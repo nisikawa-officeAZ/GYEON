@@ -1,0 +1,30 @@
+export const MOCK_PDF_ESTIMATE = {
+  estimateNo: "EST-2024-001",
+  status: "APPROVED" as const,
+  createdAt: "2024-01-20",
+  customer: {
+    name: "山田 太郎",
+    kana: "ヤマダ タロウ",
+    phone: "090-1234-5678",
+    email: "yamada@example.com",
+    address: "東京都渋谷区神宮前1-1-1",
+  },
+  vehicle: {
+    manufacturer: "Toyota",
+    model: "Alphard",
+    year: "2022",
+    grade: "Executive Lounge",
+    bodyColor: "Pearl White",
+    licensePlate: "品川 300 あ 1234",
+  },
+  items: [
+    { description: "車両本体価格", qty: 1, unitPrice: 2800000, amount: 2800000 },
+    { description: "オプション（フロアマット）", qty: 1, unitPrice: 150000, amount: 150000 },
+    { description: "オプション（ドライブレコーダー）", qty: 1, unitPrice: 80000, amount: 80000 },
+    { description: "納車整備費", qty: 1, unitPrice: 50000, amount: 50000 },
+    { description: "登録手続き代行費", qty: 1, unitPrice: 120000, amount: 120000 },
+  ],
+  subtotal: 3200000,
+  tax: 320000,
+  total: 3520000,
+};
