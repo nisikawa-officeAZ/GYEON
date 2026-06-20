@@ -18,7 +18,11 @@ function formatYen(n: number) {
   return "¥" + n.toLocaleString("ja-JP");
 }
 
-export default function EstimateTable() {
+interface EstimateTableProps {
+  onViewDetail?: (estimate: Estimate) => void;
+}
+
+export default function EstimateTable({ onViewDetail }: EstimateTableProps) {
   return (
     <div className="bg-[#1e293b] rounded-xl shadow-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -33,13 +37,14 @@ export default function EstimateTable() {
               <th className="text-right text-xs font-medium text-slate-400 px-4 py-3 hidden md:table-cell">Tax</th>
               <th className="text-right text-xs font-medium text-slate-400 px-4 py-3">Total</th>
               <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden sm:table-cell">Created</th>
+              <th className="text-center text-xs font-medium text-slate-400 px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {MOCK_ESTIMATES.map((e, i) => (
               <tr
                 key={e.id}
-                className={`border-b border-slate-800 hover:bg-slate-700/30 transition-colors cursor-pointer ${
+                className={`border-b border-slate-800 hover:bg-slate-700/30 transition-colors ${
                   i === MOCK_ESTIMATES.length - 1 ? "border-b-0" : ""
                 }`}
               >
@@ -66,6 +71,14 @@ export default function EstimateTable() {
                 </td>
                 <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap hidden sm:table-cell">
                   {formatDate(e.createdAt)}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => onViewDetail?.(e)}
+                    className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium whitespace-nowrap transition-colors"
+                  >
+                    View Detail
+                  </button>
                 </td>
               </tr>
             ))}

@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { Estimate } from "@/types/estimate";
 import MainLayout from "@/components/layout/MainLayout";
 import PageTitle from "@/components/ui/PageTitle";
 import EstimateTable from "@/components/estimates/EstimateTable";
 import EstimateForm from "@/components/estimates/EstimateForm";
+import EstimateDetail from "@/components/estimates/EstimateDetail";
 
 export default function EstimatesPage() {
-  const [showForm, setShowForm] = useState(false);
+  const [showForm,   setShowForm]   = useState(false);
+  const [detail,     setDetail]     = useState<Estimate | null>(null);
 
   return (
     <MainLayout>
@@ -24,19 +27,16 @@ export default function EstimatesPage() {
         </div>
 
         {/* Table */}
-        <EstimateTable />
+        <EstimateTable onViewDetail={(e) => setDetail(e)} />
       </div>
 
-      {/* Modal */}
+      {/* New Estimate Modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
             onClick={() => setShowForm(false)}
           />
-
-          {/* Dialog */}
           <div className="relative w-full max-w-lg bg-[#1e293b] rounded-xl shadow-lg p-6 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-slate-100">New Estimate</h2>
@@ -50,6 +50,14 @@ export default function EstimatesPage() {
             <EstimateForm onCancel={() => setShowForm(false)} />
           </div>
         </div>
+      )}
+
+      {/* Estimate Detail Modal */}
+      {detail && (
+        <EstimateDetail
+          estimate={detail}
+          onClose={() => setDetail(null)}
+        />
       )}
     </MainLayout>
   );
