@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { Customer } from "@/types/customer";
-import Card from "@/components/ui/Card";
-import Section from "@/components/ui/Section";
 
 type FormState = Omit<Customer, "id" | "createdAt" | "updatedAt">;
 
@@ -20,65 +18,71 @@ const EMPTY_FORM: FormState = {
 
 interface CustomerFormProps {
   initial?: FormState;
+  onCancel?: () => void;
 }
 
-export default function CustomerForm({ initial = EMPTY_FORM }: CustomerFormProps) {
+export default function CustomerForm({ initial = EMPTY_FORM, onCancel }: CustomerFormProps) {
   const [form, setForm] = useState<FormState>(initial);
 
-  const field = (label: string, key: keyof FormState, options?: {
-    type?: string;
-    placeholder?: string;
-    rows?: number;
-  }) => (
+  const input = (
+    label: string,
+    key: keyof FormState,
+    options?: { type?: string; placeholder?: string; required?: boolean }
+  ) => (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-slate-400">{label}</label>
-      {options?.rows ? (
-        <textarea
-          value={form[key] ?? ""}
-          onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
-          rows={options.rows}
-          placeholder={options?.placeholder}
-          className="bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] resize-none transition-colors"
-        />
-      ) : (
-        <input
-          type={options?.type ?? "text"}
-          value={form[key] ?? ""}
-          onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
-          placeholder={options?.placeholder}
-          className="bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors"
-        />
-      )}
+      <label className="text-xs font-medium text-slate-400">
+        {label}
+        {options?.required && <span className="text-red-400 ml-1">*</span>}
+      </label>
+      <input
+        type={options?.type ?? "text"}
+        value={form[key] ?? ""}
+        onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
+        placeholder={options?.placeholder}
+        className="bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors"
+      />
     </div>
   );
 
   return (
-    <Card>
-      <Section title="Basic Info">
-        <div className="grid grid-cols-1 gap-3">
-          {field("Name", "name", { placeholder: "山田 太郎" })}
-          {field("Kana", "kana", { placeholder: "ヤマダ タロウ" })}
-        </div>
-      </Section>
+    <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {input("Name", "name", { placeholder: "山田 太郎", required: true })}
+        {input("Kana", "kana", { placeholder: "ヤマダ タロウ" })}
+        {input("Phone", "phone", { type: "tel", placeholder: "090-0000-0000" })}
+        {input("Email", "email", { type: "email", placeholder: "example@email.com" })}
+        {input("Postal Code", "postalCode", { placeholder: "000-0000" })}
+        {input("LINE ID", "lineId", { placeholder: "line_id" })}
+      </div>
 
-      <Section title="Contact">
-        <div className="grid grid-cols-1 gap-3">
-          {field("Phone", "phone", { type: "tel", placeholder: "090-0000-0000" })}
-          {field("Email", "email", { type: "email", placeholder: "example@email.com" })}
-          {field("LINE ID", "lineId", { placeholder: "line_id" })}
-        </div>
-      </Section>
+      {input("Address", "address", { placeholder: "東京都渋谷区..." })}
 
-      <Section title="Address">
-        <div className="grid grid-cols-1 gap-3">
-          {field("Postal Code", "postalCode", { placeholder: "000-0000" })}
-          {field("Address", "address", { placeholder: "東京都渋谷区..." })}
-        </div>
-      </Section>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium text-slate-400">Memo</label>
+        <textarea
+          value={form.memo ?? ""}
+          onChange={(e) => setForm((prev) => ({ ...prev, memo: e.target.value }))}
+          rows={3}
+          placeholder="Notes..."
+          className="bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] resize-none transition-colors"
+        />
+      </div>
 
-      <Section title="Memo">
-        {field("Memo", "memo", { rows: 3, placeholder: "Notes..." })}
-      </Section>
-    </Card>
+      <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="px-4 py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors"
+        >
+          Save
+        </button>
+      </div>
+    </div>
   );
 }
