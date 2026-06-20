@@ -1,0 +1,15 @@
+// Supabase client — not connected yet.
+// Credentials will be configured when Supabase integration is approved by CTO.
+
+import { createBrowserClient } from "@supabase/ssr";
+
+export function createClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Supabase environment variables are not configured.");
+  }
+
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+}
