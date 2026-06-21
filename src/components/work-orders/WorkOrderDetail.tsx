@@ -8,7 +8,8 @@ import {
   workOrderCustomerName,
   workOrderVehicleLabel,
 } from "@/lib/work-orders/work-order-types";
-import WorkOrderFiles from "./WorkOrderFiles";
+import WorkOrderFiles           from "./WorkOrderFiles";
+import CompletionReportSection  from "@/components/completion-reports/CompletionReportSection";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -51,7 +52,8 @@ interface WorkOrderDetailProps {
 }
 
 export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDetailProps) {
-  const [showFiles, setShowFiles] = useState(false);
+  const [showFiles,  setShowFiles]  = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const estimate = wo.estimates;
   const items    = estimate?.estimate_items ?? [];
 
@@ -230,6 +232,30 @@ export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDet
             {showFiles && (
               <div className="mt-4">
                 <WorkOrderFiles workOrderId={wo.id} />
+              </div>
+            )}
+          </div>
+
+          {/* Completion Report Section */}
+          <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
+            <button
+              onClick={() => setShowReport((v) => !v)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  完了報告書
+                </h3>
+                {wo.status === "completed" && (
+                  <span className="text-[10px] text-green-400 font-medium">● 完了</span>
+                )}
+              </div>
+              <span className="text-slate-600 text-xs">{showReport ? "▲ 閉じる" : "▼ 開く"}</span>
+            </button>
+
+            {showReport && (
+              <div className="mt-4">
+                <CompletionReportSection workOrderId={wo.id} />
               </div>
             )}
           </div>
