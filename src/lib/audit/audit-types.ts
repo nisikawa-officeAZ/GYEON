@@ -9,7 +9,9 @@ export type AuditAction =
   | "onboarding_started"
   | "onboarding_step_updated"
   | "onboarding_completed"
-  | "onboarding_reset";
+  | "onboarding_reset"
+  // PHASE61
+  | "migration_status_viewed";
 
 export type AuditResourceType =
   | "customer" | "vehicle" | "estimate" | "work_order"
@@ -17,7 +19,9 @@ export type AuditResourceType =
   | "product_order" | "reservation" | "staff" | "role"
   | "dealer_setting" | "document" | "super_admin"
   // PHASE59
-  | "onboarding";
+  | "onboarding"
+  // PHASE61
+  | "migration";
 
 export interface AuditLogDB {
   id:            string;
@@ -65,7 +69,8 @@ export function auditActionLabel(action: AuditAction): string {
     onboarding_started:      "オンボーディング開始",
     onboarding_step_updated: "オンボーディング進捗更新",
     onboarding_completed:    "オンボーディング完了",
-    onboarding_reset:        "オンボーディングリセット",
+    onboarding_reset:         "オンボーディングリセット",
+    migration_status_viewed:  "マイグレーション状態確認",
   };
   return map[action];
 }
@@ -87,6 +92,7 @@ export function auditResourceTypeLabel(type: AuditResourceType): string {
     document:          "ドキュメント",
     super_admin:       "スーパーアドミン",
     onboarding:        "オンボーディング",
+    migration:         "マイグレーション",
   };
   return map[type];
 }

@@ -27,7 +27,9 @@ export type AdminAuditAction =
   | "subscription_created"
   | "subscription_updated"
   | "trial_extended"
-  | "subscription_note_updated";
+  | "subscription_note_updated"
+  // PHASE61: migration status
+  | "migration_status_viewed";
 
 export interface AdminAuditLogDB {
   id: string;
