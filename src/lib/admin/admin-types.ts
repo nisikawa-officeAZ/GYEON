@@ -35,7 +35,14 @@ export type AdminAuditAction =
   | "staging_verification_item_updated"
   | "staging_verification_completed"
   | "staging_issue_created"
-  | "staging_issue_resolved";
+  | "staging_issue_resolved"
+  // PHASE63: UAT management
+  | "uat_dealer_created"
+  | "uat_session_started"
+  | "uat_session_completed"
+  | "uat_feedback_created"
+  | "uat_issue_created"
+  | "uat_issue_resolved";
 
 export interface AdminAuditLogDB {
   id: string;

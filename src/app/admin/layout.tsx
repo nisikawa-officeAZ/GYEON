@@ -46,6 +46,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <Link href="/admin/staging-verification" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
             Staging Verification
           </Link>
+          <Link href="/admin/uat" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
+            UAT
+          </Link>
         </nav>
         <div className="flex-1" />
         <span className="text-xs text-slate-500">{admin.email ?? admin.name ?? "Admin"}</span>
