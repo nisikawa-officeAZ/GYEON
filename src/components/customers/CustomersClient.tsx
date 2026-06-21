@@ -6,6 +6,7 @@ import PageTitle          from "@/components/ui/PageTitle";
 import CustomerSearch     from "@/components/customers/CustomerSearch";
 import CustomerTable      from "@/components/customers/CustomerTable";
 import CustomerForm       from "@/components/customers/CustomerForm";
+import CustomerActivityTimeline from "@/components/activity/CustomerActivityTimeline";
 import { useCurrentStaff } from "@/contexts/StaffContext";
 
 type ModalState =
@@ -73,6 +74,14 @@ export default function CustomersClient({ customers }: CustomersClientProps) {
               onCancel={closeModal}
               onSuccess={closeModal}
             />
+            {modal.mode === "edit" && (
+              <div className="mt-6 pt-5 border-t border-slate-700">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                  アクティビティ
+                </h3>
+                <CustomerActivityTimeline customerId={modal.customer.id} />
+              </div>
+            )}
           </div>
         </div>
       )}

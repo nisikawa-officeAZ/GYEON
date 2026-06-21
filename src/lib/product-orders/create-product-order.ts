@@ -4,6 +4,7 @@ import { createClient }          from "@/lib/supabase/server";
 import { getCurrentDealer }      from "@/lib/auth/get-current-dealer";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { ProductOrderDB }        from "./product-order-types";
+import { createActivityLog }     from "@/lib/activity/activity-log";
 
 export interface ProductOrderItemInput {
   product_id:            string | null;
@@ -81,6 +82,13 @@ export async function createProductOrder(
     .select("*, product_order_items(*)")
     .eq("id", order.id)
     .single();
+
+  void createActivityLog({
+    entity_type: "product_order",
+    entity_id:   order.id,
+    action:      "created",
+    title:       `商品注文を作成: ${orderNumber}`,
+  });
 
   return { success: true, data: full as unknown as ProductOrderDB };
 }

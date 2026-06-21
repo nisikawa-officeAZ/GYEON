@@ -5,6 +5,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { InvoiceDB } from "@/lib/invoices/invoice-types";
 import { renderInvoicePdf } from "./templates/invoice-pdf";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
+import { createActivityLog } from "@/lib/activity/activity-log";
+import { createNotification } from "@/lib/notifications/notification";
 
 export async function generateInvoicePdf(
   invoiceId: string
@@ -52,5 +54,20 @@ export async function generateInvoicePdf(
   });
 
   if (!result.success) return { success: false, error: result.error };
+
+  void createActivityLog({
+    entity_type: "document_file",
+    entity_id:   invoiceId,
+    customer_id: (invoice.customers as unknown as { id?: string } | null)?.id ?? null,
+    action:      "generated_pdf",
+    title:       `請求書PDFを生成: ${documentNumber}`,
+  });
+
+  void createNotification({
+    type:    "success",
+    title:   "PDFを生成しました",
+    message: documentNumber,
+  });
+
   return { success: true, signedUrl: result.signedUrl };
 }

@@ -13,6 +13,7 @@ import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { EstimateCategory } from "./estimate-types";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
+import { createActivityLog } from "@/lib/activity/activity-log";
 
 interface ItemInput {
   category:              EstimateCategory;
@@ -160,6 +161,14 @@ export async function createEstimate(formData: FormData) {
       }
     }
   }
+
+  void createActivityLog({
+    entity_type: "estimate",
+    entity_id:   newEstimate.id,
+    customer_id: customerId ?? null,
+    action:      "created",
+    title:       `見積書を作成: ${resolvedNo}`,
+  });
 
   revalidatePath("/estimates");
   return { success: true };

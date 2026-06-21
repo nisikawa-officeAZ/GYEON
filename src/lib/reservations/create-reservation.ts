@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { ReservationDB, ReservationStatus, ReservationServiceType } from "./reservation-types";
+import { createActivityLog } from "@/lib/activity/activity-log";
+import { createNotification } from "@/lib/notifications/notification";
 
 interface CreateReservationInput {
   customer_id?: string | null;
@@ -56,6 +58,22 @@ export async function createReservation(
 
   revalidatePath("/reservations");
   revalidatePath("/calendar");
+
+  void createActivityLog({
+    entity_type: "reservation",
+    entity_id:   data.id,
+    customer_id: input.customer_id ?? null,
+    action:      "created",
+    title:       `予約を作成: ${reservation_number ?? data.id.slice(0, 8)}`,
+  });
+
+  void createNotification({
+    type:        "info",
+    title:       "予約を作成しました",
+    message:     `${input.reservation_date} ${input.service_type}`,
+    entity_type: "reservation",
+    entity_id:   data.id,
+  });
 
   return { success: true, data: data as unknown as ReservationDB };
 }

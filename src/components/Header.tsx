@@ -1,5 +1,7 @@
 "use client";
 
+import NotificationBell from "@/components/notifications/NotificationBell";
+
 const isDev = process.env.NODE_ENV === "development";
 
 interface HeaderProps {
@@ -44,6 +46,7 @@ export default function Header({ open, onToggleSidebar }: HeaderProps) {
       <div className="flex-1" />
 
       <div className="flex items-center gap-3">
+        <NotificationBell />
         <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-slate-300 text-xs font-medium">
           U
         </div>

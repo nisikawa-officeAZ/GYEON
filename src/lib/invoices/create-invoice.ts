@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { InvoiceItemInput, calculateInvoiceTotals, lineTotal } from "./invoice-types";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
+import { createActivityLog } from "@/lib/activity/activity-log";
 
 export async function createInvoice(fd: FormData): Promise<{ error: string } | { success: true; id: string }> {
   const dealer = await getCurrentDealer();
@@ -113,6 +114,14 @@ export async function createInvoice(fd: FormData): Promise<{ error: string } | {
       return { error: "明細の保存に失敗しました" };
     }
   }
+
+  void createActivityLog({
+    entity_type: "invoice",
+    entity_id:   inv.id,
+    customer_id: customer_id ?? null,
+    action:      "created",
+    title:       `請求書を作成: ${resolvedInvoiceNumber ?? inv.id.slice(0, 8)}`,
+  });
 
   return { success: true, id: inv.id };
 }

@@ -5,6 +5,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { EstimateDB } from "@/lib/estimates/estimate-types";
 import { renderEstimatePdf } from "./templates/estimate-pdf";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
+import { createActivityLog } from "@/lib/activity/activity-log";
+import { createNotification } from "@/lib/notifications/notification";
 
 export async function generateEstimatePdf(
   estimateId: string
@@ -50,5 +52,20 @@ export async function generateEstimatePdf(
   });
 
   if (!result.success) return { success: false, error: result.error };
+
+  void createActivityLog({
+    entity_type: "document_file",
+    entity_id:   estimateId,
+    customer_id: (estimate.customers as unknown as { id?: string } | null)?.id ?? null,
+    action:      "generated_pdf",
+    title:       `見積書PDFを生成: ${documentNumber}`,
+  });
+
+  void createNotification({
+    type:    "success",
+    title:   "PDFを生成しました",
+    message: documentNumber,
+  });
+
   return { success: true, signedUrl: result.signedUrl };
 }

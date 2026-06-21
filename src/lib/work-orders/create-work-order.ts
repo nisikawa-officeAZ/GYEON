@@ -15,6 +15,7 @@ import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { WorkOrderStatus }  from "./work-order-types";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
+import { createActivityLog } from "@/lib/activity/activity-log";
 
 function str(formData: FormData, key: string): string | null {
   return (formData.get(key) as string | null)?.trim() || null;
@@ -90,7 +91,7 @@ export async function createWorkOrder(formData: FormData) {
 
   const resolvedWoNumber = woNumber || (await getNextDocumentNumber("work_order")) || null;
 
-  const { error } = await supabase.from("work_orders").insert({
+  const { data: newWorkOrder, error } = await supabase.from("work_orders").insert({
     dealer_id:          dealer.dealer_id,   // server-injected — never from form
     estimate_id:        estimateId        || null,
     customer_id:        customerId        || null,
@@ -106,11 +107,21 @@ export async function createWorkOrder(formData: FormData) {
     service_summary:    serviceSummary    || null,
     notes:              notes             || null,
     internal_memo:      internalMemo      || null,
-  });
+  }).select("id, work_order_number").single();
 
   if (error) {
     console.error("[createWorkOrder] error:", error.message);
     return { error: error.message };
+  }
+
+  if (newWorkOrder) {
+    void createActivityLog({
+      entity_type: "work_order",
+      entity_id:   newWorkOrder.id,
+      customer_id: customerId ?? null,
+      action:      "created",
+      title:       `作業指示書を作成: ${newWorkOrder.work_order_number ?? newWorkOrder.id.slice(0, 8)}`,
+    });
   }
 
   revalidatePath("/work-orders");

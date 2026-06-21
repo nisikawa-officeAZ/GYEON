@@ -5,6 +5,8 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { calculateNetAmount } from "./payment-types";
 import { recalculateInvoicePayment } from "./recalculate-invoice-payment";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
+import { createActivityLog } from "@/lib/activity/activity-log";
+import { createNotification } from "@/lib/notifications/notification";
 
 export async function createPayment(
   fd: FormData
@@ -61,6 +63,22 @@ export async function createPayment(
 
   // Recalculate invoice totals
   await recalculateInvoicePayment(supabase, invoice_id, dealer.dealer_id);
+
+  void createActivityLog({
+    entity_type: "payment",
+    entity_id:   payment.id,
+    customer_id: inv.customer_id ?? null,
+    action:      "paid",
+    title:       `入金を記録: ${amount.toLocaleString()}円`,
+  });
+
+  void createNotification({
+    type:        "success",
+    title:       "入金を記録しました",
+    message:     `${amount.toLocaleString()}円が記録されました`,
+    entity_type: "payment",
+    entity_id:   payment.id,
+  });
 
   return { success: true, id: payment.id };
 }
