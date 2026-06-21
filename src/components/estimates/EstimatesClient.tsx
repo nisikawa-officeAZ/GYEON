@@ -8,7 +8,7 @@ import PageTitle        from "@/components/ui/PageTitle";
 import EstimateTable    from "@/components/estimates/EstimateTable";
 import EstimateForm     from "@/components/estimates/EstimateForm";
 import EstimateDetail   from "@/components/estimates/EstimateDetail";
-import ServiceEstimateForm from "@/components/services/ServiceEstimateForm";
+import GyeonServiceForm from "@/components/gyeon/GyeonServiceForm";
 
 type ModalState =
   | { mode: "none" }
@@ -106,7 +106,7 @@ export default function EstimatesClient({ estimates, customers, vehicles }: Esti
                 ✕
               </button>
             </div>
-            <ServiceEstimateForm onCancel={closeModal} />
+            <GyeonServiceForm estimates={estimates} onCancel={closeModal} onSuccess={closeModal} />
           </div>
         </div>
       )}
