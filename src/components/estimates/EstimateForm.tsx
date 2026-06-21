@@ -152,6 +152,23 @@ const STATUSES: { value: EstimateStatus; label: string }[] = [
   { value: "expired",  label: "期限切れ" },
 ];
 
+interface ServiceOption { name: string; category: EstimateCategory; }
+const SERVICE_OPTIONS: ServiceOption[] = [
+  { name: "ボディコーティング",            category: "coating"  },
+  { name: "PPF施工",                      category: "ppf"      },
+  { name: "ウィンドウフィルム",             category: "window"   },
+  { name: "フロントガラス撥水",             category: "glass"    },
+  { name: "ホイールコーティング",           category: "coating"  },
+  { name: "レザー / インテリアコーティング", category: "interior" },
+  { name: "ルームクリーニング",             category: "interior" },
+  { name: "ポリッシュ / 研磨",             category: "coating"  },
+  { name: "メンテナンス洗車",              category: "other"    },
+  { name: "鉄粉・付着物除去",              category: "other"    },
+  { name: "樹脂パーツコーティング",         category: "coating"  },
+  { name: "エンジンルームクリーニング",     category: "other"    },
+  { name: "その他作業",                    category: "other"    },
+];
+
 const inputClass =
   "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors";
 const labelClass = "text-xs font-medium text-slate-400";
@@ -184,6 +201,10 @@ export default function EstimateForm({
   const [pending,             startTransition] = useTransition();
   const [previewNo,           setPreviewNo] = useState<string>("");
   const [showProductSelector, setShowProductSelector] = useState(false);
+  const [showServicePanel,  setShowServicePanel]  = useState(false);
+  const [serviceSelections, setServiceSelections] = useState<Array<ServiceOption & { checked: boolean; price: string }>>(
+    () => SERVICE_OPTIONS.map((s) => ({ ...s, checked: false, price: "" }))
+  );
 
   // Vehicle registration OCR state
   type VehicleRegStage = "closed" | "upload" | "review";
@@ -245,6 +266,30 @@ export default function EstimateForm({
         retail_price_snapshot: product.retail_price,
       },
     ]);
+  }
+
+  function addSelectedServices() {
+    const toAdd = serviceSelections.filter((s) => s.checked);
+    if (toAdd.length === 0) return;
+    setItems((prev) => [
+      ...prev,
+      ...toAdd.map((s) => ({
+        key:                   nextKey(),
+        category:              s.category,
+        item_name:             s.name,
+        description:           "",
+        quantity:              "1",
+        unit_price:            s.price || "0",
+        discount_rate:         "0",
+        item_type:             "manual" as const,
+        product_id:            null,
+        sku:                   null,
+        product_name_snapshot: null,
+        retail_price_snapshot: null,
+      })),
+    ]);
+    setServiceSelections((prev) => prev.map((s) => ({ ...s, checked: false, price: "" })));
+    setShowServicePanel(false);
   }
 
   // ── Submit ───────────────────────────────────────────────────────────────────
@@ -423,6 +468,75 @@ export default function EstimateForm({
             className={inputClass}
           />
         </div>
+      </div>
+
+      {/* ── Service Selection ── */}
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => setShowServicePanel((v) => !v)}
+          className="flex items-center justify-between w-full text-left group"
+        >
+          <span className={labelClass}>サービス選択</span>
+          <span className="text-xs text-slate-500 group-hover:text-slate-300 transition-colors">
+            {showServicePanel ? "▲ 閉じる" : "▼ 選択して明細に追加"}
+          </span>
+        </button>
+
+        {showServicePanel && (
+          <div className="border border-slate-700 rounded-lg p-3 flex flex-col gap-3 bg-slate-800/20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4">
+              {serviceSelections.map((svc, i) => (
+                <div key={svc.name} className="flex items-center gap-2 min-w-0">
+                  <input
+                    type="checkbox"
+                    id={`svc-${i}`}
+                    checked={svc.checked}
+                    onChange={(e) =>
+                      setServiceSelections((prev) =>
+                        prev.map((s, j) => j === i ? { ...s, checked: e.target.checked } : s)
+                      )
+                    }
+                    className="w-4 h-4 shrink-0 accent-blue-600"
+                  />
+                  <label
+                    htmlFor={`svc-${i}`}
+                    className="text-sm text-slate-300 flex-1 cursor-pointer truncate"
+                  >
+                    {svc.name}
+                  </label>
+                  {svc.checked && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="text-xs text-slate-500">¥</span>
+                      <input
+                        type="number"
+                        value={svc.price}
+                        onChange={(e) =>
+                          setServiceSelections((prev) =>
+                            prev.map((s, j) => j === i ? { ...s, price: e.target.value } : s)
+                          )
+                        }
+                        min="0"
+                        placeholder="0"
+                        className="w-24 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 text-right focus:outline-none focus:border-[#1d4ed8]"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end border-t border-slate-700/50 pt-2">
+              <button
+                type="button"
+                onClick={addSelectedServices}
+                disabled={!serviceSelections.some((s) => s.checked)}
+                className="px-4 py-2 bg-[#1d4ed8] hover:bg-[#1e40af] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                明細に追加
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Vehicle Registration OCR modal */}
