@@ -10,6 +10,7 @@ import {
   invoiceStatusLabel,
   invoiceCategoryLabel,
 } from "@/lib/invoices/invoice-types";
+import PaymentSection from "@/components/payments/PaymentSection";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -40,8 +41,10 @@ interface InvoiceDetailProps {
 }
 
 export default function InvoiceDetail({ invoice: inv, onClose, onEdit }: InvoiceDetailProps) {
-  const [showPdf, setShowPdf] = useState(false);
-  const items = (inv.invoice_items ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
+  const [showPdf,      setShowPdf]      = useState(false);
+  const [showPayments, setShowPayments] = useState(false);
+  const [invoiceData,  setInvoiceData]  = useState(inv);
+  const items = (invoiceData.invoice_items ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
@@ -205,6 +208,43 @@ export default function InvoiceDetail({ invoice: inv, onClose, onEdit }: Invoice
               <p className="text-xs text-slate-300 whitespace-pre-wrap">{inv.internal_memo}</p>
             </div>
           )}
+
+          {/* Payment Section */}
+          <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
+            <button
+              onClick={() => setShowPayments((v) => !v)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">入金管理</h3>
+                {invoiceData.paid_amount > 0 && (
+                  <span className="text-[10px] text-green-400 font-medium">
+                    ¥{invoiceData.paid_amount.toLocaleString("ja-JP")} 入金済み
+                  </span>
+                )}
+                {invoiceData.balance_due > 0 && (
+                  <span className="text-[10px] text-blue-400 font-medium">
+                    残 ¥{invoiceData.balance_due.toLocaleString("ja-JP")}
+                  </span>
+                )}
+              </div>
+              <span className="text-slate-600 text-xs">{showPayments ? "▲ 閉じる" : "▼ 開く"}</span>
+            </button>
+            {showPayments && (
+              <div className="mt-4">
+                <PaymentSection
+                  invoiceId={invoiceData.id}
+                  invoiceBalance={invoiceData.balance_due}
+                  onPaymentSaved={async () => {
+                    // Refresh invoice data after payment changes
+                    const { getInvoice } = await import("@/lib/invoices/get-invoice");
+                    const fresh = await getInvoice(invoiceData.id);
+                    if (fresh) setInvoiceData(fresh);
+                  }}
+                />
+              </div>
+            )}
+          </div>
 
           {/* PDF Preview toggle */}
           <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
