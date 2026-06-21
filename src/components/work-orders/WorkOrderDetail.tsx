@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   WorkOrderDB,
   workOrderStatusLabel,
@@ -7,6 +8,7 @@ import {
   workOrderCustomerName,
   workOrderVehicleLabel,
 } from "@/lib/work-orders/work-order-types";
+import WorkOrderFiles from "./WorkOrderFiles";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -49,6 +51,7 @@ interface WorkOrderDetailProps {
 }
 
 export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDetailProps) {
+  const [showFiles, setShowFiles] = useState(false);
   const estimate = wo.estimates;
   const items    = estimate?.estimate_items ?? [];
 
@@ -211,6 +214,25 @@ export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDet
               <p className="text-xs text-slate-300 whitespace-pre-wrap">{wo.internal_memo}</p>
             </div>
           )}
+
+          {/* Files Section */}
+          <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
+            <button
+              onClick={() => setShowFiles((v) => !v)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                施工写真・ファイル
+              </h3>
+              <span className="text-slate-600 text-xs">{showFiles ? "▲ 閉じる" : "▼ 開く"}</span>
+            </button>
+
+            {showFiles && (
+              <div className="mt-4">
+                <WorkOrderFiles workOrderId={wo.id} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
