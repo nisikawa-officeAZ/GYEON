@@ -42,7 +42,14 @@ export type AdminAuditAction =
   | "uat_session_completed"
   | "uat_feedback_created"
   | "uat_issue_created"
-  | "uat_issue_resolved";
+  | "uat_issue_resolved"
+  // PHASE64: billing management
+  | "billing_created"
+  | "invoice_issued"
+  | "invoice_paid"
+  | "subscription_renewed"
+  | "subscription_cancelled"
+  | "subscription_suspended";
 
 export interface AdminAuditLogDB {
   id: string;
