@@ -11,29 +11,36 @@ import {
 import {
   planBadgeColor,
   PLAN_FEATURES,
-  planLabel,
+  type DealerPlan,
 } from "@/lib/plans/plan-types";
-import Link from "next/link";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   return iso.slice(0, 10).replace(/-/g, "/");
 }
 
-export default async function SubscriptionStatusCard() {
-  const sub = await getCurrentDealerSubscription();
+const FALLBACK_CARD = (
+  <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-5">
+    <p className="text-xs text-slate-500">サブスクリプション情報を取得できませんでした。</p>
+  </div>
+);
 
-  if (!sub) {
-    return (
-      <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-5">
-        <p className="text-xs text-slate-500">サブスクリプション情報を取得できませんでした。</p>
-      </div>
-    );
+export default async function SubscriptionStatusCard() {
+  let sub: Awaited<ReturnType<typeof getCurrentDealerSubscription>> = null;
+
+  try {
+    sub = await getCurrentDealerSubscription();
+  } catch (err) {
+    console.error("[SubscriptionStatusCard] fetch failed:", err);
+    return FALLBACK_CARD;
   }
 
+  if (!sub) return FALLBACK_CARD;
+
+  try {
   const isActive    = isActiveSubscriptionStatus(sub.status);
-  const planFeatures = PLAN_FEATURES[sub.plan_code];
-  const proFeatureCount    = planFeatures.filter((f) => !PLAN_FEATURES.basic.includes(f)).length;
+  const planKey     = (sub.plan_code in PLAN_FEATURES ? sub.plan_code : "basic") as DealerPlan;
+  const planFeatures = PLAN_FEATURES[planKey] ?? PLAN_FEATURES.basic;
   const proOnlyFeatures    = PLAN_FEATURES.pro.filter((f) => !PLAN_FEATURES.basic.includes(f));
   const proPlusOnlyFeatures = PLAN_FEATURES.pro_plus.filter((f) => !PLAN_FEATURES.pro.includes(f));
 
@@ -61,7 +68,7 @@ export default async function SubscriptionStatusCard() {
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-md border text-xs font-bold tracking-wide ${planBadgeColor(sub.plan_code)}`}>
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-md border text-xs font-bold tracking-wide ${planBadgeColor(planKey)}`}>
               {getPlanLabel(sub.plan_code)}
             </span>
             <span className={`inline-flex items-center px-2 py-0.5 rounded border text-[10px] font-semibold ${getStatusBadgeColor(sub.status)}`}>
@@ -168,4 +175,8 @@ export default async function SubscriptionStatusCard() {
       )}
     </div>
   );
+  } catch (err) {
+    console.error("[SubscriptionStatusCard] render error:", err);
+    return FALLBACK_CARD;
+  }
 }

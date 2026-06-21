@@ -6,19 +6,38 @@ import { getCurrentPlan } from "@/lib/plans/get-current-plan";
 import {
   PLAN_FEATURES,
   planLabel,
+  type DealerPlanInfo,
 } from "@/lib/plans/plan-types";
 import { getCurrentStaff } from "@/lib/staff/get-current-staff";
 import { getStaffList } from "@/lib/staff/get-staff-list";
 import StaffManagement from "@/components/settings/StaffManagement";
 import SubscriptionStatusCard from "@/components/subscription/SubscriptionStatusCard";
+import type { DocumentSequenceDB } from "@/lib/numbering/numbering-types";
+import type { DealerStaffDB, DealerStaffRole } from "@/lib/staff/staff-types";
+
+const FALLBACK_PLAN: DealerPlanInfo = {
+  plan: "basic",
+  subscription_status: "active",
+  started_at: null,
+  expired_at: null,
+};
 
 export default async function SettingsPage() {
-  const [sequences, planInfo, staffInfo, staffList] = await Promise.all([
-    getDocumentSequences(),
-    getCurrentPlan(),
-    getCurrentStaff(),
-    getStaffList(),
-  ]);
+  let sequences: DocumentSequenceDB[] = [];
+  let planInfo: DealerPlanInfo = FALLBACK_PLAN;
+  let staffInfo: { role: DealerStaffRole; staffId: string | null } | null = null;
+  let staffList: DealerStaffDB[] = [];
+
+  try {
+    [sequences, planInfo, staffInfo, staffList] = await Promise.all([
+      getDocumentSequences(),
+      getCurrentPlan(),
+      getCurrentStaff(),
+      getStaffList(),
+    ]);
+  } catch (err) {
+    console.error("[SettingsPage] data fetch failed:", err);
+  }
 
   // Feature labels for display
   const featureLabels: Record<string, string> = {
@@ -52,9 +71,19 @@ export default async function SettingsPage() {
   const proOnly      = PLAN_FEATURES.pro.filter((f) => !PLAN_FEATURES.basic.includes(f));
   const proPlusOnly  = PLAN_FEATURES.pro_plus.filter((f) => !PLAN_FEATURES.pro.includes(f));
 
+  const currentPlan = planInfo.plan ?? "basic";
+
   return (
     <MainLayout>
       <div className="max-w-3xl mx-auto p-6 flex flex-col gap-8">
+        {/* ── Release header ─────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-4 py-2 bg-slate-900/60 border border-slate-800 rounded-xl">
+          <span className="text-xs font-semibold text-slate-300 tracking-wide">
+            GYEON Detailer Agent v1.0 Official Release
+          </span>
+          <span className="text-[10px] text-slate-500">Powered by GYEON Japan</span>
+        </div>
+
         <PageTitle title="Settings" />
 
         {/* ── プランカード ───────────────────────────────────────────── */}
@@ -76,11 +105,11 @@ export default async function SettingsPage() {
                 <div
                   key={key}
                   className={`px-4 py-3 text-xs font-bold tracking-wide text-center ${color} ${
-                    planInfo.plan === key ? "bg-slate-800/60" : ""
+                    currentPlan === key ? "bg-slate-800/60" : ""
                   }`}
                 >
                   {planLabel(key)}
-                  {planInfo.plan === key && (
+                  {currentPlan === key && (
                     <span className="ml-1.5 text-[9px] font-semibold bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">
                       現在
                     </span>

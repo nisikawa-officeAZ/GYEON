@@ -26,13 +26,17 @@ export async function getDocumentSequences(): Promise<DocumentSequenceDB[]> {
   const supabase = await createClient();
   const did = dealer.dealer_id;
 
-  const { data } = await supabase
-    .from("document_sequences")
-    .select("*")
-    .eq("dealer_id", did)
-    .order("sequence_type");
-
-  const existing = (data ?? []) as DocumentSequenceDB[];
+  let existing: DocumentSequenceDB[] = [];
+  try {
+    const { data } = await supabase
+      .from("document_sequences")
+      .select("*")
+      .eq("dealer_id", did)
+      .order("sequence_type");
+    existing = (data ?? []) as DocumentSequenceDB[];
+  } catch (err) {
+    console.error("[getDocumentSequences] query failed:", err);
+  }
   const existingTypes = new Set(existing.map((s) => s.sequence_type));
 
   // Fill in defaults for any missing types so the UI always shows all 6
