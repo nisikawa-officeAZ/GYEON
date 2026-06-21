@@ -6,7 +6,8 @@ export type DocumentSequenceType =
   | "completion_report"
   | "invoice"
   | "payment"
-  | "maintenance_reminder";
+  | "maintenance_reminder"
+  | "product_order";
 
 export type DocumentResetPolicy = "never" | "yearly" | "monthly";
 
@@ -33,6 +34,7 @@ export function defaultPrefix(type: DocumentSequenceType): string {
     case "invoice":              return "INV";
     case "payment":              return "PAY";
     case "maintenance_reminder": return "MNT";
+    case "product_order":        return "PO";
   }
 }
 
@@ -44,6 +46,7 @@ export function sequenceTypeLabel(type: DocumentSequenceType): string {
     case "invoice":              return "請求書";
     case "payment":              return "入金";
     case "maintenance_reminder": return "メンテナンス通知";
+    case "product_order":        return "商品注文";
   }
 }
 

@@ -11,6 +11,7 @@ const ALL_TYPES: DocumentSequenceType[] = [
   "invoice",
   "payment",
   "maintenance_reminder",
+  "product_order",
 ];
 
 /**
