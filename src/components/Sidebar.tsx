@@ -18,6 +18,8 @@ const navItems: NavItem[] = [
   { type: "flow-arrow" },
   { type: "link", href: "/work-orders", label: "Work Orders", icon: "⊟" },
   { type: "flow-arrow" },
+  { type: "link", href: "/completion-reports", label: "Reports", icon: "✓" },
+  { type: "flow-arrow" },
   { type: "link", href: "/invoices", label: "Invoices", icon: "⊝" },
   { type: "flow-arrow" },
   { type: "link", href: "/payments", label: "Payments", icon: "⊕" },
