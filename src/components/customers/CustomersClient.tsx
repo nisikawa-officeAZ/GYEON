@@ -6,6 +6,7 @@ import PageTitle          from "@/components/ui/PageTitle";
 import CustomerSearch     from "@/components/customers/CustomerSearch";
 import CustomerTable      from "@/components/customers/CustomerTable";
 import CustomerForm       from "@/components/customers/CustomerForm";
+import { useCurrentStaff } from "@/contexts/StaffContext";
 
 type ModalState =
   | { mode: "none" }
@@ -18,6 +19,7 @@ interface CustomersClientProps {
 
 export default function CustomersClient({ customers }: CustomersClientProps) {
   const [modal, setModal] = useState<ModalState>({ mode: "none" });
+  const { canEdit } = useCurrentStaff();
 
   const closeModal = () => setModal({ mode: "none" });
 
@@ -26,12 +28,14 @@ export default function CustomersClient({ customers }: CustomersClientProps) {
       {/* Header row */}
       <div className="flex items-center justify-between mb-6">
         <PageTitle title="Customers" subtitle="顧客管理" />
-        <button
-          onClick={() => setModal({ mode: "create" })}
-          className="shrink-0 bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-        >
-          + New Customer
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => setModal({ mode: "create" })}
+            className="shrink-0 bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            + New Customer
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -42,7 +46,7 @@ export default function CustomersClient({ customers }: CustomersClientProps) {
       {/* Table */}
       <CustomerTable
         customers={customers}
-        onEdit={(c) => setModal({ mode: "edit", customer: c })}
+        onEdit={canEdit ? (c) => setModal({ mode: "edit", customer: c }) : undefined}
       />
 
       {/* Modal */}

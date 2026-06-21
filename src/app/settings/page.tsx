@@ -10,11 +10,16 @@ import {
   subscriptionStatusColor,
   planLabel,
 } from "@/lib/plans/plan-types";
+import { getCurrentStaff } from "@/lib/staff/get-current-staff";
+import { getStaffList } from "@/lib/staff/get-staff-list";
+import StaffManagement from "@/components/settings/StaffManagement";
 
 export default async function SettingsPage() {
-  const [sequences, planInfo] = await Promise.all([
+  const [sequences, planInfo, staffInfo, staffList] = await Promise.all([
     getDocumentSequences(),
     getCurrentPlan(),
+    getCurrentStaff(),
+    getStaffList(),
   ]);
 
   // Feature labels for display
@@ -127,6 +132,19 @@ export default async function SettingsPage() {
             ))}
           </div>
         </section>
+
+        {/* ── スタッフ管理 ──────────────────────────────────────────── */}
+        {(staffInfo?.role === "owner" || staffInfo?.role === "manager") && (
+          <section className="flex flex-col gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-slate-100">スタッフ管理</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                ディーラーのスタッフメンバーとアクセス権限を管理します。
+              </p>
+            </div>
+            <StaffManagement initialStaff={staffList} currentRole={staffInfo.role} />
+          </section>
+        )}
 
         {/* ── 番号設定 ──────────────────────────────────────────────── */}
         <section className="flex flex-col gap-3">

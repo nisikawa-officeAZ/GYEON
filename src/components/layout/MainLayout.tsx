@@ -3,6 +3,7 @@
 import { useState, ReactNode } from "react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import { StaffProvider } from "@/contexts/StaffContext";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -13,6 +14,7 @@ export default function MainLayout({ children, footer }: MainLayoutProps) {
   const [open, setOpen] = useState(false);
 
   return (
+    <StaffProvider>
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <Header open={open} onToggleSidebar={() => setOpen((prev) => !prev)} />
@@ -40,5 +42,6 @@ export default function MainLayout({ children, footer }: MainLayoutProps) {
         </footer>
       )}
     </div>
+    </StaffProvider>
   );
 }
