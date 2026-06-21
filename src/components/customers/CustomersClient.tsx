@@ -28,13 +28,13 @@ export default function CustomersClient({ customers }: CustomersClientProps) {
     <div className="max-w-7xl mx-auto">
       {/* Header row */}
       <div className="flex items-center justify-between mb-6">
-        <PageTitle title="Customers" subtitle="顧客管理" />
+        <PageTitle title="顧客管理" />
         {canEdit && (
           <button
             onClick={() => setModal({ mode: "create" })}
             className="shrink-0 bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
-            + New Customer
+            + 新規顧客登録
           </button>
         )}
       </div>
@@ -60,7 +60,7 @@ export default function CustomersClient({ customers }: CustomersClientProps) {
           <div className="relative w-full max-w-lg bg-[#1e293b] rounded-xl shadow-lg p-6 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-slate-100">
-                {modal.mode === "edit" ? "Edit Customer" : "New Customer"}
+                {modal.mode === "edit" ? "顧客情報編集" : "新規顧客登録"}
               </h2>
               <button
                 onClick={closeModal}

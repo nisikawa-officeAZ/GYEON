@@ -11,7 +11,7 @@ export default function CustomerSearch() {
     <div className="bg-[#1e293b] rounded-xl shadow-lg p-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-400">Name</label>
+          <label className="text-xs font-medium text-slate-400">氏名</label>
           <input
             type="text"
             value={name}
@@ -21,7 +21,7 @@ export default function CustomerSearch() {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-400">Phone</label>
+          <label className="text-xs font-medium text-slate-400">電話番号</label>
           <input
             type="tel"
             value={phone}
@@ -43,7 +43,7 @@ export default function CustomerSearch() {
       </div>
       <div className="mt-3 flex justify-end">
         <button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-          Search
+          検索
         </button>
       </div>
     </div>

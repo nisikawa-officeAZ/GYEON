@@ -130,8 +130,8 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
 
       {/* 姓名 */}
       <div className="grid grid-cols-2 gap-3">
-        {field("姓 (Last Name)",  "last_name",  { placeholder: "山田",   required: true })}
-        {field("名 (First Name)", "first_name", { placeholder: "太郎" })}
+        {field("姓",  "last_name",  { placeholder: "山田",   required: true })}
+        {field("名", "first_name", { placeholder: "太郎" })}
       </div>
 
       {/* セイメイ */}
@@ -210,14 +210,14 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
           disabled={pending}
           className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50"
         >
-          Cancel
+          キャンセル
         </button>
         <button
           type="submit"
           disabled={pending}
           className="px-4 py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50"
         >
-          {pending ? "Saving..." : isEdit ? "Update" : "Save"}
+          {pending ? "保存中..." : isEdit ? "更新" : "保存"}
         </button>
       </div>
     </form>

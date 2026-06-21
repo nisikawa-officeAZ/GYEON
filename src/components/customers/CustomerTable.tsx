@@ -16,7 +16,7 @@ export default function CustomerTable({ customers, onEdit }: CustomerTableProps)
   if (customers.length === 0) {
     return (
       <div className="bg-[#1e293b] rounded-xl shadow-lg p-10 text-center">
-        <p className="text-sm text-slate-500">No customers yet.</p>
+        <p className="text-sm text-slate-500">顧客データがありません</p>
       </div>
     );
   }
@@ -27,13 +27,13 @@ export default function CustomerTable({ customers, onEdit }: CustomerTableProps)
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-700">
-              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Name</th>
-              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Kana</th>
-              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Phone</th>
-              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden md:table-cell">Email</th>
-              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden lg:table-cell">Address</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">氏名</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">フリガナ</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">電話番号</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden md:table-cell">メール</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden lg:table-cell">住所</th>
               <th className="text-center text-xs font-medium text-slate-400 px-4 py-3">LINE</th>
-              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden sm:table-cell">Created</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden sm:table-cell">登録日</th>
               {onEdit && (
                 <th className="text-left text-xs font-medium text-slate-400 px-4 py-3" />
               )}
@@ -81,7 +81,7 @@ export default function CustomerTable({ customers, onEdit }: CustomerTableProps)
                         onClick={() => onEdit(c)}
                         className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
                       >
-                        Edit
+                        編集
                       </button>
                     </td>
                   )}
