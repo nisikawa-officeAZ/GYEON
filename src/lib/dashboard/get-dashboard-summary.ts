@@ -135,6 +135,7 @@ function countByStatus<T extends { status: string }>(
 // ─── Main fetch ───────────────────────────────────────────────────────────────
 
 export async function getDashboardSummary(): Promise<DashboardSummary | null> {
+  try {
   const dealer = await getCurrentDealer();
   if (!dealer) return null;
 
@@ -435,4 +436,8 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
     upcoming_work_orders: (upcomingWOResult.data ?? []) as unknown as UpcomingWorkOrder[],
     recent_activities:    activities,
   };
+  } catch (e) {
+    console.error("[getDashboardSummary] Unexpected error:", e);
+    return null;
+  }
 }
