@@ -29,7 +29,13 @@ export type AdminAuditAction =
   | "trial_extended"
   | "subscription_note_updated"
   // PHASE61: migration status
-  | "migration_status_viewed";
+  | "migration_status_viewed"
+  // PHASE62: staging verification
+  | "staging_verification_run_created"
+  | "staging_verification_item_updated"
+  | "staging_verification_completed"
+  | "staging_issue_created"
+  | "staging_issue_resolved";
 
 export interface AdminAuditLogDB {
   id: string;
