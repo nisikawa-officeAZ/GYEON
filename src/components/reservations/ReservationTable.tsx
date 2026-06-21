@@ -170,7 +170,7 @@ export default function ReservationTable({ reservations, onEdit, onRefresh }: Pr
                             onClick={() => handleCreateWO(r)}
                             className="px-2 py-1 bg-green-600/80 hover:bg-green-600 text-white text-xs rounded transition-colors disabled:opacity-50"
                           >
-                            WO作成
+                            施工指示作成
                           </button>
                         )}
                         {!["cancelled", "no_show", "completed"].includes(r.status) && (
