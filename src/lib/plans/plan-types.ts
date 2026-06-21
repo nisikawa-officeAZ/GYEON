@@ -35,6 +35,7 @@ export type AppFeature =
   // Pro
   | "work_orders"
   | "calendar"
+  | "reservations"
   | "completion_reports"
   | "invoices"
   | "payments"
@@ -67,6 +68,7 @@ export const PLAN_FEATURES: Record<DealerPlan, AppFeature[]> = {
     // Pro additions
     "work_orders",
     "calendar",
+    "reservations",
     "completion_reports",
     "invoices",
     "payments",
@@ -82,6 +84,7 @@ export const PLAN_FEATURES: Record<DealerPlan, AppFeature[]> = {
     "product_orders",
     "work_orders",
     "calendar",
+    "reservations",
     "completion_reports",
     "invoices",
     "payments",

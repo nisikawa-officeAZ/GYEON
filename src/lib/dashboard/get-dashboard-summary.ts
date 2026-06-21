@@ -91,6 +91,14 @@ export interface MaintenanceDashboardStats {
   sent_this_month: number;
 }
 
+export interface ReservationStats {
+  today:      number;
+  this_week:  number;
+  this_month: number;
+  pending:    number;
+  confirmed:  number;
+}
+
 export interface DashboardSummary {
   customer_count:   number;
   vehicle_count:    number;
@@ -102,6 +110,7 @@ export interface DashboardSummary {
   line_message_stats:    LineMessageStats;
   line_queue_stats:      { scheduled: number; failed: number };
   maintenance_stats:     MaintenanceDashboardStats;
+  reservation_stats:     ReservationStats;
   today_work_orders:     TodayWorkOrder[];
   upcoming_work_orders:  UpcomingWorkOrder[];
   recent_activities:     RecentActivity[];
@@ -160,6 +169,7 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
     lineMsgStatsResult,
     lineQueueStatsResult,
     maintenanceStatsResult,
+    reservationResult,
   ] = await Promise.all([
     // Customer count
     supabase
@@ -274,6 +284,12 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
 
     // Maintenance stats
     getMaintenanceStats(),
+
+    // Reservation stats: status rows for today/week/month filtering
+    supabase
+      .from("reservations")
+      .select("status, reservation_date")
+      .eq("dealer_id", did),
   ]);
 
   // ── Counts ──────────────────────────────────────────────────────────────────
@@ -306,6 +322,17 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
 
   const monthlyReceived = ((paymentResult.data ?? []) as { amount: number }[])
     .reduce((s, p) => s + p.amount, 0);
+
+  // ── Reservation stats ─────────────────────────────────────────────────────
+  const reservationRows = (reservationResult.data ?? []) as { status: string; reservation_date: string }[];
+  const weekEnd = sevenDaysStr;
+  const reservationStats: ReservationStats = {
+    today:      reservationRows.filter((r) => r.reservation_date === todayStr).length,
+    this_week:  reservationRows.filter((r) => r.reservation_date >= todayStr && r.reservation_date <= weekEnd).length,
+    this_month: reservationRows.filter((r) => r.reservation_date >= monthStart).length,
+    pending:    reservationRows.filter((r) => r.status === "pending").length,
+    confirmed:  reservationRows.filter((r) => r.status === "confirmed").length,
+  };
 
   // ── Recent activities ──────────────────────────────────────────────────────
   type CustomerJoin = { last_name: string | null; first_name: string | null } | null;
@@ -403,6 +430,7 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
     line_message_stats:    lineMsgStatsResult,
     line_queue_stats:      lineQueueStatsResult,
     maintenance_stats:     maintenanceStatsResult,
+    reservation_stats:     reservationStats,
     today_work_orders:    (todayWOResult.data ?? []) as unknown as TodayWorkOrder[],
     upcoming_work_orders: (upcomingWOResult.data ?? []) as unknown as UpcomingWorkOrder[],
     recent_activities:    activities,

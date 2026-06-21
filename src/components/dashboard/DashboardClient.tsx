@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardSummary, TodayWorkOrder, UpcomingWorkOrder, RecentActivity, MaintenanceDashboardStats } from "@/lib/dashboard/get-dashboard-summary";
+import { DashboardSummary, TodayWorkOrder, UpcomingWorkOrder, RecentActivity, MaintenanceDashboardStats, ReservationStats } from "@/lib/dashboard/get-dashboard-summary";
 import {
   DealerPlanInfo,
   planLabel,
@@ -262,6 +262,30 @@ export default function DashboardClient({ summary: s, today, planInfo }: Dashboa
           label="今月送信済み通知"
           value={String(s.maintenance_stats.sent_this_month)}
           accent={s.maintenance_stats.sent_this_month > 0 ? "green" : undefined}
+        />
+      </div>
+
+      {/* ── Reservation stats ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <SummaryCard
+          label="本日の予約"
+          value={String(s.reservation_stats.today)}
+          accent={s.reservation_stats.today > 0 ? "blue" : undefined}
+        />
+        <SummaryCard
+          label="今週の予約"
+          value={String(s.reservation_stats.this_week)}
+          accent={s.reservation_stats.this_week > 0 ? "blue" : undefined}
+        />
+        <SummaryCard
+          label="仮予約"
+          value={String(s.reservation_stats.pending)}
+          accent={s.reservation_stats.pending > 0 ? "amber" : undefined}
+        />
+        <SummaryCard
+          label="確定済み予約"
+          value={String(s.reservation_stats.confirmed)}
+          accent={s.reservation_stats.confirmed > 0 ? "green" : undefined}
         />
       </div>
 

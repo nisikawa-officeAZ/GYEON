@@ -20,6 +20,10 @@ const navItems: NavItem[] = [
   { type: "flow-arrow" },
   { type: "link", href: "/estimates",         label: "Estimates",      icon: "⊛", feature: "estimates" },
   { type: "flow-arrow" },
+  { type: "link", href: "/calendar",          label: "Calendar",       icon: "◷", feature: "calendar" },
+  { type: "flow-arrow" },
+  { type: "link", href: "/reservations",      label: "Reservations",   icon: "◈", feature: "reservations" },
+  { type: "flow-arrow" },
   { type: "link", href: "/work-orders",       label: "Work Orders",    icon: "⊟", feature: "work_orders" },
   { type: "flow-arrow" },
   { type: "link", href: "/completion-reports",label: "Reports",        icon: "✓", feature: "completion_reports" },
@@ -33,7 +37,7 @@ const navItems: NavItem[] = [
   { type: "link", href: "/products",          label: "Products",       icon: "⊗", feature: "products" },
   { type: "link", href: "/product-orders",    label: "Product Orders", icon: "⊘", feature: "product_orders" },
   { type: "link", href: "/line",              label: "LINE",           icon: "⊿", feature: "line" },
-  { type: "link", href: "/maintenance",       label: "Maintenance",    icon: "◈", feature: "maintenance" },
+  { type: "link", href: "/maintenance",       label: "Maintenance",    icon: "◉", feature: "maintenance" },
   { type: "link", href: "/settings",          label: "Settings",       icon: "⊞" },
 ];
 

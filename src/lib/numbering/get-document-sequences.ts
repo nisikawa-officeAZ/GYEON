@@ -12,6 +12,7 @@ const ALL_TYPES: DocumentSequenceType[] = [
   "payment",
   "maintenance_reminder",
   "product_order",
+  "reservation",
 ];
 
 /**

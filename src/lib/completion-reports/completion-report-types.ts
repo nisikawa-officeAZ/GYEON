@@ -15,12 +15,13 @@ export interface CompletionReportDB {
   report_date:      string | null;   // ISO date "YYYY-MM-DD"
   customer_message: string | null;
   internal_memo:    string | null;
-  pdf_file_path:    string | null;
-  pdf_file_url:     string | null;
-  is_shared:        boolean;
-  shared_at:        string | null;
-  created_at:       string;
-  updated_at:       string;
+  pdf_file_path:         string | null;
+  pdf_file_url:          string | null;
+  is_shared:             boolean;
+  shared_at:             string | null;
+  next_maintenance_date: string | null;
+  created_at:            string;
+  updated_at:            string;
 }
 
 // Fields for INSERT
@@ -42,10 +43,11 @@ export type CompletionReportUpdateInput = {
   report_date?:      string | null;
   customer_message?: string | null;
   internal_memo?:    string | null;
-  is_shared?:        boolean;
-  shared_at?:        string | null;
-  pdf_file_path?:    string | null;
-  pdf_file_url?:     string | null;
+  is_shared?:             boolean;
+  shared_at?:             string | null;
+  pdf_file_path?:         string | null;
+  pdf_file_url?:          string | null;
+  next_maintenance_date?: string | null;
 };
 
 // ─── Full data for preview rendering ─────────────────────────────────────────
