@@ -14,6 +14,9 @@ import { VehicleDB }  from "@/lib/vehicles/vehicle-types";
 import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 import ProductSelector from "@/components/products/ProductSelector";
 import { GyeonProductDB } from "@/lib/products/product-types";
+import VehicleRegistrationUpload  from "@/components/vehicle-registration/VehicleRegistrationUpload";
+import VehicleRegistrationOcrReview from "@/components/vehicle-registration/VehicleRegistrationOcrReview";
+import { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
 
 // ─── Item form state ──────────────────────────────────────────────────────────
 
@@ -172,6 +175,11 @@ export default function EstimateForm({
   const [previewNo,           setPreviewNo] = useState<string>("");
   const [showProductSelector, setShowProductSelector] = useState(false);
 
+  // Vehicle registration OCR state
+  type VehicleRegStage = "closed" | "upload" | "review";
+  const [vehicleRegStage, setVehicleRegStage] = useState<VehicleRegStage>("closed");
+  const [pendingOcrResult, setPendingOcrResult] = useState<VehicleRegistrationOcrResult | null>(null);
+
   useEffect(() => {
     if (!estimate) {
       previewDocumentNumber("estimate").then((p) => setPreviewNo(p ?? ""));
@@ -311,6 +319,19 @@ export default function EstimateForm({
         </div>
       </div>
 
+      {/* ── Vehicle Registration OCR button ── */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-slate-500">顧客・車両情報</span>
+        <button
+          type="button"
+          onClick={() => setVehicleRegStage("upload")}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-400 hover:text-blue-300 border border-blue-500/30 hover:border-blue-400/50 rounded-lg bg-blue-500/5 hover:bg-blue-500/10 transition-colors"
+        >
+          <span>📄</span>
+          車検証から自動入力
+        </button>
+      </div>
+
       {/* ── Customer ── */}
       <div className="flex flex-col gap-1">
         <label className={labelClass}>
@@ -391,6 +412,85 @@ export default function EstimateForm({
           />
         </div>
       </div>
+
+      {/* Vehicle Registration OCR modal */}
+      {vehicleRegStage !== "closed" && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => { setVehicleRegStage("closed"); setPendingOcrResult(null); }}
+        >
+          <div
+            className="bg-[#1e293b] border border-slate-700 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-100">
+                {vehicleRegStage === "upload" ? "車検証を読み取る" : "読み取り結果を確認"}
+              </h3>
+              <button
+                type="button"
+                onClick={() => { setVehicleRegStage("closed"); setPendingOcrResult(null); }}
+                className="text-slate-500 hover:text-slate-200 text-lg leading-none transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {vehicleRegStage === "upload" && (
+              <VehicleRegistrationUpload
+                customerId={form.customer_id || undefined}
+                vehicleId={form.vehicle_id || undefined}
+                onComplete={(result) => {
+                  setPendingOcrResult(result);
+                  setVehicleRegStage("review");
+                }}
+                onCancel={() => { setVehicleRegStage("closed"); setPendingOcrResult(null); }}
+              />
+            )}
+
+            {vehicleRegStage === "review" && pendingOcrResult && (
+              <VehicleRegistrationOcrReview
+                ocrResult={pendingOcrResult}
+                onApply={(selected) => {
+                  // Apply extracted vehicle info to internal_memo as reference
+                  // TODO: Phase68 — match/create vehicle record directly from OCR result
+                  const lines: string[] = ["【車検証読み取り結果】"];
+                  const labelMap: Record<string, string> = {
+                    vehicle_name: "車名",
+                    maker: "メーカー",
+                    model: "型式",
+                    chassis_number: "車台番号",
+                    license_plate_region: "ナンバー地域",
+                    license_plate_class: "分類番号",
+                    license_plate_kana: "かな",
+                    license_plate_number: "指定番号",
+                    first_registration_date: "初年度登録",
+                    inspection_expiry_date: "車検有効期限",
+                    owner_name: "所有者",
+                    user_name: "使用者",
+                    color: "色",
+                    fuel_type: "燃料",
+                  };
+                  for (const [key, val] of Object.entries(selected)) {
+                    if (val && key !== "confidence") {
+                      lines.push(`${labelMap[key] ?? key}: ${val}`);
+                    }
+                  }
+                  const ocrText = lines.join("\n");
+                  setField("internal_memo",
+                    form.internal_memo
+                      ? `${form.internal_memo}\n\n${ocrText}`
+                      : ocrText
+                  );
+                  setVehicleRegStage("closed");
+                  setPendingOcrResult(null);
+                }}
+                onCancel={() => { setVehicleRegStage("closed"); setPendingOcrResult(null); }}
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ProductSelector modal */}
       {showProductSelector && (

@@ -7,7 +7,27 @@
 
 ---
 
-## v1.1 — Payments & Operations Upgrade
+## v1.1 — AI & Operational Enhancements
+
+### Vehicle Registration AI OCR ✅ IMPLEMENTED (PHASE67)
+
+Upload a vehicle registration certificate image to automatically extract customer and vehicle data using GPT-4o-mini Vision API.
+
+**Features:**
+- Image upload to private Supabase Storage (signed URL only, no public URL)
+- AI extraction of all key fields (owner, vehicle info, plate number, inspection dates)
+- Human confirmation required before applying to any record
+- Full audit log (upload / OCR start / complete / confirm / archive)
+- Integrated in new estimate screen (EstimateForm)
+- Migration: `supabase/migrations/067_vehicle_registration_ocr.sql`
+- Docs: `docs/VEHICLE_REGISTRATION_OCR.md`
+
+**Future improvements:**
+- Vehicle record auto-match from chassis number
+- Customer auto-match from owner name
+- Electronic vehicle registration certificate (e-車検証) QR support
+
+---
 
 ### Stripe Payment Integration
 Accept card payments from customers within the app. Automated invoice payment links. Subscription auto-renewal billing without admin intervention.

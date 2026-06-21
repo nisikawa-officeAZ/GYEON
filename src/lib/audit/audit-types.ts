@@ -21,7 +21,9 @@ export type AuditResourceType =
   // PHASE59
   | "onboarding"
   // PHASE61
-  | "migration";
+  | "migration"
+  // PHASE67
+  | "vehicle_registration";
 
 export interface AuditLogDB {
   id:            string;
@@ -91,8 +93,9 @@ export function auditResourceTypeLabel(type: AuditResourceType): string {
     dealer_setting:    "ディーラー設定",
     document:          "ドキュメント",
     super_admin:       "スーパーアドミン",
-    onboarding:        "オンボーディング",
-    migration:         "マイグレーション",
+    onboarding:             "オンボーディング",
+    migration:              "マイグレーション",
+    vehicle_registration:   "車検証OCR",
   };
   return map[type];
 }

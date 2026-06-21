@@ -16,14 +16,15 @@ Complete core detailing shop management for Japanese market:
 
 ---
 
-## v1.1 — Stripe Payment Integration
+## v1.1 — AI & Operational Enhancements
 
-| Feature | Description |
-|---------|-------------|
-| Stripe Connect | Accept card payments from customers |
-| Automated Invoice | Auto-generate and send invoices on completion |
-| Subscription Auto-Renewal | Automated dealer subscription billing |
-| Payment Dashboard | Revenue analytics per dealer |
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Vehicle Registration AI OCR** | Upload 車検証 image → GPT-4o-mini extracts all fields → human confirmation → auto-fill | ✅ PHASE67 |
+| Stripe Connect | Accept card payments from customers | Planned |
+| Automated Invoice | Auto-generate and send invoices on completion | Planned |
+| Subscription Auto-Renewal | Automated dealer subscription billing | Planned |
+| Payment Dashboard | Revenue analytics per dealer | Planned |
 
 ---
 
