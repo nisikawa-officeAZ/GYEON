@@ -12,33 +12,33 @@ type NavItem =
   | { type: "flow-arrow" };
 
 const navItems: NavItem[] = [
-  { type: "link", href: "/",                  label: "Dashboard",      icon: "▦" },
+  { type: "link", href: "/",                  label: "ダッシュボード", icon: "▦" },
 
-  { type: "link", href: "/customers",         label: "Customers",      icon: "⊙", feature: "customers" },
+  { type: "link", href: "/customers",         label: "顧客管理",   icon: "⊙", feature: "customers" },
   { type: "flow-arrow" },
-  { type: "link", href: "/vehicles",          label: "Vehicles",       icon: "⊡", feature: "vehicles" },
+  { type: "link", href: "/vehicles",          label: "車両管理",   icon: "⊡", feature: "vehicles" },
   { type: "flow-arrow" },
-  { type: "link", href: "/estimates",         label: "Estimates",      icon: "⊛", feature: "estimates" },
+  { type: "link", href: "/estimates",         label: "見積管理",   icon: "⊛", feature: "estimates" },
   { type: "flow-arrow" },
-  { type: "link", href: "/calendar",          label: "Calendar",       icon: "◷", feature: "calendar" },
+  { type: "link", href: "/calendar",          label: "カレンダー", icon: "◷", feature: "calendar" },
   { type: "flow-arrow" },
-  { type: "link", href: "/reservations",      label: "Reservations",   icon: "◈", feature: "reservations" },
+  { type: "link", href: "/reservations",      label: "予約管理",   icon: "◈", feature: "reservations" },
   { type: "flow-arrow" },
-  { type: "link", href: "/work-orders",       label: "Work Orders",    icon: "⊟", feature: "work_orders" },
+  { type: "link", href: "/work-orders",       label: "施工指示",   icon: "⊟", feature: "work_orders" },
   { type: "flow-arrow" },
-  { type: "link", href: "/completion-reports",label: "Reports",        icon: "✓", feature: "completion_reports" },
+  { type: "link", href: "/completion-reports",label: "完了報告",   icon: "✓", feature: "completion_reports" },
   { type: "flow-arrow" },
-  { type: "link", href: "/invoices",          label: "Invoices",       icon: "⊝", feature: "invoices" },
+  { type: "link", href: "/invoices",          label: "請求管理",   icon: "⊝", feature: "invoices" },
   { type: "flow-arrow" },
-  { type: "link", href: "/payments",          label: "Payments",       icon: "⊕", feature: "payments" },
+  { type: "link", href: "/payments",          label: "入金管理",   icon: "⊕", feature: "payments" },
   { type: "flow-arrow" },
-  { type: "link", href: "/pdf",               label: "PDF",            icon: "⊠", feature: "estimate_pdf" },
+  { type: "link", href: "/pdf",               label: "PDF",        icon: "⊠", feature: "estimate_pdf" },
 
-  { type: "link", href: "/products",          label: "Products",       icon: "⊗", feature: "products" },
-  { type: "link", href: "/product-orders",    label: "Product Orders", icon: "⊘", feature: "product_orders" },
-  { type: "link", href: "/line",              label: "LINE",           icon: "⊿", feature: "line" },
-  { type: "link", href: "/maintenance",       label: "Maintenance",    icon: "◉", feature: "maintenance" },
-  { type: "link", href: "/settings",          label: "Settings",       icon: "⊞" },
+  { type: "link", href: "/products",          label: "商品管理",   icon: "⊗", feature: "products" },
+  { type: "link", href: "/product-orders",    label: "商品注文",   icon: "⊘", feature: "product_orders" },
+  { type: "link", href: "/line",              label: "LINE",       icon: "⊿", feature: "line" },
+  { type: "link", href: "/maintenance",       label: "メンテナンス", icon: "◉", feature: "maintenance" },
+  { type: "link", href: "/settings",          label: "設定",       icon: "⊞" },
 ];
 
 interface SidebarProps {
@@ -126,7 +126,7 @@ export default function Sidebar({ open }: SidebarProps) {
       </nav>
 
       <div className="px-3 pt-4 pb-6 border-t border-slate-800">
-        <p className="text-xs text-slate-600 px-3">v0.1.0-dev</p>
+        <p className="text-xs text-slate-600 px-3">v1.0.0</p>
       </div>
     </aside>
   );

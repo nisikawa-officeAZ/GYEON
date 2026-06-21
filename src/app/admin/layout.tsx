@@ -23,40 +23,40 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         <span className="text-sm font-semibold text-slate-300">GYEON Admin Console</span>
         <nav className="flex items-center gap-1 ml-4">
           <Link href="/admin" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
-            Overview
+            概要
           </Link>
           <Link href="/admin/dealers" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
-            Dealers
+            ディーラー管理
           </Link>
           <Link href="/admin/users" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
-            Users
+            ユーザー管理
           </Link>
           <Link href="/admin/subscriptions" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
-            Subscriptions
+            契約プラン
           </Link>
           <Link href="/admin/audit" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
-            Audit
+            監査ログ
           </Link>
           <Link href="/admin/release-readiness" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
-            Release Readiness
+            リリース確認
           </Link>
           <Link href="/admin/migration-status" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
-            Migration Status
+            マイグレーション状態
           </Link>
           <Link href="/admin/staging-verification" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
-            Staging Verification
+            ステージング検証
           </Link>
           <Link href="/admin/uat" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
-            UAT
+            受入テスト
           </Link>
           <Link href="/admin/billing" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
-            Billing
+            請求管理
           </Link>
           <Link href="/admin/release-candidate" className="text-xs text-amber-400 hover:text-amber-200 px-3 py-1.5 rounded hover:bg-amber-950/40 border border-amber-800/40 transition-colors">
-            RC1
+            RC確認
           </Link>
           <Link href="/admin/official-release" className="text-xs text-amber-300 hover:text-amber-100 px-3 py-1.5 rounded hover:bg-amber-900/50 border border-amber-600/50 bg-amber-950/20 font-semibold transition-colors">
-            v1.0 Release
+            正式リリース
           </Link>
         </nav>
         <div className="flex-1" />
