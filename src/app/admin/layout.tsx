@@ -55,6 +55,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <Link href="/admin/release-candidate" className="text-xs text-amber-400 hover:text-amber-200 px-3 py-1.5 rounded hover:bg-amber-950/40 border border-amber-800/40 transition-colors">
             RC1
           </Link>
+          <Link href="/admin/official-release" className="text-xs text-amber-300 hover:text-amber-100 px-3 py-1.5 rounded hover:bg-amber-900/50 border border-amber-600/50 bg-amber-950/20 font-semibold transition-colors">
+            v1.0 Release
+          </Link>
         </nav>
         <div className="flex-1" />
         <span className="text-xs text-slate-500">{admin.email ?? admin.name ?? "Admin"}</span>

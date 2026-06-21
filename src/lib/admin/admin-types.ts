@@ -52,7 +52,9 @@ export type AdminAuditAction =
   | "subscription_suspended"
   // PHASE65: RC status
   | "release_candidate_viewed"
-  | "release_score_checked";
+  | "release_score_checked"
+  // PHASE66: official release
+  | "official_release_viewed";
 
 export interface AdminAuditLogDB {
   id: string;

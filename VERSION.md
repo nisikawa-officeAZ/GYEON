@@ -1,15 +1,19 @@
 # GYEON Detailer Agent — Version
 
-| Field       | Value                                |
-|-------------|--------------------------------------|
-| Application | GYEON Detailer Agent                 |
-| Version     | 1.0.0-RC1                            |
-| Status      | Release Candidate                    |
-| Date        | 2026-06-21                           |
-| Owner       | Office AZ                            |
-| Powered by  | GYEON Japan                          |
-| Platform    | Next.js 15 / Supabase / Vercel       |
-| Repository  | nisikawa-officeAZ/GYEON              |
+| Field        | Value                                |
+|--------------|--------------------------------------|
+| Application  | GYEON Detailer Agent                 |
+| Version      | 1.0.0                                |
+| Status       | Official Release                     |
+| Release Date | 2026                                 |
+| Owner        | Office AZ                            |
+| Powered by   | GYEON Japan                          |
+| Platform     | Next.js 15 / Supabase / Vercel       |
+| Repository   | nisikawa-officeAZ/GYEON              |
+
+## Tagline
+
+> 施工で終わらせない。顧客との関係を、次の来店へ。
 
 ## Version Scheme
 
@@ -27,4 +31,5 @@ MAJOR.MINOR.PATCH[-LABEL]
 
 | Version     | Date       | Description                     |
 |-------------|------------|---------------------------------|
+| 1.0.0       | 2026-06-21 | Official Release                |
 | 1.0.0-RC1   | 2026-06-21 | First release candidate         |
