@@ -13,11 +13,22 @@ import { revalidatePath } from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 
+function str(formData: FormData, key: string): string | null {
+  return (formData.get(key) as string | null)?.trim() || null;
+}
+
+function num(formData: FormData, key: string): number | null {
+  const v = (formData.get(key) as string | null)?.trim();
+  if (!v) return null;
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+}
+
 export async function updateVehicle(vehicleId: string, formData: FormData) {
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "No active dealer membership." };
 
-  const customerId = (formData.get("customer_id") as string | null)?.trim();
+  const customerId = str(formData, "customer_id");
   if (!customerId) return { error: "Customer is required." };
 
   const supabase = await createClient();
@@ -37,16 +48,20 @@ export async function updateVehicle(vehicleId: string, formData: FormData) {
   const { error } = await supabase
     .from("vehicles")
     .update({
-      customer_id:   customerId,
-      manufacturer:  (formData.get("manufacturer")  as string | null) || null,
-      model:         (formData.get("model")          as string | null) || null,
-      year:          (formData.get("year")           as string | null) || null,
-      grade:         (formData.get("grade")          as string | null) || null,
-      body_color:    (formData.get("body_color")     as string | null) || null,
-      license_plate: (formData.get("license_plate")  as string | null) || null,
-      vin:           (formData.get("vin")            as string | null) || null,
-      memo:          (formData.get("memo")           as string | null) || null,
-      updated_at:    new Date().toISOString(),
+      customer_id:            customerId,
+      vehicle_code:           str(formData, "vehicle_code"),
+      maker:                  str(formData, "maker"),
+      model:                  str(formData, "model"),
+      grade:                  str(formData, "grade"),
+      year:                   str(formData, "year"),
+      color:                  str(formData, "color"),
+      plate_number:           str(formData, "plate_number"),
+      vin:                    str(formData, "vin"),
+      body_size:              str(formData, "body_size"),
+      mileage:                num(formData, "mileage"),
+      inspection_expiry_date: str(formData, "inspection_expiry_date") || null,
+      notes:                  str(formData, "notes"),
+      updated_at:             new Date().toISOString(),
     })
     .eq("id",        vehicleId)
     .eq("dealer_id", dealer.dealer_id);   // scope to current dealer only

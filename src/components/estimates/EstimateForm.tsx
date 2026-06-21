@@ -160,7 +160,7 @@ export default function EstimateForm({
           <option value="">Select vehicle...</option>
           {filteredVehicles.map((v) => (
             <option key={v.id} value={v.id}>
-              {[v.manufacturer, v.model, v.year].filter(Boolean).join(" ") || v.id}
+              {[v.maker, v.model, v.plate_number].filter(Boolean).join(" ") || v.id}
             </option>
           ))}
         </select>
