@@ -1,10 +1,11 @@
 export const dynamic = "force-dynamic";
 
-import MainLayout from "@/components/layout/MainLayout";
-import { getReservations } from "@/lib/reservations/get-reservations";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import MainLayout            from "@/components/layout/MainLayout";
+import { getReservations }   from "@/lib/reservations/get-reservations";
+import { createClient }      from "@/lib/supabase/server";
+import { getCurrentDealer }  from "@/lib/auth/get-current-dealer";
 import ReservationsPageClient from "./ReservationsPageClient";
+import FeatureGate           from "@/components/plans/FeatureGate";
 
 export default async function ReservationsPage() {
   const today = new Date().toISOString().slice(0, 10);
@@ -43,11 +44,13 @@ export default async function ReservationsPage() {
 
   return (
     <MainLayout>
-      <ReservationsPageClient
-        initialReservations={reservations}
-        customers={customers}
-        vehicles={vehicles}
-      />
+      <FeatureGate feature="reservations">
+        <ReservationsPageClient
+          initialReservations={reservations}
+          customers={customers}
+          vehicles={vehicles}
+        />
+      </FeatureGate>
     </MainLayout>
   );
 }

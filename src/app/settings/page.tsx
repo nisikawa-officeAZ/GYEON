@@ -3,16 +3,14 @@ import PageTitle from "@/components/ui/PageTitle";
 import { getDocumentSequences } from "@/lib/numbering/get-document-sequences";
 import DocumentSequenceSettings from "@/components/settings/DocumentSequenceSettings";
 import { getCurrentPlan } from "@/lib/plans/get-current-plan";
-import PlanBadge from "@/components/plans/PlanBadge";
 import {
   PLAN_FEATURES,
-  subscriptionStatusLabel,
-  subscriptionStatusColor,
   planLabel,
 } from "@/lib/plans/plan-types";
 import { getCurrentStaff } from "@/lib/staff/get-current-staff";
 import { getStaffList } from "@/lib/staff/get-staff-list";
 import StaffManagement from "@/components/settings/StaffManagement";
+import SubscriptionStatusCard from "@/components/subscription/SubscriptionStatusCard";
 
 export default async function SettingsPage() {
   const [sequences, planInfo, staffInfo, staffList] = await Promise.all([
@@ -66,18 +64,8 @@ export default async function SettingsPage() {
             <p className="text-xs text-slate-500 mt-0.5">現在の契約プランと利用可能な機能を確認できます。</p>
           </div>
 
-          {/* Current plan card */}
-          <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-5 flex items-start justify-between gap-4">
-            <div className="flex flex-col gap-2">
-              <PlanBadge planInfo={planInfo} showStatus />
-              {planInfo.started_at && (
-                <p className="text-xs text-slate-500">開始日: {planInfo.started_at.slice(0, 10)}</p>
-              )}
-              {planInfo.expired_at && (
-                <p className="text-xs text-slate-500">有効期限: {planInfo.expired_at.slice(0, 10)}</p>
-              )}
-            </div>
-          </div>
+          {/* Subscription status card (PHASE58) */}
+          <SubscriptionStatusCard />
 
           {/* Feature matrix */}
           <div className="bg-[#0f172a] border border-slate-800 rounded-xl overflow-hidden">

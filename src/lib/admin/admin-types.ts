@@ -22,7 +22,12 @@ export type AdminAuditAction =
   | "dealer_updated"
   | "dealer_status_changed"
   | "login_impersonation_started"
-  | "admin_login";
+  | "admin_login"
+  // PHASE58: subscription management
+  | "subscription_created"
+  | "subscription_updated"
+  | "trial_extended"
+  | "subscription_note_updated";
 
 export interface AdminAuditLogDB {
   id: string;
