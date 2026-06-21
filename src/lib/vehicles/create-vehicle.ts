@@ -44,7 +44,7 @@ export async function createVehicle(formData: FormData) {
     return { error: "Customer not found or does not belong to your dealer." };
   }
 
-  const { error } = await supabase.from("vehicles").insert({
+  const { data: newVehicle, error } = await supabase.from("vehicles").insert({
     dealer_id:              dealer.dealer_id,   // server-injected — never from form
     customer_id:            customerId,
     vehicle_code:           str(formData, "vehicle_code"),
@@ -59,13 +59,15 @@ export async function createVehicle(formData: FormData) {
     mileage:                num(formData, "mileage"),
     inspection_expiry_date: str(formData, "inspection_expiry_date") || null,
     notes:                  str(formData, "notes"),
-  });
+  }).select("id").single();
 
   if (error) {
     console.error("[createVehicle] error:", error.message);
     return { error: error.message };
   }
 
+  if (!newVehicle) return { error: "車両の作成に失敗しました" };
+
   revalidatePath("/vehicles");
-  return { success: true };
+  return { success: true, vehicleId: newVehicle.id };
 }

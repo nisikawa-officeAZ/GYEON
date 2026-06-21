@@ -52,16 +52,16 @@ export async function createCustomer(formData: FormData) {
     return { error: error.message };
   }
 
-  if (newCustomer) {
-    void createActivityLog({
-      entity_type: "customer",
-      entity_id:   newCustomer.id,
-      customer_id: newCustomer.id,
-      action:      "created",
-      title:       `顧客を作成: ${newCustomer.last_name}${newCustomer.first_name ? ` ${newCustomer.first_name}` : ""}`.trim(),
-    });
-  }
+  if (!newCustomer) return { error: "顧客の作成に失敗しました" };
+
+  void createActivityLog({
+    entity_type: "customer",
+    entity_id:   newCustomer.id,
+    customer_id: newCustomer.id,
+    action:      "created",
+    title:       `顧客を作成: ${newCustomer.last_name}${newCustomer.first_name ? ` ${newCustomer.first_name}` : ""}`.trim(),
+  });
 
   revalidatePath("/customers");
-  return { success: true };
+  return { success: true, customerId: newCustomer.id };
 }

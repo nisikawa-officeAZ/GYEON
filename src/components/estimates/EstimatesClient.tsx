@@ -7,6 +7,7 @@ import { VehicleDB }    from "@/lib/vehicles/vehicle-types";
 import PageTitle        from "@/components/ui/PageTitle";
 import EstimateTable    from "@/components/estimates/EstimateTable";
 import EstimateForm     from "@/components/estimates/EstimateForm";
+import EstimateWizard   from "@/components/estimates/EstimateWizard";
 import EstimateDetail   from "@/components/estimates/EstimateDetail";
 import GyeonServiceForm from "@/components/gyeon/GyeonServiceForm";
 import WorkOrderForm    from "@/components/work-orders/WorkOrderForm";
@@ -59,8 +60,35 @@ export default function EstimatesClient({ estimates, customers, vehicles }: Esti
         onCreateWorkOrder={(e) => setModal({ mode: "work-order", estimate: e })}
       />
 
-      {/* New / Edit Estimate Modal */}
-      {(modal.mode === "create" || modal.mode === "edit") && (
+      {/* New Estimate Wizard Modal */}
+      {modal.mode === "create" && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+          <div
+            className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
+            onClick={closeModal}
+          />
+          <div className="relative w-full max-w-xl bg-[#1e293b] rounded-xl shadow-lg p-6 my-4">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-semibold text-slate-100">新規見積</h2>
+              <button
+                onClick={closeModal}
+                className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
+              >
+                ✕
+              </button>
+            </div>
+            <EstimateWizard
+              customers={customers}
+              vehicles={vehicles}
+              onCancel={closeModal}
+              onSuccess={closeModal}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Estimate Modal */}
+      {modal.mode === "edit" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
@@ -68,9 +96,7 @@ export default function EstimatesClient({ estimates, customers, vehicles }: Esti
           />
           <div className="relative w-full max-w-lg bg-[#1e293b] rounded-xl shadow-lg p-6 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-slate-100">
-                {modal.mode === "edit" ? "見積編集" : "新規見積"}
-              </h2>
+              <h2 className="text-base font-semibold text-slate-100">見積編集</h2>
               <button
                 onClick={closeModal}
                 className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
@@ -79,7 +105,7 @@ export default function EstimatesClient({ estimates, customers, vehicles }: Esti
               </button>
             </div>
             <EstimateForm
-              estimate={modal.mode === "edit" ? modal.estimate : undefined}
+              estimate={modal.estimate}
               customers={customers}
               vehicles={vehicles}
               onCancel={closeModal}
