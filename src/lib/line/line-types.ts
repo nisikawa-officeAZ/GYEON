@@ -41,6 +41,11 @@ export interface DealerSettingsDB {
   business_address:    string | null;
   business_website:    string | null;
   logo_url:            string | null;
+  // Company info (PHASE66)
+  company_name:             string | null;
+  postal_code:              string | null;
+  contact_name:             string | null;
+  qualified_invoice_number: string | null;
   // Document settings (PHASE59)
   stamp_url:           string | null;
   pdf_footer:          string | null;

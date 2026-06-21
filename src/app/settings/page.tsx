@@ -12,6 +12,9 @@ import { getCurrentStaff } from "@/lib/staff/get-current-staff";
 import { getStaffList } from "@/lib/staff/get-staff-list";
 import StaffManagement from "@/components/settings/StaffManagement";
 import SubscriptionStatusCard from "@/components/subscription/SubscriptionStatusCard";
+import CompanySettingsForm from "@/components/settings/CompanySettingsForm";
+import { getCompanySettings } from "@/lib/company/save-company-settings";
+import type { CompanySettingsFields } from "@/lib/company/save-company-settings";
 import type { DocumentSequenceDB } from "@/lib/numbering/numbering-types";
 import type { DealerStaffDB, DealerStaffRole } from "@/lib/staff/staff-types";
 
@@ -27,13 +30,15 @@ export default async function SettingsPage() {
   let planInfo: DealerPlanInfo = FALLBACK_PLAN;
   let staffInfo: { role: DealerStaffRole; staffId: string | null } | null = null;
   let staffList: DealerStaffDB[] = [];
+  let companySettings: CompanySettingsFields | null = null;
 
   try {
-    [sequences, planInfo, staffInfo, staffList] = await Promise.all([
+    [sequences, planInfo, staffInfo, staffList, companySettings] = await Promise.all([
       getDocumentSequences(),
       getCurrentPlan(),
       getCurrentStaff(),
       getStaffList(),
+      getCompanySettings(),
     ]);
   } catch (err) {
     console.error("[SettingsPage] data fetch failed:", err);
@@ -162,6 +167,17 @@ export default async function SettingsPage() {
             <StaffManagement initialStaff={staffList} currentRole={staffInfo.role} />
           </section>
         )}
+
+        {/* ── 自社設定 ──────────────────────────────────────────────── */}
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-slate-100">自社設定</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              店舗・会社情報を設定します。見積書・請求書に自動反映されます。
+            </p>
+          </div>
+          <CompanySettingsForm initialSettings={companySettings} />
+        </section>
 
         {/* ── 番号設定 ──────────────────────────────────────────────── */}
         <section className="flex flex-col gap-3">
