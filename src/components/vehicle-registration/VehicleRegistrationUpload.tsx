@@ -7,7 +7,7 @@
 //   3. File selected → preview shown
 //   4. User confirms → upload + OCR
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { uploadAndAnalyzeVehicleRegistration } from "@/lib/vehicle-registration/actions";
 import { VehicleRegistrationOcrResult }         from "@/lib/vehicle-registration/vehicle-registration-types";
 
@@ -34,12 +34,17 @@ export default function VehicleRegistrationUpload({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef   = useRef<HTMLInputElement>(null);
 
+  const [isMobile,     setIsMobile]     = useState(false);
   const [stage,        setStage]        = useState<Stage>("choice");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview,      setPreview]      = useState<string | null>(null);
   const [fileName,     setFileName]     = useState<string>("");
   const [error,        setError]        = useState<string | null>(null);
   const [isPending,    startTransition] = useTransition();
+
+  useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+  }, []);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     setError(null);
@@ -107,33 +112,52 @@ export default function VehicleRegistrationUpload({
         <div className="flex flex-col gap-3">
           <p className="text-xs text-slate-400 text-center">画像の取得方法を選択してください</p>
 
-          <div className="grid grid-cols-2 gap-3">
-            {/* カメラで撮影 */}
-            <button
-              type="button"
-              onClick={() => cameraInputRef.current?.click()}
-              className="flex flex-col items-center justify-center gap-3 py-8 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors"
-            >
-              <span className="text-3xl">📷</span>
-              <div className="text-center">
-                <p className="text-sm font-medium text-slate-200">カメラで撮影</p>
-                <p className="text-xs text-slate-500 mt-0.5">背面カメラで車検証を撮影</p>
-              </div>
-            </button>
+          {isMobile ? (
+            /* Mobile: camera + file picker */
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex flex-col items-center justify-center gap-3 py-8 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors"
+              >
+                <span className="text-3xl">📷</span>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-slate-200">カメラで撮影</p>
+                  <p className="text-xs text-slate-500 mt-0.5">背面カメラで車検証を撮影</p>
+                </div>
+              </button>
 
-            {/* ファイルから選択 */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col items-center justify-center gap-3 py-8 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors"
-            >
-              <span className="text-3xl">📂</span>
-              <div className="text-center">
-                <p className="text-sm font-medium text-slate-200">ファイルから選択</p>
-                <p className="text-xs text-slate-500 mt-0.5">画像・PDF を選択</p>
-              </div>
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center gap-3 py-8 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors"
+              >
+                <span className="text-3xl">📂</span>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-slate-200">ファイルから選択</p>
+                  <p className="text-xs text-slate-500 mt-0.5">画像・PDF を選択</p>
+                </div>
+              </button>
+            </div>
+          ) : (
+            /* Desktop: file picker only */
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center gap-3 py-8 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors w-full"
+              >
+                <span className="text-3xl">📂</span>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-slate-200">ファイルから選択</p>
+                  <p className="text-xs text-slate-500 mt-0.5">画像・PDF を選択</p>
+                </div>
+              </button>
+              <p className="text-xs text-slate-500 text-center">
+                PCではカメラ撮影ではなく画像ファイルを選択してください
+              </p>
+            </div>
+          )}
 
           <p className="text-xs text-slate-600 text-center">JPEG・PNG・WebP・PDF / 最大10MB</p>
         </div>
@@ -176,16 +200,18 @@ export default function VehicleRegistrationUpload({
 
       {/* ── Hidden inputs ─────────────────────────────────────────────── */}
 
-      {/* Camera input — back camera on mobile */}
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={handleFileChange}
-        disabled={isPending}
-      />
+      {/* Camera input — rendered only on mobile (capture="environment" is a no-op on desktop) */}
+      {isMobile && (
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleFileChange}
+          disabled={isPending}
+        />
+      )}
 
       {/* File picker — images and PDF */}
       <input
