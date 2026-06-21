@@ -187,6 +187,28 @@ export default function DashboardClient({ summary: s, today }: DashboardClientPr
         />
       </div>
 
+      {/* ── LINE stats ────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <SummaryCard
+          label="LINE友達数"
+          value={String(s.line_stats.friends_count)}
+          sub={`連携済み: ${s.line_stats.linked_count}名`}
+          accent={s.line_stats.friends_count > 0 ? "green" : undefined}
+        />
+        <SummaryCard
+          label="今月の新規友達"
+          value={String(s.line_stats.this_month_new)}
+          sub={`${monthLabel}`}
+          accent={s.line_stats.this_month_new > 0 ? "blue" : undefined}
+        />
+        <SummaryCard
+          label="未連携の友達"
+          value={String(s.line_stats.friends_count - s.line_stats.linked_count)}
+          sub="顧客紐付けなし"
+          accent={(s.line_stats.friends_count - s.line_stats.linked_count) > 0 ? "amber" : undefined}
+        />
+      </div>
+
       {/* ── Status section: Estimates / Work Orders / Invoices ────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 

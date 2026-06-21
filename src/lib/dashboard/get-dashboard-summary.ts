@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { getLineStats } from "@/lib/line/get-line-customers";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,12 @@ export interface RecentActivity {
   status:     string;
 }
 
+export interface LineStats {
+  friends_count:  number;
+  linked_count:   number;
+  this_month_new: number;
+}
+
 export interface DashboardSummary {
   customer_count:   number;
   vehicle_count:    number;
@@ -75,6 +82,7 @@ export interface DashboardSummary {
   work_orders:      WorkOrderCounts;
   invoices:         InvoiceCounts;
   sales:            SalesSummary;
+  line_stats:           LineStats;
   today_work_orders:    TodayWorkOrder[];
   upcoming_work_orders: UpcomingWorkOrder[];
   recent_activities:    RecentActivity[];
@@ -128,6 +136,7 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
     recentWOs,
     recentInvoices,
     recentPayments,
+    lineStatsResult,
   ] = await Promise.all([
     // Customer count
     supabase
@@ -230,6 +239,9 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
       .eq("dealer_id", did)
       .order("created_at", { ascending: false })
       .limit(5),
+
+    // LINE stats
+    getLineStats(),
   ]);
 
   // ── Counts ──────────────────────────────────────────────────────────────────
@@ -355,6 +367,7 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
       outstanding,
       yearly_sales:     yearlySales,
     },
+    line_stats:           lineStatsResult,
     today_work_orders:    (todayWOResult.data ?? []) as unknown as TodayWorkOrder[],
     upcoming_work_orders: (upcomingWOResult.data ?? []) as unknown as UpcomingWorkOrder[],
     recent_activities:    activities,

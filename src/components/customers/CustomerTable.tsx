@@ -1,6 +1,7 @@
 "use client";
 
 import { CustomerDB, customerDisplayName, customerKanaName } from "@/lib/customers/customer-types";
+import LineStatusBadge from "@/components/line/LineStatusBadge";
 
 function formatDate(iso: string) {
   return iso.slice(0, 10);
@@ -64,13 +65,11 @@ export default function CustomerTable({ customers, onEdit }: CustomerTableProps)
                     {address || "—"}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {c.line_connected ? (
-                      <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">
-                        Connected
-                      </span>
-                    ) : (
-                      <span className="text-[10px] text-slate-600">Not Connected</span>
-                    )}
+                    <LineStatusBadge
+                      connected={!!c.line_connected}
+                      displayName={c.line_display_name}
+                      customerId={c.id}
+                    />
                   </td>
                   <td className="px-4 py-3 text-slate-500 text-xs hidden sm:table-cell whitespace-nowrap">
                     {formatDate(c.created_at)}
