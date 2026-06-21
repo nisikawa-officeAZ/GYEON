@@ -22,6 +22,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         </span>
         <span className="text-sm font-semibold text-slate-300">GYEON Admin Console</span>
         <nav className="flex items-center gap-1 ml-4">
+          <Link href="/admin" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
+            Overview
+          </Link>
           <Link href="/admin/dealers" className="text-xs text-slate-400 hover:text-slate-100 px-3 py-1.5 rounded hover:bg-slate-800 transition-colors">
             Dealers
           </Link>
