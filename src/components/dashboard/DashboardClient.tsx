@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardSummary, TodayWorkOrder, UpcomingWorkOrder, RecentActivity } from "@/lib/dashboard/get-dashboard-summary";
+import { DashboardSummary, TodayWorkOrder, UpcomingWorkOrder, RecentActivity, MaintenanceDashboardStats } from "@/lib/dashboard/get-dashboard-summary";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -206,6 +206,30 @@ export default function DashboardClient({ summary: s, today }: DashboardClientPr
           value={String(s.line_queue_stats.scheduled)}
           sub={`キュー失敗: ${s.line_queue_stats.failed}件`}
           accent={s.line_queue_stats.failed > 0 ? "red" : s.line_queue_stats.scheduled > 0 ? "amber" : undefined}
+        />
+      </div>
+
+      {/* ── Maintenance stats ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <SummaryCard
+          label="今月のメンテナンス予定"
+          value={String(s.maintenance_stats.this_month)}
+          accent={s.maintenance_stats.this_month > 0 ? "blue" : undefined}
+        />
+        <SummaryCard
+          label="7日以内の通知予定"
+          value={String(s.maintenance_stats.next_7_days)}
+          accent={s.maintenance_stats.next_7_days > 0 ? "amber" : undefined}
+        />
+        <SummaryCard
+          label="未送信通知"
+          value={String(s.maintenance_stats.pending)}
+          accent={s.maintenance_stats.pending > 0 ? "red" : undefined}
+        />
+        <SummaryCard
+          label="今月送信済み通知"
+          value={String(s.maintenance_stats.sent_this_month)}
+          accent={s.maintenance_stats.sent_this_month > 0 ? "green" : undefined}
         />
       </div>
 

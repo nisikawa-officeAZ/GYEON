@@ -5,6 +5,7 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getLineStats } from "@/lib/line/get-line-customers";
 import { getLineMessageStats } from "@/lib/line/get-line-message-logs";
 import { getLineQueueStats } from "@/lib/line/get-line-notification-queue";
+import { getMaintenanceStats } from "@/lib/maintenance/get-maintenance-reminders";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -83,6 +84,13 @@ export interface LineMessageStats {
   total_sent:        number;
 }
 
+export interface MaintenanceDashboardStats {
+  this_month:      number;
+  next_7_days:     number;
+  pending:         number;
+  sent_this_month: number;
+}
+
 export interface DashboardSummary {
   customer_count:   number;
   vehicle_count:    number;
@@ -93,6 +101,7 @@ export interface DashboardSummary {
   line_stats:            LineStats;
   line_message_stats:    LineMessageStats;
   line_queue_stats:      { scheduled: number; failed: number };
+  maintenance_stats:     MaintenanceDashboardStats;
   today_work_orders:     TodayWorkOrder[];
   upcoming_work_orders:  UpcomingWorkOrder[];
   recent_activities:     RecentActivity[];
@@ -150,6 +159,7 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
     lineStatsResult,
     lineMsgStatsResult,
     lineQueueStatsResult,
+    maintenanceStatsResult,
   ] = await Promise.all([
     // Customer count
     supabase
@@ -261,6 +271,9 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
 
     // LINE queue stats
     getLineQueueStats(),
+
+    // Maintenance stats
+    getMaintenanceStats(),
   ]);
 
   // ── Counts ──────────────────────────────────────────────────────────────────
@@ -389,6 +402,7 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
     line_stats:            lineStatsResult,
     line_message_stats:    lineMsgStatsResult,
     line_queue_stats:      lineQueueStatsResult,
+    maintenance_stats:     maintenanceStatsResult,
     today_work_orders:    (todayWOResult.data ?? []) as unknown as TodayWorkOrder[],
     upcoming_work_orders: (upcomingWOResult.data ?? []) as unknown as UpcomingWorkOrder[],
     recent_activities:    activities,

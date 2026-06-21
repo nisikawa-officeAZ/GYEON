@@ -11,6 +11,7 @@ import {
 import WorkOrderFiles           from "./WorkOrderFiles";
 import CompletionReportSection  from "@/components/completion-reports/CompletionReportSection";
 import InvoiceSection           from "@/components/invoices/InvoiceSection";
+import MaintenanceSection       from "@/components/maintenance/MaintenanceSection";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -53,9 +54,10 @@ interface WorkOrderDetailProps {
 }
 
 export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDetailProps) {
-  const [showFiles,    setShowFiles]    = useState(false);
-  const [showReport,   setShowReport]   = useState(false);
-  const [showInvoice,  setShowInvoice]  = useState(false);
+  const [showFiles,       setShowFiles]       = useState(false);
+  const [showReport,      setShowReport]      = useState(false);
+  const [showInvoice,     setShowInvoice]     = useState(false);
+  const [showMaintenance, setShowMaintenance] = useState(false);
   const estimate = wo.estimates;
   const items    = estimate?.estimate_items ?? [];
 
@@ -277,6 +279,39 @@ export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDet
             {showInvoice && (
               <div className="mt-4">
                 <InvoiceSection workOrderId={wo.id} />
+              </div>
+            )}
+          </div>
+
+          {/* Maintenance Section */}
+          <div className={`rounded-xl shadow-lg p-5 ${
+            wo.status === "completed"
+              ? "bg-[#1e293b] border border-green-700/20"
+              : "bg-[#1e293b]"
+          }`}>
+            <button
+              onClick={() => setShowMaintenance((v) => !v)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  メンテナンス通知
+                </h3>
+                {wo.status === "completed" && (
+                  <span className="text-[10px] text-green-400 font-medium">● 設定推奨</span>
+                )}
+              </div>
+              <span className="text-slate-600 text-xs">{showMaintenance ? "▲ 閉じる" : "▼ 開く"}</span>
+            </button>
+
+            {showMaintenance && (
+              <div className="mt-4">
+                <MaintenanceSection
+                  workOrderId={wo.id}
+                  customerId={wo.customer_id ?? ""}
+                  vehicleId={wo.vehicle_id}
+                  isCompleted={wo.status === "completed"}
+                />
               </div>
             )}
           </div>
