@@ -192,7 +192,9 @@ export default function EstimateForm({
 
   useEffect(() => {
     if (!estimate) {
-      previewDocumentNumber("estimate").then((p) => setPreviewNo(p ?? ""));
+      previewDocumentNumber("estimate")
+        .then((p) => setPreviewNo(p ?? ""))
+        .catch(() => {}); // Preview is cosmetic — never block the form on failure
     }
   }, [estimate]);
 

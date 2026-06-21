@@ -5,11 +5,19 @@ import { getCustomers } from "@/lib/customers/get-customers";
 import { getVehicles }  from "@/lib/vehicles/get-vehicles";
 
 export default async function EstimatesPage() {
-  const [estimates, customers, vehicles] = await Promise.all([
-    getEstimates(),
-    getCustomers(),
-    getVehicles(),
-  ]);
+  let estimates: Awaited<ReturnType<typeof getEstimates>>  = [];
+  let customers: Awaited<ReturnType<typeof getCustomers>> = [];
+  let vehicles:  Awaited<ReturnType<typeof getVehicles>>  = [];
+
+  try {
+    [estimates, customers, vehicles] = await Promise.all([
+      getEstimates(),
+      getCustomers(),
+      getVehicles(),
+    ]);
+  } catch (err) {
+    console.error("[EstimatesPage] data fetch failed:", err);
+  }
 
   return (
     <MainLayout>
