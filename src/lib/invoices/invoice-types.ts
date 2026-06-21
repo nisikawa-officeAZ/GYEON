@@ -87,13 +87,19 @@ export interface InvoiceDB {
 // ─── Input types ─────────────────────────────────────────────────────────────
 
 export type InvoiceItemInput = {
-  category:      InvoiceCategory;
-  item_name:     string;
-  description:   string;
-  quantity:      number;
-  unit_price:    number;
-  discount_rate: number;
-  sort_order:    number;
+  category:              InvoiceCategory;
+  item_name:             string;
+  description:           string;
+  quantity:              number;
+  unit_price:            number;
+  discount_rate:         number;
+  sort_order:            number;
+  // Product link (optional)
+  item_type?:            "manual" | "product";
+  product_id?:           string | null;
+  sku?:                  string | null;
+  product_name_snapshot?: string | null;
+  retail_price_snapshot?: number | null;
 };
 
 export type InvoiceInput = {

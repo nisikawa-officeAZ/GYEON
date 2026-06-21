@@ -15,6 +15,8 @@ import {
 import { createInvoice } from "@/lib/invoices/create-invoice";
 import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 import { updateInvoice } from "@/lib/invoices/update-invoice";
+import ProductSelector from "@/components/products/ProductSelector";
+import { GyeonProductDB } from "@/lib/products/product-types";
 
 const inputClass =
   "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors w-full";
@@ -102,9 +104,10 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
 
   const [form, setForm]   = useState<FormFields>(init.form);
   const [items, setItems] = useState<InvoiceItemInput[]>(init.items);
-  const [error,     setError]   = useState<string | null>(null);
-  const [pending,   startTransition] = useTransition();
-  const [previewNo, setPreviewNo] = useState<string>("");
+  const [error,               setError]   = useState<string | null>(null);
+  const [pending,             startTransition] = useTransition();
+  const [previewNo,           setPreviewNo] = useState<string>("");
+  const [showProductSelector, setShowProductSelector] = useState(false);
 
   useEffect(() => {
     if (!invoice) {
@@ -126,6 +129,26 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
 
   function addItem() {
     setItems((prev) => [...prev, { ...EMPTY_ITEM, sort_order: prev.length }]);
+  }
+
+  function addProductItem(product: GyeonProductDB) {
+    setItems((prev) => [
+      ...prev,
+      {
+        category:              "other",
+        item_name:             product.product_name + (product.size_label ? ` ${product.size_label}` : ""),
+        description:           product.description ?? "",
+        quantity:              1,
+        unit_price:            product.retail_price ?? 0,
+        discount_rate:         0,
+        sort_order:            prev.length,
+        item_type:             "product" as const,
+        product_id:            product.id,
+        sku:                   product.sku,
+        product_name_snapshot: product.product_name,
+        retail_price_snapshot: product.retail_price,
+      },
+    ]);
   }
 
   function removeItem(index: number) {
@@ -167,6 +190,13 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
   }
 
   return (
+    <>
+    {showProductSelector && (
+      <ProductSelector
+        onSelect={addProductItem}
+        onClose={() => setShowProductSelector(false)}
+      />
+    )}
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       {error && (
         <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
@@ -223,10 +253,16 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <p className={labelClass}>明細</p>
-          <button type="button" onClick={addItem}
-            className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium transition-colors">
-            + 行を追加
-          </button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => setShowProductSelector(true)}
+              className="text-xs text-emerald-500 hover:text-emerald-400 font-medium transition-colors">
+              + GYEON商品
+            </button>
+            <button type="button" onClick={addItem}
+              className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium transition-colors">
+              + 行を追加
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -244,8 +280,13 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
             </thead>
             <tbody>
               {items.map((item, i) => (
-                <tr key={i} className="border-b border-slate-700/40 last:border-b-0">
+                <tr key={i} className={`border-b border-slate-700/40 last:border-b-0 ${item.item_type === "product" ? "bg-emerald-950/20" : ""}`}>
                   <td className="py-1.5 pr-2">
+                    {item.item_type === "product" ? (
+                      <span className="text-[10px] text-emerald-400 bg-emerald-900/40 border border-emerald-800/50 px-1.5 py-1 rounded font-mono block truncate">
+                        {item.sku ?? "GYEON"}
+                      </span>
+                    ) : (
                     <select value={item.category}
                       onChange={(e) => setItem(i, "category", e.target.value as InvoiceCategory)}
                       className="bg-[#0f172a] border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100 w-full focus:outline-none focus:border-[#1d4ed8]">
@@ -253,6 +294,7 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
                         <option key={c.value} value={c.value}>{c.label}</option>
                       ))}
                     </select>
+                    )}
                   </td>
                   <td className="py-1.5 pr-2">
                     <input type="text" value={item.item_name}
@@ -370,5 +412,6 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
         </button>
       </div>
     </form>
+    </>
   );
 }

@@ -89,16 +89,21 @@ export async function createInvoice(fd: FormData): Promise<{ error: string } | {
   // Insert line items
   if (items.length > 0) {
     const itemRows = items.map((item) => ({
-      invoice_id:    inv.id,
-      dealer_id:     dealer.dealer_id,
-      category:      item.category,
-      item_name:     item.item_name,
-      description:   item.description || null,
-      quantity:      item.quantity,
-      unit_price:    item.unit_price,
-      discount_rate: item.discount_rate,
-      line_total:    lineTotal(item.quantity, item.unit_price, item.discount_rate),
-      sort_order:    item.sort_order,
+      invoice_id:            inv.id,
+      dealer_id:             dealer.dealer_id,
+      category:              item.category,
+      item_name:             item.item_name,
+      description:           item.description || null,
+      quantity:              item.quantity,
+      unit_price:            item.unit_price,
+      discount_rate:         item.discount_rate,
+      line_total:            lineTotal(item.quantity, item.unit_price, item.discount_rate),
+      sort_order:            item.sort_order,
+      item_type:             item.item_type             ?? "manual",
+      product_id:            item.product_id            ?? null,
+      sku:                   item.sku                   ?? null,
+      product_name_snapshot: item.product_name_snapshot ?? null,
+      retail_price_snapshot: item.retail_price_snapshot ?? null,
     }));
     const { error: itemsErr } = await supabase.from("invoice_items").insert(itemRows);
     if (itemsErr) {

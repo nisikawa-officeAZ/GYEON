@@ -15,13 +15,18 @@ import { EstimateCategory } from "./estimate-types";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 
 interface ItemInput {
-  category:      EstimateCategory;
-  item_name:     string;
-  description:   string;
-  quantity:      number;
-  unit_price:    number;
-  discount_rate: number;
-  sort_order:    number;
+  category:              EstimateCategory;
+  item_name:             string;
+  description:           string;
+  quantity:              number;
+  unit_price:            number;
+  discount_rate:         number;
+  sort_order:            number;
+  item_type?:            "manual" | "product";
+  product_id?:           string | null;
+  sku?:                  string | null;
+  product_name_snapshot?: string | null;
+  retail_price_snapshot?: number | null;
 }
 
 function str(formData: FormData, key: string): string | null {
@@ -126,18 +131,23 @@ export async function createEstimate(formData: FormData) {
 
     if (items.length > 0) {
       const rows = items.map((item, i) => ({
-        estimate_id:   newEstimate.id,
-        dealer_id:     dealer.dealer_id,
-        category:      item.category      ?? "other",
-        item_name:     item.item_name     ?? "",
-        description:   item.description   || null,
-        quantity:      item.quantity      ?? 1,
-        unit_price:    item.unit_price    ?? 0,
-        discount_rate: item.discount_rate ?? 0,
-        line_total:    Math.round(
+        estimate_id:            newEstimate.id,
+        dealer_id:              dealer.dealer_id,
+        category:               item.category               ?? "other",
+        item_name:              item.item_name              ?? "",
+        description:            item.description            || null,
+        quantity:               item.quantity               ?? 1,
+        unit_price:             item.unit_price             ?? 0,
+        discount_rate:          item.discount_rate          ?? 0,
+        line_total:             Math.round(
           (item.quantity ?? 1) * (item.unit_price ?? 0) * (1 - (item.discount_rate ?? 0) / 100)
         ),
-        sort_order:    item.sort_order    ?? i,
+        sort_order:             item.sort_order             ?? i,
+        item_type:              item.item_type              ?? "manual",
+        product_id:             item.product_id             ?? null,
+        sku:                    item.sku                    ?? null,
+        product_name_snapshot:  item.product_name_snapshot  ?? null,
+        retail_price_snapshot:  item.retail_price_snapshot  ?? null,
       }));
 
       const { error: itemsError } = await supabase

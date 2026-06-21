@@ -12,17 +12,25 @@ import {
 import { CustomerDB } from "@/lib/customers/customer-types";
 import { VehicleDB }  from "@/lib/vehicles/vehicle-types";
 import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
+import ProductSelector from "@/components/products/ProductSelector";
+import { GyeonProductDB } from "@/lib/products/product-types";
 
 // ─── Item form state ──────────────────────────────────────────────────────────
 
 interface ItemRow {
-  key:           number;   // local react key
-  category:      EstimateCategory;
-  item_name:     string;
-  description:   string;
-  quantity:      string;
-  unit_price:    string;
-  discount_rate: string;
+  key:                   number;   // local react key
+  category:              EstimateCategory;
+  item_name:             string;
+  description:           string;
+  quantity:              string;
+  unit_price:            string;
+  discount_rate:         string;
+  // Product link (optional)
+  item_type:             "manual" | "product";
+  product_id:            string | null;
+  sku:                   string | null;
+  product_name_snapshot: string | null;
+  retail_price_snapshot: number | null;
 }
 
 let _itemKey = 0;
@@ -30,25 +38,35 @@ function nextKey() { return ++_itemKey; }
 
 function emptyItem(): ItemRow {
   return {
-    key:           nextKey(),
-    category:      "other",
-    item_name:     "",
-    description:   "",
-    quantity:      "1",
-    unit_price:    "0",
-    discount_rate: "0",
+    key:                   nextKey(),
+    category:              "other",
+    item_name:             "",
+    description:           "",
+    quantity:              "1",
+    unit_price:            "0",
+    discount_rate:         "0",
+    item_type:             "manual",
+    product_id:            null,
+    sku:                   null,
+    product_name_snapshot: null,
+    retail_price_snapshot: null,
   };
 }
 
 function itemFromDB(item: EstimateItemDB): ItemRow {
   return {
-    key:           nextKey(),
-    category:      item.category,
-    item_name:     item.item_name,
-    description:   item.description ?? "",
-    quantity:      String(item.quantity),
-    unit_price:    String(item.unit_price),
-    discount_rate: String(item.discount_rate),
+    key:                   nextKey(),
+    category:              item.category,
+    item_name:             item.item_name,
+    description:           item.description ?? "",
+    quantity:              String(item.quantity),
+    unit_price:            String(item.unit_price),
+    discount_rate:         String(item.discount_rate),
+    item_type:             (item as unknown as { item_type?: string }).item_type === "product" ? "product" : "manual",
+    product_id:            (item as unknown as { product_id?: string | null }).product_id ?? null,
+    sku:                   (item as unknown as { sku?: string | null }).sku ?? null,
+    product_name_snapshot: (item as unknown as { product_name_snapshot?: string | null }).product_name_snapshot ?? null,
+    retail_price_snapshot: (item as unknown as { retail_price_snapshot?: number | null }).retail_price_snapshot ?? null,
   };
 }
 
@@ -149,9 +167,10 @@ export default function EstimateForm({
           .map(itemFromDB)
       : [emptyItem()]
   );
-  const [error,     setError]   = useState<string | null>(null);
-  const [pending,   startTransition] = useTransition();
-  const [previewNo, setPreviewNo] = useState<string>("");
+  const [error,               setError]   = useState<string | null>(null);
+  const [pending,             startTransition] = useTransition();
+  const [previewNo,           setPreviewNo] = useState<string>("");
+  const [showProductSelector, setShowProductSelector] = useState(false);
 
   useEffect(() => {
     if (!estimate) {
@@ -188,6 +207,26 @@ export default function EstimateForm({
     setItems((prev) => prev.filter((r) => r.key !== key));
   }
 
+  function addProductItem(product: GyeonProductDB) {
+    setItems((prev) => [
+      ...prev,
+      {
+        key:                   nextKey(),
+        category:              "other",
+        item_name:             product.product_name + (product.size_label ? ` ${product.size_label}` : ""),
+        description:           product.description ?? "",
+        quantity:              "1",
+        unit_price:            String(product.retail_price ?? 0),
+        discount_rate:         "0",
+        item_type:             "product",
+        product_id:            product.id,
+        sku:                   product.sku,
+        product_name_snapshot: product.product_name,
+        retail_price_snapshot: product.retail_price,
+      },
+    ]);
+  }
+
   // ── Submit ───────────────────────────────────────────────────────────────────
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -204,13 +243,18 @@ export default function EstimateForm({
 
     // Line items serialized as JSON
     const itemsPayload = items.map((item, i) => ({
-      category:      item.category,
-      item_name:     item.item_name,
-      description:   item.description,
-      quantity:      Number(item.quantity)      || 1,
-      unit_price:    Number(item.unit_price)    || 0,
-      discount_rate: Number(item.discount_rate) || 0,
-      sort_order:    i,
+      category:              item.category,
+      item_name:             item.item_name,
+      description:           item.description,
+      quantity:              Number(item.quantity)      || 1,
+      unit_price:            Number(item.unit_price)    || 0,
+      discount_rate:         Number(item.discount_rate) || 0,
+      sort_order:            i,
+      item_type:             item.item_type,
+      product_id:            item.product_id,
+      sku:                   item.sku,
+      product_name_snapshot: item.product_name_snapshot,
+      retail_price_snapshot: item.retail_price_snapshot,
     }));
     fd.set("items_json", JSON.stringify(itemsPayload));
 
@@ -348,17 +392,34 @@ export default function EstimateForm({
         </div>
       </div>
 
+      {/* ProductSelector modal */}
+      {showProductSelector && (
+        <ProductSelector
+          onSelect={addProductItem}
+          onClose={() => setShowProductSelector(false)}
+        />
+      )}
+
       {/* ── Line Items ── */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <label className={labelClass}>明細</label>
-          <button
-            type="button"
-            onClick={addItem}
-            className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium transition-colors"
-          >
-            + 行を追加
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowProductSelector(true)}
+              className="text-xs text-emerald-500 hover:text-emerald-400 font-medium transition-colors"
+            >
+              + GYEON商品
+            </button>
+            <button
+              type="button"
+              onClick={addItem}
+              className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium transition-colors"
+            >
+              + 行を追加
+            </button>
+          </div>
         </div>
 
         <div className="border border-slate-700 rounded-lg overflow-hidden">
@@ -374,7 +435,13 @@ export default function EstimateForm({
 
           {/* Item rows */}
           {items.map((item) => (
-            <div key={item.key} className="border-t border-slate-700/60 px-3 py-2 flex flex-col gap-1.5">
+            <div key={item.key} className={`border-t border-slate-700/60 px-3 py-2 flex flex-col gap-1.5 ${item.item_type === "product" ? "bg-emerald-950/20" : ""}`}>
+              {/* Product badge */}
+              {item.item_type === "product" && item.sku && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-emerald-400 bg-emerald-900/40 border border-emerald-800/50 px-1.5 py-0.5 rounded font-mono">GYEON {item.sku}</span>
+                </div>
+              )}
               {/* Row 1: category + item_name */}
               <div className="flex gap-2">
                 <select
