@@ -9,6 +9,7 @@ import {
   orderTotal,
 } from "@/lib/product-orders/product-order-types";
 import { updateProductOrderStatus } from "@/lib/product-orders/update-product-order";
+import DocumentPdfActions from "@/components/pdf/DocumentPdfActions";
 
 interface Props {
   orders:    ProductOrderDB[];
@@ -190,6 +191,15 @@ export default function ProductOrderTable({ orders, onRefresh }: Props) {
                   >
                     印刷
                   </button>
+                  <DocumentPdfActions
+                    documentType="product_order"
+                    documentId={order.id}
+                    documentNumber={orderDisplayNo(order)}
+                    onGenerate={async () => {
+                      const { generateProductOrderPdf } = await import("@/lib/pdf/generate-product-order-pdf");
+                      return generateProductOrderPdf(order.id);
+                    }}
+                  />
 
                   {order.status === "draft" && (
                     <button

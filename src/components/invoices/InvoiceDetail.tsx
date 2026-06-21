@@ -11,6 +11,7 @@ import {
   invoiceCategoryLabel,
 } from "@/lib/invoices/invoice-types";
 import PaymentSection from "@/components/payments/PaymentSection";
+import DocumentPdfActions from "@/components/pdf/DocumentPdfActions";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -258,14 +259,23 @@ export default function InvoiceDetail({ invoice: inv, onClose, onEdit }: Invoice
               <span className="text-slate-600 text-xs">{showPdf ? "▲ 閉じる" : "▼ 開く"}</span>
             </button>
             {showPdf && (
-              <div className="mt-4">
-                <div className="flex justify-end mb-3">
+              <div className="mt-4 flex flex-col gap-4">
+                <div className="flex justify-between items-start flex-wrap gap-3">
                   <button
                     onClick={() => window.print()}
                     className="text-xs bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-3 py-1.5 rounded-lg transition-colors"
                   >
                     印刷 / PDF保存
                   </button>
+                  <DocumentPdfActions
+                    documentType="invoice"
+                    documentId={invoiceData.id}
+                    documentNumber={invoiceData.invoice_number ?? `INV-${invoiceData.id.slice(0, 8).toUpperCase()}`}
+                    onGenerate={async () => {
+                      const { generateInvoicePdf } = await import("@/lib/pdf/generate-invoice-pdf");
+                      return generateInvoicePdf(invoiceData.id);
+                    }}
+                  />
                 </div>
                 {/* InvoicePdfPreview is rendered here when ready */}
                 <p className="text-xs text-slate-500 text-center py-4">

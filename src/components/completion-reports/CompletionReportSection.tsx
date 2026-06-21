@@ -17,6 +17,7 @@ import {
 } from "@/lib/completion-reports/get-completion-report";
 import CompletionReportForm    from "./CompletionReportForm";
 import CompletionReportPreview from "./CompletionReportPreview";
+import DocumentPdfActions      from "@/components/pdf/DocumentPdfActions";
 
 const STATUS_BADGE: Record<string, string> = {
   draft:     "bg-slate-600 text-slate-100",
@@ -77,19 +78,30 @@ export default function CompletionReportSection({ workOrderId }: CompletionRepor
   if (view.mode === "preview") {
     return (
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <button
             onClick={() => setView({ mode: "list" })}
             className="text-xs text-slate-400 hover:text-slate-100 flex items-center gap-1 transition-colors"
           >
             ← 一覧に戻る
           </button>
-          <button
-            onClick={() => window.print()}
-            className="text-xs bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-3 py-1.5 rounded-lg transition-colors"
-          >
-            印刷 / PDF保存
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => window.print()}
+              className="text-xs bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-3 py-1.5 rounded-lg transition-colors"
+            >
+              印刷 / PDF保存
+            </button>
+            <DocumentPdfActions
+              documentType="completion_report"
+              documentId={view.data.report.id}
+              documentNumber={view.data.report.report_number ?? `RPT-${view.data.report.id.slice(0, 8).toUpperCase()}`}
+              onGenerate={async () => {
+                const { generateCompletionReportPdf } = await import("@/lib/pdf/generate-completion-report-pdf");
+                return generateCompletionReportPdf(view.data.report.id);
+              }}
+            />
+          </div>
         </div>
         <CompletionReportPreview data={view.data} previewAll={true} />
       </div>
