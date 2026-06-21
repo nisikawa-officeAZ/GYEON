@@ -121,9 +121,13 @@ export default function VehicleRegistrationUpload({
       />
 
       {error && (
-        <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10">
-          <span className="text-red-400 shrink-0 text-sm">✕</span>
-          <p className="text-xs text-red-400">{error}</p>
+        <div className={`flex items-start gap-2 px-3 py-2 rounded-lg border text-xs ${
+          error.includes("未設定") || error.includes("未作成") || error.includes("未適用")
+            ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+            : "border-red-500/30 bg-red-500/10 text-red-400"
+        }`}>
+          <span className="shrink-0">{error.includes("未設定") || error.includes("未作成") || error.includes("未適用") ? "⚠" : "✕"}</span>
+          <p>{error}</p>
         </div>
       )}
 

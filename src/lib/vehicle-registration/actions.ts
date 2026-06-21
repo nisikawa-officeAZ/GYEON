@@ -64,12 +64,23 @@ export async function uploadAndAnalyzeVehicleRegistration(
   );
 
   if (!uploadResult.success || !uploadResult.storagePath) {
-    return { success: false, error: uploadResult.error ?? "アップロードに失敗しました" };
+    // Bucket not created yet → show setup guidance
+    const err = uploadResult.error ?? "アップロードに失敗しました";
+    const isBucketMissing =
+      err.includes("Bucket not found") ||
+      err.includes("bucket") ||
+      err.includes("does not exist");
+    return {
+      success: false,
+      error: isBucketMissing
+        ? "ストレージバケットが未作成です。管理者に VEHICLE_REGISTRATION_STORAGE_SETUP.md を確認するよう依頼してください。"
+        : err,
+    };
   }
 
   const storagePath = uploadResult.storagePath;
 
-  // 2. Insert DB row (pending)
+  // 2. Insert DB row — if table doesn't exist yet, fail gracefully
   const { data: insertData, error: insertError } = await supabase
     .from("vehicle_registration_files")
     .insert({
@@ -90,10 +101,19 @@ export async function uploadAndAnalyzeVehicleRegistration(
 
   if (insertError || !insertData) {
     console.error("[actions] insert error:", insertError?.message);
-    // Clean up storage if DB insert fails
+    // Table not applied yet → user-friendly guidance
+    const isTableMissing =
+      insertError?.message?.includes("does not exist") ||
+      insertError?.code === "42P01";
+    // Clean up storage regardless
     const supabase2 = await createClient();
-    await supabase2.storage.from(VEHICLE_REG_BUCKET).remove([storagePath]);
-    return { success: false, error: "データベース登録に失敗しました" };
+    await supabase2.storage.from(VEHICLE_REG_BUCKET).remove([storagePath]).catch(() => null);
+    return {
+      success: false,
+      error: isTableMissing
+        ? "DBテーブルが未適用です。マイグレーション 067_vehicle_registration_ocr.sql を Supabase SQL Editor で実行してください。"
+        : "データベース登録に失敗しました",
+    };
   }
 
   const fileRow = insertData as VehicleRegistrationFile;

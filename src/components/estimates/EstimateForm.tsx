@@ -14,9 +14,19 @@ import { VehicleDB }  from "@/lib/vehicles/vehicle-types";
 import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 import ProductSelector from "@/components/products/ProductSelector";
 import { GyeonProductDB } from "@/lib/products/product-types";
-import VehicleRegistrationUpload  from "@/components/vehicle-registration/VehicleRegistrationUpload";
-import VehicleRegistrationOcrReview from "@/components/vehicle-registration/VehicleRegistrationOcrReview";
-import { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
+import dynamic from "next/dynamic";
+import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
+
+// Dynamic imports — OCR modules load lazily so EstimateForm never crashes
+// even if the vehicle-registration table/bucket/API key is not yet configured.
+const VehicleRegistrationUpload = dynamic(
+  () => import("@/components/vehicle-registration/VehicleRegistrationUpload"),
+  { ssr: false, loading: () => <div className="py-8 text-center text-xs text-slate-500">読み込み中...</div> },
+);
+const VehicleRegistrationOcrReview = dynamic(
+  () => import("@/components/vehicle-registration/VehicleRegistrationOcrReview"),
+  { ssr: false, loading: () => <div className="py-8 text-center text-xs text-slate-500">読み込み中...</div> },
+);
 
 // ─── Item form state ──────────────────────────────────────────────────────────
 
