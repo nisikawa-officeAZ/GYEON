@@ -1,4 +1,4 @@
-import { EstimateDB } from "@/lib/estimates/estimate-types";
+import { EstimateDB, estimateStatusLabel } from "@/lib/estimates/estimate-types";
 
 const STATUS_COLOR: Record<string, string> = {
   draft:    "bg-slate-600 text-slate-100",
@@ -44,7 +44,7 @@ export default function EstimateSummary({ estimate }: EstimateSummaryProps) {
           合計
         </h3>
         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${STATUS_COLOR[estimate.status] ?? "bg-slate-700 text-slate-300"}`}>
-          {estimate.status.toUpperCase()}
+          {estimateStatusLabel(estimate.status)}
         </span>
       </div>
 

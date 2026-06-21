@@ -132,11 +132,11 @@ const CATEGORIES: { value: EstimateCategory; label: string }[] = [
 ];
 
 const STATUSES: { value: EstimateStatus; label: string }[] = [
-  { value: "draft",    label: "DRAFT" },
-  { value: "sent",     label: "SENT" },
-  { value: "approved", label: "APPROVED" },
-  { value: "rejected", label: "REJECTED" },
-  { value: "expired",  label: "EXPIRED" },
+  { value: "draft",    label: "下書き" },
+  { value: "sent",     label: "送付済み" },
+  { value: "approved", label: "承認済み" },
+  { value: "rejected", label: "却下" },
+  { value: "expired",  label: "期限切れ" },
 ];
 
 const inputClass =
@@ -286,7 +286,7 @@ export default function EstimateForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
           <label className={labelClass}>
-            Estimate No <span className="text-red-400 ml-1">*</span>
+            見積番号 <span className="text-red-400 ml-1">*</span>
           </label>
           <input
             type="text"
@@ -590,14 +590,14 @@ export default function EstimateForm({
           disabled={pending}
           className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50"
         >
-          Cancel
+          キャンセル
         </button>
         <button
           type="submit"
           disabled={pending}
           className="px-4 py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50"
         >
-          {pending ? "Saving..." : isEdit ? "Update" : "Save"}
+          {pending ? "保存中..." : isEdit ? "更新" : "保存"}
         </button>
       </div>
     </form>

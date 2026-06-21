@@ -34,19 +34,19 @@ export default function EstimatesClient({ estimates, customers, vehicles }: Esti
     <div className="max-w-7xl mx-auto">
       {/* Header row */}
       <div className="flex items-center justify-between mb-6">
-        <PageTitle title="Estimates" subtitle="見積管理" />
+        <PageTitle title="見積管理" />
         <div className="flex gap-2">
           <button
             onClick={() => setModal({ mode: "gyeon" })}
             className="shrink-0 bg-[#0f172a] hover:bg-slate-800 text-slate-200 border border-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
-            Create GYEON Estimate
+            GYEON見積作成
           </button>
           <button
             onClick={() => setModal({ mode: "create" })}
             className="shrink-0 bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
-            + New Estimate
+            + 新規見積
           </button>
         </div>
       </div>
@@ -69,7 +69,7 @@ export default function EstimatesClient({ estimates, customers, vehicles }: Esti
           <div className="relative w-full max-w-lg bg-[#1e293b] rounded-xl shadow-lg p-6 overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-slate-100">
-                {modal.mode === "edit" ? "Edit Estimate" : "New Estimate"}
+                {modal.mode === "edit" ? "見積編集" : "新規見積"}
               </h2>
               <button
                 onClick={closeModal}
@@ -99,8 +99,8 @@ export default function EstimatesClient({ estimates, customers, vehicles }: Esti
           <div className="relative w-full max-w-2xl bg-[#1e293b] rounded-xl shadow-lg p-6 my-4">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-base font-semibold text-slate-100">GYEON Estimate</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Detailing Service</p>
+                <h2 className="text-base font-semibold text-slate-100">GYEON見積</h2>
+                <p className="text-xs text-slate-500 mt-0.5">施工内容見積</p>
               </div>
               <button
                 onClick={closeModal}
@@ -137,7 +137,7 @@ export default function EstimatesClient({ estimates, customers, vehicles }: Esti
           <div className="relative w-full max-w-lg bg-[#1e293b] rounded-xl shadow-lg p-6 my-4">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-base font-semibold text-slate-100">New Work Order</h2>
+                <h2 className="text-base font-semibold text-slate-100">新規施工指示</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   見積 {modal.estimate.estimate_number ?? modal.estimate.estimate_no} から作成
                 </p>

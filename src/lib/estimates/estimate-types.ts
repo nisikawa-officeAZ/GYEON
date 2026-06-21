@@ -69,6 +69,17 @@ export function estimateDisplayNo(e: Pick<EstimateDB, 'estimate_number' | 'estim
   return e.estimate_number ?? e.estimate_no ?? '—';
 }
 
+export function estimateStatusLabel(status: EstimateStatus): string {
+  switch (status.toLowerCase()) {
+    case 'draft':    return '下書き';
+    case 'sent':     return '送付済み';
+    case 'approved': return '承認済み';
+    case 'rejected': return '却下';
+    case 'expired':  return '期限切れ';
+    default:         return status;
+  }
+}
+
 export function estimateCustomerName(
   customers: EstimateDB['customers']
 ): string {

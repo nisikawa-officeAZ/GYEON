@@ -70,7 +70,7 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
                 onClick={onCreateWorkOrder}
                 className="text-xs font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-3 py-1.5 rounded-lg transition-colors"
               >
-                Work Order作成
+                施工指示作成
               </button>
             )}
             <button

@@ -38,4 +38,35 @@ export const JA = {
     releaseCandidate:     "RC確認",
     officialRelease:      "正式リリース",
   },
+
+  // ── Estimate ──────────────────────────────────────────────────────────────
+  estimate: {
+    pageTitle:       "見積管理",
+    new:             "新規見積",
+    edit:            "見積編集",
+    gyeonEstimate:   "GYEON見積作成",
+    gyeonModal:      "GYEON見積",
+    gyeonSubtitle:   "施工内容見積",
+    workOrderNew:    "新規施工指示",
+    noEstimates:     "見積がまだありません",
+    createWorkOrder: "施工指示作成",
+    status: {
+      draft:    "下書き",
+      sent:     "送付済み",
+      approved: "承認済み",
+      rejected: "却下",
+      expired:  "期限切れ",
+    },
+    form: {
+      estimateNo:   "見積番号",
+      save:         "保存",
+      saving:       "保存中...",
+      update:       "更新",
+      cancel:       "キャンセル",
+    },
+    table: {
+      edit:   "編集",
+      detail: "詳細",
+    },
+  },
 } as const;

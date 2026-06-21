@@ -5,6 +5,7 @@ import {
   estimateDisplayNo,
   estimateCustomerName,
   estimateVehicleLabel,
+  estimateStatusLabel,
 } from "@/lib/estimates/estimate-types";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -39,7 +40,7 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreat
   if (estimates.length === 0) {
     return (
       <div className="bg-[#1e293b] rounded-xl shadow-lg p-10 text-center">
-        <p className="text-sm text-slate-500">No estimates yet.</p>
+        <p className="text-sm text-slate-500">見積がまだありません</p>
       </div>
     );
   }
@@ -80,7 +81,7 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreat
                 </td>
                 <td className="px-4 py-3">
                   <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[e.status] ?? "bg-slate-700 text-slate-300"}`}>
-                    {e.status.toUpperCase()}
+                    {estimateStatusLabel(e.status)}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-slate-400 text-right whitespace-nowrap hidden md:table-cell">
@@ -102,7 +103,7 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreat
                         onClick={() => onEdit(e)}
                         className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
                       >
-                        Edit
+                        編集
                       </button>
                     )}
                     {onViewDetail && (
@@ -110,7 +111,7 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreat
                         onClick={() => onViewDetail(e)}
                         className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium transition-colors"
                       >
-                        Detail
+                        詳細
                       </button>
                     )}
                     {onCreateWorkOrder &&
