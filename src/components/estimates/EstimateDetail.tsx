@@ -32,11 +32,12 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 interface EstimateDetailProps {
-  estimate: EstimateDB;
-  onClose:  () => void;
+  estimate:             EstimateDB;
+  onClose:              () => void;
+  onCreateWorkOrder?:   () => void;
 }
 
-export default function EstimateDetail({ estimate, onClose }: EstimateDetailProps) {
+export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }: EstimateDetailProps) {
   const customer = estimate.customers;
   const vehicle  = estimate.vehicles;
   const items    = estimate.estimate_items ?? [];
@@ -63,12 +64,22 @@ export default function EstimateDetail({ estimate, onClose }: EstimateDetailProp
             )}
             <p className="text-xs text-slate-500 mt-0.5">見積詳細</p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-2">
+            {onCreateWorkOrder && (
+              <button
+                onClick={onCreateWorkOrder}
+                className="text-xs font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Work Order作成
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Body */}

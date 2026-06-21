@@ -29,12 +29,13 @@ function formatYen(n: number) {
 }
 
 interface EstimateTableProps {
-  estimates:     EstimateDB[];
-  onViewDetail?: (estimate: EstimateDB) => void;
-  onEdit?:       (estimate: EstimateDB) => void;
+  estimates:            EstimateDB[];
+  onViewDetail?:        (estimate: EstimateDB) => void;
+  onEdit?:              (estimate: EstimateDB) => void;
+  onCreateWorkOrder?:   (estimate: EstimateDB) => void;
 }
 
-export default function EstimateTable({ estimates, onViewDetail, onEdit }: EstimateTableProps) {
+export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreateWorkOrder }: EstimateTableProps) {
   if (estimates.length === 0) {
     return (
       <div className="bg-[#1e293b] rounded-xl shadow-lg p-10 text-center">
@@ -110,6 +111,15 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit }: Estim
                         className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium transition-colors"
                       >
                         Detail
+                      </button>
+                    )}
+                    {onCreateWorkOrder &&
+                     (e.status === "approved" || e.status === "APPROVED") && (
+                      <button
+                        onClick={() => onCreateWorkOrder(e)}
+                        className="text-xs text-green-400 hover:text-green-300 font-medium transition-colors"
+                      >
+                        WO作成
                       </button>
                     )}
                   </div>

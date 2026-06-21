@@ -16,6 +16,8 @@ const navItems: NavItem[] = [
   { type: "flow-arrow" },
   { type: "link", href: "/estimates", label: "Estimates", icon: "⊛" },
   { type: "flow-arrow" },
+  { type: "link", href: "/work-orders", label: "Work Orders", icon: "⊟" },
+  { type: "flow-arrow" },
   { type: "link", href: "/pdf", label: "PDF", icon: "⊠" },
 
   { type: "link", href: "/settings", label: "Settings", icon: "⊞" },
