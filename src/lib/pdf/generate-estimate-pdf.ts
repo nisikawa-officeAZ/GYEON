@@ -7,6 +7,7 @@ import { renderEstimatePdf } from "./templates/estimate-pdf";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { createNotification } from "@/lib/notifications/notification";
+import { createAuditLog } from "@/lib/audit/audit";
 
 export async function generateEstimatePdf(
   estimateId: string
@@ -65,6 +66,13 @@ export async function generateEstimatePdf(
     type:    "success",
     title:   "PDFを生成しました",
     message: documentNumber,
+  });
+
+  void createAuditLog({
+    action: "generate_pdf",
+    resource_type: "document",
+    resource_id: estimateId,
+    new_value: { document_type: "estimate", number: estimate.estimate_number },
   });
 
   return { success: true, signedUrl: result.signedUrl };

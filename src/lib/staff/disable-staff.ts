@@ -2,6 +2,7 @@
 
 import { requireRole } from "@/lib/staff/require-role";
 import { createClient } from "@/lib/supabase/server";
+import { createAuditLog } from "@/lib/audit/audit";
 
 interface DisableStaffResult {
   success: boolean;
@@ -58,6 +59,13 @@ export async function disableStaff(staffId: string): Promise<DisableStaffResult>
     if (updateError) {
       return { success: false, error: updateError.message };
     }
+
+    void createAuditLog({
+      action: "delete_staff",
+      resource_type: "staff",
+      resource_id: staffId,
+      new_value: { status: "disabled" },
+    });
 
     return { success: true };
   } catch (err) {

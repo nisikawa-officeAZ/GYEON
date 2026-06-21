@@ -7,6 +7,7 @@ import { renderInvoicePdf } from "./templates/invoice-pdf";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { createNotification } from "@/lib/notifications/notification";
+import { createAuditLog } from "@/lib/audit/audit";
 
 export async function generateInvoicePdf(
   invoiceId: string
@@ -67,6 +68,13 @@ export async function generateInvoicePdf(
     type:    "success",
     title:   "PDFを生成しました",
     message: documentNumber,
+  });
+
+  void createAuditLog({
+    action: "generate_pdf",
+    resource_type: "document",
+    resource_id: invoiceId,
+    new_value: { document_type: "invoice", number: invoice.invoice_number },
   });
 
   return { success: true, signedUrl: result.signedUrl };

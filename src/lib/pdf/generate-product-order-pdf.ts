@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ProductOrderDB } from "@/lib/product-orders/product-order-types";
 import { renderProductOrderPdf } from "./templates/product-order-pdf";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
+import { createAuditLog } from "@/lib/audit/audit";
 
 export async function generateProductOrderPdf(
   orderId: string
@@ -48,5 +49,13 @@ export async function generateProductOrderPdf(
   });
 
   if (!result.success) return { success: false, error: result.error };
+
+  void createAuditLog({
+    action: "generate_pdf",
+    resource_type: "document",
+    resource_id: orderId,
+    new_value: { document_type: "product_order", number: documentNumber },
+  });
+
   return { success: true, signedUrl: result.signedUrl };
 }

@@ -3,6 +3,7 @@
 import { requireRole } from "@/lib/staff/require-role";
 import { createClient } from "@/lib/supabase/server";
 import type { DealerStaffRole } from "@/lib/staff/staff-types";
+import { createAuditLog } from "@/lib/audit/audit";
 
 interface UpdateStaffRoleResult {
   success: boolean;
@@ -57,6 +58,14 @@ export async function updateStaffRole(
     if (updateError) {
       return { success: false, error: updateError.message };
     }
+
+    void createAuditLog({
+      action: "change_role",
+      resource_type: "role",
+      resource_id: staffId,
+      old_value: { role: target.role },
+      new_value: { role: newRole },
+    });
 
     return { success: true };
   } catch (err) {

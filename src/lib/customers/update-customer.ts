@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { createActivityLog } from "@/lib/activity/activity-log";
+import { createAuditLog } from "@/lib/audit/audit";
 
 function str(formData: FormData, key: string): string | null {
   return (formData.get(key) as string | null)?.trim() || null;
@@ -63,6 +64,12 @@ export async function updateCustomer(customerId: string, formData: FormData) {
     customer_id: customerId,
     action:      "updated",
     title:       `顧客を更新: ${lastName}${firstName ? ` ${firstName}` : ""}`.trim(),
+  });
+
+  void createAuditLog({
+    action: "update",
+    resource_type: "customer",
+    resource_id: customerId,
   });
 
   revalidatePath("/customers");

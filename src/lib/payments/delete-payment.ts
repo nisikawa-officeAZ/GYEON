@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { recalculateInvoicePayment } from "./recalculate-invoice-payment";
+import { createAuditLog } from "@/lib/audit/audit";
 
 export async function deletePayment(
   id: string
@@ -34,6 +35,13 @@ export async function deletePayment(
 
   // Recalculate invoice totals after deletion
   await recalculateInvoicePayment(supabase, existing.invoice_id as string, dealer.dealer_id);
+
+  void createAuditLog({
+    action: "delete",
+    resource_type: "payment",
+    resource_id: id,
+    old_value: { invoice_id: existing.invoice_id },
+  });
 
   return { success: true };
 }

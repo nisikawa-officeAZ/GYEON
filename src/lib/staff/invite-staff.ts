@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/staff/require-role";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { createClient } from "@/lib/supabase/server";
 import type { DealerStaffRole, DealerStaffDB } from "@/lib/staff/staff-types";
+import { createAuditLog } from "@/lib/audit/audit";
 
 interface InviteStaffInput {
   email: string;
@@ -49,6 +50,13 @@ export async function inviteStaff(input: InviteStaffInput): Promise<InviteStaffR
     if (error) {
       return { success: false, error: error.message };
     }
+
+    void createAuditLog({
+      action: "create_staff",
+      resource_type: "staff",
+      resource_id: data.id,
+      new_value: { email: input.email, name: input.name, role: input.role },
+    });
 
     return { success: true, data: data as DealerStaffDB };
   } catch (err) {

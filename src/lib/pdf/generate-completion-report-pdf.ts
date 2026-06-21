@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { CompletionReportFullData } from "@/lib/completion-reports/completion-report-types";
 import { renderCompletionReportPdf } from "./templates/completion-report-pdf";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
+import { createAuditLog } from "@/lib/audit/audit";
 
 export async function generateCompletionReportPdf(
   reportId: string
@@ -100,5 +101,13 @@ export async function generateCompletionReportPdf(
   });
 
   if (!result.success) return { success: false, error: result.error };
+
+  void createAuditLog({
+    action: "generate_pdf",
+    resource_type: "document",
+    resource_id: reportId,
+    new_value: { document_type: "completion_report", number: documentNumber },
+  });
+
   return { success: true, signedUrl: result.signedUrl };
 }
