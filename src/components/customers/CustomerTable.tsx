@@ -1,6 +1,6 @@
 "use client";
 
-import { CustomerDB } from "@/lib/customers/customer-types";
+import { CustomerDB, customerDisplayName, customerKanaName } from "@/lib/customers/customer-types";
 
 function formatDate(iso: string) {
   return iso.slice(0, 10);
@@ -39,43 +39,56 @@ export default function CustomerTable({ customers, onEdit }: CustomerTableProps)
             </tr>
           </thead>
           <tbody>
-            {customers.map((c, i) => (
-              <tr
-                key={c.id}
-                className={`border-b border-slate-800 hover:bg-slate-700/30 transition-colors ${
-                  i === customers.length - 1 ? "border-b-0" : ""
-                }`}
-              >
-                <td className="px-4 py-3 font-medium text-slate-100 whitespace-nowrap">{c.name}</td>
-                <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{c.kana ?? "—"}</td>
-                <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{c.phone ?? "—"}</td>
-                <td className="px-4 py-3 text-slate-400 hidden md:table-cell">{c.email ?? "—"}</td>
-                <td className="px-4 py-3 text-slate-400 hidden lg:table-cell max-w-[200px] truncate">{c.address ?? "—"}</td>
-                <td className="px-4 py-3 text-center">
-                  {c.line_id ? (
-                    <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">
-                      ✓
-                    </span>
-                  ) : (
-                    <span className="text-slate-700">—</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-slate-500 text-xs hidden sm:table-cell whitespace-nowrap">
-                  {formatDate(c.created_at)}
-                </td>
-                {onEdit && (
-                  <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => onEdit(c)}
-                      className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
-                    >
-                      Edit
-                    </button>
+            {customers.map((c, i) => {
+              const displayName = customerDisplayName(c);
+              const kanaName    = customerKanaName(c);
+              const address     = [c.prefecture, c.city, c.address1, c.address2]
+                .filter(Boolean).join(" ");
+
+              return (
+                <tr
+                  key={c.id}
+                  className={`border-b border-slate-800 hover:bg-slate-700/30 transition-colors ${
+                    i === customers.length - 1 ? "border-b-0" : ""
+                  }`}
+                >
+                  <td className="px-4 py-3 font-medium text-slate-100 whitespace-nowrap">
+                    {displayName || "—"}
                   </td>
-                )}
-              </tr>
-            ))}
+                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
+                    {kanaName || "—"}
+                  </td>
+                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{c.phone ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-400 hidden md:table-cell">{c.email ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-400 hidden lg:table-cell max-w-[200px] truncate">
+                    {address || "—"}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {c.line_connected ? (
+                      <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">
+                        Connected
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-600">Not Connected</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-slate-500 text-xs hidden sm:table-cell whitespace-nowrap">
+                    {formatDate(c.created_at)}
+                  </td>
+                  {onEdit && (
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => onEdit(c)}
+                        className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

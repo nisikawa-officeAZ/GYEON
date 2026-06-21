@@ -10,25 +10,38 @@ import { revalidatePath } from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 
+function str(formData: FormData, key: string): string | null {
+  return (formData.get(key) as string | null)?.trim() || null;
+}
+
 export async function createCustomer(formData: FormData) {
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "No active dealer membership." };
 
-  const name = (formData.get("name") as string | null)?.trim();
-  if (!name) return { error: "Name is required." };
+  const lastName = str(formData, "last_name");
+  if (!lastName) return { error: "姓（last name）is required." };
 
   const supabase = await createClient();
 
   const { error } = await supabase.from("customers").insert({
-    name,
-    kana:        (formData.get("kana")        as string | null) || null,
-    phone:       (formData.get("phone")       as string | null) || null,
-    email:       (formData.get("email")       as string | null) || null,
-    postal_code: (formData.get("postal_code") as string | null) || null,
-    address:     (formData.get("address")     as string | null) || null,
-    line_id:     (formData.get("line_id")     as string | null) || null,
-    memo:        (formData.get("memo")        as string | null) || null,
-    dealer_id:   dealer.dealer_id,   // server-injected — never from form
+    dealer_id:        dealer.dealer_id,   // server-injected — never from form
+    customer_code:    str(formData, "customer_code"),
+    last_name:        lastName,
+    first_name:       str(formData, "first_name"),
+    last_name_kana:   str(formData, "last_name_kana"),
+    first_name_kana:  str(formData, "first_name_kana"),
+    phone:            str(formData, "phone"),
+    email:            str(formData, "email"),
+    postal_code:      str(formData, "postal_code"),
+    prefecture:       str(formData, "prefecture"),
+    city:             str(formData, "city"),
+    address1:         str(formData, "address1"),
+    address2:         str(formData, "address2"),
+    birthday:         str(formData, "birthday") || null,
+    gender:           str(formData, "gender"),
+    occupation:       str(formData, "occupation"),
+    notes:            str(formData, "notes"),
+    line_user_id:     str(formData, "line_user_id"),
   });
 
   if (error) {

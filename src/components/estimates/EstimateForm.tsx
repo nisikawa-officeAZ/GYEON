@@ -132,7 +132,10 @@ export default function EstimateForm({
           <option value="">Select customer...</option>
           {customers.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name}{c.kana ? ` (${c.kana})` : ""}
+              {[c.last_name, c.first_name].filter(Boolean).join(" ")}
+              {(c.last_name_kana || c.first_name_kana)
+                ? ` (${[c.last_name_kana, c.first_name_kana].filter(Boolean).join(" ")})`
+                : ""}
             </option>
           ))}
         </select>

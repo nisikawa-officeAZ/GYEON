@@ -18,7 +18,33 @@ export async function getCustomers(): Promise<CustomerDB[]> {
 
   const { data, error } = await supabase
     .from("customers")
-    .select("*")
+    .select(`
+      id,
+      dealer_id,
+      customer_code,
+      last_name,
+      first_name,
+      last_name_kana,
+      first_name_kana,
+      phone,
+      email,
+      postal_code,
+      prefecture,
+      city,
+      address1,
+      address2,
+      birthday,
+      gender,
+      occupation,
+      notes,
+      line_user_id,
+      line_display_name,
+      line_picture_url,
+      line_connected,
+      deleted_at,
+      created_at,
+      updated_at
+    `)
     .eq("dealer_id", dealer.dealer_id)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
