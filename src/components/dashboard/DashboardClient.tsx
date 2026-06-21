@@ -196,16 +196,16 @@ export default function DashboardClient({ summary: s, today }: DashboardClientPr
           accent={s.line_stats.friends_count > 0 ? "green" : undefined}
         />
         <SummaryCard
-          label="今月の新規友達"
-          value={String(s.line_stats.this_month_new)}
-          sub={`${monthLabel}`}
-          accent={s.line_stats.this_month_new > 0 ? "blue" : undefined}
+          label={`${monthLabel}送信数`}
+          value={String(s.line_message_stats.this_month_sent)}
+          sub={`失敗: ${s.line_message_stats.this_month_failed}件`}
+          accent={s.line_message_stats.this_month_failed > 0 ? "red" : s.line_message_stats.this_month_sent > 0 ? "blue" : undefined}
         />
         <SummaryCard
-          label="未連携の友達"
-          value={String(s.line_stats.friends_count - s.line_stats.linked_count)}
-          sub="顧客紐付けなし"
-          accent={(s.line_stats.friends_count - s.line_stats.linked_count) > 0 ? "amber" : undefined}
+          label="予約通知数"
+          value={String(s.line_queue_stats.scheduled)}
+          sub={`キュー失敗: ${s.line_queue_stats.failed}件`}
+          accent={s.line_queue_stats.failed > 0 ? "red" : s.line_queue_stats.scheduled > 0 ? "amber" : undefined}
         />
       </div>
 

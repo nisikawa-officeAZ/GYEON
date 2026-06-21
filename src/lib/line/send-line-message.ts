@@ -6,6 +6,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { LineMessage } from "./line-types";
+import { LineMessagePurpose } from "./line-message-types";
+import { createPendingLog, markLogSent, markLogFailed } from "./create-line-message-log";
 
 const LINE_API_BASE = "https://api.line.me/v2/bot";
 
@@ -22,16 +24,22 @@ export async function fetchLineProfile(
   return res.json();
 }
 
-// ─── Send push message ───────────────────────────────────────────────────────
+// ─── Send push message (with log) ────────────────────────────────────────────
 
 export async function sendLineMessage(
   lineUserId: string,
-  messages: LineMessage[]
+  messages: LineMessage[],
+  options?: {
+    purpose?:         LineMessagePurpose;
+    title?:           string | null;
+    body?:            string;
+    customerId?:      string | null;
+    lineCustomerId?:  string | null;
+  }
 ): Promise<{ error: string } | { success: true }> {
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
 
-  // Fetch access token server-side
   const supabase = await createClient();
   const { data: settings } = await supabase
     .from("dealer_settings")
@@ -39,8 +47,23 @@ export async function sendLineMessage(
     .eq("dealer_id", dealer.dealer_id)
     .maybeSingle();
 
-  if (!settings?.line_enabled) return { error: "LINE連携が無効です" };
-  if (!settings?.line_access_token) return { error: "LINEアクセストークンが設定されていません" };
+  if (!settings?.line_enabled)       return { error: "LINE連携が無効です" };
+  if (!settings?.line_access_token)  return { error: "LINEアクセストークンが設定されていません" };
+
+  const purpose: LineMessagePurpose = options?.purpose ?? "manual";
+  const body = options?.body ?? (messages[0] && "text" in messages[0] ? messages[0].text : "");
+
+  // Create pending log
+  const logId = await createPendingLog(supabase, dealer.dealer_id, {
+    line_user_id:     lineUserId,
+    customer_id:      options?.customerId     ?? null,
+    line_customer_id: options?.lineCustomerId ?? null,
+    message_type:     messages[0]?.type       ?? "text",
+    purpose,
+    title:            options?.title          ?? null,
+    body,
+    payload:          { messages },
+  });
 
   // Update last_message_at
   await supabase
@@ -60,10 +83,13 @@ export async function sendLineMessage(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
+    const errMsg = (err as { message?: string }).message ?? res.statusText;
     console.error("sendLineMessage error:", err);
-    return { error: `LINE送信エラー: ${(err as { message?: string }).message ?? res.statusText}` };
+    if (logId) await markLogFailed(supabase, logId, dealer.dealer_id, errMsg);
+    return { error: `LINE送信エラー: ${errMsg}` };
   }
 
+  if (logId) await markLogSent(supabase, logId, dealer.dealer_id);
   return { success: true };
 }
 
@@ -71,9 +97,19 @@ export async function sendLineMessage(
 
 export async function sendLineTextMessage(
   lineUserId: string,
-  text: string
+  text: string,
+  options?: {
+    purpose?:        LineMessagePurpose;
+    title?:          string | null;
+    customerId?:     string | null;
+    lineCustomerId?: string | null;
+  }
 ): Promise<{ error: string } | { success: true }> {
-  return sendLineMessage(lineUserId, [{ type: "text", text }]);
+  return sendLineMessage(
+    lineUserId,
+    [{ type: "text", text }],
+    { ...options, body: text }
+  );
 }
 
 // ─── Completion report notification ──────────────────────────────────────────
@@ -88,10 +124,9 @@ export async function sendCompletionNotification(
 
   const supabase = await createClient();
 
-  // Find LINE connection for this customer
   const { data: lineCustomer } = await supabase
     .from("line_customers")
-    .select("line_user_id, is_friend")
+    .select("id, line_user_id, is_friend")
     .eq("dealer_id", dealer.dealer_id)
     .eq("customer_id", customerId)
     .eq("is_friend", true)
@@ -105,7 +140,12 @@ export async function sendCompletionNotification(
     ? `施工が完了しました。\n作業指示書: ${workOrderNumber}\n\n完了報告書はこちら:\n${reportUrl}`
     : `施工が完了しました。\n作業指示書: ${workOrderNumber}\n\nご不明な点はお気軽にご連絡ください。`;
 
-  return sendLineTextMessage(lineCustomer.line_user_id, text);
+  return sendLineTextMessage(lineCustomer.line_user_id, text, {
+    purpose:        "completion_report",
+    title:          `完了報告 ${workOrderNumber}`,
+    customerId,
+    lineCustomerId: lineCustomer.id,
+  });
 }
 
 // ─── Maintenance reminder notification ───────────────────────────────────────
@@ -121,7 +161,7 @@ export async function sendMaintenanceReminder(
 
   const { data: lineCustomer } = await supabase
     .from("line_customers")
-    .select("line_user_id, is_friend")
+    .select("id, line_user_id, is_friend")
     .eq("dealer_id", dealer.dealer_id)
     .eq("customer_id", customerId)
     .eq("is_friend", true)
@@ -135,5 +175,10 @@ export async function sendMaintenanceReminder(
     ? `そろそろメンテナンスの時期です。\nコーティングのメンテナンスでお車を最良の状態に保ちましょう。\n\nご予約はこちら:\n${bookingUrl}`
     : `そろそろメンテナンスの時期です。\nコーティングのメンテナンスでお車を最良の状態に保ちましょう。\nお気軽にご相談ください。`;
 
-  return sendLineTextMessage(lineCustomer.line_user_id, text);
+  return sendLineTextMessage(lineCustomer.line_user_id, text, {
+    purpose:        "maintenance_reminder",
+    title:          "メンテナンス通知",
+    customerId,
+    lineCustomerId: lineCustomer.id,
+  });
 }

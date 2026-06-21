@@ -26,6 +26,7 @@ const navItems: NavItem[] = [
   { type: "flow-arrow" },
   { type: "link", href: "/pdf", label: "PDF", icon: "⊠" },
 
+  { type: "link", href: "/line", label: "LINE", icon: "⊿" },
   { type: "link", href: "/settings", label: "Settings", icon: "⊞" },
 ];
 

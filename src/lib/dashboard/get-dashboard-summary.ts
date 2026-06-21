@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getLineStats } from "@/lib/line/get-line-customers";
+import { getLineMessageStats } from "@/lib/line/get-line-message-logs";
+import { getLineQueueStats } from "@/lib/line/get-line-notification-queue";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -75,6 +77,12 @@ export interface LineStats {
   this_month_new: number;
 }
 
+export interface LineMessageStats {
+  this_month_sent:   number;
+  this_month_failed: number;
+  total_sent:        number;
+}
+
 export interface DashboardSummary {
   customer_count:   number;
   vehicle_count:    number;
@@ -82,11 +90,14 @@ export interface DashboardSummary {
   work_orders:      WorkOrderCounts;
   invoices:         InvoiceCounts;
   sales:            SalesSummary;
-  line_stats:           LineStats;
-  today_work_orders:    TodayWorkOrder[];
-  upcoming_work_orders: UpcomingWorkOrder[];
-  recent_activities:    RecentActivity[];
+  line_stats:            LineStats;
+  line_message_stats:    LineMessageStats;
+  line_queue_stats:      { scheduled: number; failed: number };
+  today_work_orders:     TodayWorkOrder[];
+  upcoming_work_orders:  UpcomingWorkOrder[];
+  recent_activities:     RecentActivity[];
 }
+
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -137,6 +148,8 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
     recentInvoices,
     recentPayments,
     lineStatsResult,
+    lineMsgStatsResult,
+    lineQueueStatsResult,
   ] = await Promise.all([
     // Customer count
     supabase
@@ -242,6 +255,12 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
 
     // LINE stats
     getLineStats(),
+
+    // LINE message stats
+    getLineMessageStats(),
+
+    // LINE queue stats
+    getLineQueueStats(),
   ]);
 
   // ── Counts ──────────────────────────────────────────────────────────────────
@@ -367,7 +386,9 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
       outstanding,
       yearly_sales:     yearlySales,
     },
-    line_stats:           lineStatsResult,
+    line_stats:            lineStatsResult,
+    line_message_stats:    lineMsgStatsResult,
+    line_queue_stats:      lineQueueStatsResult,
     today_work_orders:    (todayWOResult.data ?? []) as unknown as TodayWorkOrder[],
     upcoming_work_orders: (upcomingWOResult.data ?? []) as unknown as UpcomingWorkOrder[],
     recent_activities:    activities,
