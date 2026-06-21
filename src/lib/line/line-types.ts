@@ -26,21 +26,34 @@ export interface LineCustomerDB {
 }
 
 export interface DealerSettingsDB {
-  id:                 string;
-  dealer_id:          string;
-  line_channel_id:    string | null;
+  id:                  string;
+  dealer_id:           string;
+  line_channel_id:     string | null;
   line_channel_secret: string | null;  // Server-only
-  line_access_token:  string | null;   // Server-only
-  line_liff_id:       string | null;
-  webhook_url:        string | null;
-  line_enabled:       boolean;
-  business_name:      string | null;
-  business_phone:     string | null;
-  business_email:     string | null;
-  business_address:   string | null;
-  logo_url:           string | null;
-  created_at:         string;
-  updated_at:         string;
+  line_access_token:   string | null;  // Server-only
+  line_liff_id:        string | null;
+  webhook_url:         string | null;
+  line_enabled:        boolean;
+  // Business info
+  business_name:       string | null;
+  business_phone:      string | null;
+  business_email:      string | null;
+  business_address:    string | null;
+  business_website:    string | null;
+  logo_url:            string | null;
+  // Document settings (PHASE59)
+  stamp_url:           string | null;
+  pdf_footer:          string | null;
+  invoice_note:        string | null;
+  completion_note:     string | null;
+  tax_rate:            number;
+  terms_and_conditions: string | null;
+  // Onboarding (PHASE59)
+  onboarding_completed:    boolean;
+  onboarding_completed_at: string | null;
+  onboarding_step:         number;
+  created_at:          string;
+  updated_at:          string;
 }
 
 // Safe subset for client — never includes secrets

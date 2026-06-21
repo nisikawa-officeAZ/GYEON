@@ -4,13 +4,20 @@ export type AuditAction =
   | "generate_pdf" | "download_pdf" | "send_line"
   | "create_staff" | "delete_staff"
   // PHASE58
-  | "feature_access_denied";
+  | "feature_access_denied"
+  // PHASE59
+  | "onboarding_started"
+  | "onboarding_step_updated"
+  | "onboarding_completed"
+  | "onboarding_reset";
 
 export type AuditResourceType =
   | "customer" | "vehicle" | "estimate" | "work_order"
   | "completion_report" | "invoice" | "payment"
   | "product_order" | "reservation" | "staff" | "role"
-  | "dealer_setting" | "document" | "super_admin";
+  | "dealer_setting" | "document" | "super_admin"
+  // PHASE59
+  | "onboarding";
 
 export interface AuditLogDB {
   id:            string;
@@ -52,9 +59,13 @@ export function auditActionLabel(action: AuditAction): string {
     generate_pdf: "PDF生成",
     download_pdf: "PDFダウンロード",
     send_line:    "LINE送信",
-    create_staff:          "スタッフ招待",
-    delete_staff:          "スタッフ削除",
-    feature_access_denied: "機能アクセス拒否",
+    create_staff:            "スタッフ招待",
+    delete_staff:            "スタッフ削除",
+    feature_access_denied:   "機能アクセス拒否",
+    onboarding_started:      "オンボーディング開始",
+    onboarding_step_updated: "オンボーディング進捗更新",
+    onboarding_completed:    "オンボーディング完了",
+    onboarding_reset:        "オンボーディングリセット",
   };
   return map[action];
 }
@@ -75,6 +86,7 @@ export function auditResourceTypeLabel(type: AuditResourceType): string {
     dealer_setting:    "ディーラー設定",
     document:          "ドキュメント",
     super_admin:       "スーパーアドミン",
+    onboarding:        "オンボーディング",
   };
   return map[type];
 }
