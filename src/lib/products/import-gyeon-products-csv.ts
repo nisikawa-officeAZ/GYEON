@@ -79,7 +79,13 @@ function rowToObject(headers: string[], values: string[]): CsvRow {
 export async function importGyeonProductsCsv(
   csvText: string,
 ): Promise<ImportResult> {
-  const supabase = await createClient();
+  let supabase: Awaited<ReturnType<typeof createClient>>;
+  try {
+    supabase = await createClient();
+  } catch (err) {
+    console.error("[importGyeonProductsCsv] supabase init failed:", err);
+    return { inserted: 0, updated: 0, errors: [{ row: 0, sku: "", message: "DB接続に失敗しました" }] };
+  }
   const result: ImportResult = { inserted: 0, updated: 0, errors: [] };
 
   const { headers, rows } = parseCsv(csvText);
