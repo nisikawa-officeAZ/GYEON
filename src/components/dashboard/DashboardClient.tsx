@@ -1,6 +1,13 @@
 "use client";
 
 import { DashboardSummary, TodayWorkOrder, UpcomingWorkOrder, RecentActivity, MaintenanceDashboardStats } from "@/lib/dashboard/get-dashboard-summary";
+import {
+  DealerPlanInfo,
+  planLabel,
+  planBadgeColor,
+  subscriptionStatusLabel,
+  subscriptionStatusColor,
+} from "@/lib/plans/plan-types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -127,11 +134,12 @@ const ACTIVITY_COLOR: Record<string, string> = {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 interface DashboardClientProps {
-  summary: DashboardSummary;
-  today:   string;
+  summary:  DashboardSummary;
+  today:    string;
+  planInfo: DealerPlanInfo;
 }
 
-export default function DashboardClient({ summary: s, today }: DashboardClientProps) {
+export default function DashboardClient({ summary: s, today, planInfo }: DashboardClientProps) {
   const now = new Date(today);
   const monthLabel = `${now.getFullYear()}年${now.getMonth() + 1}月`;
   const yearLabel  = `${now.getFullYear()}年`;
@@ -141,6 +149,30 @@ export default function DashboardClient({ summary: s, today }: DashboardClientPr
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-slate-100">ダッシュボード</h1>
         <p className="text-xs text-slate-500">{formatDate(today)}</p>
+      </div>
+
+      {/* ── Plan card ────────────────────────────────────────────────────── */}
+      <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-md border text-xs font-bold tracking-wide ${planBadgeColor(planInfo.plan)}`}>
+            {planLabel(planInfo.plan)}
+          </span>
+          <span className={`text-xs font-medium ${subscriptionStatusColor(planInfo.subscription_status)}`}>
+            {subscriptionStatusLabel(planInfo.subscription_status)}
+          </span>
+        </div>
+        <div className="text-right">
+          {planInfo.started_at && (
+            <p className="text-[10px] text-slate-500">
+              開始: {planInfo.started_at.slice(0, 10)}
+            </p>
+          )}
+          {planInfo.expired_at && (
+            <p className="text-[10px] text-slate-500">
+              期限: {planInfo.expired_at.slice(0, 10)}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* ── Top KPI cards ─────────────────────────────────────────────────── */}
