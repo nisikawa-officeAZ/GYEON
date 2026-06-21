@@ -22,9 +22,10 @@ export async function getGyeonServiceEstimates(): Promise<GyeonServiceEstimateDB
       *,
       estimates (
         estimate_no,
+        estimate_number,
         status,
-        customers ( name, phone, email ),
-        vehicles  ( manufacturer, model, year, grade, license_plate )
+        customers ( last_name, first_name, phone, email ),
+        vehicles  ( maker, model, year, grade, plate_number )
       )
     `)
     .eq("dealer_id", dealer.dealer_id)

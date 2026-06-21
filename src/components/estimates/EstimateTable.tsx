@@ -1,8 +1,19 @@
 "use client";
 
-import { EstimateDB, EstimateStatus } from "@/lib/estimates/estimate-types";
+import {
+  EstimateDB,
+  estimateDisplayNo,
+  estimateCustomerName,
+  estimateVehicleLabel,
+} from "@/lib/estimates/estimate-types";
 
-const STATUS_BADGE: Record<EstimateStatus, string> = {
+const STATUS_BADGE: Record<string, string> = {
+  draft:    "bg-slate-600 text-slate-100",
+  sent:     "bg-blue-600 text-white",
+  approved: "bg-green-600 text-white",
+  rejected: "bg-red-600 text-white",
+  expired:  "bg-amber-600 text-white",
+  // Legacy uppercase
   DRAFT:    "bg-slate-600 text-slate-100",
   SENT:     "bg-blue-600 text-white",
   APPROVED: "bg-green-600 text-white",
@@ -38,14 +49,14 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit }: Estim
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-700">
-              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Estimate No</th>
-              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden sm:table-cell">Customer</th>
-              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden md:table-cell">Vehicle</th>
-              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">Status</th>
-              <th className="text-right text-xs font-medium text-slate-400 px-4 py-3 hidden md:table-cell">Subtotal</th>
-              <th className="text-right text-xs font-medium text-slate-400 px-4 py-3 hidden md:table-cell">Tax</th>
-              <th className="text-right text-xs font-medium text-slate-400 px-4 py-3">Total</th>
-              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden sm:table-cell">Created</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">No</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden sm:table-cell">顧客</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden md:table-cell">車両</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3">ステータス</th>
+              <th className="text-right text-xs font-medium text-slate-400 px-4 py-3 hidden md:table-cell">小計</th>
+              <th className="text-right text-xs font-medium text-slate-400 px-4 py-3 hidden md:table-cell">消費税</th>
+              <th className="text-right text-xs font-medium text-slate-400 px-4 py-3">合計</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden sm:table-cell">作成日</th>
               <th className="text-center text-xs font-medium text-slate-400 px-4 py-3" />
             </tr>
           </thead>
@@ -57,24 +68,25 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit }: Estim
                   i === estimates.length - 1 ? "border-b-0" : ""
                 }`}
               >
-                <td className="px-4 py-3 font-medium text-slate-100 whitespace-nowrap">{e.estimate_no}</td>
+                <td className="px-4 py-3 font-medium text-slate-100 whitespace-nowrap">
+                  {estimateDisplayNo(e)}
+                </td>
                 <td className="px-4 py-3 text-slate-400 whitespace-nowrap hidden sm:table-cell">
-                  {e.customers?.name ?? "—"}
+                  {estimateCustomerName(e.customers)}
                 </td>
                 <td className="px-4 py-3 text-slate-400 whitespace-nowrap hidden md:table-cell">
-                  {[e.vehicles?.manufacturer, e.vehicles?.model, e.vehicles?.year]
-                    .filter(Boolean).join(" ") || "—"}
+                  {estimateVehicleLabel(e.vehicles)}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[e.status]}`}>
-                    {e.status}
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[e.status] ?? "bg-slate-700 text-slate-300"}`}>
+                    {e.status.toUpperCase()}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-slate-400 text-right whitespace-nowrap hidden md:table-cell">
                   {formatYen(e.subtotal)}
                 </td>
                 <td className="px-4 py-3 text-slate-400 text-right whitespace-nowrap hidden md:table-cell">
-                  {formatYen(e.tax)}
+                  {formatYen(e.tax_amount ?? e.tax ?? 0)}
                 </td>
                 <td className="px-4 py-3 text-slate-100 font-medium text-right whitespace-nowrap">
                   {formatYen(e.total)}
@@ -97,7 +109,7 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit }: Estim
                         onClick={() => onViewDetail(e)}
                         className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium transition-colors"
                       >
-                        View Detail
+                        Detail
                       </button>
                     )}
                   </div>

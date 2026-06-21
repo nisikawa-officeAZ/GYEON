@@ -3,41 +3,128 @@
 import { useState, useTransition } from "react";
 import { createEstimate } from "@/lib/estimates/create-estimate";
 import { updateEstimate } from "@/lib/estimates/update-estimate";
-import { EstimateDB, EstimateStatus } from "@/lib/estimates/estimate-types";
+import {
+  EstimateDB,
+  EstimateStatus,
+  EstimateCategory,
+  EstimateItemDB,
+} from "@/lib/estimates/estimate-types";
 import { CustomerDB } from "@/lib/customers/customer-types";
 import { VehicleDB }  from "@/lib/vehicles/vehicle-types";
 
+// ─── Item form state ──────────────────────────────────────────────────────────
+
+interface ItemRow {
+  key:           number;   // local react key
+  category:      EstimateCategory;
+  item_name:     string;
+  description:   string;
+  quantity:      string;
+  unit_price:    string;
+  discount_rate: string;
+}
+
+let _itemKey = 0;
+function nextKey() { return ++_itemKey; }
+
+function emptyItem(): ItemRow {
+  return {
+    key:           nextKey(),
+    category:      "other",
+    item_name:     "",
+    description:   "",
+    quantity:      "1",
+    unit_price:    "0",
+    discount_rate: "0",
+  };
+}
+
+function itemFromDB(item: EstimateItemDB): ItemRow {
+  return {
+    key:           nextKey(),
+    category:      item.category,
+    item_name:     item.item_name,
+    description:   item.description ?? "",
+    quantity:      String(item.quantity),
+    unit_price:    String(item.unit_price),
+    discount_rate: String(item.discount_rate),
+  };
+}
+
+function lineTotal(item: ItemRow): number {
+  const qty  = Number(item.quantity)      || 0;
+  const up   = Number(item.unit_price)    || 0;
+  const disc = Number(item.discount_rate) || 0;
+  return Math.round(qty * up * (1 - disc / 100));
+}
+
+// ─── Estimate form state ──────────────────────────────────────────────────────
+
 interface FormFields {
-  customer_id: string;
-  vehicle_id:  string;
-  estimate_no: string;
-  status:      EstimateStatus;
-  subtotal:    string;
-  tax:         string;
-  total:       string;
+  customer_id:     string;
+  vehicle_id:      string;
+  estimate_no:     string;
+  status:          string;
+  title:           string;
+  tax_rate:        string;
+  discount_amount: string;
+  valid_until:     string;
+  notes:           string;
+  internal_memo:   string;
 }
 
 const EMPTY: FormFields = {
-  customer_id: "",
-  vehicle_id:  "",
-  estimate_no: "",
-  status:      "DRAFT",
-  subtotal:    "0",
-  tax:         "0",
-  total:       "0",
+  customer_id:     "",
+  vehicle_id:      "",
+  estimate_no:     "",
+  status:          "draft",
+  title:           "",
+  tax_rate:        "10",
+  discount_amount: "0",
+  valid_until:     "",
+  notes:           "",
+  internal_memo:   "",
 };
 
 function fromDB(e: EstimateDB): FormFields {
   return {
-    customer_id: e.customer_id,
-    vehicle_id:  e.vehicle_id,
-    estimate_no: e.estimate_no,
-    status:      e.status,
-    subtotal:    String(e.subtotal),
-    tax:         String(e.tax),
-    total:       String(e.total),
+    customer_id:     e.customer_id,
+    vehicle_id:      e.vehicle_id,
+    estimate_no:     e.estimate_number ?? e.estimate_no ?? "",
+    status:          e.status,
+    title:           e.title           ?? "",
+    tax_rate:        String(e.tax_rate ?? 10),
+    discount_amount: String(e.discount_amount ?? 0),
+    valid_until:     e.valid_until     ?? "",
+    notes:           e.notes           ?? "",
+    internal_memo:   e.internal_memo   ?? "",
   };
 }
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const CATEGORIES: { value: EstimateCategory; label: string }[] = [
+  { value: "coating",  label: "コーティング" },
+  { value: "ppf",      label: "PPF" },
+  { value: "window",   label: "ウィンドウ" },
+  { value: "interior", label: "インテリア" },
+  { value: "glass",    label: "ガラス" },
+  { value: "other",    label: "その他" },
+];
+
+const STATUSES: { value: EstimateStatus; label: string }[] = [
+  { value: "draft",    label: "DRAFT" },
+  { value: "sent",     label: "SENT" },
+  { value: "approved", label: "APPROVED" },
+  { value: "rejected", label: "REJECTED" },
+  { value: "expired",  label: "EXPIRED" },
+];
+
+const inputClass =
+  "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors";
+const labelClass = "text-xs font-medium text-slate-400";
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 interface EstimateFormProps {
   estimate?:  EstimateDB;
@@ -47,33 +134,77 @@ interface EstimateFormProps {
   onSuccess?: () => void;
 }
 
-const inputClass =
-  "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors";
-const labelClass = "text-xs font-medium text-slate-400";
-
 export default function EstimateForm({
   estimate, customers, vehicles, onCancel, onSuccess,
 }: EstimateFormProps) {
   const isEdit = !!estimate;
+
   const [form,    setForm]    = useState<FormFields>(estimate ? fromDB(estimate) : EMPTY);
+  const [items,   setItems]   = useState<ItemRow[]>(
+    estimate?.estimate_items?.length
+      ? estimate.estimate_items
+          .slice()
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map(itemFromDB)
+      : [emptyItem()]
+  );
   const [error,   setError]   = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function set<K extends keyof FormFields>(key: K, value: FormFields[K]) {
+  function setField<K extends keyof FormFields>(key: K, value: FormFields[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  // Filter vehicles to only those belonging to the selected customer
+  // Filter vehicles to only those belonging to the selected customer.
   const filteredVehicles = form.customer_id
     ? vehicles.filter((v) => v.customer_id === form.customer_id)
     : vehicles;
 
+  // ── Computed totals ──────────────────────────────────────────────────────────
+  const subtotal      = items.reduce((s, item) => s + lineTotal(item), 0);
+  const discountAmt   = Number(form.discount_amount) || 0;
+  const taxRate       = Number(form.tax_rate)        || 10;
+  const taxAmount     = Math.floor((subtotal - discountAmt) * taxRate / 100);
+  const total         = subtotal - discountAmt + taxAmount;
+
+  // ── Item row helpers ─────────────────────────────────────────────────────────
+  function updateItem(key: number, patch: Partial<ItemRow>) {
+    setItems((prev) => prev.map((r) => r.key === key ? { ...r, ...patch } : r));
+  }
+
+  function addItem() {
+    setItems((prev) => [...prev, emptyItem()]);
+  }
+
+  function removeItem(key: number) {
+    setItems((prev) => prev.filter((r) => r.key !== key));
+  }
+
+  // ── Submit ───────────────────────────────────────────────────────────────────
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
     const fd = new FormData();
     (Object.keys(form) as (keyof FormFields)[]).forEach((k) => fd.set(k, form[k]));
+
+    // Computed amounts
+    fd.set("subtotal",       String(subtotal));
+    fd.set("tax_amount",     String(taxAmount));
+    fd.set("discount_amount", String(discountAmt));
+    fd.set("total",          String(total));
+
+    // Line items serialized as JSON
+    const itemsPayload = items.map((item, i) => ({
+      category:      item.category,
+      item_name:     item.item_name,
+      description:   item.description,
+      quantity:      Number(item.quantity)      || 1,
+      unit_price:    Number(item.unit_price)    || 0,
+      discount_rate: Number(item.discount_rate) || 0,
+      sort_order:    i,
+    }));
+    fd.set("items_json", JSON.stringify(itemsPayload));
 
     startTransition(async () => {
       const result = isEdit && estimate
@@ -89,8 +220,9 @@ export default function EstimateForm({
     });
   }
 
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
       {error && (
         <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
@@ -98,38 +230,48 @@ export default function EstimateForm({
         </div>
       )}
 
-      {/* Estimate No */}
-      <div className="flex flex-col gap-1">
-        <label className={labelClass}>
-          Estimate No <span className="text-red-400 ml-1">*</span>
-        </label>
-        <input
-          type="text"
-          name="estimate_no"
-          value={form.estimate_no}
-          onChange={(e) => set("estimate_no", e.target.value)}
-          placeholder="EST-2024-001"
-          required
-          className={inputClass}
-        />
+      {/* ── Estimate No & Title ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
+          <label className={labelClass}>
+            Estimate No <span className="text-red-400 ml-1">*</span>
+          </label>
+          <input
+            type="text"
+            value={form.estimate_no}
+            onChange={(e) => setField("estimate_no", e.target.value)}
+            placeholder="EST-2024-001"
+            required
+            className={inputClass}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className={labelClass}>タイトル</label>
+          <input
+            type="text"
+            value={form.title}
+            onChange={(e) => setField("title", e.target.value)}
+            placeholder="例: コーティング施工一式"
+            className={inputClass}
+          />
+        </div>
       </div>
 
-      {/* Customer */}
+      {/* ── Customer ── */}
       <div className="flex flex-col gap-1">
         <label className={labelClass}>
-          Customer <span className="text-red-400 ml-1">*</span>
+          顧客 <span className="text-red-400 ml-1">*</span>
         </label>
         <select
-          name="customer_id"
           value={form.customer_id}
           onChange={(e) => {
-            set("customer_id", e.target.value);
-            set("vehicle_id", ""); // reset vehicle when customer changes
+            setField("customer_id", e.target.value);
+            setField("vehicle_id", "");
           }}
           required
           className={inputClass}
         >
-          <option value="">Select customer...</option>
+          <option value="">顧客を選択...</option>
           {customers.map((c) => (
             <option key={c.id} value={c.id}>
               {[c.last_name, c.first_name].filter(Boolean).join(" ")}
@@ -140,24 +282,23 @@ export default function EstimateForm({
           ))}
         </select>
         {customers.length === 0 && (
-          <p className="text-[10px] text-slate-600">No customers found. Create a customer first.</p>
+          <p className="text-[10px] text-slate-600">顧客が登録されていません。先に顧客を作成してください。</p>
         )}
       </div>
 
-      {/* Vehicle */}
+      {/* ── Vehicle ── */}
       <div className="flex flex-col gap-1">
         <label className={labelClass}>
-          Vehicle <span className="text-red-400 ml-1">*</span>
+          車両 <span className="text-red-400 ml-1">*</span>
         </label>
         <select
-          name="vehicle_id"
           value={form.vehicle_id}
-          onChange={(e) => set("vehicle_id", e.target.value)}
+          onChange={(e) => setField("vehicle_id", e.target.value)}
           required
           disabled={!form.customer_id}
           className={inputClass}
         >
-          <option value="">Select vehicle...</option>
+          <option value="">車両を選択...</option>
           {filteredVehicles.map((v) => (
             <option key={v.id} value={v.id}>
               {[v.maker, v.model, v.plate_number].filter(Boolean).join(" ") || v.id}
@@ -165,48 +306,206 @@ export default function EstimateForm({
           ))}
         </select>
         {form.customer_id && filteredVehicles.length === 0 && (
-          <p className="text-[10px] text-slate-600">No vehicles for this customer. Create a vehicle first.</p>
+          <p className="text-[10px] text-slate-600">この顧客の車両がありません。先に車両を登録してください。</p>
         )}
         {!form.customer_id && (
-          <p className="text-[10px] text-slate-600">Select a customer first.</p>
+          <p className="text-[10px] text-slate-600">先に顧客を選択してください。</p>
         )}
       </div>
 
-      {/* Status */}
-      <div className="flex flex-col gap-1">
-        <label className={labelClass}>Status</label>
-        <select
-          name="status"
-          value={form.status}
-          onChange={(e) => set("status", e.target.value as EstimateStatus)}
-          className={inputClass}
-        >
-          <option value="DRAFT">DRAFT</option>
-          <option value="SENT">SENT</option>
-          <option value="APPROVED">APPROVED</option>
-          <option value="REJECTED">REJECTED</option>
-        </select>
+      {/* ── Status & Valid Until ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
+          <label className={labelClass}>ステータス</label>
+          <select
+            value={form.status}
+            onChange={(e) => setField("status", e.target.value as EstimateStatus)}
+            className={inputClass}
+          >
+            {STATUSES.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className={labelClass}>有効期限</label>
+          <input
+            type="date"
+            value={form.valid_until}
+            onChange={(e) => setField("valid_until", e.target.value)}
+            className={inputClass}
+          />
+        </div>
       </div>
 
-      {/* Amounts */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {(["subtotal", "tax", "total"] as const).map((key) => (
-          <div key={key} className="flex flex-col gap-1">
-            <label className={labelClass}>{key.charAt(0).toUpperCase() + key.slice(1)}</label>
-            <input
-              type="number"
-              name={key}
-              value={form[key]}
-              onChange={(e) => set(key, e.target.value)}
-              min="0"
-              placeholder="0"
-              className={inputClass}
-            />
+      {/* ── Line Items ── */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <label className={labelClass}>明細</label>
+          <button
+            type="button"
+            onClick={addItem}
+            className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium transition-colors"
+          >
+            + 行を追加
+          </button>
+        </div>
+
+        <div className="border border-slate-700 rounded-lg overflow-hidden">
+          {/* Item table header */}
+          <div className="grid grid-cols-[1fr_80px_90px_70px_80px_32px] gap-1 px-3 py-2 bg-slate-800/50 text-[10px] font-medium text-slate-500">
+            <span>品目</span>
+            <span className="text-right">単価</span>
+            <span className="text-right">数量</span>
+            <span className="text-right">割引%</span>
+            <span className="text-right">小計</span>
+            <span />
           </div>
-        ))}
+
+          {/* Item rows */}
+          {items.map((item) => (
+            <div key={item.key} className="border-t border-slate-700/60 px-3 py-2 flex flex-col gap-1.5">
+              {/* Row 1: category + item_name */}
+              <div className="flex gap-2">
+                <select
+                  value={item.category}
+                  onChange={(e) => updateItem(item.key, { category: e.target.value as EstimateCategory })}
+                  className="bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-[11px] text-slate-400 focus:outline-none focus:border-[#1d4ed8] shrink-0 w-28"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={item.item_name}
+                  onChange={(e) => updateItem(item.key, { item_name: e.target.value })}
+                  placeholder="品目名"
+                  className="flex-1 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8]"
+                />
+              </div>
+              {/* Row 2: quantities */}
+              <div className="grid grid-cols-[1fr_80px_90px_70px_80px_32px] gap-1 items-center">
+                <input
+                  type="text"
+                  value={item.description}
+                  onChange={(e) => updateItem(item.key, { description: e.target.value })}
+                  placeholder="説明（省略可）"
+                  className="bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-xs text-slate-400 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8]"
+                />
+                <input
+                  type="number"
+                  value={item.unit_price}
+                  onChange={(e) => updateItem(item.key, { unit_price: e.target.value })}
+                  min="0"
+                  className="bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 text-right focus:outline-none focus:border-[#1d4ed8]"
+                />
+                <input
+                  type="number"
+                  value={item.quantity}
+                  onChange={(e) => updateItem(item.key, { quantity: e.target.value })}
+                  min="0"
+                  step="0.01"
+                  className="bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 text-right focus:outline-none focus:border-[#1d4ed8]"
+                />
+                <input
+                  type="number"
+                  value={item.discount_rate}
+                  onChange={(e) => updateItem(item.key, { discount_rate: e.target.value })}
+                  min="0"
+                  max="100"
+                  className="bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 text-right focus:outline-none focus:border-[#1d4ed8]"
+                />
+                <span className="text-xs text-slate-300 text-right font-medium">
+                  ¥{lineTotal(item).toLocaleString("ja-JP")}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeItem(item.key)}
+                  className="text-slate-600 hover:text-red-400 text-sm leading-none transition-colors"
+                  title="削除"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {items.length === 0 && (
+            <div className="px-3 py-4 text-center text-xs text-slate-600">
+              明細がありません。「+ 行を追加」から追加してください。
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Buttons */}
+      {/* ── Totals ── */}
+      <div className="flex justify-end">
+        <div className="w-60 flex flex-col gap-1.5">
+          <div className="flex justify-between text-xs text-slate-400">
+            <span>小計</span>
+            <span>¥{subtotal.toLocaleString("ja-JP")}</span>
+          </div>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-xs text-red-400 shrink-0">値引き</span>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-red-400">¥</span>
+              <input
+                type="number"
+                value={form.discount_amount}
+                onChange={(e) => setField("discount_amount", e.target.value)}
+                min="0"
+                className="w-24 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-xs text-red-400 text-right focus:outline-none focus:border-[#1d4ed8]"
+              />
+            </div>
+          </div>
+          <div className="flex justify-between items-center gap-2">
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-slate-400">消費税</span>
+              <input
+                type="number"
+                value={form.tax_rate}
+                onChange={(e) => setField("tax_rate", e.target.value)}
+                min="0"
+                max="100"
+                className="w-12 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-xs text-slate-400 text-right focus:outline-none focus:border-[#1d4ed8]"
+              />
+              <span className="text-xs text-slate-400">%</span>
+            </div>
+            <span className="text-xs text-slate-400">¥{taxAmount.toLocaleString("ja-JP")}</span>
+          </div>
+          <div className="flex justify-between border-t border-slate-600 pt-2 mt-1">
+            <span className="text-sm font-bold text-slate-100">合計</span>
+            <span className="text-base font-bold text-slate-100">¥{total.toLocaleString("ja-JP")}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Notes & Internal Memo ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
+          <label className={labelClass}>備考（顧客向け）</label>
+          <textarea
+            value={form.notes}
+            onChange={(e) => setField("notes", e.target.value)}
+            rows={3}
+            placeholder="見積書に記載するメモ..."
+            className={`${inputClass} resize-none`}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className={labelClass}>内部メモ</label>
+          <textarea
+            value={form.internal_memo}
+            onChange={(e) => setField("internal_memo", e.target.value)}
+            rows={3}
+            placeholder="社内向けメモ（PDFには出力されません）..."
+            className={`${inputClass} resize-none`}
+          />
+        </div>
+      </div>
+
+      {/* ── Buttons ── */}
       <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
         <button
           type="button"

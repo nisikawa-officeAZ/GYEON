@@ -62,7 +62,9 @@ export default function GyeonServicePdfPreview({ gyeonEstimate: est }: GyeonServ
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">お客様</p>
               {customer ? (
                 <>
-                  <p className="font-bold text-gray-900">{customer.name} 様</p>
+                  <p className="font-bold text-gray-900">
+                    {[customer.last_name, customer.first_name].filter(Boolean).join(" ")} 様
+                  </p>
                   {customer.phone && <p className="text-sm text-gray-600 mt-1">{customer.phone}</p>}
                   {customer.email && <p className="text-sm text-gray-600">{customer.email}</p>}
                 </>
@@ -75,15 +77,15 @@ export default function GyeonServicePdfPreview({ gyeonEstimate: est }: GyeonServ
               {vehicle ? (
                 <>
                   <p className="font-bold text-gray-900">
-                    {[vehicle.manufacturer, vehicle.model].filter(Boolean).join(" ") || "—"}
+                    {[vehicle.maker, vehicle.model].filter(Boolean).join(" ") || "—"}
                   </p>
                   {(vehicle.year || vehicle.grade) && (
                     <p className="text-sm text-gray-600">
                       {[vehicle.year && `${vehicle.year}年`, vehicle.grade].filter(Boolean).join(" / ")}
                     </p>
                   )}
-                  {vehicle.license_plate && (
-                    <p className="text-sm text-gray-600 mt-1">{vehicle.license_plate}</p>
+                  {vehicle.plate_number && (
+                    <p className="text-sm text-gray-600 mt-1">{vehicle.plate_number}</p>
                   )}
                 </>
               ) : (

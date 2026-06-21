@@ -23,15 +23,21 @@ export interface GyeonServiceEstimateDB {
 
   // Joined data — populated when select includes relations (PDF-friendly)
   estimates?: {
-    estimate_no: string;
-    status:      string;
-    customers?:  { name: string; phone: string | null; email: string | null } | null;
+    estimate_no:     string;
+    estimate_number: string | null;
+    status:          string;
+    customers?:  {
+      last_name:  string | null;
+      first_name: string | null;
+      phone:      string | null;
+      email:      string | null;
+    } | null;
     vehicles?:   {
-      manufacturer:  string | null;
-      model:         string | null;
-      year:          string | null;
-      grade:         string | null;
-      license_plate: string | null;
+      maker:        string | null;
+      model:        string | null;
+      year:         string | null;
+      grade:        string | null;
+      plate_number: string | null;
     } | null;
   } | null;
 }

@@ -46,8 +46,12 @@ export default function GyeonServiceDetail({ gyeonEstimate, onClose }: GyeonServ
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                 Customer / Vehicle
               </p>
-              {est.estimates.customers?.name && (
-                <Row label="Customer" value={est.estimates.customers.name} />
+              {(est.estimates.customers?.last_name || est.estimates.customers?.first_name) && (
+                <Row
+                  label="Customer"
+                  value={[est.estimates.customers.last_name, est.estimates.customers.first_name]
+                    .filter(Boolean).join(" ")}
+                />
               )}
               {est.estimates.customers?.phone && (
                 <Row label="Phone" value={est.estimates.customers.phone} />
@@ -56,15 +60,15 @@ export default function GyeonServiceDetail({ gyeonEstimate, onClose }: GyeonServ
                 <Row
                   label="Vehicle"
                   value={[
-                    est.estimates.vehicles.manufacturer,
+                    est.estimates.vehicles.maker,
                     est.estimates.vehicles.model,
                     est.estimates.vehicles.year,
                     est.estimates.vehicles.grade,
                   ].filter(Boolean).join(" ")}
                 />
               )}
-              {est.estimates.vehicles?.license_plate && (
-                <Row label="Plate" value={est.estimates.vehicles.license_plate} />
+              {est.estimates.vehicles?.plate_number && (
+                <Row label="Plate" value={est.estimates.vehicles.plate_number} />
               )}
             </section>
           )}

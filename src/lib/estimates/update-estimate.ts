@@ -1,34 +1,61 @@
 "use server";
 
 // Server Action — updates an existing estimate.
+// Line items are replaced (delete + re-insert) on every save.
 //
 // Security rules:
 //   1. Update is scoped by BOTH id AND dealer_id from dealer_members.
-//      A user cannot update an estimate belonging to another dealer.
-//   2. If customer_id is changed, the new customer_id is validated against dealer_id.
-//   3. If vehicle_id is changed, the new vehicle_id is validated against dealer_id.
-//   4. dealer_id is NEVER changeable via this action.
+//   2. customer_id and vehicle_id changes are validated against dealer_id.
+//   3. dealer_id is NEVER changeable via this action.
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath }   from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
-import { EstimateStatus }   from "./estimate-types";
+import { EstimateCategory } from "./estimate-types";
+
+interface ItemInput {
+  category:      EstimateCategory;
+  item_name:     string;
+  description:   string;
+  quantity:      number;
+  unit_price:    number;
+  discount_rate: number;
+  sort_order:    number;
+}
+
+function str(formData: FormData, key: string): string | null {
+  return (formData.get(key) as string | null)?.trim() || null;
+}
+
+function num(formData: FormData, key: string, fallback = 0): number {
+  const v = (formData.get(key) as string | null)?.trim();
+  if (!v) return fallback;
+  const n = Number(v);
+  return isNaN(n) ? fallback : n;
+}
 
 export async function updateEstimate(estimateId: string, formData: FormData) {
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "No active dealer membership." };
 
-  const customerId  = (formData.get("customer_id")  as string | null)?.trim();
-  const vehicleId   = (formData.get("vehicle_id")   as string | null)?.trim();
-  const estimateNo  = (formData.get("estimate_no")  as string | null)?.trim();
-  const status      = (formData.get("status")       as string | null) ?? "DRAFT";
-  const subtotal    = Number(formData.get("subtotal") ?? 0);
-  const tax         = Number(formData.get("tax")      ?? 0);
-  const total       = Number(formData.get("total")    ?? 0);
+  const customerId     = str(formData, "customer_id");
+  const vehicleId      = str(formData, "vehicle_id");
+  const estimateNo     = str(formData, "estimate_no") ?? "";
+  const status         = str(formData, "status") ?? "draft";
+  const title          = str(formData, "title");
+  const subtotal       = num(formData, "subtotal");
+  const taxRate        = num(formData, "tax_rate", 10);
+  const taxAmount      = num(formData, "tax_amount");
+  const discountAmount = num(formData, "discount_amount");
+  const total          = num(formData, "total");
+  const validUntil     = str(formData, "valid_until");
+  const notes          = str(formData, "notes");
+  const internalMemo   = str(formData, "internal_memo");
+  const itemsJson      = str(formData, "items_json");
 
-  if (!customerId)  return { error: "Customer is required." };
-  if (!vehicleId)   return { error: "Vehicle is required." };
-  if (!estimateNo)  return { error: "Estimate No is required." };
+  if (!customerId) return { error: "Customer is required." };
+  if (!vehicleId)  return { error: "Vehicle is required." };
+  if (!estimateNo) return { error: "Estimate No is required." };
 
   const supabase = await createClient();
 
@@ -56,24 +83,79 @@ export async function updateEstimate(estimateId: string, formData: FormData) {
     return { error: "Vehicle not found or does not belong to your dealer." };
   }
 
-  const { error } = await supabase
+  // Update the estimate record.
+  const { error: updateError } = await supabase
     .from("estimates")
     .update({
-      customer_id:  customerId,
-      vehicle_id:   vehicleId,
-      estimate_no:  estimateNo,
-      status:       status as EstimateStatus,
-      subtotal:     isNaN(subtotal) ? 0 : subtotal,
-      tax:          isNaN(tax)      ? 0 : tax,
-      total:        isNaN(total)    ? 0 : total,
-      updated_at:   new Date().toISOString(),
+      customer_id:     customerId,
+      vehicle_id:      vehicleId,
+      estimate_no:     estimateNo,
+      estimate_number: estimateNo,
+      title:           title,
+      status:          status,
+      subtotal:        subtotal,
+      tax:             taxAmount,      // legacy column mirror
+      tax_rate:        taxRate,
+      tax_amount:      taxAmount,
+      discount_amount: discountAmount,
+      total:           total,
+      valid_until:     validUntil || null,
+      notes:           notes,
+      internal_memo:   internalMemo,
+      updated_at:      new Date().toISOString(),
     })
     .eq("id",        estimateId)
     .eq("dealer_id", dealer.dealer_id);   // scope to current dealer only
 
-  if (error) {
-    console.error("[updateEstimate] error:", error.message);
-    return { error: error.message };
+  if (updateError) {
+    console.error("[updateEstimate] error:", updateError.message);
+    return { error: updateError.message };
+  }
+
+  // Replace line items: delete existing, re-insert.
+  if (itemsJson !== null) {
+    // Delete all existing items for this estimate.
+    const { error: deleteError } = await supabase
+      .from("estimate_items")
+      .delete()
+      .eq("estimate_id", estimateId)
+      .eq("dealer_id",   dealer.dealer_id);
+
+    if (deleteError) {
+      console.error("[updateEstimate] delete items error:", deleteError.message);
+    }
+
+    let items: ItemInput[] = [];
+    try {
+      items = JSON.parse(itemsJson) as ItemInput[];
+    } catch {
+      // itemsJson was present but unparseable — proceed without items
+    }
+
+    if (items.length > 0) {
+      const rows = items.map((item, i) => ({
+        estimate_id:   estimateId,
+        dealer_id:     dealer.dealer_id,
+        category:      item.category      ?? "other",
+        item_name:     item.item_name     ?? "",
+        description:   item.description   || null,
+        quantity:      item.quantity      ?? 1,
+        unit_price:    item.unit_price    ?? 0,
+        discount_rate: item.discount_rate ?? 0,
+        line_total:    Math.round(
+          (item.quantity ?? 1) * (item.unit_price ?? 0) * (1 - (item.discount_rate ?? 0) / 100)
+        ),
+        sort_order:    item.sort_order    ?? i,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("estimate_items")
+        .insert(rows);
+
+      if (itemsError) {
+        console.error("[updateEstimate] insert items error:", itemsError.message);
+      }
+    }
   }
 
   revalidatePath("/estimates");

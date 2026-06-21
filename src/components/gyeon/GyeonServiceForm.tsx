@@ -111,13 +111,19 @@ export default function GyeonServiceForm({
           className="w-full bg-[#0f172a] border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1d4ed8]"
         >
           <option value="">— Select Estimate —</option>
-          {estimates.map((est) => (
-            <option key={est.id} value={est.id}>
-              {est.estimate_no}
-              {est.customers?.name ? ` — ${est.customers.name}` : ""}
-              {est.vehicles?.model  ? ` / ${est.vehicles.model}`  : ""}
-            </option>
-          ))}
+          {estimates.map((est) => {
+            const custName = est.customers
+              ? [est.customers.last_name, est.customers.first_name].filter(Boolean).join(" ")
+              : "";
+            const displayNo = est.estimate_number ?? est.estimate_no ?? "";
+            return (
+              <option key={est.id} value={est.id}>
+                {displayNo}
+                {custName ? ` — ${custName}` : ""}
+                {est.vehicles?.model ? ` / ${est.vehicles.model}` : ""}
+              </option>
+            );
+          })}
         </select>
       </div>
 
