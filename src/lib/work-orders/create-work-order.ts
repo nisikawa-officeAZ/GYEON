@@ -14,6 +14,7 @@ import { revalidatePath }   from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { WorkOrderStatus }  from "./work-order-types";
+import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 
 function str(formData: FormData, key: string): string | null {
   return (formData.get(key) as string | null)?.trim() || null;
@@ -87,12 +88,14 @@ export async function createWorkOrder(formData: FormData) {
     }
   }
 
+  const resolvedWoNumber = woNumber || (await getNextDocumentNumber("work_order")) || null;
+
   const { error } = await supabase.from("work_orders").insert({
     dealer_id:          dealer.dealer_id,   // server-injected — never from form
     estimate_id:        estimateId        || null,
     customer_id:        customerId        || null,
     vehicle_id:         vehicleId         || null,
-    work_order_number:  woNumber          || null,
+    work_order_number:  resolvedWoNumber,
     status,
     title:              title             || null,
     scheduled_start_at: schedStart        || null,

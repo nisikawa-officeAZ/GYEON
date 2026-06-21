@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import {
   MaintenanceReminderDB,
   MaintenanceReminderInput,
@@ -13,6 +13,7 @@ import {
 } from "@/lib/maintenance/maintenance-types";
 import { createMaintenanceReminderFromFormData } from "@/lib/maintenance/create-maintenance-reminder";
 import { updateMaintenanceReminderFromFormData } from "@/lib/maintenance/update-maintenance-reminder";
+import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 
 interface Props {
   // For create: pass prefill values
@@ -58,8 +59,15 @@ function Textarea({ ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement
 
 export default function MaintenanceReminderForm({ prefill, reminder, onSaved, onCancel }: Props) {
   const isEdit = !!reminder;
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const [isPending,  startTransition] = useTransition();
+  const [error,      setError]        = useState<string | null>(null);
+  const [previewNo,  setPreviewNo]    = useState<string>("");
+
+  useEffect(() => {
+    if (!isEdit) {
+      previewDocumentNumber("maintenance_reminder").then((p) => setPreviewNo(p ?? ""));
+    }
+  }, [isEdit]);
 
   const [reminderType, setReminderType] = useState(
     reminder?.reminder_type ?? prefill?.reminder_type ?? "maintenance"
@@ -114,6 +122,20 @@ export default function MaintenanceReminderForm({ prefill, reminder, onSaved, on
           {prefill?.customer_id   && <p>顧客ID: {prefill.customer_id}</p>}
           {prefill?.vehicle_id    && <p>車両ID: {prefill.vehicle_id}</p>}
           {prefill?.work_order_id && <p>作業指示書ID: {prefill.work_order_id}</p>}
+        </div>
+      )}
+
+      {/* Reminder number */}
+      {!isEdit && (
+        <div>
+          <Label>リマインダー番号（空欄で自動採番）</Label>
+          <Input
+            name="reminder_number"
+            placeholder={previewNo ? `自動採番: ${previewNo}` : "MNT-0000-00001"}
+          />
+          {previewNo && (
+            <p className="text-xs text-slate-500 mt-1">空欄の場合、保存時に自動採番されます（次: {previewNo}）</p>
+          )}
         </div>
       )}
 

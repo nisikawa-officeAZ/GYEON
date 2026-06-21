@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { createWorkOrder } from "@/lib/work-orders/create-work-order";
 import { updateWorkOrder } from "@/lib/work-orders/update-work-order";
 import {
@@ -11,6 +11,7 @@ import {
 import { EstimateDB, estimateDisplayNo, estimateCustomerName } from "@/lib/estimates/estimate-types";
 import { CustomerDB } from "@/lib/customers/customer-types";
 import { VehicleDB }  from "@/lib/vehicles/vehicle-types";
+import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 
 // ─── Form state ───────────────────────────────────────────────────────────────
 
@@ -118,8 +119,15 @@ export default function WorkOrderForm({
     return EMPTY;
   });
 
-  const [error,   setError]   = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [error,     setError]   = useState<string | null>(null);
+  const [pending,   startTransition] = useTransition();
+  const [previewNo, setPreviewNo] = useState<string>("");
+
+  useEffect(() => {
+    if (!workOrder) {
+      previewDocumentNumber("work_order").then((p) => setPreviewNo(p ?? ""));
+    }
+  }, [workOrder]);
 
   function set<K extends keyof FormFields>(key: K, value: FormFields[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -179,9 +187,12 @@ export default function WorkOrderForm({
             type="text"
             value={form.work_order_number}
             onChange={(e) => set("work_order_number", e.target.value)}
-            placeholder="WO-2024-001"
+            placeholder={previewNo ? `自動採番: ${previewNo}` : "WO-0000-00001"}
             className={inputClass}
           />
+          {!form.work_order_number && previewNo && (
+            <p className="text-xs text-slate-500">空欄の場合、保存時に自動採番されます（次: {previewNo}）</p>
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <label className={labelClass}>ステータス</label>

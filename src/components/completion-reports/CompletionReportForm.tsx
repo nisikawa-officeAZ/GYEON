@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import {
   CompletionReportDB,
   CompletionReportStatus,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/completion-reports/completion-report-types";
 import { createCompletionReport } from "@/lib/completion-reports/create-completion-report";
 import { updateCompletionReport } from "@/lib/completion-reports/update-completion-report";
+import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 
 const STATUSES: CompletionReportStatus[] = ["draft", "generated", "shared", "archived"];
 
@@ -67,8 +68,15 @@ export default function CompletionReportForm({
   const [form, setForm] = useState<FormFields>(
     report ? fromDB(report) : { ...EMPTY_FORM, customer_message: DEFAULT_MESSAGE }
   );
-  const [error,   setError]   = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [error,     setError]   = useState<string | null>(null);
+  const [pending,   startTransition] = useTransition();
+  const [previewNo, setPreviewNo] = useState<string>("");
+
+  useEffect(() => {
+    if (!report) {
+      previewDocumentNumber("completion_report").then((p) => setPreviewNo(p ?? ""));
+    }
+  }, [report]);
 
   function set<K extends keyof FormFields>(key: K, value: FormFields[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -136,7 +144,7 @@ export default function CompletionReportForm({
             type="text"
             value={form.report_number}
             onChange={(e) => set("report_number", e.target.value)}
-            placeholder="RPT-2024-001"
+            placeholder={previewNo ? `自動採番: ${previewNo}` : "REP-0000-00001"}
             className={inputClass}
           />
         </div>

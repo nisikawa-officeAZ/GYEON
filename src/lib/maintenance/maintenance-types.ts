@@ -59,6 +59,7 @@ export interface MaintenanceReminderInput {
   customer_id:       string;
   vehicle_id?:       string | null;
   work_order_id?:    string | null;
+  reminder_number?:  string | null;
   title?:            string | null;
   reminder_type?:    MaintenanceReminderType;
   status?:           MaintenanceReminderStatus;

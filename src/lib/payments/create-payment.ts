@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { calculateNetAmount } from "./payment-types";
 import { recalculateInvoicePayment } from "./recalculate-invoice-payment";
+import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 
 export async function createPayment(
   fd: FormData
@@ -30,13 +31,16 @@ export async function createPayment(
   const fee_amount = parseFloat((fd.get("fee_amount") as string) || "0");
   const net_amount = calculateNetAmount(amount, fee_amount);
 
+  const rawPaymentNumber    = (fd.get("payment_number") as string) || null;
+  const resolvedPaymentNumber = rawPaymentNumber || (await getNextDocumentNumber("payment")) || null;
+
   const { data: payment, error } = await supabase
     .from("payments")
     .insert({
       dealer_id:      dealer.dealer_id,
       invoice_id,
       customer_id:    inv.customer_id ?? null,
-      payment_number: (fd.get("payment_number") as string) || null,
+      payment_number: resolvedPaymentNumber,
       payment_date:   (fd.get("payment_date") as string) || null,
       payment_method: (fd.get("payment_method") as string) || "cash",
       amount,

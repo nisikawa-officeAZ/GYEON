@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import {
   PaymentDB,
   PaymentMethod,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/payments/payment-types";
 import { createPayment } from "@/lib/payments/create-payment";
 import { updatePayment } from "@/lib/payments/update-payment";
+import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 
 const inputClass =
   "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors w-full";
@@ -80,8 +81,15 @@ export default function PaymentForm({
       ? fromDB(payment)
       : { ...EMPTY_FORM, amount: invoiceBalance ?? 0 }
   );
-  const [error,   setError]   = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [error,     setError]   = useState<string | null>(null);
+  const [pending,   startTransition] = useTransition();
+  const [previewNo, setPreviewNo] = useState<string>("");
+
+  useEffect(() => {
+    if (!payment) {
+      previewDocumentNumber("payment").then((p) => setPreviewNo(p ?? ""));
+    }
+  }, [payment]);
 
   function set<K extends keyof FormFields>(key: K, value: FormFields[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -139,7 +147,10 @@ export default function PaymentForm({
           <label className={labelClass}>入金番号</label>
           <input type="text" value={form.payment_number}
             onChange={(e) => set("payment_number", e.target.value)}
-            placeholder="PAY-2024-001" className={inputClass} />
+            placeholder={previewNo ? `自動採番: ${previewNo}` : "PAY-0000-00001"} className={inputClass} />
+          {!form.payment_number && previewNo && (
+            <p className="text-xs text-slate-500">空欄の場合、保存時に自動採番されます（次: {previewNo}）</p>
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <label className={labelClass}>入金日</label>

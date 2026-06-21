@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { InvoiceItemInput, calculateInvoiceTotals, lineTotal } from "./invoice-types";
+import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 
 export async function createInvoice(fd: FormData): Promise<{ error: string } | { success: true; id: string }> {
   const dealer = await getCurrentDealer();
@@ -50,6 +51,9 @@ export async function createInvoice(fd: FormData): Promise<{ error: string } | {
   const totals = calculateInvoiceTotals(items, discount_amount, tax_rate, paid_amount);
 
   // Insert invoice
+  const rawInvoiceNumber = (fd.get("invoice_number") as string) || null;
+  const resolvedInvoiceNumber = rawInvoiceNumber || (await getNextDocumentNumber("invoice")) || null;
+
   const { data: inv, error: invErr } = await supabase
     .from("invoices")
     .insert({
@@ -59,7 +63,7 @@ export async function createInvoice(fd: FormData): Promise<{ error: string } | {
       estimate_id,
       work_order_id,
       completion_report_id,
-      invoice_number:       (fd.get("invoice_number") as string) || null,
+      invoice_number:       resolvedInvoiceNumber,
       status:               (fd.get("status") as string) || "draft",
       title:                (fd.get("title") as string) || null,
       issue_date:           (fd.get("issue_date") as string) || null,

@@ -8,6 +8,7 @@ import {
   defaultMaintenanceMessage,
   maintenanceVehicleLabel,
 } from "./maintenance-types";
+import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 
 function scheduledSendAtFromDueDate(dueDate: string): string {
   // Default: 7 days before due_date at 10:00
@@ -15,13 +16,6 @@ function scheduledSendAtFromDueDate(dueDate: string): string {
   d.setDate(d.getDate() - 7);
   d.setHours(10, 0, 0, 0);
   return d.toISOString();
-}
-
-function generateReminderNumber(): string {
-  const now = new Date();
-  const ymd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-  const rand = Math.floor(Math.random() * 9000) + 1000;
-  return `MR-${ymd}-${rand}`;
 }
 
 export async function createMaintenanceReminder(
@@ -99,7 +93,7 @@ export async function createMaintenanceReminder(
       customer_id:       input.customer_id,
       vehicle_id:        input.vehicle_id        ?? null,
       work_order_id:     input.work_order_id     ?? null,
-      reminder_number:   generateReminderNumber(),
+      reminder_number:   input.reminder_number || (await getNextDocumentNumber("maintenance_reminder")) || `MNT-${Date.now()}`,
       title:             input.title             ?? null,
       reminder_type:     reminderType,
       status:            input.status            ?? "scheduled",
@@ -135,6 +129,7 @@ export async function createMaintenanceReminderFromFormData(
     customer_id:       fd.get("customer_id")       as string,
     vehicle_id:        fd.get("vehicle_id")        as string | null,
     work_order_id:     fd.get("work_order_id")     as string | null,
+    reminder_number:   (fd.get("reminder_number")  as string | null) || null,
     title:             fd.get("title")             as string | null,
     reminder_type:     (fd.get("reminder_type")    as string | null) as import("./maintenance-types").MaintenanceReminderType ?? "maintenance",
     status:            (fd.get("status")           as string | null) as import("./maintenance-types").MaintenanceReminderStatus ?? "scheduled",

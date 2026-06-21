@@ -1,16 +1,26 @@
 import MainLayout from "@/components/layout/MainLayout";
 import PageTitle from "@/components/ui/PageTitle";
-import EmptyState from "@/components/ui/EmptyState";
+import { getDocumentSequences } from "@/lib/numbering/get-document-sequences";
+import DocumentSequenceSettings from "@/components/settings/DocumentSequenceSettings";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const sequences = await getDocumentSequences();
+
   return (
     <MainLayout>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-3xl mx-auto p-6 flex flex-col gap-8">
         <PageTitle title="Settings" />
-        <EmptyState
-          message="Coming Soon"
-          description="Awaiting GPT CTO Specification"
-        />
+
+        {/* ── 番号設定 ──────────────────────────────────────────────── */}
+        <section className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-slate-100">番号設定</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              各書類の自動採番ルールを設定します。現在の採番数はリセットできません。
+            </p>
+          </div>
+          <DocumentSequenceSettings sequences={sequences} />
+        </section>
       </div>
     </MainLayout>
   );

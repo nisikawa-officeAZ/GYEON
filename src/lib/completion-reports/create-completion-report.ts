@@ -11,6 +11,7 @@
 import { revalidatePath }   from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 
 function str(formData: FormData, key: string): string | null {
   return (formData.get(key) as string | null)?.trim() || null;
@@ -43,12 +44,14 @@ export async function createCompletionReport(formData: FormData) {
     return { error: "Work order not found or does not belong to your dealer." };
   }
 
+  const resolvedReportNumber = reportNumber || (await getNextDocumentNumber("completion_report")) || null;
+
   const { data: newReport, error } = await supabase
     .from("completion_reports")
     .insert({
       dealer_id:        dealer.dealer_id,   // server-injected — never from form
       work_order_id:    workOrderId,
-      report_number:    reportNumber || null,
+      report_number:    resolvedReportNumber,
       title:            title || wo.title || "施工完了報告書",
       status:           "draft",
       report_date:      reportDate,

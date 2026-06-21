@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import {
   InvoiceDB,
   InvoiceStatus,
@@ -13,6 +13,7 @@ import {
   invoiceDisplayNo,
 } from "@/lib/invoices/invoice-types";
 import { createInvoice } from "@/lib/invoices/create-invoice";
+import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 import { updateInvoice } from "@/lib/invoices/update-invoice";
 
 const inputClass =
@@ -101,8 +102,15 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
 
   const [form, setForm]   = useState<FormFields>(init.form);
   const [items, setItems] = useState<InvoiceItemInput[]>(init.items);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [error,     setError]   = useState<string | null>(null);
+  const [pending,   startTransition] = useTransition();
+  const [previewNo, setPreviewNo] = useState<string>("");
+
+  useEffect(() => {
+    if (!invoice) {
+      previewDocumentNumber("invoice").then((p) => setPreviewNo(p ?? ""));
+    }
+  }, [invoice]);
 
   function setField<K extends keyof FormFields>(key: K, value: FormFields[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -182,7 +190,10 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
         <div className="flex flex-col gap-1">
           <label className={labelClass}>請求書番号</label>
           <input type="text" value={form.invoice_number} onChange={(e) => setField("invoice_number", e.target.value)}
-            placeholder="INV-2024-001" className={inputClass} />
+            placeholder={previewNo ? `自動採番: ${previewNo}` : "INV-0000-00001"} className={inputClass} />
+          {!form.invoice_number && previewNo && (
+            <p className="text-xs text-slate-500">空欄の場合、保存時に自動採番されます（次: {previewNo}）</p>
+          )}
         </div>
       </div>
 

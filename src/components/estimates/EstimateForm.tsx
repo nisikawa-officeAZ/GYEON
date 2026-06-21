@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { createEstimate } from "@/lib/estimates/create-estimate";
 import { updateEstimate } from "@/lib/estimates/update-estimate";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/lib/estimates/estimate-types";
 import { CustomerDB } from "@/lib/customers/customer-types";
 import { VehicleDB }  from "@/lib/vehicles/vehicle-types";
+import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 
 // ─── Item form state ──────────────────────────────────────────────────────────
 
@@ -148,8 +149,15 @@ export default function EstimateForm({
           .map(itemFromDB)
       : [emptyItem()]
   );
-  const [error,   setError]   = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [error,     setError]   = useState<string | null>(null);
+  const [pending,   startTransition] = useTransition();
+  const [previewNo, setPreviewNo] = useState<string>("");
+
+  useEffect(() => {
+    if (!estimate) {
+      previewDocumentNumber("estimate").then((p) => setPreviewNo(p ?? ""));
+    }
+  }, [estimate]);
 
   function setField<K extends keyof FormFields>(key: K, value: FormFields[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -240,10 +248,12 @@ export default function EstimateForm({
             type="text"
             value={form.estimate_no}
             onChange={(e) => setField("estimate_no", e.target.value)}
-            placeholder="EST-2024-001"
-            required
+            placeholder={previewNo ? `自動採番: ${previewNo}` : "EST-0000-00001"}
             className={inputClass}
           />
+          {!form.estimate_no && previewNo && (
+            <p className="text-xs text-slate-500">空欄の場合、保存時に自動採番されます（次: {previewNo}）</p>
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <label className={labelClass}>タイトル</label>

@@ -12,6 +12,7 @@ import { revalidatePath }   from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { EstimateCategory } from "./estimate-types";
+import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 
 interface ItemInput {
   category:      EstimateCategory;
@@ -55,7 +56,9 @@ export async function createEstimate(formData: FormData) {
 
   if (!customerId)  return { error: "Customer is required." };
   if (!vehicleId)   return { error: "Vehicle is required." };
-  if (!estimateNo)  return { error: "Estimate No is required." };
+
+  // Auto-assign number if not provided
+  const resolvedNo = estimateNo || (await getNextDocumentNumber("estimate")) || "";
 
   const supabase = await createClient();
 
@@ -89,8 +92,8 @@ export async function createEstimate(formData: FormData) {
     .insert({
       customer_id:     customerId,
       vehicle_id:      vehicleId,
-      estimate_no:     estimateNo,
-      estimate_number: estimateNo,
+      estimate_no:     resolvedNo,
+      estimate_number: resolvedNo,
       title:           title,
       status:          status,
       subtotal:        subtotal,
