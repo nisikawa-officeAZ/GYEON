@@ -10,6 +10,7 @@ import {
 } from "@/lib/work-orders/work-order-types";
 import WorkOrderFiles           from "./WorkOrderFiles";
 import CompletionReportSection  from "@/components/completion-reports/CompletionReportSection";
+import InvoiceSection           from "@/components/invoices/InvoiceSection";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -52,8 +53,9 @@ interface WorkOrderDetailProps {
 }
 
 export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDetailProps) {
-  const [showFiles,  setShowFiles]  = useState(false);
-  const [showReport, setShowReport] = useState(false);
+  const [showFiles,    setShowFiles]    = useState(false);
+  const [showReport,   setShowReport]   = useState(false);
+  const [showInvoice,  setShowInvoice]  = useState(false);
   const estimate = wo.estimates;
   const items    = estimate?.estimate_items ?? [];
 
@@ -256,6 +258,25 @@ export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDet
             {showReport && (
               <div className="mt-4">
                 <CompletionReportSection workOrderId={wo.id} />
+              </div>
+            )}
+          </div>
+
+          {/* Invoice Section */}
+          <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
+            <button
+              onClick={() => setShowInvoice((v) => !v)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                請求書
+              </h3>
+              <span className="text-slate-600 text-xs">{showInvoice ? "▲ 閉じる" : "▼ 開く"}</span>
+            </button>
+
+            {showInvoice && (
+              <div className="mt-4">
+                <InvoiceSection workOrderId={wo.id} />
               </div>
             )}
           </div>
