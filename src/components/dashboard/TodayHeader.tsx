@@ -1,29 +1,8 @@
 "use client";
 
-// DealerOS — Today's Work Header (PHASE73)
-// Replaces GyeonHero. Shows greeting and safe operational counters only.
-// Financial data is NOT displayed here.
-
-interface CounterChip {
-  label: string;
-  value: number;
-  accent: "blue" | "amber" | "rose" | "sky";
-}
-
-function Chip({ label, value, accent }: CounterChip) {
-  const styles = {
-    blue:  "border-blue-700/40 bg-blue-950/20 text-blue-300",
-    amber: "border-amber-700/40 bg-amber-950/20 text-amber-300",
-    rose:  "border-rose-700/40 bg-rose-950/20 text-rose-300",
-    sky:   "border-sky-700/40 bg-sky-950/20 text-sky-300",
-  };
-  return (
-    <div className={`flex flex-col items-center gap-0.5 px-4 py-2.5 rounded-xl border ${styles[accent]} min-w-[72px]`}>
-      <span className="text-xl font-bold leading-none">{value}</span>
-      <span className="text-[10px] leading-tight text-center opacity-80">{label}</span>
-    </div>
-  );
-}
+// DealerOS — Compact Today Header (PHASE73 iPhone-first revision)
+// Thin single row: dealer name on left, operational counter chips on right.
+// No financial data. Chips only shown when value > 0 to save space.
 
 interface Props {
   businessName:         string | null;
@@ -41,31 +20,37 @@ export default function TodayHeader({
   lineScheduled,
 }: Props) {
   const name = businessName ?? "ディーラー";
+
+  const chips = [
+    { label: "予約",    value: reservationToday,     color: "bg-blue-950/50 text-blue-300 border-blue-700/30"    },
+    { label: "作業中",  value: workOrdersInProgress,  color: "bg-amber-950/50 text-amber-300 border-amber-700/30" },
+    { label: "メンテ",  value: maintenanceNext7Days,  color: "bg-rose-950/50 text-rose-300 border-rose-700/30"    },
+    { label: "LINE",    value: lineScheduled,          color: "bg-sky-950/50 text-sky-300 border-sky-700/30"       },
+  ].filter(c => c.value > 0);
+
   return (
-    <div className="rounded-2xl border border-slate-800 bg-[#0a0f1a] px-6 pt-6 pb-5 flex flex-col gap-4">
+    <div className="flex items-center justify-between gap-3 px-4 py-3">
       {/* Greeting */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] text-slate-500 tracking-wider mb-0.5">GYEON Detailer Agent</p>
-          <h1 className="text-xl font-bold text-slate-100 leading-tight">
-            こんにちは、{name}
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">今日の業務</p>
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-[10px] px-2 py-1 rounded-full border border-blue-700/40 text-blue-400 bg-blue-950/20">
-            v1.0 Official
-          </span>
-        </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] text-slate-500 leading-none">今日の業務</p>
+        <p className="text-sm font-bold text-slate-100 truncate mt-0.5">{name}</p>
       </div>
 
-      {/* Safe operational counters — no financial data */}
-      <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
-        <Chip label="本日の予約"       value={reservationToday}     accent="blue"  />
-        <Chip label="作業中"           value={workOrdersInProgress}  accent="amber" />
-        <Chip label="メンテナンス通知"  value={maintenanceNext7Days}  accent="rose"  />
-        <Chip label="LINE送信予定"     value={lineScheduled}         accent="sky"   />
-      </div>
+      {/* Operational counter chips — only when > 0 */}
+      {chips.length > 0 ? (
+        <div className="flex items-center gap-1.5 shrink-0">
+          {chips.map(c => (
+            <span
+              key={c.label}
+              className={`text-[10px] font-bold px-2 py-1 rounded-full border ${c.color}`}
+            >
+              {c.label} {c.value}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <span className="text-[10px] text-slate-600 shrink-0">今日の予定なし</span>
+      )}
     </div>
   );
 }
