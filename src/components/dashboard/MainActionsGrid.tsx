@@ -1,39 +1,114 @@
 "use client";
 
-// DealerOS — Main Actions Grid (PHASE73 iPhone-first revision)
-// 4×2 icon grid. Icon-first, short label only. Touch-friendly tap targets.
-// No descriptions, no sub-links, no scrolling.
-
 import Link from "next/link";
 
 const ACTIONS = [
-  { icon: "📝", label: "見積",   href: "/estimates",      accent: "hover:border-blue-500/50 active:bg-blue-950/20"    },
-  { icon: "👥", label: "顧客",   href: "/customers",      accent: "hover:border-violet-500/50 active:bg-violet-950/20" },
-  { icon: "🚗", label: "車両",   href: "/vehicles",       accent: "hover:border-sky-500/50 active:bg-sky-950/20"      },
-  { icon: "📅", label: "予約",   href: "/reservations",   accent: "hover:border-amber-500/50 active:bg-amber-950/20"  },
-  { icon: "📋", label: "作業",   href: "/work-orders",    accent: "hover:border-green-500/50 active:bg-green-950/20"  },
-  { icon: "💬", label: "LINE",   href: "/line",           accent: "hover:border-emerald-500/50 active:bg-emerald-950/20" },
-  { icon: "🛒", label: "注文",   href: "/product-orders", accent: "hover:border-orange-500/50 active:bg-orange-950/20" },
-  { icon: "⚙️", label: "設定",   href: "/settings",       accent: "hover:border-slate-500/50 active:bg-slate-800/40"  },
+  {
+    icon:    "📝",
+    label:   "見積もり",
+    sub:     "新規作成・一覧",
+    href:    "/estimates",
+    iconBg:  "bg-blue-900/50 text-blue-300",
+    border:  "border-blue-900/40 hover:border-blue-600/50",
+    glow:    "from-blue-900/20 to-transparent",
+  },
+  {
+    icon:    "👥",
+    label:   "顧客管理",
+    sub:     "登録・検索",
+    href:    "/customers",
+    iconBg:  "bg-violet-900/50 text-violet-300",
+    border:  "border-violet-900/40 hover:border-violet-600/50",
+    glow:    "from-violet-900/20 to-transparent",
+  },
+  {
+    icon:    "🚗",
+    label:   "車両管理",
+    sub:     "台帳・整備記録",
+    href:    "/vehicles",
+    iconBg:  "bg-sky-900/50 text-sky-300",
+    border:  "border-sky-900/40 hover:border-sky-600/50",
+    glow:    "from-sky-900/20 to-transparent",
+  },
+  {
+    icon:    "📅",
+    label:   "予約",
+    sub:     "本日・週間",
+    href:    "/reservations",
+    iconBg:  "bg-amber-900/50 text-amber-300",
+    border:  "border-amber-900/40 hover:border-amber-600/50",
+    glow:    "from-amber-900/20 to-transparent",
+  },
+  {
+    icon:    "📋",
+    label:   "作業管理",
+    sub:     "進行中・完了",
+    href:    "/work-orders",
+    iconBg:  "bg-emerald-900/50 text-emerald-300",
+    border:  "border-emerald-900/40 hover:border-emerald-600/50",
+    glow:    "from-emerald-900/20 to-transparent",
+  },
+  {
+    icon:    "💬",
+    label:   "LINE連携",
+    sub:     "受信・送信",
+    href:    "/line",
+    iconBg:  "bg-green-900/50 text-green-300",
+    border:  "border-green-900/40 hover:border-green-600/50",
+    glow:    "from-green-900/20 to-transparent",
+  },
+  {
+    icon:    "🛒",
+    label:   "商品注文",
+    sub:     "発注・在庫",
+    href:    "/product-orders",
+    iconBg:  "bg-orange-900/50 text-orange-300",
+    border:  "border-orange-900/40 hover:border-orange-600/50",
+    glow:    "from-orange-900/20 to-transparent",
+  },
+  {
+    icon:    "⚙️",
+    label:   "設定",
+    sub:     "店舗・スタッフ",
+    href:    "/settings",
+    iconBg:  "bg-slate-800/80 text-slate-300",
+    border:  "border-slate-700/40 hover:border-slate-500/50",
+    glow:    "from-slate-800/30 to-transparent",
+  },
 ] as const;
 
 export default function MainActionsGrid() {
   return (
-    <div className="grid grid-cols-4 gap-2 px-3">
+    <div className="grid grid-cols-2 gap-2.5">
       {ACTIONS.map(a => (
         <Link
           key={a.href}
           href={a.href}
           className={`
-            flex flex-col items-center justify-center gap-2
-            min-h-[84px] sm:min-h-[100px]
-            bg-[#0f172a] border border-slate-800 rounded-2xl
-            touch-manipulation select-none transition-colors
-            ${a.accent}
+            relative flex items-center gap-3 p-3.5
+            bg-[#0f172a] border rounded-2xl overflow-hidden
+            ${a.border}
+            touch-manipulation select-none
+            transition-all duration-150
+            active:scale-[0.97] active:brightness-90
           `}
         >
-          <span className="text-[28px] sm:text-[32px] leading-none">{a.icon}</span>
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-300 tracking-wide">{a.label}</span>
+          {/* Subtle gradient accent in top-left corner */}
+          <div className={`absolute inset-0 bg-gradient-to-br ${a.glow} pointer-events-none`} />
+
+          {/* Icon container */}
+          <div className={`relative shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-[20px] ${a.iconBg}`}>
+            {a.icon}
+          </div>
+
+          {/* Text */}
+          <div className="relative min-w-0 flex-1">
+            <p className="text-[13px] font-bold text-slate-100 leading-tight truncate">{a.label}</p>
+            <p className="text-[10px] text-slate-500 mt-0.5 leading-tight truncate">{a.sub}</p>
+          </div>
+
+          {/* Chevron */}
+          <span className="relative text-slate-700 text-base leading-none shrink-0">›</span>
         </Link>
       ))}
     </div>

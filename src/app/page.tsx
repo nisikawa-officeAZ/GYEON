@@ -83,12 +83,12 @@ export default async function HomePage() {
         - flex flex-col with gap fills vertical space naturally
         - pb-safe ensures home indicator doesn't overlap content
       */}
-      <div className="max-w-lg mx-auto flex flex-col gap-3 pb-safe">
+      <div className="max-w-lg mx-auto flex flex-col gap-4 pb-safe">
 
         {/* Onboarding card — only when incomplete */}
         <OnboardingCard />
 
-        {/* ── Compact header: greeting + safe counters ─────────────────────── */}
+        {/* ── Premium hero: car image + dealer name + operational chips ─────── */}
         <TodayHeader
           businessName={businessName}
           reservationToday={summary.reservation_stats.today}
@@ -97,34 +97,34 @@ export default async function HomePage() {
           lineScheduled={summary.line_queue_stats.scheduled}
         />
 
-        {/* ── 4×2 icon grid — main actions ──────────────────────────────────── */}
+        {/* ── 2×4 premium card grid — main actions ──────────────────────────── */}
         <MainActionsGrid />
 
-        {/* ── Compact maintenance summary (max 3 display) ───────────────────── */}
+        {/* ── Maintenance summary ────────────────────────────────────────────── */}
         {showMaintenance && (
-          <div className="mx-3 rounded-xl border border-slate-800 bg-[#0f172a] overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800/60">
-              <span className="text-[11px] font-semibold text-slate-400">🔔 メンテナンス通知</span>
+          <div className="rounded-2xl border border-amber-900/30 bg-[#0f172a] overflow-hidden shadow-lg shadow-black/30">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-amber-900/20">
+              <span className="text-[11px] font-semibold text-amber-400/80">🔔 メンテナンス通知</span>
               <Link href="/maintenance" className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
                 一覧 →
               </Link>
             </div>
             <div className="flex divide-x divide-slate-800/60">
               {m.next_7_days > 0 && (
-                <div className="flex-1 flex flex-col items-center py-3 gap-0.5">
-                  <span className="text-lg font-bold text-amber-400">{m.next_7_days}</span>
+                <div className="flex-1 flex flex-col items-center py-3.5 gap-1">
+                  <span className="text-xl font-bold text-amber-400">{m.next_7_days}</span>
                   <span className="text-[10px] text-slate-500">7日以内</span>
                 </div>
               )}
               {m.pending > 0 && (
-                <div className="flex-1 flex flex-col items-center py-3 gap-0.5">
-                  <span className="text-lg font-bold text-rose-400">{m.pending}</span>
+                <div className="flex-1 flex flex-col items-center py-3.5 gap-1">
+                  <span className="text-xl font-bold text-rose-400">{m.pending}</span>
                   <span className="text-[10px] text-slate-500">未送信</span>
                 </div>
               )}
               {m.this_month > 0 && (
-                <div className="flex-1 flex flex-col items-center py-3 gap-0.5">
-                  <span className="text-lg font-bold text-slate-300">{m.this_month}</span>
+                <div className="flex-1 flex flex-col items-center py-3.5 gap-1">
+                  <span className="text-xl font-bold text-slate-300">{m.this_month}</span>
                   <span className="text-[10px] text-slate-500">今月予定</span>
                 </div>
               )}
