@@ -2,26 +2,20 @@ import { redirect }           from "next/navigation";
 import MainLayout             from "@/components/layout/MainLayout";
 import { getDashboardSummary } from "@/lib/dashboard/get-dashboard-summary";
 import type { DashboardSummary, UpcomingWorkOrder } from "@/lib/dashboard/get-dashboard-summary";
-import { getCurrentPlan }     from "@/lib/plans/get-current-plan";
-import type { DealerPlanInfo } from "@/lib/plans/plan-types";
 import { getCurrentDealer }   from "@/lib/auth/get-current-dealer";
 import { createClient }       from "@/lib/supabase/server";
+import { getCompanySettings } from "@/lib/company/save-company-settings";
 import OnboardingCard         from "@/components/onboarding/OnboardingCard";
 
-// PHASE66-B: Branded dashboard components
-import GyeonHero             from "@/components/dashboard/GyeonHero";
-import DashboardKpiCards     from "@/components/dashboard/DashboardKpiCards";
-import QuickActionsCard      from "@/components/dashboard/QuickActionsCard";
+// PHASE73: Today's Work Dashboard — Operation First
+import TodayHeader         from "@/components/dashboard/TodayHeader";
+import MainActionsGrid     from "@/components/dashboard/MainActionsGrid";
 import TodayReservationsCard from "@/components/dashboard/TodayReservationsCard";
-import MaintenanceDueCard    from "@/components/dashboard/MaintenanceDueCard";
-import RecentActivityCard    from "@/components/dashboard/RecentActivityCard";
-import StatusSummaryPanel    from "@/components/dashboard/StatusSummaryPanel";
+import MaintenanceDueCard   from "@/components/dashboard/MaintenanceDueCard";
 
-export const metadata = { title: "Dashboard | GYEON Detailer Agent" };
+export const metadata = { title: "ホーム | GYEON Detailer Agent" };
 
-// ─── Safe fallback values ─────────────────────────────────────────────────────
-// Used when Supabase is unreachable, migrations not yet applied, or no dealer session.
-// Hero and QuickActions always render; data sections show zeros/empty.
+// ─── Safe fallback ────────────────────────────────────────────────────────────
 
 const EMPTY_SUMMARY: DashboardSummary = {
   customer_count:  0,
@@ -40,16 +34,9 @@ const EMPTY_SUMMARY: DashboardSummary = {
   recent_activities:     [],
 };
 
-const EMPTY_PLAN: DealerPlanInfo = {
-  plan:                "basic",
-  subscription_status: "trial",
-  started_at:          null,
-  expired_at:          null,
-};
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function DashboardPage() {
+export default async function HomePage() {
   // ── Onboarding redirect check ──────────────────────────────────────────────
   let shouldRedirectToOnboarding = false;
   try {
@@ -71,100 +58,60 @@ export default async function DashboardPage() {
       }
     }
   } catch {
-    // Migration not applied or column missing — skip redirect silently
+    // Column missing or DB unreachable — skip redirect
   }
 
   if (shouldRedirectToOnboarding) {
     redirect("/onboarding");
   }
 
-  // ── Dashboard data — never crashes the page ────────────────────────────────
-  // getDashboardSummary() returns null when the dealer session is absent.
-  // Either null or a thrown error (e.g. migration not yet applied, DB unreachable)
-  // both fall back to EMPTY_SUMMARY so Hero + QuickActions always render.
-
-  let summary:  DashboardSummary = EMPTY_SUMMARY;
-  let planInfo: DealerPlanInfo   = EMPTY_PLAN;
-  let dataError = false;
+  // ── Operational data (never crashes page) ─────────────────────────────────
+  let summary:      DashboardSummary = EMPTY_SUMMARY;
+  let businessName: string | null    = null;
 
   try {
-    const [rawSummary, rawPlan] = await Promise.all([
+    const [rawSummary, companySettings] = await Promise.all([
       getDashboardSummary(),
-      getCurrentPlan(),
+      getCompanySettings(),
     ]);
-    if (rawSummary) {
-      summary  = rawSummary;
-      planInfo = rawPlan;
-    } else {
-      // Dealer not found / not logged in — safe zeros shown
-      dataError = true;
-      console.error("[Dashboard] getDashboardSummary() returned null — dealer session may be missing or DB unavailable");
-    }
-  } catch (e) {
-    dataError = true;
-    console.error("[Dashboard] Failed to load dashboard data:", e);
+    if (rawSummary) summary = rawSummary;
+    businessName = companySettings?.business_name ?? null;
+  } catch {
+    // Fallback to zeros — page always renders
   }
-
-  const today = new Date().toISOString().slice(0, 10);
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-2xl mx-auto px-4 py-5 flex flex-col gap-5">
 
-        {/* Onboarding progress card — hidden when completed */}
+        {/* Onboarding progress — hidden when completed */}
         <OnboardingCard />
 
-        {/* ── GYEON Hero — always rendered ─────────────────────────────────── */}
-        <GyeonHero />
+        {/* ── Today's Work Header — greeting + safe counters ─────────────── */}
+        <TodayHeader
+          businessName={businessName}
+          reservationToday={summary.reservation_stats.today}
+          workOrdersInProgress={summary.work_orders.in_progress}
+          maintenanceNext7Days={summary.maintenance_stats.next_7_days}
+          lineScheduled={summary.line_queue_stats.scheduled}
+        />
 
-        {/* Data unavailability notice — non-blocking */}
-        {dataError && (
-          <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-700/40 bg-amber-950/20">
-            <span className="text-amber-400 shrink-0">⚠</span>
-            <p className="text-xs text-amber-300">
-              ダッシュボードデータを取得できませんでした。Supabase接続またはマイグレーションを確認してください。
-              集計値はすべてゼロで表示しています。
-            </p>
-          </div>
-        )}
+        {/* ── Main menu — 8 cards, 2-column grid ────────────────────────── */}
+        <MainActionsGrid />
 
-        {/* ── KPI Cards ────────────────────────────────────────────────────── */}
-        <div className="mb-6">
-          <DashboardKpiCards summary={summary} today={today} planInfo={planInfo} />
-        </div>
+        {/* ── Today's schedule ──────────────────────────────────────────── */}
+        <TodayReservationsCard
+          items={summary.today_work_orders}
+          reservationToday={summary.reservation_stats.today}
+        />
 
-        {/* ── Quick Actions — always rendered ──────────────────────────────── */}
-        <div className="mb-6">
-          <QuickActionsCard />
-        </div>
+        {/* ── Maintenance notifications ──────────────────────────────────── */}
+        <MaintenanceDueCard
+          maintenance={summary.maintenance_stats}
+          lineStats={summary.line_stats}
+        />
 
-        {/* ── Status panels: Estimates / Work Orders / Invoices ────────────── */}
-        <div className="mb-6">
-          <StatusSummaryPanel
-            estimates={summary.estimates}
-            workOrders={summary.work_orders}
-            invoices={summary.invoices}
-          />
-        </div>
-
-        {/* ── Today Schedule ───────────────────────────────────────────────── */}
-        <div className="mb-6">
-          <TodayReservationsCard
-            items={summary.today_work_orders}
-            reservationToday={summary.reservation_stats.today}
-          />
-        </div>
-
-        {/* ── Maintenance + Recent Activity (2-col on desktop) ─────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <MaintenanceDueCard
-            maintenance={summary.maintenance_stats}
-            lineStats={summary.line_stats}
-          />
-          <RecentActivityCard activities={summary.recent_activities} />
-        </div>
-
-        {/* ── Upcoming 7 days ──────────────────────────────────────────────── */}
+        {/* ── Upcoming 7 days ───────────────────────────────────────────── */}
         <UpcomingWorkOrdersPanel items={summary.upcoming_work_orders} />
 
       </div>
@@ -172,7 +119,7 @@ export default async function DashboardPage() {
   );
 }
 
-// ─── Upcoming work orders panel (inline, no separate file needed) ─────────────
+// ─── Upcoming work orders (inline, no separate file) ─────────────────────────
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -185,7 +132,7 @@ function fmtTime(iso: string | null): string {
   return iso.replace("T", " ").slice(11, 16);
 }
 
-function upcomingCustName(wo: UpcomingWorkOrder): string {
+function custName(wo: UpcomingWorkOrder): string {
   if (!wo.customers) return "—";
   return [wo.customers.last_name, wo.customers.first_name].filter(Boolean).join(" ") || "—";
 }
@@ -223,7 +170,7 @@ function UpcomingWorkOrdersPanel({ items }: { items: UpcomingWorkOrder[] }) {
                 <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${WO_BADGE[wo.status] ?? "bg-slate-700 text-slate-400"}`}>
                   {WO_LABEL[wo.status] ?? wo.status}
                 </span>
-                <p className="text-xs text-slate-200 truncate">{upcomingCustName(wo)}</p>
+                <p className="text-xs text-slate-200 truncate">{custName(wo)}</p>
               </div>
               {wo.vehicles && (
                 <p className="text-[10px] text-slate-500 truncate">
