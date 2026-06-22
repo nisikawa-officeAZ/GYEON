@@ -171,5 +171,5 @@ export async function createEstimate(formData: FormData) {
   });
 
   revalidatePath("/estimates");
-  return { success: true };
+  return { success: true, estimateId: newEstimate.id };
 }

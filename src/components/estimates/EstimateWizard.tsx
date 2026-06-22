@@ -34,13 +34,13 @@ type DetailerRank = "detailer" | "certified";
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const CATEGORIES: { id: CategoryId; label: string; emoji: string }[] = [
-  { id: "coating",     label: "コーティング（GYEON）", emoji: "✨" },
-  { id: "ppf",         label: "PPFフィルム",            emoji: "🛡" },
-  { id: "window",      label: "ウインドフィルム",        emoji: "🪟" },
-  { id: "maintenance", label: "メンテナンス",            emoji: "🔧" },
-  { id: "carwash",     label: "洗車",                   emoji: "🚿" },
-  { id: "roomclean",   label: "ルームクリーニング",      emoji: "🧹" },
-  { id: "other",       label: "その他作業",              emoji: "📋" },
+  { id: "coating",     label: "ボディコーティング",     emoji: "✨" },
+  { id: "ppf",         label: "PPF",                   emoji: "🛡" },
+  { id: "window",      label: "ウィンドウフィルム",     emoji: "🪟" },
+  { id: "maintenance", label: "ボディ定期メンテナンス", emoji: "🔧" },
+  { id: "carwash",     label: "メンテナンス洗車",       emoji: "🚿" },
+  { id: "roomclean",   label: "ルームクリーニング",     emoji: "🧹" },
+  { id: "other",       label: "その他作業",             emoji: "📋" },
 ];
 
 const BODY_SIZES: { key: string; name: string; multi: number }[] = [
@@ -105,10 +105,10 @@ const SCREEN_LABEL: Record<Screen, string> = {
   step2:              "STEP 2 / ボディサイズ",
   step3:              "STEP 3 / コーティング選択",
   step4:              "STEP 4 / 追加オプション",
-  "step-ppf":         "PPF 見積",
-  "step-window":      "ウインドフィルム",
-  "step-maintenance": "メンテナンス",
-  "step-carwash":     "洗車",
+  "step-ppf":         "PPF",
+  "step-window":      "ウィンドウフィルム",
+  "step-maintenance": "ボディ定期メンテナンス",
+  "step-carwash":     "メンテナンス洗車",
   "step-roomclean":   "ルームクリーニング",
   "step-other":       "その他作業",
   step5:              "STEP 5 / お見積確認",
@@ -170,11 +170,11 @@ function nextScreen(cur: Screen, cats: CategoryId[]): Screen {
     case "category": return "step1";
     case "step1":
       if (has("coating") || has("ppf")) return "step2";
-      if (has("window"))      return "step-window";
-      if (has("carwash"))     return "step-carwash";
-      if (has("roomclean"))   return "step-roomclean";
-      if (has("maintenance")) return "step-maintenance";
-      if (has("other"))       return "step-other";
+      if (has("window"))       return "step-window";
+      if (has("maintenance"))  return "step-maintenance";
+      if (has("carwash"))      return "step-carwash";
+      if (has("roomclean"))    return "step-roomclean";
+      if (has("other"))        return "step-other";
       return "step5";
     case "step2":
       if (has("coating")) return "step3";
@@ -191,15 +191,17 @@ function nextScreen(cur: Screen, cats: CategoryId[]): Screen {
       if (has("other"))       return "step-other";
       return "step5";
     case "step-ppf":
-      if (has("window"))      return "step-window";
-      if (has("carwash"))     return "step-carwash";
-      if (has("roomclean"))   return "step-roomclean";
-      if (has("other"))       return "step-other";
+      if (has("window"))       return "step-window";
+      if (has("maintenance"))  return "step-maintenance";
+      if (has("carwash"))      return "step-carwash";
+      if (has("roomclean"))    return "step-roomclean";
+      if (has("other"))        return "step-other";
       return "step5";
     case "step-window":
-      if (has("carwash"))     return "step-carwash";
-      if (has("roomclean"))   return "step-roomclean";
-      if (has("other"))       return "step-other";
+      if (has("maintenance"))  return "step-maintenance";
+      if (has("carwash"))      return "step-carwash";
+      if (has("roomclean"))    return "step-roomclean";
+      if (has("other"))        return "step-other";
       return "step5";
     case "step-maintenance":
       if (has("carwash"))     return "step-carwash";
@@ -227,7 +229,7 @@ export interface EstimateWizardProps {
   customers: CustomerDB[];
   vehicles:  VehicleDB[];
   onCancel?: () => void;
-  onSuccess?:() => void;
+  onSuccess?: (estimateId?: string) => void;
 }
 
 export default function EstimateWizard({ customers, vehicles, onCancel, onSuccess }: EstimateWizardProps) {
@@ -253,7 +255,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   const [custLabel,  setCustLabel]  = useState("");
   const [searchQ,    setSearchQ]    = useState("");
   const [isDealer,   setIsDealer]   = useState(false);
-  const [dealerRate, setDealerRate] = useState(80);
+  const [dealerRate, setDealerRate] = useState(70);
   const [nc, setNc] = useState({
     last_name: "", first_name: "", last_name_kana: "", first_name_kana: "",
     phone: "", email: "", line_user_id: "", address: "",
@@ -281,6 +283,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   const [vehLabel,  setVehLabel]  = useState("");
   const [nv, setNv] = useState({
     maker: "", model: "", grade: "", vehicle_code: "", year: "", color: "", plate_number: "", vin: "",
+    inspection_expiry_date: "",
   });
 
   const custVehicles = vehicles.filter(v => v.customer_id === customerId);
@@ -429,9 +432,10 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
         fd.set("vehicle_code", nv.vehicle_code);
         fd.set("year",         nv.year);
         fd.set("color",        nv.color);
-        fd.set("plate_number", nv.plate_number);
-        fd.set("vin",          nv.vin);
-        fd.set("body_size",    sizeKey);
+        fd.set("plate_number",           nv.plate_number);
+        fd.set("vin",                    nv.vin);
+        fd.set("body_size",              sizeKey);
+        fd.set("inspection_expiry_date", nv.inspection_expiry_date);
         const r = await createVehicle(fd);
         if ("error" in r) { setError(r.error ?? null); return; }
         const vid = "vehicleId" in r ? r.vehicleId : undefined;
@@ -485,7 +489,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
       fd.set("items_json",      JSON.stringify(items));
       const r = await createEstimate(fd);
       if (r?.error) { setError(r.error); return; }
-      onSuccess?.();
+      onSuccess?.("estimateId" in r ? r.estimateId : undefined);
       onCancel?.();
     });
   }
@@ -666,6 +670,14 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
                   <input type="text" value={nv.model} onChange={e => setNv(p => ({ ...p, model: e.target.value }))} placeholder="Prius" className={inp} />
                 </div>
                 <div className="flex flex-col gap-1">
+                  <label className={lbl}>グレード</label>
+                  <input type="text" value={nv.grade} onChange={e => setNv(p => ({ ...p, grade: e.target.value }))} placeholder="Z" className={inp} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className={lbl}>型式</label>
+                  <input type="text" value={nv.vehicle_code} onChange={e => setNv(p => ({ ...p, vehicle_code: e.target.value }))} placeholder="ZVW50" className={inp} />
+                </div>
+                <div className="flex flex-col gap-1">
                   <label className={lbl}>年式</label>
                   <input type="text" value={nv.year} onChange={e => setNv(p => ({ ...p, year: e.target.value }))} placeholder="2023" className={inp} />
                 </div>
@@ -676,6 +688,14 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
                 <div className="col-span-2 flex flex-col gap-1">
                   <label className={lbl}>ナンバー</label>
                   <input type="text" value={nv.plate_number} onChange={e => setNv(p => ({ ...p, plate_number: e.target.value }))} placeholder="品川 300 あ 1234" className={inp} />
+                </div>
+                <div className="col-span-2 flex flex-col gap-1">
+                  <label className={lbl}>車台番号（VIN）</label>
+                  <input type="text" value={nv.vin} onChange={e => setNv(p => ({ ...p, vin: e.target.value }))} placeholder="ZVW5000000000" className={inp} />
+                </div>
+                <div className="col-span-2 flex flex-col gap-1">
+                  <label className={lbl}>車検満了日</label>
+                  <input type="date" value={nv.inspection_expiry_date} onChange={e => setNv(p => ({ ...p, inspection_expiry_date: e.target.value }))} className={inp} />
                 </div>
               </div>
             )}
