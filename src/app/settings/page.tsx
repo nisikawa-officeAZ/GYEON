@@ -17,6 +17,9 @@ import { getCompanySettings } from "@/lib/company/save-company-settings";
 import type { CompanySettingsFields } from "@/lib/company/save-company-settings";
 import type { DocumentSequenceDB } from "@/lib/numbering/numbering-types";
 import type { DealerStaffDB, DealerStaffRole } from "@/lib/staff/staff-types";
+import CanonicalSettingsSkeleton from "@/components/settings/CanonicalSettingsSkeleton";
+import { getCanonicalDealerSettings } from "@/lib/dealer-settings/get-canonical-dealer-settings";
+import type { CanonicalDealerSettings } from "@/lib/dealer-settings/dealer-settings-types";
 
 const FALLBACK_PLAN: DealerPlanInfo = {
   plan: "basic",
@@ -31,17 +34,21 @@ export default async function SettingsPage() {
   let staffInfo: { role: DealerStaffRole; staffId: string | null } | null = null;
   let staffList: DealerStaffDB[] = [];
   let companySettings: CompanySettingsFields | null = null;
+  let canonicalSettings: CanonicalDealerSettings | null = null;
 
   try {
-    [sequences, planInfo, staffInfo, staffList, companySettings] = await Promise.all([
+    [sequences, planInfo, staffInfo, staffList, companySettings, canonicalSettings] = await Promise.all([
       getDocumentSequences(),
       getCurrentPlan(),
       getCurrentStaff(),
       getStaffList(),
       getCompanySettings(),
+      getCanonicalDealerSettings(),
     ]);
   } catch (err) {
     console.error("[SettingsPage] data fetch failed:", err);
+    // getCanonicalDealerSettings never throws — if we get here, fetch all individually
+    if (!canonicalSettings) canonicalSettings = await getCanonicalDealerSettings();
   }
 
   // Feature labels for display
@@ -189,6 +196,11 @@ export default async function SettingsPage() {
           </div>
           <DocumentSequenceSettings sequences={sequences} />
         </section>
+
+        {/* ── Canonical Settings Skeleton (PHASE72) ─────────────────── */}
+        {canonicalSettings && (
+          <CanonicalSettingsSkeleton settings={canonicalSettings} />
+        )}
       </div>
     </MainLayout>
   );
