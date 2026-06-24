@@ -94,132 +94,155 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
     });
   }
 
-  const inputClass =
-    "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors";
+  // ── スタイル定数（Genspark世界観 × PC向け） ─────────────────────────────────
+  const card    = "bg-[#111827] rounded-2xl border border-white/[.08] p-5";
+  const secHdr  = "text-[11px] font-bold text-slate-400 uppercase tracking-[1px] mb-3";
+  const lbl     = "block text-[11px] font-semibold text-slate-400 uppercase tracking-[0.5px] mb-1.5";
+  const inp     = "w-full bg-[#1a2236] border border-white/[.08] rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:bg-[#1e2a42] transition-colors";
 
-  const field = (
-    label: string,
-    key: keyof FormFields,
-    opts?: { type?: string; placeholder?: string; required?: boolean }
-  ) => (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-slate-400">
-        {label}
-        {opts?.required && <span className="text-red-400 ml-1">*</span>}
-      </label>
-      <input
-        type={opts?.type ?? "text"}
-        name={key}
-        value={form[key]}
-        onChange={(e) => set(key, e.target.value)}
-        placeholder={opts?.placeholder}
-        required={opts?.required}
-        className={inputClass}
-      />
-    </div>
-  );
+  // ── 入力フィールドヘルパー ──────────────────────────────────────────────────
+  function Field({
+    label, fieldKey, type = "text", placeholder, required: req, children,
+  }: {
+    label: string; fieldKey?: keyof FormFields; type?: string;
+    placeholder?: string; required?: boolean; children?: React.ReactNode;
+  }) {
+    return (
+      <div>
+        <label className={lbl}>
+          {label}
+          {req && <span className="text-red-400 normal-case tracking-normal font-bold ml-1">*</span>}
+        </label>
+        {children ?? (
+          <input
+            type={type}
+            value={fieldKey ? form[fieldKey] : ""}
+            onChange={(e) => fieldKey && set(fieldKey, e.target.value)}
+            placeholder={placeholder}
+            required={req}
+            className={inp}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
       {error && (
-        <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
+        <div className="bg-red-900/20 border border-red-700/50 rounded-xl px-4 py-3">
           <p className="text-xs text-red-400">{error}</p>
         </div>
       )}
 
-      {/* 姓名 */}
-      <div className="grid grid-cols-2 gap-3">
-        {field("姓",  "last_name",  { placeholder: "山田",   required: true })}
-        {field("名", "first_name", { placeholder: "太郎" })}
+      {/* ── 基本情報 ── */}
+      <div className={card}>
+        <div className={secHdr}>基本情報</div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+          <Field label="姓" fieldKey="last_name" placeholder="山田" required />
+          <Field label="名" fieldKey="first_name" placeholder="太郎" />
+          <Field label="セイ" fieldKey="last_name_kana" placeholder="ヤマダ" />
+          <Field label="メイ" fieldKey="first_name_kana" placeholder="タロウ" />
+        </div>
       </div>
 
-      {/* セイメイ */}
-      <div className="grid grid-cols-2 gap-3">
-        {field("セイ", "last_name_kana",  { placeholder: "ヤマダ" })}
-        {field("メイ", "first_name_kana", { placeholder: "タロウ" })}
+      {/* ── 連絡先 ＋ 住所（横2カラム） ── */}
+      <div className="grid grid-cols-2 gap-4">
+
+        {/* 連絡先カード */}
+        <div className={card}>
+          <div className={secHdr}>連絡先</div>
+          <div className="flex flex-col gap-4">
+            <Field label="電話番号" fieldKey="phone" type="tel" placeholder="090-0000-0000" />
+            <Field label="メール" fieldKey="email" type="email" placeholder="example@email.com" />
+            <Field label="LINE ID" fieldKey="line_user_id" placeholder="Uxxxxxxxxxxxxxxxxxxx" />
+          </div>
+        </div>
+
+        {/* 住所カード */}
+        <div className={card}>
+          <div className={secHdr}>住所</div>
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="郵便番号" fieldKey="postal_code" placeholder="000-0000" />
+              <Field label="都道府県" fieldKey="prefecture" placeholder="東京都" />
+            </div>
+            <Field label="市区町村" fieldKey="city" placeholder="渋谷区" />
+            <Field label="住所1" fieldKey="address1" placeholder="神宮前1-1-1" />
+            <Field label="住所2" fieldKey="address2" placeholder="マンション名・部屋番号" />
+          </div>
+        </div>
+
       </div>
 
-      {/* 連絡先 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {field("電話番号", "phone", { type: "tel",   placeholder: "090-0000-0000" })}
-        {field("メール",   "email", { type: "email", placeholder: "example@email.com" })}
-      </div>
-
-      {/* 住所 */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {field("郵便番号", "postal_code", { placeholder: "000-0000" })}
-        {field("都道府県", "prefecture",  { placeholder: "東京都" })}
-        {field("市区町村", "city",        { placeholder: "渋谷区" })}
-      </div>
-      {field("住所1", "address1", { placeholder: "神宮前1-1-1" })}
-      {field("住所2", "address2", { placeholder: "マンション名・部屋番号 など" })}
-
-      {/* LINE */}
-      {field("LINE ユーザーID", "line_user_id", { placeholder: "Uxxxxxxxxxxxxxxxxxxx" })}
-
-      {/* メモ */}
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-slate-400">メモ</label>
+      {/* ── メモ ── */}
+      <div className={card}>
+        <div className={secHdr}>メモ</div>
         <textarea
           name="notes"
           value={form.notes}
           onChange={(e) => set("notes", e.target.value)}
           rows={3}
           placeholder="備考・メモ..."
-          className={`${inputClass} resize-none`}
+          className={`${inp} resize-none`}
         />
       </div>
 
-      {/* 追加項目トグル */}
+      {/* ── 追加項目トグル ── */}
       <button
         type="button"
         onClick={() => setShowExtra((v) => !v)}
-        className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors self-start"
+        className="text-[12px] text-slate-500 hover:text-slate-300 flex items-center gap-1.5 transition-colors self-start"
       >
-        <span>{showExtra ? "▲" : "▼"}</span>
-        {showExtra ? "追加項目を閉じる" : "追加項目を表示（顧客コード・生年月日・性別・職業）"}
+        <span className="text-[10px]">{showExtra ? "▲" : "▼"}</span>
+        {showExtra ? "追加項目を閉じる" : "追加項目（顧客コード・生年月日・性別・職業）"}
       </button>
 
+      {/* ── 追加項目 ── */}
       {showExtra && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-slate-700/50 pt-4">
-          {field("顧客コード",  "customer_code", { placeholder: "CUST-001" })}
-          {field("生年月日",    "birthday",      { type: "date" })}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-400">性別</label>
-            <select
-              name="gender"
-              value={form.gender}
-              onChange={(e) => set("gender", e.target.value)}
-              className={inputClass}
-            >
-              <option value="">選択なし</option>
-              <option value="male">男性</option>
-              <option value="female">女性</option>
-              <option value="other">その他</option>
-            </select>
+        <div className={card}>
+          <div className={secHdr}>追加項目</div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+            <Field label="顧客コード" fieldKey="customer_code" placeholder="CUST-001" />
+            <Field label="生年月日" fieldKey="birthday" type="date" />
+            <Field label="性別">
+              <select
+                name="gender"
+                value={form.gender}
+                onChange={(e) => set("gender", e.target.value)}
+                className={inp}
+              >
+                <option value="" className="bg-[#111827]">選択なし</option>
+                <option value="male"   className="bg-[#111827]">男性</option>
+                <option value="female" className="bg-[#111827]">女性</option>
+                <option value="other"  className="bg-[#111827]">その他</option>
+              </select>
+            </Field>
+            <Field label="職業" fieldKey="occupation" placeholder="会社員" />
           </div>
-          {field("職業", "occupation", { placeholder: "会社員" })}
         </div>
       )}
 
-      <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+      {/* ── アクションボタン ── */}
+      <div className="flex justify-end gap-3 pt-1 border-t border-white/[.08]">
         <button
           type="button"
           onClick={onCancel}
           disabled={pending}
-          className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50"
+          className="px-5 py-2.5 text-sm font-medium text-slate-400 rounded-xl border border-white/[.08] hover:border-white/20 hover:text-slate-200 transition-colors disabled:opacity-50"
         >
           キャンセル
         </button>
         <button
           type="submit"
           disabled={pending}
-          className="px-4 py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50"
+          className="px-8 py-2.5 text-sm font-bold text-white rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 transition-colors disabled:opacity-40"
         >
           {pending ? "保存中..." : isEdit ? "更新" : "保存"}
         </button>
       </div>
+
     </form>
   );
 }
