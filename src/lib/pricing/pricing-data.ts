@@ -105,3 +105,69 @@ export const WINDOW_FILM_GRADES: { id: string; name: string; coeff: number }[] =
   { id: "uv-cut",   name: "UVカット",    coeff: 1.1 },
   { id: "ir-cut",   name: "IRカット",    coeff: 1.2 },
 ];
+
+// ── PPF ───────────────────────────────────────────────────────────────────────
+
+export const PPF_PLANS: { id: string; name: string; desc: string }[] = [
+  { id: "front-half", name: "フロントフル",  desc: "ボンネット・フロントフェンダー・ドアミラー・バンパー" },
+  // ↑ OD-10: name may change to "フロントハーフ" after operator session
+  { id: "full-body",  name: "フルボディ",   desc: "全パネル施工" },
+];
+
+// Flat price table — absolute values per plan × size (not multipliers).
+// OD-2: prices from canonical spec. OD-15: XXL fallback = XL price.
+export const PPF_PLAN_PRICES: Record<string, Record<string, number>> = {
+  "front-half": {
+    SS: 130000, S: 150000, M: 170000, ML: 180000,
+    L:  190000, LL: 220000, XL: 260000, XXL: 260000,
+  },
+  "full-body": {
+    SS: 250000, S: 290000, M: 330000, ML: 350000,
+    L:  370000, LL: 430000, XL: 520000, XXL: 520000,
+  },
+};
+
+export const PPF_FILM_TYPES: { id: string; name: string; coeff: number }[] = [
+  { id: "clear",  name: "クリア",   coeff: 1.0 },
+  { id: "matte",  name: "マット",   coeff: 1.3 },
+  { id: "carbon", name: "カーボン", coeff: 1.5 }, // OD-4: verify canonical
+  { id: "color",  name: "カラー",   coeff: 1.8 }, // OD-4: coeff was 1.2 in impl
+];
+
+// OD-3: 4-rank system (canonical). Previous impl had 3 ranks.
+export const PPF_VEHICLE_RANKS: { id: string; name: string; coeff: number }[] = [
+  { id: "std",     name: "スタンダード",   coeff: 1.0 },
+  { id: "premium", name: "プレミアム",     coeff: 1.3 },
+  { id: "upper",   name: "アッパー",       coeff: 1.5 },
+  { id: "luxury",  name: "ラグジュアリー", coeff: 1.8 },
+];
+
+export const PPF_RANK_AUTO_DETECT: { rank: string; makers: string[] }[] = [
+  { rank: "luxury",  makers: ["フェラーリ", "ランボルギーニ", "マクラーレン", "ベントレー", "ロールスロイス", "マセラティ", "アストンマーチン"] },
+  { rank: "upper",   makers: ["BMW", "メルセデス", "Mercedes", "アウディ", "Audi", "VW", "フォルクスワーゲン", "ポルシェ", "ランドローバー", "ボルボ", "ジャガー", "テスラ", "Tesla", "レクサス"] },
+  { rank: "premium", makers: ["トヨタ", "Toyota", "日産", "Nissan", "ホンダ", "Honda", "マツダ", "Mazda", "スバル", "Subaru", "三菱", "Mitsubishi", "スズキ", "ダイハツ"] },
+];
+
+export function detectPpfRank(maker: string): string {
+  if (!maker) return "std";
+  const normalized = maker.trim().toLowerCase();
+  for (const group of PPF_RANK_AUTO_DETECT) {
+    if (group.makers.some(m => normalized.includes(m.toLowerCase()))) return group.rank;
+  }
+  return "std";
+}
+
+export const PPF_FRONT_GLASS: { id: string; name: string; price: number }[] = [
+  { id: "ppf", name: "PPFフィルム貼り", price: 80000 },
+  { id: "tpu", name: "TPUフィルム貼り", price: 60000 },
+];
+
+export const PPF_SINGLE_PARTS: { id: string; name: string; price: number; maxQty: number }[] = [
+  { id: "sp-headlight", name: "ヘッドライト",       price: 25000, maxQty: 1 },
+  { id: "sp-b-pillar",  name: "Bピラー",           price: 15000, maxQty: 1 },
+  { id: "sp-c-pillar",  name: "Cピラー",           price: 15000, maxQty: 1 },
+  { id: "sp-mirror",    name: "ドアミラー",         price: 12000, maxQty: 1 },
+  { id: "sp-step",      name: "サイドステップ",     price: 18000, maxQty: 1 },
+  { id: "sp-rear-bump", name: "リアバンパー",       price: 20000, maxQty: 1 },
+  { id: "sp-door-cup",  name: "ドアカップ（1枚）", price:  3000, maxQty: 6 },
+];
