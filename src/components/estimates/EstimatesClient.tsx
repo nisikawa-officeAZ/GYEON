@@ -1,20 +1,23 @@
 "use client";
 
-import { useState }     from "react";
-import { EstimateDB }   from "@/lib/estimates/estimate-types";
-import { CustomerDB }   from "@/lib/customers/customer-types";
-import { VehicleDB }    from "@/lib/vehicles/vehicle-types";
-import PageTitle        from "@/components/ui/PageTitle";
-import EstimateTable    from "@/components/estimates/EstimateTable";
-import EstimateForm     from "@/components/estimates/EstimateForm";
-import EstimateWizard   from "@/components/estimates/EstimateWizard";
-import EstimateDetail   from "@/components/estimates/EstimateDetail";
-import GyeonServiceForm from "@/components/gyeon/GyeonServiceForm";
-import WorkOrderForm    from "@/components/work-orders/WorkOrderForm";
+import { useState }      from "react";
+import { useRouter }     from "next/navigation";
+import { EstimateDB }    from "@/lib/estimates/estimate-types";
+import { CustomerDB }    from "@/lib/customers/customer-types";
+import { VehicleDB }     from "@/lib/vehicles/vehicle-types";
+import PageTitle         from "@/components/ui/PageTitle";
+import EstimateTable     from "@/components/estimates/EstimateTable";
+import EstimateForm      from "@/components/estimates/EstimateForm";
+import EstimateWizard    from "@/components/estimates/EstimateWizard";
+import EstimateDetail    from "@/components/estimates/EstimateDetail";
+import GyeonServiceForm  from "@/components/gyeon/GyeonServiceForm";
+import WorkOrderForm     from "@/components/work-orders/WorkOrderForm";
+import CustomerVehicleOnboardingWizard from "@/components/onboarding/CustomerVehicleOnboardingWizard";
 
 type ModalState =
   | { mode: "none" }
   | { mode: "create" }
+  | { mode: "onboarding" }
   | { mode: "edit";        estimate: EstimateDB }
   | { mode: "detail";      estimate: EstimateDB }
   | { mode: "gyeon" }
@@ -27,6 +30,7 @@ interface EstimatesClientProps {
 }
 
 export default function EstimatesClient({ estimates, customers, vehicles }: EstimatesClientProps) {
+  const router = useRouter();
   const [modal, setModal] = useState<ModalState>({ mode: "none" });
 
   const closeModal = () => setModal({ mode: "none" });
@@ -37,6 +41,12 @@ export default function EstimatesClient({ estimates, customers, vehicles }: Esti
       <div className="flex items-center justify-between mb-6">
         <PageTitle title="見積管理" />
         <div className="flex gap-2">
+          <button
+            onClick={() => setModal({ mode: "onboarding" })}
+            className="shrink-0 bg-[#0f172a] hover:bg-slate-800 text-slate-200 border border-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            顧客・車両登録
+          </button>
           <button
             onClick={() => setModal({ mode: "gyeon" })}
             className="shrink-0 bg-[#0f172a] hover:bg-slate-800 text-slate-200 border border-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
@@ -59,6 +69,38 @@ export default function EstimatesClient({ estimates, customers, vehicles }: Esti
         onEdit={(e) => setModal({ mode: "edit", estimate: e })}
         onCreateWorkOrder={(e) => setModal({ mode: "work-order", estimate: e })}
       />
+
+      {/* Customer & Vehicle Onboarding Modal */}
+      {modal.mode === "onboarding" && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+          <div
+            className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
+            onClick={closeModal}
+          />
+          <div className="relative w-full max-w-xl bg-[#1e293b] rounded-xl shadow-lg p-6 my-4">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-base font-semibold text-slate-100">顧客・車両登録</h2>
+                <p className="text-xs text-slate-500 mt-0.5">登録後に見積作成画面が開きます</p>
+              </div>
+              <button
+                onClick={closeModal}
+                className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
+              >
+                ✕
+              </button>
+            </div>
+            <CustomerVehicleOnboardingWizard
+              customers={customers}
+              onComplete={() => {
+                router.refresh();
+                setModal({ mode: "create" });
+              }}
+              onCancel={closeModal}
+            />
+          </div>
+        </div>
+      )}
 
       {/* New Estimate Wizard Modal */}
       {modal.mode === "create" && (
