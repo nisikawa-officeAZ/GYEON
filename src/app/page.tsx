@@ -1,10 +1,13 @@
-import { redirect }         from "next/navigation";
-import Image                 from "next/image";
-import Link                  from "next/link";
-import MainLayout            from "@/components/layout/MainLayout";
-import { getCurrentDealer }  from "@/lib/auth/get-current-dealer";
-import { createClient }      from "@/lib/supabase/server";
-import OnboardingCard        from "@/components/onboarding/OnboardingCard";
+import { redirect }              from "next/navigation";
+import Image                      from "next/image";
+import Link                       from "next/link";
+import MainLayout                 from "@/components/layout/MainLayout";
+import { getCurrentDealer }       from "@/lib/auth/get-current-dealer";
+import { createClient }           from "@/lib/supabase/server";
+import OnboardingCard             from "@/components/onboarding/OnboardingCard";
+import { getDashboardSummary }    from "@/lib/dashboard/get-dashboard-summary";
+import TodayReservationsCard      from "@/components/dashboard/TodayReservationsCard";
+import MaintenanceDueCard         from "@/components/dashboard/MaintenanceDueCard";
 
 export const metadata = { title: "ホーム | GYEON Detailer Agent" };
 
@@ -30,6 +33,9 @@ export default async function HomePage() {
   } catch { /* column missing — skip */ }
 
   if (shouldRedirectToOnboarding) redirect("/onboarding");
+
+  // Fetch operational data — no sales/revenue fields are passed to UI
+  const dash = await getDashboardSummary();
 
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -190,7 +196,7 @@ export default async function HomePage() {
                 className="text-[11px] mt-0.5 leading-tight"
                 style={{ color: "rgba(255,255,255,0.55)" }}
               >
-                New Estimate · Step by Step
+                顧客・車両を登録して見積作成
               </div>
             </div>
 
@@ -207,12 +213,12 @@ export default async function HomePage() {
         {/* ══ SECONDARY GRID ════════════════════════════════════════════════ */}
         <div className="px-5 mt-2.5 grid grid-cols-2 gap-2.5 relative z-10">
           {[
-            { icon: "📋", label: "見積もり一覧",  sub: "Estimate List",    href: "/estimates"    },
-            { icon: "📋", label: "作業管理",       sub: "Work Management",  href: "/work-orders"  },
-            { icon: "👥", label: "顧客管理",       sub: "Customers",        href: "/customers"    },
-            { icon: "🚗", label: "車両管理",       sub: "Vehicles",         href: "/vehicles"     },
-            { icon: "📅", label: "予約",           sub: "Reservations",     href: "/reservations" },
-            { icon: "💬", label: "LINE",           sub: "Messaging",        href: "/line"         },
+            { icon: "📋", label: "見積もり一覧", sub: "新規作成・一覧",   href: "/estimates"    },
+            { icon: "🔧", label: "作業管理",      sub: "進行中・完了確認", href: "/work-orders"  },
+            { icon: "👥", label: "顧客管理",      sub: "登録・検索",       href: "/customers"    },
+            { icon: "🚗", label: "車両管理",      sub: "台帳・整備記録",   href: "/vehicles"     },
+            { icon: "📅", label: "予約",          sub: "本日・今週の予約", href: "/reservations" },
+            { icon: "💬", label: "LINE",          sub: "受信・送信管理",   href: "/line"         },
           ].map(item => (
             <Link
               key={item.href}
@@ -242,10 +248,10 @@ export default async function HomePage() {
         </div>
 
         {/* ══ BOTTOM UTILITIES ════════════════════════════════════════════════ */}
-        <div className="px-5 mt-2.5 mb-4 grid grid-cols-2 gap-2.5 relative z-10">
+        <div className="px-5 mt-2.5 grid grid-cols-2 gap-2.5 relative z-10">
           {[
-            { icon: "🛒", label: "商品注文", sub: "Orders",   href: "/product-orders" },
-            { icon: "⚙️", label: "設定",     sub: "Settings", href: "/settings"       },
+            { icon: "🛒", label: "商品注文", sub: "発注・在庫確認", href: "/product-orders" },
+            { icon: "⚙️", label: "設定",     sub: "店舗・スタッフ", href: "/settings"       },
           ].map(item => (
             <Link
               key={item.href}
@@ -276,6 +282,26 @@ export default async function HomePage() {
             </Link>
           ))}
         </div>
+
+        {/* ══ TODAY'S SCHEDULE ════════════════════════════════════════════ */}
+        {dash && (
+          <div className="px-5 mt-3 relative z-10">
+            <TodayReservationsCard
+              items={dash.today_work_orders}
+              reservationToday={dash.reservation_stats.today}
+            />
+          </div>
+        )}
+
+        {/* ══ MAINTENANCE + LINE ═══════════════════════════════════════════ */}
+        {dash && (
+          <div className="px-5 mt-2.5 mb-6 relative z-10">
+            <MaintenanceDueCard
+              maintenance={dash.maintenance_stats}
+              lineStats={dash.line_stats}
+            />
+          </div>
+        )}
 
           </div>
         </MainLayout>
