@@ -11,6 +11,8 @@ import {
   BODY_SIZES, COATINGS, TOPCOAT_BASE, TOPCOAT_NAME, COATING_OPTIONS,
   MAINTENANCE_MENUS, CARWASH_MENUS, ROOM_CLEAN_PARTS, ROOM_CLEAN_CONDITIONS,
   WINDOW_FILM_PARTS, WINDOW_FILM_GRADES,
+  PPF_PLANS, PPF_PLAN_PRICES, PPF_FILM_TYPES, PPF_VEHICLE_RANKS,
+  PPF_FRONT_GLASS, PPF_SINGLE_PARTS, detectPpfRank,
 } from "@/lib/pricing/pricing-data";
 import type { CoatingId }        from "@/lib/pricing/pricing-data";
 import { calculateEstimate, buildLineItems } from "@/lib/pricing/pricing-engine";
@@ -73,7 +75,7 @@ const SCREEN_LABEL: Record<Screen, string> = {
   step5:              "STEP 5 / お見積確認",
 };
 
-const PLACEHOLDER_SCREENS: Screen[] = ["step-ppf"];
+const PLACEHOLDER_SCREENS: Screen[] = [];
 
 function topcoatOpts(coatingId: string, layer: LayerMode, cert: boolean): { id: string; name: string }[] {
   if (layer === "none") return [];
@@ -272,6 +274,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
     : [];
 
   useEffect(() => { setTopcoat2(""); setTopcoat3(""); }, [coatId, layerMode, rank]);
+  useEffect(() => { if (nv.maker) setPpfVehicleRank(detectPpfRank(nv.maker)); }, [nv.maker]);
 
   // ── Options ───────────────────────────────────────────────────────────────
   const [selOpts, setSelOpts] = useState<string[]>([]);
@@ -283,6 +286,11 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   const [roomCleanCond,  setRoomCleanCond]  = useState<string>("normal");
   const [windowPartSel,  setWindowPartSel]  = useState<string[]>([]);
   const [windowGrade,    setWindowGrade]    = useState<string>("standard");
+  const [ppfPlan,        setPpfPlan]        = useState<string>("");
+  const [ppfFilmType,    setPpfFilmType]    = useState<string>("clear");
+  const [ppfVehicleRank, setPpfVehicleRank] = useState<string>("std");
+  const [ppfFrontGlass,  setPpfFrontGlass]  = useState<string>("");
+  const [ppfSingleParts, setPpfSingleParts] = useState<{ id: string; qty: number }[]>([]);
   const [otherItems, setOtherItems] = useState<{ id: string; name: string; price: number }[]>([]);
   const [otherName,  setOtherName]  = useState("");
   const [otherPrice, setOtherPrice] = useState("");
@@ -304,8 +312,16 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   const serviceInputs: ServiceInput[] = [];
   if (has("coating") && coatId)
     serviceInputs.push({ type: "coating", coatingId: coatId, sizeKey, topcoat2: topcoat2 || undefined, topcoat3: topcoat3 || undefined, optionIds: selOpts });
-  if (has("ppf"))
-    serviceInputs.push({ type: "ppf" });
+  if (has("ppf") && ppfPlan)
+    serviceInputs.push({
+      type:        "ppf",
+      planId:      ppfPlan,
+      filmType:    ppfFilmType,
+      vehicleRank: ppfVehicleRank,
+      sizeKey,
+      frontGlass:  ppfFrontGlass  || undefined,
+      singleParts: ppfSingleParts.filter(sp => sp.qty > 0),
+    });
   if (has("window"))
     serviceInputs.push({ type: "window", partIds: windowPartSel, grade: windowGrade });
   if (has("maintenance") && maintenanceSel.length > 0)
@@ -344,6 +360,8 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   const rcCondCoeff  = ROOM_CLEAN_CONDITIONS.find(c => c.id === roomCleanCond)?.coeff ?? 1.0;
   const wfGradeCoeff = WINDOW_FILM_GRADES.find(g => g.id === windowGrade)?.coeff ?? 1.0;
   const windowTot    = estCalc.services.find(s => s.type === "window")?.subtotal ?? 0;
+  const ppfSvc       = estCalc.services.find(s => s.type === "ppf");
+  const ppfTot       = ppfSvc?.subtotal ?? 0;
 
   // ── OCR ───────────────────────────────────────────────────────────────────
   function applyOcr(sel: Partial<VehicleRegistrationOcrResult>) {
@@ -1084,6 +1102,155 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
         </div>
       )}
 
+      {/* ══ STEP: PPF ══ */}
+      {screen === "step-ppf" && (
+        <div className="flex flex-col gap-5">
+
+          {/* ① Plan */}
+          <div className="flex flex-col gap-2">
+            <p className={lbl}>① プランを選択してください <span className="text-red-400">*</span></p>
+            <div className="flex flex-col gap-2">
+              {PPF_PLANS.map(plan => {
+                const active     = ppfPlan === plan.id;
+                const basePrice  = sizeKey ? (PPF_PLAN_PRICES[plan.id]?.[sizeKey] ?? 0) : 0;
+                return (
+                  <button key={plan.id} type="button"
+                    onClick={() => setPpfPlan(plan.id)}
+                    className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-colors text-left ${active ? "bg-blue-950/20 border-[#1d4ed8]/40" : "bg-[#0f172a] border-slate-700 hover:border-slate-600"}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-4 h-4 rounded-full border-2 shrink-0 transition-colors ${active ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-200">{plan.name}</p>
+                        <p className="text-[10px] text-slate-500 truncate">{plan.desc}</p>
+                      </div>
+                    </div>
+                    {basePrice > 0 && (
+                      <span className={`text-xs font-medium shrink-0 ml-2 ${active ? "text-blue-400" : "text-slate-500"}`}>
+                        ¥{basePrice.toLocaleString("ja-JP")}〜
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ② Film type */}
+          <div className="flex flex-col gap-2">
+            <p className={lbl}>② フィルムタイプ <span className="text-red-400">*</span></p>
+            <div className="grid grid-cols-2 gap-2">
+              {PPF_FILM_TYPES.map(film => {
+                const active = ppfFilmType === film.id;
+                return (
+                  <button key={film.id} type="button"
+                    onClick={() => setPpfFilmType(film.id)}
+                    className={`flex flex-col items-center gap-1 px-3 py-3 rounded-lg border transition-colors ${active ? "bg-blue-950/30 border-[#1d4ed8]/60 text-slate-100" : "bg-[#0f172a] border-slate-700 text-slate-400 hover:border-slate-600"}`}>
+                    <span className="text-xs font-semibold">{film.name}</span>
+                    <span className={`text-[10px] ${active ? "text-blue-400" : "text-slate-600"}`}>×{film.coeff.toFixed(1)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ③ Vehicle rank */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className={lbl}>③ 車両ランク <span className="text-red-400">*</span></p>
+              {nv.maker && (
+                <span className="text-[10px] text-amber-400">自動検出: {nv.maker}</span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {PPF_VEHICLE_RANKS.map(rank => {
+                const active = ppfVehicleRank === rank.id;
+                return (
+                  <button key={rank.id} type="button"
+                    onClick={() => setPpfVehicleRank(rank.id)}
+                    className={`flex flex-col items-center gap-1 px-3 py-3 rounded-lg border transition-colors ${active ? "bg-blue-950/30 border-[#1d4ed8]/60 text-slate-100" : "bg-[#0f172a] border-slate-700 text-slate-400 hover:border-slate-600"}`}>
+                    <span className="text-xs font-semibold">{rank.name}</span>
+                    <span className={`text-[10px] ${active ? "text-blue-400" : "text-slate-600"}`}>×{rank.coeff.toFixed(1)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ④ Front glass option */}
+          <div className="flex flex-col gap-2">
+            <p className={lbl}>④ フロントガラスオプション（任意）</p>
+            <div className="flex flex-col gap-2">
+              <button type="button"
+                onClick={() => setPpfFrontGlass("")}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${ppfFrontGlass === "" ? "bg-blue-950/20 border-[#1d4ed8]/40" : "bg-[#0f172a] border-slate-700 hover:border-slate-600"}`}>
+                <div className={`w-4 h-4 rounded-full border-2 shrink-0 transition-colors ${ppfFrontGlass === "" ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`} />
+                <span className="text-sm text-slate-300">なし（スキップ）</span>
+              </button>
+              {PPF_FRONT_GLASS.map(fg => {
+                const active = ppfFrontGlass === fg.id;
+                return (
+                  <button key={fg.id} type="button"
+                    onClick={() => setPpfFrontGlass(fg.id)}
+                    className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${active ? "bg-blue-950/20 border-[#1d4ed8]/40" : "bg-[#0f172a] border-slate-700 hover:border-slate-600"}`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full border-2 shrink-0 transition-colors ${active ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`} />
+                      <span className="text-sm text-slate-200">{fg.name}</span>
+                    </div>
+                    <span className={`text-xs font-medium ${active ? "text-blue-400" : "text-slate-500"}`}>¥{fg.price.toLocaleString("ja-JP")}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ⑤ Single parts */}
+          <div className="flex flex-col gap-2">
+            <p className={lbl}>⑤ 単体パーツ追加（任意・複数可）</p>
+            {PPF_SINGLE_PARTS.map(part => {
+              const sel       = ppfSingleParts.find(p => p.id === part.id);
+              const checked   = !!sel;
+              const qty       = sel?.qty ?? 0;
+              const isDoorCup = part.id === "sp-door-cup";
+              return (
+                <div key={part.id}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${checked ? "bg-blue-950/20 border-[#1d4ed8]/40" : "bg-[#0f172a] border-slate-700"}`}>
+                  <button type="button"
+                    onClick={() => setPpfSingleParts(p => checked ? p.filter(x => x.id !== part.id) : [...p, { id: part.id, qty: 1 }])}
+                    className="flex items-center gap-3 flex-1 text-left min-w-0">
+                    <div className={`w-4 h-4 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${checked ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`}>
+                      {checked && <span className="text-white text-[10px] leading-none">✓</span>}
+                    </div>
+                    <span className="text-sm text-slate-200">{part.name}</span>
+                  </button>
+                  {isDoorCup && checked ? (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button type="button"
+                        onClick={() => setPpfSingleParts(p => p.map(x => x.id === "sp-door-cup" ? { ...x, qty: Math.max(1, x.qty - 1) } : x))}
+                        className="w-6 h-6 rounded border border-slate-600 text-slate-400 hover:border-slate-500 text-xs flex items-center justify-center">−</button>
+                      <span className="text-sm text-slate-200 w-5 text-center">{qty}</span>
+                      <button type="button"
+                        onClick={() => setPpfSingleParts(p => p.map(x => x.id === "sp-door-cup" ? { ...x, qty: Math.min(part.maxQty, x.qty + 1) } : x))}
+                        className="w-6 h-6 rounded border border-slate-600 text-slate-400 hover:border-slate-500 text-xs flex items-center justify-center">＋</button>
+                      <span className="text-xs font-medium text-blue-400 w-16 text-right">¥{(part.price * qty).toLocaleString("ja-JP")}</span>
+                    </div>
+                  ) : (
+                    <span className={`text-xs font-medium shrink-0 ${checked ? "text-blue-400" : "text-slate-500"}`}>¥{part.price.toLocaleString("ja-JP")}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Running subtotal */}
+          {ppfTot > 0 && (
+            <div className="border border-slate-700 rounded-lg px-4 py-3 flex justify-between">
+              <span className="text-xs text-slate-500">PPF 小計</span>
+              <span className="text-sm font-medium text-slate-100">¥{ppfTot.toLocaleString("ja-JP")}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ══ Placeholder screens ══ */}
       {PLACEHOLDER_SCREENS.includes(screen) && (
         <div className="border border-slate-700/50 rounded-xl p-8 text-center flex flex-col items-center gap-3">
@@ -1124,6 +1291,17 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
                     const o = COATING_OPTIONS.find(x => x.id === id);
                     return o ? <div key={id} className="flex justify-between text-xs text-slate-400"><span>{o.name}</span><span>+¥{o.price.toLocaleString("ja-JP")}</span></div> : null;
                   })}
+                </div>
+              )}
+              {has("ppf") && ppfTot > 0 && (
+                <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
+                  <p className="text-xs font-medium text-slate-400">PPF</p>
+                  {ppfSvc?.lineItems.map((item, i) => (
+                    <div key={i} className="flex justify-between text-sm">
+                      <span className="text-slate-300">{item.item_name}</span>
+                      <span className="text-slate-100">¥{(item.unit_price * item.quantity).toLocaleString("ja-JP")}</span>
+                    </div>
+                  ))}
                 </div>
               )}
               {has("maintenance") && maintenanceSel.length > 0 && (
@@ -1277,6 +1455,9 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
                 else if (screen === "step4") handleStep4Next();
                 else if (screen === "step-window") {
                   if (windowPartSel.length === 0) { setError("施工箇所を1か所以上選択してください"); return; }
+                  push(nextScreen(screen, cats));
+                } else if (screen === "step-ppf") {
+                  if (!ppfPlan) { setError("プランを選択してください"); return; }
                   push(nextScreen(screen, cats));
                 } else push(nextScreen(screen, cats));
               }}
