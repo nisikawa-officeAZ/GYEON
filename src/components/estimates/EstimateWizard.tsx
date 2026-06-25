@@ -10,6 +10,7 @@ import { VehicleDB }             from "@/lib/vehicles/vehicle-types";
 import {
   BODY_SIZES, COATINGS, TOPCOAT_BASE, TOPCOAT_NAME, COATING_OPTIONS,
   MAINTENANCE_MENUS, CARWASH_MENUS, ROOM_CLEAN_PARTS, ROOM_CLEAN_CONDITIONS,
+  WINDOW_FILM_PARTS, WINDOW_FILM_GRADES,
 } from "@/lib/pricing/pricing-data";
 import type { CoatingId }        from "@/lib/pricing/pricing-data";
 import { calculateEstimate, buildLineItems } from "@/lib/pricing/pricing-engine";
@@ -72,7 +73,7 @@ const SCREEN_LABEL: Record<Screen, string> = {
   step5:              "STEP 5 / お見積確認",
 };
 
-const PLACEHOLDER_SCREENS: Screen[] = ["step-ppf", "step-window"];
+const PLACEHOLDER_SCREENS: Screen[] = ["step-ppf"];
 
 function topcoatOpts(coatingId: string, layer: LayerMode, cert: boolean): { id: string; name: string }[] {
   if (layer === "none") return [];
@@ -275,11 +276,13 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   // ── Options ───────────────────────────────────────────────────────────────
   const [selOpts, setSelOpts] = useState<string[]>([]);
 
-  // ── Maintenance / Carwash / Room Clean / Other ───────────────────────────
+  // ── Maintenance / Carwash / Room Clean / Window / Other ─────────────────
   const [maintenanceSel, setMaintenanceSel] = useState<string[]>([]);
   const [carwashSel,     setCarwashSel]     = useState<string[]>([]);
   const [roomCleanSel,   setRoomCleanSel]   = useState<string[]>([]);
   const [roomCleanCond,  setRoomCleanCond]  = useState<string>("normal");
+  const [windowPartSel,  setWindowPartSel]  = useState<string[]>([]);
+  const [windowGrade,    setWindowGrade]    = useState<string>("standard");
   const [otherItems, setOtherItems] = useState<{ id: string; name: string; price: number }[]>([]);
   const [otherName,  setOtherName]  = useState("");
   const [otherPrice, setOtherPrice] = useState("");
@@ -304,7 +307,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   if (has("ppf"))
     serviceInputs.push({ type: "ppf" });
   if (has("window"))
-    serviceInputs.push({ type: "window" });
+    serviceInputs.push({ type: "window", partIds: windowPartSel, grade: windowGrade });
   if (has("maintenance") && maintenanceSel.length > 0)
     serviceInputs.push({ type: "maintenance", menuIds: maintenanceSel });
   if (has("carwash") && carwashSel.length > 0)
@@ -339,6 +342,8 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   const roomCleanTot = estCalc.services.find(s => s.type === "roomclean")?.subtotal  ?? 0;
   const otherTot     = estCalc.services.find(s => s.type === "other")?.subtotal      ?? 0;
   const rcCondCoeff  = ROOM_CLEAN_CONDITIONS.find(c => c.id === roomCleanCond)?.coeff ?? 1.0;
+  const wfGradeCoeff = WINDOW_FILM_GRADES.find(g => g.id === windowGrade)?.coeff ?? 1.0;
+  const windowTot    = estCalc.services.find(s => s.type === "window")?.subtotal ?? 0;
 
   // ── OCR ───────────────────────────────────────────────────────────────────
   function applyOcr(sel: Partial<VehicleRegistrationOcrResult>) {
@@ -1024,6 +1029,61 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
         </div>
       )}
 
+      {/* ══ STEP: Window Film ══ */}
+      {screen === "step-window" && (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <p className={lbl}>フィルムグレードを選択してください</p>
+            <div className="grid grid-cols-2 gap-2">
+              {WINDOW_FILM_GRADES.map(grade => {
+                const active = windowGrade === grade.id;
+                return (
+                  <button key={grade.id} type="button"
+                    onClick={() => setWindowGrade(grade.id)}
+                    className={`flex flex-col items-center gap-1 px-3 py-3 rounded-lg border transition-colors ${active ? "bg-blue-950/30 border-[#1d4ed8]/60 text-slate-100" : "bg-[#0f172a] border-slate-700 text-slate-400 hover:border-slate-600"}`}>
+                    <span className="text-xs font-semibold">{grade.name}</span>
+                    <span className={`text-[10px] ${active ? "text-blue-400" : "text-slate-600"}`}>×{grade.coeff.toFixed(1)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className={lbl}>施工箇所を選択してください（複数可）</p>
+            {WINDOW_FILM_PARTS.map(part => {
+              const checked = windowPartSel.includes(part.id);
+              const price   = Math.round(part.basePrice * wfGradeCoeff);
+              return (
+                <button key={part.id} type="button"
+                  onClick={() => setWindowPartSel(p => checked ? p.filter(id => id !== part.id) : [...p, part.id])}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${checked ? "bg-blue-950/20 border-[#1d4ed8]/40" : "bg-[#0f172a] border-slate-700 hover:border-slate-600"}`}>
+                  <div className={`w-4 h-4 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${checked ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`}>
+                    {checked && <span className="text-white text-[10px] leading-none">✓</span>}
+                  </div>
+                  <span className="text-sm text-slate-200 flex-1 text-left">{part.name}</span>
+                  <div className="flex flex-col items-end shrink-0">
+                    <span className={`text-xs font-medium ${checked ? "text-blue-400" : "text-slate-500"}`}>
+                      ¥{price.toLocaleString("ja-JP")}
+                    </span>
+                    {wfGradeCoeff !== 1.0 && (
+                      <span className="text-[10px] text-slate-600 line-through">
+                        ¥{part.basePrice.toLocaleString("ja-JP")}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {windowPartSel.length > 0 && (
+            <div className="border border-slate-700 rounded-lg px-4 py-3 flex justify-between">
+              <span className="text-xs text-slate-500">ウィンドウフィルム小計</span>
+              <span className="text-sm font-medium text-slate-100">¥{windowTot.toLocaleString("ja-JP")}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ══ Placeholder screens ══ */}
       {PLACEHOLDER_SCREENS.includes(screen) && (
         <div className="border border-slate-700/50 rounded-xl p-8 text-center flex flex-col items-center gap-3">
@@ -1116,6 +1176,28 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
                   })}
                 </div>
               )}
+              {has("window") && windowPartSel.length > 0 && (
+                <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
+                  <p className="text-xs font-medium text-slate-400">
+                    ウィンドウフィルム
+                    {windowGrade !== "standard" && (
+                      <span className="ml-1 text-[10px] text-blue-400">
+                        （{WINDOW_FILM_GRADES.find(g => g.id === windowGrade)?.name}）
+                      </span>
+                    )}
+                  </p>
+                  {windowPartSel.map(id => {
+                    const p = WINDOW_FILM_PARTS.find(x => x.id === id);
+                    const price = p ? Math.round(p.basePrice * wfGradeCoeff) : 0;
+                    return p ? (
+                      <div key={id} className="flex justify-between text-sm">
+                        <span className="text-slate-300">{p.name}</span>
+                        <span className="text-slate-100">¥{price.toLocaleString("ja-JP")}</span>
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              )}
               {has("other") && otherItems.length > 0 && (
                 <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
                   <p className="text-xs font-medium text-slate-400">その他作業</p>
@@ -1193,7 +1275,10 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
                 else if (screen === "step2") handleStep2Next();
                 else if (screen === "step3") handleStep3Next();
                 else if (screen === "step4") handleStep4Next();
-                else push(nextScreen(screen, cats));
+                else if (screen === "step-window") {
+                  if (windowPartSel.length === 0) { setError("施工箇所を1か所以上選択してください"); return; }
+                  push(nextScreen(screen, cats));
+                } else push(nextScreen(screen, cats));
               }}
               className="px-5 py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50">
               {pending ? "処理中..." : "次へ →"}

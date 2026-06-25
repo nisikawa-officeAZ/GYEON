@@ -2,6 +2,7 @@ import { EstimateCategory } from "../estimates/estimate-types";
 import {
   BODY_SIZES, COATINGS, TOPCOAT_BASE, TOPCOAT_NAME, COATING_OPTIONS,
   MAINTENANCE_MENUS, CARWASH_MENUS, ROOM_CLEAN_PARTS, ROOM_CLEAN_CONDITIONS,
+  WINDOW_FILM_PARTS, WINDOW_FILM_GRADES,
 } from "./pricing-data";
 
 // ── Input types ───────────────────────────────────────────────────────────────
@@ -29,8 +30,13 @@ export interface OtherInput {
   items: { name: string; price: number }[];
 }
 
-export interface PpfInput    { type: "ppf";    }
-export interface WindowInput { type: "window"; }
+export interface PpfInput { type: "ppf"; }
+
+export interface WindowInput {
+  type:    "window";
+  partIds: string[];
+  grade:   string;
+}
 
 export type ServiceInput =
   | CoatingInput | MaintenanceInput | CarwashInput
@@ -158,6 +164,24 @@ function calcOther(input: OtherInput, offset: number): ServiceSubtotal {
   return { type: "other", lineItems: items, subtotal: sum(items) };
 }
 
+function calcWindow(input: WindowInput, offset: number): ServiceSubtotal {
+  const items: PricedLineItem[] = [];
+  let idx = offset;
+  const grade = WINDOW_FILM_GRADES.find(g => g.id === input.grade);
+  const coeff = grade?.coeff ?? 1.0;
+  input.partIds.forEach(id => {
+    const part = WINDOW_FILM_PARTS.find(p => p.id === id);
+    if (part) {
+      const price = Math.round(part.basePrice * coeff);
+      const label = grade && grade.id !== "standard"
+        ? `${part.name}（${grade.name}）`
+        : part.name;
+      items.push(mkItem("window", label, price, idx++));
+    }
+  });
+  return { type: "window", lineItems: items, subtotal: sum(items) };
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export function calculateService(input: ServiceInput, sortOffset = 0): ServiceSubtotal {
@@ -167,8 +191,8 @@ export function calculateService(input: ServiceInput, sortOffset = 0): ServiceSu
     case "carwash":     return calcCarwash(input, sortOffset);
     case "roomclean":   return calcRoomClean(input, sortOffset);
     case "other":       return calcOther(input, sortOffset);
-    case "ppf":
-    case "window":      return { type: input.type, lineItems: [], subtotal: 0 };
+    case "ppf":         return { type: "ppf", lineItems: [], subtotal: 0 };
+    case "window":      return calcWindow(input, sortOffset);
   }
 }
 

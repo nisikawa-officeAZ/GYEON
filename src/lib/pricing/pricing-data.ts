@@ -88,3 +88,20 @@ export const ROOM_CLEAN_CONDITIONS: { id: string; label: string; coeff: number }
   { id: "dirty",  label: "汚れあり", coeff: 1.3 },
   { id: "heavy",  label: "重度汚れ", coeff: 1.6 },
 ];
+
+// ── Window film ───────────────────────────────────────────────────────────────
+
+export const WINDOW_FILM_PARTS: { id: string; name: string; basePrice: number }[] = [
+  { id: "wf-front-side", name: "フロントサイド",   basePrice: 25000 },
+  { id: "wf-rear-side",  name: "リアサイド",       basePrice: 20000 },
+  { id: "wf-rear",       name: "リアウィンドウ",   basePrice: 18000 },
+  { id: "wf-quarter",    name: "クォーター",       basePrice: 12000 },
+  { id: "wf-all",        name: "全窓一括",         basePrice: 80000 },
+];
+
+export const WINDOW_FILM_GRADES: { id: string; name: string; coeff: number }[] = [
+  { id: "standard", name: "スタンダード", coeff: 1.0 },
+  { id: "premium",  name: "プレミアム",   coeff: 1.3 },
+  { id: "uv-cut",   name: "UVカット",    coeff: 1.1 },
+  { id: "ir-cut",   name: "IRカット",    coeff: 1.2 },
+];
