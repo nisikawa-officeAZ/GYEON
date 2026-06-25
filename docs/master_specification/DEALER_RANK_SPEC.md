@@ -71,7 +71,7 @@ The full dealer application → Admin approval flow requires schema changes:
 - Admin UI to review pending applications
 - App-access gate tied to approval status
 
-**These are deferred to a future sprint requiring schema migration approval.**
+**Decisions locked in `SPRINT10_APPROVAL_FLOW_SPEC.md`. Implementation plan in `SPRINT10A_IMPLEMENTATION_PLAN.md`. Awaiting migration 071 staging approval.**
 
 ---
 
