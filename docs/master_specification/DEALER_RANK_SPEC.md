@@ -77,6 +77,8 @@ The full dealer application → Admin approval flow requires schema changes:
 
 ## 3. Deferred: Full Approval Flow
 
+**Sprint 10 planning document:** `SPRINT10_APPROVAL_FLOW_SPEC.md` — full spec, schema migration proposal, UI design, security analysis, and implementation checklist.
+
 ### Required future work
 
 | Item | Schema impact |
