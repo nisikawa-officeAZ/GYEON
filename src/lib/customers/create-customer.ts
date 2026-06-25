@@ -17,10 +17,10 @@ function str(formData: FormData, key: string): string | null {
 
 export async function createCustomer(formData: FormData) {
   const dealer = await getCurrentDealer();
-  if (!dealer) return { error: "No active dealer membership." };
+  if (!dealer) return { error: "ディーラー認証に失敗しました" };
 
   const lastName = str(formData, "last_name");
-  if (!lastName) return { error: "姓（last name）is required." };
+  if (!lastName) return { error: "姓は必須です" };
 
   const supabase = await createClient();
 

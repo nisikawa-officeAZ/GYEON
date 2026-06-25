@@ -196,8 +196,9 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   }
 
   // ── Customer ──────────────────────────────────────────────────────────────
-  const [cMode,      setCMode]      = useState<"select" | "create">("select");
-  const [customerId, setCustomerId] = useState("");
+  const [cMode,                 setCMode]                 = useState<"select" | "create">("select");
+  const [customerId,            setCustomerId]            = useState("");
+  const [wizardCreatedCustomerId, setWizardCreatedCustomerId] = useState("");
   const [custLabel,  setCustLabel]  = useState("");
   const [searchQ,    setSearchQ]    = useState("");
   const [isDealer,   setIsDealer]   = useState(false);
@@ -394,6 +395,13 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
       return;
     }
     if (!nc.last_name) { setError("お客様名（姓）は必須です"); return; }
+    // Reuse customer created earlier in this session — prevents duplicate on back-navigation
+    if (wizardCreatedCustomerId) {
+      setCustomerId(wizardCreatedCustomerId);
+      setVMode("create");
+      push(nextScreen("step1", cats));
+      return;
+    }
     startTx(async () => {
       const fd = new FormData();
       fd.set("last_name",       nc.last_name);
@@ -407,9 +415,10 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
       fd.set("occupation",      isDealer ? "業者" : "");
       fd.set("notes",           isDealer ? `業販掛け率: ${dealerRate}%` : "");
       const r = await createCustomer(fd);
-      if ("error" in r) { setError(r.error ?? null); return; }
+      if ("error" in r) { setError(r.error ?? "顧客の作成に失敗しました"); return; }
       const cid = "customerId" in r ? r.customerId : undefined;
       if (!cid) { setError("顧客IDの取得に失敗しました"); return; }
+      setWizardCreatedCustomerId(cid);
       setCustomerId(cid);
       setCustLabel(`${nc.last_name} ${nc.first_name}`.trim());
       setVMode("create");
@@ -444,7 +453,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
         fd.set("body_size",              sizeKey);
         fd.set("inspection_expiry_date", nv.inspection_expiry_date);
         const r = await createVehicle(fd);
-        if ("error" in r) { setError(r.error ?? null); return; }
+        if ("error" in r) { setError(r.error ?? "車両の作成に失敗しました"); return; }
         const vid = "vehicleId" in r ? r.vehicleId : undefined;
         if (!vid) { setError("車両IDの取得に失敗しました"); return; }
         setVehicleId(vid);
@@ -477,7 +486,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
         vfd.set("body_size",              sizeKey);
         vfd.set("inspection_expiry_date", nv.inspection_expiry_date);
         const vr = await createVehicle(vfd);
-        if ("error" in vr) { setError(vr.error ?? null); return; }
+        if ("error" in vr) { setError(vr.error ?? "車両の作成に失敗しました"); return; }
         const vid = "vehicleId" in vr ? vr.vehicleId : undefined;
         if (!vid) { setError("車両IDの取得に失敗しました"); return; }
         setVehicleId(vid);
@@ -499,7 +508,6 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
       const r = await createEstimate(fd);
       if (r?.error) { setError(r.error); return; }
       onSuccess?.("estimateId" in r ? r.estimateId : undefined);
-      onCancel?.();
     });
   }
 

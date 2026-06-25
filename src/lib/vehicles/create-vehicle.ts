@@ -25,10 +25,10 @@ function num(formData: FormData, key: string): number | null {
 
 export async function createVehicle(formData: FormData) {
   const dealer = await getCurrentDealer();
-  if (!dealer) return { error: "No active dealer membership." };
+  if (!dealer) return { error: "ディーラー認証に失敗しました" };
 
   const customerId = str(formData, "customer_id");
-  if (!customerId) return { error: "Customer is required." };
+  if (!customerId) return { error: "顧客IDが必要です" };
 
   const supabase = await createClient();
 
@@ -41,7 +41,7 @@ export async function createVehicle(formData: FormData) {
     .single();
 
   if (customerError || !customer) {
-    return { error: "Customer not found or does not belong to your dealer." };
+    return { error: "顧客情報の確認に失敗しました" };
   }
 
   const { data: newVehicle, error } = await supabase.from("vehicles").insert({

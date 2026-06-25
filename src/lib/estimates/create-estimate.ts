@@ -43,7 +43,7 @@ function num(formData: FormData, key: string, fallback = 0): number {
 
 export async function createEstimate(formData: FormData) {
   const dealer = await getCurrentDealer();
-  if (!dealer) return { error: "No active dealer membership." };
+  if (!dealer) return { error: "ディーラー認証に失敗しました" };
 
   const customerId    = str(formData, "customer_id");
   const vehicleId     = str(formData, "vehicle_id");
@@ -60,8 +60,8 @@ export async function createEstimate(formData: FormData) {
   const internalMemo  = str(formData, "internal_memo");
   const itemsJson     = str(formData, "items_json");
 
-  if (!customerId)  return { error: "Customer is required." };
-  if (!vehicleId)   return { error: "Vehicle is required." };
+  if (!customerId)  return { error: "顧客を選択してください" };
+  if (!vehicleId)   return { error: "車両を選択してください" };
 
   // Auto-assign number if not provided
   const resolvedNo = estimateNo || (await getNextDocumentNumber("estimate")) || "";
@@ -77,7 +77,7 @@ export async function createEstimate(formData: FormData) {
     .single();
 
   if (customerError || !customer) {
-    return { error: "Customer not found or does not belong to your dealer." };
+    return { error: "顧客情報の確認に失敗しました" };
   }
 
   // Validate vehicle_id belongs to the same dealer.
@@ -89,7 +89,7 @@ export async function createEstimate(formData: FormData) {
     .single();
 
   if (vehicleError || !vehicle) {
-    return { error: "Vehicle not found or does not belong to your dealer." };
+    return { error: "車両情報の確認に失敗しました" };
   }
 
   // Insert estimate.
@@ -118,7 +118,7 @@ export async function createEstimate(formData: FormData) {
 
   if (estimateError || !newEstimate) {
     console.error("[createEstimate] error:", estimateError?.message);
-    return { error: estimateError?.message ?? "Failed to create estimate." };
+    return { error: estimateError?.message ?? "見積の作成に失敗しました" };
   }
 
   // Insert line items if provided.
@@ -127,7 +127,7 @@ export async function createEstimate(formData: FormData) {
     try {
       items = JSON.parse(itemsJson) as ItemInput[];
     } catch {
-      return { error: "Invalid items data." };
+      return { error: "見積明細データが不正です" };
     }
 
     if (items.length > 0) {
