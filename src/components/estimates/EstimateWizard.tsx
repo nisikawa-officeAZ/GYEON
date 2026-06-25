@@ -115,6 +115,20 @@ const CARWASH_MENUS: { id: string; name: string; price: number }[] = [
   { id: "cw-vacuum", name: "室内掃除機",        price: 2000 },
 ];
 
+const ROOM_CLEAN_PARTS: { id: string; name: string; basePrice: number }[] = [
+  { id: "rc-floor",   name: "フロア",             basePrice: 12000 },
+  { id: "rc-seat",    name: "シート",             basePrice: 15000 },
+  { id: "rc-ceiling", name: "天井",               basePrice:  8000 },
+  { id: "rc-dash",    name: "ダッシュボード",     basePrice: 10000 },
+  { id: "rc-full",    name: "フルパッケージ",     basePrice: 45000 },
+];
+
+const ROOM_CLEAN_CONDITIONS: { id: string; label: string; coeff: number }[] = [
+  { id: "normal", label: "通常",   coeff: 1.0 },
+  { id: "dirty",  label: "汚れあり", coeff: 1.3 },
+  { id: "heavy",  label: "重度汚れ", coeff: 1.6 },
+];
+
 const SCREEN_LABEL: Record<Screen, string> = {
   category:           "カテゴリ選択",
   step1:              "STEP 1 / 顧客・車両情報",
@@ -130,7 +144,7 @@ const SCREEN_LABEL: Record<Screen, string> = {
   step5:              "STEP 5 / お見積確認",
 };
 
-const PLACEHOLDER_SCREENS: Screen[] = ["step-ppf", "step-window", "step-roomclean"];
+const PLACEHOLDER_SCREENS: Screen[] = ["step-ppf", "step-window"];
 
 // ── Price helpers ─────────────────────────────────────────────────────────────
 
@@ -346,9 +360,11 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   // ── Options ───────────────────────────────────────────────────────────────
   const [selOpts, setSelOpts] = useState<string[]>([]);
 
-  // ── Maintenance / Carwash / Other ─────────────────────────────────────────
+  // ── Maintenance / Carwash / Room Clean / Other ───────────────────────────
   const [maintenanceSel, setMaintenanceSel] = useState<string[]>([]);
   const [carwashSel,     setCarwashSel]     = useState<string[]>([]);
+  const [roomCleanSel,   setRoomCleanSel]   = useState<string[]>([]);
+  const [roomCleanCond,  setRoomCleanCond]  = useState<string>("normal");
   const [otherItems, setOtherItems] = useState<{ id: string; name: string; price: number }[]>([]);
   const [otherName,  setOtherName]  = useState("");
   const [otherPrice, setOtherPrice] = useState("");
@@ -371,10 +387,13 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   const tc2P      = has("coating") && topcoat2 ? topcoatPrice(topcoat2, sizeKey) : 0;
   const tc3P      = has("coating") && topcoat3 ? topcoatPrice(topcoat3, sizeKey) : 0;
   const optTot    = selOpts.reduce((s, id) => s + (COATING_OPTIONS.find(o => o.id === id)?.price ?? 0), 0);
-  const maintTot  = maintenanceSel.reduce((s, id) => s + (MAINTENANCE_MENUS.find(m => m.id === id)?.price ?? 0), 0);
-  const carwashTot = carwashSel.reduce((s, id) => s + (CARWASH_MENUS.find(m => m.id === id)?.price ?? 0), 0);
-  const otherTot  = otherItems.reduce((s, item) => s + item.price, 0);
-  const subtotal  = cPrice + tc2P + tc3P + optTot + maintTot + carwashTot + otherTot;
+  const maintTot    = maintenanceSel.reduce((s, id) => s + (MAINTENANCE_MENUS.find(m => m.id === id)?.price ?? 0), 0);
+  const carwashTot  = carwashSel.reduce((s, id) => s + (CARWASH_MENUS.find(m => m.id === id)?.price ?? 0), 0);
+  const rcCondCoeff = ROOM_CLEAN_CONDITIONS.find(c => c.id === roomCleanCond)?.coeff ?? 1.0;
+  const rcBaseTot   = roomCleanSel.reduce((s, id) => s + (ROOM_CLEAN_PARTS.find(p => p.id === id)?.basePrice ?? 0), 0);
+  const roomCleanTot = Math.round(rcBaseTot * rcCondCoeff);
+  const otherTot    = otherItems.reduce((s, item) => s + item.price, 0);
+  const subtotal    = cPrice + tc2P + tc3P + optTot + maintTot + carwashTot + roomCleanTot + otherTot;
   const couponDisc  = DEFAULT_COUPONS.reduce((s, c, i) => s + (appliedCoupons[i] ? c.amount : 0), 0);
   const extraDiscN  = Number(extraDisc) || 0;
   const dealerDisc  = isDealer ? Math.round(subtotal * (1 - dealerRate / 100)) : 0;
@@ -508,6 +527,17 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
       carwashSel.forEach(id => {
         const m = CARWASH_MENUS.find(x => x.id === id);
         if (m) items.push(mk("other", m.name, m.price));
+      });
+    }
+    if (has("roomclean") && roomCleanSel.length > 0) {
+      const cond = ROOM_CLEAN_CONDITIONS.find(c => c.id === roomCleanCond);
+      roomCleanSel.forEach(id => {
+        const p = ROOM_CLEAN_PARTS.find(x => x.id === id);
+        if (p) {
+          const unitPrice = Math.round(p.basePrice * (cond?.coeff ?? 1.0));
+          const label = cond && cond.id !== "normal" ? `${p.name}（${cond.label}）` : p.name;
+          items.push(mk("interior", label, unitPrice));
+        }
       });
     }
     if (has("other") && otherItems.length > 0) {
@@ -1048,6 +1078,61 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
         </div>
       )}
 
+      {/* ══ STEP: Room Clean ══ */}
+      {screen === "step-roomclean" && (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <p className={lbl}>汚染度を選択してください</p>
+            <div className="grid grid-cols-3 gap-2">
+              {ROOM_CLEAN_CONDITIONS.map(cond => {
+                const active = roomCleanCond === cond.id;
+                return (
+                  <button key={cond.id} type="button"
+                    onClick={() => setRoomCleanCond(cond.id)}
+                    className={`flex flex-col items-center gap-1 px-3 py-3 rounded-lg border transition-colors ${active ? "bg-blue-950/30 border-[#1d4ed8]/60 text-slate-100" : "bg-[#0f172a] border-slate-700 text-slate-400 hover:border-slate-600"}`}>
+                    <span className="text-xs font-semibold">{cond.label}</span>
+                    <span className={`text-[10px] ${active ? "text-blue-400" : "text-slate-600"}`}>×{cond.coeff.toFixed(1)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className={lbl}>クリーニング箇所を選択してください（複数可）</p>
+            {ROOM_CLEAN_PARTS.map(part => {
+              const checked = roomCleanSel.includes(part.id);
+              const price   = Math.round(part.basePrice * rcCondCoeff);
+              return (
+                <button key={part.id} type="button"
+                  onClick={() => setRoomCleanSel(p => checked ? p.filter(id => id !== part.id) : [...p, part.id])}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${checked ? "bg-blue-950/20 border-[#1d4ed8]/40" : "bg-[#0f172a] border-slate-700 hover:border-slate-600"}`}>
+                  <div className={`w-4 h-4 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${checked ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`}>
+                    {checked && <span className="text-white text-[10px] leading-none">✓</span>}
+                  </div>
+                  <span className="text-sm text-slate-200 flex-1 text-left">{part.name}</span>
+                  <div className="flex flex-col items-end shrink-0">
+                    <span className={`text-xs font-medium ${checked ? "text-blue-400" : "text-slate-500"}`}>
+                      ¥{price.toLocaleString("ja-JP")}
+                    </span>
+                    {rcCondCoeff !== 1.0 && (
+                      <span className="text-[10px] text-slate-600 line-through">
+                        ¥{part.basePrice.toLocaleString("ja-JP")}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {roomCleanSel.length > 0 && (
+            <div className="border border-slate-700 rounded-lg px-4 py-3 flex justify-between">
+              <span className="text-xs text-slate-500">ルームクリーニング小計</span>
+              <span className="text-sm font-medium text-slate-100">¥{roomCleanTot.toLocaleString("ja-JP")}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ══ Placeholder screens ══ */}
       {PLACEHOLDER_SCREENS.includes(screen) && (
         <div className="border border-slate-700/50 rounded-xl p-8 text-center flex flex-col items-center gap-3">
@@ -1113,6 +1198,28 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
                       <div key={id} className="flex justify-between text-sm">
                         <span className="text-slate-300">{m.name}</span>
                         <span className="text-slate-100">¥{m.price.toLocaleString("ja-JP")}</span>
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              )}
+              {has("roomclean") && roomCleanSel.length > 0 && (
+                <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
+                  <p className="text-xs font-medium text-slate-400">
+                    ルームクリーニング
+                    {roomCleanCond !== "normal" && (
+                      <span className="ml-1 text-[10px] text-amber-400">
+                        （{ROOM_CLEAN_CONDITIONS.find(c => c.id === roomCleanCond)?.label}）
+                      </span>
+                    )}
+                  </p>
+                  {roomCleanSel.map(id => {
+                    const p = ROOM_CLEAN_PARTS.find(x => x.id === id);
+                    const price = p ? Math.round(p.basePrice * rcCondCoeff) : 0;
+                    return p ? (
+                      <div key={id} className="flex justify-between text-sm">
+                        <span className="text-slate-300">{p.name}</span>
+                        <span className="text-slate-100">¥{price.toLocaleString("ja-JP")}</span>
                       </div>
                     ) : null;
                   })}
