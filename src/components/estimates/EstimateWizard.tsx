@@ -360,8 +360,10 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   const rcCondCoeff  = ROOM_CLEAN_CONDITIONS.find(c => c.id === roomCleanCond)?.coeff ?? 1.0;
   const wfGradeCoeff = WINDOW_FILM_GRADES.find(g => g.id === windowGrade)?.coeff ?? 1.0;
   const windowTot    = estCalc.services.find(s => s.type === "window")?.subtotal ?? 0;
-  const ppfSvc       = estCalc.services.find(s => s.type === "ppf");
-  const ppfTot       = ppfSvc?.subtotal ?? 0;
+  const ppfSvc        = estCalc.services.find(s => s.type === "ppf");
+  const ppfTot        = ppfSvc?.subtotal ?? 0;
+  const windowSvc     = estCalc.services.find(s => s.type === "window");
+  const roomCleanSvc  = estCalc.services.find(s => s.type === "roomclean");
 
   // ── OCR ───────────────────────────────────────────────────────────────────
   function applyOcr(sel: Partial<VehicleRegistrationOcrResult>) {
@@ -651,7 +653,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
                     {custVehicles.map(v => {
                       const label = [v.maker, v.model, v.plate_number].filter(Boolean).join(" ") || v.id;
                       return (
-                        <button key={v.id} type="button" onClick={() => { setVehicleId(v.id); setVehLabel(label); }}
+                        <button key={v.id} type="button" onClick={() => { setVehicleId(v.id); setVehLabel(label); if (v.maker) setPpfVehicleRank(detectPpfRank(v.maker)); }}
                           className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${vehicleId === v.id ? "bg-blue-950/30 border-[#1d4ed8]/50" : "bg-[#0f172a] border-slate-700 hover:border-slate-500"}`}>
                           <p className="text-sm text-slate-200">{label}</p>
                           {v.year && <p className="text-xs text-slate-500">{v.year}年式{v.color ? ` ${v.color}` : ""}</p>}
@@ -1304,6 +1306,17 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
                   ))}
                 </div>
               )}
+              {has("window") && windowPartSel.length > 0 && (
+                <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
+                  <p className="text-xs font-medium text-slate-400">ウィンドウフィルム</p>
+                  {windowSvc?.lineItems.map((item, i) => (
+                    <div key={i} className="flex justify-between text-sm">
+                      <span className="text-slate-300">{item.item_name}</span>
+                      <span className="text-slate-100">¥{item.unit_price.toLocaleString("ja-JP")}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
               {has("maintenance") && maintenanceSel.length > 0 && (
                 <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
                   <p className="text-xs font-medium text-slate-400">ボディ定期メンテナンス</p>
@@ -1334,46 +1347,13 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
               )}
               {has("roomclean") && roomCleanSel.length > 0 && (
                 <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
-                  <p className="text-xs font-medium text-slate-400">
-                    ルームクリーニング
-                    {roomCleanCond !== "normal" && (
-                      <span className="ml-1 text-[10px] text-amber-400">
-                        （{ROOM_CLEAN_CONDITIONS.find(c => c.id === roomCleanCond)?.label}）
-                      </span>
-                    )}
-                  </p>
-                  {roomCleanSel.map(id => {
-                    const p = ROOM_CLEAN_PARTS.find(x => x.id === id);
-                    const price = p ? Math.round(p.basePrice * rcCondCoeff) : 0;
-                    return p ? (
-                      <div key={id} className="flex justify-between text-sm">
-                        <span className="text-slate-300">{p.name}</span>
-                        <span className="text-slate-100">¥{price.toLocaleString("ja-JP")}</span>
-                      </div>
-                    ) : null;
-                  })}
-                </div>
-              )}
-              {has("window") && windowPartSel.length > 0 && (
-                <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
-                  <p className="text-xs font-medium text-slate-400">
-                    ウィンドウフィルム
-                    {windowGrade !== "standard" && (
-                      <span className="ml-1 text-[10px] text-blue-400">
-                        （{WINDOW_FILM_GRADES.find(g => g.id === windowGrade)?.name}）
-                      </span>
-                    )}
-                  </p>
-                  {windowPartSel.map(id => {
-                    const p = WINDOW_FILM_PARTS.find(x => x.id === id);
-                    const price = p ? Math.round(p.basePrice * wfGradeCoeff) : 0;
-                    return p ? (
-                      <div key={id} className="flex justify-between text-sm">
-                        <span className="text-slate-300">{p.name}</span>
-                        <span className="text-slate-100">¥{price.toLocaleString("ja-JP")}</span>
-                      </div>
-                    ) : null;
-                  })}
+                  <p className="text-xs font-medium text-slate-400">ルームクリーニング</p>
+                  {roomCleanSvc?.lineItems.map((item, i) => (
+                    <div key={i} className="flex justify-between text-sm">
+                      <span className="text-slate-300">{item.item_name}</span>
+                      <span className="text-slate-100">¥{item.unit_price.toLocaleString("ja-JP")}</span>
+                    </div>
+                  ))}
                 </div>
               )}
               {has("other") && otherItems.length > 0 && (
