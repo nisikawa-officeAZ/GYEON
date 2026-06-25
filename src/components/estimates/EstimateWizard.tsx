@@ -7,7 +7,13 @@ import { createEstimate }        from "@/lib/estimates/create-estimate";
 import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 import { CustomerDB }            from "@/lib/customers/customer-types";
 import { VehicleDB }             from "@/lib/vehicles/vehicle-types";
-import { EstimateCategory }      from "@/lib/estimates/estimate-types";
+import {
+  BODY_SIZES, COATINGS, TOPCOAT_BASE, TOPCOAT_NAME, COATING_OPTIONS,
+  MAINTENANCE_MENUS, CARWASH_MENUS, ROOM_CLEAN_PARTS, ROOM_CLEAN_CONDITIONS,
+} from "@/lib/pricing/pricing-data";
+import type { CoatingId }        from "@/lib/pricing/pricing-data";
+import { calculateEstimate, buildLineItems } from "@/lib/pricing/pricing-engine";
+import type { ServiceInput }     from "@/lib/pricing/pricing-engine";
 import dynamic                   from "next/dynamic";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
 
@@ -43,90 +49,12 @@ const CATEGORIES: { id: CategoryId; label: string; emoji: string }[] = [
   { id: "other",       label: "その他作業",             emoji: "📋" },
 ];
 
-const BODY_SIZES: { key: string; name: string; multi: number }[] = [
-  { key: "SS",  name: "軽自動車",        multi: 0.75 },
-  { key: "S",   name: "コンパクト",      multi: 0.85 },
-  { key: "M",   name: "セダン / HB",    multi: 1.0  },
-  { key: "ML",  name: "ミニバン S",     multi: 1.15 },
-  { key: "L",   name: "ミニバン L",     multi: 1.3  },
-  { key: "LL",  name: "SUV / 大型",     multi: 1.5  },
-  { key: "XL",  name: "高級大型",        multi: 1.7  },
-  { key: "XXL", name: "プレミアムカー",  multi: 1.9  },
-];
-
-const COATINGS = [
-  { id: "cancoat-evo", name: "CanCoat EVO",        grade: "エントリー",   base: 55000, certOnly: false },
-  { id: "one-evo",     name: "ONE EVO",             grade: "エントリー",   base: 45000, certOnly: false },
-  { id: "pure-evo",    name: "PURE EVO",            grade: "スタンダード", base: 60000, certOnly: false },
-  { id: "mohs-evo",    name: "MOHS EVO",            grade: "スタンダード", base: 60000, certOnly: false },
-  { id: "syncro-evo",  name: "SYNCRO EVO",          grade: "プレミアム",   base: 110000,certOnly: false },
-  { id: "infinit1",    name: "infinit Base Type 1", grade: "CERTIFIED",    base: 130000,certOnly: true  },
-  { id: "infinit2",    name: "infinit Base Type 2", grade: "CERTIFIED",    base: 160000,certOnly: true  },
-] as const;
-
-type CoatingId = typeof COATINGS[number]["id"];
-
-const TOPCOAT_BASE: Record<string, number> = {
-  "one-evo": 15000, "pure-evo": 20000, "mohs-evo": 25000,
-  "cancoat-evo": 18000, "cancoat-evo-pro": 25000,
-  "infinit1": 130000, "infinit2": 160000, "infinit-t1": 40000, "infinit-t2": 50000,
-};
-const TOPCOAT_NAME: Record<string, string> = {
-  "one-evo": "ONE EVO", "pure-evo": "PURE EVO", "mohs-evo": "MOHS EVO",
-  "cancoat-evo": "CanCoat EVO", "cancoat-evo-pro": "CanCoat EVO PRO",
-  "infinit1": "infinit Base Type 1", "infinit2": "infinit Base Type 2",
-  "infinit-t1": "infinit TopCoat Type 1", "infinit-t2": "infinit TopCoat Type 2",
-};
-
-const COATING_OPTIONS = [
-  { id: "polish",        name: "ハードポリッシュ",           price: 30000, cat: "coating"  as EstimateCategory },
-  { id: "iron",          name: "鉄粉除去",                   price: 8000,  cat: "coating"  as EstimateCategory },
-  { id: "glass",         name: "ガラス撥水コート",           price: 15000, cat: "glass"    as EstimateCategory },
-  { id: "wheel",         name: "ホイールコーティング",       price: 18000, cat: "coating"  as EstimateCategory },
-  { id: "interior",      name: "室内クリーニング",           price: 20000, cat: "interior" as EstimateCategory },
-  { id: "leather-clean", name: "レザークリーニング",         price: 15000, cat: "interior" as EstimateCategory },
-  { id: "leather-coat",  name: "レザーコーティング",         price: 18000, cat: "interior" as EstimateCategory },
-  { id: "headlight",     name: "ヘッドライトリペア",         price: 12000, cat: "other"    as EstimateCategory },
-  { id: "engine-clean",  name: "エンジンルームクリーニング", price: 20000, cat: "other"    as EstimateCategory },
-  { id: "engine-coat",   name: "エンジンルームコーティング", price: 15000, cat: "other"    as EstimateCategory },
-];
-
 const DEFAULT_COUPONS = [
   { name: "新規ご来店クーポン",   amount: 5000  },
   { name: "リピーター割引",       amount: 3000  },
   { name: "紹介特典クーポン",     amount: 5000  },
   { name: "キャンペーンクーポン", amount: 10000 },
   { name: "スタッフ割引",         amount: 3000  },
-];
-
-const MAINTENANCE_MENUS: { id: string; name: string; price: number }[] = [
-  { id: "A", name: "メンテナンスA", price: 0 },
-  { id: "B", name: "メンテナンスB", price: 0 },
-  { id: "C", name: "メンテナンスC", price: 0 },
-  { id: "D", name: "メンテナンスD", price: 0 },
-  { id: "E", name: "メンテナンスE", price: 0 },
-];
-
-const CARWASH_MENUS: { id: string; name: string; price: number }[] = [
-  { id: "cw-hand",   name: "手洗い洗車",       price: 3000 },
-  { id: "cw-polish", name: "ポリッシュ洗車",   price: 5000 },
-  { id: "cw-coat",   name: "簡易コーティング", price: 8000 },
-  { id: "cw-wax",    name: "ワックス仕上げ",   price: 5000 },
-  { id: "cw-vacuum", name: "室内掃除機",        price: 2000 },
-];
-
-const ROOM_CLEAN_PARTS: { id: string; name: string; basePrice: number }[] = [
-  { id: "rc-floor",   name: "フロア",             basePrice: 12000 },
-  { id: "rc-seat",    name: "シート",             basePrice: 15000 },
-  { id: "rc-ceiling", name: "天井",               basePrice:  8000 },
-  { id: "rc-dash",    name: "ダッシュボード",     basePrice: 10000 },
-  { id: "rc-full",    name: "フルパッケージ",     basePrice: 45000 },
-];
-
-const ROOM_CLEAN_CONDITIONS: { id: string; label: string; coeff: number }[] = [
-  { id: "normal", label: "通常",   coeff: 1.0 },
-  { id: "dirty",  label: "汚れあり", coeff: 1.3 },
-  { id: "heavy",  label: "重度汚れ", coeff: 1.6 },
 ];
 
 const SCREEN_LABEL: Record<Screen, string> = {
@@ -145,19 +73,6 @@ const SCREEN_LABEL: Record<Screen, string> = {
 };
 
 const PLACEHOLDER_SCREENS: Screen[] = ["step-ppf", "step-window"];
-
-// ── Price helpers ─────────────────────────────────────────────────────────────
-
-function sizeMulti(key: string): number {
-  return BODY_SIZES.find(s => s.key === key)?.multi ?? 1.0;
-}
-function coatingPrice(id: string, size: string): number {
-  const c = COATINGS.find(c => c.id === id);
-  return c ? Math.round(c.base * sizeMulti(size)) : 0;
-}
-function topcoatPrice(id: string, size: string): number {
-  return Math.round((TOPCOAT_BASE[id] ?? 0) * sizeMulti(size));
-}
 
 function topcoatOpts(coatingId: string, layer: LayerMode, cert: boolean): { id: string; name: string }[] {
   if (layer === "none") return [];
@@ -382,24 +297,48 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
     }
   }, [screen]);
 
-  // ── Price calculation ─────────────────────────────────────────────────────
-  const cPrice    = has("coating") && coatId ? coatingPrice(coatId, sizeKey) : 0;
-  const tc2P      = has("coating") && topcoat2 ? topcoatPrice(topcoat2, sizeKey) : 0;
-  const tc3P      = has("coating") && topcoat3 ? topcoatPrice(topcoat3, sizeKey) : 0;
-  const optTot    = selOpts.reduce((s, id) => s + (COATING_OPTIONS.find(o => o.id === id)?.price ?? 0), 0);
-  const maintTot    = maintenanceSel.reduce((s, id) => s + (MAINTENANCE_MENUS.find(m => m.id === id)?.price ?? 0), 0);
-  const carwashTot  = carwashSel.reduce((s, id) => s + (CARWASH_MENUS.find(m => m.id === id)?.price ?? 0), 0);
-  const rcCondCoeff = ROOM_CLEAN_CONDITIONS.find(c => c.id === roomCleanCond)?.coeff ?? 1.0;
-  const rcBaseTot   = roomCleanSel.reduce((s, id) => s + (ROOM_CLEAN_PARTS.find(p => p.id === id)?.basePrice ?? 0), 0);
-  const roomCleanTot = Math.round(rcBaseTot * rcCondCoeff);
-  const otherTot    = otherItems.reduce((s, item) => s + item.price, 0);
-  const subtotal    = cPrice + tc2P + tc3P + optTot + maintTot + carwashTot + roomCleanTot + otherTot;
+  // ── Pricing Engine ────────────────────────────────────────────────────────
+  const serviceInputs: ServiceInput[] = [];
+  if (has("coating") && coatId)
+    serviceInputs.push({ type: "coating", coatingId: coatId, sizeKey, topcoat2: topcoat2 || undefined, topcoat3: topcoat3 || undefined, optionIds: selOpts });
+  if (has("ppf"))
+    serviceInputs.push({ type: "ppf" });
+  if (has("window"))
+    serviceInputs.push({ type: "window" });
+  if (has("maintenance") && maintenanceSel.length > 0)
+    serviceInputs.push({ type: "maintenance", menuIds: maintenanceSel });
+  if (has("carwash") && carwashSel.length > 0)
+    serviceInputs.push({ type: "carwash", menuIds: carwashSel });
+  if (has("roomclean") && roomCleanSel.length > 0)
+    serviceInputs.push({ type: "roomclean", partIds: roomCleanSel, condition: roomCleanCond });
+  if (has("other") && otherItems.length > 0)
+    serviceInputs.push({ type: "other", items: otherItems });
+
   const couponDisc  = DEFAULT_COUPONS.reduce((s, c, i) => s + (appliedCoupons[i] ? c.amount : 0), 0);
   const extraDiscN  = Number(extraDisc) || 0;
-  const dealerDisc  = isDealer ? Math.round(subtotal * (1 - dealerRate / 100)) : 0;
-  const afterDisc   = subtotal - couponDisc - extraDiscN - dealerDisc;
-  const taxAmt      = Math.floor(afterDisc * taxRate / 100);
-  const total       = afterDisc + taxAmt;
+  const estCalc     = calculateEstimate(
+    serviceInputs,
+    { couponTotal: couponDisc, extraAmount: extraDiscN, isDealer, dealerRate },
+    taxRate,
+  );
+
+  const { subtotal, couponDiscount, extraDiscount, dealerDiscount, taxableAmount, taxAmount, total } = estCalc;
+  const dealerDisc = dealerDiscount;
+  const afterDisc  = taxableAmount;
+  const taxAmt     = taxAmount;
+
+  // Per-service display values derived from engine
+  const coatSvc      = estCalc.services.find(s => s.type === "coating");
+  const coatItems    = coatSvc?.lineItems ?? [];
+  const cPrice       = coatItems[0]?.unit_price ?? 0;
+  const tc2P         = topcoat2 ? (coatItems[1]?.unit_price ?? 0) : 0;
+  const tc3P         = topcoat3 ? (coatItems[2]?.unit_price ?? 0) : 0;
+  const optTot       = (coatSvc?.subtotal ?? 0) - cPrice - tc2P - tc3P;
+  const maintTot     = estCalc.services.find(s => s.type === "maintenance")?.subtotal ?? 0;
+  const carwashTot   = estCalc.services.find(s => s.type === "carwash")?.subtotal    ?? 0;
+  const roomCleanTot = estCalc.services.find(s => s.type === "roomclean")?.subtotal  ?? 0;
+  const otherTot     = estCalc.services.find(s => s.type === "other")?.subtotal      ?? 0;
+  const rcCondCoeff  = ROOM_CLEAN_CONDITIONS.find(c => c.id === roomCleanCond)?.coeff ?? 1.0;
 
   // ── OCR ───────────────────────────────────────────────────────────────────
   function applyOcr(sel: Partial<VehicleRegistrationOcrResult>) {
@@ -494,55 +433,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
 
   function handleSave() {
     if (!customerId) { setError("顧客が未設定です"); return; }
-    type LineItem = {
-      category: EstimateCategory; item_name: string; quantity: number; unit_price: number;
-      discount_rate: number; sort_order: number; item_type: string;
-      product_id: null; sku: null; product_name_snapshot: null; retail_price_snapshot: null;
-    };
-    const items: LineItem[] = [];
-    let so = 0;
-    const mk = (cat: EstimateCategory, name: string, price: number): LineItem => ({
-      category: cat, item_name: name, quantity: 1, unit_price: price, discount_rate: 0,
-      sort_order: so++, item_type: "manual",
-      product_id: null, sku: null, product_name_snapshot: null, retail_price_snapshot: null,
-    });
-
-    if (has("coating") && coatId) {
-      const c = COATINGS.find(c => c.id === coatId);
-      items.push(mk("coating", c?.name ?? coatId, cPrice));
-      if (topcoat2) items.push(mk("coating", `トップコート: ${TOPCOAT_NAME[topcoat2] ?? topcoat2}`, tc2P));
-      if (topcoat3) items.push(mk("coating", `トップコート(3層): ${TOPCOAT_NAME[topcoat3] ?? topcoat3}`, tc3P));
-      selOpts.forEach(id => {
-        const opt = COATING_OPTIONS.find(o => o.id === id);
-        if (opt) items.push(mk(opt.cat, opt.name, opt.price));
-      });
-    }
-    if (has("maintenance") && maintenanceSel.length > 0) {
-      maintenanceSel.forEach(id => {
-        const m = MAINTENANCE_MENUS.find(x => x.id === id);
-        if (m) items.push(mk("other", m.name, m.price));
-      });
-    }
-    if (has("carwash") && carwashSel.length > 0) {
-      carwashSel.forEach(id => {
-        const m = CARWASH_MENUS.find(x => x.id === id);
-        if (m) items.push(mk("other", m.name, m.price));
-      });
-    }
-    if (has("roomclean") && roomCleanSel.length > 0) {
-      const cond = ROOM_CLEAN_CONDITIONS.find(c => c.id === roomCleanCond);
-      roomCleanSel.forEach(id => {
-        const p = ROOM_CLEAN_PARTS.find(x => x.id === id);
-        if (p) {
-          const unitPrice = Math.round(p.basePrice * (cond?.coeff ?? 1.0));
-          const label = cond && cond.id !== "normal" ? `${p.name}（${cond.label}）` : p.name;
-          items.push(mk("interior", label, unitPrice));
-        }
-      });
-    }
-    if (has("other") && otherItems.length > 0) {
-      otherItems.forEach(item => items.push(mk("other", item.name, item.price)));
-    }
+    const items = buildLineItems(serviceInputs);
 
     startTx(async () => {
       // Create vehicle here for maintenance/carwash/other flows that bypass step4
@@ -827,7 +718,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
           <p className={lbl}>ボディサイズを選択してください</p>
           <div className="grid grid-cols-2 gap-2">
             {BODY_SIZES.map(s => {
-              const price = has("coating") && coatId ? coatingPrice(coatId, s.key) : null;
+              const price = has("coating") && coatId ? Math.round((COATINGS.find(c => c.id === coatId)?.base ?? 0) * (BODY_SIZES.find(b => b.key === s.key)?.multi ?? 1.0)) : null;
               const isSel = sizeKey === s.key;
               return (
                 <button key={s.key} type="button" onClick={() => setSizeKey(s.key)}
@@ -843,7 +734,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
             })}
           </div>
           {has("coating") && coatId && (
-            <p className="text-xs text-slate-600">係数 ×{sizeMulti(sizeKey)} / {COATINGS.find(c => c.id === coatId)?.name}</p>
+            <p className="text-xs text-slate-600">係数 ×{BODY_SIZES.find(s => s.key === sizeKey)?.multi ?? 1.0} / {COATINGS.find(c => c.id === coatId)?.name}</p>
           )}
         </div>
       )}
@@ -862,7 +753,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
 
           <div className="flex flex-col gap-2">
             {visCoats.map(c => {
-              const price = coatingPrice(c.id, sizeKey);
+              const price = Math.round(c.base * (BODY_SIZES.find(b => b.key === sizeKey)?.multi ?? 1.0));
               const isSel = coatId === c.id;
               const gc = c.grade === "CERTIFIED" ? "border-amber-500/50 text-amber-400 bg-amber-950/20"
                 : c.grade === "プレミアム" ? "border-purple-500/50 text-purple-400"
@@ -902,7 +793,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
             <div className="flex flex-col gap-2">
               <label className={lbl}>2層目トップコート <span className="text-red-400">*</span></label>
               {tc2Opts.map(t => {
-                const p = topcoatPrice(t.id, sizeKey);
+                const p = Math.round((TOPCOAT_BASE[t.id] ?? 0) * (BODY_SIZES.find(b => b.key === sizeKey)?.multi ?? 1.0));
                 return (
                   <button key={t.id} type="button" onClick={() => setTopcoat2(t.id)}
                     className={`flex items-center justify-between px-4 py-3 rounded-lg border text-left transition-colors ${topcoat2 === t.id ? "bg-blue-950/30 border-[#1d4ed8]/50" : "bg-[#0f172a] border-slate-700 hover:border-slate-600"}`}>
@@ -921,7 +812,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
             <div className="flex flex-col gap-2">
               <label className={lbl}>3層目トップコート</label>
               {tc3Opts.map(t => {
-                const p = topcoatPrice(t.id, sizeKey);
+                const p = Math.round((TOPCOAT_BASE[t.id] ?? 0) * (BODY_SIZES.find(b => b.key === sizeKey)?.multi ?? 1.0));
                 return (
                   <button key={t.id} type="button" onClick={() => setTopcoat3(t.id)}
                     className={`flex items-center justify-between px-4 py-3 rounded-lg border text-left transition-colors ${topcoat3 === t.id ? "bg-blue-950/30 border-[#1d4ed8]/50" : "bg-[#0f172a] border-slate-700 hover:border-slate-600"}`}>
@@ -1166,7 +1057,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
                     <span className="text-slate-300">{COATINGS.find(c => c.id === coatId)?.name}</span>
                     <span className="text-slate-100">¥{cPrice.toLocaleString("ja-JP")}</span>
                   </div>
-                  <p className="text-[10px] text-slate-600">サイズ: {sizeKey}（×{sizeMulti(sizeKey)}）</p>
+                  <p className="text-[10px] text-slate-600">サイズ: {sizeKey}（×{BODY_SIZES.find(s => s.key === sizeKey)?.multi ?? 1.0}）</p>
                   {topcoat2 && <div className="flex justify-between text-xs text-slate-400"><span>2層目: {TOPCOAT_NAME[topcoat2]}</span><span>+¥{tc2P.toLocaleString("ja-JP")}</span></div>}
                   {topcoat3 && <div className="flex justify-between text-xs text-slate-400"><span>3層目: {TOPCOAT_NAME[topcoat3]}</span><span>+¥{tc3P.toLocaleString("ja-JP")}</span></div>}
                   {selOpts.map(id => {
