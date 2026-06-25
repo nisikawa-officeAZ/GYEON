@@ -102,6 +102,7 @@ export default function CustomerVehicleOnboardingWizard({
   const pop  = () => setHistory(h => (h.length > 1 ? h.slice(0, -1) : h));
 
   const [existingCustomerId, setExistingCustomerId] = useState<string | null>(null);
+  const [createdCustomerId,  setCreatedCustomerId]  = useState<string | null>(null);
   const [customerSearch,     setCustomerSearch]     = useState("");
   const [ocrResult,          setOcrResult]          = useState<VehicleRegistrationOcrResult | null>(null);
   const [customerForm,       setCustomerForm]       = useState<CustomerFormState>(EMPTY_CUSTOMER_FORM);
@@ -153,9 +154,16 @@ export default function CustomerVehicleOnboardingWizard({
   function handleConfirm() {
     setError(null);
     startTransition(async () => {
-      let customerId = existingCustomerId ?? "";
+      let customerId: string;
 
-      if (isNewCustomer) {
+      if (existingCustomerId !== null) {
+        // Existing customer path — use selected customer ID directly
+        customerId = existingCustomerId;
+      } else if (createdCustomerId) {
+        // Retry path — customer already created on a previous attempt; reuse to prevent duplicate
+        customerId = createdCustomerId;
+      } else {
+        // New customer, first attempt — create now
         if (!customerForm.last_name.trim()) {
           setError("姓は必須です");
           return;
@@ -179,6 +187,7 @@ export default function CustomerVehicleOnboardingWizard({
           return;
         }
         customerId = customerResult.customerId;
+        setCreatedCustomerId(customerResult.customerId);
       }
 
       if (!customerId) {
