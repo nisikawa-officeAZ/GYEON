@@ -99,6 +99,22 @@ const DEFAULT_COUPONS = [
   { name: "スタッフ割引",         amount: 3000  },
 ];
 
+const MAINTENANCE_MENUS: { id: string; name: string; price: number }[] = [
+  { id: "A", name: "メンテナンスA", price: 0 },
+  { id: "B", name: "メンテナンスB", price: 0 },
+  { id: "C", name: "メンテナンスC", price: 0 },
+  { id: "D", name: "メンテナンスD", price: 0 },
+  { id: "E", name: "メンテナンスE", price: 0 },
+];
+
+const CARWASH_MENUS: { id: string; name: string; price: number }[] = [
+  { id: "cw-hand",   name: "手洗い洗車",       price: 3000 },
+  { id: "cw-polish", name: "ポリッシュ洗車",   price: 5000 },
+  { id: "cw-coat",   name: "簡易コーティング", price: 8000 },
+  { id: "cw-wax",    name: "ワックス仕上げ",   price: 5000 },
+  { id: "cw-vacuum", name: "室内掃除機",        price: 2000 },
+];
+
 const SCREEN_LABEL: Record<Screen, string> = {
   category:           "カテゴリ選択",
   step1:              "STEP 1 / 顧客・車両情報",
@@ -114,9 +130,7 @@ const SCREEN_LABEL: Record<Screen, string> = {
   step5:              "STEP 5 / お見積確認",
 };
 
-const PLACEHOLDER_SCREENS: Screen[] = [
-  "step-ppf", "step-window", "step-maintenance", "step-carwash", "step-roomclean", "step-other",
-];
+const PLACEHOLDER_SCREENS: Screen[] = ["step-ppf", "step-window", "step-roomclean"];
 
 // ── Price helpers ─────────────────────────────────────────────────────────────
 
@@ -332,6 +346,13 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   // ── Options ───────────────────────────────────────────────────────────────
   const [selOpts, setSelOpts] = useState<string[]>([]);
 
+  // ── Maintenance / Carwash / Other ─────────────────────────────────────────
+  const [maintenanceSel, setMaintenanceSel] = useState<string[]>([]);
+  const [carwashSel,     setCarwashSel]     = useState<string[]>([]);
+  const [otherItems, setOtherItems] = useState<{ id: string; name: string; price: number }[]>([]);
+  const [otherName,  setOtherName]  = useState("");
+  const [otherPrice, setOtherPrice] = useState("");
+
   // ── Confirmation ──────────────────────────────────────────────────────────
   const [previewNo,       setPreviewNo]      = useState("");
   const [notes,           setNotes]          = useState("");
@@ -350,7 +371,10 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   const tc2P      = has("coating") && topcoat2 ? topcoatPrice(topcoat2, sizeKey) : 0;
   const tc3P      = has("coating") && topcoat3 ? topcoatPrice(topcoat3, sizeKey) : 0;
   const optTot    = selOpts.reduce((s, id) => s + (COATING_OPTIONS.find(o => o.id === id)?.price ?? 0), 0);
-  const subtotal  = cPrice + tc2P + tc3P + optTot;
+  const maintTot  = maintenanceSel.reduce((s, id) => s + (MAINTENANCE_MENUS.find(m => m.id === id)?.price ?? 0), 0);
+  const carwashTot = carwashSel.reduce((s, id) => s + (CARWASH_MENUS.find(m => m.id === id)?.price ?? 0), 0);
+  const otherTot  = otherItems.reduce((s, item) => s + item.price, 0);
+  const subtotal  = cPrice + tc2P + tc3P + optTot + maintTot + carwashTot + otherTot;
   const couponDisc  = DEFAULT_COUPONS.reduce((s, c, i) => s + (appliedCoupons[i] ? c.amount : 0), 0);
   const extraDiscN  = Number(extraDisc) || 0;
   const dealerDisc  = isDealer ? Math.round(subtotal * (1 - dealerRate / 100)) : 0;
@@ -474,11 +498,50 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
         if (opt) items.push(mk(opt.cat, opt.name, opt.price));
       });
     }
+    if (has("maintenance") && maintenanceSel.length > 0) {
+      maintenanceSel.forEach(id => {
+        const m = MAINTENANCE_MENUS.find(x => x.id === id);
+        if (m) items.push(mk("other", m.name, m.price));
+      });
+    }
+    if (has("carwash") && carwashSel.length > 0) {
+      carwashSel.forEach(id => {
+        const m = CARWASH_MENUS.find(x => x.id === id);
+        if (m) items.push(mk("other", m.name, m.price));
+      });
+    }
+    if (has("other") && otherItems.length > 0) {
+      otherItems.forEach(item => items.push(mk("other", item.name, item.price)));
+    }
 
     startTx(async () => {
+      // Create vehicle here for maintenance/carwash/other flows that bypass step4
+      let resolvedVehicleId = vehicleId;
+      if (!resolvedVehicleId && vMode === "create") {
+        const vfd = new FormData();
+        vfd.set("customer_id",            customerId);
+        vfd.set("maker",                  nv.maker);
+        vfd.set("model",                  nv.model);
+        vfd.set("grade",                  nv.grade);
+        vfd.set("vehicle_code",           nv.vehicle_code);
+        vfd.set("year",                   nv.year);
+        vfd.set("color",                  nv.color);
+        vfd.set("plate_number",           nv.plate_number);
+        vfd.set("vin",                    nv.vin);
+        vfd.set("body_size",              sizeKey);
+        vfd.set("inspection_expiry_date", nv.inspection_expiry_date);
+        const vr = await createVehicle(vfd);
+        if ("error" in vr) { setError(vr.error ?? null); return; }
+        const vid = "vehicleId" in vr ? vr.vehicleId : undefined;
+        if (!vid) { setError("車両IDの取得に失敗しました"); return; }
+        setVehicleId(vid);
+        setVehLabel([nv.maker, nv.model, nv.plate_number].filter(Boolean).join(" ") || "新規車両");
+        resolvedVehicleId = vid;
+      }
+
       const fd = new FormData();
       fd.set("customer_id",     customerId);
-      fd.set("vehicle_id",      vehicleId ?? "");
+      fd.set("vehicle_id",      resolvedVehicleId ?? "");
       fd.set("status",          "sent");
       fd.set("tax_rate",        String(taxRate));
       fd.set("discount_amount", String(couponDisc + extraDiscN + dealerDisc));
@@ -879,6 +942,112 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
         </div>
       )}
 
+      {/* ══ STEP: Maintenance ══ */}
+      {screen === "step-maintenance" && (
+        <div className="flex flex-col gap-3">
+          <p className={lbl}>メンテナンスメニューを選択してください（複数可）</p>
+          {MAINTENANCE_MENUS.map(menu => {
+            const checked = maintenanceSel.includes(menu.id);
+            return (
+              <button key={menu.id} type="button"
+                onClick={() => setMaintenanceSel(p => checked ? p.filter(id => id !== menu.id) : [...p, menu.id])}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${checked ? "bg-blue-950/20 border-[#1d4ed8]/40" : "bg-[#0f172a] border-slate-700 hover:border-slate-600"}`}>
+                <div className={`w-4 h-4 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${checked ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`}>
+                  {checked && <span className="text-white text-[10px] leading-none">✓</span>}
+                </div>
+                <span className="text-sm text-slate-200 flex-1 text-left">{menu.name}</span>
+                <span className={`text-xs font-medium shrink-0 ${menu.price > 0 ? (checked ? "text-blue-400" : "text-slate-500") : "text-slate-600"}`}>
+                  {menu.price > 0 ? `¥${menu.price.toLocaleString("ja-JP")}` : "価格未設定"}
+                </span>
+              </button>
+            );
+          })}
+          {maintenanceSel.length > 0 && maintTot > 0 && (
+            <div className="border border-slate-700 rounded-lg px-4 py-3 flex justify-between">
+              <span className="text-xs text-slate-500">メンテナンス小計</span>
+              <span className="text-sm font-medium text-slate-100">¥{maintTot.toLocaleString("ja-JP")}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══ STEP: Carwash ══ */}
+      {screen === "step-carwash" && (
+        <div className="flex flex-col gap-3">
+          <p className={lbl}>洗車メニューを選択してください（複数可）</p>
+          {CARWASH_MENUS.map(menu => {
+            const checked = carwashSel.includes(menu.id);
+            return (
+              <button key={menu.id} type="button"
+                onClick={() => setCarwashSel(p => checked ? p.filter(id => id !== menu.id) : [...p, menu.id])}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${checked ? "bg-blue-950/20 border-[#1d4ed8]/40" : "bg-[#0f172a] border-slate-700 hover:border-slate-600"}`}>
+                <div className={`w-4 h-4 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${checked ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`}>
+                  {checked && <span className="text-white text-[10px] leading-none">✓</span>}
+                </div>
+                <span className="text-sm text-slate-200 flex-1 text-left">{menu.name}</span>
+                <span className={`text-xs font-medium shrink-0 ${checked ? "text-blue-400" : "text-slate-500"}`}>
+                  ¥{menu.price.toLocaleString("ja-JP")}
+                </span>
+              </button>
+            );
+          })}
+          {carwashSel.length > 0 && (
+            <div className="border border-slate-700 rounded-lg px-4 py-3 flex justify-between">
+              <span className="text-xs text-slate-500">洗車小計</span>
+              <span className="text-sm font-medium text-slate-100">¥{carwashTot.toLocaleString("ja-JP")}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══ STEP: Other ══ */}
+      {screen === "step-other" && (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <p className={lbl}>作業内容・金額を追加してください</p>
+            <div className="flex gap-2">
+              <input type="text" value={otherName} onChange={e => setOtherName(e.target.value)}
+                placeholder="作業内容を入力" className={`${inp} flex-1`} />
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="text-slate-500 text-sm">¥</span>
+                <input type="number" value={otherPrice} onChange={e => setOtherPrice(e.target.value)}
+                  min="0" placeholder="0"
+                  className="w-24 bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-[#1d4ed8]" />
+              </div>
+              <button type="button"
+                onClick={() => {
+                  const name = otherName.trim();
+                  const price = Number(otherPrice) || 0;
+                  if (!name) return;
+                  setOtherItems(p => [...p, { id: crypto.randomUUID(), name, price }]);
+                  setOtherName("");
+                  setOtherPrice("");
+                }}
+                className="px-4 py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors shrink-0">
+                追加
+              </button>
+            </div>
+          </div>
+          {otherItems.length > 0 && (
+            <div className="flex flex-col gap-2">
+              {otherItems.map(item => (
+                <div key={item.id} className="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-700 bg-[#0f172a]">
+                  <span className="text-sm text-slate-200 flex-1">{item.name}</span>
+                  <span className="text-xs text-blue-400 font-medium">¥{item.price.toLocaleString("ja-JP")}</span>
+                  <button type="button"
+                    onClick={() => setOtherItems(p => p.filter(i => i.id !== item.id))}
+                    className="text-slate-500 hover:text-red-400 transition-colors text-xs ml-2">✕</button>
+                </div>
+              ))}
+              <div className="border border-slate-700 rounded-lg px-4 py-3 flex justify-between">
+                <span className="text-xs text-slate-500">その他小計</span>
+                <span className="text-sm font-medium text-slate-100">¥{otherTot.toLocaleString("ja-JP")}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ══ Placeholder screens ══ */}
       {PLACEHOLDER_SCREENS.includes(screen) && (
         <div className="border border-slate-700/50 rounded-xl p-8 text-center flex flex-col items-center gap-3">
@@ -919,6 +1088,45 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
                     const o = COATING_OPTIONS.find(x => x.id === id);
                     return o ? <div key={id} className="flex justify-between text-xs text-slate-400"><span>{o.name}</span><span>+¥{o.price.toLocaleString("ja-JP")}</span></div> : null;
                   })}
+                </div>
+              )}
+              {has("maintenance") && maintenanceSel.length > 0 && (
+                <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
+                  <p className="text-xs font-medium text-slate-400">ボディ定期メンテナンス</p>
+                  {maintenanceSel.map(id => {
+                    const m = MAINTENANCE_MENUS.find(x => x.id === id);
+                    return m ? (
+                      <div key={id} className="flex justify-between text-sm">
+                        <span className="text-slate-300">{m.name}</span>
+                        <span className="text-slate-100">{m.price > 0 ? `¥${m.price.toLocaleString("ja-JP")}` : "—"}</span>
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              )}
+              {has("carwash") && carwashSel.length > 0 && (
+                <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
+                  <p className="text-xs font-medium text-slate-400">メンテナンス洗車</p>
+                  {carwashSel.map(id => {
+                    const m = CARWASH_MENUS.find(x => x.id === id);
+                    return m ? (
+                      <div key={id} className="flex justify-between text-sm">
+                        <span className="text-slate-300">{m.name}</span>
+                        <span className="text-slate-100">¥{m.price.toLocaleString("ja-JP")}</span>
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              )}
+              {has("other") && otherItems.length > 0 && (
+                <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
+                  <p className="text-xs font-medium text-slate-400">その他作業</p>
+                  {otherItems.map(item => (
+                    <div key={item.id} className="flex justify-between text-sm">
+                      <span className="text-slate-300">{item.name}</span>
+                      <span className="text-slate-100">¥{item.price.toLocaleString("ja-JP")}</span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
