@@ -133,7 +133,7 @@ function StoreContent({ s, companySettings, staffList, staffInfo }: {
   staffList: DealerStaffDB[];
   staffInfo: Props["staffInfo"];
 }) {
-  const rankLabel = s.detailer_rank === "certified" ? "⭐ Certified Detailer" : "🔵 Detailer";
+  const rankLabel = s.detailer_rank === "certified" ? "⭐ 認定ディテイラー" : "🔵 ディテイラー";
   return (
     <div className="flex flex-col gap-5">
       {/* Company settings — working save */}
@@ -147,9 +147,9 @@ function StoreContent({ s, companySettings, staffList, staffInfo }: {
         </div>
         <div className={grid2}>
           <div className="flex flex-col gap-0.5">
-            <p className="text-[10px] text-slate-500">Detailerランク</p>
+            <p className="text-[10px] text-slate-500">ディテイラーランク</p>
             <p className="text-sm text-slate-300">{rankLabel}</p>
-            <p className="text-[10px] text-slate-600 mt-0.5">EstimateWizardのコーティング表示に使用</p>
+            <p className="text-[10px] text-slate-600 mt-0.5">管理者が設定するランクです</p>
           </div>
           <ReadField title="電話番号（予備）" value={s.business_phone_alt} />
         </div>

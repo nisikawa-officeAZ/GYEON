@@ -5,6 +5,7 @@ import { useRouter }     from "next/navigation";
 import { EstimateDB }    from "@/lib/estimates/estimate-types";
 import { CustomerDB }    from "@/lib/customers/customer-types";
 import { VehicleDB }     from "@/lib/vehicles/vehicle-types";
+import type { DetailerRank } from "@/lib/dealer-settings/dealer-settings-types";
 import PageTitle         from "@/components/ui/PageTitle";
 import EstimateTable     from "@/components/estimates/EstimateTable";
 import EstimateForm      from "@/components/estimates/EstimateForm";
@@ -24,12 +25,13 @@ type ModalState =
   | { mode: "work-order";  estimate: EstimateDB };
 
 interface EstimatesClientProps {
-  estimates: EstimateDB[];
-  customers: CustomerDB[];
-  vehicles:  VehicleDB[];
+  estimates:  EstimateDB[];
+  customers:  CustomerDB[];
+  vehicles:   VehicleDB[];
+  dealerRank: DetailerRank;
 }
 
-export default function EstimatesClient({ estimates, customers, vehicles }: EstimatesClientProps) {
+export default function EstimatesClient({ estimates, customers, vehicles, dealerRank }: EstimatesClientProps) {
   const router = useRouter();
   const [modal, setModal] = useState<ModalState>({ mode: "none" });
 
@@ -122,6 +124,7 @@ export default function EstimatesClient({ estimates, customers, vehicles }: Esti
             <EstimateWizard
               customers={customers}
               vehicles={vehicles}
+              dealerRank={dealerRank}
               onCancel={closeModal}
               onSuccess={closeModal}
             />

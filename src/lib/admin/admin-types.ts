@@ -54,7 +54,9 @@ export type AdminAuditAction =
   | "release_candidate_viewed"
   | "release_score_checked"
   // PHASE66: official release
-  | "official_release_viewed";
+  | "official_release_viewed"
+  // Dealer rank management
+  | "rank_assigned";
 
 export interface AdminAuditLogDB {
   id: string;

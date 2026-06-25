@@ -19,6 +19,7 @@ import { calculateEstimate, buildLineItems } from "@/lib/pricing/pricing-engine"
 import type { ServiceInput }     from "@/lib/pricing/pricing-engine";
 import dynamic                   from "next/dynamic";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
+import type { DetailerRank }     from "@/lib/dealer-settings/dealer-settings-types";
 
 const VehicleRegistrationUpload = dynamic(
   () => import("@/components/vehicle-registration/VehicleRegistrationUpload"),
@@ -36,9 +37,8 @@ type Screen =
   | "step-ppf" | "step-window" | "step-maintenance"
   | "step-carwash" | "step-roomclean" | "step-other" | "step5";
 
-type CategoryId   = "coating" | "ppf" | "window" | "maintenance" | "carwash" | "roomclean" | "other";
-type LayerMode    = "none" | "2layer" | "3layer";
-type DetailerRank = "detailer" | "certified";
+type CategoryId = "coating" | "ppf" | "window" | "maintenance" | "carwash" | "roomclean" | "other";
+type LayerMode  = "none" | "2layer" | "3layer";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -172,13 +172,14 @@ const lbl = "text-xs font-medium text-slate-400";
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export interface EstimateWizardProps {
-  customers: CustomerDB[];
-  vehicles:  VehicleDB[];
-  onCancel?: () => void;
-  onSuccess?: (estimateId?: string) => void;
+  customers:   CustomerDB[];
+  vehicles:    VehicleDB[];
+  dealerRank:  DetailerRank;
+  onCancel?:   () => void;
+  onSuccess?:  (estimateId?: string) => void;
 }
 
-export default function EstimateWizard({ customers, vehicles, onCancel, onSuccess }: EstimateWizardProps) {
+export default function EstimateWizard({ customers, vehicles, dealerRank, onCancel, onSuccess }: EstimateWizardProps) {
 
   const [history, setHistory] = useState<Screen[]>(["category"]);
   const screen = history[history.length - 1]!;
@@ -261,7 +262,8 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
   const [sizeKey, setSizeKey] = useState("M");
 
   // ── Coating ───────────────────────────────────────────────────────────────
-  const [rank,      setRank]      = useState<DetailerRank>("detailer");
+  // rank is server-controlled (Admin-assigned). Never from client state.
+  const rank     = dealerRank;
   const [coatId,    setCoatId]    = useState<CoatingId | "">("");
   const [layerMode, setLayerMode] = useState<LayerMode>("none");
   const [topcoat2,  setTopcoat2]  = useState("");
@@ -274,7 +276,7 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
     ? topcoatOpts(coatId, "3layer", isCert).filter(t => t.id !== topcoat2)
     : [];
 
-  useEffect(() => { setTopcoat2(""); setTopcoat3(""); }, [coatId, layerMode, rank]);
+  useEffect(() => { setTopcoat2(""); setTopcoat3(""); }, [coatId, layerMode]);
   useEffect(() => { if (nv.maker) setPpfVehicleRank(detectPpfRank(nv.maker)); }, [nv.maker]);
 
   // ── Options ───────────────────────────────────────────────────────────────
@@ -775,13 +777,13 @@ export default function EstimateWizard({ customers, vehicles, onCancel, onSucces
       {/* ══ STEP3 Coating ══ */}
       {screen === "step3" && (
         <div className="flex flex-col gap-4">
-          <div className="flex gap-2">
-            {(["detailer", "certified"] as DetailerRank[]).map(r => (
-              <button key={r} type="button" onClick={() => { setRank(r); setCoatId(""); }}
-                className={`flex-1 py-2.5 text-sm font-medium rounded-lg border transition-colors ${rank === r ? "bg-[#1d4ed8] border-[#1d4ed8] text-white" : "bg-[#0f172a] border-slate-700 text-slate-400 hover:border-slate-500"}`}>
-                {r === "detailer" ? "🔵 Detailer" : "⭐ Certified Detailer"}
-              </button>
-            ))}
+          {/* Read-only rank badge — Admin-assigned, dealer cannot change */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-700 bg-[#0f172a]">
+            <span className="text-sm">{rank === "certified" ? "⭐" : "🔵"}</span>
+            <span className="text-sm text-slate-300">
+              {rank === "certified" ? "認定ディテイラー" : "ディテイラー"}
+            </span>
+            <span className="text-[10px] text-slate-500 ml-auto">管理者設定ランク</span>
           </div>
 
           <div className="flex flex-col gap-2">
