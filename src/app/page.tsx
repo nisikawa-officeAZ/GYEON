@@ -34,8 +34,26 @@ export default async function HomePage() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <MainLayout>
-      <div className="max-w-lg mx-auto flex flex-col pb-safe" style={{ position: "relative" }}>
+    <>
+      {/* ══════════════════════════════════════════════════════════════════════
+          PC(デスクトップ)版トップ画面 — lg(≥1024px)以上で表示
+          Gensparkデザイン(/public/desktop-home.html)をそのまま忠実に表示。
+          メニューはクリックで実ページへ遷移(target=_parent)。
+         ══════════════════════════════════════════════════════════════════════ */}
+      <div className="hidden lg:block fixed inset-0 z-50 bg-[#080d1a]">
+        <iframe
+          src="/desktop-home.html"
+          title="GYEON Detailer Agent"
+          className="w-full h-full border-0 block"
+        />
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          スマホ版トップ画面 — lg未満で表示(従来のまま・変更なし)
+         ══════════════════════════════════════════════════════════════════════ */}
+      <div className="lg:hidden">
+        <MainLayout>
+          <div className="max-w-lg mx-auto flex flex-col pb-safe" style={{ position: "relative" }}>
 
         {/* Ambient glow — top center */}
         <div
@@ -259,7 +277,9 @@ export default async function HomePage() {
           ))}
         </div>
 
+          </div>
+        </MainLayout>
       </div>
-    </MainLayout>
+    </>
   );
 }
