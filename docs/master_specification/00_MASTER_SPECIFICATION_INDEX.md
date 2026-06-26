@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v4.3 — Sprint 11P) |
+| **Last Updated** | 2026-06-26 (v4.4 — Sprint 11Q) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -184,6 +184,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── AI_PROVIDER_ADAPTER_REGISTRY_SPEC.md   ← Sprint 11N: Provider Adapter Registry — 5 provider descriptors, capability maps, selection policy, check #13 (adapter_registry_check), AI Settings compatibility
 ├── AI_SETTINGS_PLATFORM_SPEC.md          ← Sprint 11O: AI Settings Platform — AISettingsProfile, provider selection, capability assignment, budget policy (3 strategies), view models, orchestrator integration (consultAISettingsForExecution)
 ├── AI_SETTINGS_DATABASE_ARCHITECTURE.md ← Sprint 11P: DB architecture review — existing schema analysis, dealer_ai_settings proposal (migration 072), dealer_ai_usage_log proposal (migration 073), RLS strategy, migration plan, TypeScript database-types.ts
+├── SAAS_ENTERPRISE_SPEC.md              ← Sprint 11Q: SaaS Enterprise Foundation Review — dealer lifecycle (10 stages), plan tiers (Basic/Pro/Pro+/Enterprise proposed), feature gate matrix (27 features), billing architecture, AI billing ownership model, security review (6 gaps identified), pre-Sprint 11R checklist
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -238,6 +239,7 @@ TIER 4 — DESIGN AUTHORITY
 | **4.1** | **2026-06-26** | **Sprint 11N** | **AI Provider Adapter Registry: AIProviderAdapterDescriptor (5 providers, all adapter_available: false), AIProviderAdapterCapabilityMap (16 caps × 5 providers, 4 support_status values), 6 selection strategies + 4 pre-built policies, check #13 (adapter_registry_check) + 3 new decision values (needs_adapter/provider_unknown/capability_unavailable), AI Settings compatibility bridge, AI_PROVIDER_ADAPTER_REGISTRY_SPEC.md** |
 | **4.2** | **2026-06-26** | **Sprint 11O** | **AI Settings Platform Foundation: AISettingsProfile (dealer canonical config), AIProviderConfiguration, AIProviderHealthStatus (6), AIExecutionPreference (4 modes), AIProviderSelectionConfig + rules, AICapabilityAssignmentMap (preferred/fallback/disabled), AIBudgetPolicyConfig (3 strategies, emergency stop, auto_pause), AISettingsPlatformView + 4 card types, consultAISettingsForExecution() (6 decisions), buildUsagePolicyFromBudgetPolicy(), AI_SETTINGS_PLATFORM_SPEC.md** |
 | **4.3** | **2026-06-26** | **Sprint 11P** | **AI Settings Database Architecture Review: existing schema audit (dealer_settings.ai_settings jsonb current AI storage, 15 relevant tables), dealer_ai_settings table proposal (migration 072: default_provider + fallback_providers + 4 jsonb columns + RLS), dealer_ai_usage_log table proposal (migration 073: append-only, execution_status 5 values, cost tracking), TypeScript DealerAiSettingsRow/DealerAiUsageLogRow + serialization helpers, AI_SETTINGS_DATABASE_ARCHITECTURE.md** |
+| **4.4** | **2026-06-26** | **Sprint 11Q** | **SaaS Enterprise Foundation Review: dealer lifecycle 10-stage model, 3+1 plan tiers (Enterprise proposed), feature gate matrix (27 features, 6 gate gaps), billing architecture (manual → Stripe-ready → Enterprise contract), AI billing ownership (dealer pays provider direct), security review (billing RLS deprecated pattern, role-based AI write gap), saas-foundation-types.ts (DealerLifecycleStage/ExtendedPlanCode/BillingModel/AIBillingOwnership/FeatureGateEvaluation/SaasFoundationStatus), pre-Sprint 11R checklist (8 items), SAAS_ENTERPRISE_SPEC.md** |
 
 ---
 
