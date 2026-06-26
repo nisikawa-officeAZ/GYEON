@@ -7,8 +7,11 @@
 | **Status** | Approved Future Feature — Deferred |
 | **Created** | 2026-06-26 |
 | **Priority** | Future Version (after core platform reaches stable production) |
-| **Phases** | PHASE 71 – PHASE 77 |
+| **Phases** | PHASE 71 – PHASE 76 |
+| **Prerequisite** | AI Gateway Architecture (`AI_GATEWAY_SPEC.md`) must be implemented first |
 | **Implementation** | Do not implement. Specification and roadmap only. |
+
+> **Architecture update (2026-06-26):** PHASE 77 (AI Review Request Agent) has been moved to the **AI Reputation Agent** track (`AI_REPUTATION_AGENT_ROADMAP.md`). Reputation management is now a separate Pro+ module. This document covers PHASE 71–76 (AI Marketing + AI Growth) only.
 
 ---
 
@@ -472,176 +475,31 @@ A dedicated dashboard section showing:
 
 ---
 
-## PHASE 77 — AI Review Request Agent
+## PHASE 77 — AI Review Request Agent [MOVED]
 
-**Prerequisite:** LINE integration active (Phase B of core platform). Work order completion event available. PHASE 73 (AI Content Writer) recommended for content generation.
+> **This phase has been moved to the AI Reputation Agent track.**
+> See `AI_REPUTATION_AGENT_ROADMAP.md` PHASE 77 for the full specification.
 
-**Status:** Future roadmap. Do not implement now.
+PHASE 77 (AI Review Request Agent) is now part of the **AI Reputation Agent** — a separate Pro+ module. Reputation management (review collection, Google Business Profile integration, reputation analytics) is distinct from marketing content creation and social publishing.
 
-> **Purpose:** After job completion, help dealers collect authentic customer reviews and social proof through LINE — increasing MEO signals (Google Business Profile star ratings), AEO authority, and LLMO credibility without generating fake content or pressuring customers.
+**Reason for separation:** Review collection involves strict compliance rules, legal considerations, and a different workflow from content marketing. Keeping it as a separate module makes the compliance requirements clearer and easier to enforce independently.
 
-### 77.1 Trigger Conditions
+For the complete PHASE 77 specification, see: `AI_REPUTATION_AGENT_ROADMAP.md`
 
-The review request workflow may be initiated when any of the following occurs:
+---
 
-| Trigger | Condition |
-|---------|-----------|
-| Work order status → `completed` | Primary trigger. Dealer receives prompt to send review request. |
-| Completion report finalized | Alternative trigger if completion reports are used consistently. |
-| Manual trigger by dealer | Dealer can initiate from customer record at any time. |
+## [Former PHASE 77 content — now in AI_REPUTATION_AGENT_ROADMAP.md]
 
-**Default behavior:** Dealer must actively choose to send the request. Auto-sending without dealer action is not permitted in v1.0.
-
-### 77.2 Required Flow
-
-```
-Work order marked as completed
-  ↓
-System prompts dealer: "レビューリクエストを送信しますか？"
-  ↓
-Dealer reviews AI-generated LINE message
-  ↓                          ↓
-[編集して送信]           [このまま送信]
-  ↓                          ↓
-  └──────────┬───────────────┘
-             ↓
-  Dealer confirms → LINE message sent to customer
-             ↓
-  System records: review_request_sent_at, sent_by
-             ↓
-  Dealer manually confirms review received (optional)
-  System records: review_confirmed_at (manual)
-```
-
-**Dealer approval is required before sending in v1.0.** The dealer must explicitly confirm the message before it is delivered.
-
-### 77.3 AI-Generated LINE Message
-
-The AI generates a polite, natural Japanese review request message using job context. The message is editable by the dealer before sending.
-
-**Required message elements:**
-
-1. **Greeting and thank-you** — references the completed job
-2. **Voluntary review request** — asks politely, without pressure
-3. **Explicit permission to write freely** — "率直なご感想で問題ございません"
-4. **Review destination links** — Google Business Profile review URL, and optionally Instagram and dealer website
-5. **Closing** — shop name and contact
-
-**Example message (generated baseline — editable by dealer):**
-
-```
-{customer_name} 様
-
-この度は施工をご依頼いただき、誠にありがとうございました。
-
-今後のサービス向上のため、もしよろしければレビュー投稿にご協力いただけますと幸いです。
-率直なご感想で問題ございません。
-
-▼ Googleレビューはこちら
-{google_business_profile_review_url}
-
-{instagram_url が存在する場合:}
-▼ Instagramのフォローもお待ちしています
-{instagram_url}
-
-ご不明な点がございましたら、お気軽にご連絡ください。
-引き続きよろしくお願いいたします。
-
-{dealer_name}
-{dealer_phone}
-```
-
-**Context injected from job data:**
-
-| Variable | Source |
-|----------|--------|
-| `customer_name` | `customers` table |
-| `google_business_profile_review_url` | `dealer_settings` (new field: `gbp_review_url`) |
-| `instagram_url` | `dealer_settings` (new field: `instagram_url`) |
-| `dealer_name` | `dealer_settings.name` |
-| `dealer_phone` | `dealer_settings.phone` |
-| Service context | Work order service category + GYEON product (used for personalization, not mandatory in message body) |
-
-### 77.4 Optional Review Writing Support
-
-The AI may optionally generate a brief, friendly prompt to help customers who want to write a review but don't know how to start. This is **never sent automatically** — the dealer must choose to include it.
-
-**Purpose:** Reduce friction for customers who want to leave a review but are uncertain what to write. The prompt must not suggest specific opinions or star ratings.
-
-**Example support text (optional, appended to or separate from main message):**
-
-```
-レビューに何を書けばよいかお困りの場合は、以下のような点を参考にしていただけますと幸いです。
-
-・施工前と施工後の印象の違い
-・スタッフの対応
-・仕上がりのご感想
-・どんな方にお勧めしたいか
-
-もちろん、ご自由にお書きいただいて問題ありません。
-```
-
-**Key constraint:** The support text provides structural prompts only — never specific opinion suggestions ("素晴らしかった", "5つ星" など). The customer's opinion must remain entirely their own.
-
-### 77.5 MEO/SEO Keyword Awareness
-
-While the review request message itself must remain natural and pressure-free, the AI may **lightly** incorporate context that, if reflected in the customer's review, would support MEO/SEO:
-
-- The message naturally mentions the service performed (e.g., "セラミックコーティングの施工") so that if the customer mentions it in their review, it becomes an organic keyword signal
-- The message includes the shop name as it appears on Google Business Profile
-- The optional writing support text includes service-neutral prompts (e.g., "施工前と施工後の印象") that, if answered by the customer, naturally contain service-relevant keywords
-
-**This is keyword awareness, not keyword injection.** The customer writes freely. No specific words are requested or required.
-
-### 77.6 Compliance Rules (Mandatory — Non-Negotiable)
-
-These rules are permanent and cannot be relaxed in any future version without explicit legal/ethical review:
-
-| Rule | Description |
-|------|-------------|
-| No fake reviews | The system must never generate, submit, or simulate customer reviews on behalf of any customer |
-| No posting on behalf of customers | Reviews must be written and submitted by the customer directly — never by the dealer or the system |
-| No pressure | The message tone must be polite and explicitly voluntary. No follow-up pressure messages in v1.0. |
-| No positive-only requests | The system must never instruct customers to leave only positive feedback or to submit only if they are satisfied |
-| No incentivized reviews | No rewards, discounts, gifts, or loyalty points may be offered in exchange for a review |
-| Voluntary and authentic | The customer must be free to write any opinion, including negative feedback |
-| No star rating suggestion | The message must never suggest or imply a specific star rating |
-| No opinion suggestion | The optional writing support text must not suggest specific adjectives, outcomes, or sentiment |
-
-Violation of any of these rules constitutes a policy violation and must be treated as a critical bug.
-
-### 77.7 Tracking
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `review_request_sent_at` | `timestamptz` | When the LINE message was sent |
-| `review_request_sent_by` | `uuid` | Staff member who approved and sent the request |
-| `review_confirmed_at` | `timestamptz \| null` | When dealer manually marks a review as received |
-| `review_platform` | `text \| null` | 'google' / 'instagram' / 'website' — manually set by dealer |
-| `review_request_work_order_id` | `uuid` | FK to work order that triggered the request |
-
-These fields are stored per work order or per a new `review_requests` table (schema design TBD at implementation time — no migration applied now).
-
-**Dashboard indicator:** Dealer can see:
-- How many review requests have been sent this month
-- How many reviews have been manually confirmed
-- Which jobs have not yet had a review request sent
-
-### 77.8 Future Scope (Deferred Beyond v1.0)
-
-| Feature | Notes |
-|---------|-------|
-| Automated follow-up (single, optional) | One polite follow-up after N days if no review confirmed — requires opt-in |
-| Direct GBP review link generation | Deep link to GBP review modal for specific shop |
-| Review content analysis | AI reads received reviews for sentiment and keyword signals (privacy review required) |
-| Multi-platform review tracking | Track review counts per platform over time |
-| Review response drafting | AI drafts owner response to Google reviews (dealer edits and posts manually) |
+> *This section intentionally left as a redirect. The full PHASE 77 specification is in `AI_REPUTATION_AGENT_ROADMAP.md`. Do not reconstruct PHASE 77 content here.*
 
 ---
 
 ## Phase Dependency Map
 
 ```
+AI Gateway Architecture (prerequisite — see AI_GATEWAY_SPEC.md)
+  │
+  ▼
 PHASE 71 — AI Media Foundation
   (before/after images, AI blur, branding assets)
       │
@@ -650,10 +508,6 @@ PHASE 71 — AI Media Foundation
       │
       ├── PHASE 73 — AI Content Writer + Discovery Optimization Engine
       │       (requires: job metadata + media quality score)
-      │       │
-      │       └── PHASE 77 — AI Review Request Agent
-      │               (requires: LINE active + work order completion event)
-      │               (PHASE 73 recommended for content generation)
       │
       └─────────────────────┐
                             ▼
@@ -663,28 +517,48 @@ PHASE 71 — AI Media Foundation
                             ▼
                    PHASE 75 — AI Marketing Analytics
                         (requires: published post data)
-                        (PHASE 77 tracking feeds into MEO analytics)
                             │
                             ▼
                    PHASE 76 — AI Growth Agent
                         (requires: sufficient history)
 ```
 
+> **AI Reputation Agent (PHASE 77–81)** is a separate track.
+> See `AI_REPUTATION_AGENT_ROADMAP.md` for the full specification.
+
 ---
 
-## Technology Considerations (Preliminary)
+## [PHASE 77 moved]
 
-| Capability | Candidate technology |
-|------------|---------------------|
-| License plate / face blur | OpenAI Vision API or dedicated CV model |
-| AI image quality scoring | OpenAI Vision API |
-| AI video generation | Runway, Sora API, or similar when available |
-| AI content writing | Claude API (claude-sonnet-4-6 or later) |
+> PHASE 77 has been moved to `AI_REPUTATION_AGENT_ROADMAP.md`. See that document for the complete specification.
+
+---
+
+## AI Gateway Dependency
+
+All AI inference calls in PHASE 71–76 route through the **AI Gateway** (`AI_GATEWAY_SPEC.md`).
+
+| Principle | Impact on this track |
+|-----------|---------------------|
+| Provider-agnostic | No specific AI provider is hardcoded. Content writing, image analysis, video generation all route through the gateway adapter. |
+| Dealer-owned keys | Dealers configure their own AI provider API keys in `dealer_ai_settings`. Office AZ does not pay inference costs. |
+| Server-side only | API keys are never returned to client. All AI calls are server-side. |
+
+**Implementation prerequisite:** AI Gateway must be implemented before any PHASE 71–76 feature is built.
+
+---
+
+## Technology Considerations
+
+| Capability | Candidate technology (via AI Gateway) |
+|------------|--------------------------------------|
+| License plate / face blur | OpenAI Vision API or dedicated CV model (dealer's key) |
+| AI image quality scoring | OpenAI Vision API or Gemini (dealer's key) |
+| AI video generation | Runway, Sora API, or similar when available (separate key management TBD) |
+| AI content writing | Claude or OpenAI (dealer's key via gateway) |
 | Social publishing | Instagram Graph API, Facebook API, TikTok API, YouTube Data API, LINE Messaging API |
 | Analytics ingestion | Platform Insights APIs |
 | Background processing | Supabase Edge Functions or dedicated job queue |
-| Review request messaging | LINE Messaging API (already in core platform — Phase B) |
-| GBP review link | Google Business Profile API or static deep-link URL per dealer |
 
 **All AI API keys must be stored server-side. No AI API credentials may be exposed to the client.**
 
@@ -706,11 +580,12 @@ PHASE 71 — AI Media Foundation
 
 **Do not begin any PHASE 71–76 implementation until:**
 
-1. Core business platform (estimates, invoices, work orders, customers, LINE) is at stable production
-2. Sprint 10 (dealer approval flow) is complete
-3. CTO sign-off on media storage architecture and AI vendor selection
-4. Privacy policy updated for AI image processing and social platform connections
-5. Separate product specification pass for each phase under SDD
+1. AI Gateway Architecture implemented and validated (`AI_GATEWAY_SPEC.md`)
+2. Core business platform (estimates, invoices, work orders, customers, LINE) is at stable production
+3. Sprint 10 (dealer approval flow) is complete
+4. CTO sign-off on media storage architecture and AI vendor selection
+5. Privacy policy updated for AI image processing and social platform connections
+6. Separate product specification pass for each phase under SDD
 
 ---
 

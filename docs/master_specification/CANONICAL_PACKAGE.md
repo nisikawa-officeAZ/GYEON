@@ -177,9 +177,14 @@ The two JSON files (`gyeon_flow.json`, `gyeon_settings_flow.json`) are the highe
 
 | Document | Scope |
 |----------|-------|
-| `AI_MARKETING_AGENT_ROADMAP.md` | PHASE 71–77: AI media, video generation, content writing, social publishing, analytics, growth agent, review request agent. Includes **mandatory Discovery Optimization requirement** (SEO/MEO/AEO/LLMO/AIO) and **mandatory compliance rules** for review collection (no fake reviews, no incentivized reviews, no pressure). Full spec with principles, phase dependencies, privacy rules, and implementation gate. |
+| `AI_GATEWAY_SPEC.md` | AI Gateway Architecture: provider-agnostic AI infrastructure (OpenAI, Claude, Gemini, Azure OpenAI + future), dealer-owned API keys, Office AZ bears no inference costs, `dealer_ai_settings` schema proposal, future `AppFeature` additions (`ai_marketing`, `ai_growth`, `ai_reputation`). **Prerequisite to all AI Agent features.** |
+| `AI_MARKETING_AGENT_ROADMAP.md` | PHASE 71–76: AI media management, video generation, content writing, social publishing, marketing analytics, growth agent. Includes **mandatory Discovery Optimization requirement** (SEO/MEO/AEO/LLMO/AIO). Full spec with principles, phase dependencies, privacy rules, and implementation gate. Requires AI Gateway. |
+| `AI_REPUTATION_AGENT_ROADMAP.md` | PHASE 77–81: AI review request via LINE, AI review writing support, Google Business Profile integration, reputation analytics, reputation improvement recommendations. Includes **mandatory compliance rules** (no fake reviews, no incentivized reviews, no pressure). Requires AI Gateway. |
 
-**Mandatory requirement note:** All AI-generated marketing content must be optimized for SEO, MEO (Google Maps/local), AEO (Answer Engine / featured snippets), LLMO (Large Language Model citations), and AIO (Google AI Overviews). This is built into PHASE 73 (AI Content Writer) as a non-optional Discovery Optimization Engine and tracked in PHASE 75 (Analytics) as a dedicated analytics category.
+**Mandatory requirement notes:**
+- **Discovery Optimization (AI Marketing):** All AI-generated marketing content must be optimized for SEO, MEO, AEO, LLMO, and AIO. Mandatory in PHASE 73 (Content Writer) via Discovery Optimization Engine.
+- **Review compliance (AI Reputation):** No fake reviews, no incentivized reviews, no pressure messaging, no star rating suggestions. Mandatory in all PHASE 77–81 implementations. See `AI_REPUTATION_AGENT_ROADMAP.md` §77.6.
+- **AI Gateway (all AI features):** Office AZ does not pay AI inference costs. Dealers use their own provider API keys via the gateway.
 
 These documents are specification-only. No implementation until the gate conditions in each document are satisfied.
 

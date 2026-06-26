@@ -4,7 +4,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Active — Living Document (updated as ODs resolve and phases complete) |
-| **Last Updated** | 2026-06-26 |
+| **Last Updated** | 2026-06-26 (AI Gateway + AI Platform restructure) |
 | **Canonical Source** | `ROADMAP_V2.md`, `ROADMAP_AFTER_v1.md`, audit findings |
 | **Related Documents** | `09_PHASE_STATUS.md`, `11_CANONICAL_RULES.md`, `OPERATOR_DECISIONS.md`, `AI_MARKETING_AGENT_ROADMAP.md` |
 
@@ -141,13 +141,39 @@ From the project's already-recorded V2 roadmap (`ROADMAP_V2.md`, `ROADMAP_AFTER_
 
 ---
 
-## Phase F — AI Marketing Agent (Future Roadmap)
+## Phase G — AI Gateway Architecture (Future — Prerequisite to all AI features)
 
-> **Status:** Approved future feature — deferred until core business platform reaches stable production.
-> **Full specification:** `AI_MARKETING_AGENT_ROADMAP.md`
-> **Do not implement until the Implementation Gate in that document is satisfied.**
+> **Status:** Approved architecture decision — deferred.
+> **Full specification:** `AI_GATEWAY_SPEC.md`
+> **Must be implemented before any AI Agent feature (PHASE 71–81).**
 
-Transform GYEON Detailer Agent from a business management system into an AI business growth platform. The agent automatically converts completed jobs into marketing content — videos, captions, hashtags — and publishes to social platforms with dealer approval.
+The platform must be AI-provider agnostic. Dealers register their own API keys. Office AZ does not pay AI inference costs.
+
+| Principle | Impact |
+|-----------|--------|
+| Provider-agnostic | Supports OpenAI, Claude, Gemini, Azure OpenAI, and future providers via adapter pattern |
+| Dealer-owned keys | Each dealer registers their own AI provider API key in `dealer_ai_settings` (new table, migration required — not now) |
+| No Office AZ inference costs | All AI inference for AI Agent features routes through dealer's own API key |
+| Server-side only | Keys encrypted at rest, never returned to client |
+
+**Future `AppFeature` additions (define at implementation time, NOT now):**
+- `"ai_marketing"` → Pro+ (AI Marketing Agent, PHASE 71–75)
+- `"ai_growth"` → Pro+ (AI Growth Agent, PHASE 76)
+- `"ai_reputation"` → Pro+ (AI Reputation Agent, PHASE 77–81)
+
+---
+
+## Phase F — AI Platform (Future Roadmap)
+
+> **Status:** Approved future features — deferred until AI Gateway is implemented and core platform is stable.
+> **Do not implement until the respective Implementation Gates are satisfied.**
+> **AI Gateway (Phase G) is a prerequisite for all items in Phase F.**
+
+The AI Platform adds three strategic Pro+ modules:
+
+### F1 — AI Marketing Agent
+
+Transform completed jobs into marketing content with dealer approval.
 
 | Phase | Name | What it delivers |
 |-------|------|-----------------|
@@ -156,23 +182,44 @@ Transform GYEON Detailer Agent from a business management system into an AI busi
 | PHASE 73 | AI Content Writer | Auto-generate titles, captions, hashtags; **mandatory SEO/MEO/AEO/LLMO/AIO optimization** via Discovery Optimization Engine; local + service + vehicle + GYEON product keywords; FAQ-style answer content; platform metadata |
 | PHASE 74 | AI Social Publishing | Draft → dealer approval → scheduled publish to Instagram, Facebook, X, TikTok, YouTube Shorts, LINE VOOM |
 | PHASE 75 | AI Marketing Analytics | Reach, views, saves, engagement; **discovery performance analytics** (MEO/SEO/AEO/LLMO/AIO channel tracking); AI recommendations |
-| PHASE 76 | AI Growth Agent | Proactive: detect inactive accounts, suggest content, auto-create drafts, trigger campaign ideas |
-| PHASE 77 | AI Review Request Agent | After job completion, AI generates polite Japanese LINE review request; links to Google Business Profile, Instagram, dealer website; dealer approval required; strict no-fake-review compliance rules |
 
-**Locked principles:**
-- Dealer approval before any publish is the **default**. Automatic publishing is opt-in, never the default.
+**Full specification:** `AI_MARKETING_AGENT_ROADMAP.md`
+
+### F2 — AI Growth Agent
+
+| Phase | Name | What it delivers |
+|-------|------|-----------------|
+| PHASE 76 | AI Growth Agent | Proactive: detect inactive accounts, suggest content, auto-create drafts, trigger campaign ideas; growth dashboard |
+
+**Full specification:** `AI_MARKETING_AGENT_ROADMAP.md` (PHASE 76 section)
+
+### F3 — AI Reputation Agent
+
+| Phase | Name | What it delivers |
+|-------|------|-----------------|
+| PHASE 77 | AI Review Request Agent | LINE review request after job completion; dealer approval required; strict no-fake-review compliance rules |
+| PHASE 78 | AI Review Writing Support | Guided neutral prompts for customers who want help writing reviews |
+| PHASE 79 | Google Business Profile Integration | GBP review link generation, review count tracking, response drafting |
+| PHASE 80 | Reputation Analytics Dashboard | Review metrics, MEO signal health, trend data |
+| PHASE 81 | Reputation Improvement Recommendations | AI-generated actionable suggestions |
+
+**Full specification:** `AI_REPUTATION_AGENT_ROADMAP.md`
+
+### Locked principles (all Phase F modules)
+- Dealer approval before any publish or send is the **default**. Automatic actions are opt-in, never the default.
 - License plates and faces are blurred server-side before any image is stored or transmitted.
 - All AI API credentials are server-side only — never exposed to the client.
+- **No fake reviews, no incentivized reviews, no pressure messaging — ever.** See `AI_REPUTATION_AGENT_ROADMAP.md` §77.6.
 - No synthetic "before" images — ever.
-- **All generated content must be optimized for SEO, MEO, AEO, LLMO, and AIO.** This is mandatory, not optional. See `AI_MARKETING_AGENT_ROADMAP.md` §Discovery Optimization.
+- **All generated marketing content must be optimized for SEO, MEO, AEO, LLMO, and AIO.** This is mandatory. See `AI_MARKETING_AGENT_ROADMAP.md` §Discovery Optimization.
 
-**Implementation gate:** Core platform stable + Sprint 10 complete + CTO sign-off on media storage architecture + privacy policy update. See `AI_MARKETING_AGENT_ROADMAP.md` §Implementation Gate.
+**Implementation gate:** AI Gateway complete + core platform stable + Sprint 10 complete + CTO sign-off. See individual roadmap documents.
 
 ---
 
 ## Sequencing Summary
 
-**Prerequisites → A (desktop UI) → B (activate integrations) → C (spec/data reconciliation) → D (hardening) → E (documented V2 scope) → F (AI Marketing Agent — future).**
+**Prerequisites → A (desktop UI) → B (activate integrations) → C (spec/data reconciliation) → D (hardening) → E (documented V2 scope) → G (AI Gateway architecture — prerequisite) → F (AI Platform: F1 Marketing, F2 Growth, F3 Reputation — future).**
 
 - Phase A can begin immediately (no operator decisions block desktop UI work).
 - Phase B requires OD-1 (migration 070 status) + env var provisioning.
@@ -180,7 +227,8 @@ Transform GYEON Detailer Agent from a business management system into an AI busi
 - Phase C requires OD-1 through OD-10 to be resolved first.
 - Phase A and Phase B env-var provisioning can proceed in parallel.
 - Phase E items each require their own specification pass under SDD before implementation begins.
-- Phase F requires core platform stable production + its own specification pass per SDD. See `AI_MARKETING_AGENT_ROADMAP.md`.
+- Phase G (AI Gateway) must be implemented before any Phase F feature.
+- Phase F (AI Platform) requires Phase G complete + core platform stable + individual SDD pass per phase. See `AI_GATEWAY_SPEC.md`, `AI_MARKETING_AGENT_ROADMAP.md`, `AI_REPUTATION_AGENT_ROADMAP.md`.
 
 ---
 

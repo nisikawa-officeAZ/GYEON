@@ -1,0 +1,366 @@
+# AI Reputation Agent — Future Roadmap
+## GYEON Detailer Agent: Authentic Review Collection and Reputation Management
+
+| Field | Value |
+|-------|-------|
+| **Document** | AI Reputation Agent Roadmap |
+| **Status** | Approved Future Feature — Deferred |
+| **Created** | 2026-06-26 |
+| **Priority** | Future Version (after core platform reaches stable production) |
+| **Phases** | PHASE 77 – PHASE 81 |
+| **Prerequisite** | AI Gateway Architecture (`AI_GATEWAY_SPEC.md`) must be implemented first |
+| **Implementation** | Do not implement now. Specification and roadmap only. |
+
+> **Note on PHASE 77 origin:** PHASE 77 (AI Review Request Agent) was previously listed under `AI_MARKETING_AGENT_ROADMAP.md`. It has been moved here as the first phase of the AI Reputation Agent track. The content is identical to the original PHASE 77 specification.
+
+---
+
+## Vision
+
+Help dealers build authentic online reputation by making it easy to ask satisfied customers for reviews — through natural, polite, non-pressured communication via LINE.
+
+The AI Reputation Agent turns every completed job into an opportunity to collect genuine customer feedback. It does this with strict compliance rules: no fake reviews, no incentives, no pressure, no star rating suggestions.
+
+**Long-term goal:** A reputation management platform that tracks review health, identifies improvement opportunities, and helps dealers maintain a strong local presence on Google Business Profile and other platforms — without compromising review authenticity.
+
+---
+
+## Principles
+
+1. **Authenticity is non-negotiable.** The system never generates, submits, or simulates reviews on behalf of customers. All reviews must be written and submitted by the customer.
+2. **Voluntary always.** Review requests are polite and explicitly optional. No pressure messaging. No follow-up until explicitly opted in.
+3. **Dealer controls every send.** No review request is sent without dealer approval in v1.0.
+4. **Compliance is permanent.** The compliance rules in PHASE 77 (§77.6) cannot be relaxed in any version without explicit legal/ethical review.
+5. **MEO-aware, never manipulative.** Content is designed to provide organic keyword context — never to instruct customers on what to write or which star rating to give.
+
+---
+
+## AI Gateway Dependency
+
+All AI-generated content in this track (review request messages, writing support prompts, recommendations) is routed through the **AI Gateway** (`AI_GATEWAY_SPEC.md`).
+
+- Dealer must have an AI provider API key configured in `dealer_ai_settings`
+- Feature gate: `AppFeature: "ai_reputation"` (Pro+) — defined at implementation time
+- Office AZ does not pay inference costs for any AI Reputation Agent operation
+
+---
+
+## PHASE 77 — AI Review Request Agent
+
+**Prerequisite:** LINE integration active (Phase B of core platform). Work order completion event available. AI Gateway configured.
+
+**Status:** Future roadmap. Do not implement now.
+
+> **Purpose:** After job completion, help dealers collect authentic customer reviews and social proof through LINE — increasing MEO signals (Google Business Profile star ratings), AEO authority, and LLMO credibility without generating fake content or pressuring customers.
+
+### 77.1 Trigger Conditions
+
+The review request workflow may be initiated when any of the following occurs:
+
+| Trigger | Condition |
+|---------|-----------|
+| Work order status → `completed` | Primary trigger. Dealer receives prompt to send review request. |
+| Completion report finalized | Alternative trigger if completion reports are used consistently. |
+| Manual trigger by dealer | Dealer can initiate from customer record at any time. |
+
+**Default behavior:** Dealer must actively choose to send the request. Auto-sending without dealer action is not permitted in v1.0.
+
+### 77.2 Required Flow
+
+```
+Work order marked as completed
+  ↓
+System prompts dealer: "レビューリクエストを送信しますか？"
+  ↓
+Dealer reviews AI-generated LINE message
+  ↓                          ↓
+[編集して送信]           [このまま送信]
+  ↓                          ↓
+  └──────────┬───────────────┘
+             ↓
+  Dealer confirms → LINE message sent to customer
+             ↓
+  System records: review_request_sent_at, sent_by
+             ↓
+  Dealer manually confirms review received (optional)
+  System records: review_confirmed_at (manual)
+```
+
+**Dealer approval is required before sending in v1.0.** The dealer must explicitly confirm the message before it is delivered.
+
+### 77.3 AI-Generated LINE Message
+
+The AI generates a polite, natural Japanese review request message using job context. The message is editable by the dealer before sending.
+
+**Required message elements:**
+
+1. **Greeting and thank-you** — references the completed job
+2. **Voluntary review request** — asks politely, without pressure
+3. **Explicit permission to write freely** — "率直なご感想で問題ございません"
+4. **Review destination links** — Google Business Profile review URL, and optionally Instagram and dealer website
+5. **Closing** — shop name and contact
+
+**Example message (generated baseline — editable by dealer):**
+
+```
+{customer_name} 様
+
+この度は施工をご依頼いただき、誠にありがとうございました。
+
+今後のサービス向上のため、もしよろしければレビュー投稿にご協力いただけますと幸いです。
+率直なご感想で問題ございません。
+
+▼ Googleレビューはこちら
+{google_business_profile_review_url}
+
+{instagram_url が存在する場合:}
+▼ Instagramのフォローもお待ちしています
+{instagram_url}
+
+ご不明な点がございましたら、お気軽にご連絡ください。
+引き続きよろしくお願いいたします。
+
+{dealer_name}
+{dealer_phone}
+```
+
+**Context injected from job data:**
+
+| Variable | Source |
+|----------|--------|
+| `customer_name` | `customers` table |
+| `google_business_profile_review_url` | `dealer_settings` (new field: `gbp_review_url`) |
+| `instagram_url` | `dealer_settings.sns_urls.instagram` (PHASE70 column) |
+| `dealer_name` | `dealer_settings.business_name` |
+| `dealer_phone` | `dealer_settings.business_phone` |
+| Service context | Work order service category + GYEON product (used for personalization, not mandatory in message body) |
+
+### 77.4 Optional Review Writing Support
+
+The AI may optionally generate a brief, friendly prompt to help customers who want to write a review but don't know how to start. This is **never sent automatically** — the dealer must choose to include it.
+
+**Example support text (optional):**
+
+```
+レビューに何を書けばよいかお困りの場合は、以下のような点を参考にしていただけますと幸いです。
+
+・施工前と施工後の印象の違い
+・スタッフの対応
+・仕上がりのご感想
+・どんな方にお勧めしたいか
+
+もちろん、ご自由にお書きいただいて問題ありません。
+```
+
+**Key constraint:** The support text provides structural prompts only — never specific opinion suggestions ("素晴らしかった", "5つ星" など). The customer's opinion must remain entirely their own.
+
+### 77.5 MEO/SEO Keyword Awareness
+
+While the review request message itself must remain natural and pressure-free, the AI may **lightly** incorporate context that, if reflected in the customer's review, would support MEO/SEO:
+
+- The message naturally mentions the service performed (e.g., "セラミックコーティングの施工") so that if the customer mentions it in their review, it becomes an organic keyword signal
+- The message includes the shop name as it appears on Google Business Profile
+- The optional writing support text includes service-neutral prompts that, if answered by the customer, naturally contain service-relevant keywords
+
+**This is keyword awareness, not keyword injection.** The customer writes freely. No specific words are requested or required.
+
+### 77.6 Compliance Rules (Mandatory — Non-Negotiable — Permanent)
+
+These rules are **permanent** and cannot be relaxed in any future version without explicit legal/ethical review:
+
+| Rule | Description |
+|------|-------------|
+| No fake reviews | The system must never generate, submit, or simulate customer reviews on behalf of any customer |
+| No posting on behalf of customers | Reviews must be written and submitted by the customer directly — never by the dealer or the system |
+| No pressure | The message tone must be polite and explicitly voluntary. No follow-up pressure messages in v1.0. |
+| No positive-only requests | The system must never instruct customers to leave only positive feedback or to submit only if they are satisfied |
+| No incentivized reviews | No rewards, discounts, gifts, or loyalty points may be offered in exchange for a review |
+| Voluntary and authentic | The customer must be free to write any opinion, including negative feedback |
+| No star rating suggestion | The message must never suggest or imply a specific star rating |
+| No opinion suggestion | The optional writing support text must not suggest specific adjectives, outcomes, or sentiment |
+
+Violation of any of these rules constitutes a policy violation and must be treated as a critical bug.
+
+### 77.7 Tracking
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `review_request_sent_at` | `timestamptz` | When the LINE message was sent |
+| `review_request_sent_by` | `uuid` | Staff member who approved and sent the request |
+| `review_confirmed_at` | `timestamptz \| null` | When dealer manually marks a review as received |
+| `review_platform` | `text \| null` | 'google' / 'instagram' / 'website' — manually set by dealer |
+| `review_request_work_order_id` | `uuid` | FK to work order that triggered the request |
+
+These fields are stored per work order or per a new `review_requests` table (schema design TBD at implementation time — no migration applied now).
+
+**Dashboard indicator:** Dealer can see:
+- How many review requests have been sent this month
+- How many reviews have been manually confirmed
+- Which jobs have not yet had a review request sent
+
+### 77.8 Future Scope (Deferred Beyond v1.0)
+
+| Feature | Notes |
+|---------|-------|
+| Automated follow-up (single, optional) | One polite follow-up after N days if no review confirmed — requires opt-in |
+| Direct GBP review link generation | Deep link to GBP review modal for specific shop |
+| Review content analysis | AI reads received reviews for sentiment and keyword signals (privacy review required) |
+| Multi-platform review tracking | Track review counts per platform over time |
+| Review response drafting | AI drafts owner response to Google reviews (dealer edits and posts manually) |
+
+---
+
+## PHASE 78 — AI Review Writing Support
+
+**Prerequisite:** PHASE 77 operational. Customer-facing LINE interaction established.
+
+**Status:** Future roadmap. Do not implement now.
+
+Expand the optional writing support from PHASE 77 into a structured, interactive experience:
+
+| Feature | Description |
+|---------|-------------|
+| Guided review prompts | Structured questions the AI generates based on the job — neutral, non-leading |
+| Platform-specific prompts | Different question sets for Google, Instagram, dealer website |
+| Review length guidance | Suggest optimal review length per platform (Google: 50–200 words; Instagram caption: shorter) |
+| Prompt personalization | Prompts reference the actual service performed (coating, PPF, etc.) — neutral framing only |
+
+**Compliance note:** PHASE 77.6 compliance rules apply to all PHASE 78 content without exception.
+
+---
+
+## PHASE 79 — Google Business Profile Review Integration
+
+**Prerequisite:** PHASE 77 operational. Google Business Profile API access configured.
+
+**Status:** Future roadmap. Do not implement now.
+
+| Feature | Description |
+|---------|-------------|
+| GBP deep-link generation | Auto-generate the direct Google review URL for each dealer's GBP listing |
+| Review count tracking | Pull review count from GBP Insights API to show trend in dealer dashboard |
+| Star rating display | Show current average star rating in reputation dashboard |
+| Review notification | Notify dealer when a new Google review is detected |
+| Review response drafting | AI generates draft response for Google reviews — dealer edits and posts manually, never automated |
+
+**Note:** Google review response drafting is the only AI content in this phase that assists dealers in writing (not customers). The dealer always posts responses manually via their GBP account — the system never posts on behalf of the dealer.
+
+---
+
+## PHASE 80 — Reputation Analytics Dashboard
+
+**Prerequisite:** PHASE 77–79 operational. Review data accumulating.
+
+**Status:** Future roadmap. Do not implement now.
+
+| Metric | Source |
+|--------|--------|
+| Total reviews sent (LINE requests) | Internal tracking |
+| Review conversion rate (requests → confirmed reviews) | Internal tracking |
+| Average response time (days from request to review) | Internal tracking |
+| Google star rating trend | GBP API |
+| Review volume by platform | GBP API + manual logs |
+| MEO signal health score | Composite: rating + recency + volume + response rate |
+| Best-performing service categories (by review trigger) | Correlated from work order data |
+
+### Discovery Impact Tracking
+
+| Signal | Description |
+|--------|-------------|
+| GBP ranking trend | Estimated local search rank for primary service keywords |
+| Review keyword frequency | How often service-relevant keywords appear in received reviews (aggregate, anonymized) |
+| Review velocity | Rate of new reviews — plateaus signal action needed |
+
+---
+
+## PHASE 81 — Reputation Improvement Recommendations
+
+**Prerequisite:** PHASE 80 operational. Sufficient data accumulated (minimum 3 months).
+
+**Status:** Future roadmap. Do not implement now.
+
+The AI analyzes reputation data and generates actionable improvement recommendations:
+
+**Example recommendations:**
+- 「レビュー依頼の送信後、平均3日以内に届いたレビューが多い傾向があります。施工完了から2日以内の送信が効果的です」
+- 「Googleレビューの星評価が先月から低下しています。最近のレビューを確認し、お客様の声に対応することをお勧めします」
+- 「PPF施工のレビュー数が少ない傾向があります。PPF施工完了後のレビュー依頼を積極的に活用してみてください」
+- 「レビューへの返信をしているお店は、GBP表示回数が平均1.5倍高くなっています」
+
+All recommendations are AI-generated but dealer-reviewed. No action is taken automatically.
+
+---
+
+## Phase Dependency Map
+
+```
+AI Gateway Architecture (prerequisite)
+  │
+  ▼
+PHASE 77 — AI Review Request Agent
+  (LINE integration active, work order completion event)
+      │
+      ├── PHASE 78 — AI Review Writing Support
+      │       (guided prompts, platform-specific)
+      │
+      └── PHASE 79 — Google Business Profile Integration
+              (GBP API, review tracking, response drafting)
+              │
+              ▼
+          PHASE 80 — Reputation Analytics Dashboard
+              (review metrics, MEO signals, trend data)
+              │
+              ▼
+          PHASE 81 — Reputation Improvement Recommendations
+              (AI analysis, actionable suggestions)
+```
+
+**Cross-track dependency:** PHASE 80 reputation analytics feeds into the AI Marketing Agent's PHASE 75 discovery performance analytics. Review keyword signals (aggregate) inform the MEO optimization recommendations in the Marketing track.
+
+---
+
+## Technology Considerations
+
+| Capability | Candidate technology |
+|------------|---------------------|
+| Review request message generation | AI Gateway → Claude or OpenAI (dealer's key) |
+| Review writing support prompts | AI Gateway → Claude or OpenAI (dealer's key) |
+| Review response drafting | AI Gateway → Claude or OpenAI (dealer's key) |
+| GBP review link generation | Static URL pattern: `https://search.google.com/local/writereview?placeid={place_id}` |
+| GBP review count / rating | Google Business Profile API (OAuth2 per dealer) |
+| Reputation score calculation | Rule-based + AI-assisted — no external API required |
+| LINE message delivery | LINE Messaging API (already in core platform) |
+
+**All AI API keys must be stored server-side. No AI API credentials may be exposed to the client.**
+
+---
+
+## Compliance Checklist (Non-Negotiable)
+
+Every feature implemented in this track must pass the following checklist before shipping:
+
+- [ ] No fake review generation path exists in any code
+- [ ] No automated send without explicit dealer approval
+- [ ] No star rating suggestion in any generated text
+- [ ] No positive-only framing in any generated prompt
+- [ ] No incentive language in any template or prompt
+- [ ] Customer's free choice is preserved in all flows
+- [ ] All generated content is editable by dealer before sending
+
+---
+
+## Implementation Gate
+
+**Do not begin any PHASE 77–81 implementation until:**
+
+1. AI Gateway Architecture implemented and validated (see `AI_GATEWAY_SPEC.md`)
+2. Core business platform at stable production
+3. Sprint 10 (dealer approval flow) complete
+4. LINE integration active (Phase B of core platform)
+5. Legal review of review request compliance rules against Japanese consumer protection law
+6. Privacy policy updated for AI-assisted communications
+7. Separate SDD specification pass for each phase
+
+---
+
+*GYEON Detailer Agent | AI Reputation Agent Roadmap | Office AZ | 2026-06-26*

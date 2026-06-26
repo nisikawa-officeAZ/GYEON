@@ -162,7 +162,9 @@ TIER 4 — DESIGN AUTHORITY
 ├── DEALER_RANK_SPEC.md                    ← Sprint 9: rank lockdown spec + Sprint 10 deferred work
 ├── SPRINT10_APPROVAL_FLOW_SPEC.md         ← Sprint 10: dealer approval flow (decisions locked)
 ├── SPRINT10A_IMPLEMENTATION_PLAN.md       ← Sprint 10A: full implementation plan
-├── AI_MARKETING_AGENT_ROADMAP.md          ← Future: PHASE 71–76 AI marketing platform (deferred)
+├── AI_GATEWAY_SPEC.md                     ← Future: AI provider-agnostic gateway (prerequisite to all AI agents)
+├── AI_MARKETING_AGENT_ROADMAP.md          ← Future: PHASE 71–76 AI marketing + growth (deferred)
+├── AI_REPUTATION_AGENT_ROADMAP.md         ← Future: PHASE 77–81 AI reputation + review management (deferred)
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -187,6 +189,7 @@ TIER 4 — DESIGN AUTHORITY
 | 1.1 | 2026-06-26 | Sprint 9–10 | Dealer rank lockdown, approval flow spec (decisions locked), Sprint 10A plan |
 | 1.2 | 2026-06-26 | Future Roadmap | AI Marketing Agent roadmap added (PHASE 71–77, deferred) |
 | 1.3 | 2026-06-26 | Pro+ Feature | LINE Rich Menu Management implemented (Pro+); `line_rich_menu` in AppFeature; uses PHASE70 `line_public_settings` column; no new migration; pure-Node.js PNG generator |
+| 1.4 | 2026-06-26 | Architecture | AI Gateway Architecture decision; AI Platform restructured (F1 Marketing, F2 Growth, F3 Reputation); PHASE 77 moved to AI Reputation Agent; `AI_GATEWAY_SPEC.md` + `AI_REPUTATION_AGENT_ROADMAP.md` created |
 
 ---
 
