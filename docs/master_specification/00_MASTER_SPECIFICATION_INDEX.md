@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v3.5 — Sprint 11H) |
+| **Last Updated** | 2026-06-26 (v3.6 — Sprint 11I) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -176,6 +176,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── REPUTATION_PLATFORM_SPEC.md       ← Sprint 11C: AI Reputation Platform — review request workflow, compliance model, signal model, MEO/AEO/LLMO/AIO, CE integration
 ├── LINE_AUTOMATION_PLATFORM_SPEC.md  ← Sprint 11G: LINE Automation Platform — 10 workflows, 9 triggers, 4 approval modes, AI integration (deferred), Rich Menu compat (8 buttons)
 ├── AI_GROWTH_PLATFORM_SPEC.md        ← Sprint 11H: AI Growth Platform — 8 domain objects, 11 data sources, 15 KPIs, 9 recommendation categories, 6 dashboards, 3 AI workflows
+├── AI_CONTENT_AUTOMATION_SPEC.md     ← Sprint 11I: Content Automation Platform — 9 domain objects, 14-stage pipeline, 9 publishing destinations, 5 optimization targets, 5 approval modes
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -222,6 +223,7 @@ TIER 4 — DESIGN AUTHORITY
 | **3.3** | **2026-06-26** | **Sprint 11F** | **Review LINE Message Builder: deterministic builder (7 message rules), compliance validator (3 violation categories), link readiness (4 destinations), UI preview + copy button, REPUTATION_PLATFORM_SPEC.md §14** |
 | **3.4** | **2026-06-26** | **Sprint 11G** | **LINE Automation Platform Foundation: 10 workflows, 9 triggers, 4 approval modes, 8 execution states, AI integration spec (deferred), Rich Menu compat (8 buttons), LINE_AUTOMATION_PLATFORM_SPEC.md** |
 | **3.5** | **2026-06-26** | **Sprint 11H** | **AI Growth Platform Foundation: 8 domain objects (GrowthInsight/Recommendation/Opportunity/Metric/Score/Trend/Report/Dashboard), 11 data sources, 15 KPIs, 9 recommendation categories, 6 dashboard types, 3 AI workflows, AI_GROWTH_PLATFORM_SPEC.md** |
+| **3.6** | **2026-06-26** | **Sprint 11I** | **AI Content Automation Platform: 9 domain objects (ContentProject/Source/StoryboardPlan/CaptionPlan/HashtagPlan/PublishingPlan/ApprovalWorkflow/PublishingSchedule/AutomationPolicy), 14-stage pipeline, 9 destinations, 5 optimization targets, 5 approval modes, AI_CONTENT_AUTOMATION_SPEC.md** |
 
 ---
 
