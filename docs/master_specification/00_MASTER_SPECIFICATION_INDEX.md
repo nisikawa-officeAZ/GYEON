@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v4.8 — Sprint 11T) |
+| **Last Updated** | 2026-06-26 (v4.9 — Sprint 11U) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -188,6 +188,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── AI_MARKETPLACE_SPEC.md              ← Sprint 11S: AI Capability Marketplace — 14 categories, 19 capabilities (16 base + 3 extension), 11 providers (5 gateway + 6 new), recommendation engine (4 modes + 75 benchmarks), AI Settings bridge (toGatewayAssignment)
 ├── ENTERPRISE_DISTRIBUTION_PLATFORM_SPEC.md ← EDP Planning: Office AZ Enterprise Distribution Platform — 8 roles, B2B portal, inventory, ordering workflow, delivery documents, monthly billing, sales dashboard, 5 AI modules, separate deployment architecture, 10 open questions (EDP-OD-01–10)
 ├── PLATFORM_CORE_SPEC.md               ← Sprint 11T: Platform Core — 5 applications, 10 shared modules, 10 isolation rules (8 strict + 2 advisory), feature discovery API, cross-app policy, PLATFORM_CORE descriptor
+├── AI_SETTINGS_UI_SPEC.md              ← Sprint 11U: AI Settings UI Foundation — 6-section page (Overview/Provider/Capability/Budget/Health/Marketplace), recommendation mode selector (5 modes), capability assignment per category (14), marketplace provider grid (11), Platform Core integration, migration-aware save
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -247,6 +248,7 @@ TIER 4 — DESIGN AUTHORITY
 | **4.6** | **2026-06-26** | **Sprint 11S** | **AI Capability Marketplace Foundation: AICapabilityCategory (14), AIMarketplaceCapability (16 base + 3 extension: translation/voice_synthesis/voice_cloning), AIMarketplaceProviderId (5 gateway + 6 new: google_veo/runway/kling/pika/luma/elevenlabs), AIProviderProfile (11 profiles), AIProviderBenchmark (75 entries across 4 modes), PROVIDER_RECOMMENDATIONS (68 entries), toGatewayAssignment() bridge, validateMarketplaceRouting(), AI_SETTINGS_MARKETPLACE_INTEGRATION, AI_CAPABILITY_MARKETPLACE descriptor; AI_MARKETPLACE_SPEC.md** |
 | **4.7** | **2026-06-26** | **EDP Planning** | **Enterprise Distribution Platform: planning document for independent Office AZ Group ERP product; Attraction Co., Ltd. as first target; 8 user roles, B2B portal (company pricing/payment terms/credit), inventory (on-hand/reserved/incoming/backorder), ordering workflow (buyer→confirm→pick→ship→notify), delivery documents (retail=with prices, wholesaler=without), monthly billing (configurable closing/payment day, auto-statement PDF), sales dashboard (6 panels), 5 AI modules (demand/inventory/purchasing/sales/inactivity), separate deployment (distinct Supabase project), 10 open questions; ENTERPRISE_DISTRIBUTION_PLATFORM_SPEC.md + 10_ROADMAP.md Phase H** |
 | **4.8** | **2026-06-26** | **Sprint 11T** | **Platform Core Foundation: PlatformApplicationId (5), PlatformModuleId (10), ModuleManifest (10 manifests with capabilities), PlatformApplication (5 descriptors), CrossApplicationPolicy (10 rules: 8 strict + 2 advisory), feature discovery API (discoverFeatures/getAvailableModules/getApplicationModuleSummary/isCapabilityAvailable + 22 platform features), PLATFORM_CORE descriptor, PLATFORM_CORE_SPEC.md** |
+| **4.9** | **2026-06-26** | **Sprint 11U** | **AI Settings UI Foundation: app/settings/ai/ page (server component, Pro+ gate, migration-aware), 6 client sections (AIOverviewSection/ProviderStatusSection/CapabilityAssignmentSection/BudgetSection/AIHealthSection/MarketplaceSection), recommendation mode selector (5 modes: best_quality/lowest_cost/fastest/balanced/dealer_selected), capability assignment by CATEGORY_CATALOG (14 categories, per-capability preferred+fallback+disable), marketplace grid (11 providers, category filter, extension toggle), Platform Core integration (isModuleAvailable/discoverFeatures), save via saveAISettingsProfile() with MIGRATION_REQUIRED handling, AI_SETTINGS_UI_SPEC.md** |
 
 ---
 
