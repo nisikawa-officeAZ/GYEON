@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v4.4 — Sprint 11Q) |
+| **Last Updated** | 2026-06-26 (v4.5 — Sprint 11R) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -240,6 +240,7 @@ TIER 4 — DESIGN AUTHORITY
 | **4.2** | **2026-06-26** | **Sprint 11O** | **AI Settings Platform Foundation: AISettingsProfile (dealer canonical config), AIProviderConfiguration, AIProviderHealthStatus (6), AIExecutionPreference (4 modes), AIProviderSelectionConfig + rules, AICapabilityAssignmentMap (preferred/fallback/disabled), AIBudgetPolicyConfig (3 strategies, emergency stop, auto_pause), AISettingsPlatformView + 4 card types, consultAISettingsForExecution() (6 decisions), buildUsagePolicyFromBudgetPolicy(), AI_SETTINGS_PLATFORM_SPEC.md** |
 | **4.3** | **2026-06-26** | **Sprint 11P** | **AI Settings Database Architecture Review: existing schema audit (dealer_settings.ai_settings jsonb current AI storage, 15 relevant tables), dealer_ai_settings table proposal (migration 072: default_provider + fallback_providers + 4 jsonb columns + RLS), dealer_ai_usage_log table proposal (migration 073: append-only, execution_status 5 values, cost tracking), TypeScript DealerAiSettingsRow/DealerAiUsageLogRow + serialization helpers, AI_SETTINGS_DATABASE_ARCHITECTURE.md** |
 | **4.4** | **2026-06-26** | **Sprint 11Q** | **SaaS Enterprise Foundation Review: dealer lifecycle 10-stage model, 3+1 plan tiers (Enterprise proposed), feature gate matrix (27 features, 6 gate gaps), billing architecture (manual → Stripe-ready → Enterprise contract), AI billing ownership (dealer pays provider direct), security review (billing RLS deprecated pattern, role-based AI write gap), saas-foundation-types.ts (DealerLifecycleStage/ExtendedPlanCode/BillingModel/AIBillingOwnership/FeatureGateEvaluation/SaasFoundationStatus), pre-Sprint 11R checklist (8 items), SAAS_ENTERPRISE_SPEC.md** |
+| **4.5** | **2026-06-26** | **Sprint 11R** | **AI Settings Persistence Layer: two-layer repository (dealer_ai_settings table preferred, dealer_settings JSONB fallback), AISettingsRepository + AIUsageRepository interfaces, AI_SETTINGS_REPOSITORY_FACTORY, 4 server actions (getAISettingsProfile/saveAISettingsProfile/getAIUsageSummary/validateAISettingsInput), 4-level provider resolution chain, 13 canonical error codes (AISettingsResult\<T\>), settings_available unlocked to true in both descriptors, AI_SETTINGS_PLATFORM_SPEC.md updated to v2.0** |
 
 ---
 

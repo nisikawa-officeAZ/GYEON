@@ -120,3 +120,63 @@ export {
 
 // Re-export AIUsagePolicy from gateway layer for convenience
 export type { AIUsagePolicy } from "@/lib/ai/usage-policy";
+
+// Sprint 11R — Repository layer
+export type {
+  AISettingsStorageSource,
+  AISettingsLoadResult,
+  AISettingsSavePayload,
+  AISettingsPersistenceTarget,
+  AISettingsPersistenceResult,
+  AIUsageSummaryResult,
+  AISettingsRepository,
+  AIUsageRepository,
+  AISettingsRepositoryFactory,
+} from "./repository";
+export {
+  createSupabaseAISettingsRepository,
+  createSupabaseAIUsageRepository,
+  AI_SETTINGS_REPOSITORY_FACTORY,
+} from "./repository";
+
+// Sprint 11R — Canonical error types
+export type {
+  AISettingsErrorCode,
+  AISettingsError,
+  AISettingsResult,
+  AISettingsValidationViolation,
+  AISettingsValidationResult,
+} from "./errors";
+export {
+  settingsOk,
+  settingsFail,
+  isSettingsError,
+  isSettingsOk,
+  VALID_SETTINGS,
+} from "./errors";
+
+// Sprint 11R — Provider resolution
+export type {
+  AIProviderResolutionSource,
+  AIResolvedProvider,
+  AIProviderResolutionStep,
+  AIProviderResolutionChain,
+  AIProviderResolutionContext,
+} from "./provider-resolution";
+export {
+  resolveProvider,
+  resolveProviderWithChain,
+  resolveAllCapabilities,
+} from "./provider-resolution";
+
+// Sprint 11R — Server actions
+export type { AISettingsProfileSaveInput } from "./actions";
+export {
+  getAISettingsProfile,
+  buildProfileFromLoadResult,
+  buildDefaultProfile,
+  saveAISettingsProfile,
+  isValidProviderId,
+  getAIUsageSummary,
+  validateAISettingsInput,
+} from "./actions";

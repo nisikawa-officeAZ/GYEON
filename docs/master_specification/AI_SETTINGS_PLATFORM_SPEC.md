@@ -3,14 +3,14 @@
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.0 |
-| **Status** | Foundation Complete |
-| **Sprint** | 11O |
+| **Version** | 2.0 |
+| **Status** | Persistence Layer Complete |
+| **Sprint** | 11R (updated from 11O) |
 | **Created** | 2026-06-26 |
 | **Last Updated** | 2026-06-26 |
 | **Implementation** | `src/lib/ai-settings/` |
-| **AI Provider Execution** | Deferred — Sprint 11P+ |
-| **DB Persistence** | Deferred — Sprint 11P+ |
+| **AI Provider Execution** | Deferred — Sprint 11V+ |
+| **DB Persistence** | Implemented — Sprint 11R (two-layer strategy) |
 
 ---
 
@@ -320,9 +320,105 @@ All Sprint 11J–11N security constraints remain in force. Sprint 11O adds:
 | Sprint 11M | AI Provider Execution Readiness | Complete |
 | Sprint 11N | AI Provider Adapter Registry Foundation | Complete |
 | **Sprint 11O** | **AI Settings Platform Foundation (this document)** | **Complete** |
-| Sprint 11P+ | DB persistence for AISettingsProfile (`dealer_ai_settings` migration — CTO approval) | Planned |
-| Sprint 11P+ | Server action: `buildSettingsProfileFromDB()` using `getCurrentDealer()` | Planned |
-| Sprint 11P+ | Wire `consultAISettingsForExecution()` before execution guard in server actions | Planned |
-| Sprint 11P+ | `dealer_ai_usage_log` migration for real `current_month_usd` tracking (CTO approval) | Planned |
-| Sprint 11P+ | AI Settings provider card UI using `buildSettingsPlatformView()` | Planned |
-| Sprint 11P+ | Concrete OpenAI adapter (`adapter_available: true`, `run_execute: true`) | Planned |
+| **Sprint 11R** | **Persistence layer: repository + server actions + provider resolution + errors** | **Complete** |
+| Sprint 11S | AI Settings provider card UI using `buildSettingsPlatformView()` | Planned |
+| Sprint 11S | Wire `consultAISettingsForExecution()` in orchestrator server actions | Planned |
+| Sprint 11S | Real `current_month_usd` (requires CTO to apply migration 073) | Planned |
+| Sprint 11V | Concrete OpenAI adapter (`adapter_available: true`, `run_execute: true`) | Planned |
+
+---
+
+## §12 — Sprint 11R: Persistence Layer (Addendum)
+
+Sprint 11R implements the persistence layer for the AI Settings Platform.
+
+### New source files
+
+```
+src/lib/ai-settings/
+  ├── errors.ts                          Phase E — canonical error types + AISettingsResult<T>
+  ├── provider-resolution.ts             Phase D — 4-level provider resolution chain
+  ├── repository/
+  │   ├── repository-types.ts            Phase A — AISettingsRepository + AIUsageRepository interfaces
+  │   ├── settings-repository.ts         Phase A — Supabase two-layer implementation
+  │   ├── usage-repository.ts            Phase A — Supabase usage log reader
+  │   ├── repository-factory.ts          Phase A — AI_SETTINGS_REPOSITORY_FACTORY
+  │   └── index.ts
+  └── actions/
+      ├── get-ai-settings-profile.ts     Phase B — getAISettingsProfile() server action
+      ├── save-ai-settings-profile.ts    Phase B — saveAISettingsProfile() server action
+      ├── get-ai-usage-summary.ts        Phase B — getAIUsageSummary() server action
+      ├── validate-ai-settings.ts        Phase E — validateAISettingsInput()
+      └── index.ts
+```
+
+### Two-layer persistence strategy
+
+**Layer 1 (preferred)**: `dealer_ai_settings` table (migration 072 — CTO approval)
+- Structured columns: `dealer_id`, `default_provider`, `fallback_providers`
+- JSONB columns: `capability_preferences`, `execution_preferences`, `budget_policy`, `health_policy`
+- Upsert on `dealer_id` conflict
+
+**Layer 2 (fallback)**: `dealer_settings.ai_settings` JSONB (migration 070 — already applied)
+- Extended namespace keys alongside existing: `cap_prefs`, `exec_prefs`, `budget_pol`
+- Full persistence without requiring migration 072
+
+Fallback is triggered when `dealer_ai_settings` returns PostgreSQL error code `42P01` (undefined table). Fully transparent to server actions — they receive the same typed result regardless of which layer was used.
+
+### Repository design
+
+```typescript
+// Interface (independent of Supabase)
+interface AISettingsRepository {
+  load(dealer_id: string): Promise<AISettingsResult<AISettingsLoadResult>>;
+  save(dealer_id: string, payload: AISettingsSavePayload): Promise<AISettingsPersistenceResult>;
+}
+
+interface AIUsageRepository {
+  getMonthlySpend(dealer_id: string, period: string): Promise<number>;
+  getSummary(dealer_id: string, period: string): Promise<AIUsageSummaryResult>;
+}
+```
+
+Implementations are created by `AI_SETTINGS_REPOSITORY_FACTORY`. Server actions import the factory and never depend on the Supabase implementation directly.
+
+### Provider resolution chain (4 levels)
+
+| Level | Source | Field |
+|-------|--------|-------|
+| 1 | Capability assignment preferred | `capability_assignments[cap].preferred_provider` |
+| 2 | Capability assignment fallback | `capability_assignments[cap].fallback_provider` |
+| 3 | Primary + fallback providers | `provider_selection.primary_provider`, `.fallback_providers` |
+| 4 | System default | First `is_enabled && is_selected` in `provider_configurations` |
+
+### Canonical error codes
+
+| Code | Meaning |
+|------|---------|
+| `SETTINGS_NOT_CONFIGURED` | No AI settings found |
+| `PROVIDER_DISABLED` | Dealer disabled the provider |
+| `PROVIDER_NOT_AVAILABLE` | Adapter not yet implemented |
+| `FEATURE_NOT_LICENSED` | Pro+ required |
+| `SUBSCRIPTION_REQUIRED` | Active subscription required |
+| `BUDGET_LIMIT_REACHED` | Monthly budget exceeded |
+| `PROVIDER_UNKNOWN` | Provider not in registry |
+| `ENCRYPTION_NOT_CONFIGURED` | DEALER_AI_KEY_SECRET missing |
+| `VALIDATION_FAILED` | Input validation failed |
+| `PERSISTENCE_ERROR` | Database write failed |
+| `AUTHENTICATION_FAILED` | getCurrentDealer() returned null |
+| `MIGRATION_REQUIRED` | Required DB column/table missing |
+| `USAGE_NOT_AVAILABLE` | dealer_ai_usage_log not yet created |
+
+### Settings availability update
+
+- `AISettingsPlatformDescriptor.settings_available` → `true` (was `false`)
+- `AISettingsIntegrationStatus.settings_available` → `true` (was `false`)
+- Both version fields updated to `"1.1.0-persisted"`
+
+### What Sprint 11R does NOT do
+
+- Does NOT apply migrations 072 or 073 (CTO approval still required)
+- Does NOT implement AI provider execution (`run_execute` still `false`)
+- Does NOT import AI provider SDKs
+- Does NOT make external API calls
+- Does NOT expose raw API keys in any type or path

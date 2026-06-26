@@ -122,17 +122,17 @@ export interface AISettingsProfile {
 
 export interface AISettingsPlatformDescriptor {
   version:                string;
-  /** Always false in Sprint 11O — no DB persistence of settings yet. */
-  settings_available:     false;
+  /** true from Sprint 11R — repository + server actions implemented. */
+  settings_available:     boolean;
   settings_target_sprint: string;
   supported_providers:    number;
   supported_capabilities: number;
 }
 
 export const AI_SETTINGS_PLATFORM: AISettingsPlatformDescriptor = {
-  version:                "1.0.0-foundation",
-  settings_available:     false,
-  settings_target_sprint: "Sprint 11P+",
+  version:                "1.1.0-persisted",
+  settings_available:     true,
+  settings_target_sprint: "Sprint 11R",
   supported_providers:    5,
   supported_capabilities: 16,
 };

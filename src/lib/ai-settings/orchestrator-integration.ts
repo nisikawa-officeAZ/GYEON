@@ -88,17 +88,17 @@ export interface AISettingsExecutionContext {
 
 export interface AISettingsIntegrationStatus {
   version:                     string;
-  /** Always false in Sprint 11O — DB settings persistence deferred to Sprint 11P+. */
-  settings_available:          false;
+  /** true from Sprint 11R — repository layer and server actions implemented. */
+  settings_available:          boolean;
   integration_target_sprint:   string;
   consult_function_available:  true;
   execution_context_available: true;
 }
 
 export const AI_SETTINGS_INTEGRATION: AISettingsIntegrationStatus = {
-  version:                     "1.0.0-foundation",
-  settings_available:          false,
-  integration_target_sprint:   "Sprint 11P+",
+  version:                     "1.1.0-persisted",
+  settings_available:          true,
+  integration_target_sprint:   "Sprint 11R",
   consult_function_available:  true,
   execution_context_available: true,
 };
