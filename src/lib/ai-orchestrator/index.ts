@@ -103,7 +103,6 @@ export {
 } from "./failure-strategy";
 
 // Sprint 11K Runtime: dry-run execution layer
-// Re-export key runtime types and runners from the runtime submodule.
 export type {
   AIRuntimeExecutionMode,
   AIOrchestratorRuntime,
@@ -130,4 +129,31 @@ export {
   buildGatesForPlan,
   buildCrossAgentFeedExchanges,
   validateFailureStrategy,
+} from "./runtime";
+
+// Sprint 11L: Live Runtime Bridge
+export type {
+  AIExecutionBridgeState,
+  AIExecutionBridgeContext,
+  AIExecutionBridgePolicy,
+  AICapabilitySummary,
+  AIExecutionNextAction,
+  AIExecutionBridgeResult,
+  AIStepBridgeResult,
+  AIApprovalPauseRecord,
+  AIOrchestratorLiveBridgeResult,
+  AILiveRuntimeRequest,
+  AIOrchestratorRuntimeBridge,
+} from "./runtime";
+export {
+  AI_ORCHESTRATOR_RUNTIME_BRIDGE,
+  RUNTIME_BRIDGE_CAPABILITIES,
+  DEFAULT_BRIDGE_POLICY,
+  runPlanLiveBridge,
+  runStepBridgeLifecycle,
+  getAgentInstance,
+  isConcreteAgent,
+  buildApprovalPauseRecord,
+  resolveApprovalPause,
+  isApprovalPaused,
 } from "./runtime";
