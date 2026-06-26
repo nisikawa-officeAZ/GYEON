@@ -30,10 +30,13 @@ import type { AIBudgetGuardState }   from "./budget-guard";
 // ─── Guard check identifiers ──────────────────────────────────────────────────
 
 /**
- * AIProviderExecutionCheckId — the 12 ordered checks the execution guard runs.
+ * AIProviderExecutionCheckId — the ordered checks the execution guard runs.
  *
- * Checks are evaluated in declaration order. The first required check that
- * fails determines the guard decision (deny or needs_configuration).
+ * Checks 1–12 are from Sprint 11M. Check 13 (adapter_registry_check) is added
+ * in Sprint 11N to incorporate adapter registry awareness into the guard.
+ *
+ * All checks are evaluated in declaration order. The first required check that
+ * fails determines the guard decision.
  */
 export type AIProviderExecutionCheckId =
   | "run_execute_flag"                  // 1.  run_execute must be explicitly true
@@ -43,21 +46,29 @@ export type AIProviderExecutionCheckId =
   | "provider_configured"               // 5.  gateway.provider must be non-null
   | "provider_enabled"                  // 6.  gateway.status must not be "disabled"
   | "encrypted_key_exists"              // 7.  gateway.status must not be "no_key"
-  | "capability_supported_by_provider"  // 8.  provider must support all required capabilities
+  | "capability_supported_by_provider"  // 8.  provider must support all required capabilities (model-level)
   | "usage_policy_allows"               // 9.  usage policy allows execution (limit not hard-stopped)
   | "monthly_limit_not_exceeded"        // 10. current spend must be below monthly_limit_usd
   | "dealer_billing_acknowledged"       // 11. dealer acknowledges they own the AI billing costs
-  | "no_key_exposure_risk";             // 12. structural: no raw API key in the execution context
+  | "no_key_exposure_risk"              // 12. structural: no raw API key in the execution context
+  | "adapter_registry_check";           // 13. Sprint 11N: adapter registry inspection (descriptor + capability availability)
 
 // ─── Guard decision ───────────────────────────────────────────────────────────
 
 /**
  * AIProviderExecutionDecision — the outcome of the execution guard evaluation.
+ *
+ * Sprint 11M values: allow, deny, needs_configuration
+ * Sprint 11N additions: needs_adapter, provider_unknown, capability_unavailable
+ *   (these are more specific forms of needs_configuration, surfaced by check #13)
  */
 export type AIProviderExecutionDecision =
-  | "allow"                 // All required checks passed — execution is permitted
-  | "deny"                  // A blocking check failed — execution must not proceed
-  | "needs_configuration";  // A configuration step is required before execution
+  | "allow"                  // All required checks passed — execution is permitted
+  | "deny"                   // A blocking check failed — execution must not proceed
+  | "needs_configuration"    // A configuration step is required before execution
+  | "needs_adapter"          // Sprint 11N: Provider descriptor exists; adapter not yet implemented
+  | "provider_unknown"       // Sprint 11N: Provider not registered in adapter descriptor registry
+  | "capability_unavailable"; // Sprint 11N: Required capability is unavailable for this provider
 
 // ─── Individual check result ──────────────────────────────────────────────────
 
@@ -207,10 +218,10 @@ export interface AIProviderExecutionReadiness {
 }
 
 export const AI_PROVIDER_EXECUTION_READINESS: AIProviderExecutionReadiness = {
-  version:                 "1.0.0-readiness",
+  version:                 "1.1.0-readiness",  // Bumped in Sprint 11N: +adapter_registry_check
   execution_available:     false,
-  execution_target_sprint: "Sprint 11N+",
-  guard_checks_count:      12,
+  execution_target_sprint: "Sprint 11O+",
+  guard_checks_count:      13,                 // 12 from Sprint 11M + adapter_registry_check
   all_checks_implemented:  true,
 };
 

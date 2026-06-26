@@ -25,6 +25,7 @@ import type { AICapability }       from "@/lib/ai/capabilities";
 import { getAgentEntry }           from "@/lib/ai/agents/registry";
 import { getMissingCapabilities }  from "./capability-routing";
 import { evaluateBudgetGuard }     from "./budget-guard";
+import { inspectAdapterRegistry }  from "../provider-adapters";
 import type {
   AIProviderExecutionCheckId,
   AIProviderExecutionCheckResult,
@@ -268,6 +269,73 @@ function checkDealerBillingAcknowledged(
   );
 }
 
+// ─── Check 13 (Sprint 11N): Adapter registry inspection ──────────────────────
+
+function checkAdapterRegistryStatus(
+  ctx:            AIProviderExecutionContext,
+  required_caps:  AICapability[],
+): AIProviderExecutionCheckResult {
+  // If no provider configured, check #5 already handles it — pass trivially here
+  if (!ctx.gateway_provider) {
+    return makeCheck(
+      "adapter_registry_check",
+      true,
+      false, // Non-required — check #5 already enforces provider_configured
+      "No provider configured — adapter registry check not applicable",
+      { registry_decision: "provider_unknown" },
+    );
+  }
+
+  const inspection = inspectAdapterRegistry(ctx.gateway_provider, required_caps);
+
+  switch (inspection.decision) {
+    case "provider_unknown":
+      return makeCheck(
+        "adapter_registry_check",
+        false,
+        true,  // Blocking — unknown providers cannot be used
+        inspection.message,
+        { registry_decision: "provider_unknown", provider_id: ctx.gateway_provider },
+      );
+
+    case "capability_unavailable":
+      return makeCheck(
+        "adapter_registry_check",
+        false,
+        true,  // Blocking — unavailable capabilities cannot be implemented for this provider
+        inspection.message,
+        {
+          registry_decision:  "capability_unavailable",
+          provider_id:        ctx.gateway_provider,
+          unavailable_caps:   inspection.unavailable_caps,
+        },
+      );
+
+    case "needs_adapter":
+      return makeCheck(
+        "adapter_registry_check",
+        false,
+        false, // Non-blocking in Sprint 11N — adapter will be available in Sprint 11O+
+        inspection.message,
+        {
+          registry_decision:      "needs_adapter",
+          provider_id:            ctx.gateway_provider,
+          planned_sprint:         "Sprint 11O+",
+          descriptor_found:       inspection.descriptor_found,
+        },
+      );
+
+    case "adapter_available":
+      return makeCheck(
+        "adapter_registry_check",
+        true,
+        false,
+        inspection.message,
+        { registry_decision: "adapter_available", provider_id: ctx.gateway_provider },
+      );
+  }
+}
+
 function checkNoKeyExposureRisk(
   ctx: AIProviderExecutionContext,
 ): AIProviderExecutionCheckResult {
@@ -329,6 +397,7 @@ export function checkProviderExecutionReadiness(
     checkMonthlyLimitNotExceeded(ctx, estimated_cost_usd, policy),
     checkDealerBillingAcknowledged(policy),
     checkNoKeyExposureRisk(ctx),
+    checkAdapterRegistryStatus(ctx, required_caps), // Sprint 11N check #13
   ];
 
   // Find the first required check that failed
@@ -345,14 +414,21 @@ export function checkProviderExecutionReadiness(
     };
   }
 
-  const decision: AIProviderExecutionDecision = classifyDecision(failed.check_id);
+  // For the adapter_registry_check, read the specific decision from check details
+  const decision: AIProviderExecutionDecision =
+    failed.check_id === "adapter_registry_check"
+      ? classifyAdapterRegistryDecision(failed.details)
+      : classifyDecision(failed.check_id);
+
+  // "deny" → denial_reason; any non-allow, non-deny decision → configuration_step
+  const is_configuration_issue = decision !== "allow" && decision !== "deny";
 
   return {
     decision,
     checks,
     failed_check:       failed.check_id,
     denial_reason:      decision === "deny" ? failed.message : null,
-    configuration_step: decision === "needs_configuration" ? failed.message : null,
+    configuration_step: is_configuration_issue ? failed.message : null,
     evaluated_at:       now,
   };
 }
@@ -360,13 +436,15 @@ export function checkProviderExecutionReadiness(
 // ─── Decision classification ──────────────────────────────────────────────────
 
 /**
- * classifyDecision — maps a failed check ID to its decision type.
+ * classifyDecision — maps a failed check ID (checks 1–12) to its decision type.
  *
  * "needs_configuration" checks are ones the dealer can fix by configuring the
  * AI Gateway or enabling a feature — not fundamental access denials.
  *
  * "deny" checks represent hard blockers: execution policy is false, plan limit
  * is reached, billing is not acknowledged, or a security constraint is violated.
+ *
+ * Check #13 (adapter_registry_check) uses classifyAdapterRegistryDecision() instead.
  */
 function classifyDecision(
   check_id: AIProviderExecutionCheckId,
@@ -380,6 +458,24 @@ function classifyDecision(
     "capability_supported_by_provider",
   ];
   return configuration_checks.includes(check_id) ? "needs_configuration" : "deny";
+}
+
+/**
+ * classifyAdapterRegistryDecision — maps the adapter registry check's details
+ * to the specific Sprint 11N decision type.
+ *
+ * Called when check #13 (adapter_registry_check) is the failed check.
+ */
+function classifyAdapterRegistryDecision(
+  details: Record<string, unknown>,
+): AIProviderExecutionDecision {
+  const registry_decision = details["registry_decision"] as string | undefined;
+  switch (registry_decision) {
+    case "provider_unknown":       return "provider_unknown";
+    case "capability_unavailable": return "capability_unavailable";
+    case "needs_adapter":          return "needs_adapter";
+    default:                       return "needs_configuration";
+  }
 }
 
 // ─── Guard object (implements AIProviderExecutionGuard interface) ─────────────

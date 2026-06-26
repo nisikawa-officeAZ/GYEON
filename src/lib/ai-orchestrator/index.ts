@@ -131,6 +131,50 @@ export {
   validateFailureStrategy,
 } from "./runtime";
 
+// Sprint 11N: Provider Adapter Registry
+export type {
+  AIProviderAdapterStatus,
+  AICapabilitySupportStatus,
+  AIProviderCapabilityDeclaration,
+  AIProviderAdapterCapabilityMap,
+  AIProviderAdapterDefaultModels,
+  AIProviderAdapterDescriptor,
+  AIProviderAdapterRegistry,
+  AIAdapterRegistryDecision,
+  AIAdapterRegistryInspection,
+  AIAdapterSelectionStrategy,
+  AIProviderAdapterSelectionPolicy,
+  AIProviderAdapterValidationResult,
+  AIProviderAdapterSummaryForSettings,
+  AIProviderCapabilityBadge,
+  AIAdapterRegistrySummaryForSettings,
+} from "./provider-adapters";
+export {
+  AI_PROVIDER_ADAPTER_REGISTRY,
+  inspectAdapterRegistry,
+  AI_PROVIDER_ADAPTER_DESCRIPTORS,
+  getAdapterDescriptor,
+  isProviderInAdapterRegistry,
+  getPlannedDescriptors,
+  getAvailableDescriptors,
+  PROVIDER_CAPABILITY_MAPS,
+  getCapabilityDeclaration,
+  getUnavailableCapabilities,
+  getCapabilityGroupsForProvider,
+  DEFAULT_ADAPTER_SELECTION_POLICY,
+  QUALITY_FIRST_SELECTION_POLICY,
+  COST_OPTIMIZED_SELECTION_POLICY,
+  ENTERPRISE_SELECTION_POLICY,
+  filterDescriptorsByPolicy,
+  rankDescriptorsByStrategy,
+  resolveSelectionOrder,
+  getSelectionPolicyLabel,
+  getAdapterSummariesForSettings,
+  getAdapterRegistrySummaryForSettings,
+  getCapabilityBadgesForProvider,
+  getUnsupportedCapabilitiesForSettings,
+} from "./provider-adapters";
+
 // Sprint 11M: Provider Execution Readiness
 export type {
   AIProviderExecutionCheckId,
