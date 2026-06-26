@@ -250,8 +250,9 @@ export default async function HomePage() {
         {/* ══ BOTTOM UTILITIES ════════════════════════════════════════════════ */}
         <div className="px-5 mt-2.5 grid grid-cols-2 gap-2.5 relative z-10">
           {[
-            { icon: "🛒", label: "商品注文", sub: "発注・在庫確認", href: "/product-orders" },
-            { icon: "⚙️", label: "設定",     sub: "店舗・スタッフ", href: "/settings"       },
+            { icon: "📊", label: "ダッシュボード", sub: "KPI・売上・作業", href: "/dashboard"     },
+            { icon: "🛒", label: "商品注文",       sub: "発注・在庫確認", href: "/product-orders" },
+            { icon: "⚙️", label: "設定",           sub: "店舗・スタッフ", href: "/settings"       },
           ].map(item => (
             <Link
               key={item.href}
