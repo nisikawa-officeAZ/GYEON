@@ -1,8 +1,8 @@
 # GYEON Business Hub — Dealer Owner Dashboard Specification
 
 **Route**: `/dashboard`  
-**Version**: 1.0.0 — Sprint 12A  
-**Status**: Foundation implemented  
+**Version**: 2.0.0 — Sprint 12B  
+**Status**: AI Insights Panel active  
 **Last Updated**: 2026-06-26
 
 ---
@@ -97,12 +97,15 @@ Revenue data is gated server-side. The role check happens in `page.tsx` using `c
 
 Additional: Overdue invoice count (red alert), issued invoice count (amber).
 
-### 4.8 AI Insights Placeholder
-**Component**: `src/components/dashboard/AIInsightsPlaceholder.tsx` (`"use client"`)  
-**Data**: No data. Architecture placeholder only.  
-**Insight types declared**: ai_summary, next_action_suggestion, anomaly_detection, growth_opportunity, risk_warning  
-**Status**: Sprint 12B — requires AI Gateway integration.  
-**Safe for all roles.**
+### 4.8 AI Insight Panel
+**Component**: `src/components/dashboard/AIInsightPanel.tsx` (**Server Component**)  
+**Sprint 12B**: Live deterministic insights + placeholders for AI-dependent types.  
+**Data**: `buildDeterministicInsights(dash, role)` from `src/lib/ai-insights/`  
+**Insight domain**: `src/lib/ai-insights/` (7 files — see `AI_INSIGHTS_SPEC.md`)
+
+Role-filtered server-side before being passed to the panel (AIP-002).  
+Revenue risk insight (`contains_revenue_data: true`) excluded for staff/readonly.  
+See `AI_INSIGHTS_SPEC.md` for full insight inventory and privacy rules.
 
 ### 4.9 Quick Navigation
 3-column icon grid: Estimates, Work Orders, Customers, Vehicles, Reservations, Settings.  
@@ -157,7 +160,7 @@ The dashboard section labels and component metadata reference Analytics Center m
 | OperationsOverview | `src/components/dashboard/OperationsOverview.tsx` | Client | All |
 | CommunicationOverview | `src/components/dashboard/CommunicationOverview.tsx` | Client | All |
 | ReviewOpportunities | `src/components/dashboard/ReviewOpportunities.tsx` | Client | All |
-| AIInsightsPlaceholder | `src/components/dashboard/AIInsightsPlaceholder.tsx` | Client | All |
+| **AIInsightPanel** | `src/components/dashboard/AIInsightPanel.tsx` | **Server** | Role-filtered |
 | **OwnerRevenueSection** | `src/components/dashboard/OwnerRevenueSection.tsx` | **Server** | **Owner / Manager only** |
 | TodayReservationsCard | `src/components/dashboard/TodayReservationsCard.tsx` | Client (existing) | All |
 | MaintenanceDueCard | `src/components/dashboard/MaintenanceDueCard.tsx` | Client (existing) | All |
@@ -178,14 +181,28 @@ The desktop home (iframe of `/public/desktop-home.html`) was not modified.
 
 ---
 
-## 9. Remaining Work Before Sprint 12B
+## 9. Sprint 12B Additions
+
+| Addition | Status |
+|---|---|
+| `src/lib/ai-insights/` domain | Implemented — 6 source files |
+| `AIInsightPanel` server component | Implemented — replaces AIInsightsPlaceholder |
+| Deterministic insights (7 types) | Implemented — based on real DashboardSummary data |
+| AIP-001 through AIP-007 policies | Implemented |
+| Subscription gating documentation | Implemented — advisory in 12B |
+| Revenue risk insight (owner/manager) | Implemented — server-side filtered |
+
+## 10. Remaining Work Before Sprint 12C
 
 | Item | Notes |
 |---|---|
-| Review data integration | Connect Google Business Profile review counts to ReviewOpportunities |
-| AI Gateway wiring | Connect AIInsightsPlaceholder to live AI insights (Sprint 12B) |
+| AI Gateway status integration | Call `checkAiGatewayReady()` in page; pass real gateway_status to panel |
+| Review data integration | Connect Google Business Profile for review opportunity insight |
+| SNS Marketing data | Connect for marketing opportunity insight |
+| Customer inactivity AI scoring | `growth_ai` entitlement required |
+| AI-generated insight content | Sprint 12C — growth_agent produces ai_summary, anomaly_detection |
+| Insight persistence | Supabase storage for insight history (requires schema migration) |
+| Insight acknowledgement | Dealer dismiss/acknowledge actions |
 | Desktop dashboard layout | Full-width responsive layout for `lg:` breakpoint |
-| SNS / Marketing section | Connect sns_marketing metrics when available |
-| Dashboard analytics logging | Track which sections users engage with most |
-| Customer inactivity widget | Surface high-churn-risk customers on dashboard |
+| Dashboard analytics logging | Track section engagement |
 | Subscription tier badge | Show current plan on dashboard header |

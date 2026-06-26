@@ -12,8 +12,7 @@
 //   passes. The revenue HTML is never included in the response for unauthorized
 //   users. No client-side role check. No "use client" in OwnerRevenueSection.
 
-import { Suspense }             from "react";
-import Link                     from "next/link";
+import Link from "next/link";
 import MainLayout               from "@/components/layout/MainLayout";
 import { getCurrentStaff }      from "@/lib/staff/get-current-staff";
 import { getDashboardSummary }  from "@/lib/dashboard/get-dashboard-summary";
@@ -23,8 +22,9 @@ import MaintenanceDueCard       from "@/components/dashboard/MaintenanceDueCard"
 import OperationsOverview       from "@/components/dashboard/OperationsOverview";
 import CommunicationOverview    from "@/components/dashboard/CommunicationOverview";
 import ReviewOpportunities      from "@/components/dashboard/ReviewOpportunities";
-import AIInsightsPlaceholder    from "@/components/dashboard/AIInsightsPlaceholder";
+import AIInsightPanel           from "@/components/dashboard/AIInsightPanel";
 import OwnerRevenueSection      from "@/components/dashboard/OwnerRevenueSection";
+import { buildDeterministicInsights } from "@/lib/ai-insights/deterministic-insights";
 
 export const metadata = { title: "ダッシュボード | GYEON Detailer Agent" };
 
@@ -62,6 +62,20 @@ export default async function DashboardPage() {
 
   // Revenue visibility — server-side authority only (ANL-002, Phase C)
   const showRevenue = canViewFinance(role);
+
+  // Build deterministic AI insights — role-filtered server-side (AIP-002)
+  const aiInsights = dash
+    ? buildDeterministicInsights(
+        {
+          maintenance:    dash.maintenance_stats,
+          estimates:      dash.estimates,
+          line_stats:     dash.line_stats,
+          invoices:       dash.invoices,
+          customer_count: dash.customer_count,
+        },
+        role,
+      )
+    : [];
 
   // ── Today's date ────────────────────────────────────────────────────────────
   const today = new Date().toLocaleDateString("ja-JP", {
@@ -188,9 +202,15 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* ── AI insights placeholder ────────────────────────────────────────── */}
+        {/* ── AI Insight Panel ───────────────────────────────────────────────── */}
+        {/* Insights are role-filtered server-side before passing (AIP-002).    */}
+        {/* Revenue insights only included when canViewFinance(role) is true.   */}
         <SectionLabel label="AIインサイト" />
-        <AIInsightsPlaceholder />
+        <AIInsightPanel
+          insights={aiInsights}
+          role={role}
+          gateway_status="not_configured"
+        />
 
         {/* ── Quick navigation ───────────────────────────────────────────────── */}
         <SectionLabel label="クイックアクセス" />
