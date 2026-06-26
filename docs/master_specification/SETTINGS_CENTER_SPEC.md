@@ -1,4 +1,4 @@
-# Unified Settings Center — Sprint 12F / 12G Specification
+# Unified Settings Center — Sprint 12F / 12G / 12H Specification
 
 ## Overview
 
@@ -352,6 +352,115 @@ AI providers → `<Link href="/settings/ai">` (dedicated page).
 - No fake subscription state (real `planInfo` from server)
 - No unsafe client-only authorization for sensitive settings
 - All data fetched server-side in `settings/page.tsx`
+
+---
+
+---
+
+## Sprint 12H — Settings Category Pages Foundation
+
+### New Files
+
+| File | Description |
+|------|-------------|
+| `src/app/settings/[category]/page.tsx` | Dynamic server component for all 20 category routes |
+| `src/components/settings/SettingsCategoryPageView.tsx` | Pure display component with all sub-components |
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `src/components/settings/SettingsCenterHub.tsx` | 8 active category cards updated from `panel` → `route` actions |
+| `docs/master_specification/SETTINGS_CENTER_SPEC.md` | Sprint 12H section added |
+
+### Route Structure
+
+```
+/settings/[category]   — dynamic route (all 20 SettingsCategoryId slugs)
+/settings/ai           — static route (takes precedence over [category] for slug "ai")
+```
+
+Next.js App Router static-route priority: `/settings/ai` is served by `app/settings/ai/page.tsx`, not the dynamic route.
+
+### Dynamic Route Behavior
+
+| Category Status | Page Renders |
+|----------------|-------------|
+| `ui_available: true` | Full category page: header, section list, items, configure CTA |
+| `status: "future"` | Coming-soon state with target sprint + registered item preview |
+| `status: "enterprise_only"` | Enterprise-locked state |
+| `canAccess: false` | Generic access-denied (no category name or item names shown — SPOL-004) |
+
+### Page Server Component (app/settings/[category]/page.tsx)
+
+Server-side actions called:
+1. `getCurrentStaff()` — resolves staff role → visibility level (dealer_id from getCurrentDealer() inside)
+2. `getCanonicalDealerSettings()` — loaded only when `canAccess && category.ui_available`
+3. `getRegistrationsForCategory(categoryId)` — pure static call from Sprint 12F registry
+
+### SettingsCategoryPageView Sub-Components
+
+All implemented as internal functions in `SettingsCategoryPageView.tsx`:
+
+| Component | Purpose |
+|-----------|---------|
+| `SettingsAccessState` | Access-denied gate — reveals no category info (SPOL-004) |
+| `SettingsEnterpriseState` | Enterprise-locked display |
+| `SettingsFutureState` | Coming-soon with item preview |
+| `SettingsCategoryHeader` | Icon, name, status badge, access level metadata card |
+| `SettingsSectionList` | Items grouped by section prefix, each with ItemBadge |
+| `ActiveCategoryContent` | Combines header + section list + configure CTA |
+
+### Hub Navigation Updates (Phase E)
+
+8 active category hub cards updated from `{ kind: "panel" }` to `{ kind: "route" }`:
+
+| Category | Old Action | New Action |
+|----------|-----------|-----------|
+| dealer | panel: "store" | route: /settings/dealer |
+| staff | panel: "store" | route: /settings/staff |
+| branding | panel: "store" | route: /settings/branding |
+| notifications | panel: "reminder" | route: /settings/notifications |
+| communication | panel: "line" | route: /settings/communication |
+| subscription | panel: "plan" | route: /settings/subscription |
+| ocr | panel: "ocr" | route: /settings/ocr |
+| pdf | panel: "pdf" | route: /settings/pdf |
+
+`onOpenPanel` retained for footer backup/support panel actions in `SettingsCenterWrapper`.
+
+### Visibility Behavior
+
+- `getCurrentStaff()` resolves role server-side
+- `resolveVisibilityFromRole(role)` maps to `SettingsVisibilityLevel`
+- `canViewSetting(level, category.min_visibility)` gates the page
+- `canAccess=false` → `SettingsAccessState` (no category info exposed — SPOL-004)
+- Client-side visibility in hub cards is UX-only; server enforcement is Sprint 13+
+
+### Category Page URLs
+
+All 20 categories now have dedicated URLs:
+```
+/settings/dealer          /settings/subscription
+/settings/organization    /settings/media
+/settings/staff           /settings/ocr
+/settings/roles_permissions /settings/pdf
+/settings/ai_providers    /settings/customer_portal
+/settings/ai_marketplace  /settings/gyeon_distribution
+/settings/communication   /settings/warehouse
+/settings/automation      /settings/crm
+/settings/analytics       /settings/accounting
+/settings/branding
+/settings/notifications
+```
+
+### Sprint 12H Constraints Respected
+
+- No migrations, no schema changes, no persistence
+- No external APIs, no provider SDKs
+- No fake settings functionality
+- No broken links (all linked routes exist via dynamic handler)
+- No unsafe authorization claims (visibility is UX gate; enforcement Sprint 13+)
+- dealer_id from getCurrentDealer() inside server actions
 
 ---
 

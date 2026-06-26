@@ -1,12 +1,14 @@
 "use client";
 
-// GYEON Business Hub — Unified Settings Center Hub (Sprint 12G)
+// GYEON Business Hub — Unified Settings Center Hub (Sprint 12G / updated 12H)
 //
 // Premium category-based settings landing page.
 // Renders 7 group sections with 20 category cards derived from the
 // Sprint 12F settings registry.
 //
-// Active categories link into existing settings panels or routes.
+// Sprint 12G: Active categories opened settings panels in-page.
+// Sprint 12H: Active (ui_available) categories now link to dedicated /settings/[category] routes.
+//             The onOpenPanel prop is retained for footer backup/support panel actions.
 // Future categories display a "準備中" (Coming Soon) state.
 // Enterprise categories display a lock state.
 //
@@ -90,7 +92,7 @@ const HUB_GROUPS: HubGroup[] = [
         label:         "店舗設定",
         description:   "店舗情報・業者設定・価格・施工メニュー",
         minVisibility: "staff",
-        action:        { kind: "panel", panelId: "store" },
+        action:        { kind: "route", href: "/settings/dealer" },
         getState: ({ settings }) =>
           settings.business_name ? "configured" : "not_configured",
       },
@@ -109,7 +111,7 @@ const HUB_GROUPS: HubGroup[] = [
         label:         "スタッフ管理",
         description:   "スタッフプロフィール・招待・役割設定",
         minVisibility: "manager",
-        action:        { kind: "panel", panelId: "store" },
+        action:        { kind: "route", href: "/settings/staff" },
         getState: () => "active",
       },
       {
@@ -127,7 +129,7 @@ const HUB_GROUPS: HubGroup[] = [
         label:         "ブランディング",
         description:   "ショップロゴ・スタンプ・書類デザイン",
         minVisibility: "dealer_owner",
-        action:        { kind: "panel", panelId: "store" },
+        action:        { kind: "route", href: "/settings/branding" },
         getState: ({ settings }) =>
           settings.logo_url ? "configured" : "not_configured",
       },
@@ -137,7 +139,7 @@ const HUB_GROUPS: HubGroup[] = [
         label:         "通知設定",
         description:   "メンテナンスリマインダー・通知テンプレート",
         minVisibility: "manager",
-        action:        { kind: "panel", panelId: "reminder" },
+        action:        { kind: "route", href: "/settings/notifications" },
         getState: ({ settings }) => {
           const hasEnabled = settings.maintenance_reminder_templates.some(t => t.enabled);
           return hasEnabled ? "configured" : "active";
@@ -188,7 +190,7 @@ const HUB_GROUPS: HubGroup[] = [
         label:         "コミュニケーション設定",
         description:   "LINE連携・メッセージテンプレート・リッチメニュー",
         minVisibility: "manager",
-        action:        { kind: "panel", panelId: "line" },
+        action:        { kind: "route", href: "/settings/communication" },
         getState: ({ settings }) =>
           settings.line_enabled ? "configured" : "not_configured",
       },
@@ -243,7 +245,7 @@ const HUB_GROUPS: HubGroup[] = [
         label:         "契約・プラン",
         description:   "利用プラン・請求情報・機能一覧",
         minVisibility: "dealer_owner",
-        action:        { kind: "panel", panelId: "plan" },
+        action:        { kind: "route", href: "/settings/subscription" },
         getState: () => "configured",
       },
       {
@@ -261,7 +263,7 @@ const HUB_GROUPS: HubGroup[] = [
         label:         "車検証OCR",
         description:   "OCR設定・処理ポリシー・フォーマット確認",
         minVisibility: "manager",
-        action:        { kind: "panel", panelId: "ocr" },
+        action:        { kind: "route", href: "/settings/ocr" },
         getState: ({ settings }) =>
           settings.ocr_enabled ? "configured" : "active",
       },
@@ -271,7 +273,7 @@ const HUB_GROUPS: HubGroup[] = [
         label:         "PDF・書類",
         description:   "採番設定・書類フォーマット・税率・利用規約",
         minVisibility: "manager",
-        action:        { kind: "panel", panelId: "pdf" },
+        action:        { kind: "route", href: "/settings/pdf" },
         getState: () => "configured",
       },
       {
