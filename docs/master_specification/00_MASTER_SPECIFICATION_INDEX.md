@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 |
+| **Last Updated** | 2026-06-26 (v2.9 — Sprint 11B) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -172,6 +172,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── MEDIA_ASSETS_SCHEMA_PROPOSAL.md      ← Sprint 10K: media_assets migration proposal — DRAFT, CTO approval required
 ├── MEDIA_PLATFORM_SPEC.md               ← Sprint 10L: Media as first-class business domain — domain objects, lifecycle, associations, consent, service layer
 ├── MARKETING_PLATFORM_SPEC.md          ← Sprint 11A: AI Marketing Platform — domain, asset model, channel registry, workflow, optimization, AI compatibility
+├── VIDEO_PIPELINE_SPEC.md             ← Sprint 11B: AI Video Pipeline — source media, timeline, publishing profiles (9), AI providers (8), privacy model
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -211,6 +212,7 @@ TIER 4 — DESIGN AUTHORITY
 | **2.6** | **2026-06-26** | **Sprint 10K review** | **Media Architecture Review: media_assets vs work_order_files comparison, MEDIA_ASSETS_SCHEMA_PROPOSAL.md (full SQL — DRAFT), coexistence migration strategy, Option 1 rejected (work_order_id NOT NULL blocker), Option 2 recommended (dedicated media_assets table), MEDIA_ARCHITECTURE.md §12** |
 | **2.7** | **2026-06-26** | **Sprint 10L** | **Media Platform Foundation: MediaAsset domain object, MediaLifecycleStage (10 stages), MediaAssociation (11 entity targets), MediaConsentDetail (5 scopes), MediaRetention, 7 service interfaces + 6 implementations, retention_expired permission scope, MEDIA_PLATFORM_SPEC.md** |
 | **2.8** | **2026-06-26** | **Sprint 11A** | **AI Marketing Platform Foundation: MarketingCampaign, MarketingAsset (consumes MediaAsset), MARKETING_CHANNEL_REGISTRY (10 channels), 9-stage PublishingWorkflow, SEO/MEO/AEO/LLMO/AIO ContentOptimizationProfile, MarketingAssetForAgent AI gate, MARKETING_PLATFORM_SPEC.md** |
+| **2.9** | **2026-06-26** | **Sprint 11B** | **AI Video Pipeline Foundation: VideoProject, VideoSource (12 types), VideoTimeline (10 scene types), VIDEO_PUBLISHING_PROFILE_REGISTRY (9 profiles), VIDEO_AI_PROVIDER_REGISTRY (8 providers), VideoPrivacyConfig, VIDEO_PIPELINE_SPEC.md** |
 
 ---
 
