@@ -308,3 +308,59 @@ export function getMarketingApprovedMedia(
       vehicle_id:              m.vehicle_id,
     }));
 }
+
+// ─── Media retention ───────────────────────────────────────────────────────────
+
+/**
+ * Why a media asset was physically deleted.
+ * Stored in MediaDeletionRecord so that deletion events are auditable.
+ */
+export type MediaDeletionReason =
+  | "retention_period_expired"  // Default retention window elapsed
+  | "ai_processing_completed"   // Source video deleted immediately after AI processing
+  | "download_confirmed"        // AI-generated video deleted after dealer download confirmed
+  | "dealer_manual_delete"      // Dealer explicitly triggered deletion
+  | "consent_revoked"           // Customer revoked consent — media must be purged
+  | "policy_enforcement";       // System enforced a retention rule
+
+/**
+ * Safe metadata record retained after a media asset is physically deleted from storage.
+ *
+ * The file_path and file_url are gone after deletion.
+ * This record proves the asset existed and documents its lifecycle.
+ *
+ * Privacy rule: this record must NOT contain the file URL or storage path.
+ * It must NOT be publicly accessible.
+ * It must be retained even after the media is deleted (until its own retention expires).
+ */
+export interface MediaDeletionRecord {
+  media_id:               string;
+  work_order_id:          string | null;
+  customer_id:            string | null;
+  vehicle_id:             string | null;
+  media_type:             MediaType;
+  /** ISO 8601 — when the file was physically deleted from storage. */
+  deleted_at:             string;
+  retention_reason:       MediaDeletionReason;
+  /**
+   * ID of an AI-generated output asset that was produced from this source media.
+   * Null if this asset was not used as AI input.
+   */
+  generated_output_record: string | null;
+  download_status:        "not_downloaded" | "downloaded" | "unknown";
+  publish_status:         "not_published" | "published" | "unknown";
+}
+
+/**
+ * Default retention period in days by media type.
+ *
+ * Videos: 30 days — short by default to minimize storage cost and privacy risk.
+ * Photos: 3650 days (~10 years) — treated as long-term job records.
+ *
+ * These defaults are overridden by dealer retention configuration when available.
+ * Phase 10K: expose dealer configuration via settings UI.
+ */
+export const DEFAULT_RETENTION_DAYS: Record<MediaType, number> = {
+  photo: 3650,  // ~10 years — long-term job documentation
+  video: 30,    // 30 days — short window; see VideoRetentionPolicy in media-video.ts
+};

@@ -361,7 +361,105 @@ const aiGate = runtime.checkAICapability({
 
 ---
 
-## 10. Files Changed in Sprint 10I
+## 10. Media Retention Policy
+
+| Field | Value |
+|-------|-------|
+| **Status** | Specification defined — Sprint 10K (enforcement runtime pending CTO approval) |
+| **Types** | `MediaDeletionReason`, `MediaDeletionRecord` in `media-types.ts` |
+| **Video policy** | `VideoRetentionPolicy`, `VideoRetentionPeriod` in `media-video.ts` |
+
+### 10.1 Principles
+
+Video media is **not stored permanently by default**.
+
+The retention policy exists to reduce:
+- Storage cost (video files are large)
+- Privacy risk (customer vehicle footage is sensitive)
+- Customer data exposure (minimize time sensitive media is held)
+
+Photos may be retained longer than videos because they are job records and are typically much smaller in size.
+
+Customer media must never be public by default, regardless of retention status.
+
+### 10.2 Retention Matrix
+
+| Media Category | Default Retention | Early Deletion Allowed | Permanent Retention |
+|----------------|-------------------|----------------------|---------------------|
+| Uploaded source video | **30 days** | Yes — after AI processing completes | Requires `dealer_retained = true` + policy approval |
+| AI-generated video | **30 days** | Yes — after confirmed dealer download or SNS publish | Not allowed by default |
+| Photos | **~10 years** (3650 days) | Yes — dealer manual delete | Allowed with consent controls |
+
+### 10.3 Source Video Rules
+
+1. Default retention: **30 days** from upload date.
+2. Dealers may delete source videos at any time before the window expires.
+3. If the video is used for AI video generation, it **may** be deleted immediately after processing completes — this is opt-in, not automatic.
+4. Source videos must not be retained forever unless `dealer_retained = true` is set explicitly and the dealer's plan permits permanent retention.
+
+### 10.4 AI-Generated Video Rules
+
+1. Default retention: **30 days** from generation date.
+2. If the dealer downloads the generated video, the system **may** delete it immediately after download is confirmed — this is opt-in, not automatic.
+3. If used for SNS publishing, retain only the minimum required metadata and publishing record (platform, post_id, published_at). The video file itself may be deleted.
+4. Generated videos must not be retained permanently by default.
+
+### 10.5 Safe Deletion Record
+
+After a video file is physically deleted from storage, a `MediaDeletionRecord` is kept.
+
+**Fields retained after deletion:**
+
+| Field | Description |
+|-------|-------------|
+| `media_id` | UUID of the deleted asset |
+| `work_order_id` | The job this media belonged to |
+| `customer_id` | The customer — for privacy compliance audit |
+| `vehicle_id` | The vehicle serviced |
+| `media_type` | `"photo"` or `"video"` |
+| `deleted_at` | ISO 8601 timestamp of physical deletion |
+| `retention_reason` | Why it was deleted (`retention_period_expired`, `ai_processing_completed`, `download_confirmed`, `dealer_manual_delete`, `consent_revoked`, `policy_enforcement`) |
+| `generated_output_record` | ID of AI-generated output derived from this source, if applicable |
+| `download_status` | `"not_downloaded"` / `"downloaded"` / `"unknown"` |
+| `publish_status` | `"not_published"` / `"published"` / `"unknown"` |
+
+**Privacy rules for deletion records:**
+- Must NOT contain `file_url` or `file_path` (the signed URL is invalid after deletion anyway)
+- Must NOT be publicly accessible
+- Must be retained for at least `metadata_retention_days` (default: 3650 days)
+
+### 10.6 Future Dealer Configuration (Phase 10K+)
+
+The following retention preferences will be configurable per dealer via the settings UI:
+
+| Option | Type | Plan Requirement |
+|--------|------|-----------------|
+| Delete source video after AI processing | Toggle | Any |
+| Delete generated video after download | Toggle | Any |
+| Keep videos for 7 days | Period selection | Any |
+| Keep videos for 30 days (default) | Period selection | Any |
+| Keep videos for 90 days | Period selection | **Pro+ only** |
+
+`NINETY_DAY_RETENTION_REQUIRES_PRO_PLUS = true` — enforced server-side.
+
+Dealer preference types: `DealerVideoRetentionPreference` in `media-video.ts`.
+
+### 10.7 Implementation Status
+
+| Component | Status |
+|-----------|--------|
+| `MediaDeletionReason`, `MediaDeletionRecord` types | Defined — Sprint 10K |
+| `VideoRetentionPolicy`, `VideoRetentionPeriod` types | Defined — Sprint 10K |
+| `DEFAULT_VIDEO_RETENTION_POLICY` constant | Defined — Sprint 10K |
+| `DealerVideoRetentionPreference` type | Defined — Sprint 10K |
+| Deletion enforcement runtime | **NOT IMPLEMENTED** — requires CTO approval + Phase 10J migration complete |
+| Dealer settings UI for retention | **NOT IMPLEMENTED** — Phase 10K |
+| Scheduled deletion job | **NOT IMPLEMENTED** — Phase 10K |
+| `media_deletion_records` table migration | **NOT IMPLEMENTED** — Phase 10K |
+
+---
+
+## 11. Files Changed in Sprint 10I
 
 | File | Change |
 |------|--------|

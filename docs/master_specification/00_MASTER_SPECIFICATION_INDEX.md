@@ -204,6 +204,7 @@ TIER 4 — DESIGN AUTHORITY
 | **2.2** | **2026-06-26** | **Sprint 10H** | **Customer Engagement Dry-Run Runtime: EngagementWorkflowRuntime, event+action dispatchers, LINE/agent dry-run validators, WORK_COMPLETED event emission in updateWorkOrder() — zero schema changes, zero API calls** |
 | **2.3** | **2026-06-26** | **Sprint 10I** | **Media-First Architecture: canonical DealerMedia model, MediaType/MediaUsage/consent/visibility types, isPhoto()/isVideo()/isMedia() helpers, MediaSection component, AI Marketing media filter, MEDIA_ARCHITECTURE.md** |
 | **2.4** | **2026-06-26** | **Sprint 10J** | **Media Runtime Foundation: MediaRuntime class, MediaContext, MediaValidation, MediaPermissionModel, MediaCapabilityRegistry, future video architecture (VideoUploadConfig/Pipeline/HLS), AI agent compatibility layer (MediaForAI, checkMediaAICapability), index.ts public API** |
+| **2.5** | **2026-06-26** | **Sprint 10K spec** | **Media Retention Policy: VideoRetentionPeriod/Policy/Config types, MediaDeletionReason/Record, DEFAULT_VIDEO_RETENTION_POLICY, DealerVideoRetentionPreference (7/30/90 day + after_ai_processing/after_download triggers), MEDIA_ARCHITECTURE.md §10, AI_MARKETING_AGENT_ROADMAP.md §72.4** |
 
 ---
 

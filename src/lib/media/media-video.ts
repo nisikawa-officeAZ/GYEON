@@ -196,3 +196,152 @@ export function areVideoInfraRequirementsMet(): boolean {
     (r) => r.status === "approved" || r.status === "implemented",
   );
 }
+
+// ─── Video retention policy ───────────────────────────────────────────────────
+//
+// Videos are NOT stored permanently by default.
+// Default retention: 30 days for all video categories.
+// Do not implement deletion runtime until VIDEO_INFRA_REQUIREMENTS are met
+// and the retention enforcement service is designed and CTO-approved.
+
+/**
+ * Retention period options for video assets.
+ *
+ * - "after_ai_processing": source video deleted immediately after AI processing completes.
+ * - "after_download":      AI-generated video deleted after dealer download is confirmed.
+ * - 7 / 30 / 90:          fixed day windows.
+ *
+ * 90-day retention requires Pro+ plan. See NINETY_DAY_RETENTION_REQUIRES_PRO_PLUS.
+ */
+export type VideoRetentionPeriod =
+  | "after_ai_processing"  // Source video: delete immediately after AI processing
+  | "after_download"       // Generated video: delete after confirmed download
+  | 7                      // 7-day fixed window
+  | 30                     // 30-day fixed window (default)
+  | 90;                    // 90-day fixed window — Pro+ plan required
+
+/** All supported retention period values, in order from shortest to longest. */
+export const SUPPORTED_VIDEO_RETENTION_PERIODS: VideoRetentionPeriod[] = [
+  "after_ai_processing",
+  "after_download",
+  7,
+  30,
+  90,
+];
+
+/**
+ * 90-day video retention requires the dealer to be on the Pro+ plan.
+ * Enforced server-side — never rely on client-side plan checks.
+ */
+export const NINETY_DAY_RETENTION_REQUIRES_PRO_PLUS = true as const;
+
+// ─── Source video retention ───────────────────────────────────────────────────
+
+/**
+ * Retention configuration for dealer-uploaded source videos.
+ *
+ * Source videos are the raw files uploaded from a job — before, during, after.
+ * They are distinct from AI-generated output videos.
+ */
+export interface VideoSourceRetentionConfig {
+  /** How long to keep the source video file. Default: 30 days. */
+  period:                   VideoRetentionPeriod;
+  /**
+   * If true, the source video is deleted immediately after AI processing completes.
+   * The generated output (thumbnail, AI video) is kept separately.
+   * Default: false — keep for the full period even after AI use.
+   */
+  delete_after_ai_processing: boolean;
+  /**
+   * If true, the dealer has explicitly opted into permanent retention.
+   * Only allowed if the dealer's plan permits it.
+   * Never set automatically — requires explicit dealer action.
+   */
+  dealer_retained:          boolean;
+}
+
+// ─── AI-generated video retention ────────────────────────────────────────────
+
+/**
+ * Retention configuration for AI-generated output videos.
+ *
+ * Generated videos are produced by the AI Video Generator (Phase 72).
+ * They are distinct from the source footage uploaded by the dealer.
+ */
+export interface VideoGeneratedRetentionConfig {
+  /** How long to keep the generated video file. Default: 30 days. */
+  period:                   VideoRetentionPeriod;
+  /**
+   * If true, the generated video file is deleted immediately after the dealer
+   * confirms a successful download.
+   * Only the metadata (MediaDeletionRecord) and publishing record are kept.
+   * Default: false — keep for the full period even after download.
+   */
+  delete_after_download:    boolean;
+  /**
+   * If true, the generated video is deleted after SNS publishing is confirmed.
+   * Only the publishing record (platform, post_id, published_at) is kept.
+   * Default: false.
+   */
+  delete_after_publishing:  boolean;
+}
+
+// ─── Combined retention policy ────────────────────────────────────────────────
+
+export interface VideoRetentionPolicy {
+  source_video:            VideoSourceRetentionConfig;
+  generated_video:         VideoGeneratedRetentionConfig;
+  /**
+   * How long to keep MediaDeletionRecords after the file is deleted.
+   * Must be longer than the video retention period.
+   * Default: 3650 days (~10 years) for compliance.
+   */
+  metadata_retention_days: number;
+}
+
+/**
+ * Default video retention policy — applied when no dealer configuration exists.
+ * Conservative defaults: 30-day fixed window, no automatic early deletion.
+ */
+export const DEFAULT_VIDEO_RETENTION_POLICY: VideoRetentionPolicy = {
+  source_video: {
+    period:                    30,
+    delete_after_ai_processing: false,
+    dealer_retained:           false,
+  },
+  generated_video: {
+    period:               30,
+    delete_after_download:   false,
+    delete_after_publishing: false,
+  },
+  metadata_retention_days: 3650,  // ~10 years — outlasts all video retention windows
+};
+
+// ─── Dealer retention preferences (Phase 10K+) ───────────────────────────────
+
+/**
+ * Dealer-configurable retention preferences.
+ * Exposed via settings UI in Phase 10K — not yet implemented.
+ *
+ * The backend must validate:
+ *   - 90-day retention requires Pro+ plan (NINETY_DAY_RETENTION_REQUIRES_PRO_PLUS)
+ *   - delete_after_ai_processing and delete_after_download cannot both be false
+ *     if period is "after_ai_processing" / "after_download"
+ *   - dealer_retained requires explicit opt-in and policy approval
+ */
+export interface DealerVideoRetentionPreference {
+  source_video_period:       VideoRetentionPeriod;
+  delete_source_after_ai:    boolean;
+  generated_video_period:    VideoRetentionPeriod;
+  delete_generated_after_download:  boolean;
+  delete_generated_after_publishing: boolean;
+}
+
+/** Default dealer preference — matches DEFAULT_VIDEO_RETENTION_POLICY. */
+export const DEFAULT_DEALER_VIDEO_RETENTION_PREFERENCE: DealerVideoRetentionPreference = {
+  source_video_period:                    30,
+  delete_source_after_ai:                 false,
+  generated_video_period:                 30,
+  delete_generated_after_download:        false,
+  delete_generated_after_publishing:      false,
+};

@@ -16,6 +16,9 @@ export type {
   MediaMetadata,
   PhotoMimeType,
   VideoMimeType,
+  // Retention
+  MediaDeletionReason,
+  MediaDeletionRecord,
 } from "./media-types";
 
 export {
@@ -25,6 +28,8 @@ export {
   VIDEO_TARGET_MAX_UPLOAD_BYTES,
   workOrderFileToDealerMedia,
   getMarketingApprovedMedia,
+  // Retention
+  DEFAULT_RETENTION_DAYS,
 } from "./media-types";
 
 // ─── Context (Sprint 10J) ─────────────────────────────────────────────────────
@@ -90,6 +95,12 @@ export type {
   VideoBitrateLevel,
   VideoInfraPrerequisite,
   VideoInfraRequirement,
+  // Retention
+  VideoRetentionPeriod,
+  VideoSourceRetentionConfig,
+  VideoGeneratedRetentionConfig,
+  VideoRetentionPolicy,
+  DealerVideoRetentionPreference,
 } from "./media-video";
 
 export {
@@ -98,6 +109,11 @@ export {
   FUTURE_HLS_CONFIG,
   VIDEO_INFRA_REQUIREMENTS,
   areVideoInfraRequirementsMet,
+  // Retention
+  SUPPORTED_VIDEO_RETENTION_PERIODS,
+  NINETY_DAY_RETENTION_REQUIRES_PRO_PLUS,
+  DEFAULT_VIDEO_RETENTION_POLICY,
+  DEFAULT_DEALER_VIDEO_RETENTION_PREFERENCE,
 } from "./media-video";
 
 // ─── AI compatibility (Sprint 10J) ───────────────────────────────────────────

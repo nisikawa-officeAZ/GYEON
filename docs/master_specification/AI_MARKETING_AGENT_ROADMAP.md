@@ -224,6 +224,35 @@ All formats generated from the same source media — platform-specific aspect ra
 - Music volume / no-music option
 - Preview before publishing
 
+### 72.4 Generated Video Retention
+
+AI-generated videos are **not stored permanently by default**.
+
+| Event | Default behavior | Dealer-configurable |
+|-------|-----------------|---------------------|
+| Generation | Retain for 30 days | Yes |
+| Dealer download confirmed | Keep for remainder of 30-day window | Delete immediately (opt-in) |
+| SNS publish confirmed | Keep for remainder of 30-day window | Delete immediately (opt-in) |
+| 30-day window expires | Delete file — keep `MediaDeletionRecord` | Change period: 7 / 30 / 90 days |
+
+**After file deletion**, only the following metadata is kept:
+- `media_id` — unique asset identifier
+- `work_order_id` — the job this video was generated for
+- `customer_id` — for privacy audit
+- `vehicle_id`
+- `deleted_at` — timestamp of physical deletion
+- `download_status` — whether the dealer downloaded the file
+- `publish_status` — whether it was published to SNS
+- `generated_output_record` — ID linking to the source media used as input
+
+**Source video retention:**
+If the dealer's source footage was used as input for AI generation, the source video follows its own retention policy independently. By default, source videos are also deleted after 30 days. Dealers may opt in to delete source footage immediately after AI processing completes.
+
+**Implementation:**
+- Retention types: `VideoRetentionPolicy`, `VideoGeneratedRetentionConfig`, `VideoRetentionPeriod` in `src/lib/media/media-video.ts`
+- Deletion enforcement runtime: **NOT IMPLEMENTED** — Phase 10K, requires CTO approval
+- Dealer settings UI: **NOT IMPLEMENTED** — Phase 10K
+
 ---
 
 ## PHASE 73 — AI Content Writer
