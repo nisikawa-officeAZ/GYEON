@@ -1,9 +1,11 @@
 # Business Application Registry Specification
 
 **Module**: `src/lib/business-applications/`  
-**Version**: 1.0.0 — Sprint 11W  
+**Version**: 1.1.0 — Sprint 11W (branding updated post-Sprint 11W)  
 **Status**: Active — Foundation implemented  
 **Last Updated**: 2026-06-26
+
+> **Branding note**: Platform name is **GYEON Business Hub**. See `GYEON_BUSINESS_HUB_BRANDING_SPEC.md` for the canonical name mapping. Internal module IDs and TypeScript identifiers are unchanged.
 
 ---
 
@@ -19,27 +21,26 @@ The Business Application Registry is a coordination layer above Platform Core.
 
 ---
 
-## 2. AZ Platform Application Model
+## 2. GYEON Business Hub Application Model
 
-AZ Platform supports six independent business applications on top of shared Platform Core.
+GYEON Business Hub supports six independent business applications on top of shared Platform Core.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           AZ Platform                                        │
+│                        GYEON Business Hub                                    │
 │                                                                              │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
 │  │                     Business Applications (6)                         │   │
 │  │                                                                        │   │
 │  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────────────┐  │   │
-│  │  │ GYEON Dealer   │  │ Enterprise     │  │ Warehouse Management   │  │   │
-│  │  │ Agent          │  │ Distribution   │  │ System                 │  │   │
-│  │  │ (active)       │  │ Platform       │  │ (planned)              │  │   │
-│  │  │                │  │ (planned)      │  │                        │  │   │
+│  │  │ GYEON Dealer   │  │ GYEON          │  │ GYEON Warehouse        │  │   │
+│  │  │ Agent          │  │ Distribution   │  │                        │  │   │
+│  │  │ (active)       │  │ (planned)      │  │ (planned)              │  │   │
 │  │  └────────────────┘  └────────────────┘  └────────────────────────┘  │   │
 │  │                                                                        │   │
 │  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────────────┐  │   │
-│  │  │ Accounting     │  │ CRM            │  │ AI Operations          │  │   │
-│  │  │ System         │  │                │  │ Platform               │  │   │
+│  │  │ GYEON          │  │ GYEON CRM      │  │ GYEON AI Center        │  │   │
+│  │  │ Accounting     │  │                │  │                        │  │   │
 │  │  │ (planned)      │  │ (planned)      │  │ (planned)              │  │   │
 │  │  └────────────────┘  └────────────────┘  └────────────────────────┘  │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
@@ -60,7 +61,8 @@ AZ Platform supports six independent business applications on top of shared Plat
 
 | Field | Value |
 |-------|-------|
-| ID | `dealer_agent` |
+| **Display Name** | GYEON Dealer Agent |
+| Internal ID | `dealer_agent` |
 | Type | `dealer_management` |
 | Status | **active** |
 | Target | GYEON-certified detailing shop owners, managers, technicians |
@@ -73,11 +75,12 @@ AZ Platform supports six independent business applications on top of shared Plat
 
 ---
 
-### 3.2 Enterprise Distribution Platform
+### 3.2 GYEON Distribution
 
 | Field | Value |
 |-------|-------|
-| ID | `enterprise_distribution` |
+| **Display Name** | GYEON Distribution |
+| Internal ID | `enterprise_distribution` |
 | Type | `b2b_distribution` |
 | Status | planned |
 | Target | Office AZ Group staff, Attraction Co., Ltd. team, authorized wholesalers and retailers |
@@ -90,11 +93,12 @@ AZ Platform supports six independent business applications on top of shared Plat
 
 ---
 
-### 3.3 Warehouse Management System
+### 3.3 GYEON Warehouse
 
 | Field | Value |
 |-------|-------|
-| ID | `warehouse` |
+| **Display Name** | GYEON Warehouse |
+| Internal ID | `warehouse` |
 | Type | `warehouse_management` |
 | Status | planned |
 | Target | Warehouse staff, logistics coordinators, warehouse managers |
@@ -107,11 +111,12 @@ AZ Platform supports six independent business applications on top of shared Plat
 
 ---
 
-### 3.4 Accounting System
+### 3.4 GYEON Accounting
 
 | Field | Value |
 |-------|-------|
-| ID | `accounting` |
+| **Display Name** | GYEON Accounting |
+| Internal ID | `accounting` |
 | Type | `financial_management` |
 | Status | planned |
 | Target | Accounting team, finance managers, company executives |
@@ -124,11 +129,12 @@ AZ Platform supports six independent business applications on top of shared Plat
 
 ---
 
-### 3.5 Customer Relationship Management
+### 3.5 GYEON CRM
 
 | Field | Value |
 |-------|-------|
-| ID | `crm` |
+| **Display Name** | GYEON CRM |
+| Internal ID | `crm` |
 | Type | `customer_relationship` |
 | Status | planned |
 | Target | Sales team, account managers, customer success |
@@ -141,11 +147,12 @@ AZ Platform supports six independent business applications on top of shared Plat
 
 ---
 
-### 3.6 AI Operations Platform
+### 3.6 GYEON AI Center
 
 | Field | Value |
 |-------|-------|
-| ID | `ai_operations` |
+| **Display Name** | GYEON AI Center |
+| Internal ID | `ai_operations` |
 | Type | `ai_operations` |
 | Status | planned |
 | Target | Platform administrators, AI operations engineers, technical management |
@@ -170,7 +177,7 @@ All rules complement Platform Core policy (PLAT-001 through PLAT-010).
 | APP-004 | Cross-Application Workflows Require Explicit Platform Policy Declaration | strict |
 | APP-005 | Tenant Identity Is Always Injected Server-Side | strict |
 | APP-006 | Organization Scope Validated Server-Side | strict |
-| APP-007 | AI Operations May Observe But Not Control Other Applications | strict |
+| APP-007 | GYEON AI Center May Observe But Not Control Other Applications | strict |
 | APP-008 | Feature Flag Gates Are Platform-Scoped and Must Not Be Bypassed | advisory |
 
 ---
@@ -181,28 +188,28 @@ All rules complement Platform Core policy (PLAT-001 through PLAT-010).
 |---------|------------|--------------|
 | authentication | all 6 | — |
 | authorization | all 6 | — |
-| ai_gateway | ai_operations | dealer_agent, enterprise_distribution, warehouse, accounting, crm |
-| ai_marketplace | ai_operations | dealer_agent, enterprise_distribution, crm |
-| pdf | dealer_agent, enterprise_distribution, accounting | — |
-| notification | enterprise_distribution, warehouse, accounting, crm | ai_operations |
-| ocr | — | dealer_agent |
-| line | — | dealer_agent, enterprise_distribution, crm |
-| media | — | dealer_agent, crm |
-| analytics | — | dealer_agent, enterprise_distribution, warehouse, accounting, crm, ai_operations |
+| ai_gateway | GYEON AI Center | GYEON Dealer Agent, GYEON Distribution, GYEON Warehouse, GYEON Accounting, GYEON CRM |
+| ai_marketplace | GYEON AI Center | GYEON Dealer Agent, GYEON Distribution, GYEON CRM |
+| pdf | GYEON Dealer Agent, GYEON Distribution, GYEON Accounting | — |
+| notification | GYEON Distribution, GYEON Warehouse, GYEON Accounting, GYEON CRM | GYEON AI Center |
+| ocr | — | GYEON Dealer Agent |
+| line | — | GYEON Dealer Agent, GYEON Distribution, GYEON CRM |
+| media | — | GYEON Dealer Agent, GYEON CRM |
+| analytics | — | all 6 |
 | organization | — | all 6 |
 
 ---
 
 ## 6. Organization Integration
 
-| Application | Supported Org Types | Admin Roles |
-|-------------|---------------------|-------------|
-| dealer_agent | dealer, branch, division, company, platform | platform_admin, dealer_owner |
-| enterprise_distribution | platform, company, division, branch, warehouse | platform_admin, company_admin |
-| warehouse | platform, company, division, warehouse | platform_admin, company_admin |
-| accounting | platform, company, division | platform_admin, company_admin |
-| crm | platform, company, division, branch | platform_admin, company_admin |
-| ai_operations | platform, company | platform_admin |
+| Application | Display Name | Supported Org Types | Admin Roles |
+|-------------|-------------|---------------------|-------------|
+| `dealer_agent` | GYEON Dealer Agent | dealer, branch, division, company, platform | platform_admin, dealer_owner |
+| `enterprise_distribution` | GYEON Distribution | platform, company, division, branch, warehouse | platform_admin, company_admin |
+| `warehouse` | GYEON Warehouse | platform, company, division, warehouse | platform_admin, company_admin |
+| `accounting` | GYEON Accounting | platform, company, division | platform_admin, company_admin |
+| `crm` | GYEON CRM | platform, company, division, branch | platform_admin, company_admin |
+| `ai_operations` | GYEON AI Center | platform, company | platform_admin |
 
 ---
 
@@ -210,13 +217,13 @@ All rules complement Platform Core policy (PLAT-001 through PLAT-010).
 
 ```
 src/lib/business-applications/
-├── index.ts                       — package barrel (public API)
-├── business-application-types.ts — domain types
+├── index.ts                        — package barrel (public API)
+├── business-application-types.ts  — domain types
 ├── business-application-registry.ts — all 6 application manifests
-├── application-capabilities.ts   — capability discovery API
+├── application-capabilities.ts    — capability discovery API
 ├── application-isolation-policy.ts — APP-001 through APP-008
-├── organization-integration.ts   — per-app org scope declarations
-└── platform-core-bridge.ts       — Platform Core-compatible adapters
+├── organization-integration.ts    — per-app org scope declarations
+└── platform-core-bridge.ts        — Platform Core-compatible adapters
 ```
 
 **Dependency direction:**
@@ -229,15 +236,15 @@ No circular imports. `platform-core/` does not import from `business-application
 
 ## 8. Capability Counts
 
-| Application | Available | Planned | Future | Total |
-|-------------|-----------|---------|--------|-------|
-| dealer_agent | 11 | 3 | 0 | 14 |
-| enterprise_distribution | 0 | 7 | 2 | 9 |
-| warehouse | 0 | 3 | 4 | 7 |
-| accounting | 0 | 5 | 2 | 7 |
-| crm | 0 | 3 | 4 | 7 |
-| ai_operations | 0 | 5 | 3 | 8 |
-| **Total** | **11** | **26** | **15** | **52** |
+| Display Name | Internal ID | Available | Planned | Future | Total |
+|-------------|-------------|-----------|---------|--------|-------|
+| GYEON Dealer Agent | `dealer_agent` | 11 | 3 | 0 | 14 |
+| GYEON Distribution | `enterprise_distribution` | 0 | 7 | 2 | 9 |
+| GYEON Warehouse | `warehouse` | 0 | 3 | 4 | 7 |
+| GYEON Accounting | `accounting` | 0 | 5 | 2 | 7 |
+| GYEON CRM | `crm` | 0 | 3 | 4 | 7 |
+| GYEON AI Center | `ai_operations` | 0 | 5 | 3 | 8 |
+| **Total** | | **11** | **26** | **15** | **52** |
 
 ---
 
@@ -245,6 +252,6 @@ No circular imports. `platform-core/` does not import from `business-application
 
 | Sprint | Focus |
 |--------|-------|
-| Sprint 11X | Business Application Registry UI (admin panel — read-only diagnostic view) |
+| Sprint 11X | GYEON Business Hub admin diagnostic UI (read-only application registry view) |
 | Sprint 12+ | Runtime activation gate (feature flag resolution for planned applications) |
-| Sprint 12+ | Enterprise Distribution Platform implementation begins |
+| Sprint 12+ | GYEON Distribution implementation begins |
