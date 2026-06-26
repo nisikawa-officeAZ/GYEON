@@ -1,12 +1,12 @@
-// DealerOS — Platform Core: Application Registry (Sprint 11T Phase B)
+// AZ Platform — Platform Core: Application Registry (Sprint 11T / updated Sprint 11W)
 //
-// Canonical registry of all Office AZ Platform applications.
+// Canonical registry of all AZ Platform applications.
 // Each entry declares what the application is, its status, required modules,
 // and where its specification lives.
 //
 // Current state:
 //   Active (1):  dealer_agent
-//   Planned (4): enterprise_distribution, warehouse, accounting, crm
+//   Planned (5): enterprise_distribution, warehouse, accounting, crm, ai_operations
 //
 // Applications are fully isolated — they do not import from each other.
 // All cross-application shared services are consumed through platform-core.
@@ -138,6 +138,30 @@ const CRM: PlatformApplication = {
   database_scope:        "separate_supabase",
 };
 
+// ─── 6. AI Operations Platform ───────────────────────────────────────────────
+
+const AI_OPERATIONS: PlatformApplication = {
+  application_id:    "ai_operations",
+  display_name:      "AI Operations Platform",
+  description:       "Platform-level AI operations management for Office AZ Group. Monitors AI request execution, tracks usage and costs across all platform applications, manages the AI Marketplace capability catalog, and reports on provider health.",
+  status:            "planned",
+  target_users:      "Platform administrators, AI operations engineers, technical management",
+  required_modules: [
+    "authentication",
+    "authorization",
+    "ai_gateway",
+    "ai_marketplace",
+  ],
+  optional_modules: [
+    "analytics",
+    "notification",
+  ],
+  spec_document:         null,
+  implementation_sprint: null,
+  deployment_unit:       "separate",
+  database_scope:        "separate_supabase",
+};
+
 // ─── Registry ─────────────────────────────────────────────────────────────────
 
 export const PLATFORM_APPLICATION_REGISTRY: PlatformApplication[] = [
@@ -146,6 +170,7 @@ export const PLATFORM_APPLICATION_REGISTRY: PlatformApplication[] = [
   WAREHOUSE,
   ACCOUNTING,
   CRM,
+  AI_OPERATIONS,
 ];
 
 // ─── Lookup helpers ───────────────────────────────────────────────────────────

@@ -30,8 +30,8 @@ import { ORGANIZATION_ROLES }          from "./organization-roles";
 // that level. Used by UI and policy checks to scope application access.
 
 export const ORG_TYPE_APPLICATION_MAP: Record<OrganizationType, PlatformApplicationId[]> = {
-  platform:  ["dealer_agent", "enterprise_distribution", "warehouse", "accounting", "crm"],
-  company:   ["dealer_agent", "enterprise_distribution"],
+  platform:  ["dealer_agent", "enterprise_distribution", "warehouse", "accounting", "crm", "ai_operations"],
+  company:   ["dealer_agent", "enterprise_distribution", "ai_operations"],
   division:  ["dealer_agent", "enterprise_distribution"],
   branch:    ["dealer_agent"],
   warehouse: ["warehouse", "enterprise_distribution"],
@@ -46,6 +46,7 @@ export const APPLICATION_ORG_TYPE_MAP: Record<PlatformApplicationId, Organizatio
   warehouse:               ["warehouse", "platform"],
   accounting:              ["company", "platform"],
   crm:                     ["company", "division", "platform"],
+  ai_operations:           ["company", "platform"],
 };
 
 // ─── Query helpers ─────────────────────────────────────────────────────────────
@@ -110,7 +111,7 @@ export const ORGANIZATION_MODULE_MANIFEST: OrganizationModuleManifest = {
   organization_count: ORGANIZATION_REGISTRY.length,
   role_count:         ORGANIZATION_ROLES.length,
   policy_count:       ORGANIZATION_POLICIES.length,
-  consuming_applications: ["dealer_agent", "enterprise_distribution", "warehouse", "accounting", "crm"],
+  consuming_applications: ["dealer_agent", "enterprise_distribution", "warehouse", "accounting", "crm", "ai_operations"],
   spec_document:      "docs/master_specification/ENTERPRISE_ORGANIZATION_SPEC.md",
   implementation_sprint: "Sprint 11V",
 };

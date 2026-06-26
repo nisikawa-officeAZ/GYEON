@@ -53,7 +53,7 @@ const ISOLATION_RULES: PlatformIsolationRule[] = [
     description: "All platform applications that use AI features must route through the shared AI Gateway module (src/lib/ai/). Applications do not maintain independent AI provider registries.",
     enforcement: "strict",
     rationale:   "A single AI Gateway ensures consistent key management, usage tracking, and provider adapter lifecycle across the platform. Duplicating the gateway per application is a maintenance and security liability.",
-    applies_to:  ["dealer_agent", "enterprise_distribution", "warehouse", "accounting", "crm"],
+    applies_to:  ["dealer_agent", "enterprise_distribution", "warehouse", "accounting", "crm", "ai_operations"],
   },
   {
     rule_id:     "PLAT-005",
@@ -128,6 +128,7 @@ const ISOLATED_APPLICATIONS: PlatformApplicationId[] = [
   "warehouse",
   "accounting",
   "crm",
+  "ai_operations",
 ];
 
 // ─── Policy object ────────────────────────────────────────────────────────────

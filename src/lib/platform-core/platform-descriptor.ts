@@ -1,6 +1,6 @@
-// DealerOS — Platform Core: Platform Descriptor (Sprint 11T)
+// AZ Platform — Platform Core: Platform Descriptor (Sprint 11T / updated Sprint 11W)
 //
-// The authoritative singleton descriptor for the Office AZ Platform Core.
+// The authoritative singleton descriptor for the AZ Platform Core.
 // Consumed by admin diagnostics, status checks, and documentation generation.
 //
 // Pure — no "use server", no async, no DB calls, no external calls.
@@ -14,7 +14,7 @@ import { PLATFORM_CROSS_APP_POLICY } from "./platform-policy";
 
 export const PLATFORM_CORE: PlatformCoreDescriptor = {
   version:                    "1.0.0",
-  sprint:                     "Sprint 11T",
+  sprint:                     "Sprint 11W",
   application_count:          PLATFORM_APPLICATION_REGISTRY.length,                          // 5
   active_application_count:   PLATFORM_APPLICATION_REGISTRY.filter(
     (a) => a.status === "active",

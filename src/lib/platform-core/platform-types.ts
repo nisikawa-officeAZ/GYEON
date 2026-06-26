@@ -1,10 +1,10 @@
-// DealerOS — Platform Core: Domain Types (Sprint 11T Phase A)
+// AZ Platform — Platform Core: Domain Types (Sprint 11T / updated Sprint 11W)
 //
-// Canonical type definitions for the Office AZ Platform Core.
-// Platform Core is the shared infrastructure layer for all Office AZ applications:
+// Canonical type definitions for the AZ Platform Core.
+// Platform Core is the shared infrastructure layer for all AZ Platform applications:
 //
-//   Applications (5):
-//     dealer_agent, enterprise_distribution, warehouse, accounting, crm
+//   Applications (6):
+//     dealer_agent, enterprise_distribution, warehouse, accounting, crm, ai_operations
 //
 //   Shared Modules (10):
 //     authentication, authorization, ai_gateway, ai_marketplace,
@@ -29,7 +29,8 @@ export type PlatformApplicationId =
   | "enterprise_distribution"  // Office AZ Enterprise Distribution Platform (EDP)
   | "warehouse"                // Warehouse Management System (future)
   | "accounting"               // Accounting System (future)
-  | "crm";                     // Customer Relationship Management (future)
+  | "crm"                      // Customer Relationship Management (future)
+  | "ai_operations";           // AI Operations Platform (future)
 
 // ─── Module identifiers ───────────────────────────────────────────────────────
 
