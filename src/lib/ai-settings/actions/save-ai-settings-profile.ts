@@ -54,8 +54,11 @@ export interface AISettingsProfileSaveInput {
 /**
  * saveAISettingsProfile — persists non-key AI settings fields for the current dealer.
  *
- * Returns the persistence result including which storage target was used.
- * The caller does not need to know which backend was used (table vs. JSONB).
+ * Writes to dealer_ai_settings table (canonical, migration 072) ONLY.
+ * If the table is not available (migration 072 not yet applied), returns
+ * MIGRATION_REQUIRED — never writes to the legacy JSONB compat layer.
+ *
+ * Returns the persistence result including the storage target on success.
  */
 export async function saveAISettingsProfile(
   input: AISettingsProfileSaveInput,
@@ -90,6 +93,13 @@ export async function saveAISettingsProfile(
   const result  = await repo.save(dealer.dealer_id, payload);
 
   if (!result.ok) {
+    if (result.error_code === "TABLE_NOT_AVAILABLE") {
+      return settingsFail(
+        "MIGRATION_REQUIRED",
+        "AI Settings persistence requires migration 072 (dealer_ai_settings table) — CTO approval required",
+        { migration: "072", table: "dealer_ai_settings" },
+      );
+    }
     return settingsFail(
       "PERSISTENCE_ERROR",
       result.error_message ?? "Failed to save AI settings",

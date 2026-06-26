@@ -352,18 +352,24 @@ src/lib/ai-settings/
       └── index.ts
 ```
 
-### Two-layer persistence strategy
+### Canonical storage model (Architecture clarification)
 
-**Layer 1 (preferred)**: `dealer_ai_settings` table (migration 072 — CTO approval)
-- Structured columns: `dealer_id`, `default_provider`, `fallback_providers`
-- JSONB columns: `capability_preferences`, `execution_preferences`, `budget_policy`, `health_policy`
-- Upsert on `dealer_id` conflict
+**`dealer_ai_settings` table is the ONLY long-term canonical source of truth.**
 
-**Layer 2 (fallback)**: `dealer_settings.ai_settings` JSONB (migration 070 — already applied)
-- Extended namespace keys alongside existing: `cap_prefs`, `exec_prefs`, `budget_pol`
-- Full persistence without requiring migration 072
+| Layer | Table | Role | Write? |
+|-------|-------|------|--------|
+| Canonical | `dealer_ai_settings` (migration 072) | AI Settings profile storage | Yes — only write target |
+| Compat read | `dealer_settings.ai_settings` JSONB (migration 070) | Backward compat during migration window | No — read-only |
+| Key status | `dealer_settings.ai_settings` JSONB (migration 070) | Provider key presence (always from here) | Via `saveAiSettings()` only |
 
-Fallback is triggered when `dealer_ai_settings` returns PostgreSQL error code `42P01` (undefined table). Fully transparent to server actions — they receive the same typed result regardless of which layer was used.
+**Save policy**: `saveAISettingsProfile()` writes to `dealer_ai_settings` table **only**. If the table does not exist (migration 072 not yet applied), the save returns `MIGRATION_REQUIRED` — it does **not** fall back to writing JSONB. This enforces migration 072 as a hard prerequisite for extended AI settings persistence.
+
+**Load policy**: Load tries `dealer_ai_settings` first, then falls back to `dealer_settings.ai_settings` JSONB for compat read (basic config + any pre-architecture extended keys). The `storage_source` field in `AISettingsLoadResult` reports which layer responded:
+- `"dealer_ai_settings_table"` — canonical, migration 072 applied
+- `"dealer_settings_compat"` — compat read, migration 072 not yet applied
+- `"defaults"` — no stored data found
+
+**Future cleanup task**: Once all dealers have migrated to the `dealer_ai_settings` table and no JSONB-stored data remains, the compat read path should be removed from `settings-repository.ts`. Tracked as Sprint 11T+ cleanup item.
 
 ### Repository design
 

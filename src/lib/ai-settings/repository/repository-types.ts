@@ -3,12 +3,29 @@
 // Interface contracts for AI Settings persistence. All implementations must
 // satisfy these contracts regardless of the storage backend.
 //
+// Canonical storage model (Architecture clarification post Sprint 11R):
+//   CANONICAL:    dealer_ai_settings table (migration 072)
+//                 → only long-term source of truth for AI Settings profiles
+//   COMPAT READ:  dealer_settings.ai_settings JSONB (migration 070)
+//                 → read-only backward compatibility during migration window
+//                 → never written to for new AI Settings data
+//                 → to be removed after all dealers have migrated (future cleanup task)
+//
+// Save behavior:
+//   - Writes target dealer_ai_settings ONLY
+//   - If dealer_ai_settings table not available (migration 072 not applied),
+//     save returns NOT_CONFIGURED — it does NOT fall back to JSONB
+//   - Callers must handle MIGRATION_REQUIRED and prompt for migration approval
+//
+// Load behavior:
+//   - Reads dealer_ai_settings table first (canonical)
+//   - If table unavailable, reads dealer_settings.ai_settings JSONB (compat read)
+//   - storage_source reflects which layer was used
+//
 // Design principles:
 //   - Interfaces are independent of the database implementation
 //   - No direct SQL, no Supabase imports in this file
 //   - dealer_id is always passed in — callers ensure it comes from getCurrentDealer()
-//   - If required tables do not exist, load returns a graceful NOT_CONFIGURED result
-//     and save falls back to the dealer_settings.ai_settings JSONB column
 //
 // Pure — no "use server", no async signatures in interfaces (async is implementation detail).
 
@@ -18,16 +35,27 @@ import type { AISettingsResult } from "../errors";
 
 // ─── Load result ──────────────────────────────────────────────────────────────
 
+/**
+ * AISettingsStorageSource — identifies which storage layer provided the loaded data.
+ *
+ * "dealer_ai_settings_table": canonical — migration 072 applied, structured storage
+ * "dealer_settings_compat":   compat read only — migration 072 not yet applied;
+ *                              data read from dealer_settings.ai_settings JSONB for
+ *                              backward compatibility; this layer is read-only and
+ *                              will be removed after migration completion
+ * "defaults":                 no stored data found; profile is built from coded defaults
+ */
 export type AISettingsStorageSource =
-  | "dealer_ai_settings_table" // Migration 072 applied — preferred structured storage
-  | "dealer_settings_jsonb"    // Fallback: extended fields stored in existing JSONB column
-  | "defaults";                // No stored data found; profile built from defaults
+  | "dealer_ai_settings_table"
+  | "dealer_settings_compat"
+  | "defaults";
 
 /**
  * AISettingsLoadResult — raw data loaded from storage before domain type construction.
  *
  * Provides a stable intermediate representation regardless of which storage
- * backend was used (dealer_ai_settings table vs. dealer_settings JSONB fallback).
+ * layer was used. Callers inspect storage_source if they need to know which
+ * layer responded (e.g. to display a migration prompt in the UI).
  */
 export interface AISettingsLoadResult {
   primary_provider:       AIProviderId | null;
@@ -41,7 +69,7 @@ export interface AISettingsLoadResult {
   execution_preferences:  Record<string, unknown>;
   /** Serialized AIBudgetPolicyConfig from database. Empty object if never saved. */
   budget_policy:          Record<string, unknown>;
-  /** Key presence per provider — derived from dealer_settings.ai_settings (never raw keys). */
+  /** Key presence per provider — always from dealer_settings.ai_settings (never raw keys). */
   provider_key_status:    Partial<Record<AIProviderId, {
     has_key:      boolean;
     validated_at: string | null;
@@ -72,9 +100,17 @@ export interface AISettingsSavePayload {
 
 // ─── Persistence result ───────────────────────────────────────────────────────
 
+/**
+ * AISettingsPersistenceTarget — where the save was committed.
+ *
+ * "dealer_ai_settings_table": canonical write succeeded
+ * "none":                     save did not complete (table unavailable or DB error)
+ *
+ * There is no "dealer_settings_jsonb" target — new writes never go to JSONB.
+ * The JSONB layer is read-only for backward compatibility.
+ */
 export type AISettingsPersistenceTarget =
   | "dealer_ai_settings_table"
-  | "dealer_settings_jsonb"
   | "none";
 
 export interface AISettingsPersistenceResult {
@@ -107,7 +143,8 @@ export interface AIUsageSummaryResult {
  *
  * Implementations must:
  *   - Never return raw API keys
- *   - Handle missing tables gracefully (return defaults or NOT_CONFIGURED)
+ *   - For load: try canonical table, fall back to compat read, then defaults
+ *   - For save: write to canonical table ONLY — never write to JSONB compat layer
  *   - Accept dealer_id as a parameter — callers ensure it comes from getCurrentDealer()
  */
 export interface AISettingsRepository {
