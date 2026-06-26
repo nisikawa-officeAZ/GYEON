@@ -269,7 +269,99 @@ const VIDEO_MAX_FILE_SIZE = 500 * 1024 * 1024;  // 500 MB
 
 ---
 
-## 9. Files Changed in Sprint 10I
+## 9. Media Runtime (Sprint 10J)
+
+**Location:** `src/lib/media/`
+
+### Module structure
+
+| Module | Purpose |
+|--------|---------|
+| `media-types.ts` | Canonical DealerMedia model, consent/visibility types, AI marketing filter |
+| `media-context.ts` | `MediaContext` factory — dealer_id always from `getCurrentDealer()` |
+| `media-validation.ts` | MIME type validation, file size policy, `validateMediaFile()` |
+| `media-permission.ts` | Permission model — `checkMediaPermission()`, `resolvePermissionScope()` |
+| `media-capability.ts` | `MEDIA_CAPABILITY_REGISTRY` — 8 capabilities with availability status |
+| `media-video.ts` | Future video architecture — upload config, processing pipeline, HLS, infra requirements |
+| `media-ai.ts` | AI agent compatibility — `checkMediaAICapability()`, agent-specific interfaces |
+| `media-runtime.ts` | `MediaRuntime` — unified orchestrator for all of the above |
+| `index.ts` | Public re-exports — import from `@/lib/media` |
+
+### Upload policies
+
+| Policy | Allow video | Max size | Status |
+|--------|-------------|----------|--------|
+| `CURRENT_UPLOAD_POLICY` | No | 20 MB | Active |
+| `CURRENT_PHOTO_UPLOAD_POLICY` | No | 20 MB | Active (alias) |
+| `FUTURE_VIDEO_UPLOAD_POLICY` | Yes | 500 MB | NOT ACTIVE — Phase 10K |
+
+### Permission scope levels
+
+```
+internal_only → customer_visible → marketing_candidate → marketing_approved
+```
+
+- **internal_only** (default): no external sharing
+- **customer_visible**: completion report sharing allowed
+- **marketing_candidate**: flagged for marketing, consent pending
+- **marketing_approved**: all three gates passed — visibility + is_marketing_approved + consent = approved
+
+`is_ai_training_excluded` is an orthogonal flag — it restricts AI training at any scope level.
+
+### Capability registry
+
+| Capability | Supported types | Available now | Phase |
+|------------|-----------------|---------------|-------|
+| preview | photo, video | Yes | Sprint 10I |
+| download | photo, video | Yes | Sprint 10I |
+| completion_report | photo, video | Yes | Sprint 10I |
+| thumbnail | photo, video | No | Phase 10J |
+| streaming | video | No | Phase 10K |
+| ai_analysis | photo, video | No | Phase 71–72 |
+| ai_marketing | photo, video | No | Phase 71–76 |
+| customer_gallery | photo, video | No | Future |
+
+### AI agent media interfaces
+
+| Agent | Interface | Source |
+|-------|-----------|--------|
+| `marketing_agent` | `MediaForMarketingAgent` (= `MediaForMarketing`) | `getMediaForMarketingAgent()` |
+| `reputation_agent` | `MediaForReputationAgent` | `getMediaForReputationAgent()` |
+| `growth_agent` | `MediaForGrowthAgent` (aggregate counts only) | `buildMediaForGrowthAgent()` |
+
+All AI access is gated by `checkMediaAICapability()` which enforces dealer isolation, consent status, and capability-specific rules.
+
+### Usage pattern
+
+```typescript
+// Server-side route/action:
+const ctx     = await createMediaContext();
+if (!ctx) return { error: "Not authenticated" };
+
+const runtime = MediaRuntime.withContext(ctx);
+
+// Validate before upload:
+const result = runtime.validate({ name: file.name, size: file.size, type: file.type });
+if (!result.valid) return { error: result.errors[0].message };
+
+// Check permission before sharing:
+const gate = runtime.checkPermission(media);
+if (!gate.can_include_in_completion_report) {
+  return { error: gate.denial_reasons[0] };
+}
+
+// Check AI eligibility:
+const aiGate = runtime.checkAICapability({
+  capability: "ai_marketing",
+  media,
+  agent_id:  "marketing_agent",
+  dealer_id: ctx.dealer_id,
+});
+```
+
+---
+
+## 10. Files Changed in Sprint 10I
 
 | File | Change |
 |------|--------|
@@ -277,6 +369,24 @@ const VIDEO_MAX_FILE_SIZE = 500 * 1024 * 1024;  // 500 MB
 | `src/lib/work-order-files/work-order-file-types.ts` | ADD — `isPhoto()`, `isVideo()`, `isMedia()` helpers |
 | `src/components/completion-reports/CompletionReportPreview.tsx` | RENAME `PhotoSection` → `MediaSection`; add video thumbnail card |
 | `src/components/work-orders/WorkOrderFiles.tsx` | USE `isPhoto()`/`isVideo()` from types; proper video card rendering |
+
+---
+
+## 11. Files Changed in Sprint 10J
+
+| File | Change |
+|------|--------|
+| `src/lib/media/media-types.ts` | ADD — `MediaFileInput`, `MediaMetadata` types |
+| `src/lib/media/media-context.ts` | NEW — `MediaContext` interface, `createMediaContext()` factory |
+| `src/lib/media/media-validation.ts` | NEW — `MediaUploadPolicy`, `validateMediaFile()`, MIME helpers, policy constants |
+| `src/lib/media/media-permission.ts` | NEW — `MediaPermissionScope`, `MediaPermissionGate`, `checkMediaPermission()`, `resolvePermissionScope()` |
+| `src/lib/media/media-capability.ts` | NEW — `MediaCapabilityId`, `MEDIA_CAPABILITY_REGISTRY`, lookup helpers |
+| `src/lib/media/media-video.ts` | NEW — future video upload/processing/streaming architecture, `VIDEO_INFRA_REQUIREMENTS` |
+| `src/lib/media/media-ai.ts` | NEW — `MediaForAI`, AI gate types, `checkMediaAICapability()`, agent-specific builders |
+| `src/lib/media/media-runtime.ts` | NEW — `MediaRuntime` class (validates, checks permissions, queries capabilities, gates AI) |
+| `src/lib/media/index.ts` | NEW — public re-exports for `@/lib/media` |
+| `docs/master_specification/MEDIA_ARCHITECTURE.md` | ADD — runtime section (§9), sprint 10J file list |
+| `docs/master_specification/AI_MARKETING_AGENT_ROADMAP.md` | UPDATE — media-first interfaces referenced |
 
 ---
 

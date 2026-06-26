@@ -224,6 +224,30 @@ export const VIDEO_MIME_TYPES = [
 export type PhotoMimeType = (typeof PHOTO_MIME_TYPES)[number];
 export type VideoMimeType = (typeof VIDEO_MIME_TYPES)[number];
 
+// ─── File input and metadata ──────────────────────────────────────────────────
+
+/** Raw file information provided before upload — used for validation. */
+export interface MediaFileInput {
+  name: string;
+  size: number;  // bytes
+  type: string;  // MIME type
+}
+
+/**
+ * Extracted metadata about a media asset.
+ * Fields with `?` are populated after Phase 10J metadata extraction is implemented.
+ */
+export interface MediaMetadata {
+  media_type:        MediaType;
+  mime_type:         string;
+  file_name:         string;
+  file_size_bytes:   number;
+  width?:            number;   // pixels — available after Phase 10J extraction
+  height?:           number;   // pixels
+  duration_seconds?: number;   // seconds — video only
+  captured_at?:      string;   // ISO 8601 from EXIF or user-provided
+}
+
 // ─── AI Marketing Agent integration ───────────────────────────────────────────
 
 /**

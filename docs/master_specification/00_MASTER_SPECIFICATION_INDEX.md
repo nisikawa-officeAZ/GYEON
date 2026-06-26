@@ -168,7 +168,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── AI_REPUTATION_AGENT_ROADMAP.md         ← Sprint 10E + Future: PHASE 77–81 AI reputation; foundation implemented
 ├── CUSTOMER_ENGAGEMENT_SPEC.md            ← Sprint 10F–H: Customer Engagement Platform — orchestration layer, runtime plan, dry-run impl
 ├── CUSTOMER_ENGAGEMENT_RUNTIME_PLAN.md   ← Sprint 10G–H: Runtime engine, migration proposals, Phase G-A dry-run status
-├── MEDIA_ARCHITECTURE.md                 ← Sprint 10I: Media-first canonical model — photo + video, consent, storage, AI marketing
+├── MEDIA_ARCHITECTURE.md                 ← Sprint 10I–J: Media-first canonical model — photo + video, consent, storage, runtime, AI compat
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -203,6 +203,7 @@ TIER 4 — DESIGN AUTHORITY
 | **2.1** | **2026-06-26** | **Sprint 10G** | **Customer Engagement Runtime Plan: engine interfaces, migration proposals (4 tables/columns), WORK_COMPLETED integration analysis, LINE dispatch findings, AI agent dispatch design, Phase G-A/G-B sequencing** |
 | **2.2** | **2026-06-26** | **Sprint 10H** | **Customer Engagement Dry-Run Runtime: EngagementWorkflowRuntime, event+action dispatchers, LINE/agent dry-run validators, WORK_COMPLETED event emission in updateWorkOrder() — zero schema changes, zero API calls** |
 | **2.3** | **2026-06-26** | **Sprint 10I** | **Media-First Architecture: canonical DealerMedia model, MediaType/MediaUsage/consent/visibility types, isPhoto()/isVideo()/isMedia() helpers, MediaSection component, AI Marketing media filter, MEDIA_ARCHITECTURE.md** |
+| **2.4** | **2026-06-26** | **Sprint 10J** | **Media Runtime Foundation: MediaRuntime class, MediaContext, MediaValidation, MediaPermissionModel, MediaCapabilityRegistry, future video architecture (VideoUploadConfig/Pipeline/HLS), AI agent compatibility layer (MediaForAI, checkMediaAICapability), index.ts public API** |
 
 ---
 
