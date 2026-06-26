@@ -166,6 +166,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── AI_AGENT_FRAMEWORK.md                  ← Sprint 10D–E: Common AI agent architecture (lifecycle, registry, capabilities)
 ├── AI_MARKETING_AGENT_ROADMAP.md          ← Future: PHASE 71–76 AI marketing + growth (deferred)
 ├── AI_REPUTATION_AGENT_ROADMAP.md         ← Sprint 10E + Future: PHASE 77–81 AI reputation; foundation implemented
+├── CUSTOMER_ENGAGEMENT_SPEC.md            ← Sprint 10F: Customer Engagement Platform — central orchestration layer
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -196,6 +197,7 @@ TIER 4 — DESIGN AUTHORITY
 | 1.7 | 2026-06-26 | Sprint 10C | AI Gateway settings layer: AES-256-GCM key encryption, 5-provider registry with capabilities, dealer AI settings UI (Pro+), save/test/readiness-check server actions, migration proposal for dealer_settings.ai_settings column |
 | 1.8 | 2026-06-26 | Sprint 10D | AI Agent Framework: AIAgent interface, AIAgentContext, lifecycle runner, execution policy, 7-agent registry, capability model (16 provider caps + 8 agent caps), AIAgentNotImplementedError pattern for Phase G |
 | **1.9** | **2026-06-26** | **Sprint 10E** | **AI Reputation Agent Foundation: ReputationAgent (first active agent), review workflow model, compliance constants, MarketingAgentFeed cross-agent interface, 5 reputation types, run-reputation-task server action** |
+| **2.0** | **2026-06-26** | **Sprint 10F** | **Customer Engagement Platform: 10-event system, 7 pre-defined workflows, trigger registry with agent subscribers, context factory, eligibility checks, CUSTOMER_ENGAGEMENT_SPEC.md** |
 
 ---
 
