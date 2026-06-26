@@ -28,6 +28,7 @@ import type {
   AIOrchestrationWorkflowId,
   AIExecutionPolicy,
 }                                              from "../orchestrator-types";
+import type { AIProviderExecutionGuardResult } from "../provider-execution/execution-readiness-types";
 
 // ─── Bridge execution state ───────────────────────────────────────────────────
 
@@ -67,6 +68,12 @@ export interface AIExecutionBridgeContext {
   agent_context:  AIAgentContext;
   /** Step input data resolved from plan step_outputs (null in Sprint 11L). */
   input_payload:  Record<string, unknown>;
+  /**
+   * Active AppFeatures for this dealer — pre-loaded from DB by the calling server action.
+   * Used by the provider execution guard (Sprint 11M) to verify feature gates.
+   * Mirrors AILiveRuntimeRequest.active_features.
+   */
+  active_features: AppFeature[];
 }
 
 // ─── Bridge policy ────────────────────────────────────────────────────────────
@@ -161,6 +168,13 @@ export interface AIExecutionBridgeResult {
   error_message:         string | null;
   /** ISO 8601 timestamp when this bridge result was built. */
   execution_timestamp:   string;
+  /**
+   * Provider execution readiness check result (Sprint 11M).
+   * null for skipped or structurally blocked steps that never reach the guard.
+   * Present on all lifecycle-prepared steps — decision is "deny" in Sprint 11M
+   * (run_execute is false) and "allow" once Sprint 11N+ wires real execution.
+   */
+  readiness_check:       AIProviderExecutionGuardResult | null;
 }
 
 // ─── Per-step live bridge result ──────────────────────────────────────────────

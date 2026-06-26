@@ -80,14 +80,15 @@ function buildStepBridgeContext(
 ): AIExecutionBridgeContext {
   return {
     execution_id,
-    dealer_id:     request.dealer_id,
+    dealer_id:      request.dealer_id,
     plan_id,
     step_id,
-    workflow_id:   request.workflow_id,
-    trace_id:      request.trace_id ?? `trace_${plan_id}`,
+    workflow_id:    request.workflow_id,
+    trace_id:       request.trace_id ?? `trace_${plan_id}`,
     execution_mode: "live",
     agent_context:  request.agent_context,
     input_payload:  {},  // Sprint 11L: no real input data; Sprint 11M will populate
+    active_features: request.active_features,  // Sprint 11M: forwarded to readiness guard
   };
 }
 
@@ -258,6 +259,7 @@ export async function runPlanLiveBridge(
           initialize_succeeded: false,
           error_message:        "Step skipped — required feature not active",
           execution_timestamp:  now,
+          readiness_check:      null, // Guard not run for skipped steps
         },
         execution_state:   "completed",
         parallel_group_id,
@@ -304,6 +306,7 @@ export async function runPlanLiveBridge(
           initialize_succeeded: false,
           error_message:        dry_run_result.validation_errors.join("; ") || `Step blocked: ${dry_run_result.dry_run_status}`,
           execution_timestamp:  now,
+          readiness_check:      null, // Guard not run for structurally blocked steps
         },
         execution_state:   "failed",
         parallel_group_id,

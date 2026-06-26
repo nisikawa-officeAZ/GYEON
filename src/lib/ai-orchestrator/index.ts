@@ -131,6 +131,47 @@ export {
   validateFailureStrategy,
 } from "./runtime";
 
+// Sprint 11M: Provider Execution Readiness
+export type {
+  AIProviderExecutionCheckId,
+  AIProviderExecutionDecision,
+  AIProviderExecutionCheckResult,
+  AIProviderExecutionGuardResult,
+  AIProviderExecutionContext,
+  AIProviderExecutionRequest,
+  AIProviderExecutionResult,
+  AIProviderExecutionPolicy,
+  AIProviderExecutionReadiness,
+  AIProviderExecutionGuard,
+  AIBudgetGuardDecision,
+  AIBudgetGuardState,
+  AIProviderAdapterCapability,
+  AIProviderAdapterRequest,
+  AIProviderAdapterResponse,
+  AIProviderAdapterHealthCheck,
+  AIProviderAdapterErrorCategory,
+  AIProviderAdapterError,
+  AIProviderAdapterContract,
+} from "./provider-execution";
+export {
+  DEFAULT_PROVIDER_EXECUTION_POLICY,
+  AI_PROVIDER_EXECUTION_READINESS,
+  checkProviderExecutionReadiness,
+  PROVIDER_EXECUTION_GUARD,
+  TASK_TO_PROVIDER_CAPS,
+  CAPABILITY_GROUP_LABEL,
+  getRequiredCapsForAgent,
+  getRequiredCapsForTask,
+  resolveRequiredCaps,
+  isCapabilitySupportedByProvider,
+  getMissingCapabilities,
+  getCapabilityGroups,
+  evaluateBudgetGuard,
+  isBudgetBlocking,
+  shouldWarnAboutBudget,
+  formatRemainingBudget,
+} from "./provider-execution";
+
 // Sprint 11L: Live Runtime Bridge
 export type {
   AIExecutionBridgeState,

@@ -42,6 +42,15 @@ import {
 }                                   from "./approval-gate";
 import type { AIExecutionStep }     from "../orchestrator-types";
 import type { AIExecutionPolicy }   from "../orchestrator-types";
+import {
+  checkProviderExecutionReadiness,
+}                                   from "../provider-execution/execution-guard";
+import {
+  DEFAULT_PROVIDER_EXECUTION_POLICY,
+}                                   from "../provider-execution/execution-readiness-types";
+import {
+  resolveRequiredCaps,
+}                                   from "../provider-execution/capability-routing";
 
 // ─── Capability summary builder ───────────────────────────────────────────────
 
@@ -107,6 +116,11 @@ function computeStepState(
  * Calls initialize() only — no validate(), no execute().
  * agent_context must be pre-built by the calling server action.
  * Returns a structured AIExecutionBridgeResult — never throws.
+ *
+ * Sprint 11M addition: runs the provider execution readiness guard before
+ * returning the result. The guard evaluates 12 checks and produces a typed
+ * allow / deny / needs_configuration decision. In Sprint 11M the decision
+ * is always "deny" (run_execute is false) — this is by design.
  */
 export async function runStepBridgeLifecycle(
   ctx:    AIExecutionBridgeContext,
@@ -123,6 +137,29 @@ export async function runStepBridgeLifecycle(
   const approval_gate_status = evaluateApprovalGate(step, policy);
   const approval_required    = approval_gate_status !== "not_required";
 
+  // Sprint 11M: Run provider execution readiness guard.
+  // Resolves required provider capabilities for this agent + task, then runs
+  // the 12-check guard. Decision will be "deny" in Sprint 11M (run_execute: false).
+  const required_caps   = resolveRequiredCaps(step.agent_id, step.task_type);
+  const readiness_check = checkProviderExecutionReadiness(
+    {
+      context: {
+        dealer_id:        ctx.dealer_id,
+        agent_id:         step.agent_id,
+        task_type:        step.task_type,
+        required_caps,
+        active_features:  ctx.active_features,
+        gateway_status:   ctx.agent_context.gateway.status,
+        gateway_provider: ctx.agent_context.gateway.provider,
+        usage_policy:     ctx.agent_context.policy,
+        run_execute:      false, // Sprint 11M: no inference — locked false until Sprint 11N+
+      },
+      estimated_cost_usd: 0.0, // Sprint 11M: cost estimation deferred
+    },
+    DEFAULT_PROVIDER_EXECUTION_POLICY,
+    now,
+  );
+
   // Look up agent instance
   const agent = getAgentInstance(step.agent_id);
   if (!agent) {
@@ -137,6 +174,7 @@ export async function runStepBridgeLifecycle(
       initialize_succeeded: false,
       error_message:        `エージェント "${step.agent_id}" はレジストリに登録されていません`,
       execution_timestamp:  now,
+      readiness_check,
     };
   }
 
@@ -168,5 +206,6 @@ export async function runStepBridgeLifecycle(
     initialize_succeeded,
     error_message,
     execution_timestamp:  now,
+    readiness_check,
   };
 }
