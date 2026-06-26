@@ -189,3 +189,18 @@ export type {
   ReputationComplianceGuardResult,
   WorkCompletedRuntimePlan,
 } from "./runtime/index";
+
+// ─── Sprint 11F: Review LINE Message Builder ──────────────────────────────────
+// Import from "@/lib/reputation/line" for full LINE message builder API.
+// Selective re-exports for top-level convenience.
+
+export type {
+  ReviewLinkDestination,
+  ReviewLinkReadinessStatus,
+  ReviewLinkReadinessItem,
+  ReviewLinkReadinessResult,
+  ReviewLineMessageContext,
+  ReviewLineMessagePayload,
+  ReviewLineMessageValidationResult,
+  ReviewLineMessagePreview,
+} from "./line/index";

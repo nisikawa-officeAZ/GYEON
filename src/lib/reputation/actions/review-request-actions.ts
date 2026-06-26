@@ -2,7 +2,8 @@
 
 // DealerOS — Reputation Platform: Review Request Approval Server Actions
 //
-// Sprint 11E Phase D: server actions for the dealer-facing review request approval UI.
+// Sprint 11E Phase D — initial implementation.
+// Sprint 11F Phase E — added LINE message preview (buildReviewLineMessagePreview).
 //
 // Actions:
 //   prepareReviewRequestApproval()   — builds the dry-run approval data for the UI
@@ -22,7 +23,7 @@
 //   - No fake persistence — state is dry-run only
 //
 // Persistence note:
-//   ReviewRequest objects are NOT persisted in Sprint 11E.
+//   ReviewRequest objects are NOT persisted in Sprint 11E/11F.
 //   Persistence requires the `review_requests` DB table migration (CTO approval pending).
 //   All approve/reject/skip actions return dry_run: true to document this constraint.
 
@@ -33,6 +34,7 @@ import {
   workOrderCustomerName,
   workOrderVehicleLabel,
 }                                            from "@/lib/work-orders/work-order-types";
+import { getDealerSettings }                 from "@/lib/line/get-line-settings";
 import { checkReputationGatewayReadiness }   from "@/lib/reputation/runtime/gateway-readiness";
 import {
   checkReputationCompliance,
@@ -46,6 +48,13 @@ import type {
   ReputationReadinessCheck,
   ReputationComplianceCheckItem,
 }                                            from "@/lib/reputation/runtime/runtime-types";
+import {
+  buildReviewLineMessagePreview,
+}                                            from "@/lib/reputation/line/review-line-message-builder";
+import type {
+  ReviewLineMessageContext,
+  ReviewLineMessagePreview,
+}                                            from "@/lib/reputation/line/review-line-types";
 import { randomUUID }                        from "crypto";
 
 // ─── Result types ─────────────────────────────────────────────────────────────
@@ -71,7 +80,9 @@ export type ReviewRequestApprovalStatus =
 /**
  * ReviewRequestApprovalData — the full dry-run approval payload returned to the UI.
  *
- * draft_message: null — AI message generation is Phase 11F+.
+ * message_preview:      Sprint 11F — deterministic LINE message preview.
+ *                       null if feature_locked, no_customer, or dealer data unavailable.
+ * draft_message:        null — AI-generated message is Phase 11G+ (AI provider adapter).
  * persisted_request_id: null — requires review_requests DB table (pending migration).
  */
 export interface ReviewRequestApprovalData {
@@ -84,13 +95,19 @@ export interface ReviewRequestApprovalData {
   compliance_checklist: ReputationComplianceCheckItem[];
   blocking_reasons:     string[];
   /**
-   * Always null in Sprint 11E.
-   * AI-generated review request messages require Phase 11F+ (AI provider adapter).
+   * Sprint 11F: deterministic LINE message preview from ReviewLineMessageBuilder.
+   * Includes message_text, link_readiness, compliance validation, and character count.
+   * dispatch_payload is always null — real LINE dispatch requires Phase 11G+.
+   */
+  message_preview:      ReviewLineMessagePreview | null;
+  /**
+   * Always null — AI-generated review suggestion requires Phase 11G+ (AI provider adapter).
+   * Distinct from message_preview: this field will hold the AI-crafted review text,
+   * not the LINE dispatch message.
    */
   draft_message:        null;
   /**
-   * Always null in Sprint 11E.
-   * Persistence requires the review_requests table (CTO approval pending).
+   * Always null — persistence requires review_requests table (CTO approval pending).
    */
   persisted_request_id: null;
   prepared_at:          string;  // ISO 8601
@@ -134,9 +151,10 @@ function buildPlaceholderDestination(dealerId: string): ReviewDestination {
  *   2. Feature gate: ai_reputation
  *   3. Work order ownership validation (dealer_id scoped)
  *   4. Customer existence check
- *   5. AI Gateway 8-check readiness (Phase B)
+ *   5. AI Gateway readiness + dealer settings (parallel)
  *   6. Compliance guard (Phase D)
  *   7. Review request dry-run (Phase C)
+ *   8. LINE message preview (Phase E / Sprint 11F)
  *
  * Returns ReviewRequestApprovalData — always serializable, no class instances.
  * Never sends LINE. Never calls AI provider. Never persists data.
@@ -158,6 +176,7 @@ export async function prepareReviewRequestApproval(
       missing_settings:     ["ログインが必要です"],
       compliance_checklist: [],
       blocking_reasons:     ["認証エラー"],
+      message_preview:      null,
       draft_message:        null,
       persisted_request_id: null,
       prepared_at:          now,
@@ -176,6 +195,7 @@ export async function prepareReviewRequestApproval(
       missing_settings:     ["Pro+プランへのアップグレードが必要です"],
       compliance_checklist: [],
       blocking_reasons:     ["ai_reputation feature requires Pro+ plan"],
+      message_preview:      null,
       draft_message:        null,
       persisted_request_id: null,
       prepared_at:          now,
@@ -194,6 +214,7 @@ export async function prepareReviewRequestApproval(
       missing_settings:     ["作業指示書が見つかりません"],
       compliance_checklist: [],
       blocking_reasons:     ["Work order not found or not authorized"],
+      message_preview:      null,
       draft_message:        null,
       persisted_request_id: null,
       prepared_at:          now,
@@ -210,18 +231,22 @@ export async function prepareReviewRequestApproval(
       missing_settings:     ["顧客情報を作業指示書に紐付けてください"],
       compliance_checklist: [],
       blocking_reasons:     ["Work order has no linked customer"],
+      message_preview:      null,
       draft_message:        null,
       persisted_request_id: null,
       prepared_at:          now,
     };
   }
 
-  const customerName  = workOrderCustomerName(wo.customers);
-  const vehicleLabel  = workOrderVehicleLabel(wo.vehicles);
+  const customerName   = workOrderCustomerName(wo.customers);
+  const vehicleLabel   = workOrderVehicleLabel(wo.vehicles);
   const serviceSummary = wo.service_summary;
 
-  // ── 5. AI Gateway readiness (Phase B) ────────────────────────────────────────
-  const gatewayReadiness = await checkReputationGatewayReadiness();
+  // ── 5. AI Gateway readiness + dealer settings (parallel) ─────────────────────
+  const [gatewayReadiness, dealerSettings] = await Promise.all([
+    checkReputationGatewayReadiness(),
+    getDealerSettings(),
+  ]);
 
   // ── 6. Compliance guard (Phase D) ────────────────────────────────────────────
   const complianceResult = checkReputationCompliance(
@@ -244,21 +269,43 @@ export async function prepareReviewRequestApproval(
       language_preference:    "ja",
       reputation_policy:      DEFAULT_REPUTATION_POLICY,
       gateway_ready:          gatewayReadiness.overall === "ready",
-      customer_eligible:      true,  // No DB to check 30-day window in Sprint 11E
+      customer_eligible:      true,  // No DB to check 30-day window in Sprint 11F
       destination_configured: false, // No reputation settings DB table yet
     },
     actionId,
     now,
   );
 
+  // ── 8. LINE message preview (Sprint 11F Phase E) ──────────────────────────────
+  //
+  // Build the deterministic LINE review request message for the approval UI.
+  // google_review_url and instagram_url are null — no reputation settings table yet.
+  // website_url comes from dealer_settings.business_website.
+  // No LINE API calls. No AI inference.
+  const messageContext: ReviewLineMessageContext = {
+    dealer_id:           dealer.dealer_id,
+    dealer_name:         dealerSettings?.business_name ?? null,
+    customer_last_name:  wo.customers?.last_name ?? null,
+    customer_first_name: wo.customers?.first_name ?? null,
+    vehicle_label:       vehicleLabel !== "—" ? vehicleLabel : null,
+    service_summary:     serviceSummary,
+    google_review_url:   null,   // Requires reputation_settings table (CTO approval pending)
+    website_url:         dealerSettings?.business_website ?? null,
+    instagram_url:       null,   // Requires reputation_settings table (CTO approval pending)
+    facebook_url:        null,   // Requires reputation_settings table (CTO approval pending)
+    language_preference: "ja",
+  };
+
+  const messagePreview = buildReviewLineMessagePreview(messageContext, now);
+
   // ── Derive overall status ─────────────────────────────────────────────────────
-  const hasGatewayBlock = gatewayReadiness.blocking_count > 0;
+  const hasGatewayBlock    = gatewayReadiness.blocking_count > 0;
   const hasComplianceBlock = !complianceResult.passed;
 
   const status: ReviewRequestApprovalStatus =
-    hasComplianceBlock ? "compliance_blocked" :
-    hasGatewayBlock    ? "gateway_locked"     :
-    dryRun.all_checks_passed ? "ready" : "not_ready";
+    hasComplianceBlock        ? "compliance_blocked" :
+    hasGatewayBlock           ? "gateway_locked"     :
+    dryRun.all_checks_passed  ? "ready"              : "not_ready";
 
   // Merge readiness checks: gateway checks first, then workflow checks
   const workflowChecks = dryRun.readiness_checks.filter(
@@ -275,15 +322,26 @@ export async function prepareReviewRequestApproval(
     ...dryRun.readiness_checks.filter((c) => c.status === "failed" && c.blocking).map((c) => c.message),
   ];
 
+  // Merge missing settings: workflow + link readiness missing destinations
+  const linkMissingSettings = messagePreview.link_readiness.items
+    .filter((i) => i.status !== "ready")
+    .map((i) => `${i.label}: URLが未設定（将来の設定画面で追加可能）`);
+
+  const allMissingSettings = [
+    ...dryRun.required_missing_settings,
+    ...linkMissingSettings,
+  ];
+
   return {
     status,
     customer_name:        customerName,
     vehicle_label:        vehicleLabel,
     service_summary:      serviceSummary,
     readiness_checks:     allChecks,
-    missing_settings:     dryRun.required_missing_settings,
+    missing_settings:     allMissingSettings,
     compliance_checklist: [...REPUTATION_COMPLIANCE_CHECKLIST] as ReputationComplianceCheckItem[],
     blocking_reasons:     blockingReasons,
+    message_preview:      messagePreview,
     draft_message:        null,
     persisted_request_id: null,
     prepared_at:          now,

@@ -649,22 +649,112 @@ WorkOrderDetail (completed + customer exists)
 - `dry_run: true` on all action results — no LINE, no AI, no persistence
 - No API keys exposed to client
 
+### Deferred to Future Phases (Sprint 11E)
+
+| Feature | Phase |
+|---------|-------|
+| LINE message builder | **Sprint 11F — DONE** |
+| LINE message sending | Phase 11G+ |
+| AI review draft generation | Phase 11G+ (requires AI provider adapter) |
+| ReviewRequest DB persistence | Requires `review_requests` migration (CTO approval) |
+| Real destination configuration | Requires reputation settings DB table |
+
+### Next Steps (Sprint 11F) — Now Complete
+
+---
+
+## Sprint 11F — Review LINE Message Builder
+
+| Field | Value |
+|-------|-------|
+| **Commit** | `Sprint 11F: add review LINE message builder` |
+| **Status** | Complete |
+
+Sprint 11F implements the deterministic LINE review request message builder. The full message is built from dealer settings and work order data — no AI inference, no LINE API calls. The dealer sees a message preview in the approval UI and can copy it.
+
+### Architecture
+
+```
+prepareReviewRequestApproval(workOrderId)       [server action — updated Sprint 11F]
+  ├── getDealerSettings()                       — fetches business_name, business_website
+  │   (parallel with checkReputationGatewayReadiness)
+  ├── buildReviewLineMessagePreview(ctx, now)   — pure, deterministic
+  │   ├── buildReviewLineMessage(ctx, now)      — assembles Japanese message text
+  │   ├── validateReviewLineMessage(payload)    — checks compliance rules
+  │   └── checkReviewLinkReadiness(ctx)         — per-destination URL readiness
+  └── returns ReviewRequestApprovalData with message_preview populated
+
+ReviewRequestApprovalSection (UI — updated Sprint 11F)
+  ├── Renders ReviewLineMessagePreview.payload.message_text in <pre> block
+  ├── Shows character count
+  ├── Copy to clipboard button (navigator.clipboard)
+  ├── Per-destination link readiness checklist
+  └── "LINE送信は未実装（Phase 11G+）" notice
+```
+
+### Phase Completion
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| A | LINE message types, builder, validator classes | Complete |
+| B | Message content rules — volunteer tone, no incentive, no pressure | Complete |
+| C | Link readiness: Google/Instagram/website/Facebook destination status | Complete |
+| D | UI: message preview, link readiness display, copy button, send notice | Complete |
+| E | Server action: getDealerSettings, buildReviewLineMessagePreview integration | Complete |
+| F | Documentation: REPUTATION_PLATFORM_SPEC §14, roadmap, spec index v3.3 | Complete |
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/lib/reputation/line/review-line-types.ts` | Pure types: context, payload, validation, link readiness, preview |
+| `src/lib/reputation/line/review-line-message-builder.ts` | Deterministic builder + compliance validator + preview assembler |
+| `src/lib/reputation/line/review-link-readiness.ts` | Per-destination URL readiness checker |
+| `src/lib/reputation/line/index.ts` | Public API exports |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/lib/reputation/actions/review-request-actions.ts` | Added message_preview to ReviewRequestApprovalData; getDealerSettings parallel fetch |
+| `src/components/reputation/ReviewRequestApprovalSection.tsx` | Message preview, link readiness, copy button |
+| `src/lib/reputation/index.ts` | Re-exports Sprint 11F line types |
+| `docs/master_specification/REPUTATION_PLATFORM_SPEC.md` | Added §14 Sprint 11F |
+| `docs/master_specification/AI_REPUTATION_AGENT_ROADMAP.md` | Added Sprint 11F section |
+| `docs/master_specification/00_MASTER_SPECIFICATION_INDEX.md` | Bumped to v3.3 |
+
+### Message Compliance Rules
+
+The builder always generates a message that passes `validateReviewLineMessage()`:
+- Voluntary tone: "もしよろしければ" — never "ぜひ高評価"
+- Voluntary footer: "投稿は任意です。お気軽にどうぞ。" — always present
+- No incentive patterns: no クーポン, 特典, ギフト, 口コミで特典
+- No pressure patterns: no ぜひ高評価, 必ず口コミ, 高評価をお願い
+- No positive-only patterns: no 良い口コミのみ, ポジティブな口コミ
+
+### LINE Dispatch Status
+
+No LINE messages sent in Sprint 11F.
+`ReviewLineMessagePayload.is_ready_to_send = false` — literal type.
+`ReviewLineMessagePreview.dispatch_payload = null` — literal type.
+Real dispatch deferred to Phase 11G+.
+
 ### Deferred to Future Phases
 
 | Feature | Phase |
 |---------|-------|
-| LINE message sending | Phase 11F+ |
-| AI review draft generation | Phase 11F+ (requires AI provider adapter) |
+| LINE message sending | Phase 11G+ |
+| AI review draft generation | Phase 11G+ (AI provider adapter) |
 | ReviewRequest DB persistence | Requires `review_requests` migration (CTO approval) |
-| Real destination configuration | Requires reputation settings DB table |
+| Google/Instagram/Facebook URL configuration | Requires reputation_settings table |
 
-### Next Steps (Sprint 11F+)
+### Next Steps (Sprint 11G+)
 
 1. Implement AI provider adapter — `generateReviewRequestMessage()` via AI Gateway
-2. Replace `draft_message: null` with real AI-generated draft in `ReviewRequestApprovalData`
-3. Wire `line_dispatch_payload` into real LINE dispatch (post-dealer-approval)
-4. Implement `review_requests` table (CTO approval) — enable real persistence
-5. Implement ReviewSignal ingestion from Google Business Profile webhook
+2. Populate `draft_message` field with AI-generated review suggestion text
+3. Implement real LINE dispatch — wire `line_dispatch_payload` after dealer approval
+4. Implement `review_requests` DB table (CTO approval) — persist approval state
+5. Implement reputation settings page — let dealer configure Google review URL, Instagram, Facebook
 
 ---
 

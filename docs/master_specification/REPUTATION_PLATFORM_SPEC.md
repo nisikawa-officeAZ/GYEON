@@ -507,14 +507,106 @@ The UI section in `WorkOrderDetail` only renders when:
 - `wo.status === "completed"`
 - `wo.customer_id !== null`
 
+### Deferred to Future Phases (Sprint 11E)
+
+| Feature | Phase |
+|---------|-------|
+| LINE message builder and preview | **Sprint 11F — DONE** |
+| LINE message sending | Phase 11G+ |
+| AI review draft generation | Phase 11G+ |
+| ReviewRequest DB persistence | Requires `review_requests` migration (CTO approval) |
+| Real-time destination configuration | Requires reputation settings DB table |
+
+---
+
+## 14. Sprint 11F — Review LINE Message Builder
+
+Sprint 11F implements the deterministic LINE review request message builder and integrates it into the dealer approval UI.
+
+### New Module: `src/lib/reputation/line/`
+
+| File | Purpose |
+|------|---------|
+| `review-line-types.ts` | All types: context, payload, validation, link readiness, preview |
+| `review-line-message-builder.ts` | Deterministic builder + compliance validator + preview assembler |
+| `review-link-readiness.ts` | Per-destination link readiness checker |
+| `index.ts` | Public API exports |
+
+### Message Builder Rules (Phase B)
+
+The builder (`buildReviewLineMessage`) always produces a message that:
+- Greets the customer by name (last name + "様") or "お客様" if unavailable
+- Thanks the customer using "この度は...ご利用いただき、誠にありがとうございました。"
+- Includes dealer name when `dealer_settings.business_name` is available
+- Includes service summary when ≤ 60 characters (privacy-safe cutoff)
+- Requests feedback voluntarily using "もしよろしければ"
+- Ends with "投稿は任意です。お気軽にどうぞ。"
+- Includes configured review URLs (Google, website, Instagram, Facebook)
+
+The builder never generates:
+- Incentive language (クーポン, 特典, ギフト, 口コミで特典)
+- Pressure language (ぜひ高評価, 必ず口コミ, 高評価をお願い)
+- Positive-only solicitation (良い口コミのみ, ポジティブな口コミ)
+- Fake customer review text
+- AI-generated content
+
+### Compliance Validation
+
+`validateReviewLineMessage()` scans the built message for 3 categories of violations:
+1. Incentive patterns (6 patterns, all blocking)
+2. Pressure patterns (8 patterns, all blocking)
+3. Positive-only patterns (6 patterns, all blocking)
+4. Voluntary indicator check — requires one of: 任意, お気軽に, よろしければ, もしよろしければ
+
+Messages built by the builder always pass validation. The validator is a future guard against hand-edited drafts (Phase 11G+).
+
+### Link Readiness Validation (Phase C)
+
+`checkReviewLinkReadiness()` returns a `ReviewLinkReadinessResult` with status per destination:
+
+| Destination | Sprint 11F Status | When Ready |
+|-------------|-------------------|------------|
+| Google Business Profile | `missing_google_review_url` | reputation_settings table + dealer config |
+| Website testimonial | `ready` if `dealer_settings.business_website` set | Already available |
+| Instagram | `missing_destination` | reputation_settings table + dealer config |
+| Facebook | `missing_destination` | reputation_settings table + dealer config |
+
+### Server Action Integration (Phase E)
+
+`prepareReviewRequestApproval()` updated:
+- Fetches `getDealerSettings()` in parallel with `checkReputationGatewayReadiness()`
+- Builds `ReviewLineMessageContext` from work order + dealer settings
+- Calls `buildReviewLineMessagePreview()` — returns payload + validation + link readiness
+- Adds `message_preview: ReviewLineMessagePreview` to `ReviewRequestApprovalData`
+- Adds link readiness missing settings to `missing_settings[]`
+
+### UI Updates (Phase D)
+
+`ReviewRequestApprovalSection.tsx` updated:
+- LINE message preview section with `<pre>` formatted message text
+- Character count display
+- Copy message to clipboard button (navigator.clipboard — graceful fallback on failure)
+- Per-destination link readiness checklist
+- "LINE送信は未実装（Phase 11G+）" notice — no send button added
+- "Edit draft" button label updated to "下書き編集（Phase 11G+）"
+- Done state references updated from 11F+ to 11G+
+
+### LINE Dispatch Status
+
+No LINE messages are sent in Sprint 11F.
+`ReviewLineMessagePayload.is_ready_to_send = false` — literal type, always.
+`ReviewLineMessagePreview.dispatch_payload = null` — literal type, always.
+Real dispatch requires Phase 11G+: dealer LINE channel settings + review_requests table.
+
 ### Deferred to Future Phases
 
 | Feature | Phase |
 |---------|-------|
-| LINE message sending | Phase 11F+ |
-| AI review draft generation | Phase 11F+ |
+| LINE message sending | Phase 11G+ |
+| AI review draft generation | Phase 11G+ (AI provider adapter) |
 | ReviewRequest DB persistence | Requires `review_requests` migration (CTO approval) |
-| Real-time destination configuration | Requires reputation settings DB table |
+| Google review URL configuration | Requires reputation_settings table |
+| Instagram / Facebook URL configuration | Requires reputation_settings table |
 
 ---
 
