@@ -49,7 +49,7 @@ export const AI_AGENT_REGISTRY: AIAgentRegistryEntry[] = [
   {
     id:                   "reputation_agent",
     nameJa:               "AI評判管理エージェント",
-    descJa:               "Googleレビュー分析・返答ドラフト・評判スコア追跡・MEO/AEOフィードバックループ。",
+    descJa:               "Googleレビュー分析・返答ドラフト・評判スコア追跡・MEO/AEOフィードバックループ。ライン経由のレビューリクエスト生成。",
     capabilities:         ["review_management", "analytics_reporting", "search_optimization"],
     requiredProviderCaps: ["text_generation", "chat_completion", "function_calling", "meo_analysis"],
     requiredFeature:      "ai_reputation",
@@ -59,8 +59,8 @@ export const AI_AGENT_REGISTRY: AIAgentRegistryEntry[] = [
       "reputation_analysis",
       "keyword_extraction",
     ],
-    status:               "planned",
-    phase:                "PHASE 77–81",
+    status:               "active",
+    phase:                "PHASE 77–81 (Sprint 10E foundation)",
   },
   {
     id:                   "growth_agent",
@@ -96,8 +96,8 @@ export const AI_AGENT_REGISTRY: AIAgentRegistryEntry[] = [
       "review_writing_support",
       "review_response_drafting",
     ],
-    status:               "planned",
-    phase:                "PHASE 77–78",
+    status:               "active",
+    phase:                "PHASE 77–78 (Sprint 10E foundation)",
   },
   {
     id:                   "line_agent",

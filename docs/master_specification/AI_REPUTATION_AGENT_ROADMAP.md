@@ -364,4 +364,88 @@ Every feature implemented in this track must pass the following checklist before
 
 ---
 
+## Sprint 10E — Foundation Implementation (2026-06-26)
+
+**Status:** Foundation implemented. AI inference deferred to Phase G.
+
+This sprint establishes the complete reputation agent architecture as the first concrete AI agent in the GYEON Detailer Agent platform.
+
+### Implemented Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/ai/agents/reputation/types.ts` | All reputation types: platforms, review model, analysis model, dashboard, marketing feed |
+| `src/lib/ai/agents/reputation/workflow.ts` | Workflow stage model, transitions, compliance constants, throttle rules, `computeTrend()` |
+| `src/lib/ai/agents/reputation/reputation-agent.ts` | `ReputationAgent` class implementing `AIAgent<ReputationAgentRequest, ReputationAgentResponse>` |
+| `src/lib/ai/agents/reputation/run-reputation-task.ts` | Server action — execution policy → context → lifecycle |
+| `src/lib/ai/agents/reputation/index.ts` | Public API re-exports |
+
+### Agent Registry Update
+
+`reputation_agent` and `review_agent` status changed from `"planned"` → `"active"` in `src/lib/ai/agents/registry.ts`.
+
+### Architecture summary
+
+```
+runReputationTask(input)          ← "use server" — never accepts dealer_id from client
+        │
+        ▼
+checkExecutionPolicy("reputation_agent")
+  ├─ ai_reputation feature gate (Pro+)
+  ├─ AI Gateway readiness
+  ├─ getCurrentDealer() auth
+  └─ usage policy (Phase G)
+        │
+        ▼
+createAgentContext("reputation_agent")
+  └─ dealer_id from getCurrentDealer() — never from input
+        │
+        ▼
+runAgentLifecycle(new ReputationAgent(), ctx, input)
+  ├─ initialize()     → loads dealer platform config (defaults in Sprint 10E)
+  ├─ validate()       → production-quality per task_type discriminated union
+  ├─ execute()        → AIAgentNotImplementedError (Phase G)
+  ├─ postProcess()    → compliance filter (Phase G)
+  └─ logAgentUsage()  → no-op (Phase G)
+```
+
+### Task types
+
+| Task type | Sprint 10E status | Phase G behavior |
+|-----------|------------------|-----------------|
+| `review_request_generation` | Validates, defers inference | AI drafts LINE message via dealer's provider |
+| `review_response_drafting` | Validates, defers inference | AI drafts GBP review response |
+| `reputation_analysis` | Validates, defers inference | AI analyzes review corpus for sentiment, keywords, SEO signals |
+
+### Compliance rules (enforced at type level)
+
+All compliance rules from §77.6 are encoded as TypeScript `true` literal types in `ReputationComplianceRules` and `REPUTATION_COMPLIANCE` — they cannot be toggled off without a type error:
+
+```typescript
+no_fake_reviews:                true;  // Can only be assigned true
+dealer_approval_required:       true;
+manual_review_response_posting: true;
+```
+
+### Future compatibility established (Phase F)
+
+| Future consumer | Interface ready |
+|----------------|----------------|
+| AI Marketing Agent | `MarketingAgentFeed` — reputation signals for MEO/AEO/LLMO/AIO/SEO |
+| AI Growth Agent | `ReputationDashboard.trend` — improving / stable / declining |
+| LINE Agent | `ReviewRequestOutput.message_text` — LINE message draft |
+| Review Analytics | `ReviewAnalysisResult` — full analysis model |
+| Monthly Report | `ReputationDashboard` — period summary |
+
+### What Phase G must add
+
+1. `DEALER_AI_KEY_SECRET` env var configured + `ai_settings` column migration applied (CTO approval)
+2. AI provider adapter calls inside `execute()` for all three task types
+3. `dealer_settings.reputation_settings` column (separate migration, CTO approval) for platform URLs
+4. `dealer_ai_usage_log` table (separate migration) for usage tracking
+5. `postProcess()` compliance filter implementation
+6. Network-level connection test (`test_type: "live_call"`)
+
+---
+
 *GYEON Detailer Agent | AI Reputation Agent Roadmap | Office AZ | 2026-06-26*

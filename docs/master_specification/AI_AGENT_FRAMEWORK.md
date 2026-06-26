@@ -36,10 +36,17 @@ src/lib/ai/
 │
 └── agents/
     ├── types.ts                — AIAgent interface, context, request/response, errors
-    ├── registry.ts             — AI_AGENT_REGISTRY (7 agents)
+    ├── registry.ts             — AI_AGENT_REGISTRY (7 agents; 2 active in Sprint 10E)
     ├── execution-policy.ts     — checkExecutionPolicy(), createAgentContext()
     ├── lifecycle.ts            — runAgentLifecycle() orchestrator
-    └── index.ts                — Public API re-exports
+    ├── index.ts                — Public API re-exports
+    │
+    └── reputation/             — Sprint 10E: first concrete agent implementation
+        ├── types.ts            — All reputation types (platforms, review model, analysis, dashboard, marketing feed)
+        ├── workflow.ts         — Workflow stages, transitions, compliance rules, computeTrend()
+        ├── reputation-agent.ts — ReputationAgent class (implements AIAgent; inference deferred to Phase G)
+        ├── run-reputation-task.ts — "use server" server action
+        └── index.ts            — Public API re-exports
 ```
 
 ---
@@ -159,14 +166,14 @@ Higher-level responsibilities each GYEON agent handles:
 | Agent ID | Plan Gate | Status | Phase |
 |---------|-----------|--------|-------|
 | `marketing_agent` | `ai_marketing` (Pro+) | Planned | PHASE 71–75 |
-| `reputation_agent` | `ai_reputation` (Pro+) | Planned | PHASE 77–81 |
+| `reputation_agent` | `ai_reputation` (Pro+) | **Active** (Sprint 10E) | PHASE 77–81 |
 | `growth_agent` | `ai_growth` (Pro+) | Planned | PHASE 76 |
 | `ocr_agent` | `ai_gateway` (Pro+) | Planned | Phase G拡張 |
-| `review_agent` | `ai_reputation` (Pro+) | Planned | PHASE 77–78 |
+| `review_agent` | `ai_reputation` (Pro+) | **Active** (Sprint 10E) | PHASE 77–78 |
 | `line_agent` | `ai_marketing` (Pro+) | Planned | PHASE 69–70 LINE拡張 |
 | `seo_agent` | `ai_marketing` (Pro+) | Planned | PHASE 71–72 |
 
-All 7 agents are "planned" in Sprint 10D. Status changes to "active" when the first concrete implementation is shipped.
+Sprint 10E promoted `reputation_agent` and `review_agent` to "active". See `agents/reputation/` for the foundation implementation. Remaining 5 agents remain "planned".
 
 ---
 
@@ -270,4 +277,4 @@ const result = await runAgentLifecycle(new ReviewAgent(), context, input);
 
 ---
 
-*GYEON Detailer Agent | Sprint 10D | Office AZ | 2026-06-26*
+*GYEON Detailer Agent | Sprint 10D–10E | Office AZ | 2026-06-26*
