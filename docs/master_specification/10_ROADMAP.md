@@ -4,7 +4,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Active — Living Document (updated as ODs resolve and phases complete) |
-| **Last Updated** | 2026-06-26 (AI Gateway + AI Platform restructure) |
+| **Last Updated** | 2026-06-26 (Phase H — Enterprise Distribution Platform added) |
 | **Canonical Source** | `ROADMAP_V2.md`, `ROADMAP_AFTER_v1.md`, audit findings |
 | **Related Documents** | `09_PHASE_STATUS.md`, `11_CANONICAL_RULES.md`, `OPERATOR_DECISIONS.md`, `AI_MARKETING_AGENT_ROADMAP.md` |
 
@@ -221,9 +221,69 @@ Transform completed jobs into marketing content with dealer approval.
 
 ---
 
+## Phase H — Enterprise Distribution Platform (Future — Independent Product)
+
+> **Status**: Planning document only. No implementation. No migrations. No code.
+> **Full specification**: `ENTERPRISE_DISTRIBUTION_PLATFORM_SPEC.md`
+> **Prerequisite**: GYEON Detailer Agent v1.0 stable + Office AZ Group formal project approval.
+
+The Enterprise Distribution Platform (EDP) is a **separate product** built on the same technology stack. It digitizes wholesale B2B distribution operations for Office AZ Group companies, with Attraction Co., Ltd. as the first deployment target.
+
+### Supply chain position
+
+```
+Office AZ Group (GYEON official Japan importer)
+  → Attraction Co., Ltd. (wholesale distribution)
+     → Wholesalers / Retail Stores / Dealers
+        → End Customers  ← (GYEON Detailer Agent serves this layer)
+```
+
+### EDP core modules
+
+| Module | Description |
+|---|---|
+| B2B Portal | Company login, company-specific pricing, order placement, real-time inventory, shipment tracking, invoice / statement download |
+| Inventory Management | On-hand, reserved, incoming, backorder tracking; warehouse staff pick/ship workflow |
+| Ordering Workflow | Buyer order → credit check → pick → ship → tracking → notification |
+| Delivery Documents | Per-company configuration: retail store gets delivery note with prices; wholesaler gets delivery note without prices |
+| Monthly Billing | Configurable closing day / payment day per company; auto statement + invoice generation; PDF email delivery |
+| Sales Dashboard | Sales by customer, by salesperson, outstanding invoices, gross profit, monthly trend, top customers |
+
+### Future AI modules
+
+| Module | Description |
+|---|---|
+| AI Demand Forecasting | Predict demand per SKU per buyer for 30 / 60 / 90 days |
+| AI Inventory Forecasting | Alert when stock will deplete: "Inventory will be depleted in 12 days" |
+| AI Purchasing Recommendation | Draft purchase order quantities for GYEON HQ based on demand forecast |
+| AI Sales Recommendation | Cross-sell and upsell opportunity alerts for Sales Staff |
+| AI Customer Inactivity Alerts | "Customer has not ordered for 60 days" — proactive outreach triggers |
+
+### User roles
+
+Super Admin · Office AZ Admin · Attraction Admin · Warehouse Staff · Sales Staff · Wholesaler · Retail Store · Accounting
+
+### Architecture
+
+- **Separate deployment**: independent Next.js app, separate Supabase project, separate domain, separate Vercel deployment
+- **Shared stack**: Next.js 15, TypeScript, Supabase, TailwindCSS v4, Vercel — same patterns as GYEON Detailer Agent
+- **No shared database**: EDP and Dealer Agent have separate Supabase projects with no cross-database dependencies
+
+### Implementation gates (all required before EDP work begins)
+
+1. GYEON Detailer Agent v1.0 stable and deployed
+2. Office AZ Group formal project approval (separate budget and timeline)
+3. Attraction Co., Ltd. requirements confirmed (pricing model, payment terms, document formats)
+4. Separate technical infrastructure configured (Supabase project, domain, CI/CD pipeline)
+5. Data migration plan for existing customer accounts and historical order data
+
+**See**: `ENTERPRISE_DISTRIBUTION_PLATFORM_SPEC.md` for full specification, open questions (EDP-OD-01 through EDP-OD-10), and future expansion planning.
+
+---
+
 ## Sequencing Summary
 
-**Prerequisites → A (desktop UI) → B (activate integrations) → C (spec/data reconciliation) → D (hardening) → E (documented V2 scope) → G (AI Gateway architecture — prerequisite) → F (AI Platform: F1 Marketing, F2 Growth, F3 Reputation — future).**
+**Prerequisites → A (desktop UI) → B (activate integrations) → C (spec/data reconciliation) → D (hardening) → E (documented V2 scope) → G (AI Gateway architecture — prerequisite) → F (AI Platform: F1 Marketing, F2 Growth, F3 Reputation — future) → H (Enterprise Distribution Platform — separate product, independent timeline).**
 
 - Phase A can begin immediately (no operator decisions block desktop UI work).
 - Phase B requires OD-1 (migration 070 status) + env var provisioning.
@@ -233,6 +293,7 @@ Transform completed jobs into marketing content with dealer approval.
 - Phase E items each require their own specification pass under SDD before implementation begins.
 - Phase G (AI Gateway) must be implemented before any Phase F feature.
 - Phase F (AI Platform) requires Phase G complete + core platform stable + individual SDD pass per phase. See `AI_GATEWAY_SPEC.md`, `AI_MARKETING_AGENT_ROADMAP.md`, `AI_REPUTATION_AGENT_ROADMAP.md`.
+- Phase H (EDP) is independent of Phases A–F. It runs on a separate timeline after Detailer Agent v1.0 is stable and Office AZ Group approves the project formally.
 
 ---
 
