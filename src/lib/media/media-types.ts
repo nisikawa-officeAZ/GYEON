@@ -2,15 +2,16 @@
 //
 // Defines the media-first architecture for all customer photos and videos.
 //
-// Sprint 10I: type contract only. No schema migration in this sprint.
+// Current bridge: workOrderFileToDealerMedia() adapts the existing work_order_files
+// table to the DealerMedia interface until the target migration is applied.
 //
-// Current storage: work_order_files (WorkOrderFileDB).
-//   Already contains: file_type = 'photo' | 'document' | 'video' | 'other'.
-//   Missing: thumbnail_path, duration_seconds, width, height, captured_at,
-//            uploaded_by, media_usage, consent_status, completion_report_id,
-//            is_marketing_approved, is_ai_training_excluded.
+// Current storage:  work_order_files — photos and videos tied to a work_order_id.
+// Target storage:   media_assets table — dedicated, polymorphic, full retention/consent support.
+//   See: docs/master_specification/MEDIA_ASSETS_SCHEMA_PROPOSAL.md
+//   Requires CTO approval before applying.
 //
-// Target storage: DealerMedia (requires Phase 10J migration — CTO approval).
+// DealerMedia fields are designed to match the proposed media_assets schema exactly.
+// No TypeScript changes will be needed after the migration — only the DB adapter layer.
 //
 // Security:
 //   - dealer_id is always from getCurrentDealer() — never from client input

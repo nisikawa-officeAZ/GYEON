@@ -488,4 +488,89 @@ Dealer preference types: `DealerVideoRetentionPreference` in `media-video.ts`.
 
 ---
 
+## 12. Architecture Review — Sprint 10K
+
+### 12.1 Current File Table Inventory
+
+| Table | Purpose | Storage bucket | work_order_id required | Media use |
+|-------|---------|---------------|----------------------|-----------|
+| `work_order_files` | Photos, videos attached to work orders | `work-order-files` | **YES** (`NOT NULL`) | Active |
+| `document_files` | Generated PDFs (estimates, invoices, reports) | `documents` | No | Not media |
+| `vehicle_registration_files` | OCR input documents | `vehicle-registration-documents` | No | Not customer media |
+| `completion_reports` | Embeds `pdf_file_path` / `pdf_file_url` | `completion-reports` | Via FK | Not media |
+
+**Key finding:** All customer media (photos, videos) currently lives in `work_order_files`.
+No dedicated media table exists.
+
+### 12.2 work_order_files Current Schema
+
+```
+id, dealer_id, work_order_id (NOT NULL), file_type, phase,
+title, description, file_name, file_path, file_url,
+mime_type, file_size, sort_order, is_public,
+created_at, updated_at
+```
+
+17 columns. `work_order_id NOT NULL` is the blocking structural constraint.
+
+### 12.3 Option Comparison
+
+| Requirement | Option 1: Extend work_order_files | Option 2: Dedicated media_assets |
+|------------|----------------------------------|----------------------------------|
+| Photos from jobs | Supported | Supported |
+| Videos from jobs | Supported | Supported |
+| AI-generated videos (no work_order_id) | **CANNOT STORE** — `work_order_id NOT NULL` | Supported (`work_order_id` nullable) |
+| Thumbnails as linked records | Not possible | Self-FK via `ai_source_media_id` |
+| Consent tracking | Not supported | `consent_status` column |
+| Marketing approval | Not supported | `marketing_approved` boolean |
+| AI training exclusion | Not supported | `ai_training_excluded` boolean |
+| Retention policy | Not supported | `retention_policy`, `expires_at`, `deleted_at` |
+| Download tracking | Not supported | `download_status`, `downloaded_at` |
+| SNS publish tracking | Not supported | `publish_status`, `published_at` |
+| Polymorphic source | work_orders only | `source_table` + `source_id` |
+| Customer gallery filter | Requires join | Direct `customer_id` FK |
+| Column count after Phase 10J | 17 + 16 = **33 columns** | Clean new table |
+| TypeScript impact | `DealerMedia` already defined | Zero new TypeScript needed |
+
+### 12.4 Recommendation: media_assets (Option 2)
+
+**Decision: Dedicated `media_assets` table.**
+
+Blocking reason: `work_order_files.work_order_id NOT NULL` cannot be changed without breaking
+existing RLS policies and all existing queries. AI-generated videos from Phase 72 have no
+`work_order_id` — they cannot be stored in `work_order_files` under any extension plan.
+
+Secondary reasons:
+1. 33 columns in a "files" table is a maintenance liability.
+2. Retention, consent, and publish-tracking semantics are foreign to a source-file table.
+3. `DealerMedia` in `src/lib/media/media-types.ts` already defines the target schema — zero TypeScript rework after migration.
+
+Full schema proposal: `docs/master_specification/MEDIA_ASSETS_SCHEMA_PROPOSAL.md`
+
+### 12.5 Migration Strategy (Phase 10K)
+
+**Coexistence approach** — no big-bang migration:
+
+1. Apply `media_assets` migration (CTO approval required).
+2. New uploads go to `media_assets`.
+3. `work_order_files` remains read-only — historical records preserved.
+4. `workOrderFileToDealerMedia()` adapter continues bridging old records.
+5. Completion reports and work order views query both tables at the application layer.
+
+**Full migration** (separate approval, Post Sprint 10L):
+1. Backfill `work_order_files` rows into `media_assets` with `source_table = 'work_order_files'`.
+2. Deprecate `workOrderFileToDealerMedia()`.
+3. Archive, then drop `work_order_files`.
+
+### 12.6 Files Changed in Sprint 10K
+
+| File | Change |
+|------|--------|
+| `src/lib/media/media-types.ts` | UPDATE header comment — target table is now `media_assets` |
+| `docs/master_specification/MEDIA_ASSETS_SCHEMA_PROPOSAL.md` | NEW — full migration SQL, option comparison, migration strategy, TypeScript impact |
+| `docs/master_specification/MEDIA_ARCHITECTURE.md` | ADD §12 architecture review |
+| `docs/master_specification/00_MASTER_SPECIFICATION_INDEX.md` | v2.6 |
+
+---
+
 *GYEON Detailer Agent | Media Architecture | Office AZ | 2026-06-26*
