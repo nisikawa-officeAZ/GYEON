@@ -16,7 +16,7 @@ import { FeatureKey } from "./subscription-types";
 
 // ─── Feature key mapping ──────────────────────────────────────────────────────
 
-/** Maps PHASE58 FeatureKey names to the existing AppFeature names in plan-types. */
+/** Maps FeatureKey names to the AppFeature names in plan-types. */
 const FEATURE_KEY_MAP: Record<FeatureKey, AppFeature | null> = {
   customers:             "customers",
   vehicles:              "vehicles",
@@ -33,6 +33,7 @@ const FEATURE_KEY_MAP: Record<FeatureKey, AppFeature | null> = {
   line_integration:      "line",
   line_messages:         "line_crm",
   automatic_reminders:   "auto_notifications",
+  line_rich_menu:        "line_rich_menu",
   // Always accessible — no AppFeature equivalent
   audit_logs:            null,
   admin_dashboard:       null,

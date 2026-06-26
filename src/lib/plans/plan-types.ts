@@ -40,13 +40,22 @@ export type AppFeature =
   | "invoices"
   | "payments"
   | "maintenance"
-  // Pro Plus
+  // Pro Plus — LINE (active)
   | "line"
   | "line_crm"
   | "line_rich_menu"
   | "message_logs"
   | "notification_queue"
-  | "auto_notifications";
+  | "auto_notifications"
+  // Pro Plus — AI Platform (planned — not yet in PLAN_FEATURES; see feature-registry.ts)
+  | "ai_gateway"
+  | "ai_marketing"
+  | "ai_reputation"
+  | "ai_growth"
+  | "ai_video_generation"
+  | "ai_review_assistant"
+  | "ai_social_scheduler"
+  | "ai_marketing_analytics";
 
 /** Maps each plan to the features it includes (cumulative — higher plans include lower). */
 export const PLAN_FEATURES: Record<DealerPlan, AppFeature[]> = {
@@ -90,13 +99,18 @@ export const PLAN_FEATURES: Record<DealerPlan, AppFeature[]> = {
     "invoices",
     "payments",
     "maintenance",
-    // Pro Plus additions
+    // Pro Plus — LINE (active)
     "line",
     "line_crm",
     "line_rich_menu",
     "message_logs",
     "notification_queue",
     "auto_notifications",
+    // Pro Plus — AI Platform (future-ready; no UI yet — see feature-registry.ts)
+    "ai_gateway",
+    "ai_marketing",
+    "ai_reputation",
+    "ai_growth",
   ],
 };
 

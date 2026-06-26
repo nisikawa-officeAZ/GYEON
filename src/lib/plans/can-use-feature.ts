@@ -1,13 +1,11 @@
 "use server";
 
-import { getCurrentPlan } from "./get-current-plan";
-import { AppFeature, canUseFeature } from "./plan-types";
+// Thin delegation wrapper — preserves all existing import paths.
+// Business logic lives in src/lib/subscription/subscription.ts.
 
-/**
- * Server-side feature gate check.
- * Fetches the dealer's plan from DB and checks against the feature matrix.
- */
+import { checkFeatureAccess as _checkFeatureAccess } from "@/lib/subscription/subscription";
+import { AppFeature } from "@/lib/plans/plan-types";
+
 export async function checkFeatureAccess(feature: AppFeature): Promise<boolean> {
-  const { plan } = await getCurrentPlan();
-  return canUseFeature(plan, feature);
+  return _checkFeatureAccess(feature);
 }

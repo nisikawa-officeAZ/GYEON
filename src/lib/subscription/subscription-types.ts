@@ -31,6 +31,7 @@ export type FeatureKey =
   | "line_integration"
   | "line_messages"
   | "automatic_reminders"
+  | "line_rich_menu"
   | "audit_logs"
   | "admin_dashboard";
 
