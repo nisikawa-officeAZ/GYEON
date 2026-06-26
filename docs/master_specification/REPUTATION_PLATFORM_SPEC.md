@@ -300,6 +300,116 @@ interface WorkCompletedReputationPlan {
 
 ---
 
+## 12. Sprint 11D — Reputation Agent Runtime Layer
+
+### 12.1 Overview
+
+Sprint 11D implements the production-safe runtime layer at `src/lib/reputation/runtime/`.
+It connects the Sprint 11C domain model to the AI Agent Framework and AI Gateway,
+without executing any AI inference.
+
+### 12.2 ReputationRuntime (Phase A)
+
+`ReputationRuntime` is the main adapter class. Instantiated server-side via
+`ReputationRuntime.create()` which resolves `dealer_id` from `createAgentContext()` →
+`getCurrentDealer()`. Never constructed with a client-supplied dealer_id.
+
+```
+ReputationRuntime.create(destination, policy)
+  ↓
+ReputationExecutionContext
+  ├── agent_context   (dealer_id, plan, gateway, policy, trace_id)
+  ├── feature_access  (ai_gateway, ai_reputation)
+  └── primary_destination, reputation_policy, runtime_trace_id
+
+runtime.checkReadiness()    → ReputationReadinessCheck[] (Phase B)
+runtime.buildActionPlan()   → ReputationActionPlan (Phase C)
+runtime.execute()           → ReputationExecutionResult (Phases B+C+D)
+```
+
+### 12.3 AI Gateway Readiness (Phase B)
+
+`checkReputationGatewayReadiness()` runs 8 checks in sequence:
+
+| # | Check | Blocking | Source |
+|---|-------|---------|--------|
+| 1 | `ai_gateway_feature` | Yes | `checkFeatureAccess("ai_gateway")` |
+| 2 | `ai_reputation_feature` | Yes | `checkFeatureAccess("ai_reputation")` |
+| 3 | `provider_configured` | Yes | `checkAiGatewayReady()` |
+| 4 | `provider_enabled` | Yes | `checkAiGatewayReady()` |
+| 5 | `api_key_configured` | Yes | `checkAiGatewayReady()` |
+| 6 | `dealer_provider_policy` | Yes | `getAiSettings()` + provider non-null |
+| 7 | `usage_policy_available` | No (warning) | `getAiSettings().migration_required` |
+| 8 | `feature_capability_support` | Yes | `getAgentEntry("reputation_agent")` |
+
+### 12.4 Review Request Generation Dry-Run (Phase C)
+
+`buildReviewRequestDryRun()` is a pure synchronous function. Input must include
+pre-fetched gateway readiness, customer eligibility, and destination configuration.
+
+**Output includes:**
+- `readiness_status` — `"ready"` | `"not_ready"`
+- `required_missing_settings` — list of settings the dealer must configure
+- `action_plan` — 9 steps, prompt metadata, compliance checklist, action_id
+- `prompt_metadata` — template ID, estimated tokens, required context fields
+
+**The 9 action steps:**
+1. `1_gateway_check` — verify AI Gateway
+2. `2_destination_check` — verify review destination URL
+3. `3_customer_check` — verify 30-day customer eligibility
+4. `4_compliance_guard` — run Phase D compliance guard
+5. `5_prompt_build` — (deferred) build prompt from context
+6. `6_ai_generate` — (deferred) generate message via AI provider
+7. `7_draft_compliance` — (deferred) run `validateDraftCompliance()`
+8. `8_dealer_approval` — (deferred) present draft to dealer
+9. `9_line_dispatch` — (deferred) dispatch via LINE
+
+### 12.5 Compliance Guard (Phase D)
+
+`checkReputationCompliance()` validates the workflow context against 8 rules.
+`REPUTATION_COMPLIANCE_CHECKLIST` documents all 8 rules in machine-readable form.
+Included in every `ReputationActionPlan`.
+
+**The 8 permanent rules:**
+1. `no_fake_reviews` — never generate or simulate customer reviews
+2. `no_posting_on_behalf` — never auto-post to review platforms
+3. `no_selective_targeting` — no targeting by sentiment or rating
+4. `no_pressure_language` — no urgency, guilt, or follow-up pressure
+5. `no_incentive_offer` — no rewards in exchange for reviews
+6. `voluntary_and_authentic` — reviews must be voluntary
+7. `customer_owns_content` — customer is sole author of any review
+8. `dealer_approval_required` — explicit dealer confirmation always required
+
+### 12.6 Customer Engagement Integration (Phase E)
+
+`buildWorkCompletedRuntimePlan()` wraps the Sprint 11C engagement plan with runtime metadata:
+
+```typescript
+interface WorkCompletedRuntimePlan {
+  engagement_plan:          WorkCompletedReputationPlan;   // from Sprint 11C
+  execution_request:        ReputationExecutionRequest;    // for Phase 11E+ runtime
+  action_plan:              ReputationActionPlan | null;   // from ReputationRuntime
+  line_dispatch_payload:    FutureLineDispatchPayload;     // dry-run, no message
+  agent_execution_request:  FutureAgentExecutionRequest;  // dry-run, no inference
+  dealer_approval_required: true;
+  execution_deferred:       true;
+}
+```
+
+### 12.7 Sprint 11D Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/reputation/runtime/runtime-types.ts` | Phase A: all runtime domain types (pure) |
+| `src/lib/reputation/runtime/gateway-readiness.ts` | Phase B: 8-check AI Gateway validator (server) |
+| `src/lib/reputation/runtime/review-request-dryrun.ts` | Phase C: review request dry-run builder (pure) |
+| `src/lib/reputation/runtime/compliance-guard.ts` | Phase D: workflow compliance guard (pure) |
+| `src/lib/reputation/runtime/reputation-runtime.ts` | Phase A: ReputationRuntime main adapter (server) |
+| `src/lib/reputation/runtime/engagement-runtime.ts` | Phase E: CE integration + WorkCompletedRuntimePlan |
+| `src/lib/reputation/runtime/index.ts` | Public API exports for the runtime submodule |
+
+---
+
 ## 9. Files Created (Sprint 11C)
 
 | File | Action | Purpose |

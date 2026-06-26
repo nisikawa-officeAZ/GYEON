@@ -173,3 +173,19 @@ export {
   summarizePlan,
   isPlanReadyForApproval,
 } from "./reputation-engagement";
+
+// ─── Sprint 11D: Reputation Agent Runtime ────────────────────────────────────
+// Import from "@/lib/reputation/runtime" for full runtime API.
+// Selective re-exports from runtime for top-level convenience.
+
+export type {
+  ReputationExecutionContext,
+  ReputationExecutionRequest,
+  ReputationExecutionState,
+  ReputationExecutionResult,
+  ReputationReadinessCheck,
+  ReputationActionPlan,
+  ReputationGatewayReadiness,
+  ReputationComplianceGuardResult,
+  WorkCompletedRuntimePlan,
+} from "./runtime/index";

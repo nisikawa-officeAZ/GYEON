@@ -1,0 +1,285 @@
+"use server";
+
+// DealerOS — Reputation Agent Runtime: Main Adapter (Phase A)
+//
+// Sprint 11D Phase A: production-safe runtime adapter for the Reputation Agent.
+//
+// ReputationRuntime orchestrates:
+//   1. Gateway readiness checks (Phase B)
+//   2. Action plan construction (Phase C)
+//   3. Compliance guard (Phase D)
+//   4. Full dry-run execution result
+//
+// Security:
+//   dealer_id is always resolved server-side via createAgentContext() →
+//   getCurrentDealer(). It is never accepted as external input.
+//   No AI inference is triggered.
+//   No LINE messages are sent.
+//   No external API calls are made.
+//
+// Usage (server action):
+//   const runtime = await ReputationRuntime.create(primaryDestination, policy);
+//   if (!runtime) return; // not authenticated
+//   const result = await runtime.execute(request, now);
+
+import { createAgentContext }              from "@/lib/ai/agents/execution-policy";
+import { checkFeatureAccess }              from "@/lib/plans/can-use-feature";
+import { checkReputationGatewayReadiness } from "./gateway-readiness";
+import {
+  checkReputationCompliance,
+  buildCleanComplianceContext,
+}                                          from "./compliance-guard";
+import { buildReviewRequestDryRun }        from "./review-request-dryrun";
+import { DEFAULT_REPUTATION_POLICY }       from "@/lib/reputation/reputation-profile";
+import type { ReviewDestination }          from "@/lib/reputation/reputation-types";
+import type { ReputationPolicy }           from "@/lib/reputation/reputation-profile";
+import type {
+  ReputationExecutionContext,
+  ReputationExecutionRequest,
+  ReputationExecutionResult,
+  ReputationReadinessCheck,
+  ReputationActionPlan,
+} from "./runtime-types";
+import { randomUUID } from "crypto";
+
+// ─── ReputationRuntime ────────────────────────────────────────────────────────
+
+/**
+ * ReputationRuntime — production-safe runtime adapter for the Reputation Agent.
+ *
+ * Validates readiness and produces a dry-run plan without executing AI inference.
+ * Instantiated via `ReputationRuntime.create()` — never constructed directly.
+ *
+ * All methods are safe to call multiple times; none mutate external state.
+ */
+export class ReputationRuntime {
+  /** Always from getCurrentDealer() via execution context. */
+  readonly dealer_id: string;
+
+  private constructor(
+    private readonly ctx: ReputationExecutionContext,
+  ) {
+    this.dealer_id = ctx.dealer_id;
+  }
+
+  // ─── Factory ──────────────────────────────────────────────────────────────
+
+  /**
+   * Create a ReputationRuntime bound to the current dealer session.
+   *
+   * Returns null if the dealer is not authenticated or agent context fails.
+   * Fetches feature access and agent context in parallel.
+   *
+   * @param primaryDestination  Pre-loaded from dealer reputation settings (or null)
+   * @param reputationPolicy    Pre-loaded policy (defaults to DEFAULT_REPUTATION_POLICY)
+   */
+  static async create(
+    primaryDestination: ReviewDestination | null   = null,
+    reputationPolicy:   ReputationPolicy           = DEFAULT_REPUTATION_POLICY,
+  ): Promise<ReputationRuntime | null> {
+    const [agentCtx, hasGateway, hasReputation] = await Promise.all([
+      createAgentContext("reputation_agent"),
+      checkFeatureAccess("ai_gateway"),
+      checkFeatureAccess("ai_reputation"),
+    ]);
+
+    if (!agentCtx) return null;
+
+    const ctx: ReputationExecutionContext = {
+      agent_context:                agentCtx,
+      dealer_id:                    agentCtx.dealer_id,
+      feature_access: {
+        ai_gateway:    hasGateway,
+        ai_reputation: hasReputation,
+      },
+      reputation_profile_available: primaryDestination !== null,
+      primary_destination:          primaryDestination,
+      reputation_policy:            reputationPolicy,
+      runtime_trace_id:             randomUUID(),
+      prepared_at:                  new Date().toISOString(),
+    };
+
+    return new ReputationRuntime(ctx);
+  }
+
+  // ─── Context access ───────────────────────────────────────────────────────
+
+  /** Returns the full execution context (read-only). */
+  getContext(): Readonly<ReputationExecutionContext> {
+    return this.ctx;
+  }
+
+  // ─── Readiness ────────────────────────────────────────────────────────────
+
+  /**
+   * checkReadiness — runs all 8 Phase B gateway checks.
+   *
+   * Returns an array of ReputationReadinessCheck results.
+   * Does not trigger AI execution.
+   */
+  async checkReadiness(): Promise<ReputationReadinessCheck[]> {
+    const gatewayResult = await checkReputationGatewayReadiness();
+    return gatewayResult.checks;
+  }
+
+  // ─── Action plan construction ──────────────────────────────────────────────
+
+  /**
+   * buildActionPlan — constructs a ReputationActionPlan for the given request.
+   *
+   * Pure construction — no AI calls, no DB writes, no LINE sends.
+   * Returns null if no destination is available in context or request.
+   *
+   * @param request   Execution request with task details
+   * @param actionId  UUID generated by the caller
+   * @param now       ISO 8601 timestamp from the caller
+   */
+  buildActionPlan(
+    request:  ReputationExecutionRequest,
+    actionId: string,
+    now:      string,
+  ): ReputationActionPlan | null {
+    const destination = request.destination ?? this.ctx.primary_destination;
+    if (!destination) return null;
+
+    const dryRun = buildReviewRequestDryRun(
+      {
+        dealer_id:              this.ctx.dealer_id,
+        customer_id:            request.customer_id,
+        vehicle_id:             request.vehicle_id,
+        work_order_id:          request.work_order_id,
+        completion_report_id:   request.completion_report_id,
+        service_summary:        request.service_summary,
+        destination,
+        language_preference:    request.language_preference,
+        reputation_policy:      this.ctx.reputation_policy,
+        gateway_ready:          this.ctx.agent_context.gateway.status === "ready",
+        customer_eligible:      true,
+        destination_configured: destination.enabled && !!destination.review_url,
+      },
+      actionId,
+      now,
+    );
+
+    return dryRun.action_plan;
+  }
+
+  // ─── Full dry-run execution ────────────────────────────────────────────────
+
+  /**
+   * execute — performs a full dry-run for a reputation agent task.
+   *
+   * Orchestrates:
+   *   1. Phase B gateway readiness checks
+   *   2. Phase D compliance guard
+   *   3. Phase C review request dry-run
+   *
+   * Returns a ReputationExecutionResult with state and action plan.
+   * dealer_approval_required and execution_deferred are always true.
+   *
+   * No AI inference. No LINE sending. No external API calls.
+   */
+  async execute(
+    request: ReputationExecutionRequest,
+    now:     string,
+  ): Promise<ReputationExecutionResult> {
+    const actionId        = randomUUID();
+    const blockingReasons: string[] = [];
+    const warnings:        string[] = [];
+
+    // ── Phase B: Gateway readiness ──────────────────────────────────────────
+    const gatewayResult  = await checkReputationGatewayReadiness();
+    const gatewayChecks  = gatewayResult.checks;
+    const gatewayBlocked = gatewayResult.overall === "not_ready";
+
+    if (gatewayBlocked) {
+      gatewayChecks
+        .filter((c) => c.status === "failed" && c.blocking)
+        .forEach((c) => blockingReasons.push(c.message));
+    }
+
+    // ── Phase D: Compliance guard ────────────────────────────────────────────
+    const complianceCtx    = buildCleanComplianceContext();
+    const complianceResult = checkReputationCompliance(complianceCtx, now);
+
+    if (!complianceResult.passed) {
+      complianceResult.violations.forEach((v) => blockingReasons.push(v.description));
+    }
+
+    // ── Phase C: Review request dry-run ──────────────────────────────────────
+    const destination = request.destination ?? this.ctx.primary_destination;
+    let actionPlan:     ReputationActionPlan | null = null;
+    let allChecksPassed = false;
+
+    if (!destination) {
+      blockingReasons.push("No review destination configured — set a destination in Settings > Reputation");
+    } else {
+      const dryRun = buildReviewRequestDryRun(
+        {
+          dealer_id:               this.ctx.dealer_id,
+          customer_id:             request.customer_id,
+          vehicle_id:              request.vehicle_id,
+          work_order_id:           request.work_order_id,
+          completion_report_id:    request.completion_report_id,
+          service_summary:         request.service_summary,
+          destination,
+          language_preference:     request.language_preference,
+          reputation_policy:       this.ctx.reputation_policy,
+          gateway_ready:           !gatewayBlocked,
+          customer_eligible:       true,
+          destination_configured:  destination.enabled && !!destination.review_url,
+        },
+        actionId,
+        now,
+      );
+
+      actionPlan      = dryRun.action_plan;
+      allChecksPassed = dryRun.all_checks_passed &&
+                        !gatewayBlocked &&
+                        complianceResult.passed;
+
+      dryRun.required_missing_settings.forEach((s) => warnings.push(`Missing: ${s}`));
+    }
+
+    // ── Derive execution state ────────────────────────────────────────────────
+    const state: ReputationExecutionResult["state"] = blockingReasons.length > 0
+      ? gatewayBlocked
+        ? "blocked_gateway"
+        : !complianceResult.passed
+          ? "blocked_compliance"
+          : "not_ready"
+      : "dry_run";
+
+    return {
+      state,
+      dealer_id:                this.ctx.dealer_id,
+      task_type:                request.task_type,
+      readiness_checks:         gatewayChecks,
+      all_checks_passed:        allChecksPassed,
+      action_plan:              actionPlan,
+      blocking_reasons:         blockingReasons,
+      warnings,
+      dealer_approval_required: true,
+      execution_deferred:       true,
+      prepared_at:              now,
+    };
+  }
+}
+
+// ─── Convenience factory ──────────────────────────────────────────────────────
+
+/**
+ * createReputationRuntime — top-level factory for server actions.
+ *
+ * Equivalent to ReputationRuntime.create() with optional parameters.
+ * Returns null if the dealer session is not available.
+ */
+export async function createReputationRuntime(
+  primaryDestination?: ReviewDestination | null,
+  reputationPolicy?:   ReputationPolicy,
+): Promise<ReputationRuntime | null> {
+  return ReputationRuntime.create(
+    primaryDestination ?? null,
+    reputationPolicy,
+  );
+}

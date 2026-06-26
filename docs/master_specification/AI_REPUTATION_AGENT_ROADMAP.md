@@ -507,14 +507,85 @@ ReputationInsight → ReputationOptimizationProfile (MEO/AEO/LLMO/AIO)
 - `ReputationOptimizationProfile` complements (not duplicates) `ContentOptimizationProfile` from `@/lib/marketing` — reputation-specific signals only
 - One-way dependency: `@/lib/reputation` imports from `@/lib/customer-engagement`; CE module has zero knowledge of reputation
 
-### Next Steps (Sprint 11D)
+### Next Steps (Sprint 11D — now complete; see Sprint 11D section below)
 
-1. Implement `reputation_agent` review request message generation (AI Gateway)
-2. Implement dealer approval UI for review requests
-3. Implement ReviewRequest DB persistence (`review_requests` table — CTO approval required)
-4. Implement ReviewSignal ingestion from Google Business Profile review webhook
-5. Implement `reputation_agent` signal analysis to populate `ReputationInsight[]`
-6. Implement cross-agent feed from `MarketingAgentFeed` to `ContentOptimizationProfile`
+1. ~~Implement `reputation_agent` review request message generation (AI Gateway)~~ → deferred to 11E
+2. ~~Implement dealer approval UI for review requests~~ → deferred to 11E
+3. ~~Implement ReviewRequest DB persistence (`review_requests` table — CTO approval required)~~ → deferred to 11E
+4. ~~Implement ReviewSignal ingestion from Google Business Profile review webhook~~ → deferred to 11E
+5. ~~Implement `reputation_agent` signal analysis to populate `ReputationInsight[]`~~ → deferred to 11E
+6. ~~Implement cross-agent feed from `MarketingAgentFeed` to `ContentOptimizationProfile`~~ → deferred to 11E
+
+---
+
+## Sprint 11D — AI Reputation Agent Runtime
+
+### Completed: 2026-06-26
+
+Sprint 11D implements the first safe runtime layer for the AI Reputation Agent at
+`src/lib/reputation/runtime/`. Connects the Sprint 11C domain model to the AI Agent
+Framework and AI Gateway without executing any AI inference.
+
+### Architecture Overview
+
+```
+Server Action
+  ↓
+ReputationRuntime.create(destination, policy)  — dealer_id from getCurrentDealer()
+  ↓
+ReputationExecutionContext
+  ↓
+runtime.execute(request, now)
+  ├── Phase B: checkReputationGatewayReadiness()     [8 checks]
+  ├── Phase D: checkReputationCompliance()            [8 rules]
+  └── Phase C: buildReviewRequestDryRun()             [9 steps]
+  ↓
+ReputationExecutionResult
+  ├── state: "dry_run" | "blocked_gateway" | "blocked_compliance" | ...
+  ├── action_plan: ReputationActionPlan
+  └── dealer_approval_required: true  (literal — locked)
+```
+
+### Phase Completion
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| A | ReputationRuntime class, ReputationExecutionContext, request/result types | Complete |
+| B | AI Gateway 8-check readiness validator, ReputationGatewayReadiness | Complete |
+| C | Review request generation dry-run, ReputationActionPlan (9 steps, prompt metadata) | Complete |
+| D | Compliance guard, REPUTATION_COMPLIANCE_CHECKLIST (8 rules), workflow context | Complete |
+| E | CE integration, WorkCompletedRuntimePlan, FutureLineDispatchPayload | Complete |
+| F | Documentation: REPUTATION_PLATFORM_SPEC.md §12, roadmap, spec index v3.1 | Complete |
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/lib/reputation/runtime/runtime-types.ts` | All runtime domain types (pure) |
+| `src/lib/reputation/runtime/gateway-readiness.ts` | 8-check AI Gateway validator (server-side) |
+| `src/lib/reputation/runtime/review-request-dryrun.ts` | Review request dry-run builder (pure) |
+| `src/lib/reputation/runtime/compliance-guard.ts` | Workflow compliance guard (pure) |
+| `src/lib/reputation/runtime/reputation-runtime.ts` | ReputationRuntime class (server-side) |
+| `src/lib/reputation/runtime/engagement-runtime.ts` | CE integration, WorkCompletedRuntimePlan |
+| `src/lib/reputation/runtime/index.ts` | Public API exports |
+
+### Key Design Decisions
+
+- `ReputationRuntime` is a class — consistent with `ReputationAgent` in the agent framework
+- Phase B runs all 8 gateway checks in a single `Promise.all` call (4 in parallel)
+- Phase C is a pure synchronous function — all DB lookups are pre-fetched by the caller
+- Phase D checks workflow *context* (selective targeting, auto-posting), not message text; the text-pattern check is in `review-draft.ts`
+- `execution_deferred: true` is typed as literal — cannot be overridden
+- `WorkCompletedRuntimePlan.line_dispatch_payload.message_text` is permanently `null` until Phase 11E+
+
+### Next Steps (Sprint 11E)
+
+1. Implement AI provider adapter for `reputation_agent` review request generation
+2. Implement `generateReviewRequestMessage()` via AI Gateway (no fake output)
+3. Build dealer approval UI — work order completion flow → review request draft screen
+4. Implement ReviewRequest DB persistence (`review_requests` table — CTO approval required)
+5. Wire `line_dispatch_payload` into real LINE dispatch
+6. Implement ReviewSignal ingestion from Google Business Profile webhook
 
 ---
 
