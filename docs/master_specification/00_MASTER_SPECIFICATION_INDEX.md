@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v4.1 — Sprint 11N) |
+| **Last Updated** | 2026-06-26 (v4.2 — Sprint 11O) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -182,6 +182,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── AI_ORCHESTRATOR_LIVE_BRIDGE_SPEC.md ← Sprint 11L: Live Runtime Bridge — agent lifecycle initialization (all 7 agents), runtime state model, output payload, approval gate pause (in-memory)
 ├── AI_PROVIDER_EXECUTION_READINESS_SPEC.md ← Sprint 11M: Provider Execution Readiness — 12-check guard, capability routing, budget guard, provider adapter contract, bridge integration
 ├── AI_PROVIDER_ADAPTER_REGISTRY_SPEC.md   ← Sprint 11N: Provider Adapter Registry — 5 provider descriptors, capability maps, selection policy, check #13 (adapter_registry_check), AI Settings compatibility
+├── AI_SETTINGS_PLATFORM_SPEC.md          ← Sprint 11O: AI Settings Platform — AISettingsProfile, provider selection, capability assignment, budget policy (3 strategies), view models, orchestrator integration (consultAISettingsForExecution)
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -234,6 +235,7 @@ TIER 4 — DESIGN AUTHORITY
 | **3.9** | **2026-06-26** | **Sprint 11L** | **AI Orchestrator Live Runtime Bridge: AIExecutionBridgeState (7), agent lifecycle initialization (7 agents), PlannedAgentStub, AIRuntimePlanState (in-memory), AIExecutionBridgeResult payload, AIApprovalPauseRecord (in-memory), runPlanLiveBridge(), AI_ORCHESTRATOR_LIVE_BRIDGE_SPEC.md** |
 | **4.0** | **2026-06-26** | **Sprint 11M** | **AI Provider Execution Readiness: 12-check execution guard (run_execute/Pro+/gateway/feature/provider/key/capability/policy/budget/billing/security), capability routing (task→provider caps), budget guard (hard_stop/soft_warning/usage_unknown/allow), AIProviderAdapterContract (no implementations), bridge integration (readiness_check in AIExecutionBridgeResult), AI_PROVIDER_EXECUTION_READINESS_SPEC.md** |
 | **4.1** | **2026-06-26** | **Sprint 11N** | **AI Provider Adapter Registry: AIProviderAdapterDescriptor (5 providers, all adapter_available: false), AIProviderAdapterCapabilityMap (16 caps × 5 providers, 4 support_status values), 6 selection strategies + 4 pre-built policies, check #13 (adapter_registry_check) + 3 new decision values (needs_adapter/provider_unknown/capability_unavailable), AI Settings compatibility bridge, AI_PROVIDER_ADAPTER_REGISTRY_SPEC.md** |
+| **4.2** | **2026-06-26** | **Sprint 11O** | **AI Settings Platform Foundation: AISettingsProfile (dealer canonical config), AIProviderConfiguration, AIProviderHealthStatus (6), AIExecutionPreference (4 modes), AIProviderSelectionConfig + rules, AICapabilityAssignmentMap (preferred/fallback/disabled), AIBudgetPolicyConfig (3 strategies, emergency stop, auto_pause), AISettingsPlatformView + 4 card types, consultAISettingsForExecution() (6 decisions), buildUsagePolicyFromBudgetPolicy(), AI_SETTINGS_PLATFORM_SPEC.md** |
 
 ---
 
