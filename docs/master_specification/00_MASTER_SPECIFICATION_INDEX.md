@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v4.7 — EDP Planning) |
+| **Last Updated** | 2026-06-26 (v4.8 — Sprint 11T) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -187,6 +187,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── SAAS_ENTERPRISE_SPEC.md              ← Sprint 11Q: SaaS Enterprise Foundation Review — dealer lifecycle (10 stages), plan tiers (Basic/Pro/Pro+/Enterprise proposed), feature gate matrix (27 features), billing architecture, AI billing ownership model, security review (6 gaps identified), pre-Sprint 11R checklist
 ├── AI_MARKETPLACE_SPEC.md              ← Sprint 11S: AI Capability Marketplace — 14 categories, 19 capabilities (16 base + 3 extension), 11 providers (5 gateway + 6 new), recommendation engine (4 modes + 75 benchmarks), AI Settings bridge (toGatewayAssignment)
 ├── ENTERPRISE_DISTRIBUTION_PLATFORM_SPEC.md ← EDP Planning: Office AZ Enterprise Distribution Platform — 8 roles, B2B portal, inventory, ordering workflow, delivery documents, monthly billing, sales dashboard, 5 AI modules, separate deployment architecture, 10 open questions (EDP-OD-01–10)
+├── PLATFORM_CORE_SPEC.md               ← Sprint 11T: Platform Core — 5 applications, 10 shared modules, 10 isolation rules (8 strict + 2 advisory), feature discovery API, cross-app policy, PLATFORM_CORE descriptor
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -245,6 +246,7 @@ TIER 4 — DESIGN AUTHORITY
 | **4.5** | **2026-06-26** | **Sprint 11R** | **AI Settings Persistence Layer: canonical repository (dealer_ai_settings table only for writes; dealer_settings JSONB compat-read only), AISettingsRepository + AIUsageRepository interfaces, AI_SETTINGS_REPOSITORY_FACTORY, 4 server actions (getAISettingsProfile/saveAISettingsProfile/getAIUsageSummary/validateAISettingsInput), 4-level provider resolution chain, 13 canonical error codes (AISettingsResult\<T\>), settings_available unlocked to true in both descriptors, AI_SETTINGS_PLATFORM_SPEC.md updated to v2.0; Architecture clarification: dealer_ai_settings is canonical (write-only), dealer_settings.ai_settings is compat-read-only (future cleanup), save returns MIGRATION_REQUIRED when table unavailable** |
 | **4.6** | **2026-06-26** | **Sprint 11S** | **AI Capability Marketplace Foundation: AICapabilityCategory (14), AIMarketplaceCapability (16 base + 3 extension: translation/voice_synthesis/voice_cloning), AIMarketplaceProviderId (5 gateway + 6 new: google_veo/runway/kling/pika/luma/elevenlabs), AIProviderProfile (11 profiles), AIProviderBenchmark (75 entries across 4 modes), PROVIDER_RECOMMENDATIONS (68 entries), toGatewayAssignment() bridge, validateMarketplaceRouting(), AI_SETTINGS_MARKETPLACE_INTEGRATION, AI_CAPABILITY_MARKETPLACE descriptor; AI_MARKETPLACE_SPEC.md** |
 | **4.7** | **2026-06-26** | **EDP Planning** | **Enterprise Distribution Platform: planning document for independent Office AZ Group ERP product; Attraction Co., Ltd. as first target; 8 user roles, B2B portal (company pricing/payment terms/credit), inventory (on-hand/reserved/incoming/backorder), ordering workflow (buyer→confirm→pick→ship→notify), delivery documents (retail=with prices, wholesaler=without), monthly billing (configurable closing/payment day, auto-statement PDF), sales dashboard (6 panels), 5 AI modules (demand/inventory/purchasing/sales/inactivity), separate deployment (distinct Supabase project), 10 open questions; ENTERPRISE_DISTRIBUTION_PLATFORM_SPEC.md + 10_ROADMAP.md Phase H** |
+| **4.8** | **2026-06-26** | **Sprint 11T** | **Platform Core Foundation: PlatformApplicationId (5), PlatformModuleId (10), ModuleManifest (10 manifests with capabilities), PlatformApplication (5 descriptors), CrossApplicationPolicy (10 rules: 8 strict + 2 advisory), feature discovery API (discoverFeatures/getAvailableModules/getApplicationModuleSummary/isCapabilityAvailable + 22 platform features), PLATFORM_CORE descriptor, PLATFORM_CORE_SPEC.md** |
 
 ---
 
