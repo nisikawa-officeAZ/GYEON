@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v4.5 — Sprint 11R) |
+| **Last Updated** | 2026-06-26 (v4.6 — Sprint 11S) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -185,6 +185,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── AI_SETTINGS_PLATFORM_SPEC.md          ← Sprint 11O: AI Settings Platform — AISettingsProfile, provider selection, capability assignment, budget policy (3 strategies), view models, orchestrator integration (consultAISettingsForExecution)
 ├── AI_SETTINGS_DATABASE_ARCHITECTURE.md ← Sprint 11P: DB architecture review — existing schema analysis, dealer_ai_settings proposal (migration 072), dealer_ai_usage_log proposal (migration 073), RLS strategy, migration plan, TypeScript database-types.ts
 ├── SAAS_ENTERPRISE_SPEC.md              ← Sprint 11Q: SaaS Enterprise Foundation Review — dealer lifecycle (10 stages), plan tiers (Basic/Pro/Pro+/Enterprise proposed), feature gate matrix (27 features), billing architecture, AI billing ownership model, security review (6 gaps identified), pre-Sprint 11R checklist
+├── AI_MARKETPLACE_SPEC.md              ← Sprint 11S: AI Capability Marketplace — 14 categories, 19 capabilities (16 base + 3 extension), 11 providers (5 gateway + 6 new), recommendation engine (4 modes + 75 benchmarks), AI Settings bridge (toGatewayAssignment)
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -241,6 +242,7 @@ TIER 4 — DESIGN AUTHORITY
 | **4.3** | **2026-06-26** | **Sprint 11P** | **AI Settings Database Architecture Review: existing schema audit (dealer_settings.ai_settings jsonb current AI storage, 15 relevant tables), dealer_ai_settings table proposal (migration 072: default_provider + fallback_providers + 4 jsonb columns + RLS), dealer_ai_usage_log table proposal (migration 073: append-only, execution_status 5 values, cost tracking), TypeScript DealerAiSettingsRow/DealerAiUsageLogRow + serialization helpers, AI_SETTINGS_DATABASE_ARCHITECTURE.md** |
 | **4.4** | **2026-06-26** | **Sprint 11Q** | **SaaS Enterprise Foundation Review: dealer lifecycle 10-stage model, 3+1 plan tiers (Enterprise proposed), feature gate matrix (27 features, 6 gate gaps), billing architecture (manual → Stripe-ready → Enterprise contract), AI billing ownership (dealer pays provider direct), security review (billing RLS deprecated pattern, role-based AI write gap), saas-foundation-types.ts (DealerLifecycleStage/ExtendedPlanCode/BillingModel/AIBillingOwnership/FeatureGateEvaluation/SaasFoundationStatus), pre-Sprint 11R checklist (8 items), SAAS_ENTERPRISE_SPEC.md** |
 | **4.5** | **2026-06-26** | **Sprint 11R** | **AI Settings Persistence Layer: canonical repository (dealer_ai_settings table only for writes; dealer_settings JSONB compat-read only), AISettingsRepository + AIUsageRepository interfaces, AI_SETTINGS_REPOSITORY_FACTORY, 4 server actions (getAISettingsProfile/saveAISettingsProfile/getAIUsageSummary/validateAISettingsInput), 4-level provider resolution chain, 13 canonical error codes (AISettingsResult\<T\>), settings_available unlocked to true in both descriptors, AI_SETTINGS_PLATFORM_SPEC.md updated to v2.0; Architecture clarification: dealer_ai_settings is canonical (write-only), dealer_settings.ai_settings is compat-read-only (future cleanup), save returns MIGRATION_REQUIRED when table unavailable** |
+| **4.6** | **2026-06-26** | **Sprint 11S** | **AI Capability Marketplace Foundation: AICapabilityCategory (14), AIMarketplaceCapability (16 base + 3 extension: translation/voice_synthesis/voice_cloning), AIMarketplaceProviderId (5 gateway + 6 new: google_veo/runway/kling/pika/luma/elevenlabs), AIProviderProfile (11 profiles), AIProviderBenchmark (75 entries across 4 modes), PROVIDER_RECOMMENDATIONS (68 entries), toGatewayAssignment() bridge, validateMarketplaceRouting(), AI_SETTINGS_MARKETPLACE_INTEGRATION, AI_CAPABILITY_MARKETPLACE descriptor; AI_MARKETPLACE_SPEC.md** |
 
 ---
 
