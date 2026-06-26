@@ -10,7 +10,6 @@ import { checkFeatureAccess } from "@/lib/plans/can-use-feature";
 import { getProviderEntry }   from "./provider-registry";
 import type { AIProviderId }  from "./types";
 import type { AIGatewayStatus, AIGatewayReadiness } from "./ai-settings-types";
-export type { AIGatewayReadiness };
 
 /**
  * Check whether the AI Gateway is fully ready for a dealer.

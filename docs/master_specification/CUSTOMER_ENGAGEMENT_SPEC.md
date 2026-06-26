@@ -336,4 +336,77 @@ No schema change required.
 
 ---
 
+## 14. Sprint 10H — Engagement Runtime Dry-Run (2026-06-26)
+
+**Status:** Implemented. Zero schema changes. Zero migrations. Zero LINE API calls. Zero AI inference.
+
+### New engine files
+
+```
+src/lib/customer-engagement/engine/
+├── types.ts              — Sprint 10G: interfaces and result types (unchanged)
+├── runtime.ts            — EngagementWorkflowRuntime (WorkflowExecutionEngine impl)
+├── event-dispatcher.ts   — EngagementEventDispatcherImpl
+├── action-dispatcher.ts  — EngagementActionDispatcherImpl
+├── line-dry-run.ts       — validateLineActionReadiness() — typed dry-run, no LINE API
+├── agent-dry-run.ts      — validateAgentNotifyReadiness() — typed dry-run, no AI calls
+└── index.ts              — public API re-exports
+```
+
+### Phase A: WORK_COMPLETED event emission
+
+`src/lib/work-orders/update-work-order.ts` now:
+1. SELECTs the current status before the UPDATE (scoped by `id AND dealer_id`)
+2. Detects `non-completed → completed` transition (`isNewCompletion`)
+3. After a successful UPDATE, calls `createEngagementEvent("WORK_COMPLETED", ...)` and `EngagementWorkflowRuntime.dispatch(event)`
+4. `dealer_id` always from `getCurrentDealer()` — never from form input
+
+### Phase B: In-memory dry-run runtime
+
+`EngagementWorkflowRuntime.dispatch()`:
+- Never throws — all errors produce a typed `WorkflowExecutionResult`
+- Delegates to `EngagementEventDispatcherImpl` → per-trigger eligibility check → per-workflow action loop
+- Returns aggregate `{ actions_total, actions_completed, actions_failed, actions_skipped }`
+
+### Phase C: LINE dispatch dry-run
+
+`validateLineActionReadiness()` runs 3 gates in order:
+1. Feature gate: `checkFeatureAccess("line")`
+2. Dealer settings: `dealer_settings.line_enabled AND line_access_token IS NOT NULL`
+3. Customer LINE link: `line_customers WHERE customer_id AND is_friend = true`
+
+Returns typed `LineActionReadinessResult`:
+- `ready` + prepared `LineActionPayload` (with `scheduled_for` for delayed actions)
+- `skipped_feature_disabled`
+- `skipped_line_not_enabled`
+- `skipped_missing_line_settings`
+- `skipped_missing_customer_line_link`
+
+LINE API is NOT called. The prepared payload is passed to Phase G-B for actual sending.
+
+### Phase D: AI agent notify dry-run
+
+`validateAgentNotifyReadiness()` runs 4 gates in order:
+1. `agent_id` provided in action config
+2. Agent exists in `AI_AGENT_REGISTRY` via `getAgentEntry()`
+3. Feature gate: `checkFeatureAccess(entry.requiredFeature)`
+4. AI Gateway: `checkAiGatewayReady()`
+
+All 4 gates pass → returns `skipped_not_implemented` (Phase G-B removes this final gate).
+
+Agent subscribers for `WORK_COMPLETED`: `reputation_agent`, `marketing_agent`, `growth_agent`.
+
+### Bug fix: Turbopack `export type` in "use server" module
+
+Turbopack incorrectly generated runtime code for `export type { AIGatewayReadiness }` in `check-ai-gateway.ts` (a `"use server"` file), causing a `ReferenceError` when the work-orders bundle was evaluated. Removed the unused type re-export; the type is still available from `ai-settings-types.ts`.
+
+### Phase G-B prerequisites (unchanged — pending CTO approval)
+
+1. `customer_engagement_history` table — history writer no-op until then
+2. `dealer_settings.gbp_review_url` column — review request URL for `request_review` action
+3. `dealer_settings.engagement_config` column — per-dealer workflow enable/disable
+4. `engagement_job_queue` table — delayed AI agent dispatch
+
+---
+
 *GYEON Detailer Agent | Customer Engagement Platform | Office AZ | 2026-06-26*

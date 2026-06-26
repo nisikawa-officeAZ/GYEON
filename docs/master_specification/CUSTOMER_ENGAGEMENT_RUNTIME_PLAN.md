@@ -4,7 +4,7 @@
 | Field | Value |
 |-------|-------|
 | **Document** | Customer Engagement Platform Runtime Plan |
-| **Status** | Sprint 10G — Architecture plan; no runtime execution yet |
+| **Status** | Sprint 10H — Phase G-A dry-run runtime implemented (zero schema changes) |
 | **Created** | 2026-06-26 |
 | **Prerequisite** | Sprint 10F foundation (Customer Engagement Platform types, workflows, triggers) |
 | **Scope** | Runtime engine design, migration proposals, integration analysis, sequencing |
@@ -90,9 +90,9 @@ All items below use existing tables and server actions. No CTO approval needed.
 
 | Item | Integration point | Status |
 |------|-------------------|--------|
-| Wire `WORK_COMPLETED` event emission | `updateWorkOrder()` — detect `status → "completed"` transition | Plan ready |
-| `send_line_message` (completion notification) | `sendCompletionNotification()` — existing | Ready to wire |
-| `request_review` (24h delay) | `queueLineNotification(purpose="review_request", scheduled_at+24h)` — existing | Ready to wire |
+| Wire `WORK_COMPLETED` event emission | `updateWorkOrder()` — detect `status → "completed"` transition | **Done (Sprint 10H)** |
+| `send_line_message` (completion notification) | `sendCompletionNotification()` — dry-run validated | **Done (Sprint 10H dry-run)** |
+| `request_review` (24h delay) | `queueLineNotification(purpose="review_request", scheduled_at+24h)` — dry-run validated | **Done (Sprint 10H dry-run)** |
 | `MAINTENANCE_DUE` emission | `process-line-notification-queue.ts` trigger or cron | Plan ready |
 | `send_line_message` (maintenance reminder) | `sendMaintenanceReminder()` — existing | Ready to wire |
 | `CUSTOMER_CREATED` emission | `create customer` server action | Plan ready |
