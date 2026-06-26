@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v3.7 — Sprint 11J) |
+| **Last Updated** | 2026-06-26 (v3.8 — Sprint 11K) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -178,6 +178,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── AI_GROWTH_PLATFORM_SPEC.md        ← Sprint 11H: AI Growth Platform — 8 domain objects, 11 data sources, 15 KPIs, 9 recommendation categories, 6 dashboards, 3 AI workflows
 ├── AI_CONTENT_AUTOMATION_SPEC.md     ← Sprint 11I: Content Automation Platform — 9 domain objects, 14-stage pipeline, 9 publishing destinations, 5 optimization targets, 5 approval modes
 ├── AI_ORCHESTRATOR_SPEC.md           ← Sprint 11J: AI Orchestration Engine — 8 domain objects, 8 workflows, 7 agent roles, 4 coordination patterns, provider bridge, failure strategy
+├── AI_ORCHESTRATOR_RUNTIME_SPEC.md  ← Sprint 11K: Orchestrator Runtime Dry-Run — sequential + parallel validation, approval gate, failure strategy integration, cross-agent feed mapping
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -226,6 +227,7 @@ TIER 4 — DESIGN AUTHORITY
 | **3.5** | **2026-06-26** | **Sprint 11H** | **AI Growth Platform Foundation: 8 domain objects (GrowthInsight/Recommendation/Opportunity/Metric/Score/Trend/Report/Dashboard), 11 data sources, 15 KPIs, 9 recommendation categories, 6 dashboard types, 3 AI workflows, AI_GROWTH_PLATFORM_SPEC.md** |
 | **3.6** | **2026-06-26** | **Sprint 11I** | **AI Content Automation Platform: 9 domain objects (ContentProject/Source/StoryboardPlan/CaptionPlan/HashtagPlan/PublishingPlan/ApprovalWorkflow/PublishingSchedule/AutomationPolicy), 14-stage pipeline, 9 destinations, 5 optimization targets, 5 approval modes, AI_CONTENT_AUTOMATION_SPEC.md** |
 | **3.7** | **2026-06-26** | **Sprint 11J** | **AI Orchestration Engine: 8 domain objects (AIOrchestrator/ExecutionPlan/Step/Context/Policy/Result/History/Capability), 8 workflows, 7 agent coordination roles, 4 coordination patterns, provider bridge (5 invariants), failure strategy (retry/timeout/cancellation/fallback/partial), AI_ORCHESTRATOR_SPEC.md** |
+| **3.8** | **2026-06-26** | **Sprint 11K** | **AI Orchestrator Runtime Dry-Run: AIOrchestratorRuntime (dry_run_available: true), sequential step validation (8 dry_run statuses), parallel grouping (topological depth), approval gate (5 states), failure strategy integration, cross-agent feed mapping, AI_ORCHESTRATOR_RUNTIME_SPEC.md** |
 
 ---
 
