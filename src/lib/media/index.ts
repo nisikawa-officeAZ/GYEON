@@ -236,3 +236,93 @@ export {
   MediaCapabilityServiceImpl,
   MediaAuditServiceImpl,
 } from "./media-service";
+
+// ─── Asset Type Registry (Sprint 12E Phase A + B) ─────────────────────────────
+
+export type {
+  MediaAssetTypeId,
+  MediaOwnerType,
+  MediaAssetTypeDescriptor,
+} from "./media-asset-type-registry";
+
+export {
+  MEDIA_ASSET_TYPE_REGISTRY,
+  getAssetTypeDescriptor,
+  getAssetTypesByOwner,
+  getAIProcessableTypes,
+  getMarketingEligibleTypes,
+  getAvailableAssetTypes,
+  getPlannedAssetTypes,
+  getAllAssetTypeIds,
+} from "./media-asset-type-registry";
+
+// ─── Lifecycle Policy Registry (Sprint 12E Phase C) ──────────────────────────
+
+export type {
+  MediaLifecyclePolicyId,
+  MediaDeletionTrigger,
+  MediaLifecyclePolicyDescriptor,
+} from "./media-policy";
+
+export {
+  MEDIA_LIFECYCLE_POLICIES,
+  getLifecyclePolicy,
+  getRecommendedPolicyForType,
+  getAutoDeletingPolicies,
+  getNonDeletingPolicies,
+  getOverridablePolicies,
+  getDefaultPolicyIdForType,
+} from "./media-policy";
+
+// ─── Usage Context Registry (Sprint 12E Phase D) ─────────────────────────────
+
+export type {
+  MediaUsageContextId,
+  MediaUsageDescriptor,
+} from "./media-usage-registry";
+
+export {
+  MEDIA_USAGE_REGISTRY,
+  getUsageDescriptor,
+  getUsageContextsForAssetType,
+  getCustomerAccessibleContexts,
+  getMarketingEligibleContexts,
+  getAvailableUsageContexts,
+  getUsageContextIds,
+} from "./media-usage-registry";
+
+// ─── AI Compatibility Registry (Sprint 12E Phase E) ──────────────────────────
+
+export type {
+  MediaAICompatibilityModeId,
+  MediaAICompatDescriptor,
+} from "./media-ai-compat";
+
+export {
+  MEDIA_AI_COMPAT_REGISTRY,
+  getAICompatDescriptor,
+  getCompatibleModesForAssetType,
+  getModesRequiringConsent,
+  getModesRequiringApproval,
+  getModesForAgent,
+  getAICompatModeIds,
+} from "./media-ai-compat";
+
+// ─── Platform Integration Bridge (Sprint 12E Phase F) ────────────────────────
+
+export type {
+  MediaPlatformIntegrationId,
+  MediaAccessLevel,
+  MediaPlatformIntegration,
+} from "./media-platform-bridge";
+
+export {
+  MEDIA_PLATFORM_INTEGRATIONS,
+  MEDIA_ASSET_CENTER_MANIFEST,
+  getPlatformIntegration,
+  getIntegrationsForAssetType,
+  getIntegrationsForContext,
+  getAvailableIntegrations,
+  getPlannedIntegrations,
+  getIntegrationIds,
+} from "./media-platform-bridge";
