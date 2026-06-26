@@ -2,11 +2,13 @@
 
 // DealerOS — Save LINE Rich Menu Config
 // Writes to dealer_settings.line_public_settings.rich_menu (PHASE70 jsonb column).
-// Preserves existing rich_menu_id — only a publishLineRichMenu call sets/clears it.
+// Preserves existing rich_menu_id — only publishLineRichMenu sets/clears it.
 // Security: dealer_id from getCurrentDealer() only — never from client.
 
-import { createClient }     from "@/lib/supabase/server";
-import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { createClient }            from "@/lib/supabase/server";
+import { getCurrentDealer }        from "@/lib/auth/get-current-dealer";
+import { checkFeatureAccess }      from "@/lib/plans/can-use-feature";
+import { getFirstValidationError } from "./validate-rich-menu-config";
 import type { LineRichMenuConfig } from "./line-rich-menu-types";
 
 type SaveInput = Omit<LineRichMenuConfig, "rich_menu_id">;
@@ -17,12 +19,11 @@ export async function saveLineRichMenuConfig(
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "認証エラー" };
 
-  if (!config.chat_bar_text?.trim()) {
-    return { success: false, error: "チャットバーテキストを入力してください" };
-  }
-  if (!Array.isArray(config.buttons) || config.buttons.length !== 6) {
-    return { success: false, error: "ボタン設定が不正です" };
-  }
+  const hasAccess = await checkFeatureAccess("line_rich_menu");
+  if (!hasAccess) return { success: false, error: "Pro+プランが必要です" };
+
+  const validationError = getFirstValidationError(config);
+  if (validationError) return { success: false, error: validationError };
 
   const supabase = await createClient();
 

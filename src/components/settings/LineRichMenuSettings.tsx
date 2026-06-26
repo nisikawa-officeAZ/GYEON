@@ -2,28 +2,45 @@
 
 // DealerOS — LINE Rich Menu Settings UI (Pro+)
 // Manages the 6-button 3×2 LINE rich menu config.
-// Config is stored in dealer_settings.line_public_settings.rich_menu.
+// Config stored in dealer_settings.line_public_settings.rich_menu.
 // Security: all mutations use server actions with server-side dealer_id enforcement.
 
 import { useState, useTransition } from "react";
-import type { LineRichMenuConfig, RichMenuButton, RichMenuActionType } from "@/lib/line/line-rich-menu-types";
-import { DEFAULT_RICH_MENU_BUTTONS }      from "@/lib/line/line-rich-menu-types";
-import { saveLineRichMenuConfig }         from "@/lib/line/save-line-rich-menu-config";
-import { publishLineRichMenu }            from "@/lib/line/publish-line-rich-menu";
-import { deleteLineRichMenu }             from "@/lib/line/delete-line-rich-menu";
-import { canUseFeature }                  from "@/lib/plans/plan-types";
-import type { DealerPlanInfo }            from "@/lib/plans/plan-types";
+import type {
+  LineRichMenuConfig,
+  RichMenuButton,
+  RichMenuActionType,
+} from "@/lib/line/line-rich-menu-types";
+import {
+  DEFAULT_RICH_MENU_BUTTONS,
+  FUTURE_WORKFLOW_HINTS,
+  SLOT_PURPOSE_DEFAULTS,
+} from "@/lib/line/line-rich-menu-types";
+import { saveLineRichMenuConfig } from "@/lib/line/save-line-rich-menu-config";
+import { publishLineRichMenu }    from "@/lib/line/publish-line-rich-menu";
+import { deleteLineRichMenu }     from "@/lib/line/delete-line-rich-menu";
+import { canUseFeature }          from "@/lib/plans/plan-types";
+import type { DealerPlanInfo }    from "@/lib/plans/plan-types";
 
 // ─── Button colors (matches generate-rich-menu-png.ts BUTTON_COLORS) ─────────
 
 const PREVIEW_COLORS = [
-  "#1e3a8a", // btn1 予約する
-  "#064e3b", // btn2 施工メニュー
-  "#312e81", // btn3 メンテナンス
-  "#7e22ce", // btn4 レビュー投稿
-  "#0c4a6e", // btn5 施工事例
-  "#1e293b", // btn6 お問い合わせ
+  "#1e3a8a", // slot 0 予約する
+  "#064e3b", // slot 1 施工メニュー
+  "#312e81", // slot 2 メンテナンス
+  "#7e22ce", // slot 3 レビュー投稿
+  "#0c4a6e", // slot 4 施工事例
+  "#1e293b", // slot 5 お問い合わせ
 ] as const;
+
+const SLOT_LABELS = ["予約する", "施工メニュー", "メンテナンス", "レビュー投稿", "施工事例", "お問い合わせ"];
+
+const ACTION_TYPE_OPTIONS: { value: RichMenuActionType; label: string }[] = [
+  { value: "uri",      label: "URLを開く" },
+  { value: "liff",     label: "LIFFアプリを開く" },
+  { value: "message",  label: "メッセージ送信" },
+  { value: "postback", label: "ポストバック（Webhook）" },
+];
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -33,7 +50,7 @@ interface Props {
   planInfo:      DealerPlanInfo;
 }
 
-// ─── Inner components ─────────────────────────────────────────────────────────
+// ─── ButtonRow ────────────────────────────────────────────────────────────────
 
 function ButtonRow({
   index,
@@ -44,48 +61,48 @@ function ButtonRow({
   btn:      RichMenuButton;
   onChange: (i: number, btn: RichMenuButton) => void;
 }) {
-  const color = PREVIEW_COLORS[index];
-  const labels = ["予約する", "施工メニュー", "メンテナンス", "レビュー投稿", "施工事例", "お問い合わせ"];
+  const color   = PREVIEW_COLORS[index];
+  const purpose = btn.purpose ?? SLOT_PURPOSE_DEFAULTS[index];
+  const hint    = FUTURE_WORKFLOW_HINTS[purpose];
 
   return (
     <div className="flex flex-col gap-2 p-3 rounded-lg border border-slate-800 bg-slate-900/40">
+      {/* Slot header */}
       <div className="flex items-center gap-2">
-        <span
-          className="w-4 h-4 rounded-sm shrink-0"
-          style={{ backgroundColor: color }}
-          aria-hidden
-        />
+        <span className="w-4 h-4 rounded-sm shrink-0" style={{ backgroundColor: color }} aria-hidden />
         <span className="text-[10px] text-slate-500 font-medium">ボタン {index + 1}</span>
-        <span className="text-[10px] text-slate-600">（デフォルト: {labels[index]}）</span>
+        <span className="text-[10px] text-slate-600">（デフォルト: {SLOT_LABELS[index]}）</span>
       </div>
 
+      {/* Label */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-[10px] text-slate-500">ラベル</label>
+        <label className="text-[10px] text-slate-500">ラベル（最大12文字）</label>
         <input
           type="text"
           value={btn.label}
           maxLength={12}
           onChange={(e) => onChange(index, { ...btn, label: e.target.value })}
           className="w-full px-2.5 py-1.5 rounded bg-[#0a0f1e] border border-slate-700 text-xs text-slate-200 placeholder-slate-600 focus:border-blue-600 focus:outline-none"
-          placeholder={labels[index]}
+          placeholder={SLOT_LABELS[index]}
         />
       </div>
 
+      {/* Action type */}
       <div className="flex flex-col gap-1.5">
         <label className="text-[10px] text-slate-500">アクション</label>
         <select
           value={btn.action_type}
-          onChange={(e) =>
-            onChange(index, { ...btn, action_type: e.target.value as RichMenuActionType })
-          }
+          onChange={(e) => onChange(index, { ...btn, action_type: e.target.value as RichMenuActionType })}
           className="w-full px-2.5 py-1.5 rounded bg-[#0a0f1e] border border-slate-700 text-xs text-slate-200 focus:border-blue-600 focus:outline-none"
         >
-          <option value="uri">URLを開く</option>
-          <option value="message">メッセージ送信</option>
+          {ACTION_TYPE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
         </select>
       </div>
 
-      {btn.action_type === "uri" ? (
+      {/* Action-specific input */}
+      {btn.action_type === "uri" && (
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] text-slate-500">URL</label>
           <input
@@ -101,7 +118,25 @@ function ButtonRow({
             </p>
           )}
         </div>
-      ) : (
+      )}
+
+      {btn.action_type === "liff" && (
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] text-slate-500">LIFFパス（例: /reservation）</label>
+          <input
+            type="text"
+            value={btn.liff_path}
+            onChange={(e) => onChange(index, { ...btn, liff_path: e.target.value })}
+            className="w-full px-2.5 py-1.5 rounded bg-[#0a0f1e] border border-slate-700 text-xs text-slate-200 placeholder-slate-600 focus:border-blue-600 focus:outline-none"
+            placeholder="/reservation"
+          />
+          <p className="text-[10px] text-slate-600">
+            LIFF ID は LINE設定から自動的に使用されます
+          </p>
+        </div>
+      )}
+
+      {btn.action_type === "message" && (
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] text-slate-500">送信テキスト</label>
           <input
@@ -113,9 +148,35 @@ function ButtonRow({
           />
         </div>
       )}
+
+      {btn.action_type === "postback" && (
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] text-slate-500">ポストバックデータ（最大300文字）</label>
+          <input
+            type="text"
+            value={btn.postback_data}
+            maxLength={300}
+            onChange={(e) => onChange(index, { ...btn, postback_data: e.target.value })}
+            className="w-full px-2.5 py-1.5 rounded bg-[#0a0f1e] border border-slate-700 text-xs text-slate-200 placeholder-slate-600 focus:border-blue-600 focus:outline-none"
+            placeholder="action=inquiry"
+          />
+          <p className="text-[10px] text-slate-600">
+            Webhook受信時に渡されるデータ（webhook_url の設定が必要です）
+          </p>
+        </div>
+      )}
+
+      {/* Future workflow hint */}
+      {hint && (
+        <p className="text-[10px] text-purple-400/70 border-t border-slate-800/60 pt-1.5 mt-0.5">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
+
+// ─── RichMenuPreview ──────────────────────────────────────────────────────────
 
 function RichMenuPreview({ buttons }: { buttons: LineRichMenuConfig["buttons"] }) {
   return (
@@ -147,9 +208,9 @@ export default function LineRichMenuSettings({
   lineEnabled,
   planInfo,
 }: Props) {
-  const [config, setConfig]     = useState<LineRichMenuConfig>(initialConfig);
-  const [toast, setToast]       = useState<{ text: string; type: "ok" | "err" } | null>(null);
-  const [isPending, startTx]    = useTransition();
+  const [config, setConfig]  = useState<LineRichMenuConfig>(initialConfig);
+  const [toast, setToast]    = useState<{ text: string; type: "ok" | "err" } | null>(null);
+  const [isPending, startTx] = useTransition();
 
   const isProPlus  = canUseFeature(planInfo.plan, "line_rich_menu");
   const isDeployed = !!config.rich_menu_id;
@@ -166,11 +227,7 @@ export default function LineRichMenuSettings({
   }
 
   function resetToDefaults() {
-    setConfig({
-      ...config,
-      chat_bar_text: "メニュー",
-      buttons:       DEFAULT_RICH_MENU_BUTTONS,
-    });
+    setConfig({ ...config, chat_bar_text: "メニュー", buttons: DEFAULT_RICH_MENU_BUTTONS });
   }
 
   function handleSave() {
@@ -275,7 +332,7 @@ export default function LineRichMenuSettings({
           className="w-full px-3 py-2 rounded bg-[#0a0f1e] border border-slate-700 text-sm text-slate-200 placeholder-slate-600 focus:border-blue-600 focus:outline-none"
           placeholder="メニュー"
         />
-        <p className="text-[10px] text-slate-600">LINEトーク画面の下部に表示されるテキスト（最大14文字）</p>
+        <p className="text-[10px] text-slate-600">LINEトーク画面下部のテキスト（最大14文字）</p>
       </div>
 
       {/* Button config */}
@@ -301,8 +358,9 @@ export default function LineRichMenuSettings({
       <div className="px-3 py-2 border border-slate-700/40 bg-slate-900/20 rounded-lg">
         <p className="text-[10px] text-slate-600 leading-relaxed">
           <span className="text-slate-500 font-medium">v1 仕様:</span>{" "}
-          テンプレート画像は6色グリッドで自動生成されます（カスタム画像アップロードは今後実装予定）。
-          ボタンラベルはLINEアプリ内の画像には表示されません。
+          テンプレート画像は6色グリッドで自動生成されます。
+          LIFFアクションには LINE設定の LIFF ID が必要です。
+          ポストバックアクションには Webhook URL の設定が必要です。
         </p>
       </div>
 

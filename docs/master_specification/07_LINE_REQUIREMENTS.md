@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.1 |
+| **Version** | 1.2 |
 | **Status** | Canonical |
 | **Last Updated** | 2026-06-26 |
 | **Canonical Source** | `gyeon_settings_flow.json` (line, line-api, auto-message, reminder-templates), `gyeon_flow.json` (STEP5 LINE転送) |
@@ -102,7 +102,7 @@ All four LINE integration areas are **code-complete but unconfigured** locally (
 
 ## 6. LINE Rich Menu (Pro+ Feature)
 
-**Status:** Implemented (foundation). **Plan tier:** Pro+ only.
+**Status:** Implemented (production-ready foundation). **Plan tier:** Pro+ only.
 
 ### 6.1 Architecture
 - Config stored in `dealer_settings.line_public_settings.rich_menu` (PHASE70 JSONB column).
@@ -112,34 +112,56 @@ All four LINE integration areas are **code-complete but unconfigured** locally (
 ### 6.2 Files
 | File | Purpose |
 |------|---------|
-| `src/lib/line/line-rich-menu-types.ts` | Types + `parseRichMenuConfig()` |
+| `src/lib/line/line-rich-menu-types.ts` | Types, defaults, `parseRichMenuConfig()`, `FUTURE_WORKFLOW_HINTS` |
+| `src/lib/line/validate-rich-menu-config.ts` | Production validation (labels, URLs, LIFF paths, postback data) |
 | `src/lib/line/generate-rich-menu-png.ts` | Server-side PNG generator (pure Node.js zlib) |
 | `src/lib/line/get-line-rich-menu-config.ts` | Server action: read config from DB |
-| `src/lib/line/save-line-rich-menu-config.ts` | Server action: save config (preserves richMenuId) |
-| `src/lib/line/publish-line-rich-menu.ts` | Server action: create menu → upload PNG → set default |
+| `src/lib/line/save-line-rich-menu-config.ts` | Server action: save config (validates + preserves richMenuId) |
+| `src/lib/line/publish-line-rich-menu.ts` | Server action: validate → create → upload PNG → set default |
 | `src/lib/line/delete-line-rich-menu.ts` | Server action: remove from LINE + clear DB |
-| `src/components/settings/LineRichMenuSettings.tsx` | Settings UI component |
+| `src/components/settings/LineRichMenuSettings.tsx` | Settings UI component (Pro+ gated) |
 
-### 6.3 Template Image (v1)
+### 6.3 Button Action Types
+| Type | Description | Required field | LINE API mapping |
+|------|-------------|----------------|-----------------|
+| `uri` | Open external URL | `uri` | `{ type: "uri", uri }` |
+| `liff` | Open LIFF app at relative path | `liff_path` | `{ type: "uri", uri: "https://liff.line.me/{liffId}{liff_path}" }` |
+| `message` | Send text message on user's behalf | `message` | `{ type: "message", text }` |
+| `postback` | Send postback data to webhook | `postback_data` | `{ type: "postback", data }` |
+
+### 6.4 Button Purpose (Slot Identity)
+Each button slot has a fixed semantic purpose used for future AI agent integrations.
+
+| Slot | Purpose | Future workflow |
+|------|---------|-----------------|
+| 0 (Top-left) | `reservation` | Online booking integration (planned) |
+| 1 (Top-center) | `service_menu` | Service catalog page |
+| 2 (Top-right) | `maintenance` | Maintenance reminder workflow (Phase B) |
+| 3 (Bottom-left) | `review` | **AI Reputation Agent connection (PHASE 77)** |
+| 4 (Bottom-center) | `gallery` | Work photos / completion report gallery |
+| 5 (Bottom-right) | `inquiry` | Dealer inquiry / contact |
+
+Purpose is stored in the button config and exposed via `FUTURE_WORKFLOW_HINTS` for settings UI display.
+
+### 6.5 Template Image (v1)
 - 2500×1686px PNG, 6 colored zones in a 3×2 grid (GYEON brand palette).
 - Generated server-side using Node.js `zlib` — no external image library required.
 - v1 limitation: button labels are not rendered in the image.
 - Custom image upload: planned for a future version.
 
-### 6.4 6-Button Default Template
-| Position | Default Label | Default Action |
-|----------|--------------|----------------|
-| Top-left | 予約する | URI (configurable) |
-| Top-center | 施工メニュー | URI (configurable) |
-| Top-right | メンテナンス | URI (configurable) |
-| Bottom-left | レビュー投稿 | URI (configurable) |
-| Bottom-center | 施工事例 | URI (configurable) |
-| Bottom-right | お問い合わせ | Message: "お問い合わせ" |
+### 6.6 Validation rules (`validate-rich-menu-config.ts`)
+- `chat_bar_text`: 1–14 characters (required)
+- `label`: 1–12 characters per button (required)
+- `uri` (when action_type = "uri"): must be valid `http://` or `https://` URL if non-empty
+- `liff_path` (when action_type = "liff"): must start with `/`, must be non-empty
+- `message` (when action_type = "message"): must be non-empty
+- `postback_data` (when action_type = "postback"): must be non-empty, max 300 characters
 
-### 6.5 Security rules
+### 6.7 Security rules
 - `line_access_token` is read server-side only in all server actions — never returned to client.
+- `line_liff_id` is read server-side for LIFF URL construction — never passed from client.
 - `dealer_id` sourced from `getCurrentDealer()` — never from client form input.
-- Pro+ access verified server-side via `checkFeatureAccess("line_rich_menu")`.
+- Pro+ access verified server-side via `checkFeatureAccess("line_rich_menu")` in all mutations.
 
 ---
 

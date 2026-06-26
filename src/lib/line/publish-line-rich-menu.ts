@@ -7,10 +7,11 @@
 //   - line_access_token read server-side only — never returned to client
 //   - Pro+ feature gate enforced before any LINE API call
 
-import { createClient }       from "@/lib/supabase/server";
-import { getCurrentDealer }   from "@/lib/auth/get-current-dealer";
-import { checkFeatureAccess } from "@/lib/plans/can-use-feature";
-import { generateRichMenuPng } from "./generate-rich-menu-png";
+import { createClient }            from "@/lib/supabase/server";
+import { getCurrentDealer }        from "@/lib/auth/get-current-dealer";
+import { checkFeatureAccess }      from "@/lib/plans/can-use-feature";
+import { generateRichMenuPng }     from "./generate-rich-menu-png";
+import { getFirstValidationError } from "./validate-rich-menu-config";
 import type { LineRichMenuConfig, RichMenuButton } from "./line-rich-menu-types";
 
 const LINE_API = "https://api.line.me/v2/bot";
@@ -19,7 +20,7 @@ const LINE_API = "https://api.line.me/v2/bot";
 
 interface LineArea {
   bounds: { x: number; y: number; width: number; height: number };
-  action: { type: string; uri?: string; text?: string };
+  action: { type: string; uri?: string; text?: string; data?: string };
 }
 
 interface LineRichMenuBody {
@@ -32,18 +33,30 @@ interface LineRichMenuBody {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function buildAction(btn: RichMenuButton): LineArea["action"] {
-  if (btn.action_type === "message" && btn.message) {
-    return { type: "message", text: btn.message };
+function buildAction(btn: RichMenuButton, liffId: string | null): LineArea["action"] {
+  switch (btn.action_type) {
+    case "message":
+      if (btn.message) return { type: "message", text: btn.message };
+      break;
+    case "liff":
+      if (btn.liff_path && liffId) {
+        return { type: "uri", uri: `https://liff.line.me/${liffId}${btn.liff_path}` };
+      }
+      break;
+    case "postback":
+      if (btn.postback_data) {
+        return { type: "postback", data: btn.postback_data };
+      }
+      break;
+    case "uri":
+    default:
+      if (btn.uri) return { type: "uri", uri: btn.uri };
   }
-  if (btn.uri) {
-    return { type: "uri", uri: btn.uri };
-  }
-  // Fallback: send button label as a message when no URI configured
+  // Fallback: send button label as a message when no action is fully configured
   return { type: "message", text: btn.label };
 }
 
-function buildAreas(buttons: LineRichMenuConfig["buttons"]): LineArea[] {
+function buildAreas(buttons: LineRichMenuConfig["buttons"], liffId: string | null): LineArea[] {
   const W = 2500, H = 1686;
   const colW = Math.floor(W / 3);
   const rowH = Math.floor(H / 2);
@@ -58,7 +71,7 @@ function buildAreas(buttons: LineRichMenuConfig["buttons"]): LineArea[] {
         width:  col === 2 ? W - 2 * colW : colW,
         height: row === 1 ? H - rowH     : rowH,
       },
-      action: buildAction(btn),
+      action: buildAction(btn, liffId),
     };
   });
 }
@@ -92,12 +105,15 @@ export async function publishLineRichMenu(
   const hasAccess = await checkFeatureAccess("line_rich_menu");
   if (!hasAccess) return { success: false, error: "Pro+プランが必要です" };
 
+  const validationError = getFirstValidationError(config);
+  if (validationError) return { success: false, error: validationError };
+
   const supabase = await createClient();
 
   // Read LINE credentials — server-side only, never passed from client
   const { data: settings } = await supabase
     .from("dealer_settings")
-    .select("line_access_token, line_enabled, line_public_settings")
+    .select("line_access_token, line_liff_id, line_enabled, line_public_settings")
     .eq("dealer_id", dealer.dealer_id)
     .maybeSingle();
 
@@ -107,7 +123,8 @@ export async function publishLineRichMenu(
   if (!settings?.line_access_token) {
     return { success: false, error: "LINEアクセストークンが設定されていません" };
   }
-  const token = settings.line_access_token as string;
+  const token  = settings.line_access_token as string;
+  const liffId = typeof settings.line_liff_id === "string" ? settings.line_liff_id : null;
 
   // Remove previous rich menu if one exists
   const existingPublic = (settings.line_public_settings as Record<string, unknown>) ?? {};
@@ -123,7 +140,7 @@ export async function publishLineRichMenu(
     selected:    true,
     name:        "GYEON Detailer Agent メニュー",
     chatBarText: config.chat_bar_text || "メニュー",
-    areas:       buildAreas(config.buttons),
+    areas:       buildAreas(config.buttons, liffId),
   };
 
   const createRes = await linePost("/richmenu", token, menuBody);
