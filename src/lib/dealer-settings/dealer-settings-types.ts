@@ -151,6 +151,21 @@ export interface PpfPriceTables {
   parts_prices: Record<string, number>;
 }
 
+// ─── LINE Public Settings (stored in dealer_settings.line_public_settings) ───
+// Loose wrapper — rich menu config and any future public LINE display settings.
+// Secrets (line_channel_secret, line_access_token) are never stored here.
+
+export interface LinePublicSettings {
+  rich_menu?: {
+    enabled?:        boolean;
+    rich_menu_id?:   string | null;
+    chat_bar_text?:  string;
+    buttons?:        unknown[];
+    [key: string]:   unknown;
+  };
+  [key: string]: unknown;
+}
+
 // ─── Canonical Dealer Settings (server-side, no secrets) ─────────────────────
 // This is the resolved type returned by getCanonicalDealerSettings().
 // All nullable PHASE70 columns have defaults applied — nothing is undefined here.
@@ -189,6 +204,7 @@ export interface CanonicalDealerSettings {
   ocr_policy:  OcrPolicySettings;   // PHASE70, with safe defaults
 
   // LINE — public fields only (no secrets)
+  line_public_settings:       LinePublicSettings;  // PHASE70 jsonb, always {}
   line_channel_id:            string | null;
   line_liff_id:               string | null;
   webhook_url:                string | null;

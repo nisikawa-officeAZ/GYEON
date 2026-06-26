@@ -43,6 +43,7 @@ export type AppFeature =
   // Pro Plus
   | "line"
   | "line_crm"
+  | "line_rich_menu"
   | "message_logs"
   | "notification_queue"
   | "auto_notifications";
@@ -92,6 +93,7 @@ export const PLAN_FEATURES: Record<DealerPlan, AppFeature[]> = {
     // Pro Plus additions
     "line",
     "line_crm",
+    "line_rich_menu",
     "message_logs",
     "notification_queue",
     "auto_notifications",

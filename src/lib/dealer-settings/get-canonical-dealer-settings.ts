@@ -22,6 +22,7 @@ import type {
   ReminderTemplate,
   OcrPolicySettings,
   SnsUrls,
+  LinePublicSettings,
 } from "./dealer-settings-types";
 import {
   DEFAULT_COUPON_SETTINGS,
@@ -105,6 +106,7 @@ function mergeWithDefaults(raw: Record<string, any>, dealerId: string): Canonica
     ocr_policy:  jsonAs<OcrPolicySettings>(raw.ocr_policy, DEFAULT_OCR_POLICY),
 
     // LINE — public fields only (secrets stripped)
+    line_public_settings:       jsonAs<LinePublicSettings>(raw.line_public_settings, {}),
     line_channel_id:            str(raw.line_channel_id),
     line_liff_id:               str(raw.line_liff_id),
     webhook_url:                str(raw.webhook_url),

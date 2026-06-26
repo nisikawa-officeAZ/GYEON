@@ -10,6 +10,7 @@ export type LineMessagePurpose =
   | 'maintenance_reminder'
   | 'reservation'
   | 'campaign'
+  | 'review_request'
   | 'system';
 
 export type LineQueueStatus = 'scheduled' | 'processing' | 'sent' | 'failed' | 'cancelled';
@@ -130,6 +131,7 @@ export function lineMessagePurposeLabel(purpose: LineMessagePurpose): string {
     maintenance_reminder: 'メンテナンス通知',
     reservation:          '予約案内',
     campaign:             'キャンペーン',
+    review_request:       'レビュー依頼',
     system:               'システム',
   };
   return map[purpose] ?? purpose;

@@ -9,10 +9,12 @@ import type { CanonicalDealerSettings } from "@/lib/dealer-settings/dealer-setti
 import CompanySettingsForm from "./CompanySettingsForm";
 import StaffManagement from "./StaffManagement";
 import DocumentSequenceSettings from "./DocumentSequenceSettings";
+import LineRichMenuSettings from "./LineRichMenuSettings";
 import type { CompanySettingsFields } from "@/lib/company/save-company-settings";
 import type { DocumentSequenceDB } from "@/lib/numbering/numbering-types";
 import { PLAN_FEATURES, planLabel, type DealerPlanInfo } from "@/lib/plans/plan-types";
 import type { DealerStaffDB, DealerStaffRole } from "@/lib/staff/staff-types";
+import { parseRichMenuConfig } from "@/lib/line/line-rich-menu-types";
 import Link from "next/link";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -448,7 +450,8 @@ function OcrContent({ s }: { s: CanonicalDealerSettings }) {
 // CanonicalDealerSettings by getCanonicalDealerSettings() and are never
 // displayed here.
 
-function LineContent({ s }: { s: CanonicalDealerSettings }) {
+function LineContent({ s, planInfo }: { s: CanonicalDealerSettings; planInfo: DealerPlanInfo }) {
+  const richMenuConfig = parseRichMenuConfig(s.line_public_settings?.rich_menu);
   return (
     <div className="flex flex-col gap-4">
       <div className={card}>
@@ -497,6 +500,22 @@ function LineContent({ s }: { s: CanonicalDealerSettings }) {
         <Link href="/line" className="text-xs text-blue-400 hover:text-blue-300 transition-colors mt-1">
           → Channel Secret・Access Token の管理は LINE ページで行います
         </Link>
+      </div>
+
+      <div className={card}>
+        <div className="flex items-center gap-2">
+          <p className={lbl}>リッチメニュー（Pro+）</p>
+          {planInfo.plan === "pro_plus" ? (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-300 border border-purple-700 font-semibold">Pro+</span>
+          ) : (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 border border-slate-700">Pro+ 限定</span>
+          )}
+        </div>
+        <LineRichMenuSettings
+          initialConfig={richMenuConfig}
+          lineEnabled={s.line_enabled}
+          planInfo={planInfo}
+        />
       </div>
 
       <div className="px-3 py-2 border border-amber-500/20 bg-amber-950/10 rounded-lg">
@@ -590,8 +609,8 @@ function PlanContent({
     estimate_pdf: "PDF出力", products: "GYEONカタログ", product_orders: "商品注文",
     work_orders: "施工指示", calendar: "カレンダー", completion_reports: "完了報告",
     invoices: "請求書", payments: "入金管理", maintenance: "メンテナンス通知",
-    line: "LINE連携", line_crm: "LINE CRM", message_logs: "メッセージログ",
-    notification_queue: "通知キュー", auto_notifications: "自動通知",
+    line: "LINE連携", line_crm: "LINE CRM", line_rich_menu: "LINEリッチメニュー",
+    message_logs: "メッセージログ", notification_queue: "通知キュー", auto_notifications: "自動通知",
     reservations: "予約管理",
   };
 
@@ -714,7 +733,7 @@ function renderCategory(
     case "pricing": return <PricingContent s={props.settings} />;
     case "service": return <ServiceContent s={props.settings} />;
     case "ocr":     return <OcrContent     s={props.settings} />;
-    case "line":    return <LineContent    s={props.settings} />;
+    case "line":    return <LineContent    s={props.settings} planInfo={props.planInfo} />;
     case "pdf":     return <PdfContent     sequences={props.sequences} s={props.settings} />;
     case "reminder":return <ReminderContent s={props.settings} />;
     case "plan":    return <PlanContent    planInfo={props.planInfo} planSlot={props.planSlot} />;

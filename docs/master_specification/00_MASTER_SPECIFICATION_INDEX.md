@@ -185,7 +185,8 @@ TIER 4 — DESIGN AUTHORITY
 | 0.95 | 2026-06-25 | PHASE75 | 30 specification errors resolved; 17 operator decisions isolated |
 | **1.0** | **2026-06-25** | **PHASE76** | **Canonical Package organized; specification freeze candidate** |
 | 1.1 | 2026-06-26 | Sprint 9–10 | Dealer rank lockdown, approval flow spec (decisions locked), Sprint 10A plan |
-| 1.2 | 2026-06-26 | Future Roadmap | AI Marketing Agent roadmap added (PHASE 71–76, deferred) |
+| 1.2 | 2026-06-26 | Future Roadmap | AI Marketing Agent roadmap added (PHASE 71–77, deferred) |
+| 1.3 | 2026-06-26 | Pro+ Feature | LINE Rich Menu Management implemented (Pro+); `line_rich_menu` in AppFeature; uses PHASE70 `line_public_settings` column; no new migration; pure-Node.js PNG generator |
 
 ---
 
