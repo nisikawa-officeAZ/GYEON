@@ -98,5 +98,25 @@ export {
   getSettingsIntegrationStatus,
 } from "./orchestrator-integration";
 
+// Sprint 11P — Database types (proposed schema, no migrations applied)
+export type {
+  DealerAiSettingsRow,
+  DealerAiSettingsInsert,
+  DealerAiSettingsUpdate,
+  AIExecutionStatus,
+  DealerAiUsageLogRow,
+  DealerAiUsageLogInsert,
+  AISettingsDatabaseProposalStatus,
+} from "./database-types";
+export {
+  serializeCapabilityPreferences,
+  deserializeCapabilityPreferences,
+  serializeBudgetPolicy,
+  deserializeBudgetPolicy,
+  serializeExecutionPreference,
+  deserializeExecutionPreference,
+  AI_SETTINGS_DATABASE_PROPOSAL,
+} from "./database-types";
+
 // Re-export AIUsagePolicy from gateway layer for convenience
 export type { AIUsagePolicy } from "@/lib/ai/usage-policy";
