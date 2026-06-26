@@ -192,6 +192,7 @@ TIER 4 — DESIGN AUTHORITY
 | 1.4 | 2026-06-26 | Architecture | AI Gateway Architecture decision; AI Platform restructured (F1 Marketing, F2 Growth, F3 Reputation); PHASE 77 moved to AI Reputation Agent; `AI_GATEWAY_SPEC.md` + `AI_REPUTATION_AGENT_ROADMAP.md` created |
 | 1.5 | 2026-06-26 | Architecture | AI Gateway expanded: OpenRouter added, AI Provider Settings section (connection test, usage limits, cost visibility, per-feature model selection), `"ai_gateway"` as Pro+ AppFeature; product vision updated to AI-powered business OS |
 | 1.6 | 2026-06-26 | Sprint 10B | LINE Rich Menu foundation: LIFF/postback action types, button purpose/slot identity, future workflow hints, validation layer, AI Reputation Agent connection point (slot 3 review) |
+| 1.7 | 2026-06-26 | Sprint 10C | AI Gateway settings layer: AES-256-GCM key encryption, 5-provider registry with capabilities, dealer AI settings UI (Pro+), save/test/readiness-check server actions, migration proposal for dealer_settings.ai_settings column |
 
 ---
 

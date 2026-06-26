@@ -13,6 +13,9 @@ import type { DealerStaffDB, DealerStaffRole } from "@/lib/staff/staff-types";
 import { getCanonicalDealerSettings } from "@/lib/dealer-settings/get-canonical-dealer-settings";
 import type { CanonicalDealerSettings } from "@/lib/dealer-settings/dealer-settings-types";
 import SettingsCategoryNav from "@/components/settings/SettingsCategoryNav";
+import { getAiSettings } from "@/lib/ai/get-ai-settings";
+import type { AiSettingsView } from "@/lib/ai/ai-settings-types";
+import { AI_SETTINGS_DEFAULT } from "@/lib/ai/ai-settings-types";
 
 const FALLBACK_PLAN: DealerPlanInfo = {
   plan: "basic",
@@ -28,15 +31,17 @@ export default async function SettingsPage() {
   let staffList: DealerStaffDB[] = [];
   let companySettings: CompanySettingsFields | null = null;
   let canonicalSettings: CanonicalDealerSettings | null = null;
+  let aiSettings: AiSettingsView = { ...AI_SETTINGS_DEFAULT };
 
   try {
-    [sequences, planInfo, staffInfo, staffList, companySettings, canonicalSettings] = await Promise.all([
+    [sequences, planInfo, staffInfo, staffList, companySettings, canonicalSettings, aiSettings] = await Promise.all([
       getDocumentSequences(),
       getCurrentPlan(),
       getCurrentStaff(),
       getStaffList(),
       getCompanySettings(),
       getCanonicalDealerSettings(),
+      getAiSettings(),
     ]);
   } catch (err) {
     console.error("[SettingsPage] data fetch failed:", err);
@@ -66,6 +71,7 @@ export default async function SettingsPage() {
           staffList={staffList}
           staffInfo={staffInfo}
           planSlot={<SubscriptionStatusCard />}
+          aiSettings={aiSettings}
         />
       </div>
     </MainLayout>

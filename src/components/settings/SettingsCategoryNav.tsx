@@ -10,11 +10,13 @@ import CompanySettingsForm from "./CompanySettingsForm";
 import StaffManagement from "./StaffManagement";
 import DocumentSequenceSettings from "./DocumentSequenceSettings";
 import LineRichMenuSettings from "./LineRichMenuSettings";
+import AIGatewaySettings from "./AIGatewaySettings";
 import type { CompanySettingsFields } from "@/lib/company/save-company-settings";
 import type { DocumentSequenceDB } from "@/lib/numbering/numbering-types";
 import { PLAN_FEATURES, planLabel, type DealerPlanInfo } from "@/lib/plans/plan-types";
 import type { DealerStaffDB, DealerStaffRole } from "@/lib/staff/staff-types";
 import { parseRichMenuConfig } from "@/lib/line/line-rich-menu-types";
+import type { AiSettingsView } from "@/lib/ai/ai-settings-types";
 import Link from "next/link";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -27,13 +29,14 @@ interface Props {
   staffList:       DealerStaffDB[];
   staffInfo:       { role: DealerStaffRole; staffId: string | null } | null;
   planSlot:        React.ReactNode;  // SubscriptionStatusCard (server component)
+  aiSettings:      AiSettingsView;
 }
 
 // ─── Category definitions ─────────────────────────────────────────────────────
 
 type CategoryId =
   | "store" | "trade" | "pricing" | "service" | "ocr"
-  | "line" | "pdf" | "reminder" | "plan" | "backup" | "support";
+  | "line" | "pdf" | "reminder" | "plan" | "backup" | "support" | "ai";
 
 type BadgeType = "設定済み" | "表示のみ" | "準備中";
 
@@ -56,6 +59,7 @@ const CATEGORIES: Category[] = [
   { id: "plan",    label: "契約・プラン",       icon: "📊", desc: "プラン・利用機能確認"        },
   { id: "backup",  label: "バックアップ・復旧", icon: "💾", desc: "DR ステータス確認"           },
   { id: "support", label: "データ・サポート",  icon: "🛠", desc: "エクスポート・お問い合わせ"  },
+  { id: "ai",      label: "AI設定（Pro+）",   icon: "🤖", desc: "AIプロバイダー・APIキー設定"   },
 ];
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -111,7 +115,7 @@ function LockChip({ label }: { label: string }) {
 
 // ─── Badge resolver ───────────────────────────────────────────────────────────
 
-function getBadge(id: CategoryId, s: CanonicalDealerSettings): BadgeType {
+function getBadge(id: CategoryId, s: CanonicalDealerSettings, ai?: AiSettingsView): BadgeType {
   switch (id) {
     case "store":   return s.business_name ? "設定済み" : "表示のみ";
     case "trade":   return "表示のみ";
@@ -124,6 +128,11 @@ function getBadge(id: CategoryId, s: CanonicalDealerSettings): BadgeType {
     case "plan":    return "設定済み";
     case "backup":  return "準備中";
     case "support": return "準備中";
+    case "ai": {
+      if (ai?.enabled && ai.primary_provider) return "設定済み";
+      if (ai?.migration_required) return "準備中";
+      return "準備中";
+    }
   }
 }
 
@@ -612,6 +621,10 @@ function PlanContent({
     line: "LINE連携", line_crm: "LINE CRM", line_rich_menu: "LINEリッチメニュー",
     message_logs: "メッセージログ", notification_queue: "通知キュー", auto_notifications: "自動通知",
     reservations: "予約管理",
+    ai_gateway:   "AI Gateway",
+    ai_marketing: "AIマーケティング",
+    ai_reputation:"AI評判管理",
+    ai_growth:    "AI成長エージェント",
   };
 
   const currentPlan = planInfo.plan ?? "basic";
@@ -721,6 +734,22 @@ function SupportContent() {
   );
 }
 
+// ─── Section: AI設定 ──────────────────────────────────────────────────────────
+
+function AiContent({ aiSettings, planInfo }: { aiSettings: AiSettingsView; planInfo: DealerPlanInfo }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className={card}>
+        <div className="flex items-center gap-2">
+          <p className={lbl}>AI Gateway（Pro+）</p>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-300 border border-purple-700 font-semibold">Pro+</span>
+        </div>
+        <AIGatewaySettings initialSettings={aiSettings} planInfo={planInfo} />
+      </div>
+    </div>
+  );
+}
+
 // ─── Category renderer ────────────────────────────────────────────────────────
 
 function renderCategory(
@@ -739,6 +768,7 @@ function renderCategory(
     case "plan":    return <PlanContent    planInfo={props.planInfo} planSlot={props.planSlot} />;
     case "backup":  return <BackupContent />;
     case "support": return <SupportContent />;
+    case "ai":      return <AiContent     aiSettings={props.aiSettings} planInfo={props.planInfo} />;
   }
 }
 
@@ -755,7 +785,7 @@ export default function SettingsCategoryNav(props: Props) {
         <p className="text-xs text-slate-500">設定カテゴリを選択してください</p>
         <div className="grid grid-cols-2 gap-3">
           {CATEGORIES.map(cat => {
-            const badge = getBadge(cat.id, settings);
+            const badge = getBadge(cat.id, settings, props.aiSettings);
             return (
               <button
                 key={cat.id}
@@ -795,7 +825,7 @@ export default function SettingsCategoryNav(props: Props) {
       <div className="flex items-center gap-3">
         <span className="text-2xl">{cat.icon}</span>
         <h2 className="text-base font-semibold text-slate-100">{cat.label}</h2>
-        <StatusBadge type={getBadge(selected, settings)} />
+        <StatusBadge type={getBadge(selected, settings, props.aiSettings)} />
       </div>
 
       {/* Content */}

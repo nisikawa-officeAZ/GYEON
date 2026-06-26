@@ -6,19 +6,34 @@
 
 import type { AIProviderId, AITaskType } from "./types";
 
+// ─── Capabilities ─────────────────────────────────────────────────────────────
+
+export type AICapability =
+  | "text_generation"   // Generate natural language text
+  | "chat_completion"   // Multi-turn conversation
+  | "vision"            // Image understanding / OCR
+  | "image_generation"  // Create images from text
+  | "video_generation"  // Create video content
+  | "embeddings"        // Vector embeddings for search
+  | "function_calling"; // Structured tool use / JSON output
+
 // ─── Registry entry ───────────────────────────────────────────────────────────
 
 export interface AIProviderRegistryEntry {
   id:                AIProviderId;
   nameJa:            string;
+  descJa:            string;
+  capabilities:      AICapability[];
   /** Recommended default models for this provider. */
   defaultModels:     Record<AITaskType, string>;
   /** True once the adapter module is implemented (Phase G). */
   adapterAvailable:  false;  // Locked false until implementation — prevents accidental use
-  /** Settings key in dealer_ai_settings where this provider's key is stored. */
+  /** Settings key in dealer_settings.ai_settings where this provider's key is stored. */
   settingsKey:       string;
   /** URL to the provider's API key management page — shown in dealer settings UI. */
   keyManagementUrl?: string;
+  /** Whether an additional endpoint URL is required (Azure OpenAI only). */
+  requiresEndpoint:  boolean;
 }
 
 // ─── Registry ─────────────────────────────────────────────────────────────────
@@ -27,13 +42,16 @@ export const AI_PROVIDER_REGISTRY: AIProviderRegistryEntry[] = [
   {
     id:               "openai",
     nameJa:           "OpenAI",
+    descJa:           "GPT-4o / GPT-4o mini。テキスト生成・画像理解・コンテンツ作成に最適。",
+    capabilities:     ["text_generation", "chat_completion", "vision", "embeddings", "function_calling"],
     adapterAvailable: false,
+    requiresEndpoint: false,
     settingsKey:      "openai_api_key",
     keyManagementUrl: "https://platform.openai.com/api-keys",
     defaultModels: {
       content_writing:           "gpt-4o",
       image_analysis:            "gpt-4o",
-      video_generation:          "",  // Not supported by OpenAI text API — handled separately
+      video_generation:          "",  // Not natively supported by text API
       review_request_generation: "gpt-4o-mini",
       review_writing_support:    "gpt-4o-mini",
       review_response_drafting:  "gpt-4o",
@@ -44,9 +62,12 @@ export const AI_PROVIDER_REGISTRY: AIProviderRegistryEntry[] = [
   {
     id:               "anthropic",
     nameJa:           "Claude (Anthropic)",
+    descJa:           "Claude Sonnet / Haiku。長文生成・レビュー対応文・コンテンツ品質に優れる。",
+    capabilities:     ["text_generation", "chat_completion", "vision", "function_calling"],
     adapterAvailable: false,
-    settingsKey:      "claude_api_key",
-    keyManagementUrl: "https://console.anthropic.com/",
+    requiresEndpoint: false,
+    settingsKey:      "anthropic_api_key",
+    keyManagementUrl: "https://console.anthropic.com/settings/keys",
     defaultModels: {
       content_writing:           "claude-sonnet-4-6",
       image_analysis:            "claude-sonnet-4-6",
@@ -61,7 +82,10 @@ export const AI_PROVIDER_REGISTRY: AIProviderRegistryEntry[] = [
   {
     id:               "gemini",
     nameJa:           "Gemini (Google)",
+    descJa:           "Gemini 1.5 Pro / Flash。マルチモーダル・高速・コスト効率に優れる。",
+    capabilities:     ["text_generation", "chat_completion", "vision", "embeddings", "function_calling"],
     adapterAvailable: false,
+    requiresEndpoint: false,
     settingsKey:      "gemini_api_key",
     keyManagementUrl: "https://aistudio.google.com/apikey",
     defaultModels: {
@@ -78,7 +102,10 @@ export const AI_PROVIDER_REGISTRY: AIProviderRegistryEntry[] = [
   {
     id:               "azure_openai",
     nameJa:           "Azure OpenAI",
+    descJa:           "Microsoft Azure 上の OpenAI モデル。企業コンプライアンス対応ディーラー向け。",
+    capabilities:     ["text_generation", "chat_completion", "vision", "embeddings", "function_calling"],
     adapterAvailable: false,
+    requiresEndpoint: true,  // Azure requires a custom endpoint URL
     settingsKey:      "azure_openai_api_key",
     defaultModels: {
       content_writing:           "gpt-4o",
@@ -94,7 +121,10 @@ export const AI_PROVIDER_REGISTRY: AIProviderRegistryEntry[] = [
   {
     id:               "openrouter",
     nameJa:           "OpenRouter",
+    descJa:           "1つのAPIキーで100以上のモデルにアクセス。複数プロバイダーを1本化したいディーラー向け。",
+    capabilities:     ["text_generation", "chat_completion", "vision", "image_generation", "function_calling"],
     adapterAvailable: false,
+    requiresEndpoint: false,
     settingsKey:      "openrouter_api_key",
     keyManagementUrl: "https://openrouter.ai/keys",
     defaultModels: {

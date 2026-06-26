@@ -4,7 +4,7 @@
 | Field | Value |
 |-------|-------|
 | **Document** | AI Gateway Architecture Specification |
-| **Status** | Approved Architecture Decision — Deferred |
+| **Status** | Sprint 10C — Settings layer implemented; adapters deferred to Phase G |
 | **Created** | 2026-06-26 |
 | **Priority** | Prerequisite to all AI Agent features (PHASE 71–81) |
 | **Implementation** | Do not implement now. Specification only. |
@@ -80,105 +80,131 @@ Dealer Feature (AI Marketing / AI Reputation / AI Growth)
 
 ---
 
-## 4. Schema Design (Future Migration — Do Not Apply)
+## 4. Schema Design (Sprint 10C — Migration Required)
 
-New table required when Gateway is implemented:
+Sprint 10C uses a single new jsonb column on the existing `dealer_settings` table rather than a separate table. This avoids an additional migration for the settings layer.
 
 ```sql
--- Migration: dealer_ai_settings
-CREATE TABLE public.dealer_ai_settings (
-  id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  dealer_id             uuid NOT NULL REFERENCES dealers(id) ON DELETE CASCADE,
+-- Sprint 10C: Add ai_settings column to dealer_settings
+-- ⚠️ Requires CTO approval before execution in staging/production.
 
-  -- Provider keys (encrypted at rest, server-side only)
-  openai_api_key        text,                          -- NEVER return to client
-  claude_api_key        text,                          -- NEVER return to client
-  gemini_api_key        text,                          -- NEVER return to client
-  azure_openai_api_key  text,                          -- NEVER return to client
-  azure_openai_endpoint text,                          -- Azure-specific endpoint
+ALTER TABLE public.dealer_settings
+  ADD COLUMN IF NOT EXISTS ai_settings jsonb NOT NULL DEFAULT '{}';
 
-  -- Task routing configuration
-  task_routing          jsonb NOT NULL DEFAULT '{}',
-  -- Structure: { "content_writing": "claude", "image_analysis": "openai", ... }
-
-  -- Validation state
-  openai_validated_at   timestamptz,
-  claude_validated_at   timestamptz,
-  gemini_validated_at   timestamptz,
-  azure_validated_at    timestamptz,
-
-  created_at            timestamptz NOT NULL DEFAULT now(),
-  updated_at            timestamptz NOT NULL DEFAULT now(),
-
-  CONSTRAINT dealer_ai_settings_dealer_unique UNIQUE (dealer_id)
-);
-
--- RLS: dealer may only read/write their own row
-ALTER TABLE public.dealer_ai_settings ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "dealer own ai settings"
-  ON public.dealer_ai_settings
-  FOR ALL
-  USING (
-    dealer_id IN (
-      SELECT dm.dealer_id FROM dealer_members dm
-      WHERE dm.user_id = auth.uid() AND dm.status = 'active'
-    )
-  );
+-- Column contents: encrypted API keys + provider configuration.
+-- This column MUST NEVER be returned to the client.
+-- See src/lib/ai/get-ai-settings.ts for the safe read-only view.
 ```
 
-**⚠️ Do not apply this migration.** Requires CTO approval and staging verification before execution.
+### `ai_settings` jsonb structure
 
-### Security rules for `dealer_ai_settings`:
-- All `*_api_key` columns are `SELECT`-blocked by application-level code — never included in any query that returns data to the client
-- The gateway service reads keys via `createAdminClient()` (service role) — this bypasses RLS at the service layer, with dealer_id checked explicitly
-- Key validation is done server-side by the gateway — invalid keys are flagged but not exposed
+```json
+{
+  "enabled":              true,
+  "primary_provider":     "openai",
+  "monthly_limit_usd":    50,
+  "hard_limit":           false,
+  "openai_api_key":       "v1:{iv}:{tag}:{ciphertext}",
+  "anthropic_api_key":    "v1:{iv}:{tag}:{ciphertext}",
+  "gemini_api_key":       "v1:{iv}:{tag}:{ciphertext}",
+  "azure_openai_api_key": "v1:{iv}:{tag}:{ciphertext}",
+  "azure_openai_endpoint":"https://...",
+  "openrouter_api_key":   "v1:{iv}:{tag}:{ciphertext}",
+  "openai_validated_at":  "2026-06-26T00:00:00Z",
+  "anthropic_validated_at":"2026-06-26T00:00:00Z"
+}
+```
+
+### Encryption specification
+
+- **Algorithm:** AES-256-GCM
+- **Key source:** `DEALER_AI_KEY_SECRET` env var (64 hex chars = 32 bytes)
+- **IV:** 12 random bytes per key, stored with ciphertext
+- **Ciphertext format:** `"v1:{iv_hex}:{auth_tag_hex}:{ciphertext_hex}"`
+- **Decryption location:** Server actions only (`src/lib/ai/crypto.ts`)
+- **Client visibility:** Never — `AiSettingsView` contains `has_key: boolean`, not the key
+
+### Security rules for `ai_settings`:
+- `ai_settings` column MUST NEVER appear in SELECT queries that return data to the client
+- `getAiSettings()` returns `AiSettingsView` — which contains `has_key: boolean` only, not raw keys
+- `decryptApiKey()` is called only in server actions (`test-ai-connection.ts`)
+- `dealer_id` always from `getCurrentDealer()` — never from client input
+
+### Required environment variable
+```
+DEALER_AI_KEY_SECRET=<64-char hex string>
+# Generate with: openssl rand -hex 32
+```
+
+### Previous design (superseded)
+The original spec proposed a separate `dealer_ai_settings` table with RLS. Sprint 10C adopts the simpler jsonb column approach on `dealer_settings` to reduce migration scope. The separate-table approach may be revisited at Phase G if the jsonb column grows too large or if per-provider RLS becomes a requirement.
 
 ---
 
-## 5. AI Provider Settings (Dealer-Facing)
+## 5. AI Provider Settings — Sprint 10C Implementation
 
-When the AI Gateway is implemented, dealers must have a dedicated settings screen to manage their AI provider configuration.
+### Implemented (Sprint 10C)
 
-### Required settings capabilities
+| Setting | Status | File |
+|---------|--------|------|
+| AI provider selection (5 providers) | ✅ Implemented | `AIGatewaySettings.tsx` |
+| API key registration (encrypted AES-256-GCM) | ✅ Implemented | `save-ai-settings.ts` + `crypto.ts` |
+| Connection test (format validation) | ✅ Implemented | `test-ai-connection.ts` |
+| Monthly usage limit (USD) | ✅ Implemented | `save-ai-settings.ts` |
+| Hard limit toggle (block vs. warn) | ✅ Implemented | `save-ai-settings.ts` |
+| Enable / Disable AI Gateway | ✅ Implemented | `save-ai-settings.ts` |
+| Gateway readiness check | ✅ Implemented | `check-ai-gateway.ts` |
+| Pro+ feature gate | ✅ Implemented | `checkFeatureAccess("ai_gateway")` |
+| Provider capability metadata | ✅ Implemented | `provider-registry.ts` |
+| Migration-required graceful handling | ✅ Implemented | `get-ai-settings.ts` |
 
-| Setting | Description |
-|---------|-------------|
-| **AI provider selection** | Dealer selects which provider to use (OpenAI / Claude / Gemini / Azure OpenAI / OpenRouter) |
-| **API key registration** | Dealer enters their own provider API key — encrypted at rest, never returned to client |
-| **Connection test** | One-click test that validates the key against the provider API — result shown in UI (success / error message) |
-| **Monthly usage limit** | Dealer sets a monthly spend cap; AI features are gated once limit is approached |
-| **Usage visibility by feature** | Dashboard showing estimated token/cost usage broken down by AI feature (content writing, image analysis, etc.) |
-| **Estimated usage cost** | Real-time estimate based on model pricing and usage history — advisory, not guaranteed |
-| **Provider/model selection per feature** | Dealers with multiple providers can assign different providers or models per task type (e.g., Claude for content writing, OpenAI for image analysis) |
+### Deferred to Phase G
 
-### Settings storage
+| Setting | Status |
+|---------|--------|
+| Network-level connection test (real API call) | ⏳ Phase G — requires adapter implementation |
+| Per-feature provider/model assignment UI | ⏳ Phase G |
+| Usage tracking dashboard | ⏳ Phase G — requires `dealer_ai_usage_log` table |
+| Cost estimation | ⏳ Phase G |
+| AI inference (actual API calls) | ⏳ Phase G |
 
-- All API keys stored in `dealer_ai_settings` table (see §4 schema)
-- `task_routing` jsonb column stores per-feature provider/model assignments
-- Keys are validated server-side; validation timestamps stored per provider
-- Usage tracking requires a separate `dealer_ai_usage_log` table (schema TBD at implementation time)
+### Connection test note
+
+Sprint 10C's "接続テスト" is **format validation only** — it checks that the stored key matches the expected prefix/length for the selected provider. It does NOT make a network call to the provider API. The UI honestly discloses this via `test_type: "format_validation"`. A full network-level test is deferred to Phase G when adapters are implemented.
+
+### Storage
+
+- API keys stored as AES-256-GCM ciphertext in `dealer_settings.ai_settings` jsonb
+- `getAiSettings()` returns `AiSettingsView` — `has_key: boolean` only, never the raw key
+- Keys validated at save time (format) and at test time (format from stored encrypted key)
+- Validation timestamps stored per provider in `{provider_id}_validated_at` fields
 
 ### UI placement
 
-AI Provider Settings will appear as a new settings group in the dealer settings screen (group label: "AI設定" or "AI Provider設定"). This group is only visible when the dealer has a Pro+ subscription with the `"ai_gateway"` feature active.
+Settings appear under **AI設定（Pro+）** in the dealer settings screen. This category is visible to all dealers but shows a "Pro+ required" lock screen for non-Pro+ accounts.
+
+### Azure OpenAI extra field
+
+Azure OpenAI requires an `azure_openai_endpoint` URL in addition to the API key. This is stored in `ai_settings.azure_openai_endpoint` (not encrypted — it's a URL, not a secret).
 
 ---
 
-## 6. AppFeature Additions (Future)
+## 6. AppFeature Status (Sprint 10A/10C)
 
-When the AI Gateway and AI agents are implemented, the following features must be added to `AppFeature` and `PLAN_FEATURES.pro_plus`:
+All AI features are now registered in `plan-types.ts` and `feature-registry.ts`:
 
-| AppFeature | Plan Tier | Feature Group |
-|------------|-----------|---------------|
-| `"ai_gateway"` | Pro+ | AI Gateway / AI Provider Management (prerequisite to all AI agents) |
-| `"ai_marketing"` | Pro+ | AI Marketing Agent (PHASE 71–75) |
-| `"ai_growth"` | Pro+ | AI Growth Agent (PHASE 76) |
-| `"ai_reputation"` | Pro+ | AI Reputation Agent (PHASE 77–81) |
+| AppFeature | Plan Tier | Status | Gate |
+|------------|-----------|--------|------|
+| `"ai_gateway"` | Pro+ | **Active gate** — Sprint 10C settings layer | `checkFeatureAccess("ai_gateway")` |
+| `"ai_marketing"` | Pro+ | **Active gate** — No implementation yet | `checkFeatureAccess("ai_marketing")` |
+| `"ai_reputation"` | Pro+ | **Active gate** — No implementation yet | `checkFeatureAccess("ai_reputation")` |
+| `"ai_growth"` | Pro+ | **Active gate** — No implementation yet | `checkFeatureAccess("ai_growth")` |
+| `"ai_video_generation"` | Pro+ | Type-only (not in PLAN_FEATURES) | — |
+| `"ai_review_assistant"` | Pro+ | Type-only (not in PLAN_FEATURES) | — |
+| `"ai_social_scheduler"` | Pro+ | Type-only (not in PLAN_FEATURES) | — |
+| `"ai_marketing_analytics"` | Pro+ | Type-only (not in PLAN_FEATURES) | — |
 
-**Do not add these to `plan-types.ts` until implementation begins.** Defining unused feature keys creates maintenance overhead.
-
-**Implementation order:** `"ai_gateway"` must be implemented and active before `"ai_marketing"`, `"ai_growth"`, or `"ai_reputation"` can function.
+**Implementation order:** All future AI features (`ai_marketing`, `ai_reputation`, `ai_growth`) MUST call `checkAiGatewayReady()` from `src/lib/ai/check-ai-gateway.ts` and verify `status === "ready"` before executing any AI inference.
 
 ---
 
@@ -197,16 +223,36 @@ This decision is tracked as a future Operator Decision. No change to OCR code is
 
 ---
 
-## 8. Implementation Gate
+## 8. Implementation Status & Gate
 
-**Do not implement the AI Gateway until:**
+### Sprint 10C — Completed
 
-1. Core business platform at stable production
-2. Sprint 10 (dealer approval flow) complete
+| Layer | Status |
+|-------|--------|
+| AI Gateway types (`src/lib/ai/types.ts`) | ✅ Done |
+| Provider registry (`src/lib/ai/provider-registry.ts`) | ✅ Done (5 providers, capabilities) |
+| AI settings types (`src/lib/ai/ai-settings-types.ts`) | ✅ Done |
+| Encryption module (`src/lib/ai/crypto.ts`) | ✅ Done (AES-256-GCM) |
+| Key format validation (`src/lib/ai/validate-api-key.ts`) | ✅ Done |
+| Read settings server action (`src/lib/ai/get-ai-settings.ts`) | ✅ Done |
+| Save settings server action (`src/lib/ai/save-ai-settings.ts`) | ✅ Done |
+| Connection test server action (`src/lib/ai/test-ai-connection.ts`) | ✅ Done |
+| Gateway readiness check (`src/lib/ai/check-ai-gateway.ts`) | ✅ Done |
+| Usage policy types (`src/lib/ai/usage-policy.ts`) | ✅ Done |
+| Settings UI (`src/components/settings/AIGatewaySettings.tsx`) | ✅ Done |
+| Settings navigation (`SettingsCategoryNav.tsx`) | ✅ Done (AI設定 category) |
+| Settings page data fetch (`src/app/settings/page.tsx`) | ✅ Done |
+
+### Phase G — Deferred (awaiting CTO approval of migration)
+
+**Do not implement Phase G until:**
+
+1. `DEALER_AI_KEY_SECRET` env var configured in staging
+2. `ai_settings` column migration applied (`ALTER TABLE ... ADD COLUMN ai_settings jsonb`)
 3. At least one AI Agent feature (PHASE 71+) ready to implement
 4. Legal review of data processing implications (API keys, PII in AI requests)
 5. Separate SDD specification pass for each gateway adapter
-6. CTO approval of `dealer_ai_settings` migration
+6. CTO approval
 
 ---
 
