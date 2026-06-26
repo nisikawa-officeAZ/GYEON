@@ -1,4 +1,4 @@
-// GYEON Business Hub — Settings Category Page (Sprint 12H)
+// GYEON Business Hub — Settings Category Page (Sprint 12I)
 //
 // Dynamic server component for /settings/[category] routes.
 //
@@ -6,24 +6,36 @@
 // takes precedence over this dynamic route for the slug "ai" (Next.js
 // App Router static-route priority).
 //
+// Data strategy (Sprint 12I):
+//   Base fetches (all active categories): staffInfo, dealerSettings
+//   Category-specific conditional fetches (loaded only for the relevant slug):
+//     dealer / branding   → getCompanySettings()
+//     staff               → getCompanySettings() + getStaffList()
+//     communication / subscription → getCurrentPlan()
+//     pdf                 → getDocumentSequences()
+//   subscription          → SubscriptionStatusCard server component (planSlot)
+//
 // Security:
 //   - Staff role resolved server-side via getCurrentStaff()
 //   - dealer_id is always from getCurrentDealer() (inside server actions)
 //   - Visibility check applied before any category detail is rendered
 //   - Access-denied state reveals no category info (SPOL-004)
 //   - Client-side visibility is UX only — server enforcement is Sprint 13+
-//
-// Rendering strategy:
-//   - Active categories: show metadata + registered items + status
-//   - Future categories: show coming-soon state
-//   - Enterprise categories: show enterprise-locked state
-//   - Access denied: show generic gate with no category names exposed
 
 import { notFound }                       from "next/navigation";
 import type { Metadata }                  from "next";
 import MainLayout                         from "@/components/layout/MainLayout";
 import { getCurrentStaff }               from "@/lib/staff/get-current-staff";
-import { getCanonicalDealerSettings }    from "@/lib/dealer-settings/get-canonical-dealer-settings";
+import { getStaffList }                  from "@/lib/staff/get-staff-list";
+import { getCompanySettings }            from "@/lib/company/save-company-settings";
+import type { CompanySettingsFields }    from "@/lib/company/save-company-settings";
+import { getDocumentSequences }          from "@/lib/numbering/get-document-sequences";
+import type { DocumentSequenceDB }       from "@/lib/numbering/numbering-types";
+import { getCurrentPlan }               from "@/lib/plans/get-current-plan";
+import type { DealerPlanInfo }           from "@/lib/plans/plan-types";
+import type { DealerStaffDB }            from "@/lib/staff/staff-types";
+import { getCanonicalDealerSettings }   from "@/lib/dealer-settings/get-canonical-dealer-settings";
+import SubscriptionStatusCard            from "@/components/subscription/SubscriptionStatusCard";
 import {
   getSettingsCategory,
   resolveVisibilityFromRole,
@@ -68,14 +80,47 @@ export default async function SettingsCategoryPage({ params }: PageProps) {
   const canAccess = canViewSetting(userLevel, categoryMeta.min_visibility);
 
   // Load dealer settings only when user has access and the category is active.
-  // Skipping the fetch for future / enterprise / access-denied reduces load.
   const needsSettings = canAccess && categoryMeta.ui_available;
   const dealerSettings = needsSettings
     ? await getCanonicalDealerSettings().catch(() => null)
     : null;
 
+  // ── Category-specific conditional data fetches ────────────────────────────
+
+  const catId = categoryMeta.category_id;
+
+  let companySettings: CompanySettingsFields | null = null;
+  let staffList:       DealerStaffDB[]              = [];
+  let sequences:       DocumentSequenceDB[]          = [];
+  let planInfo:        DealerPlanInfo | null         = null;
+
+  if (needsSettings) {
+    if (catId === "dealer" || catId === "branding") {
+      companySettings = await getCompanySettings().catch(() => null);
+    }
+
+    if (catId === "staff") {
+      [companySettings, staffList] = await Promise.all([
+        getCompanySettings().catch(() => null),
+        getStaffList().catch(() => []),
+      ]);
+    }
+
+    if (catId === "communication" || catId === "subscription") {
+      planInfo = await getCurrentPlan().catch(() => null);
+    }
+
+    if (catId === "pdf") {
+      sequences = await getDocumentSequences().catch(() => []);
+    }
+  }
+
+  // SubscriptionStatusCard is a server component — render it server-side and
+  // pass as a React node slot to PlanContent (client component).
+  const planSlot: React.ReactNode =
+    catId === "subscription" ? <SubscriptionStatusCard /> : null;
+
   // Fetch registered settings items for this category from the Sprint 12F registry
-  // Pure static call — no DB, no async
   const registrations = getRegistrationsForCategory(categoryMeta.category_id);
 
   return (
@@ -85,8 +130,14 @@ export default async function SettingsCategoryPage({ params }: PageProps) {
           category={categoryMeta}
           canAccess={canAccess}
           staffRole={staffInfo?.role ?? null}
+          staffId={staffInfo?.staffId ?? null}
           dealerSettings={dealerSettings}
           registrations={registrations}
+          companySettings={companySettings}
+          staffList={staffList}
+          sequences={sequences}
+          planInfo={planInfo}
+          planSlot={planSlot}
         />
       </div>
     </MainLayout>

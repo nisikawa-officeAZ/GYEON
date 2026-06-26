@@ -36,6 +36,8 @@ export interface SettingsCenterWrapperProps {
   staffInfo:       { role: DealerStaffRole; staffId: string | null } | null;
   planSlot:        React.ReactNode;
   aiSettings:      AiSettingsView;
+  // Deep-link: open a specific panel on mount (from ?panel= URL param)
+  defaultPanel?:   CategoryId;
 }
 
 // ─── View state ───────────────────────────────────────────────────────────────
@@ -47,7 +49,10 @@ type ViewState =
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export default function SettingsCenterWrapper(props: SettingsCenterWrapperProps) {
-  const [view, setView] = useState<ViewState>({ mode: "hub" });
+  const initialView: ViewState = props.defaultPanel
+    ? { mode: "detail", panelId: props.defaultPanel }
+    : { mode: "hub" };
+  const [view, setView] = useState<ViewState>(initialView);
 
   const openPanel = (panelId: CategoryId) => {
     setView({ mode: "detail", panelId });

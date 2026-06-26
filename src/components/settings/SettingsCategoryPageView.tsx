@@ -1,18 +1,32 @@
-// GYEON Business Hub — Settings Category Page View (Sprint 12H)
+// GYEON Business Hub — Settings Category Page View (Sprint 12I)
 //
 // Pure display component rendered by /settings/[category]/page.tsx.
 // Accepts serialized props from the server component — no "use client" needed.
+// Imports client-component panels (CompanySettingsForm, StaffManagement, etc.)
+// which are hydrated on the browser; server renders the shell.
 //
 // Rendering branches:
 //   1. canAccess=false         → SettingsAccessState (no category detail exposed)
 //   2. enterprise_only status  → SettingsEnterpriseState
 //   3. future/hidden status    → SettingsFutureState
-//   4. visible/experimental    → full category page with sections and items
+//   4. visible/experimental    → full category page with embedded panel
 //
 // Security:
 //   - Access-denied branch reveals no category names, no setting names (SPOL-004)
-//   - Sensitive categories not rendered for unauthorized roles
+//   - Staff-only panels (staff management) gated by staffRole check
 //   - Client-side visibility is UX only; Sprint 13 adds server enforcement
+//
+// Category-to-panel mapping (Sprint 12I):
+//   dealer        → CompanySettingsForm (company/store settings)
+//   staff         → StaffManagement (owner/manager only)
+//   branding      → CompanySettingsForm (logo, stamp, colour settings)
+//   notifications → ReminderContent (reminder template display)
+//   communication → LineContent (LINE status + rich menu)
+//   subscription  → PlanContent + SubscriptionStatusCard slot
+//   ocr           → OcrContent (OCR policy read-only)
+//   pdf           → PdfContent (DocumentSequenceSettings + PDF extras)
+//   ai_providers  → link to dedicated /settings/ai page
+//   all others    → future-state notice within the category frame
 //
 // No persistence. No DB calls. No "use server". Pure render.
 
@@ -20,20 +34,49 @@ import Link from "next/link";
 import type { SettingsCategory, SettingsRegistrationEntry } from "@/lib/settings";
 import type { CanonicalDealerSettings } from "@/lib/dealer-settings/dealer-settings-types";
 import type { DealerStaffRole }         from "@/lib/staff/staff-types";
+import type { DealerStaffDB }           from "@/lib/staff/staff-types";
+import type { CompanySettingsFields }   from "@/lib/company/save-company-settings";
+import type { DocumentSequenceDB }      from "@/lib/numbering/numbering-types";
+import type { DealerPlanInfo }          from "@/lib/plans/plan-types";
+import CompanySettingsForm              from "./CompanySettingsForm";
+import StaffManagement                  from "./StaffManagement";
+import {
+  OcrContent,
+  LineContent,
+  PdfContent,
+  ReminderContent,
+  PlanContent,
+} from "./SettingsCategoryNav";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface SettingsCategoryPageViewProps {
-  category:      SettingsCategory;
-  canAccess:     boolean;
-  staffRole:     DealerStaffRole | null;
-  dealerSettings: CanonicalDealerSettings | null;
-  registrations:  SettingsRegistrationEntry[];
+  category:        SettingsCategory;
+  canAccess:       boolean;
+  staffRole:       DealerStaffRole | null;
+  staffId:         string | null;
+  dealerSettings:  CanonicalDealerSettings | null;
+  registrations:   SettingsRegistrationEntry[];
+  // Category-specific data (loaded conditionally in page.tsx)
+  companySettings: CompanySettingsFields | null;
+  staffList:       DealerStaffDB[];
+  sequences:       DocumentSequenceDB[];
+  planInfo:        DealerPlanInfo | null;
+  planSlot:        React.ReactNode;
 }
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
 const card = "bg-[#0f172a] border border-slate-800 rounded-xl p-5";
+
+// ─── Fallback plan (used when planInfo fetch fails) ───────────────────────────
+
+const FALLBACK_PLAN: DealerPlanInfo = {
+  plan:                "basic",
+  subscription_status: "active",
+  started_at:          null,
+  expired_at:          null,
+};
 
 // ─── Shared breadcrumb ────────────────────────────────────────────────────────
 
@@ -237,8 +280,6 @@ function ItemBadge({ status, requires_plan }: {
 
 // ─── SettingsSectionList ──────────────────────────────────────────────────────
 
-// Groups registration entries by section prefix (e.g., "dealer.store_info")
-// and renders them as collapsible section cards.
 function SettingsSectionList({ registrations }: { registrations: SettingsRegistrationEntry[] }) {
   if (registrations.length === 0) {
     return (
@@ -248,7 +289,6 @@ function SettingsSectionList({ registrations }: { registrations: SettingsRegistr
     );
   }
 
-  // Group by section (first two path segments of item_id)
   const sectionMap = new Map<string, SettingsRegistrationEntry[]>();
   for (const reg of registrations) {
     const parts  = reg.item_id.split(".");
@@ -257,7 +297,6 @@ function SettingsSectionList({ registrations }: { registrations: SettingsRegistr
     sectionMap.get(secKey)!.push(reg);
   }
 
-  // Convert section key to display label: "store_info" → "Store Info"
   const toLabel = (key: string) =>
     key.split(".").pop()!
       .replace(/_/g, " ")
@@ -387,73 +426,200 @@ function SettingsCategoryHeader({ category, staffRole }: {
   );
 }
 
-// ─── Active category page ─────────────────────────────────────────────────────
+// ─── DataLoadError ────────────────────────────────────────────────────────────
+
+function DataLoadError() {
+  return (
+    <div className="px-4 py-3 rounded-xl bg-red-950/20 border border-red-500/20">
+      <p className="text-xs text-red-400">
+        設定データの読み込みに失敗しました。ページを更新してください。
+      </p>
+    </div>
+  );
+}
+
+// ─── AiProvidersLink ──────────────────────────────────────────────────────────
+
+function AiProvidersLink() {
+  return (
+    <div className={`${card} flex items-center justify-between gap-4`}>
+      <div>
+        <p className="text-sm font-medium text-slate-200">AI プロバイダー設定</p>
+        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+          AIゲートウェイ・APIキー・プロバイダー接続の詳細設定は専用ページで管理します。
+        </p>
+      </div>
+      <Link
+        href="/settings/ai"
+        className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
+      >
+        AI設定を開く →
+      </Link>
+    </div>
+  );
+}
+
+// ─── CategoryDetailPanel ──────────────────────────────────────────────────────
+
+// Routes each active category to its appropriate settings panel.
+// Panels are existing client components reused without modification.
+function CategoryDetailPanel({
+  category,
+  staffRole,
+  registrations,
+  dealerSettings,
+  companySettings,
+  staffList,
+  sequences,
+  planInfo,
+  planSlot,
+}: {
+  category:        SettingsCategory;
+  staffRole:       DealerStaffRole | null;
+  registrations:   SettingsRegistrationEntry[];
+  dealerSettings:  CanonicalDealerSettings | null;
+  companySettings: CompanySettingsFields | null;
+  staffList:       DealerStaffDB[];
+  sequences:       DocumentSequenceDB[];
+  planInfo:        DealerPlanInfo | null;
+  planSlot:        React.ReactNode;
+}) {
+  switch (category.category_id) {
+    // ── 店舗設定 ─────────────────────────────────────────────────────────────
+    case "dealer":
+      return <CompanySettingsForm initialSettings={companySettings} />;
+
+    // ── スタッフ管理 ─────────────────────────────────────────────────────────
+    case "staff":
+      if (staffRole !== "owner" && staffRole !== "manager") {
+        return (
+          <div className={`${card} flex flex-col items-center gap-3 py-8 text-center`}>
+            <span className="text-2xl">👤</span>
+            <p className="text-sm text-slate-400">スタッフ管理にはマネージャー権限以上が必要です</p>
+          </div>
+        );
+      }
+      return (
+        <StaffManagement
+          initialStaff={staffList}
+          currentRole={staffRole}
+        />
+      );
+
+    // ── ブランディング ────────────────────────────────────────────────────────
+    // Logo, stamp, watermark settings are part of CompanySettingsForm.
+    case "branding":
+      return (
+        <div className="flex flex-col gap-4">
+          <div className="px-3 py-2 rounded-lg border border-slate-800 bg-slate-900/30">
+            <p className="text-[10px] text-slate-500">
+              ロゴ・スタンプ・ウォーターマーク・カラー設定は下記の自社設定フォームに含まれます。
+            </p>
+          </div>
+          <CompanySettingsForm initialSettings={companySettings} />
+        </div>
+      );
+
+    // ── メンテナンス通知 ──────────────────────────────────────────────────────
+    case "notifications":
+      return dealerSettings
+        ? <ReminderContent s={dealerSettings} />
+        : <DataLoadError />;
+
+    // ── LINE / コミュニケーション ──────────────────────────────────────────────
+    case "communication":
+      if (!dealerSettings) return <DataLoadError />;
+      return (
+        <LineContent
+          s={dealerSettings}
+          planInfo={planInfo ?? FALLBACK_PLAN}
+        />
+      );
+
+    // ── 契約・プラン ──────────────────────────────────────────────────────────
+    case "subscription":
+      return (
+        <PlanContent
+          planInfo={planInfo ?? FALLBACK_PLAN}
+          planSlot={planSlot}
+        />
+      );
+
+    // ── 車検証OCR ─────────────────────────────────────────────────────────────
+    case "ocr":
+      return dealerSettings
+        ? <OcrContent s={dealerSettings} />
+        : <DataLoadError />;
+
+    // ── PDF・書類番号 ─────────────────────────────────────────────────────────
+    case "pdf":
+      return dealerSettings
+        ? <PdfContent sequences={sequences} s={dealerSettings} />
+        : <DataLoadError />;
+
+    // ── AIプロバイダー ────────────────────────────────────────────────────────
+    // Dedicated route at /settings/ai supersedes this panel.
+    case "ai_providers":
+      return <AiProvidersLink />;
+
+    // ── その他（未実装 / 将来対応）────────────────────────────────────────────
+    default: {
+      const hasItems = registrations.some(r => r.status === "visible");
+      return (
+        <div className="flex flex-col gap-4">
+          {hasItems && registrations.length > 0 && (
+            <SettingsSectionList registrations={registrations} />
+          )}
+          <div className="flex items-center gap-3 px-4 py-3 bg-slate-900/40 border border-slate-800 rounded-xl">
+            <span className="text-slate-600">🗓️</span>
+            <p className="text-xs text-slate-600">
+              この設定カテゴリのフォーム実装は {category.target_sprint} を予定しています。
+            </p>
+          </div>
+        </div>
+      );
+    }
+  }
+}
+
+// ─── ActiveCategoryContent ────────────────────────────────────────────────────
 
 function ActiveCategoryContent({
   category,
   staffRole,
   registrations,
+  dealerSettings,
+  companySettings,
+  staffList,
+  sequences,
+  planInfo,
+  planSlot,
 }: {
-  category:      SettingsCategory;
-  staffRole:     DealerStaffRole | null;
-  registrations: SettingsRegistrationEntry[];
+  category:        SettingsCategory;
+  staffRole:       DealerStaffRole | null;
+  registrations:   SettingsRegistrationEntry[];
+  dealerSettings:  CanonicalDealerSettings | null;
+  companySettings: CompanySettingsFields | null;
+  staffList:       DealerStaffDB[];
+  sequences:       DocumentSequenceDB[];
+  planInfo:        DealerPlanInfo | null;
+  planSlot:        React.ReactNode;
 }) {
-  const hasActiveItems = registrations.some(r => r.status === "visible");
-  const hasFutureItems = registrations.some(r => r.status === "future");
-
   return (
     <div className="flex flex-col gap-5">
-      {/* Category header card */}
       <SettingsCategoryHeader category={category} staffRole={staffRole} />
 
-      {/* Registered settings */}
-      {registrations.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              登録済み設定項目 ({registrations.length})
-            </p>
-            <div className="flex-1 h-px bg-slate-800" />
-          </div>
-          <SettingsSectionList registrations={registrations} />
-        </div>
-      )}
-
-      {/* CTA row */}
-      {hasActiveItems && (
-        <div className={`${card} flex items-center justify-between gap-4`}>
-          <div>
-            <p className="text-sm font-medium text-slate-200">設定を変更する</p>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              設定の変更はSettings Centerの設定パネルから行います
-            </p>
-          </div>
-          <Link
-            href="/settings"
-            className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
-          >
-            設定を開く →
-          </Link>
-        </div>
-      )}
-
-      {/* Future items notice */}
-      {hasFutureItems && !hasActiveItems && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-slate-900/40 border border-slate-800 rounded-xl">
-          <span className="text-slate-600">🗓️</span>
-          <p className="text-xs text-slate-600">
-            この設定カテゴリのフォーム実装は {category.target_sprint} を予定しています。
-          </p>
-        </div>
-      )}
-
-      {/* Foundation sprint notice */}
-      <div className="px-3 py-2 border border-slate-800/60 bg-slate-900/20 rounded-lg">
-        <p className="text-[10px] text-slate-700">
-          Sprint 12H: UI routing foundation — 設定値の永続化はSprint 13+で実装予定。
-          dealer_id はサーバー側の getCurrentDealer() から取得します。
-        </p>
-      </div>
+      <CategoryDetailPanel
+        category={category}
+        staffRole={staffRole}
+        registrations={registrations}
+        dealerSettings={dealerSettings}
+        companySettings={companySettings}
+        staffList={staffList}
+        sequences={sequences}
+        planInfo={planInfo}
+        planSlot={planSlot}
+      />
     </div>
   );
 }
@@ -464,8 +630,14 @@ export default function SettingsCategoryPageView({
   category,
   canAccess,
   staffRole,
-  dealerSettings: _dealerSettings, // available for Sprint 13 status indicators
+  staffId: _staffId,
+  dealerSettings,
   registrations,
+  companySettings,
+  staffList,
+  sequences,
+  planInfo,
+  planSlot,
 }: SettingsCategoryPageViewProps) {
   // SPOL-004: access-denied state reveals no category details
   if (!canAccess) {
@@ -500,6 +672,12 @@ export default function SettingsCategoryPageView({
         category={category}
         staffRole={staffRole}
         registrations={registrations}
+        dealerSettings={dealerSettings}
+        companySettings={companySettings}
+        staffList={staffList}
+        sequences={sequences}
+        planInfo={planInfo}
+        planSlot={planSlot}
       />
     </div>
   );

@@ -464,6 +464,79 @@ All 20 categories now have dedicated URLs:
 
 ---
 
+## Sprint 12I — Settings Category Detail Panels
+
+### Summary
+
+Connects existing settings panels into dedicated `/settings/[category]` pages. Each active category now renders a real working panel instead of just metadata + CTA.
+
+### Category-to-Panel Mapping
+
+| Category slug | Panel rendered |
+|--------------|----------------|
+| `dealer` | `CompanySettingsForm` (company name, address, bank, etc.) |
+| `staff` | `StaffManagement` (owner/manager only; gated by staffRole) |
+| `branding` | `CompanySettingsForm` (logo, stamp, watermark, colour fields) |
+| `notifications` | `ReminderContent` — reminder template read-only display |
+| `communication` | `LineContent` — LINE status, message settings, rich menu |
+| `subscription` | `PlanContent` + `SubscriptionStatusCard` slot |
+| `ocr` | `OcrContent` — OCR policy read-only display |
+| `pdf` | `PdfContent` — `DocumentSequenceSettings` + PDF extras |
+| `ai_providers` | Link card → `/settings/ai` (dedicated AI settings route) |
+| all others | Future-state notice within category frame |
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `src/components/settings/SettingsCategoryNav.tsx` | Exported 5 panel functions: `OcrContent`, `LineContent`, `PdfContent`, `ReminderContent`, `PlanContent` |
+| `src/components/settings/SettingsCategoryPageView.tsx` | Full update — new props (companySettings, staffList, sequences, planInfo, planSlot), `CategoryDetailPanel` switch, `DataLoadError`, `AiProvidersLink` |
+| `src/app/settings/[category]/page.tsx` | Category-specific conditional data fetches; `SubscriptionStatusCard` rendered as `planSlot` for subscription |
+| `src/components/settings/SettingsCenterWrapper.tsx` | Added `defaultPanel?: CategoryId` prop; starts in detail mode when provided |
+| `src/app/settings/page.tsx` | Added `searchParams` support; reads `?panel=` param and passes as `defaultPanel` to wrapper |
+| `docs/master_specification/SETTINGS_CENTER_SPEC.md` | Sprint 12I section added |
+
+### Deep-Link Support (Phase E)
+
+`/settings?panel=<panelId>` opens that panel directly on mount.
+
+Valid values: `store`, `trade`, `pricing`, `service`, `ocr`, `line`, `pdf`, `reminder`, `plan`, `backup`, `support`, `ai`.
+
+Invalid / unknown values are silently ignored (hub shown instead).
+
+### Data Flow
+
+```
+/settings/[category]/page.tsx  (Server Component)
+  ├── getCurrentStaff()           — always
+  ├── getCanonicalDealerSettings()— when canAccess && ui_available
+  ├── getCompanySettings()        — dealer, branding, staff only
+  ├── getStaffList()              — staff only
+  ├── getCurrentPlan()            — communication, subscription only
+  ├── getDocumentSequences()      — pdf only
+  └── <SubscriptionStatusCard />  — subscription only (planSlot)
+       ↓
+SettingsCategoryPageView.tsx  (Server Component, no "use client")
+  └── CategoryDetailPanel (switch on category_id)
+       ├── CompanySettingsForm     — "use client" ✓
+       ├── StaffManagement         — "use client" ✓
+       ├── OcrContent / LineContent / PdfContent / ReminderContent / PlanContent
+       │    (exported from SettingsCategoryNav.tsx — "use client") ✓
+       └── AiProvidersLink         — link to /settings/ai
+```
+
+### Sprint 12I Constraints Respected
+
+- No migrations, no schema changes, no persistence changes
+- No external APIs, no provider SDKs
+- No fake settings functionality
+- No broken links
+- No unsafe authorization claims (staffRole gate is UX only; Sprint 13 server enforcement)
+- dealer_id from getCurrentDealer() inside all server actions
+- Reused existing components without modification of their logic
+
+---
+
 ## Sprint 12F Constraints Respected
 
 - No database migrations

@@ -424,7 +424,7 @@ function ServiceContent({ s }: { s: CanonicalDealerSettings }) {
 
 // ─── Section: 車検証OCR ───────────────────────────────────────────────────────
 
-function OcrContent({ s }: { s: CanonicalDealerSettings }) {
+export function OcrContent({ s }: { s: CanonicalDealerSettings }) {
   const rows: Array<{ label: string; node: React.ReactNode }> = [
     { label: "OCR機能",       node: <BoolPill value={s.ocr_enabled} /> },
     { label: "OCRエンジン",    node: <FixedChip label="GPT-4o mini" /> },
@@ -459,7 +459,7 @@ function OcrContent({ s }: { s: CanonicalDealerSettings }) {
 // CanonicalDealerSettings by getCanonicalDealerSettings() and are never
 // displayed here.
 
-function LineContent({ s, planInfo }: { s: CanonicalDealerSettings; planInfo: DealerPlanInfo }) {
+export function LineContent({ s, planInfo }: { s: CanonicalDealerSettings; planInfo: DealerPlanInfo }) {
   const richMenuConfig = parseRichMenuConfig(s.line_public_settings?.rich_menu);
   return (
     <div className="flex flex-col gap-4">
@@ -538,7 +538,7 @@ function LineContent({ s, planInfo }: { s: CanonicalDealerSettings; planInfo: De
 
 // ─── Section: PDF・書類 ───────────────────────────────────────────────────────
 
-function PdfContent({ sequences, s }: { sequences: DocumentSequenceDB[]; s: CanonicalDealerSettings }) {
+export function PdfContent({ sequences, s }: { sequences: DocumentSequenceDB[]; s: CanonicalDealerSettings }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
@@ -577,7 +577,7 @@ function PdfContent({ sequences, s }: { sequences: DocumentSequenceDB[]; s: Cano
 
 // ─── Section: リマインダー ────────────────────────────────────────────────────
 
-function ReminderContent({ s }: { s: CanonicalDealerSettings }) {
+export function ReminderContent({ s }: { s: CanonicalDealerSettings }) {
   return (
     <div className={card}>
       <div className="flex items-center gap-2">
@@ -606,7 +606,7 @@ function ReminderContent({ s }: { s: CanonicalDealerSettings }) {
 
 // ─── Section: 契約・プラン ────────────────────────────────────────────────────
 
-function PlanContent({
+export function PlanContent({
   planInfo,
   planSlot,
 }: {
