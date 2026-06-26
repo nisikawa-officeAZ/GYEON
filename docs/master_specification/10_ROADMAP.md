@@ -153,9 +153,9 @@ Transform GYEON Detailer Agent from a business management system into an AI busi
 |-------|------|-----------------|
 | PHASE 71 | AI Media Management Foundation | Before/after image management, AI blur (plates + faces), AI quality scoring, dealer branding assets |
 | PHASE 72 | AI Video Generator | Auto-create 15s/30s/60s marketing videos from completed jobs (Instagram Reel, TikTok, YouTube Shorts, Facebook Reel, LINE VOOM) |
-| PHASE 73 | AI Content Writer | Auto-generate titles, captions, hashtags, SEO keywords, local keywords, GYEON product references |
+| PHASE 73 | AI Content Writer | Auto-generate titles, captions, hashtags; **mandatory SEO/MEO/AEO/LLMO/AIO optimization** via Discovery Optimization Engine; local + service + vehicle + GYEON product keywords; FAQ-style answer content; platform metadata |
 | PHASE 74 | AI Social Publishing | Draft → dealer approval → scheduled publish to Instagram, Facebook, X, TikTok, YouTube Shorts, LINE VOOM |
-| PHASE 75 | AI Marketing Analytics | Reach, views, saves, engagement; best-performing images and times; AI recommendations |
+| PHASE 75 | AI Marketing Analytics | Reach, views, saves, engagement; **discovery performance analytics** (MEO/SEO/AEO/LLMO/AIO channel tracking); AI recommendations |
 | PHASE 76 | AI Growth Agent | Proactive: detect inactive accounts, suggest content, auto-create drafts, trigger campaign ideas |
 
 **Locked principles:**
@@ -163,6 +163,7 @@ Transform GYEON Detailer Agent from a business management system into an AI busi
 - License plates and faces are blurred server-side before any image is stored or transmitted.
 - All AI API credentials are server-side only — never exposed to the client.
 - No synthetic "before" images — ever.
+- **All generated content must be optimized for SEO, MEO, AEO, LLMO, and AIO.** This is mandatory, not optional. See `AI_MARKETING_AGENT_ROADMAP.md` §Discovery Optimization.
 
 **Implementation gate:** Core platform stable + Sprint 10 complete + CTO sign-off on media storage architecture + privacy policy update. See `AI_MARKETING_AGENT_ROADMAP.md` §Implementation Gate.
 
