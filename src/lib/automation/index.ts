@@ -93,3 +93,47 @@ export {
   getEntitlementForAction,
 } from "./platform-core-bridge";
 export type { ApplicationAutomationProfile } from "./platform-core-bridge";
+
+// AI Gateway Bridge (Sprint 12D)
+export type {
+  AutomationAIActionTypeId,
+  AutomationAIActionCategory,
+  AutomationAIRequest,
+  AutomationAIGatewayPayload,
+  AutomationAIReadinessStatus,
+  AutomationAIReadiness,
+  AutomationAIResult,
+  AutomationAIActionDescriptor,
+  AutomationAIApprovalProfile,
+  CommunicationFlowStepType,
+  CommunicationFlowStep,
+  AutomationCommunicationFlowType,
+  AutomationCommunicationFlow,
+} from "./ai";
+export {
+  AUTOMATION_AI_ACTION_REGISTRY,
+  getAIActionDescriptor,
+  getAIActionsByCategory,
+  getAIActionsForAgent,
+  getCustomerFacingAIActions,
+  getActionsRequiringApproval,
+  getAIActionTypeIds,
+  getRequiredAgentForAction,
+  getRequiredTaskTypeForAction,
+  validateAIActionContext,
+  buildGatewayPayload,
+  checkAIActionReadiness,
+  dryRunAIAction,
+  AI_ACTION_TO_AUTOMATION_ACTION,
+  AUTOMATION_AI_APPROVAL_POLICIES,
+  getApprovalProfile,
+  getActionsRequiringApprovalPolicy,
+  getCustomerFacingApprovalProfiles,
+  getSensitiveDataActions,
+  getReviewComplianceActions,
+  COMMUNICATION_FLOW_TEMPLATES,
+  getFlowForActionType,
+  getFlowsByChannel,
+  getFlowsRequiringApproval,
+  getFlowsRequiringConsent,
+} from "./ai";
