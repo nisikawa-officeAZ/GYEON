@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v3.3 — Sprint 11F) |
+| **Last Updated** | 2026-06-26 (v3.4 — Sprint 11G) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -174,6 +174,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── MARKETING_PLATFORM_SPEC.md          ← Sprint 11A: AI Marketing Platform — domain, asset model, channel registry, workflow, optimization, AI compatibility
 ├── VIDEO_PIPELINE_SPEC.md             ← Sprint 11B: AI Video Pipeline — source media, timeline, publishing profiles (9), AI providers (8), privacy model
 ├── REPUTATION_PLATFORM_SPEC.md       ← Sprint 11C: AI Reputation Platform — review request workflow, compliance model, signal model, MEO/AEO/LLMO/AIO, CE integration
+├── LINE_AUTOMATION_PLATFORM_SPEC.md  ← Sprint 11G: LINE Automation Platform — 10 workflows, 9 triggers, 4 approval modes, AI integration (deferred), Rich Menu compat (8 buttons)
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -218,6 +219,7 @@ TIER 4 — DESIGN AUTHORITY
 | **3.1** | **2026-06-26** | **Sprint 11D** | **AI Reputation Agent Runtime: ReputationRuntime class, 8-check gateway readiness, review request dry-run (9 steps), compliance guard (8 rules), WorkCompletedRuntimePlan, REPUTATION_PLATFORM_SPEC.md §12** |
 | **3.2** | **2026-06-26** | **Sprint 11E** | **Review Request Dealer Approval UI: ReviewRequestApprovalSection, review-request-actions server actions (prepare/approve/reject/skip dry-run), WorkOrderDetail integration, REPUTATION_PLATFORM_SPEC.md §13** |
 | **3.3** | **2026-06-26** | **Sprint 11F** | **Review LINE Message Builder: deterministic builder (7 message rules), compliance validator (3 violation categories), link readiness (4 destinations), UI preview + copy button, REPUTATION_PLATFORM_SPEC.md §14** |
+| **3.4** | **2026-06-26** | **Sprint 11G** | **LINE Automation Platform Foundation: 10 workflows, 9 triggers, 4 approval modes, 8 execution states, AI integration spec (deferred), Rich Menu compat (8 buttons), LINE_AUTOMATION_PLATFORM_SPEC.md** |
 
 ---
 
