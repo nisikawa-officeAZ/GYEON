@@ -8,6 +8,14 @@
 
 import type { AIProviderId, AITaskType, AITaskRouting } from "./types";
 
+// ─── Gateway readiness (re-used by agents/types.ts) ───────────────────────────
+
+export interface AIGatewayReadiness {
+  status:   AIGatewayStatus;
+  provider: AIProviderId | null;
+  message:  string;
+}
+
 // ─── Provider status (client-safe) ────────────────────────────────────────────
 
 export interface AiProviderStatus {

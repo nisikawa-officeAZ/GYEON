@@ -256,6 +256,32 @@ This decision is tracked as a future Operator Decision. No change to OCR code is
 
 ---
 
+## 10. AI Agent Framework (Sprint 10D)
+
+The AI Agent Framework is the common architecture layer between the Gateway and individual AI agents. See `AI_AGENT_FRAMEWORK.md` for the full specification.
+
+**Key integration points:**
+
+| Framework component | Gateway role |
+|--------------------|-------------|
+| `checkExecutionPolicy()` | Calls `checkFeatureAccess()` + `checkAiGatewayReady()` |
+| `createAgentContext()` | Calls `checkAiGatewayReady()` + `getAiSettings()` |
+| `AIAgentContext.gateway` | Contains `AIGatewayReadiness` from `checkAiGatewayReady()` |
+| `AIAgentContext.policy` | Populated from `AiSettingsView.monthly_limit_usd` + `hard_limit` |
+
+**Dependency chain:**
+```
+AI Agent (Sprint 10E+)
+        ↓
+AI Agent Framework (Sprint 10D)   ← src/lib/ai/agents/
+        ↓
+AI Gateway Settings (Sprint 10C)  ← src/lib/ai/get-ai-settings.ts, check-ai-gateway.ts
+        ↓
+AI Gateway Spec (This document)   ← provider-registry.ts, crypto.ts
+```
+
+---
+
 ## 9. Compatibility Notes
 
 ### Existing code compatibility

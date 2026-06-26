@@ -5,17 +5,8 @@
 // Actual adapters are registered at Phase G implementation time.
 
 import type { AIProviderId, AITaskType } from "./types";
-
-// ─── Capabilities ─────────────────────────────────────────────────────────────
-
-export type AICapability =
-  | "text_generation"   // Generate natural language text
-  | "chat_completion"   // Multi-turn conversation
-  | "vision"            // Image understanding / OCR
-  | "image_generation"  // Create images from text
-  | "video_generation"  // Create video content
-  | "embeddings"        // Vector embeddings for search
-  | "function_calling"; // Structured tool use / JSON output
+import type { AICapability } from "./capabilities";
+export type { AICapability };
 
 // ─── Registry entry ───────────────────────────────────────────────────────────
 
@@ -43,7 +34,7 @@ export const AI_PROVIDER_REGISTRY: AIProviderRegistryEntry[] = [
     id:               "openai",
     nameJa:           "OpenAI",
     descJa:           "GPT-4o / GPT-4o mini。テキスト生成・画像理解・コンテンツ作成に最適。",
-    capabilities:     ["text_generation", "chat_completion", "vision", "embeddings", "function_calling"],
+    capabilities:     ["text_generation", "chat_completion", "vision", "ocr", "embeddings", "function_calling"],
     adapterAvailable: false,
     requiresEndpoint: false,
     settingsKey:      "openai_api_key",
@@ -63,7 +54,7 @@ export const AI_PROVIDER_REGISTRY: AIProviderRegistryEntry[] = [
     id:               "anthropic",
     nameJa:           "Claude (Anthropic)",
     descJa:           "Claude Sonnet / Haiku。長文生成・レビュー対応文・コンテンツ品質に優れる。",
-    capabilities:     ["text_generation", "chat_completion", "vision", "function_calling"],
+    capabilities:     ["text_generation", "chat_completion", "vision", "function_calling", "seo_analysis"],
     adapterAvailable: false,
     requiresEndpoint: false,
     settingsKey:      "anthropic_api_key",
@@ -83,7 +74,7 @@ export const AI_PROVIDER_REGISTRY: AIProviderRegistryEntry[] = [
     id:               "gemini",
     nameJa:           "Gemini (Google)",
     descJa:           "Gemini 1.5 Pro / Flash。マルチモーダル・高速・コスト効率に優れる。",
-    capabilities:     ["text_generation", "chat_completion", "vision", "embeddings", "function_calling"],
+    capabilities:     ["text_generation", "chat_completion", "vision", "ocr", "embeddings", "function_calling", "seo_analysis", "aio_analysis"],
     adapterAvailable: false,
     requiresEndpoint: false,
     settingsKey:      "gemini_api_key",
@@ -122,7 +113,7 @@ export const AI_PROVIDER_REGISTRY: AIProviderRegistryEntry[] = [
     id:               "openrouter",
     nameJa:           "OpenRouter",
     descJa:           "1つのAPIキーで100以上のモデルにアクセス。複数プロバイダーを1本化したいディーラー向け。",
-    capabilities:     ["text_generation", "chat_completion", "vision", "image_generation", "function_calling"],
+    capabilities:     ["text_generation", "chat_completion", "vision", "image_generation", "function_calling", "seo_analysis"],
     adapterAvailable: false,
     requiresEndpoint: false,
     settingsKey:      "openrouter_api_key",

@@ -162,7 +162,8 @@ TIER 4 — DESIGN AUTHORITY
 ├── DEALER_RANK_SPEC.md                    ← Sprint 9: rank lockdown spec + Sprint 10 deferred work
 ├── SPRINT10_APPROVAL_FLOW_SPEC.md         ← Sprint 10: dealer approval flow (decisions locked)
 ├── SPRINT10A_IMPLEMENTATION_PLAN.md       ← Sprint 10A: full implementation plan
-├── AI_GATEWAY_SPEC.md                     ← Future: AI provider-agnostic gateway (prerequisite to all AI agents)
+├── AI_GATEWAY_SPEC.md                     ← Sprint 10C: AI provider gateway (5 providers, AES-256-GCM, settings UI)
+├── AI_AGENT_FRAMEWORK.md                  ← Sprint 10D: Common AI agent architecture (lifecycle, registry, capabilities)
 ├── AI_MARKETING_AGENT_ROADMAP.md          ← Future: PHASE 71–76 AI marketing + growth (deferred)
 ├── AI_REPUTATION_AGENT_ROADMAP.md         ← Future: PHASE 77–81 AI reputation + review management (deferred)
 │
@@ -193,6 +194,7 @@ TIER 4 — DESIGN AUTHORITY
 | 1.5 | 2026-06-26 | Architecture | AI Gateway expanded: OpenRouter added, AI Provider Settings section (connection test, usage limits, cost visibility, per-feature model selection), `"ai_gateway"` as Pro+ AppFeature; product vision updated to AI-powered business OS |
 | 1.6 | 2026-06-26 | Sprint 10B | LINE Rich Menu foundation: LIFF/postback action types, button purpose/slot identity, future workflow hints, validation layer, AI Reputation Agent connection point (slot 3 review) |
 | 1.7 | 2026-06-26 | Sprint 10C | AI Gateway settings layer: AES-256-GCM key encryption, 5-provider registry with capabilities, dealer AI settings UI (Pro+), save/test/readiness-check server actions, migration proposal for dealer_settings.ai_settings column |
+| 1.8 | 2026-06-26 | Sprint 10D | AI Agent Framework: AIAgent interface, AIAgentContext, lifecycle runner, execution policy, 7-agent registry, capability model (16 provider caps + 8 agent caps), AIAgentNotImplementedError pattern for Phase G |
 
 ---
 
