@@ -12,6 +12,8 @@ import {
   WorkOrderFileDB,
   WorkOrderFilePhase,
   workOrderFilePhaseLabel,
+  isPhoto,
+  isVideo,
 } from "@/lib/work-order-files/work-order-file-types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -54,15 +56,17 @@ function customerFullName(
   return [customers.last_name, customers.first_name].filter(Boolean).join(" ") || "—";
 }
 
-// ─── Photo section ────────────────────────────────────────────────────────────
+// ─── Media section ────────────────────────────────────────────────────────────
+// Handles both photos and videos. Videos cannot be embedded in a PDF, so they
+// render as a thumbnail placeholder with a video icon. This is intentional.
 
-interface PhotoSectionProps {
-  phase:     WorkOrderFilePhase;
-  files:     WorkOrderFileDB[];
+interface MediaSectionProps {
+  phase:      WorkOrderFilePhase;
+  files:      WorkOrderFileDB[];
   previewAll: boolean;  // true = show all files; false = is_public only
 }
 
-function PhotoSection({ phase, files, previewAll }: PhotoSectionProps) {
+function MediaSection({ phase, files, previewAll }: MediaSectionProps) {
   const shown = previewAll
     ? files
     : files.filter((f) => f.is_public);
@@ -77,23 +81,43 @@ function PhotoSection({ phase, files, previewAll }: PhotoSectionProps) {
       <div className="grid grid-cols-3 gap-2">
         {shown.map((file) => (
           <div key={file.id}>
-            {file.file_url ? (
-              <img
-                src={file.file_url}
-                alt={file.title ?? file.file_name ?? ""}
-                className="w-full h-24 object-cover rounded border border-gray-200"
-              />
-            ) : (
-              <div className="w-full h-24 rounded border border-gray-200 bg-gray-50 flex items-center justify-center">
-                <span className="text-gray-300 text-2xl">📷</span>
-              </div>
-            )}
+            <MediaThumbnail file={file} />
             {file.title && (
               <p className="text-[10px] text-gray-400 mt-1 truncate">{file.title}</p>
             )}
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function MediaThumbnail({ file }: { file: WorkOrderFileDB }) {
+  if (isPhoto(file.mime_type, file.file_name) && file.file_url) {
+    return (
+      <img
+        src={file.file_url}
+        alt={file.title ?? file.file_name ?? ""}
+        className="w-full h-24 object-cover rounded border border-gray-200"
+      />
+    );
+  }
+
+  if (isVideo(file.mime_type, file.file_name)) {
+    // Videos cannot be embedded in PDFs. Show a placeholder with video icon.
+    // Phase 10J: replace with generated thumbnail image.
+    return (
+      <div className="w-full h-24 rounded border border-gray-200 bg-gray-900 flex flex-col items-center justify-center gap-1">
+        <span className="text-2xl">🎥</span>
+        <span className="text-[9px] text-gray-400">動画</span>
+      </div>
+    );
+  }
+
+  // Document or other non-media file
+  return (
+    <div className="w-full h-24 rounded border border-gray-200 bg-gray-50 flex items-center justify-center">
+      <span className="text-gray-300 text-2xl">📄</span>
     </div>
   );
 }
@@ -319,7 +343,7 @@ export default function CompletionReportPreview({
                 const phaseFiles = byPhase[phase] ?? [];
                 if (phaseFiles.length === 0) return null;
                 return (
-                  <PhotoSection
+                  <MediaSection
                     key={phase}
                     phase={phase}
                     files={phaseFiles}

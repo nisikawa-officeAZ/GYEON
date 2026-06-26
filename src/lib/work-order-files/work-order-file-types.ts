@@ -100,3 +100,34 @@ export function workOrderFileStoragePath(
 export const WORK_ORDER_FILE_PHASES: WorkOrderFilePhase[] = [
   'before', 'during', 'after', 'damage', 'delivery', 'other',
 ];
+
+// ─── Media type helpers ───────────────────────────────────────────────────────
+
+/**
+ * Returns true when the file is a photo.
+ * Checks MIME type first; falls back to file extension.
+ * HEIC/HEIF included for iPhone photos.
+ */
+export function isPhoto(mimeType: string | null, fileName: string | null): boolean {
+  if (mimeType?.startsWith("image/")) return true;
+  const ext = (fileName ?? "").split(".").pop()?.toLowerCase() ?? "";
+  return ["jpg", "jpeg", "png", "gif", "webp", "heic", "heif"].includes(ext);
+}
+
+/**
+ * Returns true when the file is a video.
+ * Checks MIME type first; falls back to file extension.
+ */
+export function isVideo(mimeType: string | null, fileName: string | null): boolean {
+  if (mimeType?.startsWith("video/")) return true;
+  const ext = (fileName ?? "").split(".").pop()?.toLowerCase() ?? "";
+  return ["mp4", "mov", "avi", "webm", "m4v", "3gp"].includes(ext);
+}
+
+/**
+ * Returns true when the file is any media asset (photo or video).
+ * Use this to distinguish media from documents and other file types.
+ */
+export function isMedia(mimeType: string | null, fileName: string | null): boolean {
+  return isPhoto(mimeType, fileName) || isVideo(mimeType, fileName);
+}

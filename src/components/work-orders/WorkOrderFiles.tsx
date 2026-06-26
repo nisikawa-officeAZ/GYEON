@@ -7,6 +7,8 @@ import {
   WorkOrderFileType,
   workOrderFilePhaseLabel,
   WORK_ORDER_FILE_PHASES,
+  isPhoto,
+  isVideo,
 } from "@/lib/work-order-files/work-order-file-types";
 import { getWorkOrderFiles }    from "@/lib/work-order-files/get-work-order-files";
 import { uploadWorkOrderFile }  from "@/lib/work-order-files/upload-work-order-file";
@@ -20,12 +22,6 @@ function formatFileSize(bytes: number | null): string {
   if (bytes < 1024)        return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function isImage(mimeType: string | null, fileName: string | null): boolean {
-  if (mimeType?.startsWith("image/")) return true;
-  const ext = (fileName ?? "").split(".").pop()?.toLowerCase() ?? "";
-  return ["jpg", "jpeg", "png", "gif", "webp", "heic", "heif"].includes(ext);
 }
 
 // ─── File card ────────────────────────────────────────────────────────────────
@@ -53,12 +49,10 @@ function FileCard({ file, onDelete, onUpdate, pending }: FileCardProps) {
     setEditing(false);
   }
 
-  const showImage = isImage(file.mime_type, file.file_name);
-
   return (
     <div className="bg-[#0f172a] border border-slate-700 rounded-lg overflow-hidden">
       {/* Preview */}
-      {showImage && file.file_url ? (
+      {isPhoto(file.mime_type, file.file_name) && file.file_url ? (
         <a href={file.file_url} target="_blank" rel="noopener noreferrer">
           <img
             src={file.file_url}
@@ -66,11 +60,17 @@ function FileCard({ file, onDelete, onUpdate, pending }: FileCardProps) {
             className="w-full h-28 object-cover"
           />
         </a>
+      ) : isVideo(file.mime_type, file.file_name) && file.file_url ? (
+        <a href={file.file_url} target="_blank" rel="noopener noreferrer">
+          <div className="w-full h-28 flex flex-col items-center justify-center bg-slate-800/50 gap-1">
+            <span className="text-2xl text-slate-400">🎥</span>
+            <span className="text-[9px] text-slate-500">動画を開く</span>
+          </div>
+        </a>
       ) : (
         <div className="w-full h-28 flex items-center justify-center bg-slate-800/50">
           <span className="text-2xl text-slate-600">
-            {file.file_type === "document" ? "📄" :
-             file.file_type === "video"    ? "🎥" : "📎"}
+            {file.file_type === "document" ? "📄" : "📎"}
           </span>
         </div>
       )}

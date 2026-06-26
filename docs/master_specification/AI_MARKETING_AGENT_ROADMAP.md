@@ -100,56 +100,91 @@ This sentence structure serves both human readability and AI engine extractabili
 ## PHASE 71 — AI Media Management Foundation
 
 **Prerequisite:** Core business platform at stable production.
+**Sprint 10I:** Media-first architecture types defined. `src/lib/media/media-types.ts` created.
+
+> **Architecture note:** The system supports both photos and videos from the start.
+> Use `MediaType = "photo" | "video"` — not "image" — throughout all new code.
+> See `MEDIA_ARCHITECTURE.md` for the canonical media model and migration plan.
 
 ### 71.1 Job Media Management
 
-| Feature | Description |
-|---------|-------------|
-| Before / after image uploads | Attach before and after photos to completed work orders |
-| Work-in-progress images | Mid-job documentation images linked to work order timeline |
-| Video library | Short video clips from job sessions, stored per work order |
-| Media gallery per job | Browsable gallery of all media for a specific work order |
-| Dealer media library | Global library across all jobs, searchable and filterable |
+| Feature | MediaType | Description |
+|---------|-----------|-------------|
+| Before/after photo uploads | photo | Attach before and after photos to completed work orders |
+| Before/after video uploads | video | Short video clips from job start and completion |
+| Work-in-progress documentation | photo / video | Mid-job captures linked to work order timeline |
+| Water beading video | video | Coating effectiveness demonstration |
+| Completion report media gallery | photo | Per-phase grid in the completion report |
+| Dealer media library | photo + video | Global library across all jobs, searchable and filterable |
 
-### 71.2 AI Image Processing
+### 71.2 AI Media Processing
 
-| Feature | Description |
-|---------|-------------|
-| AI image quality evaluation | Automatic scoring: sharpness, lighting, composition |
-| Automatic best-shot selection | AI picks the strongest before/after pair from a batch |
-| Automatic license plate blur | Detected plates blurred before any image is stored or published |
-| Automatic face blur | Detected faces blurred before any image is stored or published |
+| Feature | MediaType | Description |
+|---------|-----------|-------------|
+| AI photo quality evaluation | photo | Automatic scoring: sharpness, lighting, composition |
+| AI video quality evaluation | video | Blur detection, stability scoring, resolution check |
+| Automatic best-shot selection | photo | AI picks the strongest before/after pair from a batch |
+| Automatic license plate blur | photo + video | Server-side before any media is stored or published |
+| Automatic face blur | photo + video | Server-side before any media is stored or published |
+| Video thumbnail generation | video | First-frame JPEG, stored at `thumbnails/{media_id}.jpg` |
 
-**Security rule:** License plate blur and face blur run server-side before any image is stored. No unblurred image with identifiable information may be stored in dealer-accessible storage or transmitted to any external service.
+**Security rule:** License plate blur and face blur run server-side before any media is stored.
+No unblurred media with identifiable information may be stored in dealer-accessible storage
+or transmitted to any external AI service.
 
-### 71.3 Dealer Branding Assets
+### 71.3 Customer Consent for Media
+
+All media defaults to `visibility = "internal_only"`. Escalating to customer-visible or marketing-approved requires explicit consent.
+
+| Step | Action | Result |
+|------|--------|--------|
+| Upload | Dealer uploads photo or video | `visibility = "internal_only"` |
+| Completion report | Dealer marks file as `is_public = true` | `visibility = "customer_visible"` |
+| Marketing consent | Dealer sends consent request to customer | `consent_status = "pending"` |
+| Customer approves | Customer confirms via LINE or web link | `consent_status = "approved"` |
+| Marketing approval | Dealer marks file | `visibility = "marketing_approved"`, `is_marketing_approved = true` |
+
+### 71.4 Dealer Branding Assets
 
 | Feature | Description |
 |---------|-------------|
 | Dealer logo management | Upload and manage shop logo and brand assets |
 | Brand color settings | Primary and secondary brand colors for content overlays |
-| Brand templates | Pre-designed overlay templates for before/after images |
+| Brand templates | Pre-designed overlay templates for before/after photos and videos |
 | Watermark settings | Optional shop name watermark position and opacity |
 | Brand preview | Preview how branded content will appear |
 
-### Data model additions (migration required — do not apply now)
+### Data model additions (Phase 10J migration — CTO approval required)
 
-```
-work_order_media (
-  id, work_order_id, dealer_id,
-  media_type: 'before' | 'after' | 'wip' | 'video',
-  storage_url, thumbnail_url, blurred_url,
-  ai_quality_score, ai_selected,
-  created_at, updated_at
-)
+```sql
+-- Extend work_order_files (preferred over new table — reuses existing upload pipeline)
+ALTER TABLE work_order_files
+  ADD COLUMN thumbnail_path        text,
+  ADD COLUMN duration_seconds      float,
+  ADD COLUMN width                 integer,
+  ADD COLUMN height                integer,
+  ADD COLUMN captured_at           timestamptz,
+  ADD COLUMN uploaded_by           uuid REFERENCES auth.users(id),
+  ADD COLUMN completion_report_id  uuid REFERENCES completion_reports(id),
+  ADD COLUMN consent_status        text NOT NULL DEFAULT 'not_required',
+  ADD COLUMN visibility            text NOT NULL DEFAULT 'internal_only',
+  ADD COLUMN is_marketing_approved   boolean NOT NULL DEFAULT false,
+  ADD COLUMN is_ai_training_excluded boolean NOT NULL DEFAULT false;
 
-dealer_brand_assets (
-  id, dealer_id,
-  logo_url, primary_color, secondary_color,
-  watermark_enabled, watermark_position, watermark_opacity,
-  template_id,
-  created_at, updated_at
-)
+-- Dealer branding assets (new table)
+CREATE TABLE dealer_brand_assets (
+  id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  dealer_id           uuid NOT NULL REFERENCES dealers(id),
+  logo_storage_path   text,
+  primary_color       text,
+  secondary_color     text,
+  watermark_enabled   boolean NOT NULL DEFAULT false,
+  watermark_position  text,
+  watermark_opacity   float,
+  template_id         text,
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  updated_at          timestamptz NOT NULL DEFAULT now()
+);
 ```
 
 ---
