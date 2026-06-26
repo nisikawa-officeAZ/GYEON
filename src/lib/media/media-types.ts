@@ -123,6 +123,26 @@ export interface DealerMedia {
   /** [FUTURE] UUID of the staff member who uploaded this file. */
   uploaded_by:      string | null;
 
+  // ── AI generation tracking ────────────────────────────────────────────────
+  /**
+   * True if this asset was created by an AI agent rather than uploaded by a human.
+   * Maps to the ai_generated column in the proposed media_assets schema.
+   */
+  ai_generated:          boolean;
+  /**
+   * [FUTURE] Self-referential FK to the source media used as AI input.
+   * Null for all human uploads. Non-null only for AI-generated outputs.
+   */
+  ai_source_media_id:    string | null;
+
+  // ── Soft delete ───────────────────────────────────────────────────────────
+  /**
+   * [FUTURE] Set when the file is physically deleted from storage.
+   * The row is retained as a MediaDeletionRecord for audit.
+   * Null means the file still exists in storage.
+   */
+  deleted_at:            string | null;
+
   // ── Relations ─────────────────────────────────────────────────────────────
   customer_id:           string | null;
   vehicle_id:            string | null;
@@ -152,6 +172,9 @@ export function workOrderFileToDealerMedia(file: WorkOrderFileDB): DealerMedia {
     consent_status: "not_required",
     is_ai_training_excluded: false,
     is_marketing_approved:   false,
+    ai_generated:       false,
+    ai_source_media_id: null,
+    deleted_at:         null,
     file_path:       file.file_path,
     file_url:        file.file_url,
     thumbnail_path:  null,
@@ -365,3 +388,22 @@ export const DEFAULT_RETENTION_DAYS: Record<MediaType, number> = {
   photo: 3650,  // ~10 years — long-term job documentation
   video: 30,    // 30 days — short window; see VideoRetentionPolicy in media-video.ts
 };
+
+/**
+ * Returns true if a video asset has exceeded its default retention window.
+ *
+ * Does NOT return true for already-deleted assets (deleted_at is set) — that is
+ * a separate state. This function identifies assets whose window has elapsed but
+ * whose file has not yet been physically removed.
+ *
+ * Photos are never considered retention-expired under the default policy.
+ */
+export function isRetentionExpired(media: DealerMedia): boolean {
+  if (media.deleted_at) return false;
+  if (media.media_type !== "video") return false;
+  const days    = DEFAULT_RETENTION_DAYS["video"];
+  const created = new Date(media.created_at);
+  const expires = new Date(created);
+  expires.setDate(expires.getDate() + days);
+  return new Date() > expires;
+}

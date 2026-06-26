@@ -1,6 +1,7 @@
 // DealerOS — Media Runtime Public API
 //
 // Sprint 10J: canonical entry point for all media module consumers.
+// Sprint 10L: extended with domain objects, lifecycle, associations, consent, service layer.
 // Import from "@/lib/media" rather than from individual sub-modules.
 
 // ─── Core types (Sprint 10I) ──────────────────────────────────────────────────
@@ -30,6 +31,7 @@ export {
   getMarketingApprovedMedia,
   // Retention
   DEFAULT_RETENTION_DAYS,
+  isRetentionExpired,
 } from "./media-types";
 
 // ─── Context (Sprint 10J) ─────────────────────────────────────────────────────
@@ -138,3 +140,99 @@ export {
 // ─── Runtime orchestrator (Sprint 10J) ───────────────────────────────────────
 
 export { MediaRuntime } from "./media-runtime";
+
+// ─── Lifecycle (Sprint 10L Phase B) ──────────────────────────────────────────
+
+export type {
+  MediaLifecycleStage,
+  MediaLifecycleTrigger,
+  MediaLifecycleTransition,
+  MediaLifecycle,
+} from "./media-lifecycle";
+
+export {
+  LIFECYCLE_TRANSITIONS,
+  deriveLifecycleStage,
+  getAvailableTransitions,
+  canTransitionTo,
+  computeRetentionExpiry,
+} from "./media-lifecycle";
+
+// ─── Association (Sprint 10L Phase C) ────────────────────────────────────────
+
+export type {
+  MediaAssociationTarget,
+  MediaAssociationRole,
+  MediaAssociation,
+} from "./media-association";
+
+export {
+  getActiveAssociations,
+  getAssociationsByTarget,
+  isAssociatedWith,
+  deriveAssociationsFromMedia,
+} from "./media-association";
+
+// ─── Consent (Sprint 10L Phase A + F) ────────────────────────────────────────
+
+export type {
+  MediaConsentScope,
+  MediaConsentChannel,
+  MediaConsentDetail,
+} from "./media-consent";
+
+export {
+  DEFAULT_MEDIA_CONSENT,
+  FULL_MARKETING_CONSENT_SCOPES,
+  pendingConsent,
+  hasConsentForScope,
+  isConsentActive,
+  isConsentDenied,
+  isConsentPending,
+} from "./media-consent";
+
+// ─── Domain objects (Sprint 10L Phase A) ─────────────────────────────────────
+
+export type {
+  MediaCategory,
+  MediaAssetStatus,
+  MediaRetention,
+  MediaAsset,
+  MediaReference,
+} from "./media-asset";
+
+export {
+  toMediaAsset,
+  toMediaReference,
+} from "./media-asset";
+
+// ─── Audit (Sprint 10L Phase D) ───────────────────────────────────────────────
+
+export {
+  createDeletionRecord,
+  validateDeletionRecord,
+  isDeletionEligible,
+  getEligibleForDeletion,
+  requiresConsentRevocationReview,
+} from "./media-audit";
+
+// ─── Service interfaces (Sprint 10L Phase D) ──────────────────────────────────
+
+export type {
+  MediaValidationService,
+  MediaAssociationService,
+  MediaPermissionService,
+  MediaRetentionService,
+  MediaLifecycleService,
+  MediaCapabilityService,
+  MediaAuditService,
+} from "./media-service";
+
+export {
+  MediaValidationServiceImpl,
+  MediaPermissionServiceImpl,
+  MediaRetentionServiceImpl,
+  MediaLifecycleServiceImpl,
+  MediaCapabilityServiceImpl,
+  MediaAuditServiceImpl,
+} from "./media-service";

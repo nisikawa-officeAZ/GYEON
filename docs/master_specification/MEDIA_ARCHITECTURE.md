@@ -573,4 +573,78 @@ Full schema proposal: `docs/master_specification/MEDIA_ASSETS_SCHEMA_PROPOSAL.md
 
 ---
 
+---
+
+## 13. Sprint 10L — Media Platform Foundation
+
+> Full specification: `MEDIA_PLATFORM_SPEC.md`
+
+Sprint 10L transforms Media into a first-class platform business domain.
+Media is no longer treated as files — it has a lifecycle, associations, permissions,
+consent obligations, and retention policy.
+
+### 13.1 New Domain Objects
+
+| Object | Module | Purpose |
+|--------|--------|---------|
+| `MediaAsset` | `media-asset.ts` | Primary domain object — extends `DealerMedia` |
+| `MediaReference` | `media-asset.ts` | Lightweight pointer for list views |
+| `MediaCategory` | `media-asset.ts` | Business purpose classification |
+| `MediaAssetStatus` | `media-asset.ts` | Operational status (active, expired, deleted) |
+| `MediaRetention` | `media-asset.ts` | Computed retention state |
+| `MediaLifecycleStage` | `media-lifecycle.ts` | All 10 lifecycle stages |
+| `MediaLifecycle` | `media-lifecycle.ts` | Full lifecycle record with history |
+| `MediaAssociation` | `media-association.ts` | Link between media and business entity |
+| `MediaConsentDetail` | `media-consent.ts` | Domain-level consent with scopes and channel |
+
+### 13.2 Lifecycle State Machine
+
+10 ordered stages: `captured → uploaded → validated → associated → in_use →
+ai_consumption → marketing → retention_active → retention_expired → deleted → audited`
+
+`deriveLifecycleStage(media: DealerMedia)` derives the current stage from DB fields.
+`LIFECYCLE_TRANSITIONS` defines all valid transitions.
+`canTransitionTo(media, target)` validates proposed transitions.
+
+### 13.3 Privacy Model Updates
+
+`retention_expired` added to `MediaPermissionScope` — blocks all operations on
+assets whose file has been deleted or whose retention window has elapsed.
+New evaluation order in `resolvePermissionScope()`:
+
+```
+retention_expired (blocks all) > consent_denied (internal_only) > marketing gates
+```
+
+### 13.4 Service Layer
+
+| Service | Status |
+|---------|--------|
+| `MediaValidationService` / `MediaValidationServiceImpl` | Implemented |
+| `MediaPermissionService` / `MediaPermissionServiceImpl` | Implemented |
+| `MediaRetentionService` / `MediaRetentionServiceImpl` | Implemented |
+| `MediaLifecycleService` / `MediaLifecycleServiceImpl` | Implemented |
+| `MediaCapabilityService` / `MediaCapabilityServiceImpl` | Implemented |
+| `MediaAuditService` / `MediaAuditServiceImpl` | Implemented |
+| `MediaAssociationService` | Interface only — requires media_assets migration |
+
+### 13.5 Files Changed in Sprint 10L
+
+| File | Change |
+|------|--------|
+| `src/lib/media/media-types.ts` | ADD `ai_generated`, `ai_source_media_id`, `deleted_at` to `DealerMedia`; ADD `isRetentionExpired()` |
+| `src/lib/media/media-lifecycle.ts` | NEW — lifecycle stage machine (Phase B) |
+| `src/lib/media/media-association.ts` | NEW — association model (Phase C) |
+| `src/lib/media/media-consent.ts` | NEW — domain consent model (Phase A + F) |
+| `src/lib/media/media-asset.ts` | NEW — `MediaAsset`, `MediaReference`, factory functions (Phase A) |
+| `src/lib/media/media-audit.ts` | NEW — deletion record utilities (Phase D) |
+| `src/lib/media/media-service.ts` | NEW — 7 service interfaces + 6 implementations (Phase D) |
+| `src/lib/media/media-permission.ts` | UPDATE — add `retention_expired` scope (Phase F) |
+| `src/lib/media/index.ts` | UPDATE — export all new types and functions |
+| `docs/master_specification/MEDIA_PLATFORM_SPEC.md` | NEW — full platform spec |
+| `docs/master_specification/MEDIA_ARCHITECTURE.md` | ADD §13 |
+| `docs/master_specification/00_MASTER_SPECIFICATION_INDEX.md` | v2.7 |
+
+---
+
 *GYEON Detailer Agent | Media Architecture | Office AZ | 2026-06-26*

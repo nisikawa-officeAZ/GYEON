@@ -17,6 +17,7 @@
 //   These helpers evaluate a single DealerMedia object — they do not re-query the DB.
 
 import type { DealerMedia } from "./media-types";
+import { isRetentionExpired } from "./media-types";
 
 // ─── Permission scope ─────────────────────────────────────────────────────────
 
@@ -25,11 +26,15 @@ import type { DealerMedia } from "./media-types";
  * visibility, consent, and marketing flags.
  *
  * Ordered from least to most permissive:
- *   internal_only < customer_visible < marketing_candidate < marketing_approved
+ *   retention_expired < internal_only < customer_visible < marketing_candidate < marketing_approved
+ *
+ * retention_expired is a blocking state: the file has been deleted or its retention
+ * window has elapsed. All operations except reading the audit record are blocked.
  *
  * is_ai_training_excluded is a separate orthogonal flag, not a scope level.
  */
 export type MediaPermissionScope =
+  | "retention_expired"   // File deleted or retention window elapsed — no access.
   | "internal_only"       // Default. No external sharing allowed.
   | "customer_visible"    // Cleared for completion report sharing.
   | "marketing_candidate" // Flagged for marketing but consent not yet confirmed.
@@ -62,6 +67,7 @@ export interface MediaPermissionGate {
  * Derives the current effective MediaPermissionScope from a DealerMedia record.
  *
  * Evaluation order:
+ * 0. File deleted or retention window expired → retention_expired (blocks all operations)
  * 1. consent_status = "denied"  → always internal_only regardless of visibility
  * 2. All three marketing gates met → marketing_approved
  * 3. Visibility = marketing_approved or usage = marketing_candidate → marketing_candidate
@@ -69,6 +75,10 @@ export interface MediaPermissionGate {
  * 5. Default → internal_only
  */
 export function resolvePermissionScope(media: DealerMedia): MediaPermissionScope {
+  if (media.deleted_at || isRetentionExpired(media)) {
+    return "retention_expired";
+  }
+
   if (media.consent_status === "denied") {
     return "internal_only";
   }
@@ -107,6 +117,24 @@ export function resolvePermissionScope(media: DealerMedia): MediaPermissionScope
 export function checkMediaPermission(media: DealerMedia): MediaPermissionGate {
   const scope   = resolvePermissionScope(media);
   const denials: string[] = [];
+
+  // Retention-expired assets block all operations — file no longer exists in storage.
+  if (scope === "retention_expired") {
+    const reason = media.deleted_at
+      ? "File has been physically deleted from storage. Only the audit record remains."
+      : "Retention window has elapsed. File is pending physical deletion.";
+    return {
+      scope,
+      is_ai_training_excluded:          media.is_ai_training_excluded,
+      can_view_internally:              false,
+      can_include_in_completion_report: false,
+      can_share_with_customer:          false,
+      can_use_for_marketing:            false,
+      can_use_for_ai_analysis:          false,
+      can_use_for_ai_training:          false,
+      denial_reasons:                   [reason],
+    };
+  }
 
   const canShareCustomer =
     scope === "customer_visible" ||
