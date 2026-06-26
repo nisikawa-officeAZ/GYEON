@@ -33,10 +33,11 @@ The GYEON Detailer Agent platform must become AI-provider agnostic. No single AI
 
 | Provider | Models (examples) | Notes |
 |----------|--------------------|-------|
-| **OpenAI** | `gpt-4o`, `gpt-4o-mini` | Most widely used; OCR already uses this via platform key (scope note: see §6) |
+| **OpenAI** | `gpt-4o`, `gpt-4o-mini` | Most widely used; OCR already uses this via platform key (scope note: see §7) |
 | **Claude (Anthropic)** | `claude-sonnet-4-6`, `claude-opus-4-8` | Content writing, long-form generation |
 | **Gemini (Google)** | `gemini-1.5-pro`, `gemini-flash` | Multimodal, fast |
 | **Azure OpenAI** | Same as OpenAI, hosted on Azure | Enterprise dealers may prefer Azure for compliance |
+| **OpenRouter** | Any model via unified API | Access to 100+ models from multiple providers via single key; useful for dealers who want model flexibility without managing multiple provider accounts |
 | **Future providers** | (additional providers TBD) | Gateway adapter pattern enables addition without breaking changes |
 
 > **Note:** The provider list is extensible. Adding a new provider requires adding a new gateway adapter — it does not require changes to business logic or feature code.
@@ -135,21 +136,53 @@ CREATE POLICY "dealer own ai settings"
 
 ---
 
-## 5. AppFeature Additions (Future)
+## 5. AI Provider Settings (Dealer-Facing)
+
+When the AI Gateway is implemented, dealers must have a dedicated settings screen to manage their AI provider configuration.
+
+### Required settings capabilities
+
+| Setting | Description |
+|---------|-------------|
+| **AI provider selection** | Dealer selects which provider to use (OpenAI / Claude / Gemini / Azure OpenAI / OpenRouter) |
+| **API key registration** | Dealer enters their own provider API key — encrypted at rest, never returned to client |
+| **Connection test** | One-click test that validates the key against the provider API — result shown in UI (success / error message) |
+| **Monthly usage limit** | Dealer sets a monthly spend cap; AI features are gated once limit is approached |
+| **Usage visibility by feature** | Dashboard showing estimated token/cost usage broken down by AI feature (content writing, image analysis, etc.) |
+| **Estimated usage cost** | Real-time estimate based on model pricing and usage history — advisory, not guaranteed |
+| **Provider/model selection per feature** | Dealers with multiple providers can assign different providers or models per task type (e.g., Claude for content writing, OpenAI for image analysis) |
+
+### Settings storage
+
+- All API keys stored in `dealer_ai_settings` table (see §4 schema)
+- `task_routing` jsonb column stores per-feature provider/model assignments
+- Keys are validated server-side; validation timestamps stored per provider
+- Usage tracking requires a separate `dealer_ai_usage_log` table (schema TBD at implementation time)
+
+### UI placement
+
+AI Provider Settings will appear as a new settings group in the dealer settings screen (group label: "AI設定" or "AI Provider設定"). This group is only visible when the dealer has a Pro+ subscription with the `"ai_gateway"` feature active.
+
+---
+
+## 6. AppFeature Additions (Future)
 
 When the AI Gateway and AI agents are implemented, the following features must be added to `AppFeature` and `PLAN_FEATURES.pro_plus`:
 
 | AppFeature | Plan Tier | Feature Group |
 |------------|-----------|---------------|
+| `"ai_gateway"` | Pro+ | AI Gateway / AI Provider Management (prerequisite to all AI agents) |
 | `"ai_marketing"` | Pro+ | AI Marketing Agent (PHASE 71–75) |
 | `"ai_growth"` | Pro+ | AI Growth Agent (PHASE 76) |
 | `"ai_reputation"` | Pro+ | AI Reputation Agent (PHASE 77–81) |
 
 **Do not add these to `plan-types.ts` until implementation begins.** Defining unused feature keys creates maintenance overhead.
 
+**Implementation order:** `"ai_gateway"` must be implemented and active before `"ai_marketing"`, `"ai_growth"`, or `"ai_reputation"` can function.
+
 ---
 
-## 6. Scope: OCR and Existing OpenAI Usage
+## 7. Scope: OCR and Existing OpenAI Usage
 
 **Current state:** OCR (vehicle registration card reading) uses `OPENAI_API_KEY` from the server environment — this is a platform-level key paid by Office AZ.
 
@@ -164,7 +197,7 @@ This decision is tracked as a future Operator Decision. No change to OCR code is
 
 ---
 
-## 7. Implementation Gate
+## 8. Implementation Gate
 
 **Do not implement the AI Gateway until:**
 
@@ -177,7 +210,7 @@ This decision is tracked as a future Operator Decision. No change to OCR code is
 
 ---
 
-## 8. Compatibility Notes
+## 9. Compatibility Notes
 
 ### Existing code compatibility
 - `src/lib/line/send-line-message.ts` — no change (LINE API, not AI gateway)

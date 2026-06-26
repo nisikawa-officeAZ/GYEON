@@ -157,9 +157,13 @@ The platform must be AI-provider agnostic. Dealers register their own API keys. 
 | Server-side only | Keys encrypted at rest, never returned to client |
 
 **Future `AppFeature` additions (define at implementation time, NOT now):**
+- `"ai_gateway"` → Pro+ (AI Gateway / AI Provider Management — prerequisite to all AI agents)
 - `"ai_marketing"` → Pro+ (AI Marketing Agent, PHASE 71–75)
 - `"ai_growth"` → Pro+ (AI Growth Agent, PHASE 76)
 - `"ai_reputation"` → Pro+ (AI Reputation Agent, PHASE 77–81)
+
+**Dealer-facing settings added in Phase G:**
+AI Provider selection, API key registration, connection test, monthly usage limit, usage visibility by feature, estimated cost, provider/model selection per AI feature. See `AI_GATEWAY_SPEC.md` §5.
 
 ---
 

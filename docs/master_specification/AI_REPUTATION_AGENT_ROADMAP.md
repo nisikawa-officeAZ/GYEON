@@ -32,6 +32,7 @@ The AI Reputation Agent turns every completed job into an opportunity to collect
 3. **Dealer controls every send.** No review request is sent without dealer approval in v1.0.
 4. **Compliance is permanent.** The compliance rules in PHASE 77 (§77.6) cannot be relaxed in any version without explicit legal/ethical review.
 5. **MEO-aware, never manipulative.** Content is designed to provide organic keyword context — never to instruct customers on what to write or which star rating to give.
+6. **Discovery feedback loop.** Reputation data (review volume, star rating trends, review keyword frequency) feeds back into the AI Marketing Agent's discovery optimization. Strong reputation signals improve MEO, AEO, LLMO, AIO, and SEO performance. This is a cross-track dependency.
 
 ---
 
@@ -315,7 +316,7 @@ PHASE 77 — AI Review Request Agent
               (AI analysis, actionable suggestions)
 ```
 
-**Cross-track dependency:** PHASE 80 reputation analytics feeds into the AI Marketing Agent's PHASE 75 discovery performance analytics. Review keyword signals (aggregate) inform the MEO optimization recommendations in the Marketing track.
+**Cross-track dependency (Discovery Feedback Loop):** PHASE 80 reputation analytics feeds back into the AI Marketing Agent's PHASE 75 discovery performance analytics. Review volume, star rating trend, and review keyword frequency (aggregate) inform MEO, AEO, LLMO, AIO, and SEO performance recommendations in the Marketing track. Strong reputation signals from the Reputation Agent amplify the discovery impact of content produced by the Marketing Agent.
 
 ---
 

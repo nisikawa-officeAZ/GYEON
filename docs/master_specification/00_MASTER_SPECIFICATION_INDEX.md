@@ -190,6 +190,7 @@ TIER 4 — DESIGN AUTHORITY
 | 1.2 | 2026-06-26 | Future Roadmap | AI Marketing Agent roadmap added (PHASE 71–77, deferred) |
 | 1.3 | 2026-06-26 | Pro+ Feature | LINE Rich Menu Management implemented (Pro+); `line_rich_menu` in AppFeature; uses PHASE70 `line_public_settings` column; no new migration; pure-Node.js PNG generator |
 | 1.4 | 2026-06-26 | Architecture | AI Gateway Architecture decision; AI Platform restructured (F1 Marketing, F2 Growth, F3 Reputation); PHASE 77 moved to AI Reputation Agent; `AI_GATEWAY_SPEC.md` + `AI_REPUTATION_AGENT_ROADMAP.md` created |
+| 1.5 | 2026-06-26 | Architecture | AI Gateway expanded: OpenRouter added, AI Provider Settings section (connection test, usage limits, cost visibility, per-feature model selection), `"ai_gateway"` as Pro+ AppFeature; product vision updated to AI-powered business OS |
 
 ---
 
