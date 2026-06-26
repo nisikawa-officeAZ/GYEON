@@ -34,7 +34,7 @@ interface Props {
 
 // ─── Category definitions ─────────────────────────────────────────────────────
 
-type CategoryId =
+export type CategoryId =
   | "store" | "trade" | "pricing" | "service" | "ocr"
   | "line" | "pdf" | "reminder" | "plan" | "backup" | "support" | "ai";
 
@@ -774,12 +774,22 @@ function renderCategory(
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export default function SettingsCategoryNav(props: Props) {
-  const [selected, setSelected] = useState<CategoryId | null>(null);
+interface SettingsCategoryNavProps extends Props {
+  defaultSelected?: CategoryId | null;
+  onBack?: () => void;
+}
+
+export default function SettingsCategoryNav(props: SettingsCategoryNavProps) {
+  const [selected, setSelected] = useState<CategoryId | null>(props.defaultSelected ?? null);
   const { settings } = props;
 
   // ── Category grid view ──────────────────────────────────────────────────
   if (!selected) {
+    if (props.onBack) {
+      // When embedded in SettingsCenterWrapper, return to hub instead of showing the 12-card grid
+      props.onBack();
+      return null;
+    }
     return (
       <div className="flex flex-col gap-4">
         <p className="text-xs text-slate-500">設定カテゴリを選択してください</p>
@@ -811,10 +821,10 @@ export default function SettingsCategoryNav(props: Props) {
   const cat = CATEGORIES.find(c => c.id === selected)!;
   return (
     <div className="flex flex-col gap-5">
-      {/* Back button */}
+      {/* Back button — returns to hub when onBack is provided, otherwise to 12-card grid */}
       <button
         type="button"
-        onClick={() => setSelected(null)}
+        onClick={() => { setSelected(null); props.onBack?.(); }}
         className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-100 transition-colors self-start"
       >
         <span>←</span>

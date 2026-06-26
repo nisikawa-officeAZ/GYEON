@@ -12,7 +12,7 @@ import type { DocumentSequenceDB } from "@/lib/numbering/numbering-types";
 import type { DealerStaffDB, DealerStaffRole } from "@/lib/staff/staff-types";
 import { getCanonicalDealerSettings } from "@/lib/dealer-settings/get-canonical-dealer-settings";
 import type { CanonicalDealerSettings } from "@/lib/dealer-settings/dealer-settings-types";
-import SettingsCategoryNav from "@/components/settings/SettingsCategoryNav";
+import SettingsCenterWrapper from "@/components/settings/SettingsCenterWrapper";
 import { getAiSettings } from "@/lib/ai/get-ai-settings";
 import type { AiSettingsView } from "@/lib/ai/ai-settings-types";
 import { AI_SETTINGS_DEFAULT } from "@/lib/ai/ai-settings-types";
@@ -63,7 +63,7 @@ export default async function SettingsPage() {
 
         <PageTitle title="Settings" />
 
-        <SettingsCategoryNav
+        <SettingsCenterWrapper
           settings={resolvedSettings}
           companySettings={companySettings}
           sequences={sequences}

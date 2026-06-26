@@ -1,4 +1,4 @@
-# Unified Settings Center — Sprint 12F Specification
+# Unified Settings Center — Sprint 12F / 12G Specification
 
 ## Overview
 
@@ -258,6 +258,100 @@ This keeps the settings module a stable, circular-import-free foundation.
 6. Future setting placeholder card
 7. Organization module integration (multi-dealer scope)
 8. Budget cap setting for AI providers
+
+---
+
+---
+
+## Sprint 12G — Settings Center UI Foundation
+
+### New Files
+
+| File | Description |
+|------|-------------|
+| `src/components/settings/SettingsCenterHub.tsx` | 20-category 7-group hub (client component) |
+| `src/components/settings/SettingsCenterWrapper.tsx` | Hub ↔ detail state manager (client component) |
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `src/components/settings/SettingsCategoryNav.tsx` | Exported `CategoryId` type; added optional `defaultSelected` and `onBack` props (backward-compatible) |
+| `src/app/settings/page.tsx` | Swapped `SettingsCategoryNav` → `SettingsCenterWrapper` |
+
+### UI Architecture
+
+```
+/settings (server component — fetches data)
+  └── SettingsCenterWrapper (client, manages view state)
+         ├── SettingsCenterHub (hub view — 20 categories, 7 groups)
+         │     ├── Category cards → onOpenPanel(panelId) callback
+         │     └── AI card → <Link href="/settings/ai">
+         └── SettingsCategoryNav (detail view — existing panels)
+               └── All 12 existing panels preserved unchanged
+```
+
+### Hub Group Structure
+
+| Group | Categories (count) | Active | Future/Locked |
+|-------|-------------------|--------|---------------|
+| Core | dealer, organization, staff, roles_permissions, branding, notifications | 3 | 3 |
+| AI Platform | ai_providers, ai_marketplace | 1 | 1 |
+| Communication | communication | 1 | 0 |
+| Automation | automation | 0 | 1 |
+| Analytics | analytics | 0 | 1 |
+| Business | subscription, media, ocr, pdf, customer_portal | 4 | 1 |
+| Enterprise | gyeon_distribution, warehouse, crm, accounting | 0 | 4 (enterprise) |
+
+### Card States
+
+| State | Badge | Color | Description |
+|-------|-------|-------|-------------|
+| `configured` | 設定済み | green | Active + data present |
+| `active` | 有効 | blue | Active, navigable |
+| `not_configured` | 未設定 | amber | Active but not yet set up |
+| `plan_required` | 🔒 Pro+ | purple | Higher plan needed |
+| `coming_soon` | 準備中 | gray | Future implementation |
+| `enterprise` | 🏢 Enterprise | gray | Enterprise entitlement required |
+
+### Visibility Implementation
+
+Uses `resolveVisibilityFromRole()` and `canViewSetting()` from `src/lib/settings`.
+
+- `company_admin` / `platform_admin` categories hidden from all dealer users
+- Enterprise group shown as locked (not hidden) — existence is not sensitive
+- Unknown roles: `resolveVisibilityFromRole(null)` → `null` → only `readonly` visible (SPOL-004)
+- Staff role: sees operational categories only (not billing, AI secrets)
+- Manager role: sees all staff + operational categories
+- Dealer owner: sees all except enterprise-locked
+
+### Navigation Integration
+
+Active categories that link to existing panels (via `SettingsCategoryNav.defaultSelected`):
+
+| Hub Category | Panel ID | Content |
+|-------------|----------|---------|
+| dealer | `"store"` | Store info, trade, pricing, service |
+| staff | `"store"` | Staff management section |
+| branding | `"store"` | Company settings with logo/stamp |
+| notifications | `"reminder"` | Maintenance reminder templates |
+| communication | `"line"` | LINE integration |
+| subscription | `"plan"` | Plan & billing |
+| ocr | `"ocr"` | OCR settings |
+| pdf | `"pdf"` | PDF & numbering |
+
+AI providers → `<Link href="/settings/ai">` (dedicated page).
+
+### Sprint 12G Constraints Respected
+
+- No database migrations
+- No schema changes
+- No persistence
+- No external APIs
+- No provider SDK imports
+- No fake subscription state (real `planInfo` from server)
+- No unsafe client-only authorization for sensitive settings
+- All data fetched server-side in `settings/page.tsx`
 
 ---
 
