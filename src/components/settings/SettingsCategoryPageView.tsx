@@ -32,6 +32,12 @@
 
 import Link from "next/link";
 import type { SettingsCategory, SettingsRegistrationEntry } from "@/lib/settings";
+import {
+  getSaveActionsForCategory,
+  canEditWithRole,
+  type SettingsSaveAction,
+  type SettingsSaveActionStatus,
+} from "@/lib/settings";
 import type { CanonicalDealerSettings } from "@/lib/dealer-settings/dealer-settings-types";
 import type { DealerStaffRole }         from "@/lib/staff/staff-types";
 import type { DealerStaffDB }           from "@/lib/staff/staff-types";
@@ -438,6 +444,86 @@ function DataLoadError() {
   );
 }
 
+// ─── RoleRestrictedNotice ─────────────────────────────────────────────────────
+
+// Shown when the current user's role is insufficient to edit this settings section.
+// Still provides visibility into what the settings contain by prompting the user
+// to contact their owner/manager. Server-side enforcement is Sprint 13+.
+function RoleRestrictedNotice() {
+  return (
+    <div className={`${card} flex items-start gap-4`}>
+      <div className="mt-0.5 w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
+        <span className="text-base">🔐</span>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <p className="text-sm font-medium text-slate-300">編集権限が必要です</p>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          この設定を変更するにはマネージャー権限以上が必要です。
+          店舗オーナーまたはマネージャーにご確認ください。
+        </p>
+        <p className="text-[10px] text-slate-700 mt-1">
+          サーバー側の権限チェック: Sprint 13 実装予定
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── SaveActionsPanel (Phase E) ───────────────────────────────────────────────
+
+// Displays the save action registry entries for this category — shows which
+// settings sections are writable, read-only, or future, and flags any missing
+// server-side role checks for transparency.
+function SaveActionsPanel({ actions }: { actions: SettingsSaveAction[] }) {
+  if (actions.length === 0) return null;
+
+  const statusStyle: Record<SettingsSaveActionStatus, string> = {
+    writable_now:                 "bg-emerald-950/30 text-emerald-400 border-emerald-500/20",
+    read_only:                    "bg-slate-800 text-slate-500 border-slate-700",
+    future:                       "bg-slate-800 text-slate-600 border-slate-700",
+    requires_migration:           "bg-amber-950/20 text-amber-500 border-amber-500/20",
+    requires_admin:               "bg-purple-950/20 text-purple-400 border-purple-500/20",
+    external_integration_required:"bg-blue-950/20 text-blue-400 border-blue-500/20",
+  };
+
+  const statusLabel: Record<SettingsSaveActionStatus, string> = {
+    writable_now:                 "保存可能",
+    read_only:                    "読み取り専用",
+    future:                       "準備中",
+    requires_migration:           "移行作業必要",
+    requires_admin:               "管理者専用",
+    external_integration_required:"外部設定必要",
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+        設定保存ステータス
+      </p>
+      {actions.map(action => (
+        <div
+          key={action.action_id}
+          className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-900/40 border border-slate-800/60"
+        >
+          <div className="flex flex-col gap-0.5">
+            <p className="text-xs text-slate-300">{action.display_name}</p>
+            {!action.has_server_role_check && action.status === "writable_now" && (
+              <p className="text-[10px] text-amber-500/60">
+                ⚠ サーバー権限チェック: Sprint 13 実装予定
+              </p>
+            )}
+          </div>
+          <span
+            className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full border ${statusStyle[action.status]}`}
+          >
+            {statusLabel[action.status]}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── AiProvidersLink ──────────────────────────────────────────────────────────
 
 function AiProvidersLink() {
@@ -462,7 +548,9 @@ function AiProvidersLink() {
 // ─── CategoryDetailPanel ──────────────────────────────────────────────────────
 
 // Routes each active category to its appropriate settings panel.
-// Panels are existing client components reused without modification.
+// Applies UI-level role gating where the underlying server action lacks a role
+// check (documented per-action in save-action-registry.ts — Sprint 13 enforces
+// server-side for those gaps).
 function CategoryDetailPanel({
   category,
   staffRole,
@@ -485,11 +573,18 @@ function CategoryDetailPanel({
   planSlot:        React.ReactNode;
 }) {
   switch (category.category_id) {
+
     // ── 店舗設定 ─────────────────────────────────────────────────────────────
+    // UI gate: manager+ required (server action lacks role check — Sprint 13)
     case "dealer":
+      if (!canEditWithRole(staffRole, "manager_or_owner")) {
+        return <RoleRestrictedNotice />;
+      }
       return <CompanySettingsForm initialSettings={companySettings} />;
 
     // ── スタッフ管理 ─────────────────────────────────────────────────────────
+    // Server actions (inviteStaff, updateStaffRole, disableStaff) enforce role
+    // via requireRole() — no UI gate needed beyond usability.
     case "staff":
       if (staffRole !== "owner" && staffRole !== "manager") {
         return (
@@ -507,8 +602,12 @@ function CategoryDetailPanel({
       );
 
     // ── ブランディング ────────────────────────────────────────────────────────
-    // Logo, stamp, watermark settings are part of CompanySettingsForm.
+    // UI gate: manager+ required. saveCompanySettings (same action as dealer)
+    // lacks server role check — Sprint 13.
     case "branding":
+      if (!canEditWithRole(staffRole, "manager_or_owner")) {
+        return <RoleRestrictedNotice />;
+      }
       return (
         <div className="flex flex-col gap-4">
           <div className="px-3 py-2 rounded-lg border border-slate-800 bg-slate-900/30">
@@ -521,12 +620,15 @@ function CategoryDetailPanel({
       );
 
     // ── メンテナンス通知 ──────────────────────────────────────────────────────
+    // Read-only display — reminder templates are PHASE70 future-edit.
     case "notifications":
       return dealerSettings
         ? <ReminderContent s={dealerSettings} />
         : <DataLoadError />;
 
     // ── LINE / コミュニケーション ──────────────────────────────────────────────
+    // LineContent is mostly read-only (connection status + PHASE70 message display).
+    // Embedded LineRichMenuSettings has its own Pro+ gate for the editable section.
     case "communication":
       if (!dealerSettings) return <DataLoadError />;
       return (
@@ -537,6 +639,7 @@ function CategoryDetailPanel({
       );
 
     // ── 契約・プラン ──────────────────────────────────────────────────────────
+    // Read-only display of plan status and feature table.
     case "subscription":
       return (
         <PlanContent
@@ -546,19 +649,23 @@ function CategoryDetailPanel({
       );
 
     // ── 車検証OCR ─────────────────────────────────────────────────────────────
+    // Read-only policy display (OCR enable/disable is PHASE70).
     case "ocr":
       return dealerSettings
         ? <OcrContent s={dealerSettings} />
         : <DataLoadError />;
 
     // ── PDF・書類番号 ─────────────────────────────────────────────────────────
+    // UI gate: manager+ required. updateDocumentSequence lacks server role check.
     case "pdf":
-      return dealerSettings
-        ? <PdfContent sequences={sequences} s={dealerSettings} />
-        : <DataLoadError />;
+      if (!dealerSettings) return <DataLoadError />;
+      if (!canEditWithRole(staffRole, "manager_or_owner")) {
+        return <RoleRestrictedNotice />;
+      }
+      return <PdfContent sequences={sequences} s={dealerSettings} />;
 
     // ── AIプロバイダー ────────────────────────────────────────────────────────
-    // Dedicated route at /settings/ai supersedes this panel.
+    // saveAiSettings is Pro+ gated + encrypted. Managed via /settings/ai.
     case "ai_providers":
       return <AiProvidersLink />;
 
@@ -605,10 +712,18 @@ function ActiveCategoryContent({
   planInfo:        DealerPlanInfo | null;
   planSlot:        React.ReactNode;
 }) {
+  const saveActions = getSaveActionsForCategory(category.category_id);
+
   return (
     <div className="flex flex-col gap-5">
       <SettingsCategoryHeader category={category} staffRole={staffRole} />
 
+      {/* Phase E — Save action status (registry-driven) */}
+      {saveActions.length > 0 && (
+        <SaveActionsPanel actions={saveActions} />
+      )}
+
+      {/* Phase D — Actual panel content (role-gated where required) */}
       <CategoryDetailPanel
         category={category}
         staffRole={staffRole}

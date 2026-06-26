@@ -537,6 +537,100 @@ SettingsCategoryPageView.tsx  (Server Component, no "use client")
 
 ---
 
+## Sprint 12J — Settings Save Actions Foundation
+
+### Summary
+
+Audited all existing server actions for settings writes. Created a declarative save action registry. Added UI-level role gating and save-state display to the category pages.
+
+### New Files
+
+| File | Description |
+|------|-------------|
+| `src/lib/settings/save-actions/save-action-types.ts` | SettingsSaveActionId, Status, Policy, SettingsSaveAction types |
+| `src/lib/settings/save-actions/save-action-registry.ts` | SETTINGS_SAVE_ACTION_REGISTRY constant + query helpers |
+| `src/lib/settings/save-actions/index.ts` | Barrel export for save-actions module |
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `src/lib/settings/index.ts` | Re-exports all save-actions types and functions |
+| `src/components/settings/SettingsCategoryPageView.tsx` | Added SaveActionsPanel (Phase E), RoleRestrictedNotice, role gating in CategoryDetailPanel (Phase F) |
+
+### Server Action Audit (Phase B)
+
+| Action | File | dealer_id | Role Check | Sprint 12J Status |
+|--------|------|-----------|------------|------------------|
+| `saveCompanySettings` | `lib/company/save-company-settings.ts` | `getCurrentDealer()` ✓ | None ⚠ | writable_now — UI gate manager+, server Sprint 13 |
+| `upsertDealerSettings` | `lib/line/update-line-settings.ts` | `getCurrentDealer()` ✓ | None ⚠ | external_integration_required — /line page |
+| `saveLineRichMenuConfig` | `lib/line/save-line-rich-menu-config.ts` | `getCurrentDealer()` ✓ | `checkFeatureAccess(Pro+)` ✓ | writable_now |
+| `updateDocumentSequence` | `lib/numbering/update-document-sequence.ts` | `getCurrentDealer()` ✓ | None ⚠ | writable_now — UI gate manager+, server Sprint 13 |
+| `inviteStaff` | `lib/staff/invite-staff.ts` | `requireRole()` ✓ | `requireRole(owner,manager)` ✓ | writable_now |
+| `updateStaffRole` | `lib/staff/update-staff-role.ts` | `requireRole()` ✓ | `requireRole(owner)` ✓ | writable_now |
+| `disableStaff` / `enableStaff` | `lib/staff/disable-staff.ts` | `requireRole()` ✓ | `requireRole(owner,manager)` ✓ | writable_now |
+| `saveAiSettings` | `lib/ai/save-ai-settings.ts` | `getCurrentDealer()` ✓ | `checkFeatureAccess(Pro+)` ✓ | writable_now — /settings/ai route |
+| `setDealerRank` | `lib/dealer-settings/set-dealer-rank.ts` | `requireAdmin()` ✓ | `requireAdmin()` ✓ | requires_admin — /admin only |
+
+### Save Action Registry (Phase C)
+
+9 actions registered in `SETTINGS_SAVE_ACTION_REGISTRY`:
+
+```
+company_info          → writable_now   (dealer, branding)
+line_connection       → external_integration_required (communication)
+line_rich_menu        → writable_now   (communication) — Pro+ gated
+document_sequences    → writable_now   (pdf)
+staff_invite          → writable_now   (staff) — role hierarchy enforced
+staff_role_update     → writable_now   (staff) — owner-only enforced
+staff_disable         → writable_now   (staff) — role hierarchy enforced
+ai_gateway_settings   → writable_now   (ai_providers) — Pro+, /settings/ai
+dealer_rank           → requires_admin (dealer) — /admin only
+```
+
+### UI Role Gating (Phase F)
+
+Categories with UI-level role gates (where server action lacks `requireRole()`):
+
+| Category | Required Role | Server Enforcement |
+|----------|--------------|-------------------|
+| `dealer` | manager or owner | Sprint 13 |
+| `branding` | manager or owner | Sprint 13 |
+| `pdf` | manager or owner | Sprint 13 |
+| `staff` | manager or owner (UI only — server actions enforce correctly) | ✓ Now |
+
+All other active categories:
+- `notifications` — read-only display, no write action
+- `communication` — `LineContent` is read-only; `LineRichMenuSettings` enforces Pro+ server-side
+- `subscription` — read-only plan display
+- `ocr` — read-only policy display
+- `ai_providers` — links to `/settings/ai` which has its own Pro+ gate
+
+### Save State Display (Phase E)
+
+`SaveActionsPanel` component in `SettingsCategoryPageView.tsx`:
+- Shows save action registry entries for the current category
+- Displays status badge per action (保存可能 / 読み取り専用 / 外部設定必要 / etc.)
+- Flags actions without server role check with "⚠ サーバー権限チェック: Sprint 13 実装予定"
+
+### Server-Side Role Enforcement Gap (Documented)
+
+Three server actions (`saveCompanySettings`, `upsertDealerSettings`, `updateDocumentSequence`) only call `getCurrentDealer()` — they verify dealer association but not staff role. A `staff` or `readonly` user who bypasses the UI could POST these actions.
+
+**Mitigation in Sprint 12J:** UI-level role gating hides or disables the editable form for insufficient roles.
+**Full fix:** Sprint 13 — add `requireRole(["owner","manager"])` to these three actions.
+
+### Sprint 12J Constraints Respected
+
+- No migrations, no schema changes, no new persistence tables
+- No external APIs, no provider SDKs
+- No fake save behavior — registry is pure metadata
+- No unsafe client-only authorization for writes — role gaps documented, Sprint 13 tracked
+- dealer_id from getCurrentDealer() in all connected server actions
+- Reused existing server actions only
+
+---
+
 ## Sprint 12F Constraints Respected
 
 - No database migrations

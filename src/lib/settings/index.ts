@@ -112,6 +112,23 @@ export {
   buildItemId,
 } from "./settings-navigation";
 
+// ─── Save action registry ─────────────────────────────────────────────────────
+
+export type {
+  SettingsSaveActionId,
+  SettingsSaveActionStatus,
+  SettingsSaveActionPolicy,
+  SettingsSaveAction,
+  SettingsSaveActionRegistry,
+} from "./save-actions";
+
+export {
+  SETTINGS_SAVE_ACTION_REGISTRY,
+  getSaveActionsForCategory,
+  getCategorySaveStatus,
+  canEditWithRole,
+} from "./save-actions";
+
 // ─── Platform integration ─────────────────────────────────────────────────────
 
 export type {
