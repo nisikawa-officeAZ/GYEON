@@ -171,6 +171,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── MEDIA_ARCHITECTURE.md                 ← Sprint 10I–L: Media-first model, runtime, retention policy, architecture review (§12), platform foundation (§13)
 ├── MEDIA_ASSETS_SCHEMA_PROPOSAL.md      ← Sprint 10K: media_assets migration proposal — DRAFT, CTO approval required
 ├── MEDIA_PLATFORM_SPEC.md               ← Sprint 10L: Media as first-class business domain — domain objects, lifecycle, associations, consent, service layer
+├── MARKETING_PLATFORM_SPEC.md          ← Sprint 11A: AI Marketing Platform — domain, asset model, channel registry, workflow, optimization, AI compatibility
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -209,6 +210,7 @@ TIER 4 — DESIGN AUTHORITY
 | **2.5** | **2026-06-26** | **Sprint 10K spec** | **Media Retention Policy: VideoRetentionPeriod/Policy/Config types, MediaDeletionReason/Record, DEFAULT_VIDEO_RETENTION_POLICY, DealerVideoRetentionPreference (7/30/90 day + after_ai_processing/after_download triggers), MEDIA_ARCHITECTURE.md §10, AI_MARKETING_AGENT_ROADMAP.md §72.4** |
 | **2.6** | **2026-06-26** | **Sprint 10K review** | **Media Architecture Review: media_assets vs work_order_files comparison, MEDIA_ASSETS_SCHEMA_PROPOSAL.md (full SQL — DRAFT), coexistence migration strategy, Option 1 rejected (work_order_id NOT NULL blocker), Option 2 recommended (dedicated media_assets table), MEDIA_ARCHITECTURE.md §12** |
 | **2.7** | **2026-06-26** | **Sprint 10L** | **Media Platform Foundation: MediaAsset domain object, MediaLifecycleStage (10 stages), MediaAssociation (11 entity targets), MediaConsentDetail (5 scopes), MediaRetention, 7 service interfaces + 6 implementations, retention_expired permission scope, MEDIA_PLATFORM_SPEC.md** |
+| **2.8** | **2026-06-26** | **Sprint 11A** | **AI Marketing Platform Foundation: MarketingCampaign, MarketingAsset (consumes MediaAsset), MARKETING_CHANNEL_REGISTRY (10 channels), 9-stage PublishingWorkflow, SEO/MEO/AEO/LLMO/AIO ContentOptimizationProfile, MarketingAssetForAgent AI gate, MARKETING_PLATFORM_SPEC.md** |
 
 ---
 

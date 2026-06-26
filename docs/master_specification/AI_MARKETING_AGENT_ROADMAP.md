@@ -653,4 +653,44 @@ All AI inference calls in PHASE 71–76 route through the **AI Gateway** (`AI_GA
 
 ---
 
+---
+
+## Sprint 11A — AI Marketing Platform Foundation
+
+> Full specification: `MARKETING_PLATFORM_SPEC.md`
+
+Sprint 11A implements the architecture-only foundation for the AI Marketing Platform.
+No API integrations, no AI inference, no database migrations.
+
+### What was implemented
+
+| Module | File | Purpose |
+|--------|------|---------|
+| Marketing Domain | `marketing-types.ts` | MarketingCampaign, MarketingPolicy, MarketingAudience, MarketingSchedule, 10 asset types, 10 channel IDs |
+| Marketing Asset | `marketing-asset.ts` | MarketingAsset (consumes MediaAsset), permission checks, publishability gate |
+| Channel Registry | `marketing-channel.ts` | MARKETING_CHANNEL_REGISTRY — 10 channels with full capability metadata |
+| Publishing Workflow | `marketing-workflow.ts` | 9-stage state machine, WORKFLOW_TRANSITIONS, deriveWorkflowStage() |
+| Optimization Model | `marketing-optimization.ts` | SEO + MEO + AEO + LLMO + AIO metadata profiles |
+| AI Compatibility | `marketing-ai.ts` | MarketingAssetForAgent, toMarketingAssetForAgent(), AGENT_MARKETING_CAPABILITIES |
+| Public API | `index.ts` | Re-exports from all marketing modules |
+
+### Key design decisions
+
+- `MarketingAsset.source_media: MediaAsset[]` — marketing content is always grounded in canonical media domain objects
+- All channels have `available_now = false` — Phase 11B will flip individual channels one at a time
+- `DEFAULT_MARKETING_POLICY.requires_dealer_approval = true` — dealers always approve before publishing
+- `DEFAULT_MARKETING_POLICY.ai_content_allowed = false` — must be explicitly enabled per campaign
+- LLMO and AIO targets added alongside SEO/MEO/AEO — forward-looking for next 3–5 years of search evolution
+- `toMarketingAssetForAgent()` runs a full media permission gate before projecting to `MarketingAssetForAgent`
+
+### Next steps (Sprint 11B)
+
+1. Implement Instagram Feed + Google Business Profile channel adapters
+2. Implement `marketing_agent` caption and hashtag generation (uses AI Gateway)
+3. Implement dealer approval UI for MarketingAsset
+4. Implement `seo_agent` optimization pass for ContentOptimizationProfile
+5. Implement `MediaAssociationService` (requires media_assets migration approval)
+
+---
+
 *GYEON Detailer Agent | AI Marketing Agent Roadmap | Office AZ | 2026-06-26*
