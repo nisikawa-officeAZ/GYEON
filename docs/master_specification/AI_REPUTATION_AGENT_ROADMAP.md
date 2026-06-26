@@ -448,4 +448,74 @@ manual_review_response_posting: true;
 
 ---
 
+## Sprint 11C — AI Reputation Platform Foundation
+
+### Completed: 2026-06-26
+
+Sprint 11C implements the production-ready AI Reputation Platform foundation as a new business domain at `src/lib/reputation/`. This sprint connects the existing AI reputation agent types, the Customer Engagement runtime, and the AI Video/Marketing platforms into one unified reputation subsystem.
+
+### Architecture Overview
+
+```
+WORK_COMPLETED (Customer Engagement event)
+  ↓
+prepareWorkCompletedReputationPlan() — async dry-run orchestrator
+  ├── validateReviewRequestReadiness() [pure, 7 checks]
+  ├── validateLineActionReadiness()    [CE engine async]
+  └── validateAgentNotifyReadiness()   [CE engine async]
+  ↓
+WorkCompletedReputationPlan (require_dealer_approval = true always)
+  ↓ [Dealer approves]
+ReviewRequest → ReviewDraft (compliance_passed required)
+  ↓ [Dealer approves draft]
+LINE review request sent → ReviewSignal created
+  ↓ Phase 11D+
+ReputationInsight → ReputationOptimizationProfile (MEO/AEO/LLMO/AIO)
+```
+
+### Phase Completion
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| A | Core domain: ReputationProfile, ReviewDestination, ReputationPolicy, ReputationSummary | Complete |
+| B | Review request workflow: 7-check readiness validator, ReviewRequest lifecycle | Complete |
+| C | Review draft compliance: REVIEW_COMPLIANCE_RULES, 5 blocking flags, validateDraftCompliance() | Complete |
+| D | Reputation signal model: ReviewSignal (7 sources, 6 types, 10 analysis dimensions) | Complete |
+| E | MEO/AEO/LLMO/AIO optimization: ReputationOptimizationProfile, FAQ candidates, structured summaries | Complete |
+| F | Customer Engagement integration: prepareWorkCompletedReputationPlan() async orchestrator | Complete |
+| G | Documentation: REPUTATION_PLATFORM_SPEC.md, spec index updated to v3.0 | Complete |
+
+### Files Created
+
+| Module | File | Purpose |
+|--------|------|---------|
+| Types | `reputation-types.ts` | Domain types + re-exports from agent foundation |
+| Profile | `reputation-profile.ts` | ReputationProfile, ReputationPolicy, destination helpers |
+| Request | `review-request.ts` | ReviewRequest, 7-check pure validator, state machine |
+| Draft | `review-draft.ts` | ReviewDraft, REVIEW_COMPLIANCE_RULES (5 blocking flags) |
+| Signal | `review-signal.ts` | ReviewSignal model, signal collection, analysis helpers |
+| Optimization | `reputation-optimization.ts` | MEO/AEO/LLMO/AIO profile structures |
+| Engagement | `reputation-engagement.ts` | Async plan orchestrator (CE integration) |
+| Public API | `index.ts` | Re-exports from all reputation modules |
+
+### Key Design Decisions
+
+- `require_dealer_approval: true` is typed as the literal `true` — not `boolean` — to make the invariant enforceable at compile time
+- `validateReviewRequestReadiness()` is a pure synchronous function — all DB lookups are done by the caller and passed in as `ReviewRequestContext`
+- 5 compliance rules are "blocking" (prevent approval) — pattern-based static check before any draft can be approved
+- `reputation-types.ts` re-exports foundation types from `@/lib/ai/agents/reputation/types` — no duplication; single source of truth
+- `ReputationOptimizationProfile` complements (not duplicates) `ContentOptimizationProfile` from `@/lib/marketing` — reputation-specific signals only
+- One-way dependency: `@/lib/reputation` imports from `@/lib/customer-engagement`; CE module has zero knowledge of reputation
+
+### Next Steps (Sprint 11D)
+
+1. Implement `reputation_agent` review request message generation (AI Gateway)
+2. Implement dealer approval UI for review requests
+3. Implement ReviewRequest DB persistence (`review_requests` table — CTO approval required)
+4. Implement ReviewSignal ingestion from Google Business Profile review webhook
+5. Implement `reputation_agent` signal analysis to populate `ReputationInsight[]`
+6. Implement cross-agent feed from `MarketingAgentFeed` to `ContentOptimizationProfile`
+
+---
+
 *GYEON Detailer Agent | AI Reputation Agent Roadmap | Office AZ | 2026-06-26*

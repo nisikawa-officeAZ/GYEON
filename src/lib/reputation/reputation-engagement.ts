@@ -1,0 +1,256 @@
+// DealerOS — Reputation Platform: Customer Engagement Integration
+//
+// Sprint 11C Phase F: connects the Reputation Platform to the Customer
+// Engagement runtime dry-run layer.
+//
+// Trigger flow (dry-run — no real sends, no real API calls):
+//
+//   WORK_COMPLETED event
+//     ↓
+//   prepareWorkCompletedReputationPlan()
+//     ↓
+//     ├── validateReviewRequestReadiness()   [pure, from review-request.ts]
+//     ├── validateLineActionReadiness()       [async, from CE engine]
+//     └── validateAgentNotifyReadiness()      [async, from CE engine]
+//     ↓
+//   WorkCompletedReputationPlan
+//     ↓
+//   Dealer approval gate (always required — require_dealer_approval = true)
+//
+// Security:
+//   dealer_id always comes from EngagementContext (injected via getCurrentDealer()).
+//   This module never accepts dealer_id from client-provided input.
+//   No LINE messages are sent. No AI inference is executed.
+
+import type { EngagementAction, EngagementContext }  from "@/lib/customer-engagement";
+import type { WorkCompletedEvent }                    from "@/lib/customer-engagement";
+import type { LineActionReadinessResult }             from "@/lib/customer-engagement/engine/line-dry-run";
+import type { AgentNotifyReadinessResult }            from "@/lib/customer-engagement/engine/agent-dry-run";
+import { validateLineActionReadiness }                from "@/lib/customer-engagement/engine/line-dry-run";
+import { validateAgentNotifyReadiness }               from "@/lib/customer-engagement/engine/agent-dry-run";
+import type { ReviewRequestReadinessResult }          from "./review-request";
+import type { ReviewDestination }                     from "./reputation-types";
+import type { ReputationPolicy }                      from "./reputation-profile";
+
+// ─── Reputation engagement plan ───────────────────────────────────────────────
+
+/**
+ * Overall readiness status for a full WORK_COMPLETED → review-request pipeline.
+ *
+ * "ready_all"        — All three components ready: review request + LINE + agent
+ * "ready_partial"    — At least one component ready; partial execution possible
+ * "not_ready"        — No component is ready; no action can proceed
+ */
+export type ReputationEngagementReadiness =
+  | "ready_all"
+  | "ready_partial"
+  | "not_ready";
+
+/**
+ * WorkCompletedReputationPlan — the full dry-run result for a WORK_COMPLETED event.
+ *
+ * Produced by prepareWorkCompletedReputationPlan() — documents exactly what
+ * would happen if the dealer approves and triggers the review request workflow.
+ *
+ * dealer_approval_required is permanently typed as the literal `true`.
+ * No action in this plan may be executed without explicit dealer confirmation.
+ */
+export interface WorkCompletedReputationPlan {
+  /** The source event that triggered this plan. */
+  event:                    WorkCompletedEvent;
+  /** Dealer context — always from getCurrentDealer(). */
+  dealer_id:                string;
+  /** Overall readiness status derived from the three component checks. */
+  overall_readiness:        ReputationEngagementReadiness;
+  /** Review request preparation result — from validateReviewRequestReadiness(). */
+  review_request_readiness: ReviewRequestReadinessResult;
+  /** LINE messaging readiness — from CE engine validateLineActionReadiness(). */
+  line_readiness:           LineActionReadinessResult;
+  /** AI reputation agent notification readiness — from CE engine. */
+  agent_readiness:          AgentNotifyReadinessResult;
+  /** Always true — no action may execute without dealer approval. */
+  dealer_approval_required: true;
+  prepared_at:              string;   // ISO 8601
+}
+
+// ─── Reputation engagement input ─────────────────────────────────────────────
+
+/**
+ * ReputationEngagementInput — the pre-fetched data needed to build a plan.
+ *
+ * The caller (server action) fetches all required data and provides it here.
+ * This keeps the plan builder testable and free of direct DB dependencies.
+ */
+export interface ReputationEngagementInput {
+  event:           WorkCompletedEvent;
+  context:         EngagementContext;
+  /** Pre-fetched customer LINE link status. */
+  customer_has_line:         boolean;
+  /** Pre-fetched customer LINE messaging consent. */
+  customer_consent_status:   "approved" | "pending" | "denied" | "not_required";
+  /** True if the dealer's reputation settings are initialized. */
+  dealer_settings_available: boolean;
+  /** True if the dealer's plan includes the reputation feature. */
+  feature_enabled:           boolean;
+  /** The primary review destination configured by the dealer. Null if none. */
+  primary_destination:       ReviewDestination | null;
+  reputation_policy:         ReputationPolicy;
+  /**
+   * ISO 8601 timestamp of the most recent review request sent to this customer.
+   * Null if no prior request exists.
+   */
+  last_request_to_customer_at: string | null;
+  /** Unique ID for the new ReviewRequest (generated by caller). */
+  review_request_id:         string;
+}
+
+// ─── Engagement action builders ───────────────────────────────────────────────
+
+/**
+ * Constructs the EngagementAction that triggers a LINE review request message.
+ * Used as input to validateLineActionReadiness() from the CE engine.
+ */
+function buildLineReviewRequestAction(): EngagementAction {
+  return {
+    id:           "reputation_review_request_line",
+    type:         "send_line_message",
+    delay_hours:  0,   // 0 = validate now; actual scheduling handled at send time
+    config: {
+      template_id: "review_request",
+      platform:    "google",   // Default; overridden by the actual destination
+    },
+    conditions: [
+      { type: "customer_has_line" },
+      { type: "feature_enabled", feature: "line" },
+    ],
+    required_feature: "line",
+  };
+}
+
+/**
+ * Constructs the EngagementAction that notifies the reputation_agent.
+ * Used as input to validateAgentNotifyReadiness() from the CE engine.
+ */
+function buildReputationAgentNotifyAction(): EngagementAction {
+  return {
+    id:           "reputation_agent_notify_work_completed",
+    type:         "notify_agent",
+    delay_hours:  0,
+    config: {
+      agent_id: "reputation_agent",
+    },
+    conditions: [
+      { type: "ai_gateway_ready" },
+      { type: "feature_enabled", feature: "ai_reputation" },
+    ],
+    required_feature: "ai_reputation",
+  };
+}
+
+// ─── Plan builder ─────────────────────────────────────────────────────────────
+
+/**
+ * prepareWorkCompletedReputationPlan — builds the full dry-run plan for a
+ * WORK_COMPLETED event.
+ *
+ * Orchestrates three parallel validations:
+ *   1. Review request readiness (pure, from review-request.ts)
+ *   2. LINE action readiness (async, CE engine)
+ *   3. Reputation agent notification readiness (async, CE engine)
+ *
+ * Returns a WorkCompletedReputationPlan documenting what would happen
+ * after dealer approval.
+ *
+ * Does NOT send any messages.
+ * Does NOT call any AI providers.
+ * Does NOT write to any database tables.
+ *
+ * dealer_id comes from input.context (populated by getCurrentDealer() in the
+ * server action that constructs the EngagementContext).
+ */
+export async function prepareWorkCompletedReputationPlan(
+  input: ReputationEngagementInput,
+  now:   string,
+): Promise<WorkCompletedReputationPlan> {
+  const { event, context } = input;
+
+  // ── 1. Validate review request readiness (pure) ──────────────────────────
+  const { validateReviewRequestReadiness } = await import("./review-request");
+
+  const reviewContext = {
+    dealer_id:                  context.dealer_id,
+    customer_id:                context.customer_id,
+    job_id:                     event.payload.work_order_id,
+    customer_has_line:          input.customer_has_line,
+    customer_consent_status:    input.customer_consent_status,
+    dealer_settings_available:  input.dealer_settings_available,
+    feature_enabled:            input.feature_enabled,
+    destination:                input.primary_destination,
+    policy:                     input.reputation_policy,
+    last_request_to_customer_at: input.last_request_to_customer_at,
+    job_completed_at:           event.payload.completed_at,
+  };
+
+  const reviewRequestReadiness = validateReviewRequestReadiness(
+    reviewContext,
+    input.review_request_id,
+    now,
+  );
+
+  // ── 2. Validate LINE action readiness (async, CE engine) ─────────────────
+  const lineAction           = buildLineReviewRequestAction();
+  const lineReadiness        = await validateLineActionReadiness(lineAction, context);
+
+  // ── 3. Validate reputation agent notification readiness (async, CE engine)
+  const agentAction          = buildReputationAgentNotifyAction();
+  const agentReadiness       = await validateAgentNotifyReadiness(agentAction, context);
+
+  // ── Derive overall readiness ─────────────────────────────────────────────
+  const reviewReady  = reviewRequestReadiness.status === "ready";
+  const lineReady    = lineReadiness.status           === "ready";
+  const agentReady   = agentReadiness.status          === "ready";
+  const allReady     = reviewReady && lineReady && agentReady;
+  const anyReady     = reviewReady || lineReady || agentReady;
+
+  const overallReadiness: ReputationEngagementReadiness = allReady
+    ? "ready_all"
+    : anyReady
+      ? "ready_partial"
+      : "not_ready";
+
+  return {
+    event,
+    dealer_id:                context.dealer_id,
+    overall_readiness:        overallReadiness,
+    review_request_readiness: reviewRequestReadiness,
+    line_readiness:           lineReadiness,
+    agent_readiness:          agentReadiness,
+    dealer_approval_required: true,
+    prepared_at:              now,
+  };
+}
+
+// ─── Plan summary helpers ─────────────────────────────────────────────────────
+
+/**
+ * Returns a human-readable summary of the plan for logging or debugging.
+ * Does not include sensitive data.
+ */
+export function summarizePlan(plan: WorkCompletedReputationPlan): string {
+  const parts: string[] = [
+    `overall=${plan.overall_readiness}`,
+    `review=${plan.review_request_readiness.status}`,
+    `line=${plan.line_readiness.status}`,
+    `agent=${plan.agent_readiness.status}`,
+    `dealer_approval_required=${plan.dealer_approval_required}`,
+  ];
+  return parts.join(", ");
+}
+
+/**
+ * Returns true if the plan is ready to proceed to dealer approval.
+ * Requires at least review_request_readiness = "ready".
+ */
+export function isPlanReadyForApproval(plan: WorkCompletedReputationPlan): boolean {
+  return plan.review_request_readiness.status === "ready";
+}

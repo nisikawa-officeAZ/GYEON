@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v2.9 — Sprint 11B) |
+| **Last Updated** | 2026-06-26 (v3.0 — Sprint 11C) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -173,6 +173,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── MEDIA_PLATFORM_SPEC.md               ← Sprint 10L: Media as first-class business domain — domain objects, lifecycle, associations, consent, service layer
 ├── MARKETING_PLATFORM_SPEC.md          ← Sprint 11A: AI Marketing Platform — domain, asset model, channel registry, workflow, optimization, AI compatibility
 ├── VIDEO_PIPELINE_SPEC.md             ← Sprint 11B: AI Video Pipeline — source media, timeline, publishing profiles (9), AI providers (8), privacy model
+├── REPUTATION_PLATFORM_SPEC.md       ← Sprint 11C: AI Reputation Platform — review request workflow, compliance model, signal model, MEO/AEO/LLMO/AIO, CE integration
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -213,6 +214,7 @@ TIER 4 — DESIGN AUTHORITY
 | **2.7** | **2026-06-26** | **Sprint 10L** | **Media Platform Foundation: MediaAsset domain object, MediaLifecycleStage (10 stages), MediaAssociation (11 entity targets), MediaConsentDetail (5 scopes), MediaRetention, 7 service interfaces + 6 implementations, retention_expired permission scope, MEDIA_PLATFORM_SPEC.md** |
 | **2.8** | **2026-06-26** | **Sprint 11A** | **AI Marketing Platform Foundation: MarketingCampaign, MarketingAsset (consumes MediaAsset), MARKETING_CHANNEL_REGISTRY (10 channels), 9-stage PublishingWorkflow, SEO/MEO/AEO/LLMO/AIO ContentOptimizationProfile, MarketingAssetForAgent AI gate, MARKETING_PLATFORM_SPEC.md** |
 | **2.9** | **2026-06-26** | **Sprint 11B** | **AI Video Pipeline Foundation: VideoProject, VideoSource (12 types), VideoTimeline (10 scene types), VIDEO_PUBLISHING_PROFILE_REGISTRY (9 profiles), VIDEO_AI_PROVIDER_REGISTRY (8 providers), VideoPrivacyConfig, VIDEO_PIPELINE_SPEC.md** |
+| **3.0** | **2026-06-26** | **Sprint 11C** | **AI Reputation Platform Foundation: ReputationProfile, ReviewRequest (7-check validator), ReviewDraft (5 compliance rules), ReviewSignal (7 sources), ReputationOptimizationProfile (MEO/AEO/LLMO/AIO), CE integration, REPUTATION_PLATFORM_SPEC.md** |
 
 ---
 
