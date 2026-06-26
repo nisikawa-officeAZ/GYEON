@@ -1,23 +1,26 @@
-// GYEON Business Hub — Settings Save Action Registry (Sprint 12J)
+// GYEON Business Hub — Settings Save Action Registry (Sprint 12K)
 //
 // Declarative registry of all settings save flows — their status, role
 // requirements, and coverage. No execution from this module.
 //
-// Key findings from Phase B (existing server action audit):
-//
+// Sprint 12J audit findings:
 //   FULLY SAFE (dealer_id from getCurrentDealer + server role check):
 //     inviteStaff, updateStaffRole, disableStaff — requireRole() enforced
 //     saveLineRichMenuConfig                    — checkFeatureAccess(Pro+)
 //     saveAiSettings                            — checkFeatureAccess(Pro+) + encryption
 //     setDealerRank                             — requireAdmin() (platform admin only)
 //
-//   PARTIALLY SAFE (dealer_id safe, role check missing — Sprint 13):
-//     saveCompanySettings  — getCurrentDealer() ✓, no role check ⚠
-//     upsertDealerSettings — getCurrentDealer() ✓, no role check ⚠
+//   PARTIALLY SAFE (dealer_id safe, role check missing — Sprint 12J gap):
+//     saveCompanySettings    — getCurrentDealer() ✓, no role check ⚠
+//     upsertDealerSettings   — getCurrentDealer() ✓, no role check ⚠
 //     updateDocumentSequence — getCurrentDealer() ✓, no role check ⚠
 //
-// Sprint 12J connects the safe flows with UI-level role gating for the
-// partially-safe ones. Full server enforcement tracked for Sprint 13.
+// Sprint 12K closes the gaps above:
+//   saveCompanySettings    → requireRole(["owner","manager"]) added ✓
+//   upsertDealerSettings   → requireRole(["owner","manager"]) added ✓
+//   updateDocumentSequence → requireRole(["owner","manager"]) added ✓
+//
+// All dealer-facing write paths now have server-side role enforcement.
 
 import type { SettingsSaveAction, SettingsSaveActionId, SettingsSaveActionRegistry } from "./save-action-types";
 import type { SettingsCategoryId } from "../settings-types";
@@ -31,11 +34,12 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
     status:                "writable_now",
     server_action_path:    "src/lib/company/save-company-settings.ts",
     ui_role_policy:        "manager_or_owner",
-    has_server_role_check: false,
+    has_server_role_check: true,
     notes:
       "saveCompanySettings upserts dealer_settings (business_name, address, logo, stamp, etc.). " +
-      "dealer_id from getCurrentDealer() — safe. No server role check yet. " +
-      "UI gates to manager+ only. Full server enforcement Sprint 13.",
+      "dealer_id from requireRole → getCurrentDealer() — safe. " +
+      "requireRole([\"owner\",\"manager\"]) enforced server-side (Sprint 12K). " +
+      "staff/readonly/unknown roles receive 権限エラー and the write is rejected.",
   },
 
   line_connection: {
@@ -45,12 +49,13 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
     status:                "external_integration_required",
     server_action_path:    "src/lib/line/update-line-settings.ts",
     ui_role_policy:        "manager_or_owner",
-    has_server_role_check: false,
+    has_server_role_check: true,
     notes:
       "upsertDealerSettings writes LINE channel credentials (channel_id, liff_id, webhook_url). " +
       "Requires LINE Developer Console setup before credentials can be entered. " +
-      "dealer_id from getCurrentDealer() — safe. No server role check — Sprint 13. " +
-      "Managed from /line page, not exposed in /settings/communication.",
+      "dealer_id from requireRole → getCurrentDealer() — safe. " +
+      "requireRole([\"owner\",\"manager\"]) enforced server-side (Sprint 12K). " +
+      "Managed from /line page, not exposed in /settings/communication panel.",
   },
 
   line_rich_menu: {
@@ -74,11 +79,13 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
     status:                "writable_now",
     server_action_path:    "src/lib/numbering/update-document-sequence.ts",
     ui_role_policy:        "manager_or_owner",
-    has_server_role_check: false,
+    has_server_role_check: true,
     notes:
       "updateDocumentSequence writes prefix/padding/reset_policy. " +
       "current_number is never directly writable via this action. " +
-      "dealer_id from getCurrentDealer() — safe. No role gate — Sprint 13.",
+      "dealer_id from requireRole → getCurrentDealer() — safe. " +
+      "requireRole([\"owner\",\"manager\"]) enforced server-side (Sprint 12K). " +
+      "staff/readonly/unknown roles receive 権限エラー and the write is rejected.",
   },
 
   staff_invite: {

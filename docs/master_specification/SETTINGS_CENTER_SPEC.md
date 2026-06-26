@@ -631,6 +631,84 @@ Three server actions (`saveCompanySettings`, `upsertDealerSettings`, `updateDocu
 
 ---
 
+## Sprint 12K — Settings Server-Side Permission Enforcement
+
+### Summary
+
+Closed all dealer-facing settings write permission gaps identified in Sprint 12J. Three server actions that previously relied on `getCurrentDealer()` only (no role check) now enforce `requireRole(["owner","manager"])` server-side. No new server actions, no new persistence.
+
+### Hardened Actions (Phase C)
+
+All three changes follow the same pattern: replace `getCurrentDealer()` with `requireRole(["owner","manager"])`, wrap in try/catch, propagate the role error message to the caller.
+
+| File | Function | Before | After |
+|------|----------|--------|-------|
+| `src/lib/company/save-company-settings.ts` | `saveCompanySettings` | `getCurrentDealer()` only | `requireRole(["owner","manager"])` |
+| `src/lib/line/update-line-settings.ts` | `upsertDealerSettings` | `getCurrentDealer()` only | `requireRole(["owner","manager"])` |
+| `src/lib/numbering/update-document-sequence.ts` | `updateDocumentSequence` | `getCurrentDealer()` only | `requireRole(["owner","manager"])` |
+
+### Permission Helper Reused (Phase B)
+
+`requireRole(allowedRoles)` at `src/lib/staff/require-role.ts`:
+- Calls `getCurrentStaff()` + `getCurrentDealer()` in parallel
+- Throws `"この操作を行う権限がありません"` if role not in `allowedRoles`
+- Throws `"認証が必要です"` if no dealer association
+- Returns `{ role, dealerId }` — dealer_id never comes from client
+- Dev-mode fallback: no staff record → treats caller as "owner" (documented)
+
+### Complete Settings Write Permission Table (Post Sprint 12K)
+
+| Action | Required Role | Enforcement | Has Server Check |
+|--------|--------------|-------------|-----------------|
+| `saveCompanySettings` | owner, manager | `requireRole(["owner","manager"])` ✓ | Yes |
+| `upsertDealerSettings` | owner, manager | `requireRole(["owner","manager"])` ✓ | Yes |
+| `updateDocumentSequence` | owner, manager | `requireRole(["owner","manager"])` ✓ | Yes |
+| `inviteStaff` | owner, manager | `requireRole(["owner","manager"])` ✓ | Yes |
+| `updateStaffRole` | owner | `requireRole(["owner"])` ✓ | Yes |
+| `disableStaff`/`enableStaff` | owner, manager | `requireRole(["owner","manager"])` ✓ | Yes |
+| `saveLineRichMenuConfig` | (Pro+ plan) | `checkFeatureAccess("line_rich_menu")` ✓ | Yes |
+| `saveAiSettings` | (Pro+ plan) | `checkFeatureAccess("ai_gateway")` + encryption ✓ | Yes |
+| `setDealerRank` | platform admin | `requireAdmin()` ✓ | Yes |
+
+**All dealer-facing write paths now have server-side enforcement.** No settings writes accept dealer_id from client input.
+
+### Registry Updates (Phase D)
+
+Three registry entries updated — `has_server_role_check: false` → `true`:
+- `company_info` (covers `dealer`, `branding` categories)
+- `line_connection` (covers `communication` category)
+- `document_sequences` (covers `pdf` category)
+
+The "⚠ サーバー権限チェック: Sprint 13 実装予定" warning badge in `SaveActionsPanel` no longer appears for these three actions.
+
+### Static Validation (Phase E — No Test Framework)
+
+No test framework exists in the project. Static validation approach:
+
+1. **TypeScript compiler:** `npx tsc --noEmit` — clean. All three hardened functions have correct type signatures. `requireRole` return type `{ role, dealerId }` correctly replaces `getCurrentDealer()` return shape.
+
+2. **Role rejection path:** `requireRole` throws when role not in `allowedRoles`. The try/catch in each action converts the thrown error into a typed return: `{ error: "この操作を行う権限がありません" }` or `{ success: false, error: "..." }`. Callers (client components) surface this error to the user.
+
+3. **dealer_id source verification:** All three updated actions derive `dealerId` from `requireRole → getCurrentDealer()` — the `dealer_members` table query filtered by `auth.uid()`. No client-provided `dealer_id` is accepted anywhere in the write path.
+
+4. **Dev mode behavior:** `requireRole` fallback (`staff?.role ?? "owner"`) means dev builds without the `dealer_staff` table still function. Production builds have the table and enforce roles correctly.
+
+Manual verification steps for each hardened action:
+- Sign in as staff role → attempt form submit → expect "この操作を行う権限がありません" error
+- Sign in as readonly role → attempt form submit → expect same error
+- Sign in as manager → attempt form submit → expect success
+- Sign in as owner → attempt form submit → expect success
+
+### Sprint 12K Constraints Respected
+
+- No migrations, no schema changes, no new persistence tables
+- No external APIs, no provider SDKs
+- No duplicate permission system — reused existing `requireRole` helper
+- No unsafe client-only authorization — all three gaps now server-enforced
+- dealer_id from `requireRole → getCurrentDealer()` in all hardened actions
+
+---
+
 ## Sprint 12F Constraints Respected
 
 - No database migrations

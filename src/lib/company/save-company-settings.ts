@@ -1,7 +1,8 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient }    from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { requireRole }      from "@/lib/staff/require-role";
 import type { DealerSettingsDB } from "@/lib/line/line-types";
 
 export type CompanySettingsFields = Pick<
@@ -52,8 +53,9 @@ export async function saveCompanySettings(
   fd: FormData
 ): Promise<{ error: string } | { success: true }> {
   try {
-    const dealer = await getCurrentDealer();
-    if (!dealer) return { error: "認証エラー" };
+    // Requires owner or manager — throws if role is insufficient or unauthenticated.
+    // dealer_id is resolved server-side via requireRole → getCurrentDealer(); never from client.
+    const { dealerId } = await requireRole(["owner", "manager"]);
 
     const supabase = await createClient();
 
@@ -62,7 +64,7 @@ export async function saveCompanySettings(
     const tax = isNaN(taxRaw) || taxRaw < 0 || taxRaw > 100 ? 10 : taxRaw;
 
     const payload = {
-      dealer_id:                dealer.dealer_id,
+      dealer_id:                dealerId,
       business_name:            str("business_name"),
       company_name:             str("company_name"),
       postal_code:              str("postal_code"),
@@ -92,6 +94,7 @@ export async function saveCompanySettings(
     return { success: true };
   } catch (err) {
     console.error("[saveCompanySettings] failed:", err);
-    return { error: "保存に失敗しました" };
+    const msg = err instanceof Error ? err.message : "保存に失敗しました";
+    return { error: msg };
   }
 }
