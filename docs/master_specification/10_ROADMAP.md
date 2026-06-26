@@ -157,6 +157,7 @@ Transform GYEON Detailer Agent from a business management system into an AI busi
 | PHASE 74 | AI Social Publishing | Draft → dealer approval → scheduled publish to Instagram, Facebook, X, TikTok, YouTube Shorts, LINE VOOM |
 | PHASE 75 | AI Marketing Analytics | Reach, views, saves, engagement; **discovery performance analytics** (MEO/SEO/AEO/LLMO/AIO channel tracking); AI recommendations |
 | PHASE 76 | AI Growth Agent | Proactive: detect inactive accounts, suggest content, auto-create drafts, trigger campaign ideas |
+| PHASE 77 | AI Review Request Agent | After job completion, AI generates polite Japanese LINE review request; links to Google Business Profile, Instagram, dealer website; dealer approval required; strict no-fake-review compliance rules |
 
 **Locked principles:**
 - Dealer approval before any publish is the **default**. Automatic publishing is opt-in, never the default.

@@ -177,7 +177,7 @@ The two JSON files (`gyeon_flow.json`, `gyeon_settings_flow.json`) are the highe
 
 | Document | Scope |
 |----------|-------|
-| `AI_MARKETING_AGENT_ROADMAP.md` | PHASE 71–76: AI media, video generation, content writing, social publishing, analytics, growth agent. Includes **mandatory Discovery Optimization requirement** (SEO/MEO/AEO/LLMO/AIO) for all generated content. Full spec with principles, phase dependencies, privacy rules, and implementation gate. |
+| `AI_MARKETING_AGENT_ROADMAP.md` | PHASE 71–77: AI media, video generation, content writing, social publishing, analytics, growth agent, review request agent. Includes **mandatory Discovery Optimization requirement** (SEO/MEO/AEO/LLMO/AIO) and **mandatory compliance rules** for review collection (no fake reviews, no incentivized reviews, no pressure). Full spec with principles, phase dependencies, privacy rules, and implementation gate. |
 
 **Mandatory requirement note:** All AI-generated marketing content must be optimized for SEO, MEO (Google Maps/local), AEO (Answer Engine / featured snippets), LLMO (Large Language Model citations), and AIO (Google AI Overviews). This is built into PHASE 73 (AI Content Writer) as a non-optional Discovery Optimization Engine and tracked in PHASE 75 (Analytics) as a dedicated analytics category.
 
