@@ -11,7 +11,8 @@ import {
 import WorkOrderFiles           from "./WorkOrderFiles";
 import CompletionReportSection  from "@/components/completion-reports/CompletionReportSection";
 import InvoiceSection           from "@/components/invoices/InvoiceSection";
-import MaintenanceSection       from "@/components/maintenance/MaintenanceSection";
+import MaintenanceSection            from "@/components/maintenance/MaintenanceSection";
+import ReviewRequestApprovalSection from "@/components/reputation/ReviewRequestApprovalSection";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -57,7 +58,8 @@ export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDet
   const [showFiles,       setShowFiles]       = useState(false);
   const [showReport,      setShowReport]      = useState(false);
   const [showInvoice,     setShowInvoice]     = useState(false);
-  const [showMaintenance, setShowMaintenance] = useState(false);
+  const [showMaintenance,    setShowMaintenance]    = useState(false);
+  const [showReviewRequest,  setShowReviewRequest]  = useState(false);
   const estimate = wo.estimates;
   const items    = estimate?.estimate_items ?? [];
 
@@ -315,6 +317,33 @@ export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDet
               </div>
             )}
           </div>
+
+          {/* Review Request Approval Section — Phase E: ai_reputation feature gate */}
+          {wo.status === "completed" && wo.customer_id && (
+            <div className={`rounded-xl shadow-lg p-5 bg-[#1e293b] border border-blue-700/20`}>
+              <button
+                onClick={() => setShowReviewRequest((v) => !v)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    レビュー依頼
+                  </h3>
+                  <span className="text-[10px] text-blue-400 font-medium">● AI機能</span>
+                </div>
+                <span className="text-slate-600 text-xs">{showReviewRequest ? "▲ 閉じる" : "▼ 開く"}</span>
+              </button>
+
+              {showReviewRequest && (
+                <div className="mt-4">
+                  <ReviewRequestApprovalSection
+                    workOrderId={wo.id}
+                    isCompleted={wo.status === "completed"}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

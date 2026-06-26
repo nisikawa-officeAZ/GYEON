@@ -439,8 +439,8 @@ interface WorkCompletedRuntimePlan {
 | ReputationOptimizationProfile population | Phase 11D — requires analysis and seo_agent |
 | Google Business Profile review read API | Phase 11D+ — requires GBP API v4.9 integration |
 | `reputation_platform` DB tables | Requires CTO approval — schema proposal pending |
-| ReviewRequest persistence | Phase 11D — requires `review_requests` table |
-| Dealer approval UI for review requests | Phase 11D — requires UI design pass |
+| ReviewRequest persistence | Phase 11F+ — requires `review_requests` table (CTO approval pending) |
+| Dealer approval UI for review requests | **Sprint 11E — DONE** — `ReviewRequestApprovalSection` implemented as dry-run |
 
 ---
 
@@ -462,6 +462,59 @@ interface WorkCompletedRuntimePlan {
 @/lib/media               → (no knowledge of @/lib/reputation)
 @/lib/marketing           → (no knowledge of @/lib/reputation)
 ```
+
+---
+
+---
+
+## 13. Sprint 11E — Review Request Dealer Approval UI
+
+Sprint 11E adds the first dealer-facing review request approval workflow.
+
+### Files Added
+
+| File | Description |
+|------|-------------|
+| `src/lib/reputation/actions/review-request-actions.ts` | Phase D: server actions for dry-run approval workflow |
+| `src/components/reputation/ReviewRequestApprovalSection.tsx` | Phase B: dealer-facing approval UI component |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/components/work-orders/WorkOrderDetail.tsx` | Phase F: added Review Request collapsible section after Maintenance |
+
+### Server Action Security Constraints
+
+All four server actions enforce:
+- `dealer_id` from `getCurrentDealer()` — never from client input
+- Work order ownership validated via `dealer_id` scope on every DB read
+- `checkFeatureAccess("ai_reputation")` — Pro+ feature gate
+- No LINE messages sent
+- No AI provider calls
+- No API keys exposed
+- `dry_run: true` on all action results
+
+### Persistence Constraint
+
+No `ReviewRequest` records are persisted in Sprint 11E.
+All approve/reject/skip actions return `dry_run: true`.
+Persistence requires the `review_requests` DB table migration (CTO approval pending).
+
+### Feature Gate
+
+The UI section in `WorkOrderDetail` only renders when:
+- `wo.status === "completed"`
+- `wo.customer_id !== null`
+
+### Deferred to Future Phases
+
+| Feature | Phase |
+|---------|-------|
+| LINE message sending | Phase 11F+ |
+| AI review draft generation | Phase 11F+ |
+| ReviewRequest DB persistence | Requires `review_requests` migration (CTO approval) |
+| Real-time destination configuration | Requires reputation settings DB table |
 
 ---
 

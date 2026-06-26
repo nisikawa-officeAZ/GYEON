@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v3.1 — Sprint 11D) |
+| **Last Updated** | 2026-06-26 (v3.2 — Sprint 11E) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -216,6 +216,7 @@ TIER 4 — DESIGN AUTHORITY
 | **2.9** | **2026-06-26** | **Sprint 11B** | **AI Video Pipeline Foundation: VideoProject, VideoSource (12 types), VideoTimeline (10 scene types), VIDEO_PUBLISHING_PROFILE_REGISTRY (9 profiles), VIDEO_AI_PROVIDER_REGISTRY (8 providers), VideoPrivacyConfig, VIDEO_PIPELINE_SPEC.md** |
 | **3.0** | **2026-06-26** | **Sprint 11C** | **AI Reputation Platform Foundation: ReputationProfile, ReviewRequest (7-check validator), ReviewDraft (5 compliance rules), ReviewSignal (7 sources), ReputationOptimizationProfile (MEO/AEO/LLMO/AIO), CE integration, REPUTATION_PLATFORM_SPEC.md** |
 | **3.1** | **2026-06-26** | **Sprint 11D** | **AI Reputation Agent Runtime: ReputationRuntime class, 8-check gateway readiness, review request dry-run (9 steps), compliance guard (8 rules), WorkCompletedRuntimePlan, REPUTATION_PLATFORM_SPEC.md §12** |
+| **3.2** | **2026-06-26** | **Sprint 11E** | **Review Request Dealer Approval UI: ReviewRequestApprovalSection, review-request-actions server actions (prepare/approve/reject/skip dry-run), WorkOrderDetail integration, REPUTATION_PLATFORM_SPEC.md §13** |
 
 ---
 

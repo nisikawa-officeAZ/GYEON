@@ -578,14 +578,93 @@ ReputationExecutionResult
 - `execution_deferred: true` is typed as literal — cannot be overridden
 - `WorkCompletedRuntimePlan.line_dispatch_payload.message_text` is permanently `null` until Phase 11E+
 
-### Next Steps (Sprint 11E)
+### Next Steps (Sprint 11E) — Now Complete
 
-1. Implement AI provider adapter for `reputation_agent` review request generation
-2. Implement `generateReviewRequestMessage()` via AI Gateway (no fake output)
-3. Build dealer approval UI — work order completion flow → review request draft screen
-4. Implement ReviewRequest DB persistence (`review_requests` table — CTO approval required)
-5. Wire `line_dispatch_payload` into real LINE dispatch
-6. Implement ReviewSignal ingestion from Google Business Profile webhook
+Sprint 11E implemented the dealer-facing review request approval UI. See Sprint 11E section below.
+
+---
+
+## Sprint 11E — Review Request Dealer Approval UI
+
+| Field | Value |
+|-------|-------|
+| **Commit** | `Sprint 11E: add review request approval UI` |
+| **Status** | Complete |
+
+Sprint 11E implements the first dealer-facing review request approval workflow after work completion. The UI is integrated into the existing work order detail panel as a new collapsible section, visible only on completed work orders with a linked customer.
+
+### Architecture
+
+```
+WorkOrderDetail (completed + customer exists)
+  ↓ renders ReviewRequestApprovalSection
+    ↓ useEffect → prepareReviewRequestApproval(workOrderId)   [server action]
+      ├── getCurrentDealer()                   — dealer_id (never from client)
+      ├── checkFeatureAccess("ai_reputation")  — Pro+ gate
+      ├── getWorkOrder(workOrderId)            — dealer_id scoped ownership check
+      ├── checkReputationGatewayReadiness()    — 8 gateway checks
+      ├── checkReputationCompliance()          — 8 workflow rules
+      └── buildReviewRequestDryRun()           — 9-step action plan
+    ↓ returns ReviewRequestApprovalData
+    ↓ Dealer clicks Approve/Reject/Skip
+      → approveReviewRequestDryRun() / rejectReviewRequestDryRun() / skipReviewRequestDryRun()
+        ├── Auth + feature gate + ownership check
+        ├── Compliance guard re-validation
+        └── Returns dry_run: true  (no LINE, no AI, no persistence)
+```
+
+### Phase Completion
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| A | Inspect existing work order UI, identify integration point | Complete |
+| B | `ReviewRequestApprovalSection` — full dealer-facing approval card | Complete |
+| C | Non-persistent UI state only — documented constraint, no fake persistence | Complete |
+| D | Server actions: prepare/approve/reject/skip — all dry-run, dealer_id from server | Complete |
+| E | Feature gate: `ai_reputation` — upgrade prompt if locked | Complete |
+| F | Section added to `WorkOrderDetail` after Maintenance, conditional on completion + customer | Complete |
+| G | Documentation: REPUTATION_PLATFORM_SPEC §13, roadmap, spec index v3.2 | Complete |
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/lib/reputation/actions/review-request-actions.ts` | Server actions for approval dry-run workflow |
+| `src/components/reputation/ReviewRequestApprovalSection.tsx` | Dealer-facing approval UI |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/components/work-orders/WorkOrderDetail.tsx` | Added `ReviewRequestApprovalSection` collapsible section |
+| `docs/master_specification/REPUTATION_PLATFORM_SPEC.md` | Added §13 Sprint 11E |
+| `docs/master_specification/AI_REPUTATION_AGENT_ROADMAP.md` | Added Sprint 11E section |
+| `docs/master_specification/00_MASTER_SPECIFICATION_INDEX.md` | Bumped to v3.2 |
+
+### Security Constraints (all enforced)
+
+- `dealer_id` from `getCurrentDealer()` — never from client input or URL
+- All DB reads scoped by `dealer_id` via `getWorkOrder()`
+- Pro+ feature gate via `checkFeatureAccess("ai_reputation")`
+- `dry_run: true` on all action results — no LINE, no AI, no persistence
+- No API keys exposed to client
+
+### Deferred to Future Phases
+
+| Feature | Phase |
+|---------|-------|
+| LINE message sending | Phase 11F+ |
+| AI review draft generation | Phase 11F+ (requires AI provider adapter) |
+| ReviewRequest DB persistence | Requires `review_requests` migration (CTO approval) |
+| Real destination configuration | Requires reputation settings DB table |
+
+### Next Steps (Sprint 11F+)
+
+1. Implement AI provider adapter — `generateReviewRequestMessage()` via AI Gateway
+2. Replace `draft_message: null` with real AI-generated draft in `ReviewRequestApprovalData`
+3. Wire `line_dispatch_payload` into real LINE dispatch (post-dealer-approval)
+4. Implement `review_requests` table (CTO approval) — enable real persistence
+5. Implement ReviewSignal ingestion from Google Business Profile webhook
 
 ---
 
