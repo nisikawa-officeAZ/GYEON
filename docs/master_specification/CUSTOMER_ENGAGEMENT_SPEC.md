@@ -295,4 +295,45 @@ Neither migration is applied in Sprint 10F. The platform operates with type cont
 
 ---
 
+## 13. Sprint 10G — Runtime Architecture (2026-06-26)
+
+**Status:** Architecture planned. Implementation deferred to Sprint 10H.
+
+### Runtime engine location
+
+```
+src/lib/customer-engagement/engine/
+└── types.ts    — WorkflowExecutionEngine, EngagementActionDispatcher, EngagementHistoryWriter,
+                  EngagementFailureHandler, EngagementRetryPolicy, result types
+```
+
+### Phase G-A (zero schema changes — Sprint 10H)
+
+The following flows are fully implementable using existing infrastructure:
+
+| Flow | Existing function | Delivery |
+|------|-------------------|---------|
+| WORK_COMPLETED → LINE completion notification | `sendCompletionNotification()` | Sprint 10H |
+| WORK_COMPLETED → review request (24h delay) | `queueLineNotification(purpose="review_request")` | Sprint 10H |
+| MAINTENANCE_DUE → LINE reminder | `sendMaintenanceReminder()` | Sprint 10H |
+| CUSTOMER_CREATED → welcome LINE message | `sendLineTextMessage()` | Sprint 10H |
+
+**No CTO approval required for Phase G-A.**
+
+### Phase G-B (with migrations)
+
+Requires 4 migrations (all pending CTO approval — proposals in `CUSTOMER_ENGAGEMENT_RUNTIME_PLAN.md`):
+1. `customer_engagement_history` table
+2. `dealer_settings.engagement_config` column
+3. `dealer_settings.gbp_review_url` column
+4. `engagement_job_queue` table (for delayed AI agent dispatch)
+
+### Key finding: `WORK_COMPLETED` canonical location
+
+The canonical event emission point is `updateWorkOrder()` in `src/lib/work-orders/update-work-order.ts`.
+Wiring requires one additional `SELECT` before the `UPDATE` to detect the `status → "completed"` transition.
+No schema change required.
+
+---
+
 *GYEON Detailer Agent | Customer Engagement Platform | Office AZ | 2026-06-26*

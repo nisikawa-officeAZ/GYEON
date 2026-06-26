@@ -166,7 +166,8 @@ TIER 4 — DESIGN AUTHORITY
 ├── AI_AGENT_FRAMEWORK.md                  ← Sprint 10D–E: Common AI agent architecture (lifecycle, registry, capabilities)
 ├── AI_MARKETING_AGENT_ROADMAP.md          ← Future: PHASE 71–76 AI marketing + growth (deferred)
 ├── AI_REPUTATION_AGENT_ROADMAP.md         ← Sprint 10E + Future: PHASE 77–81 AI reputation; foundation implemented
-├── CUSTOMER_ENGAGEMENT_SPEC.md            ← Sprint 10F: Customer Engagement Platform — central orchestration layer
+├── CUSTOMER_ENGAGEMENT_SPEC.md            ← Sprint 10F–G: Customer Engagement Platform — orchestration layer + runtime plan
+├── CUSTOMER_ENGAGEMENT_RUNTIME_PLAN.md   ← Sprint 10G: Runtime engine, migration proposals, WORK_COMPLETED analysis
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -198,6 +199,7 @@ TIER 4 — DESIGN AUTHORITY
 | 1.8 | 2026-06-26 | Sprint 10D | AI Agent Framework: AIAgent interface, AIAgentContext, lifecycle runner, execution policy, 7-agent registry, capability model (16 provider caps + 8 agent caps), AIAgentNotImplementedError pattern for Phase G |
 | **1.9** | **2026-06-26** | **Sprint 10E** | **AI Reputation Agent Foundation: ReputationAgent (first active agent), review workflow model, compliance constants, MarketingAgentFeed cross-agent interface, 5 reputation types, run-reputation-task server action** |
 | **2.0** | **2026-06-26** | **Sprint 10F** | **Customer Engagement Platform: 10-event system, 7 pre-defined workflows, trigger registry with agent subscribers, context factory, eligibility checks, CUSTOMER_ENGAGEMENT_SPEC.md** |
+| **2.1** | **2026-06-26** | **Sprint 10G** | **Customer Engagement Runtime Plan: engine interfaces, migration proposals (4 tables/columns), WORK_COMPLETED integration analysis, LINE dispatch findings, AI agent dispatch design, Phase G-A/G-B sequencing** |
 
 ---
 
