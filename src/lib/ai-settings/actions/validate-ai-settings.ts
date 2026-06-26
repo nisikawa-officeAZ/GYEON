@@ -13,7 +13,11 @@ import type { AISettingsValidationResult, AISettingsValidationViolation } from "
 import { VALID_SETTINGS } from "../errors";
 import type { AISettingsProfileSaveInput } from "./save-ai-settings-profile";
 
-const VALID_PROVIDER_IDS = new Set(AI_PROVIDER_REGISTRY.map((e) => e.id) as AIProviderId[]);
+export const VALID_PROVIDER_IDS = new Set(AI_PROVIDER_REGISTRY.map((e) => e.id) as AIProviderId[]);
+
+export function isValidProviderId(id: unknown): id is AIProviderId {
+  return typeof id === "string" && VALID_PROVIDER_IDS.has(id as AIProviderId);
+}
 
 /**
  * validateAISettingsInput — validates all fields in an AISettingsProfileSaveInput.

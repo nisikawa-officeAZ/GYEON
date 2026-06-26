@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v4.9 — Sprint 11U) |
+| **Last Updated** | 2026-06-26 (v5.0 — Sprint 11V) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -189,6 +189,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── ENTERPRISE_DISTRIBUTION_PLATFORM_SPEC.md ← EDP Planning: Office AZ Enterprise Distribution Platform — 8 roles, B2B portal, inventory, ordering workflow, delivery documents, monthly billing, sales dashboard, 5 AI modules, separate deployment architecture, 10 open questions (EDP-OD-01–10)
 ├── PLATFORM_CORE_SPEC.md               ← Sprint 11T: Platform Core — 5 applications, 10 shared modules, 10 isolation rules (8 strict + 2 advisory), feature discovery API, cross-app policy, PLATFORM_CORE descriptor
 ├── AI_SETTINGS_UI_SPEC.md              ← Sprint 11U: AI Settings UI Foundation — 6-section page (Overview/Provider/Capability/Budget/Health/Marketplace), recommendation mode selector (5 modes), capability assignment per category (14), marketplace provider grid (11), Platform Core integration, migration-aware save
+├── ENTERPRISE_ORGANIZATION_SPEC.md    ← Sprint 11V: Enterprise Organization Foundation — 6-level hierarchy (Platform/Company/Division/Branch/Warehouse/Dealer), 7 static orgs (GYEON Japan/Attraction/divisions/warehouse), 6 application ownership entries, 7 roles + permissions, 8 policies (6 strict + 2 advisory), Platform Core bridge
 │
 └── [SUPERSEDED — do not use]
     ├── 02_BUSINESS_WORKFLOW.md
@@ -249,6 +250,7 @@ TIER 4 — DESIGN AUTHORITY
 | **4.7** | **2026-06-26** | **EDP Planning** | **Enterprise Distribution Platform: planning document for independent Office AZ Group ERP product; Attraction Co., Ltd. as first target; 8 user roles, B2B portal (company pricing/payment terms/credit), inventory (on-hand/reserved/incoming/backorder), ordering workflow (buyer→confirm→pick→ship→notify), delivery documents (retail=with prices, wholesaler=without), monthly billing (configurable closing/payment day, auto-statement PDF), sales dashboard (6 panels), 5 AI modules (demand/inventory/purchasing/sales/inactivity), separate deployment (distinct Supabase project), 10 open questions; ENTERPRISE_DISTRIBUTION_PLATFORM_SPEC.md + 10_ROADMAP.md Phase H** |
 | **4.8** | **2026-06-26** | **Sprint 11T** | **Platform Core Foundation: PlatformApplicationId (5), PlatformModuleId (10), ModuleManifest (10 manifests with capabilities), PlatformApplication (5 descriptors), CrossApplicationPolicy (10 rules: 8 strict + 2 advisory), feature discovery API (discoverFeatures/getAvailableModules/getApplicationModuleSummary/isCapabilityAvailable + 22 platform features), PLATFORM_CORE descriptor, PLATFORM_CORE_SPEC.md** |
 | **4.9** | **2026-06-26** | **Sprint 11U** | **AI Settings UI Foundation: app/settings/ai/ page (server component, Pro+ gate, migration-aware), 6 client sections (AIOverviewSection/ProviderStatusSection/CapabilityAssignmentSection/BudgetSection/AIHealthSection/MarketplaceSection), recommendation mode selector (5 modes: best_quality/lowest_cost/fastest/balanced/dealer_selected), capability assignment by CATEGORY_CATALOG (14 categories, per-capability preferred+fallback+disable), marketplace grid (11 providers, category filter, extension toggle), Platform Core integration (isModuleAvailable/discoverFeatures), save via saveAISettingsProfile() with MIGRATION_REQUIRED handling, AI_SETTINGS_UI_SPEC.md** |
+| **5.0** | **2026-06-26** | **Sprint 11V** | **Enterprise Organization Foundation: OrganizationType (6: platform/company/division/branch/warehouse/dealer), OrganizationTier (tier_1 through tier_6), 7 static organizations (org_platform_root/org_gyeon_japan/org_attraction/org_detailing_division/org_wholesale_division/org_main_warehouse/org_attraction_sales), 6 application ownership entries (GYEON Japan owns dealer_agent/EDP/warehouse/accounting/crm; Attraction subscribes to EDP), 7 org roles (platform_admin/company_admin/division_manager/branch_manager/warehouse_manager/dealer_owner/dealer_staff), 8 governance policies ORG-001–ORG-008 (6 strict + 2 advisory), Platform Core bridge (ORG_TYPE_APPLICATION_MAP, APPLICATION_ORG_TYPE_MAP, ORGANIZATION_MODULE_MANIFEST), ORGANIZATION_FOUNDATION descriptor, ENTERPRISE_ORGANIZATION_SPEC.md** |
 
 ---
 

@@ -20,7 +20,7 @@ import {
   buildSettingsPlatformView,
 } from "@/lib/ai-settings/settings-view-models";
 import type { AISettingsPlatformView } from "@/lib/ai-settings/settings-view-models";
-import { buildDefaultProfile }         from "@/lib/ai-settings/actions/get-ai-settings-profile";
+import { buildDefaultProfile }         from "@/lib/ai-settings/profile-builders";
 import { AI_SETTINGS_PLATFORM }        from "@/lib/ai-settings/settings-profile-types";
 import {
   AI_MARKETPLACE_PROVIDER_PROFILES,

@@ -4,7 +4,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Active — Living Document (updated as ODs resolve and phases complete) |
-| **Last Updated** | 2026-06-26 (Phase H — Enterprise Distribution Platform added) |
+| **Last Updated** | 2026-06-26 (Phase I — Enterprise Organization Foundation added) |
 | **Canonical Source** | `ROADMAP_V2.md`, `ROADMAP_AFTER_v1.md`, audit findings |
 | **Related Documents** | `09_PHASE_STATUS.md`, `11_CANONICAL_RULES.md`, `OPERATOR_DECISIONS.md`, `AI_MARKETING_AGENT_ROADMAP.md` |
 
@@ -281,9 +281,50 @@ Super Admin · Office AZ Admin · Attraction Admin · Warehouse Staff · Sales S
 
 ---
 
+## Phase I — Enterprise Organization Foundation (Sprint 11V — Foundation Complete)
+
+> **Status**: Foundation complete. Persistence and admin UI pending CTO approval.
+> **Full specification**: `ENTERPRISE_ORGANIZATION_SPEC.md`
+> **Foundation module**: `src/lib/organization/`
+
+The Enterprise Organization Foundation provides the canonical multi-organization model for all Office AZ platform products. It enables multi-company, multi-division, and multi-application deployment planning without modifying the current dealer isolation model.
+
+### Organization hierarchy (6 levels)
+
+```
+Platform (org_platform_root)
+└── Company
+    ├── GYEON Japan K.K. (org_gyeon_japan) — active
+    │   ├── Detailing Division (org_detailing_division) — active → dealer_agent
+    │   └── Wholesale Division (org_wholesale_division) — planned → EDP + warehouse
+    │       └── Main Warehouse (org_main_warehouse) — planned → warehouse
+    └── Attraction Co., Ltd. (org_attraction) — planned → EDP subscriber
+        └── Sales Division (org_attraction_sales) — planned → EDP
+```
+
+### What Sprint 11V delivered
+
+- **Domain types**: `OrganizationType` (6), `OrganizationTier` (6), `Organization`, `OrganizationHierarchyNode`, `OrganizationMember`, `OrganizationRole`, `OrganizationPermission`, `OrganizationPolicy`
+- **Hierarchy**: 6 levels with allowed parent/child rules, static registry of 7 organizations
+- **Application registry**: 6 ownership entries mapping GYEON Japan and Attraction to platform applications
+- **Permission model**: 7 roles with explicit `dealer_role_mapping` for dealer-level roles; `ROLE_SCOPE_MATRIX` for authorization checks
+- **Governance policies**: 8 policies ORG-001–ORG-008 (6 strict, 2 advisory)
+- **Platform Core bridge**: typed `ORG_TYPE_APPLICATION_MAP`, `APPLICATION_ORG_TYPE_MAP`, `ORGANIZATION_MODULE_MANIFEST`
+- **Descriptor**: `ORGANIZATION_FOUNDATION` singleton
+
+### Pending for production use
+
+1. Database migrations (CTO approval): `organization_nodes`, `organization_members`, `organization_application_links` tables
+2. Runtime role resolution (replace static registry with DB-backed queries)
+3. Admin UI: org tree viewer, member management, role assignment
+4. EDP integration: `company_id` RLS design for Attraction's EDP access
+5. Register `organization` module in Platform Core `SHARED_SERVICES_REGISTRY`
+
+---
+
 ## Sequencing Summary
 
-**Prerequisites → A (desktop UI) → B (activate integrations) → C (spec/data reconciliation) → D (hardening) → E (documented V2 scope) → G (AI Gateway architecture — prerequisite) → F (AI Platform: F1 Marketing, F2 Growth, F3 Reputation — future) → H (Enterprise Distribution Platform — separate product, independent timeline).**
+**Prerequisites → A (desktop UI) → B (activate integrations) → C (spec/data reconciliation) → D (hardening) → E (documented V2 scope) → G (AI Gateway architecture — prerequisite) → F (AI Platform: F1 Marketing, F2 Growth, F3 Reputation — future) → H (Enterprise Distribution Platform — separate product, independent timeline) → I (Enterprise Organization Foundation — underpins H and all future multi-company products).**
 
 - Phase A can begin immediately (no operator decisions block desktop UI work).
 - Phase B requires OD-1 (migration 070 status) + env var provisioning.
@@ -294,6 +335,7 @@ Super Admin · Office AZ Admin · Attraction Admin · Warehouse Staff · Sales S
 - Phase G (AI Gateway) must be implemented before any Phase F feature.
 - Phase F (AI Platform) requires Phase G complete + core platform stable + individual SDD pass per phase. See `AI_GATEWAY_SPEC.md`, `AI_MARKETING_AGENT_ROADMAP.md`, `AI_REPUTATION_AGENT_ROADMAP.md`.
 - Phase H (EDP) is independent of Phases A–F. It runs on a separate timeline after Detailer Agent v1.0 is stable and Office AZ Group approves the project formally.
+- Phase I (Enterprise Organization) underpins Phase H and all future multi-company products. The foundation (Sprint 11V) is complete; persistence and admin UI require separate CTO approval.
 
 ---
 

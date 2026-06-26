@@ -199,11 +199,25 @@ src/lib/platform-core/
 ```
 Platform Core
   ← consumed by: dealer_agent, enterprise_distribution, warehouse, accounting, crm
+  ← consumed by: src/lib/organization/ (via platform-core-bridge.ts — types only)
   → imports from: none (no application-specific imports)
   → references: src/lib/ai/, src/lib/ai-marketplace/, src/lib/supabase/ (by source_path string only)
 ```
 
 Platform Core does not import from any application module. It declares paths as strings in module manifests (`source_path`, `spec_document`), not as import statements.
+
+### Sprint 11V — Enterprise Organization Foundation
+
+`src/lib/organization/` (Sprint 11V) is a companion foundation module. Its bridge file (`platform-core-bridge.ts`) imports Platform Core types to declare the typed `ORG_TYPE_APPLICATION_MAP`. The dependency is one-way: organization → platform-core; platform-core does NOT import from organization.
+
+The organization module provides:
+- 6-level hierarchy (Platform → Company → Division → Branch → Warehouse → Dealer)
+- 7 canonical organizations (GYEON Japan, Attraction, and their divisions)
+- 7 organization roles with dealer_role_mapping to existing DealerRole
+- 8 governance policies (ORG-001 through ORG-008)
+- `ORGANIZATION_MODULE_MANIFEST` — module descriptor for Platform Core tooling
+
+See `ENTERPRISE_ORGANIZATION_SPEC.md` for full details.
 
 ---
 
@@ -211,9 +225,10 @@ Platform Core does not import from any application module. It declares paths as 
 
 1. **Platform Admin UI** — admin console showing all registered applications, module status, and policy rule compliance
 2. **Runtime enforcement** — import-path linting rules (eslint) to enforce PLAT-001 and PLAT-002 at CI time
-3. **Warehouse specification** — `WAREHOUSE_SPEC.md` does not yet exist
-4. **Accounting specification** — `ACCOUNTING_SPEC.md` does not yet exist
-5. **CRM specification** — `CRM_SPEC.md` does not yet exist
-6. **Multi-tenant authorization** — PLAT-005 compliance for EDP (`company_id` RLS design)
-7. **Notification module specification** — full design for email and scheduled delivery
-8. **Platform versioning** — shared module version pinning strategy across applications
+3. **Organization module registration** — register `organization` in `SHARED_SERVICES_REGISTRY` once persistence is added
+4. **Warehouse specification** — `WAREHOUSE_SPEC.md` does not yet exist
+5. **Accounting specification** — `ACCOUNTING_SPEC.md` does not yet exist
+6. **CRM specification** — `CRM_SPEC.md` does not yet exist
+7. **Multi-tenant authorization** — PLAT-005 compliance for EDP (`company_id` RLS design)
+8. **Notification module specification** — full design for email and scheduled delivery
+9. **Platform versioning** — shared module version pinning strategy across applications

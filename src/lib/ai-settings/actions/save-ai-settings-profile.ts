@@ -20,7 +20,6 @@ import type {
 import { settingsOk, settingsFail }         from "../errors";
 import type { AISettingsResult }            from "../errors";
 import type { AIProviderId }               from "@/lib/ai/types";
-import { AI_PROVIDER_REGISTRY }            from "@/lib/ai/provider-registry";
 import type { AICapabilityAssignmentMap }  from "../capability-assignment";
 import type { AIBudgetPolicyConfig }       from "../budget-policy";
 import type { AIExecutionPreference }      from "../settings-profile-types";
@@ -136,10 +135,3 @@ function buildSavePayload(input: AISettingsProfileSaveInput): AISettingsSavePayl
   return payload;
 }
 
-// ─── Valid provider IDs ───────────────────────────────────────────────────────
-
-const VALID_PROVIDER_IDS = new Set(AI_PROVIDER_REGISTRY.map((e) => e.id) as AIProviderId[]);
-
-export function isValidProviderId(id: unknown): id is AIProviderId {
-  return typeof id === "string" && VALID_PROVIDER_IDS.has(id as AIProviderId);
-}
