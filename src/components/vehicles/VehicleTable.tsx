@@ -86,9 +86,9 @@ export default function VehicleTable({ vehicles, onEdit }: VehicleTableProps) {
                       <button
                         type="button"
                         onClick={() => onEdit(v)}
-                        className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
+                        className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2.5 py-2 rounded transition-colors min-h-[36px]"
                       >
-                        Edit
+                        編集
                       </button>
                     </td>
                   )}

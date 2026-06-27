@@ -726,11 +726,11 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
 
           {/* OCR modal */}
           {ocrStage !== "idle" && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={() => { setOcrStage("idle"); setPendingOcr(null); }}>
-              <div className="bg-[#1e293b] border border-slate-700 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+            <div className="fixed inset-0 z-[60] flex items-start justify-center p-3 sm:p-4 overflow-y-auto bg-black/60" onClick={() => { setOcrStage("idle"); setPendingOcr(null); }}>
+              <div className="bg-[#1e293b] border border-slate-700 rounded-xl shadow-xl w-full max-w-lg p-5 sm:p-6 my-4" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-slate-100">{ocrStage === "upload" ? "車検証を読み取る" : "読み取り結果を確認"}</h3>
-                  <button type="button" onClick={() => { setOcrStage("idle"); setPendingOcr(null); }} className="text-slate-500 hover:text-slate-200 text-lg">✕</button>
+                  <button type="button" onClick={() => { setOcrStage("idle"); setPendingOcr(null); }} className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-200 hover:bg-slate-700/50 text-lg">✕</button>
                 </div>
                 {ocrStage === "upload" && (
                   <VehicleRegistrationUpload

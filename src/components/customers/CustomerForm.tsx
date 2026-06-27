@@ -133,7 +133,7 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
   const card    = "bg-[#111827] rounded-2xl border border-white/[.08] p-5";
   const secHdr  = "text-[11px] font-bold text-slate-400 uppercase tracking-[1px] mb-3";
   const lbl     = "block text-[11px] font-semibold text-slate-400 uppercase tracking-[0.5px] mb-1.5";
-  const inp     = "w-full bg-[#1a2236] border border-white/[.08] rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:bg-[#1e2a42] transition-colors";
+  const inp     = "w-full bg-[#1a2236] border border-white/[.08] rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:bg-[#1e2a42] transition-colors min-h-[44px]";
 
   // ── 入力フィールドヘルパー ──────────────────────────────────────────────────
   function Field({
@@ -182,8 +182,8 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
         </div>
       </div>
 
-      {/* ── 連絡先 ＋ 住所（横2カラム） ── */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* ── 連絡先 ＋ 住所（横2カラム、モバイルは縦積み） ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         {/* 連絡先カード */}
         <div className={card}>

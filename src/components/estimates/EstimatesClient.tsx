@@ -78,7 +78,7 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
 
       {/* Customer & Vehicle Onboarding Modal */}
       {modal.mode === "onboarding" && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
           <div
             className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
             onClick={closeModal}
@@ -91,7 +91,7 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
               </div>
               <button
                 onClick={closeModal}
-                className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
+                className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
               >
                 ✕
               </button>
@@ -110,17 +110,17 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
 
       {/* New Estimate Wizard Modal */}
       {modal.mode === "create" && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-2 sm:p-4 overflow-y-auto overscroll-contain">
           <div
             className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
             onClick={closeModal}
           />
-          <div className="relative w-full max-w-xl bg-[#1e293b] rounded-xl shadow-lg p-6 my-4">
+          <div className="relative w-full max-w-xl bg-[#1e293b] rounded-xl shadow-lg p-4 sm:p-6 my-2 sm:my-4">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-slate-100">新規見積</h2>
               <button
                 onClick={closeModal}
-                className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
+                className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
               >
                 ✕
               </button>
@@ -139,17 +139,17 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
 
       {/* Edit Estimate Modal */}
       {modal.mode === "edit" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-4 overflow-y-auto">
           <div
-            className="absolute inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
             onClick={closeModal}
           />
-          <div className="relative w-full max-w-lg bg-[#1e293b] rounded-xl shadow-lg p-6 overflow-y-auto max-h-[90vh]">
+          <div className="relative w-full max-w-lg bg-[#1e293b] rounded-xl shadow-lg p-5 my-4">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-slate-100">見積編集</h2>
               <button
                 onClick={closeModal}
-                className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
+                className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
               >
                 ✕
               </button>
@@ -180,7 +180,7 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
               </div>
               <button
                 onClick={closeModal}
-                className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
+                className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
               >
                 ✕
               </button>
@@ -220,7 +220,7 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
               </div>
               <button
                 onClick={closeModal}
-                className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
+                className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
               >
                 ✕
               </button>

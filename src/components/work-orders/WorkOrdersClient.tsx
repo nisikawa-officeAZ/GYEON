@@ -55,19 +55,19 @@ export default function WorkOrdersClient({
 
       {/* Create / Edit Modal */}
       {(modal.mode === "create" || modal.mode === "edit") && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-4 overflow-y-auto">
           <div
             className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
             onClick={closeModal}
           />
-          <div className="relative w-full max-w-lg bg-[#1e293b] rounded-xl shadow-lg p-6 my-4">
+          <div className="relative w-full max-w-lg bg-[#1e293b] rounded-xl shadow-lg p-5 sm:p-6 my-4">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-slate-100">
                 {modal.mode === "edit" ? "施工指示書編集" : "新規施工指示"}
               </h2>
               <button
                 onClick={closeModal}
-                className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
+                className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
               >
                 ✕
               </button>

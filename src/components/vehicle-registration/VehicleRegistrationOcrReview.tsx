@@ -96,39 +96,35 @@ function FieldTable({ fields, ocr, edited, selected, onToggle, onEdit }: FieldTa
   );
 
   return (
-    <table className="w-full text-xs">
-      <tbody className="divide-y divide-slate-800">
-        {presentFields.map((key) => {
-          const isSelected = selected.has(key);
-          return (
-            <tr
-              key={key}
-              className={`transition-colors ${isSelected ? "bg-blue-950/20" : "bg-[#0f172a]"}`}
-            >
-              <td className="px-3 py-2 w-8">
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => onToggle(key)}
-                  className="accent-blue-500"
-                />
-              </td>
-              <td className="px-3 py-2 text-slate-400 whitespace-nowrap w-32">
-                {OCR_FIELD_LABELS[key]}
-              </td>
-              <td className="px-3 py-2">
-                <input
-                  type="text"
-                  value={edited[key] ?? ""}
-                  onChange={(e) => onEdit(key, e.target.value)}
-                  className="w-full bg-[#1e293b] border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-blue-500"
-                />
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <div className="divide-y divide-slate-800">
+      {presentFields.map((key) => {
+        const isSelected = selected.has(key);
+        return (
+          <label
+            key={key}
+            className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors ${isSelected ? "bg-blue-950/20" : "bg-[#0f172a]"}`}
+          >
+            {/* Checkbox with larger tap area */}
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onToggle(key)}
+              className="accent-blue-500 w-4 h-4 shrink-0"
+            />
+            <span className="text-xs text-slate-400 whitespace-nowrap w-24 shrink-0">
+              {OCR_FIELD_LABELS[key]}
+            </span>
+            <input
+              type="text"
+              value={edited[key] ?? ""}
+              onChange={(e) => onEdit(key, e.target.value)}
+              onClick={e => e.stopPropagation()}
+              className="flex-1 min-w-0 bg-[#1e293b] border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-xs focus:outline-none focus:border-blue-500"
+            />
+          </label>
+        );
+      })}
+    </div>
   );
 }
 
@@ -227,7 +223,7 @@ export default function VehicleRegistrationOcrReview({
       ) : (
         <>
           {/* Grouped field tables */}
-          <div className="overflow-y-auto max-h-[55vh] rounded-xl border border-slate-800">
+          <div className="overflow-y-auto max-h-[45dvh] sm:max-h-[55vh] rounded-xl border border-slate-800">
 
             {/* Customer section */}
             {customerPresent.length > 0 && (
@@ -306,7 +302,7 @@ export default function VehicleRegistrationOcrReview({
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors"
+              className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors min-h-[44px]"
             >
               キャンセル
             </button>
@@ -314,7 +310,7 @@ export default function VehicleRegistrationOcrReview({
               type="button"
               onClick={handleApply}
               disabled={selected.size === 0}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-sm font-medium rounded-lg transition-colors"
+              className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-sm font-medium rounded-lg transition-colors min-h-[44px]"
             >
               フォームへ反映
             </button>

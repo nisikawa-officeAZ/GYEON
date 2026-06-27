@@ -79,7 +79,7 @@ export default function CustomerTable({ customers, onEdit, onStartEstimate }: Cu
                         <button
                           type="button"
                           onClick={() => onStartEstimate(c)}
-                          className="text-xs text-emerald-400 hover:text-emerald-200 hover:bg-emerald-950/30 border border-emerald-800/40 px-2 py-1 rounded transition-colors whitespace-nowrap"
+                          className="text-xs text-emerald-400 hover:text-emerald-200 hover:bg-emerald-950/30 border border-emerald-800/40 px-2.5 py-2 rounded transition-colors whitespace-nowrap min-h-[36px]"
                         >
                           見積作成
                         </button>
@@ -88,7 +88,7 @@ export default function CustomerTable({ customers, onEdit, onStartEstimate }: Cu
                         <button
                           type="button"
                           onClick={() => onEdit(c)}
-                          className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
+                          className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2.5 py-2 rounded transition-colors min-h-[36px]"
                         >
                           編集
                         </button>

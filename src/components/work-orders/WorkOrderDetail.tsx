@@ -89,7 +89,7 @@ export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDet
           </div>
           <button
             onClick={onClose}
-            className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none"
+            className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
           >
             ✕
           </button>

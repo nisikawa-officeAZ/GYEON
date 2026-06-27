@@ -542,11 +542,11 @@ export default function EstimateForm({
       {/* Vehicle Registration OCR modal */}
       {vehicleRegStage !== "closed" && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-4 overflow-y-auto bg-black/60"
           onClick={() => { setVehicleRegStage("closed"); setPendingOcrResult(null); }}
         >
           <div
-            className="bg-[#1e293b] border border-slate-700 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6"
+            className="bg-[#1e293b] border border-slate-700 rounded-xl shadow-xl w-full max-w-lg p-5 sm:p-6 my-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">

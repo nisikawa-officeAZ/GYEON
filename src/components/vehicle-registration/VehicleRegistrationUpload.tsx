@@ -255,7 +255,7 @@ export default function VehicleRegistrationUpload({
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm rounded-lg transition-colors"
+            className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm rounded-lg transition-colors min-h-[44px]"
           >
             キャンセル
           </button>
@@ -265,7 +265,7 @@ export default function VehicleRegistrationUpload({
             type="button"
             onClick={handleAnalyze}
             disabled={!selectedFile || isPending}
-            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors min-h-[44px]"
           >
             {isPending ? "解析中..." : "AI解析開始"}
           </button>

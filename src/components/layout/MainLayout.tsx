@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, ReactNode } from "react";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
+import Header    from "@/components/Header";
+import Sidebar   from "@/components/Sidebar";
+import BottomNav from "@/components/layout/BottomNav";
 import { StaffProvider } from "@/contexts/StaffContext";
 
 interface MainLayoutProps {
@@ -19,13 +20,17 @@ export default function MainLayout({ children, footer }: MainLayoutProps) {
       {/* Header */}
       <Header open={open} onToggleSidebar={() => setOpen((prev) => !prev)} />
 
-      {/* Sidebar */}
-      <Sidebar open={open} />
+      {/* Sidebar — overlays on mobile, pushes on md+ */}
+      <Sidebar open={open} onClose={() => setOpen(false)} />
 
-      {/* Content */}
+      {/* Mobile bottom nav */}
+      <BottomNav />
+
+      {/* Content — no horizontal shift on mobile (sidebar overlays) */}
+      {/* pb-16 on mobile to clear the bottom nav bar */}
       <main
-        className={`flex-1 pt-14 p-6 transition-all duration-300 ${
-          open ? "ml-[240px]" : "ml-0"
+        className={`flex-1 pt-14 px-4 py-5 pb-20 md:pb-6 md:px-6 md:py-6 transition-all duration-300 ${
+          open ? "md:ml-[240px]" : "md:ml-0"
         }`}
       >
         {children}
@@ -35,7 +40,7 @@ export default function MainLayout({ children, footer }: MainLayoutProps) {
       {footer && (
         <footer
           className={`transition-all duration-300 ${
-            open ? "ml-[240px]" : "ml-0"
+            open ? "md:ml-[240px]" : "md:ml-0"
           }`}
         >
           {footer}

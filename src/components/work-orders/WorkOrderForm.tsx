@@ -75,7 +75,7 @@ const STATUSES: WorkOrderStatus[] = [
 ];
 
 const inputClass =
-  "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors";
+  "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors min-h-[44px]";
 const labelClass = "text-xs font-medium text-slate-400";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
