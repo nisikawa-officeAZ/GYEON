@@ -39,21 +39,50 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export async function uploadAndAnalyzeVehicleRegistration(
   formData: FormData,
 ): Promise<UploadResult> {
-  const dealer = await getCurrentDealer();
-  if (!dealer) return { success: false, error: "認証エラー" };
-
+  // Step 1: verify user session (Supabase cookie must be present)
   const user = await getCurrentUser();
+  if (!user) {
+    console.error("[OCR] Auth step 1 failed: no authenticated user — session cookie missing or expired. " +
+      "On local network (iPhone), the user must log in from the device browser; " +
+      "desktop localhost cookies are not shared with the device IP.");
+    return { success: false, error: "ログインが必要です。ブラウザでログインし直してください。" };
+  }
+  console.log("[OCR] Auth step 1 passed — user:", user.id);
+
+  // Step 2: resolve dealer membership
+  const dealer = await getCurrentDealer();
+  if (!dealer) {
+    console.error("[OCR] Auth step 2 failed: no active dealer_members record for user:", user.id,
+      "— user exists but has no dealer association or status is not 'active'.");
+    return { success: false, error: "店舗情報を取得できません。管理者にお問い合わせください。" };
+  }
+  console.log("[OCR] Auth step 2 passed — dealer:", dealer.dealer_id, "role:", dealer.role);
+
+  // Step 3: verify OpenAI API key is configured before doing any file work
+  if (!process.env.OPENAI_API_KEY) {
+    console.error("[OCR] Config step 3 failed: OPENAI_API_KEY is not set in environment.");
+    return { success: false, error: "AI解析キーが設定されていません。管理者にお問い合わせください。" };
+  }
+  console.log("[OCR] Config step 3 passed — OpenAI key present.");
 
   const file        = formData.get("file") as File | null;
   const customerId  = (formData.get("customer_id")  as string | null) || null;
   const vehicleId   = (formData.get("vehicle_id")   as string | null) || null;
   const estimateId  = (formData.get("estimate_id")  as string | null) || null;
 
-  if (!file || file.size === 0) return { success: false, error: "ファイルを選択してください" };
-  if (file.size > MAX_FILE_SIZE) return { success: false, error: "ファイルサイズは20MB以下にしてください" };
+  if (!file || file.size === 0) {
+    console.error("[OCR] File validation failed: no file or empty file");
+    return { success: false, error: "ファイルを選択してください" };
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    console.error("[OCR] File validation failed: size", file.size, "exceeds", MAX_FILE_SIZE);
+    return { success: false, error: "ファイルサイズは20MB以下にしてください" };
+  }
   if (!ALLOWED_TYPES.includes(file.type)) {
+    console.error("[OCR] File validation failed: unsupported type:", file.type);
     return { success: false, error: "対応形式はJPEG、PNG、WebPのみです" };
   }
+  console.log("[OCR] File validated — name:", file.name, "size:", file.size, "type:", file.type);
 
   const supabase = await createClient();
   const fileBuffer = await file.arrayBuffer();
@@ -68,8 +97,8 @@ export async function uploadAndAnalyzeVehicleRegistration(
   );
 
   if (!uploadResult.success || !uploadResult.storagePath) {
-    // Bucket not created yet → show setup guidance
     const err = uploadResult.error ?? "アップロードに失敗しました";
+    console.error("[OCR] Storage upload failed:", err);
     const isBucketMissing =
       err.includes("Bucket not found") ||
       err.includes("bucket") ||
@@ -78,9 +107,10 @@ export async function uploadAndAnalyzeVehicleRegistration(
       success: false,
       error: isBucketMissing
         ? "ストレージバケットが未作成です。管理者に VEHICLE_REGISTRATION_STORAGE_SETUP.md を確認するよう依頼してください。"
-        : err,
+        : "OCRサーバー処理に失敗しました（ストレージエラー）",
     };
   }
+  console.log("[OCR] Storage upload succeeded — path:", uploadResult.storagePath);
 
   const storagePath = uploadResult.storagePath;
 
@@ -143,13 +173,14 @@ export async function uploadAndAnalyzeVehicleRegistration(
 
   if ("error" in ocrResponse) {
     ocrError = ocrResponse.error;
-    console.error("[actions] OCR error:", ocrError);
+    console.error("[OCR] AI analysis failed:", ocrError);
   } else {
     ocrResult     = ocrResponse.result;
     ocrStatus     = "completed";
     ocrProvider   = ocrResponse.provider;
     ocrModel      = ocrResponse.model;
     ocrConfidence = ocrResult.confidence ?? null;
+    console.log("[OCR] AI analysis succeeded — model:", ocrModel, "confidence:", ocrConfidence);
   }
 
   // 4. Update DB row with OCR result
@@ -180,11 +211,10 @@ export async function uploadAndAnalyzeVehicleRegistration(
   } as Parameters<typeof createAuditLog>[0]);
 
   if (ocrError) {
-    // Even on OCR failure, return the file row so UI can retry
-    return { success: false, error: ocrError === "OPENAI_API_KEY_MISSING"
-      ? "車検証AI解析は未設定です。管理者にお問い合わせください。"
-      : "車検証を読み取れませんでした。画像を確認してください。"
-    };
+    if (ocrError === "OPENAI_API_KEY_MISSING") {
+      return { success: false, error: "AI解析キーが設定されていません。管理者にお問い合わせください。" };
+    }
+    return { success: false, error: "OCRサーバー処理に失敗しました。画像を確認して再試行してください。" };
   }
 
   const finalRow = (updatedData ?? fileRow) as VehicleRegistrationFile;

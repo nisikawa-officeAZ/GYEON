@@ -183,8 +183,10 @@ export default function VehicleRegistrationUpload({
     setError(null);
   }
 
-  const isSetupError =
-    error?.includes("未設定") || error?.includes("未作成") || error?.includes("未適用");
+  const isAuthError  = error?.includes("ログインが必要") || error?.includes("店舗情報");
+  const isSetupError = !isAuthError &&
+    (error?.includes("未設定") || error?.includes("未作成") || error?.includes("未適用") ||
+     error?.includes("AI解析キー"));
 
   return (
     <div className="flex flex-col gap-4">
@@ -320,11 +322,13 @@ export default function VehicleRegistrationUpload({
       {/* ── Error ─────────────────────────────────────────────────────── */}
       {error && (
         <div className={`flex items-start gap-2 px-3 py-2 rounded-lg border text-xs ${
-          isSetupError
-            ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
-            : "border-red-500/30 bg-red-500/10 text-red-400"
+          isAuthError
+            ? "border-blue-500/30 bg-blue-500/10 text-blue-300"
+            : isSetupError
+              ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+              : "border-red-500/30 bg-red-500/10 text-red-400"
         }`}>
-          <span className="shrink-0">{isSetupError ? "⚠" : "✕"}</span>
+          <span className="shrink-0">{isAuthError ? "🔐" : isSetupError ? "⚠" : "✕"}</span>
           <p>{error}</p>
         </div>
       )}
