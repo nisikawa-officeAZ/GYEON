@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GYEON Dealer Agent — Mobile UI Prototype</title>
+<style>
+/* ============================================================
+   GYEON Dealer Agent — Mobile UI Design System
+   Brand: Premium / Professional / Clean
+   Palette: Deep Black / Off-White / GYEON Blue accent
+============================================================ */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:        #0a0a0f;
+  --bg-2:      #111118;
+  --bg-3:      #1a1a24;
+  --bg-card:   #16161f;
+  --line:      rgba(255,255,255,0.08);
+  --line-strong:rgba(255,255,255,0.15);
+  --blue:      #4f8ef7;
+  --blue-dim:  rgba(79,142,247,0.15);
+  --blue-glow: rgba(79,142,247,0.25);
+  --text:      #f0f0f5;
+  --text-2:    #9999b0;
+  --text-3:    #55556a;
+  --green:     #22c55e;
+  --amber:     #f59e0b;
+  --red:       #ef4444;
+  --r:         14px;
+  --r-sm:      10px;
+  --r-lg:      20px;
+}
+body{
+  background:#1e1e2a;
+  font-family:"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic Medium",
+              "Inter",system-ui,sans-serif;
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  padding:40px 20px 80px;
+}
+
+/* ── Prototype Layout ── */
+h1.proto-title{
+  text-align:center;font-size:13px;letter-spacing:3px;
+  color:var(--text-3);text-transform:uppercase;margin-bottom:40px;
+  font-weight:600;
+}
+.screens-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(360px,1fr));
+  gap:40px;
+  max-width:1600px;margin:0 auto;
+}
+.screen-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+}
+.screen-label{
+  font-size:10px;letter-spacing:2.5px;color:var(--text-3);
+  text-transform:uppercase;font-weight:700;
+}
+
+/* ── Phone Frame ── */
+.phone{
+  width:375px;
+  background:var(--bg);
+  border-radius:44px;
+  border:1.5px solid rgba(255,255,255,0.1);
+  box-shadow:
+    0 40px 80px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(255,255,255,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  overflow:hidden;
+  position:relative;
+}
+/* Status bar */
+.status-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 28px 8px;
+  font-size:12px;font-weight:600;color:var(--text);
+}
+.status-bar .time{font-size:15px;font-weight:700;}
+.status-icons{display:flex;align-items:center;gap:5px;}
+.status-icons svg{opacity:.85;}
+
+/* Dynamic Island */
+.dynamic-island{
+  width:120px;height:34px;background:#000;
+  border-radius:999px;margin:0 auto 4px;
+}
+
+/* Screen content */
+.screen{
+  padding:0 0 100px;
+  min-height:760px;
+  overflow:hidden;
+}
+
+/* ── Common Components ── */
+.screen-header{
+  padding:8px 20px 16px;
+  display:flex;align-items:center;gap:12px;
+}
+.back-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--bg-3);border:1px solid var(--line);
+  display:grid;place-items:center;flex-shrink:0;
+  color:var(--text-2);
+}
+.header-title{
+  font-size:17px;font-weight:700;color:var(--text);
+  letter-spacing:0.3px;flex:1;
+}
+.header-action{
+  font-size:13px;color:var(--blue);font-weight:600;
+}
+
+/* Section label */
+.sec-label{
+  font-size:10px;letter-spacing:2.5px;color:var(--text-3);
+  font-weight:700;text-transform:uppercase;
+  padding:0 20px;margin-bottom:10px;
+}
+
+/* Card */
+.card{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  margin:0 16px 12px;
+  overflow:hidden;
+}
+.card-row{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 16px;
+  border-bottom:1px solid var(--line);
+}
+.card-row:last-child{border-bottom:none;}
+.row-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:grid;place-items:center;flex-shrink:0;
+  font-size:18px;
+}
+.row-body{flex:1;min-width:0;}
+.row-title{font-size:14px;font-weight:600;color:var(--text);}
+.row-sub{font-size:12px;color:var(--text-2);margin-top:2px;}
+.row-arrow{color:var(--text-3);}
+
+/* Input */
+.field-group{margin:0 16px 12px;}
+.field-label{
+  font-size:11px;letter-spacing:1.5px;color:var(--text-3);
+  font-weight:700;text-transform:uppercase;margin-bottom:6px;
+}
+.field-input{
+  width:100%;background:var(--bg-card);
+  border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:13px 14px;font-size:15px;color:var(--text);
+  font-family:inherit;
+}
+.field-input.filled{border-color:rgba(79,142,247,0.4);}
+
+/* Button */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:calc(100% - 32px);margin:0 16px 10px;
+  padding:16px;border-radius:var(--r);
+  font-size:15px;font-weight:700;font-family:inherit;
+  border:none;cursor:pointer;letter-spacing:0.3px;
+}
+.btn-primary{
+  background:var(--blue);color:#fff;
+  box-shadow:0 8px 24px rgba(79,142,247,0.35);
+}
+.btn-secondary{
+  background:var(--bg-3);color:var(--text);
+  border:1px solid var(--line-strong);
+}
+.btn-ghost{
+  background:transparent;color:var(--blue);
+  border:1px solid rgba(79,142,247,0.3);
+}
+.btn-danger{
+  background:rgba(239,68,68,0.15);color:var(--red);
+  border:1px solid rgba(239,68,68,0.25);
+}
+.btn-sm{
+  width:auto;margin:0;padding:10px 18px;
+  font-size:13px;border-radius:var(--r-sm);
+}
+
+/* Badge */
+.badge{
+  display:inline-flex;align-items:center;
+  padding:3px 9px;border-radius:999px;
+  font-size:11px;font-weight:600;letter-spacing:0.5px;
+}
+.badge-blue{background:var(--blue-dim);color:var(--blue);}
+.badge-green{background:rgba(34,197,94,0.15);color:var(--green);}
+.badge-amber{background:rgba(245,158,11,0.15);color:var(--amber);}
+.badge-red{background:rgba(239,68,68,0.12);color:var(--red);}
+
+/* Toggle */
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 16px;
+}
+.toggle-track{
+  width:48px;height:28px;border-radius:14px;
+  background:var(--blue);position:relative;flex-shrink:0;
+}
+.toggle-thumb{
+  width:22px;height:22px;border-radius:50%;background:#fff;
+  position:absolute;top:3px;right:3px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.3);
+}
+.toggle-track.off{background:var(--bg-3);border:1px solid var(--line);}
+.toggle-track.off .toggle-thumb{right:auto;left:3px;}
+
+/* Progress stepper */
+.stepper{
+  display:flex;align-items:center;
+  padding:12px 20px;gap:0;margin-bottom:8px;
+}
+.step-dot{
+  width:28px;height:28px;border-radius:50%;
+  display:grid;place-items:center;
+  font-size:11px;font-weight:700;flex-shrink:0;
+}
+.step-dot.done{background:var(--blue);color:#fff;}
+.step-dot.current{
+  background:var(--blue);color:#fff;
+  box-shadow:0 0 0 3px rgba(79,142,247,0.3);
+}
+.step-dot.pending{
+  background:var(--bg-3);color:var(--text-3);
+  border:1px solid var(--line);
+}
+.step-line{flex:1;height:1px;background:var(--line);}
+.step-line.done{background:var(--blue);}
+
+/* Bottom Nav */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(10,10,15,0.95);
+  border-top:1px solid var(--line);
+  backdrop-filter:blur(20px);
+  display:flex;align-items:center;
+  padding:10px 0 28px;
+  z-index:10;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;gap:4px;
+  font-size:10px;color:var(--text-3);font-weight:500;
+  letter-spacing:0.3px;
+}
+.nav-item.active{color:var(--blue);}
+.nav-item svg{width:22px;height:22px;}
+.nav-fab{
+  width:52px;height:52px;border-radius:50%;
+  background:var(--blue);
+  box-shadow:0 8px 24px rgba(79,142,247,0.45);
+  display:grid;place-items:center;
+  margin-top:-20px;flex-shrink:0;
+}
+
+/* Divider */
+.divider{height:1px;background:var(--line);margin:4px 16px 12px;}
+
+/* Spacer */
+.sp{height:8px;}
+.sp-lg{height:16px;}
+
+/* ── Screen 1: Home ── */
+.home-greeting{padding:4px 20px 16px;}
+.home-greeting .date{
+  font-size:11px;letter-spacing:2px;color:var(--text-3);
+  text-transform:uppercase;margin-bottom:4px;
+}
+.home-greeting .name{
+  font-size:22px;font-weight:800;color:var(--text);
+}
+.home-greeting .sub{font-size:13px;color:var(--text-2);margin-top:2px;}
+
+.grid-menu{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;padding:0 16px;margin-bottom:16px;
+}
+.grid-item{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:14px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  text-align:center;cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.grid-icon{
+  width:44px;height:44px;border-radius:12px;
+  display:grid;place-items:center;font-size:20px;
+}
+/* SVGアイコン用 */
+.grid-icon svg{width:24px;height:24px;}
+.grid-label{font-size:11px;font-weight:600;color:var(--text-2);line-height:1.3;}
+.grid-item.highlight .grid-label{color:var(--blue);}
+.grid-item.highlight{
+  background:var(--blue-dim);
+  border-color:rgba(79,142,247,0.25);
+}
+/* GYEONブランドアイコン */
+.gyeon-icon{
+  width:28px;height:28px;
+}
+/* SNSアイコン */
+.sns-icon-wrap{
+  display:flex;gap:3px;align-items:center;justify-content:center;
+  width:44px;height:44px;
+}
+.sns-dot{
+  width:8px;height:8px;border-radius:50%;
+}
+/* 今日の予約カード */
+.reservation-card{
+  margin:0 16px 8px;
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+}
+.reservation-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;
+  border-bottom:1px solid var(--line);
+}
+.reservation-item:last-child{border-bottom:none;}
+.res-time{
+  font-size:13px;font-weight:700;color:var(--blue);
+  min-width:42px;
+}
+.res-body{flex:1;}
+.res-name{font-size:14px;font-weight:600;color:var(--text);}
+.res-detail{font-size:11px;color:var(--text-2);margin-top:2px;}
+.res-car{font-size:11px;color:var(--text-3);margin-top:1px;}
+
+/* ── Screen 5: OCR Review ── */
+.ocr-source{
+  margin:0 16px 16px;
+  background:var(--bg-3);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+}
+.ocr-thumb{
+  width:60px;height:44px;border-radius:8px;
+  background:var(--bg-2);
+  border:1px solid var(--line);
+  display:grid;place-items:center;
+  font-size:20px;flex-shrink:0;
+}
+.ocr-info .title{font-size:13px;font-weight:600;color:var(--text);}
+.ocr-info .sub{font-size:11px;color:var(--text-2);margin-top:2px;}
+
+.confidence{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:999px;
+  font-size:11px;font-weight:600;
+}
+.conf-high{background:rgba(34,197,94,0.15);color:var(--green);}
+.conf-mid{background:rgba(245,158,11,0.15);color:var(--amber);}
+.conf-low{background:rgba(239,68,68,0.12);color:var(--red);}
+
+.ocr-section-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;margin-bottom:4px;
+}
+.ocr-section-title{
+  font-size:11px;letter-spacing:2px;color:var(--text-3);
+  font-weight:700;text-transform:uppercase;
+}
+
+/* ── Screen 6: Service Selection ── */
+.rank-selector{
+  display:flex;gap:8px;padding:0 16px;margin-bottom:16px;
+}
+.rank-btn{
+  flex:1;padding:12px;border-radius:var(--r-sm);
+  border:1px solid var(--line);background:var(--bg-card);
+  text-align:center;
+}
+.rank-btn.active{
+  border-color:var(--blue);
+  background:var(--blue-dim);
+}
+.rank-btn .rank-label{font-size:13px;font-weight:700;color:var(--text);}
+.rank-btn .rank-sub{font-size:10px;color:var(--text-2);margin-top:2px;}
+.rank-btn.active .rank-label{color:var(--blue);}
+
+.service-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:10px;padding:0 16px;margin-bottom:16px;
+}
+.service-card{
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--r);padding:16px 14px;
+}
+.service-card.selected{
+  border-color:var(--blue);
+  background:var(--blue-dim);
+}
+.service-card .svc-icon{font-size:24px;margin-bottom:8px;}
+.service-card .svc-name{font-size:14px;font-weight:700;color:var(--text);}
+.service-card .svc-en{font-size:10px;letter-spacing:1.5px;color:var(--text-3);margin-top:2px;text-transform:uppercase;}
+.service-card.selected .svc-name{color:var(--blue);}
+.check-mark{
+  width:20px;height:20px;border-radius:50%;
+  background:var(--blue);
+  display:grid;place-items:center;
+  float:right;margin-top:-4px;
+}
+
+/* ── Screen 7: Estimate Editor ── */
+.summary-chip{
+  display:flex;align-items:center;gap:10px;
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:10px 14px;
+  margin:0 16px 8px;
+}
+.chip-icon{font-size:16px;}
+.chip-text{font-size:12px;color:var(--text-2);}
+.chip-text strong{color:var(--text);font-weight:600;}
+
+.estimate-line{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--line);
+}
+.estimate-line:last-child{border-bottom:none;}
+.est-name{font-size:14px;color:var(--text);}
+.est-price{font-size:14px;font-weight:600;color:var(--text);}
+.est-sub{font-size:11px;color:var(--text-2);margin-top:2px;}
+
+.total-area{
+  margin:0 16px 12px;
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;
+}
+.total-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 16px;border-bottom:1px solid var(--line);
+  font-size:13px;color:var(--text-2);
+}
+.total-row:last-child{border-bottom:none;}
+.total-row.grand{
+  font-size:16px;font-weight:800;color:var(--text);
+  padding:14px 16px;
+}
+.total-row.grand .amount{color:var(--blue);}
+
+/* ── Screen 8: PDF Preview ── */
+.pdf-preview-area{
+  margin:0 16px 16px;
+  background:#fff;
+  border-radius:var(--r);
+  overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+}
+.pdf-header{
+  background:#0a0a0f;padding:16px 20px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.pdf-header .logo-text{
+  font-size:13px;font-weight:800;letter-spacing:2px;color:#fff;
+}
+.pdf-body{padding:16px 20px;background:#fff;}
+.pdf-body .pdf-title{
+  font-size:14px;font-weight:800;color:#111;
+  margin-bottom:12px;letter-spacing:1px;
+}
+.pdf-info-row{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:#444;margin-bottom:4px;
+}
+.pdf-divider{height:1px;background:#eee;margin:10px 0;}
+.pdf-item-row{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:#222;padding:4px 0;
+}
+.pdf-total{
+  display:flex;justify-content:space-between;
+  font-size:13px;font-weight:800;color:#111;
+  padding:8px 0 0;border-top:2px solid #111;margin-top:4px;
+}
+
+/* ── Screen 9: Work Order ── */
+.status-bar-work{
+  display:flex;gap:6px;padding:0 16px;margin-bottom:16px;
+  overflow-x:auto;
+}
+.status-chip{
+  padding:7px 14px;border-radius:999px;
+  font-size:12px;font-weight:600;white-space:nowrap;
+  border:1px solid var(--line);color:var(--text-2);
+  background:var(--bg-card);
+}
+.status-chip.active{
+  background:var(--blue-dim);color:var(--blue);
+  border-color:rgba(79,142,247,0.3);
+}
+
+/* ── Screen 10: Completion Report ── */
+.photo-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px;padding:0 16px;margin-bottom:16px;
+}
+.photo-slot{
+  aspect-ratio:1;border-radius:10px;
+  background:var(--bg-3);border:1px dashed var(--line-strong);
+  display:grid;place-items:center;font-size:24px;
+  color:var(--text-3);
+}
+
+/* ── Screen 11: Maintenance ── */
+.reminder-card{
+  margin:0 16px 10px;
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;
+}
+.reminder-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid var(--line);
+}
+.reminder-title{font-size:15px;font-weight:700;color:var(--text);}
+.reminder-body{padding:14px 16px;}
+.reminder-date{font-size:13px;color:var(--text-2);margin-bottom:10px;}
+.reminder-date strong{color:var(--text);}
+
+</style>
+</head>
+<body>
+
+<h1 class="proto-title">GYEON Dealer Agent — Mobile UI Prototype · All Screens</h1>
+
+<div class="screens-grid">
+
+<!-- ═══════════════════════════════════════
+     SCREEN 1: HOME  (v2 — revised layout)
+═══════════════════════════════════════ -->
+<div class="screen-wrap">
+<div class="screen-label">01 · Home</div>
+<div class="phone">
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="status-icons">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13.5" y="1" width="2.5" height="11" rx="1" opacity=".3"/></svg>
+      <svg width="16" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5C5 12.5 7 9 12 9s7 3.5 7 3.5"/><path d="M8 15.5S9.5 13 12 13s4 2.5 4 2.5"/><circle cx="12" cy="18" r="1.5" fill="currentColor"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="currentColor"><rect x="0" y="1" width="22" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="1.5" y="2.5" width="17" height="7" rx="1"/><rect x="23" y="4" width="2" height="4" rx="1"/></svg>
+    </div>
+  </div>
+  <div class="dynamic-island"></div>
+
+  <div class="screen">
+    <!-- Greeting -->
+    <div class="home-greeting">
+      <div class="date">2026年6月27日（金）</div>
+      <div class="name">おはようございます</div>
+      <div class="sub">Nishikawa さん · GYEON STORE</div>
+    </div>
+
+    <!-- ── Menu Grid (3×3 = 9マス) ──
+         上段：新規見積 / 顧客管理 / 車両管理
+         中段：カレンダー / 予約管理 / LINE
+         下段：SNS / 発注 / 空欄（予備）
+    -->
+    <div class="sec-label">メニュー</div>
+    <div class="grid-menu">
+
+      <!-- ▲ 上段 -->
+      <!-- 新規見積 -->
+      <div class="grid-item highlight">
+        <div class="grid-icon" style="background:var(--blue-dim);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="3" width="16" height="18" rx="2"/>
+            <line x1="8" y1="8" x2="16" y2="8"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+            <line x1="8" y1="16" x2="12" y2="16"/>
+            <line x1="15" y1="15" x2="15" y2="19"/>
+            <line x1="13" y1="17" x2="17" y2="17"/>
+          </svg>
+        </div>
+        <div class="grid-label">新規見積</div>
+      </div>
+
+      <!-- 顧客管理 -->
+      <div class="grid-item">
+        <div class="grid-icon" style="background:rgba(255,255,255,0.05);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+        </div>
+        <div class="grid-label">顧客管理</div>
+      </div>
+
+      <!-- 車両管理 -->
+      <div class="grid-item">
+        <div class="grid-icon" style="background:rgba(255,255,255,0.05);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 17H3v-7l2.5-5h11L19 10v7h-2"/>
+            <circle cx="7.5" cy="17" r="2.5"/>
+            <circle cx="16.5" cy="17" r="2.5"/>
+            <path d="M5 10h14"/>
+          </svg>
+        </div>
+        <div class="grid-label">車両管理</div>
+      </div>
+
+      <!-- ▲ 中段 -->
+      <!-- カレンダー -->
+      <div class="grid-item">
+        <div class="grid-icon" style="background:rgba(255,255,255,0.05);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+          </svg>
+        </div>
+        <div class="grid-label">カレンダー</div>
+      </div>
+
+      <!-- 予約管理 -->
+      <div class="grid-item">
+        <div class="grid-icon" style="background:rgba(245,158,11,0.12);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <path d="M8 15l2.5 2.5L16 12"/>
+          </svg>
+        </div>
+        <div class="grid-label">予約管理</div>
+      </div>
+
+      <!-- LINE -->
+      <div class="grid-item">
+        <div class="grid-icon" style="background:rgba(0,185,0,0.12);">
+          <!-- LINE風ロゴ（吹き出し＋ひげ） -->
+          <svg viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="10" fill="rgba(0,185,0,0.0)"/>
+            <path d="M20 6C11.16 6 4 11.92 4 19.2c0 4.7 3.12 8.84 7.82 11.3-.2.74-.74 2.68-.85 3.1-.14.52.19.52.4.38.17-.11 2.68-1.76 3.76-2.47.94.13 1.91.19 2.87.19C27.84 31.7 36 26.22 36 19.2 36 11.92 28.84 6 20 6z" fill="#00b900"/>
+            <path d="M16.4 22.6h-1.8v-6.4h1.8v6.4zM20.6 22.6h-1.7l-2.7-3.9v3.9h-1.8v-6.4h1.7l2.7 3.9v-3.9h1.8v6.4zM22.2 22.6v-6.4h1.8v5h3v1.4h-4.8z" fill="#fff"/>
+          </svg>
+        </div>
+        <div class="grid-label">LINE</div>
+      </div>
+
+      <!-- ▲ 下段 -->
+      <!-- SNS（Instagram + X + Google） -->
+      <div class="grid-item">
+        <div class="grid-icon" style="background:rgba(168,85,247,0.12);padding:0;overflow:hidden;">
+          <!-- SNS マルチアイコン: Instagram風グラデ＋X -->
+          <svg viewBox="0 0 44 44" fill="none">
+            <!-- Instagram輪郭 -->
+            <rect x="5" y="5" width="15" height="15" rx="4" fill="url(#ig-grad)"/>
+            <rect x="8.5" y="8.5" width="8" height="8" rx="2.5" fill="none" stroke="#fff" stroke-width="1.3"/>
+            <circle cx="14.5" cy="9.5" r="1" fill="#fff"/>
+            <!-- X（旧Twitter）右上 -->
+            <rect x="24" y="5" width="15" height="15" rx="4" fill="#111"/>
+            <text x="27" y="16.5" font-size="10" font-weight="800" fill="#fff" font-family="Arial,sans-serif">𝕏</text>
+            <!-- Google右下 -->
+            <rect x="24" y="24" width="15" height="15" rx="4" fill="#fff"/>
+            <text x="26.5" y="35" font-size="10" font-weight="700" fill="#4285F4" font-family="Arial,sans-serif">G</text>
+            <!-- 空白左下：グレーのプラス -->
+            <rect x="5" y="24" width="15" height="15" rx="4" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+            <line x1="12.5" y1="28" x2="12.5" y2="35" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+            <line x1="9" y1="31.5" x2="16" y2="31.5" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+            <defs>
+              <linearGradient id="ig-grad" x1="5" y1="20" x2="20" y2="5" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#f58529"/>
+                <stop offset="50%" stop-color="#dd2a7b"/>
+                <stop offset="100%" stop-color="#8134af"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="grid-label">SNS投稿</div>
+      </div>
+
+      <!-- 商品発注（GYEONマーク） -->
+      <div class="grid-item">
+        <div class="grid-icon" style="background:rgba(79,142,247,0.08);padding:0;">
+          <!-- GYEONブランドマーク：ダイヤモンド形状の「G」 -->
+          <svg viewBox="0 0 44 44" fill="none">
+            <!-- 外側ダイヤ -->
+            <polygon points="22,4 40,22 22,40 4,22" fill="none" stroke="rgba(79,142,247,0.5)" stroke-width="1.2"/>
+            <!-- 内側ダイヤ -->
+            <polygon points="22,9 35,22 22,35 9,22" fill="rgba(79,142,247,0.12)" stroke="rgba(79,142,247,0.7)" stroke-width="1"/>
+            <!-- G文字 -->
+            <text x="14" y="27" font-size="13" font-weight="800" fill="var(--blue)" font-family="Arial,Helvetica,sans-serif" letter-spacing="0">G</text>
+            <!-- 発注マーク（下部カート） -->
+            <circle cx="30" cy="32" r="5" fill="var(--blue)"/>
+            <path d="M27 30h2l1 3h2" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="29.5" cy="33.5" r=".8" fill="#fff"/>
+            <circle cx="31.5" cy="33.5" r=".8" fill="#fff"/>
+          </svg>
+        </div>
+        <div class="grid-label">商品発注</div>
+      </div>
+
+      <!-- 空欄（予備） -->
+      <div class="grid-item" style="opacity:0.35;border-style:dashed;">
+        <div class="grid-icon" style="background:rgba(255,255,255,0.03);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+        </div>
+        <div class="grid-label" style="color:var(--text-3);">準備中</div>
+      </div>
+
+      <!-- 設定（ギアマークのみ / テキストなし） -->
+      <!-- ※ 設定はボトムナビの設定アイコンで代替。グリッド9番目は予備として空欄 -->
+
+    </div>
+
+    <!-- 今日の予約（全件表示） -->
+    <div class="sec-label">今日の予約</div>
+    <div class="reservation-card">
+      <!-- 予約1 -->
+      <div class="reservation-item">
+        <div class="res-time">9:00</div>
+        <div class="res-body">
+          <div class="res-name">田中 太郎 様</div>
+          <div class="res-detail">Q²MOHS+ コーティング · Certified</div>
+          <div class="res-car">🚗 ウラカン EVO · 大阪300あ1234</div>
+        </div>
+        <span class="badge badge-amber">施工中</span>
+      </div>
+      <!-- 予約2 -->
+      <div class="reservation-item">
+        <div class="res-time">11:00</div>
+        <div class="res-body">
+          <div class="res-name">山田 花子 様</div>
+          <div class="res-detail">PPF フルラップ</div>
+          <div class="res-car">🚗 ポルシェ 911 · 京都500ら5678</div>
+        </div>
+        <span class="badge badge-green">受付済</span>
+      </div>
+      <!-- 予約3 -->
+      <div class="reservation-item">
+        <div class="res-time">13:30</div>
+        <div class="res-body">
+          <div class="res-name">佐藤 健一 様</div>
+          <div class="res-detail">ウィンドウフィルム 前後</div>
+          <div class="res-car">🚗 BMW M4 · 神戸300さ9012</div>
+        </div>
+        <span class="badge badge-green">受付済</span>
+      </div>
+      <!-- 予約4 -->
+      <div class="reservation-item">
+        <div class="res-time">15:00</div>
+        <div class="res-body">
+          <div class="res-name">株式会社 中村商会</div>
+          <div class="res-detail">メンテナンス洗車 2台</div>
+          <div class="res-car">🚗 法人 · アルファード / エルグランド</div>
+        </div>
+        <span class="badge" style="background:rgba(99,102,241,0.15);color:#818cf8;font-size:10px;padding:3px 8px;border-radius:999px;font-weight:600;white-space:nowrap;">法人</span>
+      </div>
+      <!-- 予約5 -->
+      <div class="reservation-item">
+        <div class="res-time">17:30</div>
+        <div class="res-body">
+          <div class="res-name">鈴木 みのり 様</div>
+          <div class="res-detail">施工完了 · 引渡し</div>
+          <div class="res-car">🚗 フェラーリ F8 · 大阪300む3456</div>
+        </div>
+        <span class="badge" style="background:rgba(34,197,94,0.12);color:#4ade80;font-size:10px;padding:3px 8px;border-radius:999px;font-weight:600;white-space:nowrap;">引渡し</span>
+      </div>
+    </div>
+
+    <div class="sp-lg"></div>
+  </div><!-- /screen -->
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h5v-5h4v5h5V10"/></svg>
+      ホーム
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      顧客
+    </div>
+    <div class="nav-item">
+      <div class="nav-fab">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v4M16 4v4"/></svg>
+      予定
+    </div>
+    <div class="nav-item">
+      <!-- ギアマークのみ（テキストなし） -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1-.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 2: NEW ESTIMATE START
+═══════════════════════════════════════ -->
+<div class="screen-wrap">
+<div class="screen-label">02 · New Estimate Start</div>
+<div class="phone">
+  <div class="status-bar"><span class="time">9:41</span><div class="status-icons"><svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/></svg></div></div>
+  <div class="dynamic-island"></div>
+  <div class="screen">
+    <div class="screen-header">
+      <div class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="header-title">新規見積作成</div>
+    </div>
+
+    <div class="sp-lg"></div>
+
+    <!-- Options -->
+    <div class="sec-label">開始方法を選択</div>
+    <div class="card">
+      <div class="card-row">
+        <div class="row-icon" style="background:var(--blue-dim);">👤</div>
+        <div class="row-body">
+          <div class="row-title">既存顧客から選ぶ</div>
+          <div class="row-sub">登録済み顧客を検索して開始</div>
+        </div>
+        <svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="card-row">
+        <div class="row-icon" style="background:rgba(34,197,94,0.1);">➕</div>
+        <div class="row-body">
+          <div class="row-title">新規顧客を登録</div>
+          <div class="row-sub">顧客情報を新規入力して開始</div>
+        </div>
+        <svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="card-row">
+        <div class="row-icon" style="background:rgba(245,158,11,0.12);">📷</div>
+        <div class="row-body">
+          <div class="row-title">車検証をスキャン</div>
+          <div class="row-sub">OCRで顧客・車両情報を自動読取</div>
+        </div>
+        <svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="card-row">
+        <div class="row-icon" style="background:rgba(255,255,255,0.05);">📝</div>
+        <div class="row-body">
+          <div class="row-title">下書きを続ける</div>
+          <div class="row-sub">未完了の見積が 2 件あります</div>
+        </div>
+        <svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="sp-lg"></div>
+
+    <!-- Drafts -->
+    <div class="sec-label">下書き一覧</div>
+    <div class="card">
+      <div class="card-row">
+        <div class="row-body">
+          <div class="row-title">田中 太郎 様</div>
+          <div class="row-sub">コーティング · 6月26日保存</div>
+        </div>
+        <span class="badge badge-amber">下書き</span>
+      </div>
+      <div class="card-row">
+        <div class="row-body">
+          <div class="row-title">佐藤 一郎 様</div>
+          <div class="row-sub">PPF · 6月25日保存</div>
+        </div>
+        <span class="badge badge-amber">下書き</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h5v-5h4v5h5V10"/></svg>ホーム</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>顧客</div>
+    <div class="nav-item"><div class="nav-fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></div></div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v4M16 4v4"/></svg>予定</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1-.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>設定</div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 3: CUSTOMER  (v2 — revised)
+═══════════════════════════════════════ -->
+<div class="screen-wrap">
+<div class="screen-label">03 · Customer Selection / Registration</div>
+<div class="phone">
+  <div class="status-bar"><span class="time">9:41</span></div>
+  <div class="dynamic-island"></div>
+  <div class="screen">
+    <div class="screen-header">
+      <div class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="header-title">顧客選択 / 登録</div>
+      <div class="header-action">新規</div>
+    </div>
+
+    <!-- Search -->
+    <div class="field-group">
+      <div class="field-input" style="display:flex;align-items:center;gap:8px;color:var(--text-3);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        顧客名・電話番号で検索
+      </div>
+    </div>
+
+    <!-- Existing -->
+    <div class="sec-label">登録済み顧客</div>
+    <div class="card">
+      <div class="card-row">
+        <div class="row-icon" style="background:var(--blue-dim);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+        <div class="row-body">
+          <div class="row-title">田中 太郎</div>
+          <div class="row-sub">090-1234-5678 · 3台登録</div>
+        </div>
+        <svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="card-row">
+        <div class="row-icon" style="background:rgba(255,255,255,0.05);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+        <div class="row-body">
+          <div class="row-title">山田 花子</div>
+          <div class="row-sub">090-9876-5432 · 1台登録</div>
+        </div>
+        <svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- New Customer Form -->
+    <div class="sec-label">新規顧客登録</div>
+    <div class="field-group"><div class="field-label">氏名</div><div class="field-input filled">田中 太郎</div></div>
+    <div class="field-group"><div class="field-label">フリガナ</div><div class="field-input">タナカ タロウ</div></div>
+    <div class="field-group"><div class="field-label">電話番号</div><div class="field-input">090-1234-5678</div></div>
+    <div class="field-group"><div class="field-label">メールアドレス</div><div class="field-input" style="color:var(--text-3);">未入力</div></div>
+
+    <!-- LINE ID + QRボタン -->
+    <div class="field-group">
+      <div class="field-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>LINE ID</span>
+        <!-- QR読み取りボタン -->
+        <button style="
+          display:inline-flex;align-items:center;gap:5px;
+          padding:4px 10px;border-radius:8px;
+          background:rgba(0,185,0,0.15);border:1px solid rgba(0,185,0,0.35);
+          color:#22c55e;font-size:11px;font-weight:600;cursor:pointer;
+        ">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <!-- QRコードアイコン -->
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="5" y="5" width="3" height="3" fill="currentColor"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="16" y="5" width="3" height="3" fill="currentColor"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="5" y="16" width="3" height="3" fill="currentColor"/>
+            <path d="M14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z" fill="currentColor" stroke="none"/>
+          </svg>
+          QR読み取り
+        </button>
+      </div>
+      <div class="field-input" style="color:var(--text-3);">未入力 · またはQRコードで取得</div>
+    </div>
+
+    <!-- 業者トグル（「法人顧客」→「業者」に変更） -->
+    <div class="card">
+      <div class="toggle-row">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">業者</div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:2px;">業販割引・掛払いを有効にする</div>
+        </div>
+        <div class="toggle-track off"><div class="toggle-thumb"></div></div>
+      </div>
+    </div>
+
+    <div class="sp"></div>
+    <button class="btn btn-primary">この顧客を選択して次へ</button>
+    <div class="sp-lg"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 4: VEHICLE
+═══════════════════════════════════════ -->
+<div class="screen-wrap">
+<div class="screen-label">04 · Vehicle Selection / Registration</div>
+<div class="phone">
+  <div class="status-bar"><span class="time">9:41</span></div>
+  <div class="dynamic-island"></div>
+  <div class="screen">
+    <div class="screen-header">
+      <div class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="header-title">車両選択 / 登録</div>
+    </div>
+
+    <!-- Customer context -->
+    <div class="summary-chip">
+      <span class="chip-icon">👤</span>
+      <span class="chip-text">顧客：<strong>田中 太郎</strong> 様</span>
+    </div>
+
+    <!-- Options -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-row">
+        <div class="row-icon" style="background:rgba(245,158,11,0.12);font-size:16px;">📷</div>
+        <div class="row-body">
+          <div class="row-title">車検証をスキャン</div>
+          <div class="row-sub">OCRで車両情報を自動読取</div>
+        </div>
+        <svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <!-- Linked vehicles -->
+    <div class="sec-label">登録済み車両</div>
+    <div class="card">
+      <div class="card-row">
+        <div class="row-icon" style="background:var(--blue-dim);font-size:18px;">🚗</div>
+        <div class="row-body">
+          <div class="row-title">ランボルギーニ ウラカン</div>
+          <div class="row-sub">大阪 300 あ 1234 · 2022年</div>
+        </div>
+        <svg class="row-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- New vehicle form -->
+    <div class="sec-label">新規車両登録</div>
+    <div class="field-group"><div class="field-label">メーカー</div><div class="field-input filled">ランボルギーニ</div></div>
+    <div class="field-group"><div class="field-label">車名</div><div class="field-input filled">ウラカン</div></div>
+    <div class="field-group"><div class="field-label">グレード</div><div class="field-input">EVO RWD</div></div>
+    <div class="field-group"><div class="field-label">型式</div><div class="field-input">LB624</div></div>
+    <div class="field-group"><div class="field-label">年式</div><div class="field-input">2022年</div></div>
+    <div class="field-group"><div class="field-label">ボディカラー</div><div class="field-input">アランシオ</div></div>
+    <div class="field-group"><div class="field-label">排気量</div><div class="field-input">5,204cc</div></div>
+    <div class="field-group"><div class="field-label">ナンバー</div><div class="field-input">大阪 300 あ 1234</div></div>
+    <div class="field-group"><div class="field-label">車台番号</div><div class="field-input">ZHWUC4ZF1NLA</div></div>
+    <div class="field-group"><div class="field-label">車検満了日</div><div class="field-input">2027年6月30日</div></div>
+
+    <div class="sp"></div>
+    <button class="btn btn-primary">この車両を選択して次へ</button>
+    <button class="btn btn-ghost">新規登録して次へ</button>
+    <div class="sp-lg"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 5: OCR REVIEW
+═══════════════════════════════════════ -->
+<div class="screen-wrap">
+<div class="screen-label">05 · OCR Review</div>
+<div class="phone">
+  <div class="status-bar"><span class="time">9:41</span></div>
+  <div class="dynamic-island"></div>
+  <div class="screen">
+    <div class="screen-header">
+      <div class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="header-title">OCR読取結果確認</div>
+    </div>
+
+    <!-- Scanned image -->
+    <div class="ocr-source">
+      <div class="ocr-thumb">📄</div>
+      <div class="ocr-info">
+        <div class="title">車検証スキャン完了</div>
+        <div class="sub">2026/06/27 09:38 · 読取率 94%</div>
+      </div>
+      <span class="confidence conf-high">高精度</span>
+    </div>
+
+    <!-- Warning -->
+    <div style="margin:0 16px 14px;padding:10px 14px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:10px;font-size:12px;color:var(--amber);">
+      ⚠️ 内容を必ず確認してから保存してください。自動登録はされません。
+    </div>
+
+    <!-- Customer section -->
+    <div class="ocr-section-head">
+      <span class="ocr-section-title">顧客情報</span>
+      <span class="confidence conf-high">確認済み</span>
+    </div>
+    <div class="field-group"><div class="field-label">氏名</div><div class="field-input filled">田中 太郎</div></div>
+    <div class="field-group"><div class="field-label">住所</div><div class="field-input filled">大阪府大阪市北区…</div></div>
+
+    <!-- Vehicle section -->
+    <div class="ocr-section-head">
+      <span class="ocr-section-title">車両情報</span>
+      <span class="confidence conf-mid">要確認</span>
+    </div>
+    <div class="field-group"><div class="field-label">車名</div><div class="field-input filled">ウラカン</div></div>
+    <div class="field-group"><div class="field-label">型式</div><div class="field-input filled">LB624</div></div>
+    <div class="field-group">
+      <div class="field-label" style="display:flex;align-items:center;justify-content:space-between;">
+        ナンバー <span class="confidence conf-low">要修正</span>
+      </div>
+      <div class="field-input" style="border-color:var(--amber);">大阪 300 あ 123▌</div>
+    </div>
+    <div class="field-group"><div class="field-label">車検満了日</div><div class="field-input filled">2027年6月30日</div></div>
+    <div class="field-group"><div class="field-label">車台番号</div><div class="field-input filled">ZHWUC4ZF1NLA</div></div>
+
+    <div class="sp"></div>
+    <button class="btn btn-primary">確認完了 · 保存して見積へ</button>
+    <button class="btn btn-secondary">修正してから保存</button>
+    <div class="sp-lg"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 6: SERVICE SELECTION  (v2 — revised)
+═══════════════════════════════════════ -->
+<div class="screen-wrap">
+<div class="screen-label">06 · Estimate Service Selection</div>
+<div class="phone">
+  <div class="status-bar"><span class="time">9:41</span></div>
+  <div class="dynamic-island"></div>
+  <div class="screen">
+    <div class="screen-header">
+      <div class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="header-title">サービス選択</div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step-dot done">✓</div>
+      <div class="step-line done"></div>
+      <div class="step-dot done">✓</div>
+      <div class="step-line done"></div>
+      <div class="step-dot current">3</div>
+      <div class="step-line"></div>
+      <div class="step-dot pending">4</div>
+      <div class="step-line"></div>
+      <div class="step-dot pending">5</div>
+    </div>
+
+    <!-- Context chips -->
+    <div class="summary-chip">
+      <span class="chip-icon">👤</span>
+      <span class="chip-text"><strong>田中 太郎</strong> · ウラカン EVO</span>
+    </div>
+
+    <!-- ディテーラーランク：表示のみ（選択不可） -->
+    <div style="margin:0 16px 16px;">
+      <div style="font-size:10px;letter-spacing:2px;color:var(--text-3);text-transform:uppercase;font-weight:700;margin-bottom:8px;">担当ディテーラーランク</div>
+      <div style="
+        display:flex;align-items:center;gap:12px;
+        background:linear-gradient(135deg,rgba(79,142,247,0.14) 0%,rgba(79,142,247,0.04) 100%);
+        border:1px solid rgba(79,142,247,0.28);
+        border-radius:var(--r);padding:12px 16px;
+      ">
+        <!-- バッジアイコン（認定証） -->
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="15" fill="rgba(79,142,247,0.15)" stroke="rgba(79,142,247,0.5)" stroke-width="1.5"/>
+          <path d="M16 8l2 5h5l-4 3 1.5 5L16 18l-4.5 3 1.5-5-4-3h5z" fill="var(--blue)" opacity=".9"/>
+        </svg>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--blue);">Certified Detailer</div>
+          <div style="font-size:11px;color:var(--text-2);margin-top:2px;">認定ディテーラー · 全施工対応可</div>
+        </div>
+        <!-- 読み取り専用バッジ -->
+        <div style="margin-left:auto;font-size:10px;color:var(--text-3);background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap;">登録済</div>
+      </div>
+    </div>
+
+    <!-- Service categories — SVGアイコン（車関連） -->
+    <div class="sec-label">施工カテゴリ（複数選択可）</div>
+    <div class="service-grid">
+
+      <!-- コーティング（選択済） -->
+      <div class="service-card selected">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div class="svc-icon" style="font-size:0;line-height:0;">
+            <!-- 車ボディ＋輝き：コーティングイメージ -->
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <path d="M4 18l3-7h14l3 7" stroke="var(--blue)" stroke-width="1.8" stroke-linejoin="round"/>
+              <rect x="3" y="18" width="22" height="5" rx="2" fill="rgba(79,142,247,0.2)" stroke="var(--blue)" stroke-width="1.5"/>
+              <circle cx="8" cy="23" r="2" fill="var(--blue)"/>
+              <circle cx="20" cy="23" r="2" fill="var(--blue)"/>
+              <!-- 輝き -->
+              <line x1="14" y1="4" x2="14" y2="7" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="9" y1="6" x2="10.5" y2="8.5" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="19" y1="6" x2="17.5" y2="8.5" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="check-mark"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+        </div>
+        <div class="svc-name">コーティング</div>
+        <div class="svc-en">Coating</div>
+      </div>
+
+      <!-- PPF（選択済） -->
+      <div class="service-card selected">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div class="svc-icon" style="font-size:0;">
+            <!-- 車ボンネット＋フィルム貼り -->
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <path d="M4 18l4-8h12l4 8" stroke="var(--blue)" stroke-width="1.8" stroke-linejoin="round"/>
+              <rect x="3" y="18" width="22" height="4" rx="1.5" fill="rgba(79,142,247,0.2)" stroke="var(--blue)" stroke-width="1.5"/>
+              <!-- フィルム層（半透明オーバーレイ） -->
+              <path d="M6 14h16" stroke="rgba(79,142,247,0.6)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 2"/>
+              <circle cx="8" cy="22" r="2" fill="var(--blue)"/>
+              <circle cx="20" cy="22" r="2" fill="var(--blue)"/>
+            </svg>
+          </div>
+          <div class="check-mark"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+        </div>
+        <div class="svc-name">PPF</div>
+        <div class="svc-en">Paint Protection</div>
+      </div>
+
+      <!-- ウィンドウフィルム（未選択） -->
+      <div class="service-card">
+        <div class="svc-icon" style="font-size:0;">
+          <!-- フロントガラス断面 -->
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M5 20 Q5 10 14 8 Q23 10 23 20Z" stroke="var(--text-3)" stroke-width="1.8" fill="rgba(255,255,255,0.04)"/>
+            <!-- フィルムライン -->
+            <path d="M7 17 Q14 12 21 17" stroke="var(--text-3)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 2"/>
+            <path d="M8 19.5 Q14 15 20 19.5" stroke="var(--text-3)" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="2 2"/>
+          </svg>
+        </div>
+        <div class="svc-name">ウィンドウ</div>
+        <div class="svc-en">Window Film</div>
+      </div>
+
+      <!-- メンテナンス（未選択） -->
+      <div class="service-card">
+        <div class="svc-icon" style="font-size:0;">
+          <!-- スプレーボトル＋スポンジ -->
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="9" y="12" width="8" height="12" rx="2" stroke="var(--text-3)" stroke-width="1.8"/>
+            <path d="M13 12V9h2v-3h4" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="20" cy="6" r="1.5" fill="var(--text-3)"/>
+            <!-- スプレー粒子 -->
+            <circle cx="23" cy="9" r="1" fill="var(--text-3)" opacity=".6"/>
+            <circle cx="24" cy="12" r=".8" fill="var(--text-3)" opacity=".4"/>
+            <circle cx="22" cy="14" r=".7" fill="var(--text-3)" opacity=".3"/>
+          </svg>
+        </div>
+        <div class="svc-name">メンテナンス</div>
+        <div class="svc-en">Maintenance</div>
+      </div>
+
+      <!-- 洗車（未選択） -->
+      <div class="service-card">
+        <div class="svc-icon" style="font-size:0;">
+          <!-- 水滴＋車シルエット -->
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M4 17l3-6h14l3 6" stroke="var(--text-3)" stroke-width="1.8" stroke-linejoin="round"/>
+            <rect x="3" y="17" width="22" height="4" rx="1.5" stroke="var(--text-3)" stroke-width="1.5"/>
+            <circle cx="8" cy="21" r="2" stroke="var(--text-3)" stroke-width="1.5"/>
+            <circle cx="20" cy="21" r="2" stroke="var(--text-3)" stroke-width="1.5"/>
+            <!-- 水滴 -->
+            <path d="M10 5 Q10 10 14 10 Q18 10 18 5 Q16 2 14 2 Q12 2 10 5Z" stroke="var(--text-3)" stroke-width="1.3" fill="rgba(255,255,255,0.05)"/>
+          </svg>
+        </div>
+        <div class="svc-name">洗車</div>
+        <div class="svc-en">Car Wash</div>
+      </div>
+
+      <!-- ルームクリーン（未選択）— 🪑→車内シートSVGに変更 -->
+      <div class="service-card">
+        <div class="svc-icon" style="font-size:0;">
+          <!-- 車内シート断面 -->
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <!-- シートバック -->
+            <rect x="6" y="5" width="10" height="14" rx="3" stroke="var(--text-3)" stroke-width="1.8"/>
+            <!-- シートクッション -->
+            <rect x="5" y="17" width="14" height="5" rx="2" stroke="var(--text-3)" stroke-width="1.8"/>
+            <!-- ヘッドレスト -->
+            <rect x="9" y="3" width="4" height="4" rx="1.5" stroke="var(--text-3)" stroke-width="1.5"/>
+            <!-- レール -->
+            <line x1="5" y1="22" x2="19" y2="22" stroke="var(--text-3)" stroke-width="1" stroke-linecap="round"/>
+            <!-- バキュームブラシ -->
+            <path d="M20 10 L24 6" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="24" cy="6" r="2" stroke="var(--text-3)" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="svc-name">ルームクリーン</div>
+        <div class="svc-en">Room Clean</div>
+      </div>
+
+    </div>
+
+    <!-- Optional items -->
+    <div class="sec-label">オプション下地処理</div>
+    <div class="card">
+      <div class="card-row">
+        <div class="row-body"><div class="row-title">鉄粉除去</div></div>
+        <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="card-row">
+        <div class="row-body"><div class="row-title">コンタミ除去</div></div>
+        <div class="toggle-track off"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="card-row">
+        <div class="row-body"><div class="row-title">ハード研磨</div></div>
+        <div class="toggle-track off"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="card-row">
+        <div class="row-body"><div class="row-title">タッチアップ塗装</div></div>
+        <div class="toggle-track off"><div class="toggle-thumb"></div></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary">選択完了 · 見積編集へ</button>
+    <div class="sp-lg"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 7: ESTIMATE EDITOR
+═══════════════════════════════════════ -->
+<div class="screen-wrap">
+<div class="screen-label">07 · Estimate Editor</div>
+<div class="phone">
+  <div class="status-bar"><span class="time">9:41</span></div>
+  <div class="dynamic-island"></div>
+  <div class="screen">
+    <div class="screen-header">
+      <div class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="header-title">見積編集</div>
+      <div class="header-action">保存</div>
+    </div>
+
+    <!-- Context -->
+    <div class="summary-chip"><span class="chip-icon">👤</span><span class="chip-text">顧客：<strong>田中 太郎</strong> 様</span></div>
+    <div class="summary-chip"><span class="chip-icon">🚗</span><span class="chip-text">車両：<strong>ウラカン EVO</strong> · 大阪300あ1234</span></div>
+
+    <!-- Services -->
+    <div class="sec-label">施工内容</div>
+    <div class="card">
+      <div class="estimate-line">
+        <div>
+          <div class="est-name">Q²MOHS+ / Lサイズ</div>
+          <div class="est-sub">コーティング · Certified</div>
+        </div>
+        <div class="est-price">¥180,000</div>
+      </div>
+      <div class="estimate-line">
+        <div>
+          <div class="est-name">Q²TOPCOAT / Lサイズ</div>
+          <div class="est-sub">トップコート</div>
+        </div>
+        <div class="est-price">¥35,000</div>
+      </div>
+      <div class="estimate-line">
+        <div>
+          <div class="est-name">PPF フルラップ</div>
+          <div class="est-sub">ペイントプロテクション</div>
+        </div>
+        <div class="est-price">¥280,000</div>
+      </div>
+      <div class="estimate-line">
+        <div>
+          <div class="est-name">鉄粉除去</div>
+          <div class="est-sub">下地処理オプション</div>
+        </div>
+        <div class="est-price">¥15,000</div>
+      </div>
+    </div>
+
+    <!-- Discount -->
+    <div class="sec-label">値引き</div>
+    <div class="card">
+      <div class="estimate-line">
+        <div class="est-name">クーポン割引</div>
+        <div class="est-price" style="color:var(--red);">-¥5,000</div>
+      </div>
+    </div>
+
+    <!-- Totals -->
+    <div class="sec-label">金額</div>
+    <div class="total-area">
+      <div class="total-row"><span>小計</span><span>¥505,000</span></div>
+      <div class="total-row"><span>値引き</span><span style="color:var(--red);">-¥5,000</span></div>
+      <div class="total-row"><span>消費税（10%）</span><span>¥50,000</span></div>
+      <div class="total-row grand"><span>合計</span><span class="amount">¥550,000</span></div>
+    </div>
+
+    <!-- Memo -->
+    <div class="field-group"><div class="field-label">お客様へのメモ</div><div class="field-input" style="color:var(--text-3);">施工に関するご連絡事項…</div></div>
+    <div class="field-group"><div class="field-label">社内メモ（非公開）</div><div class="field-input" style="color:var(--text-3);">スタッフ向け連絡事項…</div></div>
+
+    <button class="btn btn-primary">📄 PDFプレビューへ</button>
+    <button class="btn btn-secondary">下書き保存</button>
+    <div class="sp-lg"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 8: PDF PREVIEW
+═══════════════════════════════════════ -->
+<div class="screen-wrap">
+<div class="screen-label">08 · PDF Preview</div>
+<div class="phone">
+  <div class="status-bar"><span class="time">9:41</span></div>
+  <div class="dynamic-island"></div>
+  <div class="screen">
+    <div class="screen-header">
+      <div class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="header-title">PDFプレビュー</div>
+    </div>
+
+    <!-- PDF Preview -->
+    <div class="pdf-preview-area">
+      <div class="pdf-header">
+        <div class="logo-text">GYEON®</div>
+        <div style="font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,0.5);">ESTIMATE</div>
+      </div>
+      <div class="pdf-body">
+        <div class="pdf-title">御見積書</div>
+        <div class="pdf-info-row"><span>見積番号</span><span>EST-2026-089</span></div>
+        <div class="pdf-info-row"><span>発行日</span><span>2026年6月27日</span></div>
+        <div class="pdf-info-row"><span>有効期限</span><span>2026年7月27日</span></div>
+        <div class="pdf-divider"></div>
+        <div class="pdf-info-row"><span>お客様</span><span style="font-weight:700;">田中 太郎 様</span></div>
+        <div class="pdf-info-row"><span>車両</span><span>ウラカン EVO</span></div>
+        <div class="pdf-divider"></div>
+        <div class="pdf-item-row"><span>Q²MOHS+ / Lサイズ</span><span>¥180,000</span></div>
+        <div class="pdf-item-row"><span>Q²TOPCOAT / Lサイズ</span><span>¥35,000</span></div>
+        <div class="pdf-item-row"><span>PPF フルラップ</span><span>¥280,000</span></div>
+        <div class="pdf-item-row"><span>鉄粉除去</span><span>¥15,000</span></div>
+        <div class="pdf-item-row" style="color:#888;"><span>クーポン割引</span><span>-¥5,000</span></div>
+        <div class="pdf-divider"></div>
+        <div class="pdf-item-row" style="color:#666;"><span>消費税</span><span>¥50,000</span></div>
+        <div class="pdf-total"><span>合計金額</span><span>¥550,000</span></div>
+      </div>
+    </div>
+
+    <div class="sp"></div>
+    <button class="btn btn-primary">💾 PDFを保存</button>
+    <button class="btn btn-secondary">📤 共有・送信</button>
+    <button class="btn btn-ghost">🔧 作業指示書に変換</button>
+    <div class="sp-lg"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 9: WORK ORDER
+═══════════════════════════════════════ -->
+<div class="screen-wrap">
+<div class="screen-label">09 · Work Order</div>
+<div class="phone">
+  <div class="status-bar"><span class="time">9:41</span></div>
+  <div class="dynamic-island"></div>
+  <div class="screen">
+    <div class="screen-header">
+      <div class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="header-title">作業指示書</div>
+      <div class="header-action">編集</div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-bar-work">
+      <div class="status-chip">受付</div>
+      <div class="status-chip active">施工中</div>
+      <div class="status-chip">完了確認</div>
+      <div class="status-chip">引渡済</div>
+    </div>
+
+    <!-- Info -->
+    <div class="summary-chip"><span class="chip-icon">👤</span><span class="chip-text">顧客：<strong>田中 太郎</strong> 様</span></div>
+    <div class="summary-chip"><span class="chip-icon">🚗</span><span class="chip-text">車両：<strong>ウラカン EVO</strong></span></div>
+    <div class="summary-chip"><span class="chip-icon">📋</span><span class="chip-text">見積：<strong>EST-2026-089</strong></span></div>
+
+    <!-- Work details -->
+    <div class="sec-label">施工内容</div>
+    <div class="card">
+      <div class="card-row">
+        <div class="row-icon" style="background:var(--blue-dim);">✨</div>
+        <div class="row-body">
+          <div class="row-title">Q²MOHS+ コーティング</div>
+          <div class="row-sub">Lサイズ · Certified施工</div>
+        </div>
+        <span class="badge badge-amber">作業中</span>
+      </div>
+      <div class="card-row">
+        <div class="row-icon" style="background:rgba(34,197,94,0.1);">🛡️</div>
+        <div class="row-body">
+          <div class="row-title">PPF フルラップ</div>
+          <div class="row-sub">ペイントプロテクション</div>
+        </div>
+        <span class="badge badge-green">完了</span>
+      </div>
+    </div>
+
+    <!-- Products used -->
+    <div class="sec-label">使用製品</div>
+    <div class="card">
+      <div class="estimate-line">
+        <div class="est-name">Q²MOHS+</div>
+        <div class="est-sub">30ml使用</div>
+      </div>
+      <div class="estimate-line">
+        <div class="est-name">Q²PREP</div>
+        <div class="est-sub">脱脂処理用</div>
+      </div>
+    </div>
+
+    <!-- Schedule -->
+    <div class="field-group"><div class="field-label">施工予定日</div><div class="field-input filled">2026年6月28日（土）</div></div>
+    <div class="field-group"><div class="field-label">スタッフメモ</div><div class="field-input">フロントバンパーの小傷を事前確認済み</div></div>
+
+    <button class="btn btn-primary">✅ 完了報告書を作成</button>
+    <div class="sp-lg"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 10: COMPLETION REPORT
+═══════════════════════════════════════ -->
+<div class="screen-wrap">
+<div class="screen-label">10 · Completion Report</div>
+<div class="phone">
+  <div class="status-bar"><span class="time">9:41</span></div>
+  <div class="dynamic-island"></div>
+  <div class="screen">
+    <div class="screen-header">
+      <div class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="header-title">施工完了報告書</div>
+    </div>
+
+    <div class="summary-chip"><span class="chip-icon">👤</span><span class="chip-text"><strong>田中 太郎</strong> 様 · ウラカン EVO</span></div>
+
+    <!-- Completed services -->
+    <div class="sec-label">施工完了項目</div>
+    <div class="card">
+      <div class="card-row">
+        <div class="row-icon" style="background:rgba(34,197,94,0.1);">✅</div>
+        <div class="row-body"><div class="row-title">Q²MOHS+ コーティング</div><div class="row-sub">施工日：2026年6月28日</div></div>
+      </div>
+      <div class="card-row">
+        <div class="row-icon" style="background:rgba(34,197,94,0.1);">✅</div>
+        <div class="row-body"><div class="row-title">PPF フルラップ</div><div class="row-sub">施工日：2026年6月28日</div></div>
+      </div>
+      <div class="card-row">
+        <div class="row-icon" style="background:rgba(34,197,94,0.1);">✅</div>
+        <div class="row-body"><div class="row-title">鉄粉除去</div><div class="row-sub">施工日：2026年6月28日</div></div>
+      </div>
+    </div>
+
+    <!-- Photos -->
+    <div class="sec-label">施工写真</div>
+    <div class="photo-grid">
+      <div class="photo-slot">📷</div>
+      <div class="photo-slot">📷</div>
+      <div class="photo-slot">📷</div>
+      <div class="photo-slot" style="background:var(--blue-dim);border-color:var(--blue);font-size:14px;color:var(--blue);">+ 追加</div>
+      <div class="photo-slot"></div>
+      <div class="photo-slot"></div>
+    </div>
+
+    <!-- Maintenance recommendation -->
+    <div class="sec-label">メンテナンス推奨</div>
+    <div class="card">
+      <div class="toggle-row">
+        <div><div style="font-size:14px;font-weight:600;color:var(--text);">6ヶ月メンテナンス</div><div style="font-size:12px;color:var(--text-2);">2026年12月28日</div></div>
+        <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div><div style="font-size:14px;font-weight:600;color:var(--text);">12ヶ月メンテナンス</div><div style="font-size:12px;color:var(--text-2);">2027年6月28日</div></div>
+        <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary">📄 完了報告書PDFを生成</button>
+    <button class="btn btn-secondary">🔔 リマインダーを設定</button>
+    <div class="sp-lg"></div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 11: MAINTENANCE REMINDER
+═══════════════════════════════════════ -->
+<div class="screen-wrap">
+<div class="screen-label">11 · Maintenance Reminder</div>
+<div class="phone">
+  <div class="status-bar"><span class="time">9:41</span></div>
+  <div class="dynamic-island"></div>
+  <div class="screen">
+    <div class="screen-header">
+      <div class="back-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></div>
+      <div class="header-title">メンテナンスリマインダー</div>
+    </div>
+
+    <div class="summary-chip"><span class="chip-icon">👤</span><span class="chip-text"><strong>田中 太郎</strong> 様 · ウラカン EVO</span></div>
+
+    <!-- 6-month -->
+    <div class="reminder-card">
+      <div class="reminder-header">
+        <div class="reminder-title">6ヶ月メンテナンス</div>
+        <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="reminder-body">
+        <div class="reminder-date">通知予定：<strong>2026年12月28日</strong></div>
+        <div class="field-group" style="margin:0 0 10px;">
+          <div class="field-label">LINEメッセージ</div>
+          <div class="field-input" style="font-size:13px;min-height:70px;">田中様、コーティング施工から6ヶ月が経過します。メンテナンスのご予約はいかがでしょうか？</div>
+        </div>
+        <button class="btn btn-ghost btn-sm">📱 LINE送信プレビュー</button>
+      </div>
+    </div>
+
+    <!-- 12-month -->
+    <div class="reminder-card">
+      <div class="reminder-header">
+        <div class="reminder-title">12ヶ月メンテナンス</div>
+        <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="reminder-body">
+        <div class="reminder-date">通知予定：<strong>2027年6月28日</strong></div>
+        <div class="field-group" style="margin:0 0 10px;">
+          <div class="field-label">LINEメッセージ</div>
+          <div class="field-input" style="font-size:13px;min-height:70px;">田中様、コーティング施工から1年が経過します。年次メンテナンスのご予約をお待ちしております。</div>
+        </div>
+        <button class="btn btn-ghost btn-sm">📱 LINE送信プレビュー</button>
+      </div>
+    </div>
+
+    <!-- Manual -->
+    <div class="sec-label">手動リマインダー追加</div>
+    <div class="card">
+      <div class="card-row">
+        <div class="row-body"><div class="field-label">通知日を指定</div><div class="field-input" style="margin-top:6px;font-size:14px;color:var(--text-3);">日付を選択</div></div>
+      </div>
+    </div>
+
+    <!-- LINE status -->
+    <div class="sec-label">LINE連携状況</div>
+    <div class="card">
+      <div class="card-row">
+        <div class="row-icon" style="background:rgba(34,197,94,0.1);font-size:18px;">💬</div>
+        <div class="row-body">
+          <div class="row-title">LINE連携済み</div>
+          <div class="row-sub">@tanaka_taro · 通知有効</div>
+        </div>
+        <span class="badge badge-green">連携中</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary">🔔 リマインダーを保存</button>
+    <button class="btn btn-secondary">💬 今すぐLINE送信</button>
+    <div class="sp-lg"></div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h5v-5h4v5h5V10"/></svg>ホーム</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>顧客</div>
+    <div class="nav-item"><div class="nav-fab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></div></div>
+    <div class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v4M16 4v4"/></svg>予定</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1-.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>設定</div>
+  </div>
+</div>
+</div>
+
+</div><!-- /screens-grid -->
+</body>
+</html>
