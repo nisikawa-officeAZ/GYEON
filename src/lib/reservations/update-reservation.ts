@@ -28,6 +28,28 @@ export async function updateReservation(
 
   const supabase = await createClient();
 
+  // Validate customer ownership if being changed
+  if (input.customer_id) {
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("id", input.customer_id)
+      .eq("dealer_id", dealer.dealer_id)
+      .maybeSingle();
+    if (!customer) return { success: false, error: "顧客が見つかりません" };
+  }
+
+  // Validate vehicle ownership if being changed
+  if (input.vehicle_id) {
+    const { data: vehicle } = await supabase
+      .from("vehicles")
+      .select("id")
+      .eq("id", input.vehicle_id)
+      .eq("dealer_id", dealer.dealer_id)
+      .maybeSingle();
+    if (!vehicle) return { success: false, error: "車両が見つかりません" };
+  }
+
   const { data, error } = await supabase
     .from("reservations")
     .update({

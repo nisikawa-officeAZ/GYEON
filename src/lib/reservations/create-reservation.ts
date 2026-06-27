@@ -28,6 +28,28 @@ export async function createReservation(
   const supabase = await createClient();
   const did = dealer.dealer_id;
 
+  // Validate customer ownership
+  if (input.customer_id) {
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("id", input.customer_id)
+      .eq("dealer_id", did)
+      .maybeSingle();
+    if (!customer) return { success: false, error: "顧客が見つかりません" };
+  }
+
+  // Validate vehicle ownership
+  if (input.vehicle_id) {
+    const { data: vehicle } = await supabase
+      .from("vehicles")
+      .select("id")
+      .eq("id", input.vehicle_id)
+      .eq("dealer_id", did)
+      .maybeSingle();
+    if (!vehicle) return { success: false, error: "車両が見つかりません" };
+  }
+
   const reservation_number = await getNextDocumentNumber("reservation");
 
   const { data, error } = await supabase
