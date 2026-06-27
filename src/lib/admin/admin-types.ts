@@ -1,4 +1,8 @@
-export type AdminRole = "super_admin";
+// Re-export from admin-roles for backward compatibility.
+// admin_users.role DB constraint currently only allows 'super_admin';
+// gyeon_admin and logistics_admin require a future migration to the constraint.
+import type { AdminRole as _AdminRole } from "@/lib/admin/admin-roles";
+export type { AdminRole } from "@/lib/admin/admin-roles";
 export type AdminStatus = "active" | "disabled";
 
 export interface AdminUserDB {
@@ -6,7 +10,7 @@ export interface AdminUserDB {
   user_id: string;
   email: string | null;
   name: string | null;
-  role: AdminRole;
+  role: _AdminRole;
   status: AdminStatus;
   created_at: string;
   updated_at: string;
