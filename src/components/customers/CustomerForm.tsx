@@ -34,22 +34,7 @@ const EMPTY: FormFields = {
   notes: "", line_user_id: "",
 };
 
-// Parse business metadata from occupation/notes (backward compatible with wizard encoding)
-function parseBusinessInfo(c: CustomerDB) {
-  const isBusiness   = (c.occupation ?? "").includes("業者");
-  const rateMatch    = (c.notes ?? "").match(/業販掛け率:\s*(\d+)%/);
-  const dealerRate   = rateMatch ? parseInt(rateMatch[1], 10) : 70;
-  const termsMatch   = (c.notes ?? "").match(/与信条件:\s*([^\n]+)/);
-  const creditTerms  = termsMatch ? termsMatch[1].trim() : "";
-  const cleanNotes   = (c.notes ?? "")
-    .replace(/業販掛け率:\s*\d+%\n?/, "")
-    .replace(/与信条件:\s*[^\n]+\n?/, "")
-    .trim();
-  return { isBusiness, dealerRate, creditTerms, cleanNotes };
-}
-
 function fromDB(c: CustomerDB): FormFields {
-  const { cleanNotes } = parseBusinessInfo(c);
   return {
     customer_code:   c.customer_code   ?? "",
     last_name:       c.last_name        ?? "",
@@ -65,8 +50,8 @@ function fromDB(c: CustomerDB): FormFields {
     address2:        c.address2         ?? "",
     birthday:        c.birthday         ?? "",
     gender:          c.gender           ?? "",
-    occupation:      (c.occupation ?? "").includes("業者") ? "" : (c.occupation ?? ""),
-    notes:           cleanNotes,
+    occupation:      c.occupation       ?? "",
+    notes:           c.notes            ?? "",
     line_user_id:    c.line_user_id     ?? "",
   };
 }
@@ -79,11 +64,11 @@ interface CustomerFormProps {
 
 export default function CustomerForm({ customer, onCancel, onSuccess }: CustomerFormProps) {
   const isEdit = !!customer;
-  const parsed = customer ? parseBusinessInfo(customer) : null;
   const [form,        setForm]        = useState<FormFields>(customer ? fromDB(customer) : EMPTY);
-  const [isBusiness,  setIsBusiness]  = useState(parsed?.isBusiness ?? false);
-  const [dealerRate,  setDealerRate]  = useState(parsed?.dealerRate ?? 70);
-  const [creditTerms, setCreditTerms] = useState(parsed?.creditTerms ?? "");
+  // Business customer fields — stored in DB columns (migration 073)
+  const [isBusiness,  setIsBusiness]  = useState(customer?.is_business ?? false);
+  const [dealerRate,  setDealerRate]  = useState(customer?.trade_discount_pct ?? 70);
+  const [creditTerms, setCreditTerms] = useState(customer?.credit_terms ?? "");
   const [showExtra,   setShowExtra]   = useState(false);
   const [error,       setError]       = useState<string | null>(null);
   const [pending, startTransition]    = useTransition();
@@ -97,23 +82,12 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
     setError(null);
 
     const fd = new FormData();
-
-    // Encode business info into occupation and notes (same convention as EstimateWizard)
-    const encodedOccupation = isBusiness ? "業者" : form.occupation;
-    const metaLines: string[] = [];
-    if (isBusiness) {
-      metaLines.push(`業販掛け率: ${dealerRate}%`);
-      if (creditTerms.trim()) metaLines.push(`与信条件: ${creditTerms.trim()}`);
-    }
-    const encodedNotes = metaLines.length > 0
-      ? [...metaLines, form.notes].filter(Boolean).join("\n")
-      : form.notes;
-
-    (Object.keys(form) as (keyof FormFields)[]).forEach((k) => {
-      if (k === "occupation") fd.set(k, encodedOccupation);
-      else if (k === "notes") fd.set(k, encodedNotes);
-      else fd.set(k, form[k]);
-    });
+    // Core form fields
+    (Object.keys(form) as (keyof FormFields)[]).forEach((k) => fd.set(k, form[k]));
+    // Business customer fields — direct DB persistence (migration 073)
+    fd.set("is_business",        isBusiness ? "true" : "false");
+    fd.set("trade_discount_pct", isBusiness ? String(dealerRate) : "0");
+    fd.set("credit_terms",       isBusiness ? creditTerms : "");
 
     startTransition(async () => {
       const result = isEdit && customer

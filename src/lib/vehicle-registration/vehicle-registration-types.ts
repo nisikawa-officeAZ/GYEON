@@ -97,8 +97,10 @@ export const OCR_TO_VEHICLE_MAP: Partial<Record<keyof VehicleRegistrationOcrResu
   maker:                   "maker",
   model_code:              "model_code",
   chassis_number:          "chassis_number",
-  first_registration_date: "first_registration_date",
+  first_registration_date: "registration_date",   // maps to vehicles.registration_date (migration 073)
   inspection_expiry_date:  "inspection_expiry_date",
+  fuel_type:               "fuel_type",            // maps to vehicles.fuel_type (migration 073)
+  displacement:            "displacement",         // maps to vehicles.displacement (migration 073)
 };
 
 // Human-readable labels for each OCR field

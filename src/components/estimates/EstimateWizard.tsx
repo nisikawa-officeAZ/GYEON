@@ -236,6 +236,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   const [nv, setNv] = useState({
     maker: "", model: "", grade: "", vehicle_code: "", year: "", color: "", plate_number: "", vin: "",
     inspection_expiry_date: "",
+    displacement: "", fuel_type: "", registration_date: "",
   });
 
   const custVehicles = vehicles.filter(v => v.customer_id === customerId);
@@ -245,12 +246,20 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
     if (screen === "step2" && ocrVehicle && vMode === "create") {
       setNv(p => {
         const u = { ...p };
-        if (ocrVehicle.maker)                   u.maker        = ocrVehicle.maker;
-        if (ocrVehicle.vehicle_name)            u.model        = ocrVehicle.vehicle_name;
-        if (ocrVehicle.model)                   u.vehicle_code = ocrVehicle.model;
-        if (ocrVehicle.chassis_number)          u.vin          = ocrVehicle.chassis_number;
-        if (ocrVehicle.color)                   u.color        = ocrVehicle.color;
-        if (ocrVehicle.first_registration_date) u.year         = ocrVehicle.first_registration_date.slice(0, 4);
+        if (ocrVehicle.maker)                   u.maker             = ocrVehicle.maker;
+        if (ocrVehicle.vehicle_name)            u.model             = ocrVehicle.vehicle_name;
+        if (ocrVehicle.model)                   u.vehicle_code      = ocrVehicle.model;
+        if (ocrVehicle.chassis_number)          u.vin               = ocrVehicle.chassis_number;
+        if (ocrVehicle.color)                   u.color             = ocrVehicle.color;
+        if (ocrVehicle.displacement)            u.displacement      = ocrVehicle.displacement;
+        if (ocrVehicle.fuel_type)               u.fuel_type         = ocrVehicle.fuel_type;
+        if (ocrVehicle.first_registration_date) {
+          u.year              = ocrVehicle.first_registration_date.slice(0, 4);
+          // Convert YYYY-MM to YYYY-MM-01 for the date column
+          u.registration_date = ocrVehicle.first_registration_date.length === 7
+            ? ocrVehicle.first_registration_date + "-01"
+            : ocrVehicle.first_registration_date;
+        }
         const plate = [
           ocrVehicle.license_plate_region, ocrVehicle.license_plate_class,
           ocrVehicle.license_plate_kana,   ocrVehicle.license_plate_number,
@@ -418,8 +427,8 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       fd.set("email",           nc.email);
       fd.set("line_user_id",    nc.line_user_id);
       fd.set("address1",        nc.address);
-      fd.set("occupation",      isDealer ? "業者" : "");
-      fd.set("notes",           isDealer ? `業販掛け率: ${dealerRate}%` : "");
+      fd.set("is_business",        isDealer ? "true" : "false");
+      fd.set("trade_discount_pct", isDealer ? String(dealerRate) : "0");
       const r = await createCustomer(fd);
       if ("error" in r) { setError(r.error ?? "顧客の作成に失敗しました"); return; }
       const cid = "customerId" in r ? r.customerId : undefined;
@@ -458,6 +467,9 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
         fd.set("vin",                    nv.vin);
         fd.set("body_size",              sizeKey);
         fd.set("inspection_expiry_date", nv.inspection_expiry_date);
+        fd.set("displacement",           nv.displacement);
+        fd.set("fuel_type",              nv.fuel_type);
+        fd.set("registration_date",      nv.registration_date);
         const r = await createVehicle(fd);
         if ("error" in r) { setError(r.error ?? "車両の作成に失敗しました"); return; }
         const vid = "vehicleId" in r ? r.vehicleId : undefined;
@@ -491,6 +503,9 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
         vfd.set("vin",                    nv.vin);
         vfd.set("body_size",              sizeKey);
         vfd.set("inspection_expiry_date", nv.inspection_expiry_date);
+        vfd.set("displacement",           nv.displacement);
+        vfd.set("fuel_type",              nv.fuel_type);
+        vfd.set("registration_date",      nv.registration_date);
         const vr = await createVehicle(vfd);
         if ("error" in vr) { setError(vr.error ?? "車両の作成に失敗しました"); return; }
         const vid = "vehicleId" in vr ? vr.vehicleId : undefined;
@@ -582,7 +597,19 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
                         const cv   = vehicles.filter(v => v.customer_id === c.id);
                         return (
                           <button key={c.id} type="button"
-                            onClick={() => { setCustomerId(c.id); setCustLabel(name); setVehicleId(""); }}
+                            onClick={() => {
+                              setCustomerId(c.id);
+                              setCustLabel(name);
+                              setVehicleId("");
+                              // Apply business customer discount from DB (migration 073)
+                              if (c.is_business) {
+                                setIsDealer(true);
+                                setDealerRate(c.trade_discount_pct ?? 70);
+                              } else {
+                                setIsDealer(false);
+                                setDealerRate(70);
+                              }
+                            }}
                             className={`w-full text-left px-4 py-3 border-t border-slate-700/40 first:border-t-0 transition-colors ${customerId === c.id ? "bg-blue-950/30" : "hover:bg-slate-800/40"}`}>
                             <p className="text-sm text-slate-200">{name}</p>
                             {c.phone && <p className="text-xs text-slate-500">{c.phone}</p>}

@@ -20,13 +20,20 @@ interface FormFields {
   mileage:                string;
   inspection_expiry_date: string;
   notes:                  string;
+  // Added in migration 073
+  displacement:           string;
+  fuel_type:              string;
+  registration_date:      string;
 }
 
 const EMPTY: FormFields = {
   customer_id: "", vehicle_code: "", maker: "", model: "",
   grade: "", year: "", body_size: "", color: "",
   plate_number: "", vin: "", mileage: "", inspection_expiry_date: "", notes: "",
+  displacement: "", fuel_type: "", registration_date: "",
 };
+
+const FUEL_TYPES = ["ガソリン", "ディーゼル", "ハイブリッド", "プラグインハイブリッド", "電気 (BEV)", "水素"];
 
 function fromDB(v: VehicleDB): FormFields {
   return {
@@ -43,6 +50,9 @@ function fromDB(v: VehicleDB): FormFields {
     mileage:                v.mileage != null ? String(v.mileage) : "",
     inspection_expiry_date: v.inspection_expiry_date   ?? "",
     notes:                  v.notes                    ?? "",
+    displacement:           v.displacement             ?? "",
+    fuel_type:              v.fuel_type                ?? "",
+    registration_date:      v.registration_date        ?? "",
   };
 }
 
@@ -184,8 +194,30 @@ export default function VehicleForm({ vehicle, customers, onCancel, onSuccess }:
         {field("走行距離 (km)",  "mileage", { type: "number", placeholder: "15000" })}
       </div>
 
-      {/* 車検満了日 */}
-      {field("車検満了日", "inspection_expiry_date", { type: "date" })}
+      {/* 排気量・燃料種類 (migration 073) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {field("排気量", "displacement", { placeholder: "1998cc" })}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-slate-400">燃料種類</label>
+          <select
+            name="fuel_type"
+            value={form.fuel_type}
+            onChange={(e) => set("fuel_type", e.target.value)}
+            className={inputClass}
+          >
+            <option value="">選択なし</option>
+            {FUEL_TYPES.map((ft) => (
+              <option key={ft} value={ft}>{ft}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* 初年度登録・車検満了日 (registration_date added in migration 073) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {field("初年度登録", "registration_date", { type: "date" })}
+        {field("車検満了日", "inspection_expiry_date", { type: "date" })}
+      </div>
 
       {/* メモ */}
       <div className="flex flex-col gap-1">

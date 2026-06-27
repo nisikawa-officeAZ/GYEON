@@ -61,6 +61,10 @@ export async function updateVehicle(vehicleId: string, formData: FormData) {
       mileage:                num(formData, "mileage"),
       inspection_expiry_date: str(formData, "inspection_expiry_date") || null,
       notes:                  str(formData, "notes"),
+      // Added in migration 073
+      displacement:           str(formData, "displacement"),
+      fuel_type:              str(formData, "fuel_type"),
+      registration_date:      str(formData, "registration_date") || null,
       updated_at:             new Date().toISOString(),
     })
     .eq("id",        vehicleId)

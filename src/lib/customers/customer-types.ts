@@ -1,6 +1,7 @@
-// DealerOS — Customer Types (Supabase schema aligned — PHASE36)
-// Column names match the new customers table schema (snake_case).
-// Legacy columns (name, kana, address, memo, line_id) exist in DB but are not used by the app.
+// DealerOS — Customer Types (Supabase schema aligned — RC-08)
+// Column names match the customers table schema (snake_case).
+// Migration 073_detailer_core_missing_fields.sql adds:
+//   is_business, trade_discount_pct, credit_terms
 
 export interface CustomerDB {
   id:               string;
@@ -25,6 +26,10 @@ export interface CustomerDB {
   line_display_name: string | null;
   line_picture_url:  string | null;
   line_connected:   boolean;
+  // Business customer fields — added in migration 073
+  is_business:        boolean;
+  trade_discount_pct: number;
+  credit_terms:       string | null;
   deleted_at:       string | null;
   created_at:       string;
   updated_at:       string;
@@ -42,24 +47,28 @@ export function customerKanaName(c: Pick<CustomerDB, "last_name_kana" | "first_n
 
 // Fields accepted on INSERT — dealer_id is injected server-side, never from client.
 export type CustomerInsert = {
-  customer_code?:    string | null;
-  last_name:         string;
-  first_name?:       string | null;
-  last_name_kana?:   string | null;
-  first_name_kana?:  string | null;
-  phone?:            string | null;
-  email?:            string | null;
-  postal_code?:      string | null;
-  prefecture?:       string | null;
-  city?:             string | null;
-  address1?:         string | null;
-  address2?:         string | null;
-  birthday?:         string | null;
-  gender?:           string | null;
-  occupation?:       string | null;
-  notes?:            string | null;
-  line_user_id?:     string | null;
-  dealer_id:         string;   // Required — always set server-side
+  customer_code?:     string | null;
+  last_name:          string;
+  first_name?:        string | null;
+  last_name_kana?:    string | null;
+  first_name_kana?:   string | null;
+  phone?:             string | null;
+  email?:             string | null;
+  postal_code?:       string | null;
+  prefecture?:        string | null;
+  city?:              string | null;
+  address1?:          string | null;
+  address2?:          string | null;
+  birthday?:          string | null;
+  gender?:            string | null;
+  occupation?:        string | null;
+  notes?:             string | null;
+  line_user_id?:      string | null;
+  // Business customer fields
+  is_business?:        boolean;
+  trade_discount_pct?: number;
+  credit_terms?:       string | null;
+  dealer_id:          string;   // Required — always set server-side
 };
 
 // Fields accepted on UPDATE — id and dealer_id are used as scope, not changed.
