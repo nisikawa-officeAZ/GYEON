@@ -1,3 +1,4 @@
+import MainLayout from "@/components/layout/MainLayout";
 import { getProductsWithStock } from "@/lib/inventory/inventory-actions";
 import { getGyeonProductCategories } from "@/lib/products/get-gyeon-products";
 import InventoryClient from "./InventoryClient";
@@ -11,8 +12,10 @@ export default async function InventoryPage() {
   ]);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <InventoryClient initialItems={items} categories={categories} />
-    </div>
+    <MainLayout>
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <InventoryClient initialItems={items} categories={categories} />
+      </div>
+    </MainLayout>
   );
 }
