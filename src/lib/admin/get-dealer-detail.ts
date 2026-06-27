@@ -110,7 +110,7 @@ export async function getDealerDetail(
     supabase.from("estimates")   .select("id", { count: "exact", head: true }).eq("dealer_id", dealerId),
     supabase.from("customers")   .select("id", { count: "exact", head: true }).eq("dealer_id", dealerId),
     supabase.from("vehicles")    .select("id", { count: "exact", head: true }).eq("dealer_id", dealerId),
-    supabase.from("ocr_sessions").select("id", { count: "exact", head: true }).eq("dealer_id", dealerId),
+    supabase.from("vehicle_registration_ocr_sessions").select("id", { count: "exact", head: true }).eq("dealer_id", dealerId),
     supabase.from("admin_audit_logs").select("*")
       .eq("target_dealer_id", dealerId)
       .order("created_at", { ascending: false })
