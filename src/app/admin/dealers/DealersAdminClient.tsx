@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useMemo } from "react";
 import { approveDealerTrial, rejectDealer, suspendDealer, reactivateDealer } from "@/lib/admin/approve-dealer";
+import DealerDetailPanel from "./DealerDetailPanel";
 import type { DealerAdminView } from "@/lib/admin/admin-types";
 
 type StatusFilter = "all" | "pending" | "approved" | "rejected" | "suspended";
@@ -531,9 +532,12 @@ function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: ()
 
 interface Props {
   dealers: DealerAdminView[];
+  callerRole: string;
 }
 
-export default function DealersAdminClient({ dealers: initial }: Props) {
+export default function DealersAdminClient({ dealers: initial, callerRole }: Props) {
+  const isReadOnly = callerRole === "logistics_admin";
+
   const [dealers,      setDealers]      = useState<DealerAdminView[]>(initial);
   const [search,       setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -878,7 +882,7 @@ export default function DealersAdminClient({ dealers: initial }: Props) {
                       {/* Actions */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 flex-wrap">
-                          {/* Detail button — always */}
+                          {/* Detail button — always (opens panel in read-only for logistics_admin) */}
                           <button
                             onClick={() => setModal({ type: "detail", dealer })}
                             className="text-[10px] px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors"
@@ -886,8 +890,8 @@ export default function DealersAdminClient({ dealers: initial }: Props) {
                             詳細
                           </button>
 
-                          {/* Pending → Approve + Reject */}
-                          {isPending_ && (
+                          {/* Pending → Approve + Reject (super_admin + gyeon_admin only) */}
+                          {isPending_ && !isReadOnly && (
                             <>
                               <button
                                 onClick={() => setModal({ type: "approve", dealer })}
@@ -906,8 +910,8 @@ export default function DealersAdminClient({ dealers: initial }: Props) {
                             </>
                           )}
 
-                          {/* Approved → Suspend */}
-                          {st === "approved" && (
+                          {/* Approved → Suspend (super_admin + gyeon_admin only) */}
+                          {st === "approved" && !isReadOnly && (
                             <button
                               onClick={() => setModal({ type: "suspend", dealer })}
                               disabled={isPending}
@@ -917,8 +921,8 @@ export default function DealersAdminClient({ dealers: initial }: Props) {
                             </button>
                           )}
 
-                          {/* Suspended → Re-activate */}
-                          {st === "suspended" && (
+                          {/* Suspended → Re-activate (super_admin + gyeon_admin only) */}
+                          {st === "suspended" && !isReadOnly && (
                             <button
                               onClick={() => handleReactivate(dealer)}
                               disabled={isPending}
@@ -964,9 +968,15 @@ export default function DealersAdminClient({ dealers: initial }: Props) {
         />
       )}
       {modal.type === "detail" && (
-        <DetailModal
+        <DealerDetailPanel
           dealer={modal.dealer}
+          callerRole={callerRole}
           onClose={() => setModal({ type: "none" })}
+          onDealerUpdate={(dealerId, update) => {
+            setDealers((prev) =>
+              prev.map((d) => d.id === dealerId ? { ...d, ...update } : d)
+            );
+          }}
         />
       )}
     </div>

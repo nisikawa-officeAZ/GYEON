@@ -10,9 +10,7 @@ export default async function AdminDealersPage() {
   const caller = await getCurrentAdmin();
   if (!caller) redirect("/login");
 
-  // Logistics Admin must not access this module
-  if (caller.role === "logistics_admin") redirect("/admin/dashboard");
-
+  // logistics_admin has read-only access (no action buttons rendered in client)
   const dealers = await getDealersAdmin();
-  return <DealersAdminClient dealers={dealers} />;
+  return <DealersAdminClient dealers={dealers} callerRole={caller.role} />;
 }
