@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link        from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { createPendingDealer } from "@/lib/dealer/create-pending-dealer";
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -20,15 +21,21 @@ function passwordError(pw: string, confirm: string): string | null {
 export default function SignUpPage() {
   const router = useRouter();
 
-  const [email,    setEmail]    = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm,  setConfirm]  = useState("");
-  const [error,    setError]    = useState<string | null>(null);
-  const [loading,  setLoading]  = useState(false);
+  const [businessName, setBusinessName] = useState("");
+  const [email,        setEmail]        = useState("");
+  const [password,     setPassword]     = useState("");
+  const [confirm,      setConfirm]      = useState("");
+  const [error,        setError]        = useState<string | null>(null);
+  const [loading,      setLoading]      = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!businessName.trim()) {
+      setError("店舗名を入力してください。");
+      return;
+    }
 
     const pwErr = passwordError(password, confirm);
     if (pwErr) { setError(pwErr); return; }
@@ -46,7 +53,6 @@ export default function SignUpPage() {
       });
 
       if (signUpError) {
-        // Map Supabase English errors to Japanese
         const msg = signUpError.message.toLowerCase();
         if (msg.includes("already registered") || msg.includes("already exists")) {
           setError("このメールアドレスはすでに登録されています。ログイン画面からサインインしてください。");
@@ -60,15 +66,29 @@ export default function SignUpPage() {
         return;
       }
 
-      // Supabase returns identities[] empty when email already exists but
-      // email confirmation is on — treat that as "already registered"
       if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
         setError("このメールアドレスはすでに登録されています。ログイン画面からサインインしてください。");
         return;
       }
 
-      // Success — go to pending page
-      const needsConfirmation = !data.session; // session is null when email confirmation required
+      if (!data.user?.id) {
+        setError("アカウントの作成に失敗しました。再度お試しください。");
+        return;
+      }
+
+      // Create the pending dealer record via server action (admin client, bypasses RLS)
+      const dealerResult = await createPendingDealer({
+        businessName: businessName.trim(),
+        ownerUserId:  data.user.id,
+        email,
+      });
+
+      if (!dealerResult.success) {
+        setError("店舗情報の登録に失敗しました。しばらく待ってから再試行してください。");
+        return;
+      }
+
+      const needsConfirmation = !data.session;
       router.push(`/signup/pending?confirm=${needsConfirmation ? "1" : "0"}`);
     } catch {
       setError("予期しないエラーが発生しました。再度お試しください。");
@@ -102,7 +122,7 @@ export default function SignUpPage() {
               <p className="text-base font-bold text-[#f0f0f5] leading-tight">Detailer Agent</p>
             </div>
           </div>
-          <p className="text-xs text-[#55556a]">新規アカウントを作成</p>
+          <p className="text-xs text-[#55556a]">ディーラー登録申請</p>
         </div>
 
         {/* ── Form card ──────────────────────────────────────────────────── */}
@@ -121,10 +141,29 @@ export default function SignUpPage() {
             </div>
           )}
 
+          {/* Business name */}
+          <div>
+            <label className="block text-xs font-medium text-[#9999b0] mb-1.5">
+              店舗名 <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              required
+              autoComplete="organization"
+              placeholder="例：〇〇カーディテイリング"
+              className="w-full rounded-lg px-3 py-2.5 text-sm text-[#f0f0f5] placeholder-[#55556a] focus:outline-none transition-colors"
+              style={inputStyle}
+              onFocus={(e) => e.currentTarget.style.borderColor = focusStyle}
+              onBlur={(e)  => e.currentTarget.style.borderColor = blurStyle}
+            />
+          </div>
+
           {/* Email */}
           <div>
             <label className="block text-xs font-medium text-[#9999b0] mb-1.5">
-              メールアドレス
+              メールアドレス <span className="text-red-400">*</span>
             </label>
             <input
               type="email"
@@ -187,7 +226,7 @@ export default function SignUpPage() {
             className="w-full py-2.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: "var(--gs-blue, #4f8ef7)" }}
           >
-            {loading ? "作成中..." : "アカウントを作成"}
+            {loading ? "申請中..." : "ディーラー登録を申請する"}
           </button>
 
           {/* Back to login */}

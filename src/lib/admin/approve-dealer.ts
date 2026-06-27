@@ -50,6 +50,28 @@ export async function approveDealerTrial(
 
   if (error) return { success: false, error: error.message };
 
+  // Create dealer_members row so the owner can log in immediately after approval.
+  // Fetch owner_user_id from the dealers row (set at self-registration time).
+  const { data: dealerRow } = await supabase
+    .from("dealers")
+    .select("owner_user_id")
+    .eq("id", dealerId)
+    .single();
+
+  if (dealerRow?.owner_user_id) {
+    await supabase
+      .from("dealer_members")
+      .upsert(
+        {
+          dealer_id: dealerId,
+          user_id:   dealerRow.owner_user_id,
+          role:      "owner",
+          status:    "active",
+        },
+        { onConflict: "dealer_id,user_id" },
+      );
+  }
+
   await writeAuditLog({
     adminUserId:    admin.id,
     targetDealerId: dealerId,

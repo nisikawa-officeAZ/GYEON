@@ -1,6 +1,7 @@
-// Sign-up pending — shown after account creation while waiting for dealer linking.
-// The user now exists in Supabase Auth but has no dealer_members record yet.
-// Access to app features requires an admin to insert a dealer_members row.
+// Sign-up pending — shown after dealer registration is submitted.
+// The user and dealers record now exist; approval_status = 'pending'.
+// Access to app features is granted only after a Super Admin or GYEON Admin approves
+// the dealer and the system creates the dealer_members row.
 
 import Link from "next/link";
 
@@ -8,12 +9,11 @@ interface Props {
   searchParams: Promise<{ confirm?: string }>;
 }
 
-export const metadata = { title: "登録完了 | GYEON Detailer Agent" };
+export const metadata = { title: "申請受付完了 | GYEON Detailer Agent" };
 
 export default async function SignUpPendingPage({ searchParams }: Props) {
-  const params        = await searchParams;
-  const needsConfirm  = params.confirm === "1";
-  const isDev         = process.env.NODE_ENV === "development";
+  const params       = await searchParams;
+  const needsConfirm = params.confirm === "1";
 
   return (
     <div className="min-h-[100dvh] bg-[#0a0a0f] flex items-center justify-center p-4">
@@ -52,9 +52,28 @@ export default async function SignUpPendingPage({ searchParams }: Props) {
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-[#f0f0f5]">アカウントを作成しました</h1>
-              <p className="text-xs text-[#9999b0] mt-1">ご登録ありがとうございます</p>
+              <h1 className="text-lg font-bold text-[#f0f0f5]">ディーラー登録を受け付けました</h1>
+              <p className="text-xs text-[#9999b0] mt-1">
+                Your dealer application has been received.
+              </p>
             </div>
+          </div>
+
+          {/* Status message */}
+          <div
+            className="rounded-xl border px-4 py-4 flex flex-col gap-2"
+            style={{
+              background:   "rgba(79,142,247,0.06)",
+              borderColor:  "rgba(79,142,247,0.20)",
+            }}
+          >
+            <p className="text-sm font-semibold text-[#f0f0f5] leading-snug">
+              Your account will become available after approval by GYEON Japan.
+            </p>
+            <p className="text-xs text-[#9999b0] leading-relaxed">
+              GYEON Japanによる審査が完了次第、ログインしてシステムをご利用いただけます。
+              審査には通常1〜3営業日かかります。
+            </p>
           </div>
 
           {/* Steps */}
@@ -72,13 +91,13 @@ export default async function SignUpPendingPage({ searchParams }: Props) {
             )}
             <Step
               num={needsConfirm ? "2" : "1"}
-              title="店舗管理者に連絡してください"
-              body="ショップのオーナーまたは管理者に、アカウントを作成した旨をお知らせください。"
+              title="審査をお待ちください"
+              body="GYEON Japanが申請内容を確認します。承認後、登録メールアドレスにご連絡します。"
             />
             <Step
               num={needsConfirm ? "3" : "2"}
-              title="店舗への紐付けを待つ"
-              body="管理者があなたのアカウントを店舗に追加した後、アプリをご利用いただけます。"
+              title="承認後にログイン"
+              body="承認完了後、下記のログイン画面からシステムにアクセスできます。"
             />
           </div>
 
@@ -91,41 +110,6 @@ export default async function SignUpPendingPage({ searchParams }: Props) {
             ログイン画面へ
           </Link>
         </div>
-
-        {/* ── Dev note ───────────────────────────────────────────────────── */}
-        {isDev && (
-          <div
-            className="rounded-xl border p-4 flex flex-col gap-2"
-            style={{
-              borderColor: "rgba(245,158,11,0.3)",
-              background:  "rgba(245,158,11,0.06)",
-            }}
-          >
-            <p className="text-xs font-bold text-amber-400 tracking-wider uppercase">
-              開発者メモ — 本番環境では非表示
-            </p>
-            <p className="text-xs text-amber-300/75 leading-relaxed">
-              新規ユーザーを店舗に紐付けるには、Supabase SQL Editor で以下を実行してください。
-            </p>
-            <div
-              className="rounded-lg p-3 text-[11px] font-mono leading-relaxed overflow-x-auto"
-              style={{ background: "rgba(0,0,0,0.4)", color: "#9999b0" }}
-            >
-              <p style={{ color: "#55556a" }}>-- 1. ユーザーのUUIDを確認</p>
-              <p>SELECT id, email FROM auth.users WHERE email = &apos;登録したメール&apos;;</p>
-              <br />
-              <p style={{ color: "#55556a" }}>-- 2. 対象の dealer_id を確認</p>
-              <p>SELECT id, business_name FROM dealers LIMIT 10;</p>
-              <br />
-              <p style={{ color: "#55556a" }}>-- 3. dealer_members に追加</p>
-              <p>INSERT INTO dealer_members (user_id, dealer_id, role, status)</p>
-              <p>VALUES (&apos;&lt;user_uuid&gt;&apos;, &apos;&lt;dealer_uuid&gt;&apos;, &apos;admin&apos;, &apos;active&apos;);</p>
-            </div>
-            <p className="text-[10px] text-amber-300/50">
-              ※ dealer_id はクライアントから受け取ってはいけません。必ずサーバー側のSupabaseで設定してください。
-            </p>
-          </div>
-        )}
 
       </div>
     </div>
