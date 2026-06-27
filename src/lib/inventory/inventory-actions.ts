@@ -12,6 +12,7 @@ import type {
   ProductWithStock,
   StockCountInput,
   UpsertStockResult,
+  MovementType,
 } from "./inventory-types";
 type ProductRow = {
   id:            string;
@@ -112,6 +113,15 @@ export async function upsertStockCount(
   const totalQuantity   = caseCount * unitsPerCase + looseCount;
 
   const supabase = await createClient();
+  const now      = new Date().toISOString();
+
+  // Get current total for delta calculation (used in movement record)
+  const { data: current } = await supabase
+    .from("dealer_stock_levels")
+    .select("total_quantity")
+    .eq("dealer_id",  dealer.dealer_id)
+    .eq("product_id", input.product_id)
+    .maybeSingle();
 
   const { data, error } = await supabase
     .from("dealer_stock_levels")
@@ -123,7 +133,7 @@ export async function upsertStockCount(
         loose_count:         looseCount,
         units_per_case_used: unitsPerCase,
         total_quantity:      totalQuantity,
-        last_counted_at:     new Date().toISOString(),
+        last_counted_at:     now,
         last_counted_by:     user?.id ?? null,
         notes:               input.notes?.trim() || null,
       },
@@ -141,6 +151,35 @@ export async function upsertStockCount(
     }
     console.error("[inventory] upsert error:", error?.message);
     return { success: false, error: "在庫の保存に失敗しました" };
+  }
+
+  // Record stock movement (non-blocking — graceful if migration 072 not applied)
+  const oldTotal = current?.total_quantity ?? 0;
+  const delta    = totalQuantity - oldTotal;
+  if (delta !== 0) {
+    const movType: MovementType = delta > 0 ? "adjustment_in" : "adjustment_out";
+    supabase
+      .from("stock_movements")
+      .insert({
+        dealer_id:               dealer.dealer_id,
+        product_id:              input.product_id,
+        movement_type:           movType,
+        quantity_delta:          delta,
+        case_count:              caseCount,
+        loose_count:             looseCount,
+        units_per_case_snapshot: unitsPerCase,
+        balance_after:           totalQuantity,
+        source_type:             "count",
+        source_id:               null,
+        note:                    input.notes?.trim() || null,
+        created_by:              user?.id ?? null,
+        created_at:              now,
+      })
+      .then(({ error: mErr }) => {
+        if (mErr && !isMigrationMissing(mErr)) {
+          console.error("[inventory] movement insert error:", mErr.message);
+        }
+      });
   }
 
   return { success: true, stock: data as StockLevel };
