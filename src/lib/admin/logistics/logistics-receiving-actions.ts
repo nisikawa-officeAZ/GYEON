@@ -21,7 +21,7 @@ export async function getReceivingFormData(): Promise<ReceivingFormData> {
       .order("name"),
     supabase
       .from("gyeon_products")
-      .select("id, sku, product_name, units_per_case")
+      .select("id, sku, product_name, units_per_case, jan_code")
       .eq("is_active", true)
       .order("category")
       .order("product_name"),
@@ -104,6 +104,9 @@ export async function createAdminReceiptRecord(
       damaged_count:           damaged,
       units_per_case_snapshot: upc,
       total_quantity:          delta,
+      supplier:                input.supplier?.trim() || null,
+      po_number:               input.po_number?.trim() || null,
+      received_date:           input.received_date || null,
       note,
     })
     .select("id")

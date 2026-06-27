@@ -75,6 +75,12 @@ export default async function LogisticsDashboardPage() {
           color={stats.lowStockAlerts > 0 ? "text-red-400" : "text-slate-400"}
           description="Products at zero stock"
         />
+        <StatCard
+          label="Today's Adjustments"
+          value={stats.todayAdjustments}
+          color={stats.todayAdjustments > 0 ? "text-rose-400" : "text-slate-400"}
+          description="Stock adjustments recorded today"
+        />
       </div>
 
       {/* Module status panel */}
@@ -82,12 +88,14 @@ export default async function LogisticsDashboardPage() {
         <h2 className="text-sm font-semibold text-slate-300 mb-4">Module Status</h2>
         <div className="space-y-2 text-sm">
           {[
-            { label: "Receiving Workflow",  status: "active" },
-            { label: "Inventory Overview",  status: "active" },
-            { label: "Backorder Center",    status: "active" },
-            { label: "Shipment Queue",      status: "active" },
-            { label: "Purchase Orders",     status: "soon" },
-            { label: "Stock Adjustments",   status: "soon" },
+            { label: "Receiving Workflow",     status: "active" },
+            { label: "Inventory Overview",     status: "active" },
+            { label: "Backorder Center",       status: "active" },
+            { label: "Shipment Queue",         status: "active" },
+            { label: "棚卸し (Stocktaking)",   status: "active" },
+            { label: "Stock Adjustments",      status: "active" },
+            { label: "Movement History",       status: "active" },
+            { label: "PO Receiving",           status: "active" },
           ].map((m) => (
             <div key={m.label} className="flex items-center justify-between py-2 border-b border-slate-700/30 last:border-0">
               <span className="text-slate-300">{m.label}</span>

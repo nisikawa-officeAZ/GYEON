@@ -2,14 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { createAdminReceiptRecord } from "@/lib/admin/logistics/logistics-receiving-actions";
+import ProductSearchInput from "@/app/admin/logistics/_components/ProductSearchInput";
 import type {
   LogisticsReceivingRecord,
   ReceivingFormData,
 } from "@/lib/admin/logistics/logistics-types";
 
 type Props = {
-  dealers:        ReceivingFormData["dealers"];
-  products:       ReceivingFormData["products"];
+  dealers:         ReceivingFormData["dealers"];
+  products:        ReceivingFormData["products"];
   initialReceipts: LogisticsReceivingRecord[];
 };
 
@@ -20,6 +21,9 @@ const emptyForm = {
   loose_count:             0,
   damaged_count:           0,
   units_per_case_snapshot: 1,
+  supplier:                "",
+  po_number:               "",
+  received_date:           new Date().toISOString().split("T")[0],
   note:                    "",
 };
 
@@ -32,15 +36,6 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
 
   const selectedProduct = products.find((p) => p.id === form.product_id);
 
-  function handleProductChange(productId: string) {
-    const product = products.find((p) => p.id === productId);
-    setForm((f) => ({
-      ...f,
-      product_id:              productId,
-      units_per_case_snapshot: product?.units_per_case ?? 1,
-    }));
-  }
-
   const totalUnits =
     form.case_count * Math.max(1, form.units_per_case_snapshot) + form.loose_count;
 
@@ -49,9 +44,9 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
     setError(null);
     setSuccess(false);
 
-    if (!form.dealer_id)  { setError("ディーラーを選択してください");  return; }
-    if (!form.product_id) { setError("製品を選択してください");        return; }
-    if (totalUnits <= 0)  { setError("入荷数量は1以上を入力してください"); return; }
+    if (!form.dealer_id)  { setError("ディーラーを選択してください");      return; }
+    if (!form.product_id) { setError("製品を選択してください");            return; }
+    if (totalUnits <= 0)  { setError("入荷数量は1以上を入力してください");   return; }
 
     startTransition(async () => {
       const result = await createAdminReceiptRecord({
@@ -61,17 +56,17 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
         loose_count:             form.loose_count,
         damaged_count:           form.damaged_count,
         units_per_case_snapshot: form.units_per_case_snapshot,
+        supplier:                form.supplier || undefined,
+        po_number:               form.po_number || undefined,
+        received_date:           form.received_date || undefined,
         note:                    form.note || undefined,
       });
 
-      if (!result.success) {
-        setError(result.error);
-        return;
-      }
+      if (!result.success) { setError(result.error); return; }
 
       setSuccess(true);
       setForm(emptyForm);
-      // Refresh would need router.refresh() — for simplicity add placeholder to top
+
       const dealer  = dealers.find((d) => d.id === form.dealer_id);
       const product = products.find((p) => p.id === form.product_id);
       const newRow: LogisticsReceivingRecord = {
@@ -97,22 +92,23 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-white">Receiving Workflow</h1>
-        <p className="text-sm text-slate-400 mt-0.5">Record stock receipt for a dealer</p>
+        <p className="text-sm text-slate-400 mt-0.5">仕入先からの入荷・ディーラーへの納品記録</p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-6 mb-8">
         <h2 className="text-sm font-semibold text-slate-300 mb-4">New Receipt</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Row 1: Dealer + Supplier + PO + Date */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Dealer</label>
+            <label className="block text-xs text-slate-400 mb-1">Dealer <span className="text-red-400">*</span></label>
             <select
               value={form.dealer_id}
               onChange={(e) => setForm((f) => ({ ...f, dealer_id: e.target.value }))}
-              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+              className="w-full bg-slate-700/50 border border-slate-600 focus:border-green-500 rounded-lg px-3 py-2 text-sm text-white outline-none"
             >
-              <option value="">-- Select dealer --</option>
+              <option value="">-- Dealer --</option>
               {dealers.map((d) => (
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
@@ -120,28 +116,59 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Product</label>
-            <select
-              value={form.product_id}
-              onChange={(e) => handleProductChange(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
-            >
-              <option value="">-- Select product --</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>[{p.sku}] {p.product_name}</option>
-              ))}
-            </select>
+            <label className="block text-xs text-slate-400 mb-1">仕入先 (Supplier)</label>
+            <input
+              type="text"
+              value={form.supplier}
+              onChange={(e) => setForm((f) => ({ ...f, supplier: e.target.value }))}
+              placeholder="例: GYEON Japan"
+              className="w-full bg-slate-700/50 border border-slate-600 focus:border-green-500 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">PO番号</label>
+            <input
+              type="text"
+              value={form.po_number}
+              onChange={(e) => setForm((f) => ({ ...f, po_number: e.target.value }))}
+              placeholder="例: PO-2024-001"
+              className="w-full bg-slate-700/50 border border-slate-600 focus:border-green-500 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">入荷日</label>
+            <input
+              type="date"
+              value={form.received_date}
+              onChange={(e) => setForm((f) => ({ ...f, received_date: e.target.value }))}
+              className="w-full bg-slate-700/50 border border-slate-600 focus:border-green-500 rounded-lg px-3 py-2 text-sm text-white outline-none"
+            />
           </div>
         </div>
 
-        {/* Units per case info */}
-        {selectedProduct && (
-          <p className="mt-2 text-xs text-slate-500">
-            Default units/case: {selectedProduct.units_per_case ?? "N/A"}
-          </p>
-        )}
+        {/* Row 2: Product Search */}
+        <div className="mb-4">
+          <label className="block text-xs text-slate-400 mb-1">Product <span className="text-red-400">*</span></label>
+          <ProductSearchInput
+            products={products}
+            selectedId={form.product_id}
+            onSelect={(p) => setForm((f) => ({
+              ...f,
+              product_id:              p.id,
+              units_per_case_snapshot: p.units_per_case ?? 1,
+            }))}
+          />
+          {selectedProduct && (
+            <p className="mt-1 text-xs text-slate-500">
+              標準入数: {selectedProduct.units_per_case ?? "未設定"}本/ケース
+            </p>
+          )}
+        </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+        {/* Row 3: Quantity inputs */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs text-slate-400 mb-1">Units/Case</label>
             <input
@@ -149,66 +176,63 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
               min={1}
               value={form.units_per_case_snapshot}
               onChange={(e) => setForm((f) => ({ ...f, units_per_case_snapshot: parseInt(e.target.value) || 1 }))}
-              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+              className="w-full bg-slate-700/50 border border-slate-600 focus:border-green-500 rounded-lg px-3 py-2 text-sm text-white outline-none"
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Box Qty</label>
+            <label className="block text-xs text-slate-400 mb-1">ケース数</label>
             <input
               type="number"
               min={0}
               value={form.case_count}
               onChange={(e) => setForm((f) => ({ ...f, case_count: parseInt(e.target.value) || 0 }))}
-              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+              className="w-full bg-slate-700/50 border border-slate-600 focus:border-green-500 rounded-lg px-3 py-2 text-sm text-white outline-none"
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Loose Units</label>
+            <label className="block text-xs text-slate-400 mb-1">バラ数</label>
             <input
               type="number"
               min={0}
               value={form.loose_count}
               onChange={(e) => setForm((f) => ({ ...f, loose_count: parseInt(e.target.value) || 0 }))}
-              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+              className="w-full bg-slate-700/50 border border-slate-600 focus:border-green-500 rounded-lg px-3 py-2 text-sm text-white outline-none"
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Damaged</label>
+            <label className="block text-xs text-slate-400 mb-1">破損数</label>
             <input
               type="number"
               min={0}
               value={form.damaged_count}
               onChange={(e) => setForm((f) => ({ ...f, damaged_count: parseInt(e.target.value) || 0 }))}
-              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white"
+              className="w-full bg-slate-700/50 border border-slate-600 focus:border-green-500 rounded-lg px-3 py-2 text-sm text-white outline-none"
             />
           </div>
         </div>
 
+        {/* Row 4: Note */}
         <div className="mt-4">
-          <label className="block text-xs text-slate-400 mb-1">Note (optional)</label>
+          <label className="block text-xs text-slate-400 mb-1">備考</label>
           <input
             type="text"
             value={form.note}
             onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
-            placeholder="e.g. PO-2024-001, special handling"
-            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600"
+            placeholder="特記事項など"
+            className="w-full bg-slate-700/50 border border-slate-600 focus:border-green-500 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 outline-none"
           />
         </div>
 
-        {/* Total calculation */}
+        {/* Total */}
         <div className="mt-4 px-4 py-3 bg-slate-900/60 rounded-lg text-sm text-slate-300">
-          Total units: <span className="font-bold text-white">{totalUnits}</span>
+          入荷総数: <span className="font-bold text-white">{totalUnits}</span> 個
           {form.damaged_count > 0 && (
-            <span className="ml-3 text-amber-400">({form.damaged_count} damaged)</span>
+            <span className="ml-3 text-amber-400">（うち破損 {form.damaged_count} 個）</span>
           )}
         </div>
 
-        {error && (
-          <p className="mt-3 text-sm text-red-400">{error}</p>
-        )}
-        {success && (
-          <p className="mt-3 text-sm text-green-400">入荷を記録しました。</p>
-        )}
+        {error   && <p className="mt-3 text-sm text-red-400">{error}</p>}
+        {success && <p className="mt-3 text-sm text-green-400">入荷を記録しました。</p>}
 
         <div className="mt-5 flex justify-end">
           <button
@@ -216,7 +240,7 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
             disabled={isPending}
             className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
           >
-            {isPending ? "Recording…" : "Confirm Receipt"}
+            {isPending ? "記録中…" : "入荷確定"}
           </button>
         </div>
       </form>
@@ -225,13 +249,13 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
       <div>
         <h2 className="text-sm font-semibold text-slate-300 mb-3">Recent Receipts</h2>
         {receipts.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 text-sm">No receipts recorded yet.</div>
+          <div className="text-center py-12 text-slate-500 text-sm">まだ入荷記録がありません。</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-700/50">
-                  {["Date", "Dealer", "Product", "Boxes", "Loose", "Damaged", "Total", "Note"].map((h) => (
+                  {["日時", "ディーラー", "商品", "ケース", "バラ", "破損", "合計", "PO番号"].map((h) => (
                     <th key={h} className="text-left px-3 py-2.5 text-xs font-medium text-slate-400 uppercase">{h}</th>
                   ))}
                 </tr>
@@ -255,7 +279,7 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
                         : <span className="text-slate-600">—</span>}
                     </td>
                     <td className="px-3 py-3 font-semibold text-white text-center">{r.total_quantity}</td>
-                    <td className="px-3 py-3 text-slate-500 text-xs max-w-xs truncate">{r.note ?? "—"}</td>
+                    <td className="px-3 py-3 text-slate-500 text-xs">{r.note ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

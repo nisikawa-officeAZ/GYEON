@@ -8,6 +8,7 @@ export interface LogisticsDashboardStats {
   pendingShipments:  number; // logistics_shipments ready/picking/packed
   shippedToday:      number; // logistics_shipments shipped_at::date = today
   lowStockAlerts:    number; // dealer_stock_levels total_quantity = 0
+  todayAdjustments:  number; // warehouse_adjustments created today
 }
 
 export interface LogisticsInventoryRow {
@@ -50,10 +51,112 @@ export interface AdminReceiptInput {
   loose_count:             number;
   damaged_count:           number;
   units_per_case_snapshot: number;
+  supplier?:               string;
+  po_number?:              string;
+  received_date?:          string; // ISO date yyyy-mm-dd
   note?:                   string;
 }
 
 export type AdminReceiptResult =
+  | { success: true }
+  | { success: false; error: string };
+
+// ─── Warehouse Adjustments ────────────────────────────────────────────────────
+
+export type AdjustmentType = "damage" | "loss" | "internal_use" | "sample" | "correction";
+
+export const ADJUSTMENT_TYPE_LABELS: Record<AdjustmentType, string> = {
+  damage:       "破損",
+  loss:         "紛失",
+  internal_use: "社内使用",
+  sample:       "サンプル",
+  correction:   "在庫補正",
+};
+
+export interface WarehouseAdjustmentInput {
+  dealer_id:               string;
+  product_id:              string;
+  adjustment_type:         AdjustmentType;
+  reason:                  string;
+  quantity_delta:          number; // signed: negative = out, positive = in
+  case_count:              number;
+  loose_count:             number;
+  units_per_case_snapshot: number;
+  note?:                   string;
+}
+
+export interface WarehouseAdjustmentRow {
+  id:                      string;
+  dealer_id:               string;
+  dealer_name:             string;
+  product_id:              string;
+  sku:                     string;
+  product_name:            string;
+  adjustment_type:         AdjustmentType;
+  reason:                  string;
+  quantity_delta:          number;
+  balance_after:           number;
+  performed_by_name:       string | null;
+  note:                    string | null;
+  created_at:              string;
+}
+
+export type AdjustmentResult =
+  | { success: true }
+  | { success: false; error: string };
+
+// ─── Stock Movements ──────────────────────────────────────────────────────────
+
+export interface AdminStockMovementRow {
+  id:                string;
+  dealer_id:         string;
+  dealer_name:       string;
+  product_id:        string;
+  sku:               string;
+  product_name:      string;
+  movement_type:     string;
+  quantity_delta:    number;
+  balance_after:     number;
+  source_type:       string | null;
+  note:              string | null;
+  adjustment_reason: string | null;
+  created_by_name:   string | null;
+  created_at:        string;
+}
+
+// ─── PO Receiving ────────────────────────────────────────────────────────────
+
+export type PoFulfillmentStatus = "pending" | "partial" | "fulfilled" | "backordered";
+export type ExtendedOrderStatus = "draft" | "submitted" | "approved" | "fulfilling" | "fulfilled" | "cancelled";
+
+export interface PoFulfillmentLine {
+  id:                    string;
+  product_order_id:      string;
+  product_id:            string | null;
+  sku_snapshot:          string;
+  product_name_snapshot: string;
+  ordered_qty:           number;
+  fulfilled_qty:         number;
+  backordered_qty:       number;
+  remaining_qty:         number; // computed: ordered - fulfilled - backordered
+  status:                PoFulfillmentStatus;
+  note:                  string | null;
+}
+
+export interface PendingProductOrder {
+  id:             string;
+  dealer_id:      string;
+  dealer_name:    string;
+  order_number:   string | null;
+  status:         ExtendedOrderStatus;
+  order_date:     string | null;
+  created_at:     string;
+  item_count:     number;
+  total_qty:      number;
+  lines:          PoFulfillmentLine[];
+}
+
+export type PoReceivingResult =
   | { success: true }
   | { success: false; error: string };
 
@@ -103,7 +206,7 @@ export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
 
 export interface ReceivingFormData {
   dealers:  { id: string; name: string }[];
-  products: { id: string; sku: string; product_name: string; units_per_case: number | null }[];
+  products: { id: string; sku: string; product_name: string; units_per_case: number | null; jan_code?: string | null }[];
 }
 
 export const SHIPMENT_STATUS_COLORS: Record<ShipmentStatus, string> = {
