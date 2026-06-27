@@ -187,6 +187,12 @@ export default function ProductsClient({ initialProducts, categories }: Props) {
 
                 <p className="text-[10px] text-slate-500 font-mono">{p.sku}</p>
 
+                {p.units_per_case != null && (
+                  <span className="self-start text-[9px] text-blue-400/70 bg-blue-950/30 border border-blue-900/40 px-1.5 py-0.5 rounded">
+                    {p.units_per_case}本/ケース
+                  </span>
+                )}
+
                 {p.category && (
                   <span className="self-start text-[9px] text-slate-400 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded">
                     {categoryLabel(p.category)}

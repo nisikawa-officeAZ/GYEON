@@ -5,16 +5,17 @@ import { createClient } from "@/lib/supabase/server";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface CsvRow {
-  sku:           string;
-  jan_code?:     string;
-  product_name:  string;
-  brand?:        string;
-  category?:     string;
-  size_label?:   string;
-  retail_price?: string;
-  description?:  string;
-  image_url?:    string;
-  is_active?:    string;
+  sku:             string;
+  jan_code?:       string;
+  product_name:    string;
+  brand?:          string;
+  category?:       string;
+  size_label?:     string;
+  retail_price?:   string;
+  units_per_case?: string;
+  description?:    string;
+  image_url?:      string;
+  is_active?:      string;
 }
 
 export interface ImportResult {
@@ -117,22 +118,26 @@ export async function importGyeonProductsCsv(
       continue;
     }
 
-    const retailPrice = raw.retail_price ? parseFloat(raw.retail_price) : null;
+    const retailPrice  = raw.retail_price  ? parseFloat(raw.retail_price)  : null;
+    const unitsPerCase = raw.units_per_case ? parseInt(raw.units_per_case, 10) : null;
     const isActive    = raw.is_active === undefined || raw.is_active === ""
       ? true
       : raw.is_active.toLowerCase() !== "false" && raw.is_active !== "0";
 
     const payload = {
-      sku:          raw.sku,
-      jan_code:     raw.jan_code     || null,
-      product_name: raw.product_name,
-      brand:        raw.brand        || "GYEON",
-      category:     raw.category     || null,
-      size_label:   raw.size_label   || null,
-      retail_price: isNaN(retailPrice!) ? null : retailPrice,
-      description:  raw.description  || null,
-      image_url:    raw.image_url    || null,
-      is_active:    isActive,
+      sku:            raw.sku,
+      jan_code:       raw.jan_code     || null,
+      product_name:   raw.product_name,
+      brand:          raw.brand        || "GYEON",
+      category:       raw.category     || null,
+      size_label:     raw.size_label   || null,
+      retail_price:   isNaN(retailPrice!)  ? null : retailPrice,
+      units_per_case: (unitsPerCase != null && !isNaN(unitsPerCase) && unitsPerCase >= 1)
+                        ? unitsPerCase
+                        : null,
+      description:    raw.description  || null,
+      image_url:      raw.image_url    || null,
+      is_active:      isActive,
     };
 
     const isExisting = existingSkus.has(raw.sku);
