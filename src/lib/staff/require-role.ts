@@ -16,8 +16,11 @@ export async function requireRole(
     throw new Error("認証が必要です");
   }
 
-  // If no staff record (table not yet applied) — treat as owner for dev mode
-  const role: DealerStaffRole = staff?.role ?? "owner";
+  if (!staff) {
+    throw new Error("この操作を行う権限がありません");
+  }
+
+  const role: DealerStaffRole = staff.role;
 
   if (!allowedRoles.includes(role)) {
     throw new Error("この操作を行う権限がありません");

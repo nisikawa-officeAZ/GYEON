@@ -31,20 +31,19 @@ export async function getCurrentStaff(): Promise<{ role: DealerStaffRole; staffI
         .single();
 
       if (!error && data) {
-        const role: DealerStaffRole = isValidRole(data.role) ? data.role : "owner";
+        const role: DealerStaffRole = isValidRole(data.role) ? data.role : "readonly";
         return { role, staffId: data.id };
       }
 
       // Table doesn't exist or no record — fallback to dealer_members role
-      const fallbackRole: DealerStaffRole = isValidRole(dealer.role) ? dealer.role : "owner";
+      const fallbackRole: DealerStaffRole = isValidRole(dealer.role) ? dealer.role : "readonly";
       return { role: fallbackRole, staffId: null };
     } catch {
-      // Table doesn't exist yet — fallback
-      const fallbackRole: DealerStaffRole = isValidRole(dealer.role) ? dealer.role : "owner";
+      // Table doesn't exist yet — fallback to dealer_members role
+      const fallbackRole: DealerStaffRole = isValidRole(dealer.role) ? dealer.role : "readonly";
       return { role: fallbackRole, staffId: null };
     }
   } catch {
-    // Dev fallback — never block the UI
-    return { role: "owner", staffId: null };
+    return null;
   }
 }

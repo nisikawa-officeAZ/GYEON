@@ -34,7 +34,7 @@ export type { DealerPlan, AppFeature };
 // ─── Category identifier ──────────────────────────────────────────────────────
 
 /**
- * SettingsCategoryId — 20 top-level settings categories across all GYEON applications.
+ * SettingsCategoryId — 21 top-level settings categories across all GYEON applications.
  * Registry: see settings-category-registry.ts.
  */
 export type SettingsCategoryId =
@@ -42,6 +42,7 @@ export type SettingsCategoryId =
   | "organization"        // Organization structure, company hierarchy
   | "staff"               // Staff management, profiles, schedules
   | "roles_permissions"   // Role definitions, permission matrix
+  | "security"            // Security settings: 2FA, session policy, audit logs
   | "ai_providers"        // AI provider configuration, API keys, gateway
   | "ai_marketplace"      // AI agent settings, feature entitlements
   | "communication"       // Communication channels, LINE, WhatsApp, Email, SMS

@@ -22,7 +22,7 @@
 //   - Access-denied state reveals no category info (SPOL-004)
 //   - Client-side visibility is UX only — server enforcement is Sprint 13+
 
-import { notFound }                       from "next/navigation";
+import { notFound, redirect }             from "next/navigation";
 import type { Metadata }                  from "next";
 import MainLayout                         from "@/components/layout/MainLayout";
 import { getCurrentStaff }               from "@/lib/staff/get-current-staff";
@@ -75,9 +75,11 @@ export default async function SettingsCategoryPage({ params }: PageProps) {
   const staffInfo = await getCurrentStaff().catch(() => null);
   const userLevel  = resolveVisibilityFromRole(staffInfo?.role ?? null);
 
-  // Visibility check (SPOL-001 / SPOL-004)
-  // Note: this is a UX gate — full server-side enforcement wired in Sprint 13
+  // Visibility check (SPOL-001 / SPOL-004) — server-enforced for RC
   const canAccess = canViewSetting(userLevel, categoryMeta.min_visibility);
+  if (!canAccess) {
+    redirect("/settings");
+  }
 
   // Load dealer settings only when user has access and the category is active.
   const needsSettings = canAccess && categoryMeta.ui_available;

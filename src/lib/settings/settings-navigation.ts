@@ -130,6 +130,11 @@ export const SETTINGS_CATEGORY_ROUTES: Record<SettingsCategoryId, SettingsNavRou
     breadcrumb: ["Settings", "Roles & Permissions"],
     page_title: "Roles & Permissions",
   },
+  security: {
+    path:       "/settings/security",
+    breadcrumb: ["Settings", "Security"],
+    page_title: "Security Settings",
+  },
   ai_providers: {
     path:       "/settings/ai",
     breadcrumb: ["Settings", "AI", "AI Providers"],

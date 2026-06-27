@@ -33,7 +33,7 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
     group_id:     "core",
     display_name: "Core Settings",
     description:  "Fundamental shop identity, staff, and operational configuration.",
-    category_ids: ["dealer", "organization", "staff", "roles_permissions", "branding", "notifications"],
+    category_ids: ["dealer", "organization", "staff", "roles_permissions", "security", "branding", "notifications"],
     min_visibility: "staff",
     status:       "visible",
     order:        1,
@@ -179,6 +179,29 @@ export const SETTINGS_CATEGORY_REGISTRY: SettingsCategory[] = [
     section_ids:     [],
     ui_available:    false,
     target_sprint:   "Sprint 13+",
+  },
+
+  {
+    category_id:     "security",
+    group_id:        "core",
+    display_name:    "Security Settings",
+    display_name_ja: "セキュリティ設定",
+    description:
+      "Account security configuration — two-factor authentication, session policy, " +
+      "login history, IP allowlist, and audit log retention. " +
+      "Requires dealer_owner visibility. Sprint 13+.",
+    icon:            "🛡️",
+    min_visibility:  "dealer_owner",
+    status:          "future",
+    requires_plan:   null,
+    module_owner:    "dealer_agent",
+    section_ids:     [
+      "security.authentication",
+      "security.sessions",
+      "security.audit",
+    ],
+    ui_available:    false,
+    target_sprint:   "Sprint 13",
   },
 
   {
