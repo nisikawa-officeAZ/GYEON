@@ -215,6 +215,9 @@ export default function CustomerVehicleOnboardingWizard({
       vfd.set("vin",                    vehicleForm.vin.trim());
       vfd.set("body_size",              vehicleForm.body_size.trim());
       vfd.set("inspection_expiry_date", vehicleForm.inspection_expiry_date.trim());
+      vfd.set("displacement",           vehicleForm.displacement.trim());
+      vfd.set("fuel_type",              vehicleForm.fuel_type.trim());
+      vfd.set("registration_date",      vehicleForm.registration_date.trim());
       vfd.set("notes",                  vehicleForm.notes.trim());
 
       const vehicleResult = await createVehicle(vfd);
