@@ -12,13 +12,23 @@ function addDays(dateStr: string, days: number): string {
 
 export async function approveDealerTrial(
   dealerId: string,
-  options?: { trialEndDate?: string }
+  options?: {
+    detailerRank?:    string;
+    initialPlan?:     string;
+    serviceStartDate?: string;
+    trialDays?:       number;
+    trialEndDate?:    string;
+  }
 ) {
   const admin = await requireAdmin();
   const supabase = createAdminClient();
 
-  const today = new Date().toISOString().split("T")[0];
-  const trialEnd = options?.trialEndDate ?? addDays(today, 30);
+  const today          = new Date().toISOString().split("T")[0];
+  const plan           = options?.initialPlan     ?? "pro_plus";
+  const serviceStart   = options?.serviceStartDate ?? today;
+  const trialDays      = options?.trialDays        ?? 30;
+  const trialEnd       = options?.trialEndDate     ?? addDays(serviceStart, trialDays);
+  const detailerRank   = options?.detailerRank     ?? null;
 
   const { error } = await supabase
     .from("dealers")
@@ -26,24 +36,25 @@ export async function approveDealerTrial(
       approval_status:          "approved",
       approved_by:              admin.id,
       approved_at:              new Date().toISOString(),
-      plan:                     "pro_plus",
+      plan,
       subscription_status:      "trial",
-      trial_plan_type:          "pro_plus",
-      service_start_date:       today,
-      trial_start_date:         today,
+      trial_plan_type:          plan,
+      service_start_date:       serviceStart,
+      trial_start_date:         serviceStart,
       trial_end_date:           trialEnd,
       trial_status:             "active",
       auto_downgrade_plan_type: "basic",
+      detailer_rank:            detailerRank,
     })
     .eq("id", dealerId);
 
   if (error) return { success: false, error: error.message };
 
   await writeAuditLog({
-    adminUserId:     admin.id,
-    targetDealerId:  dealerId,
-    action:          "dealer_approved",
-    details:         { plan: "pro_plus", trial_end_date: trialEnd },
+    adminUserId:    admin.id,
+    targetDealerId: dealerId,
+    action:         "dealer_approved",
+    details:        { plan, trial_end_date: trialEnd, detailer_rank: detailerRank },
   });
 
   return { success: true };
@@ -70,6 +81,71 @@ export async function rejectDealer(dealerId: string, reason: string) {
     targetDealerId: dealerId,
     action:         "dealer_rejected",
     details:        { reason },
+  });
+
+  return { success: true };
+}
+
+export async function suspendDealer(dealerId: string, reason: string) {
+  const admin = await requireAdmin();
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("dealers")
+    .update({
+      approval_status:  "suspended",
+      subscription_status: "suspended",
+      rejection_reason: reason || null,
+    })
+    .eq("id", dealerId);
+
+  if (error) return { success: false, error: error.message };
+
+  await writeAuditLog({
+    adminUserId:    admin.id,
+    targetDealerId: dealerId,
+    action:         "dealer_suspended",
+    details:        { reason },
+  });
+
+  return { success: true };
+}
+
+export async function reactivateDealer(dealerId: string) {
+  const admin = await requireAdmin();
+  const supabase = createAdminClient();
+
+  // Determine correct subscription_status based on trial state
+  const { data: dealer } = await supabase
+    .from("dealers")
+    .select("trial_status, trial_end_date")
+    .eq("id", dealerId)
+    .single();
+
+  const today = new Date().toISOString().split("T")[0];
+  const trialActive =
+    dealer?.trial_status === "active" &&
+    dealer?.trial_end_date &&
+    dealer.trial_end_date >= today;
+
+  const subscriptionStatus = trialActive ? "trial" : "active";
+
+  const { error } = await supabase
+    .from("dealers")
+    .update({
+      approval_status:  "approved",
+      subscription_status: subscriptionStatus,
+      rejection_reason: null,
+    })
+    .eq("id", dealerId);
+
+  if (error) return { success: false, error: error.message };
+
+  await writeAuditLog({
+    adminUserId:    admin.id,
+    targetDealerId: dealerId,
+    action:         "dealer_reactivated",
+    details:        { subscription_status: subscriptionStatus },
   });
 
   return { success: true };

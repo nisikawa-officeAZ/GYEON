@@ -69,7 +69,10 @@ export type AdminAuditAction =
   | "admin_user_disabled"
   | "admin_user_enabled"
   | "admin_role_changed"
-  | "admin_password_reset";
+  | "admin_password_reset"
+  // RC-13: dealer approval center
+  | "dealer_suspended"
+  | "dealer_reactivated";
 
 export interface AdminAuditLogDB {
   id: string;
@@ -105,6 +108,11 @@ export interface DealerAdminView {
   trial_status:             string | null;
   auto_downgrade_plan_type: string | null;
   detailer_rank:            string | null;
+  // RC-13: additional fields (nullable — present if column exists in DB)
+  admin_notes?:             string | null;
+  suspended_at?:            string | null;
+  approved_by?:             string | null;
+  rejected_by?:             string | null;
 }
 
 export interface UserAdminView {
