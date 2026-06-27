@@ -246,10 +246,16 @@ export async function uploadAndAnalyzeVehicleRegistration(
 export async function confirmVehicleRegistrationOcr(
   params: ConfirmOcrResultParams,
 ): Promise<{ success: boolean; error?: string }> {
-  const dealer = await getCurrentDealer();
-  if (!dealer) return { success: false, error: "認証エラー" };
-
   const user = await getCurrentUser();
+  if (!user) {
+    console.error("[OCR:confirm] Auth failed: no authenticated user");
+    return { success: false, error: "ログインが必要です。ブラウザでログインし直してください。" };
+  }
+  const dealer = await getCurrentDealer();
+  if (!dealer) {
+    console.error("[OCR:confirm] Auth failed: no dealer membership for user:", user.id);
+    return { success: false, error: "店舗情報を取得できません。管理者にお問い合わせください。" };
+  }
 
   const supabase = await createClient();
 
@@ -380,8 +386,16 @@ export async function archiveVehicleRegistration(
   fileId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      console.error("[OCR:archive] Auth failed: no authenticated user");
+      return { success: false, error: "ログインが必要です。ブラウザでログインし直してください。" };
+    }
     const dealer = await getCurrentDealer();
-    if (!dealer) return { success: false, error: "認証エラー" };
+    if (!dealer) {
+      console.error("[OCR:archive] Auth failed: no dealer membership for user:", user.id);
+      return { success: false, error: "店舗情報を取得できません。管理者にお問い合わせください。" };
+    }
 
     const supabase = await createClient();
 

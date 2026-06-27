@@ -3,6 +3,26 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* ── GenSpark Design System tokens (RC-10) ── */
+  --gs-bg:          #0a0a0f;
+  --gs-bg-2:        #111118;
+  --gs-bg-3:        #1a1a24;
+  --gs-bg-card:     #16161f;
+  --gs-line:        rgba(255,255,255,0.08);
+  --gs-line-strong: rgba(255,255,255,0.15);
+  --gs-blue:        #4f8ef7;
+  --gs-blue-dim:    rgba(79,142,247,0.15);
+  --gs-blue-glow:   rgba(79,142,247,0.25);
+  --gs-text:        #f0f0f5;
+  --gs-text-2:      #9999b0;
+  --gs-text-3:      #55556a;
+  --gs-green:       #22c55e;
+  --gs-amber:       #f59e0b;
+  --gs-red:         #ef4444;
+  --gs-r:           14px;
+  --gs-r-sm:        10px;
+  --gs-r-lg:        20px;
 }
 
 @theme inline {
@@ -30,6 +50,76 @@ body {
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .pl-safe { padding-left: env(safe-area-inset-left, 0px); }
 .pr-safe { padding-right: env(safe-area-inset-right, 0px); }
+
+/* ── GenSpark Design System utility classes (RC-10) ── */
+
+/* Section label — ALL CAPS, letter-spaced */
+.gs-sec-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: var(--gs-text-3);
+  text-transform: uppercase;
+  padding: 0 4px;
+}
+
+/* Badge variants */
+.gs-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.gs-badge-blue  { background: var(--gs-blue-dim);          color: var(--gs-blue);  }
+.gs-badge-green { background: rgba(34,197,94,0.15);         color: var(--gs-green); }
+.gs-badge-amber { background: rgba(245,158,11,0.15);        color: var(--gs-amber); }
+.gs-badge-red   { background: rgba(239,68,68,0.12);         color: var(--gs-red);   }
+
+/* Card + row pattern */
+.gs-card {
+  background: var(--gs-bg-card);
+  border: 1px solid var(--gs-line);
+  border-radius: var(--gs-r);
+  overflow: hidden;
+}
+.gs-card-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gs-line);
+  min-height: 44px;
+}
+.gs-card-row:last-child { border-bottom: none; }
+
+/* Row icon */
+.gs-row-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+/* Context chip (breadcrumb summary) */
+.gs-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--gs-bg-card);
+  border: 1px solid var(--gs-line);
+  border-radius: var(--gs-r-sm);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--gs-text-2);
+}
+.gs-chip strong { color: var(--gs-text); font-weight: 600; }
 
 /* Hide scrollbar but keep scrollability */
 .scrollbar-hide {
