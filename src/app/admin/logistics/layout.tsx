@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LOGISTICS_NAV = [
-  { key: "dashboard",  label: "Dashboard",  href: "/admin/logistics/dashboard" },
-  { key: "receiving",  label: "Receiving",  href: "/admin/logistics/receiving" },
-  { key: "inventory",  label: "Inventory",  href: "/admin/logistics/inventory" },
-  { key: "backorders", label: "Backorders", href: "/admin/logistics/backorders" },
-  { key: "shipments",  label: "Shipments",  href: "/admin/logistics/shipments" },
+  { key: "dashboard",   label: "Dashboard",   href: "/admin/logistics/dashboard" },
+  { key: "receiving",   label: "Receiving",   href: "/admin/logistics/receiving" },
+  { key: "inventory",   label: "Inventory",   href: "/admin/logistics/inventory" },
+  { key: "backorders",  label: "Backorders",  href: "/admin/logistics/backorders" },
+  { key: "shipments",   label: "Shipments",   href: "/admin/logistics/shipments" },
+  { key: "stocktaking", label: "棚卸し",       href: "/admin/logistics/stocktaking" },
   { key: "purchase-orders", label: "Purchase Orders", href: "#", soon: true },
   { key: "adjustments",     label: "Adjustments",    href: "#", soon: true },
 ];
