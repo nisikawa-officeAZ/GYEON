@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   EstimateDB,
   EstimateItemDB,
@@ -65,6 +66,14 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
             <p className="text-xs text-slate-500 mt-0.5">見積詳細</p>
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              href={`/pdf?estimateId=${estimate.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              PDF表示
+            </Link>
             {onCreateWorkOrder && (
               <button
                 onClick={onCreateWorkOrder}

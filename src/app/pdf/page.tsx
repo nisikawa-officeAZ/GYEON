@@ -26,7 +26,7 @@ export default async function PDFPage({ searchParams }: Props) {
         {/* Header row */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <PageTitle title="PDF" subtitle="見積書プレビュー" />
-          <PDFActions />
+          <PDFActions estimateId={estimateId} />
         </div>
 
         {/* Preview — real data takes priority; fall back to demo */}
