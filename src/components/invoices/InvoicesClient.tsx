@@ -30,12 +30,14 @@ export default function InvoicesClient({ initialInvoices }: InvoicesClientProps)
   }
 
   function handleCreated(id: string) {
-    refresh().then(() => {
-      // Show detail for the new invoice
-      const found = invoices.find((i) => i.id === id);
-      if (found) setModal({ mode: "detail", invoice: found });
-      else setModal({ mode: "none" });
-    });
+    import("@/lib/invoices/get-invoices").then(({ getInvoices }) =>
+      getInvoices().then((data) => {
+        setInvoices(data);
+        const found = data.find((i) => i.id === id);
+        if (found) setModal({ mode: "detail", invoice: found });
+        else setModal({ mode: "none" });
+      })
+    );
   }
 
   function handleUpdated() {
