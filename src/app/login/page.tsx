@@ -1,15 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link        from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Suspense } from "react";
 
-export default function LoginPage() {
-  const router = useRouter();
+function LoginForm() {
+  const router       = useRouter();
+  const searchParams = useSearchParams();
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
-  const [error,    setError]    = useState<string | null>(null);
+  const [error,    setError]    = useState<string | null>(
+    searchParams.get("registered") === "1"
+      ? null  // will show success note instead
+      : null,
+  );
   const [loading,  setLoading]  = useState(false);
+
+  const justRegistered = searchParams.get("registered") === "1";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -18,52 +27,70 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
       if (authError) {
-        setError("Invalid email or password.");
+        setError("メールアドレスまたはパスワードが正しくありません。");
         return;
       }
 
       router.push("/");
       router.refresh();
     } catch {
-      setError("An unexpected error occurred. Please try again.");
+      setError("予期しないエラーが発生しました。再度お試しください。");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] bg-[#0a0a0f] flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
 
-        {/* Logo / Title */}
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-10 h-10 bg-[#1d4ed8] rounded-lg mb-4">
-            <span className="text-white text-sm font-bold">D</span>
+        {/* ── Brand header ───────────────────────────────────────────────── */}
+        <div className="mb-8 text-center flex flex-col items-center gap-3">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: "var(--gs-blue, #4f8ef7)" }}
+            >
+              <span className="text-white text-xl font-black tracking-tight">G</span>
+            </div>
+            <div className="text-left">
+              <p className="text-[10px] font-bold text-[#55556a] tracking-[2.5px] uppercase">GYEON</p>
+              <p className="text-base font-bold text-[#f0f0f5] leading-tight">Detailer Agent</p>
+            </div>
           </div>
-          <h1 className="text-xl font-semibold text-slate-100">DealerOS</h1>
-          <p className="text-xs text-slate-500 mt-1">Sign in to your account</p>
+          <p className="text-xs text-[#55556a]">ショップ管理システムにサインイン</p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-[#1e293b] rounded-xl border border-slate-700 p-6 space-y-4">
+        {/* ── Post-registration success note ─────────────────────────────── */}
+        {justRegistered && (
+          <div className="mb-4 px-4 py-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10">
+            <p className="text-xs text-emerald-400 font-medium">アカウントを作成しました。ログインしてください。</p>
+          </div>
+        )}
 
+        {/* ── Form card ──────────────────────────────────────────────────── */}
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-2xl border p-6 space-y-4"
+          style={{
+            background:   "var(--gs-bg-card, #16161f)",
+            borderColor:  "var(--gs-line, rgba(255,255,255,0.08))",
+          }}
+        >
           {/* Error */}
           {error && (
-            <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
+            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2">
               <p className="text-xs text-red-400">{error}</p>
             </div>
           )}
 
           {/* Email */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">
-              Email
+            <label className="block text-xs font-medium text-[#9999b0] mb-1.5">
+              メールアドレス
             </label>
             <input
               type="email"
@@ -72,14 +99,20 @@ export default function LoginPage() {
               required
               autoComplete="email"
               placeholder="you@example.com"
-              className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors"
+              className="w-full rounded-lg px-3 py-2.5 text-sm text-[#f0f0f5] placeholder-[#55556a] focus:outline-none transition-colors"
+              style={{
+                background:  "var(--gs-bg-2, #111118)",
+                border:      "1px solid var(--gs-line, rgba(255,255,255,0.08))",
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = "var(--gs-blue, #4f8ef7)"}
+              onBlur={(e)  => e.currentTarget.style.borderColor = "var(--gs-line, rgba(255,255,255,0.08))"}
             />
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">
-              Password
+            <label className="block text-xs font-medium text-[#9999b0] mb-1.5">
+              パスワード
             </label>
             <input
               type="password"
@@ -88,7 +121,13 @@ export default function LoginPage() {
               required
               autoComplete="current-password"
               placeholder="••••••••"
-              className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors"
+              className="w-full rounded-lg px-3 py-2.5 text-sm text-[#f0f0f5] placeholder-[#55556a] focus:outline-none transition-colors"
+              style={{
+                background:  "var(--gs-bg-2, #111118)",
+                border:      "1px solid var(--gs-line, rgba(255,255,255,0.08))",
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = "var(--gs-blue, #4f8ef7)"}
+              onBlur={(e)  => e.currentTarget.style.borderColor = "var(--gs-line, rgba(255,255,255,0.08))"}
             />
           </div>
 
@@ -96,19 +135,43 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#1d4ed8] hover:bg-[#1e40af] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-2 rounded-lg transition-colors"
+            className="w-full py-2.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: "var(--gs-blue, #4f8ef7)" }}
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "ログイン中..." : "ログイン"}
           </button>
+
+          {/* Sign-up link */}
+          <div className="text-center pt-1">
+            <p className="text-xs text-[#55556a]">
+              アカウントをお持ちでない方は{" "}
+              <Link
+                href="/signup"
+                className="underline transition-colors"
+                style={{ color: "var(--gs-blue, #4f8ef7)" }}
+              >
+                新規登録
+              </Link>
+            </p>
+          </div>
         </form>
 
-        {/* Dev note */}
+        {/* Dev environment label */}
         {process.env.NODE_ENV === "development" && (
-          <p className="text-center text-xs text-slate-600 mt-4">
-            Development environment
+          <p className="text-center text-[10px] text-[#55556a] mt-4 tracking-wider">
+            DEVELOPMENT ENVIRONMENT
           </p>
         )}
+
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0f]" />}>
+      <LoginForm />
+    </Suspense>
   );
 }
