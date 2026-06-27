@@ -115,13 +115,21 @@ export async function suspendDealer(dealerId: string, reason: string) {
   const { error } = await supabase
     .from("dealers")
     .update({
-      approval_status:  "suspended",
+      approval_status:     "suspended",
       subscription_status: "suspended",
-      rejection_reason: reason || null,
+      rejection_reason:    reason || null,
     })
     .eq("id", dealerId);
 
   if (error) return { success: false, error: error.message };
+
+  // Suspend all active dealer_members so getCurrentDealer() returns null,
+  // blocking access to all protected dealer-facing pages and server actions.
+  await supabase
+    .from("dealer_members")
+    .update({ status: "suspended" })
+    .eq("dealer_id", dealerId)
+    .eq("status", "active");
 
   await writeAuditLog({
     adminUserId:    admin.id,
@@ -155,13 +163,20 @@ export async function reactivateDealer(dealerId: string) {
   const { error } = await supabase
     .from("dealers")
     .update({
-      approval_status:  "approved",
+      approval_status:     "approved",
       subscription_status: subscriptionStatus,
-      rejection_reason: null,
+      rejection_reason:    null,
     })
     .eq("id", dealerId);
 
   if (error) return { success: false, error: error.message };
+
+  // Re-activate dealer_members that were suspended by suspendDealer().
+  await supabase
+    .from("dealer_members")
+    .update({ status: "active" })
+    .eq("dealer_id", dealerId)
+    .eq("status", "suspended");
 
   await writeAuditLog({
     adminUserId:    admin.id,

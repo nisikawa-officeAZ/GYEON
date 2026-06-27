@@ -4,6 +4,7 @@
 
 import { redirect }        from "next/navigation";
 import { getCurrentUser }  from "@/lib/auth/get-current-user";
+import { createClient }    from "@/lib/supabase/server";
 import LogoutButton        from "@/components/auth/LogoutButton";
 
 export const metadata = { title: "店舗アクセス待ち | GYEON Detailer Agent" };
@@ -13,6 +14,19 @@ export default async function NoDealerPage() {
   // If somehow an unauthenticated user lands here, send them to login
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+
+  // Detect whether the user belongs to a suspended dealer.
+  // suspendDealer() sets dealer_members.status = 'suspended', so querying here
+  // distinguishes "no membership" from "suspended membership".
+  const supabase = await createClient();
+  const { data: suspendedRow } = await supabase
+    .from("dealer_members")
+    .select("dealer_id")
+    .eq("user_id", user.id)
+    .eq("status", "suspended")
+    .limit(1)
+    .maybeSingle();
+  const isSuspended = !!suspendedRow;
 
   const isDev = process.env.NODE_ENV === "development";
 
@@ -39,93 +53,142 @@ export default async function NoDealerPage() {
           className="rounded-2xl border p-6 flex flex-col gap-5"
           style={{
             background:  "var(--gs-bg-card, #16161f)",
-            borderColor: "var(--gs-line, rgba(255,255,255,0.08))",
+            borderColor: isSuspended
+              ? "rgba(239,68,68,0.25)"
+              : "var(--gs-line, rgba(255,255,255,0.08))",
           }}
         >
-          {/* Icon + title */}
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div
-              className="w-14 h-14 rounded-full flex items-center justify-center"
-              style={{ background: "rgba(245,158,11,0.12)" }}
-            >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-                stroke="var(--gs-amber, #f59e0b)" strokeWidth="2"
-                strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9 22 9 12 15 12 15 22"/>
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-base font-bold text-[#f0f0f5]">店舗へのアクセスをお待ちください</h1>
-              <p className="text-xs text-[#9999b0] mt-1">
-                アカウント: <span className="text-[#f0f0f5] font-medium">{user.email}</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Explanation */}
-          <div
-            className="rounded-xl p-4 flex flex-col gap-3"
-            style={{ background: "var(--gs-bg-2, #111118)" }}
-          >
-            <p className="text-xs text-[#9999b0] leading-relaxed">
-              このアカウントはまだ店舗に紐付けられていません。
-              以下の手順で店舗へのアクセスを取得してください。
-            </p>
-
-            <div className="flex flex-col gap-2.5">
-              {[
-                {
-                  num: "1",
-                  text: "ショップのオーナーまたは管理者に、登録したメールアドレスをお知らせください。",
-                },
-                {
-                  num: "2",
-                  text: "管理者があなたのアカウントを店舗に追加します。",
-                },
-                {
-                  num: "3",
-                  text: "追加完了後、このページをリロードするかログインし直してください。",
-                },
-              ].map(({ num, text }) => (
-                <div key={num} className="flex gap-3">
-                  <div
-                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold"
-                    style={{
-                      background: "rgba(255,255,255,0.06)",
-                      color:      "var(--gs-text-3, #55556a)",
-                    }}
-                  >
-                    {num}
-                  </div>
-                  <p className="text-xs text-[#9999b0] leading-relaxed">{text}</p>
+          {isSuspended ? (
+            /* ── Suspended account message ─────────────────────────────── */
+            <>
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(239,68,68,0.12)" }}
+                >
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                    stroke="#ef4444" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                  </svg>
                 </div>
-              ))}
-            </div>
-          </div>
+                <div>
+                  <h1 className="text-base font-bold text-[#f0f0f5]">アカウントが停止されています</h1>
+                  <p className="text-xs text-[#9999b0] mt-1">
+                    アカウント: <span className="text-[#f0f0f5] font-medium">{user.email}</span>
+                  </p>
+                </div>
+              </div>
 
-          {/* Actions */}
-          <div className="flex gap-2">
-            <a
-              href="/no-dealer"
-              className="flex-1 py-2.5 rounded-lg text-sm font-medium text-center transition-all"
-              style={{
-                background:  "rgba(255,255,255,0.06)",
-                color:       "var(--gs-text-2, #9999b0)",
-                border:      "1px solid var(--gs-line, rgba(255,255,255,0.08))",
-              }}
-            >
-              再確認
-            </a>
-            <LogoutButton
-              className="flex-1 py-2.5 rounded-lg text-sm font-medium text-center transition-all"
-              style={{
-                background: "rgba(239,68,68,0.10)",
-                color:      "var(--gs-red, #ef4444)",
-                border:     "1px solid rgba(239,68,68,0.20)",
-              }}
-            />
-          </div>
+              <div
+                className="rounded-xl p-4"
+                style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}
+              >
+                <p className="text-xs text-[#9999b0] leading-relaxed">
+                  このアカウントは管理者によって一時停止されています。
+                  ご不明な点はGYEONサポートまでお問い合わせください。
+                </p>
+              </div>
+
+              <LogoutButton
+                className="w-full py-2.5 rounded-lg text-sm font-medium text-center transition-all"
+                style={{
+                  background: "rgba(239,68,68,0.10)",
+                  color:      "var(--gs-red, #ef4444)",
+                  border:     "1px solid rgba(239,68,68,0.20)",
+                }}
+              />
+            </>
+          ) : (
+            /* ── Pending access message ────────────────────────────────── */
+            <>
+              {/* Icon + title */}
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(245,158,11,0.12)" }}
+                >
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                    stroke="var(--gs-amber, #f59e0b)" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-base font-bold text-[#f0f0f5]">店舗へのアクセスをお待ちください</h1>
+                  <p className="text-xs text-[#9999b0] mt-1">
+                    アカウント: <span className="text-[#f0f0f5] font-medium">{user.email}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Explanation */}
+              <div
+                className="rounded-xl p-4 flex flex-col gap-3"
+                style={{ background: "var(--gs-bg-2, #111118)" }}
+              >
+                <p className="text-xs text-[#9999b0] leading-relaxed">
+                  このアカウントはまだ店舗に紐付けられていません。
+                  以下の手順で店舗へのアクセスを取得してください。
+                </p>
+
+                <div className="flex flex-col gap-2.5">
+                  {[
+                    {
+                      num: "1",
+                      text: "ショップのオーナーまたは管理者に、登録したメールアドレスをお知らせください。",
+                    },
+                    {
+                      num: "2",
+                      text: "管理者があなたのアカウントを店舗に追加します。",
+                    },
+                    {
+                      num: "3",
+                      text: "追加完了後、このページをリロードするかログインし直してください。",
+                    },
+                  ].map(({ num, text }) => (
+                    <div key={num} className="flex gap-3">
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold"
+                        style={{
+                          background: "rgba(255,255,255,0.06)",
+                          color:      "var(--gs-text-3, #55556a)",
+                        }}
+                      >
+                        {num}
+                      </div>
+                      <p className="text-xs text-[#9999b0] leading-relaxed">{text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                <a
+                  href="/no-dealer"
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium text-center transition-all"
+                  style={{
+                    background:  "rgba(255,255,255,0.06)",
+                    color:       "var(--gs-text-2, #9999b0)",
+                    border:      "1px solid var(--gs-line, rgba(255,255,255,0.08))",
+                  }}
+                >
+                  再確認
+                </a>
+                <LogoutButton
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium text-center transition-all"
+                  style={{
+                    background: "rgba(239,68,68,0.10)",
+                    color:      "var(--gs-red, #ef4444)",
+                    border:     "1px solid rgba(239,68,68,0.20)",
+                  }}
+                />
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── Dev SQL guide ───────────────────────────────────────────────── */}
