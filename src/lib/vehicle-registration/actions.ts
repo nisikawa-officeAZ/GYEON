@@ -26,6 +26,10 @@ import {
 } from "./storage";
 import { analyzeVehicleRegistrationImage } from "./ocr";
 import { createAuditLog }    from "@/lib/audit/audit";
+import {
+  createOcrSession,
+  linkFileToOcrSession,
+} from "@/lib/ocr/ocr-session-actions";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -185,7 +189,26 @@ export async function uploadAndAnalyzeVehicleRegistration(
 
   const finalRow = (updatedData ?? fileRow) as VehicleRegistrationFile;
 
-  return { success: true, file: finalRow, ocrResult };
+  // Non-blocking OCR session creation — doesn't affect the upload result.
+  // If migration 068_ocr_sessions.sql has not been applied, these calls
+  // return descriptive errors and are silently ignored here.
+  let sessionId: string | undefined = undefined;
+  let sessionPersisted = false;
+  try {
+    const sessionResult = await createOcrSession({
+      customer_id: customerId ?? undefined,
+      vehicle_id:  vehicleId  ?? undefined,
+    });
+    if (sessionResult.success) {
+      sessionId = sessionResult.sessionId;
+      const linkResult = await linkFileToOcrSession(sessionResult.sessionId, finalRow.id, true);
+      sessionPersisted = linkResult.success;
+    }
+  } catch {
+    // Session persistence is optional — upload flow completes regardless
+  }
+
+  return { success: true, file: finalRow, ocrResult, sessionId, sessionPersisted };
 }
 
 // ─── Confirm OCR result ───────────────────────────────────────────────────────

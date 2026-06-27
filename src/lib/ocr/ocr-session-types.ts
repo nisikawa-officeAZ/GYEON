@@ -70,3 +70,9 @@ export type OcrSessionResult =
 export type OcrSessionMutationResult =
   | { success: true }
   | { success: false; error: string };
+
+// Meta returned to UI after upload+OCR — carries session persistence status
+export interface OcrSessionMeta {
+  sessionId?:        string;
+  sessionPersisted?: boolean; // true = session row saved; false = migration not yet applied or DB error
+}

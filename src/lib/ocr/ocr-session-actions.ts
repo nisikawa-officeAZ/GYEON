@@ -29,10 +29,27 @@ function tableMissingError(label: string): OcrSessionMutationResult {
   };
 }
 
+function columnMissingError(): OcrSessionMutationResult {
+  return {
+    success: false,
+    error: "session_idカラムが未適用です。マイグレーション 068_ocr_sessions.sql を Supabase SQL Editor で実行してください。",
+  };
+}
+
 function isTableMissing(err: { message?: string; code?: string } | null): boolean {
   return !!(
-    err?.message?.includes("does not exist") ||
-    err?.code === "42P01"
+    err?.code === "42P01" ||
+    (err?.message?.includes("does not exist") && !err.message.includes("column"))
+  );
+}
+
+// Catches ALTER TABLE column-not-yet-added (migration 068 ALTER TABLE not applied)
+function isColumnMissing(err: { message?: string; code?: string } | null): boolean {
+  return !!(
+    err?.code === "42703" ||
+    err?.code === "PGRST204" ||
+    (err?.message?.includes("does not exist") && err.message.includes("column")) ||
+    (err?.message?.includes("Column") && err.message.includes("does not exist"))
   );
 }
 
@@ -176,6 +193,8 @@ export async function linkFileToOcrSession(
     .eq("dealer_id", dealer.dealer_id);
 
   if (fileError) {
+    if (isColumnMissing(fileError)) return columnMissingError();
+    if (isTableMissing(fileError))  return tableMissingError("ファイル");
     return { success: false, error: "ファイルとセッションのリンクに失敗しました" };
   }
 

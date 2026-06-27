@@ -10,6 +10,8 @@ import { createVehicle }  from "@/lib/vehicles/create-vehicle";
 import type { CustomerDB } from "@/lib/customers/customer-types";
 import { customerDisplayName } from "@/lib/customers/customer-types";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
+import type { OcrSessionMeta }               from "@/lib/ocr/ocr-session-types";
+import { completeOcrSession }                from "@/lib/ocr/ocr-session-actions";
 import {
   mapOcrToCustomer,
   EMPTY_CUSTOMER_FORM,
@@ -109,6 +111,8 @@ export default function CustomerVehicleOnboardingWizard({
   const [vehicleForm,        setVehicleForm]        = useState<VehicleFormState>(EMPTY_VEHICLE_FORM);
   const [error,              setError]              = useState<string | null>(null);
   const [isPending,          startTransition]       = useTransition();
+  const [ocrSessionId,       setOcrSessionId]       = useState<string | null>(null);
+  const [ocrSessionSaved,    setOcrSessionSaved]    = useState<boolean>(false);
 
   const isNewCustomer = existingCustomerId === null;
 
@@ -141,8 +145,10 @@ export default function CustomerVehicleOnboardingWizard({
     setVehicleForm(f  => ({ ...f, ...vehicleData }));
   }
 
-  function handleOcrComplete(result: VehicleRegistrationOcrResult) {
+  function handleOcrComplete(result: VehicleRegistrationOcrResult, meta?: OcrSessionMeta) {
     setOcrResult(result);
+    setOcrSessionId(meta?.sessionId ?? null);
+    setOcrSessionSaved(meta?.sessionPersisted ?? false);
     push("ocr-review");
   }
 
@@ -215,6 +221,20 @@ export default function CustomerVehicleOnboardingWizard({
       if ("error" in vehicleResult) {
         setError(vehicleResult.error ?? "車両の作成に失敗しました");
         return;
+      }
+
+      // Non-blocking OCR session completion — records reviewed_result + customer/vehicle IDs
+      if (ocrSessionId && ocrResult) {
+        try {
+          await completeOcrSession({
+            session_id:      ocrSessionId,
+            reviewed_result: ocrResult,
+            customer_id:     customerId,
+            vehicle_id:      vehicleResult.vehicleId,
+          });
+        } catch {
+          // Session completion is non-blocking — wizard finishes regardless
+        }
       }
 
       onComplete(customerId, vehicleResult.vehicleId);
@@ -344,11 +364,29 @@ export default function CustomerVehicleOnboardingWizard({
 
       {/* ── ocr-review ──────────────────────────────────────────────── */}
       {screen === "ocr-review" && ocrResult && (
-        <VehicleRegistrationOcrReview
-          ocrResult={ocrResult}
-          onApply={handleOcrApply}
-          onCancel={pop}
-        />
+        <div className="flex flex-col gap-3">
+          {/* Session persistence status badge */}
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] ${
+            ocrSessionSaved
+              ? "border-green-500/30 bg-green-500/8 text-green-400"
+              : "border-slate-700 bg-slate-800/40 text-slate-500"
+          }`}>
+            <span>{ocrSessionSaved ? "✓" : "○"}</span>
+            <span>
+              {ocrSessionSaved
+                ? "OCRセッション保存済み"
+                : ocrSessionId
+                  ? "OCRセッション保存中..."
+                  : "OCRセッション未保存（マイグレーション 068 未適用）"}
+            </span>
+          </div>
+
+          <VehicleRegistrationOcrReview
+            ocrResult={ocrResult}
+            onApply={handleOcrApply}
+            onCancel={pop}
+          />
+        </div>
       )}
 
       {/* ── customer-form ───────────────────────────────────────────── */}

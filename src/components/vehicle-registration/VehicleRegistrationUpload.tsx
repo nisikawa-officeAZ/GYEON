@@ -10,12 +10,13 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { uploadAndAnalyzeVehicleRegistration } from "@/lib/vehicle-registration/actions";
 import { VehicleRegistrationOcrResult }         from "@/lib/vehicle-registration/vehicle-registration-types";
+import type { OcrSessionMeta }                  from "@/lib/ocr/ocr-session-types";
 
 interface Props {
   customerId?:  string;
   vehicleId?:   string;
   estimateId?:  string;
-  onComplete:   (result: VehicleRegistrationOcrResult) => void;
+  onComplete:   (result: VehicleRegistrationOcrResult, meta?: OcrSessionMeta) => void;
   onCancel?:    () => void;
 }
 
@@ -89,7 +90,11 @@ export default function VehicleRegistrationUpload({
         setError(result.error ?? "車検証を読み取れませんでした。画像を確認してください。");
         return;
       }
-      onComplete(result.ocrResult);
+      const meta: OcrSessionMeta = {
+        sessionId:        result.sessionId,
+        sessionPersisted: result.sessionPersisted,
+      };
+      onComplete(result.ocrResult, meta);
     });
   }
 

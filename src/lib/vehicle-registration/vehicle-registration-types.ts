@@ -65,7 +65,13 @@ export interface VehicleRegistrationFile {
 
 // Result returned after upload + OCR analysis
 export type UploadResult =
-  | { success: true;  file: VehicleRegistrationFile; ocrResult: VehicleRegistrationOcrResult }
+  | {
+      success: true;
+      file:             VehicleRegistrationFile;
+      ocrResult:        VehicleRegistrationOcrResult;
+      sessionId?:       string;   // Set when migration 068 is applied
+      sessionPersisted?: boolean; // true = session + file link saved to DB
+    }
   | { success: false; error: string };
 
 // Params for confirming an OCR result and applying selected fields
