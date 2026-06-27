@@ -1,11 +1,14 @@
-import UsersAdminClient from "./UsersAdminClient";
+import { redirect } from "next/navigation";
+import { getCurrentAdmin } from "@/lib/admin/get-current-admin";
+import { getAdminUsers } from "@/lib/admin/get-admin-users";
 import { ADMIN_ROLE_META, DEALER_ROLE_META } from "@/lib/admin/admin-roles";
 import type { AdminRole, DealerRole } from "@/lib/admin/admin-roles";
+import AdminUsersPanel from "./AdminUsersPanel";
+import UsersAdminClient from "./UsersAdminClient";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Users | GYEON Admin" };
 
-// Role architecture reference panel (read-only, architecture-only)
 function RoleArchitecturePanel() {
   const adminRoles: { role: AdminRole; desc: string; access: string }[] = [
     { role: "super_admin",     desc: "GYEON Super Admin",    access: "Full access to all modules, audit logs, user management" },
@@ -25,11 +28,10 @@ function RoleArchitecturePanel() {
       <div className="px-5 py-4 border-b border-slate-800">
         <h2 className="text-sm font-semibold text-slate-200">Role Architecture</h2>
         <p className="text-xs text-slate-500 mt-0.5">
-          Role definitions. Full editing is in a future sprint.
+          Role definitions. Migration 075 enables all three admin roles in the DB.
         </p>
       </div>
 
-      {/* Admin roles */}
       <div className="px-5 py-4 border-b border-slate-800">
         <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">
           GYEON Admin Roles (admin_users.role)
@@ -52,7 +54,6 @@ function RoleArchitecturePanel() {
         </div>
       </div>
 
-      {/* Dealer roles */}
       <div className="px-5 py-4">
         <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">
           Dealer Member Roles (dealer_members.role)
@@ -78,20 +79,33 @@ function RoleArchitecturePanel() {
   );
 }
 
-export default function AdminUsersPage() {
+export default async function AdminUsersPage() {
+  const caller = await getCurrentAdmin();
+  if (!caller) redirect("/login");
+
+  const isSuperAdmin = caller.role === "super_admin";
+  const adminUsers   = isSuperAdmin ? await getAdminUsers() : [];
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-lg font-semibold text-slate-100">User Management</h1>
         <p className="text-xs text-slate-500 mt-0.5">
-          Supabase Auth users, dealer members, and role architecture
+          Admin users, dealer members, and role architecture
         </p>
       </div>
 
       <RoleArchitecturePanel />
 
+      {isSuperAdmin && (
+        <div>
+          <h2 className="text-sm font-semibold text-slate-300 mb-4">Admin Users</h2>
+          <AdminUsersPanel adminUsers={adminUsers} callerId={caller.user_id} />
+        </div>
+      )}
+
       <div>
-        <h2 className="text-sm font-semibold text-slate-300 mb-4">Auth Users</h2>
+        <h2 className="text-sm font-semibold text-slate-300 mb-4">Auth Users (Dealer Members)</h2>
         <UsersAdminClient />
       </div>
     </div>

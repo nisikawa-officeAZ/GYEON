@@ -1,6 +1,5 @@
 // Re-export from admin-roles for backward compatibility.
-// admin_users.role DB constraint currently only allows 'super_admin';
-// gyeon_admin and logistics_admin require a future migration to the constraint.
+// Migration 075 expands admin_users.role CHECK to allow super_admin | gyeon_admin | logistics_admin.
 import type { AdminRole as _AdminRole } from "@/lib/admin/admin-roles";
 export type { AdminRole } from "@/lib/admin/admin-roles";
 export type AdminStatus = "active" | "disabled";
@@ -64,7 +63,13 @@ export type AdminAuditAction =
   // PHASE74: trial approval
   | "dealer_approved"
   | "dealer_rejected"
-  | "trial_auto_downgraded";
+  | "trial_auto_downgraded"
+  // PHASE75: admin user management
+  | "admin_user_created"
+  | "admin_user_disabled"
+  | "admin_user_enabled"
+  | "admin_role_changed"
+  | "admin_password_reset";
 
 export interface AdminAuditLogDB {
   id: string;

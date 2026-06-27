@@ -12,3 +12,11 @@ export async function requireAdmin() {
   }
   return admin;
 }
+
+export async function requireSuperAdmin() {
+  const admin = await requireAdmin();
+  if (admin.role !== "super_admin") {
+    throw new Error("Super Admin権限が必要です");
+  }
+  return admin;
+}
