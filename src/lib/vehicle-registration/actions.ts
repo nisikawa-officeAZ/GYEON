@@ -211,10 +211,18 @@ export async function uploadAndAnalyzeVehicleRegistration(
   } as Parameters<typeof createAuditLog>[0]);
 
   if (ocrError) {
-    if (ocrError === "OPENAI_API_KEY_MISSING") {
-      return { success: false, error: "AI解析キーが設定されていません。管理者にお問い合わせください。" };
-    }
-    return { success: false, error: "OCRサーバー処理に失敗しました。画像を確認して再試行してください。" };
+    const OCR_ERROR_MESSAGES: Record<string, string> = {
+      OPENAI_API_KEY_MISSING: "AI解析キーが設定されていません。管理者にお問い合わせください。",
+      TIMEOUT:                "AI解析がタイムアウトしました。再試行してください。",
+      CONNECT_ERROR:          "AI解析サービスに接続できませんでした。通信環境を確認してください。",
+      OPENAI_AUTH_ERROR:      "AI解析キーが無効です。管理者にお問い合わせください。",
+      OPENAI_RATE_LIMIT:      "AI解析の利用制限に達しました。しばらく待ってから再試行してください。",
+      OPENAI_SERVER_ERROR:    "AI解析サービスが一時的に利用できません。再試行してください。",
+      EMPTY_RESPONSE:         "車検証画像を読み取れませんでした。鮮明な画像で再試行してください。",
+      PARSE_ERROR:            "OCR解析に失敗しました。画像が鮮明かどうか確認してください。",
+    };
+    const msg = OCR_ERROR_MESSAGES[ocrError] ?? "OCR解析に失敗しました。再試行してください。";
+    return { success: false, error: msg };
   }
 
   const finalRow = (updatedData ?? fileRow) as VehicleRegistrationFile;
