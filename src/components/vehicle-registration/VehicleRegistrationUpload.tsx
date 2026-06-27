@@ -1,11 +1,11 @@
 "use client";
 
-// PHASE67: Vehicle Registration Upload Component
+// Vehicle Registration Upload Component
 // Flow:
-//   1. Show choice UI: カメラで撮影 / ファイルから選択
-//   2. User picks source → file input opens
-//   3. File selected → preview shown
-//   4. User confirms → upload + OCR
+//   1. User picks source (camera / file)
+//   2. Image is compressed client-side via Canvas API (JPEG, PNG, WebP only)
+//   3. Compressed file is previewed with before/after size info
+//   4. User confirms → Server Action upload + OCR
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { uploadAndAnalyzeVehicleRegistration } from "@/lib/vehicle-registration/actions";
@@ -20,9 +20,77 @@ interface Props {
   onCancel?:    () => void;
 }
 
-const MAX_SIZE_MB = 10;
+// Hard limit shown to user before compression even runs
+const RAW_MAX_SIZE_MB    = 20;
+// Compress if image exceeds this size (iPhone photos are typically 4-8 MB)
+const COMPRESS_THRESHOLD = 1.5 * 1024 * 1024;
+// Max pixel dimension after compression (longer edge)
+const COMPRESS_MAX_PX    = 1920;
+// JPEG quality — high enough for OCR text accuracy
+const COMPRESS_QUALITY   = 0.88;
 
-type Stage = "choice" | "selected";
+type Stage = "choice" | "compressing" | "selected";
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Compress an image File via Canvas. Returns a new File (JPEG) or the
+// original file if compression is not applicable / not beneficial.
+async function compressImage(file: File): Promise<{ file: File; compressed: boolean }> {
+  if (!file.type.startsWith("image/") || file.type === "image/gif") {
+    return { file, compressed: false };
+  }
+  if (file.size <= COMPRESS_THRESHOLD) {
+    return { file, compressed: false };
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const { naturalWidth: w, naturalHeight: h } = img;
+      const scale = Math.min(1, COMPRESS_MAX_PX / Math.max(w, h));
+      const cw = Math.round(w * scale);
+      const ch = Math.round(h * scale);
+
+      const canvas = document.createElement("canvas");
+      canvas.width  = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve({ file, compressed: false }); return; }
+
+      ctx.drawImage(img, 0, 0, cw, ch);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size >= file.size) {
+            // Compression didn't help — send original
+            resolve({ file, compressed: false });
+            return;
+          }
+          const compressed = new File(
+            [blob],
+            file.name.replace(/\.[^.]+$/, ".jpg"),
+            { type: "image/jpeg" },
+          );
+          resolve({ file: compressed, compressed: true });
+        },
+        "image/jpeg",
+        COMPRESS_QUALITY,
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve({ file, compressed: false });
+    };
+
+    img.src = url;
+  });
+}
 
 export default function VehicleRegistrationUpload({
   customerId,
@@ -31,37 +99,47 @@ export default function VehicleRegistrationUpload({
   onComplete,
   onCancel,
 }: Props) {
-  // Two separate inputs: camera capture and file picker
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef   = useRef<HTMLInputElement>(null);
 
-  const [isMobile,     setIsMobile]     = useState(false);
-  const [stage,        setStage]        = useState<Stage>("choice");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [preview,      setPreview]      = useState<string | null>(null);
-  const [fileName,     setFileName]     = useState<string>("");
-  const [error,        setError]        = useState<string | null>(null);
-  const [isPending,    startTransition] = useTransition();
+  const [isMobile,       setIsMobile]       = useState(false);
+  const [stage,          setStage]          = useState<Stage>("choice");
+  const [selectedFile,   setSelectedFile]   = useState<File | null>(null);
+  const [originalSize,   setOriginalSize]   = useState(0);
+  const [wasCompressed,  setWasCompressed]  = useState(false);
+  const [preview,        setPreview]        = useState<string | null>(null);
+  const [fileName,       setFileName]       = useState<string>("");
+  const [error,          setError]          = useState<string | null>(null);
+  const [isPending,      startTransition]   = useTransition();
 
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
   }, []);
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     setError(null);
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const raw = e.target.files?.[0];
+    if (!raw) return;
+    e.target.value = "";
 
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      setError(`ファイルサイズは${MAX_SIZE_MB}MB以下にしてください`);
+    if (raw.size > RAW_MAX_SIZE_MB * 1024 * 1024) {
+      setError(`ファイルサイズは${RAW_MAX_SIZE_MB}MB以下にしてください`);
       return;
     }
 
+    // Show compressing indicator immediately for large images
+    if (raw.type.startsWith("image/") && raw.size > COMPRESS_THRESHOLD) {
+      setStage("compressing");
+    }
+
+    const { file, compressed } = await compressImage(raw);
+
     setSelectedFile(file);
-    setFileName(file.name);
+    setFileName(raw.name);
+    setOriginalSize(raw.size);
+    setWasCompressed(compressed);
     setStage("selected");
 
-    // Preview for images; PDF shows a placeholder
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = (ev) => setPreview(ev.target?.result as string);
@@ -69,9 +147,6 @@ export default function VehicleRegistrationUpload({
     } else {
       setPreview(null);
     }
-
-    // Reset input value so selecting the same file again re-fires onChange
-    e.target.value = "";
   }
 
   function handleAnalyze() {
@@ -101,6 +176,8 @@ export default function VehicleRegistrationUpload({
   function resetToChoice() {
     setStage("choice");
     setSelectedFile(null);
+    setOriginalSize(0);
+    setWasCompressed(false);
     setPreview(null);
     setFileName("");
     setError(null);
@@ -118,7 +195,6 @@ export default function VehicleRegistrationUpload({
           <p className="text-xs text-slate-400 text-center">画像の取得方法を選択してください</p>
 
           {isMobile ? (
-            /* Mobile: camera + file picker */
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -145,7 +221,6 @@ export default function VehicleRegistrationUpload({
               </button>
             </div>
           ) : (
-            /* Desktop: file picker only */
             <div className="flex flex-col gap-2">
               <button
                 type="button"
@@ -164,7 +239,16 @@ export default function VehicleRegistrationUpload({
             </div>
           )}
 
-          <p className="text-xs text-slate-600 text-center">JPEG・PNG・WebP・PDF / 最大10MB</p>
+          <p className="text-xs text-slate-600 text-center">JPEG・PNG・WebP・PDF / 最大{RAW_MAX_SIZE_MB}MB</p>
+        </div>
+      )}
+
+      {/* ── Stage: compressing ─────────────────────────────────────────── */}
+      {stage === "compressing" && (
+        <div className="flex flex-col items-center gap-3 py-8">
+          <span className="text-2xl animate-spin">⟳</span>
+          <p className="text-sm text-slate-300">画像を最適化しています...</p>
+          <p className="text-xs text-slate-500">OCR品質を維持しながらファイルサイズを削減中</p>
         </div>
       )}
 
@@ -188,9 +272,18 @@ export default function VehicleRegistrationUpload({
             )}
           </div>
 
-          {/* File name + re-select */}
+          {/* File name + size info + re-select */}
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-slate-500 truncate flex-1">{fileName}</p>
+            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+              <p className="text-xs text-slate-400 truncate">{fileName}</p>
+              {wasCompressed && selectedFile ? (
+                <p className="text-xs text-emerald-400">
+                  {formatBytes(originalSize)} → {formatBytes(selectedFile.size)} に圧縮
+                </p>
+              ) : selectedFile ? (
+                <p className="text-xs text-slate-600">{formatBytes(selectedFile.size)}</p>
+              ) : null}
+            </div>
             <button
               type="button"
               onClick={resetToChoice}
@@ -204,8 +297,6 @@ export default function VehicleRegistrationUpload({
       )}
 
       {/* ── Hidden inputs ─────────────────────────────────────────────── */}
-
-      {/* Camera input — rendered only on mobile (capture="environment" is a no-op on desktop) */}
       {isMobile && (
         <input
           ref={cameraInputRef}
@@ -217,8 +308,6 @@ export default function VehicleRegistrationUpload({
           disabled={isPending}
         />
       )}
-
-      {/* File picker — images and PDF */}
       <input
         ref={fileInputRef}
         type="file"
@@ -240,11 +329,16 @@ export default function VehicleRegistrationUpload({
         </div>
       )}
 
-      {/* ── AI analyzing indicator ────────────────────────────────────── */}
+      {/* ── Upload progress indicator ─────────────────────────────────── */}
       {isPending && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-500/20 bg-blue-500/5">
-          <span className="text-blue-400 shrink-0 animate-pulse">⟳</span>
-          <p className="text-xs text-blue-400">AI解析中です。しばらくお待ちください...</p>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-500/20 bg-blue-500/5">
+            <span className="text-blue-400 shrink-0 animate-pulse">⟳</span>
+            <p className="text-xs text-blue-400">アップロード・AI解析中です。しばらくお待ちください...</p>
+          </div>
+          <p className="text-xs text-slate-600 text-center">
+            通信環境によっては30秒ほどかかる場合があります
+          </p>
         </div>
       )}
 

@@ -31,7 +31,7 @@ import {
   linkFileToOcrSession,
 } from "@/lib/ocr/ocr-session-actions";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB — matches next.config.ts bodySizeLimit
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 // ─── Upload + Analyze ─────────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ export async function uploadAndAnalyzeVehicleRegistration(
   const estimateId  = (formData.get("estimate_id")  as string | null) || null;
 
   if (!file || file.size === 0) return { success: false, error: "ファイルを選択してください" };
-  if (file.size > MAX_FILE_SIZE) return { success: false, error: "ファイルサイズは10MB以下にしてください" };
+  if (file.size > MAX_FILE_SIZE) return { success: false, error: "ファイルサイズは20MB以下にしてください" };
   if (!ALLOWED_TYPES.includes(file.type)) {
     return { success: false, error: "対応形式はJPEG、PNG、WebPのみです" };
   }
