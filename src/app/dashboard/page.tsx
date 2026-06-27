@@ -12,8 +12,12 @@
 //   passes. The revenue HTML is never included in the response for unauthorized
 //   users. No client-side role check. No "use client" in OwnerRevenueSection.
 
+import { redirect }             from "next/navigation";
 import Link from "next/link";
 import MainLayout               from "@/components/layout/MainLayout";
+import { getCurrentDealer }     from "@/lib/auth/get-current-dealer";
+import { getCurrentUser }       from "@/lib/auth/get-current-user";
+import { createClient }         from "@/lib/supabase/server";
 import { getCurrentStaff }      from "@/lib/staff/get-current-staff";
 import { getDashboardSummary }  from "@/lib/dashboard/get-dashboard-summary";
 import { canViewFinance, staffRoleLabel, type DealerStaffRole } from "@/lib/staff/staff-types";
@@ -53,6 +57,28 @@ function RoleBadge({ role }: { role: DealerStaffRole }) {
 }
 
 export default async function DashboardPage() {
+  // ── Suspension gate ─────────────────────────────────────────────────────────
+  // getCurrentDealer() returns null for both "no dealer" and "suspended" states.
+  // Distinguish them so suspended dealers see a clear message instead of an
+  // empty dashboard, while truly unlinked users are redirected to /no-dealer.
+  const dealer = await getCurrentDealer();
+  if (!dealer) {
+    const user = await getCurrentUser();
+    if (user) {
+      const supabase = await createClient();
+      const { data: suspended } = await supabase
+        .from("dealer_members")
+        .select("dealer_id")
+        .eq("user_id", user.id)
+        .eq("status", "suspended")
+        .maybeSingle();
+      if (suspended) {
+        return <SuspendedCard email={user.email ?? ""} />;
+      }
+    }
+    redirect("/no-dealer");
+  }
+
   // ── Server-side role resolution ─────────────────────────────────────────────
   const staffInfo = await getCurrentStaff().catch(() => null);
   const role: DealerStaffRole = staffInfo?.role ?? "staff"; // fail-closed: unknown → staff
@@ -244,6 +270,75 @@ function ErrorCard({ message }: { message: string }) {
   return (
     <div className="rounded-xl border border-slate-800 bg-[#0a0f1a] px-4 py-6 text-center">
       <p className="text-xs text-slate-600">{message}</p>
+    </div>
+  );
+}
+
+// Shown when a suspended dealer navigates directly to /dashboard.
+// Renders without MainLayout (no dealer context) — standalone full-page card.
+function SuspendedCard({ email }: { email: string }) {
+  return (
+    <div className="min-h-[100dvh] bg-[#0a0a0f] flex items-center justify-center p-4">
+      <div className="w-full max-w-sm flex flex-col gap-5">
+        <div className="flex items-center gap-3 justify-center">
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center"
+            style={{ background: "var(--gs-blue, #4f8ef7)" }}
+          >
+            <span className="text-white text-xl font-black">G</span>
+          </div>
+          <div className="text-left">
+            <p className="text-[10px] font-bold text-[#55556a] tracking-[2.5px] uppercase">GYEON</p>
+            <p className="text-base font-bold text-[#f0f0f5] leading-tight">Detailer Agent</p>
+          </div>
+        </div>
+
+        <div
+          className="rounded-2xl border p-6 flex flex-col gap-5"
+          style={{ background: "var(--gs-bg-card, #16161f)", borderColor: "rgba(239,68,68,0.25)" }}
+        >
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(239,68,68,0.12)" }}
+            >
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-[#f0f0f5]">アカウントが停止されています</h1>
+              <p className="text-xs text-[#9999b0] mt-1">
+                アカウント: <span className="text-[#f0f0f5] font-medium">{email}</span>
+              </p>
+            </div>
+          </div>
+
+          <div
+            className="rounded-xl p-4"
+            style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}
+          >
+            <p className="text-xs text-[#9999b0] leading-relaxed">
+              このアカウントは管理者によって一時停止されています。
+              ご不明な点はGYEONサポートまでお問い合わせください。
+            </p>
+          </div>
+
+          <a
+            href="/no-dealer"
+            className="w-full py-2.5 rounded-lg text-sm font-medium text-center transition-all block"
+            style={{
+              background: "rgba(239,68,68,0.10)",
+              color:      "var(--gs-red, #ef4444)",
+              border:     "1px solid rgba(239,68,68,0.20)",
+            }}
+          >
+            詳細を確認する
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

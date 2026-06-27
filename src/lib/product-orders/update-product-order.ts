@@ -4,7 +4,16 @@ import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { OrderStatus }      from "./product-order-types";
 
-/** Updates order status. Only allowed transitions are enforced client-side. */
+// Dealers may only move orders along these paths.
+// Admin-only statuses (approved) and terminal states (cancelled) are blocked.
+const DEALER_ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  draft:     ["submitted", "cancelled"],
+  submitted: ["cancelled"],
+  approved:  [],   // admin-only — dealer cannot change an approved order
+  cancelled: [],   // terminal state
+};
+
+/** Updates order status with server-side transition guard. */
 export async function updateProductOrderStatus(
   id:     string,
   status: OrderStatus,
@@ -14,7 +23,7 @@ export async function updateProductOrderStatus(
 
   const supabase = await createClient();
 
-  // Ownership gate
+  // Ownership gate — also fetches current status for transition check
   const { data: existing } = await supabase
     .from("product_orders")
     .select("id, status")
@@ -23,6 +32,15 @@ export async function updateProductOrderStatus(
     .single();
 
   if (!existing) return { success: false, error: "注文が見つかりません" };
+
+  const currentStatus = existing.status as OrderStatus;
+  const allowed = DEALER_ALLOWED_TRANSITIONS[currentStatus] ?? [];
+  if (!allowed.includes(status)) {
+    return {
+      success: false,
+      error:   `この操作は許可されていません (${currentStatus} → ${status})`,
+    };
+  }
 
   const { error } = await supabase
     .from("product_orders")

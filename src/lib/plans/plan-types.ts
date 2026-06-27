@@ -13,7 +13,7 @@ export const APP_SUBTITLE   = "Powered by GYEON Japan";
 // ─── Plans ────────────────────────────────────────────────────────────────────
 
 export type DealerPlan         = "basic" | "pro" | "pro_plus";
-export type SubscriptionStatus = "active" | "trial" | "expired" | "cancelled";
+export type SubscriptionStatus = "pending" | "active" | "trial" | "expired" | "cancelled" | "suspended";
 
 export interface DealerPlanInfo {
   plan:                DealerPlan;
@@ -138,19 +138,23 @@ export function planBadgeColor(plan: DealerPlan): string {
 
 export function subscriptionStatusLabel(status: SubscriptionStatus): string {
   switch (status) {
+    case "pending":   return "承認待ち";
     case "active":    return "有効";
     case "trial":     return "トライアル";
     case "expired":   return "期限切れ";
     case "cancelled": return "解約済み";
+    case "suspended": return "停止中";
   }
 }
 
 export function subscriptionStatusColor(status: SubscriptionStatus): string {
   switch (status) {
+    case "pending":   return "text-amber-500";
     case "active":    return "text-green-400";
     case "trial":     return "text-amber-400";
     case "expired":   return "text-red-400";
     case "cancelled": return "text-slate-500";
+    case "suspended": return "text-red-500";
   }
 }
 
