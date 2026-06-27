@@ -21,8 +21,9 @@ export async function getEstimatePdfData(estimateId: string): Promise<EstimateDB
     .from("estimates")
     .select(`
       *,
-      customers ( name, phone, email ),
-      vehicles  ( manufacturer, model, year, grade, license_plate )
+      customers ( last_name, first_name, phone, email ),
+      vehicles  ( maker, model, year, grade, plate_number ),
+      estimate_items ( * )
     `)
     .eq("id",        estimateId)
     .eq("dealer_id", dealer.dealer_id)   // tenant scope — never from client
