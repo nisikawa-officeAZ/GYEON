@@ -9,6 +9,7 @@ export interface GyeonProductDB {
   category:             string | null;
   size_label:           string | null;
   retail_price:         number | null;
+  units_per_case:       number | null;  // Added in migration 069
   image_url:            string | null;
   description:          string | null;
   is_active:            boolean;

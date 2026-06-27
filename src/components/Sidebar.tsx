@@ -35,6 +35,7 @@ const navItems: NavItem[] = [
   { type: "link", href: "/pdf",               label: "PDF",        icon: "⊠", feature: "estimate_pdf" },
 
   { type: "link", href: "/products",          label: "商品管理",   icon: "⊗", feature: "products" },
+  { type: "link", href: "/inventory",         label: "在庫カウント", icon: "⊜", feature: "products" },
   { type: "link", href: "/product-orders",    label: "商品注文",   icon: "⊘", feature: "product_orders" },
   { type: "link", href: "/line",              label: "LINE",       icon: "⊿", feature: "line" },
   { type: "link", href: "/maintenance",       label: "メンテナンス", icon: "◉", feature: "maintenance" },
