@@ -12,9 +12,8 @@
  *   staff     — Dealer Staff: operational access only
  *   read_only — Read Only: view-only access
  *
- * DB note: admin_users.role CHECK constraint currently only allows 'super_admin'.
- * New admin roles (gyeon_admin, logistics_admin) require a future migration to
- * add them to the constraint before DB records can use them.
+ * DB note: Migration 075 expanded admin_users.role CHECK to allow
+ * 'super_admin' | 'gyeon_admin' | 'logistics_admin'.
  */
 
 export type AdminRole = "super_admin" | "gyeon_admin" | "logistics_admin";
@@ -58,7 +57,7 @@ export const ADMIN_NAV_CONFIG: {
   { key: "dealers",    label: "Dealers",    href: "/admin/dealers",    roles: ["super_admin", "gyeon_admin"],                           iconKey: "dealers"   },
   { key: "plans",      label: "Plans",      href: "/admin/plans",      roles: ["super_admin", "gyeon_admin"],                           iconKey: "plans"     },
   { key: "users",      label: "Users",      href: "/admin/users",      roles: ["super_admin"],                                          iconKey: "users"     },
-  { key: "logistics",  label: "Logistics",  href: "/admin/logistics",  roles: ["super_admin", "gyeon_admin", "logistics_admin"],        iconKey: "logistics", soon: true },
+  { key: "logistics",  label: "Logistics",  href: "/admin/logistics",  roles: ["super_admin", "gyeon_admin", "logistics_admin"],        iconKey: "logistics" },
   { key: "products",   label: "Products",   href: "/admin/products",   roles: ["super_admin", "gyeon_admin", "logistics_admin"],        iconKey: "products",  soon: true },
   { key: "crm",        label: "CRM",        href: "/admin/crm",        roles: ["super_admin", "gyeon_admin"],                           iconKey: "crm",       soon: true },
   { key: "ai-center",  label: "AI Center",  href: "/admin/ai-center",  roles: ["super_admin", "gyeon_admin"],                           iconKey: "ai",        soon: true },
