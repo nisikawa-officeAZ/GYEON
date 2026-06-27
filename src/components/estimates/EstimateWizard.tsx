@@ -172,14 +172,15 @@ const lbl = "text-xs font-medium text-slate-400";
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export interface EstimateWizardProps {
-  customers:   CustomerDB[];
-  vehicles:    VehicleDB[];
-  dealerRank:  DetailerRank;
-  onCancel?:   () => void;
-  onSuccess?:  (estimateId?: string) => void;
+  customers:          CustomerDB[];
+  vehicles:           VehicleDB[];
+  dealerRank:         DetailerRank;
+  defaultCustomerId?: string;
+  onCancel?:          () => void;
+  onSuccess?:         (estimateId?: string) => void;
 }
 
-export default function EstimateWizard({ customers, vehicles, dealerRank, onCancel, onSuccess }: EstimateWizardProps) {
+export default function EstimateWizard({ customers, vehicles, dealerRank, defaultCustomerId, onCancel, onSuccess }: EstimateWizardProps) {
 
   const [history, setHistory] = useState<Screen[]>(["category"]);
   const screen = history[history.length - 1]!;
@@ -197,10 +198,13 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, onCanc
   }
 
   // ── Customer ──────────────────────────────────────────────────────────────
+  const _defaultCust = defaultCustomerId ? customers.find(c => c.id === defaultCustomerId) : null;
   const [cMode,                 setCMode]                 = useState<"select" | "create">("select");
-  const [customerId,            setCustomerId]            = useState("");
+  const [customerId,            setCustomerId]            = useState(_defaultCust?.id ?? "");
   const [wizardCreatedCustomerId, setWizardCreatedCustomerId] = useState("");
-  const [custLabel,  setCustLabel]  = useState("");
+  const [custLabel,  setCustLabel]  = useState(
+    _defaultCust ? [_defaultCust.last_name, _defaultCust.first_name].filter(Boolean).join(" ") : ""
+  );
   const [searchQ,    setSearchQ]    = useState("");
   const [isDealer,   setIsDealer]   = useState(false);
   const [dealerRate, setDealerRate] = useState(70);

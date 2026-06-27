@@ -25,15 +25,19 @@ type ModalState =
   | { mode: "work-order";  estimate: EstimateDB };
 
 interface EstimatesClientProps {
-  estimates:  EstimateDB[];
-  customers:  CustomerDB[];
-  vehicles:   VehicleDB[];
-  dealerRank: DetailerRank;
+  estimates:         EstimateDB[];
+  customers:         CustomerDB[];
+  vehicles:          VehicleDB[];
+  dealerRank:        DetailerRank;
+  defaultCustomerId?: string;
 }
 
-export default function EstimatesClient({ estimates, customers, vehicles, dealerRank }: EstimatesClientProps) {
+export default function EstimatesClient({ estimates, customers, vehicles, dealerRank, defaultCustomerId }: EstimatesClientProps) {
   const router = useRouter();
-  const [modal, setModal] = useState<ModalState>({ mode: "none" });
+  // Auto-open wizard when navigated from customer page with a customer pre-selected
+  const [modal, setModal] = useState<ModalState>(
+    defaultCustomerId ? { mode: "create" } : { mode: "none" }
+  );
 
   const closeModal = () => setModal({ mode: "none" });
 
@@ -125,6 +129,7 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
               customers={customers}
               vehicles={vehicles}
               dealerRank={dealerRank}
+              defaultCustomerId={defaultCustomerId}
               onCancel={closeModal}
               onSuccess={closeModal}
             />

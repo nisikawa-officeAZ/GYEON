@@ -37,12 +37,12 @@ export default function WorkOrdersClient({
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <PageTitle title="Work Orders" subtitle="施工管理" />
+        <PageTitle title="施工管理" />
         <button
           onClick={() => setModal({ mode: "create" })}
           className="shrink-0 bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
-          + New Work Order
+          + 新規施工指示
         </button>
       </div>
 
@@ -63,7 +63,7 @@ export default function WorkOrdersClient({
           <div className="relative w-full max-w-lg bg-[#1e293b] rounded-xl shadow-lg p-6 my-4">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-slate-100">
-                {modal.mode === "edit" ? "Edit Work Order" : "New Work Order"}
+                {modal.mode === "edit" ? "施工指示書編集" : "新規施工指示"}
               </h2>
               <button
                 onClick={closeModal}

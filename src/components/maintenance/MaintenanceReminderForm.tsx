@@ -72,8 +72,15 @@ export default function MaintenanceReminderForm({ prefill, reminder, onSaved, on
   const [reminderType, setReminderType] = useState(
     reminder?.reminder_type ?? prefill?.reminder_type ?? "maintenance"
   );
+  const [dueDate, setDueDate] = useState(reminder?.due_date ?? "");
   const [msgTitle, setMsgTitle] = useState(reminder?.message_title ?? "");
   const [msgBody,  setMsgBody]  = useState(reminder?.message_body  ?? "");
+
+  function setDueDateMonthsFromNow(months: number) {
+    const d = new Date();
+    d.setMonth(d.getMonth() + months);
+    setDueDate(d.toISOString().slice(0, 10));
+  }
 
   function fillDefaultMessage(type: typeof reminderType) {
     const def = defaultMaintenanceMessage(type as import("@/lib/maintenance/maintenance-types").MaintenanceReminderType);
@@ -181,8 +188,23 @@ export default function MaintenanceReminderForm({ prefill, reminder, onSaved, on
           <Input
             type="date"
             name="due_date"
-            defaultValue={reminder?.due_date ?? ""}
+            value={dueDate}
+            onChange={e => setDueDate(e.target.value)}
           />
+          <div className="flex gap-2 mt-1.5">
+            <button type="button" onClick={() => setDueDateMonthsFromNow(6)}
+              className="text-[10px] px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-colors">
+              6ヶ月後
+            </button>
+            <button type="button" onClick={() => setDueDateMonthsFromNow(12)}
+              className="text-[10px] px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-colors">
+              12ヶ月後
+            </button>
+            <button type="button" onClick={() => setDueDateMonthsFromNow(3)}
+              className="text-[10px] px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-colors">
+              3ヶ月後
+            </button>
+          </div>
         </div>
 
         {/* Scheduled send at */}

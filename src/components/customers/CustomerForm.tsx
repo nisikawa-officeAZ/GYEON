@@ -34,7 +34,22 @@ const EMPTY: FormFields = {
   notes: "", line_user_id: "",
 };
 
+// Parse business metadata from occupation/notes (backward compatible with wizard encoding)
+function parseBusinessInfo(c: CustomerDB) {
+  const isBusiness   = (c.occupation ?? "").includes("業者");
+  const rateMatch    = (c.notes ?? "").match(/業販掛け率:\s*(\d+)%/);
+  const dealerRate   = rateMatch ? parseInt(rateMatch[1], 10) : 70;
+  const termsMatch   = (c.notes ?? "").match(/与信条件:\s*([^\n]+)/);
+  const creditTerms  = termsMatch ? termsMatch[1].trim() : "";
+  const cleanNotes   = (c.notes ?? "")
+    .replace(/業販掛け率:\s*\d+%\n?/, "")
+    .replace(/与信条件:\s*[^\n]+\n?/, "")
+    .trim();
+  return { isBusiness, dealerRate, creditTerms, cleanNotes };
+}
+
 function fromDB(c: CustomerDB): FormFields {
+  const { cleanNotes } = parseBusinessInfo(c);
   return {
     customer_code:   c.customer_code   ?? "",
     last_name:       c.last_name        ?? "",
@@ -50,8 +65,8 @@ function fromDB(c: CustomerDB): FormFields {
     address2:        c.address2         ?? "",
     birthday:        c.birthday         ?? "",
     gender:          c.gender           ?? "",
-    occupation:      c.occupation       ?? "",
-    notes:           c.notes            ?? "",
+    occupation:      (c.occupation ?? "").includes("業者") ? "" : (c.occupation ?? ""),
+    notes:           cleanNotes,
     line_user_id:    c.line_user_id     ?? "",
   };
 }
@@ -64,7 +79,11 @@ interface CustomerFormProps {
 
 export default function CustomerForm({ customer, onCancel, onSuccess }: CustomerFormProps) {
   const isEdit = !!customer;
+  const parsed = customer ? parseBusinessInfo(customer) : null;
   const [form,        setForm]        = useState<FormFields>(customer ? fromDB(customer) : EMPTY);
+  const [isBusiness,  setIsBusiness]  = useState(parsed?.isBusiness ?? false);
+  const [dealerRate,  setDealerRate]  = useState(parsed?.dealerRate ?? 70);
+  const [creditTerms, setCreditTerms] = useState(parsed?.creditTerms ?? "");
   const [showExtra,   setShowExtra]   = useState(false);
   const [error,       setError]       = useState<string | null>(null);
   const [pending, startTransition]    = useTransition();
@@ -78,7 +97,23 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
     setError(null);
 
     const fd = new FormData();
-    (Object.keys(form) as (keyof FormFields)[]).forEach((k) => fd.set(k, form[k]));
+
+    // Encode business info into occupation and notes (same convention as EstimateWizard)
+    const encodedOccupation = isBusiness ? "業者" : form.occupation;
+    const metaLines: string[] = [];
+    if (isBusiness) {
+      metaLines.push(`業販掛け率: ${dealerRate}%`);
+      if (creditTerms.trim()) metaLines.push(`与信条件: ${creditTerms.trim()}`);
+    }
+    const encodedNotes = metaLines.length > 0
+      ? [...metaLines, form.notes].filter(Boolean).join("\n")
+      : form.notes;
+
+    (Object.keys(form) as (keyof FormFields)[]).forEach((k) => {
+      if (k === "occupation") fd.set(k, encodedOccupation);
+      else if (k === "notes") fd.set(k, encodedNotes);
+      else fd.set(k, form[k]);
+    });
 
     startTransition(async () => {
       const result = isEdit && customer
@@ -174,6 +209,48 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
           </div>
         </div>
 
+      </div>
+
+      {/* ── 業者フラグ ── */}
+      <div className={card}>
+        <div className={secHdr}>業者フラグ</div>
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <div
+            onClick={() => setIsBusiness(v => !v)}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${isBusiness ? "bg-amber-500" : "bg-slate-700"}`}
+          >
+            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${isBusiness ? "translate-x-4" : "translate-x-1"}`} />
+          </div>
+          <span className="text-sm text-slate-300">業者顧客（業販対象）</span>
+        </label>
+        {isBusiness && (
+          <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">
+            <div>
+              <label className={lbl}>業販掛け率 (%)</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={dealerRate}
+                  onChange={e => setDealerRate(Number(e.target.value))}
+                  className={inp}
+                />
+                <span className="text-sm text-slate-400 shrink-0">%</span>
+              </div>
+            </div>
+            <div>
+              <label className={lbl}>与信条件</label>
+              <input
+                type="text"
+                value={creditTerms}
+                onChange={e => setCreditTerms(e.target.value)}
+                placeholder="例: 月末締め翌月末払い"
+                className={inp}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── メモ ── */}

@@ -5,7 +5,13 @@ import { getCustomers }              from "@/lib/customers/get-customers";
 import { getVehicles }               from "@/lib/vehicles/get-vehicles";
 import { getCanonicalDealerSettings } from "@/lib/dealer-settings/get-canonical-dealer-settings";
 
-export default async function EstimatesPage() {
+interface Props {
+  searchParams: Promise<{ customer_id?: string }>;
+}
+
+export default async function EstimatesPage({ searchParams }: Props) {
+  const { customer_id } = await searchParams;
+
   let estimates: Awaited<ReturnType<typeof getEstimates>>  = [];
   let customers: Awaited<ReturnType<typeof getCustomers>> = [];
   let vehicles:  Awaited<ReturnType<typeof getVehicles>>  = [];
@@ -29,6 +35,7 @@ export default async function EstimatesPage() {
         customers={customers}
         vehicles={vehicles}
         dealerRank={settings.detailer_rank}
+        defaultCustomerId={customer_id}
       />
     </MainLayout>
   );

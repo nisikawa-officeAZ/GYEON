@@ -8,11 +8,12 @@ function formatDate(iso: string) {
 }
 
 interface CustomerTableProps {
-  customers: CustomerDB[];
-  onEdit?:   (customer: CustomerDB) => void;
+  customers:        CustomerDB[];
+  onEdit?:          (customer: CustomerDB) => void;
+  onStartEstimate?: (customer: CustomerDB) => void;
 }
 
-export default function CustomerTable({ customers, onEdit }: CustomerTableProps) {
+export default function CustomerTable({ customers, onEdit, onStartEstimate }: CustomerTableProps) {
   if (customers.length === 0) {
     return (
       <div className="bg-[#1e293b] rounded-xl shadow-lg p-10 text-center">
@@ -34,9 +35,7 @@ export default function CustomerTable({ customers, onEdit }: CustomerTableProps)
               <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden lg:table-cell">住所</th>
               <th className="text-center text-xs font-medium text-slate-400 px-4 py-3">LINE</th>
               <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden sm:table-cell">登録日</th>
-              {onEdit && (
-                <th className="text-left text-xs font-medium text-slate-400 px-4 py-3" />
-              )}
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3" />
             </tr>
           </thead>
           <tbody>
@@ -74,17 +73,28 @@ export default function CustomerTable({ customers, onEdit }: CustomerTableProps)
                   <td className="px-4 py-3 text-slate-500 text-xs hidden sm:table-cell whitespace-nowrap">
                     {formatDate(c.created_at)}
                   </td>
-                  {onEdit && (
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => onEdit(c)}
-                        className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
-                      >
-                        編集
-                      </button>
-                    </td>
-                  )}
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1.5">
+                      {onStartEstimate && (
+                        <button
+                          type="button"
+                          onClick={() => onStartEstimate(c)}
+                          className="text-xs text-emerald-400 hover:text-emerald-200 hover:bg-emerald-950/30 border border-emerald-800/40 px-2 py-1 rounded transition-colors whitespace-nowrap"
+                        >
+                          見積作成
+                        </button>
+                      )}
+                      {onEdit && (
+                        <button
+                          type="button"
+                          onClick={() => onEdit(c)}
+                          className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
+                        >
+                          編集
+                        </button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               );
             })}

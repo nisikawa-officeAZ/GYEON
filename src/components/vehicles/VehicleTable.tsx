@@ -16,7 +16,7 @@ export default function VehicleTable({ vehicles, onEdit }: VehicleTableProps) {
   if (vehicles.length === 0) {
     return (
       <div className="bg-[#1e293b] rounded-xl shadow-lg p-10 text-center">
-        <p className="text-sm text-slate-500">No vehicles yet.</p>
+        <p className="text-sm text-slate-500">車両が登録されていません</p>
       </div>
     );
   }
