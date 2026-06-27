@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, ReactNode } from "react";
-import Header    from "@/components/Header";
-import Sidebar   from "@/components/Sidebar";
-import BottomNav from "@/components/layout/BottomNav";
+import Header      from "@/components/Header";
+import Sidebar     from "@/components/Sidebar";
+import BottomNav   from "@/components/layout/BottomNav";
+import TrialBanner from "@/components/trial/TrialBanner";
 import { StaffProvider } from "@/contexts/StaffContext";
 
 interface MainLayoutProps {
@@ -25,6 +26,11 @@ export default function MainLayout({ children, footer }: MainLayoutProps) {
 
       {/* Mobile bottom nav */}
       <BottomNav />
+
+      {/* Trial period countdown banner — shown only when trial is active or ended */}
+      <div className={`fixed top-14 left-0 right-0 z-30 transition-all duration-300 ${open ? "md:ml-[240px]" : "md:ml-0"}`}>
+        <TrialBanner />
+      </div>
 
       {/* Content — no horizontal shift on mobile (sidebar overlays) */}
       {/* pb-16 on mobile to clear the bottom nav bar */}

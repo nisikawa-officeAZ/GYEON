@@ -2,16 +2,17 @@
 
 import { requireAdmin } from "./require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { DealerAdminView } from "./admin-types";
 
-export async function getDealersAdmin() {
+export async function getDealersAdmin(): Promise<DealerAdminView[]> {
   await requireAdmin();
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("dealers")
-    .select("id, name, email, phone, plan, subscription_status, started_at, expired_at, created_at, owner_user_id")
+    .select("*")
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data ?? []) as DealerAdminView[];
 }

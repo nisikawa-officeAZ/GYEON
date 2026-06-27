@@ -56,7 +56,11 @@ export type AdminAuditAction =
   // PHASE66: official release
   | "official_release_viewed"
   // Dealer rank management
-  | "rank_assigned";
+  | "rank_assigned"
+  // PHASE74: trial approval
+  | "dealer_approved"
+  | "dealer_rejected"
+  | "trial_auto_downgraded";
 
 export interface AdminAuditLogDB {
   id: string;
@@ -80,6 +84,18 @@ export interface DealerAdminView {
   created_at: string;
   owner_user_id: string | null;
   staff_count?: number;
+  // PHASE71 approval fields
+  approval_status:          string | null;
+  approved_at:              string | null;
+  rejection_reason:         string | null;
+  // PHASE74 trial fields
+  trial_plan_type:          string | null;
+  service_start_date:       string | null;
+  trial_start_date:         string | null;
+  trial_end_date:           string | null;
+  trial_status:             string | null;
+  auto_downgrade_plan_type: string | null;
+  detailer_rank:            string | null;
 }
 
 export interface UserAdminView {
