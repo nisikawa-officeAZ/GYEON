@@ -3,6 +3,7 @@ import Image                      from "next/image";
 import Link                       from "next/link";
 import MainLayout                 from "@/components/layout/MainLayout";
 import { getCurrentDealer }       from "@/lib/auth/get-current-dealer";
+import { getCurrentUser }         from "@/lib/auth/get-current-user";
 import { createClient }           from "@/lib/supabase/server";
 import OnboardingCard             from "@/components/onboarding/OnboardingCard";
 import { getDashboardSummary }    from "@/lib/dashboard/get-dashboard-summary";
@@ -13,22 +14,29 @@ export const metadata = { title: "ホーム | GYEON Detailer Agent" };
 
 export default async function HomePage() {
 
+  // ── Dealer gate ──────────────────────────────────────────────────────────
+  // Middleware ensures the user is authenticated before reaching this page.
+  // Here we additionally verify they have an active dealer_members record.
+  const dealer = await getCurrentDealer();
+  if (!dealer) {
+    const user = await getCurrentUser();
+    if (user) redirect("/no-dealer");
+    redirect("/login");
+  }
+
   // ── Onboarding redirect ──────────────────────────────────────────────────
   let shouldRedirectToOnboarding = false;
   try {
-    const dealer = await getCurrentDealer();
-    if (dealer) {
-      const supabase = await createClient();
-      const { data: settings, error } = await supabase
-        .from("dealer_settings")
-        .select("onboarding_completed, onboarding_step")
-        .eq("dealer_id", dealer.dealer_id)
-        .maybeSingle();
-      if (!error) {
-        const completed = settings?.onboarding_completed ?? false;
-        const step      = settings?.onboarding_step      ?? 1;
-        if (!settings || (!completed && step === 1)) shouldRedirectToOnboarding = true;
-      }
+    const supabase = await createClient();
+    const { data: settings, error } = await supabase
+      .from("dealer_settings")
+      .select("onboarding_completed, onboarding_step")
+      .eq("dealer_id", dealer.dealer_id)
+      .maybeSingle();
+    if (!error) {
+      const completed = settings?.onboarding_completed ?? false;
+      const step      = settings?.onboarding_step      ?? 1;
+      if (!settings || (!completed && step === 1)) shouldRedirectToOnboarding = true;
     }
   } catch { /* column missing — skip */ }
 

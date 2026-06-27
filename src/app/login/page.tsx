@@ -111,9 +111,20 @@ function LoginForm() {
 
           {/* Password */}
           <div>
-            <label className="block text-xs font-medium text-[#9999b0] mb-1.5">
-              パスワード
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-medium text-[#9999b0]">
+                パスワード
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-xs transition-colors"
+                style={{ color: "var(--gs-text-3, #55556a)" }}
+                onMouseEnter={(e) => e.currentTarget.style.color = "var(--gs-blue, #4f8ef7)"}
+                onMouseLeave={(e) => e.currentTarget.style.color = "var(--gs-text-3, #55556a)"}
+              >
+                パスワードを忘れた方
+              </Link>
+            </div>
             <input
               type="password"
               value={password}
