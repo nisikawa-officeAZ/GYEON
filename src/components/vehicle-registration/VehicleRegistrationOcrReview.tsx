@@ -1,8 +1,10 @@
 "use client";
 
-// PHASE67: OCR Result Review Component
-// Displays extracted fields from vehicle registration certificate.
-// User must confirm before any data is applied to customer/vehicle/estimate.
+// RC-02: OCR Result Review Component — Customer/Vehicle section layout
+//
+// Displays extracted fields from a vehicle registration certificate (車検証).
+// Fields are grouped into two sections: customer data and vehicle data.
+// User can edit any field and choose which fields to apply before confirming.
 
 import { useState, useTransition } from "react";
 import {
@@ -17,12 +19,18 @@ interface Props {
   onCancel:   () => void;
 }
 
-// Fields shown in the review table (excluding confidence)
-const REVIEW_FIELDS: Array<keyof Omit<VehicleRegistrationOcrResult, "confidence">> = [
+// ─── Field grouping ────────────────────────────────────────────────────────────
+
+type ReviewField = keyof Omit<VehicleRegistrationOcrResult, "confidence">;
+
+const CUSTOMER_FIELDS: ReviewField[] = [
   "owner_name",
   "user_name",
   "owner_address",
   "user_address",
+];
+
+const VEHICLE_FIELDS: ReviewField[] = [
   "vehicle_name",
   "maker",
   "model",
@@ -40,9 +48,14 @@ const REVIEW_FIELDS: Array<keyof Omit<VehicleRegistrationOcrResult, "confidence"
   "private_or_business",
   "body_shape",
   "fuel_type",
+  "displacement",
   "color",
   "notes",
 ];
+
+const ALL_REVIEW_FIELDS: ReviewField[] = [...CUSTOMER_FIELDS, ...VEHICLE_FIELDS];
+
+// ─── Sub-components ────────────────────────────────────────────────────────────
 
 function ConfidenceBadge({ value }: { value: number | undefined }) {
   if (value === undefined) return null;
@@ -58,6 +71,69 @@ function ConfidenceBadge({ value }: { value: number | undefined }) {
   );
 }
 
+function SectionLabel({ icon, label }: { icon: string; label: string }) {
+  return (
+    <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 border-b border-slate-800">
+      <span className="text-xs">{icon}</span>
+      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{label}</p>
+    </div>
+  );
+}
+
+interface FieldTableProps {
+  fields:   ReviewField[];
+  ocr:      VehicleRegistrationOcrResult;
+  edited:   Record<string, string>;
+  selected: Set<string>;
+  onToggle: (key: string) => void;
+  onEdit:   (key: string, val: string) => void;
+}
+
+function FieldTable({ fields, ocr, edited, selected, onToggle, onEdit }: FieldTableProps) {
+  const presentFields = fields.filter(k => ocr[k]);
+  if (presentFields.length === 0) return (
+    <p className="px-4 py-3 text-xs text-slate-600">読み取れたデータがありません</p>
+  );
+
+  return (
+    <table className="w-full text-xs">
+      <tbody className="divide-y divide-slate-800">
+        {presentFields.map((key) => {
+          const isSelected = selected.has(key);
+          return (
+            <tr
+              key={key}
+              className={`transition-colors ${isSelected ? "bg-blue-950/20" : "bg-[#0f172a]"}`}
+            >
+              <td className="px-3 py-2 w-8">
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => onToggle(key)}
+                  className="accent-blue-500"
+                />
+              </td>
+              <td className="px-3 py-2 text-slate-400 whitespace-nowrap w-32">
+                {OCR_FIELD_LABELS[key]}
+              </td>
+              <td className="px-3 py-2">
+                <input
+                  type="text"
+                  value={edited[key] ?? ""}
+                  onChange={(e) => onEdit(key, e.target.value)}
+                  className="w-full bg-[#1e293b] border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-blue-500"
+                />
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
+// ─── Main component ────────────────────────────────────────────────────────────
+
 export default function VehicleRegistrationOcrReview({
   ocrResult,
   onApply,
@@ -65,19 +141,17 @@ export default function VehicleRegistrationOcrReview({
 }: Props) {
   const [, startTransition] = useTransition();
 
-  // Editable values — user can correct before applying
   const [edited, setEdited] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
-    for (const key of REVIEW_FIELDS) {
+    for (const key of ALL_REVIEW_FIELDS) {
       init[key] = (ocrResult[key] as string | undefined) ?? "";
     }
     return init;
   });
 
-  // Which fields are selected for apply
   const [selected, setSelected] = useState<Set<string>>(() => {
     const s = new Set<string>();
-    for (const key of REVIEW_FIELDS) {
+    for (const key of ALL_REVIEW_FIELDS) {
       if (ocrResult[key]) s.add(key);
     }
     return s;
@@ -92,9 +166,29 @@ export default function VehicleRegistrationOcrReview({
     });
   }
 
+  function editField(key: string, val: string) {
+    setEdited((prev) => ({ ...prev, [key]: val }));
+  }
+
+  function selectAll(fields: ReviewField[]) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      fields.filter(k => ocrResult[k]).forEach(k => next.add(k));
+      return next;
+    });
+  }
+
+  function deselectAll(fields: ReviewField[]) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      fields.forEach(k => next.delete(k));
+      return next;
+    });
+  }
+
   function handleApply() {
     const payload: Partial<VehicleRegistrationOcrResult> = {};
-    for (const key of REVIEW_FIELDS) {
+    for (const key of ALL_REVIEW_FIELDS) {
       if (selected.has(key) && edited[key]) {
         (payload as Record<string, unknown>)[key] = edited[key];
       }
@@ -104,7 +198,10 @@ export default function VehicleRegistrationOcrReview({
     });
   }
 
-  const hasValues = REVIEW_FIELDS.some((k) => ocrResult[k]);
+  const hasAnyValues = ALL_REVIEW_FIELDS.some((k) => ocrResult[k]);
+
+  const customerPresent = CUSTOMER_FIELDS.filter(k => ocrResult[k]);
+  const vehiclePresent  = VEHICLE_FIELDS.filter(k => ocrResult[k]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -123,69 +220,82 @@ export default function VehicleRegistrationOcrReview({
         </div>
       )}
 
-      {!hasValues ? (
+      {!hasAnyValues ? (
         <p className="text-sm text-slate-500 text-center py-4">
           読み取れたデータがありません。別の画像を試してください。
         </p>
       ) : (
         <>
-          {/* Field table */}
-          <div className="overflow-y-auto max-h-[50vh] rounded-xl border border-slate-800">
-            <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-[#0f172a]">
-                <tr className="border-b border-slate-800">
-                  <th className="w-8 px-3 py-2 text-left">
-                    <input
-                      type="checkbox"
-                      checked={selected.size === REVIEW_FIELDS.filter((k) => ocrResult[k]).length}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelected(new Set(REVIEW_FIELDS.filter((k) => ocrResult[k])));
-                        } else {
-                          setSelected(new Set());
-                        }
-                      }}
-                      className="accent-blue-500"
-                    />
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium text-slate-400">項目</th>
-                  <th className="px-3 py-2 text-left font-medium text-slate-400">読み取り結果（編集可）</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {REVIEW_FIELDS.map((key) => {
-                  const original = (ocrResult[key] as string | undefined) ?? "";
-                  if (!original) return null;
-                  const isSelected = selected.has(key);
-                  return (
-                    <tr
-                      key={key}
-                      className={`transition-colors ${isSelected ? "bg-blue-950/20" : "bg-[#0f172a]"}`}
+          {/* Grouped field tables */}
+          <div className="overflow-y-auto max-h-[55vh] rounded-xl border border-slate-800">
+
+            {/* Customer section */}
+            {customerPresent.length > 0 && (
+              <>
+                <SectionLabel icon="👤" label="顧客情報" />
+                <div className="flex items-center justify-between px-3 py-1 bg-[#0f172a]">
+                  <p className="text-[10px] text-slate-600">読み取った顧客データ</p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => selectAll(CUSTOMER_FIELDS)}
+                      className="text-[10px] text-blue-400 hover:text-blue-300"
                     >
-                      <td className="px-3 py-2">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleField(key)}
-                          className="accent-blue-500"
-                        />
-                      </td>
-                      <td className="px-3 py-2 text-slate-400 whitespace-nowrap">
-                        {OCR_FIELD_LABELS[key]}
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          value={edited[key]}
-                          onChange={(e) => setEdited((prev) => ({ ...prev, [key]: e.target.value }))}
-                          className="w-full bg-[#1e293b] border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-blue-500"
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      全選択
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deselectAll(CUSTOMER_FIELDS)}
+                      className="text-[10px] text-slate-500 hover:text-slate-300"
+                    >
+                      全解除
+                    </button>
+                  </div>
+                </div>
+                <FieldTable
+                  fields={CUSTOMER_FIELDS}
+                  ocr={ocrResult}
+                  edited={edited}
+                  selected={selected}
+                  onToggle={toggleField}
+                  onEdit={editField}
+                />
+              </>
+            )}
+
+            {/* Vehicle section */}
+            {vehiclePresent.length > 0 && (
+              <>
+                <SectionLabel icon="🚗" label="車両情報" />
+                <div className="flex items-center justify-between px-3 py-1 bg-[#0f172a]">
+                  <p className="text-[10px] text-slate-600">読み取った車両データ</p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => selectAll(VEHICLE_FIELDS)}
+                      className="text-[10px] text-blue-400 hover:text-blue-300"
+                    >
+                      全選択
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deselectAll(VEHICLE_FIELDS)}
+                      className="text-[10px] text-slate-500 hover:text-slate-300"
+                    >
+                      全解除
+                    </button>
+                  </div>
+                </div>
+                <FieldTable
+                  fields={VEHICLE_FIELDS}
+                  ocr={ocrResult}
+                  edited={edited}
+                  selected={selected}
+                  onToggle={toggleField}
+                  onEdit={editField}
+                />
+              </>
+            )}
           </div>
 
           <p className="text-xs text-slate-600">

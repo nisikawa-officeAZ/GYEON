@@ -31,6 +31,7 @@ export type VehicleRegistrationOcrResult = {
   private_or_business?:   string;  // 自家用/事業用
   body_shape?:             string;  // 車体の形状
   fuel_type?:              string;  // 燃料の種類
+  displacement?:           string;  // 排気量（例: 1998cc）
   color?:                  string;  // 色
   notes?:                  string;  // 備考・その他
   confidence?:             number;  // 0-1 overall confidence
@@ -117,6 +118,7 @@ export const OCR_FIELD_LABELS: Record<keyof VehicleRegistrationOcrResult, string
   private_or_business:    "自家用/事業用",
   body_shape:             "車体形状",
   fuel_type:              "燃料種類",
+  displacement:           "排気量",
   color:                  "色",
   notes:                  "備考",
   confidence:             "信頼度",

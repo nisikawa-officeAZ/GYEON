@@ -176,6 +176,9 @@ export default function CustomerVehicleOnboardingWizard({
         fd.set("first_name_kana", customerForm.first_name_kana.trim());
         fd.set("phone",           customerForm.phone.trim());
         fd.set("email",           customerForm.email.trim());
+        fd.set("postal_code",     customerForm.postal_code.trim());
+        fd.set("prefecture",      customerForm.prefecture.trim());
+        fd.set("city",            customerForm.city.trim());
         fd.set("address1",        customerForm.address1.trim());
         fd.set("notes",           customerForm.notes.trim());
         fd.set("line_user_id",    customerForm.line_user_id.trim());
@@ -427,12 +430,46 @@ export default function CustomerVehicleOnboardingWizard({
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className={labelCls}>住所</label>
+            <label className={labelCls}>郵便番号</label>
+            <input
+              type="text"
+              value={customerForm.postal_code}
+              onChange={e => setCustomerField("postal_code", e.target.value)}
+              placeholder="150-0001"
+              className={inputCls}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <label className={labelCls}>都道府県</label>
+              <input
+                type="text"
+                value={customerForm.prefecture}
+                onChange={e => setCustomerField("prefecture", e.target.value)}
+                placeholder="東京都"
+                className={inputCls}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className={labelCls}>市区町村</label>
+              <input
+                type="text"
+                value={customerForm.city}
+                onChange={e => setCustomerField("city", e.target.value)}
+                placeholder="渋谷区"
+                className={inputCls}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className={labelCls}>番地・建物名</label>
             <input
               type="text"
               value={customerForm.address1}
               onChange={e => setCustomerField("address1", e.target.value)}
-              placeholder="東京都渋谷区..."
+              placeholder="神宮前１丁目１番１号"
               className={inputCls}
             />
           </div>
@@ -581,6 +618,52 @@ export default function CustomerVehicleOnboardingWizard({
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <label className={labelCls}>型式指定番号</label>
+              <input
+                type="text"
+                value={vehicleForm.model_code}
+                onChange={e => setVehicleField("model_code", e.target.value)}
+                placeholder="AB1234"
+                className={inputCls}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className={labelCls}>燃料種類</label>
+              <input
+                type="text"
+                value={vehicleForm.fuel_type}
+                onChange={e => setVehicleField("fuel_type", e.target.value)}
+                placeholder="ガソリン"
+                className={inputCls}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <label className={labelCls}>排気量</label>
+              <input
+                type="text"
+                value={vehicleForm.displacement}
+                onChange={e => setVehicleField("displacement", e.target.value)}
+                placeholder="1998cc"
+                className={inputCls}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className={labelCls}>初年度登録</label>
+              <input
+                type="text"
+                value={vehicleForm.registration_date}
+                onChange={e => setVehicleField("registration_date", e.target.value)}
+                placeholder="2021-01"
+                className={inputCls}
+              />
+            </div>
+          </div>
+
           <div className="flex flex-col gap-1">
             <label className={labelCls}>ボディサイズ</label>
             <select
@@ -641,10 +724,13 @@ export default function CustomerVehicleOnboardingWizard({
                   label="氏名"
                   value={[customerForm.last_name, customerForm.first_name].filter(Boolean).join(" ")}
                 />
-                {customerForm.phone      && <ConfirmRow label="電話"   value={customerForm.phone} />}
-                {customerForm.email      && <ConfirmRow label="Email"  value={customerForm.email} />}
-                {customerForm.address1   && <ConfirmRow label="住所"   value={customerForm.address1} />}
-                {customerForm.is_company && <ConfirmRow label="法人"   value="はい" />}
+                {customerForm.phone        && <ConfirmRow label="電話"     value={customerForm.phone} />}
+                {customerForm.email        && <ConfirmRow label="Email"   value={customerForm.email} />}
+                {customerForm.postal_code  && <ConfirmRow label="郵便番号" value={customerForm.postal_code} />}
+                {customerForm.prefecture   && <ConfirmRow label="都道府県" value={customerForm.prefecture} />}
+                {customerForm.city         && <ConfirmRow label="市区町村" value={customerForm.city} />}
+                {customerForm.address1     && <ConfirmRow label="番地"     value={customerForm.address1} />}
+                {customerForm.is_company   && <ConfirmRow label="法人"     value="はい" />}
               </div>
             </div>
           )}

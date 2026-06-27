@@ -41,6 +41,7 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
   "private_or_business": "",
   "body_shape": "",
   "fuel_type": "",
+  "displacement": "",
   "color": "",
   "notes": "",
   "confidence": 0.0
@@ -113,7 +114,7 @@ export async function analyzeVehicleRegistrationImage(
       "license_plate_region", "license_plate_class", "license_plate_kana", "license_plate_number",
       "first_registration_date", "inspection_expiry_date",
       "vehicle_type", "use_type", "private_or_business", "body_shape", "fuel_type",
-      "color", "notes",
+      "displacement", "color", "notes",
     ];
 
     for (const key of stringFields) {
