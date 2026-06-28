@@ -44,7 +44,15 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  // Vercel PREVIEW only: keep refreshed auth cookies SameSite=None; Secure so
+  // they survive Deployment Protection (SSO). Must match client/server clients
+  // so a middleware refresh doesn't downgrade the cookie to Lax. Prod: default.
+  const isPreview = process.env.VERCEL_ENV === "preview";
+
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    ...(isPreview
+      ? { cookieOptions: { sameSite: "none" as const, secure: true } }
+      : {}),
     cookies: {
       getAll() {
         return request.cookies.getAll();

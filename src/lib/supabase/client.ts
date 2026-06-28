@@ -11,12 +11,28 @@ export function createClient(options?: { rememberMe?: boolean }) {
     throw new Error("Supabase environment variables are not configured.");
   }
 
-  // "Remember me": when enabled, persist the auth cookies across browser
-  // restarts (~400 days — the browser cap). When omitted/false, the default
-  // session behavior is used (no change to existing callers).
-  const browserOptions = options?.rememberMe
-    ? { cookieOptions: { maxAge: 60 * 60 * 24 * 400 } }
-    : undefined;
+  // Build cookie options.
+  const cookieOptions: {
+    maxAge?: number;
+    sameSite?: "lax" | "strict" | "none";
+    secure?: boolean;
+  } = {};
+
+  // "Remember me": persist the auth cookies across browser restarts (~400 days).
+  if (options?.rememberMe) cookieOptions.maxAge = 60 * 60 * 24 * 400;
+
+  // Vercel PREVIEW only: Deployment Protection (SSO) mediates the browsing
+  // context, so the browser withholds SameSite=Lax cookies from requests to the
+  // deployment (only Vercel's SameSite=None _vercel_jwt is sent). Write the auth
+  // cookie as SameSite=None; Secure on previews so the session reaches the
+  // server. Production/localhost keep the default (Lax) — no global change.
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
+    cookieOptions.sameSite = "none";
+    cookieOptions.secure = true;
+  }
+
+  const browserOptions =
+    Object.keys(cookieOptions).length > 0 ? { cookieOptions } : undefined;
 
   return createBrowserClient(supabaseUrl, supabaseAnonKey, browserOptions);
 }

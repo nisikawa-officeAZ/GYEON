@@ -14,7 +14,16 @@ export async function createClient() {
     throw new Error("Supabase environment variables are not configured.");
   }
 
+  // Vercel PREVIEW only: write refreshed auth cookies as SameSite=None; Secure
+  // so they survive the Deployment Protection (SSO) browsing context. Must match
+  // the browser client so a refresh doesn't downgrade the cookie back to Lax.
+  // Production/localhost keep the default (Lax).
+  const isPreview = process.env.VERCEL_ENV === "preview";
+
   return createServerClient(supabaseUrl, supabaseAnonKey, {
+    ...(isPreview
+      ? { cookieOptions: { sameSite: "none" as const, secure: true } }
+      : {}),
     cookies: {
       getAll() {
         return cookieStore.getAll();

@@ -28,6 +28,7 @@ export async function GET(request: Request) {
   const context = {
     requestUrl: request.url,
     referer:    request.headers.get("referer"),
+    vercelEnv:  process.env.VERCEL_ENV ?? null,   // 'preview' | 'production' | null
   };
 
   const user = await getCurrentUser();
