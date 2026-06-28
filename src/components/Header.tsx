@@ -1,6 +1,7 @@
 "use client";
 
 import NotificationBell from "@/components/notifications/NotificationBell";
+import Brand from "@/components/ui/Brand";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -25,19 +26,8 @@ export default function Header({ open, onToggleSidebar }: HeaderProps) {
         </svg>
       </button>
 
-      {/* Logo + App name */}
-      <div className="flex items-center gap-2.5">
-        {/* G mark */}
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <rect width="28" height="28" rx="6" fill="#1d4ed8" />
-          <path d="M7 8h6.5C16.538 8 19 10.462 19 14s-2.462 6-5.5 6H7V8z" fill="white" />
-          <path d="M13.5 11H10v6h3.5c1.657 0 3-1.343 3-3s-1.343-3-3-3z" fill="#1d4ed8" />
-        </svg>
-        <div className="flex flex-col leading-none">
-          <span className="text-[9px] font-semibold tracking-widest text-slate-500 uppercase">GYEON</span>
-          <span className="font-bold text-slate-100 text-sm tracking-tight leading-tight">Detailer Agent</span>
-        </div>
-      </div>
+      {/* Unified GYEON Detailer Agent branding — matches the top page treatment */}
+      <Brand size={40} />
 
       {/* Environment badge — dev only */}
       {isDev && (
