@@ -4,6 +4,7 @@ import Link                       from "next/link";
 import MainLayout                 from "@/components/layout/MainLayout";
 import { getCurrentDealer }       from "@/lib/auth/get-current-dealer";
 import { getCurrentUser }         from "@/lib/auth/get-current-user";
+import { getCurrentAdmin }        from "@/lib/admin/get-current-admin";
 import { createClient }           from "@/lib/supabase/server";
 import OnboardingCard             from "@/components/onboarding/OnboardingCard";
 import { getDashboardSummary }    from "@/lib/dashboard/get-dashboard-summary";
@@ -20,7 +21,13 @@ export default async function HomePage() {
   const dealer = await getCurrentDealer();
   if (!dealer) {
     const user = await getCurrentUser();
-    if (user) redirect("/no-dealer");
+    if (user) {
+      // Admin-only accounts (e.g. Super Admin) have no dealer_members record.
+      // Route them to the admin console instead of stranding them on /no-dealer.
+      const admin = await getCurrentAdmin();
+      if (admin) redirect("/admin/dashboard");
+      redirect("/no-dealer");
+    }
     redirect("/login");
   }
 
