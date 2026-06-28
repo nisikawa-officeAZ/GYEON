@@ -11,7 +11,15 @@ import { revalidatePath }    from "next/cache";
 import { createClient }      from "@/lib/supabase/server";
 import { getCurrentDealer }  from "@/lib/auth/get-current-dealer";
 import { getCurrentUser }    from "@/lib/auth/get-current-user";
-import type { PointCardWithCustomer, PointTxnType } from "./point-types";
+import {
+  EMPTY_POINTS_SUMMARY,
+  type PointCardWithCustomer, type PointTxnType,
+  type PointTransactionRow, type PointsSummary, type PointsFilter,
+} from "./point-types";
+
+function customerName(c?: { last_name?: string | null; first_name?: string | null } | null): string {
+  return [c?.last_name, c?.first_name].filter(Boolean).join(" ") || "—";
+}
 
 /** List the dealer's point cards with the customer's name. Never throws. */
 export async function getPointCards(): Promise<PointCardWithCustomer[]> {
@@ -43,6 +51,79 @@ export async function getPointCards(): Promise<PointCardWithCustomer[]> {
   } catch (err) {
     console.error("[getPointCards] failed:", err);
     return [];
+  }
+}
+
+/** Filtered transaction history for the current dealer (customer / type / date range). */
+export async function getPointTransactions(filter?: PointsFilter): Promise<PointTransactionRow[]> {
+  try {
+    const dealer = await getCurrentDealer();
+    if (!dealer) return [];
+
+    const supabase = await createClient();
+    let q = supabase
+      .from("point_transactions")
+      .select("id, dealer_id, customer_id, point_card_id, type, points, reason, created_by, created_at, expires_at, reference_type, reference_id, customers ( last_name, first_name )")
+      .eq("dealer_id", dealer.dealer_id)
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    if (filter?.customer_id) q = q.eq("customer_id", filter.customer_id);
+    if (filter?.type && filter.type !== "all") q = q.eq("type", filter.type);
+    if (filter?.from) q = q.gte("created_at", `${filter.from}T00:00:00`);
+    if (filter?.to)   q = q.lte("created_at", `${filter.to}T23:59:59`);
+
+    const { data, error } = await q;
+    if (error) { console.error("[getPointTransactions] error:", error.message); return []; }
+
+    return ((data ?? []) as unknown[]).map((r) => {
+      const row = r as Record<string, unknown> & {
+        customers?: { last_name?: string | null; first_name?: string | null } | null;
+      };
+      return {
+        id: row.id, dealer_id: row.dealer_id, customer_id: row.customer_id,
+        point_card_id: row.point_card_id ?? null, type: row.type, points: row.points,
+        reason: row.reason ?? null, created_by: row.created_by ?? null, created_at: row.created_at,
+        expires_at: row.expires_at ?? null,
+        reference_type: row.reference_type ?? null, reference_id: row.reference_id ?? null,
+        customer_name: customerName(row.customers),
+      } as PointTransactionRow;
+    });
+  } catch (err) {
+    console.error("[getPointTransactions] failed:", err);
+    return [];
+  }
+}
+
+/** Summary cards: active balance, issued/redeemed this month, expiring within 30 days. */
+export async function getPointsSummary(): Promise<PointsSummary> {
+  try {
+    const dealer = await getCurrentDealer();
+    if (!dealer) return { ...EMPTY_POINTS_SUMMARY };
+    const supabase = await createClient();
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const sum = (rows: { points?: number }[] | null) =>
+      (rows ?? []).reduce((a, r) => a + (r.points ?? 0), 0);
+
+    const [cards, earned, redeemed, expiring] = await Promise.all([
+      supabase.from("point_cards").select("points_balance").eq("dealer_id", dealer.dealer_id),
+      supabase.from("point_transactions").select("points").eq("dealer_id", dealer.dealer_id).eq("type", "earn").gte("created_at", monthStart),
+      supabase.from("point_transactions").select("points").eq("dealer_id", dealer.dealer_id).eq("type", "redeem").gte("created_at", monthStart),
+      supabase.from("point_transactions").select("points").eq("dealer_id", dealer.dealer_id).eq("type", "earn").gte("expires_at", now.toISOString()).lte("expires_at", in30),
+    ]);
+
+    return {
+      total_active:        ((cards.data ?? []) as { points_balance?: number }[]).reduce((a, r) => a + (r.points_balance ?? 0), 0),
+      issued_this_month:   sum(earned.data as { points?: number }[] | null),
+      redeemed_this_month: sum(redeemed.data as { points?: number }[] | null),
+      expiring_soon:       sum(expiring.data as { points?: number }[] | null),
+    };
+  } catch (err) {
+    console.error("[getPointsSummary] failed:", err);
+    return { ...EMPTY_POINTS_SUMMARY };
   }
 }
 
