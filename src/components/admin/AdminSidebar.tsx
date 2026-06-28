@@ -61,6 +61,18 @@ function NavIcon({ iconKey }: { iconKey: string }) {
         <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4"/>
       </svg>
     );
+    case "news": return (
+      <svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 2H2a1 1 0 00-1 1v10a1 1 0 001 1h10a2 2 0 002-2V4M11 2l3 2M11 2v2.5a.5.5 0 00.5.5H14"/>
+        <path d="M4 6h5M4 9h5M4 12h3"/>
+      </svg>
+    );
+    case "resources": return (
+      <svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 1v8M8 9L5 6.5M8 9l3-2.5"/>
+        <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/>
+      </svg>
+    );
     case "billing": return (
       <svg className={cls} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="1" y="3" width="14" height="10" rx="1.5"/>

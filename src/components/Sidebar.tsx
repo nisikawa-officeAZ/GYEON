@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { getCurrentPlan } from "@/lib/plans/get-current-plan";
 import { canUseFeature, DealerPlan } from "@/lib/plans/plan-types";
 import type { AppFeature } from "@/lib/plans/plan-types";
+import { getUnreadNewsCount } from "@/lib/news/news";
 
 type NavItem =
   | { type: "link"; href: string; label: string; icon: string; feature?: AppFeature }
@@ -39,6 +40,8 @@ const navItems: NavItem[] = [
   { type: "link", href: "/product-orders",    label: "商品注文",   icon: "⊘", feature: "product_orders" },
   { type: "link", href: "/line",              label: "LINE",       icon: "⊿", feature: "line" },
   { type: "link", href: "/maintenance",       label: "メンテナンス", icon: "◉", feature: "maintenance" },
+  { type: "link", href: "/news",              label: "お知らせ",   icon: "📢" },
+  { type: "link", href: "/downloads",         label: "ダウンロード", icon: "⬇" },
   { type: "link", href: "/settings",          label: "設定",       icon: "⊞" },
 ];
 
@@ -50,11 +53,21 @@ interface SidebarProps {
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [plan, setPlan] = useState<DealerPlan | null>(null);
+  const [unreadNews, setUnreadNews] = useState(0);
   const prevPathname = useRef(pathname);
 
   useEffect(() => {
     getCurrentPlan().then((info) => setPlan(info.plan));
   }, []);
+
+  // Unread GYEON News badge — refreshed periodically and on navigation.
+  useEffect(() => {
+    let active = true;
+    const load = () => getUnreadNewsCount().then((n) => { if (active) setUnreadNews(n); }).catch(() => {});
+    load();
+    const interval = setInterval(load, 60000);
+    return () => { active = false; clearInterval(interval); };
+  }, [pathname]);
 
   // Close sidebar when the user navigates (mobile UX)
   useEffect(() => {
@@ -136,6 +149,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 >
                   <span className="text-base shrink-0">{item.icon}</span>
                   <span>{item.label}</span>
+                  {item.href === "/news" && unreadNews > 0 && (
+                    <span className="ml-auto min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                      {unreadNews > 9 ? "9+" : unreadNews}
+                    </span>
+                  )}
                 </Link>
               );
             })}

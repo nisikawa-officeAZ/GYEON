@@ -55,6 +55,8 @@ export const ADMIN_NAV_CONFIG: {
 }[] = [
   { key: "dashboard",  label: "Dashboard",  href: "/admin/dashboard",  roles: ["super_admin", "gyeon_admin"],                           iconKey: "dashboard" },
   { key: "dealers",    label: "Dealers",    href: "/admin/dealers",    roles: ["super_admin", "gyeon_admin"],                           iconKey: "dealers"   },
+  { key: "news",       label: "News",       href: "/admin/news",       roles: ["super_admin", "gyeon_admin"],                           iconKey: "news"      },
+  { key: "resources",  label: "Resources",  href: "/admin/resources",  roles: ["super_admin", "gyeon_admin"],                           iconKey: "resources" },
   { key: "plans",      label: "Plans",      href: "/admin/plans",      roles: ["super_admin", "gyeon_admin"],                           iconKey: "plans"     },
   { key: "users",      label: "Users",      href: "/admin/users",      roles: ["super_admin"],                                          iconKey: "users"     },
   { key: "logistics",  label: "Logistics",  href: "/admin/logistics",  roles: ["super_admin", "gyeon_admin", "logistics_admin"],        iconKey: "logistics" },
