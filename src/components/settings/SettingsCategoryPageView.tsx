@@ -42,9 +42,11 @@ import type { CanonicalDealerSettings } from "@/lib/dealer-settings/dealer-setti
 import type { DealerStaffRole }         from "@/lib/staff/staff-types";
 import type { DealerStaffDB }           from "@/lib/staff/staff-types";
 import type { CompanySettingsFields }   from "@/lib/company/save-company-settings";
+import type { BrandingSettings }        from "@/lib/branding/branding-types";
 import type { DocumentSequenceDB }      from "@/lib/numbering/numbering-types";
 import type { DealerPlanInfo }          from "@/lib/plans/plan-types";
 import CompanySettingsForm              from "./CompanySettingsForm";
+import BrandingSettingsForm             from "./BrandingSettingsForm";
 import StaffManagement                  from "./StaffManagement";
 import {
   OcrContent,
@@ -64,11 +66,12 @@ export interface SettingsCategoryPageViewProps {
   dealerSettings:  CanonicalDealerSettings | null;
   registrations:   SettingsRegistrationEntry[];
   // Category-specific data (loaded conditionally in page.tsx)
-  companySettings: CompanySettingsFields | null;
-  staffList:       DealerStaffDB[];
-  sequences:       DocumentSequenceDB[];
-  planInfo:        DealerPlanInfo | null;
-  planSlot:        React.ReactNode;
+  companySettings:  CompanySettingsFields | null;
+  brandingSettings: BrandingSettings | null;
+  staffList:        DealerStaffDB[];
+  sequences:        DocumentSequenceDB[];
+  planInfo:         DealerPlanInfo | null;
+  planSlot:         React.ReactNode;
 }
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -557,20 +560,22 @@ function CategoryDetailPanel({
   registrations,
   dealerSettings,
   companySettings,
+  brandingSettings,
   staffList,
   sequences,
   planInfo,
   planSlot,
 }: {
-  category:        SettingsCategory;
-  staffRole:       DealerStaffRole | null;
-  registrations:   SettingsRegistrationEntry[];
-  dealerSettings:  CanonicalDealerSettings | null;
-  companySettings: CompanySettingsFields | null;
-  staffList:       DealerStaffDB[];
-  sequences:       DocumentSequenceDB[];
-  planInfo:        DealerPlanInfo | null;
-  planSlot:        React.ReactNode;
+  category:         SettingsCategory;
+  staffRole:        DealerStaffRole | null;
+  registrations:    SettingsRegistrationEntry[];
+  dealerSettings:   CanonicalDealerSettings | null;
+  companySettings:  CompanySettingsFields | null;
+  brandingSettings: BrandingSettings | null;
+  staffList:        DealerStaffDB[];
+  sequences:        DocumentSequenceDB[];
+  planInfo:         DealerPlanInfo | null;
+  planSlot:         React.ReactNode;
 }) {
   switch (category.category_id) {
 
@@ -602,22 +607,14 @@ function CategoryDetailPanel({
       );
 
     // ── ブランディング ────────────────────────────────────────────────────────
-    // UI gate: manager+ required. saveCompanySettings (same action as dealer)
-    // lacks server role check — Sprint 13.
+    // Branding manages ONLY logo / stamp / colours / customer-app theme.
+    // Store-profile fields live in the separate 店舗設定 (dealer) form.
+    // saveBrandingSettings enforces role via requireRole(["owner","manager"]).
     case "branding":
       if (!canEditWithRole(staffRole, "manager_or_owner")) {
         return <RoleRestrictedNotice />;
       }
-      return (
-        <div className="flex flex-col gap-4">
-          <div className="px-3 py-2 rounded-lg border border-slate-800 bg-slate-900/30">
-            <p className="text-[10px] text-slate-500">
-              ロゴ・スタンプ・ウォーターマーク・カラー設定は下記の自社設定フォームに含まれます。
-            </p>
-          </div>
-          <CompanySettingsForm initialSettings={companySettings} />
-        </div>
-      );
+      return <BrandingSettingsForm initial={brandingSettings} />;
 
     // ── メンテナンス通知 ──────────────────────────────────────────────────────
     // Read-only display — reminder templates are PHASE70 future-edit.
@@ -697,20 +694,22 @@ function ActiveCategoryContent({
   registrations,
   dealerSettings,
   companySettings,
+  brandingSettings,
   staffList,
   sequences,
   planInfo,
   planSlot,
 }: {
-  category:        SettingsCategory;
-  staffRole:       DealerStaffRole | null;
-  registrations:   SettingsRegistrationEntry[];
-  dealerSettings:  CanonicalDealerSettings | null;
-  companySettings: CompanySettingsFields | null;
-  staffList:       DealerStaffDB[];
-  sequences:       DocumentSequenceDB[];
-  planInfo:        DealerPlanInfo | null;
-  planSlot:        React.ReactNode;
+  category:         SettingsCategory;
+  staffRole:        DealerStaffRole | null;
+  registrations:    SettingsRegistrationEntry[];
+  dealerSettings:   CanonicalDealerSettings | null;
+  companySettings:  CompanySettingsFields | null;
+  brandingSettings: BrandingSettings | null;
+  staffList:        DealerStaffDB[];
+  sequences:        DocumentSequenceDB[];
+  planInfo:         DealerPlanInfo | null;
+  planSlot:         React.ReactNode;
 }) {
   const saveActions = getSaveActionsForCategory(category.category_id);
 
@@ -730,6 +729,7 @@ function ActiveCategoryContent({
         registrations={registrations}
         dealerSettings={dealerSettings}
         companySettings={companySettings}
+        brandingSettings={brandingSettings}
         staffList={staffList}
         sequences={sequences}
         planInfo={planInfo}
@@ -749,6 +749,7 @@ export default function SettingsCategoryPageView({
   dealerSettings,
   registrations,
   companySettings,
+  brandingSettings,
   staffList,
   sequences,
   planInfo,
@@ -789,6 +790,7 @@ export default function SettingsCategoryPageView({
         registrations={registrations}
         dealerSettings={dealerSettings}
         companySettings={companySettings}
+        brandingSettings={brandingSettings}
         staffList={staffList}
         sequences={sequences}
         planInfo={planInfo}

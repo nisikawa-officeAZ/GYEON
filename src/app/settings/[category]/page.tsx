@@ -29,6 +29,8 @@ import { getCurrentStaff }               from "@/lib/staff/get-current-staff";
 import { getStaffList }                  from "@/lib/staff/get-staff-list";
 import { getCompanySettings }            from "@/lib/company/save-company-settings";
 import type { CompanySettingsFields }    from "@/lib/company/save-company-settings";
+import { getBrandingSettings }           from "@/lib/branding/save-branding-settings";
+import type { BrandingSettings }         from "@/lib/branding/branding-types";
 import { getDocumentSequences }          from "@/lib/numbering/get-document-sequences";
 import type { DocumentSequenceDB }       from "@/lib/numbering/numbering-types";
 import { getCurrentPlan }               from "@/lib/plans/get-current-plan";
@@ -91,14 +93,19 @@ export default async function SettingsCategoryPage({ params }: PageProps) {
 
   const catId = categoryMeta.category_id;
 
-  let companySettings: CompanySettingsFields | null = null;
-  let staffList:       DealerStaffDB[]              = [];
-  let sequences:       DocumentSequenceDB[]          = [];
-  let planInfo:        DealerPlanInfo | null         = null;
+  let companySettings:  CompanySettingsFields | null = null;
+  let brandingSettings: BrandingSettings | null      = null;
+  let staffList:        DealerStaffDB[]               = [];
+  let sequences:        DocumentSequenceDB[]           = [];
+  let planInfo:         DealerPlanInfo | null          = null;
 
   if (needsSettings) {
-    if (catId === "dealer" || catId === "branding") {
+    if (catId === "dealer") {
       companySettings = await getCompanySettings().catch(() => null);
+    }
+
+    if (catId === "branding") {
+      brandingSettings = await getBrandingSettings().catch(() => null);
     }
 
     if (catId === "staff") {
@@ -136,6 +143,7 @@ export default async function SettingsCategoryPage({ params }: PageProps) {
           dealerSettings={dealerSettings}
           registrations={registrations}
           companySettings={companySettings}
+          brandingSettings={brandingSettings}
           staffList={staffList}
           sequences={sequences}
           planInfo={planInfo}

@@ -53,6 +53,20 @@ export interface DealerSettingsDB {
   completion_note:     string | null;
   tax_rate:            number;
   terms_and_conditions: string | null;
+  // Bank information (migration 081)
+  bank_name:           string | null;
+  bank_branch_name:    string | null;
+  bank_branch_code:    string | null;
+  account_type:        string | null;
+  account_number:      string | null;
+  account_holder_kana: string | null;
+  // Branding assets & palette (migration 081)
+  logo_path:             string | null;
+  stamp_path:            string | null;
+  brand_primary_color:   string | null;
+  brand_secondary_color: string | null;
+  brand_accent_color:    string | null;
+  customer_app_theme:    string | null;
   // Onboarding (PHASE59)
   onboarding_completed:    boolean;
   onboarding_completed_at: string | null;

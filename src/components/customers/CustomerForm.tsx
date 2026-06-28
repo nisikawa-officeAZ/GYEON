@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { createCustomer } from "@/lib/customers/create-customer";
 import { updateCustomer } from "@/lib/customers/update-customer";
 import { CustomerDB }     from "@/lib/customers/customer-types";
+import { lookupPostalAddress } from "@/lib/geo/postal-lookup";
 
 interface FormFields {
   customer_code:   string;
@@ -75,6 +76,26 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
 
   function set(key: keyof FormFields, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  const [postalBusy, setPostalBusy] = useState(false);
+
+  async function handlePostalLookup() {
+    setPostalBusy(true);
+    try {
+      const addr = await lookupPostalAddress(form.postal_code);
+      if (addr) {
+        setForm((prev) => ({
+          ...prev,
+          prefecture: addr.prefecture,
+          city:       addr.city,
+          // Only prefill street line if empty — never clobber user input.
+          address1:   prev.address1 || addr.town,
+        }));
+      }
+    } finally {
+      setPostalBusy(false);
+    }
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -174,7 +195,25 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
           <div className={secHdr}>住所</div>
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
-              <Field label="郵便番号" fieldKey="postal_code" placeholder="000-0000" />
+              <Field label="郵便番号">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={form.postal_code}
+                    onChange={(e) => set("postal_code", e.target.value)}
+                    placeholder="000-0000"
+                    className={inp}
+                  />
+                  <button
+                    type="button"
+                    onClick={handlePostalLookup}
+                    disabled={postalBusy}
+                    className="shrink-0 px-2.5 text-[11px] font-semibold text-slate-300 rounded-xl border border-white/[.08] hover:border-blue-500/50 hover:text-blue-300 disabled:opacity-50 transition-colors min-h-[44px]"
+                  >
+                    {postalBusy ? "…" : "住所"}
+                  </button>
+                </div>
+              </Field>
               <Field label="都道府県" fieldKey="prefecture" placeholder="東京都" />
             </div>
             <Field label="市区町村" fieldKey="city" placeholder="渋谷区" />

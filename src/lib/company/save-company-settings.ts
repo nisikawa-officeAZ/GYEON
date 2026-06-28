@@ -16,11 +16,16 @@ export type CompanySettingsFields = Pick<
   | "business_website"
   | "contact_name"
   | "qualified_invoice_number"
-  | "logo_url"
-  | "stamp_url"
   | "pdf_footer"
   | "invoice_note"
   | "tax_rate"
+  // Bank information (migration 081)
+  | "bank_name"
+  | "bank_branch_name"
+  | "bank_branch_code"
+  | "account_type"
+  | "account_number"
+  | "account_holder_kana"
 >;
 
 export async function getCompanySettings(): Promise<CompanySettingsFields | null> {
@@ -32,7 +37,7 @@ export async function getCompanySettings(): Promise<CompanySettingsFields | null
     const { data, error } = await supabase
       .from("dealer_settings")
       .select(
-        "business_name, company_name, postal_code, business_address, business_phone, business_email, business_website, contact_name, qualified_invoice_number, logo_url, stamp_url, pdf_footer, invoice_note, tax_rate"
+        "business_name, company_name, postal_code, business_address, business_phone, business_email, business_website, contact_name, qualified_invoice_number, pdf_footer, invoice_note, tax_rate, bank_name, bank_branch_name, bank_branch_code, account_type, account_number, account_holder_kana"
       )
       .eq("dealer_id", dealer.dealer_id)
       .maybeSingle();
@@ -74,11 +79,16 @@ export async function saveCompanySettings(
       business_website:         str("business_website"),
       contact_name:             str("contact_name"),
       qualified_invoice_number: str("qualified_invoice_number"),
-      logo_url:                 str("logo_url"),
-      stamp_url:                str("stamp_url"),
       pdf_footer:               str("pdf_footer"),
       invoice_note:             str("invoice_note"),
       tax_rate:                 tax,
+      // Bank information (migration 081)
+      bank_name:                str("bank_name"),
+      bank_branch_name:         str("bank_branch_name"),
+      bank_branch_code:         str("bank_branch_code"),
+      account_type:             str("account_type"),
+      account_number:           str("account_number"),
+      account_holder_kana:      str("account_holder_kana"),
       updated_at:               new Date().toISOString(),
     };
 
