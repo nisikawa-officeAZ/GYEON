@@ -26,7 +26,15 @@ export function createClient(options?: { rememberMe?: boolean }) {
   // deployment (only Vercel's SameSite=None _vercel_jwt is sent). Write the auth
   // cookie as SameSite=None; Secure on previews so the session reaches the
   // server. Production/localhost keep the default (Lax) — no global change.
-  if (process.env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
+  // Robust detection: trust NEXT_PUBLIC_VERCEL_ENV when present, else fall back
+  // to the *.vercel.app host (a preview host) unless explicitly production.
+  const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV;
+  const onVercelPreview =
+    vercelEnv === "preview" ||
+    (vercelEnv !== "production" &&
+      typeof window !== "undefined" &&
+      window.location.hostname.endsWith(".vercel.app"));
+  if (onVercelPreview) {
     cookieOptions.sameSite = "none";
     cookieOptions.secure = true;
   }
