@@ -14,6 +14,7 @@ const PUBLIC_PREFIXES = [
   "/signup",
   "/forgot-password",
   "/reset-password",
+  "/auth",            // Supabase email confirm/recovery routes (e.g. /auth/confirm)
   "/no-dealer",
   "/liff",
   "/api",
