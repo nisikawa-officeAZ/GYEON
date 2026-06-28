@@ -27,15 +27,21 @@ export default function MainLayout({ children, footer }: MainLayoutProps) {
       {/* Mobile bottom nav */}
       <BottomNav />
 
-      {/* Trial period countdown banner — shown only when trial is active or ended */}
-      <div className={`fixed top-14 left-0 right-0 z-30 transition-all duration-300 ${open ? "md:ml-[240px]" : "md:ml-0"}`}>
+      {/* Spacer reserving the fixed Header's height (incl. iPhone safe-area).
+          Keeping the offset in normal flow — instead of as padding on <main> —
+          avoids Tailwind responsive padding utilities (md:py-*) overriding it. */}
+      <div aria-hidden style={{ height: "var(--app-header-h)" }} />
+
+      {/* Trial period countdown banner — in normal flow so it pushes content
+          down (no overlap) and collapses to nothing when no trial is active. */}
+      <div className={`transition-all duration-300 ${open ? "md:ml-[240px]" : "md:ml-0"}`}>
         <TrialBanner />
       </div>
 
-      {/* Content — no horizontal shift on mobile (sidebar overlays) */}
-      {/* pb-16 on mobile to clear the bottom nav bar */}
+      {/* Content — no horizontal shift on mobile (sidebar overlays).
+          pb-20 on mobile to clear the bottom nav bar. */}
       <main
-        className={`flex-1 pt-14 px-4 py-5 pb-20 md:pb-6 md:px-6 md:py-6 transition-all duration-300 ${
+        className={`flex-1 px-4 py-5 pb-20 md:pb-6 md:px-6 md:py-6 transition-all duration-300 ${
           open ? "md:ml-[240px]" : "md:ml-0"
         }`}
       >

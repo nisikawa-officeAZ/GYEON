@@ -23,6 +23,13 @@
   --gs-r:           14px;
   --gs-r-sm:        10px;
   --gs-r-lg:        20px;
+
+  /* ── App chrome ──
+     Height reserved by the fixed top Header. Includes the iPhone safe-area
+     inset so content never slides under the notch / Dynamic Island. The base
+     header bar is h-14 (3.5rem / 56px). Consumed by Header, the layout spacer,
+     and the Sidebar so they all stay in sync. */
+  --app-header-h: calc(3.5rem + env(safe-area-inset-top, 0px));
 }
 
 @theme inline {

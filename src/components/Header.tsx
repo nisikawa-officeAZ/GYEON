@@ -11,7 +11,10 @@ interface HeaderProps {
 
 export default function Header({ open, onToggleSidebar }: HeaderProps) {
   return (
-    <header className="h-14 bg-slate-900 border-b border-slate-800 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50">
+    <header
+      className="bg-slate-900 border-b border-slate-800 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50"
+      style={{ height: "var(--app-header-h)", paddingTop: "env(safe-area-inset-top, 0px)" }}
+    >
       <button
         onClick={onToggleSidebar}
         className="w-11 h-11 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
