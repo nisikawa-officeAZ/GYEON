@@ -5,15 +5,28 @@
 // getCurrentAdmin()'s lookup finds the admin_users row under RLS.
 
 import { NextResponse }   from "next/server";
+import { cookies }        from "next/headers";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { createClient }   from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // Transport check: which cookies did the SERVER actually receive? (names only)
+  const cookieStore   = await cookies();
+  const receivedNames = cookieStore.getAll().map((c) => c.name);
+  const supabaseAuthCookies = receivedNames.filter(
+    (n) => n.startsWith("sb-") && n.includes("auth-token"),
+  );
+  const transport = {
+    receivedCookieNames:    receivedNames,
+    supabaseAuthCookieSeen: supabaseAuthCookies.length > 0,
+    supabaseAuthCookieNames: supabaseAuthCookies,
+  };
+
   const user = await getCurrentUser();
   if (!user) {
-    return NextResponse.json({ authenticated: false });
+    return NextResponse.json({ authenticated: false, transport });
   }
 
   const supabase = await createClient();
@@ -47,5 +60,6 @@ export async function GET() {
     adminStatus:            adminRow?.status ?? null,
     loginReady,
     dealerMembersRowFound:  !!dealerRow,
+    transport,
   });
 }
