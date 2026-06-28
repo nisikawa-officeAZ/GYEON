@@ -17,6 +17,7 @@ import Link from "next/link";
 import MainLayout               from "@/components/layout/MainLayout";
 import { getCurrentDealer }     from "@/lib/auth/get-current-dealer";
 import { getCurrentUser }       from "@/lib/auth/get-current-user";
+import { getCurrentAdmin }      from "@/lib/admin/get-current-admin";
 import { createClient }         from "@/lib/supabase/server";
 import { getCurrentStaff }      from "@/lib/staff/get-current-staff";
 import { getDashboardSummary }  from "@/lib/dashboard/get-dashboard-summary";
@@ -57,6 +58,12 @@ function RoleBadge({ role }: { role: DealerStaffRole }) {
 }
 
 export default async function DashboardPage() {
+  // ── Super Admin gate (must come first) ──────────────────────────────────────
+  // Super Admins have no dealer_members record. Route them to the admin console
+  // BEFORE any dealer validation so they are never trapped on /no-dealer.
+  const admin = await getCurrentAdmin();
+  if (admin) redirect("/admin/dashboard");
+
   // ── Suspension gate ─────────────────────────────────────────────────────────
   // getCurrentDealer() returns null for both "no dealer" and "suspended" states.
   // Distinguish them so suspended dealers see a clear message instead of an

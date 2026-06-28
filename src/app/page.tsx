@@ -15,19 +15,19 @@ export const metadata = { title: "ホーム | GYEON Detailer Agent" };
 
 export default async function HomePage() {
 
+  // ── Super Admin gate (must come first) ───────────────────────────────────
+  // Super Admins have no dealer_members record. Route them to the admin console
+  // BEFORE any dealer validation so they are never trapped on /no-dealer.
+  const admin = await getCurrentAdmin();
+  if (admin) redirect("/admin/dashboard");
+
   // ── Dealer gate ──────────────────────────────────────────────────────────
   // Middleware ensures the user is authenticated before reaching this page.
   // Here we additionally verify they have an active dealer_members record.
   const dealer = await getCurrentDealer();
   if (!dealer) {
     const user = await getCurrentUser();
-    if (user) {
-      // Admin-only accounts (e.g. Super Admin) have no dealer_members record.
-      // Route them to the admin console instead of stranding them on /no-dealer.
-      const admin = await getCurrentAdmin();
-      if (admin) redirect("/admin/dashboard");
-      redirect("/no-dealer");
-    }
+    if (user) redirect("/no-dealer");
     redirect("/login");
   }
 
