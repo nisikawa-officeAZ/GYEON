@@ -27,7 +27,16 @@ function LoginForm() {
 
     try {
       const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      // ── TEMP DEBUG (remove after diagnosis) — never logs the password ──
+      console.log("[login-debug] submitted email:", JSON.stringify(email), "| length:", email.length);
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      console.log(
+        "[login-debug] error.code:", authError?.code,
+        "| error.status:", authError?.status,
+        "| error.message:", authError?.message,
+        "| session is null:", data?.session == null,
+      );
+      // ── END TEMP DEBUG ──
 
       if (authError) {
         setError("メールアドレスまたはパスワードが正しくありません。");
