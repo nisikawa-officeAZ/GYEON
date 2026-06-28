@@ -4,6 +4,7 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CompletionReportFullData } from "@/lib/completion-reports/completion-report-types";
 import { renderCompletionReportPdf } from "./templates/completion-report-pdf";
+import { getDealerStampForPdf } from "./get-dealer-stamp";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
 import { createAuditLog } from "@/lib/audit/audit";
 
@@ -82,9 +83,11 @@ export async function generateCompletionReportPdf(
     files:      filesData ?? [],
   };
 
+  const stamp = await getDealerStampForPdf(dealer.dealer_id);
+
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await renderCompletionReportPdf(fullData);
+    pdfBuffer = await renderCompletionReportPdf(fullData, stamp);
   } catch (err) {
     return { success: false, error: `PDF生成エラー: ${String(err)}` };
   }

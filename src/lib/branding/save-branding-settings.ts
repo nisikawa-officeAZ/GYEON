@@ -20,9 +20,10 @@ import {
   type BrandingSettings,
   type CustomerAppTheme,
 } from "./branding-types";
+import { isStampKind, type StampKind } from "@/lib/stamp/stamp-types";
 
 const SELECT_COLS =
-  "logo_path, stamp_path, logo_url, stamp_url, brand_primary_color, brand_secondary_color, brand_accent_color, customer_app_theme";
+  "logo_path, stamp_path, logo_url, stamp_url, stamp_kind, brand_primary_color, brand_secondary_color, brand_accent_color, customer_app_theme";
 
 export async function getBrandingSettings(): Promise<BrandingSettings | null> {
   try {
@@ -48,6 +49,7 @@ export async function getBrandingSettings(): Promise<BrandingSettings | null> {
       stamp_path:            (row.stamp_path            as string | null) ?? null,
       logo_url:              (row.logo_url              as string | null) ?? null,
       stamp_url:             (row.stamp_url             as string | null) ?? null,
+      stamp_kind:            isStampKind(row.stamp_kind) ? row.stamp_kind : null,
       brand_primary_color:   (row.brand_primary_color   as string | null) ?? null,
       brand_secondary_color: (row.brand_secondary_color as string | null) ?? null,
       brand_accent_color:    (row.brand_accent_color    as string | null) ?? null,
@@ -70,6 +72,9 @@ export async function saveBrandingSettings(
 
     const str = (k: string) => (fd.get(k) as string | null)?.trim() || null;
 
+    const stampKindRaw = str("stamp_kind");
+    const stampKind: StampKind | null = isStampKind(stampKindRaw) ? stampKindRaw : null;
+
     const themeRaw = str("customer_app_theme");
     const theme: CustomerAppTheme | null =
       themeRaw && VALID_THEMES.includes(themeRaw as CustomerAppTheme)
@@ -83,6 +88,7 @@ export async function saveBrandingSettings(
       stamp_path:            str("stamp_path"),
       logo_url:              str("logo_url"),
       stamp_url:             str("stamp_url"),
+      stamp_kind:            stampKind,
       // Palette (validated hex)
       brand_primary_color:   normalizeHexColor(str("brand_primary_color")),
       brand_secondary_color: normalizeHexColor(str("brand_secondary_color")),

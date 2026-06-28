@@ -12,6 +12,7 @@
 
 import { useState, useTransition } from "react";
 import ImageUploadField from "@/components/ui/ImageUploadField";
+import StampField from "@/components/settings/StampField";
 import { uploadBrandingImage } from "@/lib/branding/upload-branding-image";
 import { saveBrandingSettings } from "@/lib/branding/save-branding-settings";
 import {
@@ -19,6 +20,7 @@ import {
   type BrandingSettings,
   type CustomerAppTheme,
 } from "@/lib/branding/branding-types";
+import type { StampKind } from "@/lib/stamp/stamp-types";
 
 interface Props {
   initial: BrandingSettings | null;
@@ -61,6 +63,7 @@ export default function BrandingSettingsForm({ initial }: Props) {
   const [logoUrl,   setLogoUrl]   = useState<string | null>(initial?.logo_url   ?? null);
   const [stampPath, setStampPath] = useState<string | null>(initial?.stamp_path ?? null);
   const [stampUrl,  setStampUrl]  = useState<string | null>(initial?.stamp_url  ?? null);
+  const [stampKind, setStampKind] = useState<StampKind | null>(initial?.stamp_kind ?? null);
 
   const [primary,   setPrimary]   = useState(initial?.brand_primary_color   ?? BRANDING_COLOR_DEFAULTS.brand_primary_color);
   const [secondary, setSecondary] = useState(initial?.brand_secondary_color ?? BRANDING_COLOR_DEFAULTS.brand_secondary_color);
@@ -78,6 +81,7 @@ export default function BrandingSettingsForm({ initial }: Props) {
     fd.set("logo_url",   logoUrl   ?? "");
     fd.set("stamp_path", stampPath ?? "");
     fd.set("stamp_url",  stampUrl  ?? "");
+    fd.set("stamp_kind", stampKind ?? "");
     fd.set("brand_primary_color",   primary);
     fd.set("brand_secondary_color", secondary);
     fd.set("brand_accent_color",    accent);
@@ -108,13 +112,10 @@ export default function BrandingSettingsForm({ initial }: Props) {
           onUploaded={(path, url) => { setLogoPath(path); setLogoUrl(url); setStatus("idle"); }}
           hint="PDF・完了報告・顧客アプリで使用されます"
         />
-        <ImageUploadField
-          label="印影スタンプ"
-          slot="stamp"
-          uploadAction={uploadBrandingImage}
+        <StampField
           value={stampUrl}
-          onUploaded={(path, url) => { setStampPath(path); setStampUrl(url); setStatus("idle"); }}
-          hint="請求書・見積書の押印に使用されます"
+          valueKind={stampKind}
+          onSaved={(path, url, kind) => { setStampPath(path); setStampUrl(url); setStampKind(kind); setStatus("idle"); }}
         />
       </div>
 

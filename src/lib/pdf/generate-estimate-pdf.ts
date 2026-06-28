@@ -4,6 +4,7 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EstimateDB } from "@/lib/estimates/estimate-types";
 import { renderEstimatePdf } from "./templates/estimate-pdf";
+import { getDealerStampForPdf } from "./get-dealer-stamp";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { createNotification } from "@/lib/notifications/notification";
@@ -34,9 +35,11 @@ export async function generateEstimatePdf(
 
   const estimate = data as EstimateDB;
 
+  const stamp = await getDealerStampForPdf(dealer.dealer_id);
+
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await renderEstimatePdf(estimate);
+    pdfBuffer = await renderEstimatePdf(estimate, stamp);
   } catch (err) {
     return { success: false, error: `PDF生成エラー: ${String(err)}` };
   }

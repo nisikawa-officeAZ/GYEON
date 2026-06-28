@@ -2,6 +2,8 @@
 //
 // Pure module (no "use server", no DB). Safe to import from client or server.
 
+import type { StampKind } from "@/lib/stamp/stamp-types";
+
 export const BRANDING_BUCKET = "dealer-branding";
 
 export type BrandingSlot = "logo" | "stamp";
@@ -15,6 +17,8 @@ export interface BrandingSettings {
   // Resolved public URLs (for preview + existing consumers e.g. PDF)
   logo_url:   string | null;
   stamp_url:  string | null;
+  // Stamp shape — drives standardized physical sizing in PDFs
+  stamp_kind: StampKind | null;
   // Palette
   brand_primary_color:   string | null;
   brand_secondary_color: string | null;
@@ -28,6 +32,7 @@ export const EMPTY_BRANDING: BrandingSettings = {
   stamp_path:            null,
   logo_url:              null,
   stamp_url:             null,
+  stamp_kind:            null,
   brand_primary_color:   null,
   brand_secondary_color: null,
   brand_accent_color:    null,

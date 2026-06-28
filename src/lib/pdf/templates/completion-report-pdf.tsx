@@ -11,6 +11,8 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import { CompletionReportFullData } from "@/lib/completion-reports/completion-report-types";
+import { StampBlock } from "@/lib/pdf/stamp-block";
+import type { PdfStamp } from "@/lib/stamp/stamp-types";
 
 const styles = StyleSheet.create({
   page: {
@@ -220,10 +222,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 interface CompletionReportDocumentProps {
-  data: CompletionReportFullData;
+  data:   CompletionReportFullData;
+  stamp?: PdfStamp | null;
 }
 
-function CompletionReportDocument({ data }: CompletionReportDocumentProps) {
+function CompletionReportDocument({ data, stamp }: CompletionReportDocumentProps) {
   const { report, dealer, work_order: wo } = data;
   const customer = wo?.customers ?? null;
   const vehicle  = wo?.vehicles  ?? null;
@@ -247,6 +250,7 @@ function CompletionReportDocument({ data }: CompletionReportDocumentProps) {
             {dealer?.phone && (
               <Text style={styles.companyInfo}>TEL: {dealer.phone}</Text>
             )}
+            {stamp && <View style={{ marginTop: 8, alignItems: "flex-start" }}><StampBlock stamp={stamp} /></View>}
           </View>
           <View>
             <Text style={styles.docTitle}>作業完了報告書</Text>
@@ -400,6 +404,9 @@ function CompletionReportDocument({ data }: CompletionReportDocumentProps) {
   );
 }
 
-export async function renderCompletionReportPdf(report: CompletionReportFullData): Promise<Buffer> {
-  return await renderToBuffer(<CompletionReportDocument data={report} />);
+export async function renderCompletionReportPdf(
+  report: CompletionReportFullData,
+  stamp?: PdfStamp | null,
+): Promise<Buffer> {
+  return await renderToBuffer(<CompletionReportDocument data={report} stamp={stamp} />);
 }

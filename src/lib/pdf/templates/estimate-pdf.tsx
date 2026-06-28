@@ -12,6 +12,8 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import { EstimateDB } from "@/lib/estimates/estimate-types";
+import { StampBlock } from "@/lib/pdf/stamp-block";
+import type { PdfStamp } from "@/lib/stamp/stamp-types";
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
@@ -205,9 +207,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 interface EstimateDocumentProps {
   estimate: EstimateDB;
+  stamp?:   PdfStamp | null;
 }
 
-function EstimateDocument({ estimate }: EstimateDocumentProps) {
+function EstimateDocument({ estimate, stamp }: EstimateDocumentProps) {
   const items = (estimate.estimate_items ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
   const docNo = estimate.estimate_number ?? estimate.estimate_no ?? "—";
   const customerName = [estimate.customers?.last_name, estimate.customers?.first_name]
@@ -221,6 +224,7 @@ function EstimateDocument({ estimate }: EstimateDocumentProps) {
           <View>
             <Text style={styles.companyName}>GYEON Detailer Agent</Text>
             <Text style={styles.companyInfo}>DealerOS — Dealer Management System</Text>
+            {stamp && <View style={{ marginTop: 8, alignItems: "flex-start" }}><StampBlock stamp={stamp} /></View>}
           </View>
           <View>
             <Text style={styles.docTitle}>見積書</Text>
@@ -347,6 +351,9 @@ function EstimateDocument({ estimate }: EstimateDocumentProps) {
 
 // ─── Export ───────────────────────────────────────────────────────────────────
 
-export async function renderEstimatePdf(estimate: EstimateDB): Promise<Buffer> {
-  return await renderToBuffer(<EstimateDocument estimate={estimate} />);
+export async function renderEstimatePdf(
+  estimate: EstimateDB,
+  stamp?: PdfStamp | null,
+): Promise<Buffer> {
+  return await renderToBuffer(<EstimateDocument estimate={estimate} stamp={stamp} />);
 }
