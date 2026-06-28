@@ -45,7 +45,16 @@ function LoginForm() {
 
       router.push("/");
       router.refresh();
-    } catch {
+    } catch (err) {
+      // ── TEMP DEBUG (remove after diagnosis) — surfaces a thrown auth/network error ──
+      console.log(
+        "[login-debug] signInWithPassword THREW",
+        "| name:",    (err as { name?: string })?.name,
+        "| status:",  (err as { status?: number })?.status,
+        "| code:",    (err as { code?: string })?.code,
+        "| message:", (err as { message?: string })?.message,
+      );
+      // ── END TEMP DEBUG ──
       setError("予期しないエラーが発生しました。再度お試しください。");
     } finally {
       setLoading(false);
