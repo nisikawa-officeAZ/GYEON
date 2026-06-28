@@ -11,7 +11,13 @@ export default async function CustomerAppPage() {
   return (
     <MainLayout>
       <div className="max-w-2xl mx-auto p-6 flex flex-col gap-6">
-        <PageTitle title="顧客アプリ" subtitle="顧客向けアプリの基本設定(基盤)" />
+        <div className="flex items-center justify-between">
+          <PageTitle title="顧客アプリ" subtitle="顧客向けアプリの基本設定(基盤)" />
+          <a href="/app" target="_blank" rel="noopener noreferrer"
+            className="shrink-0 px-3 py-2 text-xs font-semibold rounded-lg bg-blue-700 hover:bg-blue-600 text-white">
+            アプリをプレビュー ↗
+          </a>
+        </div>
         <CustomerAppClient initial={settings} />
       </div>
     </MainLayout>
