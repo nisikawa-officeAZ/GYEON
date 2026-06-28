@@ -4,9 +4,10 @@
 // true print-size preview. Guarantees the saved stamp is a transparent PNG at
 // the standard physical size (square 20mm / round 18mm); dealers never resize.
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { processStampImage } from "@/lib/media/stamp-processing";
-import { generateSealStamp } from "@/lib/media/stamp-generate";
+import { generateSealStamp, sealPreviewDataUrl } from "@/lib/media/stamp-generate";
+import { SEAL_STYLES, sealStyle } from "@/lib/media/stamp-styles";
 import { uploadBrandingImage } from "@/lib/branding/upload-branding-image";
 import { STAMP_SPECS, mmToCssPx, type StampKind } from "@/lib/stamp/stamp-types";
 
@@ -53,6 +54,16 @@ export default function StampField({ value, valueKind, onSaved }: StampFieldProp
   const [error, setError]   = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [genText, setGenText] = useState("");
+  const [styleId, setStyleId] = useState<string>(SEAL_STYLES[0].id);
+  const [stylePreviews, setStylePreviews] = useState<Record<string, string>>({});
+
+  // Live mini-previews of all 10 styles for the current text (generate tab only).
+  useEffect(() => {
+    if (tab !== "generate") return;
+    const map: Record<string, string> = {};
+    for (const s of SEAL_STYLES) map[s.id] = sealPreviewDataUrl(s.id, genText, 72);
+    setStylePreviews(map);
+  }, [tab, genText]);
 
   const upload = useCallback(async (blob: Blob, k: StampKind) => {
     const localUrl = URL.createObjectURL(blob);
@@ -102,12 +113,13 @@ export default function StampField({ value, valueKind, onSaved }: StampFieldProp
     if (!genText.trim()) { setError("印影に入れる文字を入力してください"); return; }
     setBusy(true);
     try {
-      const result = await generateSealStamp({ kind, text: genText });
-      await upload(result.blob, kind);
+      const result = await generateSealStamp({ styleId, text: genText });
+      setKind(result.kind);           // style determines square/round → correct physical size
+      await upload(result.blob, result.kind);
     } catch (err) {
       setError(err instanceof Error ? err.message : "生成に失敗しました");
     } finally { setBusy(false); }
-  }, [genText, kind, upload]);
+  }, [genText, styleId, upload]);
 
   const tabBtn = (id: "upload" | "generate", label: string) => (
     <button
@@ -141,12 +153,14 @@ export default function StampField({ value, valueKind, onSaved }: StampFieldProp
         <div className="flex gap-1">{tabBtn("upload", "アップロード")}{tabBtn("generate", "生成")}</div>
       </div>
 
-      {/* Shape selector (applies to both tabs) */}
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] text-slate-500">種類:</span>
-        {kindBtn("square", "角印 20mm")}
-        {kindBtn("round", "丸印 18mm")}
-      </div>
+      {/* Shape selector — upload tab only (generate derives shape from the style) */}
+      {tab === "upload" && (
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-slate-500">種類:</span>
+          {kindBtn("square", "角印 20mm")}
+          {kindBtn("round", "丸印 18mm")}
+        </div>
+      )}
 
       {tab === "upload" ? (
         <div
@@ -172,22 +186,52 @@ export default function StampField({ value, valueKind, onSaved }: StampFieldProp
           />
         </div>
       ) : (
-        <div className="flex flex-col gap-2 rounded-xl border border-slate-700 bg-slate-900 p-3">
+        <div className="flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900 p-3">
           <input
             value={genText}
             onChange={(e) => setGenText(e.target.value)}
-            placeholder={kind === "square" ? "会社名（例: 株式会社GYEON）" : "氏名（例: 山田）"}
+            placeholder="文字を入力（会社名 例: 株式会社GYEON / 氏名 例: 山田）"
             className="w-full bg-[#0b1120] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
           />
+
+          {/* 10-style selection */}
+          <div>
+            <p className="text-[10px] text-slate-500 mb-1.5">スタイルを選択(10種)</p>
+            <div className="grid grid-cols-5 gap-2">
+              {SEAL_STYLES.map((s) => {
+                const selected = styleId === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => { setStyleId(s.id); setKind(sealStyle(s.id).shape); }}
+                    title={s.label}
+                    className={`flex flex-col items-center gap-1 rounded-lg border p-1.5 transition-colors ${
+                      selected ? "border-blue-500 bg-blue-950/30" : "border-slate-700 bg-[#0b1120] hover:border-slate-500"
+                    }`}
+                  >
+                    <span className="w-full aspect-square grid place-items-center rounded bg-white overflow-hidden">
+                      {stylePreviews[s.id] && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={stylePreviews[s.id]} alt={s.label} className="w-full h-full object-contain" />
+                      )}
+                    </span>
+                    <span className="text-[8px] text-slate-400 leading-none text-center truncate w-full">{s.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={handleGenerate}
             disabled={busy}
             className="self-start px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white"
           >
-            {busy ? "生成中…" : "印影を生成"}
+            {busy ? "生成中…" : "この印影を生成・保存"}
           </button>
-          <p className="text-[10px] text-slate-600">日本の印鑑スタイルで透過PNGを生成し、規定サイズに自動調整します。</p>
+          <p className="text-[10px] text-slate-600">日本の印鑑スタイルで透過PNGを生成し、規定サイズ(角印20mm/丸印18mm)に自動調整します。</p>
         </div>
       )}
 
