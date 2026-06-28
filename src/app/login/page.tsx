@@ -27,16 +27,7 @@ function LoginForm() {
 
     try {
       const supabase = createClient();
-      // ── TEMP DEBUG (remove after diagnosis) — never logs the password ──
-      console.log("[login-debug] submitted email:", JSON.stringify(email), "| length:", email.length);
-      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-      console.log(
-        "[login-debug] error.code:", authError?.code,
-        "| error.status:", authError?.status,
-        "| error.message:", authError?.message,
-        "| session is null:", data?.session == null,
-      );
-      // ── END TEMP DEBUG ──
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
       if (authError) {
         setError("メールアドレスまたはパスワードが正しくありません。");
@@ -45,16 +36,7 @@ function LoginForm() {
 
       router.push("/");
       router.refresh();
-    } catch (err) {
-      // ── TEMP DEBUG (remove after diagnosis) — surfaces a thrown auth/network error ──
-      console.log(
-        "[login-debug] signInWithPassword THREW",
-        "| name:",    (err as { name?: string })?.name,
-        "| status:",  (err as { status?: number })?.status,
-        "| code:",    (err as { code?: string })?.code,
-        "| message:", (err as { message?: string })?.message,
-      );
-      // ── END TEMP DEBUG ──
+    } catch {
       setError("予期しないエラーが発生しました。再度お試しください。");
     } finally {
       setLoading(false);
