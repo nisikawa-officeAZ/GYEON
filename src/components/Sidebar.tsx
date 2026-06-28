@@ -42,6 +42,8 @@ const navItems: NavItem[] = [
   { type: "link", href: "/maintenance",       label: "メンテナンス", icon: "◉", feature: "maintenance" },
   { type: "link", href: "/news",              label: "お知らせ",   icon: "📢" },
   { type: "link", href: "/downloads",         label: "ダウンロード", icon: "⬇" },
+  { type: "link", href: "/points",            label: "ポイント",   icon: "★" },
+  { type: "link", href: "/customer-app",      label: "顧客アプリ", icon: "📱" },
   { type: "link", href: "/settings",          label: "設定",       icon: "⊞" },
 ];
 
