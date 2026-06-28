@@ -17,7 +17,7 @@ export default function Header({ open, onToggleSidebar }: HeaderProps) {
     >
       <button
         onClick={onToggleSidebar}
-        className="w-11 h-11 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+        className="w-11 h-11 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors md:hidden"
         aria-label={open ? "Close sidebar" : "Open sidebar"}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">

@@ -108,7 +108,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
       <aside
         style={{ top: "var(--app-header-h)" }}
-        className={`w-[240px] bg-slate-900 border-r border-slate-800 fixed bottom-0 left-0 z-40 flex flex-col transition-transform duration-300 ${
+        className={`w-[240px] bg-slate-900 border-r border-slate-800 fixed bottom-0 left-0 z-40 flex flex-col transition-transform duration-300 md:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
