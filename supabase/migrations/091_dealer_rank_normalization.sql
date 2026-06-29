@@ -1,6 +1,6 @@
 -- =============================================================================
 -- PHASE91: Three Official GYEON Dealer Ranks
--- File: 091_dealer_rank_three_tier.sql
+-- File: 091_dealer_rank_normalization.sql
 -- =============================================================================
 -- MANUAL APPLY ONLY. Paste into Supabase SQL Editor. Apply AFTER migration 090.
 --
