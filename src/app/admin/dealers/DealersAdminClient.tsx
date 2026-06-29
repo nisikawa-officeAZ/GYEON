@@ -9,7 +9,7 @@ import { DEALER_RANKS, normalizeRank, rankLabelOrDash, DEFAULT_DEALER_RANK } fro
 type StatusFilter = "all" | "pending" | "approved" | "rejected" | "suspended";
 type PlanFilter   = "all" | "basic" | "pro" | "pro_plus";
 type TrialFilter  = "all" | "active" | "ended" | "none";
-type RankFilter   = "all" | "shop" | "detailer" | "certified_detailer";
+type RankFilter   = "all" | "shop" | "detailer" | "certified";
 
 type Modal =
   | { type: "none" }
@@ -67,7 +67,7 @@ function rankLabel(r: string | null): string {
 function rankClass(r: string | null): string {
   if (!r || !r.trim()) return "text-slate-600 bg-transparent  border-transparent";
   switch (normalizeRank(r)) {
-    case "certified_detailer": return "text-amber-300   bg-amber-900/30   border-amber-700/40";
+    case "certified": return "text-amber-300   bg-amber-900/30   border-amber-700/40";
     case "detailer":           return "text-sky-300     bg-sky-900/30     border-sky-700/40";
     case "shop":               return "text-emerald-300 bg-emerald-900/30 border-emerald-700/40";
     default:                   return "text-slate-600 bg-transparent  border-transparent";
@@ -830,13 +830,13 @@ export default function DealersAdminClient({ dealers: initial, callerRole }: Pro
             </button>
           ))}
           <span className="text-slate-800 text-xs px-1">|</span>
-          {(["all", "shop", "detailer", "certified_detailer"] as RankFilter[]).map((r) => (
+          {(["all", "shop", "detailer", "certified"] as RankFilter[]).map((r) => (
             <button
               key={r}
               onClick={() => setRankFilter(r)}
               className={`text-[10px] px-2.5 py-1 rounded-full border transition-colors ${
                 rankFilter === r
-                  ? r === "certified_detailer" ? "bg-amber-700/20 text-amber-300 border-amber-700/40"
+                  ? r === "certified" ? "bg-amber-700/20 text-amber-300 border-amber-700/40"
                   : r === "detailer"           ? "bg-sky-700/20   text-sky-300   border-sky-700/40"
                   : "bg-slate-700/40 text-slate-300 border-slate-600/50"
                   : "text-slate-600 border-slate-800 hover:border-slate-700"

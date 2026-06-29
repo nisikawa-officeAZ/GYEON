@@ -284,7 +284,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   const [topcoat2,  setTopcoat2]  = useState("");
   const [topcoat3,  setTopcoat3]  = useState("");
 
-  const isCert   = meetsTier(rank, "certified_only");
+  const isCert   = meetsTier(rank, "certified");
   const visCoats = COATINGS.filter(c => !c.certOnly || isCert);
   const tc2Opts  = coatId ? topcoatOpts(coatId, layerMode, isCert) : [];
   const tc3Opts  = coatId && layerMode === "3layer" && topcoat2

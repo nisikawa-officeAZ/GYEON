@@ -4,19 +4,18 @@
 -- =============================================================================
 -- MANUAL APPLY ONLY. Paste into Supabase SQL Editor. Apply AFTER migration 090.
 --
--- Establishes the three official, strictly-ordinal ranks:
---   shop (1) < detailer (2) < certified_detailer (3)
+-- Canonical ranks (strictly ordinal):  shop (1) < detailer (2) < certified (3)
 --
--- This migration performs a CONTROLLED, approved data normalization + backfill
--- (locked decisions):
---   - dealer_settings.detailer_rank : 'certified' -> 'certified_detailer'
---   - dealers.detailer_rank         : 'certified' -> 'certified_detailer';
---                                     NULL/'' -> 'detailer' (backfill);
---                                     then rank becomes MANDATORY (NOT NULL).
---   - Both CHECK constraints widened to ('shop','detailer','certified_detailer').
+-- Controlled, approved data normalization + backfill (locked decisions):
+--   - dealers.detailer_rank        : 'certified_detailer' -> 'certified';
+--                                    NULL/'' -> 'detailer' (backfill);
+--                                    then rank becomes MANDATORY (NOT NULL).
+--   - dealer_settings.detailer_rank: already uses 'certified'/'detailer' — only
+--                                    the CHECK is widened to allow 'shop'.
+--   - Both CHECK constraints widened to ('shop','detailer','certified').
 --
 -- Idempotent and non-destructive beyond the explicit value mapping above.
--- Existing 'detailer' rows are unchanged.
+-- Existing 'detailer'/'certified' rows are unchanged.
 -- =============================================================================
 
 -- ─── 1. dealer_settings.detailer_rank (NOT NULL, default 'detailer' from 070) ─
@@ -30,18 +29,14 @@ BEGIN
 END;
 $$;
 
-UPDATE public.dealer_settings
-   SET detailer_rank = 'certified_detailer'
- WHERE detailer_rank = 'certified';
-
 ALTER TABLE public.dealer_settings
   ADD CONSTRAINT dealer_settings_detailer_rank_check
-  CHECK (detailer_rank IN ('shop','detailer','certified_detailer'));
+  CHECK (detailer_rank IN ('shop','detailer','certified'));
 
 -- ─── 2. dealers.detailer_rank (was nullable/unconstrained — becomes mandatory) ─
 UPDATE public.dealers
-   SET detailer_rank = 'certified_detailer'
- WHERE detailer_rank = 'certified';
+   SET detailer_rank = 'certified'
+ WHERE detailer_rank = 'certified_detailer';
 
 UPDATE public.dealers
    SET detailer_rank = 'detailer'
@@ -54,7 +49,7 @@ BEGIN
                    AND conrelid = 'public.dealers'::regclass) THEN
     ALTER TABLE public.dealers
       ADD CONSTRAINT dealers_detailer_rank_check
-      CHECK (detailer_rank IN ('shop','detailer','certified_detailer'));
+      CHECK (detailer_rank IN ('shop','detailer','certified'));
   END IF;
 END;
 $$;
@@ -69,8 +64,8 @@ NOTIFY pgrst, 'reload schema';
 -- Verification:
 --   SELECT pg_get_constraintdef(oid) FROM pg_constraint
 --    WHERE conname = 'dealers_detailer_rank_check';
---   -- expect: CHECK (detailer_rank = ANY (ARRAY['shop','detailer','certified_detailer']))
+--   -- expect: CHECK (detailer_rank = ANY (ARRAY['shop','detailer','certified']))
 --
 --   SELECT detailer_rank, count(*) FROM public.dealers GROUP BY 1;
---   -- expect: no NULLs; only shop/detailer/certified_detailer
+--   -- expect: no NULLs; only shop/detailer/certified
 -- =============================================================================

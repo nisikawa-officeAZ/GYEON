@@ -5,7 +5,7 @@
 // Rank NAMES/COUNT/ORDER come from the active MarketProfile (see
 // ./market-profiles), so nothing here is hardcoded to Japan for global
 // deployments. For the default JP market the ranks are, strictly ordinal/nested:
-//   shop (1) < detailer (2) < certified_detailer (3)
+//   shop (1) < detailer (2) < certified (3)
 //
 // Every rank gate is expressed as `rankAtLeast(dealerRank, required)` /
 // `rankLevel(...)`, so adding a future rank = edit the profile only.

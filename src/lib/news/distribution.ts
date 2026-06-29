@@ -21,6 +21,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin }      from "@/lib/admin/require-admin";
 import { getEmailProvider }  from "./delivery/email-provider";
 import { getLineProvider }   from "./delivery/line-provider";
+import { normalizeRank }     from "@/lib/ranks/dealer-ranks";
 import {
   channelsToDelivery,
   type DeliveryChannel,
@@ -63,10 +64,10 @@ async function resolveDealerRecipients(
 
   switch (audience) {
     case "certified_dealers":
-      rows = rows.filter((d) => d.detailer_rank === "certified_detailer");
+      rows = rows.filter((d) => normalizeRank(d.detailer_rank) === "certified");
       break;
     case "regular_dealers":
-      rows = rows.filter((d) => d.detailer_rank !== "certified_detailer");
+      rows = rows.filter((d) => normalizeRank(d.detailer_rank) !== "certified");
       break;
     case "active_dealers":
       rows = rows.filter((d) => d.approval_status === "approved");

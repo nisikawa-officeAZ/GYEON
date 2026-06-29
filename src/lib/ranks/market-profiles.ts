@@ -8,12 +8,12 @@
 // active market is selected by env (NEXT_PUBLIC_DEALEROS_MARKET / DEALEROS_MARKET),
 // defaulting to "JP".
 //
-// The permission-tier vocabulary (all | detailer_plus | certified_only) is
+// The permission-tier vocabulary (all | detailer | certified) is
 // GLOBAL and stable. Each profile only declares the LEVEL floor each tier maps
 // to, so "Global Certified restrictions" are supported in every market — even if
 // a market renames or adds ranks.
 
-export type PermissionTier = "all" | "detailer_plus" | "certified_only";
+export type PermissionTier = "all" | "detailer" | "certified";
 
 export interface RankDef {
   value:    string;   // machine value stored in DB (per market)
@@ -36,13 +36,13 @@ export interface MarketProfile {
 export const JP_PROFILE: MarketProfile = {
   market: "JP",
   ranks: [
-    { value: "shop",               level: 1, labelJa: "GYEON Shop",               labelEn: "GYEON Shop",               emoji: "🏪" },
-    { value: "detailer",           level: 2, labelJa: "GYEON Detailer",           labelEn: "GYEON Detailer",           emoji: "🔵" },
-    { value: "certified_detailer", level: 3, labelJa: "GYEON Certified Detailer", labelEn: "GYEON Certified Detailer", emoji: "⭐", certified: true },
+    { value: "shop",      level: 1, labelJa: "GYEON Shop",               labelEn: "GYEON Shop",               emoji: "🏪" },
+    { value: "detailer",  level: 2, labelJa: "GYEON Detailer",           labelEn: "GYEON Detailer",           emoji: "🔵" },
+    { value: "certified", level: 3, labelJa: "GYEON Certified Detailer", labelEn: "GYEON Certified Detailer", emoji: "⭐", certified: true },
   ],
   defaultRank:    "detailer",
-  legacyAliases:  { certified: "certified_detailer" }, // pre-PHASE91 dealer_settings value
-  tierFloorLevel: { all: 1, detailer_plus: 2, certified_only: 3 },
+  legacyAliases:  { certified_detailer: "certified" }, // old dealers.detailer_rank value -> canonical
+  tierFloorLevel: { all: 1, detailer: 2, certified: 3 },
 };
 
 /**

@@ -5,9 +5,9 @@
 // FINAL business rule: purchase and install permissions have EXACTLY three
 // levels, and this vocabulary is GLOBAL (market-independent):
 //
-//   all            — every dealer
-//   detailer_plus  — professional rank and above
-//   certified_only — certified rank only   (Global Certified restriction)
+//   all        — every dealer
+//   detailer   — detailer rank and above
+//   certified  — certified rank only   (Global Certified restriction)
 //
 // The mapping from a tier to the rank threshold it requires is taken from the
 // ACTIVE MARKET PROFILE (see ./market-profiles), so a market may rename or add
@@ -21,7 +21,7 @@ import { rankLevel } from "./dealer-ranks";
 
 export type { PermissionTier };
 
-export const PERMISSION_TIERS: PermissionTier[] = ["all", "detailer_plus", "certified_only"];
+export const PERMISSION_TIERS: PermissionTier[] = ["all", "detailer", "certified"];
 export const DEFAULT_PERMISSION_TIER: PermissionTier = "all";
 
 export function isValidTier(v: string | null | undefined): v is PermissionTier {
@@ -67,13 +67,13 @@ function floorRankLabel(tier: PermissionTier, lang: "ja" | "en"): string {
 export function tierLabelJa(tier: string | null | undefined): string {
   const t = normalizeTier(tier);
   if (t === "all") return "全ランク";
-  if (t === "detailer_plus") return `${floorRankLabel("detailer_plus", "ja")}以上`;
-  return `${floorRankLabel("certified_only", "ja")}限定`;
+  if (t === "detailer") return `${floorRankLabel("detailer", "ja")}以上`;
+  return `${floorRankLabel("certified", "ja")}限定`;
 }
 
 export function tierLabelEn(tier: string | null | undefined): string {
   const t = normalizeTier(tier);
   if (t === "all") return "All ranks";
-  if (t === "detailer_plus") return `${floorRankLabel("detailer_plus", "en")} or higher`;
-  return `${floorRankLabel("certified_only", "en")} only`;
+  if (t === "detailer") return `${floorRankLabel("detailer", "en")} or higher`;
+  return `${floorRankLabel("certified", "en")} only`;
 }

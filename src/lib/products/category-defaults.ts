@@ -8,13 +8,13 @@
 // don't have to set common cases by hand.
 //
 // Product-master permission fields (canonical, per the locked flow):
-//   purchase_permission   — who may BUY a SKU   (all | detailer_plus | certified_only)
-//   minimum_install_rank  — who may INSTALL it  (all | detailer_plus | certified_only)
+//   purchase_permission   — who may BUY a SKU   (all | detailer | certified)
+//   minimum_install_rank  — who may INSTALL it  (all | detailer | certified)
 //   market_scope          — global | jp_only
 //   is_active, category
 //
 // FINAL business rule captured here:
-//   - PPF category  ->  purchase_permission = detailer_plus  (Detailer or higher)
+//   - PPF category  ->  purchase_permission = detailer  (Detailer or higher)
 //
 // Tier values come from the GLOBAL permission vocabulary, so these defaults are
 // market-portable (not tied to Japan rank names).
@@ -23,7 +23,7 @@ import type { PermissionTier } from "@/lib/ranks/permission-tiers";
 
 /** Default minimum PURCHASE tier keyed by normalized (lower-case) category. */
 export const CATEGORY_DEFAULT_PURCHASE_TIER: Record<string, PermissionTier> = {
-  ppf: "detailer_plus",
+  ppf: "detailer",
 };
 
 /** Fallback when a category has no specific default. */
