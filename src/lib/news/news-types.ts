@@ -1,6 +1,8 @@
 // GYEON News Center — shared types & display metadata.
 // Pure module (no DB / no "use server"). Safe for client or server import.
 
+import type { NewsAudience, NewsChannels } from "./distribution-types";
+
 export type NewsCategory =
   | "announcement"
   | "new_product"
@@ -31,6 +33,14 @@ export interface GyeonNews {
   created_by:       string | null;
   created_at:       string;
   updated_at:       string;
+  // PHASE89: distribution fields (present after migration 089)
+  summary?:           string | null;
+  body_html?:         string | null;
+  body_text?:         string | null;
+  target_audience?:   NewsAudience;
+  target_dealer_ids?: string[] | null;
+  channels?:          NewsChannels;
+  scheduled_at?:      string | null;
 }
 
 /** News as seen by a dealer, enriched with this user's read state. */
