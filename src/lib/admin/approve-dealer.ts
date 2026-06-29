@@ -3,6 +3,7 @@
 import { requireAdmin, requireSuperAdmin } from "./require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "./write-audit-log";
+import { DEFAULT_DEALER_RANK } from "@/lib/ranks/dealer-ranks";
 
 function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr);
@@ -28,7 +29,8 @@ export async function approveDealerTrial(
   const serviceStart   = options?.serviceStartDate ?? today;
   const trialDays      = options?.trialDays        ?? 30;
   const trialEnd       = options?.trialEndDate     ?? addDays(serviceStart, trialDays);
-  const detailerRank   = options?.detailerRank     ?? null;
+  // Rank is mandatory — default to the locked canonical default if unspecified.
+  const detailerRank   = options?.detailerRank     ?? DEFAULT_DEALER_RANK;
 
   const { error } = await supabase
     .from("dealers")
@@ -71,6 +73,15 @@ export async function approveDealerTrial(
         { onConflict: "dealer_id,user_id" },
       );
   }
+
+  // Write-through sync of the assigned rank to dealer_settings (authoritative copy
+  // is dealers.detailer_rank; dealer-facing UI + estimates read dealer_settings).
+  await supabase
+    .from("dealer_settings")
+    .upsert(
+      { dealer_id: dealerId, detailer_rank: detailerRank, updated_at: new Date().toISOString() },
+      { onConflict: "dealer_id" },
+    );
 
   await writeAuditLog({
     adminUserId:    admin.id,

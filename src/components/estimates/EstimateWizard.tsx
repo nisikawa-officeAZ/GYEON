@@ -20,6 +20,7 @@ import type { ServiceInput }     from "@/lib/pricing/pricing-engine";
 import dynamic                   from "next/dynamic";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
 import type { DetailerRank }     from "@/lib/dealer-settings/dealer-settings-types";
+import { rankAtLeast, rankEmoji, rankLabelJa } from "@/lib/ranks/dealer-ranks";
 
 const VehicleRegistrationUpload = dynamic(
   () => import("@/components/vehicle-registration/VehicleRegistrationUpload"),
@@ -282,7 +283,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   const [topcoat2,  setTopcoat2]  = useState("");
   const [topcoat3,  setTopcoat3]  = useState("");
 
-  const isCert   = rank === "certified";
+  const isCert   = rankAtLeast(rank, "certified_detailer");
   const visCoats = COATINGS.filter(c => !c.certOnly || isCert);
   const tc2Opts  = coatId ? topcoatOpts(coatId, layerMode, isCert) : [];
   const tc3Opts  = coatId && layerMode === "3layer" && topcoat2
@@ -810,9 +811,9 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
         <div className="flex flex-col gap-4">
           {/* Read-only rank badge — Admin-assigned, dealer cannot change */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-700 bg-[#0f172a]">
-            <span className="text-sm">{rank === "certified" ? "⭐" : "🔵"}</span>
+            <span className="text-sm">{rankEmoji(rank)}</span>
             <span className="text-sm text-slate-300">
-              {rank === "certified" ? "認定ディテイラー" : "ディテイラー"}
+              {rankLabelJa(rank)}
             </span>
             <span className="text-[10px] text-slate-500 ml-auto">管理者設定ランク</span>
           </div>

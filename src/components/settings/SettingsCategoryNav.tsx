@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 import type { CanonicalDealerSettings } from "@/lib/dealer-settings/dealer-settings-types";
+import { rankEmoji, rankLabelJa } from "@/lib/ranks/dealer-ranks";
 import CompanySettingsForm from "./CompanySettingsForm";
 import StaffManagement from "./StaffManagement";
 import DocumentSequenceSettings from "./DocumentSequenceSettings";
@@ -144,7 +145,7 @@ function StoreContent({ s, companySettings, staffList, staffInfo }: {
   staffList: DealerStaffDB[];
   staffInfo: Props["staffInfo"];
 }) {
-  const rankLabel = s.detailer_rank === "certified" ? "⭐ 認定ディテイラー" : "🔵 ディテイラー";
+  const rankLabel = `${rankEmoji(s.detailer_rank)} ${rankLabelJa(s.detailer_rank)}`;
   return (
     <div className="flex flex-col gap-5">
       {/* Company settings — working save */}

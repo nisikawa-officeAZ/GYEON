@@ -7,6 +7,7 @@ import { updateDealerPlan } from "@/lib/admin/update-dealer-plan";
 import { suspendDealer, reactivateDealer } from "@/lib/admin/approve-dealer";
 import type { DealerAdminView } from "@/lib/admin/admin-types";
 import type { DealerDetail, TimelineEvent, AdminAuditEntry } from "@/lib/admin/get-dealer-detail";
+import { DEALER_RANKS, normalizeRank, rankLabelOrDash } from "@/lib/ranks/dealer-ranks";
 
 type Tab = "overview" | "timeline" | "audit" | "actions";
 
@@ -41,9 +42,7 @@ function planClass(p: string | null): string {
 }
 
 function rankLabel(r: string | null): string {
-  if (r === "certified_detailer") return "Certified Detailer";
-  if (r === "detailer")           return "Detailer";
-  return "—";
+  return rankLabelOrDash(r);
 }
 
 function approvalLabel(s: string | null): string {
@@ -275,7 +274,7 @@ function ActionsTab({
   const [newPlan, setNewPlan] = useState(dealer.plan ?? "pro_plus");
 
   // Change rank state
-  const [newRank, setNewRank] = useState(dealer.detailer_rank ?? "certified_detailer");
+  const [newRank, setNewRank] = useState<string>(normalizeRank(dealer.detailer_rank));
 
   // Suspend state
   const [suspendReason, setSuspendReason] = useState("");
@@ -368,8 +367,9 @@ function ActionsTab({
             onChange={(e) => setNewRank(e.target.value)}
             className="px-3 py-1.5 text-sm bg-slate-800 border border-slate-600 rounded-lg text-slate-200 focus:outline-none focus:border-slate-400"
           >
-            <option value="certified_detailer">Certified Detailer</option>
-            <option value="detailer">Detailer</option>
+            {DEALER_RANKS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.labelEn}</option>
+            ))}
           </select>
           <button
             onClick={() => {

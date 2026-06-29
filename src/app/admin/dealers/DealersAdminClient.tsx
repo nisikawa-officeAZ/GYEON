@@ -4,11 +4,12 @@ import { useState, useTransition, useMemo } from "react";
 import { approveDealerTrial, rejectDealer, suspendDealer, reactivateDealer, deleteDealer } from "@/lib/admin/approve-dealer";
 import DealerDetailPanel from "./DealerDetailPanel";
 import type { DealerAdminView } from "@/lib/admin/admin-types";
+import { DEALER_RANKS, normalizeRank, rankLabelOrDash, DEFAULT_DEALER_RANK } from "@/lib/ranks/dealer-ranks";
 
 type StatusFilter = "all" | "pending" | "approved" | "rejected" | "suspended";
 type PlanFilter   = "all" | "basic" | "pro" | "pro_plus";
 type TrialFilter  = "all" | "active" | "ended" | "none";
-type RankFilter   = "all" | "detailer" | "certified_detailer";
+type RankFilter   = "all" | "shop" | "detailer" | "certified_detailer";
 
 type Modal =
   | { type: "none" }
@@ -60,17 +61,15 @@ function planClass(p: string | null): string {
 }
 
 function rankLabel(r: string | null): string {
-  switch (r) {
-    case "certified_detailer": return "Certified Detailer";
-    case "detailer":           return "Detailer";
-    default:                   return "—";
-  }
+  return rankLabelOrDash(r);
 }
 
 function rankClass(r: string | null): string {
-  switch (r) {
-    case "certified_detailer": return "text-amber-300 bg-amber-900/30 border-amber-700/40";
-    case "detailer":           return "text-sky-300   bg-sky-900/30   border-sky-700/40";
+  if (!r || !r.trim()) return "text-slate-600 bg-transparent  border-transparent";
+  switch (normalizeRank(r)) {
+    case "certified_detailer": return "text-amber-300   bg-amber-900/30   border-amber-700/40";
+    case "detailer":           return "text-sky-300     bg-sky-900/30     border-sky-700/40";
+    case "shop":               return "text-emerald-300 bg-emerald-900/30 border-emerald-700/40";
     default:                   return "text-slate-600 bg-transparent  border-transparent";
   }
 }
@@ -131,7 +130,7 @@ function ApproveModal({
   onApprove: (opts: { detailerRank: string; initialPlan: string; serviceStartDate: string; trialEndDate: string }) => void;
   isPending: boolean;
 }) {
-  const [rank,         setRank]         = useState("certified_detailer");
+  const [rank,         setRank]         = useState<string>(DEFAULT_DEALER_RANK);
   const [plan,         setPlan]         = useState("pro_plus");
   const [startDate,    setStartDate]    = useState(today());
   const [trialDays,    setTrialDays]    = useState(30);
@@ -180,10 +179,7 @@ function ApproveModal({
           <div>
             <label className="text-xs font-medium text-slate-400 block mb-2">Detailer Rank</label>
             <div className="flex gap-2">
-              {[
-                { value: "certified_detailer", label: "Certified Detailer" },
-                { value: "detailer",            label: "Detailer" },
-              ].map((opt) => (
+              {DEALER_RANKS.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => setRank(opt.value)}
@@ -193,7 +189,7 @@ function ApproveModal({
                       : "bg-slate-800/40 border-slate-700 text-slate-400 hover:border-slate-600"
                   }`}
                 >
-                  {opt.label}
+                  {opt.labelEn}
                 </button>
               ))}
             </div>
@@ -614,7 +610,7 @@ export default function DealersAdminClient({ dealers: initial, callerRole }: Pro
       }
       if (planFilter !== "all"  && d.plan !== planFilter)                    return false;
       if (trialFilter !== "all" && (d.trial_status ?? "none") !== trialFilter) return false;
-      if (rankFilter !== "all"  && d.detailer_rank !== rankFilter)           return false;
+      if (rankFilter !== "all"  && normalizeRank(d.detailer_rank) !== rankFilter) return false;
       return true;
     });
   }, [dealers, search, statusFilter, planFilter, trialFilter, rankFilter]);
@@ -834,7 +830,7 @@ export default function DealersAdminClient({ dealers: initial, callerRole }: Pro
             </button>
           ))}
           <span className="text-slate-800 text-xs px-1">|</span>
-          {(["all", "certified_detailer", "detailer"] as RankFilter[]).map((r) => (
+          {(["all", "shop", "detailer", "certified_detailer"] as RankFilter[]).map((r) => (
             <button
               key={r}
               onClick={() => setRankFilter(r)}

@@ -4,7 +4,10 @@
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
-export type DetailerRank = "detailer" | "certified";
+// Canonical three official ranks live in @/lib/ranks/dealer-ranks.
+// `DetailerRank` is kept as a backward-compatible alias of the canonical union.
+import type { DealerRank } from "@/lib/ranks/dealer-ranks";
+export type DetailerRank = DealerRank;
 
 export type BodySizeKey = "SS" | "S" | "M" | "ML" | "L" | "LL" | "XL" | "XXL";
 
