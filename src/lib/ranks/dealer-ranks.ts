@@ -1,62 +1,48 @@
-// GYEON Official Dealer Ranks — single source of truth.
+// GYEON Dealer Ranks — public rank API, driven by the active market profile.
 //
 // Pure module (no DB / no "use server"). Safe for client or server import.
 //
-// The three official ranks are STRICTLY ORDINAL and NESTED:
-//   shop (1)  <  detailer (2)  <  certified_detailer (3)
-// Every rank gate in the app is expressed as `rankAtLeast(dealerRank, required)`,
-// so adding a future rank = append one entry here + widen the DB CHECK
-// constraints. No call-site logic changes.
+// Rank NAMES/COUNT/ORDER come from the active MarketProfile (see
+// ./market-profiles), so nothing here is hardcoded to Japan for global
+// deployments. For the default JP market the ranks are, strictly ordinal/nested:
+//   shop (1) < detailer (2) < certified_detailer (3)
 //
-// This module is intentionally LEGACY-TOLERANT: `normalizeRank()` maps the old
-// two-rank conventions ('certified', and a null/blank dealers.detailer_rank) onto
-// the canonical values, so the app keeps working both BEFORE and AFTER migration
-// 091 normalizes the stored data.
+// Every rank gate is expressed as `rankAtLeast(dealerRank, required)` /
+// `rankLevel(...)`, so adding a future rank = edit the profile only.
+//
+// Legacy-tolerant: `normalizeRank` applies the profile's legacyAliases (e.g. the
+// old 'certified' value) and falls back to the profile default, so reads never
+// break across the data migration.
 
-export type DealerRank = "shop" | "detailer" | "certified_detailer";
+import { getActiveProfile, type RankDef } from "./market-profiles";
 
-export interface DealerRankMeta {
-  value:   DealerRank;
-  level:   number;        // ordinal; higher = more privileges (nested supersets)
-  labelJa: string;
-  labelEn: string;
-  emoji:   string;
-}
+/** Rank machine value. Configurable per market — kept as `string`, validated at runtime. */
+export type DealerRank = string;
+export type DealerRankMeta = RankDef;
 
-export const DEALER_RANKS: DealerRankMeta[] = [
-  { value: "shop",               level: 1, labelJa: "GYEON Shop",               labelEn: "GYEON Shop",               emoji: "🏪" },
-  { value: "detailer",           level: 2, labelJa: "GYEON Detailer",           labelEn: "GYEON Detailer",           emoji: "🔵" },
-  { value: "certified_detailer", level: 3, labelJa: "GYEON Certified Detailer", labelEn: "GYEON Certified Detailer", emoji: "⭐" },
-];
+const PROFILE = getActiveProfile();
 
-/** Locked default for backfill / new dealers (see migration 091). */
-export const DEFAULT_DEALER_RANK: DealerRank = "detailer";
-
+export const DEALER_RANKS: RankDef[] = PROFILE.ranks;
 export const DEALER_RANK_VALUES: DealerRank[] = DEALER_RANKS.map((r) => r.value);
+export const DEFAULT_DEALER_RANK: DealerRank = PROFILE.defaultRank;
 
-const BY_VALUE = new Map<DealerRank, DealerRankMeta>(DEALER_RANKS.map((r) => [r.value, r]));
+const BY_VALUE = new Map<string, RankDef>(DEALER_RANKS.map((r) => [r.value, r]));
 
-/** True only for the three canonical machine values. */
+/** True only for a canonical machine value in the active market. */
 export function isValidRank(v: string | null | undefined): v is DealerRank {
-  return !!v && BY_VALUE.has(v as DealerRank);
+  return !!v && BY_VALUE.has(v);
 }
 
-/**
- * Map any stored/legacy value onto a canonical rank.
- *   'certified' (old dealer_settings convention) -> 'certified_detailer'
- *   null / '' / unknown                          -> DEFAULT_DEALER_RANK
- */
+/** Map any stored/legacy value onto a canonical rank (via profile aliases; unknown -> default). */
 export function normalizeRank(raw: string | null | undefined): DealerRank {
-  switch ((raw ?? "").trim()) {
-    case "shop":               return "shop";
-    case "detailer":           return "detailer";
-    case "certified":
-    case "certified_detailer": return "certified_detailer";
-    default:                   return DEFAULT_DEALER_RANK;
-  }
+  const v = (raw ?? "").trim();
+  if (BY_VALUE.has(v)) return v;
+  const alias = PROFILE.legacyAliases[v];
+  if (alias && BY_VALUE.has(alias)) return alias;
+  return DEFAULT_DEALER_RANK;
 }
 
-export function rankMeta(r: string | null | undefined): DealerRankMeta {
+export function rankMeta(r: string | null | undefined): RankDef {
   return BY_VALUE.get(normalizeRank(r))!;
 }
 
@@ -64,9 +50,9 @@ export function rankLevel(r: string | null | undefined): number {
   return rankMeta(r).level;
 }
 
-/** Does `dealerRank` meet or exceed `required`? Legacy-tolerant on `dealerRank`. */
-export function rankAtLeast(dealerRank: string | null | undefined, required: DealerRank): boolean {
-  return rankLevel(dealerRank) >= BY_VALUE.get(required)!.level;
+/** Does `dealerRank` meet or exceed `required`? Legacy-tolerant on both. */
+export function rankAtLeast(dealerRank: string | null | undefined, required: string): boolean {
+  return rankLevel(dealerRank) >= rankLevel(required);
 }
 
 export function rankLabelJa(r: string | null | undefined): string { return rankMeta(r).labelJa; }

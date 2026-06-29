@@ -20,7 +20,8 @@ import type { ServiceInput }     from "@/lib/pricing/pricing-engine";
 import dynamic                   from "next/dynamic";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
 import type { DetailerRank }     from "@/lib/dealer-settings/dealer-settings-types";
-import { rankAtLeast, rankEmoji, rankLabelJa } from "@/lib/ranks/dealer-ranks";
+import { rankEmoji, rankLabelJa } from "@/lib/ranks/dealer-ranks";
+import { meetsTier } from "@/lib/ranks/permission-tiers";
 
 const VehicleRegistrationUpload = dynamic(
   () => import("@/components/vehicle-registration/VehicleRegistrationUpload"),
@@ -283,7 +284,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   const [topcoat2,  setTopcoat2]  = useState("");
   const [topcoat3,  setTopcoat3]  = useState("");
 
-  const isCert   = rankAtLeast(rank, "certified_detailer");
+  const isCert   = meetsTier(rank, "certified_only");
   const visCoats = COATINGS.filter(c => !c.certOnly || isCert);
   const tc2Opts  = coatId ? topcoatOpts(coatId, layerMode, isCert) : [];
   const tc3Opts  = coatId && layerMode === "3layer" && topcoat2
