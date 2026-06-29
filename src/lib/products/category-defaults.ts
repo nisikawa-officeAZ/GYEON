@@ -2,13 +2,19 @@
 //
 // Pure module (no DB / no "use server"). Safe for client or server import.
 //
-// Canonical rule: a product's OWN minimum_purchase_rank (product master) is
+// Canonical rule: a product's OWN purchase_permission (product master) is
 // authoritative and always wins. This map only supplies the DEFAULT tier when a
 // product is created / seeded / CSV-imported in a given category, so operators
 // don't have to set common cases by hand.
 //
+// Product-master permission fields (canonical, per the locked flow):
+//   purchase_permission   — who may BUY a SKU   (all | detailer_plus | certified_only)
+//   minimum_install_rank  — who may INSTALL it  (all | detailer_plus | certified_only)
+//   market_scope          — global | jp_only
+//   is_active, category
+//
 // FINAL business rule captured here:
-//   - PPF category  ->  detailer_plus   (PPF products require Detailer or higher)
+//   - PPF category  ->  purchase_permission = detailer_plus  (Detailer or higher)
 //
 // Tier values come from the GLOBAL permission vocabulary, so these defaults are
 // market-portable (not tied to Japan rank names).
