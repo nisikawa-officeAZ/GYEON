@@ -7,7 +7,7 @@ import type { AdminRole } from "@/lib/admin/admin-roles";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Admin | GYEON Business Hub" };
+export const metadata = { title: "管理 | GYEON Business Hub" };
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const admin = await getCurrentAdmin();
@@ -36,13 +36,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         {/* Internal dev tools (small, right side) */}
         <nav className="hidden xl:flex items-center gap-0.5">
           {[
-            { href: "/admin/subscriptions",       label: "Subscriptions" },
-            { href: "/admin/release-readiness",   label: "Release" },
-            { href: "/admin/migration-status",    label: "Migrations" },
-            { href: "/admin/staging-verification",label: "Staging" },
+            { href: "/admin/subscriptions",       label: "サブスク" },
+            { href: "/admin/release-readiness",   label: "リリース" },
+            { href: "/admin/migration-status",    label: "マイグレーション" },
+            { href: "/admin/staging-verification",label: "ステージング" },
             { href: "/admin/uat",                 label: "UAT" },
             { href: "/admin/release-candidate",   label: "RC" },
-            { href: "/admin/official-release",    label: "OfficialRelease" },
+            { href: "/admin/official-release",    label: "正式リリース" },
           ].map((item) => (
             <Link key={item.href} href={item.href}
               className="text-[10px] text-slate-600 hover:text-slate-400 px-2 py-1 rounded transition-colors">
@@ -57,7 +57,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             {roleMeta.label}
           </span>
           <span className="text-xs text-slate-500 hidden sm:block">
-            {admin.email ?? admin.name ?? "Admin"}
+            {admin.email ?? admin.name ?? "管理者"}
           </span>
         </div>
       </header>
@@ -67,7 +67,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         {/* Sidebar brand sub-label */}
         <div className="px-4 pt-5 pb-3 border-b border-slate-800/40">
           <p className="text-[9px] font-semibold text-slate-600 uppercase tracking-widest">
-            Business Hub Admin
+管理ポータル
           </p>
         </div>
         <AdminSidebar role={admin.role} />

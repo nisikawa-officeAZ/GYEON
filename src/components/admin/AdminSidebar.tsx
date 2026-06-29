@@ -128,7 +128,7 @@ export default function AdminSidebar({ role }: { role: string }) {
         <>
           <div className="my-3 border-t border-slate-800/60" />
           <p className="px-3 text-[9px] font-semibold text-slate-600 uppercase tracking-widest mb-2">
-            Coming soon
+            近日公開
           </p>
           {soon.map((item) => (
             <div
@@ -138,7 +138,7 @@ export default function AdminSidebar({ role }: { role: string }) {
               <NavIcon iconKey={item.iconKey} />
               {item.label}
               <span className="ml-auto text-[8px] border border-slate-800 rounded px-1 py-px text-slate-700">
-                soon
+                予定
               </span>
             </div>
           ))}
