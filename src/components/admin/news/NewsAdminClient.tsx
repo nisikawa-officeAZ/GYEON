@@ -50,6 +50,13 @@ const statusBadge: Record<NewsStatus, string> = {
   archived:  "bg-amber-900/30 text-amber-300 border-amber-700/40",
 };
 
+// Display-only labels for the status enum (DB values are unchanged).
+const STATUS_LABEL: Record<NewsStatus, string> = {
+  draft:     "下書き",
+  published: "公開",
+  archived:  "アーカイブ",
+};
+
 export default function NewsAdminClient({ initialNews }: { initialNews: GyeonNews[] }) {
   const [news, setNews] = useState(initialNews);
   const [editing, setEditing] = useState<{ id: string | null; data: NewsInput } | null>(null);
@@ -105,7 +112,7 @@ export default function NewsAdminClient({ initialNews }: { initialNews: GyeonNew
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-base font-bold text-slate-100">News Management</h1>
+          <h1 className="text-base font-bold text-slate-100">お知らせ管理</h1>
           <p className="text-xs text-slate-500 mt-0.5">ディーラー向けお知らせの作成・配信（アプリ内 / メール / LINE）</p>
         </div>
         <button onClick={openNew} className="px-3 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors">
@@ -121,7 +128,7 @@ export default function NewsAdminClient({ initialNews }: { initialNews: GyeonNew
           <div key={n.id} className={`flex items-center gap-3 px-4 py-3 ${i < news.length - 1 ? "border-b border-slate-800/60" : ""}`}>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${statusBadge[n.status]}`}>{n.status}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${statusBadge[n.status]}`}>{STATUS_LABEL[n.status]}</span>
                 <span className="text-[10px] text-slate-500">{NEWS_CATEGORY_LABEL[n.category]}</span>
                 {n.priority !== "normal" && (
                   <span className="text-[10px] text-amber-400">{NEWS_PRIORITY_LABEL[n.priority]}</span>
