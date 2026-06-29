@@ -60,6 +60,7 @@ const STATUS_LABEL: Record<NewsStatus, string> = {
 export default function NewsAdminClient({ initialNews }: { initialNews: GyeonNews[] }) {
   const [news, setNews] = useState(initialNews);
   const [editing, setEditing] = useState<{ id: string | null; data: NewsInput } | null>(null);
+  const [editorTab, setEditorTab] = useState<"edit" | "preview">("edit");
   const [preview, setPreview] = useState<NewsInput | null>(null);
   const [distribute, setDistribute] = useState<GyeonNews | null>(null);
   const [history, setHistory] = useState<GyeonNews | null>(null);
@@ -68,8 +69,8 @@ export default function NewsAdminClient({ initialNews }: { initialNews: GyeonNew
 
   function refresh(updater: (prev: GyeonNews[]) => GyeonNews[]) { setNews(updater); }
 
-  function openNew() { setError(null); setEditing({ id: null, data: { ...EMPTY } }); }
-  function openEdit(n: GyeonNews) { setError(null); setEditing({ id: n.id, data: toInput(n) }); }
+  function openNew() { setError(null); setEditorTab("edit"); setEditing({ id: null, data: { ...EMPTY } }); }
+  function openEdit(n: GyeonNews) { setError(null); setEditorTab("edit"); setEditing({ id: n.id, data: toInput(n) }); }
 
   function save() {
     if (!editing) return;
@@ -157,9 +158,31 @@ export default function NewsAdminClient({ initialNews }: { initialNews: GyeonNew
       {/* Editor modal */}
       {editing && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center overflow-y-auto p-4" onClick={() => setEditing(null)}>
-          <div className="bg-[#0f172a] border border-slate-700 rounded-2xl w-full max-w-lg my-8 p-5 flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
+          <div className={`bg-[#0f172a] border border-slate-700 rounded-2xl w-full my-8 p-5 flex flex-col gap-4 ${editorTab === "preview" ? "max-w-3xl" : "max-w-lg"}`} onClick={(e) => e.stopPropagation()}>
             <p className="text-sm font-bold text-slate-100">{editing.id ? "お知らせを編集" : "新規お知らせ"}</p>
 
+            {/* Edit / Email-preview tabs */}
+            <div className="flex items-center gap-1 border-b border-slate-800 pb-2">
+              <button
+                type="button"
+                onClick={() => setEditorTab("edit")}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${editorTab === "edit" ? "border-blue-600 text-blue-300 bg-blue-900/20" : "border-transparent text-slate-400 hover:text-slate-200"}`}
+              >
+                編集
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditorTab("preview")}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${editorTab === "preview" ? "border-blue-600 text-blue-300 bg-blue-900/20" : "border-transparent text-slate-400 hover:text-slate-200"}`}
+              >
+                メールプレビュー
+              </button>
+            </div>
+
+            {editorTab === "preview" ? (
+              <EmailPreviewBody data={editing.data} />
+            ) : (
+            <>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
                 <label className={lbl}>カテゴリ</label>
@@ -201,7 +224,7 @@ export default function NewsAdminClient({ initialNews }: { initialNews: GyeonNew
               </div>
               <button
                 type="button"
-                onClick={() => setPreview(editing.data)}
+                onClick={() => setEditorTab("preview")}
                 className="self-start text-[11px] px-2.5 py-1 rounded border border-slate-700 text-slate-300 hover:text-slate-100 hover:border-slate-500"
               >
                 メールプレビュー
@@ -255,6 +278,8 @@ export default function NewsAdminClient({ initialNews }: { initialNews: GyeonNew
                 <option value="archived" className="bg-[#0b1120]">アーカイブ</option>
               </select>
             </div>
+            </>
+            )}
 
             {error && <p className="text-xs text-red-400">{error}</p>}
 
@@ -275,42 +300,76 @@ export default function NewsAdminClient({ initialNews }: { initialNews: GyeonNew
   );
 }
 
-// ── Email preview (desktop / mobile) ──────────────────────────────────────────
+// ── Email preview body (subject / preheader / HTML / plain-text) ──────────────
+// Shared by the editor "メールプレビュー" tab and the standalone preview modal.
+// The HTML is rendered inside a sandboxed <iframe> with an EMPTY sandbox
+// attribute — scripts are NOT allowed to execute.
 
-function EmailPreviewModal({ data, onClose }: { data: NewsInput; onClose: () => void }) {
+function EmailPreviewBody({ data }: { data: NewsInput }) {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
   const width = view === "desktop" ? 640 : 375;
-  const html = data.body_html?.trim()
-    ? data.body_html
-    : `<div style="font-family:sans-serif;padding:24px;color:#334155">${(data.body_text || data.summary || "(本文なし)").replace(/\n/g, "<br/>")}</div>`;
+  const hasHtml = !!data.body_html?.trim();
+  const hasText = !!data.body_text?.trim();
+  const preheader = data.summary?.trim();
 
+  const emptyBox = "rounded-lg border border-dashed border-slate-700 bg-slate-900/40 text-slate-500 text-xs text-center py-8";
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-semibold text-slate-300">受信者に表示されるメールのプレビュー</p>
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => setView("desktop")} className={`text-[11px] px-2 py-1 rounded border ${view === "desktop" ? "border-blue-600 text-blue-300 bg-blue-900/20" : "border-slate-700 text-slate-400"}`}>デスクトップ</button>
+          <button type="button" onClick={() => setView("mobile")} className={`text-[11px] px-2 py-1 rounded border ${view === "mobile" ? "border-blue-600 text-blue-300 bg-blue-900/20" : "border-slate-700 text-slate-400"}`}>モバイル</button>
+        </div>
+      </div>
+
+      {/* Envelope header: subject / sender / preheader (preview text) */}
+      <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3 text-xs space-y-1">
+        <div className="flex gap-2"><span className="text-slate-500 w-24 shrink-0">件名</span><span className="text-slate-200 font-medium">{data.title || "(無題)"}</span></div>
+        <div className="flex gap-2"><span className="text-slate-500 w-24 shrink-0">差出人</span><span className="text-slate-300">GYEON Business Hub &lt;no-reply@gyeon&gt;</span></div>
+        {preheader && <div className="flex gap-2"><span className="text-slate-500 w-24 shrink-0">プレビューテキスト</span><span className="text-slate-400">{preheader}</span></div>}
+      </div>
+
+      {/* HTML body preview (sandboxed) */}
+      <div>
+        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">HTML本文プレビュー</p>
+        {hasHtml ? (
+          <div className="flex justify-center bg-slate-200 rounded-lg p-4 overflow-x-auto">
+            <iframe
+              title="email-preview"
+              sandbox=""
+              srcDoc={data.body_html ?? ""}
+              style={{ width, height: 480, border: "0", background: "#fff", borderRadius: 6 }}
+            />
+          </div>
+        ) : (
+          <div className={emptyBox}>HTML本文が入力されていません</div>
+        )}
+      </div>
+
+      {/* Plain text fallback preview */}
+      <div>
+        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">プレーンテキスト代替プレビュー</p>
+        {hasText ? (
+          <pre className="rounded-lg border border-slate-800 bg-[#0b1120] p-3 text-xs text-slate-300 whitespace-pre-wrap break-words font-sans max-h-64 overflow-y-auto">{data.body_text}</pre>
+        ) : (
+          <div className={emptyBox}>テキスト本文が入力されていません</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Standalone email preview modal (list "プレビュー" button) ──────────────────
+
+function EmailPreviewModal({ data, onClose }: { data: NewsInput; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[60] bg-black/70 flex items-start justify-center overflow-y-auto p-4" onClick={onClose}>
       <div className="bg-[#0f172a] border border-slate-700 rounded-2xl w-full max-w-3xl my-8 p-5 flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-bold text-slate-100">メールプレビュー</p>
-          <div className="flex items-center gap-1">
-            <button onClick={() => setView("desktop")} className={`text-[11px] px-2 py-1 rounded border ${view === "desktop" ? "border-blue-600 text-blue-300 bg-blue-900/20" : "border-slate-700 text-slate-400"}`}>デスクトップ</button>
-            <button onClick={() => setView("mobile")} className={`text-[11px] px-2 py-1 rounded border ${view === "mobile" ? "border-blue-600 text-blue-300 bg-blue-900/20" : "border-slate-700 text-slate-400"}`}>モバイル</button>
-          </div>
-        </div>
+        <p className="text-sm font-bold text-slate-100">メールプレビュー</p>
 
-        {/* Envelope header */}
-        <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3 text-xs space-y-1">
-          <div className="flex gap-2"><span className="text-slate-500 w-16 shrink-0">件名</span><span className="text-slate-200 font-medium">{data.title || "(無題)"}</span></div>
-          <div className="flex gap-2"><span className="text-slate-500 w-16 shrink-0">差出人</span><span className="text-slate-300">GYEON Business Hub &lt;no-reply@gyeon&gt;</span></div>
-          {data.summary && <div className="flex gap-2"><span className="text-slate-500 w-16 shrink-0">概要</span><span className="text-slate-400">{data.summary}</span></div>}
-        </div>
-
-        {/* Rendered body — sandboxed iframe */}
-        <div className="flex justify-center bg-slate-200 rounded-lg p-4 overflow-x-auto">
-          <iframe
-            title="email-preview"
-            sandbox=""
-            srcDoc={html}
-            style={{ width, height: 480, border: "0", background: "#fff", borderRadius: 6 }}
-          />
-        </div>
+        <EmailPreviewBody data={data} />
 
         <div className="flex justify-end">
           <button onClick={onClose} className="px-3 py-2 text-xs text-slate-400 rounded-lg border border-slate-700 hover:text-slate-200">閉じる</button>

@@ -11,7 +11,8 @@ export type NewsCategory =
   | "event"
   | "training"
   | "technical"
-  | "system";
+  | "system"
+  | "newsletter";
 
 export type NewsPriority = "normal" | "important" | "urgent";
 
@@ -50,7 +51,7 @@ export interface DealerNews extends GyeonNews {
 
 export const NEWS_CATEGORIES: NewsCategory[] = [
   "announcement", "new_product", "stock_arrival", "backorder",
-  "event", "training", "technical", "system",
+  "event", "training", "technical", "system", "newsletter",
 ];
 
 export const NEWS_CATEGORY_LABEL: Record<NewsCategory, string> = {
@@ -62,6 +63,7 @@ export const NEWS_CATEGORY_LABEL: Record<NewsCategory, string> = {
   training:     "研修",
   technical:    "技術情報",
   system:       "システム",
+  newsletter:   "ニュースレター",
 };
 
 export const NEWS_CATEGORY_ICON: Record<NewsCategory, string> = {
@@ -73,6 +75,7 @@ export const NEWS_CATEGORY_ICON: Record<NewsCategory, string> = {
   training:     "🎓",
   technical:    "🔧",
   system:       "⚙️",
+  newsletter:   "📰",
 };
 
 export const NEWS_PRIORITIES: NewsPriority[] = ["normal", "important", "urgent"];
