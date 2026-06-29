@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
-import { approveDealerTrial, rejectDealer, suspendDealer, reactivateDealer } from "@/lib/admin/approve-dealer";
+import { approveDealerTrial, rejectDealer, suspendDealer, reactivateDealer, deleteDealer } from "@/lib/admin/approve-dealer";
 import DealerDetailPanel from "./DealerDetailPanel";
 import type { DealerAdminView } from "@/lib/admin/admin-types";
 
@@ -15,6 +15,7 @@ type Modal =
   | { type: "approve";    dealer: DealerAdminView }
   | { type: "reject";     dealer: DealerAdminView }
   | { type: "suspend";    dealer: DealerAdminView }
+  | { type: "delete";     dealer: DealerAdminView }
   | { type: "detail";     dealer: DealerAdminView };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -372,6 +373,41 @@ function SuspendModal({
   );
 }
 
+// ── Delete Modal ──────────────────────────────────────────────────────────────
+
+function DeleteModal({
+  dealer, onClose, onDelete, isPending,
+}: { dealer: DealerAdminView; onClose: () => void; onDelete: () => void; isPending: boolean }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="bg-[#0f172a] border border-slate-700 rounded-2xl w-full max-w-md mx-4 p-6 space-y-4 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-red-400">店舗を削除</h2>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl">✕</button>
+        </div>
+        <p className="text-sm text-slate-400">
+          <span className="font-medium text-slate-200">{dealer.name ?? "（名称未設定）"}</span>
+        </p>
+        <p className="text-sm text-slate-300">
+          このディテーラーを削除しますか？この操作は管理画面から表示されなくなります。
+        </p>
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors">
+            キャンセル
+          </button>
+          <button
+            onClick={onDelete}
+            disabled={isPending}
+            className="px-4 py-2 bg-red-800 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+          >
+            削除
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Detail Modal ──────────────────────────────────────────────────────────────
 
 function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: () => void }) {
@@ -537,6 +573,7 @@ interface Props {
 
 export default function DealersAdminClient({ dealers: initial, callerRole }: Props) {
   const isReadOnly = callerRole === "logistics_admin";
+  const isSuperAdmin = callerRole === "super_admin";
 
   const [dealers,      setDealers]      = useState<DealerAdminView[]>(initial);
   const [search,       setSearch]       = useState("");
@@ -641,6 +678,20 @@ export default function DealersAdminClient({ dealers: initial, callerRole }: Pro
           rejection_reason: reason,
         } : d));
         showToast(`${dealer.name ?? "ディーラー"} を停止しました`, "success");
+      } else {
+        showToast(result.error ?? "エラーが発生しました", "error");
+      }
+    });
+  };
+
+  const handleDelete = (dealer: DealerAdminView) => {
+    setModal({ type: "none" });
+    startTransition(async () => {
+      const result = await deleteDealer(dealer.id);
+      if (result.success) {
+        // Soft-deleted — remove from the active list (other dealers untouched)
+        setDealers((prev) => prev.filter((d) => d.id !== dealer.id));
+        showToast(`${dealer.name ?? "ディーラー"} を削除しました`, "success");
       } else {
         showToast(result.error ?? "エラーが発生しました", "error");
       }
@@ -931,6 +982,17 @@ export default function DealersAdminClient({ dealers: initial, callerRole }: Pro
                               再有効化
                             </button>
                           )}
+
+                          {/* Delete — soft delete (super_admin only) */}
+                          {isSuperAdmin && (
+                            <button
+                              onClick={() => setModal({ type: "delete", dealer })}
+                              disabled={isPending}
+                              className="text-[10px] px-2 py-1 bg-red-950/60 hover:bg-red-900/70 text-red-400 rounded transition-colors disabled:opacity-50"
+                            >
+                              削除
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -964,6 +1026,14 @@ export default function DealersAdminClient({ dealers: initial, callerRole }: Pro
           dealer={modal.dealer}
           onClose={() => setModal({ type: "none" })}
           onSuspend={(reason) => handleSuspend(modal.dealer, reason)}
+          isPending={isPending}
+        />
+      )}
+      {modal.type === "delete" && (
+        <DeleteModal
+          dealer={modal.dealer}
+          onClose={() => setModal({ type: "none" })}
+          onDelete={() => handleDelete(modal.dealer)}
           isPending={isPending}
         />
       )}

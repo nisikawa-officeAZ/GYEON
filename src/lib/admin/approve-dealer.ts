@@ -1,6 +1,6 @@
 "use server";
 
-import { requireAdmin } from "./require-admin";
+import { requireAdmin, requireSuperAdmin } from "./require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "./write-audit-log";
 
@@ -183,6 +183,39 @@ export async function reactivateDealer(dealerId: string) {
     targetDealerId: dealerId,
     action:         "dealer_reactivated",
     details:        { subscription_status: subscriptionStatus },
+  });
+
+  return { success: true };
+}
+
+/**
+ * Soft-delete a dealer (Super Admin only).
+ *
+ * Sets dealers.deleted_at so the dealer is hidden from the admin
+ * approval/list screen. This is a reversible soft delete — NO records are
+ * hard-deleted:
+ *   - auth.users are NOT removed
+ *   - customers / vehicles / estimates are NOT removed
+ *   - dealer_members are NOT removed
+ * Restore with: UPDATE dealers SET deleted_at = NULL WHERE id = ...
+ */
+export async function deleteDealer(dealerId: string) {
+  const admin = await requireSuperAdmin();
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("dealers")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", dealerId)
+    .is("deleted_at", null);
+
+  if (error) return { success: false, error: error.message };
+
+  await writeAuditLog({
+    adminUserId:    admin.id,
+    targetDealerId: dealerId,
+    action:         "dealer_deleted",
+    details:        { soft_delete: true },
   });
 
   return { success: true };

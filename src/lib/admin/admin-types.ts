@@ -73,6 +73,8 @@ export type AdminAuditAction =
   // RC-13: dealer approval center
   | "dealer_suspended"
   | "dealer_reactivated"
+  // PHASE88: dealer soft delete
+  | "dealer_deleted"
   // RC-14: dealer lifecycle management
   | "trial_extended"
   | "rank_changed"
@@ -117,6 +119,8 @@ export interface DealerAdminView {
   suspended_at?:            string | null;
   approved_by?:             string | null;
   rejected_by?:             string | null;
+  // PHASE88: soft delete (present if column exists in DB)
+  deleted_at?:              string | null;
 }
 
 export interface UserAdminView {
