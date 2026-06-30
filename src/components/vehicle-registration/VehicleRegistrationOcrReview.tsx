@@ -11,6 +11,7 @@ import {
   VehicleRegistrationOcrResult,
   OCR_FIELD_LABELS,
 } from "@/lib/vehicle-registration/vehicle-registration-types";
+import { analyzeOcrQuality } from "@/lib/ocr/ocr-field-analysis";
 
 interface Props {
   ocrResult:  VehicleRegistrationOcrResult;
@@ -199,6 +200,10 @@ export default function VehicleRegistrationOcrReview({
   const customerPresent = CUSTOMER_FIELDS.filter(k => ocrResult[k]);
   const vehiclePresent  = VEHICLE_FIELDS.filter(k => ocrResult[k]);
 
+  // Phase 2 Sprint 4 — confidence / missing-field handling
+  const quality = analyzeOcrQuality(ocrResult);
+  const lowConfidence = quality.level === "low";
+
   return (
     <div className="flex flex-col gap-4">
       {/* Warning */}
@@ -213,6 +218,35 @@ export default function VehicleRegistrationOcrReview({
       {ocrResult.confidence !== undefined && (
         <div className="flex justify-end">
           <ConfidenceBadge value={ocrResult.confidence} />
+        </div>
+      )}
+
+      {/* Low-confidence warning */}
+      {lowConfidence && (
+        <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10">
+          <span className="text-red-400 shrink-0">✕</span>
+          <p className="text-xs text-red-300">
+            読み取り精度が低い可能性があります。各項目を特に注意して確認してください。
+          </p>
+        </div>
+      )}
+
+      {/* Missing important fields */}
+      {hasAnyValues && quality.hasMissing && (
+        <div className="flex flex-col gap-1 px-3 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10">
+          <p className="text-xs text-amber-300 font-medium">
+            読み取れなかった重要項目があります（手入力で補完してください）
+          </p>
+          {quality.missingCustomer.length > 0 && (
+            <p className="text-[11px] text-amber-200/80">
+              顧客: {quality.missingCustomer.join("、")}
+            </p>
+          )}
+          {quality.missingVehicle.length > 0 && (
+            <p className="text-[11px] text-amber-200/80">
+              車両: {quality.missingVehicle.join("、")}
+            </p>
+          )}
         </div>
       )}
 

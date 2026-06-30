@@ -787,21 +787,39 @@ export default function CustomerVehicleOnboardingWizard({
             </div>
           </div>
 
-          {/* Advisory duplicate warning — non-blocking; registration may proceed */}
+          {/* Advisory duplicate review — non-blocking; registration may proceed.
+              Detection helpers are unchanged; only the review presentation is richer. */}
           {(customerDup.length > 0 || vehicleDup.length > 0) && (
-            <div className="flex flex-col gap-1 px-3 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10">
+            <div className="flex flex-col gap-2 px-3 py-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10">
               <p className="text-xs text-amber-300 font-medium">
-                重複の可能性があります（このまま登録することも可能です）
+                重複の可能性があります（内容をご確認のうえ、このまま登録することも可能です）
               </p>
+
               {customerDup.length > 0 && (
-                <p className="text-[11px] text-amber-200/80">
-                  同名・同電話番号の顧客が {customerDup.length} 件: {customerDup.slice(0, 3).map(c => customerDisplayName(c)).join("、")}
-                </p>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[11px] text-amber-200/90 font-medium">
+                    同名・同電話番号の顧客 {customerDup.length} 件
+                  </p>
+                  {customerDup.slice(0, 3).map((c) => (
+                    <p key={c.id} className="text-[11px] text-amber-200/70 pl-2">
+                      ・{customerDisplayName(c)}{c.phone ? `（${c.phone}）` : ""}
+                    </p>
+                  ))}
+                </div>
               )}
+
               {vehicleDup.length > 0 && (
-                <p className="text-[11px] text-amber-200/80">
-                  同じVIN・ナンバーの車両が {vehicleDup.length} 件登録済みです
-                </p>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[11px] text-amber-200/90 font-medium">
+                    同じVIN・ナンバーの車両 {vehicleDup.length} 件
+                  </p>
+                  {vehicleDup.slice(0, 3).map((v) => (
+                    <p key={v.id} className="text-[11px] text-amber-200/70 pl-2">
+                      ・{[v.maker, v.model].filter(Boolean).join(" ") || "車両"}
+                      {v.plate_number ? `（${v.plate_number}）` : v.vin ? `（${v.vin}）` : ""}
+                    </p>
+                  ))}
+                </div>
               )}
             </div>
           )}

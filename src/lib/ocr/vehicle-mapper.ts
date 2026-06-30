@@ -63,7 +63,10 @@ export function mapOcrToVehicle(
   const result: Partial<VehicleFormState> = {};
 
   if (ocr.maker)                  result.maker       = ocr.maker;
+  // Prefer 車名 (vehicle_name); fall back to 型式 (model) so the model field is
+  // not left empty when only the type code was read.
   if (ocr.vehicle_name)           result.model       = ocr.vehicle_name;
+  else if (ocr.model)             result.model       = ocr.model;
   if (ocr.grade)                  result.grade       = ocr.grade;
   if (ocr.model_code)             result.model_code  = ocr.model_code;
   if (ocr.color)                  result.color       = ocr.color;

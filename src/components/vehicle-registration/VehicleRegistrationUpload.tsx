@@ -328,29 +328,27 @@ export default function VehicleRegistrationUpload({
           <p className="text-xs text-slate-400 text-center">画像の取得方法を選択してください</p>
 
           {isMobile ? (
-            <div className="grid grid-cols-2 gap-3">
+            // Mobile: camera capture is the PRIMARY action; file select is secondary.
+            <div className="flex flex-col gap-3">
               <button
                 type="button"
                 onClick={() => cameraInputRef.current?.click()}
-                className="flex flex-col items-center justify-center gap-3 py-8 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors"
+                className="flex flex-col items-center justify-center gap-3 py-10 rounded-xl border-2 border-blue-500/50 bg-blue-950/20 hover:bg-blue-900/30 transition-colors w-full"
               >
-                <span className="text-3xl">📷</span>
+                <span className="text-4xl">📷</span>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-slate-200">カメラで撮影</p>
-                  <p className="text-xs text-slate-500 mt-0.5">背面カメラで車検証を撮影</p>
+                  <p className="text-base font-semibold text-blue-200">カメラで撮影</p>
+                  <p className="text-xs text-blue-300/70 mt-0.5">背面カメラで車検証を撮影（推奨）</p>
                 </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center justify-center gap-3 py-8 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors"
+                className="flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors w-full"
               >
-                <span className="text-3xl">📂</span>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-slate-200">ファイルから選択</p>
-                  <p className="text-xs text-slate-500 mt-0.5">画像・PDF を選択</p>
-                </div>
+                <span className="text-lg">📂</span>
+                <p className="text-sm text-slate-300">ファイルから選択（画像・PDF）</p>
               </button>
             </div>
           ) : (
