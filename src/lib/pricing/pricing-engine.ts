@@ -1,4 +1,5 @@
 import { EstimateCategory } from "../estimates/estimate-types";
+import { calculateEstimateTotals, lineTotal } from "./estimate-totals";
 import {
   BODY_SIZES, COATINGS, TOPCOAT_BASE, TOPCOAT_NAME, COATING_OPTIONS,
   MAINTENANCE_MENUS, CARWASH_MENUS, ROOM_CLEAN_PARTS, ROOM_CLEAN_CONDITIONS,
@@ -282,17 +283,37 @@ export function calculateEstimate(
     return r;
   });
 
-  const subtotal       = calculated.reduce((s, r) => s + r.subtotal, 0);
   const couponDiscount = discounts.couponTotal;
   const extraDiscount  = discounts.extraAmount;
+
+  // Calculation integrity (Estimate Completion Sprint 3): the FINAL totals are derived
+  // from the SAME authoritative function the server uses on persist
+  // (calculateEstimateTotals), so the UI, the saved estimate, and the PDF always agree —
+  // including discount clamping (the combined discount is clamped to [0, subtotal], so a
+  // total can never go negative as it previously could here).
+  const allItems = calculated.flatMap(r => r.lineItems);
+  const subtotal = allItems.reduce(
+    (s, i) => s + lineTotal(i.quantity, i.unit_price, i.discount_rate),
+    0,
+  );
   const dealerDiscount = discounts.isDealer
     ? Math.round(subtotal * (1 - discounts.dealerRate / 100))
     : 0;
-  const taxableAmount = subtotal - couponDiscount - extraDiscount - dealerDiscount;
-  const taxAmount     = Math.floor(taxableAmount * taxRate / 100);
-  const total         = taxableAmount + taxAmount;
+  const combinedDiscount = couponDiscount + extraDiscount + dealerDiscount;
 
-  return { services: calculated, subtotal, couponDiscount, extraDiscount, dealerDiscount, taxableAmount, taxAmount, total };
+  const authoritative = calculateEstimateTotals(allItems, combinedDiscount, taxRate);
+  const taxableAmount  = authoritative.subtotal - authoritative.discount_amount;
+
+  return {
+    services:       calculated,
+    subtotal:       authoritative.subtotal,
+    couponDiscount,
+    extraDiscount,
+    dealerDiscount,
+    taxableAmount,
+    taxAmount:      authoritative.tax_amount,
+    total:          authoritative.total,
+  };
 }
 
 export function buildPpfConfig(input: PpfInput, result: ServiceSubtotal): PpfConfig {

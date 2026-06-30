@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { createEstimate } from "@/lib/estimates/create-estimate";
 import { updateEstimate } from "@/lib/estimates/update-estimate";
+import { calculateEstimateTotals } from "@/lib/pricing/estimate-totals";
 import {
   EstimateDB,
   EstimateStatus,
@@ -229,11 +230,24 @@ export default function EstimateForm({
     : vehicles;
 
   // ── Computed totals ──────────────────────────────────────────────────────────
-  const subtotal      = items.reduce((s, item) => s + lineTotal(item), 0);
+  // Calculation integrity (Estimate Completion Sprint 3): derive the final totals from
+  // the SAME authoritative function the server uses on persist (calculateEstimateTotals),
+  // so the edit preview, the saved estimate, and the PDF always agree — including
+  // discount clamping to [0, subtotal] (the total can never go negative).
   const discountAmt   = Number(form.discount_amount) || 0;
   const taxRate       = Number(form.tax_rate)        || 10;
-  const taxAmount     = Math.floor((subtotal - discountAmt) * taxRate / 100);
-  const total         = subtotal - discountAmt + taxAmount;
+  const totals        = calculateEstimateTotals(
+    items.map((i) => ({
+      quantity:      Number(i.quantity)      || 0,
+      unit_price:    Number(i.unit_price)    || 0,
+      discount_rate: Number(i.discount_rate) || 0,
+    })),
+    discountAmt,
+    taxRate,
+  );
+  const subtotal      = totals.subtotal;
+  const taxAmount     = totals.tax_amount;
+  const total         = totals.total;
 
   // ── Item row helpers ─────────────────────────────────────────────────────────
   function updateItem(key: number, patch: Partial<ItemRow>) {
