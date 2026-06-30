@@ -161,6 +161,36 @@ To enumerate the platform's features, their scope, current status, components, d
   support time-axis positioning and overlap checks; any additional fields would require a
   separately-approved migration when this requirement is scheduled.
 
+### 7.14.2 Service Duration Settings for Calendar Time-Axis — MANDATORY FUTURE REQUIREMENT (added 2026-06-30; NOT yet implemented)
+
+> **Status: Mandatory future requirement for **store settings** + the calendar/reservation
+> workflow. Documented only — not implemented. Depends on §7.14.1 (time-axis scheduling).
+> Does NOT change the current Phase 5 Sprint 3 (notification observability) scope.**
+
+- **Per-service estimated duration:** when the calendar supports time-axis scheduling,
+  **store settings** must allow each **service / work item** to define a **configurable
+  estimated required duration**.
+- **Units:** duration may be entered as **hours**, and must also support **days** for
+  **multi-day work** (e.g., multi-day PPF/coating jobs).
+- **Reservation time blocks from durations:** a reservation's time block should be
+  **calculated from the selected service's duration** (start time + duration → end time /
+  multi-day span), rather than relying solely on manual end-time entry.
+- **Multi-service totals:** a reservation spanning **multiple services** must compute the
+  **total required time** from the sum (or appropriate composition) of the selected service
+  durations.
+- **Future use — occupied ranges:** the computed durations feed the §7.14.1 day view to
+  **display occupied time ranges** accurately.
+- **Future use — conflict / overbooking detection:** the computed time blocks must enable
+  **schedule-conflict and overbooking detection** (overlapping reservations for the same
+  dealer; optionally same assigned staff/resource per §7.14.1).
+- **Workflow ownership:** this requirement belongs to **store settings** AND the
+  **calendar/reservation workflow**. Dealer-scoped (`dealer_id` always from
+  `getCurrentDealer()`, never from client); RLS preserved.
+- **Implementation note (future):** per-service duration configuration is **new settings
+  data** (likely a per-dealer service catalog / settings field) and would require a
+  **separately-approved migration / schema** when scheduled; it then composes with the
+  existing `reservations` time fields (§7.14.1) to derive time blocks.
+
 ## 7.15 Work Orders
 - **Purpose:** Execute and track service work.
 - **Scope:** Work orders and attachments.
