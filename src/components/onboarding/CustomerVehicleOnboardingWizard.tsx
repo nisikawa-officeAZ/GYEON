@@ -4,6 +4,7 @@
 // Flow: Customer Selection → (if new) OCR or Manual → Customer Form → Vehicle Form → Confirm → Create
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import type { CustomerDB } from "@/lib/customers/customer-types";
 import { customerDisplayName } from "@/lib/customers/customer-types";
@@ -116,6 +117,11 @@ export default function CustomerVehicleOnboardingWizard({
   const [ocrSessionSaved,    setOcrSessionSaved]    = useState<boolean>(false);
   const [customerDup,        setCustomerDup]        = useState<CustomerDB[]>([]);
   const [vehicleDup,         setVehicleDup]         = useState<VehicleDB[]>([]);
+  // Sprint 5 — when set, the user chose to UPDATE an existing vehicle instead of
+  // creating a new one (no automatic overwrite — they are routed to edit it).
+  const [adoptedVehicleId,   setAdoptedVehicleId]   = useState<string | null>(null);
+
+  const router = useRouter();
 
   const isNewCustomer = existingCustomerId === null;
 
@@ -188,11 +194,26 @@ export default function CustomerVehicleOnboardingWizard({
   function goToConfirm() {
     setCustomerDup([]);
     setVehicleDup([]);
+    setAdoptedVehicleId(null);
     void runDuplicateChecks();
     push("confirm");
   }
 
+  // Sprint 5 — adopt an existing customer found by duplicate detection instead of
+  // creating a new one. Reuses the existing `existingCustomerId` path.
+  function useExistingCustomer(id: string) {
+    setExistingCustomerId(id);
+    setError(null);
+  }
+
   function handleConfirm() {
+    // Sprint 5 — "update existing vehicle" decision: never overwrite automatically;
+    // route the user to the existing vehicle's page to update it manually.
+    if (adoptedVehicleId) {
+      router.push(`/vehicles/${adoptedVehicleId}`);
+      return;
+    }
+
     setError(null);
     startTransition(async () => {
       // New customer requires a surname; existing/retry paths skip this check.
@@ -787,38 +808,99 @@ export default function CustomerVehicleOnboardingWizard({
             </div>
           </div>
 
-          {/* Advisory duplicate review — non-blocking; registration may proceed.
-              Detection helpers are unchanged; only the review presentation is richer. */}
+          {/* Registration / Update decision summary */}
+          <div className="flex flex-wrap gap-2 px-3 py-2 rounded-lg border border-slate-700 bg-[#0f172a]">
+            <span className="text-[11px] text-slate-500">登録内容:</span>
+            <span className="text-[11px] text-slate-300">
+              顧客 = {isNewCustomer ? "新規作成" : "既存を使用"}
+            </span>
+            <span className="text-[11px] text-slate-300">
+              車両 = {adoptedVehicleId ? "既存を更新" : "新規作成"}
+            </span>
+          </div>
+
+          {/* Advisory duplicate review with selection — non-blocking; registration may
+              proceed. Detection helpers are unchanged; only the review/selection UI is added. */}
           {(customerDup.length > 0 || vehicleDup.length > 0) && (
             <div className="flex flex-col gap-2 px-3 py-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10">
               <p className="text-xs text-amber-300 font-medium">
-                重複の可能性があります（内容をご確認のうえ、このまま登録することも可能です）
+                重複の可能性があります（既存の記録を使用するか、このまま新規登録できます）
               </p>
 
               {customerDup.length > 0 && (
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-1">
                   <p className="text-[11px] text-amber-200/90 font-medium">
                     同名・同電話番号の顧客 {customerDup.length} 件
                   </p>
-                  {customerDup.slice(0, 3).map((c) => (
-                    <p key={c.id} className="text-[11px] text-amber-200/70 pl-2">
-                      ・{customerDisplayName(c)}{c.phone ? `（${c.phone}）` : ""}
-                    </p>
-                  ))}
+                  {customerDup.slice(0, 3).map((c) => {
+                    const selected = existingCustomerId === c.id;
+                    return (
+                      <div key={c.id} className="flex items-center justify-between gap-2 pl-2">
+                        <span className="text-[11px] text-amber-200/70 truncate">
+                          {customerDisplayName(c)}{c.phone ? `（${c.phone}）` : ""}
+                        </span>
+                        {selected ? (
+                          <span className="text-[10px] text-emerald-300 shrink-0">✓ 使用中</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => useExistingCustomer(c.id)}
+                            className="text-[10px] text-blue-300 hover:text-blue-200 border border-blue-500/30 px-2 py-0.5 rounded shrink-0"
+                          >
+                            この顧客を使用
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {!isNewCustomer && (
+                    <button
+                      type="button"
+                      onClick={() => setExistingCustomerId(null)}
+                      className="self-start text-[10px] text-slate-400 hover:text-slate-200 underline mt-0.5"
+                    >
+                      新規顧客の作成に戻す
+                    </button>
+                  )}
                 </div>
               )}
 
               {vehicleDup.length > 0 && (
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-1">
                   <p className="text-[11px] text-amber-200/90 font-medium">
                     同じVIN・ナンバーの車両 {vehicleDup.length} 件
                   </p>
-                  {vehicleDup.slice(0, 3).map((v) => (
-                    <p key={v.id} className="text-[11px] text-amber-200/70 pl-2">
-                      ・{[v.maker, v.model].filter(Boolean).join(" ") || "車両"}
-                      {v.plate_number ? `（${v.plate_number}）` : v.vin ? `（${v.vin}）` : ""}
-                    </p>
-                  ))}
+                  {vehicleDup.slice(0, 3).map((v) => {
+                    const selected = adoptedVehicleId === v.id;
+                    return (
+                      <div key={v.id} className="flex items-center justify-between gap-2 pl-2">
+                        <span className="text-[11px] text-amber-200/70 truncate">
+                          {[v.maker, v.model].filter(Boolean).join(" ") || "車両"}
+                          {v.plate_number ? `（${v.plate_number}）` : v.vin ? `（${v.vin}）` : ""}
+                        </span>
+                        {selected ? (
+                          <span className="text-[10px] text-emerald-300 shrink-0">✓ 更新対象</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setAdoptedVehicleId(v.id)}
+                            className="text-[10px] text-blue-300 hover:text-blue-200 border border-blue-500/30 px-2 py-0.5 rounded shrink-0"
+                          >
+                            この車両を更新
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {adoptedVehicleId && (
+                    <button
+                      type="button"
+                      onClick={() => setAdoptedVehicleId(null)}
+                      className="self-start text-[10px] text-slate-400 hover:text-slate-200 underline mt-0.5"
+                    >
+                      新規車両の作成に戻す
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -834,10 +916,12 @@ export default function CustomerVehicleOnboardingWizard({
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={isPending || (isNewCustomer && !customerForm.last_name.trim())}
+            disabled={isPending || (!adoptedVehicleId && isNewCustomer && !customerForm.last_name.trim())}
             className="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors"
           >
-            {isPending ? "登録中..." : "登録して見積作成へ"}
+            {adoptedVehicleId
+              ? "既存車両の更新へ"
+              : isPending ? "登録中..." : "登録して見積作成へ"}
           </button>
         </div>
       )}
