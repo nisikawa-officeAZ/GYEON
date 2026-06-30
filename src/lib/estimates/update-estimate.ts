@@ -93,7 +93,9 @@ export async function updateEstimate(estimateId: string, formData: FormData) {
     try {
       items = JSON.parse(itemsJson as string) as ItemInput[];
     } catch {
-      items = []; // unparseable — proceed without items (existing lenient behavior)
+      // Reject malformed payload instead of silently wiping items / falling back
+      // to client totals (consistent with createEstimate).
+      return { error: "見積明細データが不正です" };
     }
   }
   const computed = items.length > 0

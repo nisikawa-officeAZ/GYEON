@@ -145,7 +145,10 @@ export function calculateInvoiceTotals(
   const subtotal   = items.reduce((s, item) => {
     return s + Math.round(item.quantity * item.unit_price * (1 - item.discount_rate / 100));
   }, 0);
-  const taxBase    = subtotal - discountAmount;
+  // Clamp the estimate-level discount to [0, subtotal] so tax/total/balance never
+  // go negative (mirrors estimate-totals.ts).
+  const discount   = Math.min(Math.max(0, discountAmount || 0), subtotal);
+  const taxBase    = subtotal - discount;
   const taxAmount  = Math.floor(taxBase * taxRate / 100);
   const total      = taxBase + taxAmount;
   const balanceDue = total - paidAmount;

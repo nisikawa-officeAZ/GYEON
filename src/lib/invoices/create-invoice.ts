@@ -235,7 +235,7 @@ export async function createInvoiceFromEstimate(
   const { data: est, error: estErr } = await supabase
     .from("estimates")
     .select(`
-      id, customer_id, vehicle_id, estimate_number, title, tax_rate, discount_amount,
+      id, status, customer_id, vehicle_id, estimate_number, title, tax_rate, discount_amount,
       estimate_items (
         category, item_name, description, quantity, unit_price, discount_rate, line_total, sort_order
       )
@@ -245,6 +245,13 @@ export async function createInvoiceFromEstimate(
     .single();
 
   if (estErr || !est) return { error: "見積が見つかりません" };
+
+  // Server-side gate (defense-in-depth; the UI already restricts this to approved
+  // estimates): only an approved estimate may be converted to an invoice.
+  const estStatus = String((est as { status?: string }).status ?? "");
+  if (estStatus !== "approved" && estStatus !== "APPROVED") {
+    return { error: "承認済みの見積のみ請求書を作成できます" };
+  }
 
   const items = (est.estimate_items as unknown as {
     category: string; item_name: string; description: string | null;
