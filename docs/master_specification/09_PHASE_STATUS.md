@@ -127,6 +127,31 @@ Scope guardrails honored: no schema change, no migration, no production deploy, 
 
 Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. Sprint 1 OCR registration flow and duplicate-detection logic untouched. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
 
+### Sprint 4 — Vehicle Registration OCR & AI Enhancement — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase2 sprint4 ocr ai enhancement` (5a4937b) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Lint | N/A — no `lint` script / ESLint config in repo (same as Sprints 1–3) |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Sprint 5 | 🔴 Not started |
+
+**Completed work:**
+- OCR review flow improvements — low-confidence warning + missing important-field summary in `VehicleRegistrationOcrReview` (customer/vehicle shown separately).
+- Camera / File selection improvements — clearer selection UI in `VehicleRegistrationUpload`.
+- Mobile camera-first behavior — camera capture is the primary action on mobile.
+- Desktop upload support — file upload preserved as the primary path on desktop.
+- AI field mapping improvements — `mapOcrToVehicle` model now falls back to 型式 when 車名 is absent.
+- Missing-field handling — new `ocr-field-analysis.ts` detects important fields the model failed to read.
+- Confidence handling — confidence level classification (high/medium/low/none) surfaced in review.
+- Duplicate review improvements — confirm step now lists matched customers (name/phone) and vehicles (maker/model + plate/VIN); detection core logic unchanged.
+- Preserved register-from-ocr orchestration — `register-from-ocr.ts` untouched.
+
+Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. OCR/AI output remains fully editable and requires explicit user confirmation before any write. Sprint 1 orchestration + duplicate-detection core preserved. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
+
 ---
 
 ## 2. Current Phase
