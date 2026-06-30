@@ -152,6 +152,31 @@ Scope guardrails honored: no schema change, no migration, no production deploy, 
 
 Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. OCR/AI output remains fully editable and requires explicit user confirmation before any write. Sprint 1 orchestration + duplicate-detection core preserved. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
 
+### Sprint 5 — OCR Session & Audit Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase2 sprint5 ocr session and audit foundation` (bfd21b7) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Lint | N/A — no `lint` script / ESLint config in repo (same as Sprints 1–4) |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Sprint 6 | 🔴 Not started |
+
+**Completed work:**
+- OCR session summary foundation — `src/lib/ocr/ocr-session-summary.ts` (status meta, reviewed-result summary, link outcome).
+- OCR status badge — `OcrStatusBadge` (draft/processing/reviewing/completed/abandoned).
+- OCR history viewer — `OcrSessionList` + `/ocr-sessions` page (dealer-scoped), links to resulting customer/vehicle.
+- OCR correction/review audit foundation — `OcrAuditTrail` over dealer-scoped `audit_logs` (resource_type `vehicle_registration`); reviewed_result shown as the corrected output.
+- Existing customer selection after duplicate detection — wizard "この顧客を使用" reuses the `existingCustomerId` path.
+- Existing vehicle selection after duplicate detection — wizard "この車両を更新" routes to manual edit (no auto-overwrite, no duplicate created).
+- Register / Update decision flow — confirm-step decision summary (顧客 = 新規/既存, 車両 = 新規/既存更新).
+- OCR processing status management — session status surfaced via badges in the history viewer.
+- Navigation integration — Sidebar "OCR履歴" → `/ocr-sessions`.
+
+Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. Customer/vehicle data never overwritten automatically; every OCR result still requires explicit user confirmation; no AI-learning functionality introduced. Sprint 1 orchestration + duplicate-detection core preserved. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
+
 ---
 
 ## 2. Current Phase
