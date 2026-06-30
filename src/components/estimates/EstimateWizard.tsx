@@ -359,6 +359,12 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   const dealerDisc = dealerDiscount;
   const afterDisc  = taxableAmount;
   const taxAmt     = taxAmount;
+  // Discount-breakdown consistency: when the configured discounts exceed the subtotal,
+  // the applied discount is capped at the subtotal and the payable is clamped to ¥0
+  // (matches the server / saved / PDF). The breakdown lines stay informational; a note
+  // makes the clamp explicit so the displayed lines are never misleading.
+  const combinedDiscount = couponDisc + extraDiscN + dealerDisc;
+  const overDiscounted   = combinedDiscount > subtotal;
 
   // Per-service display values derived from engine
   const coatSvc      = estCalc.services.find(s => s.type === "coating");
@@ -1438,6 +1444,11 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
               {couponDisc > 0  && <div className="flex justify-between text-xs text-emerald-400"><span>クーポン割引</span><span>-¥{couponDisc.toLocaleString("ja-JP")}</span></div>}
               {extraDiscN > 0  && <div className="flex justify-between text-xs text-red-400"><span>追加値引き</span><span>-¥{extraDiscN.toLocaleString("ja-JP")}</span></div>}
               {isDealer && dealerDisc > 0 && <div className="flex justify-between text-xs text-amber-400"><span>業販割引（{100 - dealerRate}%引）</span><span>-¥{dealerDisc.toLocaleString("ja-JP")}</span></div>}
+              {overDiscounted && (
+                <div className="text-[11px] text-amber-300 leading-snug pt-0.5">
+                  ※ 値引きが小計を上回るため、適用値引きは小計まで（-¥{subtotal.toLocaleString("ja-JP")}）、お支払額は¥0に調整されます。
+                </div>
+              )}
               <div className="flex justify-between text-xs text-slate-400"><span>消費税（{taxRate}%）</span><span>¥{taxAmt.toLocaleString("ja-JP")}</span></div>
             </div>
             <div className="px-4 py-3 border-t border-slate-700 flex justify-between items-center bg-slate-800/30">

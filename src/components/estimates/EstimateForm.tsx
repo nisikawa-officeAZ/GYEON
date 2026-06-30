@@ -248,6 +248,10 @@ export default function EstimateForm({
   const subtotal      = totals.subtotal;
   const taxAmount     = totals.tax_amount;
   const total         = totals.total;
+  // Discount-breakdown consistency: when the entered discount exceeds the subtotal, the
+  // applied discount is capped at the subtotal and the payable is clamped to ¥0 (matches
+  // the server / saved / PDF). A note makes the clamp explicit.
+  const overDiscounted = discountAmt > subtotal;
 
   // ── Item row helpers ─────────────────────────────────────────────────────────
   function updateItem(key: number, patch: Partial<ItemRow>) {
@@ -791,6 +795,11 @@ export default function EstimateForm({
             </div>
             <span className="text-xs text-slate-400">¥{taxAmount.toLocaleString("ja-JP")}</span>
           </div>
+          {overDiscounted && (
+            <div className="text-[11px] text-amber-300 leading-snug">
+              ※ 値引きが小計を上回るため、適用値引きは小計まで（-¥{subtotal.toLocaleString("ja-JP")}）、お支払額は¥0に調整されます。
+            </div>
+          )}
           <div className="flex justify-between border-t border-slate-600 pt-2 mt-1">
             <span className="text-sm font-bold text-slate-100">合計</span>
             <span className="text-base font-bold text-slate-100">¥{total.toLocaleString("ja-JP")}</span>
