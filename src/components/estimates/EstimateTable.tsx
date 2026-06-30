@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   EstimateDB,
   estimateDisplayNo,
@@ -98,6 +99,16 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreat
                 </td>
                 <td className="px-4 py-3 text-center whitespace-nowrap">
                   <div className="flex items-center justify-center gap-2">
+                    {/* Phase 3 Sprint 4 — direct PDF/print output (opens the
+                        tenant-scoped preview/print page; totals are server-validated). */}
+                    <Link
+                      href={`/pdf?estimateId=${e.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-slate-300 hover:text-white hover:bg-slate-700 px-2 py-1 rounded transition-colors"
+                    >
+                      PDF
+                    </Link>
                     {onEdit && (
                       <button
                         onClick={() => onEdit(e)}
