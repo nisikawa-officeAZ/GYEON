@@ -230,6 +230,49 @@ settings data** and would require a **separately-approved migration / schema** w
 requirement is scheduled; they then compose with §7.14.1 (time-axis) and §7.14.2 (duration)
 to derive reservation time blocks, occupied ranges, and conflict/overbooking detection.
 
+### 7.14.4 Store Business Hours, Holidays & Google Business Profile Sync — MANDATORY FUTURE REQUIREMENT (added 2026-06-30; NOT yet implemented)
+
+> **Status: Mandatory future requirement for **Store Settings** AND the
+> **calendar/reservation workflow**. Documented only — not implemented. Composes with
+> §7.14.1–§7.14.3. Does NOT change any current sprint scope (incl. Phase 5 Sprint 3
+> notification observability).**
+
+**Store Settings — business calendar configuration (required):**
+- **Regular business hours by weekday** — per-weekday **open time** and **close time**.
+- **Regular closed days** (recurring weekly closures).
+- **Temporary closed days** (one-off dates).
+- **Holiday business hours** and **special open days** / **special close days**.
+- **Lunch break / unavailable time blocks** within a day (if needed).
+- **Reservation availability based on business hours**; **block reservations outside
+  business hours** and **on closed days**.
+- **Calendar display must reflect open/closed status.**
+
+**Calendar behavior:**
+- The **date view** and **time-axis view** (§7.14.1) must use the store's **business hours**.
+- **Time slots outside business hours** must be **disabled or visually blocked**.
+- Reservations must **not be created outside available hours** unless **manually overridden
+  by an authorized user** (override is permission-gated).
+- **Multi-day work must skip closed days** unless manually overridden.
+- **Conflict detection** must consider: **business hours, closed days, service duration
+  (§7.14.2/§7.14.3), work-bay blocking, and technician blocking**.
+
+**Google Business Profile (GBP) — future integration:**
+- Future implementation **may** sync **regular business hours** → GBP `regularHours`.
+- Future implementation **may** sync **holiday/special hours** → GBP `specialHours`.
+- GBP integration requires **OAuth and approved API access**.
+- Google sync must be **optional per dealer/store**.
+- **Manual review/confirmation** should be required **before pushing** changes to Google.
+- The app must keep an **internal source of truth first**, then **push to Google only when
+  authorized** (internal config is authoritative; Google is a downstream, opt-in mirror).
+
+**Constraints:**
+- **Dealer-scoped**: `dealer_id` always from `getCurrentDealer()`, **never** from client
+  input; **RLS assumptions preserved**.
+- **Documentation only** — no implementation, no migrations, no schema changes, no
+  current-sprint scope change. Business-hours / holiday / GBP-link configuration is **new
+  per-dealer settings data** requiring a **separately-approved migration / schema** (and,
+  for GBP, OAuth + approved API access) when scheduled.
+
 ## 7.15 Work Orders
 - **Purpose:** Execute and track service work.
 - **Scope:** Work orders and attachments.
