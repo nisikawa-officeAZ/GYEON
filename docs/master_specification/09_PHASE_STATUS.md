@@ -88,6 +88,45 @@
 
 Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
 
+### Sprint 2 — Customer Management Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase2 sprint2 customer management foundation` (493031f) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Sprint 3 | (superseded — now complete, see below) |
+
+**Summary:** Customer list (functional search + filters + detail navigation), Customer Detail page (`/customers/[id]`), Customer Search (controlled), Customer Filters, Customer Profile editing (reused `CustomerForm`), Customer Timeline (reused `CustomerActivityTimeline`), Customer Notes (`updateCustomerNotes`), derived Customer Status & Tags foundations, and navigation integration. No schema change; status/tags derived from existing columns.
+
+### Sprint 3 — Vehicle Management Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase2 sprint3 vehicle management foundation` (6462a99) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Lint | ✅ no `lint` script / ESLint config in repo (same as Sprints 1–2); not applicable |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Sprint 4 | 🔴 Not started |
+
+**Completed work:**
+- Vehicle List page — functional search + filters + row navigation to detail.
+- Vehicle Detail page — `src/app/vehicles/[id]/page.tsx` (dealer-scoped fetch + `notFound`).
+- Vehicle Search — controlled `VehicleSearch` (maker / model / plate; space-insensitive).
+- Vehicle Filters — `VehicleFilters` (車検: 有効/間近/切れ/未登録; 顧客: 紐付きあり/なし) + shown/total count.
+- Vehicle Profile editing — reused `VehicleForm` (edit toggle on detail + list modal).
+- Vehicle Status foundation — derived `deriveVehicleStatus` from `inspection_expiry_date` + `VehicleStatusBadge` (read-only).
+- Vehicle Tags foundation — derived `deriveVehicleTags` + `VehicleTagList` (read-only).
+- Vehicle Service History foundation — `VehicleServiceHistory` via `getActivityLogsByEntity("vehicle", id)`.
+- Customer ↔ Vehicle relationship verification — owner resolved via dealer-scoped `getCustomerById`; same-dealer ownership confirmed and linked, mismatch flagged; write paths still validate `customer_id` belongs to the dealer.
+- Navigation integration — list → `/vehicles/[id]`; detail → back link + 所有者 link to `/customers/[id]`.
+
+Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. Sprint 1 OCR registration flow and duplicate-detection logic untouched. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
+
 ---
 
 ## 2. Current Phase
