@@ -14,6 +14,7 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { EstimateCategory } from "./estimate-types";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { createActivityLog } from "@/lib/activity/activity-log";
+import { calculateEstimateTotals } from "@/lib/pricing/estimate-totals";
 
 interface ItemInput {
   category:              EstimateCategory;
@@ -92,6 +93,26 @@ export async function createEstimate(formData: FormData) {
     return { error: "車両情報の確認に失敗しました" };
   }
 
+  // Parse line items (if any) and recompute estimate totals SERVER-SIDE.
+  // Server-computed totals are authoritative; client-supplied subtotal/tax/total
+  // are used only as a fallback when there are no line items (e.g., legacy/manual).
+  let items: ItemInput[] = [];
+  if (itemsJson) {
+    try {
+      items = JSON.parse(itemsJson) as ItemInput[];
+    } catch {
+      return { error: "見積明細データが不正です" };
+    }
+  }
+  const computed = items.length > 0
+    ? calculateEstimateTotals(items, discountAmount, taxRate)
+    : null;
+  const finalSubtotal = computed?.subtotal        ?? subtotal;
+  const finalDiscount = computed?.discount_amount ?? discountAmount;
+  const finalTaxRate  = computed?.tax_rate        ?? taxRate;
+  const finalTax      = computed?.tax_amount      ?? taxAmount;
+  const finalTotal    = computed?.total           ?? total;
+
   // Insert estimate.
   const { data: newEstimate, error: estimateError } = await supabase
     .from("estimates")
@@ -102,12 +123,12 @@ export async function createEstimate(formData: FormData) {
       estimate_number: resolvedNo,
       title:           title,
       status:          status,
-      subtotal:        subtotal,
-      tax:             taxAmount,      // legacy column mirror
-      tax_rate:        taxRate,
-      tax_amount:      taxAmount,
-      discount_amount: discountAmount,
-      total:           total,
+      subtotal:        finalSubtotal,
+      tax:             finalTax,        // legacy column mirror
+      tax_rate:        finalTaxRate,
+      tax_amount:      finalTax,
+      discount_amount: finalDiscount,
+      total:           finalTotal,
       valid_until:     validUntil || null,
       notes:           notes,
       internal_memo:   internalMemo,
@@ -121,15 +142,8 @@ export async function createEstimate(formData: FormData) {
     return { error: estimateError?.message ?? "見積の作成に失敗しました" };
   }
 
-  // Insert line items if provided.
-  if (itemsJson) {
-    let items: ItemInput[] = [];
-    try {
-      items = JSON.parse(itemsJson) as ItemInput[];
-    } catch {
-      return { error: "見積明細データが不正です" };
-    }
-
+  // Insert line items if provided (already parsed above).
+  {
     if (items.length > 0) {
       const rows = items.map((item, i) => ({
         estimate_id:            newEstimate.id,
