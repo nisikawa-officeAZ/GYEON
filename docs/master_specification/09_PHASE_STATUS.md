@@ -4,7 +4,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Active — Living Document (updated each phase) |
-| **Last Updated** | 2026-06-25 |
+| **Last Updated** | 2026-06-30 |
 | **Canonical Source** | `CHANGELOG.md`, git history, project audit (PHASE74/75) |
 | **Related Documents** | `01_PROJECT_OVERVIEW.md`, `10_ROADMAP.md`, `OPERATOR_DECISIONS.md` |
 
@@ -64,6 +64,29 @@
 - SDD restructuring: `/docs/master_specification/` created (11 files, 2026-06-25).
 - **PHASE74:** Master Specification Audit — `MASTER_SPECIFICATION_AUDIT_REPORT.md` (2026-06-25).
 - **PHASE75:** Master Specification Finalization — `OPERATOR_DECISIONS.md`, `MASTER_SPECIFICATION_CHANGELOG.md`, `MASTER_SPECIFICATION_V1_READY.md`, spec file updates (2026-06-25).
+
+---
+
+## 1b. Phase 2 — Customer & Vehicle Registration
+
+### Sprint 1 — Customer & Vehicle Registration Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase2 sprint1 customer vehicle registration foundation` (74fec20) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Sprint 2 | 🔴 Not started |
+
+**Summary:**
+- Customer duplicate detection helper implemented (`src/lib/customers/find-customer-duplicates.ts`, dealer-scoped).
+- Vehicle duplicate detection helper implemented (`src/lib/vehicles/find-vehicle-by-vin-or-plate.ts`, dealer-scoped).
+- `register-from-ocr` orchestration implemented (`src/lib/ocr/register-from-ocr.ts`) — creates/reuses customer + linked vehicle and completes the OCR session, composing existing create actions.
+- Existing UI wired to the registration flow (`CustomerVehicleOnboardingWizard.tsx`) with non-blocking duplicate warnings; no UI redesign.
+
+Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
 
 ---
 
