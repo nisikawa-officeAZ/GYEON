@@ -16,6 +16,7 @@ import {
 } from "@/lib/pricing/pricing-data";
 import type { CoatingId }        from "@/lib/pricing/pricing-data";
 import { calculateEstimate, buildLineItems } from "@/lib/pricing/pricing-engine";
+import { SERVICE_CATEGORIES, type ServiceCategoryId } from "@/lib/estimates/service-categories";
 import type { ServiceInput }     from "@/lib/pricing/pricing-engine";
 import dynamic                   from "next/dynamic";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
@@ -39,20 +40,15 @@ type Screen =
   | "step-ppf" | "step-window" | "step-maintenance"
   | "step-carwash" | "step-roomclean" | "step-other" | "step5";
 
-type CategoryId = "coating" | "ppf" | "window" | "maintenance" | "carwash" | "roomclean" | "other";
+// Service categories are defined canonically in the Service Category model
+// (src/lib/estimates/service-categories.ts). Wired here for a single source of
+// truth; selection/order/labels are unchanged (backward-compatible).
+type CategoryId = ServiceCategoryId;
 type LayerMode  = "none" | "2layer" | "3layer";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const CATEGORIES: { id: CategoryId; label: string; emoji: string }[] = [
-  { id: "coating",     label: "ボディコーティング",     emoji: "✨" },
-  { id: "ppf",         label: "PPF",                   emoji: "🛡" },
-  { id: "window",      label: "ウィンドウフィルム",     emoji: "🪟" },
-  { id: "maintenance", label: "ボディ定期メンテナンス", emoji: "🔧" },
-  { id: "carwash",     label: "メンテナンス洗車",       emoji: "🚿" },
-  { id: "roomclean",   label: "ルームクリーニング",     emoji: "🧹" },
-  { id: "other",       label: "その他作業",             emoji: "📋" },
-];
+const CATEGORIES = SERVICE_CATEGORIES;
 
 const DEFAULT_COUPONS = [
   { name: "新規ご来店クーポン",   amount: 5000  },
