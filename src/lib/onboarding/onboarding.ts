@@ -6,6 +6,7 @@
 
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { requireRole }      from "@/lib/staff/require-role";
 import { createAuditLog }   from "@/lib/audit/audit";
 import { createNotification } from "@/lib/notifications/notification";
 import {
@@ -93,6 +94,14 @@ async function upsertDealerSettings(
 export async function saveOnboardingStep(
   params: OnboardingSaveParams
 ): Promise<{ success: boolean; error?: string }> {
+  // Dealer settings write — owner/manager only (consistent with saveCompanySettings).
+  // Returns the existing error shape so the onboarding "never throw" contract holds.
+  try {
+    await requireRole(["owner", "manager"]);
+  } catch {
+    return { success: false, error: "この操作を行う権限がありません" };
+  }
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "ディーラー情報が取得できませんでした" };
 
@@ -136,6 +145,12 @@ export async function saveOnboardingStep(
  * Marks onboarding as complete. Fires success notification.
  */
 export async function completeOnboarding(): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireRole(["owner", "manager"]);
+  } catch {
+    return { success: false, error: "この操作を行う権限がありません" };
+  }
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "ディーラー情報が取得できませんでした" };
 
@@ -175,6 +190,12 @@ export async function completeOnboarding(): Promise<{ success: boolean; error?: 
  * onboarding_completed remains false — dashboard will show OnboardingCard.
  */
 export async function skipOnboarding(): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireRole(["owner", "manager"]);
+  } catch {
+    return { success: false, error: "この操作を行う権限がありません" };
+  }
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "ディーラー情報が取得できませんでした" };
 
@@ -197,6 +218,12 @@ export async function skipOnboarding(): Promise<{ success: boolean; error?: stri
  * Resets onboarding so the wizard starts from step 1 again.
  */
 export async function resetOnboarding(): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireRole(["owner", "manager"]);
+  } catch {
+    return { success: false, error: "この操作を行う権限がありません" };
+  }
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "ディーラー情報が取得できませんでした" };
 
