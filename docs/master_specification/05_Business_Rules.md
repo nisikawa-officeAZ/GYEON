@@ -104,6 +104,34 @@ Rules:
 - Invoice documents are generated and stored as references in storage (private bucket; see `02_SYSTEM_ARCHITECTURE.md` §2.10).
 - Commercial (platform→dealer) billing is distinct from dealer→customer invoicing.
 
+### 5.11.1 Closing-Payment (Aggregate) Billing for Trade/Business Customers — FUTURE REQUIREMENT (corrected 2026-06-30; NOT yet implemented)
+
+> **Status: Documented future billing/invoice workflow requirement. Not implemented.**
+> This **corrects** the earlier assumption that a trade/business customer always uses
+> closing-payment (aggregate) billing.
+
+- The **trade/business flag** and **closing-payment terms** are **INDEPENDENT**. Marking a
+  customer as trade/business does **not** imply closing-payment billing, and must **not**
+  require closing/payment fields to be filled.
+- **Closing-payment (aggregate) billing applies ONLY when the closing day and payment date
+  are explicitly configured** for that customer.
+  - If a closing day **and** a payment date are entered → use **aggregate closing-cycle
+    billing** (invoices/delivery notes are aggregated and billed on the configured cycle).
+  - If the closing/payment fields are **blank** → do **not** treat the customer as
+    closing-payment billing; handle billing **normally, per individual invoice / delivery
+    note**, regardless of the trade/business flag.
+- The closing/payment fields are **optional** for trade/business customers; the system must
+  not require them just because the business flag is set.
+- Examples:
+  - Trade customer with **closing day 20, payment day 15** → aggregate billing cycle.
+  - Trade customer with **no closing/payment dates** → normal per-invoice / per-delivery-note billing.
+- Implementation note (future): closing/payment configuration likely reuses the existing
+  `dealer_closing_day` / `dealer_payment_day` scaffolding (see `05_DATABASE_REQUIREMENTS.md`
+  §line 111) and the Monthly Billing roadmap item (`10_ROADMAP.md`). Any schema/columns
+  required for **per-customer** closing/payment terms must be defined under a separately
+  approved migration when this requirement is scheduled. Trade/business attributes otherwise
+  follow §5.7 (business-customer attributes apply only when the business flag is set).
+
 ## 5.12 Payment Rules
 
 - Payments are dealer-scoped and recorded against invoices.
