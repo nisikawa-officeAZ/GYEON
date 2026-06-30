@@ -69,6 +69,16 @@
 
 ## 1b. Phase 2 — Customer & Vehicle Registration
 
+> **PHASE 2 STATUS: ✅ CLOSED — Architect Approved — Ready for Phase 3 (2026-06-30)**
+>
+> - Final Closure Review completed and approved by the architect.
+> - All blocking issues resolved (3 integration bugs found & fixed in Sprint 6).
+> - All remaining items classified **Deferred** or **Future Enhancement** (none blocking) — see Sprint 6 limitations below.
+> - Verified: typecheck + build green; dealer_id always from `getCurrentDealer()`; RLS preserved; no schema change, no migration, no UI redesign across all six sprints.
+> - Not merged to main; not deployed to production. Phase 3 not started.
+>
+> Sprints S1–S6 below are all ✅ Completed.
+
 ### Sprint 1 — Customer & Vehicle Registration Foundation — ✅ Completed (2026-06-30)
 
 | Item | Status |
