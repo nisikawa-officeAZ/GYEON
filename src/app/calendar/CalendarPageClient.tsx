@@ -67,6 +67,8 @@ export default function CalendarPageClient({
   const [reservations, setReservations] = useState<ReservationDB[]>(initialReservations);
   const [modal, setModal] = useState<Modal>(null);
   const [defaultDate, setDefaultDate] = useState<string>("");
+  const [defaultStartTime, setDefaultStartTime] = useState<string>("");
+  const [defaultEndTime,   setDefaultEndTime]   = useState<string>("");
   const [loading, setLoading] = useState(false);
 
   // Computed values
@@ -164,6 +166,15 @@ export default function CalendarPageClient({
     loadReservations(date, date);
   }
 
+  function handleSlotClick(startTime: string, endTime: string) {
+    // Calendar Time-Axis Sprint 2: open the existing new-reservation modal pre-filled with
+    // the current day-view date + the selected slot's start/end time (default 60-min end).
+    setDefaultDate(dayStr);
+    setDefaultStartTime(startTime);
+    setDefaultEndTime(endTime);
+    setModal("new");
+  }
+
   function handleReservationClick(r: ReservationDB) {
     setModal({ reservation: r });
   }
@@ -196,7 +207,7 @@ export default function CalendarPageClient({
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-lg font-semibold text-slate-100">カレンダー</h1>
         <button
-          onClick={() => { setDefaultDate(""); setModal("new"); }}
+          onClick={() => { setDefaultDate(""); setDefaultStartTime(""); setDefaultEndTime(""); setModal("new"); }}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
         >
           + 新規予約
@@ -268,6 +279,7 @@ export default function CalendarPageClient({
             date={dayStr}
             reservations={reservations.filter((r) => r.reservation_date === dayStr)}
             onReservationClick={handleReservationClick}
+            onSlotClick={handleSlotClick}
           />
         )}
       </div>
@@ -290,6 +302,8 @@ export default function CalendarPageClient({
               customers={customers}
               vehicles={vehicles}
               defaultDate={defaultDate || undefined}
+              defaultStartTime={defaultStartTime || undefined}
+              defaultEndTime={defaultEndTime || undefined}
               onSuccess={handleFormSuccess}
               onCancel={() => setModal(null)}
             />

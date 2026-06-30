@@ -6,6 +6,8 @@ interface Props {
   date: string;
   reservations: ReservationDB[];
   onReservationClick?: (r: ReservationDB) => void;
+  /** Calendar Time-Axis Sprint 2: start a new reservation from a clicked available slot. */
+  onSlotClick?: (startTime: string, endTime: string) => void;
 }
 
 const DAY_START_MIN = 8 * 60;
@@ -23,7 +25,19 @@ function timeToMinutes(timeStr: string): number {
 
 const HOURS = Array.from({ length: 13 }, (_, i) => 8 + i); // 8..20
 
-export default function CalendarDayView({ date, reservations, onReservationClick }: Props) {
+function minutesToTime(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+// 30-minute slots across the visible axis: 8:00, 8:30, … 19:30.
+const SLOTS = Array.from(
+  { length: (DAY_END_MIN - DAY_START_MIN) / 30 },
+  (_, i) => DAY_START_MIN + i * 30,
+);
+
+export default function CalendarDayView({ date, reservations, onReservationClick, onSlotClick }: Props) {
   const totalHeight = ((DAY_END_MIN - DAY_START_MIN) / 60) * SLOT_HEIGHT;
 
   const timed  = reservations.filter((r) => r.start_time);
@@ -95,6 +109,24 @@ export default function CalendarDayView({ date, reservations, onReservationClick
             />
           ))}
 
+          {/* Clickable AVAILABLE time slots — start a new reservation (default 60-min end).
+              Rendered beneath the reservation blocks (which carry z-10), so clicking an
+              occupied block edits it and clicking empty time creates a new reservation. */}
+          {onSlotClick && SLOTS.map((slotMin) => (
+            <button
+              key={`slot-${slotMin}`}
+              type="button"
+              onClick={() => onSlotClick(minutesToTime(slotMin), minutesToTime(slotMin + 60))}
+              title={`${minutesToTime(slotMin)} から新規予約`}
+              className="group absolute left-0 right-0 hover:bg-emerald-500/10 transition-colors"
+              style={{ top: minutesToTop(slotMin), height: SLOT_HEIGHT / 2 }}
+            >
+              <span className="opacity-0 group-hover:opacity-100 text-[10px] text-emerald-300 absolute left-2 top-0.5">
+                + {minutesToTime(slotMin)}
+              </span>
+            </button>
+          ))}
+
           {/* Reservation blocks */}
           {timed.map((r) => {
             const startMin = timeToMinutes(r.start_time!);
@@ -109,7 +141,7 @@ export default function CalendarDayView({ date, reservations, onReservationClick
               <button
                 key={r.id}
                 onClick={() => onReservationClick?.(r)}
-                className={`absolute left-1 right-1 rounded-md px-2 text-left overflow-hidden ${serviceTypeColor(r.service_type)} hover:opacity-90 transition-opacity`}
+                className={`absolute left-1 right-1 z-10 rounded-md px-2 text-left overflow-hidden ${serviceTypeColor(r.service_type)} hover:opacity-90 transition-opacity`}
                 style={{ top, height }}
               >
                 <p className="text-xs text-white font-medium leading-tight truncate">

@@ -22,6 +22,8 @@ interface Props {
     plate_number: string | null;
   }>;
   defaultDate?: string;
+  defaultStartTime?: string;
+  defaultEndTime?: string;
   onSuccess?: (r: ReservationDB) => void;
   onCancel?: () => void;
 }
@@ -39,6 +41,8 @@ export default function ReservationForm({
   customers,
   vehicles,
   defaultDate,
+  defaultStartTime,
+  defaultEndTime,
   onSuccess,
   onCancel,
 }: Props) {
@@ -52,8 +56,8 @@ export default function ReservationForm({
     reservation?.service_type ?? "other"
   );
   const [date,      setDate]      = useState(reservation?.reservation_date ?? defaultDate ?? "");
-  const [startTime, setStartTime] = useState(reservation?.start_time?.slice(0, 5) ?? "");
-  const [endTime,   setEndTime]   = useState(reservation?.end_time?.slice(0, 5)   ?? "");
+  const [startTime, setStartTime] = useState(reservation?.start_time?.slice(0, 5) ?? defaultStartTime ?? "");
+  const [endTime,   setEndTime]   = useState(reservation?.end_time?.slice(0, 5)   ?? defaultEndTime   ?? "");
   const [notes,     setNotes]     = useState(reservation?.notes ?? "");
   const [status,    setStatus]    = useState<ReservationStatus>(reservation?.status ?? "pending");
 
