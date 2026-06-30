@@ -164,7 +164,7 @@ function nextScreen(cur: Screen, cats: CategoryId[]): Screen {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const inp = "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors w-full";
+const inp = "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-base sm:text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors w-full";
 const lbl = "text-xs font-medium text-slate-400";
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -626,7 +626,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
                   className="self-start text-xs px-3 py-1.5 rounded-lg text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 transition-colors">
                   📄 車検証から自動入力（OCR）
                 </button>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1">
                     <label className={lbl}>お客様名（姓）<span className="text-red-400"> *</span></label>
                     <input type="text" value={nc.last_name} onChange={e => setNc(p => ({ ...p, last_name: e.target.value }))} placeholder="山田" className={inp} />
@@ -703,7 +703,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
             )}
 
             {vMode === "create" && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {ocrVehicle && (
                   <div className="col-span-2 text-xs text-emerald-400 border border-emerald-500/30 rounded-lg px-3 py-2 bg-emerald-950/20">
                     ✓ 車検証OCRデータ引用済み — 内容を確認してください
@@ -1038,7 +1038,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <p className={lbl}>汚染度を選択してください</p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {ROOM_CLEAN_CONDITIONS.map(cond => {
                 const active = roomCleanCond === cond.id;
                 return (
@@ -1456,11 +1456,11 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       )}
 
       {/* ── Navigation ── */}
-      <div className="flex justify-between gap-2 pt-4 border-t border-slate-700">
+      <div className="sticky bottom-0 z-10 flex justify-between gap-2 pt-3 pb-2 border-t border-slate-700 bg-[#1e293b]">
         <div>
           {history.length > 1
-            ? <button type="button" onClick={pop} disabled={pending} className="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50">← 戻る</button>
-            : <button type="button" onClick={onCancel} disabled={pending} className="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50">キャンセル</button>
+            ? <button type="button" onClick={pop} disabled={pending} className="px-4 py-3 sm:py-2 text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50">← 戻る</button>
+            : <button type="button" onClick={onCancel} disabled={pending} className="px-4 py-3 sm:py-2 text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50">キャンセル</button>
           }
         </div>
         <div className="flex gap-2">
@@ -1480,7 +1480,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
                   push(nextScreen(screen, cats));
                 } else push(nextScreen(screen, cats));
               }}
-              className="px-5 py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50">
+              className="px-5 py-3 sm:py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50">
               {pending ? "処理中..." : "次へ →"}
             </button>
           )}
@@ -1488,7 +1488,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
             <>
               <button type="button" disabled className="px-4 py-2 text-sm font-medium bg-slate-700/40 text-slate-500 rounded-lg cursor-not-allowed">LINE転送</button>
               <button type="button" disabled={pending} onClick={handleSave}
-                className="px-5 py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50">
+                className="px-5 py-3 sm:py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50">
                 {pending ? "保存中..." : "保存して完了"}
               </button>
             </>
