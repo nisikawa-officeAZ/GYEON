@@ -5,13 +5,14 @@
 
 import { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
-import { createCustomer } from "@/lib/customers/create-customer";
-import { createVehicle }  from "@/lib/vehicles/create-vehicle";
 import type { CustomerDB } from "@/lib/customers/customer-types";
 import { customerDisplayName } from "@/lib/customers/customer-types";
+import type { VehicleDB } from "@/lib/vehicles/vehicle-types";
+import { findCustomerDuplicates }  from "@/lib/customers/find-customer-duplicates";
+import { findVehicleByVinOrPlate } from "@/lib/vehicles/find-vehicle-by-vin-or-plate";
+import { registerCustomerAndVehicleFromOcr } from "@/lib/ocr/register-from-ocr";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
 import type { OcrSessionMeta }               from "@/lib/ocr/ocr-session-types";
-import { completeOcrSession }                from "@/lib/ocr/ocr-session-actions";
 import {
   mapOcrToCustomer,
   EMPTY_CUSTOMER_FORM,
@@ -113,6 +114,8 @@ export default function CustomerVehicleOnboardingWizard({
   const [isPending,          startTransition]       = useTransition();
   const [ocrSessionId,       setOcrSessionId]       = useState<string | null>(null);
   const [ocrSessionSaved,    setOcrSessionSaved]    = useState<boolean>(false);
+  const [customerDup,        setCustomerDup]        = useState<CustomerDB[]>([]);
+  const [vehicleDup,         setVehicleDup]         = useState<VehicleDB[]>([]);
 
   const isNewCustomer = existingCustomerId === null;
 
@@ -157,90 +160,68 @@ export default function CustomerVehicleOnboardingWizard({
     push("customer-form");
   }
 
+  // Phase 2 Sprint 1 — non-blocking duplicate detection before the confirm step.
+  // Surfaces likely existing customers/vehicles; the user may still proceed.
+  async function runDuplicateChecks() {
+    try {
+      if (isNewCustomer) {
+        const dups = await findCustomerDuplicates({
+          last_name:  customerForm.last_name.trim()  || undefined,
+          first_name: customerForm.first_name.trim() || undefined,
+          phone:      customerForm.phone.trim()       || undefined,
+        });
+        setCustomerDup(dups);
+      } else {
+        setCustomerDup([]);
+      }
+
+      const vdups = await findVehicleByVinOrPlate({
+        vin:          vehicleForm.vin.trim()          || undefined,
+        plate_number: vehicleForm.plate_number.trim() || undefined,
+      });
+      setVehicleDup(vdups);
+    } catch {
+      // Duplicate detection is advisory only — never block the flow.
+    }
+  }
+
+  function goToConfirm() {
+    setCustomerDup([]);
+    setVehicleDup([]);
+    void runDuplicateChecks();
+    push("confirm");
+  }
+
   function handleConfirm() {
     setError(null);
     startTransition(async () => {
-      let customerId: string;
-
-      if (existingCustomerId !== null) {
-        // Existing customer path — use selected customer ID directly
-        customerId = existingCustomerId;
-      } else if (createdCustomerId) {
-        // Retry path — customer already created on a previous attempt; reuse to prevent duplicate
-        customerId = createdCustomerId;
-      } else {
-        // New customer, first attempt — create now
-        if (!customerForm.last_name.trim()) {
-          setError("姓は必須です");
-          return;
-        }
-
-        const fd = new FormData();
-        fd.set("last_name",       customerForm.last_name.trim());
-        fd.set("first_name",      customerForm.first_name.trim());
-        fd.set("last_name_kana",  customerForm.last_name_kana.trim());
-        fd.set("first_name_kana", customerForm.first_name_kana.trim());
-        fd.set("phone",           customerForm.phone.trim());
-        fd.set("email",           customerForm.email.trim());
-        fd.set("postal_code",     customerForm.postal_code.trim());
-        fd.set("prefecture",      customerForm.prefecture.trim());
-        fd.set("city",            customerForm.city.trim());
-        fd.set("address1",        customerForm.address1.trim());
-        fd.set("notes",           customerForm.notes.trim());
-        fd.set("line_user_id",    customerForm.line_user_id.trim());
-        if (customerForm.is_company) fd.set("occupation", "法人");
-
-        const customerResult = await createCustomer(fd);
-        if ("error" in customerResult) {
-          setError(customerResult.error ?? "顧客の作成に失敗しました");
-          return;
-        }
-        customerId = customerResult.customerId;
-        setCreatedCustomerId(customerResult.customerId);
-      }
-
-      if (!customerId) {
-        setError("顧客IDが取得できませんでした");
+      // New customer requires a surname; existing/retry paths skip this check.
+      if (isNewCustomer && !createdCustomerId && !customerForm.last_name.trim()) {
+        setError("姓は必須です");
         return;
       }
 
-      const vfd = new FormData();
-      vfd.set("customer_id",            customerId);
-      vfd.set("maker",                  vehicleForm.maker.trim());
-      vfd.set("model",                  vehicleForm.model.trim());
-      vfd.set("grade",                  vehicleForm.grade.trim());
-      vfd.set("year",                   vehicleForm.year.trim());
-      vfd.set("color",                  vehicleForm.color.trim());
-      vfd.set("plate_number",           vehicleForm.plate_number.trim());
-      vfd.set("vin",                    vehicleForm.vin.trim());
-      vfd.set("body_size",              vehicleForm.body_size.trim());
-      vfd.set("inspection_expiry_date", vehicleForm.inspection_expiry_date.trim());
-      vfd.set("displacement",           vehicleForm.displacement.trim());
-      vfd.set("fuel_type",              vehicleForm.fuel_type.trim());
-      vfd.set("registration_date",      vehicleForm.registration_date.trim());
-      vfd.set("notes",                  vehicleForm.notes.trim());
+      // existingCustomerId (selected) OR createdCustomerId (retry) → reuse without
+      // creating a duplicate. Otherwise the orchestration creates a new customer.
+      const reuseCustomerId = existingCustomerId ?? createdCustomerId ?? null;
 
-      const vehicleResult = await createVehicle(vfd);
-      if ("error" in vehicleResult) {
-        setError(vehicleResult.error ?? "車両の作成に失敗しました");
+      const result = await registerCustomerAndVehicleFromOcr({
+        existingCustomerId: reuseCustomerId,
+        customer:           customerForm,
+        vehicle:            vehicleForm,
+        sessionId:          ocrSessionId,
+        reviewedResult:     ocrResult,
+      });
+
+      if (!result.success) {
+        // If a customer was created before the vehicle step failed, remember its
+        // id so a retry reuses it instead of creating a duplicate.
+        if (result.customerId) setCreatedCustomerId(result.customerId);
+        setError(result.error);
         return;
       }
 
-      // Non-blocking OCR session completion — records reviewed_result + customer/vehicle IDs
-      if (ocrSessionId && ocrResult) {
-        try {
-          await completeOcrSession({
-            session_id:      ocrSessionId,
-            reviewed_result: ocrResult,
-            customer_id:     customerId,
-            vehicle_id:      vehicleResult.vehicleId,
-          });
-        } catch {
-          // Session completion is non-blocking — wizard finishes regardless
-        }
-      }
-
-      onComplete(customerId, vehicleResult.vehicleId);
+      onComplete(result.customerId, result.vehicleId);
     });
   }
 
@@ -742,7 +723,7 @@ export default function CustomerVehicleOnboardingWizard({
 
           <button
             type="button"
-            onClick={() => push("confirm")}
+            onClick={goToConfirm}
             className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors mt-1"
           >
             次へ → 確認
@@ -805,6 +786,25 @@ export default function CustomerVehicleOnboardingWizard({
               )}
             </div>
           </div>
+
+          {/* Advisory duplicate warning — non-blocking; registration may proceed */}
+          {(customerDup.length > 0 || vehicleDup.length > 0) && (
+            <div className="flex flex-col gap-1 px-3 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10">
+              <p className="text-xs text-amber-300 font-medium">
+                重複の可能性があります（このまま登録することも可能です）
+              </p>
+              {customerDup.length > 0 && (
+                <p className="text-[11px] text-amber-200/80">
+                  同名・同電話番号の顧客が {customerDup.length} 件: {customerDup.slice(0, 3).map(c => customerDisplayName(c)).join("、")}
+                </p>
+              )}
+              {vehicleDup.length > 0 && (
+                <p className="text-[11px] text-amber-200/80">
+                  同じVIN・ナンバーの車両が {vehicleDup.length} 件登録済みです
+                </p>
+              )}
+            </div>
+          )}
 
           {error && (
             <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10">
