@@ -301,6 +301,58 @@ Scope guardrails honored: application-layer enforcement only — no DB schema ch
 
 ---
 
+## 1e. Phase 4 — Maintenance, Reservation, LINE Readiness & Customer Retention
+
+> **PHASE 4 STATUS: ✅ COMPLETED — Architect Approved (2026-06-30)**
+>
+> Activation/automation/wiring of existing maintenance, reservation, LINE, and
+> customer-engagement infrastructure. Application-layer only — NO new tables, NO
+> migrations, NO schema changes. Feature branch `fix/branding-schema-block`; not merged
+> to main, not deployed to production.
+
+| Sprint | Scope | Status |
+|--------|-------|--------|
+| Sprint 1 | Maintenance reminder foundation — auto-create from completed work order, duplicate prevention, due-date, staff `requireStaffCapability("edit")` guards | ✅ Completed (92ebb86) |
+| Sprint 2 | Maintenance notification queue foundation — secret-guarded cron-safe due processor, idempotent queue creation, status updates | ✅ Completed (cc6ccf6) |
+| Sprint 3 | LINE notification sending activation — credential-gated send, secret-guarded queue cron, retry-safe, failure handling | ✅ Completed (18c77fc) |
+| Sprint 4 | Reservation/calendar foundation — staff-guarded writes, work-order + staff-assignment linkage, reminder→reservation linkage, booking opt-in readiness | ✅ Completed (ab3520a) |
+| Sprint 5 | Customer retention engagement activation — non-AI ActionDispatcher branches, LINE enqueue with line_connected gating + dedup, activity_logs audit, CUSTOMER_CREATED/WORK_COMPLETED/PAYMENT_COMPLETED/MAINTENANCE_DUE wiring | ✅ Completed (f294255) |
+| Sprint 6 | Integration QA & stabilization — fixed 4 defects (audit CHECK violation, duplicate-queue on link failure, concurrent double-send race, latent LINE gate on reminder scheduling) | ✅ Completed (7fe6f0b) |
+
+**Final verification:**
+- Typecheck — ✅ PASS (`npm run typecheck`)
+- Build — ✅ PASS (`npm run build`)
+- Lint — N/A (no `lint` script exists in the repo)
+
+**Final commit:** `7fe6f0b` — "fix: phase4 sprint6 integration qa fixes"
+**Feature branch:** `fix/branding-schema-block`
+**Merge to main:** ❌ Not performed.
+**Production deployment:** ❌ Not performed.
+
+**Architecture compliance:** No new tables, no migrations, no schema changes; `dealer_id`
+always from `getCurrentDealer()` (or trusted DB rows in cron processors), never from client;
+RLS assumptions preserved; cron routes secret-guarded by `CRON_SECRET`; LINE sending double-
+gated (customer `line_connected` + dealer credentials); no AI agent activation; marketing/
+campaign messaging remains Future Scope.
+
+**Known limitations (Future Scope — NOT Phase 4 blockers):**
+- Engagement persistence is interim (audited to `activity_logs` only); a dedicated
+  `engagement_events`/`workflow_runs` table would require a future approved migration.
+- `MAINTENANCE_DUE` engagement message overlaps the Sprint 1–3 reminder pipeline and is
+  cross-deduped (effectively suppressed); a single canonical maintenance channel should be
+  chosen later.
+- Production cron scheduling (Vercel cron / external scheduler) is not configured; both cron
+  routes are ready and must be wired by an operator holding `CRON_SECRET`.
+- Failed LINE sends are recorded but not auto-retried (the `attempts` field supports a future
+  retry policy); a "processing"-stuck item has no reaper yet.
+- Booking-notification opt-in and per-customer engagement consent are prepared but not
+  persisted (would require a future approved migration).
+- No automated test runner is configured; verification is review + typecheck + build.
+
+**Phase 4 closed. Phase 5 not started.**
+
+---
+
 ## 2. Current Phase
 
 **PC / Mobile UI Separation — Phase 1 (in progress).**
