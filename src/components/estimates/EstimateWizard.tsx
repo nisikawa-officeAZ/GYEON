@@ -239,35 +239,41 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
 
   const custVehicles = vehicles.filter(v => v.customer_id === customerId);
 
-  // Pre-fill vehicle fields from OCR when body size screen appears
+  // Pre-fill vehicle fields from OCR as soon as the OCR result is applied. Keyed on the
+  // OCR result (not the body-size screen) so the data reaches the new-vehicle form for
+  // EVERY service flow — previously only coating/PPF (the flows that have a step2 screen)
+  // received it, and other flows lost the OCR vehicle data. Firing on apply also lets the
+  // user review/correct the fields in step1 before saving. Merge-only, so manual edits
+  // made after OCR are preserved (the effect re-runs only when a new OCR result arrives).
   useEffect(() => {
-    if (screen === "step2" && ocrVehicle && vMode === "create") {
-      setNv(p => {
-        const u = { ...p };
-        if (ocrVehicle.maker)                   u.maker             = ocrVehicle.maker;
-        if (ocrVehicle.vehicle_name)            u.model             = ocrVehicle.vehicle_name;
-        if (ocrVehicle.model)                   u.vehicle_code      = ocrVehicle.model;
-        if (ocrVehicle.chassis_number)          u.vin               = ocrVehicle.chassis_number;
-        if (ocrVehicle.color)                   u.color             = ocrVehicle.color;
-        if (ocrVehicle.displacement)            u.displacement      = ocrVehicle.displacement;
-        if (ocrVehicle.fuel_type)               u.fuel_type         = ocrVehicle.fuel_type;
-        if (ocrVehicle.first_registration_date) {
-          u.year              = ocrVehicle.first_registration_date.slice(0, 4);
-          // Convert YYYY-MM to YYYY-MM-01 for the date column
-          u.registration_date = ocrVehicle.first_registration_date.length === 7
-            ? ocrVehicle.first_registration_date + "-01"
-            : ocrVehicle.first_registration_date;
-        }
-        const plate = [
-          ocrVehicle.license_plate_region, ocrVehicle.license_plate_class,
-          ocrVehicle.license_plate_kana,   ocrVehicle.license_plate_number,
-        ].filter(Boolean).join(" ");
-        if (plate) u.plate_number = plate;
-        return u;
-      });
-    }
+    if (!ocrVehicle || vMode !== "create") return;
+    setNv(p => {
+      const u = { ...p };
+      if (ocrVehicle.maker)                   u.maker             = ocrVehicle.maker;
+      if (ocrVehicle.vehicle_name)            u.model             = ocrVehicle.vehicle_name;
+      if (ocrVehicle.model)                   u.vehicle_code      = ocrVehicle.model;
+      if (ocrVehicle.grade)                   u.grade             = ocrVehicle.grade;
+      if (ocrVehicle.chassis_number)          u.vin               = ocrVehicle.chassis_number;
+      if (ocrVehicle.color)                   u.color             = ocrVehicle.color;
+      if (ocrVehicle.displacement)            u.displacement      = ocrVehicle.displacement;
+      if (ocrVehicle.fuel_type)               u.fuel_type         = ocrVehicle.fuel_type;
+      if (ocrVehicle.inspection_expiry_date)  u.inspection_expiry_date = ocrVehicle.inspection_expiry_date;
+      if (ocrVehicle.first_registration_date) {
+        u.year              = ocrVehicle.first_registration_date.slice(0, 4);
+        // Convert YYYY-MM to YYYY-MM-01 for the date column
+        u.registration_date = ocrVehicle.first_registration_date.length === 7
+          ? ocrVehicle.first_registration_date + "-01"
+          : ocrVehicle.first_registration_date;
+      }
+      const plate = [
+        ocrVehicle.license_plate_region, ocrVehicle.license_plate_class,
+        ocrVehicle.license_plate_kana,   ocrVehicle.license_plate_number,
+      ].filter(Boolean).join(" ");
+      if (plate) u.plate_number = plate;
+      return u;
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen]);
+  }, [ocrVehicle]);
 
   // ── Body size ─────────────────────────────────────────────────────────────
   const [sizeKey, setSizeKey] = useState("M");
