@@ -3,11 +3,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { MaintenanceReminderUpdateInput, MaintenanceReminderDB } from "./maintenance-types";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 export async function updateMaintenanceReminder(
   id: string,
   input: MaintenanceReminderUpdateInput
 ): Promise<{ error: string } | { success: true; data: MaintenanceReminderDB }> {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
 

@@ -9,6 +9,7 @@ import {
   maintenanceVehicleLabel,
 } from "./maintenance-types";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 function scheduledSendAtFromDueDate(dueDate: string): string {
   // Default: 7 days before due_date at 10:00
@@ -21,6 +22,9 @@ function scheduledSendAtFromDueDate(dueDate: string): string {
 export async function createMaintenanceReminder(
   input: MaintenanceReminderInput
 ): Promise<{ error: string } | { success: true; data: MaintenanceReminderDB }> {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
 

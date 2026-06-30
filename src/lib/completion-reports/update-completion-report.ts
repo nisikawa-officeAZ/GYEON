@@ -10,6 +10,7 @@ import { createClient }          from "@/lib/supabase/server";
 import { getCurrentDealer }      from "@/lib/auth/get-current-dealer";
 import { CompletionReportStatus } from "./completion-report-types";
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
+import { autoCreateMaintenanceReminderFromCompletion } from "@/lib/maintenance/auto-create-from-completion";
 
 function str(formData: FormData, key: string): string | null {
   return (formData.get(key) as string | null)?.trim() || null;
@@ -29,6 +30,7 @@ export async function updateCompletionReport(reportId: string, formData: FormDat
   const internalMemo    = str(formData, "internal_memo");
   const isSharedRaw     = formData.get("is_shared");
   const isShared        = isSharedRaw !== null ? isSharedRaw === "true" : undefined;
+  const nextMaintenanceDate = str(formData, "next_maintenance_date");
 
   const supabase = await createClient();
 
@@ -46,6 +48,7 @@ export async function updateCompletionReport(reportId: string, formData: FormDat
     updatePayload.is_shared = isShared;
     if (isShared) updatePayload.shared_at = new Date().toISOString();
   }
+  if (nextMaintenanceDate) updatePayload.next_maintenance_date = nextMaintenanceDate;
 
   const { error } = await supabase
     .from("completion_reports")
@@ -56,6 +59,20 @@ export async function updateCompletionReport(reportId: string, formData: FormDat
   if (error) {
     console.error("[updateCompletionReport] error:", error.message);
     return { error: error.message };
+  }
+
+  // Phase 4 Sprint 1 — if a next_maintenance_date is set on this report, auto-create a
+  // (deduped, non-blocking) maintenance reminder for the owning work order.
+  if (nextMaintenanceDate) {
+    const { data: rep } = await supabase
+      .from("completion_reports")
+      .select("work_order_id")
+      .eq("id",        reportId)
+      .eq("dealer_id", dealer.dealer_id)
+      .maybeSingle();
+    if (rep?.work_order_id) {
+      void autoCreateMaintenanceReminderFromCompletion(rep.work_order_id, nextMaintenanceDate);
+    }
   }
 
   revalidatePath("/work-orders");

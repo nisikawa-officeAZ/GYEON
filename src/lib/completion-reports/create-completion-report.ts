@@ -13,6 +13,7 @@ import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
+import { autoCreateMaintenanceReminderFromCompletion } from "@/lib/maintenance/auto-create-from-completion";
 
 function str(formData: FormData, key: string): string | null {
   return (formData.get(key) as string | null)?.trim() || null;
@@ -33,6 +34,7 @@ export async function createCompletionReport(formData: FormData) {
   const reportDate      = str(formData, "report_date")     ?? new Date().toISOString().slice(0, 10);
   const customerMessage = str(formData, "customer_message");
   const internalMemo    = str(formData, "internal_memo");
+  const nextMaintenanceDate = str(formData, "next_maintenance_date");
 
   const supabase = await createClient();
 
@@ -61,6 +63,7 @@ export async function createCompletionReport(formData: FormData) {
       report_date:      reportDate,
       customer_message: customerMessage || null,
       internal_memo:    internalMemo   || null,
+      next_maintenance_date: nextMaintenanceDate,
       is_shared:        false,
     })
     .select("id")
@@ -70,6 +73,10 @@ export async function createCompletionReport(formData: FormData) {
     console.error("[createCompletionReport] error:", error?.message);
     return { error: error?.message ?? "Failed to create report." };
   }
+
+  // Phase 4 Sprint 1 — auto-create a maintenance reminder when the report qualifies
+  // (has a next_maintenance_date). Deduped + non-blocking; never fails the report.
+  void autoCreateMaintenanceReminderFromCompletion(workOrderId, nextMaintenanceDate);
 
   revalidatePath("/work-orders");
   return { success: true, id: newReport.id };
