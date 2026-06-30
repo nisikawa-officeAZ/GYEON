@@ -46,12 +46,19 @@ export async function sendQueuedLineItem(
     return { outcome: "failed", error: "LINE user_id missing" };
   }
 
-  // Mark as processing (prevents concurrent double-processing).
-  await supabase
+  // Atomically claim the item (only if still "scheduled") so two concurrent processors
+  // cannot both send it. If no row is claimed, another processor already took it — skip.
+  const { data: claimed } = await supabase
     .from("line_notification_queue")
     .update({ status: "processing", updated_at: now })
     .eq("id",        item.id)
-    .eq("dealer_id", dealerId);
+    .eq("dealer_id", dealerId)
+    .eq("status",    "scheduled")
+    .select("id")
+    .maybeSingle();
+  if (!claimed) {
+    return { outcome: "failed", error: "別プロセスが処理中のため送信をスキップしました" };
+  }
 
   const logId = await createPendingLog(supabase, dealerId, {
     customer_id:      item.customer_id,

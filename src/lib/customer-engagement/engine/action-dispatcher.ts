@@ -58,11 +58,9 @@ export class EngagementActionDispatcherImpl implements EngagementActionDispatche
       }
 
       case "schedule_maintenance_reminder": {
-        const lineResult = await validateLineActionReadiness(action, context);
-        if (lineResult.status !== "ready" || !lineResult.payload) {
-          return skipped(action, lineResult.reason ?? "LINE条件が満たされていません");
-        }
-        // Phase 4 Sprint 5: create a maintenance_reminders row (Sprint 1 infra).
+        // Scheduling a maintenance reminder does NOT require LINE connectivity — the
+        // reminder's own pipeline handles delivery later. The per-action required_feature
+        // gate above already applies. Create the maintenance_reminders row directly.
         return runMaintenanceReminderAction(action, context);
       }
 

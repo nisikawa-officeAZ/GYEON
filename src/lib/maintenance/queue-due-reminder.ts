@@ -59,6 +59,27 @@ export async function queueDueReminderToLine(
 
   const body = r.message_body ?? r.message_title ?? "メンテナンス通知";
 
+  // Idempotency at insert time: if a (non-cancelled) queue item already exists for this
+  // reminder (e.g. a prior run inserted it but failed to persist line_queue_id), link to
+  // it instead of creating a duplicate.
+  const { data: existingQ } = await supabase
+    .from("line_notification_queue")
+    .select("id")
+    .eq("dealer_id",   dealerId)
+    .eq("customer_id", r.customer_id)
+    .neq("status",     "cancelled")
+    .contains("payload", { reminder_id: r.id })
+    .limit(1)
+    .maybeSingle();
+  if (existingQ) {
+    await supabase
+      .from("maintenance_reminders")
+      .update({ status: "queued", line_queue_id: existingQ.id, updated_at: now })
+      .eq("id",        r.id)
+      .eq("dealer_id", dealerId);
+    return "skipped";
+  }
+
   // Create a queue-READY record (NOT sent here).
   const { data: queueItem, error: qErr } = await supabase
     .from("line_notification_queue")
@@ -82,11 +103,16 @@ export async function queueDueReminderToLine(
 
   if (qErr || !queueItem) return "failed";
 
-  await supabase
+  const { error: linkErr } = await supabase
     .from("maintenance_reminders")
     .update({ status: "queued", line_queue_id: queueItem.id, updated_at: now })
     .eq("id",        r.id)
     .eq("dealer_id", dealerId);
+  if (linkErr) {
+    // Queue item created but linking failed — surface it (no longer silent). The
+    // insert-time dedup above prevents a duplicate queue item on the next run.
+    console.error("[queueDueReminderToLine] reminder link update failed:", linkErr.message);
+  }
 
   return "queued";
 }

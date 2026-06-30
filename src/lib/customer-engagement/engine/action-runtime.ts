@@ -77,6 +77,18 @@ async function alreadyQueued(
   return false;
 }
 
+// Map an engagement outcome to a value allowed by the activity_logs.action CHECK
+// constraint (created|updated|deleted|generated_pdf|archived_pdf|sent_line|scheduled|
+// completed|paid|cancelled). The precise engagement status is preserved in metadata.
+function activityActionFor(
+  action: EngagementAction,
+  status: "completed" | "failed" | "skipped",
+): string {
+  if (status !== "completed") return "cancelled";                 // skipped / failed
+  if (action.type === "schedule_maintenance_reminder") return "scheduled";
+  return "sent_line";                                             // LINE enqueue
+}
+
 async function audit(
   supabase: SupabaseClient,
   context: EngagementContext,
@@ -86,20 +98,23 @@ async function audit(
   extra?: Record<string, unknown>,
 ): Promise<void> {
   try {
+    // entity_type / action MUST satisfy the activity_logs CHECK constraints.
+    // Engagement is customer-scoped → entity_type "customer", entity_id = customer_id.
     await supabase.from("activity_logs").insert({
       dealer_id:   context.dealer_id,
-      entity_type: "engagement",
-      entity_id:   context.job_id ?? context.customer_id,
+      entity_type: "customer",
+      entity_id:   context.customer_id,
       customer_id: context.customer_id,
-      action:      `${context.event_type}:${action.type}:${status}`,
+      action:      activityActionFor(action, status),
       title:       `エンゲージメント: ${action.id}`,
       description: message,
       metadata: {
-        trace_id:    context.trace_id,
-        event_type:  context.event_type,
-        action_id:   action.id,
-        action_type: action.type,
-        status,
+        engagement:        true,
+        trace_id:          context.trace_id,
+        event_type:        context.event_type,
+        action_id:         action.id,
+        action_type:       action.type,
+        engagement_status: status,
         ...extra,
       },
     });
