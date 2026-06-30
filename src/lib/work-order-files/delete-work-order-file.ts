@@ -11,10 +11,14 @@
 import { revalidatePath }  from "next/cache";
 import { createClient }    from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 const STORAGE_BUCKET = "work-order-files";
 
 export async function deleteWorkOrderFile(fileId: string) {
+  const auth = await requireStaffCapability("delete");
+  if ("error" in auth) return auth;
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "No active dealer membership." };
 

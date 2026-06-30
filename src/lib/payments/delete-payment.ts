@@ -4,10 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { recalculateInvoicePayment } from "./recalculate-invoice-payment";
 import { createAuditLog } from "@/lib/audit/audit";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 export async function deletePayment(
   id: string
 ): Promise<{ error: string } | { success: true }> {
+  const auth = await requireStaffCapability("delete");
+  if ("error" in auth) return auth;
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
 

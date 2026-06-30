@@ -5,8 +5,12 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { InvoiceItemInput, calculateInvoiceTotals, lineTotal } from "./invoice-types";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { createActivityLog } from "@/lib/activity/activity-log";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 export async function createInvoice(fd: FormData): Promise<{ error: string } | { success: true; id: string }> {
+  const auth = await requireStaffCapability("finance");
+  if ("error" in auth) return auth;
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
 
@@ -130,6 +134,9 @@ export async function createInvoice(fd: FormData): Promise<{ error: string } | {
 export async function createInvoiceFromWorkOrder(
   workOrderId: string
 ): Promise<{ error: string } | { success: true; id: string }> {
+  const auth = await requireStaffCapability("finance");
+  if ("error" in auth) return auth;
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
 
@@ -226,6 +233,9 @@ export async function createInvoiceFromWorkOrder(
 export async function createInvoiceFromEstimate(
   estimateId: string
 ): Promise<{ error: string } | { success: true; id: string }> {
+  const auth = await requireStaffCapability("finance");
+  if ("error" in auth) return auth;
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
 

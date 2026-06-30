@@ -7,10 +7,14 @@ import { recalculateInvoicePayment } from "./recalculate-invoice-payment";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { createNotification } from "@/lib/notifications/notification";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 export async function createPayment(
   fd: FormData
 ): Promise<{ error: string } | { success: true; id: string }> {
+  const auth = await requireStaffCapability("finance");
+  if ("error" in auth) return auth;
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
 
