@@ -6,6 +6,7 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { ReservationDB, ReservationStatus, serviceTypeLabel } from "./reservation-types";
 import { getReservation } from "./get-reservation";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 interface UpdateReservationInput {
   status?: ReservationStatus;
@@ -14,6 +15,7 @@ interface UpdateReservationInput {
   end_time?: string | null;
   notes?: string | null;
   work_order_id?: string | null;
+  assigned_staff_id?: string | null;
   service_type?: string;
   customer_id?: string | null;
   vehicle_id?: string | null;
@@ -23,6 +25,9 @@ export async function updateReservation(
   id: string,
   input: UpdateReservationInput
 ): Promise<{ success: boolean; data?: ReservationDB; error?: string }> {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { success: false, error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "No active dealer membership." };
 
@@ -48,6 +53,28 @@ export async function updateReservation(
       .eq("dealer_id", dealer.dealer_id)
       .maybeSingle();
     if (!vehicle) return { success: false, error: "車両が見つかりません" };
+  }
+
+  // Validate work_order ownership if being changed
+  if (input.work_order_id) {
+    const { data: wo } = await supabase
+      .from("work_orders")
+      .select("id")
+      .eq("id", input.work_order_id)
+      .eq("dealer_id", dealer.dealer_id)
+      .maybeSingle();
+    if (!wo) return { success: false, error: "作業指示書が見つかりません" };
+  }
+
+  // Validate assigned staff ownership if being changed
+  if (input.assigned_staff_id) {
+    const { data: staff } = await supabase
+      .from("dealer_staff")
+      .select("id")
+      .eq("id", input.assigned_staff_id)
+      .eq("dealer_id", dealer.dealer_id)
+      .maybeSingle();
+    if (!staff) return { success: false, error: "担当スタッフが見つかりません" };
   }
 
   const { data, error } = await supabase
@@ -79,6 +106,9 @@ export async function updateReservation(
 export async function createWorkOrderFromReservation(
   reservationId: string
 ): Promise<{ success: boolean; work_order_id?: string; error?: string }> {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { success: false, error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "No active dealer membership." };
 

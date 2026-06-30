@@ -7,10 +7,14 @@ import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number"
 import { ReservationDB, ReservationStatus, ReservationServiceType } from "./reservation-types";
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { createNotification } from "@/lib/notifications/notification";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
+import { resolveBookingNotificationOptIn } from "./booking-notification";
 
 interface CreateReservationInput {
   customer_id?: string | null;
   vehicle_id?: string | null;
+  work_order_id?: string | null;
+  assigned_staff_id?: string | null;
   reservation_date: string;
   start_time?: string | null;
   end_time?: string | null;
@@ -22,6 +26,9 @@ interface CreateReservationInput {
 export async function createReservation(
   input: CreateReservationInput
 ): Promise<{ success: boolean; data?: ReservationDB; error?: string }> {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { success: false, error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "No active dealer membership." };
 
@@ -50,6 +57,28 @@ export async function createReservation(
     if (!vehicle) return { success: false, error: "車両が見つかりません" };
   }
 
+  // Validate work_order ownership (optional — used for reminder/work-order linkage)
+  if (input.work_order_id) {
+    const { data: wo } = await supabase
+      .from("work_orders")
+      .select("id")
+      .eq("id", input.work_order_id)
+      .eq("dealer_id", did)
+      .maybeSingle();
+    if (!wo) return { success: false, error: "作業指示書が見つかりません" };
+  }
+
+  // Validate assigned staff ownership (optional — staff assignment readiness)
+  if (input.assigned_staff_id) {
+    const { data: staff } = await supabase
+      .from("dealer_staff")
+      .select("id")
+      .eq("id", input.assigned_staff_id)
+      .eq("dealer_id", did)
+      .maybeSingle();
+    if (!staff) return { success: false, error: "担当スタッフが見つかりません" };
+  }
+
   const reservation_number = await getNextDocumentNumber("reservation");
 
   const { data, error } = await supabase
@@ -57,8 +86,10 @@ export async function createReservation(
     .insert({
       dealer_id:          did,
       reservation_number: reservation_number ?? null,
-      customer_id:        input.customer_id  ?? null,
-      vehicle_id:         input.vehicle_id   ?? null,
+      customer_id:        input.customer_id       ?? null,
+      vehicle_id:         input.vehicle_id        ?? null,
+      work_order_id:      input.work_order_id     ?? null,
+      assigned_staff_id:  input.assigned_staff_id ?? null,
       reservation_date:   input.reservation_date,
       start_time:         input.start_time   ?? null,
       end_time:           input.end_time     ?? null,
@@ -96,6 +127,14 @@ export async function createReservation(
     entity_type: "reservation",
     entity_id:   data.id,
   });
+
+  // Booking notification opt-in (prepared gate only — no LINE/email send this sprint).
+  // Default is OFF, so this block is intentionally inert; a future sprint enqueues the
+  // booking notification here when the dealer has opted in.
+  const notifyOptIn = await resolveBookingNotificationOptIn();
+  if (notifyOptIn) {
+    // Future sprint: enqueue a booking notification. Inert this sprint by design.
+  }
 
   return { success: true, data: data as unknown as ReservationDB };
 }
