@@ -9,7 +9,7 @@ import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 export async function createInvoice(fd: FormData): Promise<{ error: string } | { success: true; id: string }> {
   const auth = await requireStaffCapability("finance");
-  if ("error" in auth) return auth;
+  if ("error" in auth) return { error: auth.error };
 
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
@@ -135,7 +135,7 @@ export async function createInvoiceFromWorkOrder(
   workOrderId: string
 ): Promise<{ error: string } | { success: true; id: string }> {
   const auth = await requireStaffCapability("finance");
-  if ("error" in auth) return auth;
+  if ("error" in auth) return { error: auth.error };
 
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
@@ -234,7 +234,7 @@ export async function createInvoiceFromEstimate(
   estimateId: string
 ): Promise<{ error: string } | { success: true; id: string }> {
   const auth = await requireStaffCapability("finance");
-  if ("error" in auth) return auth;
+  if ("error" in auth) return { error: auth.error };
 
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };

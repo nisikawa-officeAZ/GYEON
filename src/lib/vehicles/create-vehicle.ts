@@ -11,6 +11,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 function str(formData: FormData, key: string): string | null {
   return (formData.get(key) as string | null)?.trim() || null;
@@ -24,6 +25,9 @@ function num(formData: FormData, key: string): number | null {
 }
 
 export async function createVehicle(formData: FormData) {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "ディーラー認証に失敗しました" };
 

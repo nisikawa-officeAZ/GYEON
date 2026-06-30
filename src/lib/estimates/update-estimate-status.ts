@@ -12,6 +12,7 @@ import { createClient }      from "@/lib/supabase/server";
 import { getCurrentDealer }  from "@/lib/auth/get-current-dealer";
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { estimateStatusLabel, type EstimateStatus } from "./estimate-types";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 // Canonical (lowercase) statuses a user may transition an estimate to.
 // NOTE: this is a "use server" module — only the async action may be exported.
@@ -24,6 +25,9 @@ function isAllowedEstimateStatus(value: string): value is EstimateStatusInput {
 }
 
 export async function updateEstimateStatus(estimateId: string, status: string) {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "No active dealer membership." };
 

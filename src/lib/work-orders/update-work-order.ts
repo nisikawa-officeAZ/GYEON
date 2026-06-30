@@ -10,6 +10,7 @@
 import { revalidatePath }   from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 import { WorkOrderStatus }  from "./work-order-types";
 import { createEngagementEvent }   from "@/lib/customer-engagement/context";
 import { EngagementWorkflowRuntime } from "@/lib/customer-engagement/engine/runtime";
@@ -19,6 +20,9 @@ function str(formData: FormData, key: string): string | null {
 }
 
 export async function updateWorkOrder(workOrderId: string, formData: FormData) {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "No active dealer membership." };
 

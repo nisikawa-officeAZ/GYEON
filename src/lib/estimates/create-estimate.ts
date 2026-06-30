@@ -15,6 +15,7 @@ import { EstimateCategory } from "./estimate-types";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { calculateEstimateTotals } from "@/lib/pricing/estimate-totals";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 interface ItemInput {
   category:              EstimateCategory;
@@ -43,6 +44,9 @@ function num(formData: FormData, key: string, fallback = 0): number {
 }
 
 export async function createEstimate(formData: FormData) {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "ディーラー認証に失敗しました" };
 

@@ -17,7 +17,7 @@ const STORAGE_BUCKET = "work-order-files";
 
 export async function deleteWorkOrderFile(fileId: string) {
   const auth = await requireStaffCapability("delete");
-  if ("error" in auth) return auth;
+  if ("error" in auth) return { error: auth.error };
 
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "No active dealer membership." };

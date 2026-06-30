@@ -11,8 +11,12 @@ import { revalidatePath }     from "next/cache";
 import { createClient }       from "@/lib/supabase/server";
 import { getCurrentDealer }   from "@/lib/auth/get-current-dealer";
 import { createActivityLog }  from "@/lib/activity/activity-log";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 export async function updateCustomerNotes(customerId: string, notes: string) {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "No active dealer membership." };
 

@@ -11,7 +11,7 @@ export async function updatePayment(
   fd: FormData
 ): Promise<{ error: string } | { success: true }> {
   const auth = await requireStaffCapability("finance");
-  if ("error" in auth) return auth;
+  if ("error" in auth) return { error: auth.error };
 
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };

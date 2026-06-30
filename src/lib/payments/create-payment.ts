@@ -13,7 +13,7 @@ export async function createPayment(
   fd: FormData
 ): Promise<{ error: string } | { success: true; id: string }> {
   const auth = await requireStaffCapability("finance");
-  if ("error" in auth) return auth;
+  if ("error" in auth) return { error: auth.error };
 
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };

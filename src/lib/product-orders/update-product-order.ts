@@ -3,6 +3,7 @@
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { OrderStatus }      from "./product-order-types";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 // Dealers may only move orders along these paths.
 // Admin-only statuses (approved) and terminal states (cancelled) are blocked.
@@ -18,6 +19,9 @@ export async function updateProductOrderStatus(
   id:     string,
   status: OrderStatus,
 ): Promise<{ success: boolean; error?: string }> {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { success: false, error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "認証エラー" };
 
@@ -57,6 +61,9 @@ export async function updateProductOrderNotes(
   id:    string,
   notes: string | null,
 ): Promise<{ success: boolean; error?: string }> {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { success: false, error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "認証エラー" };
 

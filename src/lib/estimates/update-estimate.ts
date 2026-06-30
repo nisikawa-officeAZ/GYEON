@@ -13,6 +13,7 @@ import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { EstimateCategory } from "./estimate-types";
 import { calculateEstimateTotals } from "@/lib/pricing/estimate-totals";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 interface ItemInput {
   category:      EstimateCategory;
@@ -36,6 +37,9 @@ function num(formData: FormData, key: string, fallback = 0): number {
 }
 
 export async function updateEstimate(estimateId: string, formData: FormData) {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "No active dealer membership." };
 

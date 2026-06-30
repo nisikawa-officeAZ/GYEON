@@ -10,7 +10,7 @@ export async function deletePayment(
   id: string
 ): Promise<{ error: string } | { success: true }> {
   const auth = await requireStaffCapability("delete");
-  if ("error" in auth) return auth;
+  if ("error" in auth) return { error: auth.error };
 
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
