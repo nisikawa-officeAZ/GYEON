@@ -136,6 +136,31 @@ To enumerate the platform's features, their scope, current status, components, d
 - **Security Considerations:** Dealer-scoped.
 - **Future Expansion:** External calendar sync — Future.
 
+### 7.14.1 Calendar Day Time-Axis Management — MANDATORY FUTURE REQUIREMENT (added 2026-06-30; NOT yet implemented)
+
+> **Status: Mandatory future requirement for the calendar/reservation workflow. Documented
+> only — not implemented. This does NOT change the current Phase 5 Sprint 3 (notification
+> observability) scope.**
+
+- **Date click opens a day view:** clicking a date on the calendar must open or display that
+  day's **time-axis schedule** (a single-day, time-of-day view).
+- **Time slots:** the day view must show **time slots** along a time axis.
+- **Reservation positioning:** reservations must be **positioned by their start time and end
+  time** (reservations carry `reservation_date`, `start_time`, `end_time`).
+- **Availability visibility:** users must be able to see **available vs occupied** time
+  ranges at a glance.
+- **Future capability — create from slot:** the implementation should support **creating a
+  reservation from a selected time slot** (pre-filling date + start/end from the chosen slot).
+- **Future capability — overlap detection:** the implementation should support **detecting
+  overlapping reservations** (same dealer; optionally same assigned staff/resource).
+- **Workflow ownership:** this requirement belongs to the **calendar/reservation workflow**
+  (`/calendar`, `/reservations`, `reservations`), is **dealer-scoped** (`dealer_id` always
+  from `getCurrentDealer()`, never from client), and must preserve RLS assumptions.
+- **Implementation note (future):** the existing `reservations` columns
+  (`reservation_date`, `start_time`, `end_time`, `assigned_staff_id`, `status`) already
+  support time-axis positioning and overlap checks; any additional fields would require a
+  separately-approved migration when this requirement is scheduled.
+
 ## 7.15 Work Orders
 - **Purpose:** Execute and track service work.
 - **Scope:** Work orders and attachments.
