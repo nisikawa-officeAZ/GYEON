@@ -177,6 +177,41 @@ Scope guardrails honored: no schema change, no migration, no production deploy, 
 
 Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. Customer/vehicle data never overwritten automatically; every OCR result still requires explicit user confirmation; no AI-learning functionality introduced. Sprint 1 orchestration + duplicate-detection core preserved. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
 
+### Sprint 6 — Phase 2 Integration QA & Stabilization — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `fix: phase2 integration stabilization` (09138fd) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Phase 2 | 🟡 Ready for closure review (not yet closed) |
+| Phase 3 | 🔴 Not started |
+
+**Verified work:**
+- Customer Management flow verified.
+- Vehicle Management flow verified.
+- OCR registration flow verified.
+- Duplicate customer detection verified.
+- Duplicate vehicle detection verified.
+- Existing customer / vehicle selection flow verified.
+- Register / Update decision flow verified.
+- Navigation integration verified (Customers ↔ Vehicles ↔ OCR review ↔ OCR history).
+
+**Three integration bugs found and fixed:**
+1. Wizard — stale `existingCustomerId` after adopting a duplicate then navigating back (fixed with an `adoptedCustomerFromDup` flag + reset on re-entry).
+2. Customer list 業者/個人 filter broken — `get-customers.ts` did not select `is_business` (added `is_business`, `trade_discount_pct`, `credit_terms`).
+3. Wizard — confirm customer card could vanish for an adopted duplicate absent from the page snapshot (added fallback to the duplicate-detection result).
+
+**Known limitations (recorded):**
+- `model_code` (型式指定番号) is captured but not persisted — no DB column exists (would require a future migration).
+- Vehicle "紐付きなし" filter always returns 0 because `vehicles.customer_id` is NOT NULL.
+- Duplicate detection / list filtering remain client-side over dealer-scoped, page-loaded data (not server-paginated).
+- OCR correction history shows the corrected result, not a raw-vs-corrected field diff.
+
+Scope guardrails honored: documentation/verification + bug fixes only — no new features, no schema change, no migration, no UI redesign, no production deploy, no merge to main. dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged. **Phase 2 is ready for closure review but NOT closed; Phase 3 not started.**
+
 ---
 
 ## 2. Current Phase
