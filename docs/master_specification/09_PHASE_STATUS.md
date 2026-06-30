@@ -224,6 +224,56 @@ Scope guardrails honored: documentation/verification + bug fixes only — no new
 
 ---
 
+## 1c. Phase 3 — Estimate & Work Flow
+
+Approved Architecture Plan: consolidation / flow-wiring / hardening / QA of an already-implemented chain (no greenfield build). Sprints below are on feature branch `fix/branding-schema-block`; not merged to main, not deployed.
+
+### Sprint 1 — Estimate Workflow Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed / Committed / Pushed | ✅ `feat: phase3 sprint1 estimate workflow foundation` (04b928d) |
+| Typecheck / Build | ✅ passed | Lint | N/A |
+
+**Summary:** Verified customer/vehicle selection, new-estimate flow, and existing customer↔vehicle linkage; implemented Estimate Status management (`updateEstimateStatus` dealer-scoped action + permission-gated `EstimateStatusControl`); verified navigation and RLS on estimate tables. No schema change.
+
+### Sprint 2 — Service Selection Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed / Committed / Pushed | ✅ `feat: phase3 sprint2 service selection foundation` (3a0c8e8) |
+| Typecheck / Build | ✅ passed | Lint | N/A |
+
+**Summary:** Canonical Service Category model (`src/lib/estimates/service-categories.ts`) as single source of truth (Coating, PPF, Window Film, Maintenance, Car Wash + pre-existing Room Cleaning/Other); wizard wired to it backward-compatibly; multi-service-in-one-estimate and combination readiness (Coating+PPF, Coating+Window, PPF+Window, Maintenance+Car Wash) verified. Wheel/Tire intentionally excluded (require new spec). No schema change.
+
+### Sprint 3 — Price Engine Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase3 sprint3 price engine foundation` (2d10afb) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Typecheck | ✅ passed |
+| Build | ✅ passed |
+| Lint | N/A (no lint script in repo) |
+| Sprint 4 | 🔴 Not started |
+
+**Completed work:**
+- Price Engine foundation — `src/lib/pricing/estimate-totals.ts` (server-usable, matches existing engine convention).
+- Dealer price rules foundation — applied via submitted estimate-level discount (business-customer trade discount per 05 §5.5/§5.7).
+- Discount calculation — estimate-level discount clamped to [0, subtotal]; per-line discount_rate applied.
+- Tax calculation — `tax_amount = floor(taxable × tax_rate%)`, server-computed.
+- Estimate total calculation — subtotal / discount / tax / grand total over all line items (multi-service).
+- Price summary UI — existing `EstimateSummary` reflects the server-authoritative totals (no redesign).
+- Server-side total validation — `create-estimate` and `update-estimate` recompute and persist totals from submitted line items; client subtotal/tax/total are fallback only.
+- Sprint 2 service selection integration — multi-category wizard items flow into the server recompute.
+
+**Known limitation:** the estimate-level `discount_amount` is currently taken as submitted and then clamped; future refinement may introduce stricter discount-rule sources (server-side derivation of dealer/coupon discount components).
+
+Scope guardrails honored: no schema change, no migration, no UI redesign, no production deploy, no merge to main. dealer_id always from `getCurrentDealer()`; RLS mandatory; server-side calculation authoritative, client calc preview-only. **Sprint 4 not started.**
+
+---
+
 ## 2. Current Phase
 
 **PC / Mobile UI Separation — Phase 1 (in progress).**
