@@ -219,3 +219,96 @@ export async function createInvoiceFromWorkOrder(
 
   return { success: true, id: inv.id };
 }
+
+// Phase 3 Sprint 5 — Estimate → Invoice transition (mirrors createInvoiceFromWorkOrder).
+// Pre-populates an invoice from an estimate's items; totals are recomputed
+// server-side. Dealer-scoped; dealer_id never accepted from client.
+export async function createInvoiceFromEstimate(
+  estimateId: string
+): Promise<{ error: string } | { success: true; id: string }> {
+  const dealer = await getCurrentDealer();
+  if (!dealer) return { error: "認証エラー" };
+
+  const supabase = await createClient();
+
+  // Fetch estimate + items (dealer-scoped; totals are server-authoritative).
+  const { data: est, error: estErr } = await supabase
+    .from("estimates")
+    .select(`
+      id, customer_id, vehicle_id, estimate_number, title, tax_rate, discount_amount,
+      estimate_items (
+        category, item_name, description, quantity, unit_price, discount_rate, line_total, sort_order
+      )
+    `)
+    .eq("id", estimateId)
+    .eq("dealer_id", dealer.dealer_id)
+    .single();
+
+  if (estErr || !est) return { error: "見積が見つかりません" };
+
+  const items = (est.estimate_items as unknown as {
+    category: string; item_name: string; description: string | null;
+    quantity: number; unit_price: number; discount_rate: number;
+    line_total: number; sort_order: number;
+  }[]) ?? [];
+
+  const discount_amount = est.discount_amount ?? 0;
+  const tax_rate        = est.tax_rate ?? 10;
+  const totals = calculateInvoiceTotals(items, discount_amount, tax_rate, 0);
+
+  const resolvedInvoiceNumber = (await getNextDocumentNumber("invoice")) || null;
+
+  const { data: inv, error: invErr } = await supabase
+    .from("invoices")
+    .insert({
+      dealer_id:      dealer.dealer_id,
+      customer_id:    est.customer_id ?? null,
+      vehicle_id:     est.vehicle_id ?? null,
+      estimate_id:    est.id,
+      invoice_number: resolvedInvoiceNumber,
+      status:         "draft",
+      title:          est.title ?? "請求書",
+      issue_date:     new Date().toISOString().slice(0, 10),
+      discount_amount,
+      tax_rate,
+      paid_amount:    0,
+      subtotal:       totals.subtotal,
+      tax_amount:     totals.tax_amount,
+      total:          totals.total,
+      balance_due:    totals.balance_due,
+    })
+    .select("id")
+    .single();
+
+  if (invErr || !inv) return { error: invErr?.message ?? "請求書の作成に失敗しました" };
+
+  if (items.length > 0) {
+    const itemRows = items.map((item) => ({
+      invoice_id:    inv.id,
+      dealer_id:     dealer.dealer_id,
+      category:      item.category,
+      item_name:     item.item_name,
+      description:   item.description || null,
+      quantity:      item.quantity,
+      unit_price:    item.unit_price,
+      discount_rate: item.discount_rate,
+      line_total:    lineTotal(item.quantity, item.unit_price, item.discount_rate),
+      sort_order:    item.sort_order,
+    }));
+    const { error: itemsErr } = await supabase.from("invoice_items").insert(itemRows);
+    if (itemsErr) {
+      await supabase.from("invoices").delete().eq("id", inv.id);
+      return { error: "明細の保存に失敗しました" };
+    }
+  }
+
+  void createActivityLog({
+    entity_type: "invoice",
+    entity_id:   inv.id,
+    customer_id: est.customer_id ?? null,
+    action:      "created",
+    title:       `見積から請求書を作成: ${est.estimate_number ?? est.id.slice(0, 8)}`,
+  });
+
+  return { success: true, id: inv.id };
+}

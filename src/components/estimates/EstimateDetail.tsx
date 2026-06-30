@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   EstimateDB,
   EstimateItemDB,
@@ -8,6 +10,7 @@ import {
   estimateCustomerName,
   estimateVehicleLabel,
 } from "@/lib/estimates/estimate-types";
+import { createInvoiceFromEstimate } from "@/lib/invoices/create-invoice";
 import EstimateSummary from "./EstimateSummary";
 import EstimateStatusControl from "./EstimateStatusControl";
 
@@ -46,6 +49,25 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
 
   const customerName = estimateCustomerName(customer);
   const vehicleLabel = estimateVehicleLabel(vehicle);
+
+  // Phase 3 Sprint 5 — Estimate → Invoice (one-click, mirrors the WO transition).
+  const router = useRouter();
+  const [invError, setInvError] = useState<string | null>(null);
+  const [invPending, startInvoice] = useTransition();
+  const isApproved = estimate.status === "approved" || estimate.status === "APPROVED";
+
+  function handleCreateInvoice() {
+    setInvError(null);
+    startInvoice(async () => {
+      const result = await createInvoiceFromEstimate(estimate.id);
+      if ("error" in result) {
+        setInvError(result.error);
+        return;
+      }
+      onClose();
+      router.push("/invoices");
+    });
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
@@ -86,6 +108,15 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
                 施工指示作成
               </button>
             )}
+            {isApproved && (
+              <button
+                onClick={handleCreateInvoice}
+                disabled={invPending}
+                className="text-xs font-medium bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors"
+              >
+                {invPending ? "作成中..." : "請求書作成"}
+              </button>
+            )}
             <button
               onClick={onClose}
               className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
@@ -97,6 +128,12 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
 
         {/* Body */}
         <div className="p-6 flex flex-col gap-4">
+
+          {invError && (
+            <div className="px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10">
+              <p className="text-xs text-red-400">{invError}</p>
+            </div>
+          )}
 
           {/* Customer & Vehicle */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
