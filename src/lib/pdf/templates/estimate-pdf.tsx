@@ -14,12 +14,13 @@ import {
 import { EstimateDB } from "@/lib/estimates/estimate-types";
 import { StampBlock } from "@/lib/pdf/stamp-block";
 import type { PdfStamp } from "@/lib/stamp/stamp-types";
+import { registerPdfFonts } from "@/lib/pdf/register-fonts";
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSansJP",
     fontSize: 10,
     color: "#111827",
     backgroundColor: "#ffffff",
@@ -36,7 +37,7 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 14,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#1d4ed8",
     marginBottom: 4,
   },
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
   },
   docTitle: {
     fontSize: 22,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#111827",
     textAlign: "right",
     marginBottom: 6,
@@ -70,7 +71,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#6b7280",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -125,7 +126,7 @@ const styles = StyleSheet.create({
   colUnit:     { width: 70, fontSize: 8, textAlign: "right" },
   colTotal:    { width: 70, fontSize: 8, textAlign: "right" },
   tableHeaderText: {
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#6b7280",
     fontSize: 8,
   },
@@ -151,8 +152,8 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     marginTop: 4,
   },
-  grandTotalLabel: { fontSize: 11, fontFamily: "Helvetica-Bold", color: "#111827" },
-  grandTotalValue: { fontSize: 11, fontFamily: "Helvetica-Bold", color: "#111827" },
+  grandTotalLabel: { fontSize: 11, fontFamily: "NotoSansJP-Bold", color: "#111827" },
+  grandTotalValue: { fontSize: 11, fontFamily: "NotoSansJP-Bold", color: "#111827" },
   // Notes
   notesBox: {
     backgroundColor: "#f9fafb",
@@ -185,8 +186,8 @@ const styles = StyleSheet.create({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function yen(n: number): string {
-  return "¥" + n.toLocaleString("en-US");
+function yen(n: number | null | undefined): string {
+  return "¥" + (Number.isFinite(n) ? (n as number) : 0).toLocaleString("en-US");
 }
 
 function formatDate(iso: string | null): string {
@@ -355,5 +356,6 @@ export async function renderEstimatePdf(
   estimate: EstimateDB,
   stamp?: PdfStamp | null,
 ): Promise<Buffer> {
+  registerPdfFonts();
   return await renderToBuffer(<EstimateDocument estimate={estimate} stamp={stamp} />);
 }

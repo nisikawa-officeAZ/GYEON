@@ -13,10 +13,11 @@ import {
 import { CompletionReportFullData } from "@/lib/completion-reports/completion-report-types";
 import { StampBlock } from "@/lib/pdf/stamp-block";
 import type { PdfStamp } from "@/lib/stamp/stamp-types";
+import { registerPdfFonts } from "@/lib/pdf/register-fonts";
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSansJP",
     fontSize: 10,
     color: "#111827",
     backgroundColor: "#ffffff",
@@ -32,7 +33,7 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 14,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#1d4ed8",
     marginBottom: 4,
   },
@@ -43,7 +44,7 @@ const styles = StyleSheet.create({
   },
   docTitle: {
     fontSize: 20,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#111827",
     textAlign: "right",
     marginBottom: 6,
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#6b7280",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
   colUnit:     { width: 70, fontSize: 8, textAlign: "right" },
   colTotal:    { width: 70, fontSize: 8, textAlign: "right" },
   tableHeaderText: {
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#6b7280",
     fontSize: 8,
   },
@@ -173,13 +174,13 @@ const styles = StyleSheet.create({
   },
   nextMaintenanceLabel: {
     fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#166534",
   },
   nextMaintenanceValue: {
     fontSize: 9,
     color: "#15803d",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
   },
   footer: {
     position: "absolute",
@@ -369,7 +370,7 @@ function CompletionReportDocument({ data, stamp }: CompletionReportDocumentProps
               <View style={{ alignItems: "flex-end", marginTop: 8 }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", width: 160, paddingVertical: 3 }}>
                   <Text style={{ fontSize: 9, color: "#6b7280" }}>合計</Text>
-                  <Text style={{ fontSize: 9, fontFamily: "Helvetica-Bold", color: "#111827" }}>{yen(estimate.total)}</Text>
+                  <Text style={{ fontSize: 9, fontFamily: "NotoSansJP-Bold", color: "#111827" }}>{yen(estimate.total)}</Text>
                 </View>
               </View>
             )}
@@ -408,5 +409,6 @@ export async function renderCompletionReportPdf(
   report: CompletionReportFullData,
   stamp?: PdfStamp | null,
 ): Promise<Buffer> {
+  registerPdfFonts();
   return await renderToBuffer(<CompletionReportDocument data={report} stamp={stamp} />);
 }
