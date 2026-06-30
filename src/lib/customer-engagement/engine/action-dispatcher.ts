@@ -10,6 +10,7 @@
 import { checkFeatureAccess }           from "@/lib/plans/can-use-feature";
 import { validateLineActionReadiness }   from "./line-dry-run";
 import { validateAgentNotifyReadiness }  from "./agent-dry-run";
+import { runLineAction, runMaintenanceReminderAction } from "./action-runtime";
 import type {
   EngagementActionDispatcher,
   ActionDispatchResult,
@@ -39,17 +40,12 @@ export class EngagementActionDispatcherImpl implements EngagementActionDispatche
       case "send_line_message":
       case "request_review": {
         const lineResult = await validateLineActionReadiness(action, context);
-        if (lineResult.status !== "ready") {
+        if (lineResult.status !== "ready" || !lineResult.payload) {
           return skipped(action, lineResult.reason ?? "LINE条件が満たされていません");
         }
-        // All gates passed. Sprint 10H: defer actual send to Phase G-B.
-        return {
-          action_id:     action.id,
-          action_type:   action.type,
-          status:        "skipped",
-          scheduled_for: lineResult.payload?.scheduled_for,
-          error:         "LINE送信はPhase G-Bで実装予定です（全ての事前条件は確認済み）",
-        };
+        // Phase 4 Sprint 5: enqueue to line_notification_queue (line_connected-gated,
+        // deduped, audited). Actual delivery is handled by the Sprint 3 queue processor.
+        return runLineAction(action, context, lineResult.payload);
       }
 
       case "notify_agent": {
@@ -63,16 +59,11 @@ export class EngagementActionDispatcherImpl implements EngagementActionDispatche
 
       case "schedule_maintenance_reminder": {
         const lineResult = await validateLineActionReadiness(action, context);
-        if (lineResult.status !== "ready") {
+        if (lineResult.status !== "ready" || !lineResult.payload) {
           return skipped(action, lineResult.reason ?? "LINE条件が満たされていません");
         }
-        return {
-          action_id:     action.id,
-          action_type:   action.type,
-          status:        "skipped",
-          scheduled_for: lineResult.payload?.scheduled_for,
-          error:         "メンテナンスリマインダーのスケジュールはPhase G-Bで実装予定です（全ての事前条件は確認済み）",
-        };
+        // Phase 4 Sprint 5: create a maintenance_reminders row (Sprint 1 infra).
+        return runMaintenanceReminderAction(action, context);
       }
 
       case "update_customer_tag":

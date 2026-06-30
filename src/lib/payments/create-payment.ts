@@ -8,6 +8,8 @@ import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number"
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { createNotification } from "@/lib/notifications/notification";
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
+import { createEngagementEvent } from "@/lib/customer-engagement/context";
+import { EngagementWorkflowRuntime } from "@/lib/customer-engagement/engine/runtime";
 
 export async function createPayment(
   fd: FormData
@@ -83,6 +85,26 @@ export async function createPayment(
     entity_type: "payment",
     entity_id:   payment.id,
   });
+
+  // Phase 4 Sprint 5 — emit PAYMENT_COMPLETED for the payment engagement flow.
+  // Only for completed payments tied to a customer; dealer_id resolved server-side.
+  const paymentStatus = (fd.get("status") as string) || "completed";
+  if (paymentStatus === "completed" && inv.customer_id) {
+    const pm = (fd.get("payment_method") as string) || "cash";
+    const method = (["cash", "card", "transfer", "other"].includes(pm) ? pm : "other") as
+      "cash" | "card" | "transfer" | "other";
+    const event = await createEngagementEvent("PAYMENT_COMPLETED", inv.customer_id, {
+      payment_id: payment.id,
+      invoice_id,
+      amount,
+      currency:   "JPY",
+      method,
+      paid_at:    (fd.get("payment_date") as string) || new Date().toISOString(),
+    });
+    if (event) {
+      await new EngagementWorkflowRuntime().dispatch(event);
+    }
+  }
 
   return { success: true, id: payment.id };
 }

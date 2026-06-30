@@ -11,6 +11,8 @@ import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
+import { createEngagementEvent } from "@/lib/customer-engagement/context";
+import { EngagementWorkflowRuntime } from "@/lib/customer-engagement/engine/runtime";
 
 function str(formData: FormData, key: string): string | null {
   return (formData.get(key) as string | null)?.trim() || null;
@@ -78,6 +80,16 @@ export async function createCustomer(formData: FormData) {
     action:      "created",
     title:       `顧客を作成: ${newCustomer.last_name}${newCustomer.first_name ? ` ${newCustomer.first_name}` : ""}`.trim(),
   });
+
+  // Phase 4 Sprint 5 — emit CUSTOMER_CREATED for the welcome engagement flow.
+  // dealer_id is resolved server-side inside createEngagementEvent; runtime never throws.
+  const event = await createEngagementEvent("CUSTOMER_CREATED", newCustomer.id, {
+    customer_name: `${newCustomer.last_name}${newCustomer.first_name ? ` ${newCustomer.first_name}` : ""}`.trim(),
+    has_line:      !!str(formData, "line_user_id"),
+  });
+  if (event) {
+    await new EngagementWorkflowRuntime().dispatch(event);
+  }
 
   revalidatePath("/customers");
   return { success: true, customerId: newCustomer.id };

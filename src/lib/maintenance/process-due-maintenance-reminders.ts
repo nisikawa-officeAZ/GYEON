@@ -11,6 +11,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { queueDueReminderToLine, type DueReminderRow } from "./queue-due-reminder";
+import { createEngagementEvent } from "@/lib/customer-engagement/context";
+import { EngagementWorkflowRuntime } from "@/lib/customer-engagement/engine/runtime";
 
 export interface ProcessRemindersResult {
   processed: number;
@@ -36,7 +38,7 @@ export async function processDueMaintenanceReminders(): Promise<
   const { data: reminders, error: fetchErr } = await supabase
     .from("maintenance_reminders")
     .select(`
-      id, customer_id, line_queue_id, scheduled_send_at, message_title, message_body, reminder_type,
+      id, customer_id, vehicle_id, due_date, line_queue_id, scheduled_send_at, message_title, message_body, reminder_type,
       customers ( line_connected, line_user_id )
     `)
     .eq("dealer_id", did)
@@ -55,11 +57,34 @@ export async function processDueMaintenanceReminders(): Promise<
   };
 
   for (const raw of reminders) {
-    const r = raw as unknown as DueReminderRow;
+    const r = raw as unknown as DueReminderRow & {
+      vehicle_id: string | null; due_date: string | null; reminder_type: string;
+    };
     result.processed++;
     try {
       const outcome = await queueDueReminderToLine(supabase, did, r, now);
-      if (outcome === "queued")       result.queued++;
+      if (outcome === "queued") {
+        result.queued++;
+        // Phase 4 Sprint 5 — emit MAINTENANCE_DUE for the maintenance engagement flow.
+        // The flow's LINE message is cross-deduped against this reminder's just-queued
+        // item (payload.reminder_id === job_id), so it never double-sends.
+        const dueDate = r.due_date ?? now.slice(0, 10);
+        const overdueDays = Math.max(
+          0, Math.floor((Date.now() - new Date(dueDate).getTime()) / 86_400_000),
+        );
+        const event = await createEngagementEvent(
+          "MAINTENANCE_DUE",
+          r.customer_id,
+          {
+            maintenance_id: r.id,
+            due_date:       dueDate,
+            service_type:   r.reminder_type ?? "maintenance",
+            overdue_days:   overdueDays,
+          },
+          { vehicle_id: r.vehicle_id ?? undefined, job_id: r.id },
+        );
+        if (event) await new EngagementWorkflowRuntime().dispatch(event);
+      }
       else if (outcome === "skipped") result.skipped++;
       else {
         result.failed++;
