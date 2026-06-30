@@ -11,9 +11,10 @@ interface CustomerTableProps {
   customers:        CustomerDB[];
   onEdit?:          (customer: CustomerDB) => void;
   onStartEstimate?: (customer: CustomerDB) => void;
+  onView?:          (customer: CustomerDB) => void;
 }
 
-export default function CustomerTable({ customers, onEdit, onStartEstimate }: CustomerTableProps) {
+export default function CustomerTable({ customers, onEdit, onStartEstimate, onView }: CustomerTableProps) {
   if (customers.length === 0) {
     return (
       <div className="bg-[#1e293b] rounded-xl shadow-lg p-10 text-center">
@@ -53,7 +54,17 @@ export default function CustomerTable({ customers, onEdit, onStartEstimate }: Cu
                   }`}
                 >
                   <td className="px-4 py-3 font-medium text-slate-100 whitespace-nowrap">
-                    {displayName || "—"}
+                    {onView ? (
+                      <button
+                        type="button"
+                        onClick={() => onView(c)}
+                        className="text-slate-100 hover:text-blue-300 transition-colors text-left"
+                      >
+                        {displayName || "—"}
+                      </button>
+                    ) : (
+                      displayName || "—"
+                    )}
                   </td>
                   <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
                     {kanaName || "—"}
@@ -75,6 +86,15 @@ export default function CustomerTable({ customers, onEdit, onStartEstimate }: Cu
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1.5">
+                      {onView && (
+                        <button
+                          type="button"
+                          onClick={() => onView(c)}
+                          className="text-xs text-blue-400 hover:text-blue-200 hover:bg-blue-950/30 border border-blue-800/40 px-2.5 py-2 rounded transition-colors whitespace-nowrap min-h-[36px]"
+                        >
+                          詳細
+                        </button>
+                      )}
                       {onStartEstimate && (
                         <button
                           type="button"
