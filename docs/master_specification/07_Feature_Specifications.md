@@ -191,6 +191,45 @@ To enumerate the platform's features, their scope, current status, components, d
   **separately-approved migration / schema** when scheduled; it then composes with the
   existing `reservations` time fields (§7.14.1) to derive time blocks.
 
+### 7.14.3 Store Settings — Service Scheduling Configuration — MANDATORY FUTURE REQUIREMENT (added 2026-06-30; NOT yet implemented)
+
+> **Status: Mandatory future requirement for **Store Settings**. Documented only — not
+> implemented. Superset of §7.14.2; depends on §7.14.1 (time-axis scheduling). Does NOT
+> change any current sprint scope (incl. Phase 5 Sprint 3 notification observability).**
+
+Each service / work item must support **scheduling configuration** in Store Settings.
+
+**Required configuration fields (per service/work item):**
+- Estimated duration (**hours**).
+- Estimated duration (**days**) for multi-day work.
+- **Default working hours per day**.
+- **Buffer time before** service (optional).
+- **Buffer time after** service (optional).
+- Whether the service **blocks the work bay**.
+- Whether the service **blocks the assigned technician**.
+- **Default reservation color**.
+- Whether the service is **available on weekends**.
+- Whether the service **requires manual confirmation** before reservation.
+
+**Scheduling behavior:**
+- Reservation length must be **calculated automatically** from the configured duration
+  (hours/days), incorporating before/after buffer time and default working hours per day.
+- **Multiple selected services** must produce **one combined reservation duration**.
+- **Multi-day services** must **occupy all applicable calendar days** on the time-axis view (§7.14.1).
+- Future **conflict detection** must use these **calculated occupied periods** (overlap /
+  overbooking; bay and technician blocking inform what counts as a conflict).
+- Future **staff/resource allocation** (technician, work bay) must use these scheduling settings.
+
+**Constraints:**
+- **Store-specific configuration only**, **dealer-scoped**: `dealer_id` always from
+  `getCurrentDealer()`, **never** from client input; **RLS assumptions preserved**.
+
+**Implementation status:** Documentation only — no implementation, no migrations, no schema
+changes, no current-sprint scope change. The configuration fields are **new per-dealer
+settings data** and would require a **separately-approved migration / schema** when this
+requirement is scheduled; they then compose with §7.14.1 (time-axis) and §7.14.2 (duration)
+to derive reservation time blocks, occupied ranges, and conflict/overbooking detection.
+
 ## 7.15 Work Orders
 - **Purpose:** Execute and track service work.
 - **Scope:** Work orders and attachments.
