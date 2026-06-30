@@ -1,12 +1,50 @@
 "use client";
 
-import { useState }     from "react";
+import { useState, useMemo } from "react";
+import { useRouter }    from "next/navigation";
 import { VehicleDB }    from "@/lib/vehicles/vehicle-types";
 import { CustomerDB }   from "@/lib/customers/customer-types";
 import PageTitle        from "@/components/ui/PageTitle";
 import VehicleSearch    from "@/components/vehicles/VehicleSearch";
+import type { VehicleSearchValues } from "@/components/vehicles/VehicleSearch";
+import VehicleFilters   from "@/components/vehicles/VehicleFilters";
+import type { InspectionFilter, LinkFilter } from "@/components/vehicles/VehicleFilters";
 import VehicleTable     from "@/components/vehicles/VehicleTable";
 import VehicleForm      from "@/components/vehicles/VehicleForm";
+import { deriveVehicleStatus } from "@/lib/vehicles/vehicle-status";
+
+const EMPTY_SEARCH: VehicleSearchValues = { maker: "", model: "", plate: "" };
+
+function norm(s: string): string {
+  return s.replace(/[\s　]+/g, "").toLowerCase();
+}
+
+function matchesVehicle(
+  v: VehicleDB,
+  search: VehicleSearchValues,
+  inspection: InspectionFilter,
+  link: LinkFilter,
+): boolean {
+  const maker = search.maker.trim().toLowerCase();
+  if (maker && !(v.maker ?? "").toLowerCase().includes(maker)) return false;
+
+  const model = search.model.trim().toLowerCase();
+  if (model && !(v.model ?? "").toLowerCase().includes(model)) return false;
+
+  const plate = norm(search.plate);
+  if (plate && !norm(v.plate_number ?? "").includes(plate)) return false;
+
+  if (inspection !== "all") {
+    const key = deriveVehicleStatus(v).key;
+    const matchKey = inspection === "none" ? "unknown" : inspection;
+    if (key !== matchKey) return false;
+  }
+
+  if (link === "linked"   && !v.customer_id) return false;
+  if (link === "unlinked" &&  v.customer_id) return false;
+
+  return true;
+}
 
 type ModalState =
   | { mode: "none" }
@@ -20,8 +58,22 @@ interface VehiclesClientProps {
 
 export default function VehiclesClient({ vehicles, customers }: VehiclesClientProps) {
   const [modal, setModal] = useState<ModalState>({ mode: "none" });
+  const router = useRouter();
+
+  const [search,     setSearch]     = useState<VehicleSearchValues>(EMPTY_SEARCH);
+  const [inspection, setInspection] = useState<InspectionFilter>("all");
+  const [link,       setLink]       = useState<LinkFilter>("all");
+
+  const filtered = useMemo(
+    () => vehicles.filter((v) => matchesVehicle(v, search, inspection, link)),
+    [vehicles, search, inspection, link],
+  );
 
   const closeModal = () => setModal({ mode: "none" });
+
+  function handleView(vehicle: VehicleDB) {
+    router.push(`/vehicles/${vehicle.id}`);
+  }
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -38,12 +90,29 @@ export default function VehiclesClient({ vehicles, customers }: VehiclesClientPr
 
       {/* Search */}
       <div className="mb-4">
-        <VehicleSearch />
+        <VehicleSearch
+          values={search}
+          onChange={(field, value) => setSearch((s) => ({ ...s, [field]: value }))}
+          onClear={() => setSearch(EMPTY_SEARCH)}
+        />
+      </div>
+
+      {/* Filters */}
+      <div className="mb-4">
+        <VehicleFilters
+          inspection={inspection}
+          link={link}
+          onInspection={setInspection}
+          onLink={setLink}
+          total={vehicles.length}
+          shown={filtered.length}
+        />
       </div>
 
       {/* Table */}
       <VehicleTable
-        vehicles={vehicles}
+        vehicles={filtered}
+        onView={handleView}
         onEdit={(v) => setModal({ mode: "edit", vehicle: v })}
       />
 
