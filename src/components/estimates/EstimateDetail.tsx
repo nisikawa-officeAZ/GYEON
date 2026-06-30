@@ -9,6 +9,7 @@ import {
   estimateVehicleLabel,
 } from "@/lib/estimates/estimate-types";
 import EstimateSummary from "./EstimateSummary";
+import EstimateStatusControl from "./EstimateStatusControl";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -63,7 +64,10 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
             {estimate.title && (
               <p className="text-xs text-slate-400 mt-0.5">{estimate.title}</p>
             )}
-            <p className="text-xs text-slate-500 mt-0.5">見積詳細</p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="text-xs text-slate-500">見積詳細</span>
+              <EstimateStatusControl estimateId={estimate.id} currentStatus={estimate.status} />
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Link
