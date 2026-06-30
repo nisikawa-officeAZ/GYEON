@@ -127,6 +127,54 @@ To enumerate the platform's features, their scope, current status, components, d
 - **Security Considerations:** Dealer-scoped; permission-gated per business rules.
 - **Future Expansion:** Deeper logistics — see §7.30 (Future).
 
+### 7.13.1 Flexible B2B Ordering & Shipping Destinations — MANDATORY FUTURE REQUIREMENT (added 2026-06-30; NOT yet implemented)
+
+> **Status: Mandatory future requirement for B2B product ordering. Documented only — not
+> implemented. Does NOT change any current sprint scope. Relates to the Enterprise
+> Distribution Platform direction (`ENTERPRISE_DISTRIBUTION_PLATFORM_SPEC.md`).**
+
+The ordering system must distinguish these **independent** parties/attributes on an order
+(they must NOT be assumed equal):
+- **Purchasing entity** (who places the order).
+- **Billing entity** (who is invoiced / pays).
+- **Ordering store** (the store originating the order).
+- **Ordering user** (the staff member placing the order).
+- **Shipping destination type** (see below).
+- **Recipient / store / customer address** (where goods ship).
+
+**Required order patterns (must all be supportable):**
+1. Headquarters orders → ships to **headquarters**.
+2. Headquarters orders → ships to a **branch store**.
+3. Branch store orders → ships to the **same branch store**.
+4. Branch store orders → ships to **another store**.
+5. Headquarters or branch store orders → ships **directly to an end customer**.
+
+**Shipping destination types:**
+- Headquarters
+- Own store
+- Other company store
+- End-customer direct shipment
+- Manually entered address (only if permitted)
+
+**Required behavior:**
+- Do **NOT** assume the ordering location and the delivery destination are the same.
+- Do **NOT** assume the payer/billing entity and the shipping recipient are the same.
+- Support **company-level and store-level ordering permissions** (who may order, who may
+  ship where, who may bill whom).
+- Support **direct-shipment rules and restrictions** (e.g., which roles/stores may ship to an
+  end customer; which destinations are allowed).
+- Keep all data **dealer/company-scoped**; `dealer_id` (and any company/store identifier) is
+  always resolved **server-side from `getCurrentDealer()`** and **never** accepted from
+  client input. Preserve RLS assumptions.
+
+**Implementation status:** Documentation only — no implementation, no migrations, no schema
+changes, no current-sprint scope change. Separating purchasing/billing/ordering-store/
+shipping-destination is **new order data** (likely new fields/relations on `product_orders`
+and a destination model: headquarters/store/customer/manual address) and **company/store
+hierarchy + ordering permissions**, all requiring **separately-approved migration / schema**
+and permission-model work when scheduled. Composes with the Enterprise Distribution Platform
+spec and §7.30 (Future logistics).
+
 ## 7.14 Calendar & Reservations
 - **Purpose:** Schedule jobs and manage reservations.
 - **Scope:** Calendar views; reservation records.
