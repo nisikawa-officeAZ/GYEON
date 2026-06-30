@@ -59,7 +59,7 @@ interface Props {
   initialQueue:      LineNotificationQueueDB[];
   lineStats:         LineStats;
   msgStats:          LineMessageStats;
-  queueStats:        { scheduled: number; failed: number };
+  queueStats:        { scheduled: number; processing: number; sent: number; failed: number };
 }
 
 export default function LinePageClient({
@@ -81,7 +81,7 @@ export default function LinePageClient({
     const [freshLogs, freshFailed, freshQueue] = await Promise.all([
       getLineMessageLogs({ limit: 50 }),
       getLineMessageLogs({ status: "failed", limit: 30 }),
-      getLineNotificationQueue({ status: ["scheduled", "failed"], limit: 50 }),
+      getLineNotificationQueue({ status: ["scheduled", "processing", "sent", "failed"], orderByRecent: true, limit: 50 }),
     ]);
     setLogs(freshLogs);
     setFailedLogs(freshFailed);
@@ -167,6 +167,16 @@ export default function LinePageClient({
           label="キュー失敗"
           value={queueStats.failed}
           accent={queueStats.failed > 0 ? "red" : undefined}
+        />
+        <StatCard
+          label="キュー処理中"
+          value={queueStats.processing}
+          accent={queueStats.processing > 0 ? "amber" : undefined}
+        />
+        <StatCard
+          label="キュー送信済み"
+          value={queueStats.sent}
+          accent="green"
         />
       </div>
 
