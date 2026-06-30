@@ -4,20 +4,16 @@ import { processLineNotificationQueueForCron } from "@/lib/line/process-line-que
 export const dynamic = "force-dynamic";
 
 /**
- * Phase 4 Sprint 3 — Cron endpoint: POST /api/admin/cron/process-line-queue
+ * Cron endpoint: /api/admin/cron/process-line-queue
  *
- * Sends DUE LINE notification queue items (maintenance reminders, etc.) via the LINE
- * push API. Credential-gated per dealer: items for dealers without valid LINE
- * credentials are skipped (never sent). Idempotent / retry-safe.
+ * Recovers stalled items (reaper + retry, Phase 5 Sprint 1) then sends DUE LINE
+ * notification queue items via the LINE push API. Credential-gated per dealer.
  *
  * Secret-protected: requires `Authorization: Bearer <CRON_SECRET>`. Fail-closed —
- * if CRON_SECRET is unset, all calls are rejected. Production scheduling (Vercel Cron
- * / external scheduler) is intentionally NOT configured here (out of Sprint 3 scope).
- *
- * Vercel cron.json example (NOT applied here):
- *   { "crons": [{ "path": "/api/admin/cron/process-line-queue", "schedule": "*\/5 * * * *" }] }
+ * if CRON_SECRET is unset, all calls are rejected. Scheduled by Vercel Cron (GET, which
+ * Vercel sends with the Bearer secret); external schedulers / manual triggers may POST.
  */
-export async function POST(req: NextRequest) {
+async function handle(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const auth   = req.headers.get("authorization");
 
@@ -33,7 +29,12 @@ export async function POST(req: NextRequest) {
     sent:      result.sent,
     failed:    result.failed,
     skipped:   result.skipped,
+    reaped:    result.reaped,
+    requeued:  result.requeued,
     errors:    result.errors,
     ts:        new Date().toISOString(),
   });
 }
+
+export async function GET(req: NextRequest)  { return handle(req); }
+export async function POST(req: NextRequest) { return handle(req); }

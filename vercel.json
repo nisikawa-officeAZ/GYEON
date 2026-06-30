@@ -3,6 +3,14 @@
     {
       "path": "/api/admin/cron/downgrade-trials",
       "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/admin/cron/process-due-maintenance",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/admin/cron/process-line-queue",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

@@ -16,7 +16,9 @@ export const dynamic = "force-dynamic";
  * Vercel cron.json example (NOT applied here):
  *   { "crons": [{ "path": "/api/admin/cron/process-due-maintenance", "schedule": "0 * * * *" }] }
  */
-export async function POST(req: NextRequest) {
+// Vercel Cron invokes via GET (with Authorization: Bearer $CRON_SECRET); external
+// schedulers / manual triggers may use POST. Both share the same secret-guarded handler.
+async function handle(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const auth   = req.headers.get("authorization");
 
@@ -36,3 +38,6 @@ export async function POST(req: NextRequest) {
     ts:        new Date().toISOString(),
   });
 }
+
+export async function GET(req: NextRequest)  { return handle(req); }
+export async function POST(req: NextRequest) { return handle(req); }

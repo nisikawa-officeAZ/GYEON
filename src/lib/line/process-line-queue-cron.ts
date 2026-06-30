@@ -14,12 +14,15 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendQueuedLineItem, type QueuedLineItem } from "./send-queued-line-item";
+import { recoverStalledQueueItems } from "./recover-queue";
 
 export interface ProcessQueueCronResult {
   processed: number;
   sent:      number;
   failed:    number;
   skipped:   number;   // dealers without valid LINE credentials
+  reaped:    number;   // stuck "processing" rows recovered to "scheduled"
+  requeued:  number;   // retryable "failed" rows recovered to "scheduled"
   errors:    string[];
 }
 
@@ -27,8 +30,15 @@ export async function processLineNotificationQueueForCron(): Promise<ProcessQueu
   const supabase = createAdminClient();
   const now = new Date().toISOString();
   const result: ProcessQueueCronResult = {
-    processed: 0, sent: 0, failed: 0, skipped: 0, errors: [],
+    processed: 0, sent: 0, failed: 0, skipped: 0, reaped: 0, requeued: 0, errors: [],
   };
+
+  // Recovery first (Phase 5 Sprint 1): reap stuck "processing" and requeue retryable
+  // "failed" items back to "scheduled" so the loop below re-picks them. Reuses existing
+  // fields; each row keeps its own dealer_id.
+  const recovery = await recoverStalledQueueItems(supabase, now);
+  result.reaped   = recovery.reaped;
+  result.requeued = recovery.requeued;
 
   // Due scheduled items across ALL dealers.
   const { data: items, error } = await supabase
