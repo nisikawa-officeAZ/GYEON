@@ -41,6 +41,9 @@ export async function getCustomers(): Promise<CustomerDB[]> {
       line_display_name,
       line_picture_url,
       line_connected,
+      is_business,
+      trade_discount_pct,
+      credit_terms,
       deleted_at,
       created_at,
       updated_at

@@ -120,13 +120,21 @@ export default function CustomerVehicleOnboardingWizard({
   // Sprint 5 — when set, the user chose to UPDATE an existing vehicle instead of
   // creating a new one (no automatic overwrite — they are routed to edit it).
   const [adoptedVehicleId,   setAdoptedVehicleId]   = useState<string | null>(null);
+  // Sprint 6 fix — true when the existing customer was ADOPTED from the confirm-step
+  // duplicate list (vs. chosen on the customer-select screen). Used to clear a stale
+  // adoption when re-entering the confirm step (see goToConfirm).
+  const [adoptedCustomerFromDup, setAdoptedCustomerFromDup] = useState(false);
 
   const router = useRouter();
 
   const isNewCustomer = existingCustomerId === null;
 
+  // Resolve the selected customer from the page snapshot, falling back to the
+  // duplicate-detection results (which may include records not in the snapshot).
   const selectedCustomer = existingCustomerId
-    ? (customers.find(c => c.id === existingCustomerId) ?? null)
+    ? (customers.find(c => c.id === existingCustomerId)
+        ?? customerDup.find(c => c.id === existingCustomerId)
+        ?? null)
     : null;
 
   const filteredCustomers = customerSearch.trim()
@@ -195,6 +203,13 @@ export default function CustomerVehicleOnboardingWizard({
     setCustomerDup([]);
     setVehicleDup([]);
     setAdoptedVehicleId(null);
+    // Sprint 6 fix — clear any prior confirm-step customer adoption so it is
+    // re-evaluated against fresh duplicate results. A customer chosen on the
+    // customer-select screen (not flagged) is preserved.
+    if (adoptedCustomerFromDup) {
+      setExistingCustomerId(null);
+      setAdoptedCustomerFromDup(false);
+    }
     void runDuplicateChecks();
     push("confirm");
   }
@@ -203,6 +218,7 @@ export default function CustomerVehicleOnboardingWizard({
   // creating a new one. Reuses the existing `existingCustomerId` path.
   function useExistingCustomer(id: string) {
     setExistingCustomerId(id);
+    setAdoptedCustomerFromDup(true);
     setError(null);
   }
 
@@ -300,6 +316,7 @@ export default function CustomerVehicleOnboardingWizard({
                 type="button"
                 onClick={() => {
                   setExistingCustomerId(c.id);
+                  setAdoptedCustomerFromDup(false);
                   push("vehicle-form");
                 }}
                 className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-slate-700 hover:border-blue-500/50 hover:bg-blue-950/20 transition-colors text-left"
@@ -318,6 +335,7 @@ export default function CustomerVehicleOnboardingWizard({
               type="button"
               onClick={() => {
                 setExistingCustomerId(null);
+                setAdoptedCustomerFromDup(false);
                 push("customer-method");
               }}
               className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -856,7 +874,7 @@ export default function CustomerVehicleOnboardingWizard({
                   {!isNewCustomer && (
                     <button
                       type="button"
-                      onClick={() => setExistingCustomerId(null)}
+                      onClick={() => { setExistingCustomerId(null); setAdoptedCustomerFromDup(false); }}
                       className="self-start text-[10px] text-slate-400 hover:text-slate-200 underline mt-0.5"
                     >
                       新規顧客の作成に戻す
