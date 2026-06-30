@@ -274,6 +274,33 @@ Scope guardrails honored: no schema change, no migration, no UI redesign, no pro
 
 ---
 
+## 1d. Phase 3.5 — Authorization Hardening
+
+> **PHASE 3.5 STATUS: ✅ CLOSED — Architect Approved (2026-06-30)**
+>
+> Server-side authorization hardening for Issue F (intra-tenant staff-permission enforcement gap on business/finance writes). Feature branch `fix/branding-schema-block`; not merged to main, not deployed to production.
+
+| Item | Status |
+|------|--------|
+| Tier 1 — finance / payment / invoice / destructive writes | ✅ Completed (`fix: harden tier1 server authorization`, f2b6afe) |
+| Tier 2 — general business writes | ✅ Completed (`fix: harden tier2 business write authorization`, cb351c7) |
+| Tier 3 — management authorization | ✅ Reviewed & accepted (already enforced via `requireRole`/`requireAdmin`; no code change) |
+| Onboarding residual | ✅ Completed (`fix: harden onboarding setup authorization`, 98c537d) |
+| Typecheck | ✅ passed |
+| Build | ✅ passed |
+| Feature branch pushed | ✅ |
+| Production deployed | ❌ No (not deployed) |
+
+**Summary:**
+- **Tier 1** — finance/payment/invoice and destructive delete actions hardened with a new shared guard `requireStaffCapability` (`src/lib/auth/require-staff-capability.ts`): invoice create/update + create-from-WO/Estimate and payment create/update → `"finance"`; payment/invoice/maintenance/work-order-file deletes → `"delete"`. Fail-closed; reuses `getCurrentStaff()` as the single source of truth.
+- **Tier 2** — general business writes (estimates, work orders, completion reports, customers, vehicles, product orders create/update) hardened with `requireStaffCapability("edit")`. (Inferred-return-type leakage from returning the guard object was fixed by returning a fresh `{ error }` literal.)
+- **Tier 3** — management authorization (staff management, role assignment, permission/dealer-settings management) was found to be **already** server-side enforced via the pre-existing `requireRole` (owner / owner|manager) and `requireAdmin` guards; reviewed and **accepted with no code change** (adding owner-only `"manage"` would have regressed manager access). `requireRole` and `requireStaffCapability` were intentionally NOT consolidated, and the owner/manager policy was NOT changed (architect decision).
+- **Onboarding** — all four onboarding write actions (`saveOnboardingStep`, `completeOnboarding`, `skipOnboarding`, `resetOnboarding`) now guarded with `requireRole(["owner","manager"])` (try/catch preserving the existing return shape); first-time owner setup unaffected. `getOnboardingStatus` remains a dealer-scoped read.
+
+Scope guardrails honored: application-layer enforcement only — no DB schema change, no migration, no RLS change, no middleware change; dealer_id always from `getCurrentDealer()`; Tier 1/Tier 2 behavior preserved; no merge to main; no production deploy. **Issue F closed. Phase 4 not started.**
+
+---
+
 ## 2. Current Phase
 
 **PC / Mobile UI Separation — Phase 1 (in progress).**
