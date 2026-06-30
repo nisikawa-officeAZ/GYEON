@@ -42,6 +42,7 @@
 | 25 | `055_audit_logs.sql` | audit_logs immutable table + RLS | □ | | | □ | |
 | 26 | `058_subscription_license_management.sql` | subscription_plans + dealer_subscriptions tables | □ | | | □ | |
 | 27 | `059_dealer_onboarding.sql` | Onboarding + document settings columns on dealer_settings | □ | | | □ | |
+| 28 | `088_dealer_soft_delete.sql` | Add dealers.deleted_at + partial active index (Super Admin soft delete) | ✅ | 2026-06-30 | Applied / Verified / Closed | ✅ | **Development only.** Schema, existing data, RLS, soft-delete, restore, typecheck, build all PASSED. Idempotent (ADD COLUMN / CREATE INDEX IF NOT EXISTS). |
 
 ---
 
@@ -247,6 +248,7 @@ Use this section to record each migration session:
 
 | Date | Session By | Migrations Applied | Environment | Notes |
 |---|---|---|---|---|
+| 2026-06-30 | Claude Code | `088_dealer_soft_delete.sql` | Development (DealerOS-Dev) | Applied & verified. dealers.deleted_at (timestamptz NULL) + dealers_not_deleted_idx confirmed. 3 dealer records unchanged. RLS (`dealers_select_own`) intact. Soft-delete & restore verified at DB level. typecheck + build passed. Status: CLOSED. Not merged to main, not deployed to production. |
 | | | | STAGING | |
 | | | | STAGING | |
 
