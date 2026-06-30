@@ -4,6 +4,11 @@ import withPWA from "@ducanh2912/next-pwa";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ['@react-pdf/renderer'],
+  // Bundle the local Japanese PDF fonts (M PLUS 1p, OFL) into the serverless functions
+  // that render PDFs, so registerPdfFonts() can read them from disk at runtime.
+  outputFileTracingIncludes: {
+    "/**": ["./src/lib/pdf/fonts/*.ttf"],
+  },
   experimental: {
     serverActions: {
       // iPhone 12MP photos average 6-8 MB. Allow up to 20 MB to handle
