@@ -353,6 +353,52 @@ campaign messaging remains Future Scope.
 
 ---
 
+## 1f. Estimate Completion Workstream
+
+> **ESTIMATE COMPLETION STATUS: ✅ CLOSED — Architect Approved (2026-06-30)**
+>
+> Production-readiness hardening of the end-to-end estimate flow (customer/vehicle/OCR →
+> service selection → pricing → PDF → edit/re-save → mobile). Application-layer only — NO
+> new tables, NO migrations, NO schema changes. Feature branch `fix/branding-schema-block`;
+> not merged to main, not deployed to production. (Ran concurrently with Phase 5 Sprint 1;
+> Phase 5 Sprints 2+ remain not started.)
+
+| Sprint | Scope | Status |
+|--------|-------|--------|
+| Sprint 1 | PDF reliability — Japanese font registered/applied across all PDF templates; null-safe render; signed-URL re-sign hardened (dealer-ownership gate) | ✅ Completed (77d89f3) |
+| Sprint 1 follow-up | Local font hardening — bundled M PLUS 1p TTF (OFL) preferred over CDN; env override kept; outputFileTracingIncludes | ✅ Completed (da566cb) |
+| Sprint 2 | Mobile estimate UX — responsive wizard grids, 16px inputs (iOS zoom fix), sticky one-handed nav; desktop preserved | ✅ Completed (cdc3b91) |
+| Sprint 3 | Calculation integrity — UI/edit/saved/PDF totals reconciled to one authoritative `calculateEstimateTotals`; over-discount clamp | ✅ Completed (4274a1e) |
+| Sprint 3 follow-up | Discount breakdown consistency — explicit clamp note in wizard + edit form; payable ¥0 shown clearly when over-discounted | ✅ Completed (821e4d0) |
+| Sprint 4 | OCR handoff completion — vehicle pre-fill fires on OCR apply for ALL flows; grade + inspection-expiry mapped; manual correction preserved | ✅ Completed (2de4ba8) |
+| Sprint 5 | Double-submit / duplicate-record guard — synchronous in-flight lock + permanent post-success lock on customer/vehicle/estimate creation | ✅ Completed (1ecd0b8) |
+| Sprint 6 | End-to-end production-readiness QA — full-flow adversarial review; no fixes required | ✅ Completed (QA pass; no code change) |
+
+**Final verification:**
+- End-to-End QA — ✅ PASS (no confirmed production blockers)
+- Typecheck — ✅ PASS (`npm run typecheck`)
+- Build — ✅ PASS (`npm run build`)
+- Lint — N/A (no `lint` script in the repo)
+
+**Production blockers remaining:** NONE.
+
+**Final commit:** `1ecd0b8` (Sprint 5; Sprint 6 QA required no code change).
+**Feature branch:** `fix/branding-schema-block` · **Merge to main:** ❌ Not performed · **Production deployment:** ❌ Not performed.
+
+**Architecture compliance:** No new tables, migrations, or schema changes; `dealer_id` always
+from `getCurrentDealer()` (or trusted DB rows), never from client; RLS preserved; PDF/OCR/LINE/
+cron/notification logic unchanged except the in-scope estimate fixes.
+
+**Deferred non-blocking improvements (Future Scope — NOT blockers, require architect approval):**
+- Optional minimum-one-service-item validation (today a ¥0 estimate with no items is valid per spec).
+- Optional vehicle field-level validation (a vehicle can currently be created with empty fields).
+- Optional server-side idempotency key for multi-tab / replayed-request safety (would require a
+  schema/column change).
+
+**Estimate Completion workstream closed.**
+
+---
+
 ## 2. Current Phase
 
 **PC / Mobile UI Separation — Phase 1 (in progress).**
