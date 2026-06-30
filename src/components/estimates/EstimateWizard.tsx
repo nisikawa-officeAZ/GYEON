@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { createCustomer }        from "@/lib/customers/create-customer";
 import { createVehicle }         from "@/lib/vehicles/create-vehicle";
 import { createEstimate }        from "@/lib/estimates/create-estimate";
@@ -184,6 +184,16 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   const screen = history[history.length - 1]!;
   const [error, setError]   = useState<string | null>(null);
   const [pending, startTx]  = useTransition();
+  // Double-submit guards (Estimate Completion Sprint 5):
+  //   submittingRef — synchronous in-flight lock; blocks re-entry into ANY create action
+  //     before the pending re-render can disable the button (rapid double-clicks / repeats).
+  //   submittedRef  — permanent lock set after a successful estimate save, so a completed
+  //     estimate can never be submitted twice (e.g. enabled-looking button before unmount).
+  const submittingRef = useRef(false);
+  const submittedRef  = useRef(false);
+  // Release the in-flight lock once the pending transition settles (success or error), so
+  // the next step's create can run. The post-success estimate lock is NOT released here.
+  useEffect(() => { if (!pending) submittingRef.current = false; }, [pending]);
 
   function push(s: Screen) { setHistory(h => [...h, s]); setError(null); }
   function pop()            { setHistory(h => h.length > 1 ? h.slice(0, -1) : h); setError(null); }
@@ -427,6 +437,8 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       push(nextScreen("step1", cats));
       return;
     }
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     startTx(async () => {
       const fd = new FormData();
       fd.set("last_name",       nc.last_name);
@@ -463,6 +475,8 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
 
   function handleStep4Next() {
     if (vMode === "create" && !vehicleId) {
+      if (submittingRef.current) return;
+      submittingRef.current = true;
       startTx(async () => {
         if (!customerId) { setError("顧客が未設定です"); return; }
         const fd = new FormData();
@@ -495,6 +509,9 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
 
   function handleSave() {
     if (!customerId) { setError("顧客が未設定です"); return; }
+    // Block double-submit and any re-submit after a successful save.
+    if (submittingRef.current || submittedRef.current) return;
+    submittingRef.current = true;
     const items = buildLineItems(serviceInputs);
 
     startTx(async () => {
@@ -538,6 +555,8 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       fd.set("items_json",      JSON.stringify(items));
       const r = await createEstimate(fd);
       if (r?.error) { setError(r.error); return; }
+      // Permanently lock further submits — the estimate is created (cannot submit twice).
+      submittedRef.current = true;
       onSuccess?.("estimateId" in r ? r.estimateId : undefined);
     });
   }
