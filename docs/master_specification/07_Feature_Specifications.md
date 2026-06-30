@@ -273,6 +273,47 @@ to derive reservation time blocks, occupied ranges, and conflict/overbooking det
   per-dealer settings data** requiring a **separately-approved migration / schema** (and,
   for GBP, OAuth + approved API access) when scheduled.
 
+### 7.14.5 Flexible Reservation Capacity & Manual Override — MANDATORY FUTURE REQUIREMENT (added 2026-06-30; NOT yet implemented)
+
+> **Status: Mandatory future requirement for the calendar/reservation workflow. Documented
+> only — not implemented. Refines the conflict-detection model referenced in §7.14.1 and
+> §7.14.3–§7.14.4. Does NOT change the current Calendar Time-Axis Sprint 2 scope.**
+
+**Business reality (capacity is flexible, not binary):**
+- Calendar availability must **NOT** be treated as a simple fully-available / fully-blocked rule.
+- Example: a coating job reserved **July 1–5** (plus optional buffer days) does **not** block
+  the whole shop — **other jobs may still be accepted** during that period.
+- The shop may handle **2–3 vehicles in parallel** depending on workload, space, and staff;
+  conflict detection must support this flexibility.
+
+**Required behavior:**
+- **Warn-first, not hard-block by default:** calendar conflicts should **warn** rather than
+  prevent booking by default.
+- **Hard blocking only when explicitly required** — by the service, the work bay, the
+  technician, or a store setting.
+- **Per-service configurable blocking behavior** (extends §7.14.3):
+  - **Blocks work bay**
+  - **Blocks technician**
+  - **Allows parallel work**
+  - **Requires manual confirmation**
+- **Permissioned manual override:** users with the appropriate permission may **manually
+  override** a conflict warning; the **override must require a reason** (recorded).
+- **Capacity-aware scheduling (future):** scheduling should consider **shop capacity, work
+  bays, technicians, and service duration** (§7.14.2/§7.14.3) when deciding warn vs block.
+- **Multi-day reservations must NOT automatically prevent all other reservations** during the
+  same period (they occupy days per §7.14.4 but do not exclusively lock the shop unless a
+  blocking flag requires it).
+
+**Constraints:**
+- **Dealer-scoped**: `dealer_id` always from `getCurrentDealer()`, **never** from client
+  input; **RLS assumptions preserved**. Override permission follows the existing capability
+  model (`06_USER_ROLES_AND_PERMISSIONS.md`).
+
+**Implementation status:** Documentation only — no implementation, no migrations, no schema
+changes, no current-sprint scope change. Per-service blocking flags, shop-capacity settings,
+and override-reason capture are **new settings/records** requiring a **separately-approved
+migration / schema** when scheduled; they then compose with §7.14.1–§7.14.4.
+
 ## 7.15 Work Orders
 - **Purpose:** Execute and track service work.
 - **Scope:** Work orders and attachments.
