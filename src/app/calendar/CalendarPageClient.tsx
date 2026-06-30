@@ -155,8 +155,13 @@ export default function CalendarPageClient({
   }
 
   function handleDayClick(date: string) {
-    setDefaultDate(date);
-    setModal("new");
+    // Calendar Time-Axis Sprint 1: clicking a date opens that day's time-axis (day) view.
+    // (Reservation creation remains available via the "+ 新規予約" button; creating from a
+    // selected time slot is a documented future requirement.) date is "YYYY-MM-DD"; parse as
+    // UTC midnight so currentDate.toISOString() yields the same date for the day-view filter.
+    setCurrentDate(new Date(date + "T00:00:00Z"));
+    setView("day");
+    loadReservations(date, date);
   }
 
   function handleReservationClick(r: ReservationDB) {

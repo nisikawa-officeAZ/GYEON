@@ -31,6 +31,18 @@ export default function CalendarDayView({ date, reservations, onReservationClick
 
   return (
     <div className="flex flex-col gap-0">
+      {/* Legend — distinguish occupied vs available time ranges */}
+      <div className="flex items-center gap-4 px-3 py-1.5 border-b border-slate-800 text-[10px] text-slate-500">
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-500/15 border border-emerald-500/30" />
+          空き時間
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-500" />
+          予約あり（占有）
+        </span>
+      </div>
+
       {/* All-day events */}
       {allDay.length > 0 && (
         <div className="border-b border-slate-800 p-2 flex flex-wrap gap-1">
@@ -64,8 +76,8 @@ export default function CalendarDayView({ date, reservations, onReservationClick
           ))}
         </div>
 
-        {/* Events column */}
-        <div className="relative" style={{ height: totalHeight }}>
+        {/* Events column — faint tint marks AVAILABLE time; colored blocks below are OCCUPIED */}
+        <div className="relative bg-emerald-500/5" style={{ height: totalHeight }}>
           {/* Hour lines */}
           {HOURS.map((h) => (
             <div
