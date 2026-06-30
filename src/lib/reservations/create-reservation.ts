@@ -8,7 +8,7 @@ import { ReservationDB, ReservationStatus, ReservationServiceType } from "./rese
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { createNotification } from "@/lib/notifications/notification";
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
-import { resolveBookingNotificationOptIn } from "./booking-notification";
+import { enqueueBookingNotification } from "./enqueue-booking-notification";
 
 interface CreateReservationInput {
   customer_id?: string | null;
@@ -128,12 +128,15 @@ export async function createReservation(
     entity_id:   data.id,
   });
 
-  // Booking notification opt-in (prepared gate only — no LINE/email send this sprint).
-  // Default is OFF, so this block is intentionally inert; a future sprint enqueues the
-  // booking notification here when the dealer has opted in.
-  const notifyOptIn = await resolveBookingNotificationOptIn();
-  if (notifyOptIn) {
-    // Future sprint: enqueue a booking notification. Inert this sprint by design.
+  // Phase 5 Sprint 2 — enqueue a transactional booking confirmation to the LINE queue.
+  // Non-blocking and best-effort (gated by opt-in + dealer LINE credentials + customer
+  // line_connected, deduped per reservation). Delivery is the existing credential-gated
+  // cron; this never blocks or fails reservation creation. dealer_id (did) is server-resolved.
+  if (input.customer_id) {
+    void enqueueBookingNotification(
+      supabase, did, data.id, input.customer_id,
+      input.reservation_date, input.start_time ?? null, input.service_type,
+    );
   }
 
   return { success: true, data: data as unknown as ReservationDB };

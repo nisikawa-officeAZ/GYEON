@@ -1,19 +1,31 @@
-// Phase 4 Sprint 4 — Booking notification opt-in readiness (PREPARATION ONLY).
+// Phase 5 Sprint 2 — Booking notification eligibility + message builder.
 //
-// This module prepares the opt-in GATE that a future sprint will consult before
-// sending a reservation/booking notification. No message is sent in this sprint
-// (reservation LINE/email sending is explicitly out of scope), and NO schema change
-// is made: there is currently no per-dealer/per-reservation opt-in column, so the
-// resolver returns the safe default (OFF). A future sprint may persist a per-dealer
-// flag (which would require a separately-approved migration) and read it here.
+// Opt-in WITHOUT a schema column: a dealer is "opted-in" to reservation booking
+// notifications when its plan enables auto notifications (checkFeatureAccess
+// "auto_notifications") — the same gate used for the maintenance follow-up. A persisted
+// PER-DEALER toggle remains Future Scope (would require a separately-approved migration).
+// Fail-safe OFF on any error, so nothing is ever auto-sent for ineligible dealers.
+
+import { checkFeatureAccess } from "@/lib/plans/can-use-feature";
 
 export const BOOKING_NOTIFICATION_DEFAULT_OPT_IN = false;
 
-/**
- * Resolve whether booking notifications are opted-in. Fail-safe OFF until a
- * persisted per-dealer flag exists. Returning false guarantees nothing is auto-sent.
- */
 export async function resolveBookingNotificationOptIn(): Promise<boolean> {
-  // Extension point (future, migration-gated): look up a per-dealer opt-in flag.
-  return BOOKING_NOTIFICATION_DEFAULT_OPT_IN;
+  try {
+    return await checkFeatureAccess("auto_notifications");
+  } catch {
+    return BOOKING_NOTIFICATION_DEFAULT_OPT_IN;
+  }
+}
+
+/** Pure builder for the transactional booking-confirmation text (no I/O). */
+export function buildBookingNotificationBody(input: {
+  reservationDate: string;
+  startTime?:      string | null;
+  serviceLabel:    string;
+}): string {
+  const when = input.startTime
+    ? `${input.reservationDate} ${input.startTime.slice(0, 5)}`
+    : input.reservationDate;
+  return `ご予約を承りました。\n日時: ${when}\nサービス: ${input.serviceLabel}\nご来店をお待ちしております。`;
 }
