@@ -5,6 +5,7 @@ import { createReservation } from "@/lib/reservations/create-reservation";
 import { updateReservation } from "@/lib/reservations/update-reservation";
 import { getCapacityPreview, type CapacityRecommendation } from "@/lib/reservations/get-capacity-preview";
 import type { RecommendationLevel } from "@/lib/capacity/capacity-types";
+import { recommendationEnLabel, recommendationLabel } from "@/lib/capacity/recommendation";
 import type { ReservationAdvice, ReasonSeverity } from "@/lib/capacity/reservation-advisor";
 import { getReservationStaffOptions, type ReservationStaffOption } from "@/lib/reservations/get-reservation-staff-options";
 import { logCapacityOverride, getLatestCapacityOverride, type CapacityOverrideRecord } from "@/lib/reservations/capacity-override-log";
@@ -419,15 +420,28 @@ export default function ReservationForm({
       {/* C2: soft recommendation + reason panel + suggested alternatives (never blocks). */}
       {advice && (
         <div className={`flex flex-col gap-1.5 rounded-lg px-3 py-2 border ${levelClasses(advice.level)}`}>
-          {/* Recommendation headline (C2.1) */}
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-semibold">推奨: {advice.headline}</span>
+          {/* C2.8: clear level badge + compact capacity summary */}
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold border ${levelClasses(advice.level)}`}>
+              {recommendationEnLabel(advice.level)} / {recommendationLabel(advice.level)}
+            </span>
             {advice.metrics.workshopPct !== null && (
               <span className="text-[11px]">
                 工房稼働 {advice.metrics.workshopPct}%{capacity?.confidence === "estimated" ? "（推定）" : ""}
               </span>
             )}
           </div>
+          {/* Compact capacity summary (one line; wraps on mobile) */}
+          {(advice.metrics.staff || advice.metrics.bay || advice.metrics.vehicle) && (
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-300">
+              {advice.metrics.staff && <span>スタッフ {advice.metrics.staff}</span>}
+              {advice.metrics.bay && <span>ベイ {advice.metrics.bay}</span>}
+              {advice.metrics.vehicle && <span>同時対応 {advice.metrics.vehicle}</span>}
+            </div>
+          )}
+          {advice.suggestedAlternatives.length > 0 && (
+            <span className="text-[10px] text-slate-400">{advice.headline}</span>
+          )}
 
           {/* Reason panel — WHY (C2.4) */}
           {advice.reasons.length > 0 && (

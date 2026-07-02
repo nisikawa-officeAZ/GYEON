@@ -35,6 +35,16 @@ export function recommendationLabel(level: RecommendationLevel): string {
   }
 }
 
+// Clear English labels for the four recommendation levels (C2.8).
+export function recommendationEnLabel(level: RecommendationLevel): string {
+  switch (level) {
+    case "available": return "Available";
+    case "limited":   return "Limited";
+    case "warning":   return "Warning";
+    case "high_load": return "High Load";
+  }
+}
+
 // Capacity color rules: Available=green, Limited=yellow, Warning=orange, High Load=red.
 export function levelDotClass(level: RecommendationLevel): string {
   switch (level) {
