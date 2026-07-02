@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { createReservation } from "@/lib/reservations/create-reservation";
 import { updateReservation } from "@/lib/reservations/update-reservation";
+import { getCapacityPreview } from "@/lib/reservations/get-capacity-preview";
 import {
   ReservationDB,
   ReservationStatus,
@@ -63,6 +64,33 @@ export default function ReservationForm({
 
   // Customer search filter
   const [custSearch, setCustSearch] = useState("");
+
+  // B4: soft capacity-warning preview (informational; never blocks saving).
+  const [capacityWarnings, setCapacityWarnings] = useState<string[]>([]);
+  const [requireReason, setRequireReason] = useState(false);
+  const [overrideReason, setOverrideReason] = useState(""); // acknowledged in UI only — not persisted (no schema)
+
+  useEffect(() => {
+    if (!date || !startTime || !endTime) {
+      setCapacityWarnings([]);
+      setRequireReason(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const res = await getCapacityPreview({
+        date,
+        start: startTime,
+        end: endTime,
+        excludeId: reservation?.id ?? null,
+      });
+      if (!cancelled) {
+        setCapacityWarnings(res.warnings);
+        setRequireReason(res.requireReason);
+      }
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [date, startTime, endTime, reservation?.id]);
 
   const filteredCustomers = custSearch
     ? customers.filter((c) => {
@@ -216,6 +244,30 @@ export default function ReservationForm({
           />
         </div>
       </div>
+
+      {/* B4: soft capacity warnings — informational only; saving is never blocked. */}
+      {capacityWarnings.length > 0 && (
+        <div className="flex flex-col gap-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2">
+          <span className="text-[11px] font-medium text-amber-300">キャパシティ警告（この予約は作成できます）</span>
+          <ul className="list-disc list-inside text-[11px] text-amber-200/90 flex flex-col gap-0.5">
+            {capacityWarnings.map((w, i) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
+          {requireReason && (
+            <div className="mt-1 flex flex-col gap-1">
+              <label className="text-[11px] text-amber-300">上書き理由（設定により入力が推奨されています）</label>
+              <textarea
+                value={overrideReason}
+                onChange={(e) => setOverrideReason(e.target.value)}
+                rows={2}
+                className="w-full bg-[#1e293b] border border-amber-500/40 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"
+                placeholder="重複を承知で予約する理由など"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Status (edit only) */}
       {isEdit && (

@@ -218,3 +218,39 @@ export function reconcileStaffCapacity(map: StaffCapacityMap, validStaffIds: Set
   }
   return out;
 }
+
+// ── Soft capacity warnings (Batch B4) ────────────────────────────────────────
+//
+// Pure: given how many EXISTING reservations overlap the selected time range and
+// the configured scheduling rules, return human-readable SOFT warnings. Never
+// blocks; returns [] when the conflict preference is off. No persistent staff/bay
+// assignment exists, so warnings are derived from the overlap count + config only.
+
+export function computeCapacityWarnings(overlapCount: number, settings: StaffCapacitySettings): string[] {
+  const { conflict } = settings.rules;
+  if (conflict.mode === "off") return [];
+
+  const warnings: string[] = [];
+  const projected = overlapCount + 1; // include the reservation being created/edited
+
+  if (
+    conflict.warn_capacity_exceeded &&
+    settings.capacity.simultaneous_vehicles !== null &&
+    projected > settings.capacity.simultaneous_vehicles
+  ) {
+    warnings.push(
+      `同時対応台数（${settings.capacity.simultaneous_vehicles}台）を超える可能性があります。この時間帯には既に${overlapCount}件の予約があります。`,
+    );
+  }
+
+  const activeBays = settings.capacity.work_bays.filter((b) => b.active).length;
+  if (conflict.warn_bay_overlap && activeBays > 0 && projected > activeBays) {
+    warnings.push(`稼働中の作業ベイ数（${activeBays}）を超える可能性があります。`);
+  }
+
+  if (conflict.warn_staff_overlap && overlapCount > 0) {
+    warnings.push(`選択した時間帯に重複する予約が${overlapCount}件あります。`);
+  }
+
+  return warnings;
+}
