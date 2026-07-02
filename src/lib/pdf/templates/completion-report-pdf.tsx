@@ -11,6 +11,7 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import { CompletionReportFullData } from "@/lib/completion-reports/completion-report-types";
+import { sortByCategoryOrder } from "@/lib/estimates/category-order";
 import { StampBlock } from "@/lib/pdf/stamp-block";
 import type { PdfStamp } from "@/lib/stamp/stamp-types";
 import { registerPdfFonts } from "@/lib/pdf/register-fonts";
@@ -238,7 +239,7 @@ function CompletionReportDocument({ data, stamp, branding }: CompletionReportDoc
   const customer = wo?.customers ?? null;
   const vehicle  = wo?.vehicles  ?? null;
   const estimate = wo?.estimates ?? null;
-  const items = (estimate?.estimate_items ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
+  const items = sortByCategoryOrder(estimate?.estimate_items ?? []);
 
   const docNo = report.report_number ?? `RPT-${report.id.slice(0, 8).toUpperCase()}`;
   const customerName = [customer?.last_name, customer?.first_name].filter(Boolean).join(" ") || "—";

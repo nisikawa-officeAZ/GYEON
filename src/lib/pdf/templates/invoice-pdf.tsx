@@ -11,6 +11,7 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import { InvoiceDB } from "@/lib/invoices/invoice-types";
+import { sortByCategoryOrder } from "@/lib/estimates/category-order";
 import { StampBlock } from "@/lib/pdf/stamp-block";
 import type { PdfStamp } from "@/lib/stamp/stamp-types";
 import { BrandingIdentity, BrandingFooterLines } from "@/lib/pdf/branding-blocks";
@@ -198,7 +199,7 @@ interface InvoiceDocumentProps {
 }
 
 function InvoiceDocument({ invoice, stamp, branding }: InvoiceDocumentProps) {
-  const items = (invoice.invoice_items ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
+  const items = sortByCategoryOrder(invoice.invoice_items ?? []);
   const docNo = invoice.invoice_number ?? `INV-${invoice.id.slice(0, 8).toUpperCase()}`;
   const customerName = [invoice.customers?.last_name, invoice.customers?.first_name]
     .filter(Boolean).join(" ") || "—";

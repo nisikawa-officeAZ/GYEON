@@ -12,6 +12,7 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import { EstimateDB } from "@/lib/estimates/estimate-types";
+import { sortByCategoryOrder } from "@/lib/estimates/category-order";
 import { StampBlock } from "@/lib/pdf/stamp-block";
 import type { PdfStamp } from "@/lib/stamp/stamp-types";
 import { BrandingIdentity, BrandingFooterLines } from "@/lib/pdf/branding-blocks";
@@ -218,7 +219,7 @@ interface EstimateDocumentProps {
 }
 
 function EstimateDocument({ estimate, stamp, branding }: EstimateDocumentProps) {
-  const items = (estimate.estimate_items ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
+  const items = sortByCategoryOrder(estimate.estimate_items ?? []);
   const docNo = estimate.estimate_number ?? estimate.estimate_no ?? "—";
   const customerName = [estimate.customers?.last_name, estimate.customers?.first_name]
     .filter(Boolean).join(" ") || "—";

@@ -11,6 +11,7 @@ import {
   estimateVehicleLabel,
 } from "@/lib/estimates/estimate-types";
 import { createInvoiceFromEstimate } from "@/lib/invoices/create-invoice";
+import { sortByCategoryOrder } from "@/lib/estimates/category-order";
 import EstimateSummary from "./EstimateSummary";
 import EstimateStatusControl from "./EstimateStatusControl";
 
@@ -180,9 +181,7 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
                     </tr>
                   </thead>
                   <tbody>
-                    {items
-                      .slice()
-                      .sort((a: EstimateItemDB, b: EstimateItemDB) => a.sort_order - b.sort_order)
+                    {sortByCategoryOrder(items)
                       .map((item: EstimateItemDB) => (
                         <tr key={item.id} className="border-b border-slate-700/40 last:border-b-0">
                           <td className="py-2 pr-3 text-slate-500 whitespace-nowrap">
