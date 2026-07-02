@@ -19,6 +19,8 @@ interface Props {
   bayName?: (id?: string | null) => string | null;
   /** C1.4: resolve a day's capacity recommendation level for the heatmap. */
   dayLevel?: (dateStr: string) => RecommendationLevel | null;
+  /** C1.5: whether a day is de-emphasized by the heatmap filter (display only). */
+  dayDimmed?: (dateStr: string) => boolean;
 }
 
 const HOURS = Array.from({ length: 25 }, (_, i) => 8 + i * 0.5).filter((h) => h <= 20);
@@ -41,6 +43,7 @@ export default function CalendarWeekView({
   staffName,
   bayName,
   dayLevel,
+  dayDimmed,
 }: Props) {
   const today = todayStr();
 
@@ -75,6 +78,7 @@ export default function CalendarWeekView({
             const isToday = date === today;
             const closed = isClosed?.(date) ?? false;
             const level = closed ? null : (dayLevel?.(date) ?? null);
+            const dimmed = dayDimmed?.(date) ?? false;
             return (
               <button
                 key={date}
@@ -83,7 +87,7 @@ export default function CalendarWeekView({
                 title={closed ? `${date}（定休日）の予約を表示` : level ? `${date}（稼働: ${recommendationLabel(level)}）の予約を表示` : `${date} の予約を表示`}
                 className={`py-2 text-center border-l border-slate-800 transition-colors hover:bg-slate-800/40 ${
                   isToday ? "bg-blue-900/20" : closed ? "bg-slate-900/50" : ""
-                }`}
+                } ${dimmed ? "opacity-40" : ""}`}
               >
                 <span className={`text-[10px] ${i >= 5 ? "text-blue-400" : "text-slate-400"}`}>
                   {DAY_LABELS[i]}
@@ -95,7 +99,7 @@ export default function CalendarWeekView({
                 >
                   {day}
                 </span>
-                {level && (
+                {level && !dimmed && (
                   <span className={`inline-block ml-1 w-2 h-2 rounded-full align-middle ${levelDotClass(level)}`} aria-hidden />
                 )}
                 {closed && <span className="block text-[9px] text-slate-500 leading-none">定休</span>}

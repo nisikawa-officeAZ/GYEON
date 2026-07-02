@@ -15,6 +15,7 @@ import { getDayCapacity } from "@/lib/capacity/get-day-capacity";
 import { getRangeCapacity } from "@/lib/capacity/get-range-capacity";
 import type { CapacityResult, RecommendationLevel } from "@/lib/capacity/capacity-types";
 import CalendarCapacityPanel from "@/components/calendar/CalendarCapacityPanel";
+import CalendarCapacityLegend, { type CapacityCategory } from "@/components/calendar/CalendarCapacityLegend";
 import CalendarMonthView from "@/components/calendar/CalendarMonthView";
 import CalendarWeekView from "@/components/calendar/CalendarWeekView";
 import CalendarDayView from "@/components/calendar/CalendarDayView";
@@ -211,6 +212,20 @@ export default function CalendarPageClient({
   }, [view, currentDate]);
 
   const dayLevel = (d: string): RecommendationLevel | null => rangeLevels[d] ?? null;
+
+  // C1.5: heatmap show/hide filter (month/week display only).
+  const [capFilter, setCapFilter] = useState<Record<CapacityCategory, boolean>>({
+    available: true, limited: true, warning: true, high_load: true, closed: true,
+  });
+  const toggleCapFilter = (c: CapacityCategory) => setCapFilter((p) => ({ ...p, [c]: !p[c] }));
+
+  // A day is de-emphasized when its category's filter is off (unknown levels stay visible).
+  const dayDimmed = (d: string): boolean => {
+    if (isClosed(d)) return !capFilter.closed;
+    const lvl = dayLevel(d);
+    if (!lvl) return false;
+    return !capFilter[lvl];
+  };
 
   // Navigation labels
   const navLabel =
@@ -417,6 +432,11 @@ export default function CalendarPageClient({
         <CalendarCapacityPanel capacity={dayCapacity} loading={capLoading} />
       )}
 
+      {/* C1.5: heatmap legend + show/hide filter (month/week only) */}
+      {(view === "month" || view === "week") && (
+        <CalendarCapacityLegend filter={capFilter} onToggle={toggleCapFilter} />
+      )}
+
       {/* Calendar view */}
       <div className="relative bg-[#0f172a] border border-slate-800 rounded-xl overflow-hidden">
         {/* Day/Week grids scroll vertically within a bounded height on small screens;
@@ -433,6 +453,7 @@ export default function CalendarPageClient({
               staffName={staffName}
               bayName={bayName}
               dayLevel={dayLevel}
+              dayDimmed={dayDimmed}
             />
           )}
           {view === "week" && (
@@ -445,6 +466,7 @@ export default function CalendarPageClient({
               staffName={staffName}
               bayName={bayName}
               dayLevel={dayLevel}
+              dayDimmed={dayDimmed}
             />
           )}
           {view === "day" && (

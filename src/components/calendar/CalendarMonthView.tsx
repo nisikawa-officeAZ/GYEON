@@ -19,6 +19,8 @@ interface Props {
   bayName?: (id?: string | null) => string | null;
   /** C1.4: resolve a day's capacity recommendation level for the heatmap. */
   dayLevel?: (dateStr: string) => RecommendationLevel | null;
+  /** C1.5: whether a day is de-emphasized by the heatmap filter (display only). */
+  dayDimmed?: (dateStr: string) => boolean;
 }
 
 const DAY_HEADERS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -37,6 +39,7 @@ export default function CalendarMonthView({
   staffName,
   bayName,
   dayLevel,
+  dayDimmed,
 }: Props) {
   const today = todayStr();  // A0: local date, no UTC off-by-one
 
@@ -103,6 +106,8 @@ export default function CalendarMonthView({
           const closed = isClosed?.(cell.dateStr) ?? false;
           // C1.4: capacity level for the heatmap — only for open, current-month days.
           const level = cell.currentMonth && !closed ? (dayLevel?.(cell.dateStr) ?? null) : null;
+          // C1.5: de-emphasized by the heatmap filter (display only; still clickable).
+          const dimmed = cell.currentMonth && (dayDimmed?.(cell.dateStr) ?? false);
 
           return (
             <div
@@ -111,7 +116,7 @@ export default function CalendarMonthView({
               title={closed ? "定休日" : level ? `稼働: ${recommendationLabel(level)}` : undefined}
               className={`relative min-h-[90px] p-1.5 border-b border-r border-slate-800 cursor-pointer transition-colors ${
                 cell.currentMonth ? "bg-[#0f172a] hover:bg-[#1e293b]" : "bg-[#0a1020] hover:bg-[#111827]"
-              } ${colIndex === 6 ? "border-r-0" : ""}`}
+              } ${colIndex === 6 ? "border-r-0" : ""} ${dimmed ? "opacity-40" : ""}`}
             >
               {closed && (
                 <>
@@ -121,12 +126,12 @@ export default function CalendarMonthView({
                   </span>
                 </>
               )}
-              {level && levelTintClass(level) && (
+              {level && !dimmed && levelTintClass(level) && (
                 <div className={`pointer-events-none absolute inset-0 ${levelTintClass(level)}`} aria-hidden />
               )}
               {/* Date number */}
               <div className="relative z-10 mb-1 flex items-center justify-between">
-                {level ? (
+                {level && !dimmed ? (
                   <span className={`w-2 h-2 rounded-full ${levelDotClass(level)}`} aria-hidden />
                 ) : (
                   <span />
