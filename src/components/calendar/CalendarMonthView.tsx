@@ -2,6 +2,8 @@
 
 import { ReservationDB, serviceTypeColor, serviceTypeLabel } from "@/lib/reservations/reservation-types";
 import { todayStr, statusDotClass } from "@/lib/calendar/calendar-utils";
+import type { RecommendationLevel } from "@/lib/capacity/capacity-types";
+import { levelDotClass, levelTintClass, recommendationLabel } from "@/lib/capacity/recommendation";
 
 interface Props {
   reservations: ReservationDB[];
@@ -15,6 +17,8 @@ interface Props {
   staffName?: (id?: string | null) => string | null;
   /** B6b: resolve assigned bay name; null when none/deleted. */
   bayName?: (id?: string | null) => string | null;
+  /** C1.4: resolve a day's capacity recommendation level for the heatmap. */
+  dayLevel?: (dateStr: string) => RecommendationLevel | null;
 }
 
 const DAY_HEADERS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -32,6 +36,7 @@ export default function CalendarMonthView({
   isClosed,
   staffName,
   bayName,
+  dayLevel,
 }: Props) {
   const today = todayStr();  // A0: local date, no UTC off-by-one
 
@@ -96,12 +101,14 @@ export default function CalendarMonthView({
           const isToday = cell.dateStr === today;
           const colIndex = i % 7;
           const closed = isClosed?.(cell.dateStr) ?? false;
+          // C1.4: capacity level for the heatmap — only for open, current-month days.
+          const level = cell.currentMonth && !closed ? (dayLevel?.(cell.dateStr) ?? null) : null;
 
           return (
             <div
               key={cell.dateStr + i}
               onClick={() => onDayClick?.(cell.dateStr)}
-              title={closed ? "定休日" : undefined}
+              title={closed ? "定休日" : level ? `稼働: ${recommendationLabel(level)}` : undefined}
               className={`relative min-h-[90px] p-1.5 border-b border-r border-slate-800 cursor-pointer transition-colors ${
                 cell.currentMonth ? "bg-[#0f172a] hover:bg-[#1e293b]" : "bg-[#0a1020] hover:bg-[#111827]"
               } ${colIndex === 6 ? "border-r-0" : ""}`}
@@ -114,8 +121,16 @@ export default function CalendarMonthView({
                   </span>
                 </>
               )}
+              {level && levelTintClass(level) && (
+                <div className={`pointer-events-none absolute inset-0 ${levelTintClass(level)}`} aria-hidden />
+              )}
               {/* Date number */}
-              <div className="mb-1 flex justify-end">
+              <div className="relative z-10 mb-1 flex items-center justify-between">
+                {level ? (
+                  <span className={`w-2 h-2 rounded-full ${levelDotClass(level)}`} aria-hidden />
+                ) : (
+                  <span />
+                )}
                 <span
                   className={`text-xs w-6 h-6 flex items-center justify-center rounded-full font-medium ${
                     isToday
@@ -134,7 +149,7 @@ export default function CalendarMonthView({
               </div>
 
               {/* Reservation dots / cards */}
-              <div className="flex flex-col gap-0.5">
+              <div className="relative z-10 flex flex-col gap-0.5">
                 {cellReservations.slice(0, 3).map((r) => {
                   const tech = staffName?.(r.assigned_staff_id) ?? null;
                   const bay = bayName?.(r.work_bay_id) ?? null;

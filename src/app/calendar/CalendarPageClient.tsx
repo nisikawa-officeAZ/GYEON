@@ -12,7 +12,8 @@ import {
 } from "@/lib/dealer-settings/business-hours";
 import type { WorkBayOption } from "@/lib/work-bays/work-bay-types";
 import { getDayCapacity } from "@/lib/capacity/get-day-capacity";
-import type { CapacityResult } from "@/lib/capacity/capacity-types";
+import { getRangeCapacity } from "@/lib/capacity/get-range-capacity";
+import type { CapacityResult, RecommendationLevel } from "@/lib/capacity/capacity-types";
 import CalendarCapacityPanel from "@/components/calendar/CalendarCapacityPanel";
 import CalendarMonthView from "@/components/calendar/CalendarMonthView";
 import CalendarWeekView from "@/components/calendar/CalendarWeekView";
@@ -137,6 +138,11 @@ export default function CalendarPageClient({
   const [dayCapacity, setDayCapacity] = useState<CapacityResult | null>(null);
   const [capLoading, setCapLoading] = useState(false);
 
+  // C1.4: month/week daily-workload heatmap levels, batched + memoized by range.
+  const rangeCache = useRef<Map<string, Record<string, RecommendationLevel>>>(new Map());
+  const rangeReq = useRef(0);
+  const [rangeLevels, setRangeLevels] = useState<Record<string, RecommendationLevel>>({});
+
   // Computed values
   const weekStart = getMondayOfWeek(currentDate);
   const dayStr = toLocalDateStr(currentDate);
@@ -178,6 +184,33 @@ export default function CalendarPageClient({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, dayStr]);
+
+  // C1.4: batched range capacity for the month/week heatmap (cached by range key).
+  async function loadRangeCapacity(from: string, to: string, force = false) {
+    const key = `${from}_${to}`;
+    if (!force && rangeCache.current.has(key)) {
+      setRangeLevels(rangeCache.current.get(key)!);
+      return;
+    }
+    const req = ++rangeReq.current;
+    const res = await getRangeCapacity(from, to);
+    const levels: Record<string, RecommendationLevel> = {};
+    for (const [d, cap] of Object.entries(res)) levels[d] = cap.level;
+    rangeCache.current.set(key, levels);
+    if (rangeReq.current === req) setRangeLevels(levels);
+  }
+
+  useEffect(() => {
+    if (view === "month" || view === "week") {
+      const [from, to] = rangeForView(currentDate, view);
+      loadRangeCapacity(from, to);
+    } else {
+      setRangeLevels({});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, currentDate]);
+
+  const dayLevel = (d: string): RecommendationLevel | null => rangeLevels[d] ?? null;
 
   // Navigation labels
   const navLabel =
@@ -287,7 +320,12 @@ export default function CalendarPageClient({
     // C1.3: a reservation change can affect capacity (incl. multi-day spans) — drop
     // the cache and recompute the focused day.
     capCache.current.clear();
+    rangeCache.current.clear();
     if (view === "day" && dayStr) loadDayCapacity(dayStr, true);
+    else {
+      const [from, to] = rangeForView(currentDate, view);
+      loadRangeCapacity(from, to, true);
+    }
   }
 
   const modalReservation = modal && typeof modal === "object" && "reservation" in modal
@@ -394,6 +432,7 @@ export default function CalendarPageClient({
               isClosed={isClosed}
               staffName={staffName}
               bayName={bayName}
+              dayLevel={dayLevel}
             />
           )}
           {view === "week" && (
@@ -405,6 +444,7 @@ export default function CalendarPageClient({
               isClosed={isClosed}
               staffName={staffName}
               bayName={bayName}
+              dayLevel={dayLevel}
             />
           )}
           {view === "day" && (

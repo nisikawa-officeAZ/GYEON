@@ -2,6 +2,8 @@
 
 import { ReservationDB, serviceTypeColor, serviceTypeLabel } from "@/lib/reservations/reservation-types";
 import { addDaysStr, todayStr, hm, durationLabel, statusDotClass, layoutOverlaps } from "@/lib/calendar/calendar-utils";
+import type { RecommendationLevel } from "@/lib/capacity/capacity-types";
+import { levelDotClass, recommendationLabel } from "@/lib/capacity/recommendation";
 
 interface Props {
   reservations: ReservationDB[];
@@ -15,6 +17,8 @@ interface Props {
   staffName?: (id?: string | null) => string | null;
   /** B6b: resolve assigned bay name; null when none/deleted. */
   bayName?: (id?: string | null) => string | null;
+  /** C1.4: resolve a day's capacity recommendation level for the heatmap. */
+  dayLevel?: (dateStr: string) => RecommendationLevel | null;
 }
 
 const HOURS = Array.from({ length: 25 }, (_, i) => 8 + i * 0.5).filter((h) => h <= 20);
@@ -36,6 +40,7 @@ export default function CalendarWeekView({
   isClosed,
   staffName,
   bayName,
+  dayLevel,
 }: Props) {
   const today = todayStr();
 
@@ -69,12 +74,13 @@ export default function CalendarWeekView({
             const day = parseInt(date.slice(8), 10);
             const isToday = date === today;
             const closed = isClosed?.(date) ?? false;
+            const level = closed ? null : (dayLevel?.(date) ?? null);
             return (
               <button
                 key={date}
                 type="button"
                 onClick={() => onDayClick?.(date)}
-                title={closed ? `${date}（定休日）の予約を表示` : `${date} の予約を表示`}
+                title={closed ? `${date}（定休日）の予約を表示` : level ? `${date}（稼働: ${recommendationLabel(level)}）の予約を表示` : `${date} の予約を表示`}
                 className={`py-2 text-center border-l border-slate-800 transition-colors hover:bg-slate-800/40 ${
                   isToday ? "bg-blue-900/20" : closed ? "bg-slate-900/50" : ""
                 }`}
@@ -89,6 +95,9 @@ export default function CalendarWeekView({
                 >
                   {day}
                 </span>
+                {level && (
+                  <span className={`inline-block ml-1 w-2 h-2 rounded-full align-middle ${levelDotClass(level)}`} aria-hidden />
+                )}
                 {closed && <span className="block text-[9px] text-slate-500 leading-none">定休</span>}
               </button>
             );
