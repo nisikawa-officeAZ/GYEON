@@ -76,6 +76,31 @@ function phaseLabel(phase: "heavy" | "drying" | "buffer" | "none"): string | nul
     case "none":   return null;
   }
 }
+function compatShort(status: "compatible" | "caution" | "not_recommended"): string {
+  switch (status) {
+    case "compatible":      return "可";
+    case "caution":         return "注意";
+    case "not_recommended": return "非推奨";
+  }
+}
+
+// C2.11: plain-language recommended action for non-technical staff.
+function recommendedActionText(a: ReservationAdvice, requireReason: boolean): string {
+  const compat = a.selectedCompatibility.status;
+  let base: string;
+  if (compat === "not_recommended") {
+    base = a.suggestedAlternatives.length > 0
+      ? "現在のスケジュールと両立しにくいため、代替サービスまたは別日時を検討してください。"
+      : "現在のスケジュールと両立しにくいため、別日時を検討してください。";
+  } else if (a.level === "high_load") {
+    base = "工房が高負荷です。予約は可能ですが、余裕のある日時が推奨されます。";
+  } else if (compat === "caution" || a.level === "warning") {
+    base = "予約は可能です（混雑気味）。";
+  } else {
+    base = "予約に適しています。";
+  }
+  return requireReason ? `${base} 上書き理由の入力が必要です。` : base;
+}
 
 function levelClasses(level: RecommendationLevel): string {
   switch (level) {
@@ -443,6 +468,25 @@ export default function ReservationForm({
       {/* C2: soft recommendation + reason panel + suggested alternatives (never blocks). */}
       {advice && (
         <div className={`flex flex-col gap-1.5 rounded-lg px-3 py-2 border ${levelClasses(advice.level)}`}>
+          {/* C2.11: Reservation Decision Summary (glanceable; details below) */}
+          <div className="flex flex-col gap-1 rounded-md bg-black/20 px-2.5 py-1.5">
+            <div className="flex items-center flex-wrap gap-1.5">
+              <span className="text-[11px] font-bold text-slate-100">予約判定</span>
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${levelClasses(advice.level)}`}>
+                {recommendationLabel(advice.level)}
+              </span>
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${compatBadge(advice.selectedCompatibility.status)}`}>
+                両立: {compatShort(advice.selectedCompatibility.status)}
+              </span>
+              {requireReason && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold border bg-red-500/15 border-red-500/40 text-red-300">
+                  上書き理由必須
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-200 leading-snug">{recommendedActionText(advice, requireReason)}</p>
+          </div>
+
           {/* C2.8: clear level badge + compact capacity summary */}
           <div className="flex items-center justify-between flex-wrap gap-2">
             <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold border ${levelClasses(advice.level)}`}>
