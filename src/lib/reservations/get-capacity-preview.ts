@@ -17,6 +17,9 @@ import { getStaffCapacitySettings } from "@/lib/dealer-settings/save-staff-capac
 import { computeCapacityWarnings }  from "@/lib/dealer-settings/staff-capacity";
 import { getBayOptions }            from "@/lib/work-bays/get-work-bays";
 import { WORK_BAYS_SCHEMA_READY }   from "@/lib/flags";
+import { getDayCapacity }           from "@/lib/capacity/get-day-capacity";
+import type { RecommendationLevel } from "@/lib/capacity/capacity-types";
+import type { ReservationServiceType } from "@/lib/reservations/reservation-types";
 
 export interface CapacityPreviewInput {
   date: string;        // "YYYY-MM-DD"
@@ -27,15 +30,28 @@ export interface CapacityPreviewInput {
   staffId?: string | null;
   /** B6b: selected work bay — enables precise per-bay overlap warnings. */
   bayId?: string | null;
+  /** C1.2: selected service — enables the projected workshop-capacity preview. */
+  serviceType?: ReservationServiceType | null;
+}
+
+/** C1.2: soft workshop-capacity recommendation for the selected slot (projected). */
+export interface CapacityRecommendation {
+  level: RecommendationLevel;
+  workshopPct: number | null;   // rounded peak % (null when no dimensions known)
+  staffPct: number | null;
+  bayPct: number | null;
+  vehiclePct: number | null;
+  confidence: "measured" | "estimated";
 }
 
 export interface CapacityPreviewResult {
   overlapCount: number;
   warnings: string[];
   requireReason: boolean;
+  capacity: CapacityRecommendation | null;
 }
 
-const EMPTY: CapacityPreviewResult = { overlapCount: 0, warnings: [], requireReason: false };
+const EMPTY: CapacityPreviewResult = { overlapCount: 0, warnings: [], requireReason: false, capacity: null };
 
 function toMin(t: string | null | undefined): number | null {
   if (!t) return null;
@@ -101,9 +117,39 @@ export async function getCapacityPreview(input: CapacityPreviewInput): Promise<C
       bayOverlapCount: selectedBay ? bayOverlapCount : null,
       bayCapacity,
     });
-    const requireReason = warnings.length > 0 && settings.rules.override.require_reason;
 
-    return { overlapCount, warnings, requireReason };
+    // C1.2: projected workshop-capacity recommendation (includes the candidate).
+    let capacity: CapacityRecommendation | null = null;
+    if (input.serviceType) {
+      const day = await getDayCapacity(input.date, {
+        excludeReservationId: input.excludeId ?? null,
+        candidate: {
+          start: input.start,
+          end: input.end,
+          service_type: input.serviceType,
+          staffId: selectedStaff,
+          bayId: selectedBay,
+        },
+      });
+      const pct = (v: number, cap: number | null): number | null =>
+        cap && cap > 0 ? Math.round(v * 100) : null;
+      capacity = {
+        level: day.level,
+        workshopPct: day.bottleneck ? Math.round(day.workshop.peak * 100) : null,
+        staffPct: pct(day.staff.peak, day.staff.cap),
+        bayPct: pct(day.bay.peak, day.bay.cap),
+        vehiclePct: pct(day.vehicle.peak, day.vehicle.cap),
+        confidence: day.confidence,
+      };
+    }
+
+    // Override reason is required when settings mandate it AND there is either an
+    // overlap warning or a High-Load capacity recommendation.
+    const requireReason =
+      settings.rules.override.require_reason &&
+      (warnings.length > 0 || capacity?.level === "high_load");
+
+    return { overlapCount, warnings, requireReason, capacity };
   } catch (err) {
     console.warn("[getCapacityPreview] failed — no warnings:", err);
     return EMPTY;

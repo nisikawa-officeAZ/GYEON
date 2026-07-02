@@ -3,7 +3,9 @@
 import { useState, useTransition, useEffect } from "react";
 import { createReservation } from "@/lib/reservations/create-reservation";
 import { updateReservation } from "@/lib/reservations/update-reservation";
-import { getCapacityPreview } from "@/lib/reservations/get-capacity-preview";
+import { getCapacityPreview, type CapacityRecommendation } from "@/lib/reservations/get-capacity-preview";
+import { recommendationLabel } from "@/lib/capacity/recommendation";
+import type { RecommendationLevel } from "@/lib/capacity/capacity-types";
 import { getReservationStaffOptions, type ReservationStaffOption } from "@/lib/reservations/get-reservation-staff-options";
 import { logCapacityOverride, getLatestCapacityOverride, type CapacityOverrideRecord } from "@/lib/reservations/capacity-override-log";
 import { getBayOptions } from "@/lib/work-bays/get-work-bays";
@@ -32,6 +34,15 @@ interface Props {
   defaultEndTime?: string;
   onSuccess?: (r: ReservationDB) => void;
   onCancel?: () => void;
+}
+
+function levelClasses(level: RecommendationLevel): string {
+  switch (level) {
+    case "available": return "bg-emerald-500/10 border-emerald-500/30 text-emerald-300";
+    case "limited":   return "bg-sky-500/10 border-sky-500/30 text-sky-300";
+    case "warning":   return "bg-amber-500/10 border-amber-500/30 text-amber-300";
+    case "high_load": return "bg-red-500/10 border-red-500/30 text-red-300";
+  }
 }
 
 const SERVICE_TYPES: ReservationServiceType[] = [
@@ -103,6 +114,8 @@ export default function ReservationForm({
   const [capacityWarnings, setCapacityWarnings] = useState<string[]>([]);
   const [requireReason, setRequireReason] = useState(false);
   const [overrideReason, setOverrideReason] = useState("");
+  // C1.2: soft workshop-capacity recommendation for the selected slot.
+  const [capacity, setCapacity] = useState<CapacityRecommendation | null>(null);
 
   // B5b: latest previously-recorded override reason for this reservation (edit view).
   const [priorOverride, setPriorOverride] = useState<CapacityOverrideRecord | null>(null);
@@ -119,6 +132,7 @@ export default function ReservationForm({
     if (!date || !startTime || !endTime) {
       setCapacityWarnings([]);
       setRequireReason(false);
+      setCapacity(null);
       return;
     }
     let cancelled = false;
@@ -130,14 +144,16 @@ export default function ReservationForm({
         excludeId: reservation?.id ?? null,
         staffId: staffId || null,
         bayId: bayId || null,
+        serviceType,
       });
       if (!cancelled) {
         setCapacityWarnings(res.warnings);
         setRequireReason(res.requireReason);
+        setCapacity(res.capacity);
       }
     }, 300);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [date, startTime, endTime, staffId, bayId, reservation?.id]);
+  }, [date, startTime, endTime, staffId, bayId, serviceType, reservation?.id]);
 
   const filteredCustomers = custSearch
     ? customers.filter((c) => {
@@ -154,11 +170,12 @@ export default function ReservationForm({
   // B5b: persist the override reason via the existing activity_logs infra when a
   // reason was entered and a capacity warning was present. Fire-and-forget-safe.
   async function maybeLogOverride(reservationId: string, edited: boolean) {
-    if (overrideReason.trim() && capacityWarnings.length > 0) {
+    const highLoad = capacity?.level === "high_load";
+    if (overrideReason.trim() && (capacityWarnings.length > 0 || highLoad)) {
       await logCapacityOverride({
         reservationId,
         reason: overrideReason.trim(),
-        warnings: capacityWarnings,
+        warnings: highLoad ? [...capacityWarnings, `高負荷（工房稼働 ${capacity?.workshopPct ?? "?"}%）`] : capacityWarnings,
         isEdit: edited,
       });
     }
@@ -378,28 +395,53 @@ export default function ReservationForm({
         </div>
       )}
 
-      {/* B4/B5b: soft capacity warnings — saving is not blocked, but the override
-          reason is required when the dealer's settings mandate it. */}
+      {/* C1.2: soft workshop-capacity recommendation for the selected slot (never blocks). */}
+      {capacity && (
+        <div className={`flex flex-col gap-1 rounded-lg px-3 py-2 border ${levelClasses(capacity.level)}`}>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold">推奨: {recommendationLabel(capacity.level)}</span>
+            {capacity.workshopPct !== null && (
+              <span className="text-[11px]">
+                工房稼働 {capacity.workshopPct}%{capacity.confidence === "estimated" ? "（推定）" : ""}
+              </span>
+            )}
+          </div>
+          {(capacity.staffPct !== null || capacity.bayPct !== null || capacity.vehiclePct !== null) && (
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] opacity-90">
+              {capacity.staffPct !== null && <span>スタッフ {capacity.staffPct}%</span>}
+              {capacity.bayPct !== null && <span>ベイ {capacity.bayPct}%</span>}
+              {capacity.vehiclePct !== null && <span>同時対応 {capacity.vehiclePct}%</span>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* B4/B5a/B6b: specific overlap warnings — saving is not blocked. */}
       {capacityWarnings.length > 0 && (
-        <div className="flex flex-col gap-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2">
+        <div className="flex flex-col gap-1 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2">
           <span className="text-[11px] font-medium text-amber-300">キャパシティ警告</span>
           <ul className="list-disc list-inside text-[11px] text-amber-200/90 flex flex-col gap-0.5">
             {capacityWarnings.map((w, i) => (
               <li key={i}>{w}</li>
             ))}
           </ul>
-          <div className="mt-1 flex flex-col gap-1">
-            <label className="text-[11px] text-amber-300">
-              上書き理由{requireReason ? "（必須）" : "（任意）"}
-            </label>
-            <textarea
-              value={overrideReason}
-              onChange={(e) => setOverrideReason(e.target.value)}
-              rows={2}
-              className="w-full bg-[#1e293b] border border-amber-500/40 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"
-              placeholder="重複を承知で予約する理由など"
-            />
-          </div>
+        </div>
+      )}
+
+      {/* B5b/C1.2: override reason — shown when a warning or High-Load recommendation is
+          present; required when the dealer's settings mandate it. */}
+      {(capacityWarnings.length > 0 || requireReason) && (
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] text-amber-300">
+            上書き理由{requireReason ? "（必須）" : "（任意）"}
+          </label>
+          <textarea
+            value={overrideReason}
+            onChange={(e) => setOverrideReason(e.target.value)}
+            rows={2}
+            className="w-full bg-[#1e293b] border border-amber-500/40 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"
+            placeholder="重複や高負荷を承知で予約する理由など"
+          />
         </div>
       )}
 

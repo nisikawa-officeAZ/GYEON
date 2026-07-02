@@ -18,6 +18,23 @@ import { hoursForDate, isClosedDate } from "@/lib/dealer-settings/business-hours
 import { expandReservations, intervalsForDate, MAX_MULTIDAY } from "./occupancy-expander";
 import { computeDayCapacity } from "./capacity-calculator";
 import type { CapacityResult } from "./capacity-types";
+import type { ReservationDB, ReservationServiceType } from "@/lib/reservations/reservation-types";
+
+/** Optional candidate reservation to include in a projected capacity preview. */
+export interface CandidateOccupancy {
+  start: string | null;   // "HH:MM"
+  end: string | null;
+  service_type: ReservationServiceType;
+  staffId?: string | null;
+  bayId?: string | null;
+}
+
+export interface DayCapacityOptions {
+  /** Exclude this reservation (the one being edited) from the current load. */
+  excludeReservationId?: string | null;
+  /** Add a not-yet-saved reservation so the score reflects "if I book this". */
+  candidate?: CandidateOccupancy | null;
+}
 
 // Statuses that consume workshop capacity.
 const CAPACITY_STATUSES = new Set(["pending", "confirmed", "completed"]);
@@ -51,7 +68,7 @@ function emptyClosed(date: string): CapacityResult {
   };
 }
 
-export async function getDayCapacity(date: string): Promise<CapacityResult> {
+export async function getDayCapacity(date: string, opts?: DayCapacityOptions): Promise<CapacityResult> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? "")) return emptyClosed(date);
   const dealer = await getCurrentDealer();
   if (!dealer) return emptyClosed(date);
@@ -67,9 +84,31 @@ export async function getDayCapacity(date: string): Promise<CapacityResult> {
 
     // Reservations whose occupancy could reach `date` (multi-day jobs starting earlier).
     const from = addDaysStr(date, -MAX_MULTIDAY);
-    const reservations = (await getReservationsByDateRange(from, date)).filter((r) =>
+    let reservations = (await getReservationsByDateRange(from, date)).filter((r) =>
       CAPACITY_STATUSES.has(r.status),
     );
+
+    // Exclude the edited reservation, then optionally add the candidate so the
+    // preview reflects the projected load "if I book this".
+    if (opts?.excludeReservationId) {
+      reservations = reservations.filter((r) => r.id !== opts.excludeReservationId);
+    }
+    if (opts?.candidate) {
+      const c = opts.candidate;
+      reservations = [
+        ...reservations,
+        {
+          id: "__candidate__",
+          reservation_date: date,
+          start_time: c.start,
+          end_time: c.end,
+          service_type: c.service_type,
+          assigned_staff_id: c.staffId ?? null,
+          work_bay_id: c.bayId ?? null,
+          status: "pending",
+        } as unknown as ReservationDB,
+      ];
+    }
 
     const dh = hoursForDate(date, businessHours);
     const closed = isClosedDate(date, businessHours);
