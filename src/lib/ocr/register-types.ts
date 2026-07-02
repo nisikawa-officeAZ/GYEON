@@ -12,6 +12,9 @@ export interface RegisterFromOcrParams {
   // When set, the vehicle is attached to this existing customer (ownership is
   // re-validated server-side). When null/undefined, a new customer is created.
   existingCustomerId?: string | null;
+  // When set, this existing vehicle is linked (ownership re-validated) instead of
+  // creating a new one — never overwritten. When null/undefined, a vehicle is created.
+  existingVehicleId?:  string | null;
   customer:            CustomerFormState;
   vehicle:             VehicleFormState;
   // Optional OCR session linkage — completed non-blockingly on success.

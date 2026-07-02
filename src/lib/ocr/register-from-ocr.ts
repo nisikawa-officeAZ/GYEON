@@ -69,32 +69,45 @@ export async function registerCustomerAndVehicleFromOcr(
     customerId = customerResult.customerId;
   }
 
-  // ── 2. Create the vehicle (createVehicle re-validates customer ownership) ──
-  const vfd = new FormData();
-  vfd.set("customer_id",            customerId);
-  vfd.set("maker",                  vehicle.maker.trim());
-  vfd.set("model",                  vehicle.model.trim());
-  vfd.set("grade",                  vehicle.grade.trim());
-  vfd.set("year",                   vehicle.year.trim());
-  vfd.set("color",                  vehicle.color.trim());
-  vfd.set("plate_number",           vehicle.plate_number.trim());
-  vfd.set("vin",                    vehicle.vin.trim());
-  vfd.set("body_size",              vehicle.body_size.trim());
-  vfd.set("inspection_expiry_date", vehicle.inspection_expiry_date.trim());
-  vfd.set("displacement",           vehicle.displacement.trim());
-  vfd.set("fuel_type",              vehicle.fuel_type.trim());
-  vfd.set("registration_date",      vehicle.registration_date.trim());
-  vfd.set("notes",                  vehicle.notes.trim());
+  // ── 2. Resolve the vehicle ────────────────────────────────────────────────
+  let vehicleId: string;
 
-  const vehicleResult = await createVehicle(vfd);
-  if ("error" in vehicleResult) {
-    // The customer may already exist — surface its id so the caller can retry
-    // the vehicle step without creating a duplicate customer.
-    return {
-      success:    false,
-      error:      vehicleResult.error ?? "車両の作成に失敗しました",
-      customerId,
-    };
+  if (params.existingVehicleId) {
+    // Link an existing vehicle (re-validate dealer ownership); never overwrite.
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("vehicles")
+      .select("id")
+      .eq("id",        params.existingVehicleId)
+      .eq("dealer_id", dealer.dealer_id)
+      .single();
+    if (error || !data) return { success: false, error: "車両情報の確認に失敗しました", customerId };
+    vehicleId = data.id;
+  } else {
+    // createVehicle re-validates customer ownership.
+    const vfd = new FormData();
+    vfd.set("customer_id",            customerId);
+    vfd.set("maker",                  vehicle.maker.trim());
+    vfd.set("model",                  vehicle.model.trim());
+    vfd.set("grade",                  vehicle.grade.trim());
+    vfd.set("year",                   vehicle.year.trim());
+    vfd.set("color",                  vehicle.color.trim());
+    vfd.set("plate_number",           vehicle.plate_number.trim());
+    vfd.set("vin",                    vehicle.vin.trim());
+    vfd.set("body_size",              vehicle.body_size.trim());
+    vfd.set("inspection_expiry_date", vehicle.inspection_expiry_date.trim());
+    vfd.set("displacement",           vehicle.displacement.trim());
+    vfd.set("fuel_type",              vehicle.fuel_type.trim());
+    vfd.set("registration_date",      vehicle.registration_date.trim());
+    vfd.set("notes",                  vehicle.notes.trim());
+
+    const vehicleResult = await createVehicle(vfd);
+    if ("error" in vehicleResult) {
+      // The customer may already exist — surface its id so the caller can retry
+      // the vehicle step without creating a duplicate customer.
+      return { success: false, error: vehicleResult.error ?? "車両の作成に失敗しました", customerId };
+    }
+    vehicleId = vehicleResult.vehicleId;
   }
 
   // ── 3. Complete the OCR session (non-blocking) ────────────────────────────
@@ -104,12 +117,12 @@ export async function registerCustomerAndVehicleFromOcr(
         session_id:      params.sessionId,
         reviewed_result: params.reviewedResult,
         customer_id:     customerId,
-        vehicle_id:      vehicleResult.vehicleId,
+        vehicle_id:      vehicleId,
       });
     } catch {
       // Session completion must not block the registration result.
     }
   }
 
-  return { success: true, customerId, vehicleId: vehicleResult.vehicleId };
+  return { success: true, customerId, vehicleId };
 }
