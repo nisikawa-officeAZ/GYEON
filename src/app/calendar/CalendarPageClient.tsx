@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ReservationDB } from "@/lib/reservations/reservation-types";
 import { getReservationsByDateRange } from "@/lib/reservations/get-reservations-by-date";
@@ -11,6 +11,9 @@ import {
   hoursForDate,
 } from "@/lib/dealer-settings/business-hours";
 import type { WorkBayOption } from "@/lib/work-bays/work-bay-types";
+import { getDayCapacity } from "@/lib/capacity/get-day-capacity";
+import type { CapacityResult } from "@/lib/capacity/capacity-types";
+import CalendarCapacityPanel from "@/components/calendar/CalendarCapacityPanel";
 import CalendarMonthView from "@/components/calendar/CalendarMonthView";
 import CalendarWeekView from "@/components/calendar/CalendarWeekView";
 import CalendarDayView from "@/components/calendar/CalendarDayView";
@@ -128,6 +131,12 @@ export default function CalendarPageClient({
   const [defaultEndTime,   setDefaultEndTime]   = useState<string>("");
   const [loading, setLoading] = useState(false);
 
+  // C1.3: day-capacity display, memoized per date (client cache → no repeat DB calls).
+  const capCache = useRef<Map<string, CapacityResult>>(new Map());
+  const capReq = useRef(0);
+  const [dayCapacity, setDayCapacity] = useState<CapacityResult | null>(null);
+  const [capLoading, setCapLoading] = useState(false);
+
   // Computed values
   const weekStart = getMondayOfWeek(currentDate);
   const dayStr = toLocalDateStr(currentDate);
@@ -142,6 +151,33 @@ export default function CalendarPageClient({
   // B6b: resolve a bay name for a reservation; null when unassigned/deleted.
   const bayName = (id?: string | null): string | null => (id && bayNameById[id]) || null;
   const activeBays = bays.filter((b) => b.active);
+
+  // C1.3: load day capacity (cached by date). force=true bypasses the cache after edits.
+  async function loadDayCapacity(date: string, force = false) {
+    if (!force && capCache.current.has(date)) {
+      setDayCapacity(capCache.current.get(date)!);
+      return;
+    }
+    const req = ++capReq.current;
+    setCapLoading(true);
+    try {
+      const res = await getDayCapacity(date);
+      capCache.current.set(date, res);
+      if (capReq.current === req) setDayCapacity(res); // ignore stale responses
+    } finally {
+      if (capReq.current === req) setCapLoading(false);
+    }
+  }
+
+  // Compute capacity only for the focused day (day view); clear otherwise.
+  useEffect(() => {
+    if (view === "day" && dayStr) {
+      loadDayCapacity(dayStr);
+    } else {
+      setDayCapacity(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, dayStr]);
 
   // Navigation labels
   const navLabel =
@@ -248,6 +284,10 @@ export default function CalendarPageClient({
     // Reload the current view's range (focused date preserved).
     const [from, to] = rangeForView(currentDate, view);
     loadReservations(from, to);
+    // C1.3: a reservation change can affect capacity (incl. multi-day spans) — drop
+    // the cache and recompute the focused day.
+    capCache.current.clear();
+    if (view === "day" && dayStr) loadDayCapacity(dayStr, true);
   }
 
   const modalReservation = modal && typeof modal === "object" && "reservation" in modal
@@ -333,6 +373,11 @@ export default function CalendarPageClient({
           ))}
         </div>
       </div>
+
+      {/* C1.3: workshop capacity panel (day view only) */}
+      {view === "day" && (
+        <CalendarCapacityPanel capacity={dayCapacity} loading={capLoading} />
+      )}
 
       {/* Calendar view */}
       <div className="relative bg-[#0f172a] border border-slate-800 rounded-xl overflow-hidden">
