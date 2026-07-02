@@ -138,8 +138,10 @@ export default function CalendarDayView({ date, reservations, onReservationClick
           ))}
 
           {/* Clickable AVAILABLE time slots — start a new reservation (default 60-min end).
-              Rendered beneath the reservation blocks (which carry z-10), so clicking an
-              occupied block edits it and clicking empty time creates a new reservation. */}
+              Rendered beneath the reservation blocks (which carry z-10 and span the full
+              column width), so a slot button under an occupied block is physically covered
+              and cannot be clicked: clicking a block always edits it, and only clicking empty
+              time creates a new reservation. (A2: no availability/conflict logic — pure layering.) */}
           {onSlotClick && SLOTS.map((slotMin) => (
             <button
               key={`slot-${slotMin}`}
@@ -172,11 +174,11 @@ export default function CalendarDayView({ date, reservations, onReservationClick
                 key={r.id}
                 onClick={() => onReservationClick?.(r)}
                 title={`${hm(r.start_time)}${r.end_time ? `–${hm(r.end_time)}` : ""} ${displayName(r)}`}
-                className={`group absolute left-1 right-1 z-10 rounded-lg pl-2.5 pr-2 py-1 text-left overflow-hidden shadow-sm ring-1 ring-black/10 ${serviceTypeColor(r.service_type)} hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-white/60 transition-all`}
+                className={`group absolute left-0 right-0 z-10 rounded-md pl-3 pr-2 py-1 text-left overflow-hidden shadow-sm ring-1 ring-black/10 ${serviceTypeColor(r.service_type)} hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-white/60 transition-all`}
                 style={{ top, height }}
               >
                 {/* Brighter left accent bar for quick scanning */}
-                <span className="absolute left-0 top-0 bottom-0 w-1 bg-white/40 rounded-l-lg" aria-hidden />
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-white/40 rounded-l-md" aria-hidden />
 
                 <div className="flex items-start justify-between gap-1">
                   <p className="text-[11px] sm:text-xs text-white/90 font-medium leading-tight tabular-nums truncate">
