@@ -12,6 +12,7 @@ import {
 } from "@/lib/invoices/invoice-types";
 import PaymentSection from "@/components/payments/PaymentSection";
 import DocumentPdfActions from "@/components/pdf/DocumentPdfActions";
+import { paymentProgress } from "@/lib/accounts-receivable/ar-calculations";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -176,6 +177,16 @@ export default function InvoiceDetail({ invoice: inv, onClose, onEdit }: Invoice
               <div className="flex justify-between w-52 border-t border-slate-700 pt-1.5 mt-0.5">
                 <span className="text-blue-400 font-semibold">残高</span>
                 <span className="text-blue-300 font-bold">{formatYen(inv.balance_due)}</span>
+              </div>
+              {/* E8.6: payment progress */}
+              <div className="w-52 mt-2">
+                <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+                  <span>入金進捗</span>
+                  <span>{paymentProgress(inv)}%</span>
+                </div>
+                <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500" style={{ width: `${paymentProgress(inv)}%` }} />
+                </div>
               </div>
             </div>
           </div>

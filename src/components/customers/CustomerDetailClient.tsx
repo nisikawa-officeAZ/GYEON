@@ -16,6 +16,7 @@ import CustomerStatusBadge from "@/components/customers/CustomerStatusBadge";
 import CustomerTagList from "@/components/customers/CustomerTagList";
 import CustomerNotesPanel from "@/components/customers/CustomerNotesPanel";
 import StatementPreviewPanel from "@/components/customers/StatementPreviewPanel";
+import AccountsReceivablePanel from "@/components/customers/AccountsReceivablePanel";
 import CustomerActivityTimeline from "@/components/activity/CustomerActivityTimeline";
 import { useCurrentStaff } from "@/contexts/StaffContext";
 
@@ -117,6 +118,9 @@ export default function CustomerDetailClient({ customer, vehicles, billing }: Pr
               )}
             </div>
           </div>
+
+          {/* E8.6: Accounts receivable summary (all customers with invoices) */}
+          <AccountsReceivablePanel customerId={customer.id} />
 
           {/* E8.5: Statement preview — trade customers on closing billing only */}
           {customer.is_business && billing.mode === "closing" && (
