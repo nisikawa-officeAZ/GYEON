@@ -172,11 +172,12 @@ export interface EstimateWizardProps {
   vehicles:           VehicleDB[];
   dealerRank:         DetailerRank;
   defaultCustomerId?: string;
+  defaultVehicleId?:  string;
   onCancel?:          () => void;
   onSuccess?:         (estimateId?: string) => void;
 }
 
-export default function EstimateWizard({ customers, vehicles, dealerRank, defaultCustomerId, onCancel, onSuccess }: EstimateWizardProps) {
+export default function EstimateWizard({ customers, vehicles, dealerRank, defaultCustomerId, defaultVehicleId, onCancel, onSuccess }: EstimateWizardProps) {
 
   const [history, setHistory] = useState<Screen[]>(["category"]);
   const screen = history[history.length - 1]!;
@@ -246,9 +247,15 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   });
 
   // ── Vehicle ───────────────────────────────────────────────────────────────
+  // E9.3: preselect the OCR-linked vehicle when it belongs to the default customer.
+  const _defaultVeh = defaultVehicleId
+    ? vehicles.find(v => v.id === defaultVehicleId && (!_defaultCust || v.customer_id === _defaultCust.id))
+    : null;
   const [vMode,     setVMode]     = useState<"select" | "create">("select");
-  const [vehicleId, setVehicleId] = useState("");
-  const [vehLabel,  setVehLabel]  = useState("");
+  const [vehicleId, setVehicleId] = useState(_defaultVeh?.id ?? "");
+  const [vehLabel,  setVehLabel]  = useState(
+    _defaultVeh ? [_defaultVeh.maker, _defaultVeh.model, _defaultVeh.plate_number].filter(Boolean).join(" ") : ""
+  );
   const [nv, setNv] = useState({
     maker: "", model: "", grade: "", vehicle_code: "", year: "", color: "", plate_number: "", vin: "",
     inspection_expiry_date: "",

@@ -38,8 +38,10 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
   const [modal, setModal] = useState<ModalState>(
     defaultCustomerId ? { mode: "create" } : { mode: "none" }
   );
+  // E9.3: OCR → estimate handoff — preselect the just-registered customer + vehicle.
+  const [ocrHandoff, setOcrHandoff] = useState<{ customerId?: string; vehicleId?: string }>({});
 
-  const closeModal = () => setModal({ mode: "none" });
+  const closeModal = () => { setModal({ mode: "none" }); setOcrHandoff({}); };
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -98,8 +100,12 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
             </div>
             <CustomerVehicleOnboardingWizard
               customers={customers}
-              onComplete={() => {
+              onComplete={(customerId, vehicleId) => {
                 router.refresh();
+                // Clear action: open the estimate wizard preselected with the
+                // OCR-linked customer + vehicle. No estimate is created until the
+                // operator completes the wizard.
+                setOcrHandoff({ customerId, vehicleId });
                 setModal({ mode: "create" });
               }}
               onCancel={closeModal}
@@ -129,7 +135,8 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
               customers={customers}
               vehicles={vehicles}
               dealerRank={dealerRank}
-              defaultCustomerId={defaultCustomerId}
+              defaultCustomerId={ocrHandoff.customerId ?? defaultCustomerId}
+              defaultVehicleId={ocrHandoff.vehicleId}
               onCancel={closeModal}
               onSuccess={closeModal}
             />
