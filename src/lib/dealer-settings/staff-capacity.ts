@@ -19,6 +19,7 @@ export interface WorkBay {
   id: string;
   name: string;
   active: boolean;
+  capacity?: number; // B6b: concurrent vehicles per bay (default 1)
 }
 
 export interface ParallelWorkRules {
@@ -125,7 +126,8 @@ function normalizeWorkBays(raw: unknown): WorkBay[] {
     const name = typeof o.name === "string" ? o.name.trim() : "";
     if (!name) return; // skip nameless bays
     const id = typeof o.id === "string" && o.id.trim() !== "" ? o.id.trim() : `bay_${i}`;
-    out.push({ id, name, active: isBool(o.active, true) });
+    const capacity = numOrNull(o.capacity, 50);
+    out.push({ id, name, active: isBool(o.active, true), capacity: capacity === null ? 1 : Math.max(1, capacity) });
   });
   return out;
 }
@@ -231,6 +233,11 @@ export interface CapacityWarningContext {
    *  null when no staff is selected — the warning falls back to the generic
    *  overlap count. */
   staffOverlapCount?: number | null;
+  /** B6b: overlapping reservations in the selected work bay; null when no bay
+   *  is selected — the bay warning falls back to the aggregate active-bay count. */
+  bayOverlapCount?: number | null;
+  /** B6b: capacity of the selected bay (concurrent vehicles). */
+  bayCapacity?: number | null;
 }
 
 export function computeCapacityWarnings(
@@ -254,9 +261,21 @@ export function computeCapacityWarnings(
     );
   }
 
-  const activeBays = settings.capacity.work_bays.filter((b) => b.active).length;
-  if (conflict.warn_bay_overlap && activeBays > 0 && projected > activeBays) {
-    warnings.push(`稼働中の作業ベイ数（${activeBays}）を超える可能性があります。`);
+  if (conflict.warn_bay_overlap) {
+    const bayOverlap = ctx?.bayOverlapCount ?? null;
+    const bayCap = ctx?.bayCapacity ?? null;
+    if (bayOverlap !== null && bayCap !== null) {
+      // Precise: a specific bay is selected (B6b).
+      if (bayOverlap + 1 > bayCap) {
+        warnings.push(`選択した作業ベイは同じ時間帯に${bayOverlap}件（上限${bayCap}）の予約があります。`);
+      }
+    } else {
+      // Aggregate fallback: no bay selected — compare against active bay count.
+      const activeBays = settings.capacity.work_bays.filter((b) => b.active).length;
+      if (activeBays > 0 && projected > activeBays) {
+        warnings.push(`稼働中の作業ベイ数（${activeBays}）を超える可能性があります。`);
+      }
+    }
   }
 
   if (conflict.warn_staff_overlap) {

@@ -8,6 +8,8 @@ import {
   type WorkBay,
 } from "@/lib/dealer-settings/staff-capacity";
 import { saveStaffCapacity } from "@/lib/dealer-settings/save-staff-capacity";
+import { saveWorkBays } from "@/lib/work-bays/save-work-bays";
+import { WORK_BAYS_SCHEMA_READY } from "@/lib/flags";
 
 interface StaffOption { id: string; name: string; }
 
@@ -119,7 +121,7 @@ export default function StaffCapacityForm({ initial, staffOptions, canEdit }: Pr
     const input: StaffCapacitySettings = {
       capacity: {
         simultaneous_vehicles: parseNum(simultaneous),
-        work_bays: bays.map((b) => ({ id: b.id, name: b.name, active: b.active })),
+        work_bays: bays.map((b) => ({ id: b.id, name: b.name, active: b.active, capacity: b.capacity ?? 1 })),
         parallel_work: { allow_multi_bay: allowMultiBay, max_parallel_per_staff: parseNum(maxParallel) },
       },
       staff_capacity,
@@ -137,8 +139,21 @@ export default function StaffCapacityForm({ initial, staffOptions, canEdit }: Pr
 
     startTransition(async () => {
       const res = await saveStaffCapacity(input);
-      if ("success" in res) setResult({ ok: true, msg: "保存しました" });
-      else setResult({ ok: false, msg: res.error || "保存に失敗しました" });
+      if (!("success" in res)) {
+        setResult({ ok: false, msg: res.error || "保存に失敗しました" });
+        return;
+      }
+      // B6b: when the schema is live, bays are persisted to the work_bays table.
+      if (WORK_BAYS_SCHEMA_READY) {
+        const bayRes = await saveWorkBays(
+          bays.map((b) => ({ id: b.id, name: b.name, active: b.active, capacity: b.capacity ?? 1 })),
+        );
+        if (!("success" in bayRes)) {
+          setResult({ ok: false, msg: bayRes.error || "作業ベイの保存に失敗しました" });
+          return;
+        }
+      }
+      setResult({ ok: true, msg: "保存しました" });
     });
   }
 
@@ -179,6 +194,12 @@ export default function StaffCapacityForm({ initial, staffOptions, canEdit }: Pr
                 onChange={(e) => setBay(b.id, { name: e.target.value })}
                 className={`${inputCls} flex-1`} placeholder="ベイ名" />
               <label className="flex items-center gap-1 text-xs text-slate-400">
+                台数
+                <input type="number" min={1} max={50} value={b.capacity ?? 1} disabled={!canEdit}
+                  onChange={(e) => setBay(b.id, { capacity: Math.max(1, Math.floor(Number(e.target.value) || 1)) })}
+                  className={`${inputCls} w-16`} />
+              </label>
+              <label className="flex items-center gap-1 text-xs text-slate-400">
                 <input type="checkbox" checked={b.active} disabled={!canEdit}
                   onChange={(e) => setBay(b.id, { active: e.target.checked })} />
                 有効
@@ -193,7 +214,7 @@ export default function StaffCapacityForm({ initial, staffOptions, canEdit }: Pr
         </div>
         {canEdit && (
           <button type="button"
-            onClick={() => setBays([...bays, { id: genId(), name: "", active: true }])}
+            onClick={() => setBays([...bays, { id: genId(), name: "", active: true, capacity: 1 }])}
             className="self-start px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded-lg">
             + ベイを追加
           </button>

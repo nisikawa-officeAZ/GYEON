@@ -10,6 +10,7 @@ import {
   isClosedDate,
   hoursForDate,
 } from "@/lib/dealer-settings/business-hours";
+import type { WorkBayOption } from "@/lib/work-bays/work-bay-types";
 import CalendarMonthView from "@/components/calendar/CalendarMonthView";
 import CalendarWeekView from "@/components/calendar/CalendarWeekView";
 import CalendarDayView from "@/components/calendar/CalendarDayView";
@@ -34,6 +35,10 @@ interface Props {
   businessHours?: BusinessHoursSettings;
   /** B5a follow-up: dealer-scoped staff id → name for technician display. */
   staffNameById?: Record<string, string>;
+  /** B6b: dealer-scoped bay id → name for bay display. */
+  bayNameById?: Record<string, string>;
+  /** B6b: dealer bays for day-view lanes ([] until migration 092). */
+  bays?: WorkBayOption[];
 }
 
 // A0: All calendar date math uses LOCAL date semantics. toISOString() would convert to
@@ -108,8 +113,11 @@ export default function CalendarPageClient({
   vehicles,
   businessHours = DEFAULT_BUSINESS_HOURS_SETTINGS,
   staffNameById = {},
+  bayNameById = {},
+  bays = [],
 }: Props) {
   const [view, setView] = useState<View>("month");
+  const [bayLaneMode, setBayLaneMode] = useState(false);
   const [year,  setYear]  = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -131,6 +139,9 @@ export default function CalendarPageClient({
   // B5a follow-up: resolve a technician name for a reservation; null when
   // unassigned or the staff no longer exists (never breaks the UI).
   const staffName = (id?: string | null): string | null => (id && staffNameById[id]) || null;
+  // B6b: resolve a bay name for a reservation; null when unassigned/deleted.
+  const bayName = (id?: string | null): string | null => (id && bayNameById[id]) || null;
+  const activeBays = bays.filter((b) => b.active);
 
   // Navigation labels
   const navLabel =
@@ -294,6 +305,18 @@ export default function CalendarPageClient({
           {loading && <span className="text-xs text-slate-500">読込中...</span>}
         </div>
 
+        {view === "day" && activeBays.length > 0 && (
+          <button
+            onClick={() => setBayLaneMode((v) => !v)}
+            aria-pressed={bayLaneMode}
+            className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+              bayLaneMode ? "bg-blue-600 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300"
+            }`}
+          >
+            ベイ表示
+          </button>
+        )}
+
         <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1" role="tablist" aria-label="表示切替">
           {(["month", "week", "day"] as View[]).map((v) => (
             <button
@@ -325,6 +348,7 @@ export default function CalendarPageClient({
               onReservationClick={handleReservationClick}
               isClosed={isClosed}
               staffName={staffName}
+              bayName={bayName}
             />
           )}
           {view === "week" && (
@@ -335,6 +359,7 @@ export default function CalendarPageClient({
               onDayClick={handleDayClick}
               isClosed={isClosed}
               staffName={staffName}
+              bayName={bayName}
             />
           )}
           {view === "day" && (
@@ -347,6 +372,9 @@ export default function CalendarPageClient({
               openTime={dayHours?.open ?? null}
               closeTime={dayHours?.close ?? null}
               staffName={staffName}
+              bayName={bayName}
+              bays={activeBays}
+              bayLanes={bayLaneMode && activeBays.length > 0}
             />
           )}
         </div>

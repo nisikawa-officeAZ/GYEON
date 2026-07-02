@@ -9,12 +9,14 @@ import { createActivityLog } from "@/lib/activity/activity-log";
 import { createNotification } from "@/lib/notifications/notification";
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 import { enqueueBookingNotification } from "./enqueue-booking-notification";
+import { WORK_BAYS_SCHEMA_READY } from "@/lib/flags";
 
 interface CreateReservationInput {
   customer_id?: string | null;
   vehicle_id?: string | null;
   work_order_id?: string | null;
   assigned_staff_id?: string | null;
+  work_bay_id?: string | null;
   reservation_date: string;
   start_time?: string | null;
   end_time?: string | null;
@@ -79,24 +81,39 @@ export async function createReservation(
     if (!staff) return { success: false, error: "担当スタッフが見つかりません" };
   }
 
+  // Validate work bay ownership (B6b — only when the schema is live)
+  if (WORK_BAYS_SCHEMA_READY && input.work_bay_id) {
+    const { data: bay } = await supabase
+      .from("work_bays")
+      .select("id")
+      .eq("id", input.work_bay_id)
+      .eq("dealer_id", did)
+      .maybeSingle();
+    if (!bay) return { success: false, error: "作業ベイが見つかりません" };
+  }
+
   const reservation_number = await getNextDocumentNumber("reservation");
+
+  const insertPayload: Record<string, unknown> = {
+    dealer_id:          did,
+    reservation_number: reservation_number ?? null,
+    customer_id:        input.customer_id       ?? null,
+    vehicle_id:         input.vehicle_id        ?? null,
+    work_order_id:      input.work_order_id     ?? null,
+    assigned_staff_id:  input.assigned_staff_id ?? null,
+    reservation_date:   input.reservation_date,
+    start_time:         input.start_time   ?? null,
+    end_time:           input.end_time     ?? null,
+    service_type:       input.service_type,
+    notes:              input.notes        ?? null,
+    status:             input.status       ?? "pending",
+  };
+  // B6b: only write work_bay_id once the column exists (avoids PGRST204 pre-migration).
+  if (WORK_BAYS_SCHEMA_READY) insertPayload.work_bay_id = input.work_bay_id ?? null;
 
   const { data, error } = await supabase
     .from("reservations")
-    .insert({
-      dealer_id:          did,
-      reservation_number: reservation_number ?? null,
-      customer_id:        input.customer_id       ?? null,
-      vehicle_id:         input.vehicle_id        ?? null,
-      work_order_id:      input.work_order_id     ?? null,
-      assigned_staff_id:  input.assigned_staff_id ?? null,
-      reservation_date:   input.reservation_date,
-      start_time:         input.start_time   ?? null,
-      end_time:           input.end_time     ?? null,
-      service_type:       input.service_type,
-      notes:              input.notes        ?? null,
-      status:             input.status       ?? "pending",
-    })
+    .insert(insertPayload)
     .select(`
       *,
       customers ( last_name, first_name, phone ),

@@ -6,6 +6,9 @@ import { updateReservation } from "@/lib/reservations/update-reservation";
 import { getCapacityPreview } from "@/lib/reservations/get-capacity-preview";
 import { getReservationStaffOptions, type ReservationStaffOption } from "@/lib/reservations/get-reservation-staff-options";
 import { logCapacityOverride, getLatestCapacityOverride, type CapacityOverrideRecord } from "@/lib/reservations/capacity-override-log";
+import { getBayOptions } from "@/lib/work-bays/get-work-bays";
+import type { WorkBayOption } from "@/lib/work-bays/work-bay-types";
+import { WORK_BAYS_SCHEMA_READY } from "@/lib/flags";
 import {
   ReservationDB,
   ReservationStatus,
@@ -56,6 +59,7 @@ export default function ReservationForm({
   const [customerId, setCustomerId] = useState<string>(reservation?.customer_id ?? "");
   const [vehicleId,  setVehicleId]  = useState<string>(reservation?.vehicle_id  ?? "");
   const [staffId,    setStaffId]    = useState<string>(reservation?.assigned_staff_id ?? "");
+  const [bayId,      setBayId]      = useState<string>(reservation?.work_bay_id ?? "");
   const [serviceType, setServiceType] = useState<ReservationServiceType>(
     reservation?.service_type ?? "other"
   );
@@ -81,6 +85,19 @@ export default function ReservationForm({
   // Dangling reference (assigned staff was deleted): show it, but it will be
   // cleared on save rather than triggering a server validation error.
   const staffDangling = staffId !== "" && staffOptions.length > 0 && !staffKnown;
+
+  // B6b: dealer-scoped work bay options (loaded once; only when schema is live).
+  const [bayOptions, setBayOptions] = useState<WorkBayOption[]>([]);
+  useEffect(() => {
+    if (!WORK_BAYS_SCHEMA_READY) return;
+    let cancelled = false;
+    getBayOptions().then((opts) => {
+      if (!cancelled) setBayOptions(opts);
+    });
+    return () => { cancelled = true; };
+  }, []);
+  const bayKnown = bayOptions.some((o) => o.id === bayId);
+  const bayDangling = bayId !== "" && bayOptions.length > 0 && !bayKnown;
 
   // B4: soft capacity-warning preview (informational; never blocks saving).
   const [capacityWarnings, setCapacityWarnings] = useState<string[]>([]);
@@ -112,6 +129,7 @@ export default function ReservationForm({
         end: endTime,
         excludeId: reservation?.id ?? null,
         staffId: staffId || null,
+        bayId: bayId || null,
       });
       if (!cancelled) {
         setCapacityWarnings(res.warnings);
@@ -119,7 +137,7 @@ export default function ReservationForm({
       }
     }, 300);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [date, startTime, endTime, staffId, reservation?.id]);
+  }, [date, startTime, endTime, staffId, bayId, reservation?.id]);
 
   const filteredCustomers = custSearch
     ? customers.filter((c) => {
@@ -166,6 +184,8 @@ export default function ReservationForm({
     // A dangling id (deleted staff) is cleared to null so the server validation
     // never rejects the save.
     const assignedStaffToSend = staffId && staffOptions.some((o) => o.id === staffId) ? staffId : null;
+    // B6b: only send a bay that resolves to a known dealer bay (server also gates on flag).
+    const assignedBayToSend = bayId && bayOptions.some((o) => o.id === bayId) ? bayId : null;
 
     startTransition(async () => {
       if (isEdit) {
@@ -173,6 +193,7 @@ export default function ReservationForm({
           customer_id:      customerId   || null,
           vehicle_id:       vehicleId    || null,
           assigned_staff_id: assignedStaffToSend,
+          work_bay_id:      assignedBayToSend,
           service_type:     serviceType,
           reservation_date: date,
           start_time:       startTime    || null,
@@ -191,6 +212,7 @@ export default function ReservationForm({
           customer_id:      customerId   || null,
           vehicle_id:       vehicleId    || null,
           assigned_staff_id: assignedStaffToSend,
+          work_bay_id:      assignedBayToSend,
           service_type:     serviceType,
           reservation_date: date,
           start_time:       startTime    || null,
@@ -276,6 +298,29 @@ export default function ReservationForm({
           <span className="text-[10px] text-amber-400">以前の担当スタッフは削除されています。保存すると未指定になります。</span>
         )}
       </div>
+
+      {/* Work bay (B6b — only when the schema is live) */}
+      {WORK_BAYS_SCHEMA_READY && (
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">作業ベイ</label>
+          <select
+            value={bayId}
+            onChange={(e) => setBayId(e.target.value)}
+            className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          >
+            <option value="">未指定</option>
+            {bayOptions.map((b) => (
+              <option key={b.id} value={b.id} disabled={!b.active && b.id !== bayId}>
+                {b.name}{!b.active ? "（無効）" : ""}
+              </option>
+            ))}
+            {bayDangling && <option value={bayId}>（不明なベイ）</option>}
+          </select>
+          {bayDangling && (
+            <span className="text-[10px] text-amber-400">以前の作業ベイは削除されています。保存すると未指定になります。</span>
+          )}
+        </div>
+      )}
 
       {/* Service type */}
       <div className="flex flex-col gap-1">

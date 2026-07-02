@@ -18,3 +18,13 @@
 // via NEXT_PUBLIC_BRANDING_SCHEMA_READY=true without a code change.
 export const BRANDING_SCHEMA_READY =
   process.env.NEXT_PUBLIC_BRANDING_SCHEMA_READY === "true" ? true : false;
+
+// WORK_BAYS_SCHEMA_READY gates the work_bays table + reservations.work_bay_id
+// added by migration 092 (Batch B6b). While false, ALL work-bay reads/writes are
+// skipped so the app behaves exactly as before the migration (bay selector,
+// bay lanes, and per-bay overlap are dormant; reservation create/update never
+// touch work_bay_id). Flip to true only AFTER an operator applies migration 092
+// and REST exposes the new objects. Overridable at runtime via
+// NEXT_PUBLIC_WORK_BAYS_SCHEMA_READY=true without a code change.
+export const WORK_BAYS_SCHEMA_READY =
+  process.env.NEXT_PUBLIC_WORK_BAYS_SCHEMA_READY === "true" ? true : false;

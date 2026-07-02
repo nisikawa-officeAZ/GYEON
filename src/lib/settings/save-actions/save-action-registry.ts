@@ -279,6 +279,27 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
       "B3 is CONFIGURED-BUT-NOT-ENFORCED — no calendar/reservation wiring, no conflict detection, no blocking.",
   },
 
+  // ─── Work Bays (Batch B6b) ────────────────────────────────────────────────
+
+  work_bays: {
+    action_id:             "work_bays",
+    display_name:          "Work Bay Management",
+    category_ids:          ["staff"],
+    status:                "requires_migration",
+    server_action_path:    "src/lib/work-bays/save-work-bays.ts",
+    ui_role_policy:        "manager_or_owner",
+    has_server_role_check: true,
+    dealer_scope:          true,
+    admin_scope:           false,
+    external_dependency:   null,
+    notes:
+      "saveWorkBays reconciles the dealer's work_bays rows (table, migration 092). " +
+      "reservations.work_bay_id links a reservation to a bay. dealer_id from requireRole → " +
+      "getCurrentDealer() — never from client. requireRole([\"owner\",\"manager\"]) + RLS enforced. " +
+      "Gated behind WORK_BAYS_SCHEMA_READY: until migration 092 is applied and the flag flipped, " +
+      "all bay reads/writes are skipped and the calendar/reservation flow is unchanged.",
+  },
+
   // ─── Platform Admin ───────────────────────────────────────────────────────
 
   dealer_rank: {

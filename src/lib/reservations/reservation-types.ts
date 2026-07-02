@@ -15,6 +15,7 @@ export interface ReservationDB {
   end_time:           string | null;
   service_type:       ReservationServiceType;
   assigned_staff_id:  string | null;
+  work_bay_id?:       string | null;  // B6b (present once migration 092 applied)
   status:             ReservationStatus;
   notes:              string | null;
   calendar_provider:  string | null;

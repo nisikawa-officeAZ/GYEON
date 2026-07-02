@@ -15,6 +15,8 @@ import { createClient }             from "@/lib/supabase/server";
 import { getCurrentDealer }         from "@/lib/auth/get-current-dealer";
 import { getStaffCapacitySettings } from "@/lib/dealer-settings/save-staff-capacity";
 import { computeCapacityWarnings }  from "@/lib/dealer-settings/staff-capacity";
+import { getBayOptions }            from "@/lib/work-bays/get-work-bays";
+import { WORK_BAYS_SCHEMA_READY }   from "@/lib/flags";
 
 export interface CapacityPreviewInput {
   date: string;        // "YYYY-MM-DD"
@@ -23,6 +25,8 @@ export interface CapacityPreviewInput {
   excludeId?: string | null;
   /** B5a: selected technician — enables precise per-staff overlap warnings. */
   staffId?: string | null;
+  /** B6b: selected work bay — enables precise per-bay overlap warnings. */
+  bayId?: string | null;
 }
 
 export interface CapacityPreviewResult {
@@ -50,9 +54,13 @@ export async function getCapacityPreview(input: CapacityPreviewInput): Promise<C
     if (!input?.date || startMin === null || endMin === null || endMin <= startMin) return EMPTY;
 
     const supabase = await createClient();
+    // Only select work_bay_id once the column exists (avoids 42703 pre-migration).
+    const cols = WORK_BAYS_SCHEMA_READY
+      ? "id, start_time, end_time, assigned_staff_id, work_bay_id"
+      : "id, start_time, end_time, assigned_staff_id";
     const { data, error } = await supabase
       .from("reservations")
-      .select("id, start_time, end_time, assigned_staff_id")
+      .select(cols)
       .eq("dealer_id", dealer.dealer_id)
       .eq("reservation_date", input.date)
       .not("start_time", "is", null);
@@ -63,9 +71,11 @@ export async function getCapacityPreview(input: CapacityPreviewInput): Promise<C
     }
 
     const selectedStaff = input.staffId || null;
+    const selectedBay = (WORK_BAYS_SCHEMA_READY && input.bayId) || null;
     let overlapCount = 0;
     let staffOverlapCount = 0;
-    for (const r of (data ?? []) as Array<{ id: string; start_time: string | null; end_time: string | null; assigned_staff_id: string | null }>) {
+    let bayOverlapCount = 0;
+    for (const r of (data ?? []) as unknown as Array<{ id: string; start_time: string | null; end_time: string | null; assigned_staff_id: string | null; work_bay_id?: string | null }>) {
       if (input.excludeId && r.id === input.excludeId) continue;
       const s = toMin(r.start_time);
       if (s === null) continue;
@@ -74,12 +84,22 @@ export async function getCapacityPreview(input: CapacityPreviewInput): Promise<C
       if (s < endMin && startMin < e) {
         overlapCount++;
         if (selectedStaff && r.assigned_staff_id === selectedStaff) staffOverlapCount++;
+        if (selectedBay && r.work_bay_id === selectedBay) bayOverlapCount++;
       }
+    }
+
+    // Resolve the selected bay's capacity for a precise per-bay warning.
+    let bayCapacity: number | null = null;
+    if (selectedBay) {
+      const bay = (await getBayOptions()).find((b) => b.id === selectedBay);
+      bayCapacity = bay ? bay.capacity : null;
     }
 
     const settings = await getStaffCapacitySettings();
     const warnings = computeCapacityWarnings(overlapCount, settings, {
       staffOverlapCount: selectedStaff ? staffOverlapCount : null,
+      bayOverlapCount: selectedBay ? bayOverlapCount : null,
+      bayCapacity,
     });
     const requireReason = warnings.length > 0 && settings.rules.override.require_reason;
 

@@ -13,6 +13,8 @@ interface Props {
   isClosed?: (dateStr: string) => boolean;
   /** B5a follow-up: resolve assigned technician name; null when none/deleted. */
   staffName?: (id?: string | null) => string | null;
+  /** B6b: resolve assigned bay name; null when none/deleted. */
+  bayName?: (id?: string | null) => string | null;
 }
 
 const DAY_HEADERS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -29,6 +31,7 @@ export default function CalendarMonthView({
   onReservationClick,
   isClosed,
   staffName,
+  bayName,
 }: Props) {
   const today = todayStr();  // A0: local date, no UTC off-by-one
 
@@ -134,6 +137,7 @@ export default function CalendarMonthView({
               <div className="flex flex-col gap-0.5">
                 {cellReservations.slice(0, 3).map((r) => {
                   const tech = staffName?.(r.assigned_staff_id) ?? null;
+                  const bay = bayName?.(r.work_bay_id) ?? null;
                   const label = r.customers
                     ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
                     : serviceTypeLabel(r.service_type);
@@ -144,7 +148,7 @@ export default function CalendarMonthView({
                         e.stopPropagation();
                         onReservationClick?.(r);
                       }}
-                      title={`${r.start_time ? r.start_time.slice(0, 5) + " " : ""}${label}${tech ? `（担当: ${tech}）` : ""}`}
+                      title={`${r.start_time ? r.start_time.slice(0, 5) + " " : ""}${label}${tech ? `（担当: ${tech}）` : ""}${bay ? `（ベイ: ${bay}）` : ""}`}
                       className={`flex items-center gap-1 w-full text-left px-1 py-0.5 rounded text-[10px] text-white ${serviceTypeColor(r.service_type)}`}
                     >
                       <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${statusDotClass(r.status)}`} aria-hidden />

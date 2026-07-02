@@ -7,6 +7,7 @@ import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number"
 import { ReservationDB, ReservationStatus, serviceTypeLabel } from "./reservation-types";
 import { getReservation } from "./get-reservation";
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
+import { WORK_BAYS_SCHEMA_READY } from "@/lib/flags";
 
 interface UpdateReservationInput {
   status?: ReservationStatus;
@@ -16,6 +17,7 @@ interface UpdateReservationInput {
   notes?: string | null;
   work_order_id?: string | null;
   assigned_staff_id?: string | null;
+  work_bay_id?: string | null;
   service_type?: string;
   customer_id?: string | null;
   vehicle_id?: string | null;
@@ -77,12 +79,26 @@ export async function updateReservation(
     if (!staff) return { success: false, error: "担当スタッフが見つかりません" };
   }
 
+  // Validate work bay ownership if being changed (B6b — only when schema is live)
+  if (WORK_BAYS_SCHEMA_READY && input.work_bay_id) {
+    const { data: bay } = await supabase
+      .from("work_bays")
+      .select("id")
+      .eq("id", input.work_bay_id)
+      .eq("dealer_id", dealer.dealer_id)
+      .maybeSingle();
+    if (!bay) return { success: false, error: "作業ベイが見つかりません" };
+  }
+
+  // B6b: strip work_bay_id from the update unless the column exists, so the
+  // spread never writes a non-existent column pre-migration.
+  const { work_bay_id, ...rest } = input;
+  const updatePayload: Record<string, unknown> = { ...rest, updated_at: new Date().toISOString() };
+  if (WORK_BAYS_SCHEMA_READY && work_bay_id !== undefined) updatePayload.work_bay_id = work_bay_id;
+
   const { data, error } = await supabase
     .from("reservations")
-    .update({
-      ...input,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq("id", id)
     .eq("dealer_id", dealer.dealer_id)
     .select(`

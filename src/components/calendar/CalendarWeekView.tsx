@@ -13,6 +13,8 @@ interface Props {
   isClosed?: (dateStr: string) => boolean;
   /** B5a follow-up: resolve assigned technician name; null when none/deleted. */
   staffName?: (id?: string | null) => string | null;
+  /** B6b: resolve assigned bay name; null when none/deleted. */
+  bayName?: (id?: string | null) => string | null;
 }
 
 const HOURS = Array.from({ length: 25 }, (_, i) => 8 + i * 0.5).filter((h) => h <= 20);
@@ -33,6 +35,7 @@ export default function CalendarWeekView({
   onDayClick,
   isClosed,
   staffName,
+  bayName,
 }: Props) {
   const today = todayStr();
 
@@ -178,6 +181,7 @@ export default function CalendarWeekView({
                   const widthPct = 100 / cols;
                   const dur = durationLabel(r.start_time, r.end_time);
                   const tech = staffName?.(r.assigned_staff_id) ?? null;
+                  const bay = bayName?.(r.work_bay_id) ?? null;
 
                   return (
                     <button
@@ -205,6 +209,7 @@ export default function CalendarWeekView({
                           {serviceTypeLabel(r.service_type)}
                           {dur && ` · ${dur}`}
                           {tech && ` · ${tech}`}
+                          {bay && ` · ${bay}`}
                         </p>
                       )}
                     </button>

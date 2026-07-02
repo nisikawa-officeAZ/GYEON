@@ -19,6 +19,8 @@ import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { requireRole }      from "@/lib/staff/require-role";
 import { getStaffList }     from "@/lib/staff/get-staff-list";
+import { getWorkBays }      from "@/lib/work-bays/get-work-bays";
+import { WORK_BAYS_SCHEMA_READY } from "@/lib/flags";
 import {
   type StaffCapacitySettings,
   defaultStaffCapacitySettings,
@@ -54,6 +56,15 @@ export async function getStaffCapacitySettings(): Promise<StaffCapacitySettings>
       settings.staff_capacity,
       new Set(staff.map((s) => s.id)),
     );
+
+    // B6b: once the schema is live, work_bays live in the table (authoritative),
+    // not the jsonb. Overlay them so the settings form + aggregate warnings match.
+    if (WORK_BAYS_SCHEMA_READY) {
+      const bays = await getWorkBays();
+      settings.capacity.work_bays = bays.map((b) => ({
+        id: b.id, name: b.name, active: b.active, capacity: b.capacity,
+      }));
+    }
     return settings;
   } catch (err) {
     console.warn("[getStaffCapacitySettings] failed — returning defaults:", err);
@@ -76,6 +87,12 @@ export async function saveStaffCapacity(
       normalized.staff_capacity,
       new Set(staff.map((s) => s.id)),
     );
+
+    // B6b: when the schema is live, work_bays are stored in the table (via
+    // saveWorkBays), NOT the jsonb — clear them here to avoid a stale duplicate.
+    if (WORK_BAYS_SCHEMA_READY) {
+      normalized.capacity.work_bays = [];
+    }
 
     const supabase = await createClient();
 
