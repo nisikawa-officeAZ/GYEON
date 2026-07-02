@@ -43,5 +43,6 @@ export interface CapacityResult {
     services: ReservationServiceType[];
     dryingActive: boolean;   // a multi-day job is in a drying phase on this date
     heavyActive: boolean;    // a heavy service is actively worked on this date
+    bufferActive: boolean;   // a before/after buffer period is present on this date
   };
 }

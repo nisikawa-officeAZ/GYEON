@@ -53,6 +53,12 @@ export interface ReservationAdvice {
   headline: string;
   reasons: AdvisorReason[];
   suggestedAlternatives: ServiceSuggestion[];
+  /** C2.10: compatibility of the SELECTED service with the current schedule. */
+  selectedCompatibility: {
+    status: "compatible" | "caution" | "not_recommended";
+    reason: string;
+    phase: "heavy" | "drying" | "buffer" | "none";
+  };
   /** C2.7: remaining-capacity factors, in plain language. */
   factors: AdviceFactor[];
   metrics: {
@@ -123,7 +129,7 @@ export function rankServiceRecommendations(
   ctx: AdviceEngineContext,
 ): ServiceSuggestion[] {
   const policy = ctx.policy ?? DEFAULT_SERVICE_POLICY;
-  const dayCtx = capacity.dayContext ?? { services: [], dryingActive: false, heavyActive: false };
+  const dayCtx = capacity.dayContext ?? { services: [], dryingActive: false, heavyActive: false, bufferActive: false };
   const bottleneckPeak = capacity.bottleneck ? capacity[capacity.bottleneck].peak : capacity.workshop.peak;
   const remainingHeadroom = Math.max(0, 1 - bottleneckPeak);
   const operatingMinutes = capacity.operatingMinutes || 12 * 60;
@@ -166,7 +172,7 @@ export function adviseReservation(
 ): ReservationAdvice {
   const policy = ctx?.policy ?? DEFAULT_SERVICE_POLICY;
   const level = capacity.level;
-  const dayCtx = capacity.dayContext ?? { services: [], dryingActive: false, heavyActive: false };
+  const dayCtx = capacity.dayContext ?? { services: [], dryingActive: false, heavyActive: false, bufferActive: false };
   const workshopPct = capacity.bottleneck ? Math.round(capacity.workshop.peak * 100) : null;
   const staff = occ(capacity.staff.peak, capacity.staff.cap);
   const bay = occ(capacity.bay.peak, capacity.bay.cap);
@@ -197,21 +203,30 @@ export function adviseReservation(
     reasons.push({ kind: "service", label: `${serviceTypeLabel(serviceType)}などの重作業は混雑日には推奨されません`, severity: "warn" });
   }
 
-  // C2.9: compatibility of the selected service with OTHER reservations present.
-  if (ctx) {
-    const otherServices = dayCtx.services.filter((s) => s !== serviceType);
-    const heavyActiveOther = otherServices.some((s) => isHeavyService(s, policy));
-    const selVerdict = evaluateServiceCompatibility(serviceType, {
-      dayServices: otherServices,
-      dryingActive: dayCtx.dryingActive,
-      heavyActive: heavyActiveOther,
-      blockedCombinations: ctx.blockedCombinations,
-      policy,
-    });
-    if (selVerdict.compatibility === "not_recommended") {
-      reasons.push({ kind: "service", label: `選択中の施工: ${selVerdict.reason}`, severity: "warn" });
-    }
-  }
+  // C2.9/C2.10: compatibility of the SELECTED service with OTHER reservations present.
+  const otherServices = dayCtx.services.filter((s) => s !== serviceType);
+  const heavyActiveOther = otherServices.some((s) => isHeavyService(s, policy));
+  const selVerdict = evaluateServiceCompatibility(serviceType, {
+    dayServices: otherServices,
+    dryingActive: dayCtx.dryingActive,
+    heavyActive: heavyActiveOther,
+    blockedCombinations: ctx?.blockedCombinations ?? [],
+    policy,
+  });
+
+  // Phase highlight: acceptable during heavy / drying / buffer.
+  let phase: "heavy" | "drying" | "buffer" | "none" = "none";
+  if (heavyActiveOther && policy.acceptedDuringHeavy.includes(serviceType)) phase = "heavy";
+  else if (dayCtx.dryingActive && policy.acceptedDuringDrying.includes(serviceType)) phase = "drying";
+  else if (dayCtx.bufferActive && policy.acceptedDuringDrying.includes(serviceType)) phase = "buffer";
+
+  const compatStatus: "compatible" | "caution" | "not_recommended" =
+    selVerdict.compatibility === "not_recommended" ? "not_recommended" : busy ? "caution" : "compatible";
+  const compatReason =
+    compatStatus === "caution" && selVerdict.compatibility === "compatible"
+      ? `${selVerdict.reason}（混雑気味）`
+      : selVerdict.reason;
+  const selectedCompatibility = { status: compatStatus, reason: compatReason, phase };
 
   // C2.6: capacity-ranked alternatives (only when it helps: busy or drying context).
   const shouldSuggest = !!ctx && (busy || dayCtx.dryingActive);
@@ -276,6 +291,7 @@ export function adviseReservation(
     headline,
     reasons,
     suggestedAlternatives,
+    selectedCompatibility,
     factors,
     metrics: { workshopPct, staff, bay, vehicle },
   };

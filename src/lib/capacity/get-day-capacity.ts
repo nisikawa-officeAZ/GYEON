@@ -157,6 +157,7 @@ export async function getDayCapacity(date: string, opts?: DayCapacityOptions): P
         services: Array.from(new Set(intervals.map((iv) => iv.serviceType))),
         dryingActive: intervals.some((iv) => iv.dayType === "drying"),
         heavyActive: intervals.some((iv) => iv.dayType === "active" && isHeavyService(iv.serviceType)),
+        bufferActive: intervals.some((iv) => iv.dayType === "buffer"),
       },
     };
   } catch (err) {

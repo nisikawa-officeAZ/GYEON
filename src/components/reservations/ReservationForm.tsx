@@ -54,6 +54,29 @@ function factorTone(tone: "good" | "tight" | "full" | "info"): string {
   }
 }
 
+function compatBadge(status: "compatible" | "caution" | "not_recommended"): string {
+  switch (status) {
+    case "compatible":     return "bg-emerald-500/15 border-emerald-500/40 text-emerald-300";
+    case "caution":        return "bg-amber-500/15 border-amber-500/40 text-amber-300";
+    case "not_recommended": return "bg-red-500/15 border-red-500/40 text-red-300";
+  }
+}
+function compatLabel(status: "compatible" | "caution" | "not_recommended"): string {
+  switch (status) {
+    case "compatible":      return "両立可 / Compatible";
+    case "caution":         return "注意 / Caution";
+    case "not_recommended": return "非推奨 / Not Recommended";
+  }
+}
+function phaseLabel(phase: "heavy" | "drying" | "buffer" | "none"): string | null {
+  switch (phase) {
+    case "heavy":  return "重作業中でも対応可";
+    case "drying": return "乾燥期間中に対応可";
+    case "buffer": return "バッファ期間中に対応可";
+    case "none":   return null;
+  }
+}
+
 function levelClasses(level: RecommendationLevel): string {
   switch (level) {
     case "available": return "bg-emerald-500/10 border-emerald-500/30 text-emerald-300";
@@ -442,6 +465,19 @@ export default function ReservationForm({
           {advice.suggestedAlternatives.length > 0 && (
             <span className="text-[10px] text-slate-400">{advice.headline}</span>
           )}
+
+          {/* C2.10: selected-service compatibility with the current schedule */}
+          <div className="flex items-center flex-wrap gap-2 pt-0.5">
+            <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${compatBadge(advice.selectedCompatibility.status)}`}>
+              両立: {compatLabel(advice.selectedCompatibility.status)}
+            </span>
+            <span className="text-[10px] text-slate-300">{advice.selectedCompatibility.reason}</span>
+            {phaseLabel(advice.selectedCompatibility.phase) && (
+              <span className="text-[10px] text-emerald-300">
+                {phaseLabel(advice.selectedCompatibility.phase)}
+              </span>
+            )}
+          </div>
 
           {/* Reason panel — WHY (C2.4) */}
           {advice.reasons.length > 0 && (
