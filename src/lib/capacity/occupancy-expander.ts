@@ -49,10 +49,10 @@ function pushBuffers(
   const after = dur?.buffer_after_min ?? null;
   const bayId = r.work_bay_id ?? null;
   if (before && before > 0) {
-    out.push({ reservationId: r.id, date: r.reservation_date, startMin: sMin - before, endMin: sMin, needsStaff: false, needsBay: true, staffId: null, bayId, dayType: "buffer" });
+    out.push({ reservationId: r.id, serviceType: r.service_type, date: r.reservation_date, startMin: sMin - before, endMin: sMin, needsStaff: false, needsBay: true, staffId: null, bayId, dayType: "buffer" });
   }
   if (after && after > 0 && eMin !== null) {
-    out.push({ reservationId: r.id, date: r.reservation_date, startMin: eMin, endMin: eMin + after, needsStaff: false, needsBay: true, staffId: null, bayId, dayType: "buffer" });
+    out.push({ reservationId: r.id, serviceType: r.service_type, date: r.reservation_date, startMin: eMin, endMin: eMin + after, needsStaff: false, needsBay: true, staffId: null, bayId, dayType: "buffer" });
   }
 }
 
@@ -70,7 +70,7 @@ export function expandReservation(r: ReservationDB, dur: ServiceDuration | undef
       const h = dur?.hours ?? null;
       eMin = h && h > 0 ? startMin + Math.round(h * 60) : startMin + 60;
     }
-    out.push({ reservationId: r.id, date: r.reservation_date, startMin, endMin: eMin, needsStaff: true, needsBay: true, staffId, bayId, dayType: "active" });
+    out.push({ reservationId: r.id, serviceType: r.service_type, date: r.reservation_date, startMin, endMin: eMin, needsStaff: true, needsBay: true, staffId, bayId, dayType: "active" });
     pushBuffers(out, r, startMin, eMin, dur);
     return out;
   }
@@ -87,10 +87,10 @@ export function expandReservation(r: ReservationDB, dur: ServiceDuration | undef
         const h = dur?.hours ?? null;
         eMin = h && h > 0 ? sMin + Math.round(h * 60) : null; // null → remainder of window
       }
-      out.push({ reservationId: r.id, date, startMin: sMin, endMin: eMin, needsStaff: true, needsBay: true, staffId, bayId, dayType: "active" });
+      out.push({ reservationId: r.id, serviceType: r.service_type, date, startMin: sMin, endMin: eMin, needsStaff: true, needsBay: true, staffId, bayId, dayType: "active" });
       if (isFirst) pushBuffers(out, r, sMin, eMin, dur);
     } else {
-      out.push({ reservationId: r.id, date, startMin: null, endMin: null, needsStaff: false, needsBay: true, staffId: null, bayId, dayType: "drying" });
+      out.push({ reservationId: r.id, serviceType: r.service_type, date, startMin: null, endMin: null, needsStaff: false, needsBay: true, staffId: null, bayId, dayType: "drying" });
     }
   }
   return out;

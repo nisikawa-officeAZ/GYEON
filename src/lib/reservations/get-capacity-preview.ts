@@ -21,6 +21,7 @@ import { getDayCapacity }           from "@/lib/capacity/get-day-capacity";
 import type { RecommendationLevel } from "@/lib/capacity/capacity-types";
 import type { ReservationServiceType } from "@/lib/reservations/reservation-types";
 import { adviseReservation, type ReservationAdvice } from "@/lib/capacity/reservation-advisor";
+import { getServiceDurations } from "@/lib/dealer-settings/save-service-durations";
 
 export interface CapacityPreviewInput {
   date: string;        // "YYYY-MM-DD"
@@ -145,8 +146,14 @@ export async function getCapacityPreview(input: CapacityPreviewInput): Promise<C
         vehiclePct: pct(day.vehicle.peak, day.vehicle.cap),
         confidence: day.confidence,
       };
-      // C2.5: reusable recommendation engine (reasons + suggested alternatives).
-      advice = adviseReservation(day, input.serviceType);
+      // C2.5/C2.6: reusable recommendation engine with configurable, capacity-ranked
+      // alternatives (durations + blocking + parallel rules from dealer config).
+      const durations = await getServiceDurations();
+      advice = adviseReservation(day, input.serviceType, {
+        durations,
+        blockedCombinations: settings.rules.blocking.blocked_combinations,
+        parallelAllowed: settings.capacity.parallel_work.allow_multi_bay,
+      });
     }
 
     // Override reason is required when settings mandate it AND there is either an

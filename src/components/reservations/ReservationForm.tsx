@@ -438,6 +438,7 @@ export default function ReservationForm({
                   key={s.service_type}
                   type="button"
                   onClick={() => setServiceType(s.service_type)}
+                  title={s.reason || undefined}
                   className="px-2 py-0.5 rounded-md text-[10px] bg-slate-800 border border-slate-600 text-slate-200 hover:bg-slate-700"
                 >
                   {s.label}

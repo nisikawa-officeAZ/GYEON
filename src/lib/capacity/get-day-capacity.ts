@@ -17,6 +17,7 @@ import { getReservationsByDateRange } from "@/lib/reservations/get-reservations-
 import { hoursForDate, isClosedDate } from "@/lib/dealer-settings/business-hours";
 import { expandReservations, intervalsForDate, MAX_MULTIDAY } from "./occupancy-expander";
 import { computeDayCapacity } from "./capacity-calculator";
+import { isHeavyService } from "./service-classification";
 import type { CapacityResult } from "./capacity-types";
 import type { ReservationDB, ReservationServiceType } from "@/lib/reservations/reservation-types";
 
@@ -139,7 +140,7 @@ export async function getDayCapacity(date: string, opts?: DayCapacityOptions): P
 
     const intervals = intervalsForDate(expandReservations(reservations, durations), date);
 
-    return computeDayCapacity({
+    const result = computeDayCapacity({
       date,
       operatingWindow,
       closed,
@@ -148,6 +149,16 @@ export async function getDayCapacity(date: string, opts?: DayCapacityOptions): P
       bayCapacityTotal,
       vehicleCap,
     });
+
+    // C2.6: day context for the recommendation engine.
+    return {
+      ...result,
+      dayContext: {
+        services: Array.from(new Set(intervals.map((iv) => iv.serviceType))),
+        dryingActive: intervals.some((iv) => iv.dayType === "drying"),
+        heavyActive: intervals.some((iv) => iv.dayType === "active" && isHeavyService(iv.serviceType)),
+      },
+    };
   } catch (err) {
     console.warn("[getDayCapacity] failed — returning empty:", err);
     return emptyClosed(date);

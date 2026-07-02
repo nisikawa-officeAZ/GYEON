@@ -1,5 +1,7 @@
 // DealerOS — Workshop Capacity Engine types (Phase C1.1). Pure — no I/O.
 
+import type { ReservationServiceType } from "@/lib/reservations/reservation-types";
+
 export type RecommendationLevel = "available" | "limited" | "warning" | "high_load";
 
 /** Utilization for one resource dimension. peak/avg are fractions (0..∞);
@@ -13,6 +15,7 @@ export interface DimensionUtil {
 /** One occupancy interval on a single date, produced by the expander. */
 export interface OccupancyInterval {
   reservationId: string;
+  serviceType: ReservationServiceType;
   date: string;                 // "YYYY-MM-DD"
   startMin: number | null;      // null = all-day (calculator resolves to the operating window)
   endMin: number | null;
@@ -35,4 +38,10 @@ export interface CapacityResult {
   level: RecommendationLevel;
   confidence: "measured" | "estimated";      // estimated when any cap is unknown
   reservationCount: number;                  // distinct reservations occupying the date
+  /** C2.6: day context for the recommendation engine (services/phases present). */
+  dayContext?: {
+    services: ReservationServiceType[];
+    dryingActive: boolean;   // a multi-day job is in a drying phase on this date
+    heavyActive: boolean;    // a heavy service is actively worked on this date
+  };
 }
