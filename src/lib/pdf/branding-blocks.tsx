@@ -4,7 +4,7 @@
 // footer layout while sharing ONE branding presentation. Every value falls back
 // gracefully to the product default when branding is missing.
 
-import { Text, Image, StyleSheet } from "@react-pdf/renderer";
+import { Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import type { DealerBranding } from "./dealer-branding-types";
 
 const styles = StyleSheet.create({
@@ -12,6 +12,10 @@ const styles = StyleSheet.create({
   name:   { fontSize: 14, fontWeight: 700, color: "#0f172a" },
   info:   { fontSize: 8, color: "#64748b", marginTop: 1 },
   footerText: { fontSize: 8, color: "#94a3b8", textAlign: "center" },
+  qrRow:    { flexDirection: "row", justifyContent: "center", marginBottom: 3 },
+  qrBlock:  { alignItems: "center", marginHorizontal: 8 },
+  qrImg:    { width: 44, height: 44, objectFit: "contain" },
+  qrLabel:  { fontSize: 6, color: "#94a3b8", marginTop: 1 },
 });
 
 const DEFAULT_NAME = "GYEON Detailer Agent";
@@ -39,8 +43,26 @@ export function BrandingIdentity({ branding }: { branding?: DealerBranding | nul
 export function BrandingFooterLines({ branding, docNo }: { branding?: DealerBranding | null; docNo?: string }) {
   const line1 = [branding?.name, branding?.phone].filter(Boolean).join(" ・ ") || `${DEFAULT_NAME} — DealerOS`;
   const line2 = [branding?.address, branding?.website].filter(Boolean).join(" ・ ");
+  const websiteQr = branding?.qrCode?.src ?? null;
+  const lineQr = branding?.lineQr?.src ?? null;
   return (
     <>
+      {(websiteQr || lineQr) && (
+        <View style={styles.qrRow}>
+          {websiteQr ? (
+            <View style={styles.qrBlock}>
+              <Image src={websiteQr} style={styles.qrImg} />
+              <Text style={styles.qrLabel}>Website QR</Text>
+            </View>
+          ) : null}
+          {lineQr ? (
+            <View style={styles.qrBlock}>
+              <Image src={lineQr} style={styles.qrImg} />
+              <Text style={styles.qrLabel}>LINE QR</Text>
+            </View>
+          ) : null}
+        </View>
+      )}
       {branding?.footer ? <Text style={styles.footerText}>{branding.footer}</Text> : null}
       <Text style={styles.footerText}>{line1}</Text>
       {line2 ? <Text style={styles.footerText}>{line2}</Text> : null}
