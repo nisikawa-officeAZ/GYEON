@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       branding,
     );
   } catch (err) {
-    return new Response(`PDF生成エラー: ${String(err)}`, { status: 500 });
+    { console.error("[statement pdf] render failed:", err); return new Response("PDFの生成に失敗しました", { status: 500 }); }
   }
 
   return new Response(new Uint8Array(buffer), {

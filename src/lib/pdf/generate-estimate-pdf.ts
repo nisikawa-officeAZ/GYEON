@@ -43,7 +43,7 @@ export async function generateEstimatePdf(
   try {
     pdfBuffer = await renderEstimatePdf(estimate, stamp, branding);
   } catch (err) {
-    return { success: false, error: `PDF生成エラー: ${String(err)}` };
+    return (console.error("[pdf] render failed:", err), { success: false, error: "PDFの生成に失敗しました。時間をおいて再度お試しください。" });
   }
 
   const documentNumber =

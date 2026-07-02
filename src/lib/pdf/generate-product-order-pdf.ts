@@ -35,7 +35,7 @@ export async function generateProductOrderPdf(
   try {
     pdfBuffer = await renderProductOrderPdf(order, await getDealerBranding(dealer.dealer_id));
   } catch (err) {
-    return { success: false, error: `PDF生成エラー: ${String(err)}` };
+    return (console.error("[pdf] render failed:", err), { success: false, error: "PDFの生成に失敗しました。時間をおいて再度お試しください。" });
   }
 
   const documentNumber =
