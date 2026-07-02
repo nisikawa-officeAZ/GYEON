@@ -32,7 +32,7 @@ import {
 } from "@/lib/ocr/ocr-session-actions";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB — matches next.config.ts bodySizeLimit
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"]; // E9.1: PDF support
 
 // ─── Upload + Analyze ─────────────────────────────────────────────────────────
 

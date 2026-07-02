@@ -12,6 +12,8 @@ export type OcrStatus =
 export type VehicleRegistrationOcrResult = {
   owner_name?:             string;  // 所有者氏名
   user_name?:              string;  // 使用者氏名
+  owner_name_kana?:        string;  // 所有者氏名フリガナ（記載がある場合のみ）
+  user_name_kana?:         string;  // 使用者氏名フリガナ（記載がある場合のみ）
   owner_address?:          string;  // 所有者住所
   user_address?:           string;  // 使用者住所
   vehicle_name?:           string;  // 車名
@@ -107,6 +109,8 @@ export const OCR_TO_VEHICLE_MAP: Partial<Record<keyof VehicleRegistrationOcrResu
 export const OCR_FIELD_LABELS: Record<keyof VehicleRegistrationOcrResult, string> = {
   owner_name:             "所有者氏名",
   user_name:              "使用者氏名",
+  owner_name_kana:        "所有者氏名フリガナ",
+  user_name_kana:         "使用者氏名フリガナ",
   owner_address:          "所有者住所",
   user_address:           "使用者住所",
   vehicle_name:           "車名",

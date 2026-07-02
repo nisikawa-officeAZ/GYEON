@@ -1,10 +1,11 @@
-// PHASE67: Vehicle Registration AI OCR — GPT-4o-mini Vision Analysis
+// Vehicle Registration AI OCR — OpenAI Vision analysis (image + PDF).
 // Server-side only — imported only from "use server" modules. API key never exposed.
+// E9.1: model defaults to the approved gpt-4.1-mini and is overridable via env.
 
 import { VehicleRegistrationOcrResult } from "./vehicle-registration-types";
 
 const OCR_PROVIDER   = "openai";
-const OCR_MODEL      = "gpt-4o-mini";
+const OCR_MODEL      = process.env.OCR_MODEL || "gpt-4.1-mini";
 const OCR_TIMEOUT_MS = 55_000; // 55s — OpenAI cold-start can take ~30s; give headroom
 
 const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証）を読み取るAIアシスタントです。
@@ -22,6 +23,8 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
 {
   "owner_name": "",
   "user_name": "",
+  "owner_name_kana": "",
+  "user_name_kana": "",
   "owner_address": "",
   "user_address": "",
   "vehicle_name": "",
@@ -64,7 +67,7 @@ export type OcrErrorCode =
 const RETRYABLE_CODES: OcrErrorCode[] = ["TIMEOUT", "CONNECT_ERROR", "OPENAI_SERVER_ERROR"];
 
 const STRING_FIELDS: Array<keyof VehicleRegistrationOcrResult> = [
-  "owner_name", "user_name", "owner_address", "user_address",
+  "owner_name", "user_name", "owner_name_kana", "user_name_kana", "owner_address", "user_address",
   "vehicle_name", "maker", "model", "grade", "model_code", "chassis_number",
   "license_plate_region", "license_plate_class", "license_plate_kana", "license_plate_number",
   "first_registration_date", "inspection_expiry_date",
@@ -79,7 +82,7 @@ function sleep(ms: number): Promise<void> {
 // ─── Single OpenAI call with timeout ─────────────────────────────────────────
 
 async function callOpenAI(
-  imageBase64: string,
+  fileBase64: string,
   mimeType: string,
   apiKey: string,
 ): Promise<
@@ -88,6 +91,12 @@ async function callOpenAI(
 > {
   const controller = new AbortController();
   const timeoutId  = setTimeout(() => controller.abort(), OCR_TIMEOUT_MS);
+
+  // E9.1: PDFs are sent as a document part; images keep the proven image_url path.
+  const isPdf = mimeType === "application/pdf";
+  const filePart: Record<string, unknown> = isPdf
+    ? { type: "file", file: { filename: "document.pdf", file_data: `data:application/pdf;base64,${fileBase64}` } }
+    : { type: "image_url", image_url: { url: `data:${mimeType};base64,${fileBase64}`, detail: "high" } };
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -105,13 +114,7 @@ async function callOpenAI(
             role:    "user",
             content: [
               { type: "text", text: EXTRACTION_PROMPT },
-              {
-                type:      "image_url",
-                image_url: {
-                  url:    `data:${mimeType};base64,${imageBase64}`,
-                  detail: "high",
-                },
-              },
+              filePart,
             ],
           },
         ],
