@@ -12,17 +12,19 @@ import { createClient } from "@/lib/supabase/server";
 import { getCanonicalDealerSettings } from "@/lib/dealer-settings/get-canonical-dealer-settings";
 import { resolveDealerBillingMethod, type BillingMethodInfo } from "./billing-method";
 import { resolveStatementPeriod, aggregateInvoiceTotals } from "./statement-helpers";
+import { computePaymentDueDate } from "./billing-terms";
 import { buildStatementDetail, type StatementDetailRow, type StatementInvoiceRow } from "./statement-detail";
 
 export interface StatementPreviewResult {
-  billingMethod: BillingMethodInfo;
-  eligible:      boolean;
-  billingPeriod: { periodStart: string; periodEnd: string } | null;
-  invoiceCount:  number;
-  subtotal:      number;
-  tax:           number;
-  grandTotal:    number;
-  detail:        StatementDetailRow[];
+  billingMethod:  BillingMethodInfo;
+  eligible:       boolean;
+  billingPeriod:  { periodStart: string; periodEnd: string } | null;
+  paymentDueDate: string | null;
+  invoiceCount:   number;
+  subtotal:       number;
+  tax:            number;
+  grandTotal:     number;
+  detail:         StatementDetailRow[];
 }
 
 type InvoiceQueryRow = StatementInvoiceRow & {
@@ -44,15 +46,16 @@ export async function getStatementPreview(
   const billingMethod = resolveDealerBillingMethod(ds.dealer_closing_day, ds.dealer_payment_day);
 
   const base: StatementPreviewResult = {
-    billingMethod, eligible: false, billingPeriod: null,
+    billingMethod, eligible: false, billingPeriod: null, paymentDueDate: null,
     invoiceCount: 0, subtotal: 0, tax: 0, grandTotal: 0, detail: [],
   };
 
   // Per-invoice dealers have no statement period → not eligible.
-  if (billingMethod.mode !== "closing" || billingMethod.closingDay === null) return base;
+  if (billingMethod.mode !== "closing" || billingMethod.closingDay === null || billingMethod.paymentDay === null) return base;
 
   const refDate = referenceDate ?? new Date().toISOString().slice(0, 10);
   const period = resolveStatementPeriod(refDate, billingMethod.closingDay);
+  const paymentDueDate = computePaymentDueDate(period.periodEnd, billingMethod.paymentDay);
 
   const supabase = await createClient();
   const { data } = await supabase
@@ -74,6 +77,7 @@ export async function getStatementPreview(
     billingMethod,
     eligible:      true,
     billingPeriod: period,
+    paymentDueDate,
     invoiceCount:  totals.count,
     subtotal:      totals.subtotal,
     tax:           totals.tax_amount,
