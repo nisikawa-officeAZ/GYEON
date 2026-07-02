@@ -262,6 +262,23 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
     displacement: "", fuel_type: "", registration_date: "",
   });
 
+  // E9.3/E9.4: an OCR-created customer/vehicle only appears in the props after the
+  // parent's router.refresh() completes (async) — after this component has already
+  // mounted with stale lists. The useState initializers above run only once, so
+  // preselect the OCR-linked records here once they resolve, without overriding an
+  // operator's own selection (guarded on the current value being empty).
+  useEffect(() => {
+    if (!defaultCustomerId || customerId) return;
+    const c = customers.find(x => x.id === defaultCustomerId);
+    if (c) { setCustomerId(c.id); setCustLabel([c.last_name, c.first_name].filter(Boolean).join(" ")); }
+  }, [defaultCustomerId, customers, customerId]);
+
+  useEffect(() => {
+    if (!defaultVehicleId || vehicleId) return;
+    const v = vehicles.find(x => x.id === defaultVehicleId && x.customer_id === (defaultCustomerId ?? customerId));
+    if (v) { setVehicleId(v.id); setVehLabel([v.maker, v.model, v.plate_number].filter(Boolean).join(" ")); }
+  }, [defaultVehicleId, vehicles, vehicleId, customerId, defaultCustomerId]);
+
   const custVehicles = vehicles.filter(v => v.customer_id === customerId);
 
   // Pre-fill vehicle fields from OCR as soon as the OCR result is applied. Keyed on the
