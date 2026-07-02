@@ -32,6 +32,8 @@ interface Props {
   }>;
   /** B1: store business hours / closed days — reflected visually only (no enforcement). */
   businessHours?: BusinessHoursSettings;
+  /** B5a follow-up: dealer-scoped staff id → name for technician display. */
+  staffNameById?: Record<string, string>;
 }
 
 // A0: All calendar date math uses LOCAL date semantics. toISOString() would convert to
@@ -105,6 +107,7 @@ export default function CalendarPageClient({
   customers,
   vehicles,
   businessHours = DEFAULT_BUSINESS_HOURS_SETTINGS,
+  staffNameById = {},
 }: Props) {
   const [view, setView] = useState<View>("month");
   const [year,  setYear]  = useState(initialYear);
@@ -124,6 +127,10 @@ export default function CalendarPageClient({
   // B1: business-hours / closed-day visual reflection (no enforcement).
   const isClosed = (d: string) => isClosedDate(d, businessHours);
   const dayHours = hoursForDate(dayStr, businessHours);
+
+  // B5a follow-up: resolve a technician name for a reservation; null when
+  // unassigned or the staff no longer exists (never breaks the UI).
+  const staffName = (id?: string | null): string | null => (id && staffNameById[id]) || null;
 
   // Navigation labels
   const navLabel =
@@ -317,6 +324,7 @@ export default function CalendarPageClient({
               onDayClick={handleDayClick}
               onReservationClick={handleReservationClick}
               isClosed={isClosed}
+              staffName={staffName}
             />
           )}
           {view === "week" && (
@@ -326,6 +334,7 @@ export default function CalendarPageClient({
               onReservationClick={handleReservationClick}
               onDayClick={handleDayClick}
               isClosed={isClosed}
+              staffName={staffName}
             />
           )}
           {view === "day" && (
@@ -337,6 +346,7 @@ export default function CalendarPageClient({
               closed={isClosed(dayStr)}
               openTime={dayHours?.open ?? null}
               closeTime={dayHours?.close ?? null}
+              staffName={staffName}
             />
           )}
         </div>

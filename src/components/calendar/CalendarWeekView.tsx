@@ -11,6 +11,8 @@ interface Props {
   onDayClick?: (date: string) => void;
   /** B1: whether a date is a store closed day (visual only). */
   isClosed?: (dateStr: string) => boolean;
+  /** B5a follow-up: resolve assigned technician name; null when none/deleted. */
+  staffName?: (id?: string | null) => string | null;
 }
 
 const HOURS = Array.from({ length: 25 }, (_, i) => 8 + i * 0.5).filter((h) => h <= 20);
@@ -30,6 +32,7 @@ export default function CalendarWeekView({
   onReservationClick,
   onDayClick,
   isClosed,
+  staffName,
 }: Props) {
   const today = todayStr();
 
@@ -174,6 +177,7 @@ export default function CalendarWeekView({
                   );
                   const widthPct = 100 / cols;
                   const dur = durationLabel(r.start_time, r.end_time);
+                  const tech = staffName?.(r.assigned_staff_id) ?? null;
 
                   return (
                     <button
@@ -200,6 +204,7 @@ export default function CalendarWeekView({
                         <p className="text-[9px] text-white/70 truncate">
                           {serviceTypeLabel(r.service_type)}
                           {dur && ` · ${dur}`}
+                          {tech && ` · ${tech}`}
                         </p>
                       )}
                     </button>

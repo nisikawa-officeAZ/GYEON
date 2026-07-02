@@ -5,6 +5,7 @@ import { getReservationsByDateRange } from "@/lib/reservations/get-reservations-
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getBusinessHoursSettings } from "@/lib/dealer-settings/save-business-hours";
+import { getReservationStaffOptions } from "@/lib/reservations/get-reservation-staff-options";
 import CalendarPageClient from "./CalendarPageClient";
 
 export default async function CalendarPage() {
@@ -30,6 +31,11 @@ export default async function CalendarPage() {
   const dealer = await getCurrentDealer();
   const supabase = await createClient();
   const businessHours = await getBusinessHoursSettings();
+
+  // B5a follow-up: dealer-scoped staff id → name map for technician display.
+  const staffOptions = await getReservationStaffOptions();
+  const staffNameById: Record<string, string> = {};
+  for (const s of staffOptions) staffNameById[s.id] = s.name;
 
   let customers: Array<{ id: string; last_name: string; first_name: string | null }> = [];
   let vehicles: Array<{
@@ -66,6 +72,7 @@ export default async function CalendarPage() {
         customers={customers}
         vehicles={vehicles}
         businessHours={businessHours}
+        staffNameById={staffNameById}
       />
     </MainLayout>
   );

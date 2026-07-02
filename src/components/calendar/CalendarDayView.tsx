@@ -14,6 +14,8 @@ interface Props {
   /** B1: business-hours open/close ("HH:MM") for this date; null shades nothing. */
   openTime?: string | null;
   closeTime?: string | null;
+  /** B5a follow-up: resolve assigned technician name; null when none/deleted. */
+  staffName?: (id?: string | null) => string | null;
 }
 
 const DAY_START_MIN = 8 * 60;
@@ -47,7 +49,7 @@ function vehicleSummary(r: ReservationDB): string {
   return [r.vehicles.maker, r.vehicles.model].filter(Boolean).join(" ");
 }
 
-export default function CalendarDayView({ date, reservations, onReservationClick, onSlotClick, closed = false, openTime = null, closeTime = null }: Props) {
+export default function CalendarDayView({ date, reservations, onReservationClick, onSlotClick, closed = false, openTime = null, closeTime = null, staffName }: Props) {
   const totalHeight = ((DAY_END_MIN - DAY_START_MIN) / 60) * SLOT_HEIGHT;
 
   const timed  = reservations.filter((r) => r.start_time);
@@ -200,6 +202,7 @@ export default function CalendarDayView({ date, reservations, onReservationClick
             const widthPct = 100 / cols;
             const veh = vehicleSummary(r);
             const dur = durationLabel(r.start_time, r.end_time);
+            const tech = staffName?.(r.assigned_staff_id) ?? null;
 
             return (
               <button
@@ -235,6 +238,10 @@ export default function CalendarDayView({ date, reservations, onReservationClick
                     {dur && ` · ${dur}`}
                     {veh && ` · ${veh}`}
                   </p>
+                )}
+
+                {tech && height >= 44 && (
+                  <p className="text-[10px] sm:text-[11px] text-white/80 truncate">担当: {tech}</p>
                 )}
               </button>
             );

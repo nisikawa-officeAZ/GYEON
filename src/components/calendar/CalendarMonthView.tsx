@@ -11,6 +11,8 @@ interface Props {
   onReservationClick?: (r: ReservationDB) => void;
   /** B1: whether a date is a store closed day (visual only). */
   isClosed?: (dateStr: string) => boolean;
+  /** B5a follow-up: resolve assigned technician name; null when none/deleted. */
+  staffName?: (id?: string | null) => string | null;
 }
 
 const DAY_HEADERS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -26,6 +28,7 @@ export default function CalendarMonthView({
   onDayClick,
   onReservationClick,
   isClosed,
+  staffName,
 }: Props) {
   const today = todayStr();  // A0: local date, no UTC off-by-one
 
@@ -129,29 +132,32 @@ export default function CalendarMonthView({
 
               {/* Reservation dots / cards */}
               <div className="flex flex-col gap-0.5">
-                {cellReservations.slice(0, 3).map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onReservationClick?.(r);
-                    }}
-                    title={`${r.start_time ? r.start_time.slice(0, 5) + " " : ""}${
-                      r.customers
-                        ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
-                        : serviceTypeLabel(r.service_type)
-                    }`}
-                    className={`flex items-center gap-1 w-full text-left px-1 py-0.5 rounded text-[10px] text-white ${serviceTypeColor(r.service_type)}`}
-                  >
-                    <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${statusDotClass(r.status)}`} aria-hidden />
-                    <span className="truncate">
-                      {r.start_time ? r.start_time.slice(0, 5) + " " : ""}
-                      {r.customers
-                        ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
-                        : r.reservation_number ?? r.id.slice(0, 6)}
-                    </span>
-                  </button>
-                ))}
+                {cellReservations.slice(0, 3).map((r) => {
+                  const tech = staffName?.(r.assigned_staff_id) ?? null;
+                  const label = r.customers
+                    ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
+                    : serviceTypeLabel(r.service_type);
+                  return (
+                    <button
+                      key={r.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onReservationClick?.(r);
+                      }}
+                      title={`${r.start_time ? r.start_time.slice(0, 5) + " " : ""}${label}${tech ? `（担当: ${tech}）` : ""}`}
+                      className={`flex items-center gap-1 w-full text-left px-1 py-0.5 rounded text-[10px] text-white ${serviceTypeColor(r.service_type)}`}
+                    >
+                      <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${statusDotClass(r.status)}`} aria-hidden />
+                      <span className="truncate">
+                        {r.start_time ? r.start_time.slice(0, 5) + " " : ""}
+                        {r.customers
+                          ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
+                          : r.reservation_number ?? r.id.slice(0, 6)}
+                        {tech ? ` ・${tech}` : ""}
+                      </span>
+                    </button>
+                  );
+                })}
                 {cellReservations.length > 3 && (
                   <span className="text-[9px] text-slate-400 pl-1">
                     +{cellReservations.length - 3}件
