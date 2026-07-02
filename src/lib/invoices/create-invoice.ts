@@ -6,6 +6,8 @@ import { InvoiceItemInput, calculateInvoiceTotals, lineTotal } from "./invoice-t
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
+import { getCanonicalDealerSettings } from "@/lib/dealer-settings/get-canonical-dealer-settings";
+import { resolveBillingTerms, resolveInvoiceDueDate } from "@/lib/customer-billing/billing-terms";
 
 export async function createInvoice(fd: FormData): Promise<{ error: string } | { success: true; id: string }> {
   const auth = await requireStaffCapability("finance");
@@ -275,6 +277,24 @@ export async function createInvoiceFromEstimate(
 
   const resolvedInvoiceNumber = (await getNextDocumentNumber("invoice")) || null;
 
+  // E8.2/E8.3: billing decision date = invoice issue_date. Resolve billing terms
+  // from dealer-level closing/payment days (customer-level overrides are a future
+  // schema step). Closing-payment applies only when BOTH days exist; otherwise
+  // due_date stays null (normal per-invoice behaviour preserved). The trade flag
+  // is never consulted here, so it cannot force closing billing.
+  const issueDate = new Date().toISOString().slice(0, 10);
+  let dueDate: string | null = null;
+  try {
+    const ds = await getCanonicalDealerSettings();
+    const terms = resolveBillingTerms({
+      dealerClosingDay: ds.dealer_closing_day,
+      dealerPaymentDay: ds.dealer_payment_day,
+    });
+    dueDate = resolveInvoiceDueDate(issueDate, terms);
+  } catch {
+    dueDate = null; // never block invoice creation on billing-terms resolution
+  }
+
   const { data: inv, error: invErr } = await supabase
     .from("invoices")
     .insert({
@@ -285,7 +305,8 @@ export async function createInvoiceFromEstimate(
       invoice_number: resolvedInvoiceNumber,
       status:         "draft",
       title:          est.title ?? "請求書",
-      issue_date:     new Date().toISOString().slice(0, 10),
+      issue_date:     issueDate,
+      due_date:       dueDate,
       discount_amount,
       tax_rate,
       paid_amount:    0,
