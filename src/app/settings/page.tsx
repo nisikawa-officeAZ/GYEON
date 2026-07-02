@@ -92,6 +92,18 @@ export default async function SettingsPage({
           <span className="text-slate-500 text-sm">›</span>
         </Link>
 
+        {/* B2: Service duration settings (dedicated route) */}
+        <Link
+          href="/settings/service-durations"
+          className="flex items-center justify-between px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:bg-slate-800/60 transition-colors"
+        >
+          <span className="flex flex-col">
+            <span className="text-sm font-medium text-slate-200">サービス所要時間</span>
+            <span className="text-[11px] text-slate-500">施工内容ごとの標準所要時間（時間・日数）と前後バッファを設定</span>
+          </span>
+          <span className="text-slate-500 text-sm">›</span>
+        </Link>
+
         <PageTitle title="Settings" />
 
         <SettingsCenterWrapper

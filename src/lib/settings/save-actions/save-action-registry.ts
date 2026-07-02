@@ -233,6 +233,28 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
       "Calendar reflects hours/closed days visually only — no hard booking enforcement (B1).",
   },
 
+  // ─── Service Duration Settings (Batch B2) ─────────────────────────────────
+
+  service_durations: {
+    action_id:             "service_durations",
+    display_name:          "Service Duration Settings",
+    category_ids:          ["dealer"],
+    status:                "writable_now",
+    server_action_path:    "src/lib/dealer-settings/save-service-durations.ts",
+    ui_role_policy:        "manager_or_owner",
+    has_server_role_check: true,
+    dealer_scope:          true,
+    admin_scope:           false,
+    external_dependency:   null,
+    notes:
+      "saveServiceDurations writes per-service-type estimated hours/days + before/after buffers " +
+      "to dealer_settings.business_days.service_durations (jsonb). Reuses the existing business_days " +
+      "container — no schema change / no migration. Read-merge preserves B1 business-hours keys. " +
+      "dealer_id from requireRole → getCurrentDealer() — never from client. " +
+      "requireRole([\"owner\",\"manager\"]) enforced server-side. Managed via /settings/service-durations. " +
+      "B2 is foundation only — no calendar auto-calculation and no reservation enforcement.",
+  },
+
   // ─── Platform Admin ───────────────────────────────────────────────────────
 
   dealer_rank: {

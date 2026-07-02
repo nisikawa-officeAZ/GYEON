@@ -66,7 +66,7 @@ export async function saveBusinessHours(
     const { dealerId } = await requireRole(["owner", "manager"]);
 
     // Server-side validation / normalization — never trust the client-supplied shape.
-    const business_days = normalizeBusinessHoursConfig(input?.business_hours);
+    const hoursConfig = normalizeBusinessHoursConfig(input?.business_hours);
     const closed_weekdays = Array.isArray(input?.closed_weekdays)
       ? Array.from(
           new Set(
@@ -79,6 +79,29 @@ export async function saveBusinessHours(
       : [];
 
     const supabase = await createClient();
+
+    // Read-merge: business_days is a shared jsonb container. Preserve keys owned
+    // by other features (e.g. B2 service_durations) — only overwrite the
+    // business-hours keys.
+    const { data: existing } = await supabase
+      .from("dealer_settings")
+      .select("business_days")
+      .eq("dealer_id", dealerId)
+      .maybeSingle();
+    const currentBd =
+      existing &&
+      typeof (existing as Record<string, unknown>).business_days === "object" &&
+      (existing as Record<string, unknown>).business_days !== null
+        ? ((existing as Record<string, unknown>).business_days as Record<string, unknown>)
+        : {};
+
+    const business_days = {
+      ...currentBd,
+      default_hours:     hoursConfig.default_hours,
+      weekday_hours:     hoursConfig.weekday_hours,
+      special_open_days: hoursConfig.special_open_days,
+    };
+
     const { error } = await supabase
       .from("dealer_settings")
       .upsert(

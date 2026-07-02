@@ -24,6 +24,7 @@ export type SettingsSaveActionId =
   | "staff_disable"             // disableStaff / enableStaff — staff
   | "ai_gateway_settings"       // saveAiSettings — ai_providers (/settings/ai route)
   | "business_hours"            // saveBusinessHours — dealer (/settings/business-hours route)
+  | "service_durations"         // saveServiceDurations — dealer (/settings/service-durations route)
   | "dealer_rank"               // setDealerRank — admin-only, not in dealer UI
   | "line_message_settings"     // PHASE70 — LINE message header/footer — not yet implemented
   | "ocr_policy"                // PHASE70 — OCR enable/disable flag — not yet implemented
