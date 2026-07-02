@@ -4,8 +4,8 @@ import { useState, useTransition, useEffect } from "react";
 import { createReservation } from "@/lib/reservations/create-reservation";
 import { updateReservation } from "@/lib/reservations/update-reservation";
 import { getCapacityPreview, type CapacityRecommendation } from "@/lib/reservations/get-capacity-preview";
-import { recommendationLabel } from "@/lib/capacity/recommendation";
 import type { RecommendationLevel } from "@/lib/capacity/capacity-types";
+import type { ReservationAdvice, ReasonSeverity } from "@/lib/capacity/reservation-advisor";
 import { getReservationStaffOptions, type ReservationStaffOption } from "@/lib/reservations/get-reservation-staff-options";
 import { logCapacityOverride, getLatestCapacityOverride, type CapacityOverrideRecord } from "@/lib/reservations/capacity-override-log";
 import { getBayOptions } from "@/lib/work-bays/get-work-bays";
@@ -34,6 +34,14 @@ interface Props {
   defaultEndTime?: string;
   onSuccess?: (r: ReservationDB) => void;
   onCancel?: () => void;
+}
+
+function reasonColor(sev: ReasonSeverity): string {
+  switch (sev) {
+    case "warn":   return "text-red-300";
+    case "notice": return "text-amber-300";
+    case "info":   return "text-slate-300";
+  }
 }
 
 function levelClasses(level: RecommendationLevel): string {
@@ -116,6 +124,8 @@ export default function ReservationForm({
   const [overrideReason, setOverrideReason] = useState("");
   // C1.2: soft workshop-capacity recommendation for the selected slot.
   const [capacity, setCapacity] = useState<CapacityRecommendation | null>(null);
+  // C2: full reservation advice (reasons + suggested alternatives).
+  const [advice, setAdvice] = useState<ReservationAdvice | null>(null);
 
   // B5b: latest previously-recorded override reason for this reservation (edit view).
   const [priorOverride, setPriorOverride] = useState<CapacityOverrideRecord | null>(null);
@@ -133,6 +143,7 @@ export default function ReservationForm({
       setCapacityWarnings([]);
       setRequireReason(false);
       setCapacity(null);
+      setAdvice(null);
       return;
     }
     let cancelled = false;
@@ -150,6 +161,7 @@ export default function ReservationForm({
         setCapacityWarnings(res.warnings);
         setRequireReason(res.requireReason);
         setCapacity(res.capacity);
+        setAdvice(res.advice);
       }
     }, 300);
     return () => { cancelled = true; clearTimeout(timer); };
@@ -395,22 +407,42 @@ export default function ReservationForm({
         </div>
       )}
 
-      {/* C1.2: soft workshop-capacity recommendation for the selected slot (never blocks). */}
-      {capacity && (
-        <div className={`flex flex-col gap-1 rounded-lg px-3 py-2 border ${levelClasses(capacity.level)}`}>
+      {/* C2: soft recommendation + reason panel + suggested alternatives (never blocks). */}
+      {advice && (
+        <div className={`flex flex-col gap-1.5 rounded-lg px-3 py-2 border ${levelClasses(advice.level)}`}>
+          {/* Recommendation headline (C2.1) */}
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-semibold">推奨: {recommendationLabel(capacity.level)}</span>
-            {capacity.workshopPct !== null && (
+            <span className="text-[11px] font-semibold">推奨: {advice.headline}</span>
+            {advice.metrics.workshopPct !== null && (
               <span className="text-[11px]">
-                工房稼働 {capacity.workshopPct}%{capacity.confidence === "estimated" ? "（推定）" : ""}
+                工房稼働 {advice.metrics.workshopPct}%{capacity?.confidence === "estimated" ? "（推定）" : ""}
               </span>
             )}
           </div>
-          {(capacity.staffPct !== null || capacity.bayPct !== null || capacity.vehiclePct !== null) && (
-            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] opacity-90">
-              {capacity.staffPct !== null && <span>スタッフ {capacity.staffPct}%</span>}
-              {capacity.bayPct !== null && <span>ベイ {capacity.bayPct}%</span>}
-              {capacity.vehiclePct !== null && <span>同時対応 {capacity.vehiclePct}%</span>}
+
+          {/* Reason panel — WHY (C2.4) */}
+          {advice.reasons.length > 0 && (
+            <ul className="flex flex-col gap-0.5 text-[10px]">
+              {advice.reasons.map((r, i) => (
+                <li key={i} className={reasonColor(r.severity)}>・{r.label}</li>
+              ))}
+            </ul>
+          )}
+
+          {/* Suggested alternatives (C2.2) — clickable, switches the service type */}
+          {advice.suggestedAlternatives.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span className="text-[10px] text-slate-400">代替候補:</span>
+              {advice.suggestedAlternatives.map((s) => (
+                <button
+                  key={s.service_type}
+                  type="button"
+                  onClick={() => setServiceType(s.service_type)}
+                  className="px-2 py-0.5 rounded-md text-[10px] bg-slate-800 border border-slate-600 text-slate-200 hover:bg-slate-700"
+                >
+                  {s.label}
+                </button>
+              ))}
             </div>
           )}
         </div>

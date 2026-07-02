@@ -20,6 +20,7 @@ import { WORK_BAYS_SCHEMA_READY }   from "@/lib/flags";
 import { getDayCapacity }           from "@/lib/capacity/get-day-capacity";
 import type { RecommendationLevel } from "@/lib/capacity/capacity-types";
 import type { ReservationServiceType } from "@/lib/reservations/reservation-types";
+import { adviseReservation, type ReservationAdvice } from "@/lib/capacity/reservation-advisor";
 
 export interface CapacityPreviewInput {
   date: string;        // "YYYY-MM-DD"
@@ -49,9 +50,11 @@ export interface CapacityPreviewResult {
   warnings: string[];
   requireReason: boolean;
   capacity: CapacityRecommendation | null;
+  /** C2: full reservation advice (reasons + suggested alternatives). */
+  advice: ReservationAdvice | null;
 }
 
-const EMPTY: CapacityPreviewResult = { overlapCount: 0, warnings: [], requireReason: false, capacity: null };
+const EMPTY: CapacityPreviewResult = { overlapCount: 0, warnings: [], requireReason: false, capacity: null, advice: null };
 
 function toMin(t: string | null | undefined): number | null {
   if (!t) return null;
@@ -118,8 +121,9 @@ export async function getCapacityPreview(input: CapacityPreviewInput): Promise<C
       bayCapacity,
     });
 
-    // C1.2: projected workshop-capacity recommendation (includes the candidate).
+    // C1.2 / C2: projected workshop-capacity recommendation + advice (includes candidate).
     let capacity: CapacityRecommendation | null = null;
+    let advice: ReservationAdvice | null = null;
     if (input.serviceType) {
       const day = await getDayCapacity(input.date, {
         excludeReservationId: input.excludeId ?? null,
@@ -141,6 +145,8 @@ export async function getCapacityPreview(input: CapacityPreviewInput): Promise<C
         vehiclePct: pct(day.vehicle.peak, day.vehicle.cap),
         confidence: day.confidence,
       };
+      // C2.5: reusable recommendation engine (reasons + suggested alternatives).
+      advice = adviseReservation(day, input.serviceType);
     }
 
     // Override reason is required when settings mandate it AND there is either an
@@ -149,7 +155,7 @@ export async function getCapacityPreview(input: CapacityPreviewInput): Promise<C
       settings.rules.override.require_reason &&
       (warnings.length > 0 || capacity?.level === "high_load");
 
-    return { overlapCount, warnings, requireReason, capacity };
+    return { overlapCount, warnings, requireReason, capacity, advice };
   } catch (err) {
     console.warn("[getCapacityPreview] failed — no warnings:", err);
     return EMPTY;
