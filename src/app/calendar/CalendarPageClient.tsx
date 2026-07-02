@@ -25,6 +25,27 @@ interface Props {
   }>;
 }
 
+// A0: All calendar date math uses LOCAL date semantics. toISOString() would convert to
+// UTC and, in ahead-of-UTC zones (e.g. JST +9), shift the calendar date back a day
+// ("off-by-one"). Format/parse dates via these local helpers instead.
+function toLocalDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function parseLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+
 function getMonthStart(year: number, month: number): Date {
   return new Date(year, month - 1, 1);
 }
@@ -34,7 +55,7 @@ function getMondayOfWeek(date: Date): string {
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day; // adjust to Monday
   d.setDate(d.getDate() + diff);
-  return d.toISOString().slice(0, 10);
+  return toLocalDateStr(d);
 }
 
 function formatMonthLabel(year: number, month: number): string {
@@ -42,14 +63,13 @@ function formatMonthLabel(year: number, month: number): string {
 }
 
 function formatWeekLabel(weekStart: string): string {
-  const d = new Date(weekStart + "T00:00:00");
-  const end = new Date(d);
-  end.setDate(end.getDate() + 6);
+  const d = parseLocalDate(weekStart);
+  const end = addDays(d, 6);
   return `${d.getMonth() + 1}/${d.getDate()} – ${end.getMonth() + 1}/${end.getDate()}`;
 }
 
 function formatDayLabel(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
+  const d = parseLocalDate(dateStr);
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
@@ -73,7 +93,7 @@ export default function CalendarPageClient({
 
   // Computed values
   const weekStart = getMondayOfWeek(currentDate);
-  const dayStr = currentDate.toISOString().slice(0, 10);
+  const dayStr = toLocalDateStr(currentDate);
 
   // Navigation labels
   const navLabel =
@@ -102,17 +122,15 @@ export default function CalendarPageClient({
         `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
       );
     } else if (view === "week") {
-      const d = new Date(weekStart + "T00:00:00");
-      d.setDate(d.getDate() - 7);
+      const d = addDays(parseLocalDate(weekStart), -7);
       setCurrentDate(d);
-      const from = d.toISOString().slice(0, 10);
-      const to   = new Date(d.getTime() + 6 * 86400000).toISOString().slice(0, 10);
+      const from = toLocalDateStr(d);
+      const to   = toLocalDateStr(addDays(d, 6));
       loadReservations(from, to);
     } else {
-      const d = new Date(currentDate);
-      d.setDate(d.getDate() - 1);
+      const d = addDays(currentDate, -1);
       setCurrentDate(d);
-      const ds = d.toISOString().slice(0, 10);
+      const ds = toLocalDateStr(d);
       loadReservations(ds, ds);
     }
   }
@@ -128,17 +146,15 @@ export default function CalendarPageClient({
         `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
       );
     } else if (view === "week") {
-      const d = new Date(weekStart + "T00:00:00");
-      d.setDate(d.getDate() + 7);
+      const d = addDays(parseLocalDate(weekStart), 7);
       setCurrentDate(d);
-      const from = d.toISOString().slice(0, 10);
-      const to   = new Date(d.getTime() + 6 * 86400000).toISOString().slice(0, 10);
+      const from = toLocalDateStr(d);
+      const to   = toLocalDateStr(addDays(d, 6));
       loadReservations(from, to);
     } else {
-      const d = new Date(currentDate);
-      d.setDate(d.getDate() + 1);
+      const d = addDays(currentDate, 1);
       setCurrentDate(d);
-      const ds = d.toISOString().slice(0, 10);
+      const ds = toLocalDateStr(d);
       loadReservations(ds, ds);
     }
   }
@@ -159,9 +175,10 @@ export default function CalendarPageClient({
   function handleDayClick(date: string) {
     // Calendar Time-Axis Sprint 1: clicking a date opens that day's time-axis (day) view.
     // (Reservation creation remains available via the "+ 新規予約" button; creating from a
-    // selected time slot is a documented future requirement.) date is "YYYY-MM-DD"; parse as
-    // UTC midnight so currentDate.toISOString() yields the same date for the day-view filter.
-    setCurrentDate(new Date(date + "T00:00:00Z"));
+    // selected time slot is a documented future requirement.) date is "YYYY-MM-DD"; A0: parse
+    // as LOCAL midnight so toLocalDateStr(currentDate) yields the same date for the day-view
+    // filter (no UTC off-by-one).
+    setCurrentDate(parseLocalDate(date));
     setView("day");
     loadReservations(date, date);
   }
@@ -190,7 +207,7 @@ export default function CalendarPageClient({
       );
     } else if (view === "week") {
       const from = weekStart;
-      const to   = new Date(new Date(weekStart + "T00:00:00").getTime() + 6 * 86400000).toISOString().slice(0, 10);
+      const to   = toLocalDateStr(addDays(parseLocalDate(weekStart), 6));
       loadReservations(from, to);
     } else {
       loadReservations(dayStr, dayStr);
