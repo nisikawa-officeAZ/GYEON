@@ -1,5 +1,12 @@
 import { EstimateCategory } from "../estimates/estimate-types";
 import { calculateEstimateTotals, lineTotal } from "./estimate-totals";
+import { ESTIMATE_TAXONOMY_READY } from "@/lib/flags";
+
+// Plan A (migration 093): write distinct line-item categories once the schema is
+// live; otherwise keep the legacy mapping so inserts never violate the old CHECK.
+const CAT_MAINTENANCE: EstimateCategory = ESTIMATE_TAXONOMY_READY ? "maintenance" : "other";
+const CAT_CARWASH: EstimateCategory     = ESTIMATE_TAXONOMY_READY ? "carwash"     : "other";
+const CAT_ROOMCLEAN: EstimateCategory   = ESTIMATE_TAXONOMY_READY ? "roomclean"   : "interior";
 import {
   BODY_SIZES, COATINGS, TOPCOAT_BASE, TOPCOAT_NAME, COATING_OPTIONS,
   MAINTENANCE_MENUS, CARWASH_MENUS, ROOM_CLEAN_PARTS, ROOM_CLEAN_CONDITIONS,
@@ -163,7 +170,7 @@ function calcMaintenance(input: MaintenanceInput, offset: number): ServiceSubtot
   let idx = offset;
   input.menuIds.forEach(id => {
     const m = MAINTENANCE_MENUS.find(x => x.id === id);
-    if (m) items.push(mkItem("other", m.name, m.price, idx++));
+    if (m) items.push(mkItem(CAT_MAINTENANCE, m.name, m.price, idx++));
   });
   return { type: "maintenance", lineItems: items, subtotal: sum(items) };
 }
@@ -173,7 +180,7 @@ function calcCarwash(input: CarwashInput, offset: number): ServiceSubtotal {
   let idx = offset;
   input.menuIds.forEach(id => {
     const m = CARWASH_MENUS.find(x => x.id === id);
-    if (m) items.push(mkItem("other", m.name, m.price, idx++));
+    if (m) items.push(mkItem(CAT_CARWASH, m.name, m.price, idx++));
   });
   return { type: "carwash", lineItems: items, subtotal: sum(items) };
 }
@@ -188,7 +195,7 @@ function calcRoomClean(input: RoomCleanInput, offset: number): ServiceSubtotal {
     if (p) {
       const price = Math.round(p.basePrice * coeff);
       const label = cond && cond.id !== "normal" ? `${p.name}（${cond.label}）` : p.name;
-      items.push(mkItem("interior", label, price, idx++));
+      items.push(mkItem(CAT_ROOMCLEAN, label, price, idx++));
     }
   });
   return { type: "roomclean", lineItems: items, subtotal: sum(items) };

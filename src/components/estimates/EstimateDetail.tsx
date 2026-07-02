@@ -28,12 +28,15 @@ function formatYen(n: number) {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  coating:  "コーティング",
-  ppf:      "PPF",
-  window:   "ウィンドウ",
-  interior: "インテリア",
-  glass:    "ガラス",
-  other:    "その他",
+  coating:     "コーティング",
+  ppf:         "PPF",
+  window:      "ウィンドウ",
+  interior:    "インテリア",
+  glass:       "ガラス",
+  other:       "その他",
+  maintenance: "メンテナンス",   // Plan A (migration 093)
+  carwash:     "洗車",
+  roomclean:   "ルームクリーニング",
 };
 
 interface EstimateDetailProps {

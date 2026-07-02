@@ -198,12 +198,15 @@ function formatDate(iso: string | null): string {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  coating:  "コーティング",
-  ppf:      "PPF",
-  window:   "ウィンドウ",
-  interior: "インテリア",
-  glass:    "ガラス",
-  other:    "その他",
+  coating:     "コーティング",
+  ppf:         "PPF",
+  window:      "ウィンドウ",
+  interior:    "インテリア",
+  glass:       "ガラス",
+  other:       "その他",
+  maintenance: "メンテナンス",   // Plan A (migration 093)
+  carwash:     "洗車",
+  roomclean:   "ルームクリーニング",
 };
 
 // ─── Document Component ───────────────────────────────────────────────────────

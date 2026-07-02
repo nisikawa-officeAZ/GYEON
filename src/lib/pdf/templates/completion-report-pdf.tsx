@@ -222,6 +222,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   interior: "インテリア",
   glass: "ガラス",
   other: "その他",
+  maintenance: "メンテナンス",   // Plan A (migration 093)
+  carwash: "洗車",
+  roomclean: "ルームクリーニング",
 };
 
 interface CompletionReportDocumentProps {

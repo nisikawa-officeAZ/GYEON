@@ -7,7 +7,8 @@ export type EstimateStatus =
   | 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED';
 
 export type EstimateCategory =
-  | 'coating' | 'ppf' | 'window' | 'interior' | 'glass' | 'other';
+  | 'coating' | 'ppf' | 'window' | 'interior' | 'glass' | 'other'
+  | 'maintenance' | 'carwash' | 'roomclean'; // Plan A (migration 093, gated by ESTIMATE_TAXONOMY_READY)
 
 export interface EstimateItemDB {
   id:            string;

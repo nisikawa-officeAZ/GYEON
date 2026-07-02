@@ -28,3 +28,12 @@ export const BRANDING_SCHEMA_READY =
 // NEXT_PUBLIC_WORK_BAYS_SCHEMA_READY=true without a code change.
 export const WORK_BAYS_SCHEMA_READY =
   process.env.NEXT_PUBLIC_WORK_BAYS_SCHEMA_READY === "true" ? true : false;
+
+// ESTIMATE_TAXONOMY_READY gates writing the maintenance/carwash/roomclean line-item
+// categories added by migration 093 (Plan A). While false, buildLineItems keeps the
+// legacy mapping (maintenance/carwash → 'other', roomclean → 'interior') so no insert
+// can violate the pre-093 CHECK constraint. Flip to true only AFTER migration 093 is
+// applied and REST exposes the widened constraint. Overridable via
+// NEXT_PUBLIC_ESTIMATE_TAXONOMY_READY=true without a code change.
+export const ESTIMATE_TAXONOMY_READY =
+  process.env.NEXT_PUBLIC_ESTIMATE_TAXONOMY_READY === "true" ? true : false;
