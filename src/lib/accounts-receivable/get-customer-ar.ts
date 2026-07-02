@@ -25,26 +25,29 @@ export async function getCustomerAccountsReceivable(
 
   const supabase = await createClient();
 
-  const [{ data: invoices }, { data: payments }] = await Promise.all([
-    supabase
-      .from("invoices")
-      .select("total, paid_amount, due_date, status")
-      .eq("dealer_id", dealer.dealer_id)
-      .eq("customer_id", customerId)
-      .is("deleted_at", null)
-      .neq("status", "cancelled"),
-    supabase
+  const { data: invoices } = await supabase
+    .from("invoices")
+    .select("id, total, paid_amount, due_date, status")
+    .eq("dealer_id", dealer.dealer_id)
+    .eq("customer_id", customerId)
+    .is("deleted_at", null)
+    .neq("status", "cancelled");
+
+  // E8.7: link payments through the customer's invoices (invoice_id), NOT
+  // payments.customer_id, so legacy payments without customer_id are still
+  // counted for Last Payment Date. Amounts already come from invoice.paid_amount.
+  const invoiceIds = (invoices ?? []).map((i) => (i as { id: string }).id);
+  let payments: ARPayment[] = [];
+  if (invoiceIds.length > 0) {
+    const { data } = await supabase
       .from("payments")
       .select("payment_date, amount, status")
       .eq("dealer_id", dealer.dealer_id)
-      .eq("customer_id", customerId)
-      .eq("status", "completed"),
-  ]);
+      .in("invoice_id", invoiceIds)
+      .eq("status", "completed");
+    payments = (data ?? []) as ARPayment[];
+  }
 
   const today = new Date().toISOString().slice(0, 10);
-  return summarizeAccountsReceivable(
-    (invoices ?? []) as ARInvoice[],
-    (payments ?? []) as ARPayment[],
-    today,
-  );
+  return summarizeAccountsReceivable((invoices ?? []) as ARInvoice[], payments, today);
 }
