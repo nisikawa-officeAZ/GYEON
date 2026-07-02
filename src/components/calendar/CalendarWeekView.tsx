@@ -9,6 +9,8 @@ interface Props {
   onReservationClick?: (r: ReservationDB) => void;
   /** A4: clicking a day header jumps to that day's time-axis view. */
   onDayClick?: (date: string) => void;
+  /** B1: whether a date is a store closed day (visual only). */
+  isClosed?: (dateStr: string) => boolean;
 }
 
 const HOURS = Array.from({ length: 25 }, (_, i) => 8 + i * 0.5).filter((h) => h <= 20);
@@ -27,6 +29,7 @@ export default function CalendarWeekView({
   weekStart,
   onReservationClick,
   onDayClick,
+  isClosed,
 }: Props) {
   const today = todayStr();
 
@@ -59,14 +62,15 @@ export default function CalendarWeekView({
           {weekDates.map((date, i) => {
             const day = parseInt(date.slice(8), 10);
             const isToday = date === today;
+            const closed = isClosed?.(date) ?? false;
             return (
               <button
                 key={date}
                 type="button"
                 onClick={() => onDayClick?.(date)}
-                title={`${date} の予約を表示`}
+                title={closed ? `${date}（定休日）の予約を表示` : `${date} の予約を表示`}
                 className={`py-2 text-center border-l border-slate-800 transition-colors hover:bg-slate-800/40 ${
-                  isToday ? "bg-blue-900/20" : ""
+                  isToday ? "bg-blue-900/20" : closed ? "bg-slate-900/50" : ""
                 }`}
               >
                 <span className={`text-[10px] ${i >= 5 ? "text-blue-400" : "text-slate-400"}`}>
@@ -79,6 +83,7 @@ export default function CalendarWeekView({
                 >
                   {day}
                 </span>
+                {closed && <span className="block text-[9px] text-slate-500 leading-none">定休</span>}
               </button>
             );
           })}
@@ -132,6 +137,7 @@ export default function CalendarWeekView({
             const items = timedByDay.get(date) ?? [];
             const laid = layoutOverlaps(items);
             const isToday = date === today;
+            const closed = isClosed?.(date) ?? false;
 
             return (
               <div
@@ -139,6 +145,9 @@ export default function CalendarWeekView({
                 className={`relative border-l border-slate-800 ${isToday ? "bg-blue-900/10" : ""}`}
                 style={{ height: totalHeight }}
               >
+                {closed && (
+                  <div className="pointer-events-none absolute inset-0 bg-slate-950/40" aria-hidden />
+                )}
                 {/* Hour lines */}
                 {HOURS.filter((_, i) => i % 2 === 0).map((h) => (
                   <div

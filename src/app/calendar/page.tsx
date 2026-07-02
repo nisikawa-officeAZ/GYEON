@@ -4,6 +4,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { getReservationsByDateRange } from "@/lib/reservations/get-reservations-by-date";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { getBusinessHoursSettings } from "@/lib/dealer-settings/save-business-hours";
 import CalendarPageClient from "./CalendarPageClient";
 
 export default async function CalendarPage() {
@@ -28,6 +29,7 @@ export default async function CalendarPage() {
 
   const dealer = await getCurrentDealer();
   const supabase = await createClient();
+  const businessHours = await getBusinessHoursSettings();
 
   let customers: Array<{ id: string; last_name: string; first_name: string | null }> = [];
   let vehicles: Array<{
@@ -63,6 +65,7 @@ export default async function CalendarPage() {
         initialMonth={month}
         customers={customers}
         vehicles={vehicles}
+        businessHours={businessHours}
       />
     </MainLayout>
   );

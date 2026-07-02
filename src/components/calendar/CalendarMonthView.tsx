@@ -9,6 +9,8 @@ interface Props {
   month: number;  // 1-12
   onDayClick?: (date: string) => void;
   onReservationClick?: (r: ReservationDB) => void;
+  /** B1: whether a date is a store closed day (visual only). */
+  isClosed?: (dateStr: string) => boolean;
 }
 
 const DAY_HEADERS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -23,6 +25,7 @@ export default function CalendarMonthView({
   month,
   onDayClick,
   onReservationClick,
+  isClosed,
 }: Props) {
   const today = todayStr();  // A0: local date, no UTC off-by-one
 
@@ -86,15 +89,25 @@ export default function CalendarMonthView({
           const cellReservations = reservationsByDate.get(cell.dateStr) ?? [];
           const isToday = cell.dateStr === today;
           const colIndex = i % 7;
+          const closed = isClosed?.(cell.dateStr) ?? false;
 
           return (
             <div
               key={cell.dateStr + i}
               onClick={() => onDayClick?.(cell.dateStr)}
-              className={`min-h-[90px] p-1.5 border-b border-r border-slate-800 cursor-pointer transition-colors ${
+              title={closed ? "定休日" : undefined}
+              className={`relative min-h-[90px] p-1.5 border-b border-r border-slate-800 cursor-pointer transition-colors ${
                 cell.currentMonth ? "bg-[#0f172a] hover:bg-[#1e293b]" : "bg-[#0a1020] hover:bg-[#111827]"
               } ${colIndex === 6 ? "border-r-0" : ""}`}
             >
+              {closed && (
+                <>
+                  <div className="pointer-events-none absolute inset-0 bg-slate-950/45" aria-hidden />
+                  <span className="absolute top-1 left-1 z-10 text-[9px] px-1 rounded bg-slate-700/70 text-slate-300">
+                    定休
+                  </span>
+                </>
+              )}
               {/* Date number */}
               <div className="mb-1 flex justify-end">
                 <span

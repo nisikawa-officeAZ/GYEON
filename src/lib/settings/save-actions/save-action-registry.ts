@@ -211,6 +211,28 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
       "Managed via /settings/ai dedicated route — not embedded in /settings/ai_providers.",
   },
 
+  // ─── Store Business Hours (Batch B1) ──────────────────────────────────────
+
+  business_hours: {
+    action_id:             "business_hours",
+    display_name:          "Store Business Hours & Closed Days",
+    category_ids:          ["dealer"],
+    status:                "writable_now",
+    server_action_path:    "src/lib/dealer-settings/save-business-hours.ts",
+    ui_role_policy:        "manager_or_owner",
+    has_server_role_check: true,
+    dealer_scope:          true,
+    admin_scope:           false,
+    external_dependency:   null,
+    notes:
+      "saveBusinessHours writes weekly hours + special-open days to dealer_settings.business_days " +
+      "(jsonb), regular closed days to closed_weekdays, and temporary holidays to temp_holidays. " +
+      "Reuses existing columns only — no schema change / no migration. " +
+      "dealer_id from requireRole → getCurrentDealer() — never from client. " +
+      "requireRole([\"owner\",\"manager\"]) enforced server-side. Managed via /settings/business-hours. " +
+      "Calendar reflects hours/closed days visually only — no hard booking enforcement (B1).",
+  },
+
   // ─── Platform Admin ───────────────────────────────────────────────────────
 
   dealer_rank: {

@@ -1,7 +1,7 @@
 "use client";
 
 import { ReservationDB, serviceTypeColor, serviceTypeLabel, reservationStatusLabel } from "@/lib/reservations/reservation-types";
-import { minutesToTime, hm, durationLabel, statusDotClass, layoutOverlaps } from "@/lib/calendar/calendar-utils";
+import { minutesToTime, timeToMinutes, hm, durationLabel, statusDotClass, layoutOverlaps } from "@/lib/calendar/calendar-utils";
 
 interface Props {
   date: string;
@@ -9,6 +9,11 @@ interface Props {
   onReservationClick?: (r: ReservationDB) => void;
   /** Calendar Time-Axis Sprint 2: start a new reservation from a clicked available slot. */
   onSlotClick?: (startTime: string, endTime: string) => void;
+  /** B1: store closed day — visual only, slots remain clickable (no enforcement). */
+  closed?: boolean;
+  /** B1: business-hours open/close ("HH:MM") for this date; null shades nothing. */
+  openTime?: string | null;
+  closeTime?: string | null;
 }
 
 const DAY_START_MIN = 8 * 60;
@@ -42,13 +47,17 @@ function vehicleSummary(r: ReservationDB): string {
   return [r.vehicles.maker, r.vehicles.model].filter(Boolean).join(" ");
 }
 
-export default function CalendarDayView({ date, reservations, onReservationClick, onSlotClick }: Props) {
+export default function CalendarDayView({ date, reservations, onReservationClick, onSlotClick, closed = false, openTime = null, closeTime = null }: Props) {
   const totalHeight = ((DAY_END_MIN - DAY_START_MIN) / 60) * SLOT_HEIGHT;
 
   const timed  = reservations.filter((r) => r.start_time);
   const allDay = reservations.filter((r) => !r.start_time);
   const laid   = layoutOverlaps(timed);
   const isEmpty = reservations.length === 0;
+
+  // B1: clamp business-hours to the visible axis for non-open shading (visual only).
+  const openMin  = openTime  ? Math.min(Math.max(timeToMinutes(openTime),  DAY_START_MIN), DAY_END_MIN) : null;
+  const closeMin = closeTime ? Math.min(Math.max(timeToMinutes(closeTime), DAY_START_MIN), DAY_END_MIN) : null;
 
   return (
     <div className="flex flex-col gap-0">
@@ -64,6 +73,17 @@ export default function CalendarDayView({ date, reservations, onReservationClick
         </span>
         <span className="ml-auto text-slate-500">{reservations.length} 件</span>
       </div>
+
+      {/* B1: closed-day / business-hours notice (visual only — no booking restriction) */}
+      {closed ? (
+        <div className="px-3 py-1.5 bg-slate-900/70 border-b border-slate-800 text-[11px] text-slate-400">
+          定休日（予約の作成は可能です）
+        </div>
+      ) : (openTime && closeTime) ? (
+        <div className="px-3 py-1.5 bg-slate-900/40 border-b border-slate-800 text-[11px] text-slate-500">
+          営業時間 {openTime}–{closeTime}
+        </div>
+      ) : null}
 
       {/* All-day events */}
       {allDay.length > 0 && (
@@ -107,6 +127,29 @@ export default function CalendarDayView({ date, reservations, onReservationClick
               style={{ top: minutesToTop(h * 60), height: SLOT_HEIGHT }}
             />
           ))}
+
+          {/* B1: shade non-business hours (before open / after close), or the whole day when
+              closed. Visual only + pointer-events-none, so slot-create remains available. */}
+          {closed ? (
+            <div className="pointer-events-none absolute inset-0 bg-slate-950/45" aria-hidden />
+          ) : (
+            <>
+              {openMin !== null && openMin > DAY_START_MIN && (
+                <div
+                  className="pointer-events-none absolute left-0 right-0 bg-slate-950/35"
+                  style={{ top: 0, height: minutesToTop(openMin) }}
+                  aria-hidden
+                />
+              )}
+              {closeMin !== null && closeMin < DAY_END_MIN && (
+                <div
+                  className="pointer-events-none absolute left-0 right-0 bg-slate-950/35"
+                  style={{ top: minutesToTop(closeMin), height: totalHeight - minutesToTop(closeMin) }}
+                  aria-hidden
+                />
+              )}
+            </>
+          )}
 
           {/* Hour lines */}
           {HOURS.map((h) => (

@@ -1,8 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { ReservationDB } from "@/lib/reservations/reservation-types";
 import { getReservationsByDateRange } from "@/lib/reservations/get-reservations-by-date";
+import {
+  type BusinessHoursSettings,
+  DEFAULT_BUSINESS_HOURS_SETTINGS,
+  isClosedDate,
+  hoursForDate,
+} from "@/lib/dealer-settings/business-hours";
 import CalendarMonthView from "@/components/calendar/CalendarMonthView";
 import CalendarWeekView from "@/components/calendar/CalendarWeekView";
 import CalendarDayView from "@/components/calendar/CalendarDayView";
@@ -23,6 +30,8 @@ interface Props {
     model: string | null;
     plate_number: string | null;
   }>;
+  /** B1: store business hours / closed days — reflected visually only (no enforcement). */
+  businessHours?: BusinessHoursSettings;
 }
 
 // A0: All calendar date math uses LOCAL date semantics. toISOString() would convert to
@@ -95,6 +104,7 @@ export default function CalendarPageClient({
   initialMonth,
   customers,
   vehicles,
+  businessHours = DEFAULT_BUSINESS_HOURS_SETTINGS,
 }: Props) {
   const [view, setView] = useState<View>("month");
   const [year,  setYear]  = useState(initialYear);
@@ -110,6 +120,10 @@ export default function CalendarPageClient({
   // Computed values
   const weekStart = getMondayOfWeek(currentDate);
   const dayStr = toLocalDateStr(currentDate);
+
+  // B1: business-hours / closed-day visual reflection (no enforcement).
+  const isClosed = (d: string) => isClosedDate(d, businessHours);
+  const dayHours = hoursForDate(dayStr, businessHours);
 
   // Navigation labels
   const navLabel =
@@ -227,12 +241,20 @@ export default function CalendarPageClient({
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-lg font-semibold text-slate-100">カレンダー</h1>
-        <button
-          onClick={() => { setDefaultDate(""); setDefaultStartTime(""); setDefaultEndTime(""); setModal("new"); }}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          + 新規予約
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/settings/business-hours"
+            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-lg transition-colors"
+          >
+            営業時間設定
+          </Link>
+          <button
+            onClick={() => { setDefaultDate(""); setDefaultStartTime(""); setDefaultEndTime(""); setModal("new"); }}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            + 新規予約
+          </button>
+        </div>
       </div>
 
       {/* Controls */}
@@ -294,6 +316,7 @@ export default function CalendarPageClient({
               month={month}
               onDayClick={handleDayClick}
               onReservationClick={handleReservationClick}
+              isClosed={isClosed}
             />
           )}
           {view === "week" && (
@@ -302,6 +325,7 @@ export default function CalendarPageClient({
               weekStart={weekStart}
               onReservationClick={handleReservationClick}
               onDayClick={handleDayClick}
+              isClosed={isClosed}
             />
           )}
           {view === "day" && (
@@ -310,6 +334,9 @@ export default function CalendarPageClient({
               reservations={reservations.filter((r) => r.reservation_date === dayStr)}
               onReservationClick={handleReservationClick}
               onSlotClick={handleSlotClick}
+              closed={isClosed(dayStr)}
+              openTime={dayHours?.open ?? null}
+              closeTime={dayHours?.close ?? null}
             />
           )}
         </div>

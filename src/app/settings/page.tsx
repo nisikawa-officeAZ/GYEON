@@ -1,3 +1,4 @@
+import Link from "next/link";
 import MainLayout from "@/components/layout/MainLayout";
 import PageTitle from "@/components/ui/PageTitle";
 import { getDocumentSequences } from "@/lib/numbering/get-document-sequences";
@@ -78,6 +79,18 @@ export default async function SettingsPage({
           </span>
           <span className="text-[10px] text-slate-500">Powered by GYEON Japan</span>
         </div>
+
+        {/* B1: Store business hours / closed days (dedicated route) */}
+        <Link
+          href="/settings/business-hours"
+          className="flex items-center justify-between px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:bg-slate-800/60 transition-colors"
+        >
+          <span className="flex flex-col">
+            <span className="text-sm font-medium text-slate-200">営業時間・定休日</span>
+            <span className="text-[11px] text-slate-500">週の営業時間、定休日、臨時休業日／臨時営業日を設定</span>
+          </span>
+          <span className="text-slate-500 text-sm">›</span>
+        </Link>
 
         <PageTitle title="Settings" />
 
