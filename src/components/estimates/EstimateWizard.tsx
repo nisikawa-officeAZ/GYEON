@@ -18,6 +18,8 @@ import type { CoatingId }        from "@/lib/pricing/pricing-data";
 import { calculateEstimate, buildLineItems } from "@/lib/pricing/pricing-engine";
 import { SERVICE_CATEGORIES, type ServiceCategoryId } from "@/lib/estimates/service-categories";
 import type { ServiceInput }     from "@/lib/pricing/pricing-engine";
+import { DEFAULT_PRICING_CATALOG, type PricingCatalog } from "@/lib/pricing/pricing-catalog";
+import { getDealerPricingCatalog } from "@/lib/pricing/get-dealer-pricing-catalog";
 import dynamic                   from "next/dynamic";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
 import type { DetailerRank }     from "@/lib/dealer-settings/dealer-settings-types";
@@ -184,6 +186,16 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   const screen = history[history.length - 1]!;
   const [error, setError]   = useState<string | null>(null);
   const [pending, startTx]  = useTransition();
+
+  // E5: live Dealer-Settings pricing. The catalog drives the authoritative amounts
+  // (preview total + saved line items); defaults to the standard catalog until
+  // loaded and on any failure, so behaviour is preserved for un-configured dealers.
+  const [catalog, setCatalog] = useState<PricingCatalog>(DEFAULT_PRICING_CATALOG);
+  useEffect(() => {
+    let cancelled = false;
+    getDealerPricingCatalog().then((c) => { if (!cancelled) setCatalog(c); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
   // Double-submit guards (Estimate Completion Sprint 5):
   //   submittingRef — synchronous in-flight lock; blocks re-entry into ANY create action
   //     before the pending re-render can disable the button (rapid double-clicks / repeats).
@@ -369,6 +381,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
     serviceInputs,
     { couponTotal: couponDisc, extraAmount: extraDiscN, isDealer, dealerRate },
     taxRate,
+    catalog,
   );
 
   const { subtotal, couponDiscount, extraDiscount, dealerDiscount, taxableAmount, taxAmount, total } = estCalc;
@@ -512,7 +525,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
     // Block double-submit and any re-submit after a successful save.
     if (submittingRef.current || submittedRef.current) return;
     submittingRef.current = true;
-    const items = buildLineItems(serviceInputs);
+    const items = buildLineItems(serviceInputs, catalog);
 
     startTx(async () => {
       // Create vehicle here for maintenance/carwash/other flows that bypass step4
