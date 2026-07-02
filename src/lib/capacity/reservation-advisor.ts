@@ -40,11 +40,20 @@ export interface ServiceSuggestion {
   reason?: string;
 }
 
+/** C2.7: plain-language remaining-capacity factor for the explanation panel. */
+export interface AdviceFactor {
+  label: string;
+  value: string;
+  tone: "good" | "tight" | "full" | "info";
+}
+
 export interface ReservationAdvice {
   level: RecommendationLevel;
   headline: string;
   reasons: AdvisorReason[];
   suggestedAlternatives: ServiceSuggestion[];
+  /** C2.7: remaining-capacity factors, in plain language. */
+  factors: AdviceFactor[];
   metrics: {
     workshopPct: number | null;
     staff: string | null;
@@ -69,6 +78,24 @@ function severityFor(peak: number): ReasonSeverity {
 
 function occ(peak: number, cap: number | null): string | null {
   return cap && cap > 0 ? `${Math.round(peak * cap)}/${cap}` : null;
+}
+
+function toneFromPeak(peak: number): AdviceFactor["tone"] {
+  if (peak >= 1) return "full";
+  if (peak >= 0.7) return "tight";
+  return "good";
+}
+
+function durationText(dur: ServiceDurationMap[ReservationServiceType] | undefined): string {
+  if (!dur) return "設定なし";
+  const parts: string[] = [];
+  if (dur.days && dur.days > 1) parts.push(`${dur.days}日（乾燥/複数日）`);
+  if (dur.hours) parts.push(`${dur.hours}時間`);
+  const buf: string[] = [];
+  if (dur.buffer_before_min) buf.push(`前${dur.buffer_before_min}分`);
+  if (dur.buffer_after_min) buf.push(`後${dur.buffer_after_min}分`);
+  if (buf.length) parts.push(`バッファ ${buf.join("/")}`);
+  return parts.length ? parts.join(" ・ ") : "標準";
 }
 
 function isBlockedWith(
@@ -180,11 +207,59 @@ export function adviseReservation(
       ? `${recommendationLabel(level)} — 代替候補あり`
       : recommendationLabel(level);
 
+  // C2.7: plain-language remaining-capacity factors.
+  const factors: AdviceFactor[] = [];
+  if (workshopPct !== null) {
+    factors.push({
+      label: "工房の余裕",
+      value: `${Math.max(0, 100 - workshopPct)}%`,
+      tone: toneFromPeak(capacity.workshop.peak),
+    });
+  }
+  if (capacity.staff.cap && capacity.staff.cap > 0) {
+    const occupied = Math.round(capacity.staff.peak * capacity.staff.cap);
+    factors.push({
+      label: "スタッフの空き",
+      value: `${Math.max(0, capacity.staff.cap - occupied)}/${capacity.staff.cap}名`,
+      tone: toneFromPeak(capacity.staff.peak),
+    });
+  }
+  if (capacity.bay.cap && capacity.bay.cap > 0) {
+    const occupied = Math.round(capacity.bay.peak * capacity.bay.cap);
+    factors.push({
+      label: "ベイの空き",
+      value: `${Math.max(0, capacity.bay.cap - occupied)}/${capacity.bay.cap}`,
+      tone: toneFromPeak(capacity.bay.peak),
+    });
+  }
+  if (ctx) {
+    factors.push({
+      label: "所要時間の影響",
+      value: durationText(ctx.durations[serviceType]),
+      tone: "info",
+    });
+    const blockedHits = ctx.blockedCombinations.filter(
+      ([a, b]) =>
+        (a === serviceType && dayCtx.services.includes(b)) ||
+        (b === serviceType && dayCtx.services.includes(a)),
+    );
+    factors.push({
+      label: "作業ルール",
+      value: blockedHits.length
+        ? "本日の予約と同時実施を避ける組合せあり"
+        : ctx.parallelAllowed
+          ? "並行作業 可"
+          : "並行作業 不可",
+      tone: blockedHits.length ? "full" : "info",
+    });
+  }
+
   return {
     level,
     headline,
     reasons,
     suggestedAlternatives,
+    factors,
     metrics: { workshopPct, staff, bay, vehicle },
   };
 }

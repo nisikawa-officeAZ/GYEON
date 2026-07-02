@@ -44,6 +44,15 @@ function reasonColor(sev: ReasonSeverity): string {
   }
 }
 
+function factorTone(tone: "good" | "tight" | "full" | "info"): string {
+  switch (tone) {
+    case "good": return "text-emerald-300";
+    case "tight": return "text-amber-300";
+    case "full": return "text-red-300";
+    case "info": return "text-slate-300";
+  }
+}
+
 function levelClasses(level: RecommendationLevel): string {
   switch (level) {
     case "available": return "bg-emerald-500/10 border-emerald-500/30 text-emerald-300";
@@ -429,20 +438,33 @@ export default function ReservationForm({
             </ul>
           )}
 
-          {/* Suggested alternatives (C2.2) — clickable, switches the service type */}
+          {/* C2.7: remaining-capacity factors (plain language for shop staff) */}
+          {advice.factors.length > 0 && (
+            <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 pt-0.5 border-t border-white/10 mt-0.5">
+              {advice.factors.map((f, i) => (
+                <div key={i} className="flex items-center justify-between gap-2 text-[10px]">
+                  <span className="text-slate-400">{f.label}</span>
+                  <span className={`font-medium text-right ${factorTone(f.tone)}`}>{f.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Suggested alternatives (C2.2/C2.6) — clickable + reason text (C2.7) */}
           {advice.suggestedAlternatives.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-              <span className="text-[10px] text-slate-400">代替候補:</span>
+            <div className="flex flex-col gap-1 pt-1 border-t border-white/10 mt-0.5">
+              <span className="text-[10px] text-slate-400">おすすめの代替サービス（残キャパで順位付け）:</span>
               {advice.suggestedAlternatives.map((s) => (
-                <button
-                  key={s.service_type}
-                  type="button"
-                  onClick={() => setServiceType(s.service_type)}
-                  title={s.reason || undefined}
-                  className="px-2 py-0.5 rounded-md text-[10px] bg-slate-800 border border-slate-600 text-slate-200 hover:bg-slate-700"
-                >
-                  {s.label}
-                </button>
+                <div key={s.service_type} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setServiceType(s.service_type)}
+                    className="shrink-0 px-2 py-0.5 rounded-md text-[10px] bg-slate-800 border border-slate-600 text-slate-200 hover:bg-slate-700"
+                  >
+                    {s.label}
+                  </button>
+                  {s.reason && <span className="text-[10px] text-slate-500 truncate">{s.reason}</span>}
+                </div>
               ))}
             </div>
           )}
