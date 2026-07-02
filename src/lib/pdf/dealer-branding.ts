@@ -1,22 +1,31 @@
 "use server";
 
-// DealerOS — Dealer Branding Engine (reusable across all PDF generators).
+// DealerOS — Dealer Branding Engine (the ONE branding provider for EVERY PDF).
 //
-// ONE dealer-scoped provider loading branding from EXISTING dealer_settings:
-// name, address, phone, email, website, invoice registration number, footer,
-// and logo (mirrors the stamp loader — base64 from the dealer-branding bucket,
-// falling back to the public logo_url). Every field falls back to null so the
-// PDF blocks can render a graceful default when anything is missing.
+// Dealer-scoped; loads branding from EXISTING dealer_settings only (no schema):
+// store name (business_name), company name, address, phone, email, website,
+// invoice registration number, business hours (from the B1 business-hours
+// config), footer message (pdf_footer), logo (base64 from the dealer-branding
+// bucket via logo_path, falling back to logo_url), plus QR/LINE-QR fields
+// (LINE QR sourced from friend_add_qr_url; both reserved for future rendering).
 //
-// Security: dealer_id is always supplied by the caller from getCurrentDealer();
-// never from client input. All reads are explicitly scoped to that dealer_id.
+// Every field falls back to null so the shared PDF blocks render graceful
+// defaults. dealer_id is always supplied by the caller from getCurrentDealer();
+// never from client input, and every read is scoped to that dealer_id.
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BRANDING_BUCKET } from "@/lib/branding/branding-types";
+import { normalizeBusinessHoursConfig } from "@/lib/dealer-settings/business-hours";
 import { type DealerBranding, EMPTY_DEALER_BRANDING } from "./dealer-branding-types";
 
 function clean(v: unknown): string | null {
   return typeof v === "string" && v.trim() !== "" ? v.trim() : null;
+}
+
+function formatBusinessHours(businessDays: unknown): string | null {
+  const cfg = normalizeBusinessHoursConfig(businessDays);
+  if (cfg.default_hours) return `営業時間 ${cfg.default_hours.open}–${cfg.default_hours.close}`;
+  return null;
 }
 
 export async function getDealerBranding(dealerId: string): Promise<DealerBranding> {
@@ -24,11 +33,10 @@ export async function getDealerBranding(dealerId: string): Promise<DealerBrandin
   try {
     const supabase = createAdminClient();
 
-    // Always-present branding columns (pre-081); dealer-scoped.
     const { data } = await supabase
       .from("dealer_settings")
       .select(
-        "business_name, company_name, postal_code, business_address, business_phone, business_email, business_website, qualified_invoice_number, pdf_footer, logo_url",
+        "business_name, company_name, postal_code, business_address, business_phone, business_email, business_website, qualified_invoice_number, pdf_footer, logo_url, business_days, friend_add_qr_url",
       )
       .eq("dealer_id", dealerId)
       .maybeSingle();
@@ -36,8 +44,8 @@ export async function getDealerBranding(dealerId: string): Promise<DealerBrandin
     if (!data) return { ...EMPTY_DEALER_BRANDING };
     const r = data as Record<string, unknown>;
 
-    // Logo: prefer a base64 embed from logo_path (migration 081) for offline-safe
-    // rendering; best-effort so a missing column/file never breaks branding.
+    // Logo: prefer a base64 embed from logo_path (081) for offline-safe rendering;
+    // best-effort so a missing column/file never breaks branding.
     let logo: { src: string } | null = null;
     try {
       const { data: pathRow } = await supabase
@@ -58,17 +66,25 @@ export async function getDealerBranding(dealerId: string): Promise<DealerBrandin
     }
     if (!logo && clean(r.logo_url)) logo = { src: (r.logo_url as string).trim() };
 
+    const storeName = clean(r.business_name);
+    const companyName = clean(r.company_name);
+    const lineQrUrl = clean(r.friend_add_qr_url);
+
     return {
-      name: clean(r.business_name) ?? clean(r.company_name),
-      companyName: clean(r.company_name),
+      storeName,
+      companyName,
+      name: storeName ?? companyName,
       postalCode: clean(r.postal_code),
       address: clean(r.business_address),
       phone: clean(r.business_phone),
       email: clean(r.business_email),
       website: clean(r.business_website),
       invoiceRegNo: clean(r.qualified_invoice_number),
+      businessHours: formatBusinessHours(r.business_days),
       footer: clean(r.pdf_footer),
       logo,
+      qrCode: null, // future
+      lineQr: lineQrUrl ? { src: lineQrUrl } : null, // future rendering
     };
   } catch (err) {
     console.error("[getDealerBranding] failed:", err);

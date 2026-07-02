@@ -14,6 +14,8 @@ import { CompletionReportFullData } from "@/lib/completion-reports/completion-re
 import { StampBlock } from "@/lib/pdf/stamp-block";
 import type { PdfStamp } from "@/lib/stamp/stamp-types";
 import { registerPdfFonts } from "@/lib/pdf/register-fonts";
+import { BrandingIdentity, BrandingFooterLines } from "@/lib/pdf/branding-blocks";
+import type { DealerBranding } from "@/lib/pdf/dealer-branding-types";
 
 const styles = StyleSheet.create({
   page: {
@@ -223,12 +225,13 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 interface CompletionReportDocumentProps {
-  data:   CompletionReportFullData;
-  stamp?: PdfStamp | null;
+  data:      CompletionReportFullData;
+  stamp?:    PdfStamp | null;
+  branding?: DealerBranding | null;
 }
 
-function CompletionReportDocument({ data, stamp }: CompletionReportDocumentProps) {
-  const { report, dealer, work_order: wo } = data;
+function CompletionReportDocument({ data, stamp, branding }: CompletionReportDocumentProps) {
+  const { report, work_order: wo } = data;
   const customer = wo?.customers ?? null;
   const vehicle  = wo?.vehicles  ?? null;
   const estimate = wo?.estimates ?? null;
@@ -236,7 +239,6 @@ function CompletionReportDocument({ data, stamp }: CompletionReportDocumentProps
 
   const docNo = report.report_number ?? `RPT-${report.id.slice(0, 8).toUpperCase()}`;
   const customerName = [customer?.last_name, customer?.first_name].filter(Boolean).join(" ") || "—";
-  const dealerName = dealer?.name ?? "GYEON Detailer Agent";
 
   return (
     <Document>
@@ -244,13 +246,7 @@ function CompletionReportDocument({ data, stamp }: CompletionReportDocumentProps
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.companyName}>{dealerName}</Text>
-            {dealer?.address && (
-              <Text style={styles.companyInfo}>{dealer.prefecture ?? ""} {dealer.address}</Text>
-            )}
-            {dealer?.phone && (
-              <Text style={styles.companyInfo}>TEL: {dealer.phone}</Text>
-            )}
+            <BrandingIdentity branding={branding} />
             {stamp && <View style={{ marginTop: 8, alignItems: "flex-start" }}><StampBlock stamp={stamp} /></View>}
           </View>
           <View>
@@ -397,8 +393,7 @@ function CompletionReportDocument({ data, stamp }: CompletionReportDocumentProps
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>{dealerName} — DealerOS</Text>
-          <Text style={styles.footerText}>{docNo}</Text>
+          <BrandingFooterLines branding={branding} docNo={docNo} />
         </View>
       </Page>
     </Document>
@@ -408,7 +403,8 @@ function CompletionReportDocument({ data, stamp }: CompletionReportDocumentProps
 export async function renderCompletionReportPdf(
   report: CompletionReportFullData,
   stamp?: PdfStamp | null,
+  branding?: DealerBranding | null,
 ): Promise<Buffer> {
   registerPdfFonts();
-  return await renderToBuffer(<CompletionReportDocument data={report} stamp={stamp} />);
+  return await renderToBuffer(<CompletionReportDocument data={report} stamp={stamp} branding={branding} />);
 }

@@ -33,7 +33,9 @@ export function BrandingIdentity({ branding }: { branding?: DealerBranding | nul
   );
 }
 
-/** Footer lines: store name・phone / address・website, custom footer note, and doc number. */
+/** Footer lines: store name・phone / address・website / business hours, custom
+ *  footer message, and doc number. (QR / LINE-QR are reserved on the branding
+ *  object for future rendering — intentionally not drawn yet.) */
 export function BrandingFooterLines({ branding, docNo }: { branding?: DealerBranding | null; docNo?: string }) {
   const line1 = [branding?.name, branding?.phone].filter(Boolean).join(" ・ ") || `${DEFAULT_NAME} — DealerOS`;
   const line2 = [branding?.address, branding?.website].filter(Boolean).join(" ・ ");
@@ -42,6 +44,7 @@ export function BrandingFooterLines({ branding, docNo }: { branding?: DealerBran
       {branding?.footer ? <Text style={styles.footerText}>{branding.footer}</Text> : null}
       <Text style={styles.footerText}>{line1}</Text>
       {line2 ? <Text style={styles.footerText}>{line2}</Text> : null}
+      {branding?.businessHours ? <Text style={styles.footerText}>{branding.businessHours}</Text> : null}
       {docNo ? <Text style={styles.footerText}>{docNo}</Text> : null}
     </>
   );
