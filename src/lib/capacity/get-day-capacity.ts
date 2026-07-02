@@ -1,0 +1,116 @@
+"use server";
+
+// DealerOS — Workshop Capacity: getDayCapacity(date) (Phase C1.1).
+//
+// Thin server action: loads existing dealer-scoped config (B1 hours, B2 durations,
+// B3 scheduling, B6b bays) + reservations, then delegates to the PURE capacity
+// core. dealer_id is resolved server-side via getCurrentDealer() — never from
+// client. Read-only, soft — produces a score/level, never blocks. No schema.
+
+import { getCurrentDealer }         from "@/lib/auth/get-current-dealer";
+import { getBusinessHoursSettings } from "@/lib/dealer-settings/save-business-hours";
+import { getServiceDurations }      from "@/lib/dealer-settings/save-service-durations";
+import { getStaffCapacitySettings } from "@/lib/dealer-settings/save-staff-capacity";
+import { getBayOptions }            from "@/lib/work-bays/get-work-bays";
+import { getReservationStaffOptions } from "@/lib/reservations/get-reservation-staff-options";
+import { getReservationsByDateRange } from "@/lib/reservations/get-reservations-by-date";
+import { hoursForDate, isClosedDate } from "@/lib/dealer-settings/business-hours";
+import { expandReservations, intervalsForDate, MAX_MULTIDAY } from "./occupancy-expander";
+import { computeDayCapacity } from "./capacity-calculator";
+import type { CapacityResult } from "./capacity-types";
+
+// Statuses that consume workshop capacity.
+const CAPACITY_STATUSES = new Set(["pending", "confirmed", "completed"]);
+
+function hmToMin(t: string | null | undefined): number | null {
+  if (!t) return null;
+  const [h, m] = t.split(":").map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  return h * 60 + m;
+}
+
+function addDaysStr(dateStr: string, n: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m - 1, d + n);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+}
+
+function emptyClosed(date: string): CapacityResult {
+  return {
+    date,
+    closed: true,
+    operatingMinutes: 0,
+    workshop: { peak: 0, avg: 0 },
+    staff: { peak: 0, avg: 0, cap: null },
+    bay: { peak: 0, avg: 0, cap: null },
+    vehicle: { peak: 0, avg: 0, cap: null },
+    bottleneck: null,
+    level: "available",
+    confidence: "estimated",
+    reservationCount: 0,
+  };
+}
+
+export async function getDayCapacity(date: string): Promise<CapacityResult> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? "")) return emptyClosed(date);
+  const dealer = await getCurrentDealer();
+  if (!dealer) return emptyClosed(date);
+
+  try {
+    const [businessHours, durations, scheduling, bays, staffOpts] = await Promise.all([
+      getBusinessHoursSettings(),
+      getServiceDurations(),
+      getStaffCapacitySettings(),
+      getBayOptions(),
+      getReservationStaffOptions(),
+    ]);
+
+    // Reservations whose occupancy could reach `date` (multi-day jobs starting earlier).
+    const from = addDaysStr(date, -MAX_MULTIDAY);
+    const reservations = (await getReservationsByDateRange(from, date)).filter((r) =>
+      CAPACITY_STATUSES.has(r.status),
+    );
+
+    const dh = hoursForDate(date, businessHours);
+    const closed = isClosedDate(date, businessHours);
+    const openMin = dh ? hmToMin(dh.open) : null;
+    const closeMin = dh ? hmToMin(dh.close) : null;
+    const operatingWindow =
+      openMin !== null && closeMin !== null && closeMin > openMin ? { openMin, closeMin } : null;
+
+    // Bookable staff (default bookable when no per-staff entry).
+    const staffCapMap = scheduling.staff_capacity;
+    const bookableStaffCount =
+      staffOpts.filter((s) => {
+        const e = staffCapMap[s.id];
+        return e ? e.bookable !== false : true;
+      }).length || null;
+
+    // Bay capacity total — prefer the work_bays table (B6b); fall back to B3 jsonb bays.
+    let bayCapacityTotal: number | null = null;
+    const activeBays = bays.filter((b) => b.active);
+    if (activeBays.length) {
+      bayCapacityTotal = activeBays.reduce((a, b) => a + (b.capacity || 1), 0);
+    } else {
+      const jsonbBays = scheduling.capacity.work_bays.filter((b) => b.active);
+      if (jsonbBays.length) bayCapacityTotal = jsonbBays.reduce((a, b) => a + (b.capacity ?? 1), 0);
+    }
+
+    const vehicleCap = scheduling.capacity.simultaneous_vehicles ?? null;
+
+    const intervals = intervalsForDate(expandReservations(reservations, durations), date);
+
+    return computeDayCapacity({
+      date,
+      operatingWindow,
+      closed,
+      intervals,
+      bookableStaffCount,
+      bayCapacityTotal,
+      vehicleCap,
+    });
+  } catch (err) {
+    console.warn("[getDayCapacity] failed — returning empty:", err);
+    return emptyClosed(date);
+  }
+}
