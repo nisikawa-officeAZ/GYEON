@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter }      from "next/navigation";
 import { CustomerDB, customerDisplayName, customerKanaName } from "@/lib/customers/customer-types";
 import { VehicleDB }      from "@/lib/vehicles/vehicle-types";
+import type { BillingMethodInfo } from "@/lib/customer-billing/billing-method";
 import PageTitle          from "@/components/ui/PageTitle";
 import CustomerSearch     from "@/components/customers/CustomerSearch";
 import type { CustomerSearchValues } from "@/components/customers/CustomerSearch";
@@ -56,9 +57,10 @@ type ModalState =
 interface CustomersClientProps {
   customers: CustomerDB[];
   vehicles:  VehicleDB[];
+  billing:   BillingMethodInfo;
 }
 
-export default function CustomersClient({ customers, vehicles }: CustomersClientProps) {
+export default function CustomersClient({ customers, vehicles, billing }: CustomersClientProps) {
   const [modal, setModal] = useState<ModalState>({ mode: "none" });
   const { canEdit } = useCurrentStaff();
   const router = useRouter();
@@ -121,6 +123,7 @@ export default function CustomersClient({ customers, vehicles }: CustomersClient
       {/* Table */}
       <CustomerTable
         customers={filtered}
+        billing={billing}
         onView={handleView}
         onEdit={canEdit ? (c) => setModal({ mode: "edit", customer: c }) : undefined}
         onStartEstimate={handleStartEstimate}

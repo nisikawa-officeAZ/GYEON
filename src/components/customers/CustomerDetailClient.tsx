@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import type { CustomerDB } from "@/lib/customers/customer-types";
 import { customerDisplayName, customerKanaName } from "@/lib/customers/customer-types";
 import type { VehicleDB } from "@/lib/vehicles/vehicle-types";
+import type { BillingMethodInfo } from "@/lib/customer-billing/billing-method";
 import CustomerForm from "@/components/customers/CustomerForm";
 import CustomerStatusBadge from "@/components/customers/CustomerStatusBadge";
 import CustomerTagList from "@/components/customers/CustomerTagList";
@@ -20,6 +21,7 @@ import { useCurrentStaff } from "@/contexts/StaffContext";
 interface Props {
   customer: CustomerDB;
   vehicles: VehicleDB[];
+  billing:  BillingMethodInfo;
 }
 
 const card = "bg-[#111827] rounded-2xl border border-white/[.08] p-5";
@@ -34,7 +36,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function CustomerDetailClient({ customer, vehicles }: Props) {
+export default function CustomerDetailClient({ customer, vehicles, billing }: Props) {
   const { canEdit } = useCurrentStaff();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -103,6 +105,14 @@ export default function CustomerDetailClient({ customer, vehicles }: Props) {
               )}
               {customer.is_business && customer.credit_terms && (
                 <InfoRow label="与信条件" value={customer.credit_terms} />
+              )}
+              {/* E8.4: read-only billing method resolved from Dealer Settings */}
+              <InfoRow label="請求方法" value={billing.labelJa} />
+              {billing.mode === "closing" && billing.closingDay != null && (
+                <InfoRow
+                  label="締め/支払"
+                  value={`${billing.closingDay}日締め / 翌月${billing.paymentDay}日払い（店舗設定）`}
+                />
               )}
             </div>
           </div>

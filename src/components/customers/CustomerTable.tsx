@@ -2,6 +2,7 @@
 
 import { CustomerDB, customerDisplayName, customerKanaName } from "@/lib/customers/customer-types";
 import LineStatusBadge from "@/components/line/LineStatusBadge";
+import type { BillingMethodInfo } from "@/lib/customer-billing/billing-method";
 
 function formatDate(iso: string) {
   return iso.slice(0, 10);
@@ -9,12 +10,13 @@ function formatDate(iso: string) {
 
 interface CustomerTableProps {
   customers:        CustomerDB[];
+  billing:          BillingMethodInfo;
   onEdit?:          (customer: CustomerDB) => void;
   onStartEstimate?: (customer: CustomerDB) => void;
   onView?:          (customer: CustomerDB) => void;
 }
 
-export default function CustomerTable({ customers, onEdit, onStartEstimate, onView }: CustomerTableProps) {
+export default function CustomerTable({ customers, billing, onEdit, onStartEstimate, onView }: CustomerTableProps) {
   if (customers.length === 0) {
     return (
       <div className="bg-[#1e293b] rounded-xl shadow-lg p-10 text-center">
@@ -36,6 +38,8 @@ export default function CustomerTable({ customers, onEdit, onStartEstimate, onVi
               <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden lg:table-cell">住所</th>
               <th className="text-center text-xs font-medium text-slate-400 px-4 py-3">LINE</th>
               <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden sm:table-cell">登録日</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden sm:table-cell">業者</th>
+              <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden md:table-cell">請求方法</th>
               <th className="text-left text-xs font-medium text-slate-400 px-4 py-3" />
             </tr>
           </thead>
@@ -83,6 +87,21 @@ export default function CustomerTable({ customers, onEdit, onStartEstimate, onVi
                   </td>
                   <td className="px-4 py-3 text-slate-500 text-xs hidden sm:table-cell whitespace-nowrap">
                     {formatDate(c.created_at)}
+                  </td>
+                  <td className="px-4 py-3 hidden sm:table-cell whitespace-nowrap">
+                    {c.is_business ? (
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                        業販{c.trade_discount_pct}%
+                      </span>
+                    ) : (
+                      <span className="text-slate-600 text-xs">個人</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-slate-400 text-xs hidden md:table-cell whitespace-nowrap">
+                    {billing.labelJa}
+                    {billing.mode === "closing" && billing.closingDay != null && (
+                      <span className="text-slate-600 ml-1">（{billing.closingDay}日締/翌{billing.paymentDay}日払）</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1.5">
