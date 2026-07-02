@@ -5,6 +5,7 @@ import { createReservation } from "@/lib/reservations/create-reservation";
 import { updateReservation } from "@/lib/reservations/update-reservation";
 import { getCapacityPreview } from "@/lib/reservations/get-capacity-preview";
 import { getReservationStaffOptions, type ReservationStaffOption } from "@/lib/reservations/get-reservation-staff-options";
+import { logCapacityOverride, getLatestCapacityOverride, type CapacityOverrideRecord } from "@/lib/reservations/capacity-override-log";
 import {
   ReservationDB,
   ReservationStatus,
@@ -84,7 +85,18 @@ export default function ReservationForm({
   // B4: soft capacity-warning preview (informational; never blocks saving).
   const [capacityWarnings, setCapacityWarnings] = useState<string[]>([]);
   const [requireReason, setRequireReason] = useState(false);
-  const [overrideReason, setOverrideReason] = useState(""); // acknowledged in UI only — not persisted (no schema)
+  const [overrideReason, setOverrideReason] = useState("");
+
+  // B5b: latest previously-recorded override reason for this reservation (edit view).
+  const [priorOverride, setPriorOverride] = useState<CapacityOverrideRecord | null>(null);
+  useEffect(() => {
+    if (!reservation?.id) return;
+    let cancelled = false;
+    getLatestCapacityOverride(reservation.id).then((rec) => {
+      if (!cancelled) setPriorOverride(rec);
+    });
+    return () => { cancelled = true; };
+  }, [reservation?.id]);
 
   useEffect(() => {
     if (!date || !startTime || !endTime) {
@@ -121,12 +133,32 @@ export default function ReservationForm({
     ? vehicles.filter((v) => v.customer_id === customerId)
     : vehicles;
 
+  // B5b: persist the override reason via the existing activity_logs infra when a
+  // reason was entered and a capacity warning was present. Fire-and-forget-safe.
+  async function maybeLogOverride(reservationId: string, edited: boolean) {
+    if (overrideReason.trim() && capacityWarnings.length > 0) {
+      await logCapacityOverride({
+        reservationId,
+        reason: overrideReason.trim(),
+        warnings: capacityWarnings,
+        isEdit: edited,
+      });
+    }
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
     if (!date) {
       setError("予約日を入力してください");
+      return;
+    }
+
+    // B5b: when the dealer's settings require it, an override reason is mandatory
+    // to save over a capacity warning.
+    if (requireReason && !overrideReason.trim()) {
+      setError("上書き理由を入力してください");
       return;
     }
 
@@ -149,6 +181,7 @@ export default function ReservationForm({
           status,
         });
         if (result.success && result.data) {
+          await maybeLogOverride(result.data.id, true);
           onSuccess?.(result.data);
         } else {
           setError(result.error ?? "更新に失敗しました");
@@ -166,6 +199,7 @@ export default function ReservationForm({
           status,
         });
         if (result.success && result.data) {
+          await maybeLogOverride(result.data.id, false);
           onSuccess?.(result.data);
         } else {
           setError(result.error ?? "作成に失敗しました");
@@ -292,27 +326,35 @@ export default function ReservationForm({
         </div>
       </div>
 
-      {/* B4: soft capacity warnings — informational only; saving is never blocked. */}
+      {/* B5b: previously recorded override reason for this reservation (edit view). */}
+      {priorOverride && (
+        <div className="rounded-lg bg-slate-800/60 border border-slate-700 px-3 py-2 text-[11px] text-slate-300">
+          <span className="text-slate-400">前回の上書き理由: </span>{priorOverride.reason}
+        </div>
+      )}
+
+      {/* B4/B5b: soft capacity warnings — saving is not blocked, but the override
+          reason is required when the dealer's settings mandate it. */}
       {capacityWarnings.length > 0 && (
         <div className="flex flex-col gap-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2">
-          <span className="text-[11px] font-medium text-amber-300">キャパシティ警告（この予約は作成できます）</span>
+          <span className="text-[11px] font-medium text-amber-300">キャパシティ警告</span>
           <ul className="list-disc list-inside text-[11px] text-amber-200/90 flex flex-col gap-0.5">
             {capacityWarnings.map((w, i) => (
               <li key={i}>{w}</li>
             ))}
           </ul>
-          {requireReason && (
-            <div className="mt-1 flex flex-col gap-1">
-              <label className="text-[11px] text-amber-300">上書き理由（設定により入力が推奨されています）</label>
-              <textarea
-                value={overrideReason}
-                onChange={(e) => setOverrideReason(e.target.value)}
-                rows={2}
-                className="w-full bg-[#1e293b] border border-amber-500/40 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"
-                placeholder="重複を承知で予約する理由など"
-              />
-            </div>
-          )}
+          <div className="mt-1 flex flex-col gap-1">
+            <label className="text-[11px] text-amber-300">
+              上書き理由{requireReason ? "（必須）" : "（任意）"}
+            </label>
+            <textarea
+              value={overrideReason}
+              onChange={(e) => setOverrideReason(e.target.value)}
+              rows={2}
+              className="w-full bg-[#1e293b] border border-amber-500/40 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"
+              placeholder="重複を承知で予約する理由など"
+            />
+          </div>
         </div>
       )}
 
