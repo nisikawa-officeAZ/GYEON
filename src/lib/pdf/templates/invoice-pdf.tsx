@@ -13,6 +13,8 @@ import {
 import { InvoiceDB } from "@/lib/invoices/invoice-types";
 import { StampBlock } from "@/lib/pdf/stamp-block";
 import type { PdfStamp } from "@/lib/stamp/stamp-types";
+import { BrandingIdentity, BrandingFooterLines } from "@/lib/pdf/branding-blocks";
+import type { DealerBranding } from "@/lib/pdf/dealer-branding-types";
 import { registerPdfFonts } from "@/lib/pdf/register-fonts";
 
 const styles = StyleSheet.create({
@@ -188,10 +190,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 interface InvoiceDocumentProps {
   invoice: InvoiceDB;
-  stamp?:  PdfStamp | null;
+  stamp?:    PdfStamp | null;
+  branding?: DealerBranding | null;
 }
 
-function InvoiceDocument({ invoice, stamp }: InvoiceDocumentProps) {
+function InvoiceDocument({ invoice, stamp, branding }: InvoiceDocumentProps) {
   const items = (invoice.invoice_items ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
   const docNo = invoice.invoice_number ?? `INV-${invoice.id.slice(0, 8).toUpperCase()}`;
   const customerName = [invoice.customers?.last_name, invoice.customers?.first_name]
@@ -203,8 +206,7 @@ function InvoiceDocument({ invoice, stamp }: InvoiceDocumentProps) {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.companyName}>GYEON Detailer Agent</Text>
-            <Text style={styles.companyInfo}>DealerOS — Dealer Management System</Text>
+            <BrandingIdentity branding={branding} />
             {stamp && <View style={{ marginTop: 8, alignItems: "flex-start" }}><StampBlock stamp={stamp} /></View>}
           </View>
           <View>
@@ -326,8 +328,7 @@ function InvoiceDocument({ invoice, stamp }: InvoiceDocumentProps) {
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>GYEON Detailer Agent — DealerOS</Text>
-          <Text style={styles.footerText}>{docNo}</Text>
+          <BrandingFooterLines branding={branding} docNo={docNo} />
         </View>
       </Page>
     </Document>
@@ -337,7 +338,8 @@ function InvoiceDocument({ invoice, stamp }: InvoiceDocumentProps) {
 export async function renderInvoicePdf(
   invoice: InvoiceDB,
   stamp?: PdfStamp | null,
+  branding?: DealerBranding | null,
 ): Promise<Buffer> {
   registerPdfFonts();
-  return await renderToBuffer(<InvoiceDocument invoice={invoice} stamp={stamp} />);
+  return await renderToBuffer(<InvoiceDocument invoice={invoice} stamp={stamp} branding={branding} />);
 }

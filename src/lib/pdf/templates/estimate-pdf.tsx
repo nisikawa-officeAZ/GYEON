@@ -14,6 +14,8 @@ import {
 import { EstimateDB } from "@/lib/estimates/estimate-types";
 import { StampBlock } from "@/lib/pdf/stamp-block";
 import type { PdfStamp } from "@/lib/stamp/stamp-types";
+import { BrandingIdentity, BrandingFooterLines } from "@/lib/pdf/branding-blocks";
+import type { DealerBranding } from "@/lib/pdf/dealer-branding-types";
 import { registerPdfFonts } from "@/lib/pdf/register-fonts";
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -208,10 +210,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 interface EstimateDocumentProps {
   estimate: EstimateDB;
-  stamp?:   PdfStamp | null;
+  stamp?:    PdfStamp | null;
+  branding?: DealerBranding | null;
 }
 
-function EstimateDocument({ estimate, stamp }: EstimateDocumentProps) {
+function EstimateDocument({ estimate, stamp, branding }: EstimateDocumentProps) {
   const items = (estimate.estimate_items ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
   const docNo = estimate.estimate_number ?? estimate.estimate_no ?? "—";
   const customerName = [estimate.customers?.last_name, estimate.customers?.first_name]
@@ -223,8 +226,7 @@ function EstimateDocument({ estimate, stamp }: EstimateDocumentProps) {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.companyName}>GYEON Detailer Agent</Text>
-            <Text style={styles.companyInfo}>DealerOS — Dealer Management System</Text>
+            <BrandingIdentity branding={branding} />
             {stamp && <View style={{ marginTop: 8, alignItems: "flex-start" }}><StampBlock stamp={stamp} /></View>}
           </View>
           <View>
@@ -342,8 +344,7 @@ function EstimateDocument({ estimate, stamp }: EstimateDocumentProps) {
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>GYEON Detailer Agent — DealerOS</Text>
-          <Text style={styles.footerText}>{docNo}</Text>
+          <BrandingFooterLines branding={branding} docNo={docNo} />
         </View>
       </Page>
     </Document>
@@ -355,7 +356,8 @@ function EstimateDocument({ estimate, stamp }: EstimateDocumentProps) {
 export async function renderEstimatePdf(
   estimate: EstimateDB,
   stamp?: PdfStamp | null,
+  branding?: DealerBranding | null,
 ): Promise<Buffer> {
   registerPdfFonts();
-  return await renderToBuffer(<EstimateDocument estimate={estimate} stamp={stamp} />);
+  return await renderToBuffer(<EstimateDocument estimate={estimate} stamp={stamp} branding={branding} />);
 }

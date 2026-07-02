@@ -12,6 +12,8 @@ import {
 } from "@react-pdf/renderer";
 import { ProductOrderDB, orderDisplayNo, orderStatusLabel, orderTotal } from "@/lib/product-orders/product-order-types";
 import { registerPdfFonts } from "@/lib/pdf/register-fonts";
+import { BrandingIdentity, BrandingFooterLines } from "@/lib/pdf/branding-blocks";
+import type { DealerBranding } from "@/lib/pdf/dealer-branding-types";
 
 const styles = StyleSheet.create({
   page: {
@@ -151,9 +153,10 @@ function yen(n: number): string {
 
 interface ProductOrderDocumentProps {
   order: ProductOrderDB;
+  branding?: DealerBranding | null;
 }
 
-function ProductOrderDocument({ order }: ProductOrderDocumentProps) {
+function ProductOrderDocument({ order, branding }: ProductOrderDocumentProps) {
   const items = order.product_order_items ?? [];
   const total = orderTotal(items);
   const docNo = orderDisplayNo(order);
@@ -164,8 +167,7 @@ function ProductOrderDocument({ order }: ProductOrderDocumentProps) {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.companyName}>GYEON Detailer Agent</Text>
-            <Text style={styles.companyInfo}>DealerOS — Dealer Management System</Text>
+            <BrandingIdentity branding={branding} />
           </View>
           <View>
             <Text style={styles.docTitle}>商品注文書</Text>
@@ -227,15 +229,14 @@ function ProductOrderDocument({ order }: ProductOrderDocumentProps) {
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>GYEON Detailer Agent — DealerOS</Text>
-          <Text style={styles.footerText}>{docNo}</Text>
+          <BrandingFooterLines branding={branding} docNo={docNo} />
         </View>
       </Page>
     </Document>
   );
 }
 
-export async function renderProductOrderPdf(order: ProductOrderDB): Promise<Buffer> {
+export async function renderProductOrderPdf(order: ProductOrderDB, branding?: DealerBranding | null): Promise<Buffer> {
   registerPdfFonts();
-  return await renderToBuffer(<ProductOrderDocument order={order} />);
+  return await renderToBuffer(<ProductOrderDocument order={order} branding={branding} />);
 }

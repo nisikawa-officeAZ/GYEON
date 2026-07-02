@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { InvoiceDB } from "@/lib/invoices/invoice-types";
 import { renderInvoicePdf } from "./templates/invoice-pdf";
 import { getDealerStampForPdf } from "./get-dealer-stamp";
+import { getDealerBranding } from "./dealer-branding";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { createNotification } from "@/lib/notifications/notification";
@@ -38,10 +39,11 @@ export async function generateInvoicePdf(
   const invoice = data as InvoiceDB;
 
   const stamp = await getDealerStampForPdf(dealer.dealer_id);
+  const branding = await getDealerBranding(dealer.dealer_id);
 
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await renderInvoicePdf(invoice, stamp);
+    pdfBuffer = await renderInvoicePdf(invoice, stamp, branding);
   } catch (err) {
     return { success: false, error: `PDF生成エラー: ${String(err)}` };
   }
