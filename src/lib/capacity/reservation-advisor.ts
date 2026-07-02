@@ -25,6 +25,7 @@ import {
 import { SERVICE_TYPES } from "@/lib/dealer-settings/service-durations";
 import type { ServiceDurationMap } from "@/lib/dealer-settings/service-durations";
 import { type ReservationServiceType, serviceTypeLabel } from "@/lib/reservations/reservation-types";
+import { evaluateServiceCompatibility } from "./service-compatibility";
 
 export type ReasonSeverity = "info" | "notice" | "warn";
 
@@ -98,16 +99,6 @@ function durationText(dur: ServiceDurationMap[ReservationServiceType] | undefine
   return parts.length ? parts.join(" ・ ") : "標準";
 }
 
-function isBlockedWith(
-  service: ReservationServiceType,
-  present: ReservationServiceType[],
-  blocked: Array<[ReservationServiceType, ReservationServiceType]>,
-): boolean {
-  return blocked.some(
-    ([a, b]) => (a === service && present.includes(b)) || (b === service && present.includes(a)),
-  );
-}
-
 function candidateCost(
   service: ReservationServiceType,
   durations: ServiceDurationMap,
@@ -137,16 +128,26 @@ export function rankServiceRecommendations(
   const remainingHeadroom = Math.max(0, 1 - bottleneckPeak);
   const operatingMinutes = capacity.operatingMinutes || 12 * 60;
 
+  // C2.9: service compatibility gate — only recommend services that can coexist.
+  const compatCtx = {
+    dayServices: dayCtx.services,
+    dryingActive: dayCtx.dryingActive,
+    heavyActive: dayCtx.heavyActive,
+    blockedCombinations: ctx.blockedCombinations,
+    policy,
+  };
+
   const scored = SERVICE_TYPES.filter((c) => c !== selected)
-    .filter((c) => !isBlockedWith(c, dayCtx.services, ctx.blockedCombinations))
-    .map((c) => {
+    .map((c) => ({ c, verdict: evaluateServiceCompatibility(c, compatCtx) }))
+    .filter((x) => x.verdict.compatibility === "compatible")
+    .map(({ c, verdict }) => {
       const cost = candidateCost(c, ctx.durations, policy, operatingMinutes);
       let score = remainingHeadroom - cost;
-      const tags: string[] = [`${weightLabel(serviceWeightOf(c, policy))}作業`];
-      if (ctx.parallelAllowed && policy.parallelEligible.includes(c)) { score += 0.1; tags.push("並行可"); }
-      if (dayCtx.heavyActive && policy.acceptedDuringHeavy.includes(c)) { score += 0.15; tags.push("重作業中に対応可"); }
-      if (dayCtx.dryingActive && policy.acceptedDuringDrying.includes(c)) { score += 0.15; tags.push("乾燥期間中に対応可"); }
-      return { c, score, tags };
+      if (ctx.parallelAllowed && policy.parallelEligible.includes(c)) score += 0.1;
+      if (dayCtx.heavyActive && policy.acceptedDuringHeavy.includes(c)) score += 0.15;
+      if (dayCtx.dryingActive && policy.acceptedDuringDrying.includes(c)) score += 0.15;
+      const reason = `${weightLabel(serviceWeightOf(c, policy))}作業 ・ ${verdict.reason}`;
+      return { c, score, reason };
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, 4);
@@ -154,7 +155,7 @@ export function rankServiceRecommendations(
   return scored.map((x) => ({
     service_type: x.c,
     label: serviceTypeLabel(x.c),
-    reason: x.tags.join(" / "),
+    reason: x.reason,
   }));
 }
 
@@ -194,6 +195,22 @@ export function adviseReservation(
   }
   if (busy && heavySelected) {
     reasons.push({ kind: "service", label: `${serviceTypeLabel(serviceType)}などの重作業は混雑日には推奨されません`, severity: "warn" });
+  }
+
+  // C2.9: compatibility of the selected service with OTHER reservations present.
+  if (ctx) {
+    const otherServices = dayCtx.services.filter((s) => s !== serviceType);
+    const heavyActiveOther = otherServices.some((s) => isHeavyService(s, policy));
+    const selVerdict = evaluateServiceCompatibility(serviceType, {
+      dayServices: otherServices,
+      dryingActive: dayCtx.dryingActive,
+      heavyActive: heavyActiveOther,
+      blockedCombinations: ctx.blockedCombinations,
+      policy,
+    });
+    if (selVerdict.compatibility === "not_recommended") {
+      reasons.push({ kind: "service", label: `選択中の施工: ${selVerdict.reason}`, severity: "warn" });
+    }
   }
 
   // C2.6: capacity-ranked alternatives (only when it helps: busy or drying context).
