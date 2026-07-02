@@ -104,6 +104,18 @@ export default async function SettingsPage({
           <span className="text-slate-500 text-sm">›</span>
         </Link>
 
+        {/* B3: Staff / capacity settings (dedicated route) */}
+        <Link
+          href="/settings/staff-capacity"
+          className="flex items-center justify-between px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:bg-slate-800/60 transition-colors"
+        >
+          <span className="flex flex-col">
+            <span className="text-sm font-medium text-slate-200">スタッフ・キャパシティ</span>
+            <span className="text-[11px] text-slate-500">技術者・作業ベイ・同時対応・重複警告・上書きルール（設定済み・未適用）</span>
+          </span>
+          <span className="text-slate-500 text-sm">›</span>
+        </Link>
+
         <PageTitle title="Settings" />
 
         <SettingsCenterWrapper

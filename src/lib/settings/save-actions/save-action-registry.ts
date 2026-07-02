@@ -255,6 +255,30 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
       "B2 is foundation only — no calendar auto-calculation and no reservation enforcement.",
   },
 
+  // ─── Staff / Capacity Settings (Batch B3) ─────────────────────────────────
+
+  staff_capacity: {
+    action_id:             "staff_capacity",
+    display_name:          "Staff / Capacity Settings",
+    category_ids:          ["staff"],
+    status:                "writable_now",
+    server_action_path:    "src/lib/dealer-settings/save-staff-capacity.ts",
+    ui_role_policy:        "manager_or_owner",
+    has_server_role_check: true,
+    dealer_scope:          true,
+    admin_scope:           false,
+    external_dependency:   null,
+    notes:
+      "saveStaffCapacity writes per-staff capacity/skills, work bays, simultaneous-vehicle " +
+      "capacity, parallel-work rules, conflict-warning preferences, service blocking rules, and " +
+      "manual-override requirements to dealer_settings.business_days.scheduling (jsonb). Reuses the " +
+      "existing business_days container — no schema change / no migration. Read-merge preserves B1 " +
+      "hours + B2 durations. Per-staff keys are reconciled against the dealer's dealer_staff set. " +
+      "dealer_id from requireRole → getCurrentDealer() — never from client. " +
+      "requireRole([\"owner\",\"manager\"]) enforced server-side. Managed via /settings/staff-capacity. " +
+      "B3 is CONFIGURED-BUT-NOT-ENFORCED — no calendar/reservation wiring, no conflict detection, no blocking.",
+  },
+
   // ─── Platform Admin ───────────────────────────────────────────────────────
 
   dealer_rank: {
