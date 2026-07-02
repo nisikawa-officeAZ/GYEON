@@ -1,19 +1,17 @@
 import { EstimateCategory } from "../estimates/estimate-types";
 import { calculateEstimateTotals, lineTotal } from "./estimate-totals";
 import { ESTIMATE_TAXONOMY_READY } from "@/lib/flags";
+import {
+  type PricingCatalog,
+  DEFAULT_PRICING_CATALOG,
+  bodySizeMultiplier,
+} from "./pricing-catalog";
 
 // Plan A (migration 093): write distinct line-item categories once the schema is
 // live; otherwise keep the legacy mapping so inserts never violate the old CHECK.
 const CAT_MAINTENANCE: EstimateCategory = ESTIMATE_TAXONOMY_READY ? "maintenance" : "other";
 const CAT_CARWASH: EstimateCategory     = ESTIMATE_TAXONOMY_READY ? "carwash"     : "other";
 const CAT_ROOMCLEAN: EstimateCategory   = ESTIMATE_TAXONOMY_READY ? "roomclean"   : "interior";
-import {
-  BODY_SIZES, COATINGS, TOPCOAT_BASE, TOPCOAT_NAME, COATING_OPTIONS,
-  MAINTENANCE_MENUS, CARWASH_MENUS, ROOM_CLEAN_PARTS, ROOM_CLEAN_CONDITIONS,
-  WINDOW_FILM_PARTS, WINDOW_FILM_GRADES,
-  PPF_PLANS, PPF_PLAN_PRICES, PPF_FILM_TYPES, PPF_VEHICLE_RANKS,
-  PPF_FRONT_GLASS, PPF_SINGLE_PARTS,
-} from "./pricing-data";
 
 // ── Input types ───────────────────────────────────────────────────────────────
 
@@ -125,10 +123,6 @@ export interface PpfConfig {
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
-function sizeMultiplier(sizeKey: string): number {
-  return BODY_SIZES.find(s => s.key === sizeKey)?.multi ?? 1.0;
-}
-
 function mkItem(cat: EstimateCategory, name: string, price: number, sortOrder: number, qty = 1): PricedLineItem {
   return {
     category: cat, item_name: name, quantity: qty, unit_price: price,
@@ -142,56 +136,56 @@ function sum(items: PricedLineItem[]): number {
   return items.reduce((s, i) => s + i.unit_price * i.quantity, 0);
 }
 
-// ── Service calculators ───────────────────────────────────────────────────────
+// ── Service calculators (all price data via the injected catalog) ─────────────
 
-function calcCoating(input: CoatingInput, offset: number): ServiceSubtotal {
+function calcCoating(input: CoatingInput, offset: number, catalog: PricingCatalog): ServiceSubtotal {
   const items: PricedLineItem[] = [];
   let idx = offset;
-  const multi = sizeMultiplier(input.sizeKey);
-  const coat  = COATINGS.find(c => c.id === input.coatingId);
+  const multi = bodySizeMultiplier(catalog, input.sizeKey);
+  const coat  = catalog.coatings.find(c => c.id === input.coatingId);
   if (coat) items.push(mkItem("coating", coat.name, Math.round(coat.base * multi), idx++));
   if (input.topcoat2) {
-    const p = Math.round((TOPCOAT_BASE[input.topcoat2] ?? 0) * multi);
-    items.push(mkItem("coating", `トップコート: ${TOPCOAT_NAME[input.topcoat2] ?? input.topcoat2}`, p, idx++));
+    const p = Math.round((catalog.topcoatBase[input.topcoat2] ?? 0) * multi);
+    items.push(mkItem("coating", `トップコート: ${catalog.topcoatName[input.topcoat2] ?? input.topcoat2}`, p, idx++));
   }
   if (input.topcoat3) {
-    const p = Math.round((TOPCOAT_BASE[input.topcoat3] ?? 0) * multi);
-    items.push(mkItem("coating", `トップコート(3層): ${TOPCOAT_NAME[input.topcoat3] ?? input.topcoat3}`, p, idx++));
+    const p = Math.round((catalog.topcoatBase[input.topcoat3] ?? 0) * multi);
+    items.push(mkItem("coating", `トップコート(3層): ${catalog.topcoatName[input.topcoat3] ?? input.topcoat3}`, p, idx++));
   }
   (input.optionIds ?? []).forEach(id => {
-    const opt = COATING_OPTIONS.find(o => o.id === id);
+    const opt = catalog.coatingOptions.find(o => o.id === id);
     if (opt) items.push(mkItem(opt.cat, opt.name, opt.price, idx++));
   });
   return { type: "coating", lineItems: items, subtotal: sum(items) };
 }
 
-function calcMaintenance(input: MaintenanceInput, offset: number): ServiceSubtotal {
+function calcMaintenance(input: MaintenanceInput, offset: number, catalog: PricingCatalog): ServiceSubtotal {
   const items: PricedLineItem[] = [];
   let idx = offset;
   input.menuIds.forEach(id => {
-    const m = MAINTENANCE_MENUS.find(x => x.id === id);
+    const m = catalog.maintenanceMenus.find(x => x.id === id);
     if (m) items.push(mkItem(CAT_MAINTENANCE, m.name, m.price, idx++));
   });
   return { type: "maintenance", lineItems: items, subtotal: sum(items) };
 }
 
-function calcCarwash(input: CarwashInput, offset: number): ServiceSubtotal {
+function calcCarwash(input: CarwashInput, offset: number, catalog: PricingCatalog): ServiceSubtotal {
   const items: PricedLineItem[] = [];
   let idx = offset;
   input.menuIds.forEach(id => {
-    const m = CARWASH_MENUS.find(x => x.id === id);
+    const m = catalog.carwashMenus.find(x => x.id === id);
     if (m) items.push(mkItem(CAT_CARWASH, m.name, m.price, idx++));
   });
   return { type: "carwash", lineItems: items, subtotal: sum(items) };
 }
 
-function calcRoomClean(input: RoomCleanInput, offset: number): ServiceSubtotal {
+function calcRoomClean(input: RoomCleanInput, offset: number, catalog: PricingCatalog): ServiceSubtotal {
   const items: PricedLineItem[] = [];
   let idx = offset;
-  const cond  = ROOM_CLEAN_CONDITIONS.find(c => c.id === input.condition);
+  const cond  = catalog.roomCleanConditions.find(c => c.id === input.condition);
   const coeff = cond?.coeff ?? 1.0;
   input.partIds.forEach(id => {
-    const p = ROOM_CLEAN_PARTS.find(x => x.id === id);
+    const p = catalog.roomCleanParts.find(x => x.id === id);
     if (p) {
       const price = Math.round(p.basePrice * coeff);
       const label = cond && cond.id !== "normal" ? `${p.name}（${cond.label}）` : p.name;
@@ -206,22 +200,22 @@ function calcOther(input: OtherInput, offset: number): ServiceSubtotal {
   return { type: "other", lineItems: items, subtotal: sum(items) };
 }
 
-function calcPpf(input: PpfInput, offset: number): ServiceSubtotal {
+function calcPpf(input: PpfInput, offset: number, catalog: PricingCatalog): ServiceSubtotal {
   const planId    = input.planId    ?? "";
   const sizeKey   = input.sizeKey   ?? "";
   const filmType  = input.filmType  ?? "clear";
   const rankType  = input.vehicleRank ?? "std";
 
-  const planPrices    = PPF_PLAN_PRICES[planId];
+  const planPrices    = catalog.ppfPlanPrices[planId];
   const basePlanPrice = planPrices?.[sizeKey] ?? 0;
   if (basePlanPrice === 0) return { type: "ppf", lineItems: [], subtotal: 0 };
 
   const items: PricedLineItem[] = [];
   let idx = offset;
 
-  const film = PPF_FILM_TYPES.find(f => f.id === filmType);
-  const rank = PPF_VEHICLE_RANKS.find(r => r.id === rankType);
-  const plan = PPF_PLANS.find(p => p.id === planId);
+  const film = catalog.ppfFilmTypes.find(f => f.id === filmType);
+  const rank = catalog.ppfVehicleRanks.find(r => r.id === rankType);
+  const plan = catalog.ppfPlans.find(p => p.id === planId);
 
   const filmCoeff = film?.coeff ?? 1.0;
   const rankCoeff = rank?.coeff ?? 1.0;
@@ -230,13 +224,13 @@ function calcPpf(input: PpfInput, offset: number): ServiceSubtotal {
   items.push(mkItem("ppf", planLabel, Math.round(basePlanPrice * filmCoeff * rankCoeff), idx++));
 
   if (input.frontGlass) {
-    const fg = PPF_FRONT_GLASS.find(g => g.id === input.frontGlass);
+    const fg = catalog.ppfFrontGlass.find(g => g.id === input.frontGlass);
     if (fg) items.push(mkItem("ppf", fg.name, fg.price, idx++));
   }
 
   (input.singleParts ?? []).forEach(sp => {
     if (sp.qty <= 0) return;
-    const part = PPF_SINGLE_PARTS.find(p => p.id === sp.id);
+    const part = catalog.ppfSingleParts.find(p => p.id === sp.id);
     if (part) {
       const qty = Math.min(sp.qty, part.maxQty);
       items.push(mkItem("ppf", part.name, part.price, idx++, qty));
@@ -246,13 +240,13 @@ function calcPpf(input: PpfInput, offset: number): ServiceSubtotal {
   return { type: "ppf", lineItems: items, subtotal: sum(items) };
 }
 
-function calcWindow(input: WindowInput, offset: number): ServiceSubtotal {
+function calcWindow(input: WindowInput, offset: number, catalog: PricingCatalog): ServiceSubtotal {
   const items: PricedLineItem[] = [];
   let idx = offset;
-  const grade = WINDOW_FILM_GRADES.find(g => g.id === input.grade);
+  const grade = catalog.windowGrades.find(g => g.id === input.grade);
   const coeff = grade?.coeff ?? 1.0;
   input.partIds.forEach(id => {
-    const part = WINDOW_FILM_PARTS.find(p => p.id === id);
+    const part = catalog.windowParts.find(p => p.id === id);
     if (part) {
       const price = Math.round(part.basePrice * coeff);
       const label = grade && grade.id !== "standard"
@@ -264,17 +258,21 @@ function calcWindow(input: WindowInput, offset: number): ServiceSubtotal {
   return { type: "window", lineItems: items, subtotal: sum(items) };
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
+// ── Public API (catalog defaults to DEFAULT_PRICING_CATALOG → identical) ───────
 
-export function calculateService(input: ServiceInput, sortOffset = 0): ServiceSubtotal {
+export function calculateService(
+  input: ServiceInput,
+  sortOffset = 0,
+  catalog: PricingCatalog = DEFAULT_PRICING_CATALOG,
+): ServiceSubtotal {
   switch (input.type) {
-    case "coating":     return calcCoating(input, sortOffset);
-    case "maintenance": return calcMaintenance(input, sortOffset);
-    case "carwash":     return calcCarwash(input, sortOffset);
-    case "roomclean":   return calcRoomClean(input, sortOffset);
+    case "coating":     return calcCoating(input, sortOffset, catalog);
+    case "maintenance": return calcMaintenance(input, sortOffset, catalog);
+    case "carwash":     return calcCarwash(input, sortOffset, catalog);
+    case "roomclean":   return calcRoomClean(input, sortOffset, catalog);
     case "other":       return calcOther(input, sortOffset);
-    case "ppf":         return calcPpf(input, sortOffset);
-    case "window":      return calcWindow(input, sortOffset);
+    case "ppf":         return calcPpf(input, sortOffset, catalog);
+    case "window":      return calcWindow(input, sortOffset, catalog);
   }
 }
 
@@ -282,10 +280,11 @@ export function calculateEstimate(
   services:  ServiceInput[],
   discounts: DiscountInput,
   taxRate:   number,
+  catalog:   PricingCatalog = DEFAULT_PRICING_CATALOG,
 ): EstimateResult {
   let offset = 0;
   const calculated = services.map(s => {
-    const r = calculateService(s, offset);
+    const r = calculateService(s, offset, catalog);
     offset += r.lineItems.length;
     return r;
   });
@@ -323,11 +322,15 @@ export function calculateEstimate(
   };
 }
 
-export function buildPpfConfig(input: PpfInput, result: ServiceSubtotal): PpfConfig {
-  const film = PPF_FILM_TYPES.find(f => f.id === input.filmType);
-  const rank = PPF_VEHICLE_RANKS.find(r => r.id === input.vehicleRank);
-  const plan = PPF_PLANS.find(p => p.id === input.planId);
-  const fg   = input.frontGlass ? PPF_FRONT_GLASS.find(g => g.id === input.frontGlass) : undefined;
+export function buildPpfConfig(
+  input: PpfInput,
+  result: ServiceSubtotal,
+  catalog: PricingCatalog = DEFAULT_PRICING_CATALOG,
+): PpfConfig {
+  const film = catalog.ppfFilmTypes.find(f => f.id === input.filmType);
+  const rank = catalog.ppfVehicleRanks.find(r => r.id === input.vehicleRank);
+  const plan = catalog.ppfPlans.find(p => p.id === input.planId);
+  const fg   = input.frontGlass ? catalog.ppfFrontGlass.find(g => g.id === input.frontGlass) : undefined;
   return {
     planId:           input.planId      ?? "",
     planName:         plan?.name        ?? (input.planId ?? ""),
@@ -339,7 +342,7 @@ export function buildPpfConfig(input: PpfInput, result: ServiceSubtotal): PpfCon
     frontGlass:       input.frontGlass,
     frontGlassName:   fg?.name,
     singleParts:      (input.singleParts ?? []).map(sp => {
-      const part = PPF_SINGLE_PARTS.find(p => p.id === sp.id);
+      const part = catalog.ppfSingleParts.find(p => p.id === sp.id);
       return { id: sp.id, name: part?.name ?? sp.id, qty: sp.qty, unitPrice: part?.price ?? 0 };
     }),
     adjustedPlanPrice: result.lineItems[0]?.unit_price ?? 0,
@@ -347,11 +350,14 @@ export function buildPpfConfig(input: PpfInput, result: ServiceSubtotal): PpfCon
   };
 }
 
-export function buildLineItems(services: ServiceInput[]): PricedLineItem[] {
+export function buildLineItems(
+  services: ServiceInput[],
+  catalog: PricingCatalog = DEFAULT_PRICING_CATALOG,
+): PricedLineItem[] {
   let offset = 0;
   const items: PricedLineItem[] = [];
   services.forEach(s => {
-    const r = calculateService(s, offset);
+    const r = calculateService(s, offset, catalog);
     items.push(...r.lineItems);
     offset += r.lineItems.length;
   });
