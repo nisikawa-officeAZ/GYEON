@@ -226,7 +226,18 @@ export function reconcileStaffCapacity(map: StaffCapacityMap, validStaffIds: Set
 // blocks; returns [] when the conflict preference is off. No persistent staff/bay
 // assignment exists, so warnings are derived from the overlap count + config only.
 
-export function computeCapacityWarnings(overlapCount: number, settings: StaffCapacitySettings): string[] {
+export interface CapacityWarningContext {
+  /** B5a: overlapping reservations that share the selected assigned_staff_id.
+   *  null when no staff is selected — the warning falls back to the generic
+   *  overlap count. */
+  staffOverlapCount?: number | null;
+}
+
+export function computeCapacityWarnings(
+  overlapCount: number,
+  settings: StaffCapacitySettings,
+  ctx?: CapacityWarningContext,
+): string[] {
   const { conflict } = settings.rules;
   if (conflict.mode === "off") return [];
 
@@ -248,8 +259,17 @@ export function computeCapacityWarnings(overlapCount: number, settings: StaffCap
     warnings.push(`稼働中の作業ベイ数（${activeBays}）を超える可能性があります。`);
   }
 
-  if (conflict.warn_staff_overlap && overlapCount > 0) {
-    warnings.push(`選択した時間帯に重複する予約が${overlapCount}件あります。`);
+  if (conflict.warn_staff_overlap) {
+    const staffOverlap = ctx?.staffOverlapCount ?? null;
+    if (staffOverlap !== null) {
+      // Precise: a specific technician is selected (B5a).
+      if (staffOverlap > 0) {
+        warnings.push(`選択した担当スタッフは同じ時間帯に${staffOverlap}件の予約があります。`);
+      }
+    } else if (overlapCount > 0) {
+      // Fallback: no technician selected — generic overlap notice.
+      warnings.push(`選択した時間帯に重複する予約が${overlapCount}件あります。`);
+    }
   }
 
   return warnings;

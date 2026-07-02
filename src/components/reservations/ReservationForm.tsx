@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { createReservation } from "@/lib/reservations/create-reservation";
 import { updateReservation } from "@/lib/reservations/update-reservation";
 import { getCapacityPreview } from "@/lib/reservations/get-capacity-preview";
+import { getReservationStaffOptions, type ReservationStaffOption } from "@/lib/reservations/get-reservation-staff-options";
 import {
   ReservationDB,
   ReservationStatus,
@@ -53,6 +54,7 @@ export default function ReservationForm({
 
   const [customerId, setCustomerId] = useState<string>(reservation?.customer_id ?? "");
   const [vehicleId,  setVehicleId]  = useState<string>(reservation?.vehicle_id  ?? "");
+  const [staffId,    setStaffId]    = useState<string>(reservation?.assigned_staff_id ?? "");
   const [serviceType, setServiceType] = useState<ReservationServiceType>(
     reservation?.service_type ?? "other"
   );
@@ -64,6 +66,20 @@ export default function ReservationForm({
 
   // Customer search filter
   const [custSearch, setCustSearch] = useState("");
+
+  // B5a: dealer-scoped technician options (loaded once).
+  const [staffOptions, setStaffOptions] = useState<ReservationStaffOption[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    getReservationStaffOptions().then((opts) => {
+      if (!cancelled) setStaffOptions(opts);
+    });
+    return () => { cancelled = true; };
+  }, []);
+  const staffKnown = staffOptions.some((o) => o.id === staffId);
+  // Dangling reference (assigned staff was deleted): show it, but it will be
+  // cleared on save rather than triggering a server validation error.
+  const staffDangling = staffId !== "" && staffOptions.length > 0 && !staffKnown;
 
   // B4: soft capacity-warning preview (informational; never blocks saving).
   const [capacityWarnings, setCapacityWarnings] = useState<string[]>([]);
@@ -83,6 +99,7 @@ export default function ReservationForm({
         start: startTime,
         end: endTime,
         excludeId: reservation?.id ?? null,
+        staffId: staffId || null,
       });
       if (!cancelled) {
         setCapacityWarnings(res.warnings);
@@ -90,7 +107,7 @@ export default function ReservationForm({
       }
     }, 300);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [date, startTime, endTime, reservation?.id]);
+  }, [date, startTime, endTime, staffId, reservation?.id]);
 
   const filteredCustomers = custSearch
     ? customers.filter((c) => {
@@ -113,11 +130,17 @@ export default function ReservationForm({
       return;
     }
 
+    // B5a: only send an assignment that resolves to a known dealer staff id.
+    // A dangling id (deleted staff) is cleared to null so the server validation
+    // never rejects the save.
+    const assignedStaffToSend = staffId && staffOptions.some((o) => o.id === staffId) ? staffId : null;
+
     startTransition(async () => {
       if (isEdit) {
         const result = await updateReservation(reservation!.id, {
           customer_id:      customerId   || null,
           vehicle_id:       vehicleId    || null,
+          assigned_staff_id: assignedStaffToSend,
           service_type:     serviceType,
           reservation_date: date,
           start_time:       startTime    || null,
@@ -134,6 +157,7 @@ export default function ReservationForm({
         const result = await createReservation({
           customer_id:      customerId   || null,
           vehicle_id:       vehicleId    || null,
+          assigned_staff_id: assignedStaffToSend,
           service_type:     serviceType,
           reservation_date: date,
           start_time:       startTime    || null,
@@ -194,6 +218,29 @@ export default function ReservationForm({
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Assigned technician (B5a) */}
+      <div className="flex flex-col gap-1">
+        <label className="text-xs text-slate-400">担当スタッフ</label>
+        <select
+          value={staffId}
+          onChange={(e) => setStaffId(e.target.value)}
+          className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+        >
+          <option value="">未指定</option>
+          {staffOptions.map((s) => (
+            <option key={s.id} value={s.id} disabled={s.disabled && s.id !== staffId}>
+              {s.name}{s.disabled ? "（無効）" : ""}
+            </option>
+          ))}
+          {staffDangling && (
+            <option value={staffId}>（不明なスタッフ）</option>
+          )}
+        </select>
+        {staffDangling && (
+          <span className="text-[10px] text-amber-400">以前の担当スタッフは削除されています。保存すると未指定になります。</span>
+        )}
       </div>
 
       {/* Service type */}

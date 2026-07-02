@@ -21,6 +21,8 @@ export interface CapacityPreviewInput {
   start: string;       // "HH:MM"
   end: string;         // "HH:MM"
   excludeId?: string | null;
+  /** B5a: selected technician — enables precise per-staff overlap warnings. */
+  staffId?: string | null;
 }
 
 export interface CapacityPreviewResult {
@@ -50,7 +52,7 @@ export async function getCapacityPreview(input: CapacityPreviewInput): Promise<C
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("reservations")
-      .select("id, start_time, end_time")
+      .select("id, start_time, end_time, assigned_staff_id")
       .eq("dealer_id", dealer.dealer_id)
       .eq("reservation_date", input.date)
       .not("start_time", "is", null);
@@ -60,18 +62,25 @@ export async function getCapacityPreview(input: CapacityPreviewInput): Promise<C
       return EMPTY;
     }
 
+    const selectedStaff = input.staffId || null;
     let overlapCount = 0;
-    for (const r of (data ?? []) as Array<{ id: string; start_time: string | null; end_time: string | null }>) {
+    let staffOverlapCount = 0;
+    for (const r of (data ?? []) as Array<{ id: string; start_time: string | null; end_time: string | null; assigned_staff_id: string | null }>) {
       if (input.excludeId && r.id === input.excludeId) continue;
       const s = toMin(r.start_time);
       if (s === null) continue;
       const e = toMin(r.end_time) ?? s + 60; // display default when no end time
       // Half-open overlap test.
-      if (s < endMin && startMin < e) overlapCount++;
+      if (s < endMin && startMin < e) {
+        overlapCount++;
+        if (selectedStaff && r.assigned_staff_id === selectedStaff) staffOverlapCount++;
+      }
     }
 
     const settings = await getStaffCapacitySettings();
-    const warnings = computeCapacityWarnings(overlapCount, settings);
+    const warnings = computeCapacityWarnings(overlapCount, settings, {
+      staffOverlapCount: selectedStaff ? staffOverlapCount : null,
+    });
     const requireReason = warnings.length > 0 && settings.rules.override.require_reason;
 
     return { overlapCount, warnings, requireReason };
