@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { ReservationDB } from "@/lib/reservations/reservation-types";
 import { getReservationsByDateRange } from "@/lib/reservations/get-reservations-by-date";
 import CalendarMonthView from "@/components/calendar/CalendarMonthView";
@@ -46,8 +46,24 @@ function addDays(d: Date, n: number): Date {
   return r;
 }
 
-function getMonthStart(year: number, month: number): Date {
-  return new Date(year, month - 1, 1);
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+/** Inclusive [from, to] date range covering the given view around `date`. */
+function rangeForView(date: Date, view: View): [string, string] {
+  if (view === "month") {
+    const y = date.getFullYear();
+    const m = date.getMonth() + 1;
+    const lastDay = new Date(y, m, 0).getDate();
+    return [`${y}-${pad2(m)}-01`, `${y}-${pad2(m)}-${pad2(lastDay)}`];
+  }
+  if (view === "week") {
+    const ws = getMondayOfWeek(date);
+    return [ws, toLocalDateStr(addDays(parseLocalDate(ws), 6))];
+  }
+  const ds = toLocalDateStr(date);
+  return [ds, ds];
 }
 
 function getMondayOfWeek(date: Date): string {
@@ -111,66 +127,64 @@ export default function CalendarPageClient({
     }
   }
 
-  function navigatePrev() {
+  // A4: single date-shift path keeps the focused date consistent across views.
+  function shiftDate(dir: -1 | 1) {
+    let d: Date;
     if (view === "month") {
-      const m = month - 1 < 1 ? 12 : month - 1;
-      const y = month - 1 < 1 ? year - 1 : year;
-      setMonth(m); setYear(y);
-      const lastDay = new Date(y, m, 0).getDate();
-      loadReservations(
-        `${y}-${String(m).padStart(2, "0")}-01`,
-        `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
-      );
+      // First-of-month avoids day-overflow (e.g. Jan 31 → Feb) when stepping months.
+      d = new Date(currentDate.getFullYear(), currentDate.getMonth() + dir, 1);
+      setYear(d.getFullYear());
+      setMonth(d.getMonth() + 1);
     } else if (view === "week") {
-      const d = addDays(parseLocalDate(weekStart), -7);
-      setCurrentDate(d);
-      const from = toLocalDateStr(d);
-      const to   = toLocalDateStr(addDays(d, 6));
-      loadReservations(from, to);
+      d = addDays(currentDate, dir * 7);
     } else {
-      const d = addDays(currentDate, -1);
-      setCurrentDate(d);
-      const ds = toLocalDateStr(d);
-      loadReservations(ds, ds);
+      d = addDays(currentDate, dir);
     }
+    setCurrentDate(d);
+    const [from, to] = rangeForView(d, view);
+    loadReservations(from, to);
   }
 
-  function navigateNext() {
-    if (view === "month") {
-      const m = month + 1 > 12 ? 1 : month + 1;
-      const y = month + 1 > 12 ? year + 1 : year;
-      setMonth(m); setYear(y);
-      const lastDay = new Date(y, m, 0).getDate();
-      loadReservations(
-        `${y}-${String(m).padStart(2, "0")}-01`,
-        `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
-      );
-    } else if (view === "week") {
-      const d = addDays(parseLocalDate(weekStart), 7);
-      setCurrentDate(d);
-      const from = toLocalDateStr(d);
-      const to   = toLocalDateStr(addDays(d, 6));
-      loadReservations(from, to);
-    } else {
-      const d = addDays(currentDate, 1);
-      setCurrentDate(d);
-      const ds = toLocalDateStr(d);
-      loadReservations(ds, ds);
-    }
-  }
+  function navigatePrev() { shiftDate(-1); }
+  function navigateNext() { shiftDate(1); }
 
   function navigateToday() {
-    const today = new Date();
-    const m = today.getMonth() + 1;
-    const y = today.getFullYear();
-    setCurrentDate(today);
-    setYear(y); setMonth(m);
-    const lastDay = new Date(y, m, 0).getDate();
-    loadReservations(
-      `${y}-${String(m).padStart(2, "0")}-01`,
-      `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
-    );
+    const d = new Date();
+    setCurrentDate(d);
+    setYear(d.getFullYear());
+    setMonth(d.getMonth() + 1);
+    const [from, to] = rangeForView(d, view);
+    loadReservations(from, to);
   }
+
+  // A4: switching views preserves the focused date (currentDate) and reloads that
+  // view's range so Month/Week/Day stay in sync.
+  function changeView(v: View) {
+    if (v === view) return;
+    if (v === "month") {
+      setYear(currentDate.getFullYear());
+      setMonth(currentDate.getMonth() + 1);
+    }
+    setView(v);
+    const [from, to] = rangeForView(currentDate, v);
+    loadReservations(from, to);
+  }
+
+  // A4: keyboard navigation — ←/→ move prev/next, "t" jumps to today. Ignored while a
+  // modal is open or focus is in a form field.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (modal !== null) return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "ArrowLeft") { e.preventDefault(); navigatePrev(); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); navigateNext(); }
+      else if (e.key === "t" || e.key === "T") { e.preventDefault(); navigateToday(); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, currentDate, modal]);
 
   function handleDayClick(date: string) {
     // Calendar Time-Axis Sprint 1: clicking a date opens that day's time-axis (day) view.
@@ -197,21 +211,11 @@ export default function CalendarPageClient({
   }
 
   function handleFormSuccess(r: ReservationDB) {
+    void r;
     setModal(null);
-    // Reload current view
-    if (view === "month") {
-      const lastDay = new Date(year, month, 0).getDate();
-      loadReservations(
-        `${year}-${String(month).padStart(2, "0")}-01`,
-        `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
-      );
-    } else if (view === "week") {
-      const from = weekStart;
-      const to   = toLocalDateStr(addDays(parseLocalDate(weekStart), 6));
-      loadReservations(from, to);
-    } else {
-      loadReservations(dayStr, dayStr);
-    }
+    // Reload the current view's range (focused date preserved).
+    const [from, to] = rangeForView(currentDate, view);
+    loadReservations(from, to);
   }
 
   const modalReservation = modal && typeof modal === "object" && "reservation" in modal
@@ -236,19 +240,22 @@ export default function CalendarPageClient({
         <div className="flex items-center gap-2">
           <button
             onClick={navigatePrev}
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-lg transition-colors"
+            aria-label="前へ"
+            className="px-3 py-1.5 min-w-[40px] bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 text-sm rounded-lg transition-colors"
           >
             ‹
           </button>
           <button
             onClick={navigateToday}
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-lg transition-colors"
+            aria-label="今日へ移動"
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 text-sm rounded-lg transition-colors"
           >
             今日
           </button>
           <button
             onClick={navigateNext}
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-lg transition-colors"
+            aria-label="次へ"
+            className="px-3 py-1.5 min-w-[40px] bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 text-sm rounded-lg transition-colors"
           >
             ›
           </button>
@@ -258,12 +265,14 @@ export default function CalendarPageClient({
           {loading && <span className="text-xs text-slate-500">読込中...</span>}
         </div>
 
-        <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1" role="tablist" aria-label="表示切替">
           {(["month", "week", "day"] as View[]).map((v) => (
             <button
               key={v}
-              onClick={() => setView(v)}
-              className={`px-3 py-1 text-xs rounded-md transition-colors ${
+              role="tab"
+              aria-selected={view === v}
+              onClick={() => changeView(v)}
+              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
                 view === v ? "bg-blue-600 text-white" : "text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -274,30 +283,46 @@ export default function CalendarPageClient({
       </div>
 
       {/* Calendar view */}
-      <div className="bg-[#0f172a] border border-slate-800 rounded-xl overflow-hidden">
-        {view === "month" && (
-          <CalendarMonthView
-            reservations={reservations}
-            year={year}
-            month={month}
-            onDayClick={handleDayClick}
-            onReservationClick={handleReservationClick}
-          />
-        )}
-        {view === "week" && (
-          <CalendarWeekView
-            reservations={reservations}
-            weekStart={weekStart}
-            onReservationClick={handleReservationClick}
-          />
-        )}
-        {view === "day" && (
-          <CalendarDayView
-            date={dayStr}
-            reservations={reservations.filter((r) => r.reservation_date === dayStr)}
-            onReservationClick={handleReservationClick}
-            onSlotClick={handleSlotClick}
-          />
+      <div className="relative bg-[#0f172a] border border-slate-800 rounded-xl overflow-hidden">
+        {/* Day/Week grids scroll vertically within a bounded height on small screens;
+            the month grid sizes to its content. */}
+        <div className={view === "month" ? "" : "max-h-[72vh] overflow-y-auto overscroll-contain"}>
+          {view === "month" && (
+            <CalendarMonthView
+              reservations={reservations}
+              year={year}
+              month={month}
+              onDayClick={handleDayClick}
+              onReservationClick={handleReservationClick}
+            />
+          )}
+          {view === "week" && (
+            <CalendarWeekView
+              reservations={reservations}
+              weekStart={weekStart}
+              onReservationClick={handleReservationClick}
+              onDayClick={handleDayClick}
+            />
+          )}
+          {view === "day" && (
+            <CalendarDayView
+              date={dayStr}
+              reservations={reservations.filter((r) => r.reservation_date === dayStr)}
+              onReservationClick={handleReservationClick}
+              onSlotClick={handleSlotClick}
+            />
+          )}
+        </div>
+
+        {/* Loading overlay */}
+        {loading && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#0f172a]/50 backdrop-blur-[1px]">
+            <span
+              className="w-6 h-6 rounded-full border-2 border-slate-600 border-t-blue-400 animate-spin"
+              role="status"
+              aria-label="読込中"
+            />
+          </div>
         )}
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { ReservationDB, serviceTypeColor, serviceTypeLabel, reservationStatusLabel } from "@/lib/reservations/reservation-types";
+import { minutesToTime, hm, durationLabel, statusDotClass, layoutOverlaps } from "@/lib/calendar/calendar-utils";
 
 interface Props {
   date: string;
@@ -18,29 +19,13 @@ function minutesToTop(min: number): number {
   return ((min - DAY_START_MIN) / 60) * SLOT_HEIGHT;
 }
 
-function timeToMinutes(timeStr: string): number {
-  const [h, m] = timeStr.split(":").map(Number);
-  return h * 60 + m;
-}
-
 const HOURS = Array.from({ length: 13 }, (_, i) => 8 + i); // 8..20
-
-function minutesToTime(min: number): string {
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
 
 // 30-minute slots across the visible axis: 8:00, 8:30, … 19:30.
 const SLOTS = Array.from(
   { length: (DAY_END_MIN - DAY_START_MIN) / 30 },
   (_, i) => DAY_START_MIN + i * 30,
 );
-
-/** Format a "HH:MM:SS" (or "HH:MM") time value as "HH:MM". */
-function hm(t: string | null | undefined): string {
-  return t ? t.slice(0, 5) : "";
-}
 
 /** Short customer display name; falls back to the service label when no customer. */
 function displayName(r: ReservationDB): string {
@@ -62,6 +47,8 @@ export default function CalendarDayView({ date, reservations, onReservationClick
 
   const timed  = reservations.filter((r) => r.start_time);
   const allDay = reservations.filter((r) => !r.start_time);
+  const laid   = layoutOverlaps(timed);
+  const isEmpty = reservations.length === 0;
 
   return (
     <div className="flex flex-col gap-0">
@@ -75,7 +62,7 @@ export default function CalendarDayView({ date, reservations, onReservationClick
           <span className="inline-block w-3 h-3 rounded-sm bg-blue-500" />
           予約あり（占有）
         </span>
-        <span className="ml-auto text-slate-500">{timed.length + allDay.length} 件</span>
+        <span className="ml-auto text-slate-500">{reservations.length} 件</span>
       </div>
 
       {/* All-day events */}
@@ -86,8 +73,9 @@ export default function CalendarDayView({ date, reservations, onReservationClick
             <button
               key={r.id}
               onClick={() => onReservationClick?.(r)}
-              className={`px-2.5 py-1 rounded-md text-[11px] text-white font-medium ${serviceTypeColor(r.service_type)} hover:opacity-90 transition-opacity`}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] text-white font-medium ${serviceTypeColor(r.service_type)} hover:opacity-90 transition-opacity`}
             >
+              <span className={`w-1.5 h-1.5 rounded-full ${statusDotClass(r.status)}`} aria-hidden />
               {displayName(r)}
             </button>
           ))}
@@ -95,7 +83,7 @@ export default function CalendarDayView({ date, reservations, onReservationClick
       )}
 
       {/* Time grid */}
-      <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[64px_1fr]">
+      <div className="relative grid grid-cols-[48px_1fr] sm:grid-cols-[64px_1fr]">
         {/* Time labels */}
         <div className="relative border-r border-slate-800" style={{ height: totalHeight }}>
           {HOURS.map((h) => (
@@ -138,16 +126,17 @@ export default function CalendarDayView({ date, reservations, onReservationClick
           ))}
 
           {/* Clickable AVAILABLE time slots — start a new reservation (default 60-min end).
-              Rendered beneath the reservation blocks (which carry z-10 and span the full
-              column width), so a slot button under an occupied block is physically covered
-              and cannot be clicked: clicking a block always edits it, and only clicking empty
-              time creates a new reservation. (A2: no availability/conflict logic — pure layering.) */}
+              Rendered beneath the reservation blocks (which carry z-10 and — via exact column
+              tiling — cover the full occupied width), so a slot button under an occupied block
+              is physically covered and cannot be clicked: clicking a block always edits it, and
+              only clicking empty time creates. (No availability/conflict logic — pure layering.) */}
           {onSlotClick && SLOTS.map((slotMin) => (
             <button
               key={`slot-${slotMin}`}
               type="button"
               onClick={() => onSlotClick(minutesToTime(slotMin), minutesToTime(slotMin + 60))}
               title={`${minutesToTime(slotMin)} から新規予約`}
+              aria-label={`${minutesToTime(slotMin)} から新規予約`}
               className="group absolute left-0 right-0 hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors"
               style={{ top: minutesToTop(slotMin), height: SLOT_HEIGHT / 2 }}
             >
@@ -158,24 +147,24 @@ export default function CalendarDayView({ date, reservations, onReservationClick
             </button>
           ))}
 
-          {/* Reservation blocks */}
-          {timed.map((r) => {
-            const startMin = timeToMinutes(r.start_time!);
-            const endMin   = r.end_time ? timeToMinutes(r.end_time) : startMin + 60;
-            const top      = minutesToTop(Math.max(startMin, DAY_START_MIN));
-            const height   = Math.max(
+          {/* Reservation blocks — overlapping reservations tile into columns for readability. */}
+          {laid.map(({ r, col, cols, startMin, endMin }) => {
+            const top    = minutesToTop(Math.max(startMin, DAY_START_MIN));
+            const height = Math.max(
               (Math.min(endMin, DAY_END_MIN) - Math.max(startMin, DAY_START_MIN)) / 60 * SLOT_HEIGHT,
               28
             );
+            const widthPct = 100 / cols;
             const veh = vehicleSummary(r);
+            const dur = durationLabel(r.start_time, r.end_time);
 
             return (
               <button
                 key={r.id}
                 onClick={() => onReservationClick?.(r)}
-                title={`${hm(r.start_time)}${r.end_time ? `–${hm(r.end_time)}` : ""} ${displayName(r)}`}
-                className={`group absolute left-0 right-0 z-10 rounded-md pl-3 pr-2 py-1 text-left overflow-hidden shadow-sm ring-1 ring-black/10 ${serviceTypeColor(r.service_type)} hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-white/60 transition-all`}
-                style={{ top, height }}
+                title={`${hm(r.start_time)}${r.end_time ? `–${hm(r.end_time)}` : ""}${dur ? ` (${dur})` : ""} ${displayName(r)}`}
+                className={`group absolute z-10 rounded-md pl-3 pr-2 py-1 text-left overflow-hidden shadow-sm ring-1 ring-black/20 ${serviceTypeColor(r.service_type)} hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-white/60 transition-all`}
+                style={{ top, height, left: `${col * widthPct}%`, width: `${widthPct}%` }}
               >
                 {/* Brighter left accent bar for quick scanning */}
                 <span className="absolute left-0 top-0 bottom-0 w-1 bg-white/40 rounded-l-md" aria-hidden />
@@ -186,7 +175,8 @@ export default function CalendarDayView({ date, reservations, onReservationClick
                     {r.end_time && ` – ${hm(r.end_time)}`}
                   </p>
                   {height >= 44 && (
-                    <span className="shrink-0 text-[9px] leading-none px-1.5 py-0.5 rounded-full bg-black/25 text-white/90">
+                    <span className="shrink-0 flex items-center gap-1 text-[9px] leading-none px-1.5 py-0.5 rounded-full bg-black/25 text-white/90">
+                      <span className={`w-1.5 h-1.5 rounded-full ${statusDotClass(r.status)}`} aria-hidden />
                       {reservationStatusLabel(r.status)}
                     </span>
                   )}
@@ -199,6 +189,7 @@ export default function CalendarDayView({ date, reservations, onReservationClick
                 {height >= 56 && (
                   <p className="text-[10px] sm:text-[11px] text-white/75 truncate">
                     {serviceTypeLabel(r.service_type)}
+                    {dur && ` · ${dur}`}
                     {veh && ` · ${veh}`}
                   </p>
                 )}
@@ -206,6 +197,15 @@ export default function CalendarDayView({ date, reservations, onReservationClick
             );
           })}
         </div>
+
+        {/* Empty-state hint — grid stays interactive so users can click a slot to create. */}
+        {isEmpty && (
+          <div className="pointer-events-none absolute inset-x-0 top-6 flex justify-center">
+            <span className="text-xs text-slate-500 bg-[#0f172a]/80 px-3 py-1.5 rounded-full border border-slate-800">
+              この日の予約はありません — 空き枠をクリックして新規作成
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

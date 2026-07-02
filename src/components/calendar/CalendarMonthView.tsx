@@ -1,6 +1,7 @@
 "use client";
 
-import { ReservationDB, serviceTypeColor } from "@/lib/reservations/reservation-types";
+import { ReservationDB, serviceTypeColor, serviceTypeLabel } from "@/lib/reservations/reservation-types";
+import { todayStr, statusDotClass } from "@/lib/calendar/calendar-utils";
 
 interface Props {
   reservations: ReservationDB[];
@@ -23,7 +24,7 @@ export default function CalendarMonthView({
   onDayClick,
   onReservationClick,
 }: Props) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();  // A0: local date, no UTC off-by-one
 
   // First day of the month (0=Sun, 6=Sat)
   const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
@@ -122,12 +123,20 @@ export default function CalendarMonthView({
                       e.stopPropagation();
                       onReservationClick?.(r);
                     }}
-                    className={`w-full text-left px-1 py-0.5 rounded text-[10px] text-white truncate ${serviceTypeColor(r.service_type)}`}
+                    title={`${r.start_time ? r.start_time.slice(0, 5) + " " : ""}${
+                      r.customers
+                        ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
+                        : serviceTypeLabel(r.service_type)
+                    }`}
+                    className={`flex items-center gap-1 w-full text-left px-1 py-0.5 rounded text-[10px] text-white ${serviceTypeColor(r.service_type)}`}
                   >
-                    {r.start_time ? r.start_time.slice(0, 5) + " " : ""}
-                    {r.customers
-                      ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
-                      : r.reservation_number ?? r.id.slice(0, 6)}
+                    <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${statusDotClass(r.status)}`} aria-hidden />
+                    <span className="truncate">
+                      {r.start_time ? r.start_time.slice(0, 5) + " " : ""}
+                      {r.customers
+                        ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
+                        : r.reservation_number ?? r.id.slice(0, 6)}
+                    </span>
                   </button>
                 ))}
                 {cellReservations.length > 3 && (
