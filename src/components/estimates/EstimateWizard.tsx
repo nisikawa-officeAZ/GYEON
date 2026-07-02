@@ -7,13 +7,9 @@ import { createEstimate }        from "@/lib/estimates/create-estimate";
 import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 import { CustomerDB }            from "@/lib/customers/customer-types";
 import { VehicleDB }             from "@/lib/vehicles/vehicle-types";
-import {
-  BODY_SIZES, COATINGS, TOPCOAT_BASE, TOPCOAT_NAME, COATING_OPTIONS,
-  MAINTENANCE_MENUS, CARWASH_MENUS, ROOM_CLEAN_PARTS, ROOM_CLEAN_CONDITIONS,
-  WINDOW_FILM_PARTS, WINDOW_FILM_GRADES,
-  PPF_PLANS, PPF_PLAN_PRICES, PPF_FILM_TYPES, PPF_VEHICLE_RANKS,
-  PPF_FRONT_GLASS, PPF_SINGLE_PARTS, detectPpfRank,
-} from "@/lib/pricing/pricing-data";
+// E5: all price DATA is read from the loaded PricingCatalog (single source);
+// only detectPpfRank (pure logic, not price data) is imported directly.
+import { detectPpfRank }         from "@/lib/pricing/pricing-data";
 import type { CoatingId }        from "@/lib/pricing/pricing-data";
 import { calculateEstimate, buildLineItems } from "@/lib/pricing/pricing-engine";
 import { SERVICE_CATEGORIES, type ServiceCategoryId } from "@/lib/estimates/service-categories";
@@ -309,7 +305,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   const [topcoat3,  setTopcoat3]  = useState("");
 
   const isCert   = meetsTier(rank, "certified");
-  const visCoats = COATINGS.filter(c => !c.certOnly || isCert);
+  const visCoats = catalog.coatings.filter(c => !c.certOnly || isCert);
   const tc2Opts  = coatId ? topcoatOpts(coatId, layerMode, isCert) : [];
   const tc3Opts  = coatId && layerMode === "3layer" && topcoat2
     ? topcoatOpts(coatId, "3layer", isCert).filter(t => t.id !== topcoat2)
@@ -406,8 +402,8 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   const carwashTot   = estCalc.services.find(s => s.type === "carwash")?.subtotal    ?? 0;
   const roomCleanTot = estCalc.services.find(s => s.type === "roomclean")?.subtotal  ?? 0;
   const otherTot     = estCalc.services.find(s => s.type === "other")?.subtotal      ?? 0;
-  const rcCondCoeff  = ROOM_CLEAN_CONDITIONS.find(c => c.id === roomCleanCond)?.coeff ?? 1.0;
-  const wfGradeCoeff = WINDOW_FILM_GRADES.find(g => g.id === windowGrade)?.coeff ?? 1.0;
+  const rcCondCoeff  = catalog.roomCleanConditions.find(c => c.id === roomCleanCond)?.coeff ?? 1.0;
+  const wfGradeCoeff = catalog.windowGrades.find(g => g.id === windowGrade)?.coeff ?? 1.0;
   const windowTot    = estCalc.services.find(s => s.type === "window")?.subtotal ?? 0;
   const ppfSvc        = estCalc.services.find(s => s.type === "ppf");
   const ppfTot        = ppfSvc?.subtotal ?? 0;
@@ -825,8 +821,8 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
         <div className="flex flex-col gap-3">
           <p className={lbl}>ボディサイズを選択してください</p>
           <div className="grid grid-cols-2 gap-2">
-            {BODY_SIZES.map(s => {
-              const price = has("coating") && coatId ? Math.round((COATINGS.find(c => c.id === coatId)?.base ?? 0) * (BODY_SIZES.find(b => b.key === s.key)?.multi ?? 1.0)) : null;
+            {catalog.bodySizes.map(s => {
+              const price = has("coating") && coatId ? Math.round((catalog.coatings.find(c => c.id === coatId)?.base ?? 0) * (catalog.bodySizes.find(b => b.key === s.key)?.multi ?? 1.0)) : null;
               const isSel = sizeKey === s.key;
               return (
                 <button key={s.key} type="button" onClick={() => setSizeKey(s.key)}
@@ -842,7 +838,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
             })}
           </div>
           {has("coating") && coatId && (
-            <p className="text-xs text-slate-600">係数 ×{BODY_SIZES.find(s => s.key === sizeKey)?.multi ?? 1.0} / {COATINGS.find(c => c.id === coatId)?.name}</p>
+            <p className="text-xs text-slate-600">係数 ×{catalog.bodySizes.find(s => s.key === sizeKey)?.multi ?? 1.0} / {catalog.coatings.find(c => c.id === coatId)?.name}</p>
           )}
         </div>
       )}
@@ -861,14 +857,14 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
 
           <div className="flex flex-col gap-2">
             {visCoats.map(c => {
-              const price = Math.round(c.base * (BODY_SIZES.find(b => b.key === sizeKey)?.multi ?? 1.0));
+              const price = Math.round(c.base * (catalog.bodySizes.find(b => b.key === sizeKey)?.multi ?? 1.0));
               const isSel = coatId === c.id;
               const gc = c.grade === "CERTIFIED" ? "border-amber-500/50 text-amber-400 bg-amber-950/20"
                 : c.grade === "プレミアム" ? "border-purple-500/50 text-purple-400"
                 : c.grade === "スタンダード" ? "border-blue-500/50 text-blue-400"
                 : "border-slate-600 text-slate-500";
               return (
-                <button key={c.id} type="button" onClick={() => setCoatId(c.id)}
+                <button key={c.id} type="button" onClick={() => setCoatId(c.id as CoatingId)}
                   className={`flex items-center justify-between px-4 py-4 rounded-xl border text-left transition-all ${isSel ? "bg-blue-950/40 border-[#1d4ed8]/60" : "bg-[#0f172a] border-slate-700 hover:border-slate-500"}`}>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -901,7 +897,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
             <div className="flex flex-col gap-2">
               <label className={lbl}>2層目トップコート <span className="text-red-400">*</span></label>
               {tc2Opts.map(t => {
-                const p = Math.round((TOPCOAT_BASE[t.id] ?? 0) * (BODY_SIZES.find(b => b.key === sizeKey)?.multi ?? 1.0));
+                const p = Math.round((catalog.topcoatBase[t.id] ?? 0) * (catalog.bodySizes.find(b => b.key === sizeKey)?.multi ?? 1.0));
                 return (
                   <button key={t.id} type="button" onClick={() => setTopcoat2(t.id)}
                     className={`flex items-center justify-between px-4 py-3 rounded-lg border text-left transition-colors ${topcoat2 === t.id ? "bg-blue-950/30 border-[#1d4ed8]/50" : "bg-[#0f172a] border-slate-700 hover:border-slate-600"}`}>
@@ -920,7 +916,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
             <div className="flex flex-col gap-2">
               <label className={lbl}>3層目トップコート</label>
               {tc3Opts.map(t => {
-                const p = Math.round((TOPCOAT_BASE[t.id] ?? 0) * (BODY_SIZES.find(b => b.key === sizeKey)?.multi ?? 1.0));
+                const p = Math.round((catalog.topcoatBase[t.id] ?? 0) * (catalog.bodySizes.find(b => b.key === sizeKey)?.multi ?? 1.0));
                 return (
                   <button key={t.id} type="button" onClick={() => setTopcoat3(t.id)}
                     className={`flex items-center justify-between px-4 py-3 rounded-lg border text-left transition-colors ${topcoat3 === t.id ? "bg-blue-950/30 border-[#1d4ed8]/50" : "bg-[#0f172a] border-slate-700 hover:border-slate-600"}`}>
@@ -948,7 +944,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       {screen === "step4" && (
         <div className="flex flex-col gap-3">
           <p className={lbl}>追加オプション（任意・スキップ可）</p>
-          {COATING_OPTIONS.map(opt => {
+          {catalog.coatingOptions.map(opt => {
             const checked = selOpts.includes(opt.id);
             return (
               <button key={opt.id} type="button"
@@ -975,7 +971,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       {screen === "step-maintenance" && (
         <div className="flex flex-col gap-3">
           <p className={lbl}>メンテナンスメニューを選択してください（複数可）</p>
-          {MAINTENANCE_MENUS.map(menu => {
+          {catalog.maintenanceMenus.map(menu => {
             const checked = maintenanceSel.includes(menu.id);
             return (
               <button key={menu.id} type="button"
@@ -1004,7 +1000,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       {screen === "step-carwash" && (
         <div className="flex flex-col gap-3">
           <p className={lbl}>洗車メニューを選択してください（複数可）</p>
-          {CARWASH_MENUS.map(menu => {
+          {catalog.carwashMenus.map(menu => {
             const checked = carwashSel.includes(menu.id);
             return (
               <button key={menu.id} type="button"
@@ -1083,7 +1079,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
           <div className="flex flex-col gap-2">
             <p className={lbl}>汚染度を選択してください</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {ROOM_CLEAN_CONDITIONS.map(cond => {
+              {catalog.roomCleanConditions.map(cond => {
                 const active = roomCleanCond === cond.id;
                 return (
                   <button key={cond.id} type="button"
@@ -1098,7 +1094,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
           </div>
           <div className="flex flex-col gap-2">
             <p className={lbl}>クリーニング箇所を選択してください（複数可）</p>
-            {ROOM_CLEAN_PARTS.map(part => {
+            {catalog.roomCleanParts.map(part => {
               const checked = roomCleanSel.includes(part.id);
               const price   = Math.round(part.basePrice * rcCondCoeff);
               return (
@@ -1138,7 +1134,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
           <div className="flex flex-col gap-2">
             <p className={lbl}>フィルムグレードを選択してください</p>
             <div className="grid grid-cols-2 gap-2">
-              {WINDOW_FILM_GRADES.map(grade => {
+              {catalog.windowGrades.map(grade => {
                 const active = windowGrade === grade.id;
                 return (
                   <button key={grade.id} type="button"
@@ -1153,7 +1149,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
           </div>
           <div className="flex flex-col gap-2">
             <p className={lbl}>施工箇所を選択してください（複数可）</p>
-            {WINDOW_FILM_PARTS.map(part => {
+            {catalog.windowParts.map(part => {
               const checked = windowPartSel.includes(part.id);
               const price   = Math.round(part.basePrice * wfGradeCoeff);
               return (
@@ -1195,9 +1191,9 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
           <div className="flex flex-col gap-2">
             <p className={lbl}>① プランを選択してください <span className="text-red-400">*</span></p>
             <div className="flex flex-col gap-2">
-              {PPF_PLANS.map(plan => {
+              {catalog.ppfPlans.map(plan => {
                 const active     = ppfPlan === plan.id;
-                const basePrice  = sizeKey ? (PPF_PLAN_PRICES[plan.id]?.[sizeKey] ?? 0) : 0;
+                const basePrice  = sizeKey ? (catalog.ppfPlanPrices[plan.id]?.[sizeKey] ?? 0) : 0;
                 return (
                   <button key={plan.id} type="button"
                     onClick={() => setPpfPlan(plan.id)}
@@ -1224,7 +1220,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
           <div className="flex flex-col gap-2">
             <p className={lbl}>② フィルムタイプ <span className="text-red-400">*</span></p>
             <div className="grid grid-cols-2 gap-2">
-              {PPF_FILM_TYPES.map(film => {
+              {catalog.ppfFilmTypes.map(film => {
                 const active = ppfFilmType === film.id;
                 return (
                   <button key={film.id} type="button"
@@ -1247,7 +1243,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
               )}
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {PPF_VEHICLE_RANKS.map(rank => {
+              {catalog.ppfVehicleRanks.map(rank => {
                 const active = ppfVehicleRank === rank.id;
                 return (
                   <button key={rank.id} type="button"
@@ -1271,7 +1267,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
                 <div className={`w-4 h-4 rounded-full border-2 shrink-0 transition-colors ${ppfFrontGlass === "" ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`} />
                 <span className="text-sm text-slate-300">なし（スキップ）</span>
               </button>
-              {PPF_FRONT_GLASS.map(fg => {
+              {catalog.ppfFrontGlass.map(fg => {
                 const active = ppfFrontGlass === fg.id;
                 return (
                   <button key={fg.id} type="button"
@@ -1291,7 +1287,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
           {/* ⑤ Single parts */}
           <div className="flex flex-col gap-2">
             <p className={lbl}>⑤ 単体パーツ追加（任意・複数可）</p>
-            {PPF_SINGLE_PARTS.map(part => {
+            {catalog.ppfSingleParts.map(part => {
               const sel       = ppfSingleParts.find(p => p.id === part.id);
               const checked   = !!sel;
               const qty       = sel?.qty ?? 0;
@@ -1366,14 +1362,14 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
               {has("coating") && coatId && (
                 <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-300">{COATINGS.find(c => c.id === coatId)?.name}</span>
+                    <span className="text-slate-300">{catalog.coatings.find(c => c.id === coatId)?.name}</span>
                     <span className="text-slate-100">¥{cPrice.toLocaleString("ja-JP")}</span>
                   </div>
-                  <p className="text-[10px] text-slate-600">サイズ: {sizeKey}（×{BODY_SIZES.find(s => s.key === sizeKey)?.multi ?? 1.0}）</p>
-                  {topcoat2 && <div className="flex justify-between text-xs text-slate-400"><span>2層目: {TOPCOAT_NAME[topcoat2]}</span><span>+¥{tc2P.toLocaleString("ja-JP")}</span></div>}
-                  {topcoat3 && <div className="flex justify-between text-xs text-slate-400"><span>3層目: {TOPCOAT_NAME[topcoat3]}</span><span>+¥{tc3P.toLocaleString("ja-JP")}</span></div>}
+                  <p className="text-[10px] text-slate-600">サイズ: {sizeKey}（×{catalog.bodySizes.find(s => s.key === sizeKey)?.multi ?? 1.0}）</p>
+                  {topcoat2 && <div className="flex justify-between text-xs text-slate-400"><span>2層目: {catalog.topcoatName[topcoat2]}</span><span>+¥{tc2P.toLocaleString("ja-JP")}</span></div>}
+                  {topcoat3 && <div className="flex justify-between text-xs text-slate-400"><span>3層目: {catalog.topcoatName[topcoat3]}</span><span>+¥{tc3P.toLocaleString("ja-JP")}</span></div>}
                   {selOpts.map(id => {
-                    const o = COATING_OPTIONS.find(x => x.id === id);
+                    const o = catalog.coatingOptions.find(x => x.id === id);
                     return o ? <div key={id} className="flex justify-between text-xs text-slate-400"><span>{o.name}</span><span>+¥{o.price.toLocaleString("ja-JP")}</span></div> : null;
                   })}
                 </div>
@@ -1404,7 +1400,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
                 <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
                   <p className="text-xs font-medium text-slate-400">ボディ定期メンテナンス</p>
                   {maintenanceSel.map(id => {
-                    const m = MAINTENANCE_MENUS.find(x => x.id === id);
+                    const m = catalog.maintenanceMenus.find(x => x.id === id);
                     return m ? (
                       <div key={id} className="flex justify-between text-sm">
                         <span className="text-slate-300">{m.name}</span>
@@ -1418,7 +1414,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
                 <div className="px-4 py-3 border-t border-slate-700/40 flex flex-col gap-1.5">
                   <p className="text-xs font-medium text-slate-400">メンテナンス洗車</p>
                   {carwashSel.map(id => {
-                    const m = CARWASH_MENUS.find(x => x.id === id);
+                    const m = catalog.carwashMenus.find(x => x.id === id);
                     return m ? (
                       <div key={id} className="flex justify-between text-sm">
                         <span className="text-slate-300">{m.name}</span>
