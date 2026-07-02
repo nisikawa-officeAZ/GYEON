@@ -214,11 +214,13 @@ export function adviseReservation(
     policy,
   });
 
-  // Phase highlight: acceptable during heavy / drying / buffer.
+  // Phase highlight: acceptable during heavy / drying / buffer. Buffer is gated on
+  // OTHER reservations being present so the selected service's own injected buffer
+  // does not self-trigger the highlight (QA C2.13).
   let phase: "heavy" | "drying" | "buffer" | "none" = "none";
   if (heavyActiveOther && policy.acceptedDuringHeavy.includes(serviceType)) phase = "heavy";
   else if (dayCtx.dryingActive && policy.acceptedDuringDrying.includes(serviceType)) phase = "drying";
-  else if (dayCtx.bufferActive && policy.acceptedDuringDrying.includes(serviceType)) phase = "buffer";
+  else if (dayCtx.bufferActive && otherServices.length > 0 && policy.acceptedDuringDrying.includes(serviceType)) phase = "buffer";
 
   const compatStatus: "compatible" | "caution" | "not_recommended" =
     selVerdict.compatibility === "not_recommended" ? "not_recommended" : busy ? "caution" : "compatible";
