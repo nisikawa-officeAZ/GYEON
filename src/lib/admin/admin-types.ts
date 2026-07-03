@@ -68,6 +68,7 @@ export type AdminAuditAction =
   | "admin_user_created"
   | "admin_user_disabled"
   | "admin_user_enabled"
+  | "admin_user_deleted"
   | "admin_role_changed"
   | "admin_password_reset"
   // RC-13: dealer approval center

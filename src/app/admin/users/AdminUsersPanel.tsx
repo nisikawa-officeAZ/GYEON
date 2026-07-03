@@ -7,6 +7,7 @@ import {
   enableAdminUser,
   changeAdminRole,
   resetAdminPassword,
+  deleteAdminUser,
 } from "@/lib/admin/admin-user-actions";
 import { ADMIN_ROLE_META } from "@/lib/admin/admin-roles";
 import type { AdminUserDB } from "@/lib/admin/admin-types";
@@ -19,7 +20,8 @@ type Modal =
   | { type: "create" }
   | { type: "tempPassword"; password: string; email: string }
   | { type: "changeRole"; adminId: string; currentRole: AdminRole; email: string | null }
-  | { type: "confirmDisable"; adminId: string; email: string | null };
+  | { type: "confirmDisable"; adminId: string; email: string | null }
+  | { type: "confirmDelete"; adminId: string; email: string | null };
 
 function RoleBadge({ role }: { role: string }) {
   const meta = ADMIN_ROLE_META[role as AdminRole];
@@ -60,6 +62,12 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
+
+  // How many active Super Admins remain — used to gate 完全削除 so the last one
+  // can never be removed. Server-side enforcement is authoritative regardless.
+  const activeSuperAdminCount = users.filter(
+    (u) => u.role === "super_admin" && u.status === "active",
+  ).length;
 
   const handleCreate = () => {
     if (!createEmail.trim()) return;
@@ -108,6 +116,21 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
       if (result.success) {
         setUsers((prev) => prev.map((u) => u.id === adminId ? { ...u, status: "disabled" } : u));
         showToast("アカウントを停止しました", "success");
+      } else {
+        showToast(result.error ?? "エラーが発生しました", "error");
+      }
+    });
+  };
+
+  const handleConfirmDelete = () => {
+    if (modal.type !== "confirmDelete") return;
+    const adminId = modal.adminId;
+    setModal({ type: "none" });
+    startTransition(async () => {
+      const result = await deleteAdminUser(adminId);
+      if (result.success) {
+        setUsers((prev) => prev.filter((u) => u.id !== adminId));
+        showToast("管理者を完全削除しました", "success");
       } else {
         showToast(result.error ?? "エラーが発生しました", "error");
       }
@@ -246,6 +269,20 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
                               {isDisabled ? "有効化" : "停止"}
                             </button>
                           )}
+                          {/* 完全削除 — permanent. Hidden for the current session
+                              user; disabled for the last active Super Admin. */}
+                          {!isSelf && (
+                            <button
+                              onClick={() => setModal({ type: "confirmDelete", adminId: user.id, email: user.email })}
+                              disabled={isPending || (isSuperAdmin && !isDisabled && activeSuperAdminCount < 2)}
+                              title={isSuperAdmin && !isDisabled && activeSuperAdminCount < 2
+                                ? "最後のアクティブなスーパー管理者は完全削除できません"
+                                : undefined}
+                              className="text-[10px] px-2 py-1 bg-red-950/60 hover:bg-red-900/70 text-red-400 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              完全削除
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -381,6 +418,36 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
                 className="px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm rounded-lg transition-colors disabled:opacity-40"
               >
                 停止する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm Delete (完全削除) Modal — single dialog, irreversible ──── */}
+      {modal.type === "confirmDelete" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#0f172a] border border-red-800/60 rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
+            <h2 className="text-base font-bold text-red-400">完全削除</h2>
+            <p className="text-sm text-red-300">
+              {modal.email && (
+                <><span className="font-medium text-slate-100">{modal.email}</span> </>
+              )}
+              を完全削除します。復元できません。実行しますか？
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setModal({ type: "none" })}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isPending}
+                className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white text-sm rounded-lg transition-colors disabled:opacity-40"
+              >
+                完全削除
               </button>
             </div>
           </div>

@@ -4,10 +4,16 @@ import { requireAdmin, requireSuperAdmin } from "./require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "./write-audit-log";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
+import { checkSuperAdminRemovalSafe } from "./super-admin-guard";
 
 export async function disableUserAdmin(userId: string) {
   const admin = await requireAdmin();
   const supabase = createAdminClient();
+
+  // Never suspend the last active Super Admin (or one's own super-admin access).
+  const currentUser = await getCurrentUser();
+  const guardError = await checkSuperAdminRemovalSafe(supabase, userId, currentUser?.id, "停止");
+  if (guardError) return { success: false, error: guardError };
 
   // Ban the user (Supabase ban = disabled)
   const { error } = await supabase.auth.admin.updateUserById(userId, {
@@ -58,6 +64,12 @@ export async function deleteUserAdmin(userId: string) {
   }
 
   const supabase = createAdminClient();
+
+  // Mandatory server-side guard: never hard-delete the last active Super Admin,
+  // regardless of which entry point (Admin Users / Auth Users) called us or
+  // whether the UI button was hidden.
+  const guardError = await checkSuperAdminRemovalSafe(supabase, userId, currentUser?.id, "完全削除");
+  if (guardError) return { success: false, error: guardError };
 
   // Orphan cleanup — ONLY performed for an explicit hard delete.
   // dealers.owner_user_id references auth.users with NO ON DELETE rule, so the

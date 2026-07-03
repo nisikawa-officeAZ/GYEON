@@ -5,6 +5,8 @@ import { requireSuperAdmin } from "./require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "./write-audit-log";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
+import { deleteUserAdmin } from "./user-actions";
+import { checkSuperAdminRemovalSafe } from "./super-admin-guard";
 import type { AdminRole } from "./admin-roles";
 
 type CreatableAdminRole = Exclude<AdminRole, "super_admin">;
@@ -79,6 +81,10 @@ export async function disableAdminUser(adminId: string) {
     return { success: false, error: "自分自身を無効化できません" };
   }
 
+  // Never suspend the last active Super Admin.
+  const guardError = await checkSuperAdminRemovalSafe(supabase, target.user_id, currentUser?.id, "停止");
+  if (guardError) return { success: false, error: guardError };
+
   const { error: banError } = await supabase.auth.admin.updateUserById(target.user_id, {
     ban_duration: "876600h",
   });
@@ -127,6 +133,41 @@ export async function enableAdminUser(adminId: string) {
     adminUserId:  caller.id,
     targetUserId: target.user_id,
     action:       "admin_user_enabled",
+    details:      { target_email: target.email, target_role: target.role },
+  });
+
+  return { success: true };
+}
+
+/**
+ * Permanently delete (完全削除) an admin user — Super Admin only.
+ *
+ * Delegates the actual hard delete to the existing safe deleteUserAdmin(), which
+ * enforces the mandatory guards server-side (no self-delete; never remove the
+ * last active Super Admin) and performs FK cleanup + auth.users deletion. The
+ * admin_users row is removed by ON DELETE CASCADE. No hard-delete logic is
+ * duplicated here.
+ */
+export async function deleteAdminUser(adminId: string) {
+  const caller = await requireSuperAdmin();
+  const supabase = createAdminClient();
+
+  const { data: target, error: fetchError } = await supabase
+    .from("admin_users")
+    .select("id, user_id, email, role, status")
+    .eq("id", adminId)
+    .single();
+
+  if (fetchError || !target) return { success: false, error: "管理者が見つかりません" };
+
+  // Hard delete via the single safe path (self + last-super-admin guards live there).
+  const res = await deleteUserAdmin(target.user_id);
+  if (!res.success) return { success: false, error: res.error };
+
+  await writeAuditLog({
+    adminUserId:  caller.id,
+    targetUserId: target.user_id,
+    action:       "admin_user_deleted",
     details:      { target_email: target.email, target_role: target.role },
   });
 

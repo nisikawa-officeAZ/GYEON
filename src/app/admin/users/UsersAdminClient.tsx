@@ -131,7 +131,7 @@ export default function UsersAdminClient() {
     startTransition(async () => {
       const result = await deleteUserAdmin(userId);
       if (result.success) {
-        showToast("ユーザーを削除しました", "success");
+        showToast("ユーザーを完全削除しました", "success");
         setUsers((prev) => prev.filter((u) => u.id !== userId));
       } else {
         showToast(result.error ?? "エラーが発生しました", "error");
@@ -308,7 +308,7 @@ export default function UsersAdminClient() {
                             disabled={isPending}
                             className="text-xs px-2 py-1 bg-red-900/50 hover:bg-red-800/60 text-red-300 rounded transition-colors disabled:opacity-50"
                           >
-                            削除
+                            完全削除
                           </button>
                         </div>
                       </td>
@@ -367,7 +367,7 @@ export default function UsersAdminClient() {
       {modal.type === "deleteConfirm" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-[#0f172a] border border-slate-700 rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
-            <h2 className="text-base font-bold text-red-400">ユーザーを削除</h2>
+            <h2 className="text-base font-bold text-red-400">ユーザーを完全削除</h2>
             <p className="text-sm text-slate-300">
               この操作は取り消せません。
               {modal.email && (
@@ -401,7 +401,7 @@ export default function UsersAdminClient() {
                 disabled={deleteInput !== "DELETE" || isPending}
                 className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white text-sm rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                削除する
+                完全削除する
               </button>
             </div>
           </div>
