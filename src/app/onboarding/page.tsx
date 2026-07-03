@@ -1,7 +1,5 @@
 import { redirect }           from "next/navigation";
 import { getOnboardingStatus } from "@/lib/onboarding/onboarding";
-import { getCurrentDealerSubscription } from "@/lib/subscription/subscription";
-import { getCurrentUser }      from "@/lib/auth/get-current-user";
 import OnboardingWizard        from "@/components/onboarding/OnboardingWizard";
 
 export const dynamic = "force-dynamic";
@@ -13,12 +11,6 @@ export default async function OnboardingPage() {
   if (status?.onboarding_completed) {
     redirect("/");
   }
-
-  // Fetch data for wizard steps in parallel
-  const [sub, user] = await Promise.all([
-    getCurrentDealerSubscription(),
-    getCurrentUser(),
-  ]);
 
   const defaultStatus = status ?? {
     onboarding_completed:    false,
@@ -41,28 +33,5 @@ export default async function OnboardingPage() {
     completion_note:         null,
   };
 
-  const subInfo = sub
-    ? {
-        plan_code:             sub.plan_code,
-        status:                sub.status,
-        trial_ends_at:         sub.trial_ends_at,
-        current_period_ends_at: sub.current_period_ends_at,
-      }
-    : null;
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
-
-  // Postal-code lookup is a JP-market feature; other markets disable it.
-  const market = (process.env.NEXT_PUBLIC_DEALEROS_MARKET ?? process.env.DEALEROS_MARKET ?? "JP").toUpperCase();
-  const postalLookupEnabled = market === "JP";
-
-  return (
-    <OnboardingWizard
-      initialStatus={defaultStatus}
-      subscription={subInfo}
-      appUrl={appUrl}
-      loginEmail={user?.email ?? ""}
-      postalLookupEnabled={postalLookupEnabled}
-    />
-  );
+  return <OnboardingWizard initialStatus={defaultStatus} />;
 }

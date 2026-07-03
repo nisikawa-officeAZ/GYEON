@@ -7,6 +7,7 @@ import { getCurrentUser }         from "@/lib/auth/get-current-user";
 import { getCurrentAdmin }        from "@/lib/admin/get-current-admin";
 import { createClient }           from "@/lib/supabase/server";
 import OnboardingCard             from "@/components/onboarding/OnboardingCard";
+import ProfileCompletionCard      from "@/components/onboarding/ProfileCompletionCard";
 import { getDashboardSummary }    from "@/lib/dashboard/get-dashboard-summary";
 import TodayReservationsCard      from "@/components/dashboard/TodayReservationsCard";
 import MaintenanceDueCard         from "@/components/dashboard/MaintenanceDueCard";
@@ -173,6 +174,7 @@ export default async function HomePage() {
         {/* ══ ONBOARDING (conditional) ════════════════════════════════════════ */}
         <div className="px-5 mt-3 relative z-10">
           <OnboardingCard />
+          <ProfileCompletionCard />
         </div>
 
         {/* ══ PRIMARY CTA — 新規見積もり ══════════════════════════════════════ */}

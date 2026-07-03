@@ -29,6 +29,7 @@ import CommunicationOverview    from "@/components/dashboard/CommunicationOvervi
 import ReviewOpportunities      from "@/components/dashboard/ReviewOpportunities";
 import AIInsightPanel           from "@/components/dashboard/AIInsightPanel";
 import OwnerRevenueSection      from "@/components/dashboard/OwnerRevenueSection";
+import ProfileCompletionCard    from "@/components/onboarding/ProfileCompletionCard";
 import { buildDeterministicInsights } from "@/lib/ai-insights/deterministic-insights";
 
 export const metadata = { title: "ダッシュボード | GYEON Detailer Agent" };
@@ -118,6 +119,9 @@ export default async function DashboardPage() {
   return (
     <MainLayout>
       <div className="max-w-lg mx-auto flex flex-col gap-3 px-4 pb-8 pt-4">
+
+        {/* Post-onboarding profile completion nudge (hidden until onboarded / when done) */}
+        <ProfileCompletionCard />
 
         {/* ── Dashboard header ───────────────────────────────────────────────── */}
         <div className="flex items-center justify-between">

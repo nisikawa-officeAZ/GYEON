@@ -16,9 +16,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export interface OnboardingAdminParams {
   name:      string;
   furigana?: string;
-  title?:    string;
   phone?:    string;
-  email?:    string;
 }
 
 export async function saveOnboardingAdmin(
@@ -38,7 +36,9 @@ export async function saveOnboardingAdmin(
 
   const clean = (v: string | undefined) => (v ?? "").trim() || null;
   const name  = clean(params.name);
-  const email = clean(params.email);
+  // Contact/notification email is the already-authenticated login email —
+  // never re-asked during onboarding.
+  const email = (user.email ?? "").trim() || null;
 
   const supabase = createAdminClient();
 
@@ -70,7 +70,6 @@ export async function saveOnboardingAdmin(
     ...(current?.store_profile ?? {}),
     admin_name:     name,
     admin_furigana: clean(params.furigana),
-    admin_title:    clean(params.title),
     admin_phone:    clean(params.phone),
     admin_email:    email,
   };

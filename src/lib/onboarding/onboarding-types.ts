@@ -1,11 +1,11 @@
 // PHASE59: Onboarding types
 // Pure types — no "use server" directive
 
-export const ONBOARDING_TOTAL_STEPS = 7 as const;
+export const ONBOARDING_TOTAL_STEPS = 3 as const;
 
-export type OnboardingStepNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type OnboardingStepNumber = 1 | 2 | 3;
 
-/** Pseudo-step value used when user skips the wizard */
+/** Pseudo-step value used when user skips the wizard (> total steps) */
 export const ONBOARDING_SKIPPED_STEP = 8 as const;
 
 export interface OnboardingStatus {
@@ -56,12 +56,10 @@ export interface OnboardingStepMeta {
   label:  string;
 }
 
+// Onboarding is a fast start-up flow (~1 min), NOT a full settings wizard.
+// Shop info / subscription / LINE / PDF are configured later from Settings.
 export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
-  { number: 1, title: "ショップ情報",         label: "Dealer Info" },
-  { number: 2, title: "管理者情報",           label: "Admin / Owner" },
-  { number: 3, title: "サブスクリプション",   label: "Subscription" },
-  { number: 4, title: "見積設定",             label: "Estimates" },
-  { number: 5, title: "LINE連携",             label: "LINE" },
-  { number: 6, title: "PDF・書類設定",        label: "PDF & Docs" },
-  { number: 7, title: "完了",                 label: "Finish" },
+  { number: 1, title: "管理者情報", label: "Admin / Owner" },
+  { number: 2, title: "見積設定",   label: "Estimates" },
+  { number: 3, title: "完了",       label: "Finish" },
 ];
