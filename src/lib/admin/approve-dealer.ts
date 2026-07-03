@@ -200,15 +200,24 @@ export async function reactivateDealer(dealerId: string) {
 }
 
 /**
- * Soft-delete a dealer (Super Admin only).
+ * Soft-delete (archive) a dealer AND cut off all access (Super Admin only).
  *
  * Sets dealers.deleted_at so the dealer is hidden from the admin
  * approval/list screen. This is a reversible soft delete — NO records are
- * hard-deleted:
- *   - auth.users are NOT removed
+ * hard-deleted and NO business data is removed:
+ *   - auth.users are NOT removed (handle auth deletion separately in User Management)
  *   - customers / vehicles / estimates are NOT removed
- *   - dealer_members are NOT removed
- * Restore with: UPDATE dealers SET deleted_at = NULL WHERE id = ...
+ *   - dealer_members rows are NOT removed (preserved for audit/restore)
+ *
+ * Access cut: all ACTIVE dealer_members for this dealer are set to
+ * status = 'suspended'. Because getCurrentDealer() only resolves memberships
+ * with status = 'active', this immediately blocks the owner/staff from logging
+ * into the dealer app or accessing any dealer data — closing the previous gap
+ * where an archived dealer's members stayed active and could still sign in.
+ *
+ * Restore requires BOTH steps (e.g. via reactivateDealer, or manually):
+ *   UPDATE dealers SET deleted_at = NULL WHERE id = ...
+ *   UPDATE dealer_members SET status = 'active' WHERE dealer_id = ... AND status = 'suspended'
  */
 export async function deleteDealer(dealerId: string) {
   const admin = await requireSuperAdmin();
@@ -222,12 +231,27 @@ export async function deleteDealer(dealerId: string) {
 
   if (error) return { success: false, error: error.message };
 
+  // Access cut — suspend every active membership for this dealer so the owner
+  // and staff can no longer authenticate into the dealer app. dealer_id is the
+  // server-action target (Super Admin scoped), never client tenant data; the
+  // update is scoped to this dealer only.
+  const { data: suspendedMembers, error: memberError } = await supabase
+    .from("dealer_members")
+    .update({ status: "suspended" })
+    .eq("dealer_id", dealerId)
+    .eq("status", "active")
+    .select("id");
+
+  if (memberError) return { success: false, error: memberError.message };
+
+  const suspendedCount = suspendedMembers?.length ?? 0;
+
   await writeAuditLog({
     adminUserId:    admin.id,
     targetDealerId: dealerId,
     action:         "dealer_deleted",
-    details:        { soft_delete: true },
+    details:        { soft_delete: true, suspended_members: suspendedCount },
   });
 
-  return { success: true };
+  return { success: true, suspendedMembers: suspendedCount };
 }
