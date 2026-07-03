@@ -79,6 +79,15 @@ export async function deleteUserAdmin(userId: string) {
     .eq("user_id", userId)
     .select("id");
 
+  // Remove any admin_users row for this user. admin_users.user_id is also
+  // ON DELETE CASCADE, but we clean it explicitly for symmetry, auditability,
+  // and to stay correct even if that FK rule is ever changed.
+  const { data: removedAdmins } = await supabase
+    .from("admin_users")
+    .delete()
+    .eq("user_id", userId)
+    .select("id");
+
   await writeAuditLog({
     adminUserId:  admin.id,
     targetUserId: userId,
@@ -87,11 +96,22 @@ export async function deleteUserAdmin(userId: string) {
       hard_delete:           true,
       cleared_owner_dealers: clearedOwnerDealers?.length ?? 0,
       removed_memberships:   removedMemberships?.length ?? 0,
+      removed_admins:        removedAdmins?.length ?? 0,
     },
   });
 
+  // Cleanup above already ran, so at this point the blocking FK references are
+  // cleared. If the auth deletion still fails, the account is left in a
+  // recoverable partial state — surface a clear instruction to retry.
   const { error } = await supabase.auth.admin.deleteUser(userId);
-  if (error) return { success: false, error: error.message };
+  if (error) {
+    return {
+      success: false,
+      error:
+        "関連データの削除は完了しましたが、認証ユーザーの削除に失敗しました。" +
+        "もう一度お試しいただくか、管理者にお問い合わせください。",
+    };
+  }
 
   return { success: true };
 }
