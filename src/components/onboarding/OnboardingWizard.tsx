@@ -11,6 +11,7 @@ import {
   skipOnboarding,
 } from "@/lib/onboarding/onboarding";
 import { lookupPostalCode } from "@/lib/onboarding/postal-lookup";
+import { saveOnboardingAdmin } from "@/lib/onboarding/save-onboarding-admin";
 import {
   OnboardingStatus,
   ONBOARDING_STEPS,
@@ -26,14 +27,6 @@ import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface StaffRow {
-  id:     string;
-  name:   string | null;
-  email:  string | null;
-  role:   string;
-  status: string;
-}
-
 interface SubInfo {
   plan_code: string;
   status:    string;
@@ -43,7 +36,6 @@ interface SubInfo {
 
 interface Props {
   initialStatus:       OnboardingStatus;
-  staffList:           StaffRow[];
   subscription:        SubInfo | null;
   appUrl:              string;
   loginEmail:          string;
@@ -296,73 +288,89 @@ function Step1Form({
   );
 }
 
-// ─── Step 2: Staff Setup ──────────────────────────────────────────────────────
+// ─── Step 2: Admin / Owner (管理者情報) ───────────────────────────────────────
 
-function Step2Staff({ staffList }: { staffList: StaffRow[] }) {
-  const roleLabel = (r: string) => {
-    switch (r) {
-      case "owner":    return "オーナー";
-      case "manager":  return "マネージャー";
-      case "staff":    return "スタッフ";
-      case "readonly": return "閲覧のみ";
-      default:         return r;
-    }
-  };
+interface Step2Data {
+  name:     string;
+  furigana: string;
+  title:    string;
+  phone:    string;
+  email:    string;
+}
+
+function Step2Admin({
+  data,
+  onChange,
+}: {
+  data: Step2Data;
+  onChange: (f: string, v: string) => void;
+}) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-xs text-slate-400">
-        現在のスタッフメンバーを確認し、必要に応じて設定ページからスタッフを招待してください。
+        管理者（オーナー）の情報を入力してください。この方が店舗の主担当・管理者になります。
+        追加のスタッフは、あとで「設定」→「スタッフ管理」から招待できます。
       </p>
-      <div className="bg-slate-800/40 border border-slate-700/50 rounded-xl overflow-hidden">
-        {staffList.length === 0 ? (
-          <div className="px-4 py-6 text-center">
-            <p className="text-xs text-slate-500">スタッフが登録されていません</p>
-            <p className="text-[10px] text-slate-600 mt-1">設定ページから招待できます</p>
-          </div>
-        ) : (
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-slate-700/50 text-[10px] text-slate-500 uppercase tracking-wider">
-                <th className="px-4 py-2 text-left">名前</th>
-                <th className="px-4 py-2 text-left">メール</th>
-                <th className="px-4 py-2 text-left">役割</th>
-                <th className="px-4 py-2 text-left">ステータス</th>
-              </tr>
-            </thead>
-            <tbody>
-              {staffList.map((s) => (
-                <tr key={s.id} className="border-b border-slate-700/30 last:border-b-0">
-                  <td className="px-4 py-2 text-slate-200">{s.name ?? "—"}</td>
-                  <td className="px-4 py-2 text-slate-400">{s.email ?? "—"}</td>
-                  <td className="px-4 py-2 text-slate-400">{roleLabel(s.role)}</td>
-                  <td className="px-4 py-2">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                      s.status === "active"
-                        ? "bg-green-900/30 text-green-400 border-green-800/40"
-                        : "bg-slate-800 text-slate-500 border-slate-700"
-                    }`}>
-                      {s.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">管理者氏名 *</span>
+          <input
+            type="text"
+            value={data.name}
+            onChange={(e) => onChange("name", e.target.value)}
+            placeholder="例: 山田 太郎"
+            className={STEP1_INPUT_CLASS}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">フリガナ</span>
+          <input
+            type="text"
+            value={data.furigana}
+            onChange={(e) => onChange("furigana", e.target.value)}
+            placeholder="例: ヤマダ タロウ"
+            className={STEP1_INPUT_CLASS}
+          />
+        </label>
       </div>
-      <div className="bg-blue-900/20 border border-blue-800/30 rounded-lg px-4 py-3">
-        <p className="text-xs text-blue-300 font-medium mb-1">スタッフを招待するには</p>
-        <p className="text-[10px] text-blue-400">
-          設定ページの「スタッフ管理」から招待できます。役割は Owner / Manager / Staff / ReadOnly から選択できます。
-        </p>
-        <Link
-          href="/settings"
-          target="_blank"
-          className="inline-block mt-2 text-[10px] text-blue-400 underline hover:text-blue-300"
-        >
-          設定を開く →
-        </Link>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">役職 / 担当名（任意）</span>
+          <input
+            type="text"
+            value={data.title}
+            onChange={(e) => onChange("title", e.target.value)}
+            placeholder="例: 代表 / 店長"
+            className={STEP1_INPUT_CLASS}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">電話番号（任意）</span>
+          <input
+            type="tel"
+            value={data.phone}
+            onChange={(e) => onChange("phone", e.target.value)}
+            placeholder="例: 090-0000-0000"
+            className={STEP1_INPUT_CLASS}
+          />
+        </label>
       </div>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-[10px] text-slate-500 uppercase tracking-wider">通知用メールアドレス</span>
+        <input
+          type="email"
+          value={data.email}
+          onChange={(e) => onChange("email", e.target.value)}
+          placeholder="info@example.com"
+          className={STEP1_INPUT_CLASS}
+        />
+        <span className="text-[10px] text-slate-600">
+          GYEON からの通知・連絡に使用します。初期値はログインメールアドレスです。
+        </span>
+      </label>
     </div>
   );
 }
@@ -616,7 +624,6 @@ function Step7Finish() {
 
 export default function OnboardingWizard({
   initialStatus,
-  staffList,
   subscription,
   appUrl,
   loginEmail,
@@ -673,6 +680,15 @@ export default function OnboardingWizard({
     }
   }
 
+  // Step 2 — Admin / Owner. Notification email defaults to the login email.
+  const [step2, setStep2] = useState({
+    name:     "",
+    furigana: "",
+    title:    "",
+    phone:    "",
+    email:    loginEmail || (initialStatus.business_email ?? ""),
+  });
+
   const [step4, setStep4] = useState({
     tax_rate: String(initialStatus.tax_rate ?? 10),
     terms:    initialStatus.terms_and_conditions ?? "",
@@ -692,6 +708,9 @@ export default function OnboardingWizard({
 
   function updateStep1(field: string, value: string) {
     setStep1((prev) => ({ ...prev, [field]: value }));
+  }
+  function updateStep2(field: string, value: string) {
+    setStep2((prev) => ({ ...prev, [field]: value }));
   }
   function updateStep4(field: string, value: string) {
     setStep4((prev) => ({ ...prev, [field]: value }));
@@ -737,8 +756,17 @@ export default function OnboardingWizard({
   async function handleNext() {
     startTransition(async () => {
       const nextStep = currentStep + 1;
-      const params   = buildStepParams(currentStep);
-      const result   = await saveOnboardingStep(params);
+      // Step 2 saves the dealer OWNER/admin (not ordinary staff) via its own action.
+      const result =
+        currentStep === 2
+          ? await saveOnboardingAdmin({
+              name:     step2.name,
+              furigana: step2.furigana,
+              title:    step2.title,
+              phone:    step2.phone,
+              email:    step2.email,
+            })
+          : await saveOnboardingStep(buildStepParams(currentStep));
       if (!result.success) {
         showToast(result.error ?? "保存に失敗しました", false);
         return;
@@ -783,7 +811,7 @@ export default function OnboardingWizard({
   }
 
   const isLastStep    = currentStep === ONBOARDING_TOTAL_STEPS;
-  const hasStepData   = [1, 4, 6].includes(currentStep);
+  const hasStepData   = [1, 2, 4, 6].includes(currentStep);
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center p-4">
@@ -841,7 +869,7 @@ export default function OnboardingWizard({
               />
             )}
             {currentStep === 2 && (
-              <Step2Staff staffList={staffList} />
+              <Step2Admin data={step2} onChange={updateStep2} />
             )}
             {currentStep === 3 && (
               <Step3Subscription subscription={subscription} />

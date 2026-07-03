@@ -58,7 +58,7 @@ export interface OnboardingStepMeta {
 
 export const ONBOARDING_STEPS: OnboardingStepMeta[] = [
   { number: 1, title: "ショップ情報",         label: "Dealer Info" },
-  { number: 2, title: "スタッフ設定",         label: "Staff" },
+  { number: 2, title: "管理者情報",           label: "Admin / Owner" },
   { number: 3, title: "サブスクリプション",   label: "Subscription" },
   { number: 4, title: "見積設定",             label: "Estimates" },
   { number: 5, title: "LINE連携",             label: "LINE" },

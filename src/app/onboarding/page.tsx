@@ -1,6 +1,5 @@
 import { redirect }           from "next/navigation";
 import { getOnboardingStatus } from "@/lib/onboarding/onboarding";
-import { getStaffList }        from "@/lib/staff/get-staff-list";
 import { getCurrentDealerSubscription } from "@/lib/subscription/subscription";
 import { getCurrentUser }      from "@/lib/auth/get-current-user";
 import OnboardingWizard        from "@/components/onboarding/OnboardingWizard";
@@ -16,8 +15,7 @@ export default async function OnboardingPage() {
   }
 
   // Fetch data for wizard steps in parallel
-  const [staffList, sub, user] = await Promise.all([
-    getStaffList(),
+  const [sub, user] = await Promise.all([
     getCurrentDealerSubscription(),
     getCurrentUser(),
   ]);
@@ -61,13 +59,6 @@ export default async function OnboardingPage() {
   return (
     <OnboardingWizard
       initialStatus={defaultStatus}
-      staffList={(staffList as Array<{
-        id: string;
-        name: string | null;
-        email: string | null;
-        role: string;
-        status: string;
-      }>)}
       subscription={subInfo}
       appUrl={appUrl}
       loginEmail={user?.email ?? ""}
