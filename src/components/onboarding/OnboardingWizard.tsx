@@ -97,50 +97,75 @@ function StepNav({ currentStep }: { currentStep: number }) {
 
 // ─── Step 1: Dealer Information ───────────────────────────────────────────────
 
+// Fields are inlined (NOT a nested component) so React keeps each <input>
+// mounted across the parent's re-renders — otherwise focus is lost on every
+// keystroke. Shared input styling only (a string, safe to keep in render).
+const STEP1_INPUT_CLASS =
+  "bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-slate-500 placeholder:text-slate-600";
+
 function Step1Form({
   data,
   onChange,
 }: {
-  data: { name: string; phone: string; email: string; address: string; website: string; logo: string };
+  data: { name: string; phone: string; email: string; address: string; website: string };
   onChange: (f: string, v: string) => void;
 }) {
-  const Field = ({ label, field, type = "text", placeholder = "" }: {
-    label: string; field: string; type?: string; placeholder?: string;
-  }) => (
-    <label className="flex flex-col gap-1">
-      <span className="text-[10px] text-slate-500 uppercase tracking-wider">{label}</span>
-      <input
-        type={type}
-        value={data[field as keyof typeof data]}
-        onChange={(e) => onChange(field, e.target.value)}
-        placeholder={placeholder}
-        className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-slate-500 placeholder:text-slate-600"
-      />
-    </label>
-  );
-
   return (
     <div className="flex flex-col gap-4">
       <p className="text-xs text-slate-400">
         ショップ情報を入力してください。後からも変更できます。
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label="ショップ名 *"       field="name"    placeholder="例: GYEON Tokyo" />
-        <Field label="電話番号"           field="phone"   type="tel" placeholder="例: 03-0000-0000" />
-        <Field label="メールアドレス"     field="email"   type="email" placeholder="info@example.com" />
-        <Field label="ウェブサイト URL"   field="website" placeholder="https://example.com" />
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">ショップ名 *</span>
+          <input
+            type="text"
+            value={data.name}
+            onChange={(e) => onChange("name", e.target.value)}
+            placeholder="例: GYEON Tokyo"
+            className={STEP1_INPUT_CLASS}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">電話番号</span>
+          <input
+            type="tel"
+            value={data.phone}
+            onChange={(e) => onChange("phone", e.target.value)}
+            placeholder="例: 03-0000-0000"
+            className={STEP1_INPUT_CLASS}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">メールアドレス</span>
+          <input
+            type="email"
+            value={data.email}
+            onChange={(e) => onChange("email", e.target.value)}
+            placeholder="info@example.com"
+            className={STEP1_INPUT_CLASS}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">ウェブサイト URL</span>
+          <input
+            type="text"
+            value={data.website}
+            onChange={(e) => onChange("website", e.target.value)}
+            placeholder="https://example.com"
+            className={STEP1_INPUT_CLASS}
+          />
+        </label>
       </div>
-      <Field label="住所" field="address" placeholder="例: 東京都渋谷区..." />
       <label className="flex flex-col gap-1">
-        <span className="text-[10px] text-slate-500 uppercase tracking-wider">ロゴ URL（任意）</span>
+        <span className="text-[10px] text-slate-500 uppercase tracking-wider">住所</span>
         <input
-          type="url"
-          value={data.logo}
-          onChange={(e) => onChange("logo", e.target.value)}
-          placeholder="https://example.com/logo.png"
-          className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-slate-500 placeholder:text-slate-600"
+          type="text"
+          value={data.address}
+          onChange={(e) => onChange("address", e.target.value)}
+          placeholder="例: 東京都渋谷区..."
+          className={STEP1_INPUT_CLASS}
         />
-        <span className="text-[10px] text-slate-600">ロゴ画像の URL を入力。後から設定でも変更できます。</span>
       </label>
     </div>
   );
@@ -485,7 +510,6 @@ export default function OnboardingWizard({
     email:   initialStatus.business_email   ?? "",
     address: initialStatus.business_address ?? "",
     website: initialStatus.business_website ?? "",
-    logo:    initialStatus.logo_url         ?? "",
   });
 
   const [step4, setStep4] = useState({
@@ -525,7 +549,6 @@ export default function OnboardingWizard({
         business_email:   step1.email   || null,
         business_address: step1.address || null,
         business_website: step1.website || null,
-        logo_url:         step1.logo    || null,
       };
     }
     if (step === 4) {
