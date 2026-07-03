@@ -2,6 +2,7 @@ import { redirect }           from "next/navigation";
 import { getOnboardingStatus } from "@/lib/onboarding/onboarding";
 import { getStaffList }        from "@/lib/staff/get-staff-list";
 import { getCurrentDealerSubscription } from "@/lib/subscription/subscription";
+import { getCurrentUser }      from "@/lib/auth/get-current-user";
 import OnboardingWizard        from "@/components/onboarding/OnboardingWizard";
 
 export const dynamic = "force-dynamic";
@@ -15,9 +16,10 @@ export default async function OnboardingPage() {
   }
 
   // Fetch data for wizard steps in parallel
-  const [staffList, sub] = await Promise.all([
+  const [staffList, sub, user] = await Promise.all([
     getStaffList(),
     getCurrentDealerSubscription(),
+    getCurrentUser(),
   ]);
 
   const defaultStatus = status ?? {
@@ -52,6 +54,10 @@ export default async function OnboardingPage() {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
+  // Postal-code lookup is a JP-market feature; other markets disable it.
+  const market = (process.env.NEXT_PUBLIC_DEALEROS_MARKET ?? process.env.DEALEROS_MARKET ?? "JP").toUpperCase();
+  const postalLookupEnabled = market === "JP";
+
   return (
     <OnboardingWizard
       initialStatus={defaultStatus}
@@ -64,6 +70,8 @@ export default async function OnboardingPage() {
       }>)}
       subscription={subInfo}
       appUrl={appUrl}
+      loginEmail={user?.email ?? ""}
+      postalLookupEnabled={postalLookupEnabled}
     />
   );
 }

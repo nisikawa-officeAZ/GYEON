@@ -10,6 +10,7 @@ import {
   completeOnboarding,
   skipOnboarding,
 } from "@/lib/onboarding/onboarding";
+import { lookupPostalCode } from "@/lib/onboarding/postal-lookup";
 import {
   OnboardingStatus,
   ONBOARDING_STEPS,
@@ -41,10 +42,12 @@ interface SubInfo {
 }
 
 interface Props {
-  initialStatus: OnboardingStatus;
-  staffList:     StaffRow[];
-  subscription:  SubInfo | null;
-  appUrl:        string;
+  initialStatus:       OnboardingStatus;
+  staffList:           StaffRow[];
+  subscription:        SubInfo | null;
+  appUrl:              string;
+  loginEmail:          string;
+  postalLookupEnabled: boolean;
 }
 
 // ─── Progress bar ─────────────────────────────────────────────────────────────
@@ -103,18 +106,42 @@ function StepNav({ currentStep }: { currentStep: number }) {
 const STEP1_INPUT_CLASS =
   "bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-slate-500 placeholder:text-slate-600";
 
+interface Step1Data {
+  name:       string;
+  phone:      string;
+  website:    string;
+  email:      string;
+  postalCode: string;
+  prefecture: string;
+  city:       string;
+  town:       string;
+  street:     string;
+  building:   string;
+}
+
 function Step1Form({
   data,
   onChange,
+  emailEditable,
+  onEnableEmailEdit,
+  postalLookupEnabled,
+  onPostalSearch,
+  postalStatus,
 }: {
-  data: { name: string; phone: string; email: string; address: string; website: string };
+  data: Step1Data;
   onChange: (f: string, v: string) => void;
+  emailEditable: boolean;
+  onEnableEmailEdit: () => void;
+  postalLookupEnabled: boolean;
+  onPostalSearch: () => void;
+  postalStatus: { loading: boolean; msg: string | null; ok: boolean };
 }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-xs text-slate-400">
         ショップ情報を入力してください。後からも変更できます。
       </p>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="flex flex-col gap-1">
           <span className="text-[10px] text-slate-500 uppercase tracking-wider">ショップ名 *</span>
@@ -136,37 +163,135 @@ function Step1Form({
             className={STEP1_INPUT_CLASS}
           />
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-[10px] text-slate-500 uppercase tracking-wider">メールアドレス</span>
+      </div>
+
+      <label className="flex flex-col gap-1">
+        <span className="text-[10px] text-slate-500 uppercase tracking-wider">ウェブサイト URL</span>
+        <input
+          type="text"
+          value={data.website}
+          onChange={(e) => onChange("website", e.target.value)}
+          placeholder="https://example.com"
+          className={STEP1_INPUT_CLASS}
+        />
+      </label>
+
+      {/* Contact email — auto-filled from login email, read-only until 変更する */}
+      <label className="flex flex-col gap-1">
+        <span className="text-[10px] text-slate-500 uppercase tracking-wider">連絡先メールアドレス</span>
+        <div className="flex items-center gap-2">
           <input
             type="email"
             value={data.email}
             onChange={(e) => onChange("email", e.target.value)}
+            readOnly={!emailEditable}
             placeholder="info@example.com"
+            className={`${STEP1_INPUT_CLASS} flex-1 ${emailEditable ? "" : "opacity-70"}`}
+          />
+          {!emailEditable && (
+            <button
+              type="button"
+              onClick={onEnableEmailEdit}
+              className="text-[10px] px-3 py-2 rounded-lg border border-slate-600 text-slate-300 hover:text-slate-100 hover:border-slate-500 transition-colors shrink-0"
+            >
+              変更する
+            </button>
+          )}
+        </div>
+        <span className="text-[10px] text-slate-600">
+          GYEON からの通知・連絡に使用します。初期値はログインメールアドレスです。
+        </span>
+      </label>
+
+      {/* Postal code → address search (market-gated) */}
+      <label className="flex flex-col gap-1">
+        <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+          郵便番号{postalLookupEnabled ? "（任意）" : "（この地域では無効）"}
+        </span>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            inputMode="numeric"
+            value={data.postalCode}
+            onChange={(e) => onChange("postalCode", e.target.value)}
+            placeholder="例: 1500001"
+            className={`${STEP1_INPUT_CLASS} flex-1`}
+          />
+          {postalLookupEnabled && (
+            <button
+              type="button"
+              onClick={onPostalSearch}
+              disabled={postalStatus.loading}
+              className="text-[10px] px-3 py-2 rounded-lg bg-blue-600/80 text-white hover:bg-blue-500 disabled:opacity-50 transition-colors shrink-0"
+            >
+              {postalStatus.loading ? "検索中..." : "住所検索"}
+            </button>
+          )}
+        </div>
+        {postalStatus.msg && (
+          <span className={`text-[10px] ${postalStatus.ok ? "text-green-400" : "text-red-400"}`}>
+            {postalStatus.msg}
+          </span>
+        )}
+      </label>
+
+      {/* Auto-filled address parts — editable */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">都道府県</span>
+          <input
+            type="text"
+            value={data.prefecture}
+            onChange={(e) => onChange("prefecture", e.target.value)}
+            placeholder="東京都"
             className={STEP1_INPUT_CLASS}
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-[10px] text-slate-500 uppercase tracking-wider">ウェブサイト URL</span>
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">市区町村</span>
           <input
             type="text"
-            value={data.website}
-            onChange={(e) => onChange("website", e.target.value)}
-            placeholder="https://example.com"
+            value={data.city}
+            onChange={(e) => onChange("city", e.target.value)}
+            placeholder="渋谷区"
+            className={STEP1_INPUT_CLASS}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">町域</span>
+          <input
+            type="text"
+            value={data.town}
+            onChange={(e) => onChange("town", e.target.value)}
+            placeholder="神南"
             className={STEP1_INPUT_CLASS}
           />
         </label>
       </div>
-      <label className="flex flex-col gap-1">
-        <span className="text-[10px] text-slate-500 uppercase tracking-wider">住所</span>
-        <input
-          type="text"
-          value={data.address}
-          onChange={(e) => onChange("address", e.target.value)}
-          placeholder="例: 東京都渋谷区..."
-          className={STEP1_INPUT_CLASS}
-        />
-      </label>
+
+      {/* Manually entered */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">番地</span>
+          <input
+            type="text"
+            value={data.street}
+            onChange={(e) => onChange("street", e.target.value)}
+            placeholder="例: 1-2-3"
+            className={STEP1_INPUT_CLASS}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">建物名・部屋番号</span>
+          <input
+            type="text"
+            value={data.building}
+            onChange={(e) => onChange("building", e.target.value)}
+            placeholder="例: GYEONビル 4F"
+            className={STEP1_INPUT_CLASS}
+          />
+        </label>
+      </div>
     </div>
   );
 }
@@ -494,6 +619,8 @@ export default function OnboardingWizard({
   staffList,
   subscription,
   appUrl,
+  loginEmail,
+  postalLookupEnabled,
 }: Props) {
   const router = useRouter();
 
@@ -504,13 +631,47 @@ export default function OnboardingWizard({
   const [toast, setToast]             = useState<{ msg: string; ok: boolean } | null>(null);
 
   // Per-step form state
+  // Contact email defaults to the authenticated login email (read-only until
+  // the user opts to change it). Address is captured as structured parts and
+  // composed into business_address on save.
   const [step1, setStep1] = useState({
-    name:    initialStatus.business_name    ?? "",
-    phone:   initialStatus.business_phone   ?? "",
-    email:   initialStatus.business_email   ?? "",
-    address: initialStatus.business_address ?? "",
-    website: initialStatus.business_website ?? "",
+    name:       initialStatus.business_name    ?? "",
+    phone:      initialStatus.business_phone   ?? "",
+    website:    initialStatus.business_website ?? "",
+    email:      loginEmail || (initialStatus.business_email ?? ""),
+    postalCode: "",
+    prefecture: "",
+    city:       "",
+    town:       "",
+    street:     "",
+    building:   "",
   });
+  const [emailEditable, setEmailEditable] = useState(false);
+  const [postalStatus, setPostalStatus] = useState<{ loading: boolean; msg: string | null; ok: boolean }>({
+    loading: false, msg: null, ok: false,
+  });
+
+  async function handlePostalSearch() {
+    if (!postalLookupEnabled) return;
+    setPostalStatus({ loading: true, msg: null, ok: false });
+    const r = await lookupPostalCode(step1.postalCode);
+    if (r.success) {
+      setStep1((prev) => ({
+        ...prev,
+        prefecture: r.prefecture ?? "",
+        city:       r.city ?? "",
+        town:       r.town ?? "",
+      }));
+      setPostalStatus({ loading: false, msg: "住所を自動入力しました。番地・建物名を入力してください。", ok: true });
+    } else {
+      const msg =
+        r.error === "invalid"   ? "郵便番号は7桁の数字で入力してください。"
+        : r.error === "not_found" ? "該当する住所が見つかりませんでした。手入力してください。"
+        : r.error === "disabled"  ? "この地域では住所検索は利用できません。"
+        : "住所検索に失敗しました。手入力してください。";
+      setPostalStatus({ loading: false, msg, ok: false });
+    }
+  }
 
   const [step4, setStep4] = useState({
     tax_rate: String(initialStatus.tax_rate ?? 10),
@@ -542,12 +703,15 @@ export default function OnboardingWizard({
   function buildStepParams(step: number) {
     const base = { step };
     if (step === 1) {
+      const address = [
+        step1.prefecture, step1.city, step1.town, step1.street, step1.building,
+      ].map((s) => s.trim()).filter(Boolean).join(" ");
       return {
         ...base,
         business_name:    step1.name    || null,
         business_phone:   step1.phone   || null,
         business_email:   step1.email   || null,
-        business_address: step1.address || null,
+        business_address: address       || null,
         business_website: step1.website || null,
       };
     }
@@ -666,7 +830,15 @@ export default function OnboardingWizard({
           {/* Step content */}
           <div className="px-6 pb-4">
             {currentStep === 1 && (
-              <Step1Form data={step1} onChange={updateStep1} />
+              <Step1Form
+                data={step1}
+                onChange={updateStep1}
+                emailEditable={emailEditable}
+                onEnableEmailEdit={() => setEmailEditable(true)}
+                postalLookupEnabled={postalLookupEnabled}
+                onPostalSearch={handlePostalSearch}
+                postalStatus={postalStatus}
+              />
             )}
             {currentStep === 2 && (
               <Step2Staff staffList={staffList} />
