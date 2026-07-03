@@ -1,7 +1,9 @@
 // Japanese postal-code → address lookup.
 //
-// Uses the free zipcloud API (https://zipcloud.ashtech.jp), which is CORS-enabled
+// Uses the free zipcloud API (https://zipcloud.ibsnet.co.jp), which is CORS-enabled
 // and therefore safe to call directly from the browser. No API key required.
+// (The previous zipcloud.ashtech.jp mirror became unreachable and returned no
+// results, which broke lookups in every form that uses this helper.)
 //
 // Returns the prefecture / city / town for a 7-digit Japanese postal code, or
 // null when the code is invalid or not found. Network/parse errors resolve to
@@ -39,7 +41,7 @@ export async function lookupPostalAddress(raw: string): Promise<PostalAddress | 
 
   try {
     const res = await fetch(
-      `https://zipcloud.ashtech.jp/api/search?zipcode=${zip}`,
+      `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`,
       { method: "GET" },
     );
     if (!res.ok) return null;

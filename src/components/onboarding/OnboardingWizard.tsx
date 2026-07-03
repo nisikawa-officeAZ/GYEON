@@ -10,8 +10,8 @@ import {
   completeOnboarding,
   skipOnboarding,
 } from "@/lib/onboarding/onboarding";
-import { lookupPostalCode } from "@/lib/onboarding/postal-lookup";
 import { saveOnboardingAdmin } from "@/lib/onboarding/save-onboarding-admin";
+import { lookupPostalAddress } from "@/lib/geo/postal-lookup";
 import {
   OnboardingStatus,
   ONBOARDING_STEPS,
@@ -660,23 +660,26 @@ export default function OnboardingWizard({
 
   async function handlePostalSearch() {
     if (!postalLookupEnabled) return;
+    // Shared helper (same one Customer/Settings forms use): normalizes both
+    // "5291331" and "529-1331" (and 〒/full-width) to 7 digits, hits CORS-enabled
+    // zipcloud from the browser, and returns null on invalid/not-found/error.
     setPostalStatus({ loading: true, msg: null, ok: false });
-    const r = await lookupPostalCode(step1.postalCode);
-    if (r.success) {
+    try {
+      const addr = await lookupPostalAddress(step1.postalCode);
+      if (!addr) {
+        setPostalStatus({ loading: false, msg: "住所が見つかりませんでした。手入力してください。", ok: false });
+        return;
+      }
+      // Populate prefecture / city / town; street & building stay user-editable.
       setStep1((prev) => ({
         ...prev,
-        prefecture: r.prefecture ?? "",
-        city:       r.city ?? "",
-        town:       r.town ?? "",
+        prefecture: addr.prefecture,
+        city:       addr.city,
+        town:       addr.town,
       }));
       setPostalStatus({ loading: false, msg: "住所を自動入力しました。番地・建物名を入力してください。", ok: true });
-    } else {
-      const msg =
-        r.error === "invalid"   ? "郵便番号は7桁の数字で入力してください。"
-        : r.error === "not_found" ? "該当する住所が見つかりませんでした。手入力してください。"
-        : r.error === "disabled"  ? "この地域では住所検索は利用できません。"
-        : "住所検索に失敗しました。手入力してください。";
-      setPostalStatus({ loading: false, msg, ok: false });
+    } catch {
+      setPostalStatus({ loading: false, msg: "住所が見つかりませんでした。手入力してください。", ok: false });
     }
   }
 
