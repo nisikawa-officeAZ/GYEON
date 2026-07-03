@@ -9,6 +9,20 @@ export async function createPendingDealer(params: {
 }): Promise<{ success: true; dealerId: string } | { success: false; error: string }> {
   const supabase = createAdminClient();
 
+  // Idempotency guard — never create a second dealer for an email that already
+  // has one. Returning/suspended users must be restored by Super Admin, not
+  // re-registered. The signup form pre-checks via checkEmailAccountState(); this
+  // is the server-side backstop against races and direct calls.
+  const { data: existing } = await supabase
+    .from("dealers")
+    .select("id")
+    .ilike("email", params.email.trim())
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    return { success: false, error: "account_exists" };
+  }
+
   const { data, error } = await supabase
     .from("dealers")
     .insert({

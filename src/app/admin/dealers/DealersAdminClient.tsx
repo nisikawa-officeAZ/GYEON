@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
-import { approveDealerTrial, rejectDealer, suspendDealer, reactivateDealer, deleteDealer } from "@/lib/admin/approve-dealer";
+import { approveDealerTrial, rejectDealer, suspendDealer, reactivateDealer, deleteDealer, restoreDealer } from "@/lib/admin/approve-dealer";
 import DealerDetailPanel from "./DealerDetailPanel";
 import type { DealerAdminView } from "@/lib/admin/admin-types";
 import { DEALER_RANKS, normalizeRank, rankLabelOrDash, DEFAULT_DEALER_RANK } from "@/lib/ranks/dealer-ranks";
@@ -385,7 +385,9 @@ function DeleteModal({
           <span className="font-medium text-slate-200">{dealer.name ?? "（名称未設定）"}</span>
         </p>
         <p className="text-sm text-slate-300">
-          このディテーラーを削除しますか？この操作は管理画面から表示されなくなります。
+          このディーラーをアーカイブします。管理画面の一覧から非表示になり、
+          オーナー・スタッフはログインできなくなります（メンバーは停止されます）。
+          データは保持され、あとで「アーカイブ済み」から復元できます。
         </p>
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors">
@@ -564,14 +566,16 @@ function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: ()
 
 interface Props {
   dealers: DealerAdminView[];
+  archived: DealerAdminView[];
   callerRole: string;
 }
 
-export default function DealersAdminClient({ dealers: initial, callerRole }: Props) {
+export default function DealersAdminClient({ dealers: initial, archived: initialArchived, callerRole }: Props) {
   const isReadOnly = callerRole === "logistics_admin";
   const isSuperAdmin = callerRole === "super_admin";
 
   const [dealers,      setDealers]      = useState<DealerAdminView[]>(initial);
+  const [archived,     setArchived]     = useState<DealerAdminView[]>(initialArchived);
   const [search,       setSearch]       = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [planFilter,   setPlanFilter]   = useState<PlanFilter>("all");
@@ -709,6 +713,23 @@ export default function DealersAdminClient({ dealers: initial, callerRole }: Pro
           rejection_reason:    null,
         } : d));
         showToast(`${dealer.name ?? "ディーラー"} を再有効化しました`, "success");
+      } else {
+        showToast(result.error ?? "エラーが発生しました", "error");
+      }
+    });
+  };
+
+  // Restore an archived (soft-deleted) dealer and re-activate its members.
+  const handleRestore = (dealer: DealerAdminView) => {
+    startTransition(async () => {
+      const result = await restoreDealer(dealer.id);
+      if (result.success) {
+        setArchived((prev) => prev.filter((d) => d.id !== dealer.id));
+        setDealers((prev) => [
+          { ...dealer, approval_status: "approved", rejection_reason: null },
+          ...prev,
+        ]);
+        showToast(`${dealer.name ?? "ディーラー"} を復元しました`, "success");
       } else {
         showToast(result.error ?? "エラーが発生しました", "error");
       }
@@ -999,6 +1020,52 @@ export default function DealersAdminClient({ dealers: initial, callerRole }: Pro
           </table>
         </div>
       </div>
+
+      {/* ── Archived (soft-deleted) dealers — restore path (super_admin only) ── */}
+      {isSuperAdmin && archived.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <h2 className="text-sm font-semibold text-slate-300">
+            アーカイブ済み（アクセス停止中） {archived.length}件
+          </h2>
+          <p className="text-[11px] text-slate-600">
+            削除されたディーラーです。メンバーは停止されておりログインできません。
+            復元すると承認状態とメンバーのアクセスが元に戻ります。データは削除されていません。
+          </p>
+          <div className="bg-[#0b1120] border border-slate-800 rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-slate-800">
+                    {["店舗", "メール", "登録日", "操作"].map((h) => (
+                      <th key={h} className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/40">
+                  {archived.map((dealer) => (
+                    <tr key={dealer.id} className="hover:bg-slate-800/20 transition-colors opacity-80">
+                      <td className="px-4 py-3 font-medium text-slate-300">{dealer.name ?? "（名称未設定）"}</td>
+                      <td className="px-4 py-3 text-slate-500">{dealer.email ?? "—"}</td>
+                      <td className="px-4 py-3 text-slate-500">{fmt(dealer.created_at)}</td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => handleRestore(dealer)}
+                          disabled={isPending}
+                          className="text-[10px] px-2 py-1 bg-green-900/40 hover:bg-green-800/50 text-green-300 rounded transition-colors disabled:opacity-50"
+                        >
+                          復元
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Modals ──────────────────────────────────────────────────────── */}
       {modal.type === "approve" && (

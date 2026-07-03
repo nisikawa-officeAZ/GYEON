@@ -255,3 +255,66 @@ export async function deleteDealer(dealerId: string) {
 
   return { success: true, suspendedMembers: suspendedCount };
 }
+
+/**
+ * Restore an archived dealer AND re-activate its members (Super Admin only).
+ *
+ * Reverses deleteDealer(): clears dealers.deleted_at, restores approval to
+ * 'approved', recomputes subscription_status from trial state, and re-activates
+ * every suspended dealer_members row so the owner/staff can log into the dealer
+ * app again. No business data is created or destroyed. dealer_id is the
+ * server-action target (never client tenant data); all updates are scoped to
+ * this one dealer.
+ */
+export async function restoreDealer(dealerId: string) {
+  const admin = await requireSuperAdmin();
+  const supabase = createAdminClient();
+
+  // Recompute subscription from trial state, mirroring reactivateDealer().
+  const { data: dealer } = await supabase
+    .from("dealers")
+    .select("trial_status, trial_end_date")
+    .eq("id", dealerId)
+    .single();
+
+  const today = new Date().toISOString().split("T")[0];
+  const trialActive =
+    dealer?.trial_status === "active" &&
+    dealer?.trial_end_date &&
+    dealer.trial_end_date >= today;
+
+  const subscriptionStatus = trialActive ? "trial" : "active";
+
+  const { error } = await supabase
+    .from("dealers")
+    .update({
+      deleted_at:          null,
+      approval_status:     "approved",
+      subscription_status: subscriptionStatus,
+      rejection_reason:    null,
+    })
+    .eq("id", dealerId);
+
+  if (error) return { success: false, error: error.message };
+
+  // Re-activate every membership that deleteDealer()/suspendDealer() suspended.
+  const { data: reactivated, error: memberError } = await supabase
+    .from("dealer_members")
+    .update({ status: "active" })
+    .eq("dealer_id", dealerId)
+    .eq("status", "suspended")
+    .select("id");
+
+  if (memberError) return { success: false, error: memberError.message };
+
+  const reactivatedCount = reactivated?.length ?? 0;
+
+  await writeAuditLog({
+    adminUserId:    admin.id,
+    targetDealerId: dealerId,
+    action:         "dealer_restored",
+    details:        { subscription_status: subscriptionStatus, reactivated_members: reactivatedCount },
+  });
+
+  return { success: true, reactivatedMembers: reactivatedCount };
+}

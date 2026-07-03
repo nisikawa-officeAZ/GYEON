@@ -5,6 +5,7 @@ import Link        from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { createPendingDealer } from "@/lib/dealer/create-pending-dealer";
+import { checkEmailAccountState } from "@/lib/dealer/check-email-account-state";
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -43,6 +44,23 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
+      // State-aware pre-check — block re-registration of an email that already
+      // has a dealer account, with a message that matches its state. This also
+      // prevents duplicate dealer/member creation for returning users.
+      const emailState = await checkEmailAccountState(email);
+      if (emailState.state === "suspended") {
+        setError("このメールアドレスは停止中です。管理者へ復活申請してください。");
+        return;
+      }
+      if (emailState.state === "active") {
+        setError("このメールアドレスはすでに登録されています。ログイン画面からサインインしてください。");
+        return;
+      }
+      if (emailState.state === "pending") {
+        setError("このメールアドレスの申請は現在審査中です。承認をお待ちください。");
+        return;
+      }
+
       const supabase = createClient();
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -84,7 +102,11 @@ export default function SignUpPage() {
       });
 
       if (!dealerResult.success) {
-        setError("店舗情報の登録に失敗しました。しばらく待ってから再試行してください。");
+        if (dealerResult.error === "account_exists") {
+          setError("このメールアドレスはすでに登録されています。ログイン画面からサインインしてください。");
+        } else {
+          setError("店舗情報の登録に失敗しました。しばらく待ってから再試行してください。");
+        }
         return;
       }
 

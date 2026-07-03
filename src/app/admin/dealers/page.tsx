@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentAdmin } from "@/lib/admin/get-current-admin";
-import { getDealersAdmin } from "@/lib/admin/get-dealers-admin";
+import { getDealersAdmin, getArchivedDealersAdmin } from "@/lib/admin/get-dealers-admin";
 import DealersAdminClient from "./DealersAdminClient";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +11,9 @@ export default async function AdminDealersPage() {
   if (!caller) redirect("/login");
 
   // logistics_admin has read-only access (no action buttons rendered in client)
-  const dealers = await getDealersAdmin();
-  return <DealersAdminClient dealers={dealers} callerRole={caller.role} />;
+  const [dealers, archived] = await Promise.all([
+    getDealersAdmin(),
+    getArchivedDealersAdmin(),
+  ]);
+  return <DealersAdminClient dealers={dealers} archived={archived} callerRole={caller.role} />;
 }
