@@ -3,6 +3,7 @@
 import { requireAdmin, requireSuperAdmin } from "./require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "./write-audit-log";
+import { deleteUserAdmin } from "./user-actions";
 import { DEFAULT_DEALER_RANK } from "@/lib/ranks/dealer-ranks";
 
 function addDays(dateStr: string, days: number): string {
@@ -317,4 +318,66 @@ export async function restoreDealer(dealerId: string) {
   });
 
   return { success: true, reactivatedMembers: reactivatedCount };
+}
+
+/**
+ * Permanently delete (完全削除) a dealer — Developer Preview / test cleanup only.
+ * Super Admin only. IRREVERSIBLE.
+ *
+ * Unlike deleteDealer() (soft archive), this removes the dealer entirely:
+ *   - The dealers row is deleted → approval/pending fields go with it, and
+ *     dealer_members + related per-dealer records cascade (ON DELETE CASCADE).
+ *   - If the dealer's owner is a real, NON-protected auth user, that auth user
+ *     is hard-deleted by delegating to the EXISTING safe hard-delete action
+ *     (deleteUserAdmin) — the hard-delete + FK-cleanup logic is NOT duplicated
+ *     here. Platform/admin accounts (any admin_users row) and the caller are
+ *     never deleted.
+ *
+ * No schema or RLS change. dealer_id is the server-action target (never client
+ * tenant data); every operation is scoped to this one dealer.
+ */
+export async function purgeDealer(dealerId: string) {
+  const admin = await requireSuperAdmin();
+  const supabase = createAdminClient();
+
+  const { data: dealer } = await supabase
+    .from("dealers")
+    .select("id, owner_user_id")
+    .eq("id", dealerId)
+    .maybeSingle();
+
+  if (!dealer) return { success: false, error: "対象のディーラーが見つかりません" };
+
+  const ownerUserId = (dealer.owner_user_id as string | null) ?? null;
+
+  // Hard-delete the owner auth user only if it is safely mapped and NOT a
+  // protected platform/admin account (and not the caller). Reuse the existing
+  // safe hard-delete which clears FK references and deletes auth.users.
+  let authUserDeleted = false;
+  if (ownerUserId && ownerUserId !== admin.user_id) {
+    const { data: adminRow } = await supabase
+      .from("admin_users")
+      .select("id")
+      .eq("user_id", ownerUserId)
+      .maybeSingle();
+
+    if (!adminRow) {
+      const res = await deleteUserAdmin(ownerUserId);
+      if (!res.success) return { success: false, error: res.error };
+      authUserDeleted = true;
+    }
+  }
+
+  // Remove the dealer row itself (members + related records cascade).
+  const { error } = await supabase.from("dealers").delete().eq("id", dealerId);
+  if (error) return { success: false, error: error.message };
+
+  await writeAuditLog({
+    adminUserId:    admin.id,
+    targetDealerId: dealerId,
+    action:         "dealer_purged",
+    details:        { auth_user_deleted: authUserDeleted, owner_user_id_present: !!ownerUserId },
+  });
+
+  return { success: true, authUserDeleted };
 }

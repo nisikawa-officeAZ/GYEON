@@ -76,6 +76,7 @@ export type AdminAuditAction =
   // PHASE88: dealer soft delete
   | "dealer_deleted"
   | "dealer_restored"
+  | "dealer_purged"
   // RC-14: dealer lifecycle management
   | "trial_extended"
   | "rank_changed"

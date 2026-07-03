@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
-import { approveDealerTrial, rejectDealer, suspendDealer, reactivateDealer, deleteDealer, restoreDealer } from "@/lib/admin/approve-dealer";
+import { approveDealerTrial, rejectDealer, suspendDealer, reactivateDealer, deleteDealer, restoreDealer, purgeDealer } from "@/lib/admin/approve-dealer";
 import DealerDetailPanel from "./DealerDetailPanel";
 import type { DealerAdminView } from "@/lib/admin/admin-types";
 import { DEALER_RANKS, normalizeRank, rankLabelOrDash, DEFAULT_DEALER_RANK } from "@/lib/ranks/dealer-ranks";
@@ -17,6 +17,7 @@ type Modal =
   | { type: "reject";     dealer: DealerAdminView }
   | { type: "suspend";    dealer: DealerAdminView }
   | { type: "delete";     dealer: DealerAdminView }
+  | { type: "purge";      dealer: DealerAdminView }
   | { type: "detail";     dealer: DealerAdminView };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -378,7 +379,7 @@ function DeleteModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="bg-[#0f172a] border border-slate-700 rounded-2xl w-full max-w-md mx-4 p-6 space-y-4 shadow-2xl">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-red-400">店舗を削除</h2>
+          <h2 className="text-base font-bold text-orange-400">店舗をアーカイブ</h2>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl">✕</button>
         </div>
         <p className="text-sm text-slate-400">
@@ -396,9 +397,44 @@ function DeleteModal({
           <button
             onClick={onDelete}
             disabled={isPending}
-            className="px-4 py-2 bg-red-800 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-orange-700 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
           >
-            削除
+            アーカイブ
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Purge (完全削除) Modal — single confirmation, irreversible ─────────────────
+
+function PurgeModal({
+  dealer, onClose, onPurge, isPending,
+}: { dealer: DealerAdminView; onClose: () => void; onPurge: () => void; isPending: boolean }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="bg-[#0f172a] border border-red-800/60 rounded-2xl w-full max-w-md mx-4 p-6 space-y-4 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-red-400">完全削除</h2>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl">✕</button>
+        </div>
+        <p className="text-sm text-slate-400">
+          <span className="font-medium text-slate-200">{dealer.name ?? "（名称未設定）"}</span>
+        </p>
+        <p className="text-sm text-red-300">
+          このディーラーを完全削除します。復元できません。実行しますか？
+        </p>
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors">
+            キャンセル
+          </button>
+          <button
+            onClick={onPurge}
+            disabled={isPending}
+            className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+          >
+            完全削除
           </button>
         </div>
       </div>
@@ -567,10 +603,11 @@ function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: ()
 interface Props {
   dealers: DealerAdminView[];
   archived: DealerAdminView[];
+  protectedOwnerIds: string[];
   callerRole: string;
 }
 
-export default function DealersAdminClient({ dealers: initial, archived: initialArchived, callerRole }: Props) {
+export default function DealersAdminClient({ dealers: initial, archived: initialArchived, protectedOwnerIds, callerRole }: Props) {
   const isReadOnly = callerRole === "logistics_admin";
   const isSuperAdmin = callerRole === "super_admin";
 
@@ -689,9 +726,27 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
     startTransition(async () => {
       const result = await deleteDealer(dealer.id);
       if (result.success) {
-        // Soft-deleted — remove from the active list (other dealers untouched)
+        // Soft-archived — move it from the active list into the archived list
+        // so it can be restored or 完全削除 (purged) from there.
         setDealers((prev) => prev.filter((d) => d.id !== dealer.id));
-        showToast(`${dealer.name ?? "ディーラー"} を削除しました`, "success");
+        setArchived((prev) => [{ ...dealer, deleted_at: new Date().toISOString() }, ...prev]);
+        showToast(`${dealer.name ?? "ディーラー"} をアーカイブしました`, "success");
+      } else {
+        showToast(result.error ?? "エラーが発生しました", "error");
+      }
+    });
+  };
+
+  // Permanently delete an archived dealer (完全削除) — irreversible; reuses the
+  // safe hard-delete for the owner auth user via the server action.
+  const handlePurge = (dealer: DealerAdminView) => {
+    setModal({ type: "none" });
+    startTransition(async () => {
+      const result = await purgeDealer(dealer.id);
+      if (result.success) {
+        setArchived((prev) => prev.filter((d) => d.id !== dealer.id));
+        setDealers((prev) => prev.filter((d) => d.id !== dealer.id));
+        showToast(`${dealer.name ?? "ディーラー"} を完全削除しました`, "success");
       } else {
         showToast(result.error ?? "エラーが発生しました", "error");
       }
@@ -1000,14 +1055,14 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
                             </button>
                           )}
 
-                          {/* Delete — soft delete (super_admin only) */}
+                          {/* Archive — soft delete (super_admin only) */}
                           {isSuperAdmin && (
                             <button
                               onClick={() => setModal({ type: "delete", dealer })}
                               disabled={isPending}
-                              className="text-[10px] px-2 py-1 bg-red-950/60 hover:bg-red-900/70 text-red-400 rounded transition-colors disabled:opacity-50"
+                              className="text-[10px] px-2 py-1 bg-orange-950/60 hover:bg-orange-900/70 text-orange-400 rounded transition-colors disabled:opacity-50"
                             >
-                              削除
+                              アーカイブ
                             </button>
                           )}
                         </div>
@@ -1050,13 +1105,26 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
                       <td className="px-4 py-3 text-slate-500">{dealer.email ?? "—"}</td>
                       <td className="px-4 py-3 text-slate-500">{fmt(dealer.created_at)}</td>
                       <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleRestore(dealer)}
-                          disabled={isPending}
-                          className="text-[10px] px-2 py-1 bg-green-900/40 hover:bg-green-800/50 text-green-300 rounded transition-colors disabled:opacity-50"
-                        >
-                          復元
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleRestore(dealer)}
+                            disabled={isPending}
+                            className="text-[10px] px-2 py-1 bg-green-900/40 hover:bg-green-800/50 text-green-300 rounded transition-colors disabled:opacity-50"
+                          >
+                            復元
+                          </button>
+                          {/* 完全削除 — permanent, irreversible. Hidden when the owner
+                              is a protected platform/admin user. */}
+                          {!(dealer.owner_user_id && protectedOwnerIds.includes(dealer.owner_user_id)) && (
+                            <button
+                              onClick={() => setModal({ type: "purge", dealer })}
+                              disabled={isPending}
+                              className="text-[10px] px-2 py-1 bg-red-950/60 hover:bg-red-900/70 text-red-400 rounded transition-colors disabled:opacity-50"
+                            >
+                              完全削除
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1097,6 +1165,14 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
           dealer={modal.dealer}
           onClose={() => setModal({ type: "none" })}
           onDelete={() => handleDelete(modal.dealer)}
+          isPending={isPending}
+        />
+      )}
+      {modal.type === "purge" && (
+        <PurgeModal
+          dealer={modal.dealer}
+          onClose={() => setModal({ type: "none" })}
+          onPurge={() => handlePurge(modal.dealer)}
           isPending={isPending}
         />
       )}
