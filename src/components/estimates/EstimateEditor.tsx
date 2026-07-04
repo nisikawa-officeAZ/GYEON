@@ -321,6 +321,9 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
     cfd.set("line_user_id",       nc.lineId);
     cfd.set("is_business",        nc.isBusiness ? "true" : "false");
     cfd.set("trade_discount_pct", nc.isBusiness ? nc.tradeRate : "0");
+    cfd.set("closing_day",                 nc.isBusiness ? nc.closingDay : "");
+    cfd.set("payment_day",                 nc.isBusiness ? nc.paymentDay : "");
+    cfd.set("accounts_receivable_allowed", (nc.isBusiness && nc.arAllowed) ? "true" : "false");
 
     const r = await createCustomer(cfd);
     setCreatingCustomer(false);
@@ -438,6 +441,7 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
         vfd.set("registration_date",      nv.registration_date);
         vfd.set("body_size",              sizeKey);
         vfd.set("year",                   nv.first_registration_year_month.slice(0, 4));
+        vfd.set("first_registration_year_month", nv.first_registration_year_month);
         const vr = await createVehicle(vfd);
         if ("error" in vr) { setError(vr.error ?? "車両の登録に失敗しました。"); return; }
         resolvedVehicleId = "vehicleId" in vr ? vr.vehicleId : "";
@@ -535,7 +539,6 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                     </div>
                     <div><label className={lbl}>締め日</label><input type="number" min={1} max={31} value={nc.closingDay} onChange={(e) => setNc((p) => ({ ...p, closingDay: e.target.value }))} placeholder="例: 20" className={`${inp} mt-1`} /></div>
                     <div><label className={lbl}>支払日</label><input type="number" min={1} max={31} value={nc.paymentDay} onChange={(e) => setNc((p) => ({ ...p, paymentDay: e.target.value }))} placeholder="例: 末=31" className={`${inp} mt-1`} /></div>
-                    <p className="col-span-2 text-[10px] text-slate-600">売掛許可・締め日・支払日はDB列（migration 100）未適用のため現時点では保存されません。</p>
                   </div>
                 )}
                 <button type="button" onClick={handleCreateCustomer} disabled={creatingCustomer || !nc.name.trim()}
@@ -594,7 +597,7 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                     {sizeEstimate && <span className="text-[10px] text-slate-500">{sizeEstimate.basis}</span>}
                   </div>
                 </div>
-                <p className="col-span-2 text-[10px] text-slate-600">保存時に車両として登録されます。初度登録年月はDB列（migration 098）未適用のため保存対象外です。</p>
+                <p className="col-span-2 text-[10px] text-slate-600">保存時に車両として登録されます。</p>
               </div>
             )}
           </div>

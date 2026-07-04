@@ -49,6 +49,22 @@ export async function createCustomer(formData: FormData) {
   const discountPct = isBusiness ? parseDiscountPct(formData) : 0;
   const creditTerms = isBusiness ? str(formData, "credit_terms") : null;
 
+  // G6 — business billing fields. Only included for business customers, so
+  // non-business creation never references these columns (safe before the
+  // migrations run). Requires migrations 100 (closing_day/payment_day) and 101
+  // (accounts_receivable_allowed) to be applied.
+  const dayOrNull = (v: string | null): number | null => {
+    const n = parseInt(v ?? "", 10);
+    return n >= 1 && n <= 31 ? n : null;
+  };
+  const businessBilling = isBusiness
+    ? {
+        closing_day:                 dayOrNull(str(formData, "closing_day")),
+        payment_day:                 dayOrNull(str(formData, "payment_day")),
+        accounts_receivable_allowed: formData.get("accounts_receivable_allowed") === "true",
+      }
+    : {};
+
   const { data: newCustomer, error } = await supabase.from("customers").insert({
     dealer_id:          dealer.dealer_id,   // server-injected — never from form
     customer_code:      str(formData, "customer_code"),
@@ -72,6 +88,7 @@ export async function createCustomer(formData: FormData) {
     is_business:        isBusiness,
     trade_discount_pct: discountPct,
     credit_terms:       creditTerms,
+    ...businessBilling,
   }).select("id, last_name, first_name").single();
 
   if (error) {
