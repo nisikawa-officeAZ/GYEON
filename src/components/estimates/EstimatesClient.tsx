@@ -1,7 +1,7 @@
 "use client";
 
-import { useState }      from "react";
-import { useRouter }     from "next/navigation";
+import { useState, useEffect }        from "react";
+import { useRouter, useSearchParams }  from "next/navigation";
 import { EstimateDB }    from "@/lib/estimates/estimate-types";
 import { CustomerDB }    from "@/lib/customers/customer-types";
 import { VehicleDB }     from "@/lib/vehicles/vehicle-types";
@@ -10,7 +10,6 @@ import PageTitle         from "@/components/ui/PageTitle";
 import EstimateTable     from "@/components/estimates/EstimateTable";
 import EstimateForm      from "@/components/estimates/EstimateForm";
 import EstimateWizard    from "@/components/estimates/EstimateWizard";
-import EstimateDetail    from "@/components/estimates/EstimateDetail";
 import GyeonServiceForm  from "@/components/gyeon/GyeonServiceForm";
 import WorkOrderForm     from "@/components/work-orders/WorkOrderForm";
 import CustomerVehicleOnboardingWizard from "@/components/onboarding/CustomerVehicleOnboardingWizard";
@@ -20,7 +19,6 @@ type ModalState =
   | { mode: "create" }
   | { mode: "onboarding" }
   | { mode: "edit";        estimate: EstimateDB }
-  | { mode: "detail";      estimate: EstimateDB }
   | { mode: "gyeon" }
   | { mode: "work-order";  estimate: EstimateDB };
 
@@ -41,7 +39,21 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
   // E9.3: OCR → estimate handoff — preselect the just-registered customer + vehicle.
   const [ocrHandoff, setOcrHandoff] = useState<{ customerId?: string; vehicleId?: string }>({});
 
-  const closeModal = () => { setModal({ mode: "none" }); setOcrHandoff({}); };
+  // Detail is now a full page (/estimates/[id]). Its 施工指示 action returns here via
+  // ?workorder=<id>, which opens the existing work-order modal (reused, no new logic).
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const woId = searchParams.get("workorder");
+    if (!woId) return;
+    const est = estimates.find((e) => e.id === woId);
+    if (est) setModal({ mode: "work-order", estimate: est });
+  }, [searchParams, estimates]);
+
+  const closeModal = () => {
+    setModal({ mode: "none" });
+    setOcrHandoff({});
+    if (searchParams.get("workorder")) router.replace("/estimates");
+  };
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -73,7 +85,7 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
       {/* Table */}
       <EstimateTable
         estimates={estimates}
-        onViewDetail={(e) => setModal({ mode: "detail", estimate: e })}
+        onViewDetail={(e) => router.push(`/estimates/${e.id}`)}
         onEdit={(e) => setModal({ mode: "edit", estimate: e })}
         onCreateWorkOrder={(e) => setModal({ mode: "work-order", estimate: e })}
       />
@@ -197,18 +209,7 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
         </div>
       )}
 
-      {/* Estimate Detail Modal */}
-      {modal.mode === "detail" && (
-        <EstimateDetail
-          estimate={modal.estimate}
-          onClose={closeModal}
-          onCreateWorkOrder={
-            (modal.estimate.status === "approved" || modal.estimate.status === "APPROVED")
-              ? () => setModal({ mode: "work-order", estimate: modal.estimate })
-              : undefined
-          }
-        />
-      )}
+      {/* Estimate Detail is now a full page — see /estimates/[id] (row click navigates there). */}
 
       {/* Work Order Creation Modal (from approved Estimate) */}
       {modal.mode === "work-order" && (

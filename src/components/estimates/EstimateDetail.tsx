@@ -52,9 +52,11 @@ interface EstimateDetailProps {
   estimate:             EstimateDB;
   onClose:              () => void;
   onCreateWorkOrder?:   () => void;
+  /** "modal" (default) keeps the existing overlay; "page" renders in normal flow for a full-page route. */
+  variant?:             "modal" | "page";
 }
 
-export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }: EstimateDetailProps) {
+export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, variant = "modal" }: EstimateDetailProps) {
   const customer = estimate.customers;
   const vehicle  = estimate.vehicles;
   const items    = estimate.estimate_items ?? [];
@@ -81,13 +83,19 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
     });
   }
 
+  const isPage = variant === "page";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <div className={isPage
+      ? "flex justify-center px-4 pb-8"
+      : "fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto"}>
+      {/* Backdrop (modal only) */}
+      {!isPage && (
+        <div
+          className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
+          onClick={onClose}
+        />
+      )}
 
       {/* Panel */}
       <div className="relative w-full max-w-3xl bg-[#0f172a] rounded-xl shadow-lg my-4">
