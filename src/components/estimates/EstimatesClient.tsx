@@ -8,7 +8,6 @@ import { VehicleDB }     from "@/lib/vehicles/vehicle-types";
 import type { DetailerRank } from "@/lib/dealer-settings/dealer-settings-types";
 import PageTitle         from "@/components/ui/PageTitle";
 import EstimateTable     from "@/components/estimates/EstimateTable";
-import EstimateForm      from "@/components/estimates/EstimateForm";
 import EstimateWizard    from "@/components/estimates/EstimateWizard";
 import GyeonServiceForm  from "@/components/gyeon/GyeonServiceForm";
 import WorkOrderForm     from "@/components/work-orders/WorkOrderForm";
@@ -18,7 +17,6 @@ type ModalState =
   | { mode: "none" }
   | { mode: "create" }
   | { mode: "onboarding" }
-  | { mode: "edit";        estimate: EstimateDB }
   | { mode: "gyeon" }
   | { mode: "work-order";  estimate: EstimateDB };
 
@@ -86,7 +84,7 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
       <EstimateTable
         estimates={estimates}
         onViewDetail={(e) => router.push(`/estimates/${e.id}`)}
-        onEdit={(e) => setModal({ mode: "edit", estimate: e })}
+        onEdit={(e) => router.push(`/estimates/${e.id}/edit`)}
         onCreateWorkOrder={(e) => setModal({ mode: "work-order", estimate: e })}
       />
 
@@ -156,33 +154,7 @@ export default function EstimatesClient({ estimates, customers, vehicles, dealer
         </div>
       )}
 
-      {/* Edit Estimate Modal */}
-      {modal.mode === "edit" && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-4 overflow-y-auto">
-          <div
-            className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
-            onClick={closeModal}
-          />
-          <div className="relative w-full max-w-lg bg-[#1e293b] rounded-xl shadow-lg p-5 my-4">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-slate-100">見積編集</h2>
-              <button
-                onClick={closeModal}
-                className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
-              >
-                ✕
-              </button>
-            </div>
-            <EstimateForm
-              estimate={modal.estimate}
-              customers={customers}
-              vehicles={vehicles}
-              onCancel={closeModal}
-              onSuccess={closeModal}
-            />
-          </div>
-        </div>
-      )}
+      {/* Estimate Edit is now a full page — see /estimates/[id]/edit (edit action navigates there). */}
 
       {/* GYEON Service Estimate Modal */}
       {modal.mode === "gyeon" && (
