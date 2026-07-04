@@ -1729,5 +1729,40 @@
 })();
 </script>
 
+<!-- [DealerOS bridge] Map the ?cert= URL param (passed by src/app/page.tsx via the
+     iframe src) onto the existing v17 shop-rank display, using the public
+     window.setShopRank() API. No layout/CSS change. Empty cert → nothing shown.
+     Supports long values (gyeon_*), short values, and display labels. -->
+<script>
+(function () {
+  'use strict';
+  var CERT_LABELS = {
+    'gyeon_shop':               'GYEON Shop',
+    'shop':                     'GYEON Shop',
+    'gyeon_detailer':           'GYEON Detailer',
+    'detailer':                 'GYEON Detailer',
+    'gyeon_ppf_installer':      'GYEON PPF Installer',
+    'ppf_installer':            'GYEON PPF Installer',
+    'gyeon_certified_detailer': 'GYEON Certified Detailer',
+    'certified_detailer':       'GYEON Certified Detailer',
+    'certified':                'GYEON Certified Detailer'
+  };
+  function bridgeCert() {
+    var cert = '';
+    try { cert = (new URLSearchParams(window.location.search).get('cert') || '').trim(); }
+    catch (e) { return; }
+    if (!cert) return; // no certification assigned → show nothing
+    var key   = cert.toLowerCase().replace(/\s+/g, '_');
+    var label = CERT_LABELS[key] || cert; // known value/short → label; else pass through (label input)
+    if (typeof window.setShopRank === 'function') window.setShopRank(label);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bridgeCert);
+  } else {
+    bridgeCert();
+  }
+})();
+</script>
+
 </body>
 </html>
