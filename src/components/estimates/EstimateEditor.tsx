@@ -21,10 +21,25 @@ import { CustomerDB, customerDisplayName } from "@/lib/customers/customer-types"
 import { VehicleDB, vehicleDisplayName } from "@/lib/vehicles/vehicle-types";
 import { updateEstimate } from "@/lib/estimates/update-estimate";
 import { createEstimate } from "@/lib/estimates/create-estimate";
+import { createVehicle } from "@/lib/vehicles/create-vehicle";
+import { estimateBodySize, type BodySizeEstimate } from "@/lib/vehicles/body-size-estimate";
 import { buildLineItems, type ServiceInput, type PricedLineItem } from "@/lib/pricing/pricing-engine";
 import { calculateEstimateTotals, lineTotal } from "@/lib/pricing/estimate-totals";
 import { DEFAULT_PRICING_CATALOG, type PricingCatalog } from "@/lib/pricing/pricing-catalog";
 import { getDealerPricingCatalog } from "@/lib/pricing/get-dealer-pricing-catalog";
+import dynamic from "next/dynamic";
+import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
+
+// G3 — reuse the existing OCR pipeline (loaded lazily) inside the editor. No OCR
+// logic is duplicated or modified; the same components the onboarding flow uses.
+const VehicleRegistrationUpload = dynamic(
+  () => import("@/components/vehicle-registration/VehicleRegistrationUpload"),
+  { ssr: false, loading: () => <div className="py-8 text-center text-xs text-slate-500">読み込み中...</div> },
+);
+const VehicleRegistrationOcrReview = dynamic(
+  () => import("@/components/vehicle-registration/VehicleRegistrationOcrReview"),
+  { ssr: false, loading: () => <div className="py-8 text-center text-xs text-slate-500">読み込み中...</div> },
+);
 
 const CATEGORY_LABEL: Record<string, string> = {
   coating: "コーティング", ppf: "PPF", window: "ウィンドウ", interior: "インテリア",
@@ -175,7 +190,106 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   const [error,   setError]        = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  // G3 — Vehicle Registration OCR (reuses the shared pipeline; no OCR logic here).
+  const [ocrStage,   setOcrStage]   = useState<"closed" | "upload" | "review">("closed");
+  const [pendingOcr, setPendingOcr] = useState<VehicleRegistrationOcrResult | null>(null);
+
+  // G2 — editable Vehicle Information panel (select existing OR enter a new vehicle).
+  // A new vehicle is persisted via the existing createVehicle action on save.
+  const [vehMode, setVehMode] = useState<"select" | "new">("select");
+  const [nv, setNv] = useState({
+    maker: "", model: "", grade: "", vehicle_code: "", vin: "",
+    first_registration_year_month: "", registration_date: "", inspection_expiry_date: "",
+    displacement: "", color: "", plate_number: "",
+  });
+  const [sizeEstimate, setSizeEstimate] = useState<BodySizeEstimate | null>(null);
+
   const filteredVehicles = customerId ? vehicles.filter((v) => v.customer_id === customerId) : vehicles;
+
+  const norm = (s: string | null | undefined) => (s ?? "").replace(/[\s　]/g, "");
+
+  // Apply the reviewed OCR result: (1) append the extracted 車検証 info as a
+  // reference block to 社内メモ (the existing editable field — mirrors the legacy
+  // EstimateForm OCR); (2) best-effort select a MATCHING existing vehicle by VIN or
+  // plate (no vehicle is created — that stays in the onboarding flow). Manual editing
+  // is preserved throughout.
+  function applyOcr(selected: Partial<VehicleRegistrationOcrResult>) {
+    // G2 — "new vehicle": bind OCR results to the editable panel fields (never
+    // overwrite manually edited values without confirmation).
+    if (vehMode === "new") {
+      const plate = [
+        selected.license_plate_region, selected.license_plate_class,
+        selected.license_plate_kana, selected.license_plate_number,
+      ].filter(Boolean).join(" ");
+      const regDate = selected.registration_date
+        ? (selected.registration_date.length === 7 ? selected.registration_date + "-01" : selected.registration_date)
+        : "";
+      // 車名(vehicle_name)→ model, 型式(model)→ vehicle_code. Body color is manual-only (not from OCR).
+      const mapped: Partial<typeof nv> = {
+        maker:                         selected.maker ?? "",
+        model:                         selected.vehicle_name ?? "",
+        grade:                         selected.grade ?? "",
+        vehicle_code:                  selected.model ?? "",
+        vin:                           selected.chassis_number ?? "",
+        first_registration_year_month: selected.first_registration_date ?? "",
+        registration_date:             regDate,
+        inspection_expiry_date:        selected.inspection_expiry_date ?? "",
+        displacement:                  selected.displacement ?? "",
+        plate_number:                  plate,
+      };
+      const hasManual = Object.entries(nv).some(([k, v]) => k !== "color" && v.trim() !== "");
+      const overwrite = !hasManual ||
+        window.confirm("入力済みの車両情報があります。OCR結果で上書きしますか？（キャンセル＝空欄のみ補完）");
+      setNv((prev) => {
+        const u = { ...prev };
+        for (const [k, val] of Object.entries(mapped) as [keyof typeof nv, string][]) {
+          if (!val) continue;
+          if (overwrite || !prev[k].trim()) u[k] = val;
+        }
+        return u;
+      });
+      // Vehicle Size — 3M classification (fills sizeKey; user can override).
+      const est = estimateBodySize({
+        maker: selected.maker, vehicleName: selected.vehicle_name, model: selected.model,
+        grade: selected.grade, year: selected.first_registration_date?.slice(0, 4),
+      });
+      setSizeEstimate(est);
+      if (est.sizeKey && (overwrite || sizeKey === "M")) setSizeKey(est.sizeKey);
+      setOcrStage("closed"); setPendingOcr(null);
+      return;
+    }
+
+    // Select mode (G3) — append the extracted info to 社内メモ + best-effort match.
+    const labelMap: Record<string, string> = {
+      vehicle_name: "車名", maker: "メーカー", model: "型式", chassis_number: "車台番号",
+      license_plate_region: "ナンバー地域", license_plate_class: "分類番号", license_plate_kana: "かな",
+      license_plate_number: "指定番号", first_registration_date: "初度登録年月", registration_date: "登録年月日",
+      inspection_expiry_date: "車検有効期限", owner_name: "所有者", user_name: "使用者",
+      color: "色", displacement: "排気量",
+    };
+    const lines: string[] = ["【車検証読み取り結果】"];
+    for (const [k, v] of Object.entries(selected)) {
+      if (v && k !== "confidence") lines.push(`${labelMap[k] ?? k}: ${v}`);
+    }
+    const ocrText = lines.join("\n");
+    setInternalMemo((prev) => (prev ? `${prev}\n\n${ocrText}` : ocrText));
+
+    const vin = norm(selected.chassis_number);
+    const plateNo = norm(selected.license_plate_number);
+    const picked =
+      (vin ? vehicles.find((v) => norm(v.vin) !== "" && norm(v.vin) === vin) : undefined) ??
+      (plateNo ? vehicles.find((v) => norm(v.plate_number).includes(plateNo) && plateNo !== "") : undefined);
+    if (picked) { setCustomerId(picked.customer_id); setVehicleId(picked.id); }
+
+    setOcrStage("closed"); setPendingOcr(null);
+  }
+
+  // Manual 3M re-estimate from the entered maker/model.
+  function estimateSize() {
+    const est = estimateBodySize({ maker: nv.maker, vehicleName: nv.model, grade: nv.grade });
+    setSizeEstimate(est);
+    if (est.sizeKey) setSizeKey(est.sizeKey);
+  }
 
   // ── Totals (client preview = server-authoritative function) ─────────────────
   const itemsForCalc = items.map((i) => ({ quantity: i.quantity, unit_price: i.unit_price, discount_rate: i.discount_rate }));
@@ -196,7 +310,8 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
     currentItemsSig !== initialItemsSig.current ||
     couponTotal !== 0 ||
     (isEdit ? extraAmount !== (estimate?.discount_amount ?? 0) : extraAmount !== 0) ||
-    isDealer;
+    isDealer ||
+    (vehMode === "new" && Object.values(nv).some((v) => v.trim() !== ""));
   useUnsavedChangesGuard(dirty && !pending);
 
   // ── Item helpers ────────────────────────────────────────────────────────────
@@ -229,7 +344,8 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
     setError(null);
     if (!catalogReady) { setError("価格表の読み込み中です。少し待ってから保存してください。"); return; }
     if (!customerId) { setError("顧客を選択してください。"); return; }
-    if (!vehicleId)  { setError("車両を選択してください。"); return; }
+    if (vehMode === "select" && !vehicleId) { setError("車両を選択してください。"); return; }
+    if (vehMode === "new" && !nv.maker.trim() && !nv.plate_number.trim()) { setError("新規車両のメーカーまたはナンバーを入力してください。"); return; }
     if (items.length === 0) { setError("明細を1件以上追加してください。"); return; }
 
     const itemsPayload = items.map((i, idx) => ({
@@ -239,7 +355,6 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
 
     const fd = new FormData();
     fd.set("customer_id",     customerId);
-    fd.set("vehicle_id",      vehicleId);
     fd.set("tax_rate",        String(taxRate));
     fd.set("discount_amount", String(discountAmount));
     fd.set("notes",           notes);
@@ -250,6 +365,31 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
     fd.set("items_json",      JSON.stringify(itemsPayload));
 
     startTransition(async () => {
+      // Resolve the vehicle: create a new one (reusing the existing createVehicle
+      // action) when in "new" mode, otherwise use the selected vehicle.
+      let resolvedVehicleId = vehicleId;
+      if (vehMode === "new") {
+        const vfd = new FormData();
+        vfd.set("customer_id",            customerId);
+        vfd.set("maker",                  nv.maker);
+        vfd.set("model",                  nv.model);
+        vfd.set("grade",                  nv.grade);
+        vfd.set("vehicle_code",           nv.vehicle_code);
+        vfd.set("vin",                    nv.vin);
+        vfd.set("color",                  nv.color);
+        vfd.set("plate_number",           nv.plate_number);
+        vfd.set("displacement",           nv.displacement);
+        vfd.set("inspection_expiry_date", nv.inspection_expiry_date);
+        vfd.set("registration_date",      nv.registration_date);
+        vfd.set("body_size",              sizeKey);
+        vfd.set("year",                   nv.first_registration_year_month.slice(0, 4));
+        const vr = await createVehicle(vfd);
+        if ("error" in vr) { setError(vr.error ?? "車両の登録に失敗しました。"); return; }
+        resolvedVehicleId = "vehicleId" in vr ? vr.vehicleId : "";
+      }
+      if (!resolvedVehicleId) { setError("車両の解決に失敗しました。"); return; }
+      fd.set("vehicle_id", resolvedVehicleId);
+
       if (isEdit && estimate) {
         // Preserve status / number / title / valid-until on edit.
         fd.set("status",      String(estimate.status));
@@ -307,13 +447,55 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
 
           {/* Vehicle */}
           <div className={card}>
-            <h3 className={secHdr}>車両</h3>
-            <label className={lbl}>車両を選択</label>
-            <select value={vehicleId} onChange={(e) => setVehicleId(e.target.value)} className={`${inp} mt-1`}>
-              <option value="">車両を選択...</option>
-              {filteredVehicles.map((v) => <option key={v.id} value={v.id}>{vehicleDisplayName(v) || "（車両）"}</option>)}
-            </select>
-            {customerId && filteredVehicles.length === 0 && <p className="text-[10px] text-slate-500 mt-1.5">この顧客に紐づく車両がありません。</p>}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">車両</h3>
+              <button type="button" onClick={() => setOcrStage("upload")}
+                className="text-xs px-3 py-1.5 rounded-lg text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 transition-colors">
+                📄 車検証OCR
+              </button>
+            </div>
+
+            {/* Mode: select existing OR enter a new vehicle */}
+            <div className="flex gap-2 mb-3">
+              <button type="button" onClick={() => setVehMode("select")} className={chip(vehMode === "select")}>既存車両を選択</button>
+              <button type="button" onClick={() => setVehMode("new")} className={chip(vehMode === "new")}>新規車両を入力</button>
+            </div>
+
+            {vehMode === "select" ? (
+              <>
+                <label className={lbl}>車両を選択</label>
+                <select value={vehicleId} onChange={(e) => setVehicleId(e.target.value)} className={`${inp} mt-1`}>
+                  <option value="">車両を選択...</option>
+                  {filteredVehicles.map((v) => <option key={v.id} value={v.id}>{vehicleDisplayName(v) || "（車両）"}</option>)}
+                </select>
+                {customerId && filteredVehicles.length === 0 && <p className="text-[10px] text-slate-500 mt-1.5">この顧客に紐づく車両がありません。「新規車両を入力」で登録できます。</p>}
+              </>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <div><label className={lbl}>メーカー</label><input type="text" value={nv.maker} onChange={(e) => setNv((p) => ({ ...p, maker: e.target.value }))} placeholder="トヨタ" className={`${inp} mt-1`} /></div>
+                <div><label className={lbl}>車名</label><input type="text" value={nv.model} onChange={(e) => setNv((p) => ({ ...p, model: e.target.value }))} placeholder="クラウン" className={`${inp} mt-1`} /></div>
+                <div><label className={lbl}>グレード</label><input type="text" value={nv.grade} onChange={(e) => setNv((p) => ({ ...p, grade: e.target.value }))} placeholder="アスリート" className={`${inp} mt-1`} /></div>
+                <div><label className={lbl}>型式</label><input type="text" value={nv.vehicle_code} onChange={(e) => setNv((p) => ({ ...p, vehicle_code: e.target.value }))} placeholder="ABA-XXX" className={`${inp} mt-1`} /></div>
+                <div className="col-span-2"><label className={lbl}>車台番号</label><input type="text" value={nv.vin} onChange={(e) => setNv((p) => ({ ...p, vin: e.target.value }))} className={`${inp} mt-1`} /></div>
+                <div><label className={lbl}>初度登録年月</label><input type="text" value={nv.first_registration_year_month} onChange={(e) => setNv((p) => ({ ...p, first_registration_year_month: e.target.value }))} placeholder="2020-04" className={`${inp} mt-1`} /></div>
+                <div><label className={lbl}>登録年月日</label><input type="date" value={nv.registration_date} onChange={(e) => setNv((p) => ({ ...p, registration_date: e.target.value }))} className={`${inp} mt-1`} /></div>
+                <div><label className={lbl}>車検満了日</label><input type="date" value={nv.inspection_expiry_date} onChange={(e) => setNv((p) => ({ ...p, inspection_expiry_date: e.target.value }))} className={`${inp} mt-1`} /></div>
+                <div><label className={lbl}>排気量</label><input type="text" value={nv.displacement} onChange={(e) => setNv((p) => ({ ...p, displacement: e.target.value }))} placeholder="1998cc" className={`${inp} mt-1`} /></div>
+                <div><label className={lbl}>ボディカラー<span className="text-[9px] text-slate-500">（手入力）</span></label><input type="text" value={nv.color} onChange={(e) => setNv((p) => ({ ...p, color: e.target.value }))} placeholder="ホワイトパール" className={`${inp} mt-1`} /></div>
+                <div className="col-span-2"><label className={lbl}>ナンバー</label><input type="text" value={nv.plate_number} onChange={(e) => setNv((p) => ({ ...p, plate_number: e.target.value }))} placeholder="品川 300 あ 1234" className={`${inp} mt-1`} /></div>
+                <div className="col-span-2">
+                  <label className={lbl}>ボディサイズ<span className="text-[9px] text-slate-500">（3M推定）</span></label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <select value={sizeKey} onChange={(e) => setSizeKey(e.target.value)} className="bg-[#0f172a] border border-slate-700 rounded px-2 py-2 text-sm text-slate-100">
+                      {sizeKeys.map((k) => <option key={k} value={k}>{k}</option>)}
+                    </select>
+                    <button type="button" onClick={estimateSize} className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 px-3 py-1.5 rounded-lg">3M推定</button>
+                    {sizeEstimate && <span className="text-[10px] text-slate-500">{sizeEstimate.basis}</span>}
+                  </div>
+                </div>
+                <p className="col-span-2 text-[10px] text-slate-600">保存時に車両として登録されます。初度登録年月はDB列（migration 098）未適用のため保存対象外です。</p>
+              </div>
+            )}
           </div>
 
           {/* Services */}
@@ -551,6 +733,36 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
           </div>
         </div>
       </div>
+
+      {/* G3 — Vehicle Registration OCR modal (reuses VehicleRegistrationUpload/Review) */}
+      {ocrStage !== "closed" && (
+        <div className="fixed inset-0 z-[60] flex items-start justify-center p-3 sm:p-4 overflow-y-auto bg-black/60"
+          onClick={() => { setOcrStage("closed"); setPendingOcr(null); }}>
+          <div className="bg-[#1e293b] border border-slate-700 rounded-xl shadow-xl w-full max-w-lg p-5 sm:p-6 my-4"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-100">{ocrStage === "upload" ? "車検証を読み取る" : "読み取り結果を確認"}</h3>
+              <button type="button" onClick={() => { setOcrStage("closed"); setPendingOcr(null); }}
+                className="text-slate-500 hover:text-slate-200 text-lg leading-none transition-colors">✕</button>
+            </div>
+            {ocrStage === "upload" && (
+              <VehicleRegistrationUpload
+                customerId={customerId || undefined}
+                vehicleId={vehicleId || undefined}
+                onComplete={(result) => { setPendingOcr(result); setOcrStage("review"); }}
+                onCancel={() => { setOcrStage("closed"); setPendingOcr(null); }}
+              />
+            )}
+            {ocrStage === "review" && pendingOcr && (
+              <VehicleRegistrationOcrReview
+                ocrResult={pendingOcr}
+                onApply={applyOcr}
+                onCancel={() => { setOcrStage("closed"); setPendingOcr(null); }}
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Mobile sticky bar */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 flex gap-2 p-3 bg-[#0f172a]/95 backdrop-blur border-t border-slate-800">
