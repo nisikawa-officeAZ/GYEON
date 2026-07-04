@@ -93,9 +93,10 @@ interface EstimateEditorProps {
   customers:          CustomerDB[];
   vehicles:           VehicleDB[];
   defaultCustomerId?: string;
+  defaultVehicleId?:  string;
 }
 
-export default function EstimateEditor({ mode, estimate, customers, vehicles, defaultCustomerId }: EstimateEditorProps) {
+export default function EstimateEditor({ mode, estimate, customers, vehicles, defaultCustomerId, defaultVehicleId }: EstimateEditorProps) {
   const router = useRouter();
   const isEdit = mode === "edit";
 
@@ -112,7 +113,7 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
 
   // ── Customer / Vehicle / Notes ──────────────────────────────────────────────
   const initialCustomerId = estimate?.customer_id ?? defaultCustomerId ?? "";
-  const initialVehicleId  = estimate?.vehicle_id ?? "";
+  const initialVehicleId  = estimate?.vehicle_id ?? defaultVehicleId ?? "";
   const initialNotes      = estimate?.notes ?? "";
   const initialMemo       = estimate?.internal_memo ?? "";
 
