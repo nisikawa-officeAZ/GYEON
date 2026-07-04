@@ -515,7 +515,7 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                   <input type="text" value={nc.name} onChange={(e) => setNc((p) => ({ ...p, name: e.target.value }))} placeholder="山田太郎 / 株式会社〇〇" className={`${inp} mt-1`} />
                   <span className="text-[10px] text-slate-600">個人名・法人名をそのまま1項目で入力（分割しません）</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div><label className={lbl}>電話番号</label><input type="tel" inputMode="tel" value={nc.phone} onChange={(e) => setNc((p) => ({ ...p, phone: e.target.value }))} placeholder="090-0000-0000" className={`${inp} mt-1`} /></div>
                   <div><label className={lbl}>メール</label><input type="email" value={nc.email} onChange={(e) => setNc((p) => ({ ...p, email: e.target.value }))} className={`${inp} mt-1`} /></div>
                   <div><label className={lbl}>郵便番号</label><input type="text" value={nc.postal} onChange={(e) => setNc((p) => ({ ...p, postal: e.target.value }))} placeholder="000-0000" className={`${inp} mt-1`} /></div>
@@ -527,7 +527,7 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                   <span className="text-sm text-slate-300">業者（法人）</span>
                 </div>
                 {nc.isBusiness && (
-                  <div className="grid grid-cols-2 gap-2 border border-slate-700/60 rounded-lg p-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border border-slate-700/60 rounded-lg p-3">
                     <div><label className={lbl}>掛け率（%）</label><input type="number" min={0} max={100} value={nc.tradeRate} onChange={(e) => setNc((p) => ({ ...p, tradeRate: e.target.value }))} className={`${inp} mt-1`} /></div>
                     <div className="flex items-end gap-2 pb-1">
                       <button type="button" onClick={() => setNc((p) => ({ ...p, arAllowed: !p.arAllowed }))} className={`w-5 h-5 rounded border-2 flex items-center justify-center ${nc.arAllowed ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`}>{nc.arAllowed && <span className="text-white text-[10px]">✓</span>}</button>
@@ -572,7 +572,7 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                 {customerId && filteredVehicles.length === 0 && <p className="text-[10px] text-slate-500 mt-1.5">この顧客に紐づく車両がありません。「新規車両を入力」で登録できます。</p>}
               </>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div><label className={lbl}>メーカー</label><input type="text" value={nv.maker} onChange={(e) => setNv((p) => ({ ...p, maker: e.target.value }))} placeholder="トヨタ" className={`${inp} mt-1`} /></div>
                 <div><label className={lbl}>車名</label><input type="text" value={nv.model} onChange={(e) => setNv((p) => ({ ...p, model: e.target.value }))} placeholder="クラウン" className={`${inp} mt-1`} /></div>
                 <div><label className={lbl}>グレード</label><input type="text" value={nv.grade} onChange={(e) => setNv((p) => ({ ...p, grade: e.target.value }))} placeholder="アスリート" className={`${inp} mt-1`} /></div>
@@ -619,7 +619,7 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                   <option value="">コーティングを選択...</option>
                   {catalog.coatings.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
-                <div className="grid grid-cols-2 gap-2 mb-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
                   <select value={topcoat2} onChange={(e) => setTopcoat2(e.target.value)} className={inp}>
                     <option value="">トップコート2層目なし</option>
                     {Object.keys(catalog.topcoatBase).map((t) => <option key={t} value={t}>{catalog.topcoatName[t] ?? t}</option>)}
@@ -641,7 +641,7 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
               {/* PPF */}
               <div className="border border-slate-700/60 rounded-lg p-3">
                 <p className="text-xs font-semibold text-blue-300 mb-2">PPF</p>
-                <div className="grid grid-cols-2 gap-2 mb-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
                   <select value={ppfPlan} onChange={(e) => setPpfPlan(e.target.value)} className={inp}>
                     <option value="">プランを選択...</option>
                     {catalog.ppfPlans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -742,8 +742,8 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
             {items.length === 0 ? (
               <p className="text-xs text-slate-600">明細がありません。上のサービスから追加するか「＋ 行を追加」で手入力してください。</p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+              <div className="overflow-x-auto -mx-1 px-1">
+                <table className="w-full min-w-[560px] text-xs">
                   <thead>
                     <tr className="border-b border-slate-700 text-slate-500">
                       <th className="text-left pb-2 pr-2">カテゴリ</th>

@@ -17,7 +17,7 @@ export default async function EstimateNewPage({ searchParams }: Props) {
 
   return (
     <MainLayout>
-      <div className="max-w-5xl mx-auto py-4">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4">
         <EstimateEditor mode="create" customers={customers} vehicles={vehicles} defaultCustomerId={customer_id} defaultVehicleId={vehicle_id} />
       </div>
     </MainLayout>
