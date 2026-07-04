@@ -150,7 +150,7 @@ export default async function DashboardPage() {
               { label: "施工中",     value: dash.work_orders.in_progress, color: "bg-amber-950/50 text-amber-300 border-amber-900/50",  href: "/work-orders"  },
               { label: "予約 (今日)", value: dash.reservation_stats.today, color: "bg-blue-950/50 text-blue-300 border-blue-900/50",    href: "/reservations" },
               { label: "メンテ 7日", value: dash.maintenance_stats.next_7_days, color: "bg-rose-950/50 text-rose-300 border-rose-900/50", href: "/maintenance" },
-              { label: "見積待ち",   value: dash.estimates.sent,           color: "bg-violet-950/50 text-violet-300 border-violet-900/50", href: "/estimates" },
+              { label: "見積待ち",   value: dash.estimates.proposal,       color: "bg-violet-950/50 text-violet-300 border-violet-900/50", href: "/estimates" },
             ]
               .filter(c => c.value > 0)
               .map(c => (

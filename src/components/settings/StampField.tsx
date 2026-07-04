@@ -29,7 +29,7 @@ function TrueSizePreview({ url, kind }: { url: string | null; kind: StampKind })
       >
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={url} alt="stamp" className="w-full h-full object-contain" />
+          <img src={url} alt="スタンプ" className="w-full h-full object-contain" />
         ) : (
           <span className="text-[9px] text-slate-400">未設定</span>
         )}

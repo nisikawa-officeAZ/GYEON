@@ -50,7 +50,7 @@ export default function AdminBillingPage() {
       {/* Page header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-slate-100">Billing Management</h1>
+          <h1 className="text-lg font-semibold text-slate-100">請求管理</h1>
           <p className="text-xs text-slate-500 mt-0.5">
             請求・サブスクリプション管理 — 手動オペレーション。Stripe 未接続。自動課金なし。
           </p>

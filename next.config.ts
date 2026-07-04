@@ -3,7 +3,7 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  serverExternalPackages: ['@react-pdf/renderer'],
+  serverExternalPackages: ['@react-pdf/renderer', 'sharp'],
   // Bundle the local Japanese PDF fonts (M PLUS 1p, OFL) into the serverless functions
   // that render PDFs, so registerPdfFonts() can read them from disk at runtime.
   outputFileTracingIncludes: {

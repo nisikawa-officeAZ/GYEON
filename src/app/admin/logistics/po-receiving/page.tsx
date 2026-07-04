@@ -4,7 +4,7 @@ import { getPendingProductOrders } from "@/lib/admin/logistics/po-receiving-acti
 import PoReceivingClient from "./PoReceivingClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "PO Receiving | GYEON Logistics" };
+export const metadata = { title: "発注入荷 | GYEON Logistics" };
 
 export default async function PoReceivingPage() {
   const admin = await getCurrentAdmin();

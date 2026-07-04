@@ -64,8 +64,8 @@ export default function LogisticsShipmentsClient({ initialShipments }: Props) {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-white">Shipment Queue</h1>
-        <p className="text-sm text-slate-400 mt-0.5">{shipments.length} total shipments</p>
+        <h1 className="text-xl font-semibold text-white">出荷キュー</h1>
+        <p className="text-sm text-slate-400 mt-0.5">出荷 合計 {shipments.length}件</p>
       </div>
 
       {/* Status tabs */}
@@ -77,7 +77,7 @@ export default function LogisticsShipmentsClient({ initialShipments }: Props) {
             activeTab === "all" ? "bg-slate-600 text-white" : "bg-slate-800 text-slate-400 hover:text-white",
           ].join(" ")}
         >
-          All ({shipments.length})
+          すべて ({shipments.length})
         </button>
         {STATUS_ORDER.map((s) => (
           <button
@@ -94,7 +94,7 @@ export default function LogisticsShipmentsClient({ initialShipments }: Props) {
 
         <input
           type="text"
-          placeholder="Search dealer / order…"
+          placeholder="ディーラー / 注文を検索…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="ml-auto bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500 w-52"
@@ -108,15 +108,15 @@ export default function LogisticsShipmentsClient({ initialShipments }: Props) {
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-sm text-slate-500">
           {initialShipments.length === 0
-            ? "No shipments. Create shipments from approved product orders."
-            : "No results match the current filters."}
+            ? "出荷はありません。承認済みの注文から出荷を作成してください。"
+            : "現在のフィルターに一致する結果がありません。"}
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-700/50">
-                {["Status", "Dealer", "Order #", "Tracking", "Carrier", "Assigned To", "Created", "Action"].map((h) => (
+                {["ステータス", "ディーラー", "注文番号", "追跡番号", "配送業者", "担当者", "作成日", "操作"].map((h) => (
                   <th key={h} className="text-left px-3 py-2.5 text-xs font-medium text-slate-400 uppercase whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -159,7 +159,7 @@ export default function LogisticsShipmentsClient({ initialShipments }: Props) {
                           → {SHIPMENT_STATUS_LABELS[next]}
                         </button>
                       ) : (
-                        <span className="text-xs text-slate-600">Done</span>
+                        <span className="text-xs text-slate-600">完了</span>
                       )}
                     </td>
                   </tr>

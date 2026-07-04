@@ -13,7 +13,7 @@
 // to, so "Global Certified restrictions" are supported in every market — even if
 // a market renames or adds ranks.
 
-export type PermissionTier = "all" | "detailer" | "certified";
+export type PermissionTier = "all" | "detailer" | "ppf_installer" | "certified";
 
 export interface RankDef {
   value:    string;   // machine value stored in DB (per market)
@@ -36,13 +36,22 @@ export interface MarketProfile {
 export const JP_PROFILE: MarketProfile = {
   market: "JP",
   ranks: [
-    { value: "shop",      level: 1, labelJa: "GYEON Shop",               labelEn: "GYEON Shop",               emoji: "🏪" },
-    { value: "detailer",  level: 2, labelJa: "GYEON Detailer",           labelEn: "GYEON Detailer",           emoji: "🔵" },
-    { value: "certified", level: 3, labelJa: "GYEON Certified Detailer", labelEn: "GYEON Certified Detailer", emoji: "⭐", certified: true },
+    { value: "shop",          level: 1, labelJa: "GYEON Shop",               labelEn: "GYEON Shop",               emoji: "🏪" },
+    { value: "detailer",      level: 2, labelJa: "GYEON Detailer",           labelEn: "GYEON Detailer",           emoji: "🔵" },
+    { value: "ppf_installer", level: 3, labelJa: "GYEON PPF Installer",      labelEn: "GYEON PPF Installer",      emoji: "🛡️" },
+    { value: "certified",     level: 4, labelJa: "GYEON Certified Detailer", labelEn: "GYEON Certified Detailer", emoji: "⭐", certified: true },
   ],
   defaultRank:    "detailer",
-  legacyAliases:  { certified_detailer: "certified" }, // old dealers.detailer_rank value -> canonical
-  tierFloorLevel: { all: 1, detailer: 2, certified: 3 },
+  // Legacy + alternate internal stored values -> canonical rank value.
+  // Accepts both the plain machine values and any `gyeon_*`-prefixed variants.
+  legacyAliases:  {
+    certified_detailer:       "certified",
+    gyeon_shop:               "shop",
+    gyeon_detailer:           "detailer",
+    gyeon_ppf_installer:      "ppf_installer",
+    gyeon_certified_detailer: "certified",
+  },
+  tierFloorLevel: { all: 1, detailer: 2, ppf_installer: 3, certified: 4 },
 };
 
 /**

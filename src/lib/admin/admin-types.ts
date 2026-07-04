@@ -81,7 +81,10 @@ export type AdminAuditAction =
   // RC-14: dealer lifecycle management
   | "trial_extended"
   | "rank_changed"
-  | "dealer_reset";
+  | "dealer_reset"
+  // AI Center: GYEON-managed OpenAI key management
+  | "gyeon_ai_key_updated"
+  | "gyeon_ai_connection_tested";
 
 export interface AdminAuditLogDB {
   id: string;

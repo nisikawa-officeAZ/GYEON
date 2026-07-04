@@ -2,7 +2,7 @@ import { getDealersAdmin } from "@/lib/admin/get-dealers-admin";
 import PlansAdminClient from "./PlansAdminClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Plans | GYEON Admin" };
+export const metadata = { title: "契約プラン管理 | GYEON Admin" };
 
 export default async function PlansPage() {
   const dealers = await getDealersAdmin();
@@ -19,24 +19,24 @@ export default async function PlansPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-lg font-semibold text-slate-100">Plan Management</h1>
+        <h1 className="text-lg font-semibold text-slate-100">契約プラン管理</h1>
         <p className="text-xs text-slate-500 mt-0.5">
-          All dealer plans, trial status, and auto-downgrade configuration
+          全店舗のプラン・試用状況・自動ダウングレード設定
         </p>
       </div>
 
       {/* Summary chips */}
       <div className="flex flex-wrap gap-2">
         <span className="text-xs px-3 py-1 rounded-full bg-blue-900/30 text-blue-300 border border-blue-700/40">
-          {activeTrials} active trial{activeTrials !== 1 ? "s" : ""}
+          試用中 {activeTrials}件
         </span>
         {endingSoon > 0 && (
           <span className="text-xs px-3 py-1 rounded-full bg-red-900/30 text-red-300 border border-red-700/40">
-            {endingSoon} ending within 7 days
+            7日以内に終了 {endingSoon}件
           </span>
         )}
         <span className="text-xs px-3 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-          {dealers.length} total dealers
+          店舗合計 {dealers.length}件
         </span>
       </div>
 

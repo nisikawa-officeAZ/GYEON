@@ -5,27 +5,27 @@
 import type { OfficialReleaseInfo } from "@/lib/release/final-release";
 
 const FEATURES = [
-  { name: "Customers",          phase: "PHASE38" },
-  { name: "Vehicles",           phase: "PHASE39" },
-  { name: "Estimate",           phase: "PHASE53" },
+  { name: "顧客",               phase: "PHASE38" },
+  { name: "車両",               phase: "PHASE39" },
+  { name: "見積",               phase: "PHASE53" },
   { name: "PDF",                phase: "PHASE45" },
-  { name: "Work Order",         phase: "PHASE54" },
-  { name: "Completion Report",  phase: "PHASE54" },
-  { name: "Invoice",            phase: "PHASE55" },
-  { name: "Payment",            phase: "PHASE56" },
+  { name: "作業指示",           phase: "PHASE54" },
+  { name: "施工完了報告",       phase: "PHASE54" },
+  { name: "請求書",             phase: "PHASE55" },
+  { name: "入金",               phase: "PHASE56" },
   { name: "LINE",               phase: "PHASE49" },
-  { name: "Maintenance",        phase: "PHASE51" },
-  { name: "Reservation",        phase: "PHASE50" },
-  { name: "Products",           phase: "PHASE52" },
-  { name: "Subscription",       phase: "PHASE58" },
-  { name: "Billing",            phase: "PHASE64" },
-  { name: "Audit",              phase: "PHASE37" },
-  { name: "Health",             phase: "PHASE60" },
-  { name: "Backup & DR",        phase: "PHASE59" },
-  { name: "Onboarding",         phase: "PHASE42" },
-  { name: "Release Readiness",  phase: "PHASE60" },
+  { name: "メンテナンス",       phase: "PHASE51" },
+  { name: "予約",               phase: "PHASE50" },
+  { name: "商品",               phase: "PHASE52" },
+  { name: "サブスクリプション", phase: "PHASE58" },
+  { name: "請求",               phase: "PHASE64" },
+  { name: "監査ログ",           phase: "PHASE37" },
+  { name: "稼働状況",           phase: "PHASE60" },
+  { name: "バックアップ・DR",   phase: "PHASE59" },
+  { name: "オンボーディング",   phase: "PHASE42" },
+  { name: "リリース準備状況",   phase: "PHASE60" },
   { name: "UAT",                phase: "PHASE63" },
-  { name: "RC Status",          phase: "PHASE65" },
+  { name: "RCステータス",       phase: "PHASE65" },
 ] as const;
 
 const ROADMAP = [
@@ -60,14 +60,14 @@ export default function OfficialReleasePanel({ info }: Props) {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[10px] font-bold tracking-widest text-amber-400 uppercase px-2 py-0.5 border border-amber-700/60 rounded">
-                OFFICIAL RELEASE
+                公式リリース
               </span>
             </div>
             <h2 className="text-3xl font-bold text-slate-100 mb-1">GYEON Detailer Agent</h2>
             <p className="text-xl font-semibold text-amber-400">Version {info.version}</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-[10px] text-slate-500 mb-0.5">Release Date</p>
+            <p className="text-[10px] text-slate-500 mb-0.5">リリース日</p>
             <p className="text-sm font-medium text-slate-300">{info.releaseDate}</p>
           </div>
         </div>
@@ -81,10 +81,10 @@ export default function OfficialReleasePanel({ info }: Props) {
         {/* Meta row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Owner",       value: info.owner       },
-            { label: "Powered by",  value: info.poweredBy   },
-            { label: "Platform",    value: info.platform    },
-            { label: "Dev Phases",  value: info.phases      },
+            { label: "運営",             value: info.owner       },
+            { label: "技術提供",         value: info.poweredBy   },
+            { label: "プラットフォーム", value: info.platform    },
+            { label: "開発フェーズ",     value: info.phases      },
           ].map(m => (
             <div key={m.label} className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
               <p className="text-[10px] text-slate-500 mb-0.5">{m.label}</p>
@@ -98,22 +98,22 @@ export default function OfficialReleasePanel({ info }: Props) {
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-xl border border-green-700/30 bg-green-950/20 p-4 text-center">
           <p className="text-3xl font-bold text-green-400">{info.features}</p>
-          <p className="text-[10px] text-green-600 mt-0.5">Major Features</p>
+          <p className="text-[10px] text-green-600 mt-0.5">主要機能</p>
         </div>
         <div className="rounded-xl border border-blue-700/30 bg-blue-950/20 p-4 text-center">
           <p className="text-3xl font-bold text-blue-400">{info.migrations}</p>
-          <p className="text-[10px] text-blue-600 mt-0.5">Migrations</p>
+          <p className="text-[10px] text-blue-600 mt-0.5">マイグレーション</p>
         </div>
         <div className="rounded-xl border border-amber-700/30 bg-amber-950/20 p-4 text-center">
           <p className="text-3xl font-bold text-amber-400">100</p>
-          <p className="text-[10px] text-amber-600 mt-0.5">Release Score</p>
+          <p className="text-[10px] text-amber-600 mt-0.5">リリーススコア</p>
         </div>
       </div>
 
       {/* Feature matrix */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/20 overflow-hidden">
         <div className="px-5 py-3 border-b border-slate-800 bg-slate-900/40">
-          <p className="text-xs font-semibold text-slate-300">Feature Matrix — All Completed</p>
+          <p className="text-xs font-semibold text-slate-300">機能マトリクス — すべて完了</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 divide-y sm:divide-y-0 divide-slate-800">
           {FEATURES.map((f, i) => (
@@ -136,7 +136,7 @@ export default function OfficialReleasePanel({ info }: Props) {
       {/* Roadmap after v1 */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/20 overflow-hidden">
         <div className="px-5 py-3 border-b border-slate-800 bg-slate-900/40">
-          <p className="text-xs font-semibold text-slate-300">Roadmap After v1</p>
+          <p className="text-xs font-semibold text-slate-300">v1 以降のロードマップ</p>
         </div>
         <div className="p-5">
           {/* Group by version */}
@@ -165,36 +165,36 @@ export default function OfficialReleasePanel({ info }: Props) {
       {/* Backorder flow highlight */}
       <div className="rounded-xl border border-slate-700 bg-slate-900/20 p-4">
         <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">
-          v1.2 Backorder Flow (Planned)
+          v1.2 バックオーダーフロー（予定）
         </p>
         <div className="flex flex-col gap-1 text-[10px] text-slate-500 font-mono">
-          <span>Dealer places backorder</span>
+          <span>ディーラーがバックオーダーを発注</span>
           <span className="text-slate-700 pl-2">↓</span>
-          <span>GYEON Japan orders from HQ</span>
+          <span>GYEON Japan が本社へ発注</span>
           <span className="text-slate-700 pl-2">↓</span>
-          <span>Register <span className="text-blue-400">incoming_quantity</span>, <span className="text-blue-400">expected_arrival_date</span>, <span className="text-blue-400">target_delivery_date</span></span>
+          <span><span className="text-blue-400">incoming_quantity</span>、<span className="text-blue-400">expected_arrival_date</span>、<span className="text-blue-400">target_delivery_date</span> を登録</span>
           <span className="text-slate-700 pl-2">↓</span>
-          <span>Dealer sees delivery target</span>
+          <span>ディーラーが納品予定を確認</span>
           <span className="text-slate-700 pl-2">↓</span>
-          <span className="text-green-400">Inquiry volume reduced</span>
+          <span className="text-green-400">問い合わせ件数の削減</span>
         </div>
       </div>
 
       {/* Release documents */}
       <div className="rounded-xl border border-slate-800 bg-slate-900/20 p-4">
-        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2">Release Documents</p>
+        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2">リリースドキュメント</p>
         <ul className="flex flex-col gap-1">
           {[
-            ["VERSION.md",                    "Version 1.0.0 — Official Release"],
-            ["OFFICIAL_RELEASE_NOTES.md",     "Full release notes with architecture and security"],
-            ["OFFICIAL_RELEASE_CERTIFICATE.md", "Official release certificate"],
-            ["FINAL_FEATURE_MATRIX.md",       "All 21 features, admin modules, API routes"],
-            ["ROADMAP_AFTER_v1.md",           "v1.1 → v3.0 feature roadmap with backorder flow"],
-            ["CHANGELOG.md",                  "PHASE35–PHASE66 development history"],
-            ["KNOWN_LIMITATIONS.md",          "Limitations and workarounds"],
-            ["RELEASE_CHECKLIST.md",          "55-item sign-off checklist"],
-            ["docs/OFFICIAL_RELEASE_PROCESS.md", "RC → GA release process"],
-            ["THANK_YOU.md",                  "Acknowledgements"],
+            ["VERSION.md",                    "バージョン 1.0.0 — 公式リリース"],
+            ["OFFICIAL_RELEASE_NOTES.md",     "アーキテクチャとセキュリティを含む完全なリリースノート"],
+            ["OFFICIAL_RELEASE_CERTIFICATE.md", "公式リリース証明書"],
+            ["FINAL_FEATURE_MATRIX.md",       "全21機能・管理モジュール・API ルート"],
+            ["ROADMAP_AFTER_v1.md",           "v1.1 → v3.0 の機能ロードマップとバックオーダーフロー"],
+            ["CHANGELOG.md",                  "PHASE35〜PHASE66 の開発履歴"],
+            ["KNOWN_LIMITATIONS.md",          "制限事項と回避策"],
+            ["RELEASE_CHECKLIST.md",          "55項目の承認チェックリスト"],
+            ["docs/OFFICIAL_RELEASE_PROCESS.md", "RC → GA のリリースプロセス"],
+            ["THANK_YOU.md",                  "謝辞"],
           ].map(([file, desc]) => (
             <li key={file} className="flex gap-2 text-[10px]">
               <code className="text-amber-400 shrink-0">{file}</code>
@@ -207,10 +207,10 @@ export default function OfficialReleasePanel({ info }: Props) {
       {/* Thank you footer */}
       <div className="rounded-xl border border-slate-800/50 bg-slate-900/10 p-5 text-center">
         <p className="text-xs text-slate-500 mb-1">
-          Thank you to GYEON Dealers, Beta Test Dealers, Office AZ Team,
+          GYEON ディーラー、ベータテストディーラー、Office AZ チーム、
         </p>
         <p className="text-xs text-slate-500 mb-3">
-          and everyone who supported GYEON Detailer Agent.
+          そして GYEON Detailer Agent を支えてくださったすべての皆さまに感謝します。
         </p>
         <p className="text-sm font-medium text-slate-400">施工で終わらせない。</p>
         <p className="text-sm font-medium text-slate-400">顧客との関係を、次の来店へ。</p>

@@ -4,12 +4,12 @@ import { useState, useTransition, useMemo } from "react";
 import { approveDealerTrial, rejectDealer, suspendDealer, reactivateDealer, deleteDealer, restoreDealer, purgeDealer } from "@/lib/admin/approve-dealer";
 import DealerDetailPanel from "./DealerDetailPanel";
 import type { DealerAdminView } from "@/lib/admin/admin-types";
-import { DEALER_RANKS, normalizeRank, rankLabelOrDash, DEFAULT_DEALER_RANK } from "@/lib/ranks/dealer-ranks";
+import { DEALER_RANKS, DEALER_RANK_VALUES, normalizeRank, rankLabelOrDash, DEFAULT_DEALER_RANK } from "@/lib/ranks/dealer-ranks";
 
 type StatusFilter = "all" | "pending" | "approved" | "rejected" | "suspended";
 type PlanFilter   = "all" | "basic" | "pro" | "pro_plus";
 type TrialFilter  = "all" | "active" | "ended" | "none";
-type RankFilter   = "all" | "shop" | "detailer" | "certified";
+type RankFilter   = string; // "all" | any DealerRank value (profile-driven)
 
 type Modal =
   | { type: "none" }
@@ -68,10 +68,11 @@ function rankLabel(r: string | null): string {
 function rankClass(r: string | null): string {
   if (!r || !r.trim()) return "text-slate-600 bg-transparent  border-transparent";
   switch (normalizeRank(r)) {
-    case "certified": return "text-amber-300   bg-amber-900/30   border-amber-700/40";
-    case "detailer":           return "text-sky-300     bg-sky-900/30     border-sky-700/40";
-    case "shop":               return "text-emerald-300 bg-emerald-900/30 border-emerald-700/40";
-    default:                   return "text-slate-600 bg-transparent  border-transparent";
+    case "certified":     return "text-amber-300   bg-amber-900/30   border-amber-700/40";
+    case "ppf_installer": return "text-violet-300  bg-violet-900/30  border-violet-700/40";
+    case "detailer":      return "text-sky-300     bg-sky-900/30     border-sky-700/40";
+    case "shop":          return "text-emerald-300 bg-emerald-900/30 border-emerald-700/40";
+    default:              return "text-slate-600 bg-transparent  border-transparent";
   }
 }
 
@@ -145,7 +146,7 @@ function ApproveModal({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-100">Approve Dealer</h2>
+            <h2 className="text-base font-bold text-slate-100">店舗を承認</h2>
             <p className="text-xs text-slate-500 mt-0.5">{dealer.name ?? "（名称未設定）"}</p>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl leading-none">✕</button>
@@ -178,7 +179,7 @@ function ApproveModal({
 
           {/* Detailer Rank */}
           <div>
-            <label className="text-xs font-medium text-slate-400 block mb-2">Detailer Rank</label>
+            <label className="text-xs font-medium text-slate-400 block mb-2">ディテーラーランク</label>
             <div className="flex gap-2">
               {DEALER_RANKS.map((opt) => (
                 <button
@@ -199,7 +200,7 @@ function ApproveModal({
           {/* Initial Plan */}
           <div>
             <label className="text-xs font-medium text-slate-400 block mb-2">
-              Initial Plan <span className="text-slate-600 font-normal">(default: Pro Plus)</span>
+              初期プラン <span className="text-slate-600 font-normal">(既定: Pro Plus)</span>
             </label>
             <div className="flex gap-2">
               {[
@@ -226,7 +227,7 @@ function ApproveModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-medium text-slate-400 block mb-2">
-                Service Start Date
+                サービス開始日
               </label>
               <input
                 type="date"
@@ -237,7 +238,7 @@ function ApproveModal({
             </div>
             <div>
               <label className="text-xs font-medium text-slate-400 block mb-2">
-                Trial Period <span className="text-slate-600 font-normal">(days)</span>
+                試用期間 <span className="text-slate-600 font-normal">(日数)</span>
               </label>
               <input
                 type="number"
@@ -252,7 +253,7 @@ function ApproveModal({
 
           {/* Calculated trial end */}
           <div className="bg-slate-800/40 border border-slate-700/50 rounded-lg px-4 py-3 flex items-center justify-between">
-            <span className="text-xs text-slate-500">Trial End Date（自動計算）</span>
+            <span className="text-xs text-slate-500">試用終了（自動計算）</span>
             <span className="text-sm font-semibold text-amber-300">{fmt(trialEnd)}</span>
           </div>
 
@@ -293,7 +294,7 @@ function RejectModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="bg-[#0f172a] border border-slate-700 rounded-2xl w-full max-w-md mx-4 p-6 space-y-4 shadow-2xl">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-red-400">Reject Dealer</h2>
+          <h2 className="text-base font-bold text-red-400">店舗を却下</h2>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl">✕</button>
         </div>
         <p className="text-sm text-slate-400">
@@ -336,7 +337,7 @@ function SuspendModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="bg-[#0f172a] border border-slate-700 rounded-2xl w-full max-w-md mx-4 p-6 space-y-4 shadow-2xl">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-orange-400">Suspend Dealer</h2>
+          <h2 className="text-base font-bold text-orange-400">店舗を停止</h2>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl">✕</button>
         </div>
         <p className="text-sm text-slate-400">
@@ -471,7 +472,7 @@ function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: ()
 
           {/* Store Information */}
           <section>
-            <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">Store Information</h3>
+            <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">店舗情報</h3>
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
               <div><div className="text-slate-500 mb-0.5">店舗名</div><div className="text-slate-200">{dealer.name ?? "—"}</div></div>
               <div><div className="text-slate-500 mb-0.5">現在のプラン</div>
@@ -484,7 +485,7 @@ function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: ()
 
           {/* Applicant / Contact */}
           <section>
-            <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">Contact Information</h3>
+            <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">連絡先</h3>
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
               <div><div className="text-slate-500 mb-0.5">メール</div><div className="text-slate-300">{dealer.email ?? "—"}</div></div>
               <div><div className="text-slate-500 mb-0.5">電話番号</div><div className="text-slate-300">{dealer.phone ?? "—"}</div></div>
@@ -493,7 +494,7 @@ function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: ()
 
           {/* Approval / Trial History */}
           <section>
-            <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">Signup & Approval History</h3>
+            <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">登録・承認履歴</h3>
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-2 py-2 border-b border-slate-800/60">
                 <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
@@ -541,7 +542,7 @@ function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: ()
           {/* Previous Approvals (future-ready) */}
           <section>
             <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">
-              Previous Approvals <span className="text-slate-700 normal-case font-normal">(coming soon)</span>
+              過去の承認履歴 <span className="text-slate-700 normal-case font-normal">(準備中)</span>
             </h3>
             <div className="text-xs text-slate-700 py-2 px-3 bg-slate-900/40 rounded border border-slate-800/60">
               承認履歴テーブルは将来のスプリントで実装予定です。
@@ -550,7 +551,7 @@ function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: ()
 
           {/* Internal Notes */}
           <section>
-            <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">Internal Notes</h3>
+            <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">社内メモ</h3>
             {dealer.admin_notes ? (
               <div className="text-xs text-slate-300 bg-slate-800/40 border border-slate-700/50 rounded-lg px-4 py-3 whitespace-pre-wrap">
                 {dealer.admin_notes}
@@ -564,7 +565,7 @@ function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: ()
 
           {/* Trial detail */}
           <section>
-            <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">Trial Configuration</h3>
+            <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">試用設定</h3>
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
               <div><div className="text-slate-500 mb-0.5">試用プラン</div>
                 <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-medium border ${planClass(dealer.trial_plan_type)}`}>
@@ -576,7 +577,7 @@ function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: ()
                   {planLabel(dealer.auto_downgrade_plan_type)}
                 </span>
               </div>
-              <div><div className="text-slate-500 mb-0.5">Detailer Rank</div>
+              <div><div className="text-slate-500 mb-0.5">ディテーラーランク</div>
                 <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-medium border ${rankClass(dealer.detailer_rank)}`}>
                   {rankLabel(dealer.detailer_rank)}
                 </span>
@@ -810,7 +811,7 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
       {/* ── Header + Search ─────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-lg font-semibold text-slate-100">Dealer Approval Center</h1>
+          <h1 className="text-lg font-semibold text-slate-100">店舗管理</h1>
           <p className="text-xs text-slate-500 mt-0.5">{dealers.length} 件 — 全ディーラー</p>
         </div>
         <input
@@ -868,7 +869,7 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
                   : "text-slate-500 border-slate-700/50 hover:border-slate-600"
               }`}
             >
-              {s === "all" ? "All" : s === "pending" ? "Pending" : s === "approved" ? "Approved" : s === "rejected" ? "Rejected" : "Suspended"}
+              {s === "all" ? "すべて" : s === "pending" ? "承認待ち" : s === "approved" ? "承認済み" : s === "rejected" ? "却下" : "停止中"}
             </button>
           ))}
         </div>
@@ -888,7 +889,7 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
                   : "text-slate-600 border-slate-800 hover:border-slate-700"
               }`}
             >
-              {p === "all" ? "All plans" : planLabel(p)}
+              {p === "all" ? "すべてのプラン" : planLabel(p)}
             </button>
           ))}
           <span className="text-slate-800 text-xs px-1">|</span>
@@ -902,11 +903,11 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
                   : "text-slate-600 border-slate-800 hover:border-slate-700"
               }`}
             >
-              {t === "all" ? "All trials" : t === "active" ? "Trial active" : t === "ended" ? "Trial ended" : "No trial"}
+              {t === "all" ? "すべての試用" : t === "active" ? "試用中" : t === "ended" ? "試用終了" : "試用なし"}
             </button>
           ))}
           <span className="text-slate-800 text-xs px-1">|</span>
-          {(["all", "shop", "detailer", "certified"] as RankFilter[]).map((r) => (
+          {(["all", ...DEALER_RANK_VALUES] as RankFilter[]).map((r) => (
             <button
               key={r}
               onClick={() => setRankFilter(r)}
@@ -918,7 +919,7 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
                   : "text-slate-600 border-slate-800 hover:border-slate-700"
               }`}
             >
-              {r === "all" ? "All ranks" : rankLabel(r)}
+              {r === "all" ? "すべてのランク" : rankLabel(r)}
             </button>
           ))}
           <span className="text-xs text-slate-600 ml-auto">{filtered.length}件</span>
@@ -931,7 +932,7 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-slate-800">
-                {["店舗", "ランク", "プラン", "ステータス", "試用", "登録日", "操作"].map((h) => (
+                {["店舗", "メール", "ランク", "プラン", "試用", "Owner数", "Staff数", "ステータス", "登録日", "操作"].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     {h}
                   </th>
@@ -941,7 +942,7 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
             <tbody className="divide-y divide-slate-800/40">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-slate-600">
+                  <td colSpan={10} className="px-4 py-12 text-center text-slate-600">
                     {search || statusFilter !== "all" || planFilter !== "all" || trialFilter !== "all" || rankFilter !== "all"
                       ? "該当するディーラーが見つかりません"
                       : "ディーラーがいません"}
@@ -969,6 +970,9 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
                         </button>
                       </td>
 
+                      {/* Email */}
+                      <td className="px-4 py-3 text-slate-400">{dealer.email ?? "—"}</td>
+
                       {/* Rank */}
                       <td className="px-4 py-3">
                         {dealer.detailer_rank ? (
@@ -987,16 +991,22 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
                         </span>
                       </td>
 
+                      {/* Trial countdown */}
+                      <td className="px-4 py-3">
+                        <TrialCountdown dealer={dealer} />
+                      </td>
+
+                      {/* Owner count */}
+                      <td className="px-4 py-3 text-slate-400">{dealer.owner_user_id ? 1 : 0}</td>
+
+                      {/* Staff count */}
+                      <td className="px-4 py-3 text-slate-400">{dealer.staff_count ?? 0}</td>
+
                       {/* Approval status */}
                       <td className="px-4 py-3">
                         <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-medium border ${approvalClass(st)}`}>
                           {approvalLabel(st)}
                         </span>
-                      </td>
-
-                      {/* Trial countdown */}
-                      <td className="px-4 py-3">
-                        <TrialCountdown dealer={dealer} />
                       </td>
 
                       {/* Registered */}

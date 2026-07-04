@@ -24,6 +24,14 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+function formatDateTime(s: string | null | undefined) {
+  if (!s) return "—";
+  const d = new Date(s);
+  return isNaN(d.getTime())
+    ? "—"
+    : d.toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
 function formatYen(n: number) {
   return "¥" + n.toLocaleString("ja-JP");
 }
@@ -158,9 +166,39 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
               <InfoRow label="車種"        value={vehicle?.model        ?? "—"} />
               <InfoRow label="年式"        value={vehicle?.year         ?? "—"} />
               <InfoRow label="グレード"    value={vehicle?.grade        ?? "—"} />
+              <InfoRow label="登録年月日"  value={vehicle?.registration_date      ?? "—"} />
+              <InfoRow label="車検満了日"  value={vehicle?.inspection_expiry_date ?? "—"} />
               <InfoRow label="ナンバー"    value={vehicle?.plate_number ?? "—"} />
+              <InfoRow label="ボディサイズ" value={vehicle?.body_size    ?? "—"} />
             </div>
           </div>
+
+          {/* Store/dealer info is intentionally NOT shown here — it belongs only in
+              PDF / print / email / LINE output (see src/lib/pdf/dealer-branding.ts). */}
+
+          {/* Service Summary — grouped by the categories actually selected */}
+          {items.length > 0 && (
+            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                サービス内容
+              </h3>
+              <div className="flex flex-col gap-3">
+                {Array.from(new Set(sortByCategoryOrder(items).map((i) => i.category))).map((cat) => (
+                  <div key={cat}>
+                    <p className="text-xs font-semibold text-blue-300">{CATEGORY_LABEL[cat] ?? cat}</p>
+                    <ul className="mt-1 flex flex-col gap-0.5">
+                      {items.filter((i) => i.category === cat).map((i) => (
+                        <li key={i.id} className="text-xs text-slate-300">
+                          ・{i.item_name}
+                          {i.description && <span className="text-slate-500">（{i.description}）</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Line Items */}
           {items.length > 0 && (
@@ -216,13 +254,40 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
           {/* Summary */}
           <EstimateSummary estimate={estimate} />
 
-          {/* Notes */}
-          {estimate.notes && (
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">備考</h3>
-              <p className="text-xs text-slate-300 whitespace-pre-wrap">{estimate.notes}</p>
+          {/* Notes — customer note + internal memo */}
+          {(estimate.notes || estimate.internal_memo) && (
+            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5 flex flex-col gap-3">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">備考・メモ</h3>
+              {estimate.notes && (
+                <div>
+                  <p className="text-[10px] text-slate-500 mb-0.5">お客様向け備考</p>
+                  <p className="text-xs text-slate-300 whitespace-pre-wrap">{estimate.notes}</p>
+                </div>
+              )}
+              {estimate.internal_memo && (
+                <div>
+                  <p className="text-[10px] text-slate-500 mb-0.5">社内メモ</p>
+                  <p className="text-xs text-slate-400 whitespace-pre-wrap">{estimate.internal_memo}</p>
+                </div>
+              )}
             </div>
           )}
+
+          {/* 送信履歴 — 送信はステータスではなく履歴。一覧には出さず詳細のこの領域で管理。
+              （LINE / メール / PDF ダウンロード等。現状は "送付済み" 状態から送信日時を表示） */}
+          <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">送信履歴</h3>
+            {String(estimate.status).toLowerCase() === "sent" ? (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-300">📤 送付済み</span>
+                <span className="text-slate-500">{formatDateTime(estimate.updated_at)}</span>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-600">
+                送信履歴はありません（LINE・メール・PDF送信時に記録されます）
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

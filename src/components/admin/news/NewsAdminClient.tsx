@@ -337,7 +337,7 @@ function EmailPreviewBody({ data }: { data: NewsInput }) {
         {hasHtml ? (
           <div className="flex justify-center bg-slate-200 rounded-lg p-4 overflow-x-auto">
             <iframe
-              title="email-preview"
+              title="メールプレビュー"
               sandbox=""
               srcDoc={data.body_html ?? ""}
               style={{ width, height: 480, border: "0", background: "#fff", borderRadius: 6 }}
@@ -516,7 +516,7 @@ function HistoryModal({ news, onClose }: { news: GyeonNews; onClose: () => void 
                 {jobs.map((j) => (
                   <tr key={j.id} className="text-slate-300">
                     <td className="px-2.5 py-2 whitespace-nowrap">
-                      {DELIVERY_CHANNEL_LABEL[j.channel]}{j.is_test && <span className="ml-1 text-[9px] text-amber-400">TEST</span>}
+                      {DELIVERY_CHANNEL_LABEL[j.channel]}{j.is_test && <span className="ml-1 text-[9px] text-amber-400">テスト</span>}
                     </td>
                     <td className="px-2.5 py-2 whitespace-nowrap">{DELIVERY_JOB_STATUS_LABEL[j.status]}</td>
                     <td className="px-2.5 py-2">{j.total_count}</td>

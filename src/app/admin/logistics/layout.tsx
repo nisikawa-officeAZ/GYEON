@@ -4,15 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LOGISTICS_NAV = [
-  { key: "dashboard",    label: "Dashboard",     href: "/admin/logistics/dashboard" },
-  { key: "receiving",    label: "Receiving",     href: "/admin/logistics/receiving" },
-  { key: "inventory",    label: "Inventory",     href: "/admin/logistics/inventory" },
-  { key: "backorders",   label: "Backorders",    href: "/admin/logistics/backorders" },
-  { key: "shipments",    label: "Shipments",     href: "/admin/logistics/shipments" },
-  { key: "stocktaking",  label: "棚卸し",        href: "/admin/logistics/stocktaking" },
-  { key: "adjustments",  label: "Adjustments",   href: "/admin/logistics/adjustments" },
-  { key: "movements",    label: "Movements",     href: "/admin/logistics/movements" },
-  { key: "po-receiving", label: "PO Receiving",  href: "/admin/logistics/po-receiving" },
+  { key: "dashboard",    label: "ダッシュボード",  href: "/admin/logistics/dashboard" },
+  { key: "receiving",    label: "入荷",           href: "/admin/logistics/receiving" },
+  { key: "inventory",    label: "在庫",           href: "/admin/logistics/inventory" },
+  { key: "backorders",   label: "バックオーダー",  href: "/admin/logistics/backorders" },
+  { key: "shipments",    label: "出荷",           href: "/admin/logistics/shipments" },
+  { key: "stocktaking",  label: "棚卸し",         href: "/admin/logistics/stocktaking" },
+  { key: "adjustments",  label: "調整",           href: "/admin/logistics/adjustments" },
+  { key: "movements",    label: "在庫移動",        href: "/admin/logistics/movements" },
+  { key: "po-receiving", label: "発注入荷",        href: "/admin/logistics/po-receiving" },
 ];
 
 export default function LogisticsLayout({ children }: { children: React.ReactNode }) {

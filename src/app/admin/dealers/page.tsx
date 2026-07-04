@@ -4,7 +4,7 @@ import { getDealersAdmin, getArchivedDealersAdmin, getAdminUserIds } from "@/lib
 import DealersAdminClient from "./DealersAdminClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Dealer Approval Center | GYEON Admin" };
+export const metadata = { title: "店舗管理 | GYEON Admin" };
 
 export default async function AdminDealersPage() {
   const caller = await getCurrentAdmin();

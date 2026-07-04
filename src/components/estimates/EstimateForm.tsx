@@ -9,6 +9,8 @@ import {
   EstimateStatus,
   EstimateCategory,
   EstimateItemDB,
+  ESTIMATE_WORKFLOW_STATUSES,
+  ESTIMATE_STATUS_LABELS,
 } from "@/lib/estimates/estimate-types";
 import { CustomerDB } from "@/lib/customers/customer-types";
 import { VehicleDB }  from "@/lib/vehicles/vehicle-types";
@@ -145,13 +147,9 @@ const CATEGORIES: { value: EstimateCategory; label: string }[] = [
   { value: "other",    label: "その他" },
 ];
 
-const STATUSES: { value: EstimateStatus; label: string }[] = [
-  { value: "draft",    label: "下書き" },
-  { value: "sent",     label: "送付済み" },
-  { value: "approved", label: "承認済み" },
-  { value: "rejected", label: "却下" },
-  { value: "expired",  label: "期限切れ" },
-];
+// Workflow statuses only (SENT is transmission, not workflow).
+const STATUSES: { value: EstimateStatus; label: string }[] =
+  ESTIMATE_WORKFLOW_STATUSES.map((v) => ({ value: v, label: ESTIMATE_STATUS_LABELS[v] }));
 
 interface ServiceOption { name: string; category: EstimateCategory; }
 const SERVICE_OPTIONS: ServiceOption[] = [

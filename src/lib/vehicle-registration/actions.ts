@@ -18,13 +18,18 @@ import {
   VehicleRegistrationOcrResult,
   ConfirmOcrResultParams,
   UploadResult,
+  OcrRunMeta,
 } from "./vehicle-registration-types";
+import { estimateCostUsd } from "@/lib/ai/ai-pricing";
 import {
   uploadVehicleRegistrationImage,
   archiveVehicleRegistrationFile,
   VEHICLE_REG_BUCKET,
 } from "./storage";
 import { analyzeVehicleRegistrationImage } from "./ocr";
+import { isGyeonManagedKeyConfigured } from "@/lib/ai/gyeon-managed-key";
+import { logAiUsage } from "@/lib/ai/log-ai-usage";
+import sharp from "sharp";
 import { createAuditLog }    from "@/lib/audit/audit";
 import {
   createOcrSession,
@@ -33,6 +38,16 @@ import {
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB — matches next.config.ts bodySizeLimit
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"]; // E9.1: PDF support
+
+// HEIC/HEIF (iPhone default). Accepted then converted server-side to JPEG via sharp.
+// iOS often reports an empty or "image/heic" MIME, so we also match by extension.
+const HEIC_RE = /\.(heic|heif)$/i;
+function isHeicFile(name: string, type: string): boolean {
+  return HEIC_RE.test(name) || /image\/(heic|heif)/i.test(type);
+}
+function isAcceptedFile(name: string, type: string): boolean {
+  return ALLOWED_TYPES.includes(type) || isHeicFile(name, type);
+}
 
 // ─── Upload + Analyze ─────────────────────────────────────────────────────────
 
@@ -58,12 +73,15 @@ export async function uploadAndAnalyzeVehicleRegistration(
   }
   console.log("[OCR] Auth step 2 passed — dealer:", dealer.dealer_id, "role:", dealer.role);
 
-  // Step 3: verify OpenAI API key is configured before doing any file work
-  if (!process.env.OPENAI_API_KEY) {
-    console.error("[OCR] Config step 3 failed: OPENAI_API_KEY is not set in environment.");
-    return { success: false, error: "AI解析キーが設定されていません。管理者にお問い合わせください。" };
+  // Step 3: verify the GYEON-managed OpenAI key is configured before any file work.
+  // OCR is a GYEON-managed feature — the key is resolved server-side (AI Center DB
+  // key first, OPENAI_API_KEY env fallback), never from the dealer.
+  // See docs/AI_API_OWNERSHIP_POLICY.md.
+  if (!(await isGyeonManagedKeyConfigured())) {
+    console.error("[OCR] Config step 3 failed: no GYEON-managed OpenAI key (AI Center DB nor env).");
+    return { success: false, error: "OpenAI APIキーが登録されていません。Super AdminのAIセンターから設定してください。" };
   }
-  console.log("[OCR] Config step 3 passed — OpenAI key present.");
+  console.log("[OCR] Config step 3 passed — GYEON-managed OpenAI key present.");
 
   const file        = formData.get("file") as File | null;
   const customerId  = (formData.get("customer_id")  as string | null) || null;
@@ -78,20 +96,57 @@ export async function uploadAndAnalyzeVehicleRegistration(
     console.error("[OCR] File validation failed: size", file.size, "exceeds", MAX_FILE_SIZE);
     return { success: false, error: "ファイルサイズは20MB以下にしてください" };
   }
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    console.error("[OCR] File validation failed: unsupported type:", file.type);
-    return { success: false, error: "対応形式はJPEG、PNG、WebPのみです" };
+  if (!isAcceptedFile(file.name, file.type)) {
+    console.error("[OCR] File validation failed: unsupported type:", file.type, file.name);
+    return { success: false, error: "対応形式は JPEG / PNG / WebP / HEIC / PDF です。" };
   }
   console.log("[OCR] File validated — name:", file.name, "size:", file.size, "type:", file.type);
 
   const supabase = await createClient();
-  const fileBuffer = await file.arrayBuffer();
 
-  // 1. Upload to storage
+  // Effective buffer/type/name. Images are ALWAYS preprocessed before OCR (never
+  // the raw camera frame): HEIC/HEIF is decoded, EXIF-rotated, contrast-normalized,
+  // brightness-lifted and sharpened → JPEG. PDFs pass through untouched.
+  let fileBuffer: ArrayBuffer = await file.arrayBuffer();
+  let effectiveType = file.type || "application/octet-stream";
+  let effectiveName = file.name;
+
+  const heic        = isHeicFile(file.name, file.type);
+  const isImageInput = heic || effectiveType.startsWith("image/");
+
+  if (isImageInput) {
+    try {
+      const out = await sharp(Buffer.from(fileBuffer))
+        .rotate()                        // auto-orient from EXIF
+        .normalize()                     // stretch contrast (document legibility)
+        .modulate({ brightness: 1.05 })  // slight brightness lift
+        .sharpen()                       // crisp text edges
+        .jpeg({ quality: 90 })
+        .toBuffer();
+      fileBuffer    = new Uint8Array(out).buffer; // fresh ArrayBuffer of exact length
+      effectiveType = "image/jpeg";
+      effectiveName = file.name.replace(/\.[^.]+$/i, ".jpg");
+      console.log("[OCR] Image preprocessed for OCR",
+        heic ? "(HEIC→JPEG + enhance)" : "(enhance)", `→ ${out.length} bytes`);
+    } catch (err) {
+      console.error("[OCR] Image preprocessing failed:", err);
+      if (heic) {
+        // OpenAI cannot read HEIC — without conversion we cannot proceed.
+        return {
+          success: false,
+          error: "HEIC画像の変換に失敗しました。再度お試しいただくか、別の形式（JPEG等）で撮影してください。",
+        };
+      }
+      // Non-HEIC image: fall back to the original buffer (still a valid JPEG/PNG/WebP).
+    }
+  }
+  const effectiveSize = fileBuffer.byteLength;
+
+  // 1. Upload to storage (converted JPEG for HEIC; original otherwise)
   const uploadResult = await uploadVehicleRegistrationImage(
     fileBuffer,
-    file.name,
-    file.type,
+    effectiveName,
+    effectiveType,
     customerId,
     vehicleId,
   );
@@ -124,9 +179,9 @@ export async function uploadAndAnalyzeVehicleRegistration(
       estimate_id:    estimateId,
       storage_bucket: VEHICLE_REG_BUCKET,
       storage_path:   storagePath,
-      file_name:      file.name,
-      file_size:      file.size,
-      mime_type:      file.type,
+      file_name:      effectiveName,
+      file_size:      effectiveSize,
+      mime_type:      effectiveType,
       ocr_status:     "processing",
       uploaded_by:    user?.id ?? null,
     })
@@ -162,7 +217,9 @@ export async function uploadAndAnalyzeVehicleRegistration(
 
   // 3. Analyze with GPT-4o-mini
   const imageBase64  = Buffer.from(fileBuffer).toString("base64");
-  const ocrResponse  = await analyzeVehicleRegistrationImage(imageBase64, file.type);
+  const ocrStartedAt = Date.now();
+  const ocrResponse  = await analyzeVehicleRegistrationImage(imageBase64, effectiveType);
+  const ocrResponseMs = Date.now() - ocrStartedAt;
 
   let ocrResult: VehicleRegistrationOcrResult  = {};
   let ocrStatus: string                         = "failed";
@@ -170,18 +227,45 @@ export async function uploadAndAnalyzeVehicleRegistration(
   let ocrModel: string | null                  = null;
   let ocrConfidence: number | null             = null;
   let ocrError: string | null                  = null;
+  let ocrInputTokens:  number | null           = null;
+  let ocrOutputTokens: number | null           = null;
+  let ocrTotalTokens:  number | null           = null;
+  let ocrPromptVersion: string | null          = null;
+  let ocrQuality: OcrRunMeta["quality"]        = null;
 
   if ("error" in ocrResponse) {
     ocrError = ocrResponse.error;
     console.error("[OCR] AI analysis failed:", ocrError);
   } else {
-    ocrResult     = ocrResponse.result;
-    ocrStatus     = "completed";
-    ocrProvider   = ocrResponse.provider;
-    ocrModel      = ocrResponse.model;
-    ocrConfidence = ocrResult.confidence ?? null;
-    console.log("[OCR] AI analysis succeeded — model:", ocrModel, "confidence:", ocrConfidence);
+    ocrResult       = ocrResponse.result;
+    ocrStatus       = "completed";
+    ocrProvider     = ocrResponse.provider;
+    ocrModel        = ocrResponse.model;
+    ocrConfidence   = ocrResult.confidence ?? null;
+    ocrInputTokens  = ocrResponse.usage.input;
+    ocrOutputTokens = ocrResponse.usage.output;
+    ocrTotalTokens  = ocrResponse.usage.total;
+    ocrPromptVersion = ocrResponse.promptVersion;
+    ocrQuality       = ocrResponse.quality;
+    console.log("[OCR] AI analysis succeeded — model:", ocrModel, "promptVersion:", ocrPromptVersion,
+      "confidence:", ocrConfidence, "needsManual:", ocrQuality?.needsManualCorrection);
   }
+
+  // Estimated cost (USD) for this run — best-effort; null when model/tokens unknown
+  const ocrEstimatedCost = estimateCostUsd(ocrModel, ocrInputTokens, ocrOutputTokens);
+
+  // Execution metadata (additive; surfaced to operators so they don't run SQL)
+  const ocrMeta: OcrRunMeta = {
+    provider:         ocrProvider ?? "openai",
+    model:            ocrModel,
+    inputTokens:      ocrInputTokens,
+    outputTokens:     ocrOutputTokens,
+    totalTokens:      ocrTotalTokens,
+    responseMs:       ocrResponseMs,
+    estimatedCostUsd: ocrEstimatedCost,
+    promptVersion:    ocrPromptVersion,
+    quality:          ocrQuality,
+  };
 
   // 4. Update DB row with OCR result
   const { data: updatedData, error: updateError } = await supabase
@@ -210,9 +294,25 @@ export async function uploadAndAnalyzeVehicleRegistration(
     new_value:     { ocr_status: ocrStatus, ocr_model: ocrModel, confidence: ocrConfidence },
   } as Parameters<typeof createAuditLog>[0]);
 
+  // AI usage log — one row per OCR attempt (success or failure). Best-effort.
+  // Log label is "vehicle_ocr" (the AI Center usage summary filters on this).
+  await logAiUsage({
+    featureKey:   "vehicle_ocr",
+    dealerId:     dealer.dealer_id,
+    usedBy:       user.id,
+    model:        ocrModel,
+    inputTokens:  ocrInputTokens,
+    outputTokens: ocrOutputTokens,
+    totalTokens:  ocrTotalTokens,
+    status:       ocrError ? "failed" : "success",
+    errorCode:    ocrError,
+    estimatedCost: ocrEstimatedCost,
+    responseMs:   ocrResponseMs,
+  });
+
   if (ocrError) {
     const OCR_ERROR_MESSAGES: Record<string, string> = {
-      OPENAI_API_KEY_MISSING: "AI解析キーが設定されていません。管理者にお問い合わせください。",
+      OPENAI_API_KEY_MISSING: "OpenAI APIキーが登録されていません。Super AdminのAIセンターから設定してください。",
       TIMEOUT:                "AI解析がタイムアウトしました。再試行してください。",
       CONNECT_ERROR:          "AI解析サービスに接続できませんでした。通信環境を確認してください。",
       OPENAI_AUTH_ERROR:      "AI解析キーが無効です。管理者にお問い合わせください。",
@@ -222,7 +322,7 @@ export async function uploadAndAnalyzeVehicleRegistration(
       PARSE_ERROR:            "OCR解析に失敗しました。画像が鮮明かどうか確認してください。",
     };
     const msg = OCR_ERROR_MESSAGES[ocrError] ?? "OCR解析に失敗しました。再試行してください。";
-    return { success: false, error: msg };
+    return { success: false, error: msg, errorCode: ocrError };
   }
 
   const finalRow = (updatedData ?? fileRow) as VehicleRegistrationFile;
@@ -246,7 +346,7 @@ export async function uploadAndAnalyzeVehicleRegistration(
     // Session persistence is optional — upload flow completes regardless
   }
 
-  return { success: true, file: finalRow, ocrResult, sessionId, sessionPersisted };
+  return { success: true, file: finalRow, ocrResult, sessionId, sessionPersisted, ocrMeta };
 }
 
 // ─── Confirm OCR result ───────────────────────────────────────────────────────

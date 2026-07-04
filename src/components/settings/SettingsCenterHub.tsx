@@ -82,7 +82,7 @@ function resolveState(card: HubCard, ctx: StateContext): CardState {
 const HUB_GROUPS: HubGroup[] = [
   {
     id:          "core",
-    label:       "Core",
+    label:       "基本",
     label_ja:    "店舗・基本設定",
     description: "店舗情報・スタッフ・通知・ブランディングの設定",
     cards: [
@@ -150,7 +150,7 @@ const HUB_GROUPS: HubGroup[] = [
 
   {
     id:          "ai",
-    label:       "AI Platform",
+    label:       "AI基盤",
     label_ja:    "AIプラットフォーム",
     description: "AIプロバイダー設定・エージェント・エンタイトルメント",
     cards: [
@@ -180,7 +180,7 @@ const HUB_GROUPS: HubGroup[] = [
 
   {
     id:          "communication",
-    label:       "Communication",
+    label:       "連携",
     label_ja:    "コミュニケーション",
     description: "LINEチャンネル・メッセージング・チャット設定",
     cards: [
@@ -199,7 +199,7 @@ const HUB_GROUPS: HubGroup[] = [
 
   {
     id:          "automation",
-    label:       "Automation",
+    label:       "自動化",
     label_ja:    "オートメーション",
     description: "ワークフロー自動化・トリガー設定",
     cards: [
@@ -217,7 +217,7 @@ const HUB_GROUPS: HubGroup[] = [
 
   {
     id:          "analytics",
-    label:       "Analytics",
+    label:       "分析",
     label_ja:    "アナリティクス",
     description: "ダッシュボード・KPI・レポート設定",
     cards: [
@@ -235,7 +235,7 @@ const HUB_GROUPS: HubGroup[] = [
 
   {
     id:          "business",
-    label:       "Business Operations",
+    label:       "業務",
     label_ja:    "ビジネス設定",
     description: "契約・メディア・書類処理・ポータルの設定",
     cards: [
@@ -290,7 +290,7 @@ const HUB_GROUPS: HubGroup[] = [
 
   {
     id:          "enterprise",
-    label:       "Enterprise Applications",
+    label:       "エンタープライズ",
     label_ja:    "エンタープライズアプリ",
     description: "GYEON Distribution・倉庫・CRM・会計（Enterprise限定）",
     cards: [
@@ -374,7 +374,7 @@ function CardBadge({ state }: { state: CardState }) {
     case "enterprise":
       return (
         <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800/80 text-slate-500 border border-slate-700 font-medium">
-          🏢 Enterprise
+          🏢 エンタープライズ
         </span>
       );
   }
@@ -511,7 +511,7 @@ export default function SettingsCenterHub({
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <h1 className="text-base font-bold text-slate-100 tracking-tight">
-            Settings Center
+            設定センター
           </h1>
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 font-mono">
             v0.1

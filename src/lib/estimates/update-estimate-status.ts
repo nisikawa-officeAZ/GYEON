@@ -14,10 +14,16 @@ import { createActivityLog } from "@/lib/activity/activity-log";
 import { estimateStatusLabel, type EstimateStatus } from "./estimate-types";
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
-// Canonical (lowercase) statuses a user may transition an estimate to.
+// Canonical WORKFLOW statuses a user may transition an estimate to. SENT is NOT
+// here — transmission is history, not a workflow status. Legacy 'rejected'/'expired'
+// are kept so old values can still be normalized/cleared, but are not primary targets.
 // NOTE: this is a "use server" module — only the async action may be exported.
 // The allow-list and helper are kept local (non-exported) to satisfy that rule.
-const ALLOWED_STATUSES = ["draft", "sent", "approved", "rejected", "expired"] as const;
+// Requires migration 099 for 'proposal','lost','accepted','in_progress','completed','invoiced'.
+const ALLOWED_STATUSES = [
+  "draft", "proposal", "approved", "lost", "accepted", "in_progress", "completed", "invoiced",
+  "rejected", "expired", // legacy — still accepted for backward compatibility
+] as const;
 type EstimateStatusInput = (typeof ALLOWED_STATUSES)[number];
 
 function isAllowedEstimateStatus(value: string): value is EstimateStatusInput {

@@ -276,14 +276,44 @@ function EstimateDocument({ estimate, stamp, branding }: EstimateDocumentProps) 
             )}
             {estimate.vehicles?.model && (
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>車種</Text>
+                <Text style={styles.infoLabel}>車名</Text>
                 <Text style={styles.infoValue}>{estimate.vehicles.model}</Text>
+              </View>
+            )}
+            {estimate.vehicles?.grade && (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>グレード</Text>
+                <Text style={styles.infoValue}>{estimate.vehicles.grade}</Text>
+              </View>
+            )}
+            {estimate.vehicles?.year && (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>年式</Text>
+                <Text style={styles.infoValue}>{estimate.vehicles.year}</Text>
+              </View>
+            )}
+            {estimate.vehicles?.registration_date && (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>登録年月日</Text>
+                <Text style={styles.infoValue}>{estimate.vehicles.registration_date}</Text>
+              </View>
+            )}
+            {estimate.vehicles?.inspection_expiry_date && (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>車検満了日</Text>
+                <Text style={styles.infoValue}>{estimate.vehicles.inspection_expiry_date}</Text>
               </View>
             )}
             {estimate.vehicles?.plate_number && (
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>ナンバー</Text>
                 <Text style={styles.infoValue}>{estimate.vehicles.plate_number}</Text>
+              </View>
+            )}
+            {estimate.vehicles?.body_size && (
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>ボディサイズ</Text>
+                <Text style={styles.infoValue}>{estimate.vehicles.body_size}</Text>
               </View>
             )}
           </View>

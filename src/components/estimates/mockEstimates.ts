@@ -18,7 +18,7 @@ export const MOCK_ESTIMATES: Estimate[] = [
     customerId: "2",
     vehicleId: "2",
     estimateNo: "EST-2024-002",
-    status: "SENT",
+    status: "PROPOSAL",
     subtotal: 2450000,
     tax: 245000,
     total: 2695000,

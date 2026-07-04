@@ -10,6 +10,9 @@ import { VehicleDB }             from "@/lib/vehicles/vehicle-types";
 // E5: all price DATA is read from the loaded PricingCatalog (single source);
 // only detectPpfRank (pure logic, not price data) is imported directly.
 import { detectPpfRank }         from "@/lib/pricing/pricing-data";
+import { estimateBodySize }      from "@/lib/vehicles/body-size-estimate";
+import type { BodySizeEstimate } from "@/lib/vehicles/body-size-estimate";
+import LineQrScanner             from "@/components/ui/LineQrScanner";
 import type { CoatingId }        from "@/lib/pricing/pricing-data";
 import { calculateEstimate, buildLineItems } from "@/lib/pricing/pricing-engine";
 import { SERVICE_CATEGORIES, type ServiceCategoryId } from "@/lib/estimates/service-categories";
@@ -18,6 +21,7 @@ import { DEFAULT_PRICING_CATALOG, type PricingCatalog } from "@/lib/pricing/pric
 import { getDealerPricingCatalog } from "@/lib/pricing/get-dealer-pricing-catalog";
 import dynamic                   from "next/dynamic";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
+import ScanInput from "@/components/ui/ScanInput";
 import type { DetailerRank }     from "@/lib/dealer-settings/dealer-settings-types";
 import { rankEmoji, rankLabelJa } from "@/lib/ranks/dealer-ranks";
 import { meetsTier } from "@/lib/ranks/permission-tiers";
@@ -165,6 +169,13 @@ function nextScreen(cur: Screen, cats: CategoryId[]): Screen {
 const inp = "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-base sm:text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors w-full";
 const lbl = "text-xs font-medium text-slate-400";
 
+// STEP1 segmented mode selector (customer / vehicle). Large, equal-width, tap-friendly.
+const segBtn = (active: boolean) =>
+  "flex-1 h-[52px] px-6 rounded-xl text-base font-semibold transition-all duration-200 ease-out active:scale-[0.97] disabled:opacity-30 disabled:cursor-not-allowed " +
+  (active
+    ? "bg-[#1d4ed8] text-white shadow-lg shadow-blue-900/30"
+    : "bg-[#0f172a] text-slate-400 border border-slate-700/60 hover:text-slate-200 hover:bg-slate-800 hover:border-slate-600");
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export interface EstimateWizardProps {
@@ -260,6 +271,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
     maker: "", model: "", grade: "", vehicle_code: "", year: "", color: "", plate_number: "", vin: "",
     inspection_expiry_date: "",
     displacement: "", fuel_type: "", registration_date: "",
+    first_registration_year_month: "", // 初度登録年月 (distinct from 登録年月日 = registration_date)
   });
 
   // E9.3/E9.4: an OCR-created customer/vehicle only appears in the props after the
@@ -288,7 +300,11 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   // user review/correct the fields in step1 before saving. Merge-only, so manual edits
   // made after OCR are preserved (the effect re-runs only when a new OCR result arrives).
   useEffect(() => {
-    if (!ocrVehicle || vMode !== "create") return;
+    // Apply OCR vehicle data to the new-vehicle form as soon as it arrives,
+    // regardless of vMode. OCR is applied from the customer step while vMode is
+    // still "select", so gating on vMode="create" here dropped the OCR vehicle
+    // data (nv is only READ when vMode="create", so populating it early is safe).
+    if (!ocrVehicle) return;
     setNv(p => {
       const u = { ...p };
       if (ocrVehicle.maker)                   u.maker             = ocrVehicle.maker;
@@ -300,12 +316,16 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       if (ocrVehicle.displacement)            u.displacement      = ocrVehicle.displacement;
       if (ocrVehicle.fuel_type)               u.fuel_type         = ocrVehicle.fuel_type;
       if (ocrVehicle.inspection_expiry_date)  u.inspection_expiry_date = ocrVehicle.inspection_expiry_date;
+      // 初度登録年月 (first registration) → 年式 + first_registration_year_month.
       if (ocrVehicle.first_registration_date) {
-        u.year              = ocrVehicle.first_registration_date.slice(0, 4);
-        // Convert YYYY-MM to YYYY-MM-01 for the date column
-        u.registration_date = ocrVehicle.first_registration_date.length === 7
-          ? ocrVehicle.first_registration_date + "-01"
-          : ocrVehicle.first_registration_date;
+        u.year                          = ocrVehicle.first_registration_date.slice(0, 4);
+        u.first_registration_year_month = ocrVehicle.first_registration_date;
+      }
+      // 登録年月日 (current registration) → registration_date (kept distinct).
+      if (ocrVehicle.registration_date) {
+        u.registration_date = ocrVehicle.registration_date.length === 7
+          ? ocrVehicle.registration_date + "-01"
+          : ocrVehicle.registration_date;
       }
       const plate = [
         ocrVehicle.license_plate_region, ocrVehicle.license_plate_class,
@@ -317,8 +337,26 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ocrVehicle]);
 
+  // Body-size auto-estimation (3M method) from the OCR vehicle data. Pre-selects
+  // the size when it can be estimated; leaves it for manual input otherwise.
+  useEffect(() => {
+    if (!ocrVehicle) return;
+    const est = estimateBodySize({
+      maker:       ocrVehicle.maker,
+      vehicleName: ocrVehicle.vehicle_name,
+      model:       ocrVehicle.model,
+      grade:       ocrVehicle.grade,
+      year:        ocrVehicle.first_registration_date?.slice(0, 4),
+    });
+    setSizeEstimate(est);
+    if (est.sizeKey) setSizeKey(est.sizeKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ocrVehicle]);
+
   // ── Body size ─────────────────────────────────────────────────────────────
   const [sizeKey, setSizeKey] = useState("M");
+  const [sizeEstimate, setSizeEstimate] = useState<BodySizeEstimate | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
 
   // ── Coating ───────────────────────────────────────────────────────────────
   // rank is server-controlled (Admin-assigned). Never from client state.
@@ -436,12 +474,14 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
 
   // ── OCR ───────────────────────────────────────────────────────────────────
   function applyOcr(sel: Partial<VehicleRegistrationOcrResult>) {
-    const raw = sel.owner_name || sel.user_name || "";
-    if (raw) {
-      const parts = raw.trim().split(/\s+/);
-      setNc(p => ({ ...p, last_name: parts[0] ?? p.last_name, first_name: parts.slice(1).join(" ") || p.first_name }));
+    // The review UI resolves the customer (owner/user rule + operator choice) and
+    // passes customer_candidate_*. The full name is stored as-is (no auto-split for
+    // individuals OR corporations); any stale given-name value is cleared.
+    const name = (sel.customer_candidate_name ?? "").trim();
+    if (name) {
+      setNc(p => ({ ...p, last_name: name, first_name: "" }));
     }
-    const addr = sel.owner_address || sel.user_address || "";
+    const addr = (sel.customer_candidate_address ?? "").trim();
     if (addr) setNc(p => ({ ...p, address: addr }));
     setOcrVehicle(sel);
     setOcrStage("idle"); setPendingOcr(null);
@@ -462,7 +502,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       push(nextScreen("step1", cats));
       return;
     }
-    if (!nc.last_name) { setError("お客様名（姓）は必須です"); return; }
+    if (!nc.last_name.trim()) { setError("お客様名を入力してください。"); return; }
     // Reuse customer created earlier in this session — prevents duplicate on back-navigation
     if (wizardCreatedCustomerId) {
       setCustomerId(wizardCreatedCustomerId);
@@ -474,8 +514,9 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
     submittingRef.current = true;
     startTx(async () => {
       const fd = new FormData();
-      fd.set("last_name",       nc.last_name);
-      fd.set("first_name",      nc.first_name);
+      fd.set("name",            nc.last_name.trim()); // → customers.name (full name)
+      fd.set("last_name",       nc.last_name.trim()); // legacy compatibility
+      fd.set("first_name",      "");                   // single-field name — never split
       fd.set("last_name_kana",  nc.last_name_kana);
       fd.set("first_name_kana", nc.first_name_kana);
       fd.set("phone",           nc.phone);
@@ -490,7 +531,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       if (!cid) { setError("顧客IDの取得に失敗しました"); return; }
       setWizardCreatedCustomerId(cid);
       setCustomerId(cid);
-      setCustLabel(`${nc.last_name} ${nc.first_name}`.trim());
+      setCustLabel(nc.last_name.trim());
       setVMode("create");
       push(nextScreen("step1", cats));
     });
@@ -578,7 +619,7 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       const fd = new FormData();
       fd.set("customer_id",     customerId);
       fd.set("vehicle_id",      resolvedVehicleId ?? "");
-      fd.set("status",          "sent");
+      fd.set("status",          "draft"); // new estimates are drafts (not "sent" — sending is a transmission event)
       fd.set("tax_rate",        String(taxRate));
       fd.set("discount_amount", String(couponDisc + extraDiscN + dealerDisc));
       fd.set("notes",           notes);
@@ -633,16 +674,13 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
 
           {/* Customer */}
           <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-200">お客様情報</h3>
-              <div className="flex gap-1.5">
-                {(["select", "create"] as const).map(m => (
-                  <button key={m} type="button" onClick={() => setCMode(m)}
-                    className={cMode === m ? "text-xs px-3 py-1.5 rounded-lg bg-[#1d4ed8] text-white font-medium" : "text-xs px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700 transition-colors"}>
-                    {m === "select" ? "既存顧客" : "新規登録"}
-                  </button>
-                ))}
-              </div>
+            <h3 className="text-sm font-semibold text-slate-200">お客様情報</h3>
+            <div className="flex gap-3">
+              {(["select", "create"] as const).map(m => (
+                <button key={m} type="button" onClick={() => setCMode(m)} className={segBtn(cMode === m)}>
+                  {m === "select" ? "既存顧客" : "新規登録"}
+                </button>
+              ))}
             </div>
 
             {cMode === "select" && (
@@ -691,25 +729,28 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
                   📄 車検証から自動入力（OCR）
                 </button>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className={lbl}>お客様名（姓）<span className="text-red-400"> *</span></label>
-                    <input type="text" value={nc.last_name} onChange={e => setNc(p => ({ ...p, last_name: e.target.value }))} placeholder="山田" className={inp} />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className={lbl}>名</label>
-                    <input type="text" value={nc.first_name} onChange={e => setNc(p => ({ ...p, first_name: e.target.value }))} placeholder="太郎" className={inp} />
+                  <div className="col-span-2 flex flex-col gap-1">
+                    <label className={lbl}>お客様名 / 会社名<span className="text-red-400"> *</span></label>
+                    <ScanInput type="text" value={nc.last_name} onValueChange={v => setNc(p => ({ ...p, last_name: v }))} placeholder="山田太郎 / 株式会社〇〇" className={inp} autoComplete="name" />
+                    <span className="text-[10px] text-slate-600">個人名・法人名をそのまま入力（自動分割しません）</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className={lbl}>電話番号</label>
-                    <input type="tel" value={nc.phone} onChange={e => setNc(p => ({ ...p, phone: e.target.value }))} placeholder="090-0000-0000" className={inp} />
+                    <ScanInput type="tel" inputMode="tel" value={nc.phone} onValueChange={v => setNc(p => ({ ...p, phone: v }))} placeholder="090-0000-0000" className={inp} autoComplete="tel" />
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className={lbl}>LINE ID</label>
-                    <input type="text" value={nc.line_user_id} onChange={e => setNc(p => ({ ...p, line_user_id: e.target.value }))} placeholder="LINE ID" className={inp} />
+                    <div className="flex gap-2">
+                      <ScanInput type="text" value={nc.line_user_id} onValueChange={v => setNc(p => ({ ...p, line_user_id: v }))} placeholder="LINE ID" className={`${inp} flex-1`} autoComplete="off" />
+                      <button type="button" onClick={() => setQrOpen(true)}
+                        className="shrink-0 px-3 rounded-lg text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 transition-colors whitespace-nowrap">
+                        📷 QR
+                      </button>
+                    </div>
                   </div>
                   <div className="col-span-2 flex flex-col gap-1">
                     <label className={lbl}>住所</label>
-                    <input type="text" value={nc.address} onChange={e => setNc(p => ({ ...p, address: e.target.value }))} placeholder="都道府県・市区町村・番地" className={inp} />
+                    <ScanInput type="text" value={nc.address} onValueChange={v => setNc(p => ({ ...p, address: v }))} placeholder="都道府県・市区町村・番地" className={inp} autoComplete="street-address" />
                   </div>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
@@ -735,18 +776,15 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
 
           {/* Vehicle */}
           <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-200">車両情報</h3>
-              <div className="flex gap-1.5">
-                <button type="button" onClick={() => setVMode("select")} disabled={custVehicles.length === 0}
-                  className={`text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-30 ${vMode === "select" ? "bg-[#1d4ed8] text-white font-medium" : "text-slate-400 hover:text-slate-200 hover:bg-slate-700"}`}>
-                  登録済み
-                </button>
-                <button type="button" onClick={() => setVMode("create")}
-                  className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${vMode === "create" ? "bg-[#1d4ed8] text-white font-medium" : "text-slate-400 hover:text-slate-200 hover:bg-slate-700"}`}>
-                  新規登録
-                </button>
-              </div>
+            <h3 className="text-sm font-semibold text-slate-200">車両情報</h3>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setVMode("select")} disabled={custVehicles.length === 0}
+                className={segBtn(vMode === "select")}>
+                登録済み
+              </button>
+              <button type="button" onClick={() => setVMode("create")} className={segBtn(vMode === "create")}>
+                新規登録
+              </button>
             </div>
 
             {vMode === "select" && (
@@ -805,13 +843,33 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
                   <label className={lbl}>車台番号（VIN）</label>
                   <input type="text" value={nv.vin} onChange={e => setNv(p => ({ ...p, vin: e.target.value }))} placeholder="ZVW5000000000" className={inp} />
                 </div>
-                <div className="col-span-2 flex flex-col gap-1">
+                <div className="flex flex-col gap-1">
+                  <label className={lbl}>初度登録年月</label>
+                  <input type="text" value={nv.first_registration_year_month} onChange={e => setNv(p => ({ ...p, first_registration_year_month: e.target.value }))} placeholder="2020-04" className={inp} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className={lbl}>登録年月日</label>
+                  <input type="date" value={nv.registration_date} onChange={e => setNv(p => ({ ...p, registration_date: e.target.value }))} className={inp} />
+                </div>
+                <div className="flex flex-col gap-1">
                   <label className={lbl}>車検満了日</label>
                   <input type="date" value={nv.inspection_expiry_date} onChange={e => setNv(p => ({ ...p, inspection_expiry_date: e.target.value }))} className={inp} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className={lbl}>排気量</label>
+                  <input type="text" value={nv.displacement} onChange={e => setNv(p => ({ ...p, displacement: e.target.value }))} placeholder="1998cc" className={inp} />
                 </div>
               </div>
             )}
           </div>
+
+          {/* LINE QR scanner */}
+          {qrOpen && (
+            <LineQrScanner
+              onClose={() => setQrOpen(false)}
+              onDetect={(v) => { setNc(p => ({ ...p, line_user_id: v })); setQrOpen(false); }}
+            />
+          )}
 
           {/* OCR modal */}
           {ocrStage !== "idle" && (
@@ -844,12 +902,33 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
       {screen === "step2" && (
         <div className="flex flex-col gap-3">
           <p className={lbl}>ボディサイズを選択してください</p>
+
+          {/* 3M auto-estimation result (from OCR vehicle data) */}
+          {sizeEstimate && (
+            <div className="rounded-lg border border-slate-700 bg-[#0b1120] px-3 py-2 text-xs flex flex-col gap-0.5">
+              {sizeEstimate.sizeKey ? (
+                <>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-slate-400">ボディサイズ:</span>
+                    <span className="font-semibold text-white">{sizeEstimate.sizeKey}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded border border-slate-600 text-slate-400">{sizeEstimate.source}</span>
+                    {sizeEstimate.threeM != null && <span className="text-slate-500">3M推定値 {sizeEstimate.threeM}m</span>}
+                  </div>
+                  <div className="text-[10px] text-slate-500">推定根拠: {sizeEstimate.basis}</div>
+                </>
+              ) : (
+                <span className="text-amber-300">{sizeEstimate.basis}</span>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-2">
             {catalog.bodySizes.map(s => {
               const price = has("coating") && coatId ? Math.round((catalog.coatings.find(c => c.id === coatId)?.base ?? 0) * (catalog.bodySizes.find(b => b.key === s.key)?.multi ?? 1.0)) : null;
               const isSel = sizeKey === s.key;
               return (
-                <button key={s.key} type="button" onClick={() => setSizeKey(s.key)}
+                <button key={s.key} type="button"
+                  onClick={() => { setSizeKey(s.key); setSizeEstimate({ sizeKey: s.key, threeM: sizeEstimate?.threeM ?? null, source: "手入力", basis: "手入力で選択" }); }}
                   className={`flex items-center gap-3 px-4 py-4 rounded-xl border text-left transition-all ${isSel ? "bg-blue-950/40 border-[#1d4ed8]/60" : "bg-[#0f172a] border-slate-700 hover:border-slate-500"}`}>
                   <div className="min-w-0">
                     <p className={`text-base font-bold ${isSel ? "text-white" : "text-slate-200"}`}>{s.key}</p>
@@ -1473,35 +1552,81 @@ export default function EstimateWizard({ customers, vehicles, dealerRank, defaul
             </div>
           )}
 
+          {/* ── Coupons ─────────────────────────────────────────────────────── */}
           <div className="flex flex-col gap-2">
             <label className={lbl}>クーポン（複数適用可）</label>
-            <div className="flex flex-col gap-1.5">
-              {DEFAULT_COUPONS.map((c, i) => (
-                <button key={i} type="button"
-                  onClick={() => setAppliedCoupons(p => { const a = [...p]; a[i] = !a[i]; return a; })}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors ${appliedCoupons[i] ? "bg-emerald-950/20 border-emerald-500/40 text-slate-100" : "bg-[#0f172a] border-slate-700 text-slate-400 hover:border-slate-600"}`}>
-                  <span>{c.name}</span>
-                  <span className={`text-xs font-medium ${appliedCoupons[i] ? "text-emerald-400" : "text-slate-500"}`}>-¥{c.amount.toLocaleString("ja-JP")}</span>
-                </button>
-              ))}
+            <div className="flex flex-col gap-3">
+              {DEFAULT_COUPONS.map((c, i) => {
+                const on = appliedCoupons[i];
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setAppliedCoupons(p => { const a = [...p]; a[i] = !a[i]; return a; })}
+                    aria-pressed={on}
+                    className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg border text-sm shadow-sm transition-all duration-200 ${
+                      on
+                        ? "bg-[#1d4ed8]/12 border-[#1d4ed8] text-white shadow-blue-900/20"
+                        : "bg-[#0f172a] border-slate-700 text-slate-200 hover:border-slate-600 hover:bg-slate-800/40"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5 min-w-0">
+                      <span className={`flex items-center justify-center w-5 h-5 rounded-full border shrink-0 transition-colors ${
+                        on ? "bg-[#1d4ed8] border-[#1d4ed8] text-white" : "border-slate-600 text-transparent"
+                      }`}>
+                        <svg viewBox="0 0 20 20" fill="none" className="w-3 h-3">
+                          <path d="M4 10l4 4 8-8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
+                      <span className="truncate font-medium">{c.name}</span>
+                    </span>
+                    <span className="text-sm font-semibold text-emerald-400 shrink-0">-¥{c.amount.toLocaleString("ja-JP")}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* ── Additional discount ─────────────────────────────────────────── */}
+          <div className="flex items-center justify-between gap-3">
             <label className={`${lbl} shrink-0`}>追加値引き</label>
             <div className="flex items-center gap-1.5">
               <span className="text-slate-500 text-sm">¥</span>
-              <input type="number" value={extraDisc} onChange={e => setExtraDisc(e.target.value)} min="0"
-                className="w-28 bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-[#1d4ed8]" />
+              <input
+                type="number"
+                inputMode="numeric"
+                value={extraDisc}
+                onChange={e => setExtraDisc(e.target.value)}
+                min="0"
+                className="w-32 h-10 bg-[#0f172a] border border-slate-700 rounded-lg px-3 text-sm text-right text-slate-100 focus:outline-none focus:border-[#1d4ed8] transition-colors"
+              />
             </div>
           </div>
 
-          <div className="border border-slate-700 rounded-lg overflow-hidden">
+          {/* ── Discount summary ────────────────────────────────────────────── */}
+          {combinedDiscount > 0 && (
+            <div className="rounded-lg border border-slate-700 bg-[#0b1120] px-4 py-3 flex flex-col gap-2 shadow-sm">
+              {couponDisc > 0 && (
+                <div className="flex justify-between text-xs"><span className="text-slate-400">クーポン値引き</span><span className="font-medium text-emerald-400">-¥{couponDisc.toLocaleString("ja-JP")}</span></div>
+              )}
+              {extraDiscN > 0 && (
+                <div className="flex justify-between text-xs"><span className="text-slate-400">追加値引き</span><span className="font-medium text-emerald-400">-¥{extraDiscN.toLocaleString("ja-JP")}</span></div>
+              )}
+              {isDealer && dealerDisc > 0 && (
+                <div className="flex justify-between text-xs"><span className="text-slate-400">業販割引（{100 - dealerRate}%引）</span><span className="font-medium text-emerald-400">-¥{dealerDisc.toLocaleString("ja-JP")}</span></div>
+              )}
+              <div className="border-t border-slate-700/70 my-0.5" />
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-semibold text-slate-200">総値引き</span>
+                <span className="text-lg font-bold text-emerald-400">-¥{combinedDiscount.toLocaleString("ja-JP")}</span>
+              </div>
+            </div>
+          )}
+
+          {/* ── Totals ──────────────────────────────────────────────────────── */}
+          <div className="border border-slate-700 rounded-lg overflow-hidden shadow-sm">
             <div className="px-4 py-3 flex flex-col gap-1.5">
               <div className="flex justify-between text-xs text-slate-400"><span>小計</span><span>¥{subtotal.toLocaleString("ja-JP")}</span></div>
-              {couponDisc > 0  && <div className="flex justify-between text-xs text-emerald-400"><span>クーポン割引</span><span>-¥{couponDisc.toLocaleString("ja-JP")}</span></div>}
-              {extraDiscN > 0  && <div className="flex justify-between text-xs text-red-400"><span>追加値引き</span><span>-¥{extraDiscN.toLocaleString("ja-JP")}</span></div>}
-              {isDealer && dealerDisc > 0 && <div className="flex justify-between text-xs text-amber-400"><span>業販割引（{100 - dealerRate}%引）</span><span>-¥{dealerDisc.toLocaleString("ja-JP")}</span></div>}
               {overDiscounted && (
                 <div className="text-[11px] text-amber-300 leading-snug pt-0.5">
                   ※ 値引きが小計を上回るため、適用値引きは小計まで（-¥{subtotal.toLocaleString("ja-JP")}）、お支払額は¥0に調整されます。

@@ -22,7 +22,7 @@ export async function getEstimatePdfData(estimateId: string): Promise<EstimateDB
     .select(`
       *,
       customers ( last_name, first_name, phone, email ),
-      vehicles  ( maker, model, year, grade, plate_number ),
+      vehicles  ( maker, model, year, grade, plate_number, body_size, registration_date, inspection_expiry_date ),
       estimate_items ( * )
     `)
     .eq("id",        estimateId)

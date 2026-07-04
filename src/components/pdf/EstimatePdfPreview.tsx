@@ -10,28 +10,26 @@ import {
   estimateVehicleLabel,
 } from "@/lib/estimates/estimate-types";
 
+// Workflow statuses only. Legacy 'sent'/'SENT' display as 提案中 (send is history).
 const STATUS_LABEL: Record<string, string> = {
-  draft:    "下書き",
-  sent:     "送付済み",
-  approved: "承認済み",
-  rejected: "却下",
-  expired:  "期限切れ",
-  DRAFT:    "下書き",
-  SENT:     "送付済み",
-  APPROVED: "承認済み",
-  REJECTED: "却下",
+  draft: "下書き", proposal: "提案中", approved: "承認", lost: "失注",
+  accepted: "受注", in_progress: "作業中", completed: "完了", invoiced: "請求済",
+  expired: "期限切れ",
+  // legacy compat
+  sent: "提案中", rejected: "失注",
+  DRAFT: "下書き", SENT: "提案中", APPROVED: "承認", REJECTED: "失注",
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  draft:    "bg-slate-200 text-slate-600",
-  sent:     "bg-blue-100 text-blue-700",
-  approved: "bg-green-100 text-green-700",
-  rejected: "bg-red-100 text-red-700",
-  expired:  "bg-amber-100 text-amber-700",
-  DRAFT:    "bg-slate-200 text-slate-600",
-  SENT:     "bg-blue-100 text-blue-700",
-  APPROVED: "bg-green-100 text-green-700",
-  REJECTED: "bg-red-100 text-red-700",
+  draft: "bg-slate-200 text-slate-600", proposal: "bg-blue-100 text-blue-700",
+  approved: "bg-green-100 text-green-700", lost: "bg-red-100 text-red-700",
+  accepted: "bg-emerald-100 text-emerald-700", in_progress: "bg-indigo-100 text-indigo-700",
+  completed: "bg-teal-100 text-teal-700", invoiced: "bg-purple-100 text-purple-700",
+  expired: "bg-amber-100 text-amber-700",
+  // legacy compat
+  sent: "bg-blue-100 text-blue-700", rejected: "bg-red-100 text-red-700",
+  DRAFT: "bg-slate-200 text-slate-600", SENT: "bg-blue-100 text-blue-700",
+  APPROVED: "bg-green-100 text-green-700", REJECTED: "bg-red-100 text-red-700",
 };
 
 const CATEGORY_LABEL: Record<string, string> = {

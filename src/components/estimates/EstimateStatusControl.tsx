@@ -6,25 +6,27 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { estimateStatusLabel, type EstimateStatus } from "@/lib/estimates/estimate-types";
+import {
+  estimateStatusLabel, normalizeEstimateStatus,
+  ESTIMATE_WORKFLOW_STATUSES, ESTIMATE_STATUS_LABELS, type EstimateStatus,
+} from "@/lib/estimates/estimate-types";
 import { updateEstimateStatus } from "@/lib/estimates/update-estimate-status";
 import { useCurrentStaff } from "@/contexts/StaffContext";
 
-const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: "draft",    label: "下書き" },
-  { value: "sent",     label: "送付済み" },
-  { value: "approved", label: "承認済み" },
-  { value: "rejected", label: "却下" },
-  { value: "expired",  label: "期限切れ" },
-];
+// Workflow statuses only (SENT is transmission, not workflow).
+const STATUS_OPTIONS: { value: string; label: string }[] =
+  ESTIMATE_WORKFLOW_STATUSES.map((v) => ({ value: v, label: ESTIMATE_STATUS_LABELS[v] }));
 
 function toneClass(status: string): string {
-  switch (status.toLowerCase()) {
-    case "approved": return "text-green-400 border-green-500/30 bg-green-500/10";
-    case "sent":     return "text-blue-400 border-blue-500/30 bg-blue-500/10";
-    case "rejected": return "text-red-400 border-red-500/30 bg-red-500/10";
-    case "expired":  return "text-amber-400 border-amber-500/30 bg-amber-500/10";
-    default:         return "text-slate-400 border-slate-600/40 bg-slate-700/30";
+  switch (normalizeEstimateStatus(status)) {
+    case "approved":    return "text-green-400 border-green-500/30 bg-green-500/10";
+    case "proposal":    return "text-blue-400 border-blue-500/30 bg-blue-500/10";
+    case "lost":        return "text-red-400 border-red-500/30 bg-red-500/10";
+    case "accepted":    return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
+    case "in_progress": return "text-indigo-400 border-indigo-500/30 bg-indigo-500/10";
+    case "completed":   return "text-teal-400 border-teal-500/30 bg-teal-500/10";
+    case "invoiced":    return "text-purple-400 border-purple-500/30 bg-purple-500/10";
+    default:            return "text-slate-400 border-slate-600/40 bg-slate-700/30";
   }
 }
 
@@ -36,7 +38,9 @@ interface Props {
 export default function EstimateStatusControl({ estimateId, currentStatus }: Props) {
   const { canEdit } = useCurrentStaff();
   const router = useRouter();
-  const [status, setStatus] = useState<string>(String(currentStatus).toLowerCase());
+  // Normalize legacy values (e.g. 'sent') to the canonical workflow status so the
+  // select matches an option and displays 提案中 rather than an empty selection.
+  const [status, setStatus] = useState<string>(normalizeEstimateStatus(String(currentStatus)) ?? "draft");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 

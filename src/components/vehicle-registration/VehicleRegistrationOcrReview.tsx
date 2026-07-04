@@ -12,6 +12,11 @@ import {
   OCR_FIELD_LABELS,
 } from "@/lib/vehicle-registration/vehicle-registration-types";
 import { analyzeOcrQuality } from "@/lib/ocr/ocr-field-analysis";
+import {
+  analyzeOcrCustomer,
+  resolveCustomer,
+} from "@/lib/vehicle-registration/ocr-customer-mapping";
+import type { CustomerSource } from "@/lib/vehicle-registration/ocr-customer-mapping";
 
 interface Props {
   ocrResult:  VehicleRegistrationOcrResult;
@@ -31,27 +36,24 @@ const CUSTOMER_FIELDS: ReviewField[] = [
   "user_address",
 ];
 
+// Field order per spec: メーカー → 車名 → グレード → 型式 → … → ボディカラー.
+// Fuel is intentionally excluded from this flow. ボディサイズ is estimated in the
+// wizard (3M), not an OCR field, so it is not part of this OCR review table.
 const VEHICLE_FIELDS: ReviewField[] = [
-  "vehicle_name",
-  "maker",
-  "model",
-  "grade",
-  "model_code",
-  "chassis_number",
-  "license_plate_region",
-  "license_plate_class",
-  "license_plate_kana",
-  "license_plate_number",
-  "first_registration_date",
-  "inspection_expiry_date",
-  "vehicle_type",
-  "use_type",
-  "private_or_business",
-  "body_shape",
-  "fuel_type",
-  "displacement",
-  "color",
-  "notes",
+  "maker",                   // メーカー
+  "vehicle_name",            // 車名
+  "grade",                   // グレード
+  "model",                   // 型式
+  "chassis_number",          // 車台番号
+  "license_plate_region",    // ナンバー地域
+  "license_plate_class",     // 分類番号
+  "license_plate_kana",      // かな
+  "license_plate_number",    // 指定番号
+  "first_registration_date", // 初度登録年月
+  "registration_date",       // 登録年月日
+  "inspection_expiry_date",  // 車検満了日
+  "displacement",            // 排気量
+  "color",                   // ボディカラー（手入力必須・AI自動入力なし）
 ];
 
 const ALL_REVIEW_FIELDS: ReviewField[] = [...CUSTOMER_FIELDS, ...VEHICLE_FIELDS];
@@ -88,17 +90,19 @@ interface FieldTableProps {
   selected: Set<string>;
   onToggle: (key: string) => void;
   onEdit:   (key: string, val: string) => void;
+  showAll?: boolean; // render every field (even blank) — always visible + editable
 }
 
-function FieldTable({ fields, ocr, edited, selected, onToggle, onEdit }: FieldTableProps) {
-  const presentFields = fields.filter(k => ocr[k]);
-  if (presentFields.length === 0) return (
+function FieldTable({ fields, ocr, edited, selected, onToggle, onEdit, showAll }: FieldTableProps) {
+  // showAll → every field is visible + editable (even when OCR returned blank).
+  const rendered = showAll ? fields : fields.filter(k => ocr[k]);
+  if (rendered.length === 0) return (
     <p className="px-4 py-3 text-xs text-slate-600">読み取れたデータがありません</p>
   );
 
   return (
     <div className="divide-y divide-slate-800">
-      {presentFields.map((key) => {
+      {rendered.map((key) => {
         const isSelected = selected.has(key);
         return (
           <label
@@ -146,6 +150,10 @@ export default function VehicleRegistrationOcrReview({
     return init;
   });
 
+  const [customerSource, setCustomerSource] = useState<CustomerSource>(
+    () => analyzeOcrCustomer(ocrResult).recommendedSource,
+  );
+
   const [selected, setSelected] = useState<Set<string>>(() => {
     const s = new Set<string>();
     for (const key of ALL_REVIEW_FIELDS) {
@@ -183,6 +191,17 @@ export default function VehicleRegistrationOcrReview({
     });
   }
 
+  // Live customer mapping from the (possibly edited) owner/user values + operator choice.
+  const customerInput: Partial<VehicleRegistrationOcrResult> = {
+    owner_name:    edited.owner_name,
+    user_name:     edited.user_name,
+    owner_address: edited.owner_address,
+    user_address:  edited.user_address,
+    customer_type: ocrResult.customer_type,
+  };
+  const custAnalysis = analyzeOcrCustomer(customerInput);
+  const custResolved = resolveCustomer(customerInput, customerSource);
+
   function handleApply() {
     const payload: Partial<VehicleRegistrationOcrResult> = {};
     for (const key of ALL_REVIEW_FIELDS) {
@@ -190,6 +209,10 @@ export default function VehicleRegistrationOcrReview({
         (payload as Record<string, unknown>)[key] = edited[key];
       }
     }
+    // Attach the resolved customer (owner/user rule + operator selection).
+    if (custResolved.name)    payload.customer_candidate_name    = custResolved.name;
+    if (custResolved.address) payload.customer_candidate_address = custResolved.address;
+    payload.customer_type = custResolved.customerType;
     startTransition(() => {
       onApply(payload);
     });
@@ -198,7 +221,6 @@ export default function VehicleRegistrationOcrReview({
   const hasAnyValues = ALL_REVIEW_FIELDS.some((k) => ocrResult[k]);
 
   const customerPresent = CUSTOMER_FIELDS.filter(k => ocrResult[k]);
-  const vehiclePresent  = VEHICLE_FIELDS.filter(k => ocrResult[k]);
 
   // Phase 2 Sprint 4 — confidence / missing-field handling
   const quality = analyzeOcrQuality(ocrResult);
@@ -250,6 +272,72 @@ export default function VehicleRegistrationOcrReview({
         </div>
       )}
 
+      {/* Customer mapping (owner / user business rule) */}
+      {hasAnyValues && (custAnalysis.ownerName || custAnalysis.userName) && (
+        <div className="flex flex-col gap-2 rounded-xl border border-slate-800 bg-[#0b1120] p-3">
+          <p className="text-[11px] font-semibold text-slate-300">顧客反映情報</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div className="rounded border border-slate-800 bg-slate-900/40 px-3 py-2">
+              <div className="text-[10px] text-slate-500 mb-0.5">所有者</div>
+              <div className="text-slate-200 break-words">{custAnalysis.ownerName || "—"}</div>
+              {custAnalysis.ownerAddress && <div className="text-[10px] text-slate-500 mt-0.5 break-words">{custAnalysis.ownerAddress}</div>}
+            </div>
+            <div className="rounded border border-slate-800 bg-slate-900/40 px-3 py-2">
+              <div className="text-[10px] text-slate-500 mb-0.5">使用者</div>
+              <div className="text-slate-200 break-words">{custAnalysis.userName || "—"}</div>
+              {custAnalysis.userAddress && <div className="text-[10px] text-slate-500 mt-0.5 break-words">{custAnalysis.userAddress}</div>}
+            </div>
+          </div>
+
+          {custAnalysis.ownerUserSeparated && (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-[11px] text-slate-400">顧客として登録する対象を選択してください</p>
+              <div className="flex gap-2">
+                {(["user", "owner"] as const).map((src) => (
+                  <button
+                    key={src}
+                    type="button"
+                    onClick={() => setCustomerSource(src)}
+                    className={`flex-1 h-10 rounded-lg text-xs font-semibold border transition-colors ${
+                      customerSource === src
+                        ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
+                        : "bg-[#0f172a] text-slate-400 border-slate-700 hover:text-slate-200"
+                    }`}
+                  >
+                    {src === "user" ? "使用者を顧客にする" : "所有者を顧客にする"}
+                  </button>
+                ))}
+              </div>
+              {custAnalysis.note && (
+                <p className="text-[11px] text-amber-300 bg-amber-900/15 border border-amber-800/40 rounded px-2 py-1.5">
+                  {custAnalysis.note}
+                </p>
+              )}
+              {custAnalysis.requireSelection && (
+                <p className="text-[11px] text-blue-300/90">
+                  所有者と使用者が異なります。どちらを顧客にするか確認してください。
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-2 border-t border-slate-800 pt-2">
+            <div className="min-w-0">
+              <div className="text-[10px] text-slate-500">顧客として反映する情報</div>
+              <div className="text-sm text-slate-100 truncate">{custResolved.name || "—"}</div>
+              {custResolved.address && <div className="text-[10px] text-slate-500 truncate">{custResolved.address}</div>}
+            </div>
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border shrink-0 ${
+              custResolved.customerType === "corporation" ? "text-purple-300 bg-purple-900/40 border-purple-700/50"
+              : custResolved.customerType === "individual" ? "text-blue-300 bg-blue-900/40 border-blue-700/50"
+              : "text-slate-400 bg-slate-800 border-slate-700"
+            }`}>
+              {custResolved.customerType === "corporation" ? "法人" : custResolved.customerType === "individual" ? "個人" : "不明"}
+            </span>
+          </div>
+        </div>
+      )}
+
       {!hasAnyValues ? (
         <p className="text-sm text-slate-500 text-center py-4">
           読み取れたデータがありません。別の画像を試してください。
@@ -294,38 +382,44 @@ export default function VehicleRegistrationOcrReview({
             )}
 
             {/* Vehicle section */}
-            {vehiclePresent.length > 0 && (
-              <>
-                <SectionLabel icon="🚗" label="車両情報" />
-                <div className="flex items-center justify-between px-3 py-1 bg-[#0f172a]">
-                  <p className="text-[10px] text-slate-600">読み取った車両データ</p>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => selectAll(VEHICLE_FIELDS)}
-                      className="text-[10px] text-blue-400 hover:text-blue-300"
-                    >
-                      全選択
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deselectAll(VEHICLE_FIELDS)}
-                      className="text-[10px] text-slate-500 hover:text-slate-300"
-                    >
-                      全解除
-                    </button>
-                  </div>
+            {/* Vehicle section is ALWAYS shown — every field visible + editable. */}
+            <>
+              <SectionLabel icon="🚗" label="車両情報" />
+              <div className="flex items-center justify-between px-3 py-1 bg-[#0f172a]">
+                <p className="text-[10px] text-slate-600">車両データ（未取得項目は手入力可）</p>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => selectAll(VEHICLE_FIELDS)}
+                    className="text-[10px] text-blue-400 hover:text-blue-300"
+                  >
+                    全選択
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deselectAll(VEHICLE_FIELDS)}
+                    className="text-[10px] text-slate-500 hover:text-slate-300"
+                  >
+                    全解除
+                  </button>
                 </div>
-                <FieldTable
-                  fields={VEHICLE_FIELDS}
-                  ocr={ocrResult}
-                  edited={edited}
-                  selected={selected}
-                  onToggle={toggleField}
-                  onEdit={editField}
-                />
-              </>
-            )}
+              </div>
+              <FieldTable
+                fields={VEHICLE_FIELDS}
+                ocr={ocrResult}
+                edited={edited}
+                selected={selected}
+                onToggle={toggleField}
+                onEdit={editField}
+                showAll
+              />
+              {/* ボディカラーは手入力必須 — AI は自動入力しない */}
+              {!edited.color?.trim() && (
+                <p className="px-3 py-2 text-[11px] text-amber-400 bg-amber-950/20">
+                  ボディカラーを入力してください。
+                </p>
+              )}
+            </>
           </div>
 
           <p className="text-xs text-slate-600">

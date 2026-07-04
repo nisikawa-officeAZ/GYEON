@@ -169,6 +169,26 @@ textarea::placeholder {
   opacity: 1; /* Firefox dims placeholders by default */
 }
 
+/* 5) Autofill / iOS predictive text — keep the dark UI + white readable text.
+   Chrome/Safari force a yellow background and dark text on autofill/predictive
+   selection, which makes dark fields look broken. We paint the field bg dark via
+   an inset box-shadow, force white text, and freeze the autofill transition so no
+   yellow flash appears. The entered value stays a valid, readable input. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--form-text) !important;
+  caret-color: var(--form-text);
+  -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
+          box-shadow: 0 0 0 1000px #0f172a inset !important;
+  border-radius: inherit;
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+
 /* 2) Field labels — the leading <span> inside a field <label> */
 label > span:first-child {
   color: var(--form-label);

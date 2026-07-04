@@ -38,7 +38,7 @@ export async function getEstimate(estimateId: string): Promise<EstimateDB | null
       created_at,
       updated_at,
       customers ( last_name, first_name, phone, email ),
-      vehicles  ( maker, model, year, grade, plate_number ),
+      vehicles  ( maker, model, year, grade, plate_number, body_size, registration_date, inspection_expiry_date ),
       estimate_items (
         id,
         estimate_id,

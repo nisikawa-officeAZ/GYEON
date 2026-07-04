@@ -11,7 +11,7 @@ import { getMaintenanceStats } from "@/lib/maintenance/get-maintenance-reminders
 
 export interface EstimateCounts {
   draft:    number;
-  sent:     number;
+  proposal: number; // 提案中 (was 'sent' — SENT is transmission, not workflow)
   approved: number;
   rejected: number;
   expired:  number;
@@ -300,7 +300,7 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
   const estimateRows  = (estimateResult.data ?? []) as { status: string }[];
   const workOrderRows = (workOrderResult.data ?? []) as { status: string }[];
 
-  const estCounts = countByStatus(estimateRows, ["draft", "sent", "approved", "rejected", "expired"]);
+  const estCounts = countByStatus(estimateRows, ["draft", "proposal", "sent", "approved", "rejected", "lost", "expired"]);
   const woCounts  = countByStatus(workOrderRows, ["scheduled", "in_progress", "completed", "on_hold", "cancelled"]);
 
   const invoiceRows = (invoiceResult.data ?? []) as {
@@ -401,9 +401,10 @@ export async function getDashboardSummary(): Promise<DashboardSummary | null> {
     vehicle_count:  vehicleCount,
     estimates: {
       draft:    estCounts["draft"]    ?? 0,
-      sent:     estCounts["sent"]     ?? 0,
+      // 提案中 = proposal + legacy 'sent' (SENT displayed as 提案中 until migration 099)
+      proposal: (estCounts["proposal"] ?? 0) + (estCounts["sent"] ?? 0),
       approved: estCounts["approved"] ?? 0,
-      rejected: estCounts["rejected"] ?? 0,
+      rejected: (estCounts["rejected"] ?? 0) + (estCounts["lost"] ?? 0),
       expired:  estCounts["expired"]  ?? 0,
     },
     work_orders: {

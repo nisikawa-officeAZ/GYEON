@@ -1,17 +1,18 @@
 import { MOCK_PDF_ESTIMATE } from "./mockPdfEstimate";
 
+// Workflow statuses only. Legacy SENT displays as 提案中 (send is history).
 const STATUS_LABEL: Record<string, string> = {
-  DRAFT:    "下書き",
-  SENT:     "送付済み",
-  APPROVED: "承認済み",
-  REJECTED: "却下",
+  DRAFT: "下書き", PROPOSAL: "提案中", APPROVED: "承認", LOST: "失注",
+  ACCEPTED: "受注", IN_PROGRESS: "作業中", COMPLETED: "完了", INVOICED: "請求済",
+  SENT: "提案中", REJECTED: "失注",
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  DRAFT:    "bg-slate-200 text-slate-600",
-  SENT:     "bg-blue-100 text-blue-700",
-  APPROVED: "bg-green-100 text-green-700",
-  REJECTED: "bg-red-100 text-red-700",
+  DRAFT: "bg-slate-200 text-slate-600", PROPOSAL: "bg-blue-100 text-blue-700",
+  APPROVED: "bg-green-100 text-green-700", LOST: "bg-red-100 text-red-700",
+  ACCEPTED: "bg-emerald-100 text-emerald-700", IN_PROGRESS: "bg-indigo-100 text-indigo-700",
+  COMPLETED: "bg-teal-100 text-teal-700", INVOICED: "bg-purple-100 text-purple-700",
+  SENT: "bg-blue-100 text-blue-700", REJECTED: "bg-red-100 text-red-700",
 };
 
 function formatYen(n: number) {

@@ -4,7 +4,7 @@ import { getLogisticsBackorders } from "@/lib/admin/logistics/get-logistics-back
 import LogisticsBackordersClient from "./LogisticsBackordersClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Backorder Center | GYEON Logistics" };
+export const metadata = { title: "バックオーダーセンター | GYEON Logistics" };
 
 export default async function LogisticsBackordersPage() {
   const caller = await getCurrentAdmin();

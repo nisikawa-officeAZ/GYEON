@@ -32,12 +32,19 @@ export async function createCustomer(formData: FormData) {
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "ディーラー認証に失敗しました" };
 
-  const lastName = str(formData, "last_name");
-  if (!lastName) return { error: "姓は必須です" };
+  // Full customer/company name → customers.name (NOT NULL). The estimate flow
+  // sends "name"; legacy forms send last_name/first_name (build the full name).
+  const explicitName = str(formData, "name") || str(formData, "customer_name");
+  const lastName     = str(formData, "last_name");
+  const firstName    = str(formData, "first_name");
+  const fullName     = explicitName || ([lastName, firstName].filter(Boolean).join(" ").trim() || null);
+
+  // Debug-safe: presence + length only, never the personal value.
+  console.log("[createCustomer] hasCustomerName:", !!fullName, "customerNameLength:", fullName?.length ?? 0);
+  if (!fullName) return { error: "お客様名を入力してください。" };
 
   const supabase = await createClient();
 
-  const firstName   = str(formData, "first_name");
   const isBusiness  = formData.get("is_business") === "true";
   const discountPct = isBusiness ? parseDiscountPct(formData) : 0;
   const creditTerms = isBusiness ? str(formData, "credit_terms") : null;
@@ -45,7 +52,8 @@ export async function createCustomer(formData: FormData) {
   const { data: newCustomer, error } = await supabase.from("customers").insert({
     dealer_id:          dealer.dealer_id,   // server-injected — never from form
     customer_code:      str(formData, "customer_code"),
-    last_name:          lastName,
+    name:               fullName,           // NOT-NULL column — always the full name
+    last_name:          lastName ?? fullName, // legacy compatibility
     first_name:         firstName,
     last_name_kana:     str(formData, "last_name_kana"),
     first_name_kana:    str(formData, "first_name_kana"),

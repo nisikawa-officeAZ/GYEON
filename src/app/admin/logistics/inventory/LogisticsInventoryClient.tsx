@@ -31,9 +31,9 @@ export default function LogisticsInventoryClient({ initialInventory }: Props) {
     <div className="max-w-6xl mx-auto">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-white">Inventory Overview</h1>
+          <h1 className="text-xl font-semibold text-white">在庫概要</h1>
           <p className="text-sm text-slate-400 mt-0.5">
-            {filtered.length} records
+            {filtered.length}件
           </p>
         </div>
       </div>
@@ -42,7 +42,7 @@ export default function LogisticsInventoryClient({ initialInventory }: Props) {
       <div className="flex flex-wrap gap-3 mb-5">
         <input
           type="text"
-          placeholder="Search product or dealer…"
+          placeholder="商品またはディーラーを検索…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500 w-64"
@@ -53,7 +53,7 @@ export default function LogisticsInventoryClient({ initialInventory }: Props) {
           onChange={(e) => setDealer(e.target.value)}
           className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
         >
-          <option value="">All Dealers</option>
+          <option value="">すべてのディーラー</option>
           {dealers.map((d) => <option key={d} value={d}>{d}</option>)}
         </select>
 
@@ -62,7 +62,7 @@ export default function LogisticsInventoryClient({ initialInventory }: Props) {
           onChange={(e) => setCategory(e.target.value)}
           className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
         >
-          <option value="">All Categories</option>
+          <option value="">すべてのカテゴリー</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
 
@@ -73,22 +73,22 @@ export default function LogisticsInventoryClient({ initialInventory }: Props) {
             onChange={(e) => setZeroOnly(e.target.checked)}
             className="accent-red-500"
           />
-          Zero stock only
+          在庫ゼロのみ
         </label>
       </div>
 
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-slate-500 text-sm">
           {initialInventory.length === 0
-            ? "No inventory data. Apply migration 069 and dealers must count their stock."
-            : "No results match the current filters."}
+            ? "在庫データがありません。マイグレーション069を適用し、ディーラーが在庫をカウントする必要があります。"
+            : "現在のフィルターに一致する結果がありません。"}
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-700/50">
-                {["Dealer", "SKU", "Product", "Category", "Boxes", "Loose", "Total", "Reserved", "Available", "Last Counted"].map((h) => (
+                {["ディーラー", "SKU", "商品", "カテゴリー", "ケース", "バラ", "合計", "引当済", "利用可能", "最終棚卸日"].map((h) => (
                   <th key={h} className="text-left px-3 py-2.5 text-xs font-medium text-slate-400 uppercase whitespace-nowrap">{h}</th>
                 ))}
               </tr>

@@ -55,7 +55,7 @@ function SectionCard({ title, icon, children }: { title: string; icon: string; c
 
 export default function OperationsOverview({ workOrders, estimates, customers, vehicles }: Props) {
   const activeJobs = workOrders.scheduled + workOrders.in_progress;
-  const pendingEst = estimates.draft + estimates.sent;
+  const pendingEst = estimates.draft + estimates.proposal;
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -72,9 +72,9 @@ export default function OperationsOverview({ workOrders, estimates, customers, v
 
       {/* Estimates */}
       <SectionCard title="見積もり" icon="📋">
-        <StatItem label="下書き"       value={estimates.draft}    href="/estimates" color="slate" />
-        <StatItem label="送付済・承認待" value={estimates.sent}     href="/estimates" color="amber" />
-        <StatItem label="承認済"       value={estimates.approved} href="/estimates" color="green" />
+        <StatItem label="下書き"   value={estimates.draft}    href="/estimates" color="slate" />
+        <StatItem label="提案中"   value={estimates.proposal} href="/estimates" color="amber" />
+        <StatItem label="承認"     value={estimates.approved} href="/estimates" color="green" />
         {pendingEst > 0 && (
           <div className="flex items-center justify-between py-2 border-b border-slate-800/50 last:border-0">
             <span className="text-[10px] text-slate-500">対応待ち合計</span>

@@ -1,17 +1,4 @@
-import { EstimateDB, estimateStatusLabel } from "@/lib/estimates/estimate-types";
-
-const STATUS_COLOR: Record<string, string> = {
-  draft:    "bg-slate-600 text-slate-100",
-  sent:     "bg-blue-600 text-white",
-  approved: "bg-green-600 text-white",
-  rejected: "bg-red-600 text-white",
-  expired:  "bg-amber-600 text-white",
-  // Legacy uppercase
-  DRAFT:    "bg-slate-600 text-slate-100",
-  SENT:     "bg-blue-600 text-white",
-  APPROVED: "bg-green-600 text-white",
-  REJECTED: "bg-red-600 text-white",
-};
+import { EstimateDB } from "@/lib/estimates/estimate-types";
 
 interface EstimateSummaryProps {
   estimate: Pick<
@@ -43,9 +30,7 @@ export default function EstimateSummary({ estimate }: EstimateSummaryProps) {
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
           合計
         </h3>
-        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${STATUS_COLOR[estimate.status] ?? "bg-slate-700 text-slate-300"}`}>
-          {estimateStatusLabel(estimate.status)}
-        </span>
+        {/* ステータスバッジは合計欄には表示しない（業務状態はヘッダー、送信履歴は履歴エリア） */}
       </div>
 
       <div className="space-y-2">

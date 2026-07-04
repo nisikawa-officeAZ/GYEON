@@ -51,21 +51,24 @@ export const ADMIN_NAV_CONFIG: {
   href:  string;
   roles: AdminRole[];
   soon?: boolean;
+  /** Secondary/internal tools — shown in a visually reduced group. */
+  secondary?: boolean;
   iconKey: string;
 }[] = [
   { key: "dashboard",  label: "管理ダッシュボード",  href: "/admin/dashboard",  roles: ["super_admin", "gyeon_admin"],                           iconKey: "dashboard" },
   { key: "dealers",    label: "店舗管理",    href: "/admin/dealers",    roles: ["super_admin", "gyeon_admin"],                           iconKey: "dealers"   },
   { key: "news",       label: "お知らせ",    href: "/admin/news",       roles: ["super_admin", "gyeon_admin"],                           iconKey: "news"      },
   { key: "resources",  label: "資料",        href: "/admin/resources",  roles: ["super_admin", "gyeon_admin"],                           iconKey: "resources" },
-  { key: "plans",      label: "プラン",      href: "/admin/plans",      roles: ["super_admin", "gyeon_admin"],                           iconKey: "plans"     },
-  { key: "users",      label: "ユーザー管理", href: "/admin/users",      roles: ["super_admin"],                                          iconKey: "users"     },
+  { key: "plans",      label: "契約プラン管理", href: "/admin/plans",    roles: ["super_admin", "gyeon_admin"], secondary: true,          iconKey: "plans"     },
+  { key: "users",      label: "ユーザー管理", href: "/admin/users",      roles: ["super_admin"],                secondary: true,          iconKey: "users"     },
   { key: "logistics",  label: "物流",        href: "/admin/logistics",  roles: ["super_admin", "gyeon_admin", "logistics_admin"],        iconKey: "logistics" },
   { key: "products",   label: "製品",        href: "/admin/products",   roles: ["super_admin", "gyeon_admin", "logistics_admin"],        iconKey: "products",  soon: true },
   { key: "crm",        label: "CRM",        href: "/admin/crm",        roles: ["super_admin", "gyeon_admin"],                           iconKey: "crm",       soon: true },
-  { key: "ai-center",  label: "AIセンター",  href: "/admin/ai-center",  roles: ["super_admin", "gyeon_admin"],                           iconKey: "ai",        soon: true },
+  { key: "ai-center",  label: "AIセンター",  href: "/admin/ai-center",  roles: ["super_admin", "gyeon_admin"],                           iconKey: "ai"        },
   { key: "billing",    label: "請求",        href: "/admin/billing",    roles: ["super_admin", "gyeon_admin"],                           iconKey: "billing"   },
   { key: "settings",   label: "設定",        href: "/admin/settings",   roles: ["super_admin", "gyeon_admin"],                           iconKey: "settings",  soon: true },
   { key: "audit",      label: "監査ログ",    href: "/admin/audit",      roles: ["super_admin"],                                          iconKey: "audit"     },
+  { key: "dev-preview",label: "検証",        href: "/admin/dev-preview",roles: ["super_admin"],                                          iconKey: "settings"  },
 ];
 
 export function getVisibleNav(role: string) {

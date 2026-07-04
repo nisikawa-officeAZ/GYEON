@@ -42,7 +42,11 @@ export async function getEstimates(): Promise<EstimateDB[]> {
       created_at,
       updated_at,
       customers ( last_name, first_name, phone, email ),
-      vehicles  ( maker, model, year, grade, plate_number )
+      vehicles  ( maker, model, year, grade, plate_number, body_size, registration_date, inspection_expiry_date ),
+      estimate_items (
+        id, estimate_id, dealer_id, category, item_name, description,
+        quantity, unit_price, discount_rate, line_total, sort_order, created_at, updated_at
+      )
     `)
     .eq("dealer_id", dealer.dealer_id)
     .is("deleted_at", null)

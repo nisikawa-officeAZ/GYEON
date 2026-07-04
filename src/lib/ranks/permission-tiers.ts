@@ -2,12 +2,14 @@
 //
 // Pure module (no DB / no "use server"). Safe for client or server import.
 //
-// FINAL business rule: purchase and install permissions have EXACTLY three
-// levels, and this vocabulary is GLOBAL (market-independent):
+// Purchase and install permissions use a GLOBAL (market-independent) tier
+// vocabulary. Each tier maps to a rank LEVEL floor from the active profile, so
+// new dealer ranks can add new tiers without hardcoding business rules:
 //
-//   all        — every dealer
-//   detailer   — detailer rank and above
-//   certified  — certified rank only   (Global Certified restriction)
+//   all           — every dealer
+//   detailer      — detailer rank and above
+//   ppf_installer — PPF Installer rank and above
+//   certified     — certified rank only   (Global Certified restriction)
 //
 // The mapping from a tier to the rank threshold it requires is taken from the
 // ACTIVE MARKET PROFILE (see ./market-profiles), so a market may rename or add
@@ -21,7 +23,7 @@ import { rankLevel } from "./dealer-ranks";
 
 export type { PermissionTier };
 
-export const PERMISSION_TIERS: PermissionTier[] = ["all", "detailer", "certified"];
+export const PERMISSION_TIERS: PermissionTier[] = ["all", "detailer", "ppf_installer", "certified"];
 export const DEFAULT_PERMISSION_TIER: PermissionTier = "all";
 
 export function isValidTier(v: string | null | undefined): v is PermissionTier {
@@ -67,13 +69,13 @@ function floorRankLabel(tier: PermissionTier, lang: "ja" | "en"): string {
 export function tierLabelJa(tier: string | null | undefined): string {
   const t = normalizeTier(tier);
   if (t === "all") return "全ランク";
-  if (t === "detailer") return `${floorRankLabel("detailer", "ja")}以上`;
-  return `${floorRankLabel("certified", "ja")}限定`;
+  if (t === "certified") return `${floorRankLabel("certified", "ja")}限定`;
+  return `${floorRankLabel(t, "ja")}以上`; // detailer, ppf_installer, …
 }
 
 export function tierLabelEn(tier: string | null | undefined): string {
   const t = normalizeTier(tier);
   if (t === "all") return "All ranks";
-  if (t === "detailer") return `${floorRankLabel("detailer", "en")} or higher`;
-  return `${floorRankLabel("certified", "en")} only`;
+  if (t === "certified") return `${floorRankLabel("certified", "en")} only`;
+  return `${floorRankLabel(t, "en")} or higher`; // detailer, ppf_installer, …
 }

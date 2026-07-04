@@ -9,12 +9,23 @@ import {
   estimateStatusLabel,
 } from "@/lib/estimates/estimate-types";
 
+// Business-state badge colors (「送付済み」は業務状態ではないので sent=提案中 色)
 const STATUS_BADGE: Record<string, string> = {
-  draft:    "bg-slate-600 text-slate-100",
-  sent:     "bg-blue-600 text-white",
-  approved: "bg-green-600 text-white",
-  rejected: "bg-red-600 text-white",
-  expired:  "bg-amber-600 text-white",
+  draft:       "bg-slate-600 text-slate-100",
+  sent:        "bg-blue-600 text-white",   // 提案中
+  proposed:    "bg-blue-600 text-white",   // 提案中
+  approved:    "bg-green-600 text-white",  // 承認
+  rejected:    "bg-red-600 text-white",    // 失注
+  lost:        "bg-red-600 text-white",    // 失注
+  won:         "bg-emerald-600 text-white", // 受注
+  ordered:     "bg-emerald-600 text-white", // 受注
+  in_progress: "bg-indigo-600 text-white",  // 作業中
+  working:     "bg-indigo-600 text-white",  // 作業中
+  completed:   "bg-teal-600 text-white",    // 完了
+  done:        "bg-teal-600 text-white",    // 完了
+  billed:      "bg-purple-600 text-white",  // 請求済
+  invoiced:    "bg-purple-600 text-white",  // 請求済
+  expired:     "bg-amber-600 text-white",
   // Legacy uppercase
   DRAFT:    "bg-slate-600 text-slate-100",
   SENT:     "bg-blue-600 text-white",

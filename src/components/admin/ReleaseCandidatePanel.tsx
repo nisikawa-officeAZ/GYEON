@@ -14,9 +14,9 @@ function StatusIcon({ status }: { status: RcCheckStatus }) {
 
 function OverallBadge({ status }: { status: RcOverallStatus }) {
   const map: Record<RcOverallStatus, { label: string; cls: string }> = {
-    ready:   { label: "READY",   cls: "text-green-300 border-green-700/50 bg-green-950/40" },
-    warning: { label: "WARNING", cls: "text-amber-300 border-amber-700/50 bg-amber-950/40" },
-    blocked: { label: "BLOCKED", cls: "text-red-300 border-red-700/50 bg-red-950/40"       },
+    ready:   { label: "準備完了", cls: "text-green-300 border-green-700/50 bg-green-950/40" },
+    warning: { label: "警告",     cls: "text-amber-300 border-amber-700/50 bg-amber-950/40" },
+    blocked: { label: "ブロック", cls: "text-red-300 border-red-700/50 bg-red-950/40"       },
   };
   const { label, cls } = map[status];
   return (
@@ -101,7 +101,7 @@ export default function ReleaseCandidatePanel({ report }: Props) {
       <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-5">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Version</p>
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">バージョン</p>
             <p className="text-2xl font-bold text-slate-100">{version}</p>
             <p className="text-xs text-slate-500 mt-0.5">GYEON Detailer Agent</p>
           </div>
@@ -109,27 +109,27 @@ export default function ReleaseCandidatePanel({ report }: Props) {
         </div>
 
         {/* Score */}
-        <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Release Score</p>
+        <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">リリーススコア</p>
         <ScoreBar score={score} max={maxScore} />
 
         {/* Category summary */}
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="rounded-xl border border-green-700/30 bg-green-950/20 p-3 text-center">
             <p className="text-2xl font-bold text-green-400">{passCount}</p>
-            <p className="text-[10px] text-green-600">PASS</p>
+            <p className="text-[10px] text-green-600">合格</p>
           </div>
           <div className="rounded-xl border border-amber-700/30 bg-amber-950/20 p-3 text-center">
             <p className="text-2xl font-bold text-amber-400">{warnCount}</p>
-            <p className="text-[10px] text-amber-600">WARNING</p>
+            <p className="text-[10px] text-amber-600">警告</p>
           </div>
           <div className="rounded-xl border border-red-700/30 bg-red-950/20 p-3 text-center">
             <p className="text-2xl font-bold text-red-400">{blockCount}</p>
-            <p className="text-[10px] text-red-600">BLOCKED</p>
+            <p className="text-[10px] text-red-600">ブロック</p>
           </div>
         </div>
 
         <p className="text-[10px] text-slate-600 mt-3">
-          Checked at {checkedAt.replace("T", " ").slice(0, 19)} UTC
+          確認日時 {checkedAt.replace("T", " ").slice(0, 19)} UTC
         </p>
       </div>
 
@@ -138,9 +138,9 @@ export default function ReleaseCandidatePanel({ report }: Props) {
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-green-700/40 bg-green-950/20">
           <span className="text-green-400 shrink-0">✓</span>
           <div>
-            <p className="text-xs font-semibold text-green-300">RC1 Ready for Validation</p>
+            <p className="text-xs font-semibold text-green-300">RC1 検証準備完了</p>
             <p className="text-[10px] text-green-400/80 mt-0.5">
-              All categories passed. Complete RELEASE_CHECKLIST.md and obtain sign-offs to proceed to production.
+              すべてのカテゴリが合格しました。RELEASE_CHECKLIST.md を完了し、承認を得て本番へ進んでください。
             </p>
           </div>
         </div>
@@ -148,9 +148,9 @@ export default function ReleaseCandidatePanel({ report }: Props) {
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-amber-700/40 bg-amber-950/20">
           <span className="text-amber-400 shrink-0">⚠</span>
           <div>
-            <p className="text-xs font-semibold text-amber-300">RC1 — Warnings Present</p>
+            <p className="text-xs font-semibold text-amber-300">RC1 — 警告あり</p>
             <p className="text-[10px] text-amber-400/80 mt-0.5">
-              Review warnings below. Warnings do not block release but should be acknowledged.
+              下記の警告を確認してください。警告はリリースを妨げませんが、内容を把握しておく必要があります。
             </p>
           </div>
         </div>
@@ -158,9 +158,9 @@ export default function ReleaseCandidatePanel({ report }: Props) {
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-red-700/40 bg-red-950/20">
           <span className="text-red-400 shrink-0">✗</span>
           <div>
-            <p className="text-xs font-semibold text-red-300">RC1 — Blocked</p>
+            <p className="text-xs font-semibold text-red-300">RC1 — ブロック</p>
             <p className="text-[10px] text-red-400/80 mt-0.5">
-              One or more categories failed. Resolve all failures before proceeding to production.
+              1つ以上のカテゴリが不合格です。本番へ進む前にすべての不合格を解消してください。
             </p>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default function ReleaseCandidatePanel({ report }: Props) {
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-red-700/40 bg-red-950/20">
           <span className="text-red-400 shrink-0">✗</span>
           <p className="text-xs text-red-300">
-            Release score {score}/100 is below the minimum threshold of 70. Production deployment is not approved.
+            リリーススコア {score}/100 は最低基準の 70 を下回っています。本番デプロイは承認されません。
           </p>
         </div>
       )}
@@ -179,7 +179,7 @@ export default function ReleaseCandidatePanel({ report }: Props) {
       {/* Category checklist */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/20 overflow-hidden">
         <div className="px-5 py-3 border-b border-slate-800 bg-slate-900/40">
-          <p className="text-xs font-semibold text-slate-300">Release Checklist — 10 Categories</p>
+          <p className="text-xs font-semibold text-slate-300">リリースチェックリスト — 10カテゴリ</p>
         </div>
         <div className="px-5 divide-y divide-slate-800/50">
           {categories.map(cat => (
@@ -190,16 +190,16 @@ export default function ReleaseCandidatePanel({ report }: Props) {
 
       {/* Reference docs */}
       <div className="rounded-xl border border-slate-800 bg-slate-900/20 p-4">
-        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2">Reference Documents</p>
+        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2">参考ドキュメント</p>
         <ul className="flex flex-col gap-1">
           {[
-            ["VERSION.md",                    "Version definition"],
-            ["CHANGELOG.md",                  "Full phase changelog"],
-            ["RELEASE_NOTES_v1.md",           "Feature list and technical highlights"],
-            ["KNOWN_LIMITATIONS.md",          "Known limitations and workarounds"],
-            ["RELEASE_CHECKLIST.md",          "Sign-off checklist for production"],
-            ["docs/OFFICIAL_RELEASE_PROCESS.md", "Step-by-step release process"],
-            ["ROADMAP_V2.md",                 "v2 feature roadmap"],
+            ["VERSION.md",                    "バージョン定義"],
+            ["CHANGELOG.md",                  "全フェーズの変更履歴"],
+            ["RELEASE_NOTES_v1.md",           "機能一覧と技術的ハイライト"],
+            ["KNOWN_LIMITATIONS.md",          "既知の制限事項と回避策"],
+            ["RELEASE_CHECKLIST.md",          "本番向け承認チェックリスト"],
+            ["docs/OFFICIAL_RELEASE_PROCESS.md", "ステップごとのリリースプロセス"],
+            ["ROADMAP_V2.md",                 "v2 の機能ロードマップ"],
           ].map(([file, desc]) => (
             <li key={file} className="flex gap-2 text-[10px]">
               <code className="text-blue-400 shrink-0">{file}</code>

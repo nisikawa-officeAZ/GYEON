@@ -39,7 +39,7 @@ function IssueRow({ issue, onRefresh }: { issue: StagingIssue; onRefresh: () => 
     startTransition(async () => {
       const result = await updateStagingIssue(issue.id, status, resNote);
       if (!result.success) {
-        setError(result.error ?? "Failed");
+        setError(result.error ?? "失敗しました");
       } else {
         onRefresh();
       }
@@ -147,7 +147,7 @@ export default function StagingIssuePanel({ issues, runId, onRefresh }: Props) {
         relatedArea,
       });
       if (!result.success) {
-        setFormError(result.error ?? "Failed");
+        setFormError(result.error ?? "失敗しました");
       } else {
         setTitle("");
         setDescription("");
@@ -167,13 +167,13 @@ export default function StagingIssuePanel({ issues, runId, onRefresh }: Props) {
           <p className="text-sm font-semibold text-slate-200">課題 ({issues.length})</p>
           <div className="flex gap-4 mt-1 text-[10px]">
             <span className={criticalOpen > 0 ? "text-red-400 font-bold" : "text-slate-500"}>
-              Critical: {criticalOpen} open
+              重大: {criticalOpen}件未対応
             </span>
             <span className={highOpen > 0 ? "text-orange-400 font-bold" : "text-slate-500"}>
-              High: {highOpen} open
+              高: {highOpen}件未対応
             </span>
             <span className="text-slate-500">
-              Open: {openIssues.length} / Resolved: {resolvedIssues.length}
+              未対応: {openIssues.length} / 解決済み: {resolvedIssues.length}
             </span>
           </div>
         </div>
@@ -200,7 +200,7 @@ export default function StagingIssuePanel({ issues, runId, onRefresh }: Props) {
 
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="block text-[10px] text-slate-500 mb-1">Severity</label>
+              <label className="block text-[10px] text-slate-500 mb-1">重要度</label>
               <select
                 value={severity}
                 onChange={e => setSeverity(e.target.value as IssueSeverity)}
@@ -254,7 +254,7 @@ export default function StagingIssuePanel({ issues, runId, onRefresh }: Props) {
       {/* Open issues */}
       {openIssues.length > 0 && (
         <div className="flex flex-col gap-2">
-          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Open / Investigating</p>
+          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">未対応 / 調査中</p>
           {openIssues.map(issue => (
             <IssueRow key={issue.id} issue={issue} onRefresh={onRefresh} />
           ))}
@@ -264,7 +264,7 @@ export default function StagingIssuePanel({ issues, runId, onRefresh }: Props) {
       {/* Resolved issues */}
       {resolvedIssues.length > 0 && (
         <div className="flex flex-col gap-2">
-          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Resolved / Won&apos;t Fix</p>
+          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">解決済み / 対応なし</p>
           {resolvedIssues.map(issue => (
             <IssueRow key={issue.id} issue={issue} onRefresh={onRefresh} />
           ))}

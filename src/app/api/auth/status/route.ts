@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser }   from "@/lib/auth/get-current-user";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { isGyeonManagedKeyConfigured } from "@/lib/ai/gyeon-managed-key";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,9 @@ export async function GET(): Promise<NextResponse<AuthStatusResponse>> {
       return NextResponse.json({ authenticated: false, hasDealer: false, hasOcrKey: false });
     }
     const dealer   = await getCurrentDealer();
-    const hasOcrKey = !!process.env.OPENAI_API_KEY;
+    // OCR availability = GYEON-managed key resolvable (AI Center DB key first,
+    // OPENAI_API_KEY env only as dev fallback). No direct env-only check.
+    const hasOcrKey = await isGyeonManagedKeyConfigured();
     return NextResponse.json({ authenticated: true, hasDealer: !!dealer, hasOcrKey });
   } catch {
     // Return safe fallback — component will still allow the upload attempt
