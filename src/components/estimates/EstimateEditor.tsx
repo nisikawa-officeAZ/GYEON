@@ -22,6 +22,7 @@ import { VehicleDB, vehicleDisplayName } from "@/lib/vehicles/vehicle-types";
 import { updateEstimate } from "@/lib/estimates/update-estimate";
 import { createEstimate } from "@/lib/estimates/create-estimate";
 import { createVehicle } from "@/lib/vehicles/create-vehicle";
+import { createCustomer } from "@/lib/customers/create-customer";
 import { estimateBodySize, type BodySizeEstimate } from "@/lib/vehicles/body-size-estimate";
 import { buildLineItems, type ServiceInput, type PricedLineItem } from "@/lib/pricing/pricing-engine";
 import { calculateEstimateTotals, lineTotal } from "@/lib/pricing/estimate-totals";
@@ -134,6 +135,15 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
 
   const [customerId,   setCustomerId]   = useState(initialCustomerId);
   const [vehicleId,    setVehicleId]    = useState(initialVehicleId);
+
+  // G1 — inline customer creation (reuses the existing createCustomer action).
+  const [customerMode,     setCustomerMode]     = useState<"select" | "new">("select");
+  const [creatingCustomer, setCreatingCustomer] = useState(false);
+  const [localCustomers,   setLocalCustomers]   = useState<CustomerDB[]>(customers);
+  const [nc, setNc] = useState({
+    name: "", phone: "", email: "", postal: "", address: "", lineId: "",
+    isBusiness: false, tradeRate: "70", arAllowed: false, closingDay: "", paymentDay: "",
+  });
   const [notes,        setNotes]        = useState(initialNotes);
   const [internalMemo, setInternalMemo] = useState(initialMemo);
 
@@ -291,6 +301,50 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
     if (est.sizeKey) setSizeKey(est.sizeKey);
   }
 
+  // G1 — create a customer inline (reuses createCustomer, no new write path). The
+  // customer is a first-class record created immediately (same as the legacy
+  // onboarding/wizard) and set as selected; unsaved vehicle/item/discount data is
+  // untouched. Repeated clicks are guarded.
+  async function handleCreateCustomer() {
+    setError(null);
+    const fullName = nc.name.trim(); // single full-name field — never split (corp names as-is)
+    if (!fullName) { setError("お客様名を入力してください。"); return; }
+    if (creatingCustomer) return;
+    setCreatingCustomer(true);
+
+    const cfd = new FormData();
+    cfd.set("name",               fullName);
+    cfd.set("phone",              nc.phone);
+    cfd.set("email",              nc.email);
+    cfd.set("postal_code",        nc.postal);
+    cfd.set("address1",           nc.address);
+    cfd.set("line_user_id",       nc.lineId);
+    cfd.set("is_business",        nc.isBusiness ? "true" : "false");
+    cfd.set("trade_discount_pct", nc.isBusiness ? nc.tradeRate : "0");
+
+    const r = await createCustomer(cfd);
+    setCreatingCustomer(false);
+    if ("error" in r) { setError(r.error ?? "顧客の作成に失敗しました。"); return; }
+    const newId = "customerId" in r ? r.customerId : "";
+    if (!newId) { setError("顧客IDの取得に失敗しました。"); return; }
+
+    const newCust: CustomerDB = {
+      id: newId, dealer_id: null, customer_code: null,
+      last_name: fullName, first_name: null, last_name_kana: null, first_name_kana: null,
+      phone: nc.phone.trim() || null, email: nc.email.trim() || null,
+      postal_code: nc.postal.trim() || null, prefecture: null, city: null,
+      address1: nc.address.trim() || null, address2: null,
+      birthday: null, gender: null, occupation: null, notes: null,
+      line_user_id: nc.lineId.trim() || null, line_display_name: null, line_picture_url: null, line_connected: false,
+      is_business: nc.isBusiness, trade_discount_pct: nc.isBusiness ? (Number(nc.tradeRate) || 0) : 0, credit_terms: null,
+      deleted_at: null, created_at: "", updated_at: "",
+    };
+    setLocalCustomers((prev) => [newCust, ...prev]);
+    setCustomerId(newId);
+    if (vehMode === "select") setVehicleId(""); // the new customer has no existing vehicles yet
+    setCustomerMode("select");
+  }
+
   // ── Totals (client preview = server-authoritative function) ─────────────────
   const itemsForCalc = items.map((i) => ({ quantity: i.quantity, unit_price: i.unit_price, discount_rate: i.discount_rate }));
   const rawSubtotal  = items.reduce((s, i) => s + lineTotal(i.quantity, i.unit_price, i.discount_rate), 0);
@@ -311,7 +365,8 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
     couponTotal !== 0 ||
     (isEdit ? extraAmount !== (estimate?.discount_amount ?? 0) : extraAmount !== 0) ||
     isDealer ||
-    (vehMode === "new" && Object.values(nv).some((v) => v.trim() !== ""));
+    (vehMode === "new" && Object.values(nv).some((v) => v.trim() !== "")) ||
+    (customerMode === "new" && (nc.name.trim() !== "" || nc.phone.trim() !== "" || nc.email.trim() !== "" || nc.address.trim() !== ""));
   useUnsavedChangesGuard(dirty && !pending);
 
   // ── Item helpers ────────────────────────────────────────────────────────────
@@ -438,11 +493,57 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
           {/* Customer */}
           <div className={card}>
             <h3 className={secHdr}>顧客</h3>
-            <label className={lbl}>顧客を選択</label>
-            <select value={customerId} onChange={(e) => { setCustomerId(e.target.value); setVehicleId(""); }} className={`${inp} mt-1`}>
-              <option value="">顧客を選択...</option>
-              {customers.map((c) => <option key={c.id} value={c.id}>{customerDisplayName(c) || c.last_name || "（無名）"}</option>)}
-            </select>
+
+            {/* Mode: select existing OR create a new customer */}
+            <div className="flex gap-2 mb-3">
+              <button type="button" onClick={() => setCustomerMode("select")} className={chip(customerMode === "select")}>既存顧客を選択</button>
+              <button type="button" onClick={() => setCustomerMode("new")} className={chip(customerMode === "new")}>新規顧客を作成</button>
+            </div>
+
+            {customerMode === "select" ? (
+              <>
+                <label className={lbl}>顧客を選択</label>
+                <select value={customerId} onChange={(e) => { setCustomerId(e.target.value); setVehicleId(""); }} className={`${inp} mt-1`}>
+                  <option value="">顧客を選択...</option>
+                  {localCustomers.map((c) => <option key={c.id} value={c.id}>{customerDisplayName(c) || c.last_name || "（無名）"}</option>)}
+                </select>
+              </>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <div>
+                  <label className={lbl}>お客様名 / 会社名<span className="text-red-400"> *</span></label>
+                  <input type="text" value={nc.name} onChange={(e) => setNc((p) => ({ ...p, name: e.target.value }))} placeholder="山田太郎 / 株式会社〇〇" className={`${inp} mt-1`} />
+                  <span className="text-[10px] text-slate-600">個人名・法人名をそのまま1項目で入力（分割しません）</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><label className={lbl}>電話番号</label><input type="tel" inputMode="tel" value={nc.phone} onChange={(e) => setNc((p) => ({ ...p, phone: e.target.value }))} placeholder="090-0000-0000" className={`${inp} mt-1`} /></div>
+                  <div><label className={lbl}>メール</label><input type="email" value={nc.email} onChange={(e) => setNc((p) => ({ ...p, email: e.target.value }))} className={`${inp} mt-1`} /></div>
+                  <div><label className={lbl}>郵便番号</label><input type="text" value={nc.postal} onChange={(e) => setNc((p) => ({ ...p, postal: e.target.value }))} placeholder="000-0000" className={`${inp} mt-1`} /></div>
+                  <div><label className={lbl}>LINE ID</label><input type="text" value={nc.lineId} onChange={(e) => setNc((p) => ({ ...p, lineId: e.target.value }))} className={`${inp} mt-1`} /></div>
+                  <div className="col-span-2"><label className={lbl}>住所</label><input type="text" value={nc.address} onChange={(e) => setNc((p) => ({ ...p, address: e.target.value }))} placeholder="都道府県・市区町村・番地" className={`${inp} mt-1`} /></div>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <button type="button" onClick={() => setNc((p) => ({ ...p, isBusiness: !p.isBusiness }))} className={`w-5 h-5 rounded border-2 flex items-center justify-center ${nc.isBusiness ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`}>{nc.isBusiness && <span className="text-white text-[10px]">✓</span>}</button>
+                  <span className="text-sm text-slate-300">業者（法人）</span>
+                </div>
+                {nc.isBusiness && (
+                  <div className="grid grid-cols-2 gap-2 border border-slate-700/60 rounded-lg p-3">
+                    <div><label className={lbl}>掛け率（%）</label><input type="number" min={0} max={100} value={nc.tradeRate} onChange={(e) => setNc((p) => ({ ...p, tradeRate: e.target.value }))} className={`${inp} mt-1`} /></div>
+                    <div className="flex items-end gap-2 pb-1">
+                      <button type="button" onClick={() => setNc((p) => ({ ...p, arAllowed: !p.arAllowed }))} className={`w-5 h-5 rounded border-2 flex items-center justify-center ${nc.arAllowed ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`}>{nc.arAllowed && <span className="text-white text-[10px]">✓</span>}</button>
+                      <span className="text-xs text-slate-300">売掛（AR）許可</span>
+                    </div>
+                    <div><label className={lbl}>締め日</label><input type="number" min={1} max={31} value={nc.closingDay} onChange={(e) => setNc((p) => ({ ...p, closingDay: e.target.value }))} placeholder="例: 20" className={`${inp} mt-1`} /></div>
+                    <div><label className={lbl}>支払日</label><input type="number" min={1} max={31} value={nc.paymentDay} onChange={(e) => setNc((p) => ({ ...p, paymentDay: e.target.value }))} placeholder="例: 末=31" className={`${inp} mt-1`} /></div>
+                    <p className="col-span-2 text-[10px] text-slate-600">売掛許可・締め日・支払日はDB列（migration 100）未適用のため現時点では保存されません。</p>
+                  </div>
+                )}
+                <button type="button" onClick={handleCreateCustomer} disabled={creatingCustomer || !nc.name.trim()}
+                  className="self-start text-xs font-medium bg-[#1d4ed8] hover:bg-[#1e40af] disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors">
+                  {creatingCustomer ? "登録中..." : "この顧客を登録"}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Vehicle */}
