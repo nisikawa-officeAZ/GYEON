@@ -47,6 +47,11 @@ const CATEGORY_LABEL: Record<string, string> = {
   glass: "ガラス", other: "その他", maintenance: "メンテナンス", carwash: "洗車", roomclean: "ルームクリーニング",
 };
 
+// PPF partial parts that require an operator-entered quantity (>=1). All other
+// single parts are treated as quantity = 1 internally. UI-only classification —
+// does NOT modify the PPF price master (pricing-data.ts) or dealer settings.
+const PPF_QTY_REQUIRED = new Set<string>(["sp-step", "sp-door-cup"]);
+
 const card = "bg-[#1e293b] rounded-xl shadow-lg p-5";
 const secHdr = "text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4";
 const lbl = "text-xs font-medium text-slate-400";
@@ -183,7 +188,11 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   const [ppfFilm,       setPpfFilm]       = useState("clear");
   const [ppfRank,       setPpfRank]       = useState("std");
   const [ppfFrontGlass, setPpfFrontGlass] = useState("");
-  const [ppfParts,      setPpfParts]      = useState<Record<string, number>>({});
+  // PPF partial work (部位別・プラン非依存). Per-part: selection, editable price
+  // (temporary, estimate-only), and quantity (only for quantity-required parts).
+  const [ppfPartSel,   setPpfPartSel]   = useState<Record<string, boolean>>({});
+  const [ppfPartPrice, setPpfPartPrice] = useState<Record<string, string>>({});
+  const [ppfPartQty,   setPpfPartQty]   = useState<Record<string, number>>({});
   // window
   const [windowParts, setWindowParts] = useState<string[]>([]);
   const [windowGrade, setWindowGrade] = useState("standard");
@@ -357,6 +366,18 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   const discountAmount = couponTotal + extraAmount + dealerDiscount;
   const totals = calculateEstimateTotals(itemsForCalc, discountAmount, taxRate);
 
+  // ── PPF partial work: selection state / validation (§enable rules) ──────────
+  const ppfSelectedParts = catalog.ppfSingleParts.filter((sp) => ppfPartSel[sp.id]);
+  const ppfPartMsg =
+    ppfSelectedParts.length === 0
+      ? "追加するPPF部位を選択してください"
+      : ppfSelectedParts.some((sp) => !(ppfPartUnitPrice(sp) > 0))
+        ? "価格を入力してください"
+        : ppfSelectedParts.some((sp) => PPF_QTY_REQUIRED.has(sp.id) && !(ppfPartQuantity(sp) >= 1))
+          ? "数量を入力してください"
+          : null;
+  const ppfPartAddEnabled = ppfPartMsg === null;
+
   // ── Dirty tracking (§11.1) ──────────────────────────────────────────────────
   const currentItemsSig = JSON.stringify(items.map((i) => ({ ...i, key: 0 })));
   const dirty =
@@ -390,6 +411,33 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   function removeItem(key: string) { setItems((prev) => prev.filter((i) => i.key !== key)); }
   function addBlankItem() {
     setItems((prev) => [...prev, { key: nextKey(), category: "other", item_name: "", description: "", quantity: 1, unit_price: 0, discount_rate: 0 }]);
+  }
+
+  // PPF partial work → add each SELECTED part as an estimate line using the
+  // (possibly edited) unit price and quantity. Raw items are pushed exactly like
+  // addBlankItem, so the existing estimate-totals calculation applies unchanged.
+  // The edited price lives only in component state → the price master is untouched.
+  function ppfPartUnitPrice(sp: { id: string; price: number }) {
+    const raw = ppfPartPrice[sp.id];
+    return raw == null || raw === "" ? sp.price : Number(raw);
+  }
+  function ppfPartQuantity(sp: { id: string }) {
+    return PPF_QTY_REQUIRED.has(sp.id) ? Math.max(1, ppfPartQty[sp.id] ?? 1) : 1;
+  }
+  function handleAddPpfParts() {
+    const selected = catalog.ppfSingleParts.filter((sp) => ppfPartSel[sp.id]);
+    if (selected.length === 0) return; // guarded by disabled button + inline message
+    const rows: EditorItem[] = selected.map((sp) => ({
+      key: nextKey(),
+      category: "ppf",
+      item_name: `PPF ${sp.name}`,
+      description: "",
+      quantity: ppfPartQuantity(sp),
+      unit_price: ppfPartUnitPrice(sp),
+      discount_rate: 0,
+    }));
+    setItems((prev) => [...prev, ...rows]);
+    setPpfPartSel({}); setPpfPartPrice({}); setPpfPartQty({});
   }
   const toggle = (arr: string[], id: string) => (arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id]);
 
@@ -641,9 +689,9 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                   className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
               </div>
 
-              {/* PPF */}
+              {/* PPF プラン（全体施工） */}
               <div className="border border-slate-700/60 rounded-lg p-3">
-                <p className="text-xs font-semibold text-blue-300 mb-2">PPF</p>
+                <p className="text-xs font-semibold text-blue-300 mb-2">PPF プラン（全体施工）</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
                   <select value={ppfPlan} onChange={(e) => setPpfPlan(e.target.value)} className={inp}>
                     <option value="">プランを選択...</option>
@@ -660,26 +708,54 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                     {catalog.ppfFrontGlass.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
                   </select>
                 </div>
-                {catalog.ppfSingleParts.length > 0 && (
-                  <div className="flex flex-col gap-1 mb-2">
-                    {catalog.ppfSingleParts.map((sp) => (
-                      <div key={sp.id} className="flex items-center gap-2 text-xs text-slate-300">
-                        <span className="flex-1">{sp.name}</span>
-                        {/* Unit price display (read-only). Uses the catalog price already
-                            loaded for calculation — no pricing logic change. */}
-                        <span className={`shrink-0 tabular-nums ${sp.price > 0 ? "text-slate-400" : "text-slate-600"}`}>
-                          {sp.price > 0 ? `¥${sp.price.toLocaleString("ja-JP")}` : "価格未設定"}
-                        </span>
-                        <input type="number" min={0} max={sp.maxQty} value={ppfParts[sp.id] ?? 0}
-                          onChange={(e) => setPpfParts((p) => ({ ...p, [sp.id]: Math.max(0, Math.min(sp.maxQty, Number(e.target.value) || 0)) }))}
-                          className="w-16 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-slate-100" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <button type="button" disabled={!ppfPlan} onClick={() => appendService({ type: "ppf", planId: ppfPlan, filmType: ppfFilm, vehicleRank: ppfRank, sizeKey, frontGlass: ppfFrontGlass || undefined, singleParts: Object.entries(ppfParts).filter(([, q]) => q > 0).map(([id, qty]) => ({ id, qty })) })}
+                <button type="button" disabled={!ppfPlan} onClick={() => appendService({ type: "ppf", planId: ppfPlan, filmType: ppfFilm, vehicleRank: ppfRank, sizeKey, frontGlass: ppfFrontGlass || undefined, singleParts: [] })}
                   className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
               </div>
+
+              {/* PPF 部分施工（部位別・プラン不要・独立） */}
+              {catalog.ppfSingleParts.length > 0 && (
+                <div className="border border-slate-700/60 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-blue-300 mb-1">PPF 部分施工（部位別）</p>
+                  <p className="text-[10px] text-slate-500 mb-2">プラン選択は不要。部位を選び、必要に応じて価格・数量を編集して追加します。</p>
+                  <div className="flex flex-col gap-1.5 mb-2">
+                    {catalog.ppfSingleParts.map((sp) => {
+                      const sel     = !!ppfPartSel[sp.id];
+                      const qtyReq  = PPF_QTY_REQUIRED.has(sp.id);
+                      const priceStr = ppfPartPrice[sp.id] ?? String(sp.price);
+                      const priceNum = Number(priceStr);
+                      const qty     = qtyReq ? (ppfPartQty[sp.id] ?? 1) : 1;
+                      const sub     = (priceNum > 0 ? priceNum : 0) * (qty >= 1 ? qty : 0);
+                      return (
+                        <div key={sp.id} className={`flex items-center gap-2 text-xs rounded-md px-2 py-1.5 ${sel ? "bg-blue-500/5 border border-blue-500/25" : "border border-slate-700/40"}`}>
+                          <button type="button" aria-pressed={sel} onClick={() => setPpfPartSel((p) => ({ ...p, [sp.id]: !p[sp.id] }))}
+                            className={`w-4 h-4 shrink-0 rounded border flex items-center justify-center ${sel ? "bg-[#1d4ed8] border-[#1d4ed8]" : "border-slate-600"}`}>
+                            {sel && <span className="text-white text-[9px] leading-none">✓</span>}
+                          </button>
+                          <span className="flex-1 text-slate-200 truncate">{sp.name}</span>
+                          <span className="hidden sm:inline text-[10px] text-slate-500 shrink-0">既定 {sp.price > 0 ? `¥${sp.price.toLocaleString("ja-JP")}` : "価格未設定"}</span>
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <span className="text-slate-500">¥</span>
+                            <input type="number" min={0} value={priceStr} disabled={!sel}
+                              onChange={(e) => setPpfPartPrice((p) => ({ ...p, [sp.id]: e.target.value }))}
+                              className="w-20 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-right text-slate-100 disabled:opacity-40" />
+                          </div>
+                          {qtyReq ? (
+                            <input type="number" min={1} max={sp.maxQty > 1 ? sp.maxQty : undefined} value={qty} disabled={!sel}
+                              onChange={(e) => setPpfPartQty((p) => ({ ...p, [sp.id]: Math.max(1, Number(e.target.value) || 1) }))}
+                              className="w-12 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-right text-slate-100 disabled:opacity-40" title="数量" />
+                          ) : (
+                            <span className="w-12 text-center text-slate-600 shrink-0" title="数量1固定">×1</span>
+                          )}
+                          <span className="w-20 text-right tabular-nums shrink-0 text-slate-300">{sel ? `¥${sub.toLocaleString("ja-JP")}` : "—"}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {ppfPartMsg && <p className={`text-[11px] mb-2 ${ppfSelectedParts.length === 0 ? "text-slate-500" : "text-amber-400"}`}>{ppfPartMsg}</p>}
+                  <button type="button" disabled={!ppfPartAddEnabled} onClick={handleAddPpfParts}
+                    className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
+                </div>
+              )}
 
               {/* Window */}
               <div className="border border-slate-700/60 rounded-lg p-3">
