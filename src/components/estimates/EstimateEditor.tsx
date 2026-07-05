@@ -416,6 +416,24 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
       })),
     ]);
   }
+  // TASK 1 — single-instance categories (Window Film / Room Cleaning). These may
+  // exist only once per estimate: pressing 明細に追加 REGENERATES the category's lines
+  // from the current selection (removing the existing ones) instead of appending a
+  // duplicate. The category set is derived from the freshly generated lines, so the
+  // taxonomy-flag mapping (roomclean→interior when the flag is off) is honored. No
+  // pricing change — buildLineItems is the same authoritative function as append.
+  function appendServiceSingle(input: ServiceInput) {
+    const generated: PricedLineItem[] = buildLineItems([input], catalog);
+    if (generated.length === 0) return;
+    const cats = new Set(generated.map((g) => g.category));
+    setItems((prev) => [
+      ...prev.filter((i) => !cats.has(i.category)),
+      ...generated.map((g) => ({
+        key: nextKey(), category: g.category, item_name: g.item_name,
+        description: "", quantity: g.quantity, unit_price: g.unit_price, discount_rate: g.discount_rate,
+      })),
+    ]);
+  }
   function updateItem(key: string, patch: Partial<EditorItem>) {
     setItems((prev) => prev.map((i) => (i.key === key ? { ...i, ...patch } : i)));
   }
@@ -707,7 +725,10 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                     <button key={o.id} type="button" onClick={() => setCoatingOpts((p) => toggle(p, o.id))} className={chip(coatingOpts.includes(o.id))}>{o.name}</button>
                   ))}
                 </div>
-                <button type="button" disabled={!coatingId} onClick={() => appendService({ type: "coating", coatingId, sizeKey, topcoat2: topcoat2 || undefined, topcoat3: topcoat3 || undefined, optionIds: coatingOpts })}
+                {/* TASK 2 — enable once a base coating OR at least one coating option
+                    is selected (options such as ハードポリッシュ/鉄粉除去/付着物除去/タッチアップ
+                    alone are valid). calcCoating already emits lines from options only. */}
+                <button type="button" disabled={!coatingId && coatingOpts.length === 0} onClick={() => appendService({ type: "coating", coatingId, sizeKey, topcoat2: topcoat2 || undefined, topcoat3: topcoat3 || undefined, optionIds: coatingOpts })}
                   className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
               </div>
 
@@ -788,29 +809,40 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                 <select value={windowGrade} onChange={(e) => setWindowGrade(e.target.value)} className={`${inp} mb-2`}>
                   {catalog.windowGrades.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
-                <button type="button" disabled={windowParts.length === 0} onClick={() => appendService({ type: "window", partIds: windowParts, grade: windowGrade })}
+                {/* TASK 1 — Window Film is single-instance: re-adding updates the
+                    existing line(s) instead of creating a duplicate. */}
+                <button type="button" disabled={windowParts.length === 0} onClick={() => appendServiceSingle({ type: "window", partIds: windowParts, grade: windowGrade })}
                   className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
               </div>
 
-              {/* Maintenance */}
-              <div className="border border-slate-700/60 rounded-lg p-3">
-                <p className="text-xs font-semibold text-blue-300 mb-2">ボディ定期メンテナンス</p>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {catalog.maintenanceMenus.map((m) => <button key={m.id} type="button" onClick={() => setMaintSel((x) => toggle(x, m.id))} className={chip(maintSel.includes(m.id))}>{m.name}</button>)}
-                </div>
-                <button type="button" disabled={maintSel.length === 0} onClick={() => appendService({ type: "maintenance", menuIds: maintSel })}
-                  className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
-              </div>
+              {/* Maintenance / Carwash — TASK 3: these are maintenance-menu services and
+                  are HIDDEN on the Estimate Edit screen (they should not appear during
+                  normal estimate editing). Still available when creating an estimate;
+                  not removed from the application. Existing maintenance/carwash line
+                  items on an edited estimate remain visible in the 明細 table below. */}
+              {!isEdit && (
+                <>
+                  {/* Maintenance */}
+                  <div className="border border-slate-700/60 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-blue-300 mb-2">ボディ定期メンテナンス</p>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {catalog.maintenanceMenus.map((m) => <button key={m.id} type="button" onClick={() => setMaintSel((x) => toggle(x, m.id))} className={chip(maintSel.includes(m.id))}>{m.name}</button>)}
+                    </div>
+                    <button type="button" disabled={maintSel.length === 0} onClick={() => appendService({ type: "maintenance", menuIds: maintSel })}
+                      className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
+                  </div>
 
-              {/* Carwash */}
-              <div className="border border-slate-700/60 rounded-lg p-3">
-                <p className="text-xs font-semibold text-blue-300 mb-2">メンテナンス洗車</p>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {catalog.carwashMenus.map((m) => <button key={m.id} type="button" onClick={() => setCarwashSel((x) => toggle(x, m.id))} className={chip(carwashSel.includes(m.id))}>{m.name}</button>)}
-                </div>
-                <button type="button" disabled={carwashSel.length === 0} onClick={() => appendService({ type: "carwash", menuIds: carwashSel })}
-                  className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
-              </div>
+                  {/* Carwash */}
+                  <div className="border border-slate-700/60 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-blue-300 mb-2">メンテナンス洗車</p>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {catalog.carwashMenus.map((m) => <button key={m.id} type="button" onClick={() => setCarwashSel((x) => toggle(x, m.id))} className={chip(carwashSel.includes(m.id))}>{m.name}</button>)}
+                    </div>
+                    <button type="button" disabled={carwashSel.length === 0} onClick={() => appendService({ type: "carwash", menuIds: carwashSel })}
+                      className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
+                  </div>
+                </>
+              )}
 
               {/* Room clean */}
               <div className="border border-slate-700/60 rounded-lg p-3">
@@ -821,7 +853,9 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                 <select value={roomCond} onChange={(e) => setRoomCond(e.target.value)} className={`${inp} mb-2`}>
                   {catalog.roomCleanConditions.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
                 </select>
-                <button type="button" disabled={roomSel.length === 0} onClick={() => appendService({ type: "roomclean", partIds: roomSel, condition: roomCond })}
+                {/* TASK 1 — Room Cleaning is single-instance: re-adding updates the
+                    existing line(s) instead of creating a duplicate. */}
+                <button type="button" disabled={roomSel.length === 0} onClick={() => appendServiceSingle({ type: "roomclean", partIds: roomSel, condition: roomCond })}
                   className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
               </div>
 
