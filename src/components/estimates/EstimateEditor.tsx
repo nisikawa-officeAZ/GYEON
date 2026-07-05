@@ -360,6 +360,17 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   // ── Totals (client preview = server-authoritative function) ─────────────────
   const itemsForCalc = items.map((i) => ({ quantity: i.quantity, unit_price: i.unit_price, discount_rate: i.discount_rate }));
   const rawSubtotal  = items.reduce((s, i) => s + lineTotal(i.quantity, i.unit_price, i.discount_rate), 0);
+  // Category subtotals — display only. Grouped from the SAME line items via the SAME
+  // lineTotal(); does not affect subtotal / discount / tax / total. Empty categories
+  // are omitted. Shown in canonical CATEGORY_LABEL order.
+  const categorySubtotals = (() => {
+    const order = Object.keys(CATEGORY_LABEL);
+    const m = new Map<string, number>();
+    for (const i of items) m.set(i.category, (m.get(i.category) ?? 0) + lineTotal(i.quantity, i.unit_price, i.discount_rate));
+    return Array.from(m.entries())
+      .filter(([, amt]) => Math.round(amt) !== 0)
+      .sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
+  })();
   const couponTotal  = DEFAULT_COUPONS.reduce((s, c, i) => s + (coupons[i] ? c.amount : 0), 0);
   const extraAmount  = Number(extraDisc) || 0;
   const dealerDiscount = isDealer ? Math.round(rawSubtotal * (1 - dealerRate / 100)) : 0;
@@ -906,11 +917,23 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
 
         {/* Totals */}
         <div className="lg:col-span-1">
-          <div className={`${card} lg:sticky lg:top-4`}>
+          {/* Sticky on desktop only. Offset clears the fixed top header
+              (--app-header-h ≈ 56px) plus ~40px breathing room (≈96px total) so the
+              card is never clipped under the header / notification / user icon /
+              save-cancel actions. max-h + overflow guards against vertical clipping on
+              short viewports. Below lg it stays in normal flow (no sticky → no clip). */}
+          <div className={`${card} lg:sticky lg:top-[calc(var(--app-header-h)+2.5rem)] lg:max-h-[calc(100vh-var(--app-header-h)-3.5rem)] lg:overflow-y-auto`}>
             <h3 className={secHdr}>合計</h3>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-slate-400">小計</span><span className="text-slate-200">{formatYen(totals.subtotal)}</span></div>
-              <div className="flex justify-between"><span className="text-slate-400">値引き</span><span className="text-slate-200">-{formatYen(totals.discount_amount)}</span></div>
+              {/* Category subtotals (display only) — replaces the single 小計 line. */}
+              {categorySubtotals.length > 0 ? (
+                categorySubtotals.map(([cat, amt]) => (
+                  <div key={cat} className="flex justify-between"><span className="text-slate-400">{CATEGORY_LABEL[cat] ?? cat}</span><span className="text-slate-200">{formatYen(amt)}</span></div>
+                ))
+              ) : (
+                <div className="flex justify-between"><span className="text-slate-400">小計</span><span className="text-slate-200">{formatYen(totals.subtotal)}</span></div>
+              )}
+              <div className="flex justify-between border-t border-slate-700/60 pt-2"><span className="text-slate-400">値引き</span><span className="text-slate-200">-{formatYen(totals.discount_amount)}</span></div>
               <div className="flex justify-between"><span className="text-slate-400">消費税（{taxRate}%）</span><span className="text-slate-200">{formatYen(totals.tax_amount)}</span></div>
               <div className="flex justify-between border-t border-slate-700 pt-2 font-semibold"><span className="text-slate-200">合計</span><span className="text-white">{formatYen(totals.total)}</span></div>
             </div>
