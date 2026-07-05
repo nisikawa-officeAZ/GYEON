@@ -665,6 +665,11 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                     {catalog.ppfSingleParts.map((sp) => (
                       <div key={sp.id} className="flex items-center gap-2 text-xs text-slate-300">
                         <span className="flex-1">{sp.name}</span>
+                        {/* Unit price display (read-only). Uses the catalog price already
+                            loaded for calculation — no pricing logic change. */}
+                        <span className={`shrink-0 tabular-nums ${sp.price > 0 ? "text-slate-400" : "text-slate-600"}`}>
+                          {sp.price > 0 ? `¥${sp.price.toLocaleString("ja-JP")}` : "価格未設定"}
+                        </span>
                         <input type="number" min={0} max={sp.maxQty} value={ppfParts[sp.id] ?? 0}
                           onChange={(e) => setPpfParts((p) => ({ ...p, [sp.id]: Math.max(0, Math.min(sp.maxQty, Number(e.target.value) || 0)) }))}
                           className="w-16 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-slate-100" />
