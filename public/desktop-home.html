@@ -1764,5 +1764,63 @@
 })();
 </script>
 
+<!-- [DealerOS nav bridge] The GenSpark v17 dashboard ships as a visual mockup whose
+     nav elements are placeholders (sidebar links are href="#", CTA/cards have no
+     navigation). This script maps each nav element to its real application route and
+     navigates the PARENT window (this file is rendered inside a full-screen iframe by
+     src/app/page.tsx). Behavior only — NO layout / CSS / DOM-structure change. Labels
+     with no matching route (e.g. リマインダー) are intentionally left inert. -->
+<script>
+(function () {
+  'use strict';
+  var ROUTES = {
+    // Sidebar (span.en, short EN)
+    'HOME': '/',
+    'ESTIMATES': '/estimates',
+    'WORK': '/work-orders',
+    'CUSTOMERS': '/customers',
+    'VEHICLES': '/vehicles',
+    'RESERVATIONS': '/reservations',
+    'MESSAGING': '/line',
+    'ORDERS': '/product-orders',
+    'SETTINGS': '/settings',
+    // Quick Access cards (div.en, long EN)
+    'ESTIMATE LIST': '/estimates',
+    'WORK MANAGEMENT': '/work-orders',
+    // CTA buttons (en-label)
+    'NEW ESTIMATE': '/estimates/new',
+    "TODAY'S WORK": '/work-orders',
+    // Japanese fallbacks (ja-label / h3)
+    '新規見積もり作成': '/estimates/new',
+    '本日の作業': '/work-orders'
+  };
+  function norm(s) { return (s || '').replace(/\s+/g, ' ').trim().toUpperCase(); }
+  function routeFor(el) {
+    var en = el.querySelector('.en, .en-label');
+    var ja = el.querySelector('.ja-label, h3');
+    if (en && ROUTES[norm(en.textContent)] != null) return ROUTES[norm(en.textContent)];
+    if (ja && ROUTES[ja.textContent.trim()] != null) return ROUTES[ja.textContent.trim()];
+    return null;
+  }
+  function go(route) {
+    if (!route) return;
+    var w = window.top || window.parent || window;
+    try { w.location.href = route; } catch (e) { window.location.href = route; }
+  }
+  function init() {
+    var nodes = document.querySelectorAll('nav.nav a, .cta-action, section.features .feat');
+    for (var i = 0; i < nodes.length; i++) {
+      (function (el) {
+        var route = routeFor(el);
+        if (!route) return;
+        el.addEventListener('click', function (e) { e.preventDefault(); go(route); });
+      })(nodes[i]);
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
 </body>
 </html>
