@@ -438,23 +438,39 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   function handleAddPpfParts() {
     const selected = catalog.ppfSingleParts.filter((sp) => ppfPartSel[sp.id]);
     if (selected.length === 0) return; // guarded by disabled button + inline message
-    const rows: EditorItem[] = selected.map((sp) => ({
-      key: nextKey(),
-      category: "ppf",
-      item_name: `PPF ${sp.name}`,
-      description: "",
-      quantity: ppfPartQuantity(sp),
-      unit_price: ppfPartUnitPrice(sp),
-      discount_rate: 0,
-    }));
-    setItems((prev) => [...prev, ...rows]);
-    setPpfPartSel({}); setPpfPartPrice({}); setPpfPartQty({});
+    setItems((prev) => {
+      const next = [...prev];
+      for (const sp of selected) {
+        const name  = `PPF ${sp.name}`;
+        const price = ppfPartUnitPrice(sp);
+        const qty   = ppfPartQuantity(sp);
+        // TASK 2 (Option A) — if this PPF part is already in the estimate, UPDATE the
+        // existing line (price/qty) instead of creating a duplicate.
+        const idx = next.findIndex((it) => it.category === "ppf" && it.item_name === name);
+        if (idx >= 0) next[idx] = { ...next[idx], unit_price: price, quantity: qty };
+        else next.push({ key: nextKey(), category: "ppf", item_name: name, description: "", quantity: qty, unit_price: price, discount_rate: 0 });
+      }
+      return next;
+    });
+    // TASK 1 — keep the current UI state (selection / edited prices / quantities).
+    // Nothing is reset automatically; the operator changes selections manually.
   }
   const toggle = (arr: string[], id: string) => (arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id]);
 
   function handleCancel() {
     if (dirty && !window.confirm("未保存の変更があります。破棄して戻りますか？")) return;
     router.push(isEdit && estimate ? `/estimates/${estimate.id}` : "/estimates");
+  }
+
+  // PDF / LINE — post-save actions available once the estimate has an id (edit mode).
+  // Both reuse the EXISTING flows; no new PDF/LINE logic is added here.
+  const savedEstimateId = isEdit && estimate ? estimate.id : undefined;
+  function handleOpenPdf() {
+    if (savedEstimateId) window.open(`/pdf?estimateId=${savedEstimateId}`, "_blank", "noopener,noreferrer");
+  }
+  function handleOpenLine() {
+    // No estimate-scoped LINE-send flow exists; route to the existing LINE surface.
+    if (savedEstimateId) router.push("/line");
   }
 
   function handleSave() {
@@ -528,7 +544,7 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-24 lg:pb-4">
+    <div className="flex flex-col gap-4 pb-36 lg:pb-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -934,12 +950,17 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
             </div>
             <p className="text-[10px] text-slate-600 mt-3">金額は保存時にサーバーで再計算され確定します。</p>
             {/* Desktop action buttons — inside the sticky card so they follow scroll
-                with the totals. Tablet/mobile use the fixed bottom bar instead. */}
-            <div className="hidden lg:flex gap-2 mt-4 pt-3 border-t border-slate-700/60">
+                with the totals. Tablet/mobile use the fixed bottom bar instead.
+                PDF作成 / LINE送信 reuse existing flows and require a saved estimate. */}
+            <div className="hidden lg:grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-700/60">
               <button type="button" onClick={handleCancel} disabled={pending}
-                className="flex-1 text-xs font-medium bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 px-4 py-2.5 rounded-lg transition-colors">キャンセル</button>
+                className="text-xs font-medium bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 px-4 py-2.5 rounded-lg transition-colors">キャンセル</button>
               <button type="button" onClick={handleSave} disabled={pending || !catalogReady}
-                className="flex-1 text-xs font-medium bg-[#1d4ed8] hover:bg-[#1e40af] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg transition-colors">{pending ? "保存中..." : "保存"}</button>
+                className="text-xs font-medium bg-[#1d4ed8] hover:bg-[#1e40af] disabled:opacity-50 text-white px-4 py-2.5 rounded-lg transition-colors">{pending ? "保存中..." : "保存"}</button>
+              <button type="button" onClick={handleOpenPdf} disabled={!savedEstimateId} title={savedEstimateId ? undefined : "保存後に利用できます"}
+                className="text-xs font-medium bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 px-4 py-2.5 rounded-lg transition-colors">PDF作成</button>
+              <button type="button" onClick={handleOpenLine} disabled={!savedEstimateId} title={savedEstimateId ? undefined : "保存後に利用できます"}
+                className="text-xs font-medium bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 px-4 py-2.5 rounded-lg transition-colors">LINE画面へ</button>
             </div>
           </div>
         </div>
@@ -976,9 +997,11 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
       )}
 
       {/* Mobile + tablet fixed action bar (desktop uses the sticky-card buttons) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex gap-2 p-3 bg-[#0f172a]/95 backdrop-blur border-t border-slate-800">
-        <button type="button" onClick={handleCancel} disabled={pending} className="flex-1 text-sm font-medium bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 px-4 py-3 rounded-lg">キャンセル</button>
-        <button type="button" onClick={handleSave} disabled={pending || !catalogReady} className="flex-1 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] disabled:opacity-50 text-white px-4 py-3 rounded-lg">{pending ? "保存中..." : "保存"}</button>
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 grid grid-cols-2 gap-2 p-3 bg-[#0f172a]/95 backdrop-blur border-t border-slate-800">
+        <button type="button" onClick={handleCancel} disabled={pending} className="text-sm font-medium bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 px-4 py-3 rounded-lg">キャンセル</button>
+        <button type="button" onClick={handleSave} disabled={pending || !catalogReady} className="text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] disabled:opacity-50 text-white px-4 py-3 rounded-lg">{pending ? "保存中..." : "保存"}</button>
+        <button type="button" onClick={handleOpenPdf} disabled={!savedEstimateId} className="text-sm font-medium bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 px-4 py-3 rounded-lg">PDF作成</button>
+        <button type="button" onClick={handleOpenLine} disabled={!savedEstimateId} className="text-sm font-medium bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 px-4 py-3 rounded-lg">LINE画面へ</button>
       </div>
     </div>
   );
