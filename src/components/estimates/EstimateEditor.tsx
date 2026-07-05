@@ -233,17 +233,43 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   // plate (no vehicle is created — that stays in the onboarding flow). Manual editing
   // is preserved throughout.
   function applyOcr(selected: Partial<VehicleRegistrationOcrResult>) {
-    // G2 — "new vehicle": bind OCR results to the editable panel fields (never
-    // overwrite manually edited values without confirmation).
-    if (vehMode === "new") {
-      const plate = [
-        selected.license_plate_region, selected.license_plate_class,
-        selected.license_plate_kana, selected.license_plate_number,
-      ].filter(Boolean).join(" ");
-      const regDate = selected.registration_date
-        ? (selected.registration_date.length === 7 ? selected.registration_date + "-01" : selected.registration_date)
-        : "";
-      // 車名(vehicle_name)→ model, 型式(model)→ vehicle_code. Body color is manual-only (not from OCR).
+    // OCR apply → populate the VISIBLE customer/vehicle form (not memo-only).
+    // Vehicle: prefer an existing match (select it); otherwise switch to the
+    // new-vehicle panel and fill it (incl. body color). Customer: prefer an
+    // existing name match (select it); otherwise switch to the new-customer panel
+    // and fill it. Manual edits are preserved (empty-only fill / overwrite confirm).
+
+    // ── Vehicle ────────────────────────────────────────────────────────────────
+    const plate = [
+      selected.license_plate_region, selected.license_plate_class,
+      selected.license_plate_kana, selected.license_plate_number,
+    ].filter(Boolean).join(" ");
+    const regDate = selected.registration_date
+      ? (selected.registration_date.length === 7 ? selected.registration_date + "-01" : selected.registration_date)
+      : "";
+
+    // Best-effort match to an EXISTING vehicle by VIN or plate number.
+    const vin     = norm(selected.chassis_number);
+    const plateNo = norm(selected.license_plate_number);
+    const pickedVehicle =
+      (vin ? vehicles.find((v) => norm(v.vin) !== "" && norm(v.vin) === vin) : undefined) ??
+      (plateNo ? vehicles.find((v) => norm(v.plate_number).includes(plateNo) && plateNo !== "") : undefined);
+
+    const hasVehicleOcr = !!(
+      selected.maker || selected.vehicle_name || selected.model || selected.grade ||
+      selected.chassis_number || plate || selected.first_registration_date ||
+      selected.registration_date || selected.inspection_expiry_date ||
+      selected.displacement || selected.color
+    );
+
+    if (pickedVehicle) {
+      // Prefer the existing vehicle: select it (and adopt its owner as the customer).
+      setVehMode("select");
+      setVehicleId(pickedVehicle.id);
+      setCustomerId(pickedVehicle.customer_id);
+    } else if (hasVehicleOcr) {
+      // No match → fill the new-vehicle form (switch the panel to new-vehicle mode).
+      // 車名(vehicle_name)→ model, 型式(model)→ vehicle_code, 色(color)→ body color.
       const mapped: Partial<typeof nv> = {
         maker:                         selected.maker ?? "",
         model:                         selected.vehicle_name ?? "",
@@ -254,11 +280,13 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
         registration_date:             regDate,
         inspection_expiry_date:        selected.inspection_expiry_date ?? "",
         displacement:                  selected.displacement ?? "",
+        color:                         selected.color ?? "",
         plate_number:                  plate,
       };
-      const hasManual = Object.entries(nv).some(([k, v]) => k !== "color" && v.trim() !== "");
+      const hasManual = Object.entries(nv).some(([, v]) => v.trim() !== "");
       const overwrite = !hasManual ||
         window.confirm("入力済みの車両情報があります。OCR結果で上書きしますか？（キャンセル＝空欄のみ補完）");
+      setVehMode("new");
       setNv((prev) => {
         const u = { ...prev };
         for (const [k, val] of Object.entries(mapped) as [keyof typeof nv, string][]) {
@@ -274,31 +302,50 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
       });
       setSizeEstimate(est);
       if (est.sizeKey && (overwrite || sizeKey === "M")) setSizeKey(est.sizeKey);
-      setOcrStage("closed"); setPendingOcr(null);
-      return;
     }
 
-    // Select mode (G3) — append the extracted info to 社内メモ + best-effort match.
+    // ── Customer ─────────────────────────────────────────────────────────────
+    // Skip when an existing vehicle was matched — its owner is already selected.
+    const custName = (selected.customer_candidate_name ?? "").trim();
+    const custAddr = (selected.customer_candidate_address ?? "").trim();
+    if (!pickedVehicle && custName) {
+      const nk = norm(custName);
+      const pickedCustomer = localCustomers.find((c) => {
+        const cn = norm(customerDisplayName(c) || c.last_name || "");
+        return cn !== "" && (cn === nk || cn.includes(nk) || nk.includes(cn));
+      });
+      if (pickedCustomer) {
+        // Prefer the existing customer: select it.
+        setCustomerMode("select");
+        setCustomerId(pickedCustomer.id);
+      } else {
+        // No match → fill the new-customer form (empty-only, preserving manual input).
+        setCustomerMode("new");
+        setNc((prev) => ({
+          ...prev,
+          name:       prev.name.trim() ? prev.name : custName,
+          address:    prev.address.trim() ? prev.address : custAddr,
+          isBusiness: selected.customer_type === "corporation" ? true : prev.isBusiness,
+        }));
+      }
+    }
+
+    // ── Internal memo reference block (kept; no longer the ONLY effect) ─────────
     const labelMap: Record<string, string> = {
-      vehicle_name: "車名", maker: "メーカー", model: "型式", chassis_number: "車台番号",
+      vehicle_name: "車名", maker: "メーカー", model: "型式", grade: "グレード", chassis_number: "車台番号",
       license_plate_region: "ナンバー地域", license_plate_class: "分類番号", license_plate_kana: "かな",
       license_plate_number: "指定番号", first_registration_date: "初度登録年月", registration_date: "登録年月日",
       inspection_expiry_date: "車検有効期限", owner_name: "所有者", user_name: "使用者",
+      owner_address: "所有者住所", user_address: "使用者住所",
+      customer_candidate_name: "顧客氏名", customer_candidate_address: "顧客住所",
       color: "色", displacement: "排気量",
     };
     const lines: string[] = ["【車検証読み取り結果】"];
     for (const [k, v] of Object.entries(selected)) {
-      if (v && k !== "confidence") lines.push(`${labelMap[k] ?? k}: ${v}`);
+      if (v && k !== "confidence" && k !== "customer_type" && labelMap[k]) lines.push(`${labelMap[k]}: ${v}`);
     }
     const ocrText = lines.join("\n");
     setInternalMemo((prev) => (prev ? `${prev}\n\n${ocrText}` : ocrText));
-
-    const vin = norm(selected.chassis_number);
-    const plateNo = norm(selected.license_plate_number);
-    const picked =
-      (vin ? vehicles.find((v) => norm(v.vin) !== "" && norm(v.vin) === vin) : undefined) ??
-      (plateNo ? vehicles.find((v) => norm(v.plate_number).includes(plateNo) && plateNo !== "") : undefined);
-    if (picked) { setCustomerId(picked.customer_id); setVehicleId(picked.id); }
 
     setOcrStage("closed"); setPendingOcr(null);
   }
