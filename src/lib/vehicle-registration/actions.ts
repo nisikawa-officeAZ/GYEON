@@ -30,6 +30,7 @@ import { analyzeVehicleRegistrationImage } from "./ocr";
 import { isGyeonManagedKeyConfigured } from "@/lib/ai/gyeon-managed-key";
 import { logAiUsage } from "@/lib/ai/log-ai-usage";
 import sharp from "sharp";
+import heicConvert from "heic-convert";
 import { createAuditLog }    from "@/lib/audit/audit";
 import {
   createOcrSession,
@@ -115,8 +116,34 @@ export async function uploadAndAnalyzeVehicleRegistration(
   const isImageInput = heic || effectiveType.startsWith("image/");
 
   if (isImageInput) {
+    // HEIC/HEIF: the installed sharp/libvips build cannot decode HEVC-HEIC (its
+    // libheif exposes AVIF input only), and non-Safari browsers upload HEIC
+    // unchanged. So decode HEIC → JPEG server-side with heic-convert (pure-JS /
+    // libheif-js WASM — no system HEVC codec required) FIRST, then feed the JPEG
+    // into the SAME sharp enhancement pipeline. JPEG / PNG / WebP skip this step
+    // and go straight into sharp exactly as before (behavior unchanged).
+    let sharpInput: Buffer = Buffer.from(fileBuffer);
+    if (heic) {
+      try {
+        const decoded = await heicConvert({
+          buffer: new Uint8Array(fileBuffer),
+          format: "JPEG",
+          quality: 0.92,
+        });
+        sharpInput = Buffer.from(decoded);
+        console.log("[OCR] HEIC→JPEG decoded via heic-convert →", decoded.length, "bytes");
+      } catch (err) {
+        // Log technical details server-side only; return a clear, safe message.
+        console.error("[OCR] HEIC→JPEG conversion (heic-convert) failed:", err);
+        return {
+          success: false,
+          error: "HEIC画像の変換に失敗しました。再度お試しいただくか、別の形式（JPEG等）で撮影してください。",
+        };
+      }
+    }
+
     try {
-      const out = await sharp(Buffer.from(fileBuffer))
+      const out = await sharp(sharpInput)
         .rotate()                        // auto-orient from EXIF
         .normalize()                     // stretch contrast (document legibility)
         .modulate({ brightness: 1.05 })  // slight brightness lift
@@ -129,13 +156,14 @@ export async function uploadAndAnalyzeVehicleRegistration(
       console.log("[OCR] Image preprocessed for OCR",
         heic ? "(HEIC→JPEG + enhance)" : "(enhance)", `→ ${out.length} bytes`);
     } catch (err) {
-      console.error("[OCR] Image preprocessing failed:", err);
+      console.error("[OCR] Image enhancement (sharp) failed:", err);
       if (heic) {
-        // OpenAI cannot read HEIC — without conversion we cannot proceed.
-        return {
-          success: false,
-          error: "HEIC画像の変換に失敗しました。再度お試しいただくか、別の形式（JPEG等）で撮影してください。",
-        };
+        // HEIC is already a valid JPEG from heic-convert — enhancement is optional,
+        // so fall back to the un-enhanced JPEG rather than failing the upload.
+        fileBuffer    = new Uint8Array(sharpInput).buffer;
+        effectiveType = "image/jpeg";
+        effectiveName = file.name.replace(/\.[^.]+$/i, ".jpg");
+        console.warn("[OCR] Using un-enhanced HEIC-decoded JPEG (sharp enhance skipped).");
       }
       // Non-HEIC image: fall back to the original buffer (still a valid JPEG/PNG/WebP).
     }
