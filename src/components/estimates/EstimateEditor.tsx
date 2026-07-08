@@ -16,7 +16,7 @@
 
 import { useState, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { EstimateDB, EstimateCategory, estimateDisplayNo } from "@/lib/estimates/estimate-types";
+import { EstimateDB, estimateDisplayNo } from "@/lib/estimates/estimate-types";
 import { CustomerDB, customerDisplayName } from "@/lib/customers/customer-types";
 import { VehicleDB, vehicleDisplayName } from "@/lib/vehicles/vehicle-types";
 import { updateEstimate } from "@/lib/estimates/update-estimate";
@@ -30,6 +30,10 @@ import { DEFAULT_PRICING_CATALOG, type PricingCatalog } from "@/lib/pricing/pric
 import { getDealerPricingCatalog } from "@/lib/pricing/get-dealer-pricing-catalog";
 import dynamic from "next/dynamic";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
+import {
+  CATEGORY_LABEL, PPF_QTY_REQUIRED, card, secHdr, lbl, inp, chip,
+  DEFAULT_COUPONS, formatYen, useUnsavedChangesGuard, type EditorItem,
+} from "./estimate-editor-helpers";
 
 // G3 — reuse the existing OCR pipeline (loaded lazily) inside the editor. No OCR
 // logic is duplicated or modified; the same components the onboarding flow uses.
@@ -41,72 +45,6 @@ const VehicleRegistrationOcrReview = dynamic(
   () => import("@/components/vehicle-registration/VehicleRegistrationOcrReview"),
   { ssr: false, loading: () => <div className="py-8 text-center text-xs text-slate-500">読み込み中...</div> },
 );
-
-const CATEGORY_LABEL: Record<string, string> = {
-  coating: "コーティング", ppf: "PPF", window: "ウィンドウ", interior: "インテリア",
-  glass: "ガラス", other: "その他", maintenance: "メンテナンス", carwash: "洗車", roomclean: "ルームクリーニング",
-};
-
-// PPF partial parts that require an operator-entered quantity (>=1). All other
-// single parts are treated as quantity = 1 internally. UI-only classification —
-// does NOT modify the PPF price master (pricing-data.ts) or dealer settings.
-const PPF_QTY_REQUIRED = new Set<string>(["sp-step", "sp-door-cup"]);
-
-const card = "bg-[#1e293b] rounded-xl shadow-lg p-5";
-const secHdr = "text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4";
-const lbl = "text-xs font-medium text-slate-400";
-const inp = "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-base sm:text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors w-full";
-const chip = (on: boolean) => `px-3 py-1.5 rounded-lg border text-xs transition-colors ${on ? "bg-blue-950/40 border-[#1d4ed8]/60 text-slate-100" : "bg-[#0f172a] border-slate-700 text-slate-400 hover:border-slate-500"}`;
-
-const DEFAULT_COUPONS = [
-  { name: "新規ご来店クーポン",   amount: 5000  },
-  { name: "リピーター割引",       amount: 3000  },
-  { name: "紹介特典クーポン",     amount: 5000  },
-  { name: "キャンペーンクーポン", amount: 10000 },
-  { name: "スタッフ割引",         amount: 3000  },
-];
-
-function formatYen(n: number) { return "¥" + (n ?? 0).toLocaleString("ja-JP"); }
-
-interface EditorItem {
-  key:           string;
-  category:      EstimateCategory;
-  item_name:     string;
-  description:   string;
-  quantity:      number;
-  unit_price:    number;
-  discount_rate: number;
-}
-
-// §11.1 — warn before leaving with unsaved changes.
-function useUnsavedChangesGuard(dirty: boolean) {
-  useEffect(() => {
-    if (!dirty) return;
-    const MSG = "未保存の変更があります。移動してもよろしいですか？";
-    const onBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
-    const onAnchorClick = (e: MouseEvent) => {
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      const a = (e.target as HTMLElement | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
-      if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
-      const href = a.getAttribute("href") ?? "";
-      if (href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
-      if (!window.confirm(MSG)) { e.preventDefault(); e.stopPropagation(); }
-    };
-    const onPopState = () => {
-      if (window.confirm(MSG)) { window.removeEventListener("popstate", onPopState); history.back(); }
-      else { history.pushState(history.state, "", window.location.href); }
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    document.addEventListener("click", onAnchorClick, true);
-    history.pushState(history.state, "", window.location.href);
-    window.addEventListener("popstate", onPopState);
-    return () => {
-      window.removeEventListener("beforeunload", onBeforeUnload);
-      document.removeEventListener("click", onAnchorClick, true);
-      window.removeEventListener("popstate", onPopState);
-    };
-  }, [dirty]);
-}
 
 interface EstimateEditorProps {
   mode:               "create" | "edit";
