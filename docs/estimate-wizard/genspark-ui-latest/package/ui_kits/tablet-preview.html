@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tablet UI プレビュー — 3 パターン比較 (DealerOS GYEON)</title>
+  <link rel="stylesheet" href="../colors_and_type.css">
+  <style>
+    @keyframes ds-spin      { to { transform: rotate(360deg); } }
+    @keyframes ds-fade-in   { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes ds-scale-in  { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+    body {
+      background: linear-gradient(180deg, #050810 0%, #080d1a 100%);
+      min-height: 100vh;
+      margin: 0;
+      padding: 40px 32px;
+      color: var(--ds-text-primary);
+      font-family: var(--ds-font-sans);
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .hero {
+      display: flex; align-items: flex-start; gap: 20px;
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--ds-line);
+    }
+    .hero-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--ds-primary-600), var(--ds-primary-700));
+      display: grid; place-items: center;
+      color: #fff; font-size: 26px; font-weight: 700;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px -4px rgba(29, 78, 216, 0.5);
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: 32px; font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--ds-text-muted);
+      font-size: 15px; line-height: 1.6;
+      max-width: 640px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ds-primary-400);
+      margin-bottom: 12px;
+    }
+    .patterns-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .pattern-card {
+      background: var(--ds-bg-card);
+      border: 1px solid var(--ds-line);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex; flex-direction: column; gap: 16px;
+      box-shadow: var(--ds-shadow-lg), var(--ds-hi-inner);
+      transition: all 200ms var(--ds-ease-out);
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+    .pattern-card:hover {
+      border-color: var(--ds-primary-tint-60);
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -12px rgba(29,78,216,0.25), var(--ds-hi-inner);
+    }
+    .pattern-thumb {
+      background: var(--ds-bg-elevated);
+      border: 1px solid var(--ds-line);
+      border-radius: 12px;
+      aspect-ratio: 4 / 3;
+      display: grid; place-items: center;
+      color: var(--ds-primary-300);
+      position: relative;
+      overflow: hidden;
+    }
+    .pattern-thumb-icon {
+      font-size: 48px;
+      opacity: 0.4;
+    }
+    .pattern-thumb-orient {
+      position: absolute;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--ds-primary-500);
+      border-radius: 6px;
+      background: var(--ds-primary-tint-10);
+    }
+    .pattern-thumb-orient::after {
+      content: '';
+      position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+      width: 20px; height: 3px; background: var(--ds-primary-500);
+      border-radius: 3px;
+    }
+    .thumb-landscape .pattern-thumb-orient { width: 140px; height: 100px; }
+    .thumb-portrait .pattern-thumb-orient { width: 90px; height: 130px; }
+    .thumb-adaptive .pattern-thumb-orient:nth-child(1) { width: 100px; height: 76px; transform: translateX(-45px); }
+    .thumb-adaptive .pattern-thumb-orient:nth-child(2) { width: 66px; height: 100px; transform: translateX(45px); }
+
+    .pattern-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 18px; font-weight: 700;
+      color: #fff;
+    }
+    .pattern-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--ds-primary-tint-10);
+      color: var(--ds-primary-300);
+      border: 1px solid var(--ds-primary-tint-60);
+      padding: 2px 8px; border-radius: 999px;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+    }
+    .pattern-badge-recommended {
+      background: rgba(34,197,94,0.10);
+      color: var(--ds-green-400);
+      border-color: rgba(34,197,94,0.35);
+    }
+    .pattern-desc {
+      color: var(--ds-text-muted);
+      font-size: 13px; line-height: 1.6;
+      margin: 0;
+    }
+    .pattern-features {
+      display: flex; flex-direction: column; gap: 6px;
+      margin: 4px 0;
+      padding: 12px 14px;
+      background: var(--ds-bg-elevated);
+      border: 1px solid var(--ds-line);
+      border-radius: 10px;
+    }
+    .pattern-feature {
+      display: flex; gap: 8px; align-items: flex-start;
+      font-size: 12px; color: var(--ds-text-body);
+    }
+    .pattern-feature::before {
+      content: '·';
+      color: var(--ds-primary-400);
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .pattern-cta {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, var(--ds-primary-600), var(--ds-primary-700));
+      border-radius: 12px;
+      color: #fff;
+      font-size: 14px; font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* iPad Frame プレビュー */
+    .ipad-preview-section {
+      background: var(--ds-bg-card);
+      border: 1px solid var(--ds-line);
+      border-radius: 20px;
+      padding: 32px;
+      margin-top: 32px;
+      box-shadow: var(--ds-shadow-lg), var(--ds-hi-inner);
+    }
+    .ipad-preview-tabs {
+      display: flex; gap: 8px;
+      background: var(--ds-bg-elevated);
+      border: 1px solid var(--ds-line-slate);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 24px;
+      max-width: 640px;
+    }
+    .ipad-preview-tab {
+      flex: 1;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 14px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--ds-text-muted);
+      font-family: var(--ds-font-sans);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: all 120ms var(--ds-ease-out);
+      white-space: nowrap;
+    }
+    .ipad-preview-tab.active {
+      background: linear-gradient(135deg, var(--ds-primary-600), var(--ds-primary-700));
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 6px -1px rgba(29,78,216,0.4);
+    }
+    .ipad-orient-toggle {
+      display: inline-flex; gap: 4px;
+      background: var(--ds-bg-elevated);
+      border: 1px solid var(--ds-line-slate);
+      border-radius: 12px;
+      padding: 4px;
+      margin-left: auto;
+    }
+    .ipad-orient-btn {
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--ds-text-muted);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all 120ms var(--ds-ease-out);
+      font-family: var(--ds-font-sans);
+      min-height: 40px;
+    }
+    .ipad-orient-btn:hover { color: var(--ds-text-body); }
+    .ipad-orient-btn.active {
+      background: linear-gradient(135deg, var(--ds-primary-600), var(--ds-primary-700));
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 6px -1px rgba(29,78,216,0.4);
+    }
+    .ipad-orient-icon {
+      width: 14px; height: 14px;
+      border: 1.5px solid currentColor;
+      border-radius: 2.5px;
+      display: inline-block;
+    }
+    .ipad-orient-icon.landscape { width: 18px; height: 12px; }
+    .ipad-orient-icon.portrait  { width: 12px; height: 18px; }
+
+    /* 不整合バナー: パターンと向きの組み合わせが推奨外の時に表示 */
+    .mismatch-banner {
+      display: none;
+      align-items: center; gap: 10px;
+      background: var(--ds-amber-tint-10);
+      border: 1px solid var(--ds-amber-tint-40);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--ds-amber-400);
+      font-size: 12px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .mismatch-banner.show { display: flex; }
+    .mismatch-banner strong { color: #fff; font-weight: 600; }
+    .mismatch-banner button {
+      margin-left: auto;
+      background: var(--ds-amber-400);
+      color: #1a1a24;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer;
+      font-family: var(--ds-font-sans);
+      white-space: nowrap;
+    }
+    .mismatch-banner button:hover { background: var(--ds-amber-500); }
+    .preview-controls {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    /* ══════════════════════════════════════════════════════════════
+       iPad フレーム構造の設計方針:
+       - .ipad-frame は常に実寸 (1194×834 or 834×1194) で描画
+         → iframe 内の window.innerWidth/Height が正確、CSS orientation media query が正しく発動
+       - 縮小は外側の .ipad-frame-outer で transform: scale() を適用
+         → 見た目だけ縮小、iframe 内の viewport サイズは変えない
+       - .ipad-frame-slot は縮小後の見かけサイズを確保し、周囲レイアウトが正しく詰まる
+       ══════════════════════════════════════════════════════════════ */
+    .ipad-frame-wrap {
+      display: flex; justify-content: center;
+      padding: 24px 0;
+      background: radial-gradient(ellipse at center, rgba(29,78,216,0.06) 0%, transparent 70%);
+      border-radius: 16px;
+    }
+    /* スロット: 縮小後の見かけサイズを持ち、レイアウトフローを正しく確保する */
+    .ipad-frame-slot {
+      position: relative;
+      /* JS が動的に width/height を設定 */
+    }
+    /* アウター: transform で縮小。中身の実サイズは変わらない */
+    .ipad-frame-outer {
+      transform-origin: top left;
+      /* JS が動的に scale を設定 */
+    }
+    .ipad-frame {
+      /* iPad Pro 11" フレーム風の枠 (実寸) */
+      background: #1a1a24;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 36px;
+      padding: 16px 12px;
+      box-shadow:
+        0 40px 80px -20px rgba(0,0,0,0.7),
+        0 20px 40px -12px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      position: relative;
+      transition: width 300ms var(--ds-ease-out), height 300ms var(--ds-ease-out);
+      box-sizing: border-box;
+    }
+    .ipad-frame::before {
+      /* カメラホール (縦向き時は上、横向き時は左) */
+      content: '';
+      position: absolute;
+      background: #050810;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 50%;
+      width: 8px; height: 8px;
+    }
+    /* Landscape: 実寸 1194×834 */
+    .ipad-frame.landscape {
+      width: 1194px;
+      height: 834px;
+    }
+    .ipad-frame.landscape::before {
+      left: 6px; top: 50%; transform: translateY(-50%);
+    }
+    /* Portrait: 実寸 834×1194 */
+    .ipad-frame.portrait {
+      width: 834px;
+      height: 1194px;
+    }
+    .ipad-frame.portrait::before {
+      top: 6px; left: 50%; transform: translateX(-50%);
+    }
+    .ipad-screen {
+      width: 100%; height: 100%;
+      border-radius: 20px;
+      overflow: hidden;
+      background: var(--ds-bg);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    /* iframe: フレーム内側のスクリーン領域を占有 (実寸) */
+    .ipad-screen iframe {
+      width: 100%; height: 100%;
+      border: none;
+      display: block;
+    }
+    .frame-meta {
+      text-align: center;
+      color: var(--ds-text-subtle);
+      font-size: 12px;
+      margin-top: 16px;
+      font-family: var(--ds-font-mono);
+      letter-spacing: 0.5px;
+    }
+    .frame-meta strong { color: var(--ds-primary-300); font-weight: 600; }
+    .frame-meta .scale-info { color: var(--ds-text-faint); margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-icon">📱</div>
+      <div>
+        <h1>Tablet UI プレビュー</h1>
+        <p>
+          DealerOS GYEON 見積ウィザードのタブレット向け UI を 3 パターン設計しました。
+          iPad Pro 11" (834×1194) を主対象に、施工ブースでの立ち作業・顧客への画面共有・
+          タッチ操作最適化を意識しています。デザインは PC 版と同じ言語体系を維持。
+        </p>
+      </div>
+    </div>
+
+    <!-- 3 パターン カード -->
+    <div class="section-label">パターン一覧</div>
+    <div class="patterns-grid">
+      <a class="pattern-card" href="estimate-wizard-tablet-landscape/index.html" target="_blank">
+        <div class="pattern-thumb thumb-landscape">
+          <div class="pattern-thumb-orient"></div>
+        </div>
+        <div class="pattern-title">
+          A. 横向き最適 <span class="pattern-badge">Landscape</span>
+        </div>
+        <p class="pattern-desc">
+          iPad Pro 11" 横向き (1194×834) を主対象。PC 版に最も近い体験で、
+          カウンター受付や資料参照時の使用に最適。
+        </p>
+        <div class="pattern-features">
+          <div class="pattern-feature">サイドバー 240px 常時表示</div>
+          <div class="pattern-feature">フルステッパー 7 ノード</div>
+          <div class="pattern-feature">Screen 4: 左サイド縦タブ</div>
+          <div class="pattern-feature">右 Sticky Total 220px</div>
+          <div class="pattern-feature">OCR/QR: 右半分スライドパネル</div>
+        </div>
+        <div class="pattern-cta">開く <span>→</span></div>
+      </a>
+
+      <a class="pattern-card" href="estimate-wizard-tablet-portrait/index.html" target="_blank">
+        <div class="pattern-thumb thumb-portrait">
+          <div class="pattern-thumb-orient"></div>
+        </div>
+        <div class="pattern-title">
+          B. 縦向き最適 <span class="pattern-badge">Portrait</span>
+        </div>
+        <p class="pattern-desc">
+          iPad Pro 11" 縦向き (834×1194) を主対象。片手でボディを支えつつ
+          もう片手で操作するシーンや、顧客と対面で画面を見せながらの説明に最適。
+        </p>
+        <div class="pattern-features">
+          <div class="pattern-feature">サイドバー非表示・単カラム主体</div>
+          <div class="pattern-feature">フルステッパー (縦画面でも余裕)</div>
+          <div class="pattern-feature">Screen 4: 上部 SegmentedControl</div>
+          <div class="pattern-feature">右 Sticky Total 200px</div>
+          <div class="pattern-feature">OCR/QR: 右半分スライドパネル</div>
+        </div>
+        <div class="pattern-cta">開く <span>→</span></div>
+      </a>
+
+      <a class="pattern-card" href="estimate-wizard-tablet-adaptive/index.html" target="_blank">
+        <div class="pattern-thumb thumb-adaptive">
+          <div class="pattern-thumb-orient"></div>
+          <div class="pattern-thumb-orient"></div>
+        </div>
+        <div class="pattern-title">
+          C. 両対応 Adaptive <span class="pattern-badge pattern-badge-recommended">推奨</span>
+        </div>
+        <p class="pattern-desc">
+          向きに応じて Landscape / Portrait を自動切替。iPad を持ち替えても
+          違和感なく操作可能。実運用ではこのパターンを推奨します。
+        </p>
+        <div class="pattern-features">
+          <div class="pattern-feature">Landscape 時: サイドバー + 縦タブ</div>
+          <div class="pattern-feature">Portrait 時: 単カラム + SegmentedControl</div>
+          <div class="pattern-feature">切替は CSS のみ (状態保持)</div>
+          <div class="pattern-feature">右 Sticky Total は両向きで維持</div>
+          <div class="pattern-feature">OCR/QR: 右半分スライドパネル</div>
+        </div>
+        <div class="pattern-cta">開く <span>→</span></div>
+      </a>
+    </div>
+
+    <!-- iPad Frame プレビュー -->
+    <div class="ipad-preview-section">
+      <div class="section-label">iPad Pro 11" フレームでプレビュー</div>
+      <div class="preview-controls">
+        <div class="ipad-preview-tabs">
+          <button class="ipad-preview-tab active" data-pattern="adaptive">C. 両対応 Adaptive</button>
+          <button class="ipad-preview-tab" data-pattern="landscape">A. 横向き最適</button>
+          <button class="ipad-preview-tab" data-pattern="portrait">B. 縦向き最適</button>
+        </div>
+        <div class="ipad-orient-toggle">
+          <button class="ipad-orient-btn active" data-orient="landscape">
+            <span class="ipad-orient-icon landscape"></span>
+            横向き
+          </button>
+          <button class="ipad-orient-btn" data-orient="portrait">
+            <span class="ipad-orient-icon portrait"></span>
+            縦向き
+          </button>
+        </div>
+      </div>
+
+      <!-- 不整合バナー: パターンと向きの組み合わせが推奨外の時に案内 -->
+      <div id="mismatch-banner" class="mismatch-banner">
+        <span style="font-size: 16px;">⚠️</span>
+        <div>
+          <strong id="mismatch-text"></strong>
+          <div id="mismatch-hint" style="opacity: 0.85; font-size: 11px; margin-top: 2px;"></div>
+        </div>
+        <button id="mismatch-fix">推奨の向きにする</button>
+      </div>
+
+      <div class="ipad-frame-wrap">
+        <!-- スロット: 縮小後の見かけサイズを保持し、周囲レイアウトを正しく詰める -->
+        <div id="ipad-frame-slot" class="ipad-frame-slot">
+          <!-- アウター: transform: scale() で縮小 (中身は実寸のまま) -->
+          <div id="ipad-frame-outer" class="ipad-frame-outer">
+            <!-- 実寸フレーム: 1194×834 or 834×1194 で描画、iframe 内 viewport が正しくなる -->
+            <div id="ipad-frame" class="ipad-frame landscape">
+              <div class="ipad-screen">
+                <iframe id="preview-iframe" src="estimate-wizard-tablet-adaptive/index.html"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-meta">
+        現在: <strong id="meta-pattern">C. 両対応 Adaptive</strong> · <strong id="meta-orient">1194 × 834 (横向き)</strong>
+        <span class="scale-info" id="meta-scale"></span>
+      </div>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background: var(--ds-bg-elevated); border: 1px solid var(--ds-line); border-radius: 12px; font-size: 12px; color: var(--ds-text-muted); line-height: 1.7;">
+      <strong style="color: var(--ds-text-body);">📝 使い方のヒント</strong><br>
+      各パターンの新しいタブを開いて実際に触ってみてください。
+      <code>localStorage</code> にステップと入力データが保存されるので、
+      リロードしても同じ状態に戻ります。3 パターンは独立した <code>localStorage</code> キー
+      を使うので、同時にテストしても互いに干渉しません。
+    </div>
+  </div>
+
+  <script>
+    /* パターン定義 + 各パターンの「推奨向き」を明示。
+       recommendedOrient: そのパターンが本来設計された向き。
+       compatOrients: 表示可能な向き (推奨外は警告バナー表示)。 */
+    const PATTERNS = {
+      adaptive: {
+        src: 'estimate-wizard-tablet-adaptive/index.html',
+        label: 'C. 両対応 Adaptive',
+        recommendedOrient: 'landscape',
+        compatOrients: ['landscape', 'portrait'],   // 両向き対応
+      },
+      landscape: {
+        src: 'estimate-wizard-tablet-landscape/index.html',
+        label: 'A. 横向き最適',
+        recommendedOrient: 'landscape',
+        compatOrients: ['landscape'],                // Landscape 専用
+      },
+      portrait: {
+        src: 'estimate-wizard-tablet-portrait/index.html',
+        label: 'B. 縦向き最適',
+        recommendedOrient: 'portrait',
+        compatOrients: ['portrait'],                 // Portrait 専用
+      },
+    };
+    const state = { pattern: 'adaptive', orient: 'landscape' };
+
+    const frame = document.getElementById('ipad-frame');
+    const frameOuter = document.getElementById('ipad-frame-outer');
+    const frameSlot = document.getElementById('ipad-frame-slot');
+    const iframe = document.getElementById('preview-iframe');
+    const metaPattern = document.getElementById('meta-pattern');
+    const metaOrient = document.getElementById('meta-orient');
+    const metaScale = document.getElementById('meta-scale');
+    const mismatchBanner = document.getElementById('mismatch-banner');
+    const mismatchText = document.getElementById('mismatch-text');
+    const mismatchHint = document.getElementById('mismatch-hint');
+    const mismatchFix = document.getElementById('mismatch-fix');
+
+    /* iPad 実寸を viewport 幅に応じてスケール。
+       重要: iframe 自体は実寸で描画されるため、内側の window.innerWidth/Height は
+       1194×834 (or 834×1194) を維持する → CSS orientation media query が正しく発動。 */
+    function updateScale() {
+      const isLandscape = frame.classList.contains('landscape');
+      const naturalW = isLandscape ? 1194 : 834;
+      const naturalH = isLandscape ? 834 : 1194;
+
+      /* 利用可能幅 = ラッパーの clientWidth - 少しの余白 */
+      const wrap = document.querySelector('.ipad-frame-wrap');
+      const availableW = wrap.clientWidth - 48;   /* 左右 24px ずつ余白確保 */
+
+      /* 最大でも 1 倍まで、それ以下は縮小 */
+      const scale = Math.min(1, availableW / naturalW);
+
+      /* transform で縮小 */
+      frameOuter.style.transform = `scale(${scale})`;
+
+      /* スロットに縮小後の見かけサイズを設定して、周囲レイアウトを正しく詰める */
+      frameSlot.style.width  = (naturalW * scale) + 'px';
+      frameSlot.style.height = (naturalH * scale) + 'px';
+
+      /* meta 表示更新 */
+      if (metaScale) {
+        metaScale.textContent = scale < 1
+          ? `(表示スケール ${Math.round(scale * 100)}%)`
+          : '(等倍)';
+      }
+    }
+
+    function apply() {
+      const p = PATTERNS[state.pattern];
+
+      /* パターン切替 → iframe を再ロード */
+      if (iframe.dataset.pattern !== state.pattern) {
+        iframe.src = p.src;
+        iframe.dataset.pattern = state.pattern;
+      }
+
+      /* orientation クラスを iPad フレームに反映 (物理的な viewport サイズを変える) */
+      frame.classList.remove('landscape', 'portrait');
+      frame.classList.add(state.orient);
+
+      /* meta 表示 */
+      metaPattern.textContent = p.label;
+      metaOrient.textContent = state.orient === 'landscape'
+        ? '1194 × 834 (横向き)'
+        : '834 × 1194 (縦向き)';
+
+      /* ボタン active 状態 */
+      document.querySelectorAll('.ipad-preview-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.pattern === state.pattern);
+      });
+      document.querySelectorAll('.ipad-orient-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.orient === state.orient);
+      });
+
+      /* 不整合バナー: パターンが向きに対応していない場合に警告 */
+      const isCompat = p.compatOrients.includes(state.orient);
+      if (!isCompat) {
+        const rec = p.recommendedOrient === 'landscape' ? '横向き' : '縦向き';
+        mismatchText.textContent = `${p.label} は「${rec}」専用に設計されています`;
+        mismatchHint.textContent = 'いまの組み合わせでは、UI が意図した通りに表示されない可能性があります。';
+        mismatchBanner.classList.add('show');
+      } else {
+        mismatchBanner.classList.remove('show');
+      }
+
+      /* 向きが変わったら iPad 実寸に合わせてスケールを再計算 */
+      updateScale();
+    }
+
+    /* ウィンドウリサイズでもスケール更新 (レスポンシブ) */
+    window.addEventListener('resize', () => updateScale());
+
+    /* パターン切替時: 自動で推奨向きに追従する。
+       これによりユーザーがパターンを切り替えるだけで、常に正しい組み合わせで表示される。
+       ただしユーザーが明示的に向きを変えた場合はその設定を尊重する (state.orient を書き換えるだけなので)。 */
+    document.querySelectorAll('.ipad-preview-tab').forEach(b => {
+      b.addEventListener('click', () => {
+        state.pattern = b.dataset.pattern;
+        /* パターン切替時は必ず推奨向きにリセット (不整合を起こさせない) */
+        state.orient = PATTERNS[state.pattern].recommendedOrient;
+        apply();
+      });
+    });
+
+    /* 向き手動切替 */
+    document.querySelectorAll('.ipad-orient-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        state.orient = b.dataset.orient;
+        apply();
+      });
+    });
+
+    /* 「推奨の向きにする」ボタン: 不整合バナーからワンタップ修正 */
+    mismatchFix.addEventListener('click', () => {
+      state.orient = PATTERNS[state.pattern].recommendedOrient;
+      apply();
+    });
+
+    apply();
+  </script>
+</body>
+</html>
