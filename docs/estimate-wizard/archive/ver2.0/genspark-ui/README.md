@@ -15,8 +15,8 @@ GenSpark が制作した見積ウィザードの **UI 成果物（Zip）** を�
 
 ## 準拠すべき正本仕様（Canonical）
 
-- `../GenSpark_Request_EstimateWizard_Ver2.0.md`（**Canonical UI Specification**）
-- 参照：`../CURRENT_UI_REFERENCE_INVENTORY.md`（現行UIラベル・入力順の参照）
+- `../specification/GenSpark_Request_EstimateWizard_Ver2.0.md`（**Ver2.0 UI Specification**・旧 Canonical／現行の最新は Ver2.2）
+- 参照：`../requests/CURRENT_UI_REFERENCE_INVENTORY.md`（現行UIラベル・入力順の参照）
 
 ## 注意
 

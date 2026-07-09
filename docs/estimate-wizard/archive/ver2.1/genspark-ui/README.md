@@ -5,8 +5,8 @@
 | **Package** | GenSpark Revised UI Package（post‑v2.1 デルタ反映） |
 | **Delivered** | 2026-07-09（ファイル日付 07-09-2026）※パッケージ内部マーカーに `v2.2` 表記あり |
 | **Status** | 🔵 **UI Reference only**（実装は未着手） |
-| **Canonical spec** | `../GenSpark_Request_EstimateWizard_Ver2.0.md` ＋ Architect デルタ v2.1 |
-| **Previous version** | `../archive/genspark-ui-v2.0-before-revision/`（保全済み・削除していません） |
+| **Canonical spec** | `../../ver2.0/specification/GenSpark_Request_EstimateWizard_Ver2.0.md` ＋ Architect デルタ v2.1（※現行の最新は Ver2.2） |
+| **Previous version** | `../../ver2.0/genspark-ui/`（Ver2.0 UI パッケージ・保全済み） |
 | **Source archive** | `./package_staging.zip`（受領物そのまま・provenance） |
 | **Extracted tree** | `./package/`（138ファイル） |
 
