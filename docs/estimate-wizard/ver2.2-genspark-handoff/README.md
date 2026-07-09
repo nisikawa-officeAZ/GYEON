@@ -12,9 +12,12 @@
 - **旧 Ver2.0 / Ver2.1 のファイルは参照専用（reference only）**です（下記「旧ファイルの所在」）。最新の正は常に本フォルダの Ver2.2 とします。
 - **Claude は、GenSpark 成果物を Architect が承認するまで実装しません。**
 
-## 収録予定 / 現状
-- `Estimate_Wizard_Ver2.2_Spec.md`（**未配置**）— 最新 Ver2.2 仕様。**Architect による提供が必要**です（本タスク時点でローカルに Ver2.2 仕様ファイルは存在しません）。
-- （提供後）GenSpark 向け補足資料・修正依頼（Ver2.2版）を随時追加。
+## 収録 / 現状
+- `GenSpark_Request_EstimateWizard_Ver2.2.md`（**配置済み**）— **Claude 作成の GenSpark UI 依頼書（Ver2.2 準拠・ドラフト）**。GenSpark へ送るのはこの依頼書。
+- `Estimate_Wizard_Ver2.2_Spec.md`（**未配置**）— Architect 提供の**公式正本仕様（人間可読）**。提供待ち。
+- `Estimate_Wizard_Ver2.2.json`（**未配置**）— Architect 提供の**AI/Agent 可読 正本**。提供待ち。
+- `UI/` `Images/` `References/` — GenSpark 成果物の受け皿（空）。
+- ※ 依頼書は公式 Spec 提供後に整合・確定。**実装は Architect 承認後**。
 
 > **注記**：Ver2.2 の仕様本文はチャットにインラインで提示済みですが、**正本ファイルは未配置**です。転記差異を避けるため、正本は Architect 提供、またはご承認のうえ当方がインラインテキストから `Estimate_Wizard_Ver2.2_Spec.md` として保存します。
 
