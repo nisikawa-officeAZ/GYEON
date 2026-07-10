@@ -34,6 +34,10 @@ import {
   CATEGORY_LABEL, PPF_QTY_REQUIRED, card, secHdr, lbl, inp, chip,
   DEFAULT_COUPONS, formatYen, useUnsavedChangesGuard, type EditorItem,
 } from "./estimate-editor-helpers";
+// Phase 8 — read-only wizard preview bridge. Both imports are LEAF integration modules that pull
+// in NO wizard internals, preserving the Wizard → Adapter → EstimateEditor dependency direction.
+import { WizardPreviewPanel } from "./wizard/integration/WizardPreviewPanel";
+import type { EstimateEditorPreviewData } from "./wizard/integration/previewTypes";
 
 // G3 — reuse the existing OCR pipeline (loaded lazily) inside the editor. No OCR
 // logic is duplicated or modified; the same components the onboarding flow uses.
@@ -53,9 +57,12 @@ interface EstimateEditorProps {
   vehicles:           VehicleDB[];
   defaultCustomerId?: string;
   defaultVehicleId?:  string;
+  // Phase 8 — OPTIONAL read-only wizard preview. When set, EstimateEditor renders a read-only
+  // preview and performs no production action. Undefined (default) = unchanged production editor.
+  wizardPreview?:     EstimateEditorPreviewData | null;
 }
 
-export default function EstimateEditor({ mode, estimate, customers, vehicles, defaultCustomerId, defaultVehicleId }: EstimateEditorProps) {
+export default function EstimateEditor({ mode, estimate, customers, vehicles, defaultCustomerId, defaultVehicleId, wizardPreview }: EstimateEditorProps) {
   const router = useRouter();
   const isEdit = mode === "edit";
 
@@ -63,12 +70,13 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   const [catalog, setCatalog] = useState<PricingCatalog>(DEFAULT_PRICING_CATALOG);
   const [catalogReady, setCatalogReady] = useState(false);
   useEffect(() => {
+    if (wizardPreview) return; // Phase 8 — read-only preview makes no catalog fetch / API call.
     let cancelled = false;
     getDealerPricingCatalog()
       .then((c) => { if (!cancelled) { setCatalog(c); setCatalogReady(true); } })
       .catch(() => { if (!cancelled) setCatalogReady(true); });
     return () => { cancelled = true; };
-  }, []);
+  }, [wizardPreview]);
 
   // ── Customer / Vehicle / Notes ──────────────────────────────────────────────
   const initialCustomerId = estimate?.customer_id ?? defaultCustomerId ?? "";
@@ -544,6 +552,14 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
         router.push(newId ? `/estimates/${newId}` : "/estimates");
       }
     });
+  }
+
+  // Phase 8 — read-only wizard preview. Placed AFTER all hooks so hook order is stable. When
+  // wizardPreview is set, render the self-contained read-only panel and skip the entire
+  // production editor UI (no save / PDF / LINE / finalize controls are rendered). When it is
+  // undefined/null (production), this is skipped and the editor behaves exactly as before.
+  if (wizardPreview) {
+    return <WizardPreviewPanel data={wizardPreview} />;
   }
 
   return (
