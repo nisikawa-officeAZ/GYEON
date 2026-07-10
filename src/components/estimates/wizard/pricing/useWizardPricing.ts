@@ -28,7 +28,7 @@ export function computeWizardPricing(draft: EstimateWizardDraftV22): WizardPrici
     return mapped;
   } catch {
     return {
-      status: "error", currency: "JPY", lines: [],
+      status: "error", completeness: "error", currency: "JPY", lines: [], unresolvedItems: [],
       subtotal: null, discountTotal: null, couponTotal: 0, taxableSubtotal: null, taxTotal: null, grandTotal: null,
       warnings: bundle.warnings,
       errors: [...bundle.errors, { code: WIZARD_PRICING_ERRORS.PRODUCTION_PRICING_ERROR, category: null, sourceId: null, message: "価格計算に失敗しました。" }],

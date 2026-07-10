@@ -6,8 +6,14 @@
 // (deferred); percentage discount is forwarded as intent (never converted to yen here).
 
 import type { PricingCouponState, PricingDiscountIntent } from "@/lib/pricing/canonical-pricing-engine";
+import type { WizardPricingCompleteness } from "./wizard-pricing-identity";
+
+export type { WizardPricingCompleteness } from "./wizard-pricing-identity";
 
 export type WizardPricingStatus = "idle" | "calculating" | "success" | "error" | "incomplete";
+
+/** How a displayed line derives its price (Phase 10F-R hybrid model). */
+export type WizardPricingLineKind = "catalog" | "manual";
 
 /** Non-blocking pricing issue (UI-safe; no stack traces). */
 export interface WizardPricingIssue {
@@ -18,6 +24,8 @@ export interface WizardPricingIssue {
 }
 
 export interface WizardPricingLineResult {
+  kind:           WizardPricingLineKind; // catalog (production engine) vs manual (operator input)
+  category:       string;
   sourceId:       string;
   label:          string;
   quantity:       number;
@@ -28,10 +36,20 @@ export interface WizardPricingLineResult {
   lineTotal:      number | null;
 }
 
+/** A selected priceable service that could not be priced (surfaced on Screen 7; never dropped). */
+export interface WizardUnresolvedItem {
+  category: string;
+  sourceId: string | null;
+  code:     string;
+  message:  string;
+}
+
 export interface WizardPricingResult {
   status:          WizardPricingStatus;
+  completeness:    WizardPricingCompleteness; // hybrid completeness (Phase 10F-R)
   currency:        "JPY";
   lines:           WizardPricingLineResult[];
+  unresolvedItems: WizardUnresolvedItem[];    // selected priceable services that could not be priced
   subtotal:        number | null;
   discountTotal:   number | null;
   couponTotal:     number | null; // ALWAYS 0 (coupons deferred)
@@ -54,17 +72,22 @@ export const WIZARD_PRICING_WARNINGS = {
 
 /** Stable Wizard pricing error codes. */
 export const WIZARD_PRICING_ERRORS = {
-  UNKNOWN_PRICING_REFERENCE: "UNKNOWN_PRICING_REFERENCE",
-  PERCENTAGE_NOT_SUPPORTED:  "PERCENTAGE_NOT_SUPPORTED",
-  MANUAL_PRICE_REQUIRED:     "MANUAL_PRICE_REQUIRED",
-  NO_SERVICE_SELECTED:       "NO_SERVICE_SELECTED",
-  PRODUCTION_PRICING_ERROR:  "PRODUCTION_PRICING_ERROR",
+  UNKNOWN_PRICING_REFERENCE:      "UNKNOWN_PRICING_REFERENCE",
+  PERCENTAGE_NOT_SUPPORTED:       "PERCENTAGE_NOT_SUPPORTED",
+  MANUAL_PRICE_REQUIRED:          "MANUAL_PRICE_REQUIRED",
+  MANUAL_PRICING_IDENTITY_MISSING: "MANUAL_PRICING_IDENTITY_MISSING",
+  INVALID_MANUAL_PRICE:           "INVALID_MANUAL_PRICE",
+  INVALID_QUANTITY:               "INVALID_QUANTITY",
+  NO_SERVICE_SELECTED:            "NO_SERVICE_SELECTED",
+  PRODUCTION_PRICING_ERROR:       "PRODUCTION_PRICING_ERROR",
 } as const;
 
 export const EMPTY_WIZARD_PRICING_RESULT: WizardPricingResult = {
   status: "idle",
+  completeness: "unavailable",
   currency: "JPY",
   lines: [],
+  unresolvedItems: [],
   subtotal: null,
   discountTotal: null,
   couponTotal: 0,

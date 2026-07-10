@@ -1,11 +1,15 @@
-// Estimate Wizard Ver2.2 — Wizard draft → production pricing input adapter (Phase 10D).
+// Estimate Wizard Ver2.2 — Wizard draft → production pricing input adapter (Phase 10D → 10F-R).
 //
 // Pure, deterministic. Builds the production engine's `ServiceInput[]` + `DiscountInput` from the
-// canonical draft, resolving every service to a production `pricingReferenceId` via the catalog
-// projection. It performs NO pricing arithmetic (no subtotal/tax/discount math). Unmappable
-// selections yield a controlled `UNKNOWN_PRICING_REFERENCE` issue and are excluded — never guessed,
-// never priced from fixture data. Coupons are excluded (couponTotal 0); percentage discount is NOT
-// converted to yen (returns `PERCENTAGE_NOT_SUPPORTED`). Manual policy: `other_work` = manual_only.
+// canonical draft under the HYBRID pricing identity model (Architect resolution 10F-R):
+//   • Coating is CATALOG-priced — resolved to a production `pricingReferenceId` via the 10C catalog
+//     projection (identity match; never guessed, never label-matched).
+//   • PPF / Window / Body Maintenance / Car Wash / Room Cleaning / Other Work / Store Global Options
+//     are MANUAL-priced — the operator-entered amounts are prepared by `buildManualPricingLines` and
+//     enter canonical aggregation through the EXISTING production manual path (`OtherInput`), so NO
+//     production calculator formula changes. The final subtotal/tax/discount/total remain owned by
+//     the production engine — this adapter performs NO tax/discount/coupon arithmetic.
+// Coupons are excluded (couponTotal 0); percentage discount is forwarded as intent only.
 
 import { DEFAULT_PRICING_CATALOG } from "@/lib/pricing/canonical-pricing-engine";
 import type { ServiceInput, DiscountInput, PricingCouponState, PricingDiscountIntent } from "@/lib/pricing/canonical-pricing-engine";
@@ -13,10 +17,13 @@ import { projectProductionCatalogToWizard } from "../catalog/project-production-
 import { FIXTURE_PRESENTATION_METADATA } from "../catalog/wizard-catalog-fixtures";
 import type { WizardCatalogCategoryId } from "../catalog/wizard-catalog-types";
 import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
+import type { WizardManualPricingLineInput } from "./wizard-pricing-identity";
+import { buildManualPricingLines } from "./wizard-manual-pricing";
 import type { WizardPricingIssue } from "./wizard-pricing-types";
 import { WIZARD_PRICING_WARNINGS, WIZARD_PRICING_ERRORS } from "./wizard-pricing-types";
 
-// Projected production identity set per category (built once — deterministic, pure).
+// Projected production identity set (built once — deterministic, pure). Coating is the only category
+// resolved against the catalog under the hybrid model; other categories are manual-priced.
 const PROJECTION = projectProductionCatalogToWizard(DEFAULT_PRICING_CATALOG, FIXTURE_PRESENTATION_METADATA);
 const IDS_BY_CATEGORY: Map<WizardCatalogCategoryId, Set<string>> = new Map(
   PROJECTION.categories.map((c) => [c.categoryId, new Set(c.items.map((i) => i.pricingReferenceId).filter((x): x is string => !!x))]),
@@ -28,6 +35,8 @@ const PRODUCTION_TAX_RATE = 10; // production default (estimate-totals default);
 
 export interface WizardPricingInputBundle {
   services:       ServiceInput[];
+  manualLines:    WizardManualPricingLineInput[]; // resolved manual lines (identity + operator amount)
+  catalogResolved: boolean;                        // a catalog (coating) service was resolved
   discounts:      DiscountInput;
   taxRate:        number;
   warnings:       WizardPricingIssue[];
@@ -41,6 +50,12 @@ function issue(code: string, message: string, category: string | null = null, so
   return { code, category, sourceId, message };
 }
 
+/** Manual line → canonical "other" line item. The single unitPrice×quantity is line COMPOSITION,
+ *  not aggregation: the engine still owns subtotal/tax/discount/total. */
+function manualLineExtendedPrice(l: WizardManualPricingLineInput): number {
+  return Math.round(l.unitPrice * l.quantity);
+}
+
 export function buildWizardPricingInput(draft: EstimateWizardDraftV22): WizardPricingInputBundle {
   const warnings: WizardPricingIssue[] = [];
   const errors: WizardPricingIssue[] = [];
@@ -50,46 +65,30 @@ export function buildWizardPricingInput(draft: EstimateWizardDraftV22): WizardPr
   const selected = draft.serviceSelection.selectedCategories;
   const sizeKey = draft.vehicle.bodySizeKey;
 
-  // Store global options — production models these as coating options; resolve to production option
-  // ids (Wizard `gopt-*` ids do not match `iron/polish/…` → controlled UNKNOWN reference).
-  const resolvedOptionIds: string[] = [];
-  for (const id of cfg.storeGlobalOptions.selectedOptionIds) {
-    if (has("store_global_options", id)) resolvedOptionIds.push(id);
-    else errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, `追加サービスオプション「${id}」は本番カタログに対応する識別子がありません。`, "store_global_options", id));
-  }
-
-  for (const cat of selected) {
-    if (cat === "coating") {
-      const co = cfg.coating;
-      if (!co.layer1Id) continue; // nothing chosen yet
+  // ── Coating (CATALOG path) — resolved to a production identity via the 10C projection. ──
+  let catalogResolved = false;
+  if (selected.includes("coating")) {
+    const co = cfg.coating;
+    if (co.layer1Id) {
       if (has("coating", co.layer1Id)) {
         if (!sizeKey) warnings.push(issue(WIZARD_PRICING_WARNINGS.MISSING_BODY_SIZE, "ボディサイズが未選択のため、サイズ係数は既定値で計算されます。", "coating"));
         if (co.layer2Id || co.layer3Id) warnings.push(issue(WIZARD_PRICING_WARNINGS.MULTI_LAYER_NOT_MAPPED, "2層目・3層目は本番トップコート識別子に未対応のため計算に含まれません。", "coating"));
-        services.push({ type: "coating", coatingId: co.layer1Id, sizeKey, optionIds: resolvedOptionIds });
+        // Wizard has no catalog coating-option selector; store global options are manual-priced.
+        services.push({ type: "coating", coatingId: co.layer1Id, sizeKey, optionIds: [] });
+        catalogResolved = true;
       } else {
         errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, `コーティング「${co.layer1Id}」は本番カタログに対応する識別子がありません。`, "coating", co.layer1Id));
       }
-    } else if (cat === "other") {
-      const items: { name: string; price: number }[] = [];
-      // Presets carry FIXTURE prices (no production id) — excluded (do not mix fixtures into totals).
-      if (cfg.otherWork.selectedPresetIds.length > 0) {
-        warnings.push(issue(WIZARD_PRICING_WARNINGS.PREVIEW_ONLY_ITEM, "プリセット項目はプレビュー価格のため計算に含まれません（手入力行のみ計算対象）。", "other"));
-      }
-      for (const row of cfg.otherWork.customRows) {
-        const name = row.name.trim();
-        if (!name) continue;
-        const price = Number(row.unitPrice);
-        if (row.unitPrice.trim() === "" || !Number.isFinite(price)) {
-          errors.push(issue(WIZARD_PRICING_ERRORS.MANUAL_PRICE_REQUIRED, `「${name}」の金額が未入力です。`, "other", row.id));
-          continue;
-        }
-        items.push({ name, price });
-      }
-      if (items.length > 0) services.push({ type: "other", items });
-    } else {
-      // ppf / window / maintenance / carwash / roomclean — Wizard ids do not map to production ids.
-      errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, `「${cat}」の選択項目は本番カタログ識別子への対応が未確立のため計算に含まれません。`, cat));
     }
+  }
+
+  // ── Manual categories (PPF / Window / Maintenance / Car Wash / Room Cleaning / Other / Global) ──
+  // Prepared amounts enter canonical aggregation through the existing production manual path.
+  const manual = buildManualPricingLines(draft);
+  warnings.push(...manual.warnings);
+  errors.push(...manual.errors);
+  if (manual.lines.length > 0) {
+    services.push({ type: "other", items: manual.lines.map((l) => ({ name: l.label, price: manualLineExtendedPrice(l) })) });
   }
 
   // ── Discount / coupon (forward intent only; NO conversion, NO coupon pricing) ──
@@ -104,7 +103,6 @@ export function buildWizardPricingInput(draft: EstimateWizardDraftV22): WizardPr
       discountIntent = { mode: "fixed_amount", amount: amt };
     }
   } else {
-    // percentage — production pricing has no percentage operator-discount path.
     if (dc.percentInput.trim() !== "") {
       const pct = Number(dc.percentInput) || 0;
       discountIntent = { mode: "percentage", percentage: pct };
@@ -124,5 +122,16 @@ export function buildWizardPricingInput(draft: EstimateWizardDraftV22): WizardPr
 
   const discounts: DiscountInput = { couponTotal: 0, extraAmount, isDealer, dealerRate };
 
-  return { services, discounts, taxRate: PRODUCTION_TAX_RATE, warnings, errors, couponState, discountIntent, hasSelection: selected.length > 0 };
+  return {
+    services,
+    manualLines: manual.lines,
+    catalogResolved,
+    discounts,
+    taxRate: PRODUCTION_TAX_RATE,
+    warnings,
+    errors,
+    couponState,
+    discountIntent,
+    hasSelection: selected.length > 0 || cfg.storeGlobalOptions.selectedOptionIds.length > 0,
+  };
 }
