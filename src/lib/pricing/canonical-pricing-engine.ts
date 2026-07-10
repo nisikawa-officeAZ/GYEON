@@ -59,3 +59,19 @@ export {
   makePricingCatalog,
   bodySizeMultiplier,
 } from "./pricing-catalog";
+
+// Phase 10B — forward-looking pricing contract extensions (TYPES ONLY; no runtime behavior).
+// Exposed from the canonical entry point so future pricing phases import contracts from here.
+export type {
+  PricingPolicy,
+  ManualPricePolicy,
+  PricingDiscountIntent,
+  PricingCouponState,
+  PricingWarningCode,
+  PricingWarning,
+  PricingErrorCode,
+  PricingError,
+  ExtendedDiscountInput,
+  PricingContractInputExtension,
+  ExtendedPricingResult,
+} from "./pricing-contracts";

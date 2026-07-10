@@ -21,14 +21,14 @@ import { EXAMPLE_STORE_GLOBAL_OPTIONS } from "../screens/store-global-options-co
 import { EXAMPLE_COUPONS } from "../screens/discount-coupon-config";
 import type { ShopRank } from "../screens/step-types";
 import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
-import type { EstimateEditorPreviewData, PreviewField, PreviewServiceLine } from "./previewTypes";
+import type { EstimateEditorPreviewData, PreviewField, PreviewServiceLine, PreviewPriceSummary } from "./previewTypes";
 
-/** Non-draft preview context. NOT wizard screen state — dealer rank + preview/mock display values
- *  the owner supplies so the mapper never has to calculate. */
+/** Non-draft preview context. NOT wizard screen state — the dealer rank (for coating label
+ *  resolution) plus the OWNER-SUPPLIED read-only price summary (built from the production pricing
+ *  engine result). The mapper never calculates prices. */
 export interface PreviewContext {
-  shopRank: ShopRank;
-  previewSubtotal: number;                 // mock preview base amount (never a computed total)
-  convertedDiscountAmount: number | null;  // owner-supplied mock %→yen display (mapper never computes)
+  shopRank:     ShopRank;
+  priceSummary: PreviewPriceSummary;
 }
 
 export function mapWizardDraftToPreview(draft: EstimateWizardDraftV22, ctx: PreviewContext): EstimateEditorPreviewData {
@@ -174,10 +174,7 @@ export function mapWizardDraftToPreview(draft: EstimateWizardDraftV22, ctx: Prev
     { label: "値引きモード", value: dc.mode === "amount" ? "金額値引き" : "％値引き" },
     dc.mode === "amount"
       ? { label: "値引き額", value: dc.amountInput ? yen(dc.amountInput) : "なし" }
-      : { label: "値引き率", value: dc.percentInput ? `${dc.percentInput}%` : "なし" },
-    ...(dc.mode === "percent" && ctx.convertedDiscountAmount != null
-      ? [{ label: "換算値引き額（プレビュー）", value: formatYen(ctx.convertedDiscountAmount) }]
-      : []),
+      : { label: "値引き率", value: dc.percentInput ? `${dc.percentInput}%（本エンジン未対応）` : "なし" },
   ];
   const couponSummaries = dc.selectedCouponIds.map((id) => {
     const cp = EXAMPLE_COUPONS.find((x) => x.id === id);
@@ -198,9 +195,6 @@ export function mapWizardDraftToPreview(draft: EstimateWizardDraftV22, ctx: Prev
     couponSummaries,
     customerNotes: draft.notes.customerNotes,
     internalMemo: draft.notes.internalMemo,
-    priceSummary: {
-      mockRows: [{ label: "小計（プレビュー基準額）", value: formatYen(ctx.previewSubtotal) }],
-      note: "本計算（サービス小計・オプション・税・合計）はプレビューでは行いません。今後の統合時に親の既存ロジックが算出します。",
-    },
+    priceSummary: ctx.priceSummary,
   };
 }

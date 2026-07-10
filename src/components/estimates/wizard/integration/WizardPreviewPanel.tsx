@@ -144,7 +144,7 @@ export function WizardPreviewPanel({ data }: { data: EstimateEditorPreviewData }
         <section className="bg-[#0f172a] border border-slate-700 rounded-xl shadow-lg p-5" aria-label="金額サマリー">
           <div className="flex items-center justify-between gap-2 mb-2">
             <h3 className="text-sm font-semibold text-slate-100">金額サマリー</h3>
-            <span className="text-[10px] text-amber-300/80 border border-amber-500/30 rounded px-1.5 py-0.5">プレビュー値（モック）</span>
+            <span className="text-[10px] text-emerald-300/80 border border-emerald-600/40 rounded px-1.5 py-0.5">読み取り専用（本エンジン）</span>
           </div>
           {(data.priceSummary.mockRows ?? []).length > 0 ? (
             <dl className="flex flex-col">

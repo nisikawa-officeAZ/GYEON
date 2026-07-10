@@ -582,7 +582,8 @@ export interface Step7ReviewProps {
   couponSummaries:   string[];
   customerNotes:     string; // customer-facing (may appear on customer output later)
   internalMemo:      string; // staff-only — isolated, never customer-facing
-  priceSummary:      ReviewPriceSummary;
+  /** Phase 10D — read-only pricing result from the PRODUCTION engine (Screen 7 performs no math). */
+  pricing:           import("../pricing/wizard-pricing-types").WizardPricingResult;
   // preview-only confirmation
   previewConfirmed:  boolean;
   onPreviewConfirm:  () => void;

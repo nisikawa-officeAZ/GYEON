@@ -40,6 +40,9 @@ import { Step6Notes } from "./Step6Notes";
 import { Step7Review } from "./Step7Review";
 import { WizardEstimatePreviewBridge } from "../integration/WizardEstimatePreviewBridge";
 import { wizardToEstimatePreviewAdapter, type PreviewContext } from "../integration/wizardToEstimateAdapter";
+import { useWizardPricing } from "../pricing/useWizardPricing";
+import { formatYen } from "../foundation/tokens";
+import type { PreviewPriceSummary } from "../integration/previewTypes";
 import {
   initialEstimateWizardDraftV22, setCurrentStep,
   updateCustomer, updateNewCustomer, updateVehicle, updateNewVehicle,
@@ -63,7 +66,8 @@ const PREVIEW_SCENARIOS: { label: string; ids: WizardServiceCategory[] }[] = [
 ];
 
 const MOCK_TOTALS: WizardTotalsView = { subtotal: 0, discount: 0, tax: 0, total: 0, ready: false };
-const PREVIEW_SUBTOTAL = 300000; // preview-only subtotal (real value comes from parent later)
+
+const yenOrDash = (v: number | null) => (v == null ? "—" : formatYen(v));
 
 function cnBtn(active: boolean): string {
   return [
@@ -109,12 +113,19 @@ export default function ScreensPreview() {
     : (orderedSelected[0] ?? "");
   const showAdjustment = categories.includes("coating") && categories.includes("ppf");
 
-  // Screen 5 — preview parent supplies the %→yen conversion (nothing calculates production prices).
-  const pctNum = Number(dc.percentInput);
-  const convertedDiscountAmount =
-    dc.mode === "percent" && dc.percentInput !== "" && Number.isFinite(pctNum)
-      ? Math.round((PREVIEW_SUBTOTAL * pctNum) / 100)
-      : null;
+  // Phase 10D — read-only pricing from the PRODUCTION engine (no Screen arithmetic).
+  const pricing = useWizardPricing(draft);
+  const previewPriceSummary: PreviewPriceSummary = {
+    mockRows: [
+      { label: "サービス小計", value: yenOrDash(pricing.subtotal) },
+      { label: "値引き", value: pricing.discountTotal ? `− ${yenOrDash(pricing.discountTotal)}` : yenOrDash(pricing.discountTotal) },
+      { label: "クーポン", value: yenOrDash(pricing.couponTotal) },
+      { label: "消費税", value: yenOrDash(pricing.taxTotal) },
+      { label: "合計", value: yenOrDash(pricing.grandTotal) },
+    ],
+    note: "金額は既存の本番価格エンジンが算出（読み取り専用）。保存・PDF・送信は行いません。",
+  };
+
   const nonCombinable = EXAMPLE_COUPONS.filter((c) => c.combinable === false).map((c) => c.id);
   const anyCombinableSelected = dc.selectedCouponIds.some((id) => !nonCombinable.includes(id));
   const anyNonCombinableSelected = dc.selectedCouponIds.some((id) => nonCombinable.includes(id));
@@ -128,7 +139,7 @@ export default function ScreensPreview() {
   if (nc.isBusiness) discountCouponMessages.push("業者掛け率適用中は追加値引きできません。");
 
   // Read-only preview payload (single source for Screen 7 review AND the editor bridge).
-  const previewContext: PreviewContext = { shopRank, previewSubtotal: PREVIEW_SUBTOTAL, convertedDiscountAmount };
+  const previewContext: PreviewContext = { shopRank, priceSummary: previewPriceSummary };
   const previewData = wizardToEstimatePreviewAdapter(draft, previewContext);
 
   // Phase 8/9 — read-only EstimateEditor preview via the adapter bridge (canonical draft → adapter
@@ -392,11 +403,11 @@ export default function ScreensPreview() {
       )}
       {step === 5 && (
         <Step5Discount
-          subtotal={PREVIEW_SUBTOTAL}
+          subtotal={pricing.subtotal ?? 0}
           activeDiscountMode={dc.mode}
           discountAmountValue={dc.amountInput}
           discountPercentValue={dc.percentInput}
-          convertedDiscountAmount={convertedDiscountAmount}
+          convertedDiscountAmount={null}
           maximumDiscountAmount={100000}
           minimumDiscountPercent={0}
           maximumDiscountPercent={30}
@@ -447,7 +458,7 @@ export default function ScreensPreview() {
           couponSummaries={previewData.couponSummaries}
           customerNotes={previewData.customerNotes}
           internalMemo={previewData.internalMemo}
-          priceSummary={previewData.priceSummary}
+          pricing={pricing}
           previewConfirmed={draft.review.previewConfirmed}
           onPreviewConfirm={() => setDraft((d) => updateReview(d, { previewConfirmed: true }))}
           onEditCustomer={() => goStep(1)}
