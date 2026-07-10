@@ -1,10 +1,12 @@
 "use client";
 
-// Estimate Wizard Ver2.2 — NON-FUNCTIONAL preview for Step1/Step2 (validation only).
+// Estimate Wizard Ver2.2 — development-only preview harness (Phase 9).
 //
-// Supplies representative props (local presentation state + no-op handlers) so Step1/Step2
-// can be visually validated inside the responsive WizardShell. NOT connected to the live
-// EstimateEditor and contains NO pricing / OCR / save business logic. Not route-mounted.
+// SINGLE canonical-draft owner: this harness holds ONE EstimateWizardDraftV22 and drives Screens
+// 1–7 by reading from it and writing through the typed immutable update helpers. No duplicate
+// per-screen business-state owner exists. It contains NO pricing / OCR / save logic and is NOT
+// route-mounted. Preview-only, non-draft context (dealer shop rank, 3M recommendation display,
+// Screen-4 active section, id sequence counters, editor-preview toggle) is kept out of the draft.
 
 import { useState } from "react";
 import { WizardShell } from "../foundation/WizardShell";
@@ -35,20 +37,21 @@ import { EXAMPLE_STORE_GLOBAL_OPTIONS } from "./store-global-options-config";
 import { Step5Discount } from "./Step5Discount";
 import { EXAMPLE_COUPONS } from "./discount-coupon-config";
 import { Step6Notes } from "./Step6Notes";
-import { initialStep6NotesState } from "./step-types";
 import { Step7Review } from "./Step7Review";
 import { WizardEstimatePreviewBridge } from "../integration/WizardEstimatePreviewBridge";
-import type { WizardPreviewInput } from "../integration/wizardToEstimateAdapter";
-import { formatYen } from "../foundation/tokens";
-import type { OtherWorkCustomRow, DiscountMode, Step6NotesState } from "./step-types";
-import type { ReviewField, ReviewServiceLine, ReviewPriceSummary } from "./step-types";
-import type { ShopRank, LayerCount, PpfInstallationMethodId, InteriorPpfRow } from "./step-types";
-import type { NewCustomerDraft, NewVehicleDraft, CustomerMode, VehicleMode } from "./step-types";
+import { wizardToEstimatePreviewAdapter, type PreviewContext } from "../integration/wizardToEstimateAdapter";
+import {
+  initialEstimateWizardDraftV22, setCurrentStep,
+  updateCustomer, updateNewCustomer, updateVehicle, updateNewVehicle,
+  updateServiceSelection, updateServiceConfiguration, updateDiscountAndCoupon, updateNotes, updateReview,
+} from "../draft/wizard-draft-state";
+import type { EstimateWizardDraftV22, WizardServiceCategory } from "../draft/wizard-draft-types";
+import type { ShopRank, CustomerMode, VehicleMode } from "./step-types";
 import type { BodySizeEstimate } from "@/lib/vehicles/body-size-estimate";
-import { SERVICE_CATEGORY_IDS, serviceCategoryLabel } from "@/lib/estimates/service-categories";
+import { SERVICE_CATEGORY_IDS } from "@/lib/estimates/service-categories";
 
 // Preview-only cross-service scenarios (Phase 4I validation aid — not production).
-const PREVIEW_SCENARIOS: { label: string; ids: string[] }[] = [
+const PREVIEW_SCENARIOS: { label: string; ids: WizardServiceCategory[] }[] = [
   { label: "① コーティングのみ", ids: ["coating"] },
   { label: "② PPFのみ", ids: ["ppf"] },
   { label: "③ フィルムのみ", ids: ["window"] },
@@ -60,6 +63,7 @@ const PREVIEW_SCENARIOS: { label: string; ids: string[] }[] = [
 ];
 
 const MOCK_TOTALS: WizardTotalsView = { subtotal: 0, discount: 0, tax: 0, total: 0, ready: false };
+const PREVIEW_SUBTOTAL = 300000; // preview-only subtotal (real value comes from parent later)
 
 function cnBtn(active: boolean): string {
   return [
@@ -67,272 +71,68 @@ function cnBtn(active: boolean): string {
     active ? "bg-[#1d4ed8] border-[#1d4ed8] text-white" : "bg-[#0f172a] border-slate-700 text-slate-400",
   ].join(" ");
 }
-const EMPTY_NC: NewCustomerDraft = {
-  name: "", phone: "", email: "", postal: "", address: "", lineId: "",
-  isBusiness: false, tradeRate: "", arAllowed: false, closingDay: "", paymentDay: "",
-};
-const EMPTY_NV: NewVehicleDraft = {
-  maker: "", model: "", grade: "", vehicle_code: "", vin: "",
-  first_registration_year_month: "", registration_date: "", inspection_expiry_date: "",
-  displacement: "", color: "", plate_number: "",
-};
+
+function toggleId<T extends string>(list: T[], id: T): T[] {
+  return list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+}
 
 export default function ScreensPreview() {
-  const [step, setStep] = useState<WizardStepId>(1);
-  const [customerMode, setCustomerMode] = useState<CustomerMode>("new");
-  const [vehicleMode, setVehicleMode] = useState<VehicleMode>("new");
-  const [nc, setNc] = useState<NewCustomerDraft>(EMPTY_NC);
-  const [nv, setNv] = useState<NewVehicleDraft>(EMPTY_NV);
-  const [sizeKey, setSizeKey] = useState("");
-  const [sizeEstimate, setSizeEstimate] = useState<BodySizeEstimate | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
-  // Screen4 (Phase 4A) preview state — presentation only, no pricing.
-  const [activeSection, setActiveSection] = useState("coating");
+  // ── The single canonical draft (owner) ──────────────────────────────────────
+  const [draft, setDraft] = useState<EstimateWizardDraftV22>(initialEstimateWizardDraftV22);
+  // ── Preview-only, non-draft context ─────────────────────────────────────────
   const [shopRank, setShopRank] = useState<ShopRank>("detailer");
-  const [layerCount, setLayerCount] = useState<LayerCount | null>(null);
-  const [layer1, setLayer1] = useState<string | null>(null);
-  const [layer2, setLayer2] = useState<string | null>(null);
-  const [layer3, setLayer3] = useState<string | null>(null);
-  // Screen4 PPF (Phase 4B) preview state — presentation only, no pricing.
-  const [ppfMethod, setPpfMethod] = useState<PpfInstallationMethodId | null>(null);
-  const [ppfParts, setPpfParts] = useState<string[]>([]);
-  const [ppfQty, setPpfQty] = useState<Record<string, number>>({});
-  const [ppfType, setPpfType] = useState<string | null>(null);
-  const [ppfUnitPrice, setPpfUnitPrice] = useState("");
-  const [interiorRows, setInteriorRows] = useState<InteriorPpfRow[]>([]);
-  const [rowSeq, setRowSeq] = useState(1);
-  // Screen4 Window Film (Phase 4C) preview state — presentation only, no pricing.
-  const [windowAreas, setWindowAreas] = useState<string[]>([]);
-  const [windowFilm, setWindowFilm] = useState<string | null>(null);
-  const [windowUnitPrice, setWindowUnitPrice] = useState("");
-  // Screen4 Body Maintenance (Phase 4D) preview state — presentation only, no pricing.
-  const [maintMenu, setMaintMenu] = useState<string | null>(null);
-  const [maintUnitPrice, setMaintUnitPrice] = useState("");
-  // Screen4 Car Wash (Phase 4E) preview state — presentation only, no pricing.
-  const [washMenu, setWashMenu] = useState<string | null>(null);
-  const [washUnitPrice, setWashUnitPrice] = useState("");
-  // Screen4 Room Cleaning (Phase 4F) preview state — presentation only, no pricing.
-  const [roomMenus, setRoomMenus] = useState<string[]>([]);
-  const [roomUnitPrices, setRoomUnitPrices] = useState<Record<string, string>>({});
-  // Screen4 Other Work (Phase 4G) preview state — presentation only, no pricing.
-  const [owPresets, setOwPresets] = useState<string[]>([]);
-  const [owPrices, setOwPrices] = useState<Record<string, string>>({});
-  const [owQty, setOwQty] = useState<Record<string, number>>({});
-  const [owRows, setOwRows] = useState<OtherWorkCustomRow[]>([]);
+  const [sizeEstimate, setSizeEstimate] = useState<BodySizeEstimate | null>(null);
+  const [activeSection, setActiveSection] = useState("coating");
+  const [ppfRowSeq, setPpfRowSeq] = useState(1);
   const [owRowSeq, setOwRowSeq] = useState(1);
-  // Screen4 Store Global Options (Phase 4H) preview state — presentation only, no pricing.
-  const [globalOpts, setGlobalOpts] = useState<string[]>([]);
-  const [globalOptPrices, setGlobalOptPrices] = useState<Record<string, string>>({});
-  const [globalOptQty, setGlobalOptQty] = useState<Record<string, number>>({});
-  // Screen5 Discount / Coupon (Phase 5) preview state — presentation only, no pricing.
-  const [discountMode, setDiscountMode] = useState<DiscountMode>("amount");
-  const [discountAmount, setDiscountAmount] = useState("");
-  const [discountPercent, setDiscountPercent] = useState("");
-  const [selectedCoupons, setSelectedCoupons] = useState<string[]>([]);
-  const PREVIEW_SUBTOTAL = 300000; // preview-only subtotal (real value comes from parent later)
-  // Screen6 Notes / Internal Memo (Phase 6) preview state — two explicit separated fields.
-  const [notes, setNotes] = useState<Step6NotesState>(initialStep6NotesState);
-  // Screen7 Final Review (Phase 7) preview state — local preview-only confirmation.
-  const [previewConfirmed, setPreviewConfirmed] = useState(false);
-  const handlePreviewConfirm = () => setPreviewConfirmed(true);
-  // Phase 8 — toggle to render the read-only EstimateEditor preview via the adapter bridge.
   const [showEditorPreview, setShowEditorPreview] = useState(false);
 
-  const clamp = (n: number) => Math.min(7, Math.max(1, n)) as WizardStepId;
+  const goStep = (n: number) => setDraft((d) => setCurrentStep(d, n));
 
-  // Phase 4I — derive a VALID active section from the selected categories (fixed order). If the
-  // stored activeSection was deselected, fall back to the first selected section. Entered state
-  // stays in the top-level hooks above, so hidden/deselected sections keep their values.
+  const step = draft.metadata.currentStep;
+  const customer = draft.customer;
+  const vehicle = draft.vehicle;
+  const nc = customer.newCustomer;
+  const nv = vehicle.newVehicle;
+  const cfg = draft.serviceConfiguration;
+  const categories = draft.serviceSelection.selectedCategories;
+  const dc = draft.discountAndCoupon;
+
+  const customerMode: CustomerMode = customer.sourceMode === "existing" ? "select" : "new";
+  const vehicleMode: VehicleMode = vehicle.sourceMode === "existing" ? "select" : "new";
+
+  // Screen 4 — valid active section from selected categories (fixed order); state persists in the
+  // draft so hidden/deselected sections keep their values.
   const orderedSelected = SERVICE_CATEGORY_IDS.filter((id) => categories.includes(id));
-  const resolvedActive = categories.includes(activeSection) ? activeSection : (orderedSelected[0] ?? "");
+  const resolvedActive = categories.includes(activeSection as WizardServiceCategory)
+    ? activeSection
+    : (orderedSelected[0] ?? "");
   const showAdjustment = categories.includes("coating") && categories.includes("ppf");
 
-  // Phase 5 — preview parent supplies the %→yen conversion (component never calculates it).
-  const pctNum = Number(discountPercent);
+  // Screen 5 — preview parent supplies the %→yen conversion (nothing calculates production prices).
+  const pctNum = Number(dc.percentInput);
   const convertedDiscountAmount =
-    discountMode === "percent" && discountPercent !== "" && Number.isFinite(pctNum)
+    dc.mode === "percent" && dc.percentInput !== "" && Number.isFinite(pctNum)
       ? Math.round((PREVIEW_SUBTOTAL * pctNum) / 100)
       : null;
-  // Preview-only non-combinable conflict demo (real conflict comes from the parent later).
   const nonCombinable = EXAMPLE_COUPONS.filter((c) => c.combinable === false).map((c) => c.id);
-  const anyCombinableSelected = selectedCoupons.some((id) => !nonCombinable.includes(id));
-  const anyNonCombinableSelected = selectedCoupons.some((id) => nonCombinable.includes(id));
+  const anyCombinableSelected = dc.selectedCouponIds.some((id) => !nonCombinable.includes(id));
+  const anyNonCombinableSelected = dc.selectedCouponIds.some((id) => nonCombinable.includes(id));
   const disabledCouponIds = anyNonCombinableSelected
-    ? EXAMPLE_COUPONS.filter((c) => !selectedCoupons.includes(c.id)).map((c) => c.id) // 併用不可選択中 → 他を無効
+    ? EXAMPLE_COUPONS.filter((c) => !dc.selectedCouponIds.includes(c.id)).map((c) => c.id)
     : anyCombinableSelected
-      ? nonCombinable.filter((id) => !selectedCoupons.includes(id)) // 併用可選択中 → 併用不可を無効
+      ? nonCombinable.filter((id) => !dc.selectedCouponIds.includes(id))
       : [];
   const discountCouponMessages: string[] = [];
   if (anyNonCombinableSelected) discountCouponMessages.push("このクーポンは他のクーポンと併用できません。");
   if (nc.isBusiness) discountCouponMessages.push("業者掛け率適用中は追加値引きできません。");
 
-  // Phase 7 — build read-only review DISPLAY data from the preview state (owner resolves ids →
-  // labels; the review screen never resolves or calculates). Empty values become 未入力/未選択/なし.
-  const yen = (v: string) => formatYen(Number(v) || 0);
-  const customerName = customerMode === "select" ? "既存のお客様" : (nc.name || "未入力");
-  const vehicleName =
-    vehicleMode === "select" ? "既存の車両" : ([nv.maker, nv.model].filter(Boolean).join(" ") || "未入力");
+  // Read-only preview payload (single source for Screen 7 review AND the editor bridge).
+  const previewContext: PreviewContext = { shopRank, previewSubtotal: PREVIEW_SUBTOTAL, convertedDiscountAmount };
+  const previewData = wizardToEstimatePreviewAdapter(draft, previewContext);
 
-  const customerFields: ReviewField[] =
-    customerMode === "select"
-      ? [{ label: "登録方法", value: "既存のお客様" }]
-      : [
-          { label: "登録方法", value: "新規のお客様" },
-          { label: "お名前", value: nc.name || "未入力" },
-          { label: "電話番号", value: nc.phone || "未入力" },
-          { label: "メール", value: nc.email || "未入力" },
-          { label: "郵便番号", value: nc.postal || "未入力" },
-          { label: "住所", value: nc.address || "未入力" },
-          { label: "LINE ID", value: nc.lineId || "未入力" },
-          { label: "顧客区分", value: nc.isBusiness ? "業者" : "一般" },
-          ...(nc.isBusiness
-            ? [
-                { label: "掛け率", value: nc.tradeRate ? `${nc.tradeRate}%` : "未入力" },
-                { label: "掛売り", value: nc.arAllowed ? "あり" : "なし" },
-                { label: "締め日", value: nc.closingDay || "未入力" },
-                { label: "支払日", value: nc.paymentDay || "未入力" },
-              ]
-            : []),
-        ];
-
-  const vehicleFields: ReviewField[] =
-    vehicleMode === "select"
-      ? [{ label: "登録方法", value: "既存の車両" }]
-      : [
-          { label: "登録方法", value: "新規の車両" },
-          { label: "メーカー", value: nv.maker || "未入力" },
-          { label: "車名", value: nv.model || "未入力" },
-          { label: "グレード", value: nv.grade || "未入力" },
-          { label: "型式", value: nv.vehicle_code || "未入力" },
-          { label: "初年度登録", value: nv.first_registration_year_month || "未入力" },
-          { label: "ボディカラー", value: nv.color || "未入力" },
-          { label: "ナンバー", value: nv.plate_number || "未入力" },
-          { label: "排気量", value: nv.displacement || "未入力" },
-          { label: "車検満了", value: nv.inspection_expiry_date || "未入力" },
-          { label: "ボディサイズ(3M)", value: sizeKey || "未選択" },
-        ];
-
-  const serviceLines: ReviewServiceLine[] = [];
-  for (const cat of orderedSelected) {
-    if (cat === "coating") {
-      const l1 = firstLayerOptions(shopRank).find((o) => o.id === layer1)?.label;
-      const l2 = secondLayerOptions(layer1).find((o) => o.id === layer2)?.label;
-      const l3 = thirdLayerOptions(layer1).find((o) => o.id === layer3)?.label;
-      const parts = [l1, l2, l3].filter(Boolean) as string[];
-      serviceLines.push({
-        category: serviceCategoryLabel("coating"),
-        name: layerCount ? `${layerCount}層コーティング` : "未選択",
-        detail: parts.length ? parts.join(" / ") : undefined,
-      });
-    } else if (cat === "ppf") {
-      const method = DEFAULT_PPF_METHODS.find((m) => m.id === ppfMethod)?.label;
-      const type = DEFAULT_PPF_TYPE_GROUPS.flatMap((g) => g.products).find((p) => p.id === ppfType)?.label;
-      const partLabels = ppfParts.map((id) => {
-        const p = DEFAULT_PPF_PARTS.find((x) => x.id === id);
-        const q = ppfQty[id];
-        return p ? `${p.label}${q ? `×${q}` : ""}` : id;
-      });
-      const details: string[] = [];
-      if (type) details.push(`種別: ${type}`);
-      if (partLabels.length) details.push(`部位: ${partLabels.join(", ")}`);
-      const interior = interiorRows.filter((r) => r.location || r.amount);
-      if (interior.length) details.push(`内装: ${interior.map((r) => `${r.location || "—"}${r.amount ? ` ${r.amount}` : ""}`).join(", ")}`);
-      serviceLines.push({
-        category: serviceCategoryLabel("ppf"),
-        name: method ?? "未選択",
-        detail: details.join(" / ") || undefined,
-        amount: ppfUnitPrice ? yen(ppfUnitPrice) : undefined,
-      });
-    } else if (cat === "window") {
-      const areas = windowAreas.map((id) => DEFAULT_WINDOW_AREAS.find((a) => a.id === id)?.label ?? id);
-      const film = EXAMPLE_FILM_TYPES.find((f) => f.id === windowFilm)?.label;
-      const details: string[] = [];
-      if (film) details.push(`フィルム: ${film}`);
-      if (areas.length) details.push(`エリア: ${areas.join(", ")}`);
-      serviceLines.push({
-        category: serviceCategoryLabel("window"),
-        name: film ?? "未選択",
-        detail: details.join(" / ") || undefined,
-        amount: windowUnitPrice ? yen(windowUnitPrice) : undefined,
-      });
-    } else if (cat === "maintenance") {
-      const m = EXAMPLE_MAINTENANCE_MENUS.find((x) => x.id === maintMenu);
-      serviceLines.push({
-        category: serviceCategoryLabel("maintenance"),
-        name: m?.name ?? "未選択",
-        amount: maintUnitPrice ? yen(maintUnitPrice) : m ? formatYen(m.defaultPrice) : undefined,
-      });
-    } else if (cat === "carwash") {
-      const m = EXAMPLE_WASH_MENUS.find((x) => x.id === washMenu);
-      serviceLines.push({
-        category: serviceCategoryLabel("carwash"),
-        name: m?.name ?? "未選択",
-        amount: washUnitPrice ? yen(washUnitPrice) : m ? formatYen(m.defaultPrice) : undefined,
-      });
-    } else if (cat === "roomclean") {
-      const menus = roomMenus.map((id) => EXAMPLE_ROOM_MENUS.find((x) => x.id === id)?.name ?? id);
-      serviceLines.push({
-        category: serviceCategoryLabel("roomclean"),
-        name: menus.length ? `${menus.length} メニュー` : "未選択",
-        detail: menus.length ? menus.join(", ") : undefined,
-      });
-    } else if (cat === "other") {
-      const presets = owPresets.map((id) => EXAMPLE_OTHER_WORK_PRESETS.find((x) => x.id === id)?.name ?? id);
-      const customs = owRows.filter((r) => r.name.trim()).map((r) => r.name);
-      const names = [...presets, ...customs];
-      serviceLines.push({
-        category: serviceCategoryLabel("other"),
-        name: names.length ? `${names.length} 件` : "未選択",
-        detail: names.length ? names.join(", ") : undefined,
-      });
-    }
-  }
-  const goptNames = globalOpts.map((id) => EXAMPLE_STORE_GLOBAL_OPTIONS.find((o) => o.id === id)?.name ?? id);
-  if (goptNames.length) {
-    serviceLines.push({ category: "追加サービスオプション", name: `${goptNames.length} 件`, detail: goptNames.join(", ") });
-  }
-
-  const discountFields: ReviewField[] = [
-    { label: "値引きモード", value: discountMode === "amount" ? "金額値引き" : "％値引き" },
-    discountMode === "amount"
-      ? { label: "値引き額", value: discountAmount ? yen(discountAmount) : "なし" }
-      : { label: "値引き率", value: discountPercent ? `${discountPercent}%` : "なし" },
-    ...(discountMode === "percent" && convertedDiscountAmount != null
-      ? [{ label: "換算値引き額（プレビュー）", value: formatYen(convertedDiscountAmount) }]
-      : []),
-  ];
-  const couponSummaries = selectedCoupons.map((id) => {
-    const c = EXAMPLE_COUPONS.find((x) => x.id === id);
-    if (!c) return id;
-    const v = c.discountType === "percent" ? `${c.discountValue}%` : formatYen(c.discountValue);
-    return `${c.name}（${v}）`;
-  });
-
-  const priceSummary: ReviewPriceSummary = {
-    mockRows: [{ label: "小計（プレビュー基準額）", value: formatYen(PREVIEW_SUBTOTAL) }],
-    note: "本計算（サービス小計・オプション・税・合計）はプレビューでは行いません。今後の統合時に親の既存ロジックが算出します。",
-  };
-
-  // Phase 8 — plain snapshot of the live wizard state handed to the adapter (no logic here; the
-  // adapter/mapper resolve ids → labels). The wizard remains the single state owner.
-  const wizardPreviewInput: WizardPreviewInput = {
-    customerMode, nc, vehicleMode, nv, sizeKey,
-    categories, shopRank,
-    layerCount, layer1, layer2, layer3,
-    ppfMethod, ppfParts, ppfQty, ppfType, ppfUnitPrice, interiorRows,
-    windowAreas, windowFilm, windowUnitPrice,
-    maintMenu, maintUnitPrice, washMenu, washUnitPrice,
-    roomMenus,
-    owPresets, owRows,
-    globalOpts,
-    discountMode, discountAmount, discountPercent, convertedDiscountAmount, selectedCoupons,
-    customerNotes: notes.customerNotes, internalMemo: notes.internalMemo,
-    previewSubtotal: PREVIEW_SUBTOTAL,
-  };
-
-  // Phase 8 — when toggled on, render the read-only EstimateEditor preview through the adapter
-  // bridge (Wizard → Adapter → EstimateEditor). Toggling off (adapter removed) returns to the
-  // wizard, i.e. the preview disappears. No production action, save, API, or DB write occurs.
+  // Phase 8/9 — read-only EstimateEditor preview via the adapter bridge (canonical draft → adapter
+  // → EstimateEditor). Toggling off (adapter removed) returns to the wizard; the preview disappears.
   if (showEditorPreview) {
     return (
       <div className="min-h-screen bg-[#080d1a]">
@@ -345,19 +145,19 @@ export default function ScreensPreview() {
             ← ウィザードに戻る（プレビューを閉じる）
           </button>
         </div>
-        <WizardEstimatePreviewBridge input={wizardPreviewInput} />
+        <WizardEstimatePreviewBridge draft={draft} context={previewContext} />
       </div>
     );
   }
 
   return (
     <WizardShell
-      title="見積ウィザード（Step1/2 プレビュー）"
+      title="見積ウィザード（Ver2.2 プレビュー）"
       estimateNo="PREVIEW"
-      step={step}
-      jumpTo={setStep}
-      onBack={() => setStep((s) => clamp(s - 1))}
-      onNext={() => setStep((s) => clamp(s + 1))}
+      step={step as WizardStepId}
+      jumpTo={(s) => goStep(s)}
+      onBack={() => goStep(step - 1)}
+      onNext={() => goStep(step + 1)}
       isFirst={step === 1}
       isLast={step === 7}
       totals={MOCK_TOTALS}
@@ -365,13 +165,13 @@ export default function ScreensPreview() {
       {step === 1 && (
         <Step1Customer
           customerMode={customerMode}
-          onSetCustomerMode={setCustomerMode}
+          onSetCustomerMode={(m) => setDraft((d) => updateCustomer(d, { sourceMode: m === "select" ? "existing" : "new" }))}
           onOpenOcr={() => {}}
-          customerId=""
-          onSelectCustomer={() => {}}
+          customerId={customer.customerId ?? ""}
+          onSelectCustomer={(id) => setDraft((d) => updateCustomer(d, { customerId: id || null }))}
           customers={[]}
           nc={nc}
-          onChangeNc={(patch) => setNc((p) => ({ ...p, ...patch }))}
+          onChangeNc={(patch) => setDraft((d) => updateNewCustomer(d, patch))}
           onCreateCustomer={() => {}}
           creatingCustomer={false}
           lineBusinessConfigured={false}
@@ -380,15 +180,15 @@ export default function ScreensPreview() {
       {step === 2 && (
         <Step2Vehicle
           vehicleMode={vehicleMode}
-          onSetVehicleMode={setVehicleMode}
+          onSetVehicleMode={(m) => setDraft((d) => updateVehicle(d, { sourceMode: m === "select" ? "existing" : "new" }))}
           onOpenOcr={() => {}}
-          vehicleId=""
-          onSelectVehicle={() => {}}
+          vehicleId={vehicle.vehicleId ?? ""}
+          onSelectVehicle={(id) => setDraft((d) => updateVehicle(d, { vehicleId: id || null }))}
           vehicles={[]}
           nv={nv}
-          onChangeNv={(patch) => setNv((p) => ({ ...p, ...patch }))}
-          sizeKey={sizeKey}
-          onSelectSize={setSizeKey}
+          onChangeNv={(patch) => setDraft((d) => updateNewVehicle(d, patch))}
+          sizeKey={vehicle.bodySizeKey}
+          onSelectSize={(k) => setDraft((d) => updateVehicle(d, { bodySizeKey: k }))}
           sizeKeys={["SS", "S", "M", "ML", "L", "LL", "XL"]}
           sizeEstimate={sizeEstimate}
           onEstimateSize={() => setSizeEstimate({ sizeKey: "L", basis: "プレビュー（3M推定の例）" } as BodySizeEstimate)}
@@ -398,7 +198,7 @@ export default function ScreensPreview() {
         <Step3Category
           selected={categories}
           onToggle={(id) =>
-            setCategories((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+            setDraft((d) => updateServiceSelection(d, { selectedCategories: toggleId(d.serviceSelection.selectedCategories, id as WizardServiceCategory) }))
           }
         />
       )}
@@ -411,7 +211,7 @@ export default function ScreensPreview() {
               <button
                 key={s.label}
                 type="button"
-                onClick={() => setCategories(s.ids)}
+                onClick={() => setDraft((d) => updateServiceSelection(d, { selectedCategories: [...s.ids] }))}
                 className={cnBtn(categories.length === s.ids.length && s.ids.every((id) => categories.includes(id)))}
               >
                 {s.label}
@@ -426,7 +226,7 @@ export default function ScreensPreview() {
               <button
                 key={r}
                 type="button"
-                onClick={() => { setShopRank(r); setLayer1(null); setLayer2(null); setLayer3(null); }}
+                onClick={() => { setShopRank(r); setDraft((d) => updateServiceConfiguration(d, "coating", { layer1Id: null, layer2Id: null, layer3Id: null })); }}
                 className={cnBtn(shopRank === r)}
               >
                 {r}
@@ -447,14 +247,14 @@ export default function ScreensPreview() {
               <StoreGlobalOptionsSelector
                 globalOptions={EXAMPLE_STORE_GLOBAL_OPTIONS}
                 selectedCategoryIds={categories}
-                selectedGlobalOptionIds={globalOpts}
-                unitPricesByOption={globalOptPrices}
-                quantitiesByOption={globalOptQty}
+                selectedGlobalOptionIds={cfg.storeGlobalOptions.selectedOptionIds}
+                unitPricesByOption={cfg.storeGlobalOptions.unitPricesByOption}
+                quantitiesByOption={cfg.storeGlobalOptions.quantitiesByOption}
                 onGlobalOptionToggle={(id) =>
-                  setGlobalOpts((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+                  setDraft((d) => updateServiceConfiguration(d, "storeGlobalOptions", { selectedOptionIds: toggleId(d.serviceConfiguration.storeGlobalOptions.selectedOptionIds, id) }))
                 }
-                onUnitPriceChange={(id, v) => setGlobalOptPrices((p) => ({ ...p, [id]: v }))}
-                onQuantityChange={(id, qty) => setGlobalOptQty((p) => ({ ...p, [id]: qty }))}
+                onUnitPriceChange={(id, v) => setDraft((d) => updateServiceConfiguration(d, "storeGlobalOptions", { unitPricesByOption: { ...d.serviceConfiguration.storeGlobalOptions.unitPricesByOption, [id]: v } }))}
+                onQuantityChange={(id, qty) => setDraft((d) => updateServiceConfiguration(d, "storeGlobalOptions", { quantitiesByOption: { ...d.serviceConfiguration.storeGlobalOptions.quantitiesByOption, [id]: qty } }))}
                 informationalMessage={null}
                 onAddOrUpdate={() => {}}
               />
@@ -465,17 +265,17 @@ export default function ScreensPreview() {
                 shopRank={shopRank}
                 coatingLocked={!isCoatingAvailableForRank(shopRank)}
                 lockReason="GYEON PPFインストーラーはコーティングを施工できません。"
-                selectedLayerCount={layerCount}
-                selectedLayer1ProductId={layer1}
-                selectedLayer2ProductId={layer2}
-                selectedLayer3ProductId={layer3}
+                selectedLayerCount={cfg.coating.layerCount}
+                selectedLayer1ProductId={cfg.coating.layer1Id}
+                selectedLayer2ProductId={cfg.coating.layer2Id}
+                selectedLayer3ProductId={cfg.coating.layer3Id}
                 availableLayer1Products={firstLayerOptions(shopRank)}
-                availableLayer2Products={secondLayerOptions(layer1)}
-                availableLayer3Products={thirdLayerOptions(layer1)}
-                onLayerCountChange={setLayerCount}
-                onLayer1Change={(id) => { setLayer1(id); setLayer2(null); setLayer3(null); }}
-                onLayer2Change={setLayer2}
-                onLayer3Change={setLayer3}
+                availableLayer2Products={secondLayerOptions(cfg.coating.layer1Id)}
+                availableLayer3Products={thirdLayerOptions(cfg.coating.layer1Id)}
+                onLayerCountChange={(n) => setDraft((d) => updateServiceConfiguration(d, "coating", { layerCount: n }))}
+                onLayer1Change={(id) => setDraft((d) => updateServiceConfiguration(d, "coating", { layer1Id: id, layer2Id: null, layer3Id: null }))}
+                onLayer2Change={(id) => setDraft((d) => updateServiceConfiguration(d, "coating", { layer2Id: id }))}
+                onLayer3Change={(id) => setDraft((d) => updateServiceConfiguration(d, "coating", { layer3Id: id }))}
                 onAddOrUpdate={() => {}}
               />
             ) : resolvedActive === "ppf" ? (
@@ -483,27 +283,27 @@ export default function ScreensPreview() {
                 shopRank={shopRank}
                 ppfLocked={shopRank === "shop"}
                 lockReason="GYEONショップランクでは PPF は施工できません。"
-                selectedInstallationMethod={ppfMethod}
+                selectedInstallationMethod={cfg.ppf.installationMethod}
                 installationMethods={DEFAULT_PPF_METHODS}
-                onInstallationMethodChange={(id) => { setPpfMethod(id); }}
-                selectedPartialPartIds={ppfParts}
+                onInstallationMethodChange={(id) => setDraft((d) => updateServiceConfiguration(d, "ppf", { installationMethod: id }))}
+                selectedPartialPartIds={cfg.ppf.selectedPartIds}
                 partialParts={DEFAULT_PPF_PARTS}
-                quantitiesByPart={ppfQty}
+                quantitiesByPart={cfg.ppf.quantitiesByPart}
                 onPartialPartToggle={(id) =>
-                  setPpfParts((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+                  setDraft((d) => updateServiceConfiguration(d, "ppf", { selectedPartIds: toggleId(d.serviceConfiguration.ppf.selectedPartIds, id) }))
                 }
-                onQuantityChange={(id, qty) => setPpfQty((p) => ({ ...p, [id]: qty }))}
-                selectedPpfTypeId={ppfType}
+                onQuantityChange={(id, qty) => setDraft((d) => updateServiceConfiguration(d, "ppf", { quantitiesByPart: { ...d.serviceConfiguration.ppf.quantitiesByPart, [id]: qty } }))}
+                selectedPpfTypeId={cfg.ppf.ppfTypeId}
                 ppfTypes={DEFAULT_PPF_TYPE_GROUPS}
-                onPpfTypeChange={setPpfType}
-                interiorRows={interiorRows}
-                onInteriorRowAdd={() => { setInteriorRows((r) => [...r, { id: `row-${rowSeq}`, location: "", amount: "" }]); setRowSeq((n) => n + 1); }}
-                onInteriorRowUpdate={(id, patch) => setInteriorRows((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)))}
-                onInteriorRowDelete={(id) => setInteriorRows((r) => r.filter((x) => x.id !== id))}
-                displayedUnitPrice={ppfType ? 180000 : null}
-                editableUnitPrice={ppfUnitPrice}
-                onUnitPriceChange={setPpfUnitPrice}
-                coefficientDisplay={ppfType ? "×1.00（例・表示のみ）" : null}
+                onPpfTypeChange={(id) => setDraft((d) => updateServiceConfiguration(d, "ppf", { ppfTypeId: id }))}
+                interiorRows={cfg.ppf.interiorRows}
+                onInteriorRowAdd={() => { const id = `row-${ppfRowSeq}`; setPpfRowSeq((n) => n + 1); setDraft((d) => updateServiceConfiguration(d, "ppf", { interiorRows: [...d.serviceConfiguration.ppf.interiorRows, { id, location: "", amount: "" }] })); }}
+                onInteriorRowUpdate={(id, patch) => setDraft((d) => updateServiceConfiguration(d, "ppf", { interiorRows: d.serviceConfiguration.ppf.interiorRows.map((x) => (x.id === id ? { ...x, ...patch } : x)) }))}
+                onInteriorRowDelete={(id) => setDraft((d) => updateServiceConfiguration(d, "ppf", { interiorRows: d.serviceConfiguration.ppf.interiorRows.filter((x) => x.id !== id) }))}
+                displayedUnitPrice={cfg.ppf.ppfTypeId ? 180000 : null}
+                editableUnitPrice={cfg.ppf.unitPriceInput}
+                onUnitPriceChange={(v) => setDraft((d) => updateServiceConfiguration(d, "ppf", { unitPriceInput: v }))}
+                coefficientDisplay={cfg.ppf.ppfTypeId ? "×1.00（例・表示のみ）" : null}
                 combinedServiceAdjustment={null}
                 onAddOrUpdate={() => {}}
               />
@@ -513,70 +313,70 @@ export default function ScreensPreview() {
                 windowLocked={shopRank === "shop"}
                 lockReason="GYEONショップランクではウィンドウフィルムは選択できません。"
                 areas={DEFAULT_WINDOW_AREAS}
-                selectedAreaIds={windowAreas}
+                selectedAreaIds={cfg.windowFilm.selectedAreaIds}
                 onAreaToggle={(id) =>
-                  setWindowAreas((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+                  setDraft((d) => updateServiceConfiguration(d, "windowFilm", { selectedAreaIds: toggleId(d.serviceConfiguration.windowFilm.selectedAreaIds, id) }))
                 }
                 filmTypes={EXAMPLE_FILM_TYPES}
-                selectedFilmTypeId={windowFilm}
-                onFilmTypeChange={setWindowFilm}
-                displayedUnitPrice={windowFilm ? (EXAMPLE_FILM_TYPES.find((f) => f.id === windowFilm)?.defaultUnitPrice ?? null) : null}
-                editableUnitPrice={windowUnitPrice}
-                onUnitPriceChange={setWindowUnitPrice}
+                selectedFilmTypeId={cfg.windowFilm.filmTypeId}
+                onFilmTypeChange={(id) => setDraft((d) => updateServiceConfiguration(d, "windowFilm", { filmTypeId: id }))}
+                displayedUnitPrice={cfg.windowFilm.filmTypeId ? (EXAMPLE_FILM_TYPES.find((f) => f.id === cfg.windowFilm.filmTypeId)?.defaultUnitPrice ?? null) : null}
+                editableUnitPrice={cfg.windowFilm.unitPriceInput}
+                onUnitPriceChange={(v) => setDraft((d) => updateServiceConfiguration(d, "windowFilm", { unitPriceInput: v }))}
                 onAddOrUpdate={() => {}}
               />
             ) : resolvedActive === "maintenance" ? (
               <BodyMaintenanceSelector
                 maintenanceMenus={EXAMPLE_MAINTENANCE_MENUS}
-                selectedMaintenanceMenuId={maintMenu}
-                onMaintenanceMenuChange={setMaintMenu}
-                displayedUnitPrice={maintMenu ? (EXAMPLE_MAINTENANCE_MENUS.find((m) => m.id === maintMenu)?.defaultPrice ?? null) : null}
+                selectedMaintenanceMenuId={cfg.bodyMaintenance.menuId}
+                onMaintenanceMenuChange={(id) => setDraft((d) => updateServiceConfiguration(d, "bodyMaintenance", { menuId: id }))}
+                displayedUnitPrice={cfg.bodyMaintenance.menuId ? (EXAMPLE_MAINTENANCE_MENUS.find((m) => m.id === cfg.bodyMaintenance.menuId)?.defaultPrice ?? null) : null}
                 editablePriceAllowed
-                editableUnitPrice={maintUnitPrice}
-                onUnitPriceChange={setMaintUnitPrice}
+                editableUnitPrice={cfg.bodyMaintenance.unitPriceInput}
+                onUnitPriceChange={(v) => setDraft((d) => updateServiceConfiguration(d, "bodyMaintenance", { unitPriceInput: v }))}
                 informationalMessage={null}
                 onAddOrUpdate={() => {}}
               />
             ) : resolvedActive === "carwash" ? (
               <CarWashSelector
                 washMenus={EXAMPLE_WASH_MENUS}
-                selectedWashMenuId={washMenu}
-                onWashMenuChange={setWashMenu}
-                displayedUnitPrice={washMenu ? (EXAMPLE_WASH_MENUS.find((m) => m.id === washMenu)?.defaultPrice ?? null) : null}
+                selectedWashMenuId={cfg.carWash.menuId}
+                onWashMenuChange={(id) => setDraft((d) => updateServiceConfiguration(d, "carWash", { menuId: id }))}
+                displayedUnitPrice={cfg.carWash.menuId ? (EXAMPLE_WASH_MENUS.find((m) => m.id === cfg.carWash.menuId)?.defaultPrice ?? null) : null}
                 editablePriceAllowed
-                editableUnitPrice={washUnitPrice}
-                onUnitPriceChange={setWashUnitPrice}
+                editableUnitPrice={cfg.carWash.unitPriceInput}
+                onUnitPriceChange={(v) => setDraft((d) => updateServiceConfiguration(d, "carWash", { unitPriceInput: v }))}
                 informationalMessage={null}
                 onAddOrUpdate={() => {}}
               />
             ) : resolvedActive === "roomclean" ? (
               <RoomCleaningSelector
                 roomMenus={EXAMPLE_ROOM_MENUS}
-                selectedRoomMenuIds={roomMenus}
+                selectedRoomMenuIds={cfg.roomCleaning.selectedMenuIds}
                 onRoomMenuToggle={(id) =>
-                  setRoomMenus((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+                  setDraft((d) => updateServiceConfiguration(d, "roomCleaning", { selectedMenuIds: toggleId(d.serviceConfiguration.roomCleaning.selectedMenuIds, id) }))
                 }
                 editablePriceAllowed
-                editableUnitPrices={roomUnitPrices}
-                onUnitPriceChange={(id, v) => setRoomUnitPrices((p) => ({ ...p, [id]: v }))}
+                editableUnitPrices={cfg.roomCleaning.unitPricesByMenu}
+                onUnitPriceChange={(id, v) => setDraft((d) => updateServiceConfiguration(d, "roomCleaning", { unitPricesByMenu: { ...d.serviceConfiguration.roomCleaning.unitPricesByMenu, [id]: v } }))}
                 informationalMessage={null}
                 onAddOrUpdate={() => {}}
               />
             ) : resolvedActive === "other" ? (
               <OtherWorkSelector
                 presetOtherWorkItems={EXAMPLE_OTHER_WORK_PRESETS}
-                selectedPresetItemIds={owPresets}
+                selectedPresetItemIds={cfg.otherWork.selectedPresetIds}
                 onPresetItemToggle={(id) =>
-                  setOwPresets((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+                  setDraft((d) => updateServiceConfiguration(d, "otherWork", { selectedPresetIds: toggleId(d.serviceConfiguration.otherWork.selectedPresetIds, id) }))
                 }
-                unitPricesByItem={owPrices}
-                onUnitPriceChange={(id, v) => setOwPrices((p) => ({ ...p, [id]: v }))}
-                quantitiesByItem={owQty}
-                onQuantityChange={(id, qty) => setOwQty((p) => ({ ...p, [id]: qty }))}
-                customRows={owRows}
-                onCustomRowAdd={() => { setOwRows((r) => [...r, { id: `ow-${owRowSeq}`, name: "", description: "", unitPrice: "", quantity: "", unitLabel: "" }]); setOwRowSeq((n) => n + 1); }}
-                onCustomRowUpdate={(id, patch) => setOwRows((r) => r.map((x) => (x.id === id ? { ...x, ...patch } : x)))}
-                onCustomRowDelete={(id) => setOwRows((r) => r.filter((x) => x.id !== id))}
+                unitPricesByItem={cfg.otherWork.unitPricesByItem}
+                onUnitPriceChange={(id, v) => setDraft((d) => updateServiceConfiguration(d, "otherWork", { unitPricesByItem: { ...d.serviceConfiguration.otherWork.unitPricesByItem, [id]: v } }))}
+                quantitiesByItem={cfg.otherWork.quantitiesByItem}
+                onQuantityChange={(id, qty) => setDraft((d) => updateServiceConfiguration(d, "otherWork", { quantitiesByItem: { ...d.serviceConfiguration.otherWork.quantitiesByItem, [id]: qty } }))}
+                customRows={cfg.otherWork.customRows}
+                onCustomRowAdd={() => { const id = `ow-${owRowSeq}`; setOwRowSeq((n) => n + 1); setDraft((d) => updateServiceConfiguration(d, "otherWork", { customRows: [...d.serviceConfiguration.otherWork.customRows, { id, name: "", description: "", unitPrice: "", quantity: "", unitLabel: "" }] })); }}
+                onCustomRowUpdate={(id, patch) => setDraft((d) => updateServiceConfiguration(d, "otherWork", { customRows: d.serviceConfiguration.otherWork.customRows.map((x) => (x.id === id ? { ...x, ...patch } : x)) }))}
+                onCustomRowDelete={(id) => setDraft((d) => updateServiceConfiguration(d, "otherWork", { customRows: d.serviceConfiguration.otherWork.customRows.filter((x) => x.id !== id) }))}
                 informationalMessage={null}
                 onAddOrUpdate={() => {}}
               />
@@ -593,37 +393,35 @@ export default function ScreensPreview() {
       {step === 5 && (
         <Step5Discount
           subtotal={PREVIEW_SUBTOTAL}
-          activeDiscountMode={discountMode}
-          discountAmountValue={discountAmount}
-          discountPercentValue={discountPercent}
+          activeDiscountMode={dc.mode}
+          discountAmountValue={dc.amountInput}
+          discountPercentValue={dc.percentInput}
           convertedDiscountAmount={convertedDiscountAmount}
           maximumDiscountAmount={100000}
           minimumDiscountPercent={0}
           maximumDiscountPercent={30}
           availableCoupons={EXAMPLE_COUPONS}
-          selectedCouponIds={selectedCoupons}
+          selectedCouponIds={dc.selectedCouponIds}
           disabledCouponIds={disabledCouponIds}
           disabledReasonByCoupon={{}}
           informationalMessages={discountCouponMessages}
           discountValidationMessage={null}
-          onDiscountModeChange={(m) => setDiscountMode(m)}
-          onDiscountAmountChange={setDiscountAmount}
-          onDiscountPercentChange={setDiscountPercent}
-          onDiscountClear={() => { setDiscountAmount(""); setDiscountPercent(""); }}
-          onCouponToggle={(id) =>
-            setSelectedCoupons((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
-          }
-          onContinue={() => setStep((s) => clamp(s + 1))}
+          onDiscountModeChange={(m) => setDraft((d) => updateDiscountAndCoupon(d, { mode: m }))}
+          onDiscountAmountChange={(v) => setDraft((d) => updateDiscountAndCoupon(d, { amountInput: v }))}
+          onDiscountPercentChange={(v) => setDraft((d) => updateDiscountAndCoupon(d, { percentInput: v }))}
+          onDiscountClear={() => setDraft((d) => updateDiscountAndCoupon(d, { amountInput: "", percentInput: "" }))}
+          onCouponToggle={(id) => setDraft((d) => updateDiscountAndCoupon(d, { selectedCouponIds: toggleId(d.discountAndCoupon.selectedCouponIds, id) }))}
+          onContinue={() => goStep(step + 1)}
         />
       )}
       {step === 6 && (
         <Step6Notes
-          customerNotes={notes.customerNotes}
-          internalMemo={notes.internalMemo}
-          onCustomerNotesChange={(v) => setNotes((p) => ({ ...p, customerNotes: v }))}
-          onInternalMemoChange={(v) => setNotes((p) => ({ ...p, internalMemo: v }))}
-          onBack={() => setStep((s) => clamp(s - 1))}
-          onContinue={() => setStep((s) => clamp(s + 1))}
+          customerNotes={draft.notes.customerNotes}
+          internalMemo={draft.notes.internalMemo}
+          onCustomerNotesChange={(v) => setDraft((d) => updateNotes(d, { customerNotes: v }))}
+          onInternalMemoChange={(v) => setDraft((d) => updateNotes(d, { internalMemo: v }))}
+          onBack={() => goStep(step - 1)}
+          onContinue={() => goStep(step + 1)}
         />
       )}
       {step === 7 && (
@@ -639,25 +437,25 @@ export default function ScreensPreview() {
       )}
       {step === 7 && (
         <Step7Review
-          customerName={customerName}
-          vehicleName={vehicleName}
-          categoryCount={categories.length}
-          customerFields={customerFields}
-          vehicleFields={vehicleFields}
-          serviceLines={serviceLines}
-          discountFields={discountFields}
-          couponSummaries={couponSummaries}
-          customerNotes={notes.customerNotes}
-          internalMemo={notes.internalMemo}
-          priceSummary={priceSummary}
-          previewConfirmed={previewConfirmed}
-          onPreviewConfirm={handlePreviewConfirm}
-          onEditCustomer={() => setStep(1)}
-          onEditVehicle={() => setStep(2)}
-          onEditServices={() => setStep(categories.length ? 4 : 3)}
-          onEditDiscount={() => setStep(5)}
-          onEditNotes={() => setStep(6)}
-          onBack={() => setStep(6)}
+          customerName={previewData.customerName}
+          vehicleName={previewData.vehicleName}
+          categoryCount={previewData.categoryCount}
+          customerFields={previewData.customerFields}
+          vehicleFields={previewData.vehicleFields}
+          serviceLines={previewData.serviceLines}
+          discountFields={previewData.discountFields}
+          couponSummaries={previewData.couponSummaries}
+          customerNotes={previewData.customerNotes}
+          internalMemo={previewData.internalMemo}
+          priceSummary={previewData.priceSummary}
+          previewConfirmed={draft.review.previewConfirmed}
+          onPreviewConfirm={() => setDraft((d) => updateReview(d, { previewConfirmed: true }))}
+          onEditCustomer={() => goStep(1)}
+          onEditVehicle={() => goStep(2)}
+          onEditServices={() => goStep(categories.length ? 4 : 3)}
+          onEditDiscount={() => goStep(5)}
+          onEditNotes={() => goStep(6)}
+          onBack={() => goStep(6)}
         />
       )}
     </WizardShell>

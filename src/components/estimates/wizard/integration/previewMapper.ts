@@ -1,11 +1,12 @@
-// Estimate Wizard Ver2.2 — Wizard → preview mapper (Phase 8).
+// Estimate Wizard Ver2.2 — Canonical draft → preview mapper (Phase 9).
 //
-// Translates raw Wizard preview state into the neutral EstimateEditorPreviewData shape (ids →
-// labels resolved here; empty values become 未入力/未選択/なし). This is the ONLY place the
-// aggregation lives. It is READ-ONLY: no calculation of production prices/tax/discounts, no save,
-// no API/DB/OCR/PDF/LINE. The `previewSubtotal` is a mock preview value the caller supplies —
-// never a computed total. Depends on the wizard layer (types + config); EstimateEditor never
-// imports this module.
+// Translates the canonical EstimateWizardDraftV22 into the neutral EstimateEditorPreviewData
+// shape (ids → labels; empty values become 未入力/未選択/なし). DETERMINISTIC and side-effect free:
+// no production price/tax/discount/coupon calculation, no save, no API/DB/OCR/PDF/LINE. Unknown
+// ids fall back to the raw id (never crash). A small PreviewContext carries non-draft preview
+// context only — the dealer shop rank (needed to resolve coating layer labels), a mock preview
+// subtotal, and an owner-supplied mock %→yen conversion — NOT wizard screen state. Depends on the
+// wizard layer (canonical draft + config); EstimateEditor never imports this module.
 
 import { formatYen } from "../foundation/tokens";
 import { serviceCategoryLabel, SERVICE_CATEGORY_IDS } from "@/lib/estimates/service-categories";
@@ -18,73 +19,32 @@ import { EXAMPLE_ROOM_MENUS } from "../screens/room-cleaning-config";
 import { EXAMPLE_OTHER_WORK_PRESETS } from "../screens/other-work-config";
 import { EXAMPLE_STORE_GLOBAL_OPTIONS } from "../screens/store-global-options-config";
 import { EXAMPLE_COUPONS } from "../screens/discount-coupon-config";
-import type {
-  NewCustomerDraft, NewVehicleDraft, CustomerMode, VehicleMode,
-  ShopRank, LayerCount, PpfInstallationMethodId, InteriorPpfRow, OtherWorkCustomRow, DiscountMode,
-} from "../screens/step-types";
+import type { ShopRank } from "../screens/step-types";
+import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
 import type { EstimateEditorPreviewData, PreviewField, PreviewServiceLine } from "./previewTypes";
 
-/** Raw wizard preview state consumed by the adapter (owner-held; the single state owner remains
- *  the wizard host — this is just a snapshot passed downward). */
-export interface WizardPreviewInput {
-  customerMode: CustomerMode;
-  nc:           NewCustomerDraft;
-  vehicleMode:  VehicleMode;
-  nv:           NewVehicleDraft;
-  sizeKey:      string;
-  categories:   string[];
-  shopRank:     ShopRank;
-  // coating
-  layerCount:   LayerCount | null;
-  layer1:       string | null;
-  layer2:       string | null;
-  layer3:       string | null;
-  // ppf
-  ppfMethod:    PpfInstallationMethodId | null;
-  ppfParts:     string[];
-  ppfQty:       Record<string, number>;
-  ppfType:      string | null;
-  ppfUnitPrice: string;
-  interiorRows: InteriorPpfRow[];
-  // window
-  windowAreas:     string[];
-  windowFilm:      string | null;
-  windowUnitPrice: string;
-  // maintenance / car wash
-  maintMenu:      string | null;
-  maintUnitPrice: string;
-  washMenu:       string | null;
-  washUnitPrice:  string;
-  // room cleaning
-  roomMenus:      string[];
-  // other work
-  owPresets:      string[];
-  owRows:         OtherWorkCustomRow[];
-  // store global options
-  globalOpts:     string[];
-  // discount / coupon
-  discountMode:            DiscountMode;
-  discountAmount:          string;
-  discountPercent:         string;
-  convertedDiscountAmount: number | null;
-  selectedCoupons:         string[];
-  // notes
-  customerNotes: string;
-  internalMemo:  string;
-  // mock preview subtotal (never a computed production total)
-  previewSubtotal: number;
+/** Non-draft preview context. NOT wizard screen state — dealer rank + preview/mock display values
+ *  the owner supplies so the mapper never has to calculate. */
+export interface PreviewContext {
+  shopRank: ShopRank;
+  previewSubtotal: number;                 // mock preview base amount (never a computed total)
+  convertedDiscountAmount: number | null;  // owner-supplied mock %→yen display (mapper never computes)
 }
 
-export function mapWizardToPreview(input: WizardPreviewInput): EstimateEditorPreviewData {
+export function mapWizardDraftToPreview(draft: EstimateWizardDraftV22, ctx: PreviewContext): EstimateEditorPreviewData {
   const yen = (v: string) => formatYen(Number(v) || 0);
-  const { nc, nv, customerMode, vehicleMode } = input;
+  const c = draft.customer;
+  const v = draft.vehicle;
+  const nc = c.newCustomer;
+  const nv = v.newVehicle;
+  const cfg = draft.serviceConfiguration;
 
-  const customerName = customerMode === "select" ? "既存のお客様" : (nc.name || "未入力");
+  const customerName = c.sourceMode === "existing" ? "既存のお客様" : (nc.name || "未入力");
   const vehicleName =
-    vehicleMode === "select" ? "既存の車両" : ([nv.maker, nv.model].filter(Boolean).join(" ") || "未入力");
+    v.sourceMode === "existing" ? "既存の車両" : ([nv.maker, nv.model].filter(Boolean).join(" ") || "未入力");
 
   const customerFields: PreviewField[] =
-    customerMode === "select"
+    c.sourceMode === "existing"
       ? [{ label: "登録方法", value: "既存のお客様" }]
       : [
           { label: "登録方法", value: "新規のお客様" },
@@ -106,7 +66,7 @@ export function mapWizardToPreview(input: WizardPreviewInput): EstimateEditorPre
         ];
 
   const vehicleFields: PreviewField[] =
-    vehicleMode === "select"
+    v.sourceMode === "existing"
       ? [{ label: "登録方法", value: "既存の車両" }]
       : [
           { label: "登録方法", value: "新規の車両" },
@@ -119,45 +79,47 @@ export function mapWizardToPreview(input: WizardPreviewInput): EstimateEditorPre
           { label: "ナンバー", value: nv.plate_number || "未入力" },
           { label: "排気量", value: nv.displacement || "未入力" },
           { label: "車検満了", value: nv.inspection_expiry_date || "未入力" },
-          { label: "ボディサイズ(3M)", value: input.sizeKey || "未選択" },
+          { label: "ボディサイズ(3M)", value: v.bodySizeKey || "未選択" },
         ];
 
-  // Fixed logical category order (same canonical order as Screen 4).
-  const ordered = SERVICE_CATEGORY_IDS.filter((id) => input.categories.includes(id));
+  const ordered = SERVICE_CATEGORY_IDS.filter((id) => draft.serviceSelection.selectedCategories.includes(id));
   const serviceLines: PreviewServiceLine[] = [];
   for (const cat of ordered) {
     if (cat === "coating") {
-      const l1 = firstLayerOptions(input.shopRank).find((o) => o.id === input.layer1)?.label;
-      const l2 = secondLayerOptions(input.layer1).find((o) => o.id === input.layer2)?.label;
-      const l3 = thirdLayerOptions(input.layer1).find((o) => o.id === input.layer3)?.label;
+      const co = cfg.coating;
+      const l1 = firstLayerOptions(ctx.shopRank).find((o) => o.id === co.layer1Id)?.label;
+      const l2 = secondLayerOptions(co.layer1Id).find((o) => o.id === co.layer2Id)?.label;
+      const l3 = thirdLayerOptions(co.layer1Id).find((o) => o.id === co.layer3Id)?.label;
       const parts = [l1, l2, l3].filter(Boolean) as string[];
       serviceLines.push({
         category: serviceCategoryLabel("coating"),
-        name: input.layerCount ? `${input.layerCount}層コーティング` : "未選択",
+        name: co.layerCount ? `${co.layerCount}層コーティング` : "未選択",
         detail: parts.length ? parts.join(" / ") : undefined,
       });
     } else if (cat === "ppf") {
-      const method = DEFAULT_PPF_METHODS.find((m) => m.id === input.ppfMethod)?.label;
-      const type = DEFAULT_PPF_TYPE_GROUPS.flatMap((g) => g.products).find((p) => p.id === input.ppfType)?.label;
-      const partLabels = input.ppfParts.map((id) => {
-        const p = DEFAULT_PPF_PARTS.find((x) => x.id === id);
-        const q = input.ppfQty[id];
-        return p ? `${p.label}${q ? `×${q}` : ""}` : id;
+      const p = cfg.ppf;
+      const method = DEFAULT_PPF_METHODS.find((m) => m.id === p.installationMethod)?.label;
+      const type = DEFAULT_PPF_TYPE_GROUPS.flatMap((g) => g.products).find((x) => x.id === p.ppfTypeId)?.label;
+      const partLabels = p.selectedPartIds.map((id) => {
+        const part = DEFAULT_PPF_PARTS.find((x) => x.id === id);
+        const q = p.quantitiesByPart[id];
+        return part ? `${part.label}${q ? `×${q}` : ""}` : id;
       });
       const details: string[] = [];
       if (type) details.push(`種別: ${type}`);
       if (partLabels.length) details.push(`部位: ${partLabels.join(", ")}`);
-      const interior = input.interiorRows.filter((r) => r.location || r.amount);
+      const interior = p.interiorRows.filter((r) => r.location || r.amount);
       if (interior.length) details.push(`内装: ${interior.map((r) => `${r.location || "—"}${r.amount ? ` ${r.amount}` : ""}`).join(", ")}`);
       serviceLines.push({
         category: serviceCategoryLabel("ppf"),
         name: method ?? "未選択",
         detail: details.join(" / ") || undefined,
-        amount: input.ppfUnitPrice ? yen(input.ppfUnitPrice) : undefined,
+        amount: p.unitPriceInput ? yen(p.unitPriceInput) : undefined,
       });
     } else if (cat === "window") {
-      const areas = input.windowAreas.map((id) => DEFAULT_WINDOW_AREAS.find((a) => a.id === id)?.label ?? id);
-      const film = EXAMPLE_FILM_TYPES.find((f) => f.id === input.windowFilm)?.label;
+      const w = cfg.windowFilm;
+      const areas = w.selectedAreaIds.map((id) => DEFAULT_WINDOW_AREAS.find((a) => a.id === id)?.label ?? id);
+      const film = EXAMPLE_FILM_TYPES.find((f) => f.id === w.filmTypeId)?.label;
       const details: string[] = [];
       if (film) details.push(`フィルム: ${film}`);
       if (areas.length) details.push(`エリア: ${areas.join(", ")}`);
@@ -165,32 +127,35 @@ export function mapWizardToPreview(input: WizardPreviewInput): EstimateEditorPre
         category: serviceCategoryLabel("window"),
         name: film ?? "未選択",
         detail: details.join(" / ") || undefined,
-        amount: input.windowUnitPrice ? yen(input.windowUnitPrice) : undefined,
+        amount: w.unitPriceInput ? yen(w.unitPriceInput) : undefined,
       });
     } else if (cat === "maintenance") {
-      const m = EXAMPLE_MAINTENANCE_MENUS.find((x) => x.id === input.maintMenu);
+      const bm = cfg.bodyMaintenance;
+      const m = EXAMPLE_MAINTENANCE_MENUS.find((x) => x.id === bm.menuId);
       serviceLines.push({
         category: serviceCategoryLabel("maintenance"),
         name: m?.name ?? "未選択",
-        amount: input.maintUnitPrice ? yen(input.maintUnitPrice) : m ? formatYen(m.defaultPrice) : undefined,
+        amount: bm.unitPriceInput ? yen(bm.unitPriceInput) : m ? formatYen(m.defaultPrice) : undefined,
       });
     } else if (cat === "carwash") {
-      const m = EXAMPLE_WASH_MENUS.find((x) => x.id === input.washMenu);
+      const cw = cfg.carWash;
+      const m = EXAMPLE_WASH_MENUS.find((x) => x.id === cw.menuId);
       serviceLines.push({
         category: serviceCategoryLabel("carwash"),
         name: m?.name ?? "未選択",
-        amount: input.washUnitPrice ? yen(input.washUnitPrice) : m ? formatYen(m.defaultPrice) : undefined,
+        amount: cw.unitPriceInput ? yen(cw.unitPriceInput) : m ? formatYen(m.defaultPrice) : undefined,
       });
     } else if (cat === "roomclean") {
-      const menus = input.roomMenus.map((id) => EXAMPLE_ROOM_MENUS.find((x) => x.id === id)?.name ?? id);
+      const menus = cfg.roomCleaning.selectedMenuIds.map((id) => EXAMPLE_ROOM_MENUS.find((x) => x.id === id)?.name ?? id);
       serviceLines.push({
         category: serviceCategoryLabel("roomclean"),
         name: menus.length ? `${menus.length} メニュー` : "未選択",
         detail: menus.length ? menus.join(", ") : undefined,
       });
     } else if (cat === "other") {
-      const presets = input.owPresets.map((id) => EXAMPLE_OTHER_WORK_PRESETS.find((x) => x.id === id)?.name ?? id);
-      const customs = input.owRows.filter((r) => r.name.trim()).map((r) => r.name);
+      const ow = cfg.otherWork;
+      const presets = ow.selectedPresetIds.map((id) => EXAMPLE_OTHER_WORK_PRESETS.find((x) => x.id === id)?.name ?? id);
+      const customs = ow.customRows.filter((r) => r.name.trim()).map((r) => r.name);
       const names = [...presets, ...customs];
       serviceLines.push({
         category: serviceCategoryLabel("other"),
@@ -199,41 +164,42 @@ export function mapWizardToPreview(input: WizardPreviewInput): EstimateEditorPre
       });
     }
   }
-  const goptNames = input.globalOpts.map((id) => EXAMPLE_STORE_GLOBAL_OPTIONS.find((o) => o.id === id)?.name ?? id);
+  const goptNames = cfg.storeGlobalOptions.selectedOptionIds.map((id) => EXAMPLE_STORE_GLOBAL_OPTIONS.find((o) => o.id === id)?.name ?? id);
   if (goptNames.length) {
     serviceLines.push({ category: "追加サービスオプション", name: `${goptNames.length} 件`, detail: goptNames.join(", ") });
   }
 
+  const dc = draft.discountAndCoupon;
   const discountFields: PreviewField[] = [
-    { label: "値引きモード", value: input.discountMode === "amount" ? "金額値引き" : "％値引き" },
-    input.discountMode === "amount"
-      ? { label: "値引き額", value: input.discountAmount ? yen(input.discountAmount) : "なし" }
-      : { label: "値引き率", value: input.discountPercent ? `${input.discountPercent}%` : "なし" },
-    ...(input.discountMode === "percent" && input.convertedDiscountAmount != null
-      ? [{ label: "換算値引き額（プレビュー）", value: formatYen(input.convertedDiscountAmount) }]
+    { label: "値引きモード", value: dc.mode === "amount" ? "金額値引き" : "％値引き" },
+    dc.mode === "amount"
+      ? { label: "値引き額", value: dc.amountInput ? yen(dc.amountInput) : "なし" }
+      : { label: "値引き率", value: dc.percentInput ? `${dc.percentInput}%` : "なし" },
+    ...(dc.mode === "percent" && ctx.convertedDiscountAmount != null
+      ? [{ label: "換算値引き額（プレビュー）", value: formatYen(ctx.convertedDiscountAmount) }]
       : []),
   ];
-  const couponSummaries = input.selectedCoupons.map((id) => {
-    const c = EXAMPLE_COUPONS.find((x) => x.id === id);
-    if (!c) return id;
-    const v = c.discountType === "percent" ? `${c.discountValue}%` : formatYen(c.discountValue);
-    return `${c.name}（${v}）`;
+  const couponSummaries = dc.selectedCouponIds.map((id) => {
+    const cp = EXAMPLE_COUPONS.find((x) => x.id === id);
+    if (!cp) return id;
+    const val = cp.discountType === "percent" ? `${cp.discountValue}%` : formatYen(cp.discountValue);
+    return `${cp.name}（${val}）`;
   });
 
   return {
     mode: "wizard-preview",
     customerName,
     vehicleName,
-    categoryCount: input.categories.length,
+    categoryCount: draft.serviceSelection.selectedCategories.length,
     customerFields,
     vehicleFields,
     serviceLines,
     discountFields,
     couponSummaries,
-    customerNotes: input.customerNotes,
-    internalMemo: input.internalMemo,
+    customerNotes: draft.notes.customerNotes,
+    internalMemo: draft.notes.internalMemo,
     priceSummary: {
-      mockRows: [{ label: "小計（プレビュー基準額）", value: formatYen(input.previewSubtotal) }],
+      mockRows: [{ label: "小計（プレビュー基準額）", value: formatYen(ctx.previewSubtotal) }],
       note: "本計算（サービス小計・オプション・税・合計）はプレビューでは行いません。今後の統合時に親の既存ロジックが算出します。",
     },
   };
