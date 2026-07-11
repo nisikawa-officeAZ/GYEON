@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { APP_NAME, APP_SUBTITLE } from "@/lib/plans/plan-types";
+import DevServiceWorkerCleanup from "@/components/system/DevServiceWorkerCleanup";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -33,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`${geist.variable} antialiased bg-[#080d1a] text-slate-100`}>
+        <DevServiceWorkerCleanup />
         {children}
       </body>
     </html>

@@ -50,6 +50,14 @@ export const supabasePersistenceGateway: EstimatePersistenceGateway = {
     });
 
     if (error) {
+      // Observability (server-side, DEVELOPMENT ONLY): surface the RPC diagnostic so an unmatched error
+      // does not silently collapse into SAVE_FAILED with no way to diagnose it. Logs ONLY the Postgres
+      // error CODE and MESSAGE — deliberately NOT `details`/`hint`, which can echo a failing row's
+      // column values (customer/vehicle PII). The CLIENT still receives only the controlled mapped
+      // code/message; the raw error is NEVER exposed to the user.
+      if (process.env.NODE_ENV !== "production") {
+        console.error(`[estimate-save] save_estimate_from_wizard RPC error code=${error.code ?? "?"} message=${error.message}`);
+      }
       return { ok: false, ...mapRpcError(error.message) };
     }
 
