@@ -3,7 +3,7 @@
 
 import { View } from "@react-pdf/renderer";
 import { Stack, Row, Overline, Body, Caption } from "../primitives";
-import { COLOR, BW } from "../tokens";
+import { COLOR, BW, FS } from "../tokens";
 
 export function NotesBlock({
   title,
@@ -33,7 +33,7 @@ export function NotesBlock({
         {notes.map((n, i) => (
           <Row key={i} gap={6}>
             <Caption style={{ width: 14, color: COLOR.textMuted }}>{ordered ? `${i + 1}.` : "・"}</Caption>
-            <Body style={{ flex: 1, fontSize: 11 }}>{n}</Body>
+            <Body style={{ flex: 1, fontSize: FS.fs11 }}>{n}</Body>
           </Row>
         ))}
       </Stack>

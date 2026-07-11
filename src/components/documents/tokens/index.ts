@@ -64,20 +64,23 @@ export const FONT = {
   num: "NotoSansJP",
 } as const;
 
-// ── Font sizes (design px → react-pdf converts to pt ×0.75) ──────────────────
+// ── Font sizes ───────────────────────────────────────────────────────────────
+// The GenSpark design is authored in px; @react-pdf/renderer does NOT convert a "Npx" string to pt
+// (it treats it as pt-ish), so px values render ~1.33× too large. We therefore express the tokens as
+// the pt equivalents (design px × 0.75), matching the concept-b A4 density exactly (794px→595.28pt).
 export const FS = {
-  fs9: "9px",
-  fs10: "10px",
-  fs11: "11px",
-  fs12: "12px",
-  fs13: "13px",
-  fs14: "14px",
-  fs16: "16px",
-  fs18: "18px",
-  fs22: "22px",
-  fs28: "28px",
-  fs32: "32px",
-  fs40: "40px",
+  fs9: 6.75,
+  fs10: 7.5,
+  fs11: 8.25,
+  fs12: 9,
+  fs13: 9.75,
+  fs14: 10.5,
+  fs16: 12,
+  fs18: 13.5,
+  fs22: 16.5,
+  fs28: 21,
+  fs32: 24,
+  fs40: 30,
 } as const;
 
 // ── Font weights ─────────────────────────────────────────────────────────────
@@ -108,21 +111,21 @@ export const LH = {
   relaxed: 1.75,
 } as const;
 
-// ── Spacing (4px baseline; px-strings → pt ×0.75) ────────────────────────────
+// ── Spacing (4px baseline, expressed as pt = design px × 0.75; see FS note) ───
 export const SPACE = {
   s0: 0,
-  s1: "4px",
-  s2: "8px",
-  s3: "12px",
-  s4: "16px",
-  s5: "20px",
-  s6: "24px",
-  s7: "28px",
-  s8: "32px",
-  s10: "40px",
-  s12: "48px",
-  s16: "64px",
-  s20: "80px",
+  s1: 3,
+  s2: 6,
+  s3: 9,
+  s4: 12,
+  s5: 15,
+  s6: 18,
+  s7: 21,
+  s8: 24,
+  s10: 30,
+  s12: 36,
+  s16: 48,
+  s20: 60,
 } as const;
 
 // ── Page / A4 ────────────────────────────────────────────────────────────────

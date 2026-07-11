@@ -6,7 +6,7 @@
 
 import { Page } from "@react-pdf/renderer";
 import type { ReactNode } from "react";
-import { PAGE, COLOR, FONT, FS, LH } from "../tokens";
+import { PAGE, COLOR, FONT, FS } from "../tokens";
 
 export function DocumentPage({ children }: { children: ReactNode }) {
   return (
@@ -19,7 +19,7 @@ export function DocumentPage({ children }: { children: ReactNode }) {
         color: COLOR.text,
         fontFamily: FONT.sans,
         fontSize: FS.fs13,
-        lineHeight: LH.normal,
+        lineHeight: 1.35,
       }}
     >
       {children}

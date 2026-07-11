@@ -129,14 +129,14 @@ export function SerifTitle({ children, style }: TextProps) {
 
 // ── Layout primitives ────────────────────────────────────────────────────────
 
-type BoxProps = { children?: ReactNode; style?: Style | Style[]; gap?: number };
+type BoxProps = { children?: ReactNode; style?: Style | Style[]; gap?: number; wrap?: boolean };
 
-export function Stack({ children, style, gap }: BoxProps) {
-  return <View style={merge({ flexDirection: "column", ...(gap != null ? { gap } : {}) }, style)}>{children}</View>;
+export function Stack({ children, style, gap, wrap }: BoxProps) {
+  return <View wrap={wrap} style={merge({ flexDirection: "column", ...(gap != null ? { gap } : {}) }, style)}>{children}</View>;
 }
 
-export function Row({ children, style, gap }: BoxProps) {
-  return <View style={merge({ flexDirection: "row", ...(gap != null ? { gap } : {}) }, style)}>{children}</View>;
+export function Row({ children, style, gap, wrap }: BoxProps) {
+  return <View wrap={wrap} style={merge({ flexDirection: "row", ...(gap != null ? { gap } : {}) }, style)}>{children}</View>;
 }
 
 export function Spacer({ size = 8 }: { size?: number }) {
