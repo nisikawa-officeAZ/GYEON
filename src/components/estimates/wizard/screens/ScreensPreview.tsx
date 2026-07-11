@@ -42,6 +42,9 @@ import { WizardEstimatePreviewBridge } from "../integration/WizardEstimatePrevie
 import { wizardToEstimatePreviewAdapter, type PreviewContext } from "../integration/wizardToEstimateAdapter";
 import { useWizardPricing } from "../pricing/useWizardPricing";
 import { formatYen } from "../foundation/tokens";
+import { mapDraftToEstimateSaveRequest } from "../save/estimate-save-mapper";
+import { saveEstimateFromWizardAction } from "../save/save-estimate-from-wizard-action";
+import { SaveEstimatePanel, type SaveEstimateStatus } from "./SaveEstimatePanel";
 import type { PreviewPriceSummary } from "../integration/previewTypes";
 import {
   initialEstimateWizardDraftV22, setCurrentStep,
@@ -90,6 +93,13 @@ export default function ScreensPreview() {
   const [ppfRowSeq, setPpfRowSeq] = useState(1);
   const [owRowSeq, setOwRowSeq] = useState(1);
   const [showEditorPreview, setShowEditorPreview] = useState(false);
+
+  // ── Real save (Phase 11I) — one stable idempotency key per Wizard session (retries reuse it) ──
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const [saveStatus, setSaveStatus] = useState<SaveEstimateStatus>("idle");
+  const [saveResult, setSaveResult] = useState<{ estimateNumber: string; replay: boolean } | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveIssues, setSaveIssues] = useState<{ message: string }[]>([]);
 
   const goStep = (n: number) => setDraft((d) => setCurrentStep(d, n));
 
@@ -141,6 +151,31 @@ export default function ScreensPreview() {
   // Read-only preview payload (single source for Screen 7 review AND the editor bridge).
   const previewContext: PreviewContext = { shopRank, priceSummary: previewPriceSummary };
   const previewData = wizardToEstimatePreviewAdapter(draft, previewContext);
+
+  // Real save (Phase 11I): build the DTO (client), call the server action → atomic RPC. Double-click
+  // and post-success are guarded; Wizard state is preserved on failure (never cleared here).
+  async function handleSave() {
+    if (saveStatus === "saving" || saveStatus === "validating" || saveStatus === "success") return;
+    setSaveStatus("saving");
+    setSaveError(null);
+    setSaveIssues([]);
+    try {
+      const request = mapDraftToEstimateSaveRequest({ draft, pricingResult: pricing });
+      const res = await saveEstimateFromWizardAction(request, { requestId: crypto.randomUUID(), idempotencyKey });
+      if (res.ok) {
+        setSaveResult({ estimateNumber: res.estimateNumber, replay: res.replay });
+        setSaveStatus("success");
+        setDraft((d) => updateReview(d, { previewConfirmed: true }));
+      } else {
+        setSaveError(res.message);
+        setSaveIssues(res.issues ?? []);
+        setSaveStatus("error");
+      }
+    } catch {
+      setSaveError("保存中に予期しないエラーが発生しました。");
+      setSaveStatus("error");
+    }
+  }
 
   // Phase 8/9 — read-only EstimateEditor preview via the adapter bridge (canonical draft → adapter
   // → EstimateEditor). Toggling off (adapter removed) returns to the wizard; the preview disappears.
@@ -467,6 +502,16 @@ export default function ScreensPreview() {
           onEditDiscount={() => goStep(5)}
           onEditNotes={() => goStep(6)}
           onBack={() => goStep(6)}
+          savePanel={
+            <SaveEstimatePanel
+              status={saveStatus}
+              result={saveResult}
+              errorMessage={saveError}
+              issues={saveIssues}
+              onSave={handleSave}
+              onBack={() => goStep(6)}
+            />
+          }
         />
       )}
     </WizardShell>

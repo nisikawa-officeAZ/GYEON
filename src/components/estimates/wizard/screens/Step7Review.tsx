@@ -8,18 +8,20 @@
 // and never mutates EstimateEditor. `internalMemo` is rendered in its own isolated internal-only
 // block — never merged with customerNotes and never passed into the customer-facing block.
 
+import type { ReactNode } from "react";
 import { ReviewSection, FieldList } from "./ReviewSection";
 import { ReviewPricingSummary } from "./ReviewPricingSummary";
 import { ReviewConfirmation } from "./ReviewConfirmation";
 import type { Step7ReviewProps } from "./step-types";
 
-export function Step7Review(props: Step7ReviewProps) {
+export function Step7Review(props: Step7ReviewProps & { savePanel?: ReactNode }) {
   const {
     customerName, vehicleName, categoryCount,
     customerFields, vehicleFields, serviceLines, discountFields, couponSummaries,
     customerNotes, internalMemo, pricing,
     previewConfirmed, onPreviewConfirm,
     onEditCustomer, onEditVehicle, onEditServices, onEditDiscount, onEditNotes, onBack,
+    savePanel,
   } = props;
 
   return (
@@ -130,8 +132,10 @@ export function Step7Review(props: Step7ReviewProps) {
       {/* Price summary — real read-only totals from the production pricing engine (Phase 10D) */}
       <ReviewPricingSummary pricing={pricing} />
 
-      {/* Final confirmation (preview-only) */}
-      <ReviewConfirmation previewConfirmed={previewConfirmed} onPreviewConfirm={onPreviewConfirm} onBack={onBack} />
+      {/* Final action: real save panel (Phase 11I) when provided; else the preview-only confirmation. */}
+      {savePanel ?? (
+        <ReviewConfirmation previewConfirmed={previewConfirmed} onPreviewConfirm={onPreviewConfirm} onBack={onBack} />
+      )}
     </div>
   );
 }
