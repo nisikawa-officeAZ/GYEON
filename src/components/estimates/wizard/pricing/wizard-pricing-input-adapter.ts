@@ -110,8 +110,19 @@ export function buildWizardPricingInput(draft: EstimateWizardDraftV22): WizardPr
     }
   }
 
-  const isDealer = !!nc.isBusiness;
-  const dealerRate = Number(nc.tradeRate) || 0;
+  // Trade (業者掛け率) discount: apply ONLY when a business customer has a VALID rate (0 < rate ≤ 100).
+  // An empty/zero/invalid trade rate must NOT become dealerRate=0, because the engine reads
+  // dealerRate 0 as "dealer pays 0% → 100% off" (subtotal × (1 − 0/100) = subtotal). That produced the
+  // spurious full-subtotal discount (EST-00006: isBusiness=true, no rate → discount 78,000 → total 0).
+  // Without a valid rate we apply NO dealer discount (the customer pays full); a valid rate is preserved.
+  const rawTradeRate = Number(nc.tradeRate);
+  const hasValidTradeRate =
+    nc.tradeRate.trim() !== "" &&
+    Number.isFinite(rawTradeRate) &&
+    rawTradeRate > 0 &&
+    rawTradeRate <= 100;
+  const isDealer = !!nc.isBusiness && hasValidTradeRate;
+  const dealerRate = hasValidTradeRate ? rawTradeRate : 0;
 
   const couponState: PricingCouponState = dc.selectedCouponIds.length > 0
     ? { status: "selected_not_priced", couponId: dc.selectedCouponIds[0], label: "クーポン", warningCode: "COUPON_PRICING_NOT_IMPLEMENTED" }
