@@ -10,7 +10,7 @@ import { DEFAULT_ESTIMATE_PHILOSOPHY, type EstimatePhilosophy as Phil } from "./
 export function EstimatePhilosophy({ philosophy, accent }: { philosophy?: Phil; accent: string }) {
   const p = philosophy ?? DEFAULT_ESTIMATE_PHILOSOPHY;
   return (
-    <Stack gap={2} wrap={false} style={{ alignItems: "center", marginVertical: 5 }}>
+    <Stack gap={2} wrap={false} style={{ alignItems: "center", marginVertical: 3 }}>
       <Overline style={{ letterSpacing: TRACK.widest, color: accent }}>{p.eyebrow}</Overline>
       <View style={{ width: 28, borderTopWidth: BW.thin, borderTopColor: COLOR.line, borderTopStyle: "solid", marginVertical: 1 }} />
       <Stack gap={0} style={{ alignItems: "center" }}>

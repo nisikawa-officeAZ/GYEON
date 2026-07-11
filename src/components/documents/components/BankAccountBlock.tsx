@@ -22,12 +22,12 @@ export function BankAccountBlock({ account, title = "お振込先" }: { account?
         borderWidth: BW.hair,
         borderColor: COLOR.line,
         borderStyle: "solid",
-        padding: 10,
-        marginBottom: 16,
+        padding: 7,
+        marginBottom: 6,
       }}
     >
-      <Overline style={{ marginBottom: 4 }}>{title}</Overline>
-      <Stack gap={1}>
+      <Overline style={{ marginBottom: 3 }}>{title}</Overline>
+      <Stack gap={0.5}>
         {rows
           .filter(([, v]) => !!v)
           .map(([k, v, num], i) => (

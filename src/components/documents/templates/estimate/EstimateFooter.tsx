@@ -9,12 +9,12 @@ import type { BrandProfile } from "../../types";
 
 export function EstimateFooter({ brand }: { brand: BrandProfile }) {
   return (
-    <View style={{ borderTopWidth: BW.thin, borderTopColor: COLOR.line, borderTopStyle: "solid", paddingTop: 6, marginTop: 4 }}>
+    <View style={{ borderTopWidth: BW.thin, borderTopColor: COLOR.line, borderTopStyle: "solid", paddingTop: 4, marginTop: 2 }}>
       <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
         {/* Brand */}
-        <Stack gap={3} style={{ width: 220 }}>
+        <Stack gap={2} style={{ width: 220 }}>
           {brand.rankLogoUrl ? (
-            <Image src={brand.rankLogoUrl} style={{ height: 26, objectFit: "contain", alignSelf: "flex-start" }} />
+            <Image src={brand.rankLogoUrl} style={{ height: 22, objectFit: "contain", alignSelf: "flex-start" }} />
           ) : (
             <Stack gap={0}>
               <Value style={{ fontSize: FS.fs14 }}>{brand.footer.partnerBrand || "GYEON"}</Value>
@@ -26,9 +26,9 @@ export function EstimateFooter({ brand }: { brand: BrandProfile }) {
 
         {/* SNS QR */}
         {brand.qrLinks.length ? (
-          <Stack gap={4} style={{ alignItems: "flex-end" }}>
+          <Stack gap={3} style={{ alignItems: "flex-end" }}>
             <Overline style={{ fontSize: FS.fs9 }}>Follow ・ 最新情報は SNS で</Overline>
-            <SnsFooter links={brand.qrLinks} size={32} />
+            <SnsFooter links={brand.qrLinks} size={26} />
           </Stack>
         ) : null}
       </Row>
