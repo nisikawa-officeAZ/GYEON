@@ -1,9 +1,12 @@
 import { getCurrentAdmin } from "@/lib/admin/get-current-admin";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import type { ReactNode } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { ADMIN_ROLE_META } from "@/lib/admin/admin-roles";
 import type { AdminRole } from "@/lib/admin/admin-roles";
+import { loginRedirectTarget } from "@/lib/auth/login-redirect";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +14,28 @@ export const metadata = { title: "管理 | GYEON Business Hub" };
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const admin = await getCurrentAdmin();
-  if (!admin) redirect("/login");
+  if (!admin) {
+    // Separate AUTHENTICATION from AUTHORIZATION. An authenticated user who is not an active admin
+    // (e.g. disabled/insufficient admin) is UNAUTHORIZED — send them to the app home (controlled
+    // fallback), NEVER back to /login (which would loop and look like a failed login). Only a truly
+    // unauthenticated visitor goes to /login, with the original destination preserved as `next`.
+    const user = await getCurrentUser();
+
+    // DEV-ONLY exception: the estimate-wizard dev preview must be reachable by an authorized dealer
+    // staff (for real dealer-context save E2E), even though they are not admins. Defer the actual
+    // authorization to the PAGE (it enforces edit capability via requireStaffCapability and redirects
+    // the unauthorized), and render WITHOUT admin chrome — they are not admins. Every OTHER /admin/*
+    // route stays admin-only; production is unaffected (the wizard route notFound()s there).
+    if (user && process.env.NODE_ENV !== "production") {
+      const pathname = (await headers()).get("x-pathname") ?? "";
+      if (pathname.startsWith("/admin/dev-preview/estimate-wizard")) {
+        return <>{children}</>;
+      }
+    }
+
+    if (user) redirect("/");
+    redirect(loginRedirectTarget((await headers()).get("x-pathname")));
+  }
 
   const roleMeta = ADMIN_ROLE_META[admin.role as AdminRole]
     ?? { label: admin.role, color: "text-slate-400 bg-slate-800 border-slate-700" };
