@@ -14,13 +14,25 @@ import { Page } from "@react-pdf/renderer";
 import type { ReactNode } from "react";
 import { PAGE, COLOR, FONT, FS } from "../tokens";
 
-export function DocumentPage({ children }: { children: ReactNode }) {
+/**
+ * Page margins. Defaults to the business-document frame (16mm / 18mm). The certificates are
+ * authored on a slightly different sheet — concept-b sets them to `16mm 15mm 14mm` — so they pass
+ * their own; every other document leaves this alone and is unaffected.
+ */
+export interface PagePadding {
+  top?: string;
+  bottom?: string;
+  horizontal?: string;
+}
+
+export function DocumentPage({ children, padding }: { children: ReactNode; padding?: PagePadding }) {
   return (
     <Page
       size={PAGE.size}
       style={{
-        paddingVertical: PAGE.padY,
-        paddingHorizontal: PAGE.padX,
+        paddingTop: padding?.top ?? PAGE.padY,
+        paddingBottom: padding?.bottom ?? PAGE.padY,
+        paddingHorizontal: padding?.horizontal ?? PAGE.padX,
         backgroundColor: COLOR.white,
         color: COLOR.text,
         fontFamily: FONT.sans,

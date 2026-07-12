@@ -1,5 +1,5 @@
 // Layer 3 — Document Components barrel.
-export { DocumentPage } from "./DocumentPage";
+export { DocumentPage, type PagePadding } from "./DocumentPage";
 export { Masthead } from "./Masthead";
 export { TitleBlock } from "./TitleBlock";
 export { MetaGrid, type MetaCell } from "./MetaGrid";
