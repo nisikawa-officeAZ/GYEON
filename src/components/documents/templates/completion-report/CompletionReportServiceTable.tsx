@@ -33,7 +33,7 @@ export function CompletionReportServiceTable({ works, accent }: { works: Complet
         <Caption style={{ fontSize: FS.fs9 }}>{works.length} items</Caption>
       </Row>
 
-      <Row style={{ backgroundColor: COLOR.gray50, paddingVertical: 4, paddingHorizontal: 6, borderBottomWidth: BW.thin, borderBottomColor: COLOR.lineStrong, borderBottomStyle: "solid" }}>
+      <Row fixed style={{ backgroundColor: COLOR.gray50, paddingVertical: 4, paddingHorizontal: 6, borderBottomWidth: BW.thin, borderBottomColor: COLOR.lineStrong, borderBottomStyle: "solid" }}>
         <Overline style={[COL.no, { letterSpacing: TRACK.wide }]}>No.</Overline>
         <Overline style={[COL.category, { letterSpacing: TRACK.wide }]}>Category</Overline>
         <Overline style={[COL.item, { letterSpacing: TRACK.wide }]}>Item &amp; Description</Overline>

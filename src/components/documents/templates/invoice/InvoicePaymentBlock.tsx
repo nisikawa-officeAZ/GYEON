@@ -18,7 +18,21 @@ export function InvoicePaymentBlock({
   return (
     <Stack gap={2}>
       <NotesBlock title="お支払いについて ・ Payment Notes" notes={notes} accent={accent} ordered />
-      <BankAccountBlock account={bankAccount} title="お振込先 ・ Bank Transfer" />
+      {/* concept-b `.payment-panel` — "Bank Transfer / お振込先" over a 下記口座にお振込ください line,
+          then four rows with the branch printed on the bank line and Japanese keys. */}
+      <BankAccountBlock
+        account={bankAccount}
+        title="Bank Transfer ・ お振込先"
+        subtitle="下記口座にお振込ください"
+        mergeBranch
+        labels={{
+          bankName: "銀行名",
+          branchName: "支店",
+          accountType: "口座種別",
+          accountNumber: "口座番号",
+          accountHolder: "口座名義",
+        }}
+      />
     </Stack>
   );
 }

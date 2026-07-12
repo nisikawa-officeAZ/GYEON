@@ -75,7 +75,7 @@ export function EstimateIssuerBlock({ brand, accent }: { brand: BrandProfile; ac
     <Column>
       <PartyMarker num="03" en="Issuer" ja="発行元" accent={accent} />
       {brand.logoUrl ? (
-        <Image src={brand.logoUrl} style={{ height: 16, objectFit: "contain", alignSelf: "flex-start", marginBottom: 3 }} />
+        <Image src={brand.logoUrl} style={{ height: 25.5, maxWidth: "100%", objectFit: "contain", alignSelf: "flex-start", marginBottom: 3 }} />
       ) : null}
       <ValueLg style={{ fontSize: FS.fs14, marginBottom: 2 }}>{brand.brandNameJa || brand.brandNameEn || ""}</ValueLg>
       {c.postalCode || c.address ? (

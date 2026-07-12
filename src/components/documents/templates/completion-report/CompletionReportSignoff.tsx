@@ -3,7 +3,7 @@
 //   Customer お客様受領サイン — blank signature line + date line for the customer to complete.
 // A signature area is required by the report rules; no monetary content.
 
-import { View } from "@react-pdf/renderer";
+import { View, Image } from "@react-pdf/renderer";
 import { Row, Stack, Overline, Caption, Value } from "../../primitives";
 import { COLOR, BW, FS } from "../../tokens";
 import type { BrandProfile } from "../../types";
@@ -29,10 +29,12 @@ function SignoffBox({ children }: { children: React.ReactNode }) {
 export function CompletionReportSignoff({
   brand,
   chiefTechnician,
+  reportQrUrl,
   accent,
 }: {
   brand: BrandProfile;
   chiefTechnician?: string;
+  reportQrUrl?: string;
   accent: string;
 }) {
   const technician = chiefTechnician || brand.business.responsiblePerson || "";
@@ -61,6 +63,25 @@ export function CompletionReportSignoff({
           <Caption style={{ fontSize: FS.fs10, color: COLOR.textMuted }}>　　年　　月　　日</Caption>
         </Row>
       </SignoffBox>
+
+      {/* concept-b `.signoff-qr` — QR to the online copy, right of the two sign-off boxes. */}
+      {reportQrUrl ? (
+        <Stack gap={3} style={{ alignItems: "center", justifyContent: "center", width: 46 }}>
+          <Image
+            src={reportQrUrl}
+            style={{
+              width: 42,
+              height: 42,
+              borderWidth: BW.thin,
+              borderColor: COLOR.line,
+              borderStyle: "solid",
+            }}
+          />
+          <Caption style={{ fontSize: FS.fs9, textAlign: "center", color: COLOR.textMuted }}>
+            Scan to View Online
+          </Caption>
+        </Stack>
+      ) : null}
     </Row>
   );
 }

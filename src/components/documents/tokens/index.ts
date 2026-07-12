@@ -103,6 +103,12 @@ export const TRACK = {
   widest: 2,
 } as const;
 
+// ── Line breaking ────────────────────────────────────────────────────────────
+// Japanese gets a zero-width break opportunity between characters (see register-fonts.ts). Those
+// sit next to react-pdf's implicit script-boundary "hyphenation points", which stamp a literal "-"
+// into the text when chosen. A high penalty makes the layout engine always prefer the clean break.
+export const HYPHEN_PENALTY = 10000;
+
 // ── Line heights ─────────────────────────────────────────────────────────────
 export const LH = {
   tight: 1.15,
@@ -133,6 +139,16 @@ export const PAGE = {
   size: "A4" as const,
   padX: "18mm",
   padY: "16mm",
+} as const;
+
+// Same page geometry in points, for `position: absolute` offsets. react-pdf resolves absolute
+// offsets against the paper box and does not accept mm there, so `fixed` page furniture (the serial
+// footer) must use these pt values rather than PAGE's mm strings. 1mm = 72/25.4 pt.
+const MM = 72 / 25.4;
+export const PAGE_PT = {
+  padX: 18 * MM, // 51.02pt — matches PAGE.padX
+  padY: 16 * MM, // 45.35pt — matches PAGE.padY
+  footerBottom: 10 * MM, // 28.35pt from the paper edge
 } as const;
 
 // ── Radii ────────────────────────────────────────────────────────────────────

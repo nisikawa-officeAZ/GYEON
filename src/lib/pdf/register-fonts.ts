@@ -43,6 +43,38 @@ function resolveSrc(override: string | undefined, localPath: string, cdn: string
 
 let registered = false;
 
+// ── CJK line breaking ────────────────────────────────────────────────────────
+// react-pdf splits a run into "words" at script boundaries, so a Japanese sentence arrives here as
+// several kanji/kana chunks with no spaces between them. Its layout engine treats every adjacent
+// pair of such chunks as a *hyphenation point* and stamps a literal "-" into the text whenever it
+// breaks there ("…有効期限は発行日から30日-/です。"). Returning [word] does not prevent that — the
+// chunks are still adjacent boxes.
+//
+// The engine only breaks cleanly (no hyphen) at a *glue* node, which it creates for any syllable
+// whose `.trim()` is empty. U+FEFF is the one such character that is both stripped by `trim()` and
+// renders at zero width, so interleaving it between characters gives Japanese a break opportunity
+// at every position while adding no visible space and no hyphen.
+const ZWNBSP = "﻿";
+const CJK = /[　-〿぀-ヿ㐀-䶿一-鿿＀-￯]/;
+// 行頭禁則 — may not start a line.
+const NO_LINE_START = "。、．，・：；？！)]｝〕〉》」』】’”ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶーゝゞ々…‥";
+// 行末禁則 — may not end a line.
+const NO_LINE_END = "([｛〔〈《「『【‘“";
+
+function cjkBreakOpportunities(word: string): string[] {
+  const chars = [...word];
+  const out: string[] = [];
+  chars.forEach((ch, i) => {
+    out.push(ch);
+    const next = chars[i + 1];
+    if (next === undefined) return;
+    if (NO_LINE_START.includes(next)) return; // would orphan 。、」 etc. to the next line
+    if (NO_LINE_END.includes(ch)) return; // would strand 「（ etc. at the line end
+    out.push(ZWNBSP);
+  });
+  return out;
+}
+
 export function registerPdfFonts(): void {
   if (registered) return;
   try {
@@ -54,8 +86,9 @@ export function registerPdfFonts(): void {
       family: PDF_FONT_FAMILY_BOLD,
       src:    resolveSrc(process.env.PDF_JP_FONT_BOLD_URL, LOCAL_BOLD, CDN_BOLD),
     });
-    // CJK text has no word boundaries to hyphenate — keep words intact.
-    Font.registerHyphenationCallback((word) => [word]);
+    Font.registerHyphenationCallback((word) =>
+      CJK.test(word) ? cjkBreakOpportunities(word) : [word],
+    );
     registered = true;
   } catch (err) {
     console.error("[registerPdfFonts] registration failed:", err);

@@ -74,7 +74,7 @@ export function CompletionReportTemplate({ brand, data }: { brand: BrandProfile;
         ) : null}
 
         {/* Sign-off — Chief Technician / Customer */}
-        <CompletionReportSignoff brand={brand} chiefTechnician={data.chiefTechnician} accent={primary} />
+        <CompletionReportSignoff brand={brand} chiefTechnician={data.chiefTechnician} reportQrUrl={data.reportQrUrl} accent={primary} />
 
         {/* GYEON Philosophy (reused) */}
         <EstimatePhilosophy accent={primary} />

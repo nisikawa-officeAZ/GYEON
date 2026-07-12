@@ -38,7 +38,7 @@ export function InvoiceServiceTable({ items, accent }: { items: InvoiceItem[]; a
         <Caption style={{ fontSize: FS.fs9 }}>{items.length} items</Caption>
       </Row>
 
-      <Row style={{ backgroundColor: COLOR.gray50, paddingVertical: 4, paddingHorizontal: 6, borderBottomWidth: BW.thin, borderBottomColor: COLOR.lineStrong, borderBottomStyle: "solid" }}>
+      <Row fixed style={{ backgroundColor: COLOR.gray50, paddingVertical: 4, paddingHorizontal: 6, borderBottomWidth: BW.thin, borderBottomColor: COLOR.lineStrong, borderBottomStyle: "solid" }}>
         <Overline style={[COL.category, { letterSpacing: TRACK.wide }]}>Category</Overline>
         <Overline style={[COL.item, { letterSpacing: TRACK.wide }]}>Item &amp; Description</Overline>
         <Overline style={[COL.unit, { letterSpacing: TRACK.wide }]}>Unit</Overline>

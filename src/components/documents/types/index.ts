@@ -75,6 +75,8 @@ export interface BrandProfile {
   qrLinks: BrandQrLink[]; // 0–4; empty → QR zone hidden
   /** Pre-resolved GYEON rank logo (data URI / absolute), selected from business.shopRank. */
   rankLogoUrl?: string;
+  /** GYEON wordmark (data URI / absolute). concept-b uses it for the Summary Invoice masthead. */
+  gyeonWordmarkUrl?: string;
   rank?: GyeonRank;
 }
 

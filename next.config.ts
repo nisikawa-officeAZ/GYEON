@@ -7,10 +7,11 @@ const nextConfig: NextConfig = {
   // run un-bundled on the server so the vehicle-registration OCR image pipeline can
   // decode HEIC/HEIF → JPEG before the sharp enhancement step.
   serverExternalPackages: ['@react-pdf/renderer', 'sharp', 'heic-convert', 'libheif-js'],
-  // Bundle the local Japanese PDF fonts (M PLUS 1p, OFL) into the serverless functions
-  // that render PDFs, so registerPdfFonts() can read them from disk at runtime.
+  // Bundle the local Japanese PDF fonts (M PLUS 1p, OFL) and the rasterised document brand assets
+  // (GYEON marks, SNS icons, QR placeholder) into the serverless functions that render PDFs, so
+  // registerPdfFonts() and the brand-asset resolver can read them from disk at runtime.
   outputFileTracingIncludes: {
-    "/**": ["./src/lib/pdf/fonts/*.ttf"],
+    "/**": ["./src/lib/pdf/fonts/*.ttf", "./src/lib/pdf/brand-assets/*.png"],
   },
   experimental: {
     serverActions: {

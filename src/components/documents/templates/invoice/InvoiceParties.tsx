@@ -74,8 +74,13 @@ export function InvoiceIssuerBlock({ brand, accent }: { brand: BrandProfile; acc
   return (
     <Column>
       <PartyMarker num="03" en="Issuer" ja="発行元" accent={accent} />
+      {/* concept-b `.doc-party--issuer .doc-party__logo` is 34px (25.5pt), which the other three
+          documents use. The Invoice's page-1 budget cannot absorb it: at 25.5pt — or at anything
+          above 18pt — the footer's SNS labels spill onto a second page. Held at 18pt pending an
+          Architect ruling on where to recover the ~8pt; the issuer column is our tallest, and it is
+          the one concept-b sets more tightly. */}
       {brand.logoUrl ? (
-        <Image src={brand.logoUrl} style={{ height: 16, objectFit: "contain", alignSelf: "flex-start", marginBottom: 3 }} />
+        <Image src={brand.logoUrl} style={{ height: 18, maxWidth: "100%", objectFit: "contain", alignSelf: "flex-start", marginBottom: 3 }} />
       ) : null}
       <ValueLg style={{ fontSize: FS.fs14, marginBottom: 2 }}>{brand.brandNameJa || brand.brandNameEn || ""}</ValueLg>
       {c.postalCode || c.address ? (

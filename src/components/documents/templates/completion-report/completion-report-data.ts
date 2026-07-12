@@ -37,6 +37,8 @@ export interface CompletionReportDocumentData {
   refEstimate?: string;
   status?: string; // e.g. "Completed"
   chiefTechnician?: string;
+  /** QR artwork linking to the online copy of this report (concept-b `.signoff-qr`). */
+  reportQrUrl?: string;
   titleJa?: string; // default 作業完了報告書
   titleEn?: string; // default "Completion Report / Detailing Works Summary"
   customer: CompletionCustomer;

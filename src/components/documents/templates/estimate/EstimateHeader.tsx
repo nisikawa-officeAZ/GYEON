@@ -8,11 +8,14 @@ import { formatDocDate } from "../../brand";
 import type { BrandProfile } from "../../types";
 import type { EstimateDocumentData } from "./estimate-data";
 
+// A meta pair must never be squeezed: flex would otherwise shrink the label and value into each
+// other ("Delivery Dat2026.07.20") once the trio is wider than the header's left column. Pinning the
+// pair against shrinkage and letting the row wrap keeps every label whole.
 function MetaItem({ label, value }: { label: string; value: string }) {
   return (
-    <Row gap={4}>
-      <Caption style={{ color: COLOR.textMuted }}>{label}</Caption>
-      <Value style={{ fontSize: FS.fs11 }}>{value}</Value>
+    <Row gap={4} style={{ flexShrink: 0 }}>
+      <Caption style={{ color: COLOR.textMuted, flexShrink: 0 }}>{label}</Caption>
+      <Value style={{ fontSize: FS.fs11, flexShrink: 0 }}>{value}</Value>
     </Row>
   );
 }
@@ -30,7 +33,7 @@ export function EstimateHeader({ brand, data }: { brand: BrandProfile; data: Est
           <DocSubtitle style={{ fontSize: FS.fs16, letterSpacing: TRACK.wide, color: COLOR.textStrong }}>
             {data.serial}
           </DocSubtitle>
-          <Row gap={12} style={{ marginTop: 1 }}>
+          <Row gap={12} style={{ marginTop: 1, flexWrap: "wrap" }}>
             <MetaItem label="Issue Date" value={formatDocDate(data.issueDate)} />
             {data.validUntil ? <MetaItem label="Valid Until" value={formatDocDate(data.validUntil)} /> : null}
             <MetaItem label="Currency" value="JPY (¥)" />
@@ -41,7 +44,7 @@ export function EstimateHeader({ brand, data }: { brand: BrandProfile; data: Est
         <Stack gap={2} style={{ alignItems: "flex-end", maxWidth: "40%" }}>
           {brand.logoUrl ? (
             <>
-              <Image src={brand.logoUrl} style={{ height: 20, objectFit: "contain" }} />
+              <Image src={brand.logoUrl} style={{ height: 27, maxWidth: 165, objectFit: "contain" }} />
               <Caption style={{ textAlign: "right", color: COLOR.textStrong }}>{brand.brandNameJa || brand.brandNameEn || ""}</Caption>
             </>
           ) : (
