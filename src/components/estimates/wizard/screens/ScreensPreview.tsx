@@ -38,6 +38,7 @@ import { Step5Discount } from "./Step5Discount";
 import { EXAMPLE_COUPONS } from "./discount-coupon-config";
 import { Step6Notes } from "./Step6Notes";
 import { Step7Review } from "./Step7Review";
+import { ReviewActionBar } from "./ReviewActionBar";
 import { WizardEstimatePreviewBridge } from "../integration/WizardEstimatePreviewBridge";
 import { wizardToEstimatePreviewAdapter, type PreviewContext } from "../integration/wizardToEstimateAdapter";
 import { useWizardPricing } from "../pricing/useWizardPricing";
@@ -503,14 +504,21 @@ export default function ScreensPreview() {
           onEditNotes={() => goStep(6)}
           onBack={() => goStep(6)}
           savePanel={
-            <SaveEstimatePanel
-              status={saveStatus}
-              result={saveResult}
-              errorMessage={saveError}
-              issues={saveIssues}
-              onSave={handleSave}
-              onBack={() => goStep(6)}
-            />
+            <>
+              {/* Phase 7B — the seven tracked Screen7 controls. Presentation-only: `onAction` is
+                  deliberately NOT supplied, so the controls are inert by construction. */}
+              <ReviewActionBar />
+              <div className="mt-4">
+                <SaveEstimatePanel
+                  status={saveStatus}
+                  result={saveResult}
+                  errorMessage={saveError}
+                  issues={saveIssues}
+                  onSave={handleSave}
+                  onBack={() => goStep(6)}
+                />
+              </div>
+            </>
           }
         />
       )}
