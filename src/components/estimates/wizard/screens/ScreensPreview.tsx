@@ -69,8 +69,6 @@ const PREVIEW_SCENARIOS: { label: string; ids: WizardServiceCategory[] }[] = [
   { label: "⑧ 全7カテゴリ", ids: [...SERVICE_CATEGORY_IDS] },
 ];
 
-const MOCK_TOTALS: WizardTotalsView = { subtotal: 0, discount: 0, tax: 0, total: 0, ready: false };
-
 const yenOrDash = (v: number | null) => (v == null ? "—" : formatYen(v));
 
 function cnBtn(active: boolean): string {
@@ -126,6 +124,21 @@ export default function ScreensPreview() {
 
   // Phase 10D — read-only pricing from the PRODUCTION engine (no Screen arithmetic).
   const pricing = useWizardPricing(draft);
+
+  // Persistent summary (WizardShell sidebar / mobile bottom bar) — fed by the SAME read-only
+  // production pricing result the Screen 7 review renders, so the two can never disagree. This is
+  // a display-only projection into WizardTotalsView: no arithmetic, no second calculation, no mock
+  // values. Coupons are excluded from `discount` because couponTotal is always 0 (deferred), so
+  // discountTotal alone already reconciles with grandTotal. `ready` stays false until the engine
+  // reports a complete price, which is what surfaces MiniTotalPanel's
+  // 「価格は保存時にサーバーで確定します。」 notice instead of implying a settled ¥0.
+  const wizardTotals: WizardTotalsView = {
+    subtotal: pricing.subtotal ?? 0,
+    discount: pricing.discountTotal ?? 0,
+    tax:      pricing.taxTotal ?? 0,
+    total:    pricing.grandTotal ?? 0,
+    ready:    pricing.completeness === "complete",
+  };
   const previewPriceSummary: PreviewPriceSummary = {
     mockRows: [
       { label: "サービス小計", value: yenOrDash(pricing.subtotal) },
@@ -207,7 +220,7 @@ export default function ScreensPreview() {
       onNext={() => goStep(step + 1)}
       isFirst={step === 1}
       isLast={step === 7}
-      totals={MOCK_TOTALS}
+      totals={wizardTotals}
     >
       {step === 1 && (
         <Step1Customer
