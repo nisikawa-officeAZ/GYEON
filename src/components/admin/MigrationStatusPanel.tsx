@@ -148,8 +148,6 @@ export default function MigrationStatusPanel({ report }: Props) {
         <p className="text-[10px] text-slate-500">
           マイグレーション 056 と 057 は SQL ファイルとして存在しません。これらのフェーズはコードのみの変更でした。
           055 → 058 への飛びは意図的なものです。
-          ファイル <code className="text-slate-400">001_create_core_tables_PASTE_ONLY.sql</code> は
-          参照用のコピーであり、単独で適用してはいけません。
         </p>
       </div>
 

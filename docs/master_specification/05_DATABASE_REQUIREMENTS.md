@@ -270,7 +270,6 @@ The Canonical JSON specifies **IndexedDB + Cloudflare KV + D1** with offline-fir
 ## 7. Database Hygiene Findings (Informational)
 
 - Numbering gaps `056, 057, 060, 061, 065, 068, 069` = code/doc-only phases (no schema changes). Intentional.
-- Duplicate `001_create_core_tables.sql` + `001_create_core_tables_PASTE_ONLY.sql` — cleanup candidate (Phase D).
 - `CHANGELOG.md` migration filenames do **not** match real files — unreliable; this doc is the reference.
 - "Applied" status is manual (no automated drift check).
 

@@ -79,7 +79,6 @@ Make code-complete integrations operational by configuration (not new code):
 
 - Re-introduce **ESLint** (config + script) into the pipeline.
 - Silence `/products` build-time dynamic-server log (mark route dynamic).
-- Remove duplicate legacy migration (`001_..._PASTE_ONLY.sql`) under additive-safe process.
 - Manage **PWA service-worker stale-cache** risk on deploys.
 - Evaluate iframe vs. native React for PC screens when they need live data (`08_UI_REQUIREMENTS.md` §2).
 

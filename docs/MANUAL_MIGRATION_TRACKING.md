@@ -53,10 +53,6 @@
 > The jump from 055 → 058 is intentional and correct.
 > Do NOT attempt to create or apply 056 or 057 migration files.
 
-> **File `001_create_core_tables_PASTE_ONLY.sql`** exists in the repo as a reference/backup.
-> It is NOT listed above because it is superseded by `001_create_core_tables.sql`.
-> Apply only `001_create_core_tables.sql` — never apply the PASTE_ONLY variant.
-
 ---
 
 ## Verification Queries Per Migration
