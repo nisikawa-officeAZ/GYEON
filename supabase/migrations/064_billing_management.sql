@@ -72,7 +72,7 @@ create policy "dealer_billing_dealer_select"
   on dealer_billing for select
   using (
     dealer_id in (
-      select id from dealers where user_id = auth.uid()
+      select id from dealers where owner_user_id = auth.uid()
     )
   );
 
@@ -94,7 +94,7 @@ create policy "billing_invoices_dealer_select"
   on billing_invoices for select
   using (
     dealer_id in (
-      select id from dealers where user_id = auth.uid()
+      select id from dealers where owner_user_id = auth.uid()
     )
   );
 

@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS public.work_orders (
 
 ALTER TABLE public.work_orders ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Dealer members can manage their work orders"
+DROP POLICY IF EXISTS "Dealer members can manage their work orders" ON public.work_orders;
+CREATE POLICY "Dealer members can manage their work orders"
   ON public.work_orders
   FOR ALL
   USING (

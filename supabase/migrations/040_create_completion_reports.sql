@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS public.completion_reports (
 
 ALTER TABLE public.completion_reports ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Dealer members can manage their completion reports"
+DROP POLICY IF EXISTS "Dealer members can manage their completion reports" ON public.completion_reports;
+CREATE POLICY "Dealer members can manage their completion reports"
   ON public.completion_reports
   FOR ALL
   USING (

@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS public.estimate_items (
 ALTER TABLE public.estimate_items ENABLE ROW LEVEL SECURITY;
 
 -- Dealer-scoped access: users can only see items for their own dealer.
-CREATE POLICY IF NOT EXISTS "Dealer members can manage their estimate items"
+DROP POLICY IF EXISTS "Dealer members can manage their estimate items" ON public.estimate_items;
+CREATE POLICY "Dealer members can manage their estimate items"
   ON public.estimate_items
   FOR ALL
   USING (
