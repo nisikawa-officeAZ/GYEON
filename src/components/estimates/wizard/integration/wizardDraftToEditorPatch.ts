@@ -14,10 +14,21 @@
 //   1. `WizardOwnedFieldPatch` stays SCALAR-ONLY and unchanged. This file maps its seven fields and
 //      nothing else. It is imported, never redeclared, never widened.
 //   2. Items are derived SEPARATELY, through the existing canonical path only:
-//         draft → buildWizardPricingInput(draft).services → buildLineItems(services, catalog)
+//         draft → buildWizardPricingInputFromConfig(draft, config, catalog).services
+//               → buildLineItems(services, catalog)
 //      No pricing is computed here. No line is composed here. No price is read, rounded, summed, or
 //      adjusted here. This module never touches money — it only forwards what the production engine
 //      returns.
+//
+// ── FIXTURE-FREE LABELS (Phase 8-B2F-B) ─────────────────────────────────────────
+// `config: ProductionPricingConfiguration` is a REQUIRED argument. It supplies the authoritative
+// label for every manual category, and it is the ONLY label source: the fixture-backed
+// `buildWizardPricingInput` / `wizard-manual-pricing` pair is no longer reachable from this module.
+// That pair had a `label ?? id` fallback, and its label becomes `estimate_items.item_name` — so a
+// preview-invented name, or a raw id, could be written permanently onto a customer's estimate.
+// A selected code with no authoritative entry now BLOCKS with `pricing-invalid` and produces no
+// items at all. The fixture path survives only for the frozen dev preview, which this file no longer
+// touches.
 //   3. Runtime apply is limited to NEW estimates. See "THE EXISTING-ESTIMATE GATE" below.
 //   4. Existing estimates with unresolved legacy items stay BLOCKED, with the reason preserved
 //      verbatim from the validator — never summarized, never downgraded, never dropped.
@@ -57,7 +68,8 @@
 
 import { buildLineItems, type PricedLineItem } from "@/lib/pricing/pricing-engine";
 import type { PricingCatalog } from "@/lib/pricing/pricing-catalog";
-import { buildWizardPricingInput } from "../pricing/wizard-pricing-input-adapter";
+import { buildWizardPricingInputFromConfig } from "../pricing/wizard-pricing-input-adapter-config";
+import type { ProductionPricingConfiguration } from "../pricing/wizard-manual-pricing-config";
 import type { WizardPricingIssue } from "../pricing/wizard-pricing-types";
 import type { HydratedWizardDraft } from "./estimateToWizardDraft";
 import { validateWizardDraftForEstimateEditorIntegration } from "./validateWizardDraftForEstimateEditorIntegration";
@@ -165,6 +177,7 @@ export function buildEstimateEditorApplyPlan(
   hydrated: HydratedWizardDraft,
   mode: EstimateEditorMode,
   catalog: PricingCatalog,
+  config: ProductionPricingConfiguration,
 ): EstimateEditorApplyPlan {
   // ── 1. Mode gate — FIRST. Before validation, before pricing, before anything. ──
   // Architect Ruling 3: B2 runtime apply is limited to NEW estimates. `"edit"` is refused here
@@ -219,10 +232,15 @@ export function buildEstimateEditorApplyPlan(
   }
 
   // ── 4. Items — the canonical path, and only the canonical path. ────────────────
-  // `buildWizardPricingInput` turns the Screen-4 configuration into production `ServiceInput[]`;
-  // `buildLineItems` is the same authoritative function `EstimateEditor.appendService` calls. This
-  // module composes nothing and prices nothing itself.
-  const bundle = buildWizardPricingInput(hydrated.draft);
+  // `buildWizardPricingInputFromConfig` turns the Screen-4 configuration into production
+  // `ServiceInput[]`; `buildLineItems` is the same authoritative function
+  // `EstimateEditor.appendService` calls. This module composes nothing and prices nothing itself.
+  //
+  // The CONFIG-DRIVEN adapter is used, never the fixture-backed one. Every manual line's label — the
+  // value that becomes `estimate_items.item_name` — is resolved from the required `config`. A code
+  // with no authoritative entry raises UNKNOWN_CONFIGURED_ITEM, which lands in `bundle.errors` and
+  // blocks below, so neither a fixture label nor a raw id can reach a persisted item name.
+  const bundle = buildWizardPricingInputFromConfig(hydrated.draft, config, catalog);
 
   // A draft whose own pricing input is invalid must not be applied either — half-priced items are a
   // silent data defect. Reported distinctly from an integration block so the operator sees the real

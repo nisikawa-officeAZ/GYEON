@@ -38,6 +38,14 @@ import {
   updateDiscountAndCoupon, updateNotes,
 } from "../draft/wizard-draft-state";
 import { buildWizardPricingInput } from "../pricing/wizard-pricing-input-adapter";
+import { buildWizardPricingInputFromConfig } from "../pricing/wizard-pricing-input-adapter-config";
+import {
+  buildManualPricingLinesFromConfig,
+  WIZARD_PRICING_CONFIG_ERRORS,
+  type ProductionPricingConfiguration,
+  type ProductionLabelOption,
+  type ProductionStoreGlobalOption,
+} from "../pricing/wizard-manual-pricing-config";
 import { buildLineItems } from "@/lib/pricing/pricing-engine";
 import { DEFAULT_PRICING_CATALOG } from "@/lib/pricing/pricing-catalog";
 import type { EstimateItemDB, EstimateCategory } from "@/lib/estimates/estimate-types";
@@ -77,6 +85,44 @@ function estimate(overrides: Partial<EstimateHydrationInput> = {}): EstimateHydr
 
 const codesOf = (h: HydratedWizardDraft) =>
   validateWizardDraftForEstimateEditorIntegration(h).blockingIssues.map((i) => i.code);
+
+// ── Production pricing configuration (Phase 8-B2F-B) ─────────────────────────────
+// The AUTHORITATIVE label source for every manual category. Deliberately uses labels that exist in
+// NO fixture module, so any fixture text appearing in production output is unmistakable.
+//
+// The codes intentionally REUSE the ids the fixture modules also use, because that is the dangerous
+// case: if the production path ever fell back to a fixture lookup, it would still find a match and
+// silently emit the fixture's label instead of ours. Distinct labels make that visible.
+/** A label-only option: code + authoritative label. No price, no quantity fields (8-B2F-BH). */
+const opt = (code: string, label: string): ProductionLabelOption => ({ code, label });
+
+/** A store-global option: the ONLY collection carrying priceability + quantity rules. */
+const gopt = (
+  code: string,
+  label: string,
+  over: Partial<Omit<ProductionStoreGlobalOption, "code" | "label">> = {},
+): ProductionStoreGlobalOption => ({
+  code, label, priceable: true, quantityRequired: false, minQuantity: 1, maxQuantity: null, ...over,
+});
+
+const TEST_CONFIG: ProductionPricingConfiguration = {
+  ppfMethods:         [opt("full", "CFG-PPF-FULL")],
+  filmTypes:          [opt("film-a", "CFG-FILM-A")],
+  maintenanceMenus:   [opt("maint-a", "CFG-MAINT-A")],
+  washMenus:          [opt("wash-a", "CFG-WASH-A")],
+  roomCleaningMenus:  [opt("room-a", "CFG-ROOM-A"), opt("room-b", "CFG-ROOM-B")],
+  storeGlobalOptions: [
+    gopt("gopt-a", "CFG-GOPT-A"),
+    gopt("gopt-free", "CFG-GOPT-FREE", { priceable: false }),
+    gopt("gopt-qty",  "CFG-GOPT-QTY",  { quantityRequired: true, minQuantity: 1, maxQuantity: 5 }),
+  ],
+};
+
+/** Every label this configuration can legitimately produce. */
+const CONFIG_LABELS = [
+  "CFG-PPF-FULL", "CFG-FILM-A", "CFG-MAINT-A", "CFG-WASH-A",
+  "CFG-ROOM-A", "CFG-ROOM-B", "CFG-GOPT-A", "CFG-GOPT-QTY",
+];
 
 // ── 1. Valid hydration and validation ────────────────────────────────────────────
 test("new estimate hydrates to a ready, unblocked draft", () => {
@@ -659,7 +705,7 @@ test("a ready plan maps exactly the seven scalar patch fields — and nothing el
     d.discountAndCoupon = { ...d.discountAndCoupon, mode: "amount", amountInput: "5000" };
   });
 
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "ready");
   if (plan.status !== "ready") return;
 
@@ -678,7 +724,7 @@ test("a ready plan maps exactly the seven scalar patch fields — and nothing el
 
 test("pricing-owned context is absent from the patch", () => {
   const h = newEstimateWizardDraft();
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "ready");
   if (plan.status !== "ready") return;
 
@@ -693,7 +739,7 @@ test("customerNotes and internalMemo stay separate in the patch", () => {
   const h = newDraftWith((d) => {
     d.notes = { customerNotes: "CUSTOMER-NOTE-TOKEN", internalMemo: "INTERNAL-MEMO-TOKEN" };
   });
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "ready");
   if (plan.status !== "ready") return;
 
@@ -707,7 +753,7 @@ test("the supported fixed yen discount maps to patch.discountAmount", () => {
   const h = newDraftWith((d) => {
     d.discountAndCoupon = { ...d.discountAndCoupon, mode: "amount", amountInput: "5000" };
   });
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "ready");
   if (plan.status !== "ready") return;
 
@@ -717,7 +763,7 @@ test("the supported fixed yen discount maps to patch.discountAmount", () => {
 
 test("items are produced ONLY through buildWizardPricingInput → buildLineItems", () => {
   const h = newDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "ready");
   if (plan.status !== "ready") return;
 
@@ -735,7 +781,7 @@ test("items are produced ONLY through buildWizardPricingInput → buildLineItems
 
 test("a draft with no service selection produces an empty item list, not a blocked plan", () => {
   const h = newEstimateWizardDraft();
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "ready");
   if (plan.status !== "ready") return;
   assert.deepEqual([...plan.items], []);
@@ -744,7 +790,7 @@ test("a draft with no service selection produces an empty item list, not a block
 // ── Blocking: every blocking code must yield a plan with NO items ────────────────
 test("an existing estimate with line items is blocked, with an explicit reason", () => {
   const h = estimateToWizardDraft(estimate({ estimate_items: [item("ITEM-1"), item("ITEM-2")] }));
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
 
   assert.equal(plan.status, "blocked");
   if (plan.status !== "blocked") return;
@@ -766,7 +812,7 @@ test("a percentage discount blocks the plan and produces no items", () => {
   const h = draftWithOperatorAdjustments((d) => {
     d.draft.discountAndCoupon.percentInput = "10";
   });
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
 
   assert.equal(plan.status, "blocked");
   if (plan.status !== "blocked") return;
@@ -783,7 +829,7 @@ test("a selected coupon blocks the plan and produces no items", () => {
   const h = draftWithOperatorAdjustments((d) => {
     d.draft.discountAndCoupon.selectedCouponIds.push("COUPON-TEST-1");
   });
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
 
   assert.equal(plan.status, "blocked");
   if (plan.status !== "blocked") return;
@@ -798,7 +844,7 @@ test("a selected coupon blocks the plan and produces no items", () => {
 
 test("an existing estimate with no usable id is blocked and produces no items", () => {
   const h = estimateToWizardDraft(estimate({ id: "   ", estimate_items: [] }));
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
 
   assert.equal(plan.status, "blocked");
   if (plan.status !== "blocked") return;
@@ -819,7 +865,7 @@ test("every blocking issue code reachable at runtime yields a blocked plan", () 
   ];
 
   for (const h of blocked) {
-    const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+    const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
     assert.equal(plan.status, "blocked");
     assert.ok(!("items" in plan), "a blocked plan must never carry items");
   }
@@ -827,7 +873,7 @@ test("every blocking issue code reachable at runtime yields a blocked plan", () 
 
 test("a manual row with a missing amount is blocked as pricing-invalid, not applied", () => {
   const h = newDraftWithOneManualLine("TEST-SERVICE-LINE", ""); // named, but no amount
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
 
   assert.equal(plan.status, "blocked");
   if (plan.status !== "blocked") return;
@@ -841,7 +887,7 @@ test("the planner mutates neither the draft nor the shared initial draft", () =>
   const h = newDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
   const draftBefore = JSON.stringify(h.draft);
 
-  buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
 
   assert.equal(JSON.stringify(h.draft), draftBefore);
   assert.equal(JSON.stringify(initialEstimateWizardDraftV22), before);
@@ -856,9 +902,9 @@ test("edit mode is blocked even when the draft itself is perfectly valid", () =>
 
   // The draft is genuinely ready — the block is about the SURFACE, not the data.
   assert.equal(validateWizardDraftForEstimateEditorIntegration(h).canApplyToEstimateEditor, true);
-  assert.equal(buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG).status, "ready");
+  assert.equal(buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG).status, "ready");
 
-  const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "blocked");
   if (plan.status !== "blocked") return;
   assert.equal(plan.reason, "unsupported-editor-mode");
@@ -869,7 +915,7 @@ test("edit mode is blocked even when the draft itself is perfectly valid", () =>
 test("edit mode is blocked when the estimate carries persisted items", () => {
   const h = estimateToWizardDraft(estimate({ estimate_items: [item("ITEM-1"), item("ITEM-2")] }));
 
-  const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "blocked");
   if (plan.status !== "blocked") return;
 
@@ -889,7 +935,7 @@ test("no edit-mode result ever carries items or a patch", () => {
   ];
 
   for (const h of drafts) {
-    const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG);
+    const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
     assert.equal(plan.status, "blocked");
     assert.ok(!("items" in plan), "an edit-mode plan must never carry items");
     assert.ok(!("patch" in plan), "an edit-mode plan must never carry a patch");
@@ -901,7 +947,7 @@ test("edit mode runs no pricing and mutates nothing", () => {
   const h = newDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
   const draftBefore = JSON.stringify(h.draft);
 
-  const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
 
   // A create-mode call on this same draft WOULD have produced priced items. Edit mode produces none,
   // and reports no pricing outcome at all — proof the pricing path was never entered.
@@ -917,7 +963,7 @@ test("edit mode runs no pricing and mutates nothing", () => {
 test("create mode retains all prior behavior after the mode gate was added", () => {
   // Ready + items.
   const ready = newDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
-  const readyPlan = buildEstimateEditorApplyPlan(ready, "create", DEFAULT_PRICING_CATALOG);
+  const readyPlan = buildEstimateEditorApplyPlan(ready, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(readyPlan.status, "ready");
   if (readyPlan.status !== "ready") return;
   assert.ok(readyPlan.items.length > 0);
@@ -925,7 +971,7 @@ test("create mode retains all prior behavior after the mode gate was added", () 
 
   // Still integration-blocked (not mode-blocked) when the data is bad.
   const legacy = estimateToWizardDraft(estimate({ estimate_items: [item("ITEM-1")] }));
-  const legacyPlan = buildEstimateEditorApplyPlan(legacy, "create", DEFAULT_PRICING_CATALOG);
+  const legacyPlan = buildEstimateEditorApplyPlan(legacy, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(legacyPlan.status, "blocked");
   if (legacyPlan.status !== "blocked") return;
   assert.equal(legacyPlan.reason, "integration-blocked");
@@ -950,7 +996,7 @@ test("an existing zero-item estimate is REFUSED in create mode (provenance gate)
   assert.equal(h.integration.sourceKind, "existing");
   assert.equal(h.integration.sourceEstimateId, "EST-TEST");
 
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "blocked");
   if (plan.status !== "blocked") return;
   assert.equal(plan.reason, "source-estimate-not-allowed-in-create");
@@ -963,7 +1009,7 @@ test("an existing zero-item estimate carrying priced services is still refused i
   const h = existingDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
   assert.equal(h.integration.sourceKind, "existing");
 
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "blocked");
   if (plan.status !== "blocked") return;
   assert.equal(plan.reason, "source-estimate-not-allowed-in-create");
@@ -976,7 +1022,7 @@ test("only a genuinely new draft reaches ready in create mode", () => {
   assert.equal(h.integration.sourceKind, "new");
   assert.equal(h.integration.sourceEstimateId, null);
 
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "ready");
   if (plan.status !== "ready") return;
   assert.equal(plan.patch.sourceEstimateId, null); // the editor must never write this
@@ -1018,7 +1064,7 @@ test("the container's reducer write-back never corrupts the shared initial draft
   assert.equal(h.integration.sourceEstimateId, null);
 
   // And the mutated session draft still plans cleanly in create mode.
-  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
   assert.equal(plan.status, "ready");
   if (plan.status !== "ready") return;
   assert.equal(plan.patch.customerId, "CUST-TEST");
@@ -1176,6 +1222,413 @@ test("the aliasing fix preserves frozen provenance and every blocking behaviour"
   assert.deepEqual(cfg.roomCleaning.selectedMenuIds, []);
 });
 
+// ── 19. Fixture-free production pricing labels (Phase 8-B2F-B) ───────────────────
+// `wizard-manual-pricing.ts` resolves labels from hard-imported fixtures with a `?? id` fallback, and
+// that label becomes `estimate_items.item_name`. The production path must resolve labels ONLY from
+// the required configuration, and must BLOCK — never fall back — on an unknown code.
+
+/** Select a category and configure it, on a genuinely NEW draft. */
+function draftFor(edit: (d: HydratedWizardDraft["draft"]) => void): HydratedWizardDraft {
+  return newDraftWith(edit);
+}
+
+const planFor = (h: HydratedWizardDraft) =>
+  buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
+
+// ── Every manual category: the AUTHORITATIVE label reaches PricedLineItem ────────
+const CATEGORY_CASES: ReadonlyArray<{
+  name: string;
+  expectLabel: string;
+  edit: (d: HydratedWizardDraft["draft"]) => void;
+}> = [
+  {
+    name: "ppf", expectLabel: "PPF CFG-PPF-FULL",
+    edit: (d) => {
+      d.serviceSelection = { selectedCategories: ["ppf"] };
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        ppf: { ...d.serviceConfiguration.ppf, installationMethod: "full", unitPriceInput: "50000" } };
+    },
+  },
+  {
+    name: "window", expectLabel: "ウィンドウフィルム（CFG-FILM-A）",
+    edit: (d) => {
+      d.serviceSelection = { selectedCategories: ["window"] };
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        windowFilm: { ...d.serviceConfiguration.windowFilm, filmTypeId: "film-a", unitPriceInput: "30000" } };
+    },
+  },
+  {
+    name: "maintenance", expectLabel: "CFG-MAINT-A",
+    edit: (d) => {
+      d.serviceSelection = { selectedCategories: ["maintenance"] };
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        bodyMaintenance: { menuId: "maint-a", unitPriceInput: "12000" } };
+    },
+  },
+  {
+    name: "carwash", expectLabel: "CFG-WASH-A",
+    edit: (d) => {
+      d.serviceSelection = { selectedCategories: ["carwash"] };
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        carWash: { menuId: "wash-a", unitPriceInput: "8000" } };
+    },
+  },
+  {
+    name: "roomclean", expectLabel: "CFG-ROOM-A",
+    edit: (d) => {
+      d.serviceSelection = { selectedCategories: ["roomclean"] };
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        roomCleaning: { selectedMenuIds: ["room-a"], unitPricesByMenu: { "room-a": "15000" } } };
+    },
+  },
+  {
+    name: "store_global_options", expectLabel: "CFG-GOPT-A",
+    edit: (d) => {
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        storeGlobalOptions: { selectedOptionIds: ["gopt-a"], unitPricesByOption: { "gopt-a": "5000" }, quantitiesByOption: {} } };
+    },
+  },
+];
+
+for (const c of CATEGORY_CASES) {
+  test(`[${c.name}] the authoritative configured label reaches the PricedLineItem`, () => {
+    const plan = planFor(draftFor(c.edit));
+    assert.equal(plan.status, "ready");
+    if (plan.status !== "ready") return;
+
+    assert.ok(
+      plan.items.some((i) => i.item_name === c.expectLabel),
+      `expected item_name "${c.expectLabel}", got ${JSON.stringify(plan.items.map((i) => i.item_name))}`,
+    );
+    // The stable CODE must never be the name.
+    for (const i of plan.items) {
+      assert.ok(!["full", "film-a", "maint-a", "wash-a", "room-a", "gopt-a"].includes(i.item_name),
+        `a raw code leaked into item_name: ${i.item_name}`);
+    }
+  });
+}
+
+test("free-text custom work keeps the operator's own label — no configuration governs it", () => {
+  const plan = planFor(newDraftWithOneManualLine("OPERATOR-TYPED-NAME", "9000"));
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+  assert.ok(plan.items.some((i) => i.item_name === "OPERATOR-TYPED-NAME"));
+});
+
+test("interior PPF rows keep the operator's typed location", () => {
+  const h = draftFor((d) => {
+    d.serviceSelection = { selectedCategories: ["ppf"] };
+    d.serviceConfiguration = { ...d.serviceConfiguration,
+      ppf: { ...d.serviceConfiguration.ppf, installationMethod: "interior",
+             interiorRows: [{ id: "r1", location: "OPERATOR-LOCATION", amount: "7000" }] } };
+  });
+  const plan = planFor(h);
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+  assert.ok(plan.items.some((i) => i.item_name === "OPERATOR-LOCATION"));
+});
+
+// ── Unknown codes BLOCK — never `label ?? id` ────────────────────────────────────
+const UNKNOWN_CASES: ReadonlyArray<{ name: string; edit: (d: HydratedWizardDraft["draft"]) => void }> = [
+  // "partial" is a VALID PpfInstallationMethodId, but the dealer has not configured it. A perfectly
+  // well-typed selection the configuration does not offer must still block.
+  { name: "ppf method", edit: (d) => {
+      d.serviceSelection = { selectedCategories: ["ppf"] };
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        ppf: { ...d.serviceConfiguration.ppf, installationMethod: "partial", unitPriceInput: "50000" } };
+    } },
+  { name: "film type", edit: (d) => {
+      d.serviceSelection = { selectedCategories: ["window"] };
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        windowFilm: { ...d.serviceConfiguration.windowFilm, filmTypeId: "NOT-IN-CONFIG", unitPriceInput: "1000" } };
+    } },
+  { name: "maintenance menu", edit: (d) => {
+      d.serviceSelection = { selectedCategories: ["maintenance"] };
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        bodyMaintenance: { menuId: "NOT-IN-CONFIG", unitPriceInput: "1000" } };
+    } },
+  { name: "wash menu", edit: (d) => {
+      d.serviceSelection = { selectedCategories: ["carwash"] };
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        carWash: { menuId: "NOT-IN-CONFIG", unitPriceInput: "1000" } };
+    } },
+  { name: "room menu", edit: (d) => {
+      d.serviceSelection = { selectedCategories: ["roomclean"] };
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        roomCleaning: { selectedMenuIds: ["NOT-IN-CONFIG"], unitPricesByMenu: { "NOT-IN-CONFIG": "1000" } } };
+    } },
+  { name: "store global option", edit: (d) => {
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        storeGlobalOptions: { selectedOptionIds: ["NOT-IN-CONFIG"], unitPricesByOption: { "NOT-IN-CONFIG": "1000" }, quantitiesByOption: {} } };
+    } },
+];
+
+for (const c of UNKNOWN_CASES) {
+  test(`[${c.name}] an unknown code BLOCKS with no patch and no items`, () => {
+    const plan = planFor(draftFor(c.edit));
+
+    assert.equal(plan.status, "blocked");
+    if (plan.status !== "blocked") return;
+    assert.equal(plan.reason, "pricing-invalid");
+    assert.ok(
+      plan.pricingErrors.some((e) => e.code === WIZARD_PRICING_CONFIG_ERRORS.UNKNOWN_CONFIGURED_ITEM),
+      `expected UNKNOWN_CONFIGURED_ITEM, got ${JSON.stringify(plan.pricingErrors.map((e) => e.code))}`,
+    );
+    // The whole point: a blocked plan has no items field, so a raw id cannot become an item_name.
+    assert.ok(!("items" in plan));
+    assert.ok(!("patch" in plan));
+  });
+}
+
+test("a raw code never becomes item_name, for any configured category", () => {
+  for (const c of CATEGORY_CASES) {
+    const plan = planFor(draftFor(c.edit));
+    if (plan.status !== "ready") continue;
+    for (const i of plan.items) {
+      assert.ok(i.item_name.trim() !== "", "an empty item_name would be a silent label loss");
+      assert.ok(!/^[a-z0-9-]+$/.test(i.item_name) || CONFIG_LABELS.includes(i.item_name),
+        `item_name "${i.item_name}" looks like a raw code`);
+    }
+  }
+});
+
+test("fixture text never enters production output", () => {
+  // Every label the production path can emit must come from TEST_CONFIG, the operator's own free
+  // text, or the production PricingCatalog (coating). Never from an EXAMPLE_*/DEFAULT_* module.
+  const operatorAuthored = ["OPERATOR-TYPED-NAME", "OPERATOR-LOCATION"];
+  const allCases = [
+    ...CATEGORY_CASES.map((c) => draftFor(c.edit)),
+    newDraftWithOneManualLine("OPERATOR-TYPED-NAME", "9000"),
+  ];
+  for (const h of allCases) {
+    const plan = planFor(h);
+    if (plan.status !== "ready") continue;
+    for (const i of plan.items) {
+      const ok =
+        CONFIG_LABELS.some((l) => i.item_name.includes(l)) ||
+        operatorAuthored.includes(i.item_name);
+      assert.ok(ok, `unrecognised (possibly fixture) label reached item_name: "${i.item_name}"`);
+    }
+  }
+});
+
+// ── 20. Non-priceable fail-closed (Phase 8-B2F-BH) ──────────────────────────────
+// Architect ruling: a selected production option either produces a priced line or BLOCKS the plan.
+// It is never silently discarded. Previously this was a warning, the line was dropped, the plan
+// stayed `ready`, and the container — which surfaces only blocking reasons — showed the operator
+// nothing. A billable service mis-marked `priceable: false` would vanish from the estimate.
+
+test("a SELECTED non-priceable option BLOCKS with no patch and no items", () => {
+  const plan = planFor(draftFor((d) => {
+    d.serviceConfiguration = { ...d.serviceConfiguration,
+      storeGlobalOptions: { selectedOptionIds: ["gopt-free"], unitPricesByOption: {}, quantitiesByOption: {} } };
+  }));
+
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+  assert.equal(plan.reason, "pricing-invalid");
+  assert.ok(plan.pricingErrors.some((e) => e.code === WIZARD_PRICING_CONFIG_ERRORS.NON_PRICEABLE_SELECTED_ITEM));
+  assert.ok(!("items" in plan), "a blocked plan must carry no items");
+  assert.ok(!("patch" in plan), "a blocked plan must carry no patch");
+  // The operator gets a real reason, not silence.
+  assert.ok(plan.pricingErrors.every((e) => e.message.trim() !== ""));
+});
+
+test("a non-priceable option that is NOT selected does not block", () => {
+  // `gopt-free` exists in the configuration but the operator never chose it.
+  const plan = planFor(draftFor((d) => {
+    d.serviceConfiguration = { ...d.serviceConfiguration,
+      storeGlobalOptions: { selectedOptionIds: ["gopt-a"], unitPricesByOption: { "gopt-a": "5000" }, quantitiesByOption: {} } };
+  }));
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+  assert.ok(plan.items.some((i) => i.item_name === "CFG-GOPT-A"));
+});
+
+test("an empty selection with a non-priceable option configured does not block", () => {
+  const plan = planFor(newEstimateWizardDraft());
+  assert.equal(plan.status, "ready");
+});
+
+test("a non-priceable line is never produced under any circumstance", () => {
+  const bundle = buildManualPricingLinesFromConfig(
+    draftFor((d) => {
+      d.serviceConfiguration = { ...d.serviceConfiguration,
+        storeGlobalOptions: {
+          selectedOptionIds: ["gopt-free"],
+          unitPricesByOption: { "gopt-free": "9999" }, // even WITH an amount typed in
+          quantitiesByOption: {},
+        } };
+    }).draft,
+    TEST_CONFIG,
+  );
+  assert.deepEqual(bundle.lines, []);
+  assert.equal(bundle.errors[0]?.code, WIZARD_PRICING_CONFIG_ERRORS.NON_PRICEABLE_SELECTED_ITEM);
+});
+
+// ── Price equivalence: fixture path vs config path ──────────────────────────────
+test("equivalent inputs produce IDENTICAL prices on the fixture and config paths", () => {
+  // Same draft, same codes. The config supplies different LABELS but identical quantity rules — so
+  // every unitPrice, quantity and line total must match exactly. Only names may differ.
+  const build = () => newDraftWith((d) => {
+    d.serviceSelection = { selectedCategories: ["maintenance", "carwash", "other"] };
+    d.serviceConfiguration = {
+      ...d.serviceConfiguration,
+      bodyMaintenance: { menuId: "maint-a", unitPriceInput: "12000" },
+      carWash:         { menuId: "wash-a",  unitPriceInput: "8000" },
+      otherWork: { ...d.serviceConfiguration.otherWork,
+        customRows: [{ id: "ow1", name: "OPERATOR-ROW", description: "", unitPrice: "3000", quantity: "1", unitLabel: "" }] },
+    };
+    d.discountAndCoupon = { ...d.discountAndCoupon, mode: "amount", amountInput: "1000" };
+  });
+
+  // The fixture path resolves maint-a / wash-a to nothing and falls back to the raw id — that is the
+  // very defect. Prices, however, must be untouched by the label source.
+  const fixture = buildWizardPricingInput(build().draft);
+  const configured = buildWizardPricingInputFromConfig(build().draft, TEST_CONFIG, DEFAULT_PRICING_CATALOG);
+
+  const prices = (lines: readonly { unitPrice: number; quantity: number }[]) =>
+    lines.map((l) => ({ unitPrice: l.unitPrice, quantity: l.quantity })).sort(
+      (a, b) => a.unitPrice - b.unitPrice || a.quantity - b.quantity);
+
+  assert.deepEqual(prices(configured.manualLines), prices(fixture.manualLines));
+  assert.deepEqual(configured.discounts, fixture.discounts);
+  assert.equal(configured.taxRate, fixture.taxRate);
+  assert.equal(configured.catalogResolved, fixture.catalogResolved);
+  assert.deepEqual(configured.discountIntent, fixture.discountIntent);
+  assert.deepEqual(configured.couponState, fixture.couponState);
+
+  // And the line TOTALS agree, priced by the same engine.
+  const totals = (services: typeof fixture.services) =>
+    buildLineItems(services, DEFAULT_PRICING_CATALOG)
+      .map((i) => i.unit_price * i.quantity).sort((a, b) => a - b);
+  assert.deepEqual(totals(configured.services), totals(fixture.services));
+
+  // The labels DIFFER — which is the whole point.
+  const fixtureNames = fixture.manualLines.map((l) => l.label);
+  const configNames = configured.manualLines.map((l) => l.label);
+  assert.notDeepEqual(configNames, fixtureNames);
+  assert.ok(configNames.includes("CFG-MAINT-A"));
+  assert.ok(fixtureNames.includes("maint-a")); // the raw-id fallback, demonstrated
+});
+
+test("coating remains PricingCatalog-owned on the config path", () => {
+  const h = newDraftWith((d) => {
+    d.serviceSelection = { selectedCategories: ["coating"] };
+    d.vehicle = { ...d.vehicle, bodySizeKey: "M" };
+    d.serviceConfiguration = { ...d.serviceConfiguration,
+      coating: { ...d.serviceConfiguration.coating, layerCount: 1, layer1Id: "one-evo" } };
+  });
+  const configured = buildWizardPricingInputFromConfig(h.draft, TEST_CONFIG, DEFAULT_PRICING_CATALOG);
+  const fixture = buildWizardPricingInput(h.draft);
+
+  assert.equal(configured.catalogResolved, true);
+  assert.deepEqual(configured.services, fixture.services); // identical catalog service
+  assert.deepEqual(configured.errors, fixture.errors);
+});
+
+test("an unknown coating id still raises UNKNOWN_PRICING_REFERENCE on the config path", () => {
+  const h = newDraftWith((d) => {
+    d.serviceSelection = { selectedCategories: ["coating"] };
+    d.serviceConfiguration = { ...d.serviceConfiguration,
+      coating: { ...d.serviceConfiguration.coating, layer1Id: "matte-evo" } }; // not in PricingCatalog
+  });
+  const configured = buildWizardPricingInputFromConfig(h.draft, TEST_CONFIG, DEFAULT_PRICING_CATALOG);
+  assert.equal(configured.catalogResolved, false);
+  assert.ok(configured.errors.length > 0);
+});
+
+// ── The config builder in isolation ─────────────────────────────────────────────
+test("buildManualPricingLinesFromConfig never emits a raw code as a label", () => {
+  const h = draftFor((d) => {
+    d.serviceSelection = { selectedCategories: ["maintenance"] };
+    d.serviceConfiguration = { ...d.serviceConfiguration,
+      bodyMaintenance: { menuId: "UNKNOWN-CODE", unitPriceInput: "1000" } };
+  });
+  const bundle = buildManualPricingLinesFromConfig(h.draft, TEST_CONFIG);
+  assert.deepEqual(bundle.lines, []); // no line at all — the code cannot become a label
+  assert.equal(bundle.errors[0]?.code, WIZARD_PRICING_CONFIG_ERRORS.UNKNOWN_CONFIGURED_ITEM);
+});
+
+// ── Compile-time: quantity/priceable fields exist ONLY on store-global options ──
+// `@ts-expect-error` is verified by tsc: if any of these ever STOPPED being a type error, the unused
+// directive itself fails the build (TS2578). This is what makes "quantity rules cannot change price
+// semantics elsewhere" a type-level guarantee rather than a convention.
+test("TypeScript rejects quantity/priceable fields on non-store collections", () => {
+  const bad: ProductionPricingConfiguration = {
+    // @ts-expect-error — `quantityRequired` does not exist on ProductionLabelOption.
+    ppfMethods:        [{ code: "full", label: "L", quantityRequired: true }],
+    // @ts-expect-error — `priceable` does not exist on ProductionLabelOption.
+    filmTypes:         [{ code: "film-a", label: "L", priceable: false }],
+    // @ts-expect-error — `minQuantity` does not exist on ProductionLabelOption.
+    maintenanceMenus:  [{ code: "maint-a", label: "L", minQuantity: 2 }],
+    // @ts-expect-error — `maxQuantity` does not exist on ProductionLabelOption.
+    washMenus:         [{ code: "wash-a", label: "L", maxQuantity: 9 }],
+    // @ts-expect-error — `priceable` does not exist on ProductionLabelOption.
+    roomCleaningMenus: [{ code: "room-a", label: "L", priceable: true }],
+    // Store-global options legitimately carry all four.
+    storeGlobalOptions: [gopt("gopt-a", "CFG-GOPT-A", { quantityRequired: true, maxQuantity: 3 })],
+  };
+  assert.equal(bad.storeGlobalOptions.length, 1);
+  assert.equal(bad.storeGlobalOptions[0].quantityRequired, true);
+
+  // A label-only option has exactly two keys — nothing to silently ignore.
+  assert.deepEqual(Object.keys(opt("x", "Y")).sort(), ["code", "label"]);
+});
+
+test("quantity bounds apply only to store-global options", () => {
+  // Room cleaning selects TWO menus; each prices as a single unit regardless of any quantity input.
+  const plan = planFor(draftFor((d) => {
+    d.serviceSelection = { selectedCategories: ["roomclean"] };
+    d.serviceConfiguration = { ...d.serviceConfiguration,
+      roomCleaning: {
+        selectedMenuIds: ["room-a", "room-b"],
+        unitPricesByMenu: { "room-a": "15000", "room-b": "5000" },
+      } };
+  }));
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+
+  const a = plan.items.find((i) => i.item_name === "CFG-ROOM-A");
+  const b = plan.items.find((i) => i.item_name === "CFG-ROOM-B");
+  assert.ok(a && b);
+  assert.equal(a.quantity, 1);
+  assert.equal(b.quantity, 1);
+  assert.equal(a.unit_price, 15000); // never multiplied — quantity rules do not reach this category
+  assert.equal(b.unit_price, 5000);
+});
+
+test("quantityRequired is honoured from configuration, not from a fixture", () => {
+  const plan = planFor(draftFor((d) => {
+    d.serviceConfiguration = { ...d.serviceConfiguration,
+      storeGlobalOptions: {
+        selectedOptionIds: ["gopt-qty"],
+        unitPricesByOption: { "gopt-qty": "1000" },
+        quantitiesByOption: { "gopt-qty": 3 },
+      } };
+  }));
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+  const line = plan.items.find((i) => i.item_name === "CFG-GOPT-QTY");
+  assert.ok(line);
+  assert.equal(line.unit_price, 3000); // 1000 × 3, composed exactly as the fixture path composes it
+});
+
+test("an out-of-range configured quantity blocks with INVALID_QUANTITY", () => {
+  const plan = planFor(draftFor((d) => {
+    d.serviceConfiguration = { ...d.serviceConfiguration,
+      storeGlobalOptions: {
+        selectedOptionIds: ["gopt-qty"],
+        unitPricesByOption: { "gopt-qty": "1000" },
+        quantitiesByOption: { "gopt-qty": 99 }, // maxQuantity is 5
+      } };
+  }));
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+  assert.equal(plan.reason, "pricing-invalid");
+  assert.ok(!("items" in plan));
+});
+
 // ── Compile-time: `mode` is REQUIRED and cannot be omitted or widened ────────────
 // `@ts-expect-error` is verified by `tsc`, not at runtime: if either call below ever STOPPED being
 // a type error, the unused directive itself becomes a compile error (TS2578) and `npm run typecheck`
@@ -1184,11 +1637,11 @@ test("omitting mode, or passing an unknown mode, is rejected by TypeScript", () 
   const h = newEstimateWizardDraft();
 
   // @ts-expect-error — `mode` is required; a 2-argument call must not compile.
-  buildEstimateEditorApplyPlan(h, DEFAULT_PRICING_CATALOG);
+  buildEstimateEditorApplyPlan(h, DEFAULT_PRICING_CATALOG, TEST_CONFIG);
 
   // @ts-expect-error — only "create" | "edit" are valid modes.
-  buildEstimateEditorApplyPlan(h, "view", DEFAULT_PRICING_CATALOG);
+  buildEstimateEditorApplyPlan(h, "view", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
 
   // The runtime assertion is incidental; the compile-time rejection above is the actual test.
-  assert.equal(buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG).status, "ready");
+  assert.equal(buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG).status, "ready");
 });

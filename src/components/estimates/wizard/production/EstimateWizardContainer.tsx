@@ -91,6 +91,7 @@ import {
   type EstimateEditorMode,
 } from "../integration/wizardDraftToEditorPatch";
 import type { WizardOwnedFieldPatch } from "../integration/estimateWizardIntegrationContract";
+import type { ProductionPricingConfiguration } from "../pricing/wizard-manual-pricing-config";
 import { wizardToEstimatePreviewAdapter, type PreviewContext } from "../integration/wizardToEstimateAdapter";
 import type { PreviewPriceSummary } from "../integration/previewTypes";
 import { formatYen } from "../foundation/tokens";
@@ -183,6 +184,15 @@ export interface EstimateWizardContainerProps {
   shopRank: ShopRank;
   /** Dealer-configured Screen-4/5 option lists. REQUIRED — no fixture fallback. */
   screenConfig: WizardScreenConfiguration;
+  /**
+   * Authoritative labels + quantity rules for every manual-priced category. REQUIRED (Phase 8-B2F-B).
+   *
+   * This is what becomes `estimate_items.item_name`. `screenConfig` governs only what the operator
+   * SEES; before B2F-B the persisted label was resolved inside the pricing layer from hard-imported
+   * fixtures, with a `?? id` fallback — so a preview-invented name or a raw id could be written onto
+   * a real estimate. Supplying this is now the only way to price a draft.
+   */
+  pricingConfig: ProductionPricingConfiguration;
   /** Hand the validated plan to the editor. Scalars + items only — the editor owns the mutation. */
   onApply: (patch: WizardOwnedFieldPatch, items: readonly PricedLineItem[]) => void;
   /** Close without touching a single byte of editor state. */
@@ -196,6 +206,7 @@ export default function EstimateWizardContainer({
   vehicles,
   shopRank,
   screenConfig,
+  pricingConfig,
   onApply,
   onCancel,
 }: EstimateWizardContainerProps) {
@@ -286,13 +297,13 @@ export default function EstimateWizardContainer({
       return;
     }
 
-    const plan = buildEstimateEditorApplyPlan(hydrated, mode, catalog);
+    const plan = buildEstimateEditorApplyPlan(hydrated, mode, catalog, pricingConfig);
     if (plan.status === "blocked") {
       setMessage(blockedMessage(plan)); // applies nothing
       return;
     }
     onApply(plan.patch, plan.items);
-  }, [hydrated, mode, catalog, draft, onApply]);
+  }, [hydrated, mode, catalog, pricingConfig, draft, onApply]);
 
   return (
     <WizardShell
