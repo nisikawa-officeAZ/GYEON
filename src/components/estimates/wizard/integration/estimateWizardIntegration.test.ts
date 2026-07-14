@@ -1,8 +1,14 @@
-// Estimate Wizard Ver2.2 — Phase 8 integration contract tests (Phase 8-B1H).
+// Estimate Wizard Ver2.2 — Phase 8 integration contract tests (Phase 8-B1H, extended in 8-B2B).
 //
-// Pure behavioural tests for the three hardened integration files. No React, no DOM, no server, no
-// DB, no API, no pricing, no randomness, no clock. No `any`, no `as any`, no `as unknown as`, and
-// no unsafe assertion to the opaque integration type.
+// Pure behavioural tests for the hardened integration files. No React, no DOM, no server, no DB,
+// no API, no randomness, no clock. No `any`, no `as any`, no `as unknown as`, and no unsafe
+// assertion to the opaque integration type.
+//
+// PRICING: sections 1–13 compute no prices. Section 14 (the 8-B2B apply plan) does exercise the
+// canonical pricing path, because that is precisely what it must prove: that items are produced by
+// `buildWizardPricingInput` → `buildLineItems` and by nothing else. It asserts against the real
+// production engine's own output rather than any hard-coded amount, so it pins the WIRING, not a
+// price. No price is duplicated, predicted, or re-derived in this file.
 //
 // Fixtures use obviously synthetic identifiers only — no real customer, vehicle, or note content.
 //
@@ -25,7 +31,15 @@ import {
   type HydratedWizardDraft,
 } from "./estimateToWizardDraft";
 import { validateWizardDraftForEstimateEditorIntegration } from "./validateWizardDraftForEstimateEditorIntegration";
-import { initialEstimateWizardDraftV22 } from "../draft/wizard-draft-state";
+import { buildEstimateEditorApplyPlan } from "./wizardDraftToEditorPatch";
+import {
+  initialEstimateWizardDraftV22, setCurrentStep,
+  updateCustomer, updateVehicle, updateServiceSelection, updateServiceConfiguration,
+  updateDiscountAndCoupon, updateNotes,
+} from "../draft/wizard-draft-state";
+import { buildWizardPricingInput } from "../pricing/wizard-pricing-input-adapter";
+import { buildLineItems } from "@/lib/pricing/pricing-engine";
+import { DEFAULT_PRICING_CATALOG } from "@/lib/pricing/pricing-catalog";
 import type { EstimateItemDB, EstimateCategory } from "@/lib/estimates/estimate-types";
 
 // ── Fixtures (synthetic only) ────────────────────────────────────────────────────
@@ -367,10 +381,11 @@ test("a new draft has a null source id and is still valid", () => {
 // mutable fields. So a plain assignment — no cast, no unsafe assertion, no factory seam, no change
 // to the production contract — reproduces exactly what Screen 5 produces.
 //
-// NOTE: these tests build the draft with `estimateToWizardDraft`, which constructs a FRESH
-// `discountAndCoupon` object literal. `newEstimateWizardDraft()` must NOT be used here — it
-// shallow-spreads `initialEstimateWizardDraftV22`, so its nested objects are shared by reference
-// with that module const, and mutating them would corrupt every future blank draft.
+// NOTE (corrected in Phase 8-B2C-S): an earlier version of this comment claimed
+// `newEstimateWizardDraft()` shallow-spreads `initialEstimateWizardDraftV22` and shares its nested
+// objects. That was FALSE — it has always deep-cloned via `cloneWizardDraft`. The claim was exactly
+// backwards: `estimateToWizardDraft` was the aliased one, and it is now deep-cloned too (B2C-S).
+// Both factories therefore return fully isolated drafts, and mutating either is safe here.
 
 function draftWithOperatorAdjustments(
   edit: (h: HydratedWizardDraft) => void,
@@ -572,4 +587,608 @@ test("a JSON round-trip does not reproduce the opaque draft", () => {
   // unsafe assertion. Serialization therefore cannot be used to launder a forged envelope.
   assert.equal(Object.isFrozen(roundTripped), false);
   assert.notEqual(Object.getPrototypeOf(roundTripped), Object.getPrototypeOf(h));
+});
+
+// ── 14. Apply plan (Phase 8-B2B) ─────────────────────────────────────────────────
+// `buildEstimateEditorApplyPlan` is the pure planner: validator first, items only through the
+// canonical pricing path, nothing applied.
+//
+// MUTATION HAZARD — READ BEFORE ADDING A TEST HERE.
+// `estimateToWizardDraft` assigns `serviceConfiguration: base.serviceConfiguration`
+// (estimateToWizardDraft.ts:344) — the nested config is SHARED BY REFERENCE with the module const
+// `initialEstimateWizardDraftV22`. Mutating it in place (e.g. `cfg.otherWork.customRows.push(...)`)
+// would corrupt every future draft in the process. So the helper below REPLACES the object
+// wholesale instead. No cast, no unsafe assertion — `draft` is plain, mutable, Wizard-owned state.
+
+/**
+ * A genuinely NEW draft (sourceKind "new", sourceEstimateId null), edited in place.
+ *
+ * `newEstimateWizardDraft()` DEEP-CLONES `initialEstimateWizardDraftV22` via `cloneWizardDraft`, so
+ * every nested object and array is already private to this draft. `edit` may assign or mutate freely
+ * — nothing is shared with the module const or with any other draft. (An earlier comment here
+ * claimed the opposite and pre-detached each nested object; that was based on a false premise and
+ * the defensive copying was unnecessary. Section 18 proves the isolation.)
+ *
+ * Since Phase 8-B2C-A, this is the ONLY draft shape that can reach a `"ready"` plan: the provenance
+ * gate refuses anything hydrated from a persisted estimate.
+ */
+function newDraftWith(edit: (d: HydratedWizardDraft["draft"]) => void): HydratedWizardDraft {
+  const h = newEstimateWizardDraft();
+  edit(h.draft);
+  return h;
+}
+
+/** A NEW draft carrying one named manual "other" row — the simplest priceable line. */
+function newDraftWithOneManualLine(name: string, unitPrice: string): HydratedWizardDraft {
+  return newDraftWith((d) => {
+    d.serviceSelection = { selectedCategories: ["other"] };
+    d.serviceConfiguration = {
+      ...d.serviceConfiguration,
+      otherWork: {
+        ...d.serviceConfiguration.otherWork,
+        customRows: [
+          { id: "ROW-TEST-1", name, description: "", unitPrice, quantity: "1", unitLabel: "" },
+        ],
+      },
+    };
+  });
+}
+
+/** An EXISTING-estimate draft carrying one priceable manual row — used to prove the provenance gate. */
+function existingDraftWithOneManualLine(name: string, unitPrice: string): HydratedWizardDraft {
+  const h = estimateToWizardDraft(estimate({ estimate_items: [] })); // validates clean; still "existing"
+  const cfg = h.draft.serviceConfiguration;
+  h.draft.serviceSelection = { selectedCategories: ["other"] };
+  h.draft.serviceConfiguration = {
+    ...cfg,
+    otherWork: {
+      ...cfg.otherWork,
+      customRows: [
+        { id: "ROW-TEST-1", name, description: "", unitPrice, quantity: "1", unitLabel: "" },
+      ],
+    },
+  };
+  return h;
+}
+
+test("a ready plan maps exactly the seven scalar patch fields — and nothing else", () => {
+  const h = newDraftWith((d) => {
+    d.customer = { ...d.customer, sourceMode: "existing", customerId: "CUST-TEST" };
+    d.vehicle  = { ...d.vehicle, sourceMode: "existing", vehicleId: "VEH-TEST", bodySizeKey: "M" };
+    d.notes    = { customerNotes: "CUSTOMER-NOTE-TOKEN", internalMemo: "INTERNAL-MEMO-TOKEN" };
+    d.discountAndCoupon = { ...d.discountAndCoupon, mode: "amount", amountInput: "5000" };
+  });
+
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+
+  // deepEqual pins the EXACT key set: an eighth field would fail here, and so would a missing one.
+  // This is the guard that `isDealer`, `dealerRate` and `taxRate` never enter the patch.
+  assert.deepEqual({ ...plan.patch }, {
+    sourceEstimateId: null, // a create-mode plan can only ever be built from a NEW draft
+    customerId:       "CUST-TEST",
+    vehicleId:        "VEH-TEST",
+    bodySizeKey:      "M",
+    customerNotes:    "CUSTOMER-NOTE-TOKEN",
+    internalMemo:     "INTERNAL-MEMO-TOKEN",
+    discountAmount:   "5000",
+  });
+});
+
+test("pricing-owned context is absent from the patch", () => {
+  const h = newEstimateWizardDraft();
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+
+  const keys = Object.keys(plan.patch);
+  for (const owned of ["isDealer", "dealerRate", "taxRate", "items", "coupons"]) {
+    assert.ok(!keys.includes(owned), `Pricing/Editor-owned field leaked into the patch: ${owned}`);
+  }
+  assert.equal(keys.length, 7);
+});
+
+test("customerNotes and internalMemo stay separate in the patch", () => {
+  const h = newDraftWith((d) => {
+    d.notes = { customerNotes: "CUSTOMER-NOTE-TOKEN", internalMemo: "INTERNAL-MEMO-TOKEN" };
+  });
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+
+  assert.equal(plan.patch.customerNotes, "CUSTOMER-NOTE-TOKEN");
+  assert.equal(plan.patch.internalMemo, "INTERNAL-MEMO-TOKEN");
+  assert.ok(!plan.patch.customerNotes.includes("INTERNAL-MEMO-TOKEN"));
+  assert.ok(!plan.patch.internalMemo.includes("CUSTOMER-NOTE-TOKEN"));
+});
+
+test("the supported fixed yen discount maps to patch.discountAmount", () => {
+  const h = newDraftWith((d) => {
+    d.discountAndCoupon = { ...d.discountAndCoupon, mode: "amount", amountInput: "5000" };
+  });
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+
+  assert.equal(plan.patch.discountAmount, "5000");
+  assert.equal(typeof plan.patch.discountAmount, "string"); // yen text, exactly as Screen 5 holds it
+});
+
+test("items are produced ONLY through buildWizardPricingInput → buildLineItems", () => {
+  const h = newDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+
+  // The canonical path, computed independently here. If the planner ever composed a line itself,
+  // rounded, summed, or adjusted a price, this would diverge.
+  const expected = buildLineItems(
+    buildWizardPricingInput(h.draft).services,
+    DEFAULT_PRICING_CATALOG,
+  );
+  assert.deepEqual([...plan.items], expected);
+
+  assert.ok(plan.items.length > 0, "a named, priced manual row must produce at least one line");
+  assert.ok(plan.items.some((i) => i.item_name === "TEST-SERVICE-LINE"));
+});
+
+test("a draft with no service selection produces an empty item list, not a blocked plan", () => {
+  const h = newEstimateWizardDraft();
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+  assert.deepEqual([...plan.items], []);
+});
+
+// ── Blocking: every blocking code must yield a plan with NO items ────────────────
+test("an existing estimate with line items is blocked, with an explicit reason", () => {
+  const h = estimateToWizardDraft(estimate({ estimate_items: [item("ITEM-1"), item("ITEM-2")] }));
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+
+  assert.equal(plan.reason, "integration-blocked");
+  const codes = plan.blockingIssues.map((i) => i.code);
+  assert.ok(codes.includes(INTEGRATION_ISSUE_CODES.UNRESOLVED_LEGACY_ITEMS));
+  assert.ok(codes.includes(INTEGRATION_ISSUE_CODES.SERVICE_CONFIGURATION_NOT_RECONSTRUCTED));
+
+  // The reason is operator-facing and preserved verbatim — never summarized away.
+  assert.ok(plan.blockingIssues.every((i) => i.message.trim() !== ""));
+
+  // The blocked variant has NO items field at all — legacy items cannot be overwritten.
+  assert.ok(!("items" in plan));
+  assert.ok(!("patch" in plan));
+});
+
+test("a percentage discount blocks the plan and produces no items", () => {
+  const h = draftWithOperatorAdjustments((d) => {
+    d.draft.discountAndCoupon.percentInput = "10";
+  });
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+  assert.ok(
+    plan.blockingIssues.some(
+      (i) => i.code === INTEGRATION_ISSUE_CODES.UNSUPPORTED_PERCENTAGE_DISCOUNT_PERSISTENCE,
+    ),
+  );
+  assert.ok(!("items" in plan));
+  assert.equal(h.draft.discountAndCoupon.percentInput, "10"); // never cleared
+});
+
+test("a selected coupon blocks the plan and produces no items", () => {
+  const h = draftWithOperatorAdjustments((d) => {
+    d.draft.discountAndCoupon.selectedCouponIds.push("COUPON-TEST-1");
+  });
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+  assert.ok(
+    plan.blockingIssues.some(
+      (i) => i.code === INTEGRATION_ISSUE_CODES.UNSUPPORTED_COUPON_PERSISTENCE,
+    ),
+  );
+  assert.ok(!("items" in plan));
+  assert.deepEqual(h.draft.discountAndCoupon.selectedCouponIds, ["COUPON-TEST-1"]); // never cleared
+});
+
+test("an existing estimate with no usable id is blocked and produces no items", () => {
+  const h = estimateToWizardDraft(estimate({ id: "   ", estimate_items: [] }));
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+  assert.ok(
+    plan.blockingIssues.some(
+      (i) => i.code === INTEGRATION_ISSUE_CODES.INVALID_SOURCE_ESTIMATE_ID,
+    ),
+  );
+  assert.ok(!("items" in plan));
+});
+
+test("every blocking issue code reachable at runtime yields a blocked plan", () => {
+  const blocked: HydratedWizardDraft[] = [
+    estimateToWizardDraft(estimate({ estimate_items: [item("ITEM-1")] })), // legacy + not-reconstructed
+    estimateToWizardDraft(estimate({ id: "  ", estimate_items: [] })),      // invalid source id
+    draftWithOperatorAdjustments((d) => { d.draft.discountAndCoupon.percentInput = "10"; }),
+    draftWithOperatorAdjustments((d) => { d.draft.discountAndCoupon.selectedCouponIds.push("C-1"); }),
+  ];
+
+  for (const h of blocked) {
+    const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+    assert.equal(plan.status, "blocked");
+    assert.ok(!("items" in plan), "a blocked plan must never carry items");
+  }
+});
+
+test("a manual row with a missing amount is blocked as pricing-invalid, not applied", () => {
+  const h = newDraftWithOneManualLine("TEST-SERVICE-LINE", ""); // named, but no amount
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+  assert.equal(plan.reason, "pricing-invalid");
+  assert.ok(plan.pricingErrors.length > 0);
+  assert.ok(!("items" in plan));
+});
+
+test("the planner mutates neither the draft nor the shared initial draft", () => {
+  const before = JSON.stringify(initialEstimateWizardDraftV22);
+  const h = newDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
+  const draftBefore = JSON.stringify(h.draft);
+
+  buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+
+  assert.equal(JSON.stringify(h.draft), draftBefore);
+  assert.equal(JSON.stringify(initialEstimateWizardDraftV22), before);
+});
+
+// ── 15. Create-mode hardening (Phase 8-B2B-H) ────────────────────────────────────
+// Architect Ruling 3 — apply is limited to NEW estimates — is enforced at the PLANNER by a required
+// `mode` argument, checked FIRST. "edit" never validates, never prices, never plans.
+
+test("edit mode is blocked even when the draft itself is perfectly valid", () => {
+  const h = newEstimateWizardDraft();
+
+  // The draft is genuinely ready — the block is about the SURFACE, not the data.
+  assert.equal(validateWizardDraftForEstimateEditorIntegration(h).canApplyToEstimateEditor, true);
+  assert.equal(buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG).status, "ready");
+
+  const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+  assert.equal(plan.reason, "unsupported-editor-mode");
+  assert.ok(!("items" in plan));
+  assert.ok(!("patch" in plan));
+});
+
+test("edit mode is blocked when the estimate carries persisted items", () => {
+  const h = estimateToWizardDraft(estimate({ estimate_items: [item("ITEM-1"), item("ITEM-2")] }));
+
+  const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+
+  // The MODE gate fires first, so the reason is the surface — not the (also-true) data block.
+  // The legacy items are therefore never even inspected, let alone reconstructed or overwritten.
+  assert.equal(plan.reason, "unsupported-editor-mode");
+  assert.ok(!("items" in plan));
+  assert.deepEqual(h.integration.unresolvedItemIds, ["ITEM-1", "ITEM-2"]); // untouched
+});
+
+test("no edit-mode result ever carries items or a patch", () => {
+  const drafts: HydratedWizardDraft[] = [
+    newEstimateWizardDraft(),
+    estimateToWizardDraft(estimate({ estimate_items: [] })),
+    estimateToWizardDraft(estimate({ estimate_items: [item("ITEM-1")] })),
+    newDraftWithOneManualLine("TEST-SERVICE-LINE", "12000"), // would otherwise price to real items
+  ];
+
+  for (const h of drafts) {
+    const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG);
+    assert.equal(plan.status, "blocked");
+    assert.ok(!("items" in plan), "an edit-mode plan must never carry items");
+    assert.ok(!("patch" in plan), "an edit-mode plan must never carry a patch");
+  }
+});
+
+test("edit mode runs no pricing and mutates nothing", () => {
+  const before = JSON.stringify(initialEstimateWizardDraftV22);
+  const h = newDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
+  const draftBefore = JSON.stringify(h.draft);
+
+  const plan = buildEstimateEditorApplyPlan(h, "edit", DEFAULT_PRICING_CATALOG);
+
+  // A create-mode call on this same draft WOULD have produced priced items. Edit mode produces none,
+  // and reports no pricing outcome at all — proof the pricing path was never entered.
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+  assert.deepEqual([...plan.pricingErrors], []);
+  assert.deepEqual([...plan.blockingIssues], []); // the validator never ran either
+
+  assert.equal(JSON.stringify(h.draft), draftBefore);
+  assert.equal(JSON.stringify(initialEstimateWizardDraftV22), before);
+});
+
+test("create mode retains all prior behavior after the mode gate was added", () => {
+  // Ready + items.
+  const ready = newDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
+  const readyPlan = buildEstimateEditorApplyPlan(ready, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(readyPlan.status, "ready");
+  if (readyPlan.status !== "ready") return;
+  assert.ok(readyPlan.items.length > 0);
+  assert.equal(Object.keys(readyPlan.patch).length, 7);
+
+  // Still integration-blocked (not mode-blocked) when the data is bad.
+  const legacy = estimateToWizardDraft(estimate({ estimate_items: [item("ITEM-1")] }));
+  const legacyPlan = buildEstimateEditorApplyPlan(legacy, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(legacyPlan.status, "blocked");
+  if (legacyPlan.status !== "blocked") return;
+  assert.equal(legacyPlan.reason, "integration-blocked");
+  assert.ok(
+    legacyPlan.blockingIssues.some(
+      (i) => i.code === INTEGRATION_ISSUE_CODES.UNRESOLVED_LEGACY_ITEMS,
+    ),
+  );
+});
+
+// ── 16. Provenance gate (Phase 8-B2C-A) ──────────────────────────────────────────
+// The hole the mode gate does NOT close: an EXISTING estimate with zero persisted items validates
+// cleanly, so before this gate it would sail straight through `mode: "create"` and pour a persisted
+// estimate's identity into a brand-new row.
+
+test("an existing zero-item estimate is REFUSED in create mode (provenance gate)", () => {
+  const h = estimateToWizardDraft(estimate({ estimate_items: [] }));
+
+  // It is genuinely valid data — the integration validator approves it. The refusal is purely about
+  // provenance, which is exactly why the mode gate alone was not enough.
+  assert.equal(validateWizardDraftForEstimateEditorIntegration(h).canApplyToEstimateEditor, true);
+  assert.equal(h.integration.sourceKind, "existing");
+  assert.equal(h.integration.sourceEstimateId, "EST-TEST");
+
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+  assert.equal(plan.reason, "source-estimate-not-allowed-in-create");
+  assert.ok(!("items" in plan));
+  assert.ok(!("patch" in plan));
+});
+
+test("an existing zero-item estimate carrying priced services is still refused in create mode", () => {
+  // Would otherwise price to real line items — proving the gate runs BEFORE pricing.
+  const h = existingDraftWithOneManualLine("TEST-SERVICE-LINE", "12000");
+  assert.equal(h.integration.sourceKind, "existing");
+
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "blocked");
+  if (plan.status !== "blocked") return;
+  assert.equal(plan.reason, "source-estimate-not-allowed-in-create");
+  assert.deepEqual([...plan.pricingErrors], []); // pricing never ran
+  assert.ok(!("items" in plan));
+});
+
+test("only a genuinely new draft reaches ready in create mode", () => {
+  const h = newEstimateWizardDraft();
+  assert.equal(h.integration.sourceKind, "new");
+  assert.equal(h.integration.sourceEstimateId, null);
+
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+  assert.equal(plan.patch.sourceEstimateId, null); // the editor must never write this
+});
+
+// ── 17. The container's draft-ownership mechanism (Phase 8-B2C) ──────────────────
+// EstimateWizardContainer keeps ONE opaque draft for the session and writes reducer results back
+// onto its mutable `.draft` body with Object.assign — because no constructor wraps an arbitrary
+// draft in the opaque envelope, and rebuilding one would be the forgery the contract forbids.
+//
+// The draft body it writes into is a private deep clone (`cloneWizardDraft`), so the write-back can
+// never reach the module const or another draft even if a reducer mutated in place. This test pins
+// the end-to-end behaviour: edits land on the session draft, and nothing else moves.
+
+test("the container's reducer write-back never corrupts the shared initial draft", () => {
+  const pristine = JSON.stringify(initialEstimateWizardDraftV22);
+  const h = newEstimateWizardDraft();
+
+  // Exactly what the container's `update()` does, for each reducer family it uses.
+  Object.assign(h.draft, updateCustomer(h.draft, { customerId: "CUST-TEST" }));
+  Object.assign(h.draft, updateVehicle(h.draft, { vehicleId: "VEH-TEST", bodySizeKey: "L" }));
+  Object.assign(h.draft, updateServiceSelection(h.draft, { selectedCategories: ["coating"] }));
+  Object.assign(h.draft, updateServiceConfiguration(h.draft, "coating", { layerCount: 1 }));
+  Object.assign(h.draft, updateDiscountAndCoupon(h.draft, { amountInput: "5000" }));
+  Object.assign(h.draft, updateNotes(h.draft, { customerNotes: "N", internalMemo: "M" }));
+  Object.assign(h.draft, setCurrentStep(h.draft, 7));
+
+  // The edits landed on the session draft…
+  assert.equal(h.draft.customer.customerId, "CUST-TEST");
+  assert.equal(h.draft.vehicle.bodySizeKey, "L");
+  assert.equal(h.draft.serviceConfiguration.coating.layerCount, 1);
+  assert.equal(h.draft.metadata.currentStep, 7);
+
+  // …and the module const is byte-for-byte untouched.
+  assert.equal(JSON.stringify(initialEstimateWizardDraftV22), pristine);
+
+  // Provenance survives the write-back — it is frozen and lives beside `draft`, not inside it.
+  assert.equal(h.integration.sourceKind, "new");
+  assert.equal(h.integration.sourceEstimateId, null);
+
+  // And the mutated session draft still plans cleanly in create mode.
+  const plan = buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG);
+  assert.equal(plan.status, "ready");
+  if (plan.status !== "ready") return;
+  assert.equal(plan.patch.customerId, "CUST-TEST");
+  assert.equal(plan.patch.bodySizeKey, "L");
+  assert.equal(plan.patch.discountAmount, "5000");
+  assert.equal(plan.patch.sourceEstimateId, null); // never written by the editor
+});
+
+// ── 18. Existing-estimate draft isolation (Phase 8-B2C-S) ────────────────────────
+// THE DEFECT THIS PINS. `estimateToWizardDraft` used to build its draft with a TOP-LEVEL spread of
+// `initialEstimateWizardDraftV22` and then assign `serviceConfiguration: base.serviceConfiguration`
+// outright. A spread copies only the top level, so `serviceConfiguration`, `review` and
+// `customer.newCustomer` stayed SHARED BY REFERENCE with the module const. Measured behaviour before
+// the fix:
+//
+//     h.draft.serviceConfiguration.ppf.selectedPartIds.push("HOOD");
+//     initialEstimateWizardDraftV22...selectedPartIds  →  ["HOOD"]   // module const corrupted
+//     newEstimateWizardDraft()......selectedPartIds    →  ["HOOD"]   // every future blank draft too
+//
+// One mutation through one hydrated draft poisoned every draft in the process, for its whole life.
+// It is now deep-cloned through the same `cloneWizardDraft` the create path always used.
+
+/** Every mutable nested object/array reachable from a draft body. */
+function nestedRefs(d: HydratedWizardDraft["draft"]): [string, unknown][] {
+  const cfg = d.serviceConfiguration;
+  return [
+    ["customer", d.customer],
+    ["customer.newCustomer", d.customer.newCustomer],
+    ["vehicle", d.vehicle],
+    ["vehicle.newVehicle", d.vehicle.newVehicle],
+    ["serviceSelection", d.serviceSelection],
+    ["serviceSelection.selectedCategories", d.serviceSelection.selectedCategories],
+    ["serviceConfiguration", cfg],
+    ["cfg.coating", cfg.coating],
+    ["cfg.ppf", cfg.ppf],
+    ["cfg.ppf.selectedPartIds", cfg.ppf.selectedPartIds],
+    ["cfg.ppf.quantitiesByPart", cfg.ppf.quantitiesByPart],
+    ["cfg.ppf.interiorRows", cfg.ppf.interiorRows],
+    ["cfg.windowFilm", cfg.windowFilm],
+    ["cfg.windowFilm.selectedAreaIds", cfg.windowFilm.selectedAreaIds],
+    ["cfg.bodyMaintenance", cfg.bodyMaintenance],
+    ["cfg.carWash", cfg.carWash],
+    ["cfg.roomCleaning", cfg.roomCleaning],
+    ["cfg.roomCleaning.selectedMenuIds", cfg.roomCleaning.selectedMenuIds],
+    ["cfg.roomCleaning.unitPricesByMenu", cfg.roomCleaning.unitPricesByMenu],
+    ["cfg.otherWork", cfg.otherWork],
+    ["cfg.otherWork.selectedPresetIds", cfg.otherWork.selectedPresetIds],
+    ["cfg.otherWork.customRows", cfg.otherWork.customRows],
+    ["cfg.storeGlobalOptions", cfg.storeGlobalOptions],
+    ["cfg.storeGlobalOptions.selectedOptionIds", cfg.storeGlobalOptions.selectedOptionIds],
+    ["discountAndCoupon", d.discountAndCoupon],
+    ["discountAndCoupon.selectedCouponIds", d.discountAndCoupon.selectedCouponIds],
+    ["notes", d.notes],
+    ["review", d.review],
+    ["metadata", d.metadata],
+  ];
+}
+
+/** Assert that two draft bodies share NO mutable nested reference, field by field. */
+function assertNoSharedRefs(
+  aLabel: string, a: HydratedWizardDraft["draft"],
+  bLabel: string, b: HydratedWizardDraft["draft"],
+) {
+  const ra = nestedRefs(a);
+  const rb = nestedRefs(b);
+  for (let i = 0; i < ra.length; i++) {
+    assert.notEqual(ra[i][1], rb[i][1], `${aLabel} and ${bLabel} SHARE a reference at ${ra[i][0]}`);
+  }
+}
+
+test("two estimateToWizardDraft results share no mutable nested reference", () => {
+  const a = estimateToWizardDraft(estimate({ estimate_items: [] }));
+  const b = estimateToWizardDraft(estimate({ estimate_items: [] }));
+  assertNoSharedRefs("hydrated A", a.draft, "hydrated B", b.draft);
+});
+
+test("a hydrated existing draft shares no nested reference with the module const", () => {
+  const h = estimateToWizardDraft(estimate({ estimate_items: [] }));
+  assertNoSharedRefs("hydrated", h.draft, "initial", initialEstimateWizardDraftV22);
+});
+
+test("a hydrated existing draft shares no nested reference with a new draft", () => {
+  const h = estimateToWizardDraft(estimate({ estimate_items: [] }));
+  const n = newEstimateWizardDraft();
+  assertNoSharedRefs("hydrated", h.draft, "new", n.draft);
+});
+
+test("create-path isolation remains intact", () => {
+  const a = newEstimateWizardDraft();
+  const b = newEstimateWizardDraft();
+  assertNoSharedRefs("new A", a.draft, "new B", b.draft);
+  assertNoSharedRefs("new A", a.draft, "initial", initialEstimateWizardDraftV22);
+});
+
+test("mutating a hydrated existing draft cannot reach the const, a new draft, or another hydrated draft", () => {
+  const victimConst = JSON.stringify(initialEstimateWizardDraftV22);
+
+  const h1 = estimateToWizardDraft(estimate({ estimate_items: [] }));
+  const h2 = estimateToWizardDraft(estimate({ estimate_items: [] }));
+  const n  = newEstimateWizardDraft();
+
+  // The exact mutation that used to poison the whole process.
+  h1.draft.serviceConfiguration.ppf.selectedPartIds.push("HOOD");
+  h1.draft.serviceConfiguration.otherWork.customRows.push(
+    { id: "ROW-X", name: "X", description: "", unitPrice: "1", quantity: "1", unitLabel: "" },
+  );
+  h1.draft.discountAndCoupon.selectedCouponIds.push("CPN-X");
+  h1.draft.notes.internalMemo = "LEAK";
+  h1.draft.review.previewConfirmed = true;
+  h1.draft.customer.newCustomer.name = "LEAK";
+
+  // Nothing else moved.
+  assert.deepEqual(h2.draft.serviceConfiguration.ppf.selectedPartIds, []);
+  assert.deepEqual(h2.draft.serviceConfiguration.otherWork.customRows, []);
+  assert.deepEqual(h2.draft.discountAndCoupon.selectedCouponIds, []);
+  assert.equal(h2.draft.notes.internalMemo, "");
+  assert.equal(h2.draft.review.previewConfirmed, false);
+  assert.equal(h2.draft.customer.newCustomer.name, "");
+
+  assert.deepEqual(n.draft.serviceConfiguration.ppf.selectedPartIds, []);
+  assert.equal(n.draft.notes.internalMemo, "");
+  assert.equal(n.draft.customer.newCustomer.name, "");
+
+  assert.equal(JSON.stringify(initialEstimateWizardDraftV22), victimConst);
+
+  // A draft created AFTER the mutation is still pristine — the const was never poisoned.
+  const afterwards = newEstimateWizardDraft();
+  assert.deepEqual(afterwards.draft.serviceConfiguration.ppf.selectedPartIds, []);
+  assert.deepEqual(afterwards.draft.discountAndCoupon.selectedCouponIds, []);
+});
+
+test("the aliasing fix preserves frozen provenance and every blocking behaviour", () => {
+  const h = estimateToWizardDraft(estimate({ estimate_items: [item("ITEM-1")] }));
+
+  // Provenance still frozen, still accurate.
+  assert.equal(Object.isFrozen(h.integration), true);
+  assert.equal(Object.isFrozen(h.integration.unresolvedItemIds), true);
+  assert.equal(h.integration.sourceKind, "existing");
+  assert.equal(h.integration.sourceEstimateId, "EST-TEST");
+  assert.deepEqual(h.integration.unresolvedItemIds, ["ITEM-1"]);
+  assert.equal(h.integration.reconstructionStatus, "none");
+
+  // Still blocked, for the same reasons, with the same messages.
+  const r = validateWizardDraftForEstimateEditorIntegration(h);
+  assert.equal(r.canApplyToEstimateEditor, false);
+  assert.equal(r.canPersist, false);
+  const codes = r.blockingIssues.map((i) => i.code);
+  assert.ok(codes.includes(INTEGRATION_ISSUE_CODES.UNRESOLVED_LEGACY_ITEMS));
+  assert.ok(codes.includes(INTEGRATION_ISSUE_CODES.SERVICE_CONFIGURATION_NOT_RECONSTRUCTED));
+
+  // And Screen-4 is still empty — cloning must not have "reconstructed" anything.
+  const cfg = h.draft.serviceConfiguration;
+  assert.equal(cfg.coating.layerCount, null);
+  assert.equal(cfg.ppf.installationMethod, null);
+  assert.deepEqual(cfg.roomCleaning.selectedMenuIds, []);
+});
+
+// ── Compile-time: `mode` is REQUIRED and cannot be omitted or widened ────────────
+// `@ts-expect-error` is verified by `tsc`, not at runtime: if either call below ever STOPPED being
+// a type error, the unused directive itself becomes a compile error (TS2578) and `npm run typecheck`
+// fails. So this is a real, enforced proof — not a comment. No cast, no unsafe assertion.
+test("omitting mode, or passing an unknown mode, is rejected by TypeScript", () => {
+  const h = newEstimateWizardDraft();
+
+  // @ts-expect-error — `mode` is required; a 2-argument call must not compile.
+  buildEstimateEditorApplyPlan(h, DEFAULT_PRICING_CATALOG);
+
+  // @ts-expect-error — only "create" | "edit" are valid modes.
+  buildEstimateEditorApplyPlan(h, "view", DEFAULT_PRICING_CATALOG);
+
+  // The runtime assertion is incidental; the compile-time rejection above is the actual test.
+  assert.equal(buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG).status, "ready");
 });

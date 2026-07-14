@@ -322,7 +322,19 @@ export function estimateToWizardDraft(estimate: EstimateHydrationInput): Hydrate
     });
   }
 
-  const base = initialEstimateWizardDraftV22;
+  // ── Draft body — DEEP-CLONED, never spread from the module const (Phase 8-B2C-S) ──
+  //
+  // DEFECT THIS FIXES. This used to be `const base = initialEstimateWizardDraftV22` followed by
+  // `{ ...base, serviceConfiguration: base.serviceConfiguration, … }`. A top-level spread copies only
+  // the top level, so `serviceConfiguration` (and `review`, and `customer.newCustomer`) stayed SHARED
+  // BY REFERENCE with the module const. One `draft.serviceConfiguration.ppf.selectedPartIds.push(…)`
+  // through a hydrated draft therefore corrupted `initialEstimateWizardDraftV22` itself — and with it
+  // EVERY subsequent `newEstimateWizardDraft()`, for the whole life of the process. The create path
+  // was already safe (it cloned); this path was not. Measured, not theorised.
+  //
+  // `cloneWizardDraft` is the same exhaustive, type-checked deep clone the new-estimate factory uses,
+  // so both entry points now produce fully isolated drafts by construction.
+  const base = cloneWizardDraft(initialEstimateWizardDraftV22);
 
   const draft: EstimateWizardDraftV22 = {
     ...base,
@@ -338,9 +350,10 @@ export function estimateToWizardDraft(estimate: EstimateHydrationInput): Hydrate
       bodySizeKey: estimate.vehicles?.body_size ?? "",
     },
     serviceSelection: { selectedCategories },
-    // Intentionally left at the initial (empty) shape — see the doc comment above. This is only
-    // ever safe because `reconstructionStatus` and `unresolvedItemIds` travel INSIDE the opaque
-    // draft and the validator blocks on them.
+    // Intentionally left at the initial (empty) SHAPE — see the doc comment above. It is now a
+    // private clone, so "empty" cannot be mutated into something shared. This remains safe only
+    // because `reconstructionStatus` and `unresolvedItemIds` travel INSIDE the opaque draft and the
+    // validator blocks on them.
     serviceConfiguration: base.serviceConfiguration,
     discountAndCoupon: {
       ...base.discountAndCoupon,
