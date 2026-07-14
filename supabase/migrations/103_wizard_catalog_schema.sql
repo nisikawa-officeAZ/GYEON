@@ -101,7 +101,7 @@ END $$;
 CREATE OR REPLACE FUNCTION public.wiz_guard_dealers_product_mode()
 RETURNS trigger
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = public, pg_catalog
 AS $$
 BEGIN
@@ -380,7 +380,7 @@ CREATE TABLE IF NOT EXISTS public.dealer_wizard_catalog_overrides (
 
 CREATE OR REPLACE FUNCTION public.wiz_is_any_active_member()
 RETURNS boolean
-LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public, pg_catalog
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_catalog
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.dealer_members
@@ -390,7 +390,7 @@ $$;
 
 CREATE OR REPLACE FUNCTION public.wiz_is_active_member(d uuid)
 RETURNS boolean
-LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public, pg_catalog
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_catalog
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.dealer_members
@@ -400,7 +400,7 @@ $$;
 
 CREATE OR REPLACE FUNCTION public.wiz_can_configure(d uuid)
 RETURNS boolean
-LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public, pg_catalog
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_catalog
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.dealer_members
@@ -417,7 +417,7 @@ $$;
 -- 8a. Immutable ownership/identity. Labels and prices may be corrected where ownership
 --     permits; identity and ownership may never be rewritten after insert.
 CREATE OR REPLACE FUNCTION public.wiz_guard_catalog_item_immutable()
-RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, pg_catalog
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog
 AS $$
 BEGIN
   IF NEW.market       IS DISTINCT FROM OLD.market       THEN RAISE EXCEPTION 'market is immutable'; END IF;
@@ -435,7 +435,7 @@ END $$;
 
 -- 8b. Product-mode + PPF-group integrity, on INSERT and UPDATE.
 CREATE OR REPLACE FUNCTION public.wiz_guard_catalog_item()
-RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, pg_catalog
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog
 AS $$
 DECLARE
   v_dealer_mode   text;
@@ -487,7 +487,7 @@ END $$;
 -- 8c. Hard deletion is rejected for EVERY caller, including normal application paths.
 --     Retirement is `deleted_at`; historical estimates must never lose their referent.
 CREATE OR REPLACE FUNCTION public.wiz_reject_hard_delete()
-RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, pg_catalog
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog
 AS $$
 BEGIN
   RAISE EXCEPTION 'hard deletion of wizard catalog items is forbidden; set deleted_at instead';
@@ -716,7 +716,7 @@ CREATE CONSTRAINT TRIGGER trg_wrcp_revalidate
 
 -- 8f. Overrides may only NARROW.
 CREATE OR REPLACE FUNCTION public.wiz_guard_override()
-RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, pg_catalog
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog
 AS $$
 DECLARE
   v_item public.wizard_catalog_items%ROWTYPE;
@@ -872,8 +872,18 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.dealer_wizard_catalog_overrides T
 -- then grant back only what is actually required.
 --
 -- • RLS helpers are referenced INSIDE policy expressions, which are evaluated as the querying
---   role — so `authenticated` genuinely needs EXECUTE on them. They are SECURITY INVOKER and
---   leak nothing: for `anon`, auth.uid() is NULL and every one returns false.
+--   role — so `authenticated` genuinely needs EXECUTE on them. They are SECURITY DEFINER
+--   (Phase C1V-H2) and leak nothing: they return only a boolean, and for `anon` auth.uid() is
+--   NULL so every one returns false.
+--
+--   WHY DEFINER, PROVEN EMPIRICALLY: `authenticated` holds NO SELECT privilege on
+--   `dealer_members` or `dealers`. PostgreSQL does not permission-check tables referenced
+--   DIRECTLY inside an RLS policy expression (which is why migration 004's inline subqueries
+--   work), but a SECURITY INVOKER *function* called from a policy runs with the CALLER's
+--   privileges and is denied — `ERROR: permission denied for table dealer_members` (42501).
+--   Under invoker rights every catalog RLS policy errored out and every dealer write failed.
+--   DEFINER removes that dependency entirely. Every function pins search_path, so the definer
+--   context cannot be redirected.
 --
 -- • Trigger functions are NOT granted to anyone. PostgreSQL does not check EXECUTE privilege
 --   when firing a trigger, so revoking PUBLIC does not disable them — it only stops an ordinary
