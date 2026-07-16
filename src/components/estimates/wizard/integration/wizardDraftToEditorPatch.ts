@@ -71,6 +71,7 @@ import type { PricingCatalog } from "@/lib/pricing/pricing-catalog";
 import { buildWizardPricingInputFromConfig } from "../pricing/wizard-pricing-input-adapter-config";
 import type { ProductionPricingConfiguration } from "../pricing/wizard-manual-pricing-config";
 import type { WizardPricingIssue } from "../pricing/wizard-pricing-types";
+import type { ShopRank } from "../screens/step-types";
 import type { HydratedWizardDraft } from "./estimateToWizardDraft";
 import { validateWizardDraftForEstimateEditorIntegration } from "./validateWizardDraftForEstimateEditorIntegration";
 import type { IntegrationIssue, WizardOwnedFieldPatch } from "./estimateWizardIntegrationContract";
@@ -178,6 +179,7 @@ export function buildEstimateEditorApplyPlan(
   mode: EstimateEditorMode,
   catalog: PricingCatalog,
   config: ProductionPricingConfiguration,
+  shopRank?: ShopRank,
 ): EstimateEditorApplyPlan {
   // ── 1. Mode gate — FIRST. Before validation, before pricing, before anything. ──
   // Architect Ruling 3: B2 runtime apply is limited to NEW estimates. `"edit"` is refused here
@@ -240,17 +242,34 @@ export function buildEstimateEditorApplyPlan(
   // value that becomes `estimate_items.item_name` — is resolved from the required `config`. A code
   // with no authoritative entry raises UNKNOWN_CONFIGURED_ITEM, which lands in `bundle.errors` and
   // blocks below, so neither a fixture label nor a raw id can reach a persisted item name.
-  const bundle = buildWizardPricingInputFromConfig(hydrated.draft, config, catalog);
+  // shopRank is the AUTHORITATIVE dealer rank passed from the trusted caller — never read from the
+  // draft. It gates coating eligibility and upper-layer pricing.
+  const bundle = buildWizardPricingInputFromConfig(hydrated.draft, config, catalog, shopRank);
 
   // A draft whose own pricing input is invalid must not be applied either — half-priced items are a
   // silent data defect. Reported distinctly from an integration block so the operator sees the real
-  // cause, and still with no items produced.
+  // cause, and still with no items produced. (Invalid rank → coating error lands here.)
   if (bundle.errors.length > 0) {
     return Object.freeze({
       status:         "blocked",
       reason:         "pricing-invalid",
       blockingIssues: Object.freeze([]),
       pricingErrors:  Object.freeze([...bundle.errors]),
+      issues:         Object.freeze([...validation.issues]),
+    });
+  }
+
+  // Fail closed on an unmapped multi-layer coating: a missing authoritative rank leaves upper layers
+  // unpriced (MULTI_LAYER_NOT_MAPPED, a warning not an error), which would otherwise apply a partial
+  // single-layer coating. A multi-layer selection must be fully priced or the plan is blocked.
+  const co = hydrated.draft.serviceConfiguration.coating;
+  const isMultiLayerCoating = hydrated.draft.serviceSelection.selectedCategories.includes("coating") && !!(co.layer2Id || co.layer3Id);
+  if (isMultiLayerCoating && bundle.warnings.some((w) => w.code === "MULTI_LAYER_NOT_MAPPED")) {
+    return Object.freeze({
+      status:         "blocked",
+      reason:         "pricing-invalid",
+      blockingIssues: Object.freeze([]),
+      pricingErrors:  Object.freeze([{ code: "MULTI_LAYER_NOT_MAPPED", category: "coating", sourceId: co.layer2Id ?? co.layer3Id, message: "多層コーティングを価格計算できません（店舗ランクが未指定または無効）。" }]),
       issues:         Object.freeze([...validation.issues]),
     });
   }

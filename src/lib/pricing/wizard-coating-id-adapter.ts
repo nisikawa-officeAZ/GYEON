@@ -66,3 +66,28 @@ export function toPricingCatalogCoatingId(canonicalId: string | null | undefined
   if (!(canonicalId in CANONICAL_TO_PRICING_COATING_ID)) return null;
   return CANONICAL_TO_PRICING_COATING_ID[canonicalId as CanonicalCoatingId];
 }
+
+/**
+ * canonical Wizard UPPER-LAYER (topcoat) id → PricingCatalog `topcoatBase` key.
+ * Same single source as the base map; the ONLY difference is syncro-evo is intentionally absent —
+ * SYNCRO is a first-layer/standalone system and is never an upper-layer product. `null` = not a
+ * valid upper-layer id ⇒ the caller fails closed (never a substitute or zero add-on).
+ */
+export const CANONICAL_TO_PRICING_TOPCOAT_ID: Record<string, string> = {
+  "one-evo": "one-evo",
+  "cancoat-evo": "cancoat-evo",
+  "pure-evo": "pure-evo",
+  "mohs-evo": "mohs-evo",
+  "matte-evo": "matte-evo",
+  "infinite-base-1": "infinit1",
+  "infinite-base-2": "infinit2",
+  "infinite-topcoat-1": "infinit-t1",
+  "infinite-topcoat-2": "infinit-t2",
+  "cancoat-pro-evo": "cancoat-evo-pro",
+  // syncro-evo intentionally NOT mapped — never an upper layer.
+};
+
+export function toPricingCatalogTopcoatId(canonicalId: string | null | undefined): string | null {
+  if (!canonicalId) return null;
+  return CANONICAL_TO_PRICING_TOPCOAT_ID[canonicalId] ?? null;
+}

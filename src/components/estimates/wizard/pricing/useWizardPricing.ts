@@ -12,13 +12,18 @@
 import { useMemo } from "react";
 import { calculateEstimate, DEFAULT_PRICING_CATALOG } from "@/lib/pricing/canonical-pricing-engine";
 import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
+import type { ShopRank } from "../screens/step-types";
 import { buildWizardPricingInput } from "./wizard-pricing-input-adapter";
 import { mapProductionResultToWizard } from "./wizard-pricing-result-adapter";
 import { WIZARD_PRICING_ERRORS, type WizardPricingResult } from "./wizard-pricing-types";
 
-/** Pure computation: draft → production engine → WizardPricingResult. Exported for tests/preview. */
-export function computeWizardPricing(draft: EstimateWizardDraftV22): WizardPricingResult {
-  const bundle = buildWizardPricingInput(draft);
+/** Pure computation: draft → production engine → WizardPricingResult. Exported for tests/preview.
+ *  `shopRank` is the AUTHORITATIVE dealer rank (server-derived, passed from the trusted container
+ *  boundary). It is optional only so the isolated preview harness may omit it; when omitted, upper
+ *  coating layers are not priced and MULTI_LAYER_NOT_MAPPED is surfaced (never a silent partial).
+ *  A mounted-runtime caller MUST pass it (EstimateWizardContainer does). */
+export function computeWizardPricing(draft: EstimateWizardDraftV22, shopRank?: ShopRank): WizardPricingResult {
+  const bundle = buildWizardPricingInput(draft, shopRank);
   try {
     const result = calculateEstimate(bundle.services, bundle.discounts, bundle.taxRate, DEFAULT_PRICING_CATALOG);
     const mapped = mapProductionResultToWizard(result, bundle);
@@ -37,16 +42,17 @@ export function computeWizardPricing(draft: EstimateWizardDraftV22): WizardPrici
   }
 }
 
-export function useWizardPricing(draft: EstimateWizardDraftV22): WizardPricingResult {
+export function useWizardPricing(draft: EstimateWizardDraftV22, shopRank?: ShopRank): WizardPricingResult {
   const { serviceSelection, serviceConfiguration, discountAndCoupon } = draft;
   const bodySizeKey = draft.vehicle.bodySizeKey;
   const isBusiness = draft.customer.newCustomer.isBusiness;
   const tradeRate = draft.customer.newCustomer.tradeRate;
   // Recalculate only on pricing-relevant inputs (immutable per-section refs make this precise);
   // notes / memo / address / phone / email / LINE / step do not appear here, so they never trigger.
+  // shopRank is authoritative and rank affects coating eligibility/upper-layer pricing, so it is a dep.
   return useMemo(
-    () => computeWizardPricing(draft),
+    () => computeWizardPricing(draft, shopRank),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [serviceSelection, serviceConfiguration, bodySizeKey, discountAndCoupon, isBusiness, tradeRate],
+    [serviceSelection, serviceConfiguration, bodySizeKey, discountAndCoupon, isBusiness, tradeRate, shopRank],
   );
 }

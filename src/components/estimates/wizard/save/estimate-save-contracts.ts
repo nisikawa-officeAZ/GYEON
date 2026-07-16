@@ -8,14 +8,20 @@
 
 import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
 import type { WizardPricingResult } from "../pricing/wizard-pricing-types";
+import type { ShopRank } from "../screens/step-types";
 import type { EstimateSaveRequest } from "./estimate-save-dto";
 import type { EstimateSaveErrorCode, EstimateSaveValidationResult } from "./estimate-save-errors";
 
 // ── Mapper input (§3) — ONE explicit object. No individual screen states, no React, no EstimateEditor,
 // no browser storage, no database rows. ──
+// `shopRank` is the AUTHORITATIVE, server-derived dealer rank supplied by the trusted caller — the
+// SAME value that priced `pricingResult`. It is NEVER read from `draft` or any client-controlled
+// input. A multi-layer coating that is not fully priced under this rank fails closed (the mapper
+// refuses to serialize a partial coating price).
 export type EstimateSaveMapperInput = {
   draft: EstimateWizardDraftV22;
   pricingResult: WizardPricingResult;
+  shopRank?: ShopRank;
 };
 
 // ── Mapper contract (pure) — input object → save request. ──

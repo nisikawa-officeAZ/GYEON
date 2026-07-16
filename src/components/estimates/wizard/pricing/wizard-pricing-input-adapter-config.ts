@@ -24,7 +24,9 @@
 // the id set is identical either way and the two paths cannot disagree.
 
 import type { PricingCatalog } from "@/lib/pricing/pricing-catalog";
-import { toPricingCatalogCoatingId } from "@/lib/pricing/wizard-coating-id-adapter";
+import { toPricingCatalogCoatingId, toPricingCatalogTopcoatId } from "@/lib/pricing/wizard-coating-id-adapter";
+import { validateCoatingSelection } from "./coating-selection-validation";
+import type { ShopRank } from "../screens/step-types";
 import type {
   ServiceInput,
   DiscountInput,
@@ -74,6 +76,7 @@ export function buildWizardPricingInputFromConfig(
   draft: EstimateWizardDraftV22,
   config: ProductionPricingConfiguration,
   catalog: PricingCatalog,
+  shopRank?: ShopRank,
 ): ConfigPricingInputBundle {
   const warnings: WizardPricingIssue[] = [];
   const errors: WizardPricingIssue[] = [];
@@ -83,23 +86,45 @@ export function buildWizardPricingInputFromConfig(
   const selected = draft.serviceSelection.selectedCategories;
   const sizeKey = draft.vehicle.bodySizeKey;
 
-  // ── Coating (CATALOG path) — price and name owned by PricingCatalog, unchanged. ──
-  // The Wizard emits a canonical coating id; translate it to the PricingCatalog id through the
-  // single adapter before lookup. matte-evo (and any id with no authoritative price) → null → fail
-  // closed with UNKNOWN_PRICING_REFERENCE; never a substitute price.
+  // ── Coating (CATALOG path) — price and name owned by PricingCatalog. ──
+  // Layer-1 translates to a base coatingId; explicit layer-2/3 translate to topcoat add-ons. Upper
+  // layers are priced ONLY when a shopRank is supplied AND the selection is structurally valid AND
+  // every add-on has an authoritative topcoatBase price — otherwise it fails closed (no partial
+  // coating price). Without a rank, upper layers cannot be validated, so layer-1 is priced and the
+  // rest flagged MULTI_LAYER_NOT_MAPPED (unchanged legacy behaviour).
   let catalogResolved = false;
   if (selected.includes("coating")) {
     const co = cfg.coating;
     if (co.layer1Id) {
-      const pricingId = toPricingCatalogCoatingId(co.layer1Id);
-      const known = pricingId !== null && catalog.coatings.some((c) => c.id === pricingId);
-      if (known && pricingId) {
-        if (!sizeKey) warnings.push(issue(WIZARD_PRICING_WARNINGS.MISSING_BODY_SIZE, "ボディサイズが未選択のため、サイズ係数は既定値で計算されます。", "coating"));
-        if (co.layer2Id || co.layer3Id) warnings.push(issue(WIZARD_PRICING_WARNINGS.MULTI_LAYER_NOT_MAPPED, "2層目・3層目は本番トップコート識別子に未対応のため計算に含まれません。", "coating"));
-        services.push({ type: "coating", coatingId: pricingId, sizeKey, optionIds: [] });
+      const coatingId = toPricingCatalogCoatingId(co.layer1Id);
+      const layer1Priceable = coatingId !== null && catalog.coatings.some((c) => c.id === coatingId);
+      const hasUpper = !!(co.layer2Id || co.layer3Id);
+      const sizeWarn = () => { if (!sizeKey) warnings.push(issue(WIZARD_PRICING_WARNINGS.MISSING_BODY_SIZE, "ボディサイズが未選択のため、サイズ係数は既定値で計算されます。", "coating")); };
+      if (!layer1Priceable || !coatingId) {
+        errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, `コーティング「${co.layer1Id}」は本番カタログに対応する識別子がありません。`, "coating", co.layer1Id));
+      } else if (shopRank === undefined) {
+        // Rank unavailable: cannot validate rank/upper layers. Price layer-1; flag any upper as unmapped.
+        sizeWarn();
+        if (hasUpper) warnings.push(issue(WIZARD_PRICING_WARNINGS.MULTI_LAYER_NOT_MAPPED, "2層目・3層目は店舗ランク情報がないため計算に含まれていません。", "coating"));
+        services.push({ type: "coating", coatingId, sizeKey, optionIds: [] });
         catalogResolved = true;
       } else {
-        errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, `コーティング「${co.layer1Id}」は本番カタログに対応する識別子がありません。`, "coating", co.layer1Id));
+        // Rank available: validate the FULL selection (layer-1 rank gate + upper matrix + certified).
+        const valid = validateCoatingSelection(co.layer1Id, co.layer2Id, co.layer3Id, shopRank);
+        const topcoat2 = co.layer2Id ? toPricingCatalogTopcoatId(co.layer2Id) : null;
+        const topcoat3 = co.layer3Id ? toPricingCatalogTopcoatId(co.layer3Id) : null;
+        const upperPriceable =
+          (!co.layer2Id || (topcoat2 !== null && catalog.topcoatBase[topcoat2] !== undefined)) &&
+          (!co.layer3Id || (topcoat3 !== null && catalog.topcoatBase[topcoat3] !== undefined));
+        if (!valid.ok) {
+          errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, valid.reason, "coating", co.layer1Id));
+        } else if (!upperPriceable) {
+          errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, "コーティング上層に対応する価格が本番カタログにありません。", "coating", co.layer2Id ?? co.layer3Id));
+        } else {
+          sizeWarn();
+          services.push({ type: "coating", coatingId, sizeKey, optionIds: [], ...(topcoat2 ? { topcoat2 } : {}), ...(topcoat3 ? { topcoat3 } : {}) });
+          catalogResolved = true;
+        }
       }
     }
   }

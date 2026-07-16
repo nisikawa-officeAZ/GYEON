@@ -23,7 +23,7 @@ const numOrNull = (v: string): number | null => {
 };
 
 export function mapDraftToEstimateSaveRequest(input: EstimateSaveMapperInput): EstimateSaveRequest {
-  const { draft, pricingResult } = input;
+  const { draft, pricingResult, shopRank } = input;
   const c = draft.customer;
   const v = draft.vehicle;
   const nc = c.newCustomer;
@@ -69,7 +69,17 @@ export function mapDraftToEstimateSaveRequest(input: EstimateSaveMapperInput): E
         };
 
   // ── Service lines: identity from the pure input bundle; amounts from the pricing result ──
-  const bundle = buildWizardPricingInput(draft);
+  // The bundle is built with the AUTHORITATIVE shopRank (never from the draft). A multi-layer coating
+  // that is not fully priced under this rank (missing rank → MULTI_LAYER_NOT_MAPPED; invalid rank →
+  // a coating error) fails closed here: we refuse to serialize a partial coating price into a save.
+  const bundle = buildWizardPricingInput(draft, shopRank);
+  const co = draft.serviceConfiguration.coating;
+  const isMultiLayerCoating = draft.serviceSelection.selectedCategories.includes("coating") && !!(co.layer2Id || co.layer3Id);
+  if (isMultiLayerCoating &&
+      (bundle.errors.some((e) => e.category === "coating") ||
+       bundle.warnings.some((w) => w.code === "MULTI_LAYER_NOT_MAPPED"))) {
+    throw new Error("save refused: multi-layer coating is not fully priced under the authoritative shop rank (rank missing or invalid); a partial coating price must not be saved.");
+  }
   const coatingReferenceId = draft.serviceConfiguration.coating.layer1Id;
 
   // Authoritative identity map for manual lines, keyed by `${category}:${manualPricingIdentity}`.

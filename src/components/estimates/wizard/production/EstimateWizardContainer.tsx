@@ -253,7 +253,9 @@ export default function EstimateWizardContainer({
     : (orderedSelected[0] ?? "");
 
   // Read-only pricing from the PRODUCTION engine. No arithmetic happens in this container.
-  const pricing = useWizardPricing(draft);
+  // The authoritative shopRank prop is threaded so coating eligibility + multi-layer pricing are
+  // resolved against the dealer's real rank (never inferred from the draft).
+  const pricing = useWizardPricing(draft, shopRank);
 
   const wizardTotals: WizardTotalsView = {
     subtotal: pricing.subtotal ?? 0,
@@ -297,7 +299,7 @@ export default function EstimateWizardContainer({
       return;
     }
 
-    const plan = buildEstimateEditorApplyPlan(hydrated, mode, catalog, pricingConfig);
+    const plan = buildEstimateEditorApplyPlan(hydrated, mode, catalog, pricingConfig, shopRank);
     if (plan.status === "blocked") {
       setMessage(blockedMessage(plan)); // applies nothing
       return;
