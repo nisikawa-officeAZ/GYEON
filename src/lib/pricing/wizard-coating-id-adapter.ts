@@ -6,8 +6,10 @@
 //
 // The Wizard emits ONLY the canonical identities below (coating-matrix.ts is their sole producer).
 // PricingCatalog keys/values are preserved verbatim; this module renames NOTHING and invents NO
-// price. Where an authoritative PricingCatalog entry does not exist (matte-evo), the mapping is
-// `null` so resolution stays FAIL-CLOSED — never zero, never a substitute coating, never a default.
+// price. A canonical id with no authoritative PricingCatalog entry maps to `null` so resolution
+// stays FAIL-CLOSED — never zero, never a substitute coating, never a default. (As of C2B3B1 every
+// currently selectable standalone coating, matte-evo and cancoat-pro-evo included, has an
+// authoritative base, so no standalone id maps to null today.)
 
 /** Canonical Wizard-facing coating identities. The Wizard state/UI use ONLY these. */
 export const CANONICAL_COATING_IDS = [
@@ -45,7 +47,7 @@ export const CANONICAL_TO_PRICING_COATING_ID: Record<CanonicalCoatingId, string 
   "pure-evo": "pure-evo",
   "mohs-evo": "mohs-evo",
   "syncro-evo": "syncro-evo",
-  "matte-evo": null, // no authoritative PricingCatalog base price — FAIL CLOSED, never invent
+  "matte-evo": "matte-evo", // C2B3B1: now has an authoritative PricingCatalog base (canonical == pricing key)
   "infinite-base-1": "infinit1",
   "infinite-base-2": "infinit2",
   "infinite-topcoat-1": "infinit-t1",
@@ -55,8 +57,9 @@ export const CANONICAL_TO_PRICING_COATING_ID: Record<CanonicalCoatingId, string 
 
 /**
  * Translate a canonical Wizard coating id to its PricingCatalog id.
- * Returns `null` for matte-evo (no authoritative price) AND for any non-canonical/unknown id, so
- * callers uniformly treat `null` as "no priceable reference" and raise UNKNOWN_PRICING_REFERENCE.
+ * Returns `null` for any canonical id without an authoritative price AND for any non-canonical/
+ * unknown id, so callers uniformly treat `null` as "no priceable reference" and raise
+ * UNKNOWN_PRICING_REFERENCE. (No standalone canonical id maps to null as of C2B3B1.)
  */
 export function toPricingCatalogCoatingId(canonicalId: string | null | undefined): string | null {
   if (!canonicalId) return null;

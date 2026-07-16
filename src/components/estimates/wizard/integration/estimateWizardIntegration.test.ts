@@ -1531,7 +1531,7 @@ test("an unknown coating id still raises UNKNOWN_PRICING_REFERENCE on the config
   const h = newDraftWith((d) => {
     d.serviceSelection = { selectedCategories: ["coating"] };
     d.serviceConfiguration = { ...d.serviceConfiguration,
-      coating: { ...d.serviceConfiguration.coating, layer1Id: "matte-evo" } }; // not in PricingCatalog
+      coating: { ...d.serviceConfiguration.coating, layer1Id: "no-such-coating" } }; // genuinely not in PricingCatalog (matte-evo is now priceable per C2B3B1)
   });
   const configured = buildWizardPricingInputFromConfig(h.draft, TEST_CONFIG, DEFAULT_PRICING_CATALOG);
   assert.equal(configured.catalogResolved, false);

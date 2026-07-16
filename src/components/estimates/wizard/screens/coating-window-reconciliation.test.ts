@@ -76,7 +76,7 @@ test("the single pricing adapter maps every canonical ID exactly", () => {
     "pure-evo": "pure-evo",
     "mohs-evo": "mohs-evo",
     "syncro-evo": "syncro-evo",
-    "matte-evo": null,
+    "matte-evo": "matte-evo",
     "infinite-base-1": "infinit1",
     "infinite-base-2": "infinit2",
     "infinite-topcoat-1": "infinit-t1",
@@ -88,17 +88,30 @@ test("the single pricing adapter maps every canonical ID exactly", () => {
   assert.equal(toPricingCatalogCoatingId("totally-unknown"), null);
 });
 
-test("matte-evo pricing fails closed — no authoritative price, never substituted", () => {
-  assert.equal(toPricingCatalogCoatingId("matte-evo"), null);
-  assert.ok(!DEFAULT_PRICING_CATALOG.coatings.some((c) => c.id === "matte-evo"));
+test("matte-evo now resolves to its authoritative base (C2B3B1) — no longer fail-closed", () => {
+  assert.equal(toPricingCatalogCoatingId("matte-evo"), "matte-evo");
+  assert.ok(DEFAULT_PRICING_CATALOG.coatings.some((c) => c.id === "matte-evo"));
   const d = draft((x) => {
     x.serviceSelection = { selectedCategories: ["coating"] };
+    x.vehicle = { ...x.vehicle, bodySizeKey: "M" };
     x.serviceConfiguration.coating = { ...x.serviceConfiguration.coating, layerCount: 1, layer1Id: "matte-evo" };
+  });
+  const out = buildWizardPricingInput(d);
+  assert.equal(out.catalogResolved, true);
+  const coat = out.services.find((s) => s.type === "coating") as { coatingId: string } | undefined;
+  assert.equal(coat?.coatingId, "matte-evo"); // canonical == pricing key
+  assert.ok(!out.errors.some((e) => e.code === "UNKNOWN_PRICING_REFERENCE"));
+});
+
+test("a genuinely unknown coating id still fails closed", () => {
+  assert.equal(toPricingCatalogCoatingId("no-such-coating"), null);
+  const d = draft((x) => {
+    x.serviceSelection = { selectedCategories: ["coating"] };
+    x.serviceConfiguration.coating = { ...x.serviceConfiguration.coating, layerCount: 1, layer1Id: "no-such-coating" };
   });
   const out = buildWizardPricingInput(d);
   assert.equal(out.catalogResolved, false);
   assert.ok(out.errors.some((e) => e.code === "UNKNOWN_PRICING_REFERENCE"));
-  assert.ok(!out.services.some((s) => s.type === "coating"));
 });
 
 test("infinite-base-1 now resolves through the adapter to its PricingCatalog id", () => {

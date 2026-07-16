@@ -23,19 +23,23 @@ export const COATINGS = [
   { id: "syncro-evo",  name: "SYNCRO EVO",          grade: "プレミアム",   base: 110000, certOnly: false },
   { id: "infinit1",    name: "infinit Base Type 1", grade: "CERTIFIED",    base: 130000, certOnly: true  },
   { id: "infinit2",    name: "infinit Base Type 2", grade: "CERTIFIED",    base: 160000, certOnly: true  },
+  // C2B3B1 demo defaults — dealer-overridable; every pilot store must review/override before
+  // real quoting. grade is display-only (certOnly is the authorization flag).
+  { id: "matte-evo",       name: "MATTE EVO",       grade: "プレミアム",   base: 150000, certOnly: false },
+  { id: "cancoat-evo-pro", name: "CanCoat EVO PRO", grade: "CERTIFIED",    base: 70000,  certOnly: true  },
 ] as const;
 
 export type CoatingId = typeof COATINGS[number]["id"];
 
 export const TOPCOAT_BASE: Record<string, number> = {
   "one-evo": 15000, "pure-evo": 20000, "mohs-evo": 25000,
-  "cancoat-evo": 18000, "cancoat-evo-pro": 25000,
+  "cancoat-evo": 18000, "cancoat-evo-pro": 25000, "matte-evo": 25000, // C2B3B1: MATTE additional layer (demo default)
   "infinit1": 130000, "infinit2": 160000, "infinit-t1": 40000, "infinit-t2": 50000,
 };
 
 export const TOPCOAT_NAME: Record<string, string> = {
   "one-evo": "ONE EVO", "pure-evo": "PURE EVO", "mohs-evo": "MOHS EVO",
-  "cancoat-evo": "CanCoat EVO", "cancoat-evo-pro": "CanCoat EVO PRO",
+  "cancoat-evo": "CanCoat EVO", "cancoat-evo-pro": "CanCoat EVO PRO", "matte-evo": "MATTE EVO",
   "infinit1": "infinit Base Type 1",     "infinit2": "infinit Base Type 2",
   "infinit-t1": "infinit TopCoat Type 1", "infinit-t2": "infinit TopCoat Type 2",
 };
