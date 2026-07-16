@@ -24,6 +24,7 @@
 // the id set is identical either way and the two paths cannot disagree.
 
 import type { PricingCatalog } from "@/lib/pricing/pricing-catalog";
+import { toPricingCatalogCoatingId } from "@/lib/pricing/wizard-coating-id-adapter";
 import type {
   ServiceInput,
   DiscountInput,
@@ -83,15 +84,19 @@ export function buildWizardPricingInputFromConfig(
   const sizeKey = draft.vehicle.bodySizeKey;
 
   // ── Coating (CATALOG path) — price and name owned by PricingCatalog, unchanged. ──
+  // The Wizard emits a canonical coating id; translate it to the PricingCatalog id through the
+  // single adapter before lookup. matte-evo (and any id with no authoritative price) → null → fail
+  // closed with UNKNOWN_PRICING_REFERENCE; never a substitute price.
   let catalogResolved = false;
   if (selected.includes("coating")) {
     const co = cfg.coating;
     if (co.layer1Id) {
-      const known = catalog.coatings.some((c) => c.id === co.layer1Id);
-      if (known) {
+      const pricingId = toPricingCatalogCoatingId(co.layer1Id);
+      const known = pricingId !== null && catalog.coatings.some((c) => c.id === pricingId);
+      if (known && pricingId) {
         if (!sizeKey) warnings.push(issue(WIZARD_PRICING_WARNINGS.MISSING_BODY_SIZE, "ボディサイズが未選択のため、サイズ係数は既定値で計算されます。", "coating"));
         if (co.layer2Id || co.layer3Id) warnings.push(issue(WIZARD_PRICING_WARNINGS.MULTI_LAYER_NOT_MAPPED, "2層目・3層目は本番トップコート識別子に未対応のため計算に含まれません。", "coating"));
-        services.push({ type: "coating", coatingId: co.layer1Id, sizeKey, optionIds: [] });
+        services.push({ type: "coating", coatingId: pricingId, sizeKey, optionIds: [] });
         catalogResolved = true;
       } else {
         errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, `コーティング「${co.layer1Id}」は本番カタログに対応する識別子がありません。`, "coating", co.layer1Id));

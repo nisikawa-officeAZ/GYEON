@@ -8,16 +8,18 @@
 
 import type { WindowAreaOption, FilmTypeOption } from "./step-types";
 
-/** Eight approved installation areas (store may enable/disable/reorder). */
+/** Seven canonical installation areas (C2B2A ruling — store may enable/disable/reorder).
+ *  triangular-window and quarter-glass are DISTINCT concepts and distinct buttons/state values;
+ *  the legacy merged `quarter` and the ambiguous front-side/rear-side/rear-window/full/other ids
+ *  are retired and no longer emitted. */
 export const DEFAULT_WINDOW_AREAS: WindowAreaOption[] = [
-  { id: "front-windshield", label: "フロントガラス" },
-  { id: "front-side",       label: "フロント左右" },
-  { id: "rear-side",        label: "リア左右" },
-  { id: "rear-window",      label: "リアガラス" },
-  { id: "sunroof",          label: "サンルーフ" },
-  { id: "quarter",          label: "三角窓（クォーター）" },
-  { id: "full",             label: "全面施工" },
-  { id: "other",            label: "その他" },
+  { id: "front-windshield",  label: "フロントガラス" },
+  { id: "front-door-glass",  label: "フロントドアガラス" },
+  { id: "rear-door-glass",   label: "リアドアガラス" },
+  { id: "triangular-window", label: "三角窓" },
+  { id: "quarter-glass",     label: "クォーターガラス" },
+  { id: "rear-glass",        label: "リアガラス（リアハッチ）" },
+  { id: "sunroof",           label: "サンルーフ" },
 ];
 
 /** EXAMPLE film types for the preview only (production comes from Store Settings). */

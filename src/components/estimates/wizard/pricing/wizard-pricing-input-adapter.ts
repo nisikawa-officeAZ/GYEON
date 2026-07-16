@@ -19,6 +19,7 @@ import type { WizardCatalogCategoryId } from "../catalog/wizard-catalog-types";
 import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
 import type { WizardManualPricingLineInput } from "./wizard-pricing-identity";
 import { buildManualPricingLines } from "./wizard-manual-pricing";
+import { toPricingCatalogCoatingId } from "@/lib/pricing/wizard-coating-id-adapter";
 import type { WizardPricingIssue } from "./wizard-pricing-types";
 import { WIZARD_PRICING_WARNINGS, WIZARD_PRICING_ERRORS } from "./wizard-pricing-types";
 
@@ -66,15 +67,19 @@ export function buildWizardPricingInput(draft: EstimateWizardDraftV22): WizardPr
   const sizeKey = draft.vehicle.bodySizeKey;
 
   // ── Coating (CATALOG path) — resolved to a production identity via the 10C projection. ──
+  // Translate the canonical Wizard coating id to its PricingCatalog id through the single adapter
+  // before matching the projection (whose ids ARE the PricingCatalog ids). matte-evo / any id with
+  // no authoritative price → null → fail closed with UNKNOWN_PRICING_REFERENCE.
   let catalogResolved = false;
   if (selected.includes("coating")) {
     const co = cfg.coating;
     if (co.layer1Id) {
-      if (has("coating", co.layer1Id)) {
+      const pricingId = toPricingCatalogCoatingId(co.layer1Id);
+      if (pricingId !== null && has("coating", pricingId)) {
         if (!sizeKey) warnings.push(issue(WIZARD_PRICING_WARNINGS.MISSING_BODY_SIZE, "ボディサイズが未選択のため、サイズ係数は既定値で計算されます。", "coating"));
         if (co.layer2Id || co.layer3Id) warnings.push(issue(WIZARD_PRICING_WARNINGS.MULTI_LAYER_NOT_MAPPED, "2層目・3層目は本番トップコート識別子に未対応のため計算に含まれません。", "coating"));
         // Wizard has no catalog coating-option selector; store global options are manual-priced.
-        services.push({ type: "coating", coatingId: co.layer1Id, sizeKey, optionIds: [] });
+        services.push({ type: "coating", coatingId: pricingId, sizeKey, optionIds: [] });
         catalogResolved = true;
       } else {
         errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, `コーティング「${co.layer1Id}」は本番カタログに対応する識別子がありません。`, "coating", co.layer1Id));
