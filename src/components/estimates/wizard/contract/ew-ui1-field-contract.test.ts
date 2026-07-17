@@ -132,12 +132,24 @@ test("every customer/vehicle editable field has a declared destination", () => {
 
 // ── discount-none explicitly blocked from controller until canonical contract exists ─
 // EW-FC-1B — canonical no-discount contract closure
-test("discountMode has a canonical destination and is CONTROLLER_PHASE (no longer UNRESOLVED)", () => {
+test("discountMode has a canonical destination and is no longer UNRESOLVED", () => {
   const entry = fieldContractFor("discountMode");
   assert.ok(entry);
-  assert.equal(entry!.status, "CONTROLLER_PHASE");
   assert.notEqual(entry!.status, "UNRESOLVED_CANONICAL_CONTRACT");
   assert.equal(entry!.canonical, "discountAndCoupon.mode");
+});
+
+// EW-UI-2A — controller-bound fields become LOSSLESS; unsupported ones stay display-only.
+test("EW-UI-2A: bound fields are LOSSLESS; services/suggestedSize display-only; review controller-phase", () => {
+  for (const f of ["categories", "coupons", "discountMode", "discountAmount", "discountPercent", "notesCustomer", "notesInternal"]) {
+    const e = fieldContractFor(f);
+    assert.ok(e, `missing ${f}`);
+    assert.equal(e!.status, "LOSSLESS", `${f} should be LOSSLESS`);
+    assert.ok(e!.canonical, `${f} needs a canonical home`);
+  }
+  assert.equal(fieldContractFor("services")!.status, "DISPLAY_ONLY_UNTIL_TYPED_CONTRACT");
+  assert.equal(fieldContractFor("vehicle.suggestedSize")!.status, "DISPLAY_ONLY_UNTIL_TYPED_CONTRACT");
+  assert.equal(fieldContractFor("review.previewConfirmed")!.status, "CONTROLLER_PHASE");
 });
 
 test("canonical initial + reset draft discount mode is 'none'", () => {
