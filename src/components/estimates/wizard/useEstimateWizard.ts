@@ -14,7 +14,7 @@ import { useCallback, useMemo, useState } from "react";
 import { WIZARD_STEPS, type StepId, type WizardStore } from "./wizard-types";
 import type { EstimateWizardDraftV22 } from "./draft/wizard-draft-types";
 import { setCurrentStep } from "./draft/wizard-draft-state";
-import { projectStore, applyStorePatch, initialCanonicalDraft } from "./bridge/ew-ui1-controller";
+import { projectStore, applyStorePatch, initialCanonicalDraft, type WizardStorePatch } from "./bridge/ew-ui1-controller";
 
 const MIN_STEP = 1 as const;
 const MAX_STEP = WIZARD_STEPS.length as StepId;
@@ -23,7 +23,7 @@ export interface EstimateWizardApi {
   step:        StepId;
   store:       WizardStore;                 // read-only projection of the canonical draft
   draft:       EstimateWizardDraftV22;       // the single authoritative business state (readonly to callers)
-  updateStore: (patch: Partial<WizardStore>) => void;
+  updateStore: (patch: WizardStorePatch) => void;
   jumpTo:      (n: number) => void;
   next:        () => void;
   back:        () => void;
@@ -38,7 +38,7 @@ function clampStep(n: number): StepId {
   return Math.trunc(n) as StepId;
 }
 
-export function useEstimateWizard(initial?: Partial<WizardStore>): EstimateWizardApi {
+export function useEstimateWizard(initial?: WizardStorePatch): EstimateWizardApi {
   // ONE state object — the canonical draft. Initial partial store folds through the SAME adapter.
   const [draft, setDraft] = useState<EstimateWizardDraftV22>(() => initialCanonicalDraft(initial));
 
@@ -46,7 +46,7 @@ export function useEstimateWizard(initial?: Partial<WizardStore>): EstimateWizar
   const step = clampStep(draft.metadata.currentStep);
 
   // updateStore validates synchronously and fails CLOSED before scheduling any invalid update.
-  const updateStore = useCallback((patch: Partial<WizardStore>) => {
+  const updateStore = useCallback((patch: WizardStorePatch) => {
     const result = applyStorePatch(draft, patch);
     if (result.ok) setDraft(result.draft); // valid patch only → update the single canonical draft
     // invalid/unsupported patch → no state change (fail closed); the current UI never sends these.

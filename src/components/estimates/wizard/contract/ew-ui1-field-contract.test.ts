@@ -139,15 +139,18 @@ test("discountMode has a canonical destination and is no longer UNRESOLVED", () 
   assert.equal(entry!.canonical, "discountAndCoupon.mode");
 });
 
-// EW-UI-2A — controller-bound fields become LOSSLESS; unsupported ones stay display-only.
-test("EW-UI-2A: bound fields are LOSSLESS; services/suggestedSize display-only; review controller-phase", () => {
+// EW-UI-2A/2B — controller-bound fields become LOSSLESS; unsupported ones stay display-only.
+test("EW-UI-2A/2B: bound fields are LOSSLESS; suggestedSize display-only; review controller-phase", () => {
   for (const f of ["categories", "coupons", "discountMode", "discountAmount", "discountPercent", "notesCustomer", "notesInternal"]) {
     const e = fieldContractFor(f);
     assert.ok(e, `missing ${f}`);
     assert.equal(e!.status, "LOSSLESS", `${f} should be LOSSLESS`);
     assert.ok(e!.canonical, `${f} needs a canonical home`);
   }
-  assert.equal(fieldContractFor("services")!.status, "DISPLAY_ONLY_UNTIL_TYPED_CONTRACT");
+  // EW-UI-2B: services is now bound to the canonical serviceConfiguration.
+  assert.equal(fieldContractFor("services")!.status, "LOSSLESS");
+  assert.equal(fieldContractFor("services")!.canonical, "serviceConfiguration");
+  // suggestedSize stays display-only; review still controller-phase (unchanged by EW-UI-2B).
   assert.equal(fieldContractFor("vehicle.suggestedSize")!.status, "DISPLAY_ONLY_UNTIL_TYPED_CONTRACT");
   assert.equal(fieldContractFor("review.previewConfirmed")!.status, "CONTROLLER_PHASE");
 });

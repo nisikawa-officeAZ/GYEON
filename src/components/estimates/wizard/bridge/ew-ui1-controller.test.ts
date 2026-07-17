@@ -126,20 +126,78 @@ test("13. customer-facing notes and internal memo remain separate", () => {
   assert.equal(d.notes.internalMemo, "memo");
 });
 
-// 14/15. unsupported fields fail closed
-test("14. non-empty services patch fails closed", () => {
+// 14. EW-UI-2B — services binds losslessly to the canonical serviceConfiguration.
+test("14a. every serviceConfiguration field projects losslessly (8 named sections)", () => {
   const base = fresh();
-  const r = applyStorePatch(base, { services: { ...draftToEwUi1Store(base).services, maintenance: ["m1"] } });
+  const s = draftToEwUi1Store(base).services;
+  // exactly the 8 canonical sections — no omission, no extra section
+  assert.deepEqual(Object.keys(s).sort(), [
+    "bodyMaintenance", "carWash", "coating", "otherWork", "ppf", "roomCleaning", "storeGlobalOptions", "windowFilm",
+  ]);
+  assert.deepEqual(s, base.serviceConfiguration); // value-equal to canonical
+});
+
+test("14b. projected services is DEEP-COPIED — mutating it never mutates the draft", () => {
+  const base = fresh();
+  const s = draftToEwUi1Store(base).services;
+  s.ppf.selectedPartIds.push("mutated");
+  s.ppf.quantitiesByPart["x"] = 9;
+  s.ppf.interiorRows.push({ id: "r-x", location: "door", amount: "100" });
+  s.otherWork.customRows.push({ id: "c-x", name: "n", description: "d", unitPrice: "1", quantity: "1", unitLabel: "式" });
+  assert.deepEqual(base.serviceConfiguration.ppf.selectedPartIds, []); // draft untouched
+  assert.deepEqual(base.serviceConfiguration.ppf.interiorRows, []);
+  assert.deepEqual(base.serviceConfiguration.otherWork.customRows, []);
+});
+
+test("14c. partial section patch applies losslessly via updateServiceConfiguration", () => {
+  const d = apply({ services: { ppf: { selectedPartIds: ["part-1", "part-2"], installationMethod: "full" } } });
+  assert.deepEqual(d.serviceConfiguration.ppf.selectedPartIds, ["part-1", "part-2"]);
+  assert.equal(d.serviceConfiguration.ppf.installationMethod, "full");
+  // untouched sibling section fields remain at their canonical defaults
+  assert.deepEqual(d.serviceConfiguration.coating, fresh().serviceConfiguration.coating);
+});
+
+test("14d. copy-on-apply — caller arrays/records/rows are copied; supplied row ids preserved exactly", () => {
+  const base = fresh();
+  const ids = ["p1", "p2"];
+  const rows = [{ id: "row-KEEP-1", location: "roof", amount: "500" }];
+  const r = applyStorePatch(base, { services: { ppf: { selectedPartIds: ids, interiorRows: rows } } });
+  assert.ok(r.ok);
+  if (!r.ok) return;
+  // supplied ids/rows are copied (not the same reference) …
+  assert.notEqual(r.draft.serviceConfiguration.ppf.selectedPartIds, ids);
+  assert.notEqual(r.draft.serviceConfiguration.ppf.interiorRows, rows);
+  assert.notEqual(r.draft.serviceConfiguration.ppf.interiorRows[0], rows[0]);
+  // … and mutating the caller's inputs afterwards never reaches canonical state
+  ids.push("p3");
+  rows[0].id = "row-MUTATED";
+  assert.deepEqual(r.draft.serviceConfiguration.ppf.selectedPartIds, ["p1", "p2"]);
+  assert.equal(r.draft.serviceConfiguration.ppf.interiorRows[0].id, "row-KEEP-1"); // id preserved exactly
+});
+
+test("14e. removing a Screen-3 category does NOT erase that category's Screen-4 config", () => {
+  // configure ppf, select ppf category, then deselect the category
+  let d = apply({ services: { ppf: { selectedPartIds: ["part-1"] } }, categories: ["ppf", "coating"] });
+  const r = applyStorePatch(d, { categories: ["coating"] }); // drop ppf from Screen-3
+  assert.ok(r.ok);
+  if (!r.ok) return;
+  assert.deepEqual(r.draft.serviceSelection.selectedCategories, ["coating"]);
+  assert.deepEqual(r.draft.serviceConfiguration.ppf.selectedPartIds, ["part-1"]); // config preserved
+});
+
+test("14f. atomic fail-closed — invalid category + valid service data applies NOTHING", () => {
+  const base = fresh();
+  const r = applyStorePatch(base, {
+    categories: ["ppf", "NOT_A_CATEGORY"],
+    services: { ppf: { selectedPartIds: ["part-1"] } },
+  });
   assert.equal(r.ok, false);
   if (r.ok) return;
-  assert.equal(r.error.code, "EW_UI_UNSUPPORTED_FIELD");
-  assert.deepEqual(r.error.fieldPaths, ["services"]);
+  assert.equal(r.error.code, "EW_UI_INVALID_CATEGORY");
+  assert.deepEqual(base.serviceConfiguration.ppf.selectedPartIds, []); // service data NOT applied
+  assert.deepEqual(base.serviceSelection.selectedCategories, []);      // categories NOT applied
 });
-test("14b. empty services patch is accepted (no-op, not mapped to serviceConfiguration)", () => {
-  const base = fresh();
-  const r = applyStorePatch(base, { services: draftToEwUi1Store(base).services });
-  assert.equal(r.ok, true);
-});
+
 test("15. non-null suggestedSize patch fails closed", () => {
   const r = applyStorePatch(fresh(), { vehicle: { suggestedSize: "L" } as Partial<WizardStore["vehicle"]> });
   assert.equal(r.ok, false);

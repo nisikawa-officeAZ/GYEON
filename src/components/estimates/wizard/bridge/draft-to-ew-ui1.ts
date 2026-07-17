@@ -1,12 +1,46 @@
 // EW-UI-2A — Read-only projection: canonical EstimateWizardDraftV22 → WizardStore view.
 //
 // PURE and lossless for every BOUND field. WizardStore is a PROJECTION of the single canonical
-// draft — it is never independently stored. `services` stays the existing empty presentation shape
-// (Screen-4 service editor is not implemented) and is NEVER derived from canonical
-// serviceConfiguration. `vehicle.suggestedSize` stays display-only (null). No pricing/OCR/save.
+// draft — it is never independently stored. `services` is a lossless, DEEP-COPIED projection of the
+// canonical serviceConfiguration (detached — mutating it can never mutate the draft).
+// `vehicle.suggestedSize` stays display-only (null). No pricing/OCR/save.
 
-import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
-import { initialWizardStore, type WizardStore } from "../wizard-types";
+import type { EstimateWizardDraftV22, WizardServiceConfigurationDraft } from "../draft/wizard-draft-types";
+import type { WizardStore } from "../wizard-types";
+
+/**
+ * Deep-copy the canonical service configuration so the projected view is DETACHED from the draft:
+ * every array, record, and row object is copied. Mutating the projection can never mutate the draft.
+ * No calculation, no coercion, no default invention, no JSON serialization, no generated IDs.
+ */
+function cloneServiceConfiguration(sc: WizardServiceConfigurationDraft): WizardServiceConfigurationDraft {
+  return {
+    coating: { ...sc.coating },
+    ppf: {
+      ...sc.ppf,
+      selectedPartIds: [...sc.ppf.selectedPartIds],
+      quantitiesByPart: { ...sc.ppf.quantitiesByPart },
+      interiorRows: sc.ppf.interiorRows.map((r) => ({ ...r })),
+    },
+    windowFilm: { ...sc.windowFilm, selectedAreaIds: [...sc.windowFilm.selectedAreaIds] },
+    bodyMaintenance: { ...sc.bodyMaintenance },
+    carWash: { ...sc.carWash },
+    roomCleaning: { ...sc.roomCleaning, selectedMenuIds: [...sc.roomCleaning.selectedMenuIds], unitPricesByMenu: { ...sc.roomCleaning.unitPricesByMenu } },
+    otherWork: {
+      ...sc.otherWork,
+      selectedPresetIds: [...sc.otherWork.selectedPresetIds],
+      unitPricesByItem: { ...sc.otherWork.unitPricesByItem },
+      quantitiesByItem: { ...sc.otherWork.quantitiesByItem },
+      customRows: sc.otherWork.customRows.map((r) => ({ ...r })),
+    },
+    storeGlobalOptions: {
+      ...sc.storeGlobalOptions,
+      selectedOptionIds: [...sc.storeGlobalOptions.selectedOptionIds],
+      unitPricesByOption: { ...sc.storeGlobalOptions.unitPricesByOption },
+      quantitiesByOption: { ...sc.storeGlobalOptions.quantitiesByOption },
+    },
+  };
+}
 
 export function draftToEwUi1Store(draft: EstimateWizardDraftV22): WizardStore {
   const c = draft.customer;
@@ -51,8 +85,8 @@ export function draftToEwUi1Store(draft: EstimateWizardDraftV22): WizardStore {
       suggestedSize:     null,
     },
     categories:      [...draft.serviceSelection.selectedCategories],
-    // Screen-4 service editor not implemented → keep the existing empty presentation shape.
-    services:        initialWizardStore().services,
+    // EW-UI-2B: lossless, detached projection of the canonical Screen-4 configuration.
+    services:        cloneServiceConfiguration(draft.serviceConfiguration),
     coupons:         [...dc.selectedCouponIds],
     discountMode:    dc.mode,
     discountAmount:  dc.amountInput,

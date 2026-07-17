@@ -6,27 +6,37 @@
 
 import type {
   EstimateWizardDraftV22, CustomerRegistrationMethod, WizardServiceCategory,
-  WizardDiscountDraft, WizardNotesDraft,
+  WizardDiscountDraft, WizardNotesDraft, WizardServiceConfigurationDraft,
+  WizardCoatingDraft, WizardPpfDraft, WizardWindowFilmDraft, WizardBodyMaintenanceDraft,
+  WizardCarWashDraft, WizardRoomCleaningDraft, WizardOtherWorkDraft, WizardStoreGlobalOptionsDraft,
 } from "../draft/wizard-draft-types";
 import type { NewCustomerDraft, NewVehicleDraft } from "../screens/step-types";
 import {
   updateCustomer, updateNewCustomer, updateCustomerRegistrationMethod,
-  updateVehicle, updateNewVehicle, updateServiceSelection, updateDiscountAndCoupon, updateNotes,
+  updateVehicle, updateNewVehicle, updateServiceSelection, updateServiceConfiguration,
+  updateDiscountAndCoupon, updateNotes,
 } from "../draft/wizard-draft-state";
 import { isServiceCategoryId } from "@/lib/estimates/service-categories";
-import type { WizardStore, CustomerDraft, VehicleDraft, ServiceSelections } from "../wizard-types";
+import type { WizardStore, CustomerDraft, VehicleDraft } from "../wizard-types";
+
+/** Per-section partial patch of the canonical service configuration (no `any`, no arbitrary paths). */
+export type WizardServiceConfigPatch = {
+  readonly [K in keyof WizardServiceConfigurationDraft]?: Partial<WizardServiceConfigurationDraft[K]>;
+};
 
 /**
  * A WizardStore patch: top-level fields optional, and the nested customer/vehicle/services objects
- * may be partial. `Partial<WizardStore>` (which the hook's updateStore accepts — nested objects
- * complete) is assignable to this, so the public hook signature is unchanged while tests and future
- * callers may also send partial nested patches.
+ * may be partial. `useEstimateWizard.updateStore` accepts this `WizardStorePatch` type. A plain
+ * `Partial<WizardStore>` remains assignable wherever its nested objects are complete, so existing
+ * complete-object callers keep working; `WizardStorePatch` additionally supports nested partial
+ * service-section patches. `services` accepts a per-section partial patch of the canonical service
+ * configuration (never `any`, never arbitrary deep paths).
  */
 export type WizardStorePatch = {
   readonly customer?: Partial<CustomerDraft>;
   readonly vehicle?: Partial<VehicleDraft>;
   readonly categories?: readonly string[];
-  readonly services?: Partial<ServiceSelections>;
+  readonly services?: WizardServiceConfigPatch;
   readonly coupons?: readonly string[];
   readonly discountMode?: WizardStore["discountMode"];
   readonly discountAmount?: string;
@@ -50,13 +60,70 @@ export type EwUi1ApplyResult =
 const err = (code: EwUi1PatchErrorCode, message: string, fieldPaths: string[]): EwUi1ApplyResult =>
   ({ ok: false, error: { code, message, fieldPaths } });
 
-function servicesIsNonEmpty(s: Partial<ServiceSelections>): boolean {
-  return (
-    Object.keys(s.coating ?? {}).length > 0 || Object.keys(s.ppf ?? {}).length > 0 ||
-    Object.keys(s.window ?? {}).length > 0 || Object.keys(s.roomclean ?? {}).length > 0 ||
-    (s.maintenance ?? []).length > 0 || (s.carwash ?? []).length > 0 ||
-    (s.other ?? []).length > 0 || (s.storeOptions ?? []).length > 0
-  );
+// ── Copy-on-apply helpers ──
+// Each caller-supplied array, record, or row object is COPIED before it becomes canonical state, so
+// the adapter never captures a live reference the caller could mutate afterwards. Supplied row IDs
+// are preserved EXACTLY (never generated, normalized, or replaced). Only the keys the caller sent
+// are copied — an absent section field leaves the canonical value untouched (updateServiceConfiguration
+// does a shallow per-section merge), so removing a Screen-3 category cannot erase its Screen-4 config.
+
+const copyRows = <T>(rows: readonly T[]): T[] => rows.map((r) => ({ ...r }));
+
+function copyCoating(p: Partial<WizardCoatingDraft>): Partial<WizardCoatingDraft> {
+  return { ...p }; // all scalar fields
+}
+function copyPpf(p: Partial<WizardPpfDraft>): Partial<WizardPpfDraft> {
+  const out: Partial<WizardPpfDraft> = { ...p };
+  if (p.selectedPartIds !== undefined) out.selectedPartIds = [...p.selectedPartIds];
+  if (p.quantitiesByPart !== undefined) out.quantitiesByPart = { ...p.quantitiesByPart };
+  if (p.interiorRows !== undefined) out.interiorRows = copyRows(p.interiorRows);
+  return out;
+}
+function copyWindowFilm(p: Partial<WizardWindowFilmDraft>): Partial<WizardWindowFilmDraft> {
+  const out: Partial<WizardWindowFilmDraft> = { ...p };
+  if (p.selectedAreaIds !== undefined) out.selectedAreaIds = [...p.selectedAreaIds];
+  return out;
+}
+function copyBodyMaintenance(p: Partial<WizardBodyMaintenanceDraft>): Partial<WizardBodyMaintenanceDraft> {
+  return { ...p }; // all scalar fields
+}
+function copyCarWash(p: Partial<WizardCarWashDraft>): Partial<WizardCarWashDraft> {
+  return { ...p }; // all scalar fields
+}
+function copyRoomCleaning(p: Partial<WizardRoomCleaningDraft>): Partial<WizardRoomCleaningDraft> {
+  const out: Partial<WizardRoomCleaningDraft> = { ...p };
+  if (p.selectedMenuIds !== undefined) out.selectedMenuIds = [...p.selectedMenuIds];
+  if (p.unitPricesByMenu !== undefined) out.unitPricesByMenu = { ...p.unitPricesByMenu };
+  return out;
+}
+function copyOtherWork(p: Partial<WizardOtherWorkDraft>): Partial<WizardOtherWorkDraft> {
+  const out: Partial<WizardOtherWorkDraft> = { ...p };
+  if (p.selectedPresetIds !== undefined) out.selectedPresetIds = [...p.selectedPresetIds];
+  if (p.unitPricesByItem !== undefined) out.unitPricesByItem = { ...p.unitPricesByItem };
+  if (p.quantitiesByItem !== undefined) out.quantitiesByItem = { ...p.quantitiesByItem };
+  if (p.customRows !== undefined) out.customRows = copyRows(p.customRows);
+  return out;
+}
+function copyStoreGlobalOptions(p: Partial<WizardStoreGlobalOptionsDraft>): Partial<WizardStoreGlobalOptionsDraft> {
+  const out: Partial<WizardStoreGlobalOptionsDraft> = { ...p };
+  if (p.selectedOptionIds !== undefined) out.selectedOptionIds = [...p.selectedOptionIds];
+  if (p.unitPricesByOption !== undefined) out.unitPricesByOption = { ...p.unitPricesByOption };
+  if (p.quantitiesByOption !== undefined) out.quantitiesByOption = { ...p.quantitiesByOption };
+  return out;
+}
+
+/** Apply the service-config patch section-by-section via the official reducer, with copy-on-apply. */
+function applyServiceConfigPatch(draft: EstimateWizardDraftV22, sp: WizardServiceConfigPatch): EstimateWizardDraftV22 {
+  let d = draft;
+  if (sp.coating !== undefined) d = updateServiceConfiguration(d, "coating", copyCoating(sp.coating));
+  if (sp.ppf !== undefined) d = updateServiceConfiguration(d, "ppf", copyPpf(sp.ppf));
+  if (sp.windowFilm !== undefined) d = updateServiceConfiguration(d, "windowFilm", copyWindowFilm(sp.windowFilm));
+  if (sp.bodyMaintenance !== undefined) d = updateServiceConfiguration(d, "bodyMaintenance", copyBodyMaintenance(sp.bodyMaintenance));
+  if (sp.carWash !== undefined) d = updateServiceConfiguration(d, "carWash", copyCarWash(sp.carWash));
+  if (sp.roomCleaning !== undefined) d = updateServiceConfiguration(d, "roomCleaning", copyRoomCleaning(sp.roomCleaning));
+  if (sp.otherWork !== undefined) d = updateServiceConfiguration(d, "otherWork", copyOtherWork(sp.otherWork));
+  if (sp.storeGlobalOptions !== undefined) d = updateServiceConfiguration(d, "storeGlobalOptions", copyStoreGlobalOptions(sp.storeGlobalOptions));
+  return d;
 }
 
 /**
@@ -69,10 +136,6 @@ export function applyEwUi1StorePatch(draft: EstimateWizardDraftV22, patch: Wizar
   }
 
   // ── 1. Fail-closed validation (nothing is applied if any check fails) ──
-  // Unsupported: non-empty services (Screen-4 editor not implemented).
-  if (patch.services !== undefined && servicesIsNonEmpty(patch.services)) {
-    return err("EW_UI_UNSUPPORTED_FIELD", "services binding is not implemented in this phase", ["services"]);
-  }
   // Unsupported: suggestedSize (display-only until its typed recommendation contract exists).
   if (patch.vehicle !== undefined && patch.vehicle.suggestedSize != null) {
     return err("EW_UI_UNSUPPORTED_FIELD", "vehicle.suggestedSize is display-only", ["vehicle.suggestedSize"]);
@@ -137,6 +200,11 @@ export function applyEwUi1StorePatch(draft: EstimateWizardDraftV22, patch: Wizar
 
   // Categories (validated above; official helper dedupes + preserves stable order)
   if (categories !== undefined) d = updateServiceSelection(d, { selectedCategories: categories });
+
+  // Service configuration (Screen-4 operator intent; copy-on-apply, per-section shallow merge).
+  // Category selection (above) and service configuration are SEPARATE fields — deselecting a
+  // Screen-3 category never erases the corresponding Screen-4 configuration here.
+  if (patch.services !== undefined) d = applyServiceConfigPatch(d, patch.services);
 
   // Discount / coupons (intent only; preserve inactive inputs + multiple coupon ids; no arithmetic)
   const dcPatch: Partial<WizardDiscountDraft> = {};

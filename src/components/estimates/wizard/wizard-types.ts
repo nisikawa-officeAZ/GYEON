@@ -34,6 +34,7 @@ export const WIZARD_STEPS: WizardStep[] = [
 // RegMethod is an ALIAS of the SINGLE canonical union (no duplicate literal spelling) — the
 // authority is CustomerRegistrationMethod in draft/wizard-draft-types.ts.
 import type { CustomerRegistrationMethod } from "./draft/wizard-draft-types";
+import { resetWizardDraft } from "./draft/wizard-draft-state";
 export type RegMethod = CustomerRegistrationMethod;
 
 export interface CustomerDraft {
@@ -71,24 +72,16 @@ export interface VehicleDraft {
   confirmedSize:      string | null; // operator's final choice (never auto-set)
 }
 
-// Service selections are intentionally left loosely-shaped for Phase 1; the real
-// pricing wiring (ServiceInput[] → buildLineItems) lands in Phase 2.
-export interface ServiceSelections {
-  coating:      Record<string, unknown>;
-  ppf:          Record<string, unknown>;
-  window:       Record<string, unknown>;
-  maintenance:  string[];
-  carwash:      string[];
-  roomclean:    Record<string, unknown>;
-  other:        Array<{ id: string; name: string; price: number }>;
-  storeOptions: string[];
-}
+// EW-UI-2B: services is now the CANONICAL WizardServiceConfigurationDraft (no loose
+// Record<string,unknown> legacy shape, no second independently-maintained model).
+import type { WizardServiceConfigurationDraft } from "./draft/wizard-draft-types";
+export type { WizardServiceConfigurationDraft };
 
 export interface WizardStore {
   customer:       CustomerDraft;
   vehicle:        VehicleDraft;
   categories:     string[]; // selected category ids (Screen3)
-  services:       ServiceSelections;
+  services:       WizardServiceConfigurationDraft; // canonical Screen-4 config (projection of the draft)
   coupons:        string[];
   discountMode:   DiscountMode;
   discountAmount: string;
@@ -114,10 +107,8 @@ export function initialWizardStore(): WizardStore {
       plateNumber: "", existingId: null, suggestedSize: null, confirmedSize: null,
     },
     categories: [],
-    services: {
-      coating: {}, ppf: {}, window: {}, maintenance: [], carwash: [],
-      roomclean: {}, other: [], storeOptions: [],
-    },
+    // Canonical Screen-4 config from the draft factory (fresh nested arrays/records/rows each call).
+    services: resetWizardDraft().serviceConfiguration,
     coupons: [],
     discountMode: "none",
     discountAmount: "",
