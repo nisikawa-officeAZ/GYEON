@@ -53,9 +53,12 @@ export function DiscountModeSelector(props: {
     discountValidationMessage, onDiscountModeChange, onDiscountAmountChange, onDiscountPercentChange, onDiscountClear,
   } = props;
 
+  const isNone = activeDiscountMode === "none";
   const isAmount = activeDiscountMode === "amount";
+  const isPercent = activeDiscountMode === "percent";
 
   // Lightweight DISPLAY-only validation (bounds come from props; not a pricing engine).
+  // When mode is `none`, NO amount/percentage validation runs.
   const amountNum = Number(discountAmountValue);
   const pctNum = Number(discountPercentValue);
   const localWarnings: string[] = [];
@@ -65,12 +68,13 @@ export function DiscountModeSelector(props: {
       localWarnings.push(`最大値引き額（${formatYen(maximumDiscountAmount)}）を超えています。`);
     }
   }
-  if (!isAmount && discountPercentValue !== "" && Number.isFinite(pctNum)) {
+  if (isPercent && discountPercentValue !== "" && Number.isFinite(pctNum)) {
     if (minimumDiscountPercent != null && pctNum < minimumDiscountPercent) localWarnings.push(`最小 ${minimumDiscountPercent}% を下回っています。`);
     if (maximumDiscountPercent != null && pctNum > maximumDiscountPercent) localWarnings.push(`最大 ${maximumDiscountPercent}% を超えています。`);
   }
 
-  const hasDiscount = (isAmount ? discountAmountValue : discountPercentValue) !== "";
+  // `none` => no active discount (hasDiscount false); otherwise the active mode's value.
+  const hasDiscount = isNone ? false : (isAmount ? discountAmountValue : discountPercentValue) !== "";
 
   return (
     <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
@@ -79,15 +83,16 @@ export function DiscountModeSelector(props: {
         <span className="text-[11px] text-slate-500">小計 {formatYen(subtotal)}</span>
       </div>
 
-      {/* モード切替（同時適用なし・プルダウンなし）*/}
+      {/* モード切替（値引きなし / 金額 / ％ の三者択一・同時適用なし・プルダウンなし）*/}
       <div className="flex gap-2 mt-3">
+        <ModeButton active={isNone} label="値引きなし" onClick={() => onDiscountModeChange("none")} />
         <ModeButton active={isAmount} label="金額値引き" onClick={() => onDiscountModeChange("amount")} />
-        <ModeButton active={!isAmount} label="％値引き" onClick={() => onDiscountModeChange("percent")} />
+        <ModeButton active={isPercent} label="％値引き" onClick={() => onDiscountModeChange("percent")} />
       </div>
 
-      {/* アクティブモードの入力のみ */}
+      {/* アクティブモードの入力のみ（none は入力なし）*/}
       <div className="mt-3">
-        {isAmount ? (
+        {isNone ? null : isAmount ? (
           <label className="flex items-center gap-2">
             <span className="text-xs text-slate-400 w-16">値引き額</span>
             <input

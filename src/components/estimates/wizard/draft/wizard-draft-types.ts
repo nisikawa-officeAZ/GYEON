@@ -104,7 +104,7 @@ export type WizardServiceConfigurationDraft = {
 
 // ── Discount / coupon (Screen 5) — records selections ONLY (no calculation) ──────
 export type WizardDiscountDraft = {
-  mode: DiscountMode;                    // "amount"|"percent" (implemented). "amount" ≈ recommended "fixed".
+  mode: DiscountMode;                    // canonical "none"|"amount"|"percent". "amount" ≈ recommended "fixed".
   percentInput: string;                  // string preserves live input
   amountInput: string;
   selectedCouponIds: string[];           // multi-select (Screen 5 implements multiple coupons)

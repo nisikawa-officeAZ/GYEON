@@ -170,11 +170,15 @@ export function mapWizardDraftToPreview(draft: EstimateWizardDraftV22, ctx: Prev
   }
 
   const dc = draft.discountAndCoupon;
+  const discountModeLabel = dc.mode === "amount" ? "金額値引き" : dc.mode === "percent" ? "％値引き" : "値引きなし";
   const discountFields: PreviewField[] = [
-    { label: "値引きモード", value: dc.mode === "amount" ? "金額値引き" : "％値引き" },
-    dc.mode === "amount"
-      ? { label: "値引き額", value: dc.amountInput ? yen(dc.amountInput) : "なし" }
-      : { label: "値引き率", value: dc.percentInput ? `${dc.percentInput}%（本エンジン未対応）` : "なし" },
+    { label: "値引きモード", value: discountModeLabel },
+    // Only the ACTIVE mode presents a value; `none` presents no active amount/percentage.
+    ...(dc.mode === "amount"
+      ? [{ label: "値引き額", value: dc.amountInput ? yen(dc.amountInput) : "なし" }]
+      : dc.mode === "percent"
+      ? [{ label: "値引き率", value: dc.percentInput ? `${dc.percentInput}%（本エンジン未対応）` : "なし" }]
+      : []),
   ];
   const couponSummaries = dc.selectedCouponIds.map((id) => {
     const cp = EXAMPLE_COUPONS.find((x) => x.id === id);

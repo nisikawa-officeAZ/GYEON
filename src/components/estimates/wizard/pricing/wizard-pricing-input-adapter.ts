@@ -134,13 +134,15 @@ export function buildWizardPricingInput(draft: EstimateWizardDraftV22, shopRank?
       extraAmount = amt;
       discountIntent = { mode: "fixed_amount", amount: amt };
     }
-  } else {
+  } else if (dc.mode === "percent") {
     if (dc.percentInput.trim() !== "") {
       const pct = Number(dc.percentInput) || 0;
       discountIntent = { mode: "percentage", percentage: pct };
       errors.push(issue(WIZARD_PRICING_ERRORS.PERCENTAGE_NOT_SUPPORTED, "％値引きは本番価格エンジンで未対応のため、値引きは適用されていません。", "discount"));
     }
   }
+  // dc.mode === "none": extraAmount stays 0, discountIntent stays { mode: "none" }, no error.
+  // (No implicit else = percent branch — "none" never triggers a percentage-not-supported error.)
 
   // Trade (業者掛け率) discount: apply ONLY when a business customer has a VALID rate (0 < rate ≤ 100).
   // An empty/zero/invalid trade rate must NOT become dealerRate=0, because the engine reads

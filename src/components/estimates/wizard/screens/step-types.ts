@@ -440,9 +440,11 @@ export interface StoreGlobalOptionsSelectorProps {
 }
 
 // ── Screen 5 (Phase 5: Discount / Coupon — 値引き・クーポン選択) ──────────────────
-/** Active discount mode. Exactly ONE may be active — amount and percentage are never applied
- *  simultaneously (the owner keeps only the active mode's value). */
-export type DiscountMode = "amount" | "percent";
+/** Canonical discount mode — the SINGLE authority shared by EW-UI-1 and EstimateWizardDraftV22.
+ *  Exactly ONE may be active. `none` = 値引きなし (no discount); `amount`/`percent` are never
+ *  applied simultaneously. Switching mode preserves the other modes' inactive input values; only
+ *  the active mode's value participates in pricing (later, via the EW-DC-1 engine when wired). */
+export type DiscountMode = "none" | "amount" | "percent";
 
 /** A selectable coupon (presentation-only). `discountType`/`discountValue` are DISPLAY data —
  *  the component never applies them. Combinability / conflict is decided by the parent and

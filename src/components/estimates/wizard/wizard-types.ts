@@ -4,6 +4,12 @@
 // breakpoint only; this store shape is breakpoint-agnostic. No pricing/OCR/save
 // logic lives here — those are wired to the existing DealerOS modules in Phase 2.
 
+// DiscountMode is the SINGLE canonical union owned by screens/step-types.ts. It is imported
+// (for local use by WizardStore) and re-exported (no duplicate declaration) so EW-UI-1 and
+// EstimateWizardDraftV22 share exactly one contract.
+import type { DiscountMode } from "./screens/step-types";
+export type { DiscountMode };
+
 export type StepId = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export interface WizardStep {
@@ -61,8 +67,6 @@ export interface VehicleDraft {
   suggestedSize:      string | null; // 3M recommendation (highlight only)
   confirmedSize:      string | null; // operator's final choice (never auto-set)
 }
-
-export type DiscountMode = "none" | "amount" | "percent";
 
 // Service selections are intentionally left loosely-shaped for Phase 1; the real
 // pricing wiring (ServiceInput[] → buildLineItems) lands in Phase 2.

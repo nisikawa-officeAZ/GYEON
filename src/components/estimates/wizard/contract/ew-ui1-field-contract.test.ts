@@ -5,13 +5,24 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { newEstimateWizardDraft } from "../integration/estimateToWizardDraft";
-import { updateNewCustomer, updateNewVehicle } from "../draft/wizard-draft-state";
+import {
+  updateNewCustomer, updateNewVehicle, updateDiscountAndCoupon,
+  initialEstimateWizardDraftV22, resetWizardDraft,
+} from "../draft/wizard-draft-state";
 import { computeWizardPricing } from "../pricing/useWizardPricing";
 import { mapDraftToEstimateSaveRequest } from "../save/estimate-save-mapper";
+import { buildWizardPricingInput } from "../pricing/wizard-pricing-input-adapter";
+import { buildWizardPricingInputFromConfig } from "../pricing/wizard-pricing-input-adapter-config";
+import { DEFAULT_PRICING_CATALOG } from "@/lib/pricing/canonical-pricing-engine";
+import { WIZARD_PRICING_ERRORS } from "../pricing/wizard-pricing-types";
 import { initialWizardStore, type WizardStore } from "../wizard-types";
 import {
   CUSTOMER_FIELD_CONTRACT, VEHICLE_FIELD_CONTRACT, fieldContractFor,
 } from "./ew-ui1-field-contract";
+
+const EMPTY_PRICING_CONFIG = {
+  ppfMethods: [], filmTypes: [], maintenanceMenus: [], washMenus: [], roomCleaningMenus: [], storeGlobalOptions: [],
+} as const;
 
 const RANK = "certified" as const;
 
@@ -116,11 +127,58 @@ test("every customer/vehicle editable field has a declared destination", () => {
 });
 
 // ── discount-none explicitly blocked from controller until canonical contract exists ─
-test("discountMode 'none' remains explicitly UNRESOLVED (blocked for controller)", () => {
+// EW-FC-1B — canonical no-discount contract closure
+test("discountMode has a canonical destination and is CONTROLLER_PHASE (no longer UNRESOLVED)", () => {
   const entry = fieldContractFor("discountMode");
   assert.ok(entry);
-  assert.equal(entry!.status, "UNRESOLVED_CANONICAL_CONTRACT");
-  assert.equal(entry!.canonical, null, "discountMode must NOT claim a canonical home yet");
+  assert.equal(entry!.status, "CONTROLLER_PHASE");
+  assert.notEqual(entry!.status, "UNRESOLVED_CANONICAL_CONTRACT");
+  assert.equal(entry!.canonical, "discountAndCoupon.mode");
+});
+
+test("canonical initial + reset draft discount mode is 'none'", () => {
+  assert.equal(initialEstimateWizardDraftV22.discountAndCoupon.mode, "none");
+  assert.equal(resetWizardDraft().discountAndCoupon.mode, "none");
+});
+
+test("EW-UI initial discount mode is 'none'", () => {
+  assert.equal(initialWizardStore().discountMode, "none");
+});
+
+test("save mapper represents 'none' as intent.none / fixedAmount null / percentage null (never invented)", () => {
+  const h = newEstimateWizardDraft(); // canonical default mode is now 'none'
+  const req = mapDraftToEstimateSaveRequest({ draft: h.draft, pricingResult: computeWizardPricing(h.draft, RANK), shopRank: RANK });
+  assert.equal(req.discount.intent.mode, "none");
+  assert.equal(req.discount.intent.fixedAmount, null);
+  assert.equal(req.discount.intent.percentage, null);
+  assert.equal(req.discount.appliedAmount, 0);
+});
+
+test("both pricing input adapters map 'none' to extraAmount 0 / discountIntent none / no percentage error", () => {
+  const h = newEstimateWizardDraft(); // mode 'none'
+  const a = buildWizardPricingInput(h.draft, RANK);
+  assert.equal(a.discounts.extraAmount, 0);
+  assert.equal(a.discountIntent.mode, "none");
+  assert.equal(a.errors.some((e) => e.code === WIZARD_PRICING_ERRORS.PERCENTAGE_NOT_SUPPORTED), false);
+  const b = buildWizardPricingInputFromConfig(h.draft, EMPTY_PRICING_CONFIG, DEFAULT_PRICING_CATALOG, RANK);
+  assert.equal(b.discounts.extraAmount, 0);
+  assert.equal(b.discountIntent.mode, "none");
+  assert.equal(b.errors.some((e) => e.code === WIZARD_PRICING_ERRORS.PERCENTAGE_NOT_SUPPORTED), false);
+});
+
+test("amount mode preserved; percent mode preserved as intent AND still blocked by adapter gate", () => {
+  const h = newEstimateWizardDraft();
+  // amount
+  const amt = updateDiscountAndCoupon(h.draft, { mode: "amount", amountInput: "2000" });
+  const ra = buildWizardPricingInput(amt, RANK);
+  assert.equal(ra.discounts.extraAmount, 2000);
+  assert.equal(ra.discountIntent.mode, "fixed_amount");
+  // percent — preserved as intent, blocked (unchanged behavior)
+  const pct = updateDiscountAndCoupon(h.draft, { mode: "percent", percentInput: "10" });
+  const rp = buildWizardPricingInput(pct, RANK);
+  assert.equal(rp.discountIntent.mode, "percentage");
+  assert.equal(rp.discounts.extraAmount, 0);
+  assert.equal(rp.errors.some((e) => e.code === WIZARD_PRICING_ERRORS.PERCENTAGE_NOT_SUPPORTED), true);
 });
 
 // ── no pricing arithmetic introduced by the new fields ─────────────────────────────
