@@ -75,3 +75,31 @@ export type {
   PricingContractInputExtension,
   ExtendedPricingResult,
 } from "./pricing-contracts";
+
+// EW-DC-1 — canonical discount/coupon monetary contract + client/server parity (pure; not
+// yet wired to UI/save/RPC/DB). Exposed here so future Wizard/server/persistence phases
+// consume ONE calculation implementation from the canonical entry point.
+export {
+  computeDiscountCouponPricing,
+  DISCOUNT_COUPON_CONTRACT_VERSION,
+  BASIS_POINTS_PER_PERCENT,
+  FULL_BASIS_POINTS,
+  type DiscountCouponContractVersion,
+  type ManualDiscountIntent,
+  type CouponValue,
+  type ResolvedCoupon,
+  type PricingLineInput,
+  type DiscountCouponPricingInput,
+  type LineSnapshot,
+  type CouponApplication,
+  type DiscountCouponErrorCode,
+  type DiscountCouponError,
+  type DiscountCouponWarning,
+  type DiscountCouponPricingResult,
+} from "./discount-coupon-pricing";
+
+export {
+  comparePricingSnapshots,
+  type PricingParityMismatch,
+  type PricingParityResult,
+} from "./pricing-snapshot-parity";
