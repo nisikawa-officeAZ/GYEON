@@ -73,8 +73,10 @@ import {
 // TYPES ONLY from the screen config modules. No EXAMPLE_* / DEFAULT_* fixture VALUE is imported:
 // every operator-visible collection arrives through `WizardScreenConfiguration` below, so fixture
 // data can never reach an operator — or an estimate's persisted item_name — through this container.
-import type { ComponentProps } from "react";
 import type { ShopRank, CustomerMode, VehicleMode } from "../screens/step-types";
+// WizardScreenConfiguration is defined ONCE in the shared runtime-input contract (EW-UI-3B) and
+// consumed here unchanged — this container is a read-only behavioral reference, not the EW-UI host.
+import type { WizardScreenConfiguration } from "../contract/wizard-runtime-inputs";
 
 import {
   setCurrentStep,
@@ -138,31 +140,6 @@ function blockedMessage(plan: Extract<EstimateEditorApplyPlan, { status: "blocke
     default:
       return "この内容では見積編集画面へ反映できません。入力内容をご確認ください。";
   }
-}
-
-/**
- * Every operator-visible collection on Screens 4–5, supplied by the caller.
- *
- * Each field's type is derived from the SELECTOR'S OWN prop type, so it cannot drift from what the
- * approved screens actually accept, and no shape is re-declared here.
- *
- * There is no default and no fallback. Not `EXAMPLE_*`, not `[]`. A caller that cannot supply a
- * dealer-configured list cannot mount this container — which is the point: silently substituting
- * fixture menus would put invented service names in front of an operator and, because manual line
- * labels become `item_name`, onto persisted estimates.
- */
-export interface WizardScreenConfiguration {
-  filmTypes:          ComponentProps<typeof WindowFilmSelector>["filmTypes"];
-  windowAreas:        ComponentProps<typeof WindowFilmSelector>["areas"];
-  maintenanceMenus:   ComponentProps<typeof BodyMaintenanceSelector>["maintenanceMenus"];
-  washMenus:          ComponentProps<typeof CarWashSelector>["washMenus"];
-  roomMenus:          ComponentProps<typeof RoomCleaningSelector>["roomMenus"];
-  otherWorkPresets:   ComponentProps<typeof OtherWorkSelector>["presetOtherWorkItems"];
-  storeGlobalOptions: ComponentProps<typeof StoreGlobalOptionsSelector>["globalOptions"];
-  coupons:            ComponentProps<typeof Step5Discount>["availableCoupons"];
-  ppfMethods:         ComponentProps<typeof PpfSelector>["installationMethods"];
-  ppfParts:           ComponentProps<typeof PpfSelector>["partialParts"];
-  ppfTypeGroups:      ComponentProps<typeof PpfSelector>["ppfTypes"];
 }
 
 export interface EstimateWizardContainerProps {

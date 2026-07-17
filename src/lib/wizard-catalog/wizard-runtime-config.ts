@@ -13,7 +13,7 @@
 import type { PricingCatalog } from "@/lib/pricing/pricing-catalog";
 import type { RankResolution } from "@/lib/dealer-settings/authoritative-shop-rank-core";
 import type { ShopRank } from "@/components/estimates/wizard/screens/step-types";
-import type { WizardScreenConfiguration } from "@/components/estimates/wizard/production/EstimateWizardContainer";
+import type { WizardScreenConfiguration } from "@/components/estimates/wizard/contract/wizard-runtime-inputs";
 import type { ProductionPricingConfiguration } from "@/components/estimates/wizard/pricing/wizard-manual-pricing-config";
 import type {
   FilmTypeOption, WindowAreaOption, MaintenanceMenu, WashMenu, RoomMenu,
