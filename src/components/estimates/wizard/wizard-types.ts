@@ -31,7 +31,10 @@ export const WIZARD_STEPS: WizardStep[] = [
 ];
 
 // Screen1 default is New Customer (新規顧客登録) per Architect decision.
-export type RegMethod = "new" | "ocr" | "search";
+// RegMethod is an ALIAS of the SINGLE canonical union (no duplicate literal spelling) — the
+// authority is CustomerRegistrationMethod in draft/wizard-draft-types.ts.
+import type { CustomerRegistrationMethod } from "./draft/wizard-draft-types";
+export type RegMethod = CustomerRegistrationMethod;
 
 export interface CustomerDraft {
   regMethod:      RegMethod;

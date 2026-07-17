@@ -28,7 +28,7 @@ export interface FieldContractEntry {
 
 // ── Customer (Screen 1) ──────────────────────────────────────────────────────────
 export const CUSTOMER_FIELD_CONTRACT: readonly FieldContractEntry[] = [
-  { ewUiField: "customer.regMethod",     canonical: "customer.sourceMode",             dto: "customer.mode",                      db: null,                       status: "LOSSLESS", note: "new/ocr/search → existing/new; OCR is a method, not a mode" },
+  { ewUiField: "customer.regMethod",     canonical: "customer.registrationMethod",     dto: "customer.mode",                      db: null,                       status: "LOSSLESS", note: "registrationMethod preserves new/ocr/search EXACTLY; sourceMode is derived separately for new/existing persistence. Records the selected entry method only — OCR execution/persistence is NOT implemented." },
   { ewUiField: "customer.name",          canonical: "customer.newCustomer.name",       dto: "customer.name",                      db: "customers.name",           status: "LOSSLESS" },
   { ewUiField: "customer.kana",          canonical: "customer.newCustomer.kana",       dto: "customer.kana",                      db: "customers.last_name_kana", status: "LOSSLESS", note: "ONE whole string → NewCustomerDraft.kana → DTO kana → future forward-migration persistence (last_name_kana; first_name_kana=null). NEVER split." },
   { ewUiField: "customer.email",         canonical: "customer.newCustomer.email",      dto: "customer.email",                     db: "customers.email",          status: "LOSSLESS" },

@@ -172,6 +172,7 @@ function cloneWizardDraft(source: EstimateWizardDraftV22): EstimateWizardDraftV2
   return {
     version: source.version,
     customer: {
+      registrationMethod: source.customer.registrationMethod, // preserve exactly (including "ocr")
       sourceMode: source.customer.sourceMode,
       customerId: source.customer.customerId,
       newCustomer: { ...source.customer.newCustomer },
@@ -340,6 +341,8 @@ export function estimateToWizardDraft(estimate: EstimateHydrationInput): Hydrate
     ...base,
     customer: {
       ...base.customer,
+      // Existing-estimate hydration = existing customer → search method (never invent "ocr").
+      registrationMethod: "search",
       sourceMode: "existing",
       customerId: estimate.customer_id || null,
     },

@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { newEstimateWizardDraft } from "../integration/estimateToWizardDraft";
 import {
   updateNewCustomer, updateNewVehicle, updateDiscountAndCoupon,
-  initialEstimateWizardDraftV22, resetWizardDraft,
+  initialEstimateWizardDraftV22, resetWizardDraft, updateCustomerRegistrationMethod,
 } from "../draft/wizard-draft-state";
 import { computeWizardPricing } from "../pricing/useWizardPricing";
 import { mapDraftToEstimateSaveRequest } from "../save/estimate-save-mapper";
@@ -25,6 +25,10 @@ const EMPTY_PRICING_CONFIG = {
 } as const;
 
 const RANK = "certified" as const;
+
+// EW-FC-1C: fresh canonical draft with the given registration method applied via the canonical helper.
+const updateCustomerRegistrationMethodC = (method: "new" | "ocr" | "search") =>
+  updateCustomerRegistrationMethod(newEstimateWizardDraft().draft, method);
 
 // Build a canonical draft with new-customer/new-vehicle fields set, then map to the save DTO.
 function mapWith(nc: Record<string, unknown>, nv: Record<string, unknown> = {}) {
@@ -190,4 +194,33 @@ test("added customer/vehicle fields do not affect pricing (no arithmetic path)",
   );
   assert.equal(withFields.pricingResult.subtotal, bare.pricingResult.subtotal);
   assert.equal(withFields.pricingResult.grandTotal, bare.pricingResult.grandTotal);
+});
+
+// ── EW-FC-1C — customer registration-method lossless contract ────────────────────
+test("EW-FC-1C: customer.regMethod is LOSSLESS with canonical customer.registrationMethod", () => {
+  const entry = fieldContractFor("customer.regMethod");
+  assert.ok(entry);
+  assert.equal(entry!.status, "LOSSLESS");
+  assert.equal(entry!.canonical, "customer.registrationMethod");
+});
+
+test("EW-FC-1C: EW-UI default customer.regMethod is 'new' (canonical-typed)", () => {
+  assert.equal(initialWizardStore().customer.regMethod, "new");
+});
+
+test("EW-FC-1C: UI new/ocr/search round-trip to canonical registrationMethod exactly", () => {
+  for (const method of ["new", "ocr", "search"] as const) {
+    const d = updateCustomerRegistrationMethodC(method);
+    assert.equal(d.customer.registrationMethod, method);
+  }
+});
+
+test("EW-FC-1C: save mode derives from sourceMode; registrationMethod does not alter it or pricing", () => {
+  const ocr = updateCustomerRegistrationMethodC("ocr"); // registrationMethod ocr → sourceMode new
+  const req = mapDraftToEstimateSaveRequest({ draft: ocr, pricingResult: computeWizardPricing(ocr, RANK), shopRank: RANK });
+  assert.equal(req.customer.mode, "new"); // derived from sourceMode, NOT from registrationMethod
+  // pricing identical whether registrationMethod is 'new' or 'ocr' (no monetary effect)
+  const asNew = updateCustomerRegistrationMethodC("new");
+  assert.equal(computeWizardPricing(ocr, RANK).grandTotal, computeWizardPricing(asNew, RANK).grandTotal);
+  assert.equal(computeWizardPricing(ocr, RANK).subtotal, computeWizardPricing(asNew, RANK).subtotal);
 });

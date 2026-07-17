@@ -24,8 +24,16 @@ import type {
 } from "../screens/step-types";
 
 // ── Customer (Screen 1) ─────────────────────────────────────────────────────────
+/** Canonical data-entry method for the customer step — the SINGLE authority (EW-UI-1 aliases it).
+ *  `new` = manual new-customer entry; `ocr` = OCR selected as the entry method (the result is still
+ *  a new-customer draft); `search` = existing-customer search/selection. This is DISTINCT from
+ *  `sourceMode` (the persistence mode): new/ocr → new; search → existing. It records only the
+ *  selected entry method — it does NOT execute OCR or make OCR operational. */
+export type CustomerRegistrationMethod = "new" | "ocr" | "search";
+
 export type WizardCustomerDraft = {
-  sourceMode: "existing" | "new" | null; // ↔ Screen1 customerMode ("select"→existing / "new")
+  registrationMethod: CustomerRegistrationMethod; // selected entry method (new/ocr/search) — lossless
+  sourceMode: "existing" | "new" | null; // persistence mode; kept coherent with registrationMethod
   customerId: string | null;             // existing-customer id (null until selected; never faked)
   /** Approved Screen-1 new-customer input shape, reused 1:1 (business fields live inside). */
   newCustomer: NewCustomerDraft;

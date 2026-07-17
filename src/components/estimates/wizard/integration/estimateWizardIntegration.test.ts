@@ -33,9 +33,9 @@ import {
 import { validateWizardDraftForEstimateEditorIntegration } from "./validateWizardDraftForEstimateEditorIntegration";
 import { buildEstimateEditorApplyPlan } from "./wizardDraftToEditorPatch";
 import {
-  initialEstimateWizardDraftV22, setCurrentStep,
-  updateCustomer, updateVehicle, updateServiceSelection, updateServiceConfiguration,
-  updateDiscountAndCoupon, updateNotes,
+  initialEstimateWizardDraftV22, setCurrentStep, resetWizardDraft,
+  updateCustomer, updateNewCustomer, updateVehicle, updateServiceSelection, updateServiceConfiguration,
+  updateDiscountAndCoupon, updateNotes, updateCustomerRegistrationMethod,
 } from "../draft/wizard-draft-state";
 import { buildWizardPricingInput } from "../pricing/wizard-pricing-input-adapter";
 import { buildWizardPricingInputFromConfig } from "../pricing/wizard-pricing-input-adapter-config";
@@ -1644,4 +1644,71 @@ test("omitting mode, or passing an unknown mode, is rejected by TypeScript", () 
 
   // The runtime assertion is incidental; the compile-time rejection above is the actual test.
   assert.equal(buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG).status, "ready");
+});
+
+// ── EW-FC-1C — customer registration-method / sourceMode coherence ───────────────
+test("EW-FC-1C: initial + reset registrationMethod is 'new'", () => {
+  assert.equal(initialEstimateWizardDraftV22.customer.registrationMethod, "new");
+  assert.equal(resetWizardDraft().customer.registrationMethod, "new");
+});
+
+test("EW-FC-1C: registrationMethod new/ocr/search derive coherent sourceMode; ocr not lost", () => {
+  const base = newEstimateWizardDraft().draft;
+  const n = updateCustomerRegistrationMethod(base, "new");
+  assert.equal(n.customer.registrationMethod, "new");
+  assert.equal(n.customer.sourceMode, "new");
+  const o = updateCustomerRegistrationMethod(base, "ocr");
+  assert.equal(o.customer.registrationMethod, "ocr");
+  assert.equal(o.customer.sourceMode, "new"); // ocr → new persistence, method preserved
+  const s = updateCustomerRegistrationMethod(base, "search");
+  assert.equal(s.customer.registrationMethod, "search");
+  assert.equal(s.customer.sourceMode, "existing");
+});
+
+test("EW-FC-1C: backward-compatible sourceMode patches stay coherent", () => {
+  const base = newEstimateWizardDraft().draft;
+  // sourceMode "existing" → registrationMethod "search"
+  const ex = updateCustomer(base, { sourceMode: "existing" });
+  assert.equal(ex.customer.registrationMethod, "search");
+  assert.equal(ex.customer.sourceMode, "existing");
+  // sourceMode "new" preserves an already-active ocr method
+  const ocr = updateCustomerRegistrationMethod(base, "ocr");
+  const ocrNew = updateCustomer(ocr, { sourceMode: "new" });
+  assert.equal(ocrNew.customer.registrationMethod, "ocr");
+  assert.equal(ocrNew.customer.sourceMode, "new");
+  // switching from search to sourceMode "new" → registrationMethod "new"
+  const searchThenNew = updateCustomer(s2(base), { sourceMode: "new" });
+  assert.equal(searchThenNew.customer.registrationMethod, "new");
+  assert.equal(searchThenNew.customer.sourceMode, "new");
+});
+function s2(d: typeof initialEstimateWizardDraftV22) { return updateCustomerRegistrationMethod(d, "search"); }
+
+test("EW-FC-1C: hydration — existing estimate → search; fresh draft → new", () => {
+  const h = estimateToWizardDraft(estimate({ discount_amount: 0 }));
+  assert.equal(h.draft.customer.registrationMethod, "search");
+  assert.equal(h.draft.customer.sourceMode, "existing");
+  assert.equal(newEstimateWizardDraft().draft.customer.registrationMethod, "new");
+});
+
+test("EW-FC-1C: canonical draft carries 'ocr' exactly through immutable (clone-style) updates", () => {
+  // cloneWizardDraft copies customer.registrationMethod verbatim; the public immutable updates
+  // (which return fresh cloned customer objects) must likewise preserve an active 'ocr' method
+  // when they touch unrelated fields — nothing invents or drops it.
+  const ocr = updateCustomerRegistrationMethod(newEstimateWizardDraft().draft, "ocr");
+  assert.equal(ocr.customer.registrationMethod, "ocr");
+  const afterNotes = updateNotes(updateNewCustomer(ocr, { name: "山田太郎" }), { internalMemo: "memo" });
+  assert.equal(afterNotes.customer.registrationMethod, "ocr"); // preserved exactly
+  assert.equal(afterNotes.customer.sourceMode, "new");
+  assert.equal(afterNotes.customer.newCustomer.name, "山田太郎");
+});
+
+test("EW-FC-1C: method changes never clear customer input fields", () => {
+  const withInput = updateCustomer(newEstimateWizardDraft().draft, {}); // base
+  const named = { ...withInput, customer: { ...withInput.customer, newCustomer: { ...withInput.customer.newCustomer, name: "山田太郎", email: "a@b.jp" } } };
+  const afterOcr = updateCustomerRegistrationMethod(named, "ocr");
+  assert.equal(afterOcr.customer.newCustomer.name, "山田太郎");
+  assert.equal(afterOcr.customer.newCustomer.email, "a@b.jp");
+  const afterSearch = updateCustomerRegistrationMethod(afterOcr, "search");
+  assert.equal(afterSearch.customer.newCustomer.name, "山田太郎");
+  assert.equal(afterSearch.customer.newCustomer.email, "a@b.jp");
 });

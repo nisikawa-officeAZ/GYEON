@@ -10,7 +10,7 @@ import type {
   EstimateWizardDraftV22,
   WizardCustomerDraft, WizardVehicleDraft, WizardServiceSelectionDraft,
   WizardServiceConfigurationDraft, WizardDiscountDraft, WizardNotesDraft, WizardReviewDraft,
-  WizardServiceCategory,
+  WizardServiceCategory, CustomerRegistrationMethod,
 } from "./wizard-draft-types";
 
 const EMPTY_NEW_CUSTOMER: NewCustomerDraft = {
@@ -30,7 +30,7 @@ export const MAX_STEP = 7;
 /** The single canonical initial draft — all empty/null/explicit defaults; no fake data, no IDs. */
 export const initialEstimateWizardDraftV22: EstimateWizardDraftV22 = {
   version: "2.2",
-  customer: { sourceMode: "new", customerId: null, newCustomer: { ...EMPTY_NEW_CUSTOMER } },
+  customer: { registrationMethod: "new", sourceMode: "new", customerId: null, newCustomer: { ...EMPTY_NEW_CUSTOMER } },
   vehicle: { sourceMode: "new", vehicleId: null, newVehicle: { ...EMPTY_NEW_VEHICLE }, bodySizeKey: "" },
   serviceSelection: { selectedCategories: [] },
   serviceConfiguration: {
@@ -50,8 +50,41 @@ export const initialEstimateWizardDraftV22: EstimateWizardDraftV22 = {
 };
 
 // ── Immutable, typed section updates ─────────────────────────────────────────────
+/** Keep registrationMethod and sourceMode coherent so the two contracts can NEVER contradict.
+ *  registrationMethod is the primary selection; sourceMode is the derived persistence mode. A
+ *  backward-compatible sourceMode-only patch (from committed consumers) also stays coherent.
+ *  Never clears customer input; no mutation, no `any`, no generated ids. */
+function syncCustomerModes(
+  prev: WizardCustomerDraft,
+  patch: Partial<WizardCustomerDraft>,
+): { registrationMethod: CustomerRegistrationMethod; sourceMode: "existing" | "new" | null } {
+  if (patch.registrationMethod !== undefined) {
+    // registrationMethod is authoritative → derive sourceMode (search→existing; new/ocr→new).
+    const rm = patch.registrationMethod;
+    return { registrationMethod: rm, sourceMode: rm === "search" ? "existing" : "new" };
+  }
+  if (patch.sourceMode !== undefined) {
+    const sm = patch.sourceMode;
+    if (sm === "existing") return { registrationMethod: "search", sourceMode: "existing" };
+    if (sm === "new") {
+      // preserve an already-active OCR method; otherwise "new" (e.g. previous was "search").
+      return { registrationMethod: prev.registrationMethod === "ocr" ? "ocr" : "new", sourceMode: "new" };
+    }
+    return { registrationMethod: prev.registrationMethod, sourceMode: null }; // sm === null
+  }
+  return { registrationMethod: prev.registrationMethod, sourceMode: prev.sourceMode };
+}
+
 export function updateCustomer(d: EstimateWizardDraftV22, patch: Partial<WizardCustomerDraft>): EstimateWizardDraftV22 {
-  return { ...d, customer: { ...d.customer, ...patch } };
+  const { registrationMethod, sourceMode } = syncCustomerModes(d.customer, patch);
+  return { ...d, customer: { ...d.customer, ...patch, registrationMethod, sourceMode } };
+}
+
+/** Canonical, immutable helper to set the customer registration method (derives sourceMode). */
+export function updateCustomerRegistrationMethod(
+  d: EstimateWizardDraftV22, method: CustomerRegistrationMethod,
+): EstimateWizardDraftV22 {
+  return updateCustomer(d, { registrationMethod: method });
 }
 export function updateNewCustomer(d: EstimateWizardDraftV22, patch: Partial<NewCustomerDraft>): EstimateWizardDraftV22 {
   return { ...d, customer: { ...d.customer, newCustomer: { ...d.customer.newCustomer, ...patch } } };
