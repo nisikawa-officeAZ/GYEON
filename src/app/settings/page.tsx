@@ -116,6 +116,18 @@ export default async function SettingsPage({
           <span className="text-slate-500 text-sm">›</span>
         </Link>
 
+        {/* B4: Estimate Wizard catalog settings (dedicated route) */}
+        <Link
+          href="/settings/estimate-wizard"
+          className="flex items-center justify-between px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:bg-slate-800/60 transition-colors"
+        >
+          <span className="flex flex-col">
+            <span className="text-sm font-medium text-slate-200">見積ウィザード設定</span>
+            <span className="text-[11px] text-slate-500">フィルム・サービスメニュー・その他作業・店舗オプションの登録と確認</span>
+          </span>
+          <span className="text-slate-500 text-sm">›</span>
+        </Link>
+
         <PageTitle title="Settings" />
 
         <SettingsCenterWrapper

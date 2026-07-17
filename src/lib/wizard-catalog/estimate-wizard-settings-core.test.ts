@@ -1,0 +1,227 @@
+// C2C4 — DI/pure unit tests for the settings core (no DB, no React).
+// Run: node --import tsx --test src/lib/wizard-catalog/estimate-wizard-settings-core.test.ts
+
+import { test } from "node:test";
+import assert from "node:assert/strict";
+
+import {
+  buildEstimateWizardSettingsView,
+  buildSections,
+  mapPermission,
+  presentActionError,
+  interpretReviewOutcome,
+  formatYen,
+  formatDuration,
+  CONCURRENCY_MESSAGE_JA,
+  type RawCatalogItem,
+  type RawSettingsData,
+  type RawLifecycle,
+} from "./estimate-wizard-settings-core";
+
+function item(p: Partial<RawCatalogItem> & Pick<RawCatalogItem, "code" | "kind">): RawCatalogItem {
+  return {
+    itemId: `id-${p.code}`,
+    defaultUnitPrice: null, durationMinutes: null, displayOrder: 0, priceable: true,
+    quantityRequired: false, minQuantity: null, maxQuantity: null, presentation: null,
+    isActive: true, deletedAt: null,
+    ...p,
+    labelJa: p.labelJa ?? p.code,
+  };
+}
+
+function raw(p: Partial<RawSettingsData> = {}): RawSettingsData {
+  return {
+    role: "owner", rankKnown: true, filmRequired: false, items: [], lifecycle: null,
+    coatingCount: 0, reviewerName: null, ...p,
+  };
+}
+
+const REVIEWED_LIFECYCLE: RawLifecycle = {
+  state: "CATALOG_REVIEWED", currentRevision: 5, reviewedRevision: 5,
+  lastReviewedAtIso: "2026-07-10T02:00:00.000Z", lastReviewedRevision: 5,
+};
+
+// ── permission ─────────────────────────────────────────────────────────────
+test("owner/manager are editable; staff/readonly/null are read-only", () => {
+  assert.equal(mapPermission("owner"), "editable");
+  assert.equal(mapPermission("manager"), "editable");
+  assert.equal(mapPermission("staff"), "readonly");
+  assert.equal(mapPermission("readonly"), "readonly");
+  assert.equal(mapPermission(null), "readonly");
+});
+
+test("view.canEdit follows permission", () => {
+  assert.equal(buildEstimateWizardSettingsView(raw({ role: "manager" })).canEdit, true);
+  assert.equal(buildEstimateWizardSettingsView(raw({ role: "staff" })).canEdit, false);
+});
+
+// ── section grouping ───────────────────────────────────────────────────────
+test("sections group by family; service holds three kind-groups", () => {
+  const v = buildEstimateWizardSettingsView(raw({
+    items: [
+      item({ code: "film-1", kind: "film_type" }),
+      item({ code: "maint-1", kind: "maintenance_menu" }),
+      item({ code: "wash-1", kind: "wash_menu" }),
+      item({ code: "room-1", kind: "room_cleaning_menu" }),
+      item({ code: "other-1", kind: "other_work_preset" }),
+      item({ code: "store-1", kind: "store_global_option" }),
+    ],
+  }));
+  const ids = v.sections.map((s) => s.id);
+  assert.deepEqual(ids, ["film", "service", "otherwork", "store"]);
+  const service = v.sections.find((s) => s.id === "service")!;
+  assert.deepEqual(service.groups.map((g) => g.kind), ["maintenance_menu", "wash_menu", "room_cleaning_menu"]);
+  assert.equal(service.itemCount, 3);
+  assert.equal(v.sections.find((s) => s.id === "film")!.itemCount, 1);
+});
+
+test("identity is the stable code; items sort by displayOrder then code (not label/index)", () => {
+  const v = buildSections(
+    [
+      item({ code: "maint-z", kind: "maintenance_menu", displayOrder: 2, labelJa: "AAA" }),
+      item({ code: "maint-a", kind: "maintenance_menu", displayOrder: 1, labelJa: "ZZZ" }),
+      item({ code: "maint-b", kind: "maintenance_menu", displayOrder: 1, labelJa: "MMM" }),
+    ],
+    false,
+  );
+  const g = v.find((s) => s.id === "service")!.groups.find((x) => x.kind === "maintenance_menu")!;
+  assert.deepEqual(g.items.map((i) => i.code), ["maint-a", "maint-b", "maint-z"]);
+});
+
+test("inactive / soft-deleted / blank-label items are excluded from active lists", () => {
+  const v = buildSections(
+    [
+      item({ code: "a", kind: "film_type" }),
+      item({ code: "b", kind: "film_type", isActive: false }),
+      item({ code: "c", kind: "film_type", deletedAt: "2026-01-01T00:00:00Z" }),
+      item({ code: "d", kind: "film_type", labelJa: "   " }),
+    ],
+    false,
+  );
+  assert.deepEqual(v.find((s) => s.id === "film")!.groups[0].items.map((i) => i.code), ["a"]);
+});
+
+// ── completeness / missing / review-ready ──────────────────────────────────
+test("film required + none present => not satisfied, missing-section with anchor, not ready", () => {
+  const v = buildEstimateWizardSettingsView(raw({ filmRequired: true, items: [] }));
+  const film = v.sections.find((s) => s.id === "film")!;
+  assert.equal(film.required, true);
+  assert.equal(film.satisfied, false);
+  assert.equal(v.reviewStatus.reviewReady, false);
+  assert.equal(v.reviewStatus.missingSections.length, 1);
+  assert.equal(v.reviewStatus.missingSections[0].sectionId, "film");
+  assert.equal(v.reviewStatus.missingSections[0].anchorId, "section-film");
+});
+
+test("film required + present => ready; optional empty sections do NOT block", () => {
+  const v = buildEstimateWizardSettingsView(raw({
+    filmRequired: true,
+    items: [item({ code: "film-1", kind: "film_type" })],
+  }));
+  assert.equal(v.reviewStatus.reviewReady, true);
+  assert.equal(v.reviewStatus.missingSections.length, 0);
+});
+
+test("film NOT required => ready even with zero items", () => {
+  const v = buildEstimateWizardSettingsView(raw({ filmRequired: false, items: [] }));
+  assert.equal(v.reviewStatus.reviewReady, true);
+});
+
+test("rank unknown => never review-ready (fail closed)", () => {
+  const v = buildEstimateWizardSettingsView(raw({ rankKnown: false, filmRequired: false }));
+  assert.equal(v.reviewStatus.reviewReady, false);
+  assert.match(v.reviewStatus.statusDetailJa, /店舗ランク/);
+});
+
+// ── reviewed status ────────────────────────────────────────────────────────
+test("reviewed lifecycle => reviewed=true, statusLabel 確認済み", () => {
+  const v = buildEstimateWizardSettingsView(raw({ lifecycle: REVIEWED_LIFECYCLE }));
+  assert.equal(v.reviewStatus.reviewed, true);
+  assert.equal(v.reviewStatus.statusLabelJa, "確認済み");
+});
+
+test("edited-after-review (reviewed<current) => review required again", () => {
+  const v = buildEstimateWizardSettingsView(raw({
+    lifecycle: { ...REVIEWED_LIFECYCLE, state: "MIGRATED_UNREVIEWED", reviewedRevision: null, currentRevision: 6 },
+  }));
+  assert.equal(v.reviewStatus.reviewed, false);
+  assert.equal(v.reviewStatus.statusLabelJa, "確認が必要です");
+});
+
+// ── durable last-review presentation ───────────────────────────────────────
+test("durable last-review shows date + reviewer name", () => {
+  const v = buildEstimateWizardSettingsView(raw({ lifecycle: REVIEWED_LIFECYCLE, reviewerName: "山田 太郎" }));
+  assert.ok(v.reviewStatus.lastReview);
+  assert.match(v.reviewStatus.lastReview!.dateLabelJa, /2026\/07\/10/);
+  assert.equal(v.reviewStatus.lastReview!.reviewerLabelJa, "確認者：山田 太郎");
+});
+
+test("deleted reviewer => date retained, reviewer label null (no crash, no id)", () => {
+  const v = buildEstimateWizardSettingsView(raw({ lifecycle: REVIEWED_LIFECYCLE, reviewerName: null }));
+  assert.ok(v.reviewStatus.lastReview);
+  assert.match(v.reviewStatus.lastReview!.dateLabelJa, /2026\/07\/10/);
+  assert.equal(v.reviewStatus.lastReview!.reviewerLabelJa, null);
+});
+
+test("never-reviewed => no durable history", () => {
+  const v = buildEstimateWizardSettingsView(raw({
+    lifecycle: { state: "MIGRATED_UNREVIEWED", currentRevision: 0, reviewedRevision: null, lastReviewedAtIso: null, lastReviewedRevision: null },
+  }));
+  assert.equal(v.reviewStatus.lastReview, null);
+});
+
+// ── coating / coupon ───────────────────────────────────────────────────────
+test("coating is summary + link only (no editor)", () => {
+  const v = buildEstimateWizardSettingsView(raw({ coatingCount: 3 }));
+  assert.equal(v.coating.configuredCount, 3);
+  assert.equal(v.coating.editHref, "/settings?panel=service");
+  assert.match(v.coating.summaryJa, /3件/);
+});
+
+test("coupon is a planned-only card", () => {
+  const v = buildEstimateWizardSettingsView(raw());
+  assert.equal(v.coupon.badgeJa, "今後対応予定");
+});
+
+// ── empty catalog ──────────────────────────────────────────────────────────
+test("empty catalog yields four empty sections without crashing", () => {
+  const v = buildEstimateWizardSettingsView(raw({ items: [] }));
+  assert.equal(v.sections.length, 4);
+  assert.equal(v.sections.reduce((n, s) => n + s.itemCount, 0), 0);
+});
+
+// ── no raw leakage ─────────────────────────────────────────────────────────
+test("presentation view never leaks raw lifecycle enums, dealer id, or revision wording", () => {
+  const v = buildEstimateWizardSettingsView(raw({
+    role: "owner", lifecycle: REVIEWED_LIFECYCLE, reviewerName: "山田",
+    items: [item({ code: "film-1", kind: "film_type" })], filmRequired: true,
+  }));
+  const json = JSON.stringify(v);
+  for (const forbidden of ["MIGRATED_UNREVIEWED", "CATALOG_REVIEWED", "CATALOG_ACTIVE", "LEGACY", "reviewed_configuration_revision", "dealer_id"]) {
+    assert.ok(!json.includes(forbidden), `view leaked "${forbidden}"`);
+  }
+});
+
+// ── formatters ─────────────────────────────────────────────────────────────
+test("formatYen / formatDuration", () => {
+  assert.equal(formatYen(3000), "¥3,000（税抜）");
+  assert.equal(formatYen(0), "¥0（税抜）");
+  assert.equal(formatYen(null), null);
+  assert.equal(formatDuration(30), "約30分");
+  assert.equal(formatDuration(null), null);
+  assert.equal(formatDuration(0), null);
+});
+
+// ── action-error + review-outcome presentation ─────────────────────────────
+test("presentActionError maps codes to safe Japanese (no raw text)", () => {
+  assert.match(presentActionError("PERMISSION_DENIED"), /オーナーまたはマネージャー/);
+  assert.match(presentActionError("RANK_UNAVAILABLE"), /店舗ランク/);
+  assert.match(presentActionError("RPC_ERROR"), /失敗/);
+});
+
+test("interpretReviewOutcome: matching revision => success; mismatch => stale/concurrency message", () => {
+  assert.equal(interpretReviewOutcome(7, 7).kind, "success");
+  const stale = interpretReviewOutcome(8, 7);
+  assert.equal(stale.kind, "stale");
+  assert.equal(stale.messageJa, CONCURRENCY_MESSAGE_JA);
+});
