@@ -31,6 +31,7 @@ export interface CustomerDraft {
   regMethod:      RegMethod;
   name:           string;
   kana:           string;
+  email:          string;  // メール → NewCustomerDraft.email → customers.email
   postal:         string;
   address:        string;
   phone:          string;
@@ -39,8 +40,9 @@ export interface CustomerDraft {
   contractor:     boolean; // 業者
   contractorRate: string;  // 値引率(%)
   creditSale:     boolean; // 掛売り
-  creditClosing:  string;  // 締め日
-  creditTerms:    string;  // 支払条件
+  creditClosing:  string;  // 締め日 (numeric day) → closingDay
+  paymentDay:     string;  // 支払日 (numeric day) → paymentDay — distinct from free-text creditTerms
+  creditTerms:    string;  // 支払条件 (free text) → creditTerms
 }
 
 export interface VehicleDraft {
@@ -48,6 +50,7 @@ export interface VehicleDraft {
   model:              string; // 車名 (manual only — required)
   grade:              string;
   vehicleCode:        string; // 型式
+  displacement:       string; // 排気量 → NewVehicleDraft.displacement → vehicles.displacement
   vin:                string; // 車体番号
   firstRegYearMonth:  string; // 初年度登録年月
   registrationDate:   string; // 登録年月日
@@ -85,20 +88,21 @@ export interface WizardStore {
   discountPercent: string;
   notesCustomer:  string; // 備考 (shown on estimate)
   notesInternal:  string; // 社内メモ
-  dealerRank:     string; // from dealer settings (Phase 2)
+  // NOTE: dealerRank removed (EW-FC-1A) — authoritative rank is a future trusted-host input,
+  // never client-held (no duplicate authority).
 }
 
 export function initialWizardStore(): WizardStore {
   return {
     customer: {
       regMethod: "new", // ← default: 新規顧客登録
-      name: "", kana: "", postal: "", address: "", phone: "", lineId: "",
+      name: "", kana: "", email: "", postal: "", address: "", phone: "", lineId: "",
       existingId: null,
       contractor: false, contractorRate: "",
-      creditSale: false, creditClosing: "", creditTerms: "",
+      creditSale: false, creditClosing: "", paymentDay: "", creditTerms: "",
     },
     vehicle: {
-      maker: "", model: "", grade: "", vehicleCode: "", vin: "",
+      maker: "", model: "", grade: "", vehicleCode: "", displacement: "", vin: "",
       firstRegYearMonth: "", registrationDate: "", color: "", inspectionExpiry: "",
       plateNumber: "", existingId: null, suggestedSize: null, confirmedSize: null,
     },
@@ -113,6 +117,5 @@ export function initialWizardStore(): WizardStore {
     discountPercent: "",
     notesCustomer: "",
     notesInternal: "",
-    dealerRank: "certified",
   };
 }

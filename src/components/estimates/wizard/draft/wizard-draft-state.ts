@@ -16,6 +16,7 @@ import type {
 const EMPTY_NEW_CUSTOMER: NewCustomerDraft = {
   name: "", phone: "", email: "", postal: "", address: "", lineId: "",
   isBusiness: false, tradeRate: "", arAllowed: false, closingDay: "", paymentDay: "",
+  kana: "", creditTerms: "",
 };
 const EMPTY_NEW_VEHICLE: NewVehicleDraft = {
   maker: "", model: "", grade: "", vehicle_code: "", vin: "",

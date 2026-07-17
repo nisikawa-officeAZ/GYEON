@@ -70,6 +70,9 @@ export function Step1Customer({ api }: { api: EstimateWizardApi }) {
           <Field label="電話番号" value={c.phone}>
             <TextInput value={c.phone} onChange={(v) => setC({ phone: v })} placeholder="090-0000-0000" type="tel" inputMode="tel" />
           </Field>
+          <Field label="メール" value={c.email}>
+            <TextInput value={c.email} onChange={(v) => setC({ email: v })} placeholder="example@mail.jp" type="email" inputMode="email" />
+          </Field>
           <Field label="郵便番号" value={c.postal}>
             <TextInput value={c.postal} onChange={(v) => setC({ postal: v })} placeholder="000-0000" />
           </Field>
@@ -98,6 +101,9 @@ export function Step1Customer({ api }: { api: EstimateWizardApi }) {
         <ChoiceGrid cols={2}>
           <Field label="締め日" value={c.creditClosing}>
             <TextInput value={c.creditClosing} onChange={(v) => setC({ creditClosing: v })} placeholder="例: 20" inputMode="numeric" />
+          </Field>
+          <Field label="支払日" value={c.paymentDay}>
+            <TextInput value={c.paymentDay} onChange={(v) => setC({ paymentDay: v })} placeholder="例: 末=31" inputMode="numeric" />
           </Field>
           <Field label="支払条件" value={c.creditTerms}>
             <TextInput value={c.creditTerms} onChange={(v) => setC({ creditTerms: v })} placeholder="翌月末払い" />

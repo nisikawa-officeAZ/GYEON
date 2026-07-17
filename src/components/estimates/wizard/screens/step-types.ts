@@ -19,8 +19,11 @@ export interface NewCustomerDraft {
   isBusiness: boolean; // 業者
   tradeRate:  string;  // 掛け率(%)
   arAllowed:  boolean; // 掛売り (売掛 / AR)
-  closingDay: string;  // 締め日
-  paymentDay: string;  // 支払日
+  closingDay: string;  // 締め日 (numeric day-of-month string)
+  paymentDay: string;  // 支払日 (numeric day-of-month string — distinct from free-text creditTerms)
+  // EW-FC-1A lossless field-contract additions (optional; existing fixtures unaffected):
+  kana?:        string; // フリガナ — ONE whole string (never split into last/first kana)
+  creditTerms?: string; // 支払条件 — FREE TEXT (e.g. "翌月末払い"); distinct from numeric closingDay/paymentDay
 }
 
 /** Mirrors EstimateEditor `nv` (new-vehicle draft) exactly. */

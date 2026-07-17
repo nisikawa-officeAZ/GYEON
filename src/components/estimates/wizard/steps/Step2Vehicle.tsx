@@ -42,6 +42,9 @@ export function Step2Vehicle({ api }: { api: EstimateWizardApi }) {
             <Field label="型式" value={v.vehicleCode}>
               <TextInput value={v.vehicleCode} onChange={(x) => setV({ vehicleCode: x })} placeholder="ABA-XXX" />
             </Field>
+            <Field label="排気量" value={v.displacement}>
+              <TextInput value={v.displacement} onChange={(x) => setV({ displacement: x })} placeholder="1998cc" />
+            </Field>
             <Field label="ナンバープレート" value={v.plateNumber}>
               <TextInput value={v.plateNumber} onChange={(x) => setV({ plateNumber: x })} placeholder="滋賀 330 に 1234" />
             </Field>

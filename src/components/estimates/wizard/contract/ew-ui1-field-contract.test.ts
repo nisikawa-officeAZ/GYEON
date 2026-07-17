@@ -1,0 +1,135 @@
+// EW-FC-1A — lossless customer/vehicle field-contract tests.
+// Run: node --import tsx --test src/components/estimates/wizard/contract/ew-ui1-field-contract.test.ts
+
+import { test } from "node:test";
+import assert from "node:assert/strict";
+
+import { newEstimateWizardDraft } from "../integration/estimateToWizardDraft";
+import { updateNewCustomer, updateNewVehicle } from "../draft/wizard-draft-state";
+import { computeWizardPricing } from "../pricing/useWizardPricing";
+import { mapDraftToEstimateSaveRequest } from "../save/estimate-save-mapper";
+import { initialWizardStore, type WizardStore } from "../wizard-types";
+import {
+  CUSTOMER_FIELD_CONTRACT, VEHICLE_FIELD_CONTRACT, fieldContractFor,
+} from "./ew-ui1-field-contract";
+
+const RANK = "certified" as const;
+
+// Build a canonical draft with new-customer/new-vehicle fields set, then map to the save DTO.
+function mapWith(nc: Record<string, unknown>, nv: Record<string, unknown> = {}) {
+  const h = newEstimateWizardDraft();
+  let draft = updateNewCustomer(h.draft, nc as never);
+  draft = updateNewVehicle(draft, nv as never);
+  const pricingResult = computeWizardPricing(draft, RANK);
+  const req = mapDraftToEstimateSaveRequest({ draft, pricingResult, shopRank: RANK });
+  return { req, pricingResult, draft };
+}
+
+// ── kana ──────────────────────────────────────────────────────────────────────────
+test("kana survives draft → DTO as ONE unchanged string (with an internal space)", () => {
+  const KANA = "ヤマダ タロウ"; // space proves it is not split
+  const { req } = mapWith({ name: "山田太郎", kana: KANA });
+  assert.equal(req.customer.mode, "new");
+  if (req.customer.mode !== "new") return;
+  assert.equal(req.customer.kana, KANA);
+});
+
+test("kana is never split, never copied into closingDay/paymentDay", () => {
+  const KANA = "ヤマダ タロウ";
+  const { req } = mapWith({ name: "山田", kana: KANA, closingDay: "20", paymentDay: "31" });
+  if (req.customer.mode !== "new") return assert.fail("expected new");
+  assert.equal(req.customer.kana, KANA);
+  assert.notEqual(req.customer.closingDay, KANA);
+  assert.notEqual(req.customer.paymentDay, KANA);
+  assert.equal(req.customer.closingDay, "20");
+  assert.equal(req.customer.paymentDay, "31");
+  // exactly one whole token pair — no accidental split into separate DTO parts
+  assert.equal(String(req.customer.kana), KANA);
+});
+
+// ── creditTerms / closingDay / paymentDay independence ─────────────────────────────
+test("creditTerms survives draft → DTO unchanged (free text)", () => {
+  const { req } = mapWith({ name: "山田", creditTerms: "翌月末払い" });
+  if (req.customer.mode !== "new") return assert.fail("expected new");
+  assert.equal(req.customer.creditTerms, "翌月末払い");
+});
+
+test("creditTerms, closingDay, paymentDay remain three independent values", () => {
+  const { req } = mapWith({ name: "山田", closingDay: "20", paymentDay: "31", creditTerms: "翌月末払い" });
+  if (req.customer.mode !== "new") return assert.fail("expected new");
+  assert.equal(req.customer.closingDay, "20");
+  assert.equal(req.customer.paymentDay, "31");
+  assert.equal(req.customer.creditTerms, "翌月末払い");
+  const set = new Set([req.customer.closingDay, req.customer.paymentDay, req.customer.creditTerms]);
+  assert.equal(set.size, 3, "three fields must hold three distinct values");
+});
+
+// ── email / displacement through the EXISTING mapper ───────────────────────────────
+test("email survives the existing draft → DTO mapper", () => {
+  const { req } = mapWith({ name: "山田", email: "a@b.jp" });
+  if (req.customer.mode !== "new") return assert.fail("expected new");
+  assert.equal(req.customer.email, "a@b.jp");
+});
+
+test("displacement survives the existing draft → DTO mapper", () => {
+  const { req } = mapWith({ name: "山田" }, { displacement: "1998cc" });
+  assert.equal(req.vehicle.mode, "new");
+  if (req.vehicle.mode !== "new") return;
+  assert.equal(req.vehicle.displacement, "1998cc");
+});
+
+// ── EW-UI defaults & dealerRank removal ────────────────────────────────────────────
+test("EW-UI defaults contain email / paymentDay / displacement", () => {
+  const s = initialWizardStore();
+  assert.equal(s.customer.email, "");
+  assert.equal(s.customer.paymentDay, "");
+  assert.equal(s.vehicle.displacement, "");
+});
+
+test("dealerRank no longer exists in WizardStore or its defaults", () => {
+  const s = initialWizardStore();
+  assert.equal(Object.prototype.hasOwnProperty.call(s, "dealerRank"), false);
+  // compile-time guard: WizardStore has no dealerRank key
+  const _noRank: WizardStore = s;
+  assert.equal((_noRank as unknown as Record<string, unknown>).dealerRank, undefined);
+});
+
+// ── completeness: every customer/vehicle editable field has a declared destination ──
+test("every customer/vehicle editable field has a declared destination", () => {
+  const s = initialWizardStore();
+  const customerKeys = Object.keys(s.customer).map((k) => `customer.${k}`);
+  const vehicleKeys = Object.keys(s.vehicle).map((k) => `vehicle.${k}`);
+  for (const key of [...customerKeys, ...vehicleKeys]) {
+    const entry = fieldContractFor(key);
+    assert.ok(entry, `missing field-contract entry for ${key}`);
+    // a declared destination = a canonical home OR an explicit non-LOSSLESS status
+    const hasDestination = entry!.canonical !== null || entry!.status !== "LOSSLESS";
+    assert.ok(hasDestination, `${key} has neither a canonical home nor an explicit status`);
+  }
+  // and every LOSSLESS customer/vehicle entry must actually declare canonical + dto
+  for (const e of [...CUSTOMER_FIELD_CONTRACT, ...VEHICLE_FIELD_CONTRACT]) {
+    if (e.status === "LOSSLESS") {
+      assert.ok(e.canonical, `${e.ewUiField} LOSSLESS but no canonical`);
+      assert.ok(e.dto, `${e.ewUiField} LOSSLESS but no dto`);
+    }
+  }
+});
+
+// ── discount-none explicitly blocked from controller until canonical contract exists ─
+test("discountMode 'none' remains explicitly UNRESOLVED (blocked for controller)", () => {
+  const entry = fieldContractFor("discountMode");
+  assert.ok(entry);
+  assert.equal(entry!.status, "UNRESOLVED_CANONICAL_CONTRACT");
+  assert.equal(entry!.canonical, null, "discountMode must NOT claim a canonical home yet");
+});
+
+// ── no pricing arithmetic introduced by the new fields ─────────────────────────────
+test("added customer/vehicle fields do not affect pricing (no arithmetic path)", () => {
+  const bare = mapWith({ name: "山田" });
+  const withFields = mapWith(
+    { name: "山田", kana: "ヤマダ タロウ", email: "a@b.jp", creditTerms: "翌月末払い", closingDay: "20", paymentDay: "31" },
+    { displacement: "1998cc" },
+  );
+  assert.equal(withFields.pricingResult.subtotal, bare.pricingResult.subtotal);
+  assert.equal(withFields.pricingResult.grandTotal, bare.pricingResult.grandTotal);
+});

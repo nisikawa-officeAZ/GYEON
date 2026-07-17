@@ -26,7 +26,9 @@ export type EstimateSaveCustomer =
       tradeRatePercent: number | null;   // trade discount INTENT only — never applied here
       accountsReceivableAllowed: boolean; // credit-billing flag
       closingDay: string | null;
-      paymentDay: string | null;          // payment-due rule text — never calculated into a date
+      paymentDay: string | null;          // numeric payment day-of-month — never calculated into a date
+      kana: string | null;                // EW-FC-1A: フリガナ, ONE whole string (never split). RPC does NOT persist this yet.
+      creditTerms: string | null;         // EW-FC-1A: 支払条件 free text; distinct from closingDay/paymentDay. RPC does NOT persist this yet.
     };
 
 // ── Vehicle ──────────────────────────────────────────────────────────────────────

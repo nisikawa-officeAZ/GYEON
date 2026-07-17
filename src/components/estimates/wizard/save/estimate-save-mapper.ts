@@ -46,6 +46,11 @@ export function mapDraftToEstimateSaveRequest(input: EstimateSaveMapperInput): E
           accountsReceivableAllowed: nc.arAllowed,
           closingDay: trimOrNull(nc.closingDay),
           paymentDay: trimOrNull(nc.paymentDay),
+          // EW-FC-1A: kana carried as ONE whole string (no split); creditTerms kept separate from
+          // closingDay/paymentDay. Passthrough only — no arithmetic, no DB call, no fallback guess.
+          // The current RPC (migration 102) does NOT persist these two fields yet.
+          kana: trimOrNull(nc.kana ?? ""),
+          creditTerms: trimOrNull(nc.creditTerms ?? ""),
         };
 
   // ── Vehicle ──
