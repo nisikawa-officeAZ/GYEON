@@ -1,0 +1,321 @@
+// EW-UI-5A1-B2 — Fixture-free config save mapper tests.
+//
+// Proves successful catalog+manual mapping with semantic lineIds, deterministic fail-closed precedence
+// for every ConfigSaveMapperFailure, result/bundle parity, monetary fail-closed, and source guards.
+// The TEST may use computeWizardPricingFromConfig to build authoritative inputs; the PRODUCTION mapper
+// may not.
+//
+// Run: node --import tsx --test src/components/estimates/wizard/save/estimate-save-mapper-from-config.test.ts
+
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+import {
+  mapWizardDraftToSaveRequestFromConfig,
+  type ConfigSaveMapperInput, type ConfigSaveMapperResult, type ConfigSaveMapperFailure,
+} from "./estimate-save-mapper-from-config";
+import { validateEstimateSaveRequest } from "./estimate-save-validation";
+import { computeWizardPricingFromConfig } from "../pricing/compute-wizard-pricing-from-config";
+import { DEFAULT_PRICING_CATALOG, makePricingCatalog, type PricingCatalog } from "@/lib/pricing/canonical-pricing-engine";
+import { resetWizardDraft } from "../draft/wizard-draft-state";
+import type { EstimateWizardDraftV22, WizardServiceConfigurationDraft, WizardDiscountDraft } from "../draft/wizard-draft-types";
+import type { ShopRank } from "../screens/step-types";
+import type { ServiceCategoryId } from "@/lib/estimates/service-categories";
+import type { ProductionPricingConfiguration } from "../pricing/wizard-manual-pricing-config";
+import type { WizardPricingResult } from "../pricing/wizard-pricing-types";
+
+const RANK: ShopRank = "detailer";
+const CATALOG: PricingCatalog = makePricingCatalog();
+const PC: ProductionPricingConfiguration = {
+  ppfMethods: [{ code: "full", label: "PPFフル施工" }], filmTypes: [],
+  maintenanceMenus: [{ code: "mm1", label: "6ヶ月ボディメンテナンス" }], washMenus: [], roomCleaningMenus: [],
+  storeGlobalOptions: [
+    { code: "go-np", label: "非課金オプション", priceable: false, quantityRequired: false, minQuantity: 1, maxQuantity: null },
+    { code: "go-q",  label: "数量オプション",   priceable: true,  quantityRequired: true,  minQuantity: 1, maxQuantity: 5 },
+  ],
+};
+
+function draftWith(
+  categories: ServiceCategoryId[],
+  cfg: Partial<WizardServiceConfigurationDraft> = {},
+  dc: Partial<WizardDiscountDraft> = {},
+): EstimateWizardDraftV22 {
+  const d = resetWizardDraft();
+  return {
+    ...d,
+    customer: { ...d.customer, sourceMode: "existing", customerId: "c1" },
+    vehicle: { ...d.vehicle, sourceMode: "existing", vehicleId: "v1", bodySizeKey: "M" },
+    serviceSelection: { ...d.serviceSelection, selectedCategories: categories },
+    serviceConfiguration: { ...d.serviceConfiguration, ...cfg },
+    discountAndCoupon: { ...d.discountAndCoupon, ...dc },
+  };
+}
+const coatingCfg = (l1: string, l2: string | null = null, l3: string | null = null): Partial<WizardServiceConfigurationDraft> =>
+  ({ coating: { layerCount: l3 ? 3 : l2 ? 2 : 1, layer1Id: l1, layer2Id: l2, layer3Id: l3 } });
+const maintCfg: Partial<WizardServiceConfigurationDraft> = { bodyMaintenance: { menuId: "mm1", unitPriceInput: "5000" } };
+
+function run(draft: EstimateWizardDraftV22, over: Partial<ConfigSaveMapperInput> = {}): ConfigSaveMapperResult {
+  const pricingResult = over.pricingResult ?? computeWizardPricingFromConfig(draft, PC, CATALOG, RANK);
+  return mapWizardDraftToSaveRequestFromConfig({ draft, pricingResult, pricingConfig: PC, catalog: CATALOG, shopRank: RANK, ...over });
+}
+const okReq = (r: ConfigSaveMapperResult) => { assert.equal(r.ok, true); if (!r.ok) throw new Error("unreachable"); return r.request; };
+const expectFail = (r: ConfigSaveMapperResult, reason: ConfigSaveMapperFailure) => {
+  assert.equal(r.ok, false, `expected failure ${reason}`);
+  if (r.ok) return;
+  assert.equal(r.reason, reason);
+  assert.ok(r.issues.length > 0 && r.issues[0].code === reason);
+};
+
+// ── Successful mapping ─────────────────────────────────────────────────────────────
+
+test("single-layer catalog line maps with a semantic lineId", () => {
+  const req = okReq(run(draftWith(["coating"], coatingCfg("one-evo"))));
+  const cat = req.services.filter((s) => s.pricingSource === "catalog");
+  assert.equal(cat.length, 1);
+  assert.equal(cat[0].lineId, "catalog:coating:base:one-evo");
+  assert.equal(cat[0].pricingReferenceId, "one-evo");
+  assert.equal(cat[0].metadata.catalogLineRole, "base");
+});
+
+test("ONE + ONE creates two distinct lineIds despite the repeated product id", () => {
+  const req = okReq(run(draftWith(["coating"], coatingCfg("one-evo", "one-evo"))));
+  const ids = req.services.map((s) => s.lineId);
+  assert.deepEqual(ids, ["catalog:coating:base:one-evo", "catalog:coating:topcoat2:one-evo"]);
+  assert.equal(new Set(ids).size, 2, "distinct");
+});
+
+test("ONE + CANCOAT + CANCOAT creates three distinct lineIds", () => {
+  const req = okReq(run(draftWith(["coating"], coatingCfg("one-evo", "cancoat-evo", "cancoat-evo"))));
+  const ids = req.services.map((s) => s.lineId);
+  assert.deepEqual(ids, ["catalog:coating:base:one-evo", "catalog:coating:topcoat2:cancoat-evo", "catalog:coating:topcoat3:cancoat-evo"]);
+  assert.equal(new Set(ids).size, 3);
+});
+
+test("catalog ids and roles come directly from the pricing result", () => {
+  const draft = draftWith(["coating"], coatingCfg("one-evo", "cancoat-evo", "cancoat-evo"));
+  const pr = computeWizardPricingFromConfig(draft, PC, CATALOG, RANK);
+  const req = okReq(run(draft, { pricingResult: pr }));
+  const prCat = pr.lines.filter((l) => l.kind === "catalog");
+  req.services.forEach((s, i) => {
+    const pl = prCat[i];
+    assert.equal(s.pricingReferenceId, pl.pricingReferenceId);
+    assert.equal(s.metadata.catalogLineRole, pl.kind === "catalog" ? pl.catalogLineRole : null);
+    assert.equal(s.label, pl.label);
+  });
+});
+
+test("manual label comes from pricingConfig; identity + option identity preserved", () => {
+  // maintenance manual line → label from config; ppf manual line → optionIdentity from ppfTypeId.
+  const draft = draftWith(["maintenance", "ppf"], {
+    bodyMaintenance: { menuId: "mm1", unitPriceInput: "5000" },
+    ppf: { installationMethod: "full", selectedPartIds: [], quantitiesByPart: {}, ppfTypeId: "gg1", unitPriceInput: "100000", interiorRows: [] },
+  });
+  const req = okReq(run(draft));
+  const maint = req.services.find((s) => s.category === "maintenance");
+  assert.equal(maint?.label, "6ヶ月ボディメンテナンス", "label from config, not the code");
+  assert.equal(maint?.manualPricingIdentity, "mm1");
+  const ppf = req.services.find((s) => s.category === "ppf");
+  assert.equal(ppf?.manualPricingIdentity, "full");
+  assert.deepEqual(ppf?.selectedOptionReferenceIds, ["gg1"], "option identity preserved");
+});
+
+test("customer/vehicle/kana/creditTerms/displacement/notes preserved", () => {
+  const d = resetWizardDraft();
+  const draft: EstimateWizardDraftV22 = {
+    ...d,
+    customer: { ...d.customer, sourceMode: "new", customerId: null,
+      newCustomer: { ...d.customer.newCustomer, name: "山田太郎", kana: "ヤマダタロウ", creditTerms: "月末締め翌月末払い" } },
+    vehicle: { ...d.vehicle, sourceMode: "new", vehicleId: null,
+      newVehicle: { ...d.vehicle.newVehicle, model: "クラウン", displacement: "1998cc" }, bodySizeKey: "M" },
+    serviceSelection: { ...d.serviceSelection, selectedCategories: ["maintenance"] },
+    serviceConfiguration: { ...d.serviceConfiguration, ...maintCfg },
+    notes: { customerNotes: "お客様備考", internalMemo: "社内メモ" },
+  };
+  const req = okReq(run(draft));
+  assert.equal(req.customer.mode, "new");
+  if (req.customer.mode === "new") { assert.equal(req.customer.kana, "ヤマダタロウ"); assert.equal(req.customer.creditTerms, "月末締め翌月末払い"); }
+  assert.equal(req.vehicle.mode, "new");
+  if (req.vehicle.mode === "new") assert.equal(req.vehicle.displacement, "1998cc");
+  assert.equal(req.notes.customerNotes, "お客様備考");
+  assert.equal(req.notes.internalMemo, "社内メモ");
+  assert.equal(req.metadata.source, "estimate-wizard-v2.2");
+});
+
+test("fixed-amount discount intent is preserved with appliedAmount from the result", () => {
+  const draft = draftWith(["maintenance"], maintCfg, { mode: "amount", amountInput: "1000" });
+  const pr = computeWizardPricingFromConfig(draft, PC, CATALOG, RANK);
+  const req = okReq(run(draft, { pricingResult: pr }));
+  assert.equal(req.discount.intent.mode, "fixed_amount");
+  assert.equal(req.discount.intent.fixedAmount, 1000);
+  assert.equal(req.discount.appliedAmount, pr.discountTotal);
+  assert.equal(req.pricing.taxRatePercent, 10, "tax rate from the rebuilt bundle");
+  assert.equal(req.nonPriceableSelections.length, 0);
+});
+
+test("a valid mapped request passes validateEstimateSaveRequest", () => {
+  const req = okReq(run(draftWith(["maintenance"], maintCfg)));
+  assert.equal(validateEstimateSaveRequest(req).ok, true);
+});
+
+// ── Failure cases (each reason) ─────────────────────────────────────────────────────
+
+const baseResult = () => computeWizardPricingFromConfig(draftWith(["maintenance"], maintCfg), PC, CATALOG, RANK);
+const withResult = (pr: WizardPricingResult) => run(draftWith(["maintenance"], maintCfg), { pricingResult: pr });
+
+test("pricing-incomplete / pricing-error / unresolved-items", () => {
+  expectFail(run(draftWith([])), "pricing-incomplete");                                  // no selection → unavailable
+  expectFail(withResult({ ...baseResult(), errors: [{ code: "E", category: null, sourceId: null, message: "e" }] }), "pricing-error");
+  expectFail(withResult({ ...baseResult(), unresolvedItems: [{ category: "maintenance", sourceId: null, code: "U", message: "u" }] }), "unresolved-items");
+});
+
+test("percentage-discount-unsupported / coupon-unpriced", () => {
+  expectFail(withResult({ ...baseResult(), discountIntent: { mode: "percentage", percentage: 10 } }), "percentage-discount-unsupported");
+  expectFail(withResult({ ...baseResult(), couponState: { status: "selected_not_priced", couponId: "c", label: "x", warningCode: "COUPON_PRICING_NOT_IMPLEMENTED" } }), "coupon-unpriced");
+});
+
+test("null / non-finite / negative aggregate + line amounts, and invalid quantity", () => {
+  expectFail(withResult({ ...baseResult(), grandTotal: null }), "null-aggregate-total");
+  expectFail(withResult({ ...baseResult(), lines: baseResult().lines.map((l) => ({ ...l, unitPrice: null })) }), "null-line-amount");
+  expectFail(withResult({ ...baseResult(), subtotal: Infinity }), "non-finite-amount");
+  expectFail(withResult({ ...baseResult(), subtotal: -1 }), "negative-amount");
+  expectFail(withResult({ ...baseResult(), lines: baseResult().lines.map((l) => ({ ...l, quantity: 0 })) }), "invalid-quantity");
+});
+
+test("missing catalog identity / missing manual identity / duplicate line identity", () => {
+  const coat = computeWizardPricingFromConfig(draftWith(["coating"], coatingCfg("one-evo")), PC, CATALOG, RANK);
+  // empty catalog id → missing-catalog-identity
+  const emptyId = { ...coat, lines: coat.lines.map((l) => (l.kind === "catalog" ? { ...l, pricingReferenceId: "" } : l)) };
+  expectFail(run(draftWith(["coating"], coatingCfg("one-evo")), { pricingResult: emptyId }), "missing-catalog-identity");
+  // manual line correlating to no bundle entry → missing-manual-identity
+  const base = baseResult();
+  const badManual = { ...base, lines: base.lines.map((l) => (l.kind === "manual" ? { ...l, sourceId: "maintenance:UNKNOWN" } : l)) };
+  expectFail(withResult(badManual), "missing-manual-identity");
+  // duplicate catalog line → duplicate-line-identity
+  const dup = { ...coat, lines: [...coat.lines, coat.lines[0]] };
+  expectFail(run(draftWith(["coating"], coatingCfg("one-evo")), { pricingResult: dup }), "duplicate-line-identity");
+});
+
+test("unknown-configured-item (selected code not in config)", () => {
+  expectFail(run(draftWith(["maintenance"], { bodyMaintenance: { menuId: "no-such-menu", unitPriceInput: "5000" } })), "unknown-configured-item");
+});
+
+test("result-bundle-mismatch (result from a different draft)", () => {
+  const coatingResult = computeWizardPricingFromConfig(draftWith(["coating"], coatingCfg("one-evo")), PC, CATALOG, RANK);
+  // map a coating result against a maintenance draft
+  expectFail(run(draftWith(["maintenance"], maintCfg), { pricingResult: coatingResult }), "result-bundle-mismatch");
+});
+
+test("a selected priceable:false option is rejected (pricing gate preserved)", () => {
+  const draft = draftWith(["maintenance"], {
+    bodyMaintenance: { menuId: "mm1", unitPriceInput: "5000" },
+    storeGlobalOptions: { selectedOptionIds: ["go-np"], unitPricesByOption: { "go-np": "1000" }, quantitiesByOption: {} },
+  });
+  const r = run(draft);
+  assert.equal(r.ok, false);
+});
+
+test("an unexpected internal exception becomes mapping-failed, never thrown", () => {
+  const draft = draftWith(["coating"], coatingCfg("one-evo"));
+  const badCatalog = {} as unknown as PricingCatalog; // buildWizardPricingInputFromConfig will throw on catalog.coatings
+  let r!: ConfigSaveMapperResult;
+  assert.doesNotThrow(() => {
+    r = mapWizardDraftToSaveRequestFromConfig({ draft, pricingResult: computeWizardPricingFromConfig(draft, PC, CATALOG, RANK), pricingConfig: PC, catalog: badCatalog, shopRank: RANK });
+  });
+  expectFail(r, "mapping-failed");
+});
+
+// ── Deterministic precedence ────────────────────────────────────────────────────────
+
+test("precedence: percentage-discount-unsupported wins over a null aggregate total", () => {
+  const pr = { ...baseResult(), discountIntent: { mode: "percentage" as const, percentage: 10 }, grandTotal: null };
+  expectFail(withResult(pr), "percentage-discount-unsupported"); // order 6 < 8
+});
+
+// ── R50A-F1 — authoritative bundle / payload parity fail-closed corrections ─────────
+
+// A. A forged complete/success pricingResult can NEVER hide an authoritative bundle error.
+test("R50A-F1 A: a bundle MANUAL_PRICE_REQUIRED error is not hidden by a forged complete result → pricing-error", () => {
+  const badDraft = draftWith(["maintenance"], { bodyMaintenance: { menuId: "mm1", unitPriceInput: "" } });
+  const forgedComplete = baseResult(); // status success, completeness complete, no errors — a decoy
+  expectFail(run(badDraft, { pricingResult: forgedComplete }), "pricing-error");
+});
+
+test("R50A-F1 A: a selected priceable:false option surfaces as exactly pricing-error", () => {
+  const draft = draftWith(["maintenance"], {
+    bodyMaintenance: { menuId: "mm1", unitPriceInput: "5000" },
+    storeGlobalOptions: { selectedOptionIds: ["go-np"], unitPricesByOption: { "go-np": "1000" }, quantitiesByOption: {} },
+  });
+  expectFail(run(draft), "pricing-error");
+});
+
+// B. Coupon fail-closed — a non-zero couponTotal is never silently copied.
+test("R50A-F1 B: a non-zero couponTotal fails closed → coupon-unpriced", () => {
+  expectFail(withResult({ ...baseResult(), couponTotal: 999 }), "coupon-unpriced");
+});
+
+// C. Complete discount-intent parity — a mode match with a differing amount still rejects.
+test("R50A-F1 C: bundle fixed 1000 vs result fixed 2000 → result-bundle-mismatch", () => {
+  const draft = draftWith(["maintenance"], maintCfg, { mode: "amount", amountInput: "1000" });
+  const pr = computeWizardPricingFromConfig(draft, PC, CATALOG, RANK);
+  const forged: WizardPricingResult = { ...pr, discountIntent: { mode: "fixed_amount", amount: 2000 } };
+  expectFail(run(draft, { pricingResult: forged }), "result-bundle-mismatch");
+});
+
+// D. Manual-line identity/category parity — a matched sourceId with a different category rejects.
+test("R50A-F1 D: manual sourceId maintenance:mm1 relabelled category ppf → result-bundle-mismatch", () => {
+  const base = baseResult();
+  const miscat: WizardPricingResult = {
+    ...base,
+    lines: base.lines.map((l) => (l.kind === "manual" ? { ...l, category: "ppf" } : l)),
+  };
+  expectFail(withResult(miscat), "result-bundle-mismatch");
+});
+
+test("R50A-F1 D: a duplicated manual identity → duplicate-line-identity", () => {
+  const base = baseResult(); // one maintenance manual line
+  const dupManual: WizardPricingResult = { ...base, lines: [...base.lines, base.lines[0]] };
+  expectFail(withResult(dupManual), "duplicate-line-identity");
+});
+
+// Catalog identity — a missing catalogLineRole fails closed (defensive; the adapter forbids it upstream).
+test("R50A-F1: a catalog line missing its catalogLineRole → missing-catalog-identity", () => {
+  const coatDraft = draftWith(["coating"], coatingCfg("one-evo"));
+  const coat = computeWizardPricingFromConfig(coatDraft, PC, CATALOG, RANK);
+  const noRole: WizardPricingResult = {
+    ...coat,
+    lines: coat.lines.map((l) => (l.kind === "catalog" ? ({ ...l, catalogLineRole: null } as unknown as typeof l) : l)),
+  };
+  expectFail(run(coatDraft, { pricingResult: noRole }), "missing-catalog-identity");
+});
+
+// Happy path — a valid fixed-amount discount whose bundle/result agree still maps successfully.
+test("R50A-F1: a valid fixed-amount discount (bundle == result) still maps successfully", () => {
+  const draft = draftWith(["maintenance"], maintCfg, { mode: "amount", amountInput: "1000" });
+  const pr = computeWizardPricingFromConfig(draft, PC, CATALOG, RANK);
+  const req = okReq(run(draft, { pricingResult: pr }));
+  assert.equal(req.discount.intent.mode, "fixed_amount");
+  assert.equal(req.discount.intent.fixedAmount, 1000);
+  assert.equal(req.coupon.appliedAmount, 0);
+  assert.equal(validateEstimateSaveRequest(req).ok, true);
+});
+
+// ── Source guards ────────────────────────────────────────────────────────────────
+
+test("the production mapper imports no fixture/default/legacy/persistence and has no monetary fallback", () => {
+  const code = readFileSync("src/components/estimates/wizard/save/estimate-save-mapper-from-config.ts", "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  assert.equal(/DEFAULT_PRICING_CATALOG/.test(code), false, "no DEFAULT catalog");
+  assert.equal(/EXAMPLE_/.test(code), false, "no EXAMPLE_*");
+  assert.equal(/FIXTURE_|wizard-catalog-fixtures/.test(code), false, "no fixtures");
+  assert.equal(/buildWizardPricingInput(?!FromConfig)/.test(code), false, "no fixture input adapter");
+  assert.equal(/wizard-pricing-input-adapter(?!-config)/.test(code), false, "no fixture adapter path");
+  assert.equal(/estimate-save-mapper(?!-from-config)/.test(code), false, "no legacy mapper import");
+  assert.equal(/ScreensPreview/.test(code), false, "no ScreensPreview");
+  assert.equal(/\?\?\s*0|\|\|\s*0/.test(code), false, "no ?? 0 / || 0 monetary fallback");
+  assert.equal(/calculateEstimate\b|computeWizardPricingFromConfig/.test(code), false, "no engine/compute call");
+  assert.equal(/use client|from ["']react["']/.test(code), false, "no React / use client");
+  assert.equal(/supabase|server-only|persistence|createEstimate|updateEstimate/.test(code), false, "no DB/persistence");
+  assert.equal(/next\/(navigation|router|image)/.test(code), false, "no route import");
+  assert.equal(/Date\.now|new Date|Math\.random|randomUUID|crypto\./.test(code), false, "no clock/random/uuid");
+});
