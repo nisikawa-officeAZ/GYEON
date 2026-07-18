@@ -307,35 +307,51 @@ test("13. equivalent inputs are deterministic", () => {
   assert.deepEqual(a, b);
 });
 
-// ── 14 + 15. Source guards ───────────────────────────────────────────────────────
+// ── 14 + 15. Source guards (BOTH the client hook AND the extracted server-safe core) ─────
+// The compute logic now lives in the core module; guarding only the thin hook wrapper would pass
+// trivially, so every prohibited-import / no-arithmetic check runs against BOTH modules.
 
 const MODULE_SRC = "src/components/estimates/wizard/pricing/useWizardPricingFromConfig.ts";
+const CORE_SRC = "src/components/estimates/wizard/pricing/compute-wizard-pricing-from-config.ts";
 const codeOf = (path: string): string =>
   readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
-test("14. module rejects all prohibited fixture/default imports and calls", () => {
-  const code = codeOf(MODULE_SRC);
-  assert.equal(/DEFAULT_PRICING_CATALOG/.test(code), false, "no DEFAULT_PRICING_CATALOG");
-  assert.equal(/buildWizardPricingInput(?!FromConfig)/.test(code), false, "no fixture input adapter");
-  assert.equal(/wizard-pricing-input-adapter(?!-config)/.test(code), false, "no fixture adapter path");
-  assert.equal(/useWizardPricing(?!FromConfig)/.test(code), false, "no fixture display hook");
-  assert.equal(/FIXTURE_PRESENTATION_METADATA/.test(code), false, "no fixture presentation metadata");
-  assert.equal(/wizard-catalog-fixtures/.test(code), false, "no catalog fixtures");
-  assert.equal(/wizard-manual-pricing(?!-config)/.test(code), false, "no fixture manual pricing");
-  assert.equal(/ScreensPreview/.test(code), false, "no ScreensPreview");
-  assert.equal(/production\/EstimateWizardContainer/.test(code), false, "no production container");
+test("14. both hook and core reject all prohibited fixture/default imports and calls", () => {
+  for (const src of [MODULE_SRC, CORE_SRC]) {
+    const code = codeOf(src);
+    assert.equal(/DEFAULT_PRICING_CATALOG/.test(code), false, `${src}: no DEFAULT_PRICING_CATALOG`);
+    assert.equal(/buildWizardPricingInput(?!FromConfig)/.test(code), false, `${src}: no fixture input adapter`);
+    assert.equal(/wizard-pricing-input-adapter(?!-config)/.test(code), false, `${src}: no fixture adapter path`);
+    assert.equal(/useWizardPricing(?!FromConfig)/.test(code), false, `${src}: no fixture display hook`);
+    assert.equal(/FIXTURE_PRESENTATION_METADATA/.test(code), false, `${src}: no fixture presentation metadata`);
+    assert.equal(/wizard-catalog-fixtures/.test(code), false, `${src}: no catalog fixtures`);
+    assert.equal(/wizard-manual-pricing(?!-config)/.test(code), false, `${src}: no fixture manual pricing`);
+    assert.equal(/ScreensPreview/.test(code), false, `${src}: no ScreensPreview`);
+    assert.equal(/production\/EstimateWizardContainer/.test(code), false, `${src}: no production container`);
+  }
 });
 
-test("15. module has no pricing arithmetic, apply/save, DB, route, or React-state side effects", () => {
-  const code = codeOf(MODULE_SRC);
-  // No arithmetic ownership: it forwards engine numbers, never computes totals/rounding here.
-  assert.equal(/calculateEstimateTotals|bodySizeMultiplier|Math\.|\.reduce\(/.test(code), false, "no arithmetic");
-  // No apply/save/DB/route.
-  assert.equal(/buildEstimateEditorApplyPlan|wizardDraftToEditorPatch/.test(code), false, "no apply path");
-  assert.equal(/from ["'][^"']*\/save\//.test(code), false, "no save module");
-  assert.equal(/supabase|createEstimate|updateEstimate|create-estimate/.test(code), false, "no DB/save");
-  assert.equal(/next\/(navigation|router|image)|server-only/.test(code), false, "no route/server import");
-  // Read-only hook: useMemo only, no state or effects.
-  assert.equal(/useState|useReducer|useEffect|useRef/.test(code), false, "no React state/effect");
-  assert.equal(/useMemo/.test(code), true, "hook uses useMemo");
+test("15. both hook and core have no arithmetic/apply/save/DB/route; hook uses useMemo; core is server-safe", () => {
+  for (const src of [MODULE_SRC, CORE_SRC]) {
+    const code = codeOf(src);
+    // No arithmetic ownership: forwards engine numbers, never computes totals/rounding here.
+    assert.equal(/calculateEstimateTotals|bodySizeMultiplier|Math\.|\.reduce\(/.test(code), false, `${src}: no arithmetic`);
+    assert.equal(/buildEstimateEditorApplyPlan|wizardDraftToEditorPatch/.test(code), false, `${src}: no apply path`);
+    assert.equal(/from ["'][^"']*\/save\//.test(code), false, `${src}: no save module`);
+    assert.equal(/supabase|createEstimate|updateEstimate|create-estimate/.test(code), false, `${src}: no DB/save`);
+    assert.equal(/next\/(navigation|router|image)|server-only/.test(code), false, `${src}: no route/server import`);
+    assert.equal(/useState|useReducer|useEffect|useRef/.test(code), false, `${src}: no React state/effect`);
+  }
+  // The HOOK is a client component that memoizes.
+  const hook = codeOf(MODULE_SRC);
+  assert.equal(/useMemo/.test(hook), true, "hook uses useMemo");
+  assert.match(hook, /^"use client";/, "hook declares the client boundary");
+  // The CORE is server-safe: NO "use client", NO React import/hook.
+  const core = codeOf(CORE_SRC);
+  assert.equal(/use client/.test(core), false, "core has no \"use client\"");
+  assert.equal(/from ["']react["']|useMemo|useState|useEffect/.test(core), false, "core imports no React");
+  assert.match(core, /export function computeWizardPricingFromConfig/, "core owns the pure compute");
+  // The hook DELEGATES to the core (imports + re-exports it).
+  assert.match(hook, /from ["']\.\/compute-wizard-pricing-from-config["']/, "hook imports the core");
+  assert.match(hook, /export \{ computeWizardPricingFromConfig \}/, "hook re-exports the core for compatibility");
 });

@@ -29,18 +29,52 @@ const INVALID_CODES: string[] = [
   WIZARD_PRICING_ERRORS.INVALID_QUANTITY,
 ];
 
+/** A catalog line's identity must be a real, non-empty, non-whitespace string. Validated, never trimmed. */
+function isValidCatalogId(v: string | null): v is string {
+  return typeof v === "string" && v.trim() !== "";
+}
+
 export function mapProductionResultToWizard(
   result: EstimateResult,
   bundle: WizardPricingInputBundle,
 ): WizardPricingResult {
-  // Catalog lines — from the engine's authoritative coating line items.
-  const catalogLines: WizardPricingLineResult[] = result.services
-    .filter((svc) => svc.type === "coating")
-    .flatMap((svc) =>
-      svc.lineItems.map((it) => ({
-        kind:           "catalog" as const,
+  // Catalog lines — from the engine's authoritative coating line items. Each MUST carry the engine's
+  // STABLE pricing_reference_id (never the label/sourceId/index/order). A projected catalog line whose
+  // id is missing / empty / whitespace-only FAILS CLOSED as a WHOLE RESULT: no catalog line is ever
+  // emitted with a null id, no partial/success is returned, and no numeric total is retained. The id
+  // is validated (non-empty, non-whitespace) but NEVER trimmed, invented, or derived.
+  const catalogLines: WizardPricingLineResult[] = [];
+  for (const svc of result.services) {
+    if (svc.type !== "coating") continue;
+    for (const it of svc.lineItems) {
+      const refId = it.pricing_reference_id;
+      if (!isValidCatalogId(refId)) {
+        const code = WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE;
+        const message = "カタログ明細の識別子がありません。";
+        return {
+          status: "error",
+          completeness: "error",
+          currency: "JPY",
+          lines: [],
+          unresolvedItems: [{ category: it.category, sourceId: null, code, message }],
+          subtotal: null,
+          discountTotal: null,
+          couponTotal: 0,
+          taxableSubtotal: null,
+          taxTotal: null,
+          grandTotal: null,
+          warnings: bundle.warnings,
+          errors: [...bundle.errors, { code, category: it.category, sourceId: null, message }],
+          couponState: bundle.couponState,
+          discountIntent: bundle.discountIntent,
+        };
+      }
+      // `refId` is narrowed to a non-empty string here — the catalog variant requires exactly that.
+      catalogLines.push({
+        kind:           "catalog",
         category:       it.category,
         sourceId:       `${it.category}:${it.item_name}`,
+        pricingReferenceId: refId,
         label:          it.item_name,
         quantity:       it.quantity,
         unitPrice:      it.unit_price,
@@ -48,8 +82,9 @@ export function mapProductionResultToWizard(
         discountAmount: null,
         taxAmount:      null,
         lineTotal:      lineTotal(it.quantity, it.unit_price, it.discount_rate),
-      })),
-    );
+      });
+    }
+  }
 
   // Manual lines — surfaced from the resolved operator amounts (identical extended price to the value
   // passed into canonical aggregation, so the displayed lines and the engine subtotal always agree).
@@ -59,6 +94,7 @@ export function mapProductionResultToWizard(
       kind:           "manual" as const,
       category:       l.sourceCategory,
       sourceId:       `${l.sourceCategory}:${l.manualPricingIdentity}`,
+      pricingReferenceId: null, // manual lines never carry a catalog identity
       label:          l.label,
       quantity:       l.quantity,
       unitPrice:      l.unitPrice,

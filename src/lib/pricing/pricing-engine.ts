@@ -74,6 +74,12 @@ export interface PricedLineItem {
   sku:                   null;
   product_name_snapshot: null;
   retail_price_snapshot: null;
+  // Stable authoritative catalog identity (EW-UI-5A1-B1). Non-null ONLY for catalog-priced lines that
+  // currently project as Wizard catalog lines — i.e. COATING lines (see calcCoating). It is the
+  // engine-owned persistence identity: never a label, index, or line order. Every other line
+  // (manual, and the not-yet-projected maintenance/carwash/roomclean/PPF/window catalog lines)
+  // stays null — B1 does NOT claim every catalog-backed engine line has an id.
+  pricing_reference_id:  string | null;
 }
 
 export interface ServiceSubtotal {
@@ -123,11 +129,12 @@ export interface PpfConfig {
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
-function mkItem(cat: EstimateCategory, name: string, price: number, sortOrder: number, qty = 1): PricedLineItem {
+function mkItem(cat: EstimateCategory, name: string, price: number, sortOrder: number, qty = 1, pricingReferenceId: string | null = null): PricedLineItem {
   return {
     category: cat, item_name: name, quantity: qty, unit_price: price,
     discount_rate: 0, sort_order: sortOrder, item_type: "manual",
     product_id: null, sku: null, product_name_snapshot: null, retail_price_snapshot: null,
+    pricing_reference_id: pricingReferenceId,
   };
 }
 
@@ -143,18 +150,20 @@ function calcCoating(input: CoatingInput, offset: number, catalog: PricingCatalo
   let idx = offset;
   const multi = bodySizeMultiplier(catalog, input.sizeKey);
   const coat  = catalog.coatings.find(c => c.id === input.coatingId);
-  if (coat) items.push(mkItem("coating", coat.name, Math.round(coat.base * multi), idx++));
+  // EW-UI-5A1-B1: each coating line carries its STABLE authoritative catalog id (never the label) —
+  // base → coatingId, second → topcoat2, third → topcoat3, option → option id.
+  if (coat) items.push(mkItem("coating", coat.name, Math.round(coat.base * multi), idx++, 1, input.coatingId));
   if (input.topcoat2) {
     const p = Math.round((catalog.topcoatBase[input.topcoat2] ?? 0) * multi);
-    items.push(mkItem("coating", `トップコート: ${catalog.topcoatName[input.topcoat2] ?? input.topcoat2}`, p, idx++));
+    items.push(mkItem("coating", `トップコート: ${catalog.topcoatName[input.topcoat2] ?? input.topcoat2}`, p, idx++, 1, input.topcoat2));
   }
   if (input.topcoat3) {
     const p = Math.round((catalog.topcoatBase[input.topcoat3] ?? 0) * multi);
-    items.push(mkItem("coating", `トップコート(3層): ${catalog.topcoatName[input.topcoat3] ?? input.topcoat3}`, p, idx++));
+    items.push(mkItem("coating", `トップコート(3層): ${catalog.topcoatName[input.topcoat3] ?? input.topcoat3}`, p, idx++, 1, input.topcoat3));
   }
   (input.optionIds ?? []).forEach(id => {
     const opt = catalog.coatingOptions.find(o => o.id === id);
-    if (opt) items.push(mkItem(opt.cat, opt.name, opt.price, idx++));
+    if (opt) items.push(mkItem(opt.cat, opt.name, opt.price, idx++, 1, opt.id));
   });
   return { type: "coating", lineItems: items, subtotal: sum(items) };
 }

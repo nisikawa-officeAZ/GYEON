@@ -23,8 +23,8 @@ export interface WizardPricingIssue {
   message:  string;
 }
 
-export interface WizardPricingLineResult {
-  kind:           WizardPricingLineKind; // catalog (production engine) vs manual (operator input)
+/** Fields shared by every displayed line, independent of its price-identity source. */
+export interface WizardPricingLineBase {
   category:       string;
   sourceId:       string;
   label:          string;
@@ -35,6 +35,16 @@ export interface WizardPricingLineResult {
   taxAmount:      number | null; // document-level tax not distributed to lines → null
   lineTotal:      number | null;
 }
+
+// EW-UI-5A1-B1 — the authoritative-identity invariant is encoded IN THE TYPE (discriminated on `kind`):
+//   • kind "catalog" → pricingReferenceId is a NON-NULL stable catalog id (a catalog line can NEVER
+//     be constructed with a null id — the compiler forbids it);
+//   • kind "manual"  → pricingReferenceId is null.
+// The id is derived from the engine line's pricing_reference_id — NEVER from the label, sourceId,
+// index, or line order. B2 consumes pricingReferenceId directly (not sourceId).
+export type WizardPricingLineResult =
+  | (WizardPricingLineBase & { kind: "catalog"; pricingReferenceId: string })
+  | (WizardPricingLineBase & { kind: "manual";  pricingReferenceId: null });
 
 /** A selected priceable service that could not be priced (surfaced on Screen 7; never dropped). */
 export interface WizardUnresolvedItem {
