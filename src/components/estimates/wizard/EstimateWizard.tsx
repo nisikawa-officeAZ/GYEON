@@ -10,15 +10,20 @@
 // NOTE: not yet mounted on the /estimates routes; the current EstimateEditor stays in
 // place until Phase 2 parity is confirmed (cutover is a separate approved step).
 //
-// EW-UI-3C: the host now REQUIRES the shared trusted runtime inputs (shopRank + screenConfig). They
-// are threaded to Step4Estimate ONLY — never stored in WizardStore, the canonical draft, or hook
-// state (the hook stays business-state-only), and never passed to any other step. There is no
-// default rank and no fixture screenConfig fallback: a caller that cannot supply real dealer inputs
-// cannot mount the wizard.
+// EW-UI-3C: the host REQUIRES the shared trusted selector inputs (shopRank + screenConfig), threaded
+// to Step4Estimate ONLY.
+//
+// EW-UI-4A3: the host additionally REQUIRES the authoritative pricing inputs (catalog + pricingConfig)
+// and now displays READ-ONLY pricing. It runs the SAME config-driven route the apply planner uses via
+// useWizardPricingFromConfig, and projects the WizardPricingResult DIRECTLY into WizardShell totals —
+// no arithmetic, no `?? 0`, no second calculation, null preserved. None of the four inputs (nor the
+// pricing result) is ever stored in WizardStore, EstimateWizardDraftV22, or hook state; catalog and
+// pricingConfig are consumed only by the pricing hook and never passed into any step. No save/apply.
 
 import { useEstimateWizard } from "./useEstimateWizard";
-import { WizardShell } from "./WizardShell";
-import type { WizardRuntimeInputs } from "./contract/wizard-runtime-inputs";
+import { WizardShell, type WizardTotals } from "./WizardShell";
+import type { WizardHostRuntimeInputs } from "./contract/wizard-pricing-runtime-inputs";
+import { useWizardPricingFromConfig } from "./pricing/useWizardPricingFromConfig";
 import { Step1Customer } from "./steps/Step1Customer";
 import { Step2Vehicle } from "./steps/Step2Vehicle";
 import { Step3Category } from "./steps/Step3Category";
@@ -27,16 +32,27 @@ import { Step5Discount } from "./steps/Step5Discount";
 import { Step6Notes } from "./steps/Step6Notes";
 import { Step7Review } from "./steps/Step7Review";
 
-export interface EstimateWizardProps extends WizardRuntimeInputs {
+export interface EstimateWizardProps extends WizardHostRuntimeInputs {
   mode?: "create" | "edit";
 }
 
-export default function EstimateWizard({ mode = "create", shopRank, screenConfig }: EstimateWizardProps) {
+export default function EstimateWizard({ mode = "create", shopRank, screenConfig, catalog, pricingConfig }: EstimateWizardProps) {
   const api = useEstimateWizard();
   const title = mode === "edit" ? "見積編集" : "新規見積";
 
+  // Read-only authoritative pricing over the canonical draft (same config-driven route as apply).
+  const pricing = useWizardPricingFromConfig(api.draft, pricingConfig, catalog, shopRank);
+  // Project the result DIRECTLY into the shell — values pass through untouched (null stays null).
+  const totals: WizardTotals = {
+    subtotal: pricing.subtotal,
+    discount: pricing.discountTotal,
+    tax: pricing.taxTotal,
+    total: pricing.grandTotal,
+    state: pricing.completeness,
+  };
+
   return (
-    <WizardShell api={api} title={title}>
+    <WizardShell api={api} title={title} totals={totals}>
       {api.step === 1 && <Step1Customer api={api} />}
       {api.step === 2 && <Step2Vehicle api={api} />}
       {api.step === 3 && <Step3Category api={api} />}

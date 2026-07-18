@@ -29,6 +29,8 @@ import type { WizardServiceConfigurationDraft } from "../draft/wizard-draft-type
 import type { WizardRowIdCryptoSource } from "../contract/wizard-row-id";
 import type { WizardScreenConfiguration } from "../contract/wizard-runtime-inputs";
 import type { EstimateWizardApi } from "../useEstimateWizard";
+import { makePricingCatalog } from "@/lib/pricing/pricing-catalog";
+import type { ProductionPricingConfiguration } from "../pricing/wizard-manual-pricing-config";
 
 // ── helpers ───────────────────────────────────────────────────────────────────────
 
@@ -365,8 +367,15 @@ test("ppf_installer rank locks coating", () => {
 
 // ── 9. EstimateWizard requires and threads shopRank + screenConfig ─────────────────
 
+// Authoritative-shape empty test pricing config (labels only; no fixture/default values).
+const PC: ProductionPricingConfiguration = {
+  ppfMethods: [], filmTypes: [], maintenanceMenus: [], washMenus: [], roomCleaningMenus: [], storeGlobalOptions: [],
+};
+
 test("EstimateWizard mounts with the required runtime inputs", () => {
-  const html = render(<EstimateWizard shopRank="detailer" screenConfig={SC} />);
+  const html = render(
+    <EstimateWizard shopRank="detailer" screenConfig={SC} catalog={makePricingCatalog()} pricingConfig={PC} />,
+  );
   assert.ok(html.length > 0, "root wizard renders with runtime inputs supplied");
 });
 

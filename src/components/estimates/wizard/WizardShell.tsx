@@ -13,15 +13,40 @@ import { WIZARD_STEPS, type StepId } from "./wizard-types";
 import type { EstimateWizardApi } from "./useEstimateWizard";
 import { cn, formatYen, PrimaryButton, SecondaryButton } from "./ui";
 
+/** Fail-closed display state (mirrors WizardPricingResult.completeness). */
+export type WizardPricingDisplayState = "complete" | "partial" | "unavailable" | "error";
+
 export interface WizardTotals {
-  subtotal: number;
-  discount: number;
-  tax: number;
-  total: number;
-  ready: boolean; // false while the dealer catalog / pricing is still loading (Phase 2)
+  subtotal: number | null;
+  discount: number | null;
+  tax:      number | null;
+  total:    number | null;
+  state:    WizardPricingDisplayState;
 }
 
-const EMPTY_TOTALS: WizardTotals = { subtotal: 0, discount: 0, tax: 0, total: 0, ready: false };
+// Fail-closed default: no pricing yet → null amounts (rendered as —), NEVER a manufactured ¥0.
+const EMPTY_TOTALS: WizardTotals = { subtotal: null, discount: null, tax: null, total: null, state: "unavailable" };
+
+/** null → "—" (never a manufactured ¥0); a genuine numeric zero → "¥0". Presentation only. */
+function yen(v: number | null): string {
+  return v === null ? "—" : formatYen(v);
+}
+/** Discount line: null → "—" (never "-—"); a number → "-¥N". */
+function discountYen(v: number | null): string {
+  return v === null ? "—" : `-${formatYen(v)}`;
+}
+/** Operator-safe notice for every non-complete state (null when complete). */
+function stateNotice(state: WizardPricingDisplayState): string | null {
+  switch (state) {
+    case "partial":     return "一部の金額が未確定です。表示金額は確定前です。";
+    case "unavailable": return "サービスと必要情報を選択すると金額が表示されます。";
+    case "error":       return "金額を計算できません。入力内容を確認してください。";
+    default:            return null;
+  }
+}
+function noticeColor(state: WizardPricingDisplayState): string {
+  return state === "error" ? "text-red-400/90" : state === "partial" ? "text-amber-400/90" : "text-slate-400";
+}
 
 function FullStepper({ step, jumpTo, completed }: Pick<EstimateWizardApi, "step" | "jumpTo" | "completed">) {
   return (
@@ -78,13 +103,14 @@ function CompactStepper({ step, jumpTo, completed }: Pick<EstimateWizardApi, "st
 }
 
 function TotalRows({ totals }: { totals: WizardTotals }) {
+  const notice = stateNotice(totals.state);
   return (
     <div className="space-y-2 text-sm">
-      <div className="flex justify-between"><span className="text-slate-400">小計</span><span className="text-slate-200">{formatYen(totals.subtotal)}</span></div>
-      <div className="flex justify-between"><span className="text-slate-400">値引き</span><span className="text-slate-200">-{formatYen(totals.discount)}</span></div>
-      <div className="flex justify-between"><span className="text-slate-400">消費税</span><span className="text-slate-200">{formatYen(totals.tax)}</span></div>
-      <div className="flex justify-between border-t border-slate-700 pt-2 font-semibold"><span className="text-slate-200">合計</span><span className="text-white">{formatYen(totals.total)}</span></div>
-      {!totals.ready && <p className="text-[10px] text-amber-400/80">価格は Phase 2 で価格エンジンに接続され確定します。</p>}
+      <div className="flex justify-between"><span className="text-slate-400">小計</span><span className="text-slate-200">{yen(totals.subtotal)}</span></div>
+      <div className="flex justify-between"><span className="text-slate-400">値引き</span><span className="text-slate-200">{discountYen(totals.discount)}</span></div>
+      <div className="flex justify-between"><span className="text-slate-400">消費税</span><span className="text-slate-200">{yen(totals.tax)}</span></div>
+      <div className="flex justify-between border-t border-slate-700 pt-2 font-semibold"><span className="text-slate-200">合計</span><span className="text-white">{yen(totals.total)}</span></div>
+      {notice && <p className={cn("text-[10px]", noticeColor(totals.state))}>{notice}</p>}
     </div>
   );
 }
@@ -142,8 +168,11 @@ export function WizardShell({
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-[#0f172a]/95 backdrop-blur border-t border-slate-800">
         <div className="flex items-center justify-between mb-2 text-sm">
           <span className="text-slate-400">合計</span>
-          <span className="text-white font-semibold">{formatYen(totals.total)}</span>
+          <span className="text-white font-semibold">{yen(totals.total)}</span>
         </div>
+        {stateNotice(totals.state) && (
+          <p className={cn("text-[10px] mb-2", noticeColor(totals.state))}>{stateNotice(totals.state)}</p>
+        )}
         <NavButtons api={api} />
       </div>
     </div>
