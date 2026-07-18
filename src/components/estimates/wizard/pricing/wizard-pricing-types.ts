@@ -5,7 +5,7 @@
 // by the Wizard — every number originates from the production engine. Coupons are always excluded
 // (deferred); percentage discount is forwarded as intent (never converted to yen here).
 
-import type { PricingCouponState, PricingDiscountIntent } from "@/lib/pricing/canonical-pricing-engine";
+import type { PricingCouponState, PricingDiscountIntent, CatalogLineRole } from "@/lib/pricing/canonical-pricing-engine";
 import type { WizardPricingCompleteness } from "./wizard-pricing-identity";
 
 export type { WizardPricingCompleteness } from "./wizard-pricing-identity";
@@ -36,15 +36,17 @@ export interface WizardPricingLineBase {
   lineTotal:      number | null;
 }
 
-// EW-UI-5A1-B1 — the authoritative-identity invariant is encoded IN THE TYPE (discriminated on `kind`):
-//   • kind "catalog" → pricingReferenceId is a NON-NULL stable catalog id (a catalog line can NEVER
-//     be constructed with a null id — the compiler forbids it);
-//   • kind "manual"  → pricingReferenceId is null.
-// The id is derived from the engine line's pricing_reference_id — NEVER from the label, sourceId,
-// index, or line order. B2 consumes pricingReferenceId directly (not sourceId).
+// EW-UI-5A1-B1/B1E — the authoritative-identity invariant is encoded IN THE TYPE (discriminated on
+// `kind`):
+//   • kind "catalog" → pricingReferenceId is a NON-NULL stable catalog id AND catalogLineRole is a
+//     non-null semantic role (a catalog line can NEVER be constructed without both — the compiler
+//     forbids it). `${catalogLineRole}:${pricingReferenceId}` is unique even when a product repeats.
+//   • kind "manual"  → pricingReferenceId is null and catalogLineRole is null.
+// Both come from the engine line's pricing_reference_id / catalog_line_role — NEVER from the label,
+// sourceId, index, or line order. B2 consumes these directly (not sourceId).
 export type WizardPricingLineResult =
-  | (WizardPricingLineBase & { kind: "catalog"; pricingReferenceId: string })
-  | (WizardPricingLineBase & { kind: "manual";  pricingReferenceId: null });
+  | (WizardPricingLineBase & { kind: "catalog"; pricingReferenceId: string; catalogLineRole: CatalogLineRole })
+  | (WizardPricingLineBase & { kind: "manual";  pricingReferenceId: null;   catalogLineRole: null });
 
 /** A selected priceable service that could not be priced (surfaced on Screen 7; never dropped). */
 export interface WizardUnresolvedItem {

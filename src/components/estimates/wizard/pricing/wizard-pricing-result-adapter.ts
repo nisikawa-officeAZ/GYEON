@@ -38,17 +38,19 @@ export function mapProductionResultToWizard(
   result: EstimateResult,
   bundle: WizardPricingInputBundle,
 ): WizardPricingResult {
-  // Catalog lines — from the engine's authoritative coating line items. Each MUST carry the engine's
-  // STABLE pricing_reference_id (never the label/sourceId/index/order). A projected catalog line whose
-  // id is missing / empty / whitespace-only FAILS CLOSED as a WHOLE RESULT: no catalog line is ever
-  // emitted with a null id, no partial/success is returned, and no numeric total is retained. The id
-  // is validated (non-empty, non-whitespace) but NEVER trimmed, invented, or derived.
+  // Catalog lines — from the engine's authoritative coating line items. Each MUST carry BOTH the
+  // engine's STABLE pricing_reference_id AND its semantic catalog_line_role (never the label/sourceId/
+  // index/sort_order). A projected catalog line missing EITHER identity component FAILS CLOSED as a
+  // WHOLE RESULT: no catalog line is ever emitted without both, no partial/success is returned, and no
+  // numeric total is retained. Values are validated (id non-empty/non-whitespace) but NEVER trimmed,
+  // invented, or derived.
   const catalogLines: WizardPricingLineResult[] = [];
   for (const svc of result.services) {
     if (svc.type !== "coating") continue;
     for (const it of svc.lineItems) {
       const refId = it.pricing_reference_id;
-      if (!isValidCatalogId(refId)) {
+      const role = it.catalog_line_role;
+      if (!isValidCatalogId(refId) || role === null) {
         const code = WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE;
         const message = "カタログ明細の識別子がありません。";
         return {
@@ -69,12 +71,14 @@ export function mapProductionResultToWizard(
           discountIntent: bundle.discountIntent,
         };
       }
-      // `refId` is narrowed to a non-empty string here — the catalog variant requires exactly that.
+      // `refId` narrowed to non-empty string, `role` narrowed to CatalogLineRole — exactly what the
+      // catalog variant requires.
       catalogLines.push({
         kind:           "catalog",
         category:       it.category,
         sourceId:       `${it.category}:${it.item_name}`,
         pricingReferenceId: refId,
+        catalogLineRole: role,
         label:          it.item_name,
         quantity:       it.quantity,
         unitPrice:      it.unit_price,
@@ -95,6 +99,7 @@ export function mapProductionResultToWizard(
       category:       l.sourceCategory,
       sourceId:       `${l.sourceCategory}:${l.manualPricingIdentity}`,
       pricingReferenceId: null, // manual lines never carry a catalog identity
+      catalogLineRole: null,    // …nor a catalog role
       label:          l.label,
       quantity:       l.quantity,
       unitPrice:      l.unitPrice,

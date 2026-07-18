@@ -33,6 +33,7 @@ export type {
   PpfInput,
   WindowInput,
   PricedLineItem,
+  CatalogLineRole,
   ServiceSubtotal,
   DiscountInput,
   EstimateResult,

@@ -62,6 +62,16 @@ export type ServiceInput =
 
 // ── Output types ──────────────────────────────────────────────────────────────
 
+// EW-UI-5A1-B1E — semantic role of a catalog-priced line. Distinguishes the coating layers so a
+// deterministic line identity survives REPEATED products (e.g. ONE base + ONE topcoat share the same
+// pricingReferenceId, but `base` vs `topcoat2` keep them uniquely identifiable). Produced by the
+// selection branch in calcCoating — NEVER from array position, sort_order, or label.
+export type CatalogLineRole =
+  | "base"
+  | "topcoat2"
+  | "topcoat3"
+  | "option";
+
 export interface PricedLineItem {
   category:              EstimateCategory;
   item_name:             string;
@@ -80,6 +90,10 @@ export interface PricedLineItem {
   // (manual, and the not-yet-projected maintenance/carwash/roomclean/PPF/window catalog lines)
   // stays null — B1 does NOT claim every catalog-backed engine line has an id.
   pricing_reference_id:  string | null;
+  // Semantic role of a catalog line (EW-UI-5A1-B1E), paired with pricing_reference_id so repeated
+  // products stay uniquely identifiable. Non-null on the same coating lines that carry an id; null
+  // for manual and non-projected lines.
+  catalog_line_role:     CatalogLineRole | null;
 }
 
 export interface ServiceSubtotal {
@@ -129,12 +143,13 @@ export interface PpfConfig {
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
-function mkItem(cat: EstimateCategory, name: string, price: number, sortOrder: number, qty = 1, pricingReferenceId: string | null = null): PricedLineItem {
+function mkItem(cat: EstimateCategory, name: string, price: number, sortOrder: number, qty = 1, pricingReferenceId: string | null = null, catalogLineRole: CatalogLineRole | null = null): PricedLineItem {
   return {
     category: cat, item_name: name, quantity: qty, unit_price: price,
     discount_rate: 0, sort_order: sortOrder, item_type: "manual",
     product_id: null, sku: null, product_name_snapshot: null, retail_price_snapshot: null,
     pricing_reference_id: pricingReferenceId,
+    catalog_line_role: catalogLineRole,
   };
 }
 
@@ -150,20 +165,21 @@ function calcCoating(input: CoatingInput, offset: number, catalog: PricingCatalo
   let idx = offset;
   const multi = bodySizeMultiplier(catalog, input.sizeKey);
   const coat  = catalog.coatings.find(c => c.id === input.coatingId);
-  // EW-UI-5A1-B1: each coating line carries its STABLE authoritative catalog id (never the label) —
-  // base → coatingId, second → topcoat2, third → topcoat3, option → option id.
-  if (coat) items.push(mkItem("coating", coat.name, Math.round(coat.base * multi), idx++, 1, input.coatingId));
+  // EW-UI-5A1-B1E: each coating line carries its STABLE authoritative catalog id AND its semantic role
+  // (never the label/index/order) — base → coatingId/"base", second → topcoat2/"topcoat2",
+  // third → topcoat3/"topcoat3", option → option id/"option".
+  if (coat) items.push(mkItem("coating", coat.name, Math.round(coat.base * multi), idx++, 1, input.coatingId, "base"));
   if (input.topcoat2) {
     const p = Math.round((catalog.topcoatBase[input.topcoat2] ?? 0) * multi);
-    items.push(mkItem("coating", `トップコート: ${catalog.topcoatName[input.topcoat2] ?? input.topcoat2}`, p, idx++, 1, input.topcoat2));
+    items.push(mkItem("coating", `トップコート: ${catalog.topcoatName[input.topcoat2] ?? input.topcoat2}`, p, idx++, 1, input.topcoat2, "topcoat2"));
   }
   if (input.topcoat3) {
     const p = Math.round((catalog.topcoatBase[input.topcoat3] ?? 0) * multi);
-    items.push(mkItem("coating", `トップコート(3層): ${catalog.topcoatName[input.topcoat3] ?? input.topcoat3}`, p, idx++, 1, input.topcoat3));
+    items.push(mkItem("coating", `トップコート(3層): ${catalog.topcoatName[input.topcoat3] ?? input.topcoat3}`, p, idx++, 1, input.topcoat3, "topcoat3"));
   }
   (input.optionIds ?? []).forEach(id => {
     const opt = catalog.coatingOptions.find(o => o.id === id);
-    if (opt) items.push(mkItem(opt.cat, opt.name, opt.price, idx++, 1, opt.id));
+    if (opt) items.push(mkItem(opt.cat, opt.name, opt.price, idx++, 1, opt.id, "option"));
   });
   return { type: "coating", lineItems: items, subtotal: sum(items) };
 }

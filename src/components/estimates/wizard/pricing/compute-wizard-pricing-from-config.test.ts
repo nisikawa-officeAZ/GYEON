@@ -44,15 +44,22 @@ function bundleFor(services: ServiceInput[], manualLines: ConfigPricingInputBund
 
 // ── raw engine: coating lines carry base/topcoat2/topcoat3 catalog ids ────────────
 
-test("raw pricing-engine coating lines carry the correct base/topcoat2/topcoat3 ids (never the label)", () => {
+test("raw pricing-engine coating lines carry the correct base/topcoat2/topcoat3 ids AND roles", () => {
   const result = calculateEstimate([COATING], NO_DISCOUNT, 10, DEFAULT_PRICING_CATALOG);
   const lines = result.services[0].lineItems;
   assert.equal(lines.length, 3, "base + 2 topcoats");
-  assert.equal(lines[0].pricing_reference_id, "one-evo", "base → coatingId");
-  assert.equal(lines[1].pricing_reference_id, "cancoat-evo", "second → topcoat2");
-  assert.equal(lines[2].pricing_reference_id, "cancoat-evo-pro", "third → topcoat3");
+  assert.deepEqual(lines.map((l) => l.pricing_reference_id), ["one-evo", "cancoat-evo", "cancoat-evo-pro"]);
+  assert.deepEqual(lines.map((l) => l.catalog_line_role), ["base", "topcoat2", "topcoat3"]);
   // never derived from the visible label
   for (const l of lines) assert.notEqual(l.pricing_reference_id, l.item_name, "id is not the label");
+});
+
+test("a coating OPTION line carries role \"option\" and its authoritative option id", () => {
+  const withOption: ServiceInput = { type: "coating", coatingId: "one-evo", sizeKey: "M", optionIds: ["polish"] };
+  const lines = calculateEstimate([withOption], NO_DISCOUNT, 10, DEFAULT_PRICING_CATALOG).services[0].lineItems;
+  const opt = lines.find((l) => l.catalog_line_role === "option");
+  assert.ok(opt, "option line present");
+  assert.equal(opt!.pricing_reference_id, "polish", "option id is the authoritative catalog option id");
 });
 
 test("the three layer ids are distinct", () => {
@@ -63,11 +70,12 @@ test("the three layer ids are distinct", () => {
 
 // ── mapped Wizard catalog lines carry the same ids ────────────────────────────────
 
-test("mapped catalog lines carry the same pricingReferenceId as the engine lines", () => {
+test("mapped catalog lines carry the same pricingReferenceId AND role as the engine lines", () => {
   const result = calculateEstimate([COATING], NO_DISCOUNT, 10, DEFAULT_PRICING_CATALOG);
   const mapped = mapProductionResultToWizard(result, bundleFor([COATING]));
   const cat = mapped.lines.filter((l) => l.kind === "catalog");
   assert.deepEqual(cat.map((l) => l.pricingReferenceId), ["one-evo", "cancoat-evo", "cancoat-evo-pro"]);
+  assert.deepEqual(cat.map((l) => (l.kind === "catalog" ? l.catalogLineRole : null)), ["base", "topcoat2", "topcoat3"]);
   // never the label / sourceId
   for (const l of cat) {
     assert.notEqual(l.pricingReferenceId, l.label, "id is not the label");
@@ -75,23 +83,50 @@ test("mapped catalog lines carry the same pricingReferenceId as the engine lines
   }
 });
 
+// ── repeated product references remain uniquely identifiable via role:id ───────────
+
+test("repeated products keep a unique `role:pricingReferenceId` even when the product id repeats", () => {
+  // catalog keys directly (base uses coatingId; topcoats use topcoat catalog keys).
+  const cases: Array<{ name: string; input: ServiceInput; expected: Array<[string, string]> }> = [
+    { name: "ONE + ONE", input: { type: "coating", coatingId: "one-evo", sizeKey: "M", topcoat2: "one-evo" },
+      expected: [["base", "one-evo"], ["topcoat2", "one-evo"]] },
+    { name: "ONE + CANCOAT + CANCOAT", input: { type: "coating", coatingId: "one-evo", sizeKey: "M", topcoat2: "cancoat-evo", topcoat3: "cancoat-evo" },
+      expected: [["base", "one-evo"], ["topcoat2", "cancoat-evo"], ["topcoat3", "cancoat-evo"]] },
+    { name: "MATTE + MATTE", input: { type: "coating", coatingId: "matte-evo", sizeKey: "M", topcoat2: "matte-evo" },
+      expected: [["base", "matte-evo"], ["topcoat2", "matte-evo"]] },
+  ];
+  for (const { name, input, expected } of cases) {
+    const mapped = mapProductionResultToWizard(calculateEstimate([input], NO_DISCOUNT, 10, DEFAULT_PRICING_CATALOG), bundleFor([input]));
+    const cat = mapped.lines.filter((l) => l.kind === "catalog");
+    assert.deepEqual(cat.map((l) => [l.kind === "catalog" ? l.catalogLineRole : null, l.pricingReferenceId]), expected, `${name}: roles+ids`);
+    // Product ids DO repeat where the product repeats…
+    const ids = cat.map((l) => l.pricingReferenceId);
+    assert.ok(new Set(ids).size < ids.length, `${name}: product ids repeat`);
+    // …but `role:id` is always unique — no label/index/order participates.
+    const keys = cat.map((l) => `${l.kind === "catalog" ? l.catalogLineRole : ""}:${l.pricingReferenceId}`);
+    assert.equal(new Set(keys).size, keys.length, `${name}: role:id unique`);
+  }
+});
+
 // ── label change does not change identity ─────────────────────────────────────────
 
-test("changing a display label does NOT change pricingReferenceId", () => {
+test("changing a display label changes neither pricingReferenceId nor catalogLineRole", () => {
   const renamed = makePricingCatalog({
     coatings: DEFAULT_PRICING_CATALOG.coatings.map((c) => (c.id === "one-evo" ? { ...c, name: "RENAMED-LABEL" } : c)),
   });
   const result = calculateEstimate([COATING], NO_DISCOUNT, 10, renamed);
   const base = result.services[0].lineItems[0];
   assert.equal(base.item_name, "RENAMED-LABEL", "label changed");
-  assert.equal(base.pricing_reference_id, "one-evo", "identity unchanged");
+  assert.equal(base.pricing_reference_id, "one-evo", "id unchanged");
+  assert.equal(base.catalog_line_role, "base", "role unchanged");
   const mapped = mapProductionResultToWizard(result, bundleFor([COATING]));
   const mBase = mapped.lines.find((l) => l.kind === "catalog");
   assert.equal(mBase?.label, "RENAMED-LABEL");
   assert.equal(mBase?.pricingReferenceId, "one-evo");
+  assert.equal(mBase?.kind === "catalog" ? mBase.catalogLineRole : null, "base");
 });
 
-// ── fail-closed: a projected catalog line with an invalid id → WHOLE-RESULT error ──
+// ── fail-closed: a catalog line missing EITHER identity component → WHOLE-RESULT error ──
 
 test("a null / empty / whitespace catalog id fails the WHOLE result closed (never a null-id catalog line)", () => {
   const result = calculateEstimate([COATING], NO_DISCOUNT, 10, DEFAULT_PRICING_CATALOG);
@@ -118,6 +153,23 @@ test("a null / empty / whitespace catalog id fails the WHOLE result closed (neve
   }
 });
 
+test("a missing catalog_line_role fails the WHOLE result closed", () => {
+  const result = calculateEstimate([COATING], NO_DISCOUNT, 10, DEFAULT_PRICING_CATALOG);
+  const svc = result.services[0];
+  const tampered = {
+    ...result,
+    services: [{ ...svc, lineItems: svc.lineItems.map((it, i) => (i === 0 ? { ...it, catalog_line_role: null } : it)) }],
+  };
+  const mapped = mapProductionResultToWizard(tampered, bundleFor([COATING]));
+  assert.equal(mapped.status, "error");
+  assert.equal(mapped.completeness, "error");
+  assert.equal(mapped.lines.length, 0);
+  assert.equal(mapped.subtotal, null);
+  assert.equal(mapped.grandTotal, null);
+  assert.ok(mapped.errors.some((e) => e.code === "UNKNOWN_PRICING_REFERENCE"), "missing role surfaced");
+  assert.ok(mapped.unresolvedItems.some((u) => u.code === "UNKNOWN_PRICING_REFERENCE"));
+});
+
 // ── manual lines have null identity (via the full config route) ───────────────────
 
 const PC: ProductionPricingConfiguration = {
@@ -129,12 +181,15 @@ function draftWith(categories: ServiceCategoryId[], cfg: Partial<WizardServiceCo
   return { ...d, serviceSelection: { ...d.serviceSelection, selectedCategories: categories }, serviceConfiguration: { ...d.serviceConfiguration, ...cfg } };
 }
 
-test("manual Wizard lines have pricingReferenceId === null", () => {
+test("manual Wizard lines have pricingReferenceId === null and catalogLineRole === null", () => {
   const draft = draftWith(["maintenance"], { bodyMaintenance: { menuId: "mm1", unitPriceInput: "5000" } });
   const r = computeWizardPricingFromConfig(draft, PC, makePricingCatalog(), RANK);
   const manual = r.lines.filter((l) => l.kind === "manual");
   assert.ok(manual.length > 0, "a manual maintenance line exists");
-  for (const l of manual) assert.equal(l.pricingReferenceId, null, "manual line has null identity");
+  for (const l of manual) {
+    assert.equal(l.pricingReferenceId, null, "manual line has null identity");
+    assert.equal(l.kind === "manual" ? l.catalogLineRole : "x", null, "manual line has null role");
+  }
 });
 
 // ── totals + fail-closed behavior unchanged ───────────────────────────────────────
