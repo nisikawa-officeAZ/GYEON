@@ -3,7 +3,8 @@
 // The single future-host-facing entry that resolves the complete, fail-closed runtime bundle a
 // production EstimateWizardContainer host would need. It accepts NO dealer id, rank, lifecycle, or
 // configuration from the client: dealer comes only from getCurrentDealer(), rank only from
-// getAuthoritativeShopRank(), coating catalog only from getDealerPricingCatalog(), and the Wizard
+// getAuthoritativeShopRank(), the authoritative PricingCatalog only from
+// getAuthoritativeDealerPricingCatalog() (fail-closed — never DEFAULT_PRICING_CATALOG), and the Wizard
 // catalog + lifecycle only from authenticated, RLS-scoped Supabase reads. No app route or production
 // component imports this yet — this phase establishes the boundary only.
 
@@ -11,7 +12,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getAuthoritativeShopRank } from "@/lib/dealer-settings/get-authoritative-shop-rank";
-import { getDealerPricingCatalog } from "@/lib/pricing/get-dealer-pricing-catalog";
+import { getAuthoritativeDealerPricingCatalog } from "@/lib/pricing/get-authoritative-dealer-pricing-catalog";
 import {
   resolveWizardRuntimeConfig,
   type AuthoritativeWizardRuntimeConfiguration,
@@ -23,7 +24,7 @@ export async function getAuthoritativeWizardRuntimeConfig(): Promise<Authoritati
   const readers: WizardConfigReaders = {
     getDealer: getCurrentDealer,
     getRank: getAuthoritativeShopRank,
-    getCatalog: getDealerPricingCatalog,
+    getCatalog: getAuthoritativeDealerPricingCatalog,
 
     getLifecycle: async (dealerId) => {
       const supabase = await createClient();

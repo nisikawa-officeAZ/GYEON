@@ -11,6 +11,7 @@
 // The result is fail-closed and never partial.
 
 import type { PricingCatalog } from "@/lib/pricing/pricing-catalog";
+import type { PricingCatalogResolution } from "@/lib/pricing/authoritative-pricing-catalog-core";
 import type { RankResolution } from "@/lib/dealer-settings/authoritative-shop-rank-core";
 import type { ShopRank } from "@/components/estimates/wizard/screens/step-types";
 import type { WizardScreenConfiguration } from "@/components/estimates/wizard/contract/wizard-runtime-inputs";
@@ -72,7 +73,7 @@ export interface WizardLifecycleRow {
 export interface WizardConfigReaders {
   getDealer: () => Promise<{ dealer_id: string } | null>;
   getRank: () => Promise<RankResolution>;
-  getCatalog: () => Promise<PricingCatalog>;
+  getCatalog: () => Promise<PricingCatalogResolution>;
   getLifecycle: (dealerId: string) => Promise<{ ok: true; row: WizardLifecycleRow | null } | { ok: false }>;
   getCatalogRows: (dealerId: string) => Promise<{ ok: true; rows: WizardCatalogRow[] } | { ok: false }>;
 }
@@ -155,7 +156,19 @@ export async function resolveWizardRuntimeConfig(readers: WizardConfigReaders): 
   if (gWindow.length !== 7 || WINDOW_AREA_CODES.some((c) => !windowCodes.has(c))) return fail("missing-required-globals");
   if (gMethod.length !== 5 || gPart.length !== 16 || gGroup.length !== 11) return fail("missing-required-globals");
 
-  const catalog = await readers.getCatalog();
+  // ── Authoritative pricing catalog (fail-closed) — read AFTER all catalog-row/global validation
+  //    and BEFORE buildConfigs. Any provider failure — a thrown reader OR ok:false for ANY internal
+  //    reason — collapses to a single "pricing-catalog-failed"; the provider's internal reason is
+  //    never exposed through the aggregate, and a failed catalog is never defaulted or recovered.
+  //    Only the ok:true arm may access the catalog, which is passed through unchanged. ──
+  let catalogResult: PricingCatalogResolution;
+  try {
+    catalogResult = await readers.getCatalog();
+  } catch {
+    return fail("pricing-catalog-failed");
+  }
+  if (!catalogResult.ok) return fail("pricing-catalog-failed");
+  const catalog = catalogResult.catalog;
 
   // ── Build configurations (rank-filtered; fail closed on window-film gap) ──
   const built = buildConfigs(cat.rows, shopRank, catalog);

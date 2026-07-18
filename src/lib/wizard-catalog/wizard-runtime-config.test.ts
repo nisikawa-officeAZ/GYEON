@@ -4,8 +4,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import { readFileSync } from "node:fs";
+
 import { resolveWizardRuntimeConfig, type WizardCatalogRow, type WizardConfigReaders, type WizardLifecycleRow } from "./wizard-runtime-config";
-import { DEFAULT_PRICING_CATALOG } from "@/lib/pricing/canonical-pricing-engine";
+import { DEFAULT_PRICING_CATALOG, makePricingCatalog } from "@/lib/pricing/canonical-pricing-engine";
+import type { PricingCatalogResolution } from "@/lib/pricing/authoritative-pricing-catalog-core";
 import { buildWizardPricingInputFromConfig } from "@/components/estimates/wizard/pricing/wizard-pricing-input-adapter-config";
 import { initialEstimateWizardDraftV22 } from "@/components/estimates/wizard/draft/wizard-draft-state";
 import type { ShopRank } from "@/components/estimates/wizard/screens/step-types";
@@ -42,15 +45,27 @@ function menus(): WizardCatalogRow[] {
 }
 const REVIEWED: WizardLifecycleRow = { state: "CATALOG_REVIEWED", current_configuration_revision: 3, reviewed_configuration_revision: 3, reviewed_at: "t" };
 
-function readers(over: Partial<{ dealer: { dealer_id: string } | null; rank: ShopRank | null; lifecycle: { ok: boolean; row: WizardLifecycleRow | null }; rows: WizardCatalogRow[] }>): WizardConfigReaders {
+function readers(over: Partial<{ dealer: { dealer_id: string } | null; rank: ShopRank | null; lifecycle: { ok: boolean; row: WizardLifecycleRow | null }; rows: WizardCatalogRow[]; catalog: PricingCatalogResolution | (() => Promise<PricingCatalogResolution>) }>): WizardConfigReaders {
   return {
     getDealer: async () => (over.dealer !== undefined ? over.dealer : { dealer_id: DEALER }),
     getRank: async () => (over.rank === null ? { ok: false, reason: "missing" } : { ok: true, rank: over.rank ?? "shop" }),
-    getCatalog: async () => DEFAULT_PRICING_CATALOG,
+    // The strict provider returns a discriminated result; default is a successful DEFAULT catalog.
+    getCatalog: async () => {
+      const c = over.catalog;
+      if (c === undefined) return { ok: true, catalog: DEFAULT_PRICING_CATALOG };
+      return typeof c === "function" ? c() : c;
+    },
     getLifecycle: async () => (over.lifecycle ? (over.lifecycle.ok ? { ok: true, row: over.lifecycle.row } : { ok: false }) : { ok: true, row: REVIEWED }),
     getCatalogRows: async () => ({ ok: true, rows: over.rows ?? [...globals(), ...menus()] }),
   };
 }
+
+/** Wrap readers so getCatalog calls can be counted (proves earlier gates short-circuit before it). */
+function withCatalogSpy(base: WizardConfigReaders, spy: { calls: number }): WizardConfigReaders {
+  return { ...base, getCatalog: async () => { spy.calls += 1; return base.getCatalog(); } };
+}
+
+const PRICING_FAILED = { ok: false, reason: "pricing-catalog-failed" } as const;
 
 // ── Trust boundary + top-level failures ──────────────────────────────────────
 test("resolver takes only readers (no dealer id / rank / config argument)", () => {
@@ -139,4 +154,88 @@ test("resolved pricingConfig is accepted by buildWizardPricingInputFromConfig (m
   d.serviceConfiguration.bodyMaintenance = { menuId: "maint-a", unitPriceInput: "5000" };
   const out = buildWizardPricingInputFromConfig(d, r.pricingConfig, r.catalog, r.shopRank);
   assert.ok(!out.errors.some((e) => e.code === "UNKNOWN_CONFIGURED_ITEM"), "maint-a resolves via the resolved pricingConfig");
+});
+
+// ── EW-UI-4A2-2: fail-closed authoritative pricing catalog wiring ────────────────
+
+test("every strict provider failure reason collapses to pricing-catalog-failed (no internal reason leaked)", async () => {
+  for (const reason of ["no-dealer", "read-failed", "no-row", "malformed"] as const) {
+    const r = await resolveWizardRuntimeConfig(readers({ rank: "shop", catalog: { ok: false, reason } }));
+    assert.deepEqual(r, PRICING_FAILED, `provider ${reason} → pricing-catalog-failed`);
+  }
+});
+
+test("a thrown getCatalog reader returns pricing-catalog-failed", async () => {
+  const r = await resolveWizardRuntimeConfig(readers({ rank: "shop", catalog: () => { throw new Error("boom"); } }));
+  assert.deepEqual(r, PRICING_FAILED);
+});
+
+test("a pricing-catalog failure carries no catalog / screenConfig / pricingConfig", async () => {
+  const r = await resolveWizardRuntimeConfig(readers({ rank: "shop", catalog: { ok: false, reason: "read-failed" } }));
+  assert.equal(r.ok, false);
+  assert.equal("catalog" in r, false);
+  assert.equal("screenConfig" in r, false);
+  assert.equal("pricingConfig" in r, false);
+});
+
+test("catalog failure short-circuits BEFORE buildConfigs (a would-be build failure is not reached)", async () => {
+  // certified + no film types would fail at buildConfigs with window-film-no-film-types…
+  const buildFailure = await resolveWizardRuntimeConfig(readers({ rank: "certified" }));
+  assert.deepEqual(buildFailure, { ok: false, reason: "window-film-no-film-types" }, "build-time failure visible on catalog success");
+  // …but a catalog failure returns first, so pricing-catalog-failed wins.
+  const catFailure = await resolveWizardRuntimeConfig(readers({ rank: "certified", catalog: { ok: false, reason: "malformed" } }));
+  assert.deepEqual(catFailure, PRICING_FAILED, "catalog failure returns before buildConfigs");
+});
+
+test("a successful catalog is transported losslessly (exact reference + value)", async () => {
+  const DISTINCT = makePricingCatalog({
+    coatings: DEFAULT_PRICING_CATALOG.coatings.map((c) => (c.id === "one-evo" ? { ...c, base: 123456 } : c)),
+  });
+  const r = await resolveWizardRuntimeConfig(readers({ rank: "shop", catalog: { ok: true, catalog: DISTINCT } }));
+  assert.ok(r.ok);
+  if (!r.ok) return;
+  assert.equal(r.catalog, DISTINCT, "exact same object reference — never cloned/rebuilt/defaulted");
+  assert.equal(r.catalog.coatings.find((c) => c.id === "one-evo")?.base, 123456, "distinctive value unchanged");
+});
+
+test("getCatalog is NOT called when an earlier gate fails; called exactly once on success", async () => {
+  const missingGlobals = [...globals().filter((g) => !(g.code === "sunroof" && g.kind === "window_area")), ...menus()];
+  const earlyFailures: Parameters<typeof readers>[0][] = [
+    { dealer: null },                                   // no dealer
+    { rank: null },                                     // rank failure
+    { lifecycle: { ok: false, row: null } },            // lifecycle failure
+    { rank: "shop", rows: missingGlobals },             // global-validation failure
+  ];
+  for (const over of earlyFailures) {
+    const spy = { calls: 0 };
+    await resolveWizardRuntimeConfig(withCatalogSpy(readers(over), spy));
+    assert.equal(spy.calls, 0, `getCatalog must not run for ${JSON.stringify(over)}`);
+  }
+  const spy = { calls: 0 };
+  const r = await resolveWizardRuntimeConfig(withCatalogSpy(readers({ rank: "shop" }), spy));
+  assert.equal(r.ok, true);
+  assert.equal(spy.calls, 1, "read exactly once on the success path");
+});
+
+// ── Source guards: strict wiring in the server wrapper; legacy fail-open consumers unchanged ──
+const codeOf = (path: string): string =>
+  readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+test("server wrapper wires the strict provider only (no fail-open provider / default / service-role)", () => {
+  const code = codeOf("src/lib/wizard-catalog/get-authoritative-wizard-runtime-config.ts");
+  assert.match(code, /import\s*\{\s*getAuthoritativeDealerPricingCatalog\s*\}\s*from\s*["']@\/lib\/pricing\/get-authoritative-dealer-pricing-catalog["']/, "imports the strict provider");
+  assert.match(code, /getCatalog:\s*getAuthoritativeDealerPricingCatalog/, "wires the strict provider");
+  assert.equal(/getDealerPricingCatalog/.test(code), false, "no fail-open provider reference");
+  assert.equal(/DEFAULT_PRICING_CATALOG/.test(code), false, "no default catalog");
+  assert.equal(/service_role|SERVICE_ROLE/.test(code), false, "no service-role client");
+});
+
+test("the three legacy fail-open consumers still reference getDealerPricingCatalog (unchanged)", () => {
+  for (const p of [
+    "src/lib/pricing/get-dealer-pricing-catalog.ts",
+    "src/components/estimates/EstimateEditor.tsx",
+    "src/lib/wizard-catalog/get-estimate-wizard-settings-view.ts",
+  ]) {
+    assert.match(readFileSync(p, "utf8"), /getDealerPricingCatalog/, `${p} keeps its fail-open provider`);
+  }
 });
