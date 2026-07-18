@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 
 import { readFileSync } from "node:fs";
 
-import { resolveWizardRuntimeConfig, type WizardCatalogRow, type WizardConfigReaders, type WizardLifecycleRow } from "./wizard-runtime-config";
+import { resolveWizardRuntimeConfig, resolveWizardRuntimeConfigForDealer, type WizardCatalogRow, type WizardConfigReaders, type WizardDealerBoundConfigReaders, type WizardLifecycleRow } from "./wizard-runtime-config";
 import { DEFAULT_PRICING_CATALOG, makePricingCatalog } from "@/lib/pricing/canonical-pricing-engine";
 import type { PricingCatalogResolution } from "@/lib/pricing/authoritative-pricing-catalog-core";
 import { buildWizardPricingInputFromConfig } from "@/components/estimates/wizard/pricing/wizard-pricing-input-adapter-config";
@@ -238,4 +238,176 @@ test("the three legacy fail-open consumers still reference getDealerPricingCatal
   ]) {
     assert.match(readFileSync(p, "utf8"), /getDealerPricingCatalog/, `${p} keeps its fail-open provider`);
   }
+});
+
+// ── EW-UI-5A1-B3-P0: dealer identity in the result + the dealer-bound resolver ──
+
+const OTHER_DEALER = "d0000000-0000-0000-0000-0000000000ff";
+
+test("a success carries the EXACT dealer id the resolver used", async () => {
+  const r = await resolveWizardRuntimeConfig(readers({ rank: "shop" }));
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.equal(r.dealerId, DEALER, "the dealer every read was scoped to");
+});
+
+test("the success dealerId tracks the injected dealer, never a constant", async () => {
+  const base = readers({ rank: "shop" });
+  const rows = [...globals(), ...menus().map((m) => ({ ...m, dealer_id: OTHER_DEALER }))];
+  const r = await resolveWizardRuntimeConfig({
+    ...base,
+    getDealer: async () => ({ dealer_id: OTHER_DEALER }),
+    getCatalogRows: async () => ({ ok: true, rows }),
+  });
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.equal(r.dealerId, OTHER_DEALER);
+});
+
+test("a failure carries no dealerId", async () => {
+  const r = await resolveWizardRuntimeConfig(readers({ dealer: null }));
+  assert.equal(r.ok, false);
+  assert.equal("dealerId" in r, false);
+});
+
+/** Dealer-bound readers that record the tenant each one received. */
+function boundReaders(
+  over: Partial<{ rank: ShopRank | null; lifecycle: { ok: boolean; row: WizardLifecycleRow | null }; rows: WizardCatalogRow[]; catalog: PricingCatalogResolution }>,
+  seen: { rank: string[]; catalog: string[]; lifecycle: string[]; rows: string[] },
+): WizardDealerBoundConfigReaders {
+  return {
+    getRank: async (d) => { seen.rank.push(d); return over.rank === null ? { ok: false, reason: "missing" } : { ok: true, rank: over.rank ?? "shop" }; },
+    getCatalog: async (d) => { seen.catalog.push(d); return over.catalog ?? { ok: true, catalog: DEFAULT_PRICING_CATALOG }; },
+    getLifecycle: async (d) => { seen.lifecycle.push(d); return over.lifecycle ? (over.lifecycle.ok ? { ok: true, row: over.lifecycle.row } : { ok: false }) : { ok: true, row: REVIEWED }; },
+    getCatalogRows: async (d) => { seen.rows.push(d); return { ok: true, rows: over.rows ?? [...globals(), ...menus()] }; },
+  };
+}
+const newSeen = () => ({ rank: [] as string[], catalog: [] as string[], lifecycle: [] as string[], rows: [] as string[] });
+
+test("resolveWizardRuntimeConfigForDealer takes the tenant explicitly (dealerId, readers)", () => {
+  assert.equal(resolveWizardRuntimeConfigForDealer.length, 2);
+});
+
+test("ONE constant dealerId reaches rank, catalog, lifecycle AND catalog-row readers", async () => {
+  const seen = newSeen();
+  const r = await resolveWizardRuntimeConfigForDealer(DEALER, boundReaders({ rank: "shop" }, seen));
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.equal(r.dealerId, DEALER, "the result reports the bound tenant");
+  assert.deepEqual(seen.rank, [DEALER], "rank read for the bound tenant only");
+  assert.deepEqual(seen.catalog, [DEALER], "pricing catalog read for the bound tenant only");
+  assert.deepEqual(seen.lifecycle, [DEALER], "lifecycle read for the bound tenant only");
+  assert.deepEqual(seen.rows, [DEALER], "catalog rows read for the bound tenant only");
+  const every = [...seen.rank, ...seen.catalog, ...seen.lifecycle, ...seen.rows];
+  assert.equal(new Set(every).size, 1, "exactly one distinct tenant across every reader");
+});
+
+test("a different bound dealer propagates to every reader", async () => {
+  const seen = newSeen();
+  const rows = [...globals(), ...menus().map((m) => ({ ...m, dealer_id: OTHER_DEALER }))];
+  const r = await resolveWizardRuntimeConfigForDealer(OTHER_DEALER, boundReaders({ rank: "shop", rows }, seen));
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.equal(r.dealerId, OTHER_DEALER);
+  assert.equal(new Set([...seen.rank, ...seen.catalog, ...seen.lifecycle, ...seen.rows]).size, 1);
+  assert.deepEqual(seen.rows, [OTHER_DEALER]);
+});
+
+test("a row owned by ANOTHER dealer fails closed (malformed-catalog-row)", async () => {
+  const seen = newSeen();
+  // Resolving for DEALER, but one dealer-owned row belongs to OTHER_DEALER.
+  const rows = [...globals(), ...menus(), row({ kind: "maintenance_menu", code: "foreign", owner_scope: "dealer", dealer_id: OTHER_DEALER, categories: ["maintenance"] })];
+  const r = await resolveWizardRuntimeConfigForDealer(DEALER, boundReaders({ rank: "shop", rows }, seen));
+  assert.deepEqual(r, { ok: false, reason: "malformed-catalog-row" }, "a foreign row is never admitted");
+});
+
+test("a global row bearing a dealer_id fails closed", async () => {
+  const seen = newSeen();
+  const rows = [...globals().map((g, i) => (i === 0 ? { ...g, dealer_id: OTHER_DEALER } : g)), ...menus()];
+  const r = await resolveWizardRuntimeConfigForDealer(DEALER, boundReaders({ rank: "shop", rows }, seen));
+  assert.deepEqual(r, { ok: false, reason: "malformed-catalog-row" });
+});
+
+test("a blank/whitespace/non-string dealerId fails closed as no-dealer, before ANY reader runs", async () => {
+  for (const bad of ["", "   ", "\t"]) {
+    const seen = newSeen();
+    const r = await resolveWizardRuntimeConfigForDealer(bad, boundReaders({ rank: "shop" }, seen));
+    assert.deepEqual(r, { ok: false, reason: "no-dealer" }, `blank id ${JSON.stringify(bad)} → no-dealer`);
+    assert.deepEqual([...seen.rank, ...seen.catalog, ...seen.lifecycle, ...seen.rows], [], "no reader may run without a tenant");
+  }
+});
+
+test("dealer-bound rank / catalog / lifecycle / row failures all remain fail-closed", async () => {
+  const cases: Array<[string, Parameters<typeof boundReaders>[0], string]> = [
+    ["rank", { rank: null }, "rank-unavailable"],
+    ["lifecycle read", { rank: "shop", lifecycle: { ok: false, row: null } }, "lifecycle-read-failed"],
+    ["lifecycle missing", { rank: "shop", lifecycle: { ok: true, row: null } }, "lifecycle-missing"],
+    ["pricing catalog", { rank: "shop", catalog: { ok: false, reason: "malformed" } }, "pricing-catalog-failed"],
+  ];
+  for (const [name, over, reason] of cases) {
+    const seen = newSeen();
+    const r = await resolveWizardRuntimeConfigForDealer(DEALER, boundReaders(over, seen));
+    assert.deepEqual(r, { ok: false, reason }, `${name} failure → ${reason}`);
+    assert.equal("catalog" in r, false, `${name} failure carries no catalog`);
+    assert.equal("dealerId" in r, false, `${name} failure carries no dealerId`);
+  }
+});
+
+test("a catalog-row read failure is fail-closed", async () => {
+  const seen = newSeen();
+  const base = boundReaders({ rank: "shop" }, seen);
+  const r = await resolveWizardRuntimeConfigForDealer(DEALER, { ...base, getCatalogRows: async () => ({ ok: false }) });
+  assert.deepEqual(r, { ok: false, reason: "catalog-read-failed" });
+});
+
+test("the pure resolver holds no default/fixture/client tenant or catalog", () => {
+  const code = codeOf("src/lib/wizard-catalog/wizard-runtime-config.ts");
+  assert.equal(/DEFAULT_PRICING_CATALOG/.test(code), false, "no default catalog");
+  assert.equal(/EXAMPLE_|FIXTURE|fixture|makePricingCatalog/.test(code), false, "no fixture/catalog construction");
+  assert.equal(/service_role|SERVICE_ROLE/.test(code), false, "no service-role client");
+  assert.equal(/@\/lib\/supabase|createClient/.test(code), false, "the core stays database-free");
+});
+
+// ── Source guard: the dealer-bound server wrapper ────────────────────────────
+const BOUND_WRAPPER_SRC = "src/lib/wizard-catalog/get-authoritative-wizard-runtime-config-for-dealer.ts";
+
+test("the dealer-bound server wrapper is server-only and uses the supplied actor context", () => {
+  const code = codeOf(BOUND_WRAPPER_SRC);
+  assert.match(code, /^\s*import\s+["']server-only["']/, "must begin with import \"server-only\"");
+  assert.match(code, /EstimateSaveActorContext/, "accepts the branded actor context");
+  assert.match(code, /context\.dealerId/, "uses the actor context as the tenant authority");
+  assert.match(code, /resolveWizardRuntimeConfigForDealer\s*\(/, "delegates to the dealer-bound pure resolver");
+  assert.match(code, /runtime\.dealerId\s*!==\s*tenantId/, "asserts the resolved identity before succeeding");
+});
+
+test("the dealer-bound server wrapper never re-discovers a tenant", () => {
+  const code = codeOf(BOUND_WRAPPER_SRC);
+  assert.equal(/\bgetCurrentDealer\b/.test(code), false, "no current-dealer discovery");
+  assert.equal(/\bgetCurrentStaff\b/.test(code), false, "no current-staff discovery");
+  assert.equal(/\bgetAuthoritativeShopRank\b/.test(code), false, "no arg-less rank wrapper");
+  assert.equal(/\bgetAuthoritativeDealerPricingCatalog\b/.test(code), false, "no arg-less catalog wrapper");
+  assert.match(code, /resolveAuthoritativeShopRank\s*\(/, "calls the PURE rank core instead");
+  assert.match(code, /resolveAuthoritativePricingCatalog\s*\(/, "calls the PURE pricing core instead");
+});
+
+test("the dealer-bound server wrapper uses no service-role/secret client and no default catalog", () => {
+  const code = codeOf(BOUND_WRAPPER_SRC);
+  assert.equal(/service_role|SERVICE_ROLE|serviceRole/.test(code), false, "no service-role client");
+  assert.equal(/SUPABASE_SERVICE|SECRET_KEY|createAdminClient/.test(code), false, "no secret/admin client");
+  assert.equal(/DEFAULT_PRICING_CATALOG/.test(code), false, "no default catalog");
+  assert.equal(/getDealerPricingCatalog/.test(code), false, "no fail-open provider");
+  assert.match(code, /createClient\s*\(\s*\)/, "uses the normal authenticated client");
+});
+
+test("the dealer-bound server wrapper scopes every read to the bound tenant", () => {
+  const code = codeOf(BOUND_WRAPPER_SRC);
+  assert.match(code, /eq\(\s*["']dealer_id["']\s*,\s*dealerId\s*\)/, "lifecycle scoped by the bound tenant");
+  assert.match(code, /dealer_id\.is\.null,dealer_id\.eq\.\$\{dealerId\}/, "catalog rows: required globals + this dealer only");
+});
+
+test("the arg-less server wrapper is UNCHANGED by this candidate", () => {
+  const code = codeOf("src/lib/wizard-catalog/get-authoritative-wizard-runtime-config.ts");
+  assert.match(code, /getDealer:\s*getCurrentDealer/, "still wires the current-dealer discovery");
+  assert.match(code, /getRank:\s*getAuthoritativeShopRank/, "still wires the arg-less rank wrapper");
+  assert.equal(/EstimateSaveActorContext/.test(code), false, "not migrated in this candidate");
 });

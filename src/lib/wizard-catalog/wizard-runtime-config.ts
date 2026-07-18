@@ -78,9 +78,32 @@ export interface WizardConfigReaders {
   getCatalogRows: (dealerId: string) => Promise<{ ok: true; rows: WizardCatalogRow[] } | { ok: false }>;
 }
 
+/**
+ * EW-UI-5A1-B3-P0 — the DEALER-BOUND reader contract.
+ *
+ * Every reader — rank, pricing catalog, lifecycle AND catalog rows — receives the tenant EXPLICITLY.
+ * In `WizardConfigReaders` above, `getRank`/`getCatalog` take no argument and therefore discover
+ * their own dealer internally (in the arg-less server wrapper: `getCurrentDealer()`), while
+ * `getLifecycle`/`getCatalogRows` are handed the dealer the resolver discovered. Two independent
+ * discoveries can disagree. Here they cannot: the tenant is an explicit parameter of EVERY reader,
+ * so a cross-dealer pairing is unrepresentable rather than merely unlikely.
+ */
+export interface WizardDealerBoundConfigReaders {
+  getRank: (dealerId: string) => Promise<RankResolution>;
+  getCatalog: (dealerId: string) => Promise<PricingCatalogResolution>;
+  getLifecycle: (dealerId: string) => Promise<{ ok: true; row: WizardLifecycleRow | null } | { ok: false }>;
+  getCatalogRows: (dealerId: string) => Promise<{ ok: true; rows: WizardCatalogRow[] } | { ok: false }>;
+}
+
 export type AuthoritativeWizardRuntimeConfiguration =
   | {
       ok: true;
+      /**
+       * The EXACT dealer this configuration was resolved for — the `dealer.dealer_id` the resolver
+       * actually used to read lifecycle and catalog rows, and against which every row's ownership
+       * was validated. Callers that hold their own tenant authority can assert identity against it.
+       */
+      readonly dealerId: string;
       shopRank: ShopRank;
       catalog: PricingCatalog;
       screenConfig: WizardScreenConfiguration;
@@ -176,12 +199,45 @@ export async function resolveWizardRuntimeConfig(readers: WizardConfigReaders): 
 
   return {
     ok: true,
+    dealerId: dealer.dealer_id, // the exact tenant every read above was scoped to
     shopRank,
     catalog,
     screenConfig: built.screenConfig,
     pricingConfig: built.pricingConfig,
     lifecycle: { state: life.state, currentRevision: life.current_configuration_revision, reviewedRevision: life.reviewed_configuration_revision },
   };
+}
+
+// ── PURE dealer-bound resolver ───────────────────────────────────────────────
+/**
+ * EW-UI-5A1-B3-P0 — resolve the runtime configuration for ONE EXPLICIT tenant.
+ *
+ * The caller supplies the tenant authority; this function guarantees it is the ONLY one in play.
+ * `dealerId` is captured once as a single constant and injected into EVERY reader — rank, pricing
+ * catalog, lifecycle and catalog rows — so all four reads are provably scoped to the same tenant.
+ * The `dealerId` the core passes back to `getLifecycle`/`getCatalogRows` is deliberately ignored in
+ * favour of that one constant, leaving no path by which a second tenant could enter.
+ *
+ * Fail-closed: a blank/whitespace/non-string dealer id is `"no-dealer"`. There is NO fallback, NO
+ * default tenant, and NO fixture. Every validation and failure reason of `resolveWizardRuntimeConfig`
+ * applies unchanged — this is a strictly narrower entry point, never a weaker one.
+ */
+export async function resolveWizardRuntimeConfigForDealer(
+  dealerId: string,
+  readers: WizardDealerBoundConfigReaders,
+): Promise<AuthoritativeWizardRuntimeConfiguration> {
+  if (typeof dealerId !== "string" || dealerId.trim() === "") return fail("no-dealer");
+
+  // ONE constant, closed over by every reader below. Never reassigned, never re-derived.
+  const boundDealerId: string = dealerId;
+
+  return resolveWizardRuntimeConfig({
+    getDealer: async () => ({ dealer_id: boundDealerId }),
+    getRank: () => readers.getRank(boundDealerId),
+    getCatalog: () => readers.getCatalog(boundDealerId),
+    getLifecycle: () => readers.getLifecycle(boundDealerId),
+    getCatalogRows: () => readers.getCatalogRows(boundDealerId),
+  });
 }
 
 // ── Pure builders ────────────────────────────────────────────────────────────
