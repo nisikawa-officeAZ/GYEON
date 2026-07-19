@@ -14,15 +14,31 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 import type { EstimateSaveRequest } from "./estimate-save-dto";
 import { EstimatePersistenceService } from "./estimate-persistence-service";
-import { supabasePersistenceGateway } from "./supabase-persistence-gateway";
+import { notImplementedPersistenceGateway } from "./estimate-persistence-gateway";
 import {
   ESTIMATE_SAVE_ACTION_ERRORS, logEstimateSaveStage, type EstimateSaveActionResult,
 } from "./estimate-save-orchestration-types";
 
-// The runtime save path uses the REAL atomic-RPC gateway (server-only). Dealer context comes from
-// getCurrentDealer() below — never the client. The environment target is the app's configured Supabase
-// project (DealerOS-Dev in this phase); no project ref is hardcoded and no client bypass exists.
-const persistenceService = new EstimatePersistenceService(supabasePersistenceGateway);
+// ── R56B: THIS PATH IS DISABLED ──────────────────────────────────────────────
+// This action was the ONE source-complete route to real persistence: it is reached from
+// ScreensPreview (dev-preview mount) and, until R56B, bound the real atomic-RPC gateway. Two
+// properties made that unacceptable to leave standing:
+//
+//   1. ScreensPreview is a CLIENT component that computes pricing in the browser and passes the
+//      finished DTO here. The RPC performs no repricing, so client-chosen prices would persist.
+//   2. R56B makes the RPC service-role-only. Leaving the real gateway bound here would have turned
+//      a client-priced write into a client-priced write executing with service-role privilege and
+//      no RLS — strictly worse than before.
+//
+// It is therefore rebound to the placeholder gateway and now terminates with the controlled
+// RPC_NOT_IMPLEMENTED result. No persistence occurs. The authentication, dealer-context and
+// permission gates below are retained deliberately: they are the behaviour ScreensPreview expects,
+// and removing them would change the observable failure ordering of a frozen UI.
+//
+// ScreensPreview.tsx is NOT edited. Rebinding here severs the path on its own.
+// Re-binding the real gateway is B7 work, and is blocked on R56D (numbering) and R56E (required
+// idempotency typing).
+const persistenceService = new EstimatePersistenceService(notImplementedPersistenceGateway);
 
 export async function saveEstimateFromWizardAction(
   request: EstimateSaveRequest,

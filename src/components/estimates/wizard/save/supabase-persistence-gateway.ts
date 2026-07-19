@@ -9,12 +9,13 @@ import "server-only";
 // (getCurrentDealer upstream); it is never read from the payload/client. No persistence logic is
 // duplicated here — the transaction lives entirely in the RPC.
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import type { EstimatePersistenceGateway, EstimateSaveGatewayResult } from "./estimate-persistence-gateway";
 
 // Known RPC error-code prefixes → stable gateway codes. Anything else → SAVE_FAILED (no raw leak).
 const RPC_CODE_PREFIXES = [
+  "UNAUTHENTICATED", "PERMISSION_DENIED",
   "DEALER_CONTEXT_REQUIRED", "VALIDATION_ERROR", "PRICING_INCOMPLETE",
   "CUSTOMER_NOT_FOUND", "VEHICLE_NOT_FOUND", "DUPLICATE_SUBMISSION",
   "ESTIMATE_NUMBER_FAILED", "ESTIMATE_CREATE_FAILED", "ESTIMATE_ITEM_CREATE_FAILED",
@@ -29,6 +30,10 @@ function mapRpcError(rawMessage: string | undefined): { code: string; message: s
   if (prefix === "PRICING_INCOMPLETE")   return { code: "PRICING_INCOMPLETE", message: "価格が未確定のため保存できません。" };
   if (prefix === "VALIDATION_ERROR")     return { code: "VALIDATION_ERROR", message: "入力内容に不備があります。" };
   if (prefix === "DEALER_CONTEXT_REQUIRED") return { code: "DEALER_CONTEXT_REQUIRED", message: "ディーラー情報の取得に失敗しました。" };
+  // R56B: the hardened RPC performs its own actor/membership/role checks and raises these two.
+  // Both map to fixed operator-safe text — the RPC's detail text is never forwarded.
+  if (prefix === "UNAUTHENTICATED")      return { code: "UNAUTHENTICATED", message: "ログインが必要です。" };
+  if (prefix === "PERMISSION_DENIED")    return { code: "PERMISSION_DENIED", message: "この操作を行う権限がありません。" };
   return { code: "SAVE_FAILED", message: "保存中にエラーが発生しました。" };
 }
 
@@ -41,9 +46,20 @@ export const supabasePersistenceGateway: EstimatePersistenceGateway = {
     }
 
     // 2. Single atomic RPC — the ONLY place customer/vehicle/estimate/items persist together.
-    const supabase = await createClient();
+    //
+    // R56B: the SERVER-ONLY principal. EXECUTE on the RPC is granted to service_role alone, because
+    // the browser client and the Next.js server client share the SAME public URL + anon key: an
+    // `authenticated` grant would have let any signed-in user call the RPC directly with chosen
+    // prices, and the RPC never reprices. `createAdminClient()` uses SUPABASE_SERVICE_ROLE_KEY,
+    // which carries no NEXT_PUBLIC_ prefix and is never shipped to the browser.
+    //
+    // Consequence, and why the RPC still checks everything itself: service_role BYPASSES RLS and
+    // auth.uid() is NULL, so the database has no backstop here. The RPC re-verifies the actor,
+    // requires exactly one active membership matching the dealer, resolves the effective role, and
+    // scopes every read/write by an explicit dealer predicate.
+    const supabase = createAdminClient();
     const { data, error } = await supabase.rpc("save_estimate_from_wizard", {
-      p_dealer_id:       ctx.dealerId,   // server-resolved (getCurrentDealer); never from payload
+      p_dealer_id:       ctx.dealerId,   // server-resolved context; never from payload
       p_actor_user_id:   ctx.userId,
       p_estimate_number: estimateNumber,
       p_payload:         payload,
