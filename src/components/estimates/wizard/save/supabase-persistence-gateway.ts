@@ -10,7 +10,7 @@ import "server-only";
 // duplicated here — the transaction lives entirely in the RPC.
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
+import { getNextDocumentNumberForDealer } from "@/lib/numbering/get-next-document-number";
 import type { EstimatePersistenceGateway, EstimateSaveGatewayResult } from "./estimate-persistence-gateway";
 
 // Known RPC error-code prefixes → stable gateway codes. Anything else → SAVE_FAILED (no raw leak).
@@ -40,7 +40,13 @@ function mapRpcError(rawMessage: string | undefined): { code: string; message: s
 export const supabasePersistenceGateway: EstimatePersistenceGateway = {
   async saveEstimate(payload, ctx): Promise<EstimateSaveGatewayResult> {
     // 1. Allocate + format the estimate number via the existing authoritative numbering (Option B).
-    const estimateNumber = await getNextDocumentNumber("estimate");
+    //
+    // R56D: DEALER-BOUND. The number is allocated for EXACTLY the tenant the server
+    // context already proved (ctx.dealerId) — the same value passed to the save RPC at
+    // step 2. The allocator no longer resolves a dealer of its own, so a multi-dealer
+    // actor can no longer advance one dealer's sequence while saving under another. The
+    // allocator is fail-closed: it returns null rather than an unpersisted guess.
+    const estimateNumber = await getNextDocumentNumberForDealer("estimate", ctx.dealerId);
     if (!estimateNumber) {
       return { ok: false, code: "ESTIMATE_NUMBER_FAILED", message: "見積番号を採番できませんでした。" };
     }
