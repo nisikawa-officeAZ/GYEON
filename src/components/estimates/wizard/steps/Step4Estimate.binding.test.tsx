@@ -81,6 +81,15 @@ const codeOf = (path: string): string =>
 
 const BIND_SRC = "src/components/estimates/wizard/steps/step4-bindings.ts";
 const STEP_SRC = "src/components/estimates/wizard/steps/Step4Estimate.tsx";
+// B7-2A — required existing-entity inputs. Minimal references only; the host now
+// requires both arrays, so every mount must supply them.
+const CUSTOMER_REFS = [
+  { id: "c-1", displayName: "山田太郎", phone: "090-0000-0001" },
+] as const;
+const VEHICLE_REFS = [
+  { id: "v-1", customerId: "c-1", displayName: "TOYOTA CROWN", plateNumber: "滋賀 330 に 1234", bodySize: "M" },
+] as const;
+
 const WIZARD_SRC = "src/components/estimates/wizard/EstimateWizard.tsx";
 
 // ── 1. Section-scoped patches: every callback emits exactly one section key ─────────
@@ -374,7 +383,8 @@ const PC: ProductionPricingConfiguration = {
 
 test("EstimateWizard mounts with the required runtime inputs", () => {
   const html = render(
-    <EstimateWizard shopRank="detailer" screenConfig={SC} catalog={makePricingCatalog()} pricingConfig={PC} />,
+    <EstimateWizard shopRank="detailer" screenConfig={SC} catalog={makePricingCatalog()} pricingConfig={PC}
+      customers={CUSTOMER_REFS} vehicles={VEHICLE_REFS} />,
   );
   assert.ok(html.length > 0, "root wizard renders with runtime inputs supplied");
 });

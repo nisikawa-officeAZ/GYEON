@@ -182,13 +182,86 @@ test("12. EstimateWizardContainer no longer declares its own WizardScreenConfigu
 
 // ── Shared type shape (compile-time; tsc validates in `npm run typecheck`) ────────
 
+/**
+ * ONE typed screen-configuration fixture, at module scope.
+ *
+ * Previously this lived inside test 13's callback while test 14 also referred to
+ * it — an out-of-scope reference that only tsc would catch. Hoisting it keeps a
+ * single source for both tests and removes the duplicate-declaration temptation.
+ * It stays typed as `WizardScreenConfiguration` (no cast, no `any`), so a field
+ * added to that interface fails compilation here rather than silently passing.
+ */
+const SCREEN_CONFIG: WizardScreenConfiguration = {
+  filmTypes: [], windowAreas: [], maintenanceMenus: [], washMenus: [], roomMenus: [],
+  otherWorkPresets: [], storeGlobalOptions: [], coupons: [],
+  ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
+};
+
 test("13. WizardScreenConfiguration + WizardRuntimeInputs expose the expected fields", () => {
-  const screenConfig: WizardScreenConfiguration = {
-    filmTypes: [], windowAreas: [], maintenanceMenus: [], washMenus: [], roomMenus: [],
-    otherWorkPresets: [], storeGlobalOptions: [], coupons: [],
-    ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
-  };
-  const inputs: WizardRuntimeInputs = { shopRank: "detailer", screenConfig };
+  const inputs: WizardRuntimeInputs = { shopRank: "detailer", screenConfig: SCREEN_CONFIG };
   assert.equal(inputs.shopRank, "detailer");
   assert.equal(Object.keys(inputs.screenConfig).length, 11);
+});
+
+// ── B7-2A: entity references are a SEPARATE contract from Step-4 inputs ──────
+//
+// Screen 4 needs a rank and dealer-configured menus; it needs no customer or
+// vehicle. Because `Step4EstimateProps extends WizardRuntimeInputs`, widening that
+// interface would have threaded both reference arrays into Step 4 and contradicted
+// the contract the tests above pin. These assertions keep the two apart.
+
+test("14. WizardRuntimeInputs still exposes ONLY shopRank + screenConfig", () => {
+  const inputs: WizardRuntimeInputs = { shopRank: "detailer", screenConfig: SCREEN_CONFIG };
+  assert.deepEqual(Object.keys(inputs).sort(), ["screenConfig", "shopRank"]);
+
+  const src = readFileSync("src/components/estimates/wizard/contract/wizard-runtime-inputs.ts", "utf8");
+  const body = src.slice(src.indexOf("export interface WizardRuntimeInputs"));
+  const decl = body.slice(0, body.indexOf("}") + 1);
+  for (const forbidden of ["customers", "vehicles", "defaultCustomerId", "defaultVehicleId"]) {
+    assert.equal(decl.includes(forbidden), false,
+      `WizardRuntimeInputs must not gain ${forbidden} — Step4EstimateProps extends it`);
+  }
+});
+
+test("15. WizardExistingEntityInputs is a separate, required, readonly contract", () => {
+  const src = readFileSync("src/components/estimates/wizard/contract/wizard-runtime-inputs.ts", "utf8");
+  assert.match(src, /export interface WizardExistingEntityInputs/);
+  const body = src.slice(src.indexOf("export interface WizardExistingEntityInputs"));
+  const decl = body.slice(0, body.indexOf("}") + 1);
+  assert.match(decl, /readonly customers: readonly WizardExistingCustomerReference\[\];/);
+  assert.match(decl, /readonly vehicles:  ?readonly WizardExistingVehicleReference\[\];/);
+  // Required: no optional marker, and no empty-array default anywhere in the module.
+  assert.equal(/customers\?:|vehicles\?:/.test(decl), false, "arrays must not be optional");
+  assert.equal(/=\s*\[\]/.test(src), false, "no empty-array fallback in the contract module");
+  // Preselection ids are optional BY CONTRACT — absence is a normal state.
+  assert.match(src, /readonly defaultCustomerId\?: string;/);
+  assert.match(src, /readonly defaultVehicleId\?:  ?string;/);
+});
+
+test("16. the client contract module imports no DB type", () => {
+  // EXECUTABLE CODE ONLY — via the same `codeOf` helper every other source guard in
+  // this file uses. Reading the raw file made this the one guard that policed prose:
+  // it rejected the comment explaining WHY the references are minimal, which names
+  // `CustomerDB`/`VehicleDB` precisely to document the hazard. A guard that forbids
+  // naming a hazard in documentation is over-broad; the rule is about imports.
+  const src = codeOf(RUNTIME_INPUTS_SRC);
+  for (const forbidden of ["CustomerDB", "VehicleDB", "customer-types", "vehicle-types", "supa" + "base"]) {
+    assert.equal(src.includes(forbidden), false, `contract module must not reference ${forbidden}`);
+  }
+});
+
+test("17. Step 4 receives only api, shopRank and screenConfig — never entity arrays", () => {
+  const host = readFileSync("src/components/estimates/wizard/EstimateWizard.tsx", "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  const mount = host.slice(host.indexOf("<Step4Estimate"), host.indexOf("<Step5Discount"));
+  assert.match(mount, /<Step4Estimate api=\{api\} shopRank=\{shopRank\} screenConfig=\{screenConfig\} \/>/);
+  for (const forbidden of ["customers", "vehicles"]) {
+    assert.equal(mount.includes(forbidden), false, `Step 4 must not receive ${forbidden}`);
+  }
+
+  // And Step4Estimate itself remains locked to the two-field contract.
+  const step4 = readFileSync("src/components/estimates/wizard/steps/Step4Estimate.tsx", "utf8");
+  assert.match(step4, /export interface Step4EstimateProps extends WizardRuntimeInputs/);
+  assert.equal(step4.includes("WizardExistingEntityInputs"), false,
+    "Step4Estimate must not know about entity references");
 });

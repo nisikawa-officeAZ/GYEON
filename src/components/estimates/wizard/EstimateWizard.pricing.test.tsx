@@ -47,9 +47,19 @@ const T = (over: Partial<WizardTotals>): WizardTotals =>
 // ── source guards / host inputs ───────────────────────────────────────────────────
 const codeOf = (path: string): string =>
   readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+// B7-2A — required existing-entity inputs. Minimal references only; the host now
+// requires both arrays, so every mount must supply them.
+const CUSTOMER_REFS = [
+  { id: "c-1", displayName: "山田太郎", phone: "090-0000-0001" },
+] as const;
+const VEHICLE_REFS = [
+  { id: "v-1", customerId: "c-1", displayName: "TOYOTA CROWN", plateNumber: "滋賀 330 に 1234", bodySize: "M" },
+] as const;
+
 const HOST_SRC = "src/components/estimates/wizard/EstimateWizard.tsx";
 const SHELL_SRC = "src/components/estimates/wizard/WizardShell.tsx";
 const CONTRACT_SRC = "src/components/estimates/wizard/contract/wizard-pricing-runtime-inputs.ts";
+const RUNTIME_CONTRACT_SRC = "src/components/estimates/wizard/contract/wizard-runtime-inputs.ts";
 
 // Compile-time proof that catalog + pricingConfig are REQUIRED props (omitting either is a type error).
 type HostProps = React.ComponentProps<typeof EstimateWizard>;
@@ -63,11 +73,58 @@ test("1. the host requires catalog + pricingConfig (WizardHostRuntimeInputs, no 
   assert.equal(_pricingConfigRequired, true);
   const code = codeOf(HOST_SRC);
   assert.match(code, /EstimateWizardProps\s+extends\s+WizardHostRuntimeInputs/, "props use the host contract");
-  assert.match(code, /\{\s*mode\s*=\s*"create",\s*shopRank,\s*screenConfig,\s*catalog,\s*pricingConfig\s*\}/, "destructures all four inputs");
-  // Contract module is type-only (no runtime logic) and keeps WizardRuntimeInputs unwidened.
-  const contract = codeOf(CONTRACT_SRC);
-  assert.match(contract, /export\s+type\s+WizardHostRuntimeInputs\s*=\s*WizardRuntimeInputs\s*&\s*WizardPricingRuntimeInputs/, "intersection, not widening");
-  assert.equal(/=>|function |useState|console\./.test(contract), false, "contract has no runtime logic");
+  // B7-2A: the host now also requires the entity references, so the old
+  // exact-five-field destructure assertion is obsolete. These checks replace it
+  // WITHOUT weakening what it protected — every runtime input is still required,
+  // and none may acquire a default.
+  assert.match(code, /EstimateWizardProps\s*\n?\s*extends WizardHostRuntimeInputs, WizardExistingEntityInputs, WizardPreselectionInputs/,
+    "props compose the host runtime, entity and preselection contracts");
+  // ── The no-default guard is scoped to the PARAMETER DESTRUCTURING ONLY ────
+  //
+  // Searching the whole component for `<input>=` was wrong: JSX prop assignments
+  // such as `shopRank={shopRank}` and `customers={customers}` match that pattern,
+  // so the guard fired on correct code. A default can only appear between the
+  // opening `{` of the parameter object and its closing `}`, so that is the only
+  // text examined here.
+  const paramsStart = code.indexOf("export default function EstimateWizard(");
+  assert.ok(paramsStart >= 0, "PRECONDITION: the host component declaration was located");
+  const openBrace = code.indexOf("{", paramsStart);
+  const closeBrace = code.indexOf("}", openBrace);
+  assert.ok(openBrace > 0 && closeBrace > openBrace, "PRECONDITION: the destructuring segment was isolated");
+  const params = code.slice(openBrace + 1, closeBrace);
+
+  // PRECONDITION: the segment really is the parameter list and not the body —
+  // without this, an empty or mis-sliced string would satisfy every absence check.
+  assert.equal(params.includes("<"), false, "the segment contains no JSX");
+  assert.equal(params.includes("return"), false, "the segment is not the component body");
+  assert.match(params, /mode = "create"/, "mode retains its documented default");
+
+  for (const input of ["shopRank", "screenConfig", "catalog", "pricingConfig",
+                       "customers", "vehicles", "defaultCustomerId", "defaultVehicleId"]) {
+    assert.match(params, new RegExp(`\\b${input}\\b`), `${input} is destructured`);
+    // No default of any kind — including a fabricated preselection fallback.
+    assert.equal(new RegExp(`${input}\\s*=`).test(params), false, `${input} must have no default`);
+  }
+  // Specifically: no empty-array fallback could ever mask a wiring failure.
+  assert.equal(/customers\s*=\s*\[\]|vehicles\s*=\s*\[\]/.test(params), false,
+    "no empty-array fallback for the entity references");
+
+  // Two DISTINCT contract sources, each read once into its own clearly named
+  // variable: the pricing intersection lives in one module, the entity and
+  // preselection contracts in the other.
+  const pricingContractSrc = codeOf(CONTRACT_SRC);
+  assert.match(pricingContractSrc, /export\s+type\s+WizardHostRuntimeInputs\s*=\s*WizardRuntimeInputs\s*&\s*WizardPricingRuntimeInputs/,
+    "intersection, not widening");
+  assert.equal(/=>|function |useState|console\./.test(pricingContractSrc), false,
+    "pricing contract has no runtime logic");
+
+  const runtimeContractSrc = readFileSync(RUNTIME_CONTRACT_SRC, "utf8");
+  assert.match(runtimeContractSrc, /readonly defaultCustomerId\?: string;/, "defaultCustomerId is optional");
+  assert.match(runtimeContractSrc, /readonly defaultVehicleId\?:  ?string;/, "defaultVehicleId is optional");
+  // WizardRuntimeInputs itself must stay unwidened — Step4EstimateProps extends it.
+  const rtDecl = runtimeContractSrc.slice(runtimeContractSrc.indexOf("export interface WizardRuntimeInputs"));
+  assert.equal(rtDecl.slice(0, rtDecl.indexOf("}") + 1).includes("customers"), false,
+    "WizardRuntimeInputs must not gain the entity arrays");
 });
 
 // ── 2. exact authoritative hook call ──────────────────────────────────────────────
@@ -181,7 +238,8 @@ const PC: ProductionPricingConfiguration = {
 
 test("binding smoke: EstimateWizard mounts with all four inputs and shows the fail-closed unavailable state", () => {
   const html = render(
-    <EstimateWizard shopRank="detailer" screenConfig={SC} catalog={makePricingCatalog()} pricingConfig={PC} />,
+    <EstimateWizard shopRank="detailer" screenConfig={SC} catalog={makePricingCatalog()} pricingConfig={PC}
+      customers={CUSTOMER_REFS} vehicles={VEHICLE_REFS} />,
   );
   assert.ok(html.length > 0, "host renders");
   assert.ok(html.includes(MSG_UNAVAILABLE), "empty draft → unavailable notice (pricing hook is wired)");
