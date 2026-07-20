@@ -25,6 +25,7 @@ import { WizardShell, type WizardTotals } from "./WizardShell";
 import type { WizardHostRuntimeInputs } from "./contract/wizard-pricing-runtime-inputs";
 import type { WizardExistingEntityInputs, WizardPreselectionInputs } from "./contract/wizard-runtime-inputs";
 import { resolvePreselection, preselectionStorePatch } from "./steps/existing-entity-selection";
+import type { WizardSaveBinding } from "./save/WizardSavePanel";
 import { useWizardPricingFromConfig } from "./pricing/useWizardPricingFromConfig";
 import { Step1Customer } from "./steps/Step1Customer";
 import { Step2Vehicle } from "./steps/Step2Vehicle";
@@ -37,11 +38,23 @@ import { Step7Review } from "./steps/Step7Review";
 export interface EstimateWizardProps
   extends WizardHostRuntimeInputs, WizardExistingEntityInputs, WizardPreselectionInputs {
   mode?: "create" | "edit";
+  /**
+   * B7-2C — OPTIONAL presentation seam, threaded only to Step 7.
+   *
+   * Optional deliberately: making it required would force every existing
+   * non-production mount to fabricate a session, storage and crypto just to render
+   * a wizard. The PRODUCTION wrapper is what makes save binding mandatory — it
+   * requires a branded ValidatedWizardSession that only B7-2B can produce — so
+   * optionality here costs nothing in production safety.
+   *
+   * There is no default and no fabricated fallback: absent means no save surface.
+   */
+  saveBinding?: WizardSaveBinding;
 }
 
 export default function EstimateWizard({
   mode = "create", shopRank, screenConfig, catalog, pricingConfig,
-  customers, vehicles, defaultCustomerId, defaultVehicleId,
+  customers, vehicles, defaultCustomerId, defaultVehicleId, saveBinding,
 }: EstimateWizardProps) {
   // B7-2A — preselection is resolved BEFORE the first hook initialization and folded
   // in as the initial store patch, so it becomes part of the draft's very first
@@ -80,7 +93,7 @@ export default function EstimateWizard({
       {api.step === 4 && <Step4Estimate api={api} shopRank={shopRank} screenConfig={screenConfig} />}
       {api.step === 5 && <Step5Discount api={api} />}
       {api.step === 6 && <Step6Notes api={api} />}
-      {api.step === 7 && <Step7Review api={api} />}
+      {api.step === 7 && <Step7Review api={api} saveBinding={saveBinding} />}
     </WizardShell>
   );
 }

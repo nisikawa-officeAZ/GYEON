@@ -209,3 +209,23 @@ export type WizardSaveIntentResult =
         "invalid-intent" | "save-mapping-failed" | "save-validation-failed"
       >;
     };
+
+// ── B7-2C: the injected save boundary ───────────────────────────────────────
+//
+// The signature deliberately MIRRORS the real Server Action — `raw: unknown` in,
+// `Promise<WizardSaveIntentResult>` out — so the production wrapper can be handed
+// the real action in B7-3 with no adapter, and a test can hand it a fake with no
+// cast.
+//
+// ── WHY A TYPE RATHER THAN AN IMPORT ────────────────────────────────────────
+// This module imports NO Server Action. If B7-2C imported the real one to name its
+// shape, the authoritative action would gain its first production importer here —
+// and the reachability invariant that has held since B7-1 (persistence is armed but
+// nothing can reach it) would be broken by a *type* reference, four phases early.
+// A structural type costs nothing and keeps that invariant a fact.
+//
+// `raw: unknown` is not laziness: it is the real boundary. A "use server" action is
+// callable from a browser, so its parameter type is a compile-time claim only — the
+// action validates at runtime. Typing this seam as anything narrower would assert a
+// guarantee the boundary cannot enforce.
+export type WizardSaveIntentInvoker = (raw: unknown) => Promise<WizardSaveIntentResult>;

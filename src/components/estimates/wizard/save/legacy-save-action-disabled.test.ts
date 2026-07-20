@@ -189,6 +189,65 @@ test("the B3 intent action remains unmounted (zero real importers)", () => {
   assert.deepEqual(importers, [], `B3 action must remain unmounted; found: ${importers.join(", ")}`);
 });
 
+// ── B7-2C: the save surface exists, and it still reaches nothing ────────────
+//
+// B7-2C adds the operator-facing panel and the production wrapper. The
+// reachability invariant above is what makes that safe to land BEFORE the route:
+// the wrapper takes its saver as an injected prop and imports no action, so the
+// whole client save surface can be built and proved while persistence stays
+// unreachable. These tests assert that positively rather than leaving it implied.
+
+const WIZARD_DIR = "src/components/estimates/wizard/";
+const PANEL_SRC = `${SAVE_DIR}WizardSavePanel.tsx`;
+const WRAPPER_SRC = `${WIZARD_DIR}production/ProductionEstimateWizard.tsx`;
+const SESSION_SRC = `${SAVE_DIR}wizard-idempotency-session.ts`;
+
+test("B7-2C: no client save-surface module imports either save action", () => {
+  const legacy = "saveEstimateFromWizard" + "Action";
+  const intent = "save-estimate-from-wizard" + "-intent-action";
+  for (const src of [PANEL_SRC, WRAPPER_SRC, SESSION_SRC]) {
+    const raw = readFileSync(src, "utf8");
+    assert.equal(raw.includes(intent), false, `${src} names the authoritative action`);
+    assert.equal(raw.includes(legacy), false, `${src} names the legacy action`);
+    const code = codeOf(src);
+    assert.equal(importsGateway(code), false, `${src} imports the real gateway`);
+    assert.equal(code.includes(REAL_GATEWAY_SYMBOL), false, `${src} references the real gateway`);
+    assert.equal(/EstimatePersistenceService/.test(code), false, `${src} touches the persistence service`);
+    assert.equal(/\.rpc\(|createAdminClient|service_role/.test(code), false, `${src} holds a DB surface`);
+  }
+});
+
+test("B7-2C: the saver reaches the wrapper by INJECTION only", () => {
+  const code = codeOf(WRAPPER_SRC);
+  // A structural type, not an import of the action — naming the real action here
+  // would make the wrapper its first production importer, four phases early.
+  assert.match(code, /import type \{ WizardSaveIntentInvoker \} from ["']\.\.\/save\/wizard-save-intent-types["']/,
+    "the saver is a TYPE from the pure contract module");
+  assert.match(code, /readonly saveInvoker: WizardSaveIntentInvoker/, "and a REQUIRED prop");
+  assert.equal(/import .*from ["'][^"']*-action["']/.test(code), false, "no action module is imported");
+});
+
+test("B7-2C: the production wrapper is itself not yet mounted by any route", () => {
+  // B7-3 mounts it. Until then the entire client save surface is unreachable from
+  // the browser, which is what lets this phase land without arming anything.
+  const importers: string[] = [];
+  for (const file of walk("src/app")) {
+    if (codeOf(file).includes("ProductionEstimateWizard")) importers.push(file);
+  }
+  assert.deepEqual(importers, [],
+    `no route may mount the production wizard before B7-3; found: ${importers.join(", ")}`);
+});
+
+test("B7-2C: only the wrapper may construct a save binding", () => {
+  const binders: string[] = [];
+  for (const file of walk("src")) {
+    if (file.endsWith(".test.ts") || file.endsWith(".test.tsx")) continue;
+    if (/const saveBinding: WizardSaveBinding = \{/.test(codeOf(file))) binders.push(file);
+  }
+  assert.deepEqual(binders, [WRAPPER_SRC],
+    `exactly one binding site is permitted; found: ${binders.join(", ")}`);
+});
+
 // ── Neither guard file contains a raw NUL byte (R54B-F2 regression) ──────────
 
 test("no B3/R56B guard source contains a raw NUL or other C0 control byte", () => {

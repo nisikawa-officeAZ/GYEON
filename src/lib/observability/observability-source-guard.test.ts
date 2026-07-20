@@ -515,6 +515,69 @@ test("the route stores nothing: no database, Storage or application table", () =
   }
 });
 
+// ── B7-2C: the client save surface emits NOTHING ───────────────────────────
+//
+// The save observability record is owned by the server (OBS-1L-B7): exactly one
+// sanitized event per terminal outcome, emitted by the orchestrator or the
+// persistence service. A client-side event for the same save would be a second
+// record for one outcome — and, unlike the server's, it would be written from a
+// context that holds the draft, the customer, the vehicle and the idempotency key.
+// These guards keep that impossible by construction rather than by review.
+
+const B7_2C_CLIENT = [
+  `${SAVE_DIR}WizardSavePanel.tsx`,
+  `${SAVE_DIR}wizard-idempotency-session.ts`,
+  "src/components/estimates/wizard/production/ProductionEstimateWizard.tsx",
+];
+
+test("B7-2C: no client save-surface module reports an observability event", () => {
+  for (const file of B7_2C_CLIENT) {
+    const code = codeOf(file);
+    for (const token of ["report" + "ObservabilityEvent", "create" + "ObservabilityRequestId",
+                         "sanitize" + "ObservabilityEvent", "wizard-save-" + "observability",
+                         "@/lib/" + "observability", "ui-error-" + "report"]) {
+      assert.equal(code.includes(token), false, `${file} references ${token}`);
+    }
+  }
+});
+
+test("B7-2C: the client save surface writes no console line and performs no network I/O", () => {
+  for (const file of B7_2C_CLIENT) {
+    const code = codeOf(file);
+    assert.equal(/console\s*\./.test(code), false, `${file} writes a console line`);
+    for (const token of ["fetch(", "send" + "Beacon", "XML" + "HttpRequest", "navigator."]) {
+      assert.equal(code.includes(token), false, `${file} performs ${token}`);
+    }
+  }
+});
+
+test("B7-2C: no save-outcome value can reach a log, a URL or the DOM verbatim", () => {
+  for (const file of B7_2C_CLIENT) {
+    const code = codeOf(file);
+    // Serializing the result, the draft or the record is the shape a leak takes.
+    assert.equal(/JSON\.stringify\(\s*(result|draft|res|report|session)\b/.test(code), false,
+      `${file} serializes a save value`);
+    assert.equal(code.includes("admin_audit" + "_logs"), false, `${file} names the audit table`);
+    assert.equal(code.includes("activity" + "_logs"), false, `${file} names the activity table`);
+  }
+  // The panel renders only the fixed blocked-reason vocabulary — never a raw value.
+  const panel = codeOf(`${SAVE_DIR}WizardSavePanel.tsx`);
+  assert.match(panel, /data-testid="save-blocked-reason">\{blocked \?\? ""\}/,
+    "the rendered reason is the closed union, not an interpolated message");
+});
+
+test("B7-2C: the server-owned save record remains the only save observability writer", () => {
+  // Anti-vacuity: prove the writers this guard is scoped around actually exist,
+  // so an empty result below means absence rather than a mis-scoped scan.
+  const orchestrator = codeOf(`${SAVE_DIR}wizard-save-intent-orchestrator.ts`);
+  assert.match(orchestrator, /reportFailure/, "PRECONDITION: the server reporter is still wired");
+
+  for (const file of B7_2C_CLIENT) {
+    assert.equal(codeOf(file).includes("reportFailure"), false,
+      `${file} must not own any part of the save record`);
+  }
+});
+
 test("OBS-1P touched no save-path file and no locked observability file", () => {
   const expected: Record<string, string> = {
     [`${DIR}observability-types.ts`]:              "76b0adb77f12fd60621b3c4998be351936a4527886adb5814905b24f71a5710e",

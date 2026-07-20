@@ -6,9 +6,19 @@
 // Real save/PDF/LINE and module navigation wire in Phase 2 (existing logic, unchanged).
 
 import type { EstimateWizardApi } from "../useEstimateWizard";
+import type { WizardSaveBinding } from "../save/WizardSavePanel";
+import { WizardSavePanel } from "../save/WizardSavePanel";
 import { Card, SectionTitle, PhaseTwoNotice } from "../ui";
 
-export function Step7Review({ api }: { api: EstimateWizardApi }) {
+// B7-2C: the save binding is OPTIONAL here on purpose. Only the production wrapper
+// supplies one; bare EstimateWizard mounts (every non-production test) keep the
+// existing presentation seam and need no session, storage or crypto. This step
+// creates no session or key, reads no browser storage, and performs no pricing,
+// mapping, validation, DB or navigation work — it renders what it is handed.
+
+export function Step7Review({
+  api, saveBinding,
+}: { api: EstimateWizardApi; saveBinding?: WizardSaveBinding }) {
   const s = api.store;
   return (
     <>
@@ -20,7 +30,9 @@ export function Step7Review({ api }: { api: EstimateWizardApi }) {
           <div className="flex justify-between"><dt className="text-slate-500">作業</dt><dd>{s.categories.join(" / ") || "—"}</dd></div>
         </dl>
       </Card>
-      <PhaseTwoNotice screen="保存 / PDF / LINE(送信・文章コピー) / 予約カレンダー / 請求書・納品書・納品請求書" />
+      {saveBinding
+        ? <WizardSavePanel draft={api.draft} binding={saveBinding} />
+        : <PhaseTwoNotice screen="保存 / PDF / LINE(送信・文章コピー) / 予約カレンダー / 請求書・納品書・納品請求書" />}
     </>
   );
 }
