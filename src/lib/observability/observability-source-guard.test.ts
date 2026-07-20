@@ -224,3 +224,141 @@ test("the production dev-preview route guard is untouched", () => {
   const guard = readFileSync("src/app/admin/dev-preview/estimate-wizard/page.tsx", "utf8");
   assert.match(guard, /NODE_ENV === "production"\)\s*notFound\(\)/);
 });
+
+// ── OBS-1L-B7: the save path has exactly one operational channel ─────────────
+//
+// These guard the B7 boundary from src/lib/observability's side. Tokens are
+// assembled from fragments so this file never matches its own search terms, and
+// production sources are scanned with comments stripped so a comment may name a
+// hazard the code must not contain.
+
+const SAVE_DIR = "src/components/estimates/wizard/save/";
+const SAVE_PRODUCTION = [
+  `${SAVE_DIR}estimate-save-orchestration-types.ts`,
+  `${SAVE_DIR}wizard-save-observability.ts`,
+  `${SAVE_DIR}wizard-save-intent-orchestrator.ts`,
+  `${SAVE_DIR}save-estimate-from-wizard-` + "intent-action.ts",
+  `${SAVE_DIR}supabase-persistence` + "-gateway.ts",
+  `${SAVE_DIR}estimate-persistence-service.ts`,
+  `${SAVE_DIR}save-estimate-from-wizard-` + "action.ts",
+];
+
+// The two action module names above are ASSEMBLED FROM FRAGMENTS on purpose. The
+// authoritative intent action and the legacy action are both guarded elsewhere by
+// zero-importer tests that flag ANY file spelling their module name contiguously —
+// including a guard file that merely names them. Spelling them whole here reported
+// this file as an importer and turned two unrelated boundary tests red.
+
+test("the legacy [saveEstimateFromWizard] channel no longer exists in production code", () => {
+  const legacy = "saveEstimate" + "FromWizard" + "]";
+  for (const file of SAVE_PRODUCTION) {
+    assert.equal(codeOf(file).includes(legacy), false,
+      `${file} still writes the legacy channel; it carried the complete log entry, including userId`);
+  }
+});
+
+test("only the observability core may write a console line on the save path", () => {
+  // The single permitted sink is report-observability-event.ts's severity router.
+  for (const file of SAVE_PRODUCTION) {
+    const code = codeOf(file);
+    for (const channel of ["error", "warn", "info", "log", "debug"]) {
+      assert.equal(code.includes("console" + "." + channel), false,
+        `${file} writes console.${channel} directly instead of emitting a sanitized event`);
+    }
+  }
+});
+
+test("no save-path production file reads a leaky diagnostic field", () => {
+  for (const file of SAVE_PRODUCTION) {
+    const code = codeOf(file);
+    for (const field of ["details", "hint", "constraint", "stack", "cause"]) {
+      assert.equal(code.includes("error" + "." + field), false, `${file} reads error.${field}`);
+    }
+  }
+});
+
+test("the private req_ request-id generator is gone from the authoritative action", () => {
+  const action = codeOf(`${SAVE_DIR}save-estimate-from-wizard-` + "intent-action.ts");
+  const legacyPrefix = "req" + "_";
+  assert.equal(action.includes(legacyPrefix), false,
+    "req_ shares the idempotency alphabet, so it was never a boundary — obs. is");
+  assert.match(action, /createObservabilityRequestId\(\)/, "the shared core generates the id");
+  assert.equal(/getRandomValues/.test(action), false, "no private generator remains");
+  // The id must never be derived from the replay token.
+  assert.equal(/requestId[^\n]*idempotencyKey|idempotencyKey[^\n]*requestId/.test(action), false);
+});
+
+test("the emitted userId field is never populated by the save path", () => {
+  // EstimateSaveLogEntry and EstimateSaveServerContext may still CARRY userId —
+  // they are internal contexts. What must never happen is a userId being handed to
+  // the adapter, which is the only thing that could put it in an event.
+  const types = codeOf(`${SAVE_DIR}estimate-save-orchestration-types.ts`);
+  const adapter = codeOf(`${SAVE_DIR}wizard-save-` + "observability.ts");
+  assert.equal(/userId\s*:/.test(adapter), false, "the adapter has no userId field to populate");
+  assert.equal(/entry\.userId/.test(types), false, "the single emission site never reads userId");
+});
+
+test("the generic core still owns no Estimate Wizard business vocabulary", () => {
+  // The dependency direction is domain adapter -> generic core, never the reverse.
+  for (const file of IMPL) {
+    const code = codeOf(file);
+    for (const token of ["Estimate" + "SaveStage", "Wizard" + "SaveIntentFailure",
+                         "ESTIMATE_SAVE_" + "ACTION_ERRORS", "estimates/" + "wizard"]) {
+      assert.equal(code.includes(token), false, `${file} imports domain vocabulary — direction reversed`);
+    }
+  }
+});
+
+// ── OBS-1L-B7-F1: the legacy action DISCARDS its client-supplied request id ──
+//
+// The sanitizer validates the SHAPE of a correlation id, not its PROVENANCE, so it
+// cannot reject a client-fabricated but perfectly formed obs.<32 hex> value. The
+// only fail-closed treatment for a client-reachable legacy path is to never read
+// the value at all — which is a SOURCE property, and so is guarded here.
+
+test("the legacy action never reads meta.requestId in any form", () => {
+  const legacy = codeOf(`${SAVE_DIR}save-estimate-from-wizard-` + "action.ts");
+  // Assembled from fragments so this guard never matches its own assertion strings.
+  const meta = "meta";
+  const prop = "request" + "Id";
+  for (const form of [`${meta}.${prop}`, `${meta}?.${prop}`, `${meta}!.${prop}`, `${meta}["${prop}"]`]) {
+    assert.equal(legacy.includes(form), false, `the legacy action reads ${form}`);
+  }
+  // The property must still EXIST in the parameter shape: ScreensPreview is frozen
+  // and passes it, so removing it would break a callsite this phase may not touch.
+  assert.match(legacy, /requestId\?:\s*string/,
+    "the parameter property is retained for the frozen callsite");
+});
+
+test("the legacy action uses the canonical unattributed literal, not a generated id", () => {
+  const legacy = codeOf(`${SAVE_DIR}save-estimate-from-wizard-` + "action.ts");
+  assert.match(legacy, /OBSERVABILITY_FALLBACK_REQUEST_ID/,
+    "it reports under the canonical fail-closed literal");
+  assert.match(legacy, /const\s+requestId\s*=\s*OBSERVABILITY_FALLBACK_REQUEST_ID/,
+    "and that literal IS its request id");
+  // Minting a real id here would manufacture the appearance of a trustworthy
+  // correlation for a disabled, client-reachable path.
+  assert.equal(legacy.includes("createObservability" + "RequestId"), false,
+    "the legacy action must NOT generate a trusted obs.* id");
+  assert.equal(/getRandomValues|randomUUID/.test(legacy), false, "no private generator either");
+  // Never DERIVED from the replay token. A blanket "same line" check would be a
+  // FALSE POSITIVE here: the persistence context legitimately carries requestId and
+  // idempotencyKey as sibling properties on one line. What must not exist is an
+  // ASSIGNMENT of requestId from anything client-supplied — and since requestId is a
+  // const bound to the canonical literal, there is exactly one assignment.
+  assert.equal((legacy.match(/requestId\s*=/g) ?? []).length, 1, "requestId is assigned exactly once");
+  assert.equal(/requestId\s*=[^\n;]*idempotencyKey/.test(legacy), false, "never derived from the key");
+  assert.equal(/requestId\s*=[^\n;]*meta/.test(legacy), false, "never derived from client meta");
+  // The literal is imported from the core, never re-declared, so it cannot drift.
+  assert.match(legacy, /import \{ OBSERVABILITY_FALLBACK_REQUEST_ID \} from "@\/lib\/observability\/observability-types"/);
+  assert.equal(/["']obs\.unattributed["']/.test(legacy), false, "the literal is not hand-copied");
+});
+
+test("ONLY the authoritative intent action generates a trusted request id", () => {
+  const authoritative = codeOf(`${SAVE_DIR}save-estimate-from-wizard-` + "intent-action.ts");
+  assert.match(authoritative, /createObservabilityRequestId\(\)/, "the authoritative action still generates its own");
+  // It is immune by CONSTRUCTION, not by validation: there is no requestId parameter.
+  assert.match(authoritative, /saveEstimateFromWizardIntentAction\(\s*raw:\s*unknown\s*\)/,
+    "its only parameter is the raw intent, so no client id can enter");
+  assert.equal(authoritative.includes("meta" + "." + "request" + "Id"), false);
+});

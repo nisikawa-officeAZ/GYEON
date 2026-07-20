@@ -4,6 +4,7 @@
 // structured logger. Plain types (no "use server", no DB, no side effects beyond the console logger).
 
 import type { EstimateSaveValidationIssue } from "./estimate-save-errors";
+import { reportWizardSaveStage } from "./wizard-save-observability";
 
 // Server-action error codes (distinct from the DTO validation codes in estimate-save-errors.ts).
 export const ESTIMATE_SAVE_ACTION_ERRORS = {
@@ -67,7 +68,29 @@ export type EstimateSaveLogEntry = {
   errorCode:    EstimateSaveActionErrorCode | null;
 };
 
-/** Emit a structured, PII-free save-stage log line (existing console-based convention). */
+/**
+ * Emit the ONE operational record for a save-stage outcome.
+ *
+ * ── WHY THIS NO LONGER WRITES TO THE CONSOLE DIRECTLY (OBS-1L-B7) ───────────
+ * It used to be `console.info("[saveEstimateFromWizard]", JSON.stringify(entry))`.
+ * That serialized the COMPLETE entry — including `userId` — to the operational log
+ * on all nine call sites, three of which pass a real signed-in user id. Emitting a
+ * sanitized observability event ALONGSIDE it would have produced one clean record
+ * and one leaking record per outcome, so the old channel is removed rather than
+ * supplemented. `[saveEstimateFromWizard]` no longer exists anywhere.
+ *
+ * The signature and all nine call sites are unchanged on purpose: that is what lets
+ * `EstimatePersistenceService` and the legacy action stay byte-identical while their
+ * emissions become sanitized. `userId` and `validationOk` remain on the parameter
+ * type for those callers, and are simply NEVER READ here — the adapter input is
+ * constructed field by field, never spread or forwarded, so there is no path by
+ * which either could reach an event.
+ */
 export function logEstimateSaveStage(entry: EstimateSaveLogEntry): void {
-  console.info("[saveEstimateFromWizard]", JSON.stringify(entry));
+  reportWizardSaveStage({
+    requestId: entry.requestId,
+    dealerId:  entry.dealerId,
+    stage:     entry.stage,
+    errorCode: entry.errorCode,
+  });
 }

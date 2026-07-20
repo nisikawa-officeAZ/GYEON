@@ -80,12 +80,16 @@ mock.module("./estimate-persistence-gateway", {
 
 // ─── Captured logs (must never contain the key) ──────────────────────────────
 //
-// `logEstimateSaveStage` writes through console.INFO:
-//   console.info("[saveEstimateFromWizard]", JSON.stringify(entry));
-// Capturing only log/error would leave the canary asserting against an empty buffer — it would pass
-// without ever observing the real production channel. Every console channel that could carry a
-// diagnostic is therefore intercepted, and ALL of them are restored in `after` so no global stays
-// replaced for other test files in the same process.
+// OBS-1L-B7: `logEstimateSaveStage` no longer writes its own channel. It now emits ONE
+// sanitized observability record, and the sink routes by SEVERITY:
+//   error -> console.error   warn -> console.warn   info/other -> console.info
+// so no single channel can be assumed. Capturing one would leave the canary asserting
+// against an empty buffer — it would pass without ever observing the real production
+// output. Every channel is therefore intercepted, and ALL of them are restored in
+// `after` so no global stays replaced for other test files in the same process.
+//
+// The old `[saveEstimateFromWizard]` line is gone deliberately: it serialized the
+// COMPLETE log entry, including userId, on every call.
 
 const CONSOLE_CHANNELS = ["info", "log", "warn", "error", "debug"] as const;
 type ConsoleChannel = (typeof CONSOLE_CHANNELS)[number];
@@ -168,6 +172,8 @@ function validRequest(): Record<string, unknown> {
 const K16 = "abcdefghijklmnop";                       // exactly 16
 const K64 = "a".repeat(64);                           // exactly 64
 const REQ = "req-0001";
+const USER_CANARY = "u0000000-0000-0000-0000-0000000000ff";
+const KEY_CANARY = "SPOOFKEYCANARY!!";   // '!' makes it malformed, so it is rejected
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const call = (key: unknown, requestId = REQ) =>
@@ -347,13 +353,15 @@ test("the malformed key never appears in the result or in ANY captured console c
   // ── The log channel must actually have been observed. Without this, every "absent" ────
   // ── assertion below could pass vacuously against an empty buffer.                  ────
   assert.ok(logLines.length > 0, "at least one console line was captured");
-  const stageLines = logLines.filter((l) => l.includes("[saveEstimateFromWizard]"));
-  assert.ok(stageLines.length > 0, "a real save-stage log line was captured (console.info)");
+  const stageLines = logLines.filter((l) => l.includes("[observability]"));
+  assert.ok(stageLines.length > 0, "a real sanitized record was captured on some severity channel");
 
   const validationLine = stageLines.find((l) => l.includes('"stage":"validation"'));
-  assert.ok(validationLine, "the captured log identifies the validation stage");
-  assert.match(validationLine, /"errorCode":"VALIDATION_ERROR"/,
-    "the captured log carries the stable VALIDATION_ERROR code");
+  assert.ok(validationLine, "the captured record identifies the validation stage");
+  assert.match(validationLine, /"code":"VALIDATION_ERROR"/,
+    "the captured record carries the stable VALIDATION_ERROR code");
+  assert.equal(logLines.some((l) => l.includes("saveEstimateFromWizard]")), false,
+    "the legacy channel is gone — one operational record, not a legacy log plus an event");
 
   // ── Neither the full key nor its canary prefix may appear anywhere. ────────────────────
   const serialized = JSON.stringify(res);
@@ -368,13 +376,87 @@ test("the malformed key never appears in the result or in ANY captured console c
     "the stage log itself carries ids/stage/outcome only");
 });
 
-test("console.info is the channel actually captured (guards against a vacuous canary)", async () => {
+test("the observability sink is actually captured (guards against a vacuous canary)", async () => {
   logLines.length = 0;
   await call("aaaaaaaaaaaaaaa!");   // rejected -> logEstimateSaveStage fires
   assert.ok(
-    logLines.some((l) => l.includes("[saveEstimateFromWizard]")),
-    "logEstimateSaveStage writes via console.info and the harness intercepts it",
+    logLines.some((l) => l.includes("[observability]")),
+    "logEstimateSaveStage emits through the observability sink and the harness intercepts it",
   );
+});
+
+test("the emitted record carries NO userId, and the legacy entry fields are gone", async () => {
+  logLines.length = 0;
+  auth.user = { id: USER_CANARY };
+  await call("aaaaaaaaaaaaaaa!");
+
+  // 1. PRECONDITION — a real record was observed, and the signed-in user really was
+  //    present on the internal context that produced it.
+  const found = logLines.filter((l) => l.includes("[observability]"));
+  assert.equal(found.length, 1, "exactly one record was emitted");
+  assert.equal(auth.user?.id, USER_CANARY, "the internal context carried a real user id");
+
+  // 2. ONLY NOW is absence meaningful.
+  const record = JSON.parse(found[0].replace("[observability] ", "")) as Record<string, unknown>;
+  assert.equal(record.event, "wizard-save");
+  assert.equal("userId" in record, false, "userId is never emitted, though the context carries it");
+  assert.equal(found[0].includes(USER_CANARY), false, "the user id does not appear anywhere in the line");
+  assert.equal(found[0].includes("validationOk"), false, "the legacy entry field is gone");
+});
+
+test("EVERY client-supplied requestId — malformed OR well-formed — emits as obs.unattributed", async () => {
+  // One table, no exceptions. The final entry is a PERFECTLY SHAPED obs.<32 hex>
+  // value: it is the important case, not an allowed limitation. The sanitizer
+  // validates shape, not provenance, so shape-checking could never reject it —
+  // the legacy action discards `meta.requestId` outright instead.
+  const spoofs = [
+    "unspecified",
+    "req_deadbeef",
+    "abcdefghijklmnop",                          // idempotency-key shaped
+    "../../etc/passwd",                          // path-like free text
+    "SPOOF-FREE-TEXT-CANARY-山田太郎",
+    "",                                          // empty
+    "obs.0123456789abcdef0123456789abcdef",      // WELL-FORMED — must still be discarded
+  ];
+
+  for (const spoof of spoofs) {
+    logLines.length = 0;
+    auth.user = { id: USER_CANARY };
+    const res = await call(KEY_CANARY, spoof);
+    assert.equal(res.ok, false, `${JSON.stringify(spoof)}: the malformed key is still rejected`);
+
+    // 1. PRECONDITION — a real record was emitted on a real severity channel.
+    //    Without this, every assertion below would pass against an empty buffer.
+    const found = logLines.filter((l) => l.includes("[observability]"));
+    assert.equal(found.length, 1, `${JSON.stringify(spoof)}: exactly one record was emitted`);
+    const record = JSON.parse(found[0].replace("[observability] ", "")) as Record<string, unknown>;
+    assert.equal(record.event, "wizard-save", "PRECONDITION: the record is real");
+    assert.equal(record.stage, "validation");
+
+    // 2. The client value NEVER becomes the correlation id.
+    assert.equal(record.requestId, "obs.unattributed",
+      `a client-controlled id (${JSON.stringify(spoof)}) must never become the emitted correlation id`);
+
+    // 3. The raw value appears on NO console channel.
+    const everything = logLines.join("\n");
+    if (spoof !== "") {
+      assert.equal(everything.includes(spoof), false,
+        `${JSON.stringify(spoof)}: the raw client string reached a console channel`);
+    }
+
+    // 4. userId and the idempotency key remain absent.
+    assert.equal("userId" in record, false, "userId is never emitted");
+    assert.equal(everything.includes(USER_CANARY), false, "the signed-in user id never appears");
+    assert.equal(everything.includes(KEY_CANARY), false, "the idempotency key never appears");
+    assert.equal(everything.includes("idempotencyKey"), false);
+  }
+});
+
+test("the well-formed spoof is genuinely well-formed (guards against a vacuous case)", () => {
+  // If this value did not match the canonical grammar, the case above would prove
+  // nothing — it would merely be another malformed input failing closed.
+  assert.match("obs.0123456789abcdef0123456789abcdef", /^obs\.(?:[0-9a-f]{32}|unattributed)$/);
+  assert.notEqual("obs.0123456789abcdef0123456789abcdef", "obs.unattributed");
 });
 
 test("a rejection carries no per-field diagnostic", async () => {

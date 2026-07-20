@@ -21,6 +21,9 @@ import {
 // The SINGLE pattern authority, byte-identical to the RPC's own `^[A-Za-z0-9_-]{16,64}$`.
 // Imported, never re-declared: a second copy could drift out of step with SQL.
 import { IDEMPOTENCY_KEY_PATTERN } from "./wizard-save-intent-types";
+// The canonical fail-closed correlation id. Imported, never re-declared, so this
+// action cannot drift away from the literal the sanitizer itself falls back to.
+import { OBSERVABILITY_FALLBACK_REQUEST_ID } from "@/lib/observability/observability-types";
 
 // ── R56B: THIS PATH IS DISABLED ──────────────────────────────────────────────
 // This action was the ONE source-complete route to real persistence: it is reached from
@@ -52,7 +55,30 @@ export async function saveEstimateFromWizardAction(
   meta?: { requestId?: string; idempotencyKey?: unknown },
 ): Promise<EstimateSaveActionResult> {
   const E = ESTIMATE_SAVE_ACTION_ERRORS;
-  const requestId = meta?.requestId?.trim() || "unspecified";
+
+  // ── OBS-1L-B7-F1: `meta.requestId` is ACCEPTED AND DISCARDED ────────────────
+  //
+  // The property stays in the parameter shape because ScreensPreview — a FROZEN
+  // file — passes it, and removing it would break a callsite this phase may not
+  // touch. But the value is never read, trimmed, validated, sanitized, forwarded
+  // or emitted.
+  //
+  // Discarding is the only correct treatment, and validation is not a substitute.
+  // The sanitizer checks the SHAPE of a correlation id, not its PROVENANCE: it
+  // cannot tell an id this server generated from one a client fabricated. So a
+  // caller sending a perfectly formed `obs.0123456789abcdef0123456789abcdef`
+  // would have had it accepted verbatim and emitted as a trusted correlation id —
+  // letting a client choose how its own save attempts are grouped in the
+  // operational record, or collide them with another tenant's.
+  //
+  // This action therefore reports under the canonical unattributed literal. That
+  // is honest: this path IS unattributed, because no trustworthy id exists for it.
+  // Generating a real `obs.*` id here would be worse than the spoof — it would
+  // manufacture the appearance of a trustworthy correlation for a disabled,
+  // client-reachable legacy path. The AUTHORITATIVE intent action is the one that
+  // generates a real id, and it can, because it accepts no requestId parameter at
+  // all: immunity by construction rather than by validation.
+  const requestId = OBSERVABILITY_FALLBACK_REQUEST_ID;
 
   // 1. Authentication
   const user = await getCurrentUser();

@@ -9,7 +9,9 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 
 import { runWizardSaveIntent, type WizardSaveIntentDeps } from "./wizard-save-intent-orchestrator";
-import type { WizardSaveIntentResult, WizardSaveIntentValidation } from "./wizard-save-intent-types";
+import type {
+  WizardSaveFailureReport, WizardSaveIntentResult, WizardSaveIntentValidation,
+} from "./wizard-save-intent-types";
 import { resolveEstimateSaveActorContext, type EstimateSaveActorContextFailure } from "@/lib/auth/estimate-save-actor-context";
 import type { AuthoritativeWizardRuntimeConfiguration } from "@/lib/wizard-catalog/wizard-runtime-config";
 import { DEFAULT_PRICING_CATALOG } from "@/lib/pricing/canonical-pricing-engine";
@@ -82,9 +84,19 @@ const okValidation = (): WizardSaveIntentValidation => ({
 // Tracing WRAPS the implementation rather than being part of it, so a per-test override cannot
 // accidentally silence the trace — the ordering assertions stay honest no matter what is overridden.
 type Over = Partial<WizardSaveIntentDeps>;
-function makeDeps(over: Over = {}): { deps: WizardSaveIntentDeps; trace: string[]; seen: Record<string, unknown> } {
+function makeDeps(over: Over = {}): {
+  deps: WizardSaveIntentDeps;
+  trace: string[];
+  seen: Record<string, unknown>;
+  reports: WizardSaveFailureReport[];
+  reportedAt: string[][];
+} {
   const trace: string[] = [];
   const seen: Record<string, unknown> = {};
+  const reportedAt: string[][] = [];
+  // OBS-1L-B7: every reported record, in order. `reports.length` IS the emitted-event
+  // count for the orchestrator-owned portion of a save.
+  const reports: WizardSaveFailureReport[] = [];
   const impl: WizardSaveIntentDeps = {
     validateIntent: () => okValidation(),
     resolveActorContext: () => realActorContext(),
@@ -94,6 +106,7 @@ function makeDeps(over: Over = {}): { deps: WizardSaveIntentDeps; trace: string[
     validateSaveRequest: () => ({ ok: true, issues: [] }),
     persist: async () => ({ ok: false, code: "RPC_NOT_IMPLEMENTED", message: "保存機能は現在準備中です。", stage: "rpc" }),
     requestId: REQ,
+    reportFailure: (r) => { reports.push(r); },
     ...over,
   };
   const deps: WizardSaveIntentDeps = {
@@ -113,8 +126,15 @@ function makeDeps(over: Over = {}): { deps: WizardSaveIntentDeps; trace: string[
       return impl.persist(request, context);
     },
     requestId: impl.requestId,
+    // Deliberately NOT pushed onto `trace`: the existing ordering assertions compare
+    // `trace` exactly (deepEqual), and they assert which BUSINESS stages ran. Adding
+    // a reporting entry would rewrite eleven unrelated expectations and quietly turn
+    // "no dependency ran after validation" into a claim about logging. Reporting is
+    // captured in its own array, and its position relative to the business trace is
+    // recorded here so ordering is still provable.
+    reportFailure: (r) => { reportedAt.push([...trace]); impl.reportFailure(r); },
   };
-  return { deps, trace, seen };
+  return { deps, trace, seen, reports, reportedAt };
 }
 
 const run = (over: Over = {}, raw: unknown = {}) => runWizardSaveIntent(raw, makeDeps(over).deps);
@@ -518,8 +538,13 @@ test("the action uses no service-role/secret client and no JWT claim-bag authori
 
 test("the action generates its own requestId and does not accept one", () => {
   const code = codeOf(ACTION_SRC);
-  assert.match(code, /globalThis\.crypto\.getRandomValues/, "server-generated");
-  assert.match(code, /req_unattributed/, "caught fallback literal");
+  // OBS-1L-B7: the private generator is GONE. The id now comes from the committed
+  // observability core, whose grammar (obs.<32 hex> | obs.unattributed) is provably
+  // disjoint from the idempotency alphabet — `.` is not a legal key character, so a
+  // replay token can never be mistaken for, or reused as, a correlation id.
+  assert.match(code, /createObservabilityRequestId\(\)/, "server-generated, from the shared core");
+  assert.equal(/globalThis\.crypto\.getRandomValues/.test(code), false, "no private generator remains");
+  assert.equal(/"req_" \+ ""|req_unattributed|`req_/.test(code), false, "no req_ vocabulary remains");
   assert.match(code, /saveEstimateFromWizardIntentAction\(\s*raw:\s*unknown\s*\)/, "the ONLY parameter is the raw intent");
   assert.equal(/lib\/uuid|safeRandomUUID/.test(code), false, "does not import the frozen uuid helper");
   assert.equal(/Date\.now|new Date\(/.test(code), false, "no clock data in the id");
@@ -561,4 +586,175 @@ test("ScreensPreview and every route/page still ignore the new action", () => {
   for (const file of walk("src/app")) {
     assert.equal(readFileSync(file, "utf8").includes(ACTION_MODULE), false, `${file} must not import the action`);
   }
+});
+
+// ── OBS-1L-B7: exactly one operational record, and who owns it ───────────────
+//
+// Ownership splits at ONE line — the call to `deps.persist`:
+//   • before it  → the orchestrator reports (these tests)
+//   • inside it  → EstimatePersistenceService reports (its own test file)
+//   • after it   → the orchestrator remaps SILENTLY
+// Double-counting is the failure mode these tests exist to catch: a save reported
+// twice makes every operational count wrong in a way nothing else would surface.
+
+/** Every pre-persist failure, with the exact reported vocabulary it must produce. */
+const PRE_PERSIST_CASES: ReadonlyArray<{
+  label: string; over: Over; raw?: unknown; failure: string; reported: string; dealerId?: string;
+}> = [
+  { label: "validator throws", over: { validateIntent: () => { throw new Error("boom"); } },
+    failure: "invalid-intent", reported: "invalid-intent" },
+  { label: "validator rejects",
+    over: { validateIntent: () => ({ ok: false, issues: [{ path: "intent.draft", code: "missing-field" }] }) },
+    failure: "invalid-intent", reported: "invalid-intent" },
+  { label: "actor resolution throws", over: { resolveActorContext: async () => { throw new Error("boom"); } },
+    failure: "actor-context-unavailable", reported: "actor-context-unavailable" },
+  { label: "unauthenticated", over: { resolveActorContext: async () => ({ ok: false, reason: "unauthenticated" }) },
+    failure: "unauthenticated", reported: "unauthenticated" },
+  { label: "membership read failed", over: { resolveActorContext: async () => ({ ok: false, reason: "membership-read-failed" }) },
+    failure: "actor-context-unavailable", reported: "actor-context-unavailable" },
+  { label: "staff read failed", over: { resolveActorContext: async () => ({ ok: false, reason: "staff-read-failed" }) },
+    failure: "actor-context-unavailable", reported: "actor-context-unavailable" },
+  { label: "no active membership", over: { resolveActorContext: async () => ({ ok: false, reason: "no-active-membership" }) },
+    failure: "forbidden", reported: "forbidden" },
+  { label: "permission denied", over: { resolveActorContext: async () => ({ ok: false, reason: "permission-denied" }) },
+    failure: "forbidden", reported: "forbidden" },
+  { label: "tenant ambiguous", over: { resolveActorContext: async () => ({ ok: false, reason: "tenant-context-unavailable" }) },
+    failure: "tenant-context-unavailable", reported: "tenant-context-unavailable" },
+  { label: "runtime load throws", over: { loadRuntimeConfig: async () => { throw new Error("boom"); } },
+    failure: "runtime-config-unavailable", reported: "runtime-config-unavailable", dealerId: DEALER },
+  { label: "runtime not ok", over: { loadRuntimeConfig: async () => ({ ok: false, reason: "catalog-unavailable" }) as never },
+    failure: "runtime-config-unavailable", reported: "runtime-config-unavailable", dealerId: DEALER },
+  { label: "tenant mismatch", over: { loadRuntimeConfig: async () => runtimeConfig({ dealerId: OTHER_DEALER }) },
+    failure: "tenant-context-unavailable", reported: "tenant-context-unavailable", dealerId: DEALER },
+  { label: "stale revision", over: { loadRuntimeConfig: async () => runtimeConfig({ currentRevision: 999 }) },
+    failure: "stale-config-revision", reported: "stale-config-revision", dealerId: DEALER },
+  { label: "pricing throws", over: { computePricing: () => { throw new Error("boom"); } },
+    failure: "server-pricing-failed", reported: "server-pricing-failed", dealerId: DEALER },
+  { label: "pricing incomplete",
+    over: { computePricing: () => ({ ...completePricing(), completeness: "partial" }) as WizardPricingResult },
+    failure: "server-pricing-failed", reported: "server-pricing-failed", dealerId: DEALER },
+  { label: "mapper throws", over: { mapSaveRequest: () => { throw new Error("boom"); } },
+    failure: "save-mapping-failed", reported: "save-mapping-failed", dealerId: DEALER },
+  { label: "mapper rejects",
+    over: { mapSaveRequest: () => ({ ok: false, reason: "mapping-failed", issues: [] }) as ConfigSaveMapperResult },
+    failure: "save-mapping-failed", reported: "save-mapping-failed", dealerId: DEALER },
+  { label: "DTO validator throws", over: { validateSaveRequest: () => { throw new Error("boom"); } },
+    failure: "save-validation-failed", reported: "save-validation-failed", dealerId: DEALER },
+  { label: "DTO validator rejects",
+    over: { validateSaveRequest: () => ({ ok: false, issues: [{ field: "customer.name", code: "CUSTOMER_REQUIRED", message: "x" }] }) as EstimateSaveValidationResult },
+    failure: "save-validation-failed", reported: "save-validation-failed", dealerId: DEALER },
+];
+
+test("every pre-persist failure reports EXACTLY ONE record with the correct vocabulary", async () => {
+  for (const c of PRE_PERSIST_CASES) {
+    const h = makeDeps(c.over);
+    const r = await runWizardSaveIntent(c.raw ?? {}, h.deps);
+
+    assert.equal(r.ok, false, c.label);
+    if (!r.ok) assert.equal(r.failure, c.failure, `${c.label}: public failure`);
+
+    assert.equal(h.reports.length, 1, `${c.label}: exactly one record`);
+    assert.equal(h.reports[0].failure, c.reported, `${c.label}: reported vocabulary`);
+    assert.equal(h.reports[0].dealerId, c.dealerId, `${c.label}: dealerId presence`);
+
+    // The record is emitted BEFORE the failing return, and never after a later stage.
+    assert.equal(h.trace.includes("persist"), false, `${c.label}: persistence was never entered`);
+  }
+});
+
+test("all 19 pre-persist branches are covered and none is a duplicate of another", () => {
+  assert.equal(PRE_PERSIST_CASES.length, 19, "one case per pre-persist return branch");
+  const kinds = new Set(PRE_PERSIST_CASES.map((c) => c.reported));
+  assert.equal(kinds.size, 10, "exactly the ten pre-persist failure values are exercised");
+});
+
+test("BOTH save-validation-failed branches report once and never reach persistence", async () => {
+  const branches: Over[] = [
+    { validateSaveRequest: () => { throw new Error("boom"); } },
+    { validateSaveRequest: () => ({ ok: false, issues: [{ field: "customer.name", code: "CUSTOMER_REQUIRED", message: "x" }] }) as EstimateSaveValidationResult },
+  ];
+  for (const over of branches) {
+    const h = makeDeps(over);
+    const r = await runWizardSaveIntent({}, h.deps);
+    assert.equal(r.ok, false);
+    if (!r.ok) assert.equal(r.failure, "save-validation-failed");
+    assert.equal(h.reports.length, 1, "one record");
+    assert.equal(h.reports[0].failure, "save-validation-failed",
+      "owned by the orchestrator, NOT by the persistence service");
+    assert.equal(h.trace.includes("persist"), false, "deps.persist was never called");
+    // Reported after DTO validation ran, so the record describes the stage that failed.
+    assert.deepEqual(h.reportedAt[0].at(-1), "validateSaveRequest");
+  }
+});
+
+test("EVERY post-persist outcome reports ZERO additional records", async () => {
+  const outcomes: EstimateSaveActionResult[] = [
+    { ok: true, estimateId: "e1", estimateNumber: "EST-1", customerId: "c1", vehicleId: "v1", replay: false },
+    { ok: false, code: "RPC_NOT_IMPLEMENTED", message: "x", stage: "rpc" },
+    { ok: false, code: "DUPLICATE_SUBMISSION", message: "x", stage: "rpc" },
+    { ok: false, code: "SAVE_FAILED", message: "x", stage: "rpc" },
+    { ok: false, code: "VALIDATION_ERROR", message: "x", stage: "validation" },
+    { ok: false, code: "ESTIMATE_NUMBER_FAILED", message: "x", stage: "rpc" },
+  ];
+  for (const outcome of outcomes) {
+    const h = makeDeps({ persist: async () => outcome });
+    await runWizardSaveIntent({}, h.deps);
+    assert.equal(h.trace.includes("persist"), true, "persistence WAS entered");
+    assert.equal(h.reports.length, 0,
+      `the service already reported ${outcome.ok ? "success" : outcome.code}; remapping must stay silent`);
+  }
+});
+
+test("a persist THROW reports exactly one persist-invariant and returns public persistence-failed", async () => {
+  const h = makeDeps({ persist: async () => { throw new Error("seam exploded"); } });
+  const r = await runWizardSaveIntent({}, h.deps);
+
+  assert.equal(r.ok, false);
+  if (!r.ok) assert.equal(r.failure, "persistence-failed", "the caller sees the PUBLIC failure");
+  assert.equal(h.reports.length, 1, "exactly one record");
+  assert.equal(h.reports[0].failure, "persist-invariant",
+    "the INTERNAL code — the service emitted nothing because it threw before returning");
+  assert.equal(h.reports[0].dealerId, DEALER);
+});
+
+test("a THROWING reporter cannot alter the business result or skip a stage", async () => {
+  const exploding: Over = { reportFailure: () => { throw new Error("reporting outage"); } };
+
+  // A pre-persist failure keeps its exact typed result.
+  const bad = makeDeps({ ...exploding, validateSaveRequest: () => ({ ok: false, issues: [] }) as EstimateSaveValidationResult });
+  const r1 = await runWizardSaveIntent({}, bad.deps);
+  assert.equal(r1.ok, false);
+  if (!r1.ok) assert.equal(r1.failure, "save-validation-failed", "unchanged by a throwing reporter");
+  assert.equal(bad.trace.includes("persist"), false);
+
+  // A SUCCESS still succeeds — the case where a logging defect would otherwise
+  // surface to the operator as a failed save.
+  const good = makeDeps({
+    ...exploding,
+    persist: async () => ({ ok: true, estimateId: "e1", estimateNumber: "EST-1", customerId: "c1", vehicleId: "v1", replay: false }),
+  });
+  const r2 = await runWizardSaveIntent({}, good.deps);
+  assert.equal(r2.ok, true, "a reporting outage must never fail a save that worked");
+});
+
+test("the reporter payload is CLOSED — no userId, key, issues, draft or pricing can ride in", async () => {
+  const h = makeDeps({ validateSaveRequest: () => ({ ok: false, issues: [{ field: "customer.name", code: "CUSTOMER_REQUIRED", message: "山田太郎" }] }) as EstimateSaveValidationResult });
+  await runWizardSaveIntent({}, h.deps);
+
+  assert.equal(h.reports.length, 1, "PRECONDITION: a record was actually captured");
+  const serialized = JSON.stringify(h.reports[0]);
+  assert.deepEqual(Object.keys(h.reports[0]).sort(), ["dealerId", "failure"]);
+  for (const forbidden of [USER, KEY, "山田太郎", "issues", "userId", "idempotencyKey", "message", "draft", "pricing"]) {
+    assert.equal(serialized.includes(forbidden), false, `payload exposes ${forbidden}`);
+  }
+});
+
+test("the orchestrator imports no reporting implementation, console, Supabase or transport", () => {
+  const code = readFileSync("src/components/estimates/wizard/save/wizard-save-intent-orchestrator.ts", "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  for (const token of ["console" + ".", "report" + "ObservabilityEvent", "wizard-save-" + "observability",
+                       "@/lib/" + "observability", "supa" + "base", "fetch("]) {
+    assert.equal(code.includes(token), false, `the pure core must not reference ${token}`);
+  }
+  assert.equal(/reportFailure\??\s*:/.test(code), true, "reporting arrives only as an injected dependency");
 });

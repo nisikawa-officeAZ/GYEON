@@ -36,7 +36,8 @@ import type { validateEstimateSaveRequest } from "./estimate-save-validation";
 import type { EstimateSaveActionResult, EstimateSaveServerContext } from "./estimate-save-orchestration-types";
 import { ESTIMATE_SAVE_ACTION_ERRORS } from "./estimate-save-orchestration-types";
 import type {
-  WizardSaveIntentFailure, WizardSaveIntentResult, WizardSaveIntentValidation,
+  WizardSaveFailureReporter, WizardSaveIntentFailure, WizardSaveIntentResult,
+  WizardSaveReportableFailure, WizardSaveIntentValidation,
 } from "./wizard-save-intent-types";
 
 /**
@@ -54,6 +55,16 @@ export interface WizardSaveIntentDeps {
   readonly validateSaveRequest: typeof validateEstimateSaveRequest;
   readonly persist: (request: EstimateSaveRequest, context: EstimateSaveServerContext) => Promise<EstimateSaveActionResult>;
   readonly requestId: string;
+  /**
+   * OBS-1L-B7 — pre-persist observability seam.
+   *
+   * INJECTED, like every other effect, so this module keeps importing no reporting
+   * implementation, no console, no Supabase and no transport, and so the emission
+   * ordering is assertable in the SAME call trace as steps 1-15 rather than by
+   * reading source text. It is REQUIRED, not optional: a default would let a caller
+   * silently run the authoritative save with no operational record at all.
+   */
+  readonly reportFailure: WizardSaveFailureReporter;
 }
 
 /**
@@ -68,6 +79,33 @@ type PlainFailure = Exclude<
 
 const failPlain = (failure: PlainFailure): WizardSaveIntentResult => ({ ok: false, failure });
 
+/**
+ * Report exactly one pre-persist record, then let the caller return.
+ *
+ * ── WHY THE TRY/CATCH IS NOT OPTIONAL ───────────────────────────────────────────
+ * Observability is a BYSTANDER to the save. `reportObservabilityEvent` already
+ * cannot throw, but `reportFailure` is an INJECTED function — a test double, or a
+ * future adapter — and a throwing one must not change what the operator sees. If it
+ * escaped here it would convert a clean typed failure into `persistence-failed`, or
+ * worse, skip a guard. Containing it means a reporting defect can lose a record and
+ * nothing else.
+ *
+ * The argument type is `WizardSaveReportableFailure`, which EXCLUDES all three
+ * `persistence-*` failures, so the post-persist remapping arms at the end of this
+ * function cannot call this helper at all.
+ */
+function report(
+  deps: WizardSaveIntentDeps,
+  failure: WizardSaveReportableFailure,
+  dealerId?: string,
+): void {
+  try {
+    deps.reportFailure(dealerId === undefined ? { failure } : { failure, dealerId });
+  } catch {
+    // A reporting failure is never a save failure.
+  }
+}
+
 export async function runWizardSaveIntent(
   raw: unknown,
   deps: WizardSaveIntentDeps,
@@ -77,28 +115,37 @@ export async function runWizardSaveIntent(
   try {
     validation = deps.validateIntent(raw);
   } catch {
+    report(deps, "invalid-intent");
     return { ok: false, failure: "invalid-intent", issues: [{ path: "intent", code: "unreadable-input" }] };
   }
-  if (!validation.ok) return { ok: false, failure: "invalid-intent", issues: validation.issues };
+  if (!validation.ok) {
+    report(deps, "invalid-intent");
+    return { ok: false, failure: "invalid-intent", issues: validation.issues };
+  }
   const intent = validation.intent;
 
   // ── 2. Resolve the actor EXACTLY ONCE. ──
+  //
+  // No tenant is known until step 3 succeeds, so every record up to that point is
+  // reported WITHOUT a dealerId. Substituting a placeholder would be worse than
+  // omitting it: an operator could not tell "tenant unknown" from "tenant known".
   let actor: EstimateSaveActorContextResolution;
   try {
     actor = await deps.resolveActorContext();
   } catch {
+    report(deps, "actor-context-unavailable");
     return failPlain("actor-context-unavailable");
   }
 
   // ── 3. Map the actor failure. The internal reason never leaves this switch. ──
   if (!actor.ok) {
     switch (actor.reason) {
-      case "unauthenticated":            return failPlain("unauthenticated");
-      case "membership-read-failed":     return failPlain("actor-context-unavailable");
-      case "staff-read-failed":          return failPlain("actor-context-unavailable");
-      case "no-active-membership":       return failPlain("forbidden");
-      case "permission-denied":          return failPlain("forbidden");
-      case "tenant-context-unavailable": return failPlain("tenant-context-unavailable");
+      case "unauthenticated":            report(deps, "unauthenticated");            return failPlain("unauthenticated");
+      case "membership-read-failed":     report(deps, "actor-context-unavailable");  return failPlain("actor-context-unavailable");
+      case "staff-read-failed":          report(deps, "actor-context-unavailable");  return failPlain("actor-context-unavailable");
+      case "no-active-membership":       report(deps, "forbidden");                  return failPlain("forbidden");
+      case "permission-denied":          report(deps, "forbidden");                  return failPlain("forbidden");
+      case "tenant-context-unavailable": report(deps, "tenant-context-unavailable"); return failPlain("tenant-context-unavailable");
     }
   }
   const context = actor.context;
@@ -108,18 +155,30 @@ export async function runWizardSaveIntent(
   try {
     runtime = await deps.loadRuntimeConfig(context);
   } catch {
+    report(deps, "runtime-config-unavailable", context.dealerId);
     return failPlain("runtime-config-unavailable");
   }
 
   // ── 5. Every WizardRuntimeConfigFailure collapses here; the specific reason is never returned. ──
-  if (!runtime.ok) return failPlain("runtime-config-unavailable");
+  if (!runtime.ok) {
+    report(deps, "runtime-config-unavailable", context.dealerId);
+    return failPlain("runtime-config-unavailable");
+  }
 
   // ── 6. The configuration must describe the tenant the actor is authorized for, and no other. ──
-  if (runtime.dealerId !== context.dealerId) return failPlain("tenant-context-unavailable");
+  //
+  // The reported dealerId is the ACTOR's tenant, never `runtime.dealerId`. Reporting
+  // the mismatched one would attribute the incident to the tenant that was wrongly
+  // loaded rather than the tenant whose save was refused.
+  if (runtime.dealerId !== context.dealerId) {
+    report(deps, "tenant-context-unavailable", context.dealerId);
+    return failPlain("tenant-context-unavailable");
+  }
 
   // ── 7. The client's expected revision must match the configuration actually loaded. A stale
   //       revision means the operator priced against a catalog that has since changed. ──
   if (intent.expectedConfigRevision !== runtime.lifecycle.currentRevision) {
+    report(deps, "stale-config-revision", context.dealerId);
     return failPlain("stale-config-revision");
   }
 
@@ -129,6 +188,7 @@ export async function runWizardSaveIntent(
   try {
     pricing = deps.computePricing(intent.draft, runtime.pricingConfig, runtime.catalog, runtime.shopRank);
   } catch {
+    report(deps, "server-pricing-failed", context.dealerId);
     return failPlain("server-pricing-failed");
   }
 
@@ -140,6 +200,7 @@ export async function runWizardSaveIntent(
     pricing.errors.length !== 0 ||
     pricing.unresolvedItems.length !== 0
   ) {
+    report(deps, "server-pricing-failed", context.dealerId);
     return failPlain("server-pricing-failed");
   }
 
@@ -154,14 +215,18 @@ export async function runWizardSaveIntent(
       shopRank: runtime.shopRank,
     });
   } catch {
+    report(deps, "save-mapping-failed", context.dealerId);
     return { ok: false, failure: "save-mapping-failed", mappingCodes: ["mapping-failed"] };
   }
 
   // ── 11. Mapper CODES only. `ConfigSaveMapperIssue.message` is deliberately not forwarded. ──
+  //        The codes travel in the RESULT only — the observability record carries the
+  //        stage and a stable code, never mapper-internal detail.
   if (!mapped.ok) {
     const codes: ConfigSaveMapperFailure[] = mapped.issues.length > 0
       ? mapped.issues.map((i) => i.code)
       : [mapped.reason];
+    report(deps, "save-mapping-failed", context.dealerId);
     return { ok: false, failure: "save-mapping-failed", mappingCodes: codes };
   }
   const request = mapped.request;
@@ -172,9 +237,17 @@ export async function runWizardSaveIntent(
   try {
     dto = deps.validateSaveRequest(request);
   } catch {
+    report(deps, "save-validation-failed", context.dealerId);
     return { ok: false, failure: "save-validation-failed", saveIssues: [] };
   }
-  if (!dto.ok) return { ok: false, failure: "save-validation-failed", saveIssues: dto.issues };
+  // BOTH save-validation-failed branches return here, BEFORE `deps.persist` below, so
+  // the persistence service is never entered and cannot own either outcome. The
+  // record must carry the `validation` stage, not a persistence stage — reporting a
+  // DTO defect as an RPC failure is exactly what step 12/13 exists to prevent.
+  if (!dto.ok) {
+    report(deps, "save-validation-failed", context.dealerId);
+    return { ok: false, failure: "save-validation-failed", saveIssues: dto.issues };
+  }
 
   // ── 14. Persist. dealerId and userId come from the actor context — never from the intent. ──
   let outcome: EstimateSaveActionResult;
@@ -186,11 +259,24 @@ export async function runWizardSaveIntent(
       idempotencyKey: intent.idempotencyKey,
     });
   } catch {
+    // The seam THREW rather than returning. EstimatePersistenceService emits its
+    // record immediately before each of its five returns, so a throw means it
+    // emitted NOTHING — its two pre-try steps (structural re-validation and RPC
+    // payload construction) sit outside its try block by design. This is the only
+    // persistence outcome the orchestrator owns, and it is reported under the
+    // internal `persist-invariant` code so an operator can tell "a layer that is
+    // supposed to be total threw" apart from a normal mapped failure.
+    report(deps, "persist-invariant", context.dealerId);
     return failPlain("persistence-failed");
   }
 
   // ── 15. Map the persistence result. The success arm is returned DIRECTLY — never nested inside an
   //        `ok: true` wrapper, which is what would make an "ok:true containing a failure" possible. ──
+  //
+  //        NOTHING below reports. Every outcome here was already reported INSIDE the
+  //        service, and re-reporting would double-count every save in the metrics an
+  //        operator is meant to trust. The reporter's argument type excludes all three
+  //        `persistence-*` failures, so these arms cannot report even by mistake.
   if (outcome.ok) return outcome;
   switch (outcome.code) {
     case ESTIMATE_SAVE_ACTION_ERRORS.RPC_NOT_IMPLEMENTED:  return failPlain("persistence-unavailable");

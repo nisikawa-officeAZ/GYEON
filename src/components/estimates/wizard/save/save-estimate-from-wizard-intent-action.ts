@@ -32,35 +32,12 @@ import { EstimatePersistenceService } from "./estimate-persistence-service";
 import { notImplementedPersistenceGateway } from "./estimate-persistence-gateway";
 import { validateWizardSaveIntent } from "./wizard-save-intent-validation";
 import { runWizardSaveIntent } from "./wizard-save-intent-orchestrator";
+import { createObservabilityRequestId } from "@/lib/observability/create-observability-request-id";
+import { createWizardSaveFailureReporter } from "./wizard-save-observability";
 import type { WizardSaveIntentResult } from "./wizard-save-intent-types";
 
 // The DISABLED gateway, bound once. There is no code path here that can substitute the real one.
 const persistenceService = new EstimatePersistenceService(notImplementedPersistenceGateway);
-
-/**
- * A correlation id for the PII-free save-stage log, generated on the server.
- *
- * The browser cannot supply one — the action's only parameter is the raw intent — which is the
- * defect being removed from the legacy action's `meta.requestId`. It is never derived from
- * `idempotencyKey` (conflating a log id with a replay token would let a log correlation change
- * duplicate-detection behaviour), and the `req_` prefix keeps the two visibly distinct.
- *
- * It carries no clock, user, customer, vehicle, or pricing data: 16 random bytes and nothing else.
- * `src/lib/uuid/safe-random-uuid.ts` is deliberately NOT imported.
- *
- * A generator failure returns a constant literal rather than throwing. A logging id must never be
- * able to fail a save, and it certainly must never influence which gateway is used — the binding
- * above is fixed at module load and is entirely independent of this value.
- */
-function newRequestId(): string {
-  try {
-    const bytes = new Uint8Array(16);
-    globalThis.crypto.getRandomValues(bytes);
-    return `req_${Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")}`;
-  } catch {
-    return "req_unattributed";
-  }
-}
 
 /**
  * Accept an untrusted save intent and run the authoritative server save flow.
@@ -70,6 +47,19 @@ function newRequestId(): string {
  * Persistence is disabled, so a fully valid intent terminates in `persistence-unavailable`.
  */
 export async function saveEstimateFromWizardIntentAction(raw: unknown): Promise<WizardSaveIntentResult> {
+  // OBS-1L-B7 — the correlation id, generated ONCE per save attempt on the server.
+  //
+  // This replaces a private `req_` generator. `obs.` is not a cosmetic rename: the
+  // authoritative idempotency alphabet is /^[A-Za-z0-9_-]{16,64}$/, which CONTAINS
+  // `_`, so a `req_…` value could satisfy both languages at once and a replay token
+  // could in principle be logged as a correlation id. `.` is outside that alphabet,
+  // making the two provably disjoint rather than merely conventionally different.
+  //
+  // The browser cannot supply one — this action's only parameter is the raw intent,
+  // so there is nowhere for a client id to enter — and it is never derived from
+  // `idempotencyKey`: `createObservabilityRequestId` reads no input at all.
+  const requestId = createObservabilityRequestId();
+
   return runWizardSaveIntent(raw, {
     validateIntent: validateWizardSaveIntent,
     resolveActorContext: getEstimateSaveActorContext,
@@ -78,6 +68,10 @@ export async function saveEstimateFromWizardIntentAction(raw: unknown): Promise<
     mapSaveRequest: mapWizardDraftToSaveRequestFromConfig,
     validateSaveRequest: validateEstimateSaveRequest,
     persist: (request, context) => persistenceService.save(request, context),
-    requestId: newRequestId(),
+    requestId,
+    // Bound to the SAME id the persistence context carries, so every record from one
+    // save attempt correlates — whether it was emitted before persistence by the
+    // orchestrator or inside the service.
+    reportFailure: createWizardSaveFailureReporter(requestId),
   });
 }

@@ -111,6 +111,52 @@ export type WizardSaveIntentFailure =
   | "persistence-conflict"
   | "persistence-failed";
 
+// ── OBS-1L-B7: what the orchestrator may REPORT ──────────────────────────────
+//
+// Ownership of the terminal observability record splits at exactly one line: the
+// call to `deps.persist`.
+//
+//   • Before it  — the orchestrator owns the record (eleven early returns).
+//   • Inside it  — EstimatePersistenceService owns every result it returns.
+//   • After it   — the orchestrator only REMAPS a result the service already
+//                  reported, and must emit nothing.
+//
+// The three `persistence-*` failures are exactly the outcomes the service reports,
+// so excluding them here makes the third rule a TYPE rule rather than a review note:
+// writing `reportFailure({ failure: "persistence-failed" })` in a post-persist
+// remapping arm does not compile.
+
+/** The ten failures that can occur before `deps.persist` is ever invoked. */
+export type WizardSavePrePersistFailure = Exclude<
+  WizardSaveIntentFailure,
+  "persistence-unavailable" | "persistence-conflict" | "persistence-failed"
+>;
+
+/**
+ * The reportable vocabulary.
+ *
+ * `persist-invariant` is INTERNAL and is deliberately not a `WizardSaveIntentFailure`:
+ * it describes the one case the service cannot report — the seam threw before
+ * returning, so nothing was emitted inside it. The caller still receives the public
+ * `persistence-failed`; only the observability record distinguishes the two, because
+ * an operator needs to know a throw escaped a layer that is supposed to be total.
+ */
+export type WizardSaveReportableFailure = WizardSavePrePersistFailure | "persist-invariant";
+
+/**
+ * The CLOSED reporter payload. No `issues`, no message, no draft, no pricing, no
+ * customer, no vehicle, no idempotencyKey, no userId — there is nowhere to put one.
+ * `dealerId` is present only once the actor context has resolved a tenant, and is
+ * dropped downstream unless it is UUID-shaped.
+ */
+export type WizardSaveFailureReport = {
+  readonly failure:   WizardSaveReportableFailure;
+  readonly dealerId?: string;
+};
+
+/** Injected pre-persist reporting seam. Must never throw into the save. */
+export type WizardSaveFailureReporter = (report: WizardSaveFailureReport) => void;
+
 // ── Result ───────────────────────────────────────────────────────────────────
 
 /**

@@ -75,14 +75,47 @@ test("the gateway never forwards Postgres detail/hint/row data", () => {
   assert.equal(/JSON\.stringify\(\s*error\s*\)/.test(code), false, "no whole-error serialization");
 });
 
-test("the dev-only diagnostic logs code+message only, and is production-gated", () => {
+// ── OBS-1L-B7: the gateway logs and reports NOTHING ─────────────────────────
+//
+// This test previously read `if (/console\.error/.test(code)) { ...assertions... }`.
+// That guard made it self-defeating: deleting the diagnostic — the very outcome the
+// contract wanted — made the body never execute, so the test reported green while
+// proving nothing at all. It is now UNCONDITIONAL. A reintroduced diagnostic of any
+// shape, gated or not, fails here.
+
+test("the gateway contains NO console call of any kind — unconditionally", () => {
   const code = codeOf(GATEWAY);
-  if (/console\.error/.test(code)) {
-    assert.match(code, /process\.env\.NODE_ENV\s*!==\s*["']production["']/,
-      "the diagnostic is gated out of production");
-    assert.equal(/console\.error[\s\S]{0,200}error\.details|console\.error[\s\S]{0,200}error\.hint/.test(code),
-      false, "the diagnostic must not log details/hint");
+  // Assembled from fragments so this guard file never matches its own search terms.
+  for (const channel of ["error", "warn", "info", "log", "debug", "trace"]) {
+    assert.equal(code.includes("console" + "." + channel), false,
+      `the gateway must not call console.${channel}`);
   }
+  assert.equal(/console\s*\[/.test(code), false, "no computed console channel either");
+  assert.equal(code.includes("process.env.NODE_ENV"), false,
+    "no environment-gated diagnostic remains — the gate was the old diagnostic's only home");
+});
+
+test("the gateway never reads a Supabase diagnostic field except message-for-classification", () => {
+  const code = codeOf(GATEWAY);
+  // `error.message` survives for CLOSED-PREFIX classification only: startsWith/=== against
+  // a fixed list, returning a FIXED code and FIXED text. Every other field is forbidden.
+  for (const field of ["code", "details", "hint", "constraint", "stack", "cause"]) {
+    assert.equal(code.includes("error" + "." + field), false,
+      `error.${field} must never be read — it can echo failing-row values or a SQLSTATE`);
+  }
+  assert.equal(/JSON\.stringify\(\s*error\s*\)/.test(code), false, "no whole-error serialization");
+  assert.equal(/\$\{\s*error/.test(code), false, "no interpolation of the error object");
+
+  // The one permitted read, and the only one.
+  assert.equal((code.match(/error\.message/g) ?? []).length, 1, "exactly one read of error.message");
+  assert.match(code, /mapRpcError\(\s*error\.message\s*\)/, "and it is the classification call");
+});
+
+test("the gateway emits no observability event — the service owns the terminal record", () => {
+  const code = codeOf(GATEWAY);
+  assert.equal(code.includes("report" + "ObservabilityEvent"), false, "no direct emission");
+  assert.equal(code.includes("logEstimate" + "SaveStage"), false, "no stage record");
+  assert.equal(code.includes("wizard-save-" + "observability"), false, "the adapter is not imported");
 });
 
 // ── R56D: the numbering allocation is DEALER-BOUND and FAIL-CLOSED ───────────

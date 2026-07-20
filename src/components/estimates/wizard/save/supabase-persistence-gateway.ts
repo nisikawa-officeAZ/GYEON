@@ -67,14 +67,20 @@ export const supabasePersistenceGateway: EstimatePersistenceGateway = {
     });
 
     if (error) {
-      // Observability (server-side, DEVELOPMENT ONLY): surface the RPC diagnostic so an unmatched error
-      // does not silently collapse into SAVE_FAILED with no way to diagnose it. Logs ONLY the Postgres
-      // error CODE and MESSAGE — deliberately NOT `details`/`hint`, which can echo a failing row's
-      // column values (customer/vehicle PII). The CLIENT still receives only the controlled mapped
-      // code/message; the raw error is NEVER exposed to the user.
-      if (process.env.NODE_ENV !== "production") {
-        console.error(`[estimate-save] save_estimate_from_wizard RPC error code=${error.code ?? "?"} message=${error.message}`);
-      }
+      // OBS-1L-B7: this gateway LOGS AND REPORTS NOTHING. It previously wrote a
+      // dev-gated diagnostic carrying `error.code` and `error.message`. Both are
+      // hazards: `code` is a SQLSTATE/PostgREST value that is meaningless to an
+      // operator, and `message` is row- and input-influenced text that can echo the
+      // very data the save was carrying.
+      //
+      // `mapRpcError` below reads `message` for CLOSED-PREFIX CLASSIFICATION only —
+      // `startsWith`/`===` against a fixed 11-entry list — and returns a fixed code
+      // and fixed operator-safe text. The raw string is never stored, forwarded,
+      // logged or emitted, and an unmatched diagnostic collapses to SAVE_FAILED.
+      //
+      // The single terminal record for this failure is owned by
+      // EstimatePersistenceService, which emits it immediately before returning the
+      // mapped result. Emitting here too would double-count every RPC failure.
       return { ok: false, ...mapRpcError(error.message) };
     }
 
