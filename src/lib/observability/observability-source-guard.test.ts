@@ -13,6 +13,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 
 const DIR = "src/lib/observability/";
 
@@ -361,4 +362,102 @@ test("ONLY the authoritative intent action generates a trusted request id", () =
   assert.match(authoritative, /saveEstimateFromWizardIntentAction\(\s*raw:\s*unknown\s*\)/,
     "its only parameter is the raw intent, so no client id can enter");
   assert.equal(authoritative.includes("meta" + "." + "request" + "Id"), false);
+});
+
+// ── REL-1: release identity is supplied at build time, and nothing else is ──
+//
+// The sanitizer's precedence order was already correct; what was missing was a
+// value for step 2 and a build that refuses to ship without one. These guards
+// pin both halves: the resolver stays honest, and the core stays untouched.
+
+const NEXT_CONFIG = "next.config.ts";
+const rawOf = (p: string): string => readFileSync(p, "utf8");
+
+test("the committed sanitizer is byte-identical — REL-1 supplies a value, it does not change resolution", () => {
+  const digest = createHash("sha256").update(readFileSync(`${DIR}sanitize-observability-event.ts`)).digest("hex");
+  assert.equal(digest, "4fcbb09603f5b012ebb1bc1db92c0b24383c27b0a5549dfd2b557956d4ca9a20",
+    "sanitize-observability-event.ts changed; the release precedence must stay as committed");
+
+  // Restated behaviourally, so the pin is not merely a hash to be re-blessed.
+  const code = codeOf(`${DIR}sanitize-observability-event.ts`);
+  assert.match(code, /VERCEL_GIT_COMMIT_SHA/, "step 1 unchanged");
+  assert.match(code, /NEXT_PUBLIC_GIT_COMMIT/, "step 2 unchanged");
+  assert.match(code, /return "unknown"/, "the production fallback still exists as the last resort");
+});
+
+test("next.config.ts exposes no secret-named value", () => {
+  const code = codeOf(NEXT_CONFIG);
+  // Assembled from fragments so this guard never matches its own search terms.
+  const secretish = ["SERVICE_ROLE" + "_KEY", "ANON" + "_KEY", "KEY_" + "SECRET",
+                     "AI_KEY" + "_SECRET", "ACCESS" + "_TOKEN", "CHANNEL" + "_SECRET",
+                     "PASS" + "WORD", "PRIVATE" + "_KEY", "OPENAI" + "_API_KEY"];
+  for (const token of secretish) {
+    assert.equal(code.includes(token), false, `next.config.ts references ${token}`);
+  }
+  for (const token of ["sk-", "eyJ"]) {   // OpenAI key prefix, JWT prefix
+    assert.equal(rawOf(NEXT_CONFIG).includes(token), false, `next.config.ts contains a literal ${token} value`);
+  }
+});
+
+test("NEXT_PUBLIC_GIT_COMMIT is the ONLY NEXT_PUBLIC_ name next.config.ts introduces", () => {
+  const code = codeOf(NEXT_CONFIG);
+  const publics = [...new Set([...code.matchAll(/NEXT_PUBLIC_[A-Z0-9_]*/g)].map((m) => m[0]))];
+  assert.deepEqual(publics, ["NEXT_PUBLIC_GIT_COMMIT"], `unexpected public variables: ${publics.join(", ")}`);
+  // And the env block declares exactly that one key.
+  assert.match(code, /env:\s*\{\s*NEXT_PUBLIC_GIT_COMMIT:/, "the env block declares it");
+  assert.equal(/VERCEL_GIT_COMMIT_SHA\s*:/.test(code), false, "the Vercel SHA is never re-exported under its own name");
+});
+
+test("no package version, clock, random value or dirty-worktree state can become the release", () => {
+  const code = codeOf(NEXT_CONFIG);
+  for (const token of ["Date.now", "new Date", "Math.random", "randomUUID", "safeRandomUUID",
+                       "package.json", "--dirty", "status --porcelain", "describe", "toISOString"]) {
+    assert.equal(code.includes(token), false, `${token} must not influence the release`);
+  }
+});
+
+test("the Git read cannot become shell command interpolation", () => {
+  const code = codeOf(NEXT_CONFIG);
+  assert.match(code, /execFileSync\("git",\s*\["rev-parse",\s*"HEAD"\]/, "literal argument vector, no shell");
+  for (const hazard of ["exec" + "Sync(", "shell:" , "spawn" + "Sync("]) {
+    assert.equal(code.includes(hazard), false, `${hazard} permits shell interpretation`);
+  }
+  assert.equal(/\$\{[^}]*\}\s*"\s*\]/.test(code), false, "no interpolation inside the argument vector");
+});
+
+test("OBS-1P is NOT started: no transport, no event route", () => {
+  const { existsSync } = require("node:fs") as typeof import("node:fs");
+  for (const p of [
+    "src/app/api/observability",
+    `${DIR}observability-transport.ts`,
+    `${DIR}observability-transport.test.ts`,
+  ]) {
+    assert.equal(existsSync(p), false, `${p} belongs to OBS-1P, not REL-1`);
+  }
+  // The provider seam stays inert.
+  assert.match(codeOf(`${DIR}report-observability-event.ts`),
+    /const externalProviderSink: ObservabilitySink \| null = null;/,
+    "externalProviderSink must remain null");
+  // And the sink is still the console, not a network call.
+  const reporter = codeOf(`${DIR}report-observability-event.ts`);
+  for (const token of ["fetch(", "sendBeacon", "XMLHttpRequest", "navigator."]) {
+    assert.equal(reporter.includes(token), false, `${token} is OBS-1P transport work`);
+  }
+});
+
+test("REL-1 touched no save-path file and no observability runtime file", () => {
+  const expected: Record<string, string> = {
+    [`${DIR}observability-types.ts`]:              "76b0adb77f12fd60621b3c4998be351936a4527886adb5814905b24f71a5710e",
+    [`${DIR}report-observability-event.ts`]:       "9b476c01431df32f1e5957fdcee6e2c2906f7fb569392bf9bc6b3daa286ae557",
+    [`${DIR}create-observability-request-id.ts`]:  "458e79ac6acab8993e24dfc8c6ab3bb6d1f7b7de1441951b306f522ed33b874a",
+    [`${DIR}ui-error-report.ts`]:                  "3481a829b0e3819278ead8aad25966520fc6251a560f93b90f29762fcebe5971",
+    [`${SAVE_DIR}wizard-save-` + "observability.ts"]: "6ff5ae31dd79f6aeafba5b25173c55e04543eee3b51706e8d16dc90a038d0b46",
+    [`${SAVE_DIR}estimate-save-orchestration-types.ts`]: "e24785c843aa72eaa19143ccc54e5f991fddc02ad7c3fd003719f6fe92af3e15",
+    [`${SAVE_DIR}estimate-persistence-service.ts`]: "341de1e3a49c2c6a93289b4f752e9e8c2ac8f01e4b36de964c60de371c54a40c",
+    [`${SAVE_DIR}wizard-save-intent-orchestrator.ts`]: "c3fbd2f05d912b28ae27e7eaa622820fd9824a9b41ddda27666a7e44525a4833",
+  };
+  for (const [file, digest] of Object.entries(expected)) {
+    assert.equal(createHash("sha256").update(readFileSync(file)).digest("hex"), digest,
+      `${file} must remain byte-identical during REL-1`);
+  }
 });
