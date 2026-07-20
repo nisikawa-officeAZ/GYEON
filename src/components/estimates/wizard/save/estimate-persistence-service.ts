@@ -40,7 +40,9 @@ export class EstimatePersistenceService {
     }
 
     // Normalize + build the canonical RPC payload (no execution, no SQL, no dealer id in the payload).
-    const payload = buildEstimateSaveRpcPayload(request, { idempotencyKey: ctx.idempotencyKey ?? null });
+    // R56E: the key is passed straight through. No `?? null`, no fallback, no requestId reuse, no
+    // generated UUID/timestamp — a substituted key would silently defeat duplicate detection.
+    const payload = buildEstimateSaveRpcPayload(request, { idempotencyKey: ctx.idempotencyKey });
 
     // Invoke the gateway (atomic RPC, or the disabled placeholder). Controlled result mapping only.
     try {

@@ -43,12 +43,18 @@ export type EstimateSaveActionResult =
 
 // Server-resolved context passed to the orchestration core. dealerId originates ONLY from
 // getCurrentDealer() (never the client). idempotencyKey is a client-supplied save token (never a
-// label/random-per-render) used by the future RPC for duplicate detection.
+// label/random-per-render) used by the atomic RPC for duplicate detection.
+//
+// R56E: idempotencyKey is REQUIRED and NON-NULL. The hardened RPC rejects a missing, null, blank or
+// malformed key with VALIDATION_ERROR (`^[A-Za-z0-9_-]{16,64}$`), so a context that permitted
+// optional/null was a contract mismatch: it let an unusable key travel all the way to SQL and fail
+// late and generically. Every entry point now proves the key BEFORE constructing this context.
+// No layer below may default, substitute or regenerate it — retry stability is the caller's.
 export type EstimateSaveServerContext = {
-  requestId:       string;
-  dealerId:        string;
-  userId:          string;
-  idempotencyKey?: string | null;
+  requestId:      string;
+  dealerId:       string;
+  userId:         string;
+  idempotencyKey: string;
 };
 
 // PII-free structured log entry — ids + stage + outcome only. NEVER customer/vehicle/pricing data.

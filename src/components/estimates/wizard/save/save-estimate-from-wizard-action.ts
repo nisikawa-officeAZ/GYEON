@@ -18,6 +18,9 @@ import { notImplementedPersistenceGateway } from "./estimate-persistence-gateway
 import {
   ESTIMATE_SAVE_ACTION_ERRORS, logEstimateSaveStage, type EstimateSaveActionResult,
 } from "./estimate-save-orchestration-types";
+// The SINGLE pattern authority, byte-identical to the RPC's own `^[A-Za-z0-9_-]{16,64}$`.
+// Imported, never re-declared: a second copy could drift out of step with SQL.
+import { IDEMPOTENCY_KEY_PATTERN } from "./wizard-save-intent-types";
 
 // ── R56B: THIS PATH IS DISABLED ──────────────────────────────────────────────
 // This action was the ONE source-complete route to real persistence: it is reached from
@@ -40,13 +43,16 @@ import {
 // idempotency typing).
 const persistenceService = new EstimatePersistenceService(notImplementedPersistenceGateway);
 
+// `meta.idempotencyKey` is typed `unknown` DELIBERATELY. This is a "use server" action reachable from
+// a client component, so its parameter types are a compile-time claim only — the caller can send any
+// runtime value. Declaring `string` here would assert a guarantee the boundary cannot enforce; the
+// key is therefore validated at runtime below (step 4) before it is trusted.
 export async function saveEstimateFromWizardAction(
   request: EstimateSaveRequest,
-  meta?: { requestId?: string; idempotencyKey?: string | null },
+  meta?: { requestId?: string; idempotencyKey?: unknown },
 ): Promise<EstimateSaveActionResult> {
   const E = ESTIMATE_SAVE_ACTION_ERRORS;
   const requestId = meta?.requestId?.trim() || "unspecified";
-  const idempotencyKey = meta?.idempotencyKey?.trim() || null;
 
   // 1. Authentication
   const user = await getCurrentUser();
@@ -69,9 +75,30 @@ export async function saveEstimateFromWizardAction(
     return { ok: false, code: E.PERMISSION_DENIED, message: auth.error, stage: "permission" };
   }
 
-  // 4/5. Validation → pricing completeness → payload → atomic RPC (via the canonical service)
+  // 4. Idempotency key — REQUIRED, exact format, checked AFTER the three authorization gates.
+  //
+  // ORDERING IS DELIBERATE. Validating earlier would tell an unauthenticated or unauthorized caller
+  // whether their key was well-formed, and would change the observable failure ordering that the
+  // frozen ScreensPreview depends on. Authentication, dealer context and permission all still win.
+  //
+  // NO trim: a key that needs trimming is malformed, and silently trimming would send SQL a different
+  // string than the caller believes it sent. NO fallback: the server never invents, derives or
+  // substitutes a key — doing so would defeat duplicate detection precisely on the retry path the
+  // key exists to protect. Retry stability is the caller's responsibility.
+  //
+  // The rejected VALUE IS NEVER ECHOED — not in the message, not in issues (none are attached), and
+  // not in the log, which carries ids/stage/outcome only. A malformed idempotency key can embed
+  // attacker- or PII-derived text, so reflecting it would leak it into logs and the client.
+  const rawKey: unknown = meta?.idempotencyKey;
+  if (typeof rawKey !== "string" || !IDEMPOTENCY_KEY_PATTERN.test(rawKey)) {
+    logEstimateSaveStage({ requestId, dealerId: dealer.dealer_id, userId: user.id, stage: "validation", validationOk: false, errorCode: E.VALIDATION_ERROR });
+    return { ok: false, code: E.VALIDATION_ERROR, message: "入力内容に不備があります。", stage: "validation" };
+  }
+
+  // 5/6. Validation → pricing completeness → payload → atomic RPC (via the canonical service).
+  // `rawKey` is now a proven string and is passed BYTE-FOR-BYTE into the strict context.
   return persistenceService.save(
     request,
-    { requestId, dealerId: dealer.dealer_id, userId: user.id, idempotencyKey },
+    { requestId, dealerId: dealer.dealer_id, userId: user.id, idempotencyKey: rawKey },
   );
 }

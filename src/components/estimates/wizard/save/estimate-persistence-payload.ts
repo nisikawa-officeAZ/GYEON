@@ -35,7 +35,8 @@ export type EstimateSaveRpcServiceLine = {
 };
 
 export type EstimateSaveRpcPayload = {
-  idempotencyKey:         string | null;
+  // R56E: REQUIRED and non-null. The RPC rejects null/blank/malformed with VALIDATION_ERROR.
+  idempotencyKey:         string;
   customer:               EstimateSaveCustomer;
   vehicle:                EstimateSaveVehicle;
   services:               EstimateSaveRpcServiceLine[];
@@ -86,9 +87,12 @@ function manualPricePolicyOf(wizardCategory: string): string {
 /** Build the canonical RPC payload from a validated save request. Deterministic; no side effects. */
 export function buildEstimateSaveRpcPayload(
   request: EstimateSaveRequest,
-  opts: { idempotencyKey: string | null },
+  opts: { idempotencyKey: string },
 ): EstimateSaveRpcPayload {
   return {
+    // Copied BYTE-FOR-BYTE. No trim, no normalization, no coercion, no second regex: the key was
+    // already proven against the single IDEMPOTENCY_KEY_PATTERN authority at the entry boundary,
+    // and any mutation here would break replay matching against the stored fingerprint.
     idempotencyKey: opts.idempotencyKey,
     customer: request.customer,
     vehicle: request.vehicle,
