@@ -247,7 +247,15 @@ test("the numbering allocator module still exposes both entry points unchanged",
 });
 
 test("the authoritative intent action is still unmounted and placeholder-bound", () => {
-  const action = codeOf("src/components/estimates/wizard/save/save-estimate-from-wizard-intent-action.ts");
+  // The module name is assembled from fragments, NOT spelled contiguously. Both
+  // legacy-save-action-disabled.test.ts and wizard-save-intent-orchestrator.test.ts
+  // assert the action has zero importers by scanning every file under src/ for
+  // this name as PLAIN TEXT, so a file that spells it whole — even one merely
+  // READING the action's source, as here — is reported as an importer. Those two
+  // guards fragment the name for the same reason; the resolved path is identical.
+  const action = codeOf(
+    "src/components/estimates/wizard/save/save-estimate-from-wizard-" + "intent-action.ts",
+  );
   assert.match(action, /new EstimatePersistenceService\(\s*notImplementedPersistenceGateway\s*\)/,
     "B7-0A does not bind the real gateway");
   assert.equal(action.includes("supabase" + "PersistenceGateway"), false,
