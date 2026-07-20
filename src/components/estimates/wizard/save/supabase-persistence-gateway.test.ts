@@ -93,33 +93,56 @@ test("the dev-only diagnostic logs code+message only, and is production-gated", 
 
 const ALLOCATOR = "src/lib/numbering/get-next-document-number.ts";
 
-test("the gateway allocates the number for the server-proven dealer", () => {
+test("the gateway performs NO pre-allocation — numbering happens inside the RPC", () => {
   const code = codeOf(GATEWAY);
-  assert.match(code, /import\s*\{\s*getNextDocumentNumberForDealer\s*\}\s*from\s*["']@\/lib\/numbering\/get-next-document-number["']/,
-    "imports the dealer-bound allocator");
-  assert.match(code, /getNextDocumentNumberForDealer\(\s*["']estimate["']\s*,\s*ctx\.dealerId\s*\)/,
-    "allocates for exactly ctx.dealerId");
-  // The bare one-argument form must be gone: it is what discarded the tenant.
-  assert.equal(/getNextDocumentNumber\(\s*["']estimate["']\s*\)/.test(code), false,
-    "no bare getNextDocumentNumber(\"estimate\") remains");
-  assert.equal(/getCurrentDealer/.test(code), false,
-    "the gateway never resolves a dealer itself");
+  // B7-0A: pre-allocating in a separate committed RPC is what burned a number on every
+  // replay, conflict and rejected save. No numbering call of any shape may remain.
+  assert.equal(/getNextDocumentNumberForDealer/.test(code), false,
+    "the dealer-bound allocator is no longer imported or called");
+  assert.equal(/getNextDocumentNumber/.test(code), false,
+    "no numbering allocator of any arity remains");
+  assert.equal(/@\/lib\/numbering/.test(code), false, "the numbering module is not imported");
+  assert.equal(/getCurrentDealer/.test(code), false, "the gateway never resolves a dealer itself");
 });
 
-test("the same dealer id feeds numbering and the save RPC", () => {
+test("the gateway calls the atomic RPC exactly once with exactly three arguments", () => {
   const code = codeOf(GATEWAY);
-  assert.match(code, /getNextDocumentNumberForDealer\(\s*["']estimate["']\s*,\s*ctx\.dealerId\s*\)/,
-    "numbering uses ctx.dealerId");
-  assert.match(code, /p_dealer_id:\s*ctx\.dealerId/, "the save RPC uses the SAME ctx.dealerId");
-  // Neither may come from the client payload.
-  assert.equal(/getNextDocumentNumberForDealer\([^)]*payload/.test(code), false,
-    "the dealer id is never taken from the payload");
+  assert.equal((code.match(/\.rpc\(/g) ?? []).length, 1, "exactly one RPC call");
+  assert.match(code, /\.rpc\(\s*["']save_estimate_from_wizard["']/, "the atomic save RPC");
+  assert.match(code, /p_dealer_id:\s*ctx\.dealerId/, "dealer id from the server context");
+  assert.match(code, /p_actor_user_id:\s*ctx\.userId/, "actor id from the server context");
+  assert.match(code, /p_payload:\s*payload/, "the canonical payload");
+  // The parameter no longer exists in the RPC; supplying it would be a hard error.
+  assert.equal(/p_estimate_number/.test(code), false, "no p_estimate_number is ever sent");
+  // Exactly three p_ arguments, no more.
+  const args = code.match(/p_[a-z_]+:/g) ?? [];
+  assert.deepEqual([...args].sort(), ["p_actor_user_id:", "p_dealer_id:", "p_payload:"]);
 });
 
-test("a null allocation still maps to ESTIMATE_NUMBER_FAILED", () => {
+test("the gateway never manufactures an estimate number", () => {
   const code = codeOf(GATEWAY);
-  assert.match(code, /if\s*\(\s*!estimateNumber\s*\)[\s\S]{0,160}code:\s*"ESTIMATE_NUMBER_FAILED"/,
-    "fail-closed allocation maps to the stable code");
+  assert.equal(/Date\.now\(|Math\.random\(|randomUUID\(|safeRandomUUID/.test(code), false,
+    "no timestamp, random or UUID fallback");
+  assert.equal(/estimate_number\s*\?\?/.test(code), false,
+    "no ?? fallback for the persisted number");
+  assert.equal(/estimateNumber:\s*""/.test(code), false, "never an empty-string number");
+  // The number can only come from the RPC result.
+  assert.match(code, /estimateNumber:\s*r\.estimate_number/,
+    "the returned number is exactly the RPC's persisted value");
+});
+
+test("a missing, blank or non-string estimate_number fails closed as SAVE_FAILED", () => {
+  const code = codeOf(GATEWAY);
+  assert.match(code, /typeof r\.estimate_number !== "string" \|\| r\.estimate_number\.trim\(\) === ""/,
+    "the success arm requires a real number string");
+  assert.match(code, /typeof r\.estimate_number[\s\S]{0,200}code:\s*"SAVE_FAILED"/,
+    "and maps the absence to the fixed SAVE_FAILED result");
+});
+
+test("ESTIMATE_NUMBER_FAILED remains a mapped RPC code", () => {
+  const code = codeOf(GATEWAY);
+  // The RPC still raises it — numbering config unusable, allocation or formatting failed.
+  assert.match(code, /"ESTIMATE_NUMBER_FAILED"/, "still a known RPC prefix");
 });
 
 test("the allocator uses the authenticated server client, never the admin client", () => {
@@ -168,7 +191,7 @@ test("exactly one implementation calls the numbering RPC", () => {
     "a single shared RPC call site — no duplicated allocator");
 });
 
-test("R56D changes no migration and no production route", () => {
+test("the legacy dealer-bound allocator and the production route guard are untouched", () => {
   // The numbering RPC already accepts p_dealer_id and already authorizes on it
   // (046 + 104), so R56D is a pure TypeScript correction.
   const allocator = codeOf(ALLOCATOR);
@@ -188,6 +211,70 @@ test("the gateway exports the binding but nothing binds it", () => {
   const legacy = codeOf(`${SAVE_DIR}save-estimate-from-wizard-action.ts`);
   assert.equal(legacy.includes("supabase" + "PersistenceGateway"), false,
     "the legacy action no longer binds the real gateway");
+});
+
+// ── B7-0A locked boundaries ─────────────────────────────────────────────────
+
+test("the ten legacy one-argument numbering call sites are intact", () => {
+  const CALLERS: Array<[string, number]> = [
+    ["src/lib/estimates/create-estimate.ts", 1],
+    ["src/lib/invoices/create-invoice.ts", 2],
+    ["src/lib/payments/create-payment.ts", 1],
+    ["src/lib/work-orders/create-work-order.ts", 1],
+    ["src/lib/reservations/create-reservation.ts", 1],
+    ["src/lib/reservations/update-reservation.ts", 1],
+    ["src/lib/product-orders/create-product-order.ts", 1],
+    ["src/lib/completion-reports/create-completion-report.ts", 1],
+    ["src/lib/maintenance/create-maintenance-reminder.ts", 1],
+  ];
+  let total = 0;
+  for (const [file, expected] of CALLERS) {
+    const hits = (codeOf(file).match(/getNextDocumentNumber\("[a-z_]+"\)/g) ?? []).length;
+    assert.equal(hits, expected, `${file}: one-argument call sites`);
+    total += hits;
+  }
+  assert.equal(total, 10, "ten legacy one-argument call sites in nine files");
+});
+
+test("the numbering allocator module still exposes both entry points unchanged", () => {
+  const allocator = codeOf(ALLOCATOR);
+  assert.match(allocator, /export async function getNextDocumentNumberForDealer\(/,
+    "the dealer-bound core survives for non-wizard use");
+  assert.match(allocator, /export async function getNextDocumentNumber\(/,
+    "the legacy one-argument wrapper survives");
+  assert.equal((allocator.match(/\.rpc\(\s*["']get_next_document_number["']/g) ?? []).length, 1,
+    "still exactly one numbering RPC call site, untouched by B7-0A");
+});
+
+test("the authoritative intent action is still unmounted and placeholder-bound", () => {
+  const action = codeOf("src/components/estimates/wizard/save/save-estimate-from-wizard-intent-action.ts");
+  assert.match(action, /new EstimatePersistenceService\(\s*notImplementedPersistenceGateway\s*\)/,
+    "B7-0A does not bind the real gateway");
+  assert.equal(action.includes("supabase" + "PersistenceGateway"), false,
+    "the real gateway is not imported by the intent action");
+});
+
+test("the new migration adds the three-argument RPC and drops the four-argument one", () => {
+  const { readdirSync } = require("node:fs") as typeof import("node:fs");
+  const dir = "supabase/migrations";
+  const migration = readdirSync(dir).find((f) => f.endsWith("_estimate_wizard_atomic_numbering.sql"));
+  assert.ok(migration, "the B7-0A migration exists");
+  const sql = readFileSync(`${dir}/${migration}`, "utf8");
+  assert.match(sql, /CREATE OR REPLACE FUNCTION public\.save_estimate_from_wizard\(\s*\n\s*p_dealer_id\s+uuid,\s*\n\s*p_actor_user_id\s+uuid,\s*\n\s*p_payload\s+jsonb\s*\n\)/,
+    "the new signature is exactly three arguments");
+  assert.match(sql, /DROP FUNCTION IF EXISTS public\.save_estimate_from_wizard\(uuid, uuid, text, jsonb\);/,
+    "the old four-argument writable path is dropped");
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.save_estimate_from_wizard\(uuid, uuid, jsonb\)\s*\n\s*TO service_role;/,
+    "EXECUTE is granted to service_role only");
+  assert.equal(/GRANT EXECUTE ON FUNCTION public\.save_estimate_from_wizard\(uuid, uuid, jsonb\)[\s\S]{0,80}TO (PUBLIC|anon|authenticated)/.test(sql),
+    false, "never granted to PUBLIC, anon or authenticated");
+});
+
+test("the historical hardening migration is not modified by B7-0A", () => {
+  const sql = readFileSync(
+    "supabase/migrations/20260719122621_estimate_wizard_atomic_save_hardening.sql", "utf8");
+  assert.match(sql, /p_estimate_number text,/,
+    "the historical four-argument definition remains as written — history is immutable");
 });
 
 test("the gateway holds no client-supplied dealer id or JWT claim-bag authorization", () => {

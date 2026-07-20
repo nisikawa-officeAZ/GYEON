@@ -10,7 +10,6 @@ import "server-only";
 // duplicated here — the transaction lives entirely in the RPC.
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getNextDocumentNumberForDealer } from "@/lib/numbering/get-next-document-number";
 import type { EstimatePersistenceGateway, EstimateSaveGatewayResult } from "./estimate-persistence-gateway";
 
 // Known RPC error-code prefixes → stable gateway codes. Anything else → SAVE_FAILED (no raw leak).
@@ -39,19 +38,16 @@ function mapRpcError(rawMessage: string | undefined): { code: string; message: s
 
 export const supabasePersistenceGateway: EstimatePersistenceGateway = {
   async saveEstimate(payload, ctx): Promise<EstimateSaveGatewayResult> {
-    // 1. Allocate + format the estimate number via the existing authoritative numbering (Option B).
+    // 1. Single atomic RPC — the ONLY place the number, customer, vehicle, estimate and
+    //    items are produced, and they are produced TOGETHER.
     //
-    // R56D: DEALER-BOUND. The number is allocated for EXACTLY the tenant the server
-    // context already proved (ctx.dealerId) — the same value passed to the save RPC at
-    // step 2. The allocator no longer resolves a dealer of its own, so a multi-dealer
-    // actor can no longer advance one dealer's sequence while saving under another. The
-    // allocator is fail-closed: it returns null rather than an unpersisted guess.
-    const estimateNumber = await getNextDocumentNumberForDealer("estimate", ctx.dealerId);
-    if (!estimateNumber) {
-      return { ok: false, code: "ESTIMATE_NUMBER_FAILED", message: "見積番号を採番できませんでした。" };
-    }
-
-    // 2. Single atomic RPC — the ONLY place customer/vehicle/estimate/items persist together.
+    // B7-0A: the estimate number is NO LONGER allocated here. It is allocated inside the
+    // RPC, after the advisory lock and after replay/conflict resolution, in the same
+    // transaction as the writes. Pre-allocating in a separate committed RPC — as this
+    // gateway used to — burned a document number on every exact replay, every
+    // DUPLICATE_SUBMISSION and every rejected save, leaving permanent gaps in
+    // document_sequences. There is deliberately no p_estimate_number parameter left to
+    // supply, so a caller-chosen number is now unrepresentable rather than merely unused.
     //
     // R56B: the SERVER-ONLY principal. EXECUTE on the RPC is granted to service_role alone, because
     // the browser client and the Next.js server client share the SAME public URL + anon key: an
@@ -65,10 +61,9 @@ export const supabasePersistenceGateway: EstimatePersistenceGateway = {
     // scopes every read/write by an explicit dealer predicate.
     const supabase = createAdminClient();
     const { data, error } = await supabase.rpc("save_estimate_from_wizard", {
-      p_dealer_id:       ctx.dealerId,   // server-resolved context; never from payload
-      p_actor_user_id:   ctx.userId,
-      p_estimate_number: estimateNumber,
-      p_payload:         payload,
+      p_dealer_id:     ctx.dealerId,   // server-resolved context; never from payload
+      p_actor_user_id: ctx.userId,
+      p_payload:       payload,
     });
 
     if (error) {
@@ -83,7 +78,7 @@ export const supabasePersistenceGateway: EstimatePersistenceGateway = {
       return { ok: false, ...mapRpcError(error.message) };
     }
 
-    // 3. Map the RPC jsonb result (never raw DB error text to the client).
+    // 2. Map the RPC jsonb result (never raw DB error text to the client).
     const r = (data ?? {}) as {
       ok?: boolean; estimate_id?: string; estimate_number?: string;
       customer_id?: string; vehicle_id?: string; idempotent_replay?: boolean;
@@ -91,10 +86,20 @@ export const supabasePersistenceGateway: EstimatePersistenceGateway = {
     if (!r.ok || !r.estimate_id) {
       return { ok: false, code: "SAVE_FAILED", message: "保存に失敗しました。" };
     }
+
+    // The RPC is now the ONLY source of the estimate number — for a new save and for a
+    // replay alike (a replay returns the number the original save persisted). There is no
+    // local value left to fall back to, and inventing one (a blank, a timestamp, a UUID)
+    // would surface a number that exists nowhere in the database. A missing, blank or
+    // non-string value therefore fails closed rather than being papered over.
+    if (typeof r.estimate_number !== "string" || r.estimate_number.trim() === "") {
+      return { ok: false, code: "SAVE_FAILED", message: "保存に失敗しました。" };
+    }
+
     return {
       ok: true,
       estimateId:     r.estimate_id,
-      estimateNumber: r.estimate_number ?? estimateNumber,
+      estimateNumber: r.estimate_number,   // exactly what was persisted
       customerId:     r.customer_id ?? "",
       vehicleId:      r.vehicle_id ?? "",
       replay:         !!r.idempotent_replay,
