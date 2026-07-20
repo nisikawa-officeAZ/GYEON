@@ -164,7 +164,11 @@ test("no type-checking escape hatches anywhere", () => {
 
 // ── OBS-1A leaves the B7 boundary untouched ────────────────────────────────
 
-test("the real gateway still has zero production importers", () => {
+/** The ONE production file permitted to import the real gateway (B7-1). */
+const AUTHORITATIVE_ACTION_PATH =
+  "src/components/estimates/wizard/save/save-estimate-from-wizard-" + "intent-action.ts";
+
+test("B7-1: the real gateway has exactly one production importer", () => {
   const { readdirSync, statSync } = require("node:fs") as typeof import("node:fs");
   const walk = (dir: string, out: string[] = []): string[] => {
     for (const name of readdirSync(dir)) {
@@ -181,10 +185,14 @@ test("the real gateway still has zero production importers", () => {
     return new RegExp(`from\\s*["'][^"']*${MODULE}["']`).test(code)
         || new RegExp(`import\\s*\\(\\s*["'][^"']*${MODULE}["']`).test(code);
   });
-  assert.deepEqual(importers, [], `found importers: ${importers.join(", ")}`);
+  // B7-1: the real gateway now has EXACTLY ONE permitted production importer.
+  // An exact-path allowlist, not a pattern exemption — a route or UI importer
+  // still fails here.
+  assert.deepEqual(importers, [AUTHORITATIVE_ACTION_PATH],
+    `only the authoritative intent action may import the real gateway; found: ${importers.join(", ")}`);
 });
 
-test("the authoritative intent action still has zero importers and stays placeholder-bound", () => {
+test("B7-1: the authoritative intent action binds the real gateway but no route reaches it", () => {
   // Assembled from fragments, matching the convention in
   // legacy-save-action-disabled.test.ts and wizard-save-intent-orchestrator.test.ts:
   // those guards scan every file under src/ for this module name as PLAIN TEXT, so
@@ -203,10 +211,19 @@ test("the authoritative intent action still has zero importers and stays placeho
     if (f.includes(ACTION)) return false;
     return new RegExp(`from\\s*["'][^"']*${ACTION}["']`).test(codeOf(f));
   });
-  assert.deepEqual(importers, [], `found importers: ${importers.join(", ")}`);
+  assert.deepEqual(importers, [], `the action must stay unmounted; found importers: ${importers.join(", ")}`);
 
   const action = codeOf(`src/components/estimates/wizard/save/${ACTION}.ts`);
-  assert.match(action, /new EstimatePersistenceService\(\s*notImplementedPersistenceGateway\s*\)/);
+  const REAL = "supa" + "basePersistenceGateway";
+  assert.match(action, new RegExp(`new EstimatePersistenceService\\(\\s*${REAL}\\s*\\)`),
+    "B7-1 binds the real gateway");
+  assert.equal(action.includes("notImplementedPersistenceGateway"), false,
+    "the placeholder binding is gone");
+
+  // Reachability, not the binding, is what makes B7-1 safe — so it is asserted
+  // separately and specifically for routes.
+  const routeImporters = walk("src/" + "app").filter((f) => codeOf(f).includes(ACTION));
+  assert.deepEqual(routeImporters, [], `no route may reach the action yet; found: ${routeImporters.join(", ")}`);
 });
 
 test("the legacy save action remains placeholder-bound", () => {

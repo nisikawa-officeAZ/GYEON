@@ -1,4 +1,8 @@
-// R56B — source guards for the hardened (still UNBOUND) real persistence gateway.
+// R56B — source guards for the hardened real persistence gateway.
+//
+// B7-1: the gateway is BOUND — by exactly one file, the authoritative intent action, which is
+// itself unreachable (no route, page, component or barrel imports it). The legacy action remains
+// bound to the placeholder gateway and still writes nothing.
 // Run: node --import tsx --test src/components/estimates/wizard/save/supabase-persistence-gateway.test.ts
 //
 // The gateway begins with `import "server-only"`, so it is NEVER imported here. Its guarantees are
@@ -234,11 +238,12 @@ test("the legacy dealer-bound allocator and the production route guard are untou
     "the production route guard is untouched");
 });
 
-// ── The gateway remains UNBOUND ──────────────────────────────────────────────
+// ── The gateway is bound ONLY by the unreachable authoritative action ────────
 
-test("the gateway exports the binding but nothing binds it", () => {
+test("the gateway exports its binding; only the unreachable intent action consumes it", () => {
   const code = codeOf(GATEWAY);
-  assert.match(code, /export const supabasePersistenceGateway/, "still exported for a future phase");
+  assert.match(code, /export const supabasePersistenceGateway/,
+    "exported for its one permitted consumer, the authoritative intent action");
   // Reachability is asserted exhaustively in legacy-save-action-disabled.test.ts; this pins the
   // one former importer.
   const legacy = codeOf(`${SAVE_DIR}save-estimate-from-wizard-action.ts`);
@@ -279,7 +284,7 @@ test("the numbering allocator module still exposes both entry points unchanged",
     "still exactly one numbering RPC call site, untouched by B7-0A");
 });
 
-test("the authoritative intent action is still unmounted and placeholder-bound", () => {
+test("B7-1: the authoritative intent action binds the real gateway and stays unmounted", () => {
   // The module name is assembled from fragments, NOT spelled contiguously. Both
   // legacy-save-action-disabled.test.ts and wizard-save-intent-orchestrator.test.ts
   // assert the action has zero importers by scanning every file under src/ for
@@ -289,10 +294,27 @@ test("the authoritative intent action is still unmounted and placeholder-bound",
   const action = codeOf(
     "src/components/estimates/wizard/save/save-estimate-from-wizard-" + "intent-action.ts",
   );
-  assert.match(action, /new EstimatePersistenceService\(\s*notImplementedPersistenceGateway\s*\)/,
-    "B7-0A does not bind the real gateway");
-  assert.equal(action.includes("supabase" + "PersistenceGateway"), false,
-    "the real gateway is not imported by the intent action");
+  const REAL = "supabase" + "PersistenceGateway";
+  assert.match(action, new RegExp(`new EstimatePersistenceService\\(\\s*${REAL}\\s*\\)`),
+    "B7-1 binds the real gateway");
+  assert.equal(action.includes("notImplementedPersistenceGateway"), false,
+    "the placeholder binding is gone");
+
+  // Armed, but still not reachable: the whole safety of B7-1 rests on this, not on
+  // the binding. Route mounting is a separate, later phase and a separate commit.
+  const appDir = "src/" + "app";
+  const { readdirSync, statSync } = require("node:fs") as typeof import("node:fs");
+  const walk = (dir: string, out: string[] = []): string[] => {
+    for (const name of readdirSync(dir)) {
+      const p = `${dir}/${name}`;
+      if (statSync(p).isDirectory()) walk(p, out);
+      else if (/\.tsx?$/.test(name)) out.push(p);
+    }
+    return out;
+  };
+  const mod = "save-estimate-from-wizard-" + "intent-action";
+  const routeImporters = walk(appDir).filter((f) => codeOf(f).includes(mod));
+  assert.deepEqual(routeImporters, [], `no route may reach the action yet; found: ${routeImporters.join(", ")}`);
 });
 
 test("the new migration adds the three-argument RPC and drops the four-argument one", () => {

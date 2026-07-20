@@ -7,15 +7,18 @@
 // pricing, NO mapping, NO validation — each of those lives in a module that is unit-testable without
 // crossing the server boundary.
 //
-// ── NOT MOUNTED, AND PERSISTENCE IS DISABLED ────────────────────────────────────
-// This action is imported by NO page, route, component, UI module, or ScreensPreview, and it is
-// deliberately NOT re-exported from `index.ts`. B3 establishes the boundary only; the controlled
-// production mount is B7.
+// ── B7-1: PERSISTENCE IS ARMED, BUT THIS ACTION IS STILL UNREACHABLE ────────────
+// The persistence seam now binds `supabasePersistenceGateway`, the REAL atomic-RPC gateway. A save
+// that reaches it will write to the database through `save_estimate_from_wizard`.
 //
-// The persistence seam is bound to `notImplementedPersistenceGateway`, whose `saveEstimate` throws
-// `RPC_NOT_IMPLEMENTED` before any I/O. `supabasePersistenceGateway` — the real atomic-RPC gateway —
-// is NOT imported here, so no import path from this action can reach a database write. Migration/RPC
-// hardening is B4.
+// What keeps that safe today is REACHABILITY, not the binding: this action is imported by NO page,
+// route, component, UI module, or ScreensPreview, and it is deliberately NOT re-exported from
+// `index.ts`. There is no code path from a browser to this function. The controlled production
+// mount is a LATER phase (B7-3), and it is deliberately a separate commit — the change that arms
+// persistence and the change that exposes it must never be reviewable as one unit.
+//
+// The frozen ScreensPreview development harness is unaffected: it calls the LEGACY action, which
+// remains bound to `notImplementedPersistenceGateway` and still writes nothing.
 //
 // ── TENANT AND ROLE COME FROM ONE COHERENT SOURCE ───────────────────────────────
 // `getEstimateSaveActorContext()` yields a branded { userId, dealerId, role } triple whose role and
@@ -29,22 +32,33 @@ import { computeWizardPricingFromConfig } from "../pricing/compute-wizard-pricin
 import { mapWizardDraftToSaveRequestFromConfig } from "./estimate-save-mapper-from-config";
 import { validateEstimateSaveRequest } from "./estimate-save-validation";
 import { EstimatePersistenceService } from "./estimate-persistence-service";
-import { notImplementedPersistenceGateway } from "./estimate-persistence-gateway";
+import { supabasePersistenceGateway } from "./supabase-persistence-gateway";
 import { validateWizardSaveIntent } from "./wizard-save-intent-validation";
 import { runWizardSaveIntent } from "./wizard-save-intent-orchestrator";
 import { createObservabilityRequestId } from "@/lib/observability/create-observability-request-id";
 import { createWizardSaveFailureReporter } from "./wizard-save-observability";
 import type { WizardSaveIntentResult } from "./wizard-save-intent-types";
 
-// The DISABLED gateway, bound once. There is no code path here that can substitute the real one.
-const persistenceService = new EstimatePersistenceService(notImplementedPersistenceGateway);
+// The REAL gateway, bound exactly once at module load. The binding is fixed: there is no branch,
+// environment check or parameter by which a caller could substitute a different gateway, so which
+// persistence backs this action is decided here and nowhere else.
+const persistenceService = new EstimatePersistenceService(supabasePersistenceGateway);
 
 /**
  * Accept an untrusted save intent and run the authoritative server save flow.
  *
  * Takes `raw: unknown` — by design. Nothing about the tenant, the role, the catalog, the rank, the
  * pricing, or the totals is accepted from the caller; all of it is resolved or derived server-side.
- * Persistence is disabled, so a fully valid intent terminates in `persistence-unavailable`.
+ * B7-1: a fully valid intent now reaches the atomic RPC and PERSISTS. It no longer terminates in
+ * `persistence-unavailable`, and the earlier claim that it still could — "if the RPC reports
+ * RPC_NOT_IMPLEMENTED" — was wrong. `supabasePersistenceGateway.mapRpcError` classifies against a
+ * FIXED eleven-prefix list that does not contain `RPC_NOT_IMPLEMENTED`, and every unmatched
+ * diagnostic collapses to `SAVE_FAILED`. That code is produced only by the placeholder gateway,
+ * which this action no longer binds.
+ *
+ * `persistence-unavailable` therefore remains part of the pure orchestrator contract and its tests —
+ * where the persistence seam is an injected double — but it is NOT an expected outcome through this
+ * fixed production binding. Nothing calls this function yet.
  */
 export async function saveEstimateFromWizardIntentAction(raw: unknown): Promise<WizardSaveIntentResult> {
   // OBS-1L-B7 — the correlation id, generated ONCE per save attempt on the server.

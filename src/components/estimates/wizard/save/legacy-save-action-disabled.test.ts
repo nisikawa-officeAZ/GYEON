@@ -67,7 +67,12 @@ test("ScreensPreview is unchanged and still calls the legacy action", () => {
     "ScreensPreview never referenced the real gateway and still does not");
 });
 
-// ── No source-reachable importer of the real gateway ─────────────────────────
+// ── Exactly one permitted importer and binder of the real gateway ────────────
+//
+// Before B7-1 this section asserted ZERO importers. It is now an exact-path
+// allowlist of one: the authoritative intent action. That is a narrower claim
+// than it looks — every other file, including any future route or UI module,
+// still fails these two tests.
 
 function walk(dir: string): string[] {
   const out: string[] = [];
@@ -78,6 +83,15 @@ function walk(dir: string): string[] {
   }
   return out;
 }
+
+/**
+ * The ONE production file permitted to import and bind the real gateway (B7-1).
+ *
+ * Assembled from fragments so this guard is not itself counted as an importer of
+ * the intent action by the zero-importer walk below.
+ */
+const AUTHORITATIVE_ACTION =
+  `${SAVE_DIR}save-estimate-from-wizard-` + "intent-action.ts";
 
 const GUARD_FILES = new Set([
   `${SAVE_DIR}legacy-save-action-disabled.test.ts`,
@@ -92,24 +106,28 @@ const importsGateway = (code: string): boolean =>
   || new RegExp(`import\\s*\\(\\s*["'][^"']*${REAL_GATEWAY_MODULE}["']`).test(code)
   || new RegExp(`require\\s*\\(\\s*["'][^"']*${REAL_GATEWAY_MODULE}["']`).test(code);
 
-test("NO action, page or component imports the real gateway", () => {
+test("EXACTLY ONE production importer of the real gateway is permitted", () => {
   const importers: string[] = [];
   for (const file of walk("src")) {
     if (file.endsWith(`${REAL_GATEWAY_MODULE}.ts`)) continue;   // the gateway itself
     if (importsGateway(codeOf(file))) importers.push(file);
   }
-  assert.deepEqual(importers, [],
-    `the real gateway must have zero source-reachable importers; found: ${importers.join(", ")}`);
+  // B7-1: the real gateway now has EXACTLY ONE permitted production importer — the
+  // authoritative intent action. This is an exact-path allowlist, not an exemption
+  // pattern: any other importer, including a future route or UI module, still fails.
+  assert.deepEqual(importers, [AUTHORITATIVE_ACTION],
+    `only the authoritative intent action may import the real gateway; found: ${importers.join(", ")}`);
 });
 
-test("NO file outside the gateway BINDS the real gateway to a persistence service", () => {
+test("EXACTLY ONE file binds the real gateway to a persistence service", () => {
   const binders: string[] = [];
   const bindPattern = new RegExp(`new EstimatePersistenceService\\(\\s*${REAL_GATEWAY_SYMBOL}\\s*\\)`);
   for (const file of walk("src")) {
     if (GUARD_FILES.has(file)) continue;   // these assert the absence of exactly this pattern
     if (bindPattern.test(codeOf(file))) binders.push(file);
   }
-  assert.deepEqual(binders, [], `nothing may bind the real gateway; found: ${binders.join(", ")}`);
+  assert.deepEqual(binders, [AUTHORITATIVE_ACTION],
+    `only the authoritative intent action may bind the real gateway; found: ${binders.join(", ")}`);
 });
 
 test("the save barrel does not re-export the real gateway and has no wildcard export", () => {
@@ -126,15 +144,37 @@ test("nothing under src/app imports the real gateway", () => {
   }
 });
 
-// ── B3 remains placeholder-bound and unmounted ───────────────────────────────
+// ── The authoritative intent action: real-gateway-bound, still unmounted ─────
+//
+// B7-1 armed persistence here. What keeps it safe is REACHABILITY — nothing
+// imports this action — not the binding, which is now real.
 
 const B3_ACTION = `${SAVE_DIR}save-estimate-from-wizard` + "-intent-action.ts";
 
-test("the B3 intent action remains placeholder-bound", () => {
+test("B7-1: the authoritative intent action binds the REAL gateway, exactly once", () => {
   const code = codeOf(B3_ACTION);
-  assert.match(code, /new EstimatePersistenceService\(\s*notImplementedPersistenceGateway\s*\)/,
-    "still bound to the placeholder gateway");
-  assert.equal(code.includes(REAL_GATEWAY_SYMBOL), false, "still does not reference the real gateway");
+  assert.match(code, new RegExp(`new EstimatePersistenceService\\(\\s*${REAL_GATEWAY_SYMBOL}\\s*\\)`),
+    "bound to the real gateway");
+  assert.equal((code.match(/new EstimatePersistenceService\(/g) ?? []).length, 1,
+    "exactly one service construction — no second, differently-bound instance");
+  // The placeholder must be fully gone: leaving it imported would allow a future
+  // edit to re-bind it under a branch and make persistence conditionally silent.
+  assert.equal(code.includes("notImplementedPersistenceGateway"), false,
+    "the placeholder gateway is no longer imported or referenced");
+  assert.match(code, new RegExp(`import \\{ ${REAL_GATEWAY_SYMBOL} \\} from ["']\\./supabase-persistence` + `-gateway["']`),
+    "imports the real gateway directly, not through a barrel");
+});
+
+test("B7-1: arming persistence did NOT change orchestration, actor or request-id behaviour", () => {
+  const code = codeOf(B3_ACTION);
+  // The binding is the ONLY thing this phase may change.
+  assert.match(code, /getEstimateSaveActorContext/, "actor resolution unchanged");
+  assert.match(code, /getAuthoritativeWizardRuntimeConfigForDealer/, "dealer-bound runtime config unchanged");
+  assert.match(code, /createObservabilityRequestId\(\)/, "server-generated obs request id unchanged");
+  assert.match(code, /createWizardSaveFailureReporter\(requestId\)/, "observability ownership unchanged");
+  assert.match(code, /runWizardSaveIntent\(raw, \{/, "the pure orchestrator still owns ordering");
+  assert.match(code, /saveEstimateFromWizardIntentAction\(\s*raw:\s*unknown\s*\)/,
+    "the signature still accepts no client-supplied context");
 });
 
 test("the B3 intent action remains unmounted (zero real importers)", () => {

@@ -507,13 +507,27 @@ test("the action begins with \"use server\"", () => {
   assert.match(raw, /^["']use server["'];/, "first statement is the server directive");
 });
 
-test("the action wires the DISABLED gateway and never the real one", () => {
+test("B7-1: the action wires the REAL gateway, exactly once, and nothing else changed", () => {
   const code = codeOf(ACTION_SRC);
-  assert.match(code, /notImplementedPersistenceGateway/, "binds the disabled gateway");
-  assert.match(code, /new EstimatePersistenceService\(\s*notImplementedPersistenceGateway\s*\)/, "the only construction");
-  assert.equal(/supabasePersistenceGateway/.test(code), false, "the REAL gateway is never imported");
-  assert.equal(/supabase-persistence-gateway/.test(code), false);
-  assert.equal(/getNextDocumentNumber|\.rpc\(/.test(code), false, "no numbering or RPC call");
+  const REAL = "supabase" + "PersistenceGateway";
+
+  assert.ok(code.includes(REAL), "binds the real gateway");
+  assert.match(code, new RegExp(`new EstimatePersistenceService\\(\\s*${REAL}\\s*\\)`),
+    "constructed with the real gateway");
+  assert.equal((code.match(/new EstimatePersistenceService\(/g) ?? []).length, 1,
+    "exactly one construction — no second, differently-bound instance");
+
+  // The placeholder is fully removed rather than left imported: keeping it would
+  // let a later edit re-bind it behind a branch and make persistence silently
+  // conditional, which is far harder to notice than an unbound action.
+  assert.equal(code.includes("notImplementedPersistenceGateway"), false,
+    "the placeholder is no longer imported or referenced");
+
+  // Arming persistence must not have moved work INTO the action. Numbering and the
+  // RPC still live behind the gateway and the migration, never here.
+  assert.equal(/getNextDocumentNumber|\.rpc\(/.test(code), false, "no numbering or RPC call of its own");
+  assert.equal(/createAdminClient|SUPABASE_SERVICE_ROLE_KEY/.test(code), false,
+    "no service-role surface leaks into the action");
 });
 
 test("the action references NO legacy auth or arg-less provider", () => {
