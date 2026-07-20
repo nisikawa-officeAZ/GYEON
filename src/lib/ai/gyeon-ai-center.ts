@@ -163,20 +163,26 @@ export async function saveGyeonOpenAiKey(rawKey: string): Promise<ActionResult> 
       );
 
     if (error) {
-      // Surface the REAL Supabase error server-side (never the key) so operators
-      // can see the actual cause instead of a generic message.
-      console.error(
-        "[AI Center] gyeon_ai_settings upsert failed —",
-        "code:", error.code,
-        "| message:", error.message,
-        "| details:", error.details ?? "",
-        "| hint:", error.hint ?? "",
-      );
-      const code = error.code ? `（${error.code}）` : "";
+      // OBS-1L-LEGACY: a FIXED LABEL ONLY. The Supabase error object is never
+      // read, interpolated, serialized or forwarded.
+      //
+      // This previously logged `code`, `message`, `details` and `hint`, and
+      // interpolated `code` into the operator's message. PostgreSQL populates
+      // `details`/`hint` with the FAILING ROW'S COLUMN VALUES, so a constraint
+      // violation could print customer data into the server log — this was the
+      // only place in the repository doing so. `code` is a SQLSTATE/PostgREST
+      // diagnostic, which is meaningless to an operator and must not reach a
+      // user-facing string.
+      //
+      // The trade is deliberate: the exact cause is no longer in this log line.
+      // The recovery instruction below already names the likely cause and its
+      // fix, which is what an operator can act on. Structured, sanitized
+      // reporting is OBS-1L-B7 and is intentionally NOT introduced here.
+      console.error("[AI Center] gyeon_ai_settings upsert failed");
       return {
         success: false,
         error:
-          `APIキーの保存に失敗しました${code}。接続中のSupabaseプロジェクトに ` +
+          `APIキーの保存に失敗しました。接続中のSupabaseプロジェクトに ` +
           `gyeon_ai_settings テーブルが存在しない可能性があります。` +
           `対象プロジェクトのSQL Editorでマイグレーション094/095を適用してください。`,
       };
