@@ -425,30 +425,83 @@ test("the Git read cannot become shell command interpolation", () => {
   assert.equal(/\$\{[^}]*\}\s*"\s*\]/.test(code), false, "no interpolation inside the argument vector");
 });
 
-test("OBS-1P is NOT started: no transport, no event route", () => {
+// ── OBS-1P: the transport exists, and is bounded ────────────────────────────
+//
+// This replaces REL-1's "OBS-1P is NOT started" guard. That test asserted the
+// route and transport did not exist; it has served its purpose and would now be
+// asserting the opposite of the shipped design.
+
+const ROUTE = "src/app/api/observability/event/route.ts";
+const TRANSPORT = `${DIR}observability-transport.ts`;
+const RUNBOOK = "docs/OBSERVABILITY_TRANSPORT_RUNBOOK.md";
+
+test("the OBS-1P transport, route and runbook all exist together", () => {
   const { existsSync } = require("node:fs") as typeof import("node:fs");
-  for (const p of [
-    "src/app/api/observability",
-    `${DIR}observability-transport.ts`,
-    `${DIR}observability-transport.test.ts`,
-  ]) {
-    assert.equal(existsSync(p), false, `${p} belongs to OBS-1P, not REL-1`);
+  for (const p of [ROUTE, TRANSPORT, `${DIR}observability-transport.test.ts`, RUNBOOK]) {
+    assert.equal(existsSync(p), true, `${p} is required by OBS-1P`);
   }
-  // The provider seam stays inert.
-  assert.match(codeOf(`${DIR}report-observability-event.ts`),
-    /const externalProviderSink: ObservabilitySink \| null = null;/,
-    "externalProviderSink must remain null");
-  // And the sink is still the console, not a network call.
-  const reporter = codeOf(`${DIR}report-observability-event.ts`);
-  for (const token of ["fetch(", "sendBeacon", "XMLHttpRequest", "navigator."]) {
-    assert.equal(reporter.includes(token), false, `${token} is OBS-1P transport work`);
+  // The runbook is mandatory because the WAF rule and the retention plan are
+  // account state that no test can prove. Shipping the route without it would
+  // leave rate limiting relied upon with no record of what was expected.
+  const runbook = readFileSync(RUNBOOK, "utf8");
+  for (const required of ["20 requests per 60 seconds", "Observability Plus", "30 days",
+                          "/api/observability/event", "Client IP", "NO-GO"]) {
+    assert.ok(runbook.includes(required), `the runbook must record: ${required}`);
   }
 });
 
-test("REL-1 touched no save-path file and no observability runtime file", () => {
+test("the provider seam stays null and no vendor SDK is introduced", () => {
+  assert.match(codeOf(`${DIR}report-observability-event.ts`),
+    /const externalProviderSink: ObservabilitySink \| null = null;/,
+    "externalProviderSink must remain null");
+  for (const file of [ROUTE, TRANSPORT, `${DIR}report-observability-event.ts`]) {
+    const code = codeOf(file).toLowerCase();
+    for (const v of ["sen" + "try", "data" + "dog", "log" + "tail", "ax" + "iom", "post" + "hog"]) {
+      assert.equal(code.includes(v), false, `${file} references ${v}`);
+    }
+  }
+});
+
+test("only the transport may perform network I/O — the reporter and route may not", () => {
+  // The reporter selects a sink; it must not itself become a transport.
+  const reporter = codeOf(`${DIR}report-observability-event.ts`);
+  for (const token of ["fetch(", "send" + "Beacon", "XML" + "HttpRequest", "navigator."]) {
+    assert.equal(reporter.includes(token), false, `the reporter must delegate ${token}, not perform it`);
+  }
+  // The route answers requests; it must never make one.
+  const route = codeOf(ROUTE);
+  for (const token of ["fetch(", "send" + "Beacon", "XML" + "HttpRequest"]) {
+    assert.equal(route.includes(token), false, `the route must not perform ${token}`);
+  }
+});
+
+test("the browser transport cannot loop back through the route, or vice versa", () => {
+  // The route runs on the server, where `window` is undefined, so its own
+  // reportObservabilityEvent call selects consoleSink. The separation is the
+  // runtime itself, not a flag anyone could set wrongly.
+  const reporter = codeOf(`${DIR}report-observability-event.ts`);
+  assert.match(reporter, /typeof window !== "undefined"/, "sink selection is runtime-based");
+  assert.match(reporter, /isTransportableEvent/, "and limited to the one closed UI event");
+
+  // The transport must never report its own failure through the reporter.
+  const transport = codeOf(TRANSPORT);
+  assert.equal(transport.includes("report" + "ObservabilityEvent"), false,
+    "a transport failure reported via the transport is an infinite loop");
+  assert.equal(/console\s*\./.test(transport), false, "and it writes no console line either");
+});
+
+test("the route stores nothing: no database, Storage or application table", () => {
+  const code = codeOf(ROUTE);
+  for (const token of ["supa" + "base", "createClient", "createAdminClient", ".rpc(", '.from("',
+                       "admin_audit" + "_logs", "activity" + "_logs", "Storage", "prisma"]) {
+    assert.equal(code.includes(token), false, `the route references ${token}`);
+  }
+});
+
+test("OBS-1P touched no save-path file and no locked observability file", () => {
   const expected: Record<string, string> = {
     [`${DIR}observability-types.ts`]:              "76b0adb77f12fd60621b3c4998be351936a4527886adb5814905b24f71a5710e",
-    [`${DIR}report-observability-event.ts`]:       "9b476c01431df32f1e5957fdcee6e2c2906f7fb569392bf9bc6b3daa286ae557",
+    [`${DIR}sanitize-observability-event.ts`]:     "4fcbb09603f5b012ebb1bc1db92c0b24383c27b0a5549dfd2b557956d4ca9a20",
     [`${DIR}create-observability-request-id.ts`]:  "458e79ac6acab8993e24dfc8c6ab3bb6d1f7b7de1441951b306f522ed33b874a",
     [`${DIR}ui-error-report.ts`]:                  "3481a829b0e3819278ead8aad25966520fc6251a560f93b90f29762fcebe5971",
     [`${SAVE_DIR}wizard-save-` + "observability.ts"]: "6ff5ae31dd79f6aeafba5b25173c55e04543eee3b51706e8d16dc90a038d0b46",
@@ -458,6 +511,6 @@ test("REL-1 touched no save-path file and no observability runtime file", () => 
   };
   for (const [file, digest] of Object.entries(expected)) {
     assert.equal(createHash("sha256").update(readFileSync(file)).digest("hex"), digest,
-      `${file} must remain byte-identical during REL-1`);
+      `${file} must remain byte-identical during OBS-1P`);
   }
 });

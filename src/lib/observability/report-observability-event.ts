@@ -5,6 +5,7 @@
 // sanitizer did not build.
 
 import { sanitizeObservabilityEvent } from "./sanitize-observability-event";
+import { isTransportableEvent, sendObservabilityEvent } from "./observability-transport";
 import type { ObservabilityEvent, ObservabilitySink } from "./observability-types";
 
 /** Stable, greppable marker for the operational sink. */
@@ -21,12 +22,41 @@ export const OBSERVABILITY_LOG_PREFIX = "[observability]";
  */
 const externalProviderSink: ObservabilitySink | null = null;
 
-/** Current operational sink: structured JSON on the severity-matched channel. */
+/** Server/operational sink: structured JSON on the severity-matched channel. */
 function consoleSink(event: ObservabilityEvent): void {
   const line = JSON.stringify(event);
   if (event.severity === "error")     console.error(OBSERVABILITY_LOG_PREFIX, line);
   else if (event.severity === "warn") console.warn(OBSERVABILITY_LOG_PREFIX, line);
   else                                console.info(OBSERVABILITY_LOG_PREFIX, line);
+}
+
+/**
+ * OBS-1P — sink selection.
+ *
+ * On the SERVER, `consoleSink` reaches the platform's runtime logs, which an
+ * operator can search. In the BROWSER it reaches the end user's own devtools
+ * console and nobody else — so an `obs.*` support code the UI told the user to
+ * quote was unsearchable. Browser uncaught-UI events therefore go to the
+ * first-party same-origin route instead.
+ *
+ * ── WHY THIS CANNOT LOOP ────────────────────────────────────────────────────
+ * The route handler runs on the server, where `window` is undefined, so its own
+ * `reportObservabilityEvent` call selects `consoleSink`. A browser event cannot
+ * reach the route's sink and the route's event cannot reach the transport; the
+ * separation is the runtime itself, not a flag anyone could set wrongly.
+ *
+ * Only the ONE closed uncaught-UI event is transportable. Generic events reaching
+ * a browser bundle still go to the console rather than opening the public
+ * endpoint to arbitrary payloads.
+ */
+function isBrowser(): boolean {
+  return typeof window !== "undefined" && typeof document !== "undefined";
+}
+
+function selectDefaultSink(event: ObservabilityEvent): ObservabilitySink {
+  return isBrowser() && isTransportableEvent(event)
+    ? (e) => { sendObservabilityEvent(e); }
+    : consoleSink;
 }
 
 /**
@@ -53,7 +83,10 @@ export function reportObservabilityEvent(input: unknown, sink?: ObservabilitySin
     return; // sanitization is total, but a failure here must still stay silent
   }
 
-  const target = sink ?? externalProviderSink ?? consoleSink;
+  // An explicitly injected sink still wins outright — that is what keeps every
+  // committed behavioural test asserting against a captured array rather than a
+  // network call. The provider seam stays null; the default is chosen per-runtime.
+  const target = sink ?? externalProviderSink ?? selectDefaultSink(event);
   try {
     target(event);
   } catch {
