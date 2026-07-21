@@ -192,12 +192,12 @@ test("B7-1: the real gateway has exactly one production importer", () => {
     `only the authoritative intent action may import the real gateway; found: ${importers.join(", ")}`);
 });
 
-test("B7-1: the authoritative intent action binds the real gateway but no route reaches it", () => {
-  // Assembled from fragments, matching the convention in
-  // legacy-save-action-disabled.test.ts and wizard-save-intent-orchestrator.test.ts:
-  // those guards scan every file under src/ for this module name as PLAIN TEXT, so
-  // any file spelling it contiguously — including this one — is reported as an importer.
+test("B7-3: the authoritative intent action binds the real gateway and exactly the create route reaches it", () => {
+  // Assembled from fragments so this guard file is not itself counted. The importer
+  // scan is IMPORT-syntax, so a file that merely names the module string is not an
+  // importer; only a real `from "…"` import counts.
   const ACTION = "save-estimate-from-wizard" + "-intent-action";
+  const ROUTE = "src/app/estimates/new/page.tsx";
   const { readdirSync, statSync } = require("node:fs") as typeof import("node:fs");
   const walk = (dir: string, out: string[] = []): string[] => {
     for (const name of readdirSync(dir)) {
@@ -211,7 +211,7 @@ test("B7-1: the authoritative intent action binds the real gateway but no route 
     if (f.includes(ACTION)) return false;
     return new RegExp(`from\\s*["'][^"']*${ACTION}["']`).test(codeOf(f));
   });
-  assert.deepEqual(importers, [], `the action must stay unmounted; found importers: ${importers.join(", ")}`);
+  assert.deepEqual(importers, [ROUTE], `the action's only importer must be the create route; found: ${importers.join(", ")}`);
 
   const action = codeOf(`src/components/estimates/wizard/save/${ACTION}.ts`);
   const REAL = "supa" + "basePersistenceGateway";
@@ -220,10 +220,10 @@ test("B7-1: the authoritative intent action binds the real gateway but no route 
   assert.equal(action.includes("notImplementedPersistenceGateway"), false,
     "the placeholder binding is gone");
 
-  // Reachability, not the binding, is what makes B7-1 safe — so it is asserted
-  // separately and specifically for routes.
-  const routeImporters = walk("src/" + "app").filter((f) => codeOf(f).includes(ACTION));
-  assert.deepEqual(routeImporters, [], `no route may reach the action yet; found: ${routeImporters.join(", ")}`);
+  // Exactly one route reaches the action, and it is the create route.
+  const routeImporters = walk("src/" + "app").filter(
+    (f) => !/\.test\.tsx?$/.test(f) && codeOf(f).includes(ACTION));
+  assert.deepEqual(routeImporters, [ROUTE], `exactly the create route may reach the action; found: ${routeImporters.join(", ")}`);
 });
 
 test("the legacy save action remains placeholder-bound", () => {

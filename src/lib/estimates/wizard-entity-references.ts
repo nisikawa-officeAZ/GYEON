@@ -50,8 +50,20 @@ function composeVehicleName(
   return plate !== "" ? plate : "（車両情報なし）";
 }
 
+// ── Exact minimal mapper inputs (B7-3) ───────────────────────────────────────
+// The mappers accept exactly the fields they read — no more. Widening the inputs
+// from the full `CustomerDB`/`VehicleDB` to these `Pick<>` aliases lets a
+// minimal-column dealer-bound loader supply rows without over-fetching, while a
+// full row still satisfies the `Pick<>` (so every existing caller is unchanged).
+// Runtime behavior, output shape, labels and fallbacks are identical.
+type CustomerReferenceInput = Pick<CustomerDB, "id" | "last_name" | "first_name" | "phone">;
+type VehicleReferenceInput = Pick<
+  VehicleDB,
+  "id" | "customer_id" | "maker" | "model" | "plate_number" | "body_size"
+>;
+
 /** Narrow one customer row. Exactly three keys leave this function. */
-export function toCustomerReference(row: CustomerDB): WizardExistingCustomerReference {
+export function toCustomerReference(row: CustomerReferenceInput): WizardExistingCustomerReference {
   return {
     id: row.id,
     displayName: composeCustomerName(row),
@@ -60,7 +72,7 @@ export function toCustomerReference(row: CustomerDB): WizardExistingCustomerRefe
 }
 
 /** Narrow one vehicle row. Exactly five keys leave this function. */
-export function toVehicleReference(row: VehicleDB): WizardExistingVehicleReference {
+export function toVehicleReference(row: VehicleReferenceInput): WizardExistingVehicleReference {
   return {
     id: row.id,
     customerId: row.customer_id,
@@ -72,13 +84,13 @@ export function toVehicleReference(row: VehicleDB): WizardExistingVehicleReferen
 }
 
 export function toCustomerReferences(
-  rows: readonly CustomerDB[],
+  rows: readonly CustomerReferenceInput[],
 ): readonly WizardExistingCustomerReference[] {
   return rows.map(toCustomerReference);
 }
 
 export function toVehicleReferences(
-  rows: readonly VehicleDB[],
+  rows: readonly VehicleReferenceInput[],
 ): readonly WizardExistingVehicleReference[] {
   return rows.map(toVehicleReference);
 }

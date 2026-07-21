@@ -177,16 +177,23 @@ test("B7-1: arming persistence did NOT change orchestration, actor or request-id
     "the signature still accepts no client-supplied context");
 });
 
-test("the B3 intent action remains unmounted (zero real importers)", () => {
+test("B7-3: the intent action has exactly ONE production importer — the create route", () => {
+  // B7-3 mounts the action. This is now an exact-path allowlist of one, and it is
+  // an IMPORT-syntax scan (not a plain-text one): a guard or test file that merely
+  // NAMES the module string is not an importer, so only a real `from "…"` import
+  // is counted. Any second importer — a new route, a UI module, a barrel — fails.
   const module = "save-estimate-from-wizard" + "-intent-action";
+  const ROUTE = "src/app/estimates/new/page.tsx";
+  const importsAction = (code: string): boolean =>
+    new RegExp(`from\\s*["'][^"']*${module}["']`).test(code)
+    || new RegExp(`import\\s*\\(\\s*["'][^"']*${module}["']`).test(code);
   const importers: string[] = [];
   for (const file of walk("src")) {
-    if (file.endsWith(`${module}.ts`)) continue;
-    if (GUARD_FILES.has(file)) continue;
-    if (file.endsWith("wizard-save-intent-orchestrator.test.ts")) continue;  // source-text guard
-    if (readFileSync(file, "utf8").includes(module)) importers.push(file);
+    if (file.endsWith(`${module}.ts`)) continue;   // the action itself
+    if (importsAction(codeOf(file))) importers.push(file);
   }
-  assert.deepEqual(importers, [], `B3 action must remain unmounted; found: ${importers.join(", ")}`);
+  assert.deepEqual(importers, [ROUTE],
+    `the intent action's only importer must be the create route; found: ${importers.join(", ")}`);
 });
 
 // ── B7-2C: the save surface exists, and it still reaches nothing ────────────
@@ -227,15 +234,16 @@ test("B7-2C: the saver reaches the wrapper by INJECTION only", () => {
   assert.equal(/import .*from ["'][^"']*-action["']/.test(code), false, "no action module is imported");
 });
 
-test("B7-2C: the production wrapper is itself not yet mounted by any route", () => {
-  // B7-3 mounts it. Until then the entire client save surface is unreachable from
-  // the browser, which is what lets this phase land without arming anything.
+test("B7-3: the production wrapper has exactly ONE route importer — the create route", () => {
+  // B7-3 mounts it at /estimates/new and nowhere else.
+  const ROUTE = "src/app/estimates/new/page.tsx";
   const importers: string[] = [];
   for (const file of walk("src/app")) {
+    if (/\.test\.(ts|tsx)$/.test(file)) continue;
     if (codeOf(file).includes("ProductionEstimateWizard")) importers.push(file);
   }
-  assert.deepEqual(importers, [],
-    `no route may mount the production wizard before B7-3; found: ${importers.join(", ")}`);
+  assert.deepEqual(importers, [ROUTE],
+    `exactly the create route may mount the production wizard; found: ${importers.join(", ")}`);
 });
 
 test("B7-2C: only the wrapper may construct a save binding", () => {
