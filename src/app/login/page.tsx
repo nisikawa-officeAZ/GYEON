@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link        from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizeNextPath } from "@/lib/auth/sanitize-next-path";
 import Brand from "@/components/ui/Brand";
 import { Suspense } from "react";
 
@@ -37,7 +38,13 @@ function LoginForm() {
         return;
       }
 
-      router.push("/");
+      // Restore the preserved `?next=` destination. sanitizeNextPath() validates the value returned by
+      // searchParams.get (already transport-decoded, so no further decoding) and ALWAYS returns a safe
+      // internal path — falling back to "/" when `next` is absent or unsafe, and preserving valid
+      // percent-encoding — so the redirect honors `?next=` (e.g. /admin/dev-preview/estimate-wizard)
+      // and can never open-redirect.
+      const target = sanitizeNextPath(searchParams.get("next"));
+      router.push(target);
       router.refresh();
     } catch {
       setError("予期しないエラーが発生しました。再度お試しください。");

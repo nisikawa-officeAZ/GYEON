@@ -29,9 +29,13 @@ export async function middleware(request: NextRequest) {
   );
   if (isPublic) return NextResponse.next();
 
-  // Build response we can attach refreshed session cookies to
+  // Build response we can attach refreshed session cookies to. Forward the current internal path via
+  // `x-pathname` so downstream Server Component guards (e.g. the admin layout) can preserve the
+  // destination as `?next=` when THEY redirect an authenticated-but-unauthorized user to /login.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname + request.nextUrl.search);
   const response = NextResponse.next({
-    request: { headers: request.headers },
+    request: { headers: requestHeaders },
   });
 
   const supabaseUrl     = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -68,7 +72,13 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    // Preserve the original destination so login can return the user to where they were.
+    // `next` carries the internal path+query only; the login page sanitizes it (no open redirect).
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
+    const redirectRes = NextResponse.redirect(loginUrl);
+    redirectRes.headers.set("Cache-Control", "no-store"); // never cache the auth redirect
+    return redirectRes;
   }
 
   return response;
