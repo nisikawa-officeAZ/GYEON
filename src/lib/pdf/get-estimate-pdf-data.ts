@@ -21,14 +21,14 @@ export async function getEstimatePdfData(estimateId: string): Promise<EstimateDB
     .from("estimates")
     .select(`
       *,
-      customers ( last_name, first_name, phone, email ),
-      vehicles  ( maker, model, year, grade, plate_number, body_size, registration_date, inspection_expiry_date ),
+      customers ( last_name, first_name, phone, email, postal_code, address1, is_business ),
+      vehicles  ( maker, model, year, grade, color, mileage, plate_number, body_size, registration_date, inspection_expiry_date ),
       estimate_items ( * )
     `)
     .eq("id",        estimateId)
     .eq("dealer_id", dealer.dealer_id)   // tenant scope — never from client
     .is("deleted_at", null)
-    .single();
+    .maybeSingle();
 
   if (error || !data) {
     if (error) console.error("[getEstimatePdfData] error:", error.message);

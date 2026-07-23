@@ -38,10 +38,15 @@ export function EstimateCustomerBlock({ customer, accent }: { customer: Estimate
   return (
     <Column>
       <PartyMarker num="01" en="Customer" ja="お客様情報" accent={accent} />
-      <Row gap={4} style={{ alignItems: "flex-end", marginBottom: 3 }}>
-        <ValueLg>{customer.name}</ValueLg>
-        <Value style={{ marginBottom: 1 }}>{honorific(customer.kind)}</Value>
-      </Row>
+      {/* An honorific with no name to attach to is not a courtesy, it is a stray 御中 on the page.
+          When the customer record carries no name, the whole line is omitted rather than printed
+          half-empty. */}
+      {customer.name.trim() ? (
+        <Row gap={4} style={{ alignItems: "flex-end", marginBottom: 3 }}>
+          <ValueLg>{customer.name}</ValueLg>
+          <Value style={{ marginBottom: 1 }}>{honorific(customer.kind)}</Value>
+        </Row>
+      ) : null}
       {customer.postalCode || customer.address ? (
         <Caption style={{ marginBottom: 3 }}>
           {customer.postalCode ? `〒${customer.postalCode}  ` : ""}

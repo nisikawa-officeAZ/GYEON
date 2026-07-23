@@ -27,6 +27,7 @@ export const sampleBrand: BrandProfile = {
     responsiblePerson: "山田 太郎",
   },
   footer: { tagline: "I love my car", partnerBrand: "GYEON JAPAN", showPartnerLogo: true },
+  partnerProgram: "gyeon", // explicit partner flag — keeps this GYEON design fixture rendering GYEON marks
   sealImageUrl: undefined,
   // QR artwork is still the approved placeholder (generation deferred, README §10) — the concept-b
   // mock uses the same placeholder, so the footer matches it exactly.

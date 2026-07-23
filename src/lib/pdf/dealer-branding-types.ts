@@ -11,6 +11,7 @@ export interface DealerBranding {
   email: string | null;
   website: string | null;
   invoiceRegNo: string | null;  // qualified_invoice_number (適格請求書 登録番号)
+  detailerRank: string | null;  // dealer_settings.detailer_rank (GYEON shop rank) — normalized by the BrandProfile loader
   businessHours: string | null; // derived from business hours settings (B1)
   footer: string | null;        // pdf_footer (footer message)
   logo: { src: string } | null;
@@ -28,6 +29,7 @@ export const EMPTY_DEALER_BRANDING: DealerBranding = {
   email: null,
   website: null,
   invoiceRegNo: null,
+  detailerRank: null,
   businessHours: null,
   footer: null,
   logo: null,

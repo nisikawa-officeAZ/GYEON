@@ -11,16 +11,19 @@ export function EstimateFooter({ brand }: { brand: BrandProfile }) {
   return (
     <View style={{ borderTopWidth: BW.thin, borderTopColor: COLOR.line, borderTopStyle: "solid", paddingTop: 4, marginTop: 2 }}>
       <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-        {/* Brand */}
+        {/* Brand — GYEON rank/partner lockup renders only for GYEON deployments; no hard-coded "GYEON"
+            fallback reaches OBSIDIAN output. The dealer tagline stays visible in both variants. */}
         <Stack gap={2} style={{ width: 220 }}>
-          {brand.rankLogoUrl ? (
-            <Image src={brand.rankLogoUrl} style={{ height: 22, objectFit: "contain", alignSelf: "flex-start" }} />
-          ) : (
-            <Stack gap={0}>
-              <Value style={{ fontSize: FS.fs14 }}>{brand.footer.partnerBrand || "GYEON"}</Value>
-              {brand.business.shopRankLabel ? <Caption>{brand.business.shopRankLabel}</Caption> : null}
-            </Stack>
-          )}
+          {brand.partnerProgram === "gyeon" ? (
+            brand.rankLogoUrl ? (
+              <Image src={brand.rankLogoUrl} style={{ height: 22, objectFit: "contain", alignSelf: "flex-start" }} />
+            ) : (
+              <Stack gap={0}>
+                {brand.footer.partnerBrand ? <Value style={{ fontSize: FS.fs14 }}>{brand.footer.partnerBrand}</Value> : null}
+                {brand.business.shopRankLabel ? <Caption>{brand.business.shopRankLabel}</Caption> : null}
+              </Stack>
+            )
+          ) : null}
           {brand.footer.tagline ? <Caption style={{ fontSize: FS.fs9 }}>{brand.footer.tagline}</Caption> : null}
         </Stack>
 

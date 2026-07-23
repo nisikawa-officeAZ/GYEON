@@ -74,14 +74,19 @@ export interface EstimateDB {
   customers?: {
     last_name:  string | null;
     first_name: string | null;
-    phone:      string | null;
-    email:      string | null;
+    phone:       string | null;
+    email:       string | null;
+    postal_code: string | null; // 〒 (PDF customer block; omitted when unset)
+    address1:    string | null; // 住所 (PDF customer block)
+    is_business: boolean | null; // 法人フラグ → 御中 / 様
   } | null;
   vehicles?: {
     maker:                  string | null;
     model:                  string | null;
     year:                   string | null;
     grade:                  string | null;
+    color:                  string | null; // ボディカラー (PDF left column)
+    mileage:                number | null; // 走行距離 (PDF; omitted when never recorded)
     plate_number:           string | null;
     body_size:              string | null;
     registration_date:      string | null; // 登録年月日 (current registration)

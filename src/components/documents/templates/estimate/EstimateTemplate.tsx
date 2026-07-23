@@ -12,6 +12,7 @@ import { Row, Stack, Body, Caption, Value } from "../../primitives";
 import { COLOR, FS } from "../../tokens";
 import type { BrandProfile } from "../../types";
 import type { EstimateDocumentData } from "./estimate-data";
+import { DEFAULT_ESTIMATE_PHILOSOPHY } from "./estimate-data";
 import { EstimateHeader } from "./EstimateHeader";
 import { EstimateCustomerBlock, EstimateVehicleBlock, EstimateIssuerBlock } from "./EstimateParties";
 import { EstimateServiceTable } from "./EstimateServiceTable";
@@ -76,8 +77,10 @@ export function EstimateTemplate({ brand, data }: { brand: BrandProfile; data: E
           </View>
         ) : null}
 
-        {/* GYEON Philosophy (Estimate-unique) */}
-        <EstimatePhilosophy philosophy={data.philosophy} accent={primary} />
+        {/* GYEON Philosophy (Estimate-unique) — GYEON deployments only */}
+        {brand.partnerProgram === "gyeon" ? (
+          <EstimatePhilosophy philosophy={data.philosophy ?? DEFAULT_ESTIMATE_PHILOSOPHY} accent={primary} />
+        ) : null}
 
         {/* Footer + serial */}
         <EstimateFooter brand={brand} />

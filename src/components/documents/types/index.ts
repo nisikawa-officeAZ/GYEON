@@ -78,6 +78,13 @@ export interface BrandProfile {
   /** GYEON wordmark (data URI / absolute). concept-b uses it for the Summary Invoice masthead. */
   gyeonWordmarkUrl?: string;
   rank?: GyeonRank;
+  /**
+   * Explicit partner-program discriminator (set from the build-time brand variant). "gyeon" renders
+   * the GYEON rank / wordmark / partner footer / philosophy; "none" — or absence — renders none of
+   * those GYEON elements. Optional so existing document producers remain compatible; treat absence as
+   * non-GYEON.
+   */
+  partnerProgram?: "gyeon" | "none";
 }
 
 // ── Document identity ────────────────────────────────────────────────────────

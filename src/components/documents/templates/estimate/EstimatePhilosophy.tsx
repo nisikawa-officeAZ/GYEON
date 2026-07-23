@@ -5,11 +5,14 @@
 import { View } from "@react-pdf/renderer";
 import { Stack, Overline, Caption } from "../../primitives";
 import { COLOR, FONT, FS, TRACK, LH, BW, HYPHEN_PENALTY } from "../../tokens";
-import { DEFAULT_ESTIMATE_PHILOSOPHY, type EstimatePhilosophy as Phil } from "./estimate-data";
+import type { EstimatePhilosophy as Phil } from "./estimate-data";
 import { Text } from "../../primitives/pdf-text";
 
 export function EstimatePhilosophy({ philosophy, accent }: { philosophy?: Phil; accent: string }) {
-  const p = philosophy ?? DEFAULT_ESTIMATE_PHILOSOPHY;
+  // No implicit GYEON default: render nothing unless the caller supplies a philosophy (the template
+  // provides the GYEON default only for gyeon-classic deployments).
+  if (!philosophy) return null;
+  const p = philosophy;
   return (
     <Stack gap={2} wrap={false} style={{ alignItems: "center", marginVertical: 3 }}>
       <Overline style={{ letterSpacing: TRACK.widest, color: accent }}>{p.eyebrow}</Overline>

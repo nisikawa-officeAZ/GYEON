@@ -3,9 +3,8 @@
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EstimateDB } from "@/lib/estimates/estimate-types";
-import { renderEstimatePdf } from "./templates/estimate-pdf";
-import { getDealerStampForPdf } from "./get-dealer-stamp";
-import { getDealerBranding } from "./dealer-branding";
+import { renderEstimateDocumentPdf } from "./render-estimate-document";
+import { getBrandProfile } from "./brand-profile";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
 import { createActivityLog } from "@/lib/activity/activity-log";
 import { createNotification } from "@/lib/notifications/notification";
@@ -22,8 +21,8 @@ export async function generateEstimatePdf(
     .from("estimates")
     .select(`
       *,
-      customers ( last_name, first_name, phone, email ),
-      vehicles  ( maker, model, year, grade, plate_number, body_size, registration_date, inspection_expiry_date ),
+      customers ( last_name, first_name, phone, email, postal_code, address1, is_business ),
+      vehicles  ( maker, model, year, grade, color, mileage, plate_number, body_size, registration_date, inspection_expiry_date ),
       estimate_items ( * )
     `)
     .eq("id", estimateId)
@@ -36,12 +35,11 @@ export async function generateEstimatePdf(
 
   const estimate = data as EstimateDB;
 
-  const stamp = await getDealerStampForPdf(dealer.dealer_id);
-  const branding = await getDealerBranding(dealer.dealer_id);
+  const brand = await getBrandProfile(dealer.dealer_id);
 
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await renderEstimatePdf(estimate, stamp, branding);
+    pdfBuffer = await renderEstimateDocumentPdf(estimate, brand);
   } catch (err) {
     return (console.error("[pdf] render failed:", err), { success: false, error: "PDFの生成に失敗しました。時間をおいて再度お試しください。" });
   }

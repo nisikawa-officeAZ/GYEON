@@ -36,7 +36,7 @@ export async function getDealerBranding(dealerId: string): Promise<DealerBrandin
     const { data } = await supabase
       .from("dealer_settings")
       .select(
-        "business_name, company_name, postal_code, business_address, business_phone, business_email, business_website, qualified_invoice_number, pdf_footer, logo_url, business_days, friend_add_qr_url",
+        "business_name, company_name, postal_code, business_address, business_phone, business_email, business_website, qualified_invoice_number, detailer_rank, pdf_footer, logo_url, business_days, friend_add_qr_url",
       )
       .eq("dealer_id", dealerId)
       .maybeSingle();
@@ -80,6 +80,7 @@ export async function getDealerBranding(dealerId: string): Promise<DealerBrandin
       email: clean(r.business_email),
       website: clean(r.business_website),
       invoiceRegNo: clean(r.qualified_invoice_number),
+      detailerRank: clean(r.detailer_rank),
       businessHours: formatBusinessHours(r.business_days),
       footer: clean(r.pdf_footer),
       logo,
