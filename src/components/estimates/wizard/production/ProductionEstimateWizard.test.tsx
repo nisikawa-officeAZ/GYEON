@@ -18,6 +18,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import ProductionEstimateWizard, {
   WIZARD_SESSION_QUERY_KEY,
   classifyWizardSessionQuery, buildWizardSessionUrl, buildEstimatePath,
+  buildEstimatePdfPath, buildPostSavePath,
   decideWizardBootstrap, runOnce, navigateToEstimate,
   type ProductionEstimateWizardProps, type RunOnceGuard, type NavigationSeam,
 } from "./ProductionEstimateWizard";
@@ -620,6 +621,83 @@ test("34. the wrapper imports no Server Action, gateway, Supabase or fetch", () 
   for (const global of ["window.", "document.", "history.", "location."]) {
     assert.equal(moduleScope.includes(global), false, `module scope reads ${global}`);
   }
+});
+
+// ── 36-40. R89C — the PDF post-save destination ─────────────────────────────
+
+test("36. the PDF path is built ONLY from a validated uuid, and is encoded", () => {
+  assert.equal(buildEstimatePdfPath(UUID), `/pdf?estimateId=${UUID}`);
+  for (const bad of [
+    "", "not-a-uuid", `${UUID}0`, "../../admin", "..%2Fadmin",
+    `${UUID}/../../admin`, null, undefined, 7, {}, [], `${UUID}\n`,
+  ]) {
+    assert.equal(buildEstimatePdfPath(bad), null, `accepted ${String(bad)}`);
+  }
+});
+
+test("37. buildPostSavePath routes the two literals and FAILS CLOSED on anything else", () => {
+  assert.equal(buildPostSavePath(UUID, "estimate"), `/estimates/${UUID}`);
+  assert.equal(buildPostSavePath(UUID, "pdf"), `/pdf?estimateId=${UUID}`);
+
+  // An unrecognized runtime destination is never silently coerced to either arm.
+  for (const bad of [
+    "", "Estimate", "PDF", "line", "invoice", "/pdf", "estimate ", null, undefined, 0, 1,
+    {}, [], true, "__proto__", "constructor",
+  ]) {
+    assert.equal(buildPostSavePath(UUID, bad), null, `accepted destination ${String(bad)}`);
+  }
+  // A bad id blocks BOTH destinations.
+  for (const dest of ["estimate", "pdf"]) {
+    assert.equal(buildPostSavePath("../../admin", dest), null, `${dest} accepted a bad id`);
+  }
+});
+
+test("38. navigation: pdf routes to /pdf, estimate is unchanged, and the default is estimate", () => {
+  const seen: string[] = [];
+  const spy: NavigationSeam = (p) => { seen.push(p); };
+
+  // Default (the completed-session reload caller) — byte-identical to before.
+  assert.deepEqual(navigateToEstimate(spy, UUID), { kind: "navigated", path: `/estimates/${UUID}` });
+  assert.deepEqual(navigateToEstimate(spy, UUID, "estimate"), { kind: "navigated", path: `/estimates/${UUID}` });
+  assert.deepEqual(navigateToEstimate(spy, UUID, "pdf"), { kind: "navigated", path: `/pdf?estimateId=${UUID}` });
+
+  assert.deepEqual(seen, [`/estimates/${UUID}`, `/estimates/${UUID}`, `/pdf?estimateId=${UUID}`]);
+});
+
+test("39. an INVALID destination navigates ZERO times and is its own outcome", () => {
+  const seen: string[] = [];
+  const spy: NavigationSeam = (p) => { seen.push(p); };
+
+  for (const bad of ["", "PDF", "line", "/pdf", null, 7, {}, []]) {
+    assert.deepEqual(navigateToEstimate(spy, UUID, bad), { kind: "invalid-destination" }, String(bad));
+  }
+  assert.equal(seen.length, 0, "no unknown destination ever became a URL");
+
+  // An invalid id is still reported as an invalid ID, whatever the destination.
+  for (const dest of ["estimate", "pdf", "bogus"]) {
+    assert.deepEqual(navigateToEstimate(spy, "../../admin", dest), { kind: "invalid-estimate-id" }, dest);
+  }
+  assert.equal(seen.length, 0);
+});
+
+test("40. a COMPLETED reload still routes to estimate DETAIL, and saves nothing", () => {
+  const w = seededWorld();
+  markWizardSessionPending(w.deps, w.ws);
+  markWizardSessionCompleted(w.deps, w.ws, UUID);
+  const writesBefore = w.counts.writes;
+
+  const d = decideWizardBootstrap(w.deps, valid(w.ws), NEVER_REPLACE);
+  assert.equal(d.kind, "completed");
+  if (d.kind !== "completed") return;
+
+  // The reload branch carries no destination, so the default applies.
+  const seen: string[] = [];
+  assert.deepEqual(
+    navigateToEstimate((p) => { seen.push(p); }, d.estimateId),
+    { kind: "navigated", path: `/estimates/${UUID}` },
+  );
+  assert.deepEqual(seen, [`/estimates/${UUID}`], "never the PDF route — the preference is not persisted");
+  assert.equal(w.counts.writes, writesBefore, "the bootstrap wrote nothing: no re-save");
 });
 
 test("35. initialization appears exactly twice, and the ws branch only recovers", () => {

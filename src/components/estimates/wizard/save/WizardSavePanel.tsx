@@ -33,6 +33,17 @@ import {
 // ── Binding ─────────────────────────────────────────────────────────────────
 
 /**
+ * R89C — where the operator goes after a verified save.
+ *
+ * A CLOSED union, deliberately: routing must be able to reject anything that is
+ * not one of these two, rather than defaulting an unrecognized runtime value
+ * into a path. It is a UI intent only — it never enters the persisted session
+ * record (whose parser accepts an exact key set), never reaches the invoker
+ * payload, and carries no authority of its own.
+ */
+export type WizardSaveDestination = "estimate" | "pdf";
+
+/**
  * Everything the panel needs to save, threaded from the production wrapper
  * through `EstimateWizard` → `Step7Review` without any step touching it.
  *
@@ -45,8 +56,12 @@ export type WizardSaveBinding = {
   readonly saveInvoker: WizardSaveIntentInvoker;
   readonly session: ValidatedWizardSession;
   readonly sessionDeps: WizardSessionDeps;
-  /** Receives ONLY a validated estimate id — never the raw result or record. */
-  readonly onCompleted: (estimateId: string) => void;
+  /**
+   * Receives ONLY a validated estimate id — never the raw result or record —
+   * and an EXPLICIT destination. The destination is non-optional so `undefined`
+   * can never reach routing and be re-interpreted there.
+   */
+  readonly onCompleted: (estimateId: string, destination: WizardSaveDestination) => void;
 };
 
 /**
@@ -75,6 +90,13 @@ export type WizardSaveAttemptDeps = {
   readonly inFlight: { current: boolean };
   readonly draft: Readonly<EstimateWizardDraftV22>;
   readonly binding: WizardSaveBinding;
+  /**
+   * Where a VERIFIED completion should route. Optional with a safe default of
+   * `"estimate"` so every pre-R89C caller keeps its exact behaviour; the value
+   * is captured by the caller BEFORE the first await and passed straight
+   * through, so it cannot be re-read from state after an async gap.
+   */
+  readonly destination?: WizardSaveDestination;
   readonly onSession: (session: ValidatedWizardSession) => void;
   readonly onOutcome: (outcome: WizardSaveOutcome, blocked?: WizardSaveBlockedReason) => void;
 };
@@ -107,6 +129,8 @@ export async function runWizardSaveAttempt(deps: WizardSaveAttemptDeps): Promise
 
   const { binding, draft } = deps;
   const ws = binding.session.wizardSessionId;
+  // Resolved ONCE, before any await. Nothing later re-reads it.
+  const destination: WizardSaveDestination = deps.destination ?? "estimate";
 
   try {
     // A completed session is terminal. The wrapper normally redirects before this
@@ -170,9 +194,10 @@ export async function runWizardSaveAttempt(deps: WizardSaveAttemptDeps): Promise
     deps.onSession(completed.session);
     deps.onOutcome("completed");
 
-    // Only AFTER the verified completed write, and only the validated id.
+    // Only AFTER the verified completed write, and only the validated id — with
+    // the destination captured before the invoker ran.
     if (completed.session.status === "completed" && isValidEstimateId(completed.session.estimateId)) {
-      binding.onCompleted(completed.session.estimateId);
+      binding.onCompleted(completed.session.estimateId, destination);
     }
   } finally {
     deps.inFlight.current = false;             // 7.
@@ -202,12 +227,35 @@ export function WizardSavePanel({
   );
   const [blocked, setBlocked] = useState<WizardSaveBlockedReason | null>(null);
 
-  const attempt = useCallback(() => {
+  /**
+   * The remembered destination — a REF, not state, and deliberately so.
+   *
+   * `setDestination(d)` followed by starting the attempt would read the value
+   * from the PREVIOUS render: React state is not visible to the same
+   * synchronous caller that set it. The attempt would then route with a stale
+   * destination. A ref is written and read in the same tick, so the value the
+   * operator clicked is the value that is passed in.
+   *
+   * It starts at `"estimate"`, so a remount / reload — which cannot restore a
+   * UI preference, because the destination is never persisted — falls back to
+   * the safe default rather than to a PDF route nobody asked for on this mount.
+   */
+  const lastDestination = useRef<WizardSaveDestination>("estimate");
+
+  const attempt = useCallback((destination?: WizardSaveDestination) => {
+    // Read the SHARED guard before remembering anything: a second same-tick
+    // click must neither start a second invocation nor repoint the destination
+    // of the attempt that was already accepted. This is the same ref the
+    // execution core latches — not a second guard.
+    if (inFlight.current) return;
+    if (destination !== undefined) lastDestination.current = destination;
     setBlocked(null);
     void runWizardSaveAttempt({
       inFlight,
       draft,
       binding: { ...binding, session },
+      // Passed explicitly, from the ref just written — never re-read from state.
+      destination: lastDestination.current,
       onSession: setSession,
       onOutcome: (o, reason) => { setOutcome(o); if (reason) setBlocked(reason); },
     });
@@ -245,7 +293,7 @@ export function WizardSavePanel({
             type="button"
             data-testid="save-retry-same-key"
             disabled={submitting}
-            onClick={attempt}
+            onClick={() => attempt()}
             className="mt-2 rounded-md border border-amber-600 px-4 py-2 text-sm"
           >
             同じ保存キーで再試行
@@ -260,7 +308,7 @@ export function WizardSavePanel({
             type="button"
             data-testid="save-retry-same-key"
             disabled={submitting}
-            onClick={attempt}
+            onClick={() => attempt()}
             className="mt-2 rounded-md border border-rose-600 px-4 py-2 text-sm"
           >
             同じ保存キーで再試行
@@ -273,14 +321,24 @@ export function WizardSavePanel({
       )}
 
       {canSaveFresh && (
-        <div data-testid="save-state-ready">
+        <div data-testid="save-state-ready" className="flex flex-wrap gap-2">
+          {/* Both controls run the SAME attempt, on the same guard, session and
+              key. They differ only in where a VERIFIED completion routes. */}
           <button
             type="button"
             data-testid="save-submit"
-            onClick={attempt}
+            onClick={() => attempt("estimate")}
             className="rounded-md border border-emerald-600 bg-emerald-900/40 px-5 py-2.5 text-sm"
           >
             保存
+          </button>
+          <button
+            type="button"
+            data-testid="save-submit-pdf"
+            onClick={() => attempt("pdf")}
+            className="rounded-md border border-sky-600 bg-sky-900/40 px-5 py-2.5 text-sm"
+          >
+            保存してPDFを開く
           </button>
         </div>
       )}

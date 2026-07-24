@@ -16,6 +16,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   runWizardSaveAttempt, WizardSavePanel,
   type WizardSaveBinding, type WizardSaveOutcome, type WizardSaveBlockedReason,
+  type WizardSaveDestination,
 } from "./WizardSavePanel";
 import {
   initializeWizardSession, recoverWizardSession,
@@ -77,6 +78,8 @@ const storedOf = (w: World) =>
 type Recorder = {
   invokerCalls: unknown[];
   completed: string[];
+  /** R89C — the destination handed to onCompleted, in call order. */
+  destinations: WizardSaveDestination[];
   outcomes: Array<[WizardSaveOutcome, WizardSaveBlockedReason | undefined]>;
   sessions: ValidatedWizardSession[];
 };
@@ -92,17 +95,22 @@ function bindingFor(
     saveInvoker: (raw) => { rec.invokerCalls.push(raw); return invoke(raw); },
     session,
     sessionDeps: w.deps,
-    onCompleted: (id) => { rec.completed.push(id); },
+    onCompleted: (id, destination) => { rec.completed.push(id); rec.destinations.push(destination); },
   };
 }
 
-const recorder = (): Recorder => ({ invokerCalls: [], completed: [], outcomes: [], sessions: [] });
+const recorder = (): Recorder =>
+  ({ invokerCalls: [], completed: [], destinations: [], outcomes: [], sessions: [] });
 
-function attemptDeps(w: World, binding: WizardSaveBinding, rec: Recorder, inFlight = { current: false }) {
+function attemptDeps(
+  w: World, binding: WizardSaveBinding, rec: Recorder,
+  inFlight = { current: false }, destination?: WizardSaveDestination,
+) {
   return {
     inFlight,
     draft: DRAFT,
     binding,
+    destination,
     onSession: (s: ValidatedWizardSession) => { rec.sessions.push(s); },
     onOutcome: (o: WizardSaveOutcome, b?: WizardSaveBlockedReason) => { rec.outcomes.push([o, b]); },
   };
@@ -449,4 +457,158 @@ test("15b. the algorithm is not duplicated between component and test helper", (
   // Exactly one implementation, and the component calls it.
   assert.equal((code.match(/export async function runWizardSaveAttempt/g) ?? []).length, 1);
   assert.match(code, /void runWizardSaveAttempt\(/, "the component calls the same core");
+});
+
+// ── 16-21. R89C — the post-save destination ────────────────────────────────
+
+test("16. an omitted destination defaults to `estimate` (pre-R89C callers unchanged)", async () => {
+  const w = world();
+  const rec = recorder();
+  await runWizardSaveAttempt(attemptDeps(w, bindingFor(w, async () => OK, rec), rec));
+
+  assert.deepEqual(rec.completed, [UUID]);
+  assert.deepEqual(rec.destinations, ["estimate"], "the safe default reaches routing, never undefined");
+  // The destination is a routing intent only — it never enters the invoker payload…
+  assert.deepEqual(Object.keys(rec.invokerCalls[0] as object).sort(),
+    ["draft", "expectedConfigRevision", "idempotencyKey"]);
+  // …and never the persisted record.
+  assert.deepEqual(Object.keys(storedOf(w)).sort(), ["estimateId", "key", "status", "v"]);
+});
+
+test("17. an explicit `pdf` destination reaches onCompleted through the SAME pipeline", async () => {
+  const w = world();
+  const rec = recorder();
+  await runWizardSaveAttempt(
+    attemptDeps(w, bindingFor(w, async () => OK, rec), rec, { current: false }, "pdf"),
+  );
+
+  assert.equal(rec.invokerCalls.length, 1, "one save, not a second pipeline");
+  assert.deepEqual(Object.keys(rec.invokerCalls[0] as object).sort(),
+    ["draft", "expectedConfigRevision", "idempotencyKey"], "payload shape is untouched");
+  assert.deepEqual(rec.destinations, ["pdf"]);
+  assert.equal(storedOf(w).status, "completed");
+  assert.deepEqual(Object.keys(storedOf(w)).sort(), ["estimateId", "key", "status", "v"],
+    "the destination is NOT persisted");
+});
+
+test("18. same-tick second click: ONE invocation, and the accepted destination wins", async () => {
+  const w = world();
+  const rec = recorder();
+  const inFlight = { current: false };
+  let release!: (r: WizardSaveIntentResult) => void;
+  const deferred = new Promise<WizardSaveIntentResult>((res) => { release = res; });
+
+  const binding = bindingFor(w, () => deferred, rec);
+  // First click chooses PDF; the second, in the same tick, tries to repoint it.
+  const first = runWizardSaveAttempt(attemptDeps(w, binding, rec, inFlight, "pdf"));
+  const second = runWizardSaveAttempt(attemptDeps(w, binding, rec, inFlight, "estimate"));
+
+  assert.equal(rec.invokerCalls.length, 1, "the second attempt was refused by the shared guard");
+
+  release(OK);
+  await Promise.all([first, second]);
+
+  assert.equal(rec.invokerCalls.length, 1);
+  assert.deepEqual(rec.completed, [UUID], "exactly one completion");
+  assert.deepEqual(rec.destinations, ["pdf"], "the refused click did not repoint the accepted attempt");
+});
+
+test("19. unknown / typed-failed / blocked outcomes hand NO destination to routing", async () => {
+  // Thrown → unknown.
+  const w1 = world();
+  const r1 = recorder();
+  await runWizardSaveAttempt(attemptDeps(
+    w1, bindingFor(w1, async () => { throw new Error("network down"); }, r1), r1, { current: false }, "pdf"));
+  assert.deepEqual(r1.destinations, [], "unknown never routes");
+  assert.deepEqual(r1.completed, []);
+
+  // Typed failure → failed.
+  const w2 = world();
+  const r2 = recorder();
+  await runWizardSaveAttempt(attemptDeps(
+    w2, bindingFor(w2, async () => TYPED_FAILURE, r2), r2, { current: false }, "pdf"));
+  assert.deepEqual(r2.destinations, [], "failed never routes");
+
+  // Invalid estimate id → blocked.
+  const w3 = world();
+  const r3 = recorder();
+  const bad = { ...OK, estimateId: "../../admin" } as WizardSaveIntentResult;
+  await runWizardSaveAttempt(attemptDeps(
+    w3, bindingFor(w3, async () => bad, r3), r3, { current: false }, "pdf"));
+  assert.deepEqual(r3.destinations, [], "a malformed id blocks BOTH destinations");
+  assert.deepEqual(r3.outcomes[r3.outcomes.length - 1], ["blocked", "invalid-estimate-id"]);
+});
+
+test("20. a same-mount retry keeps the destination AND the byte-identical key", async () => {
+  const w = world();
+  const rec = recorder();
+  // First attempt chooses PDF and fails with a typed failure.
+  await runWizardSaveAttempt(attemptDeps(
+    w, bindingFor(w, async () => TYPED_FAILURE, rec), rec, { current: false }, "pdf"));
+  assert.equal(storedOf(w).status, "failed");
+  assert.deepEqual(rec.destinations, []);
+
+  const after = recoverWizardSession(w.deps, w.ws);
+  assert.equal(after.ok, true);
+  if (!after.ok) return;
+
+  // The retry is the SAME remembered destination — the component passes the ref
+  // it wrote on the accepted click, not a fresh choice.
+  const rec2 = recorder();
+  await runWizardSaveAttempt(attemptDeps(
+    w, bindingFor(w, async () => OK, rec2, after.session), rec2, { current: false }, "pdf"));
+
+  assert.equal(rec2.invokerCalls.length, 1);
+  assert.equal((rec2.invokerCalls[0] as { idempotencyKey: string }).idempotencyKey, w.key,
+    "byte-identical key across the retry");
+  assert.deepEqual(rec2.destinations, ["pdf"], "the destination survived the retry");
+});
+
+test("21. both ready controls exist, share one attempt, and appear ONLY when ready", () => {
+  const rec = recorder();
+
+  const readyW = world();
+  const readyHtml = renderToStaticMarkup(React.createElement(WizardSavePanel, {
+    draft: DRAFT, binding: bindingFor(readyW, async () => OK, rec),
+  }));
+  assert.ok(readyHtml.includes('data-testid="save-submit"'), "保存");
+  assert.ok(readyHtml.includes('data-testid="save-submit-pdf"'), "保存してPDFを開く");
+
+  // Recovered pending and completed states offer neither fresh control.
+  const pendW = world();
+  markWizardSessionPending(pendW.deps, pendW.ws);
+  const pend = recoverWizardSession(pendW.deps, pendW.ws);
+  assert.equal(pend.ok, true);
+  const pendHtml = pend.ok ? renderToStaticMarkup(React.createElement(WizardSavePanel, {
+    draft: DRAFT, binding: bindingFor(pendW, async () => OK, rec, pend.session),
+  })) : "";
+  assert.equal(pendHtml.includes('data-testid="save-submit-pdf"'), false);
+  assert.equal(pendHtml.includes('data-testid="save-submit"'), false);
+
+  const compW = world();
+  markWizardSessionPending(compW.deps, compW.ws);
+  const comp = markWizardSessionCompleted(compW.deps, compW.ws, UUID);
+  const compHtml = comp.ok ? renderToStaticMarkup(React.createElement(WizardSavePanel, {
+    draft: DRAFT, binding: bindingFor(compW, async () => OK, rec, comp.session),
+  })) : "";
+  assert.equal(compHtml.includes('data-testid="save-submit-pdf"'), false);
+
+  // ── Source proof of the synchronous-holder contract ──────────────────────
+  // A DOM-free suite cannot click, so the stale-state hazard is proved from the
+  // shipping source: a REF (not state), the shared guard read BEFORE the ref is
+  // written, and retry handlers that never leak a MouseEvent into the parameter.
+  const code = readFileSync(PANEL_SRC, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  assert.match(code, /const lastDestination = useRef<WizardSaveDestination>\("estimate"\)/,
+    "a synchronous ref, defaulting to the safe destination");
+  assert.equal(/setDestination\(/.test(code), false, "no state setter may gate the attempt");
+  assert.match(code, /if \(inFlight\.current\) return;\s*\n\s*if \(destination !== undefined\) lastDestination\.current = destination;/,
+    "the shared guard is read BEFORE the remembered destination is changed");
+  assert.match(code, /destination: lastDestination\.current,/, "the ref is passed explicitly into the core");
+  assert.equal(code.includes("onClick={attempt}"), false,
+    "a bare handler would pass a MouseEvent as the destination");
+  assert.equal((code.match(/onClick=\{\(\) => attempt\(\)\}/g) ?? []).length, 2, "two retry controls");
+  assert.match(code, /onClick=\{\(\) => attempt\("estimate"\)\}/);
+  assert.match(code, /onClick=\{\(\) => attempt\("pdf"\)\}/);
+  // Still exactly one guard and one core.
+  assert.equal((code.match(/useRef\(false\)/g) ?? []).length, 1, "exactly one in-flight guard");
 });

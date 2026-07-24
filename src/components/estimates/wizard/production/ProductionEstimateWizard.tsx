@@ -32,7 +32,7 @@ import type {
   WizardExistingEntityInputs, WizardPreselectionInputs,
 } from "../contract/wizard-runtime-inputs";
 import type { WizardSaveIntentInvoker } from "../save/wizard-save-intent-types";
-import type { WizardSaveBinding } from "../save/WizardSavePanel";
+import type { WizardSaveBinding, WizardSaveDestination } from "../save/WizardSavePanel";
 import {
   initializeWizardSession, recoverWizardSession, isValidEstimateId, isValidWizardSessionId,
   type ValidatedWizardSession, type WizardSessionDeps,
@@ -72,7 +72,7 @@ type ReadyProductionWizardProps = ProductionEstimateWizardProps & {
   /** Branded AND non-completed — only B7-2B can produce one, and never a completed one. */
   readonly session: ActiveWizardSession;
   readonly sessionDeps: WizardSessionDeps;
-  readonly onCompleted: (estimateId: string) => void;
+  readonly onCompleted: (estimateId: string, destination: WizardSaveDestination) => void;
 };
 
 function ReadyProductionWizard(props: ReadyProductionWizardProps) {
@@ -170,6 +170,33 @@ export function buildEstimatePath(estimateId: unknown): string | null {
   return `/estimates/${encodeURIComponent(estimateId as string)}`;
 }
 
+/**
+ * The PDF destination (R89C).
+ *
+ * Same rule as `buildEstimatePath`: the id is validated here, at the last point
+ * before it can become a URL, and encoded rather than concatenated. The id is
+ * carried as a query value on the existing `/pdf` surface — no PDF module,
+ * renderer or Storage call is imported or reached from this file.
+ */
+export function buildEstimatePdfPath(estimateId: unknown): string | null {
+  if (!isValidEstimateId(estimateId)) return null;
+  return `/pdf?estimateId=${encodeURIComponent(estimateId as string)}`;
+}
+
+/**
+ * Resolve a post-save path, FAIL-CLOSED on both axes.
+ *
+ * An unrecognized runtime destination returns null rather than falling back to
+ * either arm: silently treating an unknown value as "estimate" would turn a
+ * corrupted or forged intent into a successful navigation, and treating it as
+ * "pdf" would do the same in the other direction. Only the two literals route.
+ */
+export function buildPostSavePath(estimateId: unknown, destination: unknown): string | null {
+  if (destination === "estimate") return buildEstimatePath(estimateId);
+  if (destination === "pdf") return buildEstimatePdfPath(estimateId);
+  return null;
+}
+
 // ── The one-shot guard ──────────────────────────────────────────────────────
 
 /** A synchronous run-once latch. A ref cell, never React state. */
@@ -207,20 +234,31 @@ export type NavigationSeam = (path: string) => void;
 export type NavigationOutcome =
   | { readonly kind: "navigated"; readonly path: string }
   | { readonly kind: "invalid-estimate-id" }
+  | { readonly kind: "invalid-destination" }
   | { readonly kind: "redirect-failed" };
 
 /**
- * The ONLY way an estimate id becomes a URL.
+ * The ONLY way an estimate id becomes a URL — for either post-save destination.
  *
  * Validation happens here, at the last point before navigation, regardless of
  * what already validated upstream — so no raw value can reach a URL even if a
- * future caller forgets. A throwing navigator is a reported outcome, not a
- * swallowed one: a silent failure would leave the operator staring at a wizard
- * for an estimate that was already saved.
+ * future caller forgets. The id is checked FIRST, so an invalid id is reported
+ * as such whatever the destination is, and an unrecognized destination is its
+ * own distinct outcome rather than a silent fallback. A throwing navigator is a
+ * reported outcome, not a swallowed one: a silent failure would leave the
+ * operator staring at a wizard for an estimate that was already saved.
+ *
+ * `destination` defaults to `"estimate"` for the pre-R89C internal caller (the
+ * completed-session reload), whose behaviour is unchanged.
  */
-export function navigateToEstimate(navigate: NavigationSeam, estimateId: unknown): NavigationOutcome {
-  const path = buildEstimatePath(estimateId);
-  if (path === null) return { kind: "invalid-estimate-id" };
+export function navigateToEstimate(
+  navigate: NavigationSeam,
+  estimateId: unknown,
+  destination: unknown = "estimate",
+): NavigationOutcome {
+  if (!isValidEstimateId(estimateId)) return { kind: "invalid-estimate-id" };
+  const path = buildPostSavePath(estimateId, destination);
+  if (path === null) return { kind: "invalid-destination" };
   try {
     navigate(path);
   } catch {
@@ -340,9 +378,12 @@ export default function ProductionEstimateWizard(props: ProductionEstimateWizard
   const bootstrapGuard = useRef(false);
   const startNewGuard = useRef(false);
 
-  const completeNavigation = useCallback((estimateId: unknown) => {
-    const outcome = navigateToEstimate(browserNavigate, estimateId);
+  // `destination` defaults to the estimate detail, which is what the completed-
+  // session reload branch below relies on. A save supplies it explicitly.
+  const completeNavigation = useCallback((estimateId: unknown, destination: unknown = "estimate") => {
+    const outcome = navigateToEstimate(browserNavigate, estimateId, destination);
     if (outcome.kind === "invalid-estimate-id") { setState({ kind: "blocked", reason: "invalid-estimate-id" }); return; }
+    if (outcome.kind === "invalid-destination") { setState({ kind: "blocked", reason: "invalid-destination" }); return; }
     if (outcome.kind === "redirect-failed") { setState({ kind: "redirect-failed" }); return; }
     setState({ kind: "completed", path: outcome.path });
   }, []);
