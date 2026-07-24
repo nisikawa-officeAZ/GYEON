@@ -19,6 +19,7 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { LineMessage } from "./line-types";
 import { LineMessagePurpose } from "./line-message-types";
 import { createPendingLog, markLogSent, markLogFailed } from "./create-line-message-log";
+import { redactShareLog } from "./line-log-redaction";
 
 const LINE_API_BASE = "https://api.line.me/v2/bot";
 
@@ -66,7 +67,7 @@ export async function fetchLineProfile(
 
 export async function sendLineMessage(
   lineUserId: string,
-  messages: LineMessage[],
+  outboundMessages: LineMessage[],
   options?: {
     purpose?:         LineMessagePurpose;
     title?:           string | null;
@@ -81,6 +82,14 @@ export async function sendLineMessage(
      * the pre-existing internal senders, whose best-effort behaviour is unchanged.
      */
     requireLog?:      boolean;
+    /**
+     * pdf-link ONLY. When true, the AUDIT copy (body + payload.messages) is
+     * replaced with a fixed placeholder while LINE still receives the original
+     * `outboundMessages`. If a safe audit copy cannot be produced, the send FAILS
+     * CLOSED before the LINE request. A closed boolean flag — never accepts a
+     * caller-supplied replacement string.
+     */
+    redactLog?:       boolean;
   }
 ): Promise<LineSendResult> {
   const dealer = await getCurrentDealer();
@@ -107,10 +116,26 @@ export async function sendLineMessage(
   if (!settings?.line_access_token)  return { error: "LINEアクセストークンが設定されていません", reason: "no-access-token" };
 
   const purpose: LineMessagePurpose = options?.purpose ?? "manual";
-  const body = options?.body ?? (messages[0] && "text" in messages[0] ? messages[0].text : "");
 
-  // Create pending log. `messages` is spread FIRST and metadata lands on its own
-  // key, so metadata can never overwrite the canonical LINE payload.
+  // `outboundMessages` is what LINE receives. `messages`/`body` are the AUDIT copy
+  // persisted to line_message_logs. They are identical for ordinary sends (text
+  // mode is byte-for-byte unchanged); for a redacted pdf-link send they diverge —
+  // LINE keeps the working URL below, the log gets a fixed placeholder.
+  let messages: LineMessage[] = outboundMessages;
+  let body = options?.body ?? (outboundMessages[0] && "text" in outboundMessages[0] ? outboundMessages[0].text : "");
+  if (options?.redactLog) {
+    const safe = redactShareLog({ messages: outboundMessages, body });
+    // FAIL CLOSED before any write or LINE call: an un-auditable share URL must
+    // never be delivered-and-forgotten.
+    if (!safe.ok) {
+      return { error: "監査用の送信記録を安全に作成できませんでした", reason: "log-unavailable" };
+    }
+    messages = safe.messages;
+    body = safe.body;
+  }
+
+  // Create pending log. The AUDIT `messages` is spread FIRST and metadata lands on
+  // its own key, so metadata can never overwrite the canonical payload.
   const logId = await createPendingLog(logSupabase, dealer.dealer_id, {
     line_user_id:     lineUserId,
     customer_id:      options?.customerId     ?? null,
@@ -143,7 +168,9 @@ export async function sendLineMessage(
       "Content-Type":  "application/json",
       "Authorization": `Bearer ${settings.line_access_token}`,
     },
-    body: JSON.stringify({ to: lineUserId, messages }),
+    // The ORIGINAL messages — LINE receives the working share URL even when the
+    // audit copy above was redacted.
+    body: JSON.stringify({ to: lineUserId, messages: outboundMessages }),
   });
 
   if (!res.ok) {
@@ -170,6 +197,8 @@ export async function sendLineTextMessage(
     lineCustomerId?: string | null;
     logMetadata?:    LineLogMetadata;
     requireLog?:     boolean;
+    /** pdf-link only — see sendLineMessage. Flows through untouched. */
+    redactLog?:      boolean;
   }
 ): Promise<LineSendResult> {
   return sendLineMessage(

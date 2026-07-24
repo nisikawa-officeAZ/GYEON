@@ -14,24 +14,46 @@
 // fetch, no clock. The one time value that exists (`sentAt`) arrives as data
 // read from a persisted log, never from `Date`.
 
+// The ONLY import: a type-only one, fully erased at runtime, so the core stays
+// importable under `node --import tsx --test`. No value/runtime import exists.
+import type { CreateShareOutcome, EstimateShareContext, PdfUnavailableReason } from "../estimates/estimate-share-types";
+
 // ── Client-supplied surface (exactly two values, neither authoritative) ─────
 
 /**
+ * How the estimate is delivered. R92B adds `pdf-link`: the same text, plus a
+ * revocable public URL to an immutable PDF snapshot. Absent → `text` (Phase-1
+ * behaviour, byte-for-byte unchanged).
+ */
+export type EstimateDeliveryMode = "text" | "pdf-link";
+
+/**
  * The operator's explicit intent. A closed union carrying NO recipient and NO
- * message data: the only thing a client may say is "I mean to send" or "I have
- * seen the prior send and mean to send again".
+ * message data: the only thing a client may say is "I mean to send" / "I have
+ * seen the prior send and mean to send again", plus an OPTIONAL delivery mode.
  */
 export type EstimateResendAuthorization =
-  | { readonly kind: "first-send" }
-  | { readonly kind: "confirmed-resend" };
+  | { readonly kind: "first-send"; readonly mode?: EstimateDeliveryMode }
+  | { readonly kind: "confirmed-resend"; readonly mode?: EstimateDeliveryMode };
 
-/** Structural validation — anything that is not one of the two literals fails closed. */
+/**
+ * Structural validation — fails closed on anything outside the closed shape.
+ * The only permitted keys are `kind` (required) and `mode` (optional); `mode`,
+ * when present, must be one of the two delivery literals.
+ */
 export function isEstimateResendAuthorization(value: unknown): value is EstimateResendAuthorization {
   if (typeof value !== "object" || value === null) return false;
   const keys = Object.keys(value as Record<string, unknown>);
-  if (keys.length !== 1 || keys[0] !== "kind") return false;
+  for (const k of keys) {
+    if (k !== "kind" && k !== "mode") return false;
+  }
   const kind = (value as { kind: unknown }).kind;
-  return kind === "first-send" || kind === "confirmed-resend";
+  if (kind !== "first-send" && kind !== "confirmed-resend") return false;
+  if ("mode" in (value as Record<string, unknown>)) {
+    const mode = (value as { mode: unknown }).mode;
+    if (mode !== "text" && mode !== "pdf-link") return false;
+  }
+  return true;
 }
 
 const ESTIMATE_ID_PATTERN =
@@ -71,7 +93,12 @@ export type EstimateLineResult =
   /** An explicit, attributable failure. `copyText` is the exact customer message. */
   | { readonly kind: "failed"; readonly message: string; readonly copyText: string }
   /** Delivery is INDETERMINATE — it may already have reached the customer. */
-  | { readonly kind: "unknown"; readonly copyText: string };
+  | { readonly kind: "unknown"; readonly copyText: string }
+  /**
+   * pdf-link only: the share (snapshot + link) could NOT be produced, so no LINE
+   * message was ever composed or sent. No side effect reached the customer.
+   */
+  | { readonly kind: "pdf-unavailable"; readonly reason: PdfUnavailableReason };
 
 /** Fixed operator-facing strings. No server detail, no PII, no raw error text. */
 export const ESTIMATE_LINE_LOG_UNAVAILABLE_MESSAGE =
@@ -142,15 +169,26 @@ export interface EstimateLineCoreDeps {
   /** The dealer's business name, or null when unset. Never defaulted. */
   readonly loadBusinessName: () => Promise<string | null>;
   /**
+   * pdf-link only: create a revocable share (immutable snapshot + tokenized URL).
+   * Runs AFTER the resend preflight and is the FIRST side effect in that mode. A
+   * non-`created` outcome aborts the send with `pdf-unavailable` — no LINE call is
+   * made. The raw token lives only inside the returned `share.url`.
+   */
+  readonly createShareLink: (estimateId: string) => Promise<CreateShareOutcome>;
+  /**
    * Performs the side-effecting send. Creates the pending log FIRST (requireLog),
    * then touches last_message_at, then calls LINE. May THROW for a network /
-   * indeterminate outcome — the caller maps that to `unknown`.
+   * indeterminate outcome — the caller maps that to `unknown`. `mode` and the
+   * optional `share` let the wrapper compose the correct log metadata (the token
+   * is never among those fields).
    */
   readonly send: (params: {
     readonly recipient: EstimateLineRecipient;
     readonly customerId: string;
     readonly estimateId: string;
     readonly text: string;
+    readonly mode: EstimateDeliveryMode;
+    readonly share: EstimateShareContext | null;
   }) => Promise<EstimateLineTransportOutcome>;
 }
 
@@ -181,6 +219,12 @@ export function buildEstimateLineText(input: {
   readonly total: number | null;
   readonly validUntil: string | null;
   readonly businessName: string | null;
+  /**
+   * pdf-link only. When present, the customer-visible message gains a PDF link
+   * block. In `text` mode this is null/absent and the message is byte-for-byte
+   * the Phase-1 text.
+   */
+  readonly shareUrl?: string | null;
 }): string {
   const lines: string[] = [];
   // Every line is conditional on its OWN persisted source. A missing number
@@ -193,6 +237,12 @@ export function buildEstimateLineText(input: {
   if (input.total !== null) lines.push(`合計金額: ¥${groupYen(input.total)}`);
   if (input.validUntil) lines.push(`有効期限: ${input.validUntil}`);
   if (input.businessName) lines.push(input.businessName);
+  // The PDF link is the LAST block, appended only in pdf-link mode. It is the one
+  // place the raw token appears in the delivered message.
+  if (input.shareUrl) {
+    lines.push("お見積書（PDF）は下記からご確認いただけます。");
+    lines.push(input.shareUrl);
+  }
   return lines.join("\n");
 }
 
@@ -207,11 +257,15 @@ export function buildEstimateLineText(input: {
  *   4. resolve the recipient (dealer + customer + friend) → not-linked
  *   5. read LINE configuration                           → line-disabled / no-access-token
  *   6. RESEND PREFLIGHT                                  → resend-required
- *   7. build the customer-safe text
+ *   6b. pdf-link ONLY: create the share                 → pdf-unavailable
+ *   7. build the customer-safe text (+ link in pdf-link)
  *   8. send (pending log → last_message_at → LINE)
  *
- * Steps 1-6 perform NO writes: no pending log is inserted and no LINE call is
- * made before the resend decision. Step 8 is the first and only side effect.
+ * Steps 1-6 perform NO writes: no share, no pending log, no LINE call is made
+ * before the resend decision. In `text` mode step 8 is the first and only side
+ * effect; in `pdf-link` mode the share creation (6b) is the first side effect,
+ * and a LINE failure afterwards LEAVES THE SHARE ACTIVE so the operator can
+ * deliver the link by hand from `copyText`.
  */
 export async function runEstimateLineSend(
   deps: EstimateLineCoreDeps,
@@ -223,6 +277,8 @@ export async function runEstimateLineSend(
     return { kind: "blocked", reason: "invalid-request" };
   }
   const id = estimateId as string;
+  // Absent mode is Phase-1 text — the default preserves existing behaviour.
+  const mode: EstimateDeliveryMode = authorization.mode ?? "text";
 
   // 2-3. The estimate is the only source of the customer.
   const estimate = await deps.loadEstimate(id);
@@ -252,12 +308,25 @@ export async function runEstimateLineSend(
     }
   }
 
-  // 7. The text, from persisted fields only.
+  // 6b. pdf-link ONLY: mint the share BEFORE composing the message. A failure
+  // here aborts with `pdf-unavailable` and NO LINE call — nothing reached the
+  // customer. In text mode this block is skipped entirely.
+  let share: EstimateShareContext | null = null;
+  if (mode === "pdf-link") {
+    const created = await deps.createShareLink(id);
+    if (created.kind !== "created") {
+      return { kind: "pdf-unavailable", reason: created.reason };
+    }
+    share = created.share;
+  }
+
+  // 7. The text, from persisted fields only (+ the link in pdf-link mode).
   const text = buildEstimateLineText({
     estimateNumber: estimate.estimateNumber,
     total: estimate.total,
     validUntil: estimate.validUntil,
     businessName: await deps.loadBusinessName(),
+    shareUrl: share?.url ?? null,
   });
 
   // 8. The single side effect.
@@ -268,6 +337,8 @@ export async function runEstimateLineSend(
       customerId: estimate.customerId,
       estimateId: id,
       text,
+      mode,
+      share,
     });
   } catch {
     // THROWN / network: the pending log stays as it is and the SERVER outcome is

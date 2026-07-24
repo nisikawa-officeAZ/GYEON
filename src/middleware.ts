@@ -18,6 +18,7 @@ const PUBLIC_PREFIXES = [
   "/no-dealer",
   "/liff",
   "/api",
+  "/s/e",             // R92B: public estimate-share landing + file (token-gated in-route)
 ];
 
 export async function middleware(request: NextRequest) {

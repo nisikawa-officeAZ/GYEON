@@ -1,9 +1,12 @@
 "use client";
 
-// R90B Phase 1 — the operator surface for sending a saved estimate over LINE.
+// R90B Phase 1 / R92B Phase 2 — the operator surface for sending a saved estimate
+// over LINE.
 //
-// TEXT ONLY. There is no PDF-link selector anywhere in this tree — not hidden,
-// not disabled: absent. Phase 2 introduces it.
+// R92B adds a PDF-link mode ALONGSIDE the text mode. The text flow is unchanged —
+// the same single "LINEで送信" button, same one click; the PDF flow is a parallel
+// entry button so muscle memory and the operation count are preserved. The chosen
+// mode rides on the authorization and is carried through any resend prompt.
 //
 // ── WHY THE ATTEMPT LOGIC IS A SEPARATE PURE FUNCTION ───────────────────────
 // This repo has no DOM harness, so a test cannot click. `runEstimateLineAttempt`
@@ -11,12 +14,18 @@
 // component calls it and the tests call the SAME function. A test helper that
 // re-implemented it would prove a copy rather than the shipped behaviour.
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
+  EstimateDeliveryMode,
   EstimateLineResult,
   EstimateResendAuthorization,
 } from "@/lib/line/send-estimate-line-core";
+import type { EstimateShareListItem } from "@/lib/estimates/estimate-share-types";
+import {
+  listActiveEstimateShares,
+  revokeEstimateShare,
+} from "@/lib/estimates/estimate-share-actions";
 
 // ── The injectable attempt core ─────────────────────────────────────────────
 
@@ -24,6 +33,41 @@ export type EstimateLineSender = (
   estimateId: string,
   authorization: EstimateResendAuthorization,
 ) => Promise<EstimateLineResult>;
+
+// ── The injectable share list/revoke cores ──────────────────────────────────
+//
+// Server Actions are wired by default, but every branch is a pure injectable
+// function the tests call DIRECTLY — the same functions the component calls, so
+// the persistent-list and revoke-then-relist behaviour is proved without a DOM.
+
+export type EstimateShareLister = (estimateId: string) => Promise<EstimateShareListItem[]>;
+export type EstimateShareRevoker = (estimateId: string, shareId: string) => Promise<{ ok: boolean }>;
+
+/** Load the active shares. A failure is swallowed to an empty list — never a send. */
+export async function runShareListLoad(deps: {
+  readonly estimateId: string;
+  readonly listShares: EstimateShareLister;
+  readonly onShares: (shares: EstimateShareListItem[]) => void;
+}): Promise<void> {
+  try {
+    const shares = await deps.listShares(deps.estimateId);
+    deps.onShares(shares);
+  } catch {
+    deps.onShares([]);
+  }
+}
+
+/** Revoke one share, then RE-LIST on success so the UI reflects the new state. */
+export async function runShareRevoke(deps: {
+  readonly estimateId: string;
+  readonly shareId: string;
+  readonly revokeShare: EstimateShareRevoker;
+  readonly reload: () => Promise<void>;
+}): Promise<{ ok: boolean }> {
+  const res = await deps.revokeShare(deps.estimateId, deps.shareId);
+  if (res.ok) await deps.reload();
+  return res;
+}
 
 export type EstimateLineAttemptDeps = {
   /** Per-mount guard. Checked and set SYNCHRONOUSLY, before any await. */
@@ -83,6 +127,16 @@ const BLOCK_TEXT: Record<string, string> = {
 const UNKNOWN_TEXT =
   "送信結果を確認できませんでした。すでに送信されている可能性があります。";
 
+// pdf-link only. The share could not be produced, so NOTHING was sent — the
+// message is safe to retry once the cause is resolved.
+const PDF_UNAVAILABLE_TEXT: Record<string, string> = {
+  "invalid-app-url":            "共有リンクのURL設定が正しくないため、PDFリンクを作成できませんでした。管理者にご確認ください。",
+  "pdf-generation-failed":      "PDFの生成に失敗したため、リンクを作成できませんでした。時間をおいて再度お試しください。",
+  "document-persist-failed":    "PDFの保存に失敗したため、リンクを作成できませんでした。時間をおいて再度お試しください。",
+  "share-create-failed":        "共有リンクの作成に失敗しました。時間をおいて再度お試しください。",
+  "reference-integrity-failed": "この見積のPDFリンクを作成できませんでした。画面を再読み込みしてください。",
+};
+
 // ── Component ───────────────────────────────────────────────────────────────
 
 type Stage =
@@ -93,14 +147,41 @@ type Stage =
 
 export function EstimateLineAction({
   estimateId, estimateNumber, customerName, send,
+  // Server Actions by default; overridable for tests.
+  listShares = listActiveEstimateShares,
+  revokeShare = revokeEstimateShare,
 }: {
   estimateId: string;
   estimateNumber: string;
   customerName: string;
   send: EstimateLineSender;
+  listShares?: EstimateShareLister;
+  revokeShare?: EstimateShareRevoker;
 }) {
   const inFlight = useRef(false);
   const [stage, setStage] = useState<Stage>({ kind: "idle" });
+  // The delivery mode chosen when the operator opened the flow. Carried through
+  // the confirm and any resend prompt so a resend keeps the original mode.
+  const [mode, setMode] = useState<EstimateDeliveryMode>("text");
+  // The persistent list of active share links, loaded on mount and refreshed
+  // after every successful revoke.
+  const [shares, setShares] = useState<EstimateShareListItem[]>([]);
+
+  const reloadShares = useCallback(
+    () => runShareListLoad({ estimateId, listShares, onShares: setShares }),
+    [estimateId, listShares],
+  );
+
+  // Load-only on mount / when the estimate changes. This effect NEVER initiates a
+  // LINE send — it calls the read-only lister and nothing else.
+  useEffect(() => {
+    void reloadShares();
+  }, [reloadShares]);
+
+  const open = useCallback((chosen: EstimateDeliveryMode) => {
+    setMode(chosen);
+    setStage({ kind: "confirming", authorization: { kind: "first-send", mode: chosen } });
+  }, []);
 
   const attempt = useCallback((authorization: EstimateResendAuthorization) => {
     void runEstimateLineAttempt({
@@ -125,14 +206,24 @@ export function EstimateLineAction({
   return (
     <div data-testid="estimate-line-action" className="flex flex-col gap-2">
       {stage.kind === "idle" && (
-        <div data-testid="line-state-idle">
+        <div data-testid="line-state-idle" className="flex gap-2">
+          {/* Text mode — unchanged Phase-1 entry: one click, same label. */}
           <button
             type="button"
             data-testid="line-send-open"
-            onClick={() => setStage({ kind: "confirming", authorization: { kind: "first-send" } })}
+            onClick={() => open("text")}
             className={`${btn} bg-[#06c755] hover:bg-[#05b34c] text-white`}
           >
             LINEで送信
+          </button>
+          {/* pdf-link mode — parallel entry, no extra step added to the text flow. */}
+          <button
+            type="button"
+            data-testid="line-send-open-pdf"
+            onClick={() => open("pdf-link")}
+            className={`${btn} bg-[#06c755]/80 hover:bg-[#05b34c] text-white`}
+          >
+            PDF付きで送信
           </button>
         </div>
       )}
@@ -140,7 +231,8 @@ export function EstimateLineAction({
       {stage.kind === "confirming" && (
         <div data-testid="line-state-confirming" className="rounded-md border border-slate-700 bg-slate-900/60 p-3">
           <p className="text-xs text-slate-200">
-            {customerName} さんの LINE に見積 {estimateNumber} を送信します。よろしいですか？
+            {customerName} さんの LINE に見積 {estimateNumber} を
+            {stage.authorization.mode === "pdf-link" ? "PDFリンク付きで" : ""}送信します。よろしいですか？
           </p>
           <div className="flex gap-2 mt-2">
             <button
@@ -180,7 +272,7 @@ export function EstimateLineAction({
             <button
               type="button"
               data-testid="line-resend-confirm"
-              onClick={() => attempt({ kind: "confirmed-resend" })}
+              onClick={() => attempt({ kind: "confirmed-resend", mode })}
               className={`${btn} bg-amber-700 hover:bg-amber-600 text-white`}
             >
               再送する
@@ -208,7 +300,7 @@ export function EstimateLineAction({
             <button
               type="button"
               data-testid="line-resend-indeterminate-confirm"
-              onClick={() => attempt({ kind: "confirmed-resend" })}
+              onClick={() => attempt({ kind: "confirmed-resend", mode })}
               className={`${btn} bg-amber-700 hover:bg-amber-600 text-white`}
             >
               それでも再送する
@@ -247,6 +339,12 @@ export function EstimateLineAction({
         <p data-testid="line-state-unknown" className="text-xs text-amber-300">{UNKNOWN_TEXT}</p>
       )}
 
+      {result?.kind === "pdf-unavailable" && (
+        <p data-testid="line-state-pdf-unavailable" className="text-xs text-rose-300">
+          {PDF_UNAVAILABLE_TEXT[result.reason] ?? "PDFリンクを作成できませんでした。"}
+        </p>
+      )}
+
       {copyText && (
         <div data-testid="line-copy-fallback" className="rounded-md border border-slate-700 bg-slate-900/60 p-3">
           {/* The exact server-generated message — never re-composed here. */}
@@ -274,6 +372,27 @@ export function EstimateLineAction({
           >
             閉じる
           </button>
+        </div>
+      )}
+
+      {/* Persistent revoke UI. Renders ONLY the safe projection (expiry), never a
+          token, hash or storage path. Revoking re-lists so the row disappears. */}
+      {shares.length > 0 && (
+        <div data-testid="line-share-list" className="rounded-md border border-slate-700 bg-slate-900/40 p-3 flex flex-col gap-2">
+          <p className="text-[11px] text-slate-400">有効な共有リンク</p>
+          {shares.map((s) => (
+            <div key={s.id} data-testid="line-share-row" className="flex items-center justify-between gap-2">
+              <span className="text-[11px] text-slate-300">有効期限: {s.expiresAt}</span>
+              <button
+                type="button"
+                data-testid="line-share-revoke"
+                onClick={() => void runShareRevoke({ estimateId, shareId: s.id, revokeShare, reload: reloadShares })}
+                className={`${btn} bg-slate-700 hover:bg-rose-700 text-slate-200`}
+              >
+                取り消す
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>

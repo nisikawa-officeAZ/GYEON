@@ -16,13 +16,24 @@ import {
   ESTIMATE_LINE_LOG_UNAVAILABLE_MESSAGE, ESTIMATE_LINE_SEND_FAILED_MESSAGE,
   type EstimateLineCoreDeps, type EstimateLineSource,
   type EstimateLineTransportOutcome, type EstimateResendProbe,
+  type EstimateDeliveryMode,
 } from "./send-estimate-line-core";
+import type { CreateShareOutcome, EstimateShareContext } from "../estimates/estimate-share-types";
 
 const ESTIMATE_ID = "3f1a7c2e-9b44-4d61-8a0f-5c7e2d9b1a33";
 const CUSTOMER_ID = "8c2b6d1f-4a33-4e55-9b21-77aa2f0c1d44";
 
 const FIRST = { kind: "first-send" } as const;
 const CONFIRMED = { kind: "confirmed-resend" } as const;
+const FIRST_PDF = { kind: "first-send", mode: "pdf-link" } as const;
+const CONFIRMED_PDF = { kind: "confirmed-resend", mode: "pdf-link" } as const;
+
+const SHARE: EstimateShareContext = {
+  url: "https://app.example.com/s/e/" + "A".repeat(43),
+  shareId: "share-1",
+  documentFileId: "docfile-1",
+  expiresAt: "2026-07-31T00:00:00Z",
+};
 
 const SOURCE: EstimateLineSource = {
   customerId: CUSTOMER_ID,
@@ -33,9 +44,13 @@ const SOURCE: EstimateLineSource = {
 
 type Calls = {
   loadEstimate: number; loadRecipient: number; loadConfig: number;
-  probeLastSent: number; loadBusinessName: number; send: number;
+  probeLastSent: number; loadBusinessName: number; createShareLink: number; send: number;
   order: string[];
-  sent: Array<{ lineUserId: string; customerId: string; estimateId: string; text: string }>;
+  shareRequests: string[];
+  sent: Array<{
+    lineUserId: string; customerId: string; estimateId: string; text: string;
+    mode: EstimateDeliveryMode; share: EstimateShareContext | null;
+  }>;
 };
 
 function world(overrides?: {
@@ -46,10 +61,12 @@ function world(overrides?: {
   businessName?: string | null;
   outcome?: EstimateLineTransportOutcome;
   throwOnSend?: boolean;
+  shareOutcome?: CreateShareOutcome;
 }): { deps: EstimateLineCoreDeps; calls: Calls } {
   const calls: Calls = {
     loadEstimate: 0, loadRecipient: 0, loadConfig: 0,
-    probeLastSent: 0, loadBusinessName: 0, send: 0, order: [], sent: [],
+    probeLastSent: 0, loadBusinessName: 0, createShareLink: 0, send: 0,
+    order: [], shareRequests: [], sent: [],
   };
   const deps: EstimateLineCoreDeps = {
     loadEstimate: async () => {
@@ -74,11 +91,16 @@ function world(overrides?: {
       calls.loadBusinessName += 1; calls.order.push("loadBusinessName");
       return overrides?.businessName === undefined ? "GYEON 品川" : overrides.businessName;
     },
+    createShareLink: async (id) => {
+      calls.createShareLink += 1; calls.order.push("createShareLink");
+      calls.shareRequests.push(id);
+      return overrides?.shareOutcome ?? { kind: "created", share: SHARE };
+    },
     send: async (p) => {
       calls.send += 1; calls.order.push("send");
       calls.sent.push({
         lineUserId: p.recipient.lineUserId, customerId: p.customerId,
-        estimateId: p.estimateId, text: p.text,
+        estimateId: p.estimateId, text: p.text, mode: p.mode, share: p.share,
       });
       if (overrides?.throwOnSend) throw new Error("network down");
       return overrides?.outcome ?? { kind: "sent" };
@@ -111,6 +133,26 @@ test("2. a malformed authorization blocks; only the two literals are accepted", 
   assert.equal(isEstimateResendAuthorization(FIRST), true);
   assert.equal(isEstimateResendAuthorization(CONFIRMED), true);
   assert.equal(isValidEstimateId(ESTIMATE_ID), true);
+});
+
+test("2b. the OPTIONAL mode is validated — only text/pdf-link, and no third key", () => {
+  // Accepted: bare kind, and either mode literal on either kind.
+  for (const ok of [
+    { kind: "first-send" }, { kind: "confirmed-resend" },
+    { kind: "first-send", mode: "text" }, { kind: "first-send", mode: "pdf-link" },
+    { kind: "confirmed-resend", mode: "text" }, { kind: "confirmed-resend", mode: "pdf-link" },
+  ]) {
+    assert.equal(isEstimateResendAuthorization(ok), true, JSON.stringify(ok));
+  }
+  // Rejected: an unknown mode, a non-string mode, or any extra key.
+  for (const bad of [
+    { kind: "first-send", mode: "pdf" }, { kind: "first-send", mode: "PDF-LINK" },
+    { kind: "first-send", mode: "" }, { kind: "first-send", mode: 1 },
+    { kind: "first-send", mode: null }, { kind: "first-send", mode: "text", extra: 1 },
+    { kind: "first-send", url: "x" },
+  ]) {
+    assert.equal(isEstimateResendAuthorization(bad), false, JSON.stringify(bad));
+  }
 });
 
 // ── 3-5. Recipient authority ───────────────────────────────────────────────
@@ -345,4 +387,91 @@ test("16. CANARY: no internal memo, cost, margin, internal id or staff name can 
   ]) {
     assert.equal(text.includes(canary), false, `the customer message leaked ${canary}`);
   }
+});
+
+// ── 17-19. buildEstimateLineText — the PDF link block ──────────────────────
+
+test("17. a shareUrl appends the link block as the LAST lines; text mode is unchanged", () => {
+  const base = buildEstimateLineText({
+    estimateNumber: "EST-2026-0001", total: 132000, validUntil: "2026-08-31", businessName: "GYEON 品川",
+  });
+  // Absent / null shareUrl → byte-identical to Phase-1.
+  assert.equal(
+    buildEstimateLineText({
+      estimateNumber: "EST-2026-0001", total: 132000, validUntil: "2026-08-31",
+      businessName: "GYEON 品川", shareUrl: null,
+    }),
+    base,
+  );
+  const withUrl = buildEstimateLineText({
+    estimateNumber: "EST-2026-0001", total: 132000, validUntil: "2026-08-31",
+    businessName: "GYEON 品川", shareUrl: SHARE.url,
+  });
+  // The base message is a strict prefix, and the URL is the final line.
+  assert.ok(withUrl.startsWith(base), "the text-mode message is preserved verbatim as the prefix");
+  assert.equal(withUrl.split("\n").at(-1), SHARE.url, "the URL is the last line");
+  assert.ok(withUrl.includes("お見積書（PDF）は下記からご確認いただけます。"));
+});
+
+// ── 18-23. pdf-link delivery ───────────────────────────────────────────────
+
+test("18. pdf-link success: the share is minted AFTER the preflight and BEFORE the send", async () => {
+  const { deps, calls } = world();
+  const r = await runEstimateLineSend(deps, ESTIMATE_ID, FIRST_PDF);
+  assert.deepEqual(r, { kind: "sent" });
+  assert.deepEqual(calls.order, [
+    "loadEstimate", "loadRecipient", "loadConfig", "probeLastSent",
+    "createShareLink", "loadBusinessName", "send",
+  ]);
+  assert.deepEqual(calls.shareRequests, [ESTIMATE_ID], "the share is keyed by the estimate id");
+  // The send carries the mode and the FULL share context (for the log metadata).
+  assert.equal(calls.sent[0].mode, "pdf-link");
+  assert.deepEqual(calls.sent[0].share, SHARE);
+  assert.ok(calls.sent[0].text.includes(SHARE.url), "the delivered message carries the link");
+});
+
+test("19. pdf-link + a prior sent row → resend-required, NO share is created", async () => {
+  const { deps, calls } = world({ probe: { kind: "sent", sentAt: "2026-07-20T02:15:00Z" } });
+  const r = await runEstimateLineSend(deps, ESTIMATE_ID, FIRST_PDF);
+  assert.deepEqual(r, { kind: "resend-required", sentAt: "2026-07-20T02:15:00Z" });
+  assert.equal(calls.createShareLink, 0, "no snapshot / share side effect before the operator confirms");
+  assert.equal(calls.send, 0);
+});
+
+test("20. pdf-link when the share cannot be produced → pdf-unavailable, NOTHING sent", async () => {
+  const { deps, calls } = world({
+    shareOutcome: { kind: "pdf-unavailable", reason: "pdf-generation-failed" },
+  });
+  const r = await runEstimateLineSend(deps, ESTIMATE_ID, FIRST_PDF);
+  assert.deepEqual(r, { kind: "pdf-unavailable", reason: "pdf-generation-failed" });
+  assert.equal(calls.createShareLink, 1);
+  assert.equal(calls.send, 0, "no LINE call is made when the link could not be created");
+  assert.equal(calls.loadBusinessName, 0, "the message is never even composed");
+});
+
+test("21. confirmed-resend pdf-link skips the preflight, still mints the share and sends", async () => {
+  const { deps, calls } = world({ probe: { kind: "sent", sentAt: "2026-07-20T02:15:00Z" } });
+  const r = await runEstimateLineSend(deps, ESTIMATE_ID, CONFIRMED_PDF);
+  assert.deepEqual(r, { kind: "sent" });
+  assert.equal(calls.probeLastSent, 0, "an explicit resend does not re-run the preflight");
+  assert.equal(calls.createShareLink, 1);
+  assert.equal(calls.sent[0].mode, "pdf-link");
+});
+
+test("22. a pdf-link send FAILURE keeps the URL in copyText for manual delivery", async () => {
+  const { deps, calls } = world({ outcome: { kind: "failed" } });
+  const r = await runEstimateLineSend(deps, ESTIMATE_ID, FIRST_PDF);
+  assert.equal(r.kind, "failed");
+  if (r.kind !== "failed") return;
+  assert.equal(r.copyText, calls.sent[0].text);
+  assert.ok(r.copyText.includes(SHARE.url), "the operator can still copy the working link");
+});
+
+test("23. text mode NEVER creates a share; the send is mode:text with a null share", async () => {
+  const { deps, calls } = world();
+  await runEstimateLineSend(deps, ESTIMATE_ID, FIRST);
+  assert.equal(calls.createShareLink, 0);
+  assert.equal(calls.sent[0].mode, "text");
+  assert.equal(calls.sent[0].share, null);
+  assert.equal(calls.sent[0].text.includes("/s/e/"), false, "no link in a text-mode message");
 });

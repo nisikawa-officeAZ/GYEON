@@ -160,8 +160,27 @@ test("11. the action accepts no recipient, dealer, customer, message, token or m
   assert.match(code, /await getCurrentDealer\(\)/);
   assert.match(code, /\.eq\("dealer_id", dealerId\)/);
   assert.match(code, /\.eq\("is_friend", true\)/);
-  assert.match(code, /logMetadata: \{ estimateId: id, mode: "text" \}/);
+  // The text-mode metadata is exactly the two keys, composed in this file.
+  assert.match(code, /\{ estimateId: id, mode: "text" \}/);
   assert.match(code, /requireLog: true/);
+});
+
+test("11f. pdf-link metadata carries the share identifiers but NEVER the token or URL", () => {
+  const code = codeOf(ACTION);
+  // The share lifecycle is delegated to the server-only orchestrator.
+  assert.match(code, /createShareLink: \(id\) => createEstimateShare\(id\)/);
+  assert.match(code, /from "@\/lib\/estimates\/create-estimate-share"/);
+  // pdf-link metadata = estimateId + mode + the three share identifiers, and
+  // nothing else. The raw token / URL must not be an audited field.
+  assert.match(code, /mode: "pdf-link"/);
+  assert.match(code, /shareId: share\.shareId/);
+  assert.match(code, /documentFileId: share\.documentFileId/);
+  assert.match(code, /expiresAt: share\.expiresAt/);
+  // NB: `line_access_token` / `hasAccessToken` are legitimate and unrelated, so
+  // the share-token canaries are specific rather than a bare "token" substring.
+  for (const forbidden of ["share.url", "rawToken", "shareToken", "tokenHash", "token_hash"]) {
+    assert.equal(code.includes(forbidden), false, `pdf-link metadata references ${forbidden}`);
+  }
 });
 
 test("11b. the resend preflight INSPECTS the query error and never invents a total", () => {
@@ -228,6 +247,15 @@ test("13. the decision core imports nothing that would make it unimportable", ()
   ]) {
     assert.equal(code.includes(forbidden), false, `the core references ${forbidden}`);
   }
-  // It imports nothing at all — every dependency arrives as a parameter.
-  assert.equal(/^import\s/m.test(code), false, "the core must have no imports");
+  // R92B: the core gains EXACTLY ONE import, and it is a TYPE-ONLY import from the
+  // pure share-types module — fully erased by tsx/esbuild at runtime, so the core
+  // remains importable under `node --import tsx --test`. No value/runtime import
+  // is permitted (a value import of a server-only module would break the runner).
+  const importLines = code.match(/^import .*$/gm) ?? [];
+  assert.equal(importLines.length, 1, "the core has exactly one import line");
+  assert.match(
+    importLines[0],
+    /^import type \{ [^}]* \} from "\.\.\/estimates\/estimate-share-types";$/,
+    "the sole import is type-only, from the pure share-types module",
+  );
 });

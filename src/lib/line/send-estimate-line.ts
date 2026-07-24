@@ -20,7 +20,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
-import { sendLineTextMessage } from "./send-line-message";
+import { sendLineTextMessage, type LineLogMetadata } from "./send-line-message";
+import { createEstimateShare } from "@/lib/estimates/create-estimate-share";
 import {
   runEstimateLineSend,
   type EstimateLineCoreDeps,
@@ -133,15 +134,36 @@ export async function sendEstimateLine(
       return { kind: "unavailable" };
     },
 
-    send: async ({ recipient, customerId, estimateId: id, text }): Promise<EstimateLineTransportOutcome> => {
+    // pdf-link only. Delegates the whole snapshot→document→share lifecycle to the
+    // server-only orchestrator. The raw token is returned ONLY inside share.url;
+    // this file never reads it apart from handing the URL to the core for the
+    // message body.
+    createShareLink: (id) => createEstimateShare(id),
+
+    send: async ({ recipient, customerId, estimateId: id, text, mode, share }): Promise<EstimateLineTransportOutcome> => {
+      // Log metadata is composed HERE, never accepted from a caller. The raw
+      // token / URL is deliberately NOT among these fields — only the share's
+      // identifiers and expiry are audited.
+      const logMetadata: LineLogMetadata =
+        mode === "pdf-link" && share
+          ? {
+              estimateId: id,
+              mode: "pdf-link",
+              shareId: share.shareId,
+              documentFileId: share.documentFileId,
+              expiresAt: share.expiresAt,
+            }
+          : { estimateId: id, mode: "text" };
       const result = await sendLineTextMessage(recipient.lineUserId, text, {
         purpose: "estimate",
         title: null,
         customerId,
         lineCustomerId: recipient.lineCustomerId,
-        // EXACTLY these two keys. Composed here, never accepted from a caller.
-        logMetadata: { estimateId: id, mode: "text" },
+        logMetadata,
         requireLog: true,
+        // pdf-link only: LINE gets the working URL; the audit log gets a
+        // placeholder so no raw token is ever persisted.
+        redactLog: mode === "pdf-link",
       });
       if ("success" in result) return { kind: "sent" };
       if (result.reason === "log-unavailable") return { kind: "log-unavailable" };

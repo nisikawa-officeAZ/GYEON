@@ -16,9 +16,11 @@ import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
-  EstimateLineAction, runEstimateLineAttempt, type EstimateLineSender,
+  EstimateLineAction, runEstimateLineAttempt, runShareListLoad, runShareRevoke,
+  type EstimateLineSender,
 } from "./EstimateLineAction";
 import type { EstimateLineResult } from "@/lib/line/send-estimate-line-core";
+import type { EstimateShareListItem } from "@/lib/estimates/estimate-share-types";
 
 (globalThis as { React?: typeof React }).React = React;
 
@@ -130,8 +132,11 @@ test("6. every contracted state and control exists in the source tree", () => {
   ]) {
     assert.ok(code.includes(marker), `missing state/control: ${marker}`);
   }
-  // The confirmation names both the customer and the estimate.
-  assert.match(code, /\{customerName\} さんの LINE に見積 \{estimateNumber\} を送信します/);
+  // The confirmation names both the customer and the estimate. R92B splits the
+  // sentence to insert an optional 「PDFリンク付きで」 clause, so the stable prefix
+  // and the closing verb are asserted separately.
+  assert.match(code, /\{customerName\} さんの LINE に見積 \{estimateNumber\} を/);
+  assert.match(code, /\{stage\.authorization\.mode === "pdf-link" \? "PDFリンク付きで" : ""\}送信します。/);
   // The in-flight control is disabled.
   assert.match(code, /data-testid="line-send-submitting"\s*\n?\s*disabled/);
   // The prior send time is shown on a resend, and a null timestamp still reads
@@ -189,9 +194,10 @@ test("6e. both the attemptedAt and 日時不明 branches exist, and resend uses 
   );
   // The nullish branch supplies the fallback timestamp label.
   assert.match(block, /\{result\.attemptedAt \?\? "日時不明"\}/);
-  // Explicit resend + cancel, and the resend carries ONLY the confirmed authorization.
+  // Explicit resend + cancel. R92B carries the chosen delivery mode through the
+  // resend so a pdf-link resend stays pdf-link.
   assert.match(block, /data-testid="line-resend-indeterminate-confirm"/);
-  assert.match(block, /onClick=\{\(\) => attempt\(\{ kind: "confirmed-resend" \}\)\}/);
+  assert.match(block, /onClick=\{\(\) => attempt\(\{ kind: "confirmed-resend", mode \}\)\}/);
   assert.match(block, /data-testid="line-resend-indeterminate-cancel"/);
   assert.match(block, /onClick=\{\(\) => setStage\(\{ kind: "idle" \}\)\}/);
 });
@@ -201,21 +207,44 @@ test("6f. the ordinary Close/reset is hidden for BOTH resend-required states", (
   assert.match(code,
     /result\.kind !== "resend-required" && result\.kind !== "resend-required-indeterminate"/,
     "the reset control must exclude both resend prompts");
-  // Neither resend state renders while a plain send is possible, and neither auto-sends.
-  assert.equal(code.includes("useEffect"), false, "no effect may fire a send");
 });
 
-// ── 7-8. Phase-1 scope and the copy fallback ───────────────────────────────
+// ── 7. Phase-2 PDF-link selector (parallel entry, muscle memory preserved) ───
 
-test("7. NO PDF-link selector exists anywhere in the tree", () => {
+test("7. the PDF-link selector exists as a PARALLEL entry that adds no step to text", () => {
   const html = render();
   const code = readFileSync(SRC, "utf8");
-  for (const forbidden of ["pdf-link", "pdfLink", "PDFリンク", "PDF付き", "mode-select", "line-mode"]) {
-    assert.equal(html.includes(forbidden), false, `rendered output offers ${forbidden}`);
-    assert.equal(code.includes(forbidden), false, `source declares ${forbidden}`);
+  // The text entry is UNCHANGED — same testid, same label, still one click.
+  assert.ok(html.includes('data-testid="line-send-open"'));
+  assert.ok(html.includes("LINEで送信"));
+  // The PDF entry sits ALONGSIDE it in the idle state (not a mode toggle that
+  // adds a step) and opens the flow directly in pdf-link mode.
+  assert.ok(html.includes('data-testid="line-send-open-pdf"'));
+  assert.ok(html.includes("PDF付きで送信"));
+  assert.match(code, /onClick=\{\(\) => open\("text"\)\}/);
+  assert.match(code, /onClick=\{\(\) => open\("pdf-link"\)\}/);
+  // `open` seeds the confirming stage with the chosen mode on the authorization.
+  assert.match(code, /setStage\(\{ kind: "confirming", authorization: \{ kind: "first-send", mode: chosen \} \}\)/);
+  // Rendering still sends nothing.
+  let calls = 0;
+  render(async () => { calls += 1; return { kind: "sent" }; });
+  assert.equal(calls, 0);
+});
+
+test("7b. the pdf-unavailable outcome has its own state and per-reason messages", () => {
+  const code = readFileSync(SRC, "utf8");
+  assert.match(code, /result\?\.kind === "pdf-unavailable"/);
+  assert.match(code, /data-testid="line-state-pdf-unavailable"/);
+  // Every PdfUnavailableReason the core can surface has an operator message.
+  for (const reason of [
+    "invalid-app-url", "pdf-generation-failed", "document-persist-failed",
+    "share-create-failed", "reference-integrity-failed",
+  ]) {
+    assert.match(code, new RegExp(`"${reason}":\\s*"`), `no message for pdf reason ${reason}`);
   }
-  // Phase 1 never asks the server for a mode.
-  assert.equal(code.includes('"pdf"'), false, "no pdf destination is constructible here");
+  // It is NOT a resend prompt, so the ordinary Close/reset still appears for it.
+  assert.match(code,
+    /result\.kind !== "resend-required" && result\.kind !== "resend-required-indeterminate"/);
 });
 
 test("8. the copy fallback appears ONLY for failed/unknown, and is the server's text", () => {
@@ -237,13 +266,19 @@ test("9. the component calls the same attempt core, with one guard, and never au
     "exactly one implementation");
   assert.match(code, /void runEstimateLineAttempt\(\{/, "the component calls it");
   assert.equal((code.match(/useRef\(false\)/g) ?? []).length, 1, "exactly one in-flight guard");
-  // No effect may fire a send.
-  assert.equal(code.includes("useEffect"), false, "no effect — a send is only ever an operator action");
+  // R92B-H1: there IS now a mount effect, but it loads the share list ONLY — it
+  // must never call `send`/`attempt`. The effect body calls `reloadShares`.
+  const effectBody = code.slice(code.indexOf("useEffect(() => {"), code.indexOf("}, [reloadShares]);"));
+  assert.ok(effectBody.includes("reloadShares"), "the effect loads the share list");
+  assert.equal(effectBody.includes("send"), false, "the effect must not reference send");
+  assert.equal(effectBody.includes("attempt"), false, "the effect must not initiate a send attempt");
+  // `reloadShares` is a READ-ONLY lister — it wires runShareListLoad, not the sender.
+  assert.match(code, /const reloadShares = useCallback\(\s*\(\) => runShareListLoad\(\{ estimateId, listShares, onShares: setShares \}\)/);
   // Handlers are wrapped, so a MouseEvent can never become an argument.
   assert.equal(/onClick=\{attempt\}/.test(code), false);
 });
 
-test("10. the component imports no transport, action, Supabase or token", () => {
+test("10. the component imports no transport, LINE-send action, Supabase or token", () => {
   const code = readFileSync(SRC, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
   for (const forbidden of [
     "send-line-message", "create-line-message-log", "send-estimate-line\"",
@@ -252,7 +287,79 @@ test("10. the component imports no transport, action, Supabase or token", () => 
   ]) {
     assert.equal(code.includes(forbidden), false, `the component references ${forbidden}`);
   }
-  // The sender arrives as a prop — the component owns no server binding.
+  // The LINE sender arrives as a prop — the component owns no LINE-send binding.
   assert.match(code, /send: EstimateLineSender;/);
   assert.match(code, /import type \{[\s\S]*?EstimateResendAuthorization,?[\s\S]*?\} from "@\/lib\/line\/send-estimate-line-core"/);
+  // R92B-H1: the list/revoke Server Actions ARE imported (read-only + revoke),
+  // wired by default and overridable for tests.
+  assert.match(code, /import \{[\s\S]*?listActiveEstimateShares,[\s\S]*?revokeEstimateShare,?[\s\S]*?\} from "@\/lib\/estimates\/estimate-share-actions"/);
+});
+
+// ── 11-13. The persistent share list and revoke (R92B-H1) ──────────────────
+
+test("11. runShareListLoad passes the lister's result through, and a failure never sends", async () => {
+  const rows: EstimateShareListItem[] = [
+    { id: "s-1", createdAt: "2026-07-24T00:00:00Z", expiresAt: "2026-07-31T00:00:00Z" },
+  ];
+  let seen: EstimateShareListItem[] | null = null;
+  let listedFor = "";
+  await runShareListLoad({
+    estimateId: ESTIMATE_ID,
+    listShares: async (id) => { listedFor = id; return rows; },
+    onShares: (s) => { seen = s; },
+  });
+  assert.equal(listedFor, ESTIMATE_ID, "the list is keyed by the estimate id");
+  assert.deepEqual(seen, rows);
+
+  // A throwing lister collapses to an empty list — the UI degrades, nothing sends.
+  let seen2: EstimateShareListItem[] | null = null;
+  await runShareListLoad({
+    estimateId: ESTIMATE_ID,
+    listShares: async () => { throw new Error("network"); },
+    onShares: (s) => { seen2 = s; },
+  });
+  assert.deepEqual(seen2, []);
+});
+
+test("12. runShareRevoke revokes then RE-LISTS on success, and does not re-list on failure", async () => {
+  const calls: string[] = [];
+  const okRes = await runShareRevoke({
+    estimateId: ESTIMATE_ID, shareId: "s-1",
+    revokeShare: async (id, shareId) => { calls.push(`revoke:${id}:${shareId}`); return { ok: true }; },
+    reload: async () => { calls.push("reload"); },
+  });
+  assert.deepEqual(okRes, { ok: true });
+  assert.deepEqual(calls, [`revoke:${ESTIMATE_ID}:s-1`, "reload"], "a successful revoke triggers exactly one re-list");
+
+  const calls2: string[] = [];
+  const failRes = await runShareRevoke({
+    estimateId: ESTIMATE_ID, shareId: "s-2",
+    revokeShare: async () => { calls2.push("revoke"); return { ok: false }; },
+    reload: async () => { calls2.push("reload"); },
+  });
+  assert.deepEqual(failRes, { ok: false });
+  assert.deepEqual(calls2, ["revoke"], "a failed revoke must NOT re-list");
+});
+
+test("13. the revoke UI renders ONLY the safe projection — expiry + control, no secret", () => {
+  const code = readFileSync(SRC, "utf8");
+  for (const marker of ["line-share-list", "line-share-row", "line-share-revoke"]) {
+    assert.ok(code.includes(marker), `missing share-list control: ${marker}`);
+  }
+  // The expiry is shown; the revoke wires runShareRevoke with a re-list reload.
+  assert.match(code, /有効期限: \{s\.expiresAt\}/);
+  assert.match(code, /runShareRevoke\(\{ estimateId, shareId: s\.id, revokeShare, reload: reloadShares \}\)/);
+  // No SHARE token/hash/storage-path field is ever referenced. (Bare "token"
+  // would collide with the unrelated `no-access-token` LINE block reason, so the
+  // canaries are the specific share-secret shapes.)
+  const stripped = code.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  for (const forbidden of [
+    "token_hash", "tokenHash", "rawToken", "s.token", "s.url",
+    "file_path", "filePath", "documentFileId", "document_file_id", "storagePath",
+  ]) {
+    assert.equal(stripped.includes(forbidden), false, `the component exposes ${forbidden}`);
+  }
+  // The projected item type carries only id/createdAt/expiresAt, so a secret field
+  // has nowhere to come from in the first place.
+  assert.match(code, /import type \{ EstimateShareListItem \}/);
 });
