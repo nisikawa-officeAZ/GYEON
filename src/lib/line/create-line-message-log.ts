@@ -1,8 +1,23 @@
-"use server";
+import "server-only";
 
 // DealerOS — LINE Message Log CRUD (PHASE47)
 // Creates and updates log entries for LINE send operations.
 // Called by send-line-message.ts around every LINE API call.
+//
+// R90B — INTERNAL SERVER MODULE, not a Server Action.
+//
+// These helpers take a caller-supplied Supabase client, a trusted server-side
+// dealerId and a log payload. As a "use server" module every export was a
+// client-callable endpoint, which meant a browser could in principle hand in its
+// own client, dealer id and payload and write an arbitrary audit row. There is
+// no callsite that needs that: the only importers are `send-line-message.ts` and
+// `send-queued-line-item.ts`, both server-side. `server-only` makes the module
+// unreachable from a client bundle at BUILD time rather than by convention.
+//
+// Note on privileges: migration 104 grants `authenticated` SELECT ONLY on
+// line_message_logs (service_role holds INSERT/UPDATE). A caller that passes a
+// session-scoped client therefore cannot write here — see send-line-message.ts,
+// which passes an admin client for exactly these three calls.
 
 import { SupabaseClient } from "@supabase/supabase-js";
 import { LineMessageInput, LineMessagePurpose } from "./line-message-types";

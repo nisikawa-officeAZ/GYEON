@@ -13,6 +13,8 @@ import { createInvoiceFromEstimate } from "@/lib/invoices/create-invoice";
 import { sortByCategoryOrder } from "@/lib/estimates/category-order";
 import EstimateSummary from "./EstimateSummary";
 import EstimateStatusControl from "./EstimateStatusControl";
+import EstimateLineAction from "./EstimateLineAction";
+import { sendEstimateLine } from "@/lib/line/send-estimate-line";
 
 // v17 workspace card. Presentation only — no data/logic here.
 function Card({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
@@ -140,6 +142,15 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, v
             >
               PDF表示
             </Link>
+            {/* Immediate download — the SAME production renderer as the preview,
+                streamed straight to the operator. No Storage write, so this works
+                without the documents bucket. */}
+            <a
+              href={`/pdf/estimate?estimateId=${encodeURIComponent(estimate.id)}&download=1`}
+              className={`${btn} bg-slate-700 hover:bg-slate-600 text-slate-200`}
+            >
+              PDFダウンロード
+            </a>
             {onCreateWorkOrder && (
               <button onClick={onCreateWorkOrder} className={`${btn} bg-slate-700 hover:bg-slate-600 text-slate-200`}>
                 施工指示作成
@@ -290,6 +301,18 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, v
             <p className="text-xs text-slate-600">
               送付履歴はありません（LINE・メール・PDF送付時に記録されます）
             </p>
+          </Card>
+
+          {/* LINE delivery (R90B Phase 1 — text only). The action receives the
+              persisted estimate id and the dealer-scoped Server Action; it never
+              sees a recipient, a token or the message body. */}
+          <Card title="LINE送信">
+            <EstimateLineAction
+              estimateId={estimate.id}
+              estimateNumber={estimateDisplayNo(estimate)}
+              customerName={customerName}
+              send={sendEstimateLine}
+            />
           </Card>
         </div>
       </div>

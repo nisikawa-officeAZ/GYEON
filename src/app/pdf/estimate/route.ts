@@ -11,6 +11,9 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getEstimatePdfData } from "@/lib/pdf/get-estimate-pdf-data";
 import { getBrandProfile } from "@/lib/pdf/brand-profile";
 import { renderEstimateDocumentPdf } from "@/lib/pdf/render-estimate-document";
+// Pure, import-free header construction — see pdf-response-headers.ts for why it
+// is a separate module rather than local helpers.
+import { buildContentDisposition, resolveDisposition } from "./pdf-response-headers";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -35,10 +38,17 @@ export async function GET(req: NextRequest) {
     return new Response("PDFの生成に失敗しました", { status: 500 });
   }
 
+  // The BYTES are identical in both modes — only the disposition differs, so an
+  // operator who previews and then downloads receives the same document.
+  const disposition = resolveDisposition(req.nextUrl.searchParams.get("download"));
+
   return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${estimate.estimate_number ?? estimate.estimate_no}.pdf"`,
+      "Content-Disposition": buildContentDisposition(
+        disposition,
+        estimate.estimate_number ?? estimate.estimate_no,
+      ),
       "Cache-Control": "no-store",
     },
   });

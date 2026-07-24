@@ -1,15 +1,53 @@
-"use server";
+import "server-only";
 
 // SERVER ONLY — Uses LINE access token from dealer_settings.
 // Never expose access_token to client.
+//
+// R90B — INTERNAL SERVER MODULE, not a Server Action.
+//
+// This is a GENERIC transport: it accepts a recipient, arbitrary message content
+// and log options. As a "use server" module that generic surface was a
+// client-callable endpoint, so a browser could push any text to any LINE user
+// the dealer can reach. No production callsite outside this directory needs
+// that. The estimate feature's client boundary is `send-estimate-line.ts`, whose
+// only client argument is an estimateId — everything else is resolved here,
+// server-side. `server-only` enforces that at build time.
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { LineMessage } from "./line-types";
 import { LineMessagePurpose } from "./line-message-types";
 import { createPendingLog, markLogSent, markLogFailed } from "./create-line-message-log";
 
 const LINE_API_BASE = "https://api.line.me/v2/bot";
+
+// ── Result ──────────────────────────────────────────────────────────────────
+
+/**
+ * Why a send did not succeed. Additive and OPTIONAL, so the historical
+ * `{ error: string }` shape every existing caller matches on is preserved.
+ */
+export type LineSendFailureReason =
+  | "line-disabled"
+  | "no-access-token"
+  /** `requireLog` was set and the pending log could not be created — nothing was sent. */
+  | "log-unavailable"
+  /** The LINE API answered with a non-OK status. */
+  | "api-failure";
+
+export type LineSendResult =
+  | { success: true }
+  | { error: string; reason?: LineSendFailureReason };
+
+/**
+ * Extra log fields, merged BESIDE the canonical messages (never over them).
+ *
+ * Flat scalars only. The type is a convenience, not the security boundary — the
+ * boundary is that this module is server-only and the estimate action accepts no
+ * metadata from its caller at all.
+ */
+export type LineLogMetadata = Readonly<Record<string, string | number | boolean | null>>;
 
 // ─── Fetch LINE profile (server-side) ────────────────────────────────────────
 
@@ -35,26 +73,45 @@ export async function sendLineMessage(
     body?:            string;
     customerId?:      string | null;
     lineCustomerId?:  string | null;
+    /** Extra audit fields, stored under `payload.metadata`. Never replaces `payload.messages`. */
+    logMetadata?:     LineLogMetadata;
+    /**
+     * FAIL CLOSED on audit loss. When true, a pending log that cannot be created
+     * aborts the send: no last_message_at write, no LINE call. Left undefined by
+     * the pre-existing internal senders, whose best-effort behaviour is unchanged.
+     */
+    requireLog?:      boolean;
   }
-): Promise<{ error: string } | { success: true }> {
+): Promise<LineSendResult> {
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
 
+  // Tenant-scoped session client: dealer_settings and line_customers both grant
+  // authenticated SELECT/INSERT/UPDATE (migration 104), so RLS still applies.
   const supabase = await createClient();
+
+  // Log-mutation client. SEPARATE and deliberately minimal in scope: migration
+  // 104 grants `authenticated` SELECT ONLY on line_message_logs, so every write
+  // through the session client silently no-ops and the audit trail is lost.
+  // Created only AFTER the dealer is resolved, used ONLY for the three log
+  // helpers below, and never returned, logged or handed to anything else.
+  const logSupabase = createAdminClient();
+
   const { data: settings } = await supabase
     .from("dealer_settings")
     .select("line_access_token, line_enabled")
     .eq("dealer_id", dealer.dealer_id)
     .maybeSingle();
 
-  if (!settings?.line_enabled)       return { error: "LINE連携が無効です" };
-  if (!settings?.line_access_token)  return { error: "LINEアクセストークンが設定されていません" };
+  if (!settings?.line_enabled)       return { error: "LINE連携が無効です", reason: "line-disabled" };
+  if (!settings?.line_access_token)  return { error: "LINEアクセストークンが設定されていません", reason: "no-access-token" };
 
   const purpose: LineMessagePurpose = options?.purpose ?? "manual";
   const body = options?.body ?? (messages[0] && "text" in messages[0] ? messages[0].text : "");
 
-  // Create pending log
-  const logId = await createPendingLog(supabase, dealer.dealer_id, {
+  // Create pending log. `messages` is spread FIRST and metadata lands on its own
+  // key, so metadata can never overwrite the canonical LINE payload.
+  const logId = await createPendingLog(logSupabase, dealer.dealer_id, {
     line_user_id:     lineUserId,
     customer_id:      options?.customerId     ?? null,
     line_customer_id: options?.lineCustomerId ?? null,
@@ -62,8 +119,16 @@ export async function sendLineMessage(
     purpose,
     title:            options?.title          ?? null,
     body,
-    payload:          { messages },
+    payload:          options?.logMetadata
+      ? { messages, metadata: options.logMetadata }
+      : { messages },
   });
+
+  // No auditable record → no send. Returning before last_message_at keeps the
+  // customer's conversation state honest about what was actually delivered.
+  if (options?.requireLog && !logId) {
+    return { error: "送信記録を作成できませんでした", reason: "log-unavailable" };
+  }
 
   // Update last_message_at
   await supabase
@@ -85,11 +150,11 @@ export async function sendLineMessage(
     const err = await res.json().catch(() => ({}));
     const errMsg = (err as { message?: string }).message ?? res.statusText;
     console.error("sendLineMessage error:", err);
-    if (logId) await markLogFailed(supabase, logId, dealer.dealer_id, errMsg);
-    return { error: `LINE送信エラー: ${errMsg}` };
+    if (logId) await markLogFailed(logSupabase, logId, dealer.dealer_id, errMsg);
+    return { error: `LINE送信エラー: ${errMsg}`, reason: "api-failure" };
   }
 
-  if (logId) await markLogSent(supabase, logId, dealer.dealer_id);
+  if (logId) await markLogSent(logSupabase, logId, dealer.dealer_id);
   return { success: true };
 }
 
@@ -103,8 +168,10 @@ export async function sendLineTextMessage(
     title?:          string | null;
     customerId?:     string | null;
     lineCustomerId?: string | null;
+    logMetadata?:    LineLogMetadata;
+    requireLog?:     boolean;
   }
-): Promise<{ error: string } | { success: true }> {
+): Promise<LineSendResult> {
   return sendLineMessage(
     lineUserId,
     [{ type: "text", text }],
