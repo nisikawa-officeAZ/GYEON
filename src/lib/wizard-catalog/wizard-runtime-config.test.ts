@@ -411,3 +411,199 @@ test("the arg-less server wrapper is UNCHANGED by this candidate", () => {
   assert.match(code, /getRank:\s*getAuthoritativeShopRank/, "still wires the arg-less rank wrapper");
   assert.equal(/EstimateSaveActorContext/.test(code), false, "not migrated in this candidate");
 });
+
+// ── B1.1-B2: coupon / coefficient / adjustment projection ────────────────────
+
+const ADJ = {
+  id: "adj-1", dealer_id: DEALER, ppf_method_code: "full", coating_code: "pure-evo",
+  adjustment_type: "amount", adjustment_value: 30_000, is_active: true, deleted_at: null,
+};
+
+function couponRow(over: Partial<WizardCatalogRow> = {}): WizardCatalogRow {
+  return row({
+    kind: "coupon", code: "coupon-a", owner_scope: "dealer", label_ja: "新規ご来店",
+    coupon_discount_type: "amount", coupon_discount_value: 5000, coupon_combinable: true,
+    coupon_valid_from: null, coupon_valid_to: null, ...over,
+  });
+}
+
+/**
+ * `readers()` defaults the dealer rank to "shop". PPF rows carry PPF_RANKS, which excludes "shop",
+ * so a PPF fixture is rank-filtered out unless the reader's rank is one that may sell PPF. The
+ * `rank` parameter exists for exactly that: without it the coefficient assertions below silently
+ * exercised nothing.
+ */
+async function resolveWith(
+  rows: WizardCatalogRow[],
+  over: Partial<WizardConfigReaders> = {},
+  rank: ShopRank = "shop",
+) {
+  return resolveWizardRuntimeConfig({ ...readers({ rows, rank }), ...over });
+}
+
+test("B1.1-B2: dealer coupons project into screenConfig and pricingConfig", async () => {
+  const r = await resolveWith([...globals(), ...menus(), couponRow()]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.equal(r.screenConfig.coupons.length, 1);
+  assert.equal(r.screenConfig.coupons[0].id, "coupon-a");
+  assert.equal(r.pricingConfig.coupons?.length, 1);
+  assert.deepEqual(r.pricingConfig.coupons?.[0].value, { kind: "amount", amountYen: 5000 });
+});
+
+test("B1.1-B2: a percent coupon is converted from 0–100 to BASIS POINTS exactly once", async () => {
+  const r = await resolveWith([
+    ...globals(), ...menus(),
+    couponRow({ coupon_discount_type: "percent", coupon_discount_value: 10 }),
+  ]);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  // 10 (percent, as 103 stores it) → 1000bp for the pricing engine.
+  assert.deepEqual(r.pricingConfig.coupons?.[0].value, { kind: "percent", basisPoints: 1000 });
+  // The screen keeps the AUTHORED unit, so the operator sees 10%, not 1000.
+  assert.equal(r.screenConfig.coupons[0].discountValue, 10);
+});
+
+test("B1.1-B2: a malformed or out-of-range coupon row fails closed", async () => {
+  for (const bad of [
+    { coupon_discount_type: null },
+    { coupon_discount_type: "ratio" },
+    { coupon_discount_value: null },
+    { coupon_discount_value: -1 },
+    { coupon_discount_value: 1.5 },
+    { coupon_discount_type: "percent", coupon_discount_value: 101 },
+  ] as Partial<WizardCatalogRow>[]) {
+    const r = await resolveWith([...globals(), ...menus(), couponRow(bad)]);
+    assert.equal(r.ok, false);
+    if (!r.ok) assert.equal(r.reason, "malformed-coupon-row");
+  }
+});
+
+// Every assertion below runs at rank "ppf_installer" — the one rank that is eligible for PPF
+// WITHOUT also being eligible for window film.
+//
+// The rank matters twice over. At "shop" the PPF fixture row is rank-filtered away entirely and the
+// assertions silently exercise nothing. At "detailer" the row IS eligible, but detailer may also
+// sell window film, so `buildConfigs` correctly fails closed with `window-film-no-film-types`
+// before reaching any PPF assertion — this fixture deliberately carries no dealer film_type row.
+// "ppf_installer" isolates the PPF projection from that unrelated precondition.
+const PPF_RANK: ShopRank = "ppf_installer";
+
+test("B1.1-B2: a valid PPF install coefficient projects, keyed by CODE", async () => {
+  const r = await resolveWith(
+    [
+      ...globals(), ...menus(),
+      row({ kind: "ppf_type_group", code: "ppf-custom", owner_scope: "dealer", ranks: PPF_RANKS, categories: ["ppf"], install_coefficient_bp: 12_500 }),
+    ],
+    {},
+    PPF_RANK,
+  );
+  assert.equal(r.ok, true, "the fixture must resolve, not be rank-filtered away");
+  if (!r.ok) return;
+  assert.equal(r.pricingConfig.installCoefficientBpByCode?.["ppf-custom"], 12_500);
+});
+
+test("B1.1-B2: a PPF row WITHOUT a coefficient contributes no key (absent, not zero)", async () => {
+  const r = await resolveWith(
+    [
+      ...globals(), ...menus(),
+      row({ kind: "ppf_type_group", code: "ppf-plain", owner_scope: "dealer", ranks: PPF_RANKS, categories: ["ppf"] }),
+    ],
+    {},
+    PPF_RANK,
+  );
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.equal("ppf-plain" in (r.pricingConfig.installCoefficientBpByCode ?? {}), false);
+});
+
+test("B1.1-B2: an invalid PPF install coefficient fails closed", async () => {
+  for (const bad of [0, -1, 1.5]) {
+    const r = await resolveWith(
+      [
+        ...globals(), ...menus(),
+        row({ kind: "ppf_type_group", code: "ppf-bad", owner_scope: "dealer", ranks: PPF_RANKS, categories: ["ppf"], install_coefficient_bp: bad }),
+      ],
+      {},
+      PPF_RANK,
+    );
+    assert.equal(r.ok, false, `coefficient ${bad} must be refused, not silently ignored`);
+    if (!r.ok) assert.equal(r.reason, "malformed-catalog-row");
+  }
+});
+
+test("B1.1-B2: adjustment rules project; an absent reader means simply no rules", async () => {
+  const none = await resolveWith([...globals(), ...menus()]);
+  assert.equal(none.ok, true);
+  if (none.ok) assert.deepEqual(none.pricingConfig.ppfCoatingAdjustments, []);
+
+  const some = await resolveWith([...globals(), ...menus()], {
+    getPpfCoatingAdjustments: async () => ({ ok: true, rows: [ADJ] }),
+  });
+  assert.equal(some.ok, true);
+  if (some.ok) {
+    assert.equal(some.pricingConfig.ppfCoatingAdjustments?.length, 1);
+    assert.equal(some.pricingConfig.ppfCoatingAdjustments?.[0].ruleId, "adj-1");
+  }
+});
+
+test("B1.1-B2: a FAILED adjustment read is fail-closed, never treated as 'no rules'", async () => {
+  const r = await resolveWith([...globals(), ...menus()], {
+    getPpfCoatingAdjustments: async () => ({ ok: false }),
+  });
+  assert.equal(r.ok, false);
+  if (!r.ok) assert.equal(r.reason, "adjustments-read-failed");
+
+  const thrown = await resolveWith([...globals(), ...menus()], {
+    getPpfCoatingAdjustments: async () => { throw new Error("boom"); },
+  });
+  assert.equal(thrown.ok, false);
+  if (!thrown.ok) assert.equal(thrown.reason, "adjustments-read-failed");
+});
+
+test("B1.1-B2: an adjustment row belonging to ANOTHER dealer is refused", async () => {
+  const r = await resolveWith([...globals(), ...menus()], {
+    getPpfCoatingAdjustments: async () => ({ ok: true, rows: [{ ...ADJ, dealer_id: "d0000000-0000-0000-0000-0000000000ff" }] }),
+  });
+  assert.equal(r.ok, false);
+  if (!r.ok) assert.equal(r.reason, "malformed-adjustment-row");
+});
+
+test("B1.1-B2: a malformed adjustment row is refused", async () => {
+  for (const bad of [
+    { adjustment_type: "ratio" },
+    { adjustment_value: -1 },
+    { adjustment_value: 1.5 },
+    { ppf_method_code: "Full Coat" },
+    { coating_code: "" },
+  ]) {
+    const r = await resolveWith([...globals(), ...menus()], {
+      getPpfCoatingAdjustments: async () => ({ ok: true, rows: [{ ...ADJ, ...bad }] }),
+    });
+    assert.equal(r.ok, false);
+    if (!r.ok) assert.equal(r.reason, "malformed-adjustment-row");
+  }
+});
+
+test("B1.1-B2: the calculation date reaches pricingConfig (no clock is read in the core)", async () => {
+  const r = await resolveWith([...globals(), ...menus()], {
+    getCalculationDate: () => "2026-07-26",
+  });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.pricingConfig.calculationDate, "2026-07-26");
+});
+
+test("B1.1-B2: the dealer-bound entry binds the adjustment reader to the SAME tenant", async () => {
+  const seen: string[] = [];
+  const base = readers({ rows: [...globals(), ...menus()] });
+  const bound: WizardDealerBoundConfigReaders = {
+    getRank: () => base.getRank(),
+    getCatalog: () => base.getCatalog(),
+    getLifecycle: (d) => base.getLifecycle(d),
+    getCatalogRows: (d) => base.getCatalogRows(d),
+    getPpfCoatingAdjustments: async (d) => { seen.push(d); return { ok: true, rows: [ADJ] }; },
+  };
+  const r = await resolveWizardRuntimeConfigForDealer(DEALER, bound);
+  assert.equal(r.ok, true);
+  assert.deepEqual(seen, [DEALER]);
+});

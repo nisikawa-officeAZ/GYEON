@@ -89,11 +89,34 @@ export type EstimateSaveDiscount = {
   appliedAmount: number | null; // from the pricing result (engine-applied); never recalculated here
 };
 
-// ── Coupon — intent only; coupons remain deferred (never financially applied) ──
+// ── Coupon — B1.1: coupons are now financially applied, so the RESOLVED result is recorded ──
+/**
+ * One coupon exactly as it was applied to THIS estimate. These are SNAPSHOT VALUES, frozen at save:
+ * label, type, authored value and applied yen are copied, never re-resolved from the coupon rule on
+ * read. A later edit to the coupon — or archiving it entirely — therefore cannot change how an
+ * already-saved estimate is explained.
+ */
+export type EstimateSaveCouponApplication = {
+  couponId: string;
+  code: string;
+  label: string;
+  discountType: "amount" | "percent";
+  /** yen for `amount`; integer basis points for `percent`. The authored value, frozen. */
+  discountValue: number;
+  /** yen actually contributed to `couponTotal`, frozen. */
+  appliedAmount: number;
+};
+
 export type EstimateSaveCoupon = {
   selectedCouponIds: string[];
-  status: "none" | "selected_not_priced";
-  appliedAmount: number | null; // ALWAYS null/0 until a production coupon model exists
+  /** `applied` ⇒ every selected coupon resolved and is reflected in `appliedAmount`. */
+  status: "none" | "selected_not_priced" | "applied";
+  appliedAmount: number | null;
+  /**
+   * Optional so the legacy mapper (which never resolves coupons) still satisfies the contract.
+   * Absent or empty ⇒ no coupon was applied; it is never a placeholder for an unknown application.
+   */
+  applications?: EstimateSaveCouponApplication[];
 };
 
 // ── Pricing summary (final figures from the production engine; nullable until complete) ──
@@ -127,6 +150,14 @@ export type EstimateSaveMetadata = {
   draftLastUpdatedAt: string | null; // from draft.metadata.lastUpdatedAt (existing; not generated)
   previewConfirmed: boolean;         // from draft.review.previewConfirmed
   estimateNumber: null;              // reserved — server-assigned in a FUTURE numbering phase
+  /**
+   * B1.1 — the dealer configuration revision that produced these numbers, copied from the
+   * authoritative runtime configuration. NOT generated here and NOT read from the client: it comes
+   * from `dealer_wizard_catalog_lifecycle.current_configuration_revision` via the resolved runtime
+   * config. `null`/absent means "unattributed", never a fabricated revision. Optional so the legacy
+   * mapper, which has no runtime configuration to attribute to, still satisfies the contract.
+   */
+  configurationRevision?: number | null;
 };
 
 // ── Root save request (dealer id intentionally OMITTED — the server enriches via getCurrentDealer) ──

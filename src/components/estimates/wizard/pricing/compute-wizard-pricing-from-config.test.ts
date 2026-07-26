@@ -39,6 +39,11 @@ function bundleFor(services: ServiceInput[], manualLines: ConfigPricingInputBund
     services, manualLines, catalogResolved: services.some((s) => s.type === "coating"),
     discounts: NO_DISCOUNT, taxRate: 10, warnings: [], errors: [],
     couponState: { status: "none" }, discountIntent: { mode: "none" }, hasSelection: true,
+    // B1.1 additions to ConfigPricingInputBundle. Empty/zero defaults keep this fixture at its
+    // existing meaning: no coupons resolved, no discount base needed, no PPF coefficient or
+    // PPF/coating reduction — i.e. exactly the pricing these tests already asserted.
+    couponApplications: [], discountBaseSubtotal: 0,
+    ppfCoefficientBpByIdentity: {}, ppfAdjustmentsByIdentity: {},
   };
 }
 

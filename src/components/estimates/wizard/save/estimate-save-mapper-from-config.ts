@@ -34,6 +34,12 @@ export type ConfigSaveMapperInput = {
   readonly pricingConfig: ProductionPricingConfiguration;
   readonly catalog: PricingCatalog;
   readonly shopRank: ShopRank;
+  /**
+   * B1.1-B2 — `lifecycle.currentRevision` from the resolved runtime configuration. Server-derived;
+   * never accepted from a client. Optional so existing callers compile; absent ⇒ `null`
+   * ("unattributed"), never a fabricated revision.
+   */
+  readonly configurationRevision?: number | null;
 };
 
 export type ConfigSaveMapperFailure =
@@ -118,20 +124,17 @@ function mapInner(input: ConfigSaveMapperInput): ConfigSaveMapperResult {
   if (pr.unresolvedItems.length > 0) {
     return fail("unresolved-items", "価格が算出できない選択項目があるため保存できません。");
   }
-  // 6. percentage-discount-unsupported
-  if (pr.discountIntent.mode === "percentage") {
-    return fail("percentage-discount-unsupported", "％値引きは保存に対応していません。金額での値引きをご利用ください。");
+  // 6/7. B1.1 — percentage discounts and configured coupons are now AUTHORIZED, so the two blanket
+  //      refusals that stood here are gone. What replaces them is narrower, not weaker: a coupon
+  //      selection that could not be RESOLVED still fails closed, so an unknown, inactive, expired
+  //      or non-combinable selection can never be saved as if it had been applied.
+  if (bundle.couponState.status === "selected_not_priced" || pr.couponState.status === "selected_not_priced") {
+    return fail("coupon-unpriced", "選択されたクーポンを適用できません。内容を確認してください。");
   }
-  // 7. coupon-unpriced — fail closed on ANY coupon signal: a draft-selected coupon, a bundle OR result
-  //    coupon state that is selected/selected_not_priced, or a non-zero (or null) couponTotal. A
-  //    successful request must always carry couponTotal 0; a non-zero coupon amount is never copied.
-  if (
-    draft.discountAndCoupon.selectedCouponIds.length > 0 ||
-    bundle.couponState.status === "selected_not_priced" ||
-    pr.couponState.status === "selected_not_priced" ||
-    pr.couponTotal !== 0
-  ) {
-    return fail("coupon-unpriced", "クーポンは保存に対応していないため、選択を解除してください。");
+  // A coupon amount may only exist when the authoritative bundle actually resolved coupons —
+  // otherwise a forged non-zero couponTotal could reach persistence.
+  if (pr.couponTotal !== 0 && bundle.couponApplications.length === 0) {
+    return fail("coupon-unpriced", "クーポン金額を確認できません。");
   }
 
   // ── D. Monetary contract (copied from the result; never recomputed) ──
@@ -303,21 +306,36 @@ function mapInner(input: ConfigSaveMapperInput): ConfigSaveMapperResult {
           bodySizeKey: trimOrNull(v.bodySizeKey),
         };
 
-  // ── H. Discount / coupon (percentage + selected coupons were already rejected above) ──
+  // ── H. Discount / coupon — B1.1: both are now recorded as APPLIED, never as deferred intent ──
   const di = pr.discountIntent;
   const discount: EstimateSaveDiscount = {
     intent: {
-      mode: di.mode === "fixed_amount" ? "fixed_amount" : "none",
+      // The DTO records only the operator-authored modes; `dealer_rate` is a customer attribute
+      // carried by `isDealer`/`dealerRate`, not an authored discount, so it maps to "none".
+      mode: di.mode === "fixed_amount" || di.mode === "percentage" ? di.mode : "none",
       fixedAmount: di.mode === "fixed_amount" ? di.amount : null,
-      percentage: null, // percentage is unreachable — rejected upstream (percentage-discount-unsupported)
+      // The authored percentage is preserved so the estimate can be explained later; the yen the
+      // engine actually applied is `appliedAmount`, and the two are never conflated.
+      percentage: di.mode === "percentage" ? di.percentage : null,
       percentageSupported: true,
     },
     appliedAmount: pr.discountTotal, // engine-applied — copied, never recalculated
   };
   const coupon: EstimateSaveCoupon = {
-    selectedCouponIds: [], // any selected coupon was rejected upstream (coupon-unpriced)
-    status: "none",
-    appliedAmount: pr.couponTotal, // always 0 under the deferred-coupon contract
+    // Every selected coupon, in the authoritative resolved order — not just the first.
+    selectedCouponIds: bundle.couponApplications.map((a) => a.couponId),
+    status: bundle.couponApplications.length > 0 ? "applied" : "none",
+    appliedAmount: pr.couponTotal, // engine-applied — copied, never recalculated
+    // B1.1-B2 — the per-coupon SNAPSHOT. Label, type, authored value and applied yen are frozen
+    // here so a later coupon edit or archive cannot change how this estimate is explained.
+    applications: bundle.couponApplications.map((a) => ({
+      couponId: a.couponId,
+      code: a.code,
+      label: a.label,
+      discountType: a.valueKind,
+      discountValue: a.valueRaw,
+      appliedAmount: a.appliedAmount,
+    })),
   };
 
   // ── Pricing summary — figures copied verbatim; taxRatePercent from the rebuilt bundle ──
@@ -352,6 +370,14 @@ function mapInner(input: ConfigSaveMapperInput): ConfigSaveMapperResult {
       draftLastUpdatedAt: draft.metadata.lastUpdatedAt,
       previewConfirmed: draft.review.previewConfirmed,
       estimateNumber: null,
+      // Server-derived attribution. A non-integer or negative value is rejected to null rather than
+      // persisted, so the column's CHECK can never be the first thing to notice a bad value.
+      configurationRevision:
+        typeof input.configurationRevision === "number" &&
+        Number.isInteger(input.configurationRevision) &&
+        input.configurationRevision >= 0
+          ? input.configurationRevision
+          : null,
     },
   };
 
@@ -367,12 +393,16 @@ function sameMultiset(a: Map<string, number>, b: Map<string, number>): boolean {
   return true;
 }
 // Full discriminated discount-intent parity. Modes must be identical; a fixed_amount intent must carry
-// the SAME finite yen amount on both sides. Percentage was rejected upstream; every other mode matches
-// on mode alone. No monetary recompute — only an equality comparison of the authoritative payloads.
+// the SAME finite yen amount on both sides, and (B1.1) a percentage intent the SAME finite percentage.
+// A forged mode/value that differs from the authoritative bundle rejects. No monetary recompute —
+// only an equality comparison of the authoritative payloads.
 function discountIntentMatches(a: PricingDiscountIntent, b: PricingDiscountIntent): boolean {
   if (a.mode !== b.mode) return false;
   if (a.mode === "fixed_amount" && b.mode === "fixed_amount") {
     return Number.isFinite(a.amount) && Number.isFinite(b.amount) && a.amount === b.amount;
+  }
+  if (a.mode === "percentage" && b.mode === "percentage") {
+    return Number.isFinite(a.percentage) && Number.isFinite(b.percentage) && a.percentage === b.percentage;
   }
   return true;
 }

@@ -14,8 +14,12 @@ export type { SupportedAuthoringKind, ShopRank };
 /** Owner/manager may mutate; everyone else is strictly read-only. */
 export type EstimateWizardPermission = "editable" | "readonly";
 
-/** The four editable top-level sections. Coating is summary-only; coupons planned-only. */
-export type WizardSettingsSectionId = "film" | "service" | "otherwork" | "store";
+/**
+ * The editable top-level sections. Coating remains summary-only (it is authored elsewhere and must
+ * never gain a duplicate editor here). B1.1 promotes coupons from a planned card to a real editable
+ * section and adds PPF types.
+ */
+export type WizardSettingsSectionId = "film" | "ppf" | "service" | "otherwork" | "store" | "coupon";
 
 /** Film presentation, presentation-safe (already string-normalised). */
 export interface FilmPresentationView {
@@ -45,6 +49,38 @@ export interface WizardSettingsItemView {
   readonly minQuantity: number | null;
   readonly maxQuantity: number | null;
   readonly presentation: FilmPresentationView | null;
+  /** PPF installation coefficient in basis points (10000 = ×1.0); null when not set. */
+  readonly installCoefficientBp: number | null;
+  /** Already-formatted for display (e.g. `×1.25`); null when no coefficient is set. */
+  readonly coefficientLabelJa: string | null;
+  /** Coupon rule, presentation-safe. Non-null only for `kind === "coupon"`. */
+  readonly coupon: CouponRuleView | null;
+}
+
+/** A coupon's authored rule, already normalised for display. */
+export interface CouponRuleView {
+  readonly discountType: "amount" | "percent";
+  /** yen for `amount`; basis points for `percent`. */
+  readonly discountValue: number;
+  readonly discountLabelJa: string;
+  readonly combinable: boolean;
+  readonly combinableLabelJa: string;
+  readonly validFrom: string | null;
+  readonly validTo: string | null;
+  readonly validityLabelJa: string;
+}
+
+/** One dealer-scoped PPF + coating reduction rule, presentation-safe. */
+export interface PpfCoatingAdjustmentView {
+  readonly ruleId: string;
+  readonly ppfMethodCode: string;
+  readonly ppfMethodLabelJa: string;
+  readonly coatingCode: string;
+  readonly coatingLabelJa: string;
+  readonly adjustmentType: "amount" | "percent";
+  readonly adjustmentValue: number;
+  readonly adjustmentLabelJa: string;
+  readonly isActive: boolean;
 }
 
 /** A kind-scoped group; the service section holds three (maintenance/wash/room). */
@@ -76,11 +112,15 @@ export interface CoatingSummaryView {
   readonly editLabelJa: string;
 }
 
-/** Coupons: read-only planned card. */
-export interface CouponPlannedView {
+/**
+ * PPF + coating reduction: a real editable card as of B1.1. The reduction is dealer-defined data —
+ * the canonical baseline forbids a client-hard-coded discount, so there is no default rule.
+ */
+export interface PpfCoatingAdjustmentSectionView {
   readonly titleJa: string;
-  readonly badgeJa: string; // 「今後対応予定」
   readonly descriptionJa: string;
+  readonly anchorId: string;
+  readonly rules: readonly PpfCoatingAdjustmentView[];
 }
 
 /** A required-but-missing section, with a direct in-page anchor. */
@@ -116,7 +156,7 @@ export interface EstimateWizardSettingsView {
   readonly reviewStatus: ReviewStatusView;
   readonly sections: readonly WizardSettingsSectionView[];
   readonly coating: CoatingSummaryView;
-  readonly coupon: CouponPlannedView;
+  readonly ppfCoatingAdjustment: PpfCoatingAdjustmentSectionView;
   /**
    * INTERNAL, NON-VISIBLE concurrency token (the current configuration revision).
    * The UI must NEVER render this; it is used only to detect that the configuration

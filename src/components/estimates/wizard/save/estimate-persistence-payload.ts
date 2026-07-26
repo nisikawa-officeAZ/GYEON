@@ -7,7 +7,7 @@
 
 import type {
   EstimateSaveRequest, EstimateSaveCustomer, EstimateSaveVehicle,
-  EstimateSaveNonPriceableSelection, EstimateSaveDiscountIntent,
+  EstimateSaveNonPriceableSelection, EstimateSaveDiscountIntent, EstimateSaveCoupon,
 } from "./estimate-save-dto";
 import {
   WIZARD_CATEGORY_PRICING_POLICY, WIZARD_CATEGORY_MANUAL_POLICY, type WizardPricingCategory,
@@ -43,8 +43,14 @@ export type EstimateSaveRpcPayload = {
   nonPriceableSelections: EstimateSaveNonPriceableSelection[];
   discountIntent:         EstimateSaveDiscountIntent;
   discountAppliedAmount:  number | null;
-  couponIntent:           { selectedCouponIds: string[]; status: "none" | "selected_not_priced" };
-  couponAppliedAmount:    number | null; // always 0/null — coupons deferred
+  // B1.1-B2: coupons are financially applied, so the RESOLVED per-coupon snapshot travels with the
+  // intent. The RPC stores this object verbatim into `estimates.coupon_intent`.
+  couponIntent: {
+    selectedCouponIds: string[];
+    status: EstimateSaveCoupon["status"];
+    applications: NonNullable<EstimateSaveCoupon["applications"]>;
+  };
+  couponAppliedAmount:    number | null;
   pricingSnapshot: {
     currency:        "JPY";
     completeness:    string;
@@ -116,7 +122,11 @@ export function buildEstimateSaveRpcPayload(
     nonPriceableSelections: request.nonPriceableSelections,
     discountIntent:         request.discount.intent,
     discountAppliedAmount:  request.discount.appliedAmount,
-    couponIntent:           { selectedCouponIds: request.coupon.selectedCouponIds, status: request.coupon.status },
+    couponIntent:           {
+      selectedCouponIds: request.coupon.selectedCouponIds,
+      status:            request.coupon.status,
+      applications:      request.coupon.applications ?? [],
+    },
     couponAppliedAmount:    request.coupon.appliedAmount,
     pricingSnapshot: {
       currency:        request.pricing.currency,

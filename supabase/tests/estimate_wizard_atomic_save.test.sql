@@ -890,3 +890,157 @@ ROLLBACK;
 --     four tables, and leave the four counts unchanged from the post-session-1
 --     values.
 -- ============================================================================
+
+-- ============================================================================
+-- B1.1 (migration 110) -- store pricing configuration foundation
+--
+-- **NOT EXECUTED IN B1.1-B.** Runs in the B1.1 verification phase against a
+-- DISPOSABLE LOCAL stack only, after applying 000 -> 110 in order. Never
+-- against the linked, staging or production project.
+--
+-- SCOPE NOTE
+--   110 adds `estimates.configuration_revision` as the attribution slot but
+--   does NOT rewrite save_estimate_from_wizard. Persisting the submitted value
+--   through the RPC is a separate, separately-reviewed migration, so the
+--   assertions below cover the COLUMN and the surrounding configuration
+--   surfaces -- not RPC round-tripping of the revision.
+--
+-- REQUIRED OUTCOMES
+--
+-- 1. configuration_revision column contract
+--    * public.estimates.configuration_revision EXISTS, is bigint and NULLABLE.
+--    * It has NO default: an INSERT that omits it yields NULL ("unattributed"),
+--      never a fabricated revision.
+--    * CHECK estimates_configuration_revision_nonneg REJECTS -1 and ACCEPTS
+--      both NULL and 0.
+--    * Pre-existing estimate rows are UNCHANGED by the migration (no backfill).
+--
+-- 2. Saved-estimate immutability (the core B1.1 acceptance)
+--    * Save an estimate through save_estimate_from_wizard whose lines carry a
+--      PPF coefficient and a PPF+coating reduction in pricing_metadata.
+--    * THEN mutate the configuration: change the catalog item's
+--      install_coefficient_bp, edit a coupon's label and value, and archive the
+--      matching dealer_ppf_coating_adjustments row.
+--    * Re-read the estimate and its estimate_items. EVERY one of item_name,
+--      unit_price, quantity, line_total, pricing_metadata, subtotal, tax,
+--      tax_amount, discount_amount and total MUST be byte-identical to the
+--      values captured immediately after the save.
+--
+-- 3. install_coefficient_bp constraints
+--    * wci_install_coefficient_positive REJECTS 0 and -1; ACCEPTS NULL and 1.
+--    * wci_install_coefficient_scope REJECTS a non-NULL coefficient on
+--      maintenance_menu / wash_menu / room_cleaning_menu / other_work_preset /
+--      store_global_option / coupon; ACCEPTS it on film_type and
+--      ppf_type_group.
+--    * dealer_wizard_catalog_overrides.install_coefficient_bp REJECTS 0 and -1.
+--
+-- 4. dealer_ppf_coating_adjustments contract
+--    * UNIQUE (dealer_id, ppf_method_code, coating_code) REJECTS a second row
+--      for the same triple.
+--    * dpca_percent_range REJECTS adjustment_value = 10001 when
+--      adjustment_type = 'percent'; ACCEPTS 10000.
+--    * dpca_value_non_negative REJECTS -1 for BOTH adjustment types.
+--    * dpca_ppf_method_code_format / dpca_coating_code_format REJECT 'Full Coat'
+--      and ''; ACCEPT 'full' and 'pure-evo'.
+--    * There is NO DELETE policy: archival is deleted_at / is_active only.
+--
+-- 5. Tenant isolation (role authenticated, TWO dealers)
+--    * Dealer A member SELECTs only dealer A adjustment rows; dealer B rows are
+--      invisible -- zero rows, never an error that leaks existence.
+--    * A dealer A member with role 'staff' (not owner|manager) CANNOT INSERT or
+--      UPDATE any adjustment row: wiz_can_configure is false, so both policies
+--      refuse.
+--    * A dealer A owner CANNOT INSERT a row carrying dealer B's dealer_id --
+--      dpca_insert's WITH CHECK evaluates wiz_can_configure(dealer_id) against
+--      the ROW's dealer, not the caller's claim.
+--
+-- 6. Revision invalidation
+--    * INSERT, then UPDATE, on dealer_ppf_coating_adjustments each bump
+--      dealer_wizard_catalog_lifecycle.current_configuration_revision by
+--      exactly ONE per STATEMENT (a two-row INSERT bumps once, not twice).
+--    * A lifecycle in CATALOG_REVIEWED leaves that state after any such bump.
+--
+-- 7. Authoring RPC allowlist (wiz_upsert_catalog_item, replaced by 110)
+--    * ACCEPTS kind 'coupon' and 'ppf_type_group' for an owner|manager.
+--    * STILL RAISES WIZ_UNSUPPORTED_KIND for 'ppf_method', 'ppf_part' and
+--      'window_area'.
+--    * RAISES WIZ_COUPON_PRICE_FORBIDDEN when a coupon payload carries
+--      default_unit_price.
+--    * RAISES WIZ_COUPON_TYPE_REQUIRED / WIZ_COUPON_VALUE_REQUIRED /
+--      WIZ_COUPON_COMBINABLE_REQUIRED when those keys are absent.
+--    * RAISES WIZ_COEFFICIENT_INVALID for install_coefficient_bp <= 0 and
+--      WIZ_UNKNOWN_FIELD when install_coefficient_bp is sent on a menu kind.
+--    * A created coupon row's generated code matches '^coupon-' and a created
+--      PPF type's matches '^ppftype-'; NEITHER is derived from the label.
+--    * Every one of the above still bumps the revision exactly once on success
+--      and not at all on failure.
+-- ============================================================================
+
+-- ============================================================================
+-- B1.1-B2 (migration 20260726090000) -- configuration_revision persistence
+--
+-- **NOT EXECUTED IN B1.1-B2.** Runs in the verification phase against a
+-- DISPOSABLE LOCAL stack only, after applying 000 -> 110 -> 20260726090000 in
+-- order. Never against the linked, staging or production project.
+--
+-- REQUIRED OUTCOMES
+--
+-- 1. Verbatim persistence, no arithmetic
+--    * A save whose metadata carries configurationRevision = 7 stores exactly 7
+--      in estimates.configuration_revision.
+--    * Every money column is byte-identical to the same payload saved under the
+--      PREVIOUS function definition: subtotal, tax, tax_rate, tax_amount,
+--      discount_amount and total must not move by a single unit. The RPC still
+--      performs NO pricing arithmetic.
+--
+-- 2. Optionality and fail-closed domain
+--    * An ABSENT metadata.configurationRevision saves successfully and stores
+--      NULL. An explicit JSON null does the same. Neither fabricates a value.
+--    * A non-integer (7.5), a negative (-1), a non-finite, a string ("7") and a
+--      boolean each RAISE
+--      'VALIDATION_ERROR: metadata.configurationRevision ...' and create ZERO
+--      rows in customers, vehicles, estimates and estimate_items.
+--    * Rejection happens in C.2b -- BEFORE the fingerprint is computed and
+--      BEFORE any write -- so a rejected value is never hashed or stored.
+--
+-- 3. Fingerprint participation (deliberate)
+--    * Two saves identical in every respect EXCEPT configurationRevision
+--      (7 vs 8) under the SAME idempotency key raise DUPLICATE_SUBMISSION.
+--      They are materially different submissions and must never replay as one
+--      another.
+--    * A genuine retry carrying the SAME revision returns
+--      idempotent_replay = true with ZERO writes and no document-number burn.
+--    * An absent key and an explicit null fingerprint IDENTICALLY (both project
+--      to JSON null), so a caller that omits the key and one that sends null
+--      are the same submission.
+--
+-- 4. Preservation of every pre-existing behavior
+--    Re-run the ENTIRE pre-existing suite above against the replaced function.
+--    All of the following must be unchanged, not merely present:
+--      * actor/membership/ambiguity/role authorization and its exact messages;
+--      * every three-valued-logic payload guard;
+--      * pricing numeric domain, scale and finiteness checks;
+--      * the discountTotal/couponTotal reduction boundary;
+--      * customer and vehicle validation, including calendar-real dates;
+--      * the single service-line validation authority and duplicate lineId
+--        rejection;
+--      * the C.9 advisory lock and the replay/conflict ordering;
+--      * estimate-number allocation AFTER the replay decision, with rollback on
+--        replay, conflict and item failure (no burned numbers);
+--      * the shared exception subtransaction and four-table row-count parity;
+--      * constraint-specific unique_violation handling
+--        (estimates_dealer_idempotency_key_uidx only);
+--      * no raw SQLSTATE / SQLERRM / constraint text reaching any caller.
+--
+-- 5. Coupon snapshot round-trip
+--    * couponIntent now carries `applications`. A save with two applied coupons
+--      stores the FULL array verbatim in estimates.coupon_intent, including each
+--      couponId, code, label, discountType, discountValue and appliedAmount.
+--    * Those stored values are UNCHANGED after the underlying coupon rows are
+--      edited (label and value) and archived. The snapshot is frozen.
+--
+-- 6. Grants and ACL
+--    * CREATE OR REPLACE preserved the existing ACL: service_role still holds
+--      EXECUTE and no new role gained it. Migration 104 remains the single
+--      authority; this migration re-issues no GRANT.
+-- ============================================================================

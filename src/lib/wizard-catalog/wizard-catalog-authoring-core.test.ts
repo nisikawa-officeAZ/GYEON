@@ -109,13 +109,25 @@ test("save: manager IS permitted (matches wiz_can_configure)", async () => {
 
 // ── save: validation short-circuits before the RPC ────────────────────────────
 
+// B1.1 made `coupon` a SUPPORTED authoring kind, so it is no longer a valid example here.
+// `ppf_method` is still global read-only vocabulary and remains genuinely unsupported.
 test("save: unsupported kind fails without calling the RPC", async () => {
   const rec = recorder();
   const res = await runSaveCatalogItem(
     upsertDeps({ rec }),
-    { kind: "coupon" as unknown as WizardCatalogItemInput["kind"], labelJa: "x" },
+    { kind: "ppf_method" as unknown as WizardCatalogItemInput["kind"], labelJa: "x" },
   );
   assert.equal(res.ok === false && res.code, "UNSUPPORTED_KIND");
+  assert.equal(rec.calls.length, 0);
+});
+
+// The behaviour that replaced it: a supported coupon kind passes the kind gate and is then
+// judged on its coupon RULE, so a malformed rule fails with INVALID_COUPON_RULE — still
+// before the RPC, and never as UNSUPPORTED_KIND.
+test("save: a supported coupon kind is judged on its rule, not rejected as unsupported", async () => {
+  const rec = recorder();
+  const res = await runSaveCatalogItem(upsertDeps({ rec }), { kind: "coupon", labelJa: "x" });
+  assert.equal(res.ok === false && res.code, "INVALID_COUPON_RULE");
   assert.equal(rec.calls.length, 0);
 });
 
@@ -257,4 +269,101 @@ test("review: injects ONLY the dealer id (no rank reaches the RPC)", async () =>
 test("review: RPC failure maps to RPC_ERROR", async () => {
   const res = await runConfirmCatalogReview(reviewDeps({ confirm: async () => ({ ok: false }) }));
   assert.equal(res.ok === false && res.code, "RPC_ERROR");
+});
+
+// ── B1.1: coupon + PPF coefficient authoring ─────────────────────────────────
+
+test("buildUpsertPayload maps coupon fields to snake_case and still emits no tenancy key", () => {
+  const p = buildUpsertPayload({
+    kind: "coupon",
+    labelJa: "新規ご来店クーポン",
+    couponDiscountType: "percent",
+    couponDiscountValue: 1000, // 10% in basis points
+    couponCombinable: false,
+    couponValidFrom: "2026-08-01",
+    couponValidTo: null,
+  });
+  assert.deepEqual(Object.keys(p).sort(), [
+    "coupon_combinable",
+    "coupon_discount_type",
+    "coupon_discount_value",
+    "coupon_valid_from",
+    "coupon_valid_to",
+    "label_ja",
+  ]);
+  assert.equal(p.coupon_discount_value, 1000);
+  assert.ok(!("dealer_id" in p) && !("owner_scope" in p));
+});
+
+test("buildUpsertPayload maps the PPF coefficient and omits unset keys", () => {
+  const p = buildUpsertPayload({ kind: "ppf_type_group", labelJa: "PPF PROTECT+", installCoefficientBp: 12500 });
+  assert.deepEqual(Object.keys(p).sort(), ["install_coefficient_bp", "label_ja"]);
+  assert.equal(p.install_coefficient_bp, 12500);
+});
+
+test("coefficient: a non-positive or non-integer value is refused BEFORE the RPC", async () => {
+  for (const bad of [0, -1, 1.5]) {
+    const rec = recorder();
+    const res = await runSaveCatalogItem(upsertDeps({ rec }), {
+      kind: "ppf_type_group",
+      labelJa: "PPF",
+      installCoefficientBp: bad,
+    });
+    assert.equal(res.ok === false && res.code, "INVALID_COEFFICIENT");
+    assert.equal(rec.calls.length, 0, "the RPC must not be called");
+  }
+});
+
+test("coefficient: null/absent is allowed (means no coefficient) and reaches the RPC", async () => {
+  const rec = recorder();
+  const res = await runSaveCatalogItem(upsertDeps({ rec }), {
+    kind: "ppf_type_group",
+    labelJa: "PPF",
+    installCoefficientBp: null,
+  });
+  assert.equal(res.ok, true);
+  assert.equal(rec.calls.length, 1);
+});
+
+test("coupon: a missing or unknown discount type is refused BEFORE the RPC", async () => {
+  const rec = recorder();
+  const res = await runSaveCatalogItem(upsertDeps({ rec }), { kind: "coupon", labelJa: "割引" });
+  assert.equal(res.ok === false && res.code, "INVALID_COUPON_RULE");
+  assert.equal(rec.calls.length, 0);
+});
+
+test("coupon: a negative / non-integer value and a missing combinable flag are refused", async () => {
+  const base = { kind: "coupon", labelJa: "割引", couponDiscountType: "amount" } as const;
+  const a = await runSaveCatalogItem(upsertDeps(), { ...base, couponDiscountValue: -1, couponCombinable: true });
+  assert.equal(a.ok === false && a.code, "INVALID_COUPON_RULE");
+  const b = await runSaveCatalogItem(upsertDeps(), { ...base, couponDiscountValue: 1.5, couponCombinable: true });
+  assert.equal(b.ok === false && b.code, "INVALID_COUPON_RULE");
+  const c = await runSaveCatalogItem(upsertDeps(), { ...base, couponDiscountValue: 5000 });
+  assert.equal(c.ok === false && c.code, "INVALID_COUPON_RULE");
+});
+
+test("coupon: a well-formed rule reaches the RPC with the server-injected dealer id", async () => {
+  const rec = recorder();
+  const res = await runSaveCatalogItem(upsertDeps({ rec }), {
+    kind: "coupon",
+    labelJa: "新規ご来店クーポン",
+    couponDiscountType: "amount",
+    couponDiscountValue: 5000,
+    couponCombinable: true,
+  });
+  assert.equal(res.ok, true);
+  assert.equal(rec.calls.length, 1);
+  assert.equal(rec.calls[0].dealerId, DEALER);
+});
+
+test("the still-global PPF vocabulary kinds remain unauthorable", async () => {
+  for (const kind of ["ppf_method", "ppf_part", "window_area"]) {
+    const rec = recorder();
+    const res = await runSaveCatalogItem(
+      upsertDeps({ rec }),
+      { kind, labelJa: "x" } as unknown as WizardCatalogItemInput,
+    );
+    assert.equal(res.ok === false && res.code, "UNSUPPORTED_KIND");
+    assert.equal(rec.calls.length, 0);
+  }
 });

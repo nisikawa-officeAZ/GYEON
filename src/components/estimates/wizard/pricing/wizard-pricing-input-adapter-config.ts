@@ -8,10 +8,23 @@
 // instead of the fixture-backed builder.
 //
 // ── WHAT IS IDENTICAL, AND WHY THAT MATTERS ─────────────────────────────────────
-// Coating resolution, the discount/trade-rate rules, the coupon state, the percentage-discount
-// refusal, and the tax rate are copied verbatim. No tax, rounding, discount, total, or rank
-// coefficient is computed or moved here — every number still originates from the production engine.
-// The test suite pins price equivalence against the fixture path for identical inputs.
+// Coating resolution, the trade-rate rules and the tax rate are copied verbatim. No tax, rounding,
+// discount ORDER, total, or rank coefficient is computed or moved here — every number still
+// originates from the production engine. The test suite pins price equivalence against the fixture
+// path for identical inputs.
+//
+// ── B1.1: WHAT CHANGED, AND WHAT DELIBERATELY DID NOT ───────────────────────────
+// `calculateEstimate` remains the production authority and its sum-then-clamp discount order, tax
+// behaviour and rounding are UNCHANGED. What changed is only what this adapter puts INTO the
+// engine's existing `DiscountInput` slots:
+//
+//   • a percentage discount is converted to yen against the engine-reported subtotal → extraAmount
+//   • configured coupons are resolved to a single yen total                          → couponTotal
+//   • PPF lines carry their dealer coefficient and PPF+coating reduction in unitPrice
+//
+// The two refusals this used to raise (PERCENTAGE_NOT_SUPPORTED, COUPON_PRICING_NOT_IMPLEMENTED)
+// are therefore no longer correct and are gone. Every OTHER fail-closed path is preserved, and a
+// coupon set that cannot be resolved still fails closed rather than pricing as zero.
 //
 // ── ONE DELIBERATE DIFFERENCE, AND WHY IT IS SAFE ───────────────────────────────
 // The fixture adapter validates the coating id against a projection built from
@@ -24,6 +37,19 @@
 // the id set is identical either way and the two paths cannot disagree.
 
 import type { PricingCatalog } from "@/lib/pricing/pricing-catalog";
+import { calculateEstimate } from "@/lib/pricing/canonical-pricing-engine";
+import {
+  resolveConfiguredCoupons,
+  percentageDiscountToYen,
+  type ConfiguredCoupon,
+  type ResolvedCouponApplication,
+} from "@/lib/pricing/configured-coupon-total";
+import {
+  applyInstallCoefficientBp,
+  resolvePpfCoatingAdjustment,
+  type PpfCoatingAdjustmentRule,
+  type ResolvedPpfCoatingAdjustment,
+} from "@/lib/wizard-catalog/ppf-coating-adjustment-core";
 import { toPricingCatalogCoatingId, toPricingCatalogTopcoatId } from "@/lib/pricing/wizard-coating-id-adapter";
 import { validateCoatingSelection } from "./coating-selection-validation";
 import type { ShopRank } from "../screens/step-types";
@@ -50,6 +76,26 @@ export type {
 
 const PRODUCTION_TAX_RATE = 10; // production default (estimate-totals default); Wizard has no tax UI.
 
+/**
+ * B1.1 — additive, OPTIONAL configuration extensions.
+ *
+ * Every field is optional, so an existing caller that passes a plain `ProductionPricingConfiguration`
+ * still compiles and still behaves EXACTLY as before: no coupons, no coefficient, no adjustment.
+ * This mirrors the additive-extension pattern already used by `pricing-contracts.ts`.
+ */
+export interface ConfiguredPricingRules {
+  /** Dealer-authored coupons, projected from `wizard_catalog_items` (kind = 'coupon'). */
+  readonly coupons?: readonly ConfiguredCoupon[];
+  /** PPF/film code → installation coefficient in basis points (10000 = ×1.0). */
+  readonly installCoefficientBpByCode?: Readonly<Record<string, number>>;
+  /** Dealer-scoped PPF + coating reduction rules. */
+  readonly ppfCoatingAdjustments?: readonly PpfCoatingAdjustmentRule[];
+  /** ISO `YYYY-MM-DD` used for coupon validity. Supplied by the caller — this module reads no clock. */
+  readonly calculationDate?: string;
+}
+
+export type ConfiguredPricingConfiguration = ProductionPricingConfiguration & ConfiguredPricingRules;
+
 export interface ConfigPricingInputBundle {
   services:        ServiceInput[];
   manualLines:     WizardManualPricingLineInput[];
@@ -61,6 +107,18 @@ export interface ConfigPricingInputBundle {
   couponState:     PricingCouponState;
   discountIntent:  PricingDiscountIntent;
   hasSelection:    boolean;
+  /**
+   * B1.1 — resolved SNAPSHOT VALUES. `PricingCouponState` (a shared contract this phase may not
+   * change) cannot express "priced", so the truth of what was actually applied lives here and
+   * `couponState` stays `none` once coupons resolve cleanly. It remains `selected_not_priced`
+   * only when a selection could NOT be resolved, which keeps that fail-closed signal meaningful.
+   */
+  couponApplications: readonly ResolvedCouponApplication[];
+  /** The subtotal the percentage discount and percentage coupons were computed against. */
+  discountBaseSubtotal: number;
+  /** Resolved PPF coefficients/adjustments, keyed by manual-line identity, for the save snapshot. */
+  ppfCoefficientBpByIdentity: Readonly<Record<string, number>>;
+  ppfAdjustmentsByIdentity: Readonly<Record<string, ResolvedPpfCoatingAdjustment>>;
 }
 
 function issue(code: string, message: string, category: string | null = null, sourceId: string | null = null): WizardPricingIssue {
@@ -74,7 +132,7 @@ function manualLineExtendedPrice(l: WizardManualPricingLineInput): number {
 
 export function buildWizardPricingInputFromConfig(
   draft: EstimateWizardDraftV22,
-  config: ProductionPricingConfiguration,
+  config: ConfiguredPricingConfiguration,
   catalog: PricingCatalog,
   shopRank?: ShopRank,
 ): ConfigPricingInputBundle {
@@ -133,11 +191,78 @@ export function buildWizardPricingInputFromConfig(
   const manual = buildManualPricingLinesFromConfig(draft, config);
   warnings.push(...manual.warnings);
   errors.push(...manual.errors);
-  if (manual.lines.length > 0) {
-    services.push({ type: "other", items: manual.lines.map((l) => ({ name: l.label, price: manualLineExtendedPrice(l) })) });
+
+  // ── B1.1: PPF installation coefficient + PPF/coating reduction ────────────────
+  // Applied to the PPF line's UNIT PRICE, so it composes with quantity exactly like every other
+  // line and the engine still owns every total. Both resolved values are recorded per line so the
+  // save mapper can freeze them into the estimate snapshot as VALUES, not as rule references.
+  const coeffByCode = config.installCoefficientBpByCode ?? {};
+  const adjustmentRules = config.ppfCoatingAdjustments ?? [];
+  const coatingCode = draft.serviceConfiguration.coating.layer1Id ?? null;
+  const ppfCoefficientBpByIdentity: Record<string, number> = {};
+  const ppfAdjustmentsByIdentity: Record<string, ResolvedPpfCoatingAdjustment> = {};
+
+  const manualLines: WizardManualPricingLineInput[] = manual.lines.map((l) => {
+    if (l.sourceCategory !== "ppf") return l;
+
+    const bp = coeffByCode[l.manualPricingIdentity];
+    // An unknown identity yields `undefined` → the coefficient helper returns the IDENTITY, so an
+    // unconfigured PPF line prices exactly as it does today. Never a silent zero, never a discount.
+    const coefficientApplied = applyInstallCoefficientBp(l.unitPrice, bp ?? null);
+
+    const adjustment = resolvePpfCoatingAdjustment(
+      l.manualPricingIdentity,
+      coatingCode,
+      adjustmentRules,
+      coefficientApplied,
+    );
+    const unitPrice = Math.max(0, coefficientApplied - (adjustment?.reductionYen ?? 0));
+
+    if (bp !== undefined) ppfCoefficientBpByIdentity[l.manualPricingIdentity] = bp;
+    if (adjustment) ppfAdjustmentsByIdentity[l.manualPricingIdentity] = adjustment;
+
+    if (unitPrice === l.unitPrice) return l;
+    return {
+      ...l,
+      unitPrice,
+      metadata: {
+        ...l.metadata,
+        ...(bp !== undefined ? { ppfInstallCoefficientBp: bp } : {}),
+        ...(adjustment
+          ? {
+              ppfCoatingAdjustmentRuleId: adjustment.ruleId,
+              ppfCoatingAdjustmentType: adjustment.adjustmentType,
+              ppfCoatingAdjustmentValue: adjustment.adjustmentValue,
+              ppfCoatingAdjustmentReductionYen: adjustment.reductionYen,
+              ppfCoatingAdjustmentCoatingCode: adjustment.coatingCode,
+            }
+          : {}),
+      },
+    };
+  });
+
+  if (manualLines.length > 0) {
+    services.push({ type: "other", items: manualLines.map((l) => ({ name: l.label, price: manualLineExtendedPrice(l) })) });
   }
 
-  // ── Discount / coupon (forward intent only; NO conversion, NO coupon pricing) ──
+  // ── Discount base subtotal (B1.1) ─────────────────────────────────────────────
+  // A percentage discount and a percentage coupon both need a defined base, and the engine is the
+  // only authority for what the subtotal IS. So we ask it, with every discount zeroed, and use the
+  // subtotal it reports. This module still computes no subtotal of its own: the number below comes
+  // from `calculateEstimate`, exactly like every other figure on this path.
+  const discountBaseSubtotal =
+    services.length > 0
+      ? calculateEstimate(
+          services,
+          { couponTotal: 0, extraAmount: 0, isDealer: false, dealerRate: 0 },
+          PRODUCTION_TAX_RATE,
+          catalog,
+        ).subtotal
+      : 0;
+
+  // ── Discount / coupon ─────────────────────────────────────────────────────────
+  // B1.1 converts BOTH upstream into the engine's existing `DiscountInput` slots. The engine's
+  // sum-then-clamp order, tax behaviour and rounding are untouched.
   const dc = draft.discountAndCoupon;
   const nc = draft.customer.newCustomer;
   let extraAmount = 0;
@@ -152,11 +277,16 @@ export function buildWizardPricingInputFromConfig(
     if (dc.percentInput.trim() !== "") {
       const pct = Number(dc.percentInput) || 0;
       discountIntent = { mode: "percentage", percentage: pct };
-      errors.push(issue(WIZARD_PRICING_ERRORS.PERCENTAGE_NOT_SUPPORTED, "％値引きは本番価格エンジンで未対応のため、値引きは適用されていません。", "discount"));
+      // Converted to yen against the defined subtotal, then fed to `extraAmount`. An out-of-range
+      // or malformed percentage converts to 0 rather than becoming a silent discount.
+      if (!Number.isFinite(pct) || pct <= 0 || pct > 100) {
+        errors.push(issue(WIZARD_PRICING_ERRORS.PERCENTAGE_NOT_SUPPORTED, "％値引きは0より大きく100以下で入力してください。", "discount"));
+      } else {
+        extraAmount = percentageDiscountToYen(discountBaseSubtotal, pct);
+      }
     }
   }
   // dc.mode === "none": extraAmount stays 0, discountIntent stays { mode: "none" }, no error.
-  // (No implicit else = percent branch — "none" never triggers a percentage-not-supported error.)
 
   // Trade (業者掛け率) discount — verbatim. An empty/zero/invalid rate must NOT become dealerRate=0,
   // which the engine reads as "dealer pays 0% → 100% off".
@@ -169,18 +299,40 @@ export function buildWizardPricingInputFromConfig(
   const isDealer = !!nc.isBusiness && hasValidTradeRate;
   const dealerRate = hasValidTradeRate ? rawTradeRate : 0;
 
-  const couponState: PricingCouponState = dc.selectedCouponIds.length > 0
-    ? { status: "selected_not_priced", couponId: dc.selectedCouponIds[0], label: "クーポン", warningCode: "COUPON_PRICING_NOT_IMPLEMENTED" }
-    : { status: "none" };
-  if (couponState.status !== "none") {
-    warnings.push(issue(WIZARD_PRICING_WARNINGS.COUPON_PRICING_NOT_IMPLEMENTED, "クーポンが選択されていますが、本番のクーポン計算は未対応です。合計には含まれません。", "coupon"));
+  // ── Coupons (B1.1) — ALL selected ids, never just the first ───────────────────
+  // Resolution is all-or-nothing: an unknown, inactive, expired, malformed or non-combinable
+  // selection rejects the whole set, because a partially applied set would silently under-discount
+  // a customer-visible quote. An unresolvable set keeps the pre-existing `selected_not_priced`
+  // state, so the downstream fail-closed save guard still fires for exactly that case.
+  const couponResolution = resolveConfiguredCoupons(
+    dc.selectedCouponIds,
+    config.coupons ?? [],
+    discountBaseSubtotal,
+    config.calculationDate ?? "",
+  );
+
+  let couponState: PricingCouponState = { status: "none" };
+  let couponApplications: readonly ResolvedCouponApplication[] = [];
+  let couponTotal = 0;
+
+  if (couponResolution.ok) {
+    couponApplications = couponResolution.applications;
+    couponTotal = couponResolution.couponTotal;
+  } else {
+    couponState = {
+      status: "selected_not_priced",
+      couponId: couponResolution.unresolvedCouponIds[0] ?? dc.selectedCouponIds[0],
+      label: "クーポン",
+      warningCode: "COUPON_PRICING_NOT_IMPLEMENTED",
+    };
+    errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, couponResolution.message, "coupon"));
   }
 
-  const discounts: DiscountInput = { couponTotal: 0, extraAmount, isDealer, dealerRate };
+  const discounts: DiscountInput = { couponTotal, extraAmount, isDealer, dealerRate };
 
   return {
     services,
-    manualLines: manual.lines,
+    manualLines,
     catalogResolved,
     discounts,
     taxRate: PRODUCTION_TAX_RATE,
@@ -189,5 +341,9 @@ export function buildWizardPricingInputFromConfig(
     couponState,
     discountIntent,
     hasSelection: selected.length > 0 || cfg.storeGlobalOptions.selectedOptionIds.length > 0,
+    couponApplications,
+    discountBaseSubtotal,
+    ppfCoefficientBpByIdentity,
+    ppfAdjustmentsByIdentity,
   };
 }

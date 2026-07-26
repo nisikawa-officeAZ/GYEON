@@ -169,8 +169,9 @@ test("pricing-incomplete / pricing-error / unresolved-items", () => {
   expectFail(withResult({ ...baseResult(), unresolvedItems: [{ category: "maintenance", sourceId: null, code: "U", message: "u" }] }), "unresolved-items");
 });
 
-test("percentage-discount-unsupported / coupon-unpriced", () => {
-  expectFail(withResult({ ...baseResult(), discountIntent: { mode: "percentage", percentage: 10 } }), "percentage-discount-unsupported");
+// B1.1 — a percentage discount is now AUTHORIZED and no longer blocks the save. What still fails
+// closed is an UNRESOLVABLE coupon selection, which is a narrower guard, not a weaker one.
+test("an unresolvable coupon selection still fails closed → coupon-unpriced", () => {
   expectFail(withResult({ ...baseResult(), couponState: { status: "selected_not_priced", couponId: "c", label: "x", warningCode: "COUPON_PRICING_NOT_IMPLEMENTED" } }), "coupon-unpriced");
 });
 
@@ -227,9 +228,11 @@ test("an unexpected internal exception becomes mapping-failed, never thrown", ()
 
 // ── Deterministic precedence ────────────────────────────────────────────────────────
 
-test("precedence: percentage-discount-unsupported wins over a null aggregate total", () => {
+// B1.1 — with the percentage refusal gone, a null aggregate total is now the first failure a
+// percentage-carrying result hits. The remaining fail-closed ordering is unchanged.
+test("precedence: a percentage intent no longer pre-empts the null-aggregate guard", () => {
   const pr = { ...baseResult(), discountIntent: { mode: "percentage" as const, percentage: 10 }, grandTotal: null };
-  expectFail(withResult(pr), "percentage-discount-unsupported"); // order 6 < 8
+  expectFail(withResult(pr), "null-aggregate-total");
 });
 
 // ── R50A-F1 — authoritative bundle / payload parity fail-closed corrections ─────────
@@ -249,8 +252,10 @@ test("R50A-F1 A: a selected priceable:false option surfaces as exactly pricing-e
   expectFail(run(draft), "pricing-error");
 });
 
-// B. Coupon fail-closed — a non-zero couponTotal is never silently copied.
-test("R50A-F1 B: a non-zero couponTotal fails closed → coupon-unpriced", () => {
+// B. Coupon fail-closed — a coupon amount that the authoritative bundle did not resolve is never
+//    silently copied. (B1.1 narrowed this from "any non-zero couponTotal" to "a non-zero
+//    couponTotal with no resolved applications", which is exactly the forgery case.)
+test("R50A-F1 B: a couponTotal with no resolved applications fails closed → coupon-unpriced", () => {
   expectFail(withResult({ ...baseResult(), couponTotal: 999 }), "coupon-unpriced");
 });
 
@@ -318,4 +323,31 @@ test("the production mapper imports no fixture/default/legacy/persistence and ha
   assert.equal(/supabase|server-only|persistence|createEstimate|updateEstimate/.test(code), false, "no DB/persistence");
   assert.equal(/next\/(navigation|router|image)/.test(code), false, "no route import");
   assert.equal(/Date\.now|new Date|Math\.random|randomUUID|crypto\./.test(code), false, "no clock/random/uuid");
+});
+
+// ── B1.1-B2: configuration revision + per-coupon snapshot ────────────────────
+
+test("B1.1-B2: the configuration revision is copied verbatim into metadata", () => {
+  const req = okReq(run(draftWith(["maintenance"], maintCfg), { configurationRevision: 7 }));
+  assert.equal(req.metadata.configurationRevision, 7);
+});
+
+test("B1.1-B2: an absent revision is null ('unattributed'), never fabricated", () => {
+  const req = okReq(run(draftWith(["maintenance"], maintCfg)));
+  assert.equal(req.metadata.configurationRevision, null);
+});
+
+test("B1.1-B2: a non-integer / negative / non-numeric revision is rejected to null, not persisted", () => {
+  for (const bad of [1.5, -1, Number.NaN, "7" as unknown as number]) {
+    const req = okReq(run(draftWith(["maintenance"], maintCfg), { configurationRevision: bad }));
+    assert.equal(req.metadata.configurationRevision, null);
+  }
+});
+
+test("B1.1-B2: with no coupons the coupon block stays 'none' with an empty snapshot", () => {
+  const req = okReq(run(draftWith(["maintenance"], maintCfg)));
+  assert.equal(req.coupon.status, "none");
+  assert.deepEqual(req.coupon.selectedCouponIds, []);
+  assert.deepEqual(req.coupon.applications, []);
+  assert.equal(req.coupon.appliedAmount, 0);
 });

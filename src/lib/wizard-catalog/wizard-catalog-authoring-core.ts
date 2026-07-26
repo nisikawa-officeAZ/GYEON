@@ -20,7 +20,11 @@ import {
   type WizardCatalogArchiveResult,
   type WizardCatalogReviewResult,
   type WizardCatalogActionFailure,
+  type PpfCoatingAdjustmentInput,
+  type PpfCoatingAdjustmentUpsertResult,
+  type PpfCoatingAdjustmentArchiveResult,
 } from "./wizard-catalog-authoring-types";
+import { validatePpfCoatingAdjustmentRule } from "./ppf-coating-adjustment-core";
 
 // ── shared gate ──────────────────────────────────────────────────────────────
 
@@ -74,6 +78,14 @@ export function buildUpsertPayload(input: WizardCatalogItemInput): Record<string
   if (input.minQuantity !== undefined) p.min_quantity = input.minQuantity;
   if (input.maxQuantity !== undefined) p.max_quantity = input.maxQuantity;
   if (input.presentation !== undefined) p.presentation = input.presentation;
+  // B1.1 — still only keys the caller actually set. The RPC's per-kind allowlist rejects a
+  // coefficient on a menu, or a coupon field on a film type, so this stays deliberately thin.
+  if (input.installCoefficientBp !== undefined) p.install_coefficient_bp = input.installCoefficientBp;
+  if (input.couponDiscountType !== undefined) p.coupon_discount_type = input.couponDiscountType;
+  if (input.couponDiscountValue !== undefined) p.coupon_discount_value = input.couponDiscountValue;
+  if (input.couponCombinable !== undefined) p.coupon_combinable = input.couponCombinable;
+  if (input.couponValidFrom !== undefined) p.coupon_valid_from = input.couponValidFrom;
+  if (input.couponValidTo !== undefined) p.coupon_valid_to = input.couponValidTo;
   return p;
 }
 
@@ -108,6 +120,24 @@ export async function runSaveCatalogItem(
   }
   if (typeof input.labelJa !== "string" || input.labelJa.trim() === "") {
     return { ok: false, code: ERR.VALIDATION_ERROR, message: "名称は必須です" };
+  }
+  // B1.1 pre-RPC shape checks. Thin on purpose: the SQL CHECKs stay the authority for ranges,
+  // ordering and cross-field rules — this only stops obviously malformed input reaching the RPC.
+  if (input.installCoefficientBp !== undefined && input.installCoefficientBp !== null) {
+    if (!Number.isInteger(input.installCoefficientBp) || input.installCoefficientBp <= 0) {
+      return { ok: false, code: ERR.INVALID_COEFFICIENT, message: "施工係数は正の整数で入力してください" };
+    }
+  }
+  if (input.kind === "coupon") {
+    if (input.couponDiscountType !== "amount" && input.couponDiscountType !== "percent") {
+      return { ok: false, code: ERR.INVALID_COUPON_RULE, message: "クーポンの割引種別が不正です" };
+    }
+    if (!Number.isInteger(input.couponDiscountValue) || (input.couponDiscountValue ?? -1) < 0) {
+      return { ok: false, code: ERR.INVALID_COUPON_RULE, message: "クーポンの割引値が不正です" };
+    }
+    if (typeof input.couponCombinable !== "boolean") {
+      return { ok: false, code: ERR.INVALID_COUPON_RULE, message: "クーポンの併用可否を指定してください" };
+    }
   }
 
   const r = await deps.upsert(g.dealerId, input);
@@ -148,6 +178,66 @@ export async function runArchiveCatalogItem(
     return { ok: false, code: ERR.RPC_ERROR, message: "アーカイブに失敗しました" };
   }
   return { ok: true, itemId: r.itemId, action: r.action };
+}
+
+// ── PPF + coating adjustment rules (B1.1) ────────────────────────────────────
+// Same gate, same failure vocabulary, same "DB is the authoritative validator" split as the
+// catalog item paths above. dealer_id is injected server-side and never accepted from a caller.
+
+export interface AdjustmentUpsertDeps extends AuthzDeps {
+  readonly upsertAdjustment: (
+    dealerId: string,
+    input: PpfCoatingAdjustmentInput,
+  ) => Promise<{ ok: true; ruleId: string; action: "created" | "updated" } | { ok: false }>;
+}
+
+export async function runSavePpfCoatingAdjustment(
+  deps: AdjustmentUpsertDeps,
+  input: PpfCoatingAdjustmentInput,
+): Promise<PpfCoatingAdjustmentUpsertResult> {
+  const g = await gate(deps);
+  if (!g.ok) return g.failure;
+
+  const v = validatePpfCoatingAdjustmentRule({
+    ppfMethodCode: input.ppfMethodCode,
+    coatingCode: input.coatingCode,
+    adjustmentType: input.adjustmentType,
+    adjustmentValue: input.adjustmentValue,
+  });
+  if (!v.ok) {
+    return { ok: false, code: ERR.INVALID_ADJUSTMENT_RULE, message: v.message };
+  }
+
+  const r = await deps.upsertAdjustment(g.dealerId, input);
+  if (!r.ok) {
+    return { ok: false, code: ERR.RPC_ERROR, message: "保存に失敗しました" };
+  }
+  return { ok: true, ruleId: r.ruleId, action: r.action };
+}
+
+export interface AdjustmentArchiveDeps extends AuthzDeps {
+  readonly archiveAdjustment: (
+    dealerId: string,
+    ruleId: string,
+  ) => Promise<{ ok: true; ruleId: string; action: "archived" | "already_archived" } | { ok: false }>;
+}
+
+export async function runArchivePpfCoatingAdjustment(
+  deps: AdjustmentArchiveDeps,
+  ruleId: string,
+): Promise<PpfCoatingAdjustmentArchiveResult> {
+  const g = await gate(deps);
+  if (!g.ok) return g.failure;
+
+  if (typeof ruleId !== "string" || ruleId.trim() === "") {
+    return { ok: false, code: ERR.VALIDATION_ERROR, message: "規則IDが必要です" };
+  }
+
+  const r = await deps.archiveAdjustment(g.dealerId, ruleId);
+  if (!r.ok) {
+    return { ok: false, code: ERR.RPC_ERROR, message: "アーカイブに失敗しました" };
+  }
+  return { ok: true, ruleId: r.ruleId, action: r.action };
 }
 
 // ── review ────────────────────────────────────────────────────────────────---

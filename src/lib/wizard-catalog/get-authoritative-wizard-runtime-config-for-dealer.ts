@@ -48,10 +48,28 @@ import {
   type AuthoritativeWizardRuntimeConfiguration,
   type WizardCatalogRow,
   type WizardDealerBoundConfigReaders,
+  type WizardPpfCoatingAdjustmentRow,
 } from "./wizard-runtime-config";
 
+// B1.1-B2 adds the six columns migration 110 introduced: the PPF installation coefficient and the
+// five coupon rule columns. Nothing else about the query changes.
 const CATALOG_ROW_COLUMNS =
-  "id, market, product_mode, kind, owner_scope, dealer_id, code, label_ja, display_order, is_active, default_unit_price, priceable, quantity_required, min_quantity, max_quantity, ppf_type_group_id, duration_minutes, deleted_at, presentation, wizard_catalog_item_ranks(rank), wizard_catalog_item_categories(category_id)";
+  "id, market, product_mode, kind, owner_scope, dealer_id, code, label_ja, display_order, is_active, default_unit_price, priceable, quantity_required, min_quantity, max_quantity, ppf_type_group_id, duration_minutes, deleted_at, presentation, install_coefficient_bp, coupon_discount_type, coupon_discount_value, coupon_combinable, coupon_valid_from, coupon_valid_to, wizard_catalog_item_ranks(rank), wizard_catalog_item_categories(category_id)";
+
+/**
+ * Today's date in the Japan business timezone, as ISO `YYYY-MM-DD`.
+ *
+ * Coupon validity is a BUSINESS-DAY boundary, so it must not shift with the server's locale. The
+ * pure resolver never reads a clock; this server entry is the single place the date enters.
+ */
+function businessCalculationDate(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
 
 /** Read `dealers.detailer_rank` for exactly one dealer. A query error or absent row is a FAILED READ. */
 async function readStoredRankFor(dealerId: string): Promise<StoredRankRead> {
@@ -168,6 +186,12 @@ export async function getAuthoritativeWizardRuntimeConfigForDealer(
           duration_minutes: (d.duration_minutes as number | null) ?? null,
           deleted_at: (d.deleted_at as string | null) ?? null,
           presentation: d.presentation,
+          install_coefficient_bp: (d.install_coefficient_bp as number | null) ?? null,
+          coupon_discount_type: (d.coupon_discount_type as string | null) ?? null,
+          coupon_discount_value: (d.coupon_discount_value as number | null) ?? null,
+          coupon_combinable: (d.coupon_combinable as boolean | null) ?? null,
+          coupon_valid_from: (d.coupon_valid_from as string | null) ?? null,
+          coupon_valid_to: (d.coupon_valid_to as string | null) ?? null,
           ranks: ((d.wizard_catalog_item_ranks as { rank: string }[] | null) ?? []).map((x) => x.rank),
           categories: ((d.wizard_catalog_item_categories as { category_id: string }[] | null) ?? []).map(
             (x) => x.category_id,
@@ -178,6 +202,37 @@ export async function getAuthoritativeWizardRuntimeConfigForDealer(
         return { ok: false };
       }
     },
+
+    // B1.1-B2 — PPF + coating reduction rules for THIS dealer only. Same discipline as the catalog
+    // read: the explicit `dealer_id` predicate scopes the query rather than relying on RLS alone,
+    // and the resolver independently re-validates ownership on every returned row.
+    getPpfCoatingAdjustments: async (dealerId: string) => {
+      try {
+        const supabase = await createClient();
+        const { data, error } = await supabase
+          .from("dealer_ppf_coating_adjustments")
+          .select("id, dealer_id, ppf_method_code, coating_code, adjustment_type, adjustment_value, is_active, deleted_at")
+          .eq("dealer_id", dealerId)
+          .is("deleted_at", null);
+        if (error || !data) return { ok: false };
+
+        const rows: WizardPpfCoatingAdjustmentRow[] = data.map((d: Record<string, unknown>) => ({
+          id: d.id as string,
+          dealer_id: d.dealer_id as string,
+          ppf_method_code: d.ppf_method_code as string,
+          coating_code: d.coating_code as string,
+          adjustment_type: d.adjustment_type as string,
+          adjustment_value: (d.adjustment_value as number) ?? 0,
+          is_active: d.is_active as boolean,
+          deleted_at: (d.deleted_at as string | null) ?? null,
+        }));
+        return { ok: true, rows };
+      } catch {
+        return { ok: false };
+      }
+    },
+
+    getCalculationDate: businessCalculationDate,
   };
 
   const runtime = await resolveWizardRuntimeConfigForDealer(tenantId, readers);

@@ -15,7 +15,9 @@ import type { PricingCatalogResolution } from "@/lib/pricing/authoritative-prici
 import type { RankResolution } from "@/lib/dealer-settings/authoritative-shop-rank-core";
 import type { ShopRank } from "@/components/estimates/wizard/screens/step-types";
 import type { WizardScreenConfiguration } from "@/components/estimates/wizard/contract/wizard-runtime-inputs";
-import type { ProductionPricingConfiguration } from "@/components/estimates/wizard/pricing/wizard-manual-pricing-config";
+import type { ConfiguredPricingConfiguration } from "@/components/estimates/wizard/pricing/wizard-pricing-input-adapter-config";
+import type { ConfiguredCoupon } from "@/lib/pricing/configured-coupon-total";
+import type { PpfCoatingAdjustmentRule } from "./ppf-coating-adjustment-core";
 import type {
   FilmTypeOption, WindowAreaOption, MaintenanceMenu, WashMenu, RoomMenu,
   InstallationMethodOption, PpfPartOption, PpfTypeGroup, PpfTypeOption,
@@ -37,7 +39,12 @@ export type WizardRuntimeConfigFailure =
   | "invalid-rank-category"
   | "window-film-no-film-types"
   | "pricing-catalog-failed"
-  | "config-build-failed";
+  | "config-build-failed"
+  // B1.1-B2: a FAILED adjustment read is never treated as "no rules" — that would silently
+  // drop a configured reduction and overcharge the customer.
+  | "adjustments-read-failed"
+  | "malformed-coupon-row"
+  | "malformed-adjustment-row";
 
 // ── Row shapes (hand-typed; no repo-wide generated Supabase types exist) ──────
 export interface WizardCatalogRow {
@@ -62,7 +69,29 @@ export interface WizardCatalogRow {
   presentation: unknown;
   ranks: readonly string[];
   categories: readonly string[];
+  // ── B1.1-B2 projected columns (110). Optional so existing fixtures/readers compile unchanged;
+  //    an absent value means "not configured", never a fabricated default.
+  install_coefficient_bp?: number | null;
+  /** 'amount' | 'percent'. Percent is stored 0–100 by 103's `wci_coupon_percent_range`. */
+  coupon_discount_type?: string | null;
+  coupon_discount_value?: number | null;
+  coupon_combinable?: boolean | null;
+  coupon_valid_from?: string | null;
+  coupon_valid_to?: string | null;
 }
+
+/** One dealer-scoped PPF + coating reduction rule, as read. `percent` values are basis points. */
+export interface WizardPpfCoatingAdjustmentRow {
+  id: string;
+  dealer_id: string;
+  ppf_method_code: string;
+  coating_code: string;
+  adjustment_type: string;
+  adjustment_value: number;
+  is_active: boolean;
+  deleted_at: string | null;
+}
+
 export interface WizardLifecycleRow {
   state: string;
   current_configuration_revision: number;
@@ -76,6 +105,19 @@ export interface WizardConfigReaders {
   getCatalog: () => Promise<PricingCatalogResolution>;
   getLifecycle: (dealerId: string) => Promise<{ ok: true; row: WizardLifecycleRow | null } | { ok: false }>;
   getCatalogRows: (dealerId: string) => Promise<{ ok: true; rows: WizardCatalogRow[] } | { ok: false }>;
+  /**
+   * B1.1-B2 — dealer-scoped PPF + coating reduction rules. OPTIONAL: an absent reader means the
+   * dealer has no rules, which is the honest "not configured" state and prices exactly as before.
+   * A reader that FAILS is fail-closed (`adjustments-read-failed`) — never silently treated as empty.
+   */
+  getPpfCoatingAdjustments?: (
+    dealerId: string,
+  ) => Promise<{ ok: true; rows: WizardPpfCoatingAdjustmentRow[] } | { ok: false }>;
+  /**
+   * ISO `YYYY-MM-DD` used for coupon validity. Supplied by the server entry so this core reads no
+   * clock and stays pure/deterministic. Absent ⇒ dated coupons cannot validate and fail closed.
+   */
+  getCalculationDate?: () => string;
 }
 
 /**
@@ -93,6 +135,10 @@ export interface WizardDealerBoundConfigReaders {
   getCatalog: (dealerId: string) => Promise<PricingCatalogResolution>;
   getLifecycle: (dealerId: string) => Promise<{ ok: true; row: WizardLifecycleRow | null } | { ok: false }>;
   getCatalogRows: (dealerId: string) => Promise<{ ok: true; rows: WizardCatalogRow[] } | { ok: false }>;
+  getPpfCoatingAdjustments?: (
+    dealerId: string,
+  ) => Promise<{ ok: true; rows: WizardPpfCoatingAdjustmentRow[] } | { ok: false }>;
+  getCalculationDate?: () => string;
 }
 
 export type AuthoritativeWizardRuntimeConfiguration =
@@ -107,7 +153,12 @@ export type AuthoritativeWizardRuntimeConfiguration =
       shopRank: ShopRank;
       catalog: PricingCatalog;
       screenConfig: WizardScreenConfiguration;
-      pricingConfig: ProductionPricingConfiguration;
+      /**
+       * B1.1-B2: now carries the projected coupons, PPF coefficients and PPF/coating reduction
+       * rules. The extension fields are optional, so every existing consumer typed against
+       * `ProductionPricingConfiguration` keeps compiling and behaving identically.
+       */
+      pricingConfig: ConfiguredPricingConfiguration;
       lifecycle: { state: string; currentRevision: number; reviewedRevision: number };
     }
   | { ok: false; reason: WizardRuntimeConfigFailure };
@@ -193,8 +244,37 @@ export async function resolveWizardRuntimeConfig(readers: WizardConfigReaders): 
   if (!catalogResult.ok) return fail("pricing-catalog-failed");
   const catalog = catalogResult.catalog;
 
+  // ── B1.1-B2: dealer-scoped PPF + coating reduction rules. Read AFTER catalog validation and
+  //    BEFORE buildConfigs, on the SAME tenant. A reader that fails is fail-closed: treating a
+  //    failed read as "no rules" would silently drop a configured reduction. ──
+  let adjustmentRows: readonly WizardPpfCoatingAdjustmentRow[] = [];
+  if (readers.getPpfCoatingAdjustments) {
+    let adj: { ok: true; rows: WizardPpfCoatingAdjustmentRow[] } | { ok: false };
+    try {
+      adj = await readers.getPpfCoatingAdjustments(dealer.dealer_id);
+    } catch {
+      return fail("adjustments-read-failed");
+    }
+    if (!adj.ok) return fail("adjustments-read-failed");
+    for (const r of adj.rows) {
+      // Ownership is validated here too, exactly as for catalog rows: RLS may legitimately expose
+      // two dealers' rows to a multi-membership user, so admission is refused twice over.
+      if (r.dealer_id !== dealer.dealer_id) return fail("malformed-adjustment-row");
+      if (r.adjustment_type !== "amount" && r.adjustment_type !== "percent") return fail("malformed-adjustment-row");
+      if (!Number.isInteger(r.adjustment_value) || r.adjustment_value < 0) return fail("malformed-adjustment-row");
+      if (!CODE_RE.test(r.ppf_method_code) || !CODE_RE.test(r.coating_code)) return fail("malformed-adjustment-row");
+    }
+    adjustmentRows = adj.rows.filter((r) => r.deleted_at === null);
+  }
+
   // ── Build configurations (rank-filtered; fail closed on window-film gap) ──
-  const built = buildConfigs(cat.rows, shopRank, catalog);
+  const built = buildConfigs(
+    cat.rows,
+    shopRank,
+    catalog,
+    adjustmentRows,
+    readers.getCalculationDate?.() ?? "",
+  );
   if (!built.ok) return fail(built.reason);
 
   return {
@@ -237,6 +317,11 @@ export async function resolveWizardRuntimeConfigForDealer(
     getCatalog: () => readers.getCatalog(boundDealerId),
     getLifecycle: () => readers.getLifecycle(boundDealerId),
     getCatalogRows: () => readers.getCatalogRows(boundDealerId),
+    // Bound to the SAME single constant tenant as every other reader above.
+    ...(readers.getPpfCoatingAdjustments
+      ? { getPpfCoatingAdjustments: () => readers.getPpfCoatingAdjustments!(boundDealerId) }
+      : {}),
+    ...(readers.getCalculationDate ? { getCalculationDate: readers.getCalculationDate } : {}),
   });
 }
 
@@ -245,7 +330,9 @@ function buildConfigs(
   rows: readonly WizardCatalogRow[],
   rank: ShopRank,
   _catalog: PricingCatalog,
-): { ok: true; screenConfig: WizardScreenConfiguration; pricingConfig: ProductionPricingConfiguration } | { ok: false; reason: WizardRuntimeConfigFailure } {
+  adjustmentRows: readonly WizardPpfCoatingAdjustmentRow[] = [],
+  calculationDate = "",
+): { ok: true; screenConfig: WizardScreenConfiguration; pricingConfig: ConfiguredPricingConfiguration } | { ok: false; reason: WizardRuntimeConfigFailure } {
   // Rank filtering: an item is offered only when its business ranks include the dealer rank.
   const eligible = rows.filter((r) => r.ranks.includes(rank));
   const of = (kind: string, scope?: "global" | "dealer") =>
@@ -286,6 +373,54 @@ function buildConfigs(
     products: groupRows.filter((c) => c.ppf_type_group_id === p.id).sort(byOrder).map((c): PpfTypeOption => ({ id: c.code, label: c.label_ja ?? "" })),
   }));
 
+  // ── B1.1-B2: dealer-authored coupons (kind = 'coupon', dealer scope) ─────────
+  // 103 stores a percent coupon as 0–100 (`wci_coupon_percent_range`), while the pricing engine
+  // consumes integer BASIS POINTS. The conversion happens HERE, once, at the projection boundary —
+  // so exactly one place owns the unit and the two can never drift apart.
+  const couponRows = of("coupon", "dealer");
+  const configuredCoupons: ConfiguredCoupon[] = [];
+  for (const r of couponRows) {
+    const type = r.coupon_discount_type;
+    const value = r.coupon_discount_value;
+    if ((type !== "amount" && type !== "percent") || typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+      return { ok: false, reason: "malformed-coupon-row" };
+    }
+    if (type === "percent" && value > 100) return { ok: false, reason: "malformed-coupon-row" };
+    configuredCoupons.push({
+      couponId: r.id,
+      code: r.code,
+      label: r.label_ja ?? "",
+      value: type === "amount"
+        ? { kind: "amount", amountYen: value }
+        : { kind: "percent", basisPoints: value * 100 }, // 0–100 → basis points
+      combinable: r.coupon_combinable ?? false,
+      validFrom: r.coupon_valid_from ?? null,
+      validTo: r.coupon_valid_to ?? null,
+      isActive: r.is_active,
+      displayOrder: r.display_order,
+    });
+  }
+
+  // ── B1.1-B2: PPF installation coefficients, keyed by the item CODE ───────────
+  // The wizard's manual PPF identity is the catalog code, so the map is keyed by code and an
+  // unconfigured code simply has no entry (the coefficient helper then applies the identity).
+  const installCoefficientBpByCode: Record<string, number> = {};
+  for (const r of [...of("ppf_type_group"), ...of("film_type")]) {
+    const bp = r.install_coefficient_bp;
+    if (bp === null || bp === undefined) continue;
+    if (!Number.isInteger(bp) || bp <= 0) return { ok: false, reason: "malformed-catalog-row" };
+    installCoefficientBpByCode[r.code] = bp;
+  }
+
+  const ppfCoatingAdjustments: PpfCoatingAdjustmentRule[] = adjustmentRows.map((r) => ({
+    ruleId: r.id,
+    ppfMethodCode: r.ppf_method_code,
+    coatingCode: r.coating_code,
+    adjustmentType: r.adjustment_type === "percent" ? "percent" : "amount",
+    adjustmentValue: r.adjustment_value,
+    isActive: r.is_active,
+  }));
+
   const screenConfig: WizardScreenConfiguration = {
     maintenanceMenus: of("maintenance_menu", "dealer").map(menu) as MaintenanceMenu[],
     washMenus: of("wash_menu", "dealer").map(menu) as WashMenu[],
@@ -294,14 +429,28 @@ function buildConfigs(
     windowAreas,
     otherWorkPresets: of("other_work_preset", "dealer").map((r): OtherWorkPresetItem => ({ id: r.code, name: r.label_ja ?? "", defaultPrice: r.default_unit_price ?? 0, displayOrder: r.display_order })),
     storeGlobalOptions: of("store_global_option", "dealer").map((r): StoreGlobalOption => ({ id: r.code, name: r.label_ja ?? "", defaultPrice: r.default_unit_price ?? 0, editableUnitPrice: false, quantityRequired: r.quantity_required, minQty: r.min_quantity, maxQty: r.max_quantity ?? undefined, displayOrder: r.display_order })),
-    coupons: [] as CouponOption[], // coupons remain unsupported until stable dealer-authored coupon rows exist
+    coupons: couponRows.map((r): CouponOption => ({
+      id: r.code,
+      name: r.label_ja ?? "",
+      discountType: r.coupon_discount_type === "percent" ? "percent" : "amount",
+      discountValue: r.coupon_discount_value ?? 0,
+      combinable: r.coupon_combinable ?? false,
+      displayOrder: r.display_order,
+      ...(r.coupon_valid_from || r.coupon_valid_to
+        ? { validityText: `${r.coupon_valid_from ?? ""} 〜 ${r.coupon_valid_to ?? ""}`.trim() }
+        : {}),
+    })),
     ppfMethods,
     ppfParts,
     ppfTypeGroups,
   };
 
   const label = (r: WizardCatalogRow) => ({ code: r.code, label: r.label_ja ?? "" });
-  const pricingConfig: ProductionPricingConfiguration = {
+  const pricingConfig: ConfiguredPricingConfiguration = {
+    coupons: configuredCoupons,
+    installCoefficientBpByCode,
+    ppfCoatingAdjustments,
+    calculationDate,
     ppfMethods: of("ppf_method", "global").map(label),
     filmTypes: of("film_type", "dealer").map(label),
     maintenanceMenus: of("maintenance_menu", "dealer").map(label),

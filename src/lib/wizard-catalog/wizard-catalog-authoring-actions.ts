@@ -20,6 +20,8 @@ import {
   runSaveCatalogItem,
   runArchiveCatalogItem,
   runConfirmCatalogReview,
+  runSavePpfCoatingAdjustment,
+  runArchivePpfCoatingAdjustment,
   buildUpsertPayload,
 } from "./wizard-catalog-authoring-core";
 import type {
@@ -27,6 +29,9 @@ import type {
   WizardCatalogUpsertResult,
   WizardCatalogArchiveResult,
   WizardCatalogReviewResult,
+  PpfCoatingAdjustmentInput,
+  PpfCoatingAdjustmentUpsertResult,
+  PpfCoatingAdjustmentArchiveResult,
 } from "./wizard-catalog-authoring-types";
 
 const SETTINGS_PATH = "/settings";
@@ -48,6 +53,8 @@ interface RpcEnvelope {
   kind?: string;
   action?: string;
   reviewed_revision?: number;
+  /** B1.1-B7 — returned by the PPF+coating adjustment RPCs. */
+  rule_id?: string;
 }
 
 /** Create or update a dealer-owned Wizard catalog item. */
@@ -123,6 +130,94 @@ export async function archiveWizardCatalogItem(
       },
     },
     itemId,
+  );
+  if (result.ok) revalidatePath(SETTINGS_PATH);
+  return result;
+}
+
+/**
+ * Create or update a dealer-scoped PPF + coating reduction rule (B1.1).
+ *
+ * B1.1-B7: writes go through the SECURITY DEFINER RPC, never direct table DML. `authenticated`
+ * holds SELECT only on this table, so the RPC is the sole write path and
+ * `wiz_can_configure(p_expected_dealer)` inside it is the enforcing authority. The dealer id is
+ * the server-resolved one and is never taken from the caller — it is an assertion the RPC
+ * re-verifies, exactly as the catalog RPCs do.
+ */
+export async function saveDealerPpfCoatingAdjustment(
+  input: PpfCoatingAdjustmentInput,
+): Promise<PpfCoatingAdjustmentUpsertResult> {
+  const result = await runSavePpfCoatingAdjustment(
+    {
+      getDealer,
+      getStaffRole,
+      upsertAdjustment: async (dealerId, inp) => {
+        try {
+          const supabase = await createClient();
+          const { data, error } = await supabase.rpc("wiz_upsert_ppf_coating_adjustment", {
+            p_expected_dealer: dealerId,
+            p_rule_id: inp.ruleId ?? null,
+            // Only the payload keys the RPC allowlists. `dealer_id` is absent by construction.
+            p_payload: {
+              ppf_method_code: inp.ppfMethodCode,
+              coating_code: inp.coatingCode,
+              adjustment_type: inp.adjustmentType,
+              adjustment_value: inp.adjustmentValue,
+              is_active: inp.isActive ?? true,
+            },
+          });
+          const env = data as RpcEnvelope | null;
+          if (error || !env?.ok || !env.rule_id) {
+            console.error("[saveDealerPpfCoatingAdjustment] rpc failed:", error?.message);
+            return { ok: false };
+          }
+          return { ok: true, ruleId: env.rule_id, action: env.action === "updated" ? "updated" : "created" };
+        } catch (err) {
+          console.error("[saveDealerPpfCoatingAdjustment] threw:", err instanceof Error ? err.message : err);
+          return { ok: false };
+        }
+      },
+    },
+    input,
+  );
+  if (result.ok) revalidatePath(SETTINGS_PATH);
+  return result;
+}
+
+/** Soft-archive a PPF + coating reduction rule (never hard-deletes: no DELETE policy or grant). */
+export async function archiveDealerPpfCoatingAdjustment(
+  ruleId: string,
+): Promise<PpfCoatingAdjustmentArchiveResult> {
+  const result = await runArchivePpfCoatingAdjustment(
+    {
+      getDealer,
+      getStaffRole,
+      archiveAdjustment: async (dealerId, id) => {
+        try {
+          const supabase = await createClient();
+          const { data, error } = await supabase.rpc("wiz_archive_ppf_coating_adjustment", {
+            p_expected_dealer: dealerId,
+            p_rule_id: id,
+          });
+          const env = data as RpcEnvelope | null;
+          if (error || !env?.ok || !env.rule_id) {
+            console.error("[archiveDealerPpfCoatingAdjustment] rpc failed:", error?.message);
+            return { ok: false };
+          }
+          // The RPC — not this action — decides idempotency: an already-archived row performs no
+          // write and reports `already_archived`.
+          return {
+            ok: true,
+            ruleId: env.rule_id,
+            action: env.action === "already_archived" ? "already_archived" : "archived",
+          };
+        } catch (err) {
+          console.error("[archiveDealerPpfCoatingAdjustment] threw:", err instanceof Error ? err.message : err);
+          return { ok: false };
+        }
+      },
+    },
+    ruleId,
   );
   if (result.ok) revalidatePath(SETTINGS_PATH);
   return result;

@@ -33,9 +33,22 @@ const MSG = {
   presentation: "フィルム情報の値が正しくありません",
   itemId: "対象項目の指定が正しくありません",
   isActive: "表示状態の指定が正しくありません",
+  installCoefficientBp: "施工係数は正の整数（basis points, 10000 = ×1.00）で入力してください",
+  couponDiscountType: "クーポンの割引種別が正しくありません",
+  couponDiscountValue: "クーポンの割引値は0以上の整数で入力してください",
+  couponCombinable: "クーポンの併用可否の指定が正しくありません",
+  couponValidFrom: "有効期間（開始）はYYYY-MM-DD形式で入力してください",
+  couponValidTo: "有効期間（終了）はYYYY-MM-DD形式で入力してください",
 } as const;
 
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 // Writable fields per kind (camelCase, client-facing). Anything else is rejected.
+//
+// EXHAUSTIVE BY CONSTRUCTION. The `never` default is not decoration: this function previously
+// omitted the two kinds B1.1 added, fell through to `undefined`, and the caller's
+// `allowed.includes(key)` threw a TypeError for every coupon and PPF-type submission. The
+// assertion below makes that failure a COMPILE error the next time a kind is added.
 const COMMON_FIELDS = ["kind", "itemId", "labelJa", "displayOrder", "isActive"] as const;
 function allowedFields(kind: SupportedAuthoringKind): readonly string[] {
   switch (kind) {
@@ -44,11 +57,25 @@ function allowedFields(kind: SupportedAuthoringKind): readonly string[] {
     case "room_cleaning_menu":
       return [...COMMON_FIELDS, "priceYen", "durationMinutes"];
     case "film_type":
-      return [...COMMON_FIELDS, "priceYen", "presentation"];
+      return [...COMMON_FIELDS, "priceYen", "presentation", "installCoefficientBp"];
+    case "ppf_type_group":
+      return [...COMMON_FIELDS, "priceYen", "installCoefficientBp"];
+    case "coupon":
+      // No priceYen: a coupon's monetary meaning is its discount value, and the RPC refuses
+      // default_unit_price on a coupon (WIZ_COUPON_PRICE_FORBIDDEN).
+      return [
+        ...COMMON_FIELDS,
+        "couponDiscountType", "couponDiscountValue", "couponCombinable",
+        "couponValidFrom", "couponValidTo",
+      ];
     case "other_work_preset":
       return [...COMMON_FIELDS];
     case "store_global_option":
       return [...COMMON_FIELDS, "priceYen", "priceable", "quantityRequired", "minQuantity", "maxQuantity"];
+    default: {
+      const exhaustive: never = kind;
+      throw new Error(`unhandled authoring kind: ${String(exhaustive)}`);
+    }
   }
 }
 
@@ -87,7 +114,8 @@ function normStr(v: unknown): string {
 export function validateWizardItemForm(raw: Record<string, unknown>): WizardItemFormResult {
   const errors: Record<string, string> = {};
 
-  // 1. kind must be a supported authoring kind (rejects coupon and any nonsense).
+  // 1. kind must be a supported authoring kind (B1.1: coupon and ppf_type_group are now among
+  //    them; ppf_method / ppf_part / window_area remain global read-only and are still rejected).
   const kind = raw.kind;
   if (!isSupportedAuthoringKind(kind)) {
     return { ok: false, errors: { kind: MSG.kind } };
@@ -131,8 +159,8 @@ export function validateWizardItemForm(raw: Record<string, unknown>): WizardItem
     else isActive = b;
   }
 
-  // 7. price (kinds that support it: menus/film/store — NOT other_work).
-  const supportsPrice = kind !== "other_work_preset";
+  // 7. price (kinds that support it: menus/film/ppf/store — NOT other_work, NOT coupon).
+  const supportsPrice = kind !== "other_work_preset" && kind !== "coupon";
   let defaultUnitPrice: number | null | undefined;
   if (supportsPrice && !isBlankOptional(raw.priceYen)) {
     const p = parseIntStrict(raw.priceYen);
@@ -203,6 +231,50 @@ export function validateWizardItemForm(raw: Record<string, unknown>): WizardItem
     }
   }
 
+  // 11. PPF installation coefficient (film/ppf only, optional, positive integer BASIS POINTS).
+  //     Allowlisting a field without parsing it would drop it silently, so the two kinds that
+  //     accept it above must also read it here.
+  let installCoefficientBp: number | undefined;
+  if ((kind === "film_type" || kind === "ppf_type_group") && !isBlankOptional(raw.installCoefficientBp)) {
+    const p = parseIntStrict(raw.installCoefficientBp);
+    if (!p.ok || p.value <= 0) errors.installCoefficientBp = MSG.installCoefficientBp;
+    else installCoefficientBp = p.value;
+  }
+
+  // 12. Coupon rule. Bounds (percent 0–100, validity ordering) are enforced by the authoring core
+  //     and the database CHECKs — this pass only rejects malformed SHAPES, exactly as elsewhere.
+  //     `couponDiscountValue` is stored in the unit it is authored in: yen for `amount`, an
+  //     INTEGER PERCENT 0–100 for `percent`. No conversion happens here.
+  let couponDiscountType: "amount" | "percent" | undefined;
+  let couponDiscountValue: number | undefined;
+  let couponCombinable: boolean | undefined;
+  let couponValidFrom: string | null | undefined;
+  let couponValidTo: string | null | undefined;
+  if (kind === "coupon") {
+    const t = raw.couponDiscountType;
+    if (t === "amount" || t === "percent") couponDiscountType = t;
+    else errors.couponDiscountType = MSG.couponDiscountType;
+
+    const p = parseIntStrict(raw.couponDiscountValue);
+    if (!p.ok || p.value < 0) errors.couponDiscountValue = MSG.couponDiscountValue;
+    else couponDiscountValue = p.value;
+
+    const b = parseBool(raw.couponCombinable);
+    if (b === null) errors.couponCombinable = MSG.couponCombinable;
+    else couponCombinable = b;
+
+    // Blank/absent means open-ended and persists as an explicit null.
+    if (isBlankOptional(raw.couponValidFrom)) couponValidFrom = null;
+    else if (typeof raw.couponValidFrom === "string" && ISO_DATE_RE.test(raw.couponValidFrom.trim())) {
+      couponValidFrom = raw.couponValidFrom.trim();
+    } else errors.couponValidFrom = MSG.couponValidFrom;
+
+    if (isBlankOptional(raw.couponValidTo)) couponValidTo = null;
+    else if (typeof raw.couponValidTo === "string" && ISO_DATE_RE.test(raw.couponValidTo.trim())) {
+      couponValidTo = raw.couponValidTo.trim();
+    } else errors.couponValidTo = MSG.couponValidTo;
+  }
+
   if (Object.keys(errors).length > 0) return { ok: false, errors };
 
   // Build the EXACT accepted C2C3 payload shape (only fields relevant to the kind).
@@ -219,6 +291,12 @@ export function validateWizardItemForm(raw: Record<string, unknown>): WizardItem
     ...(minQuantity !== undefined ? { minQuantity } : {}),
     ...(maxQuantity !== undefined ? { maxQuantity } : {}),
     ...(presentation !== undefined ? { presentation } : {}),
+    ...(installCoefficientBp !== undefined ? { installCoefficientBp } : {}),
+    ...(couponDiscountType !== undefined ? { couponDiscountType } : {}),
+    ...(couponDiscountValue !== undefined ? { couponDiscountValue } : {}),
+    ...(couponCombinable !== undefined ? { couponCombinable } : {}),
+    ...(couponValidFrom !== undefined ? { couponValidFrom } : {}),
+    ...(couponValidTo !== undefined ? { couponValidTo } : {}),
   };
   return { ok: true, input };
 }

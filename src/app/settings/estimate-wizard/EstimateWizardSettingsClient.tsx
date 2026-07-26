@@ -45,6 +45,14 @@ interface DraftFields {
   vlt: string;
   heatRejection: string;
   color: string;
+  // B1.1 — entered as a human ×multiplier (e.g. "1.25") and converted to integer basis points
+  // on submit, so no float multiplier is ever stored or sent.
+  coefficient: string;
+  couponDiscountType: "amount" | "percent";
+  couponDiscountValue: string;
+  couponCombinable: boolean;
+  couponValidFrom: string;
+  couponValidTo: string;
 }
 
 const KIND_LABEL: Record<SupportedAuthoringKind, string> = {
@@ -54,9 +62,29 @@ const KIND_LABEL: Record<SupportedAuthoringKind, string> = {
   room_cleaning_menu: "室内清掃",
   other_work_preset: "その他作業",
   store_global_option: "店舗オプション",
+  coupon: "クーポン",
+  ppf_type_group: "PPF種類",
 };
 
 const SERVICE_KINDS: SupportedAuthoringKind[] = ["maintenance_menu", "wash_menu", "room_cleaning_menu"];
+/** The kinds that carry an installation coefficient. */
+const COEFFICIENT_KINDS: SupportedAuthoringKind[] = ["film_type", "ppf_type_group"];
+const BP_PER_UNIT = 10_000;
+
+/** "1.25" → 12500. Returns null for anything not a positive finite multiplier. */
+function multiplierToBasisPoints(raw: string): number | null {
+  const t = raw.trim();
+  if (t === "") return null;
+  const n = Number(t);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.round(n * BP_PER_UNIT);
+}
+
+/** 12500 → "1.25". Keeps the editor showing the same multiplier the operator typed. */
+function basisPointsToMultiplier(bp: number | null): string {
+  if (bp === null || !Number.isInteger(bp) || bp <= 0) return "";
+  return String(bp / BP_PER_UNIT);
+}
 
 const inputCls =
   "w-full bg-[#1e293b] border border-slate-700 rounded-lg px-2.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 disabled:opacity-50";
@@ -72,6 +100,8 @@ function emptyDraft(kind: SupportedAuthoringKind): DraftFields {
     itemId: null, kind, labelJa: "", displayOrder: "", priceYen: "", durationMinutes: "",
     priceable: true, quantityRequired: false, minQuantity: "", maxQuantity: "",
     brand: "", vlt: "", heatRejection: "", color: "",
+    coefficient: "", couponDiscountType: "amount", couponDiscountValue: "",
+    couponCombinable: true, couponValidFrom: "", couponValidTo: "",
   };
 }
 
@@ -91,6 +121,15 @@ function draftFromItem(item: WizardSettingsItemView): DraftFields {
     vlt: item.presentation?.vlt ?? "",
     heatRejection: item.presentation?.heatRejection ?? "",
     color: item.presentation?.color ?? "",
+    coefficient: basisPointsToMultiplier(item.installCoefficientBp),
+    couponDiscountType: item.coupon?.discountType ?? "amount",
+    // Coupon values are stored in the unit they are authored in — yen for `amount`, an INTEGER
+    // PERCENT 0–100 for `percent` — so both display directly with no conversion. (Contrast the
+    // PPF coefficient just above, which IS stored in basis points and is converted.)
+    couponDiscountValue: item.coupon === null ? "" : String(item.coupon.discountValue),
+    couponCombinable: item.coupon?.combinable ?? true,
+    couponValidFrom: item.coupon?.validFrom ?? "",
+    couponValidTo: item.coupon?.validTo ?? "",
   };
 }
 
@@ -100,7 +139,10 @@ function buildRaw(d: DraftFields): Record<string, unknown> {
   if (d.itemId) raw.itemId = d.itemId;
   if (d.displayOrder.trim() !== "") raw.displayOrder = d.displayOrder.trim();
   const isMenu = SERVICE_KINDS.includes(d.kind);
-  if ((isMenu || d.kind === "film_type" || d.kind === "store_global_option") && d.priceYen.trim() !== "") {
+  if (
+    (isMenu || d.kind === "film_type" || d.kind === "ppf_type_group" || d.kind === "store_global_option") &&
+    d.priceYen.trim() !== ""
+  ) {
     raw.priceYen = d.priceYen.trim();
   }
   if (isMenu && d.durationMinutes.trim() !== "") raw.durationMinutes = d.durationMinutes.trim();
@@ -117,6 +159,28 @@ function buildRaw(d: DraftFields): Record<string, unknown> {
     raw.quantityRequired = d.quantityRequired;
     if (d.minQuantity.trim() !== "") raw.minQuantity = d.minQuantity.trim();
     if (d.maxQuantity.trim() !== "") raw.maxQuantity = d.maxQuantity.trim();
+  }
+  // ── PPF COEFFICIENT: BASIS POINTS ──────────────────────────────────────────
+  // The operator types a ×multiplier ("1.25"); the column is basis points, so it IS converted.
+  // This is the ONLY unit conversion performed on submit.
+  if (COEFFICIENT_KINDS.includes(d.kind)) {
+    const bp = multiplierToBasisPoints(d.coefficient);
+    if (bp !== null) raw.installCoefficientBp = bp;
+  }
+  // ── COUPON VALUE: NO CONVERSION ────────────────────────────────────────────
+  // `coupon_discount_value` is stored in the unit it is authored in: yen for `amount`, and an
+  // INTEGER PERCENT 0–100 for `percent` (enforced by `wci_coupon_percent_range`). Multiplying by
+  // 100 here — the B1.1 defect — sent a 10% coupon as 1000 and the CHECK rejected every rate
+  // above 1%. Truncation, not rounding, keeps the submitted value exactly what was typed.
+  if (d.kind === "coupon") {
+    raw.couponDiscountType = d.couponDiscountType;
+    const v = Number(d.couponDiscountValue.trim());
+    if (d.couponDiscountValue.trim() !== "" && Number.isFinite(v)) {
+      raw.couponDiscountValue = Math.trunc(v);
+    }
+    raw.couponCombinable = d.couponCombinable;
+    raw.couponValidFrom = d.couponValidFrom.trim() === "" ? null : d.couponValidFrom.trim();
+    raw.couponValidTo = d.couponValidTo.trim() === "" ? null : d.couponValidTo.trim();
   }
   return raw;
 }
@@ -341,13 +405,37 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
         />
       ))}
 
-      {/* Coupon planned card */}
-      <section className="px-4 py-4 bg-slate-900/40 border border-slate-800 rounded-xl flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-300">{view.coupon.titleJa}</span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">{view.coupon.badgeJa}</span>
+      {/* PPF + coating reduction rules (B1.1). Read-only listing: rules are authored through
+          saveDealerPpfCoatingAdjustment. There is no default rule — an empty list genuinely means
+          "no reduction applies", and a client constant must never stand in for dealer settings. */}
+      <section
+        id={view.ppfCoatingAdjustment.anchorId}
+        className="px-4 py-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col gap-3 scroll-mt-4"
+      >
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-slate-200">{view.ppfCoatingAdjustment.titleJa}</span>
+          <p className="text-[11px] text-slate-500">{view.ppfCoatingAdjustment.descriptionJa}</p>
         </div>
-        <p className="text-[11px] text-slate-500">{view.coupon.descriptionJa}</p>
+        {view.ppfCoatingAdjustment.rules.length === 0 ? (
+          <p className="text-[11px] text-slate-500">減額規則は登録されていません。</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {view.ppfCoatingAdjustment.rules.map((r) => (
+              <li
+                key={r.ruleId}
+                className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-900/40 border border-slate-800"
+              >
+                <span className="text-sm text-slate-200">
+                  {r.ppfMethodLabelJa} ＋ {r.coatingLabelJa}
+                </span>
+                <span className="text-xs text-slate-400">{r.adjustmentLabelJa}</span>
+                {!r.isActive && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">無効</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {/* Add / edit overlay: bottom sheet on mobile, side panel on tablet/desktop */}
@@ -485,7 +573,11 @@ function DraftOverlay({
   const isMenu = SERVICE_KINDS.includes(draft.kind);
   const isFilm = draft.kind === "film_type";
   const isStore = draft.kind === "store_global_option";
-  const supportsPrice = draft.kind !== "other_work_preset";
+  const hasCoefficient = COEFFICIENT_KINDS.includes(draft.kind);
+  const isCoupon = draft.kind === "coupon";
+  // Coupons carry no catalog unit price — their monetary meaning is the discount value below,
+  // and the RPC rejects `default_unit_price` on a coupon (WIZ_COUPON_PRICE_FORBIDDEN).
+  const supportsPrice = draft.kind !== "other_work_preset" && draft.kind !== "coupon";
   const titleJa = `${KIND_LABEL[draft.kind]}を${draft.itemId ? "編集" : "追加"}`;
 
   const Err = ({ id }: { id: string }) =>
@@ -554,6 +646,120 @@ function DraftOverlay({
               />
               <Err id="durationMinutes" />
             </label>
+          )}
+
+          {hasCoefficient && (
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] text-slate-400">施工係数（任意・倍率）</span>
+              <input
+                className={inputCls}
+                inputMode="decimal"
+                placeholder="例: 1.25"
+                value={draft.coefficient}
+                onChange={(e) => set({ coefficient: e.target.value })}
+                disabled={isPending}
+                aria-invalid={!!errors.installCoefficientBp}
+                aria-describedby={errors.installCoefficientBp ? "err-installCoefficientBp" : undefined}
+              />
+              <span className="text-[10px] text-slate-500">
+                基本単価に掛ける倍率です。1.00 で等倍。未入力の場合は係数なし（等倍）になります。
+              </span>
+              <Err id="installCoefficientBp" />
+            </label>
+          )}
+
+          {isCoupon && (
+            <div className="flex flex-col gap-3 rounded-lg bg-slate-900/40 border border-slate-800 px-3 py-3">
+              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">クーポン内容</span>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] text-slate-400">割引種別</span>
+                {/* Button-based, never a dropdown (Ver2.2 UI rule). */}
+                <div className="flex gap-2">
+                  {(["amount", "percent"] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => set({ couponDiscountType: t })}
+                      disabled={isPending}
+                      aria-pressed={draft.couponDiscountType === t}
+                      className={
+                        draft.couponDiscountType === t
+                          ? "px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white"
+                          : "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-200 hover:bg-slate-600"
+                      }
+                    >
+                      {t === "amount" ? "金額（円）" : "率（％）"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px] text-slate-400">
+                  {draft.couponDiscountType === "amount" ? "割引額（円）" : "割引率（％）"}
+                </span>
+                <input
+                  className={inputCls}
+                  inputMode="decimal"
+                  value={draft.couponDiscountValue}
+                  onChange={(e) => set({ couponDiscountValue: e.target.value })}
+                  disabled={isPending}
+                  aria-invalid={!!errors.couponDiscountValue}
+                  aria-describedby={errors.couponDiscountValue ? "err-couponDiscountValue" : undefined}
+                />
+                <Err id="couponDiscountValue" />
+              </label>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] text-slate-400">併用</span>
+                <div className="flex gap-2">
+                  {([true, false] as const).map((v) => (
+                    <button
+                      key={String(v)}
+                      type="button"
+                      onClick={() => set({ couponCombinable: v })}
+                      disabled={isPending}
+                      aria-pressed={draft.couponCombinable === v}
+                      className={
+                        draft.couponCombinable === v
+                          ? "px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white"
+                          : "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-200 hover:bg-slate-600"
+                      }
+                    >
+                      {v ? "他クーポンと併用可" : "併用不可"}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-[10px] text-slate-500">
+                  併用不可のクーポンが他のクーポンと同時に選択された場合、見積では全クーポンが適用されません。
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] text-slate-400">有効期間（開始・任意）</span>
+                  <input
+                    className={inputCls}
+                    type="date"
+                    value={draft.couponValidFrom}
+                    onChange={(e) => set({ couponValidFrom: e.target.value })}
+                    disabled={isPending}
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] text-slate-400">有効期間（終了・任意）</span>
+                  <input
+                    className={inputCls}
+                    type="date"
+                    value={draft.couponValidTo}
+                    onChange={(e) => set({ couponValidTo: e.target.value })}
+                    disabled={isPending}
+                  />
+                </label>
+              </div>
+              <Err id="couponValidTo" />
+            </div>
           )}
 
           {isFilm && (

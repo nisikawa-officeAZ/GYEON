@@ -12,6 +12,8 @@ import {
   interpretReviewOutcome,
   formatYen,
   formatDuration,
+  formatCouponValue,
+  formatDiscountValue,
   CONCURRENCY_MESSAGE_JA,
   type RawCatalogItem,
   type RawSettingsData,
@@ -68,7 +70,8 @@ test("sections group by family; service holds three kind-groups", () => {
     ],
   }));
   const ids = v.sections.map((s) => s.id);
-  assert.deepEqual(ids, ["film", "service", "otherwork", "store"]);
+  // B1.1 added the `ppf` and `coupon` sections; the original four keep their identity and order.
+  assert.deepEqual(ids, ["film", "ppf", "service", "otherwork", "store", "coupon"]);
   const service = v.sections.find((s) => s.id === "service")!;
   assert.deepEqual(service.groups.map((g) => g.kind), ["maintenance_menu", "wash_menu", "room_cleaning_menu"]);
   assert.equal(service.itemCount, 3);
@@ -178,15 +181,82 @@ test("coating is summary + link only (no editor)", () => {
   assert.match(v.coating.summaryJa, /3件/);
 });
 
-test("coupon is a planned-only card", () => {
+// B1.1-B3 — the two percent units are distinct and must never be formatted with each other's
+// formatter. Formatting a 10% coupon with the basis-point formatter renders "0%", which is the
+// exact confusion that produced the original defect.
+test("coupon percent formats from the STORED 0–100 unit", () => {
+  assert.equal(formatCouponValue("percent", 10), "10%引き");
+  assert.equal(formatCouponValue("percent", 100), "100%引き");
+  assert.equal(formatCouponValue("percent", 0), "0%引き");
+  assert.equal(formatCouponValue("amount", 5000), "¥5,000引き");
+});
+
+test("PPF/coating adjustment percent stays in BASIS POINTS", () => {
+  assert.equal(formatDiscountValue("percent", 1000), "10%引き");
+  assert.equal(formatDiscountValue("percent", 10000), "100%引き");
+  assert.equal(formatDiscountValue("amount", 30000), "¥30,000引き");
+});
+
+test("a coupon rule view renders its stored percent directly, never divided by 100", () => {
+  const v = buildEstimateWizardSettingsView(
+    raw({
+      items: [
+        item({
+          code: "coupon-a", kind: "coupon", labelJa: "新規ご来店",
+          couponDiscountType: "percent", couponDiscountValue: 10,
+          couponCombinable: true, couponValidFrom: null, couponValidTo: null,
+        }),
+      ],
+    }),
+  );
+  const coupon = v.sections.find((s) => s.id === "coupon");
+  const rule = coupon?.groups[0]?.items[0]?.coupon;
+  assert.equal(rule?.discountValue, 10);
+  assert.equal(rule?.discountLabelJa, "10%引き");
+});
+
+// B1.1 — coupons are a real editable section; the "planned" card is gone.
+test("coupon is an editable section, not a planned card", () => {
   const v = buildEstimateWizardSettingsView(raw());
-  assert.equal(v.coupon.badgeJa, "今後対応予定");
+  const coupon = v.sections.find((s) => s.id === "coupon");
+  assert.ok(coupon, "coupon section must exist");
+  assert.equal(coupon.kinds.includes("coupon"), true);
+  assert.equal("coupon" in v, false, "the planned-only coupon card must no longer exist");
+});
+
+test("PPF types are an editable section", () => {
+  const v = buildEstimateWizardSettingsView(raw());
+  const ppf = v.sections.find((s) => s.id === "ppf");
+  assert.ok(ppf, "ppf section must exist");
+  assert.equal(ppf.kinds.includes("ppf_type_group"), true);
+});
+
+test("PPF+coating adjustment: no rules configured means no reduction (never a default rule)", () => {
+  const v = buildEstimateWizardSettingsView(raw());
+  assert.deepEqual(v.ppfCoatingAdjustment.rules, []);
+});
+
+test("PPF+coating adjustment: archived rules are excluded, labels fall back to the CODE", () => {
+  const v = buildEstimateWizardSettingsView(
+    raw({
+      ppfCoatingAdjustments: [
+        { ruleId: "r1", ppfMethodCode: "full", coatingCode: "pure-evo", adjustmentType: "amount", adjustmentValue: 30000, isActive: true, deletedAt: null },
+        { ruleId: "r2", ppfMethodCode: "partial", coatingCode: "pure-evo", adjustmentType: "percent", adjustmentValue: 2000, isActive: true, deletedAt: "2026-07-01T00:00:00Z" },
+      ],
+    }),
+  );
+  assert.equal(v.ppfCoatingAdjustment.rules.length, 1);
+  assert.equal(v.ppfCoatingAdjustment.rules[0].ruleId, "r1");
+  // No label map supplied ⇒ the CODE is shown, never a blank.
+  assert.equal(v.ppfCoatingAdjustment.rules[0].ppfMethodLabelJa, "full");
+  assert.equal(v.ppfCoatingAdjustment.rules[0].adjustmentLabelJa, "¥30,000引き");
 });
 
 // ── empty catalog ──────────────────────────────────────────────────────────
-test("empty catalog yields four empty sections without crashing", () => {
+test("empty catalog yields six empty sections without crashing", () => {
   const v = buildEstimateWizardSettingsView(raw({ items: [] }));
-  assert.equal(v.sections.length, 4);
+  // B1.1 added the ppf and coupon sections to the original four.
+  assert.equal(v.sections.length, 6);
   assert.equal(v.sections.reduce((n, s) => n + s.itemCount, 0), 0);
 });
 
