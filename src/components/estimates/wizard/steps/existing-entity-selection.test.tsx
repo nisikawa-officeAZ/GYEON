@@ -17,7 +17,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import {
   resolvePreselection, preselectionStorePatch, selectableCustomers,
-  selectableVehiclesForCustomer, filterCustomers, existingVehicleSurvives,
+  selectableVehiclesForCustomer, existingVehicleSurvives,
   customerIsSelectable, vehicleIsSelectable,
   effectiveExistingCustomer, effectiveExistingVehicle,
   customerSelectionPatch, vehicleSelectionPatch,
@@ -137,14 +137,15 @@ test("customer change or leaving existing mode drops an incompatible vehicle", (
   assert.equal(existingVehicleSurvives(VEHICLES, "c-1", null, true), false, "no vehicle");
 });
 
-// ── 4. In-memory filter, no lookup ──────────────────────────────────────────
-
-test("the filter is in-memory over the supplied array only", () => {
-  assert.deepEqual(filterCustomers(CUSTOMERS, "").map((c) => c.id), ["c-1", "c-2"]);
-  assert.deepEqual(filterCustomers(CUSTOMERS, "山田").map((c) => c.id), ["c-1"]);
-  assert.deepEqual(filterCustomers(CUSTOMERS, "0002").map((c) => c.id), ["c-2"], "matches phone");
-  assert.deepEqual(filterCustomers(CUSTOMERS, "存在しない").map((c) => c.id), []);
-});
+// ── 4. Customer search moved to the server (B2.2B) ──────────────────────────
+//
+// The former in-memory `filterCustomers` test is deleted, not adapted: Screen 1 no longer filters
+// customers in the browser. Search is an authenticated, tenant-scoped Server Action, and its term
+// handling is covered by src/lib/customers/search-dealer-customers-core.test.ts. Its tenancy is
+// provable only against a real database and is verified in B2.6, never claimed here.
+//
+// Customer SELECTION — which is what this file is really about — remains client-side and is still
+// covered by the effective/patch tests above and below.
 
 test("the resolver module performs no fetch, storage or DB access", () => {
   const code = readFileSync("src/components/estimates/wizard/steps/existing-entity-selection.ts", "utf8")

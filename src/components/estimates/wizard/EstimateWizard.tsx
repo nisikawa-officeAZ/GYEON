@@ -23,7 +23,9 @@
 import { useEstimateWizard } from "./useEstimateWizard";
 import { WizardShell, type WizardTotals } from "./WizardShell";
 import type { WizardHostRuntimeInputs } from "./contract/wizard-pricing-runtime-inputs";
-import type { WizardExistingEntityInputs, WizardPreselectionInputs } from "./contract/wizard-runtime-inputs";
+import type {
+  WizardExistingEntityInputs, WizardPreselectionInputs, WizardCustomerSearchInputs,
+} from "./contract/wizard-runtime-inputs";
 import { resolvePreselection, preselectionStorePatch } from "./steps/existing-entity-selection";
 import type { WizardSaveBinding } from "./save/WizardSavePanel";
 import { useWizardPricingFromConfig } from "./pricing/useWizardPricingFromConfig";
@@ -36,7 +38,12 @@ import { Step6Notes } from "./steps/Step6Notes";
 import { Step7Review } from "./steps/Step7Review";
 
 export interface EstimateWizardProps
-  extends WizardHostRuntimeInputs, WizardExistingEntityInputs, WizardPreselectionInputs {
+  extends WizardHostRuntimeInputs,
+    WizardExistingEntityInputs,
+    WizardPreselectionInputs,
+    // B2.2B — threaded to Step 1 only. Optional: a non-production mount renders without a search
+    // seam and simply shows no search surface.
+    WizardCustomerSearchInputs {
   mode?: "create" | "edit";
   /**
    * B7-2C — OPTIONAL presentation seam, threaded only to Step 7.
@@ -55,6 +62,7 @@ export interface EstimateWizardProps
 export default function EstimateWizard({
   mode = "create", shopRank, screenConfig, catalog, pricingConfig,
   customers, vehicles, defaultCustomerId, defaultVehicleId, saveBinding,
+  customerSearchInvoker,
 }: EstimateWizardProps) {
   // B7-2A — preselection is resolved BEFORE the first hook initialization and folded
   // in as the initial store patch, so it becomes part of the draft's very first
@@ -87,7 +95,14 @@ export default function EstimateWizard({
 
   return (
     <WizardShell api={api} title={title} totals={totals}>
-      {api.step === 1 && <Step1Customer api={api} customers={customers} vehicles={vehicles} />}
+      {api.step === 1 && (
+        <Step1Customer
+          api={api}
+          customers={customers}
+          vehicles={vehicles}
+          customerSearchInvoker={customerSearchInvoker}
+        />
+      )}
       {api.step === 2 && <Step2Vehicle api={api} customers={customers} vehicles={vehicles} />}
       {api.step === 3 && <Step3Category api={api} />}
       {api.step === 4 && <Step4Estimate api={api} shopRank={shopRank} screenConfig={screenConfig} />}

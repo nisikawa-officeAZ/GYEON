@@ -90,18 +90,13 @@ export function selectableCustomers(
   return customers.filter((c) => !ambiguous.has(c.id));
 }
 
-/** In-memory filter. No fetch; operates only on the supplied array. */
-export function filterCustomers(
-  customers: readonly WizardExistingCustomerReference[],
-  query: string,
-): readonly WizardExistingCustomerReference[] {
-  const q = query.trim().toLowerCase();
-  const pool = selectableCustomers(customers);
-  if (q === "") return pool;
-  return pool.filter((c) =>
-    c.displayName.toLowerCase().includes(q) || (c.phone ?? "").toLowerCase().includes(q),
-  );
-}
+// B2.2C — `filterCustomers` is DELETED, not deprecated.
+//
+// Customer search moved to an authenticated, tenant-scoped Server Action in B2.2B
+// (src/lib/customers/search-dealer-customers-action.ts). Leaving a client-side filter here — even
+// unused — would be a second search implementation that a later change could silently revive, and
+// it could only ever see the preloaded reference fields, never kana, address or plate. Selection
+// remains client-side and is what the rest of this module is for.
 
 export type ResolvedPreselection = {
   readonly customerId: string | null;

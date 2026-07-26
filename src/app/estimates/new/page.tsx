@@ -17,6 +17,10 @@ import { redirect } from "next/navigation";
 import MainLayout from "@/components/layout/MainLayout";
 import ProductionEstimateWizard from "@/components/estimates/wizard/production/ProductionEstimateWizard";
 import { saveEstimateFromWizardIntentAction } from "@/components/estimates/wizard/save/save-estimate-from-wizard-intent-action";
+// B2.2B — the customer-search action is imported HERE, by the server route, and injected as a
+// prop. The client tree imports no Server Action, so every server entry point remains visible
+// at this one file.
+import { searchDealerCustomersAction } from "@/lib/customers/search-dealer-customers-action";
 import { getEstimateSaveActorContext } from "@/lib/auth/resolve-estimate-save-actor-context";
 import { getAuthoritativeWizardRuntimeConfigForDealer } from "@/lib/wizard-catalog/get-authoritative-wizard-runtime-config-for-dealer";
 import { loadDealerWizardEntityReferences } from "@/lib/estimates/get-dealer-wizard-entity-references";
@@ -93,6 +97,7 @@ export default async function EstimateNewPage({ searchParams }: Props) {
           defaultVehicleId={scalar(vehicle_id)}
           expectedConfigRevision={runtime.lifecycle.currentRevision}
           saveInvoker={saveEstimateFromWizardIntentAction}
+          customerSearchInvoker={searchDealerCustomersAction}
         />
       </div>
     </MainLayout>

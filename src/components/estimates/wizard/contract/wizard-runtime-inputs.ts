@@ -125,6 +125,44 @@ export interface WizardExistingEntityInputs {
 }
 
 /**
+ * B2.2B — the authenticated customer-search seam.
+ *
+ * Declared here as a TYPE so a `"use client"` module can call the search without importing the
+ * Server Action. The action is imported once, by the server route, and injected as a prop — the
+ * same discipline the save invoker follows. That keeps every server entry point visible at the
+ * page rather than scattered through the client tree.
+ *
+ * The invoker takes ONE argument: the operator's term. There is deliberately no dealer parameter,
+ * so a client cannot express a cross-tenant search at all; the dealer is resolved server-side from
+ * the authenticated actor context.
+ */
+export type WizardCustomerSearchFailureCode =
+  | "UNAUTHENTICATED"
+  | "DEALER_CONTEXT_REQUIRED"
+  | "QUERY_TOO_SHORT"
+  | "SEARCH_FAILED";
+
+export type WizardCustomerSearchResult =
+  | {
+      readonly ok: true;
+      readonly results: readonly WizardExistingCustomerReference[];
+      /** True when more customers matched than the server will return. */
+      readonly truncated: boolean;
+    }
+  | { readonly ok: false; readonly code: WizardCustomerSearchFailureCode };
+
+export type WizardCustomerSearchInvoker = (rawTerm: unknown) => Promise<WizardCustomerSearchResult>;
+
+/**
+ * OPTIONAL by design. A non-production mount (tests, previews) renders Screen 1 without a search
+ * seam and simply shows no search surface. There is no fabricated fallback: absent means the
+ * operator cannot search, never that "there are no customers".
+ */
+export interface WizardCustomerSearchInputs {
+  readonly customerSearchInvoker?: WizardCustomerSearchInvoker;
+}
+
+/**
  * UNTRUSTED preselection, carried from the route's `?customer_id=` / `?vehicle_id=`
  * onboarding handoff.
  *

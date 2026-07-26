@@ -6,19 +6,30 @@
 // INDEPENDENT toggle buttons. LINE ID + LINE QR only (no other SNS). No finance-company
 // UI.
 //
-// B7-2A: 既存顧客を検索 is now a real in-memory filter over the dealer-scoped
-// customer references the server supplied — no fetch, no lookup by id, no new
-// endpoint. Selecting an existing customer records ONLY the id and the mode; the
-// new-customer fields are the CREATE payload and are never populated from a
-// reference. Customer save itself is still not performed here.
+// B2.2B: 既存顧客を検索 is an AUTHENTICATED SERVER search, replacing the former
+// in-memory filter over preloaded references. The browser sends only the term —
+// never a dealer id — and the server resolves the tenant from the authenticated
+// actor context. Kana, address and name parts are searched server-side and never
+// sent to the browser; results carry only { id, displayName, phone }.
+//
+// This module imports NO Server Action. The invoker is injected from the server
+// route, exactly as the save invoker is, so every server entry point stays visible
+// at the page rather than scattered through the client tree.
+//
+// Selecting an existing customer records ONLY the id and the mode; the new-customer
+// fields are the CREATE payload and are never populated from a reference. Customer
+// save itself is still not performed here.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { EstimateWizardApi } from "../useEstimateWizard";
 import type { RegMethod } from "../wizard-types";
-import type { WizardExistingEntityInputs } from "../contract/wizard-runtime-inputs";
-import {
-  filterCustomers, effectiveExistingCustomer, customerSelectionPatch,
-} from "./existing-entity-selection";
+import type {
+  WizardExistingEntityInputs,
+  WizardCustomerSearchInputs,
+  WizardExistingCustomerReference,
+  WizardCustomerSearchFailureCode,
+} from "../contract/wizard-runtime-inputs";
+import { effectiveExistingCustomer, customerSelectionPatch } from "./existing-entity-selection";
 import { OcrEntry } from "../OcrEntry";
 import {
   Card, SectionTitle, Field, TextInput, SelectButton, ToggleButton, ChoiceGrid,
@@ -30,13 +41,55 @@ const REG_METHODS: Array<{ id: RegMethod; label: string; sub: string }> = [
   { id: "search", label: "既存顧客を検索", sub: "登録済みから選択" },
 ];
 
+/** Operator-facing text for each stable failure code. No raw database detail ever reaches here. */
+const SEARCH_MESSAGE: Record<WizardCustomerSearchFailureCode, string> = {
+  QUERY_TOO_SHORT: "2文字以上で検索してください。",
+  UNAUTHENTICATED: "セッションが確認できませんでした。再度ログインしてください。",
+  DEALER_CONTEXT_REQUIRED: "この操作を行う権限がありません。",
+  SEARCH_FAILED: "検索に失敗しました。時間をおいて再度お試しください。",
+};
+
 export function Step1Customer({
-  api, customers, vehicles,
-}: { api: EstimateWizardApi } & WizardExistingEntityInputs) {
+  api, customers, vehicles, customerSearchInvoker,
+}: { api: EstimateWizardApi } & WizardExistingEntityInputs & WizardCustomerSearchInputs) {
   const c = api.store.customer;
   const v = api.store.vehicle;
   const [query, setQuery] = useState("");
-  const matches = filterCustomers(customers, query);
+  const [matches, setMatches] = useState<readonly WizardExistingCustomerReference[]>([]);
+  const [searchState, setSearchState] = useState<"idle" | "searching" | "done">("idle");
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [truncated, setTruncated] = useState(false);
+
+  // Debounced server search. The generation guard is what makes this safe: a slow earlier
+  // response must never overwrite a newer one, which would show the operator results for a
+  // term they have already replaced.
+  useEffect(() => {
+    if (!customerSearchInvoker) return;
+    const term = query.trim();
+    if (term === "") {
+      setMatches([]); setSearchState("idle"); setSearchError(null); setTruncated(false);
+      return;
+    }
+    let current = true;
+    setSearchState("searching"); setSearchError(null);
+    const timer = setTimeout(() => {
+      void customerSearchInvoker(term).then((r) => {
+        if (!current) return;
+        if (r.ok) {
+          setMatches(r.results); setTruncated(r.truncated); setSearchError(null);
+        } else {
+          // Fail closed: never show a stale result set alongside an error.
+          setMatches([]); setTruncated(false); setSearchError(SEARCH_MESSAGE[r.code]);
+        }
+        setSearchState("done");
+      }).catch(() => {
+        if (!current) return;
+        setMatches([]); setTruncated(false);
+        setSearchError(SEARCH_MESSAGE.SEARCH_FAILED); setSearchState("done");
+      });
+    }, 250);
+    return () => { current = false; clearTimeout(timer); };
+  }, [query, customerSearchInvoker]);
 
   // EFFECTIVE, not merely stored: the mode must say "search" AND the id must still
   // resolve uniquely. A stale id from a previous mode must not keep the CREATE
@@ -87,8 +140,8 @@ export function Step1Customer({
         </div>
       )}
 
-      {/* B7-2A — existing-customer selection: an in-memory filter over the
-          dealer-scoped references the server supplied. No fetch, no lookup by id. */}
+      {/* B2.2B — existing-customer selection: an AUTHENTICATED SERVER search.
+          Tenant scoping happens on the server; this surface never sees a dealer id. */}
       {c.regMethod === "search" && (
         <div className="mt-4" data-testid="existing-customer-selector">
           {selected ? (
@@ -109,25 +162,52 @@ export function Step1Customer({
             </div>
           ) : (
             <>
-              <TextInput value={query} onChange={setQuery} placeholder="名前 / 電話番号で絞り込み" />
-              <div className="mt-2 max-h-56 overflow-y-auto divide-y divide-slate-800">
-                {matches.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-2">該当する既存顧客がありません。</p>
-                ) : (
-                  matches.map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      data-testid={`existing-customer-option-${m.id}`}
-                      className="w-full text-left py-2 px-1 hover:bg-slate-800/60"
-                      onClick={() => setCustomerSelection(m.id, "search")}
-                    >
-                      <span className="block text-sm">{m.displayName}</span>
-                      {m.phone && <span className="block text-[11px] text-slate-500">{m.phone}</span>}
-                    </button>
-                  ))
-                )}
-              </div>
+              {!customerSearchInvoker ? (
+                // No fabricated fallback. Absent seam means the operator cannot search — it must
+                // never be presented as "this dealer has no customers".
+                <p className="text-xs text-slate-500 py-2" data-testid="customer-search-unavailable">
+                  顧客検索は利用できません。
+                </p>
+              ) : (
+                <>
+                  <TextInput
+                    value={query}
+                    onChange={setQuery}
+                    placeholder="名前 / フリガナ / 住所 / 電話番号 / ナンバー下4桁"
+                  />
+                  <div className="mt-2 max-h-56 overflow-y-auto divide-y divide-slate-800">
+                    {searchError ? (
+                      <p className="text-xs text-amber-400 py-2" role="alert" data-testid="customer-search-error">
+                        {searchError}
+                      </p>
+                    ) : query.trim() === "" ? (
+                      <p className="text-xs text-slate-500 py-2">検索語を入力してください（2文字以上）。</p>
+                    ) : searchState === "searching" ? (
+                      <p className="text-xs text-slate-500 py-2">検索中…</p>
+                    ) : matches.length === 0 ? (
+                      <p className="text-xs text-slate-500 py-2">該当する既存顧客がありません。</p>
+                    ) : (
+                      matches.map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          data-testid={`existing-customer-option-${m.id}`}
+                          className="w-full text-left py-2 px-1 hover:bg-slate-800/60"
+                          onClick={() => setCustomerSelection(m.id, "search")}
+                        >
+                          <span className="block text-sm">{m.displayName}</span>
+                          {m.phone && <span className="block text-[11px] text-slate-500">{m.phone}</span>}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                  {truncated && (
+                    <p className="text-[11px] text-slate-500 mt-1" data-testid="customer-search-truncated">
+                      該当が多いため上位のみ表示しています。条件を絞り込んでください。
+                    </p>
+                  )}
+                </>
+              )}
             </>
           )}
         </div>
