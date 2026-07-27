@@ -163,6 +163,64 @@ export interface WizardCustomerSearchInputs {
 }
 
 /**
+ * B2-D — the Screen 1 duplicate WARNING seam.
+ *
+ * Declared here as a TYPE for the same reason as the search invoker: a `"use client"` module calls it
+ * without importing the Server Action, which is injected once by the server route. There is again no
+ * dealer parameter, so a client cannot express a cross-tenant check.
+ *
+ * ── ADVISORY, NEVER BLOCKING ────────────────────────────────────────────────────
+ * Nothing in this contract can prevent navigation, saving, or customer creation. A failure code is
+ * something the operator is TOLD, never something that gates them — which is why there is no
+ * "blocked" state and no required acknowledgement anywhere in these types.
+ */
+export type WizardDuplicateReason = "phone" | "name_kana";
+
+/**
+ * A candidate carries the same minimal projection as any existing-customer reference — id,
+ * displayName, phone — plus the reason it matched. Address, email, notes and every other field stay
+ * on the server: a duplicate warning is a prompt to recognise a customer, not a reason to widen the
+ * PII that reaches the browser.
+ */
+export type WizardDuplicateCandidate = WizardExistingCustomerReference & {
+  readonly reason: WizardDuplicateReason;
+};
+
+/**
+ * NOT_APPLICABLE is deliberately distinct from `ok: true` with no candidates. The first means the
+ * rule cannot fire on this input; the second means the dealer's customers were checked and none
+ * matched. Collapsing them would show the operator a reassuring "no duplicates" they never earned.
+ */
+export type WizardDuplicateCheckFailureCode =
+  | "UNAUTHENTICATED"
+  | "DEALER_CONTEXT_REQUIRED"
+  | "NOT_APPLICABLE"
+  | "LOOKUP_FAILED";
+
+export type WizardDuplicateCheckResult =
+  | {
+      readonly ok: true;
+      readonly candidates: readonly WizardDuplicateCandidate[];
+      /** True when more customers matched than the server will return. Observed, never guessed. */
+      readonly truncated: boolean;
+    }
+  | { readonly ok: false; readonly code: WizardDuplicateCheckFailureCode };
+
+export type WizardDuplicateCheckInvoker = (raw: {
+  name?: unknown;
+  kana?: unknown;
+  phone?: unknown;
+}) => Promise<WizardDuplicateCheckResult>;
+
+/**
+ * OPTIONAL by design, exactly like the search seam. A mount without it shows no advisory panel —
+ * absent means "this surface cannot check", never "there are no duplicates".
+ */
+export interface WizardDuplicateCheckInputs {
+  readonly duplicateCheckInvoker?: WizardDuplicateCheckInvoker;
+}
+
+/**
  * UNTRUSTED preselection, carried from the route's `?customer_id=` / `?vehicle_id=`
  * onboarding handoff.
  *

@@ -25,6 +25,7 @@ import { WizardShell, type WizardTotals } from "./WizardShell";
 import type { WizardHostRuntimeInputs } from "./contract/wizard-pricing-runtime-inputs";
 import type {
   WizardExistingEntityInputs, WizardPreselectionInputs, WizardCustomerSearchInputs,
+  WizardDuplicateCheckInputs,
 } from "./contract/wizard-runtime-inputs";
 import { resolvePreselection, preselectionStorePatch } from "./steps/existing-entity-selection";
 import type { WizardSaveBinding } from "./save/WizardSavePanel";
@@ -43,7 +44,8 @@ export interface EstimateWizardProps
     WizardPreselectionInputs,
     // B2.2B — threaded to Step 1 only. Optional: a non-production mount renders without a search
     // seam and simply shows no search surface.
-    WizardCustomerSearchInputs {
+    WizardCustomerSearchInputs,
+    WizardDuplicateCheckInputs {
   mode?: "create" | "edit";
   /**
    * B7-2C — OPTIONAL presentation seam, threaded only to Step 7.
@@ -63,6 +65,7 @@ export default function EstimateWizard({
   mode = "create", shopRank, screenConfig, catalog, pricingConfig,
   customers, vehicles, defaultCustomerId, defaultVehicleId, saveBinding,
   customerSearchInvoker,
+  duplicateCheckInvoker,
 }: EstimateWizardProps) {
   // B7-2A — preselection is resolved BEFORE the first hook initialization and folded
   // in as the initial store patch, so it becomes part of the draft's very first
@@ -101,6 +104,7 @@ export default function EstimateWizard({
           customers={customers}
           vehicles={vehicles}
           customerSearchInvoker={customerSearchInvoker}
+          duplicateCheckInvoker={duplicateCheckInvoker}
         />
       )}
       {api.step === 2 && <Step2Vehicle api={api} customers={customers} vehicles={vehicles} />}

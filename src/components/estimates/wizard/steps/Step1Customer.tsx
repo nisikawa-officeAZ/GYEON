@@ -20,7 +20,7 @@
 // fields are the CREATE payload and are never populated from a reference. Customer
 // save itself is still not performed here.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { EstimateWizardApi } from "../useEstimateWizard";
 import type { RegMethod } from "../wizard-types";
 import type {
@@ -28,6 +28,9 @@ import type {
   WizardCustomerSearchInputs,
   WizardExistingCustomerReference,
   WizardCustomerSearchFailureCode,
+  WizardDuplicateCheckInputs,
+  WizardDuplicateCandidate,
+  WizardDuplicateCheckFailureCode,
 } from "../contract/wizard-runtime-inputs";
 import { effectiveExistingCustomer, customerSelectionPatch } from "./existing-entity-selection";
 import { OcrEntry } from "../OcrEntry";
@@ -49,9 +52,29 @@ const SEARCH_MESSAGE: Record<WizardCustomerSearchFailureCode, string> = {
   SEARCH_FAILED: "検索に失敗しました。時間をおいて再度お試しください。",
 };
 
+/**
+ * B2-D — operator-facing text per duplicate-check failure code.
+ *
+ * `NOT_APPLICABLE` maps to the EMPTY string and is never rendered: it means the rule could not fire
+ * on this input, which is an internal condition, not something the operator did wrong. Telling them
+ * anything there would be noise on nearly every keystroke.
+ */
+const DUPLICATE_MESSAGE: Record<WizardDuplicateCheckFailureCode, string> = {
+  NOT_APPLICABLE: "",
+  UNAUTHENTICATED: "セッションが確認できませんでした。再度ログインしてください。",
+  DEALER_CONTEXT_REQUIRED: "この操作を行う権限がありません。",
+  LOOKUP_FAILED: "重複確認に失敗しました。登録は続行できます。",
+};
+
+/** Stable identity for a candidate set, so a dismissal survives re-checks that return the same rows. */
+function candidateSignature(candidates: readonly WizardDuplicateCandidate[]): string {
+  return candidates.map((c) => c.id).sort().join("|");
+}
+
 export function Step1Customer({
-  api, customers, vehicles, customerSearchInvoker,
-}: { api: EstimateWizardApi } & WizardExistingEntityInputs & WizardCustomerSearchInputs) {
+  api, customers, vehicles, customerSearchInvoker, duplicateCheckInvoker,
+}: { api: EstimateWizardApi } & WizardExistingEntityInputs & WizardCustomerSearchInputs
+  & WizardDuplicateCheckInputs) {
   const c = api.store.customer;
   const v = api.store.vehicle;
   const [query, setQuery] = useState("");
@@ -90,6 +113,63 @@ export function Step1Customer({
     }, 250);
     return () => { current = false; clearTimeout(timer); };
   }, [query, customerSearchInvoker]);
+
+  // ── B2-D: advisory duplicate warning ────────────────────────────────────────
+  // ADVISORY ONLY. Nothing below touches step completion, navigation or saving — `useEstimateWizard`
+  // still gates Step 1 on `customer.name || customer.existingId` alone, and it is deliberately not
+  // modified. Every state here (in flight, failed, dismissed, candidates shown) leaves the operator
+  // able to save exactly as before.
+  const [dupCandidates, setDupCandidates] = useState<readonly WizardDuplicateCandidate[]>([]);
+  const [dupTruncated, setDupTruncated] = useState(false);
+  const [dupError, setDupError] = useState<string | null>(null);
+  const [dupDismissed, setDupDismissed] = useState<string | null>(null);
+
+  // 「入力に戻る」 returns the operator to the field they most likely need to correct. The shared
+  // TextInput does not forward a ref and `ui` is out of scope here, so the focus target is reached
+  // through a wrapper element rather than by changing the shared component.
+  const nameFieldRef = useRef<HTMLDivElement | null>(null);
+  const focusNameInput = () => {
+    nameFieldRef.current?.querySelector("input")?.focus();
+  };
+
+  /** Every not-shown state clears the whole result, so a stale `truncated` can never outlive its rows. */
+  const clearDuplicateResult = () => {
+    setDupCandidates([]); setDupTruncated(false); setDupError(null);
+  };
+
+  useEffect(() => {
+    // No seam ⇒ no result at all. Absent must never look like "checked, nothing found".
+    if (!duplicateCheckInvoker) { clearDuplicateResult(); return; }
+    // A chosen existing customer cannot duplicate itself, so search mode is not checked at all.
+    if (c.regMethod === "search") { clearDuplicateResult(); return; }
+    // Debounced rather than fired on blur: the OCR path fills these fields programmatically and
+    // never blurs them, so a blur trigger would silently skip exactly the entry mode most likely to
+    // re-create an existing customer.
+    let current = true;
+    const timer = setTimeout(() => {
+      void duplicateCheckInvoker({ name: c.name, kana: c.kana, phone: c.phone }).then((r) => {
+        if (!current) return;
+        if (r.ok) {
+          setDupCandidates(r.candidates); setDupTruncated(r.truncated); setDupError(null);
+        } else {
+          // Fail quiet, not loud: a failed check must never look like a blocked registration.
+          // NOT_APPLICABLE included — the rule could not fire, so there is nothing to report.
+          clearDuplicateResult();
+          setDupError(DUPLICATE_MESSAGE[r.code] === "" ? null : DUPLICATE_MESSAGE[r.code]);
+        }
+      }).catch(() => {
+        if (!current) return;
+        clearDuplicateResult();
+        setDupError(DUPLICATE_MESSAGE.LOOKUP_FAILED);
+      });
+    }, 400);
+    return () => { current = false; clearTimeout(timer); };
+  }, [c.regMethod, c.name, c.kana, c.phone, duplicateCheckInvoker]);
+
+  // Re-opens when a genuinely different candidate set arrives; stays closed while it is the same one.
+  const dupSignature = candidateSignature(dupCandidates);
+  const showDuplicatePanel =
+    dupCandidates.length > 0 && dupDismissed !== dupSignature && c.regMethod !== "search";
 
   // EFFECTIVE, not merely stored: the mode must say "search" AND the id must still
   // resolve uniquely. A stale id from a previous mode must not keep the CREATE
@@ -219,9 +299,11 @@ export function Step1Customer({
           the selected one. New and OCR modes keep them fully editable. */}
       {showNewRecordFields && (
       <div className="mt-4 grid grid-cols-1 gap-3">
-        <Field label="お客様名 / 会社名" required value={c.name}>
-          <TextInput value={c.name} onChange={(x) => setC({ name: x })} placeholder="山田太郎 / 株式会社〇〇" required />
-        </Field>
+        <div ref={nameFieldRef}>
+          <Field label="お客様名 / 会社名" required value={c.name}>
+            <TextInput value={c.name} onChange={(x) => setC({ name: x })} placeholder="山田太郎 / 株式会社〇〇" required />
+          </Field>
+        </div>
         <ChoiceGrid cols={2}>
           <Field label="フリガナ" value={c.kana}>
             <TextInput value={c.kana} onChange={(x) => setC({ kana: x })} placeholder="ヤマダタロウ" />
@@ -243,6 +325,75 @@ export function Step1Customer({
           <TextInput value={c.address} onChange={(x) => setC({ address: x })} placeholder="都道府県・市区町村・番地" />
         </Field>
       </div>
+      )}
+
+      {/* B2-D — advisory duplicate warning, directly below the manual customer fields.
+          role="status" and not "alert": this is information, not an error, and it must never read as
+          a blocked registration. All three actions are explicit and none is preselected — in
+          particular "新規のお客様として登録する" is exactly as reachable as選択, because creating a
+          genuinely distinct customer is a legitimate outcome, not a fallback. */}
+      {showNewRecordFields && showDuplicatePanel && (
+        <div
+          role="status"
+          data-testid="duplicate-warning-panel"
+          className="mt-4 rounded-xl border border-amber-700/60 bg-amber-950/30 p-3"
+        >
+          <p className="text-xs text-amber-200">
+            同じお客様がすでに登録されている可能性があります。ご確認ください。
+          </p>
+          <div className="mt-2 divide-y divide-amber-900/40">
+            {dupCandidates.map((d) => (
+              <div key={d.id} data-testid={`duplicate-warning-candidate-${d.id}`} className="py-2">
+                <span className="block text-sm text-slate-100">{d.displayName}</span>
+                {d.phone && <span className="block text-[11px] text-slate-400">{d.phone}</span>}
+                <span className="block text-[10px] text-amber-300/80">
+                  {d.reason === "phone" ? "電話番号が一致" : "お名前とフリガナが一致"}
+                </span>
+                <button
+                  type="button"
+                  data-testid={`duplicate-warning-use-${d.id}`}
+                  className="mt-1 min-h-[44px] px-3 rounded-lg border border-slate-600 text-xs text-slate-100 hover:bg-slate-800/60"
+                  onClick={() => setCustomerSelection(d.id, "search")}
+                >
+                  この既存のお客様を使う
+                </button>
+              </div>
+            ))}
+          </div>
+          {dupTruncated && (
+            <p className="mt-1 text-[11px] text-amber-300/80" data-testid="duplicate-warning-truncated">
+              一致候補がさらにあります。上位10件を表示しています。
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              data-testid="duplicate-warning-create-anyway"
+              className="min-h-[44px] px-3 rounded-lg border border-slate-600 text-xs text-slate-100 hover:bg-slate-800/60"
+              onClick={() => setDupDismissed(dupSignature)}
+            >
+              新規のお客様として登録する
+            </button>
+            {/* Deliberately does NOT dismiss: the operator is going back to correct the fields, so
+                the advisory stays visible until the input actually changes (which re-runs the check)
+                or they explicitly choose one of the other two actions. Dismissing here would hide
+                the very warning they are acting on. */}
+            <button
+              type="button"
+              data-testid="duplicate-warning-dismiss"
+              className="min-h-[44px] px-3 rounded-lg text-xs text-slate-400 hover:text-slate-200"
+              onClick={focusNameInput}
+            >
+              入力に戻る
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showNewRecordFields && dupError && (
+        <p className="mt-2 text-[11px] text-slate-500" data-testid="duplicate-warning-error">
+          {dupError}
+        </p>
       )}
 
       {/* 業者 / 掛売り — two independent toggles. Part of the new-customer CREATE

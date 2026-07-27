@@ -21,6 +21,9 @@ import { saveEstimateFromWizardIntentAction } from "@/components/estimates/wizar
 // prop. The client tree imports no Server Action, so every server entry point remains visible
 // at this one file.
 import { searchDealerCustomersAction } from "@/lib/customers/search-dealer-customers-action";
+// B2-D: the duplicate-warning action, like the search action, is imported ONCE here and injected as
+// a prop, so every server entry point stays visible at the route rather than scattered in the tree.
+import { findWizardCustomerDuplicatesAction } from "@/lib/customers/find-wizard-customer-duplicates-action";
 import { getEstimateSaveActorContext } from "@/lib/auth/resolve-estimate-save-actor-context";
 import { getAuthoritativeWizardRuntimeConfigForDealer } from "@/lib/wizard-catalog/get-authoritative-wizard-runtime-config-for-dealer";
 import { loadDealerWizardEntityReferences } from "@/lib/estimates/get-dealer-wizard-entity-references";
@@ -98,6 +101,7 @@ export default async function EstimateNewPage({ searchParams }: Props) {
           expectedConfigRevision={runtime.lifecycle.currentRevision}
           saveInvoker={saveEstimateFromWizardIntentAction}
           customerSearchInvoker={searchDealerCustomersAction}
+          duplicateCheckInvoker={findWizardCustomerDuplicatesAction}
         />
       </div>
     </MainLayout>

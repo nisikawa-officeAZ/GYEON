@@ -30,6 +30,7 @@ import EstimateWizard from "../EstimateWizard";
 import type { WizardHostRuntimeInputs } from "../contract/wizard-pricing-runtime-inputs";
 import type {
   WizardExistingEntityInputs, WizardPreselectionInputs, WizardCustomerSearchInputs,
+  WizardDuplicateCheckInputs,
 } from "../contract/wizard-runtime-inputs";
 import type { WizardSaveIntentInvoker } from "../save/wizard-save-intent-types";
 import type { WizardSaveBinding, WizardSaveDestination } from "../save/WizardSavePanel";
@@ -63,7 +64,10 @@ export interface ProductionEstimateWizardProps
     // B2.2B — the customer-search seam. Like `saveInvoker` it is INJECTED by the server route;
     // this module still imports no Server Action. It is not destructured in ReadyProductionWizard,
     // so it flows to EstimateWizard through `...hostInputs` untouched.
-    WizardCustomerSearchInputs {
+    WizardCustomerSearchInputs,
+    // B2-D: advisory duplicate warning. Purely additive and, like the search seam, it flows to
+    // EstimateWizard through `...hostInputs` untouched.
+    WizardDuplicateCheckInputs {
   /** REQUIRED. Injected in B7-3; this module imports no Server Action. */
   readonly saveInvoker: WizardSaveIntentInvoker;
   /** REQUIRED. Server-resolved from the dealer-bound runtime configuration. */

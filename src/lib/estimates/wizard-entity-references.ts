@@ -18,7 +18,9 @@
 // This module performs NO lookup, NO fetch and NO query. It is a pure mapping over
 // rows the caller has already fetched under RLS.
 
-import type { CustomerDB } from "@/lib/customers/customer-types";
+// `CustomerDB` is no longer imported: the customer mapper input is declared structurally below,
+// because that declaration types `last_name` as non-null while the column is nullable. The vehicle
+// mapper still narrows `VehicleDB`, whose declarations match its columns.
 import type { VehicleDB } from "@/lib/vehicles/vehicle-types";
 import type {
   WizardExistingCustomerReference,
@@ -80,12 +82,38 @@ function composeVehicleName(
 }
 
 // ── Exact minimal mapper inputs (B7-3) ───────────────────────────────────────
-// The mappers accept exactly the fields they read — no more. Widening the inputs
-// from the full `CustomerDB`/`VehicleDB` to these `Pick<>` aliases lets a
-// minimal-column dealer-bound loader supply rows without over-fetching, while a
-// full row still satisfies the `Pick<>` (so every existing caller is unchanged).
+// The mappers accept exactly the fields they read — no more. Keeping the inputs
+// narrower than the full `CustomerDB`/`VehicleDB` lets a minimal-column
+// dealer-bound loader supply rows without over-fetching, while a full row still
+// satisfies the shape (so every existing caller is unchanged).
 // Runtime behavior, output shape, labels and fallbacks are identical.
-type CustomerReferenceInput = Pick<CustomerDB, "id" | "last_name" | "first_name" | "phone">;
+//
+// ── WHY THE CUSTOMER INPUT IS DECLARED STRUCTURALLY, NOT AS A Pick<CustomerDB> ─
+// `CustomerDB.last_name` is declared `string`, but the COLUMN is nullable —
+// migration 035 added it as plain `text` and back-filled it once, so any row that
+// predates the back-fill, or that was written by the wizard before
+// 20260727033223, carries NULL. A `Pick<>` over that declaration would promise a
+// non-null value this module cannot rely on, and `composeCustomerName` below has
+// handled the null case since B2-B.3 precisely because it does occur.
+//
+// The declaration in `customer-types.ts` is deliberately NOT widened here: that is
+// a broader type-alignment question with callers of its own, and changing it from
+// this file would reach well past the mapper boundary this type describes. What
+// this alias owns is exactly the shape the mappers read, and it now says the truth
+// about it.
+type CustomerReferenceInput = {
+  readonly id: string;
+  readonly last_name: string | null;
+  readonly first_name: string | null;
+  readonly phone: string | null;
+  /**
+   * OPTIONAL: a loader need not select the legacy full-name column. The B2-D
+   * duplicate action does select it, which is what lets `composeCustomerName`
+   * fall back to it honestly for a row whose canonical name parts are NULL.
+   * Callers that omit it are unaffected — the fallback simply cannot fire.
+   */
+  readonly name?: string | null;
+};
 type VehicleReferenceInput = Pick<
   VehicleDB,
   "id" | "customer_id" | "maker" | "model" | "plate_number" | "body_size"
