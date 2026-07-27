@@ -52,8 +52,13 @@ export type DuplicateReason = WizardDuplicateReason;
 export interface DuplicateMatchKeys {
   /** Set only when the input yields exactly 10 or 11 digits. */
   readonly phoneKey: string | null;
-  /** Set only when the input is non-blank after normalisation. */
+  /**
+   * Set whenever the entered name is non-blank after normalisation. Carried INDEPENDENTLY of
+   * `kanaKey`: a full name on its own is now a matching rule, so the name key is no longer voided
+   * when kana is missing.
+   */
   readonly nameKey: string | null;
+  /** Set whenever the entered kana is non-blank after normalisation. */
   readonly kanaKey: string | null;
 }
 
@@ -98,10 +103,19 @@ export const kanaMatchKey = textMatchKey;
 /**
  * Whether a check is worth issuing, and with which keys.
  *
- * NOT_APPLICABLE is distinct from "no candidates": it means the rule cannot fire on this input, so
- * the operator is told nothing rather than being shown a reassuring empty result they did not earn.
- * The name branch requires BOTH name and kana — a name alone is far too common a collision in this
- * market to warn on, and the product decision rules it out explicitly.
+ * NOT_APPLICABLE is distinct from "no candidates": it means no rule can fire on this input, so the
+ * operator is told nothing rather than being shown a reassuring empty result they did not earn.
+ *
+ * Three rules are applicable, any one of which is enough: an in-range phone, or a full name (with
+ * kana if present, without it if not). A kana key on its own is NOT a rule — kana without a name
+ * identifies nobody — so it never makes a check applicable by itself.
+ *
+ * ── WHY A FULL NAME ALONE NOW QUALIFIES ─────────────────────────────────────────
+ * The matched value is the WHOLE normalised name, so a surname, a partial, a prefix or a suffix
+ * can never equal it — this is exact identity of the entire entered name, not a loose match. It was
+ * added because a 車検証 carries no telephone number and prints furigana only when the registration
+ * happens to include it: without this rule, OCR intake produces no advisory at all. Manual and OCR
+ * entry are treated identically and neither has a bypass.
  */
 export function planDuplicateCheck(raw: {
   name?: unknown;
@@ -112,15 +126,10 @@ export function planDuplicateCheck(raw: {
   const nameKey = nameMatchKey(raw.name);
   const kanaKey = kanaMatchKey(raw.kana);
 
-  const nameBranchUsable = nameKey !== null && kanaKey !== null;
-  if (phoneKey === null && !nameBranchUsable) return { ok: false, code: "NOT_APPLICABLE" };
+  if (phoneKey === null && nameKey === null) return { ok: false, code: "NOT_APPLICABLE" };
 
-  // A name key without a kana key (or vice versa) is carried as null so the filter cannot be built
-  // from half the rule.
-  return {
-    ok: true,
-    keys: { phoneKey, nameKey: nameBranchUsable ? nameKey : null, kanaKey: nameBranchUsable ? kanaKey : null },
-  };
+  // Kana is carried only alongside a name: it refines the reason, it is never a rule of its own.
+  return { ok: true, keys: { phoneKey, nameKey, kanaKey: nameKey === null ? null : kanaKey } };
 }
 
 /**
@@ -138,9 +147,20 @@ export function quoteFilterValue(value: string): string {
 /**
  * The PostgREST `or=` expression.
  *
- * Both branches are EQUALITY on an indexed generated column — never `ilike`, never a prefix. The
- * name branch is a nested `and(...)` so name and kana must both hold; expressing it as two top-level
- * clauses would OR them and warn on a name alone.
+ * Every branch is EQUALITY on an indexed generated column — never `ilike`, never a prefix, never a
+ * wildcard. `match_name_norm` holds the WHOLE normalised name, so an equality on it cannot be
+ * satisfied by a surname or any partial.
+ *
+ * ── WHY THE NESTED name+kana CLAUSE IS STILL EMITTED ────────────────────────────
+ * For RETRIEVAL the name-only clause subsumes it: any row matching name AND kana also matches name.
+ * It is kept because it states the rule the classifier applies, and because the two stop being
+ * interchangeable the moment the rules are separated again. Both are served by
+ * `customers_match_name_kana_idx` — a name-only equality uses its leading (dealer_id,
+ * match_name_norm) columns — so the new rule needs no additional index.
+ *
+ * Retrieval is deliberately the UNION of the rules; WHICH reason a row is reported under is decided
+ * afterwards by `classifyReason`, not by the clause that fetched it. That separation is what lets a
+ * row whose kana DIFFERS still surface, and be reported honestly as a name-only match.
  */
 export function buildDuplicateOrFilter(keys: DuplicateMatchKeys): string {
   const clauses: string[] = [];
@@ -153,12 +173,20 @@ export function buildDuplicateOrFilter(keys: DuplicateMatchKeys): string {
         `match_kana_norm.eq.${quoteFilterValue(keys.kanaKey)})`,
     );
   }
+  if (keys.nameKey !== null) {
+    clauses.push(`match_name_norm.eq.${quoteFilterValue(keys.nameKey)}`);
+  }
   return clauses.join(",");
 }
 
 /**
- * Why this row came back. Phone is reported in preference to name+kana when both hold: it is the
- * stronger signal, and showing one reason keeps the operator's decision simple.
+ * Why this row came back, at the STRONGEST rule that holds. Precedence is phone > name+kana >
+ * name-only: exactly one reason is shown, and it is the most informative one available, so the
+ * operator is never asked to weigh two explanations for the same row.
+ *
+ * The name-only branch is checked LAST and is the fallback. A row whose name matches but whose kana
+ * differs falls through to it and is reported as a name-only match — honestly, rather than being
+ * dropped or overstated as a name+kana agreement.
  */
 export function classifyReason(
   row: { match_phone_digits?: string | null; match_name_norm?: string | null; match_kana_norm?: string | null },
@@ -173,8 +201,9 @@ export function classifyReason(
   ) {
     return "name_kana";
   }
-  // Neither rule explains this row. It is a defect, not a candidate — the caller drops it rather
-  // than showing the operator a match it cannot justify.
+  if (keys.nameKey !== null && row.match_name_norm === keys.nameKey) return "name";
+  // No rule explains this row. It is a defect, not a candidate — the caller drops it rather than
+  // showing the operator a match it cannot justify.
   return null;
 }
 

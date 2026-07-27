@@ -31,6 +31,7 @@ import type {
   WizardDuplicateCheckInputs,
   WizardDuplicateCandidate,
   WizardDuplicateCheckFailureCode,
+  WizardDuplicateReason,
 } from "../contract/wizard-runtime-inputs";
 import { effectiveExistingCustomer, customerSelectionPatch } from "./existing-entity-selection";
 import { OcrEntry } from "../OcrEntry";
@@ -64,6 +65,17 @@ const DUPLICATE_MESSAGE: Record<WizardDuplicateCheckFailureCode, string> = {
   UNAUTHENTICATED: "セッションが確認できませんでした。再度ログインしてください。",
   DEALER_CONTEXT_REQUIRED: "この操作を行う権限がありません。",
   LOOKUP_FAILED: "重複確認に失敗しました。登録は続行できます。",
+};
+
+/**
+ * Operator-facing reason per candidate, one per WizardDuplicateReason. A record rather than a
+ * ternary so adding a reason is a compile error here rather than a silently mislabelled row —
+ * "お名前が一致" must never be shown as if the kana had agreed too.
+ */
+const DUPLICATE_REASON_LABEL: Record<WizardDuplicateReason, string> = {
+  phone: "電話番号が一致",
+  name_kana: "お名前とフリガナが一致",
+  name: "お名前が一致",
 };
 
 /** Stable identity for a candidate set, so a dismissal survives re-checks that return the same rows. */
@@ -347,7 +359,7 @@ export function Step1Customer({
                 <span className="block text-sm text-slate-100">{d.displayName}</span>
                 {d.phone && <span className="block text-[11px] text-slate-400">{d.phone}</span>}
                 <span className="block text-[10px] text-amber-300/80">
-                  {d.reason === "phone" ? "電話番号が一致" : "お名前とフリガナが一致"}
+                  {DUPLICATE_REASON_LABEL[d.reason]}
                 </span>
                 <button
                   type="button"

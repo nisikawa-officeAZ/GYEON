@@ -174,7 +174,21 @@ export interface WizardCustomerSearchInputs {
  * something the operator is TOLD, never something that gates them — which is why there is no
  * "blocked" state and no required acknowledgement anywhere in these types.
  */
-export type WizardDuplicateReason = "phone" | "name_kana";
+/**
+ * Why a candidate matched, in descending strength. The order is meaningful: it is the precedence
+ * classification applies when more than one rule holds for the same row.
+ *
+ *   "phone"      — normalized 10–11 digit phone equality. The strongest signal available.
+ *   "name_kana"  — normalized full name AND normalized kana both equal.
+ *   "name"       — normalized full NAME equality alone, kana absent or different.
+ *
+ * `"name"` is deliberately full-name equality, never a surname, a partial, a prefix or a suffix —
+ * the normalized key is the whole entered name, so nothing shorter can match it. It exists because
+ * a 車検証 carries no telephone number and prints furigana only when the registration happens to
+ * include it, so OCR intake would otherwise produce no advisory at all. Manual and OCR entry share
+ * this rule; neither has a bypass.
+ */
+export type WizardDuplicateReason = "phone" | "name_kana" | "name";
 
 /**
  * A candidate carries the same minimal projection as any existing-customer reference — id,

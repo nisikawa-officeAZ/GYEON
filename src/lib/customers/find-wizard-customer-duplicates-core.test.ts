@@ -136,15 +136,119 @@ test("plan: name AND kana together are enough", () => {
   }
 });
 
-test("plan: a name WITHOUT kana never fires — the rule the product forbids", () => {
+// ── B2-D.13: an exact FULL NAME alone is now a rule ─────────────────────────
+
+test("plan: an exact full name WITHOUT kana is applicable", () => {
   const r = planDuplicateCheck({ name: "山田太郎" });
+  assert.equal(r.ok, true);
+  if (r.ok) {
+    assert.equal(r.keys.nameKey, "山田太郎");
+    assert.equal(r.keys.kanaKey, null, "no kana was entered");
+    assert.equal(r.keys.phoneKey, null);
+  }
+});
+
+test("plan: kana WITHOUT a name is still not a rule — kana alone identifies nobody", () => {
+  const r = planDuplicateCheck({ kana: "ヤマダタロウ" });
   assert.equal(r.ok, false);
   if (!r.ok) assert.equal(r.code, "NOT_APPLICABLE");
 });
 
-test("plan: kana without a name never fires either", () => {
-  const r = planDuplicateCheck({ kana: "ヤマダタロウ" });
-  assert.equal(r.ok, false);
+test("plan: the name key is carried even when kana is absent", () => {
+  const r = planDuplicateCheck({ name: "山田 太郎", phone: "03" });
+  assert.equal(r.ok, true);
+  if (r.ok) {
+    assert.equal(r.keys.nameKey, "山田太郎", "normalised, whitespace removed");
+    assert.equal(r.keys.phoneKey, null, "a 2-digit phone yields no key");
+  }
+});
+
+test("plan: NOT_APPLICABLE only when neither a phone key nor a name key exists", () => {
+  for (const raw of [{}, { name: "  " }, { kana: "ヤマダ" }, { phone: "03" }, { name: "", kana: "ヤマダ", phone: "090" }]) {
+    const r = planDuplicateCheck(raw);
+    assert.equal(r.ok, false, JSON.stringify(raw));
+  }
+});
+
+test("full-name rule is EXACT identity — a surname or partial can never equal the whole name", () => {
+  const whole = nameMatchKey("山田太郎");
+  for (const partial of ["山田", "太郎", "山田太", "田太郎", "山"]) {
+    assert.notEqual(nameMatchKey(partial), whole, `partial ${partial} must not equal the full name`);
+  }
+});
+
+test("surname / partial entry never MATCHES a longer full name", () => {
+  // A surname typed alone is still a full name from the system's point of view — it produces a key
+  // and therefore a branch. What it must never do is match a customer whose whole name is LONGER.
+  // That is the difference between full-name equality and surname matching, and it is the property
+  // the product rule actually forbids.
+  const stored = { match_name_norm: "山田太郎", match_kana_norm: "ヤマダタロウ" };
+  for (const partial of ["山田", "太郎", "山田太", "田太郎"]) {
+    const r = planDuplicateCheck({ name: partial });
+    assert.equal(r.ok, true, `${partial} still forms a plan`);
+    if (r.ok) {
+      assert.equal(classifyReason(stored, r.keys), null,
+        `entering "${partial}" must not match the customer named 山田太郎`);
+    }
+  }
+});
+
+test("a non-exact name never matches: one differing character is a different customer", () => {
+  const stored = { match_name_norm: "山田太郎" };
+  const r = planDuplicateCheck({ name: "山田太朗" });
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(classifyReason(stored, r.keys), null);
+});
+
+test("filter: a name-only plan emits an exact equality on match_name_norm", () => {
+  const f = buildDuplicateOrFilter({ phoneKey: null, nameKey: "山田太郎", kanaKey: null });
+  assert.equal(f, 'match_name_norm.eq."山田太郎"');
+  assert.equal(/ilike|like|%|\*/.test(f), false, "no wildcard or pattern matching");
+});
+
+test("filter: with kana present BOTH the nested pair and the name-only clause are emitted", () => {
+  const f = buildDuplicateOrFilter({ phoneKey: null, nameKey: "山田太郎", kanaKey: "ヤマダタロウ" });
+  assert.ok(f.includes("and(match_name_norm.eq."), "nested pair preserved");
+  assert.ok(f.includes('match_kana_norm.eq."ヤマダタロウ")'));
+  assert.ok(f.split(",").some((c) => c === 'match_name_norm.eq."山田太郎"'),
+    "a top-level name-only clause is also emitted, so a differing-kana row is still retrieved");
+  assert.equal(/ilike|like|%/.test(f), false);
+});
+
+test("reason: a matching name with a DIFFERENT kana is reported as name-only, not dropped", () => {
+  const keys = { phoneKey: null, nameKey: "山田太郎", kanaKey: "ヤマダタロウ" };
+  const row = { match_name_norm: "山田太郎", match_kana_norm: "ヤマダジロウ" };
+  assert.equal(classifyReason(row, keys), "name");
+});
+
+test("reason: name-only when no kana was entered at all", () => {
+  const keys = { phoneKey: null, nameKey: "山田太郎", kanaKey: null };
+  assert.equal(classifyReason({ match_name_norm: "山田太郎", match_kana_norm: "ヤマダタロウ" }, keys), "name");
+});
+
+test("reason precedence is phone > name_kana > name", () => {
+  const keys = { phoneKey: "09012345678", nameKey: "山田太郎", kanaKey: "ヤマダタロウ" };
+  const all = { match_phone_digits: "09012345678", match_name_norm: "山田太郎", match_kana_norm: "ヤマダタロウ" };
+  assert.equal(classifyReason(all, keys), "phone", "phone outranks both name rules");
+  assert.equal(classifyReason({ ...all, match_phone_digits: "08000000000" }, keys), "name_kana",
+    "name+kana outranks name-only");
+  assert.equal(classifyReason({ ...all, match_phone_digits: "08000000000", match_kana_norm: "チガウ" }, keys), "name",
+    "name-only is the fallback");
+});
+
+test("reason: a row whose name does NOT match is still null — no rule invented for it", () => {
+  const keys = { phoneKey: null, nameKey: "山田太郎", kanaKey: null };
+  assert.equal(classifyReason({ match_name_norm: "鈴木一郎" }, keys), null);
+});
+
+test("OCR needs no bypass: a name-only input plans and filters identically however it was typed", () => {
+  // Step 1 feeds the SAME invoker in every regMethod except "search"; the core has no entry mode.
+  const manual = planDuplicateCheck({ name: "山田太郎", kana: "", phone: "" });
+  const ocr = planDuplicateCheck({ name: "山田太郎" });
+  assert.deepEqual(manual, ocr, "no per-mode branch exists in the core");
+  if (manual.ok && ocr.ok) {
+    assert.equal(buildDuplicateOrFilter(manual.keys), buildDuplicateOrFilter(ocr.keys));
+  }
 });
 
 test("plan: a too-short phone with no name/kana is NOT_APPLICABLE, never a short-key query", () => {
@@ -155,15 +259,15 @@ test("plan: a too-short phone with no name/kana is NOT_APPLICABLE, never a short
 
 test("plan: address and email are not inputs at all", () => {
   const r = planDuplicateCheck({ name: "", kana: "", phone: "" } as Record<string, unknown>);
-  assert.equal(r.ok, false, "nothing else can make the rule fire");
+  assert.equal(r.ok, false, "nothing else can make a rule fire");
 });
 
-test("plan: name+kana carried only as a PAIR, so half the rule can never reach the filter", () => {
+test("plan: kana is never carried without a name, but a name IS carried without kana", () => {
   const r = planDuplicateCheck({ name: "山田太郎", phone: "090-1234-5678" });
   assert.equal(r.ok, true);
   if (r.ok) {
-    assert.equal(r.keys.nameKey, null, "name is dropped without kana");
-    assert.equal(r.keys.kanaKey, null);
+    assert.equal(r.keys.nameKey, "山田太郎", "the full-name rule stands on its own");
+    assert.equal(r.keys.kanaKey, null, "no kana was entered");
     assert.equal(r.keys.phoneKey, "09012345678");
   }
 });
@@ -184,9 +288,10 @@ test("filter: both branches are EQUALITY, never ilike or a wildcard", () => {
   assert.equal(/ilike|like|%/.test(f), false, "no pattern matching anywhere");
 });
 
-test("filter: the name branch is a nested AND, so a name alone can never match", () => {
+test("filter: the name+kana pair is still expressed as a nested AND, not two loose clauses", () => {
   const f = buildDuplicateOrFilter({ phoneKey: null, nameKey: "山田太郎", kanaKey: "ヤマダタロウ" });
-  assert.match(f, /^and\(match_name_norm\.eq\..+,match_kana_norm\.eq\..+\)$/);
+  assert.match(f, /^and\(match_name_norm\.eq\..+,match_kana_norm\.eq\..+\)/,
+    "the pair remains one nested clause so kana can never be dropped from it");
 });
 
 test("filter: a phone-only plan emits exactly one clause", () => {
@@ -214,10 +319,16 @@ test("reason: phone wins when both rules hold — the stronger signal is reporte
   assert.equal(classifyReason(row, keys), "phone");
 });
 
-test("reason: name_kana requires BOTH columns to agree", () => {
+test("reason: name_kana needs both columns; a differing kana falls back to name, never to nothing", () => {
+  // Both halves of the precedence contract, asserted together:
+  //   same name + same kana      → "name_kana", the stronger of the two name rules;
+  //   same name + DIFFERING kana → "name",      the full-name rule still holds on its own.
+  // The second case used to expect null, under the pre-B2-D.13 rule that a name without an agreeing
+  // kana was not a candidate at all. Exact full-name equality is now independently sufficient, so
+  // dropping that row would hide a real duplicate rather than avoid a false one.
   const keys = { phoneKey: null, nameKey: "山田太郎", kanaKey: "ヤマダタロウ" };
   assert.equal(classifyReason({ match_name_norm: "山田太郎", match_kana_norm: "ヤマダタロウ" }, keys), "name_kana");
-  assert.equal(classifyReason({ match_name_norm: "山田太郎", match_kana_norm: "ヤマダジロウ" }, keys), null);
+  assert.equal(classifyReason({ match_name_norm: "山田太郎", match_kana_norm: "ヤマダジロウ" }, keys), "name");
 });
 
 test("reason: a row no rule explains is null, so the caller can drop it", () => {
