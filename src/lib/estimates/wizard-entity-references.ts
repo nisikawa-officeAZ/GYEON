@@ -26,16 +26,45 @@ import type {
 } from "@/components/estimates/wizard/contract/wizard-runtime-inputs";
 
 /**
+ * The fields the label composer reads.
+ *
+ * Declared locally rather than as a `Pick<CustomerDB, …>` because the DB columns are nullable and
+ * `CustomerDB` does not say so. `name` is OPTIONAL so a caller that does not select it — every
+ * current reader — still satisfies the type without its column list changing.
+ */
+type CustomerNameParts = {
+  readonly last_name: string | null;
+  readonly first_name: string | null;
+  readonly name?: string | null;
+};
+
+/**
  * Compose the customer label ONCE, on the server.
  *
  * Kept here rather than in the browser so every surface shows the same string and
  * the client never needs the name parts — which is the point: `last_name` and
  * `first_name` are exactly the fields a "minimal" reference is supposed to omit.
  */
-function composeCustomerName(row: Pick<CustomerDB, "last_name" | "first_name">): string {
-  const last = row.last_name.trim();
-  const first = (row.first_name ?? "").trim();
-  return first ? `${last} ${first}` : last;
+function composeCustomerName(row: CustomerNameParts): string {
+  // Canonical parts first. Both are read defensively: `customers.last_name` is a NULLABLE column
+  // (added by migration 035) even though CustomerDB types it as `string`, so the previous
+  // `row.last_name.trim()` was a TypeError waiting for the first row that never got a canonical
+  // value written — exactly what the wizard writer produced before B2-B.3.
+  const canonical = [row.last_name, row.first_name]
+    .map((p) => (p ?? "").trim())
+    .filter((p) => p !== "");
+  if (canonical.length > 0) return canonical.join(" ");
+
+  // Legacy fallback. `customers.name` is NOT NULL and holds the full name, so a row predating the
+  // canonical backfill still labels correctly — provided the caller selected it. Neither current
+  // reader does; widening their column lists is deliberately out of scope here, so this is a
+  // forward-looking safety net rather than a repair of the existing readers.
+  const legacy = (row.name ?? "").trim();
+  if (legacy !== "") return legacy;
+
+  // Same reasoning as composeVehicleName's fallback below: an empty label renders a blank,
+  // unclickable-looking row that the operator cannot select or distinguish.
+  return "（名前未登録）";
 }
 
 /** Compose the vehicle label. Falls back through maker/model to the plate. */

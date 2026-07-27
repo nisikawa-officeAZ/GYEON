@@ -27,8 +27,8 @@ export type EstimateSaveCustomer =
       accountsReceivableAllowed: boolean; // credit-billing flag
       closingDay: string | null;
       paymentDay: string | null;          // numeric payment day-of-month — never calculated into a date
-      kana: string | null;                // EW-FC-1A: フリガナ, ONE whole string (never split). RPC does NOT persist this yet.
-      creditTerms: string | null;         // EW-FC-1A: 支払条件 free text; distinct from closingDay/paymentDay. RPC does NOT persist this yet.
+      kana: string | null;                // EW-FC-1A: フリガナ, ONE whole string (never split). B2-B.3: persisted to customers.last_name_kana.
+      creditTerms: string | null;         // EW-FC-1A: 支払条件 free text; distinct from closingDay/paymentDay. B2-B.3: persisted to customers.credit_terms.
     };
 
 // ── Vehicle ──────────────────────────────────────────────────────────────────────
