@@ -12,6 +12,17 @@ umask 077
 
 fail() { printf 'B7-4 cleanup FAILED: %s\n' "$1" >&2; exit 1; }
 
+# ── Denied Supabase project references — TWO DISTINCT PROJECTS ──────────────
+# Kept as separate constants with separate messages on purpose. This guard
+# previously tested the old Dev ref while reporting it as "the production
+# reference", and the real Production ref was tested nowhere — so the check
+# advertised a protection it did not provide. Never merge these two into one
+# pattern or one message: a cleanup aborted for touching Production and a
+# cleanup aborted for touching a frozen project need different responses from
+# whoever reads the failure.
+REF_PRODUCTION="dmvyaykhibmphrmekjbb"      # DealerOS Production — never a test target
+REF_FROZEN_OLD_DEV="fbieiotihlmpfzybowbt"  # DealerOS old Dev — FROZEN_REFERENCE_ONLY
+
 export SUPABASE_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1
 
 # ── 1. Two explicit args; validate BEFORE realpath ──────────────────────────
@@ -57,8 +68,8 @@ PROJECT_ID="dealeros-b7-4-$R_SUFFIX"
 # ── 2b. Effective (non-comment) config identity, comment-blind ──────────────
 # Distinguish comments from effective configuration: strip `#` comments and blank
 # lines, then inspect only real `key = value` assignments. A recursive content-blind
-# grep would false-reject on the production reference that appears in config.toml's
-# OWN comments.
+# grep would false-reject on the frozen old Dev reference that appears in
+# config.toml's OWN comments.
 CFG="$RUNDIR/supabase/config.toml"
 [ -f "$CFG" ] || fail "disposable config missing"
 effective_config() { sed -e 's/#.*$//' -e '/^[[:space:]]*$/d' "$CFG"; }
@@ -66,8 +77,13 @@ PID_COUNT="$(effective_config | grep -cE '^[[:space:]]*project_id[[:space:]]*=')
 [ "$PID_COUNT" -eq 1 ] || fail "config must have exactly one effective project_id"
 CFG_PID="$(effective_config | sed -nE 's/^[[:space:]]*project_id[[:space:]]*=[[:space:]]*"?([^"[:space:]]+)"?.*$/\1/p')"
 [ "$CFG_PID" = "$PROJECT_ID" ] || fail "config project_id does not match PROJECT_ID"
-# The production reference may not appear in any EFFECTIVE config value.
-if effective_config | grep -q 'fbieiotihlmpfzybowbt'; then fail "production reference in effective config"; fi
+# Neither denied project reference may appear in any EFFECTIVE config value.
+if effective_config | grep -q "$REF_PRODUCTION"; then
+  fail "PRODUCTION project reference ($REF_PRODUCTION) in effective config"
+fi
+if effective_config | grep -q "$REF_FROZEN_OLD_DEV"; then
+  fail "FROZEN OLD DEV project reference ($REF_FROZEN_OLD_DEV) in effective config — reference only, never a test target"
+fi
 
 # ── 3. App must be down BEFORE stopping anything (no auto-kill) ──────────────
 if [ -f "$EVID/app.pid" ]; then

@@ -2,9 +2,10 @@
 # B7-4 disposable E2E setup. Stands up a throwaway local Supabase project under
 # /tmp, applies the committed migrations, creates one disposable Auth user, seeds
 # one actor tenant + one foreign sentinel, and writes secret-safe run artifacts.
-# It NEVER touches the repository's supabase/ tree, .env.local, or the linked
-# remote (fbieiotihlmpfzybowbt). Every failure exits nonzero without contacting
-# production. Do NOT run in the implementation phase.
+# It NEVER touches the repository's supabase/ tree, .env.local, the linked
+# remote, the frozen old Dev project (fbieiotihlmpfzybowbt), or Production
+# (dmvyaykhibmphrmekjbb). Every failure exits nonzero without contacting either.
+# Do NOT run in the implementation phase.
 
 set -Eeuo pipefail
 umask 077
@@ -15,6 +16,17 @@ ACTOR_DEALER="b7400000-0000-4000-8000-0000000000d1"
 UUID_RE='^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
 
 fail() { printf 'B7-4 setup FAILED: %s\n' "$1" >&2; exit 1; }
+
+# ── Denied Supabase project references — TWO DISTINCT PROJECTS ──────────────
+# Kept as separate constants with separate messages on purpose. This guard
+# previously tested the old Dev ref while the surrounding prose called it
+# "production", and the real Production ref was tested nowhere — so the check
+# advertised a protection it did not provide. Never merge these two into one
+# pattern or one message: a run aborted for touching Production and a run
+# aborted for touching a frozen project need different responses from whoever
+# reads the failure.
+REF_PRODUCTION="dmvyaykhibmphrmekjbb"      # DealerOS Production — never a test target
+REF_FROZEN_OLD_DEV="fbieiotihlmpfzybowbt"  # DealerOS old Dev — FROZEN_REFERENCE_ONLY
 
 # Telemetry OFF before any CLI call (metadata commands would otherwise write state).
 export SUPABASE_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1
@@ -195,9 +207,21 @@ b7_parse_status() {                 # $1 = raw status file
   done < "$f"
   [ "$n_api" -eq 1 ] && [ "$n_db" -eq 1 ] && [ "$n_anon" -eq 1 ] && [ "$n_srk" -eq 1 ] || return 1
   [ -n "$API_URL" ] && [ -n "$DB_URL" ] && [ -n "$ANON_KEY" ] && [ -n "$SERVICE_ROLE_KEY" ] || return 1
+  # IDENTITY BEFORE FORMAT. Each denied ref is tested against EACH endpoint
+  # separately, and reports through `fail` rather than a bare `return 1`: the old
+  # form concatenated API_URL and DB_URL into one test whose only outcome was the
+  # caller's generic "status parse/validation" message, which could name neither the
+  # project nor the endpoint. E2.2 then proved the API_URL denials were unreachable
+  # while they followed the loopback check — `grep -qxE` anchors the whole line and
+  # its only variable segment is [0-9]+, so no ref-bearing API_URL could survive to
+  # be tested. Identity is the more specific claim and is judged first; the format
+  # checks below are unchanged and remain the primary control.
+  printf '%s' "$API_URL" | grep -q "$REF_PRODUCTION"     && fail "API_URL targets the PRODUCTION project ($REF_PRODUCTION)"
+  printf '%s' "$DB_URL"  | grep -q "$REF_PRODUCTION"     && fail "DB_URL targets the PRODUCTION project ($REF_PRODUCTION)"
+  printf '%s' "$API_URL" | grep -q "$REF_FROZEN_OLD_DEV" && fail "API_URL targets the FROZEN OLD DEV project ($REF_FROZEN_OLD_DEV) — reference only, never a test target"
+  printf '%s' "$DB_URL"  | grep -q "$REF_FROZEN_OLD_DEV" && fail "DB_URL targets the FROZEN OLD DEV project ($REF_FROZEN_OLD_DEV) — reference only, never a test target"
   printf '%s' "$API_URL" | grep -qxE 'http://(127\.0\.0\.1|localhost):[0-9]+' || return 1
   printf '%s' "$DB_URL"  | grep -qxE 'postgresql://[^@ ]+@(127\.0\.0\.1|localhost):[0-9]+/[A-Za-z0-9_]+' || return 1
-  printf '%s%s' "$API_URL" "$DB_URL" | grep -q 'fbieiotihlmpfzybowbt' && return 1
   printf '%s' "$ANON_KEY"         | grep -qxE '[A-Za-z0-9._-]{20,}' || return 1
   printf '%s' "$SERVICE_ROLE_KEY" | grep -qxE '[A-Za-z0-9._-]{20,}' || return 1
   return 0
