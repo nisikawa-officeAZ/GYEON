@@ -72,13 +72,44 @@ export default function SignUpPage() {
 
       if (signUpError) {
         const msg = signUpError.message.toLowerCase();
+        // Supabase AuthApiError carries a stable `code`; errors raised before a response
+        // (network, abort) leave it undefined. Classify on the code FIRST and fall back to
+        // message matching, because messages are prose and change between releases.
+        //
+        // The message must never be broader than the condition it names. A previous
+        // `msg.includes("email")` catch-all sat here and rendered EVERY email-related failure
+        // as a format error — including "Email rate limit exceeded" — so the operator was told
+        // to correct an address that was already correct, and would keep editing it while the
+        // real cause was a send limit that only time resolves.
+        const code = signUpError.code ?? "";
         if (msg.includes("already registered") || msg.includes("already exists")) {
           setError("このメールアドレスはすでに登録されています。ログイン画面からサインインしてください。");
         } else if (msg.includes("password")) {
           setError("パスワードの形式が正しくありません。");
-        } else if (msg.includes("email")) {
+        } else if (
+          code === "over_email_send_rate_limit" ||
+          code === "over_request_rate_limit" ||
+          msg.includes("rate limit") ||
+          msg.includes("you can only request this after")
+        ) {
+          setError("メール送信の回数制限に達しました。しばらく時間をおいてから再度お試しください。");
+        } else if (
+          code === "signup_disabled" ||
+          code === "email_provider_disabled" ||
+          msg.includes("signups not allowed") ||
+          msg.includes("signups are disabled")
+        ) {
+          setError("現在、新規登録を受け付けていません。管理者にお問い合わせください。");
+        } else if (
+          code === "email_address_invalid" ||
+          (msg.includes("email") && msg.includes("invalid"))
+        ) {
+          // ONLY a genuine address/format rejection reaches this message.
           setError("メールアドレスの形式が正しくありません。");
         } else {
+          // Everything else, including confirmation-email DELIVERY failures such as
+          // "Error sending confirmation email", which is a server-side send fault and
+          // says nothing about the address the operator typed.
           setError("アカウントの作成に失敗しました。しばらく待ってから再試行してください。");
         }
         return;
