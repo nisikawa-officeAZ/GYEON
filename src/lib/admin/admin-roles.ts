@@ -10,7 +10,7 @@
  *   owner     — Dealer Owner: full dealer access
  *   manager   — Dealer Manager: most dealer access, no billing
  *   staff     — Dealer Staff: operational access only
- *   read_only — Read Only: view-only access
+ *   readonly  — Read Only: view-only access
  *
  * DB note: Migration 075 expanded admin_users.role CHECK to allow
  * 'super_admin' | 'gyeon_admin' | 'logistics_admin'.
@@ -18,7 +18,7 @@
 
 export type AdminRole = "super_admin" | "gyeon_admin" | "logistics_admin";
 
-export type DealerRole = "owner" | "manager" | "staff" | "read_only";
+export type DealerRole = "owner" | "manager" | "staff" | "readonly";
 
 export interface AdminNavItem {
   key:   string;
@@ -40,7 +40,7 @@ export const DEALER_ROLE_META: Record<DealerRole, { label: string }> = {
   owner:     { label: "店舗オーナー" },
   manager:   { label: "マネージャー" },
   staff:     { label: "スタッフ"     },
-  read_only: { label: "閲覧のみ"     },
+  readonly:  { label: "閲覧のみ"     },
 };
 
 // Navigation items with role-based visibility

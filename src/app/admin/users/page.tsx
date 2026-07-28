@@ -20,7 +20,7 @@ function RoleArchitecturePanel() {
     { role: "owner",     desc: "店舗オーナー",   access: "自店舗内のフルアクセス — 全機能・請求・スタッフ管理" },
     { role: "manager",   desc: "マネージャー",   access: "見積・作業指示・顧客・予約。請求は不可。" },
     { role: "staff",     desc: "スタッフ",       access: "業務機能のみ — 見積・作業指示" },
-    { role: "read_only", desc: "閲覧のみ",       access: "全店舗データの閲覧のみ。作成・編集・削除は不可。" },
+    { role: "readonly",  desc: "閲覧のみ",       access: "全店舗データの閲覧のみ。作成・編集・削除は不可。" },
   ];
 
   return (

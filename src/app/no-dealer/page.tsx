@@ -222,7 +222,7 @@ export default async function NoDealerPage() {
               <p>VALUES</p>
               <p>  (&apos;{user.id}&apos;,</p>
               <p>   &apos;&lt;dealer_uuid&gt;&apos;,</p>
-              <p>   &apos;admin&apos;, &apos;active&apos;);</p>
+              <p>   &apos;owner&apos;, &apos;active&apos;);</p>
             </div>
           </div>
         )}
