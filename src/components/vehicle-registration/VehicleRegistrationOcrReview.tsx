@@ -150,9 +150,16 @@ export default function VehicleRegistrationOcrReview({
     return init;
   });
 
-  const [customerSource, setCustomerSource] = useState<CustomerSource>(
-    () => analyzeOcrCustomer(ocrResult).recommendedSource,
-  );
+  // B2-C.5 — the operator's EXPLICIT choice, or null when they have not made one.
+  //
+  // This deliberately does NOT seed itself with the recommendation. Seeding conflated two different
+  // states — "never chose" and "chose the party that happens to be recommended" — and because the
+  // seed was computed once from the ORIGINAL ocrResult while the mapping below is recomputed from
+  // the EDITED values on every render, a choice could outlive the condition that justified it. The
+  // selector hides itself when the parties stop being separated, so the operator could be governed
+  // by a selection they could no longer see or change. `null` makes "never chose" explicit, and the
+  // derived value below decides when a choice is allowed to apply.
+  const [sourceChoice, setSourceChoice] = useState<CustomerSource | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(() => {
     const s = new Set<string>();
@@ -200,7 +207,28 @@ export default function VehicleRegistrationOcrReview({
     customer_type: ocrResult.customer_type,
   };
   const custAnalysis = analyzeOcrCustomer(customerInput);
-  const custResolved = resolveCustomer(customerInput, customerSource);
+
+  // B2-C.5 — the ONE source used for both display and apply, derived during render from the LIVE
+  // analysis of the edited values.
+  //
+  // An explicit choice applies only while the parties are actually separated — which is exactly the
+  // condition under which the selector is rendered, so the control's visibility and the value's
+  // authority are now the same expression and cannot disagree. When the parties are not separated
+  // there is nothing to choose between, so the established recommendation governs.
+  //
+  // The choice is kept rather than cleared: the edit that de-separates the parties is usually a
+  // typo correction, and re-separating them must not silently cost the operator their decision. It
+  // lies dormant and becomes active again on its own.
+  //
+  // Derived, NOT a useEffect reset: an effect runs after commit, leaving one render in which
+  // handleApply would still build the payload from the superseded source. There is no such window
+  // here — the first render after an edit is already correct.
+  const effectiveSource: CustomerSource =
+    custAnalysis.ownerUserSeparated && sourceChoice !== null
+      ? sourceChoice
+      : custAnalysis.recommendedSource;
+
+  const custResolved = resolveCustomer(customerInput, effectiveSource);
 
   function handleApply() {
     const payload: Partial<VehicleRegistrationOcrResult> = {};
@@ -297,9 +325,12 @@ export default function VehicleRegistrationOcrReview({
                   <button
                     key={src}
                     type="button"
-                    onClick={() => setCustomerSource(src)}
+                    onClick={() => setSourceChoice(src)}
                     className={`flex-1 h-10 rounded-lg text-xs font-semibold border transition-colors ${
-                      customerSource === src
+                      // Selected state reads the DERIVED source, not the raw choice, so the
+                      // highlighted button is always the party that will actually be applied —
+                      // including before any explicit choice, where it shows the recommendation.
+                      effectiveSource === src
                         ? "bg-[#1d4ed8] text-white border-[#1d4ed8]"
                         : "bg-[#0f172a] text-slate-400 border-slate-700 hover:text-slate-200"
                     }`}
