@@ -19,6 +19,12 @@
 // Selecting an existing customer records ONLY the id and the mode; the new-customer
 // fields are the CREATE payload and are never populated from a reference. Customer
 // save itself is still not performed here.
+//
+// B2-C.2: 車検証OCR applies an already-obtained result to the SAME editable draft fields a
+// manual typist fills — 氏名 / フリガナ / 住所 only, each left untouched when the certificate
+// did not carry it. Nothing is auto-registered and no request is issued; the operator reviews
+// and may edit every applied value, and the B2-D duplicate advisory re-runs on the result with
+// no OCR-specific exception.
 
 import { useEffect, useRef, useState } from "react";
 import type { EstimateWizardApi } from "../useEstimateWizard";
@@ -34,6 +40,7 @@ import type {
   WizardDuplicateReason,
 } from "../contract/wizard-runtime-inputs";
 import { effectiveExistingCustomer, customerSelectionPatch } from "./existing-entity-selection";
+import { buildWizardCustomerOcrPatch } from "@/lib/ocr/wizard-customer-ocr-apply-core";
 import { OcrEntry } from "../OcrEntry";
 import {
   Card, SectionTitle, Field, TextInput, SelectButton, ToggleButton, ChoiceGrid,
@@ -223,9 +230,18 @@ export function Step1Customer({
         <div className="mt-4">
           <OcrEntry
             onApply={(f) => {
-              const rec = f as Record<string, unknown>;
-              const name = rec.customer_candidate_name;
-              if (typeof name === "string" && name) setC({ name });
+              // B2-C.2 — apply an ALREADY-OBTAINED result to the editable draft, and nothing else.
+              // The patch is built by a pure core: it carries 氏名 / フリガナ / 住所 only, and only
+              // where the certificate actually supplied a value, so an unreadable field leaves what
+              // the operator already typed untouched. No customer, vehicle, estimate or OCR record
+              // is created here — this writes to wizard state and issues no request at all.
+              //
+              // Spreading the patch into the draft is what feeds the applied name into the B2-D
+              // duplicate check: the effect below watches c.name / c.kana / c.phone and re-runs on
+              // exactly the same terms as a hand-typed value. There is deliberately no OCR branch
+              // in that path and none is added here.
+              const patch = buildWizardCustomerOcrPatch(f);
+              if (Object.keys(patch).length > 0) setC(patch);
             }}
           />
           <p className="text-[11px] text-slate-500 mt-2">読み取り後、フォームへ反映されます。オペレーターが修正可能です。</p>

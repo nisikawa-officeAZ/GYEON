@@ -106,19 +106,80 @@ export function analyzeOcrCustomer(r: Partial<VehicleRegistrationOcrResult>): Oc
   };
 }
 
-/** Resolve the concrete customer name/address/type for a chosen source. */
+/**
+ * Which party the customer record is ACTUALLY taken from, or null when the certificate names
+ * nobody. This is the single effective-party decision the whole mapping is built on.
+ *
+ * The requested `source` is honoured whenever that party is named. When it is not, the OTHER party
+ * is used — a certificate that names only 所有者 must still produce a customer. What must never
+ * happen is the two halves disagreeing: before this function existed the NAME fell back across
+ * parties while the address applied its own independent preference, so asking for 使用者 on a
+ * certificate that named only 所有者 could return the owner's name beside the user's address.
+ */
+export function effectiveCustomerParty(
+  r: Partial<VehicleRegistrationOcrResult>,
+  source: CustomerSource,
+): CustomerSource | null {
+  const a = analyzeOcrCustomer(r);
+  if (source === "user") {
+    if (a.userName) return "user";
+    return a.ownerName ? "owner" : null;
+  }
+  if (a.ownerName) return "owner";
+  return a.userName ? "user" : null;
+}
+
+/**
+ * True when 所有者 and 使用者 are ONE party described twice.
+ *
+ * `ownerUserSeparated` is "both named AND different", so both-named-and-NOT-separated means the two
+ * names normalise equal. That is not two parties whose data must be kept apart — it is one party
+ * recorded on two lines, which is the ordinary shape of a 車検証 where the owner drives their own
+ * car. Only in that case may a blank field be completed from the other line: 使用者住所 is routinely
+ * left blank (or printed 同上) when it repeats the owner's, and refusing to read it there would
+ * throw away an address the certificate plainly states.
+ *
+ * This is the ONE place cross-line completion is permitted, and it is gated on proven identity —
+ * never on the mere absence of a name, which is what made the original rule unsafe.
+ */
+function isOneParty(a: OcrCustomerAnalysis): boolean {
+  return !!a.ownerName && !!a.userName && !a.ownerUserSeparated;
+}
+
+/** NFKC is not applied here: this is display/draft text, not a match key. Trim only. */
+function trimmed(raw: string | undefined): string {
+  return typeof raw === "string" ? raw.trim() : "";
+}
+
+/**
+ * Resolve the concrete customer name/kana/address/type for a chosen source.
+ *
+ * Every field comes from the SAME effective party. Where that party's field is blank, the other
+ * line is read only when `isOneParty` proves the two lines describe one person; otherwise the field
+ * stays blank and is left for the operator to fill, which is strictly better than silently
+ * borrowing a different person's address.
+ */
 export function resolveCustomer(
   r: Partial<VehicleRegistrationOcrResult>,
   source: CustomerSource,
-): { name: string; address: string; customerType: CustomerType } {
+): { name: string; kana: string; address: string; customerType: CustomerType } {
   const a = analyzeOcrCustomer(r);
-  const name =
-    source === "user" ? (a.userName || a.ownerName) : (a.ownerName || a.userName);
-  // Prefer the chosen party's address; only fall back to the other when NOT separated.
-  const address =
-    source === "user"
-      ? (a.ownerUserSeparated ? a.userAddress : (a.userAddress || a.ownerAddress))
-      : (a.ownerUserSeparated ? a.ownerAddress : (a.ownerAddress || a.userAddress));
+  const party = effectiveCustomerParty(r, source);
+  const oneParty = isOneParty(a);
+
+  /** The effective party's value, completed from the other line only when they are one party. */
+  const fromParty = (userValue: string, ownerValue: string): string => {
+    if (party === null) return "";
+    const own = party === "user" ? userValue : ownerValue;
+    if (own) return own;
+    if (!oneParty) return "";
+    return party === "user" ? ownerValue : userValue;
+  };
+
+  // The name needs no completion step: `party` is non-null precisely when that party HAS a name.
+  const name = party === "user" ? a.userName : party === "owner" ? a.ownerName : "";
+  const kana = fromParty(trimmed(r.user_name_kana), trimmed(r.owner_name_kana));
+  const address = fromParty(a.userAddress, a.ownerAddress);
 
   const customerType: CustomerType = !name
     ? "unknown"
@@ -126,5 +187,5 @@ export function resolveCustomer(
       ? "corporation"
       : "individual";
 
-  return { name, address, customerType };
+  return { name, kana, address, customerType };
 }
