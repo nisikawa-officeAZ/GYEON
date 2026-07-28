@@ -26,8 +26,15 @@ export async function GET(request: Request) {
       const { error } = await supabase.auth.verifyOtp({ type, token_hash });
 
       if (!error) {
-        if (type === "recovery") {
-          // Password reset — send to the reset form
+        if (type === "recovery" || type === "invite") {
+          // Password reset, and invite acceptance — both need the reset form.
+          //
+          // An invited user is authenticated the moment verifyOtp succeeds, but has NO password:
+          // the invite never asked for one. Falling through to `next ?? "/"` would drop them on the
+          // app home, signed in, with nothing prompting them to set one — and no route in the app
+          // would ever offer it, because /reset-password is the only surface that calls
+          // updateUser({ password }). Sending them there is what makes the invite an onboarding
+          // rather than a dead end.
           return NextResponse.redirect(`${origin}/reset-password`);
         }
         return NextResponse.redirect(`${origin}${next ?? "/"}`);
