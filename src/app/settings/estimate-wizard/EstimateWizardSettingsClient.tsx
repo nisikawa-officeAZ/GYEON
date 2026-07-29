@@ -14,7 +14,9 @@ import {
   saveWizardCatalogItem,
   archiveWizardCatalogItem,
   confirmWizardCatalogReview,
+  setServiceOffering,
 } from "@/lib/wizard-catalog/wizard-catalog-authoring-actions";
+import { SERVICE_FAMILIES, SERVICE_FAMILY_LABEL_JA, type ServiceFamily } from "@/lib/estimates/service-categories";
 import { validateWizardItemForm } from "@/lib/wizard-catalog/estimate-wizard-settings-form";
 import {
   presentActionError,
@@ -312,6 +314,32 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
 
   const status = view.reviewStatus;
 
+  /**
+   * B2-E2G — toggle one service-offering family.
+   *
+   * Sends an EXPLICIT boolean for both directions: turning a service off persists `false` rather
+   * than removing anything, so the dealer's decision is recorded as a decision. Nothing is claimed
+   * optimistically — the authoritative view is re-fetched, exactly like every other mutation here.
+   */
+  const onToggleOffering = useCallback((family: ServiceFamily, next: boolean) => {
+    if (!guardEdit()) return;
+    if (busyRef.current) return;
+    busyRef.current = true;
+    startTransition(async () => {
+      try {
+        const res = await setServiceOffering(family, next);
+        if (res.ok) {
+          showToast(next ? "この施工メニューを提供する設定にしました" : "この施工メニューを提供しない設定にしました", "ok");
+          router.refresh();
+        } else {
+          showToast(presentActionError(res.code), "err");
+        }
+      } finally {
+        busyRef.current = false;
+      }
+    });
+  }, [guardEdit, router, showToast]);
+
   return (
     <div className="flex flex-col gap-6">
       {toast && (
@@ -335,6 +363,53 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
           {STAFF_READONLY_MESSAGE_JA}
         </div>
       )}
+
+      {/* ── B2-E2G: 施工メニュー提供設定 ───────────────────────────────────────────
+          Which services this shop offers at all. Deliberately ABOVE the catalog sections: a dealer
+          decides what they sell before they configure the details of it, and an opted-out family's
+          catalog section is not something they need to look at. Rank is never mentioned — it does
+          not participate in this decision. */}
+      <section
+        id="section-service-offerings"
+        className="px-4 py-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col gap-3 scroll-mt-4"
+      >
+        <div className="flex flex-col gap-1">
+          <h2 className="text-sm font-semibold text-slate-100">施工メニュー提供設定</h2>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            この店舗で提供する施工メニューを選択します。オフにしたメニューは見積ウィザードに表示されません。
+          </p>
+          <p className="text-[11px] text-amber-300/80 leading-relaxed">
+            オンにしたメニューを見積で使用するには、対応するメニュー内容の登録と、設定内容の確認（レビュー確定）が必要です。
+          </p>
+        </div>
+
+        <ul className="flex flex-col divide-y divide-slate-800">
+          {SERVICE_FAMILIES.map((family) => {
+            const on = view.serviceOfferings[family];
+            return (
+              <li key={family} className="flex items-center justify-between gap-3 py-2.5">
+                <span className="text-xs text-slate-200">{SERVICE_FAMILY_LABEL_JA[family]}</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={on}
+                  aria-label={`${SERVICE_FAMILY_LABEL_JA[family]}を提供する`}
+                  data-testid={`offering-toggle-${family}`}
+                  disabled={!canEdit || isPending}
+                  onClick={() => onToggleOffering(family, !on)}
+                  className={`min-h-[44px] px-4 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40 ${
+                    on
+                      ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
+                      : "bg-slate-800/60 text-slate-400 border-slate-700 hover:bg-slate-700/60"
+                  }`}
+                >
+                  {on ? "提供する" : "提供しない"}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
       {/* Configuration status card */}
       <section className="px-4 py-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col gap-3">

@@ -27,12 +27,18 @@ import "server-only";
 //     user; that is exactly why the query does not rely on RLS alone for tenant scoping. Any
 //     foreign row that still reached the resolver is rejected by its ownership validation
 //     (`malformed-catalog-row`), so admission is refused twice over.
+//   • The service-offering read proves an ACTIVE membership in the bound tenant before it will
+//     interpret zero rows as all-OFF. RLS renders "opted out of everything", "not your tenant" and
+//     "membership suspended" identical at the row level, so absence alone is never taken as a
+//     configuration statement.
 //   • The final result is returned ONLY when `runtime.dealerId === context.dealerId`. A mismatch is
 //     an identity defect and fails closed with no configuration at all.
 //   • No DEFAULT_PRICING_CATALOG, no fixture, no default rank, no fallback tenant anywhere.
 
 import { createClient } from "@/lib/supabase/server";
+import { buildServiceOfferings, type ServiceOfferings } from "@/lib/estimates/service-categories";
 import type { EstimateSaveActorContext } from "@/lib/auth/estimate-save-actor-context";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
 import {
   resolveAuthoritativeShopRank,
   type RankResolution,
@@ -112,6 +118,94 @@ async function readPricingSettingsFor(dealerId: string): Promise<PricingSettings
 }
 
 /**
+ * The typed outcome of an offering read, INCLUDING why a denied read was denied.
+ *
+ * Every non-ok variant fails closed identically at the boundary below — the distinction exists so
+ * the denial is explicit in the code rather than inferred from an empty result set, and so a future
+ * caller can surface "access denied" separately from "unreadable" without re-deriving it.
+ */
+type ServiceOfferingsRead =
+  | { ok: true; offerings: ServiceOfferings }
+  | { ok: false; denial: "membership-unproven" | "membership-unreadable" | "offerings-unreadable" };
+
+/**
+ * B2-E2I — read the dealer's explicit service-offering map for exactly one dealer, but only after
+ * proving the caller is an ACTIVE MEMBER of that same dealer.
+ *
+ * The proof is the point. Three states produce an empty result set from
+ * `dealer_service_offerings`, and RLS makes them indistinguishable:
+ *
+ *   1. a valid dealer that has opted out of everything  → all-OFF, a real configuration
+ *   2. a cross-tenant read                              → RLS filters every row away
+ *   3. a suspended or removed membership                → RLS filters every row away
+ *
+ * B2-E2H2 confirmed this empirically: a foreign dealer's owner reading another tenant received a
+ * byte-identical five-family all-false map. Interpreting 2 or 3 as "the dealer sells nothing" would
+ * hand an unauthorized caller a plausible-looking configuration and tell a suspended operator their
+ * store is empty. So membership is established FIRST, and only a proven active same-dealer
+ * membership may turn zero rows into the explicit all-OFF map.
+ *
+ * A query error remains a FAILED READ, never all-OFF. Nothing here reveals whether the other
+ * dealer exists, how it is configured, or which of the denial reasons applied — every failure
+ * leaves this function as the same closed `{ ok: false }`.
+ */
+async function readServiceOfferingsWithMembershipProof(
+  dealerId: string,
+): Promise<ServiceOfferingsRead> {
+  try {
+    const supabase = await createClient();
+
+    // The same current-user helper every other server path uses. It never throws and returns null
+    // when unauthenticated; either way no membership can be proven.
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, denial: "membership-unreadable" };
+
+    // Scoped to BOTH the bound tenant and this user, so a multi-membership user cannot satisfy the
+    // proof with some other dealer's membership. `status = 'active'` excludes invited, suspended
+    // and removed members. A read error is never treated as absence.
+    const { data: membership, error: membershipError } = await supabase
+      .from("dealer_members")
+      .select("dealer_id")
+      .eq("dealer_id", dealerId)
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle();
+    if (membershipError) return { ok: false, denial: "membership-unreadable" };
+    if (!membership) return { ok: false, denial: "membership-unproven" };
+
+    const { data, error } = await supabase
+      .from("dealer_service_offerings")
+      .select("family, enabled")
+      .eq("dealer_id", dealerId);
+    if (error || !data) return { ok: false, denial: "offerings-unreadable" };
+
+    return {
+      ok: true,
+      offerings: buildServiceOfferings(
+        data.map((r: Record<string, unknown>) => ({
+          family: r.family as string,
+          enabled: r.enabled === true,
+        })),
+      ),
+    };
+  } catch {
+    return { ok: false, denial: "offerings-unreadable" };
+  }
+}
+
+/**
+ * The reader shape `WizardDealerBoundConfigReaders` expects. Every denial collapses to the same
+ * closed failure, which the resolver reports as `service-offerings-read-failed` — the caller learns
+ * that no map could be established, and nothing about another tenant.
+ */
+async function readServiceOfferingsFor(
+  dealerId: string,
+): Promise<{ ok: true; offerings: ServiceOfferings } | { ok: false }> {
+  const read = await readServiceOfferingsWithMembershipProof(dealerId);
+  return read.ok ? { ok: true, offerings: read.offerings } : { ok: false };
+}
+
+/**
  * The complete, fail-closed Wizard runtime bundle for the tenant the actor context authorizes.
  *
  * Returns a success only for `context.dealerId`. Any query, parse, rank, pricing or identity error
@@ -136,6 +230,9 @@ export async function getAuthoritativeWizardRuntimeConfigForDealer(
         getDealerId: async () => dealerId,
         readPricingSettings: readPricingSettingsFor,
       }),
+
+    // Bound to the same single tenant as every other reader; never the current-dealer helper.
+    getServiceOfferings: readServiceOfferingsFor,
 
     getLifecycle: async (dealerId: string) => {
       try {

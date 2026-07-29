@@ -18,7 +18,13 @@
 
 import { useState } from "react";
 
-import { SERVICE_CATEGORY_IDS } from "@/lib/estimates/service-categories";
+import {
+  SERVICE_CATEGORY_IDS,
+  SERVICE_FAMILIES,
+  SERVICE_FAMILY_CATEGORY,
+  serviceFamilyForCategory,
+  type ServiceFamily,
+} from "@/lib/estimates/service-categories";
 import type { EstimateWizardApi } from "../useEstimateWizard";
 import type { WizardRuntimeInputs } from "../contract/wizard-runtime-inputs";
 
@@ -38,11 +44,45 @@ import { createStep4Bindings, type RowCreateResult } from "./step4-bindings";
 /** Concise, operator-facing message when secure row-ID generation fails closed (no patch applied). */
 const ROW_ID_ERROR_MESSAGE = "行を追加できませんでした。もう一度お試しください。";
 
-/** Rank locks — the accepted availability behavior (preserved exactly): ppf_installer cannot coat;
- *  shop cannot sell PPF or window film. */
+/**
+ * Rank locks — UNCHANGED, and now limited to coating only.
+ *
+ * B2-E2G: `coating` is deliberately outside the service-offering model, so its rank rule survives
+ * exactly as before. Every rank lock on a MANAGED family is gone: PPF's `shop` rule and window
+ * film's rank rules are both retired, because rank no longer decides eligibility for any of the
+ * five managed families — the dealer's own opt-in does.
+ */
 const COATING_LOCK_REASON = "GYEON PPFインストーラーはコーティングを施工できません。";
-const PPF_LOCK_REASON = "GYEONショップランクでは PPF は施工できません。";
-const WINDOW_LOCK_REASON = "GYEONショップランクではウィンドウフィルムは選択できません。";
+
+/**
+ * Setup-required copy per managed family, used ONLY when the dealer has opted in but the family's
+ * prerequisites are not satisfied.
+ *
+ * The split between "the dealer can fix this" and "only an administrator can" is deliberate and is
+ * the whole reason these are separate strings. Four families are configured from dealer-owned
+ * catalog data, so their message names the settings destination in TEXT (no link element is
+ * introduced into any selector). PPF's prerequisites are GLOBAL rows the dealer cannot author, so
+ * sending them to settings would send them somewhere that cannot help. A message must never be
+ * broader than the condition it names.
+ */
+const SETUP_REQUIRED_REASON: Readonly<Record<ServiceFamily, string>> = {
+  window_film:
+    "ウィンドウフィルムを利用するには、見積設定（見積ウィザード設定）でフィルム種類を登録してください。",
+  maintenance:
+    "ボディ定期メンテナンスを利用するには、見積設定（見積ウィザード設定）でメンテナンスメニューを登録してください。",
+  car_wash:
+    "メンテナンス洗車を利用するには、見積設定（見積ウィザード設定）で洗車メニューを登録してください。",
+  room_cleaning:
+    "ルームクリーニングを利用するには、見積設定（見積ウィザード設定）でルームクリーニングメニューを登録してください。",
+  ppf: "PPFの施工メニューが利用できません。管理者にお問い合わせください。",
+};
+
+/**
+ * Window film has a SECOND incomplete state the dealer cannot fix: film types exist, but no
+ * installation areas resolve. Areas are global rows, so this one is administrator-only.
+ */
+const WINDOW_AREAS_UNAVAILABLE_REASON =
+  "ウィンドウフィルムの施工部位が利用できません。管理者にお問い合わせください。";
 
 export interface Step4EstimateProps extends WizardRuntimeInputs {
   api: EstimateWizardApi;
@@ -60,17 +100,59 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
   // Resolve the open section against the CURRENT selection. A deselected active section falls back
   // to the first selected canonical category — WITHOUT deleting that section's saved configuration
   // (category selection and service configuration are separate canonical fields).
-  const orderedSelected = SERVICE_CATEGORY_IDS.filter((id) => categories.includes(id));
-  const resolvedActive = categories.includes(activeSection) ? activeSection : (orderedSelected[0] ?? "");
+  // ── B2-E2G: managed service-family visibility ─────────────────────────────────────────────────
+  // OPTED OUT  → the family's section is ABSENT: filtered out of the sections this screen presents,
+  //              so no tab, no content and no lock card, and NO setup prompt. A dealer who does not
+  //              offer a service has nothing to fix and must never be nagged to configure it. The
+  //              canonical draft is untouched, so opting back in restores their Screen-3 selection
+  //              and saved configuration intact.
+  // OPTED IN   → the section is PRESENT, and locked only while its prerequisites are unsatisfied.
+  //
+  // Both effects are confined to the one family. Every other enabled family, and both unmanaged
+  // categories, are unaffected — so an incomplete setup can never block an estimate for a service
+  // the dealer HAS configured.
+  const offerings = screenConfig.serviceOfferings;
 
-  // Rank locks (also reflected as disabled section tabs in the shell nav).
+  /** Prerequisites per managed family. Rank appears nowhere. */
+  const familyComplete: Readonly<Record<ServiceFamily, boolean>> = {
+    window_film: screenConfig.filmTypes.length > 0 && screenConfig.windowAreas.length > 0,
+    ppf: screenConfig.ppfMethods.length > 0
+      && screenConfig.ppfParts.length > 0
+      && screenConfig.ppfTypeGroups.length > 0,
+    maintenance: screenConfig.maintenanceMenus.length > 0,
+    car_wash: screenConfig.washMenus.length > 0,
+    room_cleaning: screenConfig.roomMenus.length > 0,
+  };
+
+  // An UNMANAGED category (coating, other) is always visible: it is outside this model entirely.
+  const visibleCategories = categories.filter((id) => {
+    const family = serviceFamilyForCategory(id);
+    return family === null || offerings[family];
+  });
+
+  const orderedSelected = SERVICE_CATEGORY_IDS.filter((id) => visibleCategories.includes(id));
+  // When the only selected category is an opted-out family, nothing remains to open and the shell
+  // renders its no-selection placeholder — deliberately, rather than silently opening a section the
+  // dealer did not choose.
+  const resolvedActive = visibleCategories.includes(activeSection) ? activeSection : (orderedSelected[0] ?? "");
+
+  // The ONLY surviving rank lock. Coating is outside the offering model (see the constant above).
   const coatingLocked = !isCoatingAvailableForRank(shopRank);
-  const ppfLocked = shopRank === "shop";
-  const windowLocked = shopRank === "shop";
+
+  // Incompleteness is evaluated only for families the dealer opted INTO — an opted-out family is
+  // not "incomplete", and its section is already absent.
+  const familyLocked = (family: ServiceFamily): boolean => offerings[family] && !familyComplete[family];
+
+  const lockReasonFor = (family: ServiceFamily): string =>
+    family === "window_film" && screenConfig.filmTypes.length > 0
+      ? WINDOW_AREAS_UNAVAILABLE_REASON   // films exist; the missing half is the global areas
+      : SETUP_REQUIRED_REASON[family];
+
   const disabledSections = new Set<string>();
   if (coatingLocked) disabledSections.add("coating");
-  if (ppfLocked) disabledSections.add("ppf");
-  if (windowLocked) disabledSections.add("window");
+  for (const family of SERVICE_FAMILIES) {
+    if (familyLocked(family)) disabledSections.add(SERVICE_FAMILY_CATEGORY[family]);
+  }
 
   // Row-creation callbacks surface the fail-closed result to the operator; success clears the notice.
   const withRowResult = (run: () => RowCreateResult) => () => setRowIdError(run().ok ? null : ROW_ID_ERROR_MESSAGE);
@@ -101,8 +183,8 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
         return (
           <PpfSelector
             shopRank={shopRank}
-            ppfLocked={ppfLocked}
-            lockReason={PPF_LOCK_REASON}
+            ppfLocked={familyLocked("ppf")}
+            lockReason={lockReasonFor("ppf")}
             selectedInstallationMethod={cfg.ppf.installationMethod}
             installationMethods={screenConfig.ppfMethods}
             onInstallationMethodChange={bindings.ppf.onInstallationMethodChange}
@@ -130,8 +212,8 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
         return (
           <WindowFilmSelector
             shopRank={shopRank}
-            windowLocked={windowLocked}
-            lockReason={WINDOW_LOCK_REASON}
+            windowLocked={familyLocked("window_film")}
+            lockReason={lockReasonFor("window_film")}
             areas={screenConfig.windowAreas}
             selectedAreaIds={cfg.windowFilm.selectedAreaIds}
             onAreaToggle={bindings.windowFilm.onAreaToggle}
@@ -226,7 +308,7 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
 
   return (
     <Step4EstimateShell
-      selectedCategories={categories}
+      selectedCategories={visibleCategories}
       activeSection={resolvedActive}
       onSelectSection={setActiveSection}
       disabledSections={disabledSections}

@@ -47,6 +47,8 @@ function runtimeConfig(over: { dealerId?: string; currentRevision?: number } = {
     shopRank: "shop",
     catalog: DEFAULT_PRICING_CATALOG,
     screenConfig: {
+      // B2-E2G: every managed family opted OUT — this fixture configures none of them.
+      serviceOfferings: { window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
       maintenanceMenus: [], washMenus: [], roomMenus: [], filmTypes: [], windowAreas: [],
       otherWorkPresets: [], storeGlobalOptions: [], coupons: [], ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
     },
@@ -224,7 +226,12 @@ test("a runtime failure maps to runtime-config-unavailable and leaks NO internal
   const reasons = [
     "no-dealer", "rank-unavailable", "catalog-read-failed", "lifecycle-read-failed", "lifecycle-missing",
     "review-required", "revision-mismatch", "missing-required-globals", "duplicate-code",
-    "malformed-catalog-row", "invalid-rank-category", "window-film-no-film-types",
+    // B2-E2B: "window-film-no-film-types" was removed from the runtime failure union. A missing
+    // optional product line no longer fails the runtime at all, so there is no such reason to map.
+    "malformed-catalog-row", "invalid-rank-category",
+    // B2-E2G: an UNREADABLE service-offering map is a typed runtime failure (never coerced to
+    // all-OFF), so it must map to the same public code and leak no more than the others.
+    "service-offerings-read-failed",
     "pricing-catalog-failed", "config-build-failed",
   ] as const;
   for (const reason of reasons) {

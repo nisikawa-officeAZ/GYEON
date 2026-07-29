@@ -34,7 +34,10 @@ function item(p: Partial<RawCatalogItem> & Pick<RawCatalogItem, "code" | "kind">
 function raw(p: Partial<RawSettingsData> = {}): RawSettingsData {
   return {
     role: "owner", rankKnown: true, filmRequired: false, items: [], lifecycle: null,
-    coatingCount: 0, reviewerName: null, ...p,
+    coatingCount: 0, reviewerName: null,
+    // B2-E2G — every managed family OFF, which is the default a brand-new dealer sees.
+    serviceOfferings: { window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
+    ...p,
   };
 }
 
@@ -294,4 +297,22 @@ test("interpretReviewOutcome: matching revision => success; mismatch => stale/co
   const stale = interpretReviewOutcome(8, 7);
   assert.equal(stale.kind, "stale");
   assert.equal(stale.messageJa, CONCURRENCY_MESSAGE_JA);
+});
+
+// ── B2-E2G: the service-offering map reaches the view untouched ──────────────
+test("service offerings are carried into the view verbatim, never derived", () => {
+  const offerings = { window_film: true, ppf: false, maintenance: true, room_cleaning: false, car_wash: true };
+  const v = buildEstimateWizardSettingsView(raw({ serviceOfferings: offerings }));
+  assert.deepEqual(v.serviceOfferings, offerings, "the map is passed through, not recomputed");
+  // Independence from the two things it must NEVER be inferred from: rank, and item counts.
+  const noItems = buildEstimateWizardSettingsView(raw({ serviceOfferings: offerings, items: [] }));
+  assert.deepEqual(noItems.serviceOfferings, offerings, "an empty catalog does not flip any family off");
+  const noRank = buildEstimateWizardSettingsView(raw({ serviceOfferings: offerings, rankKnown: false }));
+  assert.deepEqual(noRank.serviceOfferings, offerings, "an unknown rank does not flip any family off");
+});
+
+test("the default view has every managed family OFF", () => {
+  assert.deepEqual(buildEstimateWizardSettingsView(raw()).serviceOfferings, {
+    window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false,
+  });
 });

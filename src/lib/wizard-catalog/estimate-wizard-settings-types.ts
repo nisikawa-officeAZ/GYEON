@@ -8,6 +8,7 @@
 
 import type { SupportedAuthoringKind } from "./wizard-catalog-authoring-types";
 import type { ShopRank } from "@/lib/dealer-settings/authoritative-shop-rank-core";
+import type { ServiceOfferings } from "@/lib/estimates/service-categories";
 
 export type { SupportedAuthoringKind, ShopRank };
 
@@ -153,6 +154,12 @@ export interface EstimateWizardSettingsView {
   readonly canEdit: boolean;
   readonly rankKnown: boolean;
   readonly filmRequired: boolean;
+  /**
+   * B2-E2G — the dealer's opt-in for each of the five managed service families, and the current
+   * state of the 施工メニュー提供設定 controls. Every family defaults OFF. Rank decides none of
+   * them, so this must never be combined with rank in the UI.
+   */
+  readonly serviceOfferings: ServiceOfferings;
   readonly reviewStatus: ReviewStatusView;
   readonly sections: readonly WizardSettingsSectionView[];
   readonly coating: CoatingSummaryView;

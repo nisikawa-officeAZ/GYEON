@@ -45,7 +45,7 @@ function menus(): WizardCatalogRow[] {
 }
 const REVIEWED: WizardLifecycleRow = { state: "CATALOG_REVIEWED", current_configuration_revision: 3, reviewed_configuration_revision: 3, reviewed_at: "t" };
 
-function readers(over: Partial<{ dealer: { dealer_id: string } | null; rank: ShopRank | null; lifecycle: { ok: boolean; row: WizardLifecycleRow | null }; rows: WizardCatalogRow[]; catalog: PricingCatalogResolution | (() => Promise<PricingCatalogResolution>) }>): WizardConfigReaders {
+function readers(over: Partial<{ dealer: { dealer_id: string } | null; rank: ShopRank | null; lifecycle: { ok: boolean; row: WizardLifecycleRow | null }; rows: WizardCatalogRow[]; catalog: PricingCatalogResolution | (() => Promise<PricingCatalogResolution>); offerings: { ok: boolean; enabled?: boolean } }>): WizardConfigReaders {
   return {
     getDealer: async () => (over.dealer !== undefined ? over.dealer : { dealer_id: DEALER }),
     getRank: async () => (over.rank === null ? { ok: false, reason: "missing" } : { ok: true, rank: over.rank ?? "shop" }),
@@ -57,6 +57,17 @@ function readers(over: Partial<{ dealer: { dealer_id: string } | null; rank: Sho
     },
     getLifecycle: async () => (over.lifecycle ? (over.lifecycle.ok ? { ok: true, row: over.lifecycle.row } : { ok: false }) : { ok: true, row: REVIEWED }),
     getCatalogRows: async () => ({ ok: true, rows: over.rows ?? [...globals(), ...menus()] }),
+    // B2-E2G — the service-offering map. Defaults to ALL FAMILIES ON so the pre-existing assertions
+    // keep exercising the same catalog projection they always did; the opt-in is varied explicitly
+    // only where it is the thing under test.
+    getServiceOfferings: async () => {
+      if (over.offerings && !over.offerings.ok) return { ok: false };
+      const on = over.offerings?.enabled ?? true;
+      return {
+        ok: true,
+        offerings: { window_film: on, ppf: on, maintenance: on, room_cleaning: on, car_wash: on },
+      };
+    },
   };
 }
 
@@ -124,8 +135,46 @@ test("changed label keeps the same identity", async () => {
   const r = await resolveWizardRuntimeConfig(readers({ rank: "shop", rows }));
   assert.ok(r.ok && r.screenConfig.maintenanceMenus.some((x) => x.id === "maint-a"));
 });
-test("certified with window areas but no film types → window-film-no-film-types", async () => {
-  assert.deepEqual(await resolveWizardRuntimeConfig(readers({ rank: "certified" })), { ok: false, reason: "window-film-no-film-types" });
+// B2-E2B — this test previously asserted the OPPOSITE: that an eligible rank with window areas but
+// no registered film types failed the ENTIRE wizard. That behaviour is removed. An absent optional
+// product line is a configuration state, not a defect, so the runtime now succeeds and window film
+// alone becomes unavailable, gated in the live Step-4 host.
+test("certified with window areas but no film types SUCCEEDS with an empty film list", async () => {
+  const r = await resolveWizardRuntimeConfig(readers({ rank: "certified" }));
+  assert.ok(r.ok, "an absent optional product line must not fail the whole wizard");
+  assert.deepEqual(r.screenConfig.filmTypes, [], "carried through empty — never defaulted, never seeded");
+  assert.ok(r.screenConfig.windowAreas.length > 0, "window areas still resolve");
+});
+
+// ── B2-E2E: the window-film opt-in ───────────────────────────────────────────
+test("the service-offering map is carried through verbatim, and RANK never affects it", async () => {
+  for (const rank of ["shop", "detailer", "ppf_installer", "certified"] as const) {
+    const on = await resolveWizardRuntimeConfig(readers({ rank, offerings: { ok: true, enabled: true } }));
+    assert.ok(on.ok, `${rank}: opted-in dealer resolves`);
+    assert.deepEqual(
+      on.screenConfig.serviceOfferings,
+      { window_film: true, ppf: true, maintenance: true, room_cleaning: true, car_wash: true },
+      `${rank}: opted-in map carried through unchanged`,
+    );
+
+    const off = await resolveWizardRuntimeConfig(readers({ rank, offerings: { ok: true, enabled: false } }));
+    assert.ok(off.ok, `${rank}: opted-OUT dealer still resolves — opting out never fails the wizard`);
+    assert.deepEqual(
+      off.screenConfig.serviceOfferings,
+      { window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
+      `${rank}: opted-out map carried through unchanged`,
+    );
+  }
+});
+
+test("an UNREADABLE service-offering map fails closed and is never coerced to all-OFF", async () => {
+  // The distinction that matters: every family `false` is a dealer's choice and resolves ok; a
+  // failed READ is not a choice, and reporting it as "opted out" would hide every configured
+  // service behind what looks like a deliberate setting, with nothing anywhere to surface it.
+  assert.deepEqual(
+    await resolveWizardRuntimeConfig(readers({ rank: "detailer", offerings: { ok: false } })),
+    { ok: false, reason: "service-offerings-read-failed" },
+  );
 });
 test("malformed film presentation → malformed-catalog-row", async () => {
   const film = row({ kind: "film_type", code: "film-x", owner_scope: "dealer", ranks: WIN_RANKS, categories: ["window"], presentation: { vlt: 15 } }); // number, not string
@@ -179,11 +228,15 @@ test("a pricing-catalog failure carries no catalog / screenConfig / pricingConfi
 });
 
 test("catalog failure short-circuits BEFORE buildConfigs (a would-be build failure is not reached)", async () => {
-  // certified + no film types would fail at buildConfigs with window-film-no-film-types…
-  const buildFailure = await resolveWizardRuntimeConfig(readers({ rank: "certified" }));
-  assert.deepEqual(buildFailure, { ok: false, reason: "window-film-no-film-types" }, "build-time failure visible on catalog success");
+  // B2-E2B: the former probe (certified + no film types) no longer fails, so this uses a MALFORMED
+  // film presentation instead — the remaining build-time failure, still raised only inside
+  // buildConfigs and therefore still able to prove the ordering.
+  const film = row({ kind: "film_type", code: "film-x", owner_scope: "dealer", ranks: WIN_RANKS, categories: ["window"], presentation: { vlt: 15 } }); // number, not string
+  const rows = [...globals(), ...menus(), film];
+  const buildFailure = await resolveWizardRuntimeConfig(readers({ rank: "certified", rows }));
+  assert.deepEqual(buildFailure, { ok: false, reason: "malformed-catalog-row" }, "build-time failure visible on catalog success");
   // …but a catalog failure returns first, so pricing-catalog-failed wins.
-  const catFailure = await resolveWizardRuntimeConfig(readers({ rank: "certified", catalog: { ok: false, reason: "malformed" } }));
+  const catFailure = await resolveWizardRuntimeConfig(readers({ rank: "certified", rows, catalog: { ok: false, reason: "malformed" } }));
   assert.deepEqual(catFailure, PRICING_FAILED, "catalog failure returns before buildConfigs");
 });
 
@@ -273,22 +326,36 @@ test("a failure carries no dealerId", async () => {
 /** Dealer-bound readers that record the tenant each one received. */
 function boundReaders(
   over: Partial<{ rank: ShopRank | null; lifecycle: { ok: boolean; row: WizardLifecycleRow | null }; rows: WizardCatalogRow[]; catalog: PricingCatalogResolution }>,
-  seen: { rank: string[]; catalog: string[]; lifecycle: string[]; rows: string[] },
+  seen: { rank: string[]; catalog: string[]; lifecycle: string[]; rows: string[]; offerings: string[] },
 ): WizardDealerBoundConfigReaders {
   return {
     getRank: async (d) => { seen.rank.push(d); return over.rank === null ? { ok: false, reason: "missing" } : { ok: true, rank: over.rank ?? "shop" }; },
     getCatalog: async (d) => { seen.catalog.push(d); return over.catalog ?? { ok: true, catalog: DEFAULT_PRICING_CATALOG }; },
     getLifecycle: async (d) => { seen.lifecycle.push(d); return over.lifecycle ? (over.lifecycle.ok ? { ok: true, row: over.lifecycle.row } : { ok: false }) : { ok: true, row: REVIEWED }; },
     getCatalogRows: async (d) => { seen.rows.push(d); return { ok: true, rows: over.rows ?? [...globals(), ...menus()] }; },
+    // B2-E2H1-F — the offerings reader was missing here, which made every dealer-bound test resolve
+    // `service-offerings-read-failed`. It is RECORDED in `seen` like every other reader, not merely
+    // supplied: these tests exist to prove one constant tenant reaches EVERY reader, and a reader
+    // absent from that proof is exactly how this gap survived being written.
+    getServiceOfferings: async (d) => {
+      seen.offerings.push(d);
+      return {
+        ok: true,
+        offerings: { window_film: true, ppf: true, maintenance: true, room_cleaning: true, car_wash: true },
+      };
+    },
   };
 }
-const newSeen = () => ({ rank: [] as string[], catalog: [] as string[], lifecycle: [] as string[], rows: [] as string[] });
+const newSeen = () => ({
+  rank: [] as string[], catalog: [] as string[], lifecycle: [] as string[],
+  rows: [] as string[], offerings: [] as string[],
+});
 
 test("resolveWizardRuntimeConfigForDealer takes the tenant explicitly (dealerId, readers)", () => {
   assert.equal(resolveWizardRuntimeConfigForDealer.length, 2);
 });
 
-test("ONE constant dealerId reaches rank, catalog, lifecycle AND catalog-row readers", async () => {
+test("ONE constant dealerId reaches rank, catalog, lifecycle, catalog-row AND offerings readers", async () => {
   const seen = newSeen();
   const r = await resolveWizardRuntimeConfigForDealer(DEALER, boundReaders({ rank: "shop" }, seen));
   assert.equal(r.ok, true);
@@ -298,7 +365,8 @@ test("ONE constant dealerId reaches rank, catalog, lifecycle AND catalog-row rea
   assert.deepEqual(seen.catalog, [DEALER], "pricing catalog read for the bound tenant only");
   assert.deepEqual(seen.lifecycle, [DEALER], "lifecycle read for the bound tenant only");
   assert.deepEqual(seen.rows, [DEALER], "catalog rows read for the bound tenant only");
-  const every = [...seen.rank, ...seen.catalog, ...seen.lifecycle, ...seen.rows];
+  assert.deepEqual(seen.offerings, [DEALER], "service offerings read for the bound tenant only");
+  const every = [...seen.rank, ...seen.catalog, ...seen.lifecycle, ...seen.rows, ...seen.offerings];
   assert.equal(new Set(every).size, 1, "exactly one distinct tenant across every reader");
 });
 
@@ -309,7 +377,7 @@ test("a different bound dealer propagates to every reader", async () => {
   assert.equal(r.ok, true);
   if (!r.ok) return;
   assert.equal(r.dealerId, OTHER_DEALER);
-  assert.equal(new Set([...seen.rank, ...seen.catalog, ...seen.lifecycle, ...seen.rows]).size, 1);
+  assert.equal(new Set([...seen.rank, ...seen.catalog, ...seen.lifecycle, ...seen.rows, ...seen.offerings]).size, 1);
   assert.deepEqual(seen.rows, [OTHER_DEALER]);
 });
 
@@ -482,11 +550,13 @@ test("B1.1-B2: a malformed or out-of-range coupon row fails closed", async () =>
 // Every assertion below runs at rank "ppf_installer" — the one rank that is eligible for PPF
 // WITHOUT also being eligible for window film.
 //
-// The rank matters twice over. At "shop" the PPF fixture row is rank-filtered away entirely and the
-// assertions silently exercise nothing. At "detailer" the row IS eligible, but detailer may also
-// sell window film, so `buildConfigs` correctly fails closed with `window-film-no-film-types`
-// before reaching any PPF assertion — this fixture deliberately carries no dealer film_type row.
-// "ppf_installer" isolates the PPF projection from that unrelated precondition.
+// The rank matters because at "shop" the PPF fixture row is rank-filtered away entirely and the
+// assertions would silently exercise nothing. "ppf_installer" keeps the PPF projection isolated.
+//
+// B2-E2B: "detailer" would now ALSO work — the fixture carries no dealer film_type row, which used
+// to make buildConfigs fail closed with `window-film-no-film-types` before any PPF assertion ran.
+// That precondition is gone. The rank is left at "ppf_installer" because these assertions are about
+// the PPF projection and changing them here would widen this phase beyond its scope.
 const PPF_RANK: ShopRank = "ppf_installer";
 
 test("B1.1-B2: a valid PPF install coefficient projects, keyed by CODE", async () => {
@@ -601,6 +671,14 @@ test("B1.1-B2: the dealer-bound entry binds the adjustment reader to the SAME te
     getCatalog: () => base.getCatalog(),
     getLifecycle: (d) => base.getLifecycle(d),
     getCatalogRows: (d) => base.getCatalogRows(d),
+    // B2-E2H1-RF — the offerings reader was omitted here, so the dealer-bound entry called an
+    // absent reader and this test never reached its adjustment proof. It is bound to the SAME
+    // tenant `seen` records: asserting `d` inside the reader keeps offerings inside this test's
+    // one-tenant proof without changing what the tracker below is expected to contain.
+    getServiceOfferings: async (d) => {
+      assert.equal(d, DEALER, "the offerings reader receives the SAME bound tenant");
+      return base.getServiceOfferings(d);
+    },
     getPpfCoatingAdjustments: async (d) => { seen.push(d); return { ok: true, rows: [ADJ] }; },
   };
   const r = await resolveWizardRuntimeConfigForDealer(DEALER, bound);

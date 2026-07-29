@@ -20,6 +20,7 @@ import {
   runSaveCatalogItem,
   runArchiveCatalogItem,
   runConfirmCatalogReview,
+  runSetServiceOffering,
   runSavePpfCoatingAdjustment,
   runArchivePpfCoatingAdjustment,
   buildUpsertPayload,
@@ -29,6 +30,7 @@ import type {
   WizardCatalogUpsertResult,
   WizardCatalogArchiveResult,
   WizardCatalogReviewResult,
+  ServiceOfferingUpdateResult,
   PpfCoatingAdjustmentInput,
   PpfCoatingAdjustmentUpsertResult,
   PpfCoatingAdjustmentArchiveResult,
@@ -218,6 +220,59 @@ export async function archiveDealerPpfCoatingAdjustment(
       },
     },
     ruleId,
+  );
+  if (result.ok) revalidatePath(SETTINGS_PATH);
+  return result;
+}
+
+/**
+ * B2-E2G — set one service-offering family for the current dealer.
+ *
+ * Uses the SAME canonical path as every dealer-facing settings write on this screen: the dealer is
+ * resolved server-side from getCurrentDealer(), authorization is the owner|manager gate, and the
+ * write goes through the user-scoped, RLS-authenticated client. No service_role, no direct SQL, and
+ * no parallel client-side write path.
+ *
+ * BOTH values are persisted explicitly. Turning a family OFF writes `enabled = false` rather than
+ * deleting the row, so the dealer's choice is recorded as a decision they made — absence of a row
+ * means only "never chose", which is the state a brand-new dealer is in. Collapsing the two would
+ * make "I do not offer this" indistinguishable from "nobody has looked at this yet".
+ */
+export async function setServiceOffering(
+  family: unknown,
+  enabled: unknown,
+): Promise<ServiceOfferingUpdateResult> {
+  const result = await runSetServiceOffering(
+    {
+      getDealer,
+      getStaffRole,
+      write: async (dealerId, fam, isEnabled) => {
+        try {
+          const supabase = await createClient();
+          const { error } = await supabase
+            .from("dealer_service_offerings")
+            .upsert(
+              {
+                dealer_id: dealerId,
+                family: fam,
+                enabled: isEnabled,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "dealer_id,family" },
+            );
+          if (error) {
+            console.error("[setServiceOffering] upsert failed:", error.message);
+            return { ok: false };
+          }
+          return { ok: true };
+        } catch (err) {
+          console.error("[setServiceOffering] threw:", err instanceof Error ? err.message : err);
+          return { ok: false };
+        }
+      },
+    },
+    family,
+    enabled,
   );
   if (result.ok) revalidatePath(SETTINGS_PATH);
   return result;

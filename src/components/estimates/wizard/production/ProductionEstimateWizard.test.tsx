@@ -464,6 +464,8 @@ test("29. the bootstrap and start-new guards are SEPARATE instances", () => {
 
 let saveInvocations = 0;
 const SC: WizardScreenConfiguration = {
+  // B2-E2G: every managed family opted OUT — this fixture configures none of them.
+  serviceOfferings: { window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
   filmTypes: [], windowAreas: [], maintenanceMenus: [], washMenus: [], roomMenus: [],
   otherWorkPresets: [], storeGlobalOptions: [], coupons: [], ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
 };

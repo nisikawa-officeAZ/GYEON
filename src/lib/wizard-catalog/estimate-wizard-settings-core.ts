@@ -6,6 +6,7 @@
 // detail reach visible text. All visible labels are Japanese.
 
 import type { DealerStaffRole } from "@/lib/staff/staff-types";
+import type { ServiceOfferings } from "@/lib/estimates/service-categories";
 import type { WizardCatalogActionErrorCode } from "./wizard-catalog-authoring-types";
 import type {
   EstimateWizardPermission,
@@ -81,6 +82,11 @@ export interface RawSettingsData {
   readonly coatingCount: number;
   /** Resolved display name for last_reviewed_by, or null if unknown/deleted. */
   readonly reviewerName: string | null;
+  /**
+   * B2-E2G — the dealer's service-offering map. REQUIRED and total: the loader always states every
+   * family, so an omitted key can never be misread as OFF at this boundary.
+   */
+  readonly serviceOfferings: ServiceOfferings;
   /** B1.1 — optional so existing callers keep compiling; absent ⇒ no rules configured. */
   readonly ppfCoatingAdjustments?: readonly RawPpfCoatingAdjustment[];
   /** Code → Japanese label for the global PPF method vocabulary, for rule display. */
@@ -414,6 +420,8 @@ export function buildEstimateWizardSettingsView(raw: RawSettingsData): EstimateW
     canEdit: permission === "editable",
     rankKnown: raw.rankKnown,
     filmRequired: raw.filmRequired,
+    // Carried through verbatim; never derived from rank or from item counts.
+    serviceOfferings: raw.serviceOfferings,
     reviewStatus,
     sections,
     coating: buildCoatingSummary(raw.coatingCount),

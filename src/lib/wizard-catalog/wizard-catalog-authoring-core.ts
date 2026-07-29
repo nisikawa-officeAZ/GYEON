@@ -11,6 +11,7 @@
 // immutability, revision invalidation); the core never re-implements pricing.
 
 import type { DealerStaffRole } from "@/lib/staff/staff-types";
+import { isServiceFamily, type ServiceFamily } from "@/lib/estimates/service-categories";
 import type { RankResolution } from "@/lib/dealer-settings/authoritative-shop-rank-core";
 import {
   WIZARD_CATALOG_ACTION_ERRORS as ERR,
@@ -19,6 +20,7 @@ import {
   type WizardCatalogUpsertResult,
   type WizardCatalogArchiveResult,
   type WizardCatalogReviewResult,
+  type ServiceOfferingUpdateResult,
   type WizardCatalogActionFailure,
   type PpfCoatingAdjustmentInput,
   type PpfCoatingAdjustmentUpsertResult,
@@ -241,6 +243,47 @@ export async function runArchivePpfCoatingAdjustment(
 }
 
 // ── review ────────────────────────────────────────────────────────────────---
+
+/**
+ * B2-E2G — set one service-offering family.
+ *
+ * Same gate as every other authoring action: dealer resolved server-side, owner|manager only. The
+ * writer receives ONLY the server-resolved dealer id and the validated family/enabled pair — a
+ * caller can never express a tenant.
+ */
+export interface ServiceOfferingDeps extends AuthzDeps {
+  readonly write: (
+    dealerId: string,
+    family: ServiceFamily,
+    enabled: boolean,
+  ) => Promise<{ ok: true } | { ok: false }>;
+}
+
+export async function runSetServiceOffering(
+  deps: ServiceOfferingDeps,
+  rawFamily: unknown,
+  rawEnabled: unknown,
+): Promise<ServiceOfferingUpdateResult> {
+  const g = await gate(deps);
+  if (!g.ok) return g.failure;
+
+  // The family must be one of the five managed values. An unknown family is a malformed request,
+  // never something to coerce or ignore.
+  if (!isServiceFamily(rawFamily)) {
+    return { ok: false, code: ERR.VALIDATION_ERROR, message: "対象のサービスが不正です" };
+  }
+  // `enabled` must be an explicit boolean. Absence is NOT treated as OFF: the whole point of this
+  // control is that OFF is a stated choice the dealer made, not an omission we interpreted.
+  if (typeof rawEnabled !== "boolean") {
+    return { ok: false, code: ERR.VALIDATION_ERROR, message: "提供設定の値が不正です" };
+  }
+
+  const w = await deps.write(g.dealerId, rawFamily, rawEnabled);
+  if (!w.ok) {
+    return { ok: false, code: ERR.RPC_ERROR, message: "提供設定を保存できませんでした" };
+  }
+  return { ok: true, family: rawFamily, enabled: rawEnabled };
+}
 
 export interface ReviewRpcSuccess {
   readonly ok: true;

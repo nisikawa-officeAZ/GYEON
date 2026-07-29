@@ -229,6 +229,8 @@ test("11. host + shell + contract contain no fixture/default pricing dependency"
 // ── binding smoke: the real host mounts with the four inputs and renders fail-closed ──
 
 const SC: WizardScreenConfiguration = {
+  // B2-E2G: every managed family opted OUT — this fixture configures none of them.
+  serviceOfferings: { window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
   filmTypes: [], windowAreas: [], maintenanceMenus: [], washMenus: [], roomMenus: [],
   otherWorkPresets: [], storeGlobalOptions: [], coupons: [], ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
 };

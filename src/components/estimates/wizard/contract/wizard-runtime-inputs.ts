@@ -10,6 +10,7 @@
 // import the production container). Field types come straight from the approved selector prop types
 // in screens/step-types.ts, so no shape is re-declared or duplicated here.
 
+import type { ServiceOfferings } from "@/lib/estimates/service-categories";
 import type {
   ShopRank,
   FilmTypeOption,
@@ -37,6 +38,19 @@ import type {
  * become `item_name`, onto persisted estimates.
  */
 export interface WizardScreenConfiguration {
+  /**
+   * B2-E2G — the dealer's EXPLICIT opt-in for each of the five managed service families
+   * (`dealer_service_offerings`). Rank decides none of them; this map alone does, and every family
+   * defaults OFF.
+   *
+   * REQUIRED and TOTAL. Required because an optional map defaulting to all-OFF would make a wiring
+   * failure indistinguishable from a dealer who deliberately opted out, failing silently toward
+   * "service hidden" where nobody would notice. Total because a partial map would reintroduce the
+   * same ambiguity one key at a time: an absent family must never be readable as OFF at a boundary.
+   *
+   * `coating` and `other` are absent by design — they are outside the offering model.
+   */
+  serviceOfferings:   ServiceOfferings;
   filmTypes:          FilmTypeOption[];
   windowAreas:        WindowAreaOption[];
   maintenanceMenus:   MaintenanceMenu[];

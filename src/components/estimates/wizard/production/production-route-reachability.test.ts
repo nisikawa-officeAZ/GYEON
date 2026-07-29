@@ -95,13 +95,39 @@ test("failure dispositions are exact and fail-closed", () => {
   assert.match(code, /actor\.reason === "unauthenticated"[\s\S]*?redirect\("\/login"\)/, "unauthenticated → /login");
   assert.match(code, /actor\.reason === "no-active-membership"[\s\S]*?redirect\("\/no-dealer"\)/, "no membership → /no-dealer");
   assert.match(code, /if \(!actor\.ok\)[\s\S]*?return <Unavailable \/>;/, "other actor failures → Unavailable");
-  assert.match(code, /if \(!runtime\.ok\) return <Unavailable \/>;/, "every runtime failure → Unavailable");
+  // B2-E2B: runtime failures now split in exactly two. The two OWNER-RESOLVABLE review states get the
+  // actionable setup notice; every other reason still falls through to the generic one.
+  assert.match(
+    code,
+    /if \(!runtime\.ok\) \{[\s\S]*?runtime\.reason === "review-required" \|\| runtime\.reason === "revision-mismatch"[\s\S]*?return <SetupRequired \/>;[\s\S]*?return <Unavailable \/>;/,
+    "review-required/revision-mismatch → SetupRequired; every other runtime failure → Unavailable",
+  );
+  assert.equal((code.match(/<SetupRequired\b/g) ?? []).length, 1, "SetupRequired is reachable from exactly one place");
   assert.match(code, /if \(!references\.ok\) return <Unavailable \/>;/, "every entity failure → Unavailable");
   // No broad try/catch — uncaught failures must reach the estimates error boundary.
   assert.equal(/try\s*\{/.test(code), false, "no broad try/catch in the route");
   // Success mounts exactly once.
   assert.equal((code.match(/<ProductionEstimateWizard\b/g) ?? []).length, 1);
 });
+
+/**
+ * B2-E2B — the leak sweep is bounded to a single function BODY.
+ *
+ * It previously ran to the default export, which worked only while `Unavailable` was the last
+ * component in the file. With a second notice below it, that span would have swallowed the next
+ * component's doc comment and reported prose as a rendered leak. Slicing to the function's own
+ * closing brace keeps the assertion about what the component RENDERS, which was always the intent.
+ */
+const LEAKS = ["reason", "message", "stack", "digest", "error", "code",
+               "dealerId", "userId", ".role", "{actor", "{runtime", "{references"] as const;
+
+function fnBodyOf(code: string, name: string): string {
+  const s = code.indexOf(`function ${name}(`);
+  assert.ok(s >= 0, `PRECONDITION: ${name} located`);
+  const e = code.indexOf("\n}\n", s);
+  assert.ok(e > s, `PRECONDITION: ${name} body end located`);
+  return code.slice(s, e);
+}
 
 test("the Unavailable notice is fixed copy and leaks no internal reason", () => {
   const code = codeOf(ROUTE);
@@ -114,10 +140,24 @@ test("the Unavailable notice is fixed copy and leaks no internal reason", () => 
   const start = code.indexOf("function Unavailable(");
   assert.ok(start >= 0, "PRECONDITION: Unavailable located");
   assert.match(code.slice(start, start + 40), /function Unavailable\(\)/, "takes no props");
-  const body = code.slice(start, code.indexOf("export default async function"));
-  for (const leak of ["reason", "message", "stack", "digest", "error", "code",
-                      "dealerId", "userId", ".role", "{actor", "{runtime", "{references"]) {
-    assert.equal(body.includes(leak), false, `Unavailable renders ${leak}`);
+  for (const leak of LEAKS) {
+    assert.equal(fnBodyOf(code, "Unavailable").includes(leak), false, `Unavailable renders ${leak}`);
+  }
+});
+
+test("the SetupRequired notice is actionable, fixed copy, and leaks no internal reason", () => {
+  const code = codeOf(ROUTE);
+  assert.match(code, /data-testid="estimate-create-setup-required"/);
+  assert.match(code, /見積を開始する前に、見積設定の確認を完了してください。/, "exact body");
+  assert.match(code, /href="\/settings\/estimate-wizard"/, "actionable route to the setup screen");
+
+  // Same discipline as Unavailable: no props, no dynamic value, and — critically — the two review
+  // reasons share ONE message, so the surface cannot distinguish which of them occurred.
+  const start = code.indexOf("function SetupRequired(");
+  assert.ok(start >= 0, "PRECONDITION: SetupRequired located");
+  assert.match(code.slice(start, start + 42), /function SetupRequired\(\)/, "takes no props");
+  for (const leak of LEAKS) {
+    assert.equal(fnBodyOf(code, "SetupRequired").includes(leak), false, `SetupRequired renders ${leak}`);
   }
 });
 

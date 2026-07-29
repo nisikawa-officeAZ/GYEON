@@ -192,6 +192,8 @@ test("12. EstimateWizardContainer no longer declares its own WizardScreenConfigu
  * added to that interface fails compilation here rather than silently passing.
  */
 const SCREEN_CONFIG: WizardScreenConfiguration = {
+  // B2-E2G: every managed family opted OUT — this fixture configures none of them.
+  serviceOfferings: { window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
   filmTypes: [], windowAreas: [], maintenanceMenus: [], washMenus: [], roomMenus: [],
   otherWorkPresets: [], storeGlobalOptions: [], coupons: [],
   ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
@@ -200,7 +202,14 @@ const SCREEN_CONFIG: WizardScreenConfiguration = {
 test("13. WizardScreenConfiguration + WizardRuntimeInputs expose the expected fields", () => {
   const inputs: WizardRuntimeInputs = { shopRank: "detailer", screenConfig: SCREEN_CONFIG };
   assert.equal(inputs.shopRank, "detailer");
-  assert.equal(Object.keys(inputs.screenConfig).length, 11);
+  // B2-E2G: 11 → 12. `serviceOfferings` joins the contract as a REQUIRED field, so a caller that
+  // cannot state the dealer's offerings cannot mount the host — the rule every other field obeys.
+  assert.equal(Object.keys(inputs.screenConfig).length, 12);
+  assert.deepEqual(
+    Object.keys(inputs.screenConfig.serviceOfferings).sort(),
+    ["car_wash", "maintenance", "ppf", "room_cleaning", "window_film"],
+    "the offerings map is TOTAL — an absent family could otherwise be misread as OFF",
+  );
 });
 
 // ── B7-2A: entity references are a SEPARATE contract from Step-4 inputs ──────

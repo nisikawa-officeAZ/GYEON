@@ -8,6 +8,7 @@ import {
   runSaveCatalogItem,
   runArchiveCatalogItem,
   runConfirmCatalogReview,
+  runSetServiceOffering,
   buildUpsertPayload,
   type UpsertDeps,
   type ArchiveDeps,
@@ -366,4 +367,91 @@ test("the still-global PPF vocabulary kinds remain unauthorable", async () => {
     assert.equal(res.ok === false && res.code, "UNSUPPORTED_KIND");
     assert.equal(rec.calls.length, 0);
   }
+});
+
+// ── B2-E2G: service-offering writes ─────────────────────────────────────────
+//
+// The transport assertions matter more than they look. `false` must travel as a stated value all
+// the way to the writer: if OFF were ever inferred from omission, "this shop does not offer PPF"
+// would become indistinguishable from "nobody has configured PPF yet", and the compatibility
+// migration draws exactly that distinction.
+
+function offeringDeps(over: Partial<{
+  getDealer: () => Promise<{ dealer_id: string } | null>;
+  getStaffRole: () => Promise<DealerStaffRole | null>;
+  write: (d: string, f: string, e: boolean) => Promise<{ ok: true } | { ok: false }>;
+  rec: Array<{ dealerId: string; family: string; enabled: boolean }>;
+}> = {}) {
+  const rec = over.rec ?? [];
+  return {
+    deps: {
+      getDealer: over.getDealer ?? (async () => ({ dealer_id: "d-1" })),
+      getStaffRole: over.getStaffRole ?? (async (): Promise<DealerStaffRole> => "owner"),
+      write: over.write ?? (async (dealerId: string, family: string, enabled: boolean) => {
+        rec.push({ dealerId, family, enabled });
+        return { ok: true } as const;
+      }),
+    },
+    rec,
+  };
+}
+
+test("B2-E2G: enabling a family transports true and echoes what was persisted", async () => {
+  const { deps, rec } = offeringDeps();
+  const res = await runSetServiceOffering(deps, "ppf", true);
+  assert.deepEqual(res, { ok: true, family: "ppf", enabled: true });
+  assert.deepEqual(rec, [{ dealerId: "d-1", family: "ppf", enabled: true }]);
+});
+
+test("B2-E2G: DISABLING transports an explicit false — never an omission or a delete", async () => {
+  const { deps, rec } = offeringDeps();
+  const res = await runSetServiceOffering(deps, "window_film", false);
+  assert.deepEqual(res, { ok: true, family: "window_film", enabled: false });
+  assert.deepEqual(rec, [{ dealerId: "d-1", family: "window_film", enabled: false }]);
+});
+
+test("B2-E2G: every one of the five families round-trips, both directions", async () => {
+  for (const family of ["window_film", "ppf", "maintenance", "room_cleaning", "car_wash"]) {
+    for (const enabled of [true, false]) {
+      const { deps, rec } = offeringDeps();
+      assert.deepEqual(await runSetServiceOffering(deps, family, enabled), { ok: true, family, enabled });
+      assert.deepEqual(rec, [{ dealerId: "d-1", family, enabled }]);
+    }
+  }
+});
+
+test("B2-E2G: an unknown family is rejected and never written", async () => {
+  for (const bad of ["coating", "other", "", "WINDOW_FILM", null, 7]) {
+    const { deps, rec } = offeringDeps();
+    const res = await runSetServiceOffering(deps, bad, true);
+    assert.equal(res.ok, false, `${JSON.stringify(bad)} must be rejected`);
+    assert.deepEqual(rec, [], "nothing may be written for an unknown family");
+  }
+});
+
+test("B2-E2G: a non-boolean enabled is rejected — absence is not OFF", async () => {
+  for (const bad of [undefined, null, "true", 1, 0]) {
+    const { deps, rec } = offeringDeps();
+    const res = await runSetServiceOffering(deps, "ppf", bad);
+    assert.equal(res.ok, false, `${JSON.stringify(bad)} must be rejected`);
+    assert.deepEqual(rec, [], "nothing may be written without an explicit boolean");
+  }
+});
+
+test("B2-E2G: the same authorization gate as every other authoring action", async () => {
+  for (const role of ["staff", "readonly"] as DealerStaffRole[]) {
+    const { deps, rec } = offeringDeps({ getStaffRole: async () => role });
+    const res = await runSetServiceOffering(deps, "ppf", true);
+    assert.equal(res.ok, false, `${role} may not change offerings`);
+    assert.deepEqual(rec, [], "a denied caller writes nothing");
+  }
+  const { deps, rec } = offeringDeps({ getDealer: async () => null });
+  assert.equal((await runSetServiceOffering(deps, "ppf", true)).ok, false, "no dealer context");
+  assert.deepEqual(rec, []);
+});
+
+test("B2-E2G: a failed write is reported, never reported as success", async () => {
+  const { deps } = offeringDeps({ write: async () => ({ ok: false }) });
+  const res = await runSetServiceOffering(deps, "ppf", true);
+  assert.equal(res.ok, false);
 });

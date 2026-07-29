@@ -10,6 +10,7 @@
 
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { buildServiceOfferings } from "@/lib/estimates/service-categories";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getAuthoritativeShopRank } from "@/lib/dealer-settings/get-authoritative-shop-rank";
 import { getAuthoritativeDealerPricingCatalog } from "@/lib/pricing/get-authoritative-dealer-pricing-catalog";
@@ -35,6 +36,27 @@ export async function getAuthoritativeWizardRuntimeConfig(): Promise<Authoritati
         .maybeSingle();
       if (error) return { ok: false };
       return { ok: true, row: data ?? null };
+    },
+
+    // B2-E2G — the dealer's explicit service-offering map. A query error is a FAILED READ, never a
+    // silent all-OFF: reporting an unreadable map as "opted out" would hide every configured service
+    // behind what looks like the dealer's own choice. Zero rows IS valid and means every family OFF.
+    getServiceOfferings: async (dealerId) => {
+      const supabase = await createClient();
+      const { data, error } = await supabase
+        .from("dealer_service_offerings")
+        .select("family, enabled")
+        .eq("dealer_id", dealerId);
+      if (error || !data) return { ok: false };
+      return {
+        ok: true,
+        offerings: buildServiceOfferings(
+          data.map((r: Record<string, unknown>) => ({
+            family: r.family as string,
+            enabled: r.enabled === true,
+          })),
+        ),
+      };
     },
 
     getCatalogRows: async (_dealerId) => {

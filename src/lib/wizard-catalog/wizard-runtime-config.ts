@@ -10,6 +10,7 @@
 // PricingCatalog-priced; every other category stays manual (operator amount); tax is totals-only.
 // The result is fail-closed and never partial.
 
+import type { ServiceOfferings } from "@/lib/estimates/service-categories";
 import type { PricingCatalog } from "@/lib/pricing/pricing-catalog";
 import type { PricingCatalogResolution } from "@/lib/pricing/authoritative-pricing-catalog-core";
 import type { RankResolution } from "@/lib/dealer-settings/authoritative-shop-rank-core";
@@ -37,7 +38,10 @@ export type WizardRuntimeConfigFailure =
   | "duplicate-code"
   | "malformed-catalog-row"
   | "invalid-rank-category"
-  | "window-film-no-film-types"
+  // B2-E2G: the dealer's service-offering map could not be READ. Deliberately a typed failure
+  // rather than a fallback to all-OFF: defaulting an unreadable map to "opted out" would hide every
+  // configured service behind what looks like the dealer's own choice, and nothing would surface it.
+  | "service-offerings-read-failed"
   | "pricing-catalog-failed"
   | "config-build-failed"
   // B1.1-B2: a FAILED adjustment read is never treated as "no rules" — that would silently
@@ -106,6 +110,12 @@ export interface WizardConfigReaders {
   getLifecycle: (dealerId: string) => Promise<{ ok: true; row: WizardLifecycleRow | null } | { ok: false }>;
   getCatalogRows: (dealerId: string) => Promise<{ ok: true; rows: WizardCatalogRow[] } | { ok: false }>;
   /**
+   * B2-E2G — the dealer's explicit service-offering map. REQUIRED, unlike the adjustments reader: an
+   * absent adjustments reader honestly means "no rules configured", whereas an absent offerings
+   * reader would mean the resolver invented the answer. There is no default here.
+   */
+  getServiceOfferings: (dealerId: string) => Promise<{ ok: true; offerings: ServiceOfferings } | { ok: false }>;
+  /**
    * B1.1-B2 — dealer-scoped PPF + coating reduction rules. OPTIONAL: an absent reader means the
    * dealer has no rules, which is the honest "not configured" state and prices exactly as before.
    * A reader that FAILS is fail-closed (`adjustments-read-failed`) — never silently treated as empty.
@@ -135,6 +145,7 @@ export interface WizardDealerBoundConfigReaders {
   getCatalog: (dealerId: string) => Promise<PricingCatalogResolution>;
   getLifecycle: (dealerId: string) => Promise<{ ok: true; row: WizardLifecycleRow | null } | { ok: false }>;
   getCatalogRows: (dealerId: string) => Promise<{ ok: true; rows: WizardCatalogRow[] } | { ok: false }>;
+  getServiceOfferings: (dealerId: string) => Promise<{ ok: true; offerings: ServiceOfferings } | { ok: false }>;
   getPpfCoatingAdjustments?: (
     dealerId: string,
   ) => Promise<{ ok: true; rows: WizardPpfCoatingAdjustmentRow[] } | { ok: false }>;
@@ -168,7 +179,6 @@ const fail = (reason: WizardRuntimeConfigFailure): AuthoritativeWizardRuntimeCon
 const CODE_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 const WINDOW_AREA_CODES = ["front-windshield", "front-door-glass", "rear-door-glass", "triangular-window", "quarter-glass", "rear-glass", "sunroof"] as const;
 const PPF_METHOD_IDS: readonly PpfInstallationMethodId[] = ["full", "partial", "windshield", "sunroof", "interior"];
-const RANKS_WITH_WINDOW_FILM: readonly ShopRank[] = ["detailer", "certified"];
 
 // ── Presentation parse (film display attrs only; fail closed on malformed) ────
 function parseFilmPresentation(p: unknown): { ok: true; v: Pick<FilmTypeOption, "brand" | "vlt" | "heatRejection" | "color"> } | { ok: false } {
@@ -267,11 +277,26 @@ export async function resolveWizardRuntimeConfig(readers: WizardConfigReaders): 
     adjustmentRows = adj.rows.filter((r) => r.deleted_at === null);
   }
 
-  // ── Build configurations (rank-filtered; fail closed on window-film gap) ──
+  // ── B2-E2G: the dealer's explicit service-offering map ──
+  // Read on the SAME bound tenant as every other reader. A failed read is fail-closed with its own
+  // reason and is never coerced to all-OFF — see the failure-contract note. Note what this does NOT
+  // do: a family that is simply OFF, or ON with nothing configured, is a perfectly valid
+  // configuration and resolves ok. Only an unreadable map fails, because only that is a defect.
+  let serviceOfferings: ServiceOfferings;
+  try {
+    const so = await readers.getServiceOfferings(dealer.dealer_id);
+    if (!so.ok) return fail("service-offerings-read-failed");
+    serviceOfferings = so.offerings;
+  } catch {
+    return fail("service-offerings-read-failed");
+  }
+
+  // ── Build configurations (rank-filtered) ──
   const built = buildConfigs(
     cat.rows,
     shopRank,
     catalog,
+    serviceOfferings,
     adjustmentRows,
     readers.getCalculationDate?.() ?? "",
   );
@@ -317,6 +342,7 @@ export async function resolveWizardRuntimeConfigForDealer(
     getCatalog: () => readers.getCatalog(boundDealerId),
     getLifecycle: () => readers.getLifecycle(boundDealerId),
     getCatalogRows: () => readers.getCatalogRows(boundDealerId),
+    getServiceOfferings: () => readers.getServiceOfferings(boundDealerId),
     // Bound to the SAME single constant tenant as every other reader above.
     ...(readers.getPpfCoatingAdjustments
       ? { getPpfCoatingAdjustments: () => readers.getPpfCoatingAdjustments!(boundDealerId) }
@@ -330,6 +356,9 @@ function buildConfigs(
   rows: readonly WizardCatalogRow[],
   rank: ShopRank,
   _catalog: PricingCatalog,
+  // B2-E2E — REQUIRED, and positioned ahead of the defaulted params so it cannot acquire a default.
+  // The opt-in must always be supplied by the resolver, never assumed here.
+  serviceOfferings: ServiceOfferings,
   adjustmentRows: readonly WizardPpfCoatingAdjustmentRow[] = [],
   calculationDate = "",
 ): { ok: true; screenConfig: WizardScreenConfiguration; pricingConfig: ConfiguredPricingConfiguration } | { ok: false; reason: WizardRuntimeConfigFailure } {
@@ -349,10 +378,12 @@ function buildConfigs(
   }
   const windowAreas: WindowAreaOption[] = of("window_area", "global").map((r) => ({ id: r.code, label: r.label_ja ?? "" }));
 
-  // Window Film fail-closed: rank can sell it (areas present) but no film types configured.
-  if (RANKS_WITH_WINDOW_FILM.includes(rank) && windowAreas.length > 0 && filmTypes.length === 0) {
-    return { ok: false, reason: "window-film-no-film-types" };
-  }
+  // B2-E2B: an ABSENT optional product line is no longer a whole-wizard failure. A dealer with no
+  // film types configured keeps every other category usable; window film alone becomes unavailable,
+  // gated in the live Step-4 path (steps/Step4Estimate.tsx) which locks the section and tells the
+  // owner where to register film types. `filmTypes` is simply carried through empty — never
+  // defaulted, never seeded with example products. A MALFORMED film row still fails closed above
+  // (`malformed-catalog-row`): absence is a configuration state, malformed data is a defect.
 
   // PPF methods must be the canonical ids (validated globals ⇒ safe narrow).
   const ppfMethods: InstallationMethodOption[] = [];
@@ -422,6 +453,10 @@ function buildConfigs(
   }));
 
   const screenConfig: WizardScreenConfiguration = {
+    // B2-E2G — carried through exactly as read. Rank is NOT consulted for any of the five managed
+    // families: every rank may sell them, and this dealer-owned map is the sole authority over
+    // whether each is offered. Availability of a family is decided in the Step-4 host, never here.
+    serviceOfferings,
     maintenanceMenus: of("maintenance_menu", "dealer").map(menu) as MaintenanceMenu[],
     washMenus: of("wash_menu", "dealer").map(menu) as WashMenu[],
     roomMenus: of("room_cleaning_menu", "dealer").map(menu) as RoomMenu[],

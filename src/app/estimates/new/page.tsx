@@ -13,6 +13,7 @@
 // unavailable notice, and never leaks an internal reason.
 
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 import MainLayout from "@/components/layout/MainLayout";
 import ProductionEstimateWizard from "@/components/estimates/wizard/production/ProductionEstimateWizard";
@@ -59,6 +60,41 @@ function Unavailable() {
   );
 }
 
+/**
+ * B2-E2B — the ACTIONABLE counterpart to `Unavailable`, shown only for the two runtime failures the
+ * dealer can resolve themselves: the catalog review has never been confirmed (`review-required`), or
+ * a settings change invalidated it and it must be confirmed again (`revision-mismatch`).
+ *
+ * Separating these from the generic notice is deliberate. Both describe the dealer's OWN
+ * configuration state, already visible to them on their own settings screen, so naming the required
+ * step discloses nothing — whereas the previous uniform notice advised waiting, which could never
+ * resolve either state no matter how long the operator waited.
+ *
+ * Like `Unavailable`, this takes no props and renders no reason code, dealer/user id, role or
+ * configuration value: the two reasons share ONE message, so the surface cannot distinguish them.
+ * The review itself is never auto-confirmed here or anywhere else — this only routes the human to it.
+ */
+function SetupRequired() {
+  return (
+    <MainLayout>
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4">
+        <div role="alert" data-testid="estimate-create-setup-required" className="max-w-lg mx-auto text-center py-16">
+          <h1 className="text-xl font-bold mb-3">見積を開始できません</h1>
+          <p className="text-sm leading-7 text-slate-300">
+            見積を開始する前に、見積設定の確認を完了してください。
+          </p>
+          <Link
+            href="/settings/estimate-wizard"
+            className="inline-block mt-6 px-5 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+          >
+            見積ウィザード設定を開く
+          </Link>
+        </div>
+      </div>
+    </MainLayout>
+  );
+}
+
 export default async function EstimateNewPage({ searchParams }: Props) {
   const { customer_id, vehicle_id } = await searchParams;
 
@@ -76,8 +112,14 @@ export default async function EstimateNewPage({ searchParams }: Props) {
   const runtime = await getAuthoritativeWizardRuntimeConfigForDealer(actor.context);
   // 6. Every runtime failure, including a runtime `no-dealer` (an internal
   //    inconsistency AFTER actor success, not proof of missing membership), shows
-  //    the fixed notice rather than redirecting.
-  if (!runtime.ok) return <Unavailable />;
+  //    a fixed notice rather than redirecting. The two OWNER-RESOLVABLE review states
+  //    get the actionable setup notice; every other reason keeps the generic one.
+  if (!runtime.ok) {
+    if (runtime.reason === "review-required" || runtime.reason === "revision-mismatch") {
+      return <SetupRequired />;
+    }
+    return <Unavailable />;
+  }
 
   // 7. Dealer-bound entity references for the SAME context.
   const references = await loadDealerWizardEntityReferences(actor.context);

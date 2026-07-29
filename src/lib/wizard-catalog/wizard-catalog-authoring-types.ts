@@ -142,6 +142,16 @@ export type PpfCoatingAdjustmentArchiveResult =
   | { readonly ok: true; readonly ruleId: string; readonly action: "archived" | "already_archived" }
   | WizardCatalogActionFailure;
 
+/**
+ * B2-E2G — the result of setting ONE service-offering family for the current dealer.
+ *
+ * `enabled` is echoed back so the client renders what was actually persisted rather than what it
+ * optimistically assumed, matching the discipline every other action on this screen follows.
+ */
+export type ServiceOfferingUpdateResult =
+  | { readonly ok: true; readonly family: string; readonly enabled: boolean }
+  | WizardCatalogActionFailure;
+
 export type WizardCatalogReviewResult =
   | {
       readonly ok: true;

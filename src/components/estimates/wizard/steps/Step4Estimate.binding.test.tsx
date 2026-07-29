@@ -44,6 +44,9 @@ function cap(): { updateStore: Step4UpdateStore; patches: WizardStorePatch[] } {
 // A dealer-configured screenConfig with distinctive labels (trusted runtime input, NOT a fixture the
 // host imports). ZZ-prefixed strings make section rendering unambiguous in the static markup.
 const SC: WizardScreenConfiguration = {
+  // B2-E2G — a fully opted-in, fully configured dealer, so every pre-existing assertion keeps
+  // exercising the same surface it always did.
+  serviceOfferings:   { window_film: true, ppf: true, maintenance: true, room_cleaning: true, car_wash: true },
   filmTypes:          [{ id: "ft1", label: "ZZFILMTYPE" }],
   windowAreas:        [{ id: "wa1", label: "ZZWINDOWAREA" }],
   maintenanceMenus:   [{ id: "mm1", name: "ZZMAINTMENU", defaultPrice: 5000 }],
@@ -362,16 +365,171 @@ test("no categories selected → placeholder, no selector/global section", () =>
 
 // ── 8. Rank locks enforced ──────────────────────────────────────────────────────
 
-test("shop rank locks PPF and window film", () => {
+// B2-E2H1-F — this test has now shed BOTH of its original rank locks, in two steps.
+//
+// It once asserted that `shop` could sell neither PPF nor window film. B2-E2G-R made both of them
+// managed service families, so rank decides neither: the dealer's explicit opt-in does. The window
+// half was inverted then; the PPF half was missed and kept asserting a message the source no longer
+// produces, which is what B2-E2H1 caught. Both halves are now inverted, which is the sharpest
+// available proof that rank has left this decision entirely.
+//
+// `shop` is deliberately the rank under test — it is the rank that was previously excluded from both
+// families, so if any rank rule survived anywhere, this is where it would still show.
+test("shop rank can use BOTH PPF and window film once the dealer opts in", () => {
   const ppf = render(<Step4Estimate api={makeApi(["ppf"]).api} shopRank="shop" screenConfig={SC} />);
-  assert.ok(ppf.includes("GYEONショップランクでは PPF は施工できません。"), "ppf lock reason shown");
+  assert.ok(ppf.includes("ZZPPFMETHOD"), "shop rank can select PPF methods when opted in and configured");
+  assert.equal(
+    ppf.includes("GYEONショップランクでは PPF は施工できません。"), false,
+    "the retired rank-based PPF lock must not reappear",
+  );
+
   const win = render(<Step4Estimate api={makeApi(["window"]).api} shopRank="shop" screenConfig={SC} />);
-  assert.ok(win.includes("GYEONショップランクではウィンドウフィルムは選択できません。"), "window lock reason shown");
+  assert.ok(win.includes("ZZFILMTYPE"), "shop rank can select film types when opted in and configured");
+  assert.equal(
+    win.includes("GYEONショップランクではウィンドウフィルムは選択できません。"), false,
+    "the retired rank-based window-film lock must not reappear",
+  );
 });
 
 test("ppf_installer rank locks coating", () => {
   const html = render(<Step4Estimate api={makeApi(["coating"]).api} shopRank="ppf_installer" screenConfig={SC} />);
   assert.ok(html.includes("GYEON PPFインストーラーはコーティングを施工できません。"), "coating lock reason shown");
+});
+
+// ── 8b. B2-E2E — window film is an ALL-RANKS, dealer-owned OPT-IN ───────────────
+//
+// Rank no longer participates in this decision at any layer. The runtime resolver's rank list is
+// gone, and so is this host's `shop` lock. What remains is the dealer's explicit opt-in, plus the
+// question of whether they have actually finished configuring it.
+//
+// Each case below sweeps ALL FOUR ranks deliberately. A single-rank assertion would still pass if
+// someone reintroduced a rank rule for the other three, which is exactly the regression this
+// contract exists to prevent — and exactly the bug that shipped when two rank rules disagreed.
+const ALL_RANKS = ["shop", "detailer", "ppf_installer", "certified"] as const;
+const FILM_SETUP_REQUIRED = "ウィンドウフィルムを利用するには、見積設定（見積ウィザード設定）でフィルム種類を登録してください。";
+
+test("OPTED OUT: the window-film section is absent for every rank, and nothing else is affected", () => {
+  const optedOut: WizardScreenConfiguration = {
+    ...SC,
+    serviceOfferings: { ...SC.serviceOfferings, window_film: false },
+  };
+
+  for (const rank of ALL_RANKS) {
+    const win = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={optedOut} />);
+    // ABSENT, not merely locked: no film types, no areas, and no setup prompt either. A dealer who
+    // does not sell window film has nothing to fix and must never be nagged to configure it.
+    assert.equal(win.includes("ZZFILMTYPE"), false, `${rank}: no film types offered`);
+    assert.equal(win.includes("ZZWINDOWAREA"), false, `${rank}: no installation areas offered`);
+    assert.equal(win.includes(FILM_SETUP_REQUIRED), false, `${rank}: opted out is not "incomplete"`);
+    // FIXED BEHAVIOUR (B2-E2H1-F): when the only selected category belongs to an opted-out family
+    // there is nothing left to open, so Step 4 renders its existing NO-SELECTION PLACEHOLDER. It
+    // must not silently open some other category the operator never chose, and the cross-category
+    // store-global section does not render either — that section belongs to a selection, and there
+    // is none. This assertion previously claimed the opposite; the contradiction is what B2-E2H1
+    // surfaced. The wizard being alive is proven below on a render that HAS a visible selection.
+    assert.equal(win.includes("ZZGLOBALOPT"), false, `${rank}: no cross-category section without a selection`);
+
+    // Non-film categories are untouched — an opted-out dealer estimates normally.
+    const maint = render(<Step4Estimate api={makeApi(["maintenance"]).api} shopRank={rank} screenConfig={optedOut} />);
+    assert.ok(maint.includes("ZZMAINTMENU"), `${rank}: maintenance fully usable while opted out`);
+  }
+});
+
+test("OPTED IN but INCOMPLETE: only window film is locked; the wizard is never blocked", () => {
+  const noFilmTypes: WizardScreenConfiguration = { ...SC, filmTypes: [] };   // opted in via SC
+  const noAreas: WizardScreenConfiguration = { ...SC, windowAreas: [] };     // opted in via SC
+
+  for (const rank of ALL_RANKS) {
+    const win = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={noFilmTypes} />);
+    assert.ok(win.includes(FILM_SETUP_REQUIRED), `${rank}: setup-required state shown`);
+    assert.equal(win.includes("ZZWINDOWAREA"), false, `${rank}: no selectable area while locked`);
+    assert.ok(win.includes("ZZGLOBALOPT"), `${rank}: wizard still mounted, not unavailable`);
+
+    // Missing AREAS is a distinct state: areas are global catalog rows, so the dealer cannot
+    // register them and must not be told to go and do so.
+    const areas = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={noAreas} />);
+    assert.ok(areas.includes("ウィンドウフィルムの施工部位が利用できません。管理者にお問い合わせください。"),
+      `${rank}: areas-unavailable state shown`);
+    assert.equal(areas.includes(FILM_SETUP_REQUIRED), false, `${rank}: must not claim film types are missing`);
+
+    // Incomplete film setup never blocks a non-film estimate.
+    const maint = render(<Step4Estimate api={makeApi(["maintenance"]).api} shopRank={rank} screenConfig={noFilmTypes} />);
+    assert.ok(maint.includes("ZZMAINTMENU"), `${rank}: maintenance fully usable despite incomplete film setup`);
+  }
+});
+
+test("OPTED IN and configured: window film is fully usable by every rank", () => {
+  for (const rank of ALL_RANKS) {
+    const win = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={SC} />);
+    assert.ok(win.includes("ZZFILMTYPE"), `${rank}: film types selectable`);
+    assert.ok(win.includes("ZZWINDOWAREA"), `${rank}: installation areas selectable`);
+    assert.equal(win.includes(FILM_SETUP_REQUIRED), false, `${rank}: no setup prompt when configured`);
+  }
+});
+
+// ── 8c. B2-E2G — the SAME rules hold for all five managed families ─────────────
+//
+// Sweeping every family and every rank together is the point. A per-family test would still pass if
+// someone reintroduced a rank rule for one service, and a per-rank test would still pass if one
+// family were wired to the wrong offering key. Only the full cross-product catches both.
+const FAMILY_CASES = [
+  { family: "window_film",   category: "window",      marker: "ZZFILMTYPE" },
+  { family: "ppf",           category: "ppf",         marker: "ZZPPFMETHOD" },
+  { family: "maintenance",   category: "maintenance", marker: "ZZMAINTMENU" },
+  { family: "car_wash",      category: "carwash",     marker: "ZZWASHMENU" },
+  { family: "room_cleaning", category: "roomclean",   marker: "ZZROOMMENU" },
+] as const;
+
+test("every managed family: OFF hides only itself, ON+configured shows it, for every rank", () => {
+  for (const { family, category, marker } of FAMILY_CASES) {
+    for (const rank of ALL_RANKS) {
+      // OPTED IN + configured → the family's own content renders.
+      const on = render(<Step4Estimate api={makeApi([category]).api} shopRank={rank} screenConfig={SC} />);
+      assert.ok(on.includes(marker), `${family}/${rank}: content renders when offered and configured`);
+
+      // OPTED OUT → absent, and NOT merely empty: its marker is gone…
+      const offConfig: WizardScreenConfiguration = {
+        ...SC,
+        serviceOfferings: { ...SC.serviceOfferings, [family]: false },
+      };
+      const off = render(<Step4Estimate api={makeApi([category]).api} shopRank={rank} screenConfig={offConfig} />);
+      assert.equal(off.includes(marker), false, `${family}/${rank}: content absent when not offered`);
+      // …while EVERY OTHER family is untouched by that one switch.
+      for (const other of FAMILY_CASES) {
+        if (other.family === family) continue;
+        const still = render(
+          <Step4Estimate api={makeApi([other.category]).api} shopRank={rank} screenConfig={offConfig} />,
+        );
+        assert.ok(still.includes(other.marker),
+          `${family} OFF must not affect ${other.family} (${rank})`);
+      }
+    }
+  }
+});
+
+test("no-selection fallback: the only selected family being OFF opens nothing", () => {
+  // The canonical draft still holds "window"; the screen simply presents no section, rather than
+  // silently opening a category the operator never chose.
+  const optedOut: WizardScreenConfiguration = {
+    ...SC,
+    serviceOfferings: { ...SC.serviceOfferings, window_film: false },
+  };
+  const html = render(<Step4Estimate api={makeApi(["window"]).api} shopRank="detailer" screenConfig={optedOut} />);
+  for (const { marker } of FAMILY_CASES) {
+    assert.equal(html.includes(marker), false, `no family content may render (${marker})`);
+  }
+  assert.equal(html.includes("ZZGLOBALOPT"), false, "no cross-category section when nothing is selectable");
+});
+
+test("PPF incomplete directs the operator to an ADMINISTRATOR, never to dealer settings", () => {
+  // PPF prerequisites are GLOBAL rows the dealer cannot author, so a settings prompt would send
+  // them somewhere that cannot help — the message must not be broader than the condition it names.
+  const noPpf: WizardScreenConfiguration = { ...SC, ppfMethods: [], ppfParts: [], ppfTypeGroups: [] };
+  for (const rank of ALL_RANKS) {
+    const html = render(<Step4Estimate api={makeApi(["ppf"]).api} shopRank={rank} screenConfig={noPpf} />);
+    assert.ok(html.includes("管理者にお問い合わせください"), `${rank}: administrator-directed message`);
+    assert.equal(html.includes("見積ウィザード設定"), false, `${rank}: must not point at dealer settings`);
+  }
 });
 
 // ── 9. EstimateWizard requires and threads shopRank + screenConfig ─────────────────

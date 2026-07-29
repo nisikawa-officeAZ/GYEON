@@ -405,11 +405,17 @@ export default function EstimateWizardContainer({
               onLayer3Change={(id) => update((d) => updateServiceConfiguration(d, "coating", { layer3Id: id }))}
               onAddOrUpdate={() => {}}
             />
-          ) : resolvedActive === "ppf" ? (
+          ) : resolvedActive === "ppf" && screenConfig.serviceOfferings.ppf ? (
+            // B2-E2G — PPF is a managed family: rank no longer gates it, the dealer's opt-in does.
+            // Opted out ⇒ this branch is not taken and the section is ABSENT.
             <PpfSelector
               shopRank={shopRank}
-              ppfLocked={shopRank === "shop"}
-              lockReason="GYEONショップランクでは PPF は施工できません。"
+              ppfLocked={
+                screenConfig.ppfMethods.length === 0
+                || screenConfig.ppfParts.length === 0
+                || screenConfig.ppfTypeGroups.length === 0
+              }
+              lockReason="PPFの施工メニューが利用できません。管理者にお問い合わせください。"
               selectedInstallationMethod={cfg.ppf.installationMethod}
               installationMethods={screenConfig.ppfMethods}
               onInstallationMethodChange={(id) => update((d) => updateServiceConfiguration(d, "ppf", { installationMethod: id }))}
@@ -454,11 +460,19 @@ export default function EstimateWizardContainer({
               combinedServiceAdjustment={null}
               onAddOrUpdate={() => {}}
             />
-          ) : resolvedActive === "window" ? (
+          ) : resolvedActive === "window" && screenConfig.serviceOfferings.window_film ? (
+            // B2-E2G — every rank may sell window film; the dealer's explicit opt-in decides.
+            // Opted out ⇒ this branch is not taken and the section is ABSENT, matching the live
+            // Step-4 host. Opted in ⇒ locked only while film types or areas are missing. The
+            // family→category pairing is imported, never restated here.
             <WindowFilmSelector
               shopRank={shopRank}
-              windowLocked={shopRank === "shop"}
-              lockReason="GYEONショップランクではウィンドウフィルムは選択できません。"
+              windowLocked={screenConfig.filmTypes.length === 0 || screenConfig.windowAreas.length === 0}
+              lockReason={
+                screenConfig.filmTypes.length === 0
+                  ? "ウィンドウフィルムを利用するには、見積設定（見積ウィザード設定）でフィルム種類を登録してください。"
+                  : "ウィンドウフィルムの施工部位が利用できません。管理者にお問い合わせください。"
+              }
               areas={screenConfig.windowAreas}
               selectedAreaIds={cfg.windowFilm.selectedAreaIds}
               onAreaToggle={(id) =>

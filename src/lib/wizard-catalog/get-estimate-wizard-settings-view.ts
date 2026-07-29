@@ -11,6 +11,7 @@ import "server-only";
 // database error text. It fails closed and never uses service_role.
 
 import { createClient } from "@/lib/supabase/server";
+import { buildServiceOfferings } from "@/lib/estimates/service-categories";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getCurrentStaff } from "@/lib/staff/get-current-staff";
 import { getAuthoritativeShopRank } from "@/lib/dealer-settings/get-authoritative-shop-rank";
@@ -132,6 +133,41 @@ export async function getEstimateWizardSettingsView(): Promise<EstimateWizardSet
 
     const reviewerName = await resolveReviewerName((lifeRow?.last_reviewed_by as string | null) ?? null);
 
+    // B2-E2G-S — the dealer's service-offering map, read through the SAME user-scoped, RLS-scoped
+    // client as every other read on this screen, and FAIL-CLOSED on exactly the same terms.
+    //
+    // ── ZERO ROWS vs UNREADABLE ────────────────────────────────────────────────
+    // These are different facts and are treated differently:
+    //
+    //   • ZERO ROWS  — a real, valid state. It is precisely how a newly created dealer looks, and it
+    //                  means every family is OFF. An empty array flows through untouched.
+    //   • READ ERROR — not a state at all. The dealer's actual offerings are UNKNOWN.
+    //
+    // An earlier revision presented the error case as all-OFF, reasoning that the settings screen
+    // only shows controls the operator then sets deliberately. That was wrong. It would render five
+    // switches asserting "you do not offer any of these" — a claim the server could not support —
+    // and an operator who toggled one would be saving on top of an invented baseline, believing the
+    // other four had been read and confirmed. Showing an operator a fabricated configuration is not
+    // made safe by requiring a click to persist it.
+    //
+    // So this returns the same `load-failed` result the dealer, item and lifecycle reads above
+    // return. The page renders the load-error notice INSTEAD of the settings client, so no switch is
+    // rendered and no offering write action is reachable while the failure stands. There is
+    // deliberately NO fallback default anywhere on this path.
+    const { data: offeringRows, error: offeringErr } = await supabase
+      .from("dealer_service_offerings")
+      .select("family, enabled")
+      .eq("dealer_id", dealer.dealer_id);
+    if (offeringErr || !offeringRows) {
+      return { ok: false, reason: "load-failed", messageJa: LOAD_FAILED_JA };
+    }
+    const serviceOfferings = buildServiceOfferings(
+      offeringRows.map((r: Record<string, unknown>) => ({
+        family: r.family as string,
+        enabled: r.enabled === true,
+      })),
+    );
+
     const items: RawCatalogItem[] = (itemRows ?? []).map((r: Record<string, unknown>) => ({
       itemId: r.id as string,
       code: r.code as string,
@@ -157,6 +193,7 @@ export async function getEstimateWizardSettingsView(): Promise<EstimateWizardSet
       lifecycle,
       coatingCount,
       reviewerName,
+      serviceOfferings,
     };
 
     return { ok: true, view: buildEstimateWizardSettingsView(raw) };

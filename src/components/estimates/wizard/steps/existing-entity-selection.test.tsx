@@ -228,6 +228,8 @@ test("vehicle projection exposes exactly five keys and drops everything else", (
 // factory the sibling binding test uses. With the cast gone (below) these are no
 // longer hidden behind an assertion — the compiler checks them, which is the point.
 const SC: WizardScreenConfiguration = {
+  // B2-E2G: every managed family opted OUT — this fixture configures none of them.
+  serviceOfferings: { window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
   filmTypes: [], windowAreas: [], maintenanceMenus: [], washMenus: [], roomMenus: [],
   otherWorkPresets: [], storeGlobalOptions: [], coupons: [], ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
 };
