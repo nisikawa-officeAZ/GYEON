@@ -60,7 +60,18 @@ export type SettingsSaveActionPolicy =
 
 export interface SettingsSaveAction {
   action_id:              SettingsSaveActionId;
+  /**
+   * Internal English name. Diagnostics, logs and admin tooling only — the
+   * dealer-facing settings header never renders this.
+   */
   display_name:           string;
+  /**
+   * UX-2B — the Japanese name shown to dealers. REQUIRED, not optional: the
+   * settings header renders this and nothing else, so a new save action cannot
+   * be added without its Japanese label. Making it optional would let an English
+   * name leak onto a dealer screen the first time someone forgot it.
+   */
+  display_name_ja:        string;
   category_ids:           SettingsCategoryId[];
   status:                 SettingsSaveActionStatus;
   server_action_path:     string | null;
