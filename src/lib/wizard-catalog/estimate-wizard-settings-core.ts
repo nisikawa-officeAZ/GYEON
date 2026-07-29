@@ -6,7 +6,11 @@
 // detail reach visible text. All visible labels are Japanese.
 
 import type { DealerStaffRole } from "@/lib/staff/staff-types";
-import type { ServiceOfferings } from "@/lib/estimates/service-categories";
+import {
+  SERVICE_FAMILY_LABEL_JA,
+  type ServiceFamily,
+  type ServiceOfferings,
+} from "@/lib/estimates/service-categories";
 import type { WizardCatalogActionErrorCode } from "./wizard-catalog-authoring-types";
 import type {
   EstimateWizardPermission,
@@ -75,8 +79,6 @@ export interface RawLifecycle {
 export interface RawSettingsData {
   readonly role: DealerStaffRole | null;
   readonly rankKnown: boolean;
-  /** Computed by the loader from wizard_kind_policy(film_type) ∩ authoritative rank. */
-  readonly filmRequired: boolean;
   readonly items: readonly RawCatalogItem[];
   readonly lifecycle: RawLifecycle | null;
   readonly coatingCount: number;
@@ -254,7 +256,6 @@ function sortItems(a: WizardSettingsItemView, b: WizardSettingsItemView): number
 
 export function buildSections(
   items: readonly RawCatalogItem[],
-  filmRequired: boolean,
 ): WizardSettingsSectionView[] {
   const active = items.filter(isActiveEditableItem).map(toItemView);
   return SECTION_DEFS.map((def) => {
@@ -263,8 +264,6 @@ export function buildSections(
       labelJa: KIND_LABEL[kind],
       items: active.filter((i) => i.kind === kind).sort(sortItems),
     }));
-    const itemCount = groups.reduce((n, g) => n + g.items.length, 0);
-    const required = def.id === "film" ? filmRequired : false;
     return {
       id: def.id,
       labelJa: def.labelJa,
@@ -272,26 +271,71 @@ export function buildSections(
       anchorId: def.anchorId,
       kinds: def.kinds,
       groups,
-      itemCount,
-      required,
-      satisfied: required ? itemCount > 0 : true,
+      itemCount: groups.reduce((n, g) => n + g.items.length, 0),
+      // B2-E2Q-D2R — NO section is required in order to confirm a review. The former
+      // `film` requirement was a RANK rule (wizard_kind_policy ∩ detailer_rank), which
+      // the service-offering model replaced and which the all-rank widening turned into
+      // a universal block. What a family still needs in order to be USABLE is reported
+      // separately, as a warning, by `computeIncompleteFamilies` below.
+      required: false,
+      satisfied: true,
     };
   });
 }
 
 // ── review status ──────────────────────────────────────────────────────────--
 
-function computeMissingSections(sections: readonly WizardSettingsSectionView[]): MissingSectionView[] {
-  return sections
-    .filter((s) => s.required && !s.satisfied)
-    .map((s) => ({
-      sectionId: s.id,
-      labelJa: s.labelJa,
-      anchorId: s.anchorId,
-      reasonJa: s.id === "film"
-        ? "この店舗ランクではウィンドウフィルムの種類を1件以上登録する必要があります。"
-        : "必須項目が未登録です。",
-    }));
+/**
+ * B2-E2Q-D2R — the families the dealer turned ON that cannot yet be sold, because the
+ * dealer-authored rows they need do not exist.
+ *
+ * This is a WARNING, never a gate. It answers "what is not usable yet", not "may this
+ * configuration be reviewed" — the owner may legitimately opt into a family today and
+ * register its menus tomorrow, and Step 4 already shows exactly that family as a
+ * present-but-locked section while every other family stays usable.
+ *
+ * Only families with a DEALER-authored prerequisite appear. PPF is absent by design: all
+ * of its prerequisites are global rows, which the review RPC checks structurally, so a
+ * dealer can never be the reason PPF is incomplete.
+ */
+const FAMILY_PREREQUISITE: readonly {
+  readonly family: ServiceFamily;
+  readonly kind: SupportedAuthoringKind;
+  readonly sectionId: WizardSettingsSectionId;
+}[] = [
+  { family: "window_film",   kind: "film_type",          sectionId: "film" },
+  { family: "maintenance",   kind: "maintenance_menu",   sectionId: "service" },
+  { family: "car_wash",      kind: "wash_menu",          sectionId: "service" },
+  { family: "room_cleaning", kind: "room_cleaning_menu", sectionId: "service" },
+];
+
+function computeIncompleteFamilies(
+  sections: readonly WizardSettingsSectionView[],
+  offerings: ServiceOfferings,
+): MissingSectionView[] {
+  const missingBySection = new Map<WizardSettingsSectionId, string[]>();
+
+  for (const p of FAMILY_PREREQUISITE) {
+    if (!offerings[p.family]) continue;   // OFF ⇒ nothing is required of it
+    const section = sections.find((s) => s.id === p.sectionId);
+    const count = section?.groups.find((g) => g.kind === p.kind)?.items.length ?? 0;
+    if (count > 0) continue;
+    const list = missingBySection.get(p.sectionId) ?? [];
+    list.push(SERVICE_FAMILY_LABEL_JA[p.family]);
+    missingBySection.set(p.sectionId, list);
+  }
+
+  // One entry per SECTION, so the list keys stay unique even though three families
+  // share the service section.
+  return [...missingBySection.entries()].map(([sectionId, families]) => {
+    const section = sections.find((s) => s.id === sectionId)!;
+    return {
+      sectionId,
+      labelJa: section.labelJa,
+      anchorId: section.anchorId,
+      reasonJa: `${families.join("・")}をオンにしていますが、メニューが未登録のため見積では選択できません。設定の確定はこのままでも行えます。`,
+    };
+  });
 }
 
 function formatReviewDate(iso: string | null): string {
@@ -332,18 +376,20 @@ export function buildReviewStatus(
   lifecycle: RawLifecycle | null,
   reviewerName: string | null,
   rankKnown: boolean,
+  offerings: ServiceOfferings,
 ): ReviewStatusView {
   const reviewed = isCurrentlyReviewed(lifecycle);
-  const missingSections = computeMissingSections(sections);
-  // Fail closed: rank must be known before a review can be confirmed.
-  const reviewReady = rankKnown && missingSections.length === 0;
+  // Reported, never subtracted from readiness: an incomplete family is a family that is
+  // not sellable yet, not a configuration that cannot be reviewed.
+  const missingSections = computeIncompleteFamilies(sections, offerings);
+  // Fail closed on the ONE thing the confirm RPC also refuses without: an authoritative
+  // rank. Nothing about catalog contents can make a review unconfirmable any more.
+  const reviewReady = rankKnown;
   const statusDetailJa = reviewed
     ? "現在の設定内容は確認済みです。"
     : !rankKnown
       ? "店舗ランクを確認できないため確定できません。"
-      : reviewReady
-        ? "設定内容を確認して確定してください。"
-        : "必須項目が未登録のため確定できません。";
+      : "設定内容を確認して確定してください。";
   return {
     reviewed,
     reviewRequired: !reviewed,
@@ -413,13 +459,14 @@ export function buildPpfCoatingAdjustmentSection(
 
 export function buildEstimateWizardSettingsView(raw: RawSettingsData): EstimateWizardSettingsView {
   const permission = mapPermission(raw.role);
-  const sections = buildSections(raw.items, raw.filmRequired);
-  const reviewStatus = buildReviewStatus(sections, raw.lifecycle, raw.reviewerName, raw.rankKnown);
+  const sections = buildSections(raw.items);
+  const reviewStatus = buildReviewStatus(
+    sections, raw.lifecycle, raw.reviewerName, raw.rankKnown, raw.serviceOfferings,
+  );
   return {
     permission,
     canEdit: permission === "editable",
     rankKnown: raw.rankKnown,
-    filmRequired: raw.filmRequired,
     // Carried through verbatim; never derived from rank or from item counts.
     serviceOfferings: raw.serviceOfferings,
     reviewStatus,

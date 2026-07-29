@@ -153,7 +153,6 @@ export interface EstimateWizardSettingsView {
   readonly permission: EstimateWizardPermission;
   readonly canEdit: boolean;
   readonly rankKnown: boolean;
-  readonly filmRequired: boolean;
   /**
    * B2-E2G — the dealer's opt-in for each of the five managed service families, and the current
    * state of the 施工メニュー提供設定 controls. Every family defaults OFF. Rank decides none of

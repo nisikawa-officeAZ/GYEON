@@ -93,18 +93,12 @@ export async function getEstimateWizardSettingsView(): Promise<EstimateWizardSet
       .maybeSingle();
     if (lifeErr) return { ok: false, reason: "load-failed", messageJa: LOAD_FAILED_JA };
 
-    // Window-film requirement = (film_type permitted ranks for this mode) ∩ authoritative rank.
-    let filmRequired = false;
-    if (rank) {
-      const { data: policyRow } = await supabase
-        .from("wizard_kind_policy")
-        .select("permitted_ranks")
-        .eq("product_mode", productMode)
-        .eq("kind", "film_type")
-        .maybeSingle();
-      const permitted = (policyRow?.permitted_ranks as string[] | undefined) ?? [];
-      filmRequired = permitted.includes(rank);
-    }
+    // B2-E2Q-D2R — the wizard_kind_policy(film_type) ∩ rank probe that used to live here is
+    // gone. It computed "this rank may sell window film" and then treated that as "this
+    // dealer MUST have authored a film type before its configuration can be reviewed" —
+    // a rank rule the service-offering model replaced, and which the all-rank widening
+    // turned into a block on every dealer. What a family needs in order to be USABLE is
+    // derived in the pure core from the offering map, and reported as a warning.
 
     // Coating summary (never throws; returns defaults on failure).
     let coatingCount = 0;
@@ -188,7 +182,6 @@ export async function getEstimateWizardSettingsView(): Promise<EstimateWizardSet
     const raw: RawSettingsData = {
       role,
       rankKnown: rank !== null,
-      filmRequired,
       items,
       lifecycle,
       coatingCount,

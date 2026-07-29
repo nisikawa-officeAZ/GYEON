@@ -428,7 +428,7 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
               onClick={submitReview}
               disabled={!status.reviewReady || isPending}
               className={primaryBtn}
-              title={status.reviewReady ? "内容を確認済みにします" : "必須項目を登録してください"}
+              title={status.reviewReady ? "内容を確認済みにします" : "店舗ランクを確認できないため確定できません"}
             >
               {isPending ? "処理中…" : "内容を確認して確定"}
             </button>
@@ -438,7 +438,7 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
 
         {status.missingSections.length > 0 && (
           <div className="flex flex-col gap-1 rounded-lg bg-amber-950/30 border border-amber-800/40 px-3 py-2">
-            <span className="text-[11px] font-semibold text-amber-300">未登録の必須項目</span>
+            <span className="text-[11px] font-semibold text-amber-300">見積で使えないサービス（確定はできます）</span>
             {status.missingSections.map((m) => (
               <a key={m.sectionId} href={`#${m.anchorId}`} className="text-[11px] text-amber-200 underline hover:text-amber-100">
                 {m.labelJa}：{m.reasonJa}

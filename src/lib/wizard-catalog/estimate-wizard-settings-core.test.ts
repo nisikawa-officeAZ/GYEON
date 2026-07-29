@@ -33,7 +33,7 @@ function item(p: Partial<RawCatalogItem> & Pick<RawCatalogItem, "code" | "kind">
 
 function raw(p: Partial<RawSettingsData> = {}): RawSettingsData {
   return {
-    role: "owner", rankKnown: true, filmRequired: false, items: [], lifecycle: null,
+    role: "owner", rankKnown: true, items: [], lifecycle: null,
     coatingCount: 0, reviewerName: null,
     // B2-E2G — every managed family OFF, which is the default a brand-new dealer sees.
     serviceOfferings: { window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
@@ -88,7 +88,6 @@ test("identity is the stable code; items sort by displayOrder then code (not lab
       item({ code: "maint-a", kind: "maintenance_menu", displayOrder: 1, labelJa: "ZZZ" }),
       item({ code: "maint-b", kind: "maintenance_menu", displayOrder: 1, labelJa: "MMM" }),
     ],
-    false,
   );
   const g = v.find((s) => s.id === "service")!.groups.find((x) => x.kind === "maintenance_menu")!;
   assert.deepEqual(g.items.map((i) => i.code), ["maint-a", "maint-b", "maint-z"]);
@@ -102,39 +101,56 @@ test("inactive / soft-deleted / blank-label items are excluded from active lists
       item({ code: "c", kind: "film_type", deletedAt: "2026-01-01T00:00:00Z" }),
       item({ code: "d", kind: "film_type", labelJa: "   " }),
     ],
-    false,
   );
   assert.deepEqual(v.find((s) => s.id === "film")!.groups[0].items.map((i) => i.code), ["a"]);
 });
 
 // ── completeness / missing / review-ready ──────────────────────────────────
-test("film required + none present => not satisfied, missing-section with anchor, not ready", () => {
-  const v = buildEstimateWizardSettingsView(raw({ filmRequired: true, items: [] }));
+// B2-E2Q-D2R — the catalog review attests REVIEW, not COMPLETENESS. What used to be
+// asserted here is the exact defect that was removed: a rank-derived film_type
+// requirement that refused the review of a store selling no window film at all — and,
+// once film_type was widened to every rank, refused it for every dealer.
+test("ALL FIVE FAMILIES OFF with zero items => review is ready and nothing is reported", () => {
+  const v = buildEstimateWizardSettingsView(raw({ items: [] }));
   const film = v.sections.find((s) => s.id === "film")!;
-  assert.equal(film.required, true);
-  assert.equal(film.satisfied, false);
-  assert.equal(v.reviewStatus.reviewReady, false);
+  assert.equal(film.required, false, "no section is required in order to review");
+  assert.equal(film.satisfied, true);
+  assert.equal(v.reviewStatus.reviewReady, true);
+  assert.equal(v.reviewStatus.missingSections.length, 0);
+});
+
+test("family ON but unconfigured => STILL ready; warned, with the section anchor", () => {
+  const v = buildEstimateWizardSettingsView(raw({
+    items: [],
+    serviceOfferings: { window_film: true, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
+  }));
+  assert.equal(v.reviewStatus.reviewReady, true, "an incomplete family never blocks the review");
   assert.equal(v.reviewStatus.missingSections.length, 1);
   assert.equal(v.reviewStatus.missingSections[0].sectionId, "film");
   assert.equal(v.reviewStatus.missingSections[0].anchorId, "section-film");
+  assert.match(v.reviewStatus.missingSections[0].reasonJa, /確定はこのままでも行えます/);
 });
 
-test("film required + present => ready; optional empty sections do NOT block", () => {
+test("family ON and configured => ready, and no warning remains", () => {
   const v = buildEstimateWizardSettingsView(raw({
-    filmRequired: true,
     items: [item({ code: "film-1", kind: "film_type" })],
+    serviceOfferings: { window_film: true, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
   }));
   assert.equal(v.reviewStatus.reviewReady, true);
   assert.equal(v.reviewStatus.missingSections.length, 0);
 });
 
-test("film NOT required => ready even with zero items", () => {
-  const v = buildEstimateWizardSettingsView(raw({ filmRequired: false, items: [] }));
-  assert.equal(v.reviewStatus.reviewReady, true);
+test("an OFF family with zero items is never warned about", () => {
+  const v = buildEstimateWizardSettingsView(raw({
+    items: [],
+    serviceOfferings: { window_film: false, ppf: false, maintenance: true, room_cleaning: false, car_wash: false },
+  }));
+  assert.equal(v.reviewStatus.missingSections.length, 1, "only the ON family is reported");
+  assert.equal(v.reviewStatus.missingSections[0].sectionId, "service");
 });
 
 test("rank unknown => never review-ready (fail closed)", () => {
-  const v = buildEstimateWizardSettingsView(raw({ rankKnown: false, filmRequired: false }));
+  const v = buildEstimateWizardSettingsView(raw({ rankKnown: false }));
   assert.equal(v.reviewStatus.reviewReady, false);
   assert.match(v.reviewStatus.statusDetailJa, /店舗ランク/);
 });
@@ -267,7 +283,7 @@ test("empty catalog yields six empty sections without crashing", () => {
 test("presentation view never leaks raw lifecycle enums, dealer id, or revision wording", () => {
   const v = buildEstimateWizardSettingsView(raw({
     role: "owner", lifecycle: REVIEWED_LIFECYCLE, reviewerName: "山田",
-    items: [item({ code: "film-1", kind: "film_type" })], filmRequired: true,
+    items: [item({ code: "film-1", kind: "film_type" })],
   }));
   const json = JSON.stringify(v);
   for (const forbidden of ["MIGRATED_UNREVIEWED", "CATALOG_REVIEWED", "CATALOG_ACTIVE", "LEGACY", "reviewed_configuration_revision", "dealer_id"]) {
