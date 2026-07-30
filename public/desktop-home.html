@@ -549,6 +549,13 @@
     height: auto;
     object-fit: contain;
   }
+
+  /* [BRAND-3D-F1] No usable source -> never render a broken image or its alt text.
+     Width-independent guard: applies at every breakpoint and to every data-mode. */
+  .shop-info .store-logo-img:not([src]),
+  .shop-info .store-logo-img[src=""] {
+    display: none !important;
+  }
   .shop-info .shop-name {
     display: none;
     font-size: 14px;                 /* v16: was 16px */
