@@ -1,6 +1,4 @@
-import Link from "next/link";
 import MainLayout from "@/components/layout/MainLayout";
-import PageTitle from "@/components/ui/PageTitle";
 import { getDocumentSequences } from "@/lib/numbering/get-document-sequences";
 import { getCurrentPlan } from "@/lib/plans/get-current-plan";
 import type { DealerPlanInfo } from "@/lib/plans/plan-types";
@@ -71,7 +69,10 @@ export default async function SettingsPage({
 
   return (
     <MainLayout>
-      <div className="max-w-3xl mx-auto p-6 flex flex-col gap-6">
+      {/* UX-1B — max-w-3xl (768px) forced a 1280–1440px screen to render one narrow
+          column and convert the whole settings surface into vertical scrolling. The
+          hub now uses the horizontal space it already had. */}
+      <div className="max-w-6xl mx-auto p-4 sm:p-6 flex flex-col gap-6">
         {/* Release header */}
         <div className="flex items-center justify-between px-4 py-2 bg-slate-900/60 border border-slate-800 rounded-xl">
           <span className="text-xs font-semibold text-slate-300 tracking-wide">
@@ -80,55 +81,13 @@ export default async function SettingsPage({
           <span className="text-[10px] text-slate-500">Powered by GYEON Japan</span>
         </div>
 
-        {/* B1: Store business hours / closed days (dedicated route) */}
-        <Link
-          href="/settings/business-hours"
-          className="flex items-center justify-between px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:bg-slate-800/60 transition-colors"
-        >
-          <span className="flex flex-col">
-            <span className="text-sm font-medium text-slate-200">営業時間・定休日</span>
-            <span className="text-[11px] text-slate-500">週の営業時間、定休日、臨時休業日／臨時営業日を設定</span>
-          </span>
-          <span className="text-slate-500 text-sm">›</span>
-        </Link>
-
-        {/* B2: Service duration settings (dedicated route) */}
-        <Link
-          href="/settings/service-durations"
-          className="flex items-center justify-between px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:bg-slate-800/60 transition-colors"
-        >
-          <span className="flex flex-col">
-            <span className="text-sm font-medium text-slate-200">サービス所要時間</span>
-            <span className="text-[11px] text-slate-500">施工内容ごとの標準所要時間（時間・日数）と前後バッファを設定</span>
-          </span>
-          <span className="text-slate-500 text-sm">›</span>
-        </Link>
-
-        {/* B3: Staff / capacity settings (dedicated route) */}
-        <Link
-          href="/settings/staff-capacity"
-          className="flex items-center justify-between px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:bg-slate-800/60 transition-colors"
-        >
-          <span className="flex flex-col">
-            <span className="text-sm font-medium text-slate-200">スタッフ・キャパシティ</span>
-            <span className="text-[11px] text-slate-500">技術者・作業ベイ・同時対応・重複警告・上書きルール（設定済み・未適用）</span>
-          </span>
-          <span className="text-slate-500 text-sm">›</span>
-        </Link>
-
-        {/* B4: Estimate Wizard catalog settings (dedicated route) */}
-        <Link
-          href="/settings/estimate-wizard"
-          className="flex items-center justify-between px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:bg-slate-800/60 transition-colors"
-        >
-          <span className="flex flex-col">
-            <span className="text-sm font-medium text-slate-200">見積ウィザード設定</span>
-            <span className="text-[11px] text-slate-500">フィルム・サービスメニュー・その他作業・店舗オプションの登録と確認</span>
-          </span>
-          <span className="text-slate-500 text-sm">›</span>
-        </Link>
-
-        <PageTitle title="Settings" />
+        {/* UX-1B — the four hardcoded rows that used to sit here (営業時間・定休日 /
+            サービス所要時間 / スタッフ・キャパシティ / 見積ウィザード設定) are gone from
+            this page. They were a SECOND navigation list describing the same screen
+            as the hub below it, and they are now first-class cards inside the hub's
+            店舗運営 and 見積・価格 groups — same routes, same reachability, one list.
+            `PageTitle` went with them: the hub renders its own heading, so keeping
+            both produced two competing titles on one screen. */}
 
         <SettingsCenterWrapper
           settings={resolvedSettings}

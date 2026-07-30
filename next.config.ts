@@ -171,6 +171,12 @@ const releaseIdentity = resolveReleaseIdentity({
 
 export const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // UX-1B — the floating Next dev-tools indicator (a circular "N" pinned to the
+  // bottom-left of the viewport in development) sits exactly on top of the docked
+  // 240px sidebar's footer, where store identity and status are read. It is a
+  // DEVELOPMENT overlay only: it never ships in a production build, so this
+  // changes nothing about routing, caching, rendering or the deployed bundle.
+  devIndicators: false,
   // The ONLY public config value this file adds. VERCEL_GIT_COMMIT_SHA is
   // deliberately not exposed under its own name: one canonical public identifier,
   // not two that could drift. A commit SHA is public repository metadata.
