@@ -4,8 +4,12 @@ import { getCurrentUser }         from "@/lib/auth/get-current-user";
 import { getCurrentAdmin }        from "@/lib/admin/get-current-admin";
 import { createClient }           from "@/lib/supabase/server";
 import { rankLabelEn }            from "@/lib/ranks/dealer-ranks";
+import { BRAND, deriveHomeBrandPayload } from "@/lib/brand/variant";
 
-export const metadata = { title: "ホーム | GYEON Detailer Agent" };
+// Bare page label only. The product name is appended exactly once by the shared
+// metadata template in src/app/layout.tsx (`%s | ${BRAND.name}`), so repeating it
+// here would render it twice.
+export const metadata = { title: "ホーム" };
 
 export default async function HomePage() {
 
@@ -49,6 +53,14 @@ export default async function HomePage() {
   // Empty when no rank has been assigned (nothing is displayed then).
   const certLabel = rawRank && rawRank.trim() ? rankLabelEn(rawRank) : "";
 
+  // Deployment-level application brand, transported to the static home as one
+  // validated payload. src/lib/brand/variant.ts stays the single source of truth;
+  // the static file holds no per-brand text or asset path of its own.
+  const brandParam = encodeURIComponent(JSON.stringify(deriveHomeBrandPayload()));
+  const homeSrc = certLabel
+    ? `/desktop-home.html?cert=${encodeURIComponent(certLabel)}&b=${brandParam}`
+    : `/desktop-home.html?b=${brandParam}`;
+
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
@@ -62,8 +74,8 @@ export default async function HomePage() {
          ══════════════════════════════════════════════════════════════════════ */}
       <div className="fixed inset-0 z-50 bg-[#080d1a]">
         <iframe
-          src={certLabel ? `/desktop-home.html?cert=${encodeURIComponent(certLabel)}` : "/desktop-home.html"}
-          title="GYEON Detailer Agent"
+          src={homeSrc}
+          title={BRAND.name}
           className="w-full h-full border-0 block"
         />
       </div>
