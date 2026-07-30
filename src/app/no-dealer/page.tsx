@@ -6,6 +6,7 @@ import { redirect }        from "next/navigation";
 import { getCurrentUser }  from "@/lib/auth/get-current-user";
 import { createClient }    from "@/lib/supabase/server";
 import LogoutButton        from "@/components/auth/LogoutButton";
+import Brand               from "@/components/ui/Brand";
 
 export const metadata = { title: "店舗アクセス待ち | GYEON Detailer Agent" };
 export const dynamic  = "force-dynamic";
@@ -35,17 +36,8 @@ export default async function NoDealerPage() {
       <div className="w-full max-w-sm flex flex-col gap-5">
 
         {/* ── Brand ──────────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 justify-center">
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center"
-            style={{ background: "var(--gs-blue, #4f8ef7)" }}
-          >
-            <span className="text-white text-xl font-black">G</span>
-          </div>
-          <div className="text-left">
-            <p className="text-[10px] font-bold text-[#55556a] tracking-[2.5px] uppercase">GYEON</p>
-            <p className="text-base font-bold text-[#f0f0f5] leading-tight">Detailer Agent</p>
-          </div>
+        <div className="flex items-center justify-center">
+          <Brand size={56} />
         </div>
 
         {/* ── Status card ────────────────────────────────────────────────── */}

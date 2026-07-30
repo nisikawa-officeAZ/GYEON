@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { createPendingDealer } from "@/lib/dealer/create-pending-dealer";
 import { checkEmailAccountState } from "@/lib/dealer/check-email-account-state";
+import Brand from "@/components/ui/Brand";
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -163,18 +164,7 @@ export default function SignUpPage() {
 
         {/* ── Brand header ───────────────────────────────────────────────── */}
         <div className="mb-8 text-center flex flex-col items-center gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "var(--gs-blue, #4f8ef7)" }}
-            >
-              <span className="text-white text-xl font-black tracking-tight">G</span>
-            </div>
-            <div className="text-left">
-              <p className="text-[10px] font-bold text-[#55556a] tracking-[2.5px] uppercase">GYEON</p>
-              <p className="text-base font-bold text-[#f0f0f5] leading-tight">Detailer Agent</p>
-            </div>
-          </div>
+          <Brand size={56} />
           <p className="text-xs text-[#55556a]">ディーラー登録申請</p>
         </div>
 
