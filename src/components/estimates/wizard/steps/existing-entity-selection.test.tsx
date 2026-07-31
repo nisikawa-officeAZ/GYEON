@@ -35,6 +35,8 @@ import { makePricingCatalog } from "@/lib/pricing/pricing-catalog";
 import { toCustomerReference, toVehicleReference } from "@/lib/estimates/wizard-entity-references";
 import EstimateWizard from "../EstimateWizard";
 import { initialWizardStore } from "../wizard-types";
+import { resetWizardDraft } from "../draft/wizard-draft-state";
+import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
 
 // `jsx: "preserve"` compiles JSX to React.createElement against a global React.
 (globalThis as { React?: typeof React }).React = React;
@@ -337,8 +339,34 @@ function fakeApi(over: StoreOver = {}): { api: EstimateWizardApi; writes: unknow
     customer: { ...base.customer, ...(over.customer ?? {}) },
     vehicle: { ...base.vehicle, ...(over.vehicle ?? {}) },
   };
+  // EST-WIZ-REQ-F2-R1: Step 2 reads api.draft for the persistence-mode discriminator
+  // (willSaveExistingVehicle), so the fake supplies a CANONICAL draft coherent with the
+  // store overrides — sourceMode derives from the stored id, exactly the production
+  // invariant the patch adapter maintains.
+  const d = resetWizardDraft();
+  const draft: EstimateWizardDraftV22 = {
+    ...d,
+    customer: {
+      ...d.customer,
+      registrationMethod: store.customer.regMethod,
+      sourceMode: store.customer.regMethod === "search" ? "existing" : "new",
+      customerId: store.customer.existingId,
+      newCustomer: { ...d.customer.newCustomer, name: store.customer.name },
+    },
+    vehicle: {
+      ...d.vehicle,
+      sourceMode: store.vehicle.existingId ? "existing" : "new",
+      vehicleId: store.vehicle.existingId,
+      newVehicle: {
+        ...d.vehicle.newVehicle,
+        model: store.vehicle.model,
+        maker: store.vehicle.maker,
+        plate_number: store.vehicle.plateNumber,
+      },
+    },
+  };
   const writes: unknown[] = [];
-  const api = { store, updateStore: (p: unknown) => { writes.push(p); } } as unknown as EstimateWizardApi;
+  const api = { store, draft, updateStore: (p: unknown) => { writes.push(p); } } as unknown as EstimateWizardApi;
   return { api, writes };
 }
 
@@ -408,17 +436,25 @@ test("MOUNTED Step 2 REGRESSION: an AMBIGUOUS customer offers no existing-vehicl
   // which record it names is precisely what is unknown.
   const dupes = [C1, { ...C1, displayName: "別の山田" }, C2] as const;
 
-  for (const vehicleState of [{}, { existingId: "v-1" }]) {
-    const html = step2({ customer: { regMethod: "search", existingId: "c-1" }, vehicle: vehicleState }, dupes);
+  // No stored vehicle id → the editable / OCR new-vehicle flow stands.
+  const noVehicle = step2({ customer: { regMethod: "search", existingId: "c-1" }, vehicle: {} }, dupes);
+  assert.equal(noVehicle.includes("existing-vehicle-selector"), false, "no selector");
+  assert.equal(noVehicle.includes("existing-vehicle-summary"), false, "no summary");
+  assert.equal(noVehicle.includes("existing-vehicle-option-v-1"), false, "no option offered");
+  assert.equal(noVehicle.includes("既存車両"), false, "no existing-vehicle card at all");
+  assert.ok(noVehicle.includes("車名"), "the required manual model field is present");
+  assert.ok(noVehicle.includes("ボディサイズ"), "the operator body-size chooser is present");
 
-    assert.equal(html.includes("existing-vehicle-selector"), false, "no selector");
-    assert.equal(html.includes("existing-vehicle-summary"), false, "no summary");
-    assert.equal(html.includes("existing-vehicle-option-v-1"), false, "no option offered");
-    assert.equal(html.includes("既存車両"), false, "no existing-vehicle card at all");
-
-    // The editable / OCR new-vehicle flow remains fully available.
-    assert.ok(html.includes("車名"), "the required manual model field is present");
-    assert.ok(html.includes("ボディサイズ"), "the operator body-size chooser is present");
+  // A RETAINED id under the ambiguous owner is an INEFFECTIVE existing selection: the
+  // closed F2-R1 recovery contract renders ONLY the recovery alert + clear action for
+  // the vehicle area — no selector, no summary, and no editable form until the operator
+  // explicitly clears.
+  const retained = step2({ customer: { regMethod: "search", existingId: "c-1" }, vehicle: { existingId: "v-1" } }, dupes);
+  assert.ok(retained.includes("ineffective-existing-vehicle-recovery"), "the recovery alert renders");
+  assert.ok(retained.includes("ineffective-existing-vehicle-clear"), "with its explicit clear action");
+  for (const absent of ["existing-vehicle-selector", "existing-vehicle-summary", "existing-vehicle-option-v-1",
+                        "既存車両", "車名", "ボディサイズ"]) {
+    assert.equal(retained.includes(absent), false, `recovery state must not render ${absent}`);
   }
 
   // PRECONDITION: with a UNIQUE customer the same inputs DO render the surface —
@@ -426,6 +462,57 @@ test("MOUNTED Step 2 REGRESSION: an AMBIGUOUS customer offers no existing-vehicl
   // renders an existing-vehicle surface at all.
   const unique = step2({ customer: { regMethod: "search", existingId: "c-1" } }, CUSTOMERS);
   assert.ok(unique.includes("existing-vehicle-option-v-1"), "unique customer DOES offer the vehicle");
+});
+
+// ── EST-WIZ-REQ-F2-R1: the closed ineffective-selection recovery contract ───
+
+test("MOUNTED Step 2: a foreign-owned retained id renders ONLY the recovery surface", () => {
+  // Owner c-2 is uniquely effective, but v-1 belongs to c-1 → will-save-existing yet
+  // ineffective. Even the (effective) owner's own selector is withheld until the clear.
+  const html = step2({ customer: { regMethod: "search", existingId: "c-2" }, vehicle: { existingId: "v-1" } });
+  assert.ok(html.includes("ineffective-existing-vehicle-recovery"), "the recovery alert renders");
+  assert.ok(html.includes("ineffective-existing-vehicle-clear"), "with its explicit clear action");
+  for (const absent of ["existing-vehicle-selector", "existing-vehicle-summary", "existing-vehicle-option-v-2",
+                        "既存車両", "車名", "ボディサイズ"]) {
+    assert.equal(html.includes(absent), false, `recovery state must not render ${absent}`);
+  }
+});
+
+test("MOUNTED Step 2: an owner who LEFT search mode with a retained id gets the recovery surface", () => {
+  for (const regMethod of ["new", "ocr"] as const) {
+    const html = step2({ customer: { regMethod, existingId: null }, vehicle: { existingId: "v-1" } });
+    assert.ok(html.includes("ineffective-existing-vehicle-recovery"), `${regMethod}: recovery renders`);
+    assert.equal(html.includes("車名"), false, `${regMethod}: no editable form until cleared`);
+  }
+});
+
+test("MOUNTED Step 2: after clearing, typed fields survive and the editable flow returns", () => {
+  // The cleared state (existingId null) with previously typed model text: no recovery,
+  // and the text is still in the editable form — vehicleSelectionPatch(null) touches
+  // exactly one key, so the CREATE payload survives.
+  const html = step2({ customer: { regMethod: "search", existingId: "c-2" }, vehicle: { existingId: null, model: "クラウン" } });
+  assert.equal(html.includes("ineffective-existing-vehicle-recovery"), false, "no recovery once cleared");
+  assert.ok(html.includes('value="クラウン"'), "typed model text preserved in the editable form");
+  assert.ok(html.includes("車名"), "the editable flow is back");
+  assert.deepEqual(vehicleSelectionPatch(null), { vehicle: { existingId: null } }, "the clear patch is one key");
+});
+
+test("MOUNTED Step 2: the recovery clear action is BOUND to vehicleSelectionPatch(null)", () => {
+  const code = readFileSync("src/components/estimates/wizard/steps/Step2Vehicle.tsx", "utf8");
+  const recovery = code.slice(code.indexOf("ineffective-existing-vehicle-recovery"));
+  assert.match(recovery, /data-testid="ineffective-existing-vehicle-clear"[\s\S]*?onClick=\{\(\) => setExistingVehicle\(null\)\}/,
+    "the clear button calls setExistingVehicle(null)");
+  assert.match(code, /setExistingVehicle = \(id: string \| null\) => api\.updateStore\(vehicleSelectionPatch\(id\)\)/,
+    "which is vehicleSelectionPatch — one key, never a spread");
+});
+
+test("MOUNTED Step 2: setV is typed changed-keys-only and CANNOT re-assert existingId", () => {
+  const code = readFileSync("src/components/estimates/wizard/steps/Step2Vehicle.tsx", "utf8");
+  assert.match(code, /type EditableVehiclePatch = Partial<Omit<VehicleDraft, "existingId" \| "suggestedSize">>/,
+    "the editable patch TYPE excludes identity");
+  assert.match(code, /const setV = \(patch: EditableVehiclePatch\) => api\.updateStore\(\{ vehicle: patch \}\)/,
+    "changed keys only — no projection spread");
+  assert.equal(/updateStore\(\{ vehicle: \{ \.\.\.v/.test(code), false, "no full-projection spread remains");
 });
 
 test("the host passes BOTH customers and vehicles to Step2Vehicle", () => {

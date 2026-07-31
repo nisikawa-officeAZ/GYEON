@@ -1,11 +1,18 @@
 "use client";
 
-// Unified Estimate Wizard — SINGLE canonical-draft state model (EW-UI-2A).
+// Unified Estimate Wizard — SINGLE canonical-draft state model (EW-UI-2A → EST-WIZ-REQ-F1).
 //
 // The hook stores EXACTLY ONE business-state object: EstimateWizardDraftV22. WizardStore is a
 // read-only PROJECTION of that draft (never independently stored), and `step` is derived from
 // `draft.metadata.currentStep`. Screens keep reading `store` and writing via `updateStore`, but
 // every write flows through the validated, fail-closed canonical patch adapter. No pricing/OCR/save.
+//
+// EST-WIZ-REQ-F1 — navigation is FAIL-CLOSED: next() and jumpTo() resolve through the pure
+// transition resolvers in validity/wizard-step-validity (never a bare step increment), so a
+// forward move the validity contract blocks leaves metadata.currentStep unchanged even when a
+// caller bypasses the disabled button. Backward navigation is always allowed, and a restored
+// later step is normalized to its first unmet prerequisite before the first render. Navigation
+// writes ONLY metadata.currentStep — it never mutates customer or vehicle identity.
 //
 // Explicitly NOT used: useState<WizardStore>, useReducer<WizardStore>, a second mutable WizardStore
 // ref, JSON cloning, localStorage/sessionStorage, generated IDs, or pricing/save/OCR side effects.
@@ -15,6 +22,12 @@ import { WIZARD_STEPS, type StepId, type WizardStore } from "./wizard-types";
 import type { EstimateWizardDraftV22 } from "./draft/wizard-draft-types";
 import { setCurrentStep } from "./draft/wizard-draft-state";
 import { projectStore, applyStorePatch, initialCanonicalDraft, type WizardStorePatch } from "./bridge/ew-ui1-controller";
+import {
+  stepIsValid, maxEnterableStep, resolveNext, resolveJump, normalizeRestoredStep,
+  canAdvanceFrom, blockedReasonJa,
+  EMPTY_NAVIGATION_REFERENCES,
+  type WizardNavigationReferences, type WizardStepValidityInputs,
+} from "./validity/wizard-step-validity";
 
 const MIN_STEP = 1 as const;
 const MAX_STEP = WIZARD_STEPS.length as StepId;
@@ -29,7 +42,15 @@ export interface EstimateWizardApi {
   back:        () => void;
   isFirst:     boolean;
   isLast:      boolean;
-  completed:   Set<StepId>; // display-only (checkmarks); does NOT gate free-jump
+  /** Whether next() would actually move (resolveNext !== current). Drives the Next
+   *  disabled state — NOT current-step validity alone, so an invalidated EARLIER
+   *  prerequisite blocks the button even while the operator stands on a later step. */
+  canAdvance: boolean;
+  /** Operator-facing reason for a blocked Next (null when advancable or on step 7). */
+  blockedReasonJa: string | null;
+  /** Highest step the operator may ENTER — forward stepper targets beyond it are blocked. */
+  maxEnterableStep: StepId;
+  completed:   Set<StepId>; // display-only checkmarks, derived from the SAME validity contract
 }
 
 function clampStep(n: number): StepId {
@@ -38,9 +59,20 @@ function clampStep(n: number): StepId {
   return Math.trunc(n) as StepId;
 }
 
-export function useEstimateWizard(initial?: WizardStorePatch): EstimateWizardApi {
-  // ONE state object — the canonical draft. Initial partial store folds through the SAME adapter.
-  const [draft, setDraft] = useState<EstimateWizardDraftV22>(() => initialCanonicalDraft(initial));
+export function useEstimateWizard(
+  initial?: WizardStorePatch,
+  // Fail-closed default: without references an existing selection is never effective,
+  // so navigation blocks rather than trusting an unverifiable id.
+  references: WizardNavigationReferences = EMPTY_NAVIGATION_REFERENCES,
+): EstimateWizardApi {
+  const { customers, vehicles } = references;
+
+  // ONE state object — the canonical draft. Initial partial store folds through the SAME adapter,
+  // and a restored later step is normalized to its first unmet prerequisite before first render.
+  const [draft, setDraft] = useState<EstimateWizardDraftV22>(() => {
+    const d = initialCanonicalDraft(initial);
+    return setCurrentStep(d, normalizeRestoredStep(d.metadata.currentStep, { draft: d, customers, vehicles }));
+  });
 
   const store = useMemo(() => projectStore(draft), [draft]);
   const step = clampStep(draft.metadata.currentStep);
@@ -52,20 +84,33 @@ export function useEstimateWizard(initial?: WizardStorePatch): EstimateWizardApi
     // invalid/unsupported patch → no state change (fail closed); the current UI never sends these.
   }, [draft]);
 
-  // Navigation is backed by canonical metadata.currentStep (no separate step state).
-  const jumpTo = useCallback((n: number) => setDraft((d) => setCurrentStep(d, clampStep(n))), []);
-  const next = useCallback(() => setDraft((d) => setCurrentStep(d, clampStep(d.metadata.currentStep + 1))), []);
+  // Navigation is backed by canonical metadata.currentStep and resolved through the pure
+  // fail-closed transition resolvers. A blocked forward move returns the CURRENT step, so
+  // setCurrentStep rewrites the same value and the canonical step never advances.
+  const jumpTo = useCallback((n: number) => setDraft((d) =>
+    setCurrentStep(d, resolveJump(clampStep(d.metadata.currentStep), n, { draft: d, customers, vehicles }))
+  ), [customers, vehicles]);
+  const next = useCallback(() => setDraft((d) =>
+    setCurrentStep(d, resolveNext(clampStep(d.metadata.currentStep), { draft: d, customers, vehicles }))
+  ), [customers, vehicles]);
   const back = useCallback(() => setDraft((d) => setCurrentStep(d, clampStep(d.metadata.currentStep - 1))), []);
 
-  // Lightweight completion heuristic for stepper checkmarks (display only) — from the projection.
+  const validity = useMemo<WizardStepValidityInputs>(
+    () => ({ draft, customers, vehicles }),
+    [draft, customers, vehicles],
+  );
+
+  // Checkmarks derive from the SAME validity contract as navigation: a step is
+  // checked only when it lies BEHIND the operator AND stepIsValid confirms it, so a
+  // stale or ineffective selection can never show a green step, and neither the
+  // current nor any future step is ever marked complete.
   const completed = useMemo(() => {
     const done = new Set<StepId>();
-    if (store.customer.name.trim() || store.customer.existingId) done.add(1);
-    if (store.vehicle.model.trim() || store.vehicle.existingId) done.add(2);
-    if (store.categories.length > 0) done.add(3);
-    if (store.notesCustomer.trim() || store.notesInternal.trim()) done.add(6);
+    for (const s of WIZARD_STEPS) {
+      if (s.id < step && stepIsValid(s.id, validity)) done.add(s.id);
+    }
     return done;
-  }, [store]);
+  }, [validity, step]);
 
   return {
     step,
@@ -77,6 +122,9 @@ export function useEstimateWizard(initial?: WizardStorePatch): EstimateWizardApi
     back,
     isFirst: step === MIN_STEP,
     isLast: step === MAX_STEP,
+    canAdvance: canAdvanceFrom(step, validity),
+    blockedReasonJa: blockedReasonJa(step, validity),
+    maxEnterableStep: maxEnterableStep(validity),
     completed,
   };
 }

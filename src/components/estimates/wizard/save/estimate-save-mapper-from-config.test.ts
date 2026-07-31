@@ -351,3 +351,59 @@ test("B1.1-B2: with no coupons the coupon block stays 'none' with an empty snaps
   assert.deepEqual(req.coupon.applications, []);
   assert.equal(req.coupon.appliedAmount, 0);
 });
+
+// ── EST-WIZ-REQ-F1: navigation/save discriminator agreement ──────────────────
+//
+// The Step-2 navigation predicate and this mapper read the SAME two fields
+// (vehicle.sourceMode, vehicle.vehicleId). These tests pin the mapper side of that
+// agreement: any draft navigation treats as "will save existing" maps to mode
+// "existing" with the exact id, and every degenerate combination falls to "new" —
+// where the tightened save validation requires the model.
+
+test("F1: sourceMode existing + vehicleId maps to an EXISTING vehicle with the exact id", () => {
+  const req = okReq(run(draftWith(["maintenance"], maintCfg)));
+  assert.equal(req.vehicle.mode, "existing");
+  if (req.vehicle.mode === "existing") assert.equal(req.vehicle.vehicleId, "v1");
+});
+
+test("F1: degenerate drafts (sourceMode new/null with a non-null id) map to NEW — same branch navigation gates on the model", () => {
+  for (const sourceMode of ["new", null] as const) {
+    const d = draftWith(["maintenance"], maintCfg);
+    const degenerate = { ...d, vehicle: { ...d.vehicle, sourceMode, vehicleId: "v1" } };
+    const req = okReq(run(degenerate));
+    assert.equal(req.vehicle.mode, "new", `sourceMode=${String(sourceMode)} must not save as existing`);
+  }
+});
+
+test("F1: sourceMode existing WITHOUT an id maps to NEW, and maker-only is then save-blocked", () => {
+  const d = draftWith(["maintenance"], maintCfg);
+  const noId = {
+    ...d,
+    vehicle: {
+      ...d.vehicle, sourceMode: "existing" as const, vehicleId: null,
+      newVehicle: { ...d.vehicle.newVehicle, maker: "トヨタ", model: "" },
+    },
+  };
+  const req = okReq(run(noId));
+  assert.equal(req.vehicle.mode, "new");
+  const validation = validateEstimateSaveRequest(req);
+  assert.equal(validation.ok, false, "maker-only new vehicle is rejected");
+  assert.ok(validation.issues.some((i) => i.field === "vehicle.model"), "by the approved model rule");
+});
+
+test("F1: stale model text is DROPPED by the existing branch — the id alone is persisted", () => {
+  const d = draftWith(["maintenance"], maintCfg);
+  const stale = { ...d, vehicle: { ...d.vehicle, newVehicle: { ...d.vehicle.newVehicle, model: "残留モデル" } } };
+  const req = okReq(run(stale));
+  assert.equal(req.vehicle.mode, "existing");
+  assert.equal(JSON.stringify(req.vehicle).includes("残留モデル"), false, "no stale CREATE data rides along");
+});
+
+test("F2-R1: sourceMode existing with an EMPTY-STRING vehicleId maps to NEW — the truthy discriminator", () => {
+  // The mapper tests `sourceMode === "existing" && v.vehicleId` (truthy), so an empty
+  // string falls to the NEW branch; willSaveExistingVehicle mirrors exactly this.
+  const d = draftWith(["maintenance"], maintCfg);
+  const emptyId = { ...d, vehicle: { ...d.vehicle, sourceMode: "existing" as const, vehicleId: "" } };
+  const req = okReq(run(emptyId));
+  assert.equal(req.vehicle.mode, "new", "an empty-string id must never save as existing");
+});

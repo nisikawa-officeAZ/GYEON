@@ -41,11 +41,13 @@ export function validateEstimateSaveRequest(req: EstimateSaveRequest): EstimateS
     add(ESTIMATE_SAVE_ERRORS.CUSTOMER_REQUIRED, "customer.name", "お客様名が未入力です。");
   }
 
-  // Vehicle required
+  // Vehicle required. EST-WIZ-REQ-F1 (approved rule): a NEW vehicle requires a non-empty
+  // trimmed model (車名) — maker-only data is rejected, because 車名 is the manual-only
+  // required identity of the vehicle being created and the OCR apply path never supplies it.
   if (req.vehicle.mode === "existing") {
     if (!req.vehicle.vehicleId) add(ESTIMATE_SAVE_ERRORS.VEHICLE_REQUIRED, "vehicle", "車両が選択されていません。");
-  } else if (!req.vehicle.maker && !req.vehicle.model) {
-    add(ESTIMATE_SAVE_ERRORS.VEHICLE_REQUIRED, "vehicle", "車両情報が未入力です。");
+  } else if (!req.vehicle.model || req.vehicle.model.trim() === "") {
+    add(ESTIMATE_SAVE_ERRORS.VEHICLE_REQUIRED, "vehicle.model", "車名が未入力です。");
   }
 
   // At least one priced service line

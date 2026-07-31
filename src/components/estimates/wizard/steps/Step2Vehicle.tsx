@@ -12,21 +12,33 @@
 
 import type { EstimateWizardApi } from "../useEstimateWizard";
 import type { WizardExistingEntityInputs } from "../contract/wizard-runtime-inputs";
+import type { VehicleDraft } from "../wizard-types";
 import {
   selectableVehiclesForCustomer, effectiveExistingCustomer, effectiveExistingVehicle,
   vehicleSelectionPatch,
 } from "./existing-entity-selection";
+import { willSaveExistingVehicle } from "../validity/wizard-step-validity";
 import { OcrEntry } from "../OcrEntry";
 import { Card, SectionTitle, Field, TextInput, SelectButton, ChoiceGrid } from "../ui";
 
 const BODY_SIZES = ["SS", "S", "M", "ML", "L", "LL", "XL"];
+
+/** EST-WIZ-REQ-F2-R1: the editable-field patch TYPE excludes `existingId`, so a field
+ *  edit CANNOT re-assert vehicle identity even by mistake — identity is written only by
+ *  the explicit selection actions. `suggestedSize` is excluded too: it is display-only
+ *  and the patch adapter rejects it. */
+type EditableVehiclePatch = Partial<Omit<VehicleDraft, "existingId" | "suggestedSize">>;
 
 export function Step2Vehicle({
   api, customers, vehicles,
 }: { api: EstimateWizardApi } & WizardExistingEntityInputs) {
   const v = api.store.vehicle;
   const c = api.store.customer;
-  const setV = (patch: Partial<typeof v>) => api.updateStore({ vehicle: { ...v, ...patch } });
+  // EST-WIZ-REQ-F1: field edits emit ONLY the changed keys — never a spread of the full
+  // vehicle projection. A spread would re-assert `existingId` (and re-derive sourceMode)
+  // on every keystroke, silently rewriting vehicle IDENTITY from a field edit. Identity
+  // is written exclusively by the explicit selection actions below.
+  const setV = (patch: EditableVehiclePatch) => api.updateStore({ vehicle: patch });
 
   // The owner is resolved through the SAME effectiveness rule Step 1 uses: the mode
   // must be "search" AND the stored id must resolve to exactly one reference.
@@ -39,13 +51,51 @@ export function Step2Vehicle({
   const owner = effectiveExistingCustomer(customers, c.regMethod, c.existingId);
   const ownerId = owner?.id ?? null;
   const ownedVehicles = selectableVehiclesForCustomer(vehicles, ownerId);
-  const selected = effectiveExistingVehicle(vehicles, ownerId, v.existingId);
+
+  // EST-WIZ-REQ-F2-R1 — the persistence-mode discriminator is the SAME truthy test the
+  // save mapper uses (willSaveExistingVehicle over the canonical draft). The
+  // effectiveness oracle runs ONLY on the will-save-existing branch.
+  const saveExisting = willSaveExistingVehicle(api.draft);
+  const selected = saveExisting ? effectiveExistingVehicle(vehicles, ownerId, v.existingId) : null;
 
   /** Existing select/clear writes ONE key. Never a spread of the vehicle projection. */
   const setExistingVehicle = (id: string | null) => api.updateStore(vehicleSelectionPatch(id));
 
+  // An INEFFECTIVE retained selection: the draft would still SAVE as an existing vehicle,
+  // but the id no longer resolves (owner left search mode or became ambiguous, the id is
+  // absent, duplicated, or foreign-owned). Navigation is blocked in this state, so it must
+  // be VISIBLE and OPERABLE here: ONLY the recovery alert with its explicit clear action is
+  // rendered for the vehicle area — no selector and no editable form — until the operator
+  // explicitly clears. Nothing clears automatically; the typed new-vehicle fields survive
+  // the clear untouched, and the normal editable flow then returns.
+  const ineffectiveExisting = saveExisting && selected === null;
+
   return (
     <>
+      {ineffectiveExisting ? (
+        // ONLY the recovery surface for the vehicle area: no selector, no editable form,
+        // until the operator explicitly clears the ineffective selection.
+        <Card>
+          <div role="alert" data-testid="ineffective-existing-vehicle-recovery"
+            className="rounded-md border border-amber-700/60 bg-amber-950/30 px-3 py-2">
+            <p className="text-xs text-amber-200">
+              以前に選択した車両は現在利用できません。顧客の変更、参照の重複、または参照切れの可能性があります。
+            </p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              選択を解除すると、入力済みの内容を保持したまま新規車両として入力できます。
+            </p>
+            <button
+              type="button"
+              data-testid="ineffective-existing-vehicle-clear"
+              className="mt-2 min-h-[44px] px-3 rounded-lg border border-slate-600 text-xs text-slate-100 hover:bg-slate-800/60"
+              onClick={() => setExistingVehicle(null)}
+            >
+              車両の選択を解除する
+            </button>
+          </div>
+        </Card>
+      ) : (
+      <>
       {ownerId !== null && (
         <Card>
           <SectionTitle>既存車両</SectionTitle>
@@ -101,7 +151,7 @@ export function Step2Vehicle({
           <OcrEntry
             onApply={(f) => {
               const rec = f as Record<string, unknown>;
-              const patch: Partial<typeof v> = {};
+              const patch: EditableVehiclePatch = {};
               if (typeof rec.maker === "string") patch.maker = rec.maker;
               if (typeof rec.plate_number === "string") patch.plateNumber = rec.plate_number;
               if (Object.keys(patch).length) setV(patch);
@@ -145,6 +195,8 @@ export function Step2Vehicle({
           </Field>
         </div>
       </Card>
+      )}
+      </>
       )}
 
       <Card>

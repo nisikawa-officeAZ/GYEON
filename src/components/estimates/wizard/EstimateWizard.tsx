@@ -82,6 +82,10 @@ export default function EstimateWizard({
   // and an invalid patch fails closed to the plain initial draft.
   const api = useEstimateWizard(
     preselectionStorePatch(resolvePreselection(customers, vehicles, defaultCustomerId, defaultVehicleId)),
+    // EST-WIZ-REQ-F1: the SAME server-supplied reference arrays that resolve selections
+    // also drive navigation validity, so an ineffective id can never pass a gate here
+    // that the selection surfaces would refuse.
+    { customers, vehicles },
   );
   const title = mode === "edit" ? "見積編集" : "新規見積";
 
