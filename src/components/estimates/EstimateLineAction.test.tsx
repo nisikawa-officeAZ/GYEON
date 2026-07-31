@@ -289,7 +289,12 @@ test("10. the component imports no transport, LINE-send action, Supabase or toke
   }
   // The LINE sender arrives as a prop — the component owns no LINE-send binding.
   assert.match(code, /send: EstimateLineSender;/);
-  assert.match(code, /import type \{[\s\S]*?EstimateResendAuthorization,?[\s\S]*?\} from "@\/lib\/line\/send-estimate-line-core"/);
+  // F1-R1: the core import is now a VALUE import — the pure client-safe module
+  // supplies the length constant and reserve function alongside the types. The
+  // forbidden-import canaries above are what keep this boundary honest; the
+  // import may carry ONLY the core's pure exports.
+  assert.match(code,
+    /import \{[\s\S]*?MAX_ESTIMATE_LINE_MESSAGE_LENGTH,[\s\S]*?computeEstimateLinePdfReserve,[\s\S]*?type EstimateResendAuthorization,?[\s\S]*?\} from "@\/lib\/line\/send-estimate-line-core"/);
   // R92B-H1: the list/revoke Server Actions ARE imported (read-only + revoke),
   // wired by default and overridable for tests.
   assert.match(code, /import \{[\s\S]*?listActiveEstimateShares,[\s\S]*?revokeEstimateShare,?[\s\S]*?\} from "@\/lib\/estimates\/estimate-share-actions"/);
@@ -362,4 +367,115 @@ test("13. the revoke UI renders ONLY the safe projection — expiry + control, n
   // The projected item type carries only id/createdAt/expiresAt, so a secret field
   // has nowhere to come from in the first place.
   assert.match(code, /import type \{ EstimateShareListItem \}/);
+});
+
+// ── F1-R1: editable default message, UTF-16 limits, history refresh ─────────
+//
+// Import declarations are hoisted, so this block extends the suite in place.
+import {
+  validateEstimateLineBody, computeClientBodyLimit, resolveClientShareOrigin,
+  shouldRefreshEstimateLineHistory,
+} from "./EstimateLineAction";
+import {
+  MAX_ESTIMATE_LINE_MESSAGE_LENGTH, computeEstimateLinePdfReserve,
+} from "@/lib/line/send-estimate-line-core";
+
+test("F1. body validation: empty and whitespace rejected, boundary exact, surrogate pairs count as two", () => {
+  assert.deepEqual(validateEstimateLineBody("", 5000), { valid: false, reason: "empty" });
+  assert.deepEqual(validateEstimateLineBody("   \n　", 5000), { valid: false, reason: "empty" });
+  assert.deepEqual(validateEstimateLineBody("あ".repeat(5000), 5000), { valid: true, reason: null });
+  assert.deepEqual(validateEstimateLineBody("あ".repeat(5001), 5000), { valid: false, reason: "too-long" });
+  // 2500 astral chars = 5000 UTF-16 units exactly; one more unit overflows.
+  assert.deepEqual(validateEstimateLineBody("𠮷".repeat(2500), 5000), { valid: true, reason: null });
+  assert.deepEqual(validateEstimateLineBody("𠮷".repeat(2500) + "a", 5000), { valid: false, reason: "too-long" });
+});
+
+test("F2. the client pdf-link limit subtracts the SAME reserve the server computes", () => {
+  const origin = "https://app.example.com";
+  assert.equal(computeClientBodyLimit("text", origin), MAX_ESTIMATE_LINE_MESSAGE_LENGTH);
+  assert.equal(
+    computeClientBodyLimit("pdf-link", origin),
+    MAX_ESTIMATE_LINE_MESSAGE_LENGTH - computeEstimateLinePdfReserve(origin),
+    "a body the client accepts can never be one the server-composed PDF message must reject",
+  );
+  // Unresolvable origin → fall back to the text limit; the server stays authoritative.
+  assert.equal(computeClientBodyLimit("pdf-link", null), MAX_ESTIMATE_LINE_MESSAGE_LENGTH);
+});
+
+test("F3. the client origin resolver mirrors the URL API and fails to null", () => {
+  assert.equal(resolveClientShareOrigin("https://app.example.com"), "https://app.example.com");
+  assert.equal(resolveClientShareOrigin("https://app.example.com/base/path"), "https://app.example.com");
+  for (const bad of [undefined, null, "", "   ", "not a url"]) {
+    assert.equal(resolveClientShareOrigin(bad), null, String(bad));
+  }
+});
+
+test("F4. history refresh fires ONLY for outcomes that may have logged a row", () => {
+  for (const kind of ["sent", "failed", "unknown"] as const) {
+    assert.equal(shouldRefreshEstimateLineHistory(kind), true, kind);
+  }
+  for (const kind of [
+    "skipped", "blocked", "resend-required", "resend-required-indeterminate", "pdf-unavailable",
+  ] as const) {
+    assert.equal(shouldRefreshEstimateLineHistory(kind), false, kind);
+  }
+});
+
+test("F5. the editor is a REAL value initialized ONCE from the single default builder", () => {
+  const code = readFileSync(SRC, "utf8");
+  // Real value, not a placeholder.
+  assert.match(code, /data-testid="line-message-editor"\s*\n?\s*value=\{editedBody\}/);
+  assert.equal(/placeholder=/.test(code.slice(code.indexOf("line-message-editor"), code.indexOf("line-message-editor") + 400)), false,
+    "the template is the value, never a placeholder");
+  // One lazy initializer from the shared builder; edits are preserved because
+  // nothing else ever writes the state (onChange is the only setter call site).
+  assert.equal((code.match(/buildDefaultEstimateLineMessage\(/g) ?? []).length, 1, "exactly one initializer");
+  assert.match(code, /useState<string>\(\(\) =>\s*\n?\s*buildDefaultEstimateLineMessage\(\{ customerName, estimateNumber, dealerDisplayName \}\)/);
+  assert.equal((code.match(/setEditedBody\(/g) ?? []).length, 1, "only the operator's onChange writes the body");
+});
+
+test("F6. the confirmation shows the exact body and the proceed control is validity-gated", () => {
+  const code = readFileSync(SRC, "utf8");
+  // The textarea sits INSIDE the confirming stage — the confirmed text IS the body.
+  const confirming = code.slice(code.indexOf('stage.kind === "confirming"'), code.indexOf('stage.kind === "submitting"'));
+  assert.ok(confirming.includes('data-testid="line-message-editor"'), "editor inside the confirm stage");
+  assert.ok(confirming.includes('data-testid="line-message-counter"'), "UTF-16 counter visible");
+  assert.match(confirming, /\{editedBody\.length\} \/ \{bodyLimit\}/);
+  assert.match(confirming, /disabled=\{!bodyCheck\.valid\}/, "送信する is disabled while invalid");
+  assert.ok(confirming.includes('data-testid="line-message-invalid"'), "explicit invalid message");
+  assert.equal(confirming.includes(".slice("), false, "no truncation anywhere in the stage");
+  assert.equal(confirming.includes(".substring("), false);
+});
+
+test("F7. the confirmed body rides the closed authorization union; the client adds nothing else", () => {
+  const code = readFileSync(SRC, "utf8");
+  assert.match(code, /authorization: \{ \.\.\.authorization, messageBody: editedBody \}/,
+    "messageBody is merged onto the operator's authorization");
+  // A fail-closed client gate guards bypasses of the disabled button.
+  assert.match(code, /if \(!validateEstimateLineBody\(editedBody, limit\)\.valid\) return;/);
+  // No client-side share/token/url material exists to smuggle.
+  for (const forbidden of ["shareToken", "shareUrl:", "documentFileId", "lineUserId"]) {
+    assert.equal(code.includes(forbidden), false, `client must not carry ${forbidden}`);
+  }
+});
+
+test("F8. the settle callback is gated by the SAME pure refresh rule the tests exercise", () => {
+  const code = readFileSync(SRC, "utf8");
+  assert.match(code, /if \(shouldRefreshEstimateLineHistory\(result\.kind\)\) onAttemptSettled\?\.\(\);/);
+  assert.equal((code.match(/export function shouldRefreshEstimateLineHistory/g) ?? []).length, 1,
+    "one implementation, shared with the tests");
+});
+
+test("F9. the two new blocked reasons have operator messages", () => {
+  const code = readFileSync(SRC, "utf8");
+  assert.match(code, /"message-empty":\s*"メッセージが空のため送信できません。/);
+  assert.match(code, /"message-too-long":\s*"メッセージが長すぎるため送信できません。/);
+});
+
+test("F10. rendering the component still sends nothing with the editable default in place", () => {
+  let calls = 0;
+  const html = render(async () => { calls += 1; return { kind: "sent" }; });
+  assert.equal(calls, 0);
+  assert.ok(html.includes('data-testid="line-state-idle"'), "idle is unchanged");
+  assert.equal(html.includes("line-message-editor"), false, "the editor belongs to the confirm stage only");
 });

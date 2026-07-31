@@ -9,13 +9,21 @@ import { useRouter } from "next/navigation";
 import type { EstimateDB } from "@/lib/estimates/estimate-types";
 import EstimateDetail from "./EstimateDetail";
 
-export default function EstimateDetailView({ estimate }: { estimate: EstimateDB }) {
+export default function EstimateDetailView({
+  estimate,
+  dealerDisplayName = null,
+}: {
+  estimate: EstimateDB;
+  /** F1-R1: server-resolved dealer_settings.business_name for the LINE default message. */
+  dealerDisplayName?: string | null;
+}) {
   const router = useRouter();
   const isApproved = estimate.status === "approved" || estimate.status === "APPROVED";
 
   return (
     <EstimateDetail
       estimate={estimate}
+      dealerDisplayName={dealerDisplayName}
       variant="page"
       onClose={() => router.push("/estimates")}
       onCreateWorkOrder={isApproved ? () => router.push(`/estimates?workorder=${estimate.id}`) : undefined}

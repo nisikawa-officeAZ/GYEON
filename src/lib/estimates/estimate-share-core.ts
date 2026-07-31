@@ -56,7 +56,11 @@ export function buildShareUrl(origin: string, rawToken: string): string {
 // ── Token: 256-bit CSPRNG, base64url, SHA-256 persistence (§3) ───────────────
 
 export const SHARE_TOKEN_BYTES = 32; // 256 bits
-/** base64url of 32 bytes is exactly 43 chars (no padding). */
+/** base64url of 32 bytes is exactly 43 chars (no padding). AUTHORITATIVE length —
+ *  the client-safe LINE message-length accounting keeps its own literal (this
+ *  module imports node:crypto and must stay out of client bundles); a drift test
+ *  asserts the two agree. */
+export const SHARE_TOKEN_LENGTH = 43;
 const SHARE_TOKEN_SHAPE = /^[A-Za-z0-9_-]{43}$/;
 
 /** Generate a fresh raw token from the server CSPRNG. Returned in memory only. */

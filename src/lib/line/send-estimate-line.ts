@@ -22,6 +22,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { sendLineTextMessage, type LineLogMetadata } from "./send-line-message";
 import { createEstimateShare } from "@/lib/estimates/create-estimate-share";
+import { resolveAppOrigin } from "@/lib/estimates/estimate-share-core";
 import {
   runEstimateLineSend,
   type EstimateLineCoreDeps,
@@ -139,6 +140,17 @@ export async function sendEstimateLine(
     // this file never reads it apart from handing the URL to the core for the
     // message body.
     createShareLink: (id) => createEstimateShare(id),
+
+    // F1-R1 — the SAME env-derived origin createEstimateShare will use, resolved
+    // side-effect-free so the core can length-check the final pdf-link message
+    // BEFORE any share exists. Null on a misconfigured app URL (→ invalid-app-url).
+    resolveShareOrigin: () => {
+      const origin = resolveAppOrigin(
+        process.env.NEXT_PUBLIC_APP_URL,
+        process.env.NODE_ENV === "production",
+      );
+      return origin.kind === "ok" ? origin.origin : null;
+    },
 
     send: async ({ recipient, customerId, estimateId: id, text, mode, share }): Promise<EstimateLineTransportOutcome> => {
       // Log metadata is composed HERE, never accepted from a caller. The raw

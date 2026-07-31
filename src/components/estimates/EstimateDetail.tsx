@@ -14,6 +14,7 @@ import { sortByCategoryOrder } from "@/lib/estimates/category-order";
 import EstimateSummary from "./EstimateSummary";
 import EstimateStatusControl from "./EstimateStatusControl";
 import EstimateLineAction from "./EstimateLineAction";
+import EstimateLineHistory from "./EstimateLineHistory";
 import { sendEstimateLine } from "@/lib/line/send-estimate-line";
 
 // v17 workspace card. Presentation only — no data/logic here.
@@ -65,14 +66,20 @@ interface EstimateDetailProps {
   onCreateWorkOrder?:   () => void;
   /** "modal" (default) keeps the existing overlay; "page" renders in normal flow for a full-page route. */
   variant?:             "modal" | "page";
+  /** F1-R1: dealer_settings.business_name, server-resolved; null omits the LINE template line. */
+  dealerDisplayName?:   string | null;
 }
 
-export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, variant = "modal" }: EstimateDetailProps) {
+export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, variant = "modal", dealerDisplayName = null }: EstimateDetailProps) {
   const customer = estimate.customers;
   const vehicle  = estimate.vehicles;
   const items    = estimate.estimate_items ?? [];
 
   const customerName = estimateCustomerName(customer);
+
+  // F1-R1 — bumped after a LINE attempt that may have logged a row, so the
+  // 送付履歴 card refetches without a full-page reload.
+  const [historyVersion, setHistoryVersion] = useState(0);
 
   // Phase 3 Sprint 5 — Estimate → Invoice (one-click, mirrors the WO transition).
   const router = useRouter();
@@ -294,24 +301,26 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, v
             </Card>
           )}
 
-          {/* 送付履歴 — transmission (LINE / email / PDF) is history, NOT a workflow status.
-              No transmission-history data source exists yet, so this shows an empty
-              placeholder only (never fabricated). */}
+          {/* 送付履歴 — transmission history is REAL data now (F1-R1): the card
+              reads the tenant-scoped line_message_logs projection and renders
+              truthful sent/failed/unconfirmed/cancelled states. The empty text
+              appears only after a SUCCESSFUL read returns zero rows. */}
           <Card title="送付履歴">
-            <p className="text-xs text-slate-600">
-              送付履歴はありません（LINE・メール・PDF送付時に記録されます）
-            </p>
+            <EstimateLineHistory estimateId={estimate.id} version={historyVersion} />
           </Card>
 
-          {/* LINE delivery (R90B Phase 1 — text only). The action receives the
-              persisted estimate id and the dealer-scoped Server Action; it never
-              sees a recipient, a token or the message body. */}
+          {/* LINE delivery (R90B Phase 1 → F1-R1 editable message). The action
+              receives the persisted estimate id and the dealer-scoped Server
+              Action; it never sees a recipient or a token. The operator-edited
+              customer-visible body rides the closed authorization union. */}
           <Card title="LINE送信">
             <EstimateLineAction
               estimateId={estimate.id}
               estimateNumber={estimateDisplayNo(estimate)}
               customerName={customerName}
+              dealerDisplayName={dealerDisplayName}
               send={sendEstimateLine}
+              onAttemptSettled={() => setHistoryVersion((v) => v + 1)}
             />
           </Card>
         </div>

@@ -14,6 +14,8 @@ import {
   runEstimateLineSend, buildEstimateLineText,
   isEstimateResendAuthorization, isValidEstimateId,
   ESTIMATE_LINE_LOG_UNAVAILABLE_MESSAGE, ESTIMATE_LINE_SEND_FAILED_MESSAGE,
+  MAX_ESTIMATE_LINE_MESSAGE_LENGTH, computeEstimateLinePdfReserve,
+  composeEstimateLinePdfMessage,
   type EstimateLineCoreDeps, type EstimateLineSource,
   type EstimateLineTransportOutcome, type EstimateResendProbe,
   type EstimateDeliveryMode,
@@ -474,4 +476,148 @@ test("23. text mode NEVER creates a share; the send is mode:text with a null sha
   assert.equal(calls.sent[0].mode, "text");
   assert.equal(calls.sent[0].share, null);
   assert.equal(calls.sent[0].text.includes("/s/e/"), false, "no link in a text-mode message");
+});
+
+// ── F1-R1: the operator-edited message body ─────────────────────────────────
+//
+// The SHARE fixture's origin — the resolver the prevalidation tests inject.
+const SHARE_ORIGIN = "https://app.example.com";
+const withOrigin = (deps: EstimateLineCoreDeps, origin: string | null = SHARE_ORIGIN): EstimateLineCoreDeps =>
+  ({ ...deps, resolveShareOrigin: () => origin });
+
+test("F1. messageBody is structurally accepted as a string and rejected otherwise", async () => {
+  assert.equal(isEstimateResendAuthorization({ kind: "first-send", messageBody: "こんにちは" }), true);
+  assert.equal(isEstimateResendAuthorization({ kind: "confirmed-resend", mode: "pdf-link", messageBody: "x" }), true);
+  for (const bad of [
+    { kind: "first-send", messageBody: 7 },
+    { kind: "first-send", messageBody: null },
+    { kind: "first-send", messageBody: "x", extra: true },
+  ]) {
+    const { deps, calls } = world();
+    const r = await runEstimateLineSend(deps, ESTIMATE_ID, bad);
+    assert.deepEqual(r, { kind: "blocked", reason: "invalid-request" }, JSON.stringify(bad));
+    assert.deepEqual(calls.order, []);
+  }
+});
+
+test("F2. an empty or whitespace-only body blocks message-empty before ANY dependency", async () => {
+  for (const body of ["", "   ", "\n\n", "　"]) {
+    const { deps, calls } = world();
+    const r = await runEstimateLineSend(deps, ESTIMATE_ID, { kind: "first-send", messageBody: body });
+    assert.deepEqual(r, { kind: "blocked", reason: "message-empty" }, JSON.stringify(body));
+    assert.deepEqual(calls.order, [], "nothing was touched");
+  }
+});
+
+test("F3. text mode: exactly 5000 UTF-16 units passes untruncated; 5001 blocks before transport", async () => {
+  const atLimit = "あ".repeat(MAX_ESTIMATE_LINE_MESSAGE_LENGTH);
+  const ok = world();
+  const sent = await runEstimateLineSend(ok.deps, ESTIMATE_ID, { kind: "first-send", messageBody: atLimit });
+  assert.equal(sent.kind, "sent");
+  assert.equal(ok.calls.sent[0].text, atLimit, "byte-identical — no truncation, no re-composition");
+  assert.equal(ok.calls.sent[0].text.length, 5000);
+
+  const over = world();
+  const blocked = await runEstimateLineSend(over.deps, ESTIMATE_ID, {
+    kind: "first-send", messageBody: atLimit + "あ",
+  });
+  assert.deepEqual(blocked, { kind: "blocked", reason: "message-too-long" });
+  assert.deepEqual(over.calls.order, [], "rejected before any dependency, transport included");
+});
+
+test("F3b. a surrogate-pair character counts as TWO UTF-16 units", async () => {
+  const astral = "𠮷".repeat(2500); // length 5000
+  assert.equal(astral.length, 5000);
+  const ok = world();
+  const sent = await runEstimateLineSend(ok.deps, ESTIMATE_ID, { kind: "first-send", messageBody: astral });
+  assert.equal(sent.kind, "sent");
+
+  const over = world();
+  const blocked = await runEstimateLineSend(over.deps, ESTIMATE_ID, {
+    kind: "first-send", messageBody: astral + "a", // length 5001
+  });
+  assert.deepEqual(blocked, { kind: "blocked", reason: "message-too-long" });
+  assert.deepEqual(over.calls.order, []);
+});
+
+test("F4. pdf-link counts the server-appended block; the fit boundary is exact", async () => {
+  const reserve = computeEstimateLinePdfReserve(SHARE_ORIGIN);
+  const fits = "あ".repeat(MAX_ESTIMATE_LINE_MESSAGE_LENGTH - reserve);
+
+  const ok = world();
+  const sent = await runEstimateLineSend(withOrigin(ok.deps), ESTIMATE_ID, {
+    kind: "first-send", mode: "pdf-link", messageBody: fits,
+  });
+  assert.equal(sent.kind, "sent");
+  assert.equal(ok.calls.sent[0].text, composeEstimateLinePdfMessage(fits, SHARE.url),
+    "final = body + sentence + complete share URL");
+  assert.equal(ok.calls.sent[0].text.length, MAX_ESTIMATE_LINE_MESSAGE_LENGTH,
+    "the composed message lands exactly on the limit — the reserve is exact");
+
+  const over = world();
+  const blocked = await runEstimateLineSend(withOrigin(over.deps), ESTIMATE_ID, {
+    kind: "first-send", mode: "pdf-link", messageBody: fits + "あ",
+  });
+  assert.deepEqual(blocked, { kind: "blocked", reason: "message-too-long" });
+});
+
+test("F5. an oversized pdf-link body creates NO share, NO log, NO LINE call — no orphan", async () => {
+  const reserve = computeEstimateLinePdfReserve(SHARE_ORIGIN);
+  const over = "あ".repeat(MAX_ESTIMATE_LINE_MESSAGE_LENGTH - reserve + 1);
+  const { deps, calls } = world();
+  const r = await runEstimateLineSend(withOrigin(deps), ESTIMATE_ID, {
+    kind: "first-send", mode: "pdf-link", messageBody: over,
+  });
+  assert.deepEqual(r, { kind: "blocked", reason: "message-too-long" });
+  assert.equal(calls.createShareLink, 0, "no share row / snapshot / Storage object");
+  assert.equal(calls.send, 0, "no pending log, no LINE request");
+  assert.deepEqual(calls.order, [], "rejected before every dependency");
+});
+
+test("F6. pdf-link with a body FAILS CLOSED when the origin cannot be resolved", async () => {
+  // Resolver present but unresolvable → invalid-app-url before any side effect.
+  const nullOrigin = world();
+  const r1 = await runEstimateLineSend(withOrigin(nullOrigin.deps, null), ESTIMATE_ID, {
+    kind: "first-send", mode: "pdf-link", messageBody: "本文",
+  });
+  assert.deepEqual(r1, { kind: "pdf-unavailable", reason: "invalid-app-url" });
+  assert.deepEqual(nullOrigin.calls.order, []);
+
+  // Resolver ABSENT entirely → same fail-closed answer, never an unchecked send.
+  const missing = world();
+  const r2 = await runEstimateLineSend(missing.deps, ESTIMATE_ID, {
+    kind: "first-send", mode: "pdf-link", messageBody: "本文",
+  });
+  assert.deepEqual(r2, { kind: "pdf-unavailable", reason: "invalid-app-url" });
+  assert.deepEqual(missing.calls.order, []);
+});
+
+test("F7. the operator body IS the message: sent verbatim, legacy builder not consulted", async () => {
+  const body = "山田 様\n\nお世話になっております。\nGYEON 品川です。\n\nどうぞよろしくお願いいたします。";
+  const { deps, calls } = world();
+  const r = await runEstimateLineSend(deps, ESTIMATE_ID, { kind: "first-send", messageBody: body });
+  assert.equal(r.kind, "sent");
+  assert.equal(calls.sent[0].text, body, "line breaks and content preserved exactly");
+  assert.equal(calls.loadBusinessName, 0, "the generated-text path is not consulted at all");
+});
+
+test("F8. pdf-link with a body: server appends sentence + URL AFTER the operator text", async () => {
+  const body = "PDFリンク付きの本文です。";
+  const { deps, calls } = world();
+  const r = await runEstimateLineSend(withOrigin(deps), ESTIMATE_ID, {
+    kind: "confirmed-resend", mode: "pdf-link", messageBody: body,
+  });
+  assert.equal(r.kind, "sent");
+  const text = calls.sent[0].text;
+  assert.ok(text.startsWith(body), "operator text leads");
+  assert.ok(text.endsWith(SHARE.url), "the complete generated URL is appended last");
+  assert.equal(calls.loadBusinessName, 0);
+  assert.equal(calls.createShareLink, 1, "exactly one share for the valid case");
+});
+
+test("F9. without a messageBody the legacy generated text is unchanged (backward compatibility)", async () => {
+  const { deps, calls } = world();
+  await runEstimateLineSend(deps, ESTIMATE_ID, FIRST);
+  assert.equal(calls.loadBusinessName, 1, "legacy path still builds from persisted fields");
+  assert.ok(calls.sent[0].text.includes("【お見積書】EST-2026-0001"));
 });

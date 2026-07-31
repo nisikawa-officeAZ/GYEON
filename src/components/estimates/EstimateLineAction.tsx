@@ -16,11 +16,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type {
-  EstimateDeliveryMode,
-  EstimateLineResult,
-  EstimateResendAuthorization,
+import {
+  MAX_ESTIMATE_LINE_MESSAGE_LENGTH,
+  computeEstimateLinePdfReserve,
+  type EstimateDeliveryMode,
+  type EstimateLineResult,
+  type EstimateResendAuthorization,
 } from "@/lib/line/send-estimate-line-core";
+import { buildDefaultEstimateLineMessage } from "@/lib/line/estimate-line-default-message";
 import type { EstimateShareListItem } from "@/lib/estimates/estimate-share-types";
 import {
   listActiveEstimateShares,
@@ -107,6 +110,55 @@ export async function runEstimateLineAttempt(deps: EstimateLineAttemptDeps): Pro
   }
 }
 
+// ── F1-R1 pure helpers (edit / length / refresh) ────────────────────────────
+
+/**
+ * Resolve the share-URL origin CLIENT-side from the build-inlined
+ * NEXT_PUBLIC_APP_URL. Null when unresolvable — the client then falls back to
+ * the text-mode limit and the SERVER (which is authoritative) still rejects.
+ */
+export function resolveClientShareOrigin(raw: string | undefined | null): string | null {
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+  try {
+    return new URL(raw.trim()).origin;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The client-side UTF-16 limit for the operator body per mode. In pdf-link
+ * mode the server appends a block of exactly-known length, so the client limit
+ * subtracts the same reserve the server computes — it can never accept a body
+ * the server-composed PDF message would necessarily reject (under matching
+ * configuration; on divergence the server still rejects).
+ */
+export function computeClientBodyLimit(mode: EstimateDeliveryMode, origin: string | null): number {
+  if (mode === "pdf-link" && origin !== null) {
+    return MAX_ESTIMATE_LINE_MESSAGE_LENGTH - computeEstimateLinePdfReserve(origin);
+  }
+  return MAX_ESTIMATE_LINE_MESSAGE_LENGTH;
+}
+
+/** Body validity for the edit surface — UTF-16 units via string.length, no truncation. */
+export function validateEstimateLineBody(
+  body: string,
+  limit: number,
+): { readonly valid: boolean; readonly reason: "empty" | "too-long" | null } {
+  if (body.trim().length === 0) return { valid: false, reason: "empty" };
+  if (body.length > limit) return { valid: false, reason: "too-long" };
+  return { valid: true, reason: null };
+}
+
+/**
+ * Whether an outcome may have produced a line_message_logs row, and therefore
+ * whether the history card should refetch. Blocks/skips/resend prompts and
+ * pdf-unavailable provably wrote nothing, so they never trigger a refetch.
+ */
+export function shouldRefreshEstimateLineHistory(kind: EstimateLineResult["kind"]): boolean {
+  return kind === "sent" || kind === "failed" || kind === "unknown";
+}
+
 // ── Fixed operator-facing copy ──────────────────────────────────────────────
 
 // `skipped` carries no copyText — the message is never built for these outcomes —
@@ -122,6 +174,8 @@ const BLOCK_TEXT: Record<string, string> = {
   "no-access-token":          "LINEアクセストークンが設定されていません。",
   "invalid-request":          "送信要求が不正です。画面を再読み込みしてください。",
   "resend-check-unavailable": "送信済みかどうかを確認できなかったため、二重送信を避けて中止しました。時間をおいて再度お試しください。",
+  "message-empty":            "メッセージが空のため送信できません。本文を入力してください。",
+  "message-too-long":         "メッセージが長すぎるため送信できません。本文を短くしてください。",
 };
 
 const UNKNOWN_TEXT =
@@ -147,6 +201,8 @@ type Stage =
 
 export function EstimateLineAction({
   estimateId, estimateNumber, customerName, send,
+  dealerDisplayName = null,
+  onAttemptSettled,
   // Server Actions by default; overridable for tests.
   listShares = listActiveEstimateShares,
   revokeShare = revokeEstimateShare,
@@ -155,6 +211,10 @@ export function EstimateLineAction({
   estimateNumber: string;
   customerName: string;
   send: EstimateLineSender;
+  /** dealer_settings.business_name, server-resolved; null omits its template line. */
+  dealerDisplayName?: string | null;
+  /** Fired after outcomes that may have produced a history log row. */
+  onAttemptSettled?: () => void;
   listShares?: EstimateShareLister;
   revokeShare?: EstimateShareRevoker;
 }) {
@@ -163,6 +223,16 @@ export function EstimateLineAction({
   // The delivery mode chosen when the operator opened the flow. Carried through
   // the confirm and any resend prompt so a resend keeps the original mode.
   const [mode, setMode] = useState<EstimateDeliveryMode>("text");
+  // F1-R1 — the operator-editable message body. Initialized ONCE per mount from
+  // the single code-defined GYEON default; moving between edit, confirmation,
+  // mode selection and resend confirmation never re-runs this initializer, so
+  // an operator edit is never silently restored to the default.
+  const [editedBody, setEditedBody] = useState<string>(() =>
+    buildDefaultEstimateLineMessage({ customerName, estimateNumber, dealerDisplayName }),
+  );
+  const clientOrigin = resolveClientShareOrigin(process.env.NEXT_PUBLIC_APP_URL);
+  const bodyLimit = computeClientBodyLimit(mode, clientOrigin);
+  const bodyCheck = validateEstimateLineBody(editedBody, bodyLimit);
   // The persistent list of active share links, loaded on mount and refreshed
   // after every successful revoke.
   const [shares, setShares] = useState<EstimateShareListItem[]>([]);
@@ -184,15 +254,24 @@ export function EstimateLineAction({
   }, []);
 
   const attempt = useCallback((authorization: EstimateResendAuthorization) => {
+    // Fail-closed client gate: an empty or over-limit body never reaches the
+    // server (the proceed controls are disabled too — this guards bypasses).
+    const limit = computeClientBodyLimit(authorization.mode ?? "text", clientOrigin);
+    if (!validateEstimateLineBody(editedBody, limit).valid) return;
     void runEstimateLineAttempt({
       inFlight,
       estimateId,
-      authorization,
+      // The confirmed body rides the closed authorization union; recipient,
+      // dealer, tokens and URLs still have nowhere to enter.
+      authorization: { ...authorization, messageBody: editedBody },
       send,
       onSubmitting: () => setStage({ kind: "submitting" }),
-      onResult: (result) => setStage({ kind: "result", result }),
+      onResult: (result) => {
+        setStage({ kind: "result", result });
+        if (shouldRefreshEstimateLineHistory(result.kind)) onAttemptSettled?.();
+      },
     });
-  }, [estimateId, send]);
+  }, [estimateId, send, editedBody, clientOrigin, onAttemptSettled]);
 
   const btn = "text-xs font-medium px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50";
   const result = stage.kind === "result" ? stage.result : null;
@@ -234,10 +313,39 @@ export function EstimateLineAction({
             {customerName} さんの LINE に見積 {estimateNumber} を
             {stage.authorization.mode === "pdf-link" ? "PDFリンク付きで" : ""}送信します。よろしいですか？
           </p>
+          {/* F1-R1 — the message the customer receives, as a REAL editable value
+              (never a placeholder). This textarea IS the confirmation: the exact
+              body below is what will be sent (pdf-link additionally appends the
+              server-generated PDF sentence + link, noted underneath). */}
+          <textarea
+            data-testid="line-message-editor"
+            value={editedBody}
+            onChange={(e) => setEditedBody(e.target.value)}
+            rows={8}
+            className="mt-2 w-full rounded-md border border-slate-700 bg-slate-950/60 p-2 text-xs text-slate-200 whitespace-pre-wrap"
+          />
+          <div className="flex items-center justify-between mt-1">
+            <span data-testid="line-message-counter" className="text-[10px] text-slate-500">
+              {editedBody.length} / {bodyLimit}
+            </span>
+            {stage.authorization.mode === "pdf-link" && (
+              <span className="text-[10px] text-slate-500">
+                送信時にPDFリンクが自動で追記されます。
+              </span>
+            )}
+          </div>
+          {!bodyCheck.valid && (
+            <p data-testid="line-message-invalid" className="text-[11px] text-amber-300 mt-1">
+              {bodyCheck.reason === "empty"
+                ? "本文が空です。入力してください。"
+                : "本文が長すぎます。短くしてください。"}
+            </p>
+          )}
           <div className="flex gap-2 mt-2">
             <button
               type="button"
               data-testid="line-send-confirm"
+              disabled={!bodyCheck.valid}
               onClick={() => attempt(stage.authorization)}
               className={`${btn} bg-[#06c755] hover:bg-[#05b34c] text-white`}
             >

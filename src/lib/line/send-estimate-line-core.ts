@@ -27,31 +27,75 @@ import type { CreateShareOutcome, EstimateShareContext, PdfUnavailableReason } f
  */
 export type EstimateDeliveryMode = "text" | "pdf-link";
 
+// ── UTF-16 message-length accounting (GYEON-EST-LINE-F1-R1) ─────────────────
+//
+// The LINE push text limit is 5000 UTF-16 code units — exactly JavaScript
+// `string.length`. Counting code points, graphemes, or bytes here would either
+// over- or under-admit, so `.length` is the ONLY unit used, client and server.
+export const MAX_ESTIMATE_LINE_MESSAGE_LENGTH = 5000;
+
+/** The fixed sentence the server prepends to the share URL in pdf-link mode. */
+export const ESTIMATE_LINE_PDF_SENTENCE = "お見積書（PDF）は下記からご確認いただけます。";
+
+/** Share-URL path prefix — must match buildShareUrl in estimate-share-core. */
+export const ESTIMATE_LINE_SHARE_PATH_PREFIX = "/s/e/";
+
 /**
- * The operator's explicit intent. A closed union carrying NO recipient and NO
- * message data: the only thing a client may say is "I mean to send" / "I have
- * seen the prior send and mean to send again", plus an OPTIONAL delivery mode.
+ * Share-token length as a CLIENT-SAFE literal. estimate-share-core owns the
+ * authoritative SHARE_TOKEN_LENGTH but imports node:crypto, so this pure module
+ * (bundled into the operator UI) keeps its own literal; a drift test asserts the
+ * two constants and the real generator output all agree.
+ */
+export const ESTIMATE_LINE_SHARE_TOKEN_LENGTH = 43;
+
+/**
+ * EXACT UTF-16 reserve the server-appended PDF block adds to an operator body:
+ * "\n" + sentence + "\n" + origin + "/s/e/" + 43-char token. Exact — not a
+ * bound — because the token length is fixed by the share-token shape.
+ */
+export function computeEstimateLinePdfReserve(origin: string): number {
+  return 1 + ESTIMATE_LINE_PDF_SENTENCE.length + 1
+    + origin.length + ESTIMATE_LINE_SHARE_PATH_PREFIX.length
+    + ESTIMATE_LINE_SHARE_TOKEN_LENGTH;
+}
+
+/** Compose the final pdf-link message from the operator body and the share URL. */
+export function composeEstimateLinePdfMessage(body: string, shareUrl: string): string {
+  return `${body}\n${ESTIMATE_LINE_PDF_SENTENCE}\n${shareUrl}`;
+}
+
+/**
+ * The operator's explicit intent. A closed union carrying NO recipient: a client
+ * may say "I mean to send" / "I have seen the prior send and mean to send again",
+ * an OPTIONAL delivery mode, and (F1-R1) the OPTIONAL operator-edited message
+ * body. The body is customer-visible text only — recipient, dealer, tokens and
+ * URLs still have nowhere to enter.
  */
 export type EstimateResendAuthorization =
-  | { readonly kind: "first-send"; readonly mode?: EstimateDeliveryMode }
-  | { readonly kind: "confirmed-resend"; readonly mode?: EstimateDeliveryMode };
+  | { readonly kind: "first-send"; readonly mode?: EstimateDeliveryMode; readonly messageBody?: string }
+  | { readonly kind: "confirmed-resend"; readonly mode?: EstimateDeliveryMode; readonly messageBody?: string };
 
 /**
  * Structural validation — fails closed on anything outside the closed shape.
- * The only permitted keys are `kind` (required) and `mode` (optional); `mode`,
- * when present, must be one of the two delivery literals.
+ * Permitted keys are `kind` (required), `mode` (optional literal), and
+ * `messageBody` (optional string). Content rules for the body (empty / length)
+ * are enforced separately with their own typed reasons, so a structurally valid
+ * but unusable body never collapses into a generic invalid-request.
  */
 export function isEstimateResendAuthorization(value: unknown): value is EstimateResendAuthorization {
   if (typeof value !== "object" || value === null) return false;
   const keys = Object.keys(value as Record<string, unknown>);
   for (const k of keys) {
-    if (k !== "kind" && k !== "mode") return false;
+    if (k !== "kind" && k !== "mode" && k !== "messageBody") return false;
   }
   const kind = (value as { kind: unknown }).kind;
   if (kind !== "first-send" && kind !== "confirmed-resend") return false;
   if ("mode" in (value as Record<string, unknown>)) {
     const mode = (value as { mode: unknown }).mode;
     if (mode !== "text" && mode !== "pdf-link") return false;
+  }
+  if ("messageBody" in (value as Record<string, unknown>)) {
+    if (typeof (value as { messageBody: unknown }).messageBody !== "string") return false;
   }
   return true;
 }
@@ -77,7 +121,15 @@ export type EstimateLineBlockReason =
    * The duplicate-send preflight could not be answered. A read failure is NOT
    * evidence that nothing was sent, so it must never fall through to a send.
    */
-  | "resend-check-unavailable";
+  | "resend-check-unavailable"
+  /** F1-R1: the operator body was present but whitespace-only. Nothing was sent. */
+  | "message-empty"
+  /**
+   * F1-R1: the FINAL message (body, plus the server-appended PDF block in
+   * pdf-link mode) would exceed MAX_ESTIMATE_LINE_MESSAGE_LENGTH UTF-16 units.
+   * Rejected before any share creation or LINE call; text is never truncated.
+   */
+  | "message-too-long";
 
 export type EstimateLineResult =
   | { readonly kind: "sent" }
@@ -175,6 +227,15 @@ export interface EstimateLineCoreDeps {
    * made. The raw token lives only inside the returned `share.url`.
    */
   readonly createShareLink: (estimateId: string) => Promise<CreateShareOutcome>;
+
+  /**
+   * F1-R1, pdf-link prevalidation only: resolve the share-URL origin WITHOUT any
+   * side effect (the same env-derived origin createShareLink will use). Pure and
+   * synchronous so the length check can run BEFORE the share exists. Optional so
+   * legacy fixtures compile; when an operator body is present in pdf-link mode
+   * its absence fails CLOSED (invalid-app-url) rather than skipping the check.
+   */
+  readonly resolveShareOrigin?: () => string | null;
   /**
    * Performs the side-effecting send. Creates the pending log FIRST (requireLog),
    * then touches last_message_at, then calls LINE. May THROW for a network /
@@ -279,6 +340,31 @@ export async function runEstimateLineSend(
   const id = estimateId as string;
   // Absent mode is Phase-1 text — the default preserves existing behaviour.
   const mode: EstimateDeliveryMode = authorization.mode ?? "text";
+  // F1-R1: the operator-edited body, when supplied, replaces the generated base
+  // text. Its content rules are enforced HERE, before any dependency is touched,
+  // so an unusable body can never create a share, a log row, or a LINE call.
+  const operatorBody = authorization.messageBody;
+  if (operatorBody !== undefined) {
+    if (operatorBody.trim().length === 0) {
+      return { kind: "blocked", reason: "message-empty" };
+    }
+    if (mode === "text" && operatorBody.length > MAX_ESTIMATE_LINE_MESSAGE_LENGTH) {
+      return { kind: "blocked", reason: "message-too-long" };
+    }
+    if (mode === "pdf-link") {
+      // EXACT prevalidation: the appended block's length is fully determined by
+      // the origin + the fixed 43-char token, so the final message length is
+      // known BEFORE any share/document/Storage side effect exists. A missing
+      // origin resolver fails closed — never "skip the check".
+      const origin = deps.resolveShareOrigin ? deps.resolveShareOrigin() : null;
+      if (origin === null) {
+        return { kind: "pdf-unavailable", reason: "invalid-app-url" };
+      }
+      if (operatorBody.length + computeEstimateLinePdfReserve(origin) > MAX_ESTIMATE_LINE_MESSAGE_LENGTH) {
+        return { kind: "blocked", reason: "message-too-long" };
+      }
+    }
+  }
 
   // 2-3. The estimate is the only source of the customer.
   const estimate = await deps.loadEstimate(id);
@@ -320,14 +406,19 @@ export async function runEstimateLineSend(
     share = created.share;
   }
 
-  // 7. The text, from persisted fields only (+ the link in pdf-link mode).
-  const text = buildEstimateLineText({
-    estimateNumber: estimate.estimateNumber,
-    total: estimate.total,
-    validUntil: estimate.validUntil,
-    businessName: await deps.loadBusinessName(),
-    shareUrl: share?.url ?? null,
-  });
+  // 7. The text. With an operator body it is the body EXACTLY as confirmed
+  // (never truncated, never re-composed), plus — in pdf-link mode — the
+  // server-appended sentence and share URL whose length step 1 already
+  // accounted for. Without a body the legacy generated text is preserved.
+  const text = operatorBody !== undefined
+    ? (share ? composeEstimateLinePdfMessage(operatorBody, share.url) : operatorBody)
+    : buildEstimateLineText({
+        estimateNumber: estimate.estimateNumber,
+        total: estimate.total,
+        validUntil: estimate.validUntil,
+        businessName: await deps.loadBusinessName(),
+        shareUrl: share?.url ?? null,
+      });
 
   // 8. The single side effect.
   let outcome: EstimateLineTransportOutcome;
@@ -356,4 +447,52 @@ export async function runEstimateLineSend(
   }
 
   return { kind: "failed", message: ESTIMATE_LINE_SEND_FAILED_MESSAGE, copyText: text };
+}
+
+// ── Transmission-history projection (pure, client-safe) ─────────────────────
+//
+// The server-only reader (get-estimate-line-history.ts) maps raw log rows
+// through THIS whitelist projection before anything crosses the client
+// boundary. Fields are copied by NAME — line_user_id, line_customer_id, the
+// raw payload (share/document ids), error_message (may carry provider text)
+// and any credential material are not parameters of the output shape, so they
+// are unreachable rather than merely filtered.
+
+export type EstimateLineHistoryState = "sent" | "failed" | "pending" | "cancelled";
+
+export type EstimateLineHistoryRow = {
+  readonly id: string;
+  readonly state: EstimateLineHistoryState;
+  readonly mode: EstimateDeliveryMode | null;
+  /** The persisted final customer-visible text (token-redacted at write time in pdf-link mode). */
+  readonly body: string;
+  readonly createdAt: string | null;
+  readonly sentAt: string | null;
+};
+
+const HISTORY_STATES: readonly EstimateLineHistoryState[] = ["sent", "failed", "pending", "cancelled"];
+
+/** Project one raw log row to the safe client shape, or null when unprojectable. */
+export function projectEstimateLineHistoryRow(raw: unknown): EstimateLineHistoryRow | null {
+  if (typeof raw !== "object" || raw === null) return null;
+  const r = raw as {
+    id?: unknown; status?: unknown; body?: unknown;
+    payload?: unknown; created_at?: unknown; sent_at?: unknown;
+  };
+  if (typeof r.id !== "string" || r.id === "") return null;
+  if (typeof r.status !== "string" || !HISTORY_STATES.includes(r.status as EstimateLineHistoryState)) return null;
+  const metadata = (typeof r.payload === "object" && r.payload !== null)
+    ? (r.payload as { metadata?: unknown }).metadata
+    : null;
+  const rawMode = (typeof metadata === "object" && metadata !== null)
+    ? (metadata as { mode?: unknown }).mode
+    : null;
+  return {
+    id: r.id,
+    state: r.status as EstimateLineHistoryState,
+    mode: rawMode === "text" || rawMode === "pdf-link" ? rawMode : null,
+    body: typeof r.body === "string" ? r.body : "",
+    createdAt: typeof r.created_at === "string" ? r.created_at : null,
+    sentAt: typeof r.sent_at === "string" ? r.sent_at : null,
+  };
 }
