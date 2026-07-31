@@ -77,7 +77,7 @@ test("1. the host requires catalog + pricingConfig (WizardHostRuntimeInputs, no 
   // exact-five-field destructure assertion is obsolete. These checks replace it
   // WITHOUT weakening what it protected — every runtime input is still required,
   // and none may acquire a default.
-  assert.match(code, /EstimateWizardProps\s*\n?\s*extends WizardHostRuntimeInputs, WizardExistingEntityInputs, WizardPreselectionInputs/,
+  assert.match(code, /EstimateWizardProps\s+extends\s+WizardHostRuntimeInputs\s*,\s*WizardExistingEntityInputs\s*,\s*WizardPreselectionInputs\b/,
     "props compose the host runtime, entity and preselection contracts");
   // ── The no-default guard is scoped to the PARAMETER DESTRUCTURING ONLY ────
   //

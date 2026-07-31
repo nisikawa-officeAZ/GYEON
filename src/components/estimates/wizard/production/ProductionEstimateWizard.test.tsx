@@ -585,7 +585,7 @@ test("32. the public props contain no session, deps, completion or navigation se
       `${forbidden} is not constructible by a Server Component and must not be public`);
   }
   // What must remain.
-  assert.match(block, /extends WizardHostRuntimeInputs, WizardExistingEntityInputs, WizardPreselectionInputs/);
+  assert.match(block, /extends\s+WizardHostRuntimeInputs\s*,\s*WizardExistingEntityInputs\s*,\s*WizardPreselectionInputs\b/);
   assert.match(block, /readonly saveInvoker: WizardSaveIntentInvoker;/, "required saver");
   assert.match(block, /readonly expectedConfigRevision: number;/, "required revision");
   assert.equal(/saveInvoker\?:|expectedConfigRevision\?:/.test(block), false, "neither may be optional");
