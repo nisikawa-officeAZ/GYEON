@@ -10,6 +10,7 @@
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse }      from "next/server";
 import { createClient }      from "@/lib/supabase/server";
+import { claimGyeonProvisioning } from "@/lib/dealer/claim-gyeon-provisioning";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,18 @@ export async function GET(request: Request) {
       const { error } = await supabase.auth.verifyOtp({ type, token_hash });
 
       if (!error) {
+        // GYEON partner onboarding: the email-verification boundary is a claim
+        // convergence point (signup confirmations AND accepted invites). The
+        // claim is gate-guarded, session-derived, idempotent, and fail-closed —
+        // every non-eligible outcome leaves the existing flow untouched.
+        let claimedGyeonProvisioning = false;
+        try {
+          const claim = await claimGyeonProvisioning();
+          claimedGyeonProvisioning = claim.kind === "claimed";
+        } catch (claimErr) {
+          console.error("[auth/confirm] gyeon claim error:", claimErr);
+        }
+
         if (type === "recovery" || type === "invite") {
           // Password reset, and invite acceptance — both need the reset form.
           //
@@ -36,6 +49,11 @@ export async function GET(request: Request) {
           // updateUser({ password }). Sending them there is what makes the invite an onboarding
           // rather than a dead end.
           return NextResponse.redirect(`${origin}/reset-password`);
+        }
+        if (claimedGyeonProvisioning) {
+          // Freshly claimed: the owner membership is 'invited' — the shop
+          // profile is the only surface until activation.
+          return NextResponse.redirect(`${origin}/shop-profile`);
         }
         return NextResponse.redirect(`${origin}${next ?? "/"}`);
       }

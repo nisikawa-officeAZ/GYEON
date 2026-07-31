@@ -5,6 +5,7 @@ import Link        from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { createPendingDealer } from "@/lib/dealer/create-pending-dealer";
+import { claimGyeonProvisioning } from "@/lib/dealer/claim-gyeon-provisioning";
 import { checkEmailAccountState } from "@/lib/dealer/check-email-account-state";
 import Brand from "@/components/ui/Brand";
 
@@ -143,6 +144,24 @@ export default function SignUpPage() {
       }
 
       const needsConfirmation = !data.session;
+
+      // GYEON partner onboarding: with an auto-confirmed session (dev,
+      // confirmations off) the verification boundary is already crossed, so
+      // converge the pre-provisioned claim here. Gate-guarded, session-derived,
+      // idempotent — any non-claimed outcome falls through to the existing
+      // pending screen unchanged.
+      if (!needsConfirmation) {
+        try {
+          const claim = await claimGyeonProvisioning();
+          if (claim.kind === "claimed") {
+            router.push("/shop-profile");
+            return;
+          }
+        } catch {
+          // fall through to the standard pending screen
+        }
+      }
+
       router.push(`/signup/pending?confirm=${needsConfirmation ? "1" : "0"}`);
     } catch {
       setError("予期しないエラーが発生しました。再度お試しください。");

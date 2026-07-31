@@ -5,6 +5,9 @@
 import { redirect }        from "next/navigation";
 import { getCurrentUser }  from "@/lib/auth/get-current-user";
 import { createClient }    from "@/lib/supabase/server";
+import { createAdminClient }        from "@/lib/supabase/admin";
+import { claimGyeonProvisioning }   from "@/lib/dealer/claim-gyeon-provisioning";
+import { isGyeonPartnerOnboardingEnabled } from "@/lib/gyeon/partner-onboarding-enabled";
 import LogoutButton        from "@/components/auth/LogoutButton";
 import Brand               from "@/components/ui/Brand";
 
@@ -15,6 +18,41 @@ export default async function NoDealerPage() {
   // If somehow an unauthenticated user lands here, send them to login
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+
+  // GYEON partner onboarding: /no-dealer is the guaranteed sink for every
+  // verified user without an active membership, so it is the normal-login
+  // claim convergence point — a CSV-matched applicant or an invited shop
+  // owner converges here in ANY later session without re-verification.
+  //
+  // F2-08 SaaS isolation: EVERYTHING below is inside the server-only feature
+  // gate. With GYEON_PARTNER_ONBOARDING_ENABLED not exactly "true", this page
+  // runs its original behavior byte-for-byte — no claim, no admin client, no
+  // invited-membership lookup, and no /shop-profile redirect. Because
+  // /shop-profile itself redirects BACK to /no-dealer when the gate is off,
+  // gating the only /no-dealer → /shop-profile edge here makes the SaaS
+  // redirect loop structurally impossible.
+  if (isGyeonPartnerOnboardingEnabled()) {
+    if (user.email_confirmed_at) {
+      try {
+        await claimGyeonProvisioning();
+      } catch {
+        // Non-eligible/errored claims keep the existing no-dealer behavior.
+      }
+    }
+
+    // A claimed-but-not-activated owner (membership 'invited') belongs on the
+    // dedicated shop-profile surface, never on the waiting screen.
+    const adminDb = createAdminClient();
+    const { data: invitedMembership } = await adminDb
+      .from("dealer_members")
+      .select("dealer_id")
+      .eq("user_id", user.id)
+      .eq("role", "owner")
+      .eq("status", "invited")
+      .limit(1)
+      .maybeSingle();
+    if (invitedMembership) redirect("/shop-profile");
+  }
 
   // Detect whether the user belongs to a suspended dealer.
   // suspendDealer() sets dealer_members.status = 'suspended', so querying here

@@ -5,6 +5,16 @@ import { approveDealerTrial, rejectDealer, suspendDealer, reactivateDealer, dele
 import DealerDetailPanel from "./DealerDetailPanel";
 import type { DealerAdminView } from "@/lib/admin/admin-types";
 import { DEALER_RANKS, DEALER_RANK_VALUES, normalizeRank, rankLabelOrDash, DEFAULT_DEALER_RANK } from "@/lib/ranks/dealer-ranks";
+import {
+  listGyeonProvisioning,
+  createGyeonProvisioning,
+  sendGyeonProvisioningInvite,
+  resendGyeonProvisioningInvite,
+  reconcileGyeonProvisioningInvite,
+  revokeGyeonProvisioning,
+} from "@/lib/admin/gyeon-provisioning-actions";
+import { dryRunGyeonProvisioningCsv, confirmGyeonProvisioningCsv } from "@/lib/admin/gyeon-provisioning-csv";
+import { GYEON_PROVISIONING_RANKS, type GyeonProvisioningAdminRow } from "@/lib/admin/gyeon-provisioning-csv-core";
 
 type StatusFilter = "all" | "pending" | "approved" | "rejected" | "suspended";
 type PlanFilter   = "all" | "basic" | "pro" | "pro_plus";
@@ -599,6 +609,258 @@ function DetailModal({ dealer, onClose }: { dealer: DealerAdminView; onClose: ()
   );
 }
 
+// ── GYEON Partner Provisioning Panel (super_admin + server gate only) ─────────
+// The panel exists ONLY when the server passed partnerOnboarding=true (the
+// server-only GYEON_PARTNER_ONBOARDING_ENABLED gate + super_admin); every
+// action re-validates both server-side, so this rendering flag is UX, never
+// authorization.
+
+function provisioningStateLabel(row: GyeonProvisioningAdminRow): { text: string; cls: string } {
+  if (row.provisioningStatus === "claimed") return { text: "有効化済み", cls: "text-green-300 bg-green-900/30 border-green-700/40" };
+  if (row.provisioningStatus === "revoked") return { text: "取消済み", cls: "text-red-300 bg-red-900/30 border-red-700/40" };
+  switch (row.invitationState) {
+    case "none":          return { text: "未招待", cls: "text-slate-400 bg-slate-800/60 border-slate-700/40" };
+    case "pending":       return { text: "送信結果未確認", cls: "text-amber-300 bg-amber-900/30 border-amber-700/40" };
+    case "sent":          return { text: "招待送信済み", cls: "text-sky-300 bg-sky-900/30 border-sky-700/40" };
+    case "failed":        return { text: "送信失敗", cls: "text-red-300 bg-red-900/30 border-red-700/40" };
+    case "awaiting_claim": return { text: "既存アカウント（ログイン待ち）", cls: "text-violet-300 bg-violet-900/30 border-violet-700/40" };
+  }
+}
+
+function GyeonProvisioningPanel({ initialRows }: { initialRows: GyeonProvisioningAdminRow[] }) {
+  const [rows, setRows] = useState<GyeonProvisioningAdminRow[]>(initialRows);
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [busy, startBusy] = useTransition();
+
+  // Single create
+  const [newEmail, setNewEmail] = useState("");
+  const [newShop, setNewShop] = useState("");
+  const [newRank, setNewRank] = useState<string>("shop");
+  const [newCode, setNewCode] = useState("");
+
+  // CSV import
+  const [csvText, setCsvText] = useState("");
+  const [csvPreview, setCsvPreview] = useState<string | null>(null);
+
+  const say = (text: string, type: "success" | "error") => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 6000);
+  };
+
+  const refresh = async () => {
+    const result = await listGyeonProvisioning();
+    if (result.kind === "ok") setRows(result.rows);
+  };
+
+  const handleCreate = () => {
+    startBusy(async () => {
+      const result = await createGyeonProvisioning({
+        email: newEmail, shopName: newShop, detailerRank: newRank, dealerCode: newCode,
+      });
+      if (result.kind === "created") {
+        setNewEmail(""); setNewShop(""); setNewCode("");
+        say("登録しました（招待は未送信です）", "success");
+        await refresh();
+      } else if (result.kind === "conflict") {
+        say("同じメールまたはコードの登録が既に存在します", "error");
+      } else if (result.kind === "invalid-input") {
+        say(result.reasonJa, "error");
+      } else {
+        say("登録に失敗しました", "error");
+      }
+    });
+  };
+
+  const handleDryRun = () => {
+    startBusy(async () => {
+      const result = await dryRunGyeonProvisioningCsv(csvText);
+      if (result.kind === "ok") {
+        setCsvPreview(
+          `検証OK: ${result.rows.length}件` +
+          (result.conflicts.length > 0
+            ? ` / 競合 ${result.conflicts.length}件: ${result.conflicts.map((c) => c.email).join(", ")}`
+            : " / 競合なし"),
+        );
+      } else if (result.kind === "invalid") {
+        setCsvPreview(`エラー ${result.errors.length}件: ` + result.errors.slice(0, 5).map((e) => `行${e.rowNumber} ${e.code}`).join(", "));
+      } else {
+        setCsvPreview("検証に失敗しました");
+      }
+    });
+  };
+
+  const handleImport = () => {
+    startBusy(async () => {
+      const result = await confirmGyeonProvisioningCsv(csvText);
+      if (result.kind === "imported") {
+        setCsvText(""); setCsvPreview(null);
+        say(`${result.count}件を取り込みました（招待は未送信です）`, "success");
+        await refresh();
+      } else if (result.kind === "conflict") {
+        say(`競合のため全件中止: ${result.conflicts.map((c) => c.email).join(", ")}`, "error");
+      } else if (result.kind === "invalid") {
+        say("CSVにエラーがあります。検証結果を確認してください", "error");
+      } else {
+        say("取り込みに失敗しました", "error");
+      }
+    });
+  };
+
+  const runRowAction = (
+    label: string,
+    fn: () => Promise<{ kind: string }>,
+  ) => {
+    startBusy(async () => {
+      const result = await fn();
+      if (["sent", "awaiting-claim", "revoked", "settled-sent", "settled-awaiting-claim", "settled-failed"].includes(result.kind)) {
+        say(`${label}: 完了（${result.kind}）`, "success");
+      } else if (result.kind === "uncertain") {
+        say(`${label}: 送信結果を確認できませんでした。「状態照合」で確定してください（自動再送はされません）`, "error");
+      } else if (result.kind === "failed") {
+        say(`${label}: 送信失敗として記録しました（再送可能）`, "error");
+      } else if (result.kind === "reconcile-required") {
+        say(`${label}: 先に「状態照合」で結果を確定してください`, "error");
+      } else {
+        say(`${label}: 実行できませんでした（${result.kind}）`, "error");
+      }
+      await refresh();
+    });
+  };
+
+  return (
+    <div className="space-y-2 pt-2" data-testid="gyeon-provisioning-panel">
+      <h2 className="text-sm font-semibold text-slate-300">
+        GYEONパートナー事前登録 {rows.length}件
+      </h2>
+      <p className="text-[11px] text-slate-600">
+        登録済みメールでの本人認証（メール確認）完了時に自動で店舗が有効化されます。
+        取り込み・登録だけでは招待メールは送信されません。招待は行ごとに明示的に送信します。
+      </p>
+
+      {message && (
+        <p className={`text-xs ${message.type === "success" ? "text-green-300" : "text-red-300"}`} role="status">
+          {message.text}
+        </p>
+      )}
+
+      {/* Single create */}
+      <div className="bg-[#0b1120] border border-slate-800 rounded-xl p-4 flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-slate-500">代表者メール</label>
+          <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+            className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 w-52" placeholder="owner@example.com" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-slate-500">店舗名</label>
+          <input value={newShop} onChange={(e) => setNewShop(e.target.value)}
+            className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 w-44" placeholder="GYEON ○○" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-slate-500">ランク</label>
+          <select value={newRank} onChange={(e) => setNewRank(e.target.value)}
+            className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200">
+            {GYEON_PROVISIONING_RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-slate-500">ディーラーコード（任意）</label>
+          <input value={newCode} onChange={(e) => setNewCode(e.target.value)}
+            className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 w-32" />
+        </div>
+        <button onClick={handleCreate} disabled={busy}
+          className="text-xs px-3 py-1.5 bg-blue-900/40 hover:bg-blue-800/50 text-blue-300 rounded transition-colors disabled:opacity-50">
+          店舗を登録
+        </button>
+      </div>
+
+      {/* CSV import */}
+      <div className="bg-[#0b1120] border border-slate-800 rounded-xl p-4 space-y-2">
+        <label className="text-[10px] text-slate-500">
+          CSV取込（ヘッダー: representative_email, shop_name, detailer_rank, dealer_code任意）
+        </label>
+        <textarea value={csvText} onChange={(e) => setCsvText(e.target.value)} rows={4}
+          className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 font-mono"
+          placeholder={"representative_email,shop_name,detailer_rank,dealer_code\nowner@example.com,GYEON ○○,shop,GY-001"} />
+        {csvPreview && <p className="text-[11px] text-slate-400">{csvPreview}</p>}
+        <div className="flex gap-2">
+          <button onClick={handleDryRun} disabled={busy || csvText.trim() === ""}
+            className="text-xs px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition-colors disabled:opacity-50">
+            検証（書き込みなし）
+          </button>
+          <button onClick={handleImport} disabled={busy || csvText.trim() === ""}
+            className="text-xs px-3 py-1.5 bg-blue-900/40 hover:bg-blue-800/50 text-blue-300 rounded transition-colors disabled:opacity-50">
+            取込確定
+          </button>
+        </div>
+      </div>
+
+      {/* Rows */}
+      <div className="bg-[#0b1120] border border-slate-800 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-slate-800">
+                {["メール", "店舗名", "ランク", "コード", "状態", "操作"].map((h) => (
+                  <th key={h} className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/40">
+              {rows.length === 0 ? (
+                <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-600">事前登録はまだありません</td></tr>
+              ) : rows.map((row) => {
+                const badge = provisioningStateLabel(row);
+                const registered = row.provisioningStatus === "registered";
+                return (
+                  <tr key={row.id} className="hover:bg-slate-800/20 transition-colors">
+                    <td className="px-4 py-3 text-slate-300">{row.emailNormalized}</td>
+                    <td className="px-4 py-3 text-slate-300">{row.shopName}</td>
+                    <td className="px-4 py-3 text-slate-400">{row.detailerRank}</td>
+                    <td className="px-4 py-3 text-slate-500">{row.dealerCode ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block text-[10px] px-2 py-0.5 rounded border ${badge.cls}`}>{badge.text}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {registered && row.invitationState === "none" && (
+                          <button onClick={() => runRowAction("招待送信", () => sendGyeonProvisioningInvite(row.id))} disabled={busy}
+                            className="text-[10px] px-2 py-1 bg-blue-900/40 hover:bg-blue-800/50 text-blue-300 rounded transition-colors disabled:opacity-50">
+                            招待送信
+                          </button>
+                        )}
+                        {registered && (row.invitationState === "failed" || row.invitationState === "sent") && (
+                          <button onClick={() => runRowAction("再送", () => resendGyeonProvisioningInvite(row.id))} disabled={busy}
+                            className="text-[10px] px-2 py-1 bg-blue-900/40 hover:bg-blue-800/50 text-blue-300 rounded transition-colors disabled:opacity-50">
+                            再送
+                          </button>
+                        )}
+                        {registered && row.invitationState === "pending" && (
+                          <button onClick={() => runRowAction("状態照合", () => reconcileGyeonProvisioningInvite(row.id))} disabled={busy}
+                            className="text-[10px] px-2 py-1 bg-amber-900/40 hover:bg-amber-800/50 text-amber-300 rounded transition-colors disabled:opacity-50">
+                            状態照合
+                          </button>
+                        )}
+                        {registered && (
+                          <button onClick={() => runRowAction("取消", () => revokeGyeonProvisioning(row.id))} disabled={busy}
+                            className="text-[10px] px-2 py-1 bg-red-900/40 hover:bg-red-800/50 text-red-300 rounded transition-colors disabled:opacity-50">
+                            取消
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 interface Props {
@@ -606,9 +868,11 @@ interface Props {
   archived: DealerAdminView[];
   protectedOwnerIds: string[];
   callerRole: string;
+  partnerOnboarding?: boolean;
+  provisioning?: GyeonProvisioningAdminRow[] | null;
 }
 
-export default function DealersAdminClient({ dealers: initial, archived: initialArchived, protectedOwnerIds, callerRole }: Props) {
+export default function DealersAdminClient({ dealers: initial, archived: initialArchived, protectedOwnerIds, callerRole, partnerOnboarding = false, provisioning = null }: Props) {
   const isReadOnly = callerRole === "logistics_admin";
   const isSuperAdmin = callerRole === "super_admin";
 
@@ -1085,6 +1349,11 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
           </table>
         </div>
       </div>
+
+      {/* ── GYEON partner provisioning (server gate + super_admin only) ── */}
+      {isSuperAdmin && partnerOnboarding && provisioning !== null && (
+        <GyeonProvisioningPanel initialRows={provisioning} />
+      )}
 
       {/* ── Archived (soft-deleted) dealers — restore path (super_admin only) ── */}
       {isSuperAdmin && archived.length > 0 && (
