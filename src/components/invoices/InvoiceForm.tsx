@@ -7,7 +7,6 @@ import {
   InvoiceCategory,
   InvoiceItemInput,
   INVOICE_CATEGORIES,
-  INVOICE_STATUSES,
   calculateInvoiceTotals,
   lineTotal,
   invoiceDisplayNo,
@@ -164,7 +163,6 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
     const fd = new FormData();
     if (workOrderId) fd.set("work_order_id", workOrderId);
     fd.set("invoice_number",  form.invoice_number);
-    fd.set("status",          form.status);
     fd.set("title",           form.title);
     fd.set("issue_date",      form.issue_date);
     fd.set("due_date",        form.due_date);
@@ -228,15 +226,9 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="flex flex-col gap-1">
-          <label className={labelClass}>ステータス</label>
-          <select value={form.status} onChange={(e) => setField("status", e.target.value as InvoiceStatus)}
-            className={inputClass}>
-            {INVOICE_STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-        </div>
+        {/* B1: status is not user-selectable. A form always saves a draft;
+            issuance happens through 請求書を発行, which produces the immutable
+            PDF first, and payments own the later lifecycle states. */}
         <div className="flex flex-col gap-1">
           <label className={labelClass}>発行日</label>
           <input type="date" value={form.issue_date} onChange={(e) => setField("issue_date", e.target.value)}

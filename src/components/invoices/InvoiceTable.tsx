@@ -134,12 +134,16 @@ export default function InvoiceTable({
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onEdit(inv); }}
-                      className="text-slate-500 hover:text-slate-100 text-xs hover:bg-slate-700 px-2 py-1 rounded transition-colors"
-                    >
-                      編集
-                    </button>
+                    {/* B1: an issued invoice is a commercial record — edit is
+                        offered only while it is still a draft. */}
+                    {inv.status === "draft" && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onEdit(inv); }}
+                        className="text-slate-500 hover:text-slate-100 text-xs hover:bg-slate-700 px-2 py-1 rounded transition-colors"
+                      >
+                        編集
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

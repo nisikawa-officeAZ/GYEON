@@ -50,6 +50,8 @@ export interface InvoiceDB {
   balance_due:          number;
   notes:                string | null;
   internal_memo:        string | null;
+  /** Server-owned content snapshot marker; advances on any PDF-rendered change. */
+  content_version:      number;
   pdf_file_path:        string | null;
   pdf_file_url:         string | null;
   deleted_at:           string | null;

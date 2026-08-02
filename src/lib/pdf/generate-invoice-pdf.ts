@@ -1,86 +1,42 @@
 "use server";
 
-import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { InvoiceDB } from "@/lib/invoices/invoice-types";
-import { renderInvoicePdf } from "./templates/invoice-pdf";
-import { getDealerStampForPdf } from "./get-dealer-stamp";
-import { getDealerBranding } from "./dealer-branding";
-import { generateAndUploadPdf } from "./generate-pdf-and-upload";
-import { createActivityLog } from "@/lib/activity/activity-log";
-import { createNotification } from "@/lib/notifications/notification";
-import { createAuditLog } from "@/lib/audit/audit";
+// DEALEROS-ESTIMATE-INVOICE-PDF-B1 — compatibility wrapper, no longer a generator.
+//
+// This module used to render an invoice and upload it through
+// `generateAndUploadPdf`, which writes a STABLE key with `upsert: true`. That
+// meant regenerating an invoice silently replaced the bytes a customer had
+// already been sent, and archived `document_files` rows ended up pointing at
+// content that no longer matched them.
+//
+// Issuance now belongs to `issueInvoice`, which writes a UUID-keyed object with
+// `upsert: false` and flips the invoice out of draft only after the artifact
+// exists. This wrapper delegates so that no callable invoice path retains the
+// overwrite behaviour, while keeping the old call signature working.
+
+import { issueInvoice, getIssuedInvoicePdfUrl } from "@/lib/invoices/issue-invoice";
 
 export async function generateInvoicePdf(
   invoiceId: string
 ): Promise<{ success: boolean; signedUrl?: string; error?: string }> {
-  const dealer = await getCurrentDealer();
-  if (!dealer) return { success: false, error: "認証エラー" };
+  const result = await issueInvoice(invoiceId);
 
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("invoices")
-    .select(`
-      *,
-      customers    ( last_name, first_name, phone, email ),
-      vehicles     ( maker, model, year, grade, plate_number, color ),
-      estimates    ( estimate_number, title, total ),
-      work_orders  ( work_order_number, title, status ),
-      invoice_items ( * )
-    `)
-    .eq("id", invoiceId)
-    .eq("dealer_id", dealer.dealer_id)
-    .single();
-
-  if (error || !data) {
-    return { success: false, error: "請求書データの取得に失敗しました" };
+  switch (result.kind) {
+    case "issued":
+    case "already_issued":
+      return { success: true, signedUrl: result.signedUrl };
+    default:
+      return { success: false, error: result.message };
   }
+}
 
-  const invoice = data as InvoiceDB;
+/** Download-only helper: re-signs the existing artifact, never regenerates it. */
+export async function getInvoicePdfUrl(
+  invoiceId: string
+): Promise<{ success: boolean; signedUrl?: string; error?: string }> {
+  const result = await getIssuedInvoicePdfUrl(invoiceId);
 
-  const stamp = await getDealerStampForPdf(dealer.dealer_id);
-  const branding = await getDealerBranding(dealer.dealer_id);
-
-  let pdfBuffer: Buffer;
-  try {
-    pdfBuffer = await renderInvoicePdf(invoice, stamp, branding);
-  } catch (err) {
-    return (console.error("[pdf] render failed:", err), { success: false, error: "PDFの生成に失敗しました。時間をおいて再度お試しください。" });
+  if (result.kind === "issued" || result.kind === "already_issued") {
+    return { success: true, signedUrl: result.signedUrl };
   }
-
-  const documentNumber =
-    invoice.invoice_number ?? `INV-${invoiceId.slice(0, 8).toUpperCase()}`;
-
-  const result = await generateAndUploadPdf({
-    dealerId:       dealer.dealer_id,
-    documentType:   "invoice",
-    documentId:     invoiceId,
-    documentNumber,
-    pdfBuffer,
-  });
-
-  if (!result.success) return { success: false, error: result.error };
-
-  void createActivityLog({
-    entity_type: "document_file",
-    entity_id:   invoiceId,
-    customer_id: (invoice.customers as unknown as { id?: string } | null)?.id ?? null,
-    action:      "generated_pdf",
-    title:       `請求書PDFを生成: ${documentNumber}`,
-  });
-
-  void createNotification({
-    type:    "success",
-    title:   "PDFを生成しました",
-    message: documentNumber,
-  });
-
-  void createAuditLog({
-    action: "generate_pdf",
-    resource_type: "document",
-    resource_id: invoiceId,
-    new_value: { document_type: "invoice", number: invoice.invoice_number },
-  });
-
-  return { success: true, signedUrl: result.signedUrl };
+  return { success: false, error: result.message };
 }

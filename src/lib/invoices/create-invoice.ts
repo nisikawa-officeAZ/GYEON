@@ -71,7 +71,10 @@ export async function createInvoice(fd: FormData): Promise<{ error: string } | {
       work_order_id,
       completion_report_id,
       invoice_number:       resolvedInvoiceNumber,
-      status:               (fd.get("status") as string) || "draft",
+      // B1: a new invoice is ALWAYS a draft. Leaving draft requires issueInvoice,
+      // which produces the immutable PDF artifact first, so a client-supplied
+      // status can never manufacture an "issued" invoice with no document.
+      status:               "draft",
       title:                (fd.get("title") as string) || null,
       issue_date:           (fd.get("issue_date") as string) || null,
       due_date:             (fd.get("due_date") as string) || null,
