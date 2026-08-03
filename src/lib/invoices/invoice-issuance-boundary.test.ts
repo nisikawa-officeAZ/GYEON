@@ -1179,3 +1179,95 @@ test("89. ordered history leaves the successor as the final documents-policy def
     "exactly two migrations define the policies, and the fail-closed one is last"
   );
 });
+
+// ── B1-LIVE-E1-R1: issued state reaches the UI without a reload ──────────────
+
+const CLIENT = read("src/components/invoices/InvoicesClient.tsx");
+
+test("90. the issue action exposes a success callback and fires it only on a real issuance", () => {
+  assert.match(ACTIONS, /export type IssueSuccessKind = "issued" \| "already_issued"/);
+  assert.match(ACTIONS, /onIssued\?: \(kind: IssueSuccessKind\) => void/);
+  // Fired inside the success branch, gated on the ISSUE action...
+  assert.match(
+    ACTIONS,
+    /if \(result\.kind === "issued" \|\| result\.kind === "already_issued"\)[\s\S]{0,320}?if \(action === "issue"\) onIssued\?\.\(result\.kind\)/
+  );
+  // ...and never from the failure path.
+  const failTail = ACTIONS.slice(ACTIONS.indexOf("setError(result.message)"));
+  assert.ok(!/onIssued/.test(failTail), "a failed issuance must not report an issued state");
+  const calls = ACTIONS.match(/onIssued\?\.\(/g) ?? [];
+  assert.equal(calls.length, 1, "exactly one invocation site");
+});
+
+test("91. a download never mutates issuance state, and the signed link survives the switch", () => {
+  const successBlock = ACTIONS.slice(
+    ACTIONS.indexOf('if (result.kind === "issued"'),
+    ACTIONS.indexOf("setError(result.message)")
+  );
+  assert.ok(successBlock.length > 60, "the success branch must be present");
+  const urlAt = successBlock.indexOf("setSignedUrl(result.signedUrl)");
+  const cbAt = successBlock.indexOf("onIssued?.(");
+  assert.ok(urlAt >= 0 && cbAt > urlAt, "the signed URL is stored BEFORE the state switch");
+  // The link renders off signedUrl alone, so switching controls cannot remove it.
+  assert.match(ACTIONS, /\{signedUrl && \(/);
+  assert.match(ACTIONS, /PDFを開く/);
+});
+
+test("92. the detail view flips to issued immediately and then reconciles canonically", () => {
+  assert.match(DETAIL, /onInvoiceChange\?: \(invoice: InvoiceDB\) => void/);
+  assert.match(DETAIL, /function handleIssued\(\)/);
+  assert.match(DETAIL, /const optimistic: InvoiceDB = \{ \.\.\.invoiceData, status: "issued" \}/);
+  assert.match(DETAIL, /setInvoiceData\(optimistic\)/);
+  assert.match(DETAIL, /onInvoiceChange\?\.\(optimistic\)/);
+  // Canonical re-read AFTER the optimistic transition, replacing the row.
+  const at = DETAIL.indexOf("const optimistic");
+  const fetchAt = DETAIL.indexOf("getInvoice(inv.id)", at);
+  assert.ok(fetchAt > at, "the canonical fetch follows the optimistic transition");
+  assert.match(DETAIL, /setInvoiceData\(canonical\)/);
+  assert.match(DETAIL, /onInvoiceChange\?\.\(canonical\)/);
+  // A failed refresh must not revert a server-confirmed issuance.
+  const tail = DETAIL.slice(fetchAt);
+  assert.match(tail, /\.catch\(\(\) => \{/);
+  assert.ok(!/status: "draft"/.test(tail), "nothing may push the view back to draft");
+  assert.match(DETAIL, /onIssued=\{handleIssued\}/);
+});
+
+test("93. the detail renders status, title and money from invoiceData, not the stale prop", () => {
+  assert.match(DETAIL, /STATUS_BADGE\[invoiceData\.status\]/);
+  assert.match(DETAIL, /invoiceStatusLabel\(invoiceData\.status\)/);
+  assert.match(DETAIL, /invoiceDisplayNo\(invoiceData\)/);
+  assert.match(DETAIL, /const isDraft = invoiceData\.status === "draft"/);
+  for (const field of ["subtotal", "tax_amount", "total", "balance_due", "discount_amount", "paid_amount"]) {
+    assert.ok(
+      !new RegExp(`formatYen\\(inv\\.${field}\\)`).test(DETAIL),
+      `${field} must render from invoiceData`
+    );
+  }
+  assert.ok(!/STATUS_BADGE\[inv\.status\]/.test(DETAIL));
+  assert.ok(!/invoiceStatusLabel\(inv\.status\)/.test(DETAIL));
+  // Payment progress is derived state: reading it from the stale prop could show
+  // refreshed paid/balance amounts next to an unrefreshed percentage and bar.
+  const progressCalls = DETAIL.match(/paymentProgress\([a-zA-Z.]+\)/g) ?? [];
+  assert.equal(progressCalls.length, 2, "the percentage and the bar width");
+  for (const call of progressCalls) {
+    assert.equal(call, "paymentProgress(invoiceData)", "progress must read live state");
+  }
+  assert.ok(!/paymentProgress\(inv\)/.test(DETAIL), "the stale-prop form must be gone");
+  // Edit and issue controls are gated on the LIVE state.
+  assert.match(DETAIL, /\{isDraft && \(/);
+  assert.match(DETAIL, /status=\{invoiceData\.status\}/);
+});
+
+test("94. the list replaces the changed row in place without remounting the detail", () => {
+  assert.match(CLIENT, /function handleInvoiceChange\(updated: InvoiceDB\)/);
+  assert.match(CLIENT, /setInvoices\(\(prev\) => prev\.map\(\(i\) => \(i\.id === updated\.id \? updated : i\)\)\)/);
+  assert.match(
+    CLIENT,
+    /prev\.mode === "detail" && prev\.invoice\.id === updated\.id\s*\n?\s*\? \{ mode: "detail", invoice: updated \}/
+  );
+  assert.match(CLIENT, /onInvoiceChange=\{handleInvoiceChange\}/);
+  // Synchronization must not rely on a router refresh alone.
+  assert.ok(!/router\.refresh/.test(CLIENT), "state sync must be explicit, not router.refresh");
+  assert.ok(!/router\.refresh/.test(DETAIL));
+  assert.ok(!/router\.refresh/.test(ACTIONS));
+});

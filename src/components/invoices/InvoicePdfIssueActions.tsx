@@ -13,14 +13,24 @@
 
 import { useState, useTransition } from "react";
 
+export type IssueSuccessKind = "issued" | "already_issued";
+
 interface InvoicePdfIssueActionsProps {
   invoiceId: string;
   status: string;
+  /**
+   * B1-V1-R1: fired ONLY when an issue action actually succeeded, so the
+   * surrounding views can leave the draft state without a page reload. A
+   * download never fires it — downloading changes no invoice state — and a
+   * failed issuance never fires it either.
+   */
+  onIssued?: (kind: IssueSuccessKind) => void;
 }
 
 export default function InvoicePdfIssueActions({
   invoiceId,
   status,
+  onIssued,
 }: InvoicePdfIssueActionsProps) {
   const [pending, startTransition] = useTransition();
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
@@ -38,7 +48,10 @@ export default function InvoicePdfIssueActions({
           : await mod.getIssuedInvoicePdfUrl(invoiceId);
 
       if (result.kind === "issued" || result.kind === "already_issued") {
+        // The signed link survives the state change: it is set before the
+        // callback, and the callback only swaps which controls are rendered.
         setSignedUrl(result.signedUrl);
+        if (action === "issue") onIssued?.(result.kind);
         return;
       }
       setError(result.message);

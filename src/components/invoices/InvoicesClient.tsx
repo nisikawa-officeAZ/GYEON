@@ -44,6 +44,21 @@ export default function InvoicesClient({ initialInvoices }: InvoicesClientProps)
     refresh().then(() => setModal({ mode: "none" }));
   }
 
+  /**
+   * B1-V1-R1: an open detail view reports every invoice change (today:
+   * issuance) so the table leaves the draft state immediately. The row is
+   * REPLACED in place and the detail modal keeps the same identity, so the
+   * freshly produced PDFを開く link is never unmounted.
+   */
+  function handleInvoiceChange(updated: InvoiceDB) {
+    setInvoices((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+    setModal((prev) =>
+      prev.mode === "detail" && prev.invoice.id === updated.id
+        ? { mode: "detail", invoice: updated }
+        : prev
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Toolbar */}
@@ -115,6 +130,7 @@ export default function InvoicesClient({ initialInvoices }: InvoicesClientProps)
           invoice={modal.invoice}
           onClose={() => setModal({ mode: "none" })}
           onEdit={() => setModal({ mode: "edit", invoice: modal.invoice })}
+          onInvoiceChange={handleInvoiceChange}
         />
       )}
     </div>

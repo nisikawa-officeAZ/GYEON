@@ -40,13 +40,48 @@ interface InvoiceDetailProps {
   invoice: InvoiceDB;
   onClose: () => void;
   onEdit:  () => void;
+  /**
+   * B1-V1-R1: lets the owning list replace its copy of this row the moment the
+   * invoice changes, so the table leaves the draft state without a reload.
+   * Fired twice on issuance: once optimistically, once with the canonical row.
+   */
+  onInvoiceChange?: (invoice: InvoiceDB) => void;
 }
 
-export default function InvoiceDetail({ invoice: inv, onClose, onEdit }: InvoiceDetailProps) {
+export default function InvoiceDetail({
+  invoice: inv,
+  onClose,
+  onEdit,
+  onInvoiceChange,
+}: InvoiceDetailProps) {
   const [showPayments, setShowPayments] = useState(false);
   const [invoiceData,  setInvoiceData]  = useState(inv);
   const isDraft = invoiceData.status === "draft";
   const items = (invoiceData.invoice_items ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
+
+  /**
+   * A successful issuance is SERVER-CONFIRMED before this runs, so the local
+   * view flips to issued immediately and never flips back: the canonical
+   * re-read only enriches the row (numbers, pointers, timestamps). If that
+   * read fails, the optimistic issued state stands rather than lying about a
+   * draft the database no longer has.
+   */
+  function handleIssued() {
+    const optimistic: InvoiceDB = { ...invoiceData, status: "issued" };
+    setInvoiceData(optimistic);
+    onInvoiceChange?.(optimistic);
+
+    import("@/lib/invoices/get-invoice")
+      .then(({ getInvoice }) => getInvoice(inv.id))
+      .then((canonical) => {
+        if (!canonical) return;
+        setInvoiceData(canonical);
+        onInvoiceChange?.(canonical);
+      })
+      .catch(() => {
+        /* keep the server-confirmed issued state */
+      });
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
@@ -59,12 +94,12 @@ export default function InvoiceDetail({ invoice: inv, onClose, onEdit }: Invoice
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-semibold text-slate-100">{invoiceDisplayNo(inv)}</h2>
-              <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${STATUS_BADGE[inv.status] ?? "bg-slate-700 text-slate-300"}`}>
-                {invoiceStatusLabel(inv.status)}
+              <h2 className="text-base font-semibold text-slate-100">{invoiceDisplayNo(invoiceData)}</h2>
+              <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${STATUS_BADGE[invoiceData.status] ?? "bg-slate-700 text-slate-300"}`}>
+                {invoiceStatusLabel(invoiceData.status)}
               </span>
             </div>
-            {inv.title && <p className="text-xs text-slate-400 mt-0.5">{inv.title}</p>}
+            {invoiceData.title && <p className="text-xs text-slate-400 mt-0.5">{invoiceData.title}</p>}
             <p className="text-xs text-slate-500 mt-0.5">請求書</p>
           </div>
           <div className="flex items-center gap-2">
@@ -155,40 +190,40 @@ export default function InvoiceDetail({ invoice: inv, onClose, onEdit }: Invoice
             <div className="flex flex-col items-end gap-1.5 text-xs">
               <div className="flex justify-between w-52">
                 <span className="text-slate-500">小計</span>
-                <span className="text-slate-300">{formatYen(inv.subtotal)}</span>
+                <span className="text-slate-300">{formatYen(invoiceData.subtotal)}</span>
               </div>
-              {inv.discount_amount > 0 && (
+              {invoiceData.discount_amount > 0 && (
                 <div className="flex justify-between w-52">
                   <span className="text-slate-500">値引き</span>
-                  <span className="text-red-400">－{formatYen(inv.discount_amount)}</span>
+                  <span className="text-red-400">－{formatYen(invoiceData.discount_amount)}</span>
                 </div>
               )}
               <div className="flex justify-between w-52">
-                <span className="text-slate-500">消費税 ({inv.tax_rate}%)</span>
-                <span className="text-slate-300">{formatYen(inv.tax_amount)}</span>
+                <span className="text-slate-500">消費税 ({invoiceData.tax_rate}%)</span>
+                <span className="text-slate-300">{formatYen(invoiceData.tax_amount)}</span>
               </div>
               <div className="flex justify-between w-52 border-t border-slate-700 pt-1.5 mt-0.5">
                 <span className="text-slate-300 font-semibold">合計</span>
-                <span className="text-slate-100 font-bold">{formatYen(inv.total)}</span>
+                <span className="text-slate-100 font-bold">{formatYen(invoiceData.total)}</span>
               </div>
-              {inv.paid_amount > 0 && (
+              {invoiceData.paid_amount > 0 && (
                 <div className="flex justify-between w-52">
                   <span className="text-slate-500">入金済み</span>
-                  <span className="text-green-400">－{formatYen(inv.paid_amount)}</span>
+                  <span className="text-green-400">－{formatYen(invoiceData.paid_amount)}</span>
                 </div>
               )}
               <div className="flex justify-between w-52 border-t border-slate-700 pt-1.5 mt-0.5">
                 <span className="text-blue-400 font-semibold">残高</span>
-                <span className="text-blue-300 font-bold">{formatYen(inv.balance_due)}</span>
+                <span className="text-blue-300 font-bold">{formatYen(invoiceData.balance_due)}</span>
               </div>
               {/* E8.6: payment progress */}
               <div className="w-52 mt-2">
                 <div className="flex justify-between text-[10px] text-slate-500 mb-1">
                   <span>入金進捗</span>
-                  <span>{paymentProgress(inv)}%</span>
+                  <span>{paymentProgress(invoiceData)}%</span>
                 </div>
                 <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: `${paymentProgress(inv)}%` }} />
+                  <div className="h-full bg-emerald-500" style={{ width: `${paymentProgress(invoiceData)}%` }} />
                 </div>
               </div>
             </div>
@@ -272,6 +307,7 @@ export default function InvoiceDetail({ invoice: inv, onClose, onEdit }: Invoice
             <InvoicePdfIssueActions
               invoiceId={invoiceData.id}
               status={invoiceData.status}
+              onIssued={handleIssued}
             />
           </div>
         </div>
