@@ -1,0 +1,892 @@
+/* =============================================================================
+   Detailer OS Document Design System — Premium Layout (v2)
+   -----------------------------------------------------------------------------
+   GYEON プレミアムカタログ風のリファインメント。
+   ==========================================================================
+   構造:
+     .doc-page-v2                  — 全体を包むページ
+       .doc-masthead               — 発行者ロックアップ + 発行番号
+       .doc-title-block            — ドキュメント種別の"見せ場"
+       .doc-parties-v2             — 3カラム: 顧客 / 車両 / 発行者
+       .doc-table-v2               — カタログ調テーブル
+       .doc-summary-v2             — 合計サマリー（右寄せ・大タイポ）
+       .doc-notes-v2               — Notes ブロック（左バー式）
+       .doc-philosophy             — "PROTECT & ENHANCE" 哲学コピー
+       .doc-footer-v2              — GYEON ロゴ + SNS QR
+       .doc-serial                 — シリアル番号 + シグネチャ
+   ============================================================================= */
+
+/* =============================================================================
+   0. PAGE FOUNDATION
+   ============================================================================= */
+
+.doc-page-v2 {
+  width: var(--doc-page-w-px);
+  min-height: var(--doc-page-h-px);
+  padding: 20mm 18mm 14mm 20mm;
+  background: var(--doc-white);
+  color: var(--doc-text);
+  font-family: var(--doc-font-sans);
+  font-size: var(--doc-fs-13);
+  line-height: var(--doc-lh-normal);
+  box-sizing: border-box;
+  position: relative;
+  margin: 40px auto;
+  box-shadow: var(--doc-shadow-paper);
+  display: flex;
+  flex-direction: column;
+}
+
+/* =============================================================================
+   1. MASTHEAD — 発行者ロックアップ + 発行番号（ページ最上段）
+   ---------------------------------------------------------------------------
+   Layout:
+     [発行番号 大 · 明朝]                        [発行社名 · 会社ロゴ]
+     [発行日 · 有効期限 · 番号]                  [住所 · TEL]
+   ============================================================================= */
+
+.doc-masthead {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: start;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--doc-line);
+}
+
+.doc-masthead__left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.doc-masthead__doc-no-label {
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--doc-text-muted);
+  font-weight: 600;
+}
+
+.doc-masthead__doc-no {
+  font-family: var(--doc-font-serif);
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--doc-text-strong);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.doc-masthead__doc-no-slash {
+  color: var(--doc-text-faint);
+  margin: 0 4px;
+  font-weight: 300;
+}
+
+.doc-masthead__meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 4px;
+  font-size: var(--doc-fs-10);
+  color: var(--doc-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.doc-masthead__meta-item {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.doc-masthead__meta-item strong {
+  font-weight: 600;
+  color: var(--doc-text-strong);
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.doc-masthead__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  text-align: right;
+}
+
+.doc-masthead__logo {
+  height: 36px;
+  max-width: 220px;
+  object-fit: contain;
+  object-position: right center;
+}
+
+.doc-masthead__issuer {
+  font-size: var(--doc-fs-11);
+  color: var(--doc-text-strong);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.doc-masthead__issuer-sub {
+  font-size: 9px;
+  color: var(--doc-text-muted);
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+}
+
+/* =============================================================================
+   2. TITLE BLOCK — ドキュメント種別の"見せ場"
+   ---------------------------------------------------------------------------
+   Layout:
+       [大タイトル 44px]  [英字サブタイトル 極小・大文字]
+       ─────────────────────────────────────  太罫線
+       [ステータスバッジ]                     [発行日ラベル]
+   ============================================================================= */
+
+.doc-title-block {
+  padding: 28px 0 20px;
+  position: relative;
+}
+
+.doc-title-block__row {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+}
+
+.doc-title-block__mark {
+  width: 4px;
+  height: 44px;
+  background: var(--brand-primary);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.doc-title-block__ja {
+  font-family: var(--doc-font-sans);
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--doc-text-strong);
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.doc-title-block__ja > .accent {
+  color: var(--brand-primary);
+}
+
+.doc-title-block__en {
+  font-family: var(--doc-font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--doc-text-muted);
+  padding-bottom: 6px;
+}
+
+.doc-title-block__rule {
+  margin-top: 20px;
+  border-top: 2px solid var(--doc-text-strong);
+  border-bottom: 0.5px solid var(--doc-text-strong);
+  padding-top: 2px;
+  height: 5px;
+}
+
+.doc-title-block__caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 10px;
+  font-size: 10px;
+  color: var(--doc-text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.doc-title-block__caption strong {
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--doc-text-strong);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-size: 11px;
+  margin-left: 6px;
+}
+
+/* =============================================================================
+   3. PARTIES V2 — 3 カラム構成
+   ---------------------------------------------------------------------------
+   Layout:
+     [01 CUSTOMER]      [02 VEHICLE]        [03 ISSUER]
+     顧客名 大           車名 大              社名
+     住所                詳細                 住所・TEL・登録番号
+   ============================================================================= */
+
+.doc-parties-v2 {
+  display: grid;
+  grid-template-columns: 1.15fr 1.4fr 1.1fr;
+  gap: 24px;
+  padding: 24px 0 28px;
+}
+
+.doc-party {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.doc-party__marker {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--doc-text-strong);
+}
+
+.doc-party__num {
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brand-primary);
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.doc-party__label-en {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--doc-text-strong);
+}
+
+.doc-party__label-ja {
+  font-size: 10px;
+  color: var(--doc-text-muted);
+  letter-spacing: 0.08em;
+  margin-left: auto;
+}
+
+.doc-party__name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--doc-text-strong);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  padding-top: 2px;
+}
+
+.doc-party__name .honorific {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--doc-text-muted);
+  margin-left: 6px;
+  letter-spacing: 0;
+}
+
+.doc-party__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.doc-party__addr {
+  font-size: 10.5px;
+  color: var(--doc-text);
+  line-height: 1.7;
+}
+
+.doc-party__dl {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  row-gap: 4px;
+  column-gap: 10px;
+  font-size: 10.5px;
+  margin: 0;
+}
+
+.doc-party__dl dt {
+  color: var(--doc-text-muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.doc-party__dl dd {
+  margin: 0;
+  color: var(--doc-text-strong);
+  font-weight: 500;
+}
+
+.doc-party__dl dd.num {
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.doc-party--issuer .doc-party__name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* =============================================================================
+   4. TABLE V2 — カタログ調
+   ---------------------------------------------------------------------------
+   特徴:
+     - ヘッダーの上下に太い罫線（ダブル構造）
+     - カテゴリ列は薄いブランドカラーのタグ風
+     - 品目 + 内容が縦に組まれた"リッチセル"
+   ============================================================================= */
+
+.doc-section-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin: 12px 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--doc-line);
+}
+
+.doc-section-heading__num {
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+.doc-section-heading__en {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--doc-text-strong);
+}
+
+.doc-section-heading__ja {
+  font-size: 11px;
+  color: var(--doc-text-muted);
+  letter-spacing: 0.08em;
+}
+
+.doc-section-heading__meta {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--doc-text-faint);
+  letter-spacing: 0.05em;
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.doc-table-v2 {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  table-layout: fixed;
+}
+
+.doc-table-v2 thead th {
+  padding: 10px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--doc-text-muted);
+  border-top: 2px solid var(--doc-text-strong);
+  border-bottom: 0.5px solid var(--doc-text-strong);
+  text-align: left;
+  background: transparent;
+  vertical-align: middle;
+}
+
+.doc-table-v2 thead th.num { text-align: right; }
+.doc-table-v2 thead th.center { text-align: center; }
+
+/* Double-rule for the header line */
+.doc-table-v2 thead::after {
+  content: none;
+}
+
+.doc-table-v2 tbody td {
+  padding: 12px 8px 12px 8px;
+  border-bottom: 1px solid var(--doc-line-hair);
+  vertical-align: top;
+  color: var(--doc-text-strong);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.doc-table-v2 tbody tr:last-child td {
+  border-bottom: 2px solid var(--doc-text-strong);
+}
+
+/* リッチセル — 品目名 + 内容説明 */
+.doc-table-v2 .rich-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.doc-table-v2 .rich-cell__name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--doc-text-strong);
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+.doc-table-v2 .rich-cell__desc {
+  font-size: 10px;
+  color: var(--doc-text-muted);
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+/* カテゴリタグ */
+.doc-table-v2 .cat-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--brand-primary);
+  border: 1px solid var(--brand-primary);
+  border-radius: 2px;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.doc-table-v2 td.num {
+  text-align: right;
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  font-weight: 500;
+}
+
+.doc-table-v2 td.center { text-align: center; }
+.doc-table-v2 td.dash { color: var(--doc-gray-300); text-align: center; }
+.doc-table-v2 td.subtotal { font-weight: 700; color: var(--doc-text-strong); }
+.doc-table-v2 td.discount-val { color: var(--doc-danger); font-weight: 600; }
+
+/* Column widths — v2 (見積・請求・納品共通) */
+.doc-table-v2 col.c-category { width: 12%; }
+.doc-table-v2 col.c-item     { width: 42%; }
+.doc-table-v2 col.c-unit     { width: 13%; }
+.doc-table-v2 col.c-qty      { width:  8%; }
+.doc-table-v2 col.c-discount { width: 10%; }
+.doc-table-v2 col.c-subtotal { width: 15%; }
+
+/* =============================================================================
+   5. SUMMARY V2 — 右寄せ・大タイポ
+   ============================================================================= */
+
+.doc-lower {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  margin-top: 20px;
+  align-items: start;
+}
+
+.doc-summary-v2 {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.doc-summary-v2__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  padding: 8px 0;
+  align-items: baseline;
+  border-bottom: 1px solid var(--doc-line-hair);
+  font-size: 11px;
+}
+
+.doc-summary-v2__row:last-of-type {
+  border-bottom: none;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--doc-text-strong);
+}
+
+.doc-summary-v2__label {
+  color: var(--doc-text-muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.doc-summary-v2__label-en {
+  font-size: 8px;
+  color: var(--doc-text-faint);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-right: 10px;
+  font-weight: 600;
+}
+
+.doc-summary-v2__value {
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--doc-text-strong);
+  font-weight: 600;
+  text-align: right;
+  min-width: 100px;
+}
+
+.doc-summary-v2__value.negative {
+  color: var(--doc-danger);
+}
+
+/* Grand Total — the moment of drama */
+.doc-grand-total {
+  margin-top: 10px;
+  padding: 18px 20px;
+  background: var(--brand-primary);
+  color: var(--doc-text-inverse);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  border-radius: 1px;
+  position: relative;
+}
+
+.doc-grand-total::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--brand-primary);
+}
+
+.doc-grand-total__label-en {
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.doc-grand-total__label {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.doc-grand-total__unit {
+  font-size: 9px;
+  opacity: 0.7;
+  margin-left: 8px;
+  letter-spacing: 0.05em;
+}
+
+.doc-grand-total__value {
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* Concept A — Total は黒背景 */
+.concept-a .doc-grand-total { background: var(--doc-black); }
+
+/* =============================================================================
+   6. NOTES V2 — 左バー式
+   ============================================================================= */
+
+.doc-notes-v2 {
+  padding-left: 14px;
+  border-left: 2px solid var(--doc-text-strong);
+}
+
+.doc-notes-v2__header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.doc-notes-v2__en {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--doc-text-strong);
+}
+
+.doc-notes-v2__ja {
+  font-size: 10px;
+  color: var(--doc-text-muted);
+  letter-spacing: 0.08em;
+}
+
+.doc-notes-v2__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: notes;
+  font-size: 10.5px;
+  line-height: 1.75;
+  color: var(--doc-text);
+}
+
+.doc-notes-v2__list li {
+  counter-increment: notes;
+  position: relative;
+  padding-left: 22px;
+  margin-bottom: 3px;
+}
+
+.doc-notes-v2__list li::before {
+  content: counter(notes, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--doc-text-muted);
+  letter-spacing: 0.05em;
+  padding-top: 4px;
+}
+
+/* =============================================================================
+   7. PHILOSOPHY BLOCK — GYEON 哲学コピー
+   ============================================================================= */
+
+.doc-philosophy {
+  margin: 28px 0 20px;
+  padding: 24px 0;
+  border-top: 1px solid var(--doc-line);
+  border-bottom: 1px solid var(--doc-line);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.doc-philosophy__eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+.doc-philosophy__quote {
+  font-family: var(--doc-font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--doc-text-strong);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  max-width: 560px;
+}
+
+.doc-philosophy__quote .em {
+  font-style: italic;
+  color: var(--brand-primary);
+}
+
+.doc-philosophy__attr {
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--doc-text-muted);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.doc-philosophy__ornament {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--doc-text-faint);
+  margin-bottom: 4px;
+}
+
+.doc-philosophy__ornament::before,
+.doc-philosophy__ornament::after {
+  content: "";
+  width: 40px;
+  height: 1px;
+  background: currentColor;
+}
+
+.doc-philosophy__ornament span {
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  border: 1px solid currentColor;
+}
+
+/* =============================================================================
+   8. FOOTER V2 — SNS QR + Brand
+   ============================================================================= */
+
+.doc-footer-v2 {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 32px;
+  align-items: end;
+  padding-top: 20px;
+}
+
+.doc-footer-v2__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.doc-footer-v2__brand-mark {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.doc-footer-v2__brand-logo {
+  font-family: var(--doc-font-sans);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--doc-text-strong);
+  line-height: 1;
+}
+
+.doc-footer-v2__brand-sub {
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--doc-text-muted);
+  font-weight: 600;
+}
+
+.doc-footer-v2__brand-desc {
+  font-size: 9.5px;
+  color: var(--doc-text-muted);
+  line-height: 1.7;
+  max-width: 260px;
+  letter-spacing: 0.02em;
+}
+
+.doc-footer-v2__qr {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.doc-footer-v2__qr-cta {
+  font-size: 9px;
+  color: var(--doc-text-muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.doc-footer-v2__qr-list {
+  display: flex;
+  gap: 12px;
+}
+
+.doc-footer-v2__qr-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 62px;
+}
+
+.doc-footer-v2__qr-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--doc-text-strong);
+}
+
+.doc-footer-v2__qr-code {
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--doc-line);
+}
+
+.doc-footer-v2__qr-label {
+  font-size: 8.5px;
+  color: var(--doc-text-muted);
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
+/* =============================================================================
+   9. SERIAL — 最下部の書類シリアル
+   ============================================================================= */
+
+.doc-serial {
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--doc-line);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  font-size: 9px;
+  color: var(--doc-text-faint);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.doc-serial__hash {
+  text-align: left;
+}
+
+.doc-serial__center {
+  text-align: center;
+  color: var(--doc-text-muted);
+  font-weight: 600;
+  letter-spacing: 0.24em;
+}
+
+.doc-serial__page {
+  text-align: right;
+}
+
+/* =============================================================================
+   10. STATUS RIBBON — 状態バッジ（ヘッダー右端）
+   ============================================================================= */
+
+.doc-status-ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  border-radius: 1px;
+  line-height: 1;
+}
+
+.doc-status-ribbon--draft   { color: var(--doc-gray-500); }
+.doc-status-ribbon--sent    { color: var(--brand-primary); }
+.doc-status-ribbon--unpaid  { color: var(--doc-danger); }
+.doc-status-ribbon--paid    { color: var(--doc-success); background: rgba(47, 107, 61, 0.05); }
+.doc-status-ribbon--completed { color: var(--doc-success); background: rgba(47, 107, 61, 0.05); }

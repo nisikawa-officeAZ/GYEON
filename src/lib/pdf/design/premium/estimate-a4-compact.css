@@ -1,0 +1,806 @@
+body {
+  background: #eeeeec;
+  padding: 24px 0;
+}
+
+/* screen preview */
+.doc-page-v2 {
+  padding: 11.5mm 13mm 7mm 13mm;
+  margin: 12px auto;
+}
+
+.doc-masthead {
+  gap: 14px;
+  padding-bottom: 6px;
+}
+
+.doc-masthead__left {
+  gap: 3px;
+}
+
+.doc-masthead__brand-box {
+  width: min(120mm, 100%);
+  height: 17mm;
+  max-width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+
+.doc-masthead__brand-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: left top;
+}
+
+
+.doc-masthead__meta {
+  margin-top: 0;
+  gap: 12px;
+  flex-wrap: nowrap;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.header-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.header-rank {
+  display: block;
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 9pt;
+  line-height: 15.5px;
+  font-weight: 600;
+  color: var(--doc-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.doc-title-block {
+  padding: 6px 0 4px;
+}
+
+.doc-title-block__row {
+  gap: 10px;
+}
+
+.doc-title-block__rule {
+  margin-top: 4px;
+}
+
+.doc-title-block__caption {
+  margin-top: 2px;
+  gap: 12px;
+}
+
+.doc-title-block__statement {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.doc-title-block__docno-inline {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.doc-title-block__docno-label {
+  font-size: 8.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--doc-text-muted);
+  font-weight: 600;
+}
+
+.doc-title-block__docno-value {
+  font-family: var(--doc-font-num);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--doc-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.doc-parties-v2 {
+  gap: 12px;
+  padding: 7px 0 9px;
+}
+
+.doc-party {
+  gap: 3px;
+}
+
+.doc-party__marker {
+  padding-bottom: 4px;
+  margin-bottom: 2px;
+}
+
+.doc-party__name {
+  margin-bottom: 0;
+}
+
+.doc-party__body,
+.doc-party__dl,
+.doc-party__addr {
+  line-height: 1.28;
+}
+
+.doc-party__dl {
+  row-gap: 1px;
+}
+
+.doc-party--issuer {
+  gap: 2px;
+}
+
+.doc-party--issuer .doc-party__name {
+  padding-top: 0;
+}
+
+.doc-party--issuer .doc-party__dl {
+  grid-template-columns: 84px 1fr;
+}
+
+.doc-section-heading {
+  margin: 1px 0 4px;
+  padding-bottom: 3px;
+}
+
+.doc-table-v2 {
+  table-layout: fixed;
+}
+
+.doc-table-v2 col.c-category { width: 10%; }
+.doc-table-v2 col.c-item { width: 38%; }
+.doc-table-v2 col.c-unit { width: 15%; }
+.doc-table-v2 col.c-qty { width: 7%; }
+.doc-table-v2 col.c-discount { width: 12%; }
+.doc-table-v2 col.c-subtotal { width: 18%; }
+
+body.doc-kind-work-report .doc-table-v2.work-report-table col.c-category--wr { width: 22%; }
+body.doc-kind-work-report .doc-table-v2.work-report-table col.c-detail--wr { width: 78%; }
+
+.doc-table-v2 thead th {
+  padding: 5px 6px;
+}
+
+:root {
+  --doc-subtotal-value-pad-right: 6px;
+}
+
+.doc-table-v2 thead th:nth-child(3),
+.doc-table-v2 thead th:nth-child(5),
+.doc-table-v2 thead th:nth-child(6),
+.doc-table-v2 tbody td:nth-child(3),
+.doc-table-v2 tbody td:nth-child(5),
+.doc-table-v2 tbody td:nth-child(6) {
+  padding-left: 8px;
+  padding-right: var(--doc-subtotal-value-pad-right);
+}
+
+.doc-table-v2 tbody td {
+  padding: 5px 6px;
+  line-height: 1.08;
+  vertical-align: middle;
+}
+
+.doc-table-v2 tbody td:nth-child(3),
+.doc-table-v2 tbody td:nth-child(4),
+.doc-table-v2 tbody td:nth-child(5),
+.doc-table-v2 tbody td:nth-child(6) {
+  vertical-align: middle;
+}
+
+.doc-table-v2 .rich-cell {
+  gap: 1px;
+  min-width: 0;
+}
+
+.doc-table-v2 .rich-cell__name { line-height: 1.1; }
+.doc-table-v2 .rich-cell__desc {
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+
+body.doc-kind-work-report .doc-table-v2.work-report-table th.work-report-category-header {
+  text-align: left;
+}
+
+body.doc-kind-work-report .doc-table-v2.work-report-table th.work-report-detail-header {
+  text-align: left;
+  padding-left: 8px;
+}
+
+body.doc-kind-work-report .doc-table-v2.work-report-table td.work-report-detail {
+  padding: 4px 6px 4px 8px;
+  vertical-align: middle;
+}
+
+body.doc-kind-work-report .doc-table-v2.work-report-table .work-item-content {
+  display: flex;
+  align-items: baseline;
+  width: 100%;
+  min-width: 0;
+}
+
+body.doc-kind-work-report .doc-table-v2.work-report-table .work-item-name {
+  text-align: left;
+  white-space: nowrap;
+  font-weight: 700;
+  line-height: 1.1;
+  flex: 0 0 auto;
+}
+
+body.doc-kind-work-report .doc-table-v2.work-report-table .work-item-spacer {
+  flex: 1 1 12px;
+  min-width: 12px;
+}
+
+body.doc-kind-work-report .doc-table-v2.work-report-table .work-item-description {
+  text-align: right;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--doc-text-muted);
+  line-height: 1.1;
+  flex: 0 0 auto;
+}
+
+.doc-table-v2 tbody td:nth-child(3) {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  text-align: right;
+}
+
+.doc-table-v2 tbody td:nth-child(4) {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.doc-table-v2 tbody td:nth-child(5) {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.doc-table-v2 tbody td:nth-child(6) {
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  text-align: right;
+}
+
+.doc-table-v2 td.num,
+.doc-table-v2 td.subtotal,
+.doc-table-v2 td.discount-val {
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.doc-lower {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 5px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.doc-lower__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: 12px;
+  align-items: start;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.doc-lower__row--summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 68mm;
+  column-gap: 6mm;
+  align-items: start;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+body.doc-kind-work-report .doc-lower__row--summary {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+body.doc-kind-work-report .doc-lower__row--brand {
+  align-items: start;
+}
+
+body.doc-kind-work-report .doc-lower__row--summary > .doc-footer-v2__qr {
+  justify-self: end;
+  align-self: start;
+  width: max-content;
+  margin-top: 0;
+}
+
+body.doc-kind-work-report .doc-lower__row--summary > .doc-footer-v2__qr .doc-footer-v2__qr-list {
+  width: auto;
+}
+
+body.doc-kind-work-report .doc-lower__row--brand .doc-footer-v2__brand-desc {
+  margin-top: 0;
+}
+
+.doc-lower__row--qrs-total {
+  grid-template-columns: minmax(0, 36fr) minmax(0, 64fr);
+  align-items: start;
+  width: 100%;
+  margin-top: 3mm;
+}
+
+.doc-lower__row--brand {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 122mm;
+  gap: 0;
+  align-items: end;
+  width: 100%;
+  margin-bottom: 2.5mm;
+}
+
+.doc-notes-v2,
+.doc-summary-v2 {
+  padding-top: 0;
+}
+
+.doc-notes-v2 {
+  width: 100%;
+  max-width: none;
+  padding-bottom: 2mm;
+}
+
+.doc-notes-v2__header {
+  margin-bottom: 3px;
+}
+
+.doc-notes-v2__list {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+}
+
+.doc-notes-v2__list .note-row {
+  display: grid;
+  grid-template-columns: 7mm minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 0;
+  margin-bottom: 0;
+}
+
+.doc-notes-v2__list .note-no {
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--doc-text-muted);
+  letter-spacing: 0.05em;
+  padding-top: 4px;
+}
+
+.doc-notes-v2__list .note-text {
+  white-space: nowrap;
+}
+
+.doc-summary-v2__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 3px 0;
+  align-items: baseline;
+}
+
+.doc-summary-v2 {
+  justify-self: end;
+  width: 68mm;
+  min-width: 68mm;
+  max-width: 68mm;
+  flex-basis: 68mm;
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-right: 0;
+  box-sizing: border-box;
+}
+
+.doc-summary-v2__value {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
+  letter-spacing: -0.01em;
+  min-width: 116px;
+  margin-left: auto;
+  padding-right: var(--doc-subtotal-value-pad-right);
+  box-sizing: border-box;
+}
+
+.doc-grand-total {
+  margin-top: 0;
+  margin-left: auto;
+  margin-right: 0;
+  padding: 10px 6mm 10px 12px;
+  min-height: 70px;
+  width: 68mm;
+  min-width: 68mm;
+  max-width: 68mm;
+  flex-basis: 68mm;
+  flex-grow: 0;
+  flex-shrink: 0;
+  justify-self: end;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+/* Invoice grand-total label single-line lock (see doc-premium.css .doc-grand-total base). */
+
+.doc-grand-total__value {
+  white-space: nowrap;
+  margin-left: auto;
+  text-align: right;
+}
+
+.doc-footer-v2__qr {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  width: 100%;
+}
+
+.doc-footer-v2__qr-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+}
+
+.doc-footer-v2__qr-item {
+  width: auto;
+  gap: 2px;
+  align-items: center;
+}
+
+.doc-footer-v2__qr-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.doc-footer-v2__qr-code {
+  width: 18.5mm;
+  height: 18.5mm;
+  border: 1px solid var(--doc-line);
+  background: #fff;
+}
+
+.doc-footer-v2__qr-label {
+  font-size: 8.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.doc-footer-v2__brand {
+  display: flex;
+  grid-column: 1;
+  align-self: end;
+  min-height: 0;
+  padding-bottom: 2mm;
+}
+
+.doc-footer-v2__gyeon-logo {
+  display: block;
+  width: 64mm;
+  max-width: 100%;
+  height: auto;
+  max-height: 13.5mm;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.doc-footer-v2__brand-desc {
+  grid-column: 2;
+  width: 122mm;
+  max-width: 122mm;
+  margin-left: auto;
+  margin-right: 0;
+  color: var(--doc-text-muted);
+  font-size: 9.5pt;
+  line-height: 1.35;
+  text-align: right;
+  justify-self: end;
+  align-self: end;
+  box-sizing: border-box;
+  padding-bottom: 2mm;
+}
+
+.doc-footer-v2__brand-desc-line {
+  display: block;
+  white-space: nowrap;
+}
+
+.doc-footer-v2__brand-desc-line--1 {
+  position: relative;
+  left: -28.515625px;
+}
+
+.doc-grand-total::before {
+  display: none;
+}
+
+.doc-page-tail {
+  margin-top: 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.doc-page-tail__top {
+  display: block;
+}
+
+.doc-endcap {
+  display: flex;
+  flex-direction: column;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.doc-serial {
+  margin-top: 0;
+  padding-top: 2px;
+  line-height: 1.05;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.doc-serial__center {
+  letter-spacing: 0.08em;
+}
+
+body.estimate-single-page-fit .doc-page-v2 {
+  padding-bottom: 6mm;
+}
+
+body.estimate-single-page-fit .doc-lower {
+  gap: 3px;
+  margin-top: 4px;
+}
+
+body.estimate-single-page-fit .doc-lower__row {
+  gap: 10px;
+}
+
+body.estimate-single-page-fit .doc-lower__row--summary {
+  grid-template-columns: minmax(0, 1fr) 68mm;
+  column-gap: 6mm;
+}
+
+body.estimate-single-page-fit .doc-lower__row--qrs-total {
+  grid-template-columns: minmax(0, 36fr) minmax(0, 64fr);
+  margin-top: 3mm;
+}
+
+body.estimate-single-page-fit .doc-notes-v2__list {
+  line-height: 1.22;
+}
+
+body.estimate-single-page-fit .doc-summary-v2__row {
+  padding: 2px 0;
+}
+
+body.estimate-single-page-fit .doc-summary-v2__value {
+  min-width: 112px;
+}
+
+body.doc-kind-work-report .doc-summary-v2,
+body.doc-kind-work-report .doc-grand-total,
+body.doc-kind-work-report .doc-grand-total__label,
+body.doc-kind-work-report .doc-grand-total__unit,
+body.doc-kind-work-report .grand-total-en {
+  display: none !important;
+}
+
+body.estimate-single-page-fit .doc-grand-total {
+  padding: 9px 6mm 9px 11px;
+  min-height: 66px;
+  width: 68mm;
+  min-width: 68mm;
+  max-width: 68mm;
+  flex-basis: 68mm;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+/* Invoice grand-total single-line lock.
+   Preserves box width 68mm, value font-size 36px, value right edge (padding-right 6mm).
+   Uses a grid track sized to `max-content` for the labels column so long JA labels stay on one line,
+   while keeping the value column right-anchored at its original 1025.203125px baseline. */
+body.doc-kind-invoice .doc-grand-total.doc-grand-total--invoice {
+  display: grid !important;
+  grid-template-columns: max-content 1fr !important;
+  align-items: center !important;
+  column-gap: 8px !important;
+  padding: 10px 6mm 10px 12px !important;
+}
+
+body.doc-kind-invoice .doc-grand-total.doc-grand-total--invoice .doc-grand-total__labels {
+  display: block !important;
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  flex: none !important;
+}
+
+body.doc-kind-invoice .doc-grand-total.doc-grand-total--invoice .doc-grand-total__labels .grand-total-en {
+  display: inline-block !important;
+  width: auto !important;
+  max-width: none !important;
+  letter-spacing: 0.32em !important;
+  white-space: nowrap !important;
+}
+
+body.doc-kind-invoice .doc-grand-total.doc-grand-total--invoice .doc-grand-total__label-en {
+  display: block !important;
+  width: max-content !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+}
+
+body.doc-kind-invoice .doc-grand-total.doc-grand-total--invoice .doc-grand-total__label {
+  display: block !important;
+  white-space: nowrap !important;
+  letter-spacing: 0 !important;
+  font-size: 12.5px !important;
+  width: max-content !important;
+  max-width: none !important;
+  overflow: visible !important;
+}
+
+body.doc-kind-invoice .doc-grand-total.doc-grand-total--invoice .doc-grand-total__unit {
+  display: block !important;
+  margin-left: 0 !important;
+  margin-top: 1px !important;
+  letter-spacing: 0.03em !important;
+  white-space: nowrap !important;
+  font-size: 9px !important;
+}
+
+body.doc-kind-invoice .doc-grand-total.doc-grand-total--invoice .doc-grand-total__value {
+  justify-self: end !important;
+  margin-left: auto !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+  font-size: 36px !important;
+}
+
+.grand-total-en {
+  display: block;
+  width: 59.078125px;
+  white-space: nowrap;
+  letter-spacing: -0.08em;
+}
+
+body.estimate-single-page-fit .doc-footer-v2__qr-list {
+  gap: 4px;
+}
+
+body.estimate-single-page-fit .doc-footer-v2__qr-code {
+  width: 17.8mm;
+  height: 17.8mm;
+}
+
+body.estimate-single-page-fit .doc-footer-v2__gyeon-logo {
+  width: 60mm;
+}
+
+body.estimate-single-page-fit .doc-footer-v2__brand-desc {
+  width: 122mm;
+  max-width: 122mm;
+  font-size: 9.5pt;
+  line-height: 1.35;
+}
+
+body.estimate-single-page-fit .doc-lower__row--brand {
+  grid-template-columns: minmax(0, 1fr) 122mm;
+  gap: 0;
+  align-items: end;
+  width: 100%;
+  margin-bottom: 2.5mm;
+}
+
+body.estimate-amount-stress .doc-summary-v2__value,
+body.estimate-amount-stress .doc-grand-total__value,
+body.estimate-amount-stress .doc-table-v2 tbody td:nth-child(3),
+body.estimate-amount-stress .doc-table-v2 tbody td:nth-child(5),
+body.estimate-amount-stress .doc-table-v2 tbody td:nth-child(6) {
+  letter-spacing: -0.015em;
+}
+
+/* print rules must be last */
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .doc-page-v2 {
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    padding: 10mm 12mm 5mm 12mm !important;
+    overflow: hidden !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .doc-page-v2:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .doc-lower,
+  .doc-lower__row,
+  .doc-page-tail,
+  .doc-endcap,
+  .doc-serial,
+  .doc-grand-total,
+  .doc-summary-v2,
+  .doc-notes-v2,
+  .doc-footer-v2__brand,
+  .doc-footer-v2__brand-desc,
+  .doc-footer-v2__qr,
+  .doc-footer-v2__qr-item {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  body.estimate-single-page-fit .doc-page-v2 {
+    padding-bottom: 4mm !important;
+  }
+}
+
+
+/* brand-dynamic-layout */
+.doc-masthead__brand-logo[hidden] { display:none !important; }
+.doc-masthead__brand-logo { width: auto; max-width: 120mm; height: auto; max-height: 17mm; object-fit: contain; object-position: left center; }
+.header-rank:empty { display: none; }

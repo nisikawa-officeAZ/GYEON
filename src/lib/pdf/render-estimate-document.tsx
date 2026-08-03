@@ -4,18 +4,23 @@
 // operator checks is byte-for-byte what the customer receives — there is no second rendering path
 // and no HTML mock to drift out of sync.
 //
-// It follows the existing PDF architecture exactly: register the bundled Japanese fonts, then
-// renderToBuffer the approved template. No new PDF dependency.
+// TEMPLATE-B2: the visual layer behind this signature is now the ACCEPTED premium HTML design,
+// rendered by the offline serverless Chromium foundation proven in TEMPLATE-B1-R1 (self-hosted
+// Geist/Noto fonts with the Japanese numeric-stack fix, DOM-measurement pagination, zero network).
+// The exported signature is unchanged, so all three existing callers — the streaming route, the
+// Storage-persisting action, and the immutable share snapshot — continue through this single
+// renderer with no caller changes and no authorization/Storage semantics touched.
 
-import { renderToBuffer } from "@react-pdf/renderer";
-import { registerPdfFonts } from "./register-fonts";
-import { EstimateTemplate } from "@/components/documents/templates/estimate";
 import { toEstimateDocumentData } from "./estimate-document-data";
+import { buildEstimateChromiumContext } from "./chromium-document/estimate-document-context";
+import { resolveStoreLogoDataUri } from "./chromium-document/store-logo";
+import { renderChromiumDocumentPdf } from "./chromium-document/chromium-renderer";
 import type { EstimateDB } from "@/lib/estimates/estimate-types";
 import type { BrandProfile } from "@/components/documents/types";
 
 export async function renderEstimateDocumentPdf(estimate: EstimateDB, brand: BrandProfile): Promise<Buffer> {
-  registerPdfFonts();
   const data = toEstimateDocumentData(estimate);
-  return renderToBuffer(<EstimateTemplate brand={brand} data={data} />);
+  const storeLogo = await resolveStoreLogoDataUri(brand);
+  const context = buildEstimateChromiumContext(data, brand, storeLogo);
+  return renderChromiumDocumentPdf({ templateFile: "estimate-a4-compact.html", context });
 }

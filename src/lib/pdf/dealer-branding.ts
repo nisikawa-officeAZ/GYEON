@@ -16,6 +16,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BRANDING_BUCKET } from "@/lib/branding/branding-types";
 import { normalizeBusinessHoursConfig } from "@/lib/dealer-settings/business-hours";
+import { LEGACY_LOGO_MAX_BYTES, parseLegacyBrandingLogoUrl } from "./chromium-document/legacy-branding-logo";
 import { type DealerBranding, EMPTY_DEALER_BRANDING } from "./dealer-branding-types";
 
 function clean(v: unknown): string | null {
@@ -64,7 +65,28 @@ export async function getDealerBranding(dealerId: string): Promise<DealerBrandin
     } catch {
       // logo_path unavailable — fall through to logo_url.
     }
-    if (!logo && clean(r.logo_url)) logo = { src: (r.logo_url as string).trim() };
+    // Legacy bridge (TEMPLATE-B2-R1): logo_url is NEVER passed through as a URL. It may only act
+    // as a gate proving the dealer configured the canonical same-project dealer-branding object;
+    // the bytes are then downloaded through the same server-side Storage client and embedded as a
+    // data URI. Anything untrusted fails closed to no logo → the canonical GYEON DA UI fallback.
+    if (!logo) {
+      const legacyPath = parseLegacyBrandingLogoUrl(
+        clean(r.logo_url),
+        dealerId,
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+      );
+      if (legacyPath) {
+        try {
+          const { data: file } = await supabase.storage.from(BRANDING_BUCKET).download(legacyPath);
+          if (file && file.size > 0 && file.size <= LEGACY_LOGO_MAX_BYTES) {
+            const buf = Buffer.from(await file.arrayBuffer());
+            logo = { src: `data:image/png;base64,${buf.toString("base64")}` };
+          }
+        } catch {
+          // fail closed — no logo, the caller renders the canonical fallback.
+        }
+      }
+    }
 
     const storeName = clean(r.business_name);
     const companyName = clean(r.company_name);

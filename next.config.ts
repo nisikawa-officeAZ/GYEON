@@ -186,12 +186,22 @@ export const nextConfig: NextConfig = {
   // heic-convert (+ its libheif-js WASM) and sharp are native/WASM-backed and must
   // run un-bundled on the server so the vehicle-registration OCR image pipeline can
   // decode HEIC/HEIF → JPEG before the sharp enhancement step.
-  serverExternalPackages: ['@react-pdf/renderer', 'sharp', 'heic-convert', 'libheif-js'],
+  // puppeteer-core + @sparticuz/chromium (TEMPLATE-B2) run un-bundled like the other native/
+  // binary-backed server packages so the serverless Chromium build can self-extract at runtime.
+  serverExternalPackages: ['@react-pdf/renderer', 'sharp', 'heic-convert', 'libheif-js', 'puppeteer-core', '@sparticuz/chromium'],
   // Bundle the local Japanese PDF fonts (M PLUS 1p, OFL) and the rasterised document brand assets
   // (GYEON marks, SNS icons, QR placeholder) into the serverless functions that render PDFs, so
   // registerPdfFonts() and the brand-asset resolver can read them from disk at runtime.
+  // TEMPLATE-B2 adds the vendored accepted document design (HTML/CSS/JS, self-hosted Geist/Noto
+  // woff2, local icons/GYEON asset) and the canonical GYEON DA UI fallback logo, all read from disk
+  // by the offline Chromium renderer.
   outputFileTracingIncludes: {
-    "/**": ["./src/lib/pdf/fonts/*.ttf", "./src/lib/pdf/brand-assets/*.png"],
+    "/**": [
+      "./src/lib/pdf/fonts/*.ttf",
+      "./src/lib/pdf/brand-assets/*.png",
+      "./src/lib/pdf/design/premium/**",
+      "./public/brand/gyeon-classic/logos/combination.svg",
+    ],
   },
   experimental: {
     serverActions: {

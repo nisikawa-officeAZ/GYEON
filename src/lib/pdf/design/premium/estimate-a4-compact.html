@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>見積書 / Estimate — Concept B (Premium)</title>
+<link rel="stylesheet" href="./doc-tokens.css">
+<link rel="stylesheet" href="./doc-components.css">
+<link rel="stylesheet" href="./doc-premium.css">
+<link rel="stylesheet" href="./concept-b.css">
+<link rel="stylesheet" href="./estimate-a4-compact.css">
+
+</head>
+<body class="concept-b" data-doc-pack="estimate-v3" data-doc-kind="estimate">
+
+<article class="doc-page-v2">
+  <div class="doc-edge"></div>
+  <!-- ============================================================ MASTHEAD -->
+  <header class="doc-masthead">
+    <div class="doc-masthead__left">
+      <div class="doc-masthead__brand-box"><img class="doc-masthead__brand-logo" data-brand-logo="store" alt="" hidden></div>
+      <div class="doc-masthead__meta header-meta-row">
+        <div class="header-meta-left">
+          <span class="doc-masthead__meta-item">Issue Date <strong>2026.07.05</strong></span>
+          <span class="doc-masthead__meta-item">Valid Until <strong>2026.08.04</strong></span>
+          <span class="doc-masthead__meta-item">Currency <strong>JPY (¥)</strong></span>
+        </div>
+        <span class="header-rank" data-row="header-rank" data-brand-field="shop_rank_header"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================ TITLE -->
+  <section class="doc-title-block">
+    <div class="doc-title-block__row">
+      <span class="doc-title-block__mark"></span>
+      <span class="doc-title-block__ja">見積書</span>
+      <span class="doc-title-block__en">Estimate &nbsp;/&nbsp; Coating &amp; Protection Proposal</span>
+    </div>
+    <div class="doc-title-block__rule"></div>
+    <div class="doc-title-block__caption">
+      <span class="doc-title-block__statement">下記の通りお見積り申し上げます</span>
+      <span class="doc-title-block__docno-inline"><span class="doc-title-block__docno-label">Estimate No.</span><span class="doc-title-block__docno-value">EST / 2026 / 00004</span></span>
+    </div>
+  </section>
+
+  <!-- ============================================================ PARTIES -->
+  <section class="doc-parties-v2">
+    <!-- 01 Customer -->
+    <div class="doc-party">
+      <div class="doc-party__marker">
+        <span class="doc-party__num">01</span>
+        <span class="doc-party__label-en">Customer</span>
+        <span class="doc-party__label-ja">お客様情報</span>
+      </div>
+      <div class="doc-party__name">石井 紗也華<span class="honorific">様</span></div>
+      <div class="doc-party__body">
+        <div class="doc-party__addr">
+          〒460-0002<br>
+          名古屋市中区丸の内○○-1-2-3
+        </div>
+        <dl class="doc-party__dl">
+          <dt>TEL</dt>    <dd class="num">052-000-0000</dd>
+          <dt>Email</dt>  <dd><a href="mailto:customer@example.jp">customer@example.jp</a></dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- 02 Vehicle -->
+    <div class="doc-party">
+      <div class="doc-party__marker">
+        <span class="doc-party__num">02</span>
+        <span class="doc-party__label-en">Vehicle</span>
+        <span class="doc-party__label-ja">車両情報</span>
+      </div>
+      <div class="doc-party__name" style="font-size: 16px;">Ferrari 458 Italia</div>
+      <div class="doc-party__body">
+        <dl class="doc-party__dl">
+          <dt>メーカー</dt>       <dd>フェラーリ</dd>
+          <dt>年式</dt>          <dd class="num">2015 年</dd>
+          <dt>グレード</dt>      <dd>Base</dd>
+          <dt>ナンバー</dt>      <dd class="num">名古屋 332 ひ 3830</dd>
+          <dt>ボディカラー</dt>  <dd>ロッソコルサ &nbsp;/&nbsp; Red</dd>
+          <dt>走行距離</dt>      <dd class="num">28,400 km</dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- 03 Issuer -->
+    <div class="doc-party doc-party--issuer">
+      <div class="doc-party__marker">
+        <span class="doc-party__num">03</span>
+        <span class="doc-party__label-en">Issuer</span>
+        <span class="doc-party__label-ja">発行元</span>
+      </div>
+      <div class="doc-party__name" data-brand-field="brand_name_ja"></div>
+      <div class="doc-party__body">
+        <div class="doc-party__addr">
+          <span data-brand-prefix="postal_code">〒</span><span data-brand-field="postal_code"></span><br>
+          <span data-brand-field="address"></span>
+        </div>
+        <dl class="doc-party__dl">
+          <dt>TEL</dt>       <dd class="num" data-brand-field="tel"></dd>
+          <dt data-row="fax">FAX</dt>       <dd data-row="fax" class="num" data-brand-field="fax"></dd>
+          <dt data-row="invoice_registration_number">インボイス番号</dt>  <dd data-row="invoice_registration_number" class="num" data-brand-field="invoice_registration_number"></dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ ITEMS -->
+  <section>
+    <div class="doc-section-heading">
+      <span class="doc-section-heading__num">04</span>
+      <span class="doc-section-heading__en">Services &amp; Products</span>
+      <span class="doc-section-heading__ja">施工内容・製品</span>
+      <span class="doc-section-heading__meta">15 items</span>
+    </div>
+
+    <table class="doc-table-v2">
+      <colgroup>
+        <col class="c-category"><col class="c-item">
+        <col class="c-unit"><col class="c-qty"><col class="c-discount"><col class="c-subtotal">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Item &amp; Description</th>
+          <th class="num">Unit Price</th>
+          <th class="center">Qty</th>
+          <th class="num">Discount</th>
+          <th class="num">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="cat-tag">Coating</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">MOHS EVO</span>
+              <span class="rich-cell__desc">ボディコーティング / Body Coating (base layer)</span>
+            </div>
+          </td>
+          <td class="num">¥90,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥90,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">Coating</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">トップコート：MOHS EVO</span>
+              <span class="rich-cell__desc">トップコート施工 / MOHS EVO top coat application</span>
+            </div>
+          </td>
+          <td class="num">¥37,500</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥37,500</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">Coating</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">トップコート（3層）：CanCoat EVO PRO</span>
+              <span class="rich-cell__desc">3層トップコート施工 / 3-layer top coat</span>
+            </div>
+          </td>
+          <td class="num">¥37,500</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥37,500</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">PPF</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">PPF ヘッドライト</span>
+              <span class="rich-cell__desc">Headlight Protection Film</span>
+            </div>
+          </td>
+          <td class="num">¥25,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥25,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">PPF</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">PPF ドアミラー</span>
+              <span class="rich-cell__desc">Door Mirror Protection Film</span>
+            </div>
+          </td>
+          <td class="num">¥12,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥12,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">PPF</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">PPF ドアカップ（1枚）</span>
+              <span class="rich-cell__desc">Door Cup Protection Film</span>
+            </div>
+          </td>
+          <td class="num">¥8,000</td>
+          <td class="center">2</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥16,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">Window</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">リアサイド</span>
+              <span class="rich-cell__desc">Rear Side Window Film</span>
+            </div>
+          </td>
+          <td class="num">¥20,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥20,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">Window</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">リアウィンドウ</span>
+              <span class="rich-cell__desc">Rear Window Film</span>
+            </div>
+          </td>
+          <td class="num">¥18,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥18,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">Interior</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">シート（重度汚れ）</span>
+              <span class="rich-cell__desc">Seat Cleaning (heavy soil)</span>
+            </div>
+          </td>
+          <td class="num">¥24,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥24,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">Care</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">6ヶ月メンテナンス</span>
+              <span class="rich-cell__desc">6-month coating maintenance</span>
+            </div>
+          </td>
+          <td class="num">¥15,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥15,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">Care</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">12ヶ月メンテナンス</span>
+              <span class="rich-cell__desc">12-month coating maintenance</span>
+            </div>
+          </td>
+          <td class="num">¥20,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥20,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">Wash</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">プレミアム洗車</span>
+              <span class="rich-cell__desc">Premium hand wash &amp; finish</span>
+            </div>
+          </td>
+          <td class="num">¥8,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥8,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">Decon</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">鉄粉除去</span>
+              <span class="rich-cell__desc">Iron particle decontamination</span>
+            </div>
+          </td>
+          <td class="num">¥6,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥6,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">Decon</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">付着物除去</span>
+              <span class="rich-cell__desc">Pitch &amp; tar removal</span>
+            </div>
+          </td>
+          <td class="num">¥6,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥6,000</td>
+        </tr>
+        <tr>
+          <td><span class="cat-tag">Repair</span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name">タッチペン補修</span>
+              <span class="rich-cell__desc">Touch-up paint (small scratches)</span>
+            </div>
+          </td>
+          <td class="num">¥5,000</td>
+          <td class="center">1</td>
+          <td class="dash">—</td>
+          <td class="num subtotal">¥5,000</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================ LOWER -->
+  <section class="doc-lower">
+    <div class="doc-lower__row doc-lower__row--summary">
+      <div class="doc-notes-v2">
+        <div class="doc-notes-v2__header">
+          <span class="doc-notes-v2__en">Notes</span>
+          <span class="doc-notes-v2__ja">ご案内事項</span>
+        </div>
+        <div class="doc-notes-v2__list">
+          <div class="note-row"><span class="note-no">01</span><span class="note-text">表示価格はすべて税込です。</span></div>
+          <div class="note-row"><span class="note-no">02</span><span class="note-text">作業内容・価格は予告なく変更する場合がございます。</span></div>
+          <div class="note-row"><span class="note-no">03</span><span class="note-text">施工後のメンテナンスについては別途ご案内いたします。</span></div>
+          <div class="note-row"><span class="note-no">04</span><span class="note-text">ご不明点がございましたら、お気軽にお問い合わせください。</span></div>
+          <div class="note-row"><span class="note-no">05</span><span class="note-text">本見積書の有効期限は発行日から30日です。</span></div>
+        </div>
+      </div>
+
+      <div class="doc-summary-v2">
+        <div class="doc-summary-v2__row">
+          <span class="doc-summary-v2__label"><span class="doc-summary-v2__label-en">Subtotal</span>小計</span>
+          <span class="doc-summary-v2__value">¥333,000</span>
+        </div>
+        <div class="doc-summary-v2__row">
+          <span class="doc-summary-v2__label"><span class="doc-summary-v2__label-en">Discount</span>値引き</span>
+          <span class="doc-summary-v2__value negative">−¥97,700</span>
+        </div>
+        <div class="doc-summary-v2__row">
+          <span class="doc-summary-v2__label"><span class="doc-summary-v2__label-en">Tax 10%</span>消費税</span>
+          <span class="doc-summary-v2__value">¥23,530</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-lower__row doc-lower__row--qrs-total">
+      <div class="doc-footer-v2__qr">
+        <div class="doc-footer-v2__qr-list">
+          <div class="doc-footer-v2__qr-item">
+            <img class="doc-footer-v2__qr-icon" src="./assets/icons/instagram.svg" alt="">
+            <img class="doc-footer-v2__qr-code" src="" alt="Instagram QR">
+            <span class="doc-footer-v2__qr-label">Instagram</span>
+          </div>
+          <div class="doc-footer-v2__qr-item">
+            <img class="doc-footer-v2__qr-icon" src="./assets/icons/line-brand.svg" alt="">
+            <img class="doc-footer-v2__qr-code" src="" alt="LINE QR">
+            <span class="doc-footer-v2__qr-label">LINE</span>
+          </div>
+          <div class="doc-footer-v2__qr-item">
+            <img class="doc-footer-v2__qr-icon" src="./assets/icons/youtube.svg" alt="">
+            <img class="doc-footer-v2__qr-code" src="" alt="YouTube QR">
+            <span class="doc-footer-v2__qr-label">YouTube</span>
+          </div>
+          <div class="doc-footer-v2__qr-item">
+            <img class="doc-footer-v2__qr-icon" src="./assets/icons/tiktok.svg" alt="">
+            <img class="doc-footer-v2__qr-code" src="" alt="TikTok QR">
+            <span class="doc-footer-v2__qr-label">TikTok</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-grand-total">
+        <div>
+          <div class="doc-grand-total__label-en"><span class="grand-total-en">GRAND TOTAL</span></div>
+          <div class="doc-grand-total__label">合計金額<span class="doc-grand-total__unit">(税込)</span></div>
+        </div>
+        <div class="doc-grand-total__value">¥258,830</div>
+      </div>
+    </div>
+
+    <div class="doc-lower__row doc-lower__row--brand">
+      <div class="doc-footer-v2__brand">
+        <img class="doc-footer-v2__gyeon-logo" src="./assets/gyeon-official/gyeon-logo-533-user.svg" alt="GYEON">
+      </div>
+      <div class="doc-footer-v2__brand-desc"><span class="doc-footer-v2__brand-desc-line doc-footer-v2__brand-desc-line--1">GYEON認定ディテーラーは、確かな技術と高品質な施工で</span><span class="doc-footer-v2__brand-desc-line doc-footer-v2__brand-desc-line--2">お客様の愛車を美しく保ち、最高のカーライフをサポートします。</span></div>
+    </div>
+  </section>
+
+  <div class="doc-page-tail">
+    <div class="doc-page-tail__top">
+      <div class="doc-endcap">
+        <div class="doc-serial">
+          <div class="doc-serial__hash">DOC · EST-2026-00004 · A2F9-B01D</div>
+          <div class="doc-serial__center">Detailer OS · Document System v1.0</div>
+          <div class="doc-serial__page">Page 01 / 01</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+<script src="./doc-variant.js"></script>
+<script src="./doc-brand.js"></script>
+<script src="./doc-data.js"></script>
+  <script src="./doc-qr.js"></script>
+  <script src="./estimate-paginate.js"></script>
+</body>
+</html>
