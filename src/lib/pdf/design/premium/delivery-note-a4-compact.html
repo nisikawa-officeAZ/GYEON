@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>納品書 / Delivery Note</title>
+<link rel="stylesheet" href="./doc-tokens.css">
+<link rel="stylesheet" href="./doc-components.css">
+<link rel="stylesheet" href="./doc-premium.css">
+<link rel="stylesheet" href="./concept-b.css">
+<link rel="stylesheet" href="./estimate-a4-compact.css">
+
+</head>
+<body class="concept-b" data-doc-pack="estimate-v3" data-doc-kind="delivery">
+
+<article class="doc-page-v2">
+  <div class="doc-edge"></div>
+  <!-- ============================================================ MASTHEAD -->
+  <header class="doc-masthead">
+    <div class="doc-masthead__left">
+      <div class="doc-masthead__brand-box"><img class="doc-masthead__brand-logo" data-brand-logo="store" alt="" hidden></div>
+      <div class="doc-masthead__meta header-meta-row">
+        <div class="header-meta-left">
+          <span class="doc-masthead__meta-item">Issue Date <strong></strong></span>
+          <span class="doc-masthead__meta-item">Delivery Date <strong></strong></span>
+          <span class="doc-masthead__meta-item">Currency <strong>JPY (¥)</strong></span>
+        </div>
+        <span class="header-rank" data-row="header-rank" data-brand-field="shop_rank_header"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================ TITLE -->
+  <section class="doc-title-block">
+    <div class="doc-title-block__row">
+      <span class="doc-title-block__mark"></span>
+      <span class="doc-title-block__ja">納品書</span>
+      <span class="doc-title-block__en">Delivery Note &nbsp;/&nbsp; Completion Record</span>
+    </div>
+    <div class="doc-title-block__rule"></div>
+    <div class="doc-title-block__caption">
+      <span class="doc-title-block__statement">下記の通り納品いたしました</span>
+      <span class="doc-title-block__docno-inline"><span class="doc-title-block__docno-label">Delivery No.</span><span class="doc-title-block__docno-value"></span></span>
+    </div>
+  </section>
+
+  <!-- ============================================================ PARTIES -->
+  <section class="doc-parties-v2">
+    <!-- 01 Customer -->
+    <div class="doc-party">
+      <div class="doc-party__marker">
+        <span class="doc-party__num">01</span>
+        <span class="doc-party__label-en">Recipient</span>
+        <span class="doc-party__label-ja">納品先</span>
+      </div>
+      <div class="doc-party__name"></div>
+      <div class="doc-party__body">
+        <div class="doc-party__addr"></div>
+        <dl class="doc-party__dl">
+          <dt>TEL</dt>    <dd class="num"></dd>
+          <dt>Email</dt>  <dd></dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- 02 Vehicle -->
+    <div class="doc-party">
+      <div class="doc-party__marker">
+        <span class="doc-party__num">02</span>
+        <span class="doc-party__label-en">Vehicle</span>
+        <span class="doc-party__label-ja">対象車両</span>
+      </div>
+      <div class="doc-party__name" style="font-size: 16px;"></div>
+      <div class="doc-party__body">
+        <dl class="doc-party__dl">
+          <dt>メーカー</dt>       <dd></dd>
+          <dt>年式</dt>          <dd class="num"></dd>
+          <dt>グレード</dt>      <dd></dd>
+          <dt>ナンバー</dt>      <dd class="num"></dd>
+          <dt>ボディカラー</dt>  <dd></dd>
+          <dt>走行距離</dt>      <dd class="num"></dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- 03 Issuer -->
+    <div class="doc-party doc-party--issuer">
+      <div class="doc-party__marker">
+        <span class="doc-party__num">03</span>
+        <span class="doc-party__label-en">Issuer</span>
+        <span class="doc-party__label-ja">発行元</span>
+      </div>
+      <div class="doc-party__name" data-brand-field="brand_name_ja"></div>
+      <div class="doc-party__body">
+        <div class="doc-party__addr">
+          <span data-brand-prefix="postal_code">〒</span><span data-brand-field="postal_code"></span><br>
+          <span data-brand-field="address"></span>
+        </div>
+        <dl class="doc-party__dl">
+          <dt>TEL</dt>       <dd class="num" data-brand-field="tel"></dd>
+          <dt data-row="fax">FAX</dt>       <dd data-row="fax" class="num" data-brand-field="fax"></dd>
+          <dt data-row="invoice_registration_number">インボイス番号</dt>  <dd data-row="invoice_registration_number" class="num" data-brand-field="invoice_registration_number"></dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ ITEMS -->
+  <section>
+    <div class="doc-section-heading">
+      <span class="doc-section-heading__num">04</span>
+      <span class="doc-section-heading__en">Delivered Items</span>
+      <span class="doc-section-heading__ja">納品内容</span>
+      <span class="doc-section-heading__meta"></span>
+    </div>
+
+    <table class="doc-table-v2">
+      <colgroup>
+        <col class="c-category"><col class="c-item">
+        <col class="c-unit"><col class="c-qty"><col class="c-discount"><col class="c-subtotal">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Item &amp; Description</th>
+          <th class="num">Unit Price</th>
+          <th class="center">Qty</th>
+          <th class="num">Discount</th>
+          <th class="num">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="cat-tag"></span></td>
+          <td>
+            <div class="rich-cell">
+              <span class="rich-cell__name"></span>
+              <span class="rich-cell__desc"></span>
+            </div>
+          </td>
+          <td class="num"></td>
+          <td class="center"></td>
+          <td class="dash">—</td>
+          <td class="num subtotal"></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================ LOWER -->
+  <section class="doc-lower">
+    <div class="doc-lower__row doc-lower__row--summary">
+      <div class="doc-notes-v2">
+        <div class="doc-notes-v2__header">
+          <span class="doc-notes-v2__en">Notes</span>
+          <span class="doc-notes-v2__ja">ご案内事項</span>
+        </div>
+        <div class="doc-notes-v2__list">
+
+        </div>
+      </div>
+
+      <div class="doc-summary-v2">
+        <div class="doc-summary-v2__row">
+          <span class="doc-summary-v2__label"><span class="doc-summary-v2__label-en">Subtotal</span>小計</span>
+          <span class="doc-summary-v2__value"></span>
+        </div>
+        <div class="doc-summary-v2__row">
+          <span class="doc-summary-v2__label"><span class="doc-summary-v2__label-en">Discount</span>値引き</span>
+          <span class="doc-summary-v2__value"></span>
+        </div>
+        <div class="doc-summary-v2__row">
+          <span class="doc-summary-v2__label"><span class="doc-summary-v2__label-en">Tax 10%</span>消費税</span>
+          <span class="doc-summary-v2__value"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-lower__row doc-lower__row--qrs-total">
+      <div class="doc-footer-v2__qr">
+        <div class="doc-footer-v2__qr-list">
+          <div class="doc-footer-v2__qr-item">
+            <img class="doc-footer-v2__qr-icon" src="./assets/icons/instagram.svg" alt="">
+            <img class="doc-footer-v2__qr-code" src="" alt="Instagram QR">
+            <span class="doc-footer-v2__qr-label">Instagram</span>
+          </div>
+          <div class="doc-footer-v2__qr-item">
+            <img class="doc-footer-v2__qr-icon" src="./assets/icons/line-brand.svg" alt="">
+            <img class="doc-footer-v2__qr-code" src="" alt="LINE QR">
+            <span class="doc-footer-v2__qr-label">LINE</span>
+          </div>
+          <div class="doc-footer-v2__qr-item">
+            <img class="doc-footer-v2__qr-icon" src="./assets/icons/youtube.svg" alt="">
+            <img class="doc-footer-v2__qr-code" src="" alt="YouTube QR">
+            <span class="doc-footer-v2__qr-label">YouTube</span>
+          </div>
+          <div class="doc-footer-v2__qr-item">
+            <img class="doc-footer-v2__qr-icon" src="./assets/icons/tiktok.svg" alt="">
+            <img class="doc-footer-v2__qr-code" src="" alt="TikTok QR">
+            <span class="doc-footer-v2__qr-label">TikTok</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-grand-total">
+        <div>
+          <div class="doc-grand-total__label-en"><span class="grand-total-en">GRAND TOTAL</span></div>
+          <div class="doc-grand-total__label">合計金額<span class="doc-grand-total__unit">(税込)</span></div>
+        </div>
+        <div class="doc-grand-total__value"></div>
+      </div>
+    </div>
+
+    <div class="doc-lower__row doc-lower__row--brand">
+      <div class="doc-footer-v2__brand">
+        <img class="doc-footer-v2__gyeon-logo" src="./assets/gyeon-official/gyeon-logo-533-user.svg" alt="GYEON">
+      </div>
+      <div class="doc-footer-v2__brand-desc"><span class="doc-footer-v2__brand-desc-line doc-footer-v2__brand-desc-line--1">GYEON認定ディテーラーは、確かな技術と高品質な施工で</span><span class="doc-footer-v2__brand-desc-line doc-footer-v2__brand-desc-line--2">お客様の愛車を美しく保ち、最高のカーライフをサポートします。</span></div>
+    </div>
+  </section>
+
+  <div class="doc-page-tail">
+    <div class="doc-page-tail__top">
+      <div class="doc-endcap">
+        <div class="doc-serial">
+          <div class="doc-serial__hash"></div>
+          <div class="doc-serial__center">Detailer OS · Document System v1.0</div>
+          <div class="doc-serial__page">Page 01 / 01</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+<script src="./doc-brand.js"></script>
+<script src="./delivery-note-data.js"></script>
+<script src="./doc-qr.js"></script>
+<script src="./delivery-note-paginate.js"></script>
+</body>
+</html>

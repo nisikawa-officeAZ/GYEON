@@ -19,7 +19,7 @@ export async function getInvoice(id: string): Promise<InvoiceDB | null> {
       customers ( last_name, first_name, phone, email ),
       vehicles ( maker, model, year, grade, plate_number, color ),
       estimates ( estimate_number, title, total ),
-      work_orders ( work_order_number, title, status ),
+      work_orders ( work_order_number, title, status, actual_end_at ),
       invoice_items (
         id, invoice_id, dealer_id, category, item_name, description,
         quantity, unit_price, discount_rate, line_total, sort_order, created_at, updated_at
@@ -53,7 +53,7 @@ export async function getInvoicesByWorkOrder(workOrderId: string): Promise<Invoi
       customers ( last_name, first_name, phone, email ),
       vehicles ( maker, model, year, grade, plate_number, color ),
       estimates ( estimate_number, title, total ),
-      work_orders ( work_order_number, title, status )
+      work_orders ( work_order_number, title, status, actual_end_at )
     `)
     .eq("work_order_id", workOrderId)
     .eq("dealer_id", dealer.dealer_id)

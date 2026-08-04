@@ -307,6 +307,7 @@ export default function InvoiceDetail({
             <InvoicePdfIssueActions
               invoiceId={invoiceData.id}
               status={invoiceData.status}
+              workOrderActualEndAt={invoiceData.work_orders?.actual_end_at ?? null}
               onIssued={handleIssued}
             />
           </div>

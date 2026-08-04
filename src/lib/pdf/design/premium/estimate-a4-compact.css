@@ -823,6 +823,30 @@ body[data-doc-kind="invoice"] .doc-grand-total .doc-grand-total__unit {
   margin-top: 1px;
 }
 
+/* ── TEMPLATE-C2-DN (delivery-note-scoped only): dynamic-text containment ──────
+   Same guarantee the invoice received in B3-R1, scoped to the delivery note: hostile or very long
+   LITERAL recipient/customer text, addresses, contact values, item names/descriptions and notes
+   must wrap inside their own fixed-fr party/table column instead of painting across the neighbour.
+   Only wrap opportunities are added — normal Japanese names never reach them. Estimate and invoice
+   pages (data-doc-kind="estimate"/"invoice") are untouched; no truncation, ellipsis, overflow
+   hidden, or font change. */
+body[data-doc-kind="delivery"] .doc-parties-v2 .doc-party {
+  min-width: 0;
+}
+body[data-doc-kind="delivery"] .doc-party__name,
+body[data-doc-kind="delivery"] .doc-party__addr,
+body[data-doc-kind="delivery"] .doc-party__dl,
+body[data-doc-kind="delivery"] .doc-party__dl dd,
+body[data-doc-kind="delivery"] .rich-cell__name,
+body[data-doc-kind="delivery"] .rich-cell__desc,
+body[data-doc-kind="delivery"] .note-text {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 /* ── TEMPLATE-B3-R1 (invoice-scoped only): dynamic-text containment ────────────
    Hostile or very long LITERAL text bound into the invoice (customer name, address, contact
    values, item names/descriptions, notes) must wrap inside its own fixed-fr party/table column

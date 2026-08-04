@@ -15,9 +15,18 @@ import { useState, useTransition } from "react";
 
 export type IssueSuccessKind = "issued" | "already_issued";
 
+/** Invoice statuses for which a delivery note may be produced (issued and beyond). */
+const DELIVERY_NOTE_ALLOWED_STATUSES = ["issued", "paid", "partially_paid", "overdue"];
+
 interface InvoicePdfIssueActionsProps {
   invoiceId: string;
   status: string;
+  /**
+   * TEMPLATE-C2-DN: the linked work order's actual completion date — the sole delivery-date
+   * source. Null/absent means no completion date is registered, so the delivery note cannot be
+   * produced and the UI explains that instead of generating a document.
+   */
+  workOrderActualEndAt?: string | null;
   /**
    * B1-V1-R1: fired ONLY when an issue action actually succeeded, so the
    * surrounding views can leave the draft state without a page reload. A
@@ -30,6 +39,7 @@ interface InvoicePdfIssueActionsProps {
 export default function InvoicePdfIssueActions({
   invoiceId,
   status,
+  workOrderActualEndAt,
   onIssued,
 }: InvoicePdfIssueActionsProps) {
   const [pending, startTransition] = useTransition();
@@ -37,6 +47,8 @@ export default function InvoicePdfIssueActions({
   const [error, setError] = useState<string | null>(null);
 
   const isDraft = status === "draft";
+  const deliveryNoteAllowed = DELIVERY_NOTE_ALLOWED_STATUSES.includes(status);
+  const hasCompletionDate = typeof workOrderActualEndAt === "string" && workOrderActualEndAt.trim() !== "";
 
   function run(action: "issue" | "download") {
     setError(null);
@@ -94,11 +106,31 @@ export default function InvoicePdfIssueActions({
             PDFを開く
           </a>
         )}
+
+        {/* TEMPLATE-C2-DN: the delivery-note action appears only for an allowed (issued+) status
+            AND only when a work completion date is registered. It opens the authenticated
+            delivery-note route in a new tab — it never mutates or reissues the invoice. */}
+        {deliveryNoteAllowed && hasCompletionDate && (
+          <a
+            href={`/pdf/delivery-note?invoiceId=${encodeURIComponent(invoiceId)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${btn} bg-slate-700 hover:bg-slate-600 text-slate-200`}
+          >
+            納品書を表示
+          </a>
+        )}
       </div>
 
       {isDraft && (
         <p className="text-[11px] text-slate-500">
           発行すると請求書の内容は確定し、以後は編集できません。
+        </p>
+      )}
+
+      {deliveryNoteAllowed && !hasCompletionDate && (
+        <p className="text-[11px] text-amber-400/90">
+          納品書を出力するには、施工指示に作業完了日を登録してください。
         </p>
       )}
 

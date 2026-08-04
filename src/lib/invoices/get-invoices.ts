@@ -19,7 +19,7 @@ export async function getInvoices(): Promise<InvoiceDB[]> {
       customers ( last_name, first_name, phone, email ),
       vehicles ( maker, model, year, grade, plate_number, color ),
       estimates ( estimate_number, title, total ),
-      work_orders ( work_order_number, title, status )
+      work_orders ( work_order_number, title, status, actual_end_at )
     `)
     .eq("dealer_id", dealer.dealer_id)
     .is("deleted_at", null)

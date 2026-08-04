@@ -89,6 +89,9 @@ export interface InvoiceDB {
     work_order_number: string | null;
     title:             string | null;
     status:            string;
+    // TEMPLATE-C2-DN: the sole delivery-date source; exposed to the invoice detail UI so the
+    // delivery-note action can gate on a registered work completion date.
+    actual_end_at?:    string | null;
   } | null;
   invoice_items?: InvoiceItemDB[];
 }
