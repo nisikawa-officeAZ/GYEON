@@ -242,10 +242,13 @@ body.doc-kind-work-report .doc-table-v2.work-report-table .work-item-content {
 
 body.doc-kind-work-report .doc-table-v2.work-report-table .work-item-name {
   text-align: left;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   font-weight: 700;
   line-height: 1.1;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 body.doc-kind-work-report .doc-table-v2.work-report-table .work-item-spacer {
@@ -255,12 +258,15 @@ body.doc-kind-work-report .doc-table-v2.work-report-table .work-item-spacer {
 
 body.doc-kind-work-report .doc-table-v2.work-report-table .work-item-description {
   text-align: right;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   font-size: 11px;
   font-weight: 400;
   color: var(--doc-text-muted);
   line-height: 1.1;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .doc-table-v2 tbody td:nth-child(3) {
@@ -823,6 +829,28 @@ body[data-doc-kind="invoice"] .doc-grand-total .doc-grand-total__unit {
   margin-top: 1px;
 }
 
+/* ── TEMPLATE-C2-WR (work-report-scoped only): dynamic-text containment ───────
+   Same guarantee the invoice/delivery-note received, scoped to the work report: hostile or very
+   long LITERAL customer/vehicle/issuer text, item names, descriptions and notes must wrap inside
+   their own column instead of painting across the neighbour. Only wrap opportunities are added.
+   Estimate/invoice/delivery pages are untouched; no truncation, ellipsis, overflow hidden, or font
+   change. The work report carries no monetary columns. */
+body[data-doc-kind="work_report"] .doc-parties-v2 .doc-party {
+  min-width: 0;
+}
+body[data-doc-kind="work_report"] .doc-party__name,
+body[data-doc-kind="work_report"] .doc-party__addr,
+body[data-doc-kind="work_report"] .doc-party__dl,
+body[data-doc-kind="work_report"] .doc-party__dl dd,
+body[data-doc-kind="work_report"] .work-item-name,
+body[data-doc-kind="work_report"] .work-item-description,
+body[data-doc-kind="work_report"] .note-text {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 /* ── TEMPLATE-C2-DN (delivery-note-scoped only): dynamic-text containment ──────
    Same guarantee the invoice received in B3-R1, scoped to the delivery note: hostile or very long
    LITERAL recipient/customer text, addresses, contact values, item names/descriptions and notes
