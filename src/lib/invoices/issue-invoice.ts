@@ -28,9 +28,8 @@ import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { InvoiceDB } from "@/lib/invoices/invoice-types";
-import { renderInvoicePdf } from "@/lib/pdf/templates/invoice-pdf";
-import { getDealerStampForPdf } from "@/lib/pdf/get-dealer-stamp";
-import { getDealerBranding } from "@/lib/pdf/dealer-branding";
+import { renderInvoiceDocumentPdf } from "@/lib/pdf/render-invoice-document";
+import { getBrandProfile } from "@/lib/pdf/brand-profile";
 import {
   ISSUED_INVOICE_CONTENT_TYPE,
   buildIssuedInvoiceObjectKey,
@@ -176,8 +175,8 @@ export async function issueInvoice(invoiceId: string): Promise<IssueInvoiceResul
     .from("invoices")
     .select(`
       *,
-      customers    ( last_name, first_name, phone, email ),
-      vehicles     ( maker, model, year, grade, plate_number, color ),
+      customers    ( last_name, first_name, phone, email, postal_code, address1, is_business ),
+      vehicles     ( maker, model, year, grade, plate_number, color, mileage ),
       estimates    ( estimate_number, title, total ),
       work_orders  ( work_order_number, title, status ),
       invoice_items ( * )
@@ -212,9 +211,12 @@ export async function issueInvoice(invoiceId: string): Promise<IssueInvoiceResul
 
   let buffer: Buffer;
   try {
-    const stamp = await getDealerStampForPdf(dealerId);
-    const branding = await getDealerBranding(dealerId);
-    buffer = await renderInvoicePdf(renderedInvoice, stamp, branding);
+    // TEMPLATE-B3: the adopted premium invoice design renders through the offline Chromium
+    // foundation. Branding resolves from the AUTHENTICATED dealerId only (getBrandProfile embeds
+    // the configured store logo or the canonical GYEON DA UI fallback); the adopted design
+    // carries no stamp, so the legacy stamp fetch is gone from this issuance path.
+    const brand = await getBrandProfile(dealerId);
+    buffer = await renderInvoiceDocumentPdf(renderedInvoice, brand);
   } catch {
     return fail("persistence_error");
   }

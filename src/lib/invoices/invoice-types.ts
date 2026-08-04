@@ -64,6 +64,11 @@ export interface InvoiceDB {
     first_name: string | null;
     phone:      string | null;
     email:      string | null;
+    // TEMPLATE-B3: the adopted invoice layout prints the billing address block and derives the
+    // honorific (法人 → 御中) exactly like the estimate. Optional — older reads may omit them.
+    postal_code?: string | null;
+    address1?:    string | null;
+    is_business?: boolean | null;
   } | null;
   vehicles?: {
     maker:        string | null;
@@ -72,6 +77,8 @@ export interface InvoiceDB {
     grade:        string | null;
     plate_number: string | null;
     color:        string | null;
+    // TEMPLATE-B3: 走行距離 in the adopted vehicle block; printed only when recorded.
+    mileage?:     number | null;
   } | null;
   estimates?: {
     estimate_number: string | null;

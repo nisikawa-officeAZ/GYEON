@@ -66,7 +66,7 @@ test("3. the invoice upload is non-overwriting", () => {
 
 test("4. the old generator delegates instead of generating", () => {
   assert.match(GENERATE, /issueInvoice/);
-  assert.ok(!/renderInvoicePdf/.test(GENERATE), "it must no longer render");
+  assert.ok(!/renderInvoicePdf|renderInvoiceDocumentPdf/.test(GENERATE), "it must no longer render");
   assert.ok(!/\.storage\b/.test(GENERATE), "it must no longer touch Storage directly");
 });
 
@@ -90,7 +90,9 @@ test("6. every admin-client TABLE statement is dealer-scoped, since RLS is bypas
   assert.ok(tableChains.length >= 3, "expected the invoices and document_files statements");
 
   for (const chain of tableChains) {
-    const window = chain.slice(0, 400);
+    // TEMPLATE-B3 widened the render read's column list (billing address, honorific flag,
+    // mileage), so the dealer predicate sits farther from `.from(`; the window grows with it.
+    const window = chain.slice(0, 700);
     // Both helpers resolve the dealer from the session; issueInvoice keeps it in
     // `dealerId`, getIssuedInvoicePdfUrl reads `dealer.dealer_id` directly.
     assert.ok(
@@ -140,7 +142,7 @@ test("9. failures after the upload compensate, and signing failures never regene
   const signFn = ISSUE.slice(signStart, signEnd);
   assert.ok(signFn.length > 200, "the sliced signer body must be non-trivial");
   assert.ok(!/upload\(/.test(signFn));
-  assert.ok(!/renderInvoicePdf/.test(signFn));
+  assert.ok(!/renderInvoicePdf|renderInvoiceDocumentPdf/.test(signFn));
 });
 
 test("10. all seven typed outcomes exist", () => {
@@ -680,7 +682,12 @@ test("57. InvoiceDB carries content_version and no ad hoc cast remains", () => {
   assert.match(TYPES, /content_version:\s+number;/);
   assert.ok(!/\(full as \{ content_version\?: number \}\)/.test(ISSUE));
   assert.match(ISSUE, /const renderedInvoice = full as InvoiceDB;/);
-  assert.match(ISSUE, /renderInvoicePdf\(renderedInvoice, stamp, branding\)/);
+  // TEMPLATE-B3: the adopted premium invoice renders via the Chromium foundation with the
+  // authenticated dealer's BrandProfile; the legacy stamp fetch is gone from this path.
+  assert.match(ISSUE, /renderInvoiceDocumentPdf\(renderedInvoice, brand\)/);
+  assert.ok(!/renderInvoicePdf\(/.test(ISSUE), "the legacy react-pdf invoice renderer must be gone");
+  assert.ok(!/getDealerStampForPdf/.test(ISSUE), "the stamp fetch must be gone from issuance");
+  assert.match(ISSUE, /getBrandProfile\(dealerId\)/);
 });
 
 // ── B1-R4: atomic draft save and snapshot gate ───────────────────────────────
@@ -760,7 +767,7 @@ test("64. the draft-save function is INVOKER, pinned and privilege-scoped", () =
 test("65. the snapshot is validated before render, upload, insert and transition", () => {
   assert.match(ISSUE, /validateIssuanceSnapshot\(/);
   const validateAt = ISSUE.indexOf("validateIssuanceSnapshot(");
-  const renderAt = ISSUE.indexOf("renderInvoicePdf(renderedInvoice");
+  const renderAt = ISSUE.indexOf("renderInvoiceDocumentPdf(renderedInvoice");
   const uploadAt = ISSUE.indexOf(".upload(filePath");
   const insertAt = ISSUE.indexOf('.from("document_files").insert(') > 0
     ? ISSUE.indexOf('.from("document_files").insert(')

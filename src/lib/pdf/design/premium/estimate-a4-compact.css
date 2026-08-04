@@ -804,3 +804,47 @@ body.estimate-amount-stress .doc-table-v2 tbody td:nth-child(6) {
 .doc-masthead__brand-logo[hidden] { display:none !important; }
 .doc-masthead__brand-logo { width: auto; max-width: 120mm; height: auto; max-height: 17mm; object-fit: contain; object-position: left center; }
 .header-rank:empty { display: none; }
+
+/* ── TEMPLATE-B3 (invoice-scoped only) ─────────────────────────────────────────
+   The adopted invoice prints ご請求金額 (5 glyphs) where the estimate prints 合計金額 (4), so the
+   base grand-total label wraps. The package's doc-kind-invoice override block solves the wrap but
+   demonstrably self-overflows the fixed 68mm box (labels grid column + 36px value exceed it), and
+   the ACCEPTED validation pixels show the BASE geometry with the label on one line. These two
+   attribute-scoped rules reproduce exactly that: label column sized to its content, single line,
+   value still right-anchored by the base rules. Estimate pages (data-doc-kind="estimate") are
+   untouched. */
+body[data-doc-kind="invoice"] .doc-grand-total .doc-grand-total__label {
+  white-space: nowrap;
+  overflow: visible;
+}
+body[data-doc-kind="invoice"] .doc-grand-total .doc-grand-total__unit {
+  display: block;
+  margin-left: 0;
+  margin-top: 1px;
+}
+
+/* ── TEMPLATE-B3-R1 (invoice-scoped only): dynamic-text containment ────────────
+   Hostile or very long LITERAL text bound into the invoice (customer name, address, contact
+   values, item names/descriptions, notes) must wrap inside its own fixed-fr party/table column
+   instead of painting across the neighbouring column. Root cause: grid/flex items default to
+   min-width:auto and the dynamic text carries no overflow-wrap, so one unbroken token widens or
+   overpaints the track (measured: billing name scrollWidth 322 vs clientWidth 212; dd chain grown
+   to 359px inside a 212px party). Normal Japanese names are unaffected — these rules only add
+   wrap opportunities that short strings never reach. Estimate pages (data-doc-kind="estimate")
+   are untouched; no truncation, no ellipsis, no overflow:hidden, no font changes. */
+body[data-doc-kind="invoice"] .doc-parties-v2 .doc-party {
+  min-width: 0;
+}
+body[data-doc-kind="invoice"] .doc-party__name,
+body[data-doc-kind="invoice"] .doc-party__addr,
+body[data-doc-kind="invoice"] .doc-party__dl,
+body[data-doc-kind="invoice"] .doc-party__dl dd,
+body[data-doc-kind="invoice"] .rich-cell__name,
+body[data-doc-kind="invoice"] .rich-cell__desc,
+body[data-doc-kind="invoice"] .note-text {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
