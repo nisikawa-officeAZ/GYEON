@@ -8,6 +8,7 @@ import { createActivityLog } from "@/lib/activity/activity-log";
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 import { getCanonicalDealerSettings } from "@/lib/dealer-settings/get-canonical-dealer-settings";
 import { resolveBillingTerms, resolveInvoiceDueDate } from "@/lib/customer-billing/billing-terms";
+import { resolveDeliveryDate } from "./invoice-delivery-date";
 
 export async function createInvoice(fd: FormData): Promise<{ error: string } | { success: true; id: string }> {
   const auth = await requireStaffCapability("finance");
@@ -38,13 +39,20 @@ export async function createInvoice(fd: FormData): Promise<{ error: string } | {
     const { data } = await supabase.from("estimates").select("id").eq("id", estimate_id).eq("dealer_id", dealer.dealer_id).single();
     if (!data) return { error: "見積が見つかりません" };
   }
+  // MONTHLY-DATA-B1: while validating FK ownership, capture the two authoritative delivery-date
+  // sources through the SAME dealer-scoped queries (report_date from a linked completion report;
+  // actual_end_at from a linked work order). No extra trust surface is introduced.
+  let woActualEndAt: string | null = null;
+  let crReportDate: string | null = null;
   if (work_order_id) {
-    const { data } = await supabase.from("work_orders").select("id").eq("id", work_order_id).eq("dealer_id", dealer.dealer_id).single();
+    const { data } = await supabase.from("work_orders").select("id, actual_end_at").eq("id", work_order_id).eq("dealer_id", dealer.dealer_id).single();
     if (!data) return { error: "作業指示書が見つかりません" };
+    woActualEndAt = (data as { actual_end_at: string | null }).actual_end_at ?? null;
   }
   if (completion_report_id) {
-    const { data } = await supabase.from("completion_reports").select("id").eq("id", completion_report_id).eq("dealer_id", dealer.dealer_id).single();
+    const { data } = await supabase.from("completion_reports").select("id, report_date").eq("id", completion_report_id).eq("dealer_id", dealer.dealer_id).single();
     if (!data) return { error: "完了報告書が見つかりません" };
+    crReportDate = (data as { report_date: string | null }).report_date ?? null;
   }
 
   // Parse line items
@@ -60,6 +68,21 @@ export async function createInvoice(fd: FormData): Promise<{ error: string } | {
   // Insert invoice
   const rawInvoiceNumber = (fd.get("invoice_number") as string) || null;
   const resolvedInvoiceNumber = rawInvoiceNumber || (await getNextDocumentNumber("invoice")) || null;
+
+  // MONTHLY-DATA-B1 (+R1): registered precedence — authorized manual input → completion-report date
+  // → work-order completion date (Asia/Tokyo) → null. issue_date is never a source. FAIL CLOSED: a
+  // present-but-invalid manual value (or report_date) is rejected BEFORE the INSERT and never
+  // silently replaced by a lower-precedence source. The raw FormData value is passed through so a
+  // non-string (e.g. File) is treated as invalid, not coerced.
+  const deliveryResolution = resolveDeliveryDate({
+    manual:      fd.get("delivery_date"),
+    reportDate:  crReportDate,
+    actualEndAt: woActualEndAt,
+  });
+  if (deliveryResolution.kind === "invalid") {
+    return { error: "請求書の作成に失敗しました" };
+  }
+  const delivery_date = deliveryResolution.value;
 
   const { data: inv, error: invErr } = await supabase
     .from("invoices")
@@ -78,6 +101,7 @@ export async function createInvoice(fd: FormData): Promise<{ error: string } | {
       title:                (fd.get("title") as string) || null,
       issue_date:           (fd.get("issue_date") as string) || null,
       due_date:             (fd.get("due_date") as string) || null,
+      delivery_date,
       discount_amount,
       tax_rate,
       paid_amount,
@@ -151,7 +175,7 @@ export async function createInvoiceFromWorkOrder(
   const { data: wo, error: woErr } = await supabase
     .from("work_orders")
     .select(`
-      id, customer_id, vehicle_id, title,
+      id, customer_id, vehicle_id, title, actual_end_at,
       estimate_id,
       estimates (
         id, estimate_number, title, tax_rate, discount_amount,
@@ -185,6 +209,15 @@ export async function createInvoiceFromWorkOrder(
   const paid_amount     = 0;
   const totals = calculateInvoiceTotals(items, discount_amount, tax_rate, paid_amount);
 
+  // MONTHLY-DATA-B1 (+R1): the linked work order is the delivery-date source — its actual completion
+  // timestamp projected onto the Asia/Tokyo calendar date. Null when the work is not yet complete.
+  // actual_end_at is a timestamptz column (valid or null), so resolution is always "resolved"; the
+  // defensive invalid branch keeps delivery_date null rather than guessing.
+  const woDeliveryResolution = resolveDeliveryDate({
+    actualEndAt: (wo as { actual_end_at?: string | null }).actual_end_at ?? null,
+  });
+  const delivery_date = woDeliveryResolution.kind === "resolved" ? woDeliveryResolution.value : null;
+
   const { data: inv, error: invErr } = await supabase
     .from("invoices")
     .insert({
@@ -196,6 +229,7 @@ export async function createInvoiceFromWorkOrder(
       status:         "draft",
       title:          wo.title ?? "請求書",
       issue_date:     new Date().toISOString().slice(0, 10),
+      delivery_date,
       discount_amount,
       tax_rate,
       paid_amount,
@@ -310,6 +344,9 @@ export async function createInvoiceFromEstimate(
       title:          est.title ?? "請求書",
       issue_date:     issueDate,
       due_date:       dueDate,
+      // MONTHLY-DATA-B1: an estimate carries no delivery date. It stays null until a work order /
+      // completion report supplies one or an operator enters it — issue_date is NEVER copied here.
+      delivery_date:  null,
       discount_amount,
       tax_rate,
       paid_amount:    0,

@@ -500,6 +500,8 @@ const VALID_TEXT_FIELDS = {
   title:          null,
   issue_date:     "2026-08-02",
   due_date:       null,
+  // MONTHLY-DATA-B1: delivery_date is part of the exact-key text contract (nullable string).
+  delivery_date:  null,
   notes:          "",
   internal_memo:  null,
 };
@@ -528,7 +530,8 @@ const VALID_ITEM = {
 
 test("43. the schema key sets are exactly the accepted contract", () => {
   assert.deepEqual([...DRAFT_SAVE_TEXT_KEYS],
-    ["invoice_number", "title", "issue_date", "due_date", "notes", "internal_memo"]);
+    // MONTHLY-DATA-B1: delivery_date is a nullable-string date key in the exact-key contract.
+    ["invoice_number", "title", "issue_date", "due_date", "delivery_date", "notes", "internal_memo"]);
   assert.deepEqual([...DRAFT_SAVE_MONEY_KEYS],
     ["discount_amount", "tax_rate", "paid_amount", "subtotal", "tax_amount", "total", "balance_due"]);
   assert.deepEqual([...DRAFT_SAVE_ITEM_KEYS],

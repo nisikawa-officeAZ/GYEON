@@ -14,7 +14,11 @@ import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 
-import { INVOICE_COMMERCIAL_FIELDS } from "./invoice-issuance-core";
+import {
+  INVOICE_COMMERCIAL_FIELDS,
+  DRAFT_SAVE_TEXT_KEYS,
+  DRAFT_SAVE_MONEY_KEYS,
+} from "./invoice-issuance-core";
 
 const ROOT = process.cwd();
 
@@ -1026,6 +1030,9 @@ test("80. non-array p_items and non-object elements are rejected outright", () =
 });
 
 test("81. the SQL key sets mirror the pure TypeScript contract exactly", () => {
+  // MONTHLY-DATA-B1: the EFFECTIVE save_invoice_draft is now the delivery_date migration (it
+  // CREATE OR REPLACEs the function), so the mirror is checked against NEW_SAVE_FN. The TS text
+  // contract gained delivery_date; money and item contracts are unchanged.
   const CORE_RAW = read("src/lib/invoices/invoice-issuance-core.ts");
   const grab = (name: string) => {
     const at = CORE_RAW.indexOf(`export const ${name}`);
@@ -1035,19 +1042,19 @@ test("81. the SQL key sets mirror the pure TypeScript contract exactly", () => {
   const text = grab("DRAFT_SAVE_TEXT_KEYS");
   const money = grab("DRAFT_SAVE_MONEY_KEYS");
   const item = grab("DRAFT_SAVE_ITEM_KEYS");
-  assert.equal(text.length, 6); assert.equal(money.length, 7); assert.equal(item.length, 8);
+  assert.equal(text.length, 7); assert.equal(money.length, 7); assert.equal(item.length, 8);
   const sorted = (a: string[]) => [...a].sort();
   const sqlList = (re: RegExp) => {
-    const m = SAVE_FN.match(re);
+    const m = NEW_SAVE_FN.match(re);
     assert.ok(m, `SQL literal for ${re} must exist`);
     return (m![0].match(/'([a-z_]+)'/g) ?? []).map((s) => s.replace(/'/g, ""));
   };
   assert.deepEqual(
-    sqlList(/array\['due_date', 'internal_memo', 'invoice_number', 'issue_date', 'notes', 'title'\]/),
+    sqlList(/array\['delivery_date', 'due_date', 'internal_memo', 'invoice_number', 'issue_date', 'notes', 'title'\]/),
     sorted(text)
   );
   assert.deepEqual(
-    sqlList(/array\['balance_due',[\s\S]{0,220}?'title', 'total'\]/),
+    sqlList(/array\['balance_due', 'delivery_date',[\s\S]{0,240}?'title', 'total'\]/),
     sorted([...text, ...money])
   );
   assert.deepEqual(
@@ -1277,4 +1284,129 @@ test("94. the list replaces the changed row in place without remounting the deta
   assert.ok(!/router\.refresh/.test(CLIENT), "state sync must be explicit, not router.refresh");
   assert.ok(!/router\.refresh/.test(DETAIL));
   assert.ok(!/router\.refresh/.test(ACTIONS));
+});
+
+// ── MONTHLY-DATA-B1: invoices.delivery_date coordinated contract ──────────────
+//
+// The delivery_date column, its immutability and its RPC key contract live in a NEW migration; the
+// prior immutability migration must stay byte-identical. These tests read the NEW migration by its
+// CLI-generated name suffix and prove delivery_date is carried into every effective definition.
+
+const MIGRATIONS_DIR = "supabase/migrations";
+const DELIVERY_MIGRATION_FILE = readdirSync(join(ROOT, MIGRATIONS_DIR)).find((f) =>
+  f.endsWith("_invoice_delivery_date.sql")
+);
+const NEW_MIGRATION = DELIVERY_MIGRATION_FILE
+  ? read(join(MIGRATIONS_DIR, DELIVERY_MIGRATION_FILE))
+  : "";
+const NEW_MIGRATION_RAW = DELIVERY_MIGRATION_FILE
+  ? readRaw(join(MIGRATIONS_DIR, DELIVERY_MIGRATION_FILE))
+  : "";
+
+const NEW_INVOICE_UPDATE_FN = NEW_MIGRATION.slice(
+  NEW_MIGRATION.indexOf("create or replace function public.enforce_invoice_issued_immutability"),
+  NEW_MIGRATION.indexOf("drop trigger if exists invoices_issued_immutability")
+);
+const NEW_SAVE_FN = NEW_MIGRATION.slice(
+  NEW_MIGRATION.indexOf("create or replace function public.save_invoice_draft"),
+  NEW_MIGRATION.indexOf("revoke all on function public.save_invoice_draft")
+);
+
+test("66. the delivery_date migration adds a fail-closed NULLABLE date column (no IF NOT EXISTS/default/backfill)", () => {
+  assert.ok(DELIVERY_MIGRATION_FILE, "a *_invoice_delivery_date.sql migration must exist");
+  // R1: a plain ADD COLUMN fails closed on schema drift; IF NOT EXISTS would silently accept an
+  // existing incompatible column and must NOT be used for this column.
+  assert.match(NEW_MIGRATION, /alter table public\.invoices\s+add column delivery_date date/);
+  assert.ok(!/add column if not exists delivery_date/i.test(NEW_MIGRATION),
+    "delivery_date must use a fail-closed ADD COLUMN, never ADD COLUMN IF NOT EXISTS");
+  // No NOT NULL, no default, no backfill UPDATE — existing rows and drafts stay valid.
+  assert.ok(!/delivery_date\s+date\s+not null/i.test(NEW_MIGRATION), "delivery_date must be nullable");
+  assert.ok(!/add column delivery_date date\s+default/i.test(NEW_MIGRATION), "no default");
+  assert.ok(!/update public\.invoices\s+set delivery_date/i.test(NEW_MIGRATION), "no backfill");
+});
+
+test("67. the new immutability function versions AND freezes delivery_date", () => {
+  assert.ok(NEW_INVOICE_UPDATE_FN.length > 500, "the new update guard must be present");
+  // Versioned while draft.
+  const versioned = NEW_INVOICE_UPDATE_FN.slice(0, NEW_INVOICE_UPDATE_FN.indexOf("if old.status = 'draft'"));
+  assert.match(versioned, /new\.delivery_date\s+is distinct from old\.delivery_date/);
+  // Frozen after issuance.
+  const frozen = NEW_INVOICE_UPDATE_FN.slice(NEW_INVOICE_UPDATE_FN.indexOf("invoice_cannot_return_to_draft"));
+  assert.match(frozen, /new\.delivery_date\s+is distinct from old\.delivery_date/);
+  // Preserve every existing frozen commercial field in the new function too.
+  for (const field of INVOICE_COMMERCIAL_FIELDS) {
+    assert.match(NEW_INVOICE_UPDATE_FN, new RegExp(`new\\.${field}\\s+is distinct from old\\.${field}`));
+  }
+});
+
+test("68. the new save_invoice_draft carries delivery_date in both key arrays, the loop and the UPDATE", () => {
+  assert.ok(NEW_SAVE_FN.length > 500, "the new draft-save function must be present");
+  // No-items exact key array (sorted) includes delivery_date.
+  assert.match(
+    NEW_SAVE_FN,
+    /array\['delivery_date', 'due_date', 'internal_memo', 'invoice_number', 'issue_date', 'notes', 'title'\]/
+  );
+  // With-items exact key array (sorted) includes delivery_date.
+  assert.match(
+    NEW_SAVE_FN,
+    /array\['balance_due', 'delivery_date', 'discount_amount', 'due_date', 'internal_memo', 'invoice_number',\s*'issue_date', 'notes', 'paid_amount', 'subtotal', 'tax_amount', 'tax_rate',\s*'title', 'total'\]/
+  );
+  // String/null type loop includes delivery_date.
+  assert.match(NEW_SAVE_FN, /array\['invoice_number', 'title', 'issue_date', 'due_date', 'delivery_date', 'notes', 'internal_memo'\]/);
+  // The draft UPDATE persists it as a date.
+  assert.match(NEW_SAVE_FN, /delivery_date\s+= nullif\(p_fields->>'delivery_date', ''\)::date/);
+  // The new function keeps its guarantees.
+  assert.match(NEW_SAVE_FN, /security invoker/);
+  assert.match(NEW_SAVE_FN, /set search_path = ''/);
+  assert.match(NEW_SAVE_FN, /for update;/);
+  assert.match(NEW_MIGRATION, /grant execute on function public\.save_invoice_draft\(uuid, uuid, jsonb, jsonb\) to authenticated/);
+});
+
+test("69. the prior immutability migration remains byte-identical (never learns delivery_date)", () => {
+  // The C2-WR-accepted migration is out of this phase's write allowlist; it must be untouched. The
+  // clearest source-level proof is that it contains no reference to the new column at all.
+  assert.ok(!/delivery_date/.test(readRaw("supabase/migrations/20260801132658_invoice_issued_immutability.sql")),
+    "the prior migration must not be edited to mention delivery_date");
+});
+
+test("70. the SQL and TypeScript draft-save key sets match exactly (incl. delivery_date)", () => {
+  const sortCsv = (keys: readonly string[]) => [...keys].sort().map((k) => `'${k}'`).join(", ");
+  // The TS text-only set, sorted, must be the SQL no-items array verbatim.
+  const tsTextSorted = sortCsv(DRAFT_SAVE_TEXT_KEYS);
+  assert.ok(NEW_SAVE_FN.includes(`array[${tsTextSorted}]`),
+    `SQL no-items array must equal sorted TS text keys: array[${tsTextSorted}]`);
+  // The TS with-items set (text ∪ money), sorted, must appear as the SQL with-items array. The SQL
+  // literal wraps across lines, so compare on whitespace-collapsed text.
+  const tsAllSorted = sortCsv([...DRAFT_SAVE_TEXT_KEYS, ...DRAFT_SAVE_MONEY_KEYS]);
+  const collapsed = NEW_SAVE_FN.replace(/\s+/g, " ");
+  assert.ok(collapsed.includes(`array[${tsAllSorted}]`),
+    `SQL with-items array must equal sorted TS text+money keys: array[${tsAllSorted}]`);
+  assert.ok(NEW_MIGRATION_RAW.length > 0, "raw new migration must be readable");
+});
+
+test("71. createInvoice rejects an invalid manual delivery_date BEFORE the invoice INSERT", () => {
+  // The resolver is fail-closed and the guard returns the generic creation error before any insert.
+  assert.match(CREATE, /resolveDeliveryDate\(\{[\s\S]{0,160}?fd\.get\("delivery_date"\)/);
+  assert.match(CREATE, /deliveryResolution\.kind === "invalid"/);
+  const guardAt = CREATE.indexOf('deliveryResolution.kind === "invalid"');
+  const insertAt = CREATE.indexOf('.from("invoices")\n    .insert(') >= 0
+    ? CREATE.indexOf('.from("invoices")\n    .insert(')
+    : CREATE.search(/\.from\("invoices"\)\s*\.insert\(/);
+  assert.ok(guardAt > 0 && insertAt > guardAt, "the invalid-delivery guard must precede the invoice INSERT");
+  // The raw FormData value is passed (so a non-string is invalid), never coerced with `as string`.
+  assert.ok(!/manual:\s*\(fd\.get\("delivery_date"\) as string\)/.test(CREATE),
+    "manual delivery input must not be coerced to string before validation");
+});
+
+test("72. updateInvoice rejects an invalid manual delivery_date BEFORE math and the RPC", () => {
+  assert.match(UPDATE, /parseDeliveryDateField\(fd\.get\("delivery_date"\)\)/);
+  assert.match(UPDATE, /manualDelivery\.kind === "invalid"/);
+  const guardAt = UPDATE.indexOf('manualDelivery.kind === "invalid"');
+  const totalsAt = UPDATE.indexOf("calculateInvoiceTotals(");
+  const rpcAt = UPDATE.indexOf('supabase.rpc("save_invoice_draft"');
+  assert.ok(guardAt > 0, "the invalid-delivery guard must exist");
+  assert.ok(totalsAt > guardAt, "the guard must precede money calculation");
+  assert.ok(rpcAt > guardAt, "the guard must precede the save_invoice_draft RPC");
+  // The persisted value is the validated one or null — never a raw uncoerced pass-through.
+  assert.match(UPDATE, /delivery_date:\s*manualDelivery\.kind === "valid" \? manualDelivery\.value : null/);
 });

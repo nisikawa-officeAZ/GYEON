@@ -369,6 +369,10 @@ export const DRAFT_SAVE_TEXT_KEYS = [
   "title",
   "issue_date",
   "due_date",
+  // MONTHLY-DATA-B1: 納品日 — a nullable-string date key, exactly like issue_date / due_date. Its
+  // presence here keeps this contract byte-for-byte consistent with the effective save_invoice_draft
+  // SQL key arrays (the boundary test pins the two together).
+  "delivery_date",
   "notes",
   "internal_memo",
 ] as const;

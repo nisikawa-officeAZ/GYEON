@@ -15,6 +15,7 @@
 // system. No React, no Supabase, no environment, no network.
 
 import { calculateInvoiceTotals, lineTotal } from "./invoice-types";
+import { isValidCalendarDate } from "./invoice-delivery-date";
 
 export type SnapshotRejection =
   | "invalid-number"
@@ -23,7 +24,11 @@ export type SnapshotRejection =
   | "tax-amount-mismatch"
   | "total-mismatch"
   | "balance-due-mismatch"
-  | "missing-items";
+  | "missing-items"
+  // MONTHLY-DATA-B1: a newly issued invoice must carry a real delivery_date. These run BEFORE the
+  // render/upload/mutation because the whole validator does (issue-invoice aborts on any rejection).
+  | "missing-delivery-date"
+  | "invalid-delivery-date";
 
 export type SnapshotValidation =
   | { readonly kind: "valid" }
@@ -45,6 +50,8 @@ export interface SnapshotInvoiceInput {
   total?: unknown;
   balance_due?: unknown;
   invoice_items?: unknown;
+  // MONTHLY-DATA-B1: authoritative delivery date. Must be a valid non-null YYYY-MM-DD before issue.
+  delivery_date?: unknown;
 }
 
 /** Money must be a real finite number. NaN, Infinity, null and strings are not. */
@@ -63,6 +70,17 @@ export function validateIssuanceSnapshot(invoice: SnapshotInvoiceInput): Snapsho
     reason,
     ...(detail ? { detail } : {}),
   });
+
+  // MONTHLY-DATA-B1: the delivery-date gate. A newly issued invoice MUST carry a real, non-null
+  // calendar delivery_date; issuance never falls back to issue_date, report_date, or the clock. This
+  // sits inside validateIssuanceSnapshot, which issue-invoice runs BEFORE rendering, upload, the
+  // invoice transition and the document_files insert — so a missing/invalid date leaves zero state.
+  const deliveryDate = invoice.delivery_date;
+  if (deliveryDate === null || deliveryDate === undefined ||
+      (typeof deliveryDate === "string" && deliveryDate.trim() === "")) {
+    return invalid("missing-delivery-date");
+  }
+  if (!isValidCalendarDate(deliveryDate)) return invalid("invalid-delivery-date", "delivery_date");
 
   const items = invoice.invoice_items;
   if (!Array.isArray(items)) return invalid("missing-items");

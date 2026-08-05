@@ -41,6 +41,9 @@ export interface InvoiceDB {
   title:                string | null;
   issue_date:           string | null;
   due_date:             string | null;
+  // MONTHLY-DATA-B1: 納品日 — authoritative delivery date. Required (valid calendar date) before
+  // issuance; never derived from issue_date. Nullable at rest so drafts and legacy rows stay valid.
+  delivery_date:        string | null;
   subtotal:             number;
   discount_amount:      number;
   tax_rate:             number;
@@ -126,6 +129,9 @@ export type InvoiceInput = {
   title:                string | null;
   issue_date:           string | null;
   due_date:             string | null;
+  // MONTHLY-DATA-B1: 納品日 — authoritative delivery date resolved server-side (manual input,
+  // completion report date, or work-order completion date). Never issue_date.
+  delivery_date:        string | null;
   subtotal:             number;
   discount_amount:      number;
   tax_rate:             number;

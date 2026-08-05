@@ -11,6 +11,7 @@ import {
   validateDraftSaveFields,
   validateDraftSaveItems,
 } from "./invoice-issuance-core";
+import { parseDeliveryDateField } from "./invoice-delivery-date";
 
 export async function updateInvoice(
   id: string,
@@ -94,6 +95,14 @@ export async function updateInvoice(
     return { error: "請求書の保存に失敗しました" };
   }
 
+  // MONTHLY-DATA-B1 (+R1): a present-but-invalid manual delivery_date fails closed BEFORE any money
+  // math and BEFORE the RPC — it is never silently cleared or replaced. Absent (blank) is allowed and
+  // clears the draft's delivery_date; a valid value is persisted as-is.
+  const manualDelivery = parseDeliveryDateField(fd.get("delivery_date"));
+  if (manualDelivery.kind === "invalid") {
+    return { error: "請求書の保存に失敗しました" };
+  }
+
   // Totals — computed from the VALIDATED rows only. parseFloat garbage becomes
   // NaN here and is caught by the fields validator below, never persisted.
   const discount_amount = parseFloat((fd.get("discount_amount") as string) || "0");
@@ -117,6 +126,9 @@ export async function updateInvoice(
     title:          (fd.get("title") as string) || null,
     issue_date:     (fd.get("issue_date") as string) || null,
     due_date:       (fd.get("due_date") as string) || null,
+    // MONTHLY-DATA-B1 (+R1): 納品日 — draft-editable. Only an absent (→ null) or already-validated
+    // value reaches here; the invalid case returned above. The RPC persists it with nullif(...)::date.
+    delivery_date:  manualDelivery.kind === "valid" ? manualDelivery.value : null,
     discount_amount,
     tax_rate,
     paid_amount,

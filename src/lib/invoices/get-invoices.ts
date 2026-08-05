@@ -13,7 +13,7 @@ export async function getInvoices(): Promise<InvoiceDB[]> {
     .from("invoices")
     .select(`
       id, dealer_id, customer_id, vehicle_id, estimate_id, work_order_id, completion_report_id,
-      invoice_number, status, title, issue_date, due_date,
+      invoice_number, status, title, issue_date, due_date, delivery_date,
       subtotal, discount_amount, tax_rate, tax_amount, total, paid_amount, balance_due,
       notes, internal_memo, pdf_file_path, pdf_file_url, deleted_at, created_at, updated_at,
       customers ( last_name, first_name, phone, email ),

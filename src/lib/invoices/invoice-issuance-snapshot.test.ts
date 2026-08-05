@@ -18,6 +18,9 @@ function consistentInvoice(
   const paid_amount = opts.paid_amount ?? 0;
   const totals = calculateInvoiceTotals(items, discount_amount, tax_rate, paid_amount);
   return {
+    // MONTHLY-DATA-B1: a consistent snapshot now also carries a valid delivery_date, since the
+    // validator gates on it before the money checks. The money-focused tests keep their reasons.
+    delivery_date: "2026-08-04",
     discount_amount,
     tax_rate,
     paid_amount,
@@ -152,4 +155,40 @@ test("10. validation reuses the shared money rules rather than a second policy",
       }
     }
   }
+});
+
+// ── MONTHLY-DATA-B1: the delivery-date issuance gate ─────────────────────────
+
+test("11. a null, undefined or blank delivery_date is rejected as missing", () => {
+  for (const bad of [null, undefined, "", "   "]) {
+    const inv = consistentInvoice(BASE_ITEMS) as Record<string, unknown>;
+    inv.delivery_date = bad;
+    const r = validateIssuanceSnapshot(inv);
+    assert.equal(r.kind, "invalid");
+    assert.equal(r.kind === "invalid" ? r.reason : "", "missing-delivery-date", String(bad));
+  }
+});
+
+test("12. a malformed or impossible delivery_date is rejected as invalid", () => {
+  for (const bad of ["2026-02-30", "2026-13-01", "2026/08/04", "2026-8-4", "garbage", "2026-08-04T00:00:00Z"]) {
+    const inv = consistentInvoice(BASE_ITEMS) as Record<string, unknown>;
+    inv.delivery_date = bad;
+    const r = validateIssuanceSnapshot(inv);
+    assert.equal(r.kind, "invalid");
+    assert.equal(r.kind === "invalid" ? r.reason : "", "invalid-delivery-date", bad);
+  }
+});
+
+test("13. a valid delivery_date passes the gate; the check runs before the money checks", () => {
+  const ok = consistentInvoice(BASE_ITEMS) as Record<string, unknown>;
+  ok.delivery_date = "2026-08-04";
+  assert.deepEqual(validateIssuanceSnapshot(ok), { kind: "valid" });
+
+  // The delivery gate precedes money validation: a snapshot missing its delivery date is rejected
+  // for THAT reason even when a money field is also broken, proving issuance stops early.
+  const both = consistentInvoice(BASE_ITEMS) as Record<string, unknown>;
+  both.delivery_date = null;
+  both.total = 999999; // also inconsistent
+  const r = validateIssuanceSnapshot(both);
+  assert.equal(r.kind === "invalid" ? r.reason : "", "missing-delivery-date");
 });
