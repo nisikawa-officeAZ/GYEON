@@ -5,6 +5,7 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import {
   DocumentSequenceType,
   defaultPrefix,
+  defaultResetPolicy,
   formatDocumentNumber,
   computeFiscalYear,
 } from "./numbering-types";
@@ -67,7 +68,11 @@ async function loadSequenceConfig(
 
   const prefix      = seq?.prefix  ?? defaultPrefix(sequenceType);
   const padding     = seq?.padding ?? 5;
-  const resetPolicy = (seq?.reset_policy ?? "never") as "never" | "yearly" | "monthly";
+  // MONTHLY-DATA-B2: on a MISSING row, the reset default is per-type — monthly_invoice → "monthly",
+  // every existing type → "never" (unchanged). A stored reset_policy still wins when the row exists,
+  // so this changes no existing type's behaviour. Allocation stays on the authoritative RPC; the
+  // legacy guessed-number fallback below is NOT reachable for the dealer-bound (new) path.
+  const resetPolicy = (seq?.reset_policy ?? defaultResetPolicy(sequenceType)) as "never" | "yearly" | "monthly";
 
   return {
     ok,

@@ -14,6 +14,8 @@ import {
   formatDocumentNumber,
   computeFiscalYear,
   defaultPrefix,
+  defaultResetPolicy,
+  sequenceTypeLabel,
   DOCUMENT_NUMBER_TIME_ZONE,
   type DocumentResetPolicy,
   type DocumentSequenceType,
@@ -98,6 +100,7 @@ test("defaultPrefix still maps every sequence type", () => {
   const expected: Record<DocumentSequenceType, string> = {
     estimate: "EST", work_order: "WO", completion_report: "REP", invoice: "INV",
     payment: "PAY", maintenance_reminder: "MNT", product_order: "PO", reservation: "RSV",
+    monthly_invoice: "MIV",
   };
   for (const [type, prefix] of Object.entries(expected)) {
     assert.equal(defaultPrefix(type as DocumentSequenceType), prefix);
@@ -198,4 +201,40 @@ test("every DocumentResetPolicy is handled", () => {
   const got = policies.map((p) => computeFiscalYear(p, d));
   assert.deepEqual(got, [0, 2026, 202607]);
   for (const v of got) assert.equal(Number.isSafeInteger(v), true);
+});
+
+// ─── MONTHLY-DATA-B2: the monthly_invoice sequence type ──────────────────────
+
+test("monthly_invoice: MIV prefix, Japanese label, monthly reset formatting", () => {
+  assert.equal(defaultPrefix("monthly_invoice"), "MIV");
+  assert.equal(sequenceTypeLabel("monthly_invoice"), "月次請求書");
+  // MIV-2026-08-00001 (monthly reset: fiscalYear = YYYYMM).
+  assert.equal(formatDocumentNumber("MIV", 1, 5, 202608), "MIV-2026-08-00001");
+  // The Asia/Tokyo clock produces YYYYMM for a monthly reset.
+  const d = new Date("2026-08-03T20:00:00.000Z"); // 05:00 JST next day
+  assert.equal(computeFiscalYear("monthly", d), 202608);
+});
+
+test("defaultResetPolicy: only monthly_invoice defaults to monthly; every existing type stays never", () => {
+  assert.equal(defaultResetPolicy("monthly_invoice"), "monthly");
+  const existing: DocumentSequenceType[] = [
+    "estimate", "work_order", "completion_report", "invoice",
+    "payment", "maintenance_reminder", "product_order", "reservation",
+  ];
+  for (const t of existing) {
+    assert.equal(defaultResetPolicy(t), "never", `${t} must keep the never default`);
+  }
+});
+
+test("every existing sequence type retains its prefix and label", () => {
+  const expected: Record<string, [string, string]> = {
+    estimate: ["EST", "見積書"], work_order: ["WO", "作業指示書"],
+    completion_report: ["REP", "作業完了報告"], invoice: ["INV", "請求書"],
+    payment: ["PAY", "入金"], maintenance_reminder: ["MNT", "メンテナンス通知"],
+    product_order: ["PO", "商品注文"], reservation: ["RSV", "予約"],
+  };
+  for (const [t, [pfx, label]] of Object.entries(expected)) {
+    assert.equal(defaultPrefix(t as DocumentSequenceType), pfx);
+    assert.equal(sequenceTypeLabel(t as DocumentSequenceType), label);
+  }
 });

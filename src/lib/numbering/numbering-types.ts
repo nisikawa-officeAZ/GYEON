@@ -8,7 +8,9 @@ export type DocumentSequenceType =
   | "payment"
   | "maintenance_reminder"
   | "product_order"
-  | "reservation";
+  | "reservation"
+  // MONTHLY-DATA-B2: the monthly consolidated invoice (月次請求書), numbered MIV with a monthly reset.
+  | "monthly_invoice";
 
 export type DocumentResetPolicy = "never" | "yearly" | "monthly";
 
@@ -37,6 +39,24 @@ export function defaultPrefix(type: DocumentSequenceType): string {
     case "maintenance_reminder": return "MNT";
     case "product_order":        return "PO";
     case "reservation":          return "RSV";
+    case "monthly_invoice":      return "MIV";
+  }
+}
+
+/**
+ * MONTHLY-DATA-B2: the default reset policy for a NEW sequence row of a given type.
+ *
+ * Only monthly_invoice defaults to a monthly reset (MIV-YYYY-MM-NNNNN); every existing type keeps
+ * its historical "never" default, so this helper cannot change the numbering of any existing type.
+ * A stored `document_sequences.reset_policy` still wins when a row already exists — this is only the
+ * default used when the row is absent.
+ */
+export function defaultResetPolicy(type: DocumentSequenceType): DocumentResetPolicy {
+  switch (type) {
+    case "monthly_invoice":
+      return "monthly";
+    default:
+      return "never";
   }
 }
 
@@ -50,6 +70,7 @@ export function sequenceTypeLabel(type: DocumentSequenceType): string {
     case "maintenance_reminder": return "メンテナンス通知";
     case "product_order":        return "商品注文";
     case "reservation":          return "予約";
+    case "monthly_invoice":      return "月次請求書";
   }
 }
 

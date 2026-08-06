@@ -289,3 +289,30 @@ test("the dealer-bound function never returns a fallback on any failure mode", a
     assert.equal(out, null, `expected null for ${JSON.stringify(f)}`);
   }
 });
+
+// ─── MONTHLY-DATA-B2: monthly_invoice allocates through the authoritative RPC ────
+
+test("monthly_invoice with NO sequence row still allocates through the RPC with a monthly reset", async () => {
+  // Missing row => defaults; the reset default for monthly_invoice is 'monthly' (not 'never'),
+  // so the RPC is called with p_reset_policy='monthly' and p_prefix='MIV', and the formatted
+  // result carries the YYYY-MM monthly segment. issue_date / legacy fallback are never involved.
+  withScenario({ configData: null, rpcData: 1 });
+  const out = await getNextDocumentNumberForDealer("monthly_invoice", DEALER);
+
+  assert.equal(recorded.rpcCalls.length, 1, "the authoritative RPC must be called");
+  const [name, args] = recorded.rpcCalls[0];
+  assert.equal(name, "get_next_document_number");
+  assert.equal(args.p_sequence_type, "monthly_invoice");
+  assert.equal(args.p_reset_policy, "monthly");
+  assert.equal(args.p_prefix, "MIV");
+  assert.match(String(out), /^MIV-\d{4}-\d{2}-00001$/);
+});
+
+test("an existing 'never' row for monthly_invoice still wins over the monthly default", async () => {
+  // A stored reset_policy always overrides the per-type default.
+  withScenario({ configData: { prefix: "MIV", padding: 5, reset_policy: "never", fiscal_year: 0, current_number: 0 }, rpcData: 1 });
+  const out = await getNextDocumentNumberForDealer("monthly_invoice", DEALER);
+  const [, args] = recorded.rpcCalls[0];
+  assert.equal(args.p_reset_policy, "never");
+  assert.equal(out, "MIV-00001");
+});

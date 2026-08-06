@@ -1,7 +1,8 @@
 // DealerOS — Document File Types (PHASE54)
 // Pure types file — no "use server" directive
 
-export type DocumentType = "estimate" | "completion_report" | "invoice" | "product_order";
+// MONTHLY-DATA-B2: monthly_invoice (月次請求書) is a persisted document type; existing types are unchanged.
+export type DocumentType = "estimate" | "completion_report" | "invoice" | "product_order" | "monthly_invoice";
 export type DocumentFileStatus = "active" | "archived" | "deleted";
 
 export interface DocumentFileDB {
@@ -26,6 +27,7 @@ export function documentTypeLabel(type: DocumentType): string {
     case "completion_report": return "作業完了報告書";
     case "invoice":           return "請求書";
     case "product_order":     return "商品注文書";
+    case "monthly_invoice":   return "月次請求書";
   }
 }
 
