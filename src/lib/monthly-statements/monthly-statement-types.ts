@@ -26,7 +26,9 @@ export interface MonthlyStatementDB {
   current_discount:       number;
   current_tax:            number;
   current_total:          number;
-  allocated_payments_total: number;
+  payments_received_total: number;  // B3: completed customer receipts in the period (by payment_date)
+  allocated_payments_total: number; // B3: portion of those receipts reconciled to invoices
+  unapplied_credit_total: number;   // B3: receipt amount not yet allocated to an invoice
   adjustments_total:      number;
   closing_balance:        number;
   customer_snapshot:      Record<string, unknown>;
@@ -59,6 +61,48 @@ export interface MonthlyStatementLineDB {
   total_snapshot:            number;
   sort_order:                number;
   created_at:                string;
+}
+
+/** B3: a persisted allocation of a payment to a specific invoice (allocated-mode payments only). */
+export interface PaymentAllocationDB {
+  id:               string;
+  dealer_id:        string;
+  customer_id:      string;
+  payment_id:       string;
+  invoice_id:       string;
+  allocated_amount: number;
+  allocation_order: number;
+  created_by:       string | null;
+  created_at:       string;
+  idempotency_key:  string | null;
+}
+
+/** B3: an immutable statement-to-payment snapshot, created only during issuance (system-owned). */
+export interface MonthlyStatementReceiptDB {
+  id:                        string;
+  statement_id:              string;
+  payment_id:                string;
+  dealer_id:                 string;
+  customer_id:               string;
+  payment_date_snapshot:     string;   // YYYY-MM-DD; the authoritative period selector, never created_at
+  payment_number_snapshot:   string | null;
+  payment_method_snapshot:   string;
+  amount_snapshot:           number;
+  allocated_amount_snapshot: number;   // amount_snapshot = allocated + unapplied (enforced in the DB)
+  unapplied_amount_snapshot: number;
+  created_at:                string;
+}
+
+/** B3: a signed monthly-statement adjustment (immutable once the parent statement leaves draft). */
+export interface MonthlyStatementAdjustmentDB {
+  id:            string;
+  dealer_id:     string;
+  customer_id:   string;
+  statement_id:  string;
+  signed_amount: number;
+  reason:        string;
+  created_by:    string | null;
+  created_at:    string;
 }
 
 export function monthlyStatementStatusLabel(status: MonthlyStatementStatus): string {

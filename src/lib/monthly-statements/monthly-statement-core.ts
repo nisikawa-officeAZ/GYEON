@@ -142,15 +142,18 @@ export function resolveOpeningBalance(previous: { closing_balance: number } | nu
 }
 
 export interface ClosingBalanceInput {
-  opening_balance:          number;
-  current_total:            number;
-  allocated_payments_total: number;
-  adjustments_total:        number;
+  opening_balance:         number;
+  current_total:           number;
+  payments_received_total: number;   // B3: customer-level receipts in the period (NOT allocation-only)
+  adjustments_total:       number;
 }
 
 /**
- * closing_balance = opening_balance + current_total - allocated_payments_total + adjustments_total.
- * @throws if any input is non-finite (never coerced to zero).
+ * B3 closing balance:
+ *   closing_balance = opening_balance + current_total - payments_received_total + adjustments_total.
+ * payments_received_total is the sum of completed customer receipts selected by payment_date within the
+ * statement period (see statement-receipt-core), so prior-invoice payments and unapplied credit both
+ * reduce the balance exactly once. @throws if any input is non-finite (never coerced to zero).
  */
 export function computeClosingBalance(input: ClosingBalanceInput): number {
   for (const [field, value] of Object.entries(input)) {
@@ -161,8 +164,31 @@ export function computeClosingBalance(input: ClosingBalanceInput): number {
   return (
     input.opening_balance +
     input.current_total -
-    input.allocated_payments_total +
+    input.payments_received_total +
     input.adjustments_total
+  );
+}
+
+export interface ReceiptReconciliationInput {
+  payments_received_total:  number;
+  allocated_payments_total: number;
+  unapplied_credit_total:   number;
+}
+
+/**
+ * B3 reconciliation identity: payments_received_total === allocated_payments_total +
+ * unapplied_credit_total. Returns true only when it holds exactly. @throws if any input is non-finite
+ * (never coerced to zero) — a NaN/Infinity total is a hard error, not a silent reconciliation pass.
+ */
+export function reconcileReceiptTotals(input: ReceiptReconciliationInput): boolean {
+  for (const [field, value] of Object.entries(input)) {
+    if (!isFiniteNumber(value)) {
+      throw new Error(`monthly-statement-core: non-finite ${field} in reconciliation input`);
+    }
+  }
+  return (
+    input.payments_received_total ===
+    input.allocated_payments_total + input.unapplied_credit_total
   );
 }
 

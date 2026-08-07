@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+// B3-B1B I1 — payments list. Displays the derived payment mode (legacy_direct /
+// allocated / unapplied). Deletion is disabled in I1: no delete button, no delete flow.
+// "編集" opens the notes-only editor.
+
 import {
   PaymentDB,
   PaymentStatus,
@@ -8,9 +11,10 @@ import {
   paymentMethodLabel,
   paymentStatusLabel,
   paymentCustomerName,
+  paymentModeLabel,
+  derivePaymentMode,
   PAYMENT_STATUSES,
 } from "@/lib/payments/payment-types";
-import { deletePayment } from "@/lib/payments/delete-payment";
 
 function formatYen(n: number) {
   return "¥" + n.toLocaleString("ja-JP");
@@ -23,11 +27,16 @@ const STATUS_BADGE: Record<PaymentStatus, string> = {
   refunded:  "bg-red-700 text-white",
 };
 
+const MODE_BADGE: Record<string, string> = {
+  legacy_direct: "bg-slate-700 text-slate-300",
+  allocated:     "bg-blue-900/60 text-blue-300",
+  unapplied:     "bg-amber-900/50 text-amber-300",
+};
+
 interface PaymentTableProps {
   payments:       PaymentDB[];
   onView:         (p: PaymentDB) => void;
   onEdit:         (p: PaymentDB) => void;
-  onDeleted:      () => void;
   filterStatus:   string;
   onFilterStatus: (s: string) => void;
   searchQuery:    string;
@@ -38,14 +47,11 @@ export default function PaymentTable({
   payments,
   onView,
   onEdit,
-  onDeleted,
   filterStatus,
   onFilterStatus,
   searchQuery,
   onSearch,
 }: PaymentTableProps) {
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
   const filtered = payments.filter((p) => {
     if (filterStatus && p.status !== filterStatus) return false;
     if (searchQuery) {
@@ -57,18 +63,6 @@ export default function PaymentTable({
     }
     return true;
   });
-
-  async function handleDelete(p: PaymentDB) {
-    if (!confirm(`${paymentDisplayNo(p)} を削除しますか？`)) return;
-    setDeletingId(p.id);
-    const result = await deletePayment(p.id);
-    setDeletingId(null);
-    if ("error" in result) {
-      alert(result.error);
-    } else {
-      onDeleted();
-    }
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -103,6 +97,7 @@ export default function PaymentTable({
             <thead>
               <tr className="border-b border-slate-800 bg-[#1e293b]">
                 <th className="text-left px-4 py-3 text-slate-500 font-medium">入金番号</th>
+                <th className="text-left px-4 py-3 text-slate-500 font-medium">区分</th>
                 <th className="text-left px-4 py-3 text-slate-500 font-medium hidden sm:table-cell">請求書</th>
                 <th className="text-left px-4 py-3 text-slate-500 font-medium hidden md:table-cell">顧客名</th>
                 <th className="text-left px-4 py-3 text-slate-500 font-medium">入金日</th>
@@ -115,55 +110,57 @@ export default function PaymentTable({
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
-                <tr key={p.id}
-                  className="border-b border-slate-800 hover:bg-[#1e293b]/50 transition-colors cursor-pointer"
-                  onClick={() => onView(p)}>
-                  <td className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">
-                    {paymentDisplayNo(p)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap hidden sm:table-cell">
-                    {p.invoices?.invoice_number ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-300 whitespace-nowrap hidden md:table-cell">
-                    {paymentCustomerName(p.customers)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
-                    {p.payment_date ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap hidden sm:table-cell">
-                    {paymentMethodLabel(p.payment_method)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-slate-200 font-medium whitespace-nowrap">
-                    {formatYen(p.amount)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap hidden md:table-cell">
-                    {p.fee_amount > 0 ? formatYen(p.fee_amount) : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right text-slate-300 whitespace-nowrap hidden md:table-cell">
-                    {formatYen(p.net_amount)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${STATUS_BADGE[p.status] ?? "bg-slate-700 text-slate-300"}`}>
-                      {paymentStatusLabel(p.status)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={() => onEdit(p)}
-                        className="text-slate-500 hover:text-slate-100 text-xs hover:bg-slate-700 px-2 py-1 rounded transition-colors">
-                        編集
-                      </button>
-                      <button
-                        onClick={() => handleDelete(p)}
-                        disabled={deletingId === p.id}
-                        className="text-slate-500 hover:text-red-400 text-xs hover:bg-red-900/20 px-2 py-1 rounded transition-colors disabled:opacity-50">
-                        {deletingId === p.id ? "..." : "削除"}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((p) => {
+                const mode = derivePaymentMode(p);
+                return (
+                  <tr key={p.id}
+                    className="border-b border-slate-800 hover:bg-[#1e293b]/50 transition-colors cursor-pointer"
+                    onClick={() => onView(p)}>
+                    <td className="px-4 py-3 text-slate-300 font-medium whitespace-nowrap">
+                      {paymentDisplayNo(p)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${MODE_BADGE[mode]}`}>
+                        {paymentModeLabel(mode)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-400 whitespace-nowrap hidden sm:table-cell">
+                      {p.invoices?.invoice_number ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-300 whitespace-nowrap hidden md:table-cell">
+                      {paymentCustomerName(p.customers)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
+                      {p.payment_date ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-400 whitespace-nowrap hidden sm:table-cell">
+                      {paymentMethodLabel(p.payment_method)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-200 font-medium whitespace-nowrap">
+                      {formatYen(p.amount)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap hidden md:table-cell">
+                      {p.fee_amount > 0 ? formatYen(p.fee_amount) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-300 whitespace-nowrap hidden md:table-cell">
+                      {formatYen(p.net_amount)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${STATUS_BADGE[p.status] ?? "bg-slate-700 text-slate-300"}`}>
+                        {paymentStatusLabel(p.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => onEdit(p)}
+                          className="text-slate-500 hover:text-slate-100 text-xs hover:bg-slate-700 px-2 py-1 rounded transition-colors">
+                          編集
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -11,6 +11,7 @@ import {
   aggregateStatementTotals,
   resolveOpeningBalance,
   computeClosingBalance,
+  reconcileReceiptTotals,
   deriveWorkDescription,
   type CandidateInvoice,
 } from "./monthly-statement-core";
@@ -99,12 +100,40 @@ test("9. opening balance: previous closing_balance, else zero; non-finite reject
   assert.throws(() => resolveOpeningBalance({ closing_balance: NaN }));
 });
 
-test("10. closing balance = opening + current_total - allocated + adjustments", () => {
+test("10. B3 closing balance = opening + current_total - payments_received + adjustments", () => {
   assert.equal(computeClosingBalance({
-    opening_balance: 1000, current_total: 5000, allocated_payments_total: 2000, adjustments_total: 300,
+    opening_balance: 1000, current_total: 5000, payments_received_total: 2000, adjustments_total: 300,
   }), 4300);
+  // The three mandated accounting scenarios (opening/charges/receipt) resolve exactly:
+  assert.equal(computeClosingBalance({
+    opening_balance: 100000, current_total: 0, payments_received_total: 60000, adjustments_total: 0,
+  }), 40000, "previous balance only");
+  assert.equal(computeClosingBalance({
+    opening_balance: 100000, current_total: 50000, payments_received_total: 60000, adjustments_total: 0,
+  }), 90000, "current charges plus prior-invoice payment");
+  assert.equal(computeClosingBalance({
+    opening_balance: 0, current_total: 50000, payments_received_total: 60000, adjustments_total: 0,
+  }), -10000, "unapplied credit yields negative (customer credit) balance");
   assert.throws(() => computeClosingBalance({
-    opening_balance: 0, current_total: NaN, allocated_payments_total: 0, adjustments_total: 0,
+    opening_balance: 0, current_total: NaN, payments_received_total: 0, adjustments_total: 0,
+  }));
+});
+
+test("10b. reconciliation identity: payments_received = allocated + unapplied", () => {
+  assert.equal(reconcileReceiptTotals({
+    payments_received_total: 60000, allocated_payments_total: 60000, unapplied_credit_total: 0,
+  }), true, "fully allocated");
+  assert.equal(reconcileReceiptTotals({
+    payments_received_total: 60000, allocated_payments_total: 0, unapplied_credit_total: 60000,
+  }), true, "fully unapplied");
+  assert.equal(reconcileReceiptTotals({
+    payments_received_total: 60000, allocated_payments_total: 25000, unapplied_credit_total: 35000,
+  }), true, "split");
+  assert.equal(reconcileReceiptTotals({
+    payments_received_total: 60000, allocated_payments_total: 25000, unapplied_credit_total: 30000,
+  }), false, "mismatch is not silently accepted");
+  assert.throws(() => reconcileReceiptTotals({
+    payments_received_total: Infinity, allocated_payments_total: 0, unapplied_credit_total: 0,
   }));
 });
 

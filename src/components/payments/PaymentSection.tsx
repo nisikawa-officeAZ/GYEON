@@ -1,8 +1,13 @@
 "use client";
 
-// Lazy-loaded payment section inside InvoiceDetail.
+// B3-B1B I1 — payment section inside InvoiceDetail. Creation here is ALWAYS legacy_direct
+// against the surrounding invoice (the only place that mode is offered). Editing is
+// notes-only. Deletion is disabled in I1 — no delete button, no delete flow. Refreshes
+// after successful create, notes update, or conversion. Rows come from the I1-R1 union
+// read, so a converted (allocated) payment stays visible here with the amount applied to
+// THIS invoice (invoice_context_amount); the full payment amount is shown when they differ.
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import {
   PaymentDB,
   PaymentStatus,
@@ -11,7 +16,6 @@ import {
   paymentStatusLabel,
 } from "@/lib/payments/payment-types";
 import { getPaymentsByInvoice } from "@/lib/payments/get-payments";
-import { deletePayment } from "@/lib/payments/delete-payment";
 import PaymentForm   from "./PaymentForm";
 import PaymentDetail from "./PaymentDetail";
 
@@ -35,15 +39,13 @@ type ViewState =
 interface PaymentSectionProps {
   invoiceId:      string;
   invoiceBalance: number;
-  onPaymentSaved?: () => void;  // called after create/update/delete so parent can refresh invoice
+  onPaymentSaved?: () => void;  // called after create/notes-update/conversion so parent refreshes
 }
 
 export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSaved }: PaymentSectionProps) {
   const [payments,  setPayments]  = useState<PaymentDB[]>([]);
   const [loading,   setLoading]   = useState(true);
   const [view,      setView]      = useState<ViewState>({ mode: "list" });
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
 
   function refresh() {
     setLoading(true);
@@ -61,33 +63,19 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
     onPaymentSaved?.();
   }
 
-  async function handleDelete(p: PaymentDB) {
-    if (!confirm(`${paymentDisplayNo(p)} を削除しますか？`)) return;
-    setDeletingId(p.id);
-    startTransition(async () => {
-      const result = await deletePayment(p.id);
-      setDeletingId(null);
-      if ("error" in result) {
-        alert(result.error);
-      } else {
-        refresh();
-        onPaymentSaved?.();
-      }
-    });
-  }
-
-  // ── Detail view ──────────────────────────────────────────────────────────────
+  // ── Detail view (conversion lives here for legacy-direct rows) ────────────────
   if (view.mode === "detail") {
     return (
       <PaymentDetail
         payment={view.payment}
         onClose={() => setView({ mode: "list" })}
         onEdit={() => setView({ mode: "edit", payment: view.payment })}
+        onConverted={handleSaved}
       />
     );
   }
 
-  // ── Create form ──────────────────────────────────────────────────────────────
+  // ── Create form: fixed legacy_direct for THIS invoice ─────────────────────────
   if (view.mode === "create") {
     return (
       <div className="flex flex-col gap-3">
@@ -96,8 +84,7 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
           ← キャンセル
         </button>
         <PaymentForm
-          invoiceId={invoiceId}
-          invoiceBalance={invoiceBalance}
+          context={{ kind: "invoice", invoiceId, invoiceBalance }}
           onCancel={() => setView({ mode: "list" })}
           onSuccess={handleSaved}
         />
@@ -105,7 +92,7 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
     );
   }
 
-  // ── Edit form ────────────────────────────────────────────────────────────────
+  // ── Edit form: notes / internal_memo only ─────────────────────────────────────
   if (view.mode === "edit") {
     return (
       <div className="flex flex-col gap-3">
@@ -114,7 +101,7 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
           ← 戻る
         </button>
         <PaymentForm
-          invoiceId={invoiceId}
+          context={{ kind: "invoice", invoiceId, invoiceBalance }}
           payment={view.payment}
           onCancel={() => setView({ mode: "list" })}
           onSuccess={handleSaved}
@@ -123,7 +110,7 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
     );
   }
 
-  // ── List view ────────────────────────────────────────────────────────────────
+  // ── List view ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-3">
       {loading ? (
@@ -154,8 +141,13 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-slate-100 truncate">
-                        {formatYen(p.amount)}
+                        {formatYen(p.invoice_context_amount ?? p.amount)}
                       </p>
+                      {(p.invoice_context_amount ?? p.amount) !== p.amount && (
+                        <span className="text-[10px] text-slate-500 shrink-0">
+                          （この請求書への割当 / 入金総額 {formatYen(p.amount)}）
+                        </span>
+                      )}
                       <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 ${STATUS_BADGE[p.status] ?? "bg-slate-700 text-slate-300"}`}>
                         {paymentStatusLabel(p.status)}
                       </span>
@@ -177,14 +169,7 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
                       onClick={() => setView({ mode: "edit", payment: p })}
                       className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
                     >
-                      編集
-                    </button>
-                    <button
-                      onClick={() => handleDelete(p)}
-                      disabled={deletingId === p.id}
-                      className="text-xs text-slate-500 hover:text-red-400 hover:bg-red-900/20 px-2 py-1 rounded transition-colors disabled:opacity-50"
-                    >
-                      {deletingId === p.id ? "..." : "削除"}
+                      メモ編集
                     </button>
                     <button
                       onClick={() => setView({ mode: "detail", payment: p })}
