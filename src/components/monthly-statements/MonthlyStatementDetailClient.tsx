@@ -3,7 +3,9 @@
 // B3-B1B I2 — monthly-statement detail: lines, receipt split, adjustments, closing formula
 // and reconciliation state. Draft-only actions: adjustments, issuance (the existing
 // service-role-isolated server action), and abandonment (with a number-burn warning).
-// No void UI, no PDF, no Storage, no allocation editing here.
+// E3: issued statements gain the immutable PDF artifact controls — 作成 (retry-safe ensure)
+// while the pointer is null, ダウンロード (sign-only) once pointed; voided keeps download only.
+// No regenerate control exists: the artifact is immutable. No credentials or URLs are persisted.
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -15,6 +17,7 @@ import type { MonthlyStatementDetail } from "@/lib/monthly-statements/get-monthl
 import { issueMonthlyStatement } from "@/lib/monthly-statements/issue-monthly-statement";
 import { abandonMonthlyStatementDraft } from "@/lib/monthly-statements/abandon-monthly-statement-draft";
 import { addStatementAdjustment, deleteStatementAdjustment } from "@/lib/monthly-statements/statement-adjustment-actions";
+import { ensureMonthlyInvoicePdf, getMonthlyInvoicePdfUrl } from "@/lib/monthly-statements/ensure-monthly-invoice-pdf";
 
 function formatYen(n: number) {
   return "¥" + n.toLocaleString("ja-JP");
@@ -43,8 +46,13 @@ export default function MonthlyStatementDetailClient({ detail }: MonthlyStatemen
   const router = useRouter();
   const { statement: s, lines, receipts, adjustments, previewReceipts, totals } = detail;
   const isDraft = s.status === "draft";
+  const isIssued = s.status === "issued";
+  const isVoided = s.status === "voided";
+  const hasPdfPointer = Boolean(s.pdf_document_file_id);
 
   const [error, setError]   = useState<string | null>(null);
+  // Artifact feedback carries its tone: operator-attention states are NOT retry invitations.
+  const [artifactNotice, setArtifactNotice] = useState<{ tone: "operator" | "retry"; message: string } | null>(null);
   const [confirmAbandon, setConfirmAbandon] = useState(false);
   const [adjAmount, setAdjAmount] = useState("");
   const [adjReason, setAdjReason] = useState("");
@@ -61,6 +69,37 @@ export default function MonthlyStatementDetailClient({ detail }: MonthlyStatemen
       const result = await issueMonthlyStatement(s.id);
       if ("error" in result) setError(result.error);
       else router.refresh();
+    });
+  }
+
+  function handleArtifactResult(result: Awaited<ReturnType<typeof ensureMonthlyInvoicePdf>>) {
+    if (result.kind === "ready") {
+      setArtifactNotice(null);
+      // The signed URL carries download disposition (createSignedUrl { download: true }), so a
+      // same-tab navigation downloads the PDF without leaving the page. window.open after an
+      // await is popup-blocked by browsers; location.assign is not.
+      window.location.assign(result.signedUrl);
+      router.refresh();
+      return;
+    }
+    const operatorKinds = ["artifact_missing", "cleanup_failed"];
+    setArtifactNotice({
+      tone: operatorKinds.includes(result.kind) ? "operator" : "retry",
+      message: result.message,
+    });
+  }
+
+  function handleCreatePdf() {
+    setArtifactNotice(null);
+    startTransition(async () => {
+      handleArtifactResult(await ensureMonthlyInvoicePdf(s.id));
+    });
+  }
+
+  function handleDownloadPdf() {
+    setArtifactNotice(null);
+    startTransition(async () => {
+      handleArtifactResult(await getMonthlyInvoicePdfUrl(s.id));
     });
   }
 
@@ -121,12 +160,34 @@ export default function MonthlyStatementDetailClient({ detail }: MonthlyStatemen
               </button>
             </>
           )}
+          {isIssued && !hasPdfPointer && (
+            <button onClick={handleCreatePdf} disabled={pending}
+              className="text-xs font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-4 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+              {pending ? "処理中..." : "請求書PDFを作成"}
+            </button>
+          )}
+          {(isIssued || isVoided) && hasPdfPointer && (
+            <button onClick={handleDownloadPdf} disabled={pending}
+              className="text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-100 px-4 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+              {pending ? "処理中..." : "PDFをダウンロード"}
+            </button>
+          )}
         </div>
       </div>
 
       {error && (
         <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
           <p className="text-xs text-red-400">{error}</p>
+        </div>
+      )}
+
+      {artifactNotice && (
+        <div className={artifactNotice.tone === "operator"
+          ? "bg-amber-900/30 border border-amber-700 rounded-lg px-3 py-2"
+          : "bg-red-900/30 border border-red-700 rounded-lg px-3 py-2"}>
+          <p className={`text-xs ${artifactNotice.tone === "operator" ? "text-amber-400" : "text-red-400"}`}>
+            {artifactNotice.message}
+          </p>
         </div>
       )}
 

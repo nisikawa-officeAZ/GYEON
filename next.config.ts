@@ -200,6 +200,7 @@ export const nextConfig: NextConfig = {
       "./src/lib/pdf/fonts/*.ttf",
       "./src/lib/pdf/brand-assets/*.png",
       "./src/lib/pdf/design/premium/**",
+      "./src/lib/pdf/chromium-document/design/**",
       "./public/brand/gyeon-classic/logos/combination.svg",
     ],
   },

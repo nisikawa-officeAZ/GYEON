@@ -40,6 +40,11 @@ export interface MonthlyStatementDB {
   voided_at:              string | null;
   voided_by:              string | null;
   void_reason:            string | null;
+  // E3: immutable monthly-invoice PDF artifact pointer (M1 migration). Written ONLY by
+  // attach_monthly_statement_pdf_rpc; pdf_generated_at is DB-derived in the pointer trigger.
+  // Optional: rows read before the M1 migration is applied carry no pointer columns at all.
+  pdf_document_file_id?:  string | null;
+  pdf_generated_at?:      string | null;
   created_at:             string;
   updated_at:             string;
 }
