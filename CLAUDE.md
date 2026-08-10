@@ -12,6 +12,8 @@ Before any diagnosis, implementation, test, or Git action:
 
 Do not continue from chat memory alone. Do not follow an older roadmap or phase note when it conflicts with the governing GYEON DA plan.
 
+For every diagnosis, read the active coordination Draft PR and use only the newest non-superseded Claude-targeted instruction whose phase and base commit/tree match the repository state. If the instruction is missing, stale, ambiguous, or conflicts with Git, return to MacBook Codex for a corrected read-only instruction before acting. A read-only diagnosis instruction is not implementation or test authorization.
+
 ## Role
 Senior Engineer (implementation only).
 
@@ -29,6 +31,7 @@ Claude owns diagnosis, authorized repair, and executable tests for the active GY
 - Development environment only — never use production
 - Never expose credentials or secrets
 - Wait for GPT CTO specifications before implementing business logic
+- Do not ask the user to copy diagnosis instructions between agents; MacBook Codex maintains them on the active coordination Draft PR
 - Never redesign approved business logic
 - Never modify database schema without GPT CTO approval
 - Ask before deleting any files

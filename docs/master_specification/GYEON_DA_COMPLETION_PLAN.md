@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Document status | DRAFT — direction ratified; documentation commit pending |
+| Document status | ACTIVE — direction ratified and Git-governed |
 | Execution authority | Canonical for GYEON DA completion after ratification |
 | Owner | Office AZ / Product Owner |
 | Technical authority | MacBook Codex |
@@ -160,6 +160,16 @@ Rules:
 8. Migration application, Ready conversion, merge, deployment, and destructive operations always require explicit user approval.
 9. Completion is recorded in `GYEON_DA_PHASE_RESULTS.md` before the next phase is authorized.
 10. A phase may close as `PASS_WITH_NO_CODE` when current evidence proves the capability already meets its acceptance criteria.
+
+### 6.1 Claude read-only diagnosis instruction maintenance
+
+MacBook Codex owns the Claude diagnosis handoff. At each new diagnosis or implementation-candidate boundary, and before any implementation or verification instruction, Codex must proactively publish a Claude-targeted read-only diagnosis instruction on the active coordination Draft PR. The user is not a transport layer and must not be asked to copy the instruction between agents.
+
+The instruction must state the exact phase, base branch/commit/tree, required first reads, read scope, protected metadata-only paths, required diagnosis, prohibitions, result schema, and return target. It authorizes inspection only unless a later, separate gate explicitly authorizes another action.
+
+Codex must automatically correct the instruction when the phase, base, scope, allowlist, protected boundary, candidate commands, prohibitions, or expected result changes. Material corrections are appended as a new superseding comment that identifies the prior comment URL or ID and lists the corrected fields. Historical evidence is not silently rewritten. Claude follows only the newest non-superseded instruction matching both the active phase and repository base.
+
+This is event-driven phase governance. It does not reinstate a background polling or five-minute monitoring automation. Missing, stale, ambiguous, or conflicting instructions are a blocker for Claude, not a reason to guess or broaden scope.
 
 ## 7. Delivery phases
 

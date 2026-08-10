@@ -45,6 +45,9 @@ MacBook must not implement Office AZ inventory. Studio must not redirect its inv
 
 - One active implementation phase at a time.
 - Audit, repair, verification, commit, push, migration apply, Ready conversion, merge, and deployment remain separate gates.
+- Before proposing implementation or verification, MacBook Codex must proactively publish a Claude-targeted read-only diagnosis instruction on the active coordination Draft PR. The user must not be asked to relay that instruction manually.
+- MacBook Codex must append a corrected, superseding diagnosis instruction whenever its phase, base commit/tree, literal read scope or allowlist, protected paths, candidate commands, prohibitions, or required result changes. The superseding comment must identify the prior comment and the corrected fields; the newest non-superseded instruction matching the phase and base governs.
+- A Claude read-only diagnosis instruction never authorizes file changes, tests, dependency changes, Git mutations, database/Supabase access, migration work, Ready conversion, merge, or deployment. Those remain separate gates.
 - Use literal allowlists. Do not silently broaden scope.
 - Record every accepted, rejected, or blocked phase in `GYEON_DA_PHASE_RESULTS.md`.
 - Do not claim completion from source presence alone; use the E0-E5 evidence levels in the governing plan.
