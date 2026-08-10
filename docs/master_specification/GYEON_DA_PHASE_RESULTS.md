@@ -214,3 +214,76 @@ rollback_or_recovery: "The documentation branch is separate from the baseline; n
 decision: "GDA-0_DIRECTION_LOCK_PUBLISHED"
 next: "Publish this append-only delivery record, obtain Claude and Studio acknowledgements, then begin the separately authorized GDA-1 read-only audit."
 ```
+
+## GDA-1R — Focused test gate repair and acceptance
+
+```yaml
+phase: GDA-1R
+status: PASS
+date: 2026-08-10
+objective: "Repair the stale GDA-1 focused save-test gate without changing production source or reading protected preview content."
+authorization: "The user explicitly authorized the three-test-path repair, verification, separate commit/push, child Draft PR creation, independent acceptance, and this one-ledger-file delivery record."
+repository:
+  root: "/Users/atsushinishikawa/dealeros"
+  base_branch: "fix/approval-center-delete-access-cut"
+  base_commit: "5b1cd6ae8d3277d3d46cfc4f15f247fc168e0223"
+  base_tree: "56c86cdcc52b7957becbb8315f04872dcf3fdda6"
+  worktree: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gda1-audit-v1"
+candidate:
+  branch: "agent/gda1r-focused-test-gate-repair"
+  commit: "3a0e72b611a7515ad1e938292ce9854e6d611552"
+  tree: "5cb97386bfc17dfd7979dbaaa69208f3603edaf5"
+  allowlist:
+    - "src/components/estimates/wizard/save/save-estimate-from-wizard-action.test.ts"
+    - "src/components/estimates/wizard/save/supabase-persistence-gateway.test.ts"
+    - "src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts"
+  changed_paths:
+    - "src/components/estimates/wizard/save/supabase-persistence-gateway.test.ts"
+    - "src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts"
+  protected_path_evidence:
+    - "100644 c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f src/components/estimates/wizard/screens/ScreensPreview.tsx; path/mode/blob/Git-state only; content not accessed in repaired verification or acceptance"
+    - "The repaired recursive scan excludes the exact protected pathname before returning any path to a content reader."
+    - "The LINE migration, closed finance migration, and closed finance boundary test were absent from the candidate diff."
+  per_path_sha256:
+    "src/components/estimates/wizard/save/save-estimate-from-wizard-action.test.ts": "caf757019ac1cf43b2991ffc98210558eb4d4f31051a3a459cfc67a3da1cf8ca"
+    "src/components/estimates/wizard/save/supabase-persistence-gateway.test.ts": "ab82816da9c3ec539b5d8bfc57287383a4a6cbb59c8946eac36cdf281193ae77"
+    "src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts": "e176f139fc26a218efae0c3b9e13c76e706368ea091ce23b842f25e48afb14ce"
+  combined_sha256: "02ba54da00b93ad0b916469a2146e78630daf4bdb8cf7b58d29a2ff191742dd9 (SHA-256 of the three `shasum -a 256` manifest lines in allowlist order; relative pathnames; two spaces between hash and path; LF; final newline present)"
+verification:
+  commands:
+    - "node --experimental-test-module-mocks --import /Users/atsushinishikawa/dealeros/node_modules/tsx/dist/loader.mjs --test src/components/estimates/wizard/save/save-estimate-from-wizard-action.test.ts src/components/estimates/wizard/save/supabase-persistence-gateway.test.ts src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts"
+    - "node --experimental-test-module-mocks --import /Users/atsushinishikawa/dealeros/node_modules/tsx/dist/loader.mjs --test src/lib/auth/dealer-surface-access-boundary.test.ts src/lib/auth/estimate-save-actor-context.test.ts src/lib/auth/require-active-dealer.test.ts src/lib/customers/find-wizard-customer-duplicates-core.test.ts src/lib/vehicle-registration/ocr-customer-mapping.test.ts src/lib/ocr/wizard-customer-ocr-apply-core.test.ts src/components/estimates/wizard/production/production-route-reachability.test.ts src/components/estimates/wizard/save/wizard-idempotency-session.test.ts src/components/estimates/wizard/save/supabase-persistence-gateway.test.ts src/components/estimates/wizard/save/save-estimate-from-wizard-action.test.ts src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts src/app/pdf/estimate/route.test.ts src/app/pdf/work-report/route.test.ts src/lib/pdf/__tests__/template-b2/estimate-binding-boundary.test.ts src/lib/pdf/__tests__/template-c2/work-report-binding-boundary.test.ts src/lib/estimates/estimate-share-boundary.test.ts src/lib/line/line-transport-boundary.test.ts src/lib/line/line-log-redaction.test.ts src/lib/invoices/invoice-issuance-boundary.test.ts"
+    - "git diff --check -- src/components/estimates/wizard/save/save-estimate-from-wizard-action.test.ts src/components/estimates/wizard/save/supabase-persistence-gateway.test.ts src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts"
+    - "GitHub PR #9 remote metadata, commit/tree/parent, changed-path, Draft, mergeability, and accepted-hash comparison"
+  passed: 646
+  failed: 0
+  typecheck: NOT_RUN
+  build: NOT_RUN
+  lint: NOT_RUN
+  evidence_paths:
+    - "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5234913952"
+    - "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5234974799"
+    - "https://github.com/nisikawa-officeAZ/GYEON/pull/9"
+    - "https://github.com/nisikawa-officeAZ/GYEON/pull/9#issuecomment-5234991271"
+    - "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5234992517"
+external_actions:
+  database_access: false
+  migration_created: false
+  migration_applied: false
+  storage_changed: false
+  line_external_changed: false
+  deployed: false
+git_actions:
+  committed: true
+  pushed: true
+  pr_changed: true
+  ready_or_merged: false
+known_limitations:
+  - "The targeted 113 tests are a repeated subset of the 533-test focused suite; 646 records executed across both commands, not 646 unique tests."
+  - "Node module mocking remains experimental and `mock.module` namedExports emits a non-failing deprecation warning."
+  - "Reservations/calendar, unified work-order completion, completion-report creation, duplicate maintenance scheduling, authenticated environment proof, and real-device PWA acceptance remain open GDA-1 evidence gaps."
+  - "PR #9 is Draft and was not marked Ready or merged."
+rollback_or_recovery: "The repair is isolated in Draft PR #9. Revert commit 3a0e72b or close the unmerged Draft PR; no production source, database, migration, external service, or deployment state changed."
+decision: "GDA-1R_FOCUSED_TEST_GATE_REPAIRED_AND_ACCEPTED"
+next: "Select and authorize exactly one remaining GDA-1 evidence gate; no GDA-2 product implementation is authorized by this record."
+```
