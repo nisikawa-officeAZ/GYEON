@@ -487,6 +487,8 @@ const codeOf = (path: string): string =>
 const ORCH_SRC = "src/components/estimates/wizard/save/wizard-save-intent-orchestrator.ts";
 const ACTION_SRC = "src/components/estimates/wizard/save/save-estimate-from-wizard-intent-action.ts";
 const ACTION_MODULE = "save-estimate-from-wizard-intent-action";
+const EXPECTED_ROUTE_IMPORTER = "src/app/estimates/new/page.tsx";
+const PROTECTED_PREVIEW = "src/components/estimates/wizard/screens/ScreensPreview.tsx";
 
 test("the orchestrator source contains NO prohibited runtime dependency", () => {
   const code = codeOf(ORCH_SRC);
@@ -580,19 +582,26 @@ function walk(dir: string): string[] {
   for (const e of readdirSync(dir, { withFileTypes: true, recursive: true })) {
     if (!e.isFile()) continue;
     if (!/\.(ts|tsx)$/.test(e.name)) continue;
-    out.push(`${e.parentPath ?? dir}/${e.name}`);
+    const path = `${e.parentPath ?? dir}/${e.name}`;
+    // This path is hash-only evidence. Source-scanning tests must never open it.
+    if (path === PROTECTED_PREVIEW) continue;
+    out.push(path);
   }
   return out;
 }
 
-test("the new action has ZERO importers anywhere in src/", () => {
+test("the new action has exactly one production importer", () => {
   const importers: string[] = [];
   for (const file of walk("src")) {
     if (file.endsWith(`${ACTION_MODULE}.ts`)) continue;             // the action itself
     if (file.endsWith("wizard-save-intent-orchestrator.test.ts")) continue; // this test (source text only)
     if (readFileSync(file, "utf8").includes(ACTION_MODULE)) importers.push(file);
   }
-  assert.deepEqual(importers, [], `the action must remain unmounted; found importers: ${importers.join(", ")}`);
+  assert.deepEqual(
+    importers,
+    [EXPECTED_ROUTE_IMPORTER],
+    `the action must have one production importer; found: ${importers.join(", ")}`,
+  );
 });
 
 test("the save barrel does not re-export the new action and has no wildcard export", () => {
@@ -601,12 +610,12 @@ test("the save barrel does not re-export the new action and has no wildcard expo
   assert.equal(/export\s+\*/.test(barrel), false, "no wildcard export could pick it up");
 });
 
-test("ScreensPreview and every route/page still ignore the new action", () => {
-  const preview = readFileSync("src/components/estimates/wizard/screens/ScreensPreview.tsx", "utf8");
-  assert.equal(preview.includes(ACTION_MODULE), false, "ScreensPreview does not import it");
-  for (const file of walk("src/app")) {
-    assert.equal(readFileSync(file, "utf8").includes(ACTION_MODULE), false, `${file} must not import the action`);
-  }
+test("source scans exclude the protected preview and only the accepted route mounts the action", () => {
+  assert.equal(walk("src").includes(PROTECTED_PREVIEW), false, "protected preview stays outside content scans");
+  const routeImporters = walk("src/app").filter((file) =>
+    readFileSync(file, "utf8").includes(ACTION_MODULE),
+  );
+  assert.deepEqual(routeImporters, [EXPECTED_ROUTE_IMPORTER]);
 });
 
 // ── OBS-1L-B7: exactly one operational record, and who owns it ───────────────
