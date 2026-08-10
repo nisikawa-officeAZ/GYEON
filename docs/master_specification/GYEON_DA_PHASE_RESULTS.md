@@ -454,3 +454,73 @@ rollback_or_recovery: "Revert local contract commit ce4e670c617ef3ea9105d7df7a1e
 decision: "GDA_1W_C1_COMPLETION_AUTHORITY_CONTRACT_ACCEPTED_AND_LOCALLY_COMMITTED"
 next: "After the ledger-only commit is verified, separately authorize push of the two documentation commits and a Draft PR #8 evidence update. Source implementation, migration generation/application, tests, DB access, Ready conversion, merge, and deployment remain unauthorized."
 ```
+
+## GDA-0E — Claude diagnosis handoff governance
+
+```yaml
+phase: GDA-0E
+status: ACCEPTED_DOCUMENTATION_COMMITTED
+date: 2026-08-10
+objective: "Make Claude-targeted read-only diagnosis instructions an automatic, Git-governed Codex responsibility so the user no longer transports or repairs handoffs manually."
+authorization: "The user explicitly directed MacBook Codex to always append and correct Claude read-only diagnosis instructions automatically."
+repository:
+  root: "/Users/atsushinishikawa/dealeros"
+  branch: "plan/gyeon-da-completion-v1"
+  base_commit: "bdceb9b50dea566d86c67bbe9e8593fcd8bf3ec4"
+  base_tree: "b02dedc7835cdcb7e1c8e847c3d601625eb67b02"
+  worktree: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gyeon-da-completion-v1"
+candidate:
+  governance_commit: "cdde014b6016b6da4120d06f0b98c33a650ed721"
+  governance_tree: "f927b18b758f41d1926665f9f2cef9ab2a47900f"
+  governance_parent: "bdceb9b50dea566d86c67bbe9e8593fcd8bf3ec4"
+  literal_allowlist:
+    - "AGENTS.md"
+    - "CLAUDE.md"
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  changed_paths:
+    - "AGENTS.md"
+    - "CLAUDE.md"
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  governance_commit_changed_paths:
+    - "AGENTS.md"
+    - "CLAUDE.md"
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+  per_path_sha256:
+    "AGENTS.md": "1c3b986a66bda93ddde74ff9c6d7310facca402dcb21c7713497eb54ef0879e2"
+    "CLAUDE.md": "c8ca7d0969b2e2ef1d9a6da4cb3c3f7f299cfbce3eb40d72d97814319bc59856"
+    "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md": "3bed3377da8cb9fa79874c2585c75e9e273648e74e4b518cc960e404279e77f2"
+verification:
+  commands:
+    - "git diff --check"
+    - "git diff --cached --name-status"
+    - "git diff --cached --check"
+    - "git show --format= --name-status cdde014b6016b6da4120d06f0b98c33a650ed721"
+  tests_run: false
+  typecheck: NOT_RUN
+  build: NOT_RUN
+  lint: NOT_RUN
+external_actions:
+  database_access: false
+  migration_created: false
+  migration_applied: false
+  storage_changed: false
+  line_external_changed: false
+  deployed: false
+git_actions:
+  governance_committed: true
+  governance_commit: "cdde014b6016b6da4120d06f0b98c33a650ed721"
+  result_ledger_commit_authorized: true
+  committed: true
+  pushed: false
+  pr_comment_policy_changed: true
+  pr_comment_url: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5235666749"
+  ready_or_merged: false
+decision: "Codex must publish the read-only Claude diagnosis instruction at each applicable phase boundary and append a traceable superseding correction whenever governing fields change. Claude uses only the newest matching non-superseded instruction."
+known_limitations:
+  - "This rule is event-driven and does not restore the stopped five-minute GitHub monitoring automation."
+  - "Read-only diagnosis never implies permission to edit, test, install dependencies, mutate Git, access DB/Supabase, generate or apply migrations, mark Ready, merge, or deploy."
+rollback_or_recovery: "Revert governance commit cdde014b6016b6da4120d06f0b98c33a650ed721 and the following ledger-only commit if this rule is withdrawn. No application or environment state is involved."
+next: "After verifying the ledger-only commit and clean worktree, separately authorize push of the two documentation commits."
+```
