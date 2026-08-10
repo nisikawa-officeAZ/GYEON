@@ -524,3 +524,58 @@ known_limitations:
 rollback_or_recovery: "Revert governance commit cdde014b6016b6da4120d06f0b98c33a650ed721 and the following ledger-only commit if this rule is withdrawn. No application or environment state is involved."
 next: "After verifying the ledger-only commit and clean worktree, separately authorize push of the two documentation commits."
 ```
+
+## GDA-1W-C2R — C2 acceptance and allocator-contract revision
+
+```yaml
+phase: GDA-1W-C2R
+status: C2_CHANGES_REQUIRED_ACCEPTED_DOCUMENT_REVISION_CANDIDATE_UNCOMMITTED
+date: 2026-08-10
+objective: "Accept the GDA-1W-C2 diagnosis result and revise the completion-authority contract so number allocation is consistent with dealer_staff-primary authorization, without touching source, migrations, tests, or environments."
+authorization: "MacBook Codex C2R instruction (user-preauthorized process), PR #8 comment 5236315322; document-only allowlist of exactly two paths."
+c2_evidence:
+  diagnosis_instruction: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5235701374"
+  diagnosis_result: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5236273107"
+  c2_status: "CHANGES_REQUIRED"
+  confirmed_finding: "Contract §5.3 authorizes an active dealer_staff owner/manager/staff actor even without an active dealer_members row, while §5.6 mandated nested use of public.get_next_document_number, whose migration-104 hardening authorizes only an active dealer_members row or dealers.owner_user_id. A dealer_staff-only actor therefore passed completion authorization and then failed allocation mid-transaction."
+  other_findings: "All other C2 findings, the 26-path classification, and the no-allowlist-delta conclusion were accepted as diagnosis evidence only."
+codex_ruling: "Two-layer allocator contract: a non-exposed SECURITY INVOKER internal core (provisionally private.allocate_next_document_number_v1, empty search_path, schema-qualified, INSERT ... ON CONFLICT increment only) becomes the single sequence-row arbiter; PUBLIC/anon/authenticated/service_role receive no private-schema USAGE and no core EXECUTE; public.get_next_document_number keeps its exact signature, active-member-or-owner authorization, return semantics, and authenticated-only EXECUTE and delegates to the core; complete_work_order_v1 performs §5.3 authorization first and then invokes the core in the same transaction; wrappers are owned so their SECURITY DEFINER context can invoke the core; all create/replace and revoke/grant statements occur in one migration transaction with no PUBLIC-execute window. Rejected alternatives: adding an allocator-membership requirement to completion (contradicts dealer_staff-primary authority) and granting dealer_staff-only callers the existing public allocator (broadens a shared public numbering API)."
+repository:
+  root: "/Users/atsushinishikawa/dealeros"
+  branch: "plan/gyeon-da-completion-v1"
+  base_commit: "9635f7e0cc694308007c033c07a57464fe6b5f16"
+  base_tree: "cfedda73fb313c33d5b68a23104f548bb64754b8"
+  worktree: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gyeon-da-completion-v1"
+candidate:
+  literal_allowlist:
+    - "docs/master_specification/GDA_1W_COMPLETION_AUTHORITY_CONTRACT.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  changed_paths:
+    - "docs/master_specification/GDA_1W_COMPLETION_AUTHORITY_CONTRACT.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  contract_delta: "§5.5 names the internal core as the sequence-row atomic arbiter; §5.6 replaces the nested-public-allocator rule with the two-layer ruling while preserving the deterministic-configuration, REP/5/never default, formatDocumentNumber-parity, whole-transaction-failure, no-TypeScript-fallback, and unique-index collision rules; §7.1 adds the private-schema/core ACL boundary and the unchanged public-allocator guarantee; §10.2 adds private-schema/core ACL assertions, per-role direct-core denial, the unchanged public-allocator role matrix, and dealer_staff-only end-to-end completion success; §11 and §12 record that the ruling adds no application-source path and edits no existing migration (all allocator objects live only in the future generated completion migration); §13 adds explicit acceptance of the two-layer allocator boundary."
+external_actions:
+  database_access: false
+  migration_generated: false
+  migration_applied: false
+  dependency_changed: false
+  storage_changed: false
+  line_external_changed: false
+  deployed: false
+verification:
+  tests_run: false
+  typecheck: NOT_RUN
+  build: NOT_RUN
+  lint: NOT_RUN
+git_actions:
+  committed: false
+  pushed: false
+  pr_changed: false
+  ready_or_merged: false
+known_limitations:
+  - "This candidate is uncommitted; staging, commit, push, and PR delivery remain separate gates."
+  - "C3 remains inactive: no migration was generated and no SQL content exists for the two-layer allocator."
+rollback_or_recovery: "Discard the working-tree changes to the two documentation paths; no other state exists."
+decision: "GDA_1W_C2_ACCEPTED_AS_CHANGES_REQUIRED_AND_CONTRACT_REVISED_TO_TWO_LAYER_ALLOCATOR"
+next: "Return the C2R document candidate to MacBook Codex for acceptance; commit/push and the migration-pathname generation subphase remain separately authorized. C3 remains inactive."
+```

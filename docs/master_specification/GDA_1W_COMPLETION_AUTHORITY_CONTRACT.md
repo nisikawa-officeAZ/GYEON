@@ -311,7 +311,7 @@ One function call is one short PostgreSQL transaction. It acquires locks in this
 1. work order row by primary key with `FOR UPDATE`;
 2. existing canonical completion report, if any, with `FOR UPDATE`;
 3. existing idempotency request, if any, through the unique `(dealer_id, idempotency_key)` arbiter;
-4. document-sequence row through the existing authoritative allocator only when a new report number is required.
+4. document-sequence row through the internal sequence-allocation core `private.allocate_next_document_number_v1` — the single atomic arbiter of the sequence row — only when a new report number is required.
 
 Then it:
 
@@ -330,11 +330,23 @@ All multi-row reads and writes remain inside the function. Locks on multiple obj
 
 ### 5.6 Number allocation
 
-The completion function must use the existing database-owned `get_next_document_number` concurrency authority for `completion_report` within the same transaction.
+Number allocation uses a two-layer allocator contract (C2R ruling). The C2 diagnosis proved that requiring the completion function to call `public.get_next_document_number` directly is inconsistent with §5.3: that public allocator authorizes only an active `dealer_members` row or `dealers.owner_user_id`, so a §5.3-authorized `dealer_staff`-only actor would fail allocation mid-transaction. The nested-public-allocator rule is therefore replaced as follows:
 
-- It must resolve the stored sequence configuration deterministically.
+1. A non-exposed internal sequence-allocation core, provisionally named `private.allocate_next_document_number_v1(uuid, text, integer, text, integer, text)`, becomes the single atomic arbiter of the sequence row.
+2. The internal core is `SECURITY INVOKER`, uses `SET search_path = ''`, schema-qualifies every reference, and contains only the existing `INSERT ... ON CONFLICT` atomic increment behavior.
+3. `PUBLIC`, `anon`, `authenticated`, and `service_role` receive no `USAGE` on the `private` schema and no `EXECUTE` on the internal core; the `private` schema is not exposed through the Data API.
+4. The existing `public.get_next_document_number` keeps its exact signature, its active-member-or-owner authorization, its direct-caller behavior, its return semantics, and its authenticated-only `EXECUTE` grant, and delegates the increment to the internal core.
+5. `complete_work_order_v1` performs the exact §5.3 authorization first, then invokes the internal core — never the public wrapper — for `completion_report` within the same transaction.
+6. Both wrappers are owned/deployed so that their `SECURITY DEFINER` context can invoke the `SECURITY INVOKER` core; no client can invoke the core directly.
+7. All create/replace and revoke/grant statements for the core and wrappers occur in one migration transaction with no window in which `PUBLIC` holds `EXECUTE`.
+
+This preserves the legacy allocator's authorization for its existing direct callers, adds no new direct numbering capability for any client role, and permits valid `dealer_staff`-only completion.
+
+The following allocation rules are preserved unchanged:
+
+- The stored sequence configuration must be resolved deterministically.
 - If no configuration row exists, the existing default contract (`REP`, padding 5, reset `never`) is used.
-- It must format the persisted number using the same semantic segments as `formatDocumentNumber`.
+- The persisted number must be formatted using the same semantic segments as `formatDocumentNumber`.
 - If configuration, allocation, formatting, or insert fails, the entire transaction fails.
 - The legacy one-argument TypeScript fallback is forbidden.
 - The report-number unique index is the final collision guard.
@@ -397,6 +409,8 @@ Future migration and source work must establish:
 - `work_orders`: existing non-completion edits may remain, but table-wide UPDATE is replaced with reviewed column grants plus a database guard that rejects raw changes entering/leaving `completed`; authenticated and service-role callers have no raw UPDATE privilege on `actual_end_at`;
 - `anon`: no application-table or function access;
 - `service_role`: no function execute and no raw mutation of completion authority;
+- `private` schema and internal allocation core: no `USAGE` on the schema and no `EXECUTE` on `private.allocate_next_document_number_v1` for `PUBLIC`, `anon`, `authenticated`, or `service_role`; the core is reachable only through the two `SECURITY DEFINER` wrappers (§5.6);
+- `public.get_next_document_number`: exact existing signature, active-member-or-owner authorization, return semantics, and authenticated-only `EXECUTE` remain unchanged;
 - report header and item DELETE remain denied; archival is a separately authorized state change.
 
 The generic `updateWorkOrder` path must not be able to set `completed` or change `actual_end_at`. A completed row may leave `completed` only through a future correction/recovery operation. The database completed-state guard also requires one canonical confirmed report and 1–100 valid snapshot items. The generic completion-report form must not directly set status, sharing state, report number, report/work-order binding, confirmation metadata, version, or snapshot rows.
@@ -475,6 +489,10 @@ Disposable-database verification, staging preflight, staging apply, production p
 Tests must run only against a separately authorized disposable local database and must prove:
 
 - function owner, `SECURITY DEFINER`, empty `search_path`, and exact EXECUTE grants;
+- `private` schema and internal-core ACL assertions: no `USAGE` on schema `private` and no `EXECUTE` on `private.allocate_next_document_number_v1` for `PUBLIC`, `anon`, `authenticated`, or `service_role`;
+- direct invocation of the internal core is denied for each of `PUBLIC`, `anon`, `authenticated`, and `service_role`;
+- the existing `public.get_next_document_number` role matrix is unchanged: an active member or owner succeeds, every other caller receives `FORBIDDEN`, and its `EXECUTE` grant remains authenticated-only;
+- an active `dealer_staff`-only actor (owner/manager/staff with no active `dealer_members` row) completes successfully end-to-end, including number allocation;
 - authenticated owner/manager/staff success;
 - readonly, invited, disabled, anonymous, service-role, unknown-role, and cross-dealer denial;
 - blocking `dealer_staff` state cannot fall back to `dealer_members`;
@@ -533,6 +551,8 @@ The migration path cannot truthfully be listed yet: project rules require `supab
 3. the implementation allowlist must then be reissued with that exact path; and
 4. no migration content may be written before the exact generated path is accepted.
 
+The C2R allocator ruling (§5.6) adds no application-source path to this allowlist and edits no existing migration: the `private` schema, the internal allocation core, the `public.get_next_document_number` delegation, and every related ACL statement belong exclusively to the future generated completion migration path above.
+
 No glob, directory-wide permission, placeholder filename, or implicit dependency is authorized. If diagnosis proves another path is necessary, implementation stops and returns an allowlist delta for approval.
 
 The following remain protected and outside every completion implementation allowlist unless the user separately changes the boundary:
@@ -554,7 +574,7 @@ No step may be combined silently:
 2. **Documentation commit** — separately authorize staging and committing this one document.
 3. **Documentation push/PR update** — separately authorize push and PR metadata/comment changes.
 4. **Implementation diagnosis** — Claude reads the accepted contract and validates the proposed allowlist against current source; no edits.
-5. **Migration pathname generation** — separately authorize `supabase migration new work_order_completion_authority`; record exact path; no SQL content.
+5. **Migration pathname generation** — separately authorize `supabase migration new work_order_completion_authority`; record exact path; no SQL content. The two-layer allocator objects (`private` schema, internal core, public-allocator delegation, and their ACLs) are implemented only inside that generated migration; no existing migration is edited and no application-source path is added by the allocator ruling.
 6. **Implementation candidate** — separately authorize the final literal allowlist; no DB connection or migration apply.
 7. **Focused source verification** — separately authorize exact test and candidate typecheck commands.
 8. **Disposable DB verification** — separately authorize local Supabase/PostgreSQL setup, migration replay, pgTAP, raw-role probes, and two-connection concurrency.
@@ -572,6 +592,7 @@ This contract is ready to accept only when the product owner confirms all of the
 - completion, report, snapshot, number, and idempotency result are one atomic operation;
 - only active `owner`, `manager`, or `staff` may complete or correct a draft;
 - raw Data API writes cannot bypass the operation;
+- the two-layer allocator boundary: a non-exposed internal sequence-allocation core arbitrates the sequence row, the existing public allocator keeps its exact authorization and delegates to it, completion invokes the core only after §5.3 authorization, and no runtime role can call the core directly;
 - report rendering reads only the confirmed snapshot;
 - no automatic customer, finance, maintenance, Storage, or external side effect occurs;
 - existing duplicates and legacy reports are not silently rewritten;
