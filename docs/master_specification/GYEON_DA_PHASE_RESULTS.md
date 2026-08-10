@@ -633,3 +633,55 @@ git_actions:
 rollback_or_recovery: "Discard the working-tree change to this one ledger file; no other state exists."
 next: "Return this ledger-repair candidate to MacBook Codex for acceptance. After acceptance, a separately authorized literal one-path stage-and-commit gate is required; after commit acceptance, a separately authorized push gate is required; only after pushed-ledger acceptance may migration pathname generation be separately authorized."
 ```
+
+## GDA-1W-C4R — Focused source verification accepted (C4 CHANGES_REQUIRED → C4R three-path repair → PASS)
+
+```yaml
+phase: GDA-1W-C4R
+status: ACCEPTED_PASS_LEDGER_CANDIDATE
+date: 2026-08-10
+append_only: true
+objective: "Record the accepted focused source-test and candidate-scoped strict noEmit verification of the GDA-1W-C3 27-path completion candidate, including the Codex-accepted three-path C4R repair."
+authorization: "User explicitly authorized C4 command diagnosis, C4 limited execution, the C4R three-path repair, and this one-path append-only ledger phase; MacBook Codex instructions and acceptances on Draft PR #8."
+handoff_chain:
+  claude_c4_changes_required: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5238412191"
+  codex_c4_independent_review: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5238437131"
+  claude_c4r_pass: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5239610570"
+  codex_c4r_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5239672259"
+repository:
+  branch: "plan/gyeon-da-completion-v1"
+  accepted_base_head: "94cd2d75f804d385113a5a877e9bc95579410d23"
+  accepted_tree: "586373ffb5903abb44a7249d3f963711c7a7e553"
+  candidate: "27-path GDA-1W-C3 working-tree candidate; index empty throughout"
+c4r_repaired_paths_sha256:
+  - path: "src/lib/work-orders/complete-work-order.test.ts"
+    sha256: "5acb928e664e4b7ad406b0dd184a4efc3fbb7a5300d3d467adbd3d43328a6bb6"
+  - path: "src/app/pdf/work-report/route.test.ts"
+    sha256: "9c128cb6739bb86018fe072cfa25c78fa9e0c288c7deb8fbbdbda3580551b24f"
+  - path: "src/lib/completion-reports/get-completion-report.ts"
+    sha256: "b145fed8e33a7ac3ca116a064e8e81321bc5ba4b19c0cfe6eddc04cf3815e967"
+fixture_ruling: "The complete-work-order test fake used `scenario.user ?? default` and swallowed the EXPLICIT null no-session scenario into a valid actor; corrected to an undefined-check so explicit null stays unauthenticated. Codex accepted this as a bounded test-only fixture repair inside the literal three-path allowlist; no production behavior changed."
+executable_verification:
+  focused_tests: "six focused files re-run under the accepted /private/tmp overlay boundary with the accepted flags: 29+25+20+19+10+17 = 120/120 subtests PASS, 0 fail, 0 skip; independently re-run by Codex with identical totals"
+  strict_noemit: "exact 22-root candidate-scoped tsc: 622 program files, 0 protected-path occurrences in --listFilesOnly, exit 0, 0 diagnostics; independently re-run by Codex"
+  git_checks: "git diff --check over the 27 candidate paths PASS; HEAD/tree unchanged; porcelain status byte-identical across runs"
+protected_paths: "All four protected paths remained metadata-only (mode 100644, blobs c1eb0dc8…, fe3c80f2…, accd2234…, 32fda495…); content was never accessed; traversal-time exclusions used for every source search."
+external_actions:
+  database_supabase_storage_line_access: false
+  migration_generated_or_applied: false
+  browser_e2e: false
+  dependency_changed: false
+  deployed: false
+git_actions:
+  committed: false
+  pushed: false
+  pr_changed: "handoff/result comments only on Draft PR #8"
+  ready_or_merged: false
+known_limitations:
+  - "Disposable-DB verification (migration replay, pgTAP, raw-role probes, RLS, separate-connection concurrency) has NOT run; C5 remains inactive and unauthorized."
+  - "This ledger entry is an uncommitted, unpushed one-path candidate; stage/commit/push are separate gates."
+  - "The genuine cookie-session route verification gate specified in the C4 diagnosis remains a future separately authorized phase."
+rollback_or_recovery: "Discard the working-tree change to this one ledger file; the 27-path source candidate is untouched by this phase."
+decision: "GDA_1W_C4R_ACCEPTED_PASS"
+next: "Return the one-path ledger candidate to MACBOOK_CODEX; stage/commit/push are separate gates; C5 stays inactive until separately authorized."
+```
