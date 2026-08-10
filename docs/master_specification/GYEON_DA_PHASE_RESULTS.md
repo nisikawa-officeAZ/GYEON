@@ -287,3 +287,89 @@ rollback_or_recovery: "The repair is isolated in Draft PR #9. Revert commit 3a0e
 decision: "GDA-1R_FOCUSED_TEST_GATE_REPAIRED_AND_ACCEPTED"
 next: "Select and authorize exactly one remaining GDA-1 evidence gate; no GDA-2 product implementation is authorized by this record."
 ```
+
+## GDA-1W — Work-order completion to work-report read-only audit
+
+```yaml
+phase: GDA-1W
+status: CHANGES_REQUIRED
+date: 2026-08-10
+objective: "Determine whether the current work-order completion, completion-report creation, and monetary-free work-report PDF form one accurate, duplicate-safe, authorized GYEON detailer journey."
+authorization: "The user explicitly authorized a read-only GDA-1 inspection from work-order completion through work-report PDF, then separately authorized this one-ledger-file commit and push delivery phase."
+repository:
+  root: "/Users/atsushinishikawa/dealeros"
+  base_branch: "plan/gyeon-da-completion-v1"
+  base_commit: "98c109db73f17efc3b938e5954f8f7f5ba7ec604"
+  base_tree: "1bcc8b4a3e6312e954c283c80558ed505551445c"
+  worktree: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gyeon-da-completion-v1"
+candidate:
+  branch: "NONE_READ_ONLY_AUDIT"
+  commit: "NONE"
+  tree: "NONE"
+  allowlist: []
+  changed_paths: []
+  protected_path_evidence:
+    - "100644 c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f src/components/estimates/wizard/screens/ScreensPreview.tsx; pathname/mode/blob/Git-state only; content not accessed"
+    - "100644 accd22345054cc44f89156fd78eaba6dfe4242a4 supabase/migrations/20260801110110_line_link_tokens.sql; pathname/mode/blob/Git-state only; content not accessed"
+    - "100644 32fda49583ae1217bc13711784ad8fa31744726c supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql; pathname/mode/blob/Git-state only; content not accessed"
+    - "100644 fe3c80f22fd80dcbfab076082473216dda582c14 src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts; pathname/mode/blob/Git-state only; content not accessed"
+  per_path_sha256: {}
+  combined_sha256: "NOT_APPLICABLE; no bounded source candidate was created or reviewed"
+classification:
+  monetary_free_work_report_renderer: "E2_LOCALLY_VERIFIED_FROM_ACCEPTED_GDA_1R_EVIDENCE"
+  authenticated_work_report_route: "E1_SOURCE_PRESENT; current tests assert route/auth/tenant behavior primarily from source text"
+  work_order_to_work_report_journey: "PARTIAL_E1"
+findings:
+  - severity: "P0"
+    id: "GDA1W-ACTUAL-WORK-AUTHORITY"
+    result: "The work-report loader takes category, item_name, description, and sort_order from estimate_items. It does not have an authoritative performed-work snapshot, so changed or omitted work can produce a factually incorrect customer document."
+  - severity: "P0"
+    id: "GDA1W-DUPLICATE-REPORT-AND-NUMBER"
+    result: "The UI permits repeated completion-report creation, completion_reports has no uniqueness constraint for dealer_id plus work_order_id, and createCompletionReport uses the legacy one-argument numbering allocator whose documented fallback can return an unpersisted duplicate number."
+  - severity: "P1"
+    id: "GDA1W-INCOMPLETE-COMPLETION-TRANSITION"
+    result: "A work order can be saved with status completed while actual_end_at is empty. Prior-state SELECT, UPDATE, and downstream event dispatch are not one atomic created-vs-replayed completion operation."
+  - severity: "P1"
+    id: "GDA1W-UI-SERVER-ELIGIBILITY-MISMATCH"
+    result: "The completion-report UI exposes work-report links after checking only completed status and actual_end_at, while the server also requires report_date, report_number, estimate_id, and at least one estimate item. The top-level completion page simultaneously says PDF output is preparing."
+  - severity: "P1"
+    id: "GDA1W-WRITE-AUTHORIZATION-AND-EVIDENCE"
+    result: "Server actions use the edit-capability guard and the PDF route resolves an active dealer, but migration-source RLS policies grant member-scoped table writes without active-status or staff-role predicates. No dedicated behavioral tests cover updateWorkOrder or createCompletionReport, and no genuine authenticated request/environment proof was performed in this audit."
+verification:
+  commands:
+    - "git status -sb; git rev-parse HEAD; git rev-parse HEAD^{tree}; git rev-list --left-right --count @{upstream}...HEAD"
+    - "Read-only route/action/UI/data-model inspection of WorkOrderForm, updateWorkOrder, CompletionReportSection/Form, completion-report actions, work-report route/loader/adapter/renderer, numbering allocator, and relevant migration sources"
+    - "Existing test-source inspection for src/app/pdf/work-report/route.test.ts and src/lib/pdf/__tests__/template-c2/work-report-binding-boundary.test.ts"
+    - "GitHub read-only verification of Draft PR #8 and accepted focused-test repair Draft PR #9"
+    - "git ls-tree HEAD -- four protected paths"
+  tests_run: false
+  passed: 0
+  failed: 0
+  typecheck: NOT_RUN
+  build: NOT_RUN
+  lint: NOT_RUN
+  evidence_paths:
+    - "https://github.com/nisikawa-officeAZ/GYEON/pull/8"
+    - "https://github.com/nisikawa-officeAZ/GYEON/pull/9"
+    - "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5234992517"
+external_actions:
+  database_access: false
+  migration_created: false
+  migration_applied: false
+  storage_changed: false
+  line_external_changed: false
+  deployed: false
+git_actions:
+  committed: false
+  pushed: false
+  pr_changed: false
+  ready_or_merged: false
+known_limitations:
+  - "The accepted GDA-1R suite included 17 route-header/source tests and 17 work-report binding tests, but GDA-1W did not rerun tests and did not execute a genuine request-scope authenticated route proof."
+  - "Live database schema, applied RLS state, Supabase configuration, Storage, LINE, deployment, and production behavior were not accessed."
+  - "Reservations/calendar, maintenance duplication, review delivery, real-device PWA, and the rest of the GDA-1 journey remain separate open gates."
+  - "This audit does not authorize source implementation, a migration, database access, Ready conversion, merge, or deployment."
+rollback_or_recovery: "Read-only source/Git/GitHub inspection created no source or environment state. This append-only result can be reverted as one documentation commit without affecting application behavior."
+decision: "GDA_1W_CHANGES_REQUIRED_WORK_REPORT_RENDERER_E2_BUT_END_TO_END_JOURNEY_PARTIAL_E1"
+next: "Authorize GDA-1W-C1 as a contract-only decision phase for one canonical completion report per work order, an authoritative performed-work snapshot, an atomic created-vs-replayed completion operation, active-staff DB authorization, real request tests, and a literal future implementation allowlist. No source implementation is authorized by this record."
+```
