@@ -141,3 +141,76 @@ rollback_or_recovery: "Documentation-only candidate in an isolated worktree; sou
 decision: "DIRECTION_RATIFIED; UPDATED_CANDIDATE_PENDING_HASH_AND_COMMIT_GATE"
 next: "Verify the five-path direction-lock candidate, then authorize a separate documentation commit phase."
 ```
+
+## GDA-0D — Direction-lock Git delivery
+
+```yaml
+phase: GDA-0D
+status: PASS
+date: 2026-08-10
+objective: "Publish the five-path GYEON DA direction lock and preserve its exact Git evidence."
+authorization: "User explicitly approved committing and pushing the five authorized paths."
+repository:
+  root: "/Users/atsushinishikawa/dealeros"
+  base_branch: "fix/approval-center-delete-access-cut"
+  base_commit: "5b1cd6ae8d3277d3d46cfc4f15f247fc168e0223"
+  base_tree: "56c86cdcc52b7957becbb8315f04872dcf3fdda6"
+  worktree: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gyeon-da-completion-v1"
+candidate:
+  branch: "plan/gyeon-da-completion-v1"
+  commit: "12c61812ed1d59226661b2b78b89b2aea3004c8d"
+  tree: "f189885d81df23f593ee172542496b9c4d2b99a0"
+  allowlist:
+    - "AGENTS.md"
+    - "CLAUDE.md"
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "docs/master_specification/INDEX.md"
+  changed_paths:
+    - "AGENTS.md"
+    - "CLAUDE.md"
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "docs/master_specification/INDEX.md"
+  protected_path_evidence:
+    - "All four protected paths remained absent from worktree and commit changes."
+  per_path_sha256:
+    "AGENTS.md": "a3ac3f160cffb5713b55d3a03a09c1f51acce28d551c9388f3688c5e95f2414b"
+    "CLAUDE.md": "369692f48db32d0b2c2c51de08c51b8d47b46d3b59de5ce0e9a3a0e20d056ec0"
+    "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md": "f50a83b6e0fdcb0f353953dd8c174dcd66636334e0ba1bbe8bc439dba2739f29"
+    "docs/master_specification/INDEX.md": "b4e1e937e6df76df6b4b1323a4aadb6000b0be852564b5fbd89c29bd5e549903"
+    "docs/master_specification/GYEON_DA_PHASE_RESULTS.md": "Recorded by commit blob; ledger subsequently receives this append-only delivery record."
+  combined_sha256: "523c8da756487f2bba559b96d5b5f29680746a6b4851a761fe31af417660b68f (four non-ledger governing paths; two-space shasum manifest; LF; final newline)"
+verification:
+  commands:
+    - "git diff --cached --check"
+    - "git show --format=%H%n%T%n%P%n%s --name-status --no-renames 12c61812ed1d59226661b2b78b89b2aea3004c8d"
+    - "git ls-remote --heads origin plan/gyeon-da-completion-v1"
+    - "git rev-list --left-right --count @{upstream}...HEAD"
+  passed: 4
+  failed: 0
+  typecheck: NOT_APPLICABLE
+  build: NOT_APPLICABLE
+  lint: NOT_APPLICABLE
+  evidence_paths:
+    - "https://github.com/nisikawa-officeAZ/GYEON/commit/12c61812ed1d59226661b2b78b89b2aea3004c8d"
+    - "https://github.com/nisikawa-officeAZ/GYEON/pull/7#issuecomment-5234521806"
+external_actions:
+  database_access: false
+  migration_created: false
+  migration_applied: false
+  storage_changed: false
+  line_external_changed: false
+  deployed: false
+git_actions:
+  committed: true
+  pushed: true
+  pr_changed: true
+  ready_or_merged: false
+known_limitations:
+  - "Claude direction-lock acknowledgement remains pending."
+  - "Studio dedicated inventory repository/branch/Draft PR URL remains pending."
+rollback_or_recovery: "The documentation branch is separate from the baseline; no application source or protected path changed."
+decision: "GDA-0_DIRECTION_LOCK_PUBLISHED"
+next: "Publish this append-only delivery record, obtain Claude and Studio acknowledgements, then begin the separately authorized GDA-1 read-only audit."
+```
