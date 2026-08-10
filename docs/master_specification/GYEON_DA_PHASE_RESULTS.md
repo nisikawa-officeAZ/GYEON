@@ -579,3 +579,57 @@ rollback_or_recovery: "Discard the working-tree changes to the two documentation
 decision: "GDA_1W_C2_ACCEPTED_AS_CHANGES_REQUIRED_AND_CONTRACT_REVISED_TO_TWO_LAYER_ALLOCATOR"
 next: "Return the C2R document candidate to MacBook Codex for acceptance; commit/push and the migration-pathname generation subphase remain separately authorized. C3 remains inactive."
 ```
+
+## GDA-1W-C3R — Append-only ledger repair (C2R commit/push acceptance and corrected C3 diagnosis)
+
+```yaml
+phase: GDA-1W-C3R
+status: LEDGER_REPAIR_CANDIDATE_READY_FOR_CODEX_REVIEW
+date: 2026-08-10
+append_only: true
+objective: "Repair the stale GDA-1W-C2R governance state by recording the accepted documentation commit/push and the corrected, accepted C3 implementation diagnosis, so the next separately authorized migration-pathname phase begins from an accurate Git ledger."
+authorization: "User explicitly approved the one-path ledger repair after Codex C3 acceptance; MacBook Codex instruction PR #8 comment 5236692311."
+supersedes: "Only the stale git_actions.committed=false / pushed=false flags and the 'This candidate is uncommitted' limitation of the historical GDA-1W-C2R entry above. That entry is preserved verbatim as historical evidence and is not rewritten, deleted, or reordered."
+repository:
+  primary_checkout: "/Users/atsushinishikawa/dealeros"
+  common_git_dir: "/Users/atsushinishikawa/dealeros/.git"
+  worktree_git_toplevel: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gyeon-da-completion-v1"
+  branch: "plan/gyeon-da-completion-v1"
+  base_commit: "dae71e65a280eb3071e81e4263fc73585e85aebc"
+  base_tree: "8aa2a9c4f75e652f7cd4a19c8c437d0f6277ec1d"
+c2r_git_resolution:
+  accepted_commit: "dae71e65a280eb3071e81e4263fc73585e85aebc"
+  accepted_tree: "8aa2a9c4f75e652f7cd4a19c8c437d0f6277ec1d"
+  commit_message: "docs: align GDA completion allocator authority"
+  changed_paths:
+    - "docs/master_specification/GDA_1W_COMPLETION_AUTHORITY_CONTRACT.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  commit_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5236466503"
+  push_result: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5236496096"
+  push_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5236517978"
+c3_diagnosis:
+  corrected_result: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5236665462"
+  codex_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5236676018"
+  implementation_candidate_allowlist: "14 tracked existing paths + 12 absent/new paths = 26 total"
+  allowlist_delta: "none"
+  migration_pathname: "GENERATED_LATER — supabase migration new work_order_completion_authority has not been run and no migration path exists"
+external_actions:
+  source_files_changed: false
+  tests_run: false
+  typecheck: NOT_RUN
+  build: NOT_RUN
+  lint: NOT_RUN
+  database_access: false
+  migration_generated: false
+  migration_applied: false
+  storage_changed: false
+  line_external_changed: false
+  deployed: false
+git_actions:
+  committed: false
+  pushed: false
+  pr_changed: false
+  ready_or_merged: false
+rollback_or_recovery: "Discard the working-tree change to this one ledger file; no other state exists."
+next: "Return this ledger-repair candidate to MacBook Codex for acceptance. After acceptance, a separately authorized literal one-path stage-and-commit gate is required; after commit acceptance, a separately authorized push gate is required; only after pushed-ledger acceptance may migration pathname generation be separately authorized."
+```
