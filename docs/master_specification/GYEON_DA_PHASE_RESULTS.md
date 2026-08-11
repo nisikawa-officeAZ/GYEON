@@ -1091,3 +1091,90 @@ rollback_or_recovery: "Discard the GDA-1R2-C1R2 contract edits and remove only t
 decision: "GDA_1R2_C1R2_DIRECT_PATH_NON_BILLABLE_TERMINAL_RULE_REPAIRED_UNCOMMITTED"
 next: "RETURN_GDA-1R2-C1R2_FINAL_REPAIR_TO_CODEX_UNCOMMITTED"
 ```
+
+## GDA-1R2-C1D — Three-path delivery-status sync (uncommitted)
+
+```yaml
+phase: GDA-1R2-C1D_THREE_PATH_DELIVERY_STATUS_SYNC_UNCOMMITTED
+status: CANDIDATE_UNCOMMITTED
+date: 2026-08-11
+append_only: true
+objective: "Execute the owner-approved bounded documentation repair: synchronize the reservation conversion contract metadata/status, the INDEX Reservation Conversion Contract row status, and this ledger with the delivered GDA-1R2-C1/C1R/C1R2 state — independently accepted, committed, and pushed at commit 09c564deba08123623c75ff435c0792403f9d5fc — without touching the contract semantic body or any other path."
+authorization: "Owner-approved bounded documentation repair; MacBook Codex governing instruction https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250527990"
+delivery_evidence:
+  c1c_evidence: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250332496"
+  c1p_evidence: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250439406"
+repository:
+  worktree: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gyeon-da-completion-v1"
+  branch: "plan/gyeon-da-completion-v1"
+  head_commit: "09c564deba08123623c75ff435c0792403f9d5fc"
+  head_tree: "dcf9dc1f6d484f30312fe13ed6a184b75c8078fd"
+  parent_commit: "f5c06755589ffcf9d1b87ac06e89f69cb3751511"
+  upstream_and_pr_head: "09c564deba08123623c75ff435c0792403f9d5fc (remote/PR #8 head equals local HEAD; independently re-measured by MacBook Codex at the GDA-1R2-C1D-R1 evidence gate: HEAD/upstream 09c564deba08123623c75ff435c0792403f9d5fc, tree dcf9dc1f6d484f30312fe13ed6a184b75c8078fd, parent f5c06755589ffcf9d1b87ac06e89f69cb3751511, divergence 0/0, index empty, exactly the three allowlisted changed paths)"
+  divergence: "0/0"
+  starting_index: "empty"
+  starting_worktree: "clean"
+  pr_state: "PR #8 OPEN, Draft, not merged"
+tooling_constraint: "Historical fact: the initial MacBook Claude authoring session for this block exposed only file read/edit tools and no shell, so after-state hashes, sizes, git diff --check, and fresh Git-state checks were originally recorded as EXTERNAL_VERIFICATION_REQUIRED/NOT_RUN. MacBook Codex has since completed that external verification independently, and the measured values are recorded in the evidence fields below (GDA-1R2-C1D-R1 evidence repair). No Git-mutating, state-mutating, or content-accessing action outside the allowlisted document edits was taken in either session."
+candidate:
+  literal_three_path_write_allowlist:
+    - "docs/master_specification/GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md (metadata/status and delivery-evidence links only)"
+    - "docs/master_specification/INDEX.md (Reservation Conversion Contract row status only)"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md (append this one GDA-1R2-C1D block at EOF only)"
+  changed_paths:
+    - "docs/master_specification/GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md"
+    - "docs/master_specification/INDEX.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  contract_sha256_before: "6980f1aea9e1e52a5f6b4a53b62094246d451cac5789563f27d926233ead9267 (committed content at 09c564de; 40298 bytes; independently re-measured by MacBook Codex)"
+  contract_sha256_after: "47cb2bfba06b1d503bd505aa16b97ffcbb594a987aba4268830a23b107db999c (40769 bytes; measured by MacBook Codex); size delta is exactly the §1 status-row rewording plus one added Delivery evidence table row"
+  index_sha256_before: "44ff31fb7f34ee2e8c40959a935b828961a90fd0748375b8f36ca8d8bbaee9b6 (committed content at 09c564de; 6131 bytes; independently re-measured by MacBook Codex)"
+  index_sha256_after: "3fe2ab70d37c5598873cfa01e41da441137db8b40ebb58b062d1a90e6df564d0 (6188 bytes; measured by MacBook Codex); size delta is exactly the one-row status-cell rewording"
+  ledger_sha256_before_append: "df41abfa39979c2f0c16b357cc741200eb6c0414fae08b24c8d76bb07aacdeba (78444 bytes; independently re-measured by MacBook Codex)"
+  ledger_sha256_pre_r1_candidate: "1ca910bb6b5b8d4959603451f2158251ba0707dec4ef01c7e40e28a4eaed13fd (86496 bytes; the C1D candidate as measured by MacBook Codex before this in-block GDA-1R2-C1D-R1 evidence repair; superseded by that repair)"
+  ledger_sha256_final: "SELF_REFERENTIAL_EXTERNAL_EVIDENCE — the ledger cannot embed its own final hash; verify the final blob externally at the MacBook Codex acceptance gate"
+  ledger_final_size_bytes: "87294"
+  prefix_78444_proof: "This GDA-1R2-C1D block was appended as a pure insertion after the previously final ledger byte; no pre-existing byte was rewritten, reordered, or deleted. MacBook Codex verified externally that the post-edit first 78444 bytes hash to df41abfa39979c2f0c16b357cc741200eb6c0414fae08b24c8d76bb07aacdeba, byte-identical to the pre-append ledger. The GDA-1R2-C1D-R1 evidence repair is likewise confined to this block and leaves the first 78444 bytes untouched."
+  contract_semantic_body_proof: "Only the §1 Metadata table was edited (Document status row reworded; one Delivery evidence row inserted before the Predecessor diagnosis/acceptance row). Every byte from the exact heading '## 2. Mission and non-goals' onward is byte-identical; no semantic rule, definition, state model, transaction, numbering, authorization, matrix, post-conversion, LIFF, capacity, API, evidence-gate, allowlist, or acceptance-checklist content was touched. MacBook Codex verified hash equality of the post-heading semantic body externally: before/after SHA-256 a4e110318b7dc4909e6676a30b6d47afef151fc7aff1d5392ec5cdf7945e444a."
+  index_one_row_proof: "Only the Status cell of the Reservation Conversion Contract row changed, from 'GDA-1R2-C1 candidate; UNCOMMITTED' to 'Accepted, committed, and pushed at commit 09c564de; implementation separately unauthorized'. MacBook Codex verified externally that the INDEX diff is exactly this one status cell; the row description, every other row, every other section, and the Last Updated value (already 2026-08-11) are unchanged."
+  git_diff_check: "PASS — run externally by MacBook Codex at the GDA-1R2-C1D-R1 evidence gate; no whitespace errors"
+  protected_path_evidence:
+    - "src/components/estimates/wizard/screens/ScreensPreview.tsx — never opened, read, diffed, copied, staged, or modified in this session; metadata 100644 c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f freshly re-verified by MacBook Codex via git ls-files"
+    - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts — never accessed; metadata 100644 fe3c80f22fd80dcbfab076082473216dda582c14 freshly re-verified by MacBook Codex"
+    - "supabase/migrations/20260801110110_line_link_tokens.sql — never accessed or applied; metadata 100644 accd22345054cc44f89156fd78eaba6dfe4242a4 freshly re-verified by MacBook Codex"
+    - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql — never accessed or applied; metadata 100644 32fda49583ae1217bc13711784ad8fa31744726c freshly re-verified by MacBook Codex"
+scope_negatives:
+  fourth_changed_path: false
+  contract_semantic_redesign_or_body_edit: false
+  source_test_migration_config_dependency_action: false
+external_actions:
+  database_access: false
+  supabase_cli_mcp_docker_colima_access: false
+  migration_generated: false
+  migration_applied: false
+  dependency_changed: false
+  storage_changed: false
+  line_external_changed: false
+  network_or_github_access: false
+  deployed: false
+tests:
+  tests_run: false
+  typecheck: NOT_RUN
+  build: NOT_RUN
+  lint: NOT_RUN
+git_actions:
+  staged: false
+  committed: false
+  pushed: false
+  fetch_or_pull: false
+  branch_or_worktree_changed: false
+  pr_changed: false
+  ready_or_merged: false
+  migration_apply_or_deployment: false
+known_limitations:
+  - "This is an uncommitted three-path delivery-status documentation sync; MacBook Codex independent acceptance, staging, commit, and push are separate later gates."
+  - "After-edit SHA-256 hashes, byte sizes, git diff --check, and fresh Git/protected-path state could not be computed in the initial authoring session (no shell tool); MacBook Codex has since completed this external verification and the measured values are recorded above (GDA-1R2-C1D-R1)."
+  - "The ledger file's own final hash is self-referential and must be verified externally at the separate acceptance/commit gate."
+rollback_or_recovery: "Exact rollback: revert only the contract §1 metadata/status edits (restore the CANDIDATE_UNCOMMITTED status row and remove the Delivery evidence row), restore only the INDEX Reservation Conversion Contract row status cell to 'GDA-1R2-C1 candidate; UNCOMMITTED', and remove only this appended GDA-1R2-C1D block. No other state exists to roll back."
+decision: "GDA_1R2_C1D_THREE_PATH_DELIVERY_STATUS_SYNCED_UNCOMMITTED"
+next: "RETURN_GDA-1R2-C1D-R1_LEDGER_EVIDENCE_REPAIR_TO_CODEX_UNCOMMITTED"
+```

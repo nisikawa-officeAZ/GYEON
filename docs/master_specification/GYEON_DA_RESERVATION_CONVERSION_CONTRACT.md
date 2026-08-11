@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| Document status | CANDIDATE_UNCOMMITTED — owner-approved documentation-only contract candidate, finally repaired under GDA-1R2-C1R2, awaiting MacBook Codex independent acceptance |
+| Document status | ACCEPTED_COMMITTED_PUSHED — the GDA-1R2-C1/C1R/C1R2 contract candidate was independently accepted by MacBook Codex, committed, and pushed at commit `09c564deba08123623c75ff435c0792403f9d5fc`, tree `dcf9dc1f6d484f30312fe13ed6a184b75c8078fd`; implementation remains separately unauthorized |
 | Phase | GDA-1R2-C1_RESERVATION_TO_ESTIMATE_WORK_ORDER_CONVERSION_CONTRACT, repaired by GDA-1R2-C1R_TWO_PATH_CONTRACT_SEMANTICS_REPAIR_UNCOMMITTED, finally repaired by GDA-1R2-C1R2_DIRECT_PATH_NON_BILLABLE_TERMINAL_RULE_UNCOMMITTED |
 | Owner | Office AZ / Product Owner (nisikawa@office-az.com) |
 | Technical authority | MacBook Codex (specification authority and independent acceptance) |
@@ -13,6 +13,7 @@
 | Base tree | `481c9f600a56e3eaa28018fb0b894ffba4714489` |
 | Branch / worktree | `plan/gyeon-da-completion-v1` / `work/dealeros-gyeon-da-completion-v1` |
 | Governing instruction | GDA-1R2-C1R2 final repair: https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250189948 (supersedes, for this document's direct-path billing semantics, the C1R repair instruction https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250093680 and the C1 authoring instruction https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249905852) |
+| Delivery evidence | GDA-1R2-C1C evidence: https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250332496 — GDA-1R2-C1P evidence: https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250439406 — GDA-1R2-C1D delivery-status sync instruction: https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250527990 |
 | Predecessor diagnosis/acceptance | GDA-1R2 reservation diagnosis and owner approval are summarized inside the C1 authoring instruction above. The GDA-1R2-C1 candidate result is https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249985100, the Codex CHANGES_REQUIRED review driving the C1R repair is https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249995628, the GDA-1R2-C1R repair result is https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250169579, and the Codex CHANGES_REQUIRED review driving this C1R2 final repair is https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250174185. The accepted completion-authority predecessor chain is recorded in `GYEON_DA_PHASE_RESULTS.md` (GDA-1W-C1 through GDA-1W-C6L), including C6/C6P acceptance at https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249254499 and https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249277187 |
 | Document precedence | Explicit current user authorization → `AGENTS.md` + `GYEON_DA_COMPLETION_PLAN.md` → latest accepted `GYEON_DA_PHASE_RESULTS.md` entry → this contract → frozen v2.0 architecture documents where not in conflict → older roadmaps/status/chat as historical evidence only |
 | Evidence level | E0/E1 documentation contract. This document grants no executable evidence and authorizes no implementation, test, migration, database, external-service, Git-mutation, Ready, merge, or deployment action. |
