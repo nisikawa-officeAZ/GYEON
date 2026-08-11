@@ -770,3 +770,61 @@ rollback_or_recovery: "Discard only the appended GDA-1W-C5L block from docs/mast
 decision: "GDA_1W_C5_RUNTIME_VERIFICATION_ACCEPTED_PASS"
 next: "Return the one-path append-only ledger candidate to MACBOOK_CODEX for independent acceptance. After acceptance, stop for explicit owner approval of an exact 28-path literal stage-and-commit gate; push remains later and separate."
 ```
+
+## GDA-1W-C6L — Commit and normal push accepted (C6 → C6P PASS)
+
+```yaml
+phase: GDA-1W-C6L
+status: ACCEPTED_PASS_LEDGER_CANDIDATE_UNCOMMITTED
+date: 2026-08-11
+append_only: true
+objective: "Record the accepted exact 28-path GDA completion authority commit and its one normal non-force push to Draft PR #8, without changing source, migrations, tests, dependencies, configuration, or any environment in this ledger-only phase."
+authorization: "Owner explicitly approved GDA-1W-C6L; MacBook Codex C6L start instruction PR #8 comment https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249286282."
+handoff_chain:
+  c6_authorization: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249216618"
+  c6_codex_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249254499"
+  c6p_authorization: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249265451"
+  c6p_codex_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249277187"
+  c6l_start: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249286282"
+repository:
+  branch: "plan/gyeon-da-completion-v1"
+  commit: "1b297ef62a46aeced6579f39e4e542f93a9bdda7"
+  tree: "ab451af70561e25b5afd1aca768bdb5088665016"
+  parent: "537eed49da0de2a8998cb02923a160bd5ce507ca"
+  subject: "feat: add GDA completion authority foundation"
+  committed_paths: "exactly 28"
+  commit_stats: "7888 insertions / 714 deletions"
+  combined_sha256_mode_manifest: "c26caba4b87adc5b5cfd0e994d366811aef0e330a0b692d8a7c3d7ac0577fae6"
+delivery:
+  push: "PASS — one normal non-force push"
+  push_range: "537eed4..1b297ef"
+  local_head: "1b297ef62a46aeced6579f39e4e542f93a9bdda7"
+  upstream_head: "1b297ef62a46aeced6579f39e4e542f93a9bdda7"
+  remote_head: "1b297ef62a46aeced6579f39e4e542f93a9bdda7"
+  pr_head: "1b297ef62a46aeced6579f39e4e542f93a9bdda7"
+  divergence: "0/0"
+  index: "empty"
+  worktree: "clean"
+  pull_request: "https://github.com/nisikawa-officeAZ/GYEON/pull/8 — OPEN / Draft / not merged"
+accepted_boundaries:
+  force_push: false
+  additional_commit_amend_rebase_merge: false
+  tests_typecheck_build_runtime_in_c6_or_c6p: false
+  database_supabase_docker_colima_storage_line_access_in_c6_or_c6p: false
+  ready_or_merged: false
+  migration_applied: false
+  deployed: false
+c6l_actions:
+  source_or_migration_changed: false
+  tests_or_runtime_run: false
+  external_environment_accessed: false
+  staged: false
+  committed: false
+  pushed: false
+known_limitations:
+  - "This is an uncommitted one-path append-only ledger candidate."
+  - "Literal staging and one ledger commit require separate owner authorization; its push remains a later separate authorization."
+rollback_or_recovery: "Discard only this appended GDA-1W-C6L block; do not alter any earlier ledger bytes or any other path."
+decision: GDA_1W_C6_AND_C6P_ACCEPTED_PASS_DELIVERED_DRAFT
+next: "Return to MACBOOK_CODEX for acceptance; then stop for owner approval of one-path ledger stage-and-commit; push later separate."
+```
