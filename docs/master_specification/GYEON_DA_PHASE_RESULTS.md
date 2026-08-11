@@ -685,3 +685,88 @@ rollback_or_recovery: "Discard the working-tree change to this one ledger file; 
 decision: "GDA_1W_C4R_ACCEPTED_PASS"
 next: "Return the one-path ledger candidate to MACBOOK_CODEX; stage/commit/push are separate gates; C5 stays inactive until separately authorized."
 ```
+
+## GDA-1W-C5L — Disposable runtime verification accepted (C5R2 repair → Attempt 17 PASS)
+
+```yaml
+phase: GDA-1W-C5L
+status: ACCEPTED_PASS_LEDGER_CANDIDATE_UNCOMMITTED
+date: 2026-08-11
+append_only: true
+objective: "Record the Codex-accepted C5R2 two-path concurrency repair and the complete Attempt 17 disposable runtime PASS, without changing application source, migrations, tests, dependencies, configuration, or any environment in this ledger-only phase."
+authorization: "Owner explicitly approved GDA-1W-C5L; MacBook Codex start instruction PR #8 comment 5249173992; candidate-count clarification PR #8 comment 5249179237."
+handoff_chain:
+  c5r2_codex_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249073660"
+  attempt_17_authorization: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249091548"
+  attempt_17_codex_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249131680"
+  c5l_start: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249173992"
+  c5l_count_clarification: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249179237"
+repository:
+  worktree: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gyeon-da-completion-v1"
+  branch: "plan/gyeon-da-completion-v1"
+  head: "537eed49da0de2a8998cb02923a160bd5ce507ca"
+  tree: "af294a1f0748d192723913209203473fc4b27942"
+  upstream_head: "537eed49da0de2a8998cb02923a160bd5ce507ca"
+  divergence: "0/0"
+  index: "empty"
+  candidate_before_c5l: "exactly 27 literal paths = 14 tracked changes + 13 untracked files"
+  candidate_after_c5l_expected: "exactly 28 literal paths = 15 tracked changes + 13 untracked files"
+  candidate_delta: "Only docs/master_specification/GYEON_DA_PHASE_RESULTS.md is added to the candidate set; the original 27 candidate paths remain preserved."
+  pull_request: "https://github.com/nisikawa-officeAZ/GYEON/pull/8 — OPEN / Draft / not merged / head unchanged"
+c5r2_accepted_hashes:
+  concurrency_a:
+    before_sha256: "dc0f7c09f1b16a36a8a714a9cdfe6e1e946ff0f532d62b3eb1e31eed4d70e689"
+    after_sha256: "f939d5160a1fda0a1029b2a0188ee21e7639b3d68acf030db66389688ec7d0da"
+  concurrency_b:
+    before_sha256: "2fd341476f0498b83bb82ab5c298d7fbb3293c63e7e3fdc88734a6c11b0106dd"
+    after_sha256: "e85646fd5430e6944625902cb9ef3ae8122f486e495ccc95d677525b125aeed7"
+  runner_sha256: "a5d0ce5d7255a84f6919e701b658cf1d6635f3e063264787ee2b4a39d66f9493"
+  migration_sha256: "166447f65335e5473158383dd6e564a8b73a00834bd3f4c9ab518130915abb87"
+  pgtap_sha256: "592d9eedba191f561775e9ad3cbdee8ed01505c41e96ed2c38d9def60e8c80ff"
+attempt_17_disposable_runtime:
+  suffix: "woZy9g — burned after the one accepted run; never reuse"
+  runtime: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/runtime/gda1w-c5.woZy9g"
+  git_external: true
+  versions:
+    claude_code: "2.1.226"
+    supabase_cli: "2.108.0"
+    psql: "18.4"
+    colima: "0.10.3"
+    docker: "29.6.1"
+    disposable_postgresql: "17.6"
+  runtime_copy: "PASS — exactly 102 migrations plus the accepted pgTAP, runner, and repaired A/B files; all source/runtime hashes independently equal"
+  migration_replay: "PASS — 102/102"
+  pgtap: "PASS — Files=1, Tests=157, failures=0, Result=PASS"
+  concurrency: "PASS — genuine separate-process/separate-connection verification; GDA1W-C3-CONC SUMMARY: PASS races=2"
+  concurrency_details:
+    - "RACE1 same key: one created, one replayed, one request row"
+    - "RACE2 different key / same work order: one created, one replayed, two request rows, replay alias bound"
+  cleanup: "PASS — supabase stop --no-backup; matching containers=0; matching volumes=0; Colima restored to stopped"
+  no_repair_or_retry_in_run: true
+evidence_hashes:
+  supabase_start_log: "46e6a31e54937296d3a1ca5fd982a9913edc8cab7c59286859aae5f965fd8fb4"
+  pgtap_log: "b70e970ac0dd035307d2e46b59697b05fa4c6958245fd44858f553ce6b37cd46"
+  concurrency_log: "f83fd321154f48cd2b0aba726dedfc68aea93bd573ef47e136dd20000683e3d7"
+  cleanup_supabase_log: "6fecf4a659d5e48908c023a824f224c855c2708fadd44e4f641f52ad83db90c4"
+  cleanup_colima_log: "988c5bbedd556b3a6ecba23272b5e0f8449b554b5b5bbc61e2d421fce6c4f780"
+accepted_boundaries:
+  shared_linked_preview_staging_production_line_access: false
+  protected_migration_content_access: false
+  repository_files_changed_by_attempt_17: false
+  source_or_migration_changed_by_c5l: false
+  tests_or_runtime_run_by_c5l: false
+  database_supabase_docker_colima_storage_line_access_by_c5l: false
+git_actions:
+  staged: false
+  committed: false
+  pushed: false
+  ready_or_merged: false
+  migration_applied: false
+  deployed: false
+known_limitations:
+  - "This is an uncommitted one-path append-only ledger candidate; the accepted implementation and runtime evidence are not yet committed."
+  - "Exact candidate staging and one commit require separate owner authorization; push remains a later, separate authorization."
+rollback_or_recovery: "Discard only the appended GDA-1W-C5L block from docs/master_specification/GYEON_DA_PHASE_RESULTS.md; no source, environment, database, or deployment state was created by C5L."
+decision: "GDA_1W_C5_RUNTIME_VERIFICATION_ACCEPTED_PASS"
+next: "Return the one-path append-only ledger candidate to MACBOOK_CODEX for independent acceptance. After acceptance, stop for explicit owner approval of an exact 28-path literal stage-and-commit gate; push remains later and separate."
+```

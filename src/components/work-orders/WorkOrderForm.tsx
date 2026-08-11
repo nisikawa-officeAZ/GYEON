@@ -1,12 +1,27 @@
 "use client";
 
+// GDA-1W completion boundary (accepted contract §3, §7.1):
+//   * The GENERIC save path can no longer express completion. 「完了」 is not a
+//     selectable status, and `actual_end_at` is neither a form field nor part
+//     of the submitted payload — the server action and the database both
+//     reject them independently; this form simply cannot produce them.
+//   * Completion is ONE deliberate action in the dedicated panel below: the
+//     operator confirms the actual end time AND the monetary-free performed
+//     work, then presses the completion button, which calls the atomic
+//     `completeWorkOrder` command. A linked estimate only PREFILLS the
+//     editable candidate; the confirmed snapshot is the authority.
+//   * One idempotency key per INTENT: generated when the panel's inputs
+//     change, retained across retries of the unchanged intent.
+
 import { useState, useTransition, useEffect } from "react";
 import { createWorkOrder } from "@/lib/work-orders/create-work-order";
 import { updateWorkOrder } from "@/lib/work-orders/update-work-order";
+import { completeWorkOrder } from "@/lib/work-orders/complete-work-order";
 import {
   WorkOrderDB,
   WorkOrderStatus,
   workOrderStatusLabel,
+  type PerformedWorkItemInput,
 } from "@/lib/work-orders/work-order-types";
 import { EstimateDB, estimateDisplayNo, estimateCustomerName } from "@/lib/estimates/estimate-types";
 import { CustomerDB } from "@/lib/customers/customer-types";
@@ -14,6 +29,8 @@ import { VehicleDB }  from "@/lib/vehicles/vehicle-types";
 import { previewDocumentNumber } from "@/lib/numbering/preview-document-number";
 
 // ─── Form state ───────────────────────────────────────────────────────────────
+// `actual_end_at` is intentionally ABSENT: it is owned by the completion
+// authority and never travels with the generic save.
 
 interface FormFields {
   estimate_id:        string;
@@ -25,7 +42,6 @@ interface FormFields {
   scheduled_start_at: string;
   scheduled_end_at:   string;
   actual_start_at:    string;
-  actual_end_at:      string;
   assigned_staff:     string;
   service_summary:    string;
   notes:              string;
@@ -42,7 +58,6 @@ const EMPTY: FormFields = {
   scheduled_start_at: "",
   scheduled_end_at:   "",
   actual_start_at:    "",
-  actual_end_at:      "",
   assigned_staff:     "",
   service_summary:    "",
   notes:              "",
@@ -60,7 +75,6 @@ function fromDB(wo: WorkOrderDB): FormFields {
     scheduled_start_at: wo.scheduled_start_at ? wo.scheduled_start_at.slice(0, 16) : "",
     scheduled_end_at:   wo.scheduled_end_at   ? wo.scheduled_end_at.slice(0, 16)   : "",
     actual_start_at:    wo.actual_start_at    ? wo.actual_start_at.slice(0, 16)    : "",
-    actual_end_at:      wo.actual_end_at      ? wo.actual_end_at.slice(0, 16)      : "",
     assigned_staff:     wo.assigned_staff     ?? "",
     service_summary:    wo.service_summary    ?? "",
     notes:              wo.notes              ?? "",
@@ -70,13 +84,56 @@ function fromDB(wo: WorkOrderDB): FormFields {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const STATUSES: WorkOrderStatus[] = [
-  'scheduled', 'in_progress', 'completed', 'cancelled', 'on_hold',
+// 「完了」 is deliberately NOT selectable: completion happens only through the
+// dedicated completion action below.
+const SELECTABLE_STATUSES: Exclude<WorkOrderStatus, "completed">[] = [
+  'scheduled', 'in_progress', 'cancelled', 'on_hold',
 ];
+
+const COMPLETABLE_STATUSES: WorkOrderStatus[] = ['scheduled', 'in_progress', 'on_hold'];
 
 const inputClass =
   "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors min-h-[44px]";
 const labelClass = "text-xs font-medium text-slate-400";
+
+// Stable domain codes from the completion adapter, in operator language.
+// Raw SQL/server text never reaches this component by construction.
+const COMPLETION_ERROR_MESSAGES: Record<string, string> = {
+  UNAUTHENTICATED:               "ログインが必要です。再度ログインしてください。",
+  NOT_FOUND:                     "作業指示が見つかりません。",
+  PERMISSION_DENIED:             "完了操作の権限がありません。",
+  VALIDATION_ERROR:              "入力内容を確認してください（終了日時と、実施した作業 1〜100 件が必要です）。",
+  INVALID_STATE:                 "この状態の作業指示は完了できません。",
+  IDEMPOTENCY_CONFLICT:          "内容が変更されています。もう一度内容を確認して完了してください。",
+  ALREADY_COMPLETED_CONFLICT:    "この作業指示は既に別の内容で完了しています。",
+  RECOVERY_REQUIRED:             "過去データの復旧確認が必要です。管理者に連絡してください。",
+  COMPLETION_STATE_INCONSISTENT: "データ状態に不整合があります。管理者に連絡してください。",
+  REPORT_NUMBER_FAILED:          "報告書番号の採番に失敗しました。もう一度お試しください。",
+  STALE_VERSION:                 "他の更新が先に行われました。最新の内容を確認してください。",
+  UNEXPECTED_ERROR:              "完了処理に失敗しました。同じ内容のままもう一度お試しください。",
+};
+
+/** One key per intent: generated client-side, 16-128 chars, retained for retries. */
+function newIntentKey(): string {
+  return `wo-complete-${crypto.randomUUID()}`;
+}
+
+interface CompletionItemDraft {
+  category:    string;
+  itemName:    string;
+  description: string;
+}
+
+const EMPTY_ITEM: CompletionItemDraft = { category: "", itemName: "", description: "" };
+
+/** Monetary-free prefill candidate from the linked estimate (§3.4): prefill ONLY. */
+function prefillItems(wo: WorkOrderDB | undefined): CompletionItemDraft[] {
+  const items = wo?.estimates?.estimate_items;
+  if (!items || items.length === 0) return [{ ...EMPTY_ITEM }];
+  return [...items]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((i) => ({ category: i.category, itemName: i.item_name, description: i.description ?? "" }));
+}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -102,6 +159,8 @@ export default function WorkOrderForm({
   onSuccess,
 }: WorkOrderFormProps) {
   const isEdit = !!workOrder;
+  const isCompleted = workOrder?.status === "completed";
+  const canComplete = isEdit && !!workOrder && COMPLETABLE_STATUSES.includes(workOrder.status);
 
   const [form, setForm] = useState<FormFields>(() => {
     if (workOrder) return fromDB(workOrder);
@@ -123,6 +182,14 @@ export default function WorkOrderForm({
   const [pending,   startTransition] = useTransition();
   const [previewNo, setPreviewNo] = useState<string>("");
 
+  // ── Completion panel state ──
+  const [completionEndAt, setCompletionEndAt] = useState<string>("");
+  const [completionItems, setCompletionItems] = useState<CompletionItemDraft[]>(() => prefillItems(workOrder));
+  const [completionKey,   setCompletionKey]   = useState<string>(() => newIntentKey());
+  const [completionError, setCompletionError] = useState<string | null>(null);
+  const [completionDone,  setCompletionDone]  = useState<string | null>(null);
+  const [completing, startCompleting] = useTransition();
+
   useEffect(() => {
     if (!workOrder) {
       previewDocumentNumber("work_order").then((p) => setPreviewNo(p ?? ""));
@@ -131,6 +198,28 @@ export default function WorkOrderForm({
 
   function set<K extends keyof FormFields>(key: K, value: FormFields[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  // Any change to the completion inputs is a NEW intent: it gets a new key.
+  // Retrying the SAME inputs (after e.g. a network failure) reuses the key.
+  function touchCompletionIntent() {
+    setCompletionKey(newIntentKey());
+    setCompletionError(null);
+  }
+
+  function setCompletionItem(index: number, patch: Partial<CompletionItemDraft>) {
+    setCompletionItems((prev) => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
+    touchCompletionIntent();
+  }
+
+  function addCompletionItem() {
+    setCompletionItems((prev) => (prev.length >= 100 ? prev : [...prev, { ...EMPTY_ITEM }]));
+    touchCompletionIntent();
+  }
+
+  function removeCompletionItem(index: number) {
+    setCompletionItems((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+    touchCompletionIntent();
   }
 
   // When estimate changes, auto-fill customer/vehicle/title.
@@ -170,6 +259,46 @@ export default function WorkOrderForm({
     });
   }
 
+  function handleComplete() {
+    if (!workOrder) return;
+    setCompletionError(null);
+
+    if (!completionEndAt) {
+      setCompletionError("実際の終了日時を入力してください。");
+      return;
+    }
+
+    // Exactly the three monetary-free fields (§3.2); blank description -> null.
+    const performedItems: PerformedWorkItemInput[] = completionItems.map((it) => ({
+      category:    it.category,
+      itemName:    it.itemName,
+      description: it.description.trim() === "" ? null : it.description,
+    }));
+
+    startCompleting(async () => {
+      const result = await completeWorkOrder({
+        workOrderId:    workOrder.id,
+        idempotencyKey: completionKey,   // retained for retries of this intent
+        actualEndAt:    new Date(completionEndAt).toISOString(),
+        performedItems,
+      });
+
+      if (!result.ok) {
+        setCompletionError(
+          COMPLETION_ERROR_MESSAGES[result.code] ?? COMPLETION_ERROR_MESSAGES.UNEXPECTED_ERROR,
+        );
+        return;
+      }
+
+      setCompletionDone(
+        result.result.outcome === "created"
+          ? `完了しました（報告書番号: ${result.result.report_number}）`
+          : `既に完了済みです（報告書番号: ${result.result.report_number}）`,
+      );
+      onSuccess?.();
+    });
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
@@ -196,15 +325,29 @@ export default function WorkOrderForm({
         </div>
         <div className="flex flex-col gap-1">
           <label className={labelClass}>ステータス</label>
-          <select
-            value={form.status}
-            onChange={(e) => set("status", e.target.value as WorkOrderStatus)}
-            className={inputClass}
-          >
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>{workOrderStatusLabel(s)}</option>
-            ))}
-          </select>
+          {isCompleted ? (
+            <>
+              {/* A completed order shows its terminal status read-only; leaving
+                  'completed' requires a future correction/recovery operation. */}
+              <input type="text" value={workOrderStatusLabel("completed")} disabled className={inputClass} />
+              <p className="text-[10px] text-slate-500">完了済みの作業指示のステータスはここでは変更できません。</p>
+            </>
+          ) : (
+            <>
+              <select
+                value={form.status}
+                onChange={(e) => set("status", e.target.value as WorkOrderStatus)}
+                className={inputClass}
+              >
+                {SELECTABLE_STATUSES.map((s) => (
+                  <option key={s} value={s}>{workOrderStatusLabel(s)}</option>
+                ))}
+              </select>
+              {canComplete && (
+                <p className="text-[10px] text-slate-500">完了は下の「作業完了」で行います。</p>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -308,7 +451,7 @@ export default function WorkOrderForm({
         </div>
       </div>
 
-      {/* ── Actual ── */}
+      {/* ── Actual start (actual END belongs to the completion action) ── */}
       <div className="flex flex-col gap-1">
         <label className={labelClass}>実施工</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -323,12 +466,18 @@ export default function WorkOrderForm({
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-[10px] text-slate-500">終了</span>
-            <input
-              type="datetime-local"
-              value={form.actual_end_at}
-              onChange={(e) => set("actual_end_at", e.target.value)}
-              className={inputClass}
-            />
+            {isCompleted && workOrder?.actual_end_at ? (
+              <input
+                type="text"
+                value={workOrder.actual_end_at.slice(0, 16).replace("T", " ")}
+                disabled
+                className={inputClass}
+              />
+            ) : (
+              <p className="text-xs text-slate-500 px-1 py-2.5">
+                終了日時は「作業完了」で確定します。
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -381,7 +530,7 @@ export default function WorkOrderForm({
         </div>
       </div>
 
-      {/* ── Buttons ── */}
+      {/* ── Buttons (generic save) ── */}
       <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
         <button
           type="button"
@@ -399,6 +548,98 @@ export default function WorkOrderForm({
           {pending ? "保存中..." : isEdit ? "更新" : "保存"}
         </button>
       </div>
+
+      {/* ── Completion panel: the ONE deliberate completion action ── */}
+      {canComplete && !completionDone && (
+        <div className="flex flex-col gap-4 mt-2 p-4 rounded-lg border border-emerald-800 bg-emerald-950/20">
+          <div>
+            <h3 className="text-sm font-semibold text-emerald-300">作業完了</h3>
+            <p className="text-[11px] text-slate-400 mt-1">
+              実際の終了日時と、実際に行った作業内容を確認して完了してください。
+              見積からの転記は下書きです — 実施内容と異なる場合は修正してください。金額はここでは扱いません。
+            </p>
+          </div>
+
+          {completionError && (
+            <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
+              <p className="text-xs text-red-400">{completionError}</p>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1">
+            <label className={labelClass}>実際の終了日時</label>
+            <input
+              type="datetime-local"
+              value={completionEndAt}
+              onChange={(e) => { setCompletionEndAt(e.target.value); touchCompletionIntent(); }}
+              className={inputClass}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className={labelClass}>実施した作業（1〜100件）</label>
+            {completionItems.map((item, index) => (
+              <div key={index} className="grid grid-cols-1 sm:grid-cols-[1fr_1.5fr_1.5fr_auto] gap-2">
+                <input
+                  type="text"
+                  value={item.category}
+                  onChange={(e) => setCompletionItem(index, { category: e.target.value })}
+                  placeholder="カテゴリ"
+                  className={inputClass}
+                />
+                <input
+                  type="text"
+                  value={item.itemName}
+                  onChange={(e) => setCompletionItem(index, { itemName: e.target.value })}
+                  placeholder="作業名"
+                  className={inputClass}
+                />
+                <input
+                  type="text"
+                  value={item.description}
+                  onChange={(e) => setCompletionItem(index, { description: e.target.value })}
+                  placeholder="補足（任意）"
+                  className={inputClass}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeCompletionItem(index)}
+                  disabled={completionItems.length <= 1 || completing}
+                  className="px-3 py-2 text-xs text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-40"
+                  aria-label="この作業を削除"
+                >
+                  削除
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addCompletionItem}
+              disabled={completionItems.length >= 100 || completing}
+              className="self-start px-3 py-1.5 text-xs text-emerald-300 hover:bg-emerald-900/30 border border-emerald-800 rounded-lg transition-colors disabled:opacity-40"
+            >
+              ＋ 作業を追加
+            </button>
+          </div>
+
+          <div className="flex justify-end pt-2 border-t border-emerald-900/50">
+            <button
+              type="button"
+              onClick={handleComplete}
+              disabled={completing}
+              className="px-4 py-2 text-sm font-medium bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg transition-colors disabled:opacity-50"
+            >
+              {completing ? "完了処理中..." : "この内容で作業を完了する"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {completionDone && (
+        <div className="bg-emerald-900/30 border border-emerald-700 rounded-lg px-3 py-2">
+          <p className="text-xs text-emerald-300">{completionDone}</p>
+        </div>
+      )}
     </form>
   );
 }

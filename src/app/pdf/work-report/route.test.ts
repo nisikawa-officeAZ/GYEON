@@ -1,209 +1,252 @@
-// TEMPLATE-C2-WR — the work-report PDF route's auth/tenant/no-persistence guarantees + shared header safety.
+// GDA-1W-C3 — Focused tests for the authenticated work-report PDF route.
 //
-// Run: node --import tsx --test src/app/pdf/estimate/route.test.ts
+// Plain `node:test` + `node:assert/strict`. The route's server dependencies —
+// the request-scope dealer resolution, the ONE fail-closed loader, the brand
+// profile, and the renderer — are replaced with `mock.module` fakes that
+// RECORD every invocation. That record proves the boundary claims: the loader
+// runs exactly once per request, the renderer receives EXACTLY the loader's
+// eligible source (so an estimate-item substitute cannot exist on this path),
+// and no other data source is consulted. The route imports no service-role
+// client and no Storage module; nothing here uploads or mutates.
 //
-// The header helpers live in `pdf-response-headers.ts`, which imports nothing
-// and is therefore EXECUTED here against real inputs — header construction is
-// the part that must be proved by behaviour, not by a regex over its own source.
-// The route handler itself pulls in `@/lib/pdf/brand-profile` (`server-only`,
-// unresolvable under this runner), so its auth / tenant / body-byte guarantees
-// are asserted from source text.
+// NOTE for the separately authorized verification gate: `mock.module` requires
+// Node's module-mock support (`--experimental-test-module-mocks` alongside
+// `--import tsx --test`). These are module-boundary tests; the contract's
+// genuine cookie-session evidence comes from the separately authorized
+// disposable-stack phase, which these assertions supplement, never replace.
 
-import { test } from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { strict as assert } from "node:assert";
+import { before, beforeEach, describe, it, mock } from "node:test";
 
-import {
-  sanitizePdfBasename, buildPdfFilename, encodeRfc5987, toAsciiFilename,
-  buildContentDisposition, isDownloadRequested, resolveDisposition,
-  FALLBACK_PDF_BASENAME,
-} from "../estimate/pdf-response-headers";
+// ── Scenario + call log ──────────────────────────────────────────────────────
 
-const ROUTE_SRC = "src/app/pdf/work-report/route.ts";
-const codeOf = (p: string): string =>
-  readFileSync(p, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
-
-/** Parse the two parameters back out of a Content-Disposition value. */
-function parseDisposition(header: string) {
-  const token = header.slice(0, header.indexOf(";"));
-  const ascii = /filename="([^"]*)"/.exec(header)?.[1] ?? null;
-  const starred = /filename\*=UTF-8''(.*)$/.exec(header)?.[1] ?? null;
-  return { token, ascii, starred };
+interface Scenario {
+  dealer: { dealer_id: string } | null;
+  resolved: unknown;
+  renderThrows?: boolean;
 }
 
-// ── 1-2. `download` is honoured only for the exact literal "1" ─────────────
+interface CallLog {
+  loaderCalls: Array<{ dealerId: string; reportId: string }>;
+  brandCalls: string[];
+  renderCalls: unknown[];
+}
 
-test("1. download=1 is the ONLY value that yields attachment", () => {
-  assert.equal(isDownloadRequested("1"), true);
-  assert.equal(resolveDisposition("1"), "attachment");
+let scenario: Scenario = { dealer: null, resolved: null };
+let log: CallLog = { loaderCalls: [], brandCalls: [], renderCalls: [] };
+
+const DEALER = "22222222-2222-4222-8222-222222222222";
+const REPORT = "44444444-4444-4444-8444-444444444444";
+const PDF_BYTES = Buffer.from("%PDF-1.7 fake");
+const BRAND = { name: "GYEON Test" };
+
+const eligibleSource = () => ({
+  reportNumber: "REP-00001",
+  reportDate: "2026-08-10",
+  workDate: "2026-08-10T03:04:05.678Z",
+  customerMessage: null,
+  customer: { last_name: "山田", first_name: "太郎" },
+  vehicle: { maker: "Toyota", model: "Prius", plate_number: null },
+  items: [
+    { category: "コーティング", item_name: "GYEON施工", description: null, sort_order: 0 },
+  ],
 });
 
-test("2. absent, empty, true, 0 and every other value stay inline", () => {
-  for (const raw of [null, "", "0", "true", "TRUE", "yes", "01", "1 ", " 1", "2", "on", "attachment"]) {
-    assert.equal(isDownloadRequested(raw), false, `"${String(raw)}" must not trigger a download`);
-    assert.equal(resolveDisposition(raw), "inline", `"${String(raw)}" must stay inline`);
-  }
+// ── Module mocks, installed BEFORE the route is imported. ────────────────────
+
+mock.module("@/lib/auth/get-current-dealer", {
+  namedExports: {
+    getCurrentDealer: async () => scenario.dealer,
+  },
 });
 
-// ── 3-6. Sanitization, executed ────────────────────────────────────────────
-
-test("3. CR/LF injection is stripped — no header can be split", () => {
-  assert.equal(sanitizePdfBasename("EST\r\n-1"), "EST-1");
-  const injected = buildContentDisposition("attachment", 'x"\r\nSet-Cookie: a=b');
-  for (const bad of ["\r", "\n"]) {
-    assert.equal(injected.includes(bad), false, `header still contains ${JSON.stringify(bad)}`);
-  }
-  assert.equal(injected.includes("Set-Cookie"), true, "…the text survives, inert, as part of the name");
-  assert.equal(parseDisposition(injected).ascii?.includes('"'), false);
+mock.module("@/lib/pdf/get-work-report-pdf-data", {
+  namedExports: {
+    getWorkReportPdfData: async (dealerId: string, reportId: string) => {
+      log.loaderCalls.push({ dealerId, reportId });
+      return scenario.resolved;
+    },
+  },
 });
 
-test("4. quotes and backslashes are stripped — the quoted-string cannot be closed", () => {
-  assert.equal(sanitizePdfBasename('EST"1'), "EST1");
-  assert.equal(sanitizePdfBasename("EST\\1"), "EST1");
-  const h = buildContentDisposition("inline", 'a"b\\c');
-  assert.equal(parseDisposition(h).ascii, "abc.pdf");
+mock.module("@/lib/pdf/brand-profile", {
+  namedExports: {
+    getBrandProfile: async (dealerId: string) => {
+      log.brandCalls.push(dealerId);
+      return BRAND;
+    },
+  },
 });
 
-test("5. C0 controls, DEL and C1 controls are stripped", () => {
-  assert.equal(sanitizePdfBasename("A\u0000B\u001FC"), "ABC");
-  assert.equal(sanitizePdfBasename("A\u007FB"), "AB");
-  assert.equal(sanitizePdfBasename("A\u0085B\u009FC"), "ABC", "C1 range (incl. NEL)");
-  // Nothing in the emitted header is a control character.
-  const h = buildContentDisposition("attachment", "A\u0000\u0085\u009FB");
-  assert.equal(/[\u0000-\u001F\u007F-\u009F]/.test(h), false);
+mock.module("@/lib/pdf/render-work-report-document", {
+  namedExports: {
+    renderWorkReportDocumentPdf: async (source: unknown, brand: unknown) => {
+      log.renderCalls.push({ source, brand });
+      if (scenario.renderThrows) throw new Error("secret internal renderer detail");
+      return PDF_BYTES;
+    },
+  },
 });
 
-test("6. an empty or all-stripped number falls back, and never yields an empty filename", () => {
-  for (const raw of [null, undefined, "", "   ", '"""', "\r\n", "\u0000\u007F"]) {
-    assert.equal(sanitizePdfBasename(raw), FALLBACK_PDF_BASENAME, `"${String(raw)}" must fall back`);
-    assert.equal(buildPdfFilename(raw), "estimate.pdf");
-  }
-  assert.notEqual(parseDisposition(buildContentDisposition("inline", "")).ascii, "");
+// The route loads AFTER the mock.module registrations above. A typed module
+// variable initialized in a root `before` hook replaces the previous
+// top-level `await import(...)`: CJS output (no "type": "module" in
+// package.json) cannot contain top-level await, but the hook body may await,
+// and node:test runs root `before` prior to every registered test.
+let GET: typeof import("./route")["GET"];
+before(async () => {
+  ({ GET } = await import("./route"));
 });
 
-// ── 7. Exactly one extension ───────────────────────────────────────────────
+// The route reads only req.nextUrl.searchParams; a URL-bearing stub is a
+// faithful NextRequest for this handler.
+function request(query: string): Parameters<typeof GET>[0] {
+  return { nextUrl: new URL(`https://app.test/pdf/work-report${query}`) } as Parameters<typeof GET>[0];
+}
 
-test("7. exactly one trailing lowercase .pdf, whatever the input carries", () => {
-  // Single-extension and fallback vectors — unchanged, must stay green.
-  assert.equal(buildPdfFilename("EST-2026-0001"), "EST-2026-0001.pdf");
-  assert.equal(buildPdfFilename("EST-2026-0001.pdf"), "EST-2026-0001.pdf", "no .pdf.pdf");
-  assert.equal(buildPdfFilename("EST-2026-0001.PDF"), "EST-2026-0001.pdf", "case-insensitive");
-  assert.equal(buildPdfFilename(".pdf"), "estimate.pdf", "an extension alone is not a name");
-
-  // R90E regression — EVERY repeated trailing extension is consumed.
-  assert.equal(buildPdfFilename("EST-1.pdf.pdf"), "EST-1.pdf");
-  assert.equal(buildPdfFilename("EST-1.PDF.pdf"), "EST-1.pdf");
-  assert.equal(buildPdfFilename("EST-1.pdf.PDF.pdf"), "EST-1.pdf");
-  assert.equal(buildPdfFilename("x.pdf.pdf.pdf.pdf"), "x.pdf");
-
-  // The extension that survives is always a single lowercase `.pdf`.
-  for (const raw of [
-    "EST-1", "EST-1.pdf", "見積-1", null,
-    "EST-1.pdf.pdf", "EST-1.PDF.pdf", "EST-1.pdf.PDF.pdf", "x.pdf.pdf.pdf.pdf",
-  ]) {
-    const out = buildPdfFilename(raw);
-    assert.equal((out.match(/\.pdf/gi) ?? []).length, 1, `${String(raw)} → ${out}`);
-    assert.match(out, /\.pdf$/, `${out} must end in a lowercase .pdf`);
-    assert.equal(out.endsWith(".PDF"), false);
-  }
+beforeEach(() => {
+  scenario = { dealer: { dealer_id: DEALER }, resolved: null };
+  log = { loaderCalls: [], brandCalls: [], renderCalls: [] };
 });
 
-// ── 8-10. RFC 5987 ─────────────────────────────────────────────────────────
+// ── Authentication ───────────────────────────────────────────────────────────
 
-test("8. apostrophe, parentheses and asterisk are percent-encoded", () => {
-  // encodeURIComponent alone leaves all four literal — that is the bug this covers.
-  assert.equal(encodeURIComponent("'()*").includes("'"), true, "PRECONDITION: the naive encoder leaks");
-  assert.equal(encodeRfc5987("'()*"), "%27%28%29%2A");
-  const h = buildContentDisposition("attachment", "O'Brien (v2)*");
-  const { starred } = parseDisposition(h);
-  for (const bad of ["'", "(", ")", "*"]) {
-    assert.equal(starred?.includes(bad), false, `filename* still contains a literal ${bad}`);
-  }
+describe("authentication", () => {
+  it("401 with no dealer session, before the loader is ever consulted", async () => {
+    scenario.dealer = null;
+    const res = await GET(request(`?reportId=${REPORT}`));
+    assert.equal(res.status, 401);
+    assert.equal(await res.text(), "Unauthorized");
+    assert.equal(log.loaderCalls.length, 0);
+    assert.equal(log.renderCalls.length, 0);
+  });
+
+  it("401 when the loader's genuine request scope reports unauthenticated", async () => {
+    scenario.resolved = { kind: "unauthenticated" };
+    const res = await GET(request(`?reportId=${REPORT}`));
+    assert.equal(res.status, 401);
+    assert.equal(log.renderCalls.length, 0);
+  });
 });
 
-test("9. percent is encoded and the value round-trips exactly", () => {
-  assert.equal(encodeRfc5987("100%"), "100%25");
-  for (const name of ["見積-2026-0001", "O'Brien (v2)*.pdf", "a b%c", "EST-1"]) {
-    const { starred } = parseDisposition(buildContentDisposition("inline", name));
-    assert.equal(decodeURIComponent(starred ?? ""), buildPdfFilename(name), `round-trip failed for ${name}`);
-  }
+// ── Input and not-found ──────────────────────────────────────────────────────
+
+describe("input and not-found", () => {
+  it("400 for a missing reportId without calling the loader", async () => {
+    const res = await GET(request(""));
+    assert.equal(res.status, 400);
+    assert.equal(await res.text(), "reportId required");
+    assert.equal(log.loaderCalls.length, 0);
+  });
+
+  it("400 when the loader classifies the id as invalid", async () => {
+    scenario.resolved = { kind: "invalid_request" };
+    const res = await GET(request("?reportId=%20"));
+    // A whitespace id survives the route's presence check; the loader decides.
+    assert.equal(res.status, 400);
+  });
+
+  it("404 for foreign/missing reports with a bare body — no reasons, no ownership hint", async () => {
+    scenario.resolved = { kind: "not_found" };
+    const res = await GET(request(`?reportId=${REPORT}`));
+    assert.equal(res.status, 404);
+    assert.equal(await res.text(), "Not found");
+    assert.equal(log.renderCalls.length, 0);
+  });
 });
 
-test("10. a Japanese name keeps a NON-EMPTY ASCII fallback and an exact filename*", () => {
-  const h = buildContentDisposition("attachment", "見積-2026-0001");
-  const { token, ascii, starred } = parseDisposition(h);
-  assert.equal(token, "attachment");
-  assert.ok(ascii && ascii.length > 0, "the ASCII fallback must not be empty");
-  assert.equal(/^[\x20-\x7e]*$/.test(ascii ?? ""), true, "the ASCII fallback must be ASCII-only");
-  assert.equal(ascii, "__-2026-0001.pdf", "one underscore per non-ASCII character");
-  assert.equal(decodeURIComponent(starred ?? ""), "見積-2026-0001.pdf");
-  assert.equal(toAsciiFilename("見積.pdf"), "__.pdf");
+// ── 422: exact shared reasons ────────────────────────────────────────────────
+
+describe("not eligible", () => {
+  it("422 with EXACTLY the shared reason codes as JSON, private no-store, no PDF render", async () => {
+    scenario.resolved = {
+      kind: "not_eligible",
+      reasons: ["work-order-not-completed", "snapshot-unconfirmed"],
+    };
+    const res = await GET(request(`?reportId=${REPORT}`));
+    assert.equal(res.status, 422);
+    assert.equal(res.headers.get("Content-Type"), "application/json; charset=utf-8");
+    assert.equal(res.headers.get("Cache-Control"), "private, no-store");
+    assert.deepEqual(await res.json(), {
+      ready: false,
+      reasons: ["work-order-not-completed", "snapshot-unconfirmed"],
+    });
+    assert.equal(log.renderCalls.length, 0);
+    assert.equal(log.brandCalls.length, 0);
+  });
 });
 
-// ── 11-12. Disposition shape ───────────────────────────────────────────────
+// ── Eligible PDF ─────────────────────────────────────────────────────────────
 
-test("11. both parameters are always emitted, in both modes", () => {
-  for (const mode of ["inline", "attachment"] as const) {
-    const h = buildContentDisposition(mode, "EST-1");
-    assert.match(h, /^(inline|attachment); filename="[\x20-\x7e]*"; filename\*=UTF-8''/);
-    assert.equal(parseDisposition(h).token, mode);
-  }
+describe("eligible PDF", () => {
+  it("200 PDF: loader once with (dealer, report), renderer gets EXACTLY the loader source", async () => {
+    const source = eligibleSource();
+    scenario.resolved = { kind: "ok", source };
+    const res = await GET(request(`?reportId=${REPORT}`));
+
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get("Content-Type"), "application/pdf");
+    assert.equal(res.headers.get("Cache-Control"), "private, no-store");
+    const disposition = res.headers.get("Content-Disposition") ?? "";
+    assert.match(disposition, /REP-00001/);
+
+    // Exactly ONE loader call, with the session dealer and the requested id.
+    assert.deepEqual(log.loaderCalls, [{ dealerId: DEALER, reportId: REPORT }]);
+    // The renderer receives the loader's source BY IDENTITY: nothing was
+    // merged in, so an estimate-item substitute is unrepresentable here.
+    assert.equal(log.renderCalls.length, 1);
+    const call = log.renderCalls[0] as { source: unknown; brand: unknown };
+    assert.equal(call.source, source);
+    assert.equal(call.brand, BRAND);
+    assert.deepEqual(log.brandCalls, [DEALER]);
+
+    const body = Buffer.from(await res.arrayBuffer());
+    assert.deepEqual(body, PDF_BYTES);
+  });
+
+  it("download=1 switches to attachment disposition; the bytes are identical", async () => {
+    scenario.resolved = { kind: "ok", source: eligibleSource() };
+    const inline = await GET(request(`?reportId=${REPORT}`));
+    const download = await GET(request(`?reportId=${REPORT}&download=1`));
+
+    const inlineDisp = inline.headers.get("Content-Disposition") ?? "";
+    const downloadDisp = download.headers.get("Content-Disposition") ?? "";
+    assert.notEqual(inlineDisp, downloadDisp);
+    assert.match(downloadDisp, /attachment/);
+    assert.deepEqual(
+      Buffer.from(await inline.arrayBuffer()),
+      Buffer.from(await download.arrayBuffer()),
+    );
+  });
 });
 
-test("12. inline and attachment differ ONLY in the leading token", () => {
-  const inline = buildContentDisposition("inline", "見積-1");
-  const attach = buildContentDisposition("attachment", "見積-1");
-  assert.equal(inline.replace(/^inline/, ""), attach.replace(/^attachment/, ""));
-});
+// ── Failure and leakage boundaries ───────────────────────────────────────────
 
-// ── 13-17. Route guarantees (source) ───────────────────────────────────────
+describe("failure boundaries", () => {
+  it("500 on renderer failure with the generic message — internal detail never leaks", async () => {
+    scenario.resolved = { kind: "ok", source: eligibleSource() };
+    scenario.renderThrows = true;
+    const res = await GET(request(`?reportId=${REPORT}`));
+    assert.equal(res.status, 500);
+    const body = await res.text();
+    assert.equal(body, "PDFの生成に失敗しました");
+    assert.equal(body.includes("secret internal renderer detail"), false);
+  });
 
-test("13. the route uses the shared pure header helpers rather than its own copy", () => {
-  const code = codeOf(ROUTE_SRC);
-  assert.match(code, /from "\.\.\/estimate\/pdf-response-headers"/);
-  assert.match(code, /resolveDisposition\(req\.nextUrl\.searchParams\.get\("download"\)\)/);
-  assert.match(code, /buildContentDisposition\(disposition, resolved\.source\.reportNumber\)/);
-  for (const gone of ["safePdfFilename", "encodeURIComponent(", "\\x20-\\x7e"]) {
-    assert.equal(code.includes(gone), false, `the route still defines ${gone}`);
-  }
-});
-
-test("14. authentication precedes the invoice read; the dealer is session-resolved", () => {
-  const code = codeOf(ROUTE_SRC);
-  assert.match(code, /if \(!dealer\) return new Response\("Unauthorized", \{ status: 401 \}\);/);
-  const dealerCall = code.indexOf("await getCurrentDealer()");
-  const dataCall = code.indexOf("await getWorkReportPdfData(dealer.dealer_id, reportId)");
-  assert.ok(dealerCall >= 0 && dataCall > dealerCall, "the dealer is resolved first");
-  assert.ok(code.indexOf("status: 401") < dataCall, "401 precedes any report read");
-  // the query is scoped by the SESSION dealer, never a client-supplied one
-  assert.ok(!/searchParams\.get\(\s*["\x27`]dealer/i.test(code), "no client dealer id");
-});
-
-test("15. the PDF BYTES are identical in both modes — one render, one body", () => {
-  const code = codeOf(ROUTE_SRC);
-  assert.equal((code.match(/renderWorkReportDocumentPdf\(/g) ?? []).length, 1, "one render call");
-  assert.equal((code.match(/new Response\(new Uint8Array\(buffer\)/g) ?? []).length, 1, "one body");
-  assert.ok(
-    code.indexOf("buffer = await renderWorkReportDocumentPdf") < code.indexOf("resolveDisposition("),
-    "the disposition is chosen after the render",
-  );
-});
-
-test("16. Content-Type and Cache-Control are unchanged", () => {
-  const code = codeOf(ROUTE_SRC);
-  assert.match(code, /"Content-Type": "application\/pdf"/);
-  assert.match(code, /"Cache-Control": "private, no-store"/);
-  assert.equal((code.match(/"Content-Type":/g) ?? []).length, 1);
-});
-
-test("17. no Storage write and no documents-bucket dependency", () => {
-  const code = codeOf(ROUTE_SRC);
-  for (const forbidden of [
-    "generate-pdf-and-upload", "generateAndUploadPdf", ".storage", "documents",
-    "createSignedUrl", "upload(", "createAdminClient",
-  ]) {
-    assert.equal(code.includes(forbidden), false, `the route references ${forbidden}`);
-  }
-  // The helper module is pure: no imports at all.
-  assert.equal(/^import\s/m.test(codeOf("src/app/pdf/estimate/pdf-response-headers.ts")), false);
+  it("every non-ok outcome renders nothing and calls the loader exactly once", async () => {
+    const outcomes: unknown[] = [
+      { kind: "unauthenticated" },
+      { kind: "invalid_request" },
+      { kind: "not_found" },
+      { kind: "not_eligible", reasons: ["archived"] },
+    ];
+    for (const resolved of outcomes) {
+      log = { loaderCalls: [], brandCalls: [], renderCalls: [] };
+      scenario = { dealer: { dealer_id: DEALER }, resolved };
+      await GET(request(`?reportId=${REPORT}`));
+      assert.equal(log.loaderCalls.length, 1);
+      assert.equal(log.renderCalls.length, 0);
+      assert.equal(log.brandCalls.length, 0);
+    }
+  });
 });

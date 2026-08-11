@@ -1,8 +1,15 @@
-// TEMPLATE-C2-WR — work-report binding boundary + unit tests.
+// TEMPLATE-C2-WR + GDA-1W — work-report binding boundary + unit tests.
 //
 // The route/loader/renderer pull in server-only + Chromium modules that cannot resolve under this
 // runner, so their auth / tenant / offline / no-persistence / monetary-exclusion guarantees are
 // asserted from source text; the pure adapter + context are executed against real inputs.
+//
+// GDA-1W (accepted contract §3.2 / §8) changes the AUTHORITATIVE binding pinned here:
+//   * performed-work rows come ONLY from the confirmed completion_report_items snapshot,
+//     through the shared fail-closed source (getWorkReportSource);
+//   * the optional estimate relation contributes BINDING FACTS ONLY — it may never supply
+//     items or money, and its absence never blocks an otherwise valid report;
+//   * eligibility is the ONE shared §8 reason contract consumed by UI, loader, and route.
 //
 // Run: node --import tsx --test src/lib/pdf/__tests__/template-c2/*.test.ts
 
@@ -21,6 +28,7 @@ const codeOf = (p: string): string =>
 const raw = (p: string): string => readFileSync(path.join(ROOT, p), "utf8");
 
 const LOADER = "src/lib/pdf/get-work-report-pdf-data.ts";
+const SHARED_SOURCE = "src/lib/completion-reports/get-completion-report.ts";
 const DATA = "src/lib/pdf/work-report-document-data.ts";
 const CONTEXT = "src/lib/pdf/chromium-document/work-report-document-context.ts";
 const RENDERER = "src/lib/pdf/render-work-report-document.tsx";
@@ -79,13 +87,36 @@ test("WR-2 the chain never reuses the monetary completion model or renderer", ()
   }
 });
 
-test("WR-3 the loader selects only non-monetary estimate-item columns", () => {
-  const code = codeOf(LOADER);
-  // estimate_items projection is exactly category / item_name / description / sort_order
-  const m = /estimate_items\s*\(([^)]*)\)/.exec(code);
-  assert.ok(m, "the loader must project estimate_items");
-  const cols = m![1].replace(/\s/g, "").split(",").filter(Boolean).sort();
+test("WR-3 performed work binds ONLY to confirmed completion_report_items; estimates may never supply items or money", () => {
+  const loader = codeOf(LOADER);
+  // The PDF loader no longer touches estimate items at all — it consumes the
+  // shared fail-closed source.
+  assert.ok(loader.includes("getWorkReportSource"), "the loader must consume the shared source");
+  assert.ok(!loader.includes("estimate_items"), "the loader must not reference estimate_items");
+  assert.ok(!/estimates\s*\(/.test(loader), "the loader must not join estimates");
+
+  const shared = codeOf(SHARED_SOURCE);
+  // The shared source reads the snapshot from completion_report_items with
+  // exactly the material columns, ordered by sort_order.
+  const items = /from\("completion_report_items"\)\s*\.select\("([^"]*)"\)/.exec(shared);
+  assert.ok(items, "the shared source must select from completion_report_items");
+  const cols = items![1].replace(/\s/g, "").split(",").filter(Boolean).sort();
   assert.deepEqual(cols, ["category", "description", "item_name", "sort_order"]);
+  assert.ok(shared.includes('order("sort_order"'), "snapshot rows are read in sort_order");
+
+  // The optional estimate relation contributes BINDING FACTS ONLY inside the
+  // work-report path: exactly dealer_id / customer_id / vehicle_id — no item
+  // join, no monetary column, no fallback.
+  const estimate = /from\("estimates"\)\s*\.select\(\s*"([^"]*)"\s*\)/.exec(shared);
+  assert.ok(estimate, "the shared source must read the estimate binding facts");
+  const estimateCols = estimate![1].replace(/\s/g, "").split(",").filter(Boolean).sort();
+  assert.deepEqual(estimateCols, ["customer_id", "dealer_id", "vehicle_id"]);
+  for (const tok of MONETARY) {
+    assert.ok(
+      !new RegExp(`"[^"]*\\b${tok}\\b[^"]*"`).test(shared.split("getWorkReportSource")[1] ?? ""),
+      `the work-report source path must not select monetary column: ${tok}`,
+    );
+  }
 });
 
 /* ── adapter + context ──────────────────────────────────────────────────── */
@@ -136,26 +167,47 @@ test("WR-8 context: store logo must be embedded bytes; honorific derives from pa
 
 /* ── loader eligibility + route ─────────────────────────────────────────── */
 
-test("WR-9 the loader gates completion status, dates, number, estimate and >=1 item, all fail-closed", () => {
+test("WR-9 the loader gates through the SHARED §8 eligibility source, fail-closed, RLS-only", () => {
   const code = codeOf(LOADER);
-  assert.ok(code.includes('wo.status !== "completed"'), "work order must be completed");
-  assert.ok(code.includes("actual_end_at") && code.includes("report_date") && code.includes("report_number"), "date/number gates");
-  assert.ok(code.includes("estimate_id") && code.includes("items.length === 0"), "estimate + at least one item");
-  assert.ok(code.includes('kind: "not_found"') && code.includes('kind: "not_eligible"'), "coarse fail-closed outcomes");
-  assert.ok(code.includes('.eq("id", reportId)') && code.includes('.eq("dealer_id", dealerId)'), "scoped by report id AND dealer id");
+  // ONE shared judgment; no hand-rolled eligibility conditions remain.
+  assert.ok(code.includes("getWorkReportSource"), "eligibility comes from the shared source");
+  assert.ok(!code.includes('wo.status !== "completed"'), "no hand-rolled completion gate");
+  // The unauthenticated reason keeps its 401 arm; a pure tenant failure stays
+  // indistinguishable from absence; every other outcome carries EXACT reasons.
+  assert.ok(code.includes('"unauthenticated"') && code.includes('kind: "unauthenticated"'), "unauthenticated arm");
+  assert.ok(code.includes('"tenant-mismatch"') && code.includes('kind: "not_found"'), "tenant failure stays not_found");
+  assert.ok(code.includes('kind: "not_eligible"') && code.includes("reasons: source.reasons"), "exact shared reasons pass through");
+  // Defense in depth: the route-resolved dealer is cross-checked, and the
+  // enrichment read stays dealer-scoped through the RLS client.
+  assert.ok(code.includes("report.dealer_id !== dealerId"), "dealer cross-check");
+  assert.ok(code.includes('.eq("dealer_id", dealerId)'), "enrichment scoped by dealer id");
   assert.ok(code.includes("createClient") && !/createAdminClient|service_role|service-role/i.test(code), "RLS client, never service-role");
+  const shared = codeOf(SHARED_SOURCE);
+  assert.ok(!/createAdminClient|service_role|service-role/i.test(shared), "shared source: never service-role");
+  // The PDF source is built from proven canonical facts only.
+  assert.ok(code.includes("report.report_number") && code.includes("report.report_date") && code.includes("workOrder.actual_end_at"), "number/date/end from the canonical result");
 });
 
-test("WR-10 the route: nodejs force-dynamic, application/pdf, private no-store, coarse statuses, no persistence", () => {
+test("WR-10 the route: nodejs force-dynamic, application/pdf, private no-store, stable statuses + 422 reasons, no persistence", () => {
   const code = codeOf(ROUTE);
   assert.ok(code.includes('runtime = "nodejs"') && code.includes('dynamic = "force-dynamic"'));
   assert.ok(code.includes('"Content-Type": "application/pdf"') && code.includes('"Cache-Control": "private, no-store"'));
   assert.ok(code.includes("getCurrentDealer()") && !/searchParams\.get\(\s*["'`]dealer/i.test(code), "session dealer only");
-  assert.ok(/status:\s*401/.test(code) && /status:\s*404/.test(code) && /status:\s*500/.test(code), "coarse statuses");
+  assert.ok(/status:\s*401/.test(code) && /status:\s*404/.test(code) && /status:\s*500/.test(code), "stable statuses");
+  // The caller's OWN not-ready report answers 422 carrying ONLY the exact
+  // shared reason codes; the body is JSON and never raw error text.
+  assert.ok(/status:\s*422/.test(code), "not-eligible answers 422");
+  assert.ok(code.includes("reasons: resolved.reasons"), "exact shared reasons pass through");
+  assert.ok(code.includes('"Content-Type": "application/json; charset=utf-8"'), "reason body is JSON");
+  assert.ok(!code.includes("err.message") && !code.includes("error.message"), "no raw error leakage");
+  // reportId is the ONLY data input (download is presentation-only).
+  const params = [...code.matchAll(/searchParams\.get\(\s*["'`](\w+)["'`]\s*\)/g)].map((m) => m[1]).sort();
+  assert.deepEqual(params, ["download", "reportId"], "the route accepts only reportId + download");
   const all = code + codeOf(LOADER) + codeOf(RENDERER) + codeOf(DATA) + codeOf(CONTEXT);
   for (const forbidden of [".upload(", ".createSignedUrl(", "document_files", ".storage", ".update(", ".insert(", ".delete(", "upsert"]) {
     assert.ok(!all.includes(forbidden), `work-report chain must not ${forbidden}`);
   }
+  assert.ok(!/createAdminClient|service_role|service-role/i.test(all), "no service-role anywhere in the chain");
 });
 
 /* ── native design + safe DOM ───────────────────────────────────────────── */
@@ -211,13 +263,22 @@ test("WR-13 the new CSS block is work-report-only and leaves other documents unt
 
 /* ── UI ──────────────────────────────────────────────────────────────────── */
 
-test("WR-14 the completion-report UI replaces window.print + legacy generator with the authenticated route", () => {
+test("WR-14 the completion-report UI gates PDF on the SHARED eligibility and renders exact reasons", () => {
   const ui = codeOf("src/components/completion-reports/CompletionReportSection.tsx");
   assert.ok(!ui.includes("window.print"), "the window.print PDF path must be gone");
   assert.ok(!ui.includes("generateCompletionReportPdf") && !ui.includes("DocumentPdfActions"), "the legacy monetary generator must be gone");
   assert.ok(ui.includes("/pdf/work-report?reportId="), "links to the authenticated work-report route");
   assert.ok(ui.includes("&download=1"), "download link present");
-  assert.ok(/status === "completed"/.test(ui) && ui.includes("actual_end_at"), "gated on completed WO + completion date");
+  // GDA-1W: the hand-rolled completed/actual_end_at gate is REPLACED by the
+  // shared judgment; links render only on the ready arm and the exact shared
+  // reasons render otherwise — never a vague "preparing" message.
+  assert.ok(ui.includes("getWorkReportSource"), "PDF availability comes from the shared source");
+  assert.ok(ui.includes("workReport?.ready") || ui.includes("workReport.ready"), "links gated on the ready arm");
+  assert.ok(ui.includes("REASON_LABELS"), "exact shared reasons are rendered");
+  assert.ok(ui.includes("作業内容書はまだ出力できません"), "not-ready reasons headline");
+  assert.ok(!ui.includes("準備中"), "no 'preparing' language survives");
+  // Items shown/edited come from the confirmed snapshot, never estimate items.
+  assert.ok(!ui.includes("estimate_items") && !ui.includes("estimateItems"), "no estimate-item source in the section");
   assert.ok(ui.includes("作業内容書を表示") && ui.includes("作業内容書をダウンロード"), "adopted action labels");
 });
 
