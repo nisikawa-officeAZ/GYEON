@@ -828,3 +828,266 @@ rollback_or_recovery: "Discard only this appended GDA-1W-C6L block; do not alter
 decision: GDA_1W_C6_AND_C6P_ACCEPTED_PASS_DELIVERED_DRAFT
 next: "Return to MACBOOK_CODEX for acceptance; then stop for owner approval of one-path ledger stage-and-commit; push later separate."
 ```
+
+## GDA-1R2-C1 — Reservation → estimate → work-order conversion contract (documentation-only candidate)
+
+```yaml
+phase: GDA-1R2-C1_RESERVATION_TO_ESTIMATE_WORK_ORDER_CONVERSION_CONTRACT
+status: CANDIDATE_UNCOMMITTED
+date: 2026-08-11
+append_only: true
+objective: "Author the owner-approved documentation-only reservation-to-estimate/work-order conversion contract, register it in the specification index, and record this candidate without touching source, tests, migrations, dependencies, configuration, Git history, or any environment."
+authorization: "Owner-approved documentation-only contract candidate; MacBook Codex governing instruction https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249905852 (the governing PR comments and owner approval are summarized in that instruction)."
+predecessors:
+  instruction: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249905852"
+  completion_authority_chain: "GDA-1W-C1 through GDA-1W-C6L entries above, including https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249254499 and https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249277187"
+repository:
+  worktree: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gyeon-da-completion-v1"
+  branch: "plan/gyeon-da-completion-v1"
+  base_commit: "f5c06755589ffcf9d1b87ac06e89f69cb3751511"
+  base_tree: "481c9f600a56e3eaa28018fb0b894ffba4714489"
+  upstream_head: "f5c06755589ffcf9d1b87ac06e89f69cb3751511"
+  divergence: "0/0"
+  index: "empty"
+  initial_worktree: "clean"
+candidate:
+  literal_allowlist:
+    - "docs/master_specification/GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md (create)"
+    - "docs/master_specification/INDEX.md (update)"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md (append only)"
+  changed_paths:
+    - "docs/master_specification/GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md"
+    - "docs/master_specification/INDEX.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  per_path_mode_sha256:
+    "docs/master_specification/GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md": "100644 92c60ed807927e4d779a8fcd12d08d68999f2acc96c127aad55ebab6cd2b9c6f"
+    "docs/master_specification/INDEX.md": "100644 44ff31fb7f34ee2e8c40959a935b828961a90fd0748375b8f36ca8d8bbaee9b6"
+    "docs/master_specification/GYEON_DA_PHASE_RESULTS.md": "100644 SELF_REFERENTIAL_EXCLUDED_FROM_EMBEDDED_HASH; verify final blob at the separate commit gate"
+  combined_sha256: "ba3e9be5b292497bcdbe7afe061edf690eb88696e18e1050757966647ca2abab (SHA-256 of the sorted two-line 'mode path sha256' manifest for the two non-ledger paths; single spaces; LF; final newline; ledger self-excluded)"
+  index_delta: "Added the Reservation Conversion Contract row (GDA-1R2-C1 candidate; UNCOMMITTED) to Current GYEON DA execution control; corrected the two directly stale 'commit pending' statuses to 'committed' (delivered by GDA-0D); updated Last Updated to 2026-08-11. The 12-document baseline and historical sections were not rewritten."
+  protected_path_evidence:
+    - "100644 c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f src/components/estimates/wizard/screens/ScreensPreview.tsx; pathname/mode/blob per instruction and prior accepted ledger entries; content never opened, read, diffed, or copied; absent from git status"
+    - "100644 fe3c80f22fd80dcbfab076082473216dda582c14 src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts; metadata only; content never accessed; absent from git status (instruction listed a 41-hex-character blob ending '…c14f'; the 40-hex value recorded here matches the accepted GDA-0/GDA-1W ledger evidence)"
+    - "100644 accd22345054cc44f89156fd78eaba6dfe4242a4 supabase/migrations/20260801110110_line_link_tokens.sql; metadata only; content never accessed; absent from git status"
+    - "100644 32fda49583ae1217bc13711784ad8fa31744726c supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql; metadata only; content never accessed; absent from git status"
+contract_decision_summary:
+  - "Default flow is fixed: confirmed reservation -> server-validated prefilled draft estimate -> human pricing review/approval -> work order from the authoritative estimate; reservation is scheduling intent only and never authorizes price or work-order creation."
+  - "Prefill authority is server-side re-load by tenant-bound id; customer/vehicle/service/staff/bay/schedule/notes are hints until human confirmation; query/client values are never authority; estimate save remains the sole pricing authority."
+  - "Direct-work-order exception is logical, server-owned, default false, explicitly configured per low-risk/fixed-scope service, never label/client-inferred, requires explicit edit-capable staff confirmation, obeys identical atomic/idempotent/security rules, denies on absence/ambiguity, and defers physical storage."
+  - "Logical fail-closed state machine (pending/confirmed/estimate_draft/estimate_approved/converting/work_order_created/cancelled/no_show/failed-retryable) with physical schema mapping explicitly deferred."
+  - "One transaction locks the reservation, validates state/tenant/actor, persists a durable caller-supplied idempotency key, distinguishes created vs replayed, guarantees one accepted work order per reservation, deterministic same-key replay, different-key convergence, no orphans, exact rollback, operator recovery, and requires genuine separate-connection concurrency evidence."
+  - "Numbering: no legacy unpersisted fallback; in-transaction allocation; collision fails/rolls back; DB uniqueness; replay returns the prior number."
+  - "Authorization: authenticated + active membership + exact tenant + edit capability; readonly/inactive/suspended/ambiguous/cross-dealer/anon deny; grants and RLS separate; TO authenticated plus capability predicate; UPDATE needs USING and WITH CHECK; the work_orders inactive-member gap must be closed; Data API cannot bypass capability; SECURITY DEFINER constrained (justification, trusted schema, pinned search_path, explicit checks, revoke/exact regrant); no user_metadata authorization."
+  - "Source-of-truth matrix defines snapshot-vs-synchronized per datum; post-conversion drift is human-resolved and never silently overwrites another authoritative entity; customer/LIFF booking is a separate external-security contract; capacity stays advisory-only; API outcomes are stable semantic results."
+  - "Future repair allowlist (8 source + 7 test candidates, migration REQUIRED_LATER with CLI-generated filename) is recorded and marked NOT AUTHORIZED, split into likely first bounded repair versus deferred/customer-surface work."
+official_references:
+  - "https://supabase.com/docs/guides/database/postgres/row-level-security"
+  - "https://supabase.com/docs/guides/api/securing-your-api"
+  - "https://supabase.com/changelog?types=breaking-change"
+verification:
+  git_diff_check: "PASS — git diff --check over the three allowlisted paths reports no problems"
+  commands:
+    - "git status --short"
+    - "git diff --name-only"
+    - "git diff --numstat -- docs/master_specification/GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md docs/master_specification/INDEX.md docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "git diff --check -- docs/master_specification/GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md docs/master_specification/INDEX.md docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "git rev-parse HEAD HEAD^{tree} @{u}; git rev-list --left-right --count HEAD...@{u}"
+    - "shasum -a 256 (three allowlisted paths); stat (three allowlisted paths)"
+external_actions:
+  database_access: false
+  supabase_cli_mcp_docker_colima_access: false
+  migration_generated: false
+  migration_applied: false
+  dependency_changed: false
+  storage_changed: false
+  line_external_changed: false
+  network_or_github_access: false
+  deployed: false
+tests:
+  tests_run: false
+  typecheck: NOT_RUN
+  build: NOT_RUN
+  lint: NOT_RUN
+git_actions:
+  staged: false
+  committed: false
+  pushed: false
+  branch_or_worktree_changed: false
+  pr_changed: false
+  ready_or_merged: false
+known_limitations:
+  - "This is an uncommitted three-path documentation candidate; MacBook Codex independent acceptance, staging, commit, and push are separate later gates."
+  - "The contract is decision-level (E0/E1); no executable, disposable-runtime, environment, or field evidence exists for the conversion path."
+  - "Physical schema for logical states and direct-eligibility, and the exact migration filename, are intentionally undecided until separately authorized subphases."
+  - "The ledger file's own final hash is self-referential and must be verified at the separate commit gate."
+rollback_or_recovery: "Discard only these three working-tree changes (delete the new contract file, revert INDEX.md, remove this appended block); no other state exists."
+decision: "GDA_1R2_C1_RESERVATION_CONVERSION_CONTRACT_CANDIDATE_AUTHORED_UNCOMMITTED"
+next: "RETURN_GDA-1R2-C1_DOCUMENT_CANDIDATE_TO_CODEX_UNCOMMITTED"
+```
+
+## GDA-1R2-C1R — Two-path contract semantics repair (supersedes the GDA-1R2-C1 candidate semantics; uncommitted)
+
+```yaml
+phase: GDA-1R2-C1R_TWO_PATH_CONTRACT_SEMANTICS_REPAIR_UNCOMMITTED
+status: CANDIDATE_UNCOMMITTED
+date: 2026-08-11
+append_only: true
+supersedes: "GDA-1R2-C1 candidate contract semantics only; the GDA-1R2-C1 ledger block above is historical evidence and was not rewritten, reordered, or deleted"
+objective: "Execute the owner-approved bounded two-path repair of the reservation conversion contract: replace the conflated lifecycle state model with two independent logical axes and bind the direct-work-order path to server-reloaded service authority with zero monetary authority from reservation/query/client data."
+authorization: "Owner-approved bounded repair; MacBook Codex governing instruction https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250093680"
+predecessors:
+  instruction: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250093680"
+  c1_candidate_result: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249985100"
+  codex_changes_required: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5249995628"
+repository:
+  worktree: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gyeon-da-completion-v1"
+  branch: "plan/gyeon-da-completion-v1"
+  base_commit: "f5c06755589ffcf9d1b87ac06e89f69cb3751511"
+  base_tree: "481c9f600a56e3eaa28018fb0b894ffba4714489"
+  upstream_head: "f5c06755589ffcf9d1b87ac06e89f69cb3751511"
+  divergence: "0/0"
+  index: "empty"
+  starting_worktree: "the exact GDA-1R2-C1 uncommitted three-path candidate, verified byte-identical before editing"
+candidate:
+  literal_two_path_write_allowlist:
+    - "docs/master_specification/GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md (update)"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md (append one superseding GDA-1R2-C1R block only)"
+  changed_paths:
+    - "docs/master_specification/GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  index_md_unchanged: "docs/master_specification/INDEX.md remained byte-identical throughout at SHA-256 44ff31fb7f34ee2e8c40959a935b828961a90fd0748375b8f36ca8d8bbaee9b6 (verified before and after the repair)"
+  contract_sha256_before: "92c60ed807927e4d779a8fcd12d08d68999f2acc96c127aad55ebab6cd2b9c6f"
+  contract_sha256_after: "01cd2a9ef1b31b1c917923210463e3ee47d9c77b9708d85dff7cbaeccc03c39e"
+  ledger_sha256_before_append: "1cff45eca0998020f1adf652c04ad1abcd1e8e09f78da48f83e17324b67d200d (61506 bytes)"
+  ledger_sha256_final: "SELF_REFERENTIAL_EXTERNAL_EVIDENCE — the ledger cannot embed its own final hash; verify the final blob externally at the separate acceptance/commit gate"
+  pure_append_proof: "The new GDA-1R2-C1R block was appended after the existing GDA-1R2-C1 block; the first 61506 bytes of the post-append ledger hash to 1cff45eca0998020f1adf652c04ad1abcd1e8e09f78da48f83e17324b67d200d, proving every pre-existing ledger byte (including the C1 block) is unchanged, unreordered, and undeleted"
+  git_diff_check: "PASS — git diff --check over the three candidate documents reports no problems"
+  protected_path_evidence:
+    - "100644 c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f src/components/estimates/wizard/screens/ScreensPreview.tsx; metadata only via git ls-files -s; content never opened, read, diffed, or copied; absent from git status"
+    - "100644 fe3c80f22fd80dcbfab076082473216dda582c14 src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts; metadata only; content never accessed; absent from git status"
+    - "100644 accd22345054cc44f89156fd78eaba6dfe4242a4 supabase/migrations/20260801110110_line_link_tokens.sql; metadata only; content never accessed; absent from git status"
+    - "100644 32fda49583ae1217bc13711784ad8fa31744726c supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql; metadata only; content never accessed; absent from git status"
+repair_decisions:
+  - "REPAIR 1 — independent lifecycle axes: the conflated single state list was replaced by two independent logical dimensions — reservation scheduling state (pending | confirmed | cancelled | no_show) and conversion/artifact state (none | estimate_draft | estimate_approved | converting | work_order_created | failed_retryable) — with per-axis transition tables and explicit cross-axis rules (contract §3, §7)."
+  - "Cancellation, no-show, and reschedule remain possible after estimate draft/approval and after work-order creation; they change only the scheduling axis, surface drift/conflict for explicit human resolution, and never silently mutate the estimate or an accepted work order (contract §7.3, §12)."
+  - "failed_retryable is defined as a conversion-attempt result/audit state, not a reservation state, and is never committed by the failed transaction itself (contract §3, §7.2)."
+  - "Exact rollback leaves reservation, estimate, work order, number allocation, and idempotency authority unchanged; non-authoritative failure evidence may be recorded only outside the rolled-back authority mutation, must not poison same-key retry, and must not imply authoritative artifact mutation (contract §8, §15)."
+  - "REPAIR 2 — direct-path pricing and service authority: the server re-loads the explicitly configured service scope/version from server-owned configuration under exact tenant match and edit capability; explicit staff confirmation snapshots execution scope only (contract §3, §6)."
+  - "Reservation, query, and client data authorize no price, discount, tax, total, monetary line item, or invoice permission on any path; any billable pricing must use the estimate-first authoritative path (contract §4, §6, §11, §15)."
+  - "Fixed-price direct billing is a separate owner-approved contract decision and remains default denied; the direct-path work order is execution-only with respect to commerce for its whole life and cannot itself be a pricing/invoice authority (contract §6, §12)."
+  - "Definitions, canonical/direct path, state model, transaction/idempotency, source-of-truth matrix, post-conversion rules, API outcomes, acceptance checklist, rollback description, limitations, and the next gate were updated consistently; no physical table, column, enum, RPC, or migration filename was invented; metadata now records the C1R governing instruction, the C1 candidate result, and the Codex CHANGES_REQUIRED predecessor links."
+external_actions:
+  database_access: false
+  supabase_cli_mcp_docker_colima_access: false
+  migration_generated: false
+  migration_applied: false
+  dependency_changed: false
+  storage_changed: false
+  line_external_changed: false
+  network_or_github_access: false
+  deployed: false
+tests:
+  tests_run: false
+  typecheck: NOT_RUN
+  build: NOT_RUN
+  lint: NOT_RUN
+git_actions:
+  staged: false
+  committed: false
+  pushed: false
+  branch_or_worktree_changed: false
+  fetch_or_pull: false
+  pr_changed: false
+  ready_or_merged: false
+known_limitations:
+  - "This remains an uncommitted documentation candidate at decision level (E0/E1); MacBook Codex independent acceptance, staging, commit, and push are separate later gates."
+  - "Physical schema mapping for the two lifecycle axes, direct-eligibility configuration, service scope/version representation, and the recording location for non-authoritative failure evidence remain intentionally undecided."
+  - "Fixed-price direct billing remains default denied and uncontracted pending a separate owner-approved contract decision."
+  - "The ledger file's own final hash is self-referential and must be verified externally at the separate acceptance/commit gate."
+rollback_or_recovery: "Discard the GDA-1R2-C1R contract edits and remove only this appended GDA-1R2-C1R block; earlier ledger bytes, INDEX.md, and all other paths are untouched by this repair."
+decision: "GDA_1R2_C1R_TWO_PATH_CONTRACT_SEMANTICS_REPAIRED_UNCOMMITTED"
+next: "RETURN_GDA-1R2-C1R_TWO_PATH_REPAIR_TO_CODEX_UNCOMMITTED"
+```
+
+## GDA-1R2-C1R2 — Direct-path non-billable terminal rule final repair (supersedes the GDA-1R2-C1R candidate's direct-path billing semantics; uncommitted)
+
+```yaml
+phase: GDA-1R2-C1R2_DIRECT_PATH_NON_BILLABLE_TERMINAL_RULE_UNCOMMITTED
+status: CANDIDATE_UNCOMMITTED
+date: 2026-08-11
+append_only: true
+supersedes: "GDA-1R2-C1R candidate direct-path billing semantics only; the GDA-1R2-C1 and GDA-1R2-C1R ledger blocks above are historical evidence and were not rewritten, reordered, or deleted"
+objective: "Execute the owner-approved final bounded contract repair: bind direct-work-order eligibility to an explicit server-owned non-billable-for-entire-lifecycle service classification, make the direct-path work order terminally non-billable (never retrofitted, converted, priced, invoiced, or linked into billable work), replace the Section 12.6 later-billing wording, and default-deny any future estimate-to-existing-direct-work-order linkage design pending a separate owner-approved contract."
+authorization: "Owner-approved final bounded repair; MacBook Codex governing instruction https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250189948"
+predecessors:
+  instruction: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250189948"
+  c1r_repair_result: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250169579"
+  codex_changes_required: "https://github.com/nisikawa-officeAZ/GYEON/pull/8#issuecomment-5250174185"
+repository:
+  worktree: "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gyeon-da-completion-v1"
+  branch: "plan/gyeon-da-completion-v1"
+  base_commit: "f5c06755589ffcf9d1b87ac06e89f69cb3751511"
+  base_tree: "481c9f600a56e3eaa28018fb0b894ffba4714489"
+  upstream_head: "f5c06755589ffcf9d1b87ac06e89f69cb3751511"
+  divergence: "0/0"
+  index: "empty"
+  starting_worktree: "the exact GDA-1R2-C1R uncommitted three-path candidate, verified byte-identical before editing: contract SHA-256 01cd2a9ef1b31b1c917923210463e3ee47d9c77b9708d85dff7cbaeccc03c39e, INDEX SHA-256 44ff31fb7f34ee2e8c40959a935b828961a90fd0748375b8f36ca8d8bbaee9b6, ledger SHA-256 276af2d0092deb187ca0007377742151154222cc560b5481c4cd729853c2c032 at 69566 bytes"
+candidate:
+  literal_two_path_write_allowlist:
+    - "docs/master_specification/GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md (update)"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md (append one superseding GDA-1R2-C1R2 block only)"
+  changed_paths:
+    - "docs/master_specification/GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  index_md_unchanged: "docs/master_specification/INDEX.md remained byte-identical throughout at SHA-256 44ff31fb7f34ee2e8c40959a935b828961a90fd0748375b8f36ca8d8bbaee9b6 (verified before and after the repair)"
+  contract_sha256_before: "01cd2a9ef1b31b1c917923210463e3ee47d9c77b9708d85dff7cbaeccc03c39e"
+  contract_sha256_after: "6980f1aea9e1e52a5f6b4a53b62094246d451cac5789563f27d926233ead9267"
+  ledger_sha256_before_append: "276af2d0092deb187ca0007377742151154222cc560b5481c4cd729853c2c032 (69566 bytes)"
+  ledger_sha256_final: "SELF_REFERENTIAL_EXTERNAL_EVIDENCE — the ledger cannot embed its own final hash; verify the final blob externally at the separate acceptance/commit gate"
+  pure_append_proof: "The new GDA-1R2-C1R2 block was appended after the existing GDA-1R2-C1R block; the first 69566 bytes of the post-append ledger hash to 276af2d0092deb187ca0007377742151154222cc560b5481c4cd729853c2c032, proving every pre-existing ledger byte (including the C1 and C1R blocks) is unchanged, unreordered, and undeleted"
+  git_diff_check: "PASS — git diff --check over the three candidate documents reports no problems"
+  protected_path_evidence:
+    - "100644 c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f src/components/estimates/wizard/screens/ScreensPreview.tsx; metadata only via git ls-files -s; content never opened, read, diffed, or copied; absent from git status"
+    - "100644 fe3c80f22fd80dcbfab076082473216dda582c14 src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts; metadata only; content never accessed; absent from git status"
+    - "100644 accd22345054cc44f89156fd78eaba6dfe4242a4 supabase/migrations/20260801110110_line_link_tokens.sql; metadata only; content never accessed; absent from git status"
+    - "100644 32fda49583ae1217bc13711784ad8fa31744726c supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql; metadata only; content never accessed; absent from git status"
+repair_decisions:
+  - "RULING 1 — non-billable-only eligibility: the direct-work-order path is eligible only when server-owned configuration explicitly classifies the service as non-billable for its entire lifecycle; the low-risk/fixed-scope eligibility wording was removed and a lifecycle-non-billable service definition was added (contract §3, §6.1)."
+  - "RULING 2 — estimate-first before any work order: if any price, charge, monetary line item, tax, discount, total, or invoice may be required now or later, the direct path is ineligible and the default estimate-first flow must be selected before any work order is created (contract §4.5, §4.6, §6.1, §6.6)."
+  - "RULING 3 — terminal non-billability: an existing direct-path work order can never be retrofitted, converted, priced, invoiced, or linked into billable work under this contract; a direct-path created/replayed result returns execution-only identifiers with no path to later pricing or invoicing (contract §3, §6.7, §11, §12.6, §15)."
+  - "RULING 4 — Section 12.6 replaced: the wording that permitted later billable pricing/invoicing for an already-created direct work order was removed and replaced by the terminal non-billable boundary; the former §6.8 fixed-price direct billing carve-out was likewise replaced (contract §6.8, §12.6)."
+  - "RULING 5 — future linkage default denied: any future design that links an estimate to an existing direct-path work order requires a separate owner-approved contract defining one-to-one linkage, no second work order, idempotency, and pricing and invoice authority; it remains default denied here (contract §6.8, §12.6, §18.1, §18.3)."
+  - "Preserved unchanged per the ruling: the accepted two-axis lifecycle model (§7), exact rollback and transaction/idempotency rules (§8), numbering (§9), tenant/capability, RLS, and grants rules (§10), and the server-reloaded service-scope authority with execution-scope-only staff confirmation (§6.4, §6.5)."
+  - "Consistency: definitions, canonical/default flow, direct-path eligibility, source-of-truth matrix, post-conversion rules, API outcomes (not_eligible now covers a missing/false/ambiguous/unreadable non-billable classification), acceptance checklist, rollback description, known limitations, and the next gate were updated together; no physical table, column, enum, RPC, API name, or migration filename was invented; metadata records the C1R2 governing instruction, the C1R repair result, and the Codex CHANGES_REQUIRED predecessor links."
+external_actions:
+  database_access: false
+  supabase_cli_mcp_docker_colima_access: false
+  migration_generated: false
+  migration_applied: false
+  dependency_changed: false
+  storage_changed: false
+  line_external_changed: false
+  network_or_github_access: false
+  deployed: false
+tests:
+  tests_run: false
+  typecheck: NOT_RUN
+  build: NOT_RUN
+  lint: NOT_RUN
+git_actions:
+  staged: false
+  committed: false
+  pushed: false
+  branch_or_worktree_changed: false
+  fetch_or_pull: false
+  pr_changed: false
+  ready_or_merged: false
+known_limitations:
+  - "This remains an uncommitted documentation candidate at decision level (E0/E1); MacBook Codex independent acceptance, staging, commit, and push are separate later gates."
+  - "Physical schema mapping for the two lifecycle axes, the direct-eligibility and non-billable lifecycle classification, the service scope/version representation, and the recording location for non-authoritative failure evidence remain intentionally undecided."
+  - "A direct-path work order is terminally non-billable under this contract; any future estimate-to-existing-direct-work-order linkage design requires a separate owner-approved contract (one-to-one linkage, no second work order, idempotency, pricing and invoice authority) and remains default denied here."
+  - "The ledger file's own final hash is self-referential and must be verified externally at the separate acceptance/commit gate."
+rollback_or_recovery: "Discard the GDA-1R2-C1R2 contract edits and remove only this appended GDA-1R2-C1R2 block; earlier ledger bytes, INDEX.md, and all other paths are untouched by this final repair."
+decision: "GDA_1R2_C1R2_DIRECT_PATH_NON_BILLABLE_TERMINAL_RULE_REPAIRED_UNCOMMITTED"
+next: "RETURN_GDA-1R2-C1R2_FINAL_REPAIR_TO_CODEX_UNCOMMITTED"
+```
