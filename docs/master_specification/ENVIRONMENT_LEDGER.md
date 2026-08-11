@@ -87,3 +87,6 @@ The next permitted planning phase is a no-write environment-ledger remediation
 design. It must specify how to reconcile Development drift, how to close the
 Staging missing-version gap, and how to define the intentional Production
 subset without applying or rewriting any migration.
+
+The exact next-session start sequence and stop conditions are recorded in
+`NEXT_SESSION_TODO_2026_08_13.md`.
