@@ -248,6 +248,42 @@ export interface WizardDuplicateCheckInputs {
   readonly duplicateCheckInvoker?: WizardDuplicateCheckInvoker;
 }
 
+// ── GDA-1R2-C3R: reservation → estimate server-authorized prefill ───────────
+
+/**
+ * The top-level service family a reservation may prefill on Screen 3. `null` means
+ * the reservation names no recognizable family — never a default choice.
+ */
+export type WizardReservationPrefillCategory =
+  | "coating"
+  | "maintenance"
+  | "ppf"
+  | "window"
+  | "other"
+  | null;
+
+/**
+ * GDA-1R2-C3R — the SERVER-AUTHORIZED reservation prefill payload, composed
+ * server-side from a dealer-scoped reservation lookup and injected as a prop by
+ * the server route. Only the server can construct it; it never comes from a query
+ * parameter, cookie, or any client-writable channel.
+ *
+ * It carries NO authority beyond its four prefill values: no dealer identity, no
+ * role, no reservation status, no detailed service selection, no screen/pricing
+ * configuration, and no customer-facing notes. `notesInternal` is operator-internal
+ * text only.
+ *
+ * Every field is nullable: a reservation may name a customer without a vehicle, a
+ * family without notes, and so on. `null` means "nothing to prefill", never a
+ * fallback value.
+ */
+export interface WizardReservationPrefill {
+  readonly customerId: string | null;
+  readonly vehicleId: string | null;
+  readonly category: WizardReservationPrefillCategory;
+  readonly notesInternal: string | null;
+}
+
 /**
  * UNTRUSTED preselection, carried from the route's `?customer_id=` / `?vehicle_id=`
  * onboarding handoff.
@@ -260,4 +296,12 @@ export interface WizardDuplicateCheckInputs {
 export interface WizardPreselectionInputs {
   readonly defaultCustomerId?: string;
   readonly defaultVehicleId?:  string;
+  /**
+   * GDA-1R2-C3R — OPTIONAL server-authorized reservation prefill. Unlike the two
+   * untrusted query-parameter ids above — which are unchanged by this seam — this
+   * object is trusted because only the server route can construct and inject it.
+   * See `WizardReservationPrefill` for the authority boundary. Absent means "no
+   * reservation to prefill from", never a fallback.
+   */
+  readonly serverPrefill?: WizardReservationPrefill;
 }

@@ -27,7 +27,7 @@ import type {
   WizardExistingEntityInputs, WizardPreselectionInputs, WizardCustomerSearchInputs,
   WizardDuplicateCheckInputs,
 } from "./contract/wizard-runtime-inputs";
-import { resolvePreselection, preselectionStorePatch } from "./steps/existing-entity-selection";
+import { initialPreselectionStorePatch } from "./steps/existing-entity-selection";
 import type { WizardSaveBinding } from "./save/WizardSavePanel";
 import { useWizardPricingFromConfig } from "./pricing/useWizardPricingFromConfig";
 import { Step1Customer } from "./steps/Step1Customer";
@@ -63,7 +63,7 @@ export interface EstimateWizardProps
 
 export default function EstimateWizard({
   mode = "create", shopRank, screenConfig, catalog, pricingConfig,
-  customers, vehicles, defaultCustomerId, defaultVehicleId, saveBinding,
+  customers, vehicles, defaultCustomerId, defaultVehicleId, serverPrefill, saveBinding,
   customerSearchInvoker,
   duplicateCheckInvoker,
 }: EstimateWizardProps) {
@@ -81,7 +81,7 @@ export default function EstimateWizard({
   // uses (`initialCanonicalDraft` → `applyStorePatch`); nothing is mutated directly
   // and an invalid patch fails closed to the plain initial draft.
   const api = useEstimateWizard(
-    preselectionStorePatch(resolvePreselection(customers, vehicles, defaultCustomerId, defaultVehicleId)),
+    initialPreselectionStorePatch(customers, vehicles, defaultCustomerId, defaultVehicleId, serverPrefill),
     // EST-WIZ-REQ-F1: the SAME server-supplied reference arrays that resolve selections
     // also drive navigation validity, so an ineffective id can never pass a gate here
     // that the selection surfaces would refuse.
