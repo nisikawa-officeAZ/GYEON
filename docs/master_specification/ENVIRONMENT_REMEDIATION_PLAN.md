@@ -4,16 +4,18 @@
 
 | Field | Value |
 |---|---|
-| Phase | `PR2-GATE-B-R3F_BROADER_DATABASE_VERIFICATION_CONTRACT_DOCUMENT_CANDIDATE` |
+| Phase | `PR2-GATE-B-R4B_GYEON_PRODUCTS_STORAGE_REPAIR_CONTRACT_DOCUMENT_CANDIDATE` |
 | Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
 | Owner approval | 2026-08-12 |
 | Repository / PR | `nisikawa-officeAZ/GYEON` / PR #2 |
 | Branch | `fix/approval-center-delete-access-cut` |
-| Candidate base HEAD | `99b2859cda6256bc402f0918bba5ef29b6db1306` |
-| Candidate base tree | `d5caae0515d02d957ed0fadad29f6479434a3098` |
+| Candidate base HEAD | `684dc3263afe4943658a889e0e8232f415bba0e4` |
+| Candidate base tree | `60e0dcdc618e840b0d90ab248c8dde67e0cd7a58` |
 | Owner ruling | [PR #2 comment 5260802893](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260802893) |
 | Literal manifest evidence | [PR #2 comment 5261032333](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261032333) |
 | Broader verification evidence | [PR #2 comment 5261394747](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261394747) |
+| R3F push evidence | [PR #2 comment 5261545745](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261545745) |
+| R4A repair-design evidence | [PR #2 comment 5261626098](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261626098) |
 | Documentation allowlist | This file and `ENVIRONMENT_LEDGER.md` only |
 
 This document defines how to decide and verify future environment remediation.
@@ -791,25 +793,153 @@ reproducible configuration package under a separate gate. Current Development,
 Staging, Production, preview, LINE, external providers, and protected content
 are outside the disposable runtime boundary.
 
-### 14.7 Gate B-R3F completion rule and stop
+### 14.7 Gate B-R3F completion record
 
-R3F is a two-document, uncommitted candidate only. Completion requires:
+The exact two-document R3F candidate was accepted, committed, and pushed as
+commit `684dc3263afe4943658a889e0e8232f415bba0e4`, tree
+`60e0dcdc618e840b0d90ab248c8dde67e0cd7a58`. Remote verification is
+recorded in [PR #2 comment 5261545745](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261545745).
+That documentation delivery did not authorize policy/config implementation,
+broader-suite implementation, a disposable runtime, or any environment
+operation.
 
-- the diff is exactly this file plus `ENVIRONMENT_LEDGER.md`;
-- candidate base remains HEAD
-  `99b2859cda6256bc402f0918bba5ef29b6db1306` / tree
-  `d5caae0515d02d957ed0fadad29f6479434a3098` with an empty index;
-- the canonical five-bucket authority, broader suites, `gyeon_products`
-  repair prerequisite, and frozen/out-of-band boundaries are present;
-- both path modes, per-path SHA-256 values, a combined deterministic manifest
-  SHA-256, and `git diff --check` are recorded in the PR result;
-- the three excluded paths remain unchanged and protected LINE content is not
-  accessed; and
-- no source/test/migration edit, Supabase/DB/project connection, migration
-  replay/apply/repair/reset/seed, test, stage, commit, push, Ready, merge, or
-  deployment occurs.
+## 15. Gate B-R4A/R4B product and Storage repair contract
 
-After independent acceptance, the next operation is a separate exact two-path
-documentation commit gate. The policy/config repair, broader suite
-implementation, and disposable runtime each remain closed behind their own
-later explicit approval.
+### 15.1 Pinned authority and split repair tracks
+
+R4A read-only evidence is
+[PR #2 comment 5261626098](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261626098),
+pinned to HEAD `684dc3263afe4943658a889e0e8232f415bba0e4` and tree
+`60e0dcdc618e840b0d90ab248c8dde67e0cd7a58`.
+
+The repair is split into independent tracks:
+
+1. `DATABASE_CONFIGURATION`: forward `gyeon_products` SELECT-policy repair,
+   canonical five-bucket configuration/policy package, and one focused pgTAP
+   suite; and
+2. `APPLICATION_SOURCE`: admin-only product import, vehicle-registration
+   archive authorization/result handling, and private work-order-file delivery
+   and deletion semantics.
+
+No source mismatch may be repaired by widening authenticated table or Storage
+privileges. The tracks require separate literal allowlists and separate owner
+approval.
+
+### 15.2 `gyeon_products` policy and grant contract
+
+The table is a global shared GYEON product master with no `dealer_id`. The
+forward migration must:
+
+- leave `047_create_gyeon_products.sql` unchanged;
+- drop the exact historical role-only SELECT policy and create exactly one
+  replacement `FOR SELECT TO authenticated` policy;
+- require `(select auth.uid()) is not null` and an active `dealer_members` row
+  for the caller;
+- allow active members of different dealers to read the same shared rows;
+- deny invited, inactive, suspended, removed, no-member, and anonymous actors;
+- retain authenticated SELECT only, service-role CRUD, and no PUBLIC/anon
+  table privilege; and
+- use no `auth.role()`, owner-only fallback, SECURITY DEFINER helper, or
+  `wiz_is_any_active_member` dependency.
+
+Focused tests must also prove authenticated INSERT, UPDATE, and DELETE remain
+denied. Product CSV import is not authority for broader grants: its current
+request-scoped client and missing admin gate are a separate source defect.
+
+### 15.3 Canonical bucket configuration
+
+The future tracked configuration package regenerates exactly this catalog:
+
+| Bucket | Public | Source-derived ceiling | Accepted content boundary |
+|---|---:|---:|---|
+| `documents` | No | 50 MiB | PDF documents, including completion reports |
+| `work-order-files` | No | 20 MiB | current image/PDF/MP4/QuickTime surfaces |
+| `vehicle-registration-documents` | No | 20 MiB | post-preprocessing image bytes and PDF |
+| `dealer-branding` | Yes | 5 MiB | canonical PNG logo/stamp output |
+| `gyeon-resources` | No | 100 MiB | admin-managed resource MIME |
+
+Any Storage MIME restriction must accept the bytes the server actually uploads
+after preprocessing; an old setup document is not evidence of runtime bytes.
+`completion-reports` must be absent. If that bucket exists, the forward package
+raises before changing any bucket or policy. It does not delete or move objects.
+
+The operation matrix already fixed by source and accepted contracts is:
+
+- `documents`: tenant-scoped SELECT/INSERT/UPDATE; no authenticated DELETE;
+- `dealer-branding`: intended public object delivery plus active dealer-folder
+  SELECT/INSERT/UPDATE/DELETE; upsert requires SELECT, INSERT, and UPDATE; and
+- `gyeon-resources`: active-member/admin reads, admin-only writes, and ordinary
+  dealer writes denied.
+
+The final authenticated DELETE matrices for `work-order-files` and
+`vehicle-registration-documents` remain blocked on Section 15.4. A database
+policy must not grant a direct Storage client more power than the accepted
+server action.
+
+### 15.4 Application-source blockers
+
+1. `src/lib/products/import-gyeon-products-csv.ts` claims service-role behavior
+   but uses the request-scoped SSR client. The dealer-facing
+   `src/app/products/ProductsClient.tsx` exposes the import without an admin
+   gate. The later source repair uses accepted admin authorization and a
+   server-only admin client; authenticated product writes stay denied.
+2. `archiveVehicleRegistration()` calls a user-scoped copy/remove path while
+   historical setup prohibits DELETE, and it marks the database row archived
+   without requiring the Storage archive result to succeed. The later repair
+   must define the required staff capability, fail on Storage failure, and then
+   bind the minimum Storage operation set.
+3. `work-order-files` is private, but `uploadWorkOrderFile()` can persist
+   `is_public=true` and call `getPublicUrl()`. Its upload-failure cleanup and
+   explicit delete path also require an authorization rule consistent with the
+   server-side delete capability. The later repair preserves private delivery;
+   it does not make the bucket public.
+
+These are security and behavior decisions, not configuration typos. No R4C or
+R4D database-only phase may edit the listed source files.
+
+### 15.5 Focused SQL acceptance
+
+The future focused suite has a fixed, non-zero plan and proves all of the
+following with real local Auth tokens for at least two tenants:
+
+- exactly one surviving product SELECT policy with the target, predicate, and
+  table ACL from Section 15.2;
+- exactly five bucket IDs and exact public/private/configuration values;
+- `completion-reports` absent and a pre-mutation failure when it is present;
+- exact policy names, commands, target roles, `USING`, and `WITH CHECK`;
+- positive own-tenant and negative cross-tenant, inactive, no-member, and
+  anonymous Storage operations;
+- SELECT+INSERT+UPDATE for every accepted upsert path;
+- zero unexpected PUBLIC/anon writes; and
+- `Files=1`, `Tests>0`, every assertion successful, no skip, and no `NOTESTS`.
+
+Service-role success or `SET ROLE` simulation does not substitute for
+dealer-facing authorization. Disposable replay/runtime and separate-connection
+checks remain later independent gates.
+
+### 15.6 Literal delivery sequence and R4B stop
+
+R4B is an uncommitted two-document candidate only. Its literal allowlist is:
+
+1. `docs/master_specification/ENVIRONMENT_LEDGER.md`
+2. `docs/master_specification/ENVIRONMENT_REMEDIATION_PLAN.md`
+
+Acceptance requires the candidate base to remain HEAD
+`684dc3263afe4943658a889e0e8232f415bba0e4` / tree
+`60e0dcdc618e840b0d90ab248c8dde67e0cd7a58`, an empty index, exactly the two
+dirty paths, mode `100644`, per-path SHA-256 values, a deterministic
+path-ordered combined manifest SHA-256, unchanged excluded migration blobs,
+protected LINE content never accessed, and `git diff --check` PASS.
+
+After R4B acceptance, commit and push remain separate gates. The later R4C
+gate may run only `supabase migration new gyeon_products_storage_authority` to
+fix one exact empty migration pathname, then stop without SQL content. A later
+R4D database/configuration candidate is limited to that generated path plus
+`supabase/tests/gyeon_products_storage_authority.test.sql`. Tests, disposable
+runtime, commit, push, replacement apply, Ready, merge, and deployment remain
+separate owner gates.
+
+This R4B candidate does not authorize a source, test, migration, or
+configuration edit; Supabase CLI; protected-content access;
+Supabase/DB/project/Storage/Auth connection; test execution; stage; commit;
+push; Ready; merge; or deployment.

@@ -6,7 +6,7 @@
 |---|---|
 | Status | Canonical and binding |
 | Owner decision | 2026-08-12 |
-| Evidence phase | PR #2 Gate B-R3F broader database-verification contract candidate |
+| Evidence phase | PR #2 Gate B-R4B product/Storage repair contract candidate |
 | Applies to | GYEON / DealerOS Supabase environments |
 
 This document is the canonical environment identity ledger. When an older
@@ -261,11 +261,14 @@ history repair, test, typecheck, build, Ready, merge, or deployment.
 
 | Field | Value |
 |---|---|
-| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Status | `ACCEPTED_AND_PUSHED` |
 | Candidate date | 2026-08-12 |
 | Candidate base HEAD | `99b2859cda6256bc402f0918bba5ef29b6db1306` |
 | Candidate base tree | `d5caae0515d02d957ed0fadad29f6479434a3098` |
 | Read-only contract evidence | [PR #2 comment 5261394747](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261394747) |
+| Accepted commit | `684dc3263afe4943658a889e0e8232f415bba0e4` |
+| Accepted tree | `60e0dcdc618e840b0d90ab248c8dde67e0cd7a58` |
+| Push evidence | [PR #2 comment 5261545745](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261545745) |
 | Existing replay baseline | 98 executable migrations; exactly 3 excluded paths |
 | Existing pgTAP baseline | 2 files; 215 planned assertions |
 | Static application inventory | 80 table/query references; 19 RPC references; 30 environment-variable names |
@@ -300,7 +303,64 @@ migrations to hide this difference.
 
 The detailed serial suites, fail-closed acceptance rules, protected exclusions,
 and next repair/document/runtime gates are binding in
-`ENVIRONMENT_REMEDIATION_PLAN.md`. This R3F candidate changes documentation
-only. It does not authorize a source, test, or migration edit; protected-content
-access; Supabase/DB/project connection; replay/apply/reset; test; stage; commit;
-push; Ready; merge; or deployment.
+`ENVIRONMENT_REMEDIATION_PLAN.md`. The two-document R3F contract was accepted
+and pushed in commit `684dc3263afe4943658a889e0e8232f415bba0e4`. That
+documentation commit did not authorize a source, test, or migration edit;
+protected-content access; Supabase/DB/project connection; replay/apply/reset;
+test; Ready; merge; or deployment.
+
+## 12. Gate B-R4A/R4B product and Storage repair contract
+
+| Field | Value |
+|---|---|
+| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Candidate date | 2026-08-12 |
+| Candidate base HEAD | `684dc3263afe4943658a889e0e8232f415bba0e4` |
+| Candidate base tree | `60e0dcdc618e840b0d90ab248c8dde67e0cd7a58` |
+| Read-only design evidence | [PR #2 comment 5261626098](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261626098) |
+| Database/project operations | None |
+| Documentation allowlist | `ENVIRONMENT_REMEDIATION_PLAN.md`, `ENVIRONMENT_LEDGER.md` |
+
+The binding forward-repair boundary is:
+
+- `gyeon_products` remains one global shared product master. An active member
+  of any dealer may read the shared rows; inactive, invited, suspended,
+  removed, no-member, and anonymous actors may not. The replacement policy
+  uses an explicit `TO authenticated` target plus a non-null caller and active
+  `dealer_members` predicate. The historical role-only policy is replaced by a
+  forward migration; historical migration `047_create_gyeon_products.sql` is
+  never edited. Authenticated remains SELECT-only, service-role remains CRUD,
+  and no owner fallback, `auth.role()`, SECURITY DEFINER helper, or broader
+  grant is introduced.
+- the replacement Storage catalog contains exactly `documents`,
+  `work-order-files`, `vehicle-registration-documents`, `dealer-branding`, and
+  `gyeon-resources`. `completion-reports` is absent and its presence causes a
+  pre-mutation stop; the repair never silently deletes a bucket or objects.
+- the tracked migration/configuration package, focused pgTAP suite,
+  disposable replay, real two-tenant Auth proof, commit, push, replacement
+  apply, Ready, merge, and deployment remain separate gates.
+
+The R4A audit also found three application-source authorization mismatches that
+must not be papered over with wider database or Storage grants:
+
+1. product CSV import claims service-role behavior but uses a request-scoped
+   client and is exposed on the dealer-facing product page without an admin
+   gate; authenticated product writes remain prohibited;
+2. vehicle-registration archive copies and removes an object through a
+   user-scoped client while the setup contract prohibits DELETE, and the caller
+   marks the database row archived without checking the Storage result; and
+3. work-order files are canonical private objects, but the upload path can
+   persist `is_public=true` and call `getPublicUrl()` while cleanup and explicit
+   deletion require a separately authorized DELETE boundary.
+
+The database/configuration repair and these source repairs stay in independent
+literal allowlists. The next R4C gate may generate exactly one empty forward
+migration pathname with the slug `gyeon_products_storage_authority`; it may not
+write SQL. A later R4D candidate is limited to that exact generated migration
+and `supabase/tests/gyeon_products_storage_authority.test.sql`. No such path or
+test is created by this R4B documentation candidate.
+
+This R4B candidate changes the same two canonical documents only. It does not
+authorize a source, test, migration, or configuration edit; protected-content
+access; Supabase/DB/project/Storage/Auth connection; test execution; stage;
+commit; push; Ready; merge; or deployment.
