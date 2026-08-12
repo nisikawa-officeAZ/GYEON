@@ -81,12 +81,45 @@ environments.
 - `OPERATIONS_RULES.md` defines the current CLI safety boundary and references
   this ledger for exact environment identities.
 
-## 6. Next gated work
+## 6. Gate B-R1A evidence completion
 
-The next permitted planning phase is a no-write environment-ledger remediation
-design. It must specify how to reconcile Development drift, how to close the
-Staging missing-version gap, and how to define the intentional Production
-subset without applying or rewriting any migration.
+The expanded read-only reconciliation is recorded in PR #2 comments:
 
-The exact next-session start sequence and stop conditions are recorded in
-`NEXT_SESSION_TODO_2026_08_13.md`.
+1. [Git and migration-source baseline](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260388451)
+2. [Three-environment comparison](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260389298)
+3. [Complete result and exact missing sets](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260390169)
+
+The evidence refined, but did not change, the binding baseline:
+
+- Development: all inspected root objects/functions remain unresolved as
+  partial or out-of-band. No history repair is justified.
+- Staging: all non-frozen PR #2 migration candidates are recorded. The only
+  absent PR #2 executable version is the frozen LINE migration.
+- Production: 13 PR #2 versions are absent. Ten are active-path release
+  prerequisites, two are deferred behind the disabled GYEON onboarding feature
+  gate, and one remains frozen.
+
+## 7. Gate B-R2W remediation-design candidate
+
+| Field | Value |
+|---|---|
+| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Candidate date | 2026-08-12 |
+| Candidate base HEAD | `b892efa30d65581bc5b6768e2b6f89d2bf11d28f` |
+| Candidate base tree | `7999b4b39f5f5e4c4c7e0b3f4a63301e3ac52968` |
+| Plan | `ENVIRONMENT_REMEDIATION_PLAN.md` |
+| Database writes | None |
+| Migration/history changes | None |
+
+The candidate disposition is:
+
+| Environment | Remediation disposition | Current stop |
+|---|---|---|
+| Development | Choose between replacement Development and side-by-side forward reconciliation after a data-retention audit. In-place history relabel is rejected by current evidence. | Owner approval required for a new read-only selection gate. |
+| Staging | `PRESERVE_NO_APPLY`; run a future read-only focused acceptance only. The frozen LINE exception stays absent. | Separate Staging read-only gate required. |
+| Production | Ten `required_before_release`, two `intentionally_deferred`, one `prohibited/frozen`. Bulk push is prohibited because it can include the frozen path. | Separate execution-mechanism decision, backup/PITR gate, Staging acceptance, and Production-specific owner approvals required. |
+
+The exact classification, dependencies, source hashes, risk controls, restore
+requirements, future gate order, and literal source allowlists are binding only
+after this uncommitted candidate passes independent acceptance and a later
+commit gate. No operation is authorized by the candidate itself.
