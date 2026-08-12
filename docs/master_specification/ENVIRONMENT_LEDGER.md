@@ -166,12 +166,15 @@ retirement.
 
 | Field | Value |
 |---|---|
-| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Status | `ACCEPTED_AND_PUSHED` |
 | Candidate date | 2026-08-12 |
 | Candidate base HEAD | `3f3a085feee987a9024375e11c06644f3b990fde` |
 | Candidate base tree | `f3417b03c098799e211d6b321e64a33bfcf51228` |
 | Read-only recommendation | [PR #2 comment 5260786955](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260786955) |
 | Owner ruling | [PR #2 comment 5260802893](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260802893) |
+| Accepted commit | `96c0d5cb34f60396242ea89ae0cf4d0aac92f59e` |
+| Accepted tree | `aa544700b66971473f5c7127289bfffd76b8b024` |
+| Push evidence | [PR #2 comment 5260968029](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260968029) |
 | Database/project operations | None |
 | Documentation allowlist | `ENVIRONMENT_REMEDIATION_PLAN.md`, `ENVIRONMENT_LEDGER.md` |
 
@@ -198,8 +201,56 @@ dashboard estimate is more than USD 12 before tax, selects a size above Micro,
 or includes an add-on. The approximate Micro monthly amount is planning only,
 not invoice proof or project-creation authority.
 
-The next Development design gate is the literal migration/replay/test manifest
-with the frozen path excluded. This candidate authorizes no Supabase/DB/project
-connection, user/business/Auth/Storage/billing/secret read, migration replay or
-apply, history repair, reset, seed, test, stage, commit, push, Ready, merge, or
-deployment.
+The two-document ruling was accepted and pushed in commit
+`96c0d5cb34f60396242ea89ae0cf4d0aac92f59e`. The following Gate B-R3C
+read-only investigation completed the literal migration/replay/test-manifest
+design. Neither the R3B documentation commit nor the R3C investigation
+authorized a Supabase/DB/project connection, user/business/Auth/Storage/
+billing/secret read, migration replay or apply, history repair, reset, seed,
+test, Ready, merge, or deployment.
+
+## 10. Gate B-R3C/R3D literal replay and test manifest
+
+| Field | Value |
+|---|---|
+| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Candidate date | 2026-08-12 |
+| Candidate base HEAD | `96c0d5cb34f60396242ea89ae0cf4d0aac92f59e` |
+| Candidate base tree | `aa544700b66971473f5c7127289bfffd76b8b024` |
+| Read-only manifest evidence | [PR #2 comment 5261032333](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261032333) |
+| Tracked migration SQL files | 101 |
+| Executable Development replay paths | 98 |
+| Excluded paths | 3 |
+| Executable manifest SHA-256 | `174f7caac201e5a14a6625cb64908c88e86c63f0926c13a0ba09f228275e1ce8` |
+| Tracked pgTAP files | 2 |
+| Planned pgTAP assertions | 215 |
+| Test manifest SHA-256 | `7ac67877505101120128492b08534f9c4282d29006f00ed64fa661fa799f5f6a` |
+| Database/project operations | None |
+| Documentation allowlist | `ENVIRONMENT_REMEDIATION_PLAN.md`, `ENVIRONMENT_LEDGER.md` |
+
+The executable migration manifest excludes exactly these three owner-frozen
+paths:
+
+1. `supabase/migrations/20260731115631_gyeon_dealer_provisioning.sql`
+2. `supabase/migrations/20260801000649_gyeon_provisioning_pin_function_search_path.sql`
+3. `supabase/migrations/20260801110110_line_link_tokens.sql`
+
+The first two paths remain deferred GYEON partner-onboarding work. The third
+is the protected LINE path; its content remains inaccessible and only its
+mode/blob metadata may be inspected. Excluding only that protected path would
+wrongly activate the two deferred onboarding migrations, so the executable
+count is 98 rather than 100.
+
+The two tracked pgTAP files plan 165 and 50 assertions respectively. They test
+estimate-wizard atomic save/numbering and direct DML/RLS integrity, but they do
+not constitute whole-system proof for every object produced by the 98
+migrations. A later runtime gate must therefore add broader database-object,
+RLS, grant, Storage, function, Data API, and business-behavior verification.
+
+The canonical literal paths, per-path hashes, exclusions, future disposable
+runtime order, and fail-closed conditions are recorded in
+`ENVIRONMENT_REMEDIATION_PLAN.md`. This uncommitted R3D document candidate does
+not authorize a Supabase/DB/project connection, migration replay/apply/reset,
+seed, history repair, test, typecheck, build, stage, commit, push, Ready, merge,
+or deployment. The current stop is owner approval for a separate two-document
+commit gate.
