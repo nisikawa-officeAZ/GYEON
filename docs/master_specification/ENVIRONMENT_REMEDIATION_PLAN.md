@@ -4,15 +4,16 @@
 
 | Field | Value |
 |---|---|
-| Phase | `PR2-GATE-B-R3D_LITERAL_MANIFEST_DOCUMENT_CANDIDATE` |
+| Phase | `PR2-GATE-B-R3F_BROADER_DATABASE_VERIFICATION_CONTRACT_DOCUMENT_CANDIDATE` |
 | Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
 | Owner approval | 2026-08-12 |
 | Repository / PR | `nisikawa-officeAZ/GYEON` / PR #2 |
 | Branch | `fix/approval-center-delete-access-cut` |
-| Candidate base HEAD | `96c0d5cb34f60396242ea89ae0cf4d0aac92f59e` |
-| Candidate base tree | `aa544700b66971473f5c7127289bfffd76b8b024` |
+| Candidate base HEAD | `99b2859cda6256bc402f0918bba5ef29b6db1306` |
+| Candidate base tree | `d5caae0515d02d957ed0fadad29f6479434a3098` |
 | Owner ruling | [PR #2 comment 5260802893](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260802893) |
 | Literal manifest evidence | [PR #2 comment 5261032333](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261032333) |
+| Broader verification evidence | [PR #2 comment 5261394747](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261394747) |
 | Documentation allowlist | This file and `ENVIRONMENT_LEDGER.md` only |
 
 This document defines how to decide and verify future environment remediation.
@@ -258,12 +259,13 @@ surface spans:
 - audit, notifications, queues, usage logs, staging/UAT evidence; and
 - GYEON admin, news, resources, provisioning, and frozen LINE behavior.
 
-Storage surfaces include `documents`, `dealer-branding`, `gyeon-resources`,
-`work-order-files`, `completion-reports`, and the vehicle-registration bucket
-selected by `STORAGE_BUCKET`. The Git candidate has no `supabase/functions`
-directory; dashboard-created functions, if any, remain unverified. Application
-cron entry points cover trial downgrades, maintenance reminders, and LINE queue
-processing.
+The canonical replacement Storage authority contains exactly `documents`,
+`work-order-files`, `vehicle-registration-documents`, `dealer-branding`, and
+`gyeon-resources`. Completion-report PDFs use `documents`; the older
+`completion-reports` bucket reference is stale and must not be reproduced. The
+Git candidate has no `supabase/functions` directory; dashboard-created
+functions, if any, remain unverified. Application cron entry points cover trial
+downgrades, maintenance reminders, and LINE queue processing.
 
 Active source references to LINE link-token behavior do not change its frozen
 status. The protected migration remains metadata-only and outside every read,
@@ -327,16 +329,21 @@ The serial order is binding; each item needs a new explicit owner approval:
 1. `COMPLETED`: minimal data-retention and replacement-project cost boundary;
 2. `COMPLETED_DESIGN`: the literal 98-path migration/replay and two-path pgTAP
    manifest in Section 13, with the three frozen/deferred paths excluded;
-3. broader database-verification contract for RLS, grants, storage, functions,
-   and business surfaces not covered by the two existing pgTAP files;
-4. fresh disposable full replay and executable acceptance;
-5. replacement-project creation and non-secret configuration, subject to the
+3. `COMPLETED_DESIGN`: the broader database-verification contract in Section
+   14 for RLS, grants, Storage, functions/triggers, Data API, concurrency, and
+   business surfaces not covered by the two existing pgTAP files;
+4. separately approved prerequisite repair candidates for the role-only
+   `gyeon_products` SELECT policy and the canonical five-bucket configuration;
+5. separately approved implementation of the broader database test/evidence
+   suites with fixed non-zero assertion plans;
+6. fresh disposable full replay and executable acceptance;
+7. replacement-project creation and non-secret configuration, subject to the
    Micro / 31-day / no-add-on / USD-12-before-tax stop rule;
-6. read-only old-Development export inventory and transformation manifest;
-7. separately approved retained-data and Storage import;
-8. old/new schema, authorization, data-count, Storage, Auth, cron, and app
+8. read-only old-Development export inventory and transformation manifest;
+9. separately approved retained-data and Storage import;
+10. old/new schema, authorization, data-count, Storage, Auth, cron, and app
    acceptance; and
-9. cutover with rollback proof, followed only later by an independent old-
+11. cutover with rollback proof, followed only later by an independent old-
    Development retirement decision.
 
 No Development reset, replacement project, data export/copy/import, secret
@@ -631,3 +638,178 @@ B-R3D is a two-document, uncommitted candidate only. Completion requires:
 
 After independent acceptance, the next operation is a separate two-path
 documentation commit gate. Runtime verification remains closed.
+
+## 14. Gate B-R3E/R3F broader database-verification contract
+
+### 14.1 Pinned authority and purpose
+
+The read-only contract evidence is
+[PR #2 comment 5261394747](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261394747),
+pinned to HEAD `99b2859cda6256bc402f0918bba5ef29b6db1306` and tree
+`d5caae0515d02d957ed0fadad29f6479434a3098`.
+
+The 98-path replay and existing two pgTAP files remain mandatory, but they are
+not whole-system acceptance. The following contract closes the uncovered
+database-object, authorization, Storage, Data API, function/trigger,
+business-behavior, concurrency, and out-of-band configuration surfaces. Static
+source counts are diagnostic only; the disposable database catalog is the
+acceptance authority because migrations can replace, drop, or recreate the
+same named object.
+
+### 14.2 Required evidence suites
+
+The broader acceptance package must implement and execute these eight serial
+suites. Each executable suite must declare a fixed, non-zero assertion plan.
+
+1. `CATALOG_MANIFEST`: actual PostgreSQL and extension versions; schemas;
+   relations; columns; data types; defaults; nullability; constraints; indexes;
+   foreign keys; owners; ACLs; RLS flags and policies; triggers; and every final
+   function signature, owner, `prosecdef`, `proconfig`, and grant.
+2. `GRANT_RLS_ROLE_MATRIX`: `anon`, `authenticated`, `service_role`, active
+   owner/manager/staff, inactive member, foreign-dealer member, and no-member
+   actors. It must prove positive and negative CRUD behavior with real local
+   Auth tokens for two tenants. `service_role` is server-only and is never used
+   as dealer-facing authorization proof.
+3. `DATA_API_MATRIX`: classify all 80 recorded table/query references and all
+   19 RPC references as `CLIENT_EXPOSED`, `SERVER_ONLY`,
+   `FEATURE_GATED_ABSENT`, or `NO_LONGER_ACTIVE`. Zero references may remain
+   unclassified. Intended table and RPC behavior must be proved through real
+   local request paths; anon OpenAPI schema enumeration is not exposure proof.
+4. `STORAGE_MATRIX`: exact bucket existence/configuration, `storage.objects`
+   policies, generated path ownership, cross-tenant and inactive-member denial,
+   and the required upload/read/update/delete behavior. Any upsert path requires
+   INSERT, SELECT, and UPDATE authorization.
+5. `FUNCTION_TRIGGER_MATRIX`: every final callable and trigger definition,
+   least-privilege EXECUTE grants, accepted caller/owner behavior, transaction
+   rollback, audit effects, and pinned `search_path` for every accepted
+   security-definer function. No unjustified PUBLIC EXECUTE is allowed.
+6. `BUSINESS_DOMAIN_MATRIX`: tenant/Auth; customer/vehicle;
+   estimate/catalog/pricing; invoice/payment/monthly statements/PDF pointers;
+   work orders/completion/files; product orders/inventory/logistics;
+   reservations/reminders/queues; admin/audit/staging/UAT/AI usage; and
+   news/resources/branding/OCR.
+7. `CONCURRENCY_MATRIX`: genuine separate-process and separate-connection proof
+   for atomic/idempotent saves, numbering, payments/allocations, monthly
+   statements, catalog review, queues, and every other collision-sensitive
+   write identified by the catalog/business inventory.
+8. `FROZEN_OPERATIONAL_MATRIX`: the three excluded migrations remain absent;
+   their functions and features remain disabled and fail closed; cron secrets
+   fail closed; actual extension versions are recorded; and every dashboard-
+   created function or configuration item is either proved absent or explicitly
+   declared in the environment authority.
+
+### 14.3 Canonical Storage authority
+
+Replacement Development must contain exactly these five application buckets:
+
+| Bucket | Canonical purpose | Acceptance boundary |
+|---|---|---|
+| `documents` | Dealer documents and generated completion-report PDFs | Private; request-scope tenant authorization required |
+| `work-order-files` | Work-order attachments | Private; dealer/path ownership and operation-specific authorization required |
+| `vehicle-registration-documents` | Vehicle-registration source documents | Private; authenticated tenant-scoped access only |
+| `dealer-branding` | Dealer branding images | Public object reads only where explicitly intended; dealer-folder writes remain authorized |
+| `gyeon-resources` | GYEON resource files | Private; accepted authenticated/admin access matrix required |
+
+`completion-reports` is not a separate bucket. It must be absent from the
+replacement catalog and configuration. Historical comments or setup text that
+name it do not override this table. Bucket configuration and policies are
+regenerated from an accepted migration/configuration package; they are not
+copied from drifted Development.
+
+### 14.4 Mandatory authorization repair before runtime acceptance
+
+The surviving `gyeon_products` SELECT policy uses a role-only authenticated
+predicate and does not enforce the stated active-dealer-membership boundary.
+Role-only authentication is not tenant or business authorization. A separate
+explicitly approved forward migration must replace that policy without editing
+historical migration files. Its focused regression suite must prove:
+
+- an active authorized dealer member can read the intended product rows;
+- inactive, no-member, and anonymous actors cannot read them; an active member
+  of any dealer may read the shared global product master;
+- no broader table or RPC grant is introduced; and
+- the policy uses an explicit target role plus the accepted membership/owner
+  predicate, rather than `auth.role()` or a role-only rule.
+
+The forward migration candidate, focused tests, implementation verification,
+commit, push, and disposable runtime remain separate gates. Until accepted,
+broader runtime acceptance is blocked.
+
+### 14.5 Platform controls and fail-closed acceptance
+
+The contract follows current Supabase behavior:
+
+- [Data API grants and RLS](https://supabase.com/docs/guides/api/securing-your-api)
+  are separate layers. Every intended object needs explicit least-privilege
+  grants and an independently verified RLS/function boundary.
+- New `public` objects cannot rely on automatic Data/GraphQL exposure. The
+  expected grants must be represented in Git and proved from the final catalog.
+- [Storage access control](https://supabase.com/docs/guides/storage/security/access-control)
+  is operation-specific; upsert requires INSERT plus SELECT and UPDATE.
+- anon access to the Data API root no longer exposes the OpenAPI schema and is
+  not an exposure test. Use catalog evidence and real table/RPC requests.
+- requested extension-version clauses are not installed-version proof. Record
+  the actual disposable and replacement versions.
+
+A disposable runtime is accepted only when all of these conditions hold in
+order:
+
+1. the exact 98 migrations replay successfully and the local ledger contains
+   exactly those 98 ordered entries;
+2. the exact existing two pgTAP files run once, report `Files=2`, `Tests=215`,
+   every assertion successful, and `Result: PASS`;
+3. every broader suite has a fixed non-zero plan and passes without skip,
+   notests, or unclassified evidence;
+4. the actual catalog has zero unexpected or missing objects against the
+   separately ratified expected manifest;
+5. there is zero runtime public `CREATE`, zero unexpected `anon` privilege,
+   RLS on every exposed relation, ownership plus `WITH CHECK` for authorized
+   UPDATE, and no unjustified PUBLIC EXECUTE;
+6. real two-tenant requests prove no cross-tenant disclosure or mutation;
+7. every one of the 80 table/query and 19 RPC references is classified and its
+   intended Data API behavior is proved;
+8. the Storage catalog contains exactly the five buckets in Section 14.3,
+   `completion-reports` is absent, and every required operation matrix passes;
+9. every security-definer function has an accepted owner, pinned `search_path`,
+   explicit caller checks where required, and least-privilege ACL;
+10. every separate-connection concurrency proof passes without retry; and
+11. any failure burns the disposable suffix, stops the run without same-run
+    repair, and cleanup proves zero remaining run containers and volumes.
+
+### 14.6 Frozen and out-of-band boundary
+
+The exact three excluded migrations remain those in Section 13.1. The protected
+LINE migration stays metadata-only; its content is never a test-design or
+runtime input. The deferred onboarding functions must be absent after the
+98-path replay, and `GYEON_PARTNER_ONBOARDING_ENABLED` must remain unset or
+false so all related entry points fail closed.
+
+There is no tracked `supabase/functions` directory at the pinned tree. A future
+replacement gate must prove that no dashboard-only Edge Function or database
+function is silently required, or add an explicitly reviewed declaration and
+reproducible configuration package under a separate gate. Current Development,
+Staging, Production, preview, LINE, external providers, and protected content
+are outside the disposable runtime boundary.
+
+### 14.7 Gate B-R3F completion rule and stop
+
+R3F is a two-document, uncommitted candidate only. Completion requires:
+
+- the diff is exactly this file plus `ENVIRONMENT_LEDGER.md`;
+- candidate base remains HEAD
+  `99b2859cda6256bc402f0918bba5ef29b6db1306` / tree
+  `d5caae0515d02d957ed0fadad29f6479434a3098` with an empty index;
+- the canonical five-bucket authority, broader suites, `gyeon_products`
+  repair prerequisite, and frozen/out-of-band boundaries are present;
+- both path modes, per-path SHA-256 values, a combined deterministic manifest
+  SHA-256, and `git diff --check` are recorded in the PR result;
+- the three excluded paths remain unchanged and protected LINE content is not
+  accessed; and
+- no source/test/migration edit, Supabase/DB/project connection, migration
+  replay/apply/repair/reset/seed, test, stage, commit, push, Ready, merge, or
+  deployment occurs.
+
+After independent acceptance, the next operation is a separate exact two-path
+documentation commit gate. The policy/config repair, broader suite
+implementation, and disposable runtime each remain closed behind their own
+later explicit approval.

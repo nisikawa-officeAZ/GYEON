@@ -6,7 +6,7 @@
 |---|---|
 | Status | Canonical and binding |
 | Owner decision | 2026-08-12 |
-| Evidence phase | PR #2 Gate B-R1 read-only reconciliation |
+| Evidence phase | PR #2 Gate B-R3F broader database-verification contract candidate |
 | Applies to | GYEON / DealerOS Supabase environments |
 
 This document is the canonical environment identity ledger. When an older
@@ -213,11 +213,14 @@ test, Ready, merge, or deployment.
 
 | Field | Value |
 |---|---|
-| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Status | `ACCEPTED_AND_PUSHED` |
 | Candidate date | 2026-08-12 |
 | Candidate base HEAD | `96c0d5cb34f60396242ea89ae0cf4d0aac92f59e` |
 | Candidate base tree | `aa544700b66971473f5c7127289bfffd76b8b024` |
 | Read-only manifest evidence | [PR #2 comment 5261032333](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261032333) |
+| Accepted commit | `99b2859cda6256bc402f0918bba5ef29b6db1306` |
+| Accepted tree | `d5caae0515d02d957ed0fadad29f6479434a3098` |
+| Push evidence | [PR #2 comment 5261328283](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261328283) |
 | Tracked migration SQL files | 101 |
 | Executable Development replay paths | 98 |
 | Excluded paths | 3 |
@@ -249,8 +252,55 @@ RLS, grant, Storage, function, Data API, and business-behavior verification.
 
 The canonical literal paths, per-path hashes, exclusions, future disposable
 runtime order, and fail-closed conditions are recorded in
-`ENVIRONMENT_REMEDIATION_PLAN.md`. This uncommitted R3D document candidate does
-not authorize a Supabase/DB/project connection, migration replay/apply/reset,
-seed, history repair, test, typecheck, build, stage, commit, push, Ready, merge,
-or deployment. The current stop is owner approval for a separate two-document
-commit gate.
+`ENVIRONMENT_REMEDIATION_PLAN.md`. The two-document candidate was accepted and
+pushed in commit `99b2859cda6256bc402f0918bba5ef29b6db1306`. That commit did not
+authorize a Supabase/DB/project connection, migration replay/apply/reset, seed,
+history repair, test, typecheck, build, Ready, merge, or deployment.
+
+## 11. Gate B-R3E/R3F broader database-verification contract
+
+| Field | Value |
+|---|---|
+| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Candidate date | 2026-08-12 |
+| Candidate base HEAD | `99b2859cda6256bc402f0918bba5ef29b6db1306` |
+| Candidate base tree | `d5caae0515d02d957ed0fadad29f6479434a3098` |
+| Read-only contract evidence | [PR #2 comment 5261394747](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261394747) |
+| Existing replay baseline | 98 executable migrations; exactly 3 excluded paths |
+| Existing pgTAP baseline | 2 files; 215 planned assertions |
+| Static application inventory | 80 table/query references; 19 RPC references; 30 environment-variable names |
+| Database/project operations | None |
+| Documentation allowlist | `ENVIRONMENT_REMEDIATION_PLAN.md`, `ENVIRONMENT_LEDGER.md` |
+
+The replacement-Development contract is broader than migration replay and the
+two existing estimate-wizard pgTAP suites. It requires independently verified
+catalog, grants/RLS, Data API, Storage, function/trigger, business-domain,
+concurrency, and frozen/operational evidence. Every application table/query and
+RPC reference must have an explicit exposure classification, and authorization
+proof must use real local Auth tokens for at least two tenants rather than only
+session-role simulation.
+
+The canonical replacement Storage authority is exactly five buckets:
+
+1. `documents`
+2. `work-order-files`
+3. `vehicle-registration-documents`
+4. `dealer-branding`
+5. `gyeon-resources`
+
+`completion-reports` is not a separate active bucket. Completion-report PDFs
+use `documents`; older references to a `completion-reports` bucket are stale
+and must not be reproduced in replacement Development.
+
+Static source inspection also found that the surviving `gyeon_products` SELECT
+policy is role-only and does not enforce the stated active-dealer-membership
+boundary. A separately approved forward migration and focused authorization
+tests are prerequisites to runtime acceptance. Do not edit historical
+migrations to hide this difference.
+
+The detailed serial suites, fail-closed acceptance rules, protected exclusions,
+and next repair/document/runtime gates are binding in
+`ENVIRONMENT_REMEDIATION_PLAN.md`. This R3F candidate changes documentation
+only. It does not authorize a source, test, or migration edit; protected-content
+access; Supabase/DB/project connection; replay/apply/reset; test; stage; commit;
+push; Ready; merge; or deployment.
