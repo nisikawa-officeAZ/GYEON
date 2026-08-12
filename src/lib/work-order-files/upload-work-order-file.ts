@@ -10,7 +10,8 @@
 
 import { revalidatePath }   from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
-import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 import {
   WorkOrderFileType,
   WorkOrderFilePhase,
@@ -21,8 +22,8 @@ const STORAGE_BUCKET = "work-order-files";
 const MAX_FILE_SIZE  = 20 * 1024 * 1024;  // 20 MB
 
 export async function uploadWorkOrderFile(formData: FormData) {
-  const dealer = await getCurrentDealer();
-  if (!dealer) return { error: "No active dealer membership." };
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
 
   const workOrderId = (formData.get("work_order_id") as string | null)?.trim();
   if (!workOrderId)  return { error: "Work order ID is required." };
@@ -35,8 +36,6 @@ export async function uploadWorkOrderFile(formData: FormData) {
   const fileType    = ((formData.get("file_type")   as string | null)?.trim() ?? "photo")  as WorkOrderFileType;
   const title       = (formData.get("title")        as string | null)?.trim() || null;
   const description = (formData.get("description")  as string | null)?.trim() || null;
-  const isPublic    = formData.get("is_public") === "true";
-
   const supabase = await createClient();
 
   // Validate work_order_id belongs to the same dealer.
@@ -44,7 +43,7 @@ export async function uploadWorkOrderFile(formData: FormData) {
     .from("work_orders")
     .select("id")
     .eq("id",        workOrderId)
-    .eq("dealer_id", dealer.dealer_id)
+    .eq("dealer_id", auth.dealerId)
     .single();
 
   if (woError || !wo) {
@@ -54,7 +53,7 @@ export async function uploadWorkOrderFile(formData: FormData) {
   // Build storage path (server-generated, never from client).
   const uniquePrefix = crypto.randomUUID().replace(/-/g, "").slice(0, 8);
   const storagePath  = workOrderFileStoragePath(
-    dealer.dealer_id,
+    auth.dealerId,
     workOrderId,
     phase,
     file.name,
@@ -75,18 +74,9 @@ export async function uploadWorkOrderFile(formData: FormData) {
     return { error: `Upload failed: ${uploadError.message}` };
   }
 
-  // Get public or signed URL.
-  let fileUrl: string | null = null;
-  if (isPublic) {
-    const { data: urlData } = supabase.storage
-      .from(STORAGE_BUCKET)
-      .getPublicUrl(storagePath);
-    fileUrl = urlData?.publicUrl ?? null;
-  }
-
   // Insert metadata record.
   const { error: insertError } = await supabase.from("work_order_files").insert({
-    dealer_id:     dealer.dealer_id,   // server-injected — never from form
+    dealer_id:     auth.dealerId,      // server-injected — never from form
     work_order_id: workOrderId,
     file_type:     fileType,
     phase,
@@ -94,18 +84,32 @@ export async function uploadWorkOrderFile(formData: FormData) {
     description,
     file_name:     file.name,
     file_path:     storagePath,
-    file_url:      fileUrl,
+    file_url:      null,
     mime_type:     file.type || null,
     file_size:     file.size,
     sort_order:    0,
-    is_public:     isPublic,
+    is_public:     false,
   });
 
   if (insertError) {
-    // Attempt to clean up the uploaded file if DB insert fails.
-    await supabase.storage.from(STORAGE_BUCKET).remove([storagePath]);
+    // Compensating cleanup is a server-only operation over the exact path that
+    // this action generated. A caller never supplies this destructive target.
+    let cleanupError: unknown = null;
+    try {
+      const admin = createAdminClient();
+      const { error } = await admin.storage
+        .from(STORAGE_BUCKET)
+        .remove([storagePath]);
+      cleanupError = error;
+    } catch (error) {
+      cleanupError = error;
+    }
+
+    if (cleanupError) {
+      console.error("[uploadWorkOrderFile] compensating cleanup failed");
+    }
     console.error("[uploadWorkOrderFile] insert error:", insertError.message);
-    return { error: insertError.message };
+    return { error: "ファイル情報の保存に失敗しました。時間をおいて再度お試しください。" };
   }
 
   revalidatePath("/work-orders");
