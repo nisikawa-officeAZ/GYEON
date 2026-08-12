@@ -18,7 +18,7 @@ conflict must be recorded and resolved before an operation is authorized.
 
 | Role | Supabase project name | Project ref | Region | Operation policy |
 |---|---|---|---|---|
-| Development | `DealerOS-Dev` | `fbieiotihlmpfzybowbt` | `ap-northeast-2` | Development only. Migration ledger is currently unreliable; no migration apply until a separately approved reconciliation closes the drift. |
+| Development | `DealerOS-Dev` | `fbieiotihlmpfzybowbt` | `ap-northeast-2` | Development only. Gate B-R3 selects clean replacement as the remediation candidate. Keep this project read-only until an accepted cutover; no project creation, data copy, migration apply, or retirement without its separate explicit gate. |
 | Staging | `DealerOS-Dev-Next` | `vhiuiwolnlvlwvoaingd` | `ap-northeast-1` | **Formal staging from 2026-08-12.** The legacy project name remains unchanged. Read or write access, linking, migration apply, test data creation, reset, and deployment each require the applicable explicit gate. |
 | Production | `DealerOS-Prod` | `dmvyaykhibmphrmekjbb` | `ap-northeast-1` | Protected production. No link, write, migration apply, reset, or deployment without a production-specific owner gate and release evidence. |
 
@@ -103,7 +103,7 @@ The evidence refined, but did not change, the binding baseline:
 
 | Field | Value |
 |---|---|
-| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Status | `ACCEPTED_AND_PUSHED` |
 | Candidate date | 2026-08-12 |
 | Candidate base HEAD | `b892efa30d65581bc5b6768e2b6f89d2bf11d28f` |
 | Candidate base tree | `7999b4b39f5f5e4c4c7e0b3f4a63301e3ac52968` |
@@ -115,11 +115,46 @@ The candidate disposition is:
 
 | Environment | Remediation disposition | Current stop |
 |---|---|---|
-| Development | Choose between replacement Development and side-by-side forward reconciliation after a data-retention audit. In-place history relabel is rejected by current evidence. | Owner approval required for a new read-only selection gate. |
+| Development | B-R2W deferred selection between replacement Development and side-by-side reconciliation. Gate B-R3 evidence below supersedes that deferral by selecting clean replacement; in-place history relabel remains rejected. | Follow Section 8 after the B-R3A candidate is accepted and committed. |
 | Staging | `PRESERVE_NO_APPLY`; run a future read-only focused acceptance only. The frozen LINE exception stays absent. | Separate Staging read-only gate required. |
 | Production | Ten `required_before_release`, two `intentionally_deferred`, one `prohibited/frozen`. Bulk push is prohibited because it can include the frozen path. | Separate execution-mechanism decision, backup/PITR gate, Staging acceptance, and Production-specific owner approvals required. |
 
 The exact classification, dependencies, source hashes, risk controls, restore
-requirements, future gate order, and literal source allowlists are binding only
-after this uncommitted candidate passes independent acceptance and a later
-commit gate. No operation is authorized by the candidate itself.
+requirements, future gate order, and literal source allowlists were accepted
+and pushed in commit `4e5f365ca8bd30ce1173ab7284e0ef2bff39d1a1`.
+No environment operation is authorized by that documentation commit.
+
+## 8. Gate B-R3 Development remediation selection
+
+| Field | Value |
+|---|---|
+| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Candidate date | 2026-08-12 |
+| Candidate base HEAD | `4e5f365ca8bd30ce1173ab7284e0ef2bff39d1a1` |
+| Candidate base tree | `e50e518a17adff1e29883255ac326cb6bb1f25e5` |
+| Read-only selection evidence | [PR #2 comment 5260655658](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260655658) |
+| Database/project operations | None |
+| Documentation allowlist | `ENVIRONMENT_REMEDIATION_PLAN.md`, `ENVIRONMENT_LEDGER.md` |
+
+Binding candidate ruling:
+
+- Select a clean replacement Development project built from a disposable-
+  proved, non-frozen Git migration manifest.
+- Keep current Development read-only until old/new acceptance and cutover are
+  accepted. A later default-discard classification does not authorize deletion
+  from this project.
+- Import only an owner-approved retained-data and Storage subset. Regenerate
+  schema, policies, grants, migration history, buckets/policies, keys, and
+  configuration rather than copying the drifted baseline.
+- Treat side-by-side forward reconciliation as fallback only when a retention
+  audit proves non-recreatable identities or business data cannot be safely
+  migrated.
+- Keep in-place migration-history relabel rejected.
+- Keep frozen LINE work and disabled GYEON partner onboarding outside the
+  rebuild, data-copy, and activation scope.
+
+The next gate after independent acceptance of this candidate is a documentation
+commit gate for exactly the two allowlisted paths. Project creation, Supabase or
+DB connection, data export/import, migration replay/apply, test, secret
+rotation, push, cutover, and old-project retirement remain later separate
+owner gates.

@@ -4,13 +4,13 @@
 
 | Field | Value |
 |---|---|
-| Phase | `PR2-GATE-B-R2W_ENVIRONMENT_REMEDIATION_PLAN_DOCUMENT_CANDIDATE` |
+| Phase | `PR2-GATE-B-R3A_DEVELOPMENT_REMEDIATION_SELECTION_DOCUMENT_CANDIDATE` |
 | Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
 | Owner approval | 2026-08-12 |
 | Repository / PR | `nisikawa-officeAZ/GYEON` / PR #2 |
 | Branch | `fix/approval-center-delete-access-cut` |
-| Candidate base HEAD | `b892efa30d65581bc5b6768e2b6f89d2bf11d28f` |
-| Candidate base tree | `7999b4b39f5f5e4c4c7e0b3f4a63301e3ac52968` |
+| Candidate base HEAD | `4e5f365ca8bd30ce1173ab7284e0ef2bff39d1a1` |
+| Candidate base tree | `e50e518a17adff1e29883255ac326cb6bb1f25e5` |
 | Documentation allowlist | This file and `ENVIRONMENT_LEDGER.md` only |
 
 This document defines how to decide and verify future environment remediation.
@@ -169,7 +169,8 @@ Before any future Staging or Production write:
 
 The standard pending set includes the frozen migration, and historical version
 `110` is absent despite later versions being recorded. Therefore no bulk push
-is authorized. A later `PR2-GATE-B-R3_EXECUTION_MECHANISM_DECISION` must choose
+is authorized. A later
+`PR2-GATE-B-PROD-EXECUTION_MECHANISM_DECISION` must choose
 and prove exactly one of these approaches:
 
 - exact-file controlled execution plus separately approved history
@@ -198,45 +199,126 @@ Stop without same-run repair or retry if any of the following occurs:
 - the operation would require Production access without the exact Production
   gate.
 
-## 8. Development remediation alternatives
+## 8. Development remediation selection
 
-Development cannot be repaired by copying the 59 filenames into migration
-history. Choose only after a read-only data-retention inventory and owner
-decision:
+Gate B-R3 read-only selection evidence is recorded in
+[PR #2](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260655658).
+It used Git/source metadata only: no Supabase/DB connection, user/business-row
+read, secret read, project creation, file edit, test, apply, or history repair.
 
-### D1 — replacement Development project (recommended candidate)
+Development cannot be made reproducible by copying the 59 filenames into its
+migration history. Gate B-R3 therefore selects D1 as the binding remediation
+candidate for later separately approved execution.
 
-Create a new isolated Development project, replay the accepted Git migration
-set while excluding only explicitly frozen work, run the full test/probe suite,
-then migrate only owner-approved non-secret development data. Keep the old
-project read-only until cutover evidence is accepted. This produces the clearest
-provenance and avoids pretending the existing schema is reproducible.
+### 8.1 D1 — clean replacement Development project: selected
 
-### D2 — side-by-side reference plus bounded forward reconciliation
+Create a new isolated Development project in a later explicit gate. Before any
+cutover, prove an exact non-frozen Git migration manifest in a fresh disposable
+environment, build the replacement from that manifest, and import only an
+owner-approved retained-data subset. Keep the current Development project
+read-only as a comparison and rollback source until new-environment acceptance
+is complete.
 
-Build a disposable reference from Git, compare every relation/function/policy/
-grant/trigger to existing Development, and author new forward corrections for
-the exact delta. Use only if Development contains data that cannot reasonably
-be migrated. This is slower and has the highest analysis burden.
+This is the only candidate that does not turn the current unexplained
+schema/history drift into the new baseline. A platform "restore to a new
+project" clone is a database-only copy and therefore also copies the source
+database's current schema and data. It may be considered only as a separately
+approved forensic/data-extraction aid, not as the clean target baseline.
 
-### D3 — in-place history relabel
+### 8.2 D2 — side-by-side forward reconciliation: fallback only
 
-Rejected under current evidence. It becomes discussable only if every live
-statement/object is proven byte/semantic-equivalent to the exact migration and
-the owner separately approves history writes. The B-R1A evidence does not meet
-that threshold.
+Build a disposable Git reference, compare every relation/function/policy/
+grant/trigger to existing Development, and author bounded forward corrections
+for the exact delta. This becomes eligible only if a later retention audit
+proves that Development contains non-recreatable identities or business data
+whose safe extraction into the clean schema is impractical. It carries the
+highest residual-drift and analysis risk.
 
-Development selection gate inputs:
+### 8.3 D3 — in-place history relabel: rejected
 
-- data-retention owner and exact keep/delete inventory;
-- auth/storage/external-integration dependencies;
-- secret rotation and environment-variable cutover plan;
-- disposable full replay and test evidence;
-- rollback/cutover window; and
-- cost approval for any additional project or backup capability.
+Do not mark versions as applied or relabel migration history unless every live
+statement/object, policy, grant, and data effect is independently proven
+equivalent to the exact migration. The B-R1A evidence disproves that
+prerequisite. No current gate may reopen D3.
 
-No Development reset, replacement project, data copy, or history repair is
-authorized by B-R2W.
+### 8.4 Source-only dependency inventory
+
+The Gate B-R3 static inventory found 80 unique active table/query references,
+19 unique RPC references, and 30 environment-variable names. The retention
+surface spans:
+
+- identity/tenant and Auth user relationships;
+- customer, vehicle, estimate, invoice, work-order, completion-report, and PDF
+  data;
+- pricing/catalog/settings/lifecycle configuration;
+- product orders, inventory, logistics, and finance/monthly statements;
+- documents, vehicle-registration OCR, and Storage objects;
+- audit, notifications, queues, usage logs, staging/UAT evidence; and
+- GYEON admin, news, resources, provisioning, and frozen LINE behavior.
+
+Storage surfaces include `documents`, `dealer-branding`, `gyeon-resources`,
+`work-order-files`, `completion-reports`, and the vehicle-registration bucket
+selected by `STORAGE_BUCKET`. The Git candidate has no `supabase/functions`
+directory; dashboard-created functions, if any, remain unverified. Application
+cron entry points cover trial downgrades, maintenance reminders, and LINE queue
+processing.
+
+Active source references to LINE link-token behavior do not change its frozen
+status. The protected migration remains metadata-only and outside every read,
+copy, replay, or execution allowlist.
+
+### 8.5 Default retention and regeneration matrix
+
+| Class | Default disposition |
+|---|---|
+| `KEEP_IF_EXPLICITLY_JUSTIFIED` | Development identities required for acceptance, their dealer/member/staff/admin relationships, canonical test fixtures, irreplaceable transactional examples, and Storage objects referenced by retained rows. |
+| `REGENERATE_FROM_GIT_OR_CONFIG` | Schema, functions, RLS/policies, grants, migration history, Storage buckets/policies, and accepted fixtures. The migration ledger is generated by the proved replay; the drifted ledger is not imported. |
+| `DISCARD_BY_DEFAULT` | Staging/UAT verification rows, audit/activity history, notifications, queue/log rows, OCR temporary state, failed jobs, AI usage logs, and trial/billing test artifacts. Any exception needs an exact row-domain decision without recording row contents in Git. |
+| `FREEZE_DO_NOT_ENABLE_OR_COPY` | LINE secrets/link-token migration and GYEON partner onboarding. `GYEON_PARTNER_ONBOARDING_ENABLED` remains disabled/unset. |
+| `ROTATE_OR_RECONFIGURE_SEPARATELY` | Supabase URLs/keys, service-role key, Auth redirect/provider/SMTP settings, Vercel variables, `CRON_SECRET`, OCR/OpenAI key, AI encryption secret, news-email provider, Realtime settings, extensions, webhooks, and read replicas. Secret values are never recorded in Git. |
+
+No default `DISCARD_BY_DEFAULT` decision authorizes deletion from the current
+Development project. It only defines what will not be copied unless the owner
+later approves an exception.
+
+### 8.6 Platform-specific rebuild controls
+
+Current Supabase guidance requires these explicit controls:
+
+1. [Restore to a new project](https://supabase.com/docs/guides/platform/clone-project)
+   is beta, paid-plan/physical-backup dependent, incurs a separate project
+   cost, and does not copy Storage objects/settings, Edge Functions, Auth
+   settings/API keys, Realtime settings, extensions/settings, or replicas.
+2. A dashboard restore can recreate database metadata while leaving the actual
+   Storage S3 files absent. See
+   [Restore Dashboard backup](https://supabase.com/docs/guides/platform/migrating-within-supabase/dashboard-restore).
+3. CLI migration history preservation is a separate operation, and custom
+   `auth`/`storage` changes need separate reconciliation. See
+   [Backup and Restore using the CLI](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore).
+4. New projects may not expose new `public` tables to Data/GraphQL APIs by
+   default. The later acceptance manifest must prove Data API exposure,
+   required role grants, and RLS independently.
+5. Supabase now ignores explicit extension version clauses. Disposable and
+   replacement proofs must record the actual installed extension versions and
+   must not claim reproducibility from a requested version string alone.
+
+### 8.7 Required later Development gates
+
+The serial order is binding; each item needs a new explicit owner approval:
+
+1. data-retention and additional-project-cost decision;
+2. literal migration/replay/test manifest with the frozen path excluded;
+3. fresh disposable full replay and executable acceptance;
+4. replacement-project creation and non-secret configuration;
+5. read-only old-Development export inventory and transformation manifest;
+6. separately approved retained-data and Storage import;
+7. old/new schema, authorization, data-count, Storage, Auth, cron, and app
+   acceptance; and
+8. cutover with rollback proof, followed only later by an independent old-
+   Development retirement decision.
+
+No Development reset, replacement project, data export/copy/import, secret
+rotation, history repair, cutover, or retirement is authorized by Gate B-R3A.
 
 ## 9. Staging plan
 
@@ -260,21 +342,21 @@ Staging tests may reveal defects but do not authorize same-run SQL repair.
 
 Production remediation is staged, serial, and separately approved:
 
-1. `B-R3-P0_READ_ONLY_PREFLIGHT`: exact ref, backups/PITR, migration ledger,
+1. `B-PROD-P0_READ_ONLY_PREFLIGHT`: exact ref, backups/PITR, migration ledger,
    object/data/ACL manifests, lock/size estimates, source hashes.
-2. `B-R3-P1_EXECUTION_MECHANISM`: choose and disposable-prove the exact method
+2. `B-PROD-P1_EXECUTION_MECHANISM`: choose and disposable-prove the exact method
    that cannot include order 13.
-3. `B-R3-P2_PRICING_FOUNDATION_1_TO_4`: apply/verify the pricing foundation,
+3. `B-PROD-P2_PRICING_FOUNDATION_1_TO_4`: apply/verify the pricing foundation,
    snapshot revision, trigger repair, and secure RPCs under one explicit gate.
-4. `B-R3-P3_CUSTOMER_AND_RLS_5_TO_7`: apply/verify canonical persistence,
+4. `B-PROD-P3_CUSTOMER_AND_RLS_5_TO_7`: apply/verify canonical persistence,
    legacy-policy removal, and generated match keys under a new explicit gate.
-5. `B-R3-P4_SERVICE_OFFERINGS_8_TO_9`: apply/verify the data-mutating
+5. `B-PROD-P4_SERVICE_OFFERINGS_8_TO_9`: apply/verify the data-mutating
    service-offering model and review function under a new explicit gate.
-6. `B-R3-P5_LINE_LOG_POLICY_10`: apply/verify only the independent log-read
+6. `B-PROD-P5_LINE_LOG_POLICY_10`: apply/verify only the independent log-read
    policy hardening; this gate does not enable LINE.
-7. `B-R3-P6_POST_APPLY_ACCEPTANCE`: independent read-only schema, data-count,
+7. `B-PROD-P6_POST_APPLY_ACCEPTANCE`: independent read-only schema, data-count,
    request-scope authorization, app, and migration-ledger evidence.
-8. `B-R3-P7_ONBOARDING_DEFERRED`: only when the owner decides to activate
+8. `B-PROD-P7_ONBOARDING_DEFERRED`: only when the owner decides to activate
    GYEON onboarding; apply orders 11–12 together, verify, then separately enable
    the server flag.
 9. Order 13 remains outside every gate while frozen.
@@ -313,9 +395,9 @@ These are **read/apply candidate inputs**, not edit authorization. Any repair,
 new migration, test change, or execution manifest needs a newly stated literal
 allowlist. The frozen path is never added to an executable allowlist.
 
-## 12. Gate B-R2W completion rule
+## 12. Gate B-R3A completion rule
 
-B-R2W is complete only when:
+B-R3A is complete only when:
 
 - the diff is exactly this file plus `ENVIRONMENT_LEDGER.md`;
 - HEAD/tree and index remain unchanged/empty;
