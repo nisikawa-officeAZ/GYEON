@@ -1,5 +1,20 @@
 # DealerOS Next Session TODO — 2026-08-13
 
+> **Status:** `SUPERSEDED_HISTORICAL_HANDOFF_DO_NOT_EXECUTE`
+>
+> This file preserves the handoff state recorded at its creation commit as
+> historical evidence. Sections 3–7, including the embedded Claude instruction,
+> have been superseded and must not be executed. Gate B-R2/R3/R4 and the
+> self-reference-safe metadata repair were completed after this snapshot.
+>
+> Current authority is the live authority block in
+> [GYEON PR #2](https://github.com/nisikawa-officeAZ/GYEON/pull/2),
+> `ENVIRONMENT_LEDGER.md` §13,
+> `ENVIRONMENT_REMEDIATION_PLAN.md` §§15.6–16, and the
+> [R4Q-R6 result](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266829109).
+> Do not infer a current commit SHA, PR scope, approval state, or next phase from
+> this historical file.
+
 ## 1. Session state
 
 | Field | Value |
