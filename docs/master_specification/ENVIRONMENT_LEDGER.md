@@ -124,15 +124,18 @@ requirements, future gate order, and literal source allowlists were accepted
 and pushed in commit `4e5f365ca8bd30ce1173ab7284e0ef2bff39d1a1`.
 No environment operation is authorized by that documentation commit.
 
-## 8. Gate B-R3 Development remediation selection
+## 8. Gate B-R3A Development remediation selection
 
 | Field | Value |
 |---|---|
-| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Status | `ACCEPTED_AND_PUSHED` |
 | Candidate date | 2026-08-12 |
 | Candidate base HEAD | `4e5f365ca8bd30ce1173ab7284e0ef2bff39d1a1` |
 | Candidate base tree | `e50e518a17adff1e29883255ac326cb6bb1f25e5` |
 | Read-only selection evidence | [PR #2 comment 5260655658](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260655658) |
+| Accepted commit | `3f3a085feee987a9024375e11c06644f3b990fde` |
+| Accepted tree | `f3417b03c098799e211d6b321e64a33bfcf51228` |
+| Push evidence | [PR #2 comment 5260763567](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260763567) |
 | Database/project operations | None |
 | Documentation allowlist | `ENVIRONMENT_REMEDIATION_PLAN.md`, `ENVIRONMENT_LEDGER.md` |
 
@@ -153,8 +156,50 @@ Binding candidate ruling:
 - Keep frozen LINE work and disabled GYEON partner onboarding outside the
   rebuild, data-copy, and activation scope.
 
-The next gate after independent acceptance of this candidate is a documentation
-commit gate for exactly the two allowlisted paths. Project creation, Supabase or
-DB connection, data export/import, migration replay/apply, test, secret
-rotation, push, cutover, and old-project retirement remain later separate
-owner gates.
+The two-document candidate was accepted and pushed in commit
+`3f3a085feee987a9024375e11c06644f3b990fde`. That documentation commit did not
+authorize project creation, Supabase or DB connection, data export/import,
+migration replay/apply, test, secret rotation, cutover, or old-project
+retirement.
+
+## 9. Gate B-R3B retained-data and cost ruling
+
+| Field | Value |
+|---|---|
+| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Candidate date | 2026-08-12 |
+| Candidate base HEAD | `3f3a085feee987a9024375e11c06644f3b990fde` |
+| Candidate base tree | `f3417b03c098799e211d6b321e64a33bfcf51228` |
+| Read-only recommendation | [PR #2 comment 5260786955](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260786955) |
+| Owner ruling | [PR #2 comment 5260802893](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260802893) |
+| Database/project operations | None |
+| Documentation allowlist | `ENVIRONMENT_REMEDIATION_PLAN.md`, `ENVIRONMENT_LEDGER.md` |
+
+Binding owner ruling:
+
+- `KEEP_IF_EXPLICITLY_JUSTIFIED`: only active Development Auth identities
+  required for replacement acceptance, their dealer/member/staff/admin
+  relationships, owner-identified irreplaceable transactional examples, and
+  Storage objects referenced by retained rows.
+- `REGENERATE_FROM_GIT_OR_CONFIG`: schema, functions, RLS/policies, grants,
+  migration history, buckets/policies, and accepted canonical fixtures.
+- `DISCARD_BY_DEFAULT`: do not import Staging/UAT evidence, logs, queues,
+  notifications, OCR temporary state, failed jobs, AI usage, or trial/billing
+  artifacts. This classification does not authorize deletion from current
+  Development.
+- `FREEZE_DO_NOT_ENABLE_OR_COPY`: LINE link-token and GYEON partner onboarding.
+- `ROTATE_OR_RECONFIGURE_SEPARATELY`: secrets, URLs, keys, Auth/SMTP/Vercel
+  variables, `CRON_SECRET`, provider settings, Realtime, extensions, webhooks,
+  and replicas. Secret values must not be recorded in Git.
+
+A later replacement Development project is limited to Micro compute, a maximum
+of 31 days, and no paid add-ons. Stop before project creation if the Supabase
+dashboard estimate is more than USD 12 before tax, selects a size above Micro,
+or includes an add-on. The approximate Micro monthly amount is planning only,
+not invoice proof or project-creation authority.
+
+The next Development design gate is the literal migration/replay/test manifest
+with the frozen path excluded. This candidate authorizes no Supabase/DB/project
+connection, user/business/Auth/Storage/billing/secret read, migration replay or
+apply, history repair, reset, seed, test, stage, commit, push, Ready, merge, or
+deployment.
