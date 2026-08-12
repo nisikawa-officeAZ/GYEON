@@ -4,13 +4,13 @@
 
 | Field | Value |
 |---|---|
-| Phase | `R4Q-R2_PR2_SCOPE_AND_GATE_LEDGER_METADATA_REPAIR` |
-| Status | `TWO_DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Phase | `R4Q-R5R_SELF_REFERENCE_SAFE_METADATA_SEMANTICS_REPAIR` |
+| Status | `SELF_REFERENCE_SAFE_METADATA_CONTRACT_DEFINED` |
 | Owner approval | 2026-08-12 |
 | Repository / PR | `nisikawa-officeAZ/GYEON` / PR #2 |
 | Branch | `fix/approval-center-delete-access-cut` |
-| Candidate base HEAD | `67ac2eb5aedc5ac8e95481db4164f7a62a3f104c` |
-| Candidate base tree | `aad9e8bdb5dad18128c418038075c0fb03c4b82a` |
+| Candidate base HEAD | `8c126e4539b8880ca507d2e1e2a411e358f7ba18` |
+| Candidate base tree | `0a29580d8c578f7db04eb1f2a85463c29e2edbcd` |
 | Owner ruling | [PR #2 comment 5260802893](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260802893) |
 | Literal manifest evidence | [PR #2 comment 5261032333](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261032333) |
 | Broader verification evidence | [PR #2 comment 5261394747](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261394747) |
@@ -18,7 +18,11 @@
 | R4A repair-design evidence | [PR #2 comment 5261626098](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261626098) |
 | R4 runtime evidence | [PR #2 comment 5266388044](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266388044) |
 | R4 push evidence | [PR #2 comment 5266433315](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266433315) |
-| Current integration-gate evidence | [PR #2 comment 5266506008](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266506008) |
+| Pre-ledger integration-gate evidence | [PR #2 comment 5266506008](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266506008) |
+| R4Q-R2 candidate evidence | [PR #2 comment 5266558243](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266558243) |
+| R4Q-R3 acceptance evidence | [PR #2 comment 5266584471](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266584471) |
+| R4Q-R4 local commit evidence | [PR #2 comment 5266605336](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266605336) |
+| R4Q-R5 push/self-reference evidence | [PR #2 comment 5266630838](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266630838) |
 | Documentation allowlist | This file and `ENVIRONMENT_LEDGER.md` only |
 
 This document defines how to decide and verify future environment remediation.
@@ -954,17 +958,27 @@ separate allowlist, and the complete three-file/293-assertion baseline plus all
 eight suites in Section 14 remain required. Shared-environment apply, Ready,
 merge, and deployment remain separate owner gates.
 
-## 16. Current PR #2 integration release sequence
+## 16. PR #2 integration release sequence and live-metadata authority
 
-PR #2 is intentionally the v1.0 integration release vehicle. At current HEAD
-`67ac2eb5aedc5ac8e95481db4164f7a62a3f104c`, it is 319 commits ahead of and 0
-behind `main`, changes 2,297 paths, and contains +180,980 / -5,359 lines. This
-scope is accepted as intentional integration scope, but it is not merge-ready.
+PR #2 is intentionally the v1.0 integration release vehicle. The immutable
+pre-ledger audit snapshot was HEAD
+`67ac2eb5aedc5ac8e95481db4164f7a62a3f104c`, 319 commits ahead of and 0 behind
+`main`, 2,297 changed paths, and +180,980 / -5,359 lines. Commit
+`8c126e4539b8880ca507d2e1e2a411e358f7ba18` delivered that first ledger
+snapshot and necessarily advanced the PR, demonstrating why versioned
+documents must not call an embedded SHA their own live head.
+
+The PR header and GitHub API are authoritative for the live head, topology,
+and scope. The mutable external PR-body authority block may record a timestamped
+live snapshot and must be refreshed after a metadata push. This document stores
+immutable audit baselines, evidence links, and release rulings only. The
+intentional integration scope remains not merge-ready.
 
 The mandatory release sequence is:
 
-1. reconcile PR #2 body metadata and these canonical documents to the current
-   head and scope without altering source, tests, or migrations;
+1. complete the self-reference-safe metadata repair: versioned documents keep
+   immutable audit baselines while the external PR body records live head and
+   scope, without altering source, tests, or migrations;
 2. rerun incremental Gate A repository-hygiene review from accepted commit
    `2da69c7261a8e884ee1626c1e397b50bb387f88c` through the current head;
 3. complete Gate B's eight suites, current 99/3/293 baseline, and the three

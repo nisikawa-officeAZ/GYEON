@@ -384,25 +384,35 @@ The three application-source blockers above remain unresolved, and the eight
 broader suites in Section 11 remain required. Ready display state, merge,
 shared-environment apply, and deployment are not authorized by R4 acceptance.
 
-## 13. PR #2 current integration gate ledger
+## 13. PR #2 integration gate ledger
 
-| Field | Current authoritative value |
+| Field | Immutable audit value or authority rule |
 |---|---|
 | Ledger date | 2026-08-12 |
 | Base / merge-base | `main` at `2f0b56cdc3d66cbe4ce050cfa335678934fb1cb2` |
-| Current head | `67ac2eb5aedc5ac8e95481db4164f7a62a3f104c` |
-| Current tree | `aad9e8bdb5dad18128c418038075c0fb03c4b82a` |
-| Topology | 319 commits ahead, 0 behind; one merge commit |
-| Literal PR scope | 2,297 paths; +180,980 / -5,359 |
+| Pre-ledger audited head | `67ac2eb5aedc5ac8e95481db4164f7a62a3f104c` |
+| Pre-ledger audited tree | `aad9e8bdb5dad18128c418038075c0fb03c4b82a` |
+| Pre-ledger audited topology | 319 commits ahead, 0 behind; one merge commit |
+| Pre-ledger audited PR scope | 2,297 paths; +180,980 / -5,359 |
 | Gate review evidence | [PR #2 comment 5266506008](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266506008) |
+| Prior ledger delivery commit | `8c126e4539b8880ca507d2e1e2a411e358f7ba18`; [delivery evidence](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266605336) |
+| Self-reference finding | [PR #2 comment 5266630838](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266630838) |
+| Live head/scope authority | PR #2 header and GitHub API, corroborated by the latest post-push result comment |
 | Integration status | `NOT_MERGE_READY` |
 
-The current release-gate ruling is:
+The embedded Git values above are an immutable pre-delivery audit snapshot,
+not a claim that this versioned document can identify its own carrying commit.
+A Git document cannot safely contain its own live commit SHA because committing
+that value changes the SHA. The external PR body and GitHub API are therefore
+the live head/scope authority and must be refreshed after a metadata push.
+
+The release-gate ruling is:
 
 - **Gate A — repository hygiene:** accepted at commit
-  `2da69c7261a8e884ee1626c1e397b50bb387f88c`, but the current head contains
-  nine later commits and seven changed paths. Current-head incremental Gate A
-  reconciliation is still required.
+  `2da69c7261a8e884ee1626c1e397b50bb387f88c`. At the pre-ledger audited
+  snapshot, nine later commits and seven changed paths existed. Incremental
+  Gate A reconciliation remains required through the live PR head; its exact
+  live counts must be obtained from Git rather than frozen into this document.
 - **Gate B — database contract:** the R4 product/Storage subset is accepted.
   The current baseline is 99 executable migrations, exactly three excluded
   migrations, and three pgTAP files with 293 planned assertions. The remaining
