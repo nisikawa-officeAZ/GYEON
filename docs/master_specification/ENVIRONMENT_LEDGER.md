@@ -269,14 +269,18 @@ history repair, test, typecheck, build, Ready, merge, or deployment.
 | Accepted commit | `684dc3263afe4943658a889e0e8232f415bba0e4` |
 | Accepted tree | `60e0dcdc618e840b0d90ab248c8dde67e0cd7a58` |
 | Push evidence | [PR #2 comment 5261545745](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261545745) |
-| Existing replay baseline | 98 executable migrations; exactly 3 excluded paths |
-| Existing pgTAP baseline | 2 files; 215 planned assertions |
+| Pre-R4 historical replay baseline | 98 executable migrations; exactly 3 excluded paths |
+| Pre-R4 historical pgTAP baseline | 2 files; 215 planned assertions |
+| Current replay baseline after R4 | 99 executable migrations; exactly 3 excluded paths |
+| Current pgTAP baseline after R4 | 3 files; 293 planned assertions |
 | Static application inventory | 80 table/query references; 19 RPC references; 30 environment-variable names |
 | Database/project operations | None |
 | Documentation allowlist | `ENVIRONMENT_REMEDIATION_PLAN.md`, `ENVIRONMENT_LEDGER.md` |
 
 The replacement-Development contract is broader than migration replay and the
-two existing estimate-wizard pgTAP suites. It requires independently verified
+three current pgTAP suites. The two estimate-wizard suites total 215 planned
+assertions; the focused GYEON product/Storage suite adds 78, for a current
+total of 293. It requires independently verified
 catalog, grants/RLS, Data API, Storage, function/trigger, business-domain,
 concurrency, and frozen/operational evidence. Every application table/query and
 RPC reference must have an explicit exposure classification, and authorization
@@ -313,15 +317,22 @@ test; Ready; merge; or deployment.
 
 | Field | Value |
 |---|---|
-| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Status | `R4_IMPLEMENTED_RUNTIME_ACCEPTED_COMMITTED_AND_PUSHED` |
 | Candidate date | 2026-08-12 |
 | Candidate base HEAD | `684dc3263afe4943658a889e0e8232f415bba0e4` |
 | Candidate base tree | `60e0dcdc618e840b0d90ab248c8dde67e0cd7a58` |
 | Read-only design evidence | [PR #2 comment 5261626098](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261626098) |
-| Database/project operations | None |
+| Accepted commit | `67ac2eb5aedc5ac8e95481db4164f7a62a3f104c` |
+| Accepted tree | `aad9e8bdb5dad18128c418038075c0fb03c4b82a` |
+| Runtime evidence | [PR #2 comment 5266388044](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266388044) |
+| Commit evidence | [PR #2 comment 5266403615](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266403615) |
+| Push evidence | [PR #2 comment 5266433315](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266433315) |
+| Migration SHA-256 | `fc71129b5e74bcf9cd1a0751ef58d34f85e6e50459b563bdee610b95e55620a2` |
+| Focused pgTAP SHA-256 | `4f489765328c6980bbc4dcd6894ad6a935d6afb3513368b75b85ee962ec90f39` |
+| Runtime result | 99/99 replay; focused pgTAP `Files=1`, `Tests=78`, PASS; real Auth/Storage 56 PASS; separate-process/connection concurrency 12 PASS |
 | Documentation allowlist | `ENVIRONMENT_REMEDIATION_PLAN.md`, `ENVIRONMENT_LEDGER.md` |
 
-The binding forward-repair boundary is:
+The accepted R4B forward-repair contract was:
 
 - `gyeon_products` remains one global shared product master. An active member
   of any dealer may read the shared rows; inactive, invited, suspended,
@@ -354,13 +365,63 @@ must not be papered over with wider database or Storage grants:
    deletion require a separately authorized DELETE boundary.
 
 The database/configuration repair and these source repairs stay in independent
-literal allowlists. The next R4C gate may generate exactly one empty forward
-migration pathname with the slug `gyeon_products_storage_authority`; it may not
-write SQL. A later R4D candidate is limited to that exact generated migration
-and `supabase/tests/gyeon_products_storage_authority.test.sql`. No such path or
-test is created by this R4B documentation candidate.
+literal allowlists. The historical R4C gate generated exactly one empty forward
+migration pathname with the slug `gyeon_products_storage_authority`, and the
+later bounded implementation used only that generated migration and
+`supabase/tests/gyeon_products_storage_authority.test.sql`. Their final accepted
+hashes and runtime evidence are recorded below.
 
-This R4B candidate changes the same two canonical documents only. It does not
-authorize a source, test, migration, or configuration edit; protected-content
-access; Supabase/DB/project/Storage/Auth connection; test execution; stage;
-commit; push; Ready; merge; or deployment.
+The bounded R4 database/configuration repair was implemented, verified in a
+fresh disposable runtime, committed, and pushed at the accepted commit above.
+The successful run replayed all 99 executable migrations, executed the focused
+78-assertion pgTAP suite, proved 56 real Auth/Storage cases, and proved 12
+genuine separate-process/separate-connection concurrency cases. Cleanup was
+verified and no shared, linked, preview, Staging, or Production environment was
+modified.
+
+R4 acceptance is a bounded Gate B subset, not whole-system Gate B acceptance.
+The three application-source blockers above remain unresolved, and the eight
+broader suites in Section 11 remain required. Ready display state, merge,
+shared-environment apply, and deployment are not authorized by R4 acceptance.
+
+## 13. PR #2 current integration gate ledger
+
+| Field | Current authoritative value |
+|---|---|
+| Ledger date | 2026-08-12 |
+| Base / merge-base | `main` at `2f0b56cdc3d66cbe4ce050cfa335678934fb1cb2` |
+| Current head | `67ac2eb5aedc5ac8e95481db4164f7a62a3f104c` |
+| Current tree | `aad9e8bdb5dad18128c418038075c0fb03c4b82a` |
+| Topology | 319 commits ahead, 0 behind; one merge commit |
+| Literal PR scope | 2,297 paths; +180,980 / -5,359 |
+| Gate review evidence | [PR #2 comment 5266506008](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266506008) |
+| Integration status | `NOT_MERGE_READY` |
+
+The current release-gate ruling is:
+
+- **Gate A — repository hygiene:** accepted at commit
+  `2da69c7261a8e884ee1626c1e397b50bb387f88c`, but the current head contains
+  nine later commits and seven changed paths. Current-head incremental Gate A
+  reconciliation is still required.
+- **Gate B — database contract:** the R4 product/Storage subset is accepted.
+  The current baseline is 99 executable migrations, exactly three excluded
+  migrations, and three pgTAP files with 293 planned assertions. The remaining
+  catalog, grants/RLS, Data API, Storage, function/trigger, business-domain,
+  concurrency, and frozen/operational suites, plus the application-source
+  blockers in Section 12, remain incomplete.
+- **Gate C — security and destructive behavior:** not accepted. Request-scope
+  auth cookies, hard-delete/access-cut behavior, admin lifecycle, RLS/RPC
+  boundaries, and the public SECURITY DEFINER surface in
+  `096_dev_diagnostics.sql` require current-head review.
+- **Gate D — executable application proof:** not accepted. No reproducible
+  current-head typecheck, build, and end-to-end acceptance package exists.
+  Supabase Preview passing does not substitute for this gate.
+- **Gate E — release controls:** not accepted. `main` has no effective branch
+  protection/ruleset, PR #2 has no final review/requested reviewer evidence,
+  and product-owner, rollback, deploy, and post-deploy acceptance are absent.
+
+PR #2 remains the intentional v1.0 integration release vehicle; the accepted
+R4 subset is not extracted or cherry-picked separately. GYEON Draft PR #8
+remains deferred at its historical PR #2 base. After PR #2 is integrated, PR
+#8 must be retargeted or otherwise re-resolved against the integrated baseline
+and fully reverified before its own release gates can proceed.

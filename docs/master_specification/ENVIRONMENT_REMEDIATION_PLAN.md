@@ -4,18 +4,21 @@
 
 | Field | Value |
 |---|---|
-| Phase | `PR2-GATE-B-R4B_GYEON_PRODUCTS_STORAGE_REPAIR_CONTRACT_DOCUMENT_CANDIDATE` |
-| Status | `DOCUMENT_CANDIDATE_UNCOMMITTED` |
+| Phase | `R4Q-R2_PR2_SCOPE_AND_GATE_LEDGER_METADATA_REPAIR` |
+| Status | `TWO_DOCUMENT_CANDIDATE_UNCOMMITTED` |
 | Owner approval | 2026-08-12 |
 | Repository / PR | `nisikawa-officeAZ/GYEON` / PR #2 |
 | Branch | `fix/approval-center-delete-access-cut` |
-| Candidate base HEAD | `684dc3263afe4943658a889e0e8232f415bba0e4` |
-| Candidate base tree | `60e0dcdc618e840b0d90ab248c8dde67e0cd7a58` |
+| Candidate base HEAD | `67ac2eb5aedc5ac8e95481db4164f7a62a3f104c` |
+| Candidate base tree | `aad9e8bdb5dad18128c418038075c0fb03c4b82a` |
 | Owner ruling | [PR #2 comment 5260802893](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5260802893) |
 | Literal manifest evidence | [PR #2 comment 5261032333](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261032333) |
 | Broader verification evidence | [PR #2 comment 5261394747](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261394747) |
 | R3F push evidence | [PR #2 comment 5261545745](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261545745) |
 | R4A repair-design evidence | [PR #2 comment 5261626098](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261626098) |
+| R4 runtime evidence | [PR #2 comment 5266388044](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266388044) |
+| R4 push evidence | [PR #2 comment 5266433315](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266433315) |
+| Current integration-gate evidence | [PR #2 comment 5266506008](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5266506008) |
 | Documentation allowlist | This file and `ENVIRONMENT_LEDGER.md` only |
 
 This document defines how to decide and verify future environment remediation.
@@ -650,8 +653,11 @@ The read-only contract evidence is
 pinned to HEAD `99b2859cda6256bc402f0918bba5ef29b6db1306` and tree
 `d5caae0515d02d957ed0fadad29f6479434a3098`.
 
-The 98-path replay and existing two pgTAP files remain mandatory, but they are
-not whole-system acceptance. The following contract closes the uncovered
+The 98-path replay and two-file/215-assertion pgTAP values are the historical
+pre-R4 baseline. After the accepted R4 forward migration and focused suite,
+the current baseline is 99 executable migrations and three pgTAP files with
+293 planned assertions. These are mandatory, but they are not whole-system
+acceptance. The following contract closes the uncovered
 database-object, authorization, Storage, Data API, function/trigger,
 business-behavior, concurrency, and out-of-band configuration surfaces. Static
 source counts are diagnostic only; the disposable database catalog is the
@@ -756,9 +762,9 @@ The contract follows current Supabase behavior:
 A disposable runtime is accepted only when all of these conditions hold in
 order:
 
-1. the exact 98 migrations replay successfully and the local ledger contains
-   exactly those 98 ordered entries;
-2. the exact existing two pgTAP files run once, report `Files=2`, `Tests=215`,
+1. the exact 99 migrations replay successfully and the local ledger contains
+   exactly those 99 ordered entries;
+2. the exact current three pgTAP files run once, report `Files=3`, `Tests=293`,
    every assertion successful, and `Result: PASS`;
 3. every broader suite has a fixed non-zero plan and passes without skip,
    notests, or unclassified evidence;
@@ -783,8 +789,9 @@ order:
 The exact three excluded migrations remain those in Section 13.1. The protected
 LINE migration stays metadata-only; its content is never a test-design or
 runtime input. The deferred onboarding functions must be absent after the
-98-path replay, and `GYEON_PARTNER_ONBOARDING_ENABLED` must remain unset or
-false so all related entry points fail closed.
+current 99-path replay, and `GYEON_PARTNER_ONBOARDING_ENABLED` must remain unset
+or false so all related entry points fail closed. References to 98 paths are
+historical only.
 
 There is no tracked `supabase/functions` directory at the pinned tree. A future
 replacement gate must prove that no dashboard-only Edge Function or database
@@ -848,7 +855,7 @@ request-scoped client and missing admin gate are a separate source defect.
 
 ### 15.3 Canonical bucket configuration
 
-The future tracked configuration package regenerates exactly this catalog:
+The accepted tracked configuration package regenerates exactly this catalog:
 
 | Bucket | Public | Source-derived ceiling | Accepted content boundary |
 |---|---:|---:|---|
@@ -899,7 +906,7 @@ R4D database-only phase may edit the listed source files.
 
 ### 15.5 Focused SQL acceptance
 
-The future focused suite has a fixed, non-zero plan and proves all of the
+The accepted focused suite has a fixed, non-zero plan and proves all of the
 following with real local Auth tokens for at least two tenants:
 
 - exactly one surviving product SELECT policy with the target, predicate, and
@@ -914,32 +921,63 @@ following with real local Auth tokens for at least two tenants:
 - `Files=1`, `Tests>0`, every assertion successful, no skip, and no `NOTESTS`.
 
 Service-role success or `SET ROLE` simulation does not substitute for
-dealer-facing authorization. Disposable replay/runtime and separate-connection
-checks remain later independent gates.
+dealer-facing authorization. The disposable replay/runtime and
+separate-connection checks were executed under later independent gates; their
+accepted bounded results are recorded in Section 15.6 and do not close the
+broader Section 14 contract.
 
-### 15.6 Literal delivery sequence and R4B stop
+### 15.6 R4 completion record and remaining source boundary
 
-R4B is an uncommitted two-document candidate only. Its literal allowlist is:
+The R4B two-document contract was accepted before implementation. Its literal
+documentation allowlist was:
 
 1. `docs/master_specification/ENVIRONMENT_LEDGER.md`
 2. `docs/master_specification/ENVIRONMENT_REMEDIATION_PLAN.md`
 
-Acceptance requires the candidate base to remain HEAD
-`684dc3263afe4943658a889e0e8232f415bba0e4` / tree
-`60e0dcdc618e840b0d90ab248c8dde67e0cd7a58`, an empty index, exactly the two
-dirty paths, mode `100644`, per-path SHA-256 values, a deterministic
-path-ordered combined manifest SHA-256, unchanged excluded migration blobs,
-protected LINE content never accessed, and `git diff --check` PASS.
+The bounded database/configuration track was subsequently implemented,
+verified, committed, and pushed as commit
+`67ac2eb5aedc5ac8e95481db4164f7a62a3f104c`, tree
+`aad9e8bdb5dad18128c418038075c0fb03c4b82a`. The accepted migration SHA-256 is
+`fc71129b5e74bcf9cd1a0751ef58d34f85e6e50459b563bdee610b95e55620a2`; the
+accepted focused pgTAP SHA-256 is
+`4f489765328c6980bbc4dcd6894ad6a935d6afb3513368b75b85ee962ec90f39`.
 
-After R4B acceptance, commit and push remain separate gates. The later R4C
-gate may run only `supabase migration new gyeon_products_storage_authority` to
-fix one exact empty migration pathname, then stop without SQL content. A later
-R4D database/configuration candidate is limited to that generated path plus
-`supabase/tests/gyeon_products_storage_authority.test.sql`. Tests, disposable
-runtime, commit, push, replacement apply, Ready, merge, and deployment remain
-separate owner gates.
+The disposable runtime replayed 99/99 executable migrations, then passed the
+focused suite with `Files=1`, `Tests=78`, real two-tenant Auth/Storage proof
+with 56 passing cases, and genuine separate-process/separate-connection
+concurrency with 12 passing cases. Cleanup was verified. No shared, linked,
+preview, Staging, or Production environment was modified.
 
-This R4B candidate does not authorize a source, test, migration, or
-configuration edit; Supabase CLI; protected-content access;
-Supabase/DB/project/Storage/Auth connection; test execution; stage; commit;
-push; Ready; merge; or deployment.
+This acceptance closes only the bounded R4 database/configuration subset. The
+three application-source blockers in Section 15.4 remain pending under a
+separate allowlist, and the complete three-file/293-assertion baseline plus all
+eight suites in Section 14 remain required. Shared-environment apply, Ready,
+merge, and deployment remain separate owner gates.
+
+## 16. Current PR #2 integration release sequence
+
+PR #2 is intentionally the v1.0 integration release vehicle. At current HEAD
+`67ac2eb5aedc5ac8e95481db4164f7a62a3f104c`, it is 319 commits ahead of and 0
+behind `main`, changes 2,297 paths, and contains +180,980 / -5,359 lines. This
+scope is accepted as intentional integration scope, but it is not merge-ready.
+
+The mandatory release sequence is:
+
+1. reconcile PR #2 body metadata and these canonical documents to the current
+   head and scope without altering source, tests, or migrations;
+2. rerun incremental Gate A repository-hygiene review from accepted commit
+   `2da69c7261a8e884ee1626c1e397b50bb387f88c` through the current head;
+3. complete Gate B's eight suites, current 99/3/293 baseline, and the three
+   application-source blockers in Section 15.4;
+4. complete Gate C current-head security/destructive review, including real
+   request-scope authorization, hard-delete/access-cut behavior, admin
+   lifecycle, RLS/RPC boundaries, and `096_dev_diagnostics.sql`;
+5. complete Gate D current-head typecheck, build, and end-to-end proof;
+6. complete Gate E reviewer, protection/ruleset, product-owner, rollback,
+   deployment, and post-deploy controls; and
+7. only after PR #2 integration, retarget or otherwise re-resolve deferred
+   GYEON Draft PR #8 and fully reverify it against the integrated baseline.
+
+PR #2's displayed Ready state is not an accepted release gate. No step in this
+metadata-repair phase authorizes tests, a database/Supabase connection, stage,
+commit, push, Ready-state change, merge, shared-environment apply, or deploy.
