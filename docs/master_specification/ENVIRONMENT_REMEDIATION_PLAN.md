@@ -995,3 +995,29 @@ The mandatory release sequence is:
 PR #2's displayed Ready state is not an accepted release gate. No step in this
 metadata-repair phase authorizes tests, a database/Supabase connection, stage,
 commit, push, Ready-state change, merge, shared-environment apply, or deploy.
+
+## 17. R4Q-R12C catalog-manifest candidate
+
+| Field | Value |
+|---|---|
+| Candidate date | 2026-08-14 |
+| Status | `STATIC_UNCOMMITTED_CANDIDATE_NOT_RUNTIME_PROOF` |
+| Pinned head / tree | `4a5c896b32ef0b5708f89f6a63c29d07e92d34ac` / `f24f5c173cdbb532314343cbefa01e0811fcb93a` |
+| Executable migration boundary | 99 paths; manifest SHA-256 `06701e35b85d94dd5b4ce2d51a3726493cb983fca821da94e463fc637ad21a4e` |
+| Source / runtime coverage | 2,807 source-ledger rows / 2,764 runtime expected-present rows |
+| Candidate suite | `supabase/tests/catalog_manifest.test.sql`; `plan(76)` |
+| Contract | `CATALOG_MANIFEST.md` |
+| Database or test execution | None |
+
+This candidate fills the catalog-manifest design gap identified by Gate B. It
+does not close the broader Gate B suites or any Gate C–E requirement. Its exact
+candidate allowlist is the new SQL suite, the new catalog contract, and this
+document plus `ENVIRONMENT_LEDGER.md`. No dependency, configuration, source,
+migration, generated type, or protected-content change is allowed.
+
+A later disposable-runtime gate must start from a fresh isolated local
+Supabase stack, replay only the exact 99-path manifest, and run this suite once.
+It must fail closed on replay error, SQL load error, plan mismatch, zero tests,
+or any failed assertion. It must not connect to a shared, linked, preview,
+Staging, or Production project. Runtime verification, repair, commit, push,
+Ready, merge, and deployment remain separate owner gates.

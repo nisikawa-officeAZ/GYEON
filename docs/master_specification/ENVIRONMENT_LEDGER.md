@@ -435,3 +435,31 @@ R4 subset is not extracted or cherry-picked separately. GYEON Draft PR #8
 remains deferred at its historical PR #2 base. After PR #2 is integrated, PR
 #8 must be retargeted or otherwise re-resolved against the integrated baseline
 and fully reverified before its own release gates can proceed.
+
+## 14. R4Q-R12B/R12C catalog-manifest ledger
+
+| Field | Immutable value |
+|---|---|
+| R12B acceptance | [PR #2 comment 5283279059](https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5283279059) |
+| Pinned base / head / tree | `2f0b56cdc3d66cbe4ce050cfa335678934fb1cb2` / `4a5c896b32ef0b5708f89f6a63c29d07e92d34ac` / `f24f5c173cdbb532314343cbefa01e0811fcb93a` |
+| Executable manifest | 99 path-ordered mode/type/blob/path rows |
+| Manifest SHA-256 | `06701e35b85d94dd5b4ce2d51a3726493cb983fca821da94e463fc637ad21a4e` |
+| Canonical ledger | 45 artifacts; combined SHA-256 `84deba630d63466debddae965a998fecde4cb486cfb2d73680b82b875a689f15` |
+| Coverage | 2,807 source-analysis rows; 2,764 runtime expected-present rows |
+| Candidate suite | `supabase/tests/catalog_manifest.test.sql`; exactly 76 assertions |
+| Candidate status | Uncommitted and unexecuted |
+
+The three excluded migrations remain content-protected and absent from the
+99-path executable set. `ScreensPreview.tsx` also remains content-protected.
+Their metadata identities are recorded in `CATALOG_MANIFEST.md`.
+
+The R12C suite is design evidence only. It did not connect to any Supabase
+project or local database and did not replay migrations or execute pgTAP. It
+must not be used to revise the live Development/Staging/Production facts in
+Sections 2–3. A later runtime result may append evidence; it may not silently
+replace this pinned source contract.
+
+Current release impact: the catalog-manifest static candidate exists, but PR #2
+remains `NOT_MERGE_READY`. `GRANT_RLS_ROLE_MATRIX`, `DATA_API_MATRIX`, broader
+runtime behavior, real Auth request-scope proof, remaining Gate B suites, and
+Gates C–E are still open. No environment operation is authorized.
