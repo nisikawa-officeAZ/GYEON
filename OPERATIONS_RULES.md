@@ -14,7 +14,18 @@ GitHub CLIs for **development** work on DealerOS. These rules are mandatory.
   delete/update at scale, anything irreversible).
 
 ## 1. Environments allowed
-- Supabase: **Development project only** — ref `fbieiotihlmpfzybowbt`.
+- Canonical identities are defined in
+  `docs/master_specification/ENVIRONMENT_LEDGER.md`.
+- Supabase Development: `DealerOS-Dev` — ref `fbieiotihlmpfzybowbt`.
+- Supabase Staging: `DealerOS-Dev-Next` — ref
+  `vhiuiwolnlvlwvoaingd`. This is the formal staging identity, but identity
+  assignment is not connection or write authorization.
+- Supabase Production: `DealerOS-Prod` — ref `dmvyaykhibmphrmekjbb`.
+  Production remains prohibited unless a production-specific owner gate is
+  explicitly opened.
+- Default CLI permission remains **Development only**. Staging read, link,
+  apply, reset, test-data, and deployment operations require their applicable
+  explicit approval. Preview branches are not Staging.
 - Vercel: **Preview deployments only** on project `dealeros`.
 - GitHub: **current feature branch only** (e.g. `fix/branding-schema-block`).
 
@@ -37,7 +48,8 @@ GitHub CLIs for **development** work on DealerOS. These rules are mandatory.
    without explicit operator approval for the specific migration.
 5. After an approved apply: run `NOTIFY pgrst, 'reload schema';` if DDL changed
    tables, then verify with evidence (see §6).
-6. Never target a non-dev project ref. There is no Production link.
+6. Never infer a target from a saved local link. Verify the exact role and ref
+   against `ENVIRONMENT_LEDGER.md` before every approved operation.
 
 ## 4. Vercel preview-deploy procedure
 - Project is already linked (`.vercel/project.json` → `dealeros`).

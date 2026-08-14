@@ -7,7 +7,9 @@
 //   - archive instead of delete
 
 import { createClient }     from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { buildVehicleRegistrationArchivePath } from "./archive-path";
 
 export const VEHICLE_REG_BUCKET = "vehicle-registration-documents";
 const SIGNED_URL_EXPIRY_SECONDS = 60 * 60; // 1 hour
@@ -111,37 +113,63 @@ export async function getVehicleRegistrationSignedUrl(
   }
 }
 
-// Soft-delete: move file to archived/ prefix instead of deleting.
-// The original file stays; we copy then remove old path.
+// Archive by moving the file to the dealer's archived/ prefix.
+// The caller must have already passed the destructive capability gate.
 export async function archiveVehicleRegistrationFile(
+  dealerId: string,
   storagePath: string,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: true; archivedPath: string } | { success: false; error: string }> {
   try {
-    const dealer = await getCurrentDealer();
-    if (!dealer) return { success: false, error: "認証エラー" };
-
-    if (!storagePath.startsWith(dealer.dealer_id + "/")) {
+    const archivePath = buildVehicleRegistrationArchivePath(dealerId, storagePath);
+    if (!archivePath.success) {
       return { success: false, error: "アクセス権限がありません" };
     }
 
-    const archivedPath = `${dealer.dealer_id}/archived/${storagePath.split("/").slice(1).join("/")}`;
+    const admin = createAdminClient();
 
-    const supabase = await createClient();
-
-    const { error: copyError } = await supabase.storage
+    const { error: moveError } = await admin.storage
       .from(VEHICLE_REG_BUCKET)
-      .copy(storagePath, archivedPath);
+      .move(storagePath, archivePath.archivedPath);
 
-    if (copyError) {
-      console.error("[storage] archive copy error:", copyError.message);
+    if (moveError) {
+      console.error("[storage] archive move error:", moveError.message);
       return { success: false, error: "アーカイブに失敗しました" };
     }
 
-    await supabase.storage.from(VEHICLE_REG_BUCKET).remove([storagePath]);
-
-    return { success: true };
+    return { success: true, archivedPath: archivePath.archivedPath };
   } catch (err) {
     console.error("[storage] archive unexpected error:", err);
     return { success: false, error: "アーカイブ中にエラーが発生しました" };
+  }
+}
+
+// Compensation for the narrow case where Storage moved successfully but the
+// dealer-scoped DB update did not. Both paths must match the deterministic pure
+// archive mapping before the server-only client is constructed.
+export async function restoreVehicleRegistrationFile(
+  dealerId: string,
+  originalPath: string,
+  archivedPath: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const expected = buildVehicleRegistrationArchivePath(dealerId, originalPath);
+    if (!expected.success || expected.archivedPath !== archivedPath) {
+      return { success: false, error: "アクセス権限がありません" };
+    }
+
+    const admin = createAdminClient();
+    const { error: moveError } = await admin.storage
+      .from(VEHICLE_REG_BUCKET)
+      .move(archivedPath, originalPath);
+
+    if (moveError) {
+      console.error("[storage] archive compensation move error:", moveError.message);
+      return { success: false, error: "復元に失敗しました" };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("[storage] archive compensation unexpected error:", err);
+    return { success: false, error: "復元中にエラーが発生しました" };
   }
 }

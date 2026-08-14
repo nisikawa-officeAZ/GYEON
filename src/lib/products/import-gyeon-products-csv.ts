@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin/require-admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,15 +81,18 @@ function rowToObject(headers: string[], values: string[]): CsvRow {
 export async function importGyeonProductsCsv(
   csvText: string,
 ): Promise<ImportResult> {
-  let supabase: Awaited<ReturnType<typeof createClient>>;
   try {
-    supabase = await createClient();
-  } catch (err) {
-    console.error("[importGyeonProductsCsv] supabase init failed:", err);
-    return { inserted: 0, updated: 0, errors: [{ row: 0, sku: "", message: "DB接続に失敗しました" }] };
+    await requireAdmin();
+  } catch {
+    console.warn("[importGyeonProductsCsv] admin authorization failed");
+    return {
+      inserted: 0,
+      updated: 0,
+      errors: [{ row: 0, sku: "", message: "CSVインポートには有効な管理者権限が必要です" }],
+    };
   }
-  const result: ImportResult = { inserted: 0, updated: 0, errors: [] };
 
+  const result: ImportResult = { inserted: 0, updated: 0, errors: [] };
   const { headers, rows } = parseCsv(csvText);
 
   if (!headers.includes("sku") || !headers.includes("product_name")) {
@@ -99,10 +103,28 @@ export async function importGyeonProductsCsv(
     };
   }
 
+  let supabase: ReturnType<typeof createAdminClient>;
+  try {
+    supabase = createAdminClient();
+  } catch (err) {
+    console.error("[importGyeonProductsCsv] supabase init failed:", err);
+    return { inserted: 0, updated: 0, errors: [{ row: 0, sku: "", message: "DB接続に失敗しました" }] };
+  }
+
   // Fetch existing SKUs for insert/update tracking
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from("gyeon_products")
     .select("sku");
+
+  if (existingError) {
+    console.error("[importGyeonProductsCsv] existing SKU lookup failed");
+    return {
+      inserted: 0,
+      updated: 0,
+      errors: [{ row: 0, sku: "", message: "商品データの確認に失敗しました" }],
+    };
+  }
+
   const existingSkus = new Set((existing ?? []).map((r: { sku: string }) => r.sku));
 
   for (let i = 0; i < rows.length; i++) {

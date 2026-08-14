@@ -8,6 +8,7 @@ import { searchGyeonProducts } from "@/lib/products/get-gyeon-products";
 interface Props {
   initialProducts: GyeonProductDB[];
   categories:      string[];
+  canImportCsv:    boolean;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -24,7 +25,7 @@ function categoryLabel(cat: string | null): string {
   return CATEGORY_LABELS[cat] ?? cat;
 }
 
-export default function ProductsClient({ initialProducts, categories }: Props) {
+export default function ProductsClient({ initialProducts, categories, canImportCsv }: Props) {
   const [products,    setProducts]    = useState<GyeonProductDB[]>(initialProducts);
   const [keyword,     setKeyword]     = useState("");
   const [category,    setCategory]    = useState("");
@@ -72,26 +73,28 @@ export default function ProductsClient({ initialProducts, categories }: Props) {
           <h1 className="text-xl font-bold text-slate-100">GYEON 商品カタログ</h1>
           <p className="text-xs text-slate-500 mt-0.5">{products.length}件の商品</p>
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".csv"
-            onChange={handleFileImport}
-            className="hidden"
-            id="csv-import"
-          />
-          <label
-            htmlFor="csv-import"
-            className={`cursor-pointer px-3 py-1.5 text-xs font-medium rounded-md border border-slate-600 text-slate-300 hover:text-slate-100 hover:border-slate-400 transition-colors ${importing ? "opacity-50 pointer-events-none" : ""}`}
-          >
-            {importing ? "インポート中…" : "CSVインポート"}
-          </label>
-        </div>
+        {canImportCsv && (
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".csv"
+              onChange={handleFileImport}
+              className="hidden"
+              id="csv-import"
+            />
+            <label
+              htmlFor="csv-import"
+              className={`cursor-pointer px-3 py-1.5 text-xs font-medium rounded-md border border-slate-600 text-slate-300 hover:text-slate-100 hover:border-slate-400 transition-colors ${importing ? "opacity-50 pointer-events-none" : ""}`}
+            >
+              {importing ? "インポート中…" : "CSVインポート"}
+            </label>
+          </div>
+        )}
       </div>
 
       {/* Import result */}
-      {importResult && (
+      {canImportCsv && importResult && (
         <div className={`border rounded-lg px-4 py-3 text-sm ${importResult.errors.length > 0 ? "border-yellow-700 bg-yellow-900/20" : "border-green-700 bg-green-900/20"}`}>
           <p className="font-medium text-slate-100 mb-1">
             インポート完了: 新規 {importResult.inserted}件 / 更新 {importResult.updated}件
@@ -146,14 +149,18 @@ export default function ProductsClient({ initialProducts, categories }: Props) {
       {displayProducts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <p className="text-slate-500 text-sm">商品が登録されていません</p>
-          <p className="text-slate-600 text-xs">CSVインポートで商品を追加してください</p>
-          <a
-            href="/docs/GYEON_PRODUCT_TEMPLATE.csv"
-            className="text-xs text-blue-400 hover:underline"
-            download
-          >
-            CSVテンプレートをダウンロード
-          </a>
+          {canImportCsv && (
+            <>
+              <p className="text-slate-600 text-xs">CSVインポートで商品を追加してください</p>
+              <a
+                href="/docs/GYEON_PRODUCT_TEMPLATE.csv"
+                className="text-xs text-blue-400 hover:underline"
+                download
+              >
+                CSVテンプレートをダウンロード
+              </a>
+            </>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

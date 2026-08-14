@@ -24,6 +24,7 @@ import { estimateCostUsd } from "@/lib/ai/ai-pricing";
 import {
   uploadVehicleRegistrationImage,
   archiveVehicleRegistrationFile,
+  restoreVehicleRegistrationFile,
   VEHICLE_REG_BUCKET,
 } from "./storage";
 import { analyzeVehicleRegistrationImage } from "./ocr";
@@ -36,6 +37,8 @@ import {
   createOcrSession,
   linkFileToOcrSession,
 } from "@/lib/ocr/ocr-session-actions";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
+import { buildVehicleRegistrationArchivePath } from "./archive-path";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB — matches next.config.ts bodySizeLimit
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"]; // E9.1: PDF support
@@ -522,40 +525,82 @@ export async function archiveVehicleRegistration(
   fileId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
-      console.error("[OCR:archive] Auth failed: no authenticated user");
-      return { success: false, error: "ログインが必要です。ブラウザでログインし直してください。" };
-    }
-    const dealer = await getCurrentDealer();
-    if (!dealer) {
-      console.error("[OCR:archive] Auth failed: no dealer membership for user:", user.id);
-      return { success: false, error: "店舗情報を取得できません。管理者にお問い合わせください。" };
-    }
+    const auth = await requireStaffCapability("delete");
+    if ("error" in auth) return { success: false, error: auth.error };
 
     const supabase = await createClient();
 
-    // Fetch the row to get storage path
+    // Bind the client-supplied ID to the server-resolved tenant and the exact
+    // still-active Storage record before any privileged Storage operation.
     const { data: row, error: fetchError } = await supabase
       .from("vehicle_registration_files")
-      .select("storage_path")
+      .select("id, storage_bucket, storage_path, ocr_status, archived_at")
       .eq("id",        fileId)
-      .eq("dealer_id", dealer.dealer_id)
+      .eq("dealer_id", auth.dealerId)
       .single();
 
-    if (fetchError || !row) {
-      return { success: false, error: "ファイルが見つかりません" };
+    if (
+      fetchError ||
+      !row ||
+      row.storage_bucket !== VEHICLE_REG_BUCKET ||
+      row.archived_at !== null ||
+      row.ocr_status === "archived"
+    ) {
+      return { success: false, error: "ファイルが見つからないか、操作できません" };
     }
 
-    // Archive in storage
-    await archiveVehicleRegistrationFile(row.storage_path);
+    const archivePath = buildVehicleRegistrationArchivePath(
+      auth.dealerId,
+      row.storage_path,
+    );
+    if (!archivePath.success) {
+      return { success: false, error: "ファイルが見つからないか、操作できません" };
+    }
 
-    // Mark as archived in DB
-    await supabase
+    const storageResult = await archiveVehicleRegistrationFile(
+      auth.dealerId,
+      row.storage_path,
+    );
+    if (!storageResult.success) {
+      return {
+        success: false,
+        error: "アーカイブに失敗しました。時間をおいて再度お試しください。",
+      };
+    }
+
+    const archivedAt = new Date().toISOString();
+    const { data: updatedRow, error: updateError } = await supabase
       .from("vehicle_registration_files")
-      .update({ ocr_status: "archived", archived_at: new Date().toISOString() })
+      .update({
+        storage_path: storageResult.archivedPath,
+        ocr_status: "archived",
+        archived_at: archivedAt,
+      })
       .eq("id",        fileId)
-      .eq("dealer_id", dealer.dealer_id);
+      .eq("dealer_id", auth.dealerId)
+      .eq("storage_path", row.storage_path)
+      .is("archived_at", null)
+      .neq("ocr_status", "archived")
+      .select("id")
+      .maybeSingle();
+
+    if (updateError || !updatedRow) {
+      const compensation = await restoreVehicleRegistrationFile(
+        auth.dealerId,
+        row.storage_path,
+        storageResult.archivedPath,
+      );
+      if (!compensation.success) {
+        console.error("[OCR:archive] CRITICAL compensation failed after DB update failure", {
+          fileId,
+          dealerId: auth.dealerId,
+        });
+      }
+      return {
+        success: false,
+        error: "アーカイブに失敗しました。時間をおいて再度お試しください。",
+      };
+    }
 
     await createAuditLog({
       action:        "archive",
@@ -566,6 +611,9 @@ export async function archiveVehicleRegistration(
     return { success: true };
   } catch (err) {
     console.error("[actions] archive error:", err);
-    return { success: false, error: "アーカイブに失敗しました" };
+    return {
+      success: false,
+      error: "アーカイブに失敗しました。時間をおいて再度お試しください。",
+    };
   }
 }

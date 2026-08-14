@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-06-26 (v5.0 — Sprint 11V) |
+| **Last Updated** | 2026-08-12 (v5.1 — Environment Ledger) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -42,18 +42,20 @@
 | 5 | `04_SETTINGS_WORKFLOW.md` | Store settings, auth, persistence |
 | 6 | `05_DATABASE_REQUIREMENTS.md` | Data model — canonical contracts vs implementation |
 | 7 | `11_CANONICAL_RULES.md` | **All binding rules** — read before any implementation work |
-| 8 | `06_OCR_REQUIREMENTS.md` | OCR activation requirements |
-| 9 | `07_LINE_REQUIREMENTS.md` | LINE/LIFF activation requirements |
-| 10 | `08_UI_REQUIREMENTS.md` | Screen and device requirements |
-| 11 | `09_PHASE_STATUS.md` | Current implementation status |
-| 12 | `10_ROADMAP.md` | What's next |
+| 8 | `ENVIRONMENT_LEDGER.md` | Exact Development / Staging / Production identities and operation gates |
+| 9 | `06_OCR_REQUIREMENTS.md` | OCR activation requirements |
+| 10 | `07_LINE_REQUIREMENTS.md` | LINE/LIFF activation requirements |
+| 11 | `08_UI_REQUIREMENTS.md` | Screen and device requirements |
+| 12 | `09_PHASE_STATUS.md` | Current implementation status |
+| 13 | `10_ROADMAP.md` | What's next |
 
 ### 2b. Before implementing a feature
 
 1. Check `11_CANONICAL_RULES.md` for binding constraints.
-2. Find the relevant workflow document (03–08).
-3. Check `OPERATOR_DECISIONS.md` — confirm all blocking decisions are resolved for that feature.
-4. Check `09_PHASE_STATUS.md` — confirm the feature is in the right phase.
+2. Check `ENVIRONMENT_LEDGER.md` before any environment or database operation.
+3. Find the relevant workflow document (03–08).
+4. Check `OPERATOR_DECISIONS.md` — confirm all blocking decisions are resolved for that feature.
+5. Check `09_PHASE_STATUS.md` — confirm the feature is in the right phase.
 
 ### 2c. Before a new design or PR
 
@@ -148,6 +150,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── 09_PHASE_STATUS.md                 ← Implementation status (living document)
 ├── 10_ROADMAP.md                      ← What's next (living document)
 ├── 11_CANONICAL_RULES.md              ← Binding rules for all work
+├── ENVIRONMENT_LEDGER.md              ← Canonical environment identities and operation gates
 │
 ├── MASTER_SPECIFICATION_AUDIT_REPORT.md   ← PHASE74: full audit findings
 ├── MASTER_SPECIFICATION_CHANGELOG.md      ← PHASE75: per-item resolution log
@@ -252,6 +255,7 @@ TIER 4 — DESIGN AUTHORITY
 | **4.8** | **2026-06-26** | **Sprint 11T** | **Platform Core Foundation: PlatformApplicationId (5), PlatformModuleId (10), ModuleManifest (10 manifests with capabilities), PlatformApplication (5 descriptors), CrossApplicationPolicy (10 rules: 8 strict + 2 advisory), feature discovery API (discoverFeatures/getAvailableModules/getApplicationModuleSummary/isCapabilityAvailable + 22 platform features), PLATFORM_CORE descriptor, PLATFORM_CORE_SPEC.md** |
 | **4.9** | **2026-06-26** | **Sprint 11U** | **AI Settings UI Foundation: app/settings/ai/ page (server component, Pro+ gate, migration-aware), 6 client sections (AIOverviewSection/ProviderStatusSection/CapabilityAssignmentSection/BudgetSection/AIHealthSection/MarketplaceSection), recommendation mode selector (5 modes: best_quality/lowest_cost/fastest/balanced/dealer_selected), capability assignment by CATEGORY_CATALOG (14 categories, per-capability preferred+fallback+disable), marketplace grid (11 providers, category filter, extension toggle), Platform Core integration (isModuleAvailable/discoverFeatures), save via saveAISettingsProfile() with MIGRATION_REQUIRED handling, AI_SETTINGS_UI_SPEC.md** |
 | **5.0** | **2026-06-26** | **Sprint 11V** | **Enterprise Organization Foundation: OrganizationType (6: platform/company/division/branch/warehouse/dealer), OrganizationTier (tier_1 through tier_6), 7 static organizations (org_platform_root/org_gyeon_japan/org_attraction/org_detailing_division/org_wholesale_division/org_main_warehouse/org_attraction_sales), 6 application ownership entries (GYEON Japan owns dealer_agent/EDP/warehouse/accounting/crm; Attraction subscribes to EDP), 7 org roles (platform_admin/company_admin/division_manager/branch_manager/warehouse_manager/dealer_owner/dealer_staff), 8 governance policies ORG-001–ORG-008 (6 strict + 2 advisory), Platform Core bridge (ORG_TYPE_APPLICATION_MAP, APPLICATION_ORG_TYPE_MAP, ORGANIZATION_MODULE_MANIFEST), ORGANIZATION_FOUNDATION descriptor, ENTERPRISE_ORGANIZATION_SPEC.md** |
+| **5.1** | **2026-08-12** | **PR #2 Gate B-R1** | **Environment identity ledger added: DealerOS-Dev is Development, DealerOS-Dev-Next is formal Staging, DealerOS-Prod is Production; preview branches are not Staging; migration ledger drift and separate operation gates recorded.** |
 
 ---
 

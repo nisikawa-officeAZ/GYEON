@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect, useRef } from "react";
 import {
-  WorkOrderFileDB,
+  WorkOrderFileView,
   WorkOrderFilePhase,
   WorkOrderFileType,
   workOrderFilePhaseLabel,
@@ -27,7 +27,7 @@ function formatFileSize(bytes: number | null): string {
 // ─── File card ────────────────────────────────────────────────────────────────
 
 interface FileCardProps {
-  file:     WorkOrderFileDB;
+  file:     WorkOrderFileView;
   onDelete: (id: string) => void;
   onUpdate: (id: string, fd: FormData) => void;
   pending:  boolean;
@@ -52,16 +52,16 @@ function FileCard({ file, onDelete, onUpdate, pending }: FileCardProps) {
   return (
     <div className="bg-[#0f172a] border border-slate-700 rounded-lg overflow-hidden">
       {/* Preview */}
-      {isPhoto(file.mime_type, file.file_name) && file.file_url ? (
-        <a href={file.file_url} target="_blank" rel="noopener noreferrer">
+      {isPhoto(file.mime_type, file.file_name) && file.delivery_url ? (
+        <a href={file.delivery_url} target="_blank" rel="noopener noreferrer">
           <img
-            src={file.file_url}
+            src={file.delivery_url}
             alt={file.title ?? file.file_name ?? ""}
             className="w-full h-28 object-cover"
           />
         </a>
-      ) : isVideo(file.mime_type, file.file_name) && file.file_url ? (
-        <a href={file.file_url} target="_blank" rel="noopener noreferrer">
+      ) : isVideo(file.mime_type, file.file_name) && file.delivery_url ? (
+        <a href={file.delivery_url} target="_blank" rel="noopener noreferrer">
           <div className="w-full h-28 flex flex-col items-center justify-center bg-slate-800/50 gap-1">
             <span className="text-2xl text-slate-400">🎥</span>
             <span className="text-[9px] text-slate-500">動画を開く</span>
@@ -192,6 +192,7 @@ function UploadArea({ workOrderId, activePhase, onUploadDone }: UploadAreaProps)
     if (!files || files.length === 0) return;
     setError(null);
 
+    let uploadedAny = false;
     for (const file of Array.from(files)) {
       const fd = new FormData();
       fd.set("work_order_id", workOrderId);
@@ -202,13 +203,17 @@ function UploadArea({ workOrderId, activePhase, onUploadDone }: UploadAreaProps)
       await new Promise<void>((resolve) => {
         startTransition(async () => {
           const result = await uploadWorkOrderFile(fd);
-          if (result?.error) setError(result.error);
+          if (result?.error) {
+            setError(result.error);
+          } else {
+            uploadedAny = true;
+          }
           resolve();
         });
       });
     }
 
-    onUploadDone();
+    if (uploadedAny) onUploadDone();
   }
 
   return (
@@ -283,15 +288,17 @@ interface WorkOrderFilesProps {
 }
 
 export default function WorkOrderFiles({ workOrderId }: WorkOrderFilesProps) {
-  const [files,       setFiles]       = useState<WorkOrderFileDB[]>([]);
+  const [files,       setFiles]       = useState<WorkOrderFileView[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [activePhase, setActivePhase] = useState<WorkOrderFilePhase>("before");
   const [pending,     startTransition] = useTransition();
+  const [actionError, setActionError] = useState<string | null>(null);
 
   function refresh() {
     setLoading(true);
-    getWorkOrderFiles(workOrderId).then((data) => {
-      setFiles(data);
+    getWorkOrderFiles(workOrderId).then((result) => {
+      setFiles(result.files);
+      setActionError(result.error);
       setLoading(false);
     });
   }
@@ -301,14 +308,24 @@ export default function WorkOrderFiles({ workOrderId }: WorkOrderFilesProps) {
 
   function handleDelete(id: string) {
     startTransition(async () => {
-      await deleteWorkOrderFile(id);
+      setActionError(null);
+      const result = await deleteWorkOrderFile(id);
+      if (result?.error) {
+        setActionError(result.error);
+        return;
+      }
       refresh();
     });
   }
 
   function handleUpdate(id: string, fd: FormData) {
     startTransition(async () => {
-      await updateWorkOrderFile(id, fd);
+      setActionError(null);
+      const result = await updateWorkOrderFile(id, fd);
+      if (result?.error) {
+        setActionError(result.error);
+        return;
+      }
       refresh();
     });
   }
@@ -351,6 +368,12 @@ export default function WorkOrderFiles({ workOrderId }: WorkOrderFilesProps) {
         activePhase={activePhase}
         onUploadDone={refresh}
       />
+
+      {actionError && (
+        <p className="text-xs text-red-400 bg-red-900/20 border border-red-800 rounded px-3 py-2">
+          {actionError}
+        </p>
+      )}
 
       {/* File grid */}
       {loading ? (
