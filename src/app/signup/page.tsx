@@ -69,6 +69,12 @@ export default function SignUpPage() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/login`,
+          data: {
+            // Persist only the display value needed after email verification.
+            // Authorization never relies on user_metadata.
+            dealer_signup_flow: "dealer-v1",
+            dealer_business_name: businessName.trim(),
+          },
         },
       });
 
@@ -127,22 +133,6 @@ export default function SignUpPage() {
         return;
       }
 
-      // Create the pending dealer record via server action (admin client, bypasses RLS)
-      const dealerResult = await createPendingDealer({
-        businessName: businessName.trim(),
-        ownerUserId:  data.user.id,
-        email,
-      });
-
-      if (!dealerResult.success) {
-        if (dealerResult.error === "account_exists") {
-          setError("このメールアドレスはすでに登録されています。ログイン画面からサインインしてください。");
-        } else {
-          setError("店舗情報の登録に失敗しました。しばらく待ってから再試行してください。");
-        }
-        return;
-      }
-
       const needsConfirmation = !data.session;
 
       // GYEON partner onboarding: with an auto-confirmed session (dev,
@@ -159,6 +149,18 @@ export default function SignUpPage() {
           }
         } catch {
           // fall through to the standard pending screen
+        }
+
+        // Auto-confirmed environments already have a verified session. Create
+        // the pending dealer from that server-verified identity now. Production
+        // confirmation-required signups do this only after /auth/confirm.
+        const dealerResult = await createPendingDealer();
+        if (
+          dealerResult.kind !== "created" &&
+          dealerResult.kind !== "already-exists"
+        ) {
+          setError("アカウントは作成されましたが、店舗情報の登録を完了できませんでした。ログイン後に再度お試しください。");
+          return;
         }
       }
 

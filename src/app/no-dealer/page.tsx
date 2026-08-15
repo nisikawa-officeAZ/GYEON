@@ -7,6 +7,7 @@ import { getCurrentUser }  from "@/lib/auth/get-current-user";
 import { createClient }    from "@/lib/supabase/server";
 import { createAdminClient }        from "@/lib/supabase/admin";
 import { claimGyeonProvisioning }   from "@/lib/dealer/claim-gyeon-provisioning";
+import { createPendingDealer }      from "@/lib/dealer/create-pending-dealer";
 import { isGyeonPartnerOnboardingEnabled } from "@/lib/gyeon/partner-onboarding-enabled";
 import LogoutButton        from "@/components/auth/LogoutButton";
 import Brand               from "@/components/ui/Brand";
@@ -32,11 +33,25 @@ export default async function NoDealerPage() {
   // gating the only /no-dealer → /shop-profile edge here makes the SaaS
   // redirect loop structurally impossible.
   if (isGyeonPartnerOnboardingEnabled()) {
+    let claimedGyeonProvisioning = false;
     if (user.email_confirmed_at) {
       try {
-        await claimGyeonProvisioning();
+        const claim = await claimGyeonProvisioning();
+        claimedGyeonProvisioning = claim.kind === "claimed";
       } catch {
         // Non-eligible/errored claims keep the existing no-dealer behavior.
+      }
+
+      // Recovery convergence for an Auth account whose confirmation succeeded
+      // while the original pending-dealer write did not. Only the explicit
+      // dealer-signup metadata marker is eligible, and the server action still
+      // derives identity from the verified session. Pre-provisioned claims win
+      // first so this never creates a second dealer for them.
+      if (!claimedGyeonProvisioning) {
+        const pendingDealer = await createPendingDealer();
+        if (pendingDealer.kind === "created") {
+          redirect("/signup/pending?confirm=0");
+        }
       }
     }
 

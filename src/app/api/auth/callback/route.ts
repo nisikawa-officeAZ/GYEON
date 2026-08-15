@@ -5,6 +5,8 @@
 
 import { NextResponse }  from "next/server";
 import { createClient }  from "@/lib/supabase/server";
+import { claimGyeonProvisioning } from "@/lib/dealer/claim-gyeon-provisioning";
+import { createPendingDealer } from "@/lib/dealer/create-pending-dealer";
 
 export const dynamic = "force-dynamic";
 
@@ -20,9 +22,21 @@ export async function GET(request: Request) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (!error) {
-        if (type === "recovery") {
-          // Password reset — send to the reset form
+        if (type === "recovery" || type === "invite") {
+          // Password reset and invite acceptance both need the reset form.
           return NextResponse.redirect(`${origin}/reset-password`);
+        }
+
+        const claim = await claimGyeonProvisioning();
+        if (claim.kind === "claimed") {
+          return NextResponse.redirect(`${origin}/shop-profile`);
+        }
+
+        // PKCE confirmation templates converge through the same verified,
+        // session-derived pending-dealer boundary as token_hash templates.
+        const dealer = await createPendingDealer();
+        if (dealer.kind === "created" || dealer.kind === "already-exists") {
+          return NextResponse.redirect(`${origin}/signup/pending?confirm=0`);
         }
         // Email confirmation or other auth — go to home
         return NextResponse.redirect(origin);
