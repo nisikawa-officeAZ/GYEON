@@ -463,3 +463,186 @@ Current release impact: the catalog-manifest static candidate exists, but PR #2
 remains `NOT_MERGE_READY`. `GRANT_RLS_ROLE_MATRIX`, `DATA_API_MATRIX`, broader
 runtime behavior, real Auth request-scope proof, remaining Gate B suites, and
 Gates C–E are still open. No environment operation is authorized.
+
+## 15. R4Q-R12E remaining seven Gate B DB-suite ledger
+
+| Field | Immutable value |
+|---|---|
+| Candidate date | 2026-08-15 |
+| Status | `STATIC_UNCOMMITTED_CANDIDATE_NOT_RUNTIME_PROOF` |
+| Pinned base / head / tree | `2f0b56cdc3d66cbe4ce050cfa335678934fb1cb2` / `0b694461e5ee735dd969703eb7f4dac4a5fadcad` / `d54a571583469f2017f660df072178fdcef9b8c6` |
+| Contract | `GATE_B_REMAINING_SEVEN_DB_SUITES.md` |
+
+| Suite | File | Plan | SHA-256 |
+|---|---|---:|---|
+| `GRANT_RLS_ROLE_MATRIX` | `supabase/tests/grant_rls_role_matrix.test.sql` | 40 | `ca776dafddd187b4d00b6ee460ea2786017135ef596c8c60d2246f2cf1914e81` |
+| `DATA_API_MATRIX` | `supabase/tests/data_api_matrix.test.sql` | 20 | `aba6bbea9e86a9d180870f4adb747c5558ab500ca49a429bcf535c4038bfba6b` |
+| `STORAGE_MATRIX` | `supabase/tests/storage_matrix.test.sql` | 59 | `3bf55b5ca00b7450e51b9cee922b51c1ff16bd8c3be2bf1670b8c1fd8fcb96d5` |
+| `FUNCTION_TRIGGER_MATRIX` | `supabase/tests/function_trigger_matrix.test.sql` | 19 | `23da5f34cfc93412dea056fcaee7732038ec4c5f63958b1a26702cc6456a166f` |
+| `BUSINESS_DOMAIN_MATRIX` | `supabase/tests/business_domain_matrix.test.sql` | 30 | `fa17f0369bead04f8612a46c4c8660c4107ea8d54e937c9de02647bbcfb3a13c` |
+| `CONCURRENCY_MATRIX` | `supabase/tests/concurrency_matrix.test.sql` | 32 | `f159921f50fe316e7101baba699a8193eec2a5105e2b623e5077fc5200daeeb2` |
+| `FROZEN_OPERATIONAL_MATRIX` | `supabase/tests/frozen_operational_matrix.test.sql` | 22 | `fcb25f4b8e07821477ce8140747f1188e9870b2f2b7e00fd276c1636f8c7670b` |
+| **Total** | | **222** | |
+
+This candidate is separate from, and does not replace or close, the R12B/R12C
+catalog-manifest ledger in Section 14 (`plan76`). No assertion across the seven
+suites was executed while producing this candidate; `CONCURRENCY_MATRIX` in
+particular can only be proven with a real two-`psql`-client
+separate-connection protocol run inside a later disposable runtime, never from
+a single pgTAP transaction. No
+Supabase/DB/Auth/Storage/LINE connection, migration replay/apply, test
+execution, stage, commit, push, Ready-state change, merge, or deployment
+occurred in producing this candidate.
+
+The preceding R12E attempt's protected-content access was aborted with zero
+changes and remains disclosed in PR #2 comment `5294569062`. This accepted
+candidate attempt restarted at the pinned head and used the protected
+identities as metadata-only inputs.
+
+Current release impact: this seven-suite static candidate does not itself
+close Gate B. `GRANT_RLS_ROLE_MATRIX`, `DATA_API_MATRIX`, `STORAGE_MATRIX`,
+`FUNCTION_TRIGGER_MATRIX`, `BUSINESS_DOMAIN_MATRIX`, `CONCURRENCY_MATRIX`, and
+`FROZEN_OPERATIONAL_MATRIX` remain design/inventory evidence only until a
+separately authorized fresh disposable-runtime execution/repair gate proves
+them against a live local stack, including real Auth/PostgREST/Storage/OCR/
+LINE/cron/dashboard evidence still required per
+`GATE_B_REMAINING_SEVEN_DB_SUITES.md` Section 7. That runtime gate is not
+automatically authorized by this ledger entry. PR #2 remains `NOT_MERGE_READY`
+and Gates C–E remain open.
+
+## 16. R4Q-R12F-R2 failure and R12E-R2 six-path repair ledger
+
+| Field | Immutable value |
+|---|---|
+| Date | 2026-08-15 |
+| Pinned head / tree | `0b694461e5ee735dd969703eb7f4dac4a5fadcad` / `d54a571583469f2017f660df072178fdcef9b8c6` |
+| Runtime suffix / project | `r12f-r2.vOvvhI` / `r12fr2vovvhi` (burned) |
+| Replay | Exact current 100 migrations; PASS |
+| pgTAP | `Files=8`, `Tests=274`, `Result: FAIL`; six files PASS, two files FAIL |
+| Stage 3 | NOT_RUN |
+| Cleanup | Matching containers `0`; matching volumes `0` |
+| Repair status | `STATIC_UNCOMMITTED_R12E_R2_REPAIR_CANDIDATE_NOT_RUNTIME_PROOF` |
+| Current candidate boundary | Exactly 11 paths; index empty; no commit or push |
+
+R12F-R2 failed closed. `grant_rls_role_matrix.test.sql` stopped after
+assertion 16 because the policy-role diagnostic referenced `x.rolname`
+instead of `x_role.rolname`. `data_api_matrix.test.sql` ran 20 assertions and
+failed 11, 14, 16, and 19. Real Auth/PostgREST/Storage and genuine two-
+connection concurrency were not run, and the failed disposable runtime was
+fully stopped and removed without retry.
+
+The owner then approved exactly six repair paths:
+
+1. `supabase/tests/grant_rls_role_matrix.test.sql`
+2. `supabase/tests/data_api_matrix.test.sql`
+3. `src/lib/release/readiness.ts`
+4. `docs/master_specification/GATE_B_REMAINING_SEVEN_DB_SUITES.md`
+5. `docs/master_specification/ENVIRONMENT_REMEDIATION_PLAN.md`
+6. `docs/master_specification/ENVIRONMENT_LEDGER.md`
+
+The repair removes the discarded call to nonexistent `public.version()`, so
+the current exact source inventory is 80 distinct `.from(...)` literals plus
+18 distinct `.rpc(...)` literals (98 total). It distinguishes Storage buckets
+from public relations, bounds the exact six protected-excluded literals,
+classifies the future dealer AI tables as feature-gated, models INSERT-only
+client paths by their actual required privilege, and keeps admin/service-role
+paths server-only. Protected migration and `ScreensPreview.tsx` contents were
+not read.
+
+| Artifact | Plan | SHA-256 after R12E-R2 |
+|---|---:|---|
+| `grant_rls_role_matrix.test.sql` | 40 | `f48f6ca7873434d420149a2ff6481c4a10eb94cf37a36fc98f98ac6f250d809c` |
+| `data_api_matrix.test.sql` | 20 | `251f307f7365e8fe39b667a4d1d08bcf3e2064b7e67adf2e327b316d2a82cd80` |
+| `storage_matrix.test.sql` | 59 | `ee25e39f5bf82177b4a8daaa976c9df9dedc275eb92d478a5fe29f60239ab7ce` |
+| `function_trigger_matrix.test.sql` | 19 | `23da5f34cfc93412dea056fcaee7732038ec4c5f63958b1a26702cc6456a166f` |
+| `business_domain_matrix.test.sql` | 30 | `fa17f0369bead04f8612a46c4c8660c4107ea8d54e937c9de02647bbcfb3a13c` |
+| `concurrency_matrix.test.sql` | 32 | `6584c9b2010fd6c7485ad3c42f8bd77c582cc1230fac7dbf262e3fed06b7b322` |
+| `frozen_operational_matrix.test.sql` | 22 | `fcb25f4b8e07821477ce8140747f1188e9870b2f2b7e00fd276c1636f8c7670b` |
+| `src/lib/release/readiness.ts` | n/a | `d411f40a64eb52b5b8d0b08344ea439066a5bfeba769571808c208d5acd15181` |
+
+The seven-suite total remains `plan(222)` and the full eight-file target
+remains `plan(298)`. This entry is static repair evidence only. No DB or test
+execution, stage, commit, push, Ready transition, merge, apply, or deployment
+is authorized or claimed by R12E-R2.
+
+## 17. R4Q-R12F-R3/R4 runtime failures and R12E-R3 four-path repair ledger
+
+| Field | Immutable value |
+|---|---|
+| Date | 2026-08-15 |
+| Pinned head / tree | `0b694461e5ee735dd969703eb7f4dac4a5fadcad` / `d54a571583469f2017f660df072178fdcef9b8c6` |
+| R12F-R3 suffix / project | `r12f-r3.H0dTWK` / `r12fr3h0dtwk` (burned) |
+| R12F-R3 result | 100 applications logged; stack startup failed on analytics Vector/Colima socket; pgTAP NOT_RUN |
+| R12F-R4 suffix / project | `r12f-r4.yjgGlc` / `r12fr4yjgglc` (burned) |
+| R12F-R4 replay | Exact 100 versions; expected/actual ordered SHA-256 `1ad956827b7ec8f24d9a6d2006dc519b7db9117b8b01a78847634c6884629a8e` |
+| R12F-R4 pgTAP | `Files=8`, `Tests=298`, `Result: FAIL`; seven files PASS; grant/RLS assertions 19, 24, 25, 27, 37 failed |
+| Stage 3 | NOT_RUN |
+| Cleanup | Both runs: matching containers `0`; matching volumes `0` |
+| Repair status | `STATIC_UNCOMMITTED_R12E_R3_FOUR_PATH_REPAIR_CANDIDATE_NOT_RUNTIME_PROOF` |
+
+The exact four modified paths are:
+
+1. `supabase/tests/grant_rls_role_matrix.test.sql`
+2. `docs/master_specification/GATE_B_REMAINING_SEVEN_DB_SUITES.md`
+3. `docs/master_specification/ENVIRONMENT_REMEDIATION_PLAN.md`
+4. `docs/master_specification/ENVIRONMENT_LEDGER.md`
+
+The grant/RLS test remains `plan(40)`. Assertion 19 now proves exact full-set
+equality for the eight intentional service-role-only RLS-on/no-policy tables.
+Assertion 24 proves that platform direct-SQL Storage DELETE is rejected and
+leaves positive DELETE to real Storage API evidence. Assertions 25 and 27
+prove own visibility plus zero foreign visibility without a brittle cumulative
+fixture count. Assertion 37 proves anon visibility is zero while assertion 38
+continues to prove anon INSERT raises. The resulting test SHA-256 is
+`2269707f6cb083bfa03962bc96e89d9e2ba351c5cc9b8b7af6cfb37d349f9f1a`.
+
+No migration, grant, RLS policy, application source, dependency, or config is
+changed. Protected contents were not accessed. No runtime retry, stage,
+commit, push, Ready transition, merge, apply, or deployment is authorized or
+claimed by R12E-R3.
+
+## 18. R4Q-R12F-R5 runtime stop and R12E-R4 five-path repair ledger
+
+| Field | Immutable value |
+|---|---|
+| Date | 2026-08-15 |
+| Pinned head / tree | `0b694461e5ee735dd969703eb7f4dac4a5fadcad` / `d54a571583469f2017f660df072178fdcef9b8c6` |
+| Runtime suffix / project | `r12f-r5.UjmwCs` / `r12fr5ujmwcs` (burned) |
+| Replay | Exact 100-version ledger; expected/actual SHA-256 `1ad956827b7ec8f24d9a6d2006dc519b7db9117b8b01a78847634c6884629a8e` |
+| pgTAP | `Files=8`, `Tests=298`, `Result=PASS` |
+| Real request-scope proof | local Auth-issued JWT + PostgREST + Storage API `56/56 PASS` |
+| External seven-family concurrency | `NOT_RUN` |
+| Cleanup | matching containers `0`; matching volumes `0` |
+| Result comment | PR #2 comment `5299362040` |
+| Repair status | `STATIC_UNCOMMITTED_R12E_R4_FIVE_PATH_REPAIR_CANDIDATE_NOT_RUNTIME_PROOF` |
+
+R12F-R5 stopped before external concurrency because the queue-family contract
+expected `sending`, a value excluded by the exact
+`line_notification_queue_status_check`. The accepted lifecycle is
+`scheduled -> processing -> sent|failed|cancelled`. No same-run correction or
+retry occurred.
+
+The exact R12E-R4 repair paths are:
+
+1. `supabase/tests/concurrency_matrix.test.sql` (modify);
+2. `supabase/tests/runtime/concurrency_matrix.mjs` (add);
+3. `docs/master_specification/GATE_B_REMAINING_SEVEN_DB_SUITES.md` (modify);
+4. `docs/master_specification/ENVIRONMENT_REMEDIATION_PLAN.md` (modify); and
+5. `docs/master_specification/ENVIRONMENT_LEDGER.md` (modify).
+
+| Artifact | Static contract | SHA-256 after R12E-R4 |
+|---|---:|---|
+| `concurrency_matrix.test.sql` | `plan(32)` | `0ff5d845a0cb14c332e70b1a4f315035293ad1fc6c0f2ebd7906dd9fd17b2423` |
+| `runtime/concurrency_matrix.mjs` | 7 families / 2 `psql` clients / 1 attempt / 0 retries | `b7602b2254a1c57299cfb0b6eaf4c93796098ee265779e4deb0e233e1ed073ed` |
+
+The SQL candidate now uses exact catalog-valid `processing|sent` queue
+invariants. The external candidate is loopback-only, requires explicit
+disposable confirmation, proves distinct backend PIDs through a third
+connection, records both results/SQLSTATEs/timestamps, and checks all seven
+post-collision invariants. It has no retry path.
+
+R12E-R4 performs only static syntax/scope/hash verification. It makes no
+runtime-PASS claim and authorizes no DB/Supabase/Auth/Storage/LINE connection,
+migration replay/apply, test execution, stage, commit, push, Ready transition,
+merge, or deployment. The candidate remains uncommitted and PR #2 remains
+`NOT_MERGE_READY`.

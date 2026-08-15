@@ -682,8 +682,8 @@ suites. Each executable suite must declare a fixed, non-zero assertion plan.
    actors. It must prove positive and negative CRUD behavior with real local
    Auth tokens for two tenants. `service_role` is server-only and is never used
    as dealer-facing authorization proof.
-3. `DATA_API_MATRIX`: classify all 80 recorded table/query references and all
-   19 RPC references as `CLIENT_EXPOSED`, `SERVER_ONLY`,
+3. `DATA_API_MATRIX`: classify all 80 recorded `.from(...)` references and all
+   18 RPC references as `CLIENT_EXPOSED`, `SERVER_ONLY`,
    `FEATURE_GATED_ABSENT`, or `NO_LONGER_ACTIVE`. Zero references may remain
    unclassified. Intended table and RPC behavior must be proved through real
    local request paths; anon OpenAPI schema enumeration is not exposure proof.
@@ -766,9 +766,9 @@ The contract follows current Supabase behavior:
 A disposable runtime is accepted only when all of these conditions hold in
 order:
 
-1. the exact 99 migrations replay successfully and the local ledger contains
-   exactly those 99 ordered entries;
-2. the exact current three pgTAP files run once, report `Files=3`, `Tests=293`,
+1. the exact current 100 migrations replay successfully and the local ledger
+   contains exactly those 100 ordered entries;
+2. the exact current eight pgTAP files run once, report `Files=8`, `Tests=298`,
    every assertion successful, and `Result: PASS`;
 3. every broader suite has a fixed non-zero plan and passes without skip,
    notests, or unclassified evidence;
@@ -778,7 +778,7 @@ order:
    RLS on every exposed relation, ownership plus `WITH CHECK` for authorized
    UPDATE, and no unjustified PUBLIC EXECUTE;
 6. real two-tenant requests prove no cross-tenant disclosure or mutation;
-7. every one of the 80 table/query and 19 RPC references is classified and its
+7. every one of the 80 `.from(...)` and 18 RPC references is classified and its
    intended Data API behavior is proved;
 8. the Storage catalog contains exactly the five buckets in Section 14.3,
    `completion-reports` is absent, and every required operation matrix passes;
@@ -793,7 +793,7 @@ order:
 The exact three excluded migrations remain those in Section 13.1. The protected
 LINE migration stays metadata-only; its content is never a test-design or
 runtime input. The deferred onboarding functions must be absent after the
-current 99-path replay, and `GYEON_PARTNER_ONBOARDING_ENABLED` must remain unset
+current 100-path replay, and `GYEON_PARTNER_ONBOARDING_ENABLED` must remain unset
 or false so all related entry points fail closed. References to 98 paths are
 historical only.
 
@@ -981,7 +981,7 @@ The mandatory release sequence is:
    scope, without altering source, tests, or migrations;
 2. rerun incremental Gate A repository-hygiene review from accepted commit
    `2da69c7261a8e884ee1626c1e397b50bb387f88c` through the current head;
-3. complete Gate B's eight suites, current 99/3/293 baseline, and the three
+3. complete Gate B's eight suites, current 100/8/298 candidate baseline, and the three
    application-source blockers in Section 15.4;
 4. complete Gate C current-head security/destructive review, including real
    request-scope authorization, hard-delete/access-cut behavior, admin
@@ -1021,3 +1021,166 @@ It must fail closed on replay error, SQL load error, plan mismatch, zero tests,
 or any failed assertion. It must not connect to a shared, linked, preview,
 Staging, or Production project. Runtime verification, repair, commit, push,
 Ready, merge, and deployment remain separate owner gates.
+
+## 18. R4Q-R12E remaining seven Gate B DB-suite candidate
+
+| Field | Value |
+|---|---|
+| Candidate date | 2026-08-15 |
+| Status | `STATIC_UNCOMMITTED_CANDIDATE_NOT_RUNTIME_PROOF` |
+| Pinned base HEAD | `2f0b56cdc3d66cbe4ce050cfa335678934fb1cb2` |
+| Pinned candidate head / tree | `0b694461e5ee735dd969703eb7f4dac4a5fadcad` / `d54a571583469f2017f660df072178fdcef9b8c6` |
+| Contract | `GATE_B_REMAINING_SEVEN_DB_SUITES.md` |
+| Combined plan | `222` |
+| Database or test execution | None |
+
+This candidate records the remaining seven of the eight Section 14.2 suites
+(`GRANT_RLS_ROLE_MATRIX` through `FROZEN_OPERATIONAL_MATRIX`; `CATALOG_MANIFEST`
+remains the separate R12C/R12B `plan76` artifact in `CATALOG_MANIFEST.md` and
+is not re-described here). The exact ten-path R12E allowlist, per-suite plan,
+SHA-256, static-check summary, and runtime-only gap are recorded in
+`GATE_B_REMAINING_SEVEN_DB_SUITES.md`. The four protected metadata-only
+identities (the three excluded migrations plus `ScreensPreview.tsx`) were not
+accessed during this accepted-candidate attempt; only their recorded
+path/mode/blob/absent-status metadata was used where applicable. The preceding
+zero-change protected-access abort remains disclosed in PR #2 comment
+`5294569062`.
+
+This candidate did not connect to any Supabase, DB, Auth, Storage, or LINE
+project; did not replay or apply any migration; did not execute any test; and
+did not stage, commit, push, change Ready state, merge, or deploy. It does not
+itself close Gate B — the `CATALOG_MANIFEST` static candidate remains a
+separate `plan76` artifact, and this seven-suite `plan222` candidate does not
+close Gate B on its own either. The next gate is a separately authorized fresh
+disposable-runtime execution/repair gate that materializes the accepted
+migration manifest and runs all ratified pgTAP suites, including the external
+two-`psql` concurrency protocol described in
+`GATE_B_REMAINING_SEVEN_DB_SUITES.md` Sections 4.6 and 6; that gate is not
+automatically authorized by this section.
+
+## 19. R4Q-R12F-R2 failure and R12E-R2 truthful repair
+
+| Field | Value |
+|---|---|
+| Runtime date | 2026-08-15 |
+| Runtime suffix / project | `r12f-r2.vOvvhI` / `r12fr2vovvhi` (burned) |
+| Replay | Exact current 100 migrations; PASS |
+| pgTAP | `Files=8`, `Tests=274`, `Result: FAIL`; six files PASS, two files FAIL |
+| Stage 3 | NOT_RUN |
+| Cleanup | Matching containers `0`; matching volumes `0` |
+| Result evidence | PR #2 `R4Q-R12F-R2_FRESH_DISPOSABLE_EIGHT_SUITE_RUNTIME` comment |
+| Repair status | `STATIC_UNCOMMITTED_R12E_R2_REPAIR_CANDIDATE_NOT_RUNTIME_PROOF` |
+
+The grant/RLS file stopped after assertion 16 because a diagnostic formatted
+`x.rolname` instead of the actual `x_role.rolname`. The Data API file completed
+20 assertions but failed 11, 14, 16, and 19. The failure exposed four distinct
+modeling defects: Storage bucket literals were treated as public relations;
+the safe runtime was required to contain objects from physically absent
+protected migrations; future AI tables and service-role call paths were
+classified as live client paths; and INSERT-only paths were incorrectly
+required to hold SELECT. It also exposed one source defect: the release-
+readiness code called nonexistent `public.version()` and discarded both the
+data and error.
+
+The owner-approved six-path R12E-R2 repair corrects those facts without
+weakening the matrix. It removes the obsolete source call, so the exact current
+source inventory is 80 distinct `.from(...)` literals plus 18 distinct
+`.rpc(...)` literals (98 total). `documents` and `pdf` are explicitly Storage
+buckets. Six protected-excluded table/RPC literals are represented as an exact
+set while their migration contents remain unread. Future dealer AI tables are
+feature-gated. Client table posture uses the exact source-required SELECT or
+INSERT operation. `estimate_shares` and `save_estimate_from_wizard` remain
+server/service-role paths.
+
+This repair performs no database, Supabase, Auth, PostgREST, Storage, LINE, or
+external-service operation and runs no test. It does not authorize a retry,
+stage, commit, push, Ready transition, merge, apply, or deployment. A new
+fresh disposable runtime is a later explicit owner gate.
+
+## 20. R4Q-R12F-R3/R4 failures and R12E-R3 truthful grant-matrix repair
+
+| Field | R12F-R3 | R12F-R4 |
+|---|---|---|
+| Runtime suffix / project | `r12f-r3.H0dTWK` / `r12fr3h0dtwk` (burned) | `r12f-r4.yjgGlc` / `r12fr4yjgglc` (burned) |
+| Replay/start | 100 applications logged; stack startup failed | Exact 100-version ledger PASS |
+| pgTAP | NOT_RUN | `Files=8`, `Tests=298`, `Result: FAIL`; 7/8 files PASS, grant/RLS 5/40 failed |
+| Stage 3 | NOT_RUN | NOT_RUN |
+| Cleanup | Matching containers `0`; matching volumes `0` | Matching containers `0`; matching volumes `0` |
+
+R12F-R3 failed before pgTAP because the fresh Supabase CLI config enabled
+analytics and its Vector container could not bind-mount the Colima Docker
+socket. The run was stopped without retry. R12F-R4 disabled analytics in the
+disposable config before first start, without changing or restarting Colima,
+then proved the exact 100-entry ordered migration ledger.
+
+R12F-R4 exposed five test-contract errors in
+`grant_rls_role_matrix.test.sql`, not an application or migration defect. The
+source migrations intentionally define exactly eight RLS-enabled tables with
+no client policy because they are service-role-only. Direct SQL deletion from
+`storage.objects` is intentionally blocked by `storage.protect_delete()` and
+must use the Storage API. Successful INSERT fixtures accumulate inside the
+test transaction, so own visibility cannot remain exactly one row. Anon SELECT
+denial is represented by zero visible rows rather than an exception.
+
+The owner-approved R12E-R3 repair is limited to the grant/RLS test and three
+evidence documents. It keeps `plan(40)`, replaces assertion 19 with exact-set
+equality for the eight intentional service-role-only tables, records the
+direct-SQL delete guard at assertion 24, makes assertions 25/27 require own
+visibility plus zero foreign visibility, and makes assertion 37 require zero
+anon-visible rows. Positive DELETE remains a later real Storage API proof. No
+grant, policy, RLS, migration, dependency, or application source is changed.
+This is an uncommitted static repair candidate and is not runtime PASS.
+
+## 21. R4Q-R12F-R5 stop and R12E-R4 external-concurrency repair plan
+
+R12F-R5 used fresh disposable suffix/project `r12f-r5.UjmwCs` /
+`r12fr5ujmwcs`. It proved the exact 100-version ordered migration ledger,
+passed the eight-file pgTAP package (`Files=8`, `Tests=298`, `Result=PASS`),
+and passed 56 real local Auth-issued JWT/PostgREST/Storage API assertions.
+Before the seven-family external concurrency stage, the source contract was
+found to require queue state `sending`, while the exact table constraint
+permits only `scheduled`, `processing`, `sent`, `failed`, and `cancelled`.
+The run stopped fail-closed; external concurrency remained `NOT_RUN`; cleanup
+proved zero matching containers and volumes.
+
+The owner-approved R12E-R4 correction is exactly five paths:
+
+1. modify `supabase/tests/concurrency_matrix.test.sql`;
+2. add `supabase/tests/runtime/concurrency_matrix.mjs`;
+3. modify `docs/master_specification/GATE_B_REMAINING_SEVEN_DB_SUITES.md`;
+4. modify this plan; and
+5. modify `docs/master_specification/ENVIRONMENT_LEDGER.md`.
+
+The queue family now requires a single atomic
+`scheduled -> processing` claim and accepts the final invariant state
+`processing|sent`. The losing worker must affect zero rows. No database object,
+migration, RLS policy, grant, queue implementation, or application source is
+changed.
+
+The external harness is a plain Node/`psql` orchestrator. It is allowed only
+when `R12F_DISPOSABLE_CONFIRM=R12F_DISPOSABLE_LOCAL_ONLY`, rejects any database
+URL whose host is not loopback, and aborts if its one-use fixture namespace
+already exists. For each of the seven families it starts exactly two distinct
+OS `psql` processes, proves their separate backend PIDs through a third
+connection, releases both collision statements after a fixed barrier, captures
+each result/SQLSTATE/submit/completion time, and executes one invariant query
+through the third connection. It has no retry branch.
+
+The seven representative collision proofs are fixed as follows:
+
+1. identical estimate-save idempotency key -> one canonical estimate and one
+   exact replay;
+2. identical document-sequence key -> numbers `1` and `2`, final counter `2`;
+3. identical payment idempotency key -> one canonical payment row;
+4. identical monthly-statement scope -> one canonical draft statement;
+5. simultaneous catalog review -> one lifecycle row and one reviewed revision;
+6. simultaneous LINE queue claim -> affected-row outcomes `1` and `0`, final
+   state `processing`; and
+7. stock deltas `7` and `11` -> two receipt ledgers and final quantity `18`.
+
+R12E-R4 is a static, uncommitted candidate only. Allowed checks are source
+inspection, `node --check`, literal-family/count checks, path/hash verification,
+and `git diff --check`. It does not authorize Supabase/DB/Auth/Storage/LINE
+connection, migration replay/apply, pgTAP, harness execution, stage, commit,
+push, Ready transition, merge, or deployment. A new fresh disposable R12F run
+is a later explicit owner gate and must execute each stage once without retry.

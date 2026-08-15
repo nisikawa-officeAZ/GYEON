@@ -418,31 +418,54 @@ function DeleteModal({
   );
 }
 
-// ── Purge (完全削除) Modal — single confirmation, irreversible ─────────────────
+// ── Purge (完全削除) Modal — typed confirmation, irreversible ──────────────────
+
+const PURGE_CONFIRMATION_LITERAL = "DELETE";
 
 function PurgeModal({
   dealer, onClose, onPurge, isPending,
 }: { dealer: DealerAdminView; onClose: () => void; onPurge: () => void; isPending: boolean }) {
+  const [confirmation, setConfirmation] = useState("");
+
+  const handleClose = () => {
+    setConfirmation("");
+    onClose();
+  };
+
+  const canPurge = confirmation === PURGE_CONFIRMATION_LITERAL && !isPending;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="bg-[#0f172a] border border-red-800/60 rounded-2xl w-full max-w-md mx-4 p-6 space-y-4 shadow-2xl">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-red-400">完全削除</h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl">✕</button>
+          <button onClick={handleClose} className="text-slate-500 hover:text-slate-300 text-xl">✕</button>
         </div>
         <p className="text-sm text-slate-400">
           <span className="font-medium text-slate-200">{dealer.name ?? "（名称未設定）"}</span>
         </p>
         <p className="text-sm text-red-300">
-          このディーラーを完全削除します。復元できません。実行しますか？
+          このディーラーを完全削除します。この操作は取り消せません。関連するディーラーデータに連鎖して削除が及ぶ場合があり、オーナーのAuthアカウントも削除される可能性があります。
         </p>
+        <div className="space-y-1.5">
+          <label className="text-xs text-slate-500">
+            確認のため <span className="font-mono text-red-300">{PURGE_CONFIRMATION_LITERAL}</span> と入力してください
+          </label>
+          <input
+            type="text"
+            value={confirmation}
+            onChange={(e) => setConfirmation(e.target.value)}
+            placeholder={PURGE_CONFIRMATION_LITERAL}
+            className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-600 font-mono focus:outline-none focus:border-red-600"
+          />
+        </div>
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors">
+          <button onClick={handleClose} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors">
             キャンセル
           </button>
           <button
             onClick={onPurge}
-            disabled={isPending}
+            disabled={!canPurge}
             className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
           >
             完全削除

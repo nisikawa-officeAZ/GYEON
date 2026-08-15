@@ -24,15 +24,17 @@
 -- Mechanism: DIRECT fixture INSERT. `wiz_upsert_catalog_item` is unusable here —
 -- setup.sh runs this file through psql over a direct libpq connection, so
 -- auth.uid() is NULL and the RPC raises WIZ_UNAUTHENTICATED. Forging claims or
--- roles is forbidden, so the item/rank/category rows are written directly and the
--- authoritative invalidation point `wiz_bump_dealer_revision` is invoked exactly
--- ONCE afterwards. A dealer-scope catalog INSERT triggers no automatic bump
--- (108 §5 acts only on global rows; the child tables carry no bump trigger).
+-- roles is forbidden, so the item/rank/category rows are written directly. After
+-- both fixtures are complete, the actor's explicit maintenance offering is inserted;
+-- the dealer-service-offerings migration §7 trigger invokes the authoritative invalidation point
+-- `wiz_bump_dealer_revision` exactly ONCE. Dealer-scope catalog INSERTs themselves
+-- trigger no automatic bump (108 §5 acts only on global rows; the child tables carry
+-- no bump trigger).
 --
--- ORDERING IS CONTRACTUAL: the catalog fixture and its bump land BEFORE the
--- lifecycle is activated, so the reviewed revision provably covers the catalog it
--- certifies. Activating first would still satisfy every runtime check — dealer
--- rows do not bump — which is precisely why the ordering, not a test, is the guard.
+-- ORDERING IS CONTRACTUAL: the catalog fixtures and offering-trigger bump land BEFORE the
+-- lifecycle is activated, so the reviewed revision provably covers both the catalog
+-- and the offering it certifies. Activating first would be invalidated by the offering
+-- trigger, which is precisely why the ordering, not a later repair, is the guard.
 --
 -- All catalog INSERTs are plain: no ON CONFLICT, no upsert, no DO NOTHING, so a
 -- duplicate identity raises rather than silently degrading to a no-op. The
@@ -85,14 +87,14 @@ $b7_seed_lifecycle_init$;
 DO $b7_seed_film_precond$
 BEGIN
   -- Exactly one (gyeon, film_type) kind policy, permitting exactly
-  -- {detailer, certified} and supporting categories.
+  -- {shop, detailer, ppf_installer, certified} and supporting categories.
   IF (SELECT count(*) FROM public.wizard_kind_policy
         WHERE product_mode = 'gyeon'
           AND kind = 'film_type'
           AND supports_categories = true
-          AND cardinality(permitted_ranks) = 2
-          AND permitted_ranks @> ARRAY['detailer','certified']::text[]
-          AND permitted_ranks <@ ARRAY['detailer','certified']::text[]) <> 1
+          AND cardinality(permitted_ranks) = 4
+          AND permitted_ranks @> ARRAY['shop','detailer','ppf_installer','certified']::text[]
+          AND permitted_ranks <@ ARRAY['shop','detailer','ppf_installer','certified']::text[]) <> 1
      OR (SELECT count(*) FROM public.wizard_kind_policy
         WHERE product_mode = 'gyeon' AND kind = 'film_type') <> 1 THEN
     RAISE EXCEPTION 'SEED_PRECOND:film-kind-policy';
@@ -111,13 +113,14 @@ BEGIN
     RAISE EXCEPTION 'SEED_PRECOND:film-ownership-policy';
   END IF;
 
-  -- The window category is permitted for EXACTLY detailer and certified under
-  -- gyeon — no missing pair, and no additional rank silently widening it.
+  -- The window category is permitted for EXACTLY shop, detailer,
+  -- ppf_installer, and certified under gyeon — no missing rank, and no
+  -- additional rank silently widening it.
   IF (SELECT count(*) FROM public.wizard_rank_category_policy
-        WHERE product_mode = 'gyeon' AND category_id = 'window') <> 2
+        WHERE product_mode = 'gyeon' AND category_id = 'window') <> 4
      OR (SELECT count(*) FROM public.wizard_rank_category_policy
         WHERE product_mode = 'gyeon' AND category_id = 'window'
-          AND rank IN ('detailer','certified')) <> 2 THEN
+          AND rank IN ('shop','detailer','ppf_installer','certified')) <> 4 THEN
     RAISE EXCEPTION 'SEED_PRECOND:film-rank-category-policy';
   END IF;
 
@@ -282,17 +285,13 @@ SELECT 'b7400000-0000-4000-8000-0000000000a2'::uuid, r.rank
 INSERT INTO public.wizard_catalog_item_categories (catalog_item_id, category_id)
   VALUES ('b7400000-0000-4000-8000-0000000000a2', 'maintenance');
 
--- ── The single authoritative revision bump for this catalog mutation ────────
--- Invoked EXACTLY ONCE, after BOTH fixtures are complete. Film and maintenance
--- are one atomic bootstrap catalog snapshot, not two logical changes: migration
--- 106 §D likewise provisions entire dealer catalogs and bumps zero times, and
--- 108 §1 defines one bump per atomic mutation. Two bumps would assert a second
--- change that never happened.
-DO $b7_seed_film_bump$
-BEGIN
-  PERFORM public.wiz_bump_dealer_revision('b7400000-0000-4000-8000-0000000000d1'::uuid);
-END
-$b7_seed_film_bump$;
+-- ── Actor-only maintenance offering + the single authoritative revision bump ─
+-- Absence means OFF. This one explicit actor row makes the Step-3 maintenance
+-- selection visible in Step 4. The dealer-service-offerings migration §7 INSERT trigger performs the
+-- ONE required revision bump after both catalog fixtures are complete; there is
+-- deliberately no second manual bump here. The foreign sentinel receives no row.
+INSERT INTO public.dealer_service_offerings (dealer_id, family, enabled)
+VALUES ('b7400000-0000-4000-8000-0000000000d1', 'maintenance', true);
 
 -- ── Precondition: the bump produced exactly the expected lifecycle state ────
 -- wiz_bump_dealer_revision increments the current revision and forces the row back
@@ -310,7 +309,7 @@ BEGIN
           AND last_reviewed_configuration_revision IS NULL
           AND last_reviewed_at IS NULL
           AND last_reviewed_by IS NULL) <> 1 THEN
-    RAISE EXCEPTION 'SEED_PRECOND:lifecycle-post-film-bump';
+    RAISE EXCEPTION 'SEED_PRECOND:lifecycle-post-offering-bump';
   END IF;
 END
 $b7_seed_lifecycle_post_bump$;
@@ -401,6 +400,21 @@ BEGIN
     RAISE EXCEPTION 'SEED_POSTCOND:foreign-linkage';
   END IF;
 
+  -- The actor opted into exactly one managed family, maintenance, and the foreign
+  -- sentinel stayed at the migration-defined default OFF (absence of a row).
+  IF (SELECT count(*) FROM public.dealer_service_offerings
+        WHERE dealer_id = 'b7400000-0000-4000-8000-0000000000d1') <> 1
+     OR (SELECT count(*) FROM public.dealer_service_offerings
+        WHERE dealer_id = 'b7400000-0000-4000-8000-0000000000d1'
+          AND family = 'maintenance' AND enabled = true) <> 1 THEN
+    RAISE EXCEPTION 'SEED_POSTCOND:actor-maintenance-offering';
+  END IF;
+
+  IF (SELECT count(*) FROM public.dealer_service_offerings
+        WHERE dealer_id = 'b7400000-0000-4000-8000-0000000000d2') <> 0 THEN
+    RAISE EXCEPTION 'SEED_POSTCOND:foreign-service-offerings';
+  END IF;
+
   IF (SELECT count(*) FROM public.dealer_wizard_catalog_lifecycle
         WHERE dealer_id = 'b7400000-0000-4000-8000-0000000000d1'
           AND state = 'CATALOG_ACTIVE'
@@ -462,7 +476,8 @@ BEGIN
   -- The actor's dealer-owned catalog is EXACTLY these two items and nothing
   -- else: the film_type fixture (…a1) and the maintenance_menu fixture (…a2).
   -- Migration 106's backfill contributes nothing on a fresh database because the
-  -- seed leaves dealer_settings at column defaults.
+  -- seed leaves dealer_settings at column defaults; the offering migration's compatibility
+  -- backfill ran before these disposable catalog fixtures were inserted.
   IF (SELECT count(*) FROM public.wizard_catalog_items
         WHERE owner_scope = 'dealer'
           AND dealer_id = 'b7400000-0000-4000-8000-0000000000d1') <> 2 THEN
@@ -498,12 +513,13 @@ BEGIN
     RAISE EXCEPTION 'SEED_POSTCOND:actor-film-identity';
   END IF;
 
-  -- Exactly two rank rows, and the set is exactly {detailer, certified}.
+  -- Exactly four rank rows, and the set is exactly {shop, detailer,
+  -- ppf_installer, certified}.
   IF (SELECT count(*) FROM public.wizard_catalog_item_ranks
-        WHERE catalog_item_id = 'b7400000-0000-4000-8000-0000000000a1') <> 2
+        WHERE catalog_item_id = 'b7400000-0000-4000-8000-0000000000a1') <> 4
      OR (SELECT count(*) FROM public.wizard_catalog_item_ranks
         WHERE catalog_item_id = 'b7400000-0000-4000-8000-0000000000a1'
-          AND rank IN ('detailer','certified')) <> 2 THEN
+          AND rank IN ('shop','detailer','ppf_installer','certified')) <> 4 THEN
     RAISE EXCEPTION 'SEED_POSTCOND:actor-film-ranks';
   END IF;
 
