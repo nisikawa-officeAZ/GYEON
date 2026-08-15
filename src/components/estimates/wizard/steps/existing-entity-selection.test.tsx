@@ -16,7 +16,7 @@ import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
-  resolvePreselection, preselectionStorePatch, selectableCustomers,
+  resolvePreselection, preselectionStorePatch, initialPreselectionStorePatch, selectableCustomers,
   selectableVehiclesForCustomer, existingVehicleSurvives,
   customerIsSelectable, vehicleIsSelectable,
   effectiveExistingCustomer, effectiveExistingVehicle,
@@ -28,7 +28,7 @@ import type { EstimateWizardApi } from "../useEstimateWizard";
 import type { WizardStore } from "../wizard-types";
 import type {
   WizardExistingCustomerReference, WizardExistingVehicleReference,
-  WizardScreenConfiguration,
+  WizardScreenConfiguration, WizardReservationPrefill,
 } from "../contract/wizard-runtime-inputs";
 import type { ProductionPricingConfiguration } from "../pricing/wizard-manual-pricing-config";
 import { makePricingCatalog } from "@/lib/pricing/pricing-catalog";
@@ -666,5 +666,124 @@ test("Step 1 and Step 2 never copy reference display fields into new-record stat
                        "plateNumber: selected.", "confirmedSize: selected."]) {
       assert.equal(code.includes(bad), false, `${file} copies reference data via ${bad}`);
     }
+  }
+});
+
+// ── 13. GDA-1R2-C3R — server reservation prefill (pure initial patch) ───────
+
+const prefill = (over: Partial<WizardReservationPrefill> = {}): WizardReservationPrefill => ({
+  customerId: null, vehicleId: null, category: null, notesInternal: null, ...over,
+});
+
+test("PREFILL: a valid server prefill yields ONE exact patch — ids, category, internal memo", () => {
+  assert.deepEqual(
+    initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, undefined,
+      prefill({ customerId: "c-1", vehicleId: "v-1", category: "maintenance", notesInternal: "予約からの引き継ぎメモ" })),
+    {
+      customer: { regMethod: "search", existingId: "c-1" },
+      vehicle: { existingId: "v-1" },
+      categories: ["maintenance"],
+      notesInternal: "予約からの引き継ぎメモ",
+    });
+});
+
+test("PREFILL: matching explicit query ids add no authority — the server-derived patch is identical", () => {
+  const p = prefill({ customerId: "c-1", vehicleId: "v-1", category: "maintenance", notesInternal: "予約メモ" });
+  assert.deepEqual(
+    initialPreselectionStorePatch(CUSTOMERS, VEHICLES, "c-1", "v-1", p),
+    initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, undefined, p));
+});
+
+test("PREFILL: a CONFLICTING customer query drops ALL defaults — category and memo included", () => {
+  const p = prefill({ customerId: "c-1", vehicleId: "v-1", category: "maintenance", notesInternal: "予約メモ" });
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, "c-2", "v-1", p), undefined);
+  // A non-null explicit id against a NULL server id is also a conflict.
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, "c-1", undefined,
+    prefill({ customerId: null, notesInternal: "予約メモ" })), undefined);
+});
+
+test("PREFILL: a CONFLICTING vehicle query drops ALL defaults", () => {
+  const p = prefill({ customerId: "c-1", vehicleId: "v-1", category: "maintenance", notesInternal: "予約メモ" });
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, "c-1", "v-2", p), undefined);
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, "v-1",
+    prefill({ customerId: "c-1", vehicleId: null, category: "maintenance" })), undefined);
+});
+
+test("PREFILL: an EMPTY explicit customer query is a conflict — the entire prefill is dropped", () => {
+  // page.scalar returns `?customer_id=` as "" — explicitly present, not absent.
+  const p = prefill({ customerId: "c-1", vehicleId: "v-1", category: "maintenance", notesInternal: "予約メモ" });
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, "", "v-1", p), undefined);
+  // "" also conflicts with a NULL server customer id: only undefined is absence.
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, "", undefined,
+    prefill({ customerId: null, notesInternal: "予約メモ" })), undefined);
+});
+
+test("PREFILL: an EMPTY explicit vehicle query is a conflict — the entire prefill is dropped", () => {
+  const p = prefill({ customerId: "c-1", vehicleId: "v-1", category: "maintenance", notesInternal: "予約メモ" });
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, "c-1", "", p), undefined);
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, "",
+    prefill({ customerId: "c-1", vehicleId: null, category: "maintenance" })), undefined);
+});
+
+test("PREFILL: an invalid, ambiguous or foreign server entity drops ALL defaults", () => {
+  const extras = { category: "maintenance", notesInternal: "予約メモ" } as const;
+  // Unknown / foreign-tenant customer — absent from the RLS-scoped array either way.
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, undefined,
+    prefill({ customerId: "c-999", ...extras })), undefined);
+  // Ambiguous customer id.
+  const dupeCustomers = [C1, { ...C1, displayName: "別の山田" }, C2] as const;
+  assert.equal(initialPreselectionStorePatch(dupeCustomers, VEHICLES, undefined, undefined,
+    prefill({ customerId: "c-1", ...extras })), undefined);
+  // A vehicle without its owner.
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, undefined,
+    prefill({ customerId: null, vehicleId: "v-1", ...extras })), undefined);
+  // An unknown vehicle under a valid customer — NO partial keep, unlike resolvePreselection.
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, undefined,
+    prefill({ customerId: "c-1", vehicleId: "v-999", ...extras })), undefined);
+  // A foreign-owned vehicle.
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, undefined,
+    prefill({ customerId: "c-1", vehicleId: "v-2", ...extras })), undefined);
+  // An ambiguous vehicle id.
+  const dupeVehicles = [V1, { ...V1, displayName: "別のクラウン" }, V2] as const;
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, dupeVehicles, undefined, undefined,
+    prefill({ customerId: "c-1", vehicleId: "v-1", ...extras })), undefined);
+});
+
+test("PREFILL: null ids are allowed — category and memo alone form the patch", () => {
+  assert.deepEqual(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, undefined,
+    prefill({ category: "maintenance", notesInternal: "予約メモ" })),
+    { categories: ["maintenance"], notesInternal: "予約メモ" });
+  assert.deepEqual(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, undefined,
+    prefill({ notesInternal: "予約メモ" })),
+    { notesInternal: "予約メモ" });
+  // An all-null prefill would produce an EMPTY patch → undefined, never {}.
+  assert.equal(initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, undefined, prefill()), undefined);
+});
+
+test("PREFILL absent: the existing onboarding behavior is preserved exactly", () => {
+  const cases = [
+    [undefined, undefined], ["c-1", "v-1"], ["c-1", undefined], ["c-1", "v-2"],
+    ["c-999", "v-1"], [undefined, "v-1"],
+  ] as const;
+  for (const [cid, vid] of cases) {
+    assert.deepEqual(
+      initialPreselectionStorePatch(CUSTOMERS, VEHICLES, cid, vid),
+      preselectionStorePatch(resolvePreselection(CUSTOMERS, VEHICLES, cid, vid)),
+      `(${String(cid)}, ${String(vid)})`);
+  }
+});
+
+test("PREFILL: the patch NEVER carries notesCustomer or service/config/display keys", () => {
+  const patch = initialPreselectionStorePatch(CUSTOMERS, VEHICLES, undefined, undefined,
+    prefill({ customerId: "c-1", vehicleId: "v-1", category: "maintenance", notesInternal: "予約メモ" }));
+  assert.ok(patch, "PRECONDITION: the full prefill produced a patch");
+  assert.deepEqual(Object.keys(patch).sort(), ["categories", "customer", "notesInternal", "vehicle"]);
+  assert.deepEqual(Object.keys(patch.customer!).sort(), ["existingId", "regMethod"]);
+  assert.deepEqual(Object.keys(patch.vehicle!), ["existingId"]);
+  const serialized = JSON.stringify(patch);
+  for (const forbidden of ["notesCustomer", "displayName", "phone", "plateNumber", "bodySize",
+                           "confirmedSize", "suggestedSize", "filmType", "windowAreas", "ppf",
+                           "washMenu", "roomMenu", "otherWork", "coupon", "discount", "options"]) {
+    assert.equal(serialized.includes(forbidden), false, `patch contains ${forbidden}`);
   }
 });

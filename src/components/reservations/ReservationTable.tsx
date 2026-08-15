@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import {
   ReservationDB,
   reservationDisplayNo,
@@ -15,6 +16,19 @@ interface Props {
   reservations: ReservationDB[];
   onEdit?: (r: ReservationDB) => void;
   onRefresh?: () => void;
+}
+
+export function shouldShowEstimateAction(status: ReservationDB["status"]): boolean {
+  return status === "pending" || status === "confirmed";
+}
+
+export function estimateCreateUrl(reservationId: string): string {
+  const params = new URLSearchParams({ reservation_id: reservationId });
+  return `/estimates/new?${params.toString()}`;
+}
+
+export function stopRowClick(e: { stopPropagation: () => void }): void {
+  e.stopPropagation();
 }
 
 function formatDate(date: string): string {
@@ -172,6 +186,15 @@ export default function ReservationTable({ reservations, onEdit, onRefresh }: Pr
                           >
                             施工指示作成
                           </button>
+                        )}
+                        {shouldShowEstimateAction(r.status) && (
+                          <Link
+                            href={estimateCreateUrl(r.id)}
+                            onClick={stopRowClick}
+                            className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white text-xs rounded transition-colors"
+                          >
+                            見積を作成
+                          </Link>
                         )}
                         {!["cancelled", "no_show", "completed"].includes(r.status) && (
                           <button

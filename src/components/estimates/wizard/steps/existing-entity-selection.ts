@@ -19,7 +19,9 @@
 import type {
   WizardExistingCustomerReference,
   WizardExistingVehicleReference,
+  WizardReservationPrefill,
 } from "../contract/wizard-runtime-inputs";
+import type { WizardStorePatch } from "../bridge/ew-ui1-to-draft";
 // The canonical registration-method union, re-exported by wizard-types as RegMethod.
 // Type-only, and never re-declared here: a second spelling of "new"|"ocr"|"search"
 // could drift from the draft contract that actually governs persistence mode.
@@ -145,6 +147,84 @@ export function preselectionStorePatch(
   if (resolved.customerId === null) return undefined;
   const base = { customer: { regMethod: "search" as const, existingId: resolved.customerId } };
   return resolved.vehicleId === null ? base : { ...base, vehicle: { existingId: resolved.vehicleId } };
+}
+
+/**
+ * An explicit query scalar disagrees with the server's id. ONLY `undefined` is
+ * absence: the page's query adapter returns an empty query value (`?customer_id=`)
+ * as `""`, so any string — including `""` — is an explicit claim, and it conflicts
+ * unless exactly equal to the server's string id. A string never equals a null
+ * server id, so it always conflicts with one.
+ */
+function explicitDisagrees(explicit: string | undefined, serverId: string | null): boolean {
+  if (explicit === undefined) return false;
+  return explicit !== serverId;
+}
+
+/**
+ * GDA-1R2-C3R — the initial store patch, optionally seeded by a server-verified
+ * reservation prefill.
+ *
+ * ── WHY THE QUERY IDS CARRY NO AUTHORITY UNDER A PREFILL ────────────────────
+ * When `serverPrefill` is present, every id the patch writes comes from it.
+ * `defaultCustomerId` / `defaultVehicleId` stay untrusted query scalars and are
+ * consulted ONLY to detect disagreement: an explicit value that differs from
+ * the server's id — including a non-null explicit id against a null server
+ * id — means two sources name different records, and guessing between them
+ * would attach the estimate to the wrong one. The whole prefill is dropped,
+ * category and memo included: a conflicted handoff is not partially
+ * trustworthy. A matching explicit value adds nothing.
+ *
+ * Server ids are still validated by exact unique membership in the RLS-scoped
+ * arrays, like `resolvePreselection` — but with NO partial keep: the prefill is
+ * one server-issued claim, so any invalid, ambiguous or foreign-owned member
+ * falsifies all of it. Null ids are legitimate (a reservation without a linked
+ * record) and simply add no entity section.
+ *
+ * Without a prefill, this is byte-for-behavior the existing onboarding path.
+ */
+export function initialPreselectionStorePatch(
+  customers: readonly WizardExistingCustomerReference[],
+  vehicles: readonly WizardExistingVehicleReference[],
+  defaultCustomerId?: string,
+  defaultVehicleId?: string,
+  serverPrefill?: WizardReservationPrefill,
+): WizardStorePatch | undefined {
+  if (serverPrefill === undefined) {
+    return preselectionStorePatch(
+      resolvePreselection(customers, vehicles, defaultCustomerId, defaultVehicleId),
+    );
+  }
+
+  if (
+    explicitDisagrees(defaultCustomerId, serverPrefill.customerId) ||
+    explicitDisagrees(defaultVehicleId, serverPrefill.vehicleId)
+  ) {
+    return undefined;
+  }
+
+  const customer =
+    serverPrefill.customerId === null ? null : findUnique(customers, serverPrefill.customerId);
+  if (serverPrefill.customerId !== null && customer === null) return undefined;
+
+  let vehicle: WizardExistingVehicleReference | null = null;
+  if (serverPrefill.vehicleId !== null) {
+    if (customer === null) return undefined;   // a vehicle cannot arrive without its owner
+    vehicle = findUnique(vehicles, serverPrefill.vehicleId);
+    if (vehicle === null || vehicle.customerId !== customer.id) return undefined;
+  }
+
+  const patch: WizardStorePatch = {
+    ...(customer !== null
+      ? { customer: { regMethod: "search" as const, existingId: customer.id } }
+      : {}),
+    ...(vehicle !== null ? { vehicle: { existingId: vehicle.id } } : {}),
+    ...(serverPrefill.category !== null ? { categories: [serverPrefill.category] } : {}),
+    // `notesInternal` only, and exactly as given — never `notesCustomer`: the memo
+    // is staff-to-staff context and must not surface on a customer-facing document.
+    ...(serverPrefill.notesInternal !== null ? { notesInternal: serverPrefill.notesInternal } : {}),
+  };
+  return Object.keys(patch).length === 0 ? undefined : patch;
 }
 
 /**

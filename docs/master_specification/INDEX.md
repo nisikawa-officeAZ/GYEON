@@ -3,8 +3,21 @@
 **This directory (`docs/master_specification/`) is the Single Source of Truth (SSOT) for the DealerOS project.**
 All requirements, architecture, business rules, and specifications are canonical here. The canonical document set (01–12) is **complete**.
 
-**Last Updated:** 2026-06-30
+For current GYEON DA execution priority, ownership, phase authorization, completion evidence, and deferred scope, `GYEON_DA_COMPLETION_PLAN.md` and its result ledger take precedence over older roadmaps, status files, release notes, `CURRENT_TASK.md`, chat history, and handoff text. Those older documents remain historical evidence and must not silently redirect active work.
+
+**Last Updated:** 2026-08-11
 **Completion:** **100% (12 / 12 documents complete)**
+
+## Current GYEON DA execution control
+
+The following supporting documents govern the current GYEON Detailer Agent completion sequence. They do not replace the frozen v2.0 architecture; they control current priority, phase authorization, acceptance evidence, and result recording.
+
+| Document | File | Status | Purpose |
+|---|---|---|---|
+| Agent Session Bootstrap | `../../AGENTS.md` | Direction locked; committed | Mandatory first read for new Codex, Claude, Cursor, and Studio sessions. |
+| GYEON DA Completion Plan | `GYEON_DA_COMPLETION_PLAN.md` | Direction ratified; committed | Current execution authority: mission, ownership, fixed decisions, residual register, strict phase order, and completion standard. |
+| GYEON DA Phase Results | `GYEON_DA_PHASE_RESULTS.md` | Active ledger | Append-only phase evidence, acceptance decisions, Git state, verification, and external-action record. |
+| Reservation Conversion Contract | `GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md` | Accepted, committed, and pushed at commit 09c564de; implementation separately unauthorized | Reservation → estimate → work-order conversion contract: prefill authority, direct-work-order exception, state machine, idempotency, numbering, and RLS/authorization boundary. |
 
 ---
 

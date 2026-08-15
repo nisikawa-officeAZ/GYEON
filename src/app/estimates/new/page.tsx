@@ -28,11 +28,15 @@ import { findWizardCustomerDuplicatesAction } from "@/lib/customers/find-wizard-
 import { getEstimateSaveActorContext } from "@/lib/auth/resolve-estimate-save-actor-context";
 import { getAuthoritativeWizardRuntimeConfigForDealer } from "@/lib/wizard-catalog/get-authoritative-wizard-runtime-config-for-dealer";
 import { loadDealerWizardEntityReferences } from "@/lib/estimates/get-dealer-wizard-entity-references";
+// GDA-1R2-C3R — the reservation prefill loader is a server-only read that carries its own
+// capability check and dealer scoping, and fails closed to null for every invalid case.
+import { getReservationPrefill } from "@/lib/reservations/get-reservation-prefill";
 
 interface Props {
   searchParams: Promise<{
     customer_id?: string | string[];
     vehicle_id?: string | string[];
+    reservation_id?: string | string[];
   }>;
 }
 
@@ -96,7 +100,7 @@ function SetupRequired() {
 }
 
 export default async function EstimateNewPage({ searchParams }: Props) {
-  const { customer_id, vehicle_id } = await searchParams;
+  const { customer_id, vehicle_id, reservation_id } = await searchParams;
 
   // 1. Resolve the actor context exactly once.
   const actor = await getEstimateSaveActorContext();
@@ -126,6 +130,14 @@ export default async function EstimateNewPage({ searchParams }: Props) {
   // 8. Every typed entity failure shows the fixed notice.
   if (!references.ok) return <Unavailable />;
 
+  // GDA-1R2-C3R — resolved ONLY after actor, runtime and references all succeeded, and
+  // ONLY when a scalar reservation_id arrived. The loader fails closed to null for every
+  // invalid, inaccessible, wrong-tenant, wrong-status or unrecognized-service reservation,
+  // so a bad id degrades silently to the ordinary wizard with no reason leaked.
+  const reservationId = scalar(reservation_id);
+  const serverPrefill =
+    reservationId !== undefined ? await getReservationPrefill(reservationId) : null;
+
   // 9. Only full success mounts the save-capable wizard.
   return (
     <MainLayout>
@@ -140,6 +152,7 @@ export default async function EstimateNewPage({ searchParams }: Props) {
           vehicles={references.vehicles}
           defaultCustomerId={scalar(customer_id)}
           defaultVehicleId={scalar(vehicle_id)}
+          serverPrefill={serverPrefill ?? undefined}
           expectedConfigRevision={runtime.lifecycle.currentRevision}
           saveInvoker={saveEstimateFromWizardIntentAction}
           customerSearchInvoker={searchDealerCustomersAction}
