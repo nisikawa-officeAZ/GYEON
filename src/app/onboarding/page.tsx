@@ -1,7 +1,5 @@
 import { redirect }           from "next/navigation";
 import { getOnboardingStatus } from "@/lib/onboarding/onboarding";
-import { getStaffList }        from "@/lib/staff/get-staff-list";
-import { getCurrentDealerSubscription } from "@/lib/subscription/subscription";
 import OnboardingWizard        from "@/components/onboarding/OnboardingWizard";
 
 export const dynamic = "force-dynamic";
@@ -13,12 +11,6 @@ export default async function OnboardingPage() {
   if (status?.onboarding_completed) {
     redirect("/");
   }
-
-  // Fetch data for wizard steps in parallel
-  const [staffList, sub] = await Promise.all([
-    getStaffList(),
-    getCurrentDealerSubscription(),
-  ]);
 
   const defaultStatus = status ?? {
     onboarding_completed:    false,
@@ -41,29 +33,5 @@ export default async function OnboardingPage() {
     completion_note:         null,
   };
 
-  const subInfo = sub
-    ? {
-        plan_code:             sub.plan_code,
-        status:                sub.status,
-        trial_ends_at:         sub.trial_ends_at,
-        current_period_ends_at: sub.current_period_ends_at,
-      }
-    : null;
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
-
-  return (
-    <OnboardingWizard
-      initialStatus={defaultStatus}
-      staffList={(staffList as Array<{
-        id: string;
-        name: string | null;
-        email: string | null;
-        role: string;
-        status: string;
-      }>)}
-      subscription={subInfo}
-      appUrl={appUrl}
-    />
-  );
+  return <OnboardingWizard initialStatus={defaultStatus} />;
 }

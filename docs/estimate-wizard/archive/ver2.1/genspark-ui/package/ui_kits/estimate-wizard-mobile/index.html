@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#080d1a">
+  <title>見積ウィザード — Mobile (DealerOS GYEON)</title>
+
+  <link rel="stylesheet" href="../../colors_and_type.css">
+
+  <style>
+    /* ── Global animations ────────────────────────────────────── */
+    @keyframes ds-spin           { to { transform: rotate(360deg); } }
+    @keyframes ds-fade-in        { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes ds-scale-in       { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+    @keyframes ds-slide-up       { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    @keyframes ds-slide-in-right { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes ds-slide-in-panel { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes ds-slide-in-bottom { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ══════════════════════════════════════════════════════════════════
+       Mobile 設計 (依頼書 §8 準拠):
+       - 完全単カラム、1 スクリーン分のみ表示
+       - font-size 16px (iOS ズーム防止 binding)
+       - safe-area-inset-* 対応 (ノッチ・ホームインジケーター回避)
+       - 全ボタン最小 44×44px タップターゲット
+       - 下部固定 MobileTotalBar が全ての遷移を担う
+       ══════════════════════════════════════════════════════════════════ */
+
+    :root {
+      --ds-sidebar-w: 0px;         /* Mobile ではサイドバー非表示 */
+      --ds-header-h: 56px;         /* Mobile ヘッダーは 56px (iOS 標準風) */
+      --ds-mobile-bar-h: 76px;     /* 下部固定バーの実測高さ (safe-area 含めず) */
+    }
+
+    body {
+      background: var(--ds-bg);
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 16px;             /* iOS ズーム防止 binding */
+      /* Overscroll bounce 抑制 (iOS Safari で bottom bar の下が跳ねる問題) */
+      overscroll-behavior-y: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    input, textarea, button, select {
+      font-size: 16px;             /* iOS の 16px 未満は zoom される */
+    }
+    input, textarea {
+      /* iOS でフォーカス時に画面が意図せずズームされないよう明示 */
+      font-size: 16px !important;
+    }
+
+    /* ── Wizard レイアウト ─────────────────────────────────────
+       Mobile: シンプルな単カラム block レイアウト
+       Grid の複雑さを避ける (Mobile では入れ子 grid が破綻しやすい) */
+    .wz-layout {
+      display: block;
+      min-height: 100vh;
+    }
+    .wz-sidebar { display: none !important; }   /* Mobile ではサイドバー非表示 */
+
+    .wz-main {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #080d1a 0%, #060916 100%);
+    }
+
+    .wz-content-wrap {
+      /* 上部ヘッダー + コンパクトステッパー分を除いたスクロール領域 */
+      padding: 16px 16px calc(var(--ds-mobile-bar-h) + 20px + env(safe-area-inset-bottom, 0px));
+      max-width: 100%;
+      width: 100%;
+    }
+    .wz-content {
+      min-width: 0;
+      animation: ds-fade-in var(--ds-dur-base) var(--ds-ease-out);
+    }
+    .wz-total-slot { display: none !important; }   /* Mobile では Sticky Total 非表示 */
+
+    /* Screen transition (Mobile では控えめに) */
+    .wz-screen-enter {
+      animation: ds-slide-in-right 0.15s var(--ds-ease-out);
+    }
+
+    /* ヘッダー合計ミニピル (Mobile では常時表示・小型) */
+    .wz-total-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--ds-primary-tint-40);
+      border: 1px solid var(--ds-primary-tint-60);
+      color: #fff;
+      padding: 7px 12px 7px 10px;
+      border-radius: 999px;
+      font-family: var(--ds-font-num);
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      transition: all var(--ds-dur-fast) var(--ds-ease-out);
+      white-space: nowrap;
+      min-height: 36px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wz-total-pill:active {
+      background: var(--ds-primary-tint-60);
+      transform: scale(0.96);
+    }
+    .wz-total-pill-label {
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--ds-primary-200);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* ── デスクトップ用要素は完全に非表示 ─────────────────── */
+    .wz-stepper-desktop { display: none !important; }
+
+    /* ── Sidebar hide utility ────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: var(--ds-line-strong); border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    /* ── タップハイライトを完全に無効化 (iOS の灰色フラッシュを防ぐ) ── */
+    button, a, [role="button"] {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+
+  <!-- React 18 + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- Data & Components -->
+  <script src="data.js"></script>
+  <script type="text/babel" src="components.jsx"></script>
+  <script type="text/babel" src="shell.jsx"></script>
+  <script type="text/babel" src="screens/Screen1_Customer.jsx"></script>
+  <script type="text/babel" src="screens/Screen2_Vehicle.jsx"></script>
+  <script type="text/babel" src="screens/Screen3_Category.jsx"></script>
+  <script type="text/babel" src="screens/Screen4_Estimate.jsx"></script>
+  <script type="text/babel" src="screens/Screen5_Discount.jsx"></script>
+  <script type="text/babel" src="screens/Screen6_Notes.jsx"></script>
+  <script type="text/babel" src="screens/Screen7_Review.jsx"></script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="text/babel" data-presets="env,react">
+    const { useState, useEffect, useMemo } = React;
+
+    /* Mobile 版は PC/Tablet と別 localStorage キー */
+    const STORE_KEY = 'dealeros-wizard-store-mobile-v1';
+    const STEP_KEY  = 'dealeros-wizard-step-mobile-v1';
+
+    function App() {
+      const [step, setStep] = useState(() => {
+        try { return Number(localStorage.getItem(STEP_KEY)) || 1; } catch { return 1; }
+      });
+      const [store, setStore] = useState(() => {
+        try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch { return {}; }
+      });
+      const [autoSave, setAutoSave] = useState('saved');
+      const [toast, setToast] = useState(null);
+      const [menuOpen, setMenuOpen] = useState(false);
+      const [breakdownOpen, setBreakdownOpen] = useState(false);
+
+      useEffect(() => {
+        try { localStorage.setItem(STEP_KEY, String(step)); } catch {}
+        /* step 変更時に確実にスクロール位置を top にリセット。
+           iframe 内での挙動を安定させるため:
+           - smooth は外して即時遷移 (React re-render とタイミング競合を避ける)
+           - window / body / documentElement の 3 つを全て 0 に強制
+           - requestAnimationFrame で React re-render 完了後に実行
+           これで Screen 7 のように content が縦長でも先頭から表示される。 */
+        requestAnimationFrame(() => {
+          window.scrollTo(0, 0);
+          if (document.body) document.body.scrollTop = 0;
+          if (document.documentElement) document.documentElement.scrollTop = 0;
+        });
+      }, [step]);
+
+      /* 初回マウント時にもスクロール top へ (localStorage で保存された step が
+         Screen 7 のような長い content の場合、リロード直後に中間位置に落ち着くのを防ぐ) */
+      useEffect(() => {
+        window.scrollTo(0, 0);
+      }, []);
+
+      useEffect(() => {
+        setAutoSave('saving');
+        const t = setTimeout(() => {
+          try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch {}
+          setAutoSave('saved');
+        }, 300);
+        return () => clearTimeout(t);
+      }, [store]);
+
+      function updateStore(patch) {
+        setStore(s => ({ ...s, ...patch }));
+        setAutoSave('dirty');
+      }
+
+      function jumpTo(n) {
+        setStep(Math.max(1, Math.min(7, n)));
+        /* スクロールリセットは step useEffect で自動実行される (二重実行防止) */
+      }
+
+      function next() { jumpTo(step + 1); }
+      function back() { jumpTo(step - 1); }
+
+      function handleSave() {
+        setToast({ variant: 'success', message: '見積を確定・保存しました' });
+      }
+
+      function handleCancel() {
+        if (confirm('この見積を破棄して見積一覧に戻りますか？')) {
+          try { localStorage.removeItem(STORE_KEY); localStorage.removeItem(STEP_KEY); } catch {}
+          location.reload();
+        }
+      }
+
+      const completeSet = useMemo(() => {
+        const s = new Set();
+        if (store.customer?.name) s.add(1);
+        if (store.vehicle?.plate && store.vehicle?.maker && store.vehicle?.model) s.add(2);
+        if (store.cats?.length) s.add(3);
+        if (store.__lineItems?.length) s.add(4);
+        return s;
+      }, [store]);
+
+      const stickySubs = useMemo(() => {
+        const rows = store.__lineItems || [];
+        const grouped = {};
+        rows.forEach(r => {
+          const prefix = r.label.split(' · ')[0];
+          grouped[prefix] = (grouped[prefix] || 0) + r.qty * r.unit;
+        });
+        return Object.entries(grouped).map(([label, amount]) => ({ label, amount }));
+      }, [store.__lineItems]);
+
+      const couponTotal = (store.coupons || []).reduce((a, id) => a + (window.COUPONS.find(c => c.id === id)?.amount || 0), 0);
+      const rawSub = stickySubs.reduce((a, r) => a + r.amount, 0);
+      const discountAmt = store.discMode === 'amount' ? (store.discAmount || 0)
+                        : store.discMode === 'percent' ? Math.round(rawSub * (store.discPercent || 0) / 100)
+                        : 0;
+      const totalDiscount = couponTotal + discountAmt;
+      const totalTaxIncluded = Math.round((rawSub - totalDiscount) * 1.10);
+      const taxAmount = Math.round((rawSub - totalDiscount) * 0.10);
+
+      const dealerRank = store.dealerRank || 'certified';
+      const isFirst = step === 1;
+      const isLast = step === 7;
+
+      const renderScreen = () => {
+        const props = { store, updateStore };
+        return (
+          <div className="wz-screen-enter" key={step}>
+            {step === 1 && <Screen1_Customer {...props} onAdvance={() => jumpTo(2)} />}
+            {step === 2 && <Screen2_Vehicle {...props} />}
+            {step === 3 && <Screen3_Category {...props} />}
+            {step === 4 && <Screen4_Estimate {...props} dealerRank={dealerRank} />}
+            {step === 5 && <Screen5_Discount {...props} />}
+            {step === 6 && <Screen6_Notes {...props} />}
+            {step === 7 && <Screen7_Review {...props} onJump={jumpTo} onSave={handleSave} />}
+          </div>
+        );
+      };
+
+      useEffect(() => {
+        const id = setTimeout(() => {
+          if (window.lucide) window.lucide.createIcons();
+        }, 50);
+        return () => clearTimeout(id);
+      }, [step, store]);
+
+      return (
+        <div className="wz-layout">
+          <div className="wz-main">
+            <TopHeader
+              estimateNo="EST-2026-000342"
+              mode={store.editMode ? 'edit' : 'new'}
+              onCancel={handleCancel}
+              autoSaveState={autoSave}
+              onOpenMenu={() => setMenuOpen(true)}
+              totalPill={
+                <button className="wz-total-pill" onClick={() => setBreakdownOpen(true)} aria-label="合計内訳を開く">
+                  <span>{formatYen(totalTaxIncluded)}</span>
+                  <Icon name="chevron-down" size={11} />
+                </button>
+              }
+            />
+
+            <CompactStepper current={step} onJump={jumpTo} total={7} />
+
+            <div className="wz-content-wrap">
+              <div className="wz-content">
+                {renderScreen()}
+              </div>
+            </div>
+
+            <MobileTotalBar
+              subtotals={stickySubs}
+              discount={totalDiscount}
+              taxRate={0.10}
+              onNext={next}
+              onBack={back}
+              onSave={handleSave}
+              onOpenBreakdown={() => setBreakdownOpen(true)}
+              isFirst={isFirst}
+              isLast={isLast}
+            />
+
+            <HamburgerMenu open={menuOpen} onClose={() => setMenuOpen(false)} onNavHome={handleCancel} />
+
+            {/* Breakdown BottomSheet — 合計金額タップで詳細表示 */}
+            <BottomSheet
+              open={breakdownOpen}
+              onClose={() => setBreakdownOpen(false)}
+              title="お見積内訳"
+              icon="receipt"
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {stickySubs.length === 0 && (
+                  <div style={{ textAlign: 'center', color: 'var(--ds-text-muted)', padding: '24px 0', fontSize: 14 }}>
+                    <Icon name="inbox" size={28} style={{ color: 'var(--ds-text-faint)' }} />
+                    <div style={{ marginTop: 10 }}>まだ項目がありません</div>
+                  </div>
+                )}
+                {stickySubs.map((r, i) => (
+                  <div key={i} style={{
+                    display: 'flex', justifyContent: 'space-between', gap: 12,
+                    fontSize: 14, padding: '10px 4px',
+                    borderBottom: '1px solid var(--ds-line)',
+                  }}>
+                    <span style={{ color: 'var(--ds-text-muted)' }}>{r.label}</span>
+                    <span className="ds-numeric" style={{ color: 'var(--ds-text-body)', fontWeight: 500 }}>{formatYen(r.amount)}</span>
+                  </div>
+                ))}
+
+                <div style={{ height: 8 }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--ds-text-muted)', padding: '6px 4px' }}>
+                  <span>小計</span>
+                  <span className="ds-numeric" style={{ color: 'var(--ds-text-body)' }}>{formatYen(rawSub)}</span>
+                </div>
+                {totalDiscount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--ds-amber-400)', padding: '6px 4px' }}>
+                    <span>値引き / クーポン</span>
+                    <span className="ds-numeric">− {formatYen(totalDiscount)}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--ds-text-muted)', padding: '6px 4px' }}>
+                  <span>消費税 (10%)</span>
+                  <span className="ds-numeric" style={{ color: 'var(--ds-text-body)' }}>{formatYen(taxAmount)}</span>
+                </div>
+
+                <div style={{ height: 1, background: 'var(--ds-line-strong)', margin: '10px 0' }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '4px' }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ds-text-primary)' }}>合計 (税込)</span>
+                  <span className="ds-price-total" style={{ fontSize: 26 }}>{formatYen(totalTaxIncluded)}</span>
+                </div>
+              </div>
+            </BottomSheet>
+
+            <Toast open={!!toast} onClose={() => setToast(null)} message={toast?.message} variant={toast?.variant} />
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('app')).render(<App />);
+  </script>
+</body>
+</html>

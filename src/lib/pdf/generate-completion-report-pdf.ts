@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { CompletionReportFullData } from "@/lib/completion-reports/completion-report-types";
 import { renderCompletionReportPdf } from "./templates/completion-report-pdf";
 import { getDealerStampForPdf } from "./get-dealer-stamp";
+import { getDealerBranding } from "./dealer-branding";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
 import { createAuditLog } from "@/lib/audit/audit";
 
@@ -84,12 +85,13 @@ export async function generateCompletionReportPdf(
   };
 
   const stamp = await getDealerStampForPdf(dealer.dealer_id);
+  const branding = await getDealerBranding(dealer.dealer_id);
 
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await renderCompletionReportPdf(fullData, stamp);
+    pdfBuffer = await renderCompletionReportPdf(fullData, stamp, branding);
   } catch (err) {
-    return { success: false, error: `PDF生成エラー: ${String(err)}` };
+    return (console.error("[pdf] render failed:", err), { success: false, error: "PDFの生成に失敗しました。時間をおいて再度お試しください。" });
   }
 
   const documentNumber =

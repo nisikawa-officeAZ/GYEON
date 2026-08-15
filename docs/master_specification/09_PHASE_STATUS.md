@@ -4,7 +4,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Active — Living Document (updated each phase) |
-| **Last Updated** | 2026-06-25 |
+| **Last Updated** | 2026-06-30 |
 | **Canonical Source** | `CHANGELOG.md`, git history, project audit (PHASE74/75) |
 | **Related Documents** | `01_PROJECT_OVERVIEW.md`, `10_ROADMAP.md`, `OPERATOR_DECISIONS.md` |
 
@@ -64,6 +64,338 @@
 - SDD restructuring: `/docs/master_specification/` created (11 files, 2026-06-25).
 - **PHASE74:** Master Specification Audit — `MASTER_SPECIFICATION_AUDIT_REPORT.md` (2026-06-25).
 - **PHASE75:** Master Specification Finalization — `OPERATOR_DECISIONS.md`, `MASTER_SPECIFICATION_CHANGELOG.md`, `MASTER_SPECIFICATION_V1_READY.md`, spec file updates (2026-06-25).
+
+---
+
+## 1b. Phase 2 — Customer & Vehicle Registration
+
+> **PHASE 2 STATUS: ✅ CLOSED — Architect Approved — Ready for Phase 3 (2026-06-30)**
+>
+> - Final Closure Review completed and approved by the architect.
+> - All blocking issues resolved (3 integration bugs found & fixed in Sprint 6).
+> - All remaining items classified **Deferred** or **Future Enhancement** (none blocking) — see Sprint 6 limitations below.
+> - Verified: typecheck + build green; dealer_id always from `getCurrentDealer()`; RLS preserved; no schema change, no migration, no UI redesign across all six sprints.
+> - Not merged to main; not deployed to production. Phase 3 not started.
+>
+> Sprints S1–S6 below are all ✅ Completed.
+
+### Sprint 1 — Customer & Vehicle Registration Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase2 sprint1 customer vehicle registration foundation` (74fec20) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Sprint 2 | 🔴 Not started |
+
+**Summary:**
+- Customer duplicate detection helper implemented (`src/lib/customers/find-customer-duplicates.ts`, dealer-scoped).
+- Vehicle duplicate detection helper implemented (`src/lib/vehicles/find-vehicle-by-vin-or-plate.ts`, dealer-scoped).
+- `register-from-ocr` orchestration implemented (`src/lib/ocr/register-from-ocr.ts`) — creates/reuses customer + linked vehicle and completes the OCR session, composing existing create actions.
+- Existing UI wired to the registration flow (`CustomerVehicleOnboardingWizard.tsx`) with non-blocking duplicate warnings; no UI redesign.
+
+Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
+
+### Sprint 2 — Customer Management Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase2 sprint2 customer management foundation` (493031f) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Sprint 3 | (superseded — now complete, see below) |
+
+**Summary:** Customer list (functional search + filters + detail navigation), Customer Detail page (`/customers/[id]`), Customer Search (controlled), Customer Filters, Customer Profile editing (reused `CustomerForm`), Customer Timeline (reused `CustomerActivityTimeline`), Customer Notes (`updateCustomerNotes`), derived Customer Status & Tags foundations, and navigation integration. No schema change; status/tags derived from existing columns.
+
+### Sprint 3 — Vehicle Management Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase2 sprint3 vehicle management foundation` (6462a99) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Lint | ✅ no `lint` script / ESLint config in repo (same as Sprints 1–2); not applicable |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Sprint 4 | 🔴 Not started |
+
+**Completed work:**
+- Vehicle List page — functional search + filters + row navigation to detail.
+- Vehicle Detail page — `src/app/vehicles/[id]/page.tsx` (dealer-scoped fetch + `notFound`).
+- Vehicle Search — controlled `VehicleSearch` (maker / model / plate; space-insensitive).
+- Vehicle Filters — `VehicleFilters` (車検: 有効/間近/切れ/未登録; 顧客: 紐付きあり/なし) + shown/total count.
+- Vehicle Profile editing — reused `VehicleForm` (edit toggle on detail + list modal).
+- Vehicle Status foundation — derived `deriveVehicleStatus` from `inspection_expiry_date` + `VehicleStatusBadge` (read-only).
+- Vehicle Tags foundation — derived `deriveVehicleTags` + `VehicleTagList` (read-only).
+- Vehicle Service History foundation — `VehicleServiceHistory` via `getActivityLogsByEntity("vehicle", id)`.
+- Customer ↔ Vehicle relationship verification — owner resolved via dealer-scoped `getCustomerById`; same-dealer ownership confirmed and linked, mismatch flagged; write paths still validate `customer_id` belongs to the dealer.
+- Navigation integration — list → `/vehicles/[id]`; detail → back link + 所有者 link to `/customers/[id]`.
+
+Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. Sprint 1 OCR registration flow and duplicate-detection logic untouched. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
+
+### Sprint 4 — Vehicle Registration OCR & AI Enhancement — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase2 sprint4 ocr ai enhancement` (5a4937b) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Lint | N/A — no `lint` script / ESLint config in repo (same as Sprints 1–3) |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Sprint 5 | 🔴 Not started |
+
+**Completed work:**
+- OCR review flow improvements — low-confidence warning + missing important-field summary in `VehicleRegistrationOcrReview` (customer/vehicle shown separately).
+- Camera / File selection improvements — clearer selection UI in `VehicleRegistrationUpload`.
+- Mobile camera-first behavior — camera capture is the primary action on mobile.
+- Desktop upload support — file upload preserved as the primary path on desktop.
+- AI field mapping improvements — `mapOcrToVehicle` model now falls back to 型式 when 車名 is absent.
+- Missing-field handling — new `ocr-field-analysis.ts` detects important fields the model failed to read.
+- Confidence handling — confidence level classification (high/medium/low/none) surfaced in review.
+- Duplicate review improvements — confirm step now lists matched customers (name/phone) and vehicles (maker/model + plate/VIN); detection core logic unchanged.
+- Preserved register-from-ocr orchestration — `register-from-ocr.ts` untouched.
+
+Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. OCR/AI output remains fully editable and requires explicit user confirmation before any write. Sprint 1 orchestration + duplicate-detection core preserved. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
+
+### Sprint 5 — OCR Session & Audit Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase2 sprint5 ocr session and audit foundation` (bfd21b7) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Lint | N/A — no `lint` script / ESLint config in repo (same as Sprints 1–4) |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Sprint 6 | 🔴 Not started |
+
+**Completed work:**
+- OCR session summary foundation — `src/lib/ocr/ocr-session-summary.ts` (status meta, reviewed-result summary, link outcome).
+- OCR status badge — `OcrStatusBadge` (draft/processing/reviewing/completed/abandoned).
+- OCR history viewer — `OcrSessionList` + `/ocr-sessions` page (dealer-scoped), links to resulting customer/vehicle.
+- OCR correction/review audit foundation — `OcrAuditTrail` over dealer-scoped `audit_logs` (resource_type `vehicle_registration`); reviewed_result shown as the corrected output.
+- Existing customer selection after duplicate detection — wizard "この顧客を使用" reuses the `existingCustomerId` path.
+- Existing vehicle selection after duplicate detection — wizard "この車両を更新" routes to manual edit (no auto-overwrite, no duplicate created).
+- Register / Update decision flow — confirm-step decision summary (顧客 = 新規/既存, 車両 = 新規/既存更新).
+- OCR processing status management — session status surfaced via badges in the history viewer.
+- Navigation integration — Sidebar "OCR履歴" → `/ocr-sessions`.
+
+Scope guardrails honored: no schema change, no migration, no production deploy, no merge to main. Customer/vehicle data never overwritten automatically; every OCR result still requires explicit user confirmation; no AI-learning functionality introduced. Sprint 1 orchestration + duplicate-detection core preserved. Architecture preserved (dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged).
+
+### Sprint 6 — Phase 2 Integration QA & Stabilization — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `fix: phase2 integration stabilization` (09138fd) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Typecheck | ✅ `npm run typecheck` passed |
+| Build | ✅ `npm run build` passed |
+| Phase 2 | 🟡 Ready for closure review (not yet closed) |
+| Phase 3 | 🔴 Not started |
+
+**Verified work:**
+- Customer Management flow verified.
+- Vehicle Management flow verified.
+- OCR registration flow verified.
+- Duplicate customer detection verified.
+- Duplicate vehicle detection verified.
+- Existing customer / vehicle selection flow verified.
+- Register / Update decision flow verified.
+- Navigation integration verified (Customers ↔ Vehicles ↔ OCR review ↔ OCR history).
+
+**Three integration bugs found and fixed:**
+1. Wizard — stale `existingCustomerId` after adopting a duplicate then navigating back (fixed with an `adoptedCustomerFromDup` flag + reset on re-entry).
+2. Customer list 業者/個人 filter broken — `get-customers.ts` did not select `is_business` (added `is_business`, `trade_discount_pct`, `credit_terms`).
+3. Wizard — confirm customer card could vanish for an adopted duplicate absent from the page snapshot (added fallback to the duplicate-detection result).
+
+**Known limitations (recorded):**
+- `model_code` (型式指定番号) is captured but not persisted — no DB column exists (would require a future migration).
+- Vehicle "紐付きなし" filter always returns 0 because `vehicles.customer_id` is NOT NULL.
+- Duplicate detection / list filtering remain client-side over dealer-scoped, page-loaded data (not server-paginated).
+- OCR correction history shows the corrected result, not a raw-vs-corrected field diff.
+
+Scope guardrails honored: documentation/verification + bug fixes only — no new features, no schema change, no migration, no UI redesign, no production deploy, no merge to main. dealer_id always from `getCurrentDealer()`; RLS assumptions unchanged. **Phase 2 is ready for closure review but NOT closed; Phase 3 not started.**
+
+---
+
+## 1c. Phase 3 — Estimate & Work Flow
+
+Approved Architecture Plan: consolidation / flow-wiring / hardening / QA of an already-implemented chain (no greenfield build). Sprints below are on feature branch `fix/branding-schema-block`; not merged to main, not deployed.
+
+### Sprint 1 — Estimate Workflow Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed / Committed / Pushed | ✅ `feat: phase3 sprint1 estimate workflow foundation` (04b928d) |
+| Typecheck / Build | ✅ passed | Lint | N/A |
+
+**Summary:** Verified customer/vehicle selection, new-estimate flow, and existing customer↔vehicle linkage; implemented Estimate Status management (`updateEstimateStatus` dealer-scoped action + permission-gated `EstimateStatusControl`); verified navigation and RLS on estimate tables. No schema change.
+
+### Sprint 2 — Service Selection Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed / Committed / Pushed | ✅ `feat: phase3 sprint2 service selection foundation` (3a0c8e8) |
+| Typecheck / Build | ✅ passed | Lint | N/A |
+
+**Summary:** Canonical Service Category model (`src/lib/estimates/service-categories.ts`) as single source of truth (Coating, PPF, Window Film, Maintenance, Car Wash + pre-existing Room Cleaning/Other); wizard wired to it backward-compatibly; multi-service-in-one-estimate and combination readiness (Coating+PPF, Coating+Window, PPF+Window, Maintenance+Car Wash) verified. Wheel/Tire intentionally excluded (require new spec). No schema change.
+
+### Sprint 3 — Price Engine Foundation — ✅ Completed (2026-06-30)
+
+| Item | Status |
+|------|--------|
+| Completed | ✅ |
+| Committed | ✅ `feat: phase3 sprint3 price engine foundation` (2d10afb) |
+| Pushed | ✅ feature branch `fix/branding-schema-block` (not merged to main) |
+| Typecheck | ✅ passed |
+| Build | ✅ passed |
+| Lint | N/A (no lint script in repo) |
+| Sprint 4 | 🔴 Not started |
+
+**Completed work:**
+- Price Engine foundation — `src/lib/pricing/estimate-totals.ts` (server-usable, matches existing engine convention).
+- Dealer price rules foundation — applied via submitted estimate-level discount (business-customer trade discount per 05 §5.5/§5.7).
+- Discount calculation — estimate-level discount clamped to [0, subtotal]; per-line discount_rate applied.
+- Tax calculation — `tax_amount = floor(taxable × tax_rate%)`, server-computed.
+- Estimate total calculation — subtotal / discount / tax / grand total over all line items (multi-service).
+- Price summary UI — existing `EstimateSummary` reflects the server-authoritative totals (no redesign).
+- Server-side total validation — `create-estimate` and `update-estimate` recompute and persist totals from submitted line items; client subtotal/tax/total are fallback only.
+- Sprint 2 service selection integration — multi-category wizard items flow into the server recompute.
+
+**Known limitation:** the estimate-level `discount_amount` is currently taken as submitted and then clamped; future refinement may introduce stricter discount-rule sources (server-side derivation of dealer/coupon discount components).
+
+Scope guardrails honored: no schema change, no migration, no UI redesign, no production deploy, no merge to main. dealer_id always from `getCurrentDealer()`; RLS mandatory; server-side calculation authoritative, client calc preview-only. **Sprint 4 not started.**
+
+---
+
+## 1d. Phase 3.5 — Authorization Hardening
+
+> **PHASE 3.5 STATUS: ✅ CLOSED — Architect Approved (2026-06-30)**
+>
+> Server-side authorization hardening for Issue F (intra-tenant staff-permission enforcement gap on business/finance writes). Feature branch `fix/branding-schema-block`; not merged to main, not deployed to production.
+
+| Item | Status |
+|------|--------|
+| Tier 1 — finance / payment / invoice / destructive writes | ✅ Completed (`fix: harden tier1 server authorization`, f2b6afe) |
+| Tier 2 — general business writes | ✅ Completed (`fix: harden tier2 business write authorization`, cb351c7) |
+| Tier 3 — management authorization | ✅ Reviewed & accepted (already enforced via `requireRole`/`requireAdmin`; no code change) |
+| Onboarding residual | ✅ Completed (`fix: harden onboarding setup authorization`, 98c537d) |
+| Typecheck | ✅ passed |
+| Build | ✅ passed |
+| Feature branch pushed | ✅ |
+| Production deployed | ❌ No (not deployed) |
+
+**Summary:**
+- **Tier 1** — finance/payment/invoice and destructive delete actions hardened with a new shared guard `requireStaffCapability` (`src/lib/auth/require-staff-capability.ts`): invoice create/update + create-from-WO/Estimate and payment create/update → `"finance"`; payment/invoice/maintenance/work-order-file deletes → `"delete"`. Fail-closed; reuses `getCurrentStaff()` as the single source of truth.
+- **Tier 2** — general business writes (estimates, work orders, completion reports, customers, vehicles, product orders create/update) hardened with `requireStaffCapability("edit")`. (Inferred-return-type leakage from returning the guard object was fixed by returning a fresh `{ error }` literal.)
+- **Tier 3** — management authorization (staff management, role assignment, permission/dealer-settings management) was found to be **already** server-side enforced via the pre-existing `requireRole` (owner / owner|manager) and `requireAdmin` guards; reviewed and **accepted with no code change** (adding owner-only `"manage"` would have regressed manager access). `requireRole` and `requireStaffCapability` were intentionally NOT consolidated, and the owner/manager policy was NOT changed (architect decision).
+- **Onboarding** — all four onboarding write actions (`saveOnboardingStep`, `completeOnboarding`, `skipOnboarding`, `resetOnboarding`) now guarded with `requireRole(["owner","manager"])` (try/catch preserving the existing return shape); first-time owner setup unaffected. `getOnboardingStatus` remains a dealer-scoped read.
+
+Scope guardrails honored: application-layer enforcement only — no DB schema change, no migration, no RLS change, no middleware change; dealer_id always from `getCurrentDealer()`; Tier 1/Tier 2 behavior preserved; no merge to main; no production deploy. **Issue F closed. Phase 4 not started.**
+
+---
+
+## 1e. Phase 4 — Maintenance, Reservation, LINE Readiness & Customer Retention
+
+> **PHASE 4 STATUS: ✅ COMPLETED — Architect Approved (2026-06-30)**
+>
+> Activation/automation/wiring of existing maintenance, reservation, LINE, and
+> customer-engagement infrastructure. Application-layer only — NO new tables, NO
+> migrations, NO schema changes. Feature branch `fix/branding-schema-block`; not merged
+> to main, not deployed to production.
+
+| Sprint | Scope | Status |
+|--------|-------|--------|
+| Sprint 1 | Maintenance reminder foundation — auto-create from completed work order, duplicate prevention, due-date, staff `requireStaffCapability("edit")` guards | ✅ Completed (92ebb86) |
+| Sprint 2 | Maintenance notification queue foundation — secret-guarded cron-safe due processor, idempotent queue creation, status updates | ✅ Completed (cc6ccf6) |
+| Sprint 3 | LINE notification sending activation — credential-gated send, secret-guarded queue cron, retry-safe, failure handling | ✅ Completed (18c77fc) |
+| Sprint 4 | Reservation/calendar foundation — staff-guarded writes, work-order + staff-assignment linkage, reminder→reservation linkage, booking opt-in readiness | ✅ Completed (ab3520a) |
+| Sprint 5 | Customer retention engagement activation — non-AI ActionDispatcher branches, LINE enqueue with line_connected gating + dedup, activity_logs audit, CUSTOMER_CREATED/WORK_COMPLETED/PAYMENT_COMPLETED/MAINTENANCE_DUE wiring | ✅ Completed (f294255) |
+| Sprint 6 | Integration QA & stabilization — fixed 4 defects (audit CHECK violation, duplicate-queue on link failure, concurrent double-send race, latent LINE gate on reminder scheduling) | ✅ Completed (7fe6f0b) |
+
+**Final verification:**
+- Typecheck — ✅ PASS (`npm run typecheck`)
+- Build — ✅ PASS (`npm run build`)
+- Lint — N/A (no `lint` script exists in the repo)
+
+**Final commit:** `7fe6f0b` — "fix: phase4 sprint6 integration qa fixes"
+**Feature branch:** `fix/branding-schema-block`
+**Merge to main:** ❌ Not performed.
+**Production deployment:** ❌ Not performed.
+
+**Architecture compliance:** No new tables, no migrations, no schema changes; `dealer_id`
+always from `getCurrentDealer()` (or trusted DB rows in cron processors), never from client;
+RLS assumptions preserved; cron routes secret-guarded by `CRON_SECRET`; LINE sending double-
+gated (customer `line_connected` + dealer credentials); no AI agent activation; marketing/
+campaign messaging remains Future Scope.
+
+**Known limitations (Future Scope — NOT Phase 4 blockers):**
+- Engagement persistence is interim (audited to `activity_logs` only); a dedicated
+  `engagement_events`/`workflow_runs` table would require a future approved migration.
+- `MAINTENANCE_DUE` engagement message overlaps the Sprint 1–3 reminder pipeline and is
+  cross-deduped (effectively suppressed); a single canonical maintenance channel should be
+  chosen later.
+- Production cron scheduling (Vercel cron / external scheduler) is not configured; both cron
+  routes are ready and must be wired by an operator holding `CRON_SECRET`.
+- Failed LINE sends are recorded but not auto-retried (the `attempts` field supports a future
+  retry policy); a "processing"-stuck item has no reaper yet.
+- Booking-notification opt-in and per-customer engagement consent are prepared but not
+  persisted (would require a future approved migration).
+- No automated test runner is configured; verification is review + typecheck + build.
+
+**Phase 4 closed. Phase 5 not started.**
+
+---
+
+## 1f. Estimate Completion Workstream
+
+> **ESTIMATE COMPLETION STATUS: ✅ CLOSED — Architect Approved (2026-06-30)**
+>
+> Production-readiness hardening of the end-to-end estimate flow (customer/vehicle/OCR →
+> service selection → pricing → PDF → edit/re-save → mobile). Application-layer only — NO
+> new tables, NO migrations, NO schema changes. Feature branch `fix/branding-schema-block`;
+> not merged to main, not deployed to production. (Ran concurrently with Phase 5 Sprint 1;
+> Phase 5 Sprints 2+ remain not started.)
+
+| Sprint | Scope | Status |
+|--------|-------|--------|
+| Sprint 1 | PDF reliability — Japanese font registered/applied across all PDF templates; null-safe render; signed-URL re-sign hardened (dealer-ownership gate) | ✅ Completed (77d89f3) |
+| Sprint 1 follow-up | Local font hardening — bundled M PLUS 1p TTF (OFL) preferred over CDN; env override kept; outputFileTracingIncludes | ✅ Completed (da566cb) |
+| Sprint 2 | Mobile estimate UX — responsive wizard grids, 16px inputs (iOS zoom fix), sticky one-handed nav; desktop preserved | ✅ Completed (cdc3b91) |
+| Sprint 3 | Calculation integrity — UI/edit/saved/PDF totals reconciled to one authoritative `calculateEstimateTotals`; over-discount clamp | ✅ Completed (4274a1e) |
+| Sprint 3 follow-up | Discount breakdown consistency — explicit clamp note in wizard + edit form; payable ¥0 shown clearly when over-discounted | ✅ Completed (821e4d0) |
+| Sprint 4 | OCR handoff completion — vehicle pre-fill fires on OCR apply for ALL flows; grade + inspection-expiry mapped; manual correction preserved | ✅ Completed (2de4ba8) |
+| Sprint 5 | Double-submit / duplicate-record guard — synchronous in-flight lock + permanent post-success lock on customer/vehicle/estimate creation | ✅ Completed (1ecd0b8) |
+| Sprint 6 | End-to-end production-readiness QA — full-flow adversarial review; no fixes required | ✅ Completed (QA pass; no code change) |
+
+**Final verification:**
+- End-to-End QA — ✅ PASS (no confirmed production blockers)
+- Typecheck — ✅ PASS (`npm run typecheck`)
+- Build — ✅ PASS (`npm run build`)
+- Lint — N/A (no `lint` script in the repo)
+
+**Production blockers remaining:** NONE.
+
+**Final commit:** `1ecd0b8` (Sprint 5; Sprint 6 QA required no code change).
+**Feature branch:** `fix/branding-schema-block` · **Merge to main:** ❌ Not performed · **Production deployment:** ❌ Not performed.
+
+**Architecture compliance:** No new tables, migrations, or schema changes; `dealer_id` always
+from `getCurrentDealer()` (or trusted DB rows), never from client; RLS preserved; PDF/OCR/LINE/
+cron/notification logic unchanged except the in-scope estimate fixes.
+
+**Deferred non-blocking improvements (Future Scope — NOT blockers, require architect approval):**
+- Optional minimum-one-service-item validation (today a ¥0 estimate with no items is valid per spec).
+- Optional vehicle field-level validation (a vehicle can currently be created with empty fields).
+- Optional server-side idempotency key for multi-tab / replayed-request safety (would require a
+  schema/column change).
+
+**Estimate Completion workstream closed.**
 
 ---
 

@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS public.payments (
 
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Dealer members can manage their payments"
+DROP POLICY IF EXISTS "Dealer members can manage their payments" ON public.payments;
+CREATE POLICY "Dealer members can manage their payments"
   ON public.payments FOR ALL
   USING (
     dealer_id IN (

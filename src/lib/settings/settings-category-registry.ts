@@ -659,3 +659,42 @@ export function getSettingsPolicy(
 export function getCategoryIds(): SettingsCategoryId[] {
   return SETTINGS_CATEGORY_REGISTRY.map(c => c.category_id);
 }
+
+// ─── UX-2B: dealer-facing Japanese descriptions ──────────────────────────────
+//
+// `description` above is the internal English specification text: it names tables,
+// columns and sprint numbers, and it is the wrong thing to show a shop owner. The
+// settings header renders THIS map instead, and nothing else.
+//
+// The type is an exhaustive `Record<SettingsCategoryId, string>`, so a new category
+// cannot compile until its Japanese description exists. That is the point: the
+// previous design fell back to English whenever Japanese was missing, which is
+// exactly how English reached dealer screens in the first place.
+export const SETTINGS_CATEGORY_DESCRIPTION_JA: Readonly<Record<SettingsCategoryId, string>> = {
+  dealer:             "店舗の基本情報、営業時間、作業時間、スタッフに関する設定です。",
+  organization:       "複数店舗や会社階層の管理設定です。",
+  staff:              "スタッフの招待、役割、有効・無効を管理します。",
+  roles_permissions:  "役割ごとの権限を細かく設定します。",
+  security:           "二段階認証やセッション、監査ログに関する設定です。",
+  ai_providers:       "AIの接続先とAPIキーを管理します。",
+  ai_marketplace:     "AIエージェントの追加と利用範囲を管理します。",
+  communication:      "LINE連携とメッセージ配信の設定です。",
+  automation:         "作業の自動化ルールとトリガーの設定です。",
+  analytics:          "ダッシュボードとレポートの表示設定です。",
+  subscription:       "利用プランと請求に関する情報です。",
+  media:              "写真や書類の保存期間と管理方法の設定です。",
+  branding:           "ロゴやスタンプなど、書類の見た目を設定します。",
+  notifications:      "メンテナンス案内などの通知テンプレートを設定します。",
+  ocr:                "車検証の読み取りに関する設定です。",
+  pdf:                "見積書・請求書の書式、採番、税率、フッターの設定です。",
+  customer_portal:    "お客様向けポータルの公開設定です。",
+  gyeon_distribution: "GYEON製品の取り寄せと請求に関する設定です。",
+  warehouse:          "在庫と入出庫の管理設定です。",
+  crm:                "顧客管理とフォロー施策の設定です。",
+  accounting:         "会計期間と仕訳の連携設定です。",
+};
+
+/** The dealer-facing description for a category. Never falls back to English. */
+export function getCategoryDescriptionJa(id: SettingsCategoryId): string {
+  return SETTINGS_CATEGORY_DESCRIPTION_JA[id];
+}

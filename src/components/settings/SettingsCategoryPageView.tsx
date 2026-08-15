@@ -36,8 +36,16 @@ import {
   getSaveActionsForCategory,
   canEditWithRole,
   type SettingsSaveAction,
-  type SettingsSaveActionStatus,
 } from "@/lib/settings";
+import { getCategoryDescriptionJa } from "@/lib/settings/settings-category-registry";
+import {
+  dealerRoleLabelJa,
+  canSaveAsRole,
+  groupStatusLabelJa,
+  groupStatusToneClass,
+  type SettingsGroupStatus,
+  type SettingsStatusCode,
+} from "@/lib/settings/settings-status-codes";
 import type { CanonicalDealerSettings } from "@/lib/dealer-settings/dealer-settings-types";
 import type { DealerStaffRole }         from "@/lib/staff/staff-types";
 import type { DealerStaffDB }           from "@/lib/staff/staff-types";
@@ -72,6 +80,10 @@ export interface SettingsCategoryPageViewProps {
   sequences:        DocumentSequenceDB[];
   planInfo:         DealerPlanInfo | null;
   planSlot:         React.ReactNode;
+  /** UX-2B — a read on this page actually failed (evidence, not a guess). */
+  readFailure:      SettingsStatusCode | null;
+  /** UX-2B — the ROLE could not be resolved. Distinct from “role resolved, denied”. */
+  permissionCheckFailed: boolean;
 }
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -152,16 +164,15 @@ function SettingsEnterpriseState({ category }: { category: SettingsCategory }) {
         <span className="text-2xl">{category.icon}</span>
         <div>
           <h1 className="text-base font-bold text-slate-300">{category.display_name_ja}</h1>
-          <p className="text-xs text-slate-500 mt-0.5">{category.display_name}</p>
         </div>
         <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-500 border border-slate-700">
-          🏢 Enterprise
+          エンタープライズ
         </span>
       </div>
 
       <div className={`${card} flex flex-col gap-3`}>
         <p className="text-sm text-slate-400 leading-relaxed">
-          {category.description}
+          {getCategoryDescriptionJa(category.category_id)}
         </p>
         <div className="pt-2 border-t border-slate-800">
           <p className="text-xs text-slate-600">
@@ -192,7 +203,6 @@ function SettingsFutureState({
         <span className="text-2xl opacity-50">{category.icon}</span>
         <div>
           <h1 className="text-base font-bold text-slate-400">{category.display_name_ja}</h1>
-          <p className="text-xs text-slate-600 mt-0.5">{category.display_name}</p>
         </div>
         <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-500 border border-slate-700">
           準備中
@@ -202,7 +212,7 @@ function SettingsFutureState({
       {/* Coming-soon card */}
       <div className={`${card} flex flex-col gap-4`}>
         <p className="text-sm text-slate-500 leading-relaxed">
-          {category.description}
+          {getCategoryDescriptionJa(category.category_id)}
         </p>
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-800">
           <span className="text-base">🗓️</span>
@@ -371,66 +381,104 @@ function CategoryStatusChip({ status }: { status: SettingsCategory["status"] }) 
 
 // ─── SettingsCategoryHeader ───────────────────────────────────────────────────
 
-function SettingsCategoryHeader({ category, staffRole }: {
+function SettingsCategoryHeader({
+  category,
+  staffRole,
+  saveActions,
+  readFailure,
+  permissionCheckFailed,
+}: {
   category:  SettingsCategory;
   staffRole: DealerStaffRole | null;
+  saveActions: SettingsSaveAction[];
+  readFailure: SettingsStatusCode | null;
+  permissionCheckFailed: boolean;
 }) {
-  const visLabel: Record<string, string> = {
-    readonly:      "読み取り専用",
-    staff:         "スタッフ",
-    manager:       "マネージャー",
-    dealer_owner:  "オーナー",
-    company_admin: "会社管理者",
-    platform_admin:"管理者",
+  const roleJa = dealerRoleLabelJa(staffRole);
+
+  // Availability reasons that are NOT errors. A group in one of these states is
+  // simply not writable yet, and saying 保存可能 about it would be false.
+  const AVAILABILITY_JA: Partial<Record<SettingsSaveAction["status"], string>> = {
+    read_only:                     "読み取り専用",
+    future:                        "準備中",
+    requires_migration:            "移行作業が必要",
+    external_integration_required: "外部設定が必要",
+  };
+
+  /**
+   * The status of one group, in the order the evidence must be respected:
+   *   read failure → permission-check failure → declared unavailability →
+   *   permission denial → writable
+   * A failure always outranks a healthy claim, so the screen can never show green
+   * while the page knows something is wrong.
+   */
+  const statusFor = (action: SettingsSaveAction): SettingsGroupStatus => {
+    if (readFailure)           return { kind: "failure", code: readFailure };
+    if (permissionCheckFailed) return { kind: "failure", code: "SET-1003" };
+
+    const unavailable = AVAILABILITY_JA[action.status];
+    if (unavailable) return { kind: "unavailable", labelJa: unavailable };
+
+    // `manager_or_owner` is the only dealer-facing policy in the registry today;
+    // anything else has already been filtered out as platform-only above.
+    if (!canSaveAsRole(staffRole)) return { kind: "denied" };
+
+    return { kind: "writable" };
   };
 
   return (
-    <div className={`${card} flex flex-col gap-4`}>
-      {/* Title row */}
+    <div className={`${card} flex flex-col gap-3`}>
+      {/* Title — Japanese only. The internal English name, the module identifier
+          and the minimum-permission diagnostic are not shown to dealers. */}
       <div className="flex items-start gap-3">
         <span className="text-2xl leading-none mt-0.5">{category.icon}</span>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-base font-bold text-slate-100">{category.display_name_ja}</h1>
-            <span className="text-xs text-slate-500">{category.display_name}</span>
             <CategoryStatusChip status={category.status} />
           </div>
           <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-            {category.description.split(".")[0]}.
+            {getCategoryDescriptionJa(category.category_id)}
           </p>
         </div>
       </div>
 
-      {/* Metadata row */}
-      <div className="flex flex-wrap gap-4 pt-3 border-t border-slate-800">
-        <div className="flex flex-col gap-0.5">
-          <p className="text-[10px] text-slate-600 uppercase tracking-wider">最低権限</p>
-          <p className="text-xs text-slate-400">{visLabel[category.min_visibility] ?? category.min_visibility}</p>
-        </div>
-        {category.requires_plan && (
-          <div className="flex flex-col gap-0.5">
-            <p className="text-[10px] text-slate-600 uppercase tracking-wider">プラン</p>
-            <p className="text-xs text-purple-400 font-medium">
-              {category.requires_plan === "pro_plus" ? "Pro+" : category.requires_plan === "pro" ? "Pro" : "Basic"}
-            </p>
+      {/* 設定状況 — one compact grid INSIDE the header, not a second card.
+          Every cell is exactly two lines: item name on top, role or state below.
+          あなたの権限 is the first cell, so on desktop it reads leftmost and the
+          three save groups follow in registry order. */}
+      {(saveActions.length > 0 || roleJa) && (
+        <div className="flex flex-col gap-1.5 pt-3 border-t border-slate-800">
+          <p className="text-[10px] text-slate-600 tracking-wider">設定状況</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-4 gap-y-2">
+            {roleJa && (
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="text-[10px] text-slate-600 leading-tight truncate">
+                  あなたの権限
+                </span>
+                <span className="text-[11px] text-slate-400 leading-tight truncate">
+                  {roleJa}
+                </span>
+              </div>
+            )}
+            {saveActions.map((action) => {
+              const status = statusFor(action);
+              return (
+                <div key={action.action_id} className="flex flex-col gap-1 min-w-0">
+                  <span className="text-[10px] text-slate-600 leading-tight truncate">
+                    {action.display_name_ja}
+                  </span>
+                  <span
+                    className={`self-start shrink-0 text-[10px] px-2 py-0.5 rounded-full border leading-tight ${groupStatusToneClass(status)}`}
+                  >
+                    {groupStatusLabelJa(status)}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-        )}
-        <div className="flex flex-col gap-0.5">
-          <p className="text-[10px] text-slate-600 uppercase tracking-wider">モジュール</p>
-          <p className="text-xs text-slate-400 font-mono text-[11px]">{category.module_owner}</p>
         </div>
-        {staffRole && (
-          <div className="flex flex-col gap-0.5">
-            <p className="text-[10px] text-slate-600 uppercase tracking-wider">あなたの権限</p>
-            <p className="text-xs text-blue-400">{visLabel[
-              staffRole === "owner" ? "dealer_owner"
-              : staffRole === "manager" ? "manager"
-              : staffRole === "staff" ? "staff"
-              : "readonly"
-            ]}</p>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
@@ -468,61 +516,6 @@ function RoleRestrictedNotice() {
           サーバー側の権限チェック: Sprint 13 実装予定
         </p>
       </div>
-    </div>
-  );
-}
-
-// ─── SaveActionsPanel (Phase E) ───────────────────────────────────────────────
-
-// Displays the save action registry entries for this category — shows which
-// settings sections are writable, read-only, or future, and flags any missing
-// server-side role checks for transparency.
-function SaveActionsPanel({ actions }: { actions: SettingsSaveAction[] }) {
-  if (actions.length === 0) return null;
-
-  const statusStyle: Record<SettingsSaveActionStatus, string> = {
-    writable_now:                 "bg-emerald-950/30 text-emerald-400 border-emerald-500/20",
-    read_only:                    "bg-slate-800 text-slate-500 border-slate-700",
-    future:                       "bg-slate-800 text-slate-600 border-slate-700",
-    requires_migration:           "bg-amber-950/20 text-amber-500 border-amber-500/20",
-    requires_admin:               "bg-purple-950/20 text-purple-400 border-purple-500/20",
-    external_integration_required:"bg-blue-950/20 text-blue-400 border-blue-500/20",
-  };
-
-  const statusLabel: Record<SettingsSaveActionStatus, string> = {
-    writable_now:                 "保存可能",
-    read_only:                    "読み取り専用",
-    future:                       "準備中",
-    requires_migration:           "移行作業必要",
-    requires_admin:               "管理者専用",
-    external_integration_required:"外部設定必要",
-  };
-
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-        設定保存ステータス
-      </p>
-      {actions.map(action => (
-        <div
-          key={action.action_id}
-          className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-900/40 border border-slate-800/60"
-        >
-          <div className="flex flex-col gap-0.5">
-            <p className="text-xs text-slate-300">{action.display_name}</p>
-            {!action.has_server_role_check && action.status === "writable_now" && (
-              <p className="text-[10px] text-amber-500/60">
-                ⚠ サーバー権限チェック: Sprint 13 実装予定
-              </p>
-            )}
-          </div>
-          <span
-            className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full border ${statusStyle[action.status]}`}
-          >
-            {statusLabel[action.status]}
-          </span>
-        </div>
-      ))}
     </div>
   );
 }
@@ -699,6 +692,8 @@ function ActiveCategoryContent({
   sequences,
   planInfo,
   planSlot,
+  readFailure,
+  permissionCheckFailed,
 }: {
   category:         SettingsCategory;
   staffRole:        DealerStaffRole | null;
@@ -710,17 +705,26 @@ function ActiveCategoryContent({
   sequences:        DocumentSequenceDB[];
   planInfo:         DealerPlanInfo | null;
   planSlot:         React.ReactNode;
+  readFailure:      SettingsStatusCode | null;
+  permissionCheckFailed: boolean;
 }) {
-  const saveActions = getSaveActionsForCategory(category.category_id);
+  // UX-2B — platform-only entries are removed before anything is rendered. A
+  // dealer never sees 店舗ランク here: it is assigned by GYEON, is not a shop
+  // setting, and showing it — even as a locked row — invites the question of how
+  // to change it. `admin_scope` / `dealer_scope` come straight from the registry,
+  // so this cannot drift from the actual authorization model.
+  const saveActions = getSaveActionsForCategory(category.category_id)
+    .filter((a) => a.dealer_scope && !a.admin_scope && a.ui_role_policy !== "platform_admin");
 
   return (
     <div className="flex flex-col gap-5">
-      <SettingsCategoryHeader category={category} staffRole={staffRole} />
-
-      {/* Phase E — Save action status (registry-driven) */}
-      {saveActions.length > 0 && (
-        <SaveActionsPanel actions={saveActions} />
-      )}
+      <SettingsCategoryHeader
+        category={category}
+        staffRole={staffRole}
+        saveActions={saveActions}
+        readFailure={readFailure}
+        permissionCheckFailed={permissionCheckFailed}
+      />
 
       {/* Phase D — Actual panel content (role-gated where required) */}
       <CategoryDetailPanel
@@ -754,6 +758,8 @@ export default function SettingsCategoryPageView({
   sequences,
   planInfo,
   planSlot,
+  readFailure,
+  permissionCheckFailed,
 }: SettingsCategoryPageViewProps) {
   // SPOL-004: access-denied state reveals no category details
   if (!canAccess) {
@@ -795,6 +801,8 @@ export default function SettingsCategoryPageView({
         sequences={sequences}
         planInfo={planInfo}
         planSlot={planSlot}
+        readFailure={readFailure}
+        permissionCheckFailed={permissionCheckFailed}
       />
     </div>
   );

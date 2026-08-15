@@ -31,17 +31,17 @@ interface Props {
 }
 
 const ITEM_STATUS_OPTIONS: { value: VerificationItemStatus; label: string }[] = [
-  { value: "pending",        label: "— Pending" },
-  { value: "passed",         label: "✓ Passed" },
-  { value: "failed",         label: "✗ Failed" },
-  { value: "blocked",        label: "⊘ Blocked" },
+  { value: "pending",        label: "— 未実施" },
+  { value: "passed",         label: "✓ 合格" },
+  { value: "failed",         label: "✗ 不合格" },
+  { value: "blocked",        label: "⊘ ブロック" },
   { value: "not_applicable", label: "N/A" },
 ];
 
 const RUN_STATUS_OPTIONS: { value: Exclude<VerificationRunStatus, "in_progress">; label: string }[] = [
-  { value: "passed",  label: "Passed — all required items verified" },
-  { value: "failed",  label: "Failed — one or more items failed" },
-  { value: "blocked", label: "Blocked — cannot complete verification" },
+  { value: "passed",  label: "合格 — すべての必須項目を検証済み" },
+  { value: "failed",  label: "不合格 — 1つ以上の項目が失敗" },
+  { value: "blocked", label: "ブロック — 検証を完了できません" },
 ];
 
 function CategorySection({
@@ -108,9 +108,9 @@ function CategorySection({
           <span className={`text-[10px] px-2 py-0.5 rounded border ${itemStatusColor(catStatus)}`}>
             {catStatus === "pending"
               ? `${items.filter(i => i.status !== "pending" && i.status !== "not_applicable").length}/${items.length}`
-              : catStatus === "passed" ? "All Passed"
-              : catStatus === "failed" ? "Has Failures"
-              : catStatus === "blocked" ? "Blocked"
+              : catStatus === "passed" ? "すべて合格"
+              : catStatus === "failed" ? "不合格あり"
+              : catStatus === "blocked" ? "ブロック"
               : catStatus}
           </span>
         </div>
@@ -151,7 +151,7 @@ function CategorySection({
                       {/* Note */}
                       <input
                         type="text"
-                        placeholder="Operator note (optional)"
+                        placeholder="オペレーターメモ（任意）"
                         value={local.note}
                         onChange={e => setLocalItems(prev => ({
                           ...prev,
@@ -164,7 +164,7 @@ function CategorySection({
                       {/* Evidence URL */}
                       <input
                         type="text"
-                        placeholder="Evidence URL (optional)"
+                        placeholder="証跡URL（任意）"
                         value={local.evidenceUrl}
                         onChange={e => setLocalItems(prev => ({
                           ...prev,
@@ -216,7 +216,7 @@ export default function StagingVerificationPanel({ runs, currentRun, items, onRu
     startTransition(async () => {
       const result = await createVerificationRun(newRunName.trim());
       if (!result.success) {
-        setCreateError(result.error ?? "Failed to create run");
+        setCreateError(result.error ?? "ランの作成に失敗しました");
       } else if (result.runId) {
         setNewRunName("");
         onRunChange(result.runId);
@@ -230,7 +230,7 @@ export default function StagingVerificationPanel({ runs, currentRun, items, onRu
     startTransition(async () => {
       const result = await completeVerificationRun(currentRun.id, completeStatus, completeSummary);
       if (!result.success) {
-        setCompleteError(result.error ?? "Failed to complete run");
+        setCompleteError(result.error ?? "ランの完了に失敗しました");
       } else {
         setShowCompleteModal(false);
         onRunChange(currentRun.id);
@@ -304,10 +304,10 @@ export default function StagingVerificationPanel({ runs, currentRun, items, onRu
           {/* Progress summary */}
           <div className="text-right text-[10px] text-slate-500 shrink-0">
             <div className="flex gap-3">
-              <span className="text-green-400">{items.filter(i => i.status === "passed").length} Passed</span>
-              <span className="text-red-400">{items.filter(i => i.status === "failed").length} Failed</span>
-              <span className="text-orange-400">{items.filter(i => i.status === "blocked").length} Blocked</span>
-              <span className="text-slate-500">{items.filter(i => i.status === "pending").length} Pending</span>
+              <span className="text-green-400">合格 {items.filter(i => i.status === "passed").length}</span>
+              <span className="text-red-400">不合格 {items.filter(i => i.status === "failed").length}</span>
+              <span className="text-orange-400">ブロック {items.filter(i => i.status === "blocked").length}</span>
+              <span className="text-slate-500">未実施 {items.filter(i => i.status === "pending").length}</span>
             </div>
           </div>
 

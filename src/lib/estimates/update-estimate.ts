@@ -12,6 +12,8 @@ import { revalidatePath }   from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { EstimateCategory } from "./estimate-types";
+import { calculateEstimateTotals } from "@/lib/pricing/estimate-totals";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 interface ItemInput {
   category:      EstimateCategory;
@@ -35,6 +37,9 @@ function num(formData: FormData, key: string, fallback = 0): number {
 }
 
 export async function updateEstimate(estimateId: string, formData: FormData) {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "No active dealer membership." };
 
@@ -83,6 +88,29 @@ export async function updateEstimate(estimateId: string, formData: FormData) {
     return { error: "Vehicle not found or does not belong to your dealer." };
   }
 
+  // Parse line items payload (if present) and recompute totals SERVER-SIDE.
+  // Server-computed totals are authoritative; client subtotal/tax/total are a
+  // fallback only when no line items are submitted.
+  const hasItemsPayload = itemsJson !== null;
+  let items: ItemInput[] = [];
+  if (hasItemsPayload) {
+    try {
+      items = JSON.parse(itemsJson as string) as ItemInput[];
+    } catch {
+      // Reject malformed payload instead of silently wiping items / falling back
+      // to client totals (consistent with createEstimate).
+      return { error: "見積明細データが不正です" };
+    }
+  }
+  const computed = items.length > 0
+    ? calculateEstimateTotals(items, discountAmount, taxRate)
+    : null;
+  const finalSubtotal = computed?.subtotal        ?? subtotal;
+  const finalDiscount = computed?.discount_amount ?? discountAmount;
+  const finalTaxRate  = computed?.tax_rate        ?? taxRate;
+  const finalTax      = computed?.tax_amount      ?? taxAmount;
+  const finalTotal    = computed?.total           ?? total;
+
   // Update the estimate record.
   const { error: updateError } = await supabase
     .from("estimates")
@@ -93,12 +121,12 @@ export async function updateEstimate(estimateId: string, formData: FormData) {
       estimate_number: estimateNo,
       title:           title,
       status:          status,
-      subtotal:        subtotal,
-      tax:             taxAmount,      // legacy column mirror
-      tax_rate:        taxRate,
-      tax_amount:      taxAmount,
-      discount_amount: discountAmount,
-      total:           total,
+      subtotal:        finalSubtotal,
+      tax:             finalTax,        // legacy column mirror
+      tax_rate:        finalTaxRate,
+      tax_amount:      finalTax,
+      discount_amount: finalDiscount,
+      total:           finalTotal,
       valid_until:     validUntil || null,
       notes:           notes,
       internal_memo:   internalMemo,
@@ -112,8 +140,8 @@ export async function updateEstimate(estimateId: string, formData: FormData) {
     return { error: updateError.message };
   }
 
-  // Replace line items: delete existing, re-insert.
-  if (itemsJson !== null) {
+  // Replace line items: delete existing, re-insert (items already parsed above).
+  if (hasItemsPayload) {
     // Delete all existing items for this estimate.
     const { error: deleteError } = await supabase
       .from("estimate_items")
@@ -123,13 +151,6 @@ export async function updateEstimate(estimateId: string, formData: FormData) {
 
     if (deleteError) {
       console.error("[updateEstimate] delete items error:", deleteError.message);
-    }
-
-    let items: ItemInput[] = [];
-    try {
-      items = JSON.parse(itemsJson) as ItemInput[];
-    } catch {
-      // itemsJson was present but unparseable — proceed without items
     }
 
     if (items.length > 0) {

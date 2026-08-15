@@ -104,13 +104,13 @@ export default function AdjustmentsClient({ dealers, products, initialAdjustment
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-white">Stock Adjustments</h1>
+        <h1 className="text-xl font-semibold text-white">在庫調整</h1>
         <p className="text-sm text-slate-400 mt-0.5">破損・紛失・社内使用・サンプル・在庫補正の記録</p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-6 mb-8">
-        <h2 className="text-sm font-semibold text-slate-300 mb-4">New Adjustment</h2>
+        <h2 className="text-sm font-semibold text-slate-300 mb-4">新規調整</h2>
 
         {/* Adjustment type tabs */}
         <div className="flex flex-wrap gap-2 mb-4">
@@ -134,19 +134,19 @@ export default function AdjustmentsClient({ dealers, products, initialAdjustment
         {/* Row 1: Dealer + Product */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Dealer <span className="text-red-400">*</span></label>
+            <label className="block text-xs text-slate-400 mb-1">ディーラー <span className="text-red-400">*</span></label>
             <select
               value={form.dealer_id}
               onChange={(e) => setForm((f) => ({ ...f, dealer_id: e.target.value }))}
               className="w-full bg-slate-700/50 border border-slate-600 focus:border-green-500 rounded-lg px-3 py-2 text-sm text-white outline-none"
             >
-              <option value="">-- Dealer --</option>
+              <option value="">-- ディーラー --</option>
               {dealers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Product <span className="text-red-400">*</span></label>
+            <label className="block text-xs text-slate-400 mb-1">商品 <span className="text-red-400">*</span></label>
             <ProductSearchInput
               products={products}
               selectedId={form.product_id}
@@ -245,7 +245,7 @@ export default function AdjustmentsClient({ dealers, products, initialAdjustment
 
       {/* Recent adjustments */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-300 mb-3">Recent Adjustments</h2>
+        <h2 className="text-sm font-semibold text-slate-300 mb-3">最近の調整</h2>
         {adjustments.length === 0 ? (
           <div className="text-center py-12 text-slate-500 text-sm">まだ調整記録がありません。</div>
         ) : (

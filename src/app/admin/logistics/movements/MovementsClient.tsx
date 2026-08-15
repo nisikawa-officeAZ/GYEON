@@ -47,7 +47,7 @@ export default function MovementsClient({ movements }: Props) {
     <div className="max-w-7xl mx-auto">
       <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-white">Stock Movement History</h1>
+          <h1 className="text-xl font-semibold text-white">在庫移動履歴</h1>
           <p className="text-sm text-slate-400 mt-0.5">全ディーラー・全商品の在庫変動ログ</p>
         </div>
         <div className="text-sm text-slate-400">{filtered.length} 件表示</div>
@@ -67,7 +67,7 @@ export default function MovementsClient({ movements }: Props) {
           onChange={(e) => setTypeFilter(e.target.value)}
           className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-100 outline-none focus:border-green-500"
         >
-          <option value="all">All Types</option>
+          <option value="all">すべての種別</option>
           {movementTypes.map((t) => (
             <option key={t} value={t}>{MOVEMENT_TYPE_LABELS[t] ?? t}</option>
           ))}

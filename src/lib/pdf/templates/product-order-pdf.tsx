@@ -11,10 +11,13 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import { ProductOrderDB, orderDisplayNo, orderStatusLabel, orderTotal } from "@/lib/product-orders/product-order-types";
+import { registerPdfFonts } from "@/lib/pdf/register-fonts";
+import { BrandingIdentity, BrandingFooterLines } from "@/lib/pdf/branding-blocks";
+import type { DealerBranding } from "@/lib/pdf/dealer-branding-types";
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSansJP",
     fontSize: 10,
     color: "#111827",
     backgroundColor: "#ffffff",
@@ -30,7 +33,7 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 14,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#1d4ed8",
     marginBottom: 4,
   },
@@ -41,7 +44,7 @@ const styles = StyleSheet.create({
   },
   docTitle: {
     fontSize: 22,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#111827",
     textAlign: "right",
     marginBottom: 6,
@@ -62,7 +65,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#6b7280",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -89,7 +92,7 @@ const styles = StyleSheet.create({
   colQty:      { width: 40,  fontSize: 8, textAlign: "right" },
   colSubtotal: { width: 75,  fontSize: 8, textAlign: "right" },
   tableHeaderText: {
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#6b7280",
     fontSize: 8,
   },
@@ -106,8 +109,8 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     marginTop: 4,
   },
-  grandTotalLabel: { fontSize: 11, fontFamily: "Helvetica-Bold", color: "#111827" },
-  grandTotalValue: { fontSize: 11, fontFamily: "Helvetica-Bold", color: "#111827" },
+  grandTotalLabel: { fontSize: 11, fontFamily: "NotoSansJP-Bold", color: "#111827" },
+  grandTotalValue: { fontSize: 11, fontFamily: "NotoSansJP-Bold", color: "#111827" },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -115,7 +118,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   statusLabel: { fontSize: 8, color: "#9ca3af" },
-  statusValue: { fontSize: 9, fontFamily: "Helvetica-Bold", color: "#374151" },
+  statusValue: { fontSize: 9, fontFamily: "NotoSansJP-Bold", color: "#374151" },
   notesBox: {
     backgroundColor: "#f9fafb",
     borderRadius: 4,
@@ -150,9 +153,10 @@ function yen(n: number): string {
 
 interface ProductOrderDocumentProps {
   order: ProductOrderDB;
+  branding?: DealerBranding | null;
 }
 
-function ProductOrderDocument({ order }: ProductOrderDocumentProps) {
+function ProductOrderDocument({ order, branding }: ProductOrderDocumentProps) {
   const items = order.product_order_items ?? [];
   const total = orderTotal(items);
   const docNo = orderDisplayNo(order);
@@ -163,8 +167,7 @@ function ProductOrderDocument({ order }: ProductOrderDocumentProps) {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.companyName}>GYEON Detailer Agent</Text>
-            <Text style={styles.companyInfo}>DealerOS — Dealer Management System</Text>
+            <BrandingIdentity branding={branding} />
           </View>
           <View>
             <Text style={styles.docTitle}>商品注文書</Text>
@@ -226,14 +229,14 @@ function ProductOrderDocument({ order }: ProductOrderDocumentProps) {
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>GYEON Detailer Agent — DealerOS</Text>
-          <Text style={styles.footerText}>{docNo}</Text>
+          <BrandingFooterLines branding={branding} docNo={docNo} />
         </View>
       </Page>
     </Document>
   );
 }
 
-export async function renderProductOrderPdf(order: ProductOrderDB): Promise<Buffer> {
-  return await renderToBuffer(<ProductOrderDocument order={order} />);
+export async function renderProductOrderPdf(order: ProductOrderDB, branding?: DealerBranding | null): Promise<Buffer> {
+  registerPdfFonts();
+  return await renderToBuffer(<ProductOrderDocument order={order} branding={branding} />);
 }

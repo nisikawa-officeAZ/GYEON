@@ -7,7 +7,6 @@ import {
   InvoiceCategory,
   InvoiceItemInput,
   INVOICE_CATEGORIES,
-  INVOICE_STATUSES,
   calculateInvoiceTotals,
   lineTotal,
   invoiceDisplayNo,
@@ -42,6 +41,7 @@ interface FormFields {
   title:               string;
   issue_date:          string;
   due_date:            string;
+  delivery_date:       string;
   discount_amount:     number;
   tax_rate:            number;
   paid_amount:         number;
@@ -57,6 +57,7 @@ function fromDB(inv: InvoiceDB): { form: FormFields; items: InvoiceItemInput[] }
       title:           inv.title           ?? "",
       issue_date:      inv.issue_date      ?? "",
       due_date:        inv.due_date        ?? "",
+      delivery_date:   inv.delivery_date   ?? "",
       discount_amount: inv.discount_amount,
       tax_rate:        inv.tax_rate,
       paid_amount:     inv.paid_amount,
@@ -84,6 +85,7 @@ const EMPTY_FORM: FormFields = {
   title:           "請求書",
   issue_date:      new Date().toISOString().slice(0, 10),
   due_date:        "",
+  delivery_date:   "",
   discount_amount: 0,
   tax_rate:        10,
   paid_amount:     0,
@@ -164,10 +166,10 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
     const fd = new FormData();
     if (workOrderId) fd.set("work_order_id", workOrderId);
     fd.set("invoice_number",  form.invoice_number);
-    fd.set("status",          form.status);
     fd.set("title",           form.title);
     fd.set("issue_date",      form.issue_date);
     fd.set("due_date",        form.due_date);
+    fd.set("delivery_date",   form.delivery_date);
     fd.set("discount_amount", String(form.discount_amount));
     fd.set("tax_rate",        String(form.tax_rate));
     fd.set("paid_amount",     String(form.paid_amount));
@@ -228,15 +230,9 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="flex flex-col gap-1">
-          <label className={labelClass}>ステータス</label>
-          <select value={form.status} onChange={(e) => setField("status", e.target.value as InvoiceStatus)}
-            className={inputClass}>
-            {INVOICE_STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-        </div>
+        {/* B1: status is not user-selectable. A form always saves a draft;
+            issuance happens through 請求書を発行, which produces the immutable
+            PDF first, and payments own the later lifecycle states. */}
         <div className="flex flex-col gap-1">
           <label className={labelClass}>発行日</label>
           <input type="date" value={form.issue_date} onChange={(e) => setField("issue_date", e.target.value)}
@@ -245,6 +241,13 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
         <div className="flex flex-col gap-1">
           <label className={labelClass}>支払期限</label>
           <input type="date" value={form.due_date} onChange={(e) => setField("due_date", e.target.value)}
+            className={inputClass} />
+        </div>
+        {/* MONTHLY-DATA-B1: 納品日 — authoritative delivery date, editable while the invoice is a
+            draft. Required (a real calendar date) before the invoice can be issued. */}
+        <div className="flex flex-col gap-1">
+          <label className={labelClass}>納品日</label>
+          <input type="date" value={form.delivery_date} onChange={(e) => setField("delivery_date", e.target.value)}
             className={inputClass} />
         </div>
       </div>

@@ -1,0 +1,30 @@
+// EstimatePhilosophy — the Estimate-unique GYEON Philosophy block (Serif, centered): eyebrow,
+// hairline ornament, serif quote lines, attribution. Content is GYEON's brand philosophy, not tenant
+// data (default provided; overridable).
+
+import { View } from "@react-pdf/renderer";
+import { Stack, Overline, Caption } from "../../primitives";
+import { COLOR, FONT, FS, TRACK, LH, BW, HYPHEN_PENALTY } from "../../tokens";
+import type { EstimatePhilosophy as Phil } from "./estimate-data";
+import { Text } from "../../primitives/pdf-text";
+
+export function EstimatePhilosophy({ philosophy, accent }: { philosophy?: Phil; accent: string }) {
+  // No implicit GYEON default: render nothing unless the caller supplies a philosophy (the template
+  // provides the GYEON default only for gyeon-classic deployments).
+  if (!philosophy) return null;
+  const p = philosophy;
+  return (
+    <Stack gap={2} wrap={false} style={{ alignItems: "center", marginVertical: 3 }}>
+      <Overline style={{ letterSpacing: TRACK.widest, color: accent }}>{p.eyebrow}</Overline>
+      <View style={{ width: 28, borderTopWidth: BW.thin, borderTopColor: COLOR.line, borderTopStyle: "solid", marginVertical: 1 }} />
+      <Stack gap={0} style={{ alignItems: "center" }}>
+        {p.lines.map((ln, i) => (
+          <Text hyphenationPenalty={HYPHEN_PENALTY} key={i} style={{ fontFamily: FONT.serif, fontSize: FS.fs14, lineHeight: LH.snug, color: COLOR.textStrong, textAlign: "center" }}>
+            {ln}
+          </Text>
+        ))}
+      </Stack>
+      <Caption style={{ letterSpacing: TRACK.wide, textAlign: "center" }}>{p.attribution}</Caption>
+    </Stack>
+  );
+}

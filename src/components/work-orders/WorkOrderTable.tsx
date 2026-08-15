@@ -35,7 +35,7 @@ export default function WorkOrderTable({
   if (workOrders.length === 0) {
     return (
       <div className="bg-[#1e293b] rounded-xl shadow-lg p-10 text-center">
-        <p className="text-sm text-slate-500">No work orders yet.</p>
+        <p className="text-sm text-slate-500">施工指示がまだありません</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function WorkOrderTable({
                         onClick={() => onEdit(wo)}
                         className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
                       >
-                        Edit
+                        編集
                       </button>
                     )}
                     {onViewDetail && (
@@ -107,7 +107,7 @@ export default function WorkOrderTable({
                         onClick={() => onViewDetail(wo)}
                         className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium transition-colors"
                       >
-                        Detail
+                        詳細
                       </button>
                     )}
                   </div>

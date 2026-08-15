@@ -4,7 +4,7 @@ import { getLogisticsShipments } from "@/lib/admin/logistics/get-logistics-shipm
 import LogisticsShipmentsClient from "./LogisticsShipmentsClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Shipment Queue | GYEON Logistics" };
+export const metadata = { title: "出荷キュー | GYEON Logistics" };
 
 export default async function LogisticsShipmentsPage() {
   const caller = await getCurrentAdmin();

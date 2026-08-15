@@ -4,6 +4,10 @@
 
 export type LineMessageStatus = 'pending' | 'sent' | 'failed' | 'cancelled';
 
+// R90B — `estimate` joins the union for estimate delivery. The DB column is
+// `purpose text NOT NULL DEFAULT 'manual'` with NO CHECK and no enum type
+// (migration 044), so this is a TypeScript-only addition: no migration, and no
+// historical SQL is edited.
 export type LineMessagePurpose =
   | 'manual'
   | 'completion_report'
@@ -11,6 +15,7 @@ export type LineMessagePurpose =
   | 'reservation'
   | 'campaign'
   | 'review_request'
+  | 'estimate'
   | 'system';
 
 export type LineQueueStatus = 'scheduled' | 'processing' | 'sent' | 'failed' | 'cancelled';
@@ -132,6 +137,7 @@ export function lineMessagePurposeLabel(purpose: LineMessagePurpose): string {
     reservation:          '予約案内',
     campaign:             'キャンペーン',
     review_request:       'レビュー依頼',
+    estimate:             '見積送付',
     system:               'システム',
   };
   return map[purpose] ?? purpose;

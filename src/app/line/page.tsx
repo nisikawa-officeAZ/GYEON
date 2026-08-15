@@ -11,7 +11,7 @@ export default async function LinePage() {
   const [logs, failedLogs, queue, lineStats, msgStats, queueStats] = await Promise.all([
     getLineMessageLogs({ limit: 50 }),
     getLineMessageLogs({ status: "failed", limit: 30 }),
-    getLineNotificationQueue({ status: ["scheduled", "failed"], limit: 50 }),
+    getLineNotificationQueue({ status: ["scheduled", "processing", "sent", "failed"], orderByRecent: true, limit: 50 }),
     getLineStats(),
     getLineMessageStats(),
     getLineQueueStats(),

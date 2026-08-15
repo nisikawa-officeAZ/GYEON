@@ -1,0 +1,335 @@
+/* =============================================================================
+   DealerOS GYEON — Design System Tokens
+   -----------------------------------------------------------------------------
+   目的: 見積ウィザード Ver2.0 の UI 実装で使用する CSS 変数の唯一の正本。
+   哲学: ダーク基調のみ / 業務ツール / 情報密度・操作速度・視認性を最優先。
+         装飾より意味。GYEON ブランドカラー（青）をアクセントに使用。
+   由来: 既存コードベース src/app/globals.css の RC-10 トークン + 見積ウィザ
+         ード Ver2.0 依頼書 §17 Color Palette の値を厳密に統合。
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   Fonts — 業務ツールとして日本語可読性を最優先
+   本番では next/font/google の Geist を使用（layout.tsx）。
+   プレビュー環境向けに Google Fonts CDN 版を用意。
+   `**` 実プロダクションでは self-host の woff2 に切替を推奨。
+   ----------------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ==========================================================================
+     COLOR SYSTEM
+     ------------------------------------------------------------------------
+     Ver2.0 §17 と既存 RC-10 の融合。**新色発明禁止**。
+     ========================================================================== */
+
+  /* ── Surface / Background（ダーク階層） ─────────────────────────────── */
+  --ds-bg:            #080d1a;   /* ページ背景（既存 body 準拠） */
+  --ds-bg-elevated:   #0f172a;   /* 入力・低位面 (slate-900) */
+  --ds-bg-panel:      #16161f;   /* パネル・低位カード */
+  --ds-bg-card:       #1e293b;   /* カード / モーダル / パネル (slate-800) */
+  --ds-bg-card-2:     #1a1a24;   /* 二次カード面 */
+  --ds-bg-overlay:    rgba(8, 13, 26, 0.72); /* オーバーレイ地 */
+
+  /* ── Border（境界） ──────────────────────────────────────────────── */
+  --ds-line:          rgba(255, 255, 255, 0.08);  /* 弱境界 */
+  --ds-line-strong:   rgba(255, 255, 255, 0.15);  /* 強境界 */
+  --ds-line-slate:    #334155;                    /* slate-700 通常入力枠 */
+  --ds-line-slate-2:  #475569;                    /* slate-600 hover 枠 */
+
+  /* ── Primary (Brand Blue) — GYEON アクセント ─────────────────────── */
+  --ds-primary-900:   #1e3a8a;
+  --ds-primary-800:   #1e40af;   /* hover 側 */
+  --ds-primary-700:   #1d4ed8;   /* 標準プライマリ (focus 枠) */
+  --ds-primary-600:   #2563eb;
+  --ds-primary-500:   #3b82f6;
+  --ds-primary-400:   #4f8ef7;   /* 明色 (RC-10 gs-blue) */
+  --ds-primary-300:   #60a5fa;
+  --ds-primary-200:   #93c5fd;
+
+  --ds-primary-tint-5:  rgba(29, 78, 216, 0.05);
+  --ds-primary-tint-10: rgba(29, 78, 216, 0.10);
+  --ds-primary-tint-40: rgba(30, 58, 138, 0.40); /* 選択ボタン ON 背景 */
+  --ds-primary-tint-60: rgba(29, 78, 216, 0.60); /* 選択ボタン ON 境界 */
+  --ds-primary-glow:    rgba(79, 142, 247, 0.25);
+
+  /* ── Text ───────────────────────────────────────────────────────── */
+  --ds-text-strong:   #ffffff;   /* 合計金額・最強コントラスト */
+  --ds-text-primary:  #f1f5f9;   /* 通常本文 (slate-100) */
+  --ds-text-body:     #e2e8f0;   /* slate-200 */
+  --ds-text-muted:    #94a3b8;   /* ラベル (slate-400) */
+  --ds-text-subtle:   #64748b;   /* 補助 (slate-500) */
+  --ds-text-faint:    #475569;   /* 最弱 (slate-600) / placeholder */
+
+  /* ── Semantic ───────────────────────────────────────────────────── */
+  /* Amber = 必須未入力ハイライト（binding） */
+  --ds-amber-400:     #fbbf24;
+  --ds-amber-500:     #f59e0b;
+  --ds-amber-tint-10: rgba(245, 158, 11, 0.10);
+  --ds-amber-tint-40: rgba(245, 158, 11, 0.40);
+
+  /* Success / 選択済み確定 */
+  --ds-green-400:     #4ade80;
+  --ds-green-500:     #22c55e;
+  --ds-green-tint-10: rgba(34, 197, 94, 0.10);
+  --ds-green-tint-15: rgba(34, 197, 94, 0.15);
+
+  /* Error / 破壊 */
+  --ds-red-400:       #f87171;
+  --ds-red-500:       #ef4444;
+  --ds-red-tint-10:   rgba(239, 68, 68, 0.10);
+  --ds-red-tint-30:   rgba(239, 68, 68, 0.30);
+
+  /* LINE ブランドカラー（Screen7 通信ボタン） */
+  --ds-line-brand:    #06c755;
+
+  /* ==========================================================================
+     TYPOGRAPHY
+     ------------------------------------------------------------------------
+     Ver2.0 §16 準拠。日本語可読性優先。金額は tabular-nums。
+     ========================================================================== */
+
+  --ds-font-sans:     'Geist', 'Noto Sans JP', -apple-system, BlinkMacSystemFont,
+                      'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+                      'Yu Gothic UI', 'Meiryo', sans-serif;
+  --ds-font-mono:     'JetBrains Mono', 'SF Mono', Menlo, Monaco, Consolas, monospace;
+  --ds-font-num:      'Geist', 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Type scale — 業務ツールの階層。小さすぎない・大きすぎない */
+  --ds-fs-11:  11px;   /* meta / caption 極小 */
+  --ds-fs-12:  12px;   /* label / helper */
+  --ds-fs-13:  13px;   /* dense table body */
+  --ds-fs-14:  14px;   /* sm — desktop body */
+  --ds-fs-16:  16px;   /* base — mobile body (iOS zoom 防止) */
+  --ds-fs-18:  18px;   /* subtitle */
+  --ds-fs-20:  20px;   /* screen title */
+  --ds-fs-24:  24px;   /* section headline */
+  --ds-fs-28:  28px;   /* total 通常 */
+  --ds-fs-36:  36px;   /* total 強調 (desktop) */
+
+  /* Font weight — Geist の 300–800 レンジ */
+  --ds-fw-light:      300;
+  --ds-fw-regular:    400;
+  --ds-fw-medium:     500;
+  --ds-fw-semi:       600;
+  --ds-fw-bold:       700;
+  --ds-fw-black:      800;
+
+  /* Line height / tracking */
+  --ds-lh-tight:      1.2;
+  --ds-lh-snug:       1.35;
+  --ds-lh-normal:     1.5;
+  --ds-lh-relaxed:    1.65;
+
+  --ds-tr-tight:      -0.01em;   /* headline */
+  --ds-tr-wide:       0.05em;    /* small caps label */
+  --ds-tr-wider:      0.14em;    /* section overline */
+
+  /* ==========================================================================
+     SPACING — 4px baseline
+     ========================================================================== */
+
+  --ds-space-1:   4px;
+  --ds-space-2:   8px;
+  --ds-space-3:   12px;
+  --ds-space-4:   16px;
+  --ds-space-5:   20px;   /* card p-5 基準 */
+  --ds-space-6:   24px;
+  --ds-space-8:   32px;
+  --ds-space-10:  40px;
+  --ds-space-12:  48px;   /* min tap target */
+  --ds-space-16:  64px;
+
+  /* ==========================================================================
+     RADIUS
+     ========================================================================== */
+
+  --ds-radius-sm:   6px;
+  --ds-radius-md:   8px;
+  --ds-radius-lg:   10px;   /* 入力 / ボタン */
+  --ds-radius-xl:   14px;   /* カード */
+  --ds-radius-2xl:  20px;   /* 大型カード / モーダル */
+  --ds-radius-full: 9999px;
+
+  /* ==========================================================================
+     SHADOW / GLOW
+     ========================================================================== */
+
+  --ds-shadow-sm:  0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --ds-shadow-md:  0 4px 8px -2px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --ds-shadow-lg:  0 10px 20px -5px rgba(0, 0, 0, 0.5), 0 4px 8px -4px rgba(0, 0, 0, 0.4);
+  --ds-shadow-xl:  0 20px 40px -12px rgba(0, 0, 0, 0.6), 0 8px 16px -8px rgba(0, 0, 0, 0.4);
+
+  --ds-glow-primary: 0 0 0 3px rgba(29, 78, 216, 0.25);
+  --ds-glow-amber:   0 0 0 3px rgba(245, 158, 11, 0.20);
+  --ds-glow-error:   0 0 0 3px rgba(239, 68, 68, 0.20);
+
+  /* Inner highlight — グラスモーフィズム対応 */
+  --ds-hi-inner:     inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --ds-hi-inner-2:   inset 0 1px 0 rgba(255, 255, 255, 0.10);
+
+  /* ==========================================================================
+     MOTION — Ver2.0 §18 控えめ・高速
+     ========================================================================== */
+
+  --ds-ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ds-dur-fast:    120ms;
+  --ds-dur-base:    180ms;
+  --ds-dur-slow:    280ms;
+
+  /* ==========================================================================
+     TAP TARGET — Ver2.0 §14, §21 accessibility binding
+     ========================================================================== */
+
+  --ds-tap-min:     48px;
+
+  /* ==========================================================================
+     LAYOUT — Wizard shell
+     ========================================================================== */
+
+  --ds-shell-max:   1200px;
+  --ds-sidebar-w:   280px;
+  --ds-header-h:    64px;
+  --ds-stepper-h:   88px;    /* 実測: STEP バッジ + ラベル + padding = 約 88px */
+  --ds-mobile-bar-h: 88px;
+
+  /* Sticky 要素の追従位置。
+     ヘッダー(64) + 呼吸するための余白(16) = 80px。
+     ステッパーは非 sticky なのでスクロール時に画面外へ流れる。
+     Sticky Total Panel、Screen 4 の縦タブ、他の sticky 要素はすべて
+     この値を top に指定して、統一された追従挙動を実現する。 */
+  --ds-sticky-top:  80px;
+
+  /* ScreenTitle の全高（オフセット計算用）
+     内訳: overline(11px) + margin(8) + headline(24×1.2=29) + subtitle(14×1.5=21, margin 6) + marginBottom(24)
+     ≒ 99px。呼吸のため 108px に丸めて、Sticky Total パネルの上端が
+     縦タブ・見積カードと揃うよう margin-top として使う。
+     subtitle 無し画面 (Screen 3 等) では実高が 78px なので、
+     30px 過剰余白が入るが、UI 業務ツールでは視覚一貫性のほうが優先。 */
+  --ds-screen-title-h: 108px;
+}
+
+/* =============================================================================
+   SEMANTIC TYPE ROLES — 見出しから金額まで、実 UI で直接使う class
+   ============================================================================= */
+
+.ds-headline {
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-fs-24);
+  font-weight: var(--ds-fw-semi);
+  line-height: var(--ds-lh-tight);
+  letter-spacing: var(--ds-tr-tight);
+  color: var(--ds-text-primary);
+}
+
+.ds-title {
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-fs-20);
+  font-weight: var(--ds-fw-semi);
+  line-height: var(--ds-lh-snug);
+  color: var(--ds-text-primary);
+}
+
+.ds-subtitle {
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-fs-18);
+  font-weight: var(--ds-fw-medium);
+  line-height: var(--ds-lh-snug);
+  color: var(--ds-text-body);
+}
+
+.ds-body {
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-fs-14);
+  font-weight: var(--ds-fw-regular);
+  line-height: var(--ds-lh-normal);
+  color: var(--ds-text-primary);
+}
+
+.ds-body-lg {
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-fs-16);
+  font-weight: var(--ds-fw-regular);
+  line-height: var(--ds-lh-normal);
+  color: var(--ds-text-primary);
+}
+
+.ds-label {
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-fs-12);
+  font-weight: var(--ds-fw-medium);
+  color: var(--ds-text-muted);
+}
+
+.ds-overline {
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-fs-11);
+  font-weight: var(--ds-fw-bold);
+  letter-spacing: var(--ds-tr-wider);
+  text-transform: uppercase;
+  color: var(--ds-text-muted);
+}
+
+.ds-caption {
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-fs-11);
+  font-weight: var(--ds-fw-regular);
+  color: var(--ds-text-subtle);
+}
+
+/* 金額専用 — tabular-nums で桁を揃える */
+.ds-numeric {
+  font-family: var(--ds-font-num);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  letter-spacing: 0;
+}
+
+.ds-price {
+  font-family: var(--ds-font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--ds-fw-semi);
+  color: var(--ds-text-primary);
+}
+
+.ds-price-total {
+  font-family: var(--ds-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--ds-fs-28);
+  font-weight: var(--ds-fw-bold);
+  color: var(--ds-text-strong);
+  letter-spacing: var(--ds-tr-tight);
+}
+
+/* =============================================================================
+   BASE — ページ全体の初期化
+   ============================================================================= */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--ds-bg);
+  color: var(--ds-text-primary);
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-fs-14);
+  line-height: var(--ds-lh-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+button { font-family: inherit; }
+input, textarea, select { font-family: inherit; }
+
+/* Reduce motion — Ver2.0 §21 binding */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

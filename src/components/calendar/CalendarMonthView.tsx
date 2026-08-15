@@ -1,6 +1,9 @@
 "use client";
 
-import { ReservationDB, serviceTypeColor } from "@/lib/reservations/reservation-types";
+import { ReservationDB, serviceTypeColor, serviceTypeLabel } from "@/lib/reservations/reservation-types";
+import { todayStr, statusDotClass } from "@/lib/calendar/calendar-utils";
+import type { RecommendationLevel } from "@/lib/capacity/capacity-types";
+import { levelDotClass, levelTintClass, recommendationLabel } from "@/lib/capacity/recommendation";
 
 interface Props {
   reservations: ReservationDB[];
@@ -8,6 +11,16 @@ interface Props {
   month: number;  // 1-12
   onDayClick?: (date: string) => void;
   onReservationClick?: (r: ReservationDB) => void;
+  /** B1: whether a date is a store closed day (visual only). */
+  isClosed?: (dateStr: string) => boolean;
+  /** B5a follow-up: resolve assigned technician name; null when none/deleted. */
+  staffName?: (id?: string | null) => string | null;
+  /** B6b: resolve assigned bay name; null when none/deleted. */
+  bayName?: (id?: string | null) => string | null;
+  /** C1.4: resolve a day's capacity recommendation level for the heatmap. */
+  dayLevel?: (dateStr: string) => RecommendationLevel | null;
+  /** C1.5: whether a day is de-emphasized by the heatmap filter (display only). */
+  dayDimmed?: (dateStr: string) => boolean;
 }
 
 const DAY_HEADERS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -22,8 +35,13 @@ export default function CalendarMonthView({
   month,
   onDayClick,
   onReservationClick,
+  isClosed,
+  staffName,
+  bayName,
+  dayLevel,
+  dayDimmed,
 }: Props) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();  // A0: local date, no UTC off-by-one
 
   // First day of the month (0=Sun, 6=Sat)
   const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
@@ -85,17 +103,39 @@ export default function CalendarMonthView({
           const cellReservations = reservationsByDate.get(cell.dateStr) ?? [];
           const isToday = cell.dateStr === today;
           const colIndex = i % 7;
+          const closed = isClosed?.(cell.dateStr) ?? false;
+          // C1.4: capacity level for the heatmap — only for open, current-month days.
+          const level = cell.currentMonth && !closed ? (dayLevel?.(cell.dateStr) ?? null) : null;
+          // C1.5: de-emphasized by the heatmap filter (display only; still clickable).
+          const dimmed = cell.currentMonth && (dayDimmed?.(cell.dateStr) ?? false);
 
           return (
             <div
               key={cell.dateStr + i}
               onClick={() => onDayClick?.(cell.dateStr)}
-              className={`min-h-[90px] p-1.5 border-b border-r border-slate-800 cursor-pointer transition-colors ${
+              title={closed ? "定休日" : level ? `稼働: ${recommendationLabel(level)}` : undefined}
+              className={`relative min-h-[90px] p-1.5 border-b border-r border-slate-800 cursor-pointer transition-colors ${
                 cell.currentMonth ? "bg-[#0f172a] hover:bg-[#1e293b]" : "bg-[#0a1020] hover:bg-[#111827]"
-              } ${colIndex === 6 ? "border-r-0" : ""}`}
+              } ${colIndex === 6 ? "border-r-0" : ""} ${dimmed ? "opacity-40" : ""}`}
             >
+              {closed && (
+                <>
+                  <div className="pointer-events-none absolute inset-0 bg-slate-950/45" aria-hidden />
+                  <span className="absolute top-1 left-1 z-10 text-[9px] px-1 rounded bg-slate-700/70 text-slate-300">
+                    定休
+                  </span>
+                </>
+              )}
+              {level && !dimmed && levelTintClass(level) && (
+                <div className={`pointer-events-none absolute inset-0 ${levelTintClass(level)}`} aria-hidden />
+              )}
               {/* Date number */}
-              <div className="mb-1 flex justify-end">
+              <div className="relative z-10 mb-1 flex items-center justify-between">
+                {level && !dimmed ? (
+                  <span className={`w-2 h-2 rounded-full ${levelDotClass(level)}`} aria-hidden />
+                ) : (
+                  <span />
+                )}
                 <span
                   className={`text-xs w-6 h-6 flex items-center justify-center rounded-full font-medium ${
                     isToday
@@ -114,22 +154,34 @@ export default function CalendarMonthView({
               </div>
 
               {/* Reservation dots / cards */}
-              <div className="flex flex-col gap-0.5">
-                {cellReservations.slice(0, 3).map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onReservationClick?.(r);
-                    }}
-                    className={`w-full text-left px-1 py-0.5 rounded text-[10px] text-white truncate ${serviceTypeColor(r.service_type)}`}
-                  >
-                    {r.start_time ? r.start_time.slice(0, 5) + " " : ""}
-                    {r.customers
-                      ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
-                      : r.reservation_number ?? r.id.slice(0, 6)}
-                  </button>
-                ))}
+              <div className="relative z-10 flex flex-col gap-0.5">
+                {cellReservations.slice(0, 3).map((r) => {
+                  const tech = staffName?.(r.assigned_staff_id) ?? null;
+                  const bay = bayName?.(r.work_bay_id) ?? null;
+                  const label = r.customers
+                    ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
+                    : serviceTypeLabel(r.service_type);
+                  return (
+                    <button
+                      key={r.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onReservationClick?.(r);
+                      }}
+                      title={`${r.start_time ? r.start_time.slice(0, 5) + " " : ""}${label}${tech ? `（担当: ${tech}）` : ""}${bay ? `（ベイ: ${bay}）` : ""}`}
+                      className={`flex items-center gap-1 w-full text-left px-1 py-0.5 rounded text-[10px] text-white ${serviceTypeColor(r.service_type)}`}
+                    >
+                      <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${statusDotClass(r.status)}`} aria-hidden />
+                      <span className="truncate">
+                        {r.start_time ? r.start_time.slice(0, 5) + " " : ""}
+                        {r.customers
+                          ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
+                          : r.reservation_number ?? r.id.slice(0, 6)}
+                        {tech ? ` ・${tech}` : ""}
+                      </span>
+                    </button>
+                  );
+                })}
                 {cellReservations.length > 3 && (
                   <span className="text-[9px] text-slate-400 pl-1">
                     +{cellReservations.length - 3}件

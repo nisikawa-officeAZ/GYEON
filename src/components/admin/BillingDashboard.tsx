@@ -144,7 +144,7 @@ function DealerBillingRow({
         notes:         invNotes,
       });
       if (!result.success) {
-        setInvError(result.error ?? "Failed");
+        setInvError(result.error ?? "失敗しました");
       } else {
         setInvNumber(""); setInvAmount(""); setInvDueAt(""); setInvNotes("");
         setShowInvForm(false);
@@ -226,7 +226,7 @@ function DealerBillingRow({
         <div className="border-t border-slate-800">
           {/* Invoice header */}
           <div className="flex items-center gap-3 px-3 py-1.5 border-b border-slate-800 bg-slate-900/50">
-            <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex-1">Invoices</span>
+            <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex-1">請求書</span>
             <button
               onClick={() => setShowInvForm(f => !f)}
               className="text-[10px] px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200"
@@ -339,7 +339,7 @@ function CreateBillingForm({
         notes,
       });
       if (!result.success) {
-        setError(result.error ?? "Failed");
+        setError(result.error ?? "失敗しました");
       } else {
         onRefresh();
         onClose();
@@ -522,7 +522,7 @@ export default function BillingDashboard({ billings, upcomingRenewals, expiredBi
         <div className="flex items-center gap-2">
           <input
             type="text"
-            placeholder="Dealer UUID"
+            placeholder="ディーラーUUID"
             value={dealerIdInput}
             onChange={e => setDealerIdInput(e.target.value)}
             className="text-[10px] bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-slate-200 placeholder:text-slate-600 w-72 font-mono"

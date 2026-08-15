@@ -30,6 +30,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   company_info: {
     action_id:             "company_info",
     display_name:          "Company & Store Settings",
+    display_name_ja:       "店舗情報",
     category_ids:          ["dealer", "branding"],
     status:                "writable_now",
     server_action_path:    "src/lib/company/save-company-settings.ts",
@@ -50,6 +51,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   line_connection: {
     action_id:             "line_connection",
     display_name:          "LINE Channel Connection",
+    display_name_ja:       "LINE接続",
     category_ids:          ["communication"],
     status:                "external_integration_required",
     server_action_path:    "src/lib/line/update-line-settings.ts",
@@ -71,6 +73,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   line_rich_menu: {
     action_id:             "line_rich_menu",
     display_name:          "LINE Rich Menu Configuration",
+    display_name_ja:       "リッチメニュー設定",
     category_ids:          ["communication"],
     status:                "writable_now",
     server_action_path:    "src/lib/line/save-line-rich-menu-config.ts",
@@ -89,6 +92,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   line_rich_menu_publish: {
     action_id:             "line_rich_menu_publish",
     display_name:          "LINE Rich Menu Publish",
+    display_name_ja:       "リッチメニュー公開",
     category_ids:          ["communication"],
     status:                "writable_now",
     server_action_path:    "src/lib/line/publish-line-rich-menu.ts",
@@ -107,6 +111,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   line_rich_menu_delete: {
     action_id:             "line_rich_menu_delete",
     display_name:          "LINE Rich Menu Delete",
+    display_name_ja:       "リッチメニュー削除",
     category_ids:          ["communication"],
     status:                "writable_now",
     server_action_path:    "src/lib/line/delete-line-rich-menu.ts",
@@ -126,6 +131,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   document_sequences: {
     action_id:             "document_sequences",
     display_name:          "Document Sequence Settings",
+    display_name_ja:       "採番設定",
     category_ids:          ["pdf"],
     status:                "writable_now",
     server_action_path:    "src/lib/numbering/update-document-sequence.ts",
@@ -146,6 +152,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   staff_invite: {
     action_id:             "staff_invite",
     display_name:          "Staff Invite",
+    display_name_ja:       "スタッフ招待",
     category_ids:          ["staff"],
     status:                "writable_now",
     server_action_path:    "src/lib/staff/invite-staff.ts",
@@ -162,6 +169,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   staff_role_update: {
     action_id:             "staff_role_update",
     display_name:          "Staff Role Update",
+    display_name_ja:       "役割の変更",
     category_ids:          ["staff"],
     status:                "writable_now",
     server_action_path:    "src/lib/staff/update-staff-role.ts",
@@ -178,6 +186,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   staff_disable: {
     action_id:             "staff_disable",
     display_name:          "Staff Enable / Disable",
+    display_name_ja:       "有効・無効の切替",
     category_ids:          ["staff"],
     status:                "writable_now",
     server_action_path:    "src/lib/staff/disable-staff.ts",
@@ -196,6 +205,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   ai_gateway_settings: {
     action_id:             "ai_gateway_settings",
     display_name:          "AI Gateway Settings",
+    display_name_ja:       "AIゲートウェイ設定",
     category_ids:          ["ai_providers"],
     status:                "writable_now",
     server_action_path:    "src/lib/ai/save-ai-settings.ts",
@@ -211,11 +221,105 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
       "Managed via /settings/ai dedicated route — not embedded in /settings/ai_providers.",
   },
 
+  // ─── Store Business Hours (Batch B1) ──────────────────────────────────────
+
+  business_hours: {
+    action_id:             "business_hours",
+    display_name:          "Store Business Hours & Closed Days",
+    display_name_ja:       "営業時間・定休日",
+    category_ids:          ["dealer"],
+    status:                "writable_now",
+    server_action_path:    "src/lib/dealer-settings/save-business-hours.ts",
+    ui_role_policy:        "manager_or_owner",
+    has_server_role_check: true,
+    dealer_scope:          true,
+    admin_scope:           false,
+    external_dependency:   null,
+    notes:
+      "saveBusinessHours writes weekly hours + special-open days to dealer_settings.business_days " +
+      "(jsonb), regular closed days to closed_weekdays, and temporary holidays to temp_holidays. " +
+      "Reuses existing columns only — no schema change / no migration. " +
+      "dealer_id from requireRole → getCurrentDealer() — never from client. " +
+      "requireRole([\"owner\",\"manager\"]) enforced server-side. Managed via /settings/business-hours. " +
+      "Calendar reflects hours/closed days visually only — no hard booking enforcement (B1).",
+  },
+
+  // ─── Service Duration Settings (Batch B2) ─────────────────────────────────
+
+  service_durations: {
+    action_id:             "service_durations",
+    display_name:          "Service Duration Settings",
+    display_name_ja:       "作業時間",
+    category_ids:          ["dealer"],
+    status:                "writable_now",
+    server_action_path:    "src/lib/dealer-settings/save-service-durations.ts",
+    ui_role_policy:        "manager_or_owner",
+    has_server_role_check: true,
+    dealer_scope:          true,
+    admin_scope:           false,
+    external_dependency:   null,
+    notes:
+      "saveServiceDurations writes per-service-type estimated hours/days + before/after buffers " +
+      "to dealer_settings.business_days.service_durations (jsonb). Reuses the existing business_days " +
+      "container — no schema change / no migration. Read-merge preserves B1 business-hours keys. " +
+      "dealer_id from requireRole → getCurrentDealer() — never from client. " +
+      "requireRole([\"owner\",\"manager\"]) enforced server-side. Managed via /settings/service-durations. " +
+      "B2 is foundation only — no calendar auto-calculation and no reservation enforcement.",
+  },
+
+  // ─── Staff / Capacity Settings (Batch B3) ─────────────────────────────────
+
+  staff_capacity: {
+    action_id:             "staff_capacity",
+    display_name:          "Staff / Capacity Settings",
+    display_name_ja:       "スタッフ・キャパシティ",
+    category_ids:          ["staff"],
+    status:                "writable_now",
+    server_action_path:    "src/lib/dealer-settings/save-staff-capacity.ts",
+    ui_role_policy:        "manager_or_owner",
+    has_server_role_check: true,
+    dealer_scope:          true,
+    admin_scope:           false,
+    external_dependency:   null,
+    notes:
+      "saveStaffCapacity writes per-staff capacity/skills, work bays, simultaneous-vehicle " +
+      "capacity, parallel-work rules, conflict-warning preferences, service blocking rules, and " +
+      "manual-override requirements to dealer_settings.business_days.scheduling (jsonb). Reuses the " +
+      "existing business_days container — no schema change / no migration. Read-merge preserves B1 " +
+      "hours + B2 durations. Per-staff keys are reconciled against the dealer's dealer_staff set. " +
+      "dealer_id from requireRole → getCurrentDealer() — never from client. " +
+      "requireRole([\"owner\",\"manager\"]) enforced server-side. Managed via /settings/staff-capacity. " +
+      "B3 is CONFIGURED-BUT-NOT-ENFORCED — no calendar/reservation wiring, no conflict detection, no blocking.",
+  },
+
+  // ─── Work Bays (Batch B6b) ────────────────────────────────────────────────
+
+  work_bays: {
+    action_id:             "work_bays",
+    display_name:          "Work Bay Management",
+    display_name_ja:       "作業ベイ管理",
+    category_ids:          ["staff"],
+    status:                "requires_migration",
+    server_action_path:    "src/lib/work-bays/save-work-bays.ts",
+    ui_role_policy:        "manager_or_owner",
+    has_server_role_check: true,
+    dealer_scope:          true,
+    admin_scope:           false,
+    external_dependency:   null,
+    notes:
+      "saveWorkBays reconciles the dealer's work_bays rows (table, migration 092). " +
+      "reservations.work_bay_id links a reservation to a bay. dealer_id from requireRole → " +
+      "getCurrentDealer() — never from client. requireRole([\"owner\",\"manager\"]) + RLS enforced. " +
+      "Gated behind WORK_BAYS_SCHEMA_READY: until migration 092 is applied and the flag flipped, " +
+      "all bay reads/writes are skipped and the calendar/reservation flow is unchanged.",
+  },
+
   // ─── Platform Admin ───────────────────────────────────────────────────────
 
   dealer_rank: {
     action_id:             "dealer_rank",
     display_name:          "Dealer Rank Assignment",
+    display_name_ja:       "店舗ランク",
     category_ids:          ["dealer"],
     status:                "requires_admin",
     server_action_path:    "src/lib/dealer-settings/set-dealer-rank.ts",
@@ -237,6 +341,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   line_message_settings: {
     action_id:             "line_message_settings",
     display_name:          "LINE Message Header / Footer",
+    display_name_ja:       "メッセージ ヘッダー・フッター",
     category_ids:          ["communication"],
     status:                "future",
     server_action_path:    null,
@@ -255,6 +360,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   ocr_policy: {
     action_id:             "ocr_policy",
     display_name:          "OCR Enable / Disable",
+    display_name_ja:       "OCRの有効・無効",
     category_ids:          ["ocr"],
     status:                "future",
     server_action_path:    null,
@@ -273,6 +379,7 @@ export const SETTINGS_SAVE_ACTION_REGISTRY: SettingsSaveActionRegistry = {
   maintenance_templates: {
     action_id:             "maintenance_templates",
     display_name:          "Maintenance Reminder Templates",
+    display_name_ja:       "メンテナンス案内テンプレート",
     category_ids:          ["notifications"],
     status:                "future",
     server_action_path:    null,

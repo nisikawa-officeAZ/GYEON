@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css"><style>body{margin:0;padding:20px 24px;background:var(--ds-bg);}</style></head><body>
+<div class="ds-overline" style="margin-bottom:12px;padding:0;">Binding · Amber 必須未入力ハイライト</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+  <div>
+    <div style="font-size:12px;font-weight:500;color:var(--ds-amber-400);margin-bottom:6px;">お客様名 <span style="color:var(--ds-amber-400);font-weight:700;">*</span></div>
+    <input style="width:100%;min-height:44px;background:var(--ds-bg-elevated);border:1px solid var(--ds-amber-tint-40);border-radius:10px;padding:10px 14px;color:var(--ds-text-primary);font-size:14px;box-shadow:var(--ds-glow-amber);outline:none;" placeholder="山田太郎 / 株式会社〇〇" />
+    <div style="font-size:11px;color:var(--ds-amber-400);margin-top:6px;">未入力 → Amber ハイライト</div>
+  </div>
+  <div>
+    <div style="font-size:12px;font-weight:500;color:var(--ds-text-muted);margin-bottom:6px;">お客様名 <span style="color:var(--ds-amber-400);font-weight:700;">*</span></div>
+    <input style="width:100%;min-height:44px;background:var(--ds-bg-elevated);border:1px solid var(--ds-line-slate);border-radius:10px;padding:10px 14px;color:var(--ds-text-primary);font-size:14px;outline:none;" value="山田太郎" />
+    <div style="font-size:11px;color:var(--ds-green-400);margin-top:6px;">✓ 入力完了 → 通常色に戻る</div>
+  </div>
+</div>
+<div style="margin-top:12px;padding:10px 12px;background:var(--ds-bg-elevated);border:1px solid var(--ds-line);border-radius:10px;font-size:11px;color:var(--ds-text-muted);line-height:1.6;">
+  Ver2.0 §4-5 binding：必須項目 (*) が未入力の間は Amber (#fbbf24) で強調し、入力完了で通常 (白系) に戻す。
+</div>
+</body></html>

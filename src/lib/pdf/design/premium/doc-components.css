@@ -1,0 +1,682 @@
+/* =============================================================================
+   Detailer OS Document Design System — Component Styles
+   -----------------------------------------------------------------------------
+   両 Concept (A: Monochrome / B: Accent) で共有するレイアウト・コンポーネント。
+   色差分は Concept 側の CSS で --brand-primary を上書きするだけで反映される。
+   ============================================================================= */
+
+/* =============================================================================
+   1. HEADER — ドキュメント上部
+   ------------------------------------------------------------------------
+   構成:
+     左: [縦バー] ドキュメント種別タイトル (見積書 ESTIMATE)
+     右: 日付・番号（右上グリッド）
+   ============================================================================= */
+
+.doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--doc-space-8);
+  padding-bottom: var(--doc-space-6);
+}
+
+.doc-header__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--doc-space-4);
+}
+
+/* 左端の縦バー — Concept B のみブランド色。Concept A は黒。 */
+.doc-title-bar {
+  width: 3px;
+  height: 42px;
+  background: var(--brand-primary);
+  flex-shrink: 0;
+}
+
+.doc-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: var(--doc-space-4);
+}
+
+.doc-title-group .doc-document-title {
+  font-size: var(--doc-fs-28);
+  font-weight: var(--doc-fw-bold);
+  letter-spacing: var(--doc-tr-tight);
+  color: var(--doc-text-strong);
+}
+
+.doc-title-group .doc-document-subtitle {
+  font-size: var(--doc-fs-11);
+  letter-spacing: var(--doc-tr-widest);
+  color: var(--doc-text-muted);
+  font-weight: var(--doc-fw-medium);
+}
+
+.doc-header__meta {
+  text-align: right;
+  font-size: var(--doc-fs-11);
+  color: var(--doc-text-muted);
+  line-height: var(--doc-lh-relaxed);
+  min-width: 220px;
+}
+
+.doc-header__meta-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: var(--doc-space-3);
+}
+
+.doc-header__meta-label {
+  color: var(--doc-text-muted);
+  font-weight: var(--doc-fw-medium);
+}
+
+.doc-header__meta-value {
+  color: var(--doc-text-strong);
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--doc-fw-semi);
+  font-size: var(--doc-fs-13);
+  min-width: 120px;
+  text-align: left;
+}
+
+/* =============================================================================
+   2. PARTIES — 顧客情報 / 車両情報 / 会社情報の 2 カラム
+   ============================================================================= */
+
+.doc-parties {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: var(--doc-space-10);
+  margin-bottom: var(--doc-space-8);
+}
+
+.doc-party-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--doc-space-3);
+}
+
+.doc-party-block + .doc-party-block {
+  margin-top: var(--doc-space-6);
+}
+
+.doc-party-block__label {
+  display: flex;
+  align-items: center;
+  gap: var(--doc-space-2);
+  font-size: var(--doc-fs-11);
+  font-weight: var(--doc-fw-bold);
+  letter-spacing: var(--doc-tr-wider);
+  text-transform: uppercase;
+  color: var(--doc-text-muted);
+  padding-bottom: var(--doc-space-2);
+  border-bottom: var(--doc-bw-thin) solid var(--doc-line);
+  margin-bottom: var(--doc-space-2);
+}
+
+.doc-party-block__icon {
+  width: 14px;
+  height: 14px;
+  color: var(--doc-text-muted);
+}
+
+.doc-party-block__name {
+  font-size: var(--doc-fs-22);
+  font-weight: var(--doc-fw-semi);
+  color: var(--doc-text-strong);
+  letter-spacing: var(--doc-tr-tight);
+  line-height: 1.2;
+}
+
+.doc-party-block__name-honorific {
+  font-size: var(--doc-fs-13);
+  font-weight: var(--doc-fw-regular);
+  color: var(--doc-text-muted);
+  margin-left: var(--doc-space-2);
+  letter-spacing: 0;
+}
+
+.doc-party-block__meta {
+  font-size: var(--doc-fs-11);
+  color: var(--doc-text);
+  line-height: var(--doc-lh-relaxed);
+}
+
+/* --- 定義リスト (キー: 値 の行) --- */
+.doc-dl {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  row-gap: 6px;
+  column-gap: var(--doc-space-3);
+  font-size: var(--doc-fs-12);
+  align-items: baseline;
+}
+
+.doc-dl dt {
+  color: var(--doc-text-muted);
+  font-weight: var(--doc-fw-medium);
+  letter-spacing: 0.02em;
+}
+
+.doc-dl dd {
+  margin: 0;
+  color: var(--doc-text-strong);
+  font-weight: var(--doc-fw-regular);
+}
+
+/* Right column: Company info */
+.doc-company {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--doc-space-3);
+  text-align: right;
+}
+
+.doc-company__logo {
+  height: 40px;
+  max-width: 240px;
+  object-fit: contain;
+  object-position: right center;
+}
+
+.doc-company__name-ja {
+  font-size: var(--doc-fs-13);
+  font-weight: var(--doc-fw-semi);
+  color: var(--doc-text-strong);
+  letter-spacing: 0.02em;
+}
+
+.doc-company__meta {
+  font-size: var(--doc-fs-11);
+  color: var(--doc-text);
+  line-height: var(--doc-lh-relaxed);
+}
+
+.doc-company__meta .row {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--doc-space-3);
+}
+
+/* 会社情報の定義リスト (right-aligned) */
+.doc-dl--right {
+  grid-template-columns: 80px 220px;
+  justify-content: flex-end;
+  font-size: var(--doc-fs-11);
+}
+
+.doc-dl--right dt {
+  text-align: right;
+  color: var(--doc-text-muted);
+}
+
+.doc-dl--right dd {
+  text-align: left;
+}
+
+/* =============================================================================
+   3. ITEM TABLE — 明細テーブル
+   ------------------------------------------------------------------------
+   カラム: カテゴリ / 品目 / 内容 / 単価 / 数量 / 割引 / 小計
+   ============================================================================= */
+
+.doc-table-wrap {
+  margin-bottom: var(--doc-space-6);
+}
+
+.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--doc-fs-12);
+  table-layout: fixed;
+}
+
+.doc-table thead th {
+  padding: var(--doc-space-3) var(--doc-space-3);
+  text-align: left;
+  font-size: var(--doc-fs-10);
+  font-weight: var(--doc-fw-bold);
+  letter-spacing: var(--doc-tr-wider);
+  text-transform: uppercase;
+  color: var(--doc-text-muted);
+  border-top: var(--doc-bw-thin) solid var(--doc-line-strong);
+  border-bottom: var(--doc-bw-thin) solid var(--doc-line-strong);
+  background: transparent;
+  vertical-align: bottom;
+}
+
+.doc-table thead th.num,
+.doc-table tbody td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+.doc-table thead th.center,
+.doc-table tbody td.center {
+  text-align: center;
+}
+
+.doc-table tbody td {
+  padding: 11px var(--doc-space-3);
+  border-bottom: var(--doc-bw-thin) solid var(--doc-line-hair);
+  vertical-align: top;
+  color: var(--doc-text-strong);
+  font-size: var(--doc-fs-12);
+  line-height: var(--doc-lh-snug);
+}
+
+.doc-table tbody tr:last-child td {
+  border-bottom: var(--doc-bw-thin) solid var(--doc-line-strong);
+}
+
+.doc-table__category {
+  color: var(--doc-text-muted);
+  font-size: var(--doc-fs-11);
+  font-weight: var(--doc-fw-medium);
+  letter-spacing: 0.02em;
+}
+
+.doc-table__product {
+  color: var(--doc-text-strong);
+  font-weight: var(--doc-fw-medium);
+  font-size: var(--doc-fs-12);
+}
+
+.doc-table__desc {
+  color: var(--doc-text-muted);
+  font-size: var(--doc-fs-11);
+  line-height: var(--doc-lh-snug);
+}
+
+.doc-table__price {
+  color: var(--doc-text-strong);
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--doc-fw-regular);
+}
+
+.doc-table__subtotal {
+  color: var(--doc-text-strong);
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--doc-fw-semi);
+}
+
+.doc-table__dash {
+  color: var(--doc-text-faint);
+}
+
+/* Column widths tuned for the reference estimate */
+.doc-table col.c-category { width: 12%; }
+.doc-table col.c-product  { width: 20%; }
+.doc-table col.c-desc     { width: 26%; }
+.doc-table col.c-unit     { width: 11%; }
+.doc-table col.c-qty      { width:  7%; }
+.doc-table col.c-discount { width:  9%; }
+.doc-table col.c-subtotal { width: 15%; }
+
+.doc-table__category { word-break: keep-all; white-space: nowrap; }
+
+/* =============================================================================
+   4. BOTTOM — 注意事項 (左) + 合計サマリー (右)
+   ============================================================================= */
+
+.doc-bottom {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--doc-space-8);
+  margin-top: var(--doc-space-4);
+  margin-bottom: var(--doc-space-8);
+  align-items: start;
+}
+
+/* Notes area (list of ※ items) */
+.doc-notes {
+  font-size: var(--doc-fs-11);
+  color: var(--doc-text);
+  line-height: var(--doc-lh-relaxed);
+}
+
+.doc-notes__title {
+  font-size: var(--doc-fs-10);
+  font-weight: var(--doc-fw-bold);
+  letter-spacing: var(--doc-tr-wider);
+  text-transform: uppercase;
+  color: var(--doc-text-muted);
+  margin-bottom: var(--doc-space-2);
+  padding-bottom: var(--doc-space-2);
+  border-bottom: var(--doc-bw-thin) solid var(--doc-line);
+}
+
+.doc-notes__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doc-notes__list li {
+  position: relative;
+  padding-left: 14px;
+  margin-bottom: 3px;
+  color: var(--doc-text);
+}
+
+.doc-notes__list li::before {
+  content: "※";
+  position: absolute;
+  left: 0;
+  color: var(--doc-text-muted);
+}
+
+/* Price summary */
+.doc-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.doc-summary__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  padding: 6px 0;
+  font-size: var(--doc-fs-12);
+  border-bottom: var(--doc-bw-thin) solid var(--doc-line-hair);
+}
+
+.doc-summary__row:last-of-type {
+  border-bottom: none;
+}
+
+.doc-summary__label {
+  color: var(--doc-text-muted);
+  font-weight: var(--doc-fw-medium);
+}
+
+.doc-summary__value {
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--doc-text-strong);
+  font-weight: var(--doc-fw-semi);
+  text-align: right;
+  min-width: 100px;
+}
+
+.doc-summary__value--negative {
+  color: var(--doc-danger);
+}
+
+/* Grand total row — the hero of the summary */
+.doc-total {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  margin-top: var(--doc-space-3);
+  padding: var(--doc-space-4) var(--doc-space-4);
+  background: var(--brand-primary);
+  color: var(--doc-text-inverse);
+  border-radius: 2px;
+}
+
+.doc-total__label {
+  font-size: var(--doc-fs-13);
+  font-weight: var(--doc-fw-bold);
+  letter-spacing: var(--doc-tr-wide);
+  color: var(--doc-text-inverse);
+}
+
+.doc-total__unit {
+  font-size: var(--doc-fs-10);
+  font-weight: var(--doc-fw-regular);
+  opacity: 0.7;
+  margin-left: 6px;
+  letter-spacing: 0.02em;
+}
+
+.doc-total__value {
+  font-family: var(--doc-font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--doc-fs-32);
+  font-weight: var(--doc-fw-bold);
+  letter-spacing: var(--doc-tr-tight);
+  color: var(--doc-text-inverse);
+}
+
+/* Concept A の合計行 = 黒背景バージョン */
+.doc-total--mono {
+  background: var(--doc-black);
+}
+
+/* =============================================================================
+   5. FOOTER — GYEON帯 + SNS QR + タグライン
+   ============================================================================= */
+
+.doc-footer {
+  margin-top: auto;
+  padding-top: var(--doc-space-5);
+  border-top: var(--doc-bw-thin) solid var(--doc-line);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--doc-space-8);
+  align-items: end;
+}
+
+.doc-footer__brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--doc-space-2);
+}
+
+.doc-footer__brand-logo {
+  font-family: var(--doc-font-sans);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--doc-text-strong);
+  line-height: 1;
+}
+
+.doc-footer__brand-desc {
+  font-size: var(--doc-fs-10);
+  color: var(--doc-text-muted);
+  line-height: var(--doc-lh-relaxed);
+  max-width: 320px;
+}
+
+.doc-footer__qr-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--doc-space-2);
+}
+
+.doc-footer__qr-cta {
+  font-size: var(--doc-fs-10);
+  color: var(--doc-text-muted);
+  letter-spacing: 0.02em;
+  margin-bottom: 2px;
+}
+
+.doc-footer__qr-list {
+  display: flex;
+  gap: var(--doc-space-3);
+}
+
+.doc-footer__qr-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 62px;
+}
+
+.doc-footer__qr-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--doc-text-strong);
+}
+
+.doc-footer__qr-label {
+  font-size: 9px;
+  color: var(--doc-text-muted);
+  letter-spacing: 0.03em;
+}
+
+.doc-footer__qr-code {
+  width: 56px;
+  height: 56px;
+  border: var(--doc-bw-thin) solid var(--doc-line);
+}
+
+/* Bottom-most tagline row */
+.doc-tagline {
+  margin-top: var(--doc-space-4);
+  padding-top: var(--doc-space-3);
+  border-top: var(--doc-bw-thin) solid var(--doc-line);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--doc-space-4);
+  font-size: var(--doc-fs-10);
+  color: var(--doc-text-muted);
+}
+
+.doc-tagline__phrase {
+  font-family: var(--doc-font-serif);
+  font-style: italic;
+  font-size: var(--doc-fs-12);
+  font-weight: var(--doc-fw-regular);
+  color: var(--doc-text-strong);
+  text-align: center;
+}
+
+.doc-tagline__diamond {
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  border: var(--doc-bw-thin) solid var(--doc-text-muted);
+  margin: 0 auto;
+  display: inline-block;
+}
+
+.doc-tagline__partner {
+  text-align: right;
+  font-size: var(--doc-fs-10);
+  font-weight: var(--doc-fw-semi);
+  color: var(--doc-text-strong);
+  letter-spacing: var(--doc-tr-wide);
+}
+
+/* =============================================================================
+   6. STATUS BADGE — 状態バッジ
+   ============================================================================= */
+
+.doc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: var(--doc-fs-10);
+  font-weight: var(--doc-fw-semi);
+  letter-spacing: var(--doc-tr-wide);
+  text-transform: uppercase;
+  border: var(--doc-bw-thin) solid currentColor;
+  border-radius: 2px;
+  line-height: 1;
+}
+
+.doc-badge--draft    { color: var(--doc-gray-500); }
+.doc-badge--sent     { color: var(--brand-primary); }
+.doc-badge--paid     { color: var(--doc-success); }
+.doc-badge--overdue  { color: var(--doc-danger); }
+.doc-badge--valid    { color: var(--doc-success); background: rgba(47, 107, 61, 0.06); }
+
+/* =============================================================================
+   7. SIGNATURE / SEAL AREA
+   ============================================================================= */
+
+.doc-signatures {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--doc-space-6);
+  margin: var(--doc-space-6) 0;
+}
+
+.doc-signature {
+  border: var(--doc-bw-thin) solid var(--doc-line);
+  padding: var(--doc-space-4);
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.doc-signature__label {
+  font-size: var(--doc-fs-10);
+  font-weight: var(--doc-fw-bold);
+  letter-spacing: var(--doc-tr-wider);
+  text-transform: uppercase;
+  color: var(--doc-text-muted);
+}
+
+.doc-signature__line {
+  border-top: var(--doc-bw-thin) solid var(--doc-line-strong);
+  padding-top: 4px;
+  font-size: var(--doc-fs-10);
+  color: var(--doc-text-muted);
+  text-align: center;
+}
+
+.doc-seal-slot {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border: var(--doc-bw-thin) dashed var(--doc-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  color: var(--doc-text-faint);
+  letter-spacing: 0.06em;
+  align-self: flex-end;
+}
+
+/* =============================================================================
+   8. PAGE NUMBER / WATERMARK
+   ============================================================================= */
+
+.doc-pagenum {
+  position: absolute;
+  bottom: 6mm;
+  right: var(--doc-page-pad-x);
+  font-size: var(--doc-fs-9);
+  color: var(--doc-text-faint);
+  letter-spacing: var(--doc-tr-wide);
+  font-variant-numeric: tabular-nums;
+}
+
+.doc-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 120px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  color: var(--doc-gray-100);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+  white-space: nowrap;
+}
+
+.doc-page > * { position: relative; z-index: 1; }
+.doc-page > .doc-watermark { z-index: 0; }

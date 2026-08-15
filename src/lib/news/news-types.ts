@@ -1,6 +1,8 @@
 // GYEON News Center — shared types & display metadata.
 // Pure module (no DB / no "use server"). Safe for client or server import.
 
+import type { NewsAudience, NewsChannels } from "./distribution-types";
+
 export type NewsCategory =
   | "announcement"
   | "new_product"
@@ -9,7 +11,8 @@ export type NewsCategory =
   | "event"
   | "training"
   | "technical"
-  | "system";
+  | "system"
+  | "newsletter";
 
 export type NewsPriority = "normal" | "important" | "urgent";
 
@@ -31,6 +34,14 @@ export interface GyeonNews {
   created_by:       string | null;
   created_at:       string;
   updated_at:       string;
+  // PHASE89: distribution fields (present after migration 089)
+  summary?:           string | null;
+  body_html?:         string | null;
+  body_text?:         string | null;
+  target_audience?:   NewsAudience;
+  target_dealer_ids?: string[] | null;
+  channels?:          NewsChannels;
+  scheduled_at?:      string | null;
 }
 
 /** News as seen by a dealer, enriched with this user's read state. */
@@ -40,7 +51,7 @@ export interface DealerNews extends GyeonNews {
 
 export const NEWS_CATEGORIES: NewsCategory[] = [
   "announcement", "new_product", "stock_arrival", "backorder",
-  "event", "training", "technical", "system",
+  "event", "training", "technical", "system", "newsletter",
 ];
 
 export const NEWS_CATEGORY_LABEL: Record<NewsCategory, string> = {
@@ -52,6 +63,7 @@ export const NEWS_CATEGORY_LABEL: Record<NewsCategory, string> = {
   training:     "研修",
   technical:    "技術情報",
   system:       "システム",
+  newsletter:   "ニュースレター",
 };
 
 export const NEWS_CATEGORY_ICON: Record<NewsCategory, string> = {
@@ -63,6 +75,7 @@ export const NEWS_CATEGORY_ICON: Record<NewsCategory, string> = {
   training:     "🎓",
   technical:    "🔧",
   system:       "⚙️",
+  newsletter:   "📰",
 };
 
 export const NEWS_PRIORITIES: NewsPriority[] = ["normal", "important", "urgent"];

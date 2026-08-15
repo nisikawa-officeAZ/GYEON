@@ -26,7 +26,7 @@ export default function PDFActions({ estimateId }: PDFActionsProps) {
         setStatus("error");
       }
     } catch (err) {
-      setError(String(err));
+      { console.error("[pdf] action failed:", err); setError("PDFの生成に失敗しました。時間をおいて再度お試しください。"); }
       setStatus("error");
     }
   }

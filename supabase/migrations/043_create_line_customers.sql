@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS public.dealer_settings (
 
 ALTER TABLE public.dealer_settings ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Dealer members can manage their settings"
+DROP POLICY IF EXISTS "Dealer members can manage their settings" ON public.dealer_settings;
+CREATE POLICY "Dealer members can manage their settings"
   ON public.dealer_settings FOR ALL
   USING (
     dealer_id IN (
@@ -59,7 +60,8 @@ CREATE TABLE IF NOT EXISTS public.line_customers (
 
 ALTER TABLE public.line_customers ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Dealer members can manage their line customers"
+DROP POLICY IF EXISTS "Dealer members can manage their line customers" ON public.line_customers;
+CREATE POLICY "Dealer members can manage their line customers"
   ON public.line_customers FOR ALL
   USING (
     dealer_id IN (

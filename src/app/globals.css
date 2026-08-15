@@ -30,6 +30,15 @@
      header bar is h-14 (3.5rem / 56px). Consumed by Header, the layout spacer,
      and the Sidebar so they all stay in sync. */
   --app-header-h: calc(3.5rem + env(safe-area-inset-top, 0px));
+
+  /* ── Form readability tokens (contrast standard) ──
+     Single source of truth for text contrast across every form in the app.
+     Applied globally to form controls / field labels below so pages don't
+     need per-field color overrides. */
+  --form-text:        #FFFFFF;  /* user-entered text  */
+  --form-label:       #E5E7EB;  /* field labels       */
+  --form-helper:      #9CA3AF;  /* helper/description  */
+  --form-placeholder: #6B7280;  /* placeholder (dimmer than helper, still legible) */
 }
 
 @theme inline {
@@ -134,3 +143,58 @@ body {
   -ms-overflow-style: none;
 }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* ── Form readability standard (RC) ───────────────────────────────────────────
+   Centralized text-contrast rules for ALL forms. These are UNLAYERED, so under
+   Tailwind v4's cascade layers they override the per-field `text-*` /
+   `placeholder:text-*` utility classes without !important and without editing
+   413 individual fields. Layout/spacing/structure are untouched — colour only.
+
+   Field-label pattern this targets:
+     <label> <span>LABEL</span> <input/> [<span>HELPER</span>] </label>
+   Checkbox/radio labels (<label><input/><span/></label>) are intentionally NOT
+   matched (their span is not :first-child), so their styling is left as-is. */
+
+/* 1) User-entered text — every text control */
+input,
+textarea,
+select {
+  color: var(--form-text);
+}
+
+/* 4) Placeholder — clearly dimmer than the white entered text */
+input::placeholder,
+textarea::placeholder {
+  color: var(--form-placeholder);
+  opacity: 1; /* Firefox dims placeholders by default */
+}
+
+/* 5) Autofill / iOS predictive text — keep the dark UI + white readable text.
+   Chrome/Safari force a yellow background and dark text on autofill/predictive
+   selection, which makes dark fields look broken. We paint the field bg dark via
+   an inset box-shadow, force white text, and freeze the autofill transition so no
+   yellow flash appears. The entered value stays a valid, readable input. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--form-text) !important;
+  caret-color: var(--form-text);
+  -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
+          box-shadow: 0 0 0 1000px #0f172a inset !important;
+  border-radius: inherit;
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+
+/* 2) Field labels — the leading <span> inside a field <label> */
+label > span:first-child {
+  color: var(--form-label);
+}
+
+/* 3) Helper / description text — trailing <span>s after the label span */
+label > span:first-child ~ span {
+  color: var(--form-helper);
+}

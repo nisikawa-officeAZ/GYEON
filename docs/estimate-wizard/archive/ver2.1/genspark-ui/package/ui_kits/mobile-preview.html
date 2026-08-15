@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mobile UI プレビュー — DealerOS GYEON</title>
+  <link rel="stylesheet" href="../colors_and_type.css">
+  <style>
+    @keyframes ds-spin { to { transform: rotate(360deg); } }
+    @keyframes ds-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+    body {
+      background: linear-gradient(180deg, #050810 0%, #080d1a 100%);
+      min-height: 100vh;
+      margin: 0;
+      padding: 40px 32px;
+      color: var(--ds-text-primary);
+      font-family: var(--ds-font-sans);
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .hero {
+      display: flex; align-items: flex-start; gap: 20px;
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--ds-line);
+    }
+    .hero-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--ds-primary-600), var(--ds-primary-700));
+      display: grid; place-items: center;
+      color: #fff; font-size: 26px; font-weight: 700;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px -4px rgba(29, 78, 216, 0.5);
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: 32px; font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--ds-text-muted);
+      font-size: 15px; line-height: 1.6;
+      max-width: 640px;
+    }
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--ds-primary-400);
+      margin-bottom: 12px;
+    }
+
+    /* Features grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+    .feature-card {
+      background: var(--ds-bg-card);
+      border: 1px solid var(--ds-line);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: var(--ds-shadow-lg), var(--ds-hi-inner);
+    }
+    .feature-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--ds-primary-tint-10);
+      color: var(--ds-primary-300);
+      display: grid; place-items: center;
+      margin-bottom: 12px;
+    }
+    .feature-title {
+      font-size: 15px; font-weight: 600;
+      color: var(--ds-text-primary);
+      margin-bottom: 6px;
+    }
+    .feature-desc {
+      font-size: 13px; line-height: 1.6;
+      color: var(--ds-text-muted);
+    }
+
+    /* Preview section */
+    .preview-section {
+      background: var(--ds-bg-card);
+      border: 1px solid var(--ds-line);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: var(--ds-shadow-lg), var(--ds-hi-inner);
+    }
+    .preview-controls {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .device-toggle {
+      display: inline-flex; gap: 4px;
+      background: var(--ds-bg-elevated);
+      border: 1px solid var(--ds-line-slate);
+      border-radius: 12px;
+      padding: 4px;
+    }
+    .device-btn {
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--ds-text-muted);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: all 120ms;
+      font-family: var(--ds-font-sans);
+      min-height: 40px;
+      white-space: nowrap;
+    }
+    .device-btn.active {
+      background: linear-gradient(135deg, var(--ds-primary-600), var(--ds-primary-700));
+      color: #fff; font-weight: 600;
+      box-shadow: 0 2px 6px -1px rgba(29,78,216,0.4);
+    }
+
+    /* iPhone フレーム */
+    .phone-frame-wrap {
+      display: flex; justify-content: center;
+      padding: 24px 0;
+      background: radial-gradient(ellipse at center, rgba(29,78,216,0.06) 0%, transparent 70%);
+      border-radius: 16px;
+    }
+    .phone-frame-slot { position: relative; }
+    .phone-frame-outer { transform-origin: top left; }
+    .phone-frame {
+      background: #1a1a24;
+      border: 8px solid #0a0a10;
+      border-radius: 52px;
+      padding: 6px;
+      box-shadow:
+        0 40px 80px -20px rgba(0,0,0,0.7),
+        0 20px 40px -12px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      position: relative;
+      box-sizing: border-box;
+    }
+    .phone-frame::before {
+      /* Dynamic Island (iPhone 15/16) */
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 50%; transform: translateX(-50%);
+      width: 110px; height: 32px;
+      background: #050810;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .phone-frame::after {
+      /* Home indicator (bottom) */
+      content: '';
+      position: absolute;
+      bottom: 8px;
+      left: 50%; transform: translateX(-50%);
+      width: 130px; height: 5px;
+      background: rgba(255,255,255,0.35);
+      border-radius: 3px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .phone-frame.iphone-standard { width: 393px; height: 852px; }   /* iPhone 15/16 */
+    .phone-frame.iphone-promax   { width: 430px; height: 932px; }   /* iPhone 15/16 Pro Max */
+    .phone-frame.android         { width: 360px; height: 800px; }   /* Android 標準 */
+    .phone-screen {
+      width: 100%; height: 100%;
+      border-radius: 44px;
+      overflow: hidden;
+      background: var(--ds-bg);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .phone-screen iframe {
+      width: 100%; height: 100%;
+      border: none; display: block;
+    }
+    .frame-meta {
+      text-align: center;
+      color: var(--ds-text-subtle);
+      font-size: 12px;
+      margin-top: 16px;
+      font-family: var(--ds-font-mono);
+      letter-spacing: 0.5px;
+    }
+    .frame-meta strong { color: var(--ds-primary-300); font-weight: 600; }
+    .frame-meta .scale-info { color: var(--ds-text-faint); margin-left: 8px; }
+
+    .direct-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      background: var(--ds-bg-elevated);
+      border: 1px solid var(--ds-line-slate);
+      border-radius: 999px;
+      color: var(--ds-text-body);
+      font-size: 13px; font-weight: 500;
+      text-decoration: none;
+      transition: all 120ms;
+    }
+    .direct-link:hover {
+      border-color: var(--ds-primary-500);
+      color: var(--ds-primary-300);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <div class="hero-icon">📱</div>
+      <div>
+        <h1>Mobile UI プレビュー</h1>
+        <p>
+          DealerOS GYEON 見積ウィザードのスマートフォン向け UI (v2.1)。
+          iPhone 15/16 標準 (393×852), Pro Max (430×932), Android 標準 (360×800) に対応。
+          依頼書 §8 準拠、PC/Tablet と同じデザイン言語を維持しつつ、片手操作・ネイティブカメラ・ボトムシートで最適化。
+        </p>
+        <div style="margin-top: 16px;">
+          <a class="direct-link" href="estimate-wizard-mobile/index.html" target="_blank">
+            新規タブで直接開く →
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Mobile 固有の設計ポイント</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="menu"></i></div>
+        <div class="feature-title">ハンバーガーメニュー</div>
+        <div class="feature-desc">サイドバーはボトムシート形式に変更。片手でリーチしやすい下部から展開。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="list"></i></div>
+        <div class="feature-title">コンパクトステッパー</div>
+        <div class="feature-desc">「3 / 7 作業内容」+ 7 ドット進捗。タップで全ステップシートを展開して 1 タップジャンプ。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="grid"></i></div>
+        <div class="feature-title">カテゴリカードグリッド</div>
+        <div class="feature-desc">Screen 4 は 2 列カードグリッド。タップで詳細ボトムシート展開、入力済みは緑チェック。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="camera"></i></div>
+        <div class="feature-title">ネイティブカメラ起動</div>
+        <div class="feature-desc">車検証OCR は iOS/Android のネイティブカメラを直接起動。撮影後の結果は BottomSheet でレビュー。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="arrow-down-to-line"></i></div>
+        <div class="feature-title">下部固定ナビ</div>
+        <div class="feature-desc">戻る / 合計金額 / 次へ を下部バーに集約。合計タップで内訳シート展開、safe-area 対応。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i data-lucide="smartphone"></i></div>
+        <div class="feature-title">タッチ最適化</div>
+        <div class="feature-desc">全ボタン 44-56px タップターゲット、フォント 16px (iOS ズーム防止)、safe-area 対応。</div>
+      </div>
+    </div>
+
+    <div class="preview-section">
+      <div class="section-label">実機フレームでプレビュー</div>
+      <div class="preview-controls">
+        <div class="device-toggle">
+          <button class="device-btn active" data-device="iphone-standard">
+            <i data-lucide="smartphone"></i> iPhone 15/16 (393×852)
+          </button>
+          <button class="device-btn" data-device="iphone-promax">
+            <i data-lucide="smartphone"></i> iPhone Pro Max (430×932)
+          </button>
+          <button class="device-btn" data-device="android">
+            <i data-lucide="smartphone"></i> Android (360×800)
+          </button>
+        </div>
+      </div>
+
+      <div class="phone-frame-wrap">
+        <div id="phone-frame-slot" class="phone-frame-slot">
+          <div id="phone-frame-outer" class="phone-frame-outer">
+            <div id="phone-frame" class="phone-frame iphone-standard">
+              <div class="phone-screen">
+                <iframe id="preview-iframe" src="estimate-wizard-mobile/index.html"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="frame-meta">
+        現在: <strong id="meta-device">iPhone 15/16 標準 · 393 × 852</strong>
+        <span class="scale-info" id="meta-scale"></span>
+      </div>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background: var(--ds-bg-elevated); border: 1px solid var(--ds-line); border-radius: 12px; font-size: 12px; color: var(--ds-text-muted); line-height: 1.7;">
+      <strong style="color: var(--ds-text-body);">📝 使い方のヒント</strong><br>
+      デバイス切替で iPhone / Android のサイズを確認できます。
+      新規タブで直接開くと、実際にスクロール / タップして操作を試せます。
+      <code>localStorage</code> にステップと入力データが保存されるので、リロードしても同じ状態に戻ります。
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>
+    const DEVICES = {
+      'iphone-standard': { w: 393, h: 852, label: 'iPhone 15/16 標準' },
+      'iphone-promax':   { w: 430, h: 932, label: 'iPhone 15/16 Pro Max' },
+      'android':         { w: 360, h: 800, label: 'Android 標準' },
+    };
+    const state = { device: 'iphone-standard' };
+
+    const frame = document.getElementById('phone-frame');
+    const frameOuter = document.getElementById('phone-frame-outer');
+    const frameSlot = document.getElementById('phone-frame-slot');
+    const metaDevice = document.getElementById('meta-device');
+    const metaScale = document.getElementById('meta-scale');
+
+    function updateScale() {
+      const d = DEVICES[state.device];
+      const wrap = document.querySelector('.phone-frame-wrap');
+      const availableW = wrap.clientWidth - 48;
+      const availableH = window.innerHeight * 0.9;
+      const scaleW = availableW / d.w;
+      const scaleH = availableH / d.h;
+      const scale = Math.min(1, scaleW, scaleH);
+      frameOuter.style.transform = `scale(${scale})`;
+      frameSlot.style.width = (d.w * scale) + 'px';
+      frameSlot.style.height = (d.h * scale) + 'px';
+      metaScale.textContent = scale < 1 ? `(表示スケール ${Math.round(scale * 100)}%)` : '(等倍)';
+    }
+
+    function apply() {
+      const d = DEVICES[state.device];
+      frame.className = 'phone-frame ' + state.device;
+      metaDevice.textContent = `${d.label} · ${d.w} × ${d.h}`;
+      document.querySelectorAll('.device-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.device === state.device);
+      });
+      updateScale();
+    }
+
+    document.querySelectorAll('.device-btn').forEach(b => {
+      b.addEventListener('click', () => { state.device = b.dataset.device; apply(); });
+    });
+    window.addEventListener('resize', updateScale);
+
+    apply();
+    lucide.createIcons();
+  </script>
+</body>
+</html>

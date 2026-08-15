@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>見積ウィザード — DealerOS GYEON</title>
+
+  <link rel="stylesheet" href="../../colors_and_type.css">
+
+  <style>
+    /* ── Global animations ────────────────────────────────────── */
+    @keyframes ds-spin      { to { transform: rotate(360deg); } }
+    @keyframes ds-fade-in   { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes ds-scale-in  { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+    @keyframes ds-slide-up  { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    @keyframes ds-slide-in-right { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+    body {
+      background: var(--ds-bg);
+      min-height: 100vh;
+      overflow-x: hidden;
+      /* Portrait: iPad 標準 15px でタッチ最適化 */
+      font-size: 15px;
+    }
+    input, textarea, button { font-size: 15px; }
+    :root {
+      --ds-sidebar-w: 0px;   /* Portrait: サイドバー非表示なので幅 0 */
+    }
+
+    /* Wizard layout — Portrait 版はサイドバーを完全に排除。
+       Landscape/Adaptive のような grid 2 列構造を使わず、単純な 1 列レイアウト。
+       これにより 0px 幅のダミー第 1 列が残ることを防ぐ (Portrait 特有の設計)。 */
+    .wz-layout {
+      display: block;
+      min-height: 100vh;
+    }
+    .wz-sidebar { display: none !important; }   /* Portrait では絶対に出さない */
+    .wz-main {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      min-width: 0;
+      background: linear-gradient(180deg, #080d1a 0%, #060916 100%);
+    }
+    /* ── Wizard content wrap ─────────────────────────────────
+       2 列 grid: [左: Screen body 全体]  [右: Sticky Total Panel]
+       sticky を確実に発動させるため、Sticky Total は grid の直接の子。
+       3 ウィンド (Screen 4 の場合: 縦タブ・見積カード・合計パネル) の
+       上端を揃えるため、合計パネルの上に ScreenTitle 分の空白 top offset を確保。 */
+    /* ════════════════════════════════════════════════════════════════
+       レイアウト設計思想: オーバーラップを CSS Grid レベルで物理的に防ぐ。
+       中央領域には「最低幅」を明示的に設定し、grid-template-columns で
+       「中央が縮みきれない狭さ」になったら合計パネルを畳む（bp: total-hide）。
+       これによりコンテンツと合計パネルが数学的に重ならない。
+       ════════════════════════════════════════════════════════════════ */
+
+    /* ════════════════════════════════════════════════════════════════
+       Portrait パターン設計方針 (改訂版):
+       - 右 Sticky Total パネルは全域で完全撤去
+       - 合計は「ヘッダーミニピル」として常時表示 (常時可視 + タップで内訳)
+       - 中央領域は 1 カラム全幅 → コーティングボタン群が余裕を持って並ぶ
+       - ボタンオーバーラップは物理的に発生しない
+       ════════════════════════════════════════════════════════════════ */
+    .wz-content-wrap {
+      display: block;   /* 1 カラム、grid ではなく単純な block */
+      padding: 20px 20px 60px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .wz-content {
+      min-width: 0;
+      animation: ds-fade-in var(--ds-dur-base) var(--ds-ease-out);
+    }
+    /* Sticky Total slot: Portrait 版では完全に非表示 */
+    .wz-total-slot { display: none !important; }
+
+    /* Screen transition */
+    .wz-screen-enter {
+      animation: ds-slide-in-right 0.2s var(--ds-ease-out);
+    }
+
+    /* ヘッダー合計ミニピル: Portrait 版では常時表示 (どのビューポート幅でも).
+       依頼書§7 の「合計のみ + タップで内訳シート」を、
+       下部固定バーではなくヘッダー統合で実現。
+       顧客との会話で常に金額が見える + 中央領域を全幅活用 = ボタンオーバーラップ物理的にゼロ。 */
+    .wz-total-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--ds-primary-tint-40);
+      border: 1px solid var(--ds-primary-tint-60);
+      color: #fff;
+      padding: 8px 14px 8px 12px;
+      border-radius: 999px;
+      font-family: var(--ds-font-num);
+      font-variant-numeric: tabular-nums;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      transition: all var(--ds-dur-fast) var(--ds-ease-out);
+      white-space: nowrap;
+      /* タッチ操作用にターゲット拡大 */
+      min-height: 40px;
+    }
+    .wz-total-pill:hover, .wz-total-pill:active {
+      background: var(--ds-primary-tint-60);
+      border-color: var(--ds-primary-500);
+      transform: scale(0.98);
+    }
+    .wz-total-pill-label {
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      color: var(--ds-primary-200);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    /* Mobile (<600): 下部固定バーモード (キーボード時は隠す) */
+    @media (max-width: 599px) {
+      .wz-content-wrap {
+        padding: 12px 16px calc(var(--ds-mobile-bar-h) + 16px);
+      }
+      .ds-headline { font-size: 20px; }
+      body { font-size: 16px; }
+      input, textarea { font-size: 16px !important; }
+    }
+    @media (min-width: 600px) {
+      .wz-mobile-bar { display: none; }
+    }
+    /* Stepper: 幅に応じて自動切替 */
+    @media (max-width: 899px) {
+      .wz-stepper-desktop { display: none; }
+      .wz-stepper-mobile { display: block; }
+    }
+    @media (min-width: 900px) {
+      .wz-stepper-desktop { display: block; }
+      .wz-stepper-mobile { display: none; }
+    }
+
+    /* Sidebar hide utility */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: var(--ds-line-strong); border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+
+  <!-- React 18 + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- Data & Components -->
+  <script src="data.js"></script>
+  <script type="text/babel" src="components.jsx"></script>
+  <script type="text/babel" src="shell.jsx"></script>
+  <script type="text/babel" src="screens/Screen1_Customer.jsx"></script>
+  <script type="text/babel" src="screens/Screen2_Vehicle.jsx"></script>
+  <script type="text/babel" src="screens/Screen3_Category.jsx"></script>
+  <script type="text/babel" src="screens/Screen4_Estimate.jsx"></script>
+  <script type="text/babel" src="screens/Screen5_Discount.jsx"></script>
+  <script type="text/babel" src="screens/Screen6_Notes.jsx"></script>
+  <script type="text/babel" src="screens/Screen7_Review.jsx"></script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="text/babel" data-presets="env,react">
+    const { useState, useEffect, useMemo } = React;
+
+    /* Tablet Portrait 版は PC 版と別 localStorage キー */
+    const STORE_KEY = 'dealeros-wizard-store-tablet-p-v1';
+    const STEP_KEY  = 'dealeros-wizard-step-tablet-p-v1';
+
+    function App() {
+      const [step, setStep] = useState(() => {
+        try { return Number(localStorage.getItem(STEP_KEY)) || 1; } catch { return 1; }
+      });
+      const [store, setStore] = useState(() => {
+        try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch { return {}; }
+      });
+      const [autoSave, setAutoSave] = useState('saved');
+      const [toast, setToast] = useState(null);
+
+      // Persist step
+      useEffect(() => {
+        try { localStorage.setItem(STEP_KEY, String(step)); } catch {}
+      }, [step]);
+
+      // Persist store — Ver2.0 §22 auto-save
+      useEffect(() => {
+        setAutoSave('saving');
+        const t = setTimeout(() => {
+          try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch {}
+          setAutoSave('saved');
+        }, 300);
+        return () => clearTimeout(t);
+      }, [store]);
+
+      function updateStore(patch) {
+        setStore(s => ({ ...s, ...patch }));
+        setAutoSave('dirty');
+      }
+
+      function jumpTo(n) {
+        // Ver2.0 §10 - 1タップジャンプ・committing 操作にカウントしない
+        setStep(Math.max(1, Math.min(7, n)));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function next() { jumpTo(step + 1); }
+      function back() { jumpTo(step - 1); }
+
+      function handleSave() {
+        setToast({ variant: 'success', message: '見積を確定・保存しました' });
+      }
+
+      function handleCancel() {
+        if (confirm('この見積を破棄して見積一覧に戻りますか？')) {
+          try { localStorage.removeItem(STORE_KEY); localStorage.removeItem(STEP_KEY); } catch {}
+          location.reload();
+        }
+      }
+
+      // Complete set = auto-detect (dumb heuristic)
+      const completeSet = useMemo(() => {
+        const s = new Set();
+        if (store.customer?.name) s.add(1);
+        if (store.vehicle?.plate && store.vehicle?.maker && store.vehicle?.model) s.add(2);
+        if (store.cats?.length) s.add(3);
+        if (store.__lineItems?.length) s.add(4);
+        // step 5, 6 optional
+        return s;
+      }, [store]);
+
+      // Sticky Total subtotals aggregation from __lineItems
+      const stickySubs = useMemo(() => {
+        const rows = store.__lineItems || [];
+        // Group by prefix
+        const grouped = {};
+        rows.forEach(r => {
+          const prefix = r.label.split(' · ')[0];
+          grouped[prefix] = (grouped[prefix] || 0) + r.qty * r.unit;
+        });
+        return Object.entries(grouped).map(([label, amount]) => ({ label, amount }));
+      }, [store.__lineItems]);
+
+      const couponTotal = (store.coupons || []).reduce((a, id) => a + (window.COUPONS.find(c => c.id === id)?.amount || 0), 0);
+      const rawSub = stickySubs.reduce((a, r) => a + r.amount, 0);
+      const discountAmt = store.discMode === 'amount' ? (store.discAmount || 0)
+                        : store.discMode === 'percent' ? Math.round(rawSub * (store.discPercent || 0) / 100)
+                        : 0;
+      const totalDiscount = couponTotal + discountAmt;
+      /* 税込合計: Sticky Total パネルが畳まれた狭い bp で表示する
+         「合計ミニピル」に使う。CSS 側で bp 判定して display を切替。 */
+      const totalTaxIncluded = Math.round((rawSub - totalDiscount) * 1.10);
+
+      const dealerRank = store.dealerRank || 'certified';
+
+      const isFirst = step === 1;
+      const isLast = step === 7;
+
+      const renderScreen = () => {
+        const props = { store, updateStore };
+        return (
+          <div className="wz-screen-enter" key={step}>
+            {step === 1 && <Screen1_Customer {...props} onAdvance={() => jumpTo(2)} />}
+            {step === 2 && <Screen2_Vehicle {...props} />}
+            {step === 3 && <Screen3_Category {...props} />}
+            {step === 4 && <Screen4_Estimate {...props} dealerRank={dealerRank} />}
+            {step === 5 && <Screen5_Discount {...props} />}
+            {step === 6 && <Screen6_Notes {...props} />}
+            {step === 7 && <Screen7_Review {...props} onJump={jumpTo} onSave={handleSave} />}
+          </div>
+        );
+      };
+
+      // Set up lucide once
+      useEffect(() => {
+        const id = setTimeout(() => {
+          if (window.lucide) window.lucide.createIcons();
+        }, 50);
+        return () => clearTimeout(id);
+      }, [step, store]);
+
+      const [breakdownOpen, setBreakdownOpen] = useState(false);
+
+      return (
+        <div className="wz-layout">
+          <div className="wz-sidebar">
+            <Sidebar onNavHome={handleCancel} />
+          </div>
+
+          <div className="wz-main">
+            <TopHeader
+              estimateNo="EST-2026-000342"
+              mode={store.editMode ? 'edit' : 'new'}
+              onCancel={handleCancel}
+              autoSaveState={autoSave}
+              totalPill={
+                <button className="wz-total-pill" onClick={() => setBreakdownOpen(true)} title="合計内訳を開く">
+                  <span className="wz-total-pill-label">合計</span>
+                  <span>{formatYen(totalTaxIncluded)}</span>
+                  <Icon name="chevron-down" size={12} />
+                </button>
+              }
+            />
+
+            <div className="wz-stepper-desktop">
+              <Stepper current={step} onJump={jumpTo} completeSet={completeSet} />
+            </div>
+            <div className="wz-stepper-mobile">
+              <CompactStepper current={step} onJump={jumpTo} total={7} />
+            </div>
+
+            <div className="wz-content-wrap">
+              <div className="wz-content">
+                {renderScreen()}
+                <BottomNav
+                  isFirst={isFirst}
+                  isLast={isLast}
+                  onBack={back}
+                  onNext={next}
+                  extra={isLast ? (
+                    <Button variant="primary" icon="save" onClick={handleSave}>見積を確定して保存</Button>
+                  ) : null}
+                />
+              </div>
+
+              {/* grid 直接子として配置 → sticky が確実に発動する。
+                  「次へ / 戻る / 保存」は下部ナビ (BottomNav) 側に統一したので
+                  ここでは onNext/onBack/onSave/isFirst/isLast を渡さない (パネルは金額表示専用)。 */}
+              <div className="wz-total-slot">
+                <StickyTotalPanel
+                  subtotals={stickySubs}
+                  discount={totalDiscount}
+                  taxRate={0.10}
+                />
+              </div>
+            </div>
+
+            <div className="wz-mobile-bar">
+              <MobileTotalBar
+                subtotals={stickySubs}
+                discount={totalDiscount}
+                taxRate={0.10}
+                onNext={next}
+                onSave={handleSave}
+                onOpenBreakdown={() => setBreakdownOpen(true)}
+                isLast={isLast}
+              />
+            </div>
+
+            {/* Mobile breakdown sheet */}
+            <Overlay open={breakdownOpen} onClose={() => setBreakdownOpen(false)} title="お見積内訳" icon="receipt" size="sm">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {stickySubs.map((r, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '8px 0', borderBottom: '1px solid var(--ds-line)' }}>
+                    <span style={{ color: 'var(--ds-text-muted)' }}>{r.label}</span>
+                    <span className="ds-numeric">{formatYen(r.amount)}</span>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, marginTop: 4, borderTop: '1px solid var(--ds-line-strong)' }}>
+                  <span className="ds-title" style={{ fontSize: 16 }}>合計 (税込)</span>
+                  <span className="ds-price-total" style={{ fontSize: 24 }}>{formatYen(Math.round((rawSub - totalDiscount) * 1.10))}</span>
+                </div>
+              </div>
+            </Overlay>
+
+            <Toast open={!!toast} onClose={() => setToast(null)} message={toast?.message} variant={toast?.variant} />
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('app')).render(<App />);
+  </script>
+</body>
+</html>

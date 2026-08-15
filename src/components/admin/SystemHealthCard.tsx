@@ -67,7 +67,7 @@ export default function SystemHealthCard() {
 
   const checks: Array<{ key: keyof Omit<SystemHealth, "timestamp" | "overall">; label: string }> = [
     { key: "supabase",    label: "Supabase DB" },
-    { key: "storage",     label: "Storage" },
+    { key: "storage",     label: "ストレージ" },
     { key: "line",        label: "LINE" },
     { key: "environment", label: "環境変数" },
   ];
@@ -78,7 +78,7 @@ export default function SystemHealthCard() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            System Health
+            システムヘルス
           </h3>
           {health && (
             <span className={`text-xs font-bold ${statusTextColor(health.overall)}`}>

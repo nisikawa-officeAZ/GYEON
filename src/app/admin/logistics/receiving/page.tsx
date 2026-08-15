@@ -7,7 +7,7 @@ import {
 import LogisticsReceivingClient from "./LogisticsReceivingClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Receiving | GYEON Logistics" };
+export const metadata = { title: "入荷 | GYEON Logistics" };
 
 export default async function LogisticsReceivingPage() {
   const caller = await getCurrentAdmin();

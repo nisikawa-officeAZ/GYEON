@@ -96,9 +96,9 @@ function buildMaintenanceInsight(stats: MaintenanceDashboardStats): AIInsight {
 }
 
 function buildEstimateInsight(estimates: EstimateCounts): AIInsight {
-  const hasSent = estimates.sent > 0;
+  const hasSent = estimates.proposal > 0;
   const summary = hasSent
-    ? `${estimates.sent}件の見積が返答待ちです`
+    ? `${estimates.proposal}件の見積が返答待ちです`
     : "返答待ちの見積はありません";
 
   return {
@@ -109,11 +109,11 @@ function buildEstimateInsight(estimates: EstimateCounts): AIInsight {
     title:                   "見積フォローアップ",
     summary,
     detail:                  hasSent
-      ? `送付済み: ${estimates.sent}件 / 承認済み: ${estimates.approved}件 / 下書き: ${estimates.draft}件`
+      ? `提案中: ${estimates.proposal}件 / 承認: ${estimates.approved}件 / 下書き: ${estimates.draft}件`
       : null,
     recommendation:          hasSent
       ? {
-          action_label: "送付済み見積を確認する",
+          action_label: "提案中の見積を確認する",
           rationale:    "返答のない見積への早期フォローアップで承認率が向上します",
           priority:     2,
         }

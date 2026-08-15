@@ -7,6 +7,7 @@ import {
   enableAdminUser,
   changeAdminRole,
   resetAdminPassword,
+  deleteAdminUser,
 } from "@/lib/admin/admin-user-actions";
 import { ADMIN_ROLE_META } from "@/lib/admin/admin-roles";
 import type { AdminUserDB } from "@/lib/admin/admin-types";
@@ -19,7 +20,8 @@ type Modal =
   | { type: "create" }
   | { type: "tempPassword"; password: string; email: string }
   | { type: "changeRole"; adminId: string; currentRole: AdminRole; email: string | null }
-  | { type: "confirmDisable"; adminId: string; email: string | null };
+  | { type: "confirmDisable"; adminId: string; email: string | null }
+  | { type: "confirmDelete"; adminId: string; email: string | null };
 
 function RoleBadge({ role }: { role: string }) {
   const meta = ADMIN_ROLE_META[role as AdminRole];
@@ -60,6 +62,12 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
+
+  // How many active Super Admins remain — used to gate 完全削除 so the last one
+  // can never be removed. Server-side enforcement is authoritative regardless.
+  const activeSuperAdminCount = users.filter(
+    (u) => u.role === "super_admin" && u.status === "active",
+  ).length;
 
   const handleCreate = () => {
     if (!createEmail.trim()) return;
@@ -114,6 +122,21 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
     });
   };
 
+  const handleConfirmDelete = () => {
+    if (modal.type !== "confirmDelete") return;
+    const adminId = modal.adminId;
+    setModal({ type: "none" });
+    startTransition(async () => {
+      const result = await deleteAdminUser(adminId);
+      if (result.success) {
+        setUsers((prev) => prev.filter((u) => u.id !== adminId));
+        showToast("管理者を完全削除しました", "success");
+      } else {
+        showToast(result.error ?? "エラーが発生しました", "error");
+      }
+    });
+  };
+
   const handleChangeRole = () => {
     if (modal.type !== "changeRole") return;
     const adminId = modal.adminId;
@@ -158,14 +181,14 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-slate-500">{users.length} 件のAdmin User</p>
+          <p className="text-xs text-slate-500">{users.length} 件の管理者ユーザー</p>
         </div>
         <button
           onClick={() => setModal({ type: "create" })}
           disabled={isPending}
           className="text-xs px-3 py-1.5 bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
         >
-          + New Admin
+          + 新規管理者
         </button>
       </div>
 
@@ -176,7 +199,7 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
             <thead>
               <tr className="border-b border-slate-800">
                 {["メール / 名前", "ロール", "ステータス", "作成日", "操作"].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                  <th key={h} className="text-left px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     {h}
                   </th>
                 ))}
@@ -185,8 +208,8 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
             <tbody className="divide-y divide-slate-800/40">
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-slate-600">
-                    Admin Userがいません
+                  <td colSpan={5} className="px-3 py-8 text-center text-slate-600">
+                    管理者ユーザーがいません
                   </td>
                 </tr>
               ) : (
@@ -196,23 +219,23 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
                   const isSuperAdmin = user.role === "super_admin";
                   return (
                     <tr key={user.id} className={`hover:bg-slate-800/20 transition-colors ${isDisabled ? "opacity-50" : ""}`}>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <div className="font-medium text-slate-200">{user.email ?? "—"}</div>
                         {user.name && <div className="text-slate-500 text-[10px]">{user.name}</div>}
                         {isSelf && <div className="text-[10px] text-blue-400 mt-0.5">現在のセッション</div>}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <RoleBadge role={user.role} />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         {isDisabled ? (
                           <span className="text-[10px] px-2 py-0.5 rounded bg-red-900/40 text-red-300 border border-red-800/40">停止中</span>
                         ) : (
                           <span className="text-[10px] px-2 py-0.5 rounded bg-green-900/30 text-green-300 border border-green-800/40">有効</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-500">{formatDate(user.created_at)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2 text-slate-500">{formatDate(user.created_at)}</td>
+                      <td className="px-3 py-2">
                         <div className="flex flex-wrap gap-1">
                           <button
                             onClick={() => handleResetPassword(user)}
@@ -246,6 +269,20 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
                               {isDisabled ? "有効化" : "停止"}
                             </button>
                           )}
+                          {/* 完全削除 — permanent. Hidden for the current session
+                              user; disabled for the last active Super Admin. */}
+                          {!isSelf && (
+                            <button
+                              onClick={() => setModal({ type: "confirmDelete", adminId: user.id, email: user.email })}
+                              disabled={isPending || (isSuperAdmin && !isDisabled && activeSuperAdminCount < 2)}
+                              title={isSuperAdmin && !isDisabled && activeSuperAdminCount < 2
+                                ? "最後のアクティブなスーパー管理者は完全削除できません"
+                                : undefined}
+                              className="text-[10px] px-2 py-1 bg-red-950/60 hover:bg-red-900/70 text-red-400 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              完全削除
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -261,7 +298,7 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
       {modal.type === "create" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-[#0f172a] border border-slate-700 rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
-            <h2 className="text-base font-bold text-slate-100">New Admin User</h2>
+            <h2 className="text-base font-bold text-slate-100">新規管理者ユーザー</h2>
             <p className="text-xs text-slate-500">
               アカウントを作成し、初回ログイン用の仮パスワードを発行します。
             </p>
@@ -293,8 +330,8 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
                   onChange={(e) => setCreateRole(e.target.value as CreatableRole)}
                   className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 rounded-lg text-slate-200 focus:outline-none focus:border-slate-400"
                 >
-                  <option value="gyeon_admin">GYEON Admin</option>
-                  <option value="logistics_admin">Logistics Admin</option>
+                  <option value="gyeon_admin">GYEON管理者</option>
+                  <option value="logistics_admin">物流管理者</option>
                 </select>
               </div>
             </div>
@@ -322,14 +359,14 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-[#0f172a] border border-slate-700 rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
             <h2 className="text-base font-bold text-slate-100">仮パスワード発行</h2>
-            <div className="text-sm text-amber-400 bg-amber-900/20 border border-amber-700/30 rounded-lg px-4 py-3">
+            <div className="text-sm text-amber-400 bg-amber-900/20 border border-amber-700/30 rounded-lg px-3 py-2">
               このパスワードはここにのみ表示されます。安全な方法でユーザーに伝えてください。
             </div>
             <div className="text-sm text-slate-400">
               アカウント: <span className="text-slate-200">{modal.email}</span>
             </div>
             <div className="relative">
-              <div className="font-mono text-lg font-bold text-slate-100 bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 tracking-widest select-all">
+              <div className="font-mono text-lg font-bold text-slate-100 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 tracking-widest select-all">
                 {modal.password}
               </div>
               <button
@@ -387,6 +424,36 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
         </div>
       )}
 
+      {/* ── Confirm Delete (完全削除) Modal — single dialog, irreversible ──── */}
+      {modal.type === "confirmDelete" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#0f172a] border border-red-800/60 rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
+            <h2 className="text-base font-bold text-red-400">完全削除</h2>
+            <p className="text-sm text-red-300">
+              {modal.email && (
+                <><span className="font-medium text-slate-100">{modal.email}</span> </>
+              )}
+              を完全削除します。復元できません。実行しますか？
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setModal({ type: "none" })}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isPending}
+                className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white text-sm rounded-lg transition-colors disabled:opacity-40"
+              >
+                完全削除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Change Role Modal ───────────────────────────────────────────── */}
       {modal.type === "changeRole" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -407,8 +474,8 @@ export default function AdminUsersPanel({ adminUsers: initialUsers, callerId }: 
                   onChange={(e) => setNewRole(e.target.value as CreatableRole)}
                   className="px-3 py-1.5 text-sm bg-slate-800 border border-slate-600 rounded-lg text-slate-200 focus:outline-none focus:border-slate-400"
                 >
-                  <option value="gyeon_admin">GYEON Admin</option>
-                  <option value="logistics_admin">Logistics Admin</option>
+                  <option value="gyeon_admin">GYEON管理者</option>
+                  <option value="logistics_admin">物流管理者</option>
                 </select>
               </div>
             </div>

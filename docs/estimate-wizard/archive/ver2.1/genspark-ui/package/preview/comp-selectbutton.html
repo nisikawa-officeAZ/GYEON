@@ -1,0 +1,10 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css"><style>body{margin:0;padding:20px 24px;background:var(--ds-bg);} .btn{display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:12px 16px;border-radius:10px;font-size:14px;cursor:pointer;font-family:var(--ds-font-sans);position:relative;transition:all 120ms;} .on{background:var(--ds-primary-tint-40);border:1px solid var(--ds-primary-tint-60);color:var(--ds-text-primary);font-weight:600;} .off{background:var(--ds-bg-elevated);border:1px solid var(--ds-line-slate);color:var(--ds-text-muted);font-weight:500;} .dis{background:var(--ds-bg-elevated);border:1px solid var(--ds-line-slate);color:var(--ds-text-faint);opacity:0.5;} .chk{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:var(--ds-primary-500);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;}</style></head><body>
+<div class="ds-overline" style="margin-bottom:12px;padding:0;">SelectButton — Ver2.0 core (プルダウン代替)</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+  <button class="btn on">車検証OCR<span class="chk">✓</span></button>
+  <button class="btn off">手入力</button>
+  <button class="btn off">既存顧客を検索</button>
+  <button class="btn dis">未選択のレイヤー</button>
+</div>
+<div style="margin-top:12px;font-size:11px;color:var(--ds-text-subtle);">選択中: 塗り + 境界 + チェック / 非選択: 淡い境界 / disabled: opacity 0.5</div>
+</body></html>

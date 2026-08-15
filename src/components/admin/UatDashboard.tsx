@@ -126,7 +126,7 @@ export default function UatDashboard({ dealers, openIssues, allFeedback, onRefre
     setAddErr(null);
     startTrans(async () => {
       const result = await createUatDealer({ dealerName: dName, contactName: dCon, email: dMail, country: dCo, notes: dNote });
-      if (!result.success) { setAddErr(result.error ?? "Failed"); }
+      if (!result.success) { setAddErr(result.error ?? "失敗しました"); }
       else { setDName(""); setDCon(""); setDMail(""); setDCo(""); setDNote(""); setShowAdd(false); onRefresh(); }
     });
   };
@@ -136,7 +136,7 @@ export default function UatDashboard({ dealers, openIssues, allFeedback, onRefre
     setIErr(null);
     startTrans(async () => {
       const result = await createIssue({ severity: iSev, title: iTitle, description: iDesc });
-      if (!result.success) { setIErr(result.error ?? "Failed"); }
+      if (!result.success) { setIErr(result.error ?? "失敗しました"); }
       else { setITitle(""); setIDesc(""); setISev("medium"); setShowIssue(false); onRefresh(); }
     });
   };
@@ -152,19 +152,19 @@ export default function UatDashboard({ dealers, openIssues, allFeedback, onRefre
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/50">
-          <p className="text-[10px] text-slate-500 mb-1">Dealers Completed</p>
+          <p className="text-[10px] text-slate-500 mb-1">完了ディーラー</p>
           <p className="text-2xl font-bold text-slate-100">{completedCount}<span className="text-sm text-slate-500">/{dealers.length}</span></p>
         </div>
         <div className={`p-4 rounded-xl border bg-slate-900/50 ${criticalOpen > 0 ? "border-red-700/50" : "border-slate-800"}`}>
-          <p className="text-[10px] text-slate-500 mb-1">Critical Issues Open</p>
+          <p className="text-[10px] text-slate-500 mb-1">重大課題（未対応）</p>
           <p className={`text-2xl font-bold ${criticalOpen > 0 ? "text-red-400" : "text-slate-100"}`}>{criticalOpen}</p>
         </div>
         <div className={`p-4 rounded-xl border bg-slate-900/50 ${highOpen > 0 ? "border-orange-700/50" : "border-slate-800"}`}>
-          <p className="text-[10px] text-slate-500 mb-1">High Issues Open</p>
+          <p className="text-[10px] text-slate-500 mb-1">高課題（未対応）</p>
           <p className={`text-2xl font-bold ${highOpen > 0 ? "text-orange-400" : "text-slate-100"}`}>{highOpen}</p>
         </div>
         <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/50">
-          <p className="text-[10px] text-slate-500 mb-1">Avg Rating</p>
+          <p className="text-[10px] text-slate-500 mb-1">平均評価</p>
           <p className="text-2xl font-bold text-amber-400">{avgRating}<span className="text-sm text-slate-500"> / 5</span></p>
         </div>
       </div>
@@ -172,7 +172,7 @@ export default function UatDashboard({ dealers, openIssues, allFeedback, onRefre
       {/* UAT Dealers table */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-200">UAT Dealers ({dealers.length})</p>
+          <p className="text-sm font-semibold text-slate-200">UAT ディーラー ({dealers.length})</p>
           <button
             onClick={() => setShowAdd(s => !s)}
             className="text-xs px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors"
@@ -187,7 +187,7 @@ export default function UatDashboard({ dealers, openIssues, allFeedback, onRefre
             <div className="flex gap-2 flex-wrap">
               <input type="text" placeholder="ディーラー名 *" value={dName} onChange={e => setDName(e.target.value)} className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-slate-200 placeholder:text-slate-600 flex-1 min-w-36" />
               <input type="text" placeholder="担当者名" value={dCon} onChange={e => setDCon(e.target.value)} className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-slate-200 placeholder:text-slate-600 flex-1 min-w-28" />
-              <input type="text" placeholder="Email" value={dMail} onChange={e => setDMail(e.target.value)} className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-slate-200 placeholder:text-slate-600 flex-1 min-w-36" />
+              <input type="text" placeholder="メール" value={dMail} onChange={e => setDMail(e.target.value)} className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-slate-200 placeholder:text-slate-600 flex-1 min-w-36" />
               <input type="text" placeholder="国" value={dCo} onChange={e => setDCo(e.target.value)} className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-slate-200 placeholder:text-slate-600 w-24" />
               <input type="text" placeholder="メモ" value={dNote} onChange={e => setDNote(e.target.value)} className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-slate-200 placeholder:text-slate-600 flex-1 min-w-36" />
             </div>
@@ -205,13 +205,13 @@ export default function UatDashboard({ dealers, openIssues, allFeedback, onRefre
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-slate-900 border-b border-slate-800">
-                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">Dealer</th>
-                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">Country</th>
-                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">Status</th>
-                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">Sessions</th>
-                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">Feedback</th>
-                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">Started</th>
-                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">Completed</th>
+                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">ディーラー</th>
+                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">国</th>
+                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">ステータス</th>
+                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">セッション</th>
+                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">フィードバック</th>
+                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">開始日</th>
+                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">完了日</th>
                 <th className="text-left px-4 py-2.5 text-slate-400 font-medium w-8" />
               </tr>
             </thead>
@@ -261,7 +261,7 @@ export default function UatDashboard({ dealers, openIssues, allFeedback, onRefre
       {/* Feedback panel for active dealer */}
       {activeDealer && (
         <div className="rounded-xl border border-blue-800/30 bg-blue-950/10 p-4">
-          <p className="text-sm font-semibold text-slate-200 mb-3">{activeDealer.dealer_name} — Feedback & Sessions</p>
+          <p className="text-sm font-semibold text-slate-200 mb-3">{activeDealer.dealer_name} — フィードバックとセッション</p>
           <UatFeedbackPanel
             dealerId={activeDealer.id}
             sessions={activeDealer.sessions}
@@ -275,8 +275,8 @@ export default function UatDashboard({ dealers, openIssues, allFeedback, onRefre
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-slate-200">
-            Open Issues
-            {criticalOpen > 0 && <span className="ml-2 text-xs text-red-400">⚠ {criticalOpen} Critical</span>}
+            未対応の課題
+            {criticalOpen > 0 && <span className="ml-2 text-xs text-red-400">⚠ 重大 {criticalOpen}件</span>}
           </p>
           <button onClick={() => setShowIssue(s => !s)} className="text-xs px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200">
             課題を追加
@@ -287,7 +287,7 @@ export default function UatDashboard({ dealers, openIssues, allFeedback, onRefre
           <div className="p-4 rounded-xl border border-slate-700 bg-slate-900/40 flex flex-col gap-2">
             <div className="flex gap-2 flex-wrap items-end">
               <div>
-                <label className="block text-[10px] text-slate-500 mb-1">Severity</label>
+                <label className="block text-[10px] text-slate-500 mb-1">重要度</label>
                 <select value={iSev} onChange={e => setISev(e.target.value as UatIssueSeverity)} className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1.5 text-slate-200">
                   {ISSUE_SEVERITY_OPTIONS.map(s => <option key={s} value={s}>{uatIssueSeverityLabel(s)}</option>)}
                 </select>

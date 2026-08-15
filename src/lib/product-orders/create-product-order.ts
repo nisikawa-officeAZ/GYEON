@@ -5,6 +5,7 @@ import { getCurrentDealer }      from "@/lib/auth/get-current-dealer";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { ProductOrderDB }        from "./product-order-types";
 import { createActivityLog }     from "@/lib/activity/activity-log";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 export interface ProductOrderItemInput {
   product_id:            string | null;
@@ -24,6 +25,9 @@ export interface CreateProductOrderInput {
 export async function createProductOrder(
   input: CreateProductOrderInput,
 ): Promise<{ error: string } | { success: true; data: ProductOrderDB }> {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
 

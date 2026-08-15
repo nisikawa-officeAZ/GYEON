@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useRouter }           from "next/navigation";
 import Link                    from "next/link";
 import { createClient }        from "@/lib/supabase/client";
+import Brand                   from "@/components/ui/Brand";
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -99,19 +100,8 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-sm">
 
         {/* ── Brand ──────────────────────────────────────────────────────── */}
-        <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center"
-              style={{ background: "var(--gs-blue, #4f8ef7)" }}
-            >
-              <span className="text-white text-xl font-black">G</span>
-            </div>
-            <div className="text-left">
-              <p className="text-[10px] font-bold text-[#55556a] tracking-[2.5px] uppercase">GYEON</p>
-              <p className="text-base font-bold text-[#f0f0f5] leading-tight">Detailer Agent</p>
-            </div>
-          </div>
+        <div className="mb-8 text-center flex flex-col items-center gap-3">
+          <Brand size={56} />
           <p className="text-xs text-[#55556a]">新しいパスワードを設定</p>
         </div>
 

@@ -155,7 +155,7 @@ VALUES (
 ```
 
 Verification:
-- Log in as Super Admin at `/admin/login`
+- Log in as Super Admin at `/login` (there is no `/admin/login` route), then open `/admin`
 - Confirm Dealer Approval Center is accessible
 - Confirm User Management is accessible
 - Confirm Audit Log is accessible
@@ -228,7 +228,7 @@ Execute in order after deployment:
 ### Auth Flow
 - [ ] `/signup` — register new dealer → redirected to `/signup/pending`
 - [ ] `/login` — login with pending dealer → redirected to `/no-dealer` (pending message shown)
-- [ ] `/admin/login` — login as Super Admin → admin dashboard shown
+- [ ] `/login` — login as Super Admin (no `/admin/login` route) → then `/admin` → admin dashboard shown
 - [ ] Admin → approve test dealer (30-day Pro Plus trial)
 - [ ] Dealer login → dashboard shown, trial banner shows "残り30日"
 

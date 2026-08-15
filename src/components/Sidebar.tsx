@@ -40,8 +40,11 @@ const navItems: NavItem[] = [
   { type: "link", href: "/product-orders",    label: "商品注文",   icon: "⊘", feature: "product_orders" },
   { type: "link", href: "/line",              label: "LINE",       icon: "⊿", feature: "line" },
   { type: "link", href: "/maintenance",       label: "メンテナンス", icon: "◉", feature: "maintenance" },
+  { type: "link", href: "/ocr-sessions",      label: "OCR履歴",    icon: "🪪" },
   { type: "link", href: "/news",              label: "お知らせ",   icon: "📢" },
   { type: "link", href: "/downloads",         label: "ダウンロード", icon: "⬇" },
+  { type: "link", href: "/points",            label: "ポイント",   icon: "★" },
+  { type: "link", href: "/customer-app",      label: "顧客アプリ", icon: "📱" },
   { type: "link", href: "/settings",          label: "設定",       icon: "⊞" },
 ];
 

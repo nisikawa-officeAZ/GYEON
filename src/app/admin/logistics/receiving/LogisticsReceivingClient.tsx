@@ -91,24 +91,24 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-white">Receiving Workflow</h1>
+        <h1 className="text-xl font-semibold text-white">入荷ワークフロー</h1>
         <p className="text-sm text-slate-400 mt-0.5">仕入先からの入荷・ディーラーへの納品記録</p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-6 mb-8">
-        <h2 className="text-sm font-semibold text-slate-300 mb-4">New Receipt</h2>
+        <h2 className="text-sm font-semibold text-slate-300 mb-4">新規入荷</h2>
 
         {/* Row 1: Dealer + Supplier + PO + Date */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Dealer <span className="text-red-400">*</span></label>
+            <label className="block text-xs text-slate-400 mb-1">ディーラー <span className="text-red-400">*</span></label>
             <select
               value={form.dealer_id}
               onChange={(e) => setForm((f) => ({ ...f, dealer_id: e.target.value }))}
               className="w-full bg-slate-700/50 border border-slate-600 focus:border-green-500 rounded-lg px-3 py-2 text-sm text-white outline-none"
             >
-              <option value="">-- Dealer --</option>
+              <option value="">-- ディーラー --</option>
               {dealers.map((d) => (
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
@@ -116,7 +116,7 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">仕入先 (Supplier)</label>
+            <label className="block text-xs text-slate-400 mb-1">仕入先</label>
             <input
               type="text"
               value={form.supplier}
@@ -150,7 +150,7 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
 
         {/* Row 2: Product Search */}
         <div className="mb-4">
-          <label className="block text-xs text-slate-400 mb-1">Product <span className="text-red-400">*</span></label>
+          <label className="block text-xs text-slate-400 mb-1">商品 <span className="text-red-400">*</span></label>
           <ProductSearchInput
             products={products}
             selectedId={form.product_id}
@@ -170,7 +170,7 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
         {/* Row 3: Quantity inputs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Units/Case</label>
+            <label className="block text-xs text-slate-400 mb-1">入数/ケース</label>
             <input
               type="number"
               min={1}
@@ -247,7 +247,7 @@ export default function LogisticsReceivingClient({ dealers, products, initialRec
 
       {/* Recent receipts */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-300 mb-3">Recent Receipts</h2>
+        <h2 className="text-sm font-semibold text-slate-300 mb-3">最近の入荷</h2>
         {receipts.length === 0 ? (
           <div className="text-center py-12 text-slate-500 text-sm">まだ入荷記録がありません。</div>
         ) : (

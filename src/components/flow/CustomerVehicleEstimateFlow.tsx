@@ -19,10 +19,22 @@ const MOCK_FLOW = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  DRAFT:    "bg-slate-600 text-slate-100",
-  SENT:     "bg-blue-600 text-white",
-  APPROVED: "bg-green-600 text-white",
-  REJECTED: "bg-red-600 text-white",
+  DRAFT:       "bg-slate-600 text-slate-100",
+  PROPOSAL:    "bg-blue-600 text-white",
+  APPROVED:    "bg-green-600 text-white",
+  LOST:        "bg-red-600 text-white",
+  ACCEPTED:    "bg-emerald-600 text-white",
+  IN_PROGRESS: "bg-indigo-600 text-white",
+  COMPLETED:   "bg-teal-600 text-white",
+  INVOICED:    "bg-purple-600 text-white",
+  SENT:        "bg-blue-600 text-white",  // legacy → 提案中 color
+  REJECTED:    "bg-red-600 text-white",   // legacy
+};
+
+const STATUS_LABEL_UP: Record<string, string> = {
+  DRAFT: "下書き", PROPOSAL: "提案中", APPROVED: "承認", LOST: "失注",
+  ACCEPTED: "受注", IN_PROGRESS: "作業中", COMPLETED: "完了", INVOICED: "請求済",
+  SENT: "提案中", REJECTED: "失注",
 };
 
 function formatYen(n: number) {
@@ -107,7 +119,7 @@ export default function CustomerVehicleEstimateFlow() {
           <p className="font-semibold text-slate-100 text-sm mb-2">{estimate.estimateNo}</p>
           <div className="space-y-2">
             <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded ${STATUS_COLOR[estimate.status]}`}>
-              {estimate.status}
+              {STATUS_LABEL_UP[estimate.status] ?? estimate.status}
             </span>
             <p className="text-sm font-bold text-slate-100">{formatYen(estimate.total)}</p>
           </div>

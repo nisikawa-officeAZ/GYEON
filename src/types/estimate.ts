@@ -3,7 +3,11 @@ export interface Estimate {
   customerId: string;
   vehicleId: string;
   estimateNo: string;
-  status: "DRAFT" | "SENT" | "APPROVED" | "REJECTED";
+  // Workflow statuses (SENT is legacy — transmission, not workflow).
+  status:
+    | "DRAFT" | "PROPOSAL" | "APPROVED" | "LOST"
+    | "ACCEPTED" | "IN_PROGRESS" | "COMPLETED" | "INVOICED"
+    | "SENT" | "REJECTED"; // legacy
   subtotal: number;
   tax: number;
   total: number;

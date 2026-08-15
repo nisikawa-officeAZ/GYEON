@@ -1,128 +1,67 @@
-// DealerOS — LIFF Link API (PHASE46)
+// DealerOS — LIFF Link API (GYEON-LINE-SETUP-F2)
 // POST /api/line/liff/link
 //
-// Called from the LIFF page (/liff/link) after LINE Login.
-// Receives: { id_token, customer_id }
-// Verifies id_token with LINE, extracts line_user_id, then links customer.
+// Called from the LIFF page running inside the LINE app on the CUSTOMER's phone.
+// That browser has no DealerOS session, so this route must NOT require one.
+//
+// Receives exactly: { token, id_token }
 //
 // Security:
-//   - id_token verified with LINE token verification endpoint
-//   - dealer resolved from session (requires auth cookie)
-//   - customer ownership verified against dealer_id
+//   - `token` is opaque; the dealer, the customer and the expected LINE Login
+//     audience are resolved server-side from its SHA-256 hash. No browser-supplied
+//     identifier ever selects a row — the old raw-customer parameter is gone.
+//   - the LINE ID token is verified against that dealer's LINE Login channel id,
+//     as an x-www-form-urlencoded POST body — never in a URL.
+//   - the link token is consumed only after LINE accepts the ID token, and the
+//     consume + all linking writes are one atomic, winner-gated transaction.
+//   - unknown / forged / expired / revoked / replayed tokens return one opaque
+//     failure that reveals nothing about dealers or customers.
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 
-const LINE_VERIFY_URL = "https://api.line.me/oauth2/v2.1/verify";
+import { consumeLineLinkToken } from "@/lib/line/consume-line-link-token";
+
+export const dynamic = "force-dynamic";
 
 interface LiffLinkBody {
-  id_token:    string;
-  customer_id: string;
-}
-
-interface LineIdTokenPayload {
-  sub:     string;  // line_user_id
-  name:    string;
-  picture?: string;
+  token?: unknown;
+  id_token?: unknown;
 }
 
 export async function POST(req: NextRequest) {
   let body: LiffLinkBody;
   try {
-    body = await req.json();
+    body = (await req.json()) as LiffLinkBody;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { id_token, customer_id } = body;
-  if (!id_token || !customer_id) {
-    return NextResponse.json({ error: "id_token and customer_id are required" }, { status: 400 });
+  const token = typeof body.token === "string" ? body.token : "";
+  const idToken = typeof body.id_token === "string" ? body.id_token : "";
+
+  if (!token || !idToken) {
+    return NextResponse.json({ error: "token と id_token が必要です" }, { status: 400 });
   }
 
-  // Get dealer from session
-  const dealer = await getCurrentDealer();
-  if (!dealer) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const result = await consumeLineLinkToken(token, idToken);
+
+  switch (result.kind) {
+    case "linked":
+      return NextResponse.json({ success: true, display_name: result.displayName });
+
+    case "account-conflict":
+      return NextResponse.json(
+        { error: "このLINEアカウントは既に別の顧客と連携されています" },
+        { status: 409 }
+      );
+
+    // Deliberately identical shape for both failures: no probing signal about
+    // whether the link token or the LINE identity was the problem.
+    case "line-verification-failed":
+    case "invalid-token":
+      return NextResponse.json({ error: "連携リンクが無効です" }, { status: 401 });
+
+    default:
+      return NextResponse.json({ error: "連携に失敗しました" }, { status: 500 });
   }
-
-  // Fetch LIFF client_id from dealer_settings
-  const supabase = await createClient();
-  const { data: settings } = await supabase
-    .from("dealer_settings")
-    .select("line_liff_id")
-    .eq("dealer_id", dealer.dealer_id)
-    .maybeSingle();
-
-  if (!settings?.line_liff_id) {
-    return NextResponse.json({ error: "LIFF IDが設定されていません" }, { status: 400 });
-  }
-
-  // Verify id_token with LINE
-  const verifyParams = new URLSearchParams({
-    id_token,
-    client_id: settings.line_liff_id.split("-")[0] ?? settings.line_liff_id,
-  });
-
-  const verifyRes = await fetch(`${LINE_VERIFY_URL}?${verifyParams}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: verifyParams,
-  });
-
-  if (!verifyRes.ok) {
-    const err = await verifyRes.json().catch(() => ({}));
-    return NextResponse.json({ error: "LINE token verification failed", detail: err }, { status: 401 });
-  }
-
-  const payload = await verifyRes.json() as LineIdTokenPayload;
-  const lineUserId  = payload.sub;
-  const displayName = payload.name ?? "LINE User";
-  const pictureUrl  = payload.picture ?? null;
-
-  // Validate customer ownership
-  const { data: customer } = await supabase
-    .from("customers")
-    .select("id")
-    .eq("id", customer_id)
-    .eq("dealer_id", dealer.dealer_id)
-    .maybeSingle();
-
-  if (!customer) {
-    return NextResponse.json({ error: "顧客が見つかりません" }, { status: 404 });
-  }
-
-  const now = new Date().toISOString();
-
-  // Upsert line_customers
-  await supabase
-    .from("line_customers")
-    .upsert(
-      {
-        dealer_id:    dealer.dealer_id,
-        customer_id,
-        line_user_id: lineUserId,
-        display_name: displayName,
-        picture_url:  pictureUrl,
-        is_friend:    true,
-        linked_at:    now,
-        updated_at:   now,
-      },
-      { onConflict: "dealer_id,line_user_id" }
-    );
-
-  // Update customer
-  await supabase
-    .from("customers")
-    .update({
-      line_connected:    true,
-      line_user_id:      lineUserId,
-      line_display_name: displayName,
-      line_picture_url:  pictureUrl,
-      updated_at:        now,
-    })
-    .eq("id", customer_id)
-    .eq("dealer_id", dealer.dealer_id);
-
-  return NextResponse.json({ success: true, line_user_id: lineUserId, display_name: displayName });
 }

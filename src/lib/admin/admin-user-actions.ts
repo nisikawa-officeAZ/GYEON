@@ -5,6 +5,8 @@ import { requireSuperAdmin } from "./require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "./write-audit-log";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
+import { deleteUserAdmin } from "./user-actions";
+import { checkSuperAdminRemovalSafe } from "./super-admin-guard";
 import type { AdminRole } from "./admin-roles";
 
 type CreatableAdminRole = Exclude<AdminRole, "super_admin">;
@@ -79,16 +81,31 @@ export async function disableAdminUser(adminId: string) {
     return { success: false, error: "自分自身を無効化できません" };
   }
 
-  const { error: banError } = await supabase.auth.admin.updateUserById(target.user_id, {
-    ban_duration: "876600h",
-  });
-  if (banError) return { success: false, error: banError.message };
+  // Never suspend an active Super Admin.
+  const guardError = await checkSuperAdminRemovalSafe(supabase, target.user_id, currentUser?.id, "停止");
+  if (guardError) return { success: false, error: guardError };
 
+  // admin_users.status is this app's own authorization gate (requireAdmin()
+  // checks it directly), so it is written FIRST. If the Auth ban below then
+  // fails, the account is already locked out of every admin action here,
+  // rather than left in a banned-but-still-"active" inconsistent state.
   const { error: updateError } = await supabase
     .from("admin_users")
     .update({ status: "disabled" })
     .eq("id", adminId);
   if (updateError) return { success: false, error: updateError.message };
+
+  const { error: banError } = await supabase.auth.admin.updateUserById(target.user_id, {
+    ban_duration: "876600h",
+  });
+  if (banError) {
+    return {
+      success: false,
+      error:
+        "管理者権限は停止しましたが、認証レベルの停止に失敗しました。" +
+        "もう一度お試しいただくか、管理者にお問い合わせください。",
+    };
+  }
 
   await writeAuditLog({
     adminUserId:  caller.id,
@@ -133,6 +150,41 @@ export async function enableAdminUser(adminId: string) {
   return { success: true };
 }
 
+/**
+ * Permanently delete (完全削除) an admin user — Super Admin only.
+ *
+ * Delegates the actual hard delete to the existing safe deleteUserAdmin(), which
+ * enforces the mandatory guards server-side (no self-delete; active Super Admin
+ * removal denied unconditionally) and performs a read-only owner-dealer check
+ * before the auth.users deletion. The admin_users row is removed by ON DELETE
+ * CASCADE. No hard-delete logic is duplicated here.
+ */
+export async function deleteAdminUser(adminId: string) {
+  const caller = await requireSuperAdmin();
+  const supabase = createAdminClient();
+
+  const { data: target, error: fetchError } = await supabase
+    .from("admin_users")
+    .select("id, user_id, email, role, status")
+    .eq("id", adminId)
+    .single();
+
+  if (fetchError || !target) return { success: false, error: "管理者が見つかりません" };
+
+  // Hard delete via the single safe path (self + active-Super-Admin guards live there).
+  const res = await deleteUserAdmin(target.user_id);
+  if (!res.success) return { success: false, error: res.error };
+
+  await writeAuditLog({
+    adminUserId:  caller.id,
+    targetUserId: target.user_id,
+    action:       "admin_user_deleted",
+    details:      { target_email: target.email, target_role: target.role },
+  });
+
+  return { success: true };
+}
+
 export async function changeAdminRole(adminId: string, newRole: CreatableAdminRole) {
   const caller = await requireSuperAdmin();
   const currentUser = await getCurrentUser();
@@ -149,6 +201,13 @@ export async function changeAdminRole(adminId: string, newRole: CreatableAdminRo
   if (target.user_id === currentUser?.id) {
     return { success: false, error: "自分自身のロールは変更できません" };
   }
+
+  // Role demotion is a removal path too: newRole can never be "super_admin"
+  // (CreatableAdminRole excludes it), so any change of a super_admin target is
+  // a demotion away from Super Admin. Reuse the same self/active-Super-Admin guard
+  // that protects disable and hard-delete.
+  const guardError = await checkSuperAdminRemovalSafe(supabase, target.user_id, currentUser?.id, "ロール変更");
+  if (guardError) return { success: false, error: guardError };
 
   const { error: updateError } = await supabase
     .from("admin_users")

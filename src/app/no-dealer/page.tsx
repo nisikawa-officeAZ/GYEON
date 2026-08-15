@@ -5,7 +5,11 @@
 import { redirect }        from "next/navigation";
 import { getCurrentUser }  from "@/lib/auth/get-current-user";
 import { createClient }    from "@/lib/supabase/server";
+import { createAdminClient }        from "@/lib/supabase/admin";
+import { claimGyeonProvisioning }   from "@/lib/dealer/claim-gyeon-provisioning";
+import { isGyeonPartnerOnboardingEnabled } from "@/lib/gyeon/partner-onboarding-enabled";
 import LogoutButton        from "@/components/auth/LogoutButton";
+import Brand               from "@/components/ui/Brand";
 
 export const metadata = { title: "店舗アクセス待ち | GYEON Detailer Agent" };
 export const dynamic  = "force-dynamic";
@@ -14,6 +18,41 @@ export default async function NoDealerPage() {
   // If somehow an unauthenticated user lands here, send them to login
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+
+  // GYEON partner onboarding: /no-dealer is the guaranteed sink for every
+  // verified user without an active membership, so it is the normal-login
+  // claim convergence point — a CSV-matched applicant or an invited shop
+  // owner converges here in ANY later session without re-verification.
+  //
+  // F2-08 SaaS isolation: EVERYTHING below is inside the server-only feature
+  // gate. With GYEON_PARTNER_ONBOARDING_ENABLED not exactly "true", this page
+  // runs its original behavior byte-for-byte — no claim, no admin client, no
+  // invited-membership lookup, and no /shop-profile redirect. Because
+  // /shop-profile itself redirects BACK to /no-dealer when the gate is off,
+  // gating the only /no-dealer → /shop-profile edge here makes the SaaS
+  // redirect loop structurally impossible.
+  if (isGyeonPartnerOnboardingEnabled()) {
+    if (user.email_confirmed_at) {
+      try {
+        await claimGyeonProvisioning();
+      } catch {
+        // Non-eligible/errored claims keep the existing no-dealer behavior.
+      }
+    }
+
+    // A claimed-but-not-activated owner (membership 'invited') belongs on the
+    // dedicated shop-profile surface, never on the waiting screen.
+    const adminDb = createAdminClient();
+    const { data: invitedMembership } = await adminDb
+      .from("dealer_members")
+      .select("dealer_id")
+      .eq("user_id", user.id)
+      .eq("role", "owner")
+      .eq("status", "invited")
+      .limit(1)
+      .maybeSingle();
+    if (invitedMembership) redirect("/shop-profile");
+  }
 
   // Detect whether the user belongs to a suspended dealer.
   // suspendDealer() sets dealer_members.status = 'suspended', so querying here
@@ -35,17 +74,8 @@ export default async function NoDealerPage() {
       <div className="w-full max-w-sm flex flex-col gap-5">
 
         {/* ── Brand ──────────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 justify-center">
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center"
-            style={{ background: "var(--gs-blue, #4f8ef7)" }}
-          >
-            <span className="text-white text-xl font-black">G</span>
-          </div>
-          <div className="text-left">
-            <p className="text-[10px] font-bold text-[#55556a] tracking-[2.5px] uppercase">GYEON</p>
-            <p className="text-base font-bold text-[#f0f0f5] leading-tight">Detailer Agent</p>
-          </div>
+        <div className="flex items-center justify-center">
+          <Brand size={56} />
         </div>
 
         {/* ── Status card ────────────────────────────────────────────────── */}
@@ -222,7 +252,7 @@ export default async function NoDealerPage() {
               <p>VALUES</p>
               <p>  (&apos;{user.id}&apos;,</p>
               <p>   &apos;&lt;dealer_uuid&gt;&apos;,</p>
-              <p>   &apos;admin&apos;, &apos;active&apos;);</p>
+              <p>   &apos;owner&apos;, &apos;active&apos;);</p>
             </div>
           </div>
         )}

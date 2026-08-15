@@ -68,3 +68,10 @@ export type VehicleInsert = {
 
 // Fields accepted on UPDATE — id and dealer_id are used as scope, not changed.
 export type VehicleUpdate = Partial<Omit<VehicleInsert, "dealer_id">>;
+
+// Phase 2 Sprint 1 — query params for dealer-scoped vehicle lookup (duplicate
+// detection). dealer_id is never part of this query; it is resolved server-side.
+export interface VehicleLookupQuery {
+  vin?:          string;
+  plate_number?: string;
+}

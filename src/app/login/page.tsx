@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link        from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { sanitizeNextPath } from "@/lib/auth/sanitize-next-path";
+import Brand from "@/components/ui/Brand";
 import { Suspense } from "react";
 
 function LoginForm() {
@@ -17,6 +19,8 @@ function LoginForm() {
       : null,
   );
   const [loading,  setLoading]  = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe,   setRememberMe]   = useState(false);
 
   const justRegistered = searchParams.get("registered") === "1";
 
@@ -26,7 +30,7 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
+      const supabase = createClient({ rememberMe });
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
       if (authError) {
@@ -34,7 +38,13 @@ function LoginForm() {
         return;
       }
 
-      router.push("/");
+      // Restore the preserved `?next=` destination. sanitizeNextPath() validates the value returned by
+      // searchParams.get (already transport-decoded, so no further decoding) and ALWAYS returns a safe
+      // internal path — falling back to "/" when `next` is absent or unsafe, and preserving valid
+      // percent-encoding — so the redirect honors `?next=` (e.g. /admin/dev-preview/estimate-wizard)
+      // and can never open-redirect.
+      const target = sanitizeNextPath(searchParams.get("next"));
+      router.push(target);
       router.refresh();
     } catch {
       setError("予期しないエラーが発生しました。再度お試しください。");
@@ -49,18 +59,7 @@ function LoginForm() {
 
         {/* ── Brand header ───────────────────────────────────────────────── */}
         <div className="mb-8 text-center flex flex-col items-center gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "var(--gs-blue, #4f8ef7)" }}
-            >
-              <span className="text-white text-xl font-black tracking-tight">G</span>
-            </div>
-            <div className="text-left">
-              <p className="text-[10px] font-bold text-[#55556a] tracking-[2.5px] uppercase">GYEON</p>
-              <p className="text-base font-bold text-[#f0f0f5] leading-tight">Detailer Agent</p>
-            </div>
-          </div>
+          <Brand size={56} />
           <p className="text-xs text-[#55556a]">ショップ管理システムにサインイン</p>
         </div>
 
@@ -125,22 +124,57 @@ function LoginForm() {
                 パスワードを忘れた方
               </Link>
             </div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              placeholder="••••••••"
-              className="w-full rounded-lg px-3 py-2.5 text-sm text-[#f0f0f5] placeholder-[#55556a] focus:outline-none transition-colors"
-              style={{
-                background:  "var(--gs-bg-2, #111118)",
-                border:      "1px solid var(--gs-line, rgba(255,255,255,0.08))",
-              }}
-              onFocus={(e) => e.currentTarget.style.borderColor = "var(--gs-blue, #4f8ef7)"}
-              onBlur={(e)  => e.currentTarget.style.borderColor = "var(--gs-line, rgba(255,255,255,0.08))"}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                placeholder="••••••••"
+                className="w-full rounded-lg px-3 py-2.5 pr-10 text-sm text-[#f0f0f5] placeholder-[#55556a] focus:outline-none transition-colors"
+                style={{
+                  background:  "var(--gs-bg-2, #111118)",
+                  border:      "1px solid var(--gs-line, rgba(255,255,255,0.08))",
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = "var(--gs-blue, #4f8ef7)"}
+                onBlur={(e)  => e.currentTarget.style.borderColor = "var(--gs-line, rgba(255,255,255,0.08))"}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-[#9999b0] hover:text-[#f0f0f5] transition-colors"
+              >
+                {showPassword ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                    <line x1="2" x2="22" y1="2" y2="22" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
+
+          {/* Remember me */}
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded accent-[#4f8ef7]"
+              style={{ background: "var(--gs-bg-2, #111118)" }}
+            />
+            <span className="text-xs text-[#9999b0]">ログイン状態を保持する</span>
+          </label>
 
           {/* Submit */}
           <button

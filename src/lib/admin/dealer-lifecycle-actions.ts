@@ -3,6 +3,7 @@
 import { requireAdmin } from "./require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "./write-audit-log";
+import { isValidRank } from "@/lib/ranks/dealer-ranks";
 
 export async function extendDealerTrial(dealerId: string, newTrialEndDate: string) {
   const admin = await requireAdmin();
@@ -39,6 +40,12 @@ export async function extendDealerTrial(dealerId: string, newTrialEndDate: strin
 
 export async function changeDealerRank(dealerId: string, newRank: string) {
   const admin = await requireAdmin();
+
+  // Validate server-side against the canonical rank registry — never trust the client.
+  if (!isValidRank(newRank)) {
+    return { success: false, error: "無効なランクです" };
+  }
+
   const supabase = createAdminClient();
 
   const { data: current } = await supabase
@@ -47,12 +54,21 @@ export async function changeDealerRank(dealerId: string, newRank: string) {
     .eq("id", dealerId)
     .single();
 
+  // dealers.detailer_rank is the authoritative rank.
   const { error } = await supabase
     .from("dealers")
     .update({ detailer_rank: newRank })
     .eq("id", dealerId);
 
   if (error) return { success: false, error: error.message };
+
+  // Write-through sync so dealer-facing settings (and estimates) stay consistent.
+  await supabase
+    .from("dealer_settings")
+    .upsert(
+      { dealer_id: dealerId, detailer_rank: newRank, updated_at: new Date().toISOString() },
+      { onConflict: "dealer_id" },
+    );
 
   await writeAuditLog({
     adminUserId:    admin.id,

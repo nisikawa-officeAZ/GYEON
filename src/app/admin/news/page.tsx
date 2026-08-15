@@ -4,7 +4,7 @@ import { getNewsForAdmin } from "@/lib/news/manage-news";
 import NewsAdminClient from "@/components/admin/news/NewsAdminClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "News Management | Admin" };
+export const metadata = { title: "お知らせ管理 | スーパー管理者" };
 
 const MANAGE_ROLES = ["super_admin", "gyeon_admin"];
 

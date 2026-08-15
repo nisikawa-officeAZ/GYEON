@@ -21,6 +21,7 @@ import {
   type CustomerAppTheme,
 } from "@/lib/branding/branding-types";
 import type { StampKind } from "@/lib/stamp/stamp-types";
+import { BRANDING_SCHEMA_READY } from "@/lib/flags";
 
 interface Props {
   initial: BrandingSettings | null;
@@ -101,6 +102,14 @@ export default function BrandingSettingsForm({ initial }: Props) {
   return (
     <form onSubmit={handleSubmit} className="bg-[#0f172a] border border-slate-800 rounded-xl p-5 flex flex-col gap-5">
 
+      {!BRANDING_SCHEMA_READY && (
+        <div className="px-3 py-2 rounded-lg border border-amber-700/40 bg-amber-950/30">
+          <p className="text-[11px] text-amber-300">
+            ブランディング設定の保存は現在一時的に無効です(データベース更新中)。アップロード・生成・プレビューはご利用いただけます。
+          </p>
+        </div>
+      )}
+
       {/* ── ロゴ・スタンプ ── */}
       <div className="flex flex-col gap-3">
         <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">ロゴ・スタンプ</p>
@@ -151,8 +160,9 @@ export default function BrandingSettingsForm({ initial }: Props) {
       <div className="flex items-center gap-3 border-t border-slate-800 pt-4">
         <button
           type="submit"
-          disabled={pending}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
+          disabled={pending || !BRANDING_SCHEMA_READY}
+          title={!BRANDING_SCHEMA_READY ? "データベース更新中のため一時的に無効です" : undefined}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors"
         >
           {pending ? "保存中..." : "保存する"}
         </button>

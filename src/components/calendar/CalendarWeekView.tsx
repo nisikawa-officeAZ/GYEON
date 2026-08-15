@@ -1,26 +1,30 @@
 "use client";
 
-import { ReservationDB, serviceTypeColor, serviceTypeLabel, reservationStatusLabel } from "@/lib/reservations/reservation-types";
+import { ReservationDB, serviceTypeColor, serviceTypeLabel } from "@/lib/reservations/reservation-types";
+import { addDaysStr, todayStr, hm, durationLabel, statusDotClass, layoutOverlaps } from "@/lib/calendar/calendar-utils";
+import type { RecommendationLevel } from "@/lib/capacity/capacity-types";
+import { levelDotClass, recommendationLabel } from "@/lib/capacity/recommendation";
 
 interface Props {
   reservations: ReservationDB[];
   weekStart: string;  // ISO date of Monday
   onReservationClick?: (r: ReservationDB) => void;
+  /** A4: clicking a day header jumps to that day's time-axis view. */
+  onDayClick?: (date: string) => void;
+  /** B1: whether a date is a store closed day (visual only). */
+  isClosed?: (dateStr: string) => boolean;
+  /** B5a follow-up: resolve assigned technician name; null when none/deleted. */
+  staffName?: (id?: string | null) => string | null;
+  /** B6b: resolve assigned bay name; null when none/deleted. */
+  bayName?: (id?: string | null) => string | null;
+  /** C1.4: resolve a day's capacity recommendation level for the heatmap. */
+  dayLevel?: (dateStr: string) => RecommendationLevel | null;
+  /** C1.5: whether a day is de-emphasized by the heatmap filter (display only). */
+  dayDimmed?: (dateStr: string) => boolean;
 }
 
 const HOURS = Array.from({ length: 25 }, (_, i) => 8 + i * 0.5).filter((h) => h <= 20);
 const DAY_LABELS = ["月", "火", "水", "木", "金", "土", "日"];
-
-function addDays(dateStr: string, days: number): string {
-  const d = new Date(dateStr + "T00:00:00");
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-function timeToMinutes(timeStr: string): number {
-  const [h, m] = timeStr.split(":").map(Number);
-  return h * 60 + m;
-}
 
 const DAY_START_MIN = 8 * 60;   // 8:00
 const DAY_END_MIN   = 20 * 60;  // 20:00
@@ -30,19 +34,21 @@ function minutesToTop(min: number): number {
   return ((min - DAY_START_MIN) / 60) * SLOT_HEIGHT;
 }
 
-function durationToPx(startMin: number, endMin: number): number {
-  return ((endMin - startMin) / 60) * SLOT_HEIGHT;
-}
-
 export default function CalendarWeekView({
   reservations,
   weekStart,
   onReservationClick,
+  onDayClick,
+  isClosed,
+  staffName,
+  bayName,
+  dayLevel,
+  dayDimmed,
 }: Props) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
 
-  // Build date strings for Mon-Sun
-  const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  // Build date strings for Mon-Sun (A0: local date math, no UTC shift)
+  const weekDates = Array.from({ length: 7 }, (_, i) => addDaysStr(weekStart, i));
 
   // Separate timed vs all-day reservations
   const timedByDay = new Map<string, ReservationDB[]>();
@@ -70,12 +76,18 @@ export default function CalendarWeekView({
           {weekDates.map((date, i) => {
             const day = parseInt(date.slice(8), 10);
             const isToday = date === today;
+            const closed = isClosed?.(date) ?? false;
+            const level = closed ? null : (dayLevel?.(date) ?? null);
+            const dimmed = dayDimmed?.(date) ?? false;
             return (
-              <div
+              <button
                 key={date}
-                className={`py-2 text-center border-l border-slate-800 ${
-                  isToday ? "bg-blue-900/20" : ""
-                }`}
+                type="button"
+                onClick={() => onDayClick?.(date)}
+                title={closed ? `${date}（定休日）の予約を表示` : level ? `${date}（稼働: ${recommendationLabel(level)}）の予約を表示` : `${date} の予約を表示`}
+                className={`py-2 text-center border-l border-slate-800 transition-colors hover:bg-slate-800/40 ${
+                  isToday ? "bg-blue-900/20" : closed ? "bg-slate-900/50" : ""
+                } ${dimmed ? "opacity-40" : ""}`}
               >
                 <span className={`text-[10px] ${i >= 5 ? "text-blue-400" : "text-slate-400"}`}>
                   {DAY_LABELS[i]}
@@ -87,7 +99,11 @@ export default function CalendarWeekView({
                 >
                   {day}
                 </span>
-              </div>
+                {level && !dimmed && (
+                  <span className={`inline-block ml-1 w-2 h-2 rounded-full align-middle ${levelDotClass(level)}`} aria-hidden />
+                )}
+                {closed && <span className="block text-[9px] text-slate-500 leading-none">定休</span>}
+              </button>
             );
           })}
         </div>
@@ -105,11 +121,14 @@ export default function CalendarWeekView({
                   <button
                     key={r.id}
                     onClick={() => onReservationClick?.(r)}
-                    className={`w-full text-left px-1 py-0.5 rounded text-[10px] text-white truncate ${serviceTypeColor(r.service_type)}`}
+                    className={`flex items-center gap-1 w-full text-left px-1 py-0.5 rounded text-[10px] text-white truncate ${serviceTypeColor(r.service_type)}`}
                   >
-                    {r.customers
-                      ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
-                      : serviceTypeLabel(r.service_type)}
+                    <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${statusDotClass(r.status)}`} aria-hidden />
+                    <span className="truncate">
+                      {r.customers
+                        ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
+                        : serviceTypeLabel(r.service_type)}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -124,18 +143,20 @@ export default function CalendarWeekView({
             {HOURS.filter((_, i) => i % 2 === 0).map((h) => (
               <div
                 key={h}
-                className="absolute right-2 text-[10px] text-slate-600 -translate-y-1/2"
+                className="absolute right-2 text-[10px] tabular-nums text-slate-600 -translate-y-1/2"
                 style={{ top: minutesToTop(h * 60) }}
               >
-                {h}:00
+                {String(h).padStart(2, "0")}:00
               </div>
             ))}
           </div>
 
           {/* Day columns */}
-          {weekDates.map((date, colIdx) => {
+          {weekDates.map((date) => {
             const items = timedByDay.get(date) ?? [];
+            const laid = layoutOverlaps(items);
             const isToday = date === today;
+            const closed = isClosed?.(date) ?? false;
 
             return (
               <div
@@ -143,6 +164,9 @@ export default function CalendarWeekView({
                 className={`relative border-l border-slate-800 ${isToday ? "bg-blue-900/10" : ""}`}
                 style={{ height: totalHeight }}
               >
+                {closed && (
+                  <div className="pointer-events-none absolute inset-0 bg-slate-950/40" aria-hidden />
+                )}
                 {/* Hour lines */}
                 {HOURS.filter((_, i) => i % 2 === 0).map((h) => (
                   <div
@@ -160,33 +184,45 @@ export default function CalendarWeekView({
                   />
                 ))}
 
-                {/* Reservation blocks */}
-                {items.map((r) => {
-                  const startMin = timeToMinutes(r.start_time!);
-                  const endMin   = r.end_time ? timeToMinutes(r.end_time) : startMin + 60;
+                {/* Reservation blocks — overlapping items tile into columns for readability. */}
+                {laid.map(({ r, col, cols, startMin, endMin }) => {
                   const top      = minutesToTop(Math.max(startMin, DAY_START_MIN));
                   const height   = Math.max(
-                    durationToPx(Math.max(startMin, DAY_START_MIN), Math.min(endMin, DAY_END_MIN)),
+                    (Math.min(endMin, DAY_END_MIN) - Math.max(startMin, DAY_START_MIN)) / 60 * SLOT_HEIGHT,
                     20
                   );
+                  const widthPct = 100 / cols;
+                  const dur = durationLabel(r.start_time, r.end_time);
+                  const tech = staffName?.(r.assigned_staff_id) ?? null;
+                  const bay = bayName?.(r.work_bay_id) ?? null;
 
                   return (
                     <button
                       key={r.id}
                       onClick={() => onReservationClick?.(r)}
-                      className={`absolute left-0.5 right-0.5 rounded px-1 text-left overflow-hidden ${serviceTypeColor(r.service_type)} hover:opacity-90 transition-opacity`}
-                      style={{ top, height }}
-                    >
-                      <p className="text-[10px] text-white font-medium leading-tight truncate">
-                        {r.start_time?.slice(0, 5)}
-                        {" "}
-                        {r.customers
+                      title={`${hm(r.start_time)}${r.end_time ? `–${hm(r.end_time)}` : ""}${dur ? ` (${dur})` : ""} ${
+                        r.customers
                           ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
-                          : serviceTypeLabel(r.service_type)}
+                          : serviceTypeLabel(r.service_type)
+                      }`}
+                      className={`absolute rounded px-1 text-left overflow-hidden ring-1 ring-black/20 ${serviceTypeColor(r.service_type)} hover:brightness-110 transition-all`}
+                      style={{ top, height, left: `${col * widthPct}%`, width: `${widthPct}%` }}
+                    >
+                      <p className="flex items-center gap-1 text-[10px] text-white font-medium leading-tight truncate">
+                        <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${statusDotClass(r.status)}`} aria-hidden />
+                        <span className="truncate">
+                          {hm(r.start_time)}{" "}
+                          {r.customers
+                            ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
+                            : serviceTypeLabel(r.service_type)}
+                        </span>
                       </p>
                       {height >= 32 && (
                         <p className="text-[9px] text-white/70 truncate">
                           {serviceTypeLabel(r.service_type)}
+                          {dur && ` · ${dur}`}
+                          {tech && ` · ${tech}`}
+                          {bay && ` · ${bay}`}
                         </p>
                       )}
                     </button>

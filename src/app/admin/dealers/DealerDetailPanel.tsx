@@ -7,6 +7,7 @@ import { updateDealerPlan } from "@/lib/admin/update-dealer-plan";
 import { suspendDealer, reactivateDealer } from "@/lib/admin/approve-dealer";
 import type { DealerAdminView } from "@/lib/admin/admin-types";
 import type { DealerDetail, TimelineEvent, AdminAuditEntry } from "@/lib/admin/get-dealer-detail";
+import { DEALER_RANKS, normalizeRank, rankLabelOrDash } from "@/lib/ranks/dealer-ranks";
 
 type Tab = "overview" | "timeline" | "audit" | "actions";
 
@@ -41,9 +42,7 @@ function planClass(p: string | null): string {
 }
 
 function rankLabel(r: string | null): string {
-  if (r === "certified_detailer") return "Certified Detailer";
-  if (r === "detailer")           return "Detailer";
-  return "—";
+  return rankLabelOrDash(r);
 }
 
 function approvalLabel(s: string | null): string {
@@ -109,26 +108,26 @@ function OverviewTab({
     <div className="space-y-6">
       {/* Current status */}
       <div>
-        <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">Current Status</h3>
+        <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">現在の状態</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-            <div className="text-[10px] text-slate-500 mb-1">Approval</div>
+            <div className="text-[10px] text-slate-500 mb-1">承認</div>
             <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded border ${approvalClass(dealer.approval_status)}`}>
               {approvalLabel(dealer.approval_status)}
             </span>
           </div>
           <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-            <div className="text-[10px] text-slate-500 mb-1">Plan</div>
+            <div className="text-[10px] text-slate-500 mb-1">プラン</div>
             <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded border ${planClass(dealer.plan)}`}>
               {planLabel(dealer.plan)}
             </span>
           </div>
           <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-            <div className="text-[10px] text-slate-500 mb-1">Detailer Rank</div>
+            <div className="text-[10px] text-slate-500 mb-1">ディテーラーランク</div>
             <div className="text-xs text-slate-300 font-medium">{rankLabel(dealer.detailer_rank)}</div>
           </div>
           <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-            <div className="text-[10px] text-slate-500 mb-1">Trial</div>
+            <div className="text-[10px] text-slate-500 mb-1">試用</div>
             <div className="text-xs">{trialCountdown() ?? <span className="text-slate-600">—</span>}</div>
           </div>
         </div>
@@ -136,13 +135,13 @@ function OverviewTab({
 
       {/* Operational summary */}
       <div>
-        <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">Operational Summary</h3>
+        <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">利用状況</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Estimates",  value: stats.estimateCount },
-            { label: "Customers",  value: stats.customerCount },
-            { label: "Vehicles",   value: stats.vehicleCount  },
-            { label: "OCR Usage",  value: stats.ocrCount      },
+            { label: "見積",     value: stats.estimateCount },
+            { label: "顧客",     value: stats.customerCount },
+            { label: "車両",     value: stats.vehicleCount  },
+            { label: "OCR利用",  value: stats.ocrCount      },
           ].map(({ label, value }) => (
             <div key={label} className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-slate-100">{value.toLocaleString()}</div>
@@ -152,33 +151,56 @@ function OverviewTab({
         </div>
       </div>
 
+      {/* Settings status */}
+      <div>
+        <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">設定状態</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div className="text-[11px] text-slate-400">LINE設定状態</div>
+            {detail.settingsStatus?.lineConfigured ? (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded border text-green-300 bg-green-900/40 border-green-700/50">設定済み</span>
+            ) : (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded border text-slate-400 bg-slate-800 border-slate-700">未設定</span>
+            )}
+          </div>
+          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div className="text-[11px] text-slate-400">AI設定状態</div>
+            {detail.settingsStatus?.aiConfigured ? (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded border text-green-300 bg-green-900/40 border-green-700/50">設定済み</span>
+            ) : (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded border text-slate-400 bg-slate-800 border-slate-700">未設定</span>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Store & contact */}
       <div>
-        <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">Store & Contact</h3>
+        <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">店舗・連絡先</h3>
         <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
-          <div><div className="text-slate-500 mb-0.5">Email</div><div className="text-slate-300">{dealer.email ?? "—"}</div></div>
-          <div><div className="text-slate-500 mb-0.5">Phone</div><div className="text-slate-300">{dealer.phone ?? "—"}</div></div>
-          <div><div className="text-slate-500 mb-0.5">Last Login</div>
+          <div><div className="text-slate-500 mb-0.5">メール</div><div className="text-slate-300">{dealer.email ?? "—"}</div></div>
+          <div><div className="text-slate-500 mb-0.5">電話</div><div className="text-slate-300">{dealer.phone ?? "—"}</div></div>
+          <div><div className="text-slate-500 mb-0.5">最終ログイン</div>
             <div className="text-slate-300">{stats.lastLogin ? fmtDateTime(stats.lastLogin) : "—"}</div>
           </div>
-          <div><div className="text-slate-500 mb-0.5">Registered</div><div className="text-slate-300">{fmt(dealer.created_at)}</div></div>
-          <div><div className="text-slate-500 mb-0.5">Service Start</div><div className="text-slate-300">{fmt(dealer.service_start_date)}</div></div>
-          <div><div className="text-slate-500 mb-0.5">Trial End</div>
+          <div><div className="text-slate-500 mb-0.5">登録日</div><div className="text-slate-300">{fmt(dealer.created_at)}</div></div>
+          <div><div className="text-slate-500 mb-0.5">サービス開始</div><div className="text-slate-300">{fmt(dealer.service_start_date)}</div></div>
+          <div><div className="text-slate-500 mb-0.5">試用終了</div>
             <div className="text-slate-300">{fmt(dealer.trial_end_date)}</div>
           </div>
-          <div><div className="text-slate-500 mb-0.5">Auto-downgrade</div>
+          <div><div className="text-slate-500 mb-0.5">自動ダウングレード</div>
             <span className={`inline-flex text-[10px] px-2 py-0.5 rounded border ${planClass(dealer.auto_downgrade_plan_type)}`}>
               {planLabel(dealer.auto_downgrade_plan_type)}
             </span>
           </div>
-          <div><div className="text-slate-500 mb-0.5">Subscription</div><div className="text-slate-400">{dealer.subscription_status}</div></div>
+          <div><div className="text-slate-500 mb-0.5">契約状態</div><div className="text-slate-400">{dealer.subscription_status}</div></div>
         </div>
       </div>
 
       {/* Internal notes */}
       {dealer.admin_notes && (
         <div>
-          <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">Internal Notes</h3>
+          <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">社内メモ</h3>
           <div className="text-xs text-slate-300 bg-slate-800/40 border border-slate-700/50 rounded-lg px-4 py-3 whitespace-pre-wrap">
             {dealer.admin_notes}
           </div>
@@ -202,7 +224,7 @@ function TimelineTab({ events }: { events: TimelineEvent[] }) {
             <div className="text-[10px] text-slate-600 mb-0.5">{fmtDateTime(ev.date)}</div>
             <div className="text-xs font-medium text-slate-200">{ev.label}</div>
             {ev.detail && <div className="text-[10px] text-slate-500 mt-0.5">{ev.detail}</div>}
-            {ev.actor  && <div className="text-[10px] text-slate-700 mt-0.5">by {ev.actor}</div>}
+            {ev.actor  && <div className="text-[10px] text-slate-700 mt-0.5">担当: {ev.actor}</div>}
           </div>
         ))}
       </div>
@@ -212,10 +234,17 @@ function TimelineTab({ events }: { events: TimelineEvent[] }) {
 
 function AuditTab({ logs }: { logs: AdminAuditEntry[] }) {
   if (logs.length === 0) {
-    return <div className="text-sm text-slate-600 py-8 text-center">管理者アクションの記録がありません</div>;
+    return (
+      <div>
+        <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">監査ログ</h3>
+        <div className="text-sm text-slate-600 py-8 text-center">管理者アクションの記録がありません</div>
+      </div>
+    );
   }
   return (
-    <div className="overflow-x-auto">
+    <div>
+      <h3 className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-3">監査ログ</h3>
+      <div className="overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-slate-800">
@@ -253,6 +282,7 @@ function AuditTab({ logs }: { logs: AdminAuditEntry[] }) {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -275,7 +305,7 @@ function ActionsTab({
   const [newPlan, setNewPlan] = useState(dealer.plan ?? "pro_plus");
 
   // Change rank state
-  const [newRank, setNewRank] = useState(dealer.detailer_rank ?? "certified_detailer");
+  const [newRank, setNewRank] = useState<string>(normalizeRank(dealer.detailer_rank));
 
   // Suspend state
   const [suspendReason, setSuspendReason] = useState("");
@@ -291,10 +321,10 @@ function ActionsTab({
 
       {/* Extend Trial */}
       <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5">
-        <h4 className="text-xs font-semibold text-slate-300 mb-1">Extend Trial</h4>
+        <h4 className="text-xs font-semibold text-slate-300 mb-1">試用期間の延長</h4>
         <p className="text-[10px] text-slate-500 mb-3">
-          Current end: {dealer.trial_end_date ? fmt(dealer.trial_end_date) : "—"}&nbsp;·&nbsp;
-          Status: {dealer.trial_status ?? "—"}
+          現在の終了日: {dealer.trial_end_date ? fmt(dealer.trial_end_date) : "—"}&nbsp;·&nbsp;
+          状態: {dealer.trial_status ?? "—"}
         </p>
         <div className="flex items-center gap-3">
           <input
@@ -326,8 +356,8 @@ function ActionsTab({
 
       {/* Change Plan */}
       <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5">
-        <h4 className="text-xs font-semibold text-slate-300 mb-1">Change Plan</h4>
-        <p className="text-[10px] text-slate-500 mb-3">Current: {planLabel(dealer.plan)}</p>
+        <h4 className="text-xs font-semibold text-slate-300 mb-1">プラン変更</h4>
+        <p className="text-[10px] text-slate-500 mb-3">現在: {planLabel(dealer.plan)}</p>
         <div className="flex items-center gap-2">
           <select
             value={newPlan}
@@ -360,16 +390,17 @@ function ActionsTab({
 
       {/* Change Rank */}
       <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5">
-        <h4 className="text-xs font-semibold text-slate-300 mb-1">Change Detailer Rank</h4>
-        <p className="text-[10px] text-slate-500 mb-3">Current: {rankLabel(dealer.detailer_rank)}</p>
+        <h4 className="text-xs font-semibold text-slate-300 mb-1">ランク変更</h4>
+        <p className="text-[10px] text-slate-500 mb-3">現在: {rankLabel(dealer.detailer_rank)}</p>
         <div className="flex items-center gap-2">
           <select
             value={newRank}
             onChange={(e) => setNewRank(e.target.value)}
             className="px-3 py-1.5 text-sm bg-slate-800 border border-slate-600 rounded-lg text-slate-200 focus:outline-none focus:border-slate-400"
           >
-            <option value="certified_detailer">Certified Detailer</option>
-            <option value="detailer">Detailer</option>
+            {DEALER_RANKS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.labelEn}</option>
+            ))}
           </select>
           <button
             onClick={() => {
@@ -395,7 +426,7 @@ function ActionsTab({
       {!isPendingOrRejected && (
         <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5">
           <h4 className="text-xs font-semibold text-slate-300 mb-1">
-            {isSuspended ? "Re-activate Dealer" : "Suspend Dealer"}
+            {isSuspended ? "店舗を再開" : "店舗を停止"}
           </h4>
           {isSuspended ? (
             <div>
@@ -453,7 +484,7 @@ function ActionsTab({
 
       {/* Reset Account */}
       <div className="bg-red-950/20 border border-red-900/40 rounded-xl p-5">
-        <h4 className="text-xs font-semibold text-red-400 mb-1">Reset Dealer Account</h4>
+        <h4 className="text-xs font-semibold text-red-400 mb-1">アカウントのリセット</h4>
         <p className="text-[10px] text-red-500/70 mb-1">
           承認・試用状態をリセットして「承認待ち」に戻します。
           店舗データ（見積・顧客・車両）は保持されます。
@@ -531,10 +562,10 @@ export default function DealerDetailPanel({ dealer, callerRole, onClose, onDeale
   };
 
   const tabs: { key: Tab; label: string; hidden?: boolean }[] = [
-    { key: "overview",  label: "Overview"  },
-    { key: "timeline",  label: "Timeline"  },
-    { key: "audit",     label: "Audit Log" },
-    { key: "actions",   label: "Actions",  hidden: isReadOnly },
+    { key: "overview",  label: "概要"      },
+    { key: "timeline",  label: "タイムライン" },
+    { key: "audit",     label: "監査ログ"   },
+    { key: "actions",   label: "操作",      hidden: isReadOnly },
   ];
 
   return (
@@ -576,7 +607,7 @@ export default function DealerDetailPanel({ dealer, callerRole, onClose, onDeale
                 )}
                 {isReadOnly && (
                   <span className="text-[10px] px-2 py-0.5 rounded border text-slate-500 border-slate-700">
-                    Read-only
+                    閲覧のみ
                   </span>
                 )}
               </div>

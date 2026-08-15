@@ -17,6 +17,7 @@ import Link from "next/link";
 import MainLayout               from "@/components/layout/MainLayout";
 import { getCurrentDealer }     from "@/lib/auth/get-current-dealer";
 import { getCurrentUser }       from "@/lib/auth/get-current-user";
+import { getCurrentAdmin }      from "@/lib/admin/get-current-admin";
 import { createClient }         from "@/lib/supabase/server";
 import { getCurrentStaff }      from "@/lib/staff/get-current-staff";
 import { getDashboardSummary }  from "@/lib/dashboard/get-dashboard-summary";
@@ -28,6 +29,7 @@ import CommunicationOverview    from "@/components/dashboard/CommunicationOvervi
 import ReviewOpportunities      from "@/components/dashboard/ReviewOpportunities";
 import AIInsightPanel           from "@/components/dashboard/AIInsightPanel";
 import OwnerRevenueSection      from "@/components/dashboard/OwnerRevenueSection";
+import ProfileCompletionCard    from "@/components/onboarding/ProfileCompletionCard";
 import { buildDeterministicInsights } from "@/lib/ai-insights/deterministic-insights";
 
 export const metadata = { title: "ダッシュボード | GYEON Detailer Agent" };
@@ -57,6 +59,12 @@ function RoleBadge({ role }: { role: DealerStaffRole }) {
 }
 
 export default async function DashboardPage() {
+  // ── Super Admin gate (must come first) ──────────────────────────────────────
+  // Super Admins have no dealer_members record. Route them to the admin console
+  // BEFORE any dealer validation so they are never trapped on /no-dealer.
+  const admin = await getCurrentAdmin();
+  if (admin) redirect("/admin/dashboard");
+
   // ── Suspension gate ─────────────────────────────────────────────────────────
   // getCurrentDealer() returns null for both "no dealer" and "suspended" states.
   // Distinguish them so suspended dealers see a clear message instead of an
@@ -112,6 +120,9 @@ export default async function DashboardPage() {
     <MainLayout>
       <div className="max-w-lg mx-auto flex flex-col gap-3 px-4 pb-8 pt-4">
 
+        {/* Post-onboarding profile completion nudge (hidden until onboarded / when done) */}
+        <ProfileCompletionCard />
+
         {/* ── Dashboard header ───────────────────────────────────────────────── */}
         <div className="flex items-center justify-between">
           <div>
@@ -139,7 +150,7 @@ export default async function DashboardPage() {
               { label: "施工中",     value: dash.work_orders.in_progress, color: "bg-amber-950/50 text-amber-300 border-amber-900/50",  href: "/work-orders"  },
               { label: "予約 (今日)", value: dash.reservation_stats.today, color: "bg-blue-950/50 text-blue-300 border-blue-900/50",    href: "/reservations" },
               { label: "メンテ 7日", value: dash.maintenance_stats.next_7_days, color: "bg-rose-950/50 text-rose-300 border-rose-900/50", href: "/maintenance" },
-              { label: "見積待ち",   value: dash.estimates.sent,           color: "bg-violet-950/50 text-violet-300 border-violet-900/50", href: "/estimates" },
+              { label: "見積待ち",   value: dash.estimates.proposal,       color: "bg-violet-950/50 text-violet-300 border-violet-900/50", href: "/estimates" },
             ]
               .filter(c => c.value > 0)
               .map(c => (

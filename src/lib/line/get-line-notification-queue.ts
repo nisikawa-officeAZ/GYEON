@@ -7,6 +7,8 @@ import { LineNotificationQueueDB, LineQueueStatus } from "./line-message-types";
 export interface LineQueueFilter {
   status?: LineQueueStatus | LineQueueStatus[];
   limit?:  number;
+  /** Observability: order by most-recently-updated first (default: next-scheduled first). */
+  orderByRecent?: boolean;
 }
 
 export async function getLineNotificationQueue(
@@ -28,9 +30,13 @@ export async function getLineNotificationQueue(
       customers ( last_name, first_name ),
       line_customers ( display_name, picture_url )
     `)
-    .eq("dealer_id", dealer.dealer_id)
-    .order("scheduled_at", { ascending: true })
-    .limit(limit);
+    .eq("dealer_id", dealer.dealer_id);
+
+  query = filter.orderByRecent
+    ? query.order("updated_at",   { ascending: false })
+    : query.order("scheduled_at", { ascending: true });
+
+  query = query.limit(limit);
 
   if (filter.status) {
     if (Array.isArray(filter.status)) {
@@ -49,30 +55,36 @@ export async function getLineNotificationQueue(
   return (data ?? []) as unknown as LineNotificationQueueDB[];
 }
 
-export async function getLineQueueStats(): Promise<{
-  scheduled: number;
-  failed:    number;
-}> {
+export interface LineQueueStats {
+  scheduled:  number;
+  processing: number;
+  sent:       number;
+  failed:     number;
+}
+
+export async function getLineQueueStats(): Promise<LineQueueStats> {
   const dealer = await getCurrentDealer();
-  if (!dealer) return { scheduled: 0, failed: 0 };
+  if (!dealer) return { scheduled: 0, processing: 0, sent: 0, failed: 0 };
 
   const supabase = await createClient();
+  const countFor = (status: LineQueueStatus) =>
+    supabase
+      .from("line_notification_queue")
+      .select("*", { count: "exact", head: true })
+      .eq("dealer_id", dealer.dealer_id)
+      .eq("status", status);
 
-  const [scheduled, failed] = await Promise.all([
-    supabase
-      .from("line_notification_queue")
-      .select("*", { count: "exact", head: true })
-      .eq("dealer_id", dealer.dealer_id)
-      .eq("status", "scheduled"),
-    supabase
-      .from("line_notification_queue")
-      .select("*", { count: "exact", head: true })
-      .eq("dealer_id", dealer.dealer_id)
-      .eq("status", "failed"),
+  const [scheduled, processing, sent, failed] = await Promise.all([
+    countFor("scheduled"),
+    countFor("processing"),
+    countFor("sent"),
+    countFor("failed"),
   ]);
 
   return {
-    scheduled: scheduled.count ?? 0,
-    failed:    failed.count    ?? 0,
+    scheduled:  scheduled.count  ?? 0,
+    processing: processing.count ?? 0,
+    sent:       sent.count       ?? 0,
+    failed:     failed.count     ?? 0,
   };
 }

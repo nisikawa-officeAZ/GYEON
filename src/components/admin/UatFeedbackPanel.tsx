@@ -139,7 +139,7 @@ export default function UatFeedbackPanel({ dealerId, sessions, feedback, onRefre
         description,
       });
       if (!result.success) {
-        setFormError(result.error ?? "Failed");
+        setFormError(result.error ?? "失敗しました");
       } else {
         setTitle(""); setDesc(""); setRating(3); setCategory("");
         setShowForm(false);
@@ -152,7 +152,7 @@ export default function UatFeedbackPanel({ dealerId, sessions, feedback, onRefre
     <div className="flex flex-col gap-4">
       {/* Sessions */}
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Sessions</p>
+        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">セッション</p>
         {sessions.map(s => (
           <button
             key={s.id}
@@ -211,7 +211,7 @@ export default function UatFeedbackPanel({ dealerId, sessions, feedback, onRefre
       {/* Add feedback */}
       <div className="flex items-center justify-between">
         <p className="text-[10px] text-slate-500">
-          {feedback.length} feedback items
+          フィードバック {feedback.length}件
         </p>
         <button
           onClick={() => setShowForm(s => !s)}

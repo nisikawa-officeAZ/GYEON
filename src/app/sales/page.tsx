@@ -23,7 +23,7 @@ export const metadata = { title: "売上分析 | GYEON Detailer Agent" };
 const EMPTY_SUMMARY: DashboardSummary = {
   customer_count:  0,
   vehicle_count:   0,
-  estimates:       { draft: 0, sent: 0, approved: 0, rejected: 0, expired: 0 },
+  estimates:       { draft: 0, proposal: 0, approved: 0, rejected: 0, expired: 0 },
   work_orders:     { scheduled: 0, in_progress: 0, completed: 0, on_hold: 0, cancelled: 0 },
   invoices:        { draft: 0, issued: 0, paid: 0, partially_paid: 0, overdue: 0, cancelled: 0 },
   sales:           { monthly_sales: 0, monthly_received: 0, outstanding: 0, yearly_sales: 0 },
@@ -195,7 +195,7 @@ export default async function SalesPage() {
           <div className="bg-[#0f172a] border border-slate-800 rounded-xl overflow-hidden">
             {[
               { label: "下書き",   value: summary.estimates.draft,    color: "text-slate-400" },
-              { label: "送付済み", value: summary.estimates.sent,     color: "text-blue-400"  },
+              { label: "提案中", value: summary.estimates.proposal,     color: "text-blue-400"  },
               { label: "承認",     value: summary.estimates.approved, color: "text-green-400" },
               { label: "却下",     value: summary.estimates.rejected, color: "text-red-400"   },
               { label: "期限切れ", value: summary.estimates.expired,  color: "text-slate-600" },

@@ -10,6 +10,9 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { queueDueReminderToLine, type DueReminderRow } from "./queue-due-reminder";
+import { createEngagementEvent } from "@/lib/customer-engagement/context";
+import { EngagementWorkflowRuntime } from "@/lib/customer-engagement/engine/runtime";
 
 export interface ProcessRemindersResult {
   processed: number;
@@ -29,11 +32,13 @@ export async function processDueMaintenanceReminders(): Promise<
   const did = dealer.dealer_id;
   const now = new Date().toISOString();
 
-  // Fetch due reminders (scheduled_send_at <= now, status = scheduled)
+  // Fetch due reminders (scheduled_send_at <= now, status = scheduled).
+  // line_queue_id is selected so the shared helper can skip already-queued reminders
+  // (idempotency / duplicate-queue prevention).
   const { data: reminders, error: fetchErr } = await supabase
     .from("maintenance_reminders")
     .select(`
-      id, customer_id, scheduled_send_at, message_title, message_body, reminder_type,
+      id, customer_id, vehicle_id, due_date, line_queue_id, scheduled_send_at, message_title, message_body, reminder_type,
       customers ( line_connected, line_user_id )
     `)
     .eq("dealer_id", did)
@@ -52,90 +57,43 @@ export async function processDueMaintenanceReminders(): Promise<
   };
 
   for (const raw of reminders) {
-    const r = raw as unknown as {
-      id: string;
-      customer_id: string;
-      scheduled_send_at: string | null;
-      message_title: string | null;
-      message_body:  string | null;
-      reminder_type: string;
-      customers: { line_connected: boolean; line_user_id: string | null } | null;
+    const r = raw as unknown as DueReminderRow & {
+      vehicle_id: string | null; due_date: string | null; reminder_type: string;
     };
-
-    const cust = r.customers;
-
-    // LINE未連携 → failed
-    if (!cust?.line_connected || !cust?.line_user_id) {
-      await supabase
-        .from("maintenance_reminders")
-        .update({
-          status:     "failed",
-          notes:      "LINE未連携のため送信不可。顧客のLINE連携後に再設定してください。",
-          updated_at: now,
-        })
-        .eq("id", r.id)
-        .eq("dealer_id", did);
-      result.failed++;
-      result.processed++;
-      result.errors.push(`Reminder ${r.id}: LINE未連携`);
-      continue;
-    }
-
-    // Fetch line_customer id
-    const { data: lc } = await supabase
-      .from("line_customers")
-      .select("id")
-      .eq("dealer_id", did)
-      .eq("customer_id", r.customer_id)
-      .eq("is_friend", true)
-      .maybeSingle();
-
-    const body = r.message_body ?? r.message_title ?? "メンテナンス通知";
-
-    // Insert into queue
-    const { data: queueItem, error: qErr } = await supabase
-      .from("line_notification_queue")
-      .insert({
-        dealer_id:        did,
-        customer_id:      r.customer_id,
-        line_customer_id: lc?.id ?? null,
-        scheduled_at:     r.scheduled_send_at ?? now,
-        message_type:     "text",
-        purpose:          "maintenance_reminder",
-        title:            r.message_title ?? "メンテナンス通知",
-        body,
-        payload: {
-          messages:    [{ type: "text", text: body }],
-          reminder_id: r.id,
-        },
-        status:     "scheduled",
-        attempts:   0,
-        created_at: now,
-        updated_at: now,
-      })
-      .select("id")
-      .single();
-
-    if (qErr) {
-      result.errors.push(`Reminder ${r.id}: queue insert failed - ${qErr.message}`);
-      result.failed++;
-      result.processed++;
-      continue;
-    }
-
-    // Update reminder to queued
-    await supabase
-      .from("maintenance_reminders")
-      .update({
-        status:        "queued",
-        line_queue_id: queueItem.id,
-        updated_at:    now,
-      })
-      .eq("id", r.id)
-      .eq("dealer_id", did);
-
-    result.queued++;
     result.processed++;
+    try {
+      const outcome = await queueDueReminderToLine(supabase, did, r, now);
+      if (outcome === "queued") {
+        result.queued++;
+        // Phase 4 Sprint 5 — emit MAINTENANCE_DUE for the maintenance engagement flow.
+        // The flow's LINE message is cross-deduped against this reminder's just-queued
+        // item (payload.reminder_id === job_id), so it never double-sends.
+        const dueDate = r.due_date ?? now.slice(0, 10);
+        const overdueDays = Math.max(
+          0, Math.floor((Date.now() - new Date(dueDate).getTime()) / 86_400_000),
+        );
+        const event = await createEngagementEvent(
+          "MAINTENANCE_DUE",
+          r.customer_id,
+          {
+            maintenance_id: r.id,
+            due_date:       dueDate,
+            service_type:   r.reminder_type ?? "maintenance",
+            overdue_days:   overdueDays,
+          },
+          { vehicle_id: r.vehicle_id ?? undefined, job_id: r.id },
+        );
+        if (event) await new EngagementWorkflowRuntime().dispatch(event);
+      }
+      else if (outcome === "skipped") result.skipped++;
+      else {
+        result.failed++;
+        result.errors.push(`Reminder ${r.id}: not queued (LINE未連携 or insert failed)`);
+      }
+    } catch (err) {
+      result.failed++;
+      result.errors.push(`Reminder ${r.id}: ${String(err)}`);
+    }
   }
 
   return result;

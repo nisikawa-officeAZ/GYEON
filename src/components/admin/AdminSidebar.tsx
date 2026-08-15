@@ -99,8 +99,9 @@ export default function AdminSidebar({ role }: { role: string }) {
   const pathname = usePathname();
   const items = getVisibleNav(role);
 
-  const live = items.filter((i) => !i.soon);
-  const soon = items.filter((i) =>  i.soon);
+  const live      = items.filter((i) => !i.soon && !i.secondary);
+  const secondary = items.filter((i) => !i.soon &&  i.secondary);
+  const soon      = items.filter((i) =>  i.soon);
 
   function isActive(href: string) {
     if (href === "/admin/dashboard") return pathname === href || pathname === "/admin";
@@ -124,11 +125,34 @@ export default function AdminSidebar({ role }: { role: string }) {
         </Link>
       ))}
 
+      {secondary.length > 0 && (
+        <>
+          <div className="my-3 border-t border-slate-800/60" />
+          <p className="px-3 text-[9px] font-semibold text-slate-600 uppercase tracking-widest mb-2">
+            管理ツール
+          </p>
+          {secondary.map((item) => (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={`flex items-center gap-3 px-3 py-1.5 rounded-lg text-[11px] transition-colors mb-0.5 ${
+                isActive(item.href)
+                  ? "bg-blue-600/15 text-blue-300"
+                  : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+              }`}
+            >
+              <NavIcon iconKey={item.iconKey} />
+              {item.label}
+            </Link>
+          ))}
+        </>
+      )}
+
       {soon.length > 0 && (
         <>
           <div className="my-3 border-t border-slate-800/60" />
           <p className="px-3 text-[9px] font-semibold text-slate-600 uppercase tracking-widest mb-2">
-            Coming soon
+            近日公開
           </p>
           {soon.map((item) => (
             <div
@@ -138,7 +162,7 @@ export default function AdminSidebar({ role }: { role: string }) {
               <NavIcon iconKey={item.iconKey} />
               {item.label}
               <span className="ml-auto text-[8px] border border-slate-800 rounded px-1 py-px text-slate-700">
-                soon
+                予定
               </span>
             </div>
           ))}

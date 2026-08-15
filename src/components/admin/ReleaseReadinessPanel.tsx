@@ -19,20 +19,20 @@ function OverallBadge({ overall }: { overall: ReleaseReadinessReport["overall"] 
   if (overall === "ready") {
     return (
       <span className="px-3 py-1 rounded-full bg-green-900/50 text-green-300 text-xs font-bold border border-green-700/50">
-        READY
+        準備完了
       </span>
     );
   }
   if (overall === "warning") {
     return (
       <span className="px-3 py-1 rounded-full bg-amber-900/50 text-amber-300 text-xs font-bold border border-amber-700/50">
-        WARNING
+        警告
       </span>
     );
   }
   return (
     <span className="px-3 py-1 rounded-full bg-red-900/50 text-red-300 text-xs font-bold border border-red-700/50">
-      BLOCKED
+      ブロック
     </span>
   );
 }
@@ -57,29 +57,29 @@ export default function ReleaseReadinessPanel({ report }: Props) {
       <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-800 bg-slate-900/50">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
-            <h2 className="text-sm font-semibold text-slate-100">Overall Release Status</h2>
+            <h2 className="text-sm font-semibold text-slate-100">リリース全体ステータス</h2>
             <OverallBadge overall={report.overall} />
           </div>
           <p className="text-xs text-slate-500">
-            Checked: {checkedAt} —{" "}
-            <span className="text-green-400">{passCount} passed</span>
-            {warnCount > 0 && <>, <span className="text-amber-400">{warnCount} warning{warnCount > 1 ? "s" : ""}</span></>}
-            {failCount > 0 && <>, <span className="text-red-400">{failCount} failed</span></>}
+            確認日時: {checkedAt} —{" "}
+            <span className="text-green-400">合格 {passCount}件</span>
+            {warnCount > 0 && <>, <span className="text-amber-400">警告 {warnCount}件</span></>}
+            {failCount > 0 && <>, <span className="text-red-400">不合格 {failCount}件</span></>}
           </p>
         </div>
         {report.overall === "blocked" && (
           <p className="text-xs text-red-400 max-w-xs">
-            Production deployment is PROHIBITED until all BLOCKED items are resolved.
+            すべてのブロック項目が解消されるまで、本番デプロイは禁止されています。
           </p>
         )}
         {report.overall === "warning" && (
           <p className="text-xs text-amber-400 max-w-xs">
-            Review warnings before deploying to production.
+            本番へデプロイする前に警告を確認してください。
           </p>
         )}
         {report.overall === "ready" && (
           <p className="text-xs text-green-400 max-w-xs">
-            All checks passed. Review the full PRODUCTION_READINESS_CHECKLIST.md before deploying.
+            すべてのチェックに合格しました。デプロイ前に PRODUCTION_READINESS_CHECKLIST.md 全体を確認してください。
           </p>
         )}
       </div>
@@ -89,9 +89,9 @@ export default function ReleaseReadinessPanel({ report }: Props) {
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-slate-900 border-b border-slate-800">
-              <th className="text-left px-4 py-2.5 text-slate-400 font-medium w-8">Status</th>
-              <th className="text-left px-4 py-2.5 text-slate-400 font-medium">Check</th>
-              <th className="text-left px-4 py-2.5 text-slate-400 font-medium">Message</th>
+              <th className="text-left px-4 py-2.5 text-slate-400 font-medium w-8">ステータス</th>
+              <th className="text-left px-4 py-2.5 text-slate-400 font-medium">チェック項目</th>
+              <th className="text-left px-4 py-2.5 text-slate-400 font-medium">メッセージ</th>
             </tr>
           </thead>
           <tbody>
@@ -123,28 +123,28 @@ export default function ReleaseReadinessPanel({ report }: Props) {
       {/* Legend */}
       <div className="flex items-center gap-6 text-[10px] text-slate-500 px-1">
         <span className="flex items-center gap-1.5">
-          <span className="text-green-400 font-bold">✓</span> Pass — requirement met
+          <span className="text-green-400 font-bold">✓</span> 合格 — 要件を満たしています
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="text-amber-400 font-bold">⚠</span> Warning — review recommended
+          <span className="text-amber-400 font-bold">⚠</span> 警告 — 確認を推奨します
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="text-red-400 font-bold">✗</span> Fail — deployment blocked
+          <span className="text-red-400 font-bold">✗</span> 不合格 — デプロイがブロックされます
         </span>
       </div>
 
       {/* Docs links */}
       <div className="rounded-xl border border-slate-800 bg-slate-900/30 p-4">
-        <p className="text-xs text-slate-400 font-semibold mb-2">Reference Documents</p>
+        <p className="text-xs text-slate-400 font-semibold mb-2">参考ドキュメント</p>
         <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside">
-          <li>docs/PRODUCTION_READINESS_CHECKLIST.md — full manual checklist</li>
-          <li>docs/MIGRATION_APPLICATION_ORDER.md — apply migrations in this order</li>
-          <li>docs/ENVIRONMENT_RELEASE_CHECKLIST.md — environment variable verification</li>
-          <li>docs/RLS_VERIFICATION_CHECKLIST.md — row-level security verification</li>
-          <li>docs/STORAGE_VERIFICATION_CHECKLIST.md — storage bucket verification</li>
-          <li>docs/LINE_RELEASE_CHECKLIST.md — LINE integration verification</li>
-          <li>docs/PDF_RELEASE_CHECKLIST.md — PDF generation verification</li>
-          <li>docs/SUBSCRIPTION_ONBOARDING_CHECKLIST.md — subscription &amp; onboarding verification</li>
+          <li>docs/PRODUCTION_READINESS_CHECKLIST.md — 完全な手動チェックリスト</li>
+          <li>docs/MIGRATION_APPLICATION_ORDER.md — この順序でマイグレーションを適用</li>
+          <li>docs/ENVIRONMENT_RELEASE_CHECKLIST.md — 環境変数の検証</li>
+          <li>docs/RLS_VERIFICATION_CHECKLIST.md — 行レベルセキュリティの検証</li>
+          <li>docs/STORAGE_VERIFICATION_CHECKLIST.md — ストレージバケットの検証</li>
+          <li>docs/LINE_RELEASE_CHECKLIST.md — LINE 連携の検証</li>
+          <li>docs/PDF_RELEASE_CHECKLIST.md — PDF 生成の検証</li>
+          <li>docs/SUBSCRIPTION_ONBOARDING_CHECKLIST.md — サブスクリプションとオンボーディングの検証</li>
         </ul>
       </div>
     </div>

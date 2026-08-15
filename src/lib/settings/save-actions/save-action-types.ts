@@ -23,6 +23,10 @@ export type SettingsSaveActionId =
   | "staff_role_update"         // updateStaffRole — staff
   | "staff_disable"             // disableStaff / enableStaff — staff
   | "ai_gateway_settings"       // saveAiSettings — ai_providers (/settings/ai route)
+  | "business_hours"            // saveBusinessHours — dealer (/settings/business-hours route)
+  | "service_durations"         // saveServiceDurations — dealer (/settings/service-durations route)
+  | "staff_capacity"            // saveStaffCapacity — dealer (/settings/staff-capacity route)
+  | "work_bays"                 // saveWorkBays — dealer (work_bays table, migration 092)
   | "dealer_rank"               // setDealerRank — admin-only, not in dealer UI
   | "line_message_settings"     // PHASE70 — LINE message header/footer — not yet implemented
   | "ocr_policy"                // PHASE70 — OCR enable/disable flag — not yet implemented
@@ -56,7 +60,18 @@ export type SettingsSaveActionPolicy =
 
 export interface SettingsSaveAction {
   action_id:              SettingsSaveActionId;
+  /**
+   * Internal English name. Diagnostics, logs and admin tooling only — the
+   * dealer-facing settings header never renders this.
+   */
   display_name:           string;
+  /**
+   * UX-2B — the Japanese name shown to dealers. REQUIRED, not optional: the
+   * settings header renders this and nothing else, so a new save action cannot
+   * be added without its Japanese label. Making it optional would let an English
+   * name leak onto a dealer screen the first time someone forgot it.
+   */
+  display_name_ja:        string;
   category_ids:           SettingsCategoryId[];
   status:                 SettingsSaveActionStatus;
   server_action_path:     string | null;

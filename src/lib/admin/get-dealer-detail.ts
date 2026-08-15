@@ -34,10 +34,20 @@ export interface AdminAuditEntry {
   details:      Record<string, unknown>;
 }
 
+export interface DealerSettingsStatus {
+  /** dealer_settings row exists for this dealer. */
+  hasSettingsRow: boolean;
+  /** LINE integration appears configured (enabled / connected / token present). */
+  lineConfigured: boolean;
+  /** A dealer-managed AI key appears configured in ai_settings. */
+  aiConfigured:   boolean;
+}
+
 export interface DealerDetail {
-  stats:     DealerStats;
-  timeline:  TimelineEvent[];
-  auditLogs: AdminAuditEntry[];
+  stats:          DealerStats;
+  timeline:       TimelineEvent[];
+  auditLogs:      AdminAuditEntry[];
+  settingsStatus: DealerSettingsStatus;
 }
 
 function calcDaysRemaining(trialEnd: string | null | undefined): number | null {
@@ -116,6 +126,39 @@ export async function getDealerDetail(
       .order("created_at", { ascending: false })
       .limit(100),
   ]);
+
+  // ── Settings status (LINE / AI) — read-only, tolerant of missing columns ────
+  // Select the whole row so a missing optional column never errors the query.
+  const settingsStatus: DealerSettingsStatus = {
+    hasSettingsRow: false,
+    lineConfigured: false,
+    aiConfigured:   false,
+  };
+  try {
+    const { data: settingsRow } = await supabase
+      .from("dealer_settings")
+      .select("*")
+      .eq("dealer_id", dealerId)
+      .maybeSingle();
+    if (settingsRow) {
+      const row = settingsRow as Record<string, unknown>;
+      settingsStatus.hasSettingsRow = true;
+      settingsStatus.lineConfigured =
+        Boolean(row.line_enabled) ||
+        Boolean(row.line_connected) ||
+        (typeof row.line_access_token === "string" && row.line_access_token.length > 0);
+      const ai = row.ai_settings as Record<string, unknown> | null | undefined;
+      if (ai && typeof ai === "object") {
+        settingsStatus.aiConfigured =
+          ai.enabled === true ||
+          Object.entries(ai).some(
+            ([k, v]) => k.endsWith("_api_key") && typeof v === "string" && v.length > 0,
+          );
+      }
+    }
+  } catch {
+    // dealer_settings absent / column missing — leave status as all-false.
+  }
 
   // Last login from owner_user_id
   let lastLogin: string | null = null;
@@ -217,5 +260,5 @@ export async function getDealerDetail(
     daysRemaining: calcDaysRemaining(dealer.trial_end_date),
   };
 
-  return { stats, timeline: events, auditLogs };
+  return { stats, timeline: events, auditLogs, settingsStatus };
 }

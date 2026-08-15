@@ -40,6 +40,13 @@ This document lists every variable, its purpose, and where to retrieve it if los
 | `NEXT_PUBLIC_APP_URL` | Public URL of the app (e.g. `https://app.example.com`) | Vercel → Project → Settings → Domains |
 | `STORAGE_BUCKET` | Storage bucket name (default: `documents`) | Supabase Dashboard → Storage |
 | `CRON_SECRET` | Secret for cron job endpoint auth | Self-generated (see below) |
+| `GYEON_PARTNER_ONBOARDING_ENABLED` | GYEON partner provisioning gate (**server only** — enabled ONLY when exactly `true`) | Set by decision, not retrieved: `true` on the GYEON deployment; unset or `false` on SaaS deployments |
+
+> **Rule**: `GYEON_PARTNER_ONBOARDING_ENABLED` is a server-only feature gate.
+> Never prefix it with `NEXT_PUBLIC_`. Any value other than the exact string
+> `true` (including missing/empty) disables GYEON partner onboarding —
+> CSV import, invitations, auto-approval claim, and shop-profile activation
+> all short-circuit before any database access.
 
 ---
 

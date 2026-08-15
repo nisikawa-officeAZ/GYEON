@@ -76,6 +76,20 @@ Only required if LINE integration is active. If LINE is not used, these can be a
 
 ---
 
+### GYEON Partner Onboarding
+
+| Variable | Required Value | Notes |
+|---|---|---|
+| `GYEON_PARTNER_ONBOARDING_ENABLED` | `true` on the GYEON deployment ONLY | Server-only gate; unset or `false` on every SaaS deployment. Enabled only by the exact string `true`. Never `NEXT_PUBLIC_`. |
+
+```
+□ GYEON deployment: GYEON_PARTNER_ONBOARDING_ENABLED=true (server env, not NEXT_PUBLIC_)
+□ SaaS deployments: GYEON_PARTNER_ONBOARDING_ENABLED unset or false
+□ Confirmed the variable is NOT exposed as a NEXT_PUBLIC_ variable anywhere
+```
+
+---
+
 ### Cron / Scheduled Jobs
 
 | Variable | Required Value |

@@ -12,6 +12,7 @@
 
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { normalizeRank }    from "@/lib/ranks/dealer-ranks";
 import type {
   CanonicalDealerSettings,
   DetailerRank,
@@ -30,7 +31,6 @@ import {
   DEFAULT_PPF_PRICE_TABLES,
   DEFAULT_REMINDER_TEMPLATES,
   DEFAULT_OCR_POLICY,
-  DEFAULT_DETAILER_RANK,
   DEFAULT_DEALER_RATE,
   DEFAULT_TAX_RATE,
   DEFAULT_OCR_ENABLED,
@@ -63,8 +63,8 @@ function jsonArrayAs<T>(v: unknown, fallback: T[]): T[] {
 }
 
 function toDetailerRank(v: unknown): DetailerRank {
-  if (v === "certified") return "certified";
-  return DEFAULT_DETAILER_RANK;
+  // Legacy-tolerant: maps old 'certified' and null onto the canonical ranks.
+  return normalizeRank(typeof v === "string" ? v : null);
 }
 
 // ─── Merge raw DB row with defaults ──────────────────────────────────────────

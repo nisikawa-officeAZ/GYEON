@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS public.invoices (
 
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Dealer members can manage their invoices"
+DROP POLICY IF EXISTS "Dealer members can manage their invoices" ON public.invoices;
+CREATE POLICY "Dealer members can manage their invoices"
   ON public.invoices FOR ALL
   USING (
     dealer_id IN (
@@ -75,7 +76,8 @@ CREATE TABLE IF NOT EXISTS public.invoice_items (
 
 ALTER TABLE public.invoice_items ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Dealer members can manage their invoice items"
+DROP POLICY IF EXISTS "Dealer members can manage their invoice items" ON public.invoice_items;
+CREATE POLICY "Dealer members can manage their invoice items"
   ON public.invoice_items FOR ALL
   USING (
     dealer_id IN (

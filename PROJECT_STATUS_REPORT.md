@@ -63,7 +63,7 @@ Legend: ✅ Complete · 🟡 In Progress / code-complete but not fully configure
 | Item | Finding |
 |------|---------|
 | **Migration files present** | **34** SQL files in `supabase/migrations/` |
-| **Sequence** | Legacy/core: `001`–`004` (incl. a duplicate `001_..._PASTE_ONLY.sql`). Feature line: `035`–`070`. |
+| **Sequence** | Legacy/core: `001`–`004`. Feature line: `035`–`070`. |
 | **Draft migrations** | **None** in filenames (no `draft`/`wip`/`todo`). |
 | **Pending / numbering gaps** | Missing numbers **056, 057, 060, 061, 065, 068, 069**. These map to **code-/docs-only phases** (e.g. PHASE57 Admin foundation, PHASE60 Readiness, PHASE61 Migration status, PHASE65 RC) that introduced no schema change — so they are *intentional gaps*, not lost migrations. |
 | **Applied status** | ⚠️ **Cannot be confirmed by static audit.** Project policy applies migrations **manually** via the Supabase SQL Editor (per `KNOWN_LIMITATIONS`). `FINAL_FEATURE_MATRIX` claims `035`–`066` applied. Verifying against the live DB requires `SUPABASE_SERVICE_ROLE_KEY` (not present locally) and was out of scope for this read-only audit. |
@@ -126,7 +126,6 @@ Legend: ✅ Complete · 🟡 In Progress / code-complete but not fully configure
 5. **Migration numbering gaps** (056, 057, 060, 061, 065, 068, 069) are undocumented; they appear to be code-only phases but should be explicitly recorded to avoid "missing migration" confusion.
 6. **No lint pipeline** — ESLint is not configured.
 7. **`/products` logs a dynamic-server error at build time** (non-fatal) — cosmetic, but should be silenced by marking the route dynamic.
-8. **Duplicate/legacy core migration** — `001_create_core_tables.sql` and `001_create_core_tables_PASTE_ONLY.sql` coexist; cleanup candidate.
 9. **Applied-migration state is unverifiable** from code (manual migration model). No automated drift check exists.
 10. **PWA service worker** (`public/sw.js`) is present; in production it can serve stale cached UI after deploys until all tabs close — a real-world "changes don't appear" risk to manage.
 11. **Version metadata inconsistent** — `VERSION.md` says "1.0.0 Official Release" while active development continues beyond it.

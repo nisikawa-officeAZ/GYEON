@@ -1,0 +1,290 @@
+{
+  "current_task": {
+    "title": "Estimate Wizard UI Redesign",
+    "status": "planning_only",
+    "instruction": "Do not implement yet. First read and understand this specification. Report your implementation plan and wait for Architect approval."
+  },
+  "purpose": {
+    "main": "Replace the current long-scroll Estimate Editor with a step-based wizard UI.",
+    "reason": "Improve usability and reduce operator fatigue. This is an operation-flow/UI redesign only.",
+    "not_purpose": [
+      "Do not add new business features.",
+      "Do not change estimate calculation.",
+      "Do not change existing OCR logic.",
+      "Do not change existing PDF logic.",
+      "Do not change existing LINE logic.",
+      "Do not change database schema."
+    ]
+  },
+  "absolute_rules": [
+    "Implement only what is explicitly written in this specification.",
+    "Do not guess missing behavior.",
+    "Do not add new features.",
+    "Do not redesign beyond this specification.",
+    "Do not simplify or reinterpret the workflow.",
+    "If anything is unclear, stop and ask the Architect.",
+    "Preserve all existing business logic.",
+    "Preserve current pricing logic.",
+    "Preserve current OCR rules.",
+    "Preserve current AI confirmation rules.",
+    "Preserve current customer and vehicle save logic.",
+    "Preserve current PPF partial-work behavior.",
+    "Preserve the current sticky subtotal/total window on the right side.",
+    "Do not commit.",
+    "Do not push.",
+    "Do not apply migrations."
+  ],
+  "target_change": {
+    "from": "One long scrolling Estimate Editor screen",
+    "to": "Step-based wizard screen flow",
+    "scope": "UI flow and screen structure only"
+  },
+  "wizard_flow": [
+    {
+      "step": 1,
+      "name": "Customer Registration",
+      "default_mode": "new_customer",
+      "requirements": [
+        "New customer registration must be the default.",
+        "Existing customer search must be available.",
+        "Vehicle registration certificate OCR AI input must remain available.",
+        "LINE ID acquisition via QR code must be available.",
+        "Postal-code-to-address lookup must be available.",
+        "Business customer settings must use the current existing rules.",
+        "AI/OCR confirmation rules must remain unchanged."
+      ],
+      "do_not_change": [
+        "Customer save logic",
+        "Business customer logic",
+        "AI/OCR owner/user selection rules"
+      ]
+    },
+    {
+      "step": 2,
+      "name": "Vehicle Registration",
+      "requirements": [
+        "Vehicle registration OCR AI input must remain available.",
+        "Vehicle fields must remain the same as the current implementation.",
+        "Body size must be auto-estimated from the 3M total size logic.",
+        "Body size selection buttons must be displayed.",
+        "Operator must be able to manually select or correct body size."
+      ],
+      "do_not_change": [
+        "Vehicle save logic",
+        "Vehicle OCR extraction logic",
+        "Existing vehicle field definitions"
+      ]
+    },
+    {
+      "step": 3,
+      "name": "Service Category Selection",
+      "selection_type": "multiple",
+      "categories": [
+        "Coating",
+        "PPF",
+        "Window Film",
+        "Body Regular Maintenance",
+        "Car Wash",
+        "Room Cleaning",
+        "Other Work"
+      ],
+      "requirements": [
+        "Multiple categories can be selected.",
+        "Only selected categories must appear in the next service content step.",
+        "Use intuitive illustrated buttons."
+      ]
+    },
+    {
+      "step": 4,
+      "name": "Service Content Input",
+      "requirements": [
+        "Display only the service sections selected in Step 3.",
+        "If Coating is selected, show the coating section.",
+        "If PPF is selected, show the PPF section.",
+        "If Window Film is selected, show the window film section.",
+        "If Body Regular Maintenance is selected, show the body maintenance section.",
+        "If Car Wash is selected, show the car wash section.",
+        "If Room Cleaning is selected, show the room cleaning section.",
+        "If Other Work is selected, show the other work section.",
+        "PPF partial work must keep the current approved behavior and settings.",
+        "Store-specific option items must be shown only when configured in store settings.",
+        "Default example option items should exist in initial settings."
+      ],
+      "default_option_examples": [
+        "Iron Powder Removal",
+        "Hard Polish",
+        "Scratch Repair",
+        "Headlight Repair",
+        "Touch-up Paint"
+      ],
+      "do_not_change": [
+        "Existing service pricing logic",
+        "Existing PPF partial-work calculation",
+        "Existing estimate item calculation"
+      ]
+    },
+    {
+      "step": 5,
+      "name": "Discount and Coupon",
+      "requirements": [
+        "Discount can be entered as amount.",
+        "Discount can be entered as percentage.",
+        "Coupons registered in store settings must be selectable.",
+        "Current discount calculation logic must be preserved."
+      ],
+      "do_not_change": [
+        "Discount calculation logic",
+        "Coupon calculation logic"
+      ]
+    },
+    {
+      "step": 6,
+      "name": "Notes and Internal Memo",
+      "requirements": [
+        "Customer-facing note must be shown on the estimate.",
+        "Internal memo must be saved only as internal record.",
+        "Customer-facing note and internal memo must be clearly separated."
+      ]
+    },
+    {
+      "step": 7,
+      "name": "Final Review and Actions",
+      "requirements": [
+        "Show the created estimate content.",
+        "Display action buttons.",
+        "Cancel must not auto-save.",
+        "All actions except Cancel must auto-save before executing."
+      ],
+      "buttons": [
+        { "label": "修正", "behavior": "Return to the relevant wizard step for editing." },
+        { "label": "キャンセル", "behavior": "Cancel without auto-save." },
+        { "label": "保存", "behavior": "Save the estimate." },
+        { "label": "PDF作成", "behavior": "Auto-save first, then use the existing PDF generation flow." },
+        { "label": "LINE送信_or_LINE文章コピー", "behavior": "Auto-save first, then follow LINE behavior rules." },
+        { "label": "予約日を決めてカレンダー登録", "behavior": "Auto-save first, then use the existing calendar/reservation flow if available." }
+      ]
+    }
+  ],
+  "line_behavior": {
+    "common_rule": [
+      "Always auto-generate a LINE message.",
+      "The message must include default greeting text and estimate content.",
+      "The default greeting text must be editable later in store settings."
+    ],
+    "if_line_business_account_configured": {
+      "button_label": "LINE送信",
+      "behavior": "Send directly using the existing LINE integration."
+    },
+    "if_line_business_account_not_configured": {
+      "button_label": "LINE文章をコピー",
+      "behavior": "Generate copyable LINE message text for manual sending."
+    },
+    "do_not_change": [
+      "Do not create new LINE integration logic unless explicitly approved.",
+      "Do not remove the existing LINE integration."
+    ]
+  },
+  "responsive_behavior": {
+    "desktop": [
+      "Use step-based page switching.",
+      "Use Next and Back buttons.",
+      "Keep the current sticky subtotal/total window on the right side."
+    ],
+    "tablet": [
+      "Use step-based page switching.",
+      "Support left/right swipe navigation.",
+      "Also provide Next and Back buttons."
+    ],
+    "mobile": [
+      "Use step-based page switching.",
+      "Support left/right swipe navigation.",
+      "Also provide Next and Back buttons.",
+      "Avoid long scrolling."
+    ]
+  },
+  "persistent_ui_elements": {
+    "right_total_window": {
+      "status": "keep",
+      "requirements": [
+        "Keep the current sticky subtotal/total display.",
+        "Do not remove it.",
+        "It should remain useful throughout the wizard flow where applicable."
+      ]
+    }
+  },
+  "implementation_boundary": {
+    "allowed": [
+      "Wizard UI structure",
+      "Step navigation UI",
+      "Step-based rendering",
+      "Illustrated service/category buttons",
+      "Reorganizing existing EstimateEditor UI into steps"
+    ],
+    "not_allowed": [
+      "Changing estimate calculation",
+      "Changing pricing logic",
+      "Changing OCR logic",
+      "Changing AI model",
+      "Changing PDF generation logic",
+      "Changing LINE integration logic",
+      "Changing customer save logic",
+      "Changing vehicle save logic",
+      "Changing database schema",
+      "Adding migrations",
+      "Adding unrelated new features"
+    ]
+  },
+  "required_first_response_from_claude": {
+    "instruction": "Before writing code, summarize your understanding and create an implementation plan.",
+    "must_include": [
+      "Step-by-step implementation plan",
+      "Files expected to change",
+      "Files that must not change",
+      "Risk points",
+      "How existing logic will be preserved",
+      "Questions or ambiguities"
+    ],
+    "must_stop_after_plan": true,
+    "do_not_write_code_yet": true
+  },
+  "acceptance_criteria": [
+    "Current long-scroll Estimate Editor is replaced by step-based wizard UI.",
+    "Customer step works with current customer logic.",
+    "Vehicle step works with current vehicle/OCR logic.",
+    "Service category selection controls which service sections appear.",
+    "Only selected service sections are displayed for estimate input.",
+    "Discount/coupon step works with current logic.",
+    "Notes and internal memo are separated.",
+    "Final review displays estimate contents and action buttons.",
+    "Right sticky subtotal/total window remains.",
+    "Mobile/tablet navigation supports swipe and buttons.",
+    "No business logic regression.",
+    "Typecheck passes.",
+    "Build passes."
+  ],
+  "test_requirements_after_implementation": [
+    "npm run typecheck",
+    "npm run build",
+    "New estimate creation",
+    "Existing estimate editing",
+    "Customer new registration",
+    "Existing customer selection",
+    "Vehicle OCR apply",
+    "Vehicle manual entry",
+    "Service category multi-select",
+    "Selected service-only display",
+    "Discount amount",
+    "Discount percentage",
+    "Coupon selection",
+    "Notes display",
+    "Internal memo save",
+    "PDF action",
+    "LINE configured behavior",
+    "LINE not configured copy behavior",
+    "Calendar action if available",
+    "Desktop layout",
+    "Tablet layout",
+    "Mobile layout"
+  ],
+  "final_instruction": "Do not implement immediately. First provide the implementation plan and wait for Architect approval."
+}

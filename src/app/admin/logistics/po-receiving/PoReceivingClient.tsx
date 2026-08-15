@@ -138,7 +138,7 @@ export default function PoReceivingClient({ initialOrders }: Props) {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-white">PO Receiving</h1>
+        <h1 className="text-xl font-semibold text-white">発注入荷</h1>
         <p className="text-sm text-slate-400 mt-0.5">ディーラー注文の出荷準備・出荷数量の記録</p>
       </div>
 

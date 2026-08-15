@@ -1,0 +1,9 @@
+<svg width="120" height="32" viewBox="0 0 120 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- G mark on dark -->
+  <rect width="32" height="32" rx="7" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <path d="M6 8h8.5C17.538 8 20 10.462 20 14s-2.462 6-5.5 6H6V8z" fill="#1d4ed8"/>
+  <path d="M12.5 11H9v6h3.5c1.657 0 3-1.343 3-3s-1.343-3-3-3z" fill="#1e293b"/>
+  <!-- Wordmark -->
+  <text x="40" y="13" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="700" fill="#475569" letter-spacing="1">GYEON</text>
+  <text x="40" y="26" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="800" fill="#1e293b" letter-spacing="0">Detailer Agent</text>
+</svg>

@@ -41,6 +41,9 @@ export interface InvoiceDB {
   title:                string | null;
   issue_date:           string | null;
   due_date:             string | null;
+  // MONTHLY-DATA-B1: 納品日 — authoritative delivery date. Required (valid calendar date) before
+  // issuance; never derived from issue_date. Nullable at rest so drafts and legacy rows stay valid.
+  delivery_date:        string | null;
   subtotal:             number;
   discount_amount:      number;
   tax_rate:             number;
@@ -50,6 +53,8 @@ export interface InvoiceDB {
   balance_due:          number;
   notes:                string | null;
   internal_memo:        string | null;
+  /** Server-owned content snapshot marker; advances on any PDF-rendered change. */
+  content_version:      number;
   pdf_file_path:        string | null;
   pdf_file_url:         string | null;
   deleted_at:           string | null;
@@ -62,6 +67,11 @@ export interface InvoiceDB {
     first_name: string | null;
     phone:      string | null;
     email:      string | null;
+    // TEMPLATE-B3: the adopted invoice layout prints the billing address block and derives the
+    // honorific (法人 → 御中) exactly like the estimate. Optional — older reads may omit them.
+    postal_code?: string | null;
+    address1?:    string | null;
+    is_business?: boolean | null;
   } | null;
   vehicles?: {
     maker:        string | null;
@@ -70,6 +80,8 @@ export interface InvoiceDB {
     grade:        string | null;
     plate_number: string | null;
     color:        string | null;
+    // TEMPLATE-B3: 走行距離 in the adopted vehicle block; printed only when recorded.
+    mileage?:     number | null;
   } | null;
   estimates?: {
     estimate_number: string | null;
@@ -80,6 +92,9 @@ export interface InvoiceDB {
     work_order_number: string | null;
     title:             string | null;
     status:            string;
+    // TEMPLATE-C2-DN: the sole delivery-date source; exposed to the invoice detail UI so the
+    // delivery-note action can gate on a registered work completion date.
+    actual_end_at?:    string | null;
   } | null;
   invoice_items?: InvoiceItemDB[];
 }
@@ -114,6 +129,9 @@ export type InvoiceInput = {
   title:                string | null;
   issue_date:           string | null;
   due_date:             string | null;
+  // MONTHLY-DATA-B1: 納品日 — authoritative delivery date resolved server-side (manual input,
+  // completion report date, or work-order completion date). Never issue_date.
+  delivery_date:        string | null;
   subtotal:             number;
   discount_amount:      number;
   tax_rate:             number;
@@ -145,7 +163,10 @@ export function calculateInvoiceTotals(
   const subtotal   = items.reduce((s, item) => {
     return s + Math.round(item.quantity * item.unit_price * (1 - item.discount_rate / 100));
   }, 0);
-  const taxBase    = subtotal - discountAmount;
+  // Clamp the estimate-level discount to [0, subtotal] so tax/total/balance never
+  // go negative (mirrors estimate-totals.ts).
+  const discount   = Math.min(Math.max(0, discountAmount || 0), subtotal);
+  const taxBase    = subtotal - discount;
   const taxAmount  = Math.floor(taxBase * taxRate / 100);
   const total      = taxBase + taxAmount;
   const balanceDue = total - paidAmount;

@@ -17,6 +17,8 @@ import type {
   GyeonNews, NewsCategory, NewsPriority, NewsStatus,
 } from "./news-types";
 import { NEWS_CATEGORIES, NEWS_PRIORITIES } from "./news-types";
+import type { NewsAudience, NewsChannels } from "./distribution-types";
+import { NEWS_AUDIENCES, NEWS_CHANNELS } from "./distribution-types";
 
 const MANAGE_ROLES = ["super_admin", "gyeon_admin"];
 
@@ -57,6 +59,14 @@ export interface NewsInput {
   status:           NewsStatus;
   publish_start_at: string | null;
   publish_end_at:   string | null;
+  // PHASE89: distribution fields
+  summary:           string | null;
+  body_html:         string | null;
+  body_text:         string | null;
+  target_audience:   NewsAudience;
+  target_dealer_ids: string[];
+  channels:          NewsChannels;
+  scheduled_at:      string | null;
 }
 
 function sanitize(input: NewsInput) {
@@ -65,6 +75,11 @@ function sanitize(input: NewsInput) {
   const status: NewsStatus =
     input.status === "published" || input.status === "archived" ? input.status : "draft";
   const clean = (v: string | null) => (v && v.trim() ? v.trim() : null);
+  const audience: NewsAudience = NEWS_AUDIENCES.includes(input.target_audience) ? input.target_audience : "all_dealers";
+  const channels: NewsChannels = NEWS_CHANNELS.includes(input.channels) ? input.channels : "in_app";
+  const dealerIds = Array.isArray(input.target_dealer_ids)
+    ? input.target_dealer_ids.filter((s) => typeof s === "string" && s.trim()).map((s) => s.trim())
+    : [];
   return {
     category,
     priority,
@@ -77,6 +92,14 @@ function sanitize(input: NewsInput) {
     status,
     publish_start_at: clean(input.publish_start_at),
     publish_end_at:   clean(input.publish_end_at),
+    // PHASE89: distribution fields
+    summary:           clean(input.summary),
+    body_html:         clean(input.body_html),
+    body_text:         clean(input.body_text),
+    target_audience:   audience,
+    target_dealer_ids: dealerIds,
+    channels,
+    scheduled_at:      clean(input.scheduled_at),
   };
 }
 

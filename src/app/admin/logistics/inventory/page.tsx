@@ -4,7 +4,7 @@ import { getLogisticsInventory } from "@/lib/admin/logistics/get-logistics-inven
 import LogisticsInventoryClient from "./LogisticsInventoryClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Inventory Overview | GYEON Logistics" };
+export const metadata = { title: "在庫概要 | GYEON Logistics" };
 
 export default async function LogisticsInventoryPage() {
   const caller = await getCurrentAdmin();

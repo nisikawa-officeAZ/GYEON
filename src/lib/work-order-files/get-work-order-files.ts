@@ -10,11 +10,24 @@
 
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
-import { WorkOrderFileDB }  from "./work-order-file-types";
+import type {
+  GetWorkOrderFilesResult,
+  WorkOrderFileDB,
+} from "./work-order-file-types";
+import {
+  toPrivateWorkOrderFileView,
+  WORK_ORDER_FILE_SIGNED_URL_TTL_SECONDS,
+} from "./private-work-order-file-delivery";
 
-export async function getWorkOrderFiles(workOrderId: string): Promise<WorkOrderFileDB[]> {
+const STORAGE_BUCKET = "work-order-files";
+const PRIVATE_DELIVERY_ERROR =
+  "ファイルを安全に読み込めませんでした。時間をおいて再度お試しください。";
+
+export async function getWorkOrderFiles(
+  workOrderId: string,
+): Promise<GetWorkOrderFilesResult> {
   const dealer = await getCurrentDealer();
-  if (!dealer) return [];
+  if (!dealer) return { files: [], error: PRIVATE_DELIVERY_ERROR };
 
   const supabase = await createClient();
 
@@ -26,7 +39,7 @@ export async function getWorkOrderFiles(workOrderId: string): Promise<WorkOrderF
     .eq("dealer_id", dealer.dealer_id)
     .single();
 
-  if (woError || !wo) return [];
+  if (woError || !wo) return { files: [], error: PRIVATE_DELIVERY_ERROR };
 
   const { data, error } = await supabase
     .from("work_order_files")
@@ -56,8 +69,30 @@ export async function getWorkOrderFiles(workOrderId: string): Promise<WorkOrderF
 
   if (error) {
     console.error("[getWorkOrderFiles] error:", error.message);
-    return [];
+    return { files: [], error: PRIVATE_DELIVERY_ERROR };
   }
 
-  return (data as WorkOrderFileDB[]) ?? [];
+  const records = (data as WorkOrderFileDB[] | null) ?? [];
+
+  try {
+    const files = await Promise.all(records.map(async (record) => {
+      const { data: signed, error: signError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .createSignedUrl(
+          record.file_path,
+          WORK_ORDER_FILE_SIGNED_URL_TTL_SECONDS,
+        );
+
+      if (signError || !signed?.signedUrl) {
+        throw new Error("Private URL signing failed.");
+      }
+
+      return toPrivateWorkOrderFileView(record, signed.signedUrl);
+    }));
+
+    return { files, error: null };
+  } catch {
+    console.error("[getWorkOrderFiles] private delivery signing failed");
+    return { files: [], error: PRIVATE_DELIVERY_ERROR };
+  }
 }

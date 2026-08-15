@@ -1,0 +1,54 @@
+# B7-4 disposable-local Supabase configuration TEMPLATE.
+#
+# This file is a TEMPLATE. It is NEVER used from the repository root and is NEVER
+# the repository's supabase/config.toml. setup.sh copies it into a per-run
+# disposable directory RUNDIR/supabase/config.toml and substitutes
+# __B7_4_PROJECT_ID__ with the dynamic PROJECT_ID (dealeros-b7-4-<suffix>). Every
+# `supabase` command runs with --workdir "$RUNDIR" against THIS config only; the
+# disposable directory carries no supabase/.temp link state, so the CLI can never
+# reach the linked "DealerOS-Dev" remote (fbieiotihlmpfzybowbt).
+
+project_id = "__B7_4_PROJECT_ID__"
+
+[api]
+enabled = true
+port = 55321
+schemas = ["public", "graphql_public"]
+
+[db]
+port = 55322
+shadow_port = 55320
+major_version = 15
+
+# Automatic seed is disabled: the disposable Auth user must be created (via the
+# local GoTrue admin client) AFTER migrations and BEFORE the tenant seed.sql runs.
+[db.seed]
+enabled = false
+
+[studio]
+enabled = true
+port = 55323
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["http://127.0.0.1:3000", "http://localhost:3000"]
+
+[auth.email]
+# Local convenience only (disposable): no real mailbox exists in the disposable run.
+enable_confirmations = false
+
+# Local Storage is required because committed migrations 081 and 083 create
+# buckets and policies against the Storage-managed schema.
+[storage]
+enabled = true
+
+# Other services unnecessary for the estimate-save E2E remain disabled.
+[realtime]
+enabled = false
+
+[analytics]
+enabled = false
+
+[edge_runtime]
+enabled = false

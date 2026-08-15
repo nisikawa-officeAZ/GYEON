@@ -1,47 +1,19 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
-import { recalculateInvoicePayment } from "./recalculate-invoice-payment";
-import { createAuditLog } from "@/lib/audit/audit";
+// B3-B1B I1 — payment deletion is DISABLED.
+//
+// Deleting a payment is a financial correction. Corrections require a separately designed
+// atomic correction RPC (a later phase); until then this action fails closed immediately,
+// with ZERO Supabase, authorization-helper, audit-log, recalculation, or notification
+// calls. The database additionally guards via the issued-statement freeze trigger and the
+// payment_allocations ON DELETE RESTRICT foreign key if this boundary were ever bypassed.
+// ("use server" files may export only async functions, so the message stays module-local.)
+
+const PAYMENT_DELETION_DISABLED_MESSAGE =
+  "入金の削除は現在無効です。金銭訂正は今後提供される訂正機能で行ってください";
 
 export async function deletePayment(
-  id: string
+  _id: string
 ): Promise<{ error: string } | { success: true }> {
-  const dealer = await getCurrentDealer();
-  if (!dealer) return { error: "認証エラー" };
-
-  const supabase = await createClient();
-
-  // Fetch to get invoice_id before deleting
-  const { data: existing } = await supabase
-    .from("payments")
-    .select("id, invoice_id")
-    .eq("id", id)
-    .eq("dealer_id", dealer.dealer_id)
-    .single();
-  if (!existing) return { error: "入金記録が見つかりません" };
-
-  const { error } = await supabase
-    .from("payments")
-    .delete()
-    .eq("id", id)
-    .eq("dealer_id", dealer.dealer_id);
-
-  if (error) {
-    console.error("deletePayment error:", error);
-    return { error: error.message };
-  }
-
-  // Recalculate invoice totals after deletion
-  await recalculateInvoicePayment(supabase, existing.invoice_id as string, dealer.dealer_id);
-
-  void createAuditLog({
-    action: "delete",
-    resource_type: "payment",
-    resource_id: id,
-    old_value: { invoice_id: existing.invoice_id },
-  });
-
-  return { success: true };
+  return { error: PAYMENT_DELETION_DISABLED_MESSAGE };
 }

@@ -6,6 +6,8 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { ReservationDB, ReservationStatus, serviceTypeLabel } from "./reservation-types";
 import { getReservation } from "./get-reservation";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
+import { WORK_BAYS_SCHEMA_READY } from "@/lib/flags";
 
 interface UpdateReservationInput {
   status?: ReservationStatus;
@@ -14,6 +16,8 @@ interface UpdateReservationInput {
   end_time?: string | null;
   notes?: string | null;
   work_order_id?: string | null;
+  assigned_staff_id?: string | null;
+  work_bay_id?: string | null;
   service_type?: string;
   customer_id?: string | null;
   vehicle_id?: string | null;
@@ -23,6 +27,9 @@ export async function updateReservation(
   id: string,
   input: UpdateReservationInput
 ): Promise<{ success: boolean; data?: ReservationDB; error?: string }> {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { success: false, error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "No active dealer membership." };
 
@@ -50,12 +57,48 @@ export async function updateReservation(
     if (!vehicle) return { success: false, error: "車両が見つかりません" };
   }
 
+  // Validate work_order ownership if being changed
+  if (input.work_order_id) {
+    const { data: wo } = await supabase
+      .from("work_orders")
+      .select("id")
+      .eq("id", input.work_order_id)
+      .eq("dealer_id", dealer.dealer_id)
+      .maybeSingle();
+    if (!wo) return { success: false, error: "作業指示書が見つかりません" };
+  }
+
+  // Validate assigned staff ownership if being changed
+  if (input.assigned_staff_id) {
+    const { data: staff } = await supabase
+      .from("dealer_staff")
+      .select("id")
+      .eq("id", input.assigned_staff_id)
+      .eq("dealer_id", dealer.dealer_id)
+      .maybeSingle();
+    if (!staff) return { success: false, error: "担当スタッフが見つかりません" };
+  }
+
+  // Validate work bay ownership if being changed (B6b — only when schema is live)
+  if (WORK_BAYS_SCHEMA_READY && input.work_bay_id) {
+    const { data: bay } = await supabase
+      .from("work_bays")
+      .select("id")
+      .eq("id", input.work_bay_id)
+      .eq("dealer_id", dealer.dealer_id)
+      .maybeSingle();
+    if (!bay) return { success: false, error: "作業ベイが見つかりません" };
+  }
+
+  // B6b: strip work_bay_id from the update unless the column exists, so the
+  // spread never writes a non-existent column pre-migration.
+  const { work_bay_id, ...rest } = input;
+  const updatePayload: Record<string, unknown> = { ...rest, updated_at: new Date().toISOString() };
+  if (WORK_BAYS_SCHEMA_READY && work_bay_id !== undefined) updatePayload.work_bay_id = work_bay_id;
+
   const { data, error } = await supabase
     .from("reservations")
-    .update({
-      ...input,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq("id", id)
     .eq("dealer_id", dealer.dealer_id)
     .select(`
@@ -79,6 +122,9 @@ export async function updateReservation(
 export async function createWorkOrderFromReservation(
   reservationId: string
 ): Promise<{ success: boolean; work_order_id?: string; error?: string }> {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { success: false, error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { success: false, error: "No active dealer membership." };
 

@@ -4,6 +4,7 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ProductOrderDB } from "@/lib/product-orders/product-order-types";
 import { renderProductOrderPdf } from "./templates/product-order-pdf";
+import { getDealerBranding } from "./dealer-branding";
 import { generateAndUploadPdf } from "./generate-pdf-and-upload";
 import { createAuditLog } from "@/lib/audit/audit";
 
@@ -32,9 +33,9 @@ export async function generateProductOrderPdf(
 
   let pdfBuffer: Buffer;
   try {
-    pdfBuffer = await renderProductOrderPdf(order);
+    pdfBuffer = await renderProductOrderPdf(order, await getDealerBranding(dealer.dealer_id));
   } catch (err) {
-    return { success: false, error: `PDF生成エラー: ${String(err)}` };
+    return (console.error("[pdf] render failed:", err), { success: false, error: "PDFの生成に失敗しました。時間をおいて再度お試しください。" });
   }
 
   const documentNumber =

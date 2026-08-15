@@ -51,11 +51,18 @@ export const JA = {
     noEstimates:     "見積がまだありません",
     createWorkOrder: "施工指示作成",
     status: {
-      draft:    "下書き",
-      sent:     "送付済み",
-      approved: "承認済み",
-      rejected: "却下",
-      expired:  "期限切れ",
+      draft:       "下書き",
+      proposal:    "提案中",
+      approved:    "承認",
+      lost:        "失注",
+      accepted:    "受注",
+      in_progress: "作業中",
+      completed:   "完了",
+      invoiced:    "請求済",
+      expired:     "期限切れ",
+      // legacy compat (SENT is transmission → 提案中)
+      sent:        "提案中",
+      rejected:    "失注",
     },
     form: {
       estimateNo:   "見積番号",

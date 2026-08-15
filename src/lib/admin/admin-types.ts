@@ -68,15 +68,23 @@ export type AdminAuditAction =
   | "admin_user_created"
   | "admin_user_disabled"
   | "admin_user_enabled"
+  | "admin_user_deleted"
   | "admin_role_changed"
   | "admin_password_reset"
   // RC-13: dealer approval center
   | "dealer_suspended"
   | "dealer_reactivated"
+  // PHASE88: dealer soft delete
+  | "dealer_deleted"
+  | "dealer_restored"
+  | "dealer_purged"
   // RC-14: dealer lifecycle management
   | "trial_extended"
   | "rank_changed"
-  | "dealer_reset";
+  | "dealer_reset"
+  // AI Center: GYEON-managed OpenAI key management
+  | "gyeon_ai_key_updated"
+  | "gyeon_ai_connection_tested";
 
 export interface AdminAuditLogDB {
   id: string;
@@ -117,6 +125,8 @@ export interface DealerAdminView {
   suspended_at?:            string | null;
   approved_by?:             string | null;
   rejected_by?:             string | null;
+  // PHASE88: soft delete (present if column exists in DB)
+  deleted_at?:              string | null;
 }
 
 export interface UserAdminView {

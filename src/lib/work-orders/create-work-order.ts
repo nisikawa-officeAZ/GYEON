@@ -16,12 +16,16 @@ import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { WorkOrderStatus }  from "./work-order-types";
 import { getNextDocumentNumber } from "@/lib/numbering/get-next-document-number";
 import { createActivityLog } from "@/lib/activity/activity-log";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 function str(formData: FormData, key: string): string | null {
   return (formData.get(key) as string | null)?.trim() || null;
 }
 
 export async function createWorkOrder(formData: FormData) {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "No active dealer membership." };
 

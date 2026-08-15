@@ -70,6 +70,11 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
   const [isBusiness,  setIsBusiness]  = useState(customer?.is_business ?? false);
   const [dealerRate,  setDealerRate]  = useState(customer?.trade_discount_pct ?? 70);
   const [creditTerms, setCreditTerms] = useState(customer?.credit_terms ?? "");
+  // Legacy GenSpark business billing fields — persistence requires migration 100.
+  const [closingDay,    setClosingDay]    = useState<string>((customer as { closing_day?: number | null })?.closing_day?.toString() ?? "");
+  const [paymentDay,    setPaymentDay]    = useState<string>((customer as { payment_day?: number | null })?.payment_day?.toString() ?? "");
+  const [billingName,   setBillingName]   = useState<string>((customer as { billing_name?: string | null })?.billing_name ?? "");
+  const [billingContact, setBillingContact] = useState<string>((customer as { billing_contact?: string | null })?.billing_contact ?? "");
   const [showExtra,   setShowExtra]   = useState(false);
   const [error,       setError]       = useState<string | null>(null);
   const [pending, startTransition]    = useTransition();
@@ -261,6 +266,26 @@ export default function CustomerForm({ customer, onCancel, onSuccess }: Customer
                 placeholder="例: 月末締め翌月末払い"
                 className={inp}
               />
+            </div>
+            <div>
+              <label className={lbl}>締め日</label>
+              <input type="number" min={1} max={31} value={closingDay}
+                onChange={e => setClosingDay(e.target.value)} placeholder="例: 20（末日は31）" className={inp} />
+            </div>
+            <div>
+              <label className={lbl}>支払日</label>
+              <input type="number" min={1} max={31} value={paymentDay}
+                onChange={e => setPaymentDay(e.target.value)} placeholder="例: 末日は31" className={inp} />
+            </div>
+            <div>
+              <label className={lbl}>請求先名</label>
+              <input type="text" value={billingName}
+                onChange={e => setBillingName(e.target.value)} placeholder="請求書の宛名" className={inp} />
+            </div>
+            <div>
+              <label className={lbl}>請求先担当者</label>
+              <input type="text" value={billingContact}
+                onChange={e => setBillingContact(e.target.value)} placeholder="経理ご担当者名" className={inp} />
             </div>
           </div>
         )}

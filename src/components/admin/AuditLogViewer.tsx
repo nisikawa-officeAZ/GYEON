@@ -137,7 +137,7 @@ export default function AuditLogViewer() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-slate-100">監査ログ</h1>
-        <span className="text-xs text-slate-500">DEALER-SCOPED AUDIT LOG</span>
+        <span className="text-xs text-slate-500">ディーラー別監査ログ</span>
       </div>
 
       {/* Filter bar */}

@@ -103,7 +103,7 @@ export default function ResourcesAdminClient({ initialResources }: { initialReso
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-base font-bold text-slate-100">Resource Management</h1>
+          <h1 className="text-base font-bold text-slate-100">リソース管理</h1>
           <p className="text-xs text-slate-500 mt-0.5">公式素材・カタログ・SDS/TDS・動画の管理</p>
         </div>
         <button onClick={openNew} className="px-3 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors">

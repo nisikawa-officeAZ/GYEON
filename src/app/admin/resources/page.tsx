@@ -4,7 +4,7 @@ import { getResourcesForAdmin } from "@/lib/resources/manage-resources";
 import ResourcesAdminClient from "@/components/admin/resources/ResourcesAdminClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Resource Management | Admin" };
+export const metadata = { title: "リソース管理 | 管理" };
 
 const MANAGE_ROLES = ["super_admin", "gyeon_admin"];
 

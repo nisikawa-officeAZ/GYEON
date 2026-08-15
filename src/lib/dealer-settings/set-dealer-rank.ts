@@ -12,8 +12,9 @@ import { requireAdmin }     from "@/lib/admin/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog }    from "@/lib/admin/write-audit-log";
 import type { DetailerRank } from "./dealer-settings-types";
+import { DEALER_RANK_VALUES } from "@/lib/ranks/dealer-ranks";
 
-const VALID_RANKS: DetailerRank[] = ["detailer", "certified"];
+const VALID_RANKS: DetailerRank[] = DEALER_RANK_VALUES;
 
 export async function setDealerRank(
   dealerId: string,

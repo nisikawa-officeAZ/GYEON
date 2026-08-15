@@ -1,138 +1,130 @@
-# 01 — PROJECT OVERVIEW
-## GYEON Detailer Agent — Master Specification
+# GYEON Detailer Agent Enterprise Master Specification
 
 | Field | Value |
 |-------|-------|
-| **Version** | 1.0 |
+| **Document** | 01 — Project Overview |
 | **Status** | Canonical |
-| **Last Updated** | 2026-06-25 |
-| **Canonical Source** | `gyeon_flow.json`, `gyeon_settings_flow.json`, implementation audit |
-| **Related Documents** | `02_SYSTEM_ARCHITECTURE.md`, `09_PHASE_STATUS.md`, `10_ROADMAP.md`, `11_CANONICAL_RULES.md` |
+| **Owner** | System Architect |
+| **Version** | 2.0 |
+| **Last Updated** | 2026-06-30 |
+| **Governing Workflow** | `README.md` (Single Source of Truth + approved workflow) |
+| **Related Documents** | `02_SYSTEM_ARCHITECTURE.md`, `09_PHASE_STATUS.md`, `10_ROADMAP.md` / `11_Roadmap.md`, `INDEX.md` |
 
-> **Status:** Canonical. Generated under Specification-Driven Development (SDD).
-> **Source of truth:** `gyeon_flow.json` + `gyeon_settings_flow.json` (the Canonical Core Specification).
-> **Rule:** Implementation must follow this specification. Never the reverse.
-> **Generated:** 2026-06-25 · Documentation only — no code changed.
-
----
-
-## 1. Purpose
-
-GYEON Detailer Agent is an **AI-powered business operating system for professional detailers** — a cloud platform for automotive detailing shops that handle GYEON ceramic coating and related services.
-
-Its core job today is to turn an on-site service consultation into a structured, priced, shareable **estimate**, and to carry that relationship forward (work order → invoice → payment → maintenance reminder → repeat visit).
-
-Its long-term vision is to become a full AI business growth platform: supporting not only estimate, customer, vehicle, work order, product order, and LINE operations, but also **AI-driven marketing, reputation management, customer retention, and business growth.**
-
-Tagline (from `VERSION.md`): **「施工で終わらせない。顧客との関係を、次の来店へ。」**
-
-The estimate engine supports seven service categories, each with its own pricing model:
-**Coating (GYEON), PPF, Window Film, Maintenance, Car Wash, Room Cleaning, Other Work.**
-
-### Strategic platform direction (Pro+ AI Platform)
-
-| Module | Scope |
-|--------|-------|
-| **AI Gateway** | Provider-agnostic AI infrastructure; dealer-owned API keys; Office AZ does not pay inference costs |
-| **AI Marketing Agent** | Convert completed jobs into marketing content (video, captions, SNS publishing) with mandatory SEO/MEO/AEO/LLMO/AIO optimization |
-| **AI Reputation Agent** | Authentic review collection via LINE; Google Business Profile integration; reputation analytics |
-| **AI Growth Agent** | Proactive business growth analysis and content recommendations |
-| **LINE Rich Menu Management** | Customer-facing LINE rich menu (reservation, service menu, maintenance, review, inquiry) |
-
-> These modules are approved future features — deferred until core platform reaches stable production. See `10_ROADMAP.md` Phase F and `AI_GATEWAY_SPEC.md`.
+> This document is the official **Project Overview** for the platform. It defines *what* the product is and *why* it exists. Architecture, deployment, and technology details are defined in `02_SYSTEM_ARCHITECTURE.md` and are **not duplicated here** — this document references them where relevant. All implementation must follow this specification under the workflow defined in `README.md`; implementation conforms to the specification, never the reverse.
 
 ---
 
-## 2. Two Architectural Layers
+## 1. Project Overview
 
-### 2.1 Canonical business architecture (runtime-agnostic)
-Defined by the Canonical JSON. This is the **immutable business logic**: screens, steps, conditions, calculations, transitions, settings, and pricing. It does not depend on any particular database or framework and applies to every implementation.
+### 1.1 Vision
 
-### 2.2 Implemented runtime architecture (current)
-The live implementation in `~/DealerOS`:
+To be the AI-powered business operating system for professional automotive detailing — a platform that does not end at the completed job, but carries the customer relationship forward into repeat business and measurable growth. The long-term vision extends the core operations platform into AI-driven marketing, reputation, retention, and growth capabilities (see §1.12 and `10_ROADMAP.md`).
 
-```
-Browser (PWA, mobile-first; PC top screen added)
-        │
-        ▼
-Next.js 15 (App Router, Server Components + Server Actions)
-        │
-        ▼
-Supabase  ── PostgreSQL (RLS, dealer-scoped multi-tenant)
-          ── Supabase Auth (email/password)
-          ── Supabase Storage (PDF, OCR images)
-        │
-        ▼
-Vercel (hosting)   +   External: OpenAI (OCR), LINE (LIFF/Messaging)
-```
+### 1.2 Mission
 
-> ⚠️ **Architecture discrepancy note.**
-> The Canonical JSON's persistence/auth/sync sections describe the *original Genspark runtime* — IndexedDB + Cloudflare KV + D1 (SQLite) + Workers/Hono + custom AuthToken. The **current implementation replaces that** with Supabase (PostgreSQL + Auth + Storage). The *business logic* (estimate flow, pricing, settings semantics) is preserved; the *storage substrate* is not the same. See `05_DATABASE_REQUIREMENTS.md` §4 and `11_CANONICAL_RULES.md` §6.
+Enable detailing businesses to convert an on-site service consultation into a structured, priced, shareable record, and to manage the full downstream lifecycle — customer, vehicle, estimate, work order, completion report, invoice, payment, and maintenance follow-up — within a single multi-tenant SaaS platform, with strict per-tenant (dealer) data isolation.
 
----
+### 1.3 Project Goals
 
-## 3. Technology Stack (implemented)
+1. Provide a complete operational workflow for detailing shops: estimate → work order → completion report → invoice → payment → maintenance reminder → repeat visit.
+2. Reduce manual data entry through AI assistance (e.g., vehicle-registration OCR that auto-populates customer and vehicle records, subject to mandatory human confirmation).
+3. Guarantee tenant isolation: every record is owned by exactly one dealer and is never visible or modifiable across dealers.
+4. Remain specification-driven and incrementally verifiable, with each change reviewed, type-checked, and built before commit (see `README.md`).
+5. Support a path from a GYEON-branded edition to a brand-neutral generic edition (see §1.5) without architectural divergence.
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 15 (App Router, Turbopack) |
-| Language | TypeScript 5 |
-| UI | React 19, TailwindCSS v4 |
-| Database | Supabase (PostgreSQL) with Row-Level Security |
-| Auth | Supabase Auth (email/password) |
-| Storage | Supabase Storage (private bucket, signed URLs) |
-| PDF | @react-pdf/renderer |
-| PWA | @ducanh2912/next-pwa (service worker) |
-| OCR | OpenAI `gpt-4o-mini` (vision) |
-| Messaging | LINE LIFF + Messaging API |
-| Hosting | Vercel |
+### 1.4 Target Users
 
----
+- **Detailing shop staff / operators** — create and manage estimates, customers, vehicles, work orders, invoices, and payments for their own shop (dealer).
+- **Shop owners / managers** — oversee operations, staff, and subscription/billing for their dealer.
+- **Platform / Super Admin** — operate the multi-tenant platform: dealer approval, lifecycle management, and platform-wide administration (distinct from per-dealer users).
+- **End customers (indirect)** — interact through customer-facing surfaces (e.g., LINE integration and customer-facing views) but are not platform operators.
 
-## 4. Current Version
+Role and permission definitions are specified in `06_User_Roles_and_Permissions.md`.
 
-| Field | Value |
-|-------|-------|
-| Declared version (`VERSION.md`) | **1.0.0 — "Official Release"** |
-| Latest CHANGELOG phase | PHASE65 — Release Candidate (RC1) |
-| Canonical JSON version | `2024-06` |
+### 1.5 Product Editions
 
----
+The platform is delivered in two editions that share one codebase, data model, and architecture. Editions differ in branding, terminology, and catalog content — **not** in core architecture or tenant-isolation model.
 
-## 5. Current Phase
+#### GYEON Detailer Agent
+The GYEON-branded edition for shops operating within the GYEON ceramic-coating ecosystem. It includes GYEON-specific branding, product/service catalog semantics, and coating-related terminology and warranty concepts. This is the primary edition and the reference implementation.
 
-- **Last documented numbered phase (CHANGELOG):** PHASE65 — Release Candidate (RC1)
-- **Last numbered phase in git history:** PHASE73 — Home screen visual restoration
-- **Current active work:** Post-1.0.0 **PC / Mobile UI separation** (PC top screen delivered; other screens pending).
+#### Detailer Agent (Generic Edition)
+A brand-neutral edition for detailing businesses not tied to the GYEON brand. It provides the same operational platform with neutral branding and a generic catalog/terminology, enabling white-label or non-GYEON deployments. Edition selection affects presentation and catalog content only; the underlying business rules, data isolation, and architecture remain identical.
 
-Full detail in `09_PHASE_STATUS.md`.
+### 1.6 Core Principles
 
----
+1. **Specification-Driven Development (SDD).** The canonical specification is the highest authority; implementation conforms to it, never the reverse.
+2. **Tenant isolation first.** `dealer_id` is always resolved server-side from the authenticated user's dealer membership and is never accepted from client input. All data access is dealer-scoped, with Row-Level Security as defense-in-depth (see `10_Security_and_RLS.md`).
+3. **No silent data loss.** Customer and vehicle data is never overwritten automatically; soft-deletion is preferred over destructive deletion.
+4. **AI assists, humans decide.** AI/OCR output must always be reviewable and editable, and requires explicit user confirmation before any record is created or updated.
+5. **Incremental, verified change.** Work proceeds one feature at a time and is verified (review → typecheck → build) before commit and push, per `README.md`.
+6. **Preserve existing behavior.** Approved business logic and existing canonical documents are preserved; changes are additive and reconciled against the specification.
 
-## 6. Development Philosophy
+### 1.7 Business Scope
 
-**Specification-Driven Development (SDD).**
+In scope for the platform:
 
-1. The **Canonical Core Specification** (`gyeon_flow.json`, `gyeon_settings_flow.json`) is the highest authority.
-2. Implementation conforms to the specification — never the reverse.
-3. The canonical JSON files are **not overwritten or redesigned**; they are read-only inputs.
-4. Documents in `/docs/master_specification/` are **derived from** the JSON and from the verified implementation state.
-5. Changes proceed **incrementally**, one screen/feature at a time, verified by eye, saved to Git after each step (see `11_CANONICAL_RULES.md`).
+- Customer management (profiles, search, status/tagging foundations, notes, activity timeline).
+- Vehicle management (profiles, search, status foundations, service-history foundation, customer↔vehicle linkage).
+- Vehicle-registration OCR / AI-assisted registration with duplicate detection and a register/update decision flow.
+- Estimate creation across the platform's service categories (e.g., Coating/GYEON, PPF, Window Film, Maintenance, Car Wash, Room Cleaning, Other Work).
+- Downstream operations: work orders, completion reports, invoices, payments, and maintenance reminders.
+- Product catalog and product orders.
+- LINE integration (customer messaging / LIFF surfaces).
+- Multi-tenant administration: dealer onboarding, approval, subscription/licensing, and audit logging.
 
----
+Out of scope (deferred / future): AI marketing, reputation, and growth modules (see §1.12). Detailed per-feature behavior is specified in `07_Feature_Specifications.md` and related documents.
 
-## 7. Master Specification Index
+### 1.8 Supported Platforms
 
-| File | Contents |
-|------|----------|
-| `01_PROJECT_OVERVIEW.md` | This document — project identity, purpose, stack |
-| `02_SYSTEM_ARCHITECTURE.md` | System architecture, deployment, security, subscriptions |
-| `03_BUSINESS_WORKFLOW.md` | Estimate workflow — derived from `gyeon_flow.json` |
-| `04_SETTINGS_WORKFLOW.md` | Settings & persistence — derived from `gyeon_settings_flow.json` |
-| `05_DATABASE_REQUIREMENTS.md` | Data model requirements — canonical vs implemented |
-| `06_OCR_REQUIREMENTS.md` | Vehicle-registration OCR requirements |
-| `07_LINE_REQUIREMENTS.md` | LINE / LIFF / messaging requirements |
-| `08_UI_REQUIREMENTS.md` | Screen & UI requirements |
-| `09_PHASE_STATUS.md` | Completed / current / pending phases |
-| `10_ROADMAP.md` | Roadmap from the current baseline |
-| `11_CANONICAL_RULES.md` | SDD rules, security rules, migration rules, design rules |
+- **Web (PWA):** mobile-first responsive web application, installable as a Progressive Web App, with a desktop (PC) presentation in addition to mobile.
+- **Mobile devices:** camera-first capture for vehicle-registration OCR on mobile.
+- **Desktop:** file-upload-first workflow for OCR and full operational use.
+- **Messaging surface:** LINE (LIFF / Messaging API) for customer-facing interactions.
+
+Runtime, hosting, and platform technology are defined in `02_SYSTEM_ARCHITECTURE.md`.
+
+### 1.9 High-Level System Components
+
+At a conceptual level the platform comprises:
+
+- **Operations core** — customers, vehicles, estimates, work orders, completion reports, invoices, payments, maintenance.
+- **AI / OCR subsystem** — vehicle-registration analysis, field mapping, duplicate detection, and OCR session/audit history.
+- **Catalog & orders** — products/services and product orders.
+- **Messaging integration** — LINE customer messaging.
+- **Multi-tenant administration** — dealer lifecycle, subscriptions/licensing, roles/permissions, and audit logging.
+- **Tenant-isolation layer** — server-side dealer resolution plus Row-Level Security.
+
+Concrete component design, technology choices, data flow, and deployment topology are defined in `02_SYSTEM_ARCHITECTURE.md` and are intentionally not restated here.
+
+### 1.10 Current Development Status
+
+- The core operations platform is implemented and has reached an official release baseline (declared release 1.0.0 / RC1; see `09_PHASE_STATUS.md` for the authoritative phase record).
+- **Phase 2 — Customer & Vehicle Registration (including OCR/AI)** has been completed and **CLOSED (architect-approved, 2026-06-30)** across six sprints, with integration QA and stabilization performed.
+- Work is conducted on a feature branch; it is not merged to main and not deployed to production as part of these specification activities.
+- **Phase 3 has not started.**
+
+`09_PHASE_STATUS.md` is the living source of truth for phase/sprint status.
+
+### 1.11 Completed Phases
+
+Summarized at a high level (authoritative detail in `09_PHASE_STATUS.md`):
+
+- **Core platform (through release baseline):** authentication, customer management, vehicle management, estimates, GYEON service estimates, PDF generation, document storage, work orders, completion reports, invoices, payments, reservations, maintenance reminders, products and product orders, LINE integration, admin console, subscriptions/licensing, audit logging, and release/disaster-recovery readiness.
+- **Phase 2 — Customer & Vehicle Registration:**
+  - Sprint 1 — Registration foundation (OCR → customer + vehicle orchestration; duplicate-detection helpers).
+  - Sprint 2 — Customer Management foundation (list, detail, search, filters, profile editing, notes, derived status/tags, timeline).
+  - Sprint 3 — Vehicle Management foundation (list, detail, search, filters, profile editing, derived 車検 status/tags, service-history foundation, customer↔vehicle verification).
+  - Sprint 4 — OCR & AI enhancement (camera/file selection, mobile camera-first, review improvements, field-mapping and confidence/missing-field handling).
+  - Sprint 5 — OCR session & audit foundation (history viewer, status management, audit trail, existing-record selection, register/update decision flow).
+  - Sprint 6 — Integration QA & stabilization (flows verified; three integration bugs fixed). **Phase 2 CLOSED.**
+
+### 1.12 Future Roadmap Summary
+
+High-level direction only; the authoritative roadmap is `10_ROADMAP.md` / `11_Roadmap.md`:
+
+- **Phase 3 and beyond:** scope to be defined and approved by the architect before implementation begins.
+- **Pro+ AI Platform (deferred future modules):** provider-agnostic AI Gateway (dealer-owned keys), AI Marketing Agent, AI Reputation Agent, AI Growth Agent, and LINE Rich-Menu management. These are approved future features deferred until the core platform is stable in production.
+- **Editions:** continued support for the GYEON and Generic editions from a single codebase (see §1.5).
+
+> No AI-learning functionality is implied or authorized by this overview. Future modules are subject to separate specification and architect approval under the workflow in `README.md`.

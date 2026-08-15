@@ -10,13 +10,14 @@
 
 import { revalidatePath }  from "next/cache";
 import { createClient }    from "@/lib/supabase/server";
-import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 const STORAGE_BUCKET = "work-order-files";
 
 export async function deleteWorkOrderFile(fileId: string) {
-  const dealer = await getCurrentDealer();
-  if (!dealer) return { error: "No active dealer membership." };
+  const auth = await requireStaffCapability("delete");
+  if ("error" in auth) return { error: auth.error };
 
   const supabase = await createClient();
 
@@ -25,33 +26,46 @@ export async function deleteWorkOrderFile(fileId: string) {
     .from("work_order_files")
     .select("id, file_path, dealer_id")
     .eq("id",        fileId)
-    .eq("dealer_id", dealer.dealer_id)   // scope to current dealer
+    .eq("dealer_id", auth.dealerId)   // scope to current dealer
     .single();
 
   if (fetchError || !file) {
     return { error: "File not found or does not belong to your dealer." };
   }
 
-  // Delete from Supabase Storage using the DB-stored path.
-  const { error: storageError } = await supabase.storage
+  let admin: ReturnType<typeof createAdminClient>;
+  try {
+    admin = createAdminClient();
+  } catch {
+    console.error("[deleteWorkOrderFile] admin client unavailable");
+    return { error: "ファイルを削除できませんでした。時間をおいて再度お試しください。" };
+  }
+
+  // Delete from Supabase Storage using the exact DB-stored path. Authenticated
+  // clients are intentionally not granted a broad direct DELETE capability.
+  const { error: storageError } = await admin.storage
     .from(STORAGE_BUCKET)
     .remove([file.file_path]);
 
   if (storageError) {
-    // Log but proceed — the file may have already been removed from storage.
-    console.warn("[deleteWorkOrderFile] storage remove warning:", storageError.message);
+    console.error("[deleteWorkOrderFile] storage remove failed");
+    return { error: "ファイルを削除できませんでした。時間をおいて再度お試しください。" };
   }
 
-  // Delete the DB record.
-  const { error: deleteError } = await supabase
+  // Delete the metadata only after checked Storage success. Exact id, dealer,
+  // and path predicates prevent a stale lookup from deleting a changed row.
+  const { data: deletedRow, error: deleteError } = await admin
     .from("work_order_files")
     .delete()
     .eq("id",        fileId)
-    .eq("dealer_id", dealer.dealer_id);   // double-scope for safety
+    .eq("dealer_id", auth.dealerId)
+    .eq("file_path", file.file_path)
+    .select("id")
+    .maybeSingle();
 
-  if (deleteError) {
-    console.error("[deleteWorkOrderFile] db delete error:", deleteError.message);
-    return { error: deleteError.message };
+  if (deleteError || !deletedRow) {
+    console.error("[deleteWorkOrderFile] metadata delete failed");
+    return { error: "ファイル情報を削除できませんでした。時間をおいて再度お試しください。" };
   }
 
   revalidatePath("/work-orders");

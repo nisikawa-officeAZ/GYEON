@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
-import { DocumentSequenceDB, DocumentSequenceType, defaultPrefix } from "./numbering-types";
+import { DocumentSequenceDB, DocumentSequenceType, defaultPrefix, defaultResetPolicy } from "./numbering-types";
 
 const ALL_TYPES: DocumentSequenceType[] = [
   "estimate",
@@ -13,6 +13,8 @@ const ALL_TYPES: DocumentSequenceType[] = [
   "maintenance_reminder",
   "product_order",
   "reservation",
+  // MONTHLY-DATA-B2: the settings list surfaces monthly_invoice alongside the existing types.
+  "monthly_invoice",
 ];
 
 /**
@@ -47,7 +49,8 @@ export async function getDocumentSequences(): Promise<DocumentSequenceDB[]> {
       sequence_type:  t,
       prefix:         defaultPrefix(t),
       padding:        5,
-      reset_policy:   "never",
+      // MONTHLY-DATA-B2: only monthly_invoice defaults to monthly; every existing type stays "never".
+      reset_policy:   defaultResetPolicy(t),
       fiscal_year:    0,
       current_number: 0,
       created_at:     "",

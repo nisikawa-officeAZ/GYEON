@@ -131,7 +131,7 @@ export default function UsersAdminClient() {
     startTransition(async () => {
       const result = await deleteUserAdmin(userId);
       if (result.success) {
-        showToast("ユーザーを削除しました", "success");
+        showToast("ユーザーを完全削除しました", "success");
         setUsers((prev) => prev.filter((u) => u.id !== userId));
       } else {
         showToast(result.error ?? "エラーが発生しました", "error");
@@ -162,7 +162,7 @@ export default function UsersAdminClient() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Toast */}
       {toast && (
         <div
@@ -179,8 +179,8 @@ export default function UsersAdminClient() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">Users</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{users.length} 件</p>
+          <h1 className="text-sm font-semibold text-slate-100">ユーザー一覧</h1>
+          <p className="text-xs text-slate-500 mt-0.5">{users.length} 件</p>
         </div>
         <input
           type="text"
@@ -194,25 +194,25 @@ export default function UsersAdminClient() {
       {/* Table */}
       <div className="bg-[#0f172a] border border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-slate-800">
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="text-left px-3 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">
                   メール
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="text-left px-3 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">
                   ディーラー
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="text-left px-3 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">
                   登録日
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="text-left px-3 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">
                   最終ログイン
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="text-left px-3 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">
                   ステータス
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <th className="text-left px-3 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">
                   操作
                 </th>
               </tr>
@@ -235,7 +235,7 @@ export default function UsersAdminClient() {
                   const banned = isBanned(user.banned_until);
                   return (
                     <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <button
                           onClick={() => {
                             setNewEmail(user.email ?? "");
@@ -247,7 +247,7 @@ export default function UsersAdminClient() {
                         </button>
                         <div className="text-xs text-slate-600 mt-0.5 font-mono">{user.id.slice(0, 8)}…</div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         {user.dealer_name ? (
                           <div>
                             <div className="text-slate-300">{user.dealer_name}</div>
@@ -257,9 +257,9 @@ export default function UsersAdminClient() {
                           <span className="text-slate-600">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-400 text-xs">{formatDate(user.created_at)}</td>
-                      <td className="px-4 py-3 text-slate-400 text-xs">{formatDate(user.last_sign_in_at)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2 text-slate-400 text-xs">{formatDate(user.created_at)}</td>
+                      <td className="px-3 py-2 text-slate-400 text-xs">{formatDate(user.last_sign_in_at)}</td>
+                      <td className="px-3 py-2">
                         {banned ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-900/50 text-red-300 border border-red-700/50">
                             停止中
@@ -274,7 +274,7 @@ export default function UsersAdminClient() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">
                         <div className="flex flex-wrap items-center gap-1">
                           <button
                             onClick={() => handlePasswordReset(user.id, user.email)}
@@ -308,7 +308,7 @@ export default function UsersAdminClient() {
                             disabled={isPending}
                             className="text-xs px-2 py-1 bg-red-900/50 hover:bg-red-800/60 text-red-300 rounded transition-colors disabled:opacity-50"
                           >
-                            削除
+                            完全削除
                           </button>
                         </div>
                       </td>
@@ -326,7 +326,7 @@ export default function UsersAdminClient() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-[#0f172a] border border-slate-700 rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
             <h2 className="text-base font-bold text-slate-100">仮パスワード発行</h2>
-            <div className="text-sm text-amber-400 bg-amber-900/20 border border-amber-700/30 rounded-lg px-4 py-3">
+            <div className="text-sm text-amber-400 bg-amber-900/20 border border-amber-700/30 rounded-lg px-3 py-2">
               このパスワードはここにのみ表示されます。安全な方法でユーザーに伝えてください。
             </div>
             {modal.email && (
@@ -335,7 +335,7 @@ export default function UsersAdminClient() {
               </div>
             )}
             <div className="relative">
-              <div className="font-mono text-lg font-bold text-slate-100 bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 tracking-widest select-all">
+              <div className="font-mono text-lg font-bold text-slate-100 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 tracking-widest select-all">
                 {modal.password}
               </div>
               <button
@@ -367,7 +367,7 @@ export default function UsersAdminClient() {
       {modal.type === "deleteConfirm" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-[#0f172a] border border-slate-700 rounded-xl p-6 w-full max-w-md mx-4 space-y-4">
-            <h2 className="text-base font-bold text-red-400">ユーザーを削除</h2>
+            <h2 className="text-base font-bold text-red-400">ユーザーを完全削除</h2>
             <p className="text-sm text-slate-300">
               この操作は取り消せません。
               {modal.email && (
@@ -401,7 +401,7 @@ export default function UsersAdminClient() {
                 disabled={deleteInput !== "DELETE" || isPending}
                 className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white text-sm rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                削除する
+                完全削除する
               </button>
             </div>
           </div>

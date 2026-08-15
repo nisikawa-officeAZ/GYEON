@@ -5,6 +5,9 @@ import Link        from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { createPendingDealer } from "@/lib/dealer/create-pending-dealer";
+import { claimGyeonProvisioning } from "@/lib/dealer/claim-gyeon-provisioning";
+import { checkEmailAccountState } from "@/lib/dealer/check-email-account-state";
+import Brand from "@/components/ui/Brand";
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -43,6 +46,23 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
+      // State-aware pre-check — block re-registration of an email that already
+      // has a dealer account, with a message that matches its state. This also
+      // prevents duplicate dealer/member creation for returning users.
+      const emailState = await checkEmailAccountState(email);
+      if (emailState.state === "suspended") {
+        setError("このメールアドレスは停止中です。管理者へ復活申請してください。");
+        return;
+      }
+      if (emailState.state === "active") {
+        setError("このメールアドレスはすでに登録されています。ログイン画面からサインインしてください。");
+        return;
+      }
+      if (emailState.state === "pending") {
+        setError("このメールアドレスの申請は現在審査中です。承認をお待ちください。");
+        return;
+      }
+
       const supabase = createClient();
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -54,13 +74,44 @@ export default function SignUpPage() {
 
       if (signUpError) {
         const msg = signUpError.message.toLowerCase();
+        // Supabase AuthApiError carries a stable `code`; errors raised before a response
+        // (network, abort) leave it undefined. Classify on the code FIRST and fall back to
+        // message matching, because messages are prose and change between releases.
+        //
+        // The message must never be broader than the condition it names. A previous
+        // `msg.includes("email")` catch-all sat here and rendered EVERY email-related failure
+        // as a format error — including "Email rate limit exceeded" — so the operator was told
+        // to correct an address that was already correct, and would keep editing it while the
+        // real cause was a send limit that only time resolves.
+        const code = signUpError.code ?? "";
         if (msg.includes("already registered") || msg.includes("already exists")) {
           setError("このメールアドレスはすでに登録されています。ログイン画面からサインインしてください。");
         } else if (msg.includes("password")) {
           setError("パスワードの形式が正しくありません。");
-        } else if (msg.includes("email")) {
+        } else if (
+          code === "over_email_send_rate_limit" ||
+          code === "over_request_rate_limit" ||
+          msg.includes("rate limit") ||
+          msg.includes("you can only request this after")
+        ) {
+          setError("メール送信の回数制限に達しました。しばらく時間をおいてから再度お試しください。");
+        } else if (
+          code === "signup_disabled" ||
+          code === "email_provider_disabled" ||
+          msg.includes("signups not allowed") ||
+          msg.includes("signups are disabled")
+        ) {
+          setError("現在、新規登録を受け付けていません。管理者にお問い合わせください。");
+        } else if (
+          code === "email_address_invalid" ||
+          (msg.includes("email") && msg.includes("invalid"))
+        ) {
+          // ONLY a genuine address/format rejection reaches this message.
           setError("メールアドレスの形式が正しくありません。");
         } else {
+          // Everything else, including confirmation-email DELIVERY failures such as
+          // "Error sending confirmation email", which is a server-side send fault and
+          // says nothing about the address the operator typed.
           setError("アカウントの作成に失敗しました。しばらく待ってから再試行してください。");
         }
         return;
@@ -84,11 +135,33 @@ export default function SignUpPage() {
       });
 
       if (!dealerResult.success) {
-        setError("店舗情報の登録に失敗しました。しばらく待ってから再試行してください。");
+        if (dealerResult.error === "account_exists") {
+          setError("このメールアドレスはすでに登録されています。ログイン画面からサインインしてください。");
+        } else {
+          setError("店舗情報の登録に失敗しました。しばらく待ってから再試行してください。");
+        }
         return;
       }
 
       const needsConfirmation = !data.session;
+
+      // GYEON partner onboarding: with an auto-confirmed session (dev,
+      // confirmations off) the verification boundary is already crossed, so
+      // converge the pre-provisioned claim here. Gate-guarded, session-derived,
+      // idempotent — any non-claimed outcome falls through to the existing
+      // pending screen unchanged.
+      if (!needsConfirmation) {
+        try {
+          const claim = await claimGyeonProvisioning();
+          if (claim.kind === "claimed") {
+            router.push("/shop-profile");
+            return;
+          }
+        } catch {
+          // fall through to the standard pending screen
+        }
+      }
+
       router.push(`/signup/pending?confirm=${needsConfirmation ? "1" : "0"}`);
     } catch {
       setError("予期しないエラーが発生しました。再度お試しください。");
@@ -110,18 +183,7 @@ export default function SignUpPage() {
 
         {/* ── Brand header ───────────────────────────────────────────────── */}
         <div className="mb-8 text-center flex flex-col items-center gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "var(--gs-blue, #4f8ef7)" }}
-            >
-              <span className="text-white text-xl font-black tracking-tight">G</span>
-            </div>
-            <div className="text-left">
-              <p className="text-[10px] font-bold text-[#55556a] tracking-[2.5px] uppercase">GYEON</p>
-              <p className="text-base font-bold text-[#f0f0f5] leading-tight">Detailer Agent</p>
-            </div>
-          </div>
+          <Brand size={56} />
           <p className="text-xs text-[#55556a]">ディーラー登録申請</p>
         </div>
 

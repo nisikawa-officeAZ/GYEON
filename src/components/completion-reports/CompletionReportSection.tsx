@@ -17,7 +17,6 @@ import {
 } from "@/lib/completion-reports/get-completion-report";
 import CompletionReportForm    from "./CompletionReportForm";
 import CompletionReportPreview from "./CompletionReportPreview";
-import DocumentPdfActions      from "@/components/pdf/DocumentPdfActions";
 
 const STATUS_BADGE: Record<string, string> = {
   draft:     "bg-slate-600 text-slate-100",
@@ -86,21 +85,36 @@ export default function CompletionReportSection({ workOrderId }: CompletionRepor
             ← 一覧に戻る
           </button>
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => window.print()}
-              className="text-xs bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-3 py-1.5 rounded-lg transition-colors"
-            >
-              印刷 / PDF保存
-            </button>
-            <DocumentPdfActions
-              documentType="completion_report"
-              documentId={view.data.report.id}
-              documentNumber={view.data.report.report_number ?? `RPT-${view.data.report.id.slice(0, 8).toUpperCase()}`}
-              onGenerate={async () => {
-                const { generateCompletionReportPdf } = await import("@/lib/pdf/generate-completion-report-pdf");
-                return generateCompletionReportPdf(view.data.report.id);
-              }}
-            />
+            {/* TEMPLATE-C2-WR: the adopted 作業内容書 renders on demand through the authenticated
+                route (inline / download). It appears only when the linked work order is completed
+                and a completion date is registered — the monetary-free document has no other
+                source. It never mutates the report or work order. */}
+            {view.data.work_order?.status === "completed" &&
+            typeof view.data.work_order?.actual_end_at === "string" &&
+            view.data.work_order.actual_end_at.trim() !== "" ? (
+              <>
+                <a
+                  href={`/pdf/work-report?reportId=${encodeURIComponent(view.data.report.id)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  作業内容書を表示
+                </a>
+                <a
+                  href={`/pdf/work-report?reportId=${encodeURIComponent(view.data.report.id)}&download=1`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  作業内容書をダウンロード
+                </a>
+              </>
+            ) : (
+              <p className="text-[11px] text-amber-400/90">
+                作業内容書を出力するには、施工指示を完了し作業完了日を登録してください。
+              </p>
+            )}
           </div>
         </div>
         <CompletionReportPreview data={view.data} previewAll={true} />

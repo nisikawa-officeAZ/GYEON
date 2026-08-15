@@ -12,6 +12,8 @@ export type OcrStatus =
 export type VehicleRegistrationOcrResult = {
   owner_name?:             string;  // 所有者氏名
   user_name?:              string;  // 使用者氏名
+  owner_name_kana?:        string;  // 所有者氏名フリガナ（記載がある場合のみ）
+  user_name_kana?:         string;  // 使用者氏名フリガナ（記載がある場合のみ）
   owner_address?:          string;  // 所有者住所
   user_address?:           string;  // 使用者住所
   vehicle_name?:           string;  // 車名
@@ -24,7 +26,8 @@ export type VehicleRegistrationOcrResult = {
   license_plate_class?:    string;  // 分類番号（3桁）
   license_plate_kana?:     string;  // かな文字
   license_plate_number?:   string;  // 指定番号（4桁）
-  first_registration_date?: string; // 初年度登録年月 YYYY-MM
+  first_registration_date?: string; // 初度登録年月 YYYY-MM (first registration → 年式/vehicle age)
+  registration_date?:       string; // 登録年月日 YYYY-MM-DD (current registration date)
   inspection_expiry_date?:  string; // 車検有効期限 YYYY-MM-DD
   vehicle_type?:           string;  // 車両種別
   use_type?:               string;  // 用途
@@ -34,6 +37,11 @@ export type VehicleRegistrationOcrResult = {
   displacement?:           string;  // 排気量（例: 1998cc）
   color?:                  string;  // 色
   notes?:                  string;  // 備考・その他
+  // ─ Customer mapping (Japanese registration rule: owner ≠ user) ─
+  customer_candidate_name?:    string; // 顧客として反映する氏名（使用者優先）
+  customer_candidate_address?: string; // 顧客として反映する住所
+  customer_type?:              string; // individual / corporation / unknown
+  owner_user_separated?:       string; // "true" / "false" / "unknown"
   confidence?:             number;  // 0-1 overall confidence
 };
 
@@ -63,6 +71,19 @@ export interface VehicleRegistrationFile {
   updated_at:      string;
 }
 
+// Execution metadata for a single OCR AI run (for operator diagnostics)
+export interface OcrRunMeta {
+  provider: string;            // e.g. "openai"
+  model: string | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  totalTokens: number | null;
+  responseMs: number;          // wall-clock of the AI call
+  estimatedCostUsd: number | null;
+  promptVersion?: string | null;
+  quality?: import("./ocr-quality").OcrQualityReport | null; // per-scan quality report
+}
+
 // Result returned after upload + OCR analysis
 export type UploadResult =
   | {
@@ -71,8 +92,9 @@ export type UploadResult =
       ocrResult:        VehicleRegistrationOcrResult;
       sessionId?:       string;   // Set when migration 068 is applied
       sessionPersisted?: boolean; // true = session + file link saved to DB
+      ocrMeta?:         OcrRunMeta; // AI execution metadata (additive; for operator diagnostics)
     }
-  | { success: false; error: string };
+  | { success: false; error: string; errorCode?: string };
 
 // Params for confirming an OCR result and applying selected fields
 export interface ConfirmOcrResultParams {
@@ -107,6 +129,8 @@ export const OCR_TO_VEHICLE_MAP: Partial<Record<keyof VehicleRegistrationOcrResu
 export const OCR_FIELD_LABELS: Record<keyof VehicleRegistrationOcrResult, string> = {
   owner_name:             "所有者氏名",
   user_name:              "使用者氏名",
+  owner_name_kana:        "所有者氏名フリガナ",
+  user_name_kana:         "使用者氏名フリガナ",
   owner_address:          "所有者住所",
   user_address:           "使用者住所",
   vehicle_name:           "車名",
@@ -119,7 +143,8 @@ export const OCR_FIELD_LABELS: Record<keyof VehicleRegistrationOcrResult, string
   license_plate_class:    "分類番号",
   license_plate_kana:     "かな",
   license_plate_number:   "指定番号",
-  first_registration_date: "初年度登録",
+  first_registration_date: "初度登録年月",
+  registration_date:       "登録年月日",
   inspection_expiry_date:  "車検有効期限",
   vehicle_type:           "車両種別",
   use_type:               "用途",
@@ -127,7 +152,11 @@ export const OCR_FIELD_LABELS: Record<keyof VehicleRegistrationOcrResult, string
   body_shape:             "車体形状",
   fuel_type:              "燃料種類",
   displacement:           "排気量",
-  color:                  "色",
+  color:                  "ボディカラー",
   notes:                  "備考",
+  customer_candidate_name:    "顧客反映氏名",
+  customer_candidate_address: "顧客反映住所",
+  customer_type:              "顧客種別",
+  owner_user_separated:       "所有者・使用者の相違",
   confidence:             "信頼度",
 };

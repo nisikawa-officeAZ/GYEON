@@ -73,3 +73,11 @@ export type CustomerInsert = {
 
 // Fields accepted on UPDATE — id and dealer_id are used as scope, not changed.
 export type CustomerUpdate = Partial<Omit<CustomerInsert, "dealer_id">>;
+
+// Phase 2 Sprint 1 — query params for dealer-scoped duplicate detection.
+// dealer_id is never part of this query; it is always resolved server-side.
+export interface CustomerDuplicateQuery {
+  last_name?:  string;
+  first_name?: string;
+  phone?:      string;
+}

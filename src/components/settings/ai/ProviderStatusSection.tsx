@@ -33,9 +33,9 @@ const COST_LABEL: Record<string, string> = {
 };
 
 const QUALITY_LABEL: Record<string, string> = {
-  good:   "Good",
-  better: "Better",
-  best:   "Best",
+  good:   "良好",
+  better: "高品質",
+  best:   "最高品質",
 };
 
 interface ProviderStatusSectionProps {
@@ -82,7 +82,7 @@ export default function ProviderStatusSection({
                     {card.display_name}
                   </p>
                   {card.is_primary && (
-                    <span className="text-[9px] text-blue-400 font-medium">PRIMARY</span>
+                    <span className="text-[9px] text-blue-400 font-medium">メイン</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5">

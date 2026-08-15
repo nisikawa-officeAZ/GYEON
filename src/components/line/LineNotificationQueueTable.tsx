@@ -111,7 +111,16 @@ export default function LineNotificationQueueTable({ items, onChanged }: Props) 
                 <td className="px-4 py-3 text-[10px] text-red-400 hidden xl:table-cell max-w-[160px] truncate">
                   {item.error_message ?? "—"}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
+                  {/* Read-only link to the customer's record / activity log when applicable. */}
+                  {item.customer_id && (
+                    <a
+                      href={`/customers/${item.customer_id}`}
+                      className="text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-700/40 px-2 py-1 rounded transition-colors"
+                    >
+                      履歴
+                    </a>
+                  )}
                   {item.status === "scheduled" && (
                     <button
                       type="button"

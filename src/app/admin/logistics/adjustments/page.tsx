@@ -4,7 +4,7 @@ import { getAdjustmentFormData, getRecentWarehouseAdjustments } from "@/lib/admi
 import AdjustmentsClient from "./AdjustmentsClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Stock Adjustments | GYEON Logistics" };
+export const metadata = { title: "在庫調整 | GYEON Logistics" };
 
 export default async function AdjustmentsPage() {
   const admin = await getCurrentAdmin();

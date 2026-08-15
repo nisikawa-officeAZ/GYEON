@@ -207,7 +207,6 @@ These items are confirmed out of V1.0 scope.
 | /products dynamic-server log silence | Minor |
 | PWA service worker cache hardening | Phase D |
 | Evaluate iframe → native React for live-data screens | Phase D |
-| Remove duplicate legacy migration (001 PASTE_ONLY) | Requires additive-safe process |
 
 ### 3d. Phase E (V2.0 — Documented Scope)
 

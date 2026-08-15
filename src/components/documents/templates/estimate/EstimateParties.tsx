@@ -1,0 +1,98 @@
+// EstimateCustomerBlock / EstimateVehicleBlock / EstimateIssuerBlock — the 3-column party grid
+// (01 Customer / 02 Vehicle / 03 Issuer) from concept-b. Built from shared primitives; the numbered
+// marker is shared internally. Issuer identity is injected from BrandProfile.
+
+import { View, Image } from "@react-pdf/renderer";
+import type { ReactNode } from "react";
+import { Row, Stack, Overline, Caption, Value, ValueLg } from "../../primitives";
+import { COLOR, FS } from "../../tokens";
+import { honorific } from "../../brand";
+import type { BrandProfile } from "../../types";
+import type { EstimateCustomer, EstimateVehicle } from "./estimate-data";
+
+function PartyMarker({ num, en, ja, accent }: { num: string; en: string; ja: string; accent: string }) {
+  return (
+    <Row gap={6} style={{ alignItems: "center", marginBottom: 2 }}>
+      <Value style={{ fontFamily: undefined, fontSize: FS.fs14, color: accent }}>{num}</Value>
+      <Overline style={{ color: accent }}>{en}</Overline>
+      <Caption style={{ fontSize: FS.fs9 }}>{ja}</Caption>
+    </Row>
+  );
+}
+
+function KV({ k, v }: { k: string; v?: string }) {
+  if (!v) return null;
+  return (
+    <Row gap={6} style={{ marginBottom: 0.5 }}>
+      <Caption style={{ width: 46, color: COLOR.textMuted, lineHeight: 1.2 }}>{k}</Caption>
+      <Value style={{ flex: 1, fontSize: FS.fs10, lineHeight: 1.2 }}>{v}</Value>
+    </Row>
+  );
+}
+
+function Column({ children }: { children: ReactNode }) {
+  return <Stack style={{ flex: 1, paddingRight: 6 }}>{children}</Stack>;
+}
+
+export function EstimateCustomerBlock({ customer, accent }: { customer: EstimateCustomer; accent: string }) {
+  return (
+    <Column>
+      <PartyMarker num="01" en="Customer" ja="お客様情報" accent={accent} />
+      {/* An honorific with no name to attach to is not a courtesy, it is a stray 御中 on the page.
+          When the customer record carries no name, the whole line is omitted rather than printed
+          half-empty. */}
+      {customer.name.trim() ? (
+        <Row gap={4} style={{ alignItems: "flex-end", marginBottom: 3 }}>
+          <ValueLg>{customer.name}</ValueLg>
+          <Value style={{ marginBottom: 1 }}>{honorific(customer.kind)}</Value>
+        </Row>
+      ) : null}
+      {customer.postalCode || customer.address ? (
+        <Caption style={{ marginBottom: 3 }}>
+          {customer.postalCode ? `〒${customer.postalCode}  ` : ""}
+          {customer.address ?? ""}
+        </Caption>
+      ) : null}
+      <KV k="TEL" v={customer.tel} />
+      <KV k="Email" v={customer.email} />
+    </Column>
+  );
+}
+
+export function EstimateVehicleBlock({ vehicle, accent }: { vehicle: EstimateVehicle; accent: string }) {
+  return (
+    <Column>
+      <PartyMarker num="02" en="Vehicle" ja="車両情報" accent={accent} />
+      {vehicle.name ? <ValueLg style={{ fontSize: FS.fs16, marginBottom: 2 }}>{vehicle.name}</ValueLg> : null}
+      <KV k="メーカー" v={vehicle.maker} />
+      <KV k="年式" v={vehicle.year} />
+      <KV k="グレード" v={vehicle.grade} />
+      <KV k="ナンバー" v={vehicle.plate} />
+      <KV k="ボディカラー" v={vehicle.color} />
+      <KV k="走行距離" v={vehicle.mileage} />
+    </Column>
+  );
+}
+
+export function EstimateIssuerBlock({ brand, accent }: { brand: BrandProfile; accent: string }) {
+  const c = brand.contact;
+  return (
+    <Column>
+      <PartyMarker num="03" en="Issuer" ja="発行元" accent={accent} />
+      {brand.logoUrl ? (
+        <Image src={brand.logoUrl} style={{ height: 25.5, maxWidth: "100%", objectFit: "contain", alignSelf: "flex-start", marginBottom: 3 }} />
+      ) : null}
+      <ValueLg style={{ fontSize: FS.fs14, marginBottom: 2 }}>{brand.brandNameJa || brand.brandNameEn || ""}</ValueLg>
+      {c.postalCode || c.address ? (
+        <Caption style={{ marginBottom: 3 }}>
+          {c.postalCode ? `〒${c.postalCode}  ` : ""}
+          {c.address ?? ""}
+        </Caption>
+      ) : null}
+      <KV k="TEL" v={c.tel} />
+      <KV k="FAX" v={c.fax} />
+      <KV k="ランク" v={brand.business.shopRankLabel || brand.business.shopRank} />
+      <KV k="登録番号" v={brand.business.invoiceRegistrationNumber} />
+    </Column>
+  );
+}

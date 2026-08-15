@@ -4,10 +4,10 @@ import { useState, useMemo } from "react";
 import type { LogisticsBackorderRow } from "@/lib/admin/logistics/logistics-types";
 
 const STATUS_LABELS: Record<string, string> = {
-  waiting:   "Waiting",
-  partial:   "Partial",
-  fulfilled: "Fulfilled",
-  cancelled: "Cancelled",
+  waiting:   "入荷待ち",
+  partial:   "一部入荷",
+  fulfilled: "完了",
+  cancelled: "キャンセル",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -42,9 +42,9 @@ export default function LogisticsBackordersClient({ initialBackorders }: Props) 
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-white">Backorder Center</h1>
+        <h1 className="text-xl font-semibold text-white">バックオーダーセンター</h1>
         <p className="text-sm text-slate-400 mt-0.5">
-          {waitingCount} waiting · {partialCount} partial
+          入荷待ち {waitingCount}件 · 一部入荷 {partialCount}件
         </p>
       </div>
 
@@ -60,13 +60,13 @@ export default function LogisticsBackordersClient({ initialBackorders }: Props) 
                 : "bg-slate-800 text-slate-400 hover:text-white",
             ].join(" ")}
           >
-            {s === "all" ? "All" : STATUS_LABELS[s]}
+            {s === "all" ? "すべて" : STATUS_LABELS[s]}
           </button>
         ))}
 
         <input
           type="text"
-          placeholder="Search…"
+          placeholder="検索…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="ml-auto bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500 w-52"
@@ -76,15 +76,15 @@ export default function LogisticsBackordersClient({ initialBackorders }: Props) 
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-sm text-slate-500">
           {initialBackorders.length === 0
-            ? "No backorders. Create backorder records from the shipment queue or via admin actions."
-            : "No results match the current filters."}
+            ? "バックオーダーはありません。出荷キューまたは管理操作からバックオーダー記録を作成してください。"
+            : "現在のフィルターに一致する結果がありません。"}
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-700/50">
-                {["Status", "Dealer", "Product", "Order #", "Ordered", "Waiting", "Expected", "Target Delivery"].map((h) => (
+                {["ステータス", "ディーラー", "商品", "注文番号", "注文数", "入荷待ち", "入荷予定", "納品目標"].map((h) => (
                   <th key={h} className="text-left px-3 py-2.5 text-xs font-medium text-slate-400 uppercase whitespace-nowrap">{h}</th>
                 ))}
               </tr>

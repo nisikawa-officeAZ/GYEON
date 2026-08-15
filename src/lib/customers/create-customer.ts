@@ -10,6 +10,9 @@ import { revalidatePath } from "next/cache";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { createActivityLog } from "@/lib/activity/activity-log";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
+import { createEngagementEvent } from "@/lib/customer-engagement/context";
+import { EngagementWorkflowRuntime } from "@/lib/customer-engagement/engine/runtime";
 
 function str(formData: FormData, key: string): string | null {
   return (formData.get(key) as string | null)?.trim() || null;
@@ -23,23 +26,50 @@ function parseDiscountPct(formData: FormData): number {
 }
 
 export async function createCustomer(formData: FormData) {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "ディーラー認証に失敗しました" };
 
-  const lastName = str(formData, "last_name");
-  if (!lastName) return { error: "姓は必須です" };
+  // Full customer/company name → customers.name (NOT NULL). The estimate flow
+  // sends "name"; legacy forms send last_name/first_name (build the full name).
+  const explicitName = str(formData, "name") || str(formData, "customer_name");
+  const lastName     = str(formData, "last_name");
+  const firstName    = str(formData, "first_name");
+  const fullName     = explicitName || ([lastName, firstName].filter(Boolean).join(" ").trim() || null);
+
+  // Debug-safe: presence + length only, never the personal value.
+  console.log("[createCustomer] hasCustomerName:", !!fullName, "customerNameLength:", fullName?.length ?? 0);
+  if (!fullName) return { error: "お客様名を入力してください。" };
 
   const supabase = await createClient();
 
-  const firstName   = str(formData, "first_name");
   const isBusiness  = formData.get("is_business") === "true";
   const discountPct = isBusiness ? parseDiscountPct(formData) : 0;
   const creditTerms = isBusiness ? str(formData, "credit_terms") : null;
 
+  // G6 — business billing fields. Only included for business customers, so
+  // non-business creation never references these columns (safe before the
+  // migrations run). Requires migrations 100 (closing_day/payment_day) and 101
+  // (accounts_receivable_allowed) to be applied.
+  const dayOrNull = (v: string | null): number | null => {
+    const n = parseInt(v ?? "", 10);
+    return n >= 1 && n <= 31 ? n : null;
+  };
+  const businessBilling = isBusiness
+    ? {
+        closing_day:                 dayOrNull(str(formData, "closing_day")),
+        payment_day:                 dayOrNull(str(formData, "payment_day")),
+        accounts_receivable_allowed: formData.get("accounts_receivable_allowed") === "true",
+      }
+    : {};
+
   const { data: newCustomer, error } = await supabase.from("customers").insert({
     dealer_id:          dealer.dealer_id,   // server-injected — never from form
     customer_code:      str(formData, "customer_code"),
-    last_name:          lastName,
+    name:               fullName,           // NOT-NULL column — always the full name
+    last_name:          lastName ?? fullName, // legacy compatibility
     first_name:         firstName,
     last_name_kana:     str(formData, "last_name_kana"),
     first_name_kana:    str(formData, "first_name_kana"),
@@ -58,6 +88,7 @@ export async function createCustomer(formData: FormData) {
     is_business:        isBusiness,
     trade_discount_pct: discountPct,
     credit_terms:       creditTerms,
+    ...businessBilling,
   }).select("id, last_name, first_name").single();
 
   if (error) {
@@ -74,6 +105,16 @@ export async function createCustomer(formData: FormData) {
     action:      "created",
     title:       `顧客を作成: ${newCustomer.last_name}${newCustomer.first_name ? ` ${newCustomer.first_name}` : ""}`.trim(),
   });
+
+  // Phase 4 Sprint 5 — emit CUSTOMER_CREATED for the welcome engagement flow.
+  // dealer_id is resolved server-side inside createEngagementEvent; runtime never throws.
+  const event = await createEngagementEvent("CUSTOMER_CREATED", newCustomer.id, {
+    customer_name: `${newCustomer.last_name}${newCustomer.first_name ? ` ${newCustomer.first_name}` : ""}`.trim(),
+    has_line:      !!str(formData, "line_user_id"),
+  });
+  if (event) {
+    await new EngagementWorkflowRuntime().dispatch(event);
+  }
 
   revalidatePath("/customers");
   return { success: true, customerId: newCustomer.id };

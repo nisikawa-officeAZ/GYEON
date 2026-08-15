@@ -1,20 +1,45 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   EstimateDB,
   EstimateItemDB,
   estimateDisplayNo,
   estimateCustomerName,
-  estimateVehicleLabel,
 } from "@/lib/estimates/estimate-types";
+import { createInvoiceFromEstimate } from "@/lib/invoices/create-invoice";
+import { sortByCategoryOrder } from "@/lib/estimates/category-order";
 import EstimateSummary from "./EstimateSummary";
+import EstimateStatusControl from "./EstimateStatusControl";
+import EstimateLineAction from "./EstimateLineAction";
+import EstimateLineHistory from "./EstimateLineHistory";
+import { sendEstimateLine } from "@/lib/line/send-estimate-line";
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+// v17 workspace card. Presentation only — no data/logic here.
+function Card({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="flex justify-between items-start gap-4 py-2 border-b border-slate-700/50 last:border-b-0">
+    <div className="bg-[#111a2b] border border-slate-700/60 rounded-xl shadow-lg p-5">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{title}</h3>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// Field row: label (left) / value (right). Empty values render as a subtle 未入力
+// placeholder so unfilled fields read as editable-later, per the v17 reference.
+function FieldRow({ label, value }: { label: string; value: string | null | undefined }) {
+  const empty = value == null || value === "" || value === "—";
+  return (
+    <div className="flex justify-between items-start gap-4 py-2 border-b border-slate-700/40 last:border-b-0">
       <span className="text-xs text-slate-500 shrink-0 w-32">{label}</span>
-      <span className="text-xs text-slate-200 text-right">{value}</span>
+      <span className={`text-xs text-right ${empty ? "text-slate-600" : "text-slate-200"}`}>
+        {empty ? "未入力" : value}
+      </span>
     </div>
   );
 }
@@ -24,62 +49,123 @@ function formatYen(n: number) {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  coating:  "コーティング",
-  ppf:      "PPF",
-  window:   "ウィンドウ",
-  interior: "インテリア",
-  glass:    "ガラス",
-  other:    "その他",
+  coating:     "コーティング",
+  ppf:         "PPF",
+  window:      "ウィンドウ",
+  interior:    "インテリア",
+  glass:       "ガラス",
+  other:       "その他",
+  maintenance: "メンテナンス",   // Plan A (migration 093)
+  carwash:     "洗車",
+  roomclean:   "ルームクリーニング",
 };
 
 interface EstimateDetailProps {
   estimate:             EstimateDB;
   onClose:              () => void;
   onCreateWorkOrder?:   () => void;
+  /** "modal" (default) keeps the existing overlay; "page" renders in normal flow for a full-page route. */
+  variant?:             "modal" | "page";
+  /** F1-R1: dealer_settings.business_name, server-resolved; null omits the LINE template line. */
+  dealerDisplayName?:   string | null;
 }
 
-export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }: EstimateDetailProps) {
+export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, variant = "modal", dealerDisplayName = null }: EstimateDetailProps) {
   const customer = estimate.customers;
   const vehicle  = estimate.vehicles;
   const items    = estimate.estimate_items ?? [];
 
   const customerName = estimateCustomerName(customer);
-  const vehicleLabel = estimateVehicleLabel(vehicle);
+
+  // F1-R1 — bumped after a LINE attempt that may have logged a row, so the
+  // 送付履歴 card refetches without a full-page reload.
+  const [historyVersion, setHistoryVersion] = useState(0);
+
+  // Phase 3 Sprint 5 — Estimate → Invoice (one-click, mirrors the WO transition).
+  const router = useRouter();
+  const [invError, setInvError] = useState<string | null>(null);
+  const [invPending, startInvoice] = useTransition();
+  const isApproved = estimate.status === "approved" || estimate.status === "APPROVED";
+
+  function handleCreateInvoice() {
+    setInvError(null);
+    startInvoice(async () => {
+      const result = await createInvoiceFromEstimate(estimate.id);
+      if ("error" in result) {
+        setInvError(result.error);
+        return;
+      }
+      onClose();
+      router.push("/invoices");
+    });
+  }
+
+  // 「編集する」 navigates to the existing full editor route. No inline save, no
+  // new Server Action — the editor owns all save/validation logic.
+  function handleEdit() {
+    router.push(`/estimates/${estimate.id}/edit`);
+  }
+
+  const isPage = variant === "page";
+
+  const btn = "text-xs font-medium px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <div className={isPage
+      ? "flex justify-center px-4 pb-8"
+      : "fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto"}>
+      {/* Backdrop (modal only) */}
+      {!isPage && (
+        <div
+          className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
+          onClick={onClose}
+        />
+      )}
 
       {/* Panel */}
-      <div className="relative w-full max-w-3xl bg-[#0f172a] rounded-xl shadow-lg my-4">
+      <div className="relative w-full max-w-3xl bg-[#0b1220] rounded-xl shadow-lg my-4">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+        <div className="flex items-start justify-between gap-3 px-6 py-4 border-b border-slate-800">
           <div>
-            <h2 className="text-base font-semibold text-slate-100">{estimateDisplayNo(estimate)}</h2>
+            <h2 className="text-lg font-semibold text-slate-100">{estimateDisplayNo(estimate)}</h2>
             {estimate.title && (
               <p className="text-xs text-slate-400 mt-0.5">{estimate.title}</p>
             )}
-            <p className="text-xs text-slate-500 mt-0.5">見積詳細</p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="text-xs text-slate-500">見積詳細</span>
+              {/* Canonical workflow status (no legacy "送付済み" — status is not a transmission event). */}
+              <EstimateStatusControl estimateId={estimate.id} currentStatus={estimate.status} />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <button onClick={handleEdit} className={`${btn} bg-[#1d4ed8] hover:bg-[#1e40af] text-white`}>
+              編集する
+            </button>
             <Link
               href={`/pdf?estimateId=${estimate.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+              className={`${btn} bg-slate-700 hover:bg-slate-600 text-slate-200`}
             >
               PDF表示
             </Link>
+            {/* Immediate download — the SAME production renderer as the preview,
+                streamed straight to the operator. No Storage write, so this works
+                without the documents bucket. */}
+            <a
+              href={`/pdf/estimate?estimateId=${encodeURIComponent(estimate.id)}&download=1`}
+              className={`${btn} bg-slate-700 hover:bg-slate-600 text-slate-200`}
+            >
+              PDFダウンロード
+            </a>
             {onCreateWorkOrder && (
-              <button
-                onClick={onCreateWorkOrder}
-                className="text-xs font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-3 py-1.5 rounded-lg transition-colors"
-              >
+              <button onClick={onCreateWorkOrder} className={`${btn} bg-slate-700 hover:bg-slate-600 text-slate-200`}>
                 施工指示作成
+              </button>
+            )}
+            {isApproved && (
+              <button onClick={handleCreateInvoice} disabled={invPending} className={`${btn} bg-emerald-700 hover:bg-emerald-600 text-white`}>
+                {invPending ? "作成中..." : "請求書作成"}
               </button>
             )}
             <button
@@ -94,37 +180,61 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
         {/* Body */}
         <div className="p-6 flex flex-col gap-4">
 
+          {invError && (
+            <div className="px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10">
+              <p className="text-xs text-red-400">{invError}</p>
+            </div>
+          )}
+
           {/* Customer & Vehicle */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
-                顧客情報
-              </h3>
-              <InfoRow label="顧客名"  value={customerName} />
-              <InfoRow label="電話番号" value={customer?.phone ?? "—"} />
-              <InfoRow label="メール"   value={customer?.email ?? "—"} />
-            </div>
+            <Card title="顧客情報">
+              <FieldRow label="顧客名"  value={customerName} />
+              <FieldRow label="電話番号" value={customer?.phone} />
+              <FieldRow label="メール"   value={customer?.email} />
+            </Card>
 
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
-                車両情報
-              </h3>
-              <InfoRow label="メーカー"    value={vehicle?.maker        ?? "—"} />
-              <InfoRow label="車種"        value={vehicle?.model        ?? "—"} />
-              <InfoRow label="年式"        value={vehicle?.year         ?? "—"} />
-              <InfoRow label="グレード"    value={vehicle?.grade        ?? "—"} />
-              <InfoRow label="ナンバー"    value={vehicle?.plate_number ?? "—"} />
-            </div>
+            <Card title="車両情報">
+              <FieldRow label="メーカー"     value={vehicle?.maker} />
+              <FieldRow label="車種"         value={vehicle?.model} />
+              <FieldRow label="年式"         value={vehicle?.year} />
+              <FieldRow label="グレード"     value={vehicle?.grade} />
+              <FieldRow label="登録年月日"   value={vehicle?.registration_date} />
+              <FieldRow label="車検満了日"   value={vehicle?.inspection_expiry_date} />
+              <FieldRow label="ナンバー"     value={vehicle?.plate_number} />
+              <FieldRow label="ボディサイズ" value={vehicle?.body_size} />
+            </Card>
           </div>
+
+          {/* Store/dealer info is intentionally NOT shown here — it belongs only in
+              PDF / print / email / LINE output (see src/lib/pdf/dealer-branding.ts). */}
+
+          {/* Service Summary — grouped by the categories actually selected */}
+          {items.length > 0 && (
+            <Card title="サービス内容">
+              <div className="flex flex-col gap-3">
+                {Array.from(new Set(sortByCategoryOrder(items).map((i) => i.category))).map((cat) => (
+                  <div key={cat}>
+                    <p className="text-xs font-semibold text-blue-300">{CATEGORY_LABEL[cat] ?? cat}</p>
+                    <ul className="mt-1 flex flex-col gap-0.5">
+                      {items.filter((i) => i.category === cat).map((i) => (
+                        <li key={i.id} className="text-xs text-slate-300">
+                          ・{i.item_name}
+                          {i.description && <span className="text-slate-500">（{i.description}）</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
 
           {/* Line Items */}
           {items.length > 0 && (
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
-                明細
-              </h3>
+            <Card title="明細">
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full min-w-[480px] text-xs">
                   <thead>
                     <tr className="border-b border-slate-700 text-slate-500">
                       <th className="text-left pb-2 pr-3">カテゴリ</th>
@@ -136,9 +246,7 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
                     </tr>
                   </thead>
                   <tbody>
-                    {items
-                      .slice()
-                      .sort((a: EstimateItemDB, b: EstimateItemDB) => a.sort_order - b.sort_order)
+                    {sortByCategoryOrder(items)
                       .map((item: EstimateItemDB) => (
                         <tr key={item.id} className="border-b border-slate-700/40 last:border-b-0">
                           <td className="py-2 pr-3 text-slate-500 whitespace-nowrap">
@@ -167,19 +275,54 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder }:
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Card>
           )}
 
-          {/* Summary */}
+          {/* Summary (金額サマリー) */}
           <EstimateSummary estimate={estimate} />
 
-          {/* Notes */}
-          {estimate.notes && (
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">備考</h3>
-              <p className="text-xs text-slate-300 whitespace-pre-wrap">{estimate.notes}</p>
-            </div>
+          {/* Notes — customer note + internal memo */}
+          {(estimate.notes || estimate.internal_memo) && (
+            <Card title="備考・メモ">
+              <div className="flex flex-col gap-3">
+                {estimate.notes && (
+                  <div>
+                    <p className="text-[10px] text-slate-500 mb-0.5">お客様向け備考</p>
+                    <p className="text-xs text-slate-300 whitespace-pre-wrap">{estimate.notes}</p>
+                  </div>
+                )}
+                {estimate.internal_memo && (
+                  <div>
+                    <p className="text-[10px] text-slate-500 mb-0.5">社内メモ</p>
+                    <p className="text-xs text-slate-400 whitespace-pre-wrap">{estimate.internal_memo}</p>
+                  </div>
+                )}
+              </div>
+            </Card>
           )}
+
+          {/* 送付履歴 — transmission history is REAL data now (F1-R1): the card
+              reads the tenant-scoped line_message_logs projection and renders
+              truthful sent/failed/unconfirmed/cancelled states. The empty text
+              appears only after a SUCCESSFUL read returns zero rows. */}
+          <Card title="送付履歴">
+            <EstimateLineHistory estimateId={estimate.id} version={historyVersion} />
+          </Card>
+
+          {/* LINE delivery (R90B Phase 1 → F1-R1 editable message). The action
+              receives the persisted estimate id and the dealer-scoped Server
+              Action; it never sees a recipient or a token. The operator-edited
+              customer-visible body rides the closed authorization union. */}
+          <Card title="LINE送信">
+            <EstimateLineAction
+              estimateId={estimate.id}
+              estimateNumber={estimateDisplayNo(estimate)}
+              customerName={customerName}
+              dealerDisplayName={dealerDisplayName}
+              send={sendEstimateLine}
+              onAttemptSettled={() => setHistoryVersion((v) => v + 1)}
+            />
+          </Card>
         </div>
       </div>
     </div>

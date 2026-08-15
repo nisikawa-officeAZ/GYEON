@@ -94,7 +94,7 @@ export default function PlansAdminClient({ dealers }: Props) {
                   : "text-slate-500 border-slate-700/50 hover:border-slate-600"
               }`}
             >
-              {p === "all" ? "All plans" : planLabel(p)}
+              {p === "all" ? "全プラン" : planLabel(p)}
             </button>
           ))}
         </div>
@@ -111,7 +111,7 @@ export default function PlansAdminClient({ dealers }: Props) {
                   : "text-slate-500 border-slate-700/50 hover:border-slate-600"
               }`}
             >
-              {t === "all" ? "All trials" : t === "none" ? "No trial" : t === "active" ? "Trial active" : "Trial ended"}
+              {t === "all" ? "全試用状況" : t === "none" ? "試用なし" : t === "active" ? "試用中" : "試用終了"}
             </button>
           ))}
         </div>

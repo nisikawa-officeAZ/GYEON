@@ -1,0 +1,33 @@
+/* =============================================================================
+   Concept B — Luxury with Subtle Brand Accent
+   -----------------------------------------------------------------------------
+   Deep Navy (#0a2145) をアクセントに 5% だけ使う。
+   使用箇所:
+     - タイトル左の縦バー
+     - 合計行の背景
+     - プレミアム帳票向けの見返しライン
+   全体基調は Concept A と同じモノクロ。
+   Brand Profile で --brand-primary を上書きするだけで色替えが完結する。
+   ============================================================================= */
+
+:root {
+  --brand-primary:      #0a2145;   /* Deep Navy — 既存見積書と整合 */
+  --brand-primary-dark: #061532;
+  --brand-primary-tint: rgba(10, 33, 69, 0.06);
+}
+
+/* Party block icon — Concept B ではブランド色を薄く適用 */
+.concept-b .doc-party-block__icon {
+  color: var(--brand-primary);
+}
+
+/* 見積書番号などの右上メタも数字は黒のままで OK。ラベルだけ少しネイビー寄り */
+.concept-b .doc-header__meta-label {
+  color: var(--brand-primary);
+  opacity: 0.75;
+}
+
+/* GYEON帯ロゴのSHOPマーク・パートナー帯はブランド色に */
+.concept-b .doc-footer__brand-accent {
+  color: var(--brand-primary);
+}

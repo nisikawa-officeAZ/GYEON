@@ -6,10 +6,14 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
+import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 
 export async function queueMaintenanceReminder(
   reminderId: string
 ): Promise<{ error: string } | { success: true; queueId: string }> {
+  const auth = await requireStaffCapability("edit");
+  if ("error" in auth) return { error: auth.error };
+
   const dealer = await getCurrentDealer();
   if (!dealer) return { error: "認証エラー" };
 

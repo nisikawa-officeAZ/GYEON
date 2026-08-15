@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getAdminDashboardStats } from "@/lib/admin/get-admin-stats";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Dashboard | GYEON Admin" };
+export const metadata = { title: "管理ダッシュボード | GYEON Admin" };
 
 function StatCard({
   value,
@@ -49,11 +49,11 @@ export default async function AdminDashboardPage() {
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-slate-100">Dashboard</h1>
+          <h1 className="text-lg font-semibold text-slate-100">管理ダッシュボード</h1>
           <p className="text-xs text-slate-500 mt-0.5">{today}</p>
         </div>
         <Link href="/admin/dealers" className="text-xs text-blue-400 hover:text-blue-200 transition-colors">
-          Dealers →
+          店舗管理 →
         </Link>
       </div>
 
@@ -62,7 +62,7 @@ export default async function AdminDashboardPage() {
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-950/30 border border-amber-800/50">
           <span className="text-amber-400 text-base">●</span>
           <p className="text-sm text-amber-200">
-            <span className="font-semibold">{stats.pendingApprovals}</span> 件の承認待ちディーラーがあります
+            <span className="font-semibold">{stats.pendingApprovals}</span> 件の承認待ち店舗があります
           </p>
           <Link href="/admin/dealers" className="ml-auto text-xs text-amber-400 hover:text-amber-200 underline shrink-0">
             確認する →
@@ -72,25 +72,25 @@ export default async function AdminDashboardPage() {
 
       {/* ── Dealer overview stats ─────────────────────────────────────────── */}
       <section>
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Dealer Overview</h2>
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">店舗概要</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <StatCard value={stats.totalDealers}     label="Total Dealers"        accent="slate"  href="/admin/dealers" />
-          <StatCard value={stats.pendingApprovals} label="Pending Approvals"    accent="amber"  href="/admin/dealers" />
-          <StatCard value={stats.activeTrials}     label="Active Trials"        accent="blue"   href="/admin/plans"   />
-          <StatCard value={stats.trialsEndingSoon} label="Trials Ending ≤ 7d"   accent={stats.trialsEndingSoon > 0 ? "red" : "slate"} href="/admin/plans" />
-          <StatCard value={stats.certifiedDetailers} label="Certified Detailers" accent="green" />
-          <StatCard value={stats.totalDealers}     label="Dealer Count"         accent="slate"  />
+          <StatCard value={stats.totalDealers}     label="総店舗数"            accent="slate"  href="/admin/dealers" />
+          <StatCard value={stats.pendingApprovals} label="承認待ち"            accent="amber"  href="/admin/dealers" />
+          <StatCard value={stats.activeTrials}     label="トライアル中"        accent="blue"   href="/admin/plans"   />
+          <StatCard value={stats.trialsEndingSoon} label="7日以内に終了"       accent={stats.trialsEndingSoon > 0 ? "red" : "slate"} href="/admin/plans" />
+          <StatCard value={stats.certifiedDetailers} label="認定ディテーラー"  accent="green" />
+          <StatCard value={stats.totalDealers}     label="店舗数"              accent="slate"  />
         </div>
       </section>
 
       {/* ── Plan distribution ─────────────────────────────────────────────── */}
       <section>
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Plan Distribution</h2>
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">プラン分布</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatCard value={stats.planCounts.basic}    label="Basic"    sublabel="Free tier"                accent="slate"  href="/admin/plans" />
-          <StatCard value={stats.planCounts.pro}      label="Pro"      sublabel="Standard paid"            accent="blue"   href="/admin/plans" />
-          <StatCard value={stats.planCounts.pro_plus} label="Pro Plus" sublabel="Premium / Trial"          accent="purple" href="/admin/plans" />
-          <StatCard value={stats.planCounts.other}    label="Other"    sublabel="Unknown / legacy"         accent="slate"  />
+          <StatCard value={stats.planCounts.basic}    label="Basic"    sublabel="無料プラン"               accent="slate"  href="/admin/plans" />
+          <StatCard value={stats.planCounts.pro}      label="Pro"      sublabel="有料スタンダード"         accent="blue"   href="/admin/plans" />
+          <StatCard value={stats.planCounts.pro_plus} label="Pro Plus" sublabel="プレミアム / トライアル"   accent="purple" href="/admin/plans" />
+          <StatCard value={stats.planCounts.other}    label="その他"   sublabel="不明 / 旧プラン"          accent="slate"  />
         </div>
 
         {/* Visual bar */}
@@ -120,13 +120,13 @@ export default async function AdminDashboardPage() {
 
       {/* ── Quick actions ─────────────────────────────────────────────────── */}
       <section>
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Quick Actions</h2>
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">クイック操作</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { href: "/admin/dealers",      label: "Dealer Management",  desc: "Approve, reject, manage dealers",   icon: "⊙" },
-            { href: "/admin/plans",        label: "Plan Management",    desc: "Trial status, plan details",        icon: "◈" },
-            { href: "/admin/users",        label: "User Management",    desc: "Admin & dealer users",              icon: "⊡" },
-            { href: "/admin/audit",        label: "Audit Logs",         desc: "All admin actions",                 icon: "⊟" },
+            { href: "/admin/dealers",      label: "店舗管理",      desc: "店舗の承認・却下・管理",       icon: "⊙" },
+            { href: "/admin/plans",        label: "プラン管理",    desc: "トライアル状況・プラン詳細",   icon: "◈" },
+            { href: "/admin/users",        label: "ユーザー管理",  desc: "管理者・店舗ユーザー",         icon: "⊡" },
+            { href: "/admin/audit",        label: "監査ログ",      desc: "すべての管理操作",             icon: "⊟" },
           ].map((item) => (
             <Link
               key={item.href}

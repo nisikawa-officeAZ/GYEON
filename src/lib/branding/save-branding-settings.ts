@@ -21,9 +21,13 @@ import {
   type CustomerAppTheme,
 } from "./branding-types";
 import { isStampKind, type StampKind } from "@/lib/stamp/stamp-types";
+import { BRANDING_SCHEMA_READY } from "@/lib/flags";
 
 const SELECT_COLS =
   "logo_path, stamp_path, logo_url, stamp_url, stamp_kind, brand_primary_color, brand_secondary_color, brand_accent_color, customer_app_theme";
+// While the branding schema isn't exposed by REST, only the pre-existing URL
+// columns are safe to select; the rest would raise 42703.
+const SELECT_COLS_FALLBACK = "logo_url, stamp_url";
 
 export async function getBrandingSettings(): Promise<BrandingSettings | null> {
   try {
@@ -33,7 +37,7 @@ export async function getBrandingSettings(): Promise<BrandingSettings | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("dealer_settings")
-      .select(SELECT_COLS)
+      .select(BRANDING_SCHEMA_READY ? SELECT_COLS : SELECT_COLS_FALLBACK)
       .eq("dealer_id", dealer.dealer_id)
       .maybeSingle();
 
@@ -43,7 +47,7 @@ export async function getBrandingSettings(): Promise<BrandingSettings | null> {
     }
     if (!data) return { ...EMPTY_BRANDING };
 
-    const row = data as Record<string, unknown>;
+    const row = data as unknown as Record<string, unknown>;
     return {
       logo_path:             (row.logo_path             as string | null) ?? null,
       stamp_path:            (row.stamp_path            as string | null) ?? null,
@@ -67,6 +71,11 @@ export async function saveBrandingSettings(
   fd: FormData,
 ): Promise<{ error: string } | { success: true }> {
   try {
+    // Branding columns are not yet exposed by production REST — refuse the write
+    // gracefully instead of failing the upsert with PGRST204. No data is touched.
+    if (!BRANDING_SCHEMA_READY) {
+      return { error: "ブランディング設定は現在一時的に利用できません(スキーマ更新中)" };
+    }
     const { dealerId } = await requireRole(["owner", "manager"]);
     const supabase = await createClient();
 

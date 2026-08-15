@@ -33,7 +33,8 @@ CREATE TABLE IF NOT EXISTS public.work_order_files (
 
 ALTER TABLE public.work_order_files ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Dealer members can manage their work order files"
+DROP POLICY IF EXISTS "Dealer members can manage their work order files" ON public.work_order_files;
+CREATE POLICY "Dealer members can manage their work order files"
   ON public.work_order_files
   FOR ALL
   USING (

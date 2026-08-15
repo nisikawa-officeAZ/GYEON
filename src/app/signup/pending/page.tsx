@@ -4,6 +4,7 @@
 // the dealer and the system creates the dealer_members row.
 
 import Link from "next/link";
+import Brand from "@/components/ui/Brand";
 
 interface Props {
   searchParams: Promise<{ confirm?: string }>;
@@ -20,17 +21,8 @@ export default async function SignUpPendingPage({ searchParams }: Props) {
       <div className="w-full max-w-sm flex flex-col gap-5">
 
         {/* ── Brand header ───────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 justify-center">
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "var(--gs-blue, #4f8ef7)" }}
-          >
-            <span className="text-white text-xl font-black">G</span>
-          </div>
-          <div className="text-left">
-            <p className="text-[10px] font-bold text-[#55556a] tracking-[2.5px] uppercase">GYEON</p>
-            <p className="text-base font-bold text-[#f0f0f5] leading-tight">Detailer Agent</p>
-          </div>
+        <div className="flex items-center justify-center">
+          <Brand size={56} />
         </div>
 
         {/* ── Success card ───────────────────────────────────────────────── */}

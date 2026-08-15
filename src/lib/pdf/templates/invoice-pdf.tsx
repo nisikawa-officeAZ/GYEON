@@ -11,12 +11,16 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import { InvoiceDB } from "@/lib/invoices/invoice-types";
+import { sortByCategoryOrder } from "@/lib/estimates/category-order";
 import { StampBlock } from "@/lib/pdf/stamp-block";
 import type { PdfStamp } from "@/lib/stamp/stamp-types";
+import { BrandingIdentity, BrandingFooterLines } from "@/lib/pdf/branding-blocks";
+import type { DealerBranding } from "@/lib/pdf/dealer-branding-types";
+import { registerPdfFonts } from "@/lib/pdf/register-fonts";
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSansJP",
     fontSize: 10,
     color: "#111827",
     backgroundColor: "#ffffff",
@@ -32,7 +36,7 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 14,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#1d4ed8",
     marginBottom: 4,
   },
@@ -43,7 +47,7 @@ const styles = StyleSheet.create({
   },
   docTitle: {
     fontSize: 22,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#111827",
     textAlign: "right",
     marginBottom: 6,
@@ -64,7 +68,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#6b7280",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -117,7 +121,7 @@ const styles = StyleSheet.create({
   colUnit:     { width: 70, fontSize: 8, textAlign: "right" },
   colTotal:    { width: 70, fontSize: 8, textAlign: "right" },
   tableHeaderText: {
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansJP-Bold",
     color: "#6b7280",
     fontSize: 8,
   },
@@ -142,8 +146,8 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     marginTop: 4,
   },
-  grandTotalLabel: { fontSize: 11, fontFamily: "Helvetica-Bold", color: "#111827" },
-  grandTotalValue: { fontSize: 11, fontFamily: "Helvetica-Bold", color: "#111827" },
+  grandTotalLabel: { fontSize: 11, fontFamily: "NotoSansJP-Bold", color: "#111827" },
+  grandTotalValue: { fontSize: 11, fontFamily: "NotoSansJP-Bold", color: "#111827" },
   balanceRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -153,8 +157,8 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     marginTop: 4,
   },
-  balanceLabel: { fontSize: 10, fontFamily: "Helvetica-Bold", color: "#1d4ed8" },
-  balanceValue: { fontSize: 10, fontFamily: "Helvetica-Bold", color: "#1d4ed8" },
+  balanceLabel: { fontSize: 10, fontFamily: "NotoSansJP-Bold", color: "#1d4ed8" },
+  balanceValue: { fontSize: 10, fontFamily: "NotoSansJP-Bold", color: "#1d4ed8" },
   footer: {
     position: "absolute",
     bottom: 24,
@@ -183,15 +187,19 @@ const CATEGORY_LABELS: Record<string, string> = {
   interior: "インテリア",
   glass: "ガラス",
   other: "その他",
+  maintenance: "メンテナンス",   // Plan A (migration 093)
+  carwash: "洗車",
+  roomclean: "ルームクリーニング",
 };
 
 interface InvoiceDocumentProps {
   invoice: InvoiceDB;
-  stamp?:  PdfStamp | null;
+  stamp?:    PdfStamp | null;
+  branding?: DealerBranding | null;
 }
 
-function InvoiceDocument({ invoice, stamp }: InvoiceDocumentProps) {
-  const items = (invoice.invoice_items ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
+function InvoiceDocument({ invoice, stamp, branding }: InvoiceDocumentProps) {
+  const items = sortByCategoryOrder(invoice.invoice_items ?? []);
   const docNo = invoice.invoice_number ?? `INV-${invoice.id.slice(0, 8).toUpperCase()}`;
   const customerName = [invoice.customers?.last_name, invoice.customers?.first_name]
     .filter(Boolean).join(" ") || "—";
@@ -202,8 +210,7 @@ function InvoiceDocument({ invoice, stamp }: InvoiceDocumentProps) {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.companyName}>GYEON Detailer Agent</Text>
-            <Text style={styles.companyInfo}>DealerOS — Dealer Management System</Text>
+            <BrandingIdentity branding={branding} />
             {stamp && <View style={{ marginTop: 8, alignItems: "flex-start" }}><StampBlock stamp={stamp} /></View>}
           </View>
           <View>
@@ -325,8 +332,7 @@ function InvoiceDocument({ invoice, stamp }: InvoiceDocumentProps) {
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>GYEON Detailer Agent — DealerOS</Text>
-          <Text style={styles.footerText}>{docNo}</Text>
+          <BrandingFooterLines branding={branding} docNo={docNo} />
         </View>
       </Page>
     </Document>
@@ -336,6 +342,8 @@ function InvoiceDocument({ invoice, stamp }: InvoiceDocumentProps) {
 export async function renderInvoicePdf(
   invoice: InvoiceDB,
   stamp?: PdfStamp | null,
+  branding?: DealerBranding | null,
 ): Promise<Buffer> {
-  return await renderToBuffer(<InvoiceDocument invoice={invoice} stamp={stamp} />);
+  registerPdfFonts();
+  return await renderToBuffer(<InvoiceDocument invoice={invoice} stamp={stamp} branding={branding} />);
 }

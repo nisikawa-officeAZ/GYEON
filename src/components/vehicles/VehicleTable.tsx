@@ -10,9 +10,11 @@ function formatDate(iso: string | null) {
 interface VehicleTableProps {
   vehicles: VehicleDB[];
   onEdit?:  (vehicle: VehicleDB) => void;
+  onView?:  (vehicle: VehicleDB) => void;
 }
 
-export default function VehicleTable({ vehicles, onEdit }: VehicleTableProps) {
+export default function VehicleTable({ vehicles, onEdit, onView }: VehicleTableProps) {
+  const showActions = !!(onEdit || onView);
   if (vehicles.length === 0) {
     return (
       <div className="bg-[#1e293b] rounded-xl shadow-lg p-10 text-center">
@@ -36,7 +38,7 @@ export default function VehicleTable({ vehicles, onEdit }: VehicleTableProps) {
               <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden sm:table-cell">ナンバー</th>
               <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden lg:table-cell">色</th>
               <th className="text-left text-xs font-medium text-slate-400 px-4 py-3 hidden xl:table-cell">車検満了日</th>
-              {onEdit && (
+              {showActions && (
                 <th className="text-left text-xs font-medium text-slate-400 px-4 py-3" />
               )}
             </tr>
@@ -58,7 +60,17 @@ export default function VehicleTable({ vehicles, onEdit }: VehicleTableProps) {
                     {custName || "—"}
                   </td>
                   <td className="px-4 py-3 font-medium text-slate-100 whitespace-nowrap">
-                    {v.maker ?? "—"}
+                    {onView ? (
+                      <button
+                        type="button"
+                        onClick={() => onView(v)}
+                        className="text-slate-100 hover:text-blue-300 transition-colors text-left"
+                      >
+                        {v.maker ?? "—"}
+                      </button>
+                    ) : (
+                      v.maker ?? "—"
+                    )}
                   </td>
                   <td className="px-4 py-3 text-slate-300 whitespace-nowrap">
                     {v.model ?? "—"}
@@ -81,15 +93,28 @@ export default function VehicleTable({ vehicles, onEdit }: VehicleTableProps) {
                   <td className="px-4 py-3 text-slate-400 text-xs hidden xl:table-cell whitespace-nowrap">
                     {formatDate(v.inspection_expiry_date)}
                   </td>
-                  {onEdit && (
+                  {showActions && (
                     <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => onEdit(v)}
-                        className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2.5 py-2 rounded transition-colors min-h-[36px]"
-                      >
-                        編集
-                      </button>
+                      <div className="flex gap-1.5">
+                        {onView && (
+                          <button
+                            type="button"
+                            onClick={() => onView(v)}
+                            className="text-xs text-blue-400 hover:text-blue-200 hover:bg-blue-950/30 border border-blue-800/40 px-2.5 py-2 rounded transition-colors whitespace-nowrap min-h-[36px]"
+                          >
+                            詳細
+                          </button>
+                        )}
+                        {onEdit && (
+                          <button
+                            type="button"
+                            onClick={() => onEdit(v)}
+                            className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2.5 py-2 rounded transition-colors min-h-[36px]"
+                          >
+                            編集
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
