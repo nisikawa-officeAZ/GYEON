@@ -10,6 +10,8 @@ import { readFileSync } from "node:fs";
 const read = (path: string) => readFileSync(path, "utf8");
 const stripComments = (source: string) =>
   source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+const MIGRATION =
+  "supabase/migrations/20260815141732_dealer_signup_uniqueness.sql";
 
 test("1. pending-dealer creation is zero-argument and session-derived", () => {
   const source = stripComments(read("src/lib/dealer/create-pending-dealer.ts"));
@@ -91,4 +93,44 @@ test("7. PKCE callback keeps recovery and invite out of dealer creation", () => 
   const createAt = source.indexOf("await createPendingDealer()");
   assert.ok(resetAt >= 0 && createAt > resetAt);
   assert.match(source, /dealer\.kind === "created" \|\| dealer\.kind === "already-exists"/);
+});
+
+test("8. migration fail-closes duplicate pending signup identities without global uniqueness", () => {
+  const sql = read(MIGRATION);
+
+  assert.match(
+    sql,
+    /where approval_status = 'pending'\s+and owner_user_id is not null\s+group by owner_user_id\s+having count\(\*\) > 1/,
+  );
+  assert.match(
+    sql,
+    /where approval_status = 'pending'\s+and email is not null\s+and btrim\(email\) <> ''\s+group by lower\(btrim\(email\)\)\s+having count\(\*\) > 1/,
+  );
+  assert.match(sql, /errcode = '23505'/);
+  assert.match(
+    sql,
+    /create unique index dealers_pending_owner_user_id_uidx\s+on public\.dealers \(owner_user_id\)\s+where approval_status = 'pending'\s+and owner_user_id is not null/,
+  );
+  assert.match(
+    sql,
+    /create unique index dealers_pending_email_normalized_uidx\s+on public\.dealers \(\(lower\(btrim\(email\)\)\)\)\s+where approval_status = 'pending'\s+and email is not null\s+and btrim\(email\) <> ''/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /on public\.dealers \(owner_user_id\)\s+where owner_user_id is not null/,
+    "multi-dealer membership architecture forbids a global owner uniqueness rule",
+  );
+});
+
+test("9. a 23505 loser performs one bounded winner-resolution re-read", () => {
+  const source = stripComments(read("src/lib/dealer/create-pending-dealer.ts"));
+
+  const insertAt = source.indexOf(".insert({");
+  const conflictAt = source.indexOf('error?.code === "23505"', insertAt);
+  const rereadAt = source.indexOf("findExistingDealer(admin, user.id, normalizedEmail)", conflictAt);
+  const unresolvedAt = source.indexOf("unresolved uniqueness conflict", rereadAt);
+
+  assert.ok(insertAt >= 0 && conflictAt > insertAt && rereadAt > conflictAt && unresolvedAt > rereadAt);
+  assert.match(source.slice(conflictAt), /if \(winner\) return winner/);
+  assert.match(source.slice(conflictAt), /return \{ kind: "error" \}/);
 });

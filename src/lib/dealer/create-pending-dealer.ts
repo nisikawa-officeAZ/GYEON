@@ -16,6 +16,44 @@ export type CreatePendingDealerResult =
   | { kind: "email-conflict" }
   | { kind: "error" };
 
+type AdminClient = ReturnType<typeof createAdminClient>;
+type ExistingDealerResult = Extract<
+  CreatePendingDealerResult,
+  { kind: "already-exists" | "email-conflict" | "error" }
+>;
+
+async function findExistingDealer(
+  admin: AdminClient,
+  userId: string,
+  normalizedEmail: string,
+): Promise<ExistingDealerResult | null> {
+  const { data: ownerDealer, error: ownerLookupError } = await admin
+    .from("dealers")
+    .select("id")
+    .eq("owner_user_id", userId)
+    .limit(1)
+    .maybeSingle();
+  if (ownerLookupError) {
+    console.error("[createPendingDealer] owner lookup error:", ownerLookupError.message);
+    return { kind: "error" };
+  }
+  if (ownerDealer) return { kind: "already-exists", dealerId: ownerDealer.id };
+
+  const { data: emailDealer, error: emailLookupError } = await admin
+    .from("dealers")
+    .select("id")
+    .ilike("email", normalizedEmail)
+    .limit(1)
+    .maybeSingle();
+  if (emailLookupError) {
+    console.error("[createPendingDealer] email lookup error:", emailLookupError.message);
+    return { kind: "error" };
+  }
+  if (emailDealer) return { kind: "email-conflict" };
+
+  return null;
+}
+
 /**
  * Converges a verified Dealer registration into one pending dealer row.
  *
@@ -52,32 +90,12 @@ export async function createPendingDealer(): Promise<CreatePendingDealerResult> 
     const normalizedEmail = user.email.trim().toLowerCase();
     const admin = createAdminClient();
 
-    // Idempotency guard 1: the verified Auth user already owns a dealer.
-    const { data: ownerDealer, error: ownerLookupError } = await admin
-      .from("dealers")
-      .select("id")
-      .eq("owner_user_id", user.id)
-      .limit(1)
-      .maybeSingle();
-    if (ownerLookupError) {
-      console.error("[createPendingDealer] owner lookup error:", ownerLookupError.message);
-      return { kind: "error" };
-    }
-    if (ownerDealer) return { kind: "already-exists", dealerId: ownerDealer.id };
-
-    // Idempotency guard 2: a dealer already uses the verified email. This is a
-    // no-write outcome; returning/suspended accounts remain a human-admin case.
-    const { data: emailDealer, error: emailLookupError } = await admin
-      .from("dealers")
-      .select("id")
-      .ilike("email", normalizedEmail)
-      .limit(1)
-      .maybeSingle();
-    if (emailLookupError) {
-      console.error("[createPendingDealer] email lookup error:", emailLookupError.message);
-      return { kind: "error" };
-    }
-    if (emailDealer) return { kind: "email-conflict" };
+    // Fast-path idempotency guards. The database indexes added by
+    // dealer_signup_uniqueness are the final concurrency authority; these
+    // reads provide deterministic returning/suspended-account outcomes before
+    // attempting the insert.
+    const existingDealer = await findExistingDealer(admin, user.id, normalizedEmail);
+    if (existingDealer) return existingDealer;
 
     const { data, error } = await admin
       .from("dealers")
@@ -92,6 +110,17 @@ export async function createPendingDealer(): Promise<CreatePendingDealerResult> 
       })
       .select("id")
       .single();
+
+    if (error?.code === "23505") {
+      // A concurrent request inserted the same pending signup identity after
+      // our fast-path reads. PostgreSQL waits for the winner transaction before
+      // returning 23505, so one bounded re-read resolves the committed winner.
+      const winner = await findExistingDealer(admin, user.id, normalizedEmail);
+      if (winner) return winner;
+
+      console.error("[createPendingDealer] unresolved uniqueness conflict:", error.message);
+      return { kind: "error" };
+    }
 
     if (error) {
       console.error("[createPendingDealer] insert error:", error.message);
