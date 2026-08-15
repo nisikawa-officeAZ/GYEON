@@ -11,6 +11,7 @@ import { type EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse }      from "next/server";
 import { createClient }      from "@/lib/supabase/server";
 import { claimGyeonProvisioning } from "@/lib/dealer/claim-gyeon-provisioning";
+import { createPendingDealer } from "@/lib/dealer/create-pending-dealer";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,19 @@ export async function GET(request: Request) {
           // Freshly claimed: the owner membership is 'invited' — the shop
           // profile is the only surface until activation.
           return NextResponse.redirect(`${origin}/shop-profile`);
+        }
+
+        if (type === "signup") {
+          // Confirmation-required production signup converges here. The
+          // service action derives id/email from this verified session and
+          // creates at most one pending dealer; no browser-supplied user id is
+          // accepted by the service-role boundary.
+          const dealer = await createPendingDealer();
+          const suffix =
+            dealer.kind === "created" || dealer.kind === "already-exists"
+              ? ""
+              : "&setup_error=1";
+          return NextResponse.redirect(`${origin}/signup/pending?confirm=0${suffix}`);
         }
         return NextResponse.redirect(`${origin}${next ?? "/"}`);
       }

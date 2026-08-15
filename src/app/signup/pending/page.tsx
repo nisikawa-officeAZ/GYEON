@@ -7,7 +7,7 @@ import Link from "next/link";
 import Brand from "@/components/ui/Brand";
 
 interface Props {
-  searchParams: Promise<{ confirm?: string }>;
+  searchParams: Promise<{ confirm?: string; setup_error?: string }>;
 }
 
 export const metadata = { title: "申請受付完了 | GYEON Detailer Agent" };
@@ -15,6 +15,7 @@ export const metadata = { title: "申請受付完了 | GYEON Detailer Agent" };
 export default async function SignUpPendingPage({ searchParams }: Props) {
   const params       = await searchParams;
   const needsConfirm = params.confirm === "1";
+  const setupError   = params.setup_error === "1";
 
   return (
     <div className="min-h-[100dvh] bg-[#0a0a0f] flex items-center justify-center p-4">
@@ -44,12 +45,25 @@ export default async function SignUpPendingPage({ searchParams }: Props) {
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-[#f0f0f5]">ディーラー登録を受け付けました</h1>
+              <h1 className="text-lg font-bold text-[#f0f0f5]">
+                {needsConfirm ? "確認メールを送信しました" : "ディーラー登録を受け付けました"}
+              </h1>
               <p className="text-xs text-[#9999b0] mt-1">
-                Your dealer application has been received.
+                {needsConfirm
+                  ? "メールアドレスの確認後に登録申請が完了します。"
+                  : "登録申請を受け付けました。審査完了までお待ちください。"}
               </p>
             </div>
           </div>
+
+          {setupError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+              <p className="text-xs text-red-400 leading-relaxed">
+                メールアドレスは確認できましたが、店舗情報の登録を完了できませんでした。
+                ログイン後に再確認するか、GYEONサポートへお問い合わせください。
+              </p>
+            </div>
+          )}
 
           {/* Status message */}
           <div
@@ -60,7 +74,7 @@ export default async function SignUpPendingPage({ searchParams }: Props) {
             }}
           >
             <p className="text-sm font-semibold text-[#f0f0f5] leading-snug">
-              Your account will become available after approval by GYEON Japan.
+              GYEON Japanの承認後にアカウントをご利用いただけます。
             </p>
             <p className="text-xs text-[#9999b0] leading-relaxed">
               GYEON Japanによる審査が完了次第、ログインしてシステムをご利用いただけます。
@@ -77,7 +91,7 @@ export default async function SignUpPendingPage({ searchParams }: Props) {
               <Step
                 num="1"
                 title="メールを確認してください"
-                body="登録したメールアドレスに確認メールをお送りしました。受信トレイと迷惑メールフォルダをご確認ください。"
+                body="登録したメールアドレスに確認メールをお送りしました。メール内の「メールアドレスを確認する」を押してください。受信トレイと迷惑メールフォルダもご確認ください。"
                 highlight
               />
             )}
