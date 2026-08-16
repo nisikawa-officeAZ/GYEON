@@ -263,7 +263,30 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Prohibited:** Any third repository path; automatic artifact creation, invoice issue, payment recording, approval, LINE send, maintenance creation, or review delivery; server-action, persistence, schema, RLS, migration, dependency, or config change; DB, Supabase, Auth, Storage, LINE, EC, or other external-service access; stage, commit, push, Ready conversion, merge, deployment, cleanup, or destructive action without its later separate gate.
 
-**Current stopping point:** Git authority binding only. The first source attempt made no changes. This two-document plan/ledger correction must be independently accepted, committed, and normally pushed before the already-approved exact two-path implementation resumes on Draft PR #15.
+**Current stopping point:** GDA-3A-I1 is independently accepted, committed at `4d01861c33131c8c891109f27d2c5ffda5bbc02d`, normally pushed to Draft PR #15, and recorded by the append-only ledger synchronization commit `4df3501f021f0b85cd15c69b5a02e9f662c914fd`. PR #15 remains OPEN/Draft/unmerged. GDA-3A is source-closed at E1; environment, field, Ready, merge, and deployment acceptance remain unauthorized. The active next bounded phase is GDA-3B below.
+
+### GDA-3B — Invoice-from-work-order replay guard
+
+**Authorization:** After GDA-3A-I1 and its append-only completion record were independently accepted, committed, and normally pushed, the product owner approved proceeding to the next Book implementation phase. Claude completed one bounded read-only GDA-3 gap diagnosis at exact HEAD `4df3501f021f0b85cd15c69b5a02e9f662c914fd`, and MacBook Codex accepted the source finding with the correction that an application-level existence lookup is a common-path replay guard, not full concurrency-safe idempotency. This entry authorizes only the two-document Git authority candidate. Source/test implementation, commit, push, migration, and release actions remain later separate gates.
+
+**Objective:** Prevent ordinary retries, stale UI submissions, and second-tab calls to `createInvoiceFromWorkOrder` from creating another generated draft invoice when a dealer-scoped invoice for the same work order already exists. Preserve all manual invoice creation, issuance, payment, UI, numbering, and financial authority behavior.
+
+**Literal future implementation allowlist:**
+
+1. MODIFY `src/lib/invoices/create-invoice.ts`
+2. ADD `src/lib/invoices/create-invoice-from-work-order-idempotency.test.ts`
+
+**Required behavior:** After the existing finance-capability authorization and canonical dealer resolution, query `invoices` by both `dealer_id` and `work_order_id`. Fail closed on lookup error. If an existing invoice is found, return its id with an explicit replay marker and execute no work-order fetch, document-number allocation, invoice insert, item insert, cleanup delete, or activity side effect. If none exists, preserve the current server-authoritative creation flow and return a non-replay marker. The existing caller must remain compatible without a UI change.
+
+**Required verification:** Use a real `node:test` behavior test with `mock.module` fakes registered before importing the action. Prove dealer/work-order scoping, lookup-error fail-closed behavior, existing-row replay with zero downstream writes/side effects, first-call creation with exactly one invoice insert, and unchanged authorization-before-data-access ordering. Run the existing invoice-issuance boundary regression, the smallest strict TypeScript check through a temporary config outside Git limited to the exact action/test paths and direct imports, `git diff --check`, and exact changed-path/index checks.
+
+**Frozen/no-modify paths:** `src/components/invoices/InvoiceSection.tsx`, `src/lib/invoices/issue-invoice.ts`, `src/components/work-orders/WorkOrderDetail.tsx`, every completion-report, maintenance, and review-request path, and every migration/schema path.
+
+**Known limitation and later owner decision:** This source-only guard does not eliminate two truly simultaneous inserts that both observe no existing row. Full concurrency closure requires a separately authorized database contract such as a unique key or transactional lock. The current UI also permits manually creating additional invoices for one work order, so a one-invoice-per-work-order database rule is a product/accounting decision and is not inferred or authorized here. GDA-3B must remain PARTIAL evidence for full duplicate prevention.
+
+**Prohibited:** Any third repository path; UI, manual invoice creation, issuance, payments, invoice status, numbering, schema, RLS, migration, dependency, or config change; DB, Supabase, Auth, Storage, LINE, EC, or other external-service access; stage, commit, push, Ready conversion, merge, deployment, cleanup, or destructive action without its later separate gate.
+
+**Current stopping point:** Return this exact two-document Git authority candidate for independent acceptance. Do not implement GDA-3B source/test changes until the document candidate is separately accepted, committed, and normally pushed, and the owner then explicitly approves the exact two-path uncommitted implementation.
 
 ### GDA-4 — Customer communication and follow-up
 
@@ -297,7 +320,7 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Prohibited:** Modification of `review-request-actions.ts` or any third source/test path; persistence, review-request table/schema/RLS/migration work; LINE sending; AI-provider execution; dependency/config changes; database, Supabase, Auth, Storage, LINE, EC, or other external-service access; stage, commit, push, Ready conversion, merge, deployment, or destructive action without its later separate gate.
 
-**Current stopping point:** GDA-4A-I1 is accepted, committed at `0de9eedf46aa23d505299280097d937c85d22a11`, normally pushed to Draft PR #15, and recorded by the append-only ledger synchronization commit `73460aa0d4cf6c0da94c222f99ce7762584dffd0`. PR #15 remains OPEN/Draft/unmerged. Persistence, approval execution, LINE delivery, Ready conversion, merge, and deployment remain unauthorized. The active next bounded phase is GDA-3A above.
+**Current stopping point:** GDA-4A-I1 is accepted, committed at `0de9eedf46aa23d505299280097d937c85d22a11`, normally pushed to Draft PR #15, and recorded by the append-only ledger synchronization commit `73460aa0d4cf6c0da94c222f99ce7762584dffd0`. GDA-3A-I1 is also accepted, committed, normally pushed, and ledger-recorded. PR #15 remains OPEN/Draft/unmerged. Persistence, approval execution, LINE delivery, Ready conversion, merge, and deployment remain unauthorized. The active next bounded phase is GDA-3B above.
 
 ### GDA-5 — Operational AI assistance
 

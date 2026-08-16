@@ -1662,3 +1662,63 @@ evidence_level: "E1 source and focused executable verification accepted; no DB, 
 decision: "GDA_3A_I1_ACCEPTED_COMMITTED_AND_PUSHED"
 next: "RETURN_THIS_EXACT_ONE_DOCUMENT_LEDGER_SYNC_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT_AND_NORMAL_PUSH_GATES; THEN RUN_ONE_BOUNDED_READ_ONLY_DIAGNOSIS_TO_SELECT_THE_NEXT_SMALLEST_UNFINISHED_GDA_3_CAPABILITY"
 ```
+
+## GDA-3B-A0 — Bind the invoice-from-work-order replay guard
+
+```yaml
+phase: GDA-3B-A0_INVOICE_FROM_WORK_ORDER_REPLAY_GUARD_GIT_AUTHORITY
+status: DOCUMENT_AUTHORITY_CANDIDATE_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+authorization: "After GDA-3A-I1 and its completion ledger were independently accepted, committed, and normally pushed, the product owner approved proceeding to the next Book implementation phase. This authorizes the bounded read-only diagnosis and this exact two-document authority candidate only."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  required_state: "OPEN/Draft/unmerged"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  base_head: "4df3501f021f0b85cd15c69b5a02e9f662c914fd"
+  base_tree: "8a95023275f31a763a7cf32c43224f51ed9a7299"
+  upstream: "0/0"
+accepted_diagnosis:
+  marker: "GDA_3_D2_READ_ONLY_DIAGNOSIS_RESULT_V1"
+  decision: "PASS_WITH_CODEX_SCOPE_CORRECTION"
+  finding: "createInvoiceFromWorkOrder inserts a draft invoice without first checking for an existing dealer/work-order invoice; InvoiceSection only hides its generated-invoice button after client state observes an invoice"
+  database_state_from_source: "invoices.work_order_id has an ordinary non-unique index; no uniqueness contract closes concurrent generated-invoice inserts"
+  evidence: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307656466"
+codex_scope_correction:
+  - "Describe the phase as a common-path replay/existence guard, never as full concurrency-safe idempotency."
+  - "Return an existing dealer-scoped invoice and perform no downstream action for ordinary retries/stale submissions."
+  - "Preserve the simultaneous-insert race as an explicit known limitation."
+  - "Do not infer a one-invoice-per-work-order database rule because manual additional invoices are currently permitted."
+literal_document_allowlist:
+  - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+  - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+future_literal_implementation_allowlist:
+  - "MODIFY src/lib/invoices/create-invoice.ts"
+  - "ADD src/lib/invoices/create-invoice-from-work-order-idempotency.test.ts"
+required_behavior:
+  - "Run finance authorization and canonical dealer resolution before the dealer/work-order existence lookup."
+  - "Fail closed on lookup error."
+  - "Existing row returns its id with an explicit replay marker and performs no work-order fetch, numbering, insert, delete, or activity side effect."
+  - "Missing row preserves current server-authoritative creation and returns a non-replay marker."
+  - "Existing caller remains compatible; no UI change."
+required_verification:
+  - "Focused node:test behavior test using mock.module before importing the action."
+  - "Existing invoice-issuance boundary regression."
+  - "Strict TypeScript through one temporary config outside Git limited to the exact action/test paths and direct imports."
+  - "git diff --check and exact two-path/index evidence."
+frozen_paths:
+  - "src/components/invoices/InvoiceSection.tsx"
+  - "src/lib/invoices/issue-invoice.ts"
+  - "src/components/work-orders/WorkOrderDetail.tsx"
+  - "all completion-report, maintenance, review-request, migration, and schema paths"
+known_limitations:
+  - "Two truly simultaneous requests can both pass the source-level lookup before either insert."
+  - "A unique key or transactional lock needs a separate migration contract and owner decision."
+  - "The current manual additional-invoice capability prevents silently inferring one invoice per work order."
+prohibitions:
+  - "No source/test implementation before this exact authority candidate is accepted, committed, and normally pushed and the exact two-path implementation is then explicitly approved."
+  - "No third repository path, DB/Supabase/Auth/Storage/LINE/EC access, migration, dependency/config change, stage, Ready, merge, deploy, cleanup, or destructive action."
+evidence_level: "E0 Git authority only; not source, runtime, database, environment, field, or production acceptance"
+decision: "GDA_3B_GIT_AUTHORITY_CANDIDATE_UNCOMMITTED"
+next: "RETURN_THIS_EXACT_TWO_DOCUMENT_CANDIDATE_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT_AND_NORMAL_PUSH_GATES; THEN REQUEST_EXPLICIT_OWNER_APPROVAL_OF_THE_EXACT_TWO_PATH_UNCOMMITTED_GDA_3B_IMPLEMENTATION"
+```
