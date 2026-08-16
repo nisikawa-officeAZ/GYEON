@@ -160,9 +160,19 @@ export async function createInvoice(fd: FormData): Promise<{ error: string } | {
 }
 
 // Creates an invoice pre-populated from a work order's linked estimate items
+//
+// GDA-3B: a common-path replay guard, not full concurrency-safe idempotency.
+// Before doing anything else, this checks for a dealer-scoped invoice already
+// linked to the work order and returns it unchanged on a match, so ordinary
+// retries, stale UI submissions, and second-tab calls cannot mint another
+// generated draft invoice. Two truly simultaneous requests can still both pass
+// this lookup before either insert; closing that requires a separately
+// authorized database contract (unique key or transactional lock). Manual
+// creation of additional invoices for one work order remains permitted, so no
+// one-invoice-per-work-order rule is inferred here.
 export async function createInvoiceFromWorkOrder(
   workOrderId: string
-): Promise<{ error: string } | { success: true; id: string }> {
+): Promise<{ error: string } | { success: true; id: string; alreadyExists: boolean }> {
   const auth = await requireStaffCapability("finance");
   if ("error" in auth) return { error: auth.error };
 
@@ -170,6 +180,16 @@ export async function createInvoiceFromWorkOrder(
   if (!dealer) return { error: "認証エラー" };
 
   const supabase = await createClient();
+
+  const { data: existing, error: existingErr } = await supabase
+    .from("invoices")
+    .select("id")
+    .eq("dealer_id", dealer.dealer_id)
+    .eq("work_order_id", workOrderId)
+    .maybeSingle();
+
+  if (existingErr) return { error: "請求書の確認に失敗しました" };
+  if (existing) return { success: true, id: existing.id, alreadyExists: true };
 
   // Fetch work order with estimate + items
   const { data: wo, error: woErr } = await supabase
@@ -263,7 +283,7 @@ export async function createInvoiceFromWorkOrder(
     }
   }
 
-  return { success: true, id: inv.id };
+  return { success: true, id: inv.id, alreadyExists: false };
 }
 
 // Phase 3 Sprint 5 — Estimate → Invoice transition (mirrors createInvoiceFromWorkOrder).
