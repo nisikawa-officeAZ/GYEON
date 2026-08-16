@@ -244,6 +244,27 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Acceptance target:** E3 plus a measured reduction in screens/steps compared with the baseline.
 
+### GDA-3A — Completed-work-order review surface
+
+**Authorization:** On 2026-08-16 the product owner explicitly approved starting the next smallest Book-side implementation phase after GDA-4A-I1 and its governance synchronization were committed and normally pushed. The bounded read-only diagnosis was accepted by MacBook Codex, and the owner then explicitly approved the exact two-path uncommitted implementation. The first implementation attempt correctly stopped before source edits because this Git authority entry was missing. After this exact two-document authority correction is independently accepted, committed, and normally pushed, the already-approved GDA-3A-I1 implementation may resume without another owner reply; commit and push of the later source candidate remain separate gates.
+
+**Objective:** Turn the existing completed-work-order follow-up controls into one truthful completion-desk review flow without changing any child capability, persistence rule, financial authority, or communication authority.
+
+**Literal implementation allowlist:**
+
+1. MODIFY `src/components/work-orders/WorkOrderDetail.tsx`
+2. ADD `src/components/work-orders/work-order-completion-desk.test.ts`
+
+**Required behavior:** Extract the existing completion-report, invoice, maintenance, and conditional review-request JSX into one local `completionDeskSections` element without duplicating those implementations. When `wo.status === "completed"`, render that element once inside a clearly labeled `完了後の対応` container with the explicit sequence `1. 完了報告書 → 2. 請求書 → 3. メンテナンス通知 → 4. レビュー依頼`. When the work order is not completed, render the same element without the new wrapper so current availability and behavior remain unchanged. Preserve all existing show/hide state, toggles, child imports, child props, status guards, and human-confirmation boundaries. Do not default-open any section.
+
+**Required verification:** The focused `node:test` source-contract test must prove the completed-only wrapper, exact sequence, shared single `completionDeskSections` element, single invocation of every child, unchanged four show/hide states, and absence of new server actions or automatic issue/send/approval behavior. Run the smallest strict TypeScript check through a temporary config outside Git limited to the exact component and test paths, then run `git diff --check` and exact changed-path/index checks.
+
+**Frozen/no-modify child paths:** `CompletionReportSection.tsx`, `InvoiceSection.tsx`, `MaintenanceSection.tsx`, `ReviewRequestApprovalSection.tsx`, and `review-request-actions.ts`.
+
+**Prohibited:** Any third repository path; automatic artifact creation, invoice issue, payment recording, approval, LINE send, maintenance creation, or review delivery; server-action, persistence, schema, RLS, migration, dependency, or config change; DB, Supabase, Auth, Storage, LINE, EC, or other external-service access; stage, commit, push, Ready conversion, merge, deployment, cleanup, or destructive action without its later separate gate.
+
+**Current stopping point:** Git authority binding only. The first source attempt made no changes. This two-document plan/ledger correction must be independently accepted, committed, and normally pushed before the already-approved exact two-path implementation resumes on Draft PR #15.
+
 ### GDA-4 — Customer communication and follow-up
 
 **Objective:** Make estimate, completion, review, and maintenance communication usable without manual re-entry.
@@ -276,7 +297,7 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Prohibited:** Modification of `review-request-actions.ts` or any third source/test path; persistence, review-request table/schema/RLS/migration work; LINE sending; AI-provider execution; dependency/config changes; database, Supabase, Auth, Storage, LINE, EC, or other external-service access; stage, commit, push, Ready conversion, merge, deployment, or destructive action without its later separate gate.
 
-**Current stopping point:** The ratified plan was pushed at commit `ccda0a8d31142178391d74d9496b514fa9c2ca8c`, but the first Claude diagnosis stopped fail-closed because the authorization sentence above was stale and the instruction was posted to frozen order PR #7. The prior GYEON DA PR #8 is already merged and closed, so the owner authorized new Draft PR #15 as the current GDA-4A coordination surface. No GDA-4A source or test file has been edited. This two-document PR #15 binding must be accepted, committed, and pushed before a corrected PR #15 read-only diagnosis.
+**Current stopping point:** GDA-4A-I1 is accepted, committed at `0de9eedf46aa23d505299280097d937c85d22a11`, normally pushed to Draft PR #15, and recorded by the append-only ledger synchronization commit `73460aa0d4cf6c0da94c222f99ce7762584dffd0`. PR #15 remains OPEN/Draft/unmerged. Persistence, approval execution, LINE delivery, Ready conversion, merge, and deployment remain unauthorized. The active next bounded phase is GDA-3A above.
 
 ### GDA-5 — Operational AI assistance
 

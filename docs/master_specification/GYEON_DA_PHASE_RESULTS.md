@@ -1539,3 +1539,62 @@ evidence_level: "E1 source and focused executable verification accepted; no DB, 
 decision: "GDA_4A_I1_PREVIEW_ONLY_IMPLEMENTATION_ACCEPTED_PUSHED"
 next: "INDEPENDENTLY_ACCEPT_THIS_ONE_DOCUMENT_LEDGER_SYNC; THEN_REQUEST_SEPARATE_COMMIT_AND_NORMAL_PUSH_GATES; KEEP_PR_15_DRAFT_AND_UNMERGED"
 ```
+
+## GDA-3A-A0 — Bind the completed-work-order review-surface implementation
+
+```yaml
+phase: GDA-3A-A0_COMPLETION_DESK_GIT_AUTHORITY_BINDING
+status: DOCUMENT_AUTHORITY_CANDIDATE_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+authorization: "After GDA-4A-I1 and its governance synchronization were normally pushed, the product owner explicitly approved starting the next smallest Book-side phase and separately approved the exact two-path uncommitted GDA-3A-I1 implementation."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  required_state: "OPEN/Draft/unmerged"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  base_head: "73460aa0d4cf6c0da94c222f99ce7762584dffd0"
+  base_tree: "bc10067ab0e9de88e08e9ba3e7c0186e0205b889"
+  upstream: "0/0"
+accepted_diagnosis:
+  decision: "GDA_3A_D1_READ_ONLY_DIAGNOSIS_ACCEPTED_WITH_CODEX_PATCH_CORRECTION"
+  work_report_contradiction: "already source-closed; no repair authorized"
+  exact_gap: "completed work orders expose completion report, invoice, maintenance, and review request as four disconnected toggles without one completion-desk sequence"
+  proposed_scope: "UI-only grouping; no child capability or authority change"
+failed_implementation_attempt_1:
+  result: "FAIL_CLOSED_GIT_GOVERNANCE_MISSING"
+  reason: "PR #15 carried the implementation instruction but the Git completion plan and ledger had no ratified GDA-3A entry"
+  repository_changed_paths: "none"
+  index_worktree: "clean"
+  tests_typecheck_build: "not run"
+  external_or_database_access: "none"
+  evidence: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+literal_document_allowlist:
+  - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+  - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+future_literal_implementation_allowlist:
+  - "MODIFY src/components/work-orders/WorkOrderDetail.tsx"
+  - "ADD src/components/work-orders/work-order-completion-desk.test.ts"
+required_behavior:
+  - "Use one local completionDeskSections element; do not duplicate the four existing child implementations."
+  - "Completed work orders render it once inside 完了後の対応 with the exact four-step sequence."
+  - "Non-completed work orders render the same element without the wrapper and retain current behavior."
+  - "Preserve existing state, toggles, imports, child props, status guards, and human-confirmation boundaries."
+frozen_child_paths:
+  - "src/components/completion-reports/CompletionReportSection.tsx"
+  - "src/components/invoices/InvoiceSection.tsx"
+  - "src/components/maintenance/MaintenanceSection.tsx"
+  - "src/components/reputation/ReviewRequestApprovalSection.tsx"
+  - "src/lib/reputation/actions/review-request-actions.ts"
+required_verification:
+  - "focused node:test source-contract test"
+  - "strict TypeScript through /private/tmp/gda3a-work-order-completion-desk-tsconfig.json"
+  - "git diff --check"
+  - "exact two-path candidate and empty index"
+prohibitions:
+  - "No source/test changes until this exact authority candidate is accepted, committed, and normally pushed."
+  - "No DB/Supabase/Auth/Storage/LINE/EC access, migration, dependency/config change, stage, Ready, merge, deploy, cleanup, or destructive action."
+resume_rule: "After this exact two-document correction is accepted, committed, and normally pushed, resume the already owner-approved GDA-3A-I1 exact two-path implementation without another owner reply. The later source commit and push remain separate gates."
+evidence_level: "E0 Git authority binding only; not source, runtime, environment, field, or production acceptance"
+decision: "GDA_3A_GIT_AUTHORITY_BINDING_CANDIDATE_UNCOMMITTED"
+next: "RETURN_THIS_EXACT_TWO_DOCUMENT_CANDIDATE_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT AND NORMAL PUSH GATES; THEN RESUME THE ALREADY-APPROVED GDA-3A-I1 IMPLEMENTATION"
+```
