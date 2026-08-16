@@ -63,6 +63,113 @@ export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDet
   const estimate = wo.estimates;
   const items    = estimate?.estimate_items ?? [];
 
+  const completionDeskSections = (
+    <>
+      {/* Completion Report Section */}
+      <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
+        <button
+          onClick={() => setShowReport((v) => !v)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              完了報告書
+            </h3>
+            {wo.status === "completed" && (
+              <span className="text-[10px] text-green-400 font-medium">● 完了</span>
+            )}
+          </div>
+          <span className="text-slate-600 text-xs">{showReport ? "▲ 閉じる" : "▼ 開く"}</span>
+        </button>
+
+        {showReport && (
+          <div className="mt-4">
+            <CompletionReportSection workOrderId={wo.id} />
+          </div>
+        )}
+      </div>
+
+      {/* Invoice Section */}
+      <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
+        <button
+          onClick={() => setShowInvoice((v) => !v)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            請求書
+          </h3>
+          <span className="text-slate-600 text-xs">{showInvoice ? "▲ 閉じる" : "▼ 開く"}</span>
+        </button>
+
+        {showInvoice && (
+          <div className="mt-4">
+            <InvoiceSection workOrderId={wo.id} />
+          </div>
+        )}
+      </div>
+
+      {/* Maintenance Section */}
+      <div className={`rounded-xl shadow-lg p-5 ${
+        wo.status === "completed"
+          ? "bg-[#1e293b] border border-green-700/20"
+          : "bg-[#1e293b]"
+      }`}>
+        <button
+          onClick={() => setShowMaintenance((v) => !v)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              メンテナンス通知
+            </h3>
+            {wo.status === "completed" && (
+              <span className="text-[10px] text-green-400 font-medium">● 設定推奨</span>
+            )}
+          </div>
+          <span className="text-slate-600 text-xs">{showMaintenance ? "▲ 閉じる" : "▼ 開く"}</span>
+        </button>
+
+        {showMaintenance && (
+          <div className="mt-4">
+            <MaintenanceSection
+              workOrderId={wo.id}
+              customerId={wo.customer_id ?? ""}
+              vehicleId={wo.vehicle_id}
+              isCompleted={wo.status === "completed"}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Review Request Approval Section — Phase E: ai_reputation feature gate */}
+      {wo.status === "completed" && wo.customer_id && (
+        <div className={`rounded-xl shadow-lg p-5 bg-[#1e293b] border border-blue-700/20`}>
+          <button
+            onClick={() => setShowReviewRequest((v) => !v)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                レビュー依頼
+              </h3>
+              <span className="text-[10px] text-blue-400 font-medium">● AI機能</span>
+            </div>
+            <span className="text-slate-600 text-xs">{showReviewRequest ? "▲ 閉じる" : "▼ 開く"}</span>
+          </button>
+
+          {showReviewRequest && (
+            <div className="mt-4">
+              <ReviewRequestApprovalSection
+                workOrderId={wo.id}
+                isCompleted={wo.status === "completed"}
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
       {/* Backdrop */}
@@ -242,107 +349,21 @@ export default function WorkOrderDetail({ workOrder: wo, onClose }: WorkOrderDet
             )}
           </div>
 
-          {/* Completion Report Section */}
-          <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-            <button
-              onClick={() => setShowReport((v) => !v)}
-              className="w-full flex items-center justify-between text-left"
-            >
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  完了報告書
-                </h3>
-                {wo.status === "completed" && (
-                  <span className="text-[10px] text-green-400 font-medium">● 完了</span>
-                )}
-              </div>
-              <span className="text-slate-600 text-xs">{showReport ? "▲ 閉じる" : "▼ 開く"}</span>
-            </button>
-
-            {showReport && (
-              <div className="mt-4">
-                <CompletionReportSection workOrderId={wo.id} />
-              </div>
-            )}
-          </div>
-
-          {/* Invoice Section */}
-          <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-            <button
-              onClick={() => setShowInvoice((v) => !v)}
-              className="w-full flex items-center justify-between text-left"
-            >
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                請求書
+          {/* Completion Desk — completed-work-order follow-up sequence */}
+          {wo.status === "completed" ? (
+            <div className="bg-[#1e293b]/60 rounded-xl border border-green-700/30 p-5">
+              <h3 className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-1">
+                完了後の対応
               </h3>
-              <span className="text-slate-600 text-xs">{showInvoice ? "▲ 閉じる" : "▼ 開く"}</span>
-            </button>
-
-            {showInvoice && (
-              <div className="mt-4">
-                <InvoiceSection workOrderId={wo.id} />
+              <p className="text-[10px] text-slate-500 mb-4">
+                1. 完了報告書 → 2. 請求書 → 3. メンテナンス通知 → 4. レビュー依頼
+              </p>
+              <div className="flex flex-col gap-4">
+                {completionDeskSections}
               </div>
-            )}
-          </div>
-
-          {/* Maintenance Section */}
-          <div className={`rounded-xl shadow-lg p-5 ${
-            wo.status === "completed"
-              ? "bg-[#1e293b] border border-green-700/20"
-              : "bg-[#1e293b]"
-          }`}>
-            <button
-              onClick={() => setShowMaintenance((v) => !v)}
-              className="w-full flex items-center justify-between text-left"
-            >
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  メンテナンス通知
-                </h3>
-                {wo.status === "completed" && (
-                  <span className="text-[10px] text-green-400 font-medium">● 設定推奨</span>
-                )}
-              </div>
-              <span className="text-slate-600 text-xs">{showMaintenance ? "▲ 閉じる" : "▼ 開く"}</span>
-            </button>
-
-            {showMaintenance && (
-              <div className="mt-4">
-                <MaintenanceSection
-                  workOrderId={wo.id}
-                  customerId={wo.customer_id ?? ""}
-                  vehicleId={wo.vehicle_id}
-                  isCompleted={wo.status === "completed"}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Review Request Approval Section — Phase E: ai_reputation feature gate */}
-          {wo.status === "completed" && wo.customer_id && (
-            <div className={`rounded-xl shadow-lg p-5 bg-[#1e293b] border border-blue-700/20`}>
-              <button
-                onClick={() => setShowReviewRequest((v) => !v)}
-                className="w-full flex items-center justify-between text-left"
-              >
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    レビュー依頼
-                  </h3>
-                  <span className="text-[10px] text-blue-400 font-medium">● AI機能</span>
-                </div>
-                <span className="text-slate-600 text-xs">{showReviewRequest ? "▲ 閉じる" : "▼ 開く"}</span>
-              </button>
-
-              {showReviewRequest && (
-                <div className="mt-4">
-                  <ReviewRequestApprovalSection
-                    workOrderId={wo.id}
-                    isCompleted={wo.status === "completed"}
-                  />
-                </div>
-              )}
             </div>
+          ) : (
+            completionDeskSections
           )}
         </div>
       </div>
