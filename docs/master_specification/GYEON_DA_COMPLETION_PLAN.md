@@ -255,9 +255,28 @@ This is event-driven phase governance. It does not reinstate a background pollin
 - Queue/cron retries are idempotent and observable without leaking customer data.
 - Completion and maintenance messages include only authoritative data and valid secure links.
 - Payment confirmation is implemented only after an idempotent outbox or created-vs-replayed contract is accepted.
-- Review-request dry-run is replaced by real, approval-gated execution or explicitly deferred with no misleading UI.
+- Review-request dry-run is replaced by real, approval-gated execution or explicitly deferred with no misleading UI. Until persistence and delivery are separately authorized, `GDA-4A` makes the existing surface preview/copy-only and removes fake approval, rejection, and skip actions.
 
 **Acceptance target:** E4 in a controlled GYEON pilot. Migration/external setup/deployment remain separate authorization phases.
+
+### GDA-4A — Review-request preview-only safety repair
+
+**Authorization:** On 2026-08-16 the product owner approved selecting and immediately preparing the smallest Book-side GYEON DA implementation phase after GDA-ORDER-1A was normally pushed. This plan records the selected phase before source editing; post-update owner ratification remains required by fixed decision 8.
+
+**Objective:** Remove fake approval-state interactions from the unfinished review-request feature while preserving the useful, truthful preview and copy tools. The UI must not imply that approval, rejection, deferral, persistence, AI generation, or LINE delivery occurred when none of those actions are implemented.
+
+**Literal implementation allowlist:**
+
+1. MODIFY `src/components/reputation/ReviewRequestApprovalSection.tsx`
+2. ADD `src/components/reputation/review-request-preview-only.test.ts`
+
+**Required behavior:** Keep authenticated readiness loading, customer/vehicle/service summary, deterministic message preview, copy action, link readiness, missing settings, and compliance information. Change approval-oriented labels to preview/readiness language; remove imports, state, handlers, result UI, and buttons for dry-run approve/reject/skip; retain the disabled AI-edit boundary; and show clear Japanese notice that the current screen does not save an approval or send LINE.
+
+**Required verification:** The new focused source-contract test, the smallest strict TypeScript check for the two candidate paths and direct imports, and `git diff --check` must pass. Before implementation, Claude must perform one bounded read-only diagnosis at the pinned source base, and MacBook Codex must independently confirm the two-path scope.
+
+**Prohibited:** Modification of `review-request-actions.ts` or any third source/test path; persistence, review-request table/schema/RLS/migration work; LINE sending; AI-provider execution; dependency/config changes; database, Supabase, Auth, Storage, LINE, EC, or other external-service access; stage, commit, push, Ready conversion, merge, deployment, or destructive action without its later separate gate.
+
+**Current stopping point:** This plan and ledger update is a ratified, uncommitted two-document governance change. No GDA-4A source or test file has been edited.
 
 ### GDA-5 — Operational AI assistance
 

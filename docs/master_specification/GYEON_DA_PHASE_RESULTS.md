@@ -1328,3 +1328,65 @@ evidence_level: "E0 governance plus source-derived diagnosis only; not source ac
 decision: "GDA_ORDER_1A_TWO_PATH_PLAN_RATIFIED_UNCOMMITTED"
 next: "REQUEST_THE_SEPARATE_TWO_DOCUMENT_COMMIT_GATE; AFTER_COMMIT_ACCEPTANCE_REQUEST_NORMAL_PUSH; ONLY_AFTER_REMOTE_PLAN_EVIDENCE_POST_A_CLAUDE_TARGETED_READ_ONLY_DIAGNOSIS_INSTRUCTION_TO_DRAFT_PR_7"
 ```
+
+## GDA-4A-A0 — Review-request preview-only safety phase selection
+
+```yaml
+phase: GDA-4A-A0_REVIEW_REQUEST_PREVIEW_ONLY_PLAN_SELECTION
+status: PLAN_RATIFIED_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+objective: "Record the smallest DB-free GYEON DA implementation phase after the pushed order-idempotency repair: remove fake review approval-state interactions and retain a truthful preview/copy-only surface until persistence and LINE delivery are separately authorized."
+authorization: "After GDA-ORDER-1A was pushed, the product owner explicitly approved one bounded selection of the next GYEON DA mainline implementation and immediate preparation of its smallest phase, then explicitly ratified this recorded GDA-4A two-document plan change on 2026-08-16 after independent candidate review."
+predecessor_delivery:
+  phase: GDA-ORDER-1A
+  commit: "6fcd29d907d5a6648fbf509ad7f17c44392dae99"
+  tree: "924c89b84c6f48ac135dc830a8fc82ffa9001482"
+  remote_branch: "agent/gyeon-order-runtime-v1"
+  upstream: "0/0"
+  verification: "16/16 focused tests PASS; focused strict TypeScript PASS; git diff --check PASS"
+  evidence: "https://github.com/nisikawa-officeAZ/GYEON/pull/7#issuecomment-5306614558"
+planning_candidate:
+  repository: "nisikawa-officeAZ/GYEON"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  base_head: "1e90831d6873dd13bb37c40ddac66f52a92279a3"
+  base_tree: "46c69f96ea3431a60acf641bd41e06a201420d2f"
+  literal_document_allowlist:
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  commit: false
+  push: false
+source_base:
+  branch: "agent/auth-signup-recovery-jp-v1"
+  head: "f0a9135bf7744e139910899db232f52b528ac88e"
+  tree: "dbf1a4911014ab46fbf063f507b1a04c5abb1662"
+  upstream: "0/0"
+  initial_index_and_worktree: "clean"
+diagnosis:
+  - "ReviewRequestApprovalSection loads a useful authenticated readiness and deterministic LINE-message preview, but its approve/reject/skip handlers call dry-run actions that persist and send nothing."
+  - "The UI presents approval-oriented state and action outcomes even though review-request approval persistence, AI generation, and LINE dispatch are explicitly unimplemented."
+  - "The completion plan already requires either real approval-gated execution or explicit deferral with no misleading UI; preview/copy-only is the smallest safe DB-free repair."
+future_literal_two_path_write_allowlist:
+  - "MODIFY src/components/reputation/ReviewRequestApprovalSection.tsx"
+  - "ADD src/components/reputation/review-request-preview-only.test.ts"
+required_behavior:
+  - "Preserve readiness loading, summaries, deterministic preview, copy, link readiness, missing settings, compliance display, and the disabled future AI-edit boundary."
+  - "Remove dry-run approve/reject/skip imports, state, handlers, result UI, and buttons."
+  - "Replace approval-oriented labels with preview/readiness wording and clearly state in Japanese that approval is not saved and LINE is not sent."
+required_verification:
+  - "new focused preview-only source-contract test"
+  - "smallest strict TypeScript check for the two candidate paths and direct imports"
+  - "git diff --check"
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx remains metadata/status/hash-only; content access is prohibited"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql remains content-protected"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql remains content-protected"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts remains content-protected"
+prohibitions:
+  - "No modification of src/lib/reputation/actions/review-request-actions.ts and no third source/test path."
+  - "No persistence, schema, RLS, migration, LINE sending, AI-provider execution, dependency, or config change."
+  - "No DB, Supabase, Auth, Storage, LINE, EC, stage, commit, push, Ready, merge, deployment, or destructive action during this plan candidate."
+evidence_level: "E0 governance plus source-derived bounded diagnosis only; not source, runtime, environment, field, or production acceptance"
+decision: "GDA_4A_PREVIEW_ONLY_TWO_PATH_PLAN_RATIFIED_UNCOMMITTED"
+next: "REQUEST_THE_SEPARATE_TWO_DOCUMENT_COMMIT_GATE; AFTER_COMMIT_ACCEPTANCE_REQUEST_NORMAL_PUSH; THEN_POST_AND_RUN_ONE_BOUNDED_CLAUDE_READ_ONLY_DIAGNOSIS_BEFORE_SOURCE_IMPLEMENTATION"
+```
