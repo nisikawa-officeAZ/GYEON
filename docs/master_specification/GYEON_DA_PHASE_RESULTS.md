@@ -1277,3 +1277,54 @@ rollback_or_recovery: "Discard only this uncommitted five-document A1 sync candi
 decision: "GHP_2A_SOURCE_TEST_SEED_ACCEPTED_AND_FIVE_DOCUMENT_GOVERNANCE_SYNCED_UNCOMMITTED"
 next: "RETURN_GHP-2A-A1_FIVE_DOCUMENT_SYNC_CANDIDATE_TO_MACBOOK_CODEX_FOR_INDEPENDENT_ACCEPTANCE; COMMIT/PUSH/READY/MERGE_REMAIN_SEPARATE_GATES"
 ```
+
+## GDA-ORDER-1A-A0 — Draft-only order UI/idempotency bounded resume
+
+```yaml
+phase: GDA-ORDER-1A-A0_ORDER_UI_IDEMPOTENCY_BOUNDED_RESUME
+status: PLAN_RATIFIED_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+objective: "Record the smallest safe Book-side exception needed to make the existing product-order form compatible with Draft PR #7's fail-closed server action while D2-S2 waits for official product input."
+authorization: "The product owner explicitly answered yes to starting the Book-side order UI and idempotency repair in parallel while the official D2-S2 product table is unavailable, then explicitly ratified this recorded two-document plan change after independent candidate review on 2026-08-16."
+planning_candidate:
+  repository: "nisikawa-officeAZ/GYEON"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  base_head: "88e55e03b69fd301f8da987f4702454b50c2205e"
+  base_tree: "9dd62db40e7c62ca93c08377c601e3967cedde57"
+  literal_document_allowlist:
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  current_changed_paths: "exactly the two document paths above"
+  commit: false
+  push: false
+order_draft_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/7"
+  head: "75245038870d1daa820e692a1cee44aa50849594"
+  tree: "e0b10498c869f09054f31de01c06c7ef7f6307b8"
+  state_required: "OPEN/Draft/unmerged"
+diagnosis:
+  - "The secure server action requires a nonempty idempotency_key and uses the order RPC rather than direct multi-table writes."
+  - "The secure server action rejects submitted status before card authorization and does not consume the current UI order_date."
+  - "ProductOrderForm.tsx supplies no idempotency key, exposes an unsupported submitted/confirmation checkbox, and exposes a misleading order-date input."
+future_literal_two_path_write_allowlist:
+  - "MODIFY src/components/product-orders/ProductOrderForm.tsx"
+  - "ADD src/components/product-orders/product-order-form-idempotency.test.ts"
+required_verification:
+  - "focused product-order-form idempotency source-contract test"
+  - "existing src/lib/product-orders/gyeon-order-rpc-binding.test.ts"
+  - "focused strict TypeScript check for the bounded candidate and direct imports"
+  - "git diff --check"
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx remains metadata/status/hash-only; content access is prohibited"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql remains content-protected"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql remains content-protected"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts remains content-protected"
+prohibitions:
+  - "No third source/test path, dependency/config change, official-product decision, broader ordering, offer/shipping, card authorization, or payment capture."
+  - "No DB, Supabase, Auth, Storage, LINE, EC, migration, Ready, merge, deployment, or destructive action."
+  - "No source/test edit, test execution, stage, commit, or push during this document-plan candidate."
+evidence_level: "E0 governance plus source-derived diagnosis only; not source acceptance, runtime, environment, field, or production proof"
+decision: "GDA_ORDER_1A_TWO_PATH_PLAN_RATIFIED_UNCOMMITTED"
+next: "REQUEST_THE_SEPARATE_TWO_DOCUMENT_COMMIT_GATE; AFTER_COMMIT_ACCEPTANCE_REQUEST_NORMAL_PUSH; ONLY_AFTER_REMOTE_PLAN_EVIDENCE_POST_A_CLAUDE_TARGETED_READ_ONLY_DIAGNOSIS_INSTRUCTION_TO_DRAFT_PR_7"
+```

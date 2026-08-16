@@ -48,7 +48,7 @@ The following decisions remain binding until this file is changed, reviewed, exp
 
 1. **GYEON DA completion is the MacBook priority.**
 2. **SaaS commercialization is deferred until after GYEON DA field completion.**
-3. **GYEON order Draft PR #7 is frozen.** It may be resumed only when this plan records a direct GYEON DA completion dependency and the user approves that phase.
+3. **GYEON order Draft PR #7 is generally frozen, with one exact bounded exception.** On 2026-08-16 the product owner approved `GDA-ORDER-1A`, a two-path Draft-only compatibility repair because the accepted secure order action cannot be used safely by the current UI without a stable idempotency key, while the UI still exposes an unsupported submitted/card path. The exception is limited to `ProductOrderForm.tsx` and one focused source-contract test. It does not authorize broader ordering, offer/shipping authority, card authorization, database or migration work, external API access, Ready conversion, merge, or deployment.
 4. **Office AZ inventory is not MacBook implementation scope.** Mac Studio owns the complete Office AZ inventory foundation. MacBook may define integration contracts and perform independent review only.
 5. **The closed finance track stays closed.** Accepted invoice, payment, monthly-statement, and PDF-artifact contracts are not redesigned unless a verified regression blocks GYEON DA.
 6. **AI assists; humans decide.** AI may draft, summarize, classify, or recommend. It must not issue invoices, send customer messages, overwrite customer/vehicle records, apply migrations, or perform destructive actions without the required human approval.
@@ -76,7 +76,7 @@ The following paths are excluded from content inspection and modification unless
 ### 3.2 Excluded delivery tracks
 
 - SaaS catalogue, commercial billing expansion, white label, and generic SaaS rollout.
-- GYEON product-order expansion while Draft PR #7 is frozen.
+- GYEON product-order expansion while Draft PR #7 is frozen, except the exact two-path `GDA-ORDER-1A` UI/idempotency compatibility repair recorded below.
 - Office AZ inventory implementation, migrations, tests, deployment, and operations.
 - EC integration and inventory-to-EC availability.
 - Marketing automation that does not directly remove current detailer administrative work.
@@ -141,7 +141,7 @@ This register prevents a future session from treating every placeholder as a com
 
 ### Deferred after GDA-7
 
-- HLS video delivery, customer media gallery, marketing/SEO/growth AI, generic SaaS, white label, ordering expansion, Office AZ inventory implementation on MacBook, and EC expansion.
+- HLS video delivery, customer media gallery, marketing/SEO/growth AI, generic SaaS, white label, ordering expansion beyond the exact `GDA-ORDER-1A` compatibility repair, Office AZ inventory implementation on MacBook, and EC expansion.
 - The full GYEON HP store-discovery track is governed by `GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md` and remains deferred until GDA-7. The only accepted exception is `GHP-2A`: a pure two-path projection source/test seed with no schema, Storage, API, website, SEO/MEO, GBP or deployment authority.
 
 ## 6. Strict phase protocol
@@ -298,6 +298,27 @@ This is event-driven phase governance. It does not reinstate a background pollin
 **Required work:** accepted commit/tree, reviewed PR, authorized merge, authorized migrations/configuration, authorized deployment, authenticated production smoke, rollback/recovery evidence, and result-ledger closure.
 
 **Exit:** E5 for the critical journey. Only after GDA-7 closes may the full GYEON HP sequence or SaaS commercialization planning become the primary roadmap. The bounded GHP-2A seed below does not change this exit condition.
+
+### GDA-ORDER-1A — Draft-only order form idempotency compatibility repair
+
+**Authorization:** The product owner explicitly approved this bounded Book-side phase on 2026-08-16 while D2-S2 waits for the official product-input package. This is a tactical safety and usability exception, not a change to the GYEON DA completion priority and not evidence that ordering is production-ready.
+
+**Objective:** Make the existing order form compatible with Draft PR #7's secure server action by supplying one stable idempotency key across duplicate clicks and retries, and by removing UI controls for server behavior that is intentionally unavailable before card authorization.
+
+**Direct dependency and present defect:** Draft PR #7 requires a nonempty `idempotency_key`, rejects `submitted` before card authorization, and does not accept the UI's `order_date`. The current `ProductOrderForm.tsx` supplies no idempotency key, exposes a submitted/confirmation checkbox, and exposes a misleading order-date control. Without this bounded repair the order surface is internally inconsistent and remains vulnerable to duplicate intent at the UI boundary.
+
+**Literal implementation allowlist:**
+
+1. MODIFY `src/components/product-orders/ProductOrderForm.tsx`
+2. ADD `src/components/product-orders/product-order-form-idempotency.test.ts`
+
+**Required behavior:** Generate one client idempotency key per form instance, reuse it for repeated submission attempts and retry of the same intent, submit Draft status only, remove the unsupported submit/card-confirmation option, remove the unused order-date input, and explain the Draft-only limitation in clear Japanese.
+
+**Required verification:** The new focused source-contract test, the existing `src/lib/product-orders/gyeon-order-rpc-binding.test.ts`, a focused strict TypeScript check covering the two candidate paths and their direct imports, and `git diff --check` must pass. Before implementation, Codex must publish a Claude-targeted read-only diagnosis instruction on Draft PR #7 and independently confirm its pinned head/tree and exact scope.
+
+**Prohibited:** Every third source/test path; dependency or configuration changes; product-price or official-product-data decisions; order authority, offer/shipping authority, card authorization or payment capture; source-derived claims of runtime proof; database, Supabase, Auth, Storage, LINE, EC or other external-service access; schema/RLS/migration creation or application; stage, commit, push, Ready conversion, merge, deployment, or destructive action without its later separate gate.
+
+**Current stopping point:** This plan and ledger update is a two-document uncommitted governance candidate. Source/test implementation remains inactive until this candidate is independently accepted, committed, normally pushed, and explicitly ratified by the product owner after the recorded change.
 
 ### GHP-2A — Public-profile projection seed (accepted pre-GDA-7 exception)
 
