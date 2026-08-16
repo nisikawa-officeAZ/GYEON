@@ -1390,3 +1390,49 @@ evidence_level: "E0 governance plus source-derived bounded diagnosis only; not s
 decision: "GDA_4A_PREVIEW_ONLY_TWO_PATH_PLAN_RATIFIED_UNCOMMITTED"
 next: "REQUEST_THE_SEPARATE_TWO_DOCUMENT_COMMIT_GATE; AFTER_COMMIT_ACCEPTANCE_REQUEST_NORMAL_PUSH; THEN_POST_AND_RUN_ONE_BOUNDED_CLAUDE_READ_ONLY_DIAGNOSIS_BEFORE_SOURCE_IMPLEMENTATION"
 ```
+
+## GDA-4A-A0-R1 — Authorization sentence and coordination-PR correction
+
+```yaml
+phase: GDA-4A-A0-R1_GOVERNANCE_POINTER_CORRECTION
+status: DOCUMENT_REPAIR_CANDIDATE_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+objective: "Correct the stale post-ratification sentence and route GDA-4A coordination to the active GYEON DA Draft PR #8 rather than frozen order Draft PR #7."
+authorization: "The product owner explicitly ratified GDA-4A, separately approved its two-document commit, and separately approved normal push of commit ccda0a8 on 2026-08-16. This R1 candidate only repairs the governance wording and PR pointer exposed by Claude's required fail-closed diagnosis stop."
+accepted_remote_plan:
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  commit: "ccda0a8d31142178391d74d9496b514fa9c2ca8c"
+  tree: "7f54897ba7bed332578a4d8fcdded934e7167ed8"
+  upstream: "0/0"
+failed_instruction:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/7"
+  comment: "https://github.com/nisikawa-officeAZ/GYEON/pull/7#issuecomment-5306674152"
+  result: "Claude stopped fail-closed before emitting GDA-4A-D1_RESULT_V1 because the source branch saw stale plan/ledger authority and PR #7 is frozen for non-order work."
+  source_changed_paths: "none"
+  tests_typecheck_build: "not run"
+  external_or_database_access: "none"
+superseding_stop_comment:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/7"
+  result: "Prior GDA-4A-D1 instruction explicitly superseded; PR #7 remains frozen for GDA-4A."
+correction:
+  - "Replace the stale plan sentence saying post-update ratification remains required with the already completed explicit owner-ratification record."
+  - "State that GDA-4A read-only diagnosis is coordinated on GYEON DA Draft PR #8; it does not resume order Draft PR #7."
+  - "Require this exact two-document repair to be accepted, committed, and pushed before a corrected Claude diagnosis is posted."
+literal_document_allowlist:
+  - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+  - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+source_base:
+  branch: "agent/auth-signup-recovery-jp-v1"
+  head: "f0a9135bf7744e139910899db232f52b528ac88e"
+  tree: "dbf1a4911014ab46fbf063f507b1a04c5abb1662"
+  upstream: "0/0"
+  state_after_failed_diagnosis: "clean; no source/test changes"
+future_coordination_pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/8"
+prohibitions:
+  - "No source/test/dependency/config/migration change and no DB/Supabase/Auth/Storage/LINE/EC access."
+  - "No stage, commit, push, Ready, merge, deploy, cleanup, or destructive action during this document repair candidate."
+evidence_level: "E0 corrected governance only; not source, runtime, environment, field, or production acceptance"
+decision: "GDA_4A_GOVERNANCE_POINTER_CHANGES_REQUIRED_REPAIRED_UNCOMMITTED"
+next: "RETURN_THE_EXACT_TWO_DOCUMENT_R1_CANDIDATE_TO_MACBOOK_CODEX; AFTER_ACCEPTANCE_REQUEST_SEPARATE_COMMIT_AND_PUSH_GATES; THEN_POST_CORRECTED_READ_ONLY_DIAGNOSIS_TO_PR_8"
+```
