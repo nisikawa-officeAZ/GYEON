@@ -16,6 +16,12 @@ interface OrderRow extends ProductOrderItemInput {
 let _key = 0;
 function nextKey() { return ++_key; }
 
+// One cryptographically random key per form intent. Reused across rerenders,
+// duplicate clicks, and retries; rotated only after a successful save.
+function createIdempotencyKey(): string {
+  return crypto.randomUUID();
+}
+
 interface Props {
   onSaved: (order: ProductOrderDB) => void;
   onCancel?: () => void;
@@ -23,12 +29,11 @@ interface Props {
 
 export default function ProductOrderForm({ onSaved, onCancel }: Props) {
   const [rows,                setRows]                = useState<OrderRow[]>([]);
-  const [orderDate,           setOrderDate]           = useState(new Date().toISOString().slice(0, 10));
   const [notes,               setNotes]               = useState("");
-  const [submitAsSubmitted,   setSubmitAsSubmitted]   = useState(false);
   const [showSelector,        setShowSelector]        = useState(false);
   const [error,               setError]               = useState<string | null>(null);
   const [isPending,           startTransition]        = useTransition();
+  const [idempotencyKey,      setIdempotencyKey]      = useState<string>(() => createIdempotencyKey());
 
   function addProduct(product: GyeonProductDB) {
     // If already in list, increment quantity
@@ -73,15 +78,16 @@ export default function ProductOrderForm({ onSaved, onCancel }: Props) {
 
     startTransition(async () => {
       const result = await createProductOrder({
-        items:      rows.map(({ key: _k, ...item }) => item),
-        order_date: orderDate,
-        notes:      notes || null,
-        status:     submitAsSubmitted ? "submitted" : "draft",
+        items:           rows.map(({ key: _k, ...item }) => item),
+        notes:           notes || null,
+        status:          "draft",
+        idempotency_key: idempotencyKey,
       });
 
       if ("error" in result) {
         setError(result.error);
       } else {
+        setIdempotencyKey(createIdempotencyKey());
         onSaved(result.data);
       }
     });
@@ -107,26 +113,15 @@ export default function ProductOrderForm({ onSaved, onCancel }: Props) {
         )}
 
         {/* Header fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-slate-400">注文日</label>
-            <input
-              type="date"
-              value={orderDate}
-              onChange={(e) => setOrderDate(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-slate-400">備考</label>
-            <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="社内メモ（任意）"
-              className={inputClass}
-            />
-          </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400">備考</label>
+          <input
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="社内メモ（任意）"
+            className={inputClass}
+          />
         </div>
 
         {/* Item list */}
@@ -213,18 +208,11 @@ export default function ProductOrderForm({ onSaved, onCancel }: Props) {
         </div>
 
         {/* Submit */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-700">
-          <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={submitAsSubmitted}
-              onChange={(e) => setSubmitAsSubmitted(e.target.checked)}
-              className="accent-blue-600"
-            />
-            保存と同時に注文確定する
-          </label>
-
-          <div className="flex gap-2">
+        <div className="flex flex-col gap-2 pt-2 border-t border-slate-700">
+          <p className="text-xs text-slate-500">
+            カード与信の接続前は下書き保存のみご利用いただけます
+          </p>
+          <div className="flex justify-end gap-2">
             {onCancel && (
               <button
                 type="button"
@@ -240,7 +228,7 @@ export default function ProductOrderForm({ onSaved, onCancel }: Props) {
               disabled={isPending || rows.length === 0}
               className="px-4 py-2 text-sm font-medium bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
             >
-              {isPending ? "作成中…" : submitAsSubmitted ? "注文を確定する" : "下書きとして保存"}
+              {isPending ? "作成中…" : "下書きとして保存"}
             </button>
           </div>
         </div>
