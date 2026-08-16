@@ -1722,3 +1722,68 @@ evidence_level: "E0 Git authority only; not source, runtime, database, environme
 decision: "GDA_3B_GIT_AUTHORITY_CANDIDATE_UNCOMMITTED"
 next: "RETURN_THIS_EXACT_TWO_DOCUMENT_CANDIDATE_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT_AND_NORMAL_PUSH_GATES; THEN REQUEST_EXPLICIT_OWNER_APPROVAL_OF_THE_EXACT_TWO_PATH_UNCOMMITTED_GDA_3B_IMPLEMENTATION"
 ```
+
+## GDA-3B-I1 — Invoice-from-work-order replay guard accepted and pushed
+
+```yaml
+phase: GDA-3B-I1_INVOICE_FROM_WORK_ORDER_REPLAY_GUARD
+status: PASS_IMPLEMENTATION_COMMITTED_AND_PUSHED
+date: 2026-08-16
+append_only: true
+authorization: "The product owner explicitly approved the exact two-path uncommitted implementation, its exact two-path commit, and its normal non-force push as separate gates."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  live_state_after_push: "OPEN/Draft/unmerged"
+  base_branch: "main"
+implementation_commit:
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  parent: "da5ae18a5800760025fe675e52f01d481ef99fd4"
+  commit: "9731b8d9f5cf9a2718e40f45363c6bbb49a9aa60"
+  tree: "39038d2b7964dd562ef2a9112cc15fcad416b700"
+  push_mode: "normal non-force"
+  upstream_after_push: "0/0"
+literal_committed_paths:
+  - "MODIFY src/lib/invoices/create-invoice.ts"
+  - "ADD src/lib/invoices/create-invoice-from-work-order-idempotency.test.ts"
+sha256:
+  create_invoice_before: "aa5cbaf982b10b5648abdd8ec971f1a72c401b34a8442a674b1784d57c1ec35d"
+  create_invoice_after: "a7071fd5feda9e17962c946c5a8e3f631837c92e4e3ed8a819f54e615622e568"
+  replay_guard_test: "68a474bef6e6e20064d6ecca8fac428aec2556435fce3ee5579222cab30bbe45"
+accepted_behavior:
+  - "Finance authorization and canonical dealer resolution remain before data access."
+  - "The existence lookup is scoped by both dealer_id and work_order_id and fails closed on lookup error."
+  - "An existing invoice returns its id with alreadyExists true and performs no downstream work-order fetch, insert, delete, numbering, or activity side effect."
+  - "A missing invoice preserves the existing server-authoritative creation flow and returns alreadyExists false."
+  - "UI, manual invoice creation, issuance, payments, numbering contract, schema, RLS, and migrations remain unchanged."
+verification:
+  focused_node26_behavior_test: "8/8 PASS; no deprecated namedExports warning"
+  invoice_issuance_regression: "104/104 PASS"
+  bounded_strict_typescript: "PASS; exit 0; no diagnostics"
+  committed_git_diff_check: "PASS"
+  exact_path_and_index_check: "PASS; exact two committed paths; worktree/index clean after push"
+acceptance_evidence:
+  diagnosis_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307656466"
+  corrected_implementation_instruction: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307689489"
+  node26_repair_instruction: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307715668"
+  uncommitted_candidate_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307735681"
+  commit_record: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307742841"
+  push_record: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307752510"
+known_limitations:
+  - "This is a common-path replay/existence guard, not full concurrency-safe idempotency."
+  - "Two truly simultaneous requests can both pass the lookup before either insert."
+  - "A unique key or transactional lock needs a separate migration contract and owner product/accounting decision because manual additional invoices remain permitted."
+process_nonconformance:
+  - "Claude used one read-only GitHub API instruction check despite the no-network wording."
+  - "Claude transiently created and then removed one gitignored node_modules symlink despite the explicit no-link rule."
+  - "MacBook Codex confirmed no residual path or third Git candidate path and independently reran every accepted test/typecheck command without relying on the symlink."
+prohibited_operations:
+  real_database_or_external_service_access: false
+  migration_action: false
+  dependency_or_config_change: false
+  ready: false
+  merge: false
+  deploy: false
+evidence_level: "E1 source and focused executable verification accepted; full concurrent duplicate prevention, DB, environment, field, and production acceptance remain open"
+decision: "GDA_3B_I1_ACCEPTED_COMMITTED_AND_PUSHED_WITH_RECORDED_NONRESIDUAL_PROCESS_DEVIATION"
+next: "RETURN_THIS_EXACT_ONE_DOCUMENT_LEDGER_SYNC_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT_AND_NORMAL_PUSH_GATES; THEN RUN_ONE_BOUNDED_READ_ONLY_DIAGNOSIS_TO_SELECT_THE_NEXT_SMALLEST_UNFINISHED_GDA_3_CAPABILITY"
+```
