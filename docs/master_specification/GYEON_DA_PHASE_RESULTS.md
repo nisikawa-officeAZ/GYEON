@@ -1598,3 +1598,67 @@ evidence_level: "E0 Git authority binding only; not source, runtime, environment
 decision: "GDA_3A_GIT_AUTHORITY_BINDING_CANDIDATE_UNCOMMITTED"
 next: "RETURN_THIS_EXACT_TWO_DOCUMENT_CANDIDATE_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT AND NORMAL PUSH GATES; THEN RESUME THE ALREADY-APPROVED GDA-3A-I1 IMPLEMENTATION"
 ```
+
+## GDA-3A-I1 — Completed-work-order review surface accepted and pushed
+
+```yaml
+phase: GDA-3A-I1_COMPLETED_WORK_ORDER_REVIEW_SURFACE
+status: PASS_IMPLEMENTATION_COMMITTED_AND_PUSHED
+date: 2026-08-16
+append_only: true
+authorization: "The product owner explicitly approved the exact two-path uncommitted implementation, its exact two-path commit, its normal non-force push, and the post-push independent acceptance as separate gates."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  live_state_after_push: "OPEN/Draft/unmerged"
+  base_branch: "main"
+implementation_commit:
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  parent: "aa4130717ba76a8d2c6450ce5f3f3650ec5edd45"
+  commit: "4d01861c33131c8c891109f27d2c5ffda5bbc02d"
+  tree: "12641484545d55a7480aa6e7053d1c079a4f8348"
+  push_mode: "normal non-force"
+  upstream_after_push: "0/0"
+literal_committed_paths:
+  - "MODIFY src/components/work-orders/WorkOrderDetail.tsx"
+  - "ADD src/components/work-orders/work-order-completion-desk.test.ts"
+sha256:
+  work_order_detail_before: "62ea97851ff1d3cbf7618f331a582a46eca0b8fd6cce14e73e28ea9e3f13a629"
+  work_order_detail_after: "8fc720ebdc9d799b0445fb193be1515c9580492bbe7027bc965d1bc33c264892"
+  completion_desk_test: "77b6aefa30ea2ac8315e832f7f1b7d3800504018a8e48c58be821cbb5097b5e6"
+accepted_behavior:
+  - "Completed work orders render one clearly labeled 完了後の対応 review surface with the exact sequence 1. 完了報告書 → 2. 請求書 → 3. メンテナンス通知 → 4. レビュー依頼."
+  - "The four existing child sections are defined once in one local completionDeskSections element and each child remains invoked exactly once."
+  - "Non-completed work orders render the same element without the new wrapper, preserving current availability and behavior."
+  - "All existing closed-by-default toggles, child props, status guards, and human-confirmation boundaries remain intact."
+  - "No automatic artifact creation, invoice issue, payment recording, approval, LINE send, maintenance creation, or review delivery was introduced."
+verification:
+  focused_source_contract_test: "13/13 PASS; 0 failed"
+  focused_strict_typescript: "PASS; exit 0; no diagnostics"
+  committed_git_diff_check: "PASS"
+  exact_path_and_index_check: "PASS; exact two committed paths; worktree/index clean after push"
+acceptance_evidence:
+  uncommitted_candidate_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307601126"
+  commit_record: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307606058"
+  push_record: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307610485"
+  post_push_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307615248"
+guarded_paths:
+  completion_report_section: "unchanged outside the candidate set"
+  invoice_section: "unchanged outside the candidate set"
+  maintenance_section: "unchanged outside the candidate set"
+  review_request_approval_section: "unchanged outside the candidate set"
+  review_request_actions: "unchanged outside the candidate set"
+  screens_preview_blob: "c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
+  line_link_tokens_blob: "accd22345054cc44f89156fd78eaba6dfe4242a4"
+  monthly_invoice_pdf_artifact_blob: "32fda49583ae1217bc13711784ad8fa31744726c"
+  monthly_invoice_artifact_boundary_test_blob: "fe3c80f22fd80dcbfab076082473216dda582c14"
+prohibited_operations:
+  database_or_external_service_access: false
+  migration_action: false
+  dependency_or_config_change: false
+  ready: false
+  merge: false
+  deploy: false
+evidence_level: "E1 source and focused executable verification accepted; no DB, external-service, environment, field, or production acceptance"
+decision: "GDA_3A_I1_ACCEPTED_COMMITTED_AND_PUSHED"
+next: "RETURN_THIS_EXACT_ONE_DOCUMENT_LEDGER_SYNC_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT_AND_NORMAL_PUSH_GATES; THEN RUN_ONE_BOUNDED_READ_ONLY_DIAGNOSIS_TO_SELECT_THE_NEXT_SMALLEST_UNFINISHED_GDA_3_CAPABILITY"
+```
