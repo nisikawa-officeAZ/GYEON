@@ -1787,3 +1787,82 @@ evidence_level: "E1 source and focused executable verification accepted; full co
 decision: "GDA_3B_I1_ACCEPTED_COMMITTED_AND_PUSHED_WITH_RECORDED_NONRESIDUAL_PROCESS_DEVIATION"
 next: "RETURN_THIS_EXACT_ONE_DOCUMENT_LEDGER_SYNC_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT_AND_NORMAL_PUSH_GATES; THEN RUN_ONE_BOUNDED_READ_ONLY_DIAGNOSIS_TO_SELECT_THE_NEXT_SMALLEST_UNFINISHED_GDA_3_CAPABILITY"
 ```
+
+## GDA-PERF-1B-I1 — Request-scoped auth memoization focused-verification candidate (uncommitted)
+
+```yaml
+phase: GDA-PERF-1B-I1_REQUEST_SCOPED_AUTH_MEMOIZATION
+status: PASS_CANDIDATE_FOCUSED_VERIFICATION_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+authorization: "The product owner separately approved diagnosis, the exact five-path uncommitted implementation, focused verification, and now this exact two-document governance sync."
+owner_authorization_boundaries:
+  - "Diagnosis, the exact five-path source/test candidate, and focused verification were separately approved."
+  - "This document-only governance sync does not itself authorize commit, push, Ready conversion, merge, deployment, or any DB/external-service action."
+  - "Independent acceptance by MacBook Codex remains the next gate before any commit/push."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  required_state: "OPEN/Draft/unmerged"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  pinned_head: "d47c37b91d6940f59ab06e6d0140f8d6506a43f3"
+  pinned_tree: "7a1128f427bbf8143fb6055bbdb3114c8c25e0ea"
+  upstream: "0/0"
+  index: "empty"
+candidate:
+  literal_allowlist:
+    - "MODIFY src/lib/auth/get-current-user.ts"
+    - "MODIFY src/lib/auth/get-current-dealer.ts"
+    - "MODIFY src/lib/admin/get-current-admin.ts"
+    - "MODIFY src/lib/staff/get-current-staff.ts"
+    - "ADD src/lib/auth/get-current-user-memoization.test.ts"
+  per_path_sha256:
+    get-current-user.ts: "709948a60b83f2c0dc9babc756f2f9af23ab3015230643f5435cba7e2048a9b8"
+    get-current-dealer.ts: "662c3a4c4732ff9769441b4f0a6753a37b6138180b8f807d76266612fdbedfd1"
+    get-current-admin.ts: "f5c6a1b63b34e14747d019e08f7f85eb2ee1b0be46a06a69ae93233bdc880321"
+    get-current-staff.ts: "0797d8a4f6f2ed20ed5c504a5d061f85ffc7953a284ef35d3de38625fa9847ff"
+    get-current-user-memoization.test.ts: "98343ab16cca69d3ff7330a462107d01a1d64471907d8a1aec112a6c734adda6"
+required_preserved_behavior:
+  - "Exported async wrappers remain."
+  - "Auth query, dealer active filter, admin active filter, staff query outcome handling, and resolveStaffAuthorization remain unchanged."
+  - "Null-on-failure behavior remains unchanged."
+  - "No page call-order, middleware, client-construction, dependency, config, schema, or DB change."
+verification:
+  focused_node_test: "4/4 PASS"
+  focused_strict_typescript_five_path_direct_import: "PASS; 0 diagnostics"
+  git_diff_check: "PASS"
+  hash_match: "exact hashes match per_path_sha256 above"
+  index_state: "empty"
+  pr_state: "Draft/unmerged"
+full_project_typecheck_qualification:
+  status: "NOT_GREEN_NOT_CLAIMED"
+  bounded_attempt_result: "exactly eight candidate-unrelated TS7016 diagnostics"
+  diagnostics_breakdown:
+    - "seven react-dom/server declaration diagnostics in existing tests"
+    - "one heic-convert declaration diagnostic in vehicle-registration"
+  candidate_path_diagnostics: 0
+  full_repository_green: "NOT_CLAIMED"
+protected_path_evidence:
+  path: "src/components/estimates/wizard/screens/ScreensPreview.tsx"
+  access: "metadata_only_pathname_mode_hash_git_state"
+  git_blob: "c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
+  sha256: "d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e"
+evidence_level: "E1 source/focused executable candidate evidence only; no latency, environment, field, or production proof claimed"
+later_performance_acceptance: "Authenticated Chrome remeasurement only after a separately authorized preview/deployed candidate. Production currently serves old code."
+external_actions:
+  database_access: false
+  migration_created: false
+  migration_applied: false
+  storage_changed: false
+  line_external_changed: false
+  deployed: false
+  dependency_or_config_change: false
+git_actions:
+  committed: false
+  pushed: false
+  pr_changed: false
+  ready_or_merged: false
+current_stop: "The source five-path candidate and this two-document candidate remain uncommitted; independent acceptance is next; document-only commit/push and source-only commit/push are later separate gates."
+evidence: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5308005599"
+decision: "GDA_PERF_1B_GOVERNANCE_CANDIDATE_UNCOMMITTED"
+next: "RETURN_EXACT_TWO_DOCUMENT_CANDIDATE_TO_MACBOOK_CODEX_FOR_INDEPENDENT_ACCEPTANCE"
+```

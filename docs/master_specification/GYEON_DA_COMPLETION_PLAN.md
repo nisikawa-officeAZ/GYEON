@@ -339,6 +339,34 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Acceptance target:** E4 with measured time saved and an accepted error/correction rate.
 
+### GDA-PERF-1B — Request-scoped auth memoization Git authority sync
+
+**Authorization:** The product owner separately approved diagnosis, the exact five-path uncommitted implementation, focused verification, and now this exact two-document governance sync.
+
+**Objective:** Reduce repeated request-scope authentication/dealer/admin/staff lookups by stable module-scope React `cache` memoization while preserving authorization and fail-closed behavior.
+
+**Literal source/test allowlist (already-approved uncommitted candidate):**
+
+1. MODIFY `src/lib/auth/get-current-user.ts`
+2. MODIFY `src/lib/auth/get-current-dealer.ts`
+3. MODIFY `src/lib/admin/get-current-admin.ts`
+4. MODIFY `src/lib/staff/get-current-staff.ts`
+5. ADD `src/lib/auth/get-current-user-memoization.test.ts`
+
+**Required preserved behavior:** Exported async wrappers remain. Auth query, dealer active filter, admin active filter, staff query outcome handling, `resolveStaffAuthorization`, and null-on-failure remain unchanged. No page call-order, middleware, client-construction, dependency, config, schema, or DB change.
+
+**Accepted candidate evidence:** 4/4 focused Node tests PASS. Exact five-path/direct-import strict TypeScript PASS with zero diagnostics. `git diff --check` PASS. Exact hashes match. Index empty. PR #15 stays Draft/unmerged.
+
+**Full-project typecheck qualification:** Not green and not claimed. One bounded attempt ended with exactly eight candidate-unrelated TS7016 diagnostics (seven `react-dom/server` declarations in existing tests, one `heic-convert` declaration in vehicle-registration); candidate-path diagnostics were zero.
+
+**Evidence level:** E1 source/focused executable candidate evidence only. Do not claim actual latency improvement, environment proof, field proof, or production proof.
+
+**Later performance acceptance:** Authenticated Chrome remeasurement only after a separately authorized preview/deployed candidate. Production currently serves old code.
+
+**Prohibited:** Any third repository path; DB, Supabase, Auth, Storage, LINE, EC, or other external-service access; migration, dependency, or config change; stage, commit, push, Ready conversion, merge, deployment, or destructive action without its later separate gate.
+
+**Current stopping point:** The source five-path candidate and this two-document candidate remain uncommitted. Independent acceptance is next; document-only commit/push and source-only commit/push are later separate gates.
+
 ### GDA-6 — Field acceptance and operational hardening
 
 **Objective:** Prove that a GYEON detailer can complete the daily journey without developer assistance.
