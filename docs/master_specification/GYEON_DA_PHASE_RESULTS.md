@@ -1481,3 +1481,61 @@ evidence_level: "E0 coordination binding only; not source, runtime, environment,
 decision: "GDA_4A_COORDINATION_PR15_BOUND_UNCOMMITTED"
 next: "RETURN_THE_EXACT_TWO_DOCUMENT_R2_CANDIDATE_TO_MACBOOK_CODEX; AFTER_ACCEPTANCE_REQUEST_SEPARATE_COMMIT_AND_PUSH_GATES; THEN_POST_AND_RUN_THE_CORRECTED_READ_ONLY_DIAGNOSIS_ON_PR_15"
 ```
+
+## GDA-4A-I1 — Review-request preview-only implementation accepted and pushed
+
+```yaml
+phase: GDA-4A-I1_REVIEW_REQUEST_PREVIEW_ONLY_IMPLEMENTATION
+status: PASS_IMPLEMENTATION_COMMITTED_AND_PUSHED
+date: 2026-08-16
+append_only: true
+authorization: "The product owner explicitly approved the exact two-path uncommitted implementation, its later exact two-path commit, and its later normal non-force push as separate gates."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  live_state_after_push: "OPEN/Draft/unmerged"
+  base_branch: "main"
+  base_sha: "1d6ca2b573d674b1340549b185e4e1d1a459d459"
+implementation_commit:
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  parent: "0584db46a22d5780d5d27cda16ea887c3108f37e"
+  commit: "0de9eedf46aa23d505299280097d937c85d22a11"
+  tree: "35abe7f0c053e3ceed634f0b7473114cf063bedc"
+  push_mode: "normal non-force"
+  upstream_after_push: "0/0"
+literal_committed_paths:
+  - "MODIFY src/components/reputation/ReviewRequestApprovalSection.tsx"
+  - "ADD src/components/reputation/review-request-preview-only.test.ts"
+sha256:
+  review_request_approval_section: "9f8a59da5490cdc6121042e287e783a8b1dd1bf767164a509364b3231ffd07a9"
+  preview_only_test: "f6fb48563d6b153dacdad7ade9c6ba5b3c7bd740581586f5e6cf8dd6d86f26e4"
+accepted_behavior:
+  - "Removed fake approve/reject/skip imports, handlers, state, result UI, and action buttons that implied persisted approval or delivery."
+  - "Preserved readiness loading, summaries, deterministic message preview, copy, LINE-link readiness, missing-settings, compliance, status guards, and the disabled future AI-edit boundary."
+  - "Added clear Japanese disclosure that approval is not saved and LINE is not sent."
+  - "Replaced executable wording 承認可能 with preview wording プレビュー準備完了."
+verification:
+  focused_source_contract_test: "17/17 PASS; 0 failed"
+  focused_strict_typescript: "PASS; exit 0; no diagnostics"
+  git_diff_check: "PASS"
+acceptance_evidence:
+  diagnosis_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5306739517"
+  uncommitted_candidate_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5306825215"
+  commit_result: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5306833690"
+  push_result: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5306837776"
+guarded_paths:
+  review_request_actions_blob: "f980c424e79416ba0c87b7c7182fad5d5604bc8c"
+  screens_preview_blob: "c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
+  line_link_tokens_blob: "accd22345054cc44f89156fd78eaba6dfe4242a4"
+  monthly_invoice_pdf_artifact_blob: "32fda49583ae1217bc13711784ad8fa31744726c"
+  monthly_invoice_artifact_boundary_test_blob: "fe3c80f22fd80dcbfab076082473216dda582c14"
+prohibited_operations:
+  database_or_external_service_access: false
+  migration_action: false
+  dependency_or_config_change: false
+  ready: false
+  merge: false
+  deploy: false
+evidence_level: "E1 source and focused executable verification accepted; no DB, external-service, environment, field, or production acceptance"
+decision: "GDA_4A_I1_PREVIEW_ONLY_IMPLEMENTATION_ACCEPTED_PUSHED"
+next: "INDEPENDENTLY_ACCEPT_THIS_ONE_DOCUMENT_LEDGER_SYNC; THEN_REQUEST_SEPARATE_COMMIT_AND_NORMAL_PUSH_GATES; KEEP_PR_15_DRAFT_AND_UNMERGED"
+```
