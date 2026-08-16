@@ -56,7 +56,7 @@ The following decisions remain binding until this file is changed, reviewed, exp
 8. **Chat does not silently change the plan.** A changed decision is valid only after this document and the result ledger are updated and the user explicitly ratifies the change.
 9. **Claude is the bounded implementation agent.** Claude diagnoses, repairs, and runs executable tests only inside an authorized GYEON DA phase; Claude must confirm the Git plan before acting.
 10. **Studio owns the complete Office AZ inventory system.** Studio continues autonomously within its approved inventory specification and does not wait for routine MacBook review. It escalates only product-authority changes, security boundaries, scope conflicts, destructive operations, shared-integration contracts, and final DetailerOS integration.
-11. **GYEON HP store discovery is the first ratified post-completion growth track, with one current bounded exception.** The full store-directory, media, cross-domain API, website, SEO/MEO, GBP and nightly-publication sequence remains deferred until GDA-7. On 2026-08-16 the product owner explicitly activated only `GHP-2A`, the pure two-path public-profile projection seed in Draft PR #12, so its privacy and authority contract can be repaired and tested before persistence or external connection exists.
+11. **GYEON HP store discovery is the first ratified post-completion growth track, with one accepted bounded exception.** The full store-directory, media, cross-domain API, website, SEO/MEO, GBP and nightly-publication sequence remains deferred until GDA-7. On 2026-08-16 the product owner explicitly activated only `GHP-2A`, the pure two-path public-profile projection seed in Draft PR #12; its privacy and authority contract is now independently accepted at head `9b8bc1eb2cb59e879f5ebeb5b91e85ba4f522662`. PR #12 remains Draft and unmerged, and the acceptance does not authorize persistence or external connection work.
 
 ## 3. Protected and excluded scope
 
@@ -142,7 +142,7 @@ This register prevents a future session from treating every placeholder as a com
 ### Deferred after GDA-7
 
 - HLS video delivery, customer media gallery, marketing/SEO/growth AI, generic SaaS, white label, ordering expansion, Office AZ inventory implementation on MacBook, and EC expansion.
-- The full GYEON HP store-discovery track is governed by `GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md` and remains deferred until GDA-7. The only active exception is `GHP-2A`: a pure two-path projection source/test seed with no schema, Storage, API, website, SEO/MEO, GBP or deployment authority.
+- The full GYEON HP store-discovery track is governed by `GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md` and remains deferred until GDA-7. The only accepted exception is `GHP-2A`: a pure two-path projection source/test seed with no schema, Storage, API, website, SEO/MEO, GBP or deployment authority.
 
 ## 6. Strict phase protocol
 
@@ -299,13 +299,15 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Exit:** E5 for the critical journey. Only after GDA-7 closes may the full GYEON HP sequence or SaaS commercialization planning become the primary roadmap. The bounded GHP-2A seed below does not change this exit condition.
 
-### GHP-2A — Public-profile projection seed (active pre-GDA-7 exception)
+### GHP-2A — Public-profile projection seed (accepted pre-GDA-7 exception)
 
 **Authorization:** Explicit product-owner approval on 2026-08-16 to update the Git plan and proceed with the bounded GHP-2 seed before GDA-7.
 
 **Objective:** Repair and independently accept the pure public/private projection boundary in Draft PR #12 before any database, media, API or website implementation begins.
 
 **Responsible agents:** MacBook Claude/Codex may implement the exact repair; MacBook Codex performs independent acceptance. Office AZ remains product authority.
+
+**Accepted status:** The exact two-path source/test seed passed final independent review at PR #12 head `9b8bc1eb2cb59e879f5ebeb5b91e85ba4f522662`, tree `19fb3cf2f08778abaa87313c8908d4e32cb815c4`; focused tests 32/32 PASS, focused strict typecheck PASS, and `git diff --check` PASS. Evidence: [PR #12 comment 5304962007](https://github.com/nisikawa-officeAZ/GYEON/pull/12#issuecomment-5304962007). PR #12 remains Draft/unmerged; this is E2 source/test evidence only.
 
 **Literal implementation allowlist:**
 
@@ -318,11 +320,11 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Prohibited:** every third path, dependency/config changes, schema/RLS/migration/DB/Supabase/Storage access, store-settings UI, media, external API, website, AI, SEO/MEO, GBP, Ready conversion, merge and deployment.
 
-**Exit:** return to the GYEON DA completion critical path. GHP-2B and GHP-3 through GHP-7 remain inactive until GDA-7 or a later explicit Git-governed owner decision.
+**Exit:** achieved for the bounded source/test seed; return to the GYEON DA completion critical path. GHP-2B and GHP-3 through GHP-7 remain inactive until GDA-7 or a later explicit Git-governed owner decision. PR #12 Ready conversion and merge remain separate owner-controlled gates.
 
 ### GDA-POST-1 — GYEON HP store discovery and SEO/MEO connection
 
-**Activation condition:** GDA-7 is formally closed. The architecture is ratified now, but only GHP-2A above is active before that condition.
+**Activation condition:** GDA-7 is formally closed. The architecture is ratified now, but only the bounded GHP-2A source/test seed above is accepted before that condition.
 
 **Governing contract:** `GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md`.
 

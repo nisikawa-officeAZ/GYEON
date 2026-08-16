@@ -2,21 +2,21 @@
 
 | Field | Value |
 |---|---|
-| Document status | RATIFIED DESIGN — GHP-2A source-only seed active; full integration deferred until GDA-7 closes |
-| Version | 1.1 |
+| Document status | RATIFIED DESIGN — GHP-2A source/test seed independently accepted; full integration deferred until GDA-7 closes |
+| Version | 1.2 |
 | Decision date | 2026-08-10 |
 | Early seed activation | 2026-08-16 — explicit product-owner authorization |
 | Product owner | Office AZ |
 | Source system | GYEON Detailer Agent / DealerOS |
 | Destination | Future renewed GYEON website on a different domain |
-| Current evidence | E0 — specification only |
+| Current evidence | Full integration: E0 design only; bounded GHP-2A seed: E2 source/test acceptance at PR #12 head `9b8bc1eb2cb59e879f5ebeb5b91e85ba4f522662` |
 | Governing plan | `GYEON_DA_COMPLETION_PLAN.md` |
 
 ## 0. Authority and timing
 
 This document records a fixed product-owner decision. After GYEON Detailer Agent reaches GDA-7 production completion, the GYEON website will be renewed and connected to an approved public projection of DealerOS store data.
 
-On 2026-08-16 the product owner explicitly activated one narrow pre-GDA-7 exception: **GHP-2A**, the pure public-profile projection seed already isolated in Draft PR #12. That exception authorizes repair and focused tests only on the two literal source/test paths recorded in §15. It does not activate store-settings UI, schema, RLS, Storage, media, API, website, AI, SEO/MEO, GBP, deployment, or publication work.
+On 2026-08-16 the product owner explicitly activated one narrow pre-GDA-7 exception: **GHP-2A**, the pure public-profile projection seed isolated in Draft PR #12. The authorized two-path repair and focused verification are now independently accepted at head `9b8bc1eb2cb59e879f5ebeb5b91e85ba4f522662`, tree `19fb3cf2f08778abaa87313c8908d4e32cb815c4`; the final PASS evidence is [PR #12 comment 5304962007](https://github.com/nisikawa-officeAZ/GYEON/pull/12#issuecomment-5304962007). PR #12 remains Draft and unmerged. This acceptance does not activate store-settings UI, schema, RLS, Storage, media, API, website, AI, SEO/MEO, GBP, deployment, publication, Ready conversion, or merge work.
 
 The current GYEON DA completion path remains first priority. Full integration still starts only after GDA-7 is closed. GHP-2A is a bounded contract-safety seed, not an authorization to advance the wider GHP sequence.
 
@@ -459,9 +459,11 @@ Progress metrics are not proof that search rank or sales were caused by the syst
 
 ## 15. Delivery phases and bounded early exception
 
-### 15.1 Active pre-GDA-7 exception — GHP-2A
+### 15.1 Accepted pre-GDA-7 exception — GHP-2A
 
 **Objective:** establish a pure, deterministic and fail-closed DealerOS public-profile projection before any persistence or cross-domain API exists.
+
+**Accepted evidence:** Draft PR #12 head `9b8bc1eb2cb59e879f5ebeb5b91e85ba4f522662`, tree `19fb3cf2f08778abaa87313c8908d4e32cb815c4`; exact two-path scope; focused tests 32/32 PASS; focused strict typecheck PASS; `git diff --check` PASS; [MacBook Codex final independent PASS](https://github.com/nisikawa-officeAZ/GYEON/pull/12#issuecomment-5304962007). This is E2 source/test evidence only, not DB, API, website, field, or production proof.
 
 **Literal implementation allowlist:**
 
