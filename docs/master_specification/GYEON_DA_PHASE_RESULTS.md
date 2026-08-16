@@ -1178,3 +1178,47 @@ rollback_or_recovery: "Exact rollback: revert only the contract §1 metadata/sta
 decision: "GDA_1R2_C1D_THREE_PATH_DELIVERY_STATUS_SYNCED_UNCOMMITTED"
 next: "RETURN_GDA-1R2-C1D-R1_LEDGER_EVIDENCE_REPAIR_TO_CODEX_UNCOMMITTED"
 ```
+
+## GHP-2A-A0 — Pre-GDA-7 bounded projection-seed activation
+
+```yaml
+phase: GHP-2A-A0_PRE_GDA7_BOUNDED_PROJECTION_SEED_ACTIVATION
+status: RATIFIED_ACTIVE_BOUNDED_EXCEPTION
+date: 2026-08-16
+objective: "Formally record the product owner's decision to activate only the pure GHP-2 public-profile projection seed before GDA-7, while keeping the complete store settings, media, cross-domain API, website, SEO/MEO, GBP and publication track deferred."
+authorization: "The product owner answered yes to MacBook Codex's explicit question asking whether the Git plan should be formally updated to allow only the GHP-2 seed before GDA-7."
+governance_delivery:
+  branch: "agent/ghp-2-plan-activation-v1"
+  base_commit: "1d6ca2b573d674b1340549b185e4e1d1a459d459"
+  base_branch: "main"
+  delivery_mode: "documentation-only commit, push and Draft PR; merge remains owner-controlled"
+  literal_document_allowlist:
+    - "docs/master_specification/GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md"
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "docs/master_specification/00_MASTER_SPECIFICATION_INDEX.md"
+    - "docs/master_specification/MASTER_SPECIFICATION_CHANGELOG.md"
+active_implementation:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/12"
+  reviewed_head: "e7dc51c0a5ace4bfb754364315eb10b8353d160e"
+  changes_required: "https://github.com/nisikawa-officeAZ/GYEON/pull/12#issuecomment-5304894747"
+  responsible_agents: "MacBook Claude/Codex bounded repair; MacBook Codex independent acceptance; Office AZ product authority"
+  literal_two_path_allowlist:
+    - "src/lib/dealer-public-profile/dealer-public-profile-projection.ts"
+    - "src/lib/dealer-public-profile/dealer-public-profile-projection.test.ts"
+  required_repairs:
+    - "fail closed unless the profile is currently published with required owner consent and operator approval"
+    - "fail closed on duplicate/conflicting approved versus suspended/rejected/expired qualification records"
+    - "prevent an internal dealer identifier from being accepted as the public-store identifier boundary"
+    - "require explicit-zone ISO/RFC3339 instants and canonical qualification ordering"
+  exit: "focused tests and git diff --check PASS on the exact two paths, followed by MacBook Codex PASS on the reviewed Draft PR #12 head"
+prohibitions:
+  - "No third source/test path and no dependency or config change."
+  - "No DB, Supabase, schema, RLS, migration, Storage, media, external API, website, SEO/MEO, GBP, Ready, merge or deployment."
+  - "GHP-2B and GHP-3 through GHP-7 remain inactive until GDA-7 or a later explicit Git-governed owner decision."
+evidence_level: "E0 governance plus an E1/E2 source-test candidate only; not environment, field or production proof"
+protected_paths: "No protected-path content was accessed or changed; the document activation does not broaden their existing restrictions."
+rollback_or_recovery: "Close the documentation Draft PR without merge and revert only its five documentation paths. PR #12 remains Draft and can be closed independently; no runtime or external state changes are created by this plan update."
+decision: "GHP_2A_PUBLIC_PROFILE_PROJECTION_SEED_ACTIVE_BEFORE_GDA7_WITH_EXACT_TWO_PATH_BOUNDARY"
+next: "Deliver this five-document governance update as a Draft PR, then execute GHP-2R only on PR #12's exact two source/test paths and return it for independent review."
+```

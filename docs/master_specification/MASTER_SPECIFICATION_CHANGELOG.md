@@ -201,5 +201,16 @@
 
 ---
 
+## POST-GDA RATIFIED DECISIONS — 2026-08-16 ADDENDUM
+
+This append-only addendum records a product-owner decision after the PHASE75 compilation. It does not alter the historical PHASE75 counts above.
+
+| ID | Type | Affected Docs | Decision | Resolution | Status |
+|---|---|---|---|---|---|
+| GHP-DEC-1 | FF / RATIFIED | `GYEON_DA_COMPLETION_PLAN.md`, `GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md`, index, ledger | After GDA-7, renew the GYEON website using an approved DealerOS public-store projection, ordered store images, operator-owned qualifications, nightly cross-domain synchronization, and policy-bounded AI SEO/MEO/GBP maintenance. | Created the canonical integration specification and GDA-POST-1 phase while preserving tenant/privacy separation, atomic publication, audit, consent and rollback gates. | Ratified design; full integration deferred until GDA-7 |
+| GHP-DEC-2 | OWNER EXCEPTION / ACTIVE | `GYEON_DA_COMPLETION_PLAN.md`, `GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md`, ledger | Activate only the pure GHP-2A public-profile projection seed before GDA-7 so privacy, publication authority, qualification revocation, public-ID and deterministic-output rules are correct before persistence or external connection. | Bound implementation to the exact two source/test paths in Draft PR #12 and kept every schema, Storage, API, website, SEO/MEO, GBP, Ready, merge and deployment action prohibited. | Active bounded exception; independent PASS required |
+
+---
+
 *GYEON Detailer Agent | PHASE75 Finalization | Office AZ | 2026-06-25*  
 *Documentation only — no code, no migrations, no UI, no commits.*
