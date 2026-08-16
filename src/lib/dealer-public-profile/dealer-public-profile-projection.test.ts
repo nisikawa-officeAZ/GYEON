@@ -9,10 +9,13 @@ import assert from "node:assert/strict";
 
 import {
   DEALER_PUBLIC_CAPABILITY_IDS,
-  buildDealerPublicProfileProjection,
+  buildDealerPublicProfileProjection as buildProjection,
   isCapabilityCurrentlyValid,
   isDealerPublicCapabilityId,
+  isDealerPublicStoreId,
+  parseDealerPublicStoreId,
   type DealerPublicCapabilityInput,
+  type DealerPublicProfilePublicationAuthority,
   type DealerPublicProfileSourceFacts,
 } from "./dealer-public-profile-projection";
 
@@ -30,6 +33,26 @@ const FACTS: DealerPublicProfileSourceFacts = {
 };
 
 const NOW = new Date("2026-08-16T00:00:00.000Z");
+
+const PUBLISHED_AUTHORITY: DealerPublicProfilePublicationAuthority = {
+  lifecycle_state: "published",
+  owner_publication_consent: true,
+  operator_approved: true,
+};
+
+const PUBLIC_ID = parseDealerPublicStoreId("PUB-TEST-1");
+
+function buildDealerPublicProfileProjection(
+  facts: DealerPublicProfileSourceFacts,
+  capabilities: readonly DealerPublicCapabilityInput[] | null | undefined,
+  opaquePublicId: string,
+  options: { now?: Date } = {},
+) {
+  return buildProjection(facts, capabilities, parseDealerPublicStoreId(opaquePublicId), {
+    now: options.now ?? NOW,
+    publication: PUBLISHED_AUTHORITY,
+  });
+}
 
 function approvedCapability(
   capability_id: DealerPublicCapabilityInput["capability_id"],
@@ -85,20 +108,66 @@ test("private/internal fields never appear in the output, even if the caller wid
   ]);
 });
 
-test("public_store_id is always the caller-supplied opaque id, never a raw internal id", () => {
-  const result = buildDealerPublicProfileProjection(FACTS, [], "OPAQUE-STORE-42", { now: NOW });
-  assert.equal(result.public_store_id, "OPAQUE-STORE-42");
+test("public_store_id is always the validated caller-supplied public id", () => {
+  const result = buildDealerPublicProfileProjection(FACTS, [], "PUB-OPAQUE-42", { now: NOW });
+  assert.equal(result.public_store_id, "PUB-OPAQUE-42");
 });
 
-test("a missing or blank opaquePublicId throws instead of returning a projection", () => {
-  for (const bad of ["", "   "]) {
+test("a missing, blank, arbitrary, or internal-looking id throws instead of returning a projection", () => {
+  for (const bad of [
+    "",
+    "   ",
+    "OPAQUE-STORE-42",
+    "11111111-1111-1111-1111-111111111111",
+    "PUB-lowercase",
+  ]) {
     assert.throws(() => buildDealerPublicProfileProjection(FACTS, [], bad, { now: NOW }));
   }
   // @ts-expect-error — intentionally omitting the required argument
   assert.throws(() => buildDealerPublicProfileProjection(FACTS, [], undefined, { now: NOW }));
+
+  assert.throws(() =>
+    buildProjection(
+      FACTS,
+      [],
+      "11111111-1111-1111-1111-111111111111" as unknown as typeof PUBLIC_ID,
+      { now: NOW, publication: PUBLISHED_AUTHORITY },
+    ),
+  );
 });
 
-// ── 2. Capability publication is fail-closed ──────────────────────────────────
+// ── 2. Profile publication authority is fail-closed ──────────────────────────
+
+test("only a published profile with owner consent and operator approval can be projected", () => {
+  for (const lifecycle_state of ["draft", "submitted", "approved", "suspended", "withdrawn"] as const) {
+    assert.throws(() =>
+      buildProjection(FACTS, [], PUBLIC_ID, {
+        now: NOW,
+        publication: { ...PUBLISHED_AUTHORITY, lifecycle_state },
+      }),
+    );
+  }
+
+  for (const publication of [
+    { ...PUBLISHED_AUTHORITY, owner_publication_consent: false },
+    { ...PUBLISHED_AUTHORITY, operator_approved: false },
+  ]) {
+    assert.throws(() => buildProjection(FACTS, [], PUBLIC_ID, { now: NOW, publication }));
+  }
+});
+
+test("missing or mistyped publication authority fails closed", () => {
+  for (const publication of [undefined, null, {}, "published", true]) {
+    assert.throws(() =>
+      buildProjection(FACTS, [], PUBLIC_ID, {
+        now: NOW,
+        publication: publication as unknown as DealerPublicProfilePublicationAuthority,
+      }),
+    );
+  }
+});
+
+// ── 3. Capability publication is fail-closed ──────────────────────────────────
 
 test("only status \"approved\" publishes a capability — every other status is excluded", () => {
   const statuses: DealerPublicCapabilityInput["status"][] = [
@@ -182,6 +251,26 @@ test("a malformed valid_from/valid_through timestamp fails closed, not open", ()
     { now: NOW },
   );
   assert.deepEqual(badThrough.capabilities, []);
+});
+
+test("a parseable but non-RFC3339 timestamp or impossible calendar instant fails closed", () => {
+  for (const invalid of [
+    "08/15/2026",
+    "2026-08-15",
+    "2026-08-15T00:00:00",
+    "2026-08-15 00:00:00Z",
+    "2026-02-30T00:00:00Z",
+    "2026-08-15T24:00:00Z",
+    "2026-08-15T00:00:00+24:00",
+  ]) {
+    const result = buildDealerPublicProfileProjection(
+      FACTS,
+      [approvedCapability("gyeon_certified_detailer", { valid_from: invalid })],
+      "PUB-1",
+      { now: NOW },
+    );
+    assert.deepEqual(result.capabilities, [], `${invalid} must fail strict instant validation`);
+  }
 });
 
 test("an invalid injected now rejects every capability, even one that is approved and unbounded", () => {
@@ -305,17 +394,31 @@ test("a malformed capability entry (wrong type, null) is excluded without throwi
   assert.deepEqual(result.capabilities, []);
 });
 
-test("duplicate approved entries for the same capability publish exactly once", () => {
+test("duplicate approved entries for the same capability fail closed", () => {
   const result = buildDealerPublicProfileProjection(
     FACTS,
     [approvedCapability("gyeon_certified_detailer"), approvedCapability("gyeon_certified_detailer")],
     "PUB-1",
     { now: NOW },
   );
-  assert.deepEqual(result.capabilities, [{ capability_id: "gyeon_certified_detailer" }]);
+  assert.deepEqual(result.capabilities, []);
 });
 
-// ── 3. Missing/empty capability list is fail-closed, never a default fallback ──
+test("approved plus revoked authority rows fail closed in either order", () => {
+  for (const status of ["rejected", "suspended", "expired"] as const) {
+    const approved = approvedCapability("gyeon_certified_detailer");
+    const revoked = approvedCapability("gyeon_certified_detailer", { status });
+    for (const capabilities of [
+      [approved, revoked],
+      [revoked, approved],
+    ]) {
+      const result = buildDealerPublicProfileProjection(FACTS, capabilities, "PUB-1", { now: NOW });
+      assert.deepEqual(result.capabilities, [], `${status} conflict must not publish in either order`);
+    }
+  }
+});
+
+// ── 4. Missing/empty capability list is fail-closed, never a default fallback ──
 
 for (const [label, value] of [
   ["undefined", undefined],
@@ -338,18 +441,26 @@ test("a non-array capabilities value (defensive, mistyped input) yields zero pub
   assert.deepEqual(result.capabilities, []);
 });
 
-// ── 4. All five canonical capabilities round-trip when approved and current ──
+// ── 5. Canonical capabilities are complete and deterministically ordered ──────
 
-test("every canonical capability id publishes when approved and currently valid", () => {
-  const all = DEALER_PUBLIC_CAPABILITY_IDS.map((id) => approvedCapability(id));
-  const result = buildDealerPublicProfileProjection(FACTS, all, "PUB-1", { now: NOW });
+test("every canonical capability id publishes in canonical order regardless of input order", () => {
+  const reversed = [...DEALER_PUBLIC_CAPABILITY_IDS].reverse().map((id) => approvedCapability(id));
+  const result = buildDealerPublicProfileProjection(FACTS, reversed, "PUB-1", { now: NOW });
   assert.deepEqual(
-    result.capabilities.map((c) => c.capability_id).sort(),
-    [...DEALER_PUBLIC_CAPABILITY_IDS].sort(),
+    result.capabilities.map((c) => c.capability_id),
+    DEALER_PUBLIC_CAPABILITY_IDS,
   );
 });
 
-// ── 5. Facts are null-safe, never coerced into "" or a fabricated placeholder ──
+test("equivalent capability permutations produce byte-identical projections", () => {
+  const forward = DEALER_PUBLIC_CAPABILITY_IDS.map((id) => approvedCapability(id));
+  const reverse = [...forward].reverse();
+  const a = buildDealerPublicProfileProjection(FACTS, forward, "PUB-1", { now: NOW });
+  const b = buildDealerPublicProfileProjection(FACTS, reverse, "PUB-1", { now: NOW });
+  assert.equal(JSON.stringify(a), JSON.stringify(b));
+});
+
+// ── 6. Facts are null-safe, never coerced into "" or a fabricated placeholder ──
 
 test("absent/blank/whitespace-only facts become null, never an empty string", () => {
   const blank: DealerPublicProfileSourceFacts = {
@@ -386,12 +497,23 @@ test("valid non-blank facts pass through unchanged", () => {
   assert.equal(result.inquiry_url, FACTS.inquiry_url);
 });
 
-// ── 6. Exported helpers, tested directly ──────────────────────────────────────
+// ── 7. Exported helpers, tested directly ──────────────────────────────────────
 
 test("isDealerPublicCapabilityId matches only the five canonical literals", () => {
   for (const id of DEALER_PUBLIC_CAPABILITY_IDS) assert.equal(isDealerPublicCapabilityId(id), true);
   for (const v of ["", "gyeon_platinum_partner", "GYEON_CERTIFIED_DETAILER", null, undefined, 1, {}, []]) {
     assert.equal(isDealerPublicCapabilityId(v), false);
+  }
+});
+
+test("public-store ID parser accepts only the dedicated opaque namespace", () => {
+  for (const value of ["PUB-1", "PUB-OPAQUE-STORE-42", "PUB-A1B2C3"]) {
+    assert.equal(isDealerPublicStoreId(value), true);
+    assert.equal(parseDealerPublicStoreId(value), value);
+  }
+  for (const value of ["", "PUB-", "PUB-lower", "internal-uuid", "11111111-1111-1111-1111-111111111111"]) {
+    assert.equal(isDealerPublicStoreId(value), false);
+    assert.throws(() => parseDealerPublicStoreId(value));
   }
 });
 
