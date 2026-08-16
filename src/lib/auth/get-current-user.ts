@@ -1,9 +1,10 @@
 // Server-side helper — returns the current authenticated Supabase user.
 // Returns null if not authenticated. Does not throw.
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
-export async function getCurrentUser() {
+const getCurrentUserCached = cache(async () => {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -11,4 +12,8 @@ export async function getCurrentUser() {
   } catch {
     return null;
   }
+});
+
+export async function getCurrentUser() {
+  return getCurrentUserCached();
 }

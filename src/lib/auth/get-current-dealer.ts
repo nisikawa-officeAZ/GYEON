@@ -14,6 +14,7 @@
 //   - User is not authenticated
 //   - No active dealer_members record exists for the user
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "./get-current-user";
 
@@ -22,7 +23,7 @@ export interface DealerMembership {
   role: string;
 }
 
-export async function getCurrentDealer(): Promise<DealerMembership | null> {
+const getCurrentDealerCached = cache(async (): Promise<DealerMembership | null> => {
   try {
     const user = await getCurrentUser();
     if (!user) return null;
@@ -46,4 +47,8 @@ export async function getCurrentDealer(): Promise<DealerMembership | null> {
   } catch {
     return null;
   }
+});
+
+export async function getCurrentDealer(): Promise<DealerMembership | null> {
+  return getCurrentDealerCached();
 }

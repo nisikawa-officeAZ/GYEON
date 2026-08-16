@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { createClient } from "@/lib/supabase/server";
@@ -9,7 +10,7 @@ import {
   type DealerStaffQueryOutcome,
 } from "@/lib/staff/current-staff-authorization-core";
 
-export async function getCurrentStaff(): Promise<{ role: DealerStaffRole; staffId: string | null } | null> {
+const getCurrentStaffCached = cache(async (): Promise<{ role: DealerStaffRole; staffId: string | null } | null> => {
   try {
     const user = await getCurrentUser();
     if (!user) return null;
@@ -57,4 +58,8 @@ export async function getCurrentStaff(): Promise<{ role: DealerStaffRole; staffI
   } catch {
     return null;
   }
+});
+
+export async function getCurrentStaff(): Promise<{ role: DealerStaffRole; staffId: string | null } | null> {
+  return getCurrentStaffCached();
 }
