@@ -276,7 +276,7 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Prohibited:** Modification of `review-request-actions.ts` or any third source/test path; persistence, review-request table/schema/RLS/migration work; LINE sending; AI-provider execution; dependency/config changes; database, Supabase, Auth, Storage, LINE, EC, or other external-service access; stage, commit, push, Ready conversion, merge, deployment, or destructive action without its later separate gate.
 
-**Current stopping point:** The ratified plan was pushed at commit `ccda0a8d31142178391d74d9496b514fa9c2ca8c`, but the first Claude diagnosis stopped fail-closed because the authorization sentence above was stale and the instruction was posted to frozen order PR #7 instead of GYEON DA Draft PR #8. No GDA-4A source or test file has been edited. A two-document governance-pointer correction must be accepted, committed, and pushed before a corrected PR #8 read-only diagnosis.
+**Current stopping point:** The ratified plan was pushed at commit `ccda0a8d31142178391d74d9496b514fa9c2ca8c`, but the first Claude diagnosis stopped fail-closed because the authorization sentence above was stale and the instruction was posted to frozen order PR #7. The prior GYEON DA PR #8 is already merged and closed, so the owner authorized new Draft PR #15 as the current GDA-4A coordination surface. No GDA-4A source or test file has been edited. This two-document PR #15 binding must be accepted, committed, and pushed before a corrected PR #15 read-only diagnosis.
 
 ### GDA-5 — Operational AI assistance
 

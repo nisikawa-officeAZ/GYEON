@@ -1436,3 +1436,48 @@ evidence_level: "E0 corrected governance only; not source, runtime, environment,
 decision: "GDA_4A_GOVERNANCE_POINTER_CHANGES_REQUIRED_REPAIRED_UNCOMMITTED"
 next: "RETURN_THE_EXACT_TWO_DOCUMENT_R1_CANDIDATE_TO_MACBOOK_CODEX; AFTER_ACCEPTANCE_REQUEST_SEPARATE_COMMIT_AND_PUSH_GATES; THEN_POST_CORRECTED_READ_ONLY_DIAGNOSIS_TO_PR_8"
 ```
+
+## GDA-4A-A0-R2 — Bind the current coordination Draft PR
+
+```yaml
+phase: GDA-4A-A0-R2_COORDINATION_PR15_BINDING
+status: DOCUMENT_BINDING_CANDIDATE_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+objective: "Replace the obsolete merged PR #8 pointer with the newly authorized open Draft PR #15 as the current GDA-4A coordination surface."
+authorization: "After live GitHub verification showed PR #8 already merged and closed, the product owner explicitly authorized creation of a new main-based Draft PR from the accepted governance branch and approved making it the GDA-4A source of truth."
+prior_coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/8"
+  live_state: "closed and merged"
+  permitted_use: "historical evidence only; not an active instruction surface"
+current_coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  state_required: "OPEN/Draft/unmerged"
+  base_branch: "main"
+  base_sha: "1d6ca2b573d674b1340549b185e4e1d1a459d459"
+  head_branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  head_commit_before_binding_candidate: "d6f3b28bcee08e9322246b852bb5d686af8a13f3"
+  head_tree_before_binding_candidate: "9a5a6149cd86c6254053c1461e9d5c35fe8f00a1"
+  topology: "5 ahead / 0 behind"
+  changed_paths_before_binding_candidate: "exactly five documentation paths"
+source_identity_guard:
+  pinned_source_head: "f0a9135bf7744e139910899db232f52b528ac88e"
+  pinned_source_tree: "dbf1a4911014ab46fbf063f507b1a04c5abb1662"
+  review_section_blob_at_source_and_pr15_head: "ac3558ace9acf943d869a472fee5e016b0ddeaf3"
+  action_file_blob_at_source_and_pr15_head: "f980c424e79416ba0c87b7c7182fad5d5604bc8c"
+  result: "both diagnosis-target blobs are byte-identical across the pinned source base and PR #15 head"
+literal_document_allowlist:
+  - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+  - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+required_next_instruction:
+  target: "CLAUDE_CODE"
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  mode: "bounded read-only diagnosis only"
+  precondition: "this exact two-document binding is independently accepted, committed, normally pushed, and PR #15 remains OPEN/Draft/unmerged"
+prohibitions:
+  - "No source/test/dependency/config/migration change and no DB/Supabase/Auth/Storage/LINE/EC access."
+  - "No stage, commit, push, Ready, merge, deploy, cleanup, or destructive action during this binding candidate."
+evidence_level: "E0 coordination binding only; not source, runtime, environment, field, or production acceptance"
+decision: "GDA_4A_COORDINATION_PR15_BOUND_UNCOMMITTED"
+next: "RETURN_THE_EXACT_TWO_DOCUMENT_R2_CANDIDATE_TO_MACBOOK_CODEX; AFTER_ACCEPTANCE_REQUEST_SEPARATE_COMMIT_AND_PUSH_GATES; THEN_POST_AND_RUN_THE_CORRECTED_READ_ONLY_DIAGNOSIS_ON_PR_15"
+```
