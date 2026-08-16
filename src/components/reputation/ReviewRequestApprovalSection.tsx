@@ -1,29 +1,28 @@
 "use client";
 
-// DealerOS — Review Request Approval Section
+// DealerOS — Review Request Preview Section
 //
-// Sprint 11E Phase B/E: initial dealer-facing review request approval UI.
+// Sprint 11E Phase B/E: initial dealer-facing review request preview UI.
 // Sprint 11F Phase D: added LINE message preview, link readiness, and copy button.
+// GDA-4A: removed fake approve/reject/skip actions; preview/copy-only surface.
 //
 // Shown inside WorkOrderDetail when:
 //   - work order status === "completed"
 //   - work order has a linked customer_id
 //
 // Features:
-//   - Loads dry-run readiness data on mount
+//   - Loads readiness data on mount
 //   - Shows customer, vehicle, service summary
 //   - Shows AI Gateway + review destination + compliance readiness
 //   - Lists missing settings the dealer must configure
 //   - LINE message preview with character count (Sprint 11F)
 //   - Per-destination link readiness (Sprint 11F)
 //   - Copy message text button (Sprint 11F)
-//   - Approve / Reject / Skip buttons (all dry-run — no LINE sent)
 //   - Edit draft button (disabled — AI generation is Phase 11G+)
 //
 // Persistence:
-//   All approve/reject/skip actions return dry_run: true.
+//   This screen never saves an approval and never sends LINE.
 //   No ReviewRequest is persisted — requires review_requests DB table migration.
-//   State is local React state only.
 //
 // LINE dispatch:
 //   Not implemented. Deferred to Phase 11G+.
@@ -32,18 +31,12 @@
 // AI generation:
 //   Not implemented. Deferred to Phase 11G+.
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import type {
   ReviewRequestApprovalData,
   ReviewRequestApprovalStatus,
-  ReviewRequestDryRunActionResult,
 } from "@/lib/reputation/actions/review-request-actions";
-import {
-  prepareReviewRequestApproval,
-  approveReviewRequestDryRun,
-  rejectReviewRequestDryRun,
-  skipReviewRequestDryRun,
-} from "@/lib/reputation/actions/review-request-actions";
+import { prepareReviewRequestApproval } from "@/lib/reputation/actions/review-request-actions";
 import type { ReputationReadinessCheck } from "@/lib/reputation/runtime/runtime-types";
 import type { ReviewLinkReadinessItem } from "@/lib/reputation/line/review-line-types";
 import { linkReadinessStatusLabel } from "@/lib/reputation/line/review-link-readiness";
@@ -60,16 +53,11 @@ interface ReviewRequestApprovalSectionProps {
 type SectionPhase =
   | "idle"
   | "loading"
-  | "loaded"
-  | "approving"
-  | "rejecting"
-  | "skipping"
-  | "done";
+  | "loaded";
 
 interface SectionState {
   phase:  SectionPhase;
   data:   ReviewRequestApprovalData | null;
-  result: ReviewRequestDryRunActionResult | null;
   error:  string | null;
 }
 
@@ -77,7 +65,7 @@ interface SectionState {
 
 function statusBadge(status: ReviewRequestApprovalStatus): { label: string; cls: string } {
   switch (status) {
-    case "ready":              return { label: "承認可能",           cls: "bg-green-600/20 text-green-400 border border-green-600/30" };
+    case "ready":              return { label: "プレビュー準備完了",  cls: "bg-green-600/20 text-green-400 border border-green-600/30" };
     case "not_ready":          return { label: "設定が必要",         cls: "bg-amber-600/20 text-amber-400 border border-amber-600/30" };
     case "feature_locked":     return { label: "Pro+必須",           cls: "bg-slate-700 text-slate-400 border border-slate-600" };
     case "no_customer":        return { label: "顧客未設定",         cls: "bg-slate-700 text-slate-400 border border-slate-600" };
@@ -122,44 +110,20 @@ export default function ReviewRequestApprovalSection({
   workOrderId,
   isCompleted,
 }: ReviewRequestApprovalSectionProps) {
-  const [state,     setState]     = useState<SectionState>({ phase: "idle", data: null, result: null, error: null });
+  const [state,     setState]     = useState<SectionState>({ phase: "idle", data: null, error: null });
   const [expanded,  setExpanded]  = useState(false);
   const [copied,    setCopied]    = useState(false);
-  const [, startTransition]       = useTransition();
 
   // ── Load on mount ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!isCompleted) return;
     setState((s) => ({ ...s, phase: "loading" }));
     prepareReviewRequestApproval(workOrderId).then((data) => {
-      setState({ phase: "loaded", data, result: null, error: null });
+      setState({ phase: "loaded", data, error: null });
     }).catch(() => {
-      setState({ phase: "loaded", data: null, result: null, error: "データの取得に失敗しました。" });
+      setState({ phase: "loaded", data: null, error: "データの取得に失敗しました。" });
     });
   }, [workOrderId, isCompleted]);
-
-  // ── Action handlers ────────────────────────────────────────────────────────────
-  function handleApprove() {
-    setState((s) => ({ ...s, phase: "approving" }));
-    startTransition(async () => {
-      const result = await approveReviewRequestDryRun(workOrderId);
-      setState((s) => ({ ...s, phase: "done", result }));
-    });
-  }
-  function handleReject() {
-    setState((s) => ({ ...s, phase: "rejecting" }));
-    startTransition(async () => {
-      const result = await rejectReviewRequestDryRun(workOrderId);
-      setState((s) => ({ ...s, phase: "done", result }));
-    });
-  }
-  function handleSkip() {
-    setState((s) => ({ ...s, phase: "skipping" }));
-    startTransition(async () => {
-      const result = await skipReviewRequestDryRun(workOrderId);
-      setState((s) => ({ ...s, phase: "done", result }));
-    });
-  }
 
   // ── Copy handler ───────────────────────────────────────────────────────────────
   function handleCopy(text: string) {
@@ -190,46 +154,6 @@ export default function ReviewRequestApprovalSection({
 
   const { data } = state;
   const badge    = statusBadge(data.status);
-  const busy     = state.phase === "approving" || state.phase === "rejecting" || state.phase === "skipping";
-
-  // ── Done state ─────────────────────────────────────────────────────────────────
-  if (state.phase === "done" && state.result) {
-    const r = state.result;
-    if (!r.success) {
-      return (
-        <div className="flex flex-col gap-3">
-          <div className="bg-red-900/10 border border-red-700/30 rounded-lg px-4 py-3">
-            <p className="text-xs text-red-400">{r.error}</p>
-          </div>
-          <button onClick={() => setState({ phase: "loaded", data, result: null, error: null })}
-            className="text-xs text-slate-400 hover:text-slate-100 self-start transition-colors">
-            ← 戻る
-          </button>
-        </div>
-      );
-    }
-    const actionIcon = r.action === "approved" ? "✓" : r.action === "rejected" ? "✗" : "—";
-    const actionBg   = r.action === "approved" ? "bg-green-900/20 border-green-700/30" : "bg-slate-800 border-slate-700";
-    const actionText = r.action === "approved" ? "text-green-300" : "text-slate-400";
-    return (
-      <div className={`rounded-lg border px-4 py-4 flex flex-col gap-3 ${actionBg}`}>
-        <div className="flex items-center gap-2">
-          <span className={`text-sm font-bold ${actionText}`}>{actionIcon}</span>
-          <p className={`text-xs font-medium ${actionText}`}>{r.message}</p>
-        </div>
-        {r.action === "approved" && (
-          <div className="flex flex-col gap-1">
-            <p className="text-[10px] text-amber-500/80">⚠ LINE送信は未実装です（Phase 11G+で実装予定）</p>
-            <p className="text-[10px] text-slate-600">⚠ レビュー依頼はDBに保存されません（review_requestsテーブルのmigrationが必要）</p>
-          </div>
-        )}
-        <button onClick={() => setState({ phase: "loaded", data, result: null, error: null })}
-          className="text-xs text-slate-500 hover:text-slate-300 self-start transition-colors">
-          ← 戻る
-        </button>
-      </div>
-    );
-  }
 
   // ── Feature / customer guards ─────────────────────────────────────────────────
   if (data.status === "feature_locked") {
@@ -256,12 +180,19 @@ export default function ReviewRequestApprovalSection({
   return (
     <div className="flex flex-col gap-4">
 
-      {/* Status badge + dry-run label */}
+      {/* Status badge + preview-only notice */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${badge.cls}`}>
           {badge.label}
         </span>
-        <span className="text-[10px] text-slate-600">ドライラン — LINE送信・DB保存は未実装</span>
+        <span className="text-[10px] text-slate-600">プレビューのみ — LINE送信・DB保存は未実装</span>
+      </div>
+
+      {/* No-save / no-send disclosure */}
+      <div className="bg-amber-900/10 border border-amber-700/30 rounded-lg px-4 py-2.5">
+        <p className="text-[11px] text-amber-300/90 leading-relaxed">
+          このプレビューでは承認は保存されず、LINEも送信されません。
+        </p>
       </div>
 
       {/* Customer / Vehicle / Service summary */}
@@ -410,33 +341,12 @@ export default function ReviewRequestApprovalSection({
         </div>
       </div>
 
-      {/* Action buttons */}
+      {/* Preview-only actions */}
       <div className="flex flex-wrap items-center gap-2 pt-1">
-        <button
-          onClick={handleApprove}
-          disabled={busy}
-          className="text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium px-4 py-2 rounded-lg transition-colors"
-        >
-          {state.phase === "approving" ? "処理中..." : "承認（ドライラン）"}
-        </button>
-        <button
-          onClick={handleReject}
-          disabled={busy}
-          className="text-xs bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 px-4 py-2 rounded-lg transition-colors"
-        >
-          {state.phase === "rejecting" ? "処理中..." : "否認"}
-        </button>
-        <button
-          onClick={handleSkip}
-          disabled={busy}
-          className="text-xs text-slate-500 hover:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-2 transition-colors"
-        >
-          {state.phase === "skipping" ? "..." : "後で"}
-        </button>
         <button
           disabled
           title="AI生成ドラフト編集はPhase 11G+で実装予定"
-          className="text-xs text-slate-700 cursor-not-allowed px-3 py-2 ml-auto"
+          className="text-xs text-slate-700 cursor-not-allowed px-3 py-2"
         >
           下書き編集（Phase 11G+）
         </button>
@@ -444,7 +354,7 @@ export default function ReviewRequestApprovalSection({
 
       {/* Footer notice */}
       <p className="text-[10px] text-slate-700 border-t border-slate-800 pt-2">
-        ※ 現在はドライランのみです。LINE送信 · AI生成 · DB保存はPhase 11G+で実装予定です。
+        ※ 現在はプレビューのみです。LINE送信 · AI生成 · DB保存はPhase 11G+で実装予定です。
       </p>
     </div>
   );
