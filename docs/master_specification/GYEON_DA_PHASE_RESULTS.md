@@ -1178,3 +1178,907 @@ rollback_or_recovery: "Exact rollback: revert only the contract §1 metadata/sta
 decision: "GDA_1R2_C1D_THREE_PATH_DELIVERY_STATUS_SYNCED_UNCOMMITTED"
 next: "RETURN_GDA-1R2-C1D-R1_LEDGER_EVIDENCE_REPAIR_TO_CODEX_UNCOMMITTED"
 ```
+
+## GHP-2A-A0 — Pre-GDA-7 bounded projection-seed activation
+
+```yaml
+phase: GHP-2A-A0_PRE_GDA7_BOUNDED_PROJECTION_SEED_ACTIVATION
+status: RATIFIED_ACTIVE_BOUNDED_EXCEPTION
+date: 2026-08-16
+objective: "Formally record the product owner's decision to activate only the pure GHP-2 public-profile projection seed before GDA-7, while keeping the complete store settings, media, cross-domain API, website, SEO/MEO, GBP and publication track deferred."
+authorization: "The product owner answered yes to MacBook Codex's explicit question asking whether the Git plan should be formally updated to allow only the GHP-2 seed before GDA-7."
+governance_delivery:
+  branch: "agent/ghp-2-plan-activation-v1"
+  base_commit: "1d6ca2b573d674b1340549b185e4e1d1a459d459"
+  base_branch: "main"
+  delivery_mode: "documentation-only commit, push and Draft PR; merge remains owner-controlled"
+  literal_document_allowlist:
+    - "docs/master_specification/GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md"
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "docs/master_specification/00_MASTER_SPECIFICATION_INDEX.md"
+    - "docs/master_specification/MASTER_SPECIFICATION_CHANGELOG.md"
+active_implementation:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/12"
+  reviewed_head: "e7dc51c0a5ace4bfb754364315eb10b8353d160e"
+  changes_required: "https://github.com/nisikawa-officeAZ/GYEON/pull/12#issuecomment-5304894747"
+  responsible_agents: "MacBook Claude/Codex bounded repair; MacBook Codex independent acceptance; Office AZ product authority"
+  literal_two_path_allowlist:
+    - "src/lib/dealer-public-profile/dealer-public-profile-projection.ts"
+    - "src/lib/dealer-public-profile/dealer-public-profile-projection.test.ts"
+  required_repairs:
+    - "fail closed unless the profile is currently published with required owner consent and operator approval"
+    - "fail closed on duplicate/conflicting approved versus suspended/rejected/expired qualification records"
+    - "prevent an internal dealer identifier from being accepted as the public-store identifier boundary"
+    - "require explicit-zone ISO/RFC3339 instants and canonical qualification ordering"
+  exit: "focused tests and git diff --check PASS on the exact two paths, followed by MacBook Codex PASS on the reviewed Draft PR #12 head"
+prohibitions:
+  - "No third source/test path and no dependency or config change."
+  - "No DB, Supabase, schema, RLS, migration, Storage, media, external API, website, SEO/MEO, GBP, Ready, merge or deployment."
+  - "GHP-2B and GHP-3 through GHP-7 remain inactive until GDA-7 or a later explicit Git-governed owner decision."
+evidence_level: "E0 governance plus an E1/E2 source-test candidate only; not environment, field or production proof"
+protected_paths: "No protected-path content was accessed or changed; the document activation does not broaden their existing restrictions."
+rollback_or_recovery: "Close the documentation Draft PR without merge and revert only its five documentation paths. PR #12 remains Draft and can be closed independently; no runtime or external state changes are created by this plan update."
+decision: "GHP_2A_PUBLIC_PROFILE_PROJECTION_SEED_ACTIVE_BEFORE_GDA7_WITH_EXACT_TWO_PATH_BOUNDARY"
+next: "Deliver this five-document governance update as a Draft PR, then execute GHP-2R only on PR #12's exact two source/test paths and return it for independent review."
+```
+
+## GHP-2A-A1 — Post-acceptance governance evidence sync
+
+```yaml
+phase: GHP-2A-A1_POST_ACCEPTANCE_FIVE_DOCUMENT_GOVERNANCE_SYNC
+status: SOURCE_TEST_SEED_ACCEPTED_GOVERNANCE_SYNC_CANDIDATE_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+supersedes: "Only the pre-acceptance status and next-step implications of GHP-2A-A0 above. The A0 activation block remains unchanged as historical evidence."
+objective: "Synchronize the five-document GHP governance package to the independently accepted PR #12 remote head without activating persistence, external integration, Ready conversion, merge, or any wider GHP phase."
+authorization: "The product owner explicitly approved the GHP-2A-A1 five-document, uncommitted evidence-sync repair after MacBook Codex reviewed PR #13 and posted CHANGES_REQUIRED at https://github.com/nisikawa-officeAZ/GYEON/pull/13#issuecomment-5304967952."
+governance_repository:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/13"
+  branch: "agent/ghp-2-plan-activation-v1"
+  starting_head: "357c508300e12e01f81a8f2afa665711932ce518"
+  starting_tree: "c1402a9e7d0851522ea308df4a150f2302d788a8"
+  base: "1d6ca2b573d674b1340549b185e4e1d1a459d459"
+  starting_upstream: "0/0"
+  starting_index: "empty"
+  starting_worktree: "clean"
+accepted_source_seed:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/12"
+  head: "9b8bc1eb2cb59e879f5ebeb5b91e85ba4f522662"
+  tree: "19fb3cf2f08778abaa87313c8908d4e32cb815c4"
+  parent: "e7dc51c0a5ace4bfb754364315eb10b8353d160e"
+  final_independent_pass: "https://github.com/nisikawa-officeAZ/GYEON/pull/12#issuecomment-5304962007"
+  literal_two_path_scope:
+    - "src/lib/dealer-public-profile/dealer-public-profile-projection.ts"
+    - "src/lib/dealer-public-profile/dealer-public-profile-projection.test.ts"
+  sha256:
+    projection: "a1556df3a548e56fe0012c6cd90e6a8b3ecaeb21ea057df702ec92c0f6e175cd"
+    focused_test: "07ef06736b48b7c2a2b7554bf62b7fa844121a4617fd564638f2e580a97bf26e"
+  verification:
+    focused_tests: "32/32 PASS; 0 fail"
+    focused_strict_typecheck: "PASS"
+    git_diff_check: "PASS"
+    pr_state: "OPEN/Draft/unmerged/mergeable"
+  evidence_level: "E2 source plus focused executable verification; not DB, API, website, field, or production proof"
+candidate:
+  literal_five_document_allowlist:
+    - "docs/master_specification/GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md"
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "docs/master_specification/00_MASTER_SPECIFICATION_INDEX.md"
+    - "docs/master_specification/MASTER_SPECIFICATION_CHANGELOG.md"
+  intent: "Update current status and append closure evidence only; preserve the historical A0 and GHP-DEC-2 records."
+prohibitions:
+  - "No sixth path and no source, test, dependency, config, schema, migration, DB, Supabase, Storage, media, external API, website, SEO/MEO, GBP, or deployment action."
+  - "No GHP-2B or GHP-3 through GHP-7 activation."
+  - "No stage, commit, push, Ready conversion, or merge in this candidate phase."
+protected_paths: "ScreensPreview.tsx remained metadata/status-only and unchanged; its content was not accessed."
+rollback_or_recovery: "Discard only this uncommitted five-document A1 sync candidate. PR #12 and the committed PR #13 A0 delivery remain unchanged."
+decision: "GHP_2A_SOURCE_TEST_SEED_ACCEPTED_AND_FIVE_DOCUMENT_GOVERNANCE_SYNCED_UNCOMMITTED"
+next: "RETURN_GHP-2A-A1_FIVE_DOCUMENT_SYNC_CANDIDATE_TO_MACBOOK_CODEX_FOR_INDEPENDENT_ACCEPTANCE; COMMIT/PUSH/READY/MERGE_REMAIN_SEPARATE_GATES"
+```
+
+## GDA-ORDER-1A-A0 — Draft-only order UI/idempotency bounded resume
+
+```yaml
+phase: GDA-ORDER-1A-A0_ORDER_UI_IDEMPOTENCY_BOUNDED_RESUME
+status: PLAN_RATIFIED_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+objective: "Record the smallest safe Book-side exception needed to make the existing product-order form compatible with Draft PR #7's fail-closed server action while D2-S2 waits for official product input."
+authorization: "The product owner explicitly answered yes to starting the Book-side order UI and idempotency repair in parallel while the official D2-S2 product table is unavailable, then explicitly ratified this recorded two-document plan change after independent candidate review on 2026-08-16."
+planning_candidate:
+  repository: "nisikawa-officeAZ/GYEON"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  base_head: "88e55e03b69fd301f8da987f4702454b50c2205e"
+  base_tree: "9dd62db40e7c62ca93c08377c601e3967cedde57"
+  literal_document_allowlist:
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  current_changed_paths: "exactly the two document paths above"
+  commit: false
+  push: false
+order_draft_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/7"
+  head: "75245038870d1daa820e692a1cee44aa50849594"
+  tree: "e0b10498c869f09054f31de01c06c7ef7f6307b8"
+  state_required: "OPEN/Draft/unmerged"
+diagnosis:
+  - "The secure server action requires a nonempty idempotency_key and uses the order RPC rather than direct multi-table writes."
+  - "The secure server action rejects submitted status before card authorization and does not consume the current UI order_date."
+  - "ProductOrderForm.tsx supplies no idempotency key, exposes an unsupported submitted/confirmation checkbox, and exposes a misleading order-date input."
+future_literal_two_path_write_allowlist:
+  - "MODIFY src/components/product-orders/ProductOrderForm.tsx"
+  - "ADD src/components/product-orders/product-order-form-idempotency.test.ts"
+required_verification:
+  - "focused product-order-form idempotency source-contract test"
+  - "existing src/lib/product-orders/gyeon-order-rpc-binding.test.ts"
+  - "focused strict TypeScript check for the bounded candidate and direct imports"
+  - "git diff --check"
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx remains metadata/status/hash-only; content access is prohibited"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql remains content-protected"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql remains content-protected"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts remains content-protected"
+prohibitions:
+  - "No third source/test path, dependency/config change, official-product decision, broader ordering, offer/shipping, card authorization, or payment capture."
+  - "No DB, Supabase, Auth, Storage, LINE, EC, migration, Ready, merge, deployment, or destructive action."
+  - "No source/test edit, test execution, stage, commit, or push during this document-plan candidate."
+evidence_level: "E0 governance plus source-derived diagnosis only; not source acceptance, runtime, environment, field, or production proof"
+decision: "GDA_ORDER_1A_TWO_PATH_PLAN_RATIFIED_UNCOMMITTED"
+next: "REQUEST_THE_SEPARATE_TWO_DOCUMENT_COMMIT_GATE; AFTER_COMMIT_ACCEPTANCE_REQUEST_NORMAL_PUSH; ONLY_AFTER_REMOTE_PLAN_EVIDENCE_POST_A_CLAUDE_TARGETED_READ_ONLY_DIAGNOSIS_INSTRUCTION_TO_DRAFT_PR_7"
+```
+
+## GDA-4A-A0 — Review-request preview-only safety phase selection
+
+```yaml
+phase: GDA-4A-A0_REVIEW_REQUEST_PREVIEW_ONLY_PLAN_SELECTION
+status: PLAN_RATIFIED_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+objective: "Record the smallest DB-free GYEON DA implementation phase after the pushed order-idempotency repair: remove fake review approval-state interactions and retain a truthful preview/copy-only surface until persistence and LINE delivery are separately authorized."
+authorization: "After GDA-ORDER-1A was pushed, the product owner explicitly approved one bounded selection of the next GYEON DA mainline implementation and immediate preparation of its smallest phase, then explicitly ratified this recorded GDA-4A two-document plan change on 2026-08-16 after independent candidate review."
+predecessor_delivery:
+  phase: GDA-ORDER-1A
+  commit: "6fcd29d907d5a6648fbf509ad7f17c44392dae99"
+  tree: "924c89b84c6f48ac135dc830a8fc82ffa9001482"
+  remote_branch: "agent/gyeon-order-runtime-v1"
+  upstream: "0/0"
+  verification: "16/16 focused tests PASS; focused strict TypeScript PASS; git diff --check PASS"
+  evidence: "https://github.com/nisikawa-officeAZ/GYEON/pull/7#issuecomment-5306614558"
+planning_candidate:
+  repository: "nisikawa-officeAZ/GYEON"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  base_head: "1e90831d6873dd13bb37c40ddac66f52a92279a3"
+  base_tree: "46c69f96ea3431a60acf641bd41e06a201420d2f"
+  literal_document_allowlist:
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  commit: false
+  push: false
+source_base:
+  branch: "agent/auth-signup-recovery-jp-v1"
+  head: "f0a9135bf7744e139910899db232f52b528ac88e"
+  tree: "dbf1a4911014ab46fbf063f507b1a04c5abb1662"
+  upstream: "0/0"
+  initial_index_and_worktree: "clean"
+diagnosis:
+  - "ReviewRequestApprovalSection loads a useful authenticated readiness and deterministic LINE-message preview, but its approve/reject/skip handlers call dry-run actions that persist and send nothing."
+  - "The UI presents approval-oriented state and action outcomes even though review-request approval persistence, AI generation, and LINE dispatch are explicitly unimplemented."
+  - "The completion plan already requires either real approval-gated execution or explicit deferral with no misleading UI; preview/copy-only is the smallest safe DB-free repair."
+future_literal_two_path_write_allowlist:
+  - "MODIFY src/components/reputation/ReviewRequestApprovalSection.tsx"
+  - "ADD src/components/reputation/review-request-preview-only.test.ts"
+required_behavior:
+  - "Preserve readiness loading, summaries, deterministic preview, copy, link readiness, missing settings, compliance display, and the disabled future AI-edit boundary."
+  - "Remove dry-run approve/reject/skip imports, state, handlers, result UI, and buttons."
+  - "Replace approval-oriented labels with preview/readiness wording and clearly state in Japanese that approval is not saved and LINE is not sent."
+required_verification:
+  - "new focused preview-only source-contract test"
+  - "smallest strict TypeScript check for the two candidate paths and direct imports"
+  - "git diff --check"
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx remains metadata/status/hash-only; content access is prohibited"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql remains content-protected"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql remains content-protected"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts remains content-protected"
+prohibitions:
+  - "No modification of src/lib/reputation/actions/review-request-actions.ts and no third source/test path."
+  - "No persistence, schema, RLS, migration, LINE sending, AI-provider execution, dependency, or config change."
+  - "No DB, Supabase, Auth, Storage, LINE, EC, stage, commit, push, Ready, merge, deployment, or destructive action during this plan candidate."
+evidence_level: "E0 governance plus source-derived bounded diagnosis only; not source, runtime, environment, field, or production acceptance"
+decision: "GDA_4A_PREVIEW_ONLY_TWO_PATH_PLAN_RATIFIED_UNCOMMITTED"
+next: "REQUEST_THE_SEPARATE_TWO_DOCUMENT_COMMIT_GATE; AFTER_COMMIT_ACCEPTANCE_REQUEST_NORMAL_PUSH; THEN_POST_AND_RUN_ONE_BOUNDED_CLAUDE_READ_ONLY_DIAGNOSIS_BEFORE_SOURCE_IMPLEMENTATION"
+```
+
+## GDA-4A-A0-R1 — Authorization sentence and coordination-PR correction
+
+```yaml
+phase: GDA-4A-A0-R1_GOVERNANCE_POINTER_CORRECTION
+status: DOCUMENT_REPAIR_CANDIDATE_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+objective: "Correct the stale post-ratification sentence and route GDA-4A coordination to the active GYEON DA Draft PR #8 rather than frozen order Draft PR #7."
+authorization: "The product owner explicitly ratified GDA-4A, separately approved its two-document commit, and separately approved normal push of commit ccda0a8 on 2026-08-16. This R1 candidate only repairs the governance wording and PR pointer exposed by Claude's required fail-closed diagnosis stop."
+accepted_remote_plan:
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  commit: "ccda0a8d31142178391d74d9496b514fa9c2ca8c"
+  tree: "7f54897ba7bed332578a4d8fcdded934e7167ed8"
+  upstream: "0/0"
+failed_instruction:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/7"
+  comment: "https://github.com/nisikawa-officeAZ/GYEON/pull/7#issuecomment-5306674152"
+  result: "Claude stopped fail-closed before emitting GDA-4A-D1_RESULT_V1 because the source branch saw stale plan/ledger authority and PR #7 is frozen for non-order work."
+  source_changed_paths: "none"
+  tests_typecheck_build: "not run"
+  external_or_database_access: "none"
+superseding_stop_comment:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/7"
+  result: "Prior GDA-4A-D1 instruction explicitly superseded; PR #7 remains frozen for GDA-4A."
+correction:
+  - "Replace the stale plan sentence saying post-update ratification remains required with the already completed explicit owner-ratification record."
+  - "State that GDA-4A read-only diagnosis is coordinated on GYEON DA Draft PR #8; it does not resume order Draft PR #7."
+  - "Require this exact two-document repair to be accepted, committed, and pushed before a corrected Claude diagnosis is posted."
+literal_document_allowlist:
+  - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+  - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+source_base:
+  branch: "agent/auth-signup-recovery-jp-v1"
+  head: "f0a9135bf7744e139910899db232f52b528ac88e"
+  tree: "dbf1a4911014ab46fbf063f507b1a04c5abb1662"
+  upstream: "0/0"
+  state_after_failed_diagnosis: "clean; no source/test changes"
+future_coordination_pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/8"
+prohibitions:
+  - "No source/test/dependency/config/migration change and no DB/Supabase/Auth/Storage/LINE/EC access."
+  - "No stage, commit, push, Ready, merge, deploy, cleanup, or destructive action during this document repair candidate."
+evidence_level: "E0 corrected governance only; not source, runtime, environment, field, or production acceptance"
+decision: "GDA_4A_GOVERNANCE_POINTER_CHANGES_REQUIRED_REPAIRED_UNCOMMITTED"
+next: "RETURN_THE_EXACT_TWO_DOCUMENT_R1_CANDIDATE_TO_MACBOOK_CODEX; AFTER_ACCEPTANCE_REQUEST_SEPARATE_COMMIT_AND_PUSH_GATES; THEN_POST_CORRECTED_READ_ONLY_DIAGNOSIS_TO_PR_8"
+```
+
+## GDA-4A-A0-R2 — Bind the current coordination Draft PR
+
+```yaml
+phase: GDA-4A-A0-R2_COORDINATION_PR15_BINDING
+status: DOCUMENT_BINDING_CANDIDATE_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+objective: "Replace the obsolete merged PR #8 pointer with the newly authorized open Draft PR #15 as the current GDA-4A coordination surface."
+authorization: "After live GitHub verification showed PR #8 already merged and closed, the product owner explicitly authorized creation of a new main-based Draft PR from the accepted governance branch and approved making it the GDA-4A source of truth."
+prior_coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/8"
+  live_state: "closed and merged"
+  permitted_use: "historical evidence only; not an active instruction surface"
+current_coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  state_required: "OPEN/Draft/unmerged"
+  base_branch: "main"
+  base_sha: "1d6ca2b573d674b1340549b185e4e1d1a459d459"
+  head_branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  head_commit_before_binding_candidate: "d6f3b28bcee08e9322246b852bb5d686af8a13f3"
+  head_tree_before_binding_candidate: "9a5a6149cd86c6254053c1461e9d5c35fe8f00a1"
+  topology: "5 ahead / 0 behind"
+  changed_paths_before_binding_candidate: "exactly five documentation paths"
+source_identity_guard:
+  pinned_source_head: "f0a9135bf7744e139910899db232f52b528ac88e"
+  pinned_source_tree: "dbf1a4911014ab46fbf063f507b1a04c5abb1662"
+  review_section_blob_at_source_and_pr15_head: "ac3558ace9acf943d869a472fee5e016b0ddeaf3"
+  action_file_blob_at_source_and_pr15_head: "f980c424e79416ba0c87b7c7182fad5d5604bc8c"
+  result: "both diagnosis-target blobs are byte-identical across the pinned source base and PR #15 head"
+literal_document_allowlist:
+  - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+  - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+required_next_instruction:
+  target: "CLAUDE_CODE"
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  mode: "bounded read-only diagnosis only"
+  precondition: "this exact two-document binding is independently accepted, committed, normally pushed, and PR #15 remains OPEN/Draft/unmerged"
+prohibitions:
+  - "No source/test/dependency/config/migration change and no DB/Supabase/Auth/Storage/LINE/EC access."
+  - "No stage, commit, push, Ready, merge, deploy, cleanup, or destructive action during this binding candidate."
+evidence_level: "E0 coordination binding only; not source, runtime, environment, field, or production acceptance"
+decision: "GDA_4A_COORDINATION_PR15_BOUND_UNCOMMITTED"
+next: "RETURN_THE_EXACT_TWO_DOCUMENT_R2_CANDIDATE_TO_MACBOOK_CODEX; AFTER_ACCEPTANCE_REQUEST_SEPARATE_COMMIT_AND_PUSH_GATES; THEN_POST_AND_RUN_THE_CORRECTED_READ_ONLY_DIAGNOSIS_ON_PR_15"
+```
+
+## GDA-4A-I1 — Review-request preview-only implementation accepted and pushed
+
+```yaml
+phase: GDA-4A-I1_REVIEW_REQUEST_PREVIEW_ONLY_IMPLEMENTATION
+status: PASS_IMPLEMENTATION_COMMITTED_AND_PUSHED
+date: 2026-08-16
+append_only: true
+authorization: "The product owner explicitly approved the exact two-path uncommitted implementation, its later exact two-path commit, and its later normal non-force push as separate gates."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  live_state_after_push: "OPEN/Draft/unmerged"
+  base_branch: "main"
+  base_sha: "1d6ca2b573d674b1340549b185e4e1d1a459d459"
+implementation_commit:
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  parent: "0584db46a22d5780d5d27cda16ea887c3108f37e"
+  commit: "0de9eedf46aa23d505299280097d937c85d22a11"
+  tree: "35abe7f0c053e3ceed634f0b7473114cf063bedc"
+  push_mode: "normal non-force"
+  upstream_after_push: "0/0"
+literal_committed_paths:
+  - "MODIFY src/components/reputation/ReviewRequestApprovalSection.tsx"
+  - "ADD src/components/reputation/review-request-preview-only.test.ts"
+sha256:
+  review_request_approval_section: "9f8a59da5490cdc6121042e287e783a8b1dd1bf767164a509364b3231ffd07a9"
+  preview_only_test: "f6fb48563d6b153dacdad7ade9c6ba5b3c7bd740581586f5e6cf8dd6d86f26e4"
+accepted_behavior:
+  - "Removed fake approve/reject/skip imports, handlers, state, result UI, and action buttons that implied persisted approval or delivery."
+  - "Preserved readiness loading, summaries, deterministic message preview, copy, LINE-link readiness, missing-settings, compliance, status guards, and the disabled future AI-edit boundary."
+  - "Added clear Japanese disclosure that approval is not saved and LINE is not sent."
+  - "Replaced executable wording 承認可能 with preview wording プレビュー準備完了."
+verification:
+  focused_source_contract_test: "17/17 PASS; 0 failed"
+  focused_strict_typescript: "PASS; exit 0; no diagnostics"
+  git_diff_check: "PASS"
+acceptance_evidence:
+  diagnosis_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5306739517"
+  uncommitted_candidate_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5306825215"
+  commit_result: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5306833690"
+  push_result: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5306837776"
+guarded_paths:
+  review_request_actions_blob: "f980c424e79416ba0c87b7c7182fad5d5604bc8c"
+  screens_preview_blob: "c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
+  line_link_tokens_blob: "accd22345054cc44f89156fd78eaba6dfe4242a4"
+  monthly_invoice_pdf_artifact_blob: "32fda49583ae1217bc13711784ad8fa31744726c"
+  monthly_invoice_artifact_boundary_test_blob: "fe3c80f22fd80dcbfab076082473216dda582c14"
+prohibited_operations:
+  database_or_external_service_access: false
+  migration_action: false
+  dependency_or_config_change: false
+  ready: false
+  merge: false
+  deploy: false
+evidence_level: "E1 source and focused executable verification accepted; no DB, external-service, environment, field, or production acceptance"
+decision: "GDA_4A_I1_PREVIEW_ONLY_IMPLEMENTATION_ACCEPTED_PUSHED"
+next: "INDEPENDENTLY_ACCEPT_THIS_ONE_DOCUMENT_LEDGER_SYNC; THEN_REQUEST_SEPARATE_COMMIT_AND_NORMAL_PUSH_GATES; KEEP_PR_15_DRAFT_AND_UNMERGED"
+```
+
+## GDA-3A-A0 — Bind the completed-work-order review-surface implementation
+
+```yaml
+phase: GDA-3A-A0_COMPLETION_DESK_GIT_AUTHORITY_BINDING
+status: DOCUMENT_AUTHORITY_CANDIDATE_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+authorization: "After GDA-4A-I1 and its governance synchronization were normally pushed, the product owner explicitly approved starting the next smallest Book-side phase and separately approved the exact two-path uncommitted GDA-3A-I1 implementation."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  required_state: "OPEN/Draft/unmerged"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  base_head: "73460aa0d4cf6c0da94c222f99ce7762584dffd0"
+  base_tree: "bc10067ab0e9de88e08e9ba3e7c0186e0205b889"
+  upstream: "0/0"
+accepted_diagnosis:
+  decision: "GDA_3A_D1_READ_ONLY_DIAGNOSIS_ACCEPTED_WITH_CODEX_PATCH_CORRECTION"
+  work_report_contradiction: "already source-closed; no repair authorized"
+  exact_gap: "completed work orders expose completion report, invoice, maintenance, and review request as four disconnected toggles without one completion-desk sequence"
+  proposed_scope: "UI-only grouping; no child capability or authority change"
+failed_implementation_attempt_1:
+  result: "FAIL_CLOSED_GIT_GOVERNANCE_MISSING"
+  reason: "PR #15 carried the implementation instruction but the Git completion plan and ledger had no ratified GDA-3A entry"
+  repository_changed_paths: "none"
+  index_worktree: "clean"
+  tests_typecheck_build: "not run"
+  external_or_database_access: "none"
+  evidence: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+literal_document_allowlist:
+  - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+  - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+future_literal_implementation_allowlist:
+  - "MODIFY src/components/work-orders/WorkOrderDetail.tsx"
+  - "ADD src/components/work-orders/work-order-completion-desk.test.ts"
+required_behavior:
+  - "Use one local completionDeskSections element; do not duplicate the four existing child implementations."
+  - "Completed work orders render it once inside 完了後の対応 with the exact four-step sequence."
+  - "Non-completed work orders render the same element without the wrapper and retain current behavior."
+  - "Preserve existing state, toggles, imports, child props, status guards, and human-confirmation boundaries."
+frozen_child_paths:
+  - "src/components/completion-reports/CompletionReportSection.tsx"
+  - "src/components/invoices/InvoiceSection.tsx"
+  - "src/components/maintenance/MaintenanceSection.tsx"
+  - "src/components/reputation/ReviewRequestApprovalSection.tsx"
+  - "src/lib/reputation/actions/review-request-actions.ts"
+required_verification:
+  - "focused node:test source-contract test"
+  - "strict TypeScript through /private/tmp/gda3a-work-order-completion-desk-tsconfig.json"
+  - "git diff --check"
+  - "exact two-path candidate and empty index"
+prohibitions:
+  - "No source/test changes until this exact authority candidate is accepted, committed, and normally pushed."
+  - "No DB/Supabase/Auth/Storage/LINE/EC access, migration, dependency/config change, stage, Ready, merge, deploy, cleanup, or destructive action."
+resume_rule: "After this exact two-document correction is accepted, committed, and normally pushed, resume the already owner-approved GDA-3A-I1 exact two-path implementation without another owner reply. The later source commit and push remain separate gates."
+evidence_level: "E0 Git authority binding only; not source, runtime, environment, field, or production acceptance"
+decision: "GDA_3A_GIT_AUTHORITY_BINDING_CANDIDATE_UNCOMMITTED"
+next: "RETURN_THIS_EXACT_TWO_DOCUMENT_CANDIDATE_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT AND NORMAL PUSH GATES; THEN RESUME THE ALREADY-APPROVED GDA-3A-I1 IMPLEMENTATION"
+```
+
+## GDA-3A-I1 — Completed-work-order review surface accepted and pushed
+
+```yaml
+phase: GDA-3A-I1_COMPLETED_WORK_ORDER_REVIEW_SURFACE
+status: PASS_IMPLEMENTATION_COMMITTED_AND_PUSHED
+date: 2026-08-16
+append_only: true
+authorization: "The product owner explicitly approved the exact two-path uncommitted implementation, its exact two-path commit, its normal non-force push, and the post-push independent acceptance as separate gates."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  live_state_after_push: "OPEN/Draft/unmerged"
+  base_branch: "main"
+implementation_commit:
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  parent: "aa4130717ba76a8d2c6450ce5f3f3650ec5edd45"
+  commit: "4d01861c33131c8c891109f27d2c5ffda5bbc02d"
+  tree: "12641484545d55a7480aa6e7053d1c079a4f8348"
+  push_mode: "normal non-force"
+  upstream_after_push: "0/0"
+literal_committed_paths:
+  - "MODIFY src/components/work-orders/WorkOrderDetail.tsx"
+  - "ADD src/components/work-orders/work-order-completion-desk.test.ts"
+sha256:
+  work_order_detail_before: "62ea97851ff1d3cbf7618f331a582a46eca0b8fd6cce14e73e28ea9e3f13a629"
+  work_order_detail_after: "8fc720ebdc9d799b0445fb193be1515c9580492bbe7027bc965d1bc33c264892"
+  completion_desk_test: "77b6aefa30ea2ac8315e832f7f1b7d3800504018a8e48c58be821cbb5097b5e6"
+accepted_behavior:
+  - "Completed work orders render one clearly labeled 完了後の対応 review surface with the exact sequence 1. 完了報告書 → 2. 請求書 → 3. メンテナンス通知 → 4. レビュー依頼."
+  - "The four existing child sections are defined once in one local completionDeskSections element and each child remains invoked exactly once."
+  - "Non-completed work orders render the same element without the new wrapper, preserving current availability and behavior."
+  - "All existing closed-by-default toggles, child props, status guards, and human-confirmation boundaries remain intact."
+  - "No automatic artifact creation, invoice issue, payment recording, approval, LINE send, maintenance creation, or review delivery was introduced."
+verification:
+  focused_source_contract_test: "13/13 PASS; 0 failed"
+  focused_strict_typescript: "PASS; exit 0; no diagnostics"
+  committed_git_diff_check: "PASS"
+  exact_path_and_index_check: "PASS; exact two committed paths; worktree/index clean after push"
+acceptance_evidence:
+  uncommitted_candidate_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307601126"
+  commit_record: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307606058"
+  push_record: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307610485"
+  post_push_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307615248"
+guarded_paths:
+  completion_report_section: "unchanged outside the candidate set"
+  invoice_section: "unchanged outside the candidate set"
+  maintenance_section: "unchanged outside the candidate set"
+  review_request_approval_section: "unchanged outside the candidate set"
+  review_request_actions: "unchanged outside the candidate set"
+  screens_preview_blob: "c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
+  line_link_tokens_blob: "accd22345054cc44f89156fd78eaba6dfe4242a4"
+  monthly_invoice_pdf_artifact_blob: "32fda49583ae1217bc13711784ad8fa31744726c"
+  monthly_invoice_artifact_boundary_test_blob: "fe3c80f22fd80dcbfab076082473216dda582c14"
+prohibited_operations:
+  database_or_external_service_access: false
+  migration_action: false
+  dependency_or_config_change: false
+  ready: false
+  merge: false
+  deploy: false
+evidence_level: "E1 source and focused executable verification accepted; no DB, external-service, environment, field, or production acceptance"
+decision: "GDA_3A_I1_ACCEPTED_COMMITTED_AND_PUSHED"
+next: "RETURN_THIS_EXACT_ONE_DOCUMENT_LEDGER_SYNC_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT_AND_NORMAL_PUSH_GATES; THEN RUN_ONE_BOUNDED_READ_ONLY_DIAGNOSIS_TO_SELECT_THE_NEXT_SMALLEST_UNFINISHED_GDA_3_CAPABILITY"
+```
+
+## GDA-3B-A0 — Bind the invoice-from-work-order replay guard
+
+```yaml
+phase: GDA-3B-A0_INVOICE_FROM_WORK_ORDER_REPLAY_GUARD_GIT_AUTHORITY
+status: DOCUMENT_AUTHORITY_CANDIDATE_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+authorization: "After GDA-3A-I1 and its completion ledger were independently accepted, committed, and normally pushed, the product owner approved proceeding to the next Book implementation phase. This authorizes the bounded read-only diagnosis and this exact two-document authority candidate only."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  required_state: "OPEN/Draft/unmerged"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  base_head: "4df3501f021f0b85cd15c69b5a02e9f662c914fd"
+  base_tree: "8a95023275f31a763a7cf32c43224f51ed9a7299"
+  upstream: "0/0"
+accepted_diagnosis:
+  marker: "GDA_3_D2_READ_ONLY_DIAGNOSIS_RESULT_V1"
+  decision: "PASS_WITH_CODEX_SCOPE_CORRECTION"
+  finding: "createInvoiceFromWorkOrder inserts a draft invoice without first checking for an existing dealer/work-order invoice; InvoiceSection only hides its generated-invoice button after client state observes an invoice"
+  database_state_from_source: "invoices.work_order_id has an ordinary non-unique index; no uniqueness contract closes concurrent generated-invoice inserts"
+  evidence: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307656466"
+codex_scope_correction:
+  - "Describe the phase as a common-path replay/existence guard, never as full concurrency-safe idempotency."
+  - "Return an existing dealer-scoped invoice and perform no downstream action for ordinary retries/stale submissions."
+  - "Preserve the simultaneous-insert race as an explicit known limitation."
+  - "Do not infer a one-invoice-per-work-order database rule because manual additional invoices are currently permitted."
+literal_document_allowlist:
+  - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+  - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+future_literal_implementation_allowlist:
+  - "MODIFY src/lib/invoices/create-invoice.ts"
+  - "ADD src/lib/invoices/create-invoice-from-work-order-idempotency.test.ts"
+required_behavior:
+  - "Run finance authorization and canonical dealer resolution before the dealer/work-order existence lookup."
+  - "Fail closed on lookup error."
+  - "Existing row returns its id with an explicit replay marker and performs no work-order fetch, numbering, insert, delete, or activity side effect."
+  - "Missing row preserves current server-authoritative creation and returns a non-replay marker."
+  - "Existing caller remains compatible; no UI change."
+required_verification:
+  - "Focused node:test behavior test using mock.module before importing the action."
+  - "Existing invoice-issuance boundary regression."
+  - "Strict TypeScript through one temporary config outside Git limited to the exact action/test paths and direct imports."
+  - "git diff --check and exact two-path/index evidence."
+frozen_paths:
+  - "src/components/invoices/InvoiceSection.tsx"
+  - "src/lib/invoices/issue-invoice.ts"
+  - "src/components/work-orders/WorkOrderDetail.tsx"
+  - "all completion-report, maintenance, review-request, migration, and schema paths"
+known_limitations:
+  - "Two truly simultaneous requests can both pass the source-level lookup before either insert."
+  - "A unique key or transactional lock needs a separate migration contract and owner decision."
+  - "The current manual additional-invoice capability prevents silently inferring one invoice per work order."
+prohibitions:
+  - "No source/test implementation before this exact authority candidate is accepted, committed, and normally pushed and the exact two-path implementation is then explicitly approved."
+  - "No third repository path, DB/Supabase/Auth/Storage/LINE/EC access, migration, dependency/config change, stage, Ready, merge, deploy, cleanup, or destructive action."
+evidence_level: "E0 Git authority only; not source, runtime, database, environment, field, or production acceptance"
+decision: "GDA_3B_GIT_AUTHORITY_CANDIDATE_UNCOMMITTED"
+next: "RETURN_THIS_EXACT_TWO_DOCUMENT_CANDIDATE_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT_AND_NORMAL_PUSH_GATES; THEN REQUEST_EXPLICIT_OWNER_APPROVAL_OF_THE_EXACT_TWO_PATH_UNCOMMITTED_GDA_3B_IMPLEMENTATION"
+```
+
+## GDA-3B-I1 — Invoice-from-work-order replay guard accepted and pushed
+
+```yaml
+phase: GDA-3B-I1_INVOICE_FROM_WORK_ORDER_REPLAY_GUARD
+status: PASS_IMPLEMENTATION_COMMITTED_AND_PUSHED
+date: 2026-08-16
+append_only: true
+authorization: "The product owner explicitly approved the exact two-path uncommitted implementation, its exact two-path commit, and its normal non-force push as separate gates."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  live_state_after_push: "OPEN/Draft/unmerged"
+  base_branch: "main"
+implementation_commit:
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  parent: "da5ae18a5800760025fe675e52f01d481ef99fd4"
+  commit: "9731b8d9f5cf9a2718e40f45363c6bbb49a9aa60"
+  tree: "39038d2b7964dd562ef2a9112cc15fcad416b700"
+  push_mode: "normal non-force"
+  upstream_after_push: "0/0"
+literal_committed_paths:
+  - "MODIFY src/lib/invoices/create-invoice.ts"
+  - "ADD src/lib/invoices/create-invoice-from-work-order-idempotency.test.ts"
+sha256:
+  create_invoice_before: "aa5cbaf982b10b5648abdd8ec971f1a72c401b34a8442a674b1784d57c1ec35d"
+  create_invoice_after: "a7071fd5feda9e17962c946c5a8e3f631837c92e4e3ed8a819f54e615622e568"
+  replay_guard_test: "68a474bef6e6e20064d6ecca8fac428aec2556435fce3ee5579222cab30bbe45"
+accepted_behavior:
+  - "Finance authorization and canonical dealer resolution remain before data access."
+  - "The existence lookup is scoped by both dealer_id and work_order_id and fails closed on lookup error."
+  - "An existing invoice returns its id with alreadyExists true and performs no downstream work-order fetch, insert, delete, numbering, or activity side effect."
+  - "A missing invoice preserves the existing server-authoritative creation flow and returns alreadyExists false."
+  - "UI, manual invoice creation, issuance, payments, numbering contract, schema, RLS, and migrations remain unchanged."
+verification:
+  focused_node26_behavior_test: "8/8 PASS; no deprecated namedExports warning"
+  invoice_issuance_regression: "104/104 PASS"
+  bounded_strict_typescript: "PASS; exit 0; no diagnostics"
+  committed_git_diff_check: "PASS"
+  exact_path_and_index_check: "PASS; exact two committed paths; worktree/index clean after push"
+acceptance_evidence:
+  diagnosis_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307656466"
+  corrected_implementation_instruction: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307689489"
+  node26_repair_instruction: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307715668"
+  uncommitted_candidate_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307735681"
+  commit_record: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307742841"
+  push_record: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5307752510"
+known_limitations:
+  - "This is a common-path replay/existence guard, not full concurrency-safe idempotency."
+  - "Two truly simultaneous requests can both pass the lookup before either insert."
+  - "A unique key or transactional lock needs a separate migration contract and owner product/accounting decision because manual additional invoices remain permitted."
+process_nonconformance:
+  - "Claude used one read-only GitHub API instruction check despite the no-network wording."
+  - "Claude transiently created and then removed one gitignored node_modules symlink despite the explicit no-link rule."
+  - "MacBook Codex confirmed no residual path or third Git candidate path and independently reran every accepted test/typecheck command without relying on the symlink."
+prohibited_operations:
+  real_database_or_external_service_access: false
+  migration_action: false
+  dependency_or_config_change: false
+  ready: false
+  merge: false
+  deploy: false
+evidence_level: "E1 source and focused executable verification accepted; full concurrent duplicate prevention, DB, environment, field, and production acceptance remain open"
+decision: "GDA_3B_I1_ACCEPTED_COMMITTED_AND_PUSHED_WITH_RECORDED_NONRESIDUAL_PROCESS_DEVIATION"
+next: "RETURN_THIS_EXACT_ONE_DOCUMENT_LEDGER_SYNC_TO_MACBOOK_CODEX; AFTER ACCEPTANCE REQUEST SEPARATE COMMIT_AND_NORMAL_PUSH_GATES; THEN RUN_ONE_BOUNDED_READ_ONLY_DIAGNOSIS_TO_SELECT_THE_NEXT_SMALLEST_UNFINISHED_GDA_3_CAPABILITY"
+```
+
+## GDA-PERF-1B-I1 — Request-scoped auth memoization focused-verification candidate (uncommitted)
+
+```yaml
+phase: GDA-PERF-1B-I1_REQUEST_SCOPED_AUTH_MEMOIZATION
+status: PASS_CANDIDATE_FOCUSED_VERIFICATION_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+authorization: "The product owner separately approved diagnosis, the exact five-path uncommitted implementation, focused verification, and now this exact two-document governance sync."
+owner_authorization_boundaries:
+  - "Diagnosis, the exact five-path source/test candidate, and focused verification were separately approved."
+  - "This document-only governance sync does not itself authorize commit, push, Ready conversion, merge, deployment, or any DB/external-service action."
+  - "Independent acceptance by MacBook Codex remains the next gate before any commit/push."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  required_state: "OPEN/Draft/unmerged"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  pinned_head: "d47c37b91d6940f59ab06e6d0140f8d6506a43f3"
+  pinned_tree: "7a1128f427bbf8143fb6055bbdb3114c8c25e0ea"
+  upstream: "0/0"
+  index: "empty"
+candidate:
+  literal_allowlist:
+    - "MODIFY src/lib/auth/get-current-user.ts"
+    - "MODIFY src/lib/auth/get-current-dealer.ts"
+    - "MODIFY src/lib/admin/get-current-admin.ts"
+    - "MODIFY src/lib/staff/get-current-staff.ts"
+    - "ADD src/lib/auth/get-current-user-memoization.test.ts"
+  per_path_sha256:
+    get-current-user.ts: "709948a60b83f2c0dc9babc756f2f9af23ab3015230643f5435cba7e2048a9b8"
+    get-current-dealer.ts: "662c3a4c4732ff9769441b4f0a6753a37b6138180b8f807d76266612fdbedfd1"
+    get-current-admin.ts: "f5c6a1b63b34e14747d019e08f7f85eb2ee1b0be46a06a69ae93233bdc880321"
+    get-current-staff.ts: "0797d8a4f6f2ed20ed5c504a5d061f85ffc7953a284ef35d3de38625fa9847ff"
+    get-current-user-memoization.test.ts: "98343ab16cca69d3ff7330a462107d01a1d64471907d8a1aec112a6c734adda6"
+required_preserved_behavior:
+  - "Exported async wrappers remain."
+  - "Auth query, dealer active filter, admin active filter, staff query outcome handling, and resolveStaffAuthorization remain unchanged."
+  - "Null-on-failure behavior remains unchanged."
+  - "No page call-order, middleware, client-construction, dependency, config, schema, or DB change."
+verification:
+  focused_node_test: "4/4 PASS"
+  focused_strict_typescript_five_path_direct_import: "PASS; 0 diagnostics"
+  git_diff_check: "PASS"
+  hash_match: "exact hashes match per_path_sha256 above"
+  index_state: "empty"
+  pr_state: "Draft/unmerged"
+full_project_typecheck_qualification:
+  status: "NOT_GREEN_NOT_CLAIMED"
+  bounded_attempt_result: "exactly eight candidate-unrelated TS7016 diagnostics"
+  diagnostics_breakdown:
+    - "seven react-dom/server declaration diagnostics in existing tests"
+    - "one heic-convert declaration diagnostic in vehicle-registration"
+  candidate_path_diagnostics: 0
+  full_repository_green: "NOT_CLAIMED"
+protected_path_evidence:
+  path: "src/components/estimates/wizard/screens/ScreensPreview.tsx"
+  access: "metadata_only_pathname_mode_hash_git_state"
+  git_blob: "c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
+  sha256: "d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e"
+evidence_level: "E1 source/focused executable candidate evidence only; no latency, environment, field, or production proof claimed"
+later_performance_acceptance: "Authenticated Chrome remeasurement only after a separately authorized preview/deployed candidate. Production currently serves old code."
+external_actions:
+  database_access: false
+  migration_created: false
+  migration_applied: false
+  storage_changed: false
+  line_external_changed: false
+  deployed: false
+  dependency_or_config_change: false
+git_actions:
+  committed: false
+  pushed: false
+  pr_changed: false
+  ready_or_merged: false
+current_stop: "The source five-path candidate and this two-document candidate remain uncommitted; independent acceptance is next; document-only commit/push and source-only commit/push are later separate gates."
+evidence: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-5308005599"
+decision: "GDA_PERF_1B_GOVERNANCE_CANDIDATE_UNCOMMITTED"
+next: "RETURN_EXACT_TWO_DOCUMENT_CANDIDATE_TO_MACBOOK_CODEX_FOR_INDEPENDENT_ACCEPTANCE"
+```
+
+## GDA-PERF-1B-D1 — Commit/push and Preview delivery evidence synchronization (uncommitted)
+
+```yaml
+phase: GDA-PERF-1B-D1_DELIVERY_EVIDENCE_SYNCHRONIZATION
+status: PASS_DELIVERY_EVIDENCE_SYNC_CANDIDATE_UNCOMMITTED
+date: 2026-08-17
+append_only: true
+authorization: "The product owner approved preparing the exact PERF-1B delivery-ledger synchronization candidate, followed only after its separate closure by a distinct Dev-Next public-host governance candidate."
+owner_authorization_boundaries:
+  - "Authorized now: independently verify the already-pushed PERF-1B commits and prepare this exact two-document uncommitted synchronization candidate."
+  - "Not authorized by this candidate: stage, commit, push, Vercel project creation, environment transfer, DNS, Supabase configuration, Ready conversion, merge, production deployment, or any DB/external-service mutation."
+  - "The Dev-Next public-host exception must not be bundled with this active PERF-1B synchronization."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  live_state_verified_2026_08_17: "OPEN/Draft/unmerged"
+  base: "main"
+  base_sha: "1d6ca2b573d674b1340549b185e4e1d1a459d459"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  remote_head: "1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+  remote_tree: "d535a11202649400c43488ebd155fc06eb1119af"
+  upstream: "0/0"
+  index_before_candidate: "empty"
+  worktree_before_candidate: "clean"
+document_authority_delivery:
+  commit: "fae126a17cb7313e7f1cba6c7edcfba6a44df1fd"
+  parent: "d47c37b91d6940f59ab06e6d0140f8d6506a43f3"
+  tree: "4237f94aa07dc3b5cb144cf91357160d6b6d296b"
+  push: "normal non-force; remote transition d47c37b -> fae126a"
+  exact_paths:
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+source_delivery:
+  commit: "1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+  parent: "fae126a17cb7313e7f1cba6c7edcfba6a44df1fd"
+  tree: "d535a11202649400c43488ebd155fc06eb1119af"
+  push: "normal non-force; remote transition fae126a -> 1c7b3e9"
+  exact_paths:
+    - "MODIFY src/lib/auth/get-current-user.ts"
+    - "MODIFY src/lib/auth/get-current-dealer.ts"
+    - "MODIFY src/lib/admin/get-current-admin.ts"
+    - "MODIFY src/lib/staff/get-current-staff.ts"
+    - "ADD src/lib/auth/get-current-user-memoization.test.ts"
+  per_path_sha256:
+    get-current-user.ts: "709948a60b83f2c0dc9babc756f2f9af23ab3015230643f5435cba7e2048a9b8"
+    get-current-dealer.ts: "662c3a4c4732ff9769441b4f0a6753a37b6138180b8f807d76266612fdbedfd1"
+    get-current-admin.ts: "f5c6a1b63b34e14747d019e08f7f85eb2ee1b0be46a06a69ae93233bdc880321"
+    get-current-staff.ts: "0797d8a4f6f2ed20ed5c504a5d061f85ffc7953a284ef35d3de38625fa9847ff"
+    get-current-user-memoization.test.ts: "98343ab16cca69d3ff7330a462107d01a1d64471907d8a1aec112a6c734adda6"
+accepted_verification:
+  focused_node_test: "4/4 PASS"
+  exact_five_path_direct_import_strict_typescript: "PASS; zero diagnostics"
+  commit_diff_check: "PASS"
+  full_repository_green: "NOT_CLAIMED; eight previously recorded unrelated TS7016 diagnostics"
+  actual_latency_improvement: "NOT_PROVEN"
+preview_delivery:
+  first_attempt:
+    deployment: "dpl_8mYSgfvPXYSRxa9VuXuJoxCKgPQ3"
+    target: "preview"
+    result: "ERROR; release identity unavailable; failed closed; not reused as acceptance"
+  accepted_retry:
+    deployment: "dpl_Cat8xGBhQ9AK6c5TMNLADKevQCbN"
+    url: "https://dealeros-3xig1ktxb-nisikawa-5024s-projects.vercel.app"
+    target: "preview"
+    result: "READY"
+    exact_source_commit: "1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+    exact_build_only_release_identity: "NEXT_PUBLIC_GIT_COMMIT=1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+    build: "Next.js 15.5.19; compile PASS; type validation PASS; static generation 42/42; output deployment PASS"
+  qualification:
+    - "The READY Preview is protected by Vercel Authentication and is not anonymous-public acceptance evidence."
+    - "Authenticated Chrome performance remeasurement was not completed."
+    - "No production deployment or alias promotion occurred."
+protected_path_evidence:
+  path: "src/components/estimates/wizard/screens/ScreensPreview.tsx"
+  access: "metadata_only_pathname_mode_blob_git_state"
+  mode: "100644"
+  git_blob: "c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
+candidate:
+  literal_allowlist:
+    - "MODIFY docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "MODIFY docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  actual_changed_paths: "exactly the two literal documents above"
+  tests_typecheck_build: "NOT_RUN; documentation-only synchronization"
+  git_diff_check: "PASS; exit 0"
+external_actions_during_this_sync:
+  database_access: false
+  migration_created_or_applied: false
+  storage_changed: false
+  line_external_changed: false
+  vercel_project_or_environment_changed: false
+  dns_changed: false
+  supabase_auth_changed: false
+  deployed: false
+git_actions_during_this_sync:
+  staged: false
+  committed: false
+  pushed: false
+  ready_or_merged: false
+decision: "GDA_PERF_1B_DELIVERY_EVIDENCE_SYNC_CANDIDATE_UNCOMMITTED"
+next: "RETURN_EXACT_TWO_DOCUMENT_DELIVERY_SYNC_CANDIDATE_FOR_INDEPENDENT_ACCEPTANCE; COMMIT_AND_PUSH_REMAIN_SEPARATE GATES; DEV_NEXT_PUBLIC_HOST_GOVERNANCE_REMAINS_A_LATER_SEPARATE_PHASE"
+```
+
+## GDA-PERF-1B-D2 — Delivery-evidence synchronization committed and pushed
+
+```yaml
+phase: GDA-PERF-1B-D2_DELIVERY_EVIDENCE_SYNC_REMOTE_CLOSURE
+status: PASS_COMMITTED_AND_NORMALLY_PUSHED
+date: 2026-08-17
+append_only: true
+authorization: "The product owner separately approved staging/committing the exact accepted two-document candidate, then approved normal non-force push of that exact commit."
+commit:
+  sha: "a2d778e312cdde2160bdda261477296a5d3f5cba"
+  parent: "1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+  tree: "b7aa4183d9130f74ec2567ac78c929d007892112"
+  subject: "docs: sync GDA PERF-1B delivery evidence"
+  exact_paths:
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+verification:
+  git_diff_check: "PASS"
+  push: "normal non-force; remote transition 1c7b3e9 -> a2d778e"
+  local_upstream_after_push: "0/0"
+  index_worktree_after_push: "clean"
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  pr_state: "OPEN/Draft/unmerged"
+  remote_head: "a2d778e312cdde2160bdda261477296a5d3f5cba"
+qualification:
+  source_evidence: "E1 accepted"
+  protected_preview_delivery: "READY accepted"
+  authenticated_latency_improvement: "NOT_PROVEN"
+  anonymous_public_auth: "NOT_PROVEN"
+external_actions:
+  database_or_supabase: false
+  vercel_or_dns: false
+  deployment: false
+  ready_or_merge: false
+decision: "GDA_PERF_1B_DELIVERY_SYNC_REMOTE_CLOSED"
+next: "BEGIN_SEPARATE_GDA_AUTH_DEVNEXT_1A_FOUR_DOCUMENT_GOVERNANCE_CANDIDATE"
+```
+
+## GDA-AUTH-DEVNEXT-1A-A0 — Isolated public Auth governance candidate (uncommitted)
+
+```yaml
+phase: GDA-AUTH-DEVNEXT-1A-A0_ISOLATED_PUBLIC_AUTH_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED
+date: 2026-08-17
+append_only: true
+authorization: "The product owner approved preparation of this distinct governance candidate after PERF-1B remote closure."
+candidate:
+  literal_allowlist:
+    - "MODIFY OPERATIONS_RULES.md"
+    - "MODIFY docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "MODIFY docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "MODIFY docs/master_specification/ENVIRONMENT_LEDGER.md"
+  source_or_test_edits: false
+  stage_commit_push: false
+  external_mutation: false
+frozen_identity:
+  vercel_project: "dealeros-dev-next (proposed; not created)"
+  business_role: "Staging / Dev-Next public Auth verification"
+  vercel_target: "production platform semantics only after later gates"
+  public_hostname: "dev-next.detailer-ag.com"
+  source_commit: "1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+  source_tree: "d535a11202649400c43488ebd155fc06eb1119af"
+  supabase_role: "Staging DealerOS-Dev-Next"
+  supabase_ref: "vhiuiwolnlvlwvoaingd"
+  frozen_existing_project: "dealeros"
+  frozen_existing_domain: "app.detailer-ag.com"
+initial_environment_allowlist:
+  - "NEXT_PUBLIC_SUPABASE_URL for Staging ref vhiuiwolnlvlwvoaingd; secret-safe transfer"
+  - "NEXT_PUBLIC_SUPABASE_ANON_KEY for the same Staging project; secret-safe transfer"
+  - "SUPABASE_SERVICE_ROLE_KEY for the same Staging project; secret-safe transfer; required by signup account-state and pending-dealer server actions"
+  - "NEXT_PUBLIC_APP_URL=https://dev-next.detailer-ag.com"
+  - "NEXT_PUBLIC_GIT_COMMIT=1c7b3e93aa6ffd9c43e66d3d448fbaba24619573; build only"
+explicitly_unset:
+  - "CRON_SECRET"
+  - "GYEON_PARTNER_ONBOARDING_ENABLED"
+  - "LINE_CHANNEL_ID / LINE_CHANNEL_SECRET / LINE_CHANNEL_ACCESS_TOKEN / NEXT_PUBLIC_LIFF_ID"
+  - "OPENAI_API_KEY / DEALER_AI_KEY_SECRET"
+  - "Storage / OCR / PDF / NEWS-provider values"
+  - "every Production-scoped value"
+mandatory_predeploy_proof:
+  exact_future_test_only_allowlist:
+    - "ADD src/app/api/admin/cron/downgrade-trials/route.test.ts"
+    - "ADD src/app/api/admin/cron/process-due-maintenance/route.test.ts"
+    - "ADD src/app/api/admin/cron/process-line-queue/route.test.ts"
+    - "ADD src/app/api/public-route-authority.test.ts"
+  cron_assertion: "With CRON_SECRET absent: scheduled GET to POST-only downgrade-trials is framework 405; its exported POST is 401; GET and POST on each other cron are 401; every downstream mutation/external-send mock has zero calls."
+  public_inventory: "Exactly nine middleware PUBLIC_PREFIXES, nine current src/app/api/**/route.ts paths, public src/app/auth/confirm/route.ts, /signup server actions, gated /no-dealer, and R92B /s/e page/file; missing/extra/duplicate/unclassified surfaces fail."
+  public_authority_assertion: "Auth callback/confirm require valid Supabase code/token and verified session before pending-dealer authority; LIFF requires opaque token plus audience-verified LINE identity before consume; webhook requires matching HMAC before writes/external profile; auth/trial status remain session-derived read-only; observability has no DB/Storage/service-role/external provider; checkEmailAccountState is read-only and emits only new|pending|active|suspended; partner gate unset blocks /no-dealer admin authority; R92B share route preserves opaque-token/hash, uniform 404, immutable file, no-store/no-referrer, and no-internal-data boundaries."
+  frozen_existing_regressions:
+    - "src/app/s/e/share-route.test.ts sha256 f7967afd170860a97ba9305b47cee199af619294ea5ce84bc4f0167a959beb13"
+    - "src/lib/estimates/estimate-share-boundary.test.ts sha256 3c772e4ba0cf57b1dfac5e71571e1a5f89f0f4f339a37f18e2b1dacd663be5ba"
+    - "src/lib/dealer/create-pending-dealer.test.ts sha256 fee95410d77898a8124a677a6d7efc890dfdcd500c30d259eaeb8789285f8a78"
+    - "src/lib/dealer/claim-gyeon-provisioning.test.ts sha256 b7206e80855db84c94a225c35b96ccd89ae178a7ee24393f51abdbb1935813dd"
+    - "src/lib/line/line-link-token.test.ts sha256 5906f7eab62b6bbbcea2ff88dd9d4479ee949f95ced60b490038cba848223774"
+    - "src/app/api/observability/event/route.test.ts sha256 7453a177fa7720075519aa8402b863c5fcd8d70251ccf99a6ae45ed70a5a0a78"
+  source_change: "NOT_AUTHORIZED"
+later_separate_gates:
+  - "independent Sol acceptance of this candidate"
+  - "document-only commit"
+  - "normal non-force push"
+  - "four-test public-authority implementation and executable acceptance"
+  - "isolated Vercel project/environment creation"
+  - "exact deployment and domain binding"
+  - "Staging Supabase Auth URL/redirect/template update"
+  - "real anonymous email confirmation, login, and recovery proof"
+rollback: "Detach only dev-next.detailer-ag.com, freeze the isolated project, restore separately captured Staging Auth configuration; deletion remains a destructive separate gate."
+prohibited:
+  - "existing dealeros project or app.detailer-ag.com mutation"
+  - "Development or Production Supabase use"
+  - "secret disclosure in output, logs, files, clipboard, chat, or Git"
+  - "billable add-on, Git connection, protection disable, migration, DB data action, LINE action, Ready, merge, or business-Production release"
+current_stop: "Four-document uncommitted candidate only; independent Sol acceptance next."
+decision: "GDA_AUTH_DEVNEXT_1A_GOVERNANCE_CANDIDATE_UNCOMMITTED"
+```

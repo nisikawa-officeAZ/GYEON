@@ -5,7 +5,7 @@
 |-------|-------|
 | **Version** | 1.0 |
 | **Status** | Specification Freeze Candidate |
-| **Last Updated** | 2026-08-12 (v5.1 — Environment Ledger) |
+| **Last Updated** | 2026-08-16 (v5.3 — GHP-2A source/test acceptance sync) |
 | **Canonical Source** | All 11 core spec documents |
 | **Related Documents** | All |
 
@@ -180,6 +180,7 @@ TIER 4 — DESIGN AUTHORITY
 ├── LINE_AUTOMATION_PLATFORM_SPEC.md  ← Sprint 11G: LINE Automation Platform — 10 workflows, 9 triggers, 4 approval modes, AI integration (deferred), Rich Menu compat (8 buttons)
 ├── AI_GROWTH_PLATFORM_SPEC.md        ← Sprint 11H: AI Growth Platform — 8 domain objects, 11 data sources, 15 KPIs, 9 recommendation categories, 6 dashboards, 3 AI workflows
 ├── AI_CONTENT_AUTOMATION_SPEC.md     ← Sprint 11I: Content Automation Platform — 9 domain objects, 14-stage pipeline, 9 publishing destinations, 5 optimization targets, 5 approval modes
+├── GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md ← GDA-POST-1/GHP-2A: future GYEON website store discovery plus the independently accepted two-path public-profile projection safety seed
 ├── AI_ORCHESTRATOR_SPEC.md           ← Sprint 11J: AI Orchestration Engine — 8 domain objects, 8 workflows, 7 agent roles, 4 coordination patterns, provider bridge, failure strategy
 ├── AI_ORCHESTRATOR_RUNTIME_SPEC.md  ← Sprint 11K: Orchestrator Runtime Dry-Run — sequential + parallel validation, approval gate, failure strategy integration, cross-agent feed mapping
 ├── AI_ORCHESTRATOR_LIVE_BRIDGE_SPEC.md ← Sprint 11L: Live Runtime Bridge — agent lifecycle initialization (all 7 agents), runtime state model, output payload, approval gate pause (in-memory)
@@ -256,6 +257,8 @@ TIER 4 — DESIGN AUTHORITY
 | **4.9** | **2026-06-26** | **Sprint 11U** | **AI Settings UI Foundation: app/settings/ai/ page (server component, Pro+ gate, migration-aware), 6 client sections (AIOverviewSection/ProviderStatusSection/CapabilityAssignmentSection/BudgetSection/AIHealthSection/MarketplaceSection), recommendation mode selector (5 modes: best_quality/lowest_cost/fastest/balanced/dealer_selected), capability assignment by CATEGORY_CATALOG (14 categories, per-capability preferred+fallback+disable), marketplace grid (11 providers, category filter, extension toggle), Platform Core integration (isModuleAvailable/discoverFeatures), save via saveAISettingsProfile() with MIGRATION_REQUIRED handling, AI_SETTINGS_UI_SPEC.md** |
 | **5.0** | **2026-06-26** | **Sprint 11V** | **Enterprise Organization Foundation: OrganizationType (6: platform/company/division/branch/warehouse/dealer), OrganizationTier (tier_1 through tier_6), 7 static organizations (org_platform_root/org_gyeon_japan/org_attraction/org_detailing_division/org_wholesale_division/org_main_warehouse/org_attraction_sales), 6 application ownership entries (GYEON Japan owns dealer_agent/EDP/warehouse/accounting/crm; Attraction subscribes to EDP), 7 org roles (platform_admin/company_admin/division_manager/branch_manager/warehouse_manager/dealer_owner/dealer_staff), 8 governance policies ORG-001–ORG-008 (6 strict + 2 advisory), Platform Core bridge (ORG_TYPE_APPLICATION_MAP, APPLICATION_ORG_TYPE_MAP, ORGANIZATION_MODULE_MANIFEST), ORGANIZATION_FOUNDATION descriptor, ENTERPRISE_ORGANIZATION_SPEC.md** |
 | **5.1** | **2026-08-12** | **PR #2 Gate B-R1** | **Environment identity ledger added: DealerOS-Dev is Development, DealerOS-Dev-Next is formal Staging, DealerOS-Prod is Production; preview branches are not Staging; migration ledger drift and separate operation gates recorded.** |
+| **5.2** | **2026-08-16** | **GHP-2A owner activation** | **Ratified the post-GDA-7 GYEON HP store-discovery architecture and activated only the pre-GDA-7 two-path public-profile projection seed in Draft PR #12. Database, Storage, API, website, SEO/MEO, GBP, Ready, merge and deployment remain unauthorized.** |
+| **5.3** | **2026-08-16** | **GHP-2A source/test acceptance** | **Recorded the final independent PASS for Draft PR #12 head `9b8bc1eb2cb59e879f5ebeb5b91e85ba4f522662`: exact two paths, 32/32 focused tests, strict typecheck and diff-check PASS. Full GHP integration, Ready, merge and deployment remain unauthorized.** |
 
 ---
 

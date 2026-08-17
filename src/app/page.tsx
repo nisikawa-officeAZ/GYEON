@@ -16,13 +16,19 @@ export default async function HomePage() {
   // ── Super Admin gate (must come first) ───────────────────────────────────
   // Super Admins have no dealer_members record. Route them to the admin console
   // BEFORE any dealer validation so they are never trapped on /no-dealer.
-  const admin = await getCurrentAdmin();
+  // Both lookups are independent, request-cached authority reads (React
+  // `cache()`), so starting them concurrently costs no extra query — only
+  // the decision on each result stays sequential (admin acted on first).
+  const adminPromise  = getCurrentAdmin();
+  const dealerPromise = getCurrentDealer();
+
+  const admin = await adminPromise;
   if (admin) redirect("/admin/dashboard");
 
   // ── Dealer gate ──────────────────────────────────────────────────────────
   // Middleware ensures the user is authenticated before reaching this page.
   // Here we additionally verify they have an active dealer_members record.
-  const dealer = await getCurrentDealer();
+  const dealer = await dealerPromise;
   if (!dealer) {
     const user = await getCurrentUser();
     if (user) redirect("/no-dealer");

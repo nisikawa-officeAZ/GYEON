@@ -1,9 +1,10 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 
-export async function getCurrentAdmin() {
+const getCurrentAdminCached = cache(async () => {
   try {
     const user = await getCurrentUser();
     if (!user) return null;
@@ -21,4 +22,8 @@ export async function getCurrentAdmin() {
   } catch {
     return null;
   }
+});
+
+export async function getCurrentAdmin() {
+  return getCurrentAdminCached();
 }
