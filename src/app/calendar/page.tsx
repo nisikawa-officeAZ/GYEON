@@ -85,6 +85,7 @@ export default async function CalendarPage() {
         vehicles={vehicles}
         businessHours={businessHours}
         staffNameById={staffNameById}
+        staffOptions={staffOptions}
         bayNameById={bayNameById}
         bays={bayOptions}
       />

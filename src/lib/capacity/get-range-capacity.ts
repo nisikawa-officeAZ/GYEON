@@ -13,12 +13,24 @@ import { getBusinessHoursSettings } from "@/lib/dealer-settings/save-business-ho
 import { getServiceDurations }      from "@/lib/dealer-settings/save-service-durations";
 import { getStaffCapacitySettings } from "@/lib/dealer-settings/save-staff-capacity";
 import { getBayOptions }            from "@/lib/work-bays/get-work-bays";
-import { getReservationStaffOptions } from "@/lib/reservations/get-reservation-staff-options";
+import { getReservationStaffOptions, type ReservationStaffOption } from "@/lib/reservations/get-reservation-staff-options";
 import { getReservationsByDateRange } from "@/lib/reservations/get-reservations-by-date";
-import { hoursForDate, isClosedDate } from "@/lib/dealer-settings/business-hours";
+import { hoursForDate, isClosedDate, type BusinessHoursSettings } from "@/lib/dealer-settings/business-hours";
 import { expandReservations, intervalsForDate, MAX_MULTIDAY } from "./occupancy-expander";
 import { computeDayCapacity } from "./capacity-calculator";
 import type { CapacityResult } from "./capacity-types";
+import type { WorkBayOption } from "@/lib/work-bays/work-bay-types";
+
+// PERF-C3: the caller (CalendarPageClient) already has businessHours/bayOptions/
+// staffOptions from the page's own SSR fetch. When supplied, these skip the
+// matching refetch below instead of re-resolving dealer-wide settings that
+// don't vary by date range. getServiceDurations()/getStaffCapacitySettings()
+// have no SSR equivalent and are always fetched.
+export interface GetRangeCapacityOverrides {
+  businessHours?: BusinessHoursSettings;
+  bayOptions?: WorkBayOption[];
+  staffOptions?: ReservationStaffOption[];
+}
 
 const CAPACITY_STATUSES = new Set(["pending", "confirmed", "completed"]);
 const RANGE_MAX_DAYS = 45; // month grid (~42) + margin
@@ -51,6 +63,7 @@ function datesInclusive(from: string, to: string): string[] {
 export async function getRangeCapacity(
   from: string,
   to: string,
+  overrides?: GetRangeCapacityOverrides,
 ): Promise<Record<string, CapacityResult>> {
   const dateRe = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRe.test(from ?? "") || !dateRe.test(to ?? "") || to < from) return {};
@@ -65,11 +78,11 @@ export async function getRangeCapacity(
     const days = datesInclusive(from, end);
 
     const [businessHours, durations, scheduling, bays, staffOpts] = await Promise.all([
-      getBusinessHoursSettings(),
+      overrides?.businessHours ?? getBusinessHoursSettings(),
       getServiceDurations(),
       getStaffCapacitySettings(),
-      getBayOptions(),
-      getReservationStaffOptions(),
+      overrides?.bayOptions ?? getBayOptions(),
+      overrides?.staffOptions ?? getReservationStaffOptions(),
     ]);
 
     // One reservation fetch covering multi-day jobs that start before `from`.

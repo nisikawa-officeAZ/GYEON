@@ -11,6 +11,7 @@ import {
   hoursForDate,
 } from "@/lib/dealer-settings/business-hours";
 import type { WorkBayOption } from "@/lib/work-bays/work-bay-types";
+import type { ReservationStaffOption } from "@/lib/reservations/get-reservation-staff-options";
 import { getDayCapacity } from "@/lib/capacity/get-day-capacity";
 import { getRangeCapacity } from "@/lib/capacity/get-range-capacity";
 import type { CapacityResult, RecommendationLevel } from "@/lib/capacity/capacity-types";
@@ -40,6 +41,9 @@ interface Props {
   businessHours?: BusinessHoursSettings;
   /** B5a follow-up: dealer-scoped staff id → name for technician display. */
   staffNameById?: Record<string, string>;
+  /** PERF-C3: raw dealer-scoped staff options, reused by getRangeCapacity()
+      to skip its own duplicate fetch instead of only deriving staffNameById. */
+  staffOptions?: ReservationStaffOption[];
   /** B6b: dealer-scoped bay id → name for bay display. */
   bayNameById?: Record<string, string>;
   /** B6b: dealer bays for day-view lanes ([] until migration 092). */
@@ -118,6 +122,7 @@ export default function CalendarPageClient({
   vehicles,
   businessHours = DEFAULT_BUSINESS_HOURS_SETTINGS,
   staffNameById = {},
+  staffOptions = [],
   bayNameById = {},
   bays = [],
 }: Props) {
@@ -194,7 +199,11 @@ export default function CalendarPageClient({
       return;
     }
     const req = ++rangeReq.current;
-    const res = await getRangeCapacity(from, to);
+    // PERF-C3: businessHours/bays/staffOptions were already resolved server-side
+    // by page.tsx — pass them through so getRangeCapacity() skips its own
+    // duplicate fetch for these three (getServiceDurations/getStaffCapacitySettings
+    // and the reservations range fetch have no SSR equivalent and still run).
+    const res = await getRangeCapacity(from, to, { businessHours, bayOptions: bays, staffOptions });
     const levels: Record<string, RecommendationLevel> = {};
     for (const [d, cap] of Object.entries(res)) levels[d] = cap.level;
     rangeCache.current.set(key, levels);
