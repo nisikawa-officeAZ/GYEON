@@ -17,6 +17,7 @@
 
 import { ReactNode } from "react";
 import { requireActiveDealer } from "@/lib/auth/require-active-dealer";
+import { getCurrentStaff } from "@/lib/staff/get-current-staff";
 import MainLayoutClient from "@/components/layout/MainLayoutClient";
 
 interface MainLayoutProps {
@@ -27,5 +28,16 @@ interface MainLayoutProps {
 export default async function MainLayout({ children, footer }: MainLayoutProps) {
   await requireActiveDealer();
 
-  return <MainLayoutClient footer={footer}>{children}</MainLayoutClient>;
+  // GLOBAL_NAV_PERF_C2: getCurrentStaff() reuses the same request-memoized
+  // getCurrentUser()/getCurrentDealer() that requireActiveDealer() just
+  // resolved, so this only adds the one dealer_staff read — instead of
+  // StaffProvider re-deriving user/dealer/staff from scratch on every
+  // navigation via its own post-hydration client round trip.
+  const staff = await getCurrentStaff();
+
+  return (
+    <MainLayoutClient footer={footer} initialStaff={staff}>
+      {children}
+    </MainLayoutClient>
+  );
 }

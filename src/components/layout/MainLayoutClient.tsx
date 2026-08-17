@@ -5,22 +5,23 @@ import Header      from "@/components/Header";
 import Sidebar     from "@/components/Sidebar";
 import BottomNav   from "@/components/layout/BottomNav";
 import TrialBanner from "@/components/trial/TrialBanner";
-import { StaffProvider } from "@/contexts/StaffContext";
+import { StaffProvider, type InitialStaff } from "@/contexts/StaffContext";
 
 interface MainLayoutProps {
   children: ReactNode;
   footer?: ReactNode;
+  initialStaff?: InitialStaff;
 }
 
 // Height of the fixed top Header (h-14 = 56px) plus the iPhone safe-area inset.
 // Defined as the --app-header-h CSS variable in globals.css.
 const HEADER_OFFSET = "var(--app-header-h)";
 
-export default function MainLayout({ children, footer }: MainLayoutProps) {
+export default function MainLayout({ children, footer, initialStaff }: MainLayoutProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <StaffProvider>
+    <StaffProvider initialStaff={initialStaff}>
     <div className="min-h-screen flex flex-col">
       {/* Fixed top header (out of flow, height = --app-header-h) */}
       <Header open={open} onToggleSidebar={() => setOpen((prev) => !prev)} />
