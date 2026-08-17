@@ -2,10 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
-import { getLineStats } from "@/lib/line/get-line-customers";
-import { getLineMessageStats } from "@/lib/line/get-line-message-logs";
-import { getLineQueueStats } from "@/lib/line/get-line-notification-queue";
-import { getMaintenanceStats } from "@/lib/maintenance/get-maintenance-reminders";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -117,328 +113,59 @@ export interface DashboardSummary {
 }
 
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── RPC contract guard ──────────────────────────────────────────────────────
 
-function countByStatus<T extends { status: string }>(
-  rows: T[],
-  statuses: string[]
-): Record<string, number> {
-  const map: Record<string, number> = {};
-  for (const s of statuses) map[s] = 0;
-  for (const row of rows) {
-    const s = row.status.toLowerCase();
-    if (s in map) map[s]++;
-  }
-  return map;
+type JsonRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is JsonRecord {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasNumberKeys(value: unknown, keys: readonly string[]): boolean {
+  return isRecord(value) && keys.every((key) => typeof value[key] === "number");
+}
+
+function isDashboardSummary(value: unknown): value is DashboardSummary {
+  if (!isRecord(value)) return false;
+
+  return (
+    typeof value.customer_count === "number" &&
+    typeof value.vehicle_count === "number" &&
+    hasNumberKeys(value.estimates, ["draft", "proposal", "approved", "rejected", "expired"]) &&
+    hasNumberKeys(value.work_orders, ["scheduled", "in_progress", "completed", "on_hold", "cancelled"]) &&
+    hasNumberKeys(value.invoices, ["draft", "issued", "paid", "partially_paid", "overdue", "cancelled"]) &&
+    hasNumberKeys(value.sales, ["monthly_sales", "monthly_received", "outstanding", "yearly_sales"]) &&
+    hasNumberKeys(value.line_stats, ["friends_count", "linked_count", "this_month_new"]) &&
+    hasNumberKeys(value.line_message_stats, ["this_month_sent", "this_month_failed", "total_sent"]) &&
+    hasNumberKeys(value.line_queue_stats, ["scheduled", "failed"]) &&
+    hasNumberKeys(value.maintenance_stats, ["this_month", "next_7_days", "pending", "sent_this_month"]) &&
+    hasNumberKeys(value.reservation_stats, ["today", "this_week", "this_month", "pending", "confirmed"]) &&
+    Array.isArray(value.today_work_orders) &&
+    Array.isArray(value.upcoming_work_orders) &&
+    Array.isArray(value.recent_activities)
+  );
 }
 
 // ─── Main fetch ───────────────────────────────────────────────────────────────
 
 export async function getDashboardSummary(): Promise<DashboardSummary | null> {
   try {
-  const dealer = await getCurrentDealer();
-  if (!dealer) return null;
+    const dealer = await getCurrentDealer();
+    if (!dealer) return null;
 
-  const supabase = await createClient();
-  const did = dealer.dealer_id;
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("get_dashboard_summary", {
+      p_dealer_id: dealer.dealer_id,
+    });
 
-  const now       = new Date();
-  const todayStr  = now.toISOString().slice(0, 10);
-  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-  const yearStart  = `${now.getFullYear()}-01-01`;
-  const sevenDaysLater = new Date(now);
-  sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
-  const sevenDaysStr = sevenDaysLater.toISOString().slice(0, 10);
+    if (error || !isDashboardSummary(data)) {
+      console.error("[getDashboardSummary] Aggregate RPC failed or returned an invalid contract.");
+      return null;
+    }
 
-  const todayStart = `${todayStr}T00:00:00`;
-  const todayEnd   = `${todayStr}T23:59:59`;
-
-  const [
-    customerResult,
-    vehicleResult,
-    estimateResult,
-    workOrderResult,
-    invoiceResult,
-    paymentResult,
-    todayWOResult,
-    upcomingWOResult,
-    recentEstimates,
-    recentWOs,
-    recentInvoices,
-    recentPayments,
-    lineStatsResult,
-    lineMsgStatsResult,
-    lineQueueStatsResult,
-    maintenanceStatsResult,
-    reservationResult,
-  ] = await Promise.all([
-    // Customer count
-    supabase
-      .from("customers")
-      .select("*", { count: "exact", head: true })
-      .eq("dealer_id", did),
-
-    // Vehicle count
-    supabase
-      .from("vehicles")
-      .select("*", { count: "exact", head: true })
-      .eq("dealer_id", did),
-
-    // Estimates by status
-    supabase
-      .from("estimates")
-      .select("status")
-      .eq("dealer_id", did),
-
-    // Work orders by status
-    supabase
-      .from("work_orders")
-      .select("status")
-      .eq("dealer_id", did),
-
-    // Invoices: status + financial fields
-    supabase
-      .from("invoices")
-      .select("status, total, balance_due, issue_date")
-      .eq("dealer_id", did)
-      .is("deleted_at", null),
-
-    // Payments: completed this month
-    supabase
-      .from("payments")
-      .select("amount, payment_date, status")
-      .eq("dealer_id", did)
-      .eq("status", "completed")
-      .gte("payment_date", monthStart),
-
-    // Today's work orders
-    supabase
-      .from("work_orders")
-      .select(`
-        id, work_order_number, title, status, assigned_staff,
-        scheduled_start_at, scheduled_end_at,
-        customers ( last_name, first_name ),
-        vehicles  ( maker, model, plate_number )
-      `)
-      .eq("dealer_id", did)
-      .gte("scheduled_start_at", todayStart)
-      .lte("scheduled_start_at", todayEnd)
-      .order("scheduled_start_at", { ascending: true }),
-
-    // Upcoming 7 days (excluding today, scheduled/in_progress)
-    supabase
-      .from("work_orders")
-      .select(`
-        id, work_order_number, title, status, scheduled_start_at,
-        customers ( last_name, first_name ),
-        vehicles  ( maker, model )
-      `)
-      .eq("dealer_id", did)
-      .in("status", ["scheduled", "in_progress"])
-      .gt("scheduled_start_at", todayEnd)
-      .lte("scheduled_start_at", `${sevenDaysStr}T23:59:59`)
-      .order("scheduled_start_at", { ascending: true })
-      .limit(20),
-
-    // Recent estimates
-    supabase
-      .from("estimates")
-      .select("id, estimate_number, status, created_at, customers ( last_name, first_name )")
-      .eq("dealer_id", did)
-      .order("created_at", { ascending: false })
-      .limit(5),
-
-    // Recent completed work orders
-    supabase
-      .from("work_orders")
-      .select("id, work_order_number, status, actual_end_at, updated_at, customers ( last_name, first_name )")
-      .eq("dealer_id", did)
-      .eq("status", "completed")
-      .order("updated_at", { ascending: false })
-      .limit(5),
-
-    // Recent invoices
-    supabase
-      .from("invoices")
-      .select("id, invoice_number, status, created_at, customers ( last_name, first_name )")
-      .eq("dealer_id", did)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .limit(5),
-
-    // Recent payments
-    supabase
-      .from("payments")
-      .select("id, payment_number, amount, payment_date, status, customers ( last_name, first_name )")
-      .eq("dealer_id", did)
-      .order("created_at", { ascending: false })
-      .limit(5),
-
-    // LINE stats
-    getLineStats(),
-
-    // LINE message stats
-    getLineMessageStats(),
-
-    // LINE queue stats
-    getLineQueueStats(),
-
-    // Maintenance stats
-    getMaintenanceStats(),
-
-    // Reservation stats: status rows for today/week/month filtering
-    supabase
-      .from("reservations")
-      .select("status, reservation_date")
-      .eq("dealer_id", did),
-  ]);
-
-  // ── Counts ──────────────────────────────────────────────────────────────────
-  const customerCount = customerResult.count ?? 0;
-  const vehicleCount  = vehicleResult.count  ?? 0;
-
-  const estimateRows  = (estimateResult.data ?? []) as { status: string }[];
-  const workOrderRows = (workOrderResult.data ?? []) as { status: string }[];
-
-  const estCounts = countByStatus(estimateRows, ["draft", "proposal", "sent", "approved", "rejected", "lost", "expired"]);
-  const woCounts  = countByStatus(workOrderRows, ["scheduled", "in_progress", "completed", "on_hold", "cancelled"]);
-
-  const invoiceRows = (invoiceResult.data ?? []) as {
-    status: string; total: number; balance_due: number; issue_date: string | null;
-  }[];
-  const invCounts = countByStatus(invoiceRows, ["draft", "issued", "paid", "partially_paid", "overdue", "cancelled"]);
-
-  // ── Sales summary ──────────────────────────────────────────────────────────
-  const outstanding = invoiceRows
-    .filter((r) => r.balance_due > 0 && r.status !== "cancelled")
-    .reduce((s, r) => s + r.balance_due, 0);
-
-  const monthlySales = invoiceRows
-    .filter((r) => r.status === "paid" && r.issue_date && r.issue_date >= monthStart)
-    .reduce((s, r) => s + r.total, 0);
-
-  const yearlySales = invoiceRows
-    .filter((r) => r.status === "paid" && r.issue_date && r.issue_date >= yearStart)
-    .reduce((s, r) => s + r.total, 0);
-
-  const monthlyReceived = ((paymentResult.data ?? []) as { amount: number }[])
-    .reduce((s, p) => s + p.amount, 0);
-
-  // ── Reservation stats ─────────────────────────────────────────────────────
-  const reservationRows = (reservationResult.data ?? []) as { status: string; reservation_date: string }[];
-  const weekEnd = sevenDaysStr;
-  const reservationStats: ReservationStats = {
-    today:      reservationRows.filter((r) => r.reservation_date === todayStr).length,
-    this_week:  reservationRows.filter((r) => r.reservation_date >= todayStr && r.reservation_date <= weekEnd).length,
-    this_month: reservationRows.filter((r) => r.reservation_date >= monthStart).length,
-    pending:    reservationRows.filter((r) => r.status === "pending").length,
-    confirmed:  reservationRows.filter((r) => r.status === "confirmed").length,
-  };
-
-  // ── Recent activities ──────────────────────────────────────────────────────
-  type CustomerJoin = { last_name: string | null; first_name: string | null } | null;
-
-  function customerName(c: CustomerJoin): string {
-    if (!c) return "—";
-    return [c.last_name, c.first_name].filter(Boolean).join(" ") || "—";
-  }
-
-  const activities: RecentActivity[] = [
-    ...((recentEstimates.data ?? []) as unknown as {
-      id: string; estimate_number: string | null; status: string;
-      created_at: string; customers: CustomerJoin;
-    }[]).map((r) => ({
-      id:        r.id,
-      type:      "estimate" as const,
-      label:     customerName(r.customers),
-      sub_label: `見積 ${r.estimate_number ?? r.id.slice(0, 6)}`,
-      date:      r.created_at,
-      status:    r.status,
-    })),
-
-    ...((recentWOs.data ?? []) as unknown as {
-      id: string; work_order_number: string | null; status: string;
-      actual_end_at: string | null; updated_at: string; customers: CustomerJoin;
-    }[]).map((r) => ({
-      id:        r.id,
-      type:      "work_order" as const,
-      label:     customerName(r.customers),
-      sub_label: `施工完了 ${r.work_order_number ?? r.id.slice(0, 6)}`,
-      date:      r.actual_end_at ?? r.updated_at,
-      status:    r.status,
-    })),
-
-    ...((recentInvoices.data ?? []) as unknown as {
-      id: string; invoice_number: string | null; status: string;
-      created_at: string; customers: CustomerJoin;
-    }[]).map((r) => ({
-      id:        r.id,
-      type:      "invoice" as const,
-      label:     customerName(r.customers),
-      sub_label: `請求書 ${r.invoice_number ?? r.id.slice(0, 6)}`,
-      date:      r.created_at,
-      status:    r.status,
-    })),
-
-    ...((recentPayments.data ?? []) as unknown as {
-      id: string; payment_number: string | null; amount: number;
-      payment_date: string | null; status: string; customers: CustomerJoin;
-    }[]).map((r) => ({
-      id:        r.id,
-      type:      "payment" as const,
-      label:     customerName(r.customers),
-      sub_label: `入金 ¥${r.amount.toLocaleString("ja-JP")}`,
-      date:      r.payment_date ?? "",
-      status:    r.status,
-    })),
-  ]
-    .filter((a) => !!a.date)
-    .sort((a, b) => (b.date > a.date ? 1 : -1))
-    .slice(0, 10);
-
-  return {
-    customer_count: customerCount,
-    vehicle_count:  vehicleCount,
-    estimates: {
-      draft:    estCounts["draft"]    ?? 0,
-      // 提案中 = proposal + legacy 'sent' (SENT displayed as 提案中 until migration 099)
-      proposal: (estCounts["proposal"] ?? 0) + (estCounts["sent"] ?? 0),
-      approved: estCounts["approved"] ?? 0,
-      rejected: (estCounts["rejected"] ?? 0) + (estCounts["lost"] ?? 0),
-      expired:  estCounts["expired"]  ?? 0,
-    },
-    work_orders: {
-      scheduled:   woCounts["scheduled"]   ?? 0,
-      in_progress: woCounts["in_progress"] ?? 0,
-      completed:   woCounts["completed"]   ?? 0,
-      on_hold:     woCounts["on_hold"]     ?? 0,
-      cancelled:   woCounts["cancelled"]   ?? 0,
-    },
-    invoices: {
-      draft:          invCounts["draft"]          ?? 0,
-      issued:         invCounts["issued"]         ?? 0,
-      paid:           invCounts["paid"]           ?? 0,
-      partially_paid: invCounts["partially_paid"] ?? 0,
-      overdue:        invCounts["overdue"]        ?? 0,
-      cancelled:      invCounts["cancelled"]      ?? 0,
-    },
-    sales: {
-      monthly_sales:    monthlySales,
-      monthly_received: monthlyReceived,
-      outstanding,
-      yearly_sales:     yearlySales,
-    },
-    line_stats:            lineStatsResult,
-    line_message_stats:    lineMsgStatsResult,
-    line_queue_stats:      lineQueueStatsResult,
-    maintenance_stats:     maintenanceStatsResult,
-    reservation_stats:     reservationStats,
-    today_work_orders:    (todayWOResult.data ?? []) as unknown as TodayWorkOrder[],
-    upcoming_work_orders: (upcomingWOResult.data ?? []) as unknown as UpcomingWorkOrder[],
-    recent_activities:    activities,
-  };
-  } catch (e) {
-    console.error("[getDashboardSummary] Unexpected error:", e);
+    return data;
+  } catch (error) {
+    console.error("[getDashboardSummary] Unexpected error:", error);
     return null;
   }
 }
