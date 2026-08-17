@@ -62,14 +62,20 @@ export default async function DashboardPage() {
   // ── Super Admin gate (must come first) ──────────────────────────────────────
   // Super Admins have no dealer_members record. Route them to the admin console
   // BEFORE any dealer validation so they are never trapped on /no-dealer.
-  const admin = await getCurrentAdmin();
+  // Both lookups are independent, request-cached authority reads (React
+  // `cache()`), so starting them concurrently costs no extra query — only
+  // the decision on each result stays sequential (admin acted on first).
+  const adminPromise  = getCurrentAdmin();
+  const dealerPromise = getCurrentDealer();
+
+  const admin = await adminPromise;
   if (admin) redirect("/admin/dashboard");
 
   // ── Suspension gate ─────────────────────────────────────────────────────────
   // getCurrentDealer() returns null for both "no dealer" and "suspended" states.
   // Distinguish them so suspended dealers see a clear message instead of an
   // empty dashboard, while truly unlinked users are redirected to /no-dealer.
-  const dealer = await getCurrentDealer();
+  const dealer = await dealerPromise;
   if (!dealer) {
     const user = await getCurrentUser();
     if (user) {
@@ -87,12 +93,14 @@ export default async function DashboardPage() {
     redirect("/no-dealer");
   }
 
-  // ── Server-side role resolution ─────────────────────────────────────────────
-  const staffInfo = await getCurrentStaff().catch(() => null);
+  // ── Server-side role resolution + data fetch ────────────────────────────────
+  // Both reads require the canonical dealer gate above to have already passed,
+  // so they are safe to resolve concurrently rather than one after the other.
+  const [staffInfo, dash] = await Promise.all([
+    getCurrentStaff().catch(() => null),
+    getDashboardSummary(),
+  ]);
   const role: DealerStaffRole = staffInfo?.role ?? "staff"; // fail-closed: unknown → staff
-
-  // ── Data fetch ──────────────────────────────────────────────────────────────
-  const dash = await getDashboardSummary();
 
   // Revenue visibility — server-side authority only (ANL-002, Phase C)
   const showRevenue = canViewFinance(role);
