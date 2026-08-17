@@ -646,3 +646,87 @@ runtime-PASS claim and authorizes no DB/Supabase/Auth/Storage/LINE connection,
 migration replay/apply, test execution, stage, commit, push, Ready transition,
 merge, or deployment. The candidate remains uncommitted and PR #2 remains
 `NOT_MERGE_READY`.
+
+## 19. GDA-AUTH-DEVNEXT-1A isolated Vercel staging identity candidate
+
+| Field | Immutable candidate value |
+|---|---|
+| Date | 2026-08-17 |
+| Status | `GOVERNANCE_CANDIDATE_UNCOMMITTED_NO_RESOURCE_CREATED` |
+| Business role | Staging / Dev-Next public Auth verification |
+| Proposed Vercel project | `dealeros-dev-next` (new, isolated, no Git connection) |
+| Vercel target | `production` platform semantics only; never business Production |
+| Public hostname | `dev-next.detailer-ag.com` only |
+| Exact source commit / tree | `1c7b3e93aa6ffd9c43e66d3d448fbaba24619573` / `d535a11202649400c43488ebd155fc06eb1119af` |
+| Supabase binding | Staging `DealerOS-Dev-Next`, ref `vhiuiwolnlvlwvoaingd` only |
+| Frozen existing Vercel identity | project `dealeros`; domain `app.detailer-ag.com`; no mutation |
+
+This candidate records an identity and future gate sequence; it does not prove
+that the Vercel project, domain, DNS record, environment variables, or Supabase
+Auth settings exist. Standard-protected Preview evidence cannot satisfy real
+anonymous signup-confirmation or password-recovery acceptance. The isolated
+project approach avoids disabling Preview protection and avoids changing the
+existing `dealeros` project.
+
+The exact initial environment allowlist is:
+
+1. `NEXT_PUBLIC_SUPABASE_URL` for Staging ref
+   `vhiuiwolnlvlwvoaingd`, transferred without displaying the value;
+2. `NEXT_PUBLIC_SUPABASE_ANON_KEY` for the same Staging project, transferred
+   without displaying the value;
+3. `SUPABASE_SERVICE_ROLE_KEY` for the same Staging project, transferred
+   without displaying the value; source inspection confirms it is required by
+   the unauthenticated signup account-state server action and the
+   verified-session pending-dealer creation action;
+4. `NEXT_PUBLIC_APP_URL=https://dev-next.detailer-ag.com`;
+5. build-only
+   `NEXT_PUBLIC_GIT_COMMIT=1c7b3e93aa6ffd9c43e66d3d448fbaba24619573`.
+
+`CRON_SECRET`, `GYEON_PARTNER_ONBOARDING_ENABLED`, all LINE values, AI keys,
+Storage, OCR, PDF, NEWS-provider, and every Production-scoped value must remain
+unset. Values may be transferred only from the already qualified Staging-bound
+Preview configuration after the exact project ref is verified without exposing
+any value. They must never enter output, logs, a file, the clipboard, chat, Git,
+or PR evidence.
+
+`vercel.json` schedules three routes that can mutate subscription state,
+enqueue notifications, or send LINE. The future deployment gate therefore
+cannot open merely because `CRON_SECRET` is omitted. Vercel calls cron via
+`GET`, but `downgrade-trials` currently exports only `POST`: its scheduled
+request must fail closed as framework `405`, while its exported `POST` must
+return `401`; both methods on the other two routes must return `401`. Every
+case must call no downstream mutation or external-send function.
+
+Middleware also intentionally exposes nine exact public prefixes while this
+isolated app needs a Staging service-role key for signup. A fourth focused test
+must therefore freeze those prefixes, the nine-route `/api` inventory, public
+`/auth/confirm`, `/signup` server actions, gated `/no-dealer`, and the R92B
+`/s/e` page/file route, rejecting any unclassified surface. It must prove the
+Auth code/token/session, LIFF opaque-token/audience, LINE HMAC, coarse read-only
+signup-state, partner-gate-off, opaque estimate-share token, read-only status,
+and no-provider observability boundaries before any privileged mutation or
+external call.
+
+The unauthenticated signup pre-check is allowed to select only
+`approval_status, deleted_at, created_at`, perform no mutation/RPC/Auth-admin/
+external call, and emit only `new|pending|active|suspended`. With partner
+onboarding unset, `/no-dealer` must reach no admin client. `/s/e` is bound to
+unchanged R92B token/hash, uniform-404, immutable-file, no-store/no-referrer,
+and no-internal-data evidence. The exact future four-test allowlist and six
+frozen existing regression hashes are recorded in `OPERATIONS_RULES.md` §4.1.
+No cron handler, page, action, public route, middleware, or `vercel.json` edit
+is authorized by this ledger entry.
+
+After that complete public-authority proof, project creation/environment transfer, exact source deploy,
+domain binding, Staging Supabase Auth Site URL and redirect/template updates,
+and real-email verification remain separate ordered gates. Before any Supabase
+Auth mutation, capture the current Staging Auth URL/redirect/template state
+read-only for rollback. Rollback is limited to detaching
+`dev-next.detailer-ag.com`, freezing the isolated project, and restoring that
+captured Staging Auth configuration. Project deletion is destructive and needs
+its own approval. Production, the existing `dealeros` project, database
+migrations, and data are never rollback targets.
+
+No Vercel, DNS, Supabase, Auth, SMTP, DB, Storage, LINE, migration, test,
+deployment, stage, commit, push, Ready, merge, or destructive action occurred
+while creating this candidate.

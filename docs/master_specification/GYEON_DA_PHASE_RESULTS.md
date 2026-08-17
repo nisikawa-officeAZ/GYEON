@@ -1967,3 +1967,118 @@ git_actions_during_this_sync:
 decision: "GDA_PERF_1B_DELIVERY_EVIDENCE_SYNC_CANDIDATE_UNCOMMITTED"
 next: "RETURN_EXACT_TWO_DOCUMENT_DELIVERY_SYNC_CANDIDATE_FOR_INDEPENDENT_ACCEPTANCE; COMMIT_AND_PUSH_REMAIN_SEPARATE GATES; DEV_NEXT_PUBLIC_HOST_GOVERNANCE_REMAINS_A_LATER_SEPARATE_PHASE"
 ```
+
+## GDA-PERF-1B-D2 — Delivery-evidence synchronization committed and pushed
+
+```yaml
+phase: GDA-PERF-1B-D2_DELIVERY_EVIDENCE_SYNC_REMOTE_CLOSURE
+status: PASS_COMMITTED_AND_NORMALLY_PUSHED
+date: 2026-08-17
+append_only: true
+authorization: "The product owner separately approved staging/committing the exact accepted two-document candidate, then approved normal non-force push of that exact commit."
+commit:
+  sha: "a2d778e312cdde2160bdda261477296a5d3f5cba"
+  parent: "1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+  tree: "b7aa4183d9130f74ec2567ac78c929d007892112"
+  subject: "docs: sync GDA PERF-1B delivery evidence"
+  exact_paths:
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+verification:
+  git_diff_check: "PASS"
+  push: "normal non-force; remote transition 1c7b3e9 -> a2d778e"
+  local_upstream_after_push: "0/0"
+  index_worktree_after_push: "clean"
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  pr_state: "OPEN/Draft/unmerged"
+  remote_head: "a2d778e312cdde2160bdda261477296a5d3f5cba"
+qualification:
+  source_evidence: "E1 accepted"
+  protected_preview_delivery: "READY accepted"
+  authenticated_latency_improvement: "NOT_PROVEN"
+  anonymous_public_auth: "NOT_PROVEN"
+external_actions:
+  database_or_supabase: false
+  vercel_or_dns: false
+  deployment: false
+  ready_or_merge: false
+decision: "GDA_PERF_1B_DELIVERY_SYNC_REMOTE_CLOSED"
+next: "BEGIN_SEPARATE_GDA_AUTH_DEVNEXT_1A_FOUR_DOCUMENT_GOVERNANCE_CANDIDATE"
+```
+
+## GDA-AUTH-DEVNEXT-1A-A0 — Isolated public Auth governance candidate (uncommitted)
+
+```yaml
+phase: GDA-AUTH-DEVNEXT-1A-A0_ISOLATED_PUBLIC_AUTH_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED
+date: 2026-08-17
+append_only: true
+authorization: "The product owner approved preparation of this distinct governance candidate after PERF-1B remote closure."
+candidate:
+  literal_allowlist:
+    - "MODIFY OPERATIONS_RULES.md"
+    - "MODIFY docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "MODIFY docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "MODIFY docs/master_specification/ENVIRONMENT_LEDGER.md"
+  source_or_test_edits: false
+  stage_commit_push: false
+  external_mutation: false
+frozen_identity:
+  vercel_project: "dealeros-dev-next (proposed; not created)"
+  business_role: "Staging / Dev-Next public Auth verification"
+  vercel_target: "production platform semantics only after later gates"
+  public_hostname: "dev-next.detailer-ag.com"
+  source_commit: "1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+  source_tree: "d535a11202649400c43488ebd155fc06eb1119af"
+  supabase_role: "Staging DealerOS-Dev-Next"
+  supabase_ref: "vhiuiwolnlvlwvoaingd"
+  frozen_existing_project: "dealeros"
+  frozen_existing_domain: "app.detailer-ag.com"
+initial_environment_allowlist:
+  - "NEXT_PUBLIC_SUPABASE_URL for Staging ref vhiuiwolnlvlwvoaingd; secret-safe transfer"
+  - "NEXT_PUBLIC_SUPABASE_ANON_KEY for the same Staging project; secret-safe transfer"
+  - "SUPABASE_SERVICE_ROLE_KEY for the same Staging project; secret-safe transfer; required by signup account-state and pending-dealer server actions"
+  - "NEXT_PUBLIC_APP_URL=https://dev-next.detailer-ag.com"
+  - "NEXT_PUBLIC_GIT_COMMIT=1c7b3e93aa6ffd9c43e66d3d448fbaba24619573; build only"
+explicitly_unset:
+  - "CRON_SECRET"
+  - "GYEON_PARTNER_ONBOARDING_ENABLED"
+  - "LINE_CHANNEL_ID / LINE_CHANNEL_SECRET / LINE_CHANNEL_ACCESS_TOKEN / NEXT_PUBLIC_LIFF_ID"
+  - "OPENAI_API_KEY / DEALER_AI_KEY_SECRET"
+  - "Storage / OCR / PDF / NEWS-provider values"
+  - "every Production-scoped value"
+mandatory_predeploy_proof:
+  exact_future_test_only_allowlist:
+    - "ADD src/app/api/admin/cron/downgrade-trials/route.test.ts"
+    - "ADD src/app/api/admin/cron/process-due-maintenance/route.test.ts"
+    - "ADD src/app/api/admin/cron/process-line-queue/route.test.ts"
+    - "ADD src/app/api/public-route-authority.test.ts"
+  cron_assertion: "With CRON_SECRET absent: scheduled GET to POST-only downgrade-trials is framework 405; its exported POST is 401; GET and POST on each other cron are 401; every downstream mutation/external-send mock has zero calls."
+  public_inventory: "Exactly nine middleware PUBLIC_PREFIXES, nine current src/app/api/**/route.ts paths, public src/app/auth/confirm/route.ts, /signup server actions, gated /no-dealer, and R92B /s/e page/file; missing/extra/duplicate/unclassified surfaces fail."
+  public_authority_assertion: "Auth callback/confirm require valid Supabase code/token and verified session before pending-dealer authority; LIFF requires opaque token plus audience-verified LINE identity before consume; webhook requires matching HMAC before writes/external profile; auth/trial status remain session-derived read-only; observability has no DB/Storage/service-role/external provider; checkEmailAccountState is read-only and emits only new|pending|active|suspended; partner gate unset blocks /no-dealer admin authority; R92B share route preserves opaque-token/hash, uniform 404, immutable file, no-store/no-referrer, and no-internal-data boundaries."
+  frozen_existing_regressions:
+    - "src/app/s/e/share-route.test.ts sha256 f7967afd170860a97ba9305b47cee199af619294ea5ce84bc4f0167a959beb13"
+    - "src/lib/estimates/estimate-share-boundary.test.ts sha256 3c772e4ba0cf57b1dfac5e71571e1a5f89f0f4f339a37f18e2b1dacd663be5ba"
+    - "src/lib/dealer/create-pending-dealer.test.ts sha256 fee95410d77898a8124a677a6d7efc890dfdcd500c30d259eaeb8789285f8a78"
+    - "src/lib/dealer/claim-gyeon-provisioning.test.ts sha256 b7206e80855db84c94a225c35b96ccd89ae178a7ee24393f51abdbb1935813dd"
+    - "src/lib/line/line-link-token.test.ts sha256 5906f7eab62b6bbbcea2ff88dd9d4479ee949f95ced60b490038cba848223774"
+    - "src/app/api/observability/event/route.test.ts sha256 7453a177fa7720075519aa8402b863c5fcd8d70251ccf99a6ae45ed70a5a0a78"
+  source_change: "NOT_AUTHORIZED"
+later_separate_gates:
+  - "independent Sol acceptance of this candidate"
+  - "document-only commit"
+  - "normal non-force push"
+  - "four-test public-authority implementation and executable acceptance"
+  - "isolated Vercel project/environment creation"
+  - "exact deployment and domain binding"
+  - "Staging Supabase Auth URL/redirect/template update"
+  - "real anonymous email confirmation, login, and recovery proof"
+rollback: "Detach only dev-next.detailer-ag.com, freeze the isolated project, restore separately captured Staging Auth configuration; deletion remains a destructive separate gate."
+prohibited:
+  - "existing dealeros project or app.detailer-ag.com mutation"
+  - "Development or Production Supabase use"
+  - "secret disclosure in output, logs, files, clipboard, chat, or Git"
+  - "billable add-on, Git connection, protection disable, migration, DB data action, LINE action, Ready, merge, or business-Production release"
+current_stop: "Four-document uncommitted candidate only; independent Sol acceptance next."
+decision: "GDA_AUTH_DEVNEXT_1A_GOVERNANCE_CANDIDATE_UNCOMMITTED"
+```

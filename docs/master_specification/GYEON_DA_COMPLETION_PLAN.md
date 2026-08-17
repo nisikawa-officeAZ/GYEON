@@ -341,7 +341,7 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 ### GDA-PERF-1B — Request-scoped auth memoization Git authority sync
 
-**Authorization:** The product owner separately approved diagnosis, the exact five-path implementation, focused verification, the exact two-document Git authority sync, the two isolated commits, and their normal non-force pushes. The owner has now approved preparing this separate two-document delivery-evidence synchronization candidate; its commit and push remain later gates.
+**Authorization:** The product owner separately approved diagnosis, the exact five-path implementation, focused verification, the exact two-document Git authority sync, the two isolated commits, their normal non-force pushes, the delivery-evidence synchronization commit, and its normal non-force push.
 
 **Objective:** Reduce repeated request-scope authentication/dealer/admin/staff lookups by stable module-scope React `cache` memoization while preserving authorization and fail-closed behavior.
 
@@ -365,7 +365,74 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Prohibited:** Any third repository path; DB, Supabase, Auth, Storage, LINE, EC, or other external-service access; migration, dependency, or config change; stage, commit, push, Ready conversion, merge, deployment, or destructive action without its later separate gate.
 
-**Current stopping point:** The document authority and exact source implementation are remotely preserved in OPEN/Draft/unmerged PR #15. This exact two-document delivery-evidence synchronization candidate is uncommitted and must be independently accepted before its separate commit/push gates. The Dev-Next public-host governance exception is a later separate phase and must not be bundled into this synchronization candidate.
+**Current stopping point:** The document authority and exact source implementation are remotely preserved in OPEN/Draft/unmerged PR #15. The delivery-evidence synchronization was independently accepted, committed at `a2d778e312cdde2160bdda261477296a5d3f5cba`, tree `b7aa4183d9130f74ec2567ac78c929d007892112`, and normally pushed; local/upstream is 0/0 and the index/worktree was clean after push. PERF-1B remains E1 plus READY protected-Preview delivery evidence only: authenticated latency improvement and anonymous public Auth acceptance are not proven. The active separate phase is GDA-AUTH-DEVNEXT-1A below.
+
+### GDA-AUTH-DEVNEXT-1A — Isolated public Auth verification governance
+
+**Authorization:** After PERF-1B delivery synchronization was independently accepted, committed, and normally pushed, the product owner approved preparing this separate four-document governance candidate. This candidate authorizes no external action, source/test edit, stage, commit, or push.
+
+**Objective:** Establish one public, isolated Dev-Next host for real signup confirmation, login, and password-reset verification without weakening Preview protection and without touching the existing `dealeros` project, `app.detailer-ag.com`, or Production Supabase.
+
+**Exact governance candidate allowlist:**
+
+1. MODIFY `OPERATIONS_RULES.md`
+2. MODIFY `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. MODIFY `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+4. MODIFY `docs/master_specification/ENVIRONMENT_LEDGER.md`
+
+**Frozen deployment identity:** The future isolated project is
+`dealeros-dev-next`, the only public hostname is
+`dev-next.detailer-ag.com`, the business role is Staging / Dev-Next, and the
+only source commit/tree is
+`1c7b3e93aa6ffd9c43e66d3d448fbaba24619573` /
+`d535a11202649400c43488ebd155fc06eb1119af`. Vercel target
+`production` is permitted only as platform semantics for this isolated
+non-production project after all later gates. The existing `dealeros` project,
+`app.detailer-ag.com`, and every business-Production identity remain frozen.
+
+**Exact initial environment allowlist:** Staging-only
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and
+`SUPABASE_SERVICE_ROLE_KEY` bound to ref `vhiuiwolnlvlwvoaingd` and transferred
+without disclosure; `NEXT_PUBLIC_APP_URL=https://dev-next.detailer-ag.com`;
+and build-only `NEXT_PUBLIC_GIT_COMMIT` equal to the exact source commit above.
+The service-role key is required by the actual signup server actions for coarse
+account-state lookup and verified pending-dealer creation. No other variable
+may be copied. `CRON_SECRET`, partner provisioning, LINE, AI, Storage, OCR,
+PDF, NEWS-provider, and Production values remain unset.
+
+**Mandatory pre-deploy public-authority proof:** Before project
+creation/deployment, a separately authorized four-test candidate must prove the
+current cron-method reality and the complete public authority inventory. With
+`CRON_SECRET` absent, scheduled `GET` to POST-only `downgrade-trials` must be a
+framework `405`, its exported `POST` must return `401`, and both exported
+methods on each other cron route must return `401`; every case must make zero
+downstream mutation/external-send calls. The fourth test must inventory the
+exact nine middleware public prefixes, nine current `/api/**/route.ts` paths,
+`/auth/confirm`, `/signup` server actions, gated `/no-dealer`, and R92B `/s/e`
+page/file route, rejecting any unclassified path. It must prove Auth
+token/session, LIFF token/audience, LINE HMAC, coarse read-only signup-state,
+partner-gate-off, R92B share-token, read-only status, and no-provider
+observability boundaries before privileged mutation or external calls. Exact
+future test paths, frozen existing regression hashes, and assertions are in
+`OPERATIONS_RULES.md` §4.1. No handler, page, action, middleware, or
+`vercel.json` source change is authorized by this governance phase.
+
+**Later gated order:** independent Sol acceptance of this four-document
+candidate -> separate document commit -> normal push -> separate four-test
+candidate and executable public-authority acceptance -> separate Vercel
+project/environment creation -> exact deployment/domain proof -> separate Staging Supabase Auth
+Site URL/redirect/template update -> real anonymous email/signup/reset proof.
+Each step fails closed on identity, scope, secret, billing, or evidence drift.
+
+**Rollback boundary:** Detach only `dev-next.detailer-ag.com`, freeze the
+isolated project, and restore separately captured Staging Auth configuration.
+Project deletion is a destructive later gate. Existing Production or `dealeros`
+resources are never rollback targets.
+
+**Current stopping point:** Exact four-document uncommitted governance
+candidate only. Independent Sol acceptance is next. No Vercel project, DNS,
+environment, Supabase Auth, SMTP, DB, migration, deployment, stage, commit,
+push, Ready conversion, or merge action is authorized or claimed.
 
 ### GDA-6 — Field acceptance and operational hardening
 
