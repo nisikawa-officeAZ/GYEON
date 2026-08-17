@@ -341,11 +341,11 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 ### GDA-PERF-1B — Request-scoped auth memoization Git authority sync
 
-**Authorization:** The product owner separately approved diagnosis, the exact five-path uncommitted implementation, focused verification, and now this exact two-document governance sync.
+**Authorization:** The product owner separately approved diagnosis, the exact five-path implementation, focused verification, the exact two-document Git authority sync, the two isolated commits, and their normal non-force pushes. The owner has now approved preparing this separate two-document delivery-evidence synchronization candidate; its commit and push remain later gates.
 
 **Objective:** Reduce repeated request-scope authentication/dealer/admin/staff lookups by stable module-scope React `cache` memoization while preserving authorization and fail-closed behavior.
 
-**Literal source/test allowlist (already-approved uncommitted candidate):**
+**Accepted source/test delivery allowlist:**
 
 1. MODIFY `src/lib/auth/get-current-user.ts`
 2. MODIFY `src/lib/auth/get-current-dealer.ts`
@@ -355,17 +355,17 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Required preserved behavior:** Exported async wrappers remain. Auth query, dealer active filter, admin active filter, staff query outcome handling, `resolveStaffAuthorization`, and null-on-failure remain unchanged. No page call-order, middleware, client-construction, dependency, config, schema, or DB change.
 
-**Accepted candidate evidence:** 4/4 focused Node tests PASS. Exact five-path/direct-import strict TypeScript PASS with zero diagnostics. `git diff --check` PASS. Exact hashes match. Index empty. PR #15 stays Draft/unmerged.
+**Accepted delivered evidence:** 4/4 focused Node tests PASS. Exact five-path/direct-import strict TypeScript PASS with zero diagnostics. `git diff --check` PASS. Exact hashes match. The document authority was committed at `fae126a17cb7313e7f1cba6c7edcfba6a44df1fd` and normally pushed. The exact five-path source/test implementation was committed at `1c7b3e93aa6ffd9c43e66d3d448fbaba24619573`, tree `d535a11202649400c43488ebd155fc06eb1119af`, and normally pushed. PR #15 remains OPEN/Draft/unmerged at that remote head; local/upstream is 0/0 and the index/worktree is clean before this synchronization candidate.
 
 **Full-project typecheck qualification:** Not green and not claimed. One bounded attempt ended with exactly eight candidate-unrelated TS7016 diagnostics (seven `react-dom/server` declarations in existing tests, one `heic-convert` declaration in vehicle-registration); candidate-path diagnostics were zero.
 
 **Evidence level:** E1 source/focused executable candidate evidence only. Do not claim actual latency improvement, environment proof, field proof, or production proof.
 
-**Later performance acceptance:** Authenticated Chrome remeasurement only after a separately authorized preview/deployed candidate. Production currently serves old code.
+**Environment qualification:** One owner-approved Preview retry for exact commit `1c7b3e9` reached READY as deployment `dpl_Cat8xGBhQ9AK6c5TMNLADKevQCbN`; build, compile, type validation, static generation 42/42, and output deployment passed. The Preview remains protected by Vercel Authentication. No authenticated Chrome performance remeasurement or anonymous email-confirmation acceptance was completed, and production continues to serve older code. Actual latency improvement is therefore not accepted.
 
 **Prohibited:** Any third repository path; DB, Supabase, Auth, Storage, LINE, EC, or other external-service access; migration, dependency, or config change; stage, commit, push, Ready conversion, merge, deployment, or destructive action without its later separate gate.
 
-**Current stopping point:** The source five-path candidate and this two-document candidate remain uncommitted. Independent acceptance is next; document-only commit/push and source-only commit/push are later separate gates.
+**Current stopping point:** The document authority and exact source implementation are remotely preserved in OPEN/Draft/unmerged PR #15. This exact two-document delivery-evidence synchronization candidate is uncommitted and must be independently accepted before its separate commit/push gates. The Dev-Next public-host governance exception is a later separate phase and must not be bundled into this synchronization candidate.
 
 ### GDA-6 — Field acceptance and operational hardening
 

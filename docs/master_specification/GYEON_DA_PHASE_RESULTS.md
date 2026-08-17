@@ -1866,3 +1866,104 @@ evidence: "https://github.com/nisikawa-officeAZ/GYEON/pull/15#issuecomment-53080
 decision: "GDA_PERF_1B_GOVERNANCE_CANDIDATE_UNCOMMITTED"
 next: "RETURN_EXACT_TWO_DOCUMENT_CANDIDATE_TO_MACBOOK_CODEX_FOR_INDEPENDENT_ACCEPTANCE"
 ```
+
+## GDA-PERF-1B-D1 — Commit/push and Preview delivery evidence synchronization (uncommitted)
+
+```yaml
+phase: GDA-PERF-1B-D1_DELIVERY_EVIDENCE_SYNCHRONIZATION
+status: PASS_DELIVERY_EVIDENCE_SYNC_CANDIDATE_UNCOMMITTED
+date: 2026-08-17
+append_only: true
+authorization: "The product owner approved preparing the exact PERF-1B delivery-ledger synchronization candidate, followed only after its separate closure by a distinct Dev-Next public-host governance candidate."
+owner_authorization_boundaries:
+  - "Authorized now: independently verify the already-pushed PERF-1B commits and prepare this exact two-document uncommitted synchronization candidate."
+  - "Not authorized by this candidate: stage, commit, push, Vercel project creation, environment transfer, DNS, Supabase configuration, Ready conversion, merge, production deployment, or any DB/external-service mutation."
+  - "The Dev-Next public-host exception must not be bundled with this active PERF-1B synchronization."
+coordination_pr:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/15"
+  live_state_verified_2026_08_17: "OPEN/Draft/unmerged"
+  base: "main"
+  base_sha: "1d6ca2b573d674b1340549b185e4e1d1a459d459"
+  branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+  remote_head: "1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+  remote_tree: "d535a11202649400c43488ebd155fc06eb1119af"
+  upstream: "0/0"
+  index_before_candidate: "empty"
+  worktree_before_candidate: "clean"
+document_authority_delivery:
+  commit: "fae126a17cb7313e7f1cba6c7edcfba6a44df1fd"
+  parent: "d47c37b91d6940f59ab06e6d0140f8d6506a43f3"
+  tree: "4237f94aa07dc3b5cb144cf91357160d6b6d296b"
+  push: "normal non-force; remote transition d47c37b -> fae126a"
+  exact_paths:
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+source_delivery:
+  commit: "1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+  parent: "fae126a17cb7313e7f1cba6c7edcfba6a44df1fd"
+  tree: "d535a11202649400c43488ebd155fc06eb1119af"
+  push: "normal non-force; remote transition fae126a -> 1c7b3e9"
+  exact_paths:
+    - "MODIFY src/lib/auth/get-current-user.ts"
+    - "MODIFY src/lib/auth/get-current-dealer.ts"
+    - "MODIFY src/lib/admin/get-current-admin.ts"
+    - "MODIFY src/lib/staff/get-current-staff.ts"
+    - "ADD src/lib/auth/get-current-user-memoization.test.ts"
+  per_path_sha256:
+    get-current-user.ts: "709948a60b83f2c0dc9babc756f2f9af23ab3015230643f5435cba7e2048a9b8"
+    get-current-dealer.ts: "662c3a4c4732ff9769441b4f0a6753a37b6138180b8f807d76266612fdbedfd1"
+    get-current-admin.ts: "f5c6a1b63b34e14747d019e08f7f85eb2ee1b0be46a06a69ae93233bdc880321"
+    get-current-staff.ts: "0797d8a4f6f2ed20ed5c504a5d061f85ffc7953a284ef35d3de38625fa9847ff"
+    get-current-user-memoization.test.ts: "98343ab16cca69d3ff7330a462107d01a1d64471907d8a1aec112a6c734adda6"
+accepted_verification:
+  focused_node_test: "4/4 PASS"
+  exact_five_path_direct_import_strict_typescript: "PASS; zero diagnostics"
+  commit_diff_check: "PASS"
+  full_repository_green: "NOT_CLAIMED; eight previously recorded unrelated TS7016 diagnostics"
+  actual_latency_improvement: "NOT_PROVEN"
+preview_delivery:
+  first_attempt:
+    deployment: "dpl_8mYSgfvPXYSRxa9VuXuJoxCKgPQ3"
+    target: "preview"
+    result: "ERROR; release identity unavailable; failed closed; not reused as acceptance"
+  accepted_retry:
+    deployment: "dpl_Cat8xGBhQ9AK6c5TMNLADKevQCbN"
+    url: "https://dealeros-3xig1ktxb-nisikawa-5024s-projects.vercel.app"
+    target: "preview"
+    result: "READY"
+    exact_source_commit: "1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+    exact_build_only_release_identity: "NEXT_PUBLIC_GIT_COMMIT=1c7b3e93aa6ffd9c43e66d3d448fbaba24619573"
+    build: "Next.js 15.5.19; compile PASS; type validation PASS; static generation 42/42; output deployment PASS"
+  qualification:
+    - "The READY Preview is protected by Vercel Authentication and is not anonymous-public acceptance evidence."
+    - "Authenticated Chrome performance remeasurement was not completed."
+    - "No production deployment or alias promotion occurred."
+protected_path_evidence:
+  path: "src/components/estimates/wizard/screens/ScreensPreview.tsx"
+  access: "metadata_only_pathname_mode_blob_git_state"
+  mode: "100644"
+  git_blob: "c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
+candidate:
+  literal_allowlist:
+    - "MODIFY docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "MODIFY docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  actual_changed_paths: "exactly the two literal documents above"
+  tests_typecheck_build: "NOT_RUN; documentation-only synchronization"
+  git_diff_check: "PASS; exit 0"
+external_actions_during_this_sync:
+  database_access: false
+  migration_created_or_applied: false
+  storage_changed: false
+  line_external_changed: false
+  vercel_project_or_environment_changed: false
+  dns_changed: false
+  supabase_auth_changed: false
+  deployed: false
+git_actions_during_this_sync:
+  staged: false
+  committed: false
+  pushed: false
+  ready_or_merged: false
+decision: "GDA_PERF_1B_DELIVERY_EVIDENCE_SYNC_CANDIDATE_UNCOMMITTED"
+next: "RETURN_EXACT_TWO_DOCUMENT_DELIVERY_SYNC_CANDIDATE_FOR_INDEPENDENT_ACCEPTANCE; COMMIT_AND_PUSH_REMAIN_SEPARATE GATES; DEV_NEXT_PUBLIC_HOST_GOVERNANCE_REMAINS_A_LATER_SEPARATE_PHASE"
+```
