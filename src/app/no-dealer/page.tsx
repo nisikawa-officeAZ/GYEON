@@ -20,6 +20,19 @@ export default async function NoDealerPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  // The "recheck" action reloads this server route. Converge users whose
+  // membership became active after they first landed here into the guarded
+  // dealer dashboard instead of rendering the stale waiting state again.
+  const supabase = await createClient();
+  const { data: activeMembership } = await supabase
+    .from("dealer_members")
+    .select("dealer_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .limit(1)
+    .maybeSingle();
+  if (activeMembership) redirect("/dashboard");
+
   // GYEON partner onboarding: /no-dealer is the guaranteed sink for every
   // verified user without an active membership, so it is the normal-login
   // claim convergence point — a CSV-matched applicant or an invited shop
@@ -72,7 +85,6 @@ export default async function NoDealerPage() {
   // Detect whether the user belongs to a suspended dealer.
   // suspendDealer() sets dealer_members.status = 'suspended', so querying here
   // distinguishes "no membership" from "suspended membership".
-  const supabase = await createClient();
   const { data: suspendedRow } = await supabase
     .from("dealer_members")
     .select("dealer_id")
