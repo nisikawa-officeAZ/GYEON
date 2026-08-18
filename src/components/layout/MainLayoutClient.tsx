@@ -6,18 +6,20 @@ import Sidebar     from "@/components/Sidebar";
 import BottomNav   from "@/components/layout/BottomNav";
 import TrialBanner from "@/components/trial/TrialBanner";
 import { StaffProvider, type InitialStaff } from "@/contexts/StaffContext";
+import type { DealerPlan } from "@/lib/plans/plan-types";
 
 interface MainLayoutProps {
   children: ReactNode;
   footer?: ReactNode;
   initialStaff?: InitialStaff;
+  initialPlan?: DealerPlan;
 }
 
 // Height of the fixed top Header (h-14 = 56px) plus the iPhone safe-area inset.
 // Defined as the --app-header-h CSS variable in globals.css.
 const HEADER_OFFSET = "var(--app-header-h)";
 
-export default function MainLayout({ children, footer, initialStaff }: MainLayoutProps) {
+export default function MainLayout({ children, footer, initialStaff, initialPlan }: MainLayoutProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -28,7 +30,7 @@ export default function MainLayout({ children, footer, initialStaff }: MainLayou
 
       {/* Sidebar — off-canvas overlay on mobile (toggled by `open`),
           permanently docked on md+ so desktop navigation is always visible. */}
-      <Sidebar open={open} onClose={() => setOpen(false)} />
+      <Sidebar open={open} onClose={() => setOpen(false)} initialPlan={initialPlan} />
 
       {/* Mobile bottom nav */}
       <BottomNav />

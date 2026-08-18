@@ -95,6 +95,52 @@ export async function getUnreadNotificationCount(): Promise<number> {
   }
 }
 
+export interface NotificationBellData {
+  notifications: NotificationDB[];
+  unreadCount: number;
+}
+
+/**
+ * GLOBAL_SHELL_POST_C5: combines getNotifications() + getUnreadNotificationCount()
+ * into one server action so NotificationBell's mount fetch is one POST instead
+ * of two. Same two underlying queries (list can't safely derive the unread
+ * count — a dealer can have more than 20 unread notifications, more than the
+ * list's own limit), just run inside a single invocation instead of two.
+ */
+export async function getNotificationBellData(): Promise<NotificationBellData> {
+  try {
+    const [dealer, user] = await Promise.all([
+      getCurrentDealer(),
+      getCurrentUser(),
+    ]);
+    if (!dealer || !user) return { notifications: [], unreadCount: 0 };
+
+    const supabase = await createClient();
+    const [{ data }, { count }] = await Promise.all([
+      supabase
+        .from("notifications")
+        .select("*")
+        .eq("dealer_id", dealer.dealer_id)
+        .or(`user_id.is.null,user_id.eq.${user.id}`)
+        .order("created_at", { ascending: false })
+        .limit(20),
+      supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("dealer_id", dealer.dealer_id)
+        .eq("is_read", false)
+        .or(`user_id.is.null,user_id.eq.${user.id}`),
+    ]);
+
+    return {
+      notifications: (data as NotificationDB[]) ?? [],
+      unreadCount: count ?? 0,
+    };
+  } catch {
+    return { notifications: [], unreadCount: 0 };
+  }
+}
+
 /**
  * Marks a single notification as read.
  */

@@ -51,16 +51,21 @@ const navItems: NavItem[] = [
 interface SidebarProps {
   open:     boolean;
   onClose?: () => void;
+  /** GLOBAL_SHELL_POST_C5: server-resolved plan from MainLayout. When
+      supplied, Sidebar skips its own getCurrentPlan() mount fetch. */
+  initialPlan?: DealerPlan;
 }
 
-export default function Sidebar({ open, onClose }: SidebarProps) {
+export default function Sidebar({ open, onClose, initialPlan }: SidebarProps) {
   const pathname = usePathname();
-  const [plan, setPlan] = useState<DealerPlan | null>(null);
+  const [plan, setPlan] = useState<DealerPlan | null>(initialPlan ?? null);
   const [unreadNews, setUnreadNews] = useState(0);
   const prevPathname = useRef(pathname);
 
   useEffect(() => {
+    if (initialPlan !== undefined) return;
     getCurrentPlan().then((info) => setPlan(info.plan));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Unread GYEON News badge — refreshed periodically and on navigation.

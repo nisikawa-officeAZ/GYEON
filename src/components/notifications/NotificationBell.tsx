@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { getNotifications, getUnreadNotificationCount, markNotificationAsRead, markAllNotificationsAsRead } from "@/lib/notifications/notification";
+import { getNotificationBellData, markNotificationAsRead, markAllNotificationsAsRead } from "@/lib/notifications/notification";
 import type { NotificationDB } from "@/lib/notifications/notification-types";
 import { notificationTypeIcon, notificationTypeColor } from "@/lib/notifications/notification-types";
 
@@ -24,10 +24,8 @@ export default function NotificationBell() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   async function fetchData() {
-    const [count, notifs] = await Promise.all([
-      getUnreadNotificationCount(),
-      getNotifications(),
-    ]);
+    // GLOBAL_SHELL_POST_C5: one combined action instead of two separate POSTs.
+    const { notifications: notifs, unreadCount: count } = await getNotificationBellData();
     setUnreadCount(count);
     setNotifications(notifs);
   }

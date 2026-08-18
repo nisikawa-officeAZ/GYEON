@@ -13,13 +13,18 @@ const strip = (source: string) =>
   source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
 test("MainLayout resolves getCurrentStaff() after the dealer gate and passes it down", () => {
+  // GLOBAL_SHELL_POST_C5 added getCurrentPlan() alongside getCurrentStaff() in
+  // the same Promise.all — staff is still resolved only after the dealer gate
+  // and still passed down; just no longer on its own single-await line.
   const code = strip(read("src/components/layout/MainLayout.tsx"));
   const gateAt = code.indexOf("await requireActiveDealer()");
-  const staffAt = code.indexOf("const staff = await getCurrentStaff()", gateAt);
+  const parallelAt = code.indexOf("const [staff, planInfo] = await Promise.all([", gateAt);
+  const staffAt = code.indexOf("getCurrentStaff(),", parallelAt);
   const passAt = code.indexOf("initialStaff={staff}", staffAt);
 
   assert.ok(gateAt >= 0, "the active-dealer gate must remain");
-  assert.ok(staffAt > gateAt, "staff is resolved only after the dealer gate settles");
+  assert.ok(parallelAt > gateAt, "staff is resolved only after the dealer gate settles");
+  assert.ok(staffAt > parallelAt, "getCurrentStaff() must be part of that Promise.all");
   assert.ok(passAt > staffAt, "the resolved staff must be passed into MainLayoutClient");
 });
 
