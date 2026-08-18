@@ -15,6 +15,7 @@ interface MainLayoutProps {
   initialStaff?: InitialStaff;
   initialPlan?: DealerPlan;
   initialNotificationData?: NotificationBellData;
+  initialUnreadNews?: number;
 }
 
 // Height of the fixed top Header (h-14 = 56px) plus the iPhone safe-area inset.
@@ -27,6 +28,7 @@ export default function MainLayout({
   initialStaff,
   initialPlan,
   initialNotificationData,
+  initialUnreadNews,
 }: MainLayoutProps) {
   const [open, setOpen] = useState(false);
 
@@ -42,7 +44,12 @@ export default function MainLayout({
 
       {/* Sidebar — off-canvas overlay on mobile (toggled by `open`),
           permanently docked on md+ so desktop navigation is always visible. */}
-      <Sidebar open={open} onClose={() => setOpen(false)} initialPlan={initialPlan} />
+      <Sidebar
+        open={open}
+        onClose={() => setOpen(false)}
+        initialPlan={initialPlan}
+        initialUnreadNews={initialUnreadNews}
+      />
 
       {/* Mobile bottom nav */}
       <BottomNav />

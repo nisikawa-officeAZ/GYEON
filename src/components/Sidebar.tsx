@@ -54,12 +54,16 @@ interface SidebarProps {
   /** GLOBAL_SHELL_POST_C5: server-resolved plan from MainLayout. When
       supplied, Sidebar skips its own getCurrentPlan() mount fetch. */
   initialPlan?: DealerPlan;
+  /** GLOBAL_SHELL_POST_C7: server-resolved unread news count from
+      MainLayout. When supplied, Sidebar skips its own getUnreadNewsCount()
+      mount fetch; the 60s poll still runs unconditionally either way. */
+  initialUnreadNews?: number;
 }
 
-export default function Sidebar({ open, onClose, initialPlan }: SidebarProps) {
+export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews }: SidebarProps) {
   const pathname = usePathname();
   const [plan, setPlan] = useState<DealerPlan | null>(initialPlan ?? null);
-  const [unreadNews, setUnreadNews] = useState(0);
+  const [unreadNews, setUnreadNews] = useState(initialUnreadNews ?? 0);
   const prevPathname = useRef(pathname);
 
   useEffect(() => {
@@ -72,9 +76,10 @@ export default function Sidebar({ open, onClose, initialPlan }: SidebarProps) {
   useEffect(() => {
     let active = true;
     const load = () => getUnreadNewsCount().then((n) => { if (active) setUnreadNews(n); }).catch(() => {});
-    load();
+    if (initialUnreadNews === undefined) load();
     const interval = setInterval(load, 60000);
     return () => { active = false; clearInterval(interval); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   // Close sidebar when the user navigates (mobile UX)

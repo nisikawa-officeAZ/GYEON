@@ -30,10 +30,17 @@ test("MainLayout resolves getCurrentPlan() alongside getCurrentStaff() after the
 });
 
 test("MainLayoutClient forwards initialPlan into Sidebar", () => {
+  // GLOBAL_SHELL_POST_C7 added initialUnreadNews to the same <Sidebar> tag,
+  // pushing it onto multiple lines — initialPlan is still forwarded.
   const code = strip(read("src/components/layout/MainLayoutClient.tsx"));
+  const sidebarAt = code.indexOf("<Sidebar");
+  const sidebarCloseAt = code.indexOf("/>", sidebarAt);
+  const sidebarTag = code.slice(sidebarAt, sidebarCloseAt);
 
   assert.match(code, /initialPlan\??:\s*DealerPlan/);
-  assert.match(code, /<Sidebar open=\{open\} onClose=\{\(\) => setOpen\(false\)\} initialPlan=\{initialPlan\} \/>/);
+  assert.match(sidebarTag, /open=\{open\}/);
+  assert.match(sidebarTag, /onClose=\{\(\) => setOpen\(false\)\}/);
+  assert.match(sidebarTag, /initialPlan=\{initialPlan\}/);
 });
 
 test("Sidebar uses the supplied initialPlan and skips its own fetch when defined", () => {
