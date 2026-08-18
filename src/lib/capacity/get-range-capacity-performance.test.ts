@@ -39,9 +39,10 @@ test("businessHours/bayOptions/staffOptions are skipped when overrides supply th
 test("getServiceDurations, getStaffCapacitySettings, and the reservations range fetch remain unconditional", () => {
   const code = strip(read("src/lib/capacity/get-range-capacity.ts"));
 
-  // Called directly, never guarded by `overrides?.` — always run.
-  assert.match(code, /\n\s*getServiceDurations\(\),/);
-  assert.match(code, /\n\s*getStaffCapacitySettings\(\),/);
+  // Called directly (optionally wrapped for PERF-C4 timing), never guarded
+  // by `overrides?.` — always run.
+  assert.match(code, /getServiceDurations\(\)/);
+  assert.match(code, /getStaffCapacitySettings\(\)/);
   assert.doesNotMatch(code, /overrides\?\.\w*[Dd]urations/);
   assert.doesNotMatch(code, /overrides\?\.\w*[Ss]cheduling/);
   assert.match(code, /const reservations = \(await getReservationsByDateRange\(fetchFrom, end\)\)/);

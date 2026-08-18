@@ -14,6 +14,7 @@ import type { WorkBayOption } from "@/lib/work-bays/work-bay-types";
 import type { ReservationStaffOption } from "@/lib/reservations/get-reservation-staff-options";
 import { getDayCapacity } from "@/lib/capacity/get-day-capacity";
 import { getRangeCapacity } from "@/lib/capacity/get-range-capacity";
+import { nowMs, perfLogClient } from "@/lib/perf-debug/calendar-timing"; // PERF-C4 temporary
 import type { CapacityResult, RecommendationLevel } from "@/lib/capacity/capacity-types";
 import CalendarCapacityPanel from "@/components/calendar/CalendarCapacityPanel";
 import CalendarCapacityLegend, { type CapacityCategory } from "@/components/calendar/CalendarCapacityLegend";
@@ -149,6 +150,20 @@ export default function CalendarPageClient({
   const rangeReq = useRef(0);
   const [rangeLevels, setRangeLevels] = useState<Record<string, RecommendationLevel>>({});
 
+  // PERF-C4 (temporary): mount → first-paint-after-mount timing. `nowMs()`
+  // here is time since navigation start only for a hard/full navigation
+  // (the Navigation Timing origin); it is not meaningful across client-side
+  // route transitions.
+  useEffect(() => {
+    perfLogClient("component-mount", { msSinceNavStart: Math.round(nowMs()) });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        perfLogClient("first-visible-render-after-mount", { msSinceNavStart: Math.round(nowMs()) });
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Computed values
   const weekStart = getMondayOfWeek(currentDate);
   const dayStr = toLocalDateStr(currentDate);
@@ -199,15 +214,31 @@ export default function CalendarPageClient({
       return;
     }
     const req = ++rangeReq.current;
+    // PERF-C4 (temporary): `req` here doubles as a repeated/overlapping-call
+    // detector — if this log fires more than once per navigation with
+    // increasing req values close together, loadRangeCapacity is being
+    // invoked more than the one expected time.
+    perfLogClient("loadRangeCapacity:start", { req, from, to, force, msSinceNavStart: Math.round(nowMs()) });
+    const tStart = nowMs();
     // PERF-C3: businessHours/bays/staffOptions were already resolved server-side
     // by page.tsx — pass them through so getRangeCapacity() skips its own
     // duplicate fetch for these three (getServiceDurations/getStaffCapacitySettings
     // and the reservations range fetch have no SSR equivalent and still run).
     const res = await getRangeCapacity(from, to, { businessHours, bayOptions: bays, staffOptions });
+    perfLogClient("loadRangeCapacity:data-received", { req, ms: Math.round(nowMs() - tStart) });
     const levels: Record<string, RecommendationLevel> = {};
     for (const [d, cap] of Object.entries(res)) levels[d] = cap.level;
     rangeCache.current.set(key, levels);
-    if (rangeReq.current === req) setRangeLevels(levels);
+    if (rangeReq.current === req) {
+      setRangeLevels(levels);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          perfLogClient("loadRangeCapacity:heatmap-rendered", { req, totalMs: Math.round(nowMs() - tStart) });
+        });
+      });
+    } else {
+      perfLogClient("loadRangeCapacity:stale-ignored", { req, latestReq: rangeReq.current });
+    }
   }
 
   useEffect(() => {

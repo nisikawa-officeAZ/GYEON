@@ -20,6 +20,7 @@ import { expandReservations, intervalsForDate, MAX_MULTIDAY } from "./occupancy-
 import { computeDayCapacity } from "./capacity-calculator";
 import type { CapacityResult } from "./capacity-types";
 import type { WorkBayOption } from "@/lib/work-bays/work-bay-types";
+import { nowMs, perfLogServer } from "@/lib/perf-debug/calendar-timing"; // PERF-C4 temporary
 
 // PERF-C3: the caller (CalendarPageClient) already has businessHours/bayOptions/
 // staffOptions from the page's own SSR fetch. When supplied, these skip the
@@ -60,6 +61,16 @@ function datesInclusive(from: string, to: string): string[] {
   return out;
 }
 
+// PERF-C4 (temporary): times one Promise.all slot without changing its
+// value or whether the underlying fetch runs — a plain override value stays
+// a plain value, just awaited inside here instead of inline.
+async function timedSlot<T>(label: string, invocationId: string, slot: T | Promise<T>): Promise<T> {
+  const t0 = nowMs();
+  const value = await slot;
+  perfLogServer(`getRangeCapacity:segment:${label}`, { invocationId, ms: Math.round(nowMs() - t0) });
+  return value;
+}
+
 export async function getRangeCapacity(
   from: string,
   to: string,
@@ -67,8 +78,18 @@ export async function getRangeCapacity(
 ): Promise<Record<string, CapacityResult>> {
   const dateRe = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRe.test(from ?? "") || !dateRe.test(to ?? "") || to < from) return {};
+
+  // PERF-C4 (temporary): one id per invocation makes repeated/overlapping
+  // calls to this action distinguishable in the logs.
+  const invocationId = Math.random().toString(36).slice(2, 8);
+  const tStart = nowMs();
+  perfLogServer("getRangeCapacity:start", { invocationId, from, to, hasOverrides: !!overrides });
+
   const dealer = await getCurrentDealer();
-  if (!dealer) return {};
+  if (!dealer) {
+    perfLogServer("getRangeCapacity:no-dealer", { invocationId, ms: Math.round(nowMs() - tStart) });
+    return {};
+  }
 
   try {
     // Clamp the requested range to a safe maximum.
@@ -78,18 +99,24 @@ export async function getRangeCapacity(
     const days = datesInclusive(from, end);
 
     const [businessHours, durations, scheduling, bays, staffOpts] = await Promise.all([
-      overrides?.businessHours ?? getBusinessHoursSettings(),
-      getServiceDurations(),
-      getStaffCapacitySettings(),
-      overrides?.bayOptions ?? getBayOptions(),
-      overrides?.staffOptions ?? getReservationStaffOptions(),
+      timedSlot("businessHours", invocationId, overrides?.businessHours ?? getBusinessHoursSettings()),
+      timedSlot("serviceDurations", invocationId, getServiceDurations()),
+      timedSlot("staffCapacitySettings", invocationId, getStaffCapacitySettings()),
+      timedSlot("bayOptions", invocationId, overrides?.bayOptions ?? getBayOptions()),
+      timedSlot("staffOptions", invocationId, overrides?.staffOptions ?? getReservationStaffOptions()),
     ]);
 
     // One reservation fetch covering multi-day jobs that start before `from`.
     const fetchFrom = addDaysStr(from, -MAX_MULTIDAY);
+    const tResStart = nowMs();
     const reservations = (await getReservationsByDateRange(fetchFrom, end)).filter((r) =>
       CAPACITY_STATUSES.has(r.status),
     );
+    perfLogServer("getRangeCapacity:segment:reservationsRangeFetch", {
+      invocationId,
+      ms: Math.round(nowMs() - tResStart),
+      count: reservations.length,
+    });
 
     // Capacities (constant across the range).
     const staffCapMap = scheduling.staff_capacity;
@@ -109,6 +136,7 @@ export async function getRangeCapacity(
     }
     const vehicleCap = scheduling.capacity.simultaneous_vehicles ?? null;
 
+    const tComputeStart = nowMs();
     const allIntervals = expandReservations(reservations, durations);
 
     const out: Record<string, CapacityResult> = {};
@@ -130,8 +158,15 @@ export async function getRangeCapacity(
         vehicleCap,
       });
     }
+    perfLogServer("getRangeCapacity:segment:capacityComputation", {
+      invocationId,
+      ms: Math.round(nowMs() - tComputeStart),
+      days: days.length,
+    });
+    perfLogServer("getRangeCapacity:end", { invocationId, totalMs: Math.round(nowMs() - tStart) });
     return out;
   } catch (err) {
+    perfLogServer("getRangeCapacity:error", { invocationId, totalMs: Math.round(nowMs() - tStart) });
     console.warn("[getRangeCapacity] failed — returning empty:", err);
     return {};
   }
