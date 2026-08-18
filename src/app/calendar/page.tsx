@@ -24,22 +24,28 @@ export default async function CalendarPage() {
   const toYear  = month + 1 > 12 ? year + 1 : year;
   const to = `${toYear}-${String(toMonth).padStart(2, "0")}-07`;
 
-  const reservations = await getReservationsByDateRange(
-    `${year}-${String(month).padStart(2, "0")}-01`,
-    `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
-  );
-
-  const dealer = await getCurrentDealer();
-  const supabase = await createClient();
-  const businessHours = await getBusinessHoursSettings();
+  // PERF-C1: these five reads are independent — starting them together removes
+  // four serial network waits. getCurrentDealer() is request-memoized, so the
+  // reservations/business-hours/staff/bay reads that also resolve it internally
+  // share the same cached lookup instead of re-querying it.
+  const [reservations, dealer, supabase, businessHours, staffOptions, bayOptions] =
+    await Promise.all([
+      getReservationsByDateRange(
+        `${year}-${String(month).padStart(2, "0")}-01`,
+        `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
+      ),
+      getCurrentDealer(),
+      createClient(),
+      getBusinessHoursSettings(),
+      getReservationStaffOptions(),
+      getBayOptions(),
+    ]);
 
   // B5a follow-up: dealer-scoped staff id → name map for technician display.
-  const staffOptions = await getReservationStaffOptions();
   const staffNameById: Record<string, string> = {};
   for (const s of staffOptions) staffNameById[s.id] = s.name;
 
   // B6b: dealer-scoped bays for bay display + day-view lanes ([] until migration 092).
-  const bayOptions = await getBayOptions();
   const bayNameById: Record<string, string> = {};
   for (const b of bayOptions) bayNameById[b.id] = b.name;
 
@@ -79,6 +85,7 @@ export default async function CalendarPage() {
         vehicles={vehicles}
         businessHours={businessHours}
         staffNameById={staffNameById}
+        staffOptions={staffOptions}
         bayNameById={bayNameById}
         bays={bayOptions}
       />

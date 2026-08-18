@@ -16,13 +16,14 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "./get-current-user";
+import { cache } from "react";
 
 export interface DealerMembership {
   dealer_id: string;
   role: string;
 }
 
-export async function getCurrentDealer(): Promise<DealerMembership | null> {
+async function resolveCurrentDealer(): Promise<DealerMembership | null> {
   try {
     const user = await getCurrentUser();
     if (!user) return null;
@@ -47,3 +48,7 @@ export async function getCurrentDealer(): Promise<DealerMembership | null> {
     return null;
   }
 }
+
+// Request-scoped memoization only. The active membership query still runs for
+// every new server request and remains bound to the freshly verified user.
+export const getCurrentDealer = cache(resolveCurrentDealer);

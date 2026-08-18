@@ -65,11 +65,21 @@ export default async function DashboardPage() {
   const admin = await getCurrentAdmin();
   if (admin) redirect("/admin/dashboard");
 
+  // ── Dealer, role, and dashboard reads ───────────────────────────────────────
+  // These reads are independent after the super-admin gate. Starting them
+  // together removes three serial network waits. getCurrentDealer() and
+  // getCurrentUser() are request-memoized, so every reader shares the same
+  // verified identity and active-membership snapshot for this render.
+  const [dealer, staffInfo, dash] = await Promise.all([
+    getCurrentDealer(),
+    getCurrentStaff().catch(() => null),
+    getDashboardSummary(),
+  ]);
+
   // ── Suspension gate ─────────────────────────────────────────────────────────
   // getCurrentDealer() returns null for both "no dealer" and "suspended" states.
   // Distinguish them so suspended dealers see a clear message instead of an
   // empty dashboard, while truly unlinked users are redirected to /no-dealer.
-  const dealer = await getCurrentDealer();
   if (!dealer) {
     const user = await getCurrentUser();
     if (user) {
@@ -88,11 +98,7 @@ export default async function DashboardPage() {
   }
 
   // ── Server-side role resolution ─────────────────────────────────────────────
-  const staffInfo = await getCurrentStaff().catch(() => null);
   const role: DealerStaffRole = staffInfo?.role ?? "staff"; // fail-closed: unknown → staff
-
-  // ── Data fetch ──────────────────────────────────────────────────────────────
-  const dash = await getDashboardSummary();
 
   // Revenue visibility — server-side authority only (ANL-002, Phase C)
   const showRevenue = canViewFinance(role);

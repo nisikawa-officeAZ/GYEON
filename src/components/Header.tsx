@@ -2,15 +2,19 @@
 
 import NotificationBell from "@/components/notifications/NotificationBell";
 import Brand from "@/components/ui/Brand";
+import type { NotificationBellData } from "@/lib/notifications/notification";
 
 const isDev = process.env.NODE_ENV === "development";
 
 interface HeaderProps {
   open: boolean;
   onToggleSidebar: () => void;
+  /** GLOBAL_SHELL_POST_C6: server-resolved notification data from
+      MainLayout, threaded through to NotificationBell. */
+  initialNotificationData?: NotificationBellData;
 }
 
-export default function Header({ open, onToggleSidebar }: HeaderProps) {
+export default function Header({ open, onToggleSidebar, initialNotificationData }: HeaderProps) {
   return (
     <header
       className="bg-slate-900 border-b border-slate-800 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50"
@@ -39,7 +43,7 @@ export default function Header({ open, onToggleSidebar }: HeaderProps) {
       <div className="flex-1" />
 
       <div className="flex items-center gap-3">
-        <NotificationBell />
+        <NotificationBell initialData={initialNotificationData} />
         <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-slate-300 text-xs font-medium">
           U
         </div>

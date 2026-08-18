@@ -17,6 +17,10 @@
 
 import { ReactNode } from "react";
 import { requireActiveDealer } from "@/lib/auth/require-active-dealer";
+import { getCurrentStaff } from "@/lib/staff/get-current-staff";
+import { getCurrentPlan } from "@/lib/plans/get-current-plan";
+import { getNotificationBellData } from "@/lib/notifications/notification";
+import { getUnreadNewsCount } from "@/lib/news/news";
 import MainLayoutClient from "@/components/layout/MainLayoutClient";
 
 interface MainLayoutProps {
@@ -27,5 +31,30 @@ interface MainLayoutProps {
 export default async function MainLayout({ children, footer }: MainLayoutProps) {
   await requireActiveDealer();
 
-  return <MainLayoutClient footer={footer}>{children}</MainLayoutClient>;
+  // GLOBAL_NAV_PERF_C2/C5/C6/C7: getCurrentStaff()/getCurrentPlan()/
+  // getNotificationBellData()/getUnreadNewsCount() reuse the same
+  // request-memoized getCurrentUser()/getCurrentDealer() that
+  // requireActiveDealer() just resolved, so these only add their own
+  // query/queries each (dealer_staff, dealers, notifications, gyeon_news) —
+  // instead of StaffProvider/Sidebar/NotificationBell re-deriving user/dealer
+  // from scratch on every navigation via their own post-hydration client
+  // round trips.
+  const [staff, planInfo, notificationData, unreadNewsCount] = await Promise.all([
+    getCurrentStaff(),
+    getCurrentPlan(),
+    getNotificationBellData(),
+    getUnreadNewsCount(),
+  ]);
+
+  return (
+    <MainLayoutClient
+      footer={footer}
+      initialStaff={staff}
+      initialPlan={planInfo.plan}
+      initialNotificationData={notificationData}
+      initialUnreadNews={unreadNewsCount}
+    >
+      {children}
+    </MainLayoutClient>
+  );
 }
