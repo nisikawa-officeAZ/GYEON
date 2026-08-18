@@ -13,12 +13,13 @@ const strip = (source: string) =>
   source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
 test("MainLayout resolves getCurrentStaff() after the dealer gate and passes it down", () => {
-  // GLOBAL_SHELL_POST_C5 added getCurrentPlan() alongside getCurrentStaff() in
-  // the same Promise.all — staff is still resolved only after the dealer gate
-  // and still passed down; just no longer on its own single-await line.
+  // GLOBAL_SHELL_POST_C5/C6 added getCurrentPlan()/getNotificationBellData()
+  // alongside getCurrentStaff() in the same Promise.all — staff is still
+  // resolved only after the dealer gate and still passed down; just no
+  // longer on its own single-await line.
   const code = strip(read("src/components/layout/MainLayout.tsx"));
   const gateAt = code.indexOf("await requireActiveDealer()");
-  const parallelAt = code.indexOf("const [staff, planInfo] = await Promise.all([", gateAt);
+  const parallelAt = code.indexOf("await Promise.all([", gateAt);
   const staffAt = code.indexOf("getCurrentStaff(),", parallelAt);
   const passAt = code.indexOf("initialStaff={staff}", staffAt);
 

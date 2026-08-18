@@ -14,9 +14,11 @@ const strip = (source: string) =>
   source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
 test("MainLayout resolves getCurrentPlan() alongside getCurrentStaff() after the dealer gate", () => {
+  // GLOBAL_SHELL_POST_C6 added getNotificationBellData() to the same
+  // Promise.all — staff/plan are still resolved only after the dealer gate.
   const code = strip(read("src/components/layout/MainLayout.tsx"));
   const gateAt = code.indexOf("await requireActiveDealer()");
-  const parallelAt = code.indexOf("const [staff, planInfo] = await Promise.all([", gateAt);
+  const parallelAt = code.indexOf("await Promise.all([", gateAt);
   const staffAt = code.indexOf("getCurrentStaff(),", parallelAt);
   const planAt = code.indexOf("getCurrentPlan(),", parallelAt);
   const passAt = code.indexOf("initialPlan={planInfo.plan}", planAt);
@@ -44,7 +46,7 @@ test("Sidebar uses the supplied initialPlan and skips its own fetch when defined
 test("NotificationBell calls one combined action, not two separate ones", () => {
   const code = strip(read("src/components/notifications/NotificationBell.tsx"));
 
-  assert.match(code, /import \{ getNotificationBellData, markNotificationAsRead, markAllNotificationsAsRead \} from "@\/lib\/notifications\/notification";/);
+  assert.match(code, /import \{ getNotificationBellData, markNotificationAsRead, markAllNotificationsAsRead(, type NotificationBellData)? \} from "@\/lib\/notifications\/notification";/);
   assert.doesNotMatch(code, /getUnreadNotificationCount|getNotifications\(\)/);
   assert.match(
     code,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { getNotificationBellData, markNotificationAsRead, markAllNotificationsAsRead } from "@/lib/notifications/notification";
+import { getNotificationBellData, markNotificationAsRead, markAllNotificationsAsRead, type NotificationBellData } from "@/lib/notifications/notification";
 import type { NotificationDB } from "@/lib/notifications/notification-types";
 import { notificationTypeIcon, notificationTypeColor } from "@/lib/notifications/notification-types";
 
@@ -17,10 +17,10 @@ function formatRelativeTime(iso: string): string {
   return iso.slice(0, 10);
 }
 
-export default function NotificationBell() {
+export default function NotificationBell({ initialData }: { initialData?: NotificationBellData }) {
   const [open, setOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState<NotificationDB[]>([]);
+  const [unreadCount, setUnreadCount] = useState(initialData?.unreadCount ?? 0);
+  const [notifications, setNotifications] = useState<NotificationDB[]>(initialData?.notifications ?? []);
   const containerRef = useRef<HTMLDivElement>(null);
 
   async function fetchData() {
@@ -31,9 +31,13 @@ export default function NotificationBell() {
   }
 
   useEffect(() => {
-    fetchData();
+    // GLOBAL_SHELL_POST_C6: skip the mount fetch when MainLayout already
+    // resolved this server-side; the 60s poll still runs either way so the
+    // badge keeps refreshing.
+    if (initialData === undefined) fetchData();
     const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
