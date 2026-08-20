@@ -57,15 +57,17 @@ export default function CategoryHub({ label, labelEn, items }: CategoryHubProps)
           <Link
             key={item.href}
             href={item.href}
-            className="group min-h-[250px] rounded-[18px] border border-[#263955] bg-[#111826]/90 p-7 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#3b6eb4] hover:bg-[#141e2f] hover:shadow-[0_18px_45px_rgba(0,0,0,.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3478ff]"
+            className="group flex min-h-[64px] items-center gap-3 rounded-2xl border border-[#263955] bg-[#111826]/90 p-3 transition-all duration-200 hover:border-[#3b6eb4] hover:bg-[#141e2f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3478ff] md:min-h-0 md:flex-col md:items-stretch md:gap-0 md:rounded-[18px] md:p-5 lg:min-h-[250px] lg:p-7 lg:hover:-translate-y-0.5 lg:hover:shadow-[0_18px_45px_rgba(0,0,0,.24)]"
           >
-            <span className="grid h-[58px] w-[58px] place-items-center rounded-2xl border border-[#31568c] bg-[#122142] text-[#91b9ff] transition-colors group-hover:border-[#4a7fc8] group-hover:text-[#b6d0ff]">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#31568c] bg-[#122142] text-[#91b9ff] transition-colors group-hover:border-[#4a7fc8] group-hover:text-[#b6d0ff] md:h-[58px] md:w-[58px] md:rounded-2xl">
               <HubIcon icon={item.icon} />
             </span>
-            <h2 className="mt-7 text-[22px] font-bold text-[#edf3fc]">{item.label}</h2>
-            <p className="mt-1 text-[11px] font-semibold tracking-[0.22em] text-[#8191ad]">{item.labelEn}</p>
-            <p className="mt-5 text-[14px] leading-7 text-[#95a4bc]">{item.description}</p>
-            <span className="mt-6 inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.12em] text-[#5f9cff] opacity-0 transition-opacity group-hover:opacity-100">
+            <span className="min-w-0 flex-1 md:mt-4 lg:mt-7">
+              <h2 className="truncate text-[14px] font-bold text-[#edf3fc] md:whitespace-normal md:text-[16px] lg:text-[22px]">{item.label}</h2>
+              <p className="mt-0.5 truncate text-[9px] font-semibold tracking-[0.14em] text-[#8191ad] md:mt-1 md:whitespace-normal md:text-[10px] md:tracking-[0.22em] lg:text-[11px]">{item.labelEn}</p>
+            </span>
+            <p className="hidden md:mt-3 md:block md:line-clamp-2 md:text-[12.5px] md:leading-[1.6] md:text-[#95a4bc] lg:mt-5 lg:line-clamp-none lg:text-[14px] lg:leading-7">{item.description}</p>
+            <span className="hidden lg:mt-6 lg:inline-flex lg:items-center lg:gap-2 lg:text-[11px] lg:font-semibold lg:tracking-[0.12em] lg:text-[#5f9cff] lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100">
               開く <span aria-hidden="true">→</span>
             </span>
           </Link>
