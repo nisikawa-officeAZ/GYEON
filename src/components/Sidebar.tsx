@@ -133,8 +133,11 @@ export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews 
       )}
 
       <aside
-        style={{ top: "var(--app-header-h)" }}
-        className={`w-[240px] bg-slate-900 border-r border-slate-800 fixed bottom-0 left-0 z-40 flex flex-col transition-transform duration-300 md:translate-x-0 ${
+        style={{
+          top: "var(--app-header-h)",
+          background: "linear-gradient(180deg, var(--gs-bg-2) 0%, var(--gs-bg) 100%)",
+        }}
+        className={`w-[240px] border-r border-[var(--gs-line)] fixed bottom-0 left-0 z-40 flex flex-col backdrop-blur-md transition-transform duration-300 md:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -144,7 +147,7 @@ export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews 
               if (item.type === "flow-arrow") {
                 return (
                   <div key={i} className="flex items-center pl-[22px] py-0.5">
-                    <div className="w-px h-3 bg-slate-700 ml-[10px]" />
+                    <div className="w-px h-3 bg-[var(--gs-line-strong)] ml-[10px]" />
                   </div>
                 );
               }
@@ -154,13 +157,18 @@ export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews 
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-md text-sm transition-colors min-h-[44px] ${
+                  className={`flex items-center gap-3 px-3 py-3 rounded-[var(--gs-r-sm)] text-sm transition-colors min-h-[44px] border border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gs-blue)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--gs-bg)] ${
                     isActive
-                      ? "bg-[#1d4ed8] text-white"
-                      : "text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+                      ? "bg-[var(--gs-blue-dim)] border-[var(--gs-line-strong)] text-[var(--gs-text)]"
+                      : "text-[var(--gs-text-2)] hover:text-[var(--gs-text)] hover:bg-white/[0.04] hover:border-[var(--gs-line)]"
                   }`}
                 >
-                  <span className="text-base shrink-0">{item.icon}</span>
+                  <span
+                    className="text-base shrink-0"
+                    style={{ color: isActive ? "var(--gs-blue)" : undefined }}
+                  >
+                    {item.icon}
+                  </span>
                   <span>{item.label}</span>
                   {item.href === "/news" && unreadNews > 0 && (
                     <span className="ml-auto min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
@@ -173,8 +181,8 @@ export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews 
           </div>
         </nav>
 
-        <div className="px-3 pt-4 pb-6 border-t border-slate-800">
-          <p className="text-xs text-slate-600 px-3">v1.0.0</p>
+        <div className="px-3 pt-4 pb-6 border-t border-[var(--gs-line)]">
+          <p className="text-xs px-3" style={{ color: "var(--gs-text-3)" }}>v1.0.0</p>
         </div>
       </aside>
     </>

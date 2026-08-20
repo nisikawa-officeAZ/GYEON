@@ -17,12 +17,16 @@ interface HeaderProps {
 export default function Header({ open, onToggleSidebar, initialNotificationData }: HeaderProps) {
   return (
     <header
-      className="bg-slate-900 border-b border-slate-800 flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50"
-      style={{ height: "var(--app-header-h)", paddingTop: "env(safe-area-inset-top, 0px)" }}
+      className="border-b border-[var(--gs-line)] flex items-center px-4 gap-3 fixed top-0 left-0 right-0 z-50 backdrop-blur-md"
+      style={{
+        height: "var(--app-header-h)",
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        background: "var(--gs-bg-2)",
+      }}
     >
       <button
         onClick={onToggleSidebar}
-        className="w-11 h-11 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors md:hidden"
+        className="w-11 h-11 flex items-center justify-center rounded-[var(--gs-r-sm)] text-[var(--gs-text-2)] hover:text-[var(--gs-text)] hover:bg-white/[0.06] transition-colors md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gs-blue)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--gs-bg-2)]"
         aria-label={open ? "Close sidebar" : "Open sidebar"}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -44,7 +48,10 @@ export default function Header({ open, onToggleSidebar, initialNotificationData 
 
       <div className="flex items-center gap-3">
         <NotificationBell initialData={initialNotificationData} />
-        <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-slate-300 text-xs font-medium">
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium border border-[var(--gs-line)]"
+          style={{ background: "var(--gs-bg-3)", color: "var(--gs-text-2)" }}
+        >
           U
         </div>
       </div>
