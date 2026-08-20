@@ -1694,9 +1694,9 @@
     var hasName  = !!shopName.trim();
 
     // Update DOM content
-    logoImg.setAttribute('src', hasLogo ? logoUrl : '');
-    nameText.textContent = shopName;
-    rankText.textContent = rank.label;
+    if (logoImg) logoImg.setAttribute('src', hasLogo ? logoUrl : '');
+    if (nameText) nameText.textContent = shopName;
+    if (rankText) rankText.textContent = rank.label;
 
     // Update data-* attributes (drives CSS + traceability)
     var mode = determineHeroMode(hasLogo, hasName);
