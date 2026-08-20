@@ -2016,7 +2016,9 @@
    If the payload is absent or invalid, nothing is trusted: every application-brand
    slot stays hidden and the document title stays the neutral literal "Dashboard".
    There is no fallback to any particular brand.
-   The dealer store logo is a separate surface and is never fed from this payload. */
+   The dealer store logo is a separate surface and is never fed from this payload.
+   The owner-approved rectangular sidebar lockup is also fixed by the delivered UI
+   and must not be replaced by the square application badge from this payload. */
 (function () {
   'use strict';
 
@@ -2104,7 +2106,6 @@
     var p = readPayload();
 
     if (!p) {
-      setImage('brandBadgeImg',   null);
       setImage('brandHeroLockup', null);
       document.title = 'Dashboard';
       return;                                 // .app-brand stays hidden: no brand shown
@@ -2119,7 +2120,6 @@
     setMark('brandRegMark',    p.showRegisteredMark);
     setMark('brandRegMarkBar', p.showRegisteredMark);
 
-    setImage('brandBadgeImg',   p.sidebarBadge);   // a missing asset hides only its slot
     setImage('brandHeroLockup', p.heroLockup);
 
     document.title = p.name + ' \u2014 Dashboard';
