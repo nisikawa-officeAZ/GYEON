@@ -21,7 +21,7 @@ export default function Header({ open, onToggleSidebar, initialNotificationData 
   const category = categoryForPathname(pathname);
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-50 flex h-[var(--app-header-h)] items-center gap-3 border-b border-[#20304a] bg-[#0a1222]/95 px-4 backdrop-blur-xl md:left-[240px] md:px-7">
+    <header className="fixed left-0 right-0 top-0 z-50 flex h-[var(--app-header-h)] items-center gap-3 border-b border-[#20304a] bg-[#0a1222]/95 px-4 backdrop-blur-xl md:left-[268px] md:px-7">
       <button
         onClick={onToggleSidebar}
         className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#9aabc4] transition-colors hover:bg-white/[0.06] hover:text-white md:hidden"

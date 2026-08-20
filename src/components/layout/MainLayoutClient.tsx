@@ -60,9 +60,9 @@ export default function MainLayout({
           `padding-top`. Inline styles win over every utility class, so no
           responsive padding (e.g. md:py-*) can collapse this offset — content
           always starts below the header on every page and breakpoint.
-          On md+ the wrapper is shifted right by the 240px docked sidebar. */}
+          On md+ the wrapper is shifted right by the 268px docked sidebar. */}
       <div
-        className="flex flex-col flex-1 transition-all duration-300 md:ml-[240px]"
+        className="flex flex-col flex-1 transition-all duration-300 md:ml-[268px]"
         style={{ paddingTop: HEADER_OFFSET }}
       >
         {/* Trial countdown banner — in normal flow, directly under the header.

@@ -34,7 +34,8 @@ test("billing routes resolve to one large category and the three existing small-
 
 test("shared shell renders the rectangular Brand lockup and no legacy 22-route list", () => {
   const sidebar = read("src/components/Sidebar.tsx");
-  assert.match(sidebar, /<Brand size=\{54\}/);
+  assert.match(sidebar, /w-\[268px\]/);
+  assert.match(sidebar, /<Brand size=\{63\}/);
   assert.match(sidebar, /GDA_CATEGORIES\.map/);
   assert.doesNotMatch(sidebar, /const navItems/);
   assert.doesNotMatch(sidebar, /href: "\/completion-reports"/);

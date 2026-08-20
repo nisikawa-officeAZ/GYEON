@@ -93,11 +93,11 @@ export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews 
       {open && <div className="fixed inset-0 z-30 bg-black/60 md:hidden" onClick={onClose} aria-hidden="true" />}
 
       <aside
-        className={`fixed bottom-0 left-0 top-[var(--app-header-h)] z-40 w-[240px] border-r border-[#20304a] bg-[#080e1b]/95 backdrop-blur-xl transition-transform duration-300 md:top-0 md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed bottom-0 left-0 top-[var(--app-header-h)] z-40 w-[268px] border-r border-[#20304a] bg-[#080e1b]/95 backdrop-blur-xl transition-transform duration-300 md:top-0 md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
         aria-label="メインメニュー"
       >
-        <div className="hidden h-[138px] items-center border-b border-[#20304a] px-5 md:flex">
-          <Brand size={54} className="w-full justify-center" />
+        <div className="hidden h-[124px] items-center border-b border-[#20304a] px-[22px] md:flex">
+          <Brand size={63} className="w-full justify-center" />
         </div>
 
         <nav className="flex h-[calc(100%-52px)] flex-col gap-1 overflow-y-auto px-3 py-5 md:h-[calc(100%-190px)]">
