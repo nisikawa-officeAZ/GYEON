@@ -57,6 +57,22 @@ test("records hub preserves the owner-approved small-category order", () => {
   );
 });
 
+test("settings stays direct while its existing hub adopts the TOP visual vocabulary", () => {
+  const settingsPage = read("src/app/settings/page.tsx");
+  const settingsHub = read("src/components/settings/SettingsCenterHub.tsx");
+
+  assert.match(settingsPage, /max-w-\[1280px\]/);
+  assert.match(settingsPage, /border-\[#263955\]/);
+  assert.match(settingsHub, /SETTINGS \/ 設定メニュー/);
+  assert.match(settingsHub, /labelEn:\s+"STORE OPERATIONS"/);
+  assert.match(settingsHub, /labelEn:\s+"ESTIMATES & PRICING"/);
+  assert.match(settingsHub, /labelEn:\s+"CUSTOMER & DOCUMENTS"/);
+  assert.match(settingsHub, /labelEn:\s+"PLAN & ADMIN"/);
+  assert.match(settingsHub, /rounded-2xl border/);
+  assert.match(settingsHub, /bg-\[#111826\]\/90/);
+  assert.match(settingsHub, /border-\[#31568c\]/);
+});
+
 test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
   const hubs = [
     ["customers", "/hub/customers", ["customers", "vehicles", "customer-app"]],

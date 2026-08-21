@@ -62,6 +62,7 @@ interface HubCard {
   id:             string;
   icon:           IconKey;
   label:          string;
+  labelEn:        string;
   description:    string;
   minVisibility:  SettingsVisibilityLevel;
   action:         CardAction;
@@ -71,6 +72,7 @@ interface HubCard {
 interface HubGroup {
   id:          string;
   label:       string;
+  labelEn:     string;
   description: string;
   cards:       HubCard[];
 }
@@ -93,12 +95,14 @@ const HUB_GROUPS: HubGroup[] = [
   {
     id:          "store_ops",
     label:       "店舗運営",
+    labelEn:     "STORE OPERATIONS",
     description: "店舗情報・スタッフ・営業時間・通知",
     cards: [
       {
         id:            "dealer",
         icon:          "store",
         label:         "店舗設定",
+        labelEn:       "STORE PROFILE",
         description:   "店舗情報・業者設定・価格・施工メニュー",
         minVisibility: "staff",
         action:        { kind: "route", href: "/settings/dealer" },
@@ -109,6 +113,7 @@ const HUB_GROUPS: HubGroup[] = [
         id:            "staff",
         icon:          "people",
         label:         "スタッフ管理",
+        labelEn:       "STAFF",
         description:   "スタッフプロフィール・招待・役割設定",
         minVisibility: "manager",
         action:        { kind: "route", href: "/settings/staff" },
@@ -121,6 +126,7 @@ const HUB_GROUPS: HubGroup[] = [
         id:            "business_hours",
         icon:          "clock",
         label:         "営業時間・定休日",
+        labelEn:       "BUSINESS HOURS",
         description:   "週の営業時間、定休日、臨時休業日／臨時営業日",
         minVisibility: "readonly",
         action:        { kind: "route", href: "/settings/business-hours" },
@@ -130,6 +136,7 @@ const HUB_GROUPS: HubGroup[] = [
         id:            "service_durations",
         icon:          "timer",
         label:         "サービス所要時間",
+        labelEn:       "SERVICE DURATION",
         description:   "施工内容ごとの標準所要時間と前後バッファ",
         minVisibility: "readonly",
         action:        { kind: "route", href: "/settings/service-durations" },
@@ -139,6 +146,7 @@ const HUB_GROUPS: HubGroup[] = [
         id:            "staff_capacity",
         icon:          "people",
         label:         "スタッフ・キャパシティ",
+        labelEn:       "STAFF CAPACITY",
         description:   "技術者・作業ベイ・同時対応・重複警告（未適用）",
         minVisibility: "readonly",
         action:        { kind: "route", href: "/settings/staff-capacity" },
@@ -148,6 +156,7 @@ const HUB_GROUPS: HubGroup[] = [
         id:            "branding",
         icon:          "palette",
         label:         "ブランディング",
+        labelEn:       "BRANDING",
         description:   "ショップロゴ・スタンプ・書類デザイン",
         minVisibility: "dealer_owner",
         action:        { kind: "route", href: "/settings/branding" },
@@ -158,6 +167,7 @@ const HUB_GROUPS: HubGroup[] = [
         id:            "notifications",
         icon:          "bell",
         label:         "通知設定",
+        labelEn:       "NOTIFICATIONS",
         description:   "メンテナンスリマインダー・通知テンプレート",
         minVisibility: "manager",
         action:        { kind: "route", href: "/settings/notifications" },
@@ -172,12 +182,14 @@ const HUB_GROUPS: HubGroup[] = [
   {
     id:          "estimate_pricing",
     label:       "見積・価格",
+    labelEn:     "ESTIMATES & PRICING",
     description: "見積で選べるメニューと価格の登録",
     cards: [
       {
         id:            "estimate_wizard",
         icon:          "estimate",
         label:         "見積ウィザード設定",
+        labelEn:       "ESTIMATE WIZARD",
         description:   "提供サービス・フィルム・メニュー・割引の登録と確認",
         minVisibility: "readonly",
         action:        { kind: "route", href: "/settings/estimate-wizard" },
@@ -189,12 +201,14 @@ const HUB_GROUPS: HubGroup[] = [
   {
     id:          "customer_docs",
     label:       "顧客接点・書類",
+    labelEn:     "CUSTOMER & DOCUMENTS",
     description: "LINE連携・車検証OCR・書類フォーマット",
     cards: [
       {
         id:            "communication",
         icon:          "chat",
         label:         "コミュニケーション設定",
+        labelEn:       "COMMUNICATION",
         description:   "LINE連携・メッセージテンプレート・リッチメニュー",
         minVisibility: "manager",
         action:        { kind: "route", href: "/settings/communication" },
@@ -205,6 +219,7 @@ const HUB_GROUPS: HubGroup[] = [
         id:            "ocr",
         icon:          "scan",
         label:         "車検証OCR",
+        labelEn:       "VEHICLE OCR",
         description:   "OCR設定・処理ポリシー・フォーマット確認",
         minVisibility: "manager",
         action:        { kind: "route", href: "/settings/ocr" },
@@ -215,6 +230,7 @@ const HUB_GROUPS: HubGroup[] = [
         id:            "pdf",
         icon:          "document",
         label:         "PDF・書類",
+        labelEn:       "PDF & DOCUMENTS",
         description:   "採番設定・書類フォーマット・税率・利用規約",
         minVisibility: "manager",
         action:        { kind: "route", href: "/settings/pdf" },
@@ -226,12 +242,14 @@ const HUB_GROUPS: HubGroup[] = [
   {
     id:          "contract_admin",
     label:       "契約・管理",
+    labelEn:     "PLAN & ADMIN",
     description: "利用プラン・AI基盤",
     cards: [
       {
         id:            "subscription",
         icon:          "plan",
         label:         "契約・プラン",
+        labelEn:       "SUBSCRIPTION",
         description:   "利用プラン・請求情報・機能一覧",
         minVisibility: "dealer_owner",
         action:        { kind: "route", href: "/settings/subscription" },
@@ -241,6 +259,7 @@ const HUB_GROUPS: HubGroup[] = [
         id:            "ai_providers",
         icon:          "spark",
         label:         "AIプロバイダー設定",
+        labelEn:       "AI PROVIDERS",
         description:   "OpenAI・Anthropic・Gemini設定・APIキー管理（Pro+）",
         minVisibility: "dealer_owner",
         action:        { kind: "route", href: "/settings/ai" },
@@ -297,8 +316,8 @@ const ICON_PATHS: Record<IconKey, ReactNode> = {
 
 function CardIcon({ name, dim }: { name: IconKey; dim: boolean }) {
   return (
-    <span className={dim ? "text-slate-700" : "text-slate-400"} aria-hidden="true">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+    <span className={dim ? "text-[#526079]" : "text-[#91b9ff]"} aria-hidden="true">
+      <svg width="25" height="25" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
         {ICON_PATHS[name]}
       </svg>
     </span>
@@ -366,35 +385,45 @@ function HubCardButton({
 
   const inner = (
     <div className={[
-      "h-full flex flex-col gap-2 px-3.5 py-3 rounded-xl border transition-colors",
+      "group h-full min-h-[128px] rounded-2xl border p-4 transition-all duration-200 md:min-h-[190px] md:p-5 lg:min-h-[210px] lg:p-6",
       isInteractive
-        ? "bg-[#0f172a] border-slate-700 hover:border-slate-500 hover:bg-slate-800/30 cursor-pointer"
-        : "bg-[#0a0f1a] border-slate-800/60",
+        ? "cursor-pointer border-[#263955] bg-[#111826]/90 hover:-translate-y-0.5 hover:border-[#3b6eb4] hover:bg-[#141e2f] hover:shadow-[0_18px_45px_rgba(0,0,0,.24)]"
+        : "border-[#1d2b40] bg-[#0b111d]/80",
     ].join(" ")}
     >
-      <div className="flex items-center gap-2">
-        <CardIcon name={card.icon} dim={!isInteractive} />
-        <p className={[
-          "text-sm font-semibold leading-tight",
-          isInteractive ? "text-slate-100" : "text-slate-600",
+      <div className="flex h-full flex-col">
+        <span className={[
+          "grid h-12 w-12 place-items-center rounded-xl border md:h-[58px] md:w-[58px] md:rounded-2xl",
+          isInteractive ? "border-[#31568c] bg-[#122142]" : "border-[#243149] bg-[#101827]",
         ].join(" ")}>
-          {card.label}
+          <CardIcon name={card.icon} dim={!isInteractive} />
+        </span>
+
+        <div className="mt-3 md:mt-5">
+          <p className={[
+            "text-[15px] font-bold leading-tight md:text-[18px]",
+            isInteractive ? "text-[#edf3fc]" : "text-[#66738a]",
+          ].join(" ")}>
+            {card.label}
+          </p>
+          <p className="mt-1 text-[9px] font-semibold tracking-[0.18em] text-[#8191ad] md:text-[10px] md:tracking-[0.22em]">
+            {card.labelEn}
+          </p>
+        </div>
+
+        <p className={[
+          "mt-3 hidden text-[12px] leading-6 md:block md:flex-1",
+          isInteractive ? "text-[#95a4bc]" : "text-[#58657a]",
+        ].join(" ")}>
+          {card.description}
         </p>
-      </div>
 
-      <p className={[
-        "text-[11px] leading-relaxed flex-1",
-        isInteractive ? "text-slate-500" : "text-slate-700",
-      ].join(" ")}>
-        {card.description}
-      </p>
-
-      {/* Status and call to action share one baseline so every card ends the same way. */}
-      <div className="flex items-center justify-between gap-2">
-        <CardBadge state={state} />
-        {isInteractive && (
-          <span className="text-[11px] text-slate-400 shrink-0">開く ›</span>
-        )}
+        <div className="mt-auto flex items-center justify-between gap-2 pt-3 md:pt-5">
+          <CardBadge state={state} />
+          {isInteractive && (
+            <span className="text-[11px] font-semibold tracking-[0.08em] text-[#5f9cff]">開く →</span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -427,10 +456,13 @@ function HubCardButton({
 
 function GroupHeader({ group }: { group: HubGroup }) {
   return (
-    <div className="flex items-baseline gap-3">
-      <h2 className="text-sm font-bold text-slate-200 tracking-tight">{group.label}</h2>
-      <span className="text-[11px] text-slate-600 hidden sm:inline">{group.description}</span>
-      <div className="flex-1 h-px bg-slate-800" />
+    <div className="flex items-center gap-4">
+      <div>
+        <p className="text-[10px] font-bold tracking-[0.2em] text-[#5f9cff]">{group.labelEn}</p>
+        <h2 className="mt-1 text-[16px] font-bold text-[#e8eef7] md:text-[18px]">{group.label}</h2>
+      </div>
+      <span className="hidden text-[11px] text-[#70809b] lg:inline">{group.description}</span>
+      <div className="h-px flex-1 bg-[#20304a]" />
     </div>
   );
 }
@@ -469,11 +501,11 @@ export default function SettingsCenterHub({
   );
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-10">
 
-      <div className="flex flex-col gap-1">
-        <h1 className="text-base font-bold text-slate-100 tracking-tight">設定</h1>
-        <p className="text-xs text-slate-500">店舗の運用に必要な設定をまとめています。</p>
+      <div className="flex items-center gap-5">
+        <p className="text-[11px] font-bold tracking-[0.22em] text-[#7788a4]">SETTINGS / 設定メニュー</p>
+        <span className="h-px flex-1 bg-[#20304a]" />
       </div>
 
       {HUB_GROUPS.map((group) => {
@@ -487,10 +519,10 @@ export default function SettingsCenterHub({
                 promoted anywhere an operator is trying to work. */}
             {group.id === "contract_admin" && <InstallAppRow />}
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               <GroupHeader group={group} />
               {/* 1 column below 768, 2 columns to 1279, 3 columns from 1280. */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {visibleCards.map((card) => (
                   <HubCardButton
                     key={card.id}
@@ -507,9 +539,9 @@ export default function SettingsCenterHub({
 
       {/* Everything that cannot be opened yet — one line, closed by default. */}
       {pending.length > 0 && (
-        <details className="rounded-xl border border-slate-800 bg-slate-900/30">
-          <summary className="cursor-pointer list-none px-4 py-3 text-xs text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-2">
-            <span className="text-slate-600">▸</span>
+        <details className="rounded-2xl border border-[#263955] bg-[#111826]/70">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-4 text-xs text-[#95a4bc] transition-colors hover:text-[#edf3fc]">
+            <span className="text-[#5f9cff]">▸</span>
             今後提供予定
             <span className="text-[10px] text-slate-600">{pending.length}件</span>
           </summary>
@@ -526,7 +558,7 @@ export default function SettingsCenterHub({
       )}
 
       {/* Footer — backup / support open in the existing panel view. */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-slate-900/40 border border-slate-800 rounded-xl">
+      <div className="flex items-center gap-3 rounded-2xl border border-[#263955] bg-[#111826]/70 px-5 py-4">
         <div className="flex flex-col gap-0.5">
           <p className="text-xs font-medium text-slate-300">バックアップ・サポート</p>
           <p className="text-[10px] text-slate-500">DRステータス確認・エクスポート・サポート問い合わせ</p>
