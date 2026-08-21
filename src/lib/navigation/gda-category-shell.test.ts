@@ -49,6 +49,14 @@ test("orders hub preserves the owner-approved small-category order", () => {
   );
 });
 
+test("records hub preserves the owner-approved small-category order", () => {
+  const recordsHub = read("src/app/hub/records/page.tsx");
+  assert.match(
+    recordsHub,
+    /href: "\/pdf"[\s\S]*?label: "PDF"[\s\S]*?href: "\/ocr-sessions"[\s\S]*?label: "OCR履歴"[\s\S]*?href: "\/downloads"[\s\S]*?label: "ダウンロード"/,
+  );
+});
+
 test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
   const hubs = [
     ["customers", "/hub/customers", ["customers", "vehicles", "customer-app"]],
