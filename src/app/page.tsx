@@ -61,6 +61,10 @@ export default async function HomePage() {
   const planInfo = await getCurrentPlan();
   const planParam = encodeURIComponent(planInfo.plan);
   const trialParam = planInfo.subscription_status === "trial" ? "1" : "0";
+  const trialDays = trialParam === "1" && planInfo.expired_at
+    ? Math.max(0, Math.ceil((new Date(planInfo.expired_at).getTime() - Date.now()) / 86_400_000))
+    : null;
+  const trialDaysParam = Number.isFinite(trialDays) ? `&td=${trialDays}` : "";
   const featureParam = encodeURIComponent(PLAN_FEATURES[planInfo.plan].join(","));
 
   // Deployment-level application brand, transported to the static home as one
@@ -68,8 +72,8 @@ export default async function HomePage() {
   // the static file holds no per-brand text or asset path of its own.
   const brandParam = encodeURIComponent(JSON.stringify(deriveHomeBrandPayload()));
   const homeSrc = certLabel
-    ? `/desktop-home.html?cert=${encodeURIComponent(certLabel)}&b=${brandParam}&p=${planParam}&t=${trialParam}&f=${featureParam}`
-    : `/desktop-home.html?b=${brandParam}&p=${planParam}&t=${trialParam}&f=${featureParam}`;
+    ? `/desktop-home.html?cert=${encodeURIComponent(certLabel)}&b=${brandParam}&p=${planParam}&t=${trialParam}${trialDaysParam}&f=${featureParam}`
+    : `/desktop-home.html?b=${brandParam}&p=${planParam}&t=${trialParam}${trialDaysParam}&f=${featureParam}`;
 
   // ─────────────────────────────────────────────────────────────────────────
 

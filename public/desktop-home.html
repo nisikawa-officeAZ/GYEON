@@ -1262,12 +1262,31 @@
     .nav a .en { font-size: 8px; letter-spacing: 0.8px; }
   }
 
-  /* [v18] Badge stack: trial badge sits directly above the plan badge */
+  /* [v18] Plan and trial status remain separate authenticated facts. */
   .badge-stack {
     display: inline-flex; flex-direction: row;
     align-items: center; gap: 8px;
     flex-shrink: 0;
   }
+  .trial-stack {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .trial-countdown {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 3px);
+    transform: translateX(-50%);
+    color: #a7f3d0;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .trial-countdown.warning { color: #fbbf24; }
+  .trial-countdown.urgent { color: #f87171; }
   /* [v18] Trial badge: emerald to distinguish from BASIC(slate)/PRO(blue)/PRO+(gold) */
   .trial-badge {
     display: inline-flex; align-items: center;
@@ -1284,6 +1303,7 @@
   }
   @media (max-width: 767px) {
     .badge-stack { gap: 6px; }
+    .trial-countdown { bottom: calc(100% + 2px); font-size: 6px; letter-spacing: 0.5px; }
     .trial-badge { height: 16px; padding: 0 6px; font-size: 7px; letter-spacing: 0.8px; border-radius: 4px; }
   }
 
@@ -1398,8 +1418,11 @@
           <span class="name" id="brandHeroName">Detailer Agent</span>
           <span class="badge-stack">
             <span class="plan-tag" id="planTag" hidden></span>
-            <!-- [v18] Trial badge: shown to the right of the plan badge when data-trial="1" -->
-            <span class="trial-badge" id="trialBadge" hidden>トライアル中</span>
+            <!-- [v18] Trial status and DB-derived remaining days are shown only for an active trial. -->
+            <span class="trial-stack" id="trialStack" hidden>
+              <span class="trial-countdown" id="trialCountdown" hidden></span>
+              <span class="trial-badge" id="trialBadge">トライアル中</span>
+            </span>
           </span>
         </div>
 
@@ -1605,12 +1628,30 @@
       ? requestedPlan
       : 'basic';
     var isTrial = params.get('t') === '1';
+    var requestedTrialDays = params.get('td');
+    var trialDays = requestedTrialDays !== null && /^\d+$/.test(requestedTrialDays)
+      ? Number(requestedTrialDays)
+      : null;
 
     applyPlan(plan);
 
+    var trialStack = document.getElementById('trialStack');
     var trial = document.getElementById('trialBadge');
+    var countdown = document.getElementById('trialCountdown');
     app.dataset.trial = isTrial ? '1' : '0';
+    if (trialStack) trialStack.hidden = !isTrial;
     if (trial) trial.hidden = !isTrial;
+    if (countdown) {
+      countdown.hidden = !isTrial || trialDays === null;
+      countdown.classList.remove('warning', 'urgent');
+      if (isTrial && trialDays !== null) {
+        countdown.textContent = trialDays === 0 ? 'トライアル終了' : '残り' + trialDays + '日';
+        if (trialDays <= 3) countdown.classList.add('urgent');
+        else if (trialDays <= 7) countdown.classList.add('warning');
+      } else {
+        countdown.textContent = '';
+      }
+    }
   })();
 </script>
 
