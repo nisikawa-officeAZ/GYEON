@@ -133,6 +133,24 @@ test("business-hours settings adopts the reference cards and preserves its save 
   assert.match(form, /special_open_days: specialOpen/);
 });
 
+test("service-duration settings adopts responsive cards and preserves its exact field contract", () => {
+  const page = read("src/app/settings/service-durations/page.tsx");
+  const form = read("src/app/settings/service-durations/ServiceDurationsForm.tsx");
+
+  assert.match(page, /max-w-\[1100px\]/);
+  assert.match(page, /SERVICE DURATION/);
+  assert.match(page, /編集可能/);
+  assert.match(form, /SERVICE SETTINGS/);
+  assert.match(form, /grid-cols-2 gap-3 sm:grid-cols-4/);
+  assert.doesNotMatch(form, /overflow-x-auto/);
+  assert.equal((form.match(/SERVICE_TYPES\.map/g) ?? []).length, 1);
+  for (const field of ["hours", "days", "buffer_before_min", "buffer_after_min"]) {
+    assert.match(form, new RegExp(`setField\\(st, "${field}", value\\)`));
+  }
+  assert.match(form, /saveServiceDurations\(input\)/);
+  assert.match(form, /Number\.isFinite\(n\) && n >= 0/);
+});
+
 test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
   const hubs = [
     ["customers", "/hub/customers", ["customers", "vehicles", "customer-app"]],
