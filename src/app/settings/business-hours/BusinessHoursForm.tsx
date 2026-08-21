@@ -24,7 +24,25 @@ const WEEKDAYS: Array<{ idx: number; label: string }> = [
 ];
 
 const inputCls =
-  "bg-[#1e293b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 disabled:opacity-50";
+  "min-h-12 rounded-xl border border-[#2a3e5d] bg-[#0b1322] px-4 py-3 text-sm text-[#edf3fc] transition-all focus:border-[#4a7fc8] focus:outline-none focus:ring-2 focus:ring-[#3478ff]/20 disabled:cursor-not-allowed disabled:opacity-50";
+
+const surface =
+  "rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:p-6";
+
+function SectionTitle({ label, labelEn, hint }: { label: string; labelEn: string; hint?: string }) {
+  return (
+    <div className="flex flex-col gap-2 border-b border-[#20304a] pb-4">
+      <div className="flex items-center gap-4">
+        <div>
+          <p className="text-[9px] font-bold tracking-[0.2em] text-[#5f9cff]">{labelEn}</p>
+          <h2 className="mt-1 text-[16px] font-bold text-[#e8eef7]">{label}</h2>
+        </div>
+        <span className="h-px flex-1 bg-[#20304a]" />
+      </div>
+      {hint && <p className="text-xs leading-5 text-[#70809b]">{hint}</p>}
+    </div>
+  );
+}
 
 export default function BusinessHoursForm({ initial, canEdit }: Props) {
   const [isPending, startTransition] = useTransition();
@@ -95,120 +113,130 @@ export default function BusinessHoursForm({ initial, canEdit }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {/* Default hours */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-slate-200">標準営業時間</h2>
-        <p className="text-xs text-slate-500">曜日ごとに個別設定がない営業日に適用されます。</p>
-        <div className="flex items-center gap-2">
-          <input type="time" value={defaultOpen} disabled={!canEdit}
+      <section className={`${surface} flex flex-col gap-5`}>
+        <SectionTitle
+          label="標準営業時間"
+          labelEn="DEFAULT HOURS"
+          hint="曜日ごとに個別設定がない営業日に適用されます。"
+        />
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:max-w-xl">
+          <input aria-label="標準開店時間" type="time" value={defaultOpen} disabled={!canEdit}
             onChange={(e) => setDefaultOpen(e.target.value)} className={inputCls} />
-          <span className="text-slate-500 text-sm">〜</span>
-          <input type="time" value={defaultClose} disabled={!canEdit}
+          <span className="text-center text-sm text-[#70809b]">〜</span>
+          <input aria-label="標準閉店時間" type="time" value={defaultClose} disabled={!canEdit}
             onChange={(e) => setDefaultClose(e.target.value)} className={inputCls} />
         </div>
       </section>
 
       {/* Weekly schedule */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-slate-200">曜日別設定</h2>
-        <div className="flex flex-col gap-1.5">
+      <section className={`${surface} flex flex-col gap-5`}>
+        <SectionTitle
+          label="曜日別設定"
+          labelEn="WEEKLY SCHEDULE"
+          hint="営業／定休日を切り替え、必要な曜日だけ個別時間を設定できます。"
+        />
+        <div className="flex flex-col divide-y divide-[#20304a]">
           {WEEKDAYS.map(({ idx, label }) => {
             const isClosed = closed.has(idx);
             const h = weekdayHours[String(idx)];
             return (
-              <div key={idx} className="flex items-center gap-3 py-1">
-                <span className="w-6 text-center text-sm font-medium text-slate-300">{label}</span>
+              <div key={idx} className="grid grid-cols-[40px_88px] items-center gap-3 py-4 sm:grid-cols-[40px_88px_1fr]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#2a3e5d] bg-[#0b1322] text-sm font-bold text-[#d6e0ef]">{label}</span>
                 <button
                   type="button"
                   disabled={!canEdit}
                   onClick={() => toggleClosed(idx)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors disabled:opacity-50 ${
+                  aria-pressed={isClosed}
+                  className={`min-h-10 rounded-xl border px-3 text-xs font-semibold transition-colors disabled:opacity-50 ${
                     isClosed
-                      ? "bg-red-500/15 text-red-300 border border-red-500/30"
-                      : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                      ? "border-red-500/30 bg-red-500/15 text-red-300"
+                      : "border-emerald-500/30 bg-emerald-500/15 text-emerald-300"
                   }`}
                 >
                   {isClosed ? "定休日" : "営業"}
                 </button>
                 {!isClosed && (
-                  <div className="flex items-center gap-2">
-                    <input type="time" value={h?.open ?? ""} disabled={!canEdit}
+                  <div className="col-span-2 grid min-w-0 grid-cols-[1fr_auto_1fr] items-center gap-2 sm:col-span-1 sm:grid-cols-[150px_auto_150px_1fr]">
+                    <input aria-label={`${label}曜日の開店時間`} type="time" value={h?.open ?? ""} disabled={!canEdit}
                       onChange={(e) => setWeekdayHour(idx, "open", e.target.value)} className={inputCls} />
-                    <span className="text-slate-500 text-xs">〜</span>
-                    <input type="time" value={h?.close ?? ""} disabled={!canEdit}
+                    <span className="text-xs text-[#70809b]">〜</span>
+                    <input aria-label={`${label}曜日の閉店時間`} type="time" value={h?.close ?? ""} disabled={!canEdit}
                       onChange={(e) => setWeekdayHour(idx, "close", e.target.value)} className={inputCls} />
-                    <span className="text-[10px] text-slate-600">空欄は標準時間</span>
+                    <span className="col-span-3 text-[10px] text-[#526079] sm:col-span-1">空欄は標準時間</span>
                   </div>
                 )}
+                {isClosed && <span className="col-span-2 text-xs text-[#526079] sm:col-span-1">標準定休日として設定します</span>}
               </div>
             );
           })}
         </div>
       </section>
 
-      {/* Temporary holidays */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-slate-200">臨時休業日</h2>
-        <div className="flex items-center gap-2">
-          <input type="date" value={newHoliday} disabled={!canEdit}
-            onChange={(e) => setNewHoliday(e.target.value)} className={inputCls} />
-          <button type="button" disabled={!canEdit || !newHoliday}
-            onClick={() => addDate(tempHolidays, setTempHolidays, newHoliday, () => setNewHoliday(""))}
-            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded-lg disabled:opacity-50">
-            追加
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {tempHolidays.map((d) => (
-            <span key={d} className="flex items-center gap-1 px-2 py-1 rounded-md bg-red-500/10 border border-red-500/30 text-[11px] text-red-300">
-              {d}
-              {canEdit && (
-                <button type="button" onClick={() => setTempHolidays(tempHolidays.filter((x) => x !== d))} className="text-red-400 hover:text-red-200">×</button>
-              )}
-            </span>
-          ))}
-          {tempHolidays.length === 0 && <span className="text-xs text-slate-600">なし</span>}
-        </div>
-      </section>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        {/* Temporary holidays */}
+        <section className={`${surface} flex flex-col gap-5`}>
+          <SectionTitle label="臨時休業日" labelEn="TEMPORARY CLOSURES" />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input aria-label="追加する臨時休業日" type="date" value={newHoliday} disabled={!canEdit}
+              onChange={(e) => setNewHoliday(e.target.value)} className={`${inputCls} min-w-0 flex-1`} />
+            <button type="button" disabled={!canEdit || !newHoliday}
+              onClick={() => addDate(tempHolidays, setTempHolidays, newHoliday, () => setNewHoliday(""))}
+              className="min-h-12 rounded-xl border border-[#31568c] bg-[#122142] px-5 text-xs font-semibold text-[#91b9ff] transition-colors hover:border-[#4a7fc8] hover:text-[#c4d8ff] disabled:opacity-50">
+              追加
+            </button>
+          </div>
+          <div className="flex min-h-10 flex-wrap gap-2">
+            {tempHolidays.map((d) => (
+              <span key={d} className="flex min-h-10 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 text-xs text-red-300">
+                {d}
+                {canEdit && (
+                  <button type="button" aria-label={`${d}の臨時休業日を削除`} onClick={() => setTempHolidays(tempHolidays.filter((x) => x !== d))} className="text-red-400 hover:text-red-200">×</button>
+                )}
+              </span>
+            ))}
+            {tempHolidays.length === 0 && <span className="self-center text-xs text-[#526079]">登録なし</span>}
+          </div>
+        </section>
 
-      {/* Special open days */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-slate-200">臨時営業日</h2>
-        <p className="text-xs text-slate-500">定休日でも営業する日を指定します。</p>
-        <div className="flex items-center gap-2">
-          <input type="date" value={newSpecial} disabled={!canEdit}
-            onChange={(e) => setNewSpecial(e.target.value)} className={inputCls} />
-          <button type="button" disabled={!canEdit || !newSpecial}
-            onClick={() => addDate(specialOpen, setSpecialOpen, newSpecial, () => setNewSpecial(""))}
-            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded-lg disabled:opacity-50">
-            追加
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {specialOpen.map((d) => (
-            <span key={d} className="flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-[11px] text-emerald-300">
-              {d}
-              {canEdit && (
-                <button type="button" onClick={() => setSpecialOpen(specialOpen.filter((x) => x !== d))} className="text-emerald-400 hover:text-emerald-200">×</button>
-              )}
-            </span>
-          ))}
-          {specialOpen.length === 0 && <span className="text-xs text-slate-600">なし</span>}
-        </div>
-      </section>
+        {/* Special open days */}
+        <section className={`${surface} flex flex-col gap-5`}>
+          <SectionTitle label="臨時営業日" labelEn="SPECIAL OPEN DAYS" hint="定休日でも営業する日を指定します。" />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input aria-label="追加する臨時営業日" type="date" value={newSpecial} disabled={!canEdit}
+              onChange={(e) => setNewSpecial(e.target.value)} className={`${inputCls} min-w-0 flex-1`} />
+            <button type="button" disabled={!canEdit || !newSpecial}
+              onClick={() => addDate(specialOpen, setSpecialOpen, newSpecial, () => setNewSpecial(""))}
+              className="min-h-12 rounded-xl border border-[#31568c] bg-[#122142] px-5 text-xs font-semibold text-[#91b9ff] transition-colors hover:border-[#4a7fc8] hover:text-[#c4d8ff] disabled:opacity-50">
+              追加
+            </button>
+          </div>
+          <div className="flex min-h-10 flex-wrap gap-2">
+            {specialOpen.map((d) => (
+              <span key={d} className="flex min-h-10 items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 text-xs text-emerald-300">
+                {d}
+                {canEdit && (
+                  <button type="button" aria-label={`${d}の臨時営業日を削除`} onClick={() => setSpecialOpen(specialOpen.filter((x) => x !== d))} className="text-emerald-400 hover:text-emerald-200">×</button>
+                )}
+              </span>
+            ))}
+            {specialOpen.length === 0 && <span className="self-center text-xs text-[#526079]">登録なし</span>}
+          </div>
+        </section>
+      </div>
 
       {/* Save */}
-      <div className="flex items-center gap-3 pt-2 border-t border-slate-800">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:px-6">
         <button
           type="button"
           disabled={!canEdit || isPending}
           onClick={handleSave}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+          className="min-h-12 rounded-xl bg-[#2f6bff] px-6 text-sm font-bold text-white shadow-[0_10px_28px_rgba(47,107,255,.24)] transition-colors hover:bg-[#3977ff] disabled:opacity-50"
         >
           {isPending ? "保存中..." : "保存"}
         </button>
-        {!canEdit && <span className="text-xs text-slate-500">閲覧のみ（編集にはオーナー／マネージャー権限が必要です）</span>}
+        {!canEdit && <span className="text-xs text-[#70809b]">閲覧のみ（編集にはオーナー／マネージャー権限が必要です）</span>}
         {result && (
           <span className={`text-xs ${result.ok ? "text-emerald-400" : "text-red-400"}`}>{result.msg}</span>
         )}

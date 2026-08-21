@@ -114,6 +114,25 @@ test("staff settings follows the reference form vocabulary without changing staf
   assert.match(staff, /enableStaff\(staff\.id\)/);
 });
 
+test("business-hours settings adopts the reference cards and preserves its save contract", () => {
+  const page = read("src/app/settings/business-hours/page.tsx");
+  const form = read("src/app/settings/business-hours/BusinessHoursForm.tsx");
+
+  assert.match(page, /max-w-\[1100px\]/);
+  assert.match(page, /BUSINESS HOURS/);
+  assert.match(page, /編集可能/);
+  for (const section of ["DEFAULT HOURS", "WEEKLY SCHEDULE", "TEMPORARY CLOSURES", "SPECIAL OPEN DAYS"]) {
+    assert.match(form, new RegExp(section));
+  }
+  assert.match(form, /rounded-2xl border border-\[#263955\] bg-\[#111826\]\/90/);
+  assert.match(form, /min-h-12 rounded-xl border border-\[#2a3e5d\]/);
+  assert.equal((form.match(/WEEKDAYS\.map/g) ?? []).length, 1);
+  assert.match(form, /saveBusinessHours\(input\)/);
+  assert.match(form, /closed_weekdays: \[\.\.\.closed\]\.sort/);
+  assert.match(form, /temp_holidays: tempHolidays/);
+  assert.match(form, /special_open_days: specialOpen/);
+});
+
 test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
   const hubs = [
     ["customers", "/hub/customers", ["customers", "vehicles", "customer-app"]],
