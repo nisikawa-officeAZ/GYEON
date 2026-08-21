@@ -4,6 +4,7 @@ import { getCurrentUser }         from "@/lib/auth/get-current-user";
 import { getCurrentAdmin }        from "@/lib/admin/get-current-admin";
 import { createClient }           from "@/lib/supabase/server";
 import { rankLabelEn }            from "@/lib/ranks/dealer-ranks";
+import { getCurrentPlan }         from "@/lib/plans/get-current-plan";
 import { BRAND, deriveHomeBrandPayload } from "@/lib/brand/variant";
 
 // Bare page label only. The product name is appended exactly once by the shared
@@ -53,13 +54,20 @@ export default async function HomePage() {
   // Empty when no rank has been assigned (nothing is displayed then).
   const certLabel = rawRank && rawRank.trim() ? rankLabelEn(rawRank) : "";
 
+  // Plan and trial are separate facts. The plan always renders one of the
+  // three canonical badges; the trial badge is shown only for an actual trial
+  // subscription. Neither value is inferred by the static GenSpark shell.
+  const planInfo = await getCurrentPlan();
+  const planParam = encodeURIComponent(planInfo.plan);
+  const trialParam = planInfo.subscription_status === "trial" ? "1" : "0";
+
   // Deployment-level application brand, transported to the static home as one
   // validated payload. src/lib/brand/variant.ts stays the single source of truth;
   // the static file holds no per-brand text or asset path of its own.
   const brandParam = encodeURIComponent(JSON.stringify(deriveHomeBrandPayload()));
   const homeSrc = certLabel
-    ? `/desktop-home.html?cert=${encodeURIComponent(certLabel)}&b=${brandParam}`
-    : `/desktop-home.html?b=${brandParam}`;
+    ? `/desktop-home.html?cert=${encodeURIComponent(certLabel)}&b=${brandParam}&p=${planParam}&t=${trialParam}`
+    : `/desktop-home.html?b=${brandParam}&p=${planParam}&t=${trialParam}`;
 
   // ─────────────────────────────────────────────────────────────────────────
 

@@ -1282,10 +1282,8 @@
 </head>
 
 <body>
-<!--
-  契約プランは下の data-plan="free | pro | pro_plus" を切り替えるだけで反映されます。
--->
-<div class="app" id="app" data-plan="pro" data-trial="1">
+<!-- Plan and trial are populated from the authenticated root-page bootstrap. -->
+<div class="app" id="app" data-plan="basic" data-trial="0">
 
   <!-- ============== SIDEBAR ============== -->
   <!-- [v17] Sidebar has id for aria-controls; used as drawer target on mobile. -->
@@ -1558,11 +1556,13 @@
 <script>
   /**
    * 契約プラン → サービス名表示の連動
-   *   free     : "Detailer Agent" のみ（バッジなし）
+   *   basic    : "Detailer Agent" + スレートの BASIC バッジ
    *   pro      : "Detailer Agent" + 青の PRO バッジ
    *   pro_plus : "Detailer Agent" + ゴールドの PRO+ バッジ
    *
-   * 実装時は認証 API の plan を取得して app.dataset.plan に渡してください。
+   * p/t are emitted by the authenticated Next.js root page. Both are
+   * allowlist-validated here; direct static-file access fails closed to
+   * BASIC with no trial badge.
    * バッジは行の右端、ロゴ画像の右下と揃う位置に表示されます。
    */
   (function () {
@@ -1590,16 +1590,18 @@
       }
     }
 
-    // [v18] Demo: cycle plans by changing app.dataset.plan
-    // In production, pass the authenticated tenant's plan from the API.
-    applyPlan(app.dataset.plan || 'pro');
+    var params = new URLSearchParams(window.location.search);
+    var requestedPlan = params.get('p');
+    var plan = ['basic', 'pro', 'pro_plus'].includes(requestedPlan)
+      ? requestedPlan
+      : 'basic';
+    var isTrial = params.get('t') === '1';
 
-    // [v18] Trial state: set data-trial="1" on #app while the tenant is on trial.
-    // In production, this flag comes from the subscription API.
-    (function () {
-      var trial = document.getElementById('trialBadge');
-      if (trial && app.dataset.trial === '1') { trial.hidden = false; }
-    })();
+    applyPlan(plan);
+
+    var trial = document.getElementById('trialBadge');
+    app.dataset.trial = isTrial ? '1' : '0';
+    if (trial) trial.hidden = !isTrial;
   })();
 </script>
 

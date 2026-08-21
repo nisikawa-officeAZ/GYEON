@@ -92,6 +92,21 @@ test("TOP large categories use native parent navigation so the outer URL and bro
   );
 });
 
+test("TOP plan badge and trial badge are driven by separate authenticated facts", () => {
+  const page = read("src/app/page.tsx");
+  const top = read("public/desktop-home.html");
+
+  assert.match(page, /getCurrentPlan/);
+  assert.match(page, /planInfo\.subscription_status === "trial"/);
+  assert.match(page, /&p=\$\{planParam\}&t=\$\{trialParam\}/);
+  assert.match(top, /\['basic', 'pro', 'pro_plus'\]\.includes\(requestedPlan\)/);
+  assert.match(top, /params\.get\('t'\) === '1'/);
+  assert.match(top, /tag\.textContent = 'BASIC'/);
+  assert.match(top, /tag\.textContent = 'PRO'/);
+  assert.match(top, /tag\.textContent = 'PRO\+'/);
+  assert.doesNotMatch(top, /data-plan="pro" data-trial="1"/);
+});
+
 test("CategoryHub cards preserve the accepted desktop large-card layout at >=1024px", () => {
   const hub = read("src/components/navigation/CategoryHub.tsx");
   assert.match(hub, /lg:min-h-\[250px\]/);
