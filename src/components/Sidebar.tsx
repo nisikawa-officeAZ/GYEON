@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Brand from "@/components/ui/Brand";
 import { GDA_CATEGORIES, categoryForPathname, type GdaCategoryIcon } from "@/lib/navigation/gda-categories";
 import { getCurrentPlan } from "@/lib/plans/get-current-plan";
@@ -62,7 +62,6 @@ export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews 
   const pathname = usePathname();
   const [plan, setPlan] = useState<DealerPlan | null>(initialPlan ?? null);
   const [unreadNews, setUnreadNews] = useState(initialUnreadNews ?? 0);
-  const prevPathname = useRef(pathname);
   const activeCategory = categoryForPathname(pathname);
 
   useEffect(() => {
@@ -80,13 +79,6 @@ export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews 
     return () => { active = false; clearInterval(interval); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
-
-  useEffect(() => {
-    if (prevPathname.current !== pathname) {
-      prevPathname.current = pathname;
-      onClose?.();
-    }
-  }, [pathname, onClose]);
 
   return (
     <>
@@ -117,7 +109,7 @@ export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews 
             );
 
             return available ? (
-              <Link key={category.id} href={category.href!} className={className} aria-current={active ? "page" : undefined}>
+              <Link key={category.id} href={category.href!} className={className} aria-current={active ? "page" : undefined} onClick={onClose}>
                 {active && <span className="absolute -left-3 h-8 w-1 rounded-r-full bg-[#3478ff] shadow-[0_0_12px_rgba(52,120,255,.9)]" />}
                 {content}
               </Link>

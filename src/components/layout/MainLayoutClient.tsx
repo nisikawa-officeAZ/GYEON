@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import Header      from "@/components/Header";
 import Sidebar     from "@/components/Sidebar";
 import BottomNav   from "@/components/layout/BottomNav";
@@ -31,6 +32,14 @@ export default function MainLayout({
   initialUnreadNews,
 }: MainLayoutProps) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  // GDA_UI_MOBILE_SIDEBAR_ROUTE_RESET_R1: the mobile drawer must never be
+  // open after a route change lands — close it here at the state owner on
+  // every pathname change, independent of Sidebar's own close-on-click.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
     <StaffProvider initialStaff={initialStaff}>
