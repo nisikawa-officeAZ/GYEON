@@ -21,11 +21,11 @@ interface FieldProps {
 
 function Field({ label, name, value, onChange, placeholder, type = "text", multiline, hint }: FieldProps) {
   const base =
-    "w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 transition-colors";
+    "w-full min-h-12 rounded-xl border border-[#2a3e5d] bg-[#0b1322] px-4 py-3 text-sm text-[#edf3fc] placeholder:text-[#526079] transition-all focus:border-[#4a7fc8] focus:outline-none focus:ring-2 focus:ring-[#3478ff]/20";
 
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-slate-400">{label}</label>
+    <div className="flex flex-col gap-2">
+      <label className="text-xs font-semibold text-[#a9b7cc]">{label}</label>
       {multiline ? (
         <textarea
           name={name}
@@ -45,7 +45,19 @@ function Field({ label, name, value, onChange, placeholder, type = "text", multi
           className={base}
         />
       )}
-      {hint && <p className="text-[10px] text-slate-600">{hint}</p>}
+      {hint && <p className="text-[10px] leading-5 text-[#70809b]">{hint}</p>}
+    </div>
+  );
+}
+
+function SectionTitle({ label, labelEn }: { label: string; labelEn: string }) {
+  return (
+    <div className="flex items-center gap-4 border-b border-[#20304a] pb-4">
+      <div>
+        <p className="text-[9px] font-bold tracking-[0.2em] text-[#5f9cff]">{labelEn}</p>
+        <h2 className="mt-1 text-[16px] font-bold text-[#e8eef7]">{label}</h2>
+      </div>
+      <span className="h-px flex-1 bg-[#20304a]" />
     </div>
   );
 }
@@ -138,17 +150,17 @@ export default function CompanySettingsForm({ initialSettings }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-[#0f172a] border border-slate-800 rounded-xl p-5 flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       {/* ── 基本情報 ── */}
-      <div className="flex flex-col gap-3">
-        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">基本情報</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <section className="flex flex-col gap-5 rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:p-6">
+        <SectionTitle label="基本情報" labelEn="STORE PROFILE" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="店舗名" name="business_name" value={values.business_name} onChange={set("business_name")} />
           <Field label="会社名" name="company_name" value={values.company_name} onChange={set("company_name")} />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-400">郵便番号</label>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-[#a9b7cc]">郵便番号</label>
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -156,13 +168,13 @@ export default function CompanySettingsForm({ initialSettings }: Props) {
                 value={values.postal_code}
                 onChange={(e) => set("postal_code")(e.target.value)}
                 placeholder="000-0000"
-                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 transition-colors"
+                className="min-h-12 min-w-0 flex-1 rounded-xl border border-[#2a3e5d] bg-[#0b1322] px-4 py-3 text-sm text-[#edf3fc] placeholder:text-[#526079] transition-all focus:border-[#4a7fc8] focus:outline-none focus:ring-2 focus:ring-[#3478ff]/20"
               />
               <button
                 type="button"
                 onClick={handlePostalLookup}
                 disabled={postalBusy}
-                className="shrink-0 px-3 py-2 text-xs font-medium rounded-lg border border-slate-700 text-slate-300 hover:border-blue-600 hover:text-blue-300 disabled:opacity-50 transition-colors"
+                className="min-h-12 shrink-0 rounded-xl border border-[#31568c] bg-[#122142] px-4 text-xs font-semibold text-[#91b9ff] transition-colors hover:border-[#4a7fc8] hover:text-[#c4d8ff] disabled:opacity-50"
               >
                 {postalBusy ? "検索中…" : "住所自動入力"}
               </button>
@@ -171,22 +183,22 @@ export default function CompanySettingsForm({ initialSettings }: Props) {
           <Field label="担当者名" name="contact_name" value={values.contact_name} onChange={set("contact_name")} />
         </div>
         <Field label="住所" name="business_address" value={values.business_address} onChange={set("business_address")} />
-      </div>
+      </section>
 
       {/* ── 連絡先 ── */}
-      <div className="flex flex-col gap-3 border-t border-slate-800 pt-4">
-        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">連絡先</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <section className="flex flex-col gap-5 rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:p-6">
+        <SectionTitle label="連絡先" labelEn="CONTACT" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="電話番号" name="business_phone" value={values.business_phone} onChange={set("business_phone")} type="tel" />
           <Field label="メールアドレス" name="business_email" value={values.business_email} onChange={set("business_email")} type="email" />
         </div>
         <Field label="Webサイト" name="business_website" value={values.business_website} onChange={set("business_website")} type="url" placeholder="https://example.com" />
-      </div>
+      </section>
 
       {/* ── 書類・税務 ── */}
-      <div className="flex flex-col gap-3 border-t border-slate-800 pt-4">
-        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">書類・税務</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <section className="flex flex-col gap-5 rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:p-6">
+        <SectionTitle label="書類・税務" labelEn="DOCUMENTS & TAX" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
             label="適格請求書番号"
             name="qualified_invoice_number"
@@ -207,54 +219,63 @@ export default function CompanySettingsForm({ initialSettings }: Props) {
         </div>
         <Field label="見積書フッター" name="pdf_footer" value={values.pdf_footer} onChange={set("pdf_footer")} multiline />
         <Field label="請求書備考" name="invoice_note" value={values.invoice_note} onChange={set("invoice_note")} multiline />
-      </div>
+      </section>
 
       {/* ── 口座情報 ── */}
-      <div className="flex flex-col gap-3 border-t border-slate-800 pt-4">
-        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">口座情報</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <section className="flex flex-col gap-5 rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:p-6">
+        <SectionTitle label="口座情報" labelEn="BANK ACCOUNT" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="銀行名" name="bank_name" value={values.bank_name} onChange={set("bank_name")} placeholder="〇〇銀行" />
           <Field label="支店名" name="bank_branch_name" value={values.bank_branch_name} onChange={set("bank_branch_name")} placeholder="〇〇支店" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="支店コード" name="bank_branch_code" value={values.bank_branch_code} onChange={set("bank_branch_code")} placeholder="000" />
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-400">口座種別</label>
-            <select
-              name="account_type"
-              value={values.account_type}
-              onChange={(e) => set("account_type")(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 transition-colors"
-            >
-              <option value=""    className="bg-slate-900">未設定</option>
-              <option value="普通" className="bg-slate-900">普通</option>
-              <option value="当座" className="bg-slate-900">当座</option>
-            </select>
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-[#a9b7cc]">口座種別</label>
+            <input type="hidden" name="account_type" value={values.account_type} />
+            <div className="grid min-h-12 grid-cols-3 gap-2" role="group" aria-label="口座種別">
+              {[{ value: "", label: "未設定" }, { value: "普通", label: "普通" }, { value: "当座", label: "当座" }].map((option) => {
+                const selected = values.account_type === option.value;
+                return (
+                  <button
+                    key={option.value || "unset"}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => set("account_type")(option.value)}
+                    className={selected
+                      ? "rounded-xl border border-[#3478ff] bg-[#17336d] px-3 text-xs font-semibold text-[#b9d0ff]"
+                      : "rounded-xl border border-[#2a3e5d] bg-[#0b1322] px-3 text-xs font-semibold text-[#8191ad] transition-colors hover:border-[#4a7fc8] hover:text-[#b9d0ff]"}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="口座番号" name="account_number" value={values.account_number} onChange={set("account_number")} placeholder="0000000" />
           <Field label="口座名義（カナ）" name="account_holder_kana" value={values.account_holder_kana} onChange={set("account_holder_kana")} placeholder="カ）ジーオン" />
         </div>
-      </div>
+      </section>
 
       {/* ── 保存 ── */}
-      <div className="flex items-center gap-3 border-t border-slate-800 pt-4">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:px-6">
         <button
           type="submit"
           disabled={pending}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-colors"
+          className="min-h-12 rounded-xl bg-[#2f6bff] px-6 text-sm font-bold text-white shadow-[0_10px_28px_rgba(47,107,255,.24)] transition-colors hover:bg-[#3977ff] disabled:opacity-50"
         >
           {pending ? "保存中..." : "保存する"}
         </button>
         {status === "saved" && (
-          <span className="text-xs text-green-400 font-medium">保存しました</span>
+          <span className="text-xs font-medium text-emerald-400">保存しました</span>
         )}
         {status === "error" && (
           <span className="text-xs text-red-400">{errorMsg || "保存に失敗しました"}</span>
         )}
         {!initialSettings && status === "idle" && (
-          <span className="text-xs text-slate-600">DB未接続のため保存できない場合があります</span>
+          <span className="text-xs text-[#70809b]">DB未接続のため保存できない場合があります</span>
         )}
       </div>
     </form>

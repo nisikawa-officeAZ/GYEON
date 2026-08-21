@@ -73,6 +73,29 @@ test("settings stays direct while its existing hub adopts the TOP visual vocabul
   assert.match(settingsHub, /border-\[#31568c\]/);
 });
 
+test("dealer settings is the reference form and preserves its data contract", () => {
+  const categoryPage = read("src/app/settings/[category]/page.tsx");
+  const form = read("src/components/settings/CompanySettingsForm.tsx");
+
+  assert.match(categoryPage, /catId === "dealer" \? "mx-auto w-full max-w-\[1100px\]"/);
+  for (const section of ["STORE PROFILE", "CONTACT", "DOCUMENTS & TAX", "BANK ACCOUNT"]) {
+    assert.match(form, new RegExp(`labelEn="${section.replace(/[&]/g, "\\&")}"`));
+  }
+  assert.match(form, /min-h-12 rounded-xl border border-\[#2a3e5d\]/);
+  assert.match(form, /rounded-2xl border border-\[#263955\] bg-\[#111826\]\/90/);
+  assert.match(form, /<input type="hidden" name="account_type" value=\{values\.account_type\} \/>/);
+  assert.doesNotMatch(form, /<select[\s\S]*?name="account_type"/);
+  for (const name of [
+    "business_name", "company_name", "postal_code", "business_address", "business_phone",
+    "business_email", "business_website", "contact_name", "qualified_invoice_number", "pdf_footer",
+    "invoice_note", "tax_rate", "bank_name", "bank_branch_name", "bank_branch_code", "account_type",
+    "account_number", "account_holder_kana",
+  ]) {
+    assert.match(form, new RegExp(`name="${name}"`), `${name} must remain submitted`);
+  }
+  assert.match(form, /saveCompanySettings\(fd\)/);
+});
+
 test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
   const hubs = [
     ["customers", "/hub/customers", ["customers", "vehicles", "customer-app"]],
