@@ -77,7 +77,7 @@ test("dealer settings is the reference form and preserves its data contract", ()
   const categoryPage = read("src/app/settings/[category]/page.tsx");
   const form = read("src/components/settings/CompanySettingsForm.tsx");
 
-  assert.match(categoryPage, /catId === "dealer" \? "mx-auto w-full max-w-\[1100px\]"/);
+  assert.match(categoryPage, /catId === "dealer" \|\| catId === "staff" \? "mx-auto w-full max-w-\[1100px\]"/);
   for (const section of ["STORE PROFILE", "CONTACT", "DOCUMENTS & TAX", "BANK ACCOUNT"]) {
     assert.match(form, new RegExp(`labelEn="${section.replace(/[&]/g, "\\&")}"`));
   }
@@ -94,6 +94,24 @@ test("dealer settings is the reference form and preserves its data contract", ()
     assert.match(form, new RegExp(`name="${name}"`), `${name} must remain submitted`);
   }
   assert.match(form, /saveCompanySettings\(fd\)/);
+});
+
+test("staff settings follows the reference form vocabulary without changing staff actions", () => {
+  const categoryPage = read("src/app/settings/[category]/page.tsx");
+  const staff = read("src/components/settings/StaffManagement.tsx");
+
+  assert.match(categoryPage, /catId === "dealer" \|\| catId === "staff"/);
+  for (const section of ["TEAM OVERVIEW", "STAFF DIRECTORY", "NEW INVITATION", "PENDING INVITATIONS"]) {
+    assert.match(staff, new RegExp(section));
+  }
+  assert.match(staff, /rounded-2xl border border-\[#263955\] bg-\[#111826\]\/90/);
+  assert.match(staff, /min-h-12 rounded-xl border border-\[#3478ff\]/);
+  assert.equal((staff.match(/<select/g) ?? []).length, 1, "only the high-risk existing-role control remains a select");
+  assert.match(staff, /<RoleSelector[\s\S]*?label="招待するスタッフのロール"/);
+  assert.match(staff, /inviteStaff\(inviteForm\)/);
+  assert.match(staff, /updateStaffRole\(staffId, newRole\)/);
+  assert.match(staff, /disableStaff\(staff\.id\)/);
+  assert.match(staff, /enableStaff\(staff\.id\)/);
 });
 
 test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
