@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter }    from "next/navigation";
 import { VehicleDB }    from "@/lib/vehicles/vehicle-types";
 import { CustomerDB }   from "@/lib/customers/customer-types";
-import PageTitle        from "@/components/ui/PageTitle";
+import GdaOperationalListSurface, { GdaOperationalListActionButton } from "@/components/ui/GdaOperationalListSurface";
 import VehicleSearch    from "@/components/vehicles/VehicleSearch";
 import type { VehicleSearchValues } from "@/components/vehicles/VehicleSearch";
 import VehicleFilters   from "@/components/vehicles/VehicleFilters";
@@ -77,44 +77,39 @@ export default function VehiclesClient({ vehicles, customers }: VehiclesClientPr
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Header row */}
-      <div className="flex items-center justify-between mb-6">
-        <PageTitle title="車両管理" />
-        <button
-          onClick={() => setModal({ mode: "create" })}
-          className="shrink-0 bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-        >
-          + 新規車両登録
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="mb-4">
-        <VehicleSearch
-          values={search}
-          onChange={(field, value) => setSearch((s) => ({ ...s, [field]: value }))}
-          onClear={() => setSearch(EMPTY_SEARCH)}
+      <GdaOperationalListSurface
+        titleJa="車両管理"
+        titleEn="VEHICLES"
+        action={
+          <GdaOperationalListActionButton onClick={() => setModal({ mode: "create" })}>
+            + 新規車両登録
+          </GdaOperationalListActionButton>
+        }
+        search={
+          <VehicleSearch
+            values={search}
+            onChange={(field, value) => setSearch((s) => ({ ...s, [field]: value }))}
+            onClear={() => setSearch(EMPTY_SEARCH)}
+          />
+        }
+        filters={
+          <VehicleFilters
+            inspection={inspection}
+            link={link}
+            onInspection={setInspection}
+            onLink={setLink}
+            total={vehicles.length}
+            shown={filtered.length}
+          />
+        }
+      >
+        <VehicleTable
+          vehicles={filtered}
+          onView={handleView}
+          onEdit={(v) => setModal({ mode: "edit", vehicle: v })}
+          onCreate={() => setModal({ mode: "create" })}
         />
-      </div>
-
-      {/* Filters */}
-      <div className="mb-4">
-        <VehicleFilters
-          inspection={inspection}
-          link={link}
-          onInspection={setInspection}
-          onLink={setLink}
-          total={vehicles.length}
-          shown={filtered.length}
-        />
-      </div>
-
-      {/* Table */}
-      <VehicleTable
-        vehicles={filtered}
-        onView={handleView}
-        onEdit={(v) => setModal({ mode: "edit", vehicle: v })}
-      />
+      </GdaOperationalListSurface>
 
       {/* Modal */}
       {modal.mode !== "none" && (
