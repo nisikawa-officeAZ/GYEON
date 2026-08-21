@@ -25,20 +25,6 @@ const BILLING_ITEMS: readonly CategoryHubItem[] = [
     description: "ポイント付与・利用履歴の管理。",
     icon: "points",
   },
-  {
-    href: "/sales",
-    label: "売上",
-    labelEn: "SALES",
-    description: "売上の集計・推移を確認。",
-    icon: "sales",
-  },
-  {
-    href: "/monthly-statements",
-    label: "月次明細",
-    labelEn: "MONTHLY STATEMENTS",
-    description: "締め請求・月次明細の発行。",
-    icon: "monthly-statements",
-  },
 ] as const;
 
 export default function BillingHubPage() {

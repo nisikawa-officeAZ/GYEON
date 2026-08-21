@@ -32,6 +32,15 @@ test("billing routes resolve to one large category and all existing small-catego
   }
 });
 
+test("billing hub exposes exactly the three owner-approved small categories", () => {
+  const billingHub = read("src/app/billing/page.tsx");
+  assert.equal((billingHub.match(/href: "\/(?:invoices|payments|points)"/g) ?? []).length, 3);
+  assert.match(billingHub, /href: "\/invoices"[\s\S]*?label: "請求管理"/);
+  assert.match(billingHub, /href: "\/payments"[\s\S]*?label: "入金管理"/);
+  assert.match(billingHub, /href: "\/points"[\s\S]*?label: "ポイント"/);
+  assert.doesNotMatch(billingHub, /href: "\/(?:sales|monthly-statements)"/);
+});
+
 test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
   const hubs = [
     ["customers", "/hub/customers", ["customers", "vehicles", "customer-app"]],
