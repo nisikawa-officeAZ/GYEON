@@ -41,6 +41,14 @@ test("billing hub exposes exactly the three owner-approved small categories", ()
   assert.doesNotMatch(billingHub, /href: "\/(?:sales|monthly-statements)"/);
 });
 
+test("orders hub preserves the owner-approved small-category order", () => {
+  const ordersHub = read("src/app/hub/orders/page.tsx");
+  assert.match(
+    ordersHub,
+    /href: "\/products"[\s\S]*?label: "商品管理"[\s\S]*?href: "\/inventory"[\s\S]*?label: "在庫カウント"[\s\S]*?href: "\/product-orders"[\s\S]*?label: "商品注文"/,
+  );
+});
+
 test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
   const hubs = [
     ["customers", "/hub/customers", ["customers", "vehicles", "customer-app"]],
