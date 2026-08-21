@@ -72,13 +72,13 @@ export default async function SettingsPage({
       {/* UX-1B — max-w-3xl (768px) forced a 1280–1440px screen to render one narrow
           column and convert the whole settings surface into vertical scrolling. The
           hub now uses the horizontal space it already had. */}
-      <div className="max-w-6xl mx-auto p-4 sm:p-6 flex flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-6">
         {/* Release header */}
-        <div className="flex items-center justify-between px-4 py-2 bg-slate-900/60 border border-slate-800 rounded-xl">
-          <span className="text-xs font-semibold text-slate-300 tracking-wide">
+        <div className="flex items-center justify-between rounded-2xl border border-[#263955] bg-[#111826]/90 px-5 py-3">
+          <span className="text-xs font-semibold tracking-wide text-[#c8d3e4]">
             GYEON Detailer Agent v1.0 Official Release
           </span>
-          <span className="text-[10px] text-slate-500">Powered by GYEON Japan</span>
+          <span className="text-[10px] tracking-[0.14em] text-[#70809b]">Powered by GYEON Japan</span>
         </div>
 
         {/* UX-1B — the four hardcoded rows that used to sit here (営業時間・定休日 /

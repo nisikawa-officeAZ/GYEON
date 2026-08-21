@@ -102,6 +102,10 @@ const MAX_DAILY    = 100;
 const MAX_BAYS     = 50;
 
 function numOrNull(v: unknown, max: number): number | null {
+  // Preserve an unset capacity as `null`. Number(null) and Number("") are 0,
+  // which would otherwise turn an optional limit into an explicit zero limit.
+  if (v === null || v === undefined) return null;
+  if (typeof v === "string" && v.trim() === "") return null;
   const n = Number(v);
   if (!Number.isFinite(n) || n < 0 || n > max) return null;
   return Math.floor(n);

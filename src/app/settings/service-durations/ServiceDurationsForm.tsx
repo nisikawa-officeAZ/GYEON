@@ -22,7 +22,38 @@ type FormRow = {
 };
 
 const inputCls =
-  "w-20 bg-[#1e293b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 disabled:opacity-50";
+  "min-h-12 w-full rounded-xl border border-[#2a3e5d] bg-[#0b1322] px-4 py-3 text-sm text-[#edf3fc] transition-all placeholder:text-[#526079] focus:border-[#4a7fc8] focus:outline-none focus:ring-2 focus:ring-[#3478ff]/20 disabled:cursor-not-allowed disabled:opacity-50";
+
+function DurationField({
+  label,
+  value,
+  step,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  step: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="flex min-w-0 flex-col gap-2">
+      <span className="text-[10px] font-semibold tracking-[0.08em] text-[#8191ad]">{label}</span>
+      <input
+        aria-label={label}
+        type="number"
+        min={0}
+        step={step}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        className={inputCls}
+        placeholder="未設定"
+      />
+    </label>
+  );
+}
 
 function toStr(n: number | null | undefined): string {
   return n === null || n === undefined ? "" : String(n);
@@ -82,60 +113,60 @@ export default function ServiceDurationsForm({ initial, canEdit }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[520px] text-sm">
-          <thead>
-            <tr className="text-left text-[11px] text-slate-500">
-              <th className="py-2 pr-3 font-medium">施工内容</th>
-              <th className="py-2 px-2 font-medium">時間</th>
-              <th className="py-2 px-2 font-medium">日数</th>
-              <th className="py-2 px-2 font-medium">前バッファ(分)</th>
-              <th className="py-2 px-2 font-medium">後バッファ(分)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {SERVICE_TYPES.map((st) => {
-              const r = rows[st];
-              return (
-                <tr key={st} className="border-t border-slate-800">
-                  <td className="py-2 pr-3 text-slate-200">{serviceTypeLabel(st)}</td>
-                  <td className="py-2 px-2">
-                    <input type="number" min={0} step="0.5" value={r.hours} disabled={!canEdit}
-                      onChange={(e) => setField(st, "hours", e.target.value)} className={inputCls} placeholder="—" />
-                  </td>
-                  <td className="py-2 px-2">
-                    <input type="number" min={0} step="1" value={r.days} disabled={!canEdit}
-                      onChange={(e) => setField(st, "days", e.target.value)} className={inputCls} placeholder="—" />
-                  </td>
-                  <td className="py-2 px-2">
-                    <input type="number" min={0} step="5" value={r.buffer_before_min} disabled={!canEdit}
-                      onChange={(e) => setField(st, "buffer_before_min", e.target.value)} className={inputCls} placeholder="—" />
-                  </td>
-                  <td className="py-2 px-2">
-                    <input type="number" min={0} step="5" value={r.buffer_after_min} disabled={!canEdit}
-                      onChange={(e) => setField(st, "buffer_after_min", e.target.value)} className={inputCls} placeholder="—" />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <p className="text-[11px] text-slate-600">
-        空欄は未設定です。時間と日数は併用できます（例：多日作業は日数、当日作業は時間）。
-      </p>
+    <div className="flex flex-col gap-5">
+      <section className="rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:p-6">
+        <div className="flex flex-col gap-2 border-b border-[#20304a] pb-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="text-[9px] font-bold tracking-[0.2em] text-[#5f9cff]">SERVICE SETTINGS</p>
+              <h2 className="mt-1 text-[16px] font-bold text-[#e8eef7]">施工内容別の時間設定</h2>
+            </div>
+            <span className="h-px flex-1 bg-[#20304a]" />
+          </div>
+          <p className="text-xs leading-5 text-[#70809b]">
+            空欄は未設定です。時間と日数は併用できます（例：多日作業は日数、当日作業は時間）。
+          </p>
+        </div>
 
-      <div className="flex items-center gap-3 pt-2 border-t border-slate-800">
+        <div className="flex flex-col divide-y divide-[#20304a]">
+          {SERVICE_TYPES.map((st) => {
+            const r = rows[st];
+            const label = serviceTypeLabel(st);
+            return (
+              <article key={st} className="grid gap-4 py-5 lg:grid-cols-[180px_1fr] lg:items-end">
+                <div className="flex items-center gap-3 lg:self-center">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#31568c] bg-[#122142] text-sm font-bold text-[#73a7ff]">◴</span>
+                  <div>
+                    <p className="text-sm font-bold text-[#e8eef7]">{label}</p>
+                    <p className="mt-1 text-[9px] tracking-[0.16em] text-[#526079]">{st.toUpperCase()}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <DurationField label={`${label}・時間`} value={r.hours} step="0.5" disabled={!canEdit}
+                    onChange={(value) => setField(st, "hours", value)} />
+                  <DurationField label={`${label}・日数`} value={r.days} step="1" disabled={!canEdit}
+                    onChange={(value) => setField(st, "days", value)} />
+                  <DurationField label={`${label}・前バッファ（分）`} value={r.buffer_before_min} step="5" disabled={!canEdit}
+                    onChange={(value) => setField(st, "buffer_before_min", value)} />
+                  <DurationField label={`${label}・後バッファ（分）`} value={r.buffer_after_min} step="5" disabled={!canEdit}
+                    onChange={(value) => setField(st, "buffer_after_min", value)} />
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:px-6">
         <button
           type="button"
           disabled={!canEdit || isPending}
           onClick={handleSave}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+          className="min-h-12 rounded-xl bg-[#2f6bff] px-6 text-sm font-bold text-white shadow-[0_10px_28px_rgba(47,107,255,.24)] transition-colors hover:bg-[#3977ff] disabled:opacity-50"
         >
           {isPending ? "保存中..." : "保存"}
         </button>
-        {!canEdit && <span className="text-xs text-slate-500">閲覧のみ（編集にはオーナー／マネージャー権限が必要です）</span>}
+        {!canEdit && <span className="text-xs text-[#70809b]">閲覧のみ（編集にはオーナー／マネージャー権限が必要です）</span>}
         {result && (
           <span className={`text-xs ${result.ok ? "text-emerald-400" : "text-red-400"}`}>{result.msg}</span>
         )}

@@ -34,7 +34,7 @@ export default function MainLayout({
 
   return (
     <StaffProvider initialStaff={initialStaff}>
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#070c17]">
       {/* Fixed top header (out of flow, height = --app-header-h) */}
       <Header
         open={open}
@@ -60,9 +60,9 @@ export default function MainLayout({
           `padding-top`. Inline styles win over every utility class, so no
           responsive padding (e.g. md:py-*) can collapse this offset — content
           always starts below the header on every page and breakpoint.
-          On md+ the wrapper is shifted right by the 240px docked sidebar. */}
+          On md+ the wrapper is shifted right by the 268px docked sidebar. */}
       <div
-        className="flex flex-col flex-1 transition-all duration-300 md:ml-[240px]"
+        className="flex flex-col flex-1 transition-all duration-300 md:ml-[268px]"
         style={{ paddingTop: HEADER_OFFSET }}
       >
         {/* Trial countdown banner — in normal flow, directly under the header.
@@ -70,7 +70,7 @@ export default function MainLayout({
         <TrialBanner />
 
         {/* Page content. pb-20 on mobile clears the fixed bottom nav bar. */}
-        <main className="flex-1 px-4 py-5 pb-20 md:px-6 md:py-6 md:pb-6">
+        <main className="flex-1 bg-[radial-gradient(circle_at_85%_5%,rgba(40,92,180,0.08),transparent_30%),radial-gradient(circle_at_5%_95%,rgba(31,79,158,0.06),transparent_28%)] px-4 py-5 pb-20 md:px-8 md:py-8 md:pb-8">
           {children}
         </main>
 

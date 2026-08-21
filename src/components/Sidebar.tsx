@@ -3,53 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import Brand from "@/components/ui/Brand";
+import { GDA_CATEGORIES, categoryForPathname, type GdaCategoryIcon } from "@/lib/navigation/gda-categories";
 import { getCurrentPlan } from "@/lib/plans/get-current-plan";
 import { canUseFeature, DealerPlan } from "@/lib/plans/plan-types";
-import type { AppFeature } from "@/lib/plans/plan-types";
 import { getUnreadNewsCount } from "@/lib/news/news";
 
-type NavItem =
-  | { type: "link"; href: string; label: string; icon: string; feature?: AppFeature }
-  | { type: "flow-arrow" };
-
-const navItems: NavItem[] = [
-  { type: "link", href: "/",                  label: "ダッシュボード", icon: "▦" },
-
-  { type: "link", href: "/customers",         label: "顧客管理",   icon: "⊙", feature: "customers" },
-  { type: "flow-arrow" },
-  { type: "link", href: "/vehicles",          label: "車両管理",   icon: "⊡", feature: "vehicles" },
-  { type: "flow-arrow" },
-  { type: "link", href: "/estimates",         label: "見積管理",   icon: "⊛", feature: "estimates" },
-  { type: "flow-arrow" },
-  { type: "link", href: "/calendar",          label: "カレンダー", icon: "◷", feature: "calendar" },
-  { type: "flow-arrow" },
-  { type: "link", href: "/reservations",      label: "予約管理",   icon: "◈", feature: "reservations" },
-  { type: "flow-arrow" },
-  { type: "link", href: "/work-orders",       label: "施工指示",   icon: "⊟", feature: "work_orders" },
-  { type: "flow-arrow" },
-  { type: "link", href: "/completion-reports",label: "完了報告",   icon: "✓", feature: "completion_reports" },
-  { type: "flow-arrow" },
-  { type: "link", href: "/invoices",          label: "請求管理",   icon: "⊝", feature: "invoices" },
-  { type: "flow-arrow" },
-  { type: "link", href: "/payments",          label: "入金管理",   icon: "⊕", feature: "payments" },
-  { type: "flow-arrow" },
-  { type: "link", href: "/pdf",               label: "PDF",        icon: "⊠", feature: "estimate_pdf" },
-
-  { type: "link", href: "/products",          label: "商品管理",   icon: "⊗", feature: "products" },
-  { type: "link", href: "/inventory",         label: "在庫カウント", icon: "⊜", feature: "products" },
-  { type: "link", href: "/product-orders",    label: "商品注文",   icon: "⊘", feature: "product_orders" },
-  { type: "link", href: "/line",              label: "LINE",       icon: "⊿", feature: "line" },
-  { type: "link", href: "/maintenance",       label: "メンテナンス", icon: "◉", feature: "maintenance" },
-  { type: "link", href: "/ocr-sessions",      label: "OCR履歴",    icon: "🪪" },
-  { type: "link", href: "/news",              label: "お知らせ",   icon: "📢" },
-  { type: "link", href: "/downloads",         label: "ダウンロード", icon: "⬇" },
-  { type: "link", href: "/points",            label: "ポイント",   icon: "★" },
-  { type: "link", href: "/customer-app",      label: "顧客アプリ", icon: "📱" },
-  { type: "link", href: "/settings",          label: "設定",       icon: "⊞" },
-];
-
 interface SidebarProps {
-  open:     boolean;
+  open: boolean;
   onClose?: () => void;
   /** GLOBAL_SHELL_POST_C5: server-resolved plan from MainLayout. When
       supplied, Sidebar skips its own getCurrentPlan() mount fetch. */
@@ -60,11 +21,49 @@ interface SidebarProps {
   initialUnreadNews?: number;
 }
 
+function CategoryIcon({ icon }: { icon: GdaCategoryIcon }) {
+  const common = {
+    width: 20,
+    height: 20,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.6,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+
+  switch (icon) {
+    case "home":
+      return <svg {...common}><path d="M3 12 12 3.5 21 12"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-5.5h5V20"/></svg>;
+    case "customers":
+      return <svg {...common}><circle cx="12" cy="8" r="3.2"/><path d="M5 19c1.4-3 4-4.4 7-4.4s5.6 1.4 7 4.4"/></svg>;
+    case "document":
+      return <svg {...common}><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 9h6M9 13h6"/></svg>;
+    case "calendar":
+      return <svg {...common}><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/></svg>;
+    case "billing":
+      return <svg {...common}><rect x="6" y="4" width="12" height="16" rx="2"/><path d="m9.5 11 2.5-2.5 2.5 2.5M12 8.5V19"/></svg>;
+    case "orders":
+      return <svg {...common}><circle cx="9" cy="19" r="1.4"/><circle cx="16.5" cy="19" r="1.4"/><path d="M3 5h2.4l2 10.5h9.8L20 8H7"/></svg>;
+    case "social":
+      return <svg {...common}><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/></svg>;
+    case "message":
+      return <svg {...common}><path d="M20 12c0 3.9-3.6 7-8 7-1 0-2-.1-2.8-.4L5 20l1-3.2C4.7 15.6 4 13.9 4 12c0-3.9 3.6-7 8-7s8 3.1 8 7Z"/></svg>;
+    case "records":
+      return <svg {...common}><path d="M12 4v9M8.5 9.5 12 13l3.5-3.5M5 17v2.5h14V17"/></svg>;
+    case "settings":
+      return <svg {...common}><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.5 7.5 0 0 0 0-3l2-1.5-2-3.5-2.4 1a7.5 7.5 0 0 0-2.6-1.5L14 2.5h-4L9.6 5A7.5 7.5 0 0 0 7 6.5l-2.4-1-2 3.5 2 1.5a7.5 7.5 0 0 0 0 3l-2 1.5 2 3.5 2.4-1A7.5 7.5 0 0 0 9.6 19l.4 2.5h4l.4-2.5a7.5 7.5 0 0 0 2.6-1.5l2.4 1 2-3.5Z"/></svg>;
+  }
+}
+
 export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews }: SidebarProps) {
   const pathname = usePathname();
   const [plan, setPlan] = useState<DealerPlan | null>(initialPlan ?? null);
   const [unreadNews, setUnreadNews] = useState(initialUnreadNews ?? 0);
   const prevPathname = useRef(pathname);
+  const activeCategory = categoryForPathname(pathname);
 
   useEffect(() => {
     if (initialPlan !== undefined) return;
@@ -82,7 +81,6 @@ export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  // Close sidebar when the user navigates (mobile UX)
   useEffect(() => {
     if (prevPathname.current !== pathname) {
       prevPathname.current = pathname;
@@ -90,91 +88,47 @@ export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews 
     }
   }, [pathname, onClose]);
 
-  // Build visible items: filter links by plan (but keep flow-arrows only between visible links)
-  const visibleItems: NavItem[] = [];
-  let prevWasVisibleLink = false;
-
-  for (let i = 0; i < navItems.length; i++) {
-    const item = navItems[i];
-
-    if (item.type === "flow-arrow") {
-      if (prevWasVisibleLink) {
-        visibleItems.push(item);
-        prevWasVisibleLink = false;
-      }
-      continue;
-    }
-
-    const allowed = !item.feature || plan === null || canUseFeature(plan, item.feature);
-    if (allowed) {
-      prevWasVisibleLink = true;
-      visibleItems.push(item);
-    } else {
-      if (visibleItems.length > 0 && visibleItems[visibleItems.length - 1].type === "flow-arrow") {
-        visibleItems.pop();
-      }
-      prevWasVisibleLink = false;
-    }
-  }
-
-  if (visibleItems.length > 0 && visibleItems[visibleItems.length - 1].type === "flow-arrow") {
-    visibleItems.pop();
-  }
-
   return (
     <>
-      {/* Mobile backdrop — tapping closes sidebar */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
+      {open && <div className="fixed inset-0 z-30 bg-black/60 md:hidden" onClick={onClose} aria-hidden="true" />}
 
       <aside
-        style={{ top: "var(--app-header-h)" }}
-        className={`w-[240px] bg-slate-900 border-r border-slate-800 fixed bottom-0 left-0 z-40 flex flex-col transition-transform duration-300 md:translate-x-0 ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed bottom-0 left-0 top-[var(--app-header-h)] z-40 w-[268px] border-r border-[#20304a] bg-[#080e1b]/95 backdrop-blur-xl transition-transform duration-300 md:top-0 md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+        aria-label="メインメニュー"
       >
-        <nav className="flex-1 px-2 py-4 overflow-y-auto">
-          <div className="space-y-0.5">
-            {visibleItems.map((item, i) => {
-              if (item.type === "flow-arrow") {
-                return (
-                  <div key={i} className="flex items-center pl-[22px] py-0.5">
-                    <div className="w-px h-3 bg-slate-700 ml-[10px]" />
-                  </div>
-                );
-              }
+        <div className="hidden h-[124px] items-center border-b border-[#20304a] px-[22px] md:flex">
+          <Brand size={63} className="w-full justify-center" />
+        </div>
 
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-md text-sm transition-colors min-h-[44px] ${
-                    isActive
-                      ? "bg-[#1d4ed8] text-white"
-                      : "text-slate-400 hover:text-slate-100 hover:bg-slate-800"
-                  }`}
-                >
-                  <span className="text-base shrink-0">{item.icon}</span>
-                  <span>{item.label}</span>
-                  {item.href === "/news" && unreadNews > 0 && (
-                    <span className="ml-auto min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
-                      {unreadNews > 9 ? "9+" : unreadNews}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+        <nav className="flex h-[calc(100%-52px)] flex-col gap-1 overflow-y-auto px-3 py-5 md:h-[calc(100%-190px)]">
+          {GDA_CATEGORIES.map((category) => {
+            const active = activeCategory.id === category.id;
+            const available = category.href !== null && (!category.feature || plan === null || canUseFeature(plan, category.feature));
+            const className = `group relative flex min-h-[48px] items-center gap-1 rounded-xl border px-2.5 transition-colors ${active ? "is-active border-[#31568c] bg-[#122142] text-white" : "border-transparent text-[#b4c0d4] hover:border-[#203c66] hover:bg-white/[0.035] hover:text-white"} ${available ? "" : "cursor-not-allowed opacity-55"}`;
+            const content = (
+              <>
+                <span className={`grid h-8 w-8 shrink-0 place-items-center group-hover:text-[#61a2ff] ${active ? "text-[#61a2ff]" : "text-[#91a4c1]"}`}><CategoryIcon icon={category.icon} /></span>
+                <span className="min-w-0 flex-1 truncate text-[14px] font-semibold tracking-[0.02em]">{category.label}</span>
+                <span className={`text-[9px] font-semibold tracking-[0.12em] ${active ? "text-[#8dbbff]" : "text-[#5f708d]"}`}>{category.labelEn}</span>
+                {category.badge === "news" && unreadNews > 0 && (
+                  <span className="absolute right-2 top-1 min-w-[17px] rounded-full bg-red-500 px-1 text-center text-[9px] font-bold leading-[17px] text-white">{unreadNews > 9 ? "9+" : unreadNews}</span>
+                )}
+              </>
+            );
+
+            return available ? (
+              <Link key={category.id} href={category.href!} className={className} aria-current={active ? "page" : undefined}>
+                {active && <span className="absolute -left-3 h-8 w-1 rounded-r-full bg-[#3478ff] shadow-[0_0_12px_rgba(52,120,255,.9)]" />}
+                {content}
+              </Link>
+            ) : (
+              <div key={category.id} className={className} aria-disabled="true" title={category.id === "social-media" ? "SNS機能は準備中です" : "現在のプランでは利用できません"}>{content}</div>
+            );
+          })}
         </nav>
 
-        <div className="px-3 pt-4 pb-6 border-t border-slate-800">
-          <p className="text-xs text-slate-600 px-3">v1.0.0</p>
+        <div className="absolute bottom-0 left-0 right-0 border-t border-[#20304a] px-5 py-4">
+          <p className="text-[10px] tracking-[0.16em] text-[#455571]">SYSTEM ONLINE · v2.6</p>
         </div>
       </aside>
     </>

@@ -186,7 +186,7 @@ export default async function SettingsCategoryPage({ params }: PageProps) {
 
   return (
     <MainLayout>
-      <div className="max-w-3xl mx-auto p-6">
+      <div className={catId === "dealer" || catId === "staff" ? "mx-auto w-full max-w-[1100px]" : "max-w-3xl mx-auto p-6"}>
         <SettingsCategoryPageView
           category={categoryMeta}
           canAccess={canAccess}

@@ -26,8 +26,86 @@ interface StaffRowState {
 }
 
 const inputCls =
-  "bg-[#1e293b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 disabled:opacity-50";
-const numCls = `${inputCls} w-24`;
+  "min-h-12 rounded-xl border border-[#2a3e5d] bg-[#0b1322] px-4 py-3 text-sm text-[#edf3fc] transition-all placeholder:text-[#526079] focus:border-[#4a7fc8] focus:outline-none focus:ring-2 focus:ring-[#3478ff]/20 disabled:cursor-not-allowed disabled:opacity-50";
+const numCls = `${inputCls} w-full`;
+const surface = "rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:p-6";
+
+function SectionTitle({ label, labelEn, hint }: { label: string; labelEn: string; hint?: string }) {
+  return (
+    <div className="flex flex-col gap-2 border-b border-[#20304a] pb-4">
+      <div className="flex items-center gap-4">
+        <div>
+          <p className="text-[9px] font-bold tracking-[0.2em] text-[#5f9cff]">{labelEn}</p>
+          <h2 className="mt-1 text-[16px] font-bold text-[#e8eef7]">{label}</h2>
+        </div>
+        <span className="h-px flex-1 bg-[#20304a]" />
+      </div>
+      {hint && <p className="text-xs leading-5 text-[#70809b]">{hint}</p>}
+    </div>
+  );
+}
+
+function ToggleRow({ label, checked, disabled, onChange }: {
+  label: string;
+  checked: boolean;
+  disabled: boolean;
+  onChange?: (checked: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange?.(!checked)}
+      className="flex min-h-12 items-center justify-between gap-4 rounded-xl border border-[#2a3e5d] bg-[#0b1322] px-4 text-left text-sm text-[#c4d0e2] transition-colors hover:border-[#31568c] disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <span>{label}</span>
+      <span aria-hidden="true" className={`relative h-6 w-11 shrink-0 rounded-full border transition-colors ${
+        checked ? "border-[#4d83d0] bg-[#2f6bff]" : "border-[#344865] bg-[#172235]"
+      }`}>
+        <span className={`absolute top-0.5 h-4.5 w-4.5 rounded-full bg-white shadow transition-transform ${
+          checked ? "translate-x-[21px]" : "translate-x-0.5"
+        }`} />
+      </span>
+    </button>
+  );
+}
+
+function ChoiceGroup<T extends string>({ label, value, options, disabled, onChange }: {
+  label: string;
+  value: T;
+  options: ReadonlyArray<{ value: T; label: string }>;
+  disabled: boolean;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <fieldset className="flex min-w-0 flex-col gap-2">
+      <legend className="text-[10px] font-semibold tracking-[0.08em] text-[#8191ad]">{label}</legend>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const selected = option.value === value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={selected}
+              disabled={disabled}
+              onClick={() => onChange(option.value)}
+              className={`min-h-11 rounded-xl border px-4 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                selected
+                  ? "border-[#4a7fc8] bg-[#173367] text-[#c4d8ff] shadow-[0_0_18px_rgba(47,107,255,.16)]"
+                  : "border-[#2a3e5d] bg-[#0b1322] text-[#70809b] hover:border-[#31568c] hover:text-[#a9bad2]"
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
 
 function parseNum(v: string): number | null {
   const t = v.trim();
@@ -158,102 +236,98 @@ export default function StaffCapacityForm({ initial, staffOptions, canEdit }: Pr
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {/* Not-yet-enforced notice */}
-      <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-300">
+      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs leading-5 text-amber-300 sm:px-6">
         これらの設定は「設定済み・未適用」です。現時点ではカレンダーや予約作成には反映されず、重複警告・ブロックも行いません。
       </div>
 
       {/* Dealer-wide capacity */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-slate-200">同時対応・並行作業</h2>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <span className="w-40">同時対応台数</span>
+      <section className={`${surface} flex flex-col gap-5`}>
+        <SectionTitle label="同時対応・並行作業" labelEn="CAPACITY & PARALLEL WORK" hint="店舗全体と技術者ごとの同時対応上限を設定します。" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <label className="flex flex-col gap-2 text-sm text-[#c4d0e2]">
+            <span className="text-[10px] font-semibold tracking-[0.08em] text-[#8191ad]">同時対応台数</span>
           <input type="number" min={0} value={simultaneous} disabled={!canEdit}
             onChange={(e) => setSimultaneous(e.target.value)} className={numCls} placeholder="—" />
-        </label>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <input type="checkbox" checked={allowMultiBay} disabled={!canEdit}
-            onChange={(e) => setAllowMultiBay(e.target.checked)} />
-          複数ベイの並行作業を許可
-        </label>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <span className="w-40">技術者あたり並行上限</span>
+          </label>
+          <label className="flex flex-col gap-2 text-sm text-[#c4d0e2]">
+            <span className="text-[10px] font-semibold tracking-[0.08em] text-[#8191ad]">技術者あたり並行上限</span>
           <input type="number" min={0} value={maxParallel} disabled={!canEdit}
             onChange={(e) => setMaxParallel(e.target.value)} className={numCls} placeholder="—" />
-        </label>
+          </label>
+        </div>
+        <ToggleRow label="複数ベイの並行作業を許可" checked={allowMultiBay} disabled={!canEdit} onChange={setAllowMultiBay} />
       </section>
 
       {/* Work bays */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-slate-200">作業ベイ</h2>
-        <div className="flex flex-col gap-1.5">
+      <section className={`${surface} flex flex-col gap-5`}>
+        <SectionTitle label="作業ベイ" labelEn="WORK BAYS" hint="作業場所ごとの名称・同時対応台数・稼働状態を設定します。" />
+        <div className="flex flex-col gap-3">
           {bays.map((b) => (
-            <div key={b.id} className="flex items-center gap-2">
-              <input type="text" value={b.name} disabled={!canEdit}
-                onChange={(e) => setBay(b.id, { name: e.target.value })}
-                className={`${inputCls} flex-1`} placeholder="ベイ名" />
-              <label className="flex items-center gap-1 text-xs text-slate-400">
-                台数
-                <input type="number" min={1} max={50} value={b.capacity ?? 1} disabled={!canEdit}
+            <div key={b.id} className="grid grid-cols-1 gap-3 rounded-xl border border-[#20304a] bg-[#0b1322]/70 p-3 sm:grid-cols-[1fr_120px_110px_auto] sm:items-end">
+              <label className="flex min-w-0 flex-col gap-2">
+                <span className="text-[10px] font-semibold tracking-[0.08em] text-[#8191ad]">ベイ名</span>
+                <input aria-label={`${b.name || "未設定"}のベイ名`} type="text" value={b.name} disabled={!canEdit}
+                  onChange={(e) => setBay(b.id, { name: e.target.value })}
+                  className={`${inputCls} w-full`} placeholder="例：第1施工ベイ" />
+              </label>
+              <label className="flex flex-col gap-2">
+                <span className="text-[10px] font-semibold tracking-[0.08em] text-[#8191ad]">同時台数</span>
+                <input aria-label={`${b.name || "未設定"}の同時台数`} type="number" min={1} max={50} value={b.capacity ?? 1} disabled={!canEdit}
                   onChange={(e) => setBay(b.id, { capacity: Math.max(1, Math.floor(Number(e.target.value) || 1)) })}
-                  className={`${inputCls} w-16`} />
+                  className={`${inputCls} w-full`} />
               </label>
-              <label className="flex items-center gap-1 text-xs text-slate-400">
-                <input type="checkbox" checked={b.active} disabled={!canEdit}
-                  onChange={(e) => setBay(b.id, { active: e.target.checked })} />
-                有効
-              </label>
+              <ToggleRow label="稼働中" checked={b.active} disabled={!canEdit}
+                onChange={(checked) => setBay(b.id, { active: checked })} />
               {canEdit && (
-                <button type="button" onClick={() => setBays(bays.filter((x) => x.id !== b.id))}
-                  className="text-slate-500 hover:text-red-400 text-sm px-1">×</button>
+                <button type="button" aria-label={`${b.name || "未設定"}の作業ベイを削除`} onClick={() => setBays(bays.filter((x) => x.id !== b.id))}
+                  className="min-h-12 rounded-xl border border-red-500/30 bg-red-500/10 px-4 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/15">削除</button>
               )}
             </div>
           ))}
-          {bays.length === 0 && <span className="text-xs text-slate-600">ベイ未登録</span>}
+          {bays.length === 0 && <span className="text-xs text-[#526079]">ベイ未登録</span>}
         </div>
         {canEdit && (
           <button type="button"
             onClick={() => setBays([...bays, { id: genId(), name: "", active: true, capacity: 1 }])}
-            className="self-start px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded-lg">
+            className="min-h-12 self-start rounded-xl border border-[#31568c] bg-[#122142] px-5 text-xs font-semibold text-[#91b9ff] transition-colors hover:border-[#4a7fc8] hover:text-[#c4d8ff]">
             + ベイを追加
           </button>
         )}
       </section>
 
       {/* Per-staff capacity */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-slate-200">技術者ごとの設定</h2>
-        {staffOptions.length === 0 && <span className="text-xs text-slate-600">スタッフが登録されていません</span>}
+      <section className={`${surface} flex flex-col gap-5`}>
+        <SectionTitle label="技術者ごとの設定" labelEn="TECHNICIAN CAPACITY" hint="予約受入、1日上限、対応可能な施工をスタッフごとに設定します。" />
+        {staffOptions.length === 0 && <span className="text-xs text-[#526079]">スタッフが登録されていません</span>}
         <div className="flex flex-col gap-3">
           {staffOptions.map((opt) => {
             const s = staffCap[opt.id];
             return (
-              <div key={opt.id} className="flex flex-col gap-2 p-3 rounded-lg border border-slate-800 bg-slate-900/40">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-slate-200 font-medium truncate">{opt.name}</span>
+              <div key={opt.id} className="flex flex-col gap-4 rounded-xl border border-[#20304a] bg-[#0b1322]/70 p-4">
+                <div className="grid gap-3 sm:grid-cols-[1fr_160px_160px] sm:items-end">
                   <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-1 text-xs text-slate-400">
-                      <input type="checkbox" checked={s.bookable} disabled={!canEdit}
-                        onChange={(e) => setStaffField(opt.id, { bookable: e.target.checked })} />
-                      予約受入
-                    </label>
-                    <label className="flex items-center gap-1 text-xs text-slate-400">
-                      1日上限
-                      <input type="number" min={0} value={s.daily} disabled={!canEdit}
-                        onChange={(e) => setStaffField(opt.id, { daily: e.target.value })}
-                        className={`${inputCls} w-16`} placeholder="—" />
-                    </label>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#31568c] bg-[#122142] text-sm font-bold text-[#73a7ff]">{opt.name.slice(0, 1).toUpperCase()}</span>
+                    <span className="truncate text-sm font-bold text-[#e8eef7]">{opt.name}</span>
                   </div>
+                  <ToggleRow label="予約受入" checked={s.bookable} disabled={!canEdit}
+                    onChange={(checked) => setStaffField(opt.id, { bookable: checked })} />
+                  <label className="flex flex-col gap-2">
+                    <span className="text-[10px] font-semibold tracking-[0.08em] text-[#8191ad]">1日上限</span>
+                    <input aria-label={`${opt.name}の1日上限`} type="number" min={0} value={s.daily} disabled={!canEdit}
+                      onChange={(e) => setStaffField(opt.id, { daily: e.target.value })}
+                      className={`${inputCls} w-full`} placeholder="未設定" />
+                  </label>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2 border-t border-[#20304a] pt-4">
                   {SERVICE_TYPES.map((st) => (
                     <label key={st}
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] cursor-pointer border ${
+                      className={`flex min-h-10 items-center gap-2 rounded-xl border px-3 text-[11px] ${
                         s.skills.has(st)
-                          ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
-                          : "bg-slate-800/50 text-slate-400 border-slate-700"
-                      } ${!canEdit ? "opacity-60" : ""}`}>
+                          ? "border-[#31568c] bg-[#122142] text-[#91b9ff]"
+                          : "border-[#2a3e5d] bg-[#0b1322] text-[#70809b]"
+                      } ${!canEdit ? "opacity-60" : "cursor-pointer"}`}>
                       <input type="checkbox" className="sr-only" checked={s.skills.has(st)} disabled={!canEdit}
                         onChange={() => toggleSkill(opt.id, st)} />
                       {serviceTypeLabel(st)}
@@ -267,46 +341,40 @@ export default function StaffCapacityForm({ initial, staffOptions, canEdit }: Pr
       </section>
 
       {/* Conflict warning preference */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-slate-200">重複警告の設定</h2>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <span className="w-40">警告モード</span>
-          <select value={conflictMode} disabled={!canEdit}
-            onChange={(e) => setConflictMode(e.target.value === "off" ? "off" : "warn")} className={inputCls}>
-            <option value="warn">警告する</option>
-            <option value="off">警告しない</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <input type="checkbox" checked={warnStaff} disabled={!canEdit || conflictMode === "off"}
-            onChange={(e) => setWarnStaff(e.target.checked)} />
-          担当者の重複を警告
-        </label>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <input type="checkbox" checked={warnBay} disabled={!canEdit || conflictMode === "off"}
-            onChange={(e) => setWarnBay(e.target.checked)} />
-          ベイの重複を警告
-        </label>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <input type="checkbox" checked={warnCapacity} disabled={!canEdit || conflictMode === "off"}
-            onChange={(e) => setWarnCapacity(e.target.checked)} />
-          キャパシティ超過を警告
-        </label>
+      <section className={`${surface} flex flex-col gap-5`}>
+        <SectionTitle label="重複警告の設定" labelEn="CONFLICT WARNINGS" hint="警告対象を選択します。現在は警告・ブロックとも未適用です。" />
+        <ChoiceGroup
+          label="警告モード"
+          value={conflictMode}
+          options={[{ value: "warn", label: "警告する" }, { value: "off", label: "警告しない" }]}
+          disabled={!canEdit}
+          onChange={setConflictMode}
+        />
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <ToggleRow label="担当者の重複を警告" checked={warnStaff} disabled={!canEdit || conflictMode === "off"} onChange={setWarnStaff} />
+          <ToggleRow label="ベイの重複を警告" checked={warnBay} disabled={!canEdit || conflictMode === "off"} onChange={setWarnBay} />
+          <ToggleRow label="キャパシティ超過を警告" checked={warnCapacity} disabled={!canEdit || conflictMode === "off"} onChange={setWarnCapacity} />
+        </div>
       </section>
 
       {/* Service blocking rules */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-slate-200">同時実施を避ける施工の組み合わせ</h2>
-        <div className="flex items-center gap-2">
-          <select value={pairA} disabled={!canEdit}
-            onChange={(e) => setPairA(e.target.value as ReservationServiceType)} className={inputCls}>
-            {SERVICE_TYPES.map((st) => <option key={st} value={st}>{serviceTypeLabel(st)}</option>)}
-          </select>
-          <span className="text-slate-500 text-xs">×</span>
-          <select value={pairB} disabled={!canEdit}
-            onChange={(e) => setPairB(e.target.value as ReservationServiceType)} className={inputCls}>
-            {SERVICE_TYPES.map((st) => <option key={st} value={st}>{serviceTypeLabel(st)}</option>)}
-          </select>
+      <section className={`${surface} flex flex-col gap-5`}>
+        <SectionTitle label="同時実施を避ける施工の組み合わせ" labelEn="BLOCKED COMBINATIONS" />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <ChoiceGroup
+            label="施工1"
+            value={pairA}
+            options={SERVICE_TYPES.map((st) => ({ value: st, label: serviceTypeLabel(st) }))}
+            disabled={!canEdit}
+            onChange={setPairA}
+          />
+          <ChoiceGroup
+            label="施工2"
+            value={pairB}
+            options={SERVICE_TYPES.map((st) => ({ value: st, label: serviceTypeLabel(st) }))}
+            disabled={!canEdit}
+            onChange={setPairB}
+          />
           <button type="button" disabled={!canEdit || pairA === pairB}
             onClick={() => {
               if (pairA === pairB) return;
@@ -314,50 +382,41 @@ export default function StaffCapacityForm({ initial, staffOptions, canEdit }: Pr
                 (a === pairA && b === pairB) || (a === pairB && b === pairA));
               if (!exists) setBlocked([...blocked, [pairA, pairB]]);
             }}
-            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded-lg disabled:opacity-50">
+            className="min-h-12 justify-self-start rounded-xl border border-[#31568c] bg-[#122142] px-5 text-xs font-semibold text-[#91b9ff] transition-colors hover:border-[#4a7fc8] hover:text-[#c4d8ff] disabled:opacity-50 lg:col-span-2">
             追加
           </button>
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex min-h-10 flex-wrap gap-2">
           {blocked.map(([a, b], i) => (
-            <span key={`${a}-${b}-${i}`} className="flex items-center gap-1 px-2 py-1 rounded-md bg-slate-800 border border-slate-700 text-[11px] text-slate-300">
+            <span key={`${a}-${b}-${i}`} className="flex min-h-10 items-center gap-2 rounded-xl border border-[#2a3e5d] bg-[#0b1322] px-3 text-[11px] text-[#c4d0e2]">
               {serviceTypeLabel(a)} × {serviceTypeLabel(b)}
               {canEdit && (
-                <button type="button" onClick={() => setBlocked(blocked.filter((_, j) => j !== i))}
-                  className="text-slate-500 hover:text-red-400">×</button>
+                <button type="button" aria-label={`${serviceTypeLabel(a)}と${serviceTypeLabel(b)}の組み合わせを削除`} onClick={() => setBlocked(blocked.filter((_, j) => j !== i))}
+                  className="text-red-400 hover:text-red-300">削除</button>
               )}
             </span>
           ))}
-          {blocked.length === 0 && <span className="text-xs text-slate-600">なし</span>}
+          {blocked.length === 0 && <span className="self-center text-xs text-[#526079]">登録なし</span>}
         </div>
       </section>
 
       {/* Manual override requirements */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-slate-200">手動上書きの要件</h2>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <input type="checkbox" checked={requireReason} disabled={!canEdit}
-            onChange={(e) => setRequireReason(e.target.checked)} />
-          上書き時に理由の入力を必須にする
-        </label>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <input type="checkbox" checked disabled />
-          オーナーは上書き可能（常時）
-        </label>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <input type="checkbox" checked={allowManager} disabled={!canEdit}
-            onChange={(e) => setAllowManager(e.target.checked)} />
-          マネージャーも上書き可能
-        </label>
+      <section className={`${surface} flex flex-col gap-5`}>
+        <SectionTitle label="手動上書きの要件" labelEn="MANUAL OVERRIDE" />
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <ToggleRow label="上書き理由を必須にする" checked={requireReason} disabled={!canEdit} onChange={setRequireReason} />
+          <ToggleRow label="オーナーは上書き可能（常時）" checked disabled />
+          <ToggleRow label="マネージャーも上書き可能" checked={allowManager} disabled={!canEdit} onChange={setAllowManager} />
+        </div>
       </section>
 
       {/* Save */}
-      <div className="flex items-center gap-3 pt-2 border-t border-slate-800">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:px-6">
         <button type="button" disabled={!canEdit || isPending} onClick={handleSave}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors">
+          className="min-h-12 rounded-xl bg-[#2f6bff] px-6 text-sm font-bold text-white shadow-[0_10px_28px_rgba(47,107,255,.24)] transition-colors hover:bg-[#3977ff] disabled:opacity-50">
           {isPending ? "保存中..." : "保存"}
         </button>
-        {!canEdit && <span className="text-xs text-slate-500">閲覧のみ（編集にはオーナー／マネージャー権限が必要です）</span>}
+        {!canEdit && <span className="text-xs text-[#70809b]">閲覧のみ（編集にはオーナー／マネージャー権限が必要です）</span>}
         {result && <span className={`text-xs ${result.ok ? "text-emerald-400" : "text-red-400"}`}>{result.msg}</span>}
       </div>
     </div>
