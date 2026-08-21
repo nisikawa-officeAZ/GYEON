@@ -7,6 +7,16 @@ import { getStaffList } from "@/lib/staff/get-staff-list";
 import { getCurrentStaff } from "@/lib/staff/get-current-staff";
 import StaffCapacityForm from "./StaffCapacityForm";
 
+function StaffCapacityIcon() {
+  return (
+    <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="7" r="2.5" />
+      <path d="M4.5 16.5c.4-3 2-4.5 4.5-4.5s4.1 1.5 4.5 4.5" />
+      <path d="M16 8.5h3.5M16 12h3.5M16 15.5h3.5" />
+    </svg>
+  );
+}
+
 export default async function StaffCapacitySettingsPage() {
   const [settings, staffList, staff] = await Promise.all([
     getStaffCapacitySettings(),
@@ -36,7 +46,9 @@ export default async function StaffCapacitySettingsPage() {
         <section className="rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#31568c] bg-[#122142] text-xl text-[#73a7ff]">♙</div>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#31568c] bg-[#122142] text-[#73a7ff]">
+                <StaffCapacityIcon />
+              </div>
               <div>
                 <p className="text-[9px] font-bold tracking-[0.2em] text-[#5f9cff]">STAFF CAPACITY</p>
                 <h1 className="mt-1 text-xl font-bold text-[#e8eef7]">スタッフ・キャパシティ設定</h1>

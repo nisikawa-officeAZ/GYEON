@@ -52,11 +52,58 @@ function ToggleRow({ label, checked, disabled, onChange }: {
   onChange?: (checked: boolean) => void;
 }) {
   return (
-    <label className={`flex min-h-12 items-center justify-between gap-4 rounded-xl border border-[#2a3e5d] bg-[#0b1322] px-4 text-sm text-[#c4d0e2] ${disabled ? "opacity-60" : "cursor-pointer"}`}>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange?.(!checked)}
+      className="flex min-h-12 items-center justify-between gap-4 rounded-xl border border-[#2a3e5d] bg-[#0b1322] px-4 text-left text-sm text-[#c4d0e2] transition-colors hover:border-[#31568c] disabled:cursor-not-allowed disabled:opacity-60"
+    >
       <span>{label}</span>
-      <input type="checkbox" checked={checked} disabled={disabled}
-        onChange={(event) => onChange?.(event.target.checked)} className="h-4 w-4 accent-[#2f6bff]" />
-    </label>
+      <span aria-hidden="true" className={`relative h-6 w-11 shrink-0 rounded-full border transition-colors ${
+        checked ? "border-[#4d83d0] bg-[#2f6bff]" : "border-[#344865] bg-[#172235]"
+      }`}>
+        <span className={`absolute top-0.5 h-4.5 w-4.5 rounded-full bg-white shadow transition-transform ${
+          checked ? "translate-x-[21px]" : "translate-x-0.5"
+        }`} />
+      </span>
+    </button>
+  );
+}
+
+function ChoiceGroup<T extends string>({ label, value, options, disabled, onChange }: {
+  label: string;
+  value: T;
+  options: ReadonlyArray<{ value: T; label: string }>;
+  disabled: boolean;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <fieldset className="flex min-w-0 flex-col gap-2">
+      <legend className="text-[10px] font-semibold tracking-[0.08em] text-[#8191ad]">{label}</legend>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const selected = option.value === value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={selected}
+              disabled={disabled}
+              onClick={() => onChange(option.value)}
+              className={`min-h-11 rounded-xl border px-4 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                selected
+                  ? "border-[#4a7fc8] bg-[#173367] text-[#c4d8ff] shadow-[0_0_18px_rgba(47,107,255,.16)]"
+                  : "border-[#2a3e5d] bg-[#0b1322] text-[#70809b] hover:border-[#31568c] hover:text-[#a9bad2]"
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 
@@ -296,14 +343,13 @@ export default function StaffCapacityForm({ initial, staffOptions, canEdit }: Pr
       {/* Conflict warning preference */}
       <section className={`${surface} flex flex-col gap-5`}>
         <SectionTitle label="重複警告の設定" labelEn="CONFLICT WARNINGS" hint="警告対象を選択します。現在は警告・ブロックとも未適用です。" />
-        <label className="flex max-w-sm flex-col gap-2 text-sm text-[#c4d0e2]">
-          <span className="text-[10px] font-semibold tracking-[0.08em] text-[#8191ad]">警告モード</span>
-          <select value={conflictMode} disabled={!canEdit}
-            onChange={(e) => setConflictMode(e.target.value === "off" ? "off" : "warn")} className={`${inputCls} w-full`}>
-            <option value="warn">警告する</option>
-            <option value="off">警告しない</option>
-          </select>
-        </label>
+        <ChoiceGroup
+          label="警告モード"
+          value={conflictMode}
+          options={[{ value: "warn", label: "警告する" }, { value: "off", label: "警告しない" }]}
+          disabled={!canEdit}
+          onChange={setConflictMode}
+        />
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <ToggleRow label="担当者の重複を警告" checked={warnStaff} disabled={!canEdit || conflictMode === "off"} onChange={setWarnStaff} />
           <ToggleRow label="ベイの重複を警告" checked={warnBay} disabled={!canEdit || conflictMode === "off"} onChange={setWarnBay} />
@@ -314,16 +360,21 @@ export default function StaffCapacityForm({ initial, staffOptions, canEdit }: Pr
       {/* Service blocking rules */}
       <section className={`${surface} flex flex-col gap-5`}>
         <SectionTitle label="同時実施を避ける施工の組み合わせ" labelEn="BLOCKED COMBINATIONS" />
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto]">
-          <select value={pairA} disabled={!canEdit}
-            aria-label="組み合わせる施工1" onChange={(e) => setPairA(e.target.value as ReservationServiceType)} className={`${inputCls} min-w-0 w-full`}>
-            {SERVICE_TYPES.map((st) => <option key={st} value={st}>{serviceTypeLabel(st)}</option>)}
-          </select>
-          <span className="text-xs text-[#70809b]">×</span>
-          <select value={pairB} disabled={!canEdit}
-            aria-label="組み合わせる施工2" onChange={(e) => setPairB(e.target.value as ReservationServiceType)} className={`${inputCls} min-w-0 w-full`}>
-            {SERVICE_TYPES.map((st) => <option key={st} value={st}>{serviceTypeLabel(st)}</option>)}
-          </select>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <ChoiceGroup
+            label="施工1"
+            value={pairA}
+            options={SERVICE_TYPES.map((st) => ({ value: st, label: serviceTypeLabel(st) }))}
+            disabled={!canEdit}
+            onChange={setPairA}
+          />
+          <ChoiceGroup
+            label="施工2"
+            value={pairB}
+            options={SERVICE_TYPES.map((st) => ({ value: st, label: serviceTypeLabel(st) }))}
+            disabled={!canEdit}
+            onChange={setPairB}
+          />
           <button type="button" disabled={!canEdit || pairA === pairB}
             onClick={() => {
               if (pairA === pairB) return;
@@ -331,7 +382,7 @@ export default function StaffCapacityForm({ initial, staffOptions, canEdit }: Pr
                 (a === pairA && b === pairB) || (a === pairB && b === pairA));
               if (!exists) setBlocked([...blocked, [pairA, pairB]]);
             }}
-            className="col-span-3 min-h-12 rounded-xl border border-[#31568c] bg-[#122142] px-5 text-xs font-semibold text-[#91b9ff] transition-colors hover:border-[#4a7fc8] hover:text-[#c4d8ff] disabled:opacity-50 sm:col-span-1">
+            className="min-h-12 justify-self-start rounded-xl border border-[#31568c] bg-[#122142] px-5 text-xs font-semibold text-[#91b9ff] transition-colors hover:border-[#4a7fc8] hover:text-[#c4d8ff] disabled:opacity-50 lg:col-span-2">
             追加
           </button>
         </div>

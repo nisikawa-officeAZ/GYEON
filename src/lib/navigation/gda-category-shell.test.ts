@@ -175,6 +175,13 @@ test("staff-capacity settings adopts bounded cards and preserves every schedulin
   assert.match(form, /blocked_combinations: blocked/);
   assert.match(form, /allowManager \? \["owner", "manager"\] : \["owner"\]/);
   assert.match(form, /aria-label=\{`\$\{b\.name \|\| "未設定"\}の作業ベイを削除`\}/);
+  assert.match(page, /function StaffCapacityIcon\(\)/);
+  assert.doesNotMatch(page, /♙/);
+  assert.match(form, /role="switch"/);
+  assert.match(form, /aria-checked=\{checked\}/);
+  assert.match(form, /function ChoiceGroup/);
+  assert.match(form, /aria-pressed=\{selected\}/);
+  assert.doesNotMatch(form, /<select/);
 });
 
 test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
