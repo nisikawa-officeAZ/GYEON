@@ -2006,6 +2006,13 @@
         }
         var route = routeFor(el);
         if (!route) return;
+        if (el.matches('nav.nav a')) {
+          // Large-category navigation must be owned by the parent document so
+          // the visible URL and browser history stay in sync with the hub.
+          el.setAttribute('href', route);
+          el.setAttribute('target', '_parent');
+          return;
+        }
         el.addEventListener('click', function (e) { e.preventDefault(); go(route); });
       })(nodes[i]);
     }

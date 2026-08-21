@@ -84,6 +84,14 @@ test("TOP sidebar categories enter hubs while Quick Access cards remain direct s
   assert.match(top, /el\.matches\('\.cta-action'\) \? CTA_ROUTES/);
 });
 
+test("TOP large categories use native parent navigation so the outer URL and browser history stay synchronized", () => {
+  const top = read("public/desktop-home.html");
+  assert.match(
+    top,
+    /if \(el\.matches\('nav\.nav a'\)\) \{[\s\S]*?el\.setAttribute\('href', route\);[\s\S]*?el\.setAttribute\('target', '_parent'\);[\s\S]*?return;/,
+  );
+});
+
 test("CategoryHub cards preserve the accepted desktop large-card layout at >=1024px", () => {
   const hub = read("src/components/navigation/CategoryHub.tsx");
   assert.match(hub, /lg:min-h-\[250px\]/);
