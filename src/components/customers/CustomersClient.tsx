@@ -5,7 +5,7 @@ import { useRouter }      from "next/navigation";
 import { CustomerDB, customerDisplayName, customerKanaName } from "@/lib/customers/customer-types";
 import { VehicleDB }      from "@/lib/vehicles/vehicle-types";
 import type { BillingMethodInfo } from "@/lib/customer-billing/billing-method";
-import PageTitle          from "@/components/ui/PageTitle";
+import GdaOperationalListSurface, { GdaOperationalListActionButton } from "@/components/ui/GdaOperationalListSurface";
 import CustomerSearch     from "@/components/customers/CustomerSearch";
 import type { CustomerSearchValues } from "@/components/customers/CustomerSearch";
 import CustomerFilters    from "@/components/customers/CustomerFilters";
@@ -86,48 +86,43 @@ export default function CustomersClient({ customers, vehicles, billing }: Custom
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Header row */}
-      <div className="flex items-center justify-between mb-6">
-        <PageTitle title="顧客管理" />
-        {canEdit && (
-          <button
-            onClick={() => setModal({ mode: "create" })}
-            className="shrink-0 bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            + 新規顧客登録
-          </button>
-        )}
-      </div>
-
-      {/* Search */}
-      <div className="mb-4">
-        <CustomerSearch
-          values={search}
-          onChange={(field, value) => setSearch((s) => ({ ...s, [field]: value }))}
-          onClear={() => setSearch(EMPTY_SEARCH)}
+      <GdaOperationalListSurface
+        titleJa="顧客管理"
+        titleEn="CUSTOMERS"
+        action={
+          canEdit ? (
+            <GdaOperationalListActionButton onClick={() => setModal({ mode: "create" })}>
+              + 新規顧客登録
+            </GdaOperationalListActionButton>
+          ) : undefined
+        }
+        search={
+          <CustomerSearch
+            values={search}
+            onChange={(field, value) => setSearch((s) => ({ ...s, [field]: value }))}
+            onClear={() => setSearch(EMPTY_SEARCH)}
+          />
+        }
+        filters={
+          <CustomerFilters
+            business={business}
+            line={line}
+            onBusiness={setBusiness}
+            onLine={setLine}
+            total={customers.length}
+            shown={filtered.length}
+          />
+        }
+      >
+        <CustomerTable
+          customers={filtered}
+          billing={billing}
+          onView={handleView}
+          onEdit={canEdit ? (c) => setModal({ mode: "edit", customer: c }) : undefined}
+          onStartEstimate={handleStartEstimate}
+          onCreate={canEdit ? () => setModal({ mode: "create" }) : undefined}
         />
-      </div>
-
-      {/* Filters */}
-      <div className="mb-4">
-        <CustomerFilters
-          business={business}
-          line={line}
-          onBusiness={setBusiness}
-          onLine={setLine}
-          total={customers.length}
-          shown={filtered.length}
-        />
-      </div>
-
-      {/* Table */}
-      <CustomerTable
-        customers={filtered}
-        billing={billing}
-        onView={handleView}
-        onEdit={canEdit ? (c) => setModal({ mode: "edit", customer: c }) : undefined}
-        onStartEstimate={handleStartEstimate}
-      />
+      </GdaOperationalListSurface>
 
       {/* Modal */}
       {modal.mode !== "none" && (

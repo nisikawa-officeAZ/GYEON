@@ -19,36 +19,36 @@ export default function CustomerSearch({ values, onChange, onClear }: Props) {
   const hasQuery = !!(values.name || values.phone || values.lineId);
 
   return (
-    <div className="bg-[#1e293b] rounded-xl shadow-lg p-4">
+    <div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-400">氏名</label>
+          <label className="text-xs font-medium text-[#8191ad]">氏名</label>
           <input
             type="text"
             value={values.name}
             onChange={(e) => onChange("name", e.target.value)}
             placeholder="山田 太郎"
-            className="bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors"
+            className="bg-[#0b1220] border border-[#263955] rounded-xl px-3 py-2 text-sm text-[#edf3fc] placeholder-[#4c5b76] focus:outline-none focus:border-[#3478ff] transition-colors"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-400">電話番号</label>
+          <label className="text-xs font-medium text-[#8191ad]">電話番号</label>
           <input
             type="tel"
             value={values.phone}
             onChange={(e) => onChange("phone", e.target.value)}
             placeholder="090-0000-0000"
-            className="bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors"
+            className="bg-[#0b1220] border border-[#263955] rounded-xl px-3 py-2 text-sm text-[#edf3fc] placeholder-[#4c5b76] focus:outline-none focus:border-[#3478ff] transition-colors"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-400">LINE ID</label>
+          <label className="text-xs font-medium text-[#8191ad]">LINE ID</label>
           <input
             type="text"
             value={values.lineId}
             onChange={(e) => onChange("lineId", e.target.value)}
             placeholder="line_id"
-            className="bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors"
+            className="bg-[#0b1220] border border-[#263955] rounded-xl px-3 py-2 text-sm text-[#edf3fc] placeholder-[#4c5b76] focus:outline-none focus:border-[#3478ff] transition-colors"
           />
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function CustomerSearch({ values, onChange, onClear }: Props) {
           type="button"
           onClick={onClear}
           disabled={!hasQuery}
-          className="bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          className="border border-[#263955] text-[#c3cee2] hover:border-[#3b6eb4] hover:bg-[#141e2f] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium px-4 py-2 rounded-xl transition-colors"
         >
           クリア
         </button>
