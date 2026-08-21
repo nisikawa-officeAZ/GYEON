@@ -5,7 +5,14 @@ export interface CategoryHubItem {
   label: string;
   labelEn: string;
   description: string;
-  icon: "invoice" | "payment" | "points" | "sales" | "monthly-statements";
+  icon:
+    | "invoice" | "payment" | "points" | "sales" | "monthly-statements"
+    | "customer" | "vehicle" | "customer-app"
+    | "estimate" | "work-orders" | "completion" | "maintenance"
+    | "reservation" | "calendar"
+    | "product-orders" | "products" | "inventory"
+    | "line" | "news"
+    | "downloads" | "pdf" | "ocr";
 }
 
 interface CategoryHubProps {
@@ -38,6 +45,57 @@ function HubIcon({ icon }: { icon: CategoryHubItem["icon"] }) {
   }
   if (icon === "monthly-statements") {
     return <svg {...common}><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/><circle cx="15" cy="16.5" r="2.4"/></svg>;
+  }
+  if (icon === "customer") {
+    return <svg {...common}><circle cx="12" cy="8" r="3"/><path d="M5 20c1.3-3.5 3.7-5 7-5s5.7 1.5 7 5"/></svg>;
+  }
+  if (icon === "vehicle") {
+    return <svg {...common}><path d="m5 16 1.5-6h11l1.5 6"/><path d="M3.5 16h17v3h-17zM7 19v2M17 19v2M7.5 13h9"/></svg>;
+  }
+  if (icon === "customer-app") {
+    return <svg {...common}><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10 6h4M11 18h2"/></svg>;
+  }
+  if (icon === "estimate") {
+    return <svg {...common}><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h4"/></svg>;
+  }
+  if (icon === "work-orders") {
+    return <svg {...common}><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h6"/></svg>;
+  }
+  if (icon === "completion") {
+    return <svg {...common}><path d="M6 3h12v18H6z"/><path d="m9 12 2 2 4-5M9 17h6"/></svg>;
+  }
+  if (icon === "maintenance") {
+    return <svg {...common}><path d="m14.5 6.5 3-3a4 4 0 0 1-5 5L6 15l-3 3 3 3 3-3 6.5-6.5a4 4 0 0 1 5-5l-3 3"/><path d="M5 18h.01"/></svg>;
+  }
+  if (icon === "reservation") {
+    return <svg {...common}><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9h16M8 3v4M16 3v4M9 14h6"/></svg>;
+  }
+  if (icon === "calendar") {
+    return <svg {...common}><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9h16M8 3v4M16 3v4M8 13h2M12 13h2M8 17h2M12 17h2"/></svg>;
+  }
+  if (icon === "product-orders") {
+    return <svg {...common}><circle cx="9" cy="19" r="1.3"/><circle cx="17" cy="19" r="1.3"/><path d="M3 4h2l2.2 11h10.5L20 8H6"/></svg>;
+  }
+  if (icon === "products") {
+    return <svg {...common}><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>;
+  }
+  if (icon === "inventory") {
+    return <svg {...common}><path d="M4 9h16v11H4zM6 4h12v5H6zM9 13h6"/></svg>;
+  }
+  if (icon === "line") {
+    return <svg {...common}><path d="M20 12c0 4-3.6 7-8 7-1 0-2-.2-2.8-.5L5 20l1.1-3.2A6.3 6.3 0 0 1 4 12c0-4 3.6-7 8-7s8 3 8 7Z"/></svg>;
+  }
+  if (icon === "news") {
+    return <svg {...common}><path d="M5 4h14v16H5z"/><path d="M8 8h4v4H8zM14 8h2M14 11h2M8 15h8"/></svg>;
+  }
+  if (icon === "downloads") {
+    return <svg {...common}><path d="M12 3v11M8 10l4 4 4-4M5 18v3h14v-3"/></svg>;
+  }
+  if (icon === "pdf") {
+    return <svg {...common}><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M8.5 16v-5h2a1.5 1.5 0 0 1 0 3h-2M13 16v-5h1.5a2 2 0 0 1 0 4H13M17 16v-5h3"/></svg>;
+  }
+  if (icon === "ocr") {
+    return <svg {...common}><path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4M7 10h10M7 14h10"/></svg>;
   }
   return <svg {...common}><circle cx="12" cy="12" r="9"/><path d="M9.5 17V7h3.2a3.1 3.1 0 0 1 0 6.2H9.5M9.5 10.2h3.2"/></svg>;
 }

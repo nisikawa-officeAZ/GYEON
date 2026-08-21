@@ -23,13 +23,42 @@ test("owner-approved sidebar keeps the exact ten large categories in order", () 
   );
 });
 
-test("billing routes resolve to one large category and the three existing small-category pages", () => {
-  for (const route of ["/billing", "/invoices", "/payments", "/points"]) {
+test("billing routes resolve to one large category and all existing small-category pages", () => {
+  for (const route of ["/billing", "/invoices", "/payments", "/points", "/sales", "/monthly-statements"]) {
     assert.equal(categoryForPathname(route).id, "billing");
   }
-  for (const route of ["invoices", "payments", "points"]) {
+  for (const route of ["invoices", "payments", "points", "sales", "monthly-statements"]) {
     assert.equal(existsSync(`src/app/${route}/page.tsx`), true, `${route} route must exist`);
   }
+});
+
+test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
+  const hubs = [
+    ["customers", "/hub/customers", ["customers", "vehicles", "customer-app"]],
+    ["estimates", "/hub/estimates", ["estimates", "work-orders", "completion-reports", "maintenance"]],
+    ["reservations", "/hub/reservations", ["reservations", "calendar"]],
+    ["orders", "/hub/orders", ["product-orders", "products", "inventory"]],
+    ["messages", "/hub/messages", ["line", "news"]],
+    ["records", "/hub/records", ["downloads", "pdf", "ocr-sessions"]],
+  ] as const;
+
+  for (const [categoryId, hubPath, leaves] of hubs) {
+    assert.equal(categoryForPathname(hubPath).id, categoryId);
+    assert.equal(existsSync(`src/app${hubPath}/page.tsx`), true, `${hubPath} must exist`);
+    for (const leaf of leaves) {
+      assert.equal(categoryForPathname(`/${leaf}`).id, categoryId);
+      assert.equal(existsSync(`src/app/${leaf}/page.tsx`), true, `${leaf} route must remain`);
+    }
+  }
+});
+
+test("settings stays direct and SNS stays disabled without a fabricated route", () => {
+  const settings = GDA_CATEGORIES.find(({ id }) => id === "settings");
+  const social = GDA_CATEGORIES.find(({ id }) => id === "social-media");
+  assert.equal(settings?.href, "/settings");
+  assert.equal(social?.href, null);
+  assert.equal(existsSync("src/app/hub/settings/page.tsx"), false);
+  assert.equal(existsSync("src/app/social-media/page.tsx"), false);
 });
 
 test("shared shell renders the rectangular Brand lockup and no legacy 22-route list", () => {
@@ -45,6 +74,14 @@ test("TOP billing category enters the new hub while SNS stays intentionally inac
   const top = read("public/desktop-home.html");
   assert.match(top, /'BILLING': '\/billing'/);
   assert.equal((top.match(/data-gda-category="social-media"/g) ?? []).length, 1);
+});
+
+test("TOP sidebar categories enter hubs while Quick Access cards remain direct shortcuts", () => {
+  const top = read("public/desktop-home.html");
+  assert.match(top, /var CATEGORY_ROUTES = \{[\s\S]*?'CUSTOMERS': '\/hub\/customers'[\s\S]*?'ESTIMATES': '\/hub\/estimates'[\s\S]*?'RESERVATIONS': '\/hub\/reservations'[\s\S]*?'ORDERS': '\/hub\/orders'[\s\S]*?'MESSAGES': '\/hub\/messages'[\s\S]*?'RECORDS': '\/hub\/records'/);
+  assert.match(top, /var QUICK_ACCESS_ROUTES = \{[\s\S]*?'CUSTOMERS': '\/customers'[\s\S]*?'RESERVATIONS': '\/reservations'[\s\S]*?'ORDERS': '\/product-orders'/);
+  assert.match(top, /el\.matches\('nav\.nav a'\) \? CATEGORY_ROUTES/);
+  assert.match(top, /el\.matches\('\.cta-action'\) \? CTA_ROUTES/);
 });
 
 test("CategoryHub cards preserve the accepted desktop large-card layout at >=1024px", () => {

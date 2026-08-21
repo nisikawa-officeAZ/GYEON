@@ -1949,17 +1949,19 @@
 <script>
 (function () {
   'use strict';
-  var ROUTES = {
+  var CATEGORY_ROUTES = {
     // Sidebar categories
     'HOME': '/',
-    'CUSTOMERS': '/customers',
-    'ESTIMATES': '/estimates',
-    'RESERVATIONS': '/reservations',
+    'CUSTOMERS': '/hub/customers',
+    'ESTIMATES': '/hub/estimates',
+    'RESERVATIONS': '/hub/reservations',
     'BILLING': '/billing',
-    'ORDERS': '/product-orders',
-    'MESSAGES': '/line',
-    'RECORDS': '/downloads',
-    'SETTINGS': '/settings',
+    'ORDERS': '/hub/orders',
+    'MESSAGES': '/hub/messages',
+    'RECORDS': '/hub/records',
+    'SETTINGS': '/settings'
+  };
+  var QUICK_ACCESS_ROUTES = {
     // Quick Access cards
     'ESTIMATE LIST': '/estimates',
     'CUSTOMERS': '/customers',
@@ -1968,7 +1970,9 @@
     'RESERVATIONS': '/reservations',
     'MESSAGING': '/line',
     'ORDERS': '/product-orders',
-    'SETTINGS': '/settings',
+    'SETTINGS': '/settings'
+  };
+  var CTA_ROUTES = {
     // CTA buttons
     'NEW ESTIMATE': '/estimates/new',
     "TODAY'S WORK": '/work-orders',
@@ -1978,10 +1982,13 @@
   };
   function norm(s) { return (s || '').replace(/\s+/g, ' ').trim().toUpperCase(); }
   function routeFor(el) {
+    var routes = el.matches('nav.nav a') ? CATEGORY_ROUTES
+      : el.matches('.cta-action') ? CTA_ROUTES
+      : QUICK_ACCESS_ROUTES;
     var en = el.querySelector('.en, .en-label');
     var ja = el.querySelector('.ja-label, h3');
-    if (en && ROUTES[norm(en.textContent)] != null) return ROUTES[norm(en.textContent)];
-    if (ja && ROUTES[ja.textContent.trim()] != null) return ROUTES[ja.textContent.trim()];
+    if (en && routes[norm(en.textContent)] != null) return routes[norm(en.textContent)];
+    if (ja && routes[ja.textContent.trim()] != null) return routes[ja.textContent.trim()];
     return null;
   }
   function go(route) {
