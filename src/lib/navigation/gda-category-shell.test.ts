@@ -151,6 +151,32 @@ test("service-duration settings adopts responsive cards and preserves its exact 
   assert.match(form, /Number\.isFinite\(n\) && n >= 0/);
 });
 
+test("staff-capacity settings adopts bounded cards and preserves every scheduling contract", () => {
+  const page = read("src/app/settings/staff-capacity/page.tsx");
+  const form = read("src/app/settings/staff-capacity/StaffCapacityForm.tsx");
+
+  assert.match(page, /max-w-\[1100px\]/);
+  assert.match(page, /STAFF CAPACITY/);
+  assert.match(page, /編集可能/);
+  for (const section of [
+    "CAPACITY & PARALLEL WORK",
+    "WORK BAYS",
+    "TECHNICIAN CAPACITY",
+    "CONFLICT WARNINGS",
+    "BLOCKED COMBINATIONS",
+    "MANUAL OVERRIDE",
+  ]) {
+    assert.match(form, new RegExp(section.replace(/[&]/g, "\\&")));
+  }
+  assert.match(form, /saveStaffCapacity\(input\)/);
+  assert.match(form, /WORK_BAYS_SCHEMA_READY/);
+  assert.match(form, /saveWorkBays/);
+  assert.match(form, /staff_capacity\[opt\.id\]/);
+  assert.match(form, /blocked_combinations: blocked/);
+  assert.match(form, /allowManager \? \["owner", "manager"\] : \["owner"\]/);
+  assert.match(form, /aria-label=\{`\$\{b\.name \|\| "未設定"\}の作業ベイを削除`\}/);
+});
+
 test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
   const hubs = [
     ["customers", "/hub/customers", ["customers", "vehicles", "customer-app"]],
