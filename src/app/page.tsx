@@ -5,6 +5,7 @@ import { getCurrentAdmin }        from "@/lib/admin/get-current-admin";
 import { createClient }           from "@/lib/supabase/server";
 import { rankLabelEn }            from "@/lib/ranks/dealer-ranks";
 import { getCurrentPlan }         from "@/lib/plans/get-current-plan";
+import { PLAN_FEATURES }          from "@/lib/plans/plan-types";
 import { BRAND, deriveHomeBrandPayload } from "@/lib/brand/variant";
 
 // Bare page label only. The product name is appended exactly once by the shared
@@ -60,14 +61,15 @@ export default async function HomePage() {
   const planInfo = await getCurrentPlan();
   const planParam = encodeURIComponent(planInfo.plan);
   const trialParam = planInfo.subscription_status === "trial" ? "1" : "0";
+  const featureParam = encodeURIComponent(PLAN_FEATURES[planInfo.plan].join(","));
 
   // Deployment-level application brand, transported to the static home as one
   // validated payload. src/lib/brand/variant.ts stays the single source of truth;
   // the static file holds no per-brand text or asset path of its own.
   const brandParam = encodeURIComponent(JSON.stringify(deriveHomeBrandPayload()));
   const homeSrc = certLabel
-    ? `/desktop-home.html?cert=${encodeURIComponent(certLabel)}&b=${brandParam}&p=${planParam}&t=${trialParam}`
-    : `/desktop-home.html?b=${brandParam}&p=${planParam}&t=${trialParam}`;
+    ? `/desktop-home.html?cert=${encodeURIComponent(certLabel)}&b=${brandParam}&p=${planParam}&t=${trialParam}&f=${featureParam}`
+    : `/desktop-home.html?b=${brandParam}&p=${planParam}&t=${trialParam}&f=${featureParam}`;
 
   // ─────────────────────────────────────────────────────────────────────────
 

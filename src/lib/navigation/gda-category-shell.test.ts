@@ -107,6 +107,24 @@ test("TOP plan badge and trial badge are driven by separate authenticated facts"
   assert.doesNotMatch(top, /data-plan="pro" data-trial="1"/);
 });
 
+test("TOP actions use the server-owned feature list and fail closed when unavailable", () => {
+  const page = read("src/app/page.tsx");
+  const top = read("public/desktop-home.html");
+
+  assert.match(page, /PLAN_FEATURES\[planInfo\.plan\]\.join\(","\)/);
+  assert.match(page, /&f=\$\{featureParam\}/);
+  for (const feature of [
+    "customers", "vehicles", "estimates", "products", "product_orders",
+    "work_orders", "reservations", "invoices", "maintenance", "line",
+  ]) {
+    assert.match(top, new RegExp(`data-feature="${feature}"`));
+  }
+  assert.match(top, /allowedFeatures\.has\(feature\)/);
+  assert.match(top, /classList\.add\('plan-locked'\)/);
+  assert.match(top, /setAttribute\('aria-disabled', 'true'\)/);
+  assert.match(top, /現在のプランでは利用できません/);
+});
+
 test("CategoryHub cards preserve the accepted desktop large-card layout at >=1024px", () => {
   const hub = read("src/components/navigation/CategoryHub.tsx");
   assert.match(hub, /lg:min-h-\[250px\]/);
