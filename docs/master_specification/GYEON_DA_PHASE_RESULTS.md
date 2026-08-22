@@ -1178,3 +1178,59 @@ rollback_or_recovery: "Exact rollback: revert only the contract §1 metadata/sta
 decision: "GDA_1R2_C1D_THREE_PATH_DELIVERY_STATUS_SYNCED_UNCOMMITTED"
 next: "RETURN_GDA-1R2-C1D-R1_LEDGER_EVIDENCE_REPAIR_TO_CODEX_UNCOMMITTED"
 ```
+
+## GDA-UI-S8A — Estimate/pricing settings top-navigation correction authorization
+
+```yaml
+phase: GDA_UI_ESTIMATES_PRICING_S8A_TOP_NAV_AND_SEMANTIC_ICONS
+status: AUTHORIZED
+date: 2026-08-22
+append_only: true
+objective: "Implement the owner-approved first settings information-architecture slice: exactly four estimate/pricing navigation cards, zero state badges on those four cards, and four dedicated semantic SVG line icons, without inventing child settings or changing business behavior."
+authorization: "Explicit current owner authorization in the MacBook Codex session on 2026-08-22: proceed with Claude implementation and approve the minimal phase-record commit, push, and coordination Draft PR bootstrap."
+repository:
+  repo: "nisikawa-officeAZ/GYEON"
+  base_branch: "main"
+  starting_commit: "9fe36f79cedfc422ee1c2284346f7b25ac324b62"
+  starting_tree: "1246d45f7a2432e555b7decf9b22d7e90d0d0ec8"
+  branch: "work/gda-ui-estimates-pricing-s8"
+  worktree: "/private/tmp/gda-ui-estimates-pricing-s8"
+bootstrap_record:
+  literal_write_allowlist:
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  purpose: "Record the phase and create the required coordination Draft PR before Claude diagnosis or implementation."
+implementation_candidate:
+  literal_write_allowlist:
+    - "src/components/settings/SettingsCenterHub.tsx"
+    - "src/lib/navigation/gda-category-shell.test.ts"
+  exact_card_order:
+    - "見積ウィザード設定 / ESTIMATE WIZARD"
+    - "コーティング設定 / COATING"
+    - "PPF / PAINT PROTECTION FILM"
+    - "ウインドフィルム / WINDOW FILM"
+  badge_rule: "No state badge and no placeholder badge container on the four estimate/pricing cards; preserve CardState and badges for every other settings group."
+  icon_rule: "Dedicated 24x24 currentColor SVG line icons: connected workflow steps, layered vehicle-surface coating, applied/peeled transparent PPF sheet, and layered automotive side window. No emoji or generic document/cloud/cap/helmet/dish/shield/cup/gear substitutions."
+  behavior_rule: "Preserve existing route/action/anchor reachability and all business logic; create no route, data flow, child-page IA, or invented settings category in S8A."
+verification:
+  - "focused gda-category-shell test once"
+  - "npx tsc --noEmit once"
+  - "git diff --check once"
+  full_suite: false
+  build: false
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx — pathname/mode/hash/Git state only"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql — metadata only/no apply"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql — closed finance artifact"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts — closed finance boundary"
+prohibited:
+  - "DB/Supabase/Auth/Storage/LINE/external service/migration/dependency/config changes"
+  - "permission, pricing, business-logic, route, or backend changes"
+  - "implementation commit/push, Ready, merge, deploy, destructive action"
+responsibility:
+  product_owner: "Office AZ"
+  specification_and_acceptance: "MacBook Codex"
+  bounded_implementation_and_tests: "MacBook Claude"
+decision: "GDA_UI_ESTIMATES_PRICING_S8A_AUTHORIZED_PENDING_COORDINATION_DRAFT_PR"
+next: "COMMIT_AND_PUSH_PHASE_RECORD_CREATE_DRAFT_PR_THEN_PUBLISH_CLAUDE_DIAGNOSIS_INSTRUCTION"
+```
