@@ -1291,3 +1291,66 @@ responsibility:
 decision: "GDA_UI_ESTIMATES_PRICING_S8B_AUTHORIZED_PENDING_PHASE_RECORD_GATE"
 next: "RECORD_S8B_AUTHORIZATION_THEN_PUBLISH_CLAUDE_INSTRUCTION_AND_BUILD_UNCOMMITTED_CANDIDATE"
 ```
+
+## GDA-UI-S8B — Approved R2 estimate/pricing settings visual binding commit result
+
+```yaml
+phase: GDA_UI_ESTIMATES_PRICING_S8B_APPROVED_R2_VISUAL_BINDING
+status: COMMITTED_NOT_PUSHED
+date: 2026-08-23
+append_only: true
+design_authority:
+  delivery: "gda_pricing_settings_ui_approved_v1.zip"
+  sha256: "37696d8eb9900803886e7f93587b86b72b9637ff71dd289769407cb2f23a106d"
+repository:
+  repo: "nisikawa-officeAZ/GYEON"
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/26"
+  branch: "work/gda-pricing-settings-ui-v2"
+  base_branch: "main"
+accepted_candidate:
+  verdict: "PASS_UNCOMMITTED_CANDIDATE_THEN_PASS_COMMIT_ONLY"
+  commit: "1a491708f3ec06356a1b51e60c2ffeaa8b19fe2f"
+  tree: "f77d61da588b0dc2bea0f962d23a500c73001cd2"
+  parent: "073d80ff1e4a24488f49e5e2f8356de51b2a4558"
+  literal_changed_paths:
+    - "src/app/settings/estimate-wizard/EstimateWizardSettingsClient.tsx"
+    - "src/components/settings/SettingsCenterHub.tsx"
+    - "src/lib/navigation/gda-category-shell.test.ts"
+    - "src/lib/navigation/gda-pricing-settings-ui.test.ts"
+  content_sha256:
+    src/app/settings/estimate-wizard/EstimateWizardSettingsClient.tsx: "981b31eb5c846548993827bde18d53c9760a1d3e5ad069c9449deeb37c93f4e8"
+    src/components/settings/SettingsCenterHub.tsx: "75a2776847d15424b925239289a69be922aab8fb75fc592ad431b877a3b8b749"
+    src/lib/navigation/gda-category-shell.test.ts: "8c7d6dcacec0bc40c50ee8fd809b58431d43c294a631ee17387ee4cf6271ed92"
+    src/lib/navigation/gda-pricing-settings-ui.test.ts: "c087359975bc74354c428a7f8c3f81cde5226e11041583289d8254a41232d8a9"
+  git_blobs:
+    src/app/settings/estimate-wizard/EstimateWizardSettingsClient.tsx: "7dbcc10bd5eb32e1fe9eeaab8ba322d308b19923"
+    src/components/settings/SettingsCenterHub.tsx: "dd83fb72e9c7b967f8e391b05ba70fa9b37ce0cc"
+    src/lib/navigation/gda-category-shell.test.ts: "37efe83e2c1fc3d8d8d2e7efd66b76ec44bcc1b2"
+    src/lib/navigation/gda-pricing-settings-ui.test.ts: "64e54fb3a93da01aa1655853610ebdb55c84dd6b"
+accepted_ui:
+  parent_cards: "Exactly four owner-approved cards with supplied semantic SVGs: Estimate Wizard and Coating use blue 有効 badges; PPF設定 and ウインドフィルム設定 use gray 未設定 badges. Badges are fixed at the top-right of each card."
+  wizard_cards: "Exactly four real access cards with supplied semantic SVGs: Service Availability, Service Menus, Work Presets, and Shop Options. Existing forms and actions remain below the cards."
+  responsive: "Desktop three columns, tablet two columns, mobile one compact horizontal card per row."
+  behavior: "Existing routes, anchors, forms, callbacks, pricing, permissions, and data behavior are preserved."
+verification:
+  focused_tests: "PASS 32/32"
+  typecheck: "PASS — node node_modules/typescript/bin/tsc --noEmit"
+  diff_check: "PASS"
+  full_suite: "NOT_RUN_BY_DESIGN"
+  build: "NOT_RUN_BY_DESIGN"
+  repeated_in_commit_gate: false
+protected_paths:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: "100644 c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: "100644 fe3c80f22fd80dcbfab076082473216dda582c14"
+  supabase/migrations/20260801110110_line_link_tokens.sql: "100644 accd22345054cc44f89156fd78eaba6dfe4242a4"
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: "100644 32fda49583ae1217bc13711784ad8fa31744726c"
+evidence:
+  uncommitted_acceptance: "https://github.com/nisikawa-officeAZ/GYEON/pull/26#issuecomment-5381059174"
+  commit_result: "https://github.com/nisikawa-officeAZ/GYEON/pull/26#issuecomment-5381070748"
+scope_confirmation:
+  - "No dependency, config, DB, Supabase, Auth, Storage, LINE, migration, pricing, permission, or backend change."
+  - "No source push, Ready conversion, merge, deployment, or destructive action."
+  - "This appended result-ledger entry is an uncommitted documentation-only candidate; its commit and push are separate gates."
+decision: "GDA_UI_ESTIMATES_PRICING_S8B_SOURCE_COMMITTED_LEDGER_SYNCED_UNCOMMITTED"
+next: "INDEPENDENTLY_VERIFY_AND_COMMIT_ONLY_THIS_RESULT_LEDGER_PATH_THEN_STOP_BEFORE_PUSH"
+```
