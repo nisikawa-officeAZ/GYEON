@@ -1178,3 +1178,102 @@ rollback_or_recovery: "Exact rollback: revert only the contract §1 metadata/sta
 decision: "GDA_1R2_C1D_THREE_PATH_DELIVERY_STATUS_SYNCED_UNCOMMITTED"
 next: "RETURN_GDA-1R2-C1D-R1_LEDGER_EVIDENCE_REPAIR_TO_CODEX_UNCOMMITTED"
 ```
+
+## GHP-2A-A0 — Pre-GDA-7 bounded projection-seed activation
+
+```yaml
+phase: GHP-2A-A0_PRE_GDA7_BOUNDED_PROJECTION_SEED_ACTIVATION
+status: RATIFIED_ACTIVE_BOUNDED_EXCEPTION
+date: 2026-08-16
+objective: "Formally record the product owner's decision to activate only the pure GHP-2 public-profile projection seed before GDA-7, while keeping the complete store settings, media, cross-domain API, website, SEO/MEO, GBP and publication track deferred."
+authorization: "The product owner answered yes to MacBook Codex's explicit question asking whether the Git plan should be formally updated to allow only the GHP-2 seed before GDA-7."
+governance_delivery:
+  branch: "agent/ghp-2-plan-activation-v1"
+  base_commit: "1d6ca2b573d674b1340549b185e4e1d1a459d459"
+  base_branch: "main"
+  delivery_mode: "documentation-only commit, push and Draft PR; merge remains owner-controlled"
+  literal_document_allowlist:
+    - "docs/master_specification/GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md"
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "docs/master_specification/00_MASTER_SPECIFICATION_INDEX.md"
+    - "docs/master_specification/MASTER_SPECIFICATION_CHANGELOG.md"
+active_implementation:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/12"
+  reviewed_head: "e7dc51c0a5ace4bfb754364315eb10b8353d160e"
+  changes_required: "https://github.com/nisikawa-officeAZ/GYEON/pull/12#issuecomment-5304894747"
+  responsible_agents: "MacBook Claude/Codex bounded repair; MacBook Codex independent acceptance; Office AZ product authority"
+  literal_two_path_allowlist:
+    - "src/lib/dealer-public-profile/dealer-public-profile-projection.ts"
+    - "src/lib/dealer-public-profile/dealer-public-profile-projection.test.ts"
+  required_repairs:
+    - "fail closed unless the profile is currently published with required owner consent and operator approval"
+    - "fail closed on duplicate/conflicting approved versus suspended/rejected/expired qualification records"
+    - "prevent an internal dealer identifier from being accepted as the public-store identifier boundary"
+    - "require explicit-zone ISO/RFC3339 instants and canonical qualification ordering"
+  exit: "focused tests and git diff --check PASS on the exact two paths, followed by MacBook Codex PASS on the reviewed Draft PR #12 head"
+prohibitions:
+  - "No third source/test path and no dependency or config change."
+  - "No DB, Supabase, schema, RLS, migration, Storage, media, external API, website, SEO/MEO, GBP, Ready, merge or deployment."
+  - "GHP-2B and GHP-3 through GHP-7 remain inactive until GDA-7 or a later explicit Git-governed owner decision."
+evidence_level: "E0 governance plus an E1/E2 source-test candidate only; not environment, field or production proof"
+protected_paths: "No protected-path content was accessed or changed; the document activation does not broaden their existing restrictions."
+rollback_or_recovery: "Close the documentation Draft PR without merge and revert only its five documentation paths. PR #12 remains Draft and can be closed independently; no runtime or external state changes are created by this plan update."
+decision: "GHP_2A_PUBLIC_PROFILE_PROJECTION_SEED_ACTIVE_BEFORE_GDA7_WITH_EXACT_TWO_PATH_BOUNDARY"
+next: "Deliver this five-document governance update as a Draft PR, then execute GHP-2R only on PR #12's exact two source/test paths and return it for independent review."
+```
+
+## GHP-2A-A1 — Post-acceptance governance evidence sync
+
+```yaml
+phase: GHP-2A-A1_POST_ACCEPTANCE_FIVE_DOCUMENT_GOVERNANCE_SYNC
+status: SOURCE_TEST_SEED_ACCEPTED_GOVERNANCE_SYNC_CANDIDATE_UNCOMMITTED
+date: 2026-08-16
+append_only: true
+supersedes: "Only the pre-acceptance status and next-step implications of GHP-2A-A0 above. The A0 activation block remains unchanged as historical evidence."
+objective: "Synchronize the five-document GHP governance package to the independently accepted PR #12 remote head without activating persistence, external integration, Ready conversion, merge, or any wider GHP phase."
+authorization: "The product owner explicitly approved the GHP-2A-A1 five-document, uncommitted evidence-sync repair after MacBook Codex reviewed PR #13 and posted CHANGES_REQUIRED at https://github.com/nisikawa-officeAZ/GYEON/pull/13#issuecomment-5304967952."
+governance_repository:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/13"
+  branch: "agent/ghp-2-plan-activation-v1"
+  starting_head: "357c508300e12e01f81a8f2afa665711932ce518"
+  starting_tree: "c1402a9e7d0851522ea308df4a150f2302d788a8"
+  base: "1d6ca2b573d674b1340549b185e4e1d1a459d459"
+  starting_upstream: "0/0"
+  starting_index: "empty"
+  starting_worktree: "clean"
+accepted_source_seed:
+  pr: "https://github.com/nisikawa-officeAZ/GYEON/pull/12"
+  head: "9b8bc1eb2cb59e879f5ebeb5b91e85ba4f522662"
+  tree: "19fb3cf2f08778abaa87313c8908d4e32cb815c4"
+  parent: "e7dc51c0a5ace4bfb754364315eb10b8353d160e"
+  final_independent_pass: "https://github.com/nisikawa-officeAZ/GYEON/pull/12#issuecomment-5304962007"
+  literal_two_path_scope:
+    - "src/lib/dealer-public-profile/dealer-public-profile-projection.ts"
+    - "src/lib/dealer-public-profile/dealer-public-profile-projection.test.ts"
+  sha256:
+    projection: "a1556df3a548e56fe0012c6cd90e6a8b3ecaeb21ea057df702ec92c0f6e175cd"
+    focused_test: "07ef06736b48b7c2a2b7554bf62b7fa844121a4617fd564638f2e580a97bf26e"
+  verification:
+    focused_tests: "32/32 PASS; 0 fail"
+    focused_strict_typecheck: "PASS"
+    git_diff_check: "PASS"
+    pr_state: "OPEN/Draft/unmerged/mergeable"
+  evidence_level: "E2 source plus focused executable verification; not DB, API, website, field, or production proof"
+candidate:
+  literal_five_document_allowlist:
+    - "docs/master_specification/GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md"
+    - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "docs/master_specification/00_MASTER_SPECIFICATION_INDEX.md"
+    - "docs/master_specification/MASTER_SPECIFICATION_CHANGELOG.md"
+  intent: "Update current status and append closure evidence only; preserve the historical A0 and GHP-DEC-2 records."
+prohibitions:
+  - "No sixth path and no source, test, dependency, config, schema, migration, DB, Supabase, Storage, media, external API, website, SEO/MEO, GBP, or deployment action."
+  - "No GHP-2B or GHP-3 through GHP-7 activation."
+  - "No stage, commit, push, Ready conversion, or merge in this candidate phase."
+protected_paths: "ScreensPreview.tsx remained metadata/status-only and unchanged; its content was not accessed."
+rollback_or_recovery: "Discard only this uncommitted five-document A1 sync candidate. PR #12 and the committed PR #13 A0 delivery remain unchanged."
+decision: "GHP_2A_SOURCE_TEST_SEED_ACCEPTED_AND_FIVE_DOCUMENT_GOVERNANCE_SYNCED_UNCOMMITTED"
+next: "RETURN_GHP-2A-A1_FIVE_DOCUMENT_SYNC_CANDIDATE_TO_MACBOOK_CODEX_FOR_INDEPENDENT_ACCEPTANCE; COMMIT/PUSH/READY/MERGE_REMAIN_SEPARATE_GATES"
+```
