@@ -256,6 +256,53 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Acceptance target:** E2 local candidate after independent MacBook Codex review. S8A does not authorize production delivery or the later Estimate Wizard/PPF child-page redesign.
 
+### GDA-UI-S8B — Approved R2 estimate/pricing settings visual binding
+
+**Objective:** Bind the owner-approved GenSpark R2 package to the delivered S8A settings navigation without changing pricing, permissions, data, routes, or Estimate Wizard behavior. S8B supersedes only S8A's four-card badge-visibility rule and adds the four real Estimate Wizard access cards; every other S8A boundary remains in force.
+
+**Approved design authority:**
+
+- Delivery: `gda_pricing_settings_ui_approved_v1.zip`
+- Delivery SHA-256: `37696d8eb9900803886e7f93587b86b72b9637ff71dd289769407cb2f23a106d`
+- Canonical package sources, in precedence order: `README.md`, the final R2 correction in `BEFORE_AFTER_MAPPING.md`, `settings-pricing-top.html`, `settings-estimate-wizard.html`, `previews/mock_top_desktop.png`, `previews/mock_wizard_desktop.png`, and the eight SVG files actually present under `icons/`.
+- Stale package content is explicitly non-authoritative: the old six-child-card text and previews, missing twelve-icon manifest entries, and the invented cards `表示順設定`, `必須入力項目`, `見積レビュー確認`, and `非表示メニュー管理`.
+
+**Exact parent cards and approved visual states:**
+
+1. `見積ウィザード設定 / ESTIMATE WIZARD` — `有効`, solid GYEON-blue gradient badge.
+2. `コーティング設定 / COATING` — `有効`, solid GYEON-blue gradient badge.
+3. `PPF設定 / PPF SETTINGS` — `未設定`, gray badge.
+4. `ウインドフィルム設定 / WINDOW FILM SETTINGS` — `未設定`, gray badge.
+
+**Exact Estimate Wizard access cards:**
+
+1. `施工メニュー提供設定 / SERVICE AVAILABILITY` — `有効`.
+2. `サービスメニュー / SERVICE MENUS` — `未設定`.
+3. `その他作業プリセット / WORK PRESETS` — `未設定`.
+4. `店舗オプション / SHOP OPTIONS` — `未設定`.
+
+**Implementation allowlist:**
+
+- `src/components/settings/SettingsCenterHub.tsx`
+- `src/app/settings/estimate-wizard/page.tsx`
+- `src/app/settings/estimate-wizard/EstimateWizardSettingsClient.tsx`
+- `src/lib/navigation/gda-category-shell.test.ts`
+- `src/lib/navigation/gda-pricing-settings-ui.test.ts` (add only if focused source-contract coverage cannot remain clear in the existing test)
+
+**Required behavior:**
+
+- Preserve the existing page shell, fixed sidebar, header, responsive breakpoints, TOP v18 tokens, and all current route/anchor reachability.
+- The four Estimate Wizard child cards are a visual access layer for the four real existing settings categories. They must navigate or scroll to the existing functional sections; they must not replace, delete, rename, or reimplement those forms.
+- Keep the currently implemented functional content below the access cards. Coupon relocation, PPF child-page construction, coating internals, and window-film internals are separate later business/navigation phases and are not silently performed in S8B.
+- Use the exact eight delivered semantic SVG designs, either as inline `currentColor` SVGs or repo-local components. Emoji and unrelated generic imagery are prohibited.
+- The approved status labels in this phase describe the currently approved navigation/setup presentation. They are not permission to add DB fields, queries, mutations, or new configuration semantics.
+
+**Verification:** focused navigation/UI source-contract tests once, `npx tsc --noEmit` once, and `git diff --check` once. Full suite and build are not required unless the focused evidence fails for a reason that cannot be isolated.
+
+**Boundaries:** no DB, Supabase, Auth, Storage, LINE, migration, dependency, config, permission, pricing, action, or backend change. No content access to protected paths. Implementation commit, push, Ready, merge, Preview, and deployment remain later separate gates.
+
+**Acceptance target:** E2 uncommitted local candidate after MacBook Codex scope and visual-source review.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
