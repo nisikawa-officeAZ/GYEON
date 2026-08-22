@@ -68,8 +68,8 @@ interface HubCard {
   minVisibility:  SettingsVisibilityLevel;
   action:         CardAction;
   getState:       (ctx: StateContext) => CardState;
-  /** When false, the card renders no state badge and no placeholder in its place. Defaults to true. */
-  showBadge?:     boolean;
+  /** Fixed solid badge that overrides the state-driven CardBadge; used only by the approved S8B estimate/pricing cards. */
+  badge?:         "solid_active" | "solid_unset";
 }
 
 interface HubGroup {
@@ -197,7 +197,7 @@ const HUB_GROUPS: HubGroup[] = [
         minVisibility: "readonly",
         action:        { kind: "route", href: "/settings/estimate-wizard" },
         getState: () => "active",
-        showBadge: false,
+        badge: "solid_active",
       },
       {
         id:            "coating",
@@ -208,29 +208,29 @@ const HUB_GROUPS: HubGroup[] = [
         minVisibility: "readonly",
         action:        { kind: "route", href: "/settings?panel=service" },
         getState: () => "active",
-        showBadge: false,
+        badge: "solid_active",
       },
       {
         id:            "ppf",
         icon:          "ppf",
-        label:         "PPF",
-        labelEn:       "PAINT PROTECTION FILM",
+        label:         "PPF設定",
+        labelEn:       "PPF SETTINGS",
         description:   "PPF種類、施工係数、コーティング同時施工減額",
         minVisibility: "readonly",
         action:        { kind: "route", href: "/settings/estimate-wizard#section-ppf" },
         getState: () => "active",
-        showBadge: false,
+        badge: "solid_unset",
       },
       {
         id:            "window_film",
         icon:          "window_film",
-        label:         "ウインドフィルム",
-        labelEn:       "WINDOW FILM",
+        label:         "ウインドフィルム設定",
+        labelEn:       "WINDOW FILM SETTINGS",
         description:   "フィルムメニュー、価格、施工条件",
         minVisibility: "readonly",
         action:        { kind: "route", href: "/settings/estimate-wizard#section-film" },
         getState: () => "active",
-        showBadge: false,
+        badge: "solid_unset",
       },
     ],
   },
@@ -351,27 +351,30 @@ const LEGACY_ICON_PATHS: Record<Exclude<IconKey, "estimate_flow" | "coating" | "
   spark:    <><path d="M8 2.2 9.3 6l3.8 1.3L9.3 8.6 8 12.4 6.7 8.6 2.9 7.3 6.7 6Z" /></>,
 };
 
-/** Dedicated semantic line icons for the estimate/pricing navigation cards (S8A). */
+/** Dedicated semantic line icons for the estimate/pricing navigation cards — exact geometry from the approved GenSpark R2 package (S8B). */
 const SEMANTIC_ICON_PATHS: Record<"estimate_flow" | "coating" | "ppf" | "window_film", ReactNode> = {
   estimate_flow: <>
-    <circle cx="5" cy="6" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="18" r="2" />
-    <path d="M6.6 7.4 10.4 10.6" /><path d="M13.6 13.4 17.4 16.6" />
+    <rect x="4" y="3" width="16" height="18" rx="2" />
+    <path d="M8 7.5h8M8 11h8" />
+    <path d="M15.5 15.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z" />
   </>,
   coating: <>
-    <path d="M4 9.5c1.4-3.6 5-6 8-6s6.6 2.4 8 6c.5 3.4-1 7.2-4.6 9.3-2.1 1.2-4.7 1.2-6.8 0C5 16.7 3.5 12.9 4 9.5Z" />
-    <path d="M7.2 10.8c2.9 1.6 6.7 1.6 9.6 0" />
-    <path d="M8 14c2.4 1.2 5.6 1.2 8 0" />
-    <path d="m18.2 4.4.6 1.5 1.5.6-1.5.6-.6 1.5-.6-1.5-1.5-.6 1.5-.6Z" fill="currentColor" stroke="none" />
+    <path d="M4 15c1.5-3.5 3-5 5.5-5.5L11 8h4l2 3h2.5c.8 0 1.5.7 1.5 1.5V15" />
+    <path d="M4 15h17" />
+    <circle cx="8" cy="17.5" r="1.8" />
+    <circle cx="16.5" cy="17.5" r="1.8" />
+    <path d="M12 4.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" opacity=".7" />
   </>,
   ppf: <>
-    <rect x="4" y="5.5" width="12" height="13" rx="1.4" />
-    <path d="M12 5.5c2.6 0 5.6 1 7 3-2.6 1-5.4.4-7-1.6" />
-    <path d="M12 5.5 19 8.5" />
+    <path d="M12 3l7 2.8v5.1c0 4.4-3 8-7 10.1-4-2.1-7-5.7-7-10.1V5.8z" />
+    <path d="M12 6.2v11.6" opacity=".55" />
+    <path d="M12 6.2c-2 .4-3.8.6-5 .6" opacity=".55" />
   </>,
   window_film: <>
-    <path d="M4 8.5 7 5h10l3 3.5-2 9.5H6Z" />
-    <path d="M7 16.5 9.4 8.7" />
-    <path d="M9.6 16.5 12 8.7" />
+    <path d="M3.5 16.5c2-4.5 4-7 7-8l2-2.5h6.5l2.5 4.5c.6 1 .4 2-.3 3l-1.2 1.5c-.5.7-1.2 1.5-2 1.5z" opacity=".9" />
+    <path d="M3.5 16.5c2-4.5 4-7 7-8l2-2.5" />
+    <path d="M12.5 8.5l-1.2 6M16 6l-.8 8.5" opacity=".55" />
+    <path d="M13.5 10.5l3 3" opacity=".8" />
   </>,
 };
 
@@ -382,7 +385,7 @@ function CardIcon({ name, dim }: { name: IconKey; dim: boolean }) {
   return (
     <span className={dim ? "text-[#526079]" : "text-[#91b9ff]"} aria-hidden="true">
       {isSemantic ? (
-        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           {SEMANTIC_ICON_PATHS[name as "estimate_flow" | "coating" | "ppf" | "window_film"]}
         </svg>
       ) : (
@@ -440,6 +443,22 @@ function CardBadge({ state }: { state: CardState }) {
   }
 }
 
+/** Solid badge variant approved for the S8B estimate/pricing parent and wizard-access cards only. */
+function FixedCardBadge({ variant }: { variant: "solid_active" | "solid_unset" }) {
+  if (variant === "solid_active") {
+    return (
+      <span className="inline-flex items-center rounded-full bg-gradient-to-br from-[#60a5fa] to-[#2563eb] px-2.5 py-1 text-[10px] font-bold tracking-wide text-white shadow-[0_2px_8px_rgba(37,99,235,.35)]">
+        有効
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-full border border-[#94a3b8]/30 bg-[#94a3b8]/20 px-2.5 py-1 text-[10px] font-bold tracking-wide text-[#94a3b8]">
+      未設定
+    </span>
+  );
+}
+
 // ─── Card ─────────────────────────────────────────────────────────────────────
 
 function HubCardButton({
@@ -455,12 +474,17 @@ function HubCardButton({
 
   const inner = (
     <div className={[
-      "group h-full min-h-[128px] rounded-2xl border p-4 transition-all duration-200 md:min-h-[190px] md:p-5 lg:min-h-[210px] lg:p-6",
+      "group relative h-full min-h-[128px] rounded-2xl border p-4 transition-all duration-200 md:min-h-[190px] md:p-5 lg:min-h-[210px] lg:p-6",
       isInteractive
         ? "cursor-pointer border-[#263955] bg-[#111826]/90 hover:-translate-y-0.5 hover:border-[#3b6eb4] hover:bg-[#141e2f] hover:shadow-[0_18px_45px_rgba(0,0,0,.24)]"
         : "border-[#1d2b40] bg-[#0b111d]/80",
     ].join(" ")}
     >
+      {card.badge && (
+        <span className="absolute right-4 top-4">
+          <FixedCardBadge variant={card.badge} />
+        </span>
+      )}
       <div className="flex h-full flex-col">
         <span className={[
           "grid h-12 w-12 place-items-center rounded-xl border md:h-[58px] md:w-[58px] md:rounded-2xl",
@@ -469,7 +493,7 @@ function HubCardButton({
           <CardIcon name={card.icon} dim={!isInteractive} />
         </span>
 
-        <div className="mt-3 md:mt-5">
+        <div className={["mt-3 md:mt-5", card.badge ? "pr-16" : ""].join(" ")}>
           <p className={[
             "text-[15px] font-bold leading-tight md:text-[18px]",
             isInteractive ? "text-[#edf3fc]" : "text-[#66738a]",
@@ -488,10 +512,18 @@ function HubCardButton({
           {card.description}
         </p>
 
-        <div className="mt-auto flex items-center justify-between gap-2 pt-3 md:pt-5">
-          {card.showBadge !== false && <CardBadge state={state} />}
-          {isInteractive && (
-            <span className="text-[11px] font-semibold tracking-[0.08em] text-[#5f9cff]">開く →</span>
+        <div className="mt-auto flex items-center pt-3 md:pt-5">
+          {card.badge ? (
+            isInteractive && (
+              <span className="ml-auto text-[11px] font-semibold tracking-[0.08em] text-[#5f9cff]">開く →</span>
+            )
+          ) : (
+            <div className="flex w-full items-center justify-between gap-2">
+              <CardBadge state={state} />
+              {isInteractive && (
+                <span className="text-[11px] font-semibold tracking-[0.08em] text-[#5f9cff]">開く →</span>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -8,6 +8,7 @@
 // the server actions remain the real security boundary.
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -29,6 +30,160 @@ import type {
   WizardSettingsItemView,
   SupportedAuthoringKind,
 } from "@/lib/wizard-catalog/estimate-wizard-settings-types";
+
+// ── S8B — four real Estimate Wizard access cards ────────────────────────────
+// A visual access layer over the existing sections below; hrefs are anchors into this
+// same page, derived from the authoritative `view.sections`, never hardcoded route text.
+// No new route, action, form, or business behavior is introduced here.
+
+type WizardAccessBadgeVariant = "solid_active" | "solid_unset";
+
+function WizardAccessBadgeChip({ variant }: { variant: WizardAccessBadgeVariant }) {
+  if (variant === "solid_active") {
+    return (
+      <span className="inline-flex items-center rounded-full bg-gradient-to-br from-[#60a5fa] to-[#2563eb] px-2.5 py-1 text-[10px] font-bold tracking-wide text-white shadow-[0_2px_8px_rgba(37,99,235,.35)]">
+        有効
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-full border border-[#94a3b8]/30 bg-[#94a3b8]/20 px-2.5 py-1 text-[10px] font-bold tracking-wide text-[#94a3b8]">
+      未設定
+    </span>
+  );
+}
+
+interface WizardAccessCardDef {
+  readonly id: string;
+  readonly label: string;
+  readonly labelEn: string;
+  readonly description: string;
+  readonly badge: WizardAccessBadgeVariant;
+  /** null when the derived section anchor is unavailable — the card then fails closed: informational, not clickable, no fabricated route. */
+  readonly anchorId: string | null;
+  readonly icon: ReactNode;
+}
+
+function WizardAccessCard({ card }: { card: WizardAccessCardDef }) {
+  const isReachable = card.anchorId !== null;
+  const inner = (
+    <div
+      className={[
+        "group relative flex min-h-[64px] flex-row items-center gap-3 rounded-2xl border p-4 transition-all duration-200",
+        "md:min-h-[168px] md:flex-col md:items-stretch md:gap-3 md:p-5",
+        isReachable
+          ? "cursor-pointer border-[#263955] bg-[#111826]/90 hover:-translate-y-0.5 hover:border-[#3b6eb4] hover:bg-[#141e2f] hover:shadow-[0_18px_45px_rgba(0,0,0,.24)]"
+          : "border-[#1d2b40] bg-[#0b111d]/80",
+      ].join(" ")}
+    >
+      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[#31568c] bg-[#122142] md:h-14 md:w-14 md:rounded-2xl">
+        <span className="text-[#91b9ff]" aria-hidden="true">
+          <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            {card.icon}
+          </svg>
+        </span>
+      </span>
+      <div className="min-w-0 flex-1 md:pr-16">
+        <p className="truncate text-[15px] font-bold leading-tight text-[#edf3fc] md:overflow-visible md:whitespace-normal">{card.label}</p>
+        <p className="mt-1 truncate text-[9px] font-semibold tracking-[0.18em] text-[#8191ad] md:overflow-visible md:whitespace-normal">{card.labelEn}</p>
+      </div>
+      <span className="shrink-0 md:absolute md:right-4 md:top-4">
+        <WizardAccessBadgeChip variant={card.badge} />
+      </span>
+      <p className="hidden text-[12px] leading-6 text-[#95a4bc] md:mt-3 md:block">{card.description}</p>
+      {isReachable && (
+        <span className="hidden text-[11px] font-semibold tracking-[0.08em] text-[#5f9cff] md:mt-auto md:block md:self-start">開く →</span>
+      )}
+    </div>
+  );
+
+  if (!isReachable) {
+    return (
+      <div className="h-full" role="group" aria-label={card.label}>
+        {inner}
+      </div>
+    );
+  }
+  return (
+    <a
+      href={`#${card.anchorId}`}
+      className="block h-full rounded-2xl transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5f9cff] active:scale-[0.985]"
+    >
+      {inner}
+    </a>
+  );
+}
+
+function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessCardDef[] {
+  const serviceSection = view.sections.find(section => section.id === "service");
+  const otherworkSection = view.sections.find(section => section.id === "otherwork");
+  const storeSection = view.sections.find(section => section.id === "store");
+
+  return [
+    {
+      id: "service-availability",
+      label: "施工メニュー提供設定",
+      labelEn: "SERVICE AVAILABILITY",
+      description: "この店舗で提供する施工メニューを選択します。オフにしたメニューは見積ウィザードに表示されません。",
+      badge: "solid_active",
+      anchorId: "section-service-offerings",
+      icon: (
+        <>
+          <rect x="4" y="4" width="16" height="16" rx="2" />
+          <path d="M8 9l1.5 1.5L12 8" />
+          <path d="M14 9.5h4M14 14.5h4" />
+          <path d="M8 13.5l1.5 1.5L12 12.5" />
+        </>
+      ),
+    },
+    {
+      id: "service-menus",
+      label: "サービスメニュー",
+      labelEn: "SERVICE MENUS",
+      description: "メンテナンス・洗車・室内清掃のメニューを登録します。",
+      badge: "solid_unset",
+      anchorId: serviceSection?.anchorId ?? null,
+      icon: (
+        <>
+          <path d="M14.7 6.3a4 4 0 0 0-5.2 5.2L4 17l3 3 5.5-5.5a4 4 0 0 0 5.2-5.2l-2.6 2.6-2-2z" />
+          <path d="M18.5 13c1 1.3 2 2.3 2 3.4a2 2 0 1 1-4 0c0-1.1 1-2.1 2-3.4z" />
+        </>
+      ),
+    },
+    {
+      id: "work-presets",
+      label: "その他作業プリセット",
+      labelEn: "WORK PRESETS",
+      description: "見積時に手入力する作業の名称プリセットです（金額は現場入力）。",
+      badge: "solid_unset",
+      anchorId: otherworkSection?.anchorId ?? null,
+      icon: (
+        <>
+          <rect x="5" y="4" width="14" height="17" rx="2" />
+          <path d="M9 4a3 3 0 0 1 6 0" />
+          <path d="M9 10h6M9 13.5h4" />
+          <path d="M17.5 16.5v4M15.5 18.5h4" />
+        </>
+      ),
+    },
+    {
+      id: "shop-options",
+      label: "店舗オプション",
+      labelEn: "SHOP OPTIONS",
+      description: "出張費などの店舗共通オプションを登録します。",
+      badge: "solid_unset",
+      anchorId: storeSection?.anchorId ?? null,
+      icon: (
+        <>
+          <path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h12M20 17h0" />
+          <circle cx="16" cy="7" r="2" />
+          <circle cx="10" cy="12" r="2" />
+          <circle cx="18" cy="17" r="2" />
+        </>
+      ),
+    },
+  ];
+}
 
 type Toast = { text: string; type: "ok" | "err" | "info" };
 
@@ -363,6 +518,13 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
           {STAFF_READONLY_MESSAGE_JA}
         </div>
       )}
+
+      {/* S8B — four real Estimate Wizard access cards; visual access layer only, no new route/data flow */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {buildWizardAccessCards(view).map((card) => (
+          <WizardAccessCard key={card.id} card={card} />
+        ))}
+      </div>
 
       {/* ── B2-E2G: 施工メニュー提供設定 ───────────────────────────────────────────
           Which services this shop offers at all. Deliberately ABOVE the catalog sections: a dealer

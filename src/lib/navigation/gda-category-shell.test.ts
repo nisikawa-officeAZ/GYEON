@@ -89,8 +89,8 @@ test("estimate_pricing hub exposes exactly the four owner-approved cards in orde
 
   assert.match(groupBody, /label:\s+"見積ウィザード設定",\s*\n\s*labelEn:\s+"ESTIMATE WIZARD"/);
   assert.match(groupBody, /label:\s+"コーティング設定",\s*\n\s*labelEn:\s+"COATING"/);
-  assert.match(groupBody, /label:\s+"PPF",\s*\n\s*labelEn:\s+"PAINT PROTECTION FILM"/);
-  assert.match(groupBody, /label:\s+"ウインドフィルム",\s*\n\s*labelEn:\s+"WINDOW FILM"/);
+  assert.match(groupBody, /label:\s+"PPF設定",\s*\n\s*labelEn:\s+"PPF SETTINGS"/);
+  assert.match(groupBody, /label:\s+"ウインドフィルム設定",\s*\n\s*labelEn:\s+"WINDOW FILM SETTINGS"/);
 
   assert.match(groupBody, /href: "\/settings\/estimate-wizard"/);
   assert.match(groupBody, /href: "\/settings\?panel=service"/);
@@ -98,7 +98,7 @@ test("estimate_pricing hub exposes exactly the four owner-approved cards in orde
   assert.match(groupBody, /href: "\/settings\/estimate-wizard#section-film"/);
 });
 
-test("estimate_pricing cards render no state badge and use four dedicated semantic icons", () => {
+test("estimate_pricing cards render the approved solid badges and use four dedicated semantic icons", () => {
   const settingsHub = read("src/components/settings/SettingsCenterHub.tsx");
 
   const groupMatch = settingsHub.match(
@@ -108,23 +108,35 @@ test("estimate_pricing cards render no state badge and use four dedicated semant
   const groupBody = groupMatch[1];
 
   assert.equal(
-    (groupBody.match(/showBadge: false/g) ?? []).length,
-    4,
-    "all four estimate_pricing cards must set showBadge: false",
+    (groupBody.match(/badge:\s+"solid_active"/g) ?? []).length,
+    2,
+    "estimate_wizard and coating must use the solid active badge",
   );
+  assert.equal(
+    (groupBody.match(/badge:\s+"solid_unset"/g) ?? []).length,
+    2,
+    "ppf and window_film must use the solid unset badge",
+  );
+  assert.match(groupBody, /id:\s+"estimate_wizard"[\s\S]*?badge:\s+"solid_active"/);
+  assert.match(groupBody, /id:\s+"coating"[\s\S]*?badge:\s+"solid_active"/);
+  assert.match(groupBody, /id:\s+"ppf"[\s\S]*?badge:\s+"solid_unset"/);
+  assert.match(groupBody, /id:\s+"window_film"[\s\S]*?badge:\s+"solid_unset"/);
+
   assert.match(groupBody, /icon:\s+"estimate_flow"/);
   assert.match(groupBody, /icon:\s+"coating"/);
   assert.match(groupBody, /icon:\s+"ppf"/);
   assert.match(groupBody, /icon:\s+"window_film"/);
 
-  assert.match(settingsHub, /showBadge\?:\s+boolean/);
-  assert.match(settingsHub, /card\.showBadge !== false && <CardBadge state=\{state\} \/>/);
+  assert.match(settingsHub, /badge\?:\s+"solid_active" \| "solid_unset"/);
+  assert.match(settingsHub, /\{card\.badge && \(\s*\n\s*<span className="absolute right-4 top-4">\s*\n\s*<FixedCardBadge variant=\{card\.badge\} \/>/);
+  assert.match(settingsHub, /<CardBadge state=\{state\} \/>/);
+  assert.match(settingsHub, /function FixedCardBadge/);
+  assert.match(settingsHub, /linear-gradient|bg-gradient-to-br/);
 
-  assert.match(settingsHub, /estimate_flow:\s*<>\s*\n\s*<circle cx="5" cy="6" r="2" \/><circle cx="12" cy="12" r="2" \/><circle cx="19" cy="18" r="2" \/>/);
-  assert.match(settingsHub, /coating:\s*<>\s*\n\s*<path d="M4 9\.5c1\.4-3\.6 5-6 8-6/);
-  assert.match(settingsHub, /fill="currentColor" stroke="none" \/>\s*\n\s*<\/>,\s*\n\s*ppf:/);
-  assert.match(settingsHub, /ppf:\s*<>\s*\n\s*<rect x="4" y="5\.5" width="12" height="13" rx="1\.4" \/>/);
-  assert.match(settingsHub, /window_film:\s*<>\s*\n\s*<path d="M4 8\.5 7 5h10l3 3\.5-2 9\.5H6Z" \/>/);
+  assert.match(settingsHub, /estimate_flow:\s*<>\s*\n\s*<rect x="4" y="3" width="16" height="18" rx="2" \/>/);
+  assert.match(settingsHub, /coating:\s*<>\s*\n\s*<path d="M4 15c1\.5-3\.5 3-5 5\.5-5\.5L11 8h4l2 3h2\.5c\.8 0 1\.5\.7 1\.5 1\.5V15" \/>/);
+  assert.match(settingsHub, /ppf:\s*<>\s*\n\s*<path d="M12 3l7 2\.8v5\.1c0 4\.4-3 8-7 10\.1-4-2\.1-7-5\.7-7-10\.1V5\.8z" \/>/);
+  assert.match(settingsHub, /window_film:\s*<>\s*\n\s*<path d="M3\.5 16\.5c2-4\.5 4-7 7-8l2-2\.5h6\.5l2\.5 4\.5c\.6 1 \.4 2-\.3 3l-1\.2 1\.5c-\.5\.7-1\.2 1\.5-2 1\.5z" opacity="\.9" \/>/);
 
   assert.doesNotMatch(settingsHub, /coating:[\s\S]{0,600}(gear|shield|cup|cloud|helmet|dish)/i);
   assert.doesNotMatch(settingsHub, /ppf:[\s\S]{0,400}(gear|shield|cup|cloud|helmet|dish)/i);
