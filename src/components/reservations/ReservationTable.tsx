@@ -11,6 +11,7 @@ import {
 } from "@/lib/reservations/reservation-types";
 import { updateReservation, createWorkOrderFromReservation } from "@/lib/reservations/update-reservation";
 import { cancelReservation } from "@/lib/reservations/cancel-reservation";
+import { GdaOperationalListEmptyState } from "@/components/ui/GdaOperationalListSurface";
 
 interface Props {
   reservations: ReservationDB[];
@@ -93,130 +94,236 @@ export default function ReservationTable({ reservations, onEdit, onRefresh }: Pr
     <div className="flex flex-col gap-3">
       {message && (
         <div
-          className={`px-4 py-2 rounded-lg text-sm ${
+          className={`px-4 py-2.5 mx-3 mt-3 rounded-xl text-sm ${
             message.type === "success"
-              ? "bg-green-500/10 text-green-400 border border-green-500/30"
-              : "bg-red-500/10 text-red-400 border border-red-500/30"
+              ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30"
+              : "bg-red-500/10 text-red-300 border border-red-500/30"
           }`}
         >
           {message.text}
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-slate-800">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-800 bg-[#0f172a]">
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">予約番号</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">日時</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">顧客</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">車両</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">施工内容</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">ステータス</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">アクション</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800">
-            {reservations.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
-                  予約がありません
-                </td>
-              </tr>
-            ) : (
-              reservations.map((r) => {
-                const busy = busyId === r.id && isPending;
-                return (
-                  <tr
-                    key={r.id}
-                    className="bg-[#0f172a] hover:bg-[#1e293b] transition-colors cursor-pointer"
-                    onClick={() => onEdit?.(r)}
-                  >
-                    <td className="px-4 py-3 text-slate-300 font-mono text-xs">
-                      {reservationDisplayNo(r)}
-                    </td>
-                    <td className="px-4 py-3 text-slate-300 whitespace-nowrap">
-                      <div>{formatDate(r.reservation_date)}</div>
-                      {r.start_time && (
-                        <div className="text-xs text-slate-500">
-                          {r.start_time.slice(0, 5)}
-                          {r.end_time && ` – ${r.end_time.slice(0, 5)}`}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-slate-300">
-                      {r.customers
-                        ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
-                        : <span className="text-slate-600">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">
-                      {r.vehicles
-                        ? [r.vehicles.maker, r.vehicles.model, r.vehicles.plate_number].filter(Boolean).join(" ")
-                        : <span className="text-slate-600">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-slate-300 text-xs">
-                      {serviceTypeLabel(r.service_type)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded border text-xs ${reservationStatusColor(r.status)}`}
-                      >
-                        {reservationStatusLabel(r.status)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div
-                        className="flex items-center gap-1.5"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {r.status === "pending" && (
-                          <button
-                            disabled={busy}
-                            onClick={() => handleConfirm(r)}
-                            className="px-2 py-1 bg-blue-600/80 hover:bg-blue-600 text-white text-xs rounded transition-colors disabled:opacity-50"
-                          >
-                            確定
-                          </button>
-                        )}
-                        {r.status === "confirmed" && !r.work_order_id && (
-                          <button
-                            disabled={busy}
-                            onClick={() => handleCreateWO(r)}
-                            className="px-2 py-1 bg-green-600/80 hover:bg-green-600 text-white text-xs rounded transition-colors disabled:opacity-50"
-                          >
-                            施工指示作成
-                          </button>
-                        )}
-                        {shouldShowEstimateAction(r.status) && (
-                          <Link
-                            href={estimateCreateUrl(r.id)}
-                            onClick={stopRowClick}
-                            className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white text-xs rounded transition-colors"
-                          >
-                            見積を作成
-                          </Link>
-                        )}
-                        {!["cancelled", "no_show", "completed"].includes(r.status) && (
-                          <button
-                            disabled={busy}
-                            onClick={() => handleCancel(r)}
-                            className="px-2 py-1 bg-slate-700 hover:bg-red-700 text-slate-300 hover:text-white text-xs rounded transition-colors disabled:opacity-50"
-                          >
-                            キャンセル
-                          </button>
-                        )}
-                        {busy && (
-                          <span className="text-xs text-slate-500">処理中...</span>
-                        )}
-                      </div>
-                    </td>
+      {reservations.length === 0 ? (
+        <GdaOperationalListEmptyState
+          messageJa="予約がありません"
+          messageEn="NO RESERVATIONS YET"
+        />
+      ) : (
+        <>
+          {/* Desktop / tablet (>=768px): table-first presentation. */}
+          <div className="hidden md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#20304a]">
+                    <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">予約番号</th>
+                    <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">日時</th>
+                    <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden sm:table-cell">顧客</th>
+                    <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden md:table-cell">車両</th>
+                    <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden lg:table-cell">施工内容</th>
+                    <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">ステータス</th>
+                    <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">アクション</th>
                   </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                </thead>
+                <tbody>
+                  {reservations.map((r, i) => {
+                    const busy = busyId === r.id && isPending;
+                    return (
+                      <tr
+                        key={r.id}
+                        className={`border-b border-[#1a2740] hover:bg-[#141e2f] transition-colors cursor-pointer ${
+                          i === reservations.length - 1 ? "border-b-0" : ""
+                        }`}
+                        onClick={() => onEdit?.(r)}
+                      >
+                        <td className="px-3 py-2.5 lg:px-4 lg:py-3 font-mono text-xs text-[#edf3fc] whitespace-nowrap">
+                          {reservationDisplayNo(r)}
+                        </td>
+                        <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#c3cee2] whitespace-nowrap">
+                          <div>{formatDate(r.reservation_date)}</div>
+                          {r.start_time && (
+                            <div className="text-xs text-[#7788a4]">
+                              {r.start_time.slice(0, 5)}
+                              {r.end_time && ` – ${r.end_time.slice(0, 5)}`}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] whitespace-nowrap hidden sm:table-cell">
+                          {r.customers
+                            ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
+                            : <span className="text-[#425169]">—</span>}
+                        </td>
+                        <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] text-xs whitespace-nowrap hidden md:table-cell">
+                          {r.vehicles
+                            ? [r.vehicles.maker, r.vehicles.model, r.vehicles.plate_number].filter(Boolean).join(" ")
+                            : <span className="text-[#425169]">—</span>}
+                        </td>
+                        <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] text-xs whitespace-nowrap hidden lg:table-cell">
+                          {serviceTypeLabel(r.service_type)}
+                        </td>
+                        <td className="px-3 py-2.5 lg:px-4 lg:py-3">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded border text-xs ${reservationStatusColor(r.status)}`}
+                          >
+                            {reservationStatusLabel(r.status)}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 lg:px-4 lg:py-3">
+                          <div
+                            className="flex flex-wrap items-center gap-1.5"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {r.status === "pending" && (
+                              <button
+                                disabled={busy}
+                                onClick={() => handleConfirm(r)}
+                                className="min-h-[36px] px-2.5 py-2 rounded-lg text-xs border border-[#2f5db8]/50 text-[#5f9cff] hover:bg-[#173463]/40 transition-colors disabled:opacity-50"
+                              >
+                                確定
+                              </button>
+                            )}
+                            {r.status === "confirmed" && !r.work_order_id && (
+                              <button
+                                disabled={busy}
+                                onClick={() => handleCreateWO(r)}
+                                className="min-h-[36px] px-2.5 py-2 rounded-lg text-xs border border-emerald-800/40 text-emerald-400 hover:bg-emerald-950/30 transition-colors disabled:opacity-50"
+                              >
+                                施工指示作成
+                              </button>
+                            )}
+                            {shouldShowEstimateAction(r.status) && (
+                              <Link
+                                href={estimateCreateUrl(r.id)}
+                                onClick={stopRowClick}
+                                className="min-h-[36px] flex items-center px-2.5 py-2 rounded-lg text-xs text-[#8191ad] hover:text-[#edf3fc] hover:bg-[#1a2740] transition-colors"
+                              >
+                                見積を作成
+                              </Link>
+                            )}
+                            {!["cancelled", "no_show", "completed"].includes(r.status) && (
+                              <button
+                                disabled={busy}
+                                onClick={() => handleCancel(r)}
+                                className="min-h-[36px] px-2.5 py-2 rounded-lg text-xs text-[#8191ad] hover:text-red-300 hover:bg-red-950/30 transition-colors disabled:opacity-50"
+                              >
+                                キャンセル
+                              </button>
+                            )}
+                            {busy && (
+                              <span className="text-xs text-[#7788a4]">処理中...</span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile (<768px): stacked records replace the wide table. */}
+          <div className="flex flex-col gap-3 p-3 md:hidden">
+            {reservations.map((r) => {
+              const busy = busyId === r.id && isPending;
+              return (
+                <div
+                  key={r.id}
+                  onClick={() => onEdit?.(r)}
+                  className="rounded-2xl border border-[#263955] bg-[#0d1420] p-4 cursor-pointer"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-mono text-[13px] font-bold text-[#edf3fc]">{reservationDisplayNo(r)}</p>
+                      <p className="truncate text-[11px] text-[#8191ad]">
+                        {formatDate(r.reservation_date)}
+                        {r.start_time && (
+                          <>
+                            {" "}
+                            {r.start_time.slice(0, 5)}
+                            {r.end_time && ` – ${r.end_time.slice(0, 5)}`}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded border text-xs ${reservationStatusColor(r.status)}`}
+                    >
+                      {reservationStatusLabel(r.status)}
+                    </span>
+                  </div>
+
+                  <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-[12px]">
+                    <div>
+                      <dt className="text-[#7788a4]">顧客</dt>
+                      <dd className="truncate text-[#c3cee2]">
+                        {r.customers
+                          ? [r.customers.last_name, r.customers.first_name].filter(Boolean).join(" ")
+                          : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[#7788a4]">車両</dt>
+                      <dd className="truncate text-[#c3cee2]">
+                        {r.vehicles
+                          ? [r.vehicles.maker, r.vehicles.model, r.vehicles.plate_number].filter(Boolean).join(" ")
+                          : "—"}
+                      </dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-[#7788a4]">施工内容</dt>
+                      <dd className="text-[#c3cee2]">{serviceTypeLabel(r.service_type)}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-3 flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                    {r.status === "pending" && (
+                      <button
+                        disabled={busy}
+                        onClick={() => handleConfirm(r)}
+                        className="min-h-[44px] flex-1 rounded-xl border border-[#2f5db8]/50 text-xs font-medium text-[#5f9cff] hover:bg-[#173463]/40 transition-colors disabled:opacity-50"
+                      >
+                        確定
+                      </button>
+                    )}
+                    {r.status === "confirmed" && !r.work_order_id && (
+                      <button
+                        disabled={busy}
+                        onClick={() => handleCreateWO(r)}
+                        className="min-h-[44px] flex-1 rounded-xl border border-emerald-800/40 text-xs font-medium text-emerald-400 hover:bg-emerald-950/30 transition-colors disabled:opacity-50"
+                      >
+                        施工指示作成
+                      </button>
+                    )}
+                    {shouldShowEstimateAction(r.status) && (
+                      <Link
+                        href={estimateCreateUrl(r.id)}
+                        onClick={stopRowClick}
+                        className="min-h-[44px] flex-1 flex items-center justify-center rounded-xl border border-[#263955] text-xs font-medium text-[#8191ad] hover:text-[#edf3fc] hover:bg-[#1a2740] transition-colors"
+                      >
+                        見積を作成
+                      </Link>
+                    )}
+                    {!["cancelled", "no_show", "completed"].includes(r.status) && (
+                      <button
+                        disabled={busy}
+                        onClick={() => handleCancel(r)}
+                        className="min-h-[44px] flex-1 rounded-xl border border-[#263955] text-xs font-medium text-[#8191ad] hover:text-red-300 hover:bg-red-950/30 transition-colors disabled:opacity-50"
+                      >
+                        キャンセル
+                      </button>
+                    )}
+                    {busy && (
+                      <span className="self-center text-xs text-[#7788a4]">処理中...</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

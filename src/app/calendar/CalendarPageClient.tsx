@@ -357,20 +357,23 @@ export default function CalendarPageClient({
     : undefined;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-lg font-semibold text-slate-100">カレンダー</h1>
-        <div className="flex items-center gap-2">
+        <div>
+          <h1 className="text-[20px] font-bold text-[#edf3fc] md:text-[22px]">カレンダー</h1>
+          <p className="mt-1 text-[10px] font-semibold tracking-[0.22em] text-[#7788a4]">CALENDAR</p>
+        </div>
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
           <Link
             href="/settings/business-hours"
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-lg transition-colors"
+            className="shrink-0 rounded-xl border border-[#263955] bg-[#111826]/90 px-4 py-2.5 text-sm font-semibold text-[#c3cee2] backdrop-blur-xl transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
           >
             営業時間設定
           </Link>
           <button
             onClick={() => { setDefaultDate(""); setDefaultStartTime(""); setDefaultEndTime(""); setModal("new"); }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="shrink-0 rounded-xl border border-[#2f5db8] bg-[#1c4fd6] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1a45bd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3478ff]"
           >
             + 新規予約
           </button>
@@ -378,56 +381,58 @@ export default function CalendarPageClient({
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-3 rounded-2xl border border-[#263955] bg-[#111826]/90 p-3 backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <button
             onClick={navigatePrev}
             aria-label="前へ"
-            className="px-3 py-1.5 min-w-[40px] bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 text-sm rounded-lg transition-colors"
+            className="min-w-[40px] rounded-lg border border-[#263955] bg-[#0d1420] px-3 py-1.5 text-sm text-[#8191ad] transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
           >
             ‹
           </button>
           <button
             onClick={navigateToday}
             aria-label="今日へ移動"
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 text-sm rounded-lg transition-colors"
+            className="rounded-lg border border-[#263955] bg-[#0d1420] px-3 py-1.5 text-sm text-[#8191ad] transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
           >
             今日
           </button>
           <button
             onClick={navigateNext}
             aria-label="次へ"
-            className="px-3 py-1.5 min-w-[40px] bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 text-sm rounded-lg transition-colors"
+            className="min-w-[40px] rounded-lg border border-[#263955] bg-[#0d1420] px-3 py-1.5 text-sm text-[#8191ad] transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
           >
             ›
           </button>
-          <span className="text-slate-200 font-medium text-sm ml-2">
+          <span className="ml-2 text-sm font-medium text-[#edf3fc]">
             {navLabel}
           </span>
-          {loading && <span className="text-xs text-slate-500">読込中...</span>}
+          {loading && <span className="text-xs text-[#7788a4]">読込中...</span>}
         </div>
 
         {view === "day" && activeBays.length > 0 && (
           <button
             onClick={() => setBayLaneMode((v) => !v)}
             aria-pressed={bayLaneMode}
-            className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-              bayLaneMode ? "bg-blue-600 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300"
+            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+              bayLaneMode
+                ? "border-[#2f5db8] bg-[#1c4fd6] text-white"
+                : "border-[#263955] bg-[#0d1420] text-[#8191ad] hover:bg-[#1a2740] hover:text-[#edf3fc]"
             }`}
           >
             ベイ表示
           </button>
         )}
 
-        <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1" role="tablist" aria-label="表示切替">
+        <div className="flex items-center gap-1 rounded-xl border border-[#263955] bg-[#0d1420] p-1" role="tablist" aria-label="表示切替">
           {(["month", "week", "day"] as View[]).map((v) => (
             <button
               key={v}
               role="tab"
               aria-selected={view === v}
               onClick={() => changeView(v)}
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                view === v ? "bg-blue-600 text-white" : "text-slate-400 hover:text-slate-200"
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                view === v ? "bg-[#1c4fd6] text-white" : "text-[#7788a4] hover:text-[#c3cee2]"
               }`}
             >
               {v === "month" ? "月" : v === "week" ? "週" : "日"}
@@ -447,7 +452,7 @@ export default function CalendarPageClient({
       )}
 
       {/* Calendar view */}
-      <div className="relative bg-[#0f172a] border border-slate-800 rounded-xl overflow-hidden">
+      <div className="relative overflow-hidden rounded-2xl border border-[#263955] bg-[#0d1420]">
         {/* Day/Week grids scroll vertically within a bounded height on small screens;
             the month grid sizes to its content. */}
         <div className={view === "month" ? "" : "max-h-[72vh] overflow-y-auto overscroll-contain"}>
@@ -497,9 +502,9 @@ export default function CalendarPageClient({
 
         {/* Loading overlay */}
         {loading && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#0f172a]/50 backdrop-blur-[1px]">
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#0d1420]/60 backdrop-blur-[1px]">
             <span
-              className="w-6 h-6 rounded-full border-2 border-slate-600 border-t-blue-400 animate-spin"
+              className="w-6 h-6 rounded-full border-2 border-[#263955] border-t-[#5f9cff] animate-spin"
               role="status"
               aria-label="読込中"
             />
@@ -510,16 +515,27 @@ export default function CalendarPageClient({
       {/* Modal */}
       {modal !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain p-3 sm:p-4"
           onClick={() => setModal(null)}
         >
+          <div className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm" aria-hidden />
           <div
-            className="bg-[#1e293b] border border-slate-700 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6"
+            className="relative my-4 w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-[#263955] bg-[#111826] p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-base font-semibold text-slate-100 mb-4">
-              {modalReservation ? "予約編集" : "新規予約"}
-            </h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-[#edf3fc]">
+                {modalReservation ? "予約編集" : "新規予約"}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setModal(null)}
+                aria-label="閉じる"
+                className="flex h-9 w-9 items-center justify-center rounded-md text-[#7788a4] transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
+              >
+                ✕
+              </button>
+            </div>
             <ReservationForm
               reservation={modalReservation}
               customers={customers}

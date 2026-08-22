@@ -84,12 +84,12 @@ export default function CalendarMonthView({
   return (
     <div className="flex flex-col gap-0">
       {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-slate-800">
+      <div className="grid grid-cols-7 border-b border-[#20304a]">
         {DAY_HEADERS.map((h, i) => (
           <div
             key={h}
             className={`py-2 text-center text-xs font-medium ${
-              i === 0 ? "text-red-400" : i === 6 ? "text-blue-400" : "text-slate-400"
+              i === 0 ? "text-red-400" : i === 6 ? "text-[#5f9cff]" : "text-[#7788a4]"
             }`}
           >
             {h}
@@ -114,14 +114,14 @@ export default function CalendarMonthView({
               key={cell.dateStr + i}
               onClick={() => onDayClick?.(cell.dateStr)}
               title={closed ? "定休日" : level ? `稼働: ${recommendationLabel(level)}` : undefined}
-              className={`relative min-h-[90px] p-1.5 border-b border-r border-slate-800 cursor-pointer transition-colors ${
-                cell.currentMonth ? "bg-[#0f172a] hover:bg-[#1e293b]" : "bg-[#0a1020] hover:bg-[#111827]"
+              className={`relative min-h-[90px] p-1.5 border-b border-r border-[#1a2740] cursor-pointer transition-colors ${
+                cell.currentMonth ? "bg-[#0d1420] hover:bg-[#141e2f]" : "bg-[#0a0f1a] hover:bg-[#0d1420]"
               } ${colIndex === 6 ? "border-r-0" : ""} ${dimmed ? "opacity-40" : ""}`}
             >
               {closed && (
                 <>
-                  <div className="pointer-events-none absolute inset-0 bg-slate-950/45" aria-hidden />
-                  <span className="absolute top-1 left-1 z-10 text-[9px] px-1 rounded bg-slate-700/70 text-slate-300">
+                  <div className="pointer-events-none absolute inset-0 bg-[#05080f]/60" aria-hidden />
+                  <span className="absolute top-1 left-1 z-10 text-[9px] px-1 rounded bg-[#1a2740]/80 text-[#c3cee2]">
                     定休
                   </span>
                 </>
@@ -139,14 +139,14 @@ export default function CalendarMonthView({
                 <span
                   className={`text-xs w-6 h-6 flex items-center justify-center rounded-full font-medium ${
                     isToday
-                      ? "bg-blue-600 text-white"
+                      ? "bg-[#1c4fd6] text-white"
                       : cell.currentMonth
                       ? colIndex === 0
                         ? "text-red-400"
                         : colIndex === 6
-                        ? "text-blue-400"
-                        : "text-slate-200"
-                      : "text-slate-600"
+                        ? "text-[#5f9cff]"
+                        : "text-[#c3cee2]"
+                      : "text-[#425169]"
                   }`}
                 >
                   {cell.day}
@@ -183,7 +183,7 @@ export default function CalendarMonthView({
                   );
                 })}
                 {cellReservations.length > 3 && (
-                  <span className="text-[9px] text-slate-400 pl-1">
+                  <span className="text-[9px] text-[#7788a4] pl-1">
                     +{cellReservations.length - 3}件
                   </span>
                 )}
