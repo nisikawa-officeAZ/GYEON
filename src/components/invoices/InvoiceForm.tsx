@@ -18,8 +18,16 @@ import ProductSelector from "@/components/products/ProductSelector";
 import { GyeonProductDB } from "@/lib/products/product-types";
 
 const inputClass =
-  "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors w-full";
-const labelClass = "text-xs font-medium text-slate-400";
+  "w-full rounded-xl border border-[#263955] bg-[#0b1220]/80 px-3 py-2 text-sm text-[#E8EEF7] placeholder-[#5C6B84] transition-colors focus:border-[#60a5fa] focus:outline-none focus:ring-2 focus:ring-[#2F6BFF]/25";
+const compactInputClass =
+  "w-full rounded-lg border border-[#263955] bg-[#0b1220]/80 px-2 py-1.5 text-xs text-[#E8EEF7] placeholder-[#5C6B84] transition-colors focus:border-[#60a5fa] focus:outline-none focus:ring-2 focus:ring-[#2F6BFF]/20";
+const labelClass = "text-[11px] font-semibold uppercase tracking-[0.18em] text-[#93A4BD]";
+const glassPanelClass =
+  "rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl";
+const primaryButtonClass =
+  "rounded-xl bg-[#2F6BFF] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_22px_rgba(47,107,255,0.32)] transition-colors hover:bg-[#3b82f6] disabled:opacity-50";
+const ghostButtonClass =
+  "rounded-xl border border-[#263955] bg-[#0b1220]/70 px-4 py-2 text-sm font-semibold text-[#93A4BD] transition-colors hover:border-[#60a5fa]/50 hover:text-[#E8EEF7] disabled:opacity-50";
 
 function formatYen(n: number) {
   return "¥" + n.toLocaleString("ja-JP");
@@ -199,16 +207,16 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
         onClose={() => setShowProductSelector(false)}
       />
     )}
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5 rounded-2xl border border-[#263955] bg-[#111826]/70 p-4 backdrop-blur-xl sm:p-5">
       {error && (
-        <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
-          <p className="text-xs text-red-400">{error}</p>
+        <div className="rounded-xl border border-red-500/35 bg-red-950/30 px-3 py-2">
+          <p className="text-xs text-red-300">{error}</p>
         </div>
       )}
 
       {isEdit && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2">
-          <p className="text-[10px] text-slate-500">請求書番号: {invoiceDisplayNo(invoice!)}</p>
+        <div className="rounded-xl border border-[#263955] bg-[#0b1220]/70 px-3 py-2">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#93A4BD]">請求書番号: {invoiceDisplayNo(invoice!)}</p>
         </div>
       )}
 
@@ -224,7 +232,7 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
           <input type="text" value={form.invoice_number} onChange={(e) => setField("invoice_number", e.target.value)}
             placeholder={previewNo ? `自動採番: ${previewNo}` : "INV-0000-00001"} className={inputClass} />
           {!form.invoice_number && previewNo && (
-            <p className="text-xs text-slate-500">空欄の場合、保存時に自動採番されます（次: {previewNo}）</p>
+            <p className="text-xs text-[#5C6B84]">空欄の場合、保存時に自動採番されます（次: {previewNo}）</p>
           )}
         </div>
       </div>
@@ -258,20 +266,20 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
           <p className={labelClass}>明細</p>
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => setShowProductSelector(true)}
-              className="text-xs text-emerald-500 hover:text-emerald-400 font-medium transition-colors">
+              className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 transition-colors hover:bg-emerald-500/15">
               + GYEON商品
             </button>
             <button type="button" onClick={addItem}
-              className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium transition-colors">
+              className="rounded-full border border-[#2F6BFF]/35 bg-[#2F6BFF]/10 px-3 py-1 text-xs font-semibold text-[#60a5fa] transition-colors hover:bg-[#2F6BFF]/15">
               + 行を追加
             </button>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-2xl border border-[#263955] bg-[#0b1220]/60">
           <table className="w-full text-xs min-w-[640px]">
             <thead>
-              <tr className="border-b border-slate-700 text-slate-500">
+              <tr className="border-b border-[#263955] text-[#5C6B84]">
                 <th className="text-left pb-2 pr-2 w-28">カテゴリ</th>
                 <th className="text-left pb-2 pr-2">品目</th>
                 <th className="text-right pb-2 pr-2 w-20">単価</th>
@@ -283,16 +291,16 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
             </thead>
             <tbody>
               {items.map((item, i) => (
-                <tr key={i} className={`border-b border-slate-700/40 last:border-b-0 ${item.item_type === "product" ? "bg-emerald-950/20" : ""}`}>
+                <tr key={i} className={`border-b border-[#263955]/70 last:border-b-0 ${item.item_type === "product" ? "bg-emerald-950/20" : ""}`}>
                   <td className="py-1.5 pr-2">
                     {item.item_type === "product" ? (
-                      <span className="text-[10px] text-emerald-400 bg-emerald-900/40 border border-emerald-800/50 px-1.5 py-1 rounded font-mono block truncate">
+                      <span className="block truncate rounded-full border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-1 font-mono text-[10px] text-emerald-300">
                         {item.sku ?? "GYEON"}
                       </span>
                     ) : (
                     <select value={item.category}
                       onChange={(e) => setItem(i, "category", e.target.value as InvoiceCategory)}
-                      className="bg-[#0f172a] border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100 w-full focus:outline-none focus:border-[#1d4ed8]">
+                      className={compactInputClass}>
                       {INVOICE_CATEGORIES.map((c) => (
                         <option key={c.value} value={c.value}>{c.label}</option>
                       ))}
@@ -303,29 +311,29 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
                     <input type="text" value={item.item_name}
                       onChange={(e) => setItem(i, "item_name", e.target.value)}
                       placeholder="品目名"
-                      className="bg-[#0f172a] border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100 w-full focus:outline-none focus:border-[#1d4ed8] placeholder-slate-600" />
+                      className={compactInputClass} />
                   </td>
                   <td className="py-1.5 pr-2">
                     <input type="number" value={item.unit_price} min={0}
                       onChange={(e) => setItem(i, "unit_price", parseFloat(e.target.value) || 0)}
-                      className="bg-[#0f172a] border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100 w-full text-right focus:outline-none focus:border-[#1d4ed8]" />
+                      className={`${compactInputClass} text-right`} />
                   </td>
                   <td className="py-1.5 pr-2">
                     <input type="number" value={item.quantity} min={1} step={0.1}
                       onChange={(e) => setItem(i, "quantity", parseFloat(e.target.value) || 1)}
-                      className="bg-[#0f172a] border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100 w-full text-right focus:outline-none focus:border-[#1d4ed8]" />
+                      className={`${compactInputClass} text-right`} />
                   </td>
                   <td className="py-1.5 pr-2">
                     <input type="number" value={item.discount_rate} min={0} max={100} step={0.1}
                       onChange={(e) => setItem(i, "discount_rate", parseFloat(e.target.value) || 0)}
-                      className="bg-[#0f172a] border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100 w-full text-right focus:outline-none focus:border-[#1d4ed8]" />
+                      className={`${compactInputClass} text-right`} />
                   </td>
-                  <td className="py-1.5 text-right text-slate-200 font-medium whitespace-nowrap pr-2">
+                  <td className="py-1.5 text-right font-medium whitespace-nowrap pr-2 text-[#E8EEF7]">
                     {formatYen(lineTotal(item.quantity, item.unit_price, item.discount_rate))}
                   </td>
                   <td className="py-1.5">
                     <button type="button" onClick={() => removeItem(i)}
-                      className="text-slate-600 hover:text-red-400 transition-colors">✕</button>
+                      className="text-[#5C6B84] transition-colors hover:text-red-300">✕</button>
                   </td>
                 </tr>
               ))}
@@ -335,7 +343,7 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
       </div>
 
       {/* Totals */}
-      <div className="bg-[#0f172a] rounded-xl border border-slate-700 p-4">
+      <div className={glassPanelClass}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           <div className="flex flex-col gap-1">
             <label className={labelClass}>値引き額 (¥)</label>
@@ -358,32 +366,32 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
         </div>
         <div className="flex flex-col items-end gap-1 text-xs">
           <div className="flex justify-between w-48">
-            <span className="text-slate-500">小計</span>
-            <span className="text-slate-300">{formatYen(totals.subtotal)}</span>
+            <span className="text-[#5C6B84]">小計</span>
+            <span className="text-[#93A4BD]">{formatYen(totals.subtotal)}</span>
           </div>
           {form.discount_amount > 0 && (
             <div className="flex justify-between w-48">
-              <span className="text-slate-500">値引き</span>
+              <span className="text-[#5C6B84]">値引き</span>
               <span className="text-red-400">－{formatYen(form.discount_amount)}</span>
             </div>
           )}
           <div className="flex justify-between w-48">
-            <span className="text-slate-500">消費税 ({form.tax_rate}%)</span>
-            <span className="text-slate-300">{formatYen(totals.tax_amount)}</span>
+            <span className="text-[#5C6B84]">消費税 ({form.tax_rate}%)</span>
+            <span className="text-[#93A4BD]">{formatYen(totals.tax_amount)}</span>
           </div>
-          <div className="flex justify-between w-48 border-t border-slate-700 pt-1 mt-1">
-            <span className="text-slate-300 font-semibold">合計</span>
-            <span className="text-slate-100 font-bold">{formatYen(totals.total)}</span>
+          <div className="flex justify-between w-48 border-t border-[#263955] pt-1 mt-1">
+            <span className="font-semibold text-[#E8EEF7]">合計</span>
+            <span className="font-bold text-white">{formatYen(totals.total)}</span>
           </div>
           {form.paid_amount > 0 && (
             <div className="flex justify-between w-48">
-              <span className="text-slate-500">入金済み</span>
+              <span className="text-[#5C6B84]">入金済み</span>
               <span className="text-green-400">－{formatYen(form.paid_amount)}</span>
             </div>
           )}
-          <div className="flex justify-between w-48 border-t border-slate-700 pt-1 mt-1">
-            <span className="text-blue-400 font-semibold">残高</span>
-            <span className="text-blue-300 font-bold">{formatYen(totals.balance_due)}</span>
+          <div className="flex justify-between w-48 border-t border-[#263955] pt-1 mt-1">
+            <span className="font-semibold text-[#60a5fa]">残高</span>
+            <span className="font-bold text-[#93c5fd]">{formatYen(totals.balance_due)}</span>
           </div>
         </div>
       </div>
@@ -404,13 +412,13 @@ export default function InvoiceForm({ invoice, workOrderId, onCancel, onSuccess 
       </div>
 
       {/* Buttons */}
-      <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+      <div className="sticky bottom-0 z-10 -mx-4 -mb-4 flex flex-wrap justify-end gap-2 border-t border-[#263955] bg-[#111826]/95 px-4 py-3 backdrop-blur-xl sm:-mx-5 sm:-mb-5 sm:px-5">
         <button type="button" onClick={onCancel} disabled={pending}
-          className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50">
+          className={ghostButtonClass}>
           キャンセル
         </button>
         <button type="submit" disabled={pending}
-          className="px-4 py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50">
+          className={primaryButtonClass}>
           {pending ? "保存中..." : isEdit ? "更新" : "作成"}
         </button>
       </div>

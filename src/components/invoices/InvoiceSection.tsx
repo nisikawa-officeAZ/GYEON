@@ -19,13 +19,20 @@ function formatYen(n: number) {
 }
 
 const STATUS_BADGE: Record<InvoiceStatus, string> = {
-  draft:          "bg-slate-600 text-slate-100",
-  issued:         "bg-blue-600 text-white",
-  paid:           "bg-green-600 text-white",
-  partially_paid: "bg-amber-600 text-white",
-  overdue:        "bg-red-600 text-white",
-  cancelled:      "bg-slate-700 text-slate-400",
+  draft:          "border-[#5C6B84]/40 bg-[#5C6B84]/15 text-[#c3cee2]",
+  issued:         "border-[#2F6BFF]/45 bg-[#2F6BFF]/15 text-[#93c5fd]",
+  paid:           "border-emerald-400/40 bg-emerald-500/15 text-emerald-300",
+  partially_paid: "border-amber-400/40 bg-amber-500/15 text-amber-300",
+  overdue:        "border-red-400/40 bg-red-500/15 text-red-300",
+  cancelled:      "border-[#5C6B84]/30 bg-[#0b1220]/70 text-[#8191ad]",
 };
+
+const nestedShellClass =
+  "rounded-2xl border border-[#263955] bg-[#111826]/80 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-xl";
+const linkButtonClass =
+  "rounded-full border border-[#263955] bg-[#0b1220]/70 px-3 py-1.5 text-xs font-semibold text-[#93A4BD] transition-colors hover:border-[#60a5fa]/50 hover:text-[#E8EEF7]";
+const primaryButtonClass =
+  "rounded-xl bg-[#2F6BFF] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_22px_rgba(47,107,255,0.28)] transition-colors hover:bg-[#3b82f6] disabled:opacity-50";
 
 type ViewState =
   | { mode: "list" }
@@ -85,9 +92,9 @@ export default function InvoiceSection({ workOrderId }: InvoiceSectionProps) {
   // ── Create form ──────────────────────────────────────────────────────────────
   if (view.mode === "create") {
     return (
-      <div className="flex flex-col gap-3">
+      <div className={nestedShellClass}>
         <button onClick={() => setView({ mode: "list" })}
-          className="text-xs text-slate-400 hover:text-slate-100 flex items-center gap-1 transition-colors self-start">
+          className={`${linkButtonClass} self-start`}>
           ← キャンセル
         </button>
         <InvoiceForm
@@ -102,9 +109,9 @@ export default function InvoiceSection({ workOrderId }: InvoiceSectionProps) {
   // ── Edit form ────────────────────────────────────────────────────────────────
   if (view.mode === "edit") {
     return (
-      <div className="flex flex-col gap-3">
+      <div className={nestedShellClass}>
         <button onClick={() => setView({ mode: "list" })}
-          className="text-xs text-slate-400 hover:text-slate-100 flex items-center gap-1 transition-colors self-start">
+          className={`${linkButtonClass} self-start`}>
           ← 戻る
         </button>
         <InvoiceForm
@@ -119,29 +126,29 @@ export default function InvoiceSection({ workOrderId }: InvoiceSectionProps) {
 
   // ── List view ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-3">
+    <div className={nestedShellClass}>
       {error && (
-        <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
-          <p className="text-xs text-red-400">{error}</p>
+        <div className="rounded-xl border border-red-500/35 bg-red-950/30 px-3 py-2">
+          <p className="text-xs text-red-300">{error}</p>
         </div>
       )}
 
       {loading ? (
-        <p className="text-xs text-slate-500 py-2 text-center">読み込み中...</p>
+        <p className="py-2 text-center text-xs text-[#5C6B84]">読み込み中...</p>
       ) : invoices.length === 0 ? (
-        <div className="text-center py-4">
-          <p className="text-xs text-slate-600 mb-3">請求書がまだありません。</p>
+        <div className="rounded-2xl border border-dashed border-[#263955] bg-[#0b1220]/50 py-5 text-center">
+          <p className="mb-3 text-xs text-[#5C6B84]">請求書がまだありません。</p>
           <div className="flex justify-center gap-2 flex-wrap">
             <button
               onClick={handleCreatedFromWO}
               disabled={creating}
-              className="text-sm bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+              className={primaryButtonClass}
             >
               {creating ? "作成中..." : "作業指示書から請求書を作成"}
             </button>
             <button
               onClick={() => setView({ mode: "create" })}
-              className="text-sm bg-slate-700 hover:bg-slate-600 text-slate-100 px-4 py-2 rounded-lg transition-colors"
+              className="rounded-xl border border-[#263955] bg-[#0b1220]/70 px-4 py-2 text-sm font-semibold text-[#93A4BD] transition-colors hover:border-[#60a5fa]/50 hover:text-[#E8EEF7]"
             >
               手動で作成
             </button>
@@ -152,7 +159,7 @@ export default function InvoiceSection({ workOrderId }: InvoiceSectionProps) {
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setView({ mode: "create" })}
-              className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium transition-colors"
+              className="rounded-full border border-[#2F6BFF]/35 bg-[#2F6BFF]/10 px-3 py-1.5 text-xs font-semibold text-[#60a5fa] transition-colors hover:bg-[#2F6BFF]/15"
             >
               + 新規作成
             </button>
@@ -161,24 +168,24 @@ export default function InvoiceSection({ workOrderId }: InvoiceSectionProps) {
             {invoices.map((inv) => (
               <div
                 key={inv.id}
-                className="bg-[#0f172a] border border-slate-700 rounded-lg px-4 py-3 flex items-center justify-between gap-3"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-[#263955] bg-[#0b1220]/70 px-4 py-3 transition-colors hover:border-[#60a5fa]/40"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-slate-100 truncate">
+                    <p className="truncate text-sm font-semibold text-[#E8EEF7]">
                       {inv.title ?? invoiceDisplayNo(inv)}
                     </p>
-                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 ${STATUS_BADGE[inv.status] ?? "bg-slate-700 text-slate-300"}`}>
+                    <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${STATUS_BADGE[inv.status] ?? "border-[#263955] bg-[#0b1220]/70 text-[#93A4BD]"}`}>
                       {invoiceStatusLabel(inv.status)}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5">
+                  <p className="mt-0.5 text-[10px] text-[#5C6B84]">
                     {invoiceDisplayNo(inv)}
                     {inv.issue_date && ` · ${inv.issue_date}`}
                     {" · "}
-                    <span className="text-slate-400 font-medium">¥{inv.total.toLocaleString("ja-JP")}</span>
+                    <span className="font-medium text-[#93A4BD]">¥{inv.total.toLocaleString("ja-JP")}</span>
                     {inv.balance_due > 0 && (
-                      <span className="text-blue-400 ml-1">
+                      <span className="ml-1 text-[#60a5fa]">
                         (残 ¥{inv.balance_due.toLocaleString("ja-JP")})
                       </span>
                     )}
@@ -187,13 +194,13 @@ export default function InvoiceSection({ workOrderId }: InvoiceSectionProps) {
                 <div className="flex gap-1.5 shrink-0">
                   <button
                     onClick={() => setView({ mode: "edit", invoice: inv })}
-                    className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
+                    className="rounded-lg px-2 py-1 text-xs text-[#93A4BD] transition-colors hover:bg-[#263955]/40 hover:text-[#E8EEF7]"
                   >
                     編集
                   </button>
                   <button
                     onClick={() => setView({ mode: "detail", invoice: inv })}
-                    className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium px-2 py-1 transition-colors"
+                    className="px-2 py-1 text-xs font-semibold text-[#60a5fa] transition-colors hover:text-[#93c5fd]"
                   >
                     詳細
                   </button>

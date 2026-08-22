@@ -30,8 +30,14 @@ import { getOpenInvoicesForCustomer } from "@/lib/payments/get-payments";
 import AllocationEditor, { proposeOldestDueFirst, validateAllocations } from "./AllocationEditor";
 
 const inputClass =
-  "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors w-full";
-const labelClass = "text-xs font-medium text-slate-400";
+  "w-full rounded-xl border border-[#263955] bg-[#0b1220]/80 px-3 py-2 text-sm text-[#E8EEF7] placeholder-[#5C6B84] transition-colors focus:border-[#60a5fa] focus:outline-none focus:ring-2 focus:ring-[#2F6BFF]/25";
+const labelClass = "text-[11px] font-semibold uppercase tracking-[0.18em] text-[#93A4BD]";
+const glassPanelClass =
+  "rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl";
+const primaryButtonClass =
+  "rounded-xl bg-[#2F6BFF] px-4 py-2 text-sm font-semibold text-white shadow-[0_0_22px_rgba(47,107,255,0.32)] transition-colors hover:bg-[#3b82f6] disabled:opacity-50";
+const ghostButtonClass =
+  "rounded-xl border border-[#263955] bg-[#0b1220]/70 px-4 py-2 text-sm font-semibold text-[#93A4BD] transition-colors hover:border-[#60a5fa]/50 hover:text-[#E8EEF7] disabled:opacity-50";
 
 function formatYen(n: number) {
   return "¥" + n.toLocaleString("ja-JP");
@@ -168,18 +174,18 @@ export default function PaymentForm({ context, payment, onCancel, onSuccess }: P
   // ── EDIT rendering: memo fields only, financial fields shown read-only ────────
   if (isEdit && payment) {
     return (
-      <form onSubmit={handleEditSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleEditSubmit} className="flex flex-col gap-5 rounded-2xl border border-[#263955] bg-[#111826]/70 p-4 backdrop-blur-xl sm:p-5">
         {error && (
-          <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
-            <p className="text-xs text-red-400">{error}</p>
+          <div className="rounded-xl border border-red-500/35 bg-red-950/30 px-3 py-2">
+            <p className="text-xs text-red-300">{error}</p>
           </div>
         )}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 flex flex-col gap-0.5">
-          <p className="text-[10px] text-slate-500">入金番号: {paymentDisplayNo(payment)}</p>
-          <p className="text-[10px] text-slate-500">
+        <div className="flex flex-col gap-0.5 rounded-xl border border-[#263955] bg-[#0b1220]/70 px-3 py-2">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#93A4BD]">入金番号: {paymentDisplayNo(payment)}</p>
+          <p className="text-[10px] text-[#5C6B84]">
             入金額 {formatYen(payment.amount)} ・ 入金日 {payment.payment_date ?? "—"}
           </p>
-          <p className="text-[10px] text-amber-500/80">
+          <p className="text-[10px] text-amber-300">
             金額・日付などの金銭項目は登録後に変更できません（備考・内部メモのみ編集可能）
           </p>
         </div>
@@ -193,13 +199,13 @@ export default function PaymentForm({ context, payment, onCancel, onSuccess }: P
           <textarea value={internalMemo} onChange={(e) => setInternalMemo(e.target.value)}
             rows={2} placeholder="社内向けメモ..." className={`${inputClass} resize-none`} />
         </div>
-        <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+        <div className="sticky bottom-0 z-10 -mx-4 -mb-4 flex flex-wrap justify-end gap-2 border-t border-[#263955] bg-[#111826]/95 px-4 py-3 backdrop-blur-xl sm:-mx-5 sm:-mb-5 sm:px-5">
           <button type="button" onClick={onCancel} disabled={pending}
-            className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50">
+            className={ghostButtonClass}>
             キャンセル
           </button>
           <button type="submit" disabled={pending}
-            className="px-4 py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50">
+            className={primaryButtonClass}>
             {pending ? "保存中..." : "更新"}
           </button>
         </div>
@@ -209,10 +215,10 @@ export default function PaymentForm({ context, payment, onCancel, onSuccess }: P
 
   // ── CREATE rendering ──────────────────────────────────────────────────────────
   return (
-    <form onSubmit={handleCreateSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleCreateSubmit} className="flex flex-col gap-5 rounded-2xl border border-[#263955] bg-[#111826]/70 p-4 backdrop-blur-xl sm:p-5">
       {error && (
-        <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
-          <p className="text-xs text-red-400">{error}</p>
+        <div className="rounded-xl border border-red-500/35 bg-red-950/30 px-3 py-2">
+          <p className="text-xs text-red-300">{error}</p>
         </div>
       )}
 
@@ -269,7 +275,7 @@ export default function PaymentForm({ context, payment, onCancel, onSuccess }: P
         </div>
         <div className="flex flex-col gap-1">
           <label className={labelClass}>実入金額</label>
-          <div className="bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 font-medium">
+          <div className="rounded-xl border border-[#263955] bg-[#0b1220]/80 px-3 py-2 text-sm font-semibold text-[#E8EEF7]">
             {formatYen(netAmount)}
           </div>
         </div>
@@ -277,22 +283,22 @@ export default function PaymentForm({ context, payment, onCancel, onSuccess }: P
 
       {/* Global flow: mode + allocation editor */}
       {context.kind === "global" && customerId && (
-        <div className="flex flex-col gap-3 border border-slate-700 rounded-lg p-3">
-          <div className="flex gap-4">
-            <label className="flex items-center gap-1.5 text-xs text-slate-300">
+        <div className={glassPanelClass}>
+          <div className="flex flex-wrap gap-3">
+            <label className="flex items-center gap-1.5 rounded-full border border-[#263955] bg-[#0b1220]/70 px-3 py-2 text-xs text-[#c3cee2]">
               <input type="radio" name="payment-mode" checked={mode === "allocated"}
                 disabled={openInvoices.length === 0}
                 onChange={() => handleModeChange("allocated")} />
               請求書へ割当
             </label>
-            <label className="flex items-center gap-1.5 text-xs text-slate-300">
+            <label className="flex items-center gap-1.5 rounded-full border border-[#263955] bg-[#0b1220]/70 px-3 py-2 text-xs text-[#c3cee2]">
               <input type="radio" name="payment-mode" checked={mode === "unapplied"}
                 onChange={() => handleModeChange("unapplied")} />
               前受金として登録（未割当）
             </label>
           </div>
           {invoicesLoading ? (
-            <p className="text-xs text-slate-500">未払い請求書を読み込み中...</p>
+            <p className="text-xs text-[#5C6B84]">未払い請求書を読み込み中...</p>
           ) : mode === "allocated" ? (
             <AllocationEditor
               invoices={openInvoices}
@@ -301,7 +307,7 @@ export default function PaymentForm({ context, payment, onCancel, onSuccess }: P
               onChange={setAllocations}
             />
           ) : (
-            <p className="text-[10px] text-slate-500">
+            <p className="text-[10px] text-[#5C6B84]">
               入金額全額を前受金（未割当）として記録します。
               {openInvoices.length > 0 && " 未払いの請求書がありますが、明示的に前受金を選択しています。"}
             </p>
@@ -331,13 +337,13 @@ export default function PaymentForm({ context, payment, onCancel, onSuccess }: P
       </div>
 
       {/* Buttons */}
-      <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+      <div className="sticky bottom-0 z-10 -mx-4 -mb-4 flex flex-wrap justify-end gap-2 border-t border-[#263955] bg-[#111826]/95 px-4 py-3 backdrop-blur-xl sm:-mx-5 sm:-mb-5 sm:px-5">
         <button type="button" onClick={onCancel} disabled={pending}
-          className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50">
+          className={ghostButtonClass}>
           キャンセル
         </button>
         <button type="submit" disabled={pending}
-          className="px-4 py-2 text-sm font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50">
+          className={primaryButtonClass}>
           {pending ? "保存中..." : "入金登録"}
         </button>
       </div>

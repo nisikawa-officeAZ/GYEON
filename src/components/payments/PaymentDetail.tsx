@@ -26,9 +26,9 @@ import AllocationEditor, { validateAllocations } from "./AllocationEditor";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between items-start gap-4 py-2 border-b border-slate-700/50 last:border-b-0">
-      <span className="text-xs text-slate-500 shrink-0 w-32">{label}</span>
-      <span className="text-xs text-slate-200 text-right break-all">{value}</span>
+    <div className="flex items-start justify-between gap-4 border-b border-[#263955]/70 py-2 last:border-b-0">
+      <span className="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#5C6B84]">{label}</span>
+      <span className="break-all text-right text-xs text-[#E8EEF7]">{value}</span>
     </div>
   );
 }
@@ -38,11 +38,20 @@ function formatYen(n: number) {
 }
 
 const STATUS_BADGE: Record<PaymentStatus, string> = {
-  completed: "bg-green-600 text-white",
-  pending:   "bg-amber-600 text-white",
-  cancelled: "bg-slate-600 text-slate-300",
-  refunded:  "bg-red-700 text-white",
+  completed: "border-emerald-400/40 bg-emerald-500/15 text-emerald-300",
+  pending:   "border-amber-400/40 bg-amber-500/15 text-amber-300",
+  cancelled: "border-[#5C6B84]/40 bg-[#5C6B84]/15 text-[#c3cee2]",
+  refunded:  "border-red-400/40 bg-red-500/15 text-red-300",
 };
+
+const detailCardClass =
+  "rounded-2xl border border-[#263955] bg-[#111826]/90 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.26)] backdrop-blur-xl";
+const sectionTitleClass =
+  "mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#93A4BD]";
+const secondaryButtonClass =
+  "rounded-xl border border-[#263955] bg-[#0b1220]/70 px-3 py-1.5 text-xs font-semibold text-[#93A4BD] transition-colors hover:border-[#60a5fa]/50 hover:text-[#E8EEF7] disabled:opacity-50";
+const primaryButtonClass =
+  "rounded-xl bg-[#2F6BFF] px-3 py-1.5 text-xs font-semibold text-white shadow-[0_0_22px_rgba(47,107,255,0.28)] transition-colors hover:bg-[#3b82f6] disabled:opacity-50";
 
 interface PaymentDetailProps {
   payment:      PaymentDB;
@@ -124,30 +133,30 @@ export default function PaymentDetail({ payment: p, onClose, onEdit, onConverted
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
-      <div className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-[#070B14]/85 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative w-full max-w-2xl bg-[#0f172a] rounded-xl shadow-lg my-4">
+      <div className="relative my-4 w-full max-w-2xl overflow-hidden rounded-2xl border border-[#263955] bg-[#070B14] shadow-[0_24px_90px_rgba(0,0,0,0.55)]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+        <div className="flex items-center justify-between border-b border-[#263955] bg-[#111826]/70 px-6 py-4">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-semibold text-slate-100">{paymentDisplayNo(p)}</h2>
-              <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${STATUS_BADGE[p.status] ?? "bg-slate-700 text-slate-300"}`}>
+              <h2 className="text-base font-semibold text-[#E8EEF7]">{paymentDisplayNo(p)}</h2>
+              <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${STATUS_BADGE[p.status] ?? "border-[#263955] bg-[#0b1220]/70 text-[#93A4BD]"}`}>
                 {paymentStatusLabel(p.status)}
               </span>
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-700 text-slate-300">
+              <span className="rounded-full border border-[#263955] bg-[#0b1220]/70 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#93A4BD]">
                 {paymentModeLabel(mode)}
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">入金記録</p>
+            <p className="mt-0.5 text-[10px] uppercase tracking-[0.18em] text-[#5C6B84]">PAYMENT DETAIL</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={onEdit}
-              className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-100 px-3 py-1.5 rounded-lg transition-colors">
+              className={secondaryButtonClass}>
               メモ編集
             </button>
             <button onClick={onClose}
-              className="text-slate-500 hover:text-slate-100 transition-colors text-lg leading-none ml-2">
+              className="ml-2 text-lg leading-none text-[#5C6B84] transition-colors hover:text-[#E8EEF7]">
               ✕
             </button>
           </div>
@@ -157,8 +166,8 @@ export default function PaymentDetail({ payment: p, onClose, onEdit, onConverted
         <div className="p-6 flex flex-col gap-4">
 
           {/* Payment Info */}
-          <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">入金情報</h3>
+          <div className={detailCardClass}>
+            <h3 className={sectionTitleClass}>入金情報 / PAYMENT</h3>
             <InfoRow label="区分"      value={paymentModeLabel(mode)} />
             <InfoRow label="入金日"    value={p.payment_date ?? "—"} />
             <InfoRow label="支払方法"  value={paymentMethodLabel(p.payment_method)} />
@@ -174,8 +183,8 @@ export default function PaymentDetail({ payment: p, onClose, onEdit, onConverted
 
           {/* Direct invoice (legacy_direct) */}
           {p.invoices && p.invoice_id && (
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">請求書情報（直接入金）</h3>
+            <div className={detailCardClass}>
+              <h3 className={sectionTitleClass}>請求書情報 / DIRECT INVOICE</h3>
               <InfoRow label="請求書番号" value={p.invoices.invoice_number ?? "—"} />
               {p.invoices.title && <InfoRow label="タイトル" value={p.invoices.title} />}
               <InfoRow label="請求額合計" value={formatYen(p.invoices.total)} />
@@ -186,10 +195,10 @@ export default function PaymentDetail({ payment: p, onClose, onEdit, onConverted
 
           {/* Allocations (allocated) */}
           {mode === "allocated" && (
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">割当内訳</h3>
+            <div className={detailCardClass}>
+              <h3 className={sectionTitleClass}>割当内訳 / ALLOCATIONS</h3>
               {allocations.length === 0 ? (
-                <p className="text-xs text-slate-500">読み込み中...</p>
+                <p className="text-xs text-[#5C6B84]">読み込み中...</p>
               ) : (
                 <>
                   {allocations.map((a) => (
@@ -206,9 +215,9 @@ export default function PaymentDetail({ payment: p, onClose, onEdit, onConverted
 
           {/* Unapplied credit */}
           {mode === "unapplied" && (
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">前受金</h3>
-              <p className="text-xs text-slate-300">
+            <div className={detailCardClass}>
+              <h3 className={sectionTitleClass}>前受金 / UNAPPLIED</h3>
+              <p className="text-xs text-[#c3cee2]">
                 この入金は前受金（未割当）として記録されています。未割当残額: {formatYen(p.amount)}
               </p>
             </div>
@@ -217,23 +226,23 @@ export default function PaymentDetail({ payment: p, onClose, onEdit, onConverted
           {/* Conversion (legacy_direct only) */}
           {canConvert && !converting && (
             <button onClick={openConversion}
-              className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium self-start transition-colors">
+              className="self-start rounded-full border border-[#2F6BFF]/35 bg-[#2F6BFF]/10 px-3 py-1.5 text-xs font-semibold text-[#60a5fa] transition-colors hover:bg-[#2F6BFF]/15">
               → 割当入金へ振替（複数請求書への配分）
             </button>
           )}
           {converting && (
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5 flex flex-col gap-3 border border-[#1d4ed8]/40">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">割当入金へ振替</h3>
-              <p className="text-[10px] text-slate-500">
+            <div className="flex flex-col gap-3 rounded-2xl border border-[#2F6BFF]/40 bg-[#111826]/90 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.26)] backdrop-blur-xl">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#93A4BD]">割当入金へ振替 / CONVERT</h3>
+              <p className="text-[10px] text-[#5C6B84]">
                 入金額 {formatYen(p.amount)} を割当し直します。元の請求書への正の割当が必須です。
               </p>
               {convError && (
-                <div className="bg-red-900/30 border border-red-700 rounded-lg px-3 py-2">
-                  <p className="text-xs text-red-400">{convError}</p>
+                <div className="rounded-xl border border-red-500/35 bg-red-950/30 px-3 py-2">
+                  <p className="text-xs text-red-300">{convError}</p>
                 </div>
               )}
               {convLoading ? (
-                <p className="text-xs text-slate-500">未払い請求書を読み込み中...</p>
+                <p className="text-xs text-[#5C6B84]">未払い請求書を読み込み中...</p>
               ) : (
                 <AllocationEditor
                   invoices={convInvoices}
@@ -245,11 +254,11 @@ export default function PaymentDetail({ payment: p, onClose, onEdit, onConverted
               )}
               <div className="flex justify-end gap-2">
                 <button onClick={() => setConverting(false)} disabled={pending}
-                  className="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50">
+                  className={secondaryButtonClass}>
                   キャンセル
                 </button>
                 <button onClick={submitConversion} disabled={pending}
-                  className="px-3 py-1.5 text-xs font-medium bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg transition-colors disabled:opacity-50">
+                  className={primaryButtonClass}>
                   {pending ? "振替中..." : "振替を実行"}
                 </button>
               </div>
@@ -258,26 +267,26 @@ export default function PaymentDetail({ payment: p, onClose, onEdit, onConverted
 
           {/* Customer Info */}
           {p.customers && (
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">顧客情報</h3>
+            <div className={detailCardClass}>
+              <h3 className={sectionTitleClass}>顧客情報 / CUSTOMER</h3>
               <InfoRow label="顧客名" value={paymentCustomerName(p.customers)} />
             </div>
           )}
 
           {/* Notes */}
           {p.notes && (
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">備考</h3>
-              <p className="text-xs text-slate-300 whitespace-pre-wrap">{p.notes}</p>
+            <div className={detailCardClass}>
+              <h3 className={sectionTitleClass}>備考 / NOTES</h3>
+              <p className="text-xs text-[#c3cee2] whitespace-pre-wrap">{p.notes}</p>
             </div>
           )}
 
           {p.internal_memo && (
-            <div className="bg-[#1e293b] rounded-xl shadow-lg p-5 border border-slate-700">
-              <h3 className="text-xs font-semibold text-amber-500/80 uppercase tracking-wider mb-2">
+            <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.26)] backdrop-blur-xl">
+              <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-300">
                 内部メモ（社内のみ）
               </h3>
-              <p className="text-xs text-slate-300 whitespace-pre-wrap">{p.internal_memo}</p>
+              <p className="text-xs text-[#E8EEF7] whitespace-pre-wrap">{p.internal_memo}</p>
             </div>
           )}
         </div>
