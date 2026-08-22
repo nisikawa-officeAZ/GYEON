@@ -130,11 +130,11 @@ export default function MaintenanceClient({ initialReminders, stats }: Props) {
       </div>
 
       {/* Status filter tabs */}
-      <div className="flex border-b border-[#263955] gap-1">
+      <div className="flex gap-1 overflow-x-auto border-b border-[#263955]">
         <button
           type="button"
           onClick={() => { setStatusFilter("all"); reload("all"); }}
-          className={`px-4 py-2 text-xs font-medium border-b-2 -mb-px transition-colors ${
+          className={`-mb-px shrink-0 whitespace-nowrap border-b-2 px-4 py-2 text-xs font-medium transition-colors ${
             statusFilter === "all"
               ? "border-[#3478ff] text-[#5f9cff]"
               : "border-transparent text-[#7788a4] hover:text-[#c3cee2]"
@@ -149,7 +149,7 @@ export default function MaintenanceClient({ initialReminders, stats }: Props) {
               key={s}
               type="button"
               onClick={() => { setStatusFilter(s); reload(s); }}
-              className={`px-4 py-2 text-xs font-medium border-b-2 -mb-px transition-colors ${
+              className={`-mb-px shrink-0 whitespace-nowrap border-b-2 px-4 py-2 text-xs font-medium transition-colors ${
                 statusFilter === s
                   ? "border-[#3478ff] text-[#5f9cff]"
                   : "border-transparent text-[#7788a4] hover:text-[#c3cee2]"
