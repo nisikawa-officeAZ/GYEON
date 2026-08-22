@@ -1234,3 +1234,60 @@ responsibility:
 decision: "GDA_UI_ESTIMATES_PRICING_S8A_AUTHORIZED_PENDING_COORDINATION_DRAFT_PR"
 next: "COMMIT_AND_PUSH_PHASE_RECORD_CREATE_DRAFT_PR_THEN_PUBLISH_CLAUDE_DIAGNOSIS_INSTRUCTION"
 ```
+
+## GDA-UI-S8B — Approved R2 estimate/pricing settings visual binding authorization
+
+```yaml
+phase: GDA_UI_ESTIMATES_PRICING_S8B_APPROVED_R2_VISUAL_BINDING
+status: AUTHORIZED
+date: 2026-08-22
+append_only: true
+objective: "Bind the owner-approved GenSpark R2 estimate/pricing UI to the accepted S8A implementation, using exactly four parent cards and four real Estimate Wizard access cards while preserving every existing functional form and business boundary."
+authorization: "Explicit current owner authorization in the MacBook Codex session on 2026-08-22: the corrected package was supplied as gda_pricing_settings_ui_approved_v1.zip and the owner instructed Codex to continue with Claude implementation."
+predecessor:
+  phase: "GDA-UI-S8A"
+  delivery: "PR #25 squash-merged to main at ff0f8760a2338232e2991de55167310c7ef65da5"
+repository:
+  repo: "nisikawa-officeAZ/GYEON"
+  base_branch: "main"
+  starting_commit: "ff0f8760a2338232e2991de55167310c7ef65da5"
+  starting_tree: "4709c9685e399c78419df5de1784dce3a3c9abb0"
+  branch: "work/gda-pricing-settings-ui-v2"
+  worktree: "/private/tmp/gda-pricing-settings-ui-v2"
+design_authority:
+  delivery: "gda_pricing_settings_ui_approved_v1.zip"
+  sha256: "37696d8eb9900803886e7f93587b86b72b9637ff71dd289769407cb2f23a106d"
+  accepted_sources: "README.md; final R2 correction in BEFORE_AFTER_MAPPING.md; settings-pricing-top.html; settings-estimate-wizard.html; previews/mock_top_desktop.png; previews/mock_wizard_desktop.png; eight actual icons/*.svg files"
+  rejected_stale_sources: "old six-child-card spec/previews; absent twelve-icon manifest entries; invented display-order, required-fields, estimate-review, and hidden-menu cards"
+implementation_candidate:
+  literal_write_allowlist:
+    - "src/components/settings/SettingsCenterHub.tsx"
+    - "src/app/settings/estimate-wizard/page.tsx"
+    - "src/app/settings/estimate-wizard/EstimateWizardSettingsClient.tsx"
+    - "src/lib/navigation/gda-category-shell.test.ts"
+    - "src/lib/navigation/gda-pricing-settings-ui.test.ts (optional add only for focused source-contract coverage)"
+  parent_cards: "exactly four: Estimate Wizard active-blue; Coating active-blue; PPF Settings unset-gray; Window Film Settings unset-gray"
+  wizard_cards: "exactly four real categories: Service Availability active-blue; Service Menus unset-gray; Work Presets unset-gray; Shop Options unset-gray"
+  behavior_rule: "Cards are a visual access layer over existing routes/anchors and forms; preserve all functional content, actions, pricing, permissions, and data behavior."
+verification:
+  - "focused navigation/UI source-contract tests once"
+  - "npx tsc --noEmit once"
+  - "git diff --check once"
+  full_suite: false
+  build: false
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx — pathname/mode/hash/Git state only"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql — metadata only/no apply"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql — closed finance artifact"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts — closed finance boundary"
+prohibited:
+  - "DB/Supabase/Auth/Storage/LINE/external service/migration/dependency/config changes"
+  - "permission, pricing, business-logic, backend, or existing-form removal"
+  - "coupon relocation, PPF child implementation, coating/window internals, commit/push, Ready, merge, deploy, destructive action"
+responsibility:
+  product_owner: "Office AZ"
+  specification_and_acceptance: "MacBook Codex"
+  bounded_implementation_and_tests: "MacBook Claude"
+decision: "GDA_UI_ESTIMATES_PRICING_S8B_AUTHORIZED_PENDING_PHASE_RECORD_GATE"
+next: "RECORD_S8B_AUTHORIZATION_THEN_PUBLISH_CLAUDE_INSTRUCTION_AND_BUILD_UNCOMMITTED_CANDIDATE"
+```
