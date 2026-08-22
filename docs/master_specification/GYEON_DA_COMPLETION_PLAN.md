@@ -227,6 +227,35 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Constraint:** GDA-1 defines the literal allowlist. No speculative redesign is allowed.
 
+### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
+
+**Objective:** Correct the owner-rejected estimate/pricing settings navigation before deeper settings-page redesign. The `見積・価格 / ESTIMATES & PRICING` group must expose exactly four real cards in the approved order, remove misleading state badges from those four navigation cards, and replace unrelated generic imagery with dedicated semantic line icons while preserving the accepted TOP visual language and existing business behavior.
+
+**Exact four-card order:**
+
+1. `見積ウィザード設定 / ESTIMATE WIZARD`
+2. `コーティング設定 / COATING`
+3. `PPF / PAINT PROTECTION FILM`
+4. `ウインドフィルム / WINDOW FILM`
+
+**Implementation allowlist:**
+
+- `src/components/settings/SettingsCenterHub.tsx`
+- `src/lib/navigation/gda-category-shell.test.ts`
+
+**Required behavior:**
+
+- Preserve the existing Estimate Wizard route and existing settings-panel reachability; create no new route or data flow in S8A.
+- Render no state badge or placeholder badge container on the four estimate/pricing cards. Preserve the state contract and badges for other settings groups.
+- Use dedicated inline SVG line icons: connected workflow steps for Estimate Wizard, layered vehicle-surface protection for coating, applied/peeled transparent film for PPF, and a layered automotive side window for window film.
+- Do not invent internal settings categories. Estimate Wizard and PPF child-page information architecture remains a later separately authorized phase based on real implemented settings.
+
+**Verification:** focused `gda-category-shell` source-contract test, `npx tsc --noEmit`, and `git diff --check`, each once. Full test suite and build are not required for this visual/navigation slice.
+
+**Boundaries:** no DB, Supabase, Auth, Storage, LINE, migration, dependency, config, permission, pricing, or business-logic change. Commit, push, Ready, merge, and deployment remain separate gates. Protected paths in §3.1 remain metadata-only.
+
+**Acceptance target:** E2 local candidate after independent MacBook Codex review. S8A does not authorize production delivery or the later Estimate Wizard/PPF child-page redesign.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

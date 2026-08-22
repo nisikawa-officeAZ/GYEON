@@ -56,7 +56,8 @@ type CardAction =
 /** Icon keys map to the small stroke set below. Emoji are deliberately not used. */
 type IconKey =
   | "store" | "people" | "clock" | "timer" | "palette" | "bell"
-  | "estimate" | "chat" | "scan" | "document" | "plan" | "spark";
+  | "estimate" | "chat" | "scan" | "document" | "plan" | "spark"
+  | "estimate_flow" | "coating" | "ppf" | "window_film";
 
 interface HubCard {
   id:             string;
@@ -67,6 +68,8 @@ interface HubCard {
   minVisibility:  SettingsVisibilityLevel;
   action:         CardAction;
   getState:       (ctx: StateContext) => CardState;
+  /** When false, the card renders no state badge and no placeholder in its place. Defaults to true. */
+  showBadge?:     boolean;
 }
 
 interface HubGroup {
@@ -187,13 +190,47 @@ const HUB_GROUPS: HubGroup[] = [
     cards: [
       {
         id:            "estimate_wizard",
-        icon:          "estimate",
+        icon:          "estimate_flow",
         label:         "見積ウィザード設定",
         labelEn:       "ESTIMATE WIZARD",
-        description:   "提供サービス・フィルム・メニュー・割引の登録と確認",
+        description:   "見積作成フロー全体の表示・提供メニュー管理",
         minVisibility: "readonly",
         action:        { kind: "route", href: "/settings/estimate-wizard" },
         getState: () => "active",
+        showBadge: false,
+      },
+      {
+        id:            "coating",
+        icon:          "coating",
+        label:         "コーティング設定",
+        labelEn:       "COATING",
+        description:   "コーティングメニュー、グレード、価格、施工条件",
+        minVisibility: "readonly",
+        action:        { kind: "route", href: "/settings?panel=service" },
+        getState: () => "active",
+        showBadge: false,
+      },
+      {
+        id:            "ppf",
+        icon:          "ppf",
+        label:         "PPF",
+        labelEn:       "PAINT PROTECTION FILM",
+        description:   "PPF種類、施工係数、コーティング同時施工減額",
+        minVisibility: "readonly",
+        action:        { kind: "route", href: "/settings/estimate-wizard#section-ppf" },
+        getState: () => "active",
+        showBadge: false,
+      },
+      {
+        id:            "window_film",
+        icon:          "window_film",
+        label:         "ウインドフィルム",
+        labelEn:       "WINDOW FILM",
+        description:   "フィルムメニュー、価格、施工条件",
+        minVisibility: "readonly",
+        action:        { kind: "route", href: "/settings/estimate-wizard#section-film" },
+        getState: () => "active",
+        showBadge: false,
       },
     ],
   },
@@ -299,7 +336,7 @@ const PENDING_ITEMS: PendingItem[] = [
 
 // ─── Icons (stroke set; no emoji) ─────────────────────────────────────────────
 
-const ICON_PATHS: Record<IconKey, ReactNode> = {
+const LEGACY_ICON_PATHS: Record<Exclude<IconKey, "estimate_flow" | "coating" | "ppf" | "window_film">, ReactNode> = {
   store:    <><path d="M2.5 6.5 4 2.5h8l1.5 4" /><path d="M2.5 6.5v7h11v-7" /><path d="M2.5 6.5h11" /></>,
   people:   <><circle cx="6" cy="6" r="2" /><path d="M2.5 13c0-2 1.6-3.5 3.5-3.5S9.5 11 9.5 13" /><path d="M11 5.5a2 2 0 0 1 0 4" /><path d="M11.5 13c0-1.4-.5-2.5-1.3-3.2" /></>,
   clock:    <><circle cx="8" cy="8" r="5.5" /><path d="M8 5v3.2l2 1.3" /></>,
@@ -314,12 +351,45 @@ const ICON_PATHS: Record<IconKey, ReactNode> = {
   spark:    <><path d="M8 2.2 9.3 6l3.8 1.3L9.3 8.6 8 12.4 6.7 8.6 2.9 7.3 6.7 6Z" /></>,
 };
 
+/** Dedicated semantic line icons for the estimate/pricing navigation cards (S8A). */
+const SEMANTIC_ICON_PATHS: Record<"estimate_flow" | "coating" | "ppf" | "window_film", ReactNode> = {
+  estimate_flow: <>
+    <circle cx="5" cy="6" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="18" r="2" />
+    <path d="M6.6 7.4 10.4 10.6" /><path d="M13.6 13.4 17.4 16.6" />
+  </>,
+  coating: <>
+    <path d="M4 9.5c1.4-3.6 5-6 8-6s6.6 2.4 8 6c.5 3.4-1 7.2-4.6 9.3-2.1 1.2-4.7 1.2-6.8 0C5 16.7 3.5 12.9 4 9.5Z" />
+    <path d="M7.2 10.8c2.9 1.6 6.7 1.6 9.6 0" />
+    <path d="M8 14c2.4 1.2 5.6 1.2 8 0" />
+    <path d="m18.2 4.4.6 1.5 1.5.6-1.5.6-.6 1.5-.6-1.5-1.5-.6 1.5-.6Z" fill="currentColor" stroke="none" />
+  </>,
+  ppf: <>
+    <rect x="4" y="5.5" width="12" height="13" rx="1.4" />
+    <path d="M12 5.5c2.6 0 5.6 1 7 3-2.6 1-5.4.4-7-1.6" />
+    <path d="M12 5.5 19 8.5" />
+  </>,
+  window_film: <>
+    <path d="M4 8.5 7 5h10l3 3.5-2 9.5H6Z" />
+    <path d="M7 16.5 9.4 8.7" />
+    <path d="M9.6 16.5 12 8.7" />
+  </>,
+};
+
+const SEMANTIC_ICON_KEYS = new Set<IconKey>(["estimate_flow", "coating", "ppf", "window_film"]);
+
 function CardIcon({ name, dim }: { name: IconKey; dim: boolean }) {
+  const isSemantic = SEMANTIC_ICON_KEYS.has(name);
   return (
     <span className={dim ? "text-[#526079]" : "text-[#91b9ff]"} aria-hidden="true">
-      <svg width="25" height="25" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
-        {ICON_PATHS[name]}
-      </svg>
+      {isSemantic ? (
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          {SEMANTIC_ICON_PATHS[name as "estimate_flow" | "coating" | "ppf" | "window_film"]}
+        </svg>
+      ) : (
+        <svg width="25" height="25" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+          {LEGACY_ICON_PATHS[name as Exclude<IconKey, "estimate_flow" | "coating" | "ppf" | "window_film">]}
+        </svg>
+      )}
     </span>
   );
 }
@@ -419,7 +489,7 @@ function HubCardButton({
         </p>
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-3 md:pt-5">
-          <CardBadge state={state} />
+          {card.showBadge !== false && <CardBadge state={state} />}
           {isInteractive && (
             <span className="text-[11px] font-semibold tracking-[0.08em] text-[#5f9cff]">開く →</span>
           )}

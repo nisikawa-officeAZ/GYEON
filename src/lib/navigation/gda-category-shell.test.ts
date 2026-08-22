@@ -73,6 +73,64 @@ test("settings stays direct while its existing hub adopts the TOP visual vocabul
   assert.match(settingsHub, /border-\[#31568c\]/);
 });
 
+test("estimate_pricing hub exposes exactly the four owner-approved cards in order", () => {
+  const settingsHub = read("src/components/settings/SettingsCenterHub.tsx");
+
+  const groupMatch = settingsHub.match(
+    /id:\s+"estimate_pricing"[\s\S]*?cards:\s*\[([\s\S]*?)\n {4}\],\n {2}\},\n\n {2}\{\n {4}id:\s+"customer_docs"/,
+  );
+  assert.ok(groupMatch, "estimate_pricing group must be found");
+  const groupBody = groupMatch[1];
+
+  assert.deepEqual(
+    [...groupBody.matchAll(/id:\s+"(\w+)"/g)].map((m) => m[1]),
+    ["estimate_wizard", "coating", "ppf", "window_film"],
+  );
+
+  assert.match(groupBody, /label:\s+"見積ウィザード設定",\s*\n\s*labelEn:\s+"ESTIMATE WIZARD"/);
+  assert.match(groupBody, /label:\s+"コーティング設定",\s*\n\s*labelEn:\s+"COATING"/);
+  assert.match(groupBody, /label:\s+"PPF",\s*\n\s*labelEn:\s+"PAINT PROTECTION FILM"/);
+  assert.match(groupBody, /label:\s+"ウインドフィルム",\s*\n\s*labelEn:\s+"WINDOW FILM"/);
+
+  assert.match(groupBody, /href: "\/settings\/estimate-wizard"/);
+  assert.match(groupBody, /href: "\/settings\?panel=service"/);
+  assert.match(groupBody, /href: "\/settings\/estimate-wizard#section-ppf"/);
+  assert.match(groupBody, /href: "\/settings\/estimate-wizard#section-film"/);
+});
+
+test("estimate_pricing cards render no state badge and use four dedicated semantic icons", () => {
+  const settingsHub = read("src/components/settings/SettingsCenterHub.tsx");
+
+  const groupMatch = settingsHub.match(
+    /id:\s+"estimate_pricing"[\s\S]*?cards:\s*\[([\s\S]*?)\n {4}\],\n {2}\},\n\n {2}\{\n {4}id:\s+"customer_docs"/,
+  );
+  assert.ok(groupMatch, "estimate_pricing group must be found");
+  const groupBody = groupMatch[1];
+
+  assert.equal(
+    (groupBody.match(/showBadge: false/g) ?? []).length,
+    4,
+    "all four estimate_pricing cards must set showBadge: false",
+  );
+  assert.match(groupBody, /icon:\s+"estimate_flow"/);
+  assert.match(groupBody, /icon:\s+"coating"/);
+  assert.match(groupBody, /icon:\s+"ppf"/);
+  assert.match(groupBody, /icon:\s+"window_film"/);
+
+  assert.match(settingsHub, /showBadge\?:\s+boolean/);
+  assert.match(settingsHub, /card\.showBadge !== false && <CardBadge state=\{state\} \/>/);
+
+  assert.match(settingsHub, /estimate_flow:\s*<>\s*\n\s*<circle cx="5" cy="6" r="2" \/><circle cx="12" cy="12" r="2" \/><circle cx="19" cy="18" r="2" \/>/);
+  assert.match(settingsHub, /coating:\s*<>\s*\n\s*<path d="M4 9\.5c1\.4-3\.6 5-6 8-6/);
+  assert.match(settingsHub, /fill="currentColor" stroke="none" \/>\s*\n\s*<\/>,\s*\n\s*ppf:/);
+  assert.match(settingsHub, /ppf:\s*<>\s*\n\s*<rect x="4" y="5\.5" width="12" height="13" rx="1\.4" \/>/);
+  assert.match(settingsHub, /window_film:\s*<>\s*\n\s*<path d="M4 8\.5 7 5h10l3 3\.5-2 9\.5H6Z" \/>/);
+
+  assert.doesNotMatch(settingsHub, /coating:[\s\S]{0,600}(gear|shield|cup|cloud|helmet|dish)/i);
+  assert.doesNotMatch(settingsHub, /ppf:[\s\S]{0,400}(gear|shield|cup|cloud|helmet|dish)/i);
+  assert.doesNotMatch(settingsHub, /window_film:[\s\S]{0,400}(gear|shield|cup|cloud|helmet|dish)/i);
+});
+
 test("dealer settings is the reference form and preserves its data contract", () => {
   const categoryPage = read("src/app/settings/[category]/page.tsx");
   const form = read("src/components/settings/CompanySettingsForm.tsx");
