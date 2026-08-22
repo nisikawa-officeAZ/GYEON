@@ -5,7 +5,7 @@ import { WorkOrderDB }  from "@/lib/work-orders/work-order-types";
 import { EstimateDB }   from "@/lib/estimates/estimate-types";
 import { CustomerDB }   from "@/lib/customers/customer-types";
 import { VehicleDB }    from "@/lib/vehicles/vehicle-types";
-import PageTitle        from "@/components/ui/PageTitle";
+import GdaOperationalListSurface, { GdaOperationalListActionButton } from "@/components/ui/GdaOperationalListSurface";
 import WorkOrderTable   from "@/components/work-orders/WorkOrderTable";
 import WorkOrderForm    from "@/components/work-orders/WorkOrderForm";
 import WorkOrderDetail  from "@/components/work-orders/WorkOrderDetail";
@@ -35,23 +35,21 @@ export default function WorkOrdersClient({
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <PageTitle title="施工管理" />
-        <button
-          onClick={() => setModal({ mode: "create" })}
-          className="shrink-0 bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-        >
-          + 新規施工指示
-        </button>
-      </div>
-
-      {/* Table */}
-      <WorkOrderTable
-        workOrders={workOrders}
-        onViewDetail={(wo) => setModal({ mode: "detail", workOrder: wo })}
-        onEdit={(wo) => setModal({ mode: "edit", workOrder: wo })}
-      />
+      <GdaOperationalListSurface
+        titleJa="施工管理"
+        titleEn="WORK ORDERS"
+        action={
+          <GdaOperationalListActionButton onClick={() => setModal({ mode: "create" })}>
+            + 新規施工指示
+          </GdaOperationalListActionButton>
+        }
+      >
+        <WorkOrderTable
+          workOrders={workOrders}
+          onViewDetail={(wo) => setModal({ mode: "detail", workOrder: wo })}
+          onEdit={(wo) => setModal({ mode: "edit", workOrder: wo })}
+        />
+      </GdaOperationalListSurface>
 
       {/* Create / Edit Modal */}
       {(modal.mode === "create" || modal.mode === "edit") && (

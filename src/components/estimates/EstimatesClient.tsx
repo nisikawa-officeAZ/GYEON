@@ -6,7 +6,7 @@ import { EstimateDB }    from "@/lib/estimates/estimate-types";
 import { CustomerDB }    from "@/lib/customers/customer-types";
 import { VehicleDB }     from "@/lib/vehicles/vehicle-types";
 import type { DetailerRank } from "@/lib/dealer-settings/dealer-settings-types";
-import PageTitle         from "@/components/ui/PageTitle";
+import GdaOperationalListSurface, { GdaOperationalListActionButton } from "@/components/ui/GdaOperationalListSurface";
 import EstimateTable     from "@/components/estimates/EstimateTable";
 import GyeonServiceForm  from "@/components/gyeon/GyeonServiceForm";
 import WorkOrderForm     from "@/components/work-orders/WorkOrderForm";
@@ -49,38 +49,36 @@ export default function EstimatesClient({ estimates, customers, vehicles, defaul
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Header row */}
-      <div className="flex items-center justify-between mb-6">
-        <PageTitle title="見積管理" />
-        <div className="flex gap-2">
-          <button
-            onClick={() => setModal({ mode: "onboarding" })}
-            className="shrink-0 bg-[#0f172a] hover:bg-slate-800 text-slate-200 border border-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            顧客・車両登録
-          </button>
-          <button
-            onClick={() => setModal({ mode: "gyeon" })}
-            className="shrink-0 bg-[#0f172a] hover:bg-slate-800 text-slate-200 border border-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            GYEON見積作成
-          </button>
-          <button
-            onClick={() => router.push("/estimates/new")}
-            className="shrink-0 bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            + 新規見積
-          </button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <EstimateTable
-        estimates={estimates}
-        onViewDetail={(e) => router.push(`/estimates/${e.id}`)}
-        onEdit={(e) => router.push(`/estimates/${e.id}/edit`)}
-        onCreateWorkOrder={(e) => setModal({ mode: "work-order", estimate: e })}
-      />
+      <GdaOperationalListSurface
+        titleJa="見積管理"
+        titleEn="ESTIMATES"
+        action={
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
+            <button
+              onClick={() => setModal({ mode: "onboarding" })}
+              className="shrink-0 rounded-xl border border-[#263955] bg-[#111826]/90 px-4 py-2.5 text-sm font-semibold text-[#c3cee2] backdrop-blur-xl transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
+            >
+              顧客・車両登録
+            </button>
+            <button
+              onClick={() => setModal({ mode: "gyeon" })}
+              className="shrink-0 rounded-xl border border-[#263955] bg-[#111826]/90 px-4 py-2.5 text-sm font-semibold text-[#c3cee2] backdrop-blur-xl transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
+            >
+              GYEON見積作成
+            </button>
+            <GdaOperationalListActionButton onClick={() => router.push("/estimates/new")}>
+              + 新規見積
+            </GdaOperationalListActionButton>
+          </div>
+        }
+      >
+        <EstimateTable
+          estimates={estimates}
+          onViewDetail={(e) => router.push(`/estimates/${e.id}`)}
+          onEdit={(e) => router.push(`/estimates/${e.id}/edit`)}
+          onCreateWorkOrder={(e) => setModal({ mode: "work-order", estimate: e })}
+        />
+      </GdaOperationalListSurface>
 
       {/* Customer & Vehicle Onboarding Modal */}
       {modal.mode === "onboarding" && (

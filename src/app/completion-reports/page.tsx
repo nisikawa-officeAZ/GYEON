@@ -50,12 +50,7 @@ interface ReportListRow {
 const WorkOrdersLink = () => (
   <a
     href="/work-orders"
-    className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors self-center"
-    style={{
-      background: "rgba(79,142,247,0.10)",
-      color:      "var(--gs-blue, #4f8ef7)",
-      border:     "1px solid rgba(79,142,247,0.20)",
-    }}
+    className="mt-2 inline-flex items-center gap-2 self-center rounded-xl border border-[#2f5db8]/50 bg-[#173463]/20 px-4 py-2 text-sm font-medium text-[#5f9cff] transition-colors hover:bg-[#173463]/40"
   >
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -67,10 +62,11 @@ const WorkOrdersLink = () => (
 
 const PageHeader = () => (
   <div>
-    <p className="text-[9px] font-bold tracking-[0.18em] text-blue-500/60 uppercase mb-0.5">
+    <p className="text-[9px] font-bold tracking-[0.18em] text-[#5f9cff]/70 uppercase mb-0.5">
       GYEON® Detailer Agent
     </p>
-    <h1 className="text-lg font-bold text-white">完了報告</h1>
+    <h1 className="text-[20px] font-bold text-[#edf3fc] md:text-[22px]">完了報告</h1>
+    <p className="mt-1 text-[10px] font-semibold tracking-[0.22em] text-[#7788a4]">COMPLETION REPORTS</p>
   </div>
 );
 
@@ -84,15 +80,9 @@ export default async function CompletionReportsPage() {
         <FeatureGate feature="completion_reports">
           <div className="max-w-lg mx-auto px-4 py-10 flex flex-col gap-6">
             <PageHeader />
-            <div
-              className="rounded-2xl border p-8 flex flex-col items-center gap-3 text-center"
-              style={{
-                background:  "var(--gs-bg-card, #16161f)",
-                borderColor: "var(--gs-line, rgba(255,255,255,0.08))",
-              }}
-            >
-              <p className="text-sm font-semibold text-[#f0f0f5]">ログインが必要です</p>
-              <p className="text-xs text-[#9999b0] leading-relaxed max-w-xs">
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#263955] bg-[#111826]/90 p-8 text-center backdrop-blur-xl">
+              <p className="text-sm font-semibold text-[#edf3fc]">ログインが必要です</p>
+              <p className="text-xs text-[#8191ad] leading-relaxed max-w-xs">
                 完了報告を表示するには、有効な店舗メンバーとしてログインしてください。
               </p>
             </div>
@@ -127,15 +117,9 @@ export default async function CompletionReportsPage() {
           <PageHeader />
 
           {judged.length === 0 ? (
-            <div
-              className="rounded-2xl border p-8 flex flex-col items-center gap-4 text-center"
-              style={{
-                background:  "var(--gs-bg-card, #16161f)",
-                borderColor: "var(--gs-line, rgba(255,255,255,0.08))",
-              }}
-            >
-              <p className="text-sm font-semibold text-[#f0f0f5]">完了報告書がまだありません</p>
-              <p className="text-xs text-[#9999b0] leading-relaxed max-w-xs">
+            <div className="flex flex-col items-center gap-4 rounded-2xl border border-[#263955] bg-[#111826]/90 p-8 text-center backdrop-blur-xl">
+              <p className="text-sm font-semibold text-[#edf3fc]">完了報告書がまだありません</p>
+              <p className="text-xs text-[#8191ad] leading-relaxed max-w-xs">
                 完了報告書は施工指示の「作業完了」操作で自動的に作成されます。<br />
                 実際の終了日時と実施した作業を確認して完了してください。
               </p>
@@ -146,16 +130,12 @@ export default async function CompletionReportsPage() {
               {judged.map(({ report, source }) => (
                 <div
                   key={report.id}
-                  className="rounded-2xl border p-4 flex flex-col gap-2"
-                  style={{
-                    background:  "var(--gs-bg-card, #16161f)",
-                    borderColor: "var(--gs-line, rgba(255,255,255,0.08))",
-                  }}
+                  className="flex flex-col gap-2 rounded-2xl border border-[#263955] bg-[#0d1420] p-4"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-slate-100 truncate">
+                        <p className="text-sm font-medium text-[#edf3fc] truncate">
                           {report.title ?? "施工完了報告書"}
                         </p>
                         <span
@@ -166,7 +146,7 @@ export default async function CompletionReportsPage() {
                           {completionReportStatusLabel(report.status)}
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5">
+                      <p className="text-[10px] text-[#7788a4] mt-0.5">
                         {completionReportDisplayNo(report)}
                         {report.report_date && ` · ${report.report_date}`}
                       </p>
@@ -179,7 +159,7 @@ export default async function CompletionReportsPage() {
                           href={`/pdf/work-report?reportId=${encodeURIComponent(report.id)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-3 py-1.5 rounded-lg transition-colors"
+                          className="text-xs rounded-lg border border-[#2f5db8] bg-[#1c4fd6] text-white px-3 py-1.5 transition-colors hover:bg-[#1a45bd]"
                         >
                           作業内容書を表示
                         </a>
@@ -187,7 +167,7 @@ export default async function CompletionReportsPage() {
                           href={`/pdf/work-report?reportId=${encodeURIComponent(report.id)}&download=1`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+                          className="text-xs rounded-lg border border-[#263955] text-[#c3cee2] px-3 py-1.5 transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
                         >
                           ダウンロード
                         </a>

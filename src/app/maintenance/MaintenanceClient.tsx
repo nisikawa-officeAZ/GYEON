@@ -33,10 +33,10 @@ function StatCard({
     accent === "blue"  ? "text-blue-400"  :
     "text-slate-100";
   return (
-    <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-5">
-      <p className="text-xs text-slate-500 mb-2">{label}</p>
+    <div className="rounded-2xl border border-[#263955] bg-[#111826]/90 p-5 backdrop-blur-xl">
+      <p className="text-xs text-[#7788a4] mb-2">{label}</p>
       <p className={`text-2xl font-bold tracking-tight ${color}`}>{value}</p>
-      {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
+      {sub && <p className="text-xs text-[#7788a4] mt-1">{sub}</p>}
     </div>
   );
 }
@@ -89,19 +89,22 @@ export default function MaintenanceClient({ initialReminders, stats }: Props) {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-lg font-semibold text-slate-100">メンテナンス通知管理</h1>
+        <div>
+          <h1 className="text-[20px] font-bold text-[#edf3fc] md:text-[22px]">メンテナンス通知管理</h1>
+          <p className="mt-1 text-[10px] font-semibold tracking-[0.22em] text-[#7788a4]">MAINTENANCE</p>
+        </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             disabled={isPending}
             onClick={handleProcessDue}
-            className="text-xs bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-40"
+            className="text-xs rounded-xl border border-[#2f5db8] bg-[#1c4fd6] text-white px-4 py-2.5 font-semibold transition-colors hover:bg-[#1a45bd] disabled:opacity-40"
           >
             {isPending ? "処理中..." : "期限到達分をキュー処理"}
           </button>
           <a
             href="/maintenance/new"
-            className="text-xs bg-[#0f172a] border border-slate-700 hover:bg-slate-800 text-slate-200 px-4 py-2 rounded-lg transition-colors"
+            className="text-xs rounded-xl border border-[#263955] bg-[#111826]/90 text-[#c3cee2] px-4 py-2.5 font-semibold backdrop-blur-xl transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
           >
             + 新規作成
           </a>
@@ -127,14 +130,14 @@ export default function MaintenanceClient({ initialReminders, stats }: Props) {
       </div>
 
       {/* Status filter tabs */}
-      <div className="flex border-b border-slate-700 gap-1">
+      <div className="flex border-b border-[#263955] gap-1">
         <button
           type="button"
           onClick={() => { setStatusFilter("all"); reload("all"); }}
           className={`px-4 py-2 text-xs font-medium border-b-2 -mb-px transition-colors ${
             statusFilter === "all"
-              ? "border-[#1d4ed8] text-blue-400"
-              : "border-transparent text-slate-400 hover:text-slate-200"
+              ? "border-[#3478ff] text-[#5f9cff]"
+              : "border-transparent text-[#7788a4] hover:text-[#c3cee2]"
           }`}
         >
           すべて ({reminders.length})
@@ -148,8 +151,8 @@ export default function MaintenanceClient({ initialReminders, stats }: Props) {
               onClick={() => { setStatusFilter(s); reload(s); }}
               className={`px-4 py-2 text-xs font-medium border-b-2 -mb-px transition-colors ${
                 statusFilter === s
-                  ? "border-[#1d4ed8] text-blue-400"
-                  : "border-transparent text-slate-400 hover:text-slate-200"
+                  ? "border-[#3478ff] text-[#5f9cff]"
+                  : "border-transparent text-[#7788a4] hover:text-[#c3cee2]"
               }`}
             >
               {maintenanceReminderStatusLabel(s)} ({count})
@@ -158,12 +161,14 @@ export default function MaintenanceClient({ initialReminders, stats }: Props) {
         })}
       </div>
 
-      <MaintenanceReminderTable
-        reminders={displayed}
-        onDetail={(r) => setModal({ mode: "detail", reminder: r })}
-        onEdit={(r)   => setModal({ mode: "edit",   reminder: r })}
-        onQueued={reload}
-      />
+      <div className="overflow-hidden rounded-2xl border border-[#263955] bg-[#111826]/90 backdrop-blur-xl">
+        <MaintenanceReminderTable
+          reminders={displayed}
+          onDetail={(r) => setModal({ mode: "detail", reminder: r })}
+          onEdit={(r)   => setModal({ mode: "edit",   reminder: r })}
+          onQueued={reload}
+        />
+      </div>
 
       {/* Detail modal */}
       {modal.mode === "detail" && (
