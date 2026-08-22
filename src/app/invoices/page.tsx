@@ -11,9 +11,7 @@ export default async function InvoicesPage() {
   return (
     <MainLayout>
       <FeatureGate feature="invoices">
-        <div className="p-6 max-w-7xl mx-auto">
-          <InvoicesClient initialInvoices={invoices} />
-        </div>
+        <InvoicesClient initialInvoices={invoices} />
       </FeatureGate>
     </MainLayout>
   );

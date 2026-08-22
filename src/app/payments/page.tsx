@@ -11,9 +11,7 @@ export default async function PaymentsPage() {
   return (
     <MainLayout>
       <FeatureGate feature="payments">
-        <div className="p-6 max-w-7xl mx-auto">
-          <PaymentsClient initialPayments={payments} />
-        </div>
+        <PaymentsClient initialPayments={payments} />
       </FeatureGate>
     </MainLayout>
   );

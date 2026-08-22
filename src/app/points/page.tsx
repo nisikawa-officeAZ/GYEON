@@ -1,5 +1,4 @@
 import MainLayout from "@/components/layout/MainLayout";
-import PageTitle from "@/components/ui/PageTitle";
 import PointsClient from "@/components/points/PointsClient";
 import { getPointCards, getPointTransactions, getPointsSummary } from "@/lib/points/points";
 import { getCustomers } from "@/lib/customers/get-customers";
@@ -23,15 +22,12 @@ export default async function PointsPage() {
 
   return (
     <MainLayout>
-      <div className="max-w-4xl mx-auto p-6 flex flex-col gap-6">
-        <PageTitle title="ポイント" subtitle="顧客ポイントカード・履歴" />
-        <PointsClient
-          initialCards={cards}
-          customers={customerOptions}
-          initialTransactions={transactions}
-          summary={summary}
-        />
-      </div>
+      <PointsClient
+        initialCards={cards}
+        customers={customerOptions}
+        initialTransactions={transactions}
+        summary={summary}
+      />
     </MainLayout>
   );
 }
