@@ -71,7 +71,7 @@ export default function CalendarWeekView({
     <div className="overflow-x-auto">
       <div className="min-w-[640px]">
         {/* Header row */}
-        <div className="grid grid-cols-[48px_repeat(7,1fr)] border-b border-slate-800">
+        <div className="grid grid-cols-[48px_repeat(7,1fr)] border-b border-[#20304a]">
           <div />
           {weekDates.map((date, i) => {
             const day = parseInt(date.slice(8), 10);
@@ -85,16 +85,16 @@ export default function CalendarWeekView({
                 type="button"
                 onClick={() => onDayClick?.(date)}
                 title={closed ? `${date}（定休日）の予約を表示` : level ? `${date}（稼働: ${recommendationLabel(level)}）の予約を表示` : `${date} の予約を表示`}
-                className={`py-2 text-center border-l border-slate-800 transition-colors hover:bg-slate-800/40 ${
-                  isToday ? "bg-blue-900/20" : closed ? "bg-slate-900/50" : ""
+                className={`py-2 text-center border-l border-[#1a2740] transition-colors hover:bg-[#141e2f] ${
+                  isToday ? "bg-[#173463]/30" : closed ? "bg-[#0a0f1a]/70" : ""
                 } ${dimmed ? "opacity-40" : ""}`}
               >
-                <span className={`text-[10px] ${i >= 5 ? "text-blue-400" : "text-slate-400"}`}>
+                <span className={`text-[10px] ${i >= 5 ? "text-[#5f9cff]" : "text-[#7788a4]"}`}>
                   {DAY_LABELS[i]}
                 </span>
                 <span
                   className={`ml-1 text-sm font-medium ${
-                    isToday ? "text-blue-400" : "text-slate-200"
+                    isToday ? "text-[#5f9cff]" : "text-[#c3cee2]"
                   }`}
                 >
                   {day}
@@ -102,21 +102,21 @@ export default function CalendarWeekView({
                 {level && !dimmed && (
                   <span className={`inline-block ml-1 w-2 h-2 rounded-full align-middle ${levelDotClass(level)}`} aria-hidden />
                 )}
-                {closed && <span className="block text-[9px] text-slate-500 leading-none">定休</span>}
+                {closed && <span className="block text-[9px] text-[#7788a4] leading-none">定休</span>}
               </button>
             );
           })}
         </div>
 
         {/* All-day row */}
-        <div className="grid grid-cols-[48px_repeat(7,1fr)] border-b border-slate-800 min-h-[28px]">
+        <div className="grid grid-cols-[48px_repeat(7,1fr)] border-b border-[#20304a] min-h-[28px]">
           <div className="flex items-center justify-end pr-2">
-            <span className="text-[9px] text-slate-600">終日</span>
+            <span className="text-[9px] text-[#7788a4]">終日</span>
           </div>
           {weekDates.map((date) => {
             const items = allDayByDay.get(date) ?? [];
             return (
-              <div key={date} className="border-l border-slate-800 p-0.5 flex flex-col gap-0.5">
+              <div key={date} className="border-l border-[#1a2740] p-0.5 flex flex-col gap-0.5">
                 {items.map((r) => (
                   <button
                     key={r.id}
@@ -143,7 +143,7 @@ export default function CalendarWeekView({
             {HOURS.filter((_, i) => i % 2 === 0).map((h) => (
               <div
                 key={h}
-                className="absolute right-2 text-[10px] tabular-nums text-slate-600 -translate-y-1/2"
+                className="absolute right-2 text-[10px] tabular-nums text-[#7788a4] -translate-y-1/2"
                 style={{ top: minutesToTop(h * 60) }}
               >
                 {String(h).padStart(2, "0")}:00
@@ -161,17 +161,17 @@ export default function CalendarWeekView({
             return (
               <div
                 key={date}
-                className={`relative border-l border-slate-800 ${isToday ? "bg-blue-900/10" : ""}`}
+                className={`relative border-l border-[#1a2740] ${isToday ? "bg-[#173463]/15" : ""}`}
                 style={{ height: totalHeight }}
               >
                 {closed && (
-                  <div className="pointer-events-none absolute inset-0 bg-slate-950/40" aria-hidden />
+                  <div className="pointer-events-none absolute inset-0 bg-[#05080f]/55" aria-hidden />
                 )}
                 {/* Hour lines */}
                 {HOURS.filter((_, i) => i % 2 === 0).map((h) => (
                   <div
                     key={h}
-                    className="absolute left-0 right-0 border-t border-slate-800/50"
+                    className="absolute left-0 right-0 border-t border-[#1a2740]/70"
                     style={{ top: minutesToTop(h * 60) }}
                   />
                 ))}
@@ -179,7 +179,7 @@ export default function CalendarWeekView({
                 {HOURS.filter((_, i) => i % 2 === 1).map((h) => (
                   <div
                     key={h}
-                    className="absolute left-0 right-0 border-t border-slate-800/20"
+                    className="absolute left-0 right-0 border-t border-[#1a2740]/30"
                     style={{ top: minutesToTop(h * 60) }}
                   />
                 ))}

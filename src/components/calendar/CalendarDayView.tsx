@@ -78,17 +78,17 @@ export default function CalendarDayView({ date, reservations, onReservationClick
     const gridCols = `48px repeat(${laneDefs.length}, minmax(120px,1fr))`;
     return (
       <div className="flex flex-col gap-0">
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-800 text-[11px] text-slate-400">
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-[#20304a] text-[11px] text-[#7788a4]">
           作業ベイ別表示
-          <span className="ml-auto text-slate-500">{reservations.length} 件</span>
+          <span className="ml-auto text-[#7788a4]">{reservations.length} 件</span>
         </div>
         <div className="overflow-x-auto">
           <div className="min-w-[520px]">
             {/* Lane headers */}
-            <div className="grid border-b border-slate-800" style={{ gridTemplateColumns: gridCols }}>
+            <div className="grid border-b border-[#20304a]" style={{ gridTemplateColumns: gridCols }}>
               <div />
               {laneDefs.map((lane) => (
-                <div key={lane.id ?? "none"} className="py-2 px-1 text-center text-[11px] text-slate-300 border-l border-slate-800 truncate">
+                <div key={lane.id ?? "none"} className="py-2 px-1 text-center text-[11px] text-[#c3cee2] border-l border-[#1a2740] truncate">
                   {lane.name}
                 </div>
               ))}
@@ -97,7 +97,7 @@ export default function CalendarDayView({ date, reservations, onReservationClick
             <div className="grid" style={{ gridTemplateColumns: gridCols }}>
               <div className="relative" style={{ height: totalHeight }}>
                 {HOURS.map((h) => (
-                  <div key={h} className="absolute right-2 text-[10px] tabular-nums text-slate-500 -translate-y-1/2" style={{ top: minutesToTop(h * 60) }}>
+                  <div key={h} className="absolute right-2 text-[10px] tabular-nums text-[#7788a4] -translate-y-1/2" style={{ top: minutesToTop(h * 60) }}>
                     {String(h).padStart(2, "0")}:00
                   </div>
                 ))}
@@ -105,9 +105,9 @@ export default function CalendarDayView({ date, reservations, onReservationClick
               {laneDefs.map((lane) => {
                 const laneLaid = layoutOverlaps(timed.filter((r) => (r.work_bay_id ?? null) === lane.id));
                 return (
-                  <div key={lane.id ?? "none"} className="relative border-l border-slate-800" style={{ height: totalHeight }}>
+                  <div key={lane.id ?? "none"} className="relative border-l border-[#1a2740]" style={{ height: totalHeight }}>
                     {HOURS.map((h) => (
-                      <div key={h} className="absolute left-0 right-0 border-t border-slate-800/60" style={{ top: minutesToTop(h * 60) }} />
+                      <div key={h} className="absolute left-0 right-0 border-t border-[#1a2740]/70" style={{ top: minutesToTop(h * 60) }} />
                     ))}
                     {laneLaid.map(({ r, col, cols, startMin, endMin }) => {
                       const top = minutesToTop(Math.max(startMin, DAY_START_MIN));
@@ -141,7 +141,7 @@ export default function CalendarDayView({ date, reservations, onReservationClick
   return (
     <div className="flex flex-col gap-0">
       {/* Legend — distinguish occupied vs available time ranges */}
-      <div className="sticky top-0 z-20 flex items-center gap-4 px-3 py-2 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 text-[11px] text-slate-400">
+      <div className="sticky top-0 z-20 flex items-center gap-4 px-3 py-2 bg-[#0d1420]/95 backdrop-blur border-b border-[#20304a] text-[11px] text-[#7788a4]">
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-3 h-3 rounded-sm bg-emerald-500/15 border border-emerald-500/40" />
           空き時間
@@ -150,24 +150,24 @@ export default function CalendarDayView({ date, reservations, onReservationClick
           <span className="inline-block w-3 h-3 rounded-sm bg-blue-500" />
           予約あり（占有）
         </span>
-        <span className="ml-auto text-slate-500">{reservations.length} 件</span>
+        <span className="ml-auto text-[#7788a4]">{reservations.length} 件</span>
       </div>
 
       {/* B1: closed-day / business-hours notice (visual only — no booking restriction) */}
       {closed ? (
-        <div className="px-3 py-1.5 bg-slate-900/70 border-b border-slate-800 text-[11px] text-slate-400">
+        <div className="px-3 py-1.5 bg-[#0a0f1a]/80 border-b border-[#20304a] text-[11px] text-[#7788a4]">
           定休日（予約の作成は可能です）
         </div>
       ) : (openTime && closeTime) ? (
-        <div className="px-3 py-1.5 bg-slate-900/40 border-b border-slate-800 text-[11px] text-slate-500">
+        <div className="px-3 py-1.5 bg-[#0a0f1a]/50 border-b border-[#20304a] text-[11px] text-[#7788a4]">
           営業時間 {openTime}–{closeTime}
         </div>
       ) : null}
 
       {/* All-day events */}
       {allDay.length > 0 && (
-        <div className="border-b border-slate-800 p-2 flex flex-wrap gap-1.5">
-          <span className="text-[11px] text-slate-500 self-center mr-1">終日</span>
+        <div className="border-b border-[#20304a] p-2 flex flex-wrap gap-1.5">
+          <span className="text-[11px] text-[#7788a4] self-center mr-1">終日</span>
           {allDay.map((r) => (
             <button
               key={r.id}
@@ -184,11 +184,11 @@ export default function CalendarDayView({ date, reservations, onReservationClick
       {/* Time grid */}
       <div className="relative grid grid-cols-[48px_1fr] sm:grid-cols-[64px_1fr]">
         {/* Time labels */}
-        <div className="relative border-r border-slate-800" style={{ height: totalHeight }}>
+        <div className="relative border-r border-[#20304a]" style={{ height: totalHeight }}>
           {HOURS.map((h) => (
             <div
               key={h}
-              className="absolute right-1.5 sm:right-2 text-[10px] sm:text-[11px] tabular-nums text-slate-500 -translate-y-1/2"
+              className="absolute right-1.5 sm:right-2 text-[10px] sm:text-[11px] tabular-nums text-[#7788a4] -translate-y-1/2"
               style={{ top: minutesToTop(h * 60) }}
             >
               {String(h).padStart(2, "0")}:00
@@ -202,7 +202,7 @@ export default function CalendarDayView({ date, reservations, onReservationClick
           {HOURS.slice(0, -1).map((h, i) => (
             <div
               key={`band-${h}`}
-              className={`absolute left-0 right-0 ${i % 2 === 1 ? "bg-slate-950/25" : ""}`}
+              className={`absolute left-0 right-0 ${i % 2 === 1 ? "bg-[#05080f]/30" : ""}`}
               style={{ top: minutesToTop(h * 60), height: SLOT_HEIGHT }}
             />
           ))}
@@ -210,19 +210,19 @@ export default function CalendarDayView({ date, reservations, onReservationClick
           {/* B1: shade non-business hours (before open / after close), or the whole day when
               closed. Visual only + pointer-events-none, so slot-create remains available. */}
           {closed ? (
-            <div className="pointer-events-none absolute inset-0 bg-slate-950/45" aria-hidden />
+            <div className="pointer-events-none absolute inset-0 bg-[#05080f]/55" aria-hidden />
           ) : (
             <>
               {openMin !== null && openMin > DAY_START_MIN && (
                 <div
-                  className="pointer-events-none absolute left-0 right-0 bg-slate-950/35"
+                  className="pointer-events-none absolute left-0 right-0 bg-[#05080f]/40"
                   style={{ top: 0, height: minutesToTop(openMin) }}
                   aria-hidden
                 />
               )}
               {closeMin !== null && closeMin < DAY_END_MIN && (
                 <div
-                  className="pointer-events-none absolute left-0 right-0 bg-slate-950/35"
+                  className="pointer-events-none absolute left-0 right-0 bg-[#05080f]/40"
                   style={{ top: minutesToTop(closeMin), height: totalHeight - minutesToTop(closeMin) }}
                   aria-hidden
                 />
@@ -234,7 +234,7 @@ export default function CalendarDayView({ date, reservations, onReservationClick
           {HOURS.map((h) => (
             <div
               key={h}
-              className="absolute left-0 right-0 border-t border-slate-800"
+              className="absolute left-0 right-0 border-t border-[#20304a]"
               style={{ top: minutesToTop(h * 60) }}
             />
           ))}
@@ -242,7 +242,7 @@ export default function CalendarDayView({ date, reservations, onReservationClick
           {HOURS.slice(0, -1).map((h) => (
             <div
               key={`${h}-half`}
-              className="absolute left-0 right-0 border-t border-dashed border-slate-800/40"
+              className="absolute left-0 right-0 border-t border-dashed border-[#1a2740]/50"
               style={{ top: minutesToTop(h * 60 + 30) }}
             />
           ))}
@@ -332,7 +332,7 @@ export default function CalendarDayView({ date, reservations, onReservationClick
         {/* Empty-state hint — grid stays interactive so users can click a slot to create. */}
         {isEmpty && (
           <div className="pointer-events-none absolute inset-x-0 top-6 flex justify-center">
-            <span className="text-xs text-slate-500 bg-[#0f172a]/80 px-3 py-1.5 rounded-full border border-slate-800">
+            <span className="text-xs text-[#8191ad] bg-[#0d1420]/90 px-3 py-1.5 rounded-full border border-[#263955]">
               この日の予約はありません — 空き枠をクリックして新規作成
             </span>
           </div>

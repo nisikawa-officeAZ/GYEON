@@ -98,28 +98,31 @@ export default function ReservationsPageClient({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-lg font-semibold text-slate-100">予約一覧</h1>
+        <div>
+          <h1 className="text-[20px] font-bold text-[#edf3fc] md:text-[22px]">予約一覧</h1>
+          <p className="mt-1 text-[10px] font-semibold tracking-[0.22em] text-[#7788a4]">RESERVATIONS</p>
+        </div>
         <button
           onClick={() => setModal("new")}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+          className="shrink-0 rounded-xl border border-[#2f5db8] bg-[#1c4fd6] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1a45bd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3478ff]"
         >
           + 新規予約
         </button>
       </div>
 
       {/* Status tabs */}
-      <div className="flex items-center gap-1 bg-[#0f172a] border border-slate-800 rounded-xl p-1 flex-wrap">
+      <div className="flex flex-wrap items-center gap-1 rounded-2xl border border-[#263955] bg-[#111826]/90 p-1 backdrop-blur-xl">
         {TABS.map((t) => (
           <button
             key={t.value}
             onClick={() => handleTabChange(t.value)}
-            className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+            className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-colors ${
               activeTab === t.value
-                ? "bg-blue-600 text-white font-medium"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-[#1c4fd6] text-white"
+                : "text-[#7788a4] hover:text-[#c3cee2]"
             }`}
           >
             {t.label}
@@ -128,62 +131,75 @@ export default function ReservationsPageClient({
       </div>
 
       {/* Date range filter */}
-      <div className="flex items-end gap-3 flex-wrap">
+      <div className="flex items-end gap-3 flex-wrap rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 backdrop-blur-xl">
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-slate-400">開始日</label>
+          <label className="text-xs text-[#7788a4]">開始日</label>
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+            className="rounded-lg border border-[#263955] bg-[#0d1420] px-3 py-2 text-sm text-[#edf3fc] focus:outline-none focus:border-[#3478ff]"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-slate-400">終了日</label>
+          <label className="text-xs text-[#7788a4]">終了日</label>
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+            className="rounded-lg border border-[#263955] bg-[#0d1420] px-3 py-2 text-sm text-[#edf3fc] focus:outline-none focus:border-[#3478ff]"
           />
         </div>
         <button
           onClick={handleDateFilter}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors"
+          className="rounded-lg border border-[#263955] bg-[#1a2740] px-4 py-2 text-sm text-[#c3cee2] transition-colors hover:bg-[#20304a] hover:text-[#edf3fc]"
         >
           絞り込み
         </button>
         {(dateFrom || dateTo) && (
           <button
             onClick={() => { setDateFrom(""); setDateTo(""); reload(); }}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 text-sm rounded-lg transition-colors"
+            className="rounded-lg border border-[#263955] bg-[#0d1420] px-4 py-2 text-sm text-[#7788a4] transition-colors hover:bg-[#1a2740] hover:text-[#c3cee2]"
           >
             クリア
           </button>
         )}
-        {loading && <span className="text-xs text-slate-500">読込中...</span>}
+        {loading && <span className="text-xs text-[#7788a4]">読込中...</span>}
       </div>
 
       {/* Table */}
-      <ReservationTable
-        reservations={reservations}
-        onEdit={(r) => setModal({ reservation: r })}
-        onRefresh={reload}
-      />
+      <div className="overflow-hidden rounded-2xl border border-[#263955] bg-[#111826]/90 backdrop-blur-xl">
+        <ReservationTable
+          reservations={reservations}
+          onEdit={(r) => setModal({ reservation: r })}
+          onRefresh={reload}
+        />
+      </div>
 
       {/* Modal */}
       {modal !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain p-3 sm:p-4"
           onClick={() => setModal(null)}
         >
+          <div className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm" aria-hidden />
           <div
-            className="bg-[#1e293b] border border-slate-700 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6"
+            className="relative my-4 w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-[#263955] bg-[#111826] p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-base font-semibold text-slate-100 mb-4">
-              {modalReservation ? "予約編集" : "新規予約"}
-            </h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-[#edf3fc]">
+                {modalReservation ? "予約編集" : "新規予約"}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setModal(null)}
+                aria-label="閉じる"
+                className="flex h-9 w-9 items-center justify-center rounded-md text-[#7788a4] transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
+              >
+                ✕
+              </button>
+            </div>
             <ReservationForm
               reservation={modalReservation}
               customers={customers}

@@ -314,13 +314,13 @@ export default function ReservationForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {/* Customer select */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-slate-400">顧客</label>
+        <label className="text-xs text-[#7788a4]">顧客</label>
         <input
           type="text"
           placeholder="顧客を検索..."
           value={custSearch}
           onChange={(e) => setCustSearch(e.target.value)}
-          className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+          className="w-full bg-[#0d1420] border border-[#263955] rounded-lg px-3 py-2 text-sm text-[#edf3fc] placeholder-[#5f6b85] focus:outline-none focus:border-[#3478ff]"
         />
         <select
           value={customerId}
@@ -328,7 +328,7 @@ export default function ReservationForm({
             setCustomerId(e.target.value);
             setVehicleId("");
           }}
-          className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          className="w-full bg-[#0d1420] border border-[#263955] rounded-lg px-3 py-2 text-sm text-[#edf3fc] focus:outline-none focus:border-[#3478ff]"
         >
           <option value="">顧客を選択</option>
           {filteredCustomers.map((c) => (
@@ -341,11 +341,11 @@ export default function ReservationForm({
 
       {/* Vehicle select */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-slate-400">車両</label>
+        <label className="text-xs text-[#7788a4]">車両</label>
         <select
           value={vehicleId}
           onChange={(e) => setVehicleId(e.target.value)}
-          className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          className="w-full bg-[#0d1420] border border-[#263955] rounded-lg px-3 py-2 text-sm text-[#edf3fc] focus:outline-none focus:border-[#3478ff]"
         >
           <option value="">車両を選択</option>
           {filteredVehicles.map((v) => (
@@ -358,11 +358,11 @@ export default function ReservationForm({
 
       {/* Assigned technician (B5a) */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-slate-400">担当スタッフ</label>
+        <label className="text-xs text-[#7788a4]">担当スタッフ</label>
         <select
           value={staffId}
           onChange={(e) => setStaffId(e.target.value)}
-          className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          className="w-full bg-[#0d1420] border border-[#263955] rounded-lg px-3 py-2 text-sm text-[#edf3fc] focus:outline-none focus:border-[#3478ff]"
         >
           <option value="">未指定</option>
           {staffOptions.map((s) => (
@@ -382,11 +382,11 @@ export default function ReservationForm({
       {/* Work bay (B6b — only when the schema is live) */}
       {WORK_BAYS_SCHEMA_READY && (
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-slate-400">作業ベイ</label>
+          <label className="text-xs text-[#7788a4]">作業ベイ</label>
           <select
             value={bayId}
             onChange={(e) => setBayId(e.target.value)}
-            className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+            className="w-full bg-[#0d1420] border border-[#263955] rounded-lg px-3 py-2 text-sm text-[#edf3fc] focus:outline-none focus:border-[#3478ff]"
           >
             <option value="">未指定</option>
             {bayOptions.map((b) => (
@@ -404,11 +404,11 @@ export default function ReservationForm({
 
       {/* Service type */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-slate-400">施工内容 <span className="text-red-400">*</span></label>
+        <label className="text-xs text-[#7788a4]">施工内容 <span className="text-red-400">*</span></label>
         <select
           value={serviceType}
           onChange={(e) => setServiceType(e.target.value as ReservationServiceType)}
-          className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          className="w-full bg-[#0d1420] border border-[#263955] rounded-lg px-3 py-2 text-sm text-[#edf3fc] focus:outline-none focus:border-[#3478ff]"
           required
         >
           {SERVICE_TYPES.map((t) => (
@@ -419,42 +419,42 @@ export default function ReservationForm({
 
       {/* Date */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-slate-400">予約日 <span className="text-red-400">*</span></label>
+        <label className="text-xs text-[#7788a4]">予約日 <span className="text-red-400">*</span></label>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           required
-          className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          className="w-full bg-[#0d1420] border border-[#263955] rounded-lg px-3 py-2 text-sm text-[#edf3fc] focus:outline-none focus:border-[#3478ff]"
         />
       </div>
 
       {/* Time */}
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-slate-400">開始時刻</label>
+          <label className="text-xs text-[#7788a4]">開始時刻</label>
           <input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+            className="w-full bg-[#0d1420] border border-[#263955] rounded-lg px-3 py-2 text-sm text-[#edf3fc] focus:outline-none focus:border-[#3478ff]"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-slate-400">終了時刻</label>
+          <label className="text-xs text-[#7788a4]">終了時刻</label>
           <input
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+            className="w-full bg-[#0d1420] border border-[#263955] rounded-lg px-3 py-2 text-sm text-[#edf3fc] focus:outline-none focus:border-[#3478ff]"
           />
         </div>
       </div>
 
       {/* B5b: previously recorded override reason for this reservation (edit view). */}
       {priorOverride && (
-        <div className="rounded-lg bg-slate-800/60 border border-slate-700 px-3 py-2 text-[11px] text-slate-300">
-          <span className="text-slate-400">前回の上書き理由: </span>{priorOverride.reason}
+        <div className="rounded-lg bg-[#1a2740]/70 border border-[#263955] px-3 py-2 text-[11px] text-[#c3cee2]">
+          <span className="text-[#7788a4]">前回の上書き理由: </span>{priorOverride.reason}
         </div>
       )}
 
@@ -558,7 +558,7 @@ export default function ReservationForm({
             value={overrideReason}
             onChange={(e) => setOverrideReason(e.target.value)}
             rows={2}
-            className="w-full bg-[#1e293b] border border-amber-500/40 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"
+            className="w-full bg-[#0d1420] border border-amber-500/40 rounded-lg px-3 py-2 text-sm text-[#edf3fc] placeholder-[#5f6b85] focus:outline-none focus:border-amber-400 resize-none"
             placeholder="重複や高負荷を承知で予約する理由など"
           />
         </div>
@@ -567,11 +567,11 @@ export default function ReservationForm({
       {/* Status (edit only) */}
       {isEdit && (
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-slate-400">ステータス</label>
+          <label className="text-xs text-[#7788a4]">ステータス</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as ReservationStatus)}
-            className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+            className="w-full bg-[#0d1420] border border-[#263955] rounded-lg px-3 py-2 text-sm text-[#edf3fc] focus:outline-none focus:border-[#3478ff]"
           >
             {STATUSES.map((s) => (
               <option key={s} value={s}>{reservationStatusLabel(s)}</option>
@@ -582,18 +582,18 @@ export default function ReservationForm({
 
       {/* Notes */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-slate-400">メモ</label>
+        <label className="text-xs text-[#7788a4]">メモ</label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={3}
-          className="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
+          className="w-full bg-[#0d1420] border border-[#263955] rounded-lg px-3 py-2 text-sm text-[#edf3fc] placeholder-[#5f6b85] focus:outline-none focus:border-[#3478ff] resize-none"
           placeholder="備考・要望など"
         />
       </div>
 
       {error && (
-        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+        <p className="text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
           {error}
         </p>
       )}
@@ -603,7 +603,7 @@ export default function ReservationForm({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors"
+            className="min-h-[44px] flex-1 rounded-xl border border-[#263955] bg-[#111826]/90 text-sm font-semibold text-[#c3cee2] backdrop-blur-xl transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
           >
             キャンセル
           </button>
@@ -611,7 +611,7 @@ export default function ReservationForm({
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+          className="min-h-[44px] flex-1 rounded-xl border border-[#2f5db8] bg-[#1c4fd6] text-sm font-semibold text-white transition-colors hover:bg-[#1a45bd] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3478ff]"
         >
           {isPending ? "処理中..." : isEdit ? "更新" : "予約作成"}
         </button>
