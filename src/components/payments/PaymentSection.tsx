@@ -24,11 +24,16 @@ function formatYen(n: number) {
 }
 
 const STATUS_BADGE: Record<PaymentStatus, string> = {
-  completed: "bg-green-600 text-white",
-  pending:   "bg-amber-600 text-white",
-  cancelled: "bg-slate-600 text-slate-300",
-  refunded:  "bg-red-700 text-white",
+  completed: "border-emerald-400/40 bg-emerald-500/15 text-emerald-300",
+  pending:   "border-amber-400/40 bg-amber-500/15 text-amber-300",
+  cancelled: "border-[#5C6B84]/40 bg-[#5C6B84]/15 text-[#c3cee2]",
+  refunded:  "border-red-400/40 bg-red-500/15 text-red-300",
 };
+
+const nestedShellClass =
+  "rounded-2xl border border-[#263955] bg-[#111826]/80 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-xl";
+const linkButtonClass =
+  "rounded-full border border-[#263955] bg-[#0b1220]/70 px-3 py-1.5 text-xs font-semibold text-[#93A4BD] transition-colors hover:border-[#60a5fa]/50 hover:text-[#E8EEF7]";
 
 type ViewState =
   | { mode: "list" }
@@ -78,9 +83,9 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
   // ── Create form: fixed legacy_direct for THIS invoice ─────────────────────────
   if (view.mode === "create") {
     return (
-      <div className="flex flex-col gap-3">
+      <div className={nestedShellClass}>
         <button onClick={() => setView({ mode: "list" })}
-          className="text-xs text-slate-400 hover:text-slate-100 flex items-center gap-1 transition-colors self-start">
+          className={`${linkButtonClass} self-start`}>
           ← キャンセル
         </button>
         <PaymentForm
@@ -95,9 +100,9 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
   // ── Edit form: notes / internal_memo only ─────────────────────────────────────
   if (view.mode === "edit") {
     return (
-      <div className="flex flex-col gap-3">
+      <div className={nestedShellClass}>
         <button onClick={() => setView({ mode: "list" })}
-          className="text-xs text-slate-400 hover:text-slate-100 flex items-center gap-1 transition-colors self-start">
+          className={`${linkButtonClass} self-start`}>
           ← 戻る
         </button>
         <PaymentForm
@@ -112,13 +117,13 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
 
   // ── List view ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-3">
+    <div className={nestedShellClass}>
       {loading ? (
-        <p className="text-xs text-slate-500 py-2 text-center">読み込み中...</p>
+        <p className="py-2 text-center text-xs text-[#5C6B84]">読み込み中...</p>
       ) : (
         <>
           <div className="flex justify-between items-center">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#5C6B84]">
               {payments.length > 0
                 ? `${payments.length}件の入金記録`
                 : "入金記録がありません"}
@@ -126,7 +131,7 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
             {invoiceBalance > 0 && (
               <button
                 onClick={() => setView({ mode: "create" })}
-                className="text-xs bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-3 py-1.5 rounded-lg transition-colors"
+                className="rounded-xl bg-[#2F6BFF] px-3 py-1.5 text-xs font-semibold text-white shadow-[0_0_22px_rgba(47,107,255,0.28)] transition-colors hover:bg-[#3b82f6]"
               >
                 + 入金登録
               </button>
@@ -137,28 +142,28 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
             <div className="flex flex-col gap-2">
               {payments.map((p) => (
                 <div key={p.id}
-                  className="bg-[#0f172a] border border-slate-700 rounded-lg px-4 py-3 flex items-center justify-between gap-3">
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-[#263955] bg-[#0b1220]/70 px-4 py-3 transition-colors hover:border-[#60a5fa]/40">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-slate-100 truncate">
+                      <p className="truncate text-sm font-semibold text-[#E8EEF7]">
                         {formatYen(p.invoice_context_amount ?? p.amount)}
                       </p>
                       {(p.invoice_context_amount ?? p.amount) !== p.amount && (
-                        <span className="text-[10px] text-slate-500 shrink-0">
+                        <span className="shrink-0 text-[10px] text-[#5C6B84]">
                           （この請求書への割当 / 入金総額 {formatYen(p.amount)}）
                         </span>
                       )}
-                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 ${STATUS_BADGE[p.status] ?? "bg-slate-700 text-slate-300"}`}>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${STATUS_BADGE[p.status] ?? "border-[#263955] bg-[#0b1220]/70 text-[#93A4BD]"}`}>
                         {paymentStatusLabel(p.status)}
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
+                    <p className="mt-0.5 text-[10px] text-[#5C6B84]">
                       {paymentDisplayNo(p)}
                       {p.payment_date && ` · ${p.payment_date}`}
                       {" · "}
                       {paymentMethodLabel(p.payment_method)}
                       {p.fee_amount > 0 && (
-                        <span className="ml-1 text-slate-600">
+                        <span className="ml-1 text-[#5C6B84]">
                           (手数料 {formatYen(p.fee_amount)} / 実 {formatYen(p.net_amount)})
                         </span>
                       )}
@@ -167,13 +172,13 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
                   <div className="flex gap-1.5 shrink-0">
                     <button
                       onClick={() => setView({ mode: "edit", payment: p })}
-                      className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
+                      className="rounded-lg px-2 py-1 text-xs text-[#93A4BD] transition-colors hover:bg-[#263955]/40 hover:text-[#E8EEF7]"
                     >
                       メモ編集
                     </button>
                     <button
                       onClick={() => setView({ mode: "detail", payment: p })}
-                      className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium px-2 py-1 transition-colors"
+                      className="px-2 py-1 text-xs font-semibold text-[#60a5fa] transition-colors hover:text-[#93c5fd]"
                     >
                       詳細
                     </button>
@@ -184,7 +189,7 @@ export default function PaymentSection({ invoiceId, invoiceBalance, onPaymentSav
           )}
 
           {payments.length === 0 && invoiceBalance <= 0 && (
-            <p className="text-xs text-green-400 text-center py-2">入金完了</p>
+            <p className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 py-3 text-center text-xs font-semibold text-emerald-300">入金完了</p>
           )}
         </>
       )}
