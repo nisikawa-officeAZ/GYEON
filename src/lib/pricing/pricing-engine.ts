@@ -43,7 +43,7 @@ export interface PpfInput {
   planId?:      string;                          // "front-half" | "full-body"
   filmType?:    string;                          // "clear" | "matte" | "carbon" | "color"
   vehicleRank?: string;                          // "std" | "premium" | "upper" | "luxury"
-  sizeKey?:     string;                          // "SS"|"S"|"M"|"ML"|"L"|"LL"|"XL"|"XXL"
+  sizeKey?:     string;                          // "SS"|"S"|"M"|"ML"|"L"|"LL"|"XL"
   frontGlass?:  string;                          // "ppf" | "tpu"
   singleParts?: { id: string; qty: number }[];   // single parts with quantity
   // Sprint 5C fills planId/filmType/vehicleRank/sizeKey from wizard state.

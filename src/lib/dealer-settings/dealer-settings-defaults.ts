@@ -47,7 +47,7 @@ export const DEFAULT_SERVICE_PRICE_SETTINGS: ServicePriceSettings = {
     ],
     size_multipliers: {
       SS: 0.75, S: 0.85, M: 1.0, ML: 1.15,
-      L: 1.3,   LL: 1.5, XL: 1.7, XXL: 1.9,
+      L: 1.3,   LL: 1.5, XL: 1.7,
     },
     topcoat_prices: {
       "one-evo":         15000,

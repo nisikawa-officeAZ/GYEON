@@ -10,7 +10,6 @@ export const BODY_SIZES: { key: string; name: string; multi: number }[] = [
   { key: "L",   name: "ミニバン L",    multi: 1.3  },
   { key: "LL",  name: "SUV / 大型",    multi: 1.5  },
   { key: "XL",  name: "高級大型",       multi: 1.7  },
-  { key: "XXL", name: "プレミアムカー", multi: 1.9  },
 ];
 
 // ── Coating products ──────────────────────────────────────────────────────────
@@ -119,15 +118,15 @@ export const PPF_PLANS: { id: string; name: string; desc: string }[] = [
 ];
 
 // Flat price table — absolute values per plan × size (not multipliers).
-// OD-2: prices from canonical spec. OD-15: XXL fallback = XL price.
+// OD-2: prices from canonical spec.
 export const PPF_PLAN_PRICES: Record<string, Record<string, number>> = {
   "front-half": {
     SS: 130000, S: 150000, M: 170000, ML: 180000,
-    L:  190000, LL: 220000, XL: 260000, XXL: 260000,
+    L:  190000, LL: 220000, XL: 260000,
   },
   "full-body": {
     SS: 250000, S: 290000, M: 330000, ML: 350000,
-    L:  370000, LL: 430000, XL: 520000, XXL: 520000,
+    L:  370000, LL: 430000, XL: 520000,
   },
 };
 

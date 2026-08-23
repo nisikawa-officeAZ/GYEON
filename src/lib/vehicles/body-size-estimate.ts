@@ -2,7 +2,7 @@
 //
 // 3M value = length_m + width_m + height_m (a rough surface-area proxy used for
 // coating/PPF sizing). We map the 3M value onto the app's body-size classes
-// (see src/lib/pricing/pricing-data.ts BODY_SIZES): SS/S/M/ML/L/LL/XL/XXL.
+// (see src/lib/pricing/pricing-data.ts BODY_SIZES): SS/S/M/ML/L/LL/XL.
 //
 // Dimensions come from OCR when available; otherwise from an INTERNAL, APPROXIMATE
 // maker/model dimension map. Unknown vehicles are NOT fabricated — the result is
@@ -13,7 +13,7 @@
 export type BodySizeSource = "OCR" | "推測" | "手入力";
 
 export interface BodySizeEstimate {
-  sizeKey: string | null;        // SS/S/M/ML/L/LL/XL/XXL, or null when unknown
+  sizeKey: string | null;        // SS/S/M/ML/L/LL/XL, or null when unknown
   threeM:  number | null;        // 3M value (length+width+height, metres)
   source:  BodySizeSource | null;
   basis:   string;               // 推定根拠 (human-readable)
@@ -21,7 +21,7 @@ export interface BodySizeEstimate {
 
 interface Dim { l: number; w: number; h: number; label: string } // metres
 
-// 3M → body-size class thresholds (approximate, monotonic). >= last max → XXL.
+// 3M → body-size class thresholds (approximate, monotonic). >= last max → XL.
 const THREE_M_STEPS: { max: number; size: string }[] = [
   { max: 6.9, size: "SS" },
   { max: 7.3, size: "S"  },
@@ -29,12 +29,11 @@ const THREE_M_STEPS: { max: number; size: string }[] = [
   { max: 8.3, size: "ML" },
   { max: 8.6, size: "L"  },
   { max: 8.9, size: "LL" },
-  { max: 9.2, size: "XL" },
 ];
 
 export function classifyThreeM(threeM: number): string {
   for (const s of THREE_M_STEPS) if (threeM < s.max) return s.size;
-  return "XXL";
+  return "XL";
 }
 
 // Internal APPROXIMATE dimension map (representative vehicle per maker/brand).
