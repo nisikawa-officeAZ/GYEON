@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const read = (path: string) => readFileSync(path, "utf8");
 
@@ -9,6 +9,7 @@ const PAGE_PATH = "src/app/settings/estimate-wizard/page.tsx";
 const PANEL_PAGE_PATH = "src/app/settings/estimate-wizard/[panel]/page.tsx";
 const PANEL_CONFIG_PATH = "src/app/settings/estimate-wizard/panel-config.ts";
 const ROOT_LAYOUT_PATH = "src/app/layout.tsx";
+const LEGACY_LOADING_PATH = "src/app/settings/estimate-wizard/loading.tsx";
 
 test("estimate-wizard page remains unchanged (S8B: read-only, no edit needed)", () => {
   const page = read(PAGE_PATH);
@@ -92,6 +93,14 @@ test("estimate wizard hub never appends a selected editor below its cards", () =
   assert.match(client, /\{!panelId && \(/);
   assert.doesNotMatch(accessLayer, /onClick=\{\(\) => onSelect/);
   assert.doesNotMatch(accessLayer, /href=\{`#\$\{/);
+});
+
+test("estimate-wizard navigation does not flash the obsolete loading skeleton", () => {
+  assert.equal(
+    existsSync(LEGACY_LOADING_PATH),
+    false,
+    "the segment-level legacy skeleton must stay absent so the current screen remains visible until the dedicated route is ready",
+  );
 });
 
 test("estimate-wizard access-card icon boxes and glyphs use one exact size", () => {
