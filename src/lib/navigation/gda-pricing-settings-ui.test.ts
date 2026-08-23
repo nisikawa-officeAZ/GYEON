@@ -27,6 +27,12 @@ test("estimate wizard exposes exactly the four real access cards in the approved
   assert.match(client, /label:\s+"店舗オプション",\s*\n\s*labelEn:\s+"SHOP OPTIONS"/);
 });
 
+test("estimate wizard uses the same approved 1280px card canvas as the settings hub", () => {
+  const page = read(PAGE_PATH);
+  assert.match(page, /mx-auto flex w-full max-w-\[1280px\] flex-col gap-6/);
+  assert.doesNotMatch(page, /className="[^"]*max-w-3xl/);
+});
+
 test("estimate wizard access cards use the approved badge states and derive anchors from view.sections, never a hardcoded route", () => {
   const client = read(CLIENT_PATH);
 
