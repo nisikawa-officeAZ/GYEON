@@ -303,6 +303,50 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Acceptance target:** E2 uncommitted local candidate after MacBook Codex scope and visual-source review.
 
+### GDA-COATING-V3.3-C1 — Seven-size contract normalization
+
+**Status:** Governance activation authorized; source implementation is not yet started.
+
+**Objective:** Normalize every allowlisted new-operation vehicle-size contract to exactly `SS / S / M / ML / L / LL / XL`, abolish `XXL`, and make `XL` the terminal result of the existing 3M classifier without changing any numeric threshold.
+
+**Canonical authorities:**
+
+- `docs/master_specification/GDA_COATING_SETTINGS_FORMAL_SPEC_CHANGE_V3.md` V3.3.
+- `docs/master_specification/CLAUDE_DIRECTIVE_GDA_COATING_V3_3_C1_SEVEN_SIZE_CONTRACT.md`.
+
+**Owner decisions:**
+
+- `XXL` is not a valid new-operation size.
+- Do not merge, alias, map, automatically convert, or use `XXL` as an `XL` price fallback.
+- Existing finalized historical records are not rewritten or recalculated.
+- Existing persisted `XXL` values are not read or modified in C1. Their inventory and manual-remediation flow require a later separately authorized gate.
+- C1 preserves the current 3M thresholds, OCR/form behavior, operator correction, retained labels, retained multipliers, and retained PPF prices.
+- Direct seven-size coating prices, upper-layer pricing, coating UI, production OCR wiring, DB changes, migrations, and historical remediation are later phases.
+
+**Literal implementation allowlist:**
+
+1. `src/lib/dealer-settings/dealer-settings-types.ts`
+2. `src/lib/dealer-settings/dealer-settings-defaults.ts`
+3. `src/lib/pricing/pricing-data.ts`
+4. `src/lib/pricing/pricing-engine.ts` — comment/type-description correction only
+5. `src/lib/vehicles/body-size-estimate.ts`
+6. `src/components/onboarding/CustomerVehicleOnboardingWizard.tsx` — remove only the `XXL` option
+7. `src/lib/vehicles/body-size-estimate.test.ts` — add
+8. `src/lib/pricing/body-size-contract.test.ts` — add
+
+**Required behavior:**
+
+- The canonical size type, defaults, shared pricing data, PPF plan-price keys, classifier output, and onboarding choices contain exactly seven values in the approved order.
+- The classifier keeps the current boundaries and returns `XL` for every remaining finite value after the `LL` boundary.
+- No compatibility alias or automatic legacy coercion is introduced.
+- The old coating `base_price_m` and `size_multipliers` architecture remains temporarily in C1, with exactly seven keys. The direct-price architecture belongs to C2.
+
+**Verification:** run the two focused contract tests together once, `npx tsc --noEmit` once, and `git diff --check` once. Do not run the full suite or build unless MacBook Codex separately authorizes it after a focused failure that cannot be isolated.
+
+**Boundaries:** protected paths in section 3.1 remain metadata-only. No DB, Supabase, Auth, Storage, LINE, migration, external-service, dependency, config, route, permission, unrelated UI, stage, commit, push, Ready, merge, Preview, or deployment action is included in the C1 implementation candidate.
+
+**Acceptance target:** E2 uncommitted local candidate after independent MacBook Codex scope and evidence review. Governance-document commit/push and Draft-PR instruction are separate gates and do not authorize implementation by themselves.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

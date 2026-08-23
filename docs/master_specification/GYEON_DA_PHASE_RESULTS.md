@@ -1354,3 +1354,61 @@ scope_confirmation:
 decision: "GDA_UI_ESTIMATES_PRICING_S8B_SOURCE_COMMITTED_LEDGER_SYNCED_UNCOMMITTED"
 next: "INDEPENDENTLY_VERIFY_AND_COMMIT_ONLY_THIS_RESULT_LEDGER_PATH_THEN_STOP_BEFORE_PUSH"
 ```
+
+## GDA-COATING-V3.3-C1 — Seven-size contract governance activation
+
+```yaml
+phase: GDA_COATING_V3_3_C1_SEVEN_SIZE_CONTRACT
+status: GOVERNANCE_ACTIVATION_AUTHORIZED_IMPLEMENTATION_NOT_STARTED
+date: 2026-08-24
+append_only: true
+objective: "Normalize the new-operation vehicle-size contract to exactly SS/S/M/ML/L/LL/XL, abolish XXL without automatic conversion, and preserve the existing 3M thresholds before the later direct-price coating architecture and UI phases."
+authorization: "The owner explicitly approved Git governance registration and publication of the formal Claude instruction after reviewing and correcting the vehicle-size decision to seven sizes with XXL abolished."
+repository:
+  repo: "nisikawa-officeAZ/GYEON"
+  base_branch: "main"
+  prepared_base_commit: "372bb9d3dc625b3ff978c4f2a71401043078eb26"
+  prepared_base_tree: "b9be41da4e116bb591af42763d1f145ca4785be7"
+  governance_branch: "plan/gda-coating-v3-3-seven-size-contract"
+canonical_authority:
+  specification: "docs/master_specification/GDA_COATING_SETTINGS_FORMAL_SPEC_CHANGE_V3.md"
+  specification_version: "V3.3"
+  specification_sha256: "a44900105190c7af5232192f24e1336fa5d85cfefa2e2fa2ed17813da688d97c"
+  claude_directive: "docs/master_specification/CLAUDE_DIRECTIVE_GDA_COATING_V3_3_C1_SEVEN_SIZE_CONTRACT.md"
+  claude_directive_sha256: "83bc0c3fa0db8f95b8de42bf8d0a6e6a9ce75055be4b677045d59f3d1189d249"
+owner_decisions:
+  sizes: ["SS", "S", "M", "ML", "L", "LL", "XL"]
+  xxl: "ABOLISHED — no merge, alias, mapping, automatic conversion, or XL price fallback"
+  historical_records: "No rewrite or recalculation of finalized history"
+  persisted_xxl: "No read or mutation in C1; later read-only inventory and manual-remediation gate required"
+implementation_allowlist:
+  - "src/lib/dealer-settings/dealer-settings-types.ts"
+  - "src/lib/dealer-settings/dealer-settings-defaults.ts"
+  - "src/lib/pricing/pricing-data.ts"
+  - "src/lib/pricing/pricing-engine.ts — comment/type-description only"
+  - "src/lib/vehicles/body-size-estimate.ts"
+  - "src/components/onboarding/CustomerVehicleOnboardingWizard.tsx — remove only XXL option"
+  - "src/lib/vehicles/body-size-estimate.test.ts — add"
+  - "src/lib/pricing/body-size-contract.test.ts — add"
+governance_write_allowlist:
+  - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+  - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  - "docs/master_specification/GDA_COATING_SETTINGS_FORMAL_SPEC_CHANGE_V3.md"
+  - "docs/master_specification/CLAUDE_DIRECTIVE_GDA_COATING_V3_3_C1_SEVEN_SIZE_CONTRACT.md"
+verification_plan:
+  focused_tests: "node --import tsx --test src/lib/vehicles/body-size-estimate.test.ts src/lib/pricing/body-size-contract.test.ts — once after implementation"
+  typecheck: "npx tsc --noEmit — once after implementation"
+  diff_check: "git diff --check — once after implementation"
+  full_suite: false
+  build: false
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx — pathname/mode/hash/Git state only"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql — metadata only/no apply"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql — closed finance artifact"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts — closed finance boundary"
+scope_confirmation:
+  - "This entry registers governance only; no source implementation, test execution, DB/Supabase/Auth/Storage/LINE access, migration, stage, commit, push, Ready, merge, Preview, or deployment occurred."
+  - "Direct seven-size coating prices, upper-layer pricing, coating UI, OCR production wiring, and legacy XXL remediation remain later separately authorized phases."
+decision: "GDA_COATING_V3_3_C1_GOVERNANCE_CANDIDATE_READY"
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_COMMIT_PUSH_CREATE_DRAFT_PR_PUBLISH_CLAUDE_INSTRUCTION_THEN_STOP_BEFORE_IMPLEMENTATION"
+```
