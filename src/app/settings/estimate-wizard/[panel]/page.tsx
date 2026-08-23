@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import MainLayout from "@/components/layout/MainLayout";
 import { getEstimateWizardSettingsView } from "@/lib/wizard-catalog/get-estimate-wizard-settings-view";
 import EstimateWizardSettingsClient from "../EstimateWizardSettingsClient";
 import { getEstimateWizardPanelConfig } from "../panel-config";
@@ -25,29 +24,27 @@ export default async function EstimateWizardPanelPage({ params }: PageProps) {
   if (result.ok && !panelId) notFound();
 
   return (
-    <MainLayout>
-      <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-6">
-        <div className="flex flex-col gap-3">
-          <Link
-            href="/settings/estimate-wizard"
-            className="self-start rounded-xl border border-[#263955] bg-[#0b1220]/70 px-3 py-2 text-xs font-semibold text-[#91b9ff] transition-colors hover:border-[#3b6eb4] hover:text-white"
-          >
-            ← 見積ウィザード設定へ戻る
-          </Link>
-          <div className="flex flex-col gap-1">
-            <h1 className="text-lg font-semibold text-slate-100">{config.labelJa}</h1>
-            <p className="text-[10px] font-semibold tracking-[0.18em] text-[#8191ad]">{config.labelEn}</p>
-          </div>
+    <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-6">
+      <div className="flex flex-col gap-3">
+        <Link
+          href="/settings/estimate-wizard"
+          className="self-start rounded-xl border border-[#263955] bg-[#0b1220]/70 px-3 py-2 text-xs font-semibold text-[#91b9ff] transition-colors hover:border-[#3b6eb4] hover:text-white"
+        >
+          ← 見積ウィザード設定へ戻る
+        </Link>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-lg font-semibold text-slate-100">{config.labelJa}</h1>
+          <p className="text-[10px] font-semibold tracking-[0.18em] text-[#8191ad]">{config.labelEn}</p>
         </div>
-
-        {result.ok ? (
-          <EstimateWizardSettingsClient view={result.view} panelId={panelId!} />
-        ) : (
-          <div className="rounded-xl border border-red-800/60 bg-red-900/40 px-4 py-3 text-sm text-red-300">
-            {result.messageJa}
-          </div>
-        )}
       </div>
-    </MainLayout>
+
+      {result.ok ? (
+        <EstimateWizardSettingsClient view={result.view} panelId={panelId!} />
+      ) : (
+        <div className="rounded-xl border border-red-800/60 bg-red-900/40 px-4 py-3 text-sm text-red-300">
+          {result.messageJa}
+        </div>
+      )}
+    </div>
   );
 }
