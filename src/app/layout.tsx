@@ -23,6 +23,9 @@ export const metadata: Metadata = {
     template: `%s | ${BRAND.name}`,
   },
   description: BRAND.description,
+  other: {
+    google: "notranslate",
+  },
   // PWA manifest is served at /manifest.json by src/app/manifest.json/route.ts
   // (a Route Handler on a path that bypasses the frozen auth middleware).
   manifest: "/manifest.json",
@@ -41,8 +44,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
-      <body className={`${geist.variable} antialiased bg-[#080d1a] text-slate-100`}>
+    <html lang="ja" translate="no">
+      <body className={`${geist.variable} notranslate antialiased bg-[#080d1a] text-slate-100`}>
         <DevServiceWorkerCleanup />
         {children}
       </body>

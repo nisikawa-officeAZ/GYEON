@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import MainLayout from "@/components/layout/MainLayout";
 import { getEstimateWizardSettingsView } from "@/lib/wizard-catalog/get-estimate-wizard-settings-view";
 import EstimateWizardSettingsClient from "./EstimateWizardSettingsClient";
 
@@ -12,23 +11,24 @@ export default async function EstimateWizardSettingsPage() {
   const result = await getEstimateWizardSettingsView();
 
   return (
-    <MainLayout>
-      <div className="max-w-3xl mx-auto p-4 sm:p-6 flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-lg font-semibold text-slate-100">見積ウィザード設定</h1>
-          <p className="text-xs text-slate-500">
-            見積ウィザードで使用する項目（フィルム・サービスメニュー・その他作業・店舗オプション）を登録し、内容を確認します。
-          </p>
-        </div>
-
-        {result.ok ? (
-          <EstimateWizardSettingsClient view={result.view} />
-        ) : (
-          <div className="px-4 py-3 bg-red-900/40 border border-red-800/60 rounded-xl text-sm text-red-300">
-            {result.messageJa}
-          </div>
-        )}
+    /* Keep the approved card UI on the same 1280px canvas as the settings hub.
+       The shared route layout owns MainLayout so it remains mounted while a
+       dedicated settings panel is loading. */
+    <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-lg font-semibold text-slate-100">見積ウィザード設定</h1>
+        <p className="text-xs text-slate-500">
+          見積ウィザードで使用する項目（フィルム・サービスメニュー・その他作業・店舗オプション）を登録し、内容を確認します。
+        </p>
       </div>
-    </MainLayout>
+
+      {result.ok ? (
+        <EstimateWizardSettingsClient view={result.view} />
+      ) : (
+        <div className="px-4 py-3 bg-red-900/40 border border-red-800/60 rounded-xl text-sm text-red-300">
+          {result.messageJa}
+        </div>
+      )}
+    </div>
   );
 }

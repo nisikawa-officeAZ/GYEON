@@ -9,8 +9,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   saveWizardCatalogItem,
   archiveWizardCatalogItem,
@@ -30,11 +30,12 @@ import type {
   WizardSettingsItemView,
   SupportedAuthoringKind,
 } from "@/lib/wizard-catalog/estimate-wizard-settings-types";
+import EstimateWizardPanelLoading from "./EstimateWizardPanelLoading";
+import { getEstimateWizardPanelHref } from "./panel-config";
 
 // ── S8B — four real Estimate Wizard access cards ────────────────────────────
-// A visual access layer over the existing sections below; hrefs are anchors into this
-// same page, derived from the authoritative `view.sections`, never hardcoded route text.
-// No new route, action, form, or business behavior is introduced here.
+// A visual access layer over the existing settings editors. Every reachable card uses
+// a dedicated child URL; the hub never appends an editor beneath the cards.
 
 type WizardAccessBadgeVariant = "solid_active" | "solid_unset";
 
@@ -60,12 +61,12 @@ interface WizardAccessCardDef {
   readonly description: string;
   readonly badge: WizardAccessBadgeVariant;
   /** null when the derived section anchor is unavailable — the card then fails closed: informational, not clickable, no fabricated route. */
-  readonly anchorId: string | null;
+  readonly href: string | null;
   readonly icon: ReactNode;
 }
 
-function WizardAccessCard({ card }: { card: WizardAccessCardDef }) {
-  const isReachable = card.anchorId !== null;
+function WizardAccessCard({ card, onNavigate }: { card: WizardAccessCardDef; onNavigate: (href: string) => void }) {
+  const isReachable = card.href !== null;
   const inner = (
     <div
       className={[
@@ -76,9 +77,9 @@ function WizardAccessCard({ card }: { card: WizardAccessCardDef }) {
           : "border-[#1d2b40] bg-[#0b111d]/80",
       ].join(" ")}
     >
-      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[#31568c] bg-[#122142] md:rounded-2xl">
+      <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-xl border border-[#31568c] bg-[#122142] md:rounded-2xl">
         <span className="text-[#91b9ff]" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="block h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             {card.icon}
           </svg>
         </span>
@@ -105,12 +106,23 @@ function WizardAccessCard({ card }: { card: WizardAccessCardDef }) {
     );
   }
   return (
-    <a
-      href={`#${card.anchorId}`}
-      className="block h-full rounded-2xl transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5f9cff] active:scale-[0.985]"
+    <Link
+      href={card.href!}
+      onClick={(event) => {
+        if (
+          event.button === 0
+          && !event.metaKey
+          && !event.ctrlKey
+          && !event.shiftKey
+          && !event.altKey
+        ) {
+          onNavigate(card.href!);
+        }
+      }}
+      className="block h-full w-full rounded-2xl text-left transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5f9cff] active:scale-[0.985]"
     >
       {inner}
-    </a>
+    </Link>
   );
 }
 
@@ -126,7 +138,7 @@ function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessC
       labelEn: "SERVICE AVAILABILITY",
       description: "この店舗で提供する施工メニューを選択します。オフにしたメニューは見積ウィザードに表示されません。",
       badge: "solid_active",
-      anchorId: "section-service-offerings",
+      href: getEstimateWizardPanelHref("service-availability"),
       icon: (
         <>
           <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -142,7 +154,7 @@ function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessC
       labelEn: "SERVICE MENUS",
       description: "メンテナンス・洗車・室内清掃のメニューを登録します。",
       badge: "solid_unset",
-      anchorId: serviceSection?.anchorId ?? null,
+      href: serviceSection ? getEstimateWizardPanelHref("service-menus") : null,
       icon: (
         <>
           <path d="M14.7 6.3a4 4 0 0 0-5.2 5.2L4 17l3 3 5.5-5.5a4 4 0 0 0 5.2-5.2l-2.6 2.6-2-2z" />
@@ -156,7 +168,7 @@ function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessC
       labelEn: "WORK PRESETS",
       description: "見積時に手入力する作業の名称プリセットです（金額は現場入力）。",
       badge: "solid_unset",
-      anchorId: otherworkSection?.anchorId ?? null,
+      href: otherworkSection ? getEstimateWizardPanelHref("work-presets") : null,
       icon: (
         <>
           <rect x="5" y="4" width="14" height="17" rx="2" />
@@ -172,7 +184,7 @@ function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessC
       labelEn: "SHOP OPTIONS",
       description: "出張費などの店舗共通オプションを登録します。",
       badge: "solid_unset",
-      anchorId: storeSection?.anchorId ?? null,
+      href: storeSection ? getEstimateWizardPanelHref("shop-options") : null,
       icon: (
         <>
           <path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h12M20 17h0" />
@@ -346,7 +358,7 @@ function buildRaw(d: DraftFields): Record<string, unknown> {
   return raw;
 }
 
-export default function EstimateWizardSettingsClient({ view }: { view: EstimateWizardSettingsView }) {
+export default function EstimateWizardSettingsClient({ view, panelId = null }: { view: EstimateWizardSettingsView; panelId?: string | null }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [toast, setToast] = useState<Toast | null>(null);
@@ -354,6 +366,7 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [archiveTarget, setArchiveTarget] = useState<WizardSettingsItemView | null>(null);
   const [serviceTab, setServiceTab] = useState<SupportedAuthoringKind>("maintenance_menu");
+  const [navigatingPanelHref, setNavigatingPanelHref] = useState<string | null>(null);
   const busyRef = useRef(false);
 
   const canEdit = view.canEdit;
@@ -523,22 +536,23 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
         </div>
       )}
 
-      {/* S8B — four real Estimate Wizard access cards; visual access layer only, no new route/data flow */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {buildWizardAccessCards(view).map((card) => (
-          <WizardAccessCard key={card.id} card={card} />
-        ))}
-      </div>
+      {!panelId && navigatingPanelHref && <EstimateWizardPanelLoading />}
+
+      {!panelId && !navigatingPanelHref && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {buildWizardAccessCards(view).map((card) => (
+            <WizardAccessCard key={card.id} card={card} onNavigate={setNavigatingPanelHref} />
+          ))}
+        </div>
+      )}
 
       {/* ── B2-E2G: 施工メニュー提供設定 ───────────────────────────────────────────
           Which services this shop offers at all. Deliberately ABOVE the catalog sections: a dealer
           decides what they sell before they configure the details of it, and an opted-out family's
           catalog section is not something they need to look at. Rank is never mentioned — it does
           not participate in this decision. */}
-      <section
-        id="section-service-offerings"
-        className={`${glassSectionCls} scroll-mt-4`}
-      >
+      {panelId === "section-service-offerings" && (
+      <section className={`${glassSectionCls} scroll-mt-4`}>
         <div className="flex flex-col gap-1">
           <h2 className="text-sm font-bold text-[#edf3fc]">施工メニュー提供設定</h2>
           <p className="text-xs text-[#95a4bc] leading-relaxed">
@@ -576,8 +590,10 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
           })}
         </ul>
       </section>
+      )}
 
       {/* Configuration status card */}
+      {panelId && (
       <section className={glassSectionCls}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col">
@@ -620,19 +636,12 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
           </div>
         )}
       </section>
+      )}
 
-      {/* Coating summary + link only */}
-      <section className="px-4 py-4 rounded-2xl border border-[#263955] bg-[#111826]/90 backdrop-blur-xl flex flex-col gap-2">
-        <span className="text-[10px] font-semibold text-[#7788a4] uppercase tracking-wider">{view.coating.titleJa}</span>
-        <p className="text-sm text-[#c3cee2]">{view.coating.summaryJa}</p>
-        <p className="text-[11px] text-[#7788a4]">{view.coating.noticeJa}</p>
-        <Link href={view.coating.editHref} className={`${secondaryBtn} self-start`}>
-          {view.coating.editLabelJa}
-        </Link>
-      </section>
-
-      {/* Editable sections */}
-      {view.sections.map((section) => (
+      {/* Editable sections are rendered only after the matching access card is selected.
+          This keeps the approved GenSpark hub free of the former stacked UI while preserving
+          every existing editor and server action. */}
+      {view.sections.filter((section) => section.anchorId === panelId).map((section) => (
         <SectionCard
           key={section.id}
           section={section}
@@ -645,39 +654,6 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
           onArchive={(it) => { if (guardEdit()) setArchiveTarget(it); }}
         />
       ))}
-
-      {/* PPF + coating reduction rules (B1.1). Read-only listing: rules are authored through
-          saveDealerPpfCoatingAdjustment. There is no default rule — an empty list genuinely means
-          "no reduction applies", and a client constant must never stand in for dealer settings. */}
-      <section
-        id={view.ppfCoatingAdjustment.anchorId}
-        className={`${glassSectionCls} scroll-mt-4`}
-      >
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-semibold text-[#c3cee2]">{view.ppfCoatingAdjustment.titleJa}</span>
-          <p className="text-[11px] text-[#7788a4]">{view.ppfCoatingAdjustment.descriptionJa}</p>
-        </div>
-        {view.ppfCoatingAdjustment.rules.length === 0 ? (
-          <p className="text-[11px] text-[#7788a4]">減額規則は登録されていません。</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {view.ppfCoatingAdjustment.rules.map((r) => (
-              <li
-                key={r.ruleId}
-                className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-xl bg-[#0b1220]/70 border border-[#263955]"
-              >
-                <span className="text-sm text-[#c3cee2]">
-                  {r.ppfMethodLabelJa} ＋ {r.coatingLabelJa}
-                </span>
-                <span className="text-xs text-[#8191ad]">{r.adjustmentLabelJa}</span>
-                {!r.isActive && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#151f31] border border-[#263955] text-[#8191ad]">無効</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
 
       {/* Add / edit overlay: bottom sheet on mobile, side panel on tablet/desktop */}
       {overlayOpen && draft && (

@@ -385,11 +385,11 @@ function CardIcon({ name, dim }: { name: IconKey; dim: boolean }) {
   return (
     <span className={dim ? "text-[#526079]" : "text-[#91b9ff]"} aria-hidden="true">
       {isSemantic ? (
-        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="block h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           {SEMANTIC_ICON_PATHS[name as "estimate_flow" | "coating" | "ppf" | "window_film"]}
         </svg>
       ) : (
-        <svg width="25" height="25" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="block h-6 w-6" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
           {LEGACY_ICON_PATHS[name as Exclude<IconKey, "estimate_flow" | "coating" | "ppf" | "window_film">]}
         </svg>
       )}
@@ -487,7 +487,7 @@ function HubCardButton({
       )}
       <div className="flex h-full flex-col">
         <span className={[
-          "grid h-12 w-12 place-items-center rounded-xl border md:h-[58px] md:w-[58px] md:rounded-2xl",
+          "grid h-[52px] w-[52px] shrink-0 place-items-center rounded-xl border md:rounded-2xl",
           isInteractive ? "border-[#31568c] bg-[#122142]" : "border-[#243149] bg-[#101827]",
         ].join(" ")}>
           <CardIcon name={card.icon} dim={!isInteractive} />
