@@ -6,6 +6,7 @@ const read = (path: string) => readFileSync(path, "utf8");
 
 const CLIENT_PATH = "src/app/settings/estimate-wizard/EstimateWizardSettingsClient.tsx";
 const PAGE_PATH = "src/app/settings/estimate-wizard/page.tsx";
+const ROOT_LAYOUT_PATH = "src/app/layout.tsx";
 
 test("estimate-wizard page remains unchanged (S8B: read-only, no edit needed)", () => {
   const page = read(PAGE_PATH);
@@ -73,4 +74,15 @@ test("estimate-wizard access-card icon boxes and glyphs use one exact size", () 
   const client = read(CLIENT_PATH);
   assert.match(client, /h-\[52px\] w-\[52px\]/);
   assert.match(client, /className="block h-6 w-6" viewBox="0 0 24 24"/);
+});
+
+test("approved bilingual UI is protected from browser auto-translation", () => {
+  const layout = read(ROOT_LAYOUT_PATH);
+  const page = read(PAGE_PATH);
+
+  assert.match(layout, /google:\s*"notranslate"/);
+  assert.match(layout, /<html lang="ja" translate="no">/);
+  assert.match(layout, /notranslate antialiased/);
+  assert.match(page, />見積ウィザード設定</);
+  assert.doesNotMatch(page, /簡易ウィザード/);
 });

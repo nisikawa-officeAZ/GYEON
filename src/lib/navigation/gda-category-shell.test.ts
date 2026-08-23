@@ -143,6 +143,14 @@ test("estimate_pricing cards render the approved solid badges and use four dedic
   assert.doesNotMatch(settingsHub, /window_film:[\s\S]{0,400}(gear|shield|cup|cloud|helmet|dish)/i);
 });
 
+test("estimate pricing and wizard cards share one exact icon size", () => {
+  const settingsHub = read("src/components/settings/SettingsCenterHub.tsx");
+
+  assert.match(settingsHub, /h-\[52px\] w-\[52px\] shrink-0/);
+  assert.match(settingsHub, /className="block h-6 w-6" viewBox="0 0 24 24"/);
+  assert.doesNotMatch(settingsHub, /md:h-\[58px\] md:w-\[58px\]/);
+});
+
 test("dealer settings is the reference form and preserves its data contract", () => {
   const categoryPage = read("src/app/settings/[category]/page.tsx");
   const form = read("src/components/settings/CompanySettingsForm.tsx");
