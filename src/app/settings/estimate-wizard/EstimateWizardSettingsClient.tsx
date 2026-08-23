@@ -69,16 +69,16 @@ function WizardAccessCard({ card }: { card: WizardAccessCardDef }) {
   const inner = (
     <div
       className={[
-        "group relative flex min-h-[64px] flex-row items-center gap-3 rounded-2xl border p-4 transition-all duration-200",
+        "group relative flex h-full min-h-[64px] flex-row items-center gap-3 rounded-2xl border p-4 transition-all duration-200",
         "md:min-h-[168px] md:flex-col md:items-stretch md:gap-3 md:p-5",
         isReachable
           ? "cursor-pointer border-[#263955] bg-[#111826]/90 hover:-translate-y-0.5 hover:border-[#3b6eb4] hover:bg-[#141e2f] hover:shadow-[0_18px_45px_rgba(0,0,0,.24)]"
           : "border-[#1d2b40] bg-[#0b111d]/80",
       ].join(" ")}
     >
-      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[#31568c] bg-[#122142] md:h-14 md:w-14 md:rounded-2xl">
+      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[#31568c] bg-[#122142] md:rounded-2xl">
         <span className="text-[#91b9ff]" aria-hidden="true">
-          <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             {card.icon}
           </svg>
         </span>
@@ -244,13 +244,17 @@ function basisPointsToMultiplier(bp: number | null): string {
 }
 
 const inputCls =
-  "w-full bg-[#1e293b] border border-slate-700 rounded-lg px-2.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 disabled:opacity-50";
+  "w-full rounded-xl border border-[#263955] bg-[#0b1220]/80 px-2.5 py-2 text-sm text-[#E8EEF7] placeholder-[#5C6B84] transition-colors focus:border-[#60a5fa] focus:outline-none focus:ring-2 focus:ring-[#2F6BFF]/25 disabled:opacity-50";
 const primaryBtn =
-  "px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors";
+  "px-4 py-2 rounded-xl bg-[#2F6BFF] hover:bg-[#3b82f6] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-[0_0_22px_rgba(47,107,255,0.32)] transition-colors";
 const secondaryBtn =
-  "px-3 py-1.5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-xs font-medium rounded-lg transition-colors";
+  "px-3 py-1.5 rounded-xl border border-[#263955] bg-[#0b1220]/70 hover:border-[#60a5fa]/50 hover:text-[#E8EEF7] disabled:opacity-50 text-[#93A4BD] text-xs font-semibold transition-colors";
 const dangerBtn =
-  "px-4 py-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors";
+  "px-4 py-2 rounded-xl border border-red-500/35 bg-red-950/40 hover:bg-red-900/40 disabled:opacity-50 text-red-300 text-sm font-semibold transition-colors";
+const dangerSecondaryBtn =
+  "px-3 py-1.5 rounded-xl border border-[#263955] bg-[#0b1220]/70 hover:border-red-500/40 hover:bg-red-950/30 disabled:opacity-50 text-red-300 text-xs font-semibold transition-colors";
+const glassSectionCls =
+  "px-4 py-4 rounded-2xl border border-[#263955] bg-[#111826]/90 backdrop-blur-xl flex flex-col gap-3";
 
 function emptyDraft(kind: SupportedAuthoringKind): DraftFields {
   return {
@@ -500,12 +504,12 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
       {toast && (
         <div
           role="status"
-          className={`px-3 py-2 rounded-lg text-xs font-medium border ${
+          className={`px-3 py-2 rounded-xl text-xs font-medium border backdrop-blur-xl ${
             toast.type === "ok"
-              ? "bg-green-900/60 text-green-300 border-green-700/40"
+              ? "bg-emerald-950/40 text-emerald-400 border-emerald-500/30"
               : toast.type === "info"
-                ? "bg-amber-900/50 text-amber-200 border-amber-700/40"
-                : "bg-red-900/60 text-red-300 border-red-700/40"
+                ? "bg-amber-950/30 text-amber-400 border-amber-500/20"
+                : "bg-red-950/40 text-red-300 border-red-500/35"
           }`}
         >
           {toast.text}
@@ -514,7 +518,7 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
 
       {/* Read-only notice for staff */}
       {!canEdit && (
-        <div className="px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-xs text-slate-300">
+        <div className="px-4 py-3 rounded-xl border border-[#263955] bg-[#111826]/70 text-xs text-[#93A4BD]">
           {STAFF_READONLY_MESSAGE_JA}
         </div>
       )}
@@ -533,11 +537,11 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
           not participate in this decision. */}
       <section
         id="section-service-offerings"
-        className="px-4 py-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col gap-3 scroll-mt-4"
+        className={`${glassSectionCls} scroll-mt-4`}
       >
         <div className="flex flex-col gap-1">
-          <h2 className="text-sm font-semibold text-slate-100">施工メニュー提供設定</h2>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <h2 className="text-sm font-bold text-[#edf3fc]">施工メニュー提供設定</h2>
+          <p className="text-xs text-[#95a4bc] leading-relaxed">
             この店舗で提供する施工メニューを選択します。オフにしたメニューは見積ウィザードに表示されません。
           </p>
           <p className="text-[11px] text-amber-300/80 leading-relaxed">
@@ -545,12 +549,12 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
           </p>
         </div>
 
-        <ul className="flex flex-col divide-y divide-slate-800">
+        <ul className="flex flex-col divide-y divide-[#263955]">
           {SERVICE_FAMILIES.map((family) => {
             const on = view.serviceOfferings[family];
             return (
               <li key={family} className="flex items-center justify-between gap-3 py-2.5">
-                <span className="text-xs text-slate-200">{SERVICE_FAMILY_LABEL_JA[family]}</span>
+                <span className="text-xs text-[#c3cee2]">{SERVICE_FAMILY_LABEL_JA[family]}</span>
                 <button
                   type="button"
                   role="switch"
@@ -559,10 +563,10 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
                   data-testid={`offering-toggle-${family}`}
                   disabled={!canEdit || isPending}
                   onClick={() => onToggleOffering(family, !on)}
-                  className={`min-h-[44px] px-4 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40 ${
+                  className={`min-h-[44px] px-4 rounded-full text-xs font-semibold border transition-colors disabled:opacity-40 ${
                     on
-                      ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
-                      : "bg-slate-800/60 text-slate-400 border-slate-700 hover:bg-slate-700/60"
+                      ? "bg-gradient-to-br from-[#60a5fa] to-[#2563eb] text-white border-transparent shadow-[0_2px_8px_rgba(37,99,235,.35)] hover:brightness-110"
+                      : "bg-[#0b1220]/70 text-[#8191ad] border-[#263955] hover:border-[#3b6eb4] hover:text-[#c3cee2]"
                   }`}
                 >
                   {on ? "提供する" : "提供しない"}
@@ -574,10 +578,10 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
       </section>
 
       {/* Configuration status card */}
-      <section className="px-4 py-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col gap-3">
+      <section className={glassSectionCls}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col">
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">設定ステータス</span>
+            <span className="text-[10px] font-semibold text-[#7788a4] uppercase tracking-wider">設定ステータス</span>
             <span
               className={`text-sm font-semibold ${status.reviewed ? "text-emerald-400" : "text-amber-300"}`}
             >
@@ -596,10 +600,10 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
             </button>
           )}
         </div>
-        <p className="text-xs text-slate-400">{status.statusDetailJa}</p>
+        <p className="text-xs text-[#95a4bc]">{status.statusDetailJa}</p>
 
         {status.missingSections.length > 0 && (
-          <div className="flex flex-col gap-1 rounded-lg bg-amber-950/30 border border-amber-800/40 px-3 py-2">
+          <div className="flex flex-col gap-1 rounded-xl bg-amber-950/30 border border-amber-800/40 px-3 py-2">
             <span className="text-[11px] font-semibold text-amber-300">見積で使えないサービス（確定はできます）</span>
             {status.missingSections.map((m) => (
               <a key={m.sectionId} href={`#${m.anchorId}`} className="text-[11px] text-amber-200 underline hover:text-amber-100">
@@ -610,7 +614,7 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
         )}
 
         {status.lastReview && (
-          <div className="text-[11px] text-slate-500">
+          <div className="text-[11px] text-[#7788a4]">
             {status.lastReview.dateLabelJa}
             {status.lastReview.reviewerLabelJa ? `／${status.lastReview.reviewerLabelJa}` : ""}
           </div>
@@ -618,10 +622,10 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
       </section>
 
       {/* Coating summary + link only */}
-      <section className="px-4 py-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col gap-2">
-        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{view.coating.titleJa}</span>
-        <p className="text-sm text-slate-200">{view.coating.summaryJa}</p>
-        <p className="text-[11px] text-slate-500">{view.coating.noticeJa}</p>
+      <section className="px-4 py-4 rounded-2xl border border-[#263955] bg-[#111826]/90 backdrop-blur-xl flex flex-col gap-2">
+        <span className="text-[10px] font-semibold text-[#7788a4] uppercase tracking-wider">{view.coating.titleJa}</span>
+        <p className="text-sm text-[#c3cee2]">{view.coating.summaryJa}</p>
+        <p className="text-[11px] text-[#7788a4]">{view.coating.noticeJa}</p>
         <Link href={view.coating.editHref} className={`${secondaryBtn} self-start`}>
           {view.coating.editLabelJa}
         </Link>
@@ -647,27 +651,27 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
           "no reduction applies", and a client constant must never stand in for dealer settings. */}
       <section
         id={view.ppfCoatingAdjustment.anchorId}
-        className="px-4 py-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col gap-3 scroll-mt-4"
+        className={`${glassSectionCls} scroll-mt-4`}
       >
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-slate-200">{view.ppfCoatingAdjustment.titleJa}</span>
-          <p className="text-[11px] text-slate-500">{view.ppfCoatingAdjustment.descriptionJa}</p>
+          <span className="text-sm font-semibold text-[#c3cee2]">{view.ppfCoatingAdjustment.titleJa}</span>
+          <p className="text-[11px] text-[#7788a4]">{view.ppfCoatingAdjustment.descriptionJa}</p>
         </div>
         {view.ppfCoatingAdjustment.rules.length === 0 ? (
-          <p className="text-[11px] text-slate-500">減額規則は登録されていません。</p>
+          <p className="text-[11px] text-[#7788a4]">減額規則は登録されていません。</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {view.ppfCoatingAdjustment.rules.map((r) => (
               <li
                 key={r.ruleId}
-                className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-900/40 border border-slate-800"
+                className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-xl bg-[#0b1220]/70 border border-[#263955]"
               >
-                <span className="text-sm text-slate-200">
+                <span className="text-sm text-[#c3cee2]">
                   {r.ppfMethodLabelJa} ＋ {r.coatingLabelJa}
                 </span>
-                <span className="text-xs text-slate-400">{r.adjustmentLabelJa}</span>
+                <span className="text-xs text-[#8191ad]">{r.adjustmentLabelJa}</span>
                 {!r.isActive && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">無効</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#151f31] border border-[#263955] text-[#8191ad]">無効</span>
                 )}
               </li>
             ))}
@@ -719,18 +723,18 @@ function SectionCard({
   const activeGroup = section.groups.find((g) => g.kind === activeKind) ?? section.groups[0];
 
   return (
-    <section id={section.anchorId} className="px-4 py-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col gap-3 scroll-mt-4">
+    <section id={section.anchorId} className={`${glassSectionCls} scroll-mt-4`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-slate-100">{section.labelJa}</span>
+            <span className="text-sm font-bold text-[#edf3fc]">{section.labelJa}</span>
             {section.required && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded ${section.satisfied ? "bg-emerald-900/60 text-emerald-300" : "bg-amber-900/60 text-amber-300"}`}>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${section.satisfied ? "bg-emerald-950/40 text-emerald-400 border-emerald-500/30" : "bg-amber-950/30 text-amber-400 border-amber-500/20"}`}>
                 {section.satisfied ? "必須・登録済" : "必須・未登録"}
               </span>
             )}
           </div>
-          <span className="text-[11px] text-slate-500">{section.descriptionJa}</span>
+          <span className="text-[11px] text-[#7788a4]">{section.descriptionJa}</span>
         </div>
         {canEdit && (
           <button type="button" onClick={() => onAdd(activeKind)} disabled={isPending} className={secondaryBtn}>
@@ -740,7 +744,7 @@ function SectionCard({
       </div>
 
       {isService && (
-        <div className="flex gap-1" role="tablist" aria-label="サービス種別">
+        <div className="flex gap-1.5" role="tablist" aria-label="サービス種別">
           {SERVICE_KINDS.map((k) => (
             <button
               key={k}
@@ -748,8 +752,10 @@ function SectionCard({
               role="tab"
               aria-selected={serviceTab === k}
               onClick={() => onServiceTab(k)}
-              className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                serviceTab === k ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+              className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${
+                serviceTab === k
+                  ? "bg-gradient-to-br from-[#60a5fa] to-[#2563eb] text-white border-transparent shadow-[0_2px_8px_rgba(37,99,235,.35)]"
+                  : "bg-[#0b1220]/70 text-[#8191ad] border-[#263955] hover:border-[#3b6eb4] hover:text-[#c3cee2]"
               }`}
             >
               {KIND_LABEL[k]}
@@ -761,16 +767,16 @@ function SectionCard({
       {activeGroup && activeGroup.items.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {activeGroup.items.map((it) => (
-            <li key={it.code} className="flex items-center justify-between gap-3 rounded-lg bg-[#0f172a] border border-slate-800 px-3 py-2.5">
+            <li key={it.code} className="flex items-center justify-between gap-3 rounded-xl bg-[#0b1220]/70 border border-[#263955] px-3 py-2.5">
               <div className="flex flex-col min-w-0">
-                <span className="text-sm text-slate-200 truncate">{it.labelJa}</span>
-                <span className="text-[11px] text-slate-500">
+                <span className="text-sm text-[#edf3fc] truncate">{it.labelJa}</span>
+                <span className="text-[11px] text-[#7788a4]">
                   {it.priceLabelJa ?? "価格なし"}
                   {it.durationLabelJa ? `・${it.durationLabelJa}` : ""}
                   {it.kind === "store_global_option" && it.quantityRequired ? "・数量指定あり" : ""}
                 </span>
                 {it.presentation && (
-                  <span className="text-[10px] text-slate-600 truncate">
+                  <span className="text-[10px] text-[#5C6B84] truncate">
                     {[it.presentation.brand, it.presentation.vlt, it.presentation.heatRejection, it.presentation.color].filter(Boolean).join(" / ")}
                   </span>
                 )}
@@ -778,14 +784,22 @@ function SectionCard({
               {canEdit && (
                 <div className="flex items-center gap-2 shrink-0">
                   <button type="button" onClick={() => onEdit(it)} disabled={isPending} className={secondaryBtn}>編集</button>
-                  <button type="button" onClick={() => onArchive(it)} disabled={isPending} className="px-3 py-1.5 bg-slate-800 hover:bg-red-900/40 disabled:opacity-50 text-red-300 text-xs font-medium rounded-lg transition-colors">無効化</button>
+                  <button type="button" onClick={() => onArchive(it)} disabled={isPending} className={dangerSecondaryBtn}>無効化</button>
                 </div>
               )}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-[11px] text-slate-600 px-1 py-3">まだ登録がありません。</p>
+        <div className="flex flex-col items-center justify-center gap-2 px-4 py-8 text-center">
+          <div className="grid h-11 w-11 place-items-center rounded-xl border border-[#31568c] bg-[#122142] text-[#5f83b8]">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="4" y="5" width="16" height="15" rx="2" />
+              <path d="M4 10h16M9 15h6" />
+            </svg>
+          </div>
+          <p className="text-[11px] text-[#7788a4]">まだ登録がありません。</p>
+        </div>
       )}
     </section>
   );
@@ -822,25 +836,25 @@ function DraftOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-stretch sm:justify-end bg-black/60"
+      className="fixed inset-0 z-50 flex items-end justify-center sm:items-stretch sm:justify-end bg-black/60 backdrop-blur-sm"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
       role="dialog"
       aria-modal="true"
       aria-label={titleJa}
     >
-      <div className="w-full sm:w-[440px] sm:max-w-[92vw] sm:h-full bg-[#0f172a] border border-slate-700 rounded-t-2xl sm:rounded-t-none sm:rounded-l-2xl shadow-2xl flex flex-col max-h-[88vh] sm:max-h-full">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-          <span className="text-sm font-semibold text-slate-100">{titleJa}</span>
-          <button type="button" onClick={onClose} disabled={isPending} className="text-slate-500 hover:text-slate-300 text-lg leading-none disabled:opacity-50" aria-label="閉じる">×</button>
+      <div className="w-full sm:w-[440px] sm:max-w-[92vw] sm:h-full bg-[#111826]/95 border border-[#263955] backdrop-blur-xl rounded-t-2xl sm:rounded-t-none sm:rounded-l-2xl shadow-[0_18px_60px_rgba(0,0,0,0.4)] flex flex-col max-h-[88vh] sm:max-h-full">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#263955]">
+          <span className="text-sm font-bold text-[#edf3fc]">{titleJa}</span>
+          <button type="button" onClick={onClose} disabled={isPending} className="text-[#7788a4] hover:text-[#c3cee2] text-lg leading-none disabled:opacity-50" aria-label="閉じる">×</button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
           {errors._form && (
-            <div className="px-3 py-2 rounded-lg bg-red-900/40 border border-red-800/60 text-[11px] text-red-300">{errors._form}</div>
+            <div className="px-3 py-2 rounded-xl bg-red-950/40 border border-red-500/35 text-[11px] text-red-300">{errors._form}</div>
           )}
 
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] text-slate-400">表示名（日本語）<span className="text-red-400">必須</span></span>
+            <span className="text-[11px] text-[#93A4BD]">表示名（日本語）<span className="text-red-400">必須</span></span>
             <input
               ref={firstFieldRef}
               className={inputCls}
@@ -855,7 +869,7 @@ function DraftOverlay({
 
           {supportsPrice && (
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] text-slate-400">価格（税抜・円）</span>
+              <span className="text-[11px] text-[#93A4BD]">価格（税抜・円）</span>
               <input
                 className={inputCls}
                 inputMode="numeric"
@@ -871,7 +885,7 @@ function DraftOverlay({
 
           {isMenu && (
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] text-slate-400">所要時間（分・任意）</span>
+              <span className="text-[11px] text-[#93A4BD]">所要時間（分・任意）</span>
               <input
                 className={inputCls}
                 inputMode="numeric"
@@ -887,7 +901,7 @@ function DraftOverlay({
 
           {hasCoefficient && (
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] text-slate-400">施工係数（任意・倍率）</span>
+              <span className="text-[11px] text-[#93A4BD]">施工係数（任意・倍率）</span>
               <input
                 className={inputCls}
                 inputMode="decimal"
@@ -898,7 +912,7 @@ function DraftOverlay({
                 aria-invalid={!!errors.installCoefficientBp}
                 aria-describedby={errors.installCoefficientBp ? "err-installCoefficientBp" : undefined}
               />
-              <span className="text-[10px] text-slate-500">
+              <span className="text-[10px] text-[#7788a4]">
                 基本単価に掛ける倍率です。1.00 で等倍。未入力の場合は係数なし（等倍）になります。
               </span>
               <Err id="installCoefficientBp" />
@@ -906,11 +920,11 @@ function DraftOverlay({
           )}
 
           {isCoupon && (
-            <div className="flex flex-col gap-3 rounded-lg bg-slate-900/40 border border-slate-800 px-3 py-3">
-              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">クーポン内容</span>
+            <div className="flex flex-col gap-3 rounded-xl bg-[#0b1220]/70 border border-[#263955] px-3 py-3">
+              <span className="text-[10px] font-semibold text-[#7788a4] uppercase tracking-wider">クーポン内容</span>
 
               <div className="flex flex-col gap-1">
-                <span className="text-[11px] text-slate-400">割引種別</span>
+                <span className="text-[11px] text-[#93A4BD]">割引種別</span>
                 {/* Button-based, never a dropdown (Ver2.2 UI rule). */}
                 <div className="flex gap-2">
                   {(["amount", "percent"] as const).map((t) => (
@@ -922,8 +936,8 @@ function DraftOverlay({
                       aria-pressed={draft.couponDiscountType === t}
                       className={
                         draft.couponDiscountType === t
-                          ? "px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white"
-                          : "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-200 hover:bg-slate-600"
+                          ? "px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-br from-[#60a5fa] to-[#2563eb] text-white shadow-[0_2px_8px_rgba(37,99,235,.35)]"
+                          : "px-3 py-1.5 rounded-full text-xs font-semibold border border-[#263955] bg-[#0b1220]/70 text-[#8191ad] hover:border-[#3b6eb4] hover:text-[#c3cee2]"
                       }
                     >
                       {t === "amount" ? "金額（円）" : "率（％）"}
@@ -933,7 +947,7 @@ function DraftOverlay({
               </div>
 
               <label className="flex flex-col gap-1">
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-[#93A4BD]">
                   {draft.couponDiscountType === "amount" ? "割引額（円）" : "割引率（％）"}
                 </span>
                 <input
@@ -949,7 +963,7 @@ function DraftOverlay({
               </label>
 
               <div className="flex flex-col gap-1">
-                <span className="text-[11px] text-slate-400">併用</span>
+                <span className="text-[11px] text-[#93A4BD]">併用</span>
                 <div className="flex gap-2">
                   {([true, false] as const).map((v) => (
                     <button
@@ -960,22 +974,22 @@ function DraftOverlay({
                       aria-pressed={draft.couponCombinable === v}
                       className={
                         draft.couponCombinable === v
-                          ? "px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white"
-                          : "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-200 hover:bg-slate-600"
+                          ? "px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-br from-[#60a5fa] to-[#2563eb] text-white shadow-[0_2px_8px_rgba(37,99,235,.35)]"
+                          : "px-3 py-1.5 rounded-full text-xs font-semibold border border-[#263955] bg-[#0b1220]/70 text-[#8191ad] hover:border-[#3b6eb4] hover:text-[#c3cee2]"
                       }
                     >
                       {v ? "他クーポンと併用可" : "併用不可"}
                     </button>
                   ))}
                 </div>
-                <span className="text-[10px] text-slate-500">
+                <span className="text-[10px] text-[#7788a4]">
                   併用不可のクーポンが他のクーポンと同時に選択された場合、見積では全クーポンが適用されません。
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] text-slate-400">有効期間（開始・任意）</span>
+                  <span className="text-[11px] text-[#93A4BD]">有効期間（開始・任意）</span>
                   <input
                     className={inputCls}
                     type="date"
@@ -985,7 +999,7 @@ function DraftOverlay({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] text-slate-400">有効期間（終了・任意）</span>
+                  <span className="text-[11px] text-[#93A4BD]">有効期間（終了・任意）</span>
                   <input
                     className={inputCls}
                     type="date"
@@ -1000,11 +1014,11 @@ function DraftOverlay({
           )}
 
           {isFilm && (
-            <div className="flex flex-col gap-3 rounded-lg bg-slate-900/40 border border-slate-800 px-3 py-3">
-              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">フィルム情報（任意）</span>
+            <div className="flex flex-col gap-3 rounded-xl bg-[#0b1220]/70 border border-[#263955] px-3 py-3">
+              <span className="text-[10px] font-semibold text-[#7788a4] uppercase tracking-wider">フィルム情報（任意）</span>
               {(["brand", "vlt", "heatRejection", "color"] as const).map((k) => (
                 <label key={k} className="flex flex-col gap-1">
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-[#93A4BD]">
                     {k === "brand" ? "ブランド" : k === "vlt" ? "可視光線透過率" : k === "heatRejection" ? "遮熱性能" : "カラー"}
                   </span>
                   <input className={inputCls} value={draft[k]} onChange={(e) => set({ [k]: e.target.value } as Partial<DraftFields>)} disabled={isPending} />
@@ -1018,20 +1032,20 @@ function DraftOverlay({
             <div className="flex flex-col gap-3">
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={draft.priceable} onChange={(e) => set({ priceable: e.target.checked })} disabled={isPending} />
-                <span className="text-[11px] text-slate-300">価格対象にする</span>
+                <span className="text-[11px] text-[#c3cee2]">価格対象にする</span>
               </label>
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={draft.quantityRequired} onChange={(e) => set({ quantityRequired: e.target.checked })} disabled={isPending} />
-                <span className="text-[11px] text-slate-300">数量入力を必須にする</span>
+                <span className="text-[11px] text-[#c3cee2]">数量入力を必須にする</span>
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] text-slate-400">最小数量</span>
+                  <span className="text-[11px] text-[#93A4BD]">最小数量</span>
                   <input className={inputCls} inputMode="numeric" value={draft.minQuantity} onChange={(e) => set({ minQuantity: e.target.value })} disabled={isPending} aria-invalid={!!errors.minQuantity} />
                   <Err id="minQuantity" />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] text-slate-400">最大数量</span>
+                  <span className="text-[11px] text-[#93A4BD]">最大数量</span>
                   <input className={inputCls} inputMode="numeric" value={draft.maxQuantity} onChange={(e) => set({ maxQuantity: e.target.value })} disabled={isPending} aria-invalid={!!errors.maxQuantity} />
                   <Err id="maxQuantity" />
                 </label>
@@ -1040,13 +1054,13 @@ function DraftOverlay({
           )}
 
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] text-slate-400">表示順（任意・0以上）</span>
+            <span className="text-[11px] text-[#93A4BD]">表示順（任意・0以上）</span>
             <input className={inputCls} inputMode="numeric" value={draft.displayOrder} onChange={(e) => set({ displayOrder: e.target.value })} disabled={isPending} aria-invalid={!!errors.displayOrder} aria-describedby={errors.displayOrder ? "err-displayOrder" : undefined} />
             <Err id="displayOrder" />
           </label>
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-slate-800">
+        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-[#263955]">
           <button type="button" onClick={onClose} disabled={isPending} className={secondaryBtn}>キャンセル</button>
           <button type="button" onClick={onSubmit} disabled={isPending} className={primaryBtn}>
             {isPending ? "保存中…" : "保存"}
@@ -1068,19 +1082,19 @@ function ConfirmArchive({
   onConfirm: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center bg-black/60" role="dialog" aria-modal="true" aria-label="無効化の確認"
+    <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="無効化の確認"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div className="w-full sm:w-[380px] sm:max-w-[92vw] bg-[#0f172a] border border-slate-700 rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col">
-        <div className="px-4 py-3 border-b border-slate-800">
-          <span className="text-sm font-semibold text-slate-100">項目を無効化しますか？</span>
+      <div className="w-full sm:w-[380px] sm:max-w-[92vw] bg-[#111826]/95 border border-[#263955] backdrop-blur-xl rounded-t-2xl sm:rounded-2xl shadow-[0_18px_60px_rgba(0,0,0,0.4)] flex flex-col">
+        <div className="px-4 py-3 border-b border-[#263955]">
+          <span className="text-sm font-bold text-[#edf3fc]">項目を無効化しますか？</span>
         </div>
         <div className="px-4 py-4 flex flex-col gap-2">
-          <p className="text-sm text-slate-200">「{item.labelJa}」を無効化します。</p>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-sm text-[#c3cee2]">「{item.labelJa}」を無効化します。</p>
+          <p className="text-[11px] text-[#93A4BD]">
             無効化しても過去の見積の内容には影響しません。今後の新しい見積でのみ選択できなくなります。削除ではありません。
           </p>
         </div>
-        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-slate-800">
+        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-[#263955]">
           <button type="button" onClick={onCancel} disabled={isPending} className={secondaryBtn}>キャンセル</button>
           <button type="button" onClick={onConfirm} disabled={isPending} className={dangerBtn}>{isPending ? "処理中…" : "無効化する"}</button>
         </div>
