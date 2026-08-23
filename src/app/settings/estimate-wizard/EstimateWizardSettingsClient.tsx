@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   saveWizardCatalogItem,
@@ -29,11 +30,11 @@ import type {
   WizardSettingsItemView,
   SupportedAuthoringKind,
 } from "@/lib/wizard-catalog/estimate-wizard-settings-types";
+import { getEstimateWizardPanelHref } from "./panel-config";
 
 // ── S8B — four real Estimate Wizard access cards ────────────────────────────
-// A visual access layer over the existing sections below; hrefs are anchors into this
-// same page, derived from the authoritative `view.sections`, never hardcoded route text.
-// No new route, action, form, or business behavior is introduced here.
+// A visual access layer over the existing settings editors. Every reachable card uses
+// a dedicated child URL; the hub never appends an editor beneath the cards.
 
 type WizardAccessBadgeVariant = "solid_active" | "solid_unset";
 
@@ -59,12 +60,12 @@ interface WizardAccessCardDef {
   readonly description: string;
   readonly badge: WizardAccessBadgeVariant;
   /** null when the derived section anchor is unavailable — the card then fails closed: informational, not clickable, no fabricated route. */
-  readonly anchorId: string | null;
+  readonly href: string | null;
   readonly icon: ReactNode;
 }
 
-function WizardAccessCard({ card, onSelect }: { card: WizardAccessCardDef; onSelect: (anchorId: string) => void }) {
-  const isReachable = card.anchorId !== null;
+function WizardAccessCard({ card }: { card: WizardAccessCardDef }) {
+  const isReachable = card.href !== null;
   const inner = (
     <div
       className={[
@@ -104,13 +105,12 @@ function WizardAccessCard({ card, onSelect }: { card: WizardAccessCardDef; onSel
     );
   }
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(card.anchorId!)}
+    <Link
+      href={card.href!}
       className="block h-full w-full rounded-2xl text-left transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5f9cff] active:scale-[0.985]"
     >
       {inner}
-    </button>
+    </Link>
   );
 }
 
@@ -126,7 +126,7 @@ function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessC
       labelEn: "SERVICE AVAILABILITY",
       description: "この店舗で提供する施工メニューを選択します。オフにしたメニューは見積ウィザードに表示されません。",
       badge: "solid_active",
-      anchorId: "section-service-offerings",
+      href: getEstimateWizardPanelHref("service-availability"),
       icon: (
         <>
           <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -142,7 +142,7 @@ function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessC
       labelEn: "SERVICE MENUS",
       description: "メンテナンス・洗車・室内清掃のメニューを登録します。",
       badge: "solid_unset",
-      anchorId: serviceSection?.anchorId ?? null,
+      href: serviceSection ? getEstimateWizardPanelHref("service-menus") : null,
       icon: (
         <>
           <path d="M14.7 6.3a4 4 0 0 0-5.2 5.2L4 17l3 3 5.5-5.5a4 4 0 0 0 5.2-5.2l-2.6 2.6-2-2z" />
@@ -156,7 +156,7 @@ function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessC
       labelEn: "WORK PRESETS",
       description: "見積時に手入力する作業の名称プリセットです（金額は現場入力）。",
       badge: "solid_unset",
-      anchorId: otherworkSection?.anchorId ?? null,
+      href: otherworkSection ? getEstimateWizardPanelHref("work-presets") : null,
       icon: (
         <>
           <rect x="5" y="4" width="14" height="17" rx="2" />
@@ -172,7 +172,7 @@ function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessC
       labelEn: "SHOP OPTIONS",
       description: "出張費などの店舗共通オプションを登録します。",
       badge: "solid_unset",
-      anchorId: storeSection?.anchorId ?? null,
+      href: storeSection ? getEstimateWizardPanelHref("shop-options") : null,
       icon: (
         <>
           <path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h12M20 17h0" />
@@ -346,7 +346,7 @@ function buildRaw(d: DraftFields): Record<string, unknown> {
   return raw;
 }
 
-export default function EstimateWizardSettingsClient({ view }: { view: EstimateWizardSettingsView }) {
+export default function EstimateWizardSettingsClient({ view, panelId = null }: { view: EstimateWizardSettingsView; panelId?: string | null }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [toast, setToast] = useState<Toast | null>(null);
@@ -354,7 +354,6 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [archiveTarget, setArchiveTarget] = useState<WizardSettingsItemView | null>(null);
   const [serviceTab, setServiceTab] = useState<SupportedAuthoringKind>("maintenance_menu");
-  const [selectedPanel, setSelectedPanel] = useState<string | null>(null);
   const busyRef = useRef(false);
 
   const canEdit = view.canEdit;
@@ -524,21 +523,12 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
         </div>
       )}
 
-      {/* S8B — four real Estimate Wizard access cards; visual access layer only, no new route/data flow */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {buildWizardAccessCards(view).map((card) => (
-          <WizardAccessCard key={card.id} card={card} onSelect={setSelectedPanel} />
-        ))}
-      </div>
-
-      {selectedPanel && (
-        <button
-          type="button"
-          onClick={() => setSelectedPanel(null)}
-          className="self-start rounded-xl border border-[#263955] bg-[#0b1220]/70 px-3 py-2 text-xs font-semibold text-[#91b9ff] transition-colors hover:border-[#3b6eb4] hover:text-white"
-        >
-          ← 見積ウィザード設定へ戻る
-        </button>
+      {!panelId && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {buildWizardAccessCards(view).map((card) => (
+            <WizardAccessCard key={card.id} card={card} />
+          ))}
+        </div>
       )}
 
       {/* ── B2-E2G: 施工メニュー提供設定 ───────────────────────────────────────────
@@ -546,7 +536,7 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
           decides what they sell before they configure the details of it, and an opted-out family's
           catalog section is not something they need to look at. Rank is never mentioned — it does
           not participate in this decision. */}
-      {selectedPanel === "section-service-offerings" && (
+      {panelId === "section-service-offerings" && (
       <section className={`${glassSectionCls} scroll-mt-4`}>
         <div className="flex flex-col gap-1">
           <h2 className="text-sm font-bold text-[#edf3fc]">施工メニュー提供設定</h2>
@@ -588,7 +578,7 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
       )}
 
       {/* Configuration status card */}
-      {selectedPanel && (
+      {panelId && (
       <section className={glassSectionCls}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col">
@@ -636,7 +626,7 @@ export default function EstimateWizardSettingsClient({ view }: { view: EstimateW
       {/* Editable sections are rendered only after the matching access card is selected.
           This keeps the approved GenSpark hub free of the former stacked UI while preserving
           every existing editor and server action. */}
-      {view.sections.filter((section) => section.anchorId === selectedPanel).map((section) => (
+      {view.sections.filter((section) => section.anchorId === panelId).map((section) => (
         <SectionCard
           key={section.id}
           section={section}

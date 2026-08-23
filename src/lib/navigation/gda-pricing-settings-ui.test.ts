@@ -6,6 +6,8 @@ const read = (path: string) => readFileSync(path, "utf8");
 
 const CLIENT_PATH = "src/app/settings/estimate-wizard/EstimateWizardSettingsClient.tsx";
 const PAGE_PATH = "src/app/settings/estimate-wizard/page.tsx";
+const PANEL_PAGE_PATH = "src/app/settings/estimate-wizard/[panel]/page.tsx";
+const PANEL_CONFIG_PATH = "src/app/settings/estimate-wizard/panel-config.ts";
 const ROOT_LAYOUT_PATH = "src/app/layout.tsx";
 
 test("estimate-wizard page remains unchanged (S8B: read-only, no edit needed)", () => {
@@ -33,24 +35,25 @@ test("estimate wizard uses the same approved 1280px card canvas as the settings 
   assert.doesNotMatch(page, /className="[^"]*max-w-3xl/);
 });
 
-test("estimate wizard access cards use the approved badge states and derive anchors from view.sections, never a hardcoded route", () => {
+test("estimate wizard access cards use the approved badge states and dedicated child routes", () => {
   const client = read(CLIENT_PATH);
+  const config = read(PANEL_CONFIG_PATH);
 
   assert.equal((client.match(/badge:\s+"solid_active"/g) ?? []).length, 1, "only SERVICE AVAILABILITY is solid_active");
   assert.equal((client.match(/badge:\s+"solid_unset"/g) ?? []).length, 3, "the other three real cards are solid_unset");
-  assert.match(client, /anchorId:\s+"section-service-offerings"/);
-
   assert.match(client, /const serviceSection = view\.sections\.find\(section => section\.id === "service"\);/);
   assert.match(client, /const otherworkSection = view\.sections\.find\(section => section\.id === "otherwork"\);/);
   assert.match(client, /const storeSection = view\.sections\.find\(section => section\.id === "store"\);/);
-  assert.match(client, /anchorId:\s+serviceSection\?\.anchorId \?\? null/);
-  assert.match(client, /anchorId:\s+otherworkSection\?\.anchorId \?\? null/);
-  assert.match(client, /anchorId:\s+storeSection\?\.anchorId \?\? null/);
+  assert.match(client, /href:\s+serviceSection \? getEstimateWizardPanelHref\("service-menus"\) : null/);
+  assert.match(client, /href:\s+otherworkSection \? getEstimateWizardPanelHref\("work-presets"\) : null/);
+  assert.match(client, /href:\s+storeSection \? getEstimateWizardPanelHref\("shop-options"\) : null/);
 
-  // Fail-closed contract: a missing derived anchor renders informational only, no fabricated href.
-  assert.match(client, /const isReachable = card\.anchorId !== null;/);
+  assert.match(client, /const isReachable = card\.href !== null;/);
   assert.match(client, /if \(!isReachable\) \{/);
-  assert.doesNotMatch(client, /anchorId:\s+"\/settings/);
+  assert.match(client, /<Link\s+href=\{card\.href!\}/);
+  for (const slug of ["service-availability", "service-menus", "work-presets", "shop-options"]) {
+    assert.match(config, new RegExp(`"${slug}"`));
+  }
 });
 
 test("forbidden obsolete wizard cards are absent from the access layer", () => {
@@ -60,13 +63,15 @@ test("forbidden obsolete wizard cards are absent from the access layer", () => {
   }
 });
 
-test("existing estimate-wizard actions remain available only after selecting an access card", () => {
+test("existing estimate-wizard actions render only on a dedicated panel page", () => {
   const client = read(CLIENT_PATH);
-  assert.match(client, /const \[selectedPanel, setSelectedPanel\] = useState<string \| null>\(null\);/);
-  assert.match(client, /<WizardAccessCard key=\{card\.id\} card=\{card\} onSelect=\{setSelectedPanel\} \/>/);
-  assert.match(client, /selectedPanel === "section-service-offerings"/);
-  assert.match(client, /view\.sections\.filter\(\(section\) => section\.anchorId === selectedPanel\)\.map/);
-  assert.doesNotMatch(client, /href=\{`#\$\{card\.anchorId\}`\}/);
+  const panelPage = read(PANEL_PAGE_PATH);
+  assert.doesNotMatch(client, /selectedPanel|setSelectedPanel/);
+  assert.match(client, /panelId === "section-service-offerings"/);
+  assert.match(client, /view\.sections\.filter\(\(section\) => section\.anchorId === panelId\)\.map/);
+  assert.match(panelPage, /href="\/settings\/estimate-wizard"/);
+  assert.match(panelPage, /<EstimateWizardSettingsClient view=\{result\.view\} panelId=\{panelId!\} \/>/);
+  assert.doesNotMatch(panelPage, /buildWizardAccessCards/);
   assert.doesNotMatch(client, /view\.coating\.titleJa/);
   assert.doesNotMatch(client, /view\.ppfCoatingAdjustment\.rules\.map/);
   assert.match(client, /saveWizardCatalogItem\(parsed\.input\)/);
@@ -74,6 +79,19 @@ test("existing estimate-wizard actions remain available only after selecting an 
   assert.match(client, /confirmWizardCatalogReview\(\)/);
   assert.match(client, /setServiceOffering\(family, next\)/);
   assert.match(client, /SERVICE_FAMILIES\.map/);
+});
+
+test("estimate wizard hub never appends a selected editor below its cards", () => {
+  const page = read(PAGE_PATH);
+  const client = read(CLIENT_PATH);
+  const accessLayer = client.slice(
+    client.indexOf("type WizardAccessBadgeVariant"),
+    client.indexOf("type Toast ="),
+  );
+  assert.match(page, /<EstimateWizardSettingsClient view=\{result\.view\} \/>/);
+  assert.match(client, /\{!panelId && \(/);
+  assert.doesNotMatch(accessLayer, /onClick=\{\(\) => onSelect/);
+  assert.doesNotMatch(accessLayer, /href=\{`#\$\{/);
 });
 
 test("estimate-wizard access-card icon boxes and glyphs use one exact size", () => {
