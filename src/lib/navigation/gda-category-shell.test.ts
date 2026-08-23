@@ -288,6 +288,8 @@ test("shared shell renders the rectangular Brand lockup and no legacy 22-route l
   assert.match(sidebar, /w-\[268px\]/);
   assert.match(sidebar, /<Brand size=\{63\}/);
   assert.match(sidebar, /GDA_CATEGORIES\.map/);
+  assert.match(sidebar, /grid h-8 w-8 shrink-0 place-items-center text-\[#61a2ff\]/);
+  assert.doesNotMatch(sidebar, /active \? "text-\[#61a2ff\]" : "text-\[#91a4c1\]"/);
   assert.doesNotMatch(sidebar, /const navItems/);
   assert.doesNotMatch(sidebar, /href: "\/completion-reports"/);
 });

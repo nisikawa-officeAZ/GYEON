@@ -53,13 +53,24 @@ test("forbidden obsolete wizard cards are absent from the access layer", () => {
   }
 });
 
-test("existing estimate-wizard forms, actions, and the real service-offerings section remain unchanged below the access layer", () => {
+test("existing estimate-wizard actions remain available only after selecting an access card", () => {
   const client = read(CLIENT_PATH);
-  assert.match(client, /id="section-service-offerings"/);
+  assert.match(client, /const \[selectedPanel, setSelectedPanel\] = useState<string \| null>\(null\);/);
+  assert.match(client, /<WizardAccessCard key=\{card\.id\} card=\{card\} onSelect=\{setSelectedPanel\} \/>/);
+  assert.match(client, /selectedPanel === "section-service-offerings"/);
+  assert.match(client, /view\.sections\.filter\(\(section\) => section\.anchorId === selectedPanel\)\.map/);
+  assert.doesNotMatch(client, /href=\{`#\$\{card\.anchorId\}`\}/);
+  assert.doesNotMatch(client, /view\.coating\.titleJa/);
+  assert.doesNotMatch(client, /view\.ppfCoatingAdjustment\.rules\.map/);
   assert.match(client, /saveWizardCatalogItem\(parsed\.input\)/);
   assert.match(client, /archiveWizardCatalogItem\(target\.itemId\)/);
   assert.match(client, /confirmWizardCatalogReview\(\)/);
   assert.match(client, /setServiceOffering\(family, next\)/);
   assert.match(client, /SERVICE_FAMILIES\.map/);
-  assert.match(client, /view\.sections\.map/);
+});
+
+test("estimate-wizard access-card icon boxes and glyphs use one exact size", () => {
+  const client = read(CLIENT_PATH);
+  assert.match(client, /h-\[52px\] w-\[52px\]/);
+  assert.match(client, /className="block h-6 w-6" viewBox="0 0 24 24"/);
 });

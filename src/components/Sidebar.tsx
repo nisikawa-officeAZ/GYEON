@@ -99,7 +99,7 @@ export default function Sidebar({ open, onClose, initialPlan, initialUnreadNews 
             const className = `group relative flex min-h-[48px] items-center gap-1 rounded-xl border px-2.5 transition-colors ${active ? "is-active border-[#31568c] bg-[#122142] text-white" : "border-transparent text-[#b4c0d4] hover:border-[#203c66] hover:bg-white/[0.035] hover:text-white"} ${available ? "" : "cursor-not-allowed opacity-55"}`;
             const content = (
               <>
-                <span className={`grid h-8 w-8 shrink-0 place-items-center group-hover:text-[#61a2ff] ${active ? "text-[#61a2ff]" : "text-[#91a4c1]"}`}><CategoryIcon icon={category.icon} /></span>
+                <span className="grid h-8 w-8 shrink-0 place-items-center text-[#61a2ff]"><CategoryIcon icon={category.icon} /></span>
                 <span className="min-w-0 flex-1 truncate text-[14px] font-semibold tracking-[0.02em]">{category.label}</span>
                 <span className={`text-[9px] font-semibold tracking-[0.12em] ${active ? "text-[#8dbbff]" : "text-[#5f708d]"}`}>{category.labelEn}</span>
                 {category.badge === "news" && unreadNews > 0 && (
