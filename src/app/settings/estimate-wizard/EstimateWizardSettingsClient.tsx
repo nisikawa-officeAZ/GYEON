@@ -30,6 +30,7 @@ import type {
   WizardSettingsItemView,
   SupportedAuthoringKind,
 } from "@/lib/wizard-catalog/estimate-wizard-settings-types";
+import EstimateWizardPanelLoading from "./EstimateWizardPanelLoading";
 import { getEstimateWizardPanelHref } from "./panel-config";
 
 // ── S8B — four real Estimate Wizard access cards ────────────────────────────
@@ -64,7 +65,7 @@ interface WizardAccessCardDef {
   readonly icon: ReactNode;
 }
 
-function WizardAccessCard({ card }: { card: WizardAccessCardDef }) {
+function WizardAccessCard({ card, onNavigate }: { card: WizardAccessCardDef; onNavigate: (href: string) => void }) {
   const isReachable = card.href !== null;
   const inner = (
     <div
@@ -107,6 +108,17 @@ function WizardAccessCard({ card }: { card: WizardAccessCardDef }) {
   return (
     <Link
       href={card.href!}
+      onClick={(event) => {
+        if (
+          event.button === 0
+          && !event.metaKey
+          && !event.ctrlKey
+          && !event.shiftKey
+          && !event.altKey
+        ) {
+          onNavigate(card.href!);
+        }
+      }}
       className="block h-full w-full rounded-2xl text-left transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5f9cff] active:scale-[0.985]"
     >
       {inner}
@@ -354,6 +366,7 @@ export default function EstimateWizardSettingsClient({ view, panelId = null }: {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [archiveTarget, setArchiveTarget] = useState<WizardSettingsItemView | null>(null);
   const [serviceTab, setServiceTab] = useState<SupportedAuthoringKind>("maintenance_menu");
+  const [navigatingPanelHref, setNavigatingPanelHref] = useState<string | null>(null);
   const busyRef = useRef(false);
 
   const canEdit = view.canEdit;
@@ -523,10 +536,12 @@ export default function EstimateWizardSettingsClient({ view, panelId = null }: {
         </div>
       )}
 
-      {!panelId && (
+      {!panelId && navigatingPanelHref && <EstimateWizardPanelLoading />}
+
+      {!panelId && !navigatingPanelHref && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {buildWizardAccessCards(view).map((card) => (
-            <WizardAccessCard key={card.id} card={card} />
+            <WizardAccessCard key={card.id} card={card} onNavigate={setNavigatingPanelHref} />
           ))}
         </div>
       )}

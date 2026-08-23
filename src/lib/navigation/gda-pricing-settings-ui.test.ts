@@ -12,6 +12,7 @@ const ROOT_LAYOUT_PATH = "src/app/layout.tsx";
 const LEGACY_LOADING_PATH = "src/app/settings/estimate-wizard/loading.tsx";
 const WIZARD_LAYOUT_PATH = "src/app/settings/estimate-wizard/layout.tsx";
 const PANEL_LOADING_PATH = "src/app/settings/estimate-wizard/[panel]/loading.tsx";
+const SHARED_PANEL_LOADING_PATH = "src/app/settings/estimate-wizard/EstimateWizardPanelLoading.tsx";
 
 test("estimate-wizard page remains unchanged (S8B: read-only, no edit needed)", () => {
   const page = read(PAGE_PATH);
@@ -92,7 +93,7 @@ test("estimate wizard hub never appends a selected editor below its cards", () =
     client.indexOf("type Toast ="),
   );
   assert.match(page, /<EstimateWizardSettingsClient view=\{result\.view\} \/>/);
-  assert.match(client, /\{!panelId && \(/);
+  assert.match(client, /\{!panelId && !navigatingPanelHref && \(/);
   assert.doesNotMatch(accessLayer, /onClick=\{\(\) => onSelect/);
   assert.doesNotMatch(accessLayer, /href=\{`#\$\{/);
 });
@@ -102,6 +103,7 @@ test("estimate-wizard navigation keeps one shared shell and shows only the appro
   const panelPage = read(PANEL_PAGE_PATH);
   const layout = read(WIZARD_LAYOUT_PATH);
   const panelLoading = read(PANEL_LOADING_PATH);
+  const sharedPanelLoading = read(SHARED_PANEL_LOADING_PATH);
 
   assert.equal(
     existsSync(LEGACY_LOADING_PATH),
@@ -111,9 +113,20 @@ test("estimate-wizard navigation keeps one shared shell and shows only the appro
   assert.match(layout, /<MainLayout>\{children\}<\/MainLayout>/);
   assert.doesNotMatch(page, /<MainLayout>/);
   assert.doesNotMatch(panelPage, /<MainLayout>/);
-  assert.match(panelLoading, /設定を読み込んでいます/);
-  assert.match(panelLoading, /max-w-\[1280px\]/);
+  assert.match(panelLoading, /EstimateWizardPanelLoading/);
+  assert.match(sharedPanelLoading, /設定を読み込んでいます/);
+  assert.match(sharedPanelLoading, /max-w-\[1280px\]/);
   assert.doesNotMatch(panelLoading, /max-w-3xl|h-32 bg-slate-900\/60/);
+});
+
+test("estimate-wizard card navigation replaces the retained hub immediately", () => {
+  const client = read(CLIENT_PATH);
+
+  assert.match(client, /const \[navigatingPanelHref, setNavigatingPanelHref\] = useState<string \| null>\(null\);/);
+  assert.match(client, /onNavigate=\{setNavigatingPanelHref\}/);
+  assert.match(client, /!panelId && navigatingPanelHref && <EstimateWizardPanelLoading \/>/);
+  assert.match(client, /!panelId && !navigatingPanelHref && \(/);
+  assert.match(client, /onClick=\{\(event\) => \{/);
 });
 
 test("estimate-wizard access-card icon boxes and glyphs use one exact size", () => {
