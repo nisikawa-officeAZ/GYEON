@@ -61,7 +61,6 @@ const BODY_SIZE_OPTIONS: { key: string; label: string }[] = [
   { key: "L",   label: "L — 大型SUV" },
   { key: "LL",  label: "LL — 超大型SUV" },
   { key: "XL",  label: "XL — スーパーカー" },
-  { key: "XXL", label: "XXL — 大型スーパーカー" },
 ];
 
 const STEP_LABELS: Record<Screen, string> = {

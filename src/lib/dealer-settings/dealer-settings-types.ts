@@ -9,7 +9,7 @@
 import type { DealerRank } from "@/lib/ranks/dealer-ranks";
 export type DetailerRank = DealerRank;
 
-export type BodySizeKey = "SS" | "S" | "M" | "ML" | "L" | "LL" | "XL" | "XXL";
+export type BodySizeKey = "SS" | "S" | "M" | "ML" | "L" | "LL" | "XL";
 
 export type DiscountType = "fixed" | "percent";
 
