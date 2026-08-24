@@ -1,10 +1,12 @@
-# GYEON Detailer Agent コーティング設定 正式仕様変更書 V3.3
+# GYEON Detailer Agent コーティング設定 正式仕様変更書 V3.4
 
-- 文書ID: `GDA-COATING-SETTINGS-SPEC-CHANGE-V3.3`
+- 文書ID: `GDA-COATING-SETTINGS-SPEC-CHANGE-V3.4`
 - 制定日: 2026-08-23
 - 状態: OWNER DECISION INCORPORATED / IMPLEMENTATION NOT YET AUTHORIZED
 - 対象: GenSpark UI設計、Claude Code実装、GPT受入監査
 - 対象システム: GYEON Detailer Agent / DealerOS
+- 受理済みUI納品: `gda_coating_settings_ui_v3_3_r2_r1.zip`
+- 受理済みUI SHA-256: `59e5307c2391dfb94210dd28d5f434b0edfacca7ed92d5c8a9e01b621c4f3686`
 
 ## 1. 目的
 
@@ -19,7 +21,7 @@
 3. Mサイズ基準価格とサイズ倍率による新規価格設定を廃止する。
 4. 2層目・3層目は、単なる割合・固定額加算ではなく、実際に施工する追加レイヤー商品を選択する現行DealerOS方式を維持する。
 5. 2層目・3層目の商品選択は、店舗ランクとGYEON施工組み合わせ規則に従う。
-6. 同一の追加レイヤー商品は、2層目・3層目のどちらで使用しても同じサイズ別追加価格を使用する。
+6. 2層目と3層目は使用する液剤が異なるため、商品選択と7サイズ別価格を層ごとに完全分離する。
 7. `XXL`は`XL`へ統合せず、車両サイズ仕様から廃止する。
 
 ## 3. 正式な車両サイズ
@@ -102,18 +104,23 @@ interface CoatingBaseProductPrice {
 
 実際に施工する追加レイヤー商品を選択し、その商品の対象サイズ価格を加算する。
 
-各追加レイヤー商品も、7サイズそれぞれの税抜追加価格を直接保持する。
+各追加レイヤー商品は、2層目用と3層目用に分離された7サイズ税抜追加価格を直接保持する。
 
 概念データ形:
 
 ```ts
-interface CoatingUpperLayerPrice {
+interface CoatingLayer2ProductPrice {
   productId: string;
-  pricesBySize: SizePriceMap;
+  layer2PricesBySize: SizePriceMap;
+}
+
+interface CoatingLayer3ProductPrice {
+  productId: string;
+  layer3PricesBySize: SizePriceMap;
 }
 ```
 
-同一の商品を2層目または3層目に使用する場合、層位置による別価格は設けず、同じ`pricesBySize`を使用する。
+2層目用と3層目用の価格契約を共有してはならない。同一の商品識別子が両方の層で利用可能な場合でも、`layer2PricesBySize`と`layer3PricesBySize`は別の保存・検証・読込対象とする。一方の価格を他方へ自動複製、代用、フォールバックしてはならない。
 
 ## 5. 見積計算
 
@@ -123,11 +130,11 @@ interface CoatingUpperLayerPrice {
 1層施工 = baseProduct.pricesBySize[size]
 
 2層施工 = baseProduct.pricesBySize[size]
-          + layer2Product.pricesBySize[size]
+          + layer2Product.layer2PricesBySize[size]
 
 3層施工 = baseProduct.pricesBySize[size]
-          + layer2Product.pricesBySize[size]
-          + layer3Product.pricesBySize[size]
+          + layer2Product.layer2PricesBySize[size]
+          + layer3Product.layer3PricesBySize[size]
 ```
 
 次の方式は禁止する。
@@ -136,6 +143,7 @@ interface CoatingUpperLayerPrice {
 - 2層目・3層目の一律パーセント加算
 - 商品識別子を持たない固定額加算
 - 選択された追加レイヤー商品の代わりに別商品価格を代用する処理
+- 2層目価格を3層目価格へ、または3層目価格を2層目価格へ代用する処理
 - 未設定価格を0円として計算する処理
 
 ## 6. 商品選択と施工組み合わせ制御
@@ -172,10 +180,12 @@ GYEON施工組み合わせ規則は店舗ユーザーが自由編集する価格
 
 「2層目 加算率」「2層目 加算額」「3層目 加算率」「3層目 加算額」は削除する。
 
-代わりに「追加レイヤー価格設定」を設ける。
+代わりに「2層目価格設定」と「3層目価格設定」を別パネルとして設ける。
 
-- 追加レイヤー商品をプッシュボタンで切り替える。
-- 選択中の追加レイヤー商品について7サイズの追加価格を入力する。
+- 各パネルで、その層に利用可能な液剤を別々のプッシュボタンで切り替える。
+- 各パネルで、選択中の液剤について7サイズの追加価格を直接入力する。
+- 2層目の商品選択、入力値、未設定、無料、エラー、旧価格確認、保存結果は3層目から独立させる。
+- 3層目の商品選択、入力値、未設定、無料、エラー、旧価格確認、保存結果は2層目から独立させる。
 - その商品が2層目・3層目のどこで使用可能かを、正式マトリクスから導出した説明として表示する。
 - Certified限定の場合は明示する。
 - 組み合わせ規則そのものはこの画面で編集させない。
@@ -207,7 +217,7 @@ interface UpperLayerAvailabilityView {
 
 ### 7.3.1 追加レイヤー価格入力と組み合わせ可否の関係
 
-追加レイヤー価格は「追加レイヤー商品 × 車両サイズ」で一意であり、現在選択中のベース商品には依存しない。
+追加レイヤー価格は「層位置 × 追加レイヤー商品 × 車両サイズ」で一意であり、現在選択中のベース商品には依存しない。
 
 したがって、価格設定画面では次の規則を適用する。
 
@@ -276,12 +286,14 @@ interface UpperLayerAvailabilityView {
 ```text
 旧1層目候補価格 = round(base_price_m × size_multiplier[size])
 
-旧追加レイヤー候補価格 = round(topcoat_price × size_multiplier[size])
+旧共有トップコート参考価格 = round(topcoat_price × size_multiplier[size])
 ```
 
 移行時の必須規則:
 
 - 1円単位で四捨五入する。
+- 旧`topcoat_prices`は層位置を識別しない共有値であるため、2層目・3層目の両方へ自動複製しない。
+- 既存の保存値・正式マトリクス・利用実績から層位置を一意に確定できない場合は、参考値として表示し、各層で担当者の確認と明示保存を要求する。
 - 初期表示だけでは新形式を保存しない。
 - 画面上部に「旧価格設定から7サイズ別価格へ変換しました」と表示する。
 - 未確認の商品ボタンに「要確認」を表示する。
@@ -340,9 +352,11 @@ GenSparkは次の状態を設計し、Claudeは同じ状態を実装する。
 - マイナス、小数、指数表記、空白だけの値を拒否する。
 - 保存前にすべての変更対象を再検証する。
 
-## 13. GenSparkへの納品要求
+## 13. 受理済みGenSpark設計権威
 
-次を再納品すること。
+上記SHA-256のR2-R1パッケージをC2以降の視覚・レスポンシブ・状態設計権威として固定する。軽微な実装適合修正を理由にGenSparkへ再制作を要求しない。業務契約・DB・API・価格計算は本仕様書と実装調査を正本とし、HTMLモックを業務ロジックの正本にはしない。
+
+受理済み納品物は次を含む。
 
 1. Detailerランク版 Desktop
 2. Detailerランク版 Tablet
@@ -351,7 +365,7 @@ GenSparkは次の状態を設計し、Claudeは同じ状態を実装する。
 5. Certifiedランク版 Tablet
 6. Certifiedランク版 Mobile
 7. ベース商品7サイズ直接価格UI
-8. 追加レイヤー商品7サイズ直接価格UI
+8. 2層目商品7サイズ直接価格UIと3層目商品7サイズ直接価格UI
 9. 本文書第11章の全状態UI
 10. Claude実装用のHTML、CSS、SVG、トークン、状態表、Before/After対応表
 
@@ -403,6 +417,7 @@ GenSparkの役割はUI設計と移植可能な表現仕様までとする。デ�
 - M基準価格・サイズ倍率UIが存在しない。
 - 2層目・3層目を％または匿名金額だけで設定するUIが存在しない。
 - 追加レイヤーの商品識別が維持される。
+- 2層目と3層目の商品選択・7サイズ価格・状態・保存契約が完全に分離され、一方から他方への自動複製やフォールバックが存在しない。
 - 店舗ランクと施工可能組み合わせを壊さない。
 - 未設定と無料が視覚的・データ的に区別される。
 - 商品切替はプッシュボタン式である。
@@ -419,7 +434,7 @@ GenSparkの役割はUI設計と移植可能な表現仕様までとする。デ�
 
 1. GenSpark UI再設計・再納品
 2. GPTによるUI仕様受入
-3. Claudeによる既存データ契約・使用箇所の読取専用マッピング
+3. Claudeによる既存データ契約・使用箇所・2層目/3層目分離影響の読取専用マッピング
 4. 旧`XXL`値の検出、手動是正要求および7サイズデータ契約の実装
 5. 設定UIの実装
 6. 見積計算の実装

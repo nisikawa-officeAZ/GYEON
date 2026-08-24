@@ -1480,3 +1480,58 @@ rollback_or_recovery: "Before merge, close Draft PR #28 or revert only source co
 decision: "GDA_COATING_V3_3_C1_SOURCE_DELIVERED_DRAFT_PENDING_FINAL_ACCEPTANCE"
 next: "INDEPENDENTLY_VERIFY_ONLY_THIS_LEDGER_PATH_THEN_AUTHORIZE_A_SEPARATE_LEDGER_COMMIT_GATE"
 ```
+
+## GDA-COATING-V3.4-C2 — Direct-price architecture diagnosis authorization
+
+```yaml
+phase: GDA_COATING_V3_4_C2_DIRECT_PRICE_ARCHITECTURE_DIAGNOSIS
+status: GOVERNANCE_BOOTSTRAP_AUTHORIZED_READ_ONLY_DIAGNOSIS_PENDING
+date: 2026-08-24
+append_only: true
+objective: "Produce one source-derived architecture and impact map for seven-size direct coating prices with fully independent layer-1, layer-2, and layer-3 product-price contracts, before any source or migration implementation."
+authorization: "The owner accepted the corrected R2-R1 UI package and instructed MacBook Codex to proceed rapidly. This authority is bounded to the V3.4 governance bootstrap, Draft-PR coordination record, and one Claude read-only C2 diagnosis; source implementation, DB/migration, Ready, merge, and deploy remain unauthorized."
+predecessor:
+  phase: GDA_COATING_V3_3_C1_SEVEN_SIZE_CONTRACT
+  result: "PR #28 squash-merged to main at 0bfd69f4d6f4085163ba19599151fa689646a088; Dev-Next automatic Vercel build succeeded"
+repository:
+  repo: nisikawa-officeAZ/GYEON
+  base_branch: main
+  starting_commit: 0bfd69f4d6f4085163ba19599151fa689646a088
+  starting_tree: 8ccbdf10323b710e97bb091aa7d20d022fe59973
+  governance_branch: plan/gda-coating-v3-4-direct-price-c2
+canonical_authority:
+  specification: docs/master_specification/GDA_COATING_SETTINGS_FORMAL_SPEC_CHANGE_V3.md
+  specification_version: V3.4
+  specification_sha256: 4b14f28694b94352752807a6390f31562a8b04d0c1f0485cf2eb932e34d36fc5
+  claude_directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_COATING_V3_4_C2_DIRECT_PRICE_ARCHITECTURE_DIAGNOSIS.md
+  claude_directive_sha256: d0e80ea03077bff7b04e7ec04cf0bbe7b42463d5739a2883323e575cabd450e2
+  accepted_ui_delivery: gda_coating_settings_ui_v3_3_r2_r1.zip
+  accepted_ui_sha256: 59e5307c2391dfb94210dd28d5f434b0edfacca7ed92d5c8a9e01b621c4f3686
+owner_decisions:
+  sizes: [SS, S, M, ML, L, LL, XL]
+  xxl: "ABOLISHED — no alias, merge, conversion, mapping, or fallback"
+  direct_prices: "Tax-exclusive integer price per product and size; unset differs from explicitly confirmed free"
+  layer_contract: "Layer 1, layer 2, and layer 3 are independent product selections and independent seven-size price maps"
+  layer2_layer3: "Different liquids may be used; no copying, substitution, or cross-layer fallback"
+  historical_records: "No rewrite or recalculation of finalized history"
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/GDA_COATING_SETTINGS_FORMAL_SPEC_CHANGE_V3.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_COATING_V3_4_C2_DIRECT_PRICE_ARCHITECTURE_DIAGNOSIS.md
+diagnosis:
+  mode: READ_ONLY
+  result_name: GDA_COATING_V3_4_C2_DIRECT_PRICE_ARCHITECTURE_DIAGNOSIS_V1
+  required_output: "Current contract ledger; complete base_price_m/size_multipliers/topcoat_prices identities; target contract; persistence/migration/mixed-version plan; fail-closed behavior; accepted-UI binding; exact later phase allowlists"
+protected_paths:
+  - src/components/estimates/wizard/screens/ScreensPreview.tsx — pathname/mode/blob/Git state only
+  - supabase/migrations/20260801110110_line_link_tokens.sql — metadata only/no apply
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql — closed finance artifact
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts — closed finance boundary
+scope_confirmation:
+  - "No source/test/migration/config implementation is authorized in C2."
+  - "Claude runs no tests, typecheck, build, runtime, DB, Supabase, Auth, Storage, LINE, Vercel, or external-service operation."
+  - "Commit/push/Draft PR cover governance documents only; source commit/push, Ready, merge, migration apply, and deploy remain separate gates."
+decision: GDA_COATING_V3_4_C2_GOVERNANCE_BOOTSTRAP_CANDIDATE
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_THEN_COMMIT_PUSH_CREATE_DRAFT_PR_AND_PUBLISH_THE_CLAUDE_READ_ONLY_INSTRUCTION"
+```

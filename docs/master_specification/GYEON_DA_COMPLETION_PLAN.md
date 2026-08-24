@@ -305,11 +305,11 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 ### GDA-COATING-V3.3-C1 — Seven-size contract normalization
 
-**Status:** Governance activation authorized; source implementation is not yet started.
+**Status:** CLOSED — source delivered, verified, squash-merged in PR #28 at `0bfd69f4d6f4085163ba19599151fa689646a088`, and Dev-Next automatic Vercel build succeeded.
 
 **Objective:** Normalize every allowlisted new-operation vehicle-size contract to exactly `SS / S / M / ML / L / LL / XL`, abolish `XXL`, and make `XL` the terminal result of the existing 3M classifier without changing any numeric threshold.
 
-**Canonical authorities:**
+**Canonical authorities at C1 execution:**
 
 - `docs/master_specification/GDA_COATING_SETTINGS_FORMAL_SPEC_CHANGE_V3.md` V3.3.
 - `docs/master_specification/CLAUDE_DIRECTIVE_GDA_COATING_V3_3_C1_SEVEN_SIZE_CONTRACT.md`.
@@ -345,7 +345,36 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Boundaries:** protected paths in section 3.1 remain metadata-only. No DB, Supabase, Auth, Storage, LINE, migration, external-service, dependency, config, route, permission, unrelated UI, stage, commit, push, Ready, merge, Preview, or deployment action is included in the C1 implementation candidate.
 
-**Acceptance target:** E2 uncommitted local candidate after independent MacBook Codex scope and evidence review. Governance-document commit/push and Draft-PR instruction are separate gates and do not authorize implementation by themselves.
+**Acceptance result:** E2 source acceptance completed; commit/push/Ready/merge and post-merge Dev-Next build gates completed separately. C1 does not authorize C2 implementation.
+
+### GDA-COATING-V3.4-C2 — Direct-price architecture read-only impact diagnosis
+
+**Status:** AUTHORIZED — one bounded read-only Claude diagnosis; implementation is not authorized.
+
+**Objective:** Map the current coating settings, persistence, authoritative pricing catalog, rank/matrix enforcement, Estimate Wizard, and tests to an exact migration-safe architecture for seven-size direct prices with fully independent layer-1, layer-2, and layer-3 product-price contracts.
+
+**Canonical authorities:**
+
+- `docs/master_specification/GDA_COATING_SETTINGS_FORMAL_SPEC_CHANGE_V3.md` V3.4.
+- `docs/master_specification/CLAUDE_DIRECTIVE_GDA_COATING_V3_4_C2_DIRECT_PRICE_ARCHITECTURE_DIAGNOSIS.md`.
+- Accepted visual delivery `gda_coating_settings_ui_v3_3_r2_r1.zip`, SHA-256 `59e5307c2391dfb94210dd28d5f434b0edfacca7ed92d5c8a9e01b621c4f3686`.
+
+**Frozen owner decisions:**
+
+- Valid sizes remain exactly `SS / S / M / ML / L / LL / XL`; `XXL` stays abolished with no alias, conversion, merge, or fallback.
+- Layer 1, layer 2, and layer 3 use separate product selections and separate seven-size price maps.
+- Layer 2 and layer 3 may use different liquids. A price in one layer must never be copied, substituted, or used as fallback for the other layer.
+- Prices are tax-exclusive integers entered directly; unset and explicitly confirmed free remain distinct.
+- Existing rank/matrix rules and historical finalized records remain unchanged and fail closed.
+- The accepted R2-R1 UI is the visual authority; implementation-level corrections do not justify another GenSpark round trip.
+
+**Read boundary:** Current `origin/main` at commit `0bfd69f4d6f4085163ba19599151fa689646a088`, tree `8ccbdf10323b710e97bb091aa7d20d022fe59973`, using only the source seeds and direct dependency/caller paths in the C2 directive. Protected paths in section 3.1 remain metadata-only.
+
+**Required result:** One `GDA_COATING_V3_4_C2_DIRECT_PRICE_ARCHITECTURE_DIAGNOSIS_V1` report containing the current contract ledger, complete legacy-field identities, recommended target contract, migration and mixed-version strategy, fail-closed behavior, accepted-UI binding map, and exact literal-path phases for later implementation.
+
+**Prohibited:** Any source/test/migration/config/document edit by Claude; test/typecheck/build/runtime execution; DB/Supabase/Auth/Storage/LINE/Vercel/external-service access; branch/worktree/stage/commit/push/Ready/merge/deploy; live legacy-data query; accepted-UI redesign.
+
+**Exit:** MacBook Codex independently verifies the one C2 report and either records `CHANGES_REQUIRED` with one exact correction or accepts an exact first implementation phase. No code is required or permitted in C2.
 
 ### GDA-3 — Completion Desk
 
