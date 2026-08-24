@@ -1412,3 +1412,71 @@ scope_confirmation:
 decision: "GDA_COATING_V3_3_C1_GOVERNANCE_CANDIDATE_READY"
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_COMMIT_PUSH_CREATE_DRAFT_PR_PUBLISH_CLAUDE_INSTRUCTION_THEN_STOP_BEFORE_IMPLEMENTATION"
 ```
+
+## GDA-COATING-V3.3-C1 — Seven-size contract source delivery
+
+```yaml
+phase: GDA_COATING_V3_3_C1_SEVEN_SIZE_CONTRACT
+status: SOURCE_IMPLEMENTED_VALIDATED_COMMITTED_PUSHED_DRAFT_OPEN
+date: 2026-08-24
+append_only: true
+objective: "Deliver the source-only seven-size contract as exactly SS/S/M/ML/L/LL/XL, abolish XXL without automatic conversion, and preserve the accepted 3M thresholds and retained pricing values."
+authorization: "The owner separately authorized implementation, the environment-only focused revalidation, the exact eight-path local commit, the normal non-force push, and this one-document append-only completion-ledger candidate."
+repository:
+  repo: "nisikawa-officeAZ/GYEON"
+  base_branch: "main"
+  branch: "plan/gda-coating-v3-3-seven-size-contract"
+  pull_request: "https://github.com/nisikawa-officeAZ/GYEON/pull/28"
+  pull_request_state: "OPEN/Draft/unmerged"
+  governance_head_before_source_commit: "f2388f827dfc763b4c32dd42e4aa68a2c54f6923"
+  source_commit: "e699cd36b979eacc281dc9918b432889f341591b"
+  source_tree: "0e011135c04a9c830c490e9280757b2a5a98f3d5"
+canonical_contract:
+  sizes: ["SS", "S", "M", "ML", "L", "LL", "XL"]
+  xxl: "ABOLISHED — no alias, mapping, fallback, automatic conversion, or XL substitution"
+  thresholds: "<6.9 SS; <7.3 S; <7.9 M; <8.3 ML; <8.6 L; <8.9 LL; remaining finite values XL"
+  operator_correction: "Preserved"
+  historical_records: "No finalized historical record was rewritten or recalculated"
+implementation_paths:
+  - "src/components/onboarding/CustomerVehicleOnboardingWizard.tsx — modified"
+  - "src/lib/dealer-settings/dealer-settings-defaults.ts — modified"
+  - "src/lib/dealer-settings/dealer-settings-types.ts — modified"
+  - "src/lib/pricing/body-size-contract.test.ts — added"
+  - "src/lib/pricing/pricing-data.ts — modified"
+  - "src/lib/pricing/pricing-engine.ts — modified comment/type description only"
+  - "src/lib/vehicles/body-size-estimate.test.ts — added"
+  - "src/lib/vehicles/body-size-estimate.ts — modified"
+validation:
+  first_attempt: "CHANGES_UNVERIFIED_ENVIRONMENT_BLOCKED — the isolated clone had no node_modules, so no executable test or typecheck signal was produced"
+  environment_revalidation: "Used a temporary ignored symlink to an existing dependency directory only after candidate and source package-lock.json SHA-256 matched exactly; no install or dependency mutation occurred; symlink removed after validation"
+  focused_tests:
+    command: "node --import tsx --test src/lib/vehicles/body-size-estimate.test.ts src/lib/pricing/body-size-contract.test.ts"
+    result: "PASS 13/13"
+  typecheck:
+    command: "npx tsc --noEmit"
+    result: "PASS — zero errors"
+  diff_check:
+    command: "git diff --check"
+    result: "PASS"
+  full_suite: false
+  build: false
+git_delivery:
+  staged_paths: "Exactly eight accepted implementation paths"
+  commit: "e699cd36b979eacc281dc9918b432889f341591b"
+  push: "PASS — normal fast-forward f2388f8..e699cd3; no force"
+  remote_head_verified: "e699cd36b979eacc281dc9918b432889f341591b"
+  local_index_and_worktree_after_push: "clean"
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx — 100644 blob c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f; content not opened/diffed/modified"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql — 100644 blob accd22345054cc44f89156fd78eaba6dfe4242a4; metadata only/no apply"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql — 100644 blob 32fda49583ae1217bc13711784ad8fa31744726c; closed finance artifact"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts — 100644 blob fe3c80f22fd80dcbfab076082473216dda582c14; closed finance boundary"
+disclosure:
+  - "During the first Claude attempt, one pathname-only repo-wide grep surfaced the protected ScreensPreview.tsx path name. Its content was never opened, printed, diffed, copied, or modified."
+scope_confirmation:
+  - "No full suite, build, dependency change, DB, Supabase, Auth, Storage, LINE, external-service access, migration, Preview, Ready conversion, merge, deployment, or destructive action occurred."
+  - "Direct seven-size coating prices, upper-layer pricing, coating UI, production OCR wiring, and persisted-XXL inventory/remediation remain later separately authorized phases."
+rollback_or_recovery: "Before merge, close Draft PR #28 or revert only source commit e699cd36. No DB, migration, external-service, or deployment state exists to roll back."
+decision: "GDA_COATING_V3_3_C1_SOURCE_DELIVERED_DRAFT_PENDING_FINAL_ACCEPTANCE"
+next: "INDEPENDENTLY_VERIFY_ONLY_THIS_LEDGER_PATH_THEN_AUTHORIZE_A_SEPARATE_LEDGER_COMMIT_GATE"
+```
