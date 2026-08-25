@@ -10,19 +10,27 @@
 //
 // Pure module (no DB / no "use server"). Safe for client or server import.
 
+import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
+
+export const BODY_SIZE_KEYS = ["SS", "S", "M", "ML", "L", "LL", "XL"] as const;
+
+export type BodySizeKey = (typeof BODY_SIZE_KEYS)[number];
 export type BodySizeSource = "OCR" | "推測" | "手入力";
+export type BodySizeRecommendationLevel = "recommended" | "adjacent" | "neutral";
 
 export interface BodySizeEstimate {
-  sizeKey: string | null;        // SS/S/M/ML/L/LL/XL, or null when unknown
+  sizeKey: BodySizeKey | null;   // SS/S/M/ML/L/LL/XL, or null when unknown
   threeM:  number | null;        // 3M value (length+width+height, metres)
   source:  BodySizeSource | null;
   basis:   string;               // 推定根拠 (human-readable)
+  adjacentSizeKeys: BodySizeKey[];
+  requiresManualConfirmation: boolean;
 }
 
 interface Dim { l: number; w: number; h: number; label: string } // metres
 
 // 3M → body-size class thresholds (approximate, monotonic). >= last max → XL.
-const THREE_M_STEPS: { max: number; size: string }[] = [
+const THREE_M_STEPS: { max: number; size: BodySizeKey }[] = [
   { max: 6.9, size: "SS" },
   { max: 7.3, size: "S"  },
   { max: 7.9, size: "M"  },
@@ -31,9 +39,29 @@ const THREE_M_STEPS: { max: number; size: string }[] = [
   { max: 8.9, size: "LL" },
 ];
 
-export function classifyThreeM(threeM: number): string {
+export function classifyThreeM(threeM: number): BodySizeKey {
+  if (!Number.isFinite(threeM) || threeM <= 0) {
+    throw new RangeError("3M must be a positive finite value");
+  }
   for (const s of THREE_M_STEPS) if (threeM < s.max) return s.size;
   return "XL";
+}
+
+export function adjacentBodySizeKeys(sizeKey: BodySizeKey | null): BodySizeKey[] {
+  if (!sizeKey) return [];
+  const index = BODY_SIZE_KEYS.indexOf(sizeKey);
+  return [BODY_SIZE_KEYS[index - 1], BODY_SIZE_KEYS[index + 1]].filter(
+    (value): value is BodySizeKey => value !== undefined,
+  );
+}
+
+export function bodySizeRecommendationLevel(
+  candidate: string,
+  estimate: BodySizeEstimate | null,
+): BodySizeRecommendationLevel {
+  if (estimate?.sizeKey === candidate) return "recommended";
+  if (estimate?.adjacentSizeKeys.includes(candidate as BodySizeKey)) return "adjacent";
+  return "neutral";
 }
 
 // Internal APPROXIMATE dimension map (representative vehicle per maker/brand).
@@ -82,6 +110,40 @@ export interface EstimateBodySizeInput {
   lengthM?:     number | null;
   widthM?:      number | null;
   heightM?:     number | null;
+  /** OCR confidence, normalized to 0..1. Missing/low confidence remains manual-review only. */
+  dimensionConfidence?: number | null;
+}
+
+function isPositiveFinite(value: number | null | undefined): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0;
+}
+
+function unknownEstimate(basis: string): BodySizeEstimate {
+  return {
+    sizeKey: null,
+    threeM: null,
+    source: null,
+    basis,
+    adjacentSizeKeys: [],
+    requiresManualConfirmation: true,
+  };
+}
+
+function buildEstimate(
+  sizeKey: BodySizeKey,
+  threeM: number,
+  source: BodySizeSource,
+  basis: string,
+): BodySizeEstimate {
+  return {
+    sizeKey,
+    threeM,
+    source,
+    basis,
+    adjacentSizeKeys: adjacentBodySizeKeys(sizeKey),
+    // A recommendation never becomes the stored physical body size until the operator selects it.
+    requiresManualConfirmation: true,
+  };
 }
 
 /**
@@ -90,9 +152,25 @@ export interface EstimateBodySizeInput {
  */
 export function estimateBodySize(input: EstimateBodySizeInput): BodySizeEstimate {
   // 1) Explicit dimensions (from OCR) take priority.
-  if (input.lengthM && input.widthM && input.heightM) {
-    const threeM = round2(input.lengthM + input.widthM + input.heightM);
-    return { sizeKey: classifyThreeM(threeM), threeM, source: "OCR", basis: `OCR寸法から算出（3M=${threeM}m）` };
+  const { lengthM, widthM, heightM } = input;
+  const suppliedDimensions = [lengthM, widthM, heightM];
+  const hasAnyDimension = suppliedDimensions.some((value) => value != null);
+  const hasAllValidDimensions = isPositiveFinite(lengthM)
+    && isPositiveFinite(widthM)
+    && isPositiveFinite(heightM);
+
+  if (hasAnyDimension && !hasAllValidDimensions) {
+    return unknownEstimate("車検証の長さ・幅・高さを確認し、3項目すべてを正しいメートル値で入力してください");
+  }
+
+  if (hasAllValidDimensions) {
+    const threeM = round2(lengthM + widthM + heightM);
+    const confidence = input.dimensionConfidence;
+    const confidenceNote = confidence == null || confidence < 0.8
+      ? "・OCR信頼度未確認のため目視確認が必要"
+      : "";
+    const sizeKey = classifyThreeM(threeM);
+    return buildEstimate(sizeKey, threeM, "OCR", `OCR寸法から算出（3M=${threeM}m）${confidenceNote}`);
   }
 
   // 2) Look up representative dimensions from the internal map (maker/model text).
@@ -103,9 +181,31 @@ export function estimateBodySize(input: EstimateBodySizeInput): BodySizeEstimate
   );
   if (hit) {
     const threeM = round2(hit.dim.l + hit.dim.w + hit.dim.h);
-    return { sizeKey: classifyThreeM(threeM), threeM, source: "推測", basis: `${hit.dim.label}の代表寸法から推定（3M=${threeM}m）` };
+    const sizeKey = classifyThreeM(threeM);
+    return buildEstimate(
+      sizeKey,
+      threeM,
+      "推測",
+      `${hit.dim.label}の代表寸法による参考候補（3M=${threeM}m）・車種固有寸法ではないため確認が必要`,
+    );
   }
 
   // 3) Unknown — do not fabricate.
-  return { sizeKey: null, threeM: null, source: null, basis: "サイズを手入力してください" };
+  return unknownEstimate("サイズを手入力してください");
+}
+
+/** Convert canonical OCR millimetres to metres, then use the one shared 3M contract. */
+export function estimateBodySizeFromVehicleRegistrationOcr(
+  ocr: Partial<VehicleRegistrationOcrResult>,
+): BodySizeEstimate {
+  return estimateBodySize({
+    maker: ocr.maker,
+    vehicleName: ocr.vehicle_name,
+    model: ocr.model,
+    grade: ocr.grade,
+    lengthM: ocr.length_mm == null ? null : ocr.length_mm / 1000,
+    widthM: ocr.width_mm == null ? null : ocr.width_mm / 1000,
+    heightM: ocr.height_mm == null ? null : ocr.height_mm / 1000,
+    dimensionConfidence: ocr.dimension_confidence,
+  });
 }

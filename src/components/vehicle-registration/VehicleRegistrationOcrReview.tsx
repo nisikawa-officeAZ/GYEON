@@ -53,8 +53,13 @@ const VEHICLE_FIELDS: ReviewField[] = [
   "registration_date",       // 登録年月日
   "inspection_expiry_date",  // 車検満了日
   "displacement",            // 排気量
+  "length_mm",               // 長さ（3M計算用）
+  "width_mm",                // 幅（3M計算用）
+  "height_mm",               // 高さ（3M計算用）
   "color",                   // ボディカラー（手入力必須・AI自動入力なし）
 ];
+
+const DIMENSION_FIELDS = new Set<ReviewField>(["length_mm", "width_mm", "height_mm"]);
 
 const ALL_REVIEW_FIELDS: ReviewField[] = [...CUSTOMER_FIELDS, ...VEHICLE_FIELDS];
 
@@ -145,7 +150,8 @@ export default function VehicleRegistrationOcrReview({
   const [edited, setEdited] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
     for (const key of ALL_REVIEW_FIELDS) {
-      init[key] = (ocrResult[key] as string | undefined) ?? "";
+      const value = ocrResult[key];
+      init[key] = value == null ? "" : String(value);
     }
     return init;
   });
@@ -234,8 +240,21 @@ export default function VehicleRegistrationOcrReview({
     const payload: Partial<VehicleRegistrationOcrResult> = {};
     for (const key of ALL_REVIEW_FIELDS) {
       if (selected.has(key) && edited[key]) {
-        (payload as Record<string, unknown>)[key] = edited[key];
+        if (DIMENSION_FIELDS.has(key)) {
+          const numeric = Number(edited[key]);
+          if (Number.isFinite(numeric) && numeric > 0) {
+            (payload as Record<string, unknown>)[key] = Math.round(numeric);
+          }
+        } else {
+          (payload as Record<string, unknown>)[key] = edited[key];
+        }
       }
+    }
+    if (
+      payload.length_mm != null && payload.width_mm != null && payload.height_mm != null &&
+      ocrResult.dimension_confidence != null
+    ) {
+      payload.dimension_confidence = ocrResult.dimension_confidence;
     }
     // Attach the resolved customer (owner/user rule + operator selection).
     if (custResolved.name)    payload.customer_candidate_name    = custResolved.name;

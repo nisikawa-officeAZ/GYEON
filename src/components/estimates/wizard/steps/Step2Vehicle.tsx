@@ -20,8 +20,15 @@ import {
 import { willSaveExistingVehicle } from "../validity/wizard-step-validity";
 import { OcrEntry } from "../OcrEntry";
 import { Card, SectionTitle, Field, TextInput, SelectButton, ChoiceGrid } from "../ui";
+import {
+  BODY_SIZE_KEYS,
+  adjacentBodySizeKeys,
+  estimateBodySizeFromVehicleRegistrationOcr,
+  type BodySizeEstimate,
+  type BodySizeKey,
+} from "@/lib/vehicles/body-size-estimate";
 
-const BODY_SIZES = ["SS", "S", "M", "ML", "L", "LL", "XL"];
+const BODY_SIZES = BODY_SIZE_KEYS;
 
 /** EST-WIZ-REQ-F2-R1: the editable-field patch TYPE excludes `existingId`, so a field
  *  edit CANNOT re-assert vehicle identity even by mistake — identity is written only by
@@ -30,8 +37,12 @@ const BODY_SIZES = ["SS", "S", "M", "ML", "L", "LL", "XL"];
 type EditableVehiclePatch = Partial<Omit<VehicleDraft, "existingId" | "suggestedSize">>;
 
 export function Step2Vehicle({
-  api, customers, vehicles,
-}: { api: EstimateWizardApi } & WizardExistingEntityInputs) {
+  api, customers, vehicles, sizeEstimate = null, onSizeEstimate,
+}: {
+  api: EstimateWizardApi;
+  sizeEstimate?: BodySizeEstimate | null;
+  onSizeEstimate?: (estimate: BodySizeEstimate | null) => void;
+} & WizardExistingEntityInputs) {
   const v = api.store.vehicle;
   const c = api.store.customer;
   // EST-WIZ-REQ-F1: field edits emit ONLY the changed keys — never a spread of the full
@@ -57,9 +68,19 @@ export function Step2Vehicle({
   // effectiveness oracle runs ONLY on the will-save-existing branch.
   const saveExisting = willSaveExistingVehicle(api.draft);
   const selected = saveExisting ? effectiveExistingVehicle(vehicles, ownerId, v.existingId) : null;
+  const registeredSize = selected && BODY_SIZES.includes(selected.bodySize as BodySizeKey)
+    ? selected.bodySize as BodySizeKey
+    : null;
+  const suggestedSize = selected ? registeredSize : sizeEstimate?.sizeKey ?? null;
+  const suggestionBasis = selected && registeredSize
+    ? `登録済みボディサイズ ${registeredSize}（再確認が必要）`
+    : sizeEstimate?.basis ?? "";
 
   /** Existing select/clear writes ONE key. Never a spread of the vehicle projection. */
-  const setExistingVehicle = (id: string | null) => api.updateStore(vehicleSelectionPatch(id));
+  const setExistingVehicle = (id: string | null) => {
+    onSizeEstimate?.(null);
+    api.updateStore(vehicleSelectionPatch(id));
+  };
 
   // An INEFFECTIVE retained selection: the draft would still SAVE as an existing vehicle,
   // but the id no longer resolves (owner left search mode or became ambiguous, the id is
@@ -153,7 +174,27 @@ export function Step2Vehicle({
               const rec = f as Record<string, unknown>;
               const patch: EditableVehiclePatch = {};
               if (typeof rec.maker === "string") patch.maker = rec.maker;
-              if (typeof rec.plate_number === "string") patch.plateNumber = rec.plate_number;
+              if (typeof rec.vehicle_name === "string") patch.model = rec.vehicle_name;
+              if (typeof rec.grade === "string") patch.grade = rec.grade;
+              if (typeof rec.model === "string") patch.vehicleCode = rec.model;
+              if (typeof rec.displacement === "string") patch.displacement = rec.displacement;
+              if (typeof rec.chassis_number === "string") patch.vin = rec.chassis_number;
+              if (typeof rec.first_registration_date === "string") patch.firstRegYearMonth = rec.first_registration_date;
+              if (typeof rec.registration_date === "string") patch.registrationDate = rec.registration_date;
+              if (typeof rec.inspection_expiry_date === "string") patch.inspectionExpiry = rec.inspection_expiry_date;
+              if (typeof rec.color === "string") patch.color = rec.color;
+              const plate = [
+                rec.license_plate_region,
+                rec.license_plate_class,
+                rec.license_plate_kana,
+                rec.license_plate_number,
+              ].filter((value): value is string => typeof value === "string" && value.trim() !== "").join(" ");
+              if (plate) patch.plateNumber = plate;
+
+              // OCR dimensions produce a recommendation only. The operator's
+              // confirmedSize remains untouched until a size button is pressed.
+              const estimate = estimateBodySizeFromVehicleRegistrationOcr(f);
+              onSizeEstimate?.(estimate);
               if (Object.keys(patch).length) setV(patch);
             }}
           />
@@ -179,32 +220,54 @@ export function Step2Vehicle({
           </ChoiceGrid>
         </div>
 
-        {/* Body size — 7 buttons, recommendation highlighted, never auto-fixed */}
-        <div className="mt-4">
-          <Field label="ボディサイズ（3M推定は推奨のみ・最終決定はオペレーター）" value={v.confirmedSize}>
-            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-              {BODY_SIZES.map((s) => (
-                <SelectButton key={s} selected={v.confirmedSize === s} onClick={() => setV({ confirmedSize: s })} density="touch">
-                  <span className="w-full text-center block">
-                    {s}
-                    {v.suggestedSize === s && <span className="block text-[9px] text-emerald-400">推奨</span>}
-                  </span>
-                </SelectButton>
-              ))}
-            </div>
-          </Field>
-        </div>
       </Card>
-      )}
-      </>
       )}
 
+      {/* One confirmed physical size is shared by coating and PPF pricing. */}
       <Card>
-        <p className="text-[11px] text-slate-500">
-          拡張フィールド（車体番号 / 初年度登録年月 / 登録年月日 / 車検満了日 / ボディカラー）、
-          3M自動推定の算出、車両保存は Phase 2 で既存ロジックに接続します。
-        </p>
+        <Field label="ボディサイズ（3M推定は推奨のみ・最終決定はオペレーター）" value={v.confirmedSize}>
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+            {BODY_SIZES.map((s) => {
+              const recommended = suggestedSize === s;
+              const adjacent = suggestedSize != null && adjacentBodySizeKeys(suggestedSize).includes(s);
+              return (
+                <SelectButton
+                  key={s}
+                  selected={v.confirmedSize === s}
+                  onClick={() => setV({ confirmedSize: s })}
+                  density="touch"
+                  className={
+                    recommended
+                      ? "border-blue-400 bg-blue-600/25 text-blue-50 hover:border-blue-300"
+                      : adjacent
+                        ? "border-amber-400/80 bg-amber-400/10 text-amber-100 hover:border-amber-300"
+                        : undefined
+                  }
+                >
+                  <span className="block w-full text-center">
+                    {s}
+                    {recommended && <span className="block text-[9px] text-blue-200">推奨サイズ</span>}
+                    {adjacent && <span className="block text-[9px] text-amber-300">前後候補</span>}
+                  </span>
+                </SelectButton>
+              );
+            })}
+          </div>
+          {suggestedSize == null && (
+            <p className="mt-2 text-[11px] text-amber-300">
+              OCR寸法または登録サイズが確認できません。車検証を確認してサイズを選択してください。
+            </p>
+          )}
+          {suggestionBasis && (
+            <p className="mt-2 text-[11px] text-slate-400">推定根拠：{suggestionBasis}</p>
+          )}
+          <p className="mt-2 text-[11px] text-slate-500">
+            ここで確定したサイズを、コーティングとPPFの価格選択に共通利用します。
+          </p>
+        </Field>
       </Card>
+      </>
+      )}
     </>
   );
 }

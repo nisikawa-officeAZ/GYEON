@@ -19,12 +19,12 @@
 BEGIN;
 
 CREATE SCHEMA r56c_pgtap;
-CREATE EXTENSION pgtap WITH SCHEMA r56c_pgtap;
+CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA r56c_pgtap;
 GRANT USAGE ON SCHEMA r56c_pgtap TO authenticated, service_role;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA r56c_pgtap TO authenticated, service_role;
 SET LOCAL search_path = r56c_pgtap, pg_temp, public, auth, extensions;
 
-SELECT plan(165);
+SELECT plan(175);
 
 -- ─── Fixtures ───────────────────────────────────────────────────────────────
 CREATE TEMP TABLE t_ids (k text PRIMARY KEY, v uuid);
@@ -191,6 +191,24 @@ RETURNS jsonb LANGUAGE sql STABLE AS $$
     'metadata', jsonb_build_object(
       'source','estimate-wizard-v2.2','schemaVersion','2.2','createdFromWizard',true,
       'draftLastUpdatedAt','2026-01-01T00:00:00.000Z','previewConfirmed',true));
+$$;
+
+-- C3B: convert the canonical payload to the bounded existing-customer /
+-- existing-vehicle path while varying only the confirmed body-size value.
+CREATE OR REPLACE FUNCTION pg_temp.existing_vehicle_payload(
+  p_key text,
+  p_body_size jsonb
+) RETURNS jsonb LANGUAGE sql STABLE AS $$
+  SELECT jsonb_set(
+           jsonb_set(
+             jsonb_set(
+               jsonb_set(
+                 jsonb_set(pg_temp.payload(p_key),
+                   '{customer,mode}', '"existing"'),
+                 '{customer,customerId}', to_jsonb(pg_temp.rid('cust_a1')::text)),
+               '{vehicle,mode}', '"existing"'),
+             '{vehicle,vehicleId}', to_jsonb(pg_temp.rid('veh_a1')::text)),
+           '{vehicle,bodySizeKey}', p_body_size);
 $$;
 
 -- B7-0A: THREE arguments. The estimate number is no longer a parameter -- the RPC
@@ -841,6 +859,80 @@ SELECT is((SELECT current_number || '|' || prefix || '|' || padding
             WHERE dealer_id = pg_temp.uid('dealer_e')
               AND sequence_type = 'estimate' AND fiscal_year = 202001),
   '55|SOURCE|8', 'the source row supplied only the policy; it was never advanced');
+
+-- ═══ 12. C3B: confirmed seven-size persistence for an existing vehicle ═════
+-- The vehicle begins with an older confirmed S classification. A successful
+-- new save may replace it; replay, null input and rejected XXL must not.
+RESET ROLE;
+UPDATE public.vehicles
+   SET body_size = 'S'
+ WHERE id = pg_temp.rid('veh_a1');
+SET LOCAL ROLE service_role;
+
+SELECT is((pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+            pg_temp.existing_vehicle_payload('c3bexistingkey001', '"L"'))
+           ->> 'idempotent_replay'),
+  'false', 'a fresh existing-vehicle save accepts the operator-confirmed L size');
+RESET ROLE;
+SELECT is((SELECT body_size FROM public.vehicles WHERE id = pg_temp.rid('veh_a1')),
+  'L', 'the confirmed L size is persisted to the existing vehicle ledger');
+
+-- Exact replay must return before every write. Deliberately change the ledger
+-- between calls: a replay that re-ran the UPDATE would incorrectly restore L.
+UPDATE public.vehicles
+   SET body_size = 'M'
+ WHERE id = pg_temp.rid('veh_a1');
+SET LOCAL ROLE service_role;
+SELECT is((pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+            pg_temp.existing_vehicle_payload('c3bexistingkey001', '"L"'))
+           ->> 'idempotent_replay'),
+  'true', 'an exact replay is identified before existing-vehicle persistence');
+RESET ROLE;
+SELECT is((SELECT body_size FROM public.vehicles WHERE id = pg_temp.rid('veh_a1')),
+  'M', 'exact replay performs zero vehicle-ledger writes');
+
+-- JSON null is an unconfirmed value, not an instruction to erase the ledger.
+SET LOCAL ROLE service_role;
+SELECT is((pg_temp.call(pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+            pg_temp.existing_vehicle_payload('c3bexistingkey002', 'null'::jsonb))
+           ->> 'idempotent_replay'),
+  'false', 'a fresh save remains backward-compatible when bodySizeKey is null');
+RESET ROLE;
+SELECT is((SELECT body_size FROM public.vehicles WHERE id = pg_temp.rid('veh_a1')),
+  'M', 'null bodySizeKey preserves the existing confirmed ledger value');
+
+-- XXL is abolished. Rejection occurs before every write and preserves M.
+SET LOCAL ROLE service_role;
+SELECT throws_matching($$ SELECT pg_temp.call(
+  pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+  pg_temp.existing_vehicle_payload('c3bexistingkey003', '"XXL"')) $$,
+  'VALIDATION_ERROR: vehicle.bodySizeKey is outside the canonical seven-size contract',
+  'abolished XXL is rejected by the save authority');
+RESET ROLE;
+SELECT is((SELECT body_size FROM public.vehicles WHERE id = pg_temp.rid('veh_a1')),
+  'M', 'rejected XXL performs zero vehicle-ledger writes');
+
+-- A failure after the vehicle UPDATE must roll that update back with the
+-- estimate and item writes. Reuse the established test-only second-item fault.
+CREATE TRIGGER c3b_fault_trg BEFORE INSERT ON public.estimate_items
+  FOR EACH ROW EXECUTE FUNCTION pg_temp.r56c_fault();
+SET LOCAL ROLE service_role;
+SELECT throws_matching($$ SELECT pg_temp.call(
+  pg_temp.uid('dealer_a'), pg_temp.uid('u_owner_a'),
+  jsonb_set(
+    pg_temp.existing_vehicle_payload('c3bexistingkey004', '"L"'),
+    '{services}',
+    (pg_temp.payload() -> 'services') ||
+      jsonb_build_array(jsonb_set(jsonb_set(
+        pg_temp.payload() -> 'services' -> 0,
+        '{lineId}', '"manual:maintenance:c3b-second"'),
+        '{label}', '"FAULT_SECOND_ITEM"')))) $$,
+  'R56C_TEST_FAULT',
+  'a deliberate post-update item failure aborts the existing-vehicle save');
+RESET ROLE;
+DROP TRIGGER c3b_fault_trg ON public.estimate_items;
+SELECT is((SELECT body_size FROM public.vehicles WHERE id = pg_temp.rid('veh_a1')),
+  'M', 'post-update failure rolls the existing vehicle size back atomically');
 
 SELECT * FROM finish();
 ROLLBACK;

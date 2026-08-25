@@ -404,10 +404,11 @@ test("MOUNTED Step 2: no existing selection preserves the editable/OCR new-vehic
   assert.ok(html.includes("ボディサイズ"), "the operator body-size chooser is present");
 });
 
-test("MOUNTED Step 2: an existing selection HIDES the new-vehicle CREATE fields", () => {
+test("MOUNTED Step 2: an existing selection hides CREATE fields but keeps the shared size chooser", () => {
   const html = step2({ customer: EXISTING_C1, vehicle: { existingId: "v-1" } });
   assert.equal(html.includes("車名"), false, "the CREATE model field is not offered");
-  assert.equal(html.includes("ボディサイズ（3M推定"), false, "the body-size chooser is not offered");
+  assert.equal(html.includes("ボディサイズ（3M推定"), true,
+    "the same confirmed body-size authority must remain available for existing vehicles");
 });
 
 test("MOUNTED Step 2: bodySize is reference-only display and never sets confirmedSize", () => {
@@ -502,7 +503,7 @@ test("MOUNTED Step 2: the recovery clear action is BOUND to vehicleSelectionPatc
   const recovery = code.slice(code.indexOf("ineffective-existing-vehicle-recovery"));
   assert.match(recovery, /data-testid="ineffective-existing-vehicle-clear"[\s\S]*?onClick=\{\(\) => setExistingVehicle\(null\)\}/,
     "the clear button calls setExistingVehicle(null)");
-  assert.match(code, /setExistingVehicle = \(id: string \| null\) => api\.updateStore\(vehicleSelectionPatch\(id\)\)/,
+  assert.match(code, /setExistingVehicle = \(id: string \| null\) => \{[\s\S]*?api\.updateStore\(vehicleSelectionPatch\(id\)\);[\s\S]*?\};/,
     "which is vehicleSelectionPatch — one key, never a spread");
 });
 
@@ -518,8 +519,14 @@ test("MOUNTED Step 2: setV is typed changed-keys-only and CANNOT re-assert exist
 test("the host passes BOTH customers and vehicles to Step2Vehicle", () => {
   const host = readFileSync("src/components/estimates/wizard/EstimateWizard.tsx", "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
-  assert.match(host, /<Step2Vehicle api=\{api\} customers=\{customers\} vehicles=\{vehicles\} \/>/,
+  const mount2 = host.slice(host.indexOf("<Step2Vehicle"), host.indexOf("<Step3Category"));
+  assert.equal(mount2.includes("api={api}"), true);
+  assert.equal(mount2.includes("customers={customers}"), true);
+  assert.equal(mount2.includes("vehicles={vehicles}"), true,
     "Step 2 must receive both reference arrays");
+  assert.equal(mount2.includes("sizeEstimate={bodySizeEstimate}"), true);
+  assert.equal(mount2.includes("onSizeEstimate={setBodySizeEstimate}"), true,
+    "Step 2 must receive transient display-only size evidence");
   // Step 4 still receives neither — the contracts stay separate.
   const mount4 = host.slice(host.indexOf("<Step4Estimate"), host.indexOf("<Step5Discount"));
   assert.equal(mount4.includes("customers"), false);
@@ -528,7 +535,7 @@ test("the host passes BOTH customers and vehicles to Step2Vehicle", () => {
 
 test("MOUNTED Step 2: existing select/clear writes ONE key", () => {
   const code = readFileSync("src/components/estimates/wizard/steps/Step2Vehicle.tsx", "utf8");
-  assert.match(code, /setExistingVehicle = \(id: string \| null\) => api\.updateStore\(vehicleSelectionPatch\(id\)\)/);
+  assert.match(code, /setExistingVehicle = \(id: string \| null\) => \{[\s\S]*?api\.updateStore\(vehicleSelectionPatch\(id\)\);[\s\S]*?\};/);
   assert.deepEqual(vehicleSelectionPatch("v-1"), { vehicle: { existingId: "v-1" } });
   assert.deepEqual(vehicleSelectionPatch(null), { vehicle: { existingId: null } });
   assert.deepEqual(Object.keys(vehicleSelectionPatch("v-1").vehicle), ["existingId"]);

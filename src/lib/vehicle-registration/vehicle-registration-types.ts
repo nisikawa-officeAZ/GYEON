@@ -35,6 +35,10 @@ export type VehicleRegistrationOcrResult = {
   body_shape?:             string;  // 車体の形状
   fuel_type?:              string;  // 燃料の種類
   displacement?:           string;  // 排気量（例: 1998cc）
+  length_mm?:              number;  // 車検証「長さ」mm（推測禁止）
+  width_mm?:               number;  // 車検証「幅」mm（推測禁止）
+  height_mm?:              number;  // 車検証「高さ」mm（推測禁止）
+  dimension_confidence?:   number;  // 寸法3項目の読み取り信頼度 0-1
   color?:                  string;  // 色
   notes?:                  string;  // 備考・その他
   // ─ Customer mapping (Japanese registration rule: owner ≠ user) ─
@@ -152,6 +156,10 @@ export const OCR_FIELD_LABELS: Record<keyof VehicleRegistrationOcrResult, string
   body_shape:             "車体形状",
   fuel_type:              "燃料種類",
   displacement:           "排気量",
+  length_mm:              "長さ（mm）",
+  width_mm:               "幅（mm）",
+  height_mm:              "高さ（mm）",
+  dimension_confidence:   "寸法の信頼度",
   color:                  "ボディカラー",
   notes:                  "備考",
   customer_candidate_name:    "顧客反映氏名",
