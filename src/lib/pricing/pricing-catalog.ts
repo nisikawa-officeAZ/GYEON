@@ -22,6 +22,7 @@ import {
   PPF_FRONT_GLASS, PPF_SINGLE_PARTS,
 } from "./pricing-data";
 import type { EstimateCategory } from "@/lib/estimates/estimate-types";
+import type { CoatingSettingsV34 } from "./coating-v34-contract";
 
 // Widened element types (the pricing-data constants are `as const`; widening lets
 // the mapper produce overlaid arrays that remain assignable to the catalog).
@@ -54,6 +55,11 @@ export interface PricingCatalog {
   ppfVehicleRanks:     readonly CatalogCoeff[];
   ppfFrontGlass:       readonly CatalogPricedItem[];
   ppfSingleParts:      readonly CatalogSinglePart[];
+  // GDA_COATING_V3_4_C2_4 — seven-size direct-price coating contract. `null` for every
+  // legacy/default catalog (DEFAULT_PRICING_CATALOG, makePricingCatalog with no V3.4 override);
+  // set ONLY by the authoritative resolver once a persisted V34_READY payload is confirmed. Base,
+  // layer2, and layer3 stay fully independent — no cross-layer fallback, no size multiplier.
+  coatingV34:          CoatingSettingsV34 | null;
 }
 
 export const DEFAULT_PRICING_CATALOG: PricingCatalog = {
@@ -74,6 +80,7 @@ export const DEFAULT_PRICING_CATALOG: PricingCatalog = {
   ppfVehicleRanks:     PPF_VEHICLE_RANKS,
   ppfFrontGlass:       PPF_FRONT_GLASS,
   ppfSingleParts:      PPF_SINGLE_PARTS,
+  coatingV34:          null,
 };
 
 /** Data-driven body-size multiplier (future sizes need no code change). */

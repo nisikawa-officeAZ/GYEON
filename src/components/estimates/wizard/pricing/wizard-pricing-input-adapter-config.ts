@@ -51,6 +51,12 @@ import {
   type ResolvedPpfCoatingAdjustment,
 } from "@/lib/wizard-catalog/ppf-coating-adjustment-core";
 import { toPricingCatalogCoatingId, toPricingCatalogTopcoatId } from "@/lib/pricing/wizard-coating-id-adapter";
+import {
+  COATING_V34_BODY_SIZES,
+  type CoatingSettingsV34,
+  type CoatingV34BodySize,
+  type CoatingV34SizePriceMap,
+} from "@/lib/pricing/coating-v34-contract";
 import { validateCoatingSelection } from "./coating-selection-validation";
 import type { ShopRank } from "../screens/step-types";
 import type {
@@ -125,6 +131,31 @@ function issue(code: string, message: string, category: string | null = null, so
   return { code, category, sourceId, message };
 }
 
+/** `sizeKey` is untyped draft input; only an exact seven-size match can index a V3.4 price map. */
+function isCoatingV34BodySize(sizeKey: string): sizeKey is CoatingV34BodySize {
+  return (COATING_V34_BODY_SIZES as readonly string[]).includes(sizeKey);
+}
+
+/** Exact selected-size price from one V3.4 layer map. `null` = unavailable; `0` is a valid price. */
+function v34SizePrice(map: CoatingV34SizePriceMap, sizeKey: string): number | null {
+  return isCoatingV34BodySize(sizeKey) ? map[sizeKey] : null;
+}
+
+function v34BaseSizePrice(v34: CoatingSettingsV34, productId: string, sizeKey: string): number | null {
+  const p = v34.baseProducts.find((x) => x.productId === productId);
+  return p?.active ? v34SizePrice(p.pricesBySize, sizeKey) : null;
+}
+
+function v34Layer2SizePrice(v34: CoatingSettingsV34, productId: string, sizeKey: string): number | null {
+  const p = v34.layer2Products.find((x) => x.productId === productId);
+  return p?.active ? v34SizePrice(p.layer2PricesBySize, sizeKey) : null;
+}
+
+function v34Layer3SizePrice(v34: CoatingSettingsV34, productId: string, sizeKey: string): number | null {
+  const p = v34.layer3Products.find((x) => x.productId === productId);
+  return p?.active ? v34SizePrice(p.layer3PricesBySize, sizeKey) : null;
+}
+
 /** Manual line → canonical "other" line item. Line COMPOSITION only; the engine owns every total. */
 function manualLineExtendedPrice(l: WizardManualPricingLineInput): number {
   return Math.round(l.unitPrice * l.quantity);
@@ -153,35 +184,73 @@ export function buildWizardPricingInputFromConfig(
   let catalogResolved = false;
   if (selected.includes("coating")) {
     const co = cfg.coating;
+    const v34 = catalog.coatingV34;
     if (co.layer1Id) {
       const coatingId = toPricingCatalogCoatingId(co.layer1Id);
-      const layer1Priceable = coatingId !== null && catalog.coatings.some((c) => c.id === coatingId);
       const hasUpper = !!(co.layer2Id || co.layer3Id);
-      const sizeWarn = () => { if (!sizeKey) warnings.push(issue(WIZARD_PRICING_WARNINGS.MISSING_BODY_SIZE, "ボディサイズが未選択のため、サイズ係数は既定値で計算されます。", "coating")); };
-      if (!layer1Priceable || !coatingId) {
-        errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, `コーティング「${co.layer1Id}」は本番カタログに対応する識別子がありません。`, "coating", co.layer1Id));
-      } else if (shopRank === undefined) {
-        // Rank unavailable: cannot validate rank/upper layers. Price layer-1; flag any upper as unmapped.
-        sizeWarn();
-        if (hasUpper) warnings.push(issue(WIZARD_PRICING_WARNINGS.MULTI_LAYER_NOT_MAPPED, "2層目・3層目は店舗ランク情報がないため計算に含まれていません。", "coating"));
-        services.push({ type: "coating", coatingId, sizeKey, optionIds: [] });
-        catalogResolved = true;
-      } else {
-        // Rank available: validate the FULL selection (layer-1 rank gate + upper matrix + certified).
-        const valid = validateCoatingSelection(co.layer1Id, co.layer2Id, co.layer3Id, shopRank);
-        const topcoat2 = co.layer2Id ? toPricingCatalogTopcoatId(co.layer2Id) : null;
-        const topcoat3 = co.layer3Id ? toPricingCatalogTopcoatId(co.layer3Id) : null;
-        const upperPriceable =
-          (!co.layer2Id || (topcoat2 !== null && catalog.topcoatBase[topcoat2] !== undefined)) &&
-          (!co.layer3Id || (topcoat3 !== null && catalog.topcoatBase[topcoat3] !== undefined));
-        if (!valid.ok) {
-          errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, valid.reason, "coating", co.layer1Id));
-        } else if (!upperPriceable) {
-          errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, "コーティング上層に対応する価格が本番カタログにありません。", "coating", co.layer2Id ?? co.layer3Id));
-        } else {
-          sizeWarn();
-          services.push({ type: "coating", coatingId, sizeKey, optionIds: [], ...(topcoat2 ? { topcoat2 } : {}), ...(topcoat3 ? { topcoat3 } : {}) });
+
+      if (v34) {
+        // ── V3.4 authoritative direct-price catalog — independent per-layer, per-size lookup.
+        // No topcoatBase, no size multiplier, no cross-layer fallback; a missing size is a hard
+        // requirement failure, not a default-coefficient warning (GDA_COATING_V3_4_C2_4). ──
+        if (!coatingId) {
+          errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, `コーティング「${co.layer1Id}」は本番カタログに対応する識別子がありません。`, "coating", co.layer1Id));
+        } else if (!sizeKey) {
+          errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, "ボディサイズが未選択のため、コーティング価格を計算できません。", "coating", co.layer1Id));
+        } else if (v34BaseSizePrice(v34, coatingId, sizeKey) === null) {
+          errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, `コーティング「${co.layer1Id}」の価格が本番カタログに設定されていません。`, "coating", co.layer1Id));
+        } else if (shopRank === undefined) {
+          // Rank unavailable: cannot validate rank/upper layers. Price layer-1; flag any upper as unmapped.
+          if (hasUpper) warnings.push(issue(WIZARD_PRICING_WARNINGS.MULTI_LAYER_NOT_MAPPED, "2層目・3層目は店舗ランク情報がないため計算に含まれていません。", "coating"));
+          services.push({ type: "coating", coatingId, sizeKey, optionIds: [] });
           catalogResolved = true;
+        } else {
+          // Rank available: validate the FULL selection (layer-1 rank gate + upper matrix + certified).
+          const valid = validateCoatingSelection(co.layer1Id, co.layer2Id, co.layer3Id, shopRank);
+          const topcoat2 = co.layer2Id ? toPricingCatalogTopcoatId(co.layer2Id) : null;
+          const topcoat3 = co.layer3Id ? toPricingCatalogTopcoatId(co.layer3Id) : null;
+          const upperPriceable =
+            (!co.layer2Id || (topcoat2 !== null && v34Layer2SizePrice(v34, topcoat2, sizeKey) !== null)) &&
+            (!co.layer3Id || (topcoat3 !== null && v34Layer3SizePrice(v34, topcoat3, sizeKey) !== null));
+          if (!valid.ok) {
+            errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, valid.reason, "coating", co.layer1Id));
+          } else if (!upperPriceable) {
+            errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, "コーティング上層に対応する価格が本番カタログにありません。", "coating", co.layer2Id ?? co.layer3Id));
+          } else {
+            services.push({ type: "coating", coatingId, sizeKey, optionIds: [], ...(topcoat2 ? { topcoat2 } : {}), ...(topcoat3 ? { topcoat3 } : {}) });
+            catalogResolved = true;
+          }
+        }
+      } else {
+        // ── Legacy/default catalog path — UNCHANGED. Never reached from a V3.4 authoritative
+        // catalog, which always carries a non-null catalog.coatingV34. ──
+        const layer1Priceable = coatingId !== null && catalog.coatings.some((c) => c.id === coatingId);
+        const sizeWarn = () => { if (!sizeKey) warnings.push(issue(WIZARD_PRICING_WARNINGS.MISSING_BODY_SIZE, "ボディサイズが未選択のため、サイズ係数は既定値で計算されます。", "coating")); };
+        if (!layer1Priceable || !coatingId) {
+          errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, `コーティング「${co.layer1Id}」は本番カタログに対応する識別子がありません。`, "coating", co.layer1Id));
+        } else if (shopRank === undefined) {
+          // Rank unavailable: cannot validate rank/upper layers. Price layer-1; flag any upper as unmapped.
+          sizeWarn();
+          if (hasUpper) warnings.push(issue(WIZARD_PRICING_WARNINGS.MULTI_LAYER_NOT_MAPPED, "2層目・3層目は店舗ランク情報がないため計算に含まれていません。", "coating"));
+          services.push({ type: "coating", coatingId, sizeKey, optionIds: [] });
+          catalogResolved = true;
+        } else {
+          // Rank available: validate the FULL selection (layer-1 rank gate + upper matrix + certified).
+          const valid = validateCoatingSelection(co.layer1Id, co.layer2Id, co.layer3Id, shopRank);
+          const topcoat2 = co.layer2Id ? toPricingCatalogTopcoatId(co.layer2Id) : null;
+          const topcoat3 = co.layer3Id ? toPricingCatalogTopcoatId(co.layer3Id) : null;
+          const upperPriceable =
+            (!co.layer2Id || (topcoat2 !== null && catalog.topcoatBase[topcoat2] !== undefined)) &&
+            (!co.layer3Id || (topcoat3 !== null && catalog.topcoatBase[topcoat3] !== undefined));
+          if (!valid.ok) {
+            errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, valid.reason, "coating", co.layer1Id));
+          } else if (!upperPriceable) {
+            errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, "コーティング上層に対応する価格が本番カタログにありません。", "coating", co.layer2Id ?? co.layer3Id));
+          } else {
+            sizeWarn();
+            services.push({ type: "coating", coatingId, sizeKey, optionIds: [], ...(topcoat2 ? { topcoat2 } : {}), ...(topcoat3 ? { topcoat3 } : {}) });
+            catalogResolved = true;
+          }
         }
       }
     }
