@@ -55,6 +55,8 @@ const DEFAULT_SELECTED_PRODUCT_IDS: Record<Exclude<ShopRank, "ppf_installer">, R
   certified: { base: "infinit1", layer2: "infinit-t1", layer3: "infinit-t1" },
 };
 
+const BULK_COPY_SOURCE_PRODUCT_ID = "pure-evo";
+
 function defaultProductId(rank: ShopRank, layer: Layer, products: ProductMeta[]): string | null {
   if (rank === "ppf_installer") return null;
   const preferred = DEFAULT_SELECTED_PRODUCT_IDS[rank][layer];
@@ -71,15 +73,21 @@ function applyUnsavedDefaultPrices(
     layer2: defaultProductId(rank, "layer2", catalogs.layer2),
     layer3: defaultProductId(rank, "layer3", catalogs.layer3),
   } satisfies Record<Layer, string | null>;
+  const baseSimulationSource = catalogs.base.some((product) => product.id === BULK_COPY_SOURCE_PRODUCT_ID)
+    ? BULK_COPY_SOURCE_PRODUCT_ID
+    : selected.base;
+  const layer2SimulationSource = catalogs.layer2.some((product) => product.id === BULK_COPY_SOURCE_PRODUCT_ID)
+    ? BULK_COPY_SOURCE_PRODUCT_ID
+    : selected.layer2;
 
   return {
     selected,
     settings: {
       ...settings,
-      baseProducts: settings.baseProducts.map((product) => product.productId === selected.base
+      baseProducts: settings.baseProducts.map((product) => product.productId === selected.base || product.productId === baseSimulationSource
         ? { ...product, active: true, pricesBySize: { ...UNSAVED_DEFAULT_PRICES.base } }
         : product),
-      layer2Products: settings.layer2Products.map((product) => product.productId === selected.layer2
+      layer2Products: settings.layer2Products.map((product) => product.productId === selected.layer2 || product.productId === layer2SimulationSource
         ? { ...product, active: true, layer2PricesBySize: { ...UNSAVED_DEFAULT_PRICES.layer2 } }
         : product),
       layer3Products: settings.layer3Products.map((product) => product.productId === selected.layer3
@@ -304,6 +312,7 @@ function PriceLayer({
   confirmedFree,
   onConfirmFree,
   onToggleActive,
+  bulkCopy,
 }: {
   layer: Layer;
   selectorTitle: string;
@@ -319,6 +328,10 @@ function PriceLayer({
   confirmedFree: Set<string>;
   onConfirmFree: (key: string, checked: boolean) => void;
   onToggleActive: () => void;
+  bulkCopy?: {
+    label: string;
+    onClick: () => void;
+  };
 }) {
   const selectedProduct = products.find((product) => product.id === selected) ?? null;
   const prices = selectedProduct ? layerPrices(settings, layer, selectedProduct.id) : null;
@@ -392,16 +405,33 @@ function PriceLayer({
             <h2 className="text-base font-bold text-[#e8eef7] sm:text-lg">{selectorTitle}</h2>
             <p className="mt-2 text-xs leading-5 text-[#5c6b84]">{selectorNote}</p>
           </div>
-          {selectedProduct ? (
-            <button
-              type="button"
-              onClick={onToggleActive}
-              className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition ${active ? "border-[#2f6bff] bg-[#12316c] text-[#8bbcff]" : "border-[#41506a] bg-[#1a2434] text-[#93a4bd]"}`}
-            >
-              {active ? "提供中" : "提供しない"}
-            </button>
-          ) : null}
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {bulkCopy ? (
+              <button
+                type="button"
+                onClick={bulkCopy.onClick}
+                className="min-h-11 rounded-xl border border-[#4788ff] bg-[#10264d] px-4 text-sm font-semibold text-[#8bbcff] transition hover:bg-[#17366f] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5ea2ff]"
+              >
+                {bulkCopy.label}
+              </button>
+            ) : null}
+            {selectedProduct ? (
+              <button
+                type="button"
+                onClick={onToggleActive}
+                className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition ${active ? "border-[#2f6bff] bg-[#12316c] text-[#8bbcff]" : "border-[#41506a] bg-[#1a2434] text-[#93a4bd]"}`}
+              >
+                {active ? "提供中" : "提供しない"}
+              </button>
+            ) : null}
+          </div>
         </div>
+
+        {bulkCopy ? (
+          <p className="mt-3 text-right text-xs leading-5 text-[#71819b]">
+            画面上の未保存価格だけに反映します。「保存する」を押すまでは登録されません。
+          </p>
+        ) : null}
 
         {products.length === 0 ? (
           <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-200">
@@ -534,6 +564,37 @@ function CoatingEditor({
     if (!id) return;
     setSettings((current) => withLayerActive(current, layer, id, !layerActive(current, layer, id)));
     setNotice(null);
+  };
+
+  const bulkCopyPrices = (
+    sourceLayer: Layer,
+    targetLayer: Layer,
+    targetProducts: ProductMeta[],
+    successText: string,
+  ) => {
+    const sourceProductExists = catalogs[sourceLayer].some((product) => product.id === BULK_COPY_SOURCE_PRODUCT_ID);
+    if (!sourceProductExists) return;
+
+    setTextPrices((current) => {
+      const sourcePrices = layerPrices(settings, sourceLayer, BULK_COPY_SOURCE_PRODUCT_ID);
+      const next = { ...current };
+      for (const product of targetProducts) {
+        for (const size of COATING_V34_BODY_SIZES) {
+          const sourceKey = priceKey(sourceLayer, BULK_COPY_SOURCE_PRODUCT_ID, size);
+          const targetKey = priceKey(targetLayer, product.id, size);
+          next[targetKey] = current[sourceKey] ?? (sourcePrices[size]?.toLocaleString("ja-JP") ?? "");
+        }
+      }
+      return next;
+    });
+    setConfirmedFree((current) => {
+      const next = new Set(current);
+      for (const product of targetProducts) {
+        for (const size of COATING_V34_BODY_SIZES) next.delete(priceKey(targetLayer, product.id, size));
+      }
+      return next;
+    });
+    setNotice({ kind: "success", text: successText });
   };
 
   const save = () => {
@@ -702,6 +763,15 @@ function CoatingEditor({
           confirmedFree={confirmedFree}
           onConfirmFree={(key, checked) => setConfirmedFree((current) => { const next = new Set(current); checked ? next.add(key) : next.delete(key); return next; })}
           onToggleActive={() => toggleActive("base")}
+          bulkCopy={catalogs.base.some((product) => product.id === BULK_COPY_SOURCE_PRODUCT_ID) ? {
+            label: "PURE価格を1層目へ一括反映",
+            onClick: () => bulkCopyPrices(
+              "base",
+              "base",
+              catalogs.base,
+              "Q² PURE EVOの7サイズ価格を、1層目の全コーティング剤へ反映しました。保存するまでは未登録です。",
+            ),
+          } : undefined}
         />
         <PriceLayer
           layer="layer2"
@@ -717,6 +787,15 @@ function CoatingEditor({
             confirmedFree={confirmedFree}
             onConfirmFree={(key, checked) => setConfirmedFree((current) => { const next = new Set(current); checked ? next.add(key) : next.delete(key); return next; })}
           onToggleActive={() => toggleActive("layer2")}
+          bulkCopy={catalogs.layer2.some((product) => product.id === BULK_COPY_SOURCE_PRODUCT_ID) ? {
+            label: "PURE価格を2層目へ一括反映",
+            onClick: () => bulkCopyPrices(
+              "layer2",
+              "layer2",
+              catalogs.layer2,
+              "Q² PURE EVOの2層目7サイズ価格を、2層目の全コーティング剤へ反映しました。保存するまでは未登録です。",
+            ),
+          } : undefined}
         />
         <PriceLayer
           layer="layer3"
@@ -732,6 +811,15 @@ function CoatingEditor({
             confirmedFree={confirmedFree}
             onConfirmFree={(key, checked) => setConfirmedFree((current) => { const next = new Set(current); checked ? next.add(key) : next.delete(key); return next; })}
           onToggleActive={() => toggleActive("layer3")}
+          bulkCopy={catalogs.layer2.some((product) => product.id === BULK_COPY_SOURCE_PRODUCT_ID) ? {
+            label: "PUREの2層目価格を3層目へ一括反映",
+            onClick: () => bulkCopyPrices(
+              "layer2",
+              "layer3",
+              catalogs.layer3,
+              "Q² PURE EVOの2層目7サイズ価格を、3層目の全コーティング剤へ反映しました。保存するまでは未登録です。",
+            ),
+          } : undefined}
         />
       </div>
 
