@@ -34,6 +34,7 @@ import {
   DEFAULT_PRICING_CATALOG,
   makePricingCatalog,
 } from "./pricing-catalog";
+import { resolveStoredCoatingV34 } from "./coating-v34-persisted-payload";
 
 /** Why no authoritative catalog could be produced. None is recoverable into a catalog. */
 export type PricingCatalogResolutionFailure =
@@ -172,37 +173,29 @@ function overlayMenus(
  */
 function applyServiceOverrides(spcRaw: unknown, out: Partial<PricingCatalog>): void {
   const spc = reqObject(spcRaw);
-  const coating = reqObject(spc.coating);
   const ppf = reqObject(spc.ppf);
   const window_film = reqObject(spc.window_film);
   const maintenance = reqObject(spc.maintenance);
   const carwash = reqObject(spc.carwash);
   const room_cleaning = reqObject(spc.room_cleaning);
 
-  // ── coating: full product schema; every product validated (active ones overlay by id) ──
-  const products = reqArray(coating.products);
-  const priceById = new Map<string, number>();
-  const seenProduct = new Set<string>();
-  for (const p of products) {
-    const po = reqObject(p);
-    const id = reqNonBlankString(po.id);
-    reqString(po.name);
-    reqString(po.grade);
-    const base = reqPrice(po.base_price_m);
-    reqBoolean(po.certified_only);
-    const active = reqBoolean(po.active);
-    if (seenProduct.has(id)) bail();
-    seenProduct.add(id);
-    if (active) priceById.set(id, base); // inactive: fully validated, canonical default retained
-  }
-  const sizeMul = reqObject(coating.size_multipliers);
-  const topcoat = reqObject(coating.topcoat_prices);
-  const optionPrices = reqObject(coating.option_prices);
-  const optionNames = reqObject(coating.option_names);
-  validateCoeffMap(sizeMul);
-  validatePriceMap(topcoat);
-  validatePriceMap(optionPrices);
-  validateStringMap(optionNames); // required container; not consumed, but never optional
+  // ── coating: the V3.4 seven-size direct-price contract is the ONLY authoritative coating
+  // source. Legacy scalar/multiplier data, an unresolved legacy-review candidate, an invalid
+  // payload, and absent coating data all fail the ENTIRE catalog resolution closed via `bail()` —
+  // never a silent legacy price, never a size-multiplier fallback, never a default catalog.
+  const coatingResolution = resolveStoredCoatingV34(spc);
+  if (coatingResolution.status !== "V34_READY") bail();
+  const coatingV34 = coatingResolution.settings;
+  out.coatingV34 = coatingV34;
+  // Canonical coating product identity/labels, rank gating, and the compatibility matrix stay on
+  // DEFAULT_PRICING_CATALOG.coatings — the V3.4 payload carries prices only, never name/grade.
+  out.coatingOptions = overlay(
+    DEFAULT_PRICING_CATALOG.coatingOptions,
+    "id",
+    coatingV34.option_prices,
+    "price",
+    reqPrice,
+  );
 
   // ── ppf service overview: labels only, but fully validated ──
   reqBoolean(ppf.active);
@@ -226,14 +219,6 @@ function applyServiceOverrides(spcRaw: unknown, out: Partial<PricingCatalog>): v
   validateCoeffMap(rcCond);
 
   // ── overlays (every input already fully validated) ──
-  out.coatings = DEFAULT_PRICING_CATALOG.coatings.map((c) =>
-    priceById.has(c.id) ? { ...c, base: priceById.get(c.id) as number } : c,
-  );
-  out.bodySizes = overlay(DEFAULT_PRICING_CATALOG.bodySizes, "key", sizeMul, "multi", reqCoeff);
-  const topcoatBase: Record<string, number> = { ...DEFAULT_PRICING_CATALOG.topcoatBase };
-  for (const [k, v] of Object.entries(topcoat)) topcoatBase[k] = v as number; // validated above
-  out.topcoatBase = topcoatBase;
-  out.coatingOptions = overlay(DEFAULT_PRICING_CATALOG.coatingOptions, "id", optionPrices, "price", reqPrice);
   out.windowParts = overlay(DEFAULT_PRICING_CATALOG.windowParts, "id", wfBase, "basePrice", reqPrice);
   out.windowGrades = overlay(DEFAULT_PRICING_CATALOG.windowGrades, "id", wfGrade, "coeff", reqCoeff);
   out.maintenanceMenus = overlayMenus(DEFAULT_PRICING_CATALOG.maintenanceMenus, maintMenus);

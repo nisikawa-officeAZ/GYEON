@@ -233,32 +233,32 @@ test("8b. a partial result keeps numeric priced-subset totals and is not complet
   assert.ok(typeof r.grandTotal === "number" && r.grandTotal > 0, "priced-subset grand total remains numeric");
 });
 
-// ── 9. Percentage discount explicitly unsupported; never applied silently ─────────
+// ── 9. Percentage discount is converted to yen and applied ────────────────────────
 
-test("9. percentage discount stays unsupported and is not applied", () => {
+test("9. a valid percentage discount is converted to yen and applied", () => {
   const draft = draftWith(
     ["maintenance"],
     { bodyMaintenance: { menuId: "mm1", unitPriceInput: "5000" } },
     { mode: "percent", percentInput: "10" },
   );
   const r = computeWizardPricingFromConfig(draft, CONFIG, DEFAULT_PRICING_CATALOG, RANK);
-  assert.ok(r.errors.some((e) => e.code === "PERCENTAGE_NOT_SUPPORTED"), "percentage refusal surfaced");
-  assert.equal(r.discountIntent.mode, "percentage", "intent preserved, not converted");
-  assert.equal(r.discountTotal, 0, "no discount applied to the amount");
+  assert.equal(r.errors.some((e) => e.code === "PERCENTAGE_NOT_SUPPORTED"), false, "valid percentage is accepted");
+  assert.equal(r.discountIntent.mode, "percentage", "percentage intent is preserved");
+  assert.equal(r.discountTotal, 500, "10% of the 5,000 yen subtotal is applied");
 });
 
-// ── 10. Selected coupon explicitly unpriced; couponTotal 0 + visible warning/state ──
+// ── 10. Unknown coupon fails closed instead of silently pricing as zero ────────────
 
-test("10. a selected coupon stays unpriced with couponTotal 0 and a visible state", () => {
+test("10. an unconfigured selected coupon fails closed with a visible state", () => {
   const draft = draftWith(
     ["maintenance"],
     { bodyMaintenance: { menuId: "mm1", unitPriceInput: "5000" } },
     { selectedCouponIds: ["cp1"] },
   );
   const r = computeWizardPricingFromConfig(draft, CONFIG, DEFAULT_PRICING_CATALOG, RANK);
-  assert.equal(r.couponTotal, 0, "coupon never reduces the total");
-  assert.equal(r.couponState.status, "selected_not_priced", "coupon state is visible");
-  assert.ok(r.warnings.some((w) => w.code === "COUPON_PRICING_NOT_IMPLEMENTED"), "coupon warning surfaced");
+  assert.equal(r.couponTotal, 0, "an unknown coupon never reduces the total");
+  assert.equal(r.couponState.status, "selected_not_priced", "unpriced coupon state is visible");
+  assert.ok(r.errors.some((e) => e.code === "UNKNOWN_PRICING_REFERENCE"), "unknown coupon error surfaced");
 });
 
 // ── 11. Malformed/missing catalog or config cannot throw and cannot fall back ─────

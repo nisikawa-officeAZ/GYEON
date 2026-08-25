@@ -6,6 +6,11 @@ import {
   DEFAULT_PRICING_CATALOG,
   bodySizeMultiplier,
 } from "./pricing-catalog";
+import {
+  COATING_V34_BODY_SIZES,
+  type CoatingV34BodySize,
+  type CoatingV34SizePriceMap,
+} from "./coating-v34-contract";
 
 // Plan A (migration 093): write distinct line-item categories once the schema is
 // live; otherwise keep the legacy mapping so inserts never violate the old CHECK.
@@ -160,22 +165,68 @@ function sum(items: PricedLineItem[]): number {
 
 // ── Service calculators (all price data via the injected catalog) ─────────────
 
+/** `sizeKey` is untyped input (wizard/fixture string); only an exact seven-size match can index a
+ *  V3.4 price map. Anything else (missing, malformed, legacy/eighth size) is unavailable — never 0. */
+function isCoatingV34BodySize(sizeKey: string): sizeKey is CoatingV34BodySize {
+  return (COATING_V34_BODY_SIZES as readonly string[]).includes(sizeKey);
+}
+
+/** Exact selected-size price from one V3.4 layer map. `null` = unavailable; `0` is a valid price. */
+function v34SizePrice(map: CoatingV34SizePriceMap, sizeKey: string): number | null {
+  return isCoatingV34BodySize(sizeKey) ? map[sizeKey] : null;
+}
+
 function calcCoating(input: CoatingInput, offset: number, catalog: PricingCatalog): ServiceSubtotal {
   const items: PricedLineItem[] = [];
   let idx = offset;
-  const multi = bodySizeMultiplier(catalog, input.sizeKey);
-  const coat  = catalog.coatings.find(c => c.id === input.coatingId);
+  const v34 = catalog.coatingV34;
   // EW-UI-5A1-B1E: each coating line carries its STABLE authoritative catalog id AND its semantic role
   // (never the label/index/order) — base → coatingId/"base", second → topcoat2/"topcoat2",
   // third → topcoat3/"topcoat3", option → option id/"option".
-  if (coat) items.push(mkItem("coating", coat.name, Math.round(coat.base * multi), idx++, 1, input.coatingId, "base"));
-  if (input.topcoat2) {
-    const p = Math.round((catalog.topcoatBase[input.topcoat2] ?? 0) * multi);
-    items.push(mkItem("coating", `トップコート: ${catalog.topcoatName[input.topcoat2] ?? input.topcoat2}`, p, idx++, 1, input.topcoat2, "topcoat2"));
-  }
-  if (input.topcoat3) {
-    const p = Math.round((catalog.topcoatBase[input.topcoat3] ?? 0) * multi);
-    items.push(mkItem("coating", `トップコート(3層): ${catalog.topcoatName[input.topcoat3] ?? input.topcoat3}`, p, idx++, 1, input.topcoat3, "topcoat3"));
+  if (v34) {
+    // GDA_COATING_V3_4_C2_4 — authoritative direct-price path. Exact per-size, per-layer lookup;
+    // no size multiplier, no cross-layer fallback. null/missing/inactive never becomes a ¥0 line.
+    const base = v34.baseProducts.find(p => p.productId === input.coatingId);
+    if (base?.active) {
+      const price = v34SizePrice(base.pricesBySize, input.sizeKey);
+      if (price !== null) {
+        const name = catalog.coatings.find(c => c.id === input.coatingId)?.name ?? input.coatingId;
+        items.push(mkItem("coating", name, price, idx++, 1, input.coatingId, "base"));
+      }
+    }
+    if (input.topcoat2) {
+      const layer2 = v34.layer2Products.find(p => p.productId === input.topcoat2);
+      if (layer2?.active) {
+        const price = v34SizePrice(layer2.layer2PricesBySize, input.sizeKey);
+        if (price !== null) {
+          items.push(mkItem("coating", `トップコート: ${catalog.topcoatName[input.topcoat2] ?? input.topcoat2}`, price, idx++, 1, input.topcoat2, "topcoat2"));
+        }
+      }
+    }
+    if (input.topcoat3) {
+      const layer3 = v34.layer3Products.find(p => p.productId === input.topcoat3);
+      if (layer3?.active) {
+        const price = v34SizePrice(layer3.layer3PricesBySize, input.sizeKey);
+        if (price !== null) {
+          items.push(mkItem("coating", `トップコート(3層): ${catalog.topcoatName[input.topcoat3] ?? input.topcoat3}`, price, idx++, 1, input.topcoat3, "topcoat3"));
+        }
+      }
+    }
+  } else {
+    // Legacy/default catalog path (DEFAULT_PRICING_CATALOG / makePricingCatalog with no V3.4
+    // override) — UNCHANGED M-base × size-multiplier calculation. Never reached from a V3.4
+    // authoritative catalog, which always carries a non-null coatingV34.
+    const multi = bodySizeMultiplier(catalog, input.sizeKey);
+    const coat  = catalog.coatings.find(c => c.id === input.coatingId);
+    if (coat) items.push(mkItem("coating", coat.name, Math.round(coat.base * multi), idx++, 1, input.coatingId, "base"));
+    if (input.topcoat2) {
+      const p = Math.round((catalog.topcoatBase[input.topcoat2] ?? 0) * multi);
+      items.push(mkItem("coating", `トップコート: ${catalog.topcoatName[input.topcoat2] ?? input.topcoat2}`, p, idx++, 1, input.topcoat2, "topcoat2"));
+    }
+    if (input.topcoat3) {
+      const p = Math.round((catalog.topcoatBase[input.topcoat3] ?? 0) * multi);
+      items.push(mkItem("coating", `トップコート(3層): ${catalog.topcoatName[input.topcoat3] ?? input.topcoat3}`, p, idx++, 1, input.topcoat3, "topcoat3"));
+    }
   }
   (input.optionIds ?? []).forEach(id => {
     const opt = catalog.coatingOptions.find(o => o.id === id);
