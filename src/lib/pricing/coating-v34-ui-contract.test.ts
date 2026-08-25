@@ -9,7 +9,7 @@ test("coating V3.4 UI keeps the approved seven-size direct-price defaults", () =
   assert.match(SOURCE, /layer2:\s*\{ SS: 28_000, S: 31_000, M: 35_000, ML: 38_000, L: 42_000, LL: 46_000, XL: 50_000 \}/);
   assert.match(SOURCE, /layer3:\s*\{ SS: 18_000, S: 20_000, M: 23_000, ML: 25_000, L: 28_000, LL: 31_000, XL: 35_000 \}/);
   assert.match(SOURCE, /resolution\.status === "NOT_CONFIGURED"\s*\? applyUnsavedDefaultPrices/);
-  assert.match(SOURCE, /現在設定されている価格はシミュレーション価格を表示しています。まだ登録はされていません。/);
+  assert.match(SOURCE, /現在設定されている価格はシミュレーション用の価格を表示しています。御社の規定の金額を入力し保存を押してからアプリをご使用ください。/);
   assert.doesNotMatch(SOURCE, /趣味レーション/);
   assert.doesNotMatch(SOURCE, /未保存ドラフト/);
 });
@@ -23,6 +23,8 @@ test("coating V3.4 UI uses the approved rank-specific initial products", () => {
 test("coating V3.4 UI stacks all layers and renders compact seven-column desktop prices", () => {
   assert.match(SOURCE, /xl:grid-cols-7/);
   assert.doesNotMatch(SOURCE, /xl:grid-cols-2/);
+  assert.match(SOURCE, /xl:grid-cols-6/);
+  assert.doesNotMatch(SOURCE, /xl:grid-cols-5/);
   assert.doesNotMatch(SOURCE, /V3\.4・7サイズ契約/);
   assert.match(SOURCE, /selectorTitle="1層目コーティング剤"/);
   assert.match(SOURCE, /selectorTitle="2層目コーティング剤（追加価格・税抜）"/);

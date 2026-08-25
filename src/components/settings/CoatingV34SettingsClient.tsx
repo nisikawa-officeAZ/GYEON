@@ -409,7 +409,7 @@ function PriceLayer({
           </div>
         ) : (
           <>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" role="group" aria-label={`${selectorTitle}の商品`}>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" role="group" aria-label={`${selectorTitle}の商品`}>
               {products.map((product) => {
                 const isSelected = selected === product.id;
                 return (
@@ -682,7 +682,7 @@ function CoatingEditor({
 
       {resolution.status === "NOT_CONFIGURED" ? (
         <div className="mt-5 rounded-xl border border-[#31588f] bg-[#10264d]/55 px-4 py-3 text-sm leading-6 text-[#b8cdf0]">
-          現在設定されている価格はシミュレーション価格を表示しています。まだ登録はされていません。内容を確認し、この価格を登録する場合は「保存する」を押してください。
+          現在設定されている価格はシミュレーション用の価格を表示しています。御社の規定の金額を入力し保存を押してからアプリをご使用ください。
         </div>
       ) : null}
 
