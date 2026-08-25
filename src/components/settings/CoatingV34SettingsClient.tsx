@@ -101,6 +101,13 @@ function uniqueProducts(products: ProductMeta[]): ProductMeta[] {
   return [...new Map(products.map((product) => [product.id, product])).values()];
 }
 
+function moveCancoatToEnd(products: ProductMeta[]): ProductMeta[] {
+  return [
+    ...products.filter((product) => product.id !== "cancoat-evo"),
+    ...products.filter((product) => product.id === "cancoat-evo"),
+  ];
+}
+
 function baseProducts(rank: ShopRank): ProductMeta[] {
   return firstLayerOptions(rank).flatMap((product) => {
     const id = toPricingCatalogCoatingId(product.id);
@@ -333,6 +340,7 @@ function PriceLayer({
     onClick: () => void;
   };
 }) {
+  const displayProducts = moveCancoatToEnd(products);
   const selectedProduct = products.find((product) => product.id === selected) ?? null;
   const prices = selectedProduct ? layerPrices(settings, layer, selectedProduct.id) : null;
   const active = selectedProduct ? layerActive(settings, layer, selectedProduct.id) : false;
@@ -440,7 +448,7 @@ function PriceLayer({
         ) : (
           <>
             <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" role="group" aria-label={`${selectorTitle}の商品`}>
-              {products.map((product) => {
+              {displayProducts.map((product) => {
                 const isSelected = selected === product.id;
                 return (
                   <button

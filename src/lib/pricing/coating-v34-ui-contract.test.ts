@@ -22,6 +22,14 @@ test("coating V3.4 UI uses the approved rank-specific initial products", () => {
   assert.match(SOURCE, /certified:\s*\{ base: "infinit1", layer2: "infinit-t1", layer3: "infinit-t1" \}/);
 });
 
+test("coating V3.4 UI renders CANCOAT EVO at the right edge in every layer", () => {
+  assert.match(SOURCE, /function moveCancoatToEnd\(products: ProductMeta\[\]\): ProductMeta\[\]/);
+  assert.match(SOURCE, /products\.filter\(\(product\) => product\.id !== "cancoat-evo"\)/);
+  assert.match(SOURCE, /products\.filter\(\(product\) => product\.id === "cancoat-evo"\)/);
+  assert.match(SOURCE, /const displayProducts = moveCancoatToEnd\(products\)/);
+  assert.match(SOURCE, /displayProducts\.map\(\(product\) =>/);
+});
+
 test("coating V3.4 UI stacks all layers and renders compact seven-column desktop prices", () => {
   assert.match(SOURCE, /xl:grid-cols-7/);
   assert.doesNotMatch(SOURCE, /xl:grid-cols-2/);
