@@ -206,7 +206,7 @@ const HUB_GROUPS: HubGroup[] = [
         labelEn:       "COATING",
         description:   "コーティングメニュー、グレード、価格、施工条件",
         minVisibility: "readonly",
-        action:        { kind: "route", href: "/settings?panel=service" },
+        action:        { kind: "route", href: "/settings/coating" },
         getState: () => "active",
         badge: "solid_active",
       },
