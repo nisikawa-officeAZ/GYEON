@@ -1,0 +1,27 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+
+const SOURCE = readFileSync("src/components/settings/CoatingV34SettingsClient.tsx", "utf8");
+
+test("coating V3.4 UI keeps the approved seven-size direct-price defaults", () => {
+  assert.match(SOURCE, /base:\s*\{ SS: 65_000, S: 72_000, M: 80_000, ML: 88_000, L: 96_000, LL: 105_000, XL: 115_000 \}/);
+  assert.match(SOURCE, /layer2:\s*\{ SS: 28_000, S: 31_000, M: 35_000, ML: 38_000, L: 42_000, LL: 46_000, XL: 50_000 \}/);
+  assert.match(SOURCE, /layer3:\s*\{ SS: 18_000, S: 20_000, M: 23_000, ML: 25_000, L: 28_000, LL: 31_000, XL: 35_000 \}/);
+  assert.match(SOURCE, /resolution\.status === "NOT_CONFIGURED"\s*\? applyUnsavedDefaultPrices/);
+});
+
+test("coating V3.4 UI uses the approved rank-specific initial products", () => {
+  assert.match(SOURCE, /shop:\s*\{ base: "one-evo", layer2: "cancoat-evo", layer3: "cancoat-evo" \}/);
+  assert.match(SOURCE, /detailer:\s*\{ base: "pure-evo", layer2: "cancoat-evo", layer3: "cancoat-evo" \}/);
+  assert.match(SOURCE, /certified:\s*\{ base: "infinit1", layer2: "infinit-t1", layer3: "infinit-t1" \}/);
+});
+
+test("coating V3.4 UI stacks all layers and renders compact seven-column desktop prices", () => {
+  assert.match(SOURCE, /xl:grid-cols-7/);
+  assert.doesNotMatch(SOURCE, /xl:grid-cols-2/);
+  assert.match(SOURCE, /selectorTitle="1層目コーティング剤"/);
+  assert.match(SOURCE, /selectorTitle="2層目コーティング剤（追加価格・税抜）"/);
+  assert.match(SOURCE, /selectorTitle="3層目コーティング剤（追加価格・税抜）"/);
+  assert.match(SOURCE, /data-size-contract="SS,S,M,ML,L,LL,XL"/);
+});

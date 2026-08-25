@@ -43,6 +43,52 @@ const RANK_LABELS: Record<ShopRank, string> = {
 const EMPTY_PRICES = (): CoatingV34SizePriceMap =>
   Object.fromEntries(COATING_V34_BODY_SIZES.map((size) => [size, null])) as CoatingV34SizePriceMap;
 
+const UNSAVED_DEFAULT_PRICES: Record<Layer, CoatingV34SizePriceMap> = {
+  base: { SS: 65_000, S: 72_000, M: 80_000, ML: 88_000, L: 96_000, LL: 105_000, XL: 115_000 },
+  layer2: { SS: 28_000, S: 31_000, M: 35_000, ML: 38_000, L: 42_000, LL: 46_000, XL: 50_000 },
+  layer3: { SS: 18_000, S: 20_000, M: 23_000, ML: 25_000, L: 28_000, LL: 31_000, XL: 35_000 },
+};
+
+const DEFAULT_SELECTED_PRODUCT_IDS: Record<Exclude<ShopRank, "ppf_installer">, Record<Layer, string>> = {
+  shop: { base: "one-evo", layer2: "cancoat-evo", layer3: "cancoat-evo" },
+  detailer: { base: "pure-evo", layer2: "cancoat-evo", layer3: "cancoat-evo" },
+  certified: { base: "infinit1", layer2: "infinit-t1", layer3: "infinit-t1" },
+};
+
+function defaultProductId(rank: ShopRank, layer: Layer, products: ProductMeta[]): string | null {
+  if (rank === "ppf_installer") return null;
+  const preferred = DEFAULT_SELECTED_PRODUCT_IDS[rank][layer];
+  return products.some((product) => product.id === preferred) ? preferred : products[0]?.id ?? null;
+}
+
+function applyUnsavedDefaultPrices(
+  settings: CoatingSettingsV34,
+  rank: ShopRank,
+  catalogs: Record<Layer, ProductMeta[]>,
+): { settings: CoatingSettingsV34; selected: Record<Layer, string | null> } {
+  const selected = {
+    base: defaultProductId(rank, "base", catalogs.base),
+    layer2: defaultProductId(rank, "layer2", catalogs.layer2),
+    layer3: defaultProductId(rank, "layer3", catalogs.layer3),
+  } satisfies Record<Layer, string | null>;
+
+  return {
+    selected,
+    settings: {
+      ...settings,
+      baseProducts: settings.baseProducts.map((product) => product.productId === selected.base
+        ? { ...product, active: true, pricesBySize: { ...UNSAVED_DEFAULT_PRICES.base } }
+        : product),
+      layer2Products: settings.layer2Products.map((product) => product.productId === selected.layer2
+        ? { ...product, active: true, layer2PricesBySize: { ...UNSAVED_DEFAULT_PRICES.layer2 } }
+        : product),
+      layer3Products: settings.layer3Products.map((product) => product.productId === selected.layer3
+        ? { ...product, active: true, layer3PricesBySize: { ...UNSAVED_DEFAULT_PRICES.layer3 } }
+        : product),
+    },
+  };
+}
+
 function uniqueProducts(products: ProductMeta[]): ProductMeta[] {
   return [...new Map(products.map((product) => [product.id, product])).values()];
 }
@@ -245,8 +291,10 @@ function withParsedPrices(settings: CoatingSettingsV34, texts: TextPrices): Coat
 
 function PriceLayer({
   layer,
-  title,
-  subtitle,
+  selectorTitle,
+  priceTitle,
+  selectorNote,
+  splitPricePanel = false,
   products,
   settings,
   selected,
@@ -258,8 +306,10 @@ function PriceLayer({
   onToggleActive,
 }: {
   layer: Layer;
-  title: string;
-  subtitle: string;
+  selectorTitle: string;
+  priceTitle: string;
+  selectorNote: string;
+  splitPricePanel?: boolean;
   products: ProductMeta[];
   settings: CoatingSettingsV34;
   selected: string | null;
@@ -274,103 +324,118 @@ function PriceLayer({
   const prices = selectedProduct ? layerPrices(settings, layer, selectedProduct.id) : null;
   const active = selectedProduct ? layerActive(settings, layer, selectedProduct.id) : false;
 
-  return (
-    <section className="rounded-2xl border border-[#263955] bg-[#101827]/95 p-5 shadow-[0_18px_55px_rgba(1,7,20,0.28)] sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+  const priceContent = selectedProduct && prices ? (
+    <div>
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-[#5ea2ff]">{subtitle}</p>
-          <h2 className="mt-1 text-xl font-bold text-[#e8eef7]">{title}</h2>
+          <h2 className="text-base font-bold text-white sm:text-lg">{priceTitle}</h2>
+          <p className="mt-1 text-sm text-[#93a4bd]">
+            選択中のコーティング剤：<strong className="text-white">{selectedProduct.label}</strong>
+          </p>
         </div>
-        {selectedProduct ? (
-          <button
-            type="button"
-            onClick={onToggleActive}
-            className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition ${active ? "border-[#2f6bff] bg-[#12316c] text-[#8bbcff]" : "border-[#41506a] bg-[#1a2434] text-[#93a4bd]"}`}
-          >
-            {active ? "提供中" : "提供しない"}
-          </button>
-        ) : null}
+        <p className="text-xs text-[#71819b]">7サイズ直接入力・円（税抜）</p>
       </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7" data-size-contract="SS,S,M,ML,L,LL,XL">
+        {COATING_V34_BODY_SIZES.map((size) => {
+          const key = priceKey(layer, selectedProduct.id, size);
+          const value = textPrices[key] ?? (prices[size]?.toLocaleString("ja-JP") ?? "");
+          const normalized = normalizeDigits(value).trim();
+          const invalid = normalized !== "" && !/^\d+$/.test(normalized);
+          const isFree = normalized === "0";
+          return (
+            <label key={size} className={`min-w-0 rounded-xl border p-2.5 ${invalid ? "border-red-500/60 bg-red-500/5" : "border-[#2d405e] bg-[#182235]"}`}>
+              <span className="flex items-center justify-between text-xs font-bold text-[#5ea2ff]">
+                {size}
+                <span className="text-[9px] font-medium text-[#5c6b84]">税抜</span>
+              </span>
+              <div className="mt-2 flex min-w-0 items-center gap-1.5">
+                <input
+                  inputMode="numeric"
+                  value={value}
+                  onChange={(event) => onTextChange(key, event.target.value)}
+                  onBlur={() => {
+                    if (/^\d+$/.test(normalized)) onTextChange(key, Number(normalized).toLocaleString("ja-JP"));
+                  }}
+                  placeholder="未設定"
+                  aria-invalid={invalid}
+                  className="min-w-0 flex-1 rounded-lg border border-[#334765] bg-[#111827] px-2 py-2 text-right text-sm font-medium text-white outline-none transition placeholder:text-[#52627b] focus:border-[#4788ff]"
+                />
+                <span className="shrink-0 text-[10px] text-[#71819b]">円</span>
+              </div>
+              {invalid ? <span className="mt-2 block text-xs text-red-300">0以上の整数を入力してください</span> : null}
+              {isFree ? (
+                <span className="mt-2 flex items-center gap-2 text-[10px] text-amber-200">
+                  <input
+                    type="checkbox"
+                    checked={confirmedFree.has(key)}
+                    onChange={(event) => onConfirmFree(key, event.target.checked)}
+                    className="h-4 w-4 accent-[#2f6bff]"
+                  />
+                  無料提供として確認
+                </span>
+              ) : null}
+            </label>
+          );
+        })}
+      </div>
+      <p className="mt-3 text-xs leading-5 text-[#5c6b84]">
+        空欄は未設定として扱い、0円へ自動変換しません。表示時は3桁カンマ、保存時は整数（税抜）で保持します。
+      </p>
+    </div>
+  ) : null;
 
-      {products.length === 0 ? (
-        <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-200">
-          現在の店舗ランクでは、この層のコーティング価格を設定できません。
-        </div>
-      ) : (
-        <>
-          <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label={`${title}の商品`}>
-            {products.map((product) => {
-              const isSelected = selected === product.id;
-              const isActive = layerActive(settings, layer, product.id);
-              return (
-                <button
-                  key={product.id}
-                  type="button"
-                  aria-pressed={isSelected}
-                  onClick={() => onSelect(product.id)}
-                  className={`min-h-11 rounded-xl border px-4 py-2 text-left text-sm font-semibold transition ${isSelected ? "border-[#4788ff] bg-[#17346b] text-white shadow-[0_0_24px_rgba(47,107,255,0.22)]" : "border-[#2d405e] bg-[#0b1321] text-[#93a4bd] hover:border-[#4788ff]/70 hover:text-white"}`}
-                >
-                  {product.label}
-                  <span className={`ml-2 text-[10px] ${isActive ? "text-emerald-300" : "text-[#5c6b84]"}`}>{isActive ? "有効" : "未設定"}</span>
-                </button>
-              );
-            })}
+  return (
+    <div className="grid gap-4">
+      <section className="rounded-2xl border border-[#263955] bg-[#101827]/95 p-5 shadow-[0_18px_55px_rgba(1,7,20,0.28)] sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-bold text-[#e8eef7] sm:text-lg">{selectorTitle}</h2>
+            <p className="mt-2 text-xs leading-5 text-[#5c6b84]">{selectorNote}</p>
           </div>
-
-          {selectedProduct && prices ? (
-            <div className="mt-6">
-              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-                <p className="font-semibold text-white">{selectedProduct.label}</p>
-                <p className="text-xs text-[#71819b]">7サイズ直接入力・円（税抜）</p>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" data-size-contract="SS,S,M,ML,L,LL,XL">
-                {COATING_V34_BODY_SIZES.map((size) => {
-                  const key = priceKey(layer, selectedProduct.id, size);
-                  const value = textPrices[key] ?? (prices[size]?.toLocaleString("ja-JP") ?? "");
-                  const normalized = normalizeDigits(value).trim();
-                  const invalid = normalized !== "" && !/^\d+$/.test(normalized);
-                  const isFree = normalized === "0";
-                  return (
-                    <label key={size} className={`rounded-xl border p-3 ${invalid ? "border-red-500/60 bg-red-500/5" : "border-[#263955] bg-[#08111f]"}`}>
-                      <span className="flex items-center justify-between text-sm font-bold text-[#e8eef7]">
-                        {size}
-                        <span className="text-[10px] font-medium text-[#5c6b84]">税抜</span>
-                      </span>
-                      <div className="mt-2 flex items-center gap-2">
-                        <input
-                          inputMode="numeric"
-                          value={value}
-                          onChange={(event) => onTextChange(key, event.target.value)}
-                          onBlur={() => {
-                            if (/^\d+$/.test(normalized)) onTextChange(key, Number(normalized).toLocaleString("ja-JP"));
-                          }}
-                          placeholder="未設定"
-                          aria-invalid={invalid}
-                          className="min-w-0 flex-1 rounded-lg border border-[#334765] bg-[#060c17] px-3 py-2.5 text-right text-base font-semibold text-white outline-none transition placeholder:text-[#52627b] focus:border-[#4788ff]"
-                        />
-                        <span className="text-xs text-[#71819b]">円</span>
-                      </div>
-                      {invalid ? <span className="mt-2 block text-xs text-red-300">0以上の整数を入力してください</span> : null}
-                      {isFree ? (
-                        <span className="mt-2 flex items-center gap-2 text-xs text-amber-200">
-                          <input
-                            type="checkbox"
-                            checked={confirmedFree.has(key)}
-                            onChange={(event) => onConfirmFree(key, event.target.checked)}
-                            className="h-4 w-4 accent-[#2f6bff]"
-                          />
-                          無料提供として確認
-                        </span>
-                      ) : null}
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
+          {selectedProduct ? (
+            <button
+              type="button"
+              onClick={onToggleActive}
+              className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition ${active ? "border-[#2f6bff] bg-[#12316c] text-[#8bbcff]" : "border-[#41506a] bg-[#1a2434] text-[#93a4bd]"}`}
+            >
+              {active ? "提供中" : "提供しない"}
+            </button>
           ) : null}
-        </>
-      )}
-    </section>
+        </div>
+
+        {products.length === 0 ? (
+          <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-200">
+            現在の店舗ランクでは、この層のコーティング価格を設定できません。
+          </div>
+        ) : (
+          <>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" role="group" aria-label={`${selectorTitle}の商品`}>
+              {products.map((product) => {
+                const isSelected = selected === product.id;
+                return (
+                  <button
+                    key={product.id}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => onSelect(product.id)}
+                    className={`min-h-11 rounded-xl border px-3 py-2 text-center text-xs font-semibold transition ${isSelected ? "border-[#4788ff] bg-[#2f6bff] text-white shadow-[0_0_24px_rgba(47,107,255,0.22)]" : "border-[#2d405e] bg-[#182235] text-[#e8eef7] hover:border-[#4788ff]/70 hover:text-white"}`}
+                  >
+                    {product.label}
+                  </button>
+                );
+              })}
+            </div>
+            {!splitPricePanel && priceContent ? <div className="mt-5 border-t border-[#263955] pt-5">{priceContent}</div> : null}
+          </>
+        )}
+      </section>
+
+      {splitPricePanel && priceContent ? (
+        <section className="rounded-2xl border border-[#263955] bg-[#101827]/95 p-5 shadow-[0_18px_55px_rgba(1,7,20,0.28)] sm:p-6">
+          {priceContent}
+        </section>
+      ) : null}
+    </div>
   );
 }
 
@@ -403,27 +468,35 @@ export default function CoatingV34SettingsClient({
     ? resolution.candidates.unassignedUpperLayerProducts.map((product) => product.productId)
     : [];
   const merged = mergeCatalog(initial, rank.rank, legacyUpperProductIds);
+  const prepared = resolution.status === "NOT_CONFIGURED"
+    ? applyUnsavedDefaultPrices(merged.settings, rank.rank, merged.catalogs)
+    : {
+        settings: merged.settings,
+        selected: {
+          base: defaultProductId(rank.rank, "base", merged.catalogs.base),
+          layer2: defaultProductId(rank.rank, "layer2", merged.catalogs.layer2),
+          layer3: defaultProductId(rank.rank, "layer3", merged.catalogs.layer3),
+        },
+      };
 
-  return <CoatingEditor resolution={resolution} rank={rank.rank} initial={merged.settings} catalogs={merged.catalogs} />;
+  return <CoatingEditor resolution={resolution} rank={rank.rank} initial={prepared.settings} initialSelected={prepared.selected} catalogs={merged.catalogs} />;
 }
 
 function CoatingEditor({
   resolution,
   rank,
   initial,
+  initialSelected,
   catalogs,
 }: {
   resolution: Exclude<AuthoritativeCoatingV34ReadResult, { status: "UNAUTHENTICATED" | "READ_FAILED" | "INVALID_STORED_PAYLOAD" }>;
   rank: ShopRank;
   initial: CoatingSettingsV34;
+  initialSelected: Record<Layer, string | null>;
   catalogs: Record<Layer, ProductMeta[]>;
 }) {
   const [settings, setSettings] = useState(initial);
-  const [selected, setSelected] = useState<Record<Layer, string | null>>({
-    base: catalogs.base[0]?.id ?? null,
-    layer2: catalogs.layer2[0]?.id ?? null,
-    layer3: catalogs.layer3[0]?.id ?? null,
-  });
+  const [selected, setSelected] = useState<Record<Layer, string | null>>(initialSelected);
   const [textPrices, setTextPrices] = useState<TextPrices>(() => initialTextPrices(initial));
   const [confirmedFree, setConfirmedFree] = useState<Set<string>>(() => {
     const keys = Object.entries(initialTextPrices(initial)).filter(([, value]) => normalizeDigits(value) === "0").map(([key]) => key);
@@ -543,14 +616,25 @@ function CoatingEditor({
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#1d3150] pb-5">
-        <div>
-          <p className="text-xs font-bold tracking-[0.24em] text-[#5ea2ff]">COATING SETTINGS</p>
-          <h1 className="mt-1 text-2xl font-bold text-[#e8eef7] sm:text-3xl">コーティング設定</h1>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#71819b]">1層目・2層目・3層目で使用する液剤と、SS〜XLの7サイズ税抜価格を層ごとに設定します。</p>
-        </div>
-        <Link href="/settings" className="min-h-11 rounded-xl border border-[#2d405e] px-4 py-3 text-sm font-semibold text-[#8bbcff] hover:border-[#4788ff]">設定一覧へ戻る</Link>
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[#5c6b84]">
+        <p className="tracking-[0.14em]">DETAILER AGENT / SETTINGS / <span className="font-bold text-[#5ea2ff]">COATING / {rank.toUpperCase()}</span></p>
+        <Link href="/settings" className="min-h-11 rounded-xl border border-[#2d405e] px-4 py-3 font-semibold text-[#8bbcff] hover:border-[#4788ff]">設定一覧へ戻る</Link>
       </div>
+
+      <section className="mt-4 rounded-2xl border border-[#263955] bg-[linear-gradient(135deg,rgba(24,43,79,.76),rgba(13,22,38,.92))] p-5 sm:p-6">
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#31588f] bg-[#10264d] text-[#5ea2ff] shadow-[0_0_26px_rgba(47,107,255,0.16)]">
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-7 w-7 fill-none stroke-current" strokeWidth="1.7">
+              <path d="M12 3 19 6v5c0 4.4-2.7 8.1-7 10-4.3-1.9-7-5.6-7-10V6l7-3Z" />
+              <path d="m9.2 12 1.8 1.8 3.9-4" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-[#e8eef7] sm:text-2xl">コーティング設定（{RANK_LABELS[rank]}）</h1>
+            <p className="mt-1 text-xs font-bold tracking-[0.2em] text-[#5ea2ff]">COATING SETTINGS — 7 SIZES / {RANK_LABELS[rank].toUpperCase()}</p>
+          </div>
+        </div>
+      </section>
 
       <section className="mt-5 rounded-2xl border border-[#263955] bg-[linear-gradient(135deg,rgba(24,43,79,.72),rgba(13,22,38,.9))] p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -597,11 +681,19 @@ function CoatingEditor({
         </section>
       ) : null}
 
+      {resolution.status === "NOT_CONFIGURED" ? (
+        <div className="mt-5 rounded-xl border border-[#31588f] bg-[#10264d]/55 px-4 py-3 text-sm leading-6 text-[#b8cdf0]">
+          正本UIの想定価格を未保存ドラフトとして表示しています。既存データは変更されていません。内容を確認し、「保存する」を押した場合だけ登録されます。
+        </div>
+      ) : null}
+
       <div className="mt-5 grid gap-5">
         <PriceLayer
           layer="base"
-          title="ベース価格（1層目・税抜）"
-          subtitle="BASE COAT / LAYER 1"
+          selectorTitle="1層目コーティング剤"
+          priceTitle="ベース価格（1層目・税抜）"
+          selectorNote="店舗ランクと正式マトリクスで利用できる1層目商品のみ表示します。商品ボタンを選ぶとサイズ別価格が切り替わります。"
+          splitPricePanel
           products={catalogs.base}
           settings={settings}
           selected={selected.base}
@@ -612,11 +704,11 @@ function CoatingEditor({
           onConfirmFree={(key, checked) => setConfirmedFree((current) => { const next = new Set(current); checked ? next.add(key) : next.delete(key); return next; })}
           onToggleActive={() => toggleActive("base")}
         />
-        <div className="grid gap-5 xl:grid-cols-2">
-          <PriceLayer
-            layer="layer2"
-            title="2層目価格設定（税抜）"
-            subtitle="LAYER 2 DIRECT PRICES"
+        <PriceLayer
+          layer="layer2"
+            selectorTitle="2層目コーティング剤（追加価格・税抜）"
+            priceTitle="2層目追加価格（税抜）"
+            selectorNote="2層目に使用可能な商品のみ表示します。1層目とは別の7サイズ価格として保存します。"
             products={catalogs.layer2}
             settings={settings}
             selected={selected.layer2}
@@ -625,12 +717,13 @@ function CoatingEditor({
             onTextChange={updateText}
             confirmedFree={confirmedFree}
             onConfirmFree={(key, checked) => setConfirmedFree((current) => { const next = new Set(current); checked ? next.add(key) : next.delete(key); return next; })}
-            onToggleActive={() => toggleActive("layer2")}
-          />
-          <PriceLayer
-            layer="layer3"
-            title="3層目価格設定（税抜）"
-            subtitle="LAYER 3 DIRECT PRICES"
+          onToggleActive={() => toggleActive("layer2")}
+        />
+        <PriceLayer
+          layer="layer3"
+            selectorTitle="3層目コーティング剤（追加価格・税抜）"
+            priceTitle="3層目追加価格（税抜）"
+            selectorNote="3層目に使用可能な商品のみ表示します。2層目とは別の7サイズ価格として保存します。"
             products={catalogs.layer3}
             settings={settings}
             selected={selected.layer3}
@@ -639,9 +732,8 @@ function CoatingEditor({
             onTextChange={updateText}
             confirmedFree={confirmedFree}
             onConfirmFree={(key, checked) => setConfirmedFree((current) => { const next = new Set(current); checked ? next.add(key) : next.delete(key); return next; })}
-            onToggleActive={() => toggleActive("layer3")}
-          />
-        </div>
+          onToggleActive={() => toggleActive("layer3")}
+        />
       </div>
 
       <section className="mt-5 rounded-2xl border border-[#263955] bg-[#101827]/95 p-5 sm:p-6">
