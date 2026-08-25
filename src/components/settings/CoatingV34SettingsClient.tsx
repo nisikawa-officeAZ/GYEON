@@ -642,7 +642,6 @@ function CoatingEditor({
             <p className="text-xs font-bold tracking-[0.18em] text-[#71819b]">STORE RANK / READ ONLY</p>
             <p className="mt-1 text-lg font-bold text-white">{RANK_LABELS[rank]}</p>
           </div>
-          <span className="rounded-full border border-[#31588f] bg-[#10264d] px-4 py-2 text-xs font-semibold text-[#8bbcff]">V3.4・7サイズ契約</span>
         </div>
         <p className="mt-3 text-sm leading-6 text-[#93a4bd]">店舗ランクと正式な施工組み合わせ規則は読み取り専用です。この画面では価格と提供状態だけを変更します。</p>
       </section>
@@ -683,7 +682,7 @@ function CoatingEditor({
 
       {resolution.status === "NOT_CONFIGURED" ? (
         <div className="mt-5 rounded-xl border border-[#31588f] bg-[#10264d]/55 px-4 py-3 text-sm leading-6 text-[#b8cdf0]">
-          正本UIの想定価格を未保存ドラフトとして表示しています。既存データは変更されていません。内容を確認し、「保存する」を押した場合だけ登録されます。
+          現在設定されている価格はシミュレーション価格を表示しています。まだ登録はされていません。内容を確認し、この価格を登録する場合は「保存する」を押してください。
         </div>
       ) : null}
 
