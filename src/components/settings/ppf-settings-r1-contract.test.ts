@@ -12,8 +12,9 @@ test("PPF R1 keeps the exact seven-size contract", () => {
   assert.doesNotMatch(SOURCE, /XXL|size8|8サイズ/);
 });
 
-test("PPF R1 removes the measured 768-819px size-grid overflow without changing mobile", () => {
-  assert.match(STYLES, /@media \(min-width: 768px\) and \(max-width: 819px\)/);
+test("PPF R1 removes the measured tablet size-grid overflow without changing mobile", () => {
+  assert.match(STYLES, /@media \(max-width: 1024px\)/);
+  assert.match(STYLES, /@media \(min-width: 768px\) and \(max-width: 827px\)/);
   assert.match(STYLES, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(STYLES, /@media \(max-width: 767px\)/);
   assert.match(STYLES, /\.sizeGrid \{ grid-template-columns: 1fr; \}/);
