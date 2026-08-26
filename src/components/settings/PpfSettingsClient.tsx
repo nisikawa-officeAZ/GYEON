@@ -16,6 +16,7 @@ import {
 } from "@/lib/pricing/ppf-r1-price-contract";
 import { saveAuthoritativePpfR1PriceSettings } from "@/lib/pricing/save-authoritative-ppf-r1-price-settings";
 import styles from "./PpfSettingsClient.module.css";
+import SettingsBackControl from "./SettingsBackControl";
 
 const SIZES = ["SS", "S", "M", "ML", "L", "LL", "XL"] as const;
 
@@ -264,6 +265,7 @@ export default function PpfSettingsClient({
 
   return (
     <div className={styles.root} data-testid="ppf-settings-r1" data-size-contract="SS,S,M,ML,L,LL,XL">
+      <SettingsBackControl className="mb-4" href="/settings" label="設定一覧へ戻る" />
       <header className={styles.header}>
         <div className={styles.headerIcon}><PpfIcon /></div>
         <div><h1>PPF種類・施工係数</h1><div className={styles.en}>PPF TYPES &amp; INSTALLATION COEFFICIENTS</div></div>

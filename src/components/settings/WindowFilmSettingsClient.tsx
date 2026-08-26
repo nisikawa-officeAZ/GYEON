@@ -12,6 +12,7 @@ import {
 } from "@/lib/pricing/window-film-v1-contract";
 import type { WindowFilmTypeReadSetting, WindowFilmTypeSetting } from "@/lib/pricing/window-film-type-contract";
 import styles from "./WindowFilmSettingsClient.module.css";
+import SettingsBackControl from "./SettingsBackControl";
 
 const AREA_LABELS: Record<WindowFilmAreaCode, string> = {
   "front-windshield": "フロントガラス",
@@ -145,9 +146,10 @@ export default function WindowFilmSettingsClient({ resolution }: { resolution: A
     });
   };
 
-  if (readUnavailable) return <div className={styles.root}><div className={styles.error}>設定を安全に読み込めなかったため、編集を停止しました。再読み込みしてください。</div></div>;
+  if (readUnavailable) return <div className={styles.root}><SettingsBackControl className="mb-4" href="/settings" label="設定一覧へ戻る" /><div className={styles.error}>設定を安全に読み込めなかったため、編集を停止しました。再読み込みしてください。</div></div>;
   return (
     <div className={styles.root} data-testid="window-film-settings-v1">
+      <SettingsBackControl className="mb-4" href="/settings" label="設定一覧へ戻る" />
       <header className={styles.header}><div className={styles.icon}><WindowFilmIcon /></div><div><h1>ウインドウフィルム設定</h1><div className={styles.en}>WINDOW FILM SETTINGS</div></div></header>
       <div className={styles.breadcrumb}>DETAILER AGENT / SETTINGS / <b>WINDOW FILM</b></div>
       {notice === "sample" ? <div className={styles.notice}><b>画面に表示されている金額・係数・作業時間は、表示確認のためのサンプルです。実際の設定には使用されません。</b><br/>ご利用前に、店舗で使用する正しい内容を入力してください。空欄は「未設定」、0円は「無料」として登録されます。</div> : notice === "dirty" ? <div className={styles.notice}><b>入力内容はまだ保存されていません。</b><br/>登録する場合は、画面下の「保存する」を押してください。</div> : null}

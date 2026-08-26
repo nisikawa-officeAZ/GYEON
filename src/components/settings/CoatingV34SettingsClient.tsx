@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
+import SettingsBackControl from "./SettingsBackControl";
 import {
   COATING_PRODUCT_LABELS,
   firstLayerOptions,
@@ -711,7 +712,7 @@ function CoatingEditor({
     <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[#5c6b84]">
         <p className="tracking-[0.14em]">DETAILER AGENT / SETTINGS / <span className="font-bold text-[#5ea2ff]">COATING / {rank.toUpperCase()}</span></p>
-        <Link href="/settings" className="min-h-11 rounded-xl border border-[#2d405e] px-4 py-3 font-semibold text-[#8bbcff] hover:border-[#4788ff]">設定一覧へ戻る</Link>
+        <SettingsBackControl href="/settings" label="設定一覧へ戻る" />
       </div>
 
       <section className="mt-4 rounded-2xl border border-[#263955] bg-[linear-gradient(135deg,rgba(24,43,79,.76),rgba(13,22,38,.92))] p-5 sm:p-6">
@@ -923,12 +924,12 @@ function CoatingEditor({
 
 function BlockedState({ title, message }: { title: string; message: string }) {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+    <div className="mx-auto flex max-w-3xl flex-col px-4 py-12 sm:px-6">
+      <SettingsBackControl className="mb-4" href="/settings" label="設定一覧へ戻る" />
       <div className="rounded-2xl border border-red-500/30 bg-[#101827] p-6 sm:p-8">
         <p className="text-xs font-bold tracking-[0.2em] text-red-300">COATING SETTINGS BLOCKED</p>
         <h1 className="mt-2 text-2xl font-bold text-white">{title}</h1>
         <p className="mt-3 text-sm leading-6 text-[#93a4bd]">{message}</p>
-        <Link href="/settings" className="mt-6 inline-flex min-h-11 items-center rounded-xl border border-[#2d405e] px-4 text-sm font-semibold text-[#8bbcff]">設定一覧へ戻る</Link>
       </div>
     </div>
   );

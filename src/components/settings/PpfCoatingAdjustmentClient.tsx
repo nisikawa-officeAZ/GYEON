@@ -9,6 +9,7 @@ import {
 } from "@/lib/wizard-catalog/ppf-coating-adjustment-core";
 import { saveDealerPpfCoatingAdjustment } from "@/lib/wizard-catalog/wizard-catalog-authoring-actions";
 import styles from "./PpfCoatingAdjustmentClient.module.css";
+import SettingsBackControl from "./SettingsBackControl";
 
 type AdjustmentType = "amount" | "percent";
 
@@ -50,12 +51,12 @@ function DiscountIcon() {
 function BlockedState({ message }: { message: string }) {
   return (
     <div className={styles.root}>
+      <SettingsBackControl className="mb-4" href="/settings/ppf" label="PPF設定へ戻る" />
       <header className={styles.header}>
         <div className={styles.headerIcon}><DiscountIcon /></div>
         <div><h1>PPF＋コーティング減額</h1><div className={styles.en}>PPF &amp; COATING COMBINATION DISCOUNT</div></div>
       </header>
       <div className={styles.blocked} role="alert">{message}</div>
-      <Link className={styles.backLink} href="/settings/ppf">← PPF種類・施工係数へ戻る</Link>
     </div>
   );
 }
@@ -125,6 +126,7 @@ function ReadySettings({ result }: { result: Extract<PpfCoatingAdjustmentSetting
 
   return (
     <div className={styles.root} data-testid="ppf-coating-adjustment-settings">
+      <SettingsBackControl className="mb-4" href="/settings/ppf" label="PPF設定へ戻る" />
       <header className={styles.header}>
         <div className={styles.headerIcon}><DiscountIcon /></div>
         <div><h1>PPF＋コーティング減額</h1><div className={styles.en}>PPF &amp; COATING COMBINATION DISCOUNT</div></div>
