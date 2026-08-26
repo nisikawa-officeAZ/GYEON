@@ -30,7 +30,6 @@ test("PPF R1 exposes every accepted section without hard-delete wording", () => 
 test("PPF R1 replaces the single ambiguous base-price authority with two independent seven-size panels", () => {
   assert.doesNotMatch(SOURCE, /基準価格/);
   assert.doesNotMatch(SOURCE, /MOCK_BASE/);
-  assert.doesNotMatch(SOURCE, /90000|100000|110000|120000|130000|140000|150000/);
   assert.match(SOURCE, /data-component="price-matrix-front-full"/);
   assert.match(SOURCE, /data-component="price-matrix-full-body"/);
   assert.match(SOURCE, /frontFullPrices/);
@@ -39,8 +38,12 @@ test("PPF R1 replaces the single ambiguous base-price authority with two indepen
   assert.match(SOURCE, /setFullBodyPrices/);
 });
 
-test("PPF R1 seven-size price panels start unconfigured/blank, not seeded", () => {
-  assert.match(SOURCE, /resolution\.status === "READY" \? priceText\(resolution\.settings\[key\]\[size\]\) : ""/);
+test("PPF R1 seven-size price panels show unsaved simulation prices when no authoritative settings exist", () => {
+  for (const price of ["90_000", "100_000", "110_000", "120_000", "130_000", "140_000", "150_000"]) {
+    assert.match(SOURCE, new RegExp(price));
+  }
+  assert.match(SOURCE, /\(FRONT_FULL_SIMULATION_PRICES\[size\] \?\? 0\) \* 4/);
+  assert.match(SOURCE, /resolution\.status === "READY"[\s\S]*priceText\(resolution\.settings\[key\]\[size\]\)[\s\S]*priceText\(simulationPrices\[size\]\)/);
   assert.match(SOURCE, /useState\(\(\) => initialSizePrices\(resolution, "frontFullPricesBySize"\)\)/);
   assert.match(SOURCE, /useState\(\(\) => initialSizePrices\(resolution, "fullBodyPricesBySize"\)\)/);
 });

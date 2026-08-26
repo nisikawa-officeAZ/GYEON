@@ -19,6 +19,20 @@ import styles from "./PpfSettingsClient.module.css";
 
 const SIZES = ["SS", "S", "M", "ML", "L", "LL", "XL"] as const;
 
+const FRONT_FULL_SIMULATION_PRICES: PpfR1SizePriceMap = {
+  SS: 90_000,
+  S: 100_000,
+  M: 110_000,
+  ML: 120_000,
+  L: 130_000,
+  LL: 140_000,
+  XL: 150_000,
+};
+
+const FULL_BODY_SIMULATION_PRICES: PpfR1SizePriceMap = Object.fromEntries(
+  SIZES.map((size) => [size, (FRONT_FULL_SIMULATION_PRICES[size] ?? 0) * 4]),
+) as PpfR1SizePriceMap;
+
 type Row = { id: string; name: string; price: string; time: string; active: boolean; standard?: boolean; archived?: boolean; matrixAuthoritative?: boolean };
 type Film = { id: string; name: string; coefficient: string; active: boolean; standard?: boolean; archived?: boolean };
 type DraftNoticeState = "sample" | "dirty" | "persisted";
@@ -61,7 +75,12 @@ function initialSizePrices(
   resolution: AuthoritativePpfR1ReadResult,
   key: "frontFullPricesBySize" | "fullBodyPricesBySize",
 ): string[] {
-  return SIZES.map((size) => resolution.status === "READY" ? priceText(resolution.settings[key][size]) : "");
+  const simulationPrices = key === "frontFullPricesBySize"
+    ? FRONT_FULL_SIMULATION_PRICES
+    : FULL_BODY_SIMULATION_PRICES;
+  return SIZES.map((size) => resolution.status === "READY"
+    ? priceText(resolution.settings[key][size])
+    : priceText(simulationPrices[size]));
 }
 
 function parsePrice(value: string): number | null | undefined {
