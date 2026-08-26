@@ -181,14 +181,20 @@ const WINDOW_AREA_CODES = ["front-windshield", "front-door-glass", "rear-door-gl
 const PPF_METHOD_IDS: readonly PpfInstallationMethodId[] = ["full", "partial", "windshield", "sunroof", "interior"];
 
 // ── Presentation parse (film display attrs only; fail closed on malformed) ────
-function parseFilmPresentation(p: unknown): { ok: true; v: Pick<FilmTypeOption, "brand" | "vlt" | "heatRejection" | "color"> } | { ok: false } {
-  const out: Pick<FilmTypeOption, "brand" | "vlt" | "heatRejection" | "color"> = {};
+function parseFilmPresentation(p: unknown): { ok: true; v: Pick<FilmTypeOption, "brand" | "vlt" | "heatRejection" | "color" | "irCutPercent" | "uvCutPercent"> } | { ok: false } {
+  const out: Pick<FilmTypeOption, "brand" | "vlt" | "heatRejection" | "color" | "irCutPercent" | "uvCutPercent"> = {};
   if (p === null || typeof p !== "object" || Array.isArray(p)) return { ok: false };
   const o = p as Record<string, unknown>;
   for (const k of ["brand", "vlt", "heatRejection", "color"] as const) {
     if (k in o && o[k] !== undefined) {
       if (typeof o[k] !== "string") return { ok: false };
       out[k] = o[k] as string;
+    }
+  }
+  for (const k of ["irCutPercent", "uvCutPercent"] as const) {
+    if (k in o && o[k] !== undefined && o[k] !== null) {
+      if (typeof o[k] !== "number" || !Number.isInteger(o[k]) || o[k] < 0 || o[k] > 100) return { ok: false };
+      out[k] = o[k] as number;
     }
   }
   return { ok: true, v: out }; // unknown keys (e.g. legacyId) ignored; legacyId never becomes identity
@@ -355,7 +361,7 @@ export async function resolveWizardRuntimeConfigForDealer(
 function buildConfigs(
   rows: readonly WizardCatalogRow[],
   rank: ShopRank,
-  _catalog: PricingCatalog,
+  catalog: PricingCatalog,
   // B2-E2E — REQUIRED, and positioned ahead of the defaulted params so it cannot acquire a default.
   // The opt-in must always be supplied by the resolver, never assumed here.
   serviceOfferings: ServiceOfferings,
@@ -374,9 +380,29 @@ function buildConfigs(
   for (const r of of("film_type", "dealer")) {
     const pres = parseFilmPresentation(r.presentation);
     if (!pres.ok) return { ok: false, reason: "malformed-catalog-row" };
-    filmTypes.push({ id: r.code, label: r.label_ja ?? "", ...pres.v, defaultUnitPrice: r.default_unit_price ?? undefined });
+    filmTypes.push({
+      id: r.code,
+      label: r.label_ja ?? "",
+      ...pres.v,
+      defaultUnitPrice: r.default_unit_price ?? undefined,
+      ...(typeof r.install_coefficient_bp === "number"
+        ? { installationCoefficientBp: r.install_coefficient_bp }
+        : {}),
+    });
   }
-  const windowAreas: WindowAreaOption[] = of("window_area", "global").map((r) => ({ id: r.code, label: r.label_ja ?? "" }));
+  const windowAreas: WindowAreaOption[] = of("window_area", "global").map((r) => {
+    const configured = catalog.windowFilmV1?.areas[
+      r.code as keyof NonNullable<PricingCatalog["windowFilmV1"]>["areas"]
+    ];
+    const usable = configured?.isActive === true
+      && configured.priceYen !== null
+      && configured.durationMinutes !== null;
+    return {
+      id: r.code,
+      label: r.label_ja ?? "",
+      ...(!usable ? { disabled: true, disabledReason: "店舗設定で未提供" } : {}),
+    };
+  });
 
   // B2-E2B: an ABSENT optional product line is no longer a whole-wizard failure. A dealer with no
   // film types configured keeps every other category usable; window film alone becomes unavailable,
@@ -468,6 +494,15 @@ function buildConfigs(
     roomMenus: of("room_cleaning_menu", "dealer").map(menu) as RoomMenu[],
     filmTypes,
     windowAreas,
+    windowFilmPackages: (catalog.windowFilmV1?.packages ?? [])
+      .filter((item) => item.isActive && item.priceYen !== null && item.durationMinutes !== null)
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((item) => ({ id: item.code, label: item.name, priceYen: item.priceYen!, durationMinutes: item.durationMinutes! })),
+    windowFilmOptions: (catalog.windowFilmV1?.options ?? [])
+      .filter((item) => item.isActive && item.priceYen !== null && item.durationMinutes !== null)
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((item) => ({ id: item.code, label: item.name, priceYen: item.priceYen!, durationMinutes: item.durationMinutes! })),
+    windowFilmSettings: catalog.windowFilmV1,
     otherWorkPresets: of("other_work_preset", "dealer").map((r): OtherWorkPresetItem => ({ id: r.code, name: r.label_ja ?? "", defaultPrice: r.default_unit_price ?? 0, displayOrder: r.display_order })),
     storeGlobalOptions: of("store_global_option", "dealer").map((r): StoreGlobalOption => ({ id: r.code, name: r.label_ja ?? "", defaultPrice: r.default_unit_price ?? 0, editableUnitPrice: false, quantityRequired: r.quantity_required, minQty: r.min_quantity, maxQty: r.max_quantity ?? undefined, displayOrder: r.display_order })),
     coupons: couponRows.map((r): CouponOption => ({

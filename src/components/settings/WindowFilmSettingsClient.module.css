@@ -1,0 +1,37 @@
+.root { --blue:#5da2ff; --border:#263b59; --card:#101928; max-width:1440px; margin:0 auto; padding:32px; color:#eef4ff; }
+.header { display:flex; align-items:center; gap:16px; padding:22px 28px; border:1px solid var(--border); border-radius:18px; background:linear-gradient(135deg,#121d30,#101725); }
+.header h1 { margin:0 0 4px; font-size:24px; }
+.icon { display:grid; place-items:center; width:52px; height:52px; border:1px solid #3568a8; border-radius:14px; color:var(--blue); background:#122a50; }
+.icon svg { width:28px; height:28px; }
+.en,.breadcrumb { color:var(--blue); font-size:11px; font-weight:800; letter-spacing:.18em; }
+.breadcrumb { margin:18px 0; color:#697b94; }.breadcrumb b { color:var(--blue); }
+.notice,.error { margin:0 0 16px; padding:16px 20px; border:1px solid #8a5f08; border-radius:14px; color:#e4af34; background:rgba(73,49,5,.22); font-size:13px; line-height:1.8; }
+.error { border-color:#8d3543; color:#ff9aaa; background:#2a1118; }
+.panel { margin-top:16px; padding:24px; border:1px solid var(--border); border-radius:18px; background:var(--card); }
+.panel h2 { margin:0 0 8px; font-size:19px; }.panel p { margin:0 0 14px; color:#8fa0b8; font-size:12px; line-height:1.7; }
+.scroll { overflow-x:auto; margin-bottom:12px; } .scroll table { width:100%; min-width:760px; border-collapse:collapse; } .scroll th { padding:8px 10px; color:#778aa6; font-size:11px; text-align:left; } .scroll td { padding:7px 8px; border-top:1px solid rgba(38,59,89,.7); }
+.panel input { width:100%; min-height:44px; padding:0 12px; border:1px solid #314765; border-radius:11px; color:#f5f8ff; background:#0b1422; font:inherit; outline:none; } .panel input:focus { border-color:var(--blue); box-shadow:0 0 0 2px rgba(93,162,255,.12); } .panel input:read-only { color:#aebdd1; background:#111c2c; }
+.numeric { min-width:100px; text-align:right; }
+.button { display:inline-flex; min-height:44px; align-items:center; justify-content:center; padding:0 15px; border:1px solid #385170; border-radius:11px; color:#b9c9df; background:#142033; font-size:12px; font-weight:800; text-decoration:none; cursor:pointer; }.button:hover { border-color:var(--blue); color:#fff; }.button:disabled { opacity:.55; cursor:not-allowed; }.active { border-color:#3176ff; color:#dfeeff; background:#153e83; }.primary { border-color:#3b82ff; color:white; background:#2765df; }
+.footer { display:flex; align-items:center; justify-content:flex-end; gap:12px; margin-top:22px; }.message { margin-right:auto; color:#e4af34; font-size:12px; }
+@media (min-width:768px) and (max-width:1023px) {
+  .root { min-width:0; padding:24px 18px; }
+  .header { min-width:0; padding:20px; }
+  .header > div:last-child { min-width:0; }
+  .header h1,.en,.breadcrumb,.notice,.panel p { overflow-wrap:anywhere; }
+  .panel { min-width:0; padding:20px; }
+  .scroll { overflow-x:visible; }
+  .scroll table { display:block; width:100%; min-width:0; }
+  .scroll thead { display:none; }
+  .scroll tbody { display:grid; gap:12px; width:100%; }
+  .scroll tr { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 12px; width:100%; padding:14px; border:1px solid var(--border); border-radius:12px; background:#0d1726; }
+  .scroll td { display:flex; min-width:0; flex-direction:column; gap:6px; padding:0; border:0; }
+  .scroll td:first-child { grid-column:1 / -1; }
+  .scroll td::before { content:attr(data-label); color:#778aa6; font-size:10px; font-weight:700; letter-spacing:.04em; }
+  .scroll td > * { max-width:100%; }
+  .numeric { width:100%; min-width:0; }
+  .scroll .button { width:100%; }
+  .footer { flex-wrap:wrap; }
+  .message { width:100%; margin-right:0; }
+}
+@media (max-width:767px) { .root { padding:18px 14px 96px; }.header { padding:18px; }.header h1 { font-size:19px; }.panel { padding:18px 14px; } .scroll table { min-width:0; } .scroll thead { display:none; } .scroll tbody,.scroll tr,.scroll td { display:block; width:100%; } .scroll tr { margin-top:12px; padding:10px; border:1px solid var(--border); border-radius:12px; } .scroll td { padding:5px 0; border:0; }.footer { flex-wrap:wrap; }.message { width:100%; }.footer .button { flex:1; } }

@@ -24,6 +24,7 @@ import {
 import type { EstimateCategory } from "@/lib/estimates/estimate-types";
 import type { CoatingSettingsV34 } from "./coating-v34-contract";
 import type { PpfR1PriceSettings } from "./ppf-r1-price-contract";
+import type { WindowFilmSettingsV1 } from "./window-film-v1-contract";
 
 // Widened element types (the pricing-data constants are `as const`; widening lets
 // the mapper produce overlaid arrays that remain assignable to the catalog).
@@ -65,6 +66,9 @@ export interface PricingCatalog {
   // Legacy PPF catalog fields remain temporarily for non-wizard compatibility,
   // but are never a fallback for this nullable authority.
   ppfR1:                PpfR1PriceSettings | null;
+  // GDA_WINDOW_FILM_SETTINGS_C2 — fixed seven-area direct price/time contract.
+  // Legacy windowParts/windowGrades remain for non-wizard compatibility only.
+  windowFilmV1:         WindowFilmSettingsV1 | null;
 }
 
 export const DEFAULT_PRICING_CATALOG: PricingCatalog = {
@@ -87,6 +91,7 @@ export const DEFAULT_PRICING_CATALOG: PricingCatalog = {
   ppfSingleParts:      PPF_SINGLE_PARTS,
   coatingV34:          null,
   ppfR1:                null,
+  windowFilmV1:         null,
 };
 
 /** Data-driven body-size multiplier (future sizes need no code change). */

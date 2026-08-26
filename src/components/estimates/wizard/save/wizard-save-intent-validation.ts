@@ -459,12 +459,28 @@ function readServiceConfiguration(
   const wRaw = readObject(o.windowFilm, `${path}.windowFilm`, issues);
   let windowFilm: DraftSections["serviceConfiguration"]["windowFilm"] | undefined;
   if (wRaw !== undefined) {
-    requireExactKeys(wRaw, `${path}.windowFilm`, ["selectedAreaIds", "filmTypeId", "unitPriceInput"], issues);
+    requireExactKeys(
+      wRaw,
+      `${path}.windowFilm`,
+      ["selectedAreaIds", "filmTypeId", "unitPriceInput"],
+      issues,
+      ["selectedPackageCode", "selectedOptionIds", "optionQuantities"],
+    );
     const selectedAreaIds = readStringArray(wRaw.selectedAreaIds, `${path}.windowFilm.selectedAreaIds`, issues);
     const filmTypeId = readNullableString(wRaw.filmTypeId, `${path}.windowFilm.filmTypeId`, issues);
     const unitPriceInput = readString(wRaw.unitPriceInput, `${path}.windowFilm.unitPriceInput`, issues);
-    if (selectedAreaIds !== undefined && filmTypeId !== undefined && unitPriceInput !== undefined) {
-      windowFilm = { selectedAreaIds, filmTypeId, unitPriceInput };
+    const selectedPackageCode = wRaw.selectedPackageCode === undefined
+      ? null
+      : readNullableString(wRaw.selectedPackageCode, `${path}.windowFilm.selectedPackageCode`, issues);
+    const selectedOptionIds = wRaw.selectedOptionIds === undefined
+      ? []
+      : readStringArray(wRaw.selectedOptionIds, `${path}.windowFilm.selectedOptionIds`, issues);
+    const optionQuantities = wRaw.optionQuantities === undefined
+      ? {}
+      : readNumberRecord(wRaw.optionQuantities, `${path}.windowFilm.optionQuantities`, issues);
+    if (selectedAreaIds !== undefined && filmTypeId !== undefined && unitPriceInput !== undefined
+      && selectedPackageCode !== undefined && selectedOptionIds !== undefined && optionQuantities !== undefined) {
+      windowFilm = { selectedAreaIds, filmTypeId, unitPriceInput, selectedPackageCode, selectedOptionIds, optionQuantities };
     }
   }
 

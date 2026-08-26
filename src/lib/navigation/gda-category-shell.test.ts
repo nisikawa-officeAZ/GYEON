@@ -93,9 +93,9 @@ test("estimate_pricing hub exposes exactly the four owner-approved cards in orde
   assert.match(groupBody, /label:\s+"ウインドフィルム設定",\s*\n\s*labelEn:\s+"WINDOW FILM SETTINGS"/);
 
   assert.match(groupBody, /href: "\/settings\/estimate-wizard"/);
-  assert.match(groupBody, /href: "\/settings\?panel=service"/);
-  assert.match(groupBody, /href: "\/settings\/estimate-wizard#section-ppf"/);
-  assert.match(groupBody, /href: "\/settings\/estimate-wizard#section-film"/);
+  assert.match(groupBody, /href: "\/settings\/coating"/);
+  assert.match(groupBody, /href: "\/settings\/ppf"/);
+  assert.match(groupBody, /href: "\/settings\/window-film"/);
 });
 
 test("estimate_pricing cards render the approved solid badges and use four dedicated semantic icons", () => {

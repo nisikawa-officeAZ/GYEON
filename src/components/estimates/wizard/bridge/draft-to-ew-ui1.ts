@@ -22,7 +22,12 @@ function cloneServiceConfiguration(sc: WizardServiceConfigurationDraft): WizardS
       quantitiesByPart: { ...sc.ppf.quantitiesByPart },
       interiorRows: sc.ppf.interiorRows.map((r) => ({ ...r })),
     },
-    windowFilm: { ...sc.windowFilm, selectedAreaIds: [...sc.windowFilm.selectedAreaIds] },
+    windowFilm: {
+      ...sc.windowFilm,
+      selectedAreaIds: [...sc.windowFilm.selectedAreaIds],
+      selectedOptionIds: [...(sc.windowFilm.selectedOptionIds ?? [])],
+      optionQuantities: { ...(sc.windowFilm.optionQuantities ?? {}) },
+    },
     bodyMaintenance: { ...sc.bodyMaintenance },
     carWash: { ...sc.carWash },
     roomCleaning: { ...sc.roomCleaning, selectedMenuIds: [...sc.roomCleaning.selectedMenuIds], unitPricesByMenu: { ...sc.roomCleaning.unitPricesByMenu } },
