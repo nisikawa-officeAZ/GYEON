@@ -47,7 +47,7 @@ import {
 } from "@/lib/pricing/configured-coupon-total";
 import {
   applyInstallCoefficientBp,
-  resolvePpfCoatingAdjustment,
+  resolveGlobalPpfCoatingAdjustment,
   type PpfCoatingAdjustmentRule,
   type ResolvedPpfCoatingAdjustment,
 } from "@/lib/wizard-catalog/ppf-coating-adjustment-core";
@@ -439,36 +439,32 @@ export function buildWizardPricingInputFromConfig(
   const discountBaseSubtotal = undiscounted?.subtotal ?? 0;
 
   // ── PPF + coating reduction ──────────────────────────────────────────────────
-  // The owner contract is explicit: the reduction base is the layer-1 COATING line, not the PPF
-  // line. Front-full and full-body are separate identities; partial PPF is intentionally excluded
-  // because a fixed rule cannot safely represent arbitrary part combinations.
+  // The approved contract is one dealer-wide rule. Its base is the complete body-coating price
+  // (base + layer 2 + layer 3), never the PPF line and never unrelated coating options.
   const adjustmentRules = config.ppfCoatingAdjustments ?? [];
-  const coatingCode = draft.serviceConfiguration.coating.layer1Id ?? null;
-  const coatingBaseLine = undiscounted?.services
+  const coatingLines = undiscounted?.services
     .find((service) => service.type === "coating")
-    ?.lineItems.find((line) => line.catalog_line_role === "base");
-  const coatingBaseYen = coatingBaseLine
-    ? Math.round(coatingBaseLine.unit_price * coatingBaseLine.quantity)
-    : 0;
+    ?.lineItems ?? [];
+  const coatingTotalYen = coatingLines
+    .filter((line) => line.catalog_line_role === "base" || line.catalog_line_role === "topcoat2" || line.catalog_line_role === "topcoat3")
+    .reduce((total, line) => total + Math.round(line.unit_price * line.quantity), 0);
+  const qualifyingPpfLine = manualLines.find((line) => {
+    if (line.sourceCategory !== "ppf") return false;
+    const scope = line.metadata.ppfScope;
+    if (scope === "front_full" || scope === "full_body" || scope === "partial") return true;
+    const method = line.metadata.method;
+    return method === "full" || method === "partial";
+  });
   let ppfCoatingReductionYen = 0;
   let manualLinesWithAdjustment = manualLines;
 
-  if (coatingBaseYen > 0 && coatingCode) {
-    for (const line of manualLines) {
-      const scope = line.metadata.ppfScope;
-      if (scope !== "front_full" && scope !== "full_body") continue;
-      const adjustment = resolvePpfCoatingAdjustment(
-        scope,
-        coatingCode,
-        adjustmentRules,
-        coatingBaseYen,
-      );
-      if (!adjustment) continue;
-
+  if (coatingTotalYen > 0 && qualifyingPpfLine) {
+    const adjustment = resolveGlobalPpfCoatingAdjustment(adjustmentRules, coatingTotalYen);
+    if (adjustment) {
       ppfCoatingReductionYen = adjustment.reductionYen;
-      ppfAdjustmentsByIdentity[line.manualPricingIdentity] = adjustment;
+      ppfAdjustmentsByIdentity[qualifyingPpfLine.manualPricingIdentity] = adjustment;
       manualLinesWithAdjustment = manualLines.map((candidate) =>
-        candidate.manualPricingIdentity !== line.manualPricingIdentity
+        candidate.manualPricingIdentity !== qualifyingPpfLine.manualPricingIdentity
           ? candidate
           : {
               ...candidate,
@@ -479,11 +475,10 @@ export function buildWizardPricingInputFromConfig(
                 ppfCoatingAdjustmentValue: adjustment.adjustmentValue,
                 ppfCoatingAdjustmentReductionYen: adjustment.reductionYen,
                 ppfCoatingAdjustmentCoatingCode: adjustment.coatingCode,
-                ppfCoatingAdjustmentBase: "coating_layer1",
+                ppfCoatingAdjustmentBase: "coating_layers_total",
               },
             },
       );
-      break;
     }
   }
 

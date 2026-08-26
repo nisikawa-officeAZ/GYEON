@@ -1,59 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
-import type {
-  PpfCoatingAdjustmentProduct,
-  PpfCoatingAdjustmentScope,
-  PpfCoatingAdjustmentSettingsResult,
-} from "@/lib/pricing/get-ppf-coating-adjustment-settings";
+import { useState, useTransition } from "react";
+import type { PpfCoatingAdjustmentSettingsResult } from "@/lib/pricing/get-ppf-coating-adjustment-settings";
+import {
+  GLOBAL_PPF_COATING_ADJUSTMENT_COATING_CODE,
+  GLOBAL_PPF_COATING_ADJUSTMENT_METHOD_CODE,
+} from "@/lib/wizard-catalog/ppf-coating-adjustment-core";
 import { saveDealerPpfCoatingAdjustment } from "@/lib/wizard-catalog/wizard-catalog-authoring-actions";
 import styles from "./PpfCoatingAdjustmentClient.module.css";
 
 type AdjustmentType = "amount" | "percent";
 
-interface DraftRule {
-  readonly ruleId: string | null;
-  readonly adjustmentType: AdjustmentType;
-  readonly valueText: string;
-  readonly isActive: boolean;
-  readonly dirty: boolean;
-}
-
-const SCOPE_LABELS: Record<PpfCoatingAdjustmentScope, { ja: string; en: string }> = {
-  front_full: { ja: "フロントフル", en: "FRONT FULL" },
-  full_body: { ja: "フルボディ", en: "FULL BODY" },
-};
-
-const keyOf = (scope: PpfCoatingAdjustmentScope, coatingCode: string) => `${scope}:${coatingCode}`;
+const SAMPLE_PPF_YEN = 90_000;
+const SAMPLE_COATING_YEN = 80_000;
+const SAMPLE_ADJUSTMENT_YEN = 10_000;
 
 function percentText(basisPoints: number): string {
   return (basisPoints / 100).toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
-}
-
-function initialDrafts(result: Extract<PpfCoatingAdjustmentSettingsResult, { status: "READY" }>): Record<string, DraftRule> {
-  const byIdentity = new Map(result.rules.map((rule) => [keyOf(rule.scope, rule.coatingCode), rule]));
-  return Object.fromEntries(
-    (["front_full", "full_body"] as const).flatMap((scope) =>
-      result.products.map((product) => {
-        const rule = byIdentity.get(keyOf(scope, product.code));
-        return [
-          keyOf(scope, product.code),
-          rule
-            ? {
-                ruleId: rule.ruleId,
-                adjustmentType: rule.adjustmentType,
-                valueText: rule.adjustmentType === "amount"
-                  ? String(rule.adjustmentValue)
-                  : percentText(rule.adjustmentValue),
-                isActive: rule.isActive,
-                dirty: false,
-              }
-            : { ruleId: null, adjustmentType: "amount", valueText: "", isActive: false, dirty: false },
-        ];
-      }),
-    ),
-  );
 }
 
 function parseValue(type: AdjustmentType, valueText: string): number | null {
@@ -69,12 +33,16 @@ function parseValue(type: AdjustmentType, valueText: string): number | null {
   return Math.round(percent * 100);
 }
 
+function formatYen(value: number): string {
+  return `${value.toLocaleString("ja-JP")}円`;
+}
+
 function DiscountIcon() {
   return (
-    <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M9 4l5.5 2.2v4c0 3.4-2.3 6.3-5.5 7.9-3.2-1.6-5.5-4.5-5.5-7.9v-4z" />
-      <path d="M15.5 6.5L20 8.2v3c0 2.4-1.6 4.5-3.8 5.7" opacity=".55" />
-      <path d="M8 11.5h3.5" opacity=".9" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M19 5 5 19" />
+      <circle cx="6.5" cy="6.5" r="2.5" />
+      <circle cx="17.5" cy="17.5" r="2.5" />
     </svg>
   );
 }
@@ -84,7 +52,7 @@ function BlockedState({ message }: { message: string }) {
     <div className={styles.root}>
       <header className={styles.header}>
         <div className={styles.headerIcon}><DiscountIcon /></div>
-        <div><h1>PPF＋コーティング減額</h1><div className={styles.en}>PPF + COATING REDUCTION</div></div>
+        <div><h1>PPF＋コーティング減額</h1><div className={styles.en}>PPF &amp; COATING COMBINATION DISCOUNT</div></div>
       </header>
       <div className={styles.blocked} role="alert">{message}</div>
       <Link className={styles.backLink} href="/settings/ppf">← PPF種類・施工係数へ戻る</Link>
@@ -95,38 +63,41 @@ function BlockedState({ message }: { message: string }) {
 export default function PpfCoatingAdjustmentClient({ result }: { result: PpfCoatingAdjustmentSettingsResult }) {
   if (result.status === "UNAUTHENTICATED") return <BlockedState message="有効な店舗権限を確認できませんでした。再度ログインしてください。" />;
   if (result.status === "RANK_UNAVAILABLE") return <BlockedState message="店舗ランクを確認できないため、減額設定を表示できません。" />;
-  if (result.status === "COATING_UNAVAILABLE") return <BlockedState message="GYEON PPF Installerではコーティングを提供できないため、この設定は利用できません。" />;
+  if (result.status === "COATING_UNAVAILABLE") return <BlockedState message="GYEON PPF Installerではボディコーティングを提供できないため、この設定は利用できません。" />;
   if (result.status === "READ_FAILED") return <BlockedState message="減額設定を読み込めませんでした。時間をおいて再度お試しください。" />;
   return <ReadySettings result={result} />;
 }
 
 function ReadySettings({ result }: { result: Extract<PpfCoatingAdjustmentSettingsResult, { status: "READY" }> }) {
-  const [scope, setScope] = useState<PpfCoatingAdjustmentScope>("front_full");
-  const [drafts, setDrafts] = useState<Record<string, DraftRule>>(() => initialDrafts(result));
-  const [message, setMessage] = useState<string>("");
-  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const initialType: AdjustmentType = result.rule?.adjustmentType ?? "amount";
+  const initialText = result.rule
+    ? (initialType === "amount" ? String(result.rule.adjustmentValue) : percentText(result.rule.adjustmentValue))
+    : String(SAMPLE_ADJUSTMENT_YEN);
+  const [ruleId, setRuleId] = useState<string | null>(result.rule?.ruleId ?? null);
+  const [adjustmentType, setAdjustmentType] = useState<AdjustmentType>(initialType);
+  const [valueText, setValueText] = useState(initialText);
+  const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
-  const rows = useMemo(() => result.products.map((product) => ({
-    product,
-    draft: drafts[keyOf(scope, product.code)],
-  })), [drafts, result.products, scope]);
 
-  const updateDraft = (product: PpfCoatingAdjustmentProduct, patch: Partial<DraftRule>) => {
-    const key = keyOf(scope, product.code);
-    setDrafts((current) => ({
-      ...current,
-      [key]: { ...current[key], ...patch, dirty: true },
-    }));
+  const parsedValue = parseValue(adjustmentType, valueText);
+  const previewReduction = parsedValue === null
+    ? 0
+    : adjustmentType === "amount"
+      ? Math.min(parsedValue, SAMPLE_COATING_YEN)
+      : Math.round((SAMPLE_COATING_YEN * parsedValue) / 10_000);
+  const previewTotal = SAMPLE_PPF_YEN + SAMPLE_COATING_YEN - previewReduction;
+  const amountExceedsPreview = adjustmentType === "amount" && parsedValue !== null && parsedValue > SAMPLE_COATING_YEN;
+
+  const selectType = (type: AdjustmentType) => {
+    setAdjustmentType(type);
+    setValueText("");
     setMessage("");
   };
 
-  const save = (product: PpfCoatingAdjustmentProduct) => {
-    const key = keyOf(scope, product.code);
-    const draft = drafts[key];
-    const adjustmentValue = parseValue(draft.adjustmentType, draft.valueText);
-    if (adjustmentValue === null) {
-      setMessage(draft.adjustmentType === "amount"
-        ? "減額金額は0以上の整数で入力してください。"
+  const save = () => {
+    if (parsedValue === null) {
+      setMessage(adjustmentType === "amount"
+        ? "減額値は0以上の整数で入力してください。"
         : "減額率は0〜100％の範囲で、小数第2位まで入力してください。");
       return;
     }
@@ -134,27 +105,21 @@ function ReadySettings({ result }: { result: Extract<PpfCoatingAdjustmentSetting
       setMessage("変更できるのはオーナーまたはマネージャーです。");
       return;
     }
-
-    setSavingKey(key);
     startTransition(async () => {
       const saved = await saveDealerPpfCoatingAdjustment({
-        ruleId: draft.ruleId,
-        ppfMethodCode: scope,
-        coatingCode: product.code,
-        adjustmentType: draft.adjustmentType,
-        adjustmentValue,
-        isActive: draft.isActive,
+        ruleId,
+        ppfMethodCode: GLOBAL_PPF_COATING_ADJUSTMENT_METHOD_CODE,
+        coatingCode: GLOBAL_PPF_COATING_ADJUSTMENT_COATING_CODE,
+        adjustmentType,
+        adjustmentValue: parsedValue,
+        isActive: true,
       });
       if (saved.ok) {
-        setDrafts((current) => ({
-          ...current,
-          [key]: { ...current[key], ruleId: saved.ruleId, dirty: false },
-        }));
-        setMessage(`${SCOPE_LABELS[scope].ja}・${product.label}の減額設定を保存しました。`);
+        setRuleId(saved.ruleId);
+        setMessage("減額設定を保存しました。以後の見積に自動で適用されます。");
       } else {
         setMessage(saved.message);
       }
-      setSavingKey(null);
     });
   };
 
@@ -162,83 +127,71 @@ function ReadySettings({ result }: { result: Extract<PpfCoatingAdjustmentSetting
     <div className={styles.root} data-testid="ppf-coating-adjustment-settings">
       <header className={styles.header}>
         <div className={styles.headerIcon}><DiscountIcon /></div>
-        <div><h1>PPF＋コーティング減額</h1><div className={styles.en}>PPF + COATING REDUCTION</div></div>
+        <div><h1>PPF＋コーティング減額</h1><div className={styles.en}>PPF &amp; COATING COMBINATION DISCOUNT</div></div>
       </header>
-      <div className={styles.breadcrumb}>DETAILER AGENT / SETTINGS / PPF / <b>COATING REDUCTION</b></div>
-
-      <div className={styles.notice} role="status">
-        <b>PPFとコーティングを同時施工する場合に、1層目コーティング料金から差し引く金額を設定します。</b>
-        <span>クーポンではありません。PPF料金は変更されず、部分施工には自動適用されません。</span>
-      </div>
-      {result.obsoleteRuleCount > 0 && (
-        <div className={styles.warning} role="alert">旧仕様の減額設定が{result.obsoleteRuleCount}件あります。現在の見積計算には適用されません。</div>
-      )}
+      <div className={styles.breadcrumb}>DETAILER AGENT / SETTINGS / <b>PPF / COMBINATION DISCOUNT</b></div>
 
       <section className={styles.panel}>
-        <div className={styles.scopeTabs} role="tablist" aria-label="PPF施工範囲">
-          {(["front_full", "full_body"] as const).map((option) => (
-            <button
-              key={option}
-              type="button"
-              role="tab"
-              aria-selected={scope === option}
-              className={`${styles.scopeTab} ${scope === option ? styles.scopeTabActive : ""}`}
-              onClick={() => { setScope(option); setMessage(""); }}
-            >
-              <span>{SCOPE_LABELS[option].ja}</span>
-              <small>{SCOPE_LABELS[option].en}</small>
-            </button>
-          ))}
-        </div>
-
-        <div className={styles.sectionHeading}>
-          <div>
-            <h2>{SCOPE_LABELS[scope].ja}の減額設定</h2>
-            <p>コーティング剤ごとに円引きまたは％引きを設定します。未設定の組み合わせは減額されません。</p>
+        <h2>減額ルール設定 <small>全組み合わせ一律・コーティング価格から減額</small></h2>
+        <p className={styles.description}>PPF施工とボディコーティングを併用する場合に、コーティング価格から自動で減額します。減額方法は「円（固定額）」または「％（割合）」をボタンで切り替えて設定します。</p>
+        <div className={styles.controlRow}>
+          <span className={styles.controlLabel}>減額方法</span>
+          <div className={styles.typeButtons}>
+            <button type="button" disabled={!result.canEdit || isPending} aria-pressed={adjustmentType === "amount"} className={adjustmentType === "amount" ? styles.primaryButton : styles.button} onClick={() => selectType("amount")}>円（固定額）</button>
+            <button type="button" disabled={!result.canEdit || isPending} aria-pressed={adjustmentType === "percent"} className={adjustmentType === "percent" ? styles.primaryButton : styles.button} onClick={() => selectType("percent")}>％（割合）</button>
           </div>
-          <span className={styles.scopeBadge}>{SCOPE_LABELS[scope].en}</span>
         </div>
+        <label className={styles.valueRow}>
+          <span className={styles.controlLabel}>減額値</span>
+          <input
+            aria-label="減額値"
+            disabled={!result.canEdit || isPending}
+            inputMode={adjustmentType === "amount" ? "numeric" : "decimal"}
+            value={valueText}
+            onChange={(event) => {
+              setValueText(event.target.value.replace(adjustmentType === "amount" ? /\D/g : /[^\d.]/g, ""));
+              setMessage("");
+            }}
+          />
+          <strong>{adjustmentType === "amount" ? "円" : "％"}</strong>
+        </label>
+        <p className={styles.note}>※「％」選択時はコーティング価格（税抜）に対する割合で減額します。単位表示は選択中の減額方法に連動します。</p>
+        {!result.rule && <p className={styles.sampleNote}>10,000円は画面確認用のサンプルです。「保存する」を押すまでは登録されません。</p>}
+        {amountExceedsPreview && <p className={styles.validation} role="alert">入力額が計算例のコーティング価格を超えるため、計算例では0円を下限として補正しています。</p>}
+      </section>
 
+      <section className={styles.panel}>
+        <h2>適用条件 <small>併用時のみ自動適用</small></h2>
         <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead><tr><th>1層目コーティング剤</th><th>減額方法</th><th>減額値</th><th>状態</th><th>操作</th></tr></thead>
+          <table className={styles.conditions}><tbody>
+            <tr><th>適用対象</th><td>ボディコーティングとPPF（全体・範囲プリセット・部分PPF単体）を同一見積で選択した場合</td></tr>
+            <tr><th>減額の基準</th><td>コーティング価格（サイズ別価格＋2層目・3層目価格の合計・税抜）から減額</td></tr>
+            <tr><th>対象外</th><td>室内PPF・フロントウインドPPF・PPF専用コーティング・その他作業は減額対象外</td></tr>
+            <tr><th>下限ガード</th><td>減額後のコーティング価格が0円を下回る場合は0円（システム側で自動補正）</td></tr>
+          </tbody></table>
+        </div>
+      </section>
+
+      <section className={styles.panel}>
+        <h2>計算例 <small>見積での反映イメージ</small></h2>
+        <div className={styles.tableWrap}>
+          <table className={styles.preview}>
+            <thead><tr><th>項目</th><th>金額（税抜）</th></tr></thead>
             <tbody>
-              {rows.map(({ product, draft }) => {
-                const rowKey = keyOf(scope, product.code);
-                const configured = draft.ruleId !== null;
-                return (
-                  <tr key={product.code}>
-                    <td data-label="1層目コーティング剤"><strong>{product.label}</strong><span className={styles.code}>{product.code}</span></td>
-                    <td data-label="減額方法">
-                      <div className={styles.typeButtons}>
-                        <button type="button" disabled={!result.canEdit} aria-pressed={draft.adjustmentType === "amount"} className={draft.adjustmentType === "amount" ? styles.selectedButton : styles.optionButton} onClick={() => updateDraft(product, { adjustmentType: "amount", valueText: "" })}>円引き</button>
-                        <button type="button" disabled={!result.canEdit} aria-pressed={draft.adjustmentType === "percent"} className={draft.adjustmentType === "percent" ? styles.selectedButton : styles.optionButton} onClick={() => updateDraft(product, { adjustmentType: "percent", valueText: "" })}>％引き</button>
-                      </div>
-                    </td>
-                    <td data-label="減額値">
-                      <label className={styles.valueField}>
-                        <input aria-label={`${SCOPE_LABELS[scope].ja} ${product.label} 減額値`} disabled={!result.canEdit} inputMode={draft.adjustmentType === "amount" ? "numeric" : "decimal"} placeholder="未設定" value={draft.valueText} onChange={(event) => updateDraft(product, { valueText: event.target.value.replace(draft.adjustmentType === "amount" ? /\D/g : /[^\d.]/g, "") })} />
-                        <span>{draft.adjustmentType === "amount" ? "円" : "％"}</span>
-                      </label>
-                    </td>
-                    <td data-label="状態">
-                      <button type="button" disabled={!result.canEdit} className={`${styles.stateButton} ${draft.isActive ? styles.activeState : ""}`} onClick={() => updateDraft(product, { isActive: !draft.isActive })}>{draft.isActive ? "有効" : configured ? "停止中" : "未設定"}</button>
-                    </td>
-                    <td data-label="操作">
-                      <button type="button" className={styles.saveButton} disabled={!result.canEdit || !draft.dirty || isPending} onClick={() => save(product)}>{savingKey === rowKey ? "保存中…" : "保存"}</button>
-                    </td>
-                  </tr>
-                );
-              })}
+              <tr><td>PPF：フロントフル（PPF PROTECT+）</td><td>{formatYen(SAMPLE_PPF_YEN)}</td></tr>
+              <tr><td>コーティング：Q² PURE EVO（Mサイズ・2層）</td><td>{formatYen(SAMPLE_COATING_YEN)}</td></tr>
+              <tr className={styles.reduction}><td>併用減額（一律）</td><td>−{formatYen(previewReduction)}</td></tr>
+              <tr className={styles.total}><td>合計</td><td>{formatYen(previewTotal)}</td></tr>
             </tbody>
           </table>
         </div>
-        {result.products.length === 0 && <div className={styles.empty}>利用可能な1層目コーティング剤がありません。</div>}
+        <p className={styles.note}>※計算例は仮の金額です。実際の見積では選択されたサイズ・範囲・コーティング剤の価格に対して減額が適用されます。</p>
       </section>
 
-      <div className={styles.footer}>
-        <Link className={styles.backLink} href="/settings/ppf">← PPF種類・施工係数へ戻る</Link>
+      <div className={styles.actions}>
         {message && <span className={styles.message} role="status">{message}</span>}
+        <Link className={styles.button} href="/settings/ppf">キャンセル</Link>
+        <button type="button" className={styles.primaryButton} disabled={!result.canEdit || isPending || parsedValue === null} onClick={save}>{isPending ? "保存中…" : "保存する"}</button>
       </div>
     </div>
   );

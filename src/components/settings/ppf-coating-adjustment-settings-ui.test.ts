@@ -9,32 +9,33 @@ const LOADER = readFileSync(new URL("../../lib/pricing/get-ppf-coating-adjustmen
 const ADAPTER = readFileSync(new URL("../estimates/wizard/pricing/wizard-pricing-input-adapter-config.ts", import.meta.url), "utf8");
 const ACTIONS = readFileSync(new URL("../../lib/wizard-catalog/wizard-catalog-authoring-actions.ts", import.meta.url), "utf8");
 
-test("PPF settings links to a dedicated coating-reduction page without changing its existing layout", () => {
+test("PPF settings links to the approved dedicated combination-discount page", () => {
   assert.match(PPF_SETTINGS, /href="\/settings\/ppf\/coating-discount"/);
   assert.match(PAGE, /getPpfCoatingAdjustmentSettings\(\)/);
   assert.match(PAGE, /<PpfCoatingAdjustmentClient result=\{result\}/);
 });
 
-test("automatic reduction supports front-full and full-body only", () => {
-  assert.match(LOADER, /PPF_COATING_ADJUSTMENT_SCOPES = \["front_full", "full_body"\] as const/);
-  assert.doesNotMatch(LOADER, /PPF_COATING_ADJUSTMENT_SCOPES[^\n]*partial/);
-  assert.match(CLIENT, /\["front_full", "full_body"\] as const/);
-  assert.match(CLIENT, /部分施工には自動適用されません/);
-  assert.match(ADAPTER, /scope !== "front_full" && scope !== "full_body"/);
+test("one global rule replaces scope and coating-product matrices", () => {
+  assert.match(LOADER, /GLOBAL_PPF_COATING_ADJUSTMENT_METHOD_CODE/);
+  assert.match(LOADER, /GLOBAL_PPF_COATING_ADJUSTMENT_COATING_CODE/);
+  assert.doesNotMatch(CLIENT, /front_full|full_body|scopeTabs/);
+  assert.match(CLIENT, /coatingCode: GLOBAL_PPF_COATING_ADJUSTMENT_COATING_CODE/);
+  assert.match(CLIENT, /全組み合わせ一律/);
+  assert.match(CLIENT, /円（固定額）/);
+  assert.match(CLIENT, /％（割合）/);
 });
 
-test("reduction comes from the layer-1 coating base while PPF pricing remains untouched", () => {
-  assert.match(ADAPTER, /service\.type === "coating"/);
-  assert.match(ADAPTER, /catalog_line_role === "base"/);
-  assert.match(ADAPTER, /resolvePpfCoatingAdjustment\([\s\S]*coatingBaseYen/);
-  assert.match(ADAPTER, /ppfCoatingAdjustmentBase: "coating_layer1"/);
+test("approved applicability and coating-total base are explicit and implemented", () => {
+  assert.match(CLIENT, /全体・範囲プリセット・部分PPF単体/);
+  assert.match(CLIENT, /室内PPF・フロントウインドPPF・PPF専用コーティング・その他作業/);
+  assert.match(ADAPTER, /catalog_line_role === "base" \|\| line\.catalog_line_role === "topcoat2" \|\| line\.catalog_line_role === "topcoat3"/);
+  assert.match(ADAPTER, /scope === "front_full" \|\| scope === "full_body" \|\| scope === "partial"/);
+  assert.match(ADAPTER, /ppfCoatingAdjustmentBase: "coating_layers_total"/);
   assert.match(ADAPTER, /extraAmount: extraAmount \+ ppfCoatingReductionYen/);
-  assert.doesNotMatch(ADAPTER, /price:\s*[^,\n]*-\s*adjustment\.reductionYen/);
 });
 
-test("the dedicated UI explains the business rule and saves through the existing secured action", () => {
-  assert.match(CLIENT, /1層目コーティング料金から差し引く金額/);
-  assert.match(CLIENT, /クーポンではありません。PPF料金は変更されず/);
+test("the GenSpark sections save through the existing secured action", () => {
+  for (const label of ["減額ルール設定", "適用条件", "計算例", "保存する"]) assert.match(CLIENT, new RegExp(label));
   assert.match(CLIENT, /saveDealerPpfCoatingAdjustment\(/);
   assert.match(ACTIONS, /wiz_upsert_ppf_coating_adjustment/);
   assert.match(ACTIONS, /revalidatePath\(PPF_COATING_ADJUSTMENT_SETTINGS_PATH\)/);
