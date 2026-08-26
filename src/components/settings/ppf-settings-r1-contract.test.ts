@@ -3,12 +3,20 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 
 const SOURCE = readFileSync(new URL("./PpfSettingsClient.tsx", import.meta.url), "utf8");
+const STYLES = readFileSync(new URL("./PpfSettingsClient.module.css", import.meta.url), "utf8");
 const PAGE = readFileSync(new URL("../../app/settings/ppf/page.tsx", import.meta.url), "utf8");
 const HUB = readFileSync(new URL("./SettingsCenterHub.tsx", import.meta.url), "utf8");
 
 test("PPF R1 keeps the exact seven-size contract", () => {
   assert.match(SOURCE, /\["SS", "S", "M", "ML", "L", "LL", "XL"\]/);
   assert.doesNotMatch(SOURCE, /XXL|size8|8サイズ/);
+});
+
+test("PPF R1 removes the measured 768-819px size-grid overflow without changing mobile", () => {
+  assert.match(STYLES, /@media \(min-width: 768px\) and \(max-width: 819px\)/);
+  assert.match(STYLES, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(STYLES, /@media \(max-width: 767px\)/);
+  assert.match(STYLES, /\.sizeGrid \{ grid-template-columns: 1fr; \}/);
 });
 
 test("PPF R1 exposes every accepted section without hard-delete wording", () => {
