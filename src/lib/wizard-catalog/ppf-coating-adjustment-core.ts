@@ -33,6 +33,10 @@ export function applyInstallCoefficientBp(unitPriceYen: number, bp: number | nul
 
 export type PpfCoatingAdjustmentType = "amount" | "percent";
 
+/** Stable identity used to store the approved dealer-wide combination rule in the existing table. */
+export const GLOBAL_PPF_COATING_ADJUSTMENT_METHOD_CODE = "all_body_ppf";
+export const GLOBAL_PPF_COATING_ADJUSTMENT_COATING_CODE = "all_body_coating";
+
 /**
  * One dealer-authored reduction rule, projected from `dealer_ppf_coating_adjustments`.
  * `adjustmentValue` is yen for `amount` and integer basis points for `percent`.
@@ -107,27 +111,22 @@ export function validatePpfCoatingAdjustmentRule(
 }
 
 /**
- * Resolve the single applicable reduction for a (PPF method, coating) pair.
- *
- * `UNIQUE (dealer_id, ppf_method_code, coating_code)` makes multiplicity unrepresentable, so this
- * returns at most one rule and needs no precedence policy. Broader precedence across several PPF
- * methods on one estimate is B6.2 work and is intentionally NOT decided here — the caller resolves
- * per method code and the first active match in the caller's own deterministic order wins.
+ * Resolve the single dealer-wide combination reduction. The existing pair-keyed table stores it
+ * under one reserved, stable identity, so multiplicity remains unrepresentable without a migration.
  *
  * Returns null when no active rule matches. The reduction is clamped to the base so a rule can
  * never drive a line negative.
  */
-export function resolvePpfCoatingAdjustment(
-  ppfMethodCode: string,
-  coatingCode: string | null,
+export function resolveGlobalPpfCoatingAdjustment(
   rules: readonly PpfCoatingAdjustmentRule[],
   baseYen: number,
 ): ResolvedPpfCoatingAdjustment | null {
-  if (coatingCode === null || coatingCode === "") return null;
   if (!Number.isFinite(baseYen) || baseYen <= 0) return null;
 
   const rule = rules.find(
-    (r) => r.isActive && r.ppfMethodCode === ppfMethodCode && r.coatingCode === coatingCode,
+    (r) => r.isActive
+      && r.ppfMethodCode === GLOBAL_PPF_COATING_ADJUSTMENT_METHOD_CODE
+      && r.coatingCode === GLOBAL_PPF_COATING_ADJUSTMENT_COATING_CODE,
   );
   if (!rule) return null;
 

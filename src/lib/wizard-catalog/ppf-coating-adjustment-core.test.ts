@@ -6,9 +6,11 @@ import assert from "node:assert/strict";
 
 import {
   COEFFICIENT_BP_IDENTITY,
+  GLOBAL_PPF_COATING_ADJUSTMENT_COATING_CODE,
+  GLOBAL_PPF_COATING_ADJUSTMENT_METHOD_CODE,
   applyInstallCoefficientBp,
   isValidInstallCoefficientBp,
-  resolvePpfCoatingAdjustment,
+  resolveGlobalPpfCoatingAdjustment,
   validatePpfCoatingAdjustmentRule,
   type PpfCoatingAdjustmentRule,
 } from "./ppf-coating-adjustment-core";
@@ -101,8 +103,8 @@ test("validate: rejects an unknown type and a negative/non-integer value", () =>
 const RULES: readonly PpfCoatingAdjustmentRule[] = [
   {
     ruleId: "r1",
-    ppfMethodCode: "full",
-    coatingCode: "pure-evo",
+    ppfMethodCode: GLOBAL_PPF_COATING_ADJUSTMENT_METHOD_CODE,
+    coatingCode: GLOBAL_PPF_COATING_ADJUSTMENT_COATING_CODE,
     adjustmentType: "amount",
     adjustmentValue: 30_000,
     isActive: true,
@@ -125,12 +127,12 @@ const RULES: readonly PpfCoatingAdjustmentRule[] = [
   },
 ];
 
-test("resolve: matches on the (method, coating) code pair and freezes the authored value", () => {
-  const r = resolvePpfCoatingAdjustment("full", "pure-evo", RULES, 150_000);
+test("resolve: uses the one global identity and freezes the authored value", () => {
+  const r = resolveGlobalPpfCoatingAdjustment(RULES, 150_000);
   assert.deepEqual(r, {
     ruleId: "r1",
-    ppfMethodCode: "full",
-    coatingCode: "pure-evo",
+    ppfMethodCode: GLOBAL_PPF_COATING_ADJUSTMENT_METHOD_CODE,
+    coatingCode: GLOBAL_PPF_COATING_ADJUSTMENT_COATING_CODE,
     adjustmentType: "amount",
     adjustmentValue: 30_000,
     reductionYen: 30_000,
@@ -138,30 +140,31 @@ test("resolve: matches on the (method, coating) code pair and freezes the author
 });
 
 test("resolve: percent rules compute against the base", () => {
-  const r = resolvePpfCoatingAdjustment("partial", "pure-evo", RULES, 150_000);
-  assert.equal(r?.reductionYen, 30_000); // 20% of 150,000
+  const percentRules: readonly PpfCoatingAdjustmentRule[] = [{
+    ...RULES[0], adjustmentType: "percent", adjustmentValue: 2_000,
+  }];
+  const r = resolveGlobalPpfCoatingAdjustment(percentRules, 150_000);
+  assert.equal(r?.reductionYen, 30_000);
 });
 
 test("resolve: an inactive rule never applies", () => {
-  assert.equal(resolvePpfCoatingAdjustment("full", "mohs-evo", RULES, 150_000), null);
+  assert.equal(resolveGlobalPpfCoatingAdjustment([{ ...RULES[0], isActive: false }], 150_000), null);
 });
 
-test("resolve: no match, no coating, or a non-positive base yields null", () => {
-  assert.equal(resolvePpfCoatingAdjustment("sunroof", "pure-evo", RULES, 150_000), null);
-  assert.equal(resolvePpfCoatingAdjustment("full", null, RULES, 150_000), null);
-  assert.equal(resolvePpfCoatingAdjustment("full", "", RULES, 150_000), null);
-  assert.equal(resolvePpfCoatingAdjustment("full", "pure-evo", RULES, 0), null);
+test("resolve: an obsolete identity or a non-positive base yields null", () => {
+  assert.equal(resolveGlobalPpfCoatingAdjustment([RULES[1]], 150_000), null);
+  assert.equal(resolveGlobalPpfCoatingAdjustment(RULES, 0), null);
 });
 
 test("resolve: the reduction is clamped to the base — a rule can never drive a line negative", () => {
   const huge: readonly PpfCoatingAdjustmentRule[] = [
     { ...RULES[0], adjustmentValue: 999_999 },
   ];
-  const r = resolvePpfCoatingAdjustment("full", "pure-evo", huge, 120_000);
+  const r = resolveGlobalPpfCoatingAdjustment(huge, 120_000);
   assert.equal(r?.reductionYen, 120_000);
 });
 
 test("resolve: the Ver2.2 worked example (150,000 → 120,000)", () => {
-  const r = resolvePpfCoatingAdjustment("full", "pure-evo", RULES, 150_000);
+  const r = resolveGlobalPpfCoatingAdjustment(RULES, 150_000);
   assert.equal(150_000 - (r?.reductionYen ?? 0), 120_000);
 });
