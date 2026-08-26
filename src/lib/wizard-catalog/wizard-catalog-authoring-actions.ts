@@ -37,6 +37,7 @@ import type {
 } from "./wizard-catalog-authoring-types";
 
 const SETTINGS_PATH = "/settings";
+const PPF_COATING_ADJUSTMENT_SETTINGS_PATH = "/settings/ppf/coating-discount";
 
 async function getDealer(): Promise<{ dealer_id: string } | null> {
   const dealer = await getCurrentDealer();
@@ -182,7 +183,10 @@ export async function saveDealerPpfCoatingAdjustment(
     },
     input,
   );
-  if (result.ok) revalidatePath(SETTINGS_PATH);
+  if (result.ok) {
+    revalidatePath(SETTINGS_PATH);
+    revalidatePath(PPF_COATING_ADJUSTMENT_SETTINGS_PATH);
+  }
   return result;
 }
 
@@ -221,7 +225,10 @@ export async function archiveDealerPpfCoatingAdjustment(
     },
     ruleId,
   );
-  if (result.ok) revalidatePath(SETTINGS_PATH);
+  if (result.ok) {
+    revalidatePath(SETTINGS_PATH);
+    revalidatePath(PPF_COATING_ADJUSTMENT_SETTINGS_PATH);
+  }
   return result;
 }
 

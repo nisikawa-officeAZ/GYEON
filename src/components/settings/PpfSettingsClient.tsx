@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition, type Dispatch, type SetStateAction } from "react";
 import type { AuthoritativePpfR1CoefficientReadResult } from "@/lib/pricing/get-authoritative-ppf-r1-installation-coefficients";
 import type { AuthoritativePpfR1ReadResult } from "@/lib/pricing/get-authoritative-ppf-r1-price-settings";
@@ -296,7 +297,7 @@ export default function PpfSettingsClient({
           <label className={styles.field}>想定施工時間（分）<input className={`${styles.input} ${styles.time}`} inputMode="numeric" value={coating.time} onChange={e => setCoating(v => ({ ...v, time: e.target.value.replace(/\D/g, "") }))} /></label>
           <ToggleButton active={coating.active} onClick={() => setCoating(v => ({ ...v, active: !v.active }))} />
         </div>
-        <p>PPF施工と併せて選択された場合に加算されます。PPF＋コーティング減額は別画面で設定します。</p>
+        <p>PPF施工と併せて選択された場合に加算されます。<Link className={styles.inlineLink} href="/settings/ppf/coating-discount">PPF＋コーティング減額は別画面で設定します。→</Link></p>
       </section>
 
       <section className={styles.panel} data-component="ppf-indoor">

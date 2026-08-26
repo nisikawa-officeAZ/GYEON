@@ -20,7 +20,8 @@
 //
 //   • a percentage discount is converted to yen against the engine-reported subtotal → extraAmount
 //   • configured coupons are resolved to a single yen total                          → couponTotal
-//   • PPF lines carry their dealer coefficient and PPF+coating reduction in unitPrice
+//   • PPF lines carry their dealer coefficient in unitPrice
+//   • PPF+coating reduction is calculated from the layer-1 coating price and enters extraAmount
 //
 // The two refusals this used to raise (PERCENTAGE_NOT_SUPPORTED, COUPON_PRICING_NOT_IMPLEMENTED)
 // are therefore no longer correct and are gone. Every OTHER fail-closed path is preserved, and a
@@ -385,13 +386,10 @@ export function buildWizardPricingInputFromConfig(
     }
   }
 
-  // ── B1.1: PPF installation coefficient + PPF/coating reduction ────────────────
-  // Applied to the PPF line's UNIT PRICE, so it composes with quantity exactly like every other
-  // line and the engine still owns every total. Both resolved values are recorded per line so the
-  // save mapper can freeze them into the estimate snapshot as VALUES, not as rule references.
+  // ── B1.1: PPF installation coefficient ────────────────────────────────────────
+  // The coefficient belongs to the PPF line. PPF+coating reduction is resolved separately below
+  // from the layer-1 COATING price; it must never reduce the PPF line itself.
   const coeffByCode = config.installCoefficientBpByCode ?? {};
-  const adjustmentRules = config.ppfCoatingAdjustments ?? [];
-  const coatingCode = draft.serviceConfiguration.coating.layer1Id ?? null;
   const ppfCoefficientBpByIdentity: Record<string, number> = {};
   const ppfAdjustmentsByIdentity: Record<string, ResolvedPpfCoatingAdjustment> = {};
 
@@ -408,37 +406,15 @@ export function buildWizardPricingInputFromConfig(
     const coefficientApplied = r1AlreadyApplied
       ? l.unitPrice
       : applyInstallCoefficientBp(l.unitPrice, bp ?? null);
-    const methodCode = typeof l.metadata.ppfMethodCode === "string"
-      ? l.metadata.ppfMethodCode
-      : (typeof l.metadata.method === "string" ? l.metadata.method : l.manualPricingIdentity);
-
-    const adjustment = resolvePpfCoatingAdjustment(
-      methodCode,
-      coatingCode,
-      adjustmentRules,
-      coefficientApplied,
-    );
-    const unitPrice = Math.max(0, coefficientApplied - (adjustment?.reductionYen ?? 0));
-
     if (bp !== undefined) ppfCoefficientBpByIdentity[l.manualPricingIdentity] = bp;
-    if (adjustment) ppfAdjustmentsByIdentity[l.manualPricingIdentity] = adjustment;
 
-    if (unitPrice === l.unitPrice) return l;
+    if (coefficientApplied === l.unitPrice) return l;
     return {
       ...l,
-      unitPrice,
+      unitPrice: coefficientApplied,
       metadata: {
         ...l.metadata,
         ...(bp !== undefined ? { ppfInstallCoefficientBp: bp } : {}),
-        ...(adjustment
-          ? {
-              ppfCoatingAdjustmentRuleId: adjustment.ruleId,
-              ppfCoatingAdjustmentType: adjustment.adjustmentType,
-              ppfCoatingAdjustmentValue: adjustment.adjustmentValue,
-              ppfCoatingAdjustmentReductionYen: adjustment.reductionYen,
-              ppfCoatingAdjustmentCoatingCode: adjustment.coatingCode,
-            }
-          : {}),
       },
     };
   });
@@ -452,15 +428,64 @@ export function buildWizardPricingInputFromConfig(
   // only authority for what the subtotal IS. So we ask it, with every discount zeroed, and use the
   // subtotal it reports. This module still computes no subtotal of its own: the number below comes
   // from `calculateEstimate`, exactly like every other figure on this path.
-  const discountBaseSubtotal =
-    services.length > 0
-      ? calculateEstimate(
-          services,
-          { couponTotal: 0, extraAmount: 0, isDealer: false, dealerRate: 0 },
-          PRODUCTION_TAX_RATE,
-          catalog,
-        ).subtotal
-      : 0;
+  const undiscounted = services.length > 0
+    ? calculateEstimate(
+        services,
+        { couponTotal: 0, extraAmount: 0, isDealer: false, dealerRate: 0 },
+        PRODUCTION_TAX_RATE,
+        catalog,
+      )
+    : null;
+  const discountBaseSubtotal = undiscounted?.subtotal ?? 0;
+
+  // ── PPF + coating reduction ──────────────────────────────────────────────────
+  // The owner contract is explicit: the reduction base is the layer-1 COATING line, not the PPF
+  // line. Front-full and full-body are separate identities; partial PPF is intentionally excluded
+  // because a fixed rule cannot safely represent arbitrary part combinations.
+  const adjustmentRules = config.ppfCoatingAdjustments ?? [];
+  const coatingCode = draft.serviceConfiguration.coating.layer1Id ?? null;
+  const coatingBaseLine = undiscounted?.services
+    .find((service) => service.type === "coating")
+    ?.lineItems.find((line) => line.catalog_line_role === "base");
+  const coatingBaseYen = coatingBaseLine
+    ? Math.round(coatingBaseLine.unit_price * coatingBaseLine.quantity)
+    : 0;
+  let ppfCoatingReductionYen = 0;
+  let manualLinesWithAdjustment = manualLines;
+
+  if (coatingBaseYen > 0 && coatingCode) {
+    for (const line of manualLines) {
+      const scope = line.metadata.ppfScope;
+      if (scope !== "front_full" && scope !== "full_body") continue;
+      const adjustment = resolvePpfCoatingAdjustment(
+        scope,
+        coatingCode,
+        adjustmentRules,
+        coatingBaseYen,
+      );
+      if (!adjustment) continue;
+
+      ppfCoatingReductionYen = adjustment.reductionYen;
+      ppfAdjustmentsByIdentity[line.manualPricingIdentity] = adjustment;
+      manualLinesWithAdjustment = manualLines.map((candidate) =>
+        candidate.manualPricingIdentity !== line.manualPricingIdentity
+          ? candidate
+          : {
+              ...candidate,
+              metadata: {
+                ...candidate.metadata,
+                ppfCoatingAdjustmentRuleId: adjustment.ruleId,
+                ppfCoatingAdjustmentType: adjustment.adjustmentType,
+                ppfCoatingAdjustmentValue: adjustment.adjustmentValue,
+                ppfCoatingAdjustmentReductionYen: adjustment.reductionYen,
+                ppfCoatingAdjustmentCoatingCode: adjustment.coatingCode,
+                ppfCoatingAdjustmentBase: "coating_layer1",
+              },
+            },
+      );
+      break;
+    }
+  }
 
   // ── Discount / coupon ─────────────────────────────────────────────────────────
   // B1.1 converts BOTH upstream into the engine's existing `DiscountInput` slots. The engine's
@@ -530,11 +555,16 @@ export function buildWizardPricingInputFromConfig(
     errors.push(issue(WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE, couponResolution.message, "coupon"));
   }
 
-  const discounts: DiscountInput = { couponTotal, extraAmount, isDealer, dealerRate };
+  const discounts: DiscountInput = {
+    couponTotal,
+    extraAmount: extraAmount + ppfCoatingReductionYen,
+    isDealer,
+    dealerRate,
+  };
 
   return {
     services,
-    manualLines,
+    manualLines: manualLinesWithAdjustment,
     catalogResolved,
     discounts,
     taxRate: PRODUCTION_TAX_RATE,

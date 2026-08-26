@@ -133,14 +133,17 @@ test("missing coverage, type coefficient, body-size price, and vehicle coefficie
   }
 });
 
-test("PPF+coating reduction runs after R1 coefficients and snapshots the resolved values", () => {
+test("PPF+coating reduction reduces the layer-1 coating price, never the PPF line", () => {
   const result = buildWizardPricingInputFromConfig(
-    draft((value) => { value.serviceConfiguration.coating.layer1Id = "pure-evo"; }),
+    draft((value) => {
+      value.serviceSelection.selectedCategories = ["ppf", "coating"];
+      value.serviceConfiguration.coating.layer1Id = "pure-evo";
+    }),
     {
       ...CONFIG,
       ppfCoatingAdjustments: [{
         ruleId: "rule-1",
-        ppfMethodCode: "full",
+        ppfMethodCode: "front_full",
         coatingCode: "pure-evo",
         adjustmentType: "amount",
         adjustmentValue: 5_000,
@@ -151,7 +154,65 @@ test("PPF+coating reduction runs after R1 coefficients and snapshots the resolve
     "detailer",
   );
   assert.deepEqual(result.errors, []);
-  assert.equal(result.manualLines[0]?.unitPrice, 160_000);
+  assert.equal(result.manualLines[0]?.unitPrice, 165_000, "PPF price is unchanged");
+  assert.equal(result.discounts.extraAmount, 5_000, "reduction enters the canonical discount pipeline");
   assert.equal(result.manualLines[0]?.metadata.ppfCoatingAdjustmentReductionYen, 5_000);
+  assert.equal(result.manualLines[0]?.metadata.ppfCoatingAdjustmentBase, "coating_layer1");
   assert.equal(result.ppfAdjustmentsByIdentity[result.manualLines[0]?.manualPricingIdentity ?? ""]?.ruleId, "rule-1");
+});
+
+test("PPF+coating percentage uses the coating base and keeps front-full/full-body separate", () => {
+  const config: ConfiguredPricingConfiguration = {
+    ...CONFIG,
+    ppfCoatingAdjustments: [{
+      ruleId: "rule-front",
+      ppfMethodCode: "front_full",
+      coatingCode: "pure-evo",
+      adjustmentType: "percent",
+      adjustmentValue: 1_000,
+      isActive: true,
+    }],
+  };
+  const selected = (fullCoverage: "front_full" | "full_body") => draft((value) => {
+    value.serviceSelection.selectedCategories = ["ppf", "coating"];
+    value.serviceConfiguration.ppf.fullCoverage = fullCoverage;
+    value.serviceConfiguration.coating.layer1Id = "pure-evo";
+  });
+
+  const front = buildWizardPricingInputFromConfig(selected("front_full"), config, makePricingCatalog({ ppfR1: PPF_R1 }), "detailer");
+  assert.equal(front.discounts.extraAmount, 6_000, "10% is based on PURE M coating price 60,000");
+  assert.equal(front.manualLines[0]?.unitPrice, 165_000);
+
+  const fullBody = buildWizardPricingInputFromConfig(selected("full_body"), config, makePricingCatalog({ ppfR1: PPF_R1 }), "detailer");
+  assert.equal(fullBody.discounts.extraAmount, 0, "front-full rule never leaks into full-body");
+  assert.equal(fullBody.ppfAdjustmentsByIdentity[fullBody.manualLines[0]?.manualPricingIdentity ?? ""], undefined);
+});
+
+test("partial PPF never receives an automatic coating reduction", () => {
+  const value = draft((next) => {
+    next.serviceSelection.selectedCategories = ["ppf", "coating"];
+    next.serviceConfiguration.ppf.installationMethod = "partial";
+    next.serviceConfiguration.ppf.fullCoverage = null;
+    next.serviceConfiguration.ppf.selectedPartIds = ["bonnet"];
+    next.serviceConfiguration.ppf.vehicleCoefficientInput = "1.0";
+    next.serviceConfiguration.coating.layer1Id = "pure-evo";
+  });
+  const result = buildWizardPricingInputFromConfig(
+    value,
+    {
+      ...CONFIG,
+      ppfCoatingAdjustments: [{
+        ruleId: "unsafe-partial-rule",
+        ppfMethodCode: "partial",
+        coatingCode: "pure-evo",
+        adjustmentType: "amount",
+        adjustmentValue: 30_000,
+        isActive: true,
+      }],
+    },
+    makePricingCatalog({ ppfR1: PPF_R1 }),
+    "detailer",
+  );
+  assert.equal(result.discounts.extraAmount, 0);
+  assert.deepEqual(result.ppfAdjustmentsByIdentity, {});
 });
