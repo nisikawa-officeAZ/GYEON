@@ -77,6 +77,10 @@ import type { ShopRank, CustomerMode, VehicleMode } from "../screens/step-types"
 // WizardScreenConfiguration is defined ONCE in the shared runtime-input contract (EW-UI-3B) and
 // consumed here unchanged — this container is a read-only behavioral reference, not the EW-UI host.
 import type { WizardScreenConfiguration } from "../contract/wizard-runtime-inputs";
+import {
+  isWindowFilmV1RuntimeReady,
+  windowFilmV1SuggestedUnitPrice,
+} from "../screens/window-film-v1-suggested-price";
 
 import {
   setCurrentStep,
@@ -474,26 +478,33 @@ export default function EstimateWizardContainer({
             // family→category pairing is imported, never restated here.
             <WindowFilmSelector
               shopRank={shopRank}
-              windowLocked={screenConfig.filmTypes.length === 0 || screenConfig.windowAreas.length === 0}
+              windowLocked={!isWindowFilmV1RuntimeReady(screenConfig)}
               lockReason={
                 screenConfig.filmTypes.length === 0
                   ? "ウィンドウフィルムを利用するには、見積設定（見積ウィザード設定）でフィルム種類を登録してください。"
-                  : "ウィンドウフィルムの施工部位が利用できません。管理者にお問い合わせください。"
+                  : "ウィンドウフィルム設定で、提供する部位またはセットの金額と所要時間を登録してください。"
               }
               areas={screenConfig.windowAreas}
               selectedAreaIds={cfg.windowFilm.selectedAreaIds}
               onAreaToggle={(id) =>
                 update((d) => updateServiceConfiguration(d, "windowFilm", {
                   selectedAreaIds: toggleId(d.serviceConfiguration.windowFilm.selectedAreaIds, id),
+                  selectedPackageCode: null,
                 }))
               }
               filmTypes={screenConfig.filmTypes}
               selectedFilmTypeId={cfg.windowFilm.filmTypeId}
               onFilmTypeChange={(id) => update((d) => updateServiceConfiguration(d, "windowFilm", { filmTypeId: id }))}
+              packages={screenConfig.windowFilmPackages}
+              selectedPackageCode={cfg.windowFilm.selectedPackageCode ?? null}
+              onPackageChange={(selectedPackageCode) => update((d) => updateServiceConfiguration(d, "windowFilm", { selectedPackageCode, selectedAreaIds: selectedPackageCode ? [] : d.serviceConfiguration.windowFilm.selectedAreaIds }))}
+              options={screenConfig.windowFilmOptions}
+              selectedOptionIds={cfg.windowFilm.selectedOptionIds ?? []}
+              optionQuantities={cfg.windowFilm.optionQuantities ?? {}}
+              onOptionToggle={(id) => update((d) => updateServiceConfiguration(d, "windowFilm", { selectedOptionIds: toggleId(d.serviceConfiguration.windowFilm.selectedOptionIds ?? [], id) }))}
+              onOptionQuantityChange={(id, quantity) => update((d) => updateServiceConfiguration(d, "windowFilm", { optionQuantities: { ...(d.serviceConfiguration.windowFilm.optionQuantities ?? {}), [id]: quantity } }))}
               displayedUnitPrice={
-                cfg.windowFilm.filmTypeId
-                  ? (screenConfig.filmTypes.find((f) => f.id === cfg.windowFilm.filmTypeId)?.defaultUnitPrice ?? null)
-                  : null
+                windowFilmV1SuggestedUnitPrice(screenConfig, cfg.windowFilm)
               }
               editableUnitPrice={cfg.windowFilm.unitPriceInput}
               onUnitPriceChange={(v) => update((d) => updateServiceConfiguration(d, "windowFilm", { unitPriceInput: v }))}

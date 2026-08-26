@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { getEstimateWizardSettingsView } from "@/lib/wizard-catalog/get-estimate-wizard-settings-view";
+import SettingsBackControl from "@/components/settings/SettingsBackControl";
 import EstimateWizardSettingsClient from "./EstimateWizardSettingsClient";
 
 // C2C4 — Estimate Wizard catalog settings page (server component).
@@ -15,6 +16,7 @@ export default async function EstimateWizardSettingsPage() {
        The shared route layout owns MainLayout so it remains mounted while a
        dedicated settings panel is loading. */
     <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-6">
+      <SettingsBackControl href="/settings" label="設定一覧へ戻る" />
       <div className="flex flex-col gap-1">
         <h1 className="text-lg font-semibold text-slate-100">見積ウィザード設定</h1>
         <p className="text-xs text-slate-500">

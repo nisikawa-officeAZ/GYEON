@@ -53,6 +53,7 @@ import type { CompanySettingsFields }   from "@/lib/company/save-company-setting
 import type { BrandingSettings }        from "@/lib/branding/branding-types";
 import type { DocumentSequenceDB }      from "@/lib/numbering/numbering-types";
 import type { DealerPlanInfo }          from "@/lib/plans/plan-types";
+import SettingsBackControl             from "./SettingsBackControl";
 import CompanySettingsForm              from "./CompanySettingsForm";
 import BrandingSettingsForm             from "./BrandingSettingsForm";
 import StaffManagement                  from "./StaffManagement";
@@ -103,19 +104,9 @@ const FALLBACK_PLAN: DealerPlanInfo = {
 
 function Breadcrumb({ category }: { category?: SettingsCategory }) {
   return (
-    <div className="flex items-center gap-2 text-xs">
-      <Link
-        href="/settings"
-        className="text-slate-400 hover:text-slate-200 transition-colors"
-      >
-        ← 設定
-      </Link>
-      {category && (
-        <>
-          <span className="text-slate-700">/</span>
-          <span className="text-slate-300">{category.display_name_ja}</span>
-        </>
-      )}
+    <div className="flex w-full items-center gap-4">
+      {category && <span className="text-xs text-slate-500">{category.display_name_ja}</span>}
+      <SettingsBackControl href="/settings" label="設定一覧へ戻る" />
     </div>
   );
 }
@@ -142,12 +133,6 @@ function SettingsAccessState() {
             店舗オーナーにご確認ください。
           </p>
         </div>
-        <Link
-          href="/settings"
-          className="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-        >
-          設定トップへ戻る
-        </Link>
       </div>
     </div>
   );

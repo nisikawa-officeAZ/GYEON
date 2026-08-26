@@ -9,9 +9,11 @@
 // computes NO price, applies NO discount, creates NO estimate items. The editable unit
 // price is a field with a default value the owner uses later (not a discount/modifier).
 
+import { useEffect, useRef } from "react";
 import { SelectButton } from "../foundation/SelectButton";
 import { formatYen } from "../foundation/tokens";
 import type { WindowFilmSelectorProps } from "./step-types";
+import { reconcileWindowFilmUnitPriceInput } from "./window-film-v1-suggested-price";
 
 const CARD = "bg-[#1e293b] rounded-xl shadow-lg p-5";
 const SECHDR = "text-xs font-semibold text-slate-400 uppercase tracking-wider";
@@ -21,8 +23,31 @@ export function WindowFilmSelector(props: WindowFilmSelectorProps) {
     shopRank, windowLocked, lockReason,
     areas, selectedAreaIds, onAreaToggle,
     filmTypes, selectedFilmTypeId, onFilmTypeChange,
+    packages = [], selectedPackageCode = null, onPackageChange,
+    options = [], selectedOptionIds = [], optionQuantities = {}, onOptionToggle, onOptionQuantityChange,
     displayedUnitPrice, editableUnitPrice, onUnitPriceChange, onAddOrUpdate,
   } = props;
+
+  const editableInputRef = useRef(editableUnitPrice ?? "");
+  const onUnitPriceChangeRef = useRef(onUnitPriceChange);
+  const previousSuggestedInputRef = useRef<string | null>(null);
+  editableInputRef.current = editableUnitPrice ?? "";
+  onUnitPriceChangeRef.current = onUnitPriceChange;
+
+  useEffect(() => {
+    const nextSuggestedInput = displayedUnitPrice === null || displayedUnitPrice === undefined
+      ? null
+      : String(displayedUnitPrice);
+    const nextInput = reconcileWindowFilmUnitPriceInput(
+      editableInputRef.current,
+      previousSuggestedInputRef.current,
+      nextSuggestedInput,
+    );
+    previousSuggestedInputRef.current = nextSuggestedInput;
+    if (nextInput !== null && nextInput !== editableInputRef.current) {
+      onUnitPriceChangeRef.current?.(nextInput);
+    }
+  }, [displayedUnitPrice]);
 
   if (windowLocked) {
     return (
@@ -36,6 +61,10 @@ export function WindowFilmSelector(props: WindowFilmSelectorProps) {
   }
 
   const hasArea = selectedAreaIds.length > 0;
+  const hasScope = hasArea || selectedPackageCode !== null;
+  const effectiveEditableUnitPrice = editableUnitPrice?.trim() !== ""
+    ? editableUnitPrice
+    : displayedUnitPrice != null ? String(displayedUnitPrice) : "";
 
   return (
     <div className={CARD}>
@@ -64,6 +93,15 @@ export function WindowFilmSelector(props: WindowFilmSelectorProps) {
           {hasArea && <p className="text-[11px] text-slate-400 mt-2">選択中: {selectedAreaIds.length} 部位</p>}
         </div>
 
+        {packages.length > 0 && (
+          <div>
+            <span className="text-xs font-medium text-slate-300">セットメニューを選択（部位選択とは併用不可）</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
+              {packages.map((item) => <SelectButton key={item.id} selected={selectedPackageCode === item.id} onSelect={() => onPackageChange?.(selectedPackageCode === item.id ? null : item.id)} subLabel={`${formatYen(item.priceYen)}・${item.durationMinutes}分`}>{item.label}</SelectButton>)}
+            </div>
+          </div>
+        )}
+
         {/* 2) フィルム種類（props 供給・ブランド/VLT/遮熱/色 表示）*/}
         <div>
           <span className="text-xs font-medium text-slate-300">フィルム種類を選択</span>
@@ -89,6 +127,15 @@ export function WindowFilmSelector(props: WindowFilmSelectorProps) {
           </div>
         </div>
 
+        {options.length > 0 && (
+          <div>
+            <span className="text-xs font-medium text-slate-300">付帯オプション</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
+              {options.map((item) => <div key={item.id} className="flex flex-col gap-2"><SelectButton selected={selectedOptionIds.includes(item.id)} onSelect={() => onOptionToggle?.(item.id)} subLabel={`${formatYen(item.priceYen)}・${item.durationMinutes}分`}>{item.label}</SelectButton>{selectedOptionIds.includes(item.id) && <input aria-label={`${item.label} 数量`} type="number" min={1} step={1} value={optionQuantities[item.id] ?? 1} onChange={(event) => onOptionQuantityChange?.(item.id, Math.max(1, Number.parseInt(event.target.value, 10) || 1))} className="w-full rounded-lg border border-slate-700 bg-[#0f172a] px-3 py-2 text-right text-sm text-slate-100"/>}</div>)}
+            </div>
+          </div>
+        )}
+
         {/* 3) 既定単価表示 + 編集可能単価（計算は親）*/}
         <div className="rounded-lg border border-slate-700/60 p-3 flex flex-col gap-2">
           <div className="flex items-center justify-between text-xs">
@@ -97,11 +144,11 @@ export function WindowFilmSelector(props: WindowFilmSelectorProps) {
           </div>
           {onUnitPriceChange && (
             <label className="text-xs text-slate-400">
-              単価を上書き（任意・この値が親で単価として使われます）
+              見積単価（自動計算・必要な場合のみ上書き）
               <input
                 type="number"
                 inputMode="numeric"
-                value={editableUnitPrice ?? ""}
+                value={effectiveEditableUnitPrice}
                 onChange={(e) => onUnitPriceChange(e.target.value)}
                 placeholder={displayedUnitPrice != null ? String(displayedUnitPrice) : "単価"}
                 className="mt-1 w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-base sm:text-sm text-slate-100 text-right focus:outline-none focus:border-[#1d4ed8]"
@@ -115,7 +162,7 @@ export function WindowFilmSelector(props: WindowFilmSelectorProps) {
           <button
             type="button"
             onClick={onAddOrUpdate}
-            disabled={!hasArea || !selectedFilmTypeId}
+            disabled={!hasScope || !selectedFilmTypeId}
             className="text-xs font-medium text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-4 min-h-[44px] rounded-lg transition-colors"
           >
             明細に追加 / 更新

@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
 import MainLayout from "@/components/layout/MainLayout";
+import SettingsBackControl from "@/components/settings/SettingsBackControl";
 import { getBusinessHoursSettings } from "@/lib/dealer-settings/save-business-hours";
 import { getCurrentStaff } from "@/lib/staff/get-current-staff";
 import BusinessHoursForm from "./BusinessHoursForm";
@@ -18,13 +18,7 @@ export default async function BusinessHoursSettingsPage() {
   return (
     <MainLayout>
       <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-5">
-        <div className="flex items-center gap-2 text-xs">
-          <Link href="/settings" className="text-[#8191ad] transition-colors hover:text-[#c4d8ff]">
-            ← 設定
-          </Link>
-          <span className="text-[#3b4b66]">/</span>
-          <span className="text-[#c4d0e2]">営業時間・定休日</span>
-        </div>
+        <SettingsBackControl href="/settings" label="設定一覧へ戻る" />
 
         <section className="rounded-2xl border border-[#263955] bg-[#111826]/90 p-4 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

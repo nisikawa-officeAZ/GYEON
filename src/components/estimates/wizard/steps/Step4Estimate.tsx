@@ -40,6 +40,10 @@ import { StoreGlobalOptionsSelector } from "../screens/StoreGlobalOptionsSelecto
 import { isCoatingAvailableForRank, firstLayerOptions, secondLayerOptions, thirdLayerOptions } from "../screens/coating-matrix";
 
 import { createStep4Bindings, type RowCreateResult } from "./step4-bindings";
+import {
+  isWindowFilmV1RuntimeReady,
+  windowFilmV1SuggestedUnitPrice,
+} from "../screens/window-film-v1-suggested-price";
 
 /** Concise, operator-facing message when secure row-ID generation fails closed (no patch applied). */
 const ROW_ID_ERROR_MESSAGE = "行を追加できませんでした。もう一度お試しください。";
@@ -82,7 +86,7 @@ const SETUP_REQUIRED_REASON: Readonly<Record<ServiceFamily, string>> = {
  * installation areas resolve. Areas are global rows, so this one is administrator-only.
  */
 const WINDOW_AREAS_UNAVAILABLE_REASON =
-  "ウィンドウフィルムの施工部位が利用できません。管理者にお問い合わせください。";
+  "ウィンドウフィルム設定で、提供する部位またはセットの金額と所要時間を登録してください。";
 
 export interface Step4EstimateProps extends WizardRuntimeInputs {
   api: EstimateWizardApi;
@@ -115,7 +119,7 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
 
   /** Prerequisites per managed family. Rank appears nowhere. */
   const familyComplete: Readonly<Record<ServiceFamily, boolean>> = {
-    window_film: screenConfig.filmTypes.length > 0 && screenConfig.windowAreas.length > 0,
+    window_film: isWindowFilmV1RuntimeReady(screenConfig),
     ppf: screenConfig.ppfMethods.length > 0
       && screenConfig.ppfParts.length > 0
       && screenConfig.ppfTypeGroups.length > 0,
@@ -224,10 +228,16 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
             filmTypes={screenConfig.filmTypes}
             selectedFilmTypeId={cfg.windowFilm.filmTypeId}
             onFilmTypeChange={bindings.windowFilm.onFilmTypeChange}
+            packages={screenConfig.windowFilmPackages}
+            selectedPackageCode={cfg.windowFilm.selectedPackageCode ?? null}
+            onPackageChange={bindings.windowFilm.onPackageChange}
+            options={screenConfig.windowFilmOptions}
+            selectedOptionIds={cfg.windowFilm.selectedOptionIds ?? []}
+            optionQuantities={cfg.windowFilm.optionQuantities ?? {}}
+            onOptionToggle={bindings.windowFilm.onOptionToggle}
+            onOptionQuantityChange={bindings.windowFilm.onOptionQuantityChange}
             displayedUnitPrice={
-              cfg.windowFilm.filmTypeId
-                ? (screenConfig.filmTypes.find((f) => f.id === cfg.windowFilm.filmTypeId)?.defaultUnitPrice ?? null)
-                : null
+              windowFilmV1SuggestedUnitPrice(screenConfig, cfg.windowFilm)
             }
             editableUnitPrice={cfg.windowFilm.unitPriceInput}
             onUnitPriceChange={bindings.windowFilm.onUnitPriceChange}

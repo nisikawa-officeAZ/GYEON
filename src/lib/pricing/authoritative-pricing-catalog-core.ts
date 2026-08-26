@@ -36,6 +36,7 @@ import {
 } from "./pricing-catalog";
 import { resolveStoredCoatingV34 } from "./coating-v34-persisted-payload";
 import { parsePpfR1PriceSettings } from "./ppf-r1-price-contract";
+import { parseWindowFilmSettingsV1 } from "./window-film-v1-contract";
 
 /** Why no authoritative catalog could be produced. None is recoverable into a catalog. */
 export type PricingCatalogResolutionFailure =
@@ -222,6 +223,17 @@ function applyServiceOverrides(spcRaw: unknown, out: Partial<PricingCatalog>): v
   // ── overlays (every input already fully validated) ──
   out.windowParts = overlay(DEFAULT_PRICING_CATALOG.windowParts, "id", wfBase, "basePrice", reqPrice);
   out.windowGrades = overlay(DEFAULT_PRICING_CATALOG.windowGrades, "id", wfGrade, "coeff", reqCoeff);
+  if (Object.prototype.hasOwnProperty.call(spc, "window_film_v1")) {
+    if (spc.window_film_v1 === null) {
+      out.windowFilmV1 = null;
+    } else {
+      try {
+        out.windowFilmV1 = parseWindowFilmSettingsV1(spc.window_film_v1);
+      } catch {
+        bail();
+      }
+    }
+  }
   out.maintenanceMenus = overlayMenus(DEFAULT_PRICING_CATALOG.maintenanceMenus, maintMenus);
   out.carwashMenus = overlayMenus(DEFAULT_PRICING_CATALOG.carwashMenus, washMenus);
   out.roomCleanParts = overlay(DEFAULT_PRICING_CATALOG.roomCleanParts, "id", rcBase, "basePrice", reqPrice);

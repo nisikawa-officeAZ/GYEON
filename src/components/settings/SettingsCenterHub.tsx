@@ -228,7 +228,7 @@ const HUB_GROUPS: HubGroup[] = [
         labelEn:       "WINDOW FILM SETTINGS",
         description:   "フィルムメニュー、価格、施工条件",
         minVisibility: "readonly",
-        action:        { kind: "route", href: "/settings/estimate-wizard#section-film" },
+        action:        { kind: "route", href: "/settings/window-film" },
         getState: () => "active",
         badge: "solid_unset",
       },

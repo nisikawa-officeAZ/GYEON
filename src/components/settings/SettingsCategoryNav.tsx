@@ -19,6 +19,7 @@ import type { DealerStaffDB, DealerStaffRole } from "@/lib/staff/staff-types";
 import { parseRichMenuConfig } from "@/lib/line/line-rich-menu-types";
 import type { AiSettingsView } from "@/lib/ai/ai-settings-types";
 import Link from "next/link";
+import SettingsBackControl from "./SettingsBackControl";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -823,14 +824,10 @@ export default function SettingsCategoryNav(props: SettingsCategoryNavProps) {
   return (
     <div className="flex flex-col gap-5">
       {/* Back button — returns to hub when onBack is provided, otherwise to 12-card grid */}
-      <button
-        type="button"
+      <SettingsBackControl
+        label="設定一覧へ戻る"
         onClick={() => { setSelected(null); props.onBack?.(); }}
-        className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-100 transition-colors self-start"
-      >
-        <span>←</span>
-        <span>設定カテゴリへ戻る</span>
-      </button>
+      />
 
       {/* Category header */}
       <div className="flex items-center gap-3">

@@ -77,6 +77,9 @@ export type WizardWindowFilmDraft = {
   selectedAreaIds: string[];
   filmTypeId: string | null;
   unitPriceInput: string;
+  selectedPackageCode?: string | null;
+  selectedOptionIds?: string[];
+  optionQuantities?: Record<string, number>;
 };
 export type WizardBodyMaintenanceDraft = {
   menuId: string | null;

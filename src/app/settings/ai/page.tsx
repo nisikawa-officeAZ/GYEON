@@ -14,6 +14,7 @@
 //   - No direct Supabase calls — all data through server actions
 
 import MainLayout from "@/components/layout/MainLayout";
+import SettingsBackControl from "@/components/settings/SettingsBackControl";
 import { getAISettingsProfile } from "@/lib/ai-settings/actions/get-ai-settings-profile";
 import { getAiSettings }        from "@/lib/ai/get-ai-settings";
 import {
@@ -90,16 +91,7 @@ export default async function AISettingsPage() {
     return (
       <MainLayout>
         <div className="max-w-3xl mx-auto p-6 flex flex-col gap-6">
-          <div className="flex items-center gap-3">
-            <a
-              href="/settings"
-              className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              ← 設定
-            </a>
-            <span className="text-slate-700">/</span>
-            <span className="text-xs text-slate-300">AI設定</span>
-          </div>
+          <SettingsBackControl href="/settings" label="設定一覧へ戻る" />
 
           <div className="px-6 py-8 border border-slate-800 bg-slate-900/50 rounded-2xl text-center flex flex-col items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-blue-950/40 border border-blue-800/40 flex items-center justify-center">
@@ -127,17 +119,7 @@ export default async function AISettingsPage() {
     <MainLayout>
       <div className="max-w-4xl mx-auto p-6 flex flex-col gap-8">
 
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-3">
-          <a
-            href="/settings"
-            className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
-          >
-            ← 設定
-          </a>
-          <span className="text-slate-700">/</span>
-          <span className="text-xs text-slate-300">AI設定</span>
-        </div>
+        <SettingsBackControl href="/settings" label="設定一覧へ戻る" />
 
         {/* Page header */}
         <div className="flex items-start justify-between">

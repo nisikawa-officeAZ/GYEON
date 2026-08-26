@@ -71,6 +71,21 @@ const VALID_PPF_R1 = {
   fullBodyPricesBySize: { SS: 400000, S: 450000, M: 500000, ML: 550000, L: 600000, LL: 650000, XL: 700000 },
   partialPartPrices: { bonnet: 40000, "front-bumper": 50000, "door-mirror": 0 },
 };
+const VALID_WINDOW_FILM_V1 = {
+  contractVersion: "1.0",
+  revision: 2,
+  areas: {
+    "front-windshield": { priceYen: 30000, durationMinutes: 60, isActive: true },
+    "front-door-glass": { priceYen: 20000, durationMinutes: 40, isActive: true },
+    "rear-door-glass": { priceYen: null, durationMinutes: null, isActive: false },
+    "triangular-window": { priceYen: null, durationMinutes: null, isActive: false },
+    "quarter-glass": { priceYen: null, durationMinutes: null, isActive: false },
+    "rear-glass": { priceYen: 25000, durationMinutes: 50, isActive: true },
+    sunroof: { priceYen: null, durationMinutes: null, isActive: false },
+  },
+  packages: [],
+  options: [],
+};
 
 // deep clones for mutation-based malformed fixtures (JSON drops undefined / cannot hold NaN — those
 // cases are built inline).
@@ -197,6 +212,14 @@ test("2d. versioned PPF R1 resolves into its dedicated authority without legacy 
   assert.equal(cat.ppfR1?.frontFullPricesBySize.M, 120000);
   assert.equal(cat.ppfR1?.fullBodyPricesBySize.M, 500000);
   assert.equal(cat.ppfR1?.partialPartPrices["front-bumper"], 50000);
+});
+
+test("2e. Window Film V1 resolves independently while legacy window maps remain compatibility-only", async () => {
+  const spc = { ...withCoatingV34(VALID_SPC), window_film_v1: VALID_WINDOW_FILM_V1 };
+  const cat = okCatalog(await resolveRow(spc, null));
+  assert.deepEqual(cat.windowFilmV1, VALID_WINDOW_FILM_V1);
+  assert.equal(cat.windowFilmV1?.areas["front-windshield"].priceYen, 30000);
+  assert.equal(cat.windowParts.find((entry) => entry.id === "wf-all")?.basePrice, 81000);
 });
 
 // ── 3. Malformed rejection ─────────────────────────────────────────────────────────

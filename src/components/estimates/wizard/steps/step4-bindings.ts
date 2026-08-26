@@ -71,6 +71,9 @@ export interface WindowFilmBindings {
   onAreaToggle: (id: string) => void;
   onFilmTypeChange: (id: string) => void;
   onUnitPriceChange: (v: string) => void;
+  onPackageChange: (code: string | null) => void;
+  onOptionToggle: (code: string) => void;
+  onOptionQuantityChange: (code: string, quantity: number) => void;
 }
 export interface BodyMaintenanceBindings {
   onMenuChange: (id: string) => void;
@@ -174,9 +177,12 @@ export function createStep4Bindings(
         emitPpf({ interiorRows: services.ppf.interiorRows.filter((r) => r.id !== id) }),
     },
     windowFilm: {
-      onAreaToggle: (id) => emitWindowFilm({ selectedAreaIds: toggle(services.windowFilm.selectedAreaIds, id) }),
+      onAreaToggle: (id) => emitWindowFilm({ selectedAreaIds: toggle(services.windowFilm.selectedAreaIds, id), selectedPackageCode: null }),
       onFilmTypeChange: (id) => emitWindowFilm({ filmTypeId: id }),
       onUnitPriceChange: (v) => emitWindowFilm({ unitPriceInput: v }),
+      onPackageChange: (code) => emitWindowFilm({ selectedPackageCode: code, selectedAreaIds: code ? [] : services.windowFilm.selectedAreaIds }),
+      onOptionToggle: (code) => emitWindowFilm({ selectedOptionIds: toggle(services.windowFilm.selectedOptionIds ?? [], code) }),
+      onOptionQuantityChange: (code, quantity) => emitWindowFilm({ optionQuantities: setNum(services.windowFilm.optionQuantities ?? {}, code, quantity) }),
     },
     bodyMaintenance: {
       onMenuChange: (id) => emitBodyMaintenance({ menuId: id }),

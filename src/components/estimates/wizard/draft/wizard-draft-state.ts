@@ -36,7 +36,7 @@ export const initialEstimateWizardDraftV22: EstimateWizardDraftV22 = {
   serviceConfiguration: {
     coating: { layerCount: null, layer1Id: null, layer2Id: null, layer3Id: null },
     ppf: { installationMethod: null, fullCoverage: null, selectedPartIds: [], quantitiesByPart: {}, ppfTypeId: null, unitPriceInput: "", vehicleCoefficientInput: "1.0", interiorRows: [] },
-    windowFilm: { selectedAreaIds: [], filmTypeId: null, unitPriceInput: "" },
+    windowFilm: { selectedAreaIds: [], filmTypeId: null, unitPriceInput: "", selectedPackageCode: null, selectedOptionIds: [], optionQuantities: {} },
     bodyMaintenance: { menuId: null, unitPriceInput: "" },
     carWash: { menuId: null, unitPriceInput: "" },
     roomCleaning: { selectedMenuIds: [], unitPricesByMenu: {} },
@@ -134,7 +134,7 @@ export function resetWizardDraft(): EstimateWizardDraftV22 {
     serviceConfiguration: {
       coating: { layerCount: null, layer1Id: null, layer2Id: null, layer3Id: null },
       ppf: { installationMethod: null, fullCoverage: null, selectedPartIds: [], quantitiesByPart: {}, ppfTypeId: null, unitPriceInput: "", vehicleCoefficientInput: "1.0", interiorRows: [] },
-      windowFilm: { selectedAreaIds: [], filmTypeId: null, unitPriceInput: "" },
+      windowFilm: { selectedAreaIds: [], filmTypeId: null, unitPriceInput: "", selectedPackageCode: null, selectedOptionIds: [], optionQuantities: {} },
       bodyMaintenance: { menuId: null, unitPriceInput: "" },
       carWash: { menuId: null, unitPriceInput: "" },
       roomCleaning: { selectedMenuIds: [], unitPricesByMenu: {} },

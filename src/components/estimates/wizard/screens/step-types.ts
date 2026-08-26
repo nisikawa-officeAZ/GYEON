@@ -230,9 +230,19 @@ export interface FilmTypeOption {
   vlt?:             string; // Visible Light Transmission (display text, e.g. "15%")
   heatRejection?:   string; // 遮熱 (display text)
   color?:           string; // 色 (display text)
+  irCutPercent?:    number; // IR cut specification, 0..100
+  uvCutPercent?:    number; // UV cut specification, 0..100
+  installationCoefficientBp?: number; // authoritative basis points; parent uses it for suggested price
   defaultUnitPrice?: number; // display default only (component never calculates)
   disabled?:        boolean;
   disabledReason?:  string;
+}
+
+export interface WindowFilmConfiguredItem {
+  id: string;
+  label: string;
+  priceYen: number;
+  durationMinutes: number;
 }
 
 /** Window Film section contract — fully prop-driven; no price calc, no estimate items. */
@@ -248,9 +258,17 @@ export interface WindowFilmSelectorProps {
   filmTypes:           FilmTypeOption[];
   selectedFilmTypeId:  string | null;
   onFilmTypeChange:    (id: string) => void;
+  packages?:           WindowFilmConfiguredItem[];
+  selectedPackageCode?: string | null;
+  onPackageChange?:    (code: string | null) => void;
+  options?:            WindowFilmConfiguredItem[];
+  selectedOptionIds?:  string[];
+  optionQuantities?:   Record<string, number>;
+  onOptionToggle?:     (code: string) => void;
+  onOptionQuantityChange?: (code: string, quantity: number) => void;
   // pricing DISPLAY ONLY (owner-supplied)
   displayedUnitPrice?: number | null;
-  editableUnitPrice?:  string;
+  editableUnitPrice?:  string; // blank means use the displayed calculated suggestion
   onUnitPriceChange?:  (v: string) => void;
   onAddOrUpdate:       () => void;
 }

@@ -63,6 +63,7 @@ import {
   resolvePpfR1Price,
   type PpfR1PricingScope,
 } from "@/lib/pricing/ppf-r1-price-resolution";
+import { resolveWindowFilmV1Price } from "@/lib/pricing/window-film-v1-price-resolution";
 import { validateCoatingSelection } from "./coating-selection-validation";
 import type { ShopRank } from "../screens/step-types";
 import type {
@@ -288,11 +289,16 @@ export function buildWizardPricingInputFromConfig(
   // versioned R1 catalog. Missing R1 data blocks; it never revives unitPriceInput.
   const ppfUsesR1 = selected.includes("ppf")
     && (cfg.ppf.installationMethod === "full" || cfg.ppf.installationMethod === "partial");
-  const manualDraft: EstimateWizardDraftV22 = ppfUsesR1
+  const windowUsesV1 = selected.includes("window");
+  const excludedCalculatedCategories = new Set<string>([
+    ...(ppfUsesR1 ? ["ppf"] : []),
+    ...(windowUsesV1 ? ["window"] : []),
+  ]);
+  const manualDraft: EstimateWizardDraftV22 = excludedCalculatedCategories.size > 0
     ? {
         ...draft,
         serviceSelection: {
-          selectedCategories: selected.filter((category) => category !== "ppf"),
+          selectedCategories: selected.filter((category) => !excludedCalculatedCategories.has(category)),
         },
       }
     : draft;
@@ -386,6 +392,77 @@ export function buildWizardPricingInputFromConfig(
     }
   }
 
+  const resolvedWindowFilmV1Lines: WizardManualPricingLineInput[] = [];
+  if (windowUsesV1) {
+    const windowFilm = cfg.windowFilm;
+    const settings = catalog.windowFilmV1;
+    const filmCode = windowFilm.filmTypeId;
+    const film = filmCode ? config.filmTypes.find((entry) => entry.code === filmCode) : undefined;
+    const coefficientBp = filmCode ? config.installCoefficientBpByCode?.[filmCode] : undefined;
+    if (settings === null) {
+      errors.push(issue(WIZARD_PRICING_CONFIG_ERRORS.UNKNOWN_CONFIGURED_ITEM, "ウインドウフィルムの正式な価格・時間設定が未登録です。", "window"));
+    } else if (!filmCode || !film) {
+      errors.push(issue(WIZARD_PRICING_CONFIG_ERRORS.UNKNOWN_CONFIGURED_ITEM, "施工するフィルム種類を選択してください。", "window", filmCode));
+    } else if (coefficientBp === undefined) {
+      errors.push(issue(WIZARD_PRICING_CONFIG_ERRORS.UNKNOWN_CONFIGURED_ITEM, "選択したフィルムの施工係数が未設定です。", "window", filmCode));
+    } else {
+      const selectedOptions = windowFilm.selectedOptionIds ?? [];
+      const resolved = resolveWindowFilmV1Price(
+        settings,
+        {
+          areaCodes: windowFilm.selectedAreaIds,
+          packageCode: windowFilm.selectedPackageCode ?? null,
+          options: selectedOptions.map((code) => ({ code, quantity: windowFilm.optionQuantities?.[code] ?? 1 })),
+        },
+        coefficientBp,
+      );
+      if (!resolved.ok) {
+        errors.push(issue(WIZARD_PRICING_CONFIG_ERRORS.UNKNOWN_CONFIGURED_ITEM, "選択内容に対応するウインドウフィルム価格が未設定です。", "window", resolved.code ?? filmCode));
+      } else {
+        const overrideText = windowFilm.unitPriceInput.trim();
+        const overrideYen = overrideText === "" ? null : /^\d+$/.test(overrideText) ? Number(overrideText) : Number.NaN;
+        if (overrideYen !== null && (!Number.isSafeInteger(overrideYen) || overrideYen < 0)) {
+          errors.push(issue(WIZARD_PRICING_ERRORS.INVALID_MANUAL_PRICE, "ウインドウフィルムの上書き金額は0以上の整数で入力してください。", "window", filmCode));
+        } else {
+          const scopeCode = windowFilm.selectedPackageCode ?? windowFilm.selectedAreaIds.join("+");
+          resolvedWindowFilmV1Lines.push({
+          sourceCategory: "window",
+          manualPricingIdentity: `window_film_v1_${scopeCode}_${filmCode}`,
+          label: `ウインドウフィルム（${film.label}）`,
+          quantity: 1,
+          unitPrice: overrideYen ?? resolved.totalPriceYen,
+          optionIdentity: filmCode,
+          metadata: {
+            windowFilmContractVersion: settings.contractVersion,
+            windowFilmTypeCode: filmCode,
+            windowFilmAreaCodes: windowFilm.selectedAreaIds.join(","),
+            windowFilmPackageCode: windowFilm.selectedPackageCode ?? "",
+            windowFilmOptionQuantities: selectedOptions.map((code) => `${code}:${windowFilm.optionQuantities?.[code] ?? 1}`).join(","),
+            windowFilmOptionBasePricesYen: selectedOptions
+              .map((code) => `${code}:${settings.options.find((item) => item.code === code)?.priceYen ?? ""}`)
+              .join(","),
+            windowFilmBasePriceYen: resolved.basePriceYen,
+            windowFilmCoefficientBp: resolved.filmCoefficientBp,
+            windowFilmAdjustedBasePriceYen: resolved.adjustedBasePriceYen,
+            windowFilmOptionPriceYen: resolved.optionPriceYen,
+            windowFilmDurationMinutes: resolved.totalDurationMinutes,
+            windowFilmSuggestedPriceYen: resolved.totalPriceYen,
+            windowFilmFinalPriceYen: overrideYen ?? resolved.totalPriceYen,
+            windowFilmAreaBasePricesYen: windowFilm.selectedAreaIds
+              .map((code) => `${code}:${settings.areas[code as keyof typeof settings.areas]?.priceYen ?? ""}`)
+              .join(","),
+            windowFilmPackageBasePriceYen: windowFilm.selectedPackageCode === null
+              ? ""
+              : settings.packages.find((item) => item.code === windowFilm.selectedPackageCode)?.priceYen ?? "",
+            windowFilmManualOverrideYen: overrideYen ?? "",
+          },
+          });
+          catalogResolved = true;
+        }
+      }
+    }
+  }
+
   // ── B1.1: PPF installation coefficient ────────────────────────────────────────
   // The coefficient belongs to the PPF line. PPF+coating reduction is resolved separately below
   // from the layer-1 COATING price; it must never reduce the PPF line itself.
@@ -393,7 +470,7 @@ export function buildWizardPricingInputFromConfig(
   const ppfCoefficientBpByIdentity: Record<string, number> = {};
   const ppfAdjustmentsByIdentity: Record<string, ResolvedPpfCoatingAdjustment> = {};
 
-  const manualLines: WizardManualPricingLineInput[] = [...manual.lines, ...resolvedPpfR1Lines].map((l) => {
+  const manualLines: WizardManualPricingLineInput[] = [...manual.lines, ...resolvedPpfR1Lines, ...resolvedWindowFilmV1Lines].map((l) => {
     if (l.sourceCategory !== "ppf") return l;
 
     const r1AlreadyApplied = l.metadata.ppfR1ContractVersion === "1.0";

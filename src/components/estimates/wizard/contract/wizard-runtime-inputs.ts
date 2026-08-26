@@ -11,9 +11,11 @@
 // in screens/step-types.ts, so no shape is re-declared or duplicated here.
 
 import type { ServiceOfferings } from "@/lib/estimates/service-categories";
+import type { WindowFilmSettingsV1 } from "@/lib/pricing/window-film-v1-contract";
 import type {
   ShopRank,
   FilmTypeOption,
+  WindowFilmConfiguredItem,
   WindowAreaOption,
   MaintenanceMenu,
   WashMenu,
@@ -53,6 +55,9 @@ export interface WizardScreenConfiguration {
   serviceOfferings:   ServiceOfferings;
   filmTypes:          FilmTypeOption[];
   windowAreas:        WindowAreaOption[];
+  windowFilmPackages?: WindowFilmConfiguredItem[];
+  windowFilmOptions?: WindowFilmConfiguredItem[];
+  windowFilmSettings?: WindowFilmSettingsV1 | null;
   maintenanceMenus:   MaintenanceMenu[];
   washMenus:          WashMenu[];
   roomMenus:          RoomMenu[];
