@@ -104,8 +104,10 @@ test("every binding callback emits exactly one section-scoped services patch", (
     [() => b.coating.onLayerCountChange(2), "coating"],
     [() => b.coating.onLayer1Change("x"), "coating"],
     [() => b.ppf.onInstallationMethodChange("full"), "ppf"],
+    [() => b.ppf.onFullCoverageChange("front_full"), "ppf"],
     [() => b.ppf.onPartialPartToggle("p"), "ppf"],
     [() => b.ppf.onUnitPriceChange("100"), "ppf"],
+    [() => b.ppf.onVehicleCoefficientChange("1.25"), "ppf"],
     [() => b.windowFilm.onAreaToggle("a"), "windowFilm"],
     [() => b.windowFilm.onFilmTypeChange("f"), "windowFilm"],
     [() => b.bodyMaintenance.onMenuChange("m"), "bodyMaintenance"],
@@ -130,6 +132,10 @@ test("exact patch payloads for representative callbacks", () => {
   assert.deepEqual(patches.at(-1), { services: { coating: { layerCount: 3 } } });
   b.coating.onLayer1Change("one-evo");
   assert.deepEqual(patches.at(-1), { services: { coating: { layer1Id: "one-evo", layer2Id: null, layer3Id: null } } });
+  b.ppf.onFullCoverageChange("full_body");
+  assert.deepEqual(patches.at(-1), { services: { ppf: { fullCoverage: "full_body" } } });
+  b.ppf.onVehicleCoefficientChange("1.15");
+  assert.deepEqual(patches.at(-1), { services: { ppf: { vehicleCoefficientInput: "1.15" } } });
   b.bodyMaintenance.onMenuChange("mm1");
   assert.deepEqual(patches.at(-1), { services: { bodyMaintenance: { menuId: "mm1" } } });
   b.roomCleaning.onUnitPriceChange("rc1", "999");
@@ -391,6 +397,26 @@ test("shop rank can use BOTH PPF and window film once the dealer opts in", () =>
   );
 });
 
+test("full PPF renders the formal coverage and vehicle-coefficient controls without a manual price field", () => {
+  const services = fresh();
+  services.ppf = {
+    ...services.ppf,
+    installationMethod: "full",
+    fullCoverage: "front_full",
+    ppfTypeId: "pt1",
+    unitPriceInput: "999999",
+    vehicleCoefficientInput: "1.2",
+  };
+  const html = render(<Step4Estimate api={makeApi(["ppf"], services).api} shopRank="detailer" screenConfig={SC} />);
+  assert.ok(html.includes("施工範囲を選択"), "coverage selector is visible");
+  assert.ok(html.includes("フロントフル"), "front-full choice is visible");
+  assert.ok(html.includes("フルボディ"), "full-body choice is visible");
+  assert.ok(html.includes("車格係数（通常車は1.0）"), "vehicle coefficient is visible");
+  assert.ok(html.includes("施工範囲の価格 × PPF施工係数 × 車格係数"), "formal calculation is explained");
+  assert.equal(html.includes("単価を上書き"), false, "manual unit-price override is absent");
+  assert.equal(html.includes("999999"), false, "legacy manual value is not rendered");
+});
+
 test("ppf_installer rank locks coating", () => {
   const html = render(<Step4Estimate api={makeApi(["coating"]).api} shopRank="ppf_installer" screenConfig={SC} />);
   assert.ok(html.includes("GYEON PPFインストーラーはコーティングを施工できません。"), "coating lock reason shown");
@@ -557,7 +583,11 @@ test("EstimateWizard threads shopRank + screenConfig ONLY to Step4Estimate (sour
   assert.equal((raw.match(/shopRank=\{shopRank\}/g) ?? []).length, 1, "shopRank passed exactly once");
   assert.equal((raw.match(/screenConfig=\{screenConfig\}/g) ?? []).length, 1, "screenConfig passed exactly once");
   const code = codeOf(WIZARD_SRC);
-  assert.equal(/useState|useReducer/.test(code), false, "runtime inputs are not stored in host state");
+  assert.equal(
+    /(?:useState|useReducer)[^;\n]*(?:shopRank|screenConfig)|(?:shopRank|screenConfig)[^;\n]*(?:useState|useReducer)/.test(code),
+    false,
+    "runtime inputs are not stored in host state",
+  );
 });
 
 // ── 10. Source-level guards: no forbidden systems / data enter the canonical host ──

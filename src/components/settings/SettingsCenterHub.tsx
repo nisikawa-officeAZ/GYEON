@@ -217,7 +217,7 @@ const HUB_GROUPS: HubGroup[] = [
         labelEn:       "PPF SETTINGS",
         description:   "PPF種類、施工係数、コーティング同時施工減額",
         minVisibility: "readonly",
-        action:        { kind: "route", href: "/settings/estimate-wizard#section-ppf" },
+        action:        { kind: "route", href: "/settings/ppf" },
         getState: () => "active",
         badge: "solid_unset",
       },

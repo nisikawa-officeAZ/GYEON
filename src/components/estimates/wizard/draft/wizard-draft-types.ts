@@ -62,12 +62,15 @@ export type WizardCoatingDraft = {
   layer2Id: string | null;
   layer3Id: string | null;
 };
+export type PpfFullCoverage = "front_full" | "full_body";
 export type WizardPpfDraft = {
   installationMethod: PpfInstallationMethodId | null;
+  fullCoverage: PpfFullCoverage | null;  // required only when installationMethod === "full"
   selectedPartIds: string[];
   quantitiesByPart: Record<string, number>;
   ppfTypeId: string | null;
   unitPriceInput: string;                // editable unit-price text (string preserves live input)
+  vehicleCoefficientInput: string;       // multiplier text; canonical default "1.0"
   interiorRows: InteriorPpfRow[];
 };
 export type WizardWindowFilmDraft = {

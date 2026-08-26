@@ -20,7 +20,9 @@
 // pricing result) is ever stored in WizardStore, EstimateWizardDraftV22, or hook state; catalog and
 // pricingConfig are consumed only by the pricing hook and never passed into any step. No save/apply.
 
+import { useState } from "react";
 import { useEstimateWizard } from "./useEstimateWizard";
+import type { BodySizeEstimate } from "@/lib/vehicles/body-size-estimate";
 import { WizardShell, type WizardTotals } from "./WizardShell";
 import type { WizardHostRuntimeInputs } from "./contract/wizard-pricing-runtime-inputs";
 import type {
@@ -87,6 +89,9 @@ export default function EstimateWizard({
     // that the selection surfaces would refuse.
     { customers, vehicles },
   );
+  // OCR/3M recommendation is transient presentation evidence only. It survives
+  // wizard step navigation, but never becomes persistence authority by itself.
+  const [bodySizeEstimate, setBodySizeEstimate] = useState<BodySizeEstimate | null>(null);
   const title = mode === "edit" ? "見積編集" : "新規見積";
 
   // Read-only authoritative pricing over the canonical draft (same config-driven route as apply).
@@ -111,7 +116,15 @@ export default function EstimateWizard({
           duplicateCheckInvoker={duplicateCheckInvoker}
         />
       )}
-      {api.step === 2 && <Step2Vehicle api={api} customers={customers} vehicles={vehicles} />}
+      {api.step === 2 && (
+        <Step2Vehicle
+          api={api}
+          customers={customers}
+          vehicles={vehicles}
+          sizeEstimate={bodySizeEstimate}
+          onSizeEstimate={setBodySizeEstimate}
+        />
+      )}
       {api.step === 3 && <Step3Category api={api} />}
       {api.step === 4 && <Step4Estimate api={api} shopRank={shopRank} screenConfig={screenConfig} />}
       {api.step === 5 && <Step5Discount api={api} />}

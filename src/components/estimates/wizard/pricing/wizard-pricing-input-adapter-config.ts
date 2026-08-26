@@ -57,6 +57,11 @@ import {
   type CoatingV34BodySize,
   type CoatingV34SizePriceMap,
 } from "@/lib/pricing/coating-v34-contract";
+import {
+  PPF_COEFFICIENT_BP_IDENTITY,
+  resolvePpfR1Price,
+  type PpfR1PricingScope,
+} from "@/lib/pricing/ppf-r1-price-resolution";
 import { validateCoatingSelection } from "./coating-selection-validation";
 import type { ShopRank } from "../screens/step-types";
 import type {
@@ -71,6 +76,7 @@ import type { WizardPricingIssue } from "./wizard-pricing-types";
 import { WIZARD_PRICING_ERRORS, WIZARD_PRICING_WARNINGS } from "./wizard-pricing-types";
 import {
   buildManualPricingLinesFromConfig,
+  WIZARD_PRICING_CONFIG_ERRORS,
   type ProductionPricingConfiguration,
 } from "./wizard-manual-pricing-config";
 
@@ -94,6 +100,8 @@ export interface ConfiguredPricingRules {
   readonly coupons?: readonly ConfiguredCoupon[];
   /** PPF/film code → installation coefficient in basis points (10000 = ×1.0). */
   readonly installCoefficientBpByCode?: Readonly<Record<string, number>>;
+  /** Authoritative PPF product code/label pairs used by the R1 calculated line. */
+  readonly ppfTypes?: readonly import("./wizard-manual-pricing-config").ProductionLabelOption[];
   /** Dealer-scoped PPF + coating reduction rules. */
   readonly ppfCoatingAdjustments?: readonly PpfCoatingAdjustmentRule[];
   /** ISO `YYYY-MM-DD` used for coupon validity. Supplied by the caller — this module reads no clock. */
@@ -160,6 +168,23 @@ function v34Layer3SizePrice(v34: CoatingSettingsV34, productId: string, sizeKey:
 function manualLineExtendedPrice(l: WizardManualPricingLineInput): number {
   return Math.round(l.unitPrice * l.quantity);
 }
+
+function parseVehicleCoefficientBp(raw: string): number | null {
+  const value = raw.trim();
+  if (!/^\d+(?:\.\d{1,4})?$/.test(value)) return null;
+  const multiplier = Number(value);
+  const bp = multiplier * PPF_COEFFICIENT_BP_IDENTITY;
+  return Number.isSafeInteger(bp) && bp > 0 ? bp : null;
+}
+
+const PPF_R1_PRICING_ERRORS = {
+  SETTINGS_REQUIRED: "PPF_R1_SETTINGS_REQUIRED",
+  COVERAGE_REQUIRED: "PPF_R1_COVERAGE_REQUIRED",
+  TYPE_REQUIRED: "PPF_R1_TYPE_REQUIRED",
+  COEFFICIENT_REQUIRED: "PPF_R1_COEFFICIENT_REQUIRED",
+  VEHICLE_COEFFICIENT_INVALID: "PPF_R1_VEHICLE_COEFFICIENT_INVALID",
+  PRICE_UNAVAILABLE: "PPF_R1_PRICE_UNAVAILABLE",
+} as const;
 
 export function buildWizardPricingInputFromConfig(
   draft: EstimateWizardDraftV22,
@@ -257,9 +282,108 @@ export function buildWizardPricingInputFromConfig(
   }
 
   // ── Manual categories — AUTHORITATIVE labels only. ─────────────────────────────
-  const manual = buildManualPricingLinesFromConfig(draft, config);
+  // Full/partial PPF is no longer manual-priced when selected. Remove only that
+  // one category from the legacy manual builder, then resolve it below from the
+  // versioned R1 catalog. Missing R1 data blocks; it never revives unitPriceInput.
+  const ppfUsesR1 = selected.includes("ppf")
+    && (cfg.ppf.installationMethod === "full" || cfg.ppf.installationMethod === "partial");
+  const manualDraft: EstimateWizardDraftV22 = ppfUsesR1
+    ? {
+        ...draft,
+        serviceSelection: {
+          selectedCategories: selected.filter((category) => category !== "ppf"),
+        },
+      }
+    : draft;
+  const manual = buildManualPricingLinesFromConfig(manualDraft, config);
   warnings.push(...manual.warnings);
   errors.push(...manual.errors);
+
+  const resolvedPpfR1Lines: WizardManualPricingLineInput[] = [];
+  if (ppfUsesR1) {
+    const ppf = cfg.ppf;
+    const settings = catalog.ppfR1;
+    const methodOption = config.ppfMethods.find((entry) => entry.code === ppf.installationMethod);
+    const typeId = ppf.ppfTypeId;
+    const typeOption = typeId ? config.ppfTypes?.find((entry) => entry.code === typeId) : undefined;
+    const installCoefficientBp = typeId
+      ? config.installCoefficientBpByCode?.[typeId]
+      : undefined;
+    const vehicleCoefficientBp = parseVehicleCoefficientBp(ppf.vehicleCoefficientInput);
+
+    let scope: PpfR1PricingScope | null = null;
+    if (ppf.installationMethod === "full") {
+      if (ppf.fullCoverage) scope = { kind: ppf.fullCoverage, bodySize: sizeKey };
+    } else {
+      scope = {
+        kind: "partial",
+        parts: ppf.selectedPartIds.map((partCode) => ({
+          partCode,
+          quantity: ppf.quantitiesByPart[partCode] ?? 1,
+        })),
+      };
+    }
+
+    if (!methodOption) {
+      errors.push(issue(
+        WIZARD_PRICING_CONFIG_ERRORS.UNKNOWN_CONFIGURED_ITEM,
+        "選択したPPF施工方法は現在の設定に登録されていません。",
+        "ppf",
+        ppf.installationMethod,
+      ));
+    } else if (settings === null) {
+      errors.push(issue(PPF_R1_PRICING_ERRORS.SETTINGS_REQUIRED, "PPFの正式価格表が未設定です。設定画面で価格を保存してください。", "ppf"));
+    } else if (ppf.installationMethod === "full" && scope === null) {
+      errors.push(issue(PPF_R1_PRICING_ERRORS.COVERAGE_REQUIRED, "フロントフルまたはフルボディを選択してください。", "ppf", "full"));
+    } else if (!typeId || !typeOption) {
+      errors.push(issue(PPF_R1_PRICING_ERRORS.TYPE_REQUIRED, "施工するPPF種類を選択してください。", "ppf", typeId));
+    } else if (installCoefficientBp === undefined) {
+      errors.push(issue(PPF_R1_PRICING_ERRORS.COEFFICIENT_REQUIRED, "選択したPPF種類の施工係数が未設定です。", "ppf", typeId));
+    } else if (vehicleCoefficientBp === null) {
+      errors.push(issue(PPF_R1_PRICING_ERRORS.VEHICLE_COEFFICIENT_INVALID, "車格係数は0より大きい数値で入力してください。", "ppf", typeId));
+    } else if (scope !== null) {
+      const resolved = resolvePpfR1Price(settings, scope, installCoefficientBp, vehicleCoefficientBp);
+      if (!resolved.ok) {
+        errors.push(issue(
+          PPF_R1_PRICING_ERRORS.PRICE_UNAVAILABLE,
+          "選択内容に対応するPPF価格が未設定です。設定画面の価格を確認してください。",
+          "ppf",
+          resolved.partCode ?? ppf.installationMethod,
+        ));
+      } else {
+        const scopeLabel = resolved.scope === "front_full"
+          ? "フロントフル"
+          : resolved.scope === "full_body" ? "フルボディ" : "部分施工";
+        const identity = `ppf_r1_${resolved.scope}_${typeId}`;
+        resolvedPpfR1Lines.push({
+          sourceCategory: "ppf",
+          manualPricingIdentity: identity,
+          label: `PPF ${scopeLabel}（${typeOption.label}）`,
+          quantity: 1,
+          unitPrice: resolved.resolvedPriceYen,
+          optionIdentity: typeId,
+          metadata: {
+            ppfR1ContractVersion: settings.contractVersion,
+            ppfMethodCode: ppf.installationMethod,
+            ppfScope: resolved.scope,
+            ppfBodySize: resolved.bodySize,
+            ppfBasePriceYen: resolved.basePriceYen,
+            ppfInstallCoefficientBp: resolved.installCoefficientBp,
+            ppfVehicleCoefficientBp: resolved.vehicleCoefficientBp,
+            ppfTypeCode: typeId,
+            ...(resolved.scope === "partial"
+              ? {
+                  ppfPartQuantities: ppf.selectedPartIds
+                    .map((partCode) => `${partCode}:${ppf.quantitiesByPart[partCode] ?? 1}`)
+                    .join(","),
+                }
+              : {}),
+          },
+        });
+        catalogResolved = true;
+      }
+    }
+  }
 
   // ── B1.1: PPF installation coefficient + PPF/coating reduction ────────────────
   // Applied to the PPF line's UNIT PRICE, so it composes with quantity exactly like every other
@@ -271,16 +395,25 @@ export function buildWizardPricingInputFromConfig(
   const ppfCoefficientBpByIdentity: Record<string, number> = {};
   const ppfAdjustmentsByIdentity: Record<string, ResolvedPpfCoatingAdjustment> = {};
 
-  const manualLines: WizardManualPricingLineInput[] = manual.lines.map((l) => {
+  const manualLines: WizardManualPricingLineInput[] = [...manual.lines, ...resolvedPpfR1Lines].map((l) => {
     if (l.sourceCategory !== "ppf") return l;
 
-    const bp = coeffByCode[l.manualPricingIdentity];
-    // An unknown identity yields `undefined` → the coefficient helper returns the IDENTITY, so an
-    // unconfigured PPF line prices exactly as it does today. Never a silent zero, never a discount.
-    const coefficientApplied = applyInstallCoefficientBp(l.unitPrice, bp ?? null);
+    const r1AlreadyApplied = l.metadata.ppfR1ContractVersion === "1.0";
+    const bp = r1AlreadyApplied
+      ? (typeof l.metadata.ppfInstallCoefficientBp === "number" ? l.metadata.ppfInstallCoefficientBp : undefined)
+      : (l.optionIdentity ? coeffByCode[l.optionIdentity] : undefined);
+    // R1 already applied both coefficients in the strict resolver. Legacy/manual
+    // lines use the selected PPF product identity (not the installation method)
+    // to resolve their installation coefficient.
+    const coefficientApplied = r1AlreadyApplied
+      ? l.unitPrice
+      : applyInstallCoefficientBp(l.unitPrice, bp ?? null);
+    const methodCode = typeof l.metadata.ppfMethodCode === "string"
+      ? l.metadata.ppfMethodCode
+      : (typeof l.metadata.method === "string" ? l.metadata.method : l.manualPricingIdentity);
 
     const adjustment = resolvePpfCoatingAdjustment(
-      l.manualPricingIdentity,
+      methodCode,
       coatingCode,
       adjustmentRules,
       coefficientApplied,

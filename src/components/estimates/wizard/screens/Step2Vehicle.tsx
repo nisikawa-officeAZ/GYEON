@@ -10,6 +10,7 @@
 // the operator makes the final selection via the 7 size buttons.
 
 import { vehicleDisplayName } from "@/lib/vehicles/vehicle-types";
+import { bodySizeRecommendationLevel } from "@/lib/vehicles/body-size-estimate";
 import { SelectButton } from "../foundation/SelectButton";
 import { Field, TextInput } from "../foundation/Field";
 import type { Step2VehicleProps } from "./step-types";
@@ -118,12 +119,27 @@ export function Step2Vehicle(props: Step2VehicleProps) {
         </div>
         <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
           {sizeKeys.map((k) => {
-            const recommended = sizeEstimate?.sizeKey === k;
+            const recommendation = bodySizeRecommendationLevel(k, sizeEstimate);
+            const recommended = recommendation === "recommended";
+            const adjacent = recommendation === "adjacent";
             return (
-              <SelectButton key={k} selected={sizeKey === k} onSelect={() => onSelectSize(k)} density="touch">
+              <SelectButton
+                key={k}
+                selected={sizeKey === k}
+                onSelect={() => onSelectSize(k)}
+                density="touch"
+                className={
+                  recommended
+                    ? "border-blue-400 bg-blue-600/25 text-blue-50 hover:border-blue-300"
+                    : adjacent
+                      ? "border-amber-400/80 bg-amber-400/10 text-amber-100 hover:border-amber-300"
+                      : undefined
+                }
+              >
                 <span className="w-full text-center block">
                   {k}
-                  {recommended && <span className="block text-[9px] text-emerald-400">推奨</span>}
+                  {recommended && <span className="block text-[9px] text-blue-200">推奨サイズ</span>}
+                  {adjacent && <span className="block text-[9px] text-amber-300">前後候補</span>}
                 </span>
               </SelectButton>
             );

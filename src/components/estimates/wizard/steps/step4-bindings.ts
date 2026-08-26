@@ -20,7 +20,7 @@
 
 import type {
   WizardServiceConfigurationDraft,
-  WizardCoatingDraft, WizardPpfDraft, WizardWindowFilmDraft, WizardBodyMaintenanceDraft,
+  WizardCoatingDraft, WizardPpfDraft, PpfFullCoverage, WizardWindowFilmDraft, WizardBodyMaintenanceDraft,
   WizardCarWashDraft, WizardRoomCleaningDraft, WizardOtherWorkDraft, WizardStoreGlobalOptionsDraft,
 } from "../draft/wizard-draft-types";
 import type { WizardStorePatch } from "../bridge/ew-ui1-controller";
@@ -57,10 +57,12 @@ export interface CoatingBindings {
 }
 export interface PpfBindings {
   onInstallationMethodChange: (id: PpfInstallationMethodId) => void;
+  onFullCoverageChange: (coverage: PpfFullCoverage) => void;
   onPartialPartToggle: (id: string) => void;
   onQuantityChange: (id: string, qty: number) => void;
   onPpfTypeChange: (id: string) => void;
   onUnitPriceChange: (v: string) => void;
+  onVehicleCoefficientChange: (v: string) => void;
   onInteriorRowAdd: () => RowCreateResult;
   onInteriorRowUpdate: (id: string, patch: Partial<InteriorPpfRow>) => void;
   onInteriorRowDelete: (id: string) => void;
@@ -148,11 +150,16 @@ export function createStep4Bindings(
       onLayer3Change: (id) => emitCoating({ layer3Id: id }),
     },
     ppf: {
-      onInstallationMethodChange: (id) => emitPpf({ installationMethod: id }),
+      onInstallationMethodChange: (id) => emitPpf({
+        installationMethod: id,
+        ...(id !== "full" ? { fullCoverage: null } : {}),
+      }),
+      onFullCoverageChange: (fullCoverage) => emitPpf({ fullCoverage }),
       onPartialPartToggle: (id) => emitPpf({ selectedPartIds: toggle(services.ppf.selectedPartIds, id) }),
       onQuantityChange: (id, qty) => emitPpf({ quantitiesByPart: setNum(services.ppf.quantitiesByPart, id, qty) }),
       onPpfTypeChange: (id) => emitPpf({ ppfTypeId: id }),
       onUnitPriceChange: (v) => emitPpf({ unitPriceInput: v }),
+      onVehicleCoefficientChange: (v) => emitPpf({ vehicleCoefficientInput: v }),
       onInteriorRowAdd: () => {
         // ID set spans BOTH row families; fail closed with no patch if secure generation is unavailable.
         const id = createWizardRowId("ppfInterior", existingRowIds(services), cryptoSource);

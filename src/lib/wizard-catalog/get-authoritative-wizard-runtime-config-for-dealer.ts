@@ -263,6 +263,19 @@ export async function getAuthoritativeWizardRuntimeConfigForDealer(
           .or(`dealer_id.is.null,dealer_id.eq.${dealerId}`);
         if (error || !data) return { ok: false };
 
+        // Global PPF product coefficients are dealer-configurable through the
+        // narrow override table. A failed override read is not equivalent to
+        // "no coefficients": live PPF pricing must fail closed instead.
+        const { data: coefficientOverrides, error: coefficientOverrideError } = await supabase
+          .from("dealer_wizard_catalog_overrides")
+          .select("catalog_item_id, install_coefficient_bp")
+          .eq("dealer_id", dealerId)
+          .not("install_coefficient_bp", "is", null);
+        if (coefficientOverrideError || !coefficientOverrides) return { ok: false };
+        const coefficientOverrideByItemId = new Map(
+          coefficientOverrides.map((row) => [row.catalog_item_id, row.install_coefficient_bp]),
+        );
+
         const rows: WizardCatalogRow[] = data.map((d: Record<string, unknown>) => ({
           id: d.id as string,
           market: d.market as string,
@@ -283,7 +296,9 @@ export async function getAuthoritativeWizardRuntimeConfigForDealer(
           duration_minutes: (d.duration_minutes as number | null) ?? null,
           deleted_at: (d.deleted_at as string | null) ?? null,
           presentation: d.presentation,
-          install_coefficient_bp: (d.install_coefficient_bp as number | null) ?? null,
+          install_coefficient_bp: coefficientOverrideByItemId.has(d.id as string)
+            ? coefficientOverrideByItemId.get(d.id as string) ?? null
+            : (d.install_coefficient_bp as number | null) ?? null,
           coupon_discount_type: (d.coupon_discount_type as string | null) ?? null,
           coupon_discount_value: (d.coupon_discount_value as number | null) ?? null,
           coupon_combinable: (d.coupon_combinable as boolean | null) ?? null,

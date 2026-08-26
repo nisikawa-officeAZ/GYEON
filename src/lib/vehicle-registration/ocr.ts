@@ -31,6 +31,8 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
 - 所有者(owner)と使用者(user)は必ず別項目として抽出する（両方を保持）
 - customer_type: 顧客が個人なら "individual"、法人・会社・店舗なら "corporation"、不明なら "unknown"
 - owner_user_separated: 所有者と使用者が明らかに異なる場合 "true"、同一なら "false"、不明なら "unknown"
+- length_mm / width_mm / height_mm: 車検証に記載された長さ・幅・高さをmm単位の数値で返す。不鮮明・欠損時は null。単位換算以外の推測は禁止
+- dimension_confidence: 長さ・幅・高さ3項目の読み取り品質を0〜1で評価。1項目でも不鮮明なら0.79以下
 - 法人名（株式会社・有限会社など）は姓名に分割しないこと
 - confidence は全体的な読み取り品質を0〜1で評価
 
@@ -61,6 +63,10 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
   "body_shape": "",
   "fuel_type": "",
   "displacement": "",
+  "length_mm": null,
+  "width_mm": null,
+  "height_mm": null,
+  "dimension_confidence": 0.0,
   "color": "",
   "notes": "",
   "customer_type": "",
@@ -100,6 +106,46 @@ const STRING_FIELDS: Array<keyof VehicleRegistrationOcrResult> = [
   "fuel_type", "displacement", "color", "notes",
   "customer_type", "owner_user_separated",
 ];
+
+const DIMENSION_FIELDS = ["length_mm", "width_mm", "height_mm"] as const;
+
+function sanitizeDimensionMm(value: unknown): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+  const rounded = Math.round(value);
+  // Fail closed on clearly non-vehicle values or unit mistakes such as metres supplied as 4.6.
+  if (rounded < 500 || rounded > 15_000) return undefined;
+  return rounded;
+}
+
+/** Pure sanitizer exported for source-contract tests; performs no network or persistence action. */
+export function sanitizeVehicleRegistrationOcrResult(
+  parsed: VehicleRegistrationOcrResult,
+): VehicleRegistrationOcrResult {
+  const sanitized: VehicleRegistrationOcrResult = {};
+  for (const key of STRING_FIELDS) {
+    const val = parsed[key];
+    if (typeof val === "string" && val.trim() !== "") {
+      (sanitized as Record<string, unknown>)[key] = val.trim();
+    }
+  }
+  for (const key of DIMENSION_FIELDS) {
+    const value = sanitizeDimensionMm(parsed[key]);
+    if (value !== undefined) sanitized[key] = value;
+  }
+  const rawConf = parsed.confidence;
+  if (typeof rawConf === "number" && rawConf >= 0 && rawConf <= 1) {
+    sanitized.confidence = rawConf;
+  }
+  const dimensionConfidence = parsed.dimension_confidence;
+  if (
+    typeof dimensionConfidence === "number"
+    && dimensionConfidence >= 0
+    && dimensionConfidence <= 1
+  ) {
+    sanitized.dimension_confidence = dimensionConfidence;
+  }
+  return sanitized;
+}
 
 function sleep(ms: number): Promise<void> {
   return new Promise(r => setTimeout(r, ms));
@@ -181,21 +227,11 @@ async function callOpenAI(
       return { error: "PARSE_ERROR" };
     }
 
-    // Build sanitized result — only non-empty strings and valid confidence
-    const sanitized: VehicleRegistrationOcrResult = {};
-    for (const key of STRING_FIELDS) {
-      const val = parsed[key];
-      if (typeof val === "string" && val.trim() !== "") {
-        (sanitized as Record<string, unknown>)[key] = val.trim();
-      }
-    }
-    const rawConf = parsed.confidence;
-    if (typeof rawConf === "number" && rawConf >= 0 && rawConf <= 1) {
-      sanitized.confidence = rawConf;
-    }
+    // Build sanitized result — non-empty strings plus strictly validated mm dimensions/confidence.
+    const sanitized = sanitizeVehicleRegistrationOcrResult(parsed);
 
     // If no string field was extracted, treat as unreadable image
-    const hasData = STRING_FIELDS.some(k => k in sanitized);
+    const hasData = STRING_FIELDS.some(k => k in sanitized) || DIMENSION_FIELDS.some(k => k in sanitized);
     if (!hasData) {
       console.error("[OCR] Empty result — model extracted no fields. Image may not be a 車検証.");
       return { error: "EMPTY_RESPONSE" };
