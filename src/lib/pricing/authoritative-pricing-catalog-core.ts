@@ -35,6 +35,7 @@ import {
   makePricingCatalog,
 } from "./pricing-catalog";
 import { resolveStoredCoatingV34 } from "./coating-v34-persisted-payload";
+import { parsePpfR1PriceSettings } from "./ppf-r1-price-contract";
 
 /** Why no authoritative catalog could be produced. None is recoverable into a catalog. */
 export type PricingCatalogResolutionFailure =
@@ -230,6 +231,20 @@ function applyServiceOverrides(spcRaw: unknown, out: Partial<PricingCatalog>): v
 /** Apply a validated `ppf_price_tables` object (its five required map containers) onto the overrides. */
 function applyPpfOverrides(ppfRaw: unknown, out: Partial<PricingCatalog>): void {
   const t = reqObject(ppfRaw);
+
+  // C4B2 transition boundary: a versioned R1 payload is the ONLY value exposed
+  // through `catalog.ppfR1`. The legacy five-map payload remains readable only
+  // for non-wizard compatibility during rollout; it never populates ppfR1 and
+  // therefore cannot become a hidden fallback in the live wizard.
+  if (Object.prototype.hasOwnProperty.call(t, "contractVersion")) {
+    try {
+      out.ppfR1 = parsePpfR1PriceSettings(t);
+      return;
+    } catch {
+      bail();
+    }
+  }
+
   const planPricesRaw = reqObject(t.plan_prices);
   const filmCoeff = reqObject(t.film_coeff);
   const rankCoeff = reqObject(t.rank_coeff);

@@ -9,7 +9,10 @@ test("coating V3.4 UI keeps the approved seven-size direct-price defaults", () =
   assert.match(SOURCE, /layer2:\s*\{ SS: 28_000, S: 31_000, M: 35_000, ML: 38_000, L: 42_000, LL: 46_000, XL: 50_000 \}/);
   assert.match(SOURCE, /layer3:\s*\{ SS: 18_000, S: 20_000, M: 23_000, ML: 25_000, L: 28_000, LL: 31_000, XL: 35_000 \}/);
   assert.match(SOURCE, /resolution\.status === "NOT_CONFIGURED"\s*\? applyUnsavedDefaultPrices/);
-  assert.match(SOURCE, /現在設定されている価格はシミュレーション用の価格を表示しています。御社の規定の金額を入力し保存を押してからアプリをご使用ください。/);
+  assert.match(SOURCE, /画面に表示されている金額・係数・作業時間は、表示確認のためのサンプルです。実際の設定には使用されません。/);
+  assert.match(SOURCE, /入力内容はまだ保存されていません。/);
+  assert.match(SOURCE, /setDraftNoticeState\("persisted"\)/, "successful save hides the sample/dirty notice");
+  assert.match(SOURCE, /draftNoticeState === "sample"[\s\S]*draftNoticeState === "dirty"[\s\S]*: null/, "persisted state renders no permanent notice");
   assert.doesNotMatch(SOURCE, /趣味レーション/);
   assert.doesNotMatch(SOURCE, /未保存ドラフト/);
   assert.match(SOURCE, /baseSimulationSource/);

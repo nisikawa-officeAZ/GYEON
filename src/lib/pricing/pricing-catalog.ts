@@ -23,6 +23,7 @@ import {
 } from "./pricing-data";
 import type { EstimateCategory } from "@/lib/estimates/estimate-types";
 import type { CoatingSettingsV34 } from "./coating-v34-contract";
+import type { PpfR1PriceSettings } from "./ppf-r1-price-contract";
 
 // Widened element types (the pricing-data constants are `as const`; widening lets
 // the mapper produce overlaid arrays that remain assignable to the catalog).
@@ -60,6 +61,10 @@ export interface PricingCatalog {
   // set ONLY by the authoritative resolver once a persisted V34_READY payload is confirmed. Base,
   // layer2, and layer3 stay fully independent — no cross-layer fallback, no size multiplier.
   coatingV34:          CoatingSettingsV34 | null;
+  // GDA_PPF_R1_C4B2 — the only PPF price contract the live wizard may consume.
+  // Legacy PPF catalog fields remain temporarily for non-wizard compatibility,
+  // but are never a fallback for this nullable authority.
+  ppfR1:                PpfR1PriceSettings | null;
 }
 
 export const DEFAULT_PRICING_CATALOG: PricingCatalog = {
@@ -81,6 +86,7 @@ export const DEFAULT_PRICING_CATALOG: PricingCatalog = {
   ppfFrontGlass:       PPF_FRONT_GLASS,
   ppfSingleParts:      PPF_SINGLE_PARTS,
   coatingV34:          null,
+  ppfR1:                null,
 };
 
 /** Data-driven body-size multiplier (future sizes need no code change). */

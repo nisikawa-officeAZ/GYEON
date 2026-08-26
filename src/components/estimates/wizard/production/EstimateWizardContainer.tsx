@@ -418,7 +418,12 @@ export default function EstimateWizardContainer({
               lockReason="PPFの施工メニューが利用できません。管理者にお問い合わせください。"
               selectedInstallationMethod={cfg.ppf.installationMethod}
               installationMethods={screenConfig.ppfMethods}
-              onInstallationMethodChange={(id) => update((d) => updateServiceConfiguration(d, "ppf", { installationMethod: id }))}
+              onInstallationMethodChange={(id) => update((d) => updateServiceConfiguration(d, "ppf", {
+                installationMethod: id,
+                ...(id !== "full" ? { fullCoverage: null } : {}),
+              }))}
+              selectedFullCoverage={cfg.ppf.fullCoverage}
+              onFullCoverageChange={(fullCoverage) => update((d) => updateServiceConfiguration(d, "ppf", { fullCoverage }))}
               selectedPartialPartIds={cfg.ppf.selectedPartIds}
               partialParts={screenConfig.ppfParts}
               quantitiesByPart={cfg.ppf.quantitiesByPart}
@@ -456,6 +461,8 @@ export default function EstimateWizardContainer({
               displayedUnitPrice={null}
               editableUnitPrice={cfg.ppf.unitPriceInput}
               onUnitPriceChange={(v) => update((d) => updateServiceConfiguration(d, "ppf", { unitPriceInput: v }))}
+              vehicleCoefficientInput={cfg.ppf.vehicleCoefficientInput}
+              onVehicleCoefficientChange={(vehicleCoefficientInput) => update((d) => updateServiceConfiguration(d, "ppf", { vehicleCoefficientInput }))}
               coefficientDisplay={null}
               combinedServiceAdjustment={null}
               onAddOrUpdate={() => {}}

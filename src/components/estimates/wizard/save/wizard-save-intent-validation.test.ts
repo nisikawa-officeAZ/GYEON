@@ -38,8 +38,8 @@ function validDraft(): Record<string, unknown> {
     serviceConfiguration: {
       coating: { layerCount: null, layer1Id: null, layer2Id: null, layer3Id: null },
       ppf: {
-        installationMethod: null, selectedPartIds: [], quantitiesByPart: {},
-        ppfTypeId: null, unitPriceInput: "", interiorRows: [],
+        installationMethod: null, fullCoverage: null, selectedPartIds: [], quantitiesByPart: {},
+        ppfTypeId: null, unitPriceInput: "", vehicleCoefficientInput: "1.0", interiorRows: [],
       },
       windowFilm: { selectedAreaIds: [], filmTypeId: null, unitPriceInput: "" },
       bodyMaintenance: { menuId: "maint-a", unitPriceInput: "5000" },
@@ -230,6 +230,8 @@ test("every draft literal discriminant is enforced", () => {
 test("nullable discriminants accept null but not a wrong literal", () => {
   assert.equal(withDraft((d) => { (d.customer as Record<string, unknown>).sourceMode = null; }).ok, true);
   assert.equal(withConfig((c) => { (c.ppf as Record<string, unknown>).installationMethod = "interior"; }).ok, true);
+  assert.equal(withConfig((c) => { (c.ppf as Record<string, unknown>).fullCoverage = "front_full"; }).ok, true);
+  assertRejected(withConfig((c) => { (c.ppf as Record<string, unknown>).fullCoverage = "front-half"; }), "invalid-literal", "ppf full coverage");
 });
 
 test("LayerCount is NUMERIC 1|2|3 — the string forms are rejected, never coerced", () => {

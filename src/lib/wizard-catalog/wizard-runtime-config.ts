@@ -401,7 +401,13 @@ function buildConfigs(
   const parents = groupRows.filter((r) => r.ppf_type_group_id === null);
   const ppfTypeGroups: PpfTypeGroup[] = parents.map((p) => ({
     id: p.code, label: p.label_ja ?? "",
-    products: groupRows.filter((c) => c.ppf_type_group_id === p.id).sort(byOrder).map((c): PpfTypeOption => ({ id: c.code, label: c.label_ja ?? "" })),
+    products: groupRows.filter((c) => c.ppf_type_group_id === p.id).sort(byOrder).map((c): PpfTypeOption => ({
+      id: c.code,
+      label: c.label_ja ?? "",
+      ...(c.install_coefficient_bp != null
+        ? { coefficientDisplay: `×${(c.install_coefficient_bp / 10_000).toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}` }
+        : {}),
+    })),
   }));
 
   // ── B1.1-B2: dealer-authored coupons (kind = 'coupon', dealer scope) ─────────
@@ -484,6 +490,7 @@ function buildConfigs(
   const pricingConfig: ConfiguredPricingConfiguration = {
     coupons: configuredCoupons,
     installCoefficientBpByCode,
+    ppfTypes: of("ppf_type_group", "global").map(label),
     ppfCoatingAdjustments,
     calculationDate,
     ppfMethods: of("ppf_method", "global").map(label),

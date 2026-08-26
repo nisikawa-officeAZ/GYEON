@@ -370,6 +370,7 @@ function readCustomRow(v: unknown, path: string, issues: Issues): OtherWorkCusto
 const REGISTRATION_METHODS = ["new", "ocr", "search"] as const;
 const SOURCE_MODES = ["existing", "new"] as const;
 const PPF_METHODS: readonly PpfInstallationMethodId[] = ["full", "partial", "windshield", "sunroof", "interior"];
+const PPF_FULL_COVERAGES = ["front_full", "full_body"] as const;
 const DISCOUNT_MODES: readonly DiscountMode[] = ["none", "amount", "percent"];
 const LAYER_COUNTS: readonly LayerCount[] = [1, 2, 3];
 
@@ -435,19 +436,22 @@ function readServiceConfiguration(
   let ppf: DraftSections["serviceConfiguration"]["ppf"] | undefined;
   if (pRaw !== undefined) {
     requireExactKeys(pRaw, `${path}.ppf`, [
-      "installationMethod", "selectedPartIds", "quantitiesByPart", "ppfTypeId", "unitPriceInput", "interiorRows",
+      "installationMethod", "fullCoverage", "selectedPartIds", "quantitiesByPart", "ppfTypeId",
+      "unitPriceInput", "vehicleCoefficientInput", "interiorRows",
     ], issues);
     const installationMethod = readNullableLiteral(pRaw.installationMethod, `${path}.ppf.installationMethod`, PPF_METHODS, issues);
+    const fullCoverage = readNullableLiteral(pRaw.fullCoverage, `${path}.ppf.fullCoverage`, PPF_FULL_COVERAGES, issues);
     const selectedPartIds = readStringArray(pRaw.selectedPartIds, `${path}.ppf.selectedPartIds`, issues);
     const quantitiesByPart = readNumberRecord(pRaw.quantitiesByPart, `${path}.ppf.quantitiesByPart`, issues);
     const ppfTypeId = readNullableString(pRaw.ppfTypeId, `${path}.ppf.ppfTypeId`, issues);
     const unitPriceInput = readString(pRaw.unitPriceInput, `${path}.ppf.unitPriceInput`, issues);
+    const vehicleCoefficientInput = readString(pRaw.vehicleCoefficientInput, `${path}.ppf.vehicleCoefficientInput`, issues);
     const interiorRows = readRowArray(pRaw.interiorRows, `${path}.ppf.interiorRows`, issues, readInteriorRow);
     if (
-      installationMethod !== undefined && selectedPartIds !== undefined && quantitiesByPart !== undefined &&
-      ppfTypeId !== undefined && unitPriceInput !== undefined && interiorRows !== undefined
+      installationMethod !== undefined && fullCoverage !== undefined && selectedPartIds !== undefined && quantitiesByPart !== undefined &&
+      ppfTypeId !== undefined && unitPriceInput !== undefined && vehicleCoefficientInput !== undefined && interiorRows !== undefined
     ) {
-      ppf = { installationMethod, selectedPartIds, quantitiesByPart, ppfTypeId, unitPriceInput, interiorRows };
+      ppf = { installationMethod, fullCoverage, selectedPartIds, quantitiesByPart, ppfTypeId, unitPriceInput, vehicleCoefficientInput, interiorRows };
     }
   }
 

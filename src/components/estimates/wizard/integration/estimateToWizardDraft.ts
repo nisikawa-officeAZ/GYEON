@@ -190,10 +190,12 @@ function cloneWizardDraft(source: EstimateWizardDraftV22): EstimateWizardDraftV2
       coating: { ...cfg.coating },
       ppf: {
         installationMethod: cfg.ppf.installationMethod,
+        fullCoverage: cfg.ppf.fullCoverage,
         selectedPartIds: [...cfg.ppf.selectedPartIds],
         quantitiesByPart: { ...cfg.ppf.quantitiesByPart },
         ppfTypeId: cfg.ppf.ppfTypeId,
         unitPriceInput: cfg.ppf.unitPriceInput,
+        vehicleCoefficientInput: cfg.ppf.vehicleCoefficientInput,
         interiorRows: cfg.ppf.interiorRows.map((row) => ({ ...row })),
       },
       windowFilm: {

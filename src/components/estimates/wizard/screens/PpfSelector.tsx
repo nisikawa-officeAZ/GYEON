@@ -13,6 +13,7 @@ import { PpfInstallationMethodSelector } from "./PpfInstallationMethodSelector";
 import { PpfPartialPartsSelector } from "./PpfPartialPartsSelector";
 import { InteriorPpfRows } from "./InteriorPpfRows";
 import { PpfTypeSelector } from "./PpfTypeSelector";
+import { SelectButton } from "../foundation/SelectButton";
 import type { PpfSelectorProps } from "./step-types";
 
 const CARD = "bg-[#1e293b] rounded-xl shadow-lg p-5";
@@ -22,10 +23,12 @@ export function PpfSelector(props: PpfSelectorProps) {
   const {
     shopRank, ppfLocked, lockReason,
     selectedInstallationMethod, installationMethods, onInstallationMethodChange,
+    selectedFullCoverage = null, onFullCoverageChange,
     selectedPartialPartIds, partialParts, quantitiesByPart, onPartialPartToggle, onQuantityChange,
     selectedPpfTypeId, ppfTypes, onPpfTypeChange,
     interiorRows, onInteriorRowAdd, onInteriorRowUpdate, onInteriorRowDelete,
     displayedUnitPrice, editableUnitPrice, onUnitPriceChange, coefficientDisplay,
+    vehicleCoefficientInput = "1.0", onVehicleCoefficientChange,
     combinedServiceAdjustment, onAddOrUpdate,
   } = props;
 
@@ -45,6 +48,7 @@ export function PpfSelector(props: PpfSelectorProps) {
   const isInterior = method === "interior";
   // PPF type + unit price apply to full/partial/windshield/sunroof (not interior free rows).
   const showType = !!method && !isInterior;
+  const usesR1Price = method === "full" || method === "partial";
 
   return (
     <div className={CARD}>
@@ -56,6 +60,26 @@ export function PpfSelector(props: PpfSelectorProps) {
       <div className="flex flex-col gap-5">
         {/* 1) 施工方法（5モード）*/}
         <PpfInstallationMethodSelector methods={installationMethods} selected={method} onChange={onInstallationMethodChange} />
+
+        {method === "full" && (
+          <div>
+            <span className="text-xs font-medium text-slate-300">施工範囲を選択</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+              <SelectButton
+                selected={selectedFullCoverage === "front_full"}
+                onSelect={() => onFullCoverageChange?.("front_full")}
+              >
+                フロントフル
+              </SelectButton>
+              <SelectButton
+                selected={selectedFullCoverage === "full_body"}
+                onSelect={() => onFullCoverageChange?.("full_body")}
+              >
+                フルボディ
+              </SelectButton>
+            </div>
+          </div>
+        )}
 
         {/* 2) 部分施工のみ部位選択（フル/ガラス/サンルーフでは非表示）*/}
         {isPartial && (
@@ -84,7 +108,30 @@ export function PpfSelector(props: PpfSelectorProps) {
         {showType && <PpfTypeSelector groups={ppfTypes} selectedId={selectedPpfTypeId} onChange={onPpfTypeChange} />}
 
         {/* 4) 店舗設定由来の 単価/係数 表示 + 編集可能単価（計算は親）*/}
-        {showType && (
+        {showType && usesR1Price && (
+          <div className="rounded-lg border border-slate-700/60 p-3 flex flex-col gap-2">
+            <p className="text-xs text-slate-300">
+              価格は、施工範囲の価格 × PPF施工係数 × 車格係数で自動計算されます。
+            </p>
+            <label className="text-xs text-slate-400">
+              車格係数（通常車は1.0）
+              <input
+                type="number"
+                inputMode="decimal"
+                min="0.0001"
+                step="0.01"
+                value={vehicleCoefficientInput}
+                onChange={(event) => onVehicleCoefficientChange?.(event.target.value)}
+                className="mt-1 w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-base sm:text-sm text-slate-100 text-right focus:outline-none focus:border-[#1d4ed8]"
+              />
+            </label>
+            <p className="text-[10px] text-slate-500">
+              輸入車・スーパーカーなど施工難易度が高い車両だけ調整してください。
+            </p>
+          </div>
+        )}
+
+        {showType && !usesR1Price && (
           <div className="rounded-lg border border-slate-700/60 p-3 flex flex-col gap-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">店舗設定 単価（既定）</span>

@@ -7,6 +7,7 @@
 import type { CustomerDB } from "@/lib/customers/customer-types";
 import type { VehicleDB } from "@/lib/vehicles/vehicle-types";
 import type { BodySizeEstimate } from "@/lib/vehicles/body-size-estimate";
+import type { PpfFullCoverage } from "../draft/wizard-draft-types";
 
 /** Mirrors EstimateEditor `nc` (new-customer draft) exactly. */
 export interface NewCustomerDraft {
@@ -179,6 +180,8 @@ export interface PpfSelectorProps {
   selectedInstallationMethod: PpfInstallationMethodId | null;
   installationMethods:        InstallationMethodOption[];
   onInstallationMethodChange: (id: PpfInstallationMethodId) => void;
+  selectedFullCoverage?:       PpfFullCoverage | null;
+  onFullCoverageChange?:       (coverage: PpfFullCoverage) => void;
 
   // partial parts + quantity
   selectedPartialPartIds:  string[];
@@ -202,6 +205,8 @@ export interface PpfSelectorProps {
   displayedUnitPrice?:     number | null; // default/displayed unit price
   editableUnitPrice?:      string;        // operator-editable unit price value
   onUnitPriceChange?:      (v: string) => void;
+  vehicleCoefficientInput?: string;
+  onVehicleCoefficientChange?: (v: string) => void;
   coefficientDisplay?:     string | null; // display-only
   combinedServiceAdjustment?: string | null; // PPF+coating message/result (display only)
 

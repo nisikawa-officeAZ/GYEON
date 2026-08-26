@@ -65,6 +65,12 @@ const VALID_PPF = {
   glass_prices: { ppf: 82000 },
   parts_prices: { "sp-headlight": 26000 },
 };
+const VALID_PPF_R1 = {
+  contractVersion: "1.0",
+  frontFullPricesBySize: { SS: 100000, S: 110000, M: 120000, ML: 130000, L: 140000, LL: 150000, XL: null },
+  fullBodyPricesBySize: { SS: 400000, S: 450000, M: 500000, ML: 550000, L: 600000, LL: 650000, XL: 700000 },
+  partialPartPrices: { bonnet: 40000, "front-bumper": 50000, "door-mirror": 0 },
+};
 
 // deep clones for mutation-based malformed fixtures (JSON drops undefined / cannot hold NaN — those
 // cases are built inline).
@@ -182,6 +188,15 @@ test("2c. valid service + PPF null → service overrides plus default PPF", asyn
   assert.deepEqual(cat.coatingV34, VALID_COATING_V34, "coating is sourced from the V3.4 direct-price contract");
   const legacy = makePricingCatalog(dealerSettingsToPricingCatalog(spc as unknown as ServicePriceSettings, null));
   assert.deepEqual({ ...cat, coatingV34: null }, legacy, "every other family still matches the legacy overlay exactly");
+});
+
+test("2d. versioned PPF R1 resolves into its dedicated authority without legacy fallback", async () => {
+  const cat = okCatalog(await resolveRow(null, VALID_PPF_R1));
+  assert.deepEqual(cat.ppfR1, VALID_PPF_R1);
+  assert.deepEqual(cat.ppfPlanPrices, DEFAULT_PRICING_CATALOG.ppfPlanPrices);
+  assert.equal(cat.ppfR1?.frontFullPricesBySize.M, 120000);
+  assert.equal(cat.ppfR1?.fullBodyPricesBySize.M, 500000);
+  assert.equal(cat.ppfR1?.partialPartPrices["front-bumper"], 50000);
 });
 
 // ── 3. Malformed rejection ─────────────────────────────────────────────────────────

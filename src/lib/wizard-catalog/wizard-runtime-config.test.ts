@@ -33,7 +33,11 @@ function globals(): WizardCatalogRow[] {
     .map((c) => row({ kind: "ppf_method", code: c, owner_scope: "global", ranks: PPF_RANKS, categories: ["ppf"] }));
   const part = Array.from({ length: 16 }, (_, i) => row({ kind: "ppf_part", code: `part-${i}`, owner_scope: "global", ranks: PPF_RANKS, categories: ["ppf"] }));
   const parents = ["group-gloss", "group-matte", "group-color"].map((c) => row({ kind: "ppf_type_group", code: c, owner_scope: "global", ranks: PPF_RANKS, categories: ["ppf"], id: `g:${c}` }));
-  const prods = Array.from({ length: 8 }, (_, i) => row({ kind: "ppf_type_group", code: `prod-${i}`, owner_scope: "global", ranks: PPF_RANKS, categories: ["ppf"], ppf_type_group_id: "g:group-gloss" }));
+  const prods = Array.from({ length: 8 }, (_, i) => row({
+    kind: "ppf_type_group", code: `prod-${i}`, owner_scope: "global", ranks: PPF_RANKS,
+    categories: ["ppf"], ppf_type_group_id: "g:group-gloss",
+    install_coefficient_bp: i === 0 ? 12_500 : null,
+  }));
   return [...win, ...meth, ...part, ...parents, ...prods]; // 7+5+16+3+8 = 39
 }
 function menus(): WizardCatalogRow[] {
@@ -191,6 +195,9 @@ test("certified with a valid film type succeeds; PPF groups build parent→produ
   assert.equal(r.screenConfig.ppfMethods.length, 5);
   const gloss = r.screenConfig.ppfTypeGroups.find((g) => g.id === "group-gloss");
   assert.equal(gloss?.products.length, 8); // all 8 products parented to gloss in this fixture
+  assert.equal(gloss?.products.find((p) => p.id === "prod-0")?.coefficientDisplay, "×1.25");
+  assert.deepEqual(r.pricingConfig.ppfTypes?.find((p) => p.code === "prod-0"), { code: "prod-0", label: "prod-0" });
+  assert.equal(r.pricingConfig.installCoefficientBpByCode?.["prod-0"], 12_500);
 });
 
 // ── Config accepted by the production pricing adapter ────────────────────────

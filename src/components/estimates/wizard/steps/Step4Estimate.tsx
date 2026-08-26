@@ -188,6 +188,8 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
             selectedInstallationMethod={cfg.ppf.installationMethod}
             installationMethods={screenConfig.ppfMethods}
             onInstallationMethodChange={bindings.ppf.onInstallationMethodChange}
+            selectedFullCoverage={cfg.ppf.fullCoverage}
+            onFullCoverageChange={bindings.ppf.onFullCoverageChange}
             selectedPartialPartIds={cfg.ppf.selectedPartIds}
             partialParts={screenConfig.ppfParts}
             quantitiesByPart={cfg.ppf.quantitiesByPart}
@@ -203,6 +205,8 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
             displayedUnitPrice={null}
             editableUnitPrice={cfg.ppf.unitPriceInput}
             onUnitPriceChange={bindings.ppf.onUnitPriceChange}
+            vehicleCoefficientInput={cfg.ppf.vehicleCoefficientInput}
+            onVehicleCoefficientChange={bindings.ppf.onVehicleCoefficientChange}
             coefficientDisplay={null}
             combinedServiceAdjustment={null}
             onAddOrUpdate={() => {}}

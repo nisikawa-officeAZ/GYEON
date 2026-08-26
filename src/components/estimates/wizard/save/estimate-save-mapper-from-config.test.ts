@@ -22,13 +22,22 @@ import { resetWizardDraft } from "../draft/wizard-draft-state";
 import type { EstimateWizardDraftV22, WizardServiceConfigurationDraft, WizardDiscountDraft } from "../draft/wizard-draft-types";
 import type { ShopRank } from "../screens/step-types";
 import type { ServiceCategoryId } from "@/lib/estimates/service-categories";
-import type { ProductionPricingConfiguration } from "../pricing/wizard-manual-pricing-config";
+import type { ConfiguredPricingConfiguration } from "../pricing/wizard-pricing-input-adapter-config";
 import type { WizardPricingResult } from "../pricing/wizard-pricing-types";
 
 const RANK: ShopRank = "detailer";
-const CATALOG: PricingCatalog = makePricingCatalog();
-const PC: ProductionPricingConfiguration = {
+const CATALOG: PricingCatalog = makePricingCatalog({
+  ppfR1: {
+    contractVersion: "1.0",
+    frontFullPricesBySize: { SS: 80_000, S: 90_000, M: 100_000, ML: 110_000, L: 120_000, LL: 130_000, XL: 140_000 },
+    fullBodyPricesBySize: { SS: 400_000, S: 450_000, M: 500_000, ML: 550_000, L: 600_000, LL: 650_000, XL: 700_000 },
+    partialPartPrices: { bonnet: 40_000 },
+  },
+});
+const PC: ConfiguredPricingConfiguration = {
   ppfMethods: [{ code: "full", label: "PPFフル施工" }], filmTypes: [],
+  ppfTypes: [{ code: "gg1", label: "PPFタイプA" }],
+  installCoefficientBpByCode: { gg1: 12_500 },
   maintenanceMenus: [{ code: "mm1", label: "6ヶ月ボディメンテナンス" }], washMenus: [], roomCleaningMenus: [],
   storeGlobalOptions: [
     { code: "go-np", label: "非課金オプション", priceable: false, quantityRequired: false, minQuantity: 1, maxQuantity: null },
@@ -106,17 +115,17 @@ test("catalog ids and roles come directly from the pricing result", () => {
 });
 
 test("manual label comes from pricingConfig; identity + option identity preserved", () => {
-  // maintenance manual line → label from config; ppf manual line → optionIdentity from ppfTypeId.
+  // maintenance manual line → label from config; calculated PPF line → optionIdentity from ppfTypeId.
   const draft = draftWith(["maintenance", "ppf"], {
     bodyMaintenance: { menuId: "mm1", unitPriceInput: "5000" },
-    ppf: { installationMethod: "full", selectedPartIds: [], quantitiesByPart: {}, ppfTypeId: "gg1", unitPriceInput: "100000", interiorRows: [] },
+    ppf: { installationMethod: "full", fullCoverage: "full_body", selectedPartIds: [], quantitiesByPart: {}, ppfTypeId: "gg1", unitPriceInput: "100000", vehicleCoefficientInput: "1.0", interiorRows: [] },
   });
   const req = okReq(run(draft));
   const maint = req.services.find((s) => s.category === "maintenance");
   assert.equal(maint?.label, "6ヶ月ボディメンテナンス", "label from config, not the code");
   assert.equal(maint?.manualPricingIdentity, "mm1");
   const ppf = req.services.find((s) => s.category === "ppf");
-  assert.equal(ppf?.manualPricingIdentity, "full");
+  assert.equal(ppf?.manualPricingIdentity, "ppf_r1_full_body_gg1");
   assert.deepEqual(ppf?.selectedOptionReferenceIds, ["gg1"], "option identity preserved");
 });
 

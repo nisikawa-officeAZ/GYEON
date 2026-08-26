@@ -27,6 +27,7 @@ import {
 
 type Layer = "base" | "layer2" | "layer3";
 type TextPrices = Record<string, string>;
+type DraftNoticeState = "sample" | "dirty" | "persisted";
 
 interface ProductMeta {
   id: string;
@@ -547,7 +548,19 @@ function CoatingEditor({
   );
   const [legacyBaseConfirmed, setLegacyBaseConfirmed] = useState(resolution.status !== "LEGACY_REVIEW_REQUIRED");
   const [notice, setNotice] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+  const [draftNoticeState, setDraftNoticeState] = useState<DraftNoticeState>(() =>
+    resolution.status === "NOT_CONFIGURED"
+      ? "sample"
+      : resolution.status === "LEGACY_REVIEW_REQUIRED"
+        ? "dirty"
+        : "persisted",
+  );
   const [isPending, startTransition] = useTransition();
+
+  const markDraftDirty = () => {
+    setDraftNoticeState("dirty");
+    setNotice(null);
+  };
 
   const hasUnconfirmedZero = useMemo(
     () => Object.entries(textPrices).some(([key, value]) => normalizeDigits(value).trim() === "0" && !confirmedFree.has(key)),
@@ -564,14 +577,23 @@ function CoatingEditor({
         return next;
       });
     }
-    setNotice(null);
+    markDraftDirty();
   };
 
   const toggleActive = (layer: Layer) => {
     const id = selected[layer];
     if (!id) return;
     setSettings((current) => withLayerActive(current, layer, id, !layerActive(current, layer, id)));
-    setNotice(null);
+    markDraftDirty();
+  };
+
+  const confirmFree = (key: string, checked: boolean) => {
+    setConfirmedFree((current) => {
+      const next = new Set(current);
+      checked ? next.add(key) : next.delete(key);
+      return next;
+    });
+    markDraftDirty();
   };
 
   const bulkCopyPrices = (
@@ -602,6 +624,7 @@ function CoatingEditor({
       }
       return next;
     });
+    setDraftNoticeState("dirty");
     setNotice({ kind: "success", text: successText });
   };
 
@@ -672,6 +695,7 @@ function CoatingEditor({
       if (result.status === "SAVED") {
         setSettings(result.settings);
         setTextPrices(initialTextPrices(result.settings));
+        setDraftNoticeState("persisted");
         setNotice({ kind: "success", text: "コーティング価格を保存しました。" });
       } else if (result.status === "UNAUTHORIZED") {
         setNotice({ kind: "error", text: "保存権限がありません。オーナーまたはマネージャーで実行してください。" });
@@ -720,7 +744,7 @@ function CoatingEditor({
           <p className="font-bold text-amber-200">旧価格設定から7サイズ別価格へ変換しました</p>
           <p className="mt-2 text-sm leading-6 text-amber-100/75">旧1層目候補は確認後に保存できます。旧共有トップコート価格は層を自動判定しません。各商品を2層目・3層目へ明示的に割り当ててください。</p>
           <label className="mt-4 flex items-center gap-2 text-sm text-amber-100">
-            <input type="checkbox" checked={legacyBaseConfirmed} onChange={(event) => setLegacyBaseConfirmed(event.target.checked)} className="h-4 w-4 accent-[#2f6bff]" />
+            <input type="checkbox" checked={legacyBaseConfirmed} onChange={(event) => { setLegacyBaseConfirmed(event.target.checked); markDraftDirty(); }} className="h-4 w-4 accent-[#2f6bff]" />
             1層目の変換候補を確認しました
           </label>
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
@@ -733,10 +757,13 @@ function CoatingEditor({
                       <input
                         type="checkbox"
                         checked={legacyAssignments[product.productId]?.[layer] ?? false}
-                        onChange={(event) => setLegacyAssignments((current) => ({
-                          ...current,
-                          [product.productId]: { ...current[product.productId], [layer]: event.target.checked },
-                        }))}
+                        onChange={(event) => {
+                          setLegacyAssignments((current) => ({
+                            ...current,
+                            [product.productId]: { ...current[product.productId], [layer]: event.target.checked },
+                          }));
+                          markDraftDirty();
+                        }}
                         className="h-4 w-4 accent-[#2f6bff]"
                       />
                       {layer === "layer2" ? "2層目に割り当て" : "3層目に割り当て"}
@@ -749,9 +776,15 @@ function CoatingEditor({
         </section>
       ) : null}
 
-      {resolution.status === "NOT_CONFIGURED" ? (
-        <div className="mt-5 rounded-xl border border-[#31588f] bg-[#10264d]/55 px-4 py-3 text-sm leading-6 text-[#b8cdf0]">
-          現在設定されている価格はシミュレーション用の価格を表示しています。御社の規定の金額を入力し保存を押してからアプリをご使用ください。
+      {draftNoticeState === "sample" ? (
+        <div className="mt-5 rounded-xl border border-[#31588f] bg-[#10264d]/55 px-4 py-3 text-sm leading-6 text-[#b8cdf0]" role="status" data-notice-state="sample">
+          <strong>画面に表示されている金額・係数・作業時間は、表示確認のためのサンプルです。実際の設定には使用されません。</strong><br />
+          ご利用前に、店舗で使用する正しい内容を入力してください。空欄は「未設定」、0円は「無料」として登録されます。
+        </div>
+      ) : draftNoticeState === "dirty" ? (
+        <div className="mt-5 rounded-xl border border-[#31588f] bg-[#10264d]/55 px-4 py-3 text-sm leading-6 text-[#b8cdf0]" role="status" data-notice-state="dirty">
+          <strong>入力内容はまだ保存されていません。</strong><br />
+          内容を確認し、登録する場合は「保存する」を押してください。
         </div>
       ) : null}
 
@@ -769,7 +802,7 @@ function CoatingEditor({
           textPrices={textPrices}
           onTextChange={updateText}
           confirmedFree={confirmedFree}
-          onConfirmFree={(key, checked) => setConfirmedFree((current) => { const next = new Set(current); checked ? next.add(key) : next.delete(key); return next; })}
+          onConfirmFree={confirmFree}
           onToggleActive={() => toggleActive("base")}
           bulkCopy={catalogs.base.some((product) => product.id === BULK_COPY_SOURCE_PRODUCT_ID) ? {
             label: "PURE価格を1層目へ一括反映",
@@ -793,7 +826,7 @@ function CoatingEditor({
             textPrices={textPrices}
             onTextChange={updateText}
             confirmedFree={confirmedFree}
-            onConfirmFree={(key, checked) => setConfirmedFree((current) => { const next = new Set(current); checked ? next.add(key) : next.delete(key); return next; })}
+            onConfirmFree={confirmFree}
           onToggleActive={() => toggleActive("layer2")}
           bulkCopy={catalogs.layer2.some((product) => product.id === BULK_COPY_SOURCE_PRODUCT_ID) ? {
             label: "PURE価格を2層目へ一括反映",
@@ -817,7 +850,7 @@ function CoatingEditor({
             textPrices={textPrices}
             onTextChange={updateText}
             confirmedFree={confirmedFree}
-            onConfirmFree={(key, checked) => setConfirmedFree((current) => { const next = new Set(current); checked ? next.add(key) : next.delete(key); return next; })}
+            onConfirmFree={confirmFree}
           onToggleActive={() => toggleActive("layer3")}
           bulkCopy={catalogs.layer2.some((product) => product.id === BULK_COPY_SOURCE_PRODUCT_ID) ? {
             label: "PUREの2層目価格を3層目へ一括反映",
@@ -844,7 +877,7 @@ function CoatingEditor({
             <div key={id} className="grid gap-2 rounded-xl border border-[#263955] bg-[#08111f] p-3 sm:grid-cols-[1fr_160px]">
               <input
                 value={settings.option_names[id]}
-                onChange={(event) => setSettings((current) => ({ ...current, option_names: { ...current.option_names, [id]: event.target.value } }))}
+                onChange={(event) => { setSettings((current) => ({ ...current, option_names: { ...current.option_names, [id]: event.target.value } })); markDraftDirty(); }}
                 aria-label={`${id}の名称`}
                 className="min-h-11 rounded-lg border border-[#334765] bg-[#060c17] px-3 text-sm text-white outline-none focus:border-[#4788ff]"
               />
@@ -856,6 +889,7 @@ function CoatingEditor({
                     const raw = normalizeDigits(event.target.value);
                     if (raw !== "" && !/^\d+$/.test(raw)) return;
                     setSettings((current) => ({ ...current, option_prices: { ...current.option_prices, [id]: raw === "" ? 0 : Number(raw) } }));
+                    markDraftDirty();
                   }}
                   aria-label={`${settings.option_names[id]}の税抜価格`}
                   className="min-w-0 flex-1 bg-transparent text-right text-sm text-white outline-none"

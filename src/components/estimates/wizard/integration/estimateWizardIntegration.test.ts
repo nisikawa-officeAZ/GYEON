@@ -39,6 +39,7 @@ import {
 } from "../draft/wizard-draft-state";
 import { buildWizardPricingInput } from "../pricing/wizard-pricing-input-adapter";
 import { buildWizardPricingInputFromConfig } from "../pricing/wizard-pricing-input-adapter-config";
+import type { ConfiguredPricingConfiguration } from "../pricing/wizard-pricing-input-adapter-config";
 import {
   buildManualPricingLinesFromConfig,
   WIZARD_PRICING_CONFIG_ERRORS,
@@ -47,7 +48,7 @@ import {
   type ProductionStoreGlobalOption,
 } from "../pricing/wizard-manual-pricing-config";
 import { buildLineItems } from "@/lib/pricing/pricing-engine";
-import { DEFAULT_PRICING_CATALOG } from "@/lib/pricing/pricing-catalog";
+import { DEFAULT_PRICING_CATALOG, makePricingCatalog } from "@/lib/pricing/pricing-catalog";
 import type { EstimateItemDB, EstimateCategory } from "@/lib/estimates/estimate-types";
 
 // ── Fixtures (synthetic only) ────────────────────────────────────────────────────
@@ -105,8 +106,10 @@ const gopt = (
   code, label, priceable: true, quantityRequired: false, minQuantity: 1, maxQuantity: null, ...over,
 });
 
-const TEST_CONFIG: ProductionPricingConfiguration = {
+const TEST_CONFIG: ConfiguredPricingConfiguration = {
   ppfMethods:         [opt("full", "CFG-PPF-FULL")],
+  ppfTypes:           [opt("ppf-type-a", "CFG-PPF-TYPE")],
+  installCoefficientBpByCode: { "ppf-type-a": 12_500 },
   filmTypes:          [opt("film-a", "CFG-FILM-A")],
   maintenanceMenus:   [opt("maint-a", "CFG-MAINT-A")],
   washMenus:          [opt("wash-a", "CFG-WASH-A")],
@@ -118,9 +121,18 @@ const TEST_CONFIG: ProductionPricingConfiguration = {
   ],
 };
 
+const PPF_TEST_CATALOG = makePricingCatalog({
+  ppfR1: {
+    contractVersion: "1.0",
+    frontFullPricesBySize: { SS: 80_000, S: 90_000, M: 100_000, ML: 110_000, L: 120_000, LL: 130_000, XL: 140_000 },
+    fullBodyPricesBySize: { SS: 400_000, S: 450_000, M: 500_000, ML: 550_000, L: 600_000, LL: 650_000, XL: 700_000 },
+    partialPartPrices: { bonnet: 40_000 },
+  },
+});
+
 /** Every label this configuration can legitimately produce. */
 const CONFIG_LABELS = [
-  "CFG-PPF-FULL", "CFG-FILM-A", "CFG-MAINT-A", "CFG-WASH-A",
+  "CFG-PPF-FULL", "CFG-PPF-TYPE", "CFG-FILM-A", "CFG-MAINT-A", "CFG-WASH-A",
   "CFG-ROOM-A", "CFG-ROOM-B", "CFG-GOPT-A", "CFG-GOPT-QTY",
 ];
 
@@ -1233,7 +1245,7 @@ function draftFor(edit: (d: HydratedWizardDraft["draft"]) => void): HydratedWiza
 }
 
 const planFor = (h: HydratedWizardDraft) =>
-  buildEstimateEditorApplyPlan(h, "create", DEFAULT_PRICING_CATALOG, TEST_CONFIG);
+  buildEstimateEditorApplyPlan(h, "create", PPF_TEST_CATALOG, TEST_CONFIG);
 
 // ── Every manual category: the AUTHORITATIVE label reaches PricedLineItem ────────
 const CATEGORY_CASES: ReadonlyArray<{
@@ -1242,11 +1254,19 @@ const CATEGORY_CASES: ReadonlyArray<{
   edit: (d: HydratedWizardDraft["draft"]) => void;
 }> = [
   {
-    name: "ppf", expectLabel: "PPF CFG-PPF-FULL",
+    name: "ppf", expectLabel: "PPF フルボディ（CFG-PPF-TYPE）",
     edit: (d) => {
+      d.vehicle = { ...d.vehicle, bodySizeKey: "M" };
       d.serviceSelection = { selectedCategories: ["ppf"] };
       d.serviceConfiguration = { ...d.serviceConfiguration,
-        ppf: { ...d.serviceConfiguration.ppf, installationMethod: "full", unitPriceInput: "50000" } };
+        ppf: {
+          ...d.serviceConfiguration.ppf,
+          installationMethod: "full",
+          fullCoverage: "full_body",
+          ppfTypeId: "ppf-type-a",
+          vehicleCoefficientInput: "1.0",
+          unitPriceInput: "50000",
+        } };
     },
   },
   {
