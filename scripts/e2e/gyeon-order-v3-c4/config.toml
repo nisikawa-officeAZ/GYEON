@@ -1,0 +1,59 @@
+# GYEON_ORDER_V3_C4_R1_DISPOSABLE_TEMPLATE
+# This file is copied into a fresh runtime outside the repository. It is never
+# used as the repository's root Supabase configuration and must never be linked.
+
+project_id = "__C4_PROJECT_ID__"
+
+[api]
+enabled = true
+port = __C4_API_PORT__
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = __C4_DB_PORT__
+shadow_port = __C4_SHADOW_PORT__
+major_version = 17
+
+[db.pooler]
+enabled = false
+
+[db.seed]
+enabled = false
+
+[realtime]
+enabled = false
+
+[studio]
+enabled = true
+port = __C4_STUDIO_PORT__
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+port = __C4_INBUCKET_PORT__
+smtp_port = __C4_SMTP_PORT__
+pop3_port = __C4_POP3_PORT__
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:__C4_APP_PORT__"
+additional_redirect_urls = ["http://127.0.0.1:__C4_APP_PORT__"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false
