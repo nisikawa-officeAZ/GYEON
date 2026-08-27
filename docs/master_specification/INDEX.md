@@ -5,7 +5,7 @@ All requirements, architecture, business rules, and specifications are canonical
 
 For current GYEON DA execution priority, ownership, phase authorization, completion evidence, and deferred scope, `GYEON_DA_COMPLETION_PLAN.md` and its result ledger take precedence over older roadmaps, status files, release notes, `CURRENT_TASK.md`, chat history, and handoff text. Those older documents remain historical evidence and must not silently redirect active work.
 
-**Last Updated:** 2026-08-11
+**Last Updated:** 2026-08-27
 **Completion:** **100% (12 / 12 documents complete)**
 
 ## Current GYEON DA execution control
@@ -18,6 +18,8 @@ The following supporting documents govern the current GYEON Detailer Agent compl
 | GYEON DA Completion Plan | `GYEON_DA_COMPLETION_PLAN.md` | Direction ratified; committed | Current execution authority: mission, ownership, fixed decisions, residual register, strict phase order, and completion standard. |
 | GYEON DA Phase Results | `GYEON_DA_PHASE_RESULTS.md` | Active ledger | Append-only phase evidence, acceptance decisions, Git state, verification, and external-action record. |
 | Reservation Conversion Contract | `GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md` | Accepted, committed, and pushed at commit 09c564de; implementation separately unauthorized | Reservation → estimate → work-order conversion contract: prefill authority, direct-work-order exception, state machine, idempotency, numbering, and RLS/authorization boundary. |
+| Dealer Order Formal Decision V3 | `SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md` | Owner-ratified documentation candidate; uncommitted | Binding dealer-order business/UI decisions, supersession boundaries, unresolved implementation decisions, and acceptance contract. Runtime implementation remains separately unauthorized. |
+| GenSpark Dealer Order UI Production Request V3 | `SPEC_GYEON_ORDER_001_GENSPARK_UI_PRODUCTION_REQUEST_V3.md` | Owner-ratified documentation candidate; uncommitted | Exact no-invention production request for PC, tablet, and mobile dealer-order UI, states, roles, payments, warehouse calendar, notifications, and handoff evidence. |
 
 ---
 

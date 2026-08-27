@@ -2082,3 +2082,99 @@ prohibited:
 current_stop: "Four-document uncommitted candidate only; independent Sol acceptance next."
 decision: "GDA_AUTH_DEVNEXT_1A_GOVERNANCE_CANDIDATE_UNCOMMITTED"
 ```
+
+## GDA-ORDER-SPEC-1-A0 — Dealer-order V3 formal documentation candidate
+
+```yaml
+phase: GDA-ORDER-SPEC-1-A0_DEALER_ORDER_V3_FORMAL_DOCUMENTATION
+status: DOCUMENTATION_CANDIDATE_UNCOMMITTED
+date: 2026-08-27
+append_only: true
+authorization: "The product owner explicitly requested a formal GenSpark production request, a Studio change notice/formal decision in Git, and preservation of the final decision specification in the DA master specification."
+scope:
+  da_literal_allowlist:
+    - "ADD docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md"
+    - "ADD docs/master_specification/SPEC_GYEON_ORDER_001_GENSPARK_UI_PRODUCTION_REQUEST_V3.md"
+    - "MODIFY docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+    - "MODIFY docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+    - "MODIFY docs/master_specification/INDEX.md"
+  studio_literal_allowlist:
+    - "ADD docs/bound/SPEC-GYEON-ORDER-001_V3_STUDIO_CHANGE_NOTICE.md"
+    - "MODIFY docs/bound/README.md"
+repositories:
+  da:
+    branch: "agent/gyeon-order-ui-idempotency-resume-v1"
+    base_commit: "6e4e03b43fd184f6e7154dcfb8fc6e17470587ca"
+    base_tree: "d7e5cf91db603fc21469436e9055dbcce61d1489"
+  studio:
+    branch: "spec/product-master-v1"
+    base_commit: "a3a7851d1e77dc6cffa5fccc8e4b65de5f63bbab"
+    base_tree: "aec668448e5d247a4891352a8f75681d808d24ba"
+binding_decisions:
+  free_shipping: "pre-discount tax-exclusive list-price total >= JPY 30000; promotional goods, tax, and shipping excluded"
+  final_order_authority: "staff may prepare; owner only may formally submit"
+  payment_methods: "card, PayPay Bank prepayment, cash on delivery, and super-admin-authorized monthly credit sale"
+  backorder: "dealer chooses split-first or combined shipment for the whole order; later backorder shipment adds no shipping fee"
+  inbound: "GYEON-headquarters order number is received as one non-split inbound lot"
+  stock: "formal stock, inbound-confirmed awaiting stocktake, reserved stock, and orderable stock remain distinct"
+  warehouse: "durable work queue plus bell/email notification; super-admin warehouse calendar controls operating day and daily cutoff"
+  documents: "issued delivery-note and invoice PDFs are downloadable; customer-direct price-display policy remains unresolved"
+conflict_resolution:
+  order_status: "ADR-0003 six-state lifecycle remains unchanged"
+  superseded_dealer_order_clauses: "tax-included free-shipping basis, card-only payment, and blanket no-split outbound shipment in older Studio documents"
+  preserved_boundary: "no split for GYEON-headquarters inbound"
+verification:
+  document_content_review: "SELF_CHECK_PASS; PENDING_INDEPENDENT_ACCEPTANCE"
+  exact_changed_paths:
+    da:
+      - "docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md"
+      - "docs/master_specification/SPEC_GYEON_ORDER_001_GENSPARK_UI_PRODUCTION_REQUEST_V3.md"
+      - "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md"
+      - "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+      - "docs/master_specification/INDEX.md"
+    studio:
+      - "docs/bound/SPEC-GYEON-ORDER-001_V3_STUDIO_CHANGE_NOTICE.md"
+      - "docs/bound/README.md"
+  per_path_sha256_excluding_self_referential_ledger:
+    da_formal_decision: "44fc165d02b434c6eff23760813db5070039bab58fcbb6f8e11d3a1cb86cbbc2"
+    da_genspark_request: "2fe77a838220b2bac235a8388ff064a2ddab7d5b3df82624f38e8cee60df3031"
+    da_completion_plan: "be95df4fee3e9116c5658713d4f972c08cc80f6ff87f1efb38a0793f1e9a6ea1"
+    da_index: "3e1ded684cd165c12441d8d92da0cf0512251f488e0dc1c3645a2c5b2387dffb"
+    studio_change_notice: "9980730b3a3a29df5090e9cae392c90ead33d583477aa6695615d780c9f577f7"
+    studio_index: "7590088f4d59d9dd6bdfb33614be4b9a30efb7c3b6e421c6a47fb0cf38bcfb10"
+  git_diff_check: "PASS_BOTH_REPOSITORIES"
+  tests: "NOT_RUN_DOCUMENTATION_ONLY"
+protected_paths:
+  content_read_or_modified: false
+  metadata_only:
+    - "src/components/estimates/wizard/screens/ScreensPreview.tsx"
+    - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts"
+    - "supabase/migrations/20260801110110_line_link_tokens.sql"
+    - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql"
+external_actions:
+  source_or_test_edit: false
+  database_or_supabase: false
+  payment_or_bank_api: false
+  warehouse_or_notification: false
+  stage: false
+  commit: false
+  push: false
+  pr_ready_merge_or_deploy: false
+known_unresolved:
+  - "card capture timing and amount for split backorders"
+  - "cash-on-delivery fee contract"
+  - "credit limit and overdue-stop contract"
+  - "customer-direct delivery-note price display"
+  - "notification-recipient count and permissions"
+  - "saved-cart recalculation on price/stock change"
+  - "island/difficult-region shipping contract"
+  - "warehouse escalation SLA"
+  - "PDF generation provider, retention, and reissue rules"
+  - "NEW 90-day timer reset rules"
+  - "delivery-address registry and customer-direct address authority"
+  - "order-contact and notification-recipient source of truth"
+  - "favorites and saved-cart data scope, retention, and cross-device recovery"
+rollback: "Delete only the seven uncommitted candidate changes. No source, database, external service, or production state was changed."
+decision: "GDA_ORDER_SPEC_1_V3_DOCUMENTATION_CANDIDATE_UNCOMMITTED"
+next: "INDEPENDENTLY_REVIEW_EXACT_SEVEN_PATH_CANDIDATE; DA_AND_STUDIO_STAGE_COMMIT_PUSH_REMAIN_SEPARATE_OWNER_GATES"
+```

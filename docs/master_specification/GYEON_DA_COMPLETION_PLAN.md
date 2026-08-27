@@ -57,6 +57,7 @@ The following decisions remain binding until this file is changed, reviewed, exp
 9. **Claude is the bounded implementation agent.** Claude diagnoses, repairs, and runs executable tests only inside an authorized GYEON DA phase; Claude must confirm the Git plan before acting.
 10. **Studio owns the complete Office AZ inventory system.** Studio continues autonomously within its approved inventory specification and does not wait for routine MacBook review. It escalates only product-authority changes, security boundaries, scope conflicts, destructive operations, shared-integration contracts, and final DetailerOS integration.
 11. **GYEON HP store discovery is the first ratified post-completion growth track, with one accepted bounded exception.** The full store-directory, media, cross-domain API, website, SEO/MEO, GBP and nightly-publication sequence remains deferred until GDA-7. On 2026-08-16 the product owner explicitly activated only `GHP-2A`, the pure two-path public-profile projection seed in Draft PR #12; its privacy and authority contract is now independently accepted at head `9b8bc1eb2cb59e879f5ebeb5b91e85ba4f522662`. PR #12 remains Draft and unmerged, and the acceptance does not authorize persistence or external connection work.
+12. **The dealer-order business contract is formally ratified as documentation-only V3.** On 2026-08-27 the product owner authorized `GDA-ORDER-SPEC-1` to record the dealer-order decisions and to issue an exact GenSpark UI production request plus a Studio change notice. This exception authorizes only the five DA documentation paths and two Studio documentation paths listed in that phase. It does not activate order implementation, change the current GDA implementation phase, authorize schema/API/payment/bank/warehouse integrations, or authorize stage, commit, push, Ready, merge, migration, deployment, or production application.
 
 ## 3. Protected and excluded scope
 
@@ -76,7 +77,7 @@ The following paths are excluded from content inspection and modification unless
 ### 3.2 Excluded delivery tracks
 
 - SaaS catalogue, commercial billing expansion, white label, and generic SaaS rollout.
-- GYEON product-order expansion while Draft PR #7 is frozen, except the exact two-path `GDA-ORDER-1A` UI/idempotency compatibility repair recorded below.
+- GYEON product-order runtime expansion while Draft PR #7 is frozen, except the exact two-path `GDA-ORDER-1A` UI/idempotency compatibility repair. The documentation-only `GDA-ORDER-SPEC-1` V3 contract is permitted, but it does not authorize runtime work.
 - Office AZ inventory implementation, migrations, tests, deployment, and operations.
 - EC integration and inventory-to-EC availability.
 - Marketing automation that does not directly remove current detailer administrative work.
@@ -141,7 +142,7 @@ This register prevents a future session from treating every placeholder as a com
 
 ### Deferred after GDA-7
 
-- HLS video delivery, customer media gallery, marketing/SEO/growth AI, generic SaaS, white label, ordering expansion beyond the exact `GDA-ORDER-1A` compatibility repair, Office AZ inventory implementation on MacBook, and EC expansion.
+- HLS video delivery, customer media gallery, marketing/SEO/growth AI, generic SaaS, white label, ordering runtime expansion beyond the exact `GDA-ORDER-1A` compatibility repair, Office AZ inventory implementation on MacBook, and EC expansion. The owner-ratified `GDA-ORDER-SPEC-1` V3 documents define future order behavior only and do not remove this runtime freeze.
 - The full GYEON HP store-discovery track is governed by `GYEON_HP_STORE_DISCOVERY_INTEGRATION_SPEC.md` and remains deferred until GDA-7. The only accepted exception is `GHP-2A`: a pure two-path projection source/test seed with no schema, Storage, API, website, SEO/MEO, GBP or deployment authority.
 
 ## 6. Strict phase protocol
@@ -477,6 +478,33 @@ push, Ready conversion, or merge action is authorized or claimed.
 **Prohibited:** Every third source/test path; dependency or configuration changes; product-price or official-product-data decisions; order authority, offer/shipping authority, card authorization or payment capture; source-derived claims of runtime proof; database, Supabase, Auth, Storage, LINE, EC or other external-service access; schema/RLS/migration creation or application; stage, commit, push, Ready conversion, merge, deployment, or destructive action without its later separate gate.
 
 **Current stopping point:** This plan and ledger update is a two-document uncommitted governance candidate. Source/test implementation remains inactive until this candidate is independently accepted, committed, normally pushed, and explicitly ratified by the product owner after the recorded change.
+
+### GDA-ORDER-SPEC-1 — Dealer-order formal decision and GenSpark UI contract
+
+**Authorization:** On 2026-08-27 the product owner explicitly requested a formal GenSpark production request, a Studio change notice/formal decision, and preservation of the decision specification in the DA master specification. This is a documentation-only exception to the frozen order track.
+
+**Objective:** Establish one reviewable business contract for dealer ordering across DA, Studio, GenSpark, warehouse, payment, inventory, notification, and document-download UI without guessing unresolved implementation details.
+
+**DA literal documentation allowlist:**
+
+1. ADD `docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md`
+2. ADD `docs/master_specification/SPEC_GYEON_ORDER_001_GENSPARK_UI_PRODUCTION_REQUEST_V3.md`
+3. MODIFY `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. MODIFY `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+5. MODIFY `docs/master_specification/INDEX.md`
+
+**Studio literal documentation allowlist:**
+
+1. ADD `docs/bound/SPEC-GYEON-ORDER-001_V3_STUDIO_CHANGE_NOTICE.md`
+2. MODIFY `docs/bound/README.md`
+
+**Binding decisions recorded:** tax-exclusive list-price total of JPY 30,000 for free shipping; staff drafts with owner-only final order; card, PayPay Bank prepayment, cash on delivery, and super-admin-authorized monthly credit sale; split-first or combined backorder shipment; no GYEON-headquarters inbound split; strict separation of formal, inbound-confirmed, reserved, and orderable stock; durable warehouse work queue plus notifications; downloadable issued delivery-note/invoice PDFs; and a super-admin warehouse calendar whose operating-day and daily cutoff settings control shipment estimates.
+
+**Conflict handling:** The V3 formal-decision document supersedes only the explicitly named conflicting dealer-order clauses in older Studio shipping/ADR documents. The six-state order lifecycle remains unchanged. GYEON-headquarters inbound remains non-splittable; the new split/combined choice applies only to outbound dealer orders containing backordered lines.
+
+**Prohibited:** Source, test, schema, RLS, migration, API, payment-provider, PayPay Bank, warehouse, email, notification, PDF-generation, inventory, or deployment implementation; secret access; external service mutation; design invention outside the contract; stage, commit, push, PR mutation, Ready conversion, merge, migration application, deployment, or destructive action.
+
+**Current stopping point:** Exact seven-path uncommitted documentation candidate only. Independent acceptance is next. DA and Studio staging/commit/push remain later separate repository-specific gates, and the currently active DA implementation phase is not displaced.
 
 ### GHP-2A — Public-profile projection seed (accepted pre-GDA-7 exception)
 
