@@ -2178,3 +2178,40 @@ rollback: "Delete only the seven uncommitted candidate changes. No source, datab
 decision: "GDA_ORDER_SPEC_1_V3_DOCUMENTATION_CANDIDATE_UNCOMMITTED"
 next: "INDEPENDENTLY_REVIEW_EXACT_SEVEN_PATH_CANDIDATE; DA_AND_STUDIO_STAGE_COMMIT_PUSH_REMAIN_SEPARATE_OWNER_GATES"
 ```
+
+## GDA-ORDER-SPEC-1-D1 — Dealer-order V3 documents locally committed
+
+```yaml
+phase: GDA-ORDER-SPEC-1-D1_LOCAL_COMMIT_CLOSURE
+status: PASS_LOCAL_COMMITS_COMPLETE_PUSH_PENDING
+date: 2026-08-27
+append_only: true
+authorization: "After the exact seven-path documentation candidate was prepared, the product owner explicitly approved staging and local commit. Push was not approved."
+da_commit:
+  sha: "37eb6d4073824684dbcc5839d2717008ab57dd81"
+  parent: "6e4e03b43fd184f6e7154dcfb8fc6e17470587ca"
+  tree: "05c21cb24a67161f0f2558c97ae304e771ef4144"
+  subject: "docs: ratify dealer order V3 contract"
+  exact_paths: 5
+studio_commit:
+  sha: "07f0694a0e03f74e8e162663d9312ba51340df45"
+  parent: "a3a7851d1e77dc6cffa5fccc8e4b65de5f63bbab"
+  tree: "25739819fd0b20bf61a2d9420c0752929d3195b8"
+  subject: "docs: record dealer order V3 Studio notice"
+  exact_paths: 2
+verification:
+  da_cached_diff_check_before_commit: "PASS"
+  studio_cached_diff_check_before_commit: "PASS"
+  da_worktree_after_content_commit: "clean"
+  studio_worktree_after_content_commit: "clean"
+  source_or_test_changes: false
+  tests: "NOT_RUN_DOCUMENTATION_ONLY"
+external_actions:
+  database_or_supabase: false
+  payment_or_bank_api: false
+  warehouse_or_notification: false
+  push: false
+  pr_ready_merge_or_deploy: false
+decision: "GDA_ORDER_SPEC_1_V3_LOCAL_CONTENT_COMMITS_COMPLETE"
+next: "RETURN_LOCAL_COMMIT_EVIDENCE; NORMAL_NON_FORCE_PUSH_FOR_EACH_REPOSITORY_REQUIRES_SEPARATE_EXPLICIT_OWNER_APPROVAL"
+```
