@@ -1535,3 +1535,64 @@ scope_confirmation:
 decision: GDA_COATING_V3_4_C2_GOVERNANCE_BOOTSTRAP_CANDIDATE
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_THEN_COMMIT_PUSH_CREATE_DRAFT_PR_AND_PUBLISH_THE_CLAUDE_READ_ONLY_INSTRUCTION"
 ```
+
+## GYEON-ORDER-V3-C5-B — External-authority DB source-only governance candidate
+
+```yaml
+phase: GYEON_ORDER_V3_C5_B_EXTERNAL_AUTHORITY_DB_SOURCE_ONLY
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_SOURCE_NOT_STARTED
+date: 2026-08-27
+append_only: true
+objective: "Record the narrow C5-B exception, literal source allowlist, authority boundaries, and fail-closed acceptance contract before any DB source implementation."
+authorization: "The owner authorized creation of an uncommitted three-document governance candidate after explicitly expressing intent to proceed to C5-B. This does not authorize source implementation, tests, Git delivery, database access, or external actions."
+dependency_reason: "Approved GYEON product procurement is an operational-supply dependency for delivering GYEON services. The exception is restricted to safety hardening and does not displace GYEON DA completion or transfer Office AZ inventory ownership to MacBook."
+repository:
+  repo: nisikawa-officeAZ/GYEON
+  base_branch: main
+  main_base_commit: d1f8ef9e94c3a7ea4ed5003489c9098b6327918a
+  branch: agent/gyeon-order-v3-c5-external-authority-design
+  head_before_governance_candidate: a3da60d662bc8da7ad09f17740fc7975dd917f35
+  tree_before_governance_candidate: 37c19d0b95fc6ed28af9c74be1926f31bee27c4a
+  c5_a_delivery_state: LOCAL_COMMIT_ONLY_NOT_PUSHED_NO_DRAFT_PR
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/integrations/gyeon-order/v3-c5-external-authority-design-and-impact.md
+proposed_c5_b_source_allowlist:
+  - supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql
+  - src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts
+  - src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts
+required_contracts:
+  - "Server-owned versioned qualification authority replaces client-controllable qualification_verified text."
+  - "Evidence is bound to provider event, purpose, dealer, order, order version, fingerprint, amount, currency, verification time, expiry, and one-time consumption."
+  - "Prepare and finalize are separate short transactions; no external call holds an order lock."
+  - "Provider failure, unknown response, expiry, or version conflict preserves the original order and original authorization."
+  - "Payment/supply/reservation/calendar release creates one unaccepted warehouse task; warehouse acceptance consumes the existing task."
+  - "Provider adapters remain fail-closed stubs and SQL remains DRAFT_DO_NOT_APPLY with rollback."
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx — pathname/mode/hash/Git state only; never open/read/diff/copy/stage/modify"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql — metadata only; no apply"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql — closed finance artifact"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts — closed finance boundary"
+responsibility:
+  product_authority: Office AZ
+  specification_and_acceptance: MacBook Codex
+  bounded_diagnosis_implementation_tests: MacBook Claude after Draft-PR instruction exists
+  office_az_inventory_implementation: Mac Studio only
+external_actions:
+  database_access: false
+  supabase_access: false
+  migration_created_or_applied: false
+  provider_network_access: false
+  github_changed: false
+  deployed: false
+git_actions:
+  source_changed: false
+  staged: false
+  committed: false
+  pushed: false
+  pr_created_or_changed: false
+  ready_or_merged: false
+decision: GYEON_ORDER_V3_C5_B_GOVERNANCE_CANDIDATE_READY_FOR_OWNER_REVIEW
+next: "OWNER_REVIEWS_EXACT_THREE_DOCUMENT_DIFF_THEN_SEPARATELY_AUTHORIZES_GOVERNANCE_COMMIT; C5_A_PUSH_DRAFT_PR_AND_CLAUDE_DIAGNOSIS_REMAIN_LATER_SEPARATE_GATES"
+```

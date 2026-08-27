@@ -48,7 +48,7 @@ The following decisions remain binding until this file is changed, reviewed, exp
 
 1. **GYEON DA completion is the MacBook priority.**
 2. **SaaS commercialization is deferred until after GYEON DA field completion.**
-3. **GYEON order Draft PR #7 is frozen.** It may be resumed only when this plan records a direct GYEON DA completion dependency and the user approves that phase.
+3. **GYEON order Draft PR #7 remains historical and frozen.** The separately accepted V3 C4 foundation on `main` may be hardened only through an explicitly recorded GYEON-order phase. The current exception is limited to C5 external-authority contract hardening because dealer product procurement is an operational dependency for delivering GYEON services. This exception does not authorize UI expansion, provider connection, Office AZ inventory implementation on MacBook, migration application, deployment, or production release.
 4. **Office AZ inventory is not MacBook implementation scope.** Mac Studio owns the complete Office AZ inventory foundation. MacBook may define integration contracts and perform independent review only.
 5. **The closed finance track stays closed.** Accepted invoice, payment, monthly-statement, and PDF-artifact contracts are not redesigned unless a verified regression blocks GYEON DA.
 6. **AI assists; humans decide.** AI may draft, summarize, classify, or recommend. It must not issue invoices, send customer messages, overwrite customer/vehicle records, apply migrations, or perform destructive actions without the required human approval.
@@ -75,7 +75,7 @@ The following paths are excluded from content inspection and modification unless
 ### 3.2 Excluded delivery tracks
 
 - SaaS catalogue, commercial billing expansion, white label, and generic SaaS rollout.
-- GYEON product-order expansion while Draft PR #7 is frozen.
+- GYEON product-order expansion outside an explicitly recorded V3 C5 contract-hardening phase.
 - Office AZ inventory implementation, migrations, tests, deployment, and operations.
 - EC integration and inventory-to-EC availability.
 - Marketing automation that does not directly remove current detailer administrative work.
@@ -226,6 +226,49 @@ This is event-driven phase governance. It does not reinstate a background pollin
 **Acceptance target:** E3 for the authorized staging environment and no regression in the accepted estimate/pricing/security contracts.
 
 **Constraint:** GDA-1 defines the literal allowlist. No speculative redesign is allowed.
+
+### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
+
+**Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.
+
+**Direct GYEON DA dependency:** A detailer cannot deliver a GYEON service without procuring the approved products. C5-B is therefore allowed only as an operational-supply safety dependency. GYEON DA completion remains the primary MacBook mission, and this exception must not expand into generic commerce, EC, or MacBook-owned Office AZ inventory.
+
+**Base candidate:**
+
+- Branch: `agent/gyeon-order-v3-c5-external-authority-design`
+- C5-A local commit: `a3da60d662bc8da7ad09f17740fc7975dd917f35`
+- C5-A state: locally committed, not pushed, no Draft PR
+
+**Literal source allowlist:**
+
+- `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql`
+- `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts`
+- `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts`
+
+**Required behavior:**
+
+- Replace client-controllable `qualification_verified` text with a server-owned, versioned qualification authority and bound evaluation snapshot.
+- Strengthen external evidence with purpose, provider event identity, dealer/order/version/fingerprint/amount/currency binding, expiry, server verification, and one-time consumption.
+- Separate prepare and finalize transactions so no PSP, bank, inventory, or email call occurs while an order row lock is held.
+- Preserve the original order and original authorization on provider failure, unknown response, stale preparation, or version conflict; record only a compensation intent for a newly succeeded but unusable authorization.
+- Create exactly one `unaccepted` warehouse task when payment, supply, reservation/backorder, and calendar authorities are ready. Warehouse acceptance must consume that existing task and must not create the task for the first time.
+- Keep card PSP, PayPay Bank, Office AZ reservation, and email providers as fail-closed stubs. Provider-specific authentication, signatures, webhooks, secrets, and network calls are outside C5-B.
+- Keep the SQL file visibly `DRAFT_DO_NOT_APPLY` and transactionally self-rolling-back if executed accidentally.
+
+**Verification candidate:**
+
+- Focused TypeScript source-contract tests covering the three literal source paths.
+- Strict targeted TypeScript check for the modified contract tests.
+- `git diff --check` limited to the allowlist.
+- No Supabase project connection, local database execution, migration generation, migration history mutation, or external provider request in C5-B.
+
+**Protected paths:** All paths in section 3.1 remain metadata-only or closed. `ScreensPreview.tsx` must never be opened, read, diffed, copied, staged, or modified.
+
+**Responsibility:** Office AZ is product authority; MacBook Codex owns specification and independent acceptance; MacBook Claude performs bounded diagnosis/implementation/tests after the mandatory Draft-PR instruction exists; Mac Studio remains the sole Office AZ inventory implementation owner.
+
+**State boundary:** This section is an uncommitted governance candidate until the owner reviews and ratifies its exact diff. Source implementation, test execution, stage, commit, push, Draft-PR creation, database access, migration apply, Ready conversion, merge, and deployment remain separate gates.
+
+**Acceptance target:** E2 source candidate only. C5-C disposable-database acceptance is required before any schema candidate can advance, and production release remains blocked by unresolved external authorities.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 

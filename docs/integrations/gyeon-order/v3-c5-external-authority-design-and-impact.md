@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | `GYEON-ORDER-V3-C5-EXTERNAL-AUTHORITY-DESIGN-R1` |
-| 状態 | `C5-A_SOURCE_CANDIDATE_PASS / UNCOMMITTED / NOT_STAGED` |
+| 状態 | `C5-A_COMMITTED_LOCAL_NOT_PUSHED / C5-B_GOVERNANCE_CANDIDATE_UNCOMMITTED` |
 | 作成日 | 2026-08-27 |
 | 基準commit | `d1f8ef9e94c3a7ea4ed5003489c9098b6327918a` |
 | 前提 | C4 DB foundation pass、release blocked by external authority |
@@ -256,6 +256,14 @@ Office AZを唯一の在庫所有者として維持する。DealerOSには読み
 
 C5-Aでは既存C4 SQL、migration、UI、payments、inventory実装を変更しない。C5-B以降のallowlistはC5-A受入後に別途提示する。
 
+C5-Bのsource-only候補は次の3パスに限定する。
+
+1. `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql`
+2. `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts`
+3. `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts`
+
+このallowlistはprovider実接続、通常migration生成、Supabase接続、DB実行、UI変更、Office AZ在庫実装を含まない。C5-BのSQLは `DRAFT_DO_NOT_APPLY` と末尾 `ROLLBACK` を維持する。
+
 ## 14. 未確定で停止する項目
 
 次はユーザー決定またはprovider公式契約が得られるまで推測実装しない。
@@ -275,7 +283,9 @@ C5-Aでは既存C4 SQL、migration、UI、payments、inventory実装を変更し
 
 `C5_A_SOURCE_CANDIDATE = PASS`
 
-`C5_B_DB_SOURCE_IMPLEMENTATION = NOT_AUTHORIZED`
+`C5_B_GOVERNANCE_CANDIDATE = UNCOMMITTED`
+
+`C5_B_DB_SOURCE_IMPLEMENTATION = NOT_STARTED`
 
 `PRODUCTION_RELEASE = BLOCKED_BY_EXTERNAL_AUTHORITY`
 
@@ -294,6 +304,20 @@ C5-Aでは既存C4 SQL、migration、UI、payments、inventory実装を変更し
 | 対象2ファイルstrict typecheck | PASS |
 | SQL／migration／Supabase接続 | 変更・実行なし |
 | PSP／銀行／在庫／メール通信 | なし |
-| stage／commit／push | 未実施 |
+| stage／commit／push | commit `a3da60d662bc8da7ad09f17740fc7975dd917f35`／push未実施 |
 
 作業worktreeには依存関係をインストールせず、主checkoutに固定済みのTypeScript 5.9.3とtsx 4.23.1 runtimeを読み取り利用した。packageおよびlockfileは変更していない。
+
+## 17. C5-B統治候補
+
+2026-08-27、オーナーはC5-Bへ進む意思を明示した。ただし正本計画には商品発注の凍結規則、別の最新記録フェーズ、C5-B allowlist未登録が残っていたため、ソース実装前に統治同期を行う。
+
+統治候補の変更対象は次の3文書だけとする。
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/integrations/gyeon-order/v3-c5-external-authority-design-and-impact.md`
+
+この候補は、C5-BをGYEONサービス提供に必要な商品調達の安全性依存として限定的に記録する。GYEON DA完成優先、Office AZ在庫のStudio所有、外部provider未確定時のfail-closed、audit／implementation／verification／commit／push／DB適用の分離は変更しない。
+
+統治候補のオーナー受入とローカルcommit後、C5-A commitのpushおよびDraft PR作成は別承認とする。Draft PR上に最新のClaude向けread-only診断指示が存在するまで、C5-B source実装を開始しない。
