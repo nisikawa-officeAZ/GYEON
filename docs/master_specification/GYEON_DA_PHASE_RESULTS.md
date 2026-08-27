@@ -1596,3 +1596,102 @@ git_actions:
 decision: GYEON_ORDER_V3_C5_B_GOVERNANCE_CANDIDATE_READY_FOR_OWNER_REVIEW
 next: "OWNER_REVIEWS_EXACT_THREE_DOCUMENT_DIFF_THEN_SEPARATELY_AUTHORIZES_GOVERNANCE_COMMIT; C5_A_PUSH_DRAFT_PR_AND_CLAUDE_DIAGNOSIS_REMAIN_LATER_SEPARATE_GATES"
 ```
+
+## GYEON-ORDER-V3-C5-B — External-authority DB source-only result
+
+```yaml
+phase: GYEON_ORDER_V3_C5_B_EXTERNAL_AUTHORITY_DB_SOURCE_ONLY
+status: SOURCE_CANDIDATE_VERIFIED_COMMITTED_PUSHED_DRAFT_OPEN
+date: 2026-08-28
+append_only: true
+objective: "Replace the C4 external-authority stubs with a fail-closed source candidate for versioned qualification authority, bound one-time external evidence, prepare/finalize transactions, durable card-authorization compensation, and correct warehouse-task release timing."
+authorization: "The owner separately approved the C5-B governance commit, push and Draft PR; Claude read-only diagnosis; bounded three-file implementation and repair; exact three-file stage/local commit; normal push; and one PR result comment. No database or deployment authority was granted."
+repository:
+  repo: nisikawa-officeAZ/GYEON
+  base_branch: main
+  main_base_commit: d1f8ef9e94c3a7ea4ed5003489c9098b6327918a
+  branch: agent/gyeon-order-v3-c5-external-authority-design
+  c5_a_commit: a3da60d662bc8da7ad09f17740fc7975dd917f35
+  governance_commit: 4f60c23dab963d151e56ec11dfa076ea0472c2c1
+  source_commit: 1ae0f7e91f3889ea08c894bcb589bb35a15303ec
+  source_tree: a6f7fde6b4b9b8c15689ccd5124f17632c6e9f92
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/36
+  pull_request_state: OPEN/Draft/unmerged
+implementation_paths:
+  - supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql
+  - src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts
+  - src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts
+accepted_contracts:
+  evidence_purposes:
+    - initial_authorization
+    - edit_reauthorization
+    - bank_payment_match
+    - inventory_reservation
+  qualification: "Office AZ-owned versioned rule, product classification, and dealer-mode projections; no client qualification mode/result, browser writer, seed, or fallback."
+  transactions: "Owner submit and pre-warehouse edit use short prepare/finalize transactions; provider work remains outside PostgreSQL."
+  compensation: "Eligible post-authorization conflict inserts one unique void_new_card_authorization intent and returns normal failure JSON without mutating the original order/authorization."
+  warehouse: "Service-only release creates one unaccepted task; accept locks and consumes the existing task and never first-inserts it."
+  security: "RLS on every new public table; no authenticated direct writes; empty search_path on SECURITY DEFINER; exact revoke/grant boundaries."
+  guard: "SQL remains DRAFT_DO_NOT_APPLY with bounded timeouts and terminal ROLLBACK."
+verification:
+  focused_command: "node --import /Users/atsushinishikawa/dealeros/node_modules/tsx/dist/loader.mjs --test src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts"
+  focused_result: PASS_50_OF_50
+  diff_check: PASS
+  typecheck: "ENVIRONMENT_LIMITATION — isolated worktree could not resolve existing React, Next.js, Node type declarations, and archived UI roots; no dependency/install/config change was made."
+  protected_blobs_unchanged:
+    ScreensPreview.tsx: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+    line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+    monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+    monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+github_evidence:
+  diagnosis_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/36#issuecomment-5439636419
+  implementation_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/36#issuecomment-5439805653
+  result_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/36#issuecomment-5440371153
+scope_confirmation:
+  - "No Supabase project, local/disposable database, SQL execution, migration apply, PSP, bank, inventory, email, LINE, Vercel, Ready conversion, merge, deployment, or destructive action occurred."
+  - "Mac Studio remains the sole Office AZ inventory implementation owner."
+rollback_or_recovery: "Before merge, revert source commit 1ae0f7e and governance commit 4f60c23, or close Draft PR #36. No database/provider/deployment state exists to roll back."
+decision: GYEON_ORDER_V3_C5_B_E2_SOURCE_CANDIDATE_ACCEPTED_RELEASE_NOT_AUTHORIZED
+next: "CREATE_AND_REVIEW_C5_C_GOVERNANCE_CANDIDATE_THEN_SEPARATELY_AUTHORIZE_READ_ONLY_DIAGNOSIS; NO_DB_EXECUTION_YET"
+```
+
+## GYEON-ORDER-V3-C5-C — Disposable-database acceptance design authorization
+
+```yaml
+phase: GYEON_ORDER_V3_C5_C_DISPOSABLE_DB_ACCEPTANCE_DESIGN
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_READ_ONLY_DIAGNOSIS_NOT_STARTED
+date: 2026-08-28
+append_only: true
+objective: "Define a fresh loopback-only PostgreSQL 17 disposable acceptance gate for the pushed C5-B source candidate before any schema promotion."
+authorization: "The owner explicitly approved starting the C5-C design and impact-investigation gate. This authorizes only the four-document uncommitted governance candidate and its independent review; harness implementation, tests, Docker/Colima/Supabase, database execution, Git delivery, and PR mutation remain separate gates."
+predecessor:
+  source_commit: 1ae0f7e91f3889ea08c894bcb589bb35a15303ec
+  source_tree: a6f7fde6b4b9b8c15689ccd5124f17632c6e9f92
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/36
+  state: OPEN/Draft
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_READ_ONLY_DIAGNOSIS.md
+required_evidence:
+  - "Fresh formal migration replay plus one hash-bound terminal ROLLBACK-to-COMMIT runtime derivative."
+  - "PostgreSQL 17 pgTAP with no skip, todo, plan mismatch, or NOTESTS."
+  - "Real local GoTrue tokens and PostgREST request-scope authorization."
+  - "Qualification mode/classification server ownership and fail-closed states."
+  - "One-time external evidence, prepare/finalize, original-state preservation, and durable unique compensation."
+  - "Service-only warehouse release and existing-task acceptance."
+  - "Two independent psql sessions plus third observer for every race."
+  - "Exact cleanup, raw evidence, secret scan, and unchanged repository/protected metadata."
+burn_rule: "Any replay, pgTAP, Auth, contract, concurrency, evidence, or cleanup failure burns that suffix/evidence set; it is never repaired or rerun into acceptance."
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx — metadata only"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql — excluded from replay; metadata only/no apply"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql — closed finance; no redesign"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts — closed finance"
+scope_confirmation:
+  - "No harness source, source repair, tests, typecheck, build, runtime, DB, Supabase, Docker, Colima, Auth, HTTP, provider, Git, PR, Ready, merge, or deployment action is authorized by this entry."
+  - "The next Claude step is one read-only diagnosis only after the governance candidate is committed/pushed and its PR instruction is published."
+decision: GYEON_ORDER_V3_C5_C_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```

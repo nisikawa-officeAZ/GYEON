@@ -236,8 +236,11 @@ This is event-driven phase governance. It does not reinstate a background pollin
 **Base candidate:**
 
 - Branch: `agent/gyeon-order-v3-c5-external-authority-design`
-- C5-A local commit: `a3da60d662bc8da7ad09f17740fc7975dd917f35`
-- C5-A state: locally committed, not pushed, no Draft PR
+- C5-A commit: `a3da60d662bc8da7ad09f17740fc7975dd917f35`
+- Governance commit: `4f60c23dab963d151e56ec11dfa076ea0472c2c1`
+- C5-B source commit: `1ae0f7e91f3889ea08c894bcb589bb35a15303ec`
+- C5-B source tree: `a6f7fde6b4b9b8c15689ccd5124f17632c6e9f92`
+- Coordination PR: `https://github.com/nisikawa-officeAZ/GYEON/pull/36` — OPEN/Draft
 
 **Literal source allowlist:**
 
@@ -266,9 +269,53 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Responsibility:** Office AZ is product authority; MacBook Codex owns specification and independent acceptance; MacBook Claude performs bounded diagnosis/implementation/tests after the mandatory Draft-PR instruction exists; Mac Studio remains the sole Office AZ inventory implementation owner.
 
-**State boundary:** This section is an uncommitted governance candidate until the owner reviews and ratifies its exact diff. Source implementation, test execution, stage, commit, push, Draft-PR creation, database access, migration apply, Ready conversion, merge, and deployment remain separate gates.
+**State boundary:** C5-B reached the pushed E2 source-candidate boundary at commit `1ae0f7e91f3889ea08c894bcb589bb35a15303ec`. The SQL remains under `DRAFT_DO_NOT_APPLY`, PR #36 remains Draft, and no local/hosted database, provider, migration apply, Ready conversion, merge, or deployment is authorized by C5-B.
 
 **Acceptance target:** E2 source candidate only. C5-C disposable-database acceptance is required before any schema candidate can advance, and production release remains blocked by unresolved external authorities.
+
+### GYEON-ORDER-V3-C5-C — Disposable-database acceptance design and execution gates
+
+**Status:** AUTHORIZED FOR GOVERNANCE CANDIDATE AND ONE READ-ONLY DIAGNOSIS ONLY. Harness implementation and disposable execution are not yet authorized.
+
+**Objective:** Prove the pushed C5-B database source candidate on one fresh loopback-only PostgreSQL 17 disposable Supabase runtime, including real signed Auth/PostgREST requests, exact RLS/grant behavior, prepare/finalize evidence consumption, server-owned qualification, durable compensation, warehouse-task release timing, and genuine separate-connection races.
+
+**Predecessor:**
+
+- Branch: `agent/gyeon-order-v3-c5-external-authority-design`
+- Commit: `1ae0f7e91f3889ea08c894bcb589bb35a15303ec`
+- Tree: `a6f7fde6b4b9b8c15689ccd5124f17632c6e9f92`
+- Source verification: focused contract tests `50/50` PASS and `git diff --check` PASS
+- Known environment limitation: full-project typecheck is not an acceptance signal in the isolated worktree because repository dependencies and archived UI type roots are unresolved
+
+**Governance write allowlist:**
+
+- `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+- `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+- `docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md`
+- `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_READ_ONLY_DIAGNOSIS.md`
+
+**Current authorization boundary:**
+
+- Create and independently review the exact four-document uncommitted governance candidate.
+- After separate commit/push approval, publish the Claude read-only diagnosis instruction on Draft PR #36 and run one bounded read-only diagnosis.
+- Do not create or edit the C5-C harness, start Colima/Docker/Supabase, connect to any database, derive/apply SQL, create fixtures, run pgTAP/Auth/concurrency checks, or mutate Git in this gate.
+
+**Required later evidence:**
+
+- Exact committed-migration replay plus one hash-bound runtime derivative of the C5-B guarded SQL with only its terminal `ROLLBACK` changed to `COMMIT`.
+- PostgreSQL 17 and current pinned Supabase CLI identity.
+- pgTAP schema/RLS/grant/function tests with no plan mismatch, skip, todo, or `NOTESTS`.
+- Real local GoTrue tokens and PostgREST requests; SQL-only claim strings or service-role success are not authorization proof.
+- Two simultaneous independent database connections plus a third observer proving distinct backend PIDs for every required race.
+- Exact fixture cleanup, runtime teardown, raw evidence manifest, secret-redaction proof, and unchanged repository/protected-path metadata.
+
+**Mandatory fail/burn rule:** Any replay, pgTAP, real-Auth, business-contract, concurrency, evidence, or cleanup failure burns the suffix and evidence set. The failed runtime is never repaired or rerun into acceptance. A source defect returns to a separately authorized C5-B repair gate; an environment defect requires a new owner-approved C5-C attempt with a fresh suffix.
+
+**Protected paths:** All section 3.1 paths remain protected. `ScreensPreview.tsx` stays pathname/mode/blob/Git-state only. The LINE migration remains excluded from disposable replay unless a separate LINE phase authorizes it; no hosted/linked project may be contacted.
+
+**Responsibility:** MacBook Claude performs bounded read-only diagnosis and later separately authorized harness/verification work. MacBook Codex independently accepts scope and raw evidence. Mac Studio remains the sole Office AZ inventory implementation owner.
+
+**Acceptance target:** E2 local verification strengthened by disposable-database evidence. C5-C is not E3 because no authorized shared/staging environment is contacted. It does not authorize formal migration promotion, Dev-Next or production application, provider connection, Ready conversion, merge, or deployment.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
