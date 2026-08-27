@@ -1,7 +1,15 @@
 -- =============================================================================
 -- GYEON_ORDER_V3_C3_R1_SOURCE_ONLY
+-- GYEON_ORDER_V3_C5_B_EXTERNAL_AUTHORITY_DB_SOURCE_ONLY
 -- DRAFT_DO_NOT_APPLY: design candidate only. Never apply to any database.
--- Requires C4 disposable-DB replay, pgTAP, real JWT/RLS and concurrency proof.
+-- Requires C5-C disposable-DB replay, pgTAP, real JWT/RLS and concurrency proof.
+--
+-- C5-B adds: a generic versioned external-evidence object (renamed from the
+-- narrow payment-evidence draft), prepared-operation binding for owner-submit
+-- and pre-warehouse-edit, a server-owned versioned qualification authority,
+-- an append-only compensation outbox, and a release/accept warehouse-task
+-- split so a task is created as unaccepted only when authorities are ready
+-- and warehouse acceptance always consumes an existing task.
 -- =============================================================================
 
 begin;
@@ -272,7 +280,7 @@ alter table public.product_order_items
   );
 
 -- -----------------------------------------------------------------------------
--- Immutable evidence and workflow tables.
+-- Immutable idempotency and review-event tables (unchanged from C4).
 -- -----------------------------------------------------------------------------
 
 create table if not exists public.gyeon_order_idempotency_v3 (
@@ -300,22 +308,201 @@ create table if not exists public.gyeon_order_owner_review_events (
   created_at timestamptz not null default now()
 );
 
-create table if not exists public.gyeon_order_payment_evidence (
+-- -----------------------------------------------------------------------------
+-- C5-B: generic versioned external-evidence object. This supersedes and
+-- renames the narrow C4 `gyeon_order_payment_evidence` draft table, because
+-- the whole file remains DRAFT_DO_NOT_APPLY and was never promoted. Evidence
+-- is bound to provider event identity, purpose, dealer/order/version,
+-- request fingerprint, amount, currency, verification time, expiry, and
+-- one-time consumption. It stores a payload hash only -- never a raw
+-- provider payload, card number, bank credential, or other secret.
+-- -----------------------------------------------------------------------------
+
+create table if not exists public.gyeon_order_external_evidence_v1 (
+  id uuid primary key default gen_random_uuid(),
+  purpose text not null check (purpose in (
+    'initial_authorization', 'edit_reauthorization', 'bank_payment_match', 'inventory_reservation'
+  )),
+  provider text not null,
+  provider_event_id text not null,
+  dealer_id uuid not null references public.dealers(id) on delete restrict,
+  order_id uuid not null references public.product_orders(id) on delete restrict,
+  order_version bigint not null check (order_version > 0),
+  request_fingerprint text not null,
+  amount_inc_tax_yen integer not null check (amount_inc_tax_yen >= 0),
+  currency text not null default 'JPY' check (currency = 'JPY'),
+  authority text not null check (authority in ('server_verified', 'unverified')),
+  state text not null check (state in ('pending', 'succeeded', 'failed', 'voided')),
+  server_verified_at timestamptz,
+  expires_at timestamptz,
+  consumed_at timestamptz,
+  consumed_by_operation text,
+  payload_hash text not null,
+  created_at timestamptz not null default now(),
+  unique (provider, provider_event_id),
+  check (expires_at is null or server_verified_at is null or expires_at > server_verified_at),
+  check (authority <> 'server_verified' or server_verified_at is not null),
+  check (
+    state <> 'succeeded'
+    or (authority = 'server_verified' and server_verified_at is not null and expires_at is not null)
+  ),
+  check (consumed_at is null or consumed_by_operation is not null)
+);
+
+-- -----------------------------------------------------------------------------
+-- C5-B: server-recomputed prepared operations. Prepare is a short
+-- transaction; the caller obtains external-provider evidence outside
+-- PostgreSQL, then a separate finalize transaction consumes it once.
+-- -----------------------------------------------------------------------------
+
+create table if not exists public.gyeon_order_prepared_operations_v1 (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('owner_submit', 'edit_before_warehouse')),
+  dealer_id uuid not null references public.dealers(id) on delete restrict,
+  order_id uuid not null references public.product_orders(id) on delete restrict,
+  expected_order_version bigint not null check (expected_order_version > 0),
+  request_fingerprint text not null,
+  amount_inc_tax_yen integer not null check (amount_inc_tax_yen >= 0),
+  currency text not null default 'JPY' check (currency = 'JPY'),
+  evidence_purpose text not null check (evidence_purpose in (
+    'initial_authorization', 'edit_reauthorization'
+  )),
+  prepared_by uuid not null references auth.users(id),
+  prepared_at timestamptz not null default now(),
+  expires_at timestamptz not null,
+  consumed_at timestamptz,
+  consumed_by_operation text,
+  check (expires_at > prepared_at),
+  check (
+    (kind = 'owner_submit' and evidence_purpose = 'initial_authorization')
+    or (kind = 'edit_before_warehouse' and evidence_purpose = 'edit_reauthorization')
+  )
+);
+
+-- -----------------------------------------------------------------------------
+-- C5-B: Office AZ-owned versioned qualification authority. DealerOS stores
+-- only this versioned server-owned projection; there is no browser writer,
+-- MacBook authoring RPC, seed data, fallback value, or inferred classification.
+-- -----------------------------------------------------------------------------
+
+create table if not exists public.gyeon_qualification_rule_versions (
+  id uuid primary key default gen_random_uuid(),
+  rule_version bigint not null unique check (rule_version > 0),
+  shop_initial_threshold_ex_tax_yen integer not null
+    check (shop_initial_threshold_ex_tax_yen >= 0),
+  detailer_initial_threshold_ex_tax_yen integer not null
+    check (detailer_initial_threshold_ex_tax_yen >= 0),
+  required_detailer_product_codes text[] not null,
+  is_active boolean not null default false,
+  effective_from timestamptz not null,
+  effective_to timestamptz,
+  updated_by uuid references auth.users(id),
+  updated_at timestamptz not null default now(),
+  check (effective_to is null or effective_to > effective_from)
+);
+
+create unique index if not exists gyeon_qualification_rule_one_active_idx
+  on public.gyeon_qualification_rule_versions (is_active)
+  where is_active;
+
+create table if not exists public.gyeon_product_qualification_classification (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid not null references public.gyeon_products(id) on delete restrict,
+  classification text not null check (classification in (
+    'eligible_chemical', 'required_detailer_product', 'optional_matt', 'other'
+  )),
+  classification_version bigint not null check (classification_version > 0),
+  authority_source text not null default 'office_az' check (authority_source = 'office_az'),
+  effective_from timestamptz not null,
+  effective_to timestamptz,
+  updated_by uuid references auth.users(id),
+  updated_at timestamptz not null default now(),
+  unique (product_id, classification_version),
+  check (effective_to is null or effective_to > effective_from)
+);
+
+create unique index if not exists gyeon_qualification_classification_one_current_idx
+  on public.gyeon_product_qualification_classification (product_id)
+  where effective_to is null;
+
+-- -----------------------------------------------------------------------------
+-- C5-B: Office AZ-owned versioned qualification-mode projection. This is the
+-- only source of a dealer's qualification mode. There is no browser writer,
+-- MacBook authoring RPC, seed data, default/fallback mode, or inference from
+-- buyer rank, order history, or client input. Prepare reads exactly one
+-- currently effective row per dealer and fails closed when it is missing,
+-- stale (a projection once existed but none is currently effective), or in
+-- an explicit error state.
+-- -----------------------------------------------------------------------------
+
+create table if not exists public.gyeon_dealer_qualification_mode_projection (
+  id uuid primary key default gen_random_uuid(),
+  dealer_id uuid not null references public.dealers(id) on delete restrict,
+  qualification_mode text not null check (qualification_mode in (
+    'none', 'shop_initial', 'detailer_initial', 'shop_to_detailer'
+  )),
+  projection_version bigint not null check (projection_version > 0),
+  authority_source text not null default 'office_az' check (authority_source = 'office_az'),
+  authority_state text not null check (authority_state in (
+    'CONFIGURED', 'NOT_CONFIGURED', 'STALE', 'ERROR'
+  )),
+  effective_from timestamptz not null,
+  effective_to timestamptz,
+  observed_at timestamptz,
+  updated_at timestamptz not null default now(),
+  unique (dealer_id, projection_version),
+  check (effective_to is null or effective_to > effective_from)
+);
+
+create unique index if not exists gyeon_dealer_qualification_mode_one_current_idx
+  on public.gyeon_dealer_qualification_mode_projection (dealer_id)
+  where effective_to is null;
+
+create table if not exists public.gyeon_order_qualification_snapshots (
   id uuid primary key default gen_random_uuid(),
   order_id uuid not null references public.product_orders(id) on delete restrict,
+  order_version bigint not null check (order_version > 0),
   dealer_id uuid not null references public.dealers(id) on delete restrict,
-  payment_method text not null check (payment_method in (
-    'card', 'bank_transfer_prepaid', 'cash_on_delivery', 'credit_account'
+  evaluation_mode text not null check (evaluation_mode in (
+    'none', 'shop_initial', 'detailer_initial', 'shop_to_detailer'
   )),
-  evidence_state text not null check (evidence_state in (
-    'pending', 'authorized', 'paid', 'failed', 'voided'
-  )),
-  provider_reference text,
-  authorized_amount_inc_tax_yen integer check (authorized_amount_inc_tax_yen >= 0),
-  server_verified_at timestamptz,
-  created_at timestamptz not null default now(),
-  unique (order_id, id)
+  rule_version bigint,
+  classification_version bigint,
+  input_fingerprint text not null,
+  decision jsonb not null,
+  lifecycle_state text not null default 'not_applicable'
+    check (lifecycle_state in (
+      'not_applicable', 'provisional_met', 'officially_achieved', 'recheck_required'
+    )),
+  evaluated_at timestamptz not null default now(),
+  unique (order_id, order_version)
 );
+
+-- -----------------------------------------------------------------------------
+-- C5-B: append-only compensation outbox. A finalize conflict that occurs
+-- after a newly succeeded (but now unusable) authorization inserts exactly
+-- one row here instead of raising, and never mutates the original order.
+-- -----------------------------------------------------------------------------
+
+create table if not exists public.gyeon_order_external_compensation_outbox (
+  id uuid primary key default gen_random_uuid(),
+  compensation_kind text not null default 'void_new_card_authorization'
+    check (compensation_kind = 'void_new_card_authorization'),
+  order_id uuid not null references public.product_orders(id) on delete restrict,
+  dealer_id uuid not null references public.dealers(id) on delete restrict,
+  evidence_id uuid references public.gyeon_order_external_evidence_v1(id) on delete restrict,
+  prepared_operation_id uuid references public.gyeon_order_prepared_operations_v1(id) on delete restrict,
+  idempotency_identity text not null unique,
+  compensation_state text not null default 'pending'
+    check (compensation_state in ('pending', 'processing', 'done', 'failed')),
+  created_at timestamptz not null default now(),
+  processed_at timestamptz
+);
+
+-- -----------------------------------------------------------------------------
+-- Warehouse task. C5-B separates task creation (release, service-only, exactly
+-- once, unaccepted) from task consumption (accept, locks an existing task).
+-- -----------------------------------------------------------------------------
 
 create table if not exists public.gyeon_order_warehouse_tasks (
   order_id uuid primary key references public.product_orders(id) on delete restrict,
@@ -512,6 +699,212 @@ begin
     v_date := v_date + 1;
     v_minute := 0;
   end loop;
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+-- C5-B helper: one-time, purpose/dealer/order/version/fingerprint/amount/
+-- currency-bound evidence validation and consumption. Distinct codes for
+-- mismatch, expiry, and prior consumption; never a boolean success flag.
+-- -----------------------------------------------------------------------------
+
+create or replace function private.gyeon_order_v3_validate_and_consume_evidence(
+  p_evidence_id uuid,
+  p_purpose text,
+  p_dealer_id uuid,
+  p_order_id uuid,
+  p_order_version bigint,
+  p_request_fingerprint text,
+  p_amount_inc_tax_yen integer,
+  p_currency text,
+  p_consumed_by_operation text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_evidence public.gyeon_order_external_evidence_v1%rowtype;
+begin
+  if p_evidence_id is null then
+    return jsonb_build_object('ok', false, 'code', 'evidence_missing');
+  end if;
+
+  select * into v_evidence
+  from public.gyeon_order_external_evidence_v1 e
+  where e.id = p_evidence_id
+  for update;
+
+  if not found then
+    return jsonb_build_object('ok', false, 'code', 'evidence_missing');
+  end if;
+  if v_evidence.authority <> 'server_verified' then
+    return jsonb_build_object('ok', false, 'code', 'evidence_not_server_verified');
+  end if;
+  if v_evidence.state <> 'succeeded' then
+    return jsonb_build_object('ok', false, 'code', 'evidence_not_succeeded');
+  end if;
+  if v_evidence.consumed_at is not null then
+    return jsonb_build_object('ok', false, 'code', 'evidence_consumed');
+  end if;
+  if v_evidence.expires_at is null or now() >= v_evidence.expires_at then
+    return jsonb_build_object('ok', false, 'code', 'evidence_expired');
+  end if;
+  if v_evidence.purpose <> p_purpose then
+    return jsonb_build_object('ok', false, 'code', 'evidence_purpose_mismatch');
+  end if;
+  if v_evidence.dealer_id <> p_dealer_id or v_evidence.order_id <> p_order_id then
+    return jsonb_build_object('ok', false, 'code', 'evidence_order_binding_mismatch');
+  end if;
+  if v_evidence.order_version <> p_order_version then
+    return jsonb_build_object('ok', false, 'code', 'evidence_version_mismatch');
+  end if;
+  if v_evidence.request_fingerprint <> p_request_fingerprint then
+    return jsonb_build_object('ok', false, 'code', 'evidence_fingerprint_mismatch');
+  end if;
+  if v_evidence.amount_inc_tax_yen <> p_amount_inc_tax_yen then
+    return jsonb_build_object('ok', false, 'code', 'evidence_amount_mismatch');
+  end if;
+  if v_evidence.currency <> p_currency then
+    return jsonb_build_object('ok', false, 'code', 'evidence_currency_mismatch');
+  end if;
+
+  update public.gyeon_order_external_evidence_v1
+    set consumed_at = now(), consumed_by_operation = p_consumed_by_operation
+  where id = p_evidence_id;
+
+  return jsonb_build_object('ok', true, 'evidence_id', p_evidence_id);
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+-- C5-B helper: server-owned qualification evaluation. It reads the versioned
+-- rule authority and the Office AZ-owned classification projection; it never
+-- reads the legacy rules_snapshot ->> 'qualification_verified' client text.
+-- Upgrade mode (shop_to_detailer) stays fail-closed until a shipped/returned
+-- history authority object is added in a later gate.
+-- -----------------------------------------------------------------------------
+
+create or replace function private.gyeon_order_v3_evaluate_qualification(
+  p_dealer_id uuid,
+  p_order_id uuid,
+  p_order_version bigint,
+  p_mode text,
+  p_input_fingerprint text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_rule public.gyeon_qualification_rule_versions%rowtype;
+  v_threshold integer;
+  v_qualifying_amount integer := 0;
+  v_missing text[];
+  v_line record;
+  v_classification_version bigint;
+  v_item_count integer;
+  v_remaining integer;
+  v_met boolean;
+  v_decision jsonb;
+begin
+  if p_mode not in ('none', 'shop_initial', 'detailer_initial', 'shop_to_detailer') then
+    return jsonb_build_object('ok', false, 'code', 'qualification_authority_invalid');
+  end if;
+
+  if p_mode = 'none' then
+    v_decision := jsonb_build_object(
+      'provisionalMet', true, 'officiallyAchieved', true,
+      'qualifyingAmountExTaxYen', 0, 'amountRemainingExTaxYen', 0,
+      'missingRequiredProductCodes', '[]'::jsonb
+    );
+    insert into public.gyeon_order_qualification_snapshots (
+      order_id, order_version, dealer_id, evaluation_mode, rule_version,
+      classification_version, input_fingerprint, decision, lifecycle_state
+    ) values (
+      p_order_id, p_order_version, p_dealer_id, p_mode, null, null,
+      p_input_fingerprint, v_decision, 'not_applicable'
+    )
+    on conflict (order_id, order_version) do update
+      set decision = excluded.decision, lifecycle_state = excluded.lifecycle_state,
+          evaluated_at = now();
+    return jsonb_build_object('ok', true, 'rule_version', null, 'classification_version', null, 'decision', v_decision);
+  end if;
+
+  if p_mode = 'shop_to_detailer' then
+    return jsonb_build_object('ok', false, 'code', 'qualification_authority_not_configured');
+  end if;
+
+  select * into v_rule
+  from public.gyeon_qualification_rule_versions r
+  where r.is_active
+    and r.effective_from <= now()
+    and (r.effective_to is null or r.effective_to > now());
+  if not found then
+    return jsonb_build_object('ok', false, 'code', 'qualification_authority_not_configured');
+  end if;
+
+  v_threshold := case p_mode
+    when 'shop_initial' then v_rule.shop_initial_threshold_ex_tax_yen
+    when 'detailer_initial' then v_rule.detailer_initial_threshold_ex_tax_yen
+  end;
+  v_missing := case when p_mode = 'shop_initial' then array[]::text[] else v_rule.required_detailer_product_codes end;
+
+  select count(*) into v_item_count
+  from public.product_order_items i where i.order_id = p_order_id;
+  if v_item_count = 0 then
+    return jsonb_build_object('ok', false, 'code', 'qualification_authority_invalid');
+  end if;
+
+  for v_line in
+    select i.quantity, i.list_price_ex_tax_snapshot, c.classification, c.classification_version, p.sku
+    from public.product_order_items i
+    join public.gyeon_products p on p.id = i.product_id
+    left join public.gyeon_product_qualification_classification c
+      on c.product_id = i.product_id and c.effective_to is null
+    where i.order_id = p_order_id
+  loop
+    if v_line.classification_version is null then
+      return jsonb_build_object('ok', false, 'code', 'qualification_authority_stale');
+    end if;
+    v_classification_version := v_line.classification_version;
+    if v_line.classification = 'eligible_chemical' then
+      v_qualifying_amount := v_qualifying_amount
+        + coalesce(v_line.list_price_ex_tax_snapshot, 0) * v_line.quantity;
+    end if;
+    if v_line.quantity > 0 then
+      v_missing := array_remove(v_missing, v_line.sku);
+    end if;
+  end loop;
+
+  v_remaining := greatest(0, v_threshold - v_qualifying_amount);
+  v_met := v_remaining = 0 and array_length(v_missing, 1) is null;
+  v_decision := jsonb_build_object(
+    'provisionalMet', v_met, 'officiallyAchieved', false,
+    'qualifyingAmountExTaxYen', v_qualifying_amount,
+    'amountRemainingExTaxYen', v_remaining,
+    'missingRequiredProductCodes', to_jsonb(coalesce(v_missing, array[]::text[]))
+  );
+
+  insert into public.gyeon_order_qualification_snapshots (
+    order_id, order_version, dealer_id, evaluation_mode, rule_version,
+    classification_version, input_fingerprint, decision, lifecycle_state
+  ) values (
+    p_order_id, p_order_version, p_dealer_id, p_mode, v_rule.rule_version,
+    v_classification_version, p_input_fingerprint, v_decision,
+    case when v_met then 'provisional_met' else 'not_applicable' end
+  )
+  on conflict (order_id, order_version) do update
+    set decision = excluded.decision, lifecycle_state = excluded.lifecycle_state,
+        evaluated_at = now();
+
+  if not v_met then
+    return jsonb_build_object('ok', false, 'code', 'qualification_not_met', 'decision', v_decision);
+  end if;
+  return jsonb_build_object(
+    'ok', true, 'rule_version', v_rule.rule_version,
+    'classification_version', v_classification_version, 'decision', v_decision
+  );
 end;
 $$;
 
@@ -825,15 +1218,26 @@ begin
 end;
 $$;
 
-create or replace function public.owner_submit_gyeon_order_v3_rpc(
+-- -----------------------------------------------------------------------------
+-- C5-B: owner-submit prepare/finalize split. Prepare recomputes server
+-- commercial facts and the qualification authority, then writes a versioned
+-- prepared operation for card orders. External PSP work happens outside this
+-- transaction and outside PostgreSQL. Finalize locks the prepared operation,
+-- the order, and the evidence in that deterministic order, recomputes the
+-- fingerprint, checks expiry/version/binding, consumes evidence once, and
+-- commits the commercial mutation atomically.
+-- -----------------------------------------------------------------------------
+
+drop function if exists public.owner_submit_gyeon_order_v3_rpc(uuid, uuid, uuid, bigint, uuid, text, text, uuid);
+drop function if exists public.prepare_gyeon_order_v3_owner_submit_rpc(uuid, uuid, uuid, bigint, text, text, text);
+
+create or replace function public.prepare_gyeon_order_v3_owner_submit_rpc(
   p_dealer_id uuid,
   p_actor_id uuid,
   p_order_id uuid,
   p_expected_version bigint,
-  p_idempotency_key uuid,
   p_payment_method text,
-  p_backorder_policy text,
-  p_payment_evidence_id uuid default null
+  p_backorder_policy text
 ) returns jsonb
 language plpgsql
 security definer
@@ -842,25 +1246,15 @@ as $$
 declare
   v_order public.product_orders%rowtype;
   v_credit public.gyeon_dealer_credit_terms%rowtype;
+  v_qualification_authority public.gyeon_dealer_qualification_mode_projection%rowtype;
+  v_qualification jsonb;
   v_fingerprint text;
-  v_prior jsonb;
-  v_result jsonb;
+  v_prepared_id uuid;
+  v_amount integer;
+  v_expires_at timestamptz := now() + interval '10 minutes';
 begin
-  perform private.gyeon_order_v3_assert_actor(
-    p_dealer_id, p_actor_id, array['owner']::text[]
-  );
-  v_fingerprint := private.gyeon_order_v3_fingerprint(
-    'owner_submit', p_order_id, p_expected_version,
-    jsonb_build_object(
-      'payment_method', p_payment_method,
-      'backorder_policy', p_backorder_policy,
-      'payment_evidence_id', p_payment_evidence_id
-    )
-  );
-  v_prior := private.gyeon_order_v3_claim_idempotency(
-    p_dealer_id, p_actor_id, p_idempotency_key, 'owner_submit', v_fingerprint
-  );
-  if v_prior is not null then return v_prior; end if;
+  perform private.gyeon_order_v3_assert_actor(p_dealer_id, p_actor_id, array['owner']::text[]);
+
   select * into v_order from public.product_orders o
    where o.id = p_order_id and o.dealer_id = p_dealer_id for update;
   if not found or v_order.status <> 'draft' then
@@ -881,15 +1275,6 @@ begin
   if p_payment_method = 'cash_on_delivery' and v_order.destination_kind = 'customer_direct' then
     raise exception using errcode = '22023', message = 'COD_CUSTOMER_DIRECT_FORBIDDEN';
   end if;
-  if p_payment_method = 'card' and not exists (
-    select 1 from public.gyeon_order_payment_evidence e
-     where e.id = p_payment_evidence_id and e.order_id = p_order_id
-       and e.dealer_id = p_dealer_id and e.payment_method = 'card'
-       and e.evidence_state = 'authorized' and e.server_verified_at is not null
-       and e.authorized_amount_inc_tax_yen = v_order.grand_total_inc_tax_yen
-  ) then
-    raise exception using errcode = '55000', message = 'CARD_AUTHORIZATION_EVIDENCE_REQUIRED';
-  end if;
   if p_payment_method = 'credit_account' then
     select * into v_credit from public.gyeon_dealer_credit_terms c
      where c.dealer_id = p_dealer_id and c.credit_state = 'active'
@@ -903,10 +1288,210 @@ begin
     raise exception using errcode = '22023', message = 'PAYMENT_METHOD_INVALID';
   end if;
 
-  -- Qualification, shipping rule and supply recalc must be wired to canonical
-  -- authority before C4 promotion. Until then submission is deliberately closed.
-  if coalesce(v_order.rules_snapshot ->> 'qualification_verified', '') <> 'true' then
-    raise exception using errcode = '0A000', message = 'QUALIFICATION_AUTHORITY_NOT_CONFIGURED';
+  -- Server-owned qualification-mode authority. A browser can never select,
+  -- bypass, or downgrade the mode; it is loaded here from the Office
+  -- AZ-owned projection and fails closed before any prepared operation
+  -- exists. "Stale" means a projection once existed for this dealer but
+  -- none is currently effective; "not configured" means none ever existed.
+  select * into v_qualification_authority
+  from public.gyeon_dealer_qualification_mode_projection q
+  where q.dealer_id = p_dealer_id
+    and q.effective_from <= now()
+    and (q.effective_to is null or q.effective_to > now())
+  order by q.projection_version desc
+  limit 1;
+
+  if not found then
+    if exists (
+      select 1 from public.gyeon_dealer_qualification_mode_projection q
+      where q.dealer_id = p_dealer_id
+    ) then
+      return jsonb_build_object('ok', false, 'code', 'qualification_authority_stale');
+    end if;
+    return jsonb_build_object('ok', false, 'code', 'qualification_authority_not_configured');
+  end if;
+
+  if v_qualification_authority.authority_state = 'NOT_CONFIGURED' then
+    return jsonb_build_object('ok', false, 'code', 'qualification_authority_not_configured');
+  elsif v_qualification_authority.authority_state = 'STALE' then
+    return jsonb_build_object('ok', false, 'code', 'qualification_authority_stale');
+  elsif v_qualification_authority.authority_state <> 'CONFIGURED' then
+    return jsonb_build_object('ok', false, 'code', 'qualification_authority_error');
+  end if;
+
+  -- Never reads a client-supplied verification flag or accepts a client
+  -- qualification result; only the internally loaded mode is evaluated.
+  v_qualification := private.gyeon_order_v3_evaluate_qualification(
+    p_dealer_id, p_order_id, p_expected_version, v_qualification_authority.qualification_mode,
+    private.gyeon_order_v3_fingerprint(
+      'qualification', p_order_id, p_expected_version,
+      jsonb_build_object(
+        'mode', v_qualification_authority.qualification_mode,
+        'projection_version', v_qualification_authority.projection_version
+      )
+    )
+  );
+  if not (v_qualification ->> 'ok')::boolean then
+    return jsonb_build_object('ok', false, 'code', coalesce(v_qualification ->> 'code', 'qualification_not_met'));
+  end if;
+
+  v_amount := coalesce(
+    v_order.grand_total_inc_tax_yen,
+    coalesce(v_order.merchandise_list_ex_tax_yen, 0)
+      + coalesce(v_order.shipping_fee_ex_tax_yen, 0)
+      + coalesce(v_order.tax_yen, 0)
+  );
+  v_fingerprint := private.gyeon_order_v3_fingerprint(
+    'owner_submit_finalize', p_order_id, p_expected_version,
+    jsonb_build_object('payment_method', p_payment_method, 'backorder_policy', p_backorder_policy)
+  );
+
+  if p_payment_method = 'card' then
+    insert into public.gyeon_order_prepared_operations_v1 (
+      kind, dealer_id, order_id, expected_order_version, request_fingerprint,
+      amount_inc_tax_yen, currency, evidence_purpose, prepared_by, expires_at
+    ) values (
+      'owner_submit', p_dealer_id, p_order_id, p_expected_version, v_fingerprint,
+      v_amount, 'JPY', 'initial_authorization', p_actor_id, v_expires_at
+    ) returning id into v_prepared_id;
+
+    return jsonb_build_object(
+      'ok', true, 'requires_external_authorization', true,
+      'prepared_operation_id', v_prepared_id, 'evidence_purpose', 'initial_authorization',
+      'request_fingerprint', v_fingerprint, 'amount_inc_tax_yen', v_amount,
+      'currency', 'JPY', 'expires_at', v_expires_at
+    );
+  end if;
+
+  return jsonb_build_object(
+    'ok', true, 'requires_external_authorization', false,
+    'request_fingerprint', v_fingerprint, 'amount_inc_tax_yen', v_amount, 'currency', 'JPY'
+  );
+end;
+$$;
+
+create or replace function public.finalize_gyeon_order_v3_owner_submit_rpc(
+  p_dealer_id uuid,
+  p_actor_id uuid,
+  p_order_id uuid,
+  p_expected_version bigint,
+  p_idempotency_key uuid,
+  p_payment_method text,
+  p_backorder_policy text,
+  p_prepared_operation_id uuid default null,
+  p_evidence_id uuid default null
+) returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_prepared public.gyeon_order_prepared_operations_v1%rowtype;
+  v_order public.product_orders%rowtype;
+  v_fingerprint text;
+  v_prior jsonb;
+  v_result jsonb;
+  v_validation jsonb;
+  v_should_compensate boolean := false;
+begin
+  perform private.gyeon_order_v3_assert_actor(p_dealer_id, p_actor_id, array['owner']::text[]);
+  v_fingerprint := private.gyeon_order_v3_fingerprint(
+    'owner_submit_finalize', p_order_id, p_expected_version,
+    jsonb_build_object('payment_method', p_payment_method, 'backorder_policy', p_backorder_policy)
+  );
+  v_prior := private.gyeon_order_v3_claim_idempotency(
+    p_dealer_id, p_actor_id, p_idempotency_key, 'owner_submit_finalize', v_fingerprint
+  );
+  if v_prior is not null then return v_prior; end if;
+
+  -- Deterministic lock order: prepared operation, then order, then evidence.
+  if p_prepared_operation_id is not null then
+    select * into v_prepared
+    from public.gyeon_order_prepared_operations_v1 p
+    where p.id = p_prepared_operation_id
+      and p.kind = 'owner_submit' and p.dealer_id = p_dealer_id and p.order_id = p_order_id
+    for update;
+    if not found or v_prepared.consumed_at is not null then
+      v_result := jsonb_build_object('ok', false, 'code', 'prepared_operation_invalid', 'compensation', 'none');
+      update public.gyeon_order_idempotency_v3 i set
+        order_id = p_order_id, response_payload = v_result, completed_at = now()
+      where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key;
+      return v_result;
+    end if;
+  end if;
+
+  select * into v_order from public.product_orders o
+   where o.id = p_order_id and o.dealer_id = p_dealer_id for update;
+  if not found or v_order.status <> 'draft' then
+    raise exception using errcode = '55000', message = 'OWNER_SUBMIT_NOT_ALLOWED';
+  end if;
+
+  if p_prepared_operation_id is not null then
+    -- Evidence lock and binding check (third in the deterministic order).
+    v_should_compensate := p_evidence_id is not null and exists (
+      select 1 from public.gyeon_order_external_evidence_v1 e
+      where e.id = p_evidence_id
+        and e.authority = 'server_verified' and e.state = 'succeeded' and e.consumed_at is null
+        and e.purpose = v_prepared.evidence_purpose
+        and e.dealer_id = v_prepared.dealer_id and e.order_id = v_prepared.order_id
+        and e.order_version = v_prepared.expected_order_version
+        and e.request_fingerprint = v_prepared.request_fingerprint
+        and e.amount_inc_tax_yen = v_prepared.amount_inc_tax_yen
+        and e.currency = v_prepared.currency
+    );
+
+    if now() >= v_prepared.expires_at then
+      v_result := jsonb_build_object('ok', false, 'code', 'prepared_operation_expired',
+        'compensation', case when v_should_compensate then 'void_new_card_authorization' else 'none' end);
+    elsif v_order.aggregate_version <> v_prepared.expected_order_version then
+      v_result := jsonb_build_object('ok', false, 'code', 'order_version_conflict',
+        'compensation', case when v_should_compensate then 'void_new_card_authorization' else 'none' end);
+    elsif v_fingerprint <> v_prepared.request_fingerprint then
+      v_result := jsonb_build_object('ok', false, 'code', 'request_fingerprint_conflict',
+        'compensation', case when v_should_compensate then 'void_new_card_authorization' else 'none' end);
+    else
+      v_validation := private.gyeon_order_v3_validate_and_consume_evidence(
+        p_evidence_id, v_prepared.evidence_purpose, p_dealer_id, p_order_id,
+        p_expected_version, v_fingerprint, v_prepared.amount_inc_tax_yen,
+        v_prepared.currency, 'owner_submit_finalize'
+      );
+      if not (v_validation ->> 'ok')::boolean then
+        v_result := jsonb_build_object('ok', false, 'code', v_validation ->> 'code', 'compensation', 'none');
+      else
+        update public.gyeon_order_prepared_operations_v1
+          set consumed_at = now(), consumed_by_operation = 'owner_submit_finalize'
+        where id = v_prepared.id;
+        v_result := null;
+      end if;
+    end if;
+
+    -- Durable compensation: a normal failure JSON result, not an exception,
+    -- after inserting exactly one compensation-outbox row. The original
+    -- order and original authorization are never mutated on this path.
+    if v_result is not null and (v_result ->> 'compensation') = 'void_new_card_authorization' then
+      insert into public.gyeon_order_external_compensation_outbox (
+        order_id, dealer_id, evidence_id, prepared_operation_id, idempotency_identity
+      ) values (
+        p_order_id, p_dealer_id, p_evidence_id, v_prepared.id,
+        concat('void:', v_prepared.id, ':', coalesce(p_evidence_id::text, 'none'))
+      )
+      on conflict (idempotency_identity) do nothing;
+    end if;
+
+    if v_result is not null then
+      update public.gyeon_order_idempotency_v3 i set
+        order_id = p_order_id, response_payload = v_result, completed_at = now()
+      where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key;
+      return v_result;
+    end if;
+  else
+    if v_order.aggregate_version <> p_expected_version then
+      v_result := jsonb_build_object('ok', false, 'code', 'order_version_conflict', 'compensation', 'none');
+      update public.gyeon_order_idempotency_v3 i set
+        order_id = p_order_id, response_payload = v_result, completed_at = now()
+      where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key;
+      return v_result;
+    end if;
   end if;
 
   update public.product_orders set
@@ -929,7 +1514,7 @@ begin
     order_id, dealer_id, event_type, actor_id, order_version
   ) values (p_order_id, p_dealer_id, 'owner_confirmed', p_actor_id, p_expected_version + 1);
 
-  v_result := jsonb_build_object('order_id', p_order_id, 'status', 'submitted');
+  v_result := jsonb_build_object('ok', true, 'order_id', p_order_id, 'status', 'submitted');
   update public.gyeon_order_idempotency_v3 i set
     order_id = p_order_id, response_payload = v_result, completed_at = now()
   where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key;
@@ -937,14 +1522,20 @@ begin
 end;
 $$;
 
-create or replace function public.edit_gyeon_order_v3_before_warehouse_rpc(
+-- -----------------------------------------------------------------------------
+-- C5-B: pre-warehouse-edit prepare/finalize split. When the amount is
+-- unchanged, finalize proceeds without external authorization; a changed
+-- amount for a card order requires a prepared card reauthorization first.
+-- -----------------------------------------------------------------------------
+
+drop function if exists public.edit_gyeon_order_v3_before_warehouse_rpc(uuid, uuid, uuid, bigint, uuid, jsonb, uuid);
+
+create or replace function public.prepare_gyeon_order_v3_edit_rpc(
   p_dealer_id uuid,
   p_actor_id uuid,
   p_order_id uuid,
   p_expected_version bigint,
-  p_idempotency_key uuid,
-  p_replacement_lines jsonb,
-  p_new_card_authorization_evidence_id uuid default null
+  p_replacement_lines jsonb
 ) returns jsonb
 language plpgsql
 security definer
@@ -952,6 +1543,16 @@ set search_path = ''
 as $$
 declare
   v_order public.product_orders%rowtype;
+  v_buyer_rank text;
+  v_line jsonb;
+  v_product public.gyeon_products%rowtype;
+  v_offer public.gyeon_product_order_offers_v3%rowtype;
+  v_quantity integer;
+  v_new_list_ex integer := 0;
+  v_new_grand_total integer;
+  v_fingerprint text;
+  v_prepared_id uuid;
+  v_expires_at timestamptz := now() + interval '10 minutes';
 begin
   perform private.gyeon_order_v3_assert_actor(p_dealer_id, p_actor_id, array['owner']::text[]);
   select * into v_order from public.product_orders o
@@ -962,15 +1563,242 @@ begin
   if v_order.aggregate_version <> p_expected_version then
     raise exception using errcode = '40001', message = 'ORDER_VERSION_CONFLICT';
   end if;
-  if v_order.payment_method = 'card' and not exists (
-    select 1 from public.gyeon_order_payment_evidence e
-     where e.id = p_new_card_authorization_evidence_id and e.order_id = p_order_id
-       and e.evidence_state = 'authorized' and e.server_verified_at is not null
-  ) then
-    -- Original order and original authorization stay untouched on failure.
-    raise exception using errcode = '55000', message = 'CARD_REAUTH_FAILED_OR_MISSING';
+  if jsonb_typeof(p_replacement_lines) <> 'array' or jsonb_array_length(p_replacement_lines) = 0 then
+    raise exception using errcode = '22023', message = 'ORDER_LINES_REQUIRED';
   end if;
-  raise exception using errcode = '0A000', message = 'SERVER_REPRICE_EDIT_ADAPTER_NOT_CONFIGURED';
+
+  select gom.buyer_rank into strict v_buyer_rank
+  from public.gyeon_ordering_memberships gom
+  where gom.dealer_id = p_dealer_id
+    and gom.membership_status = 'active'
+    and gom.effective_from <= now()
+    and (gom.effective_to is null or gom.effective_to > now());
+
+  for v_line in select value from jsonb_array_elements(p_replacement_lines)
+  loop
+    if (v_line - array['product_id', 'quantity']) <> '{}'::jsonb then
+      raise exception using errcode = '22023', message = 'CLIENT_COMMERCIAL_FIELDS_FORBIDDEN';
+    end if;
+    if (v_line ->> 'quantity') !~ '^[1-9][0-9]*$' then
+      raise exception using errcode = '22023', message = 'QUANTITY_MUST_BE_POSITIVE_INTEGER';
+    end if;
+    v_quantity := (v_line ->> 'quantity')::integer;
+    select * into strict v_product from public.gyeon_products p
+     where p.id = (v_line ->> 'product_id')::uuid and p.is_active = true;
+    select o.* into strict v_offer from public.gyeon_product_order_offers_v3 o
+     where o.product_id = v_product.id and o.buyer_rank = v_buyer_rank
+       and o.publication_state = 'published' and o.is_sellable = true
+       and o.effective_from <= now() and (o.effective_to is null or o.effective_to > now());
+    v_new_list_ex := v_new_list_ex + (v_offer.list_price_ex_tax_yen * v_quantity);
+  end loop;
+
+  v_new_grand_total := v_new_list_ex + coalesce(v_order.shipping_fee_ex_tax_yen, 0) + coalesce(v_order.tax_yen, 0);
+  v_fingerprint := private.gyeon_order_v3_fingerprint(
+    'edit_finalize', p_order_id, p_expected_version, p_replacement_lines
+  );
+
+  if v_order.payment_method <> 'card' or v_new_grand_total = coalesce(v_order.grand_total_inc_tax_yen, v_new_grand_total) then
+    return jsonb_build_object(
+      'ok', true, 'action', 'finalize_without_external_authorization',
+      'request_fingerprint', v_fingerprint, 'amount_inc_tax_yen', v_new_grand_total, 'currency', 'JPY'
+    );
+  end if;
+
+  insert into public.gyeon_order_prepared_operations_v1 (
+    kind, dealer_id, order_id, expected_order_version, request_fingerprint,
+    amount_inc_tax_yen, currency, evidence_purpose, prepared_by, expires_at
+  ) values (
+    'edit_before_warehouse', p_dealer_id, p_order_id, p_expected_version, v_fingerprint,
+    v_new_grand_total, 'JPY', 'edit_reauthorization', p_actor_id, v_expires_at
+  ) returning id into v_prepared_id;
+
+  return jsonb_build_object(
+    'ok', true, 'action', 'prepare_card_reauthorization',
+    'prepared_operation_id', v_prepared_id, 'evidence_purpose', 'edit_reauthorization',
+    'request_fingerprint', v_fingerprint, 'amount_inc_tax_yen', v_new_grand_total,
+    'currency', 'JPY', 'expires_at', v_expires_at
+  );
+end;
+$$;
+
+create or replace function public.finalize_gyeon_order_v3_edit_rpc(
+  p_dealer_id uuid,
+  p_actor_id uuid,
+  p_order_id uuid,
+  p_expected_version bigint,
+  p_idempotency_key uuid,
+  p_replacement_lines jsonb,
+  p_prepared_operation_id uuid default null,
+  p_evidence_id uuid default null
+) returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_prepared public.gyeon_order_prepared_operations_v1%rowtype;
+  v_order public.product_orders%rowtype;
+  v_fingerprint text;
+  v_prior jsonb;
+  v_result jsonb;
+  v_validation jsonb;
+  v_should_compensate boolean := false;
+  v_line jsonb;
+  v_product public.gyeon_products%rowtype;
+  v_offer public.gyeon_product_order_offers_v3%rowtype;
+  v_buyer_rank text;
+  v_quantity integer;
+  v_list_ex integer := 0;
+begin
+  perform private.gyeon_order_v3_assert_actor(p_dealer_id, p_actor_id, array['owner']::text[]);
+  v_fingerprint := private.gyeon_order_v3_fingerprint(
+    'edit_finalize', p_order_id, p_expected_version, p_replacement_lines
+  );
+  v_prior := private.gyeon_order_v3_claim_idempotency(
+    p_dealer_id, p_actor_id, p_idempotency_key, 'edit_finalize', v_fingerprint
+  );
+  if v_prior is not null then return v_prior; end if;
+
+  -- Deterministic lock order: prepared operation, then order, then evidence.
+  if p_prepared_operation_id is not null then
+    select * into v_prepared
+    from public.gyeon_order_prepared_operations_v1 p
+    where p.id = p_prepared_operation_id
+      and p.kind = 'edit_before_warehouse' and p.dealer_id = p_dealer_id and p.order_id = p_order_id
+    for update;
+    if not found or v_prepared.consumed_at is not null then
+      v_result := jsonb_build_object('ok', false, 'code', 'prepared_operation_invalid', 'compensation', 'none');
+      update public.gyeon_order_idempotency_v3 i set
+        order_id = p_order_id, response_payload = v_result, completed_at = now()
+      where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key;
+      return v_result;
+    end if;
+  end if;
+
+  select * into v_order from public.product_orders o
+   where o.id = p_order_id and o.dealer_id = p_dealer_id for update;
+  if not found or v_order.status <> 'submitted' or v_order.warehouse_accepted_at is not null then
+    raise exception using errcode = '55000', message = 'WAREHOUSE_ACCEPTED_ORDER_IMMUTABLE';
+  end if;
+
+  if p_prepared_operation_id is not null then
+    v_should_compensate := p_evidence_id is not null and exists (
+      select 1 from public.gyeon_order_external_evidence_v1 e
+      where e.id = p_evidence_id
+        and e.authority = 'server_verified' and e.state = 'succeeded' and e.consumed_at is null
+        and e.purpose = v_prepared.evidence_purpose
+        and e.dealer_id = v_prepared.dealer_id and e.order_id = v_prepared.order_id
+        and e.order_version = v_prepared.expected_order_version
+        and e.request_fingerprint = v_prepared.request_fingerprint
+        and e.amount_inc_tax_yen = v_prepared.amount_inc_tax_yen
+        and e.currency = v_prepared.currency
+    );
+
+    if now() >= v_prepared.expires_at then
+      v_result := jsonb_build_object('ok', false, 'code', 'prepared_operation_expired',
+        'compensation', case when v_should_compensate then 'void_new_card_authorization' else 'none' end);
+    elsif v_order.aggregate_version <> v_prepared.expected_order_version then
+      v_result := jsonb_build_object('ok', false, 'code', 'order_version_conflict',
+        'compensation', case when v_should_compensate then 'void_new_card_authorization' else 'none' end);
+    elsif v_fingerprint <> v_prepared.request_fingerprint then
+      v_result := jsonb_build_object('ok', false, 'code', 'request_fingerprint_conflict',
+        'compensation', case when v_should_compensate then 'void_new_card_authorization' else 'none' end);
+    else
+      v_validation := private.gyeon_order_v3_validate_and_consume_evidence(
+        p_evidence_id, v_prepared.evidence_purpose, p_dealer_id, p_order_id,
+        p_expected_version, v_fingerprint, v_prepared.amount_inc_tax_yen,
+        v_prepared.currency, 'edit_finalize'
+      );
+      if not (v_validation ->> 'ok')::boolean then
+        v_result := jsonb_build_object('ok', false, 'code', v_validation ->> 'code', 'compensation', 'none');
+      else
+        update public.gyeon_order_prepared_operations_v1
+          set consumed_at = now(), consumed_by_operation = 'edit_finalize'
+        where id = v_prepared.id;
+        v_result := null;
+      end if;
+    end if;
+
+    -- Durable compensation: a normal failure JSON result, not an exception.
+    if v_result is not null and (v_result ->> 'compensation') = 'void_new_card_authorization' then
+      insert into public.gyeon_order_external_compensation_outbox (
+        order_id, dealer_id, evidence_id, prepared_operation_id, idempotency_identity
+      ) values (
+        p_order_id, p_dealer_id, p_evidence_id, v_prepared.id,
+        concat('void:', v_prepared.id, ':', coalesce(p_evidence_id::text, 'none'))
+      )
+      on conflict (idempotency_identity) do nothing;
+    end if;
+
+    if v_result is not null then
+      update public.gyeon_order_idempotency_v3 i set
+        order_id = p_order_id, response_payload = v_result, completed_at = now()
+      where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key;
+      return v_result;
+    end if;
+  else
+    if v_order.aggregate_version <> p_expected_version then
+      v_result := jsonb_build_object('ok', false, 'code', 'order_version_conflict', 'compensation', 'none');
+      update public.gyeon_order_idempotency_v3 i set
+        order_id = p_order_id, response_payload = v_result, completed_at = now()
+      where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key;
+      return v_result;
+    end if;
+  end if;
+
+  -- Replacement lines are re-snapshotted from server offer/product authority,
+  -- mirroring save_gyeon_order_v3_draft_rpc. Prepare and finalize are
+  -- separate transactions, so the recompute is intentionally repeated here.
+  delete from public.product_order_items where order_id = p_order_id;
+
+  select gom.buyer_rank into strict v_buyer_rank
+  from public.gyeon_ordering_memberships gom
+  where gom.dealer_id = p_dealer_id
+    and gom.membership_status = 'active'
+    and gom.effective_from <= now()
+    and (gom.effective_to is null or gom.effective_to > now());
+
+  for v_line in select value from jsonb_array_elements(p_replacement_lines)
+  loop
+    v_quantity := (v_line ->> 'quantity')::integer;
+    select * into strict v_product from public.gyeon_products p
+     where p.id = (v_line ->> 'product_id')::uuid and p.is_active = true;
+    select o.* into strict v_offer from public.gyeon_product_order_offers_v3 o
+     where o.product_id = v_product.id and o.buyer_rank = v_buyer_rank
+       and o.publication_state = 'published' and o.is_sellable = true
+       and o.effective_from <= now() and (o.effective_to is null or o.effective_to > now());
+    v_list_ex := v_list_ex + (v_offer.list_price_ex_tax_yen * v_quantity);
+    insert into public.product_order_items (
+      order_id, product_id, sku, product_name_snapshot, retail_price_snapshot,
+      quantity, subtotal, list_price_ex_tax_snapshot, list_price_inc_tax_snapshot,
+      purchase_price_ex_tax_snapshot, purchase_price_inc_tax_snapshot,
+      tax_rate_bps_snapshot, line_total_ex_tax_snapshot, line_total_inc_tax_snapshot,
+      offer_version_snapshot, is_promotional_goods_snapshot
+    ) values (
+      p_order_id, v_product.id, v_product.sku, v_product.product_name,
+      v_offer.list_price_ex_tax_yen, v_quantity,
+      v_offer.purchase_price_ex_tax_yen * v_quantity,
+      v_offer.list_price_ex_tax_yen, v_offer.list_price_inc_tax_yen,
+      v_offer.purchase_price_ex_tax_yen, v_offer.purchase_price_inc_tax_yen,
+      v_offer.tax_rate_bps, v_offer.purchase_price_ex_tax_yen * v_quantity,
+      v_offer.purchase_price_inc_tax_yen * v_quantity, v_offer.offer_version,
+      v_offer.is_promotional_goods
+    );
+  end loop;
+
+  update public.product_orders set
+    merchandise_list_ex_tax_yen = v_list_ex,
+    grand_total_inc_tax_yen = v_list_ex + coalesce(shipping_fee_ex_tax_yen, 0) + coalesce(tax_yen, 0),
+    aggregate_version = aggregate_version + 1,
+    request_fingerprint = v_fingerprint,
+    updated_at = now()
+  where id = p_order_id;
+
+  v_result := jsonb_build_object('ok', true, 'order_id', p_order_id, 'status', 'submitted');
+  update public.gyeon_order_idempotency_v3 i set
+    order_id = p_order_id, response_payload = v_result, completed_at = now()
+  where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key;
+  return v_result;
 end;
 $$;
 
@@ -1017,10 +1845,17 @@ begin
 end;
 $$;
 
-create or replace function public.accept_gyeon_order_v3_warehouse_rpc(
+-- -----------------------------------------------------------------------------
+-- C5-B: warehouse release/accept split. Release is service-only and creates
+-- exactly one `unaccepted` task once payment, supply, reservation/backorder,
+-- and calendar authorities are ready. Accept requires expected order and
+-- task versions, locks and consumes an existing unaccepted task, and never
+-- performs the first insert.
+-- -----------------------------------------------------------------------------
+
+create or replace function public.release_gyeon_order_v3_warehouse_rpc(
   p_order_id uuid,
   p_service_actor_id uuid,
-  p_expected_version bigint,
   p_idempotency_key uuid
 ) returns jsonb
 language plpgsql
@@ -1032,32 +1867,132 @@ declare
   v_fingerprint text;
   v_prior jsonb;
   v_result jsonb;
+  v_supply_ok boolean;
+  v_reservation_ok boolean;
 begin
   select * into v_order from public.product_orders o where o.id = p_order_id for update;
   if not found then raise exception using errcode = 'P0002', message = 'ORDER_NOT_FOUND'; end if;
   v_fingerprint := private.gyeon_order_v3_fingerprint(
-    'warehouse_accept', p_order_id, p_expected_version, '{}'::jsonb
+    'warehouse_release', p_order_id, v_order.aggregate_version, '{}'::jsonb
+  );
+  v_prior := private.gyeon_order_v3_claim_idempotency(
+    v_order.dealer_id, p_service_actor_id, p_idempotency_key, 'warehouse_release', v_fingerprint
+  );
+  if v_prior is not null then return v_prior; end if;
+
+  if v_order.status <> 'submitted' then
+    raise exception using errcode = '55000', message = 'ORDER_NOT_SUBMITTED';
+  end if;
+
+  if exists (select 1 from public.gyeon_order_warehouse_tasks t where t.order_id = p_order_id) then
+    v_result := jsonb_build_object('ok', true, 'action', 'noop_existing', 'order_id', p_order_id);
+    update public.gyeon_order_idempotency_v3 i set
+      order_id = p_order_id, response_payload = v_result, completed_at = now()
+    where i.dealer_id = v_order.dealer_id and i.idempotency_key = p_idempotency_key;
+    return v_result;
+  end if;
+
+  if v_order.payment_status in ('selection_required', 'authorization_pending', 'payment_pending', 'failed') then
+    raise exception using errcode = '55000', message = 'PAYMENT_NOT_RELEASED_TO_WAREHOUSE';
+  end if;
+  if v_order.earliest_ship_date is null then
+    raise exception using errcode = '55000', message = 'EARLIEST_SHIP_DATE_AUTHORITY_REQUIRED';
+  end if;
+
+  select bool_and(coalesce(s.authority_state, 'NOT_CONFIGURED') = 'CONFIGURED')
+    into v_supply_ok
+  from public.product_order_items i
+  left join public.gyeon_order_supply_projection s on s.product_id = i.product_id
+  where i.order_id = p_order_id;
+  if not coalesce(v_supply_ok, false) then
+    raise exception using errcode = '55000', message = 'SUPPLY_AUTHORITY_NOT_VERIFIED';
+  end if;
+
+  select exists (
+    select 1 from public.gyeon_order_external_evidence_v1 e
+    where e.order_id = p_order_id and e.dealer_id = v_order.dealer_id
+      and e.purpose = 'inventory_reservation'
+      and e.authority = 'server_verified' and e.state = 'succeeded'
+      and (e.expires_at is null or e.expires_at > now())
+  ) into v_reservation_ok;
+  if not (v_reservation_ok or v_order.contains_backorder) then
+    raise exception using errcode = '55000', message = 'INVENTORY_RESERVATION_OR_BACKORDER_EVIDENCE_REQUIRED';
+  end if;
+
+  insert into public.gyeon_order_warehouse_tasks (order_id, dealer_id, task_state, task_version)
+  values (p_order_id, v_order.dealer_id, 'unaccepted', 1)
+  on conflict (order_id) do nothing;
+
+  v_result := jsonb_build_object('ok', true, 'action', 'create_unaccepted', 'order_id', p_order_id);
+  update public.gyeon_order_idempotency_v3 i set
+    order_id = p_order_id, response_payload = v_result, completed_at = now()
+  where i.dealer_id = v_order.dealer_id and i.idempotency_key = p_idempotency_key;
+  return v_result;
+end;
+$$;
+
+drop function if exists public.accept_gyeon_order_v3_warehouse_rpc(uuid, uuid, bigint, uuid);
+
+create or replace function public.accept_gyeon_order_v3_warehouse_rpc(
+  p_order_id uuid,
+  p_service_actor_id uuid,
+  p_expected_order_version bigint,
+  p_expected_task_version bigint,
+  p_idempotency_key uuid
+) returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_order public.product_orders%rowtype;
+  v_task public.gyeon_order_warehouse_tasks%rowtype;
+  v_fingerprint text;
+  v_prior jsonb;
+  v_result jsonb;
+begin
+  select * into v_order from public.product_orders o where o.id = p_order_id for update;
+  if not found then raise exception using errcode = 'P0002', message = 'ORDER_NOT_FOUND'; end if;
+  v_fingerprint := private.gyeon_order_v3_fingerprint(
+    'warehouse_accept', p_order_id, p_expected_order_version,
+    jsonb_build_object('expected_task_version', p_expected_task_version)
   );
   v_prior := private.gyeon_order_v3_claim_idempotency(
     v_order.dealer_id, p_service_actor_id, p_idempotency_key, 'warehouse_accept', v_fingerprint
   );
   if v_prior is not null then return v_prior; end if;
-  if v_order.status <> 'submitted' or v_order.warehouse_accepted_at is not null then
+
+  if v_order.status <> 'submitted' then
     raise exception using errcode = '55000', message = 'WAREHOUSE_ACCEPT_NOT_ALLOWED';
   end if;
-  if v_order.aggregate_version <> p_expected_version then
+  if v_order.aggregate_version <> p_expected_order_version then
     raise exception using errcode = '40001', message = 'ORDER_VERSION_CONFLICT';
   end if;
-  if v_order.payment_status in ('selection_required', 'authorization_pending', 'payment_pending', 'failed') then
-    raise exception using errcode = '55000', message = 'PAYMENT_NOT_RELEASED_TO_WAREHOUSE';
+
+  -- The task must already exist from release_gyeon_order_v3_warehouse_rpc.
+  -- This RPC locks and consumes it; it never performs the first insert.
+  select * into v_task from public.gyeon_order_warehouse_tasks t
+   where t.order_id = p_order_id for update;
+  if not found then
+    raise exception using errcode = 'P0002', message = 'WAREHOUSE_TASK_NOT_FOUND';
   end if;
+  if v_task.task_state <> 'unaccepted' then
+    raise exception using errcode = '55000', message = 'WAREHOUSE_TASK_NOT_UNACCEPTED';
+  end if;
+  if v_task.task_version <> p_expected_task_version then
+    raise exception using errcode = '40001', message = 'TASK_VERSION_CONFLICT';
+  end if;
+
+  update public.gyeon_order_warehouse_tasks set
+    task_state = 'accepted', accepted_by = p_service_actor_id, accepted_at = now(),
+    task_version = task_version + 1, updated_at = now()
+  where order_id = p_order_id;
+
   update public.product_orders set status = 'approved', warehouse_accepted_by = p_service_actor_id,
     warehouse_accepted_at = now(), aggregate_version = aggregate_version + 1,
     updated_at = now() where id = p_order_id;
-  insert into public.gyeon_order_warehouse_tasks (
-    order_id, dealer_id, task_state, accepted_by, accepted_at
-  ) values (p_order_id, v_order.dealer_id, 'accepted', p_service_actor_id, now());
-  v_result := jsonb_build_object('order_id', p_order_id, 'status', 'approved');
+
+  v_result := jsonb_build_object('ok', true, 'order_id', p_order_id, 'status', 'approved');
   update public.gyeon_order_idempotency_v3 i set
     order_id = p_order_id, response_payload = v_result, completed_at = now()
   where i.dealer_id = v_order.dealer_id and i.idempotency_key = p_idempotency_key;
@@ -1077,7 +2012,13 @@ alter table public.gyeon_warehouse_calendar_days enable row level security;
 alter table public.gyeon_dealer_credit_terms enable row level security;
 alter table public.gyeon_order_idempotency_v3 enable row level security;
 alter table public.gyeon_order_owner_review_events enable row level security;
-alter table public.gyeon_order_payment_evidence enable row level security;
+alter table public.gyeon_order_external_evidence_v1 enable row level security;
+alter table public.gyeon_order_prepared_operations_v1 enable row level security;
+alter table public.gyeon_qualification_rule_versions enable row level security;
+alter table public.gyeon_product_qualification_classification enable row level security;
+alter table public.gyeon_dealer_qualification_mode_projection enable row level security;
+alter table public.gyeon_order_qualification_snapshots enable row level security;
+alter table public.gyeon_order_external_compensation_outbox enable row level security;
 alter table public.gyeon_order_warehouse_tasks enable row level security;
 alter table public.gyeon_order_notification_outbox enable row level security;
 alter table public.product_orders enable row level security;
@@ -1114,7 +2055,13 @@ revoke all privileges on table
   public.gyeon_dealer_credit_terms,
   public.gyeon_order_idempotency_v3,
   public.gyeon_order_owner_review_events,
-  public.gyeon_order_payment_evidence,
+  public.gyeon_order_external_evidence_v1,
+  public.gyeon_order_prepared_operations_v1,
+  public.gyeon_qualification_rule_versions,
+  public.gyeon_product_qualification_classification,
+  public.gyeon_dealer_qualification_mode_projection,
+  public.gyeon_order_qualification_snapshots,
+  public.gyeon_order_external_compensation_outbox,
   public.gyeon_order_warehouse_tasks,
   public.gyeon_order_notification_outbox
 from public, anon, authenticated, service_role;
@@ -1132,7 +2079,13 @@ grant select, insert, update, delete on table
   public.gyeon_dealer_credit_terms,
   public.gyeon_order_idempotency_v3,
   public.gyeon_order_owner_review_events,
-  public.gyeon_order_payment_evidence,
+  public.gyeon_order_external_evidence_v1,
+  public.gyeon_order_prepared_operations_v1,
+  public.gyeon_qualification_rule_versions,
+  public.gyeon_product_qualification_classification,
+  public.gyeon_dealer_qualification_mode_projection,
+  public.gyeon_order_qualification_snapshots,
+  public.gyeon_order_external_compensation_outbox,
   public.gyeon_order_warehouse_tasks,
   public.gyeon_order_notification_outbox
 to service_role;
@@ -1143,24 +2096,32 @@ revoke all on function private.gyeon_order_v3_can_read_dealer(uuid) from public,
 revoke all on function private.gyeon_order_v3_fingerprint(text, uuid, bigint, jsonb) from public, anon, authenticated, service_role;
 revoke all on function private.gyeon_order_v3_claim_idempotency(uuid, uuid, uuid, text, text) from public, anon, authenticated, service_role;
 revoke all on function private.gyeon_order_v3_earliest_ship_date(timestamptz) from public, anon, authenticated, service_role;
+revoke all on function private.gyeon_order_v3_validate_and_consume_evidence(uuid, text, uuid, uuid, bigint, text, integer, text, text) from public, anon, authenticated, service_role;
+revoke all on function private.gyeon_order_v3_evaluate_qualification(uuid, uuid, bigint, text, text) from public, anon, authenticated, service_role;
 revoke all on function public.list_gyeon_order_catalog_v3_rpc(uuid, uuid) from public, anon, authenticated, service_role;
 revoke all on function public.save_gyeon_order_v3_draft_rpc(uuid, uuid, uuid, uuid, bigint, jsonb, jsonb) from public, anon, authenticated, service_role;
 revoke all on function public.request_gyeon_order_v3_owner_review_rpc(uuid, uuid, uuid, bigint, uuid, text) from public, anon, authenticated, service_role;
-revoke all on function public.owner_submit_gyeon_order_v3_rpc(uuid, uuid, uuid, bigint, uuid, text, text, uuid) from public, anon, authenticated, service_role;
-revoke all on function public.edit_gyeon_order_v3_before_warehouse_rpc(uuid, uuid, uuid, bigint, uuid, jsonb, uuid) from public, anon, authenticated, service_role;
+revoke all on function public.prepare_gyeon_order_v3_owner_submit_rpc(uuid, uuid, uuid, bigint, text, text) from public, anon, authenticated, service_role;
+revoke all on function public.finalize_gyeon_order_v3_owner_submit_rpc(uuid, uuid, uuid, bigint, uuid, text, text, uuid, uuid) from public, anon, authenticated, service_role;
+revoke all on function public.prepare_gyeon_order_v3_edit_rpc(uuid, uuid, uuid, bigint, jsonb) from public, anon, authenticated, service_role;
+revoke all on function public.finalize_gyeon_order_v3_edit_rpc(uuid, uuid, uuid, bigint, uuid, jsonb, uuid, uuid) from public, anon, authenticated, service_role;
 revoke all on function public.cancel_gyeon_order_v3_before_warehouse_rpc(uuid, uuid, uuid, bigint, uuid) from public, anon, authenticated, service_role;
-revoke all on function public.accept_gyeon_order_v3_warehouse_rpc(uuid, uuid, bigint, uuid) from public, anon, authenticated, service_role;
+revoke all on function public.release_gyeon_order_v3_warehouse_rpc(uuid, uuid, uuid) from public, anon, authenticated, service_role;
+revoke all on function public.accept_gyeon_order_v3_warehouse_rpc(uuid, uuid, bigint, bigint, uuid) from public, anon, authenticated, service_role;
 
 grant usage on schema private to authenticated;
 grant execute on function private.gyeon_order_v3_can_read_dealer(uuid) to authenticated;
 grant execute on function public.save_gyeon_order_v3_draft_rpc(uuid, uuid, uuid, uuid, bigint, jsonb, jsonb) to authenticated;
 grant execute on function public.list_gyeon_order_catalog_v3_rpc(uuid, uuid) to authenticated;
 grant execute on function public.request_gyeon_order_v3_owner_review_rpc(uuid, uuid, uuid, bigint, uuid, text) to authenticated;
-grant execute on function public.owner_submit_gyeon_order_v3_rpc(uuid, uuid, uuid, bigint, uuid, text, text, uuid) to authenticated;
-grant execute on function public.edit_gyeon_order_v3_before_warehouse_rpc(uuid, uuid, uuid, bigint, uuid, jsonb, uuid) to authenticated;
+grant execute on function public.prepare_gyeon_order_v3_owner_submit_rpc(uuid, uuid, uuid, bigint, text, text) to authenticated;
+grant execute on function public.finalize_gyeon_order_v3_owner_submit_rpc(uuid, uuid, uuid, bigint, uuid, text, text, uuid, uuid) to authenticated;
+grant execute on function public.prepare_gyeon_order_v3_edit_rpc(uuid, uuid, uuid, bigint, jsonb) to authenticated;
+grant execute on function public.finalize_gyeon_order_v3_edit_rpc(uuid, uuid, uuid, bigint, uuid, jsonb, uuid, uuid) to authenticated;
 grant execute on function public.cancel_gyeon_order_v3_before_warehouse_rpc(uuid, uuid, uuid, bigint, uuid) to authenticated;
-grant execute on function public.accept_gyeon_order_v3_warehouse_rpc(uuid, uuid, bigint, uuid) to service_role;
+grant execute on function public.release_gyeon_order_v3_warehouse_rpc(uuid, uuid, uuid) to service_role;
+grant execute on function public.accept_gyeon_order_v3_warehouse_rpc(uuid, uuid, bigint, bigint, uuid) to service_role;
 
 -- Deliberately roll back if this file is accidentally executed as a script.
--- Formal migration promotion must remove this guard only after C4 acceptance.
+-- Formal migration promotion must remove this guard only after C5-C acceptance.
 rollback;
