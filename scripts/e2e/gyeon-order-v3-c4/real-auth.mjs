@@ -154,7 +154,7 @@ if (orderId) {
     p_expected_version: 2, p_idempotency_key: randomUUID(),
     p_payment_method: 'bank_transfer_prepaid', p_backorder_policy: 'ship_available_first', p_payment_evidence_id: null,
   });
-  record('owner submit fails closed without qualification authority', submit.status === 501 && submit.payload?.message === 'QUALIFICATION_AUTHORITY_NOT_CONFIGURED', `HTTP ${submit.status}; code=${submit.payload?.code ?? 'n/a'}; message=${submit.payload?.message ?? 'n/a'}`);
+  record('owner submit fails closed without qualification authority', submit.status === 400 && submit.payload?.code === '0A000' && submit.payload?.message === 'QUALIFICATION_AUTHORITY_NOT_CONFIGURED', `HTTP ${submit.status}; code=${submit.payload?.code ?? 'n/a'}; message=${submit.payload?.message ?? 'n/a'}`);
 }
 
 const passed = results.filter((entry) => entry.ok).length;
