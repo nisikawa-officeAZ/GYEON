@@ -387,6 +387,35 @@ begin
 end;
 $$;
 
+-- Read-only RLS helper. It exposes only a boolean and derives caller identity
+-- from auth.uid(); the server-owned membership table remains unreadable.
+create or replace function private.gyeon_order_v3_can_read_dealer(
+  p_dealer_id uuid
+) returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select (select auth.uid()) is not null
+    and exists (
+      select 1
+      from public.dealer_members dm
+      join public.dealers d
+        on d.id = dm.dealer_id
+       and d.status = 'active'
+      join public.gyeon_ordering_memberships gom
+        on gom.dealer_id = dm.dealer_id
+       and gom.program_code = 'gyeon_ordering'
+       and gom.membership_status = 'active'
+       and gom.effective_from <= now()
+       and (gom.effective_to is null or gom.effective_to > now())
+      where dm.dealer_id = p_dealer_id
+        and dm.user_id = auth.uid()
+        and dm.status = 'active'
+    );
+$$;
+
 create or replace function private.gyeon_order_v3_fingerprint(
   p_operation text,
   p_order_id uuid,
@@ -1059,19 +1088,7 @@ drop policy if exists gyeon_order_item_v3_select on public.product_order_items;
 create policy gyeon_order_v3_select on public.product_orders
   for select to authenticated
   using (
-    exists (
-      select 1
-      from public.dealer_members dm
-      join public.dealers d on d.id = dm.dealer_id and d.status = 'active'
-      join public.gyeon_ordering_memberships gom
-        on gom.dealer_id = dm.dealer_id
-       and gom.membership_status = 'active'
-       and gom.effective_from <= now()
-       and (gom.effective_to is null or gom.effective_to > now())
-      where dm.dealer_id = product_orders.dealer_id
-        and dm.user_id = auth.uid()
-        and dm.status = 'active'
-    )
+    private.gyeon_order_v3_can_read_dealer(product_orders.dealer_id)
   );
 
 create policy gyeon_order_item_v3_select on public.product_order_items
@@ -1119,6 +1136,7 @@ to service_role;
 
 -- Revoke default function execution, then grant exact public entrypoints.
 revoke all on function private.gyeon_order_v3_assert_actor(uuid, uuid, text[]) from public, anon, authenticated, service_role;
+revoke all on function private.gyeon_order_v3_can_read_dealer(uuid) from public, anon, authenticated, service_role;
 revoke all on function private.gyeon_order_v3_fingerprint(text, uuid, bigint, jsonb) from public, anon, authenticated, service_role;
 revoke all on function private.gyeon_order_v3_claim_idempotency(uuid, uuid, uuid, text, text) from public, anon, authenticated, service_role;
 revoke all on function private.gyeon_order_v3_earliest_ship_date(timestamptz) from public, anon, authenticated, service_role;
@@ -1130,6 +1148,8 @@ revoke all on function public.edit_gyeon_order_v3_before_warehouse_rpc(uuid, uui
 revoke all on function public.cancel_gyeon_order_v3_before_warehouse_rpc(uuid, uuid, uuid, bigint, uuid) from public, anon, authenticated, service_role;
 revoke all on function public.accept_gyeon_order_v3_warehouse_rpc(uuid, uuid, bigint, uuid) from public, anon, authenticated, service_role;
 
+grant usage on schema private to authenticated;
+grant execute on function private.gyeon_order_v3_can_read_dealer(uuid) to authenticated;
 grant execute on function public.save_gyeon_order_v3_draft_rpc(uuid, uuid, uuid, uuid, bigint, jsonb, jsonb) to authenticated;
 grant execute on function public.list_gyeon_order_catalog_v3_rpc(uuid, uuid) to authenticated;
 grant execute on function public.request_gyeon_order_v3_owner_review_rpc(uuid, uuid, uuid, bigint, uuid, text) to authenticated;

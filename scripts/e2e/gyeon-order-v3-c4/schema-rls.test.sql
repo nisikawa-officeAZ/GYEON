@@ -6,7 +6,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = extensions, pg_temp, public, pg_catalog;
 
-select plan(30);
+select plan(32);
 
 create temp table c4_tables(name text primary key);
 insert into c4_tables(name) values
@@ -103,7 +103,7 @@ select ok(
 );
 
 select is(
-  (select column_default from information_schema.columns where table_schema='public' and table_name='gyeon_order_shipping_rule_versions' and column_name='free_shipping_threshold_ex_tax_yen'),
+  (select column_default::text from information_schema.columns where table_schema='public' and table_name='gyeon_order_shipping_rule_versions' and column_name='free_shipping_threshold_ex_tax_yen'),
   '30000'::text,
   '18 free-shipping default is tax-exclusive 30000 yen'
 );
@@ -141,44 +141,65 @@ select is(
 
 select is(
   (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private' and p.proname like 'gyeon_order_v3_%'),
-  4::bigint,
-  '24 all four private helpers exist'
+  5::bigint,
+  '24 all five private helpers exist'
+);
+
+select ok(
+  exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'private'
+      and p.proname = 'gyeon_order_v3_can_read_dealer'
+      and p.prosecdef
+      and p.provolatile = 's'
+      and pg_get_functiondef(p.oid) like '%(select auth.uid())%'
+      and pg_get_functiondef(p.oid) not like '%p_actor_id%'
+  ),
+  '25 read helper is stable SECURITY DEFINER and derives caller identity from auth.uid()'
 );
 
 select is(
   (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','private') and p.proname like '%gyeon_order%v3%' and p.prosecdef),
-  10::bigint,
-  '25 ten mutation/read authority functions are SECURITY DEFINER'
+  11::bigint,
+  '26 eleven mutation/read authority functions are SECURITY DEFINER'
 );
 
 select is(
   (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','private') and p.proname like '%gyeon_order%v3%' and coalesce(array_to_string(p.proconfig, ','),'') not like '%search_path=%'),
   0::bigint,
-  '26 every C4 function pins search_path'
+  '27 every C4 function pins search_path'
 );
 
 select is(
-  (select count(*) from information_schema.routine_privileges where specific_schema='private' and routine_name like 'gyeon_order_v3_%' and grantee in ('PUBLIC','anon','authenticated','service_role')),
+  (select count(*) from information_schema.routine_privileges where specific_schema='private' and routine_name like 'gyeon_order_v3_%' and grantee in ('PUBLIC','anon','service_role')),
   0::bigint,
-  '27 no application role can execute private helpers'
+  '28 PUBLIC anon and service_role cannot execute private helpers'
+);
+
+select is(
+  (select count(*) from information_schema.routine_privileges where specific_schema='private' and routine_name='gyeon_order_v3_can_read_dealer' and grantee='authenticated' and privilege_type='EXECUTE'),
+  1::bigint,
+  '29 authenticated can execute only the caller-bound RLS read helper'
 );
 
 select is(
   (select count(*) from information_schema.routine_privileges where specific_schema='public' and routine_name like '%gyeon_order%v3%' and grantee='anon'),
   0::bigint,
-  '28 anon cannot execute any public C4 RPC'
+  '30 anon cannot execute any public C4 RPC'
 );
 
 select is(
   (select count(*) from information_schema.routine_privileges where specific_schema='public' and routine_name like '%gyeon_order%v3%' and grantee='authenticated'),
   6::bigint,
-  '29 authenticated can execute exactly six dealer-facing RPCs'
+  '31 authenticated can execute exactly six dealer-facing RPCs'
 );
 
 select is(
   (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','private') and p.proname like '%gyeon_order%v3%' and pg_get_functiondef(p.oid) like '%auth.role()%'),
   0::bigint,
-  '30 no C4 function authorizes through auth.role()'
+  '32 no C4 function authorizes through auth.role()'
 );
 
 select * from finish();
