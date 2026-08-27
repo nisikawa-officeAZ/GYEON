@@ -155,12 +155,20 @@ test("earliest ship date requires explicit calendar rows instead of weekend assu
   assert.doesNotMatch(calendar, /dow|isodow|saturday|sunday/);
 });
 
-test("idempotency locks the key and rejects a different fingerprint", () => {
+test("idempotency claims atomically, locks a conflict, and rejects a different fingerprint", () => {
   const helper = functionBlock("private.gyeon_order_v3_claim_idempotency");
   const save = functionBlock("public.save_gyeon_order_v3_draft_rpc");
+  assert.match(
+    helper,
+    /on conflict \(dealer_id, idempotency_key\) do nothing returning \* into v_existing/,
+  );
   assert.match(helper, /for update/);
   assert.match(helper, /idempotency_key_reused/);
   assert.match(helper, /request_fingerprint <> p_request_fingerprint/);
+  assert.ok(
+    helper.indexOf("insert into public.gyeon_order_idempotency_v3") <
+      helper.indexOf("select * into v_existing"),
+  );
   assert.match(save, /gyeon_order_v3_claim_idempotency/);
   assert.ok(
     save.indexOf("gyeon_order_v3_claim_idempotency") <

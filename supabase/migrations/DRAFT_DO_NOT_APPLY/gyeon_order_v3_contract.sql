@@ -448,26 +448,29 @@ as $$
 declare
   v_existing public.gyeon_order_idempotency_v3%rowtype;
 begin
+  insert into public.gyeon_order_idempotency_v3 (
+    dealer_id, idempotency_key, operation, actor_id, request_fingerprint
+  ) values (
+    p_dealer_id, p_idempotency_key, p_operation, p_actor_id, p_request_fingerprint
+  )
+  on conflict (dealer_id, idempotency_key) do nothing
+  returning * into v_existing;
+
+  if found then
+    return null;
+  end if;
+
   select * into v_existing
   from public.gyeon_order_idempotency_v3 i
   where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key
   for update;
 
-  if found then
-    if v_existing.operation <> p_operation
-       or v_existing.request_fingerprint <> p_request_fingerprint then
-      raise exception using errcode = '23505', message = 'IDEMPOTENCY_KEY_REUSED';
-    end if;
-    return v_existing.response_payload;
+  if v_existing.operation <> p_operation
+     or v_existing.request_fingerprint <> p_request_fingerprint then
+    raise exception using errcode = '23505', message = 'IDEMPOTENCY_KEY_REUSED';
   end if;
 
-  insert into public.gyeon_order_idempotency_v3 (
-    dealer_id, idempotency_key, operation, actor_id, request_fingerprint
-  ) values (
-    p_dealer_id, p_idempotency_key, p_operation, p_actor_id, p_request_fingerprint
-  );
-
-  return null;
+  return v_existing.response_payload;
 end;
 $$;
 

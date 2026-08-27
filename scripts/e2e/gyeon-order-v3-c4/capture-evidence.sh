@@ -75,10 +75,14 @@ where dealer_id='00000000-0000-0000-0000-000000000000'::uuid
   and idempotency_key='00000000-0000-0000-0000-000000000000'::uuid;
 SQL
 
-find "$EVIDENCE_DIR" -maxdepth 1 -type f ! -name 'supabase-status.env' -print0 \
+date -u '+%Y-%m-%dT%H:%M:%SZ' > "$EVIDENCE_DIR/attempt-completed.txt"
+
+find "$EVIDENCE_DIR" -maxdepth 1 -type f \
+  ! -name 'supabase-status.env' \
+  ! -name 'SHA256SUMS.txt' \
+  -print0 \
   | sort -z \
   | xargs -0 shasum -a 256 > "$EVIDENCE_DIR/SHA256SUMS.txt"
-date -u '+%Y-%m-%dT%H:%M:%SZ' > "$EVIDENCE_DIR/attempt-completed.txt"
 
 printf 'C4_EVIDENCE_CAPTURED=%s\n' "$EVIDENCE_DIR"
 printf 'C4_CLASSIFICATION_PENDING=manual_acceptance_review\n'
