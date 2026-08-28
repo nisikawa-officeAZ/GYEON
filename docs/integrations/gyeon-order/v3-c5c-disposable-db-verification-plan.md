@@ -2,14 +2,17 @@
 
 ## 1. 文書情報
 
-- 計画ID: `GYEON-ORDER-V3-C5-C-R1-DISPOSABLE-DB-ACCEPTANCE-PLAN`
+- 計画ID: `GYEON-ORDER-V3-C5-C-R2-A3-BOUND-DISPOSABLE-DB-ACCEPTANCE-PLAN`
 - 対象branch: `agent/gyeon-order-v3-c5-external-authority-design`
-- 対象commit: `1ae0f7e91f3889ea08c894bcb589bb35a15303ec`
-- 対象tree: `a6f7fde6b4b9b8c15689ccd5124f17632c6e9f92`
+- 対象commit: `37573c3f9cc476b8d7911221a8696ee61109b9bf`
+- 対象tree: `c94ca1944e1c2d54b5728943501fbc07edc9668a`
 - 対象SQL: `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql`
+- 対象SQL SHA-256: `7b72c49baa7a42e56e23959bfc69919c181ba7f51b4aa186aa69edfa575015f4`
+- RPC契約test SHA-256: `990a94cdd7417de89348e5a357a33a6766ee9f6b07289cc0f89be3494852b0ba`
+- migration契約test SHA-256: `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
 - SQL状態: `DRAFT_DO_NOT_APPLY / terminal ROLLBACK`
-- 調査日: 2026-08-28
-- 現在状態: `PLAN_ONLY / NOT_EXECUTED`
+- 更新日: 2026-08-29
+- 現在状態: `R2_GOVERNANCE_CANDIDATE / NOT_EXECUTED`
 
 この文書はDB実行権限ではない。C5-Cは、読取専用診断、検証資産実装、静的受入、使い捨てDB実行、ソース修正、commit、push、migration昇格、環境適用を別ゲートとして扱う。
 
@@ -56,8 +59,17 @@ C5-Cで有効なpurposeは次の4つだけである。
 - `void_new_card_authorization` intentを一意に1件だけinsertする。
 - `ok: false`の通常JSONを返す。
 - 同じ競合のreplay／同時実行で2件目を作らない。
+- 新しいカード与信のprovider成功後、finalize前に有効な掛け売り条件が成立した場合も、同じ一意な取消intentを保存してfail-closedにする。
 
-### 3.4 倉庫task
+### 3.4 card authority binding
+
+- submitted orderは、受理済みcard evidence IDと、そのevidenceが受理したserver-owned request fingerprintの両方を永続的に保持する。
+- `payment_status = 'authorized'`だけではcard authorityにならない。
+- warehouse releaseはdealer、order、purpose、provider、fingerprint、amount、currency、成功状態、期限、prepared-operationとの消費対応を再検証する。
+- amount-changing editは受理済み`edit_reauthorization` evidenceへauthority bindingを置換する。
+- amount-preserving editは既存のcard authority bindingを消去・置換しない。
+
+### 3.5 倉庫task
 
 - 支払・供給・予約／BO・営業日authorityが揃ったservice-only releaseで、`unaccepted` taskを一度だけ作る。
 - dealer browserはrelease／acceptできない。
@@ -139,7 +151,7 @@ fresh suffixごとに次の形式を使う。
 - C5-B 3ファイルとC5-A pure-contract 2ファイルのhashを記録する。
 - protected pathはpathname／mode／blob／Git stateだけを記録する。
 - Node、Supabase CLI、Colima/Docker、psql、PostgreSQL image versionを記録する。
-- C5-B source test `50/50`のcommit provenanceを記録し、C5-Cではsource testを再実行しない。
+- A3 source test `68/68`のcommit provenanceを記録し、C5-Cではsource testを再実行しない。
 
 ### C5C-1: fresh runtime and exact replay
 
@@ -221,7 +233,7 @@ token、password、anon key、service key全文は保存しない。証拠には
 - `shop_to_detailer` → 履歴authority未接続としてfail-closed。
 - snapshotがorder/version、mode projection version、rule version、classification version、input fingerprintへ結合される。
 
-同じ注文内で複数classification versionが混在する場合の正式挙動はClaude read-only診断で必ず確認する。単一versionへ統一できない設計なら、C5-C実行前にsource repairへ戻す。
+同じ注文内の全対象商品が単一classification versionへ揃わない場合の拒否、および同一fingerprint/versionのsnapshotだけをexact replayし、異なるauthority入力で既存snapshotを変更しないことを、A3以前に解消済みの回帰契約として必ず検証する。
 
 ### C5C-5: evidence / prepare / finalize contract
 
@@ -240,11 +252,15 @@ token、password、anon key、service key全文は保存しない。証拠には
 - provider処理はDB transaction外である。
 - finalizeはcurrent fingerprintとversionを再確認し、evidenceを一度だけ消費する。
 - provider failure／unknownではorder、prepared operation、warehouse taskを誤って進めない。
+- finalize後のorderには受理済みcard evidence IDとserver-owned request fingerprintが両方保存される。
+- null ID、期限切れ、wrong purpose、wrong consumed-operation、fingerprint/amount/currency不一致ではauthorized状態へ進めない。
 
 #### Pre-warehouse edit
 
 - 金額不変editと金額変更editを分ける。
 - card金額変更は`edit_reauthorization` evidenceが必要。
+- 金額変更成功時はcard evidence IDとrequest fingerprintを同時に置換する。
+- 金額不変editは両方のcard authority fieldを保持する。
 - 再与信失敗は元注文・元与信・versionを維持する。
 
 #### Compensation
@@ -253,12 +269,15 @@ token、password、anon key、service key全文は保存しない。証拠には
 - exception rollbackでintentを失わない。
 - original order／original authorizationは不変。
 - `void_new_card_authorization` intentは1件だけ。
+- provider成功後、finalize前にcredit-account termsが有効化された競合でもintentはdurableかつ一意である。
 
 ### C5C-6: warehouse release and acceptance
 
 - bank transferは`bank_payment_match`未消費／不一致ではreleaseしない。
 - inventoryは`inventory_reservation`未消費／不一致ではreleaseしない。
 - card、COD、credit accountのpayment readinessを支払契約どおり確認する。
+- card releaseは永続card authority binding、期限、exact fingerprint、purposeとprepared-operation consumptionの対応を再検証する。
+- card order finalize後からwarehouse release前にcredit-account termsが有効化された場合、release拒否だけで十分か、既存card authorizationのdurable void compensationも必須かをV2 read-only診断で確定する。安全な終端がsourceで保証されない場合はharnessへ進まず、`C5C_CHANGES_REQUIRED_SOURCE`または`C5C_CONTRACT_DECISION_REQUIRED`へ分類する。
 - supply projectionが`NOT_CONFIGURED`／`STALE`／`ERROR`ならreleaseしない。
 - backorder policyとwarehouse calendar未設定はfail-closed。
 - 土曜日を固定休業日にしない。
@@ -278,6 +297,8 @@ token、password、anon key、service key全文は保存しない。証拠には
 6. warehouse release二重実行。
 7. warehouse accept二重実行。
 8. cancelとwarehouse release／acceptの競合。
+9. 新card authorization成功とfinalize直前のcredit-account terms有効化。
+10. card finalize完了後、warehouse release直前のcredit-account terms有効化。
 
 合格条件:
 
@@ -353,6 +374,10 @@ Colima/Docker mount、CLI、baseline migration、PostgreSQL client、port、runt
 
 Office AZ inventory実装、provider仕様、qualification履歴正本、保護対象、linked project接続が必要になった場合。推測実装せず停止する。
 
+### `C5C_CONTRACT_DECISION_REQUIRED`
+
+card finalize後からwarehouse release前にcredit-account termsが有効化された場合など、安全な外部与信の終端がsourceと正式契約のどちらからも一意に決まらない場合。harnessで挙動を発明せず、ownerの契約判断と別のsource gateへ戻る。
+
 ## 10. 停止条件
 
 次の1件でも発生した時点で停止する。
@@ -377,9 +402,11 @@ Claudeは実装・テスト前に、現在のSQLとC4 harnessを読取専用で�
 3. C5-Cで新規作成すべき正確な検証資産allowlist。
 4. fixture dependency／cleanup順序。
 5. success pathに必要なserver-owned fixtureだけの一覧。
-6. classification version混在、prepared expiry、normal-JSON compensation、warehouse releaseに関するsource defect候補。
+6. A3で修復済みのclassification-version統一、snapshot不変性、card authority binding、expiry、purpose/consumption対応、edit時の置換／保持、finalize前credit-race compensationが実行検証可能か。
 7. 各raceの2接続SQL手順とobserver assertion。
-8. C5-C実行前にsource repairが必要かの判定。
+8. card finalize後からwarehouse release前のcredit-account terms有効化に、durable void compensationが必要か、そのsource契約が現在保証されているか。
+9. `inventory_reservation` evidenceのexact validation／consumptionがrelease transaction内でfail-closedか。
+10. C5-C実行前にsource repairまたはowner契約判断が必要かの判定。
 
 ## 12. 後続の実行資産候補allowlist
 
@@ -400,11 +427,11 @@ Claudeは実装・テスト前に、現在のSQLとC4 harnessを読取専用で�
 
 ## 13. 次のゲート
 
-1. この計画を含む4文書の未コミット差分をCodexが検証する。
-2. ownerが4文書のstage／local commitを別途承認する。
-3. ownerがpushを別途承認する。
-4. CodexがDraft PR #36へClaude read-only診断指示を投稿する。
-5. Claude診断をCodexが受入れ、10パス候補を確定または縮小する。
-6. harness実装、静的検証、disposable DB実行をそれぞれ別承認にする。
+1. このR2計画と新V2指示書を含む正確な4文書の未コミット差分をCodexが検証する。
+2. ownerが正確な4文書のstage／local commitを別途承認する。
+3. ownerが通常pushを別途承認する。
+4. ownerが新V2指示書の外部送信とClaude read-only診断を別途承認する。
+5. CodexがClaude診断を受入れ、source decisionと最小harness allowlistを確定する。
+6. harness実装、静的検証、disposable DB実行、結果記録、Git deliveryをそれぞれ別承認にする。
 
 C5-C合格後も、正式migration昇格、Dev-Next／production適用、provider接続、Ready、merge、deployは未承認のままである。

@@ -385,7 +385,7 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 
 ### GYEON-ORDER-V3-C5-C — Disposable-database acceptance design and execution gates
 
-**Status:** GOVERNANCE EXISTS, BUT ITS HASH-BOUND PREDECESSOR MUST BE REFRESHED TO A3 BEFORE ANY RESUMPTION. Harness implementation and disposable execution are not authorized by the A3 result-recording gate.
+**Status:** C5-C R2 A3-BOUND GOVERNANCE CANDIDATE AUTHORIZED FOR EXACTLY FOUR UNCOMMITTED DOCUMENT CHANGES. Harness implementation, Claude invocation, disposable execution, Git delivery, and PR mutation remain unauthorized.
 
 **Objective:** Prove the pushed C5-B database source candidate on one fresh loopback-only PostgreSQL 17 disposable Supabase runtime, including real signed Auth/PostgREST requests, exact RLS/grant behavior, prepare/finalize evidence consumption, server-owned qualification, durable compensation, warehouse-task release timing, and genuine separate-connection races.
 
@@ -402,13 +402,16 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 - `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 - `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 - `docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md`
-- `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_READ_ONLY_DIAGNOSIS.md`
+- `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_A3_READ_ONLY_DIAGNOSIS_V2.md` (new)
 
 **Current authorization boundary:**
 
-- Preserve the existing C5-C governance design as historical evidence and refresh its source hashes before a later execution authorization.
+- Preserve `CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_READ_ONLY_DIAGNOSIS.md` byte-for-byte as historical V1 evidence. V2 supersedes it only for a future A3-bound diagnosis.
+- Refresh C5-C to the A3 source commit/tree and exact source hashes. Treat the repaired classification-version and immutable-snapshot rules as mandatory regression assertions rather than unresolved defect candidates.
+- Add explicit disposable assertions for persisted card-evidence ID/fingerprint binding, evidence expiry, purpose/consumption pairing, amount-changing authority replacement, amount-preserving authority preservation, and credit-activation compensation.
+- Before harness implementation, determine whether credit terms becoming active after a card order has finalized but before warehouse release must create a durable void compensation intent. If current source cannot prove a safe terminal outcome, classify it as `CONTRACT_DECISION_REQUIRED` or `CHANGES_REQUIRED_SOURCE`; do not invent behavior in the harness.
 - The A3 result-recording commit/push and PR result comment do not authorize a new Claude invocation, harness change, or disposable run.
-- Do not create or edit the C5-C harness, start Colima/Docker/Supabase, connect to any database, derive/apply SQL, create fixtures, run pgTAP/Auth/concurrency checks, or mutate Git in this gate.
+- Do not stage, commit, push, post to PR #36, invoke Claude, create or edit the C5-C harness, start Colima/Docker/Supabase, connect to any database, derive/apply SQL, create fixtures, run pgTAP/Auth/concurrency checks, or otherwise mutate Git in this gate.
 
 **Required later evidence:**
 

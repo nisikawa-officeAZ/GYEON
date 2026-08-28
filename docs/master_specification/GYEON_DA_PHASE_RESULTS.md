@@ -1832,3 +1832,45 @@ scope_confirmation:
 decision: GYEON_ORDER_V3_C5_B_R1_A3_E2_SOURCE_CANDIDATE_ACCEPTED
 next: "REFRESH_C5_C_HASH_BOUND_GOVERNANCE_TO_37573C3_THEN_REQUEST_SEPARATE_HARNESS_OR_DISPOSABLE_EXECUTION_AUTHORIZATION"
 ```
+
+## GYEON-ORDER-V3-C5-C-R2 — A3-bound governance correction candidate
+
+```yaml
+phase: GYEON_ORDER_V3_C5_C_R2_A3_BOUND_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED
+date: 2026-08-29
+append_only: true
+objective: "Refresh the C5-C disposable-database acceptance governance to the accepted A3 source, add the A3 payment-authority contracts, and separate the remaining post-finalize credit-race decision before any harness or runtime work."
+authorization: "The owner explicitly approved exactly four uncommitted governance-document changes only. Stage, commit, push, PR mutation, Claude invocation/external transmission, tests, DB, Supabase, Docker, Colima, provider, Ready, merge, and deployment remain unauthorized."
+predecessor:
+  branch: agent/gyeon-order-v3-c5-external-authority-design
+  source_commit: 37573c3f9cc476b8d7911221a8696ee61109b9bf
+  source_tree: c94ca1944e1c2d54b5728943501fbc07edc9668a
+  sql_sha256: 7b72c49baa7a42e56e23959bfc69919c181ba7f51b4aa186aa69edfa575015f4
+  rpc_test_sha256: 990a94cdd7417de89348e5a357a33a6766ee9f6b07289cc0f89be3494852b0ba
+  migration_test_sha256: c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5
+  focused_tests: PASS_68_OF_68
+  diff_check: PASS
+audit_findings:
+  - "The R1 C5-C plan and historical V1 directive remain bound to the superseded 1ae0f7e source and its 50/50 provenance."
+  - "C5-C must add disposable assertions for persistent card evidence/fingerprint binding, expiry, purpose-consumption pairing, amount-changing replacement, amount-preserving preservation, and finalize-time credit-race compensation."
+  - "Mixed classification versions and qualification-snapshot mutability were repaired before A3 and must be regression assertions, not unresolved defect candidates."
+  - "A high-risk contract remains to diagnose: card order finalized, then credit terms activate before warehouse release. Release must fail closed, and V2 must decide whether durable void compensation is also mandatory."
+  - "inventory_reservation evidence validation and consumption remains an explicit fail-closed runtime acceptance requirement."
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_A3_READ_ONLY_DIAGNOSIS_V2.md
+historical_evidence:
+  - "docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_READ_ONLY_DIAGNOSIS.md remains unchanged as historical V1 evidence."
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "No implementation source, historical V1 directive, harness, protected content, Git index, commit, remote, PR, Claude, runtime, database, Supabase, Docker, Colima, provider, or deployment state is changed by this candidate."
+decision: GYEON_ORDER_V3_C5_C_R2_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
