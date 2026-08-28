@@ -318,6 +318,45 @@ No file may be created, deleted, renamed, formatted, staged, or modified outside
 
 **Exit:** Claude returns `GYEON_ORDER_V3_C5_B_R1_SOURCE_REPAIR_RESULT_V1`; MacBook Codex independently reviews the exact three-path diff and verification evidence. Source commit/push, C5-C resumption, and any database work remain later separate gates.
 
+### GYEON-ORDER-V3-C5-B-R1-A2 — Payment-authority correction gate
+
+**Status:** GOVERNANCE DOCUMENT AUTHORING, EXACT GOVERNANCE-ONLY COMMIT, AND NORMAL PUSH ARE AUTHORIZED. Terminal Claude execution, implementation commit/push, database work, PR instruction/comment, and release remain separately gated.
+
+**Reason for correction:** The R1 terminal-Claude candidate returned `READY_FOR_CODEX_READ_ONLY_REVIEW`, and its focused source-contract tests passed 58/58. Independent MacBook Codex review nevertheless returned `CHANGES_REQUIRED_SOURCE` because the tests did not cover three required hostile payment paths and the SQL still permitted them.
+
+**Required dirty-source baseline before any A2 execution:**
+
+- Governance HEAD before this documentation commit: `e6d78156c79ecd4a5d68ad88869f09db1b654192`
+- Governance tree before this documentation commit: `5438e4c33e7445d4eaa537cb53de5e9c2e31bacd`
+- `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql` — modified, SHA-256 `8313b9d5216049672850f2ff7c5d68d73f228c82b442e6f4df48bb94fd9127a8`
+- `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts` — modified, SHA-256 `d4fb000235680fbc8d9921d9c02d75dc9f2af8673c5275b44df6aa0c9acc7eba`
+- `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts` — unchanged, SHA-256 `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
+
+The dirty R1 source candidate is intentionally retained and must not be staged, committed, reverted, cleaned, stashed, or overwritten by the governance-only commit.
+
+**Literal future implementation allowlist — exactly three existing paths:**
+
+1. `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql`
+2. `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts`
+3. `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts`
+
+**Required A2 corrections:**
+
+1. **Bound card authority.** Card owner-submit finalize must fail closed unless the exact prepared operation and exact accepted evidence are supplied and consumed. Persist a server-owned link from the submitted order to the immutable accepted evidence that is the current card authority. Release must verify that link and its dealer/order/fingerprint/amount/currency/state/consumption binding; `payment_status = 'authorized'` alone is never authority. A successful amount-changing edit must atomically replace the current link with the accepted reauthorization evidence, while an amount-preserving edit must not erase it.
+2. **Forced credit-account terms.** If active and currently effective credit-account terms exist for the dealer, prepare, finalize, and release must reject card, bank transfer, and cash on delivery. If `credit_account` is selected without active/effective terms, it must fail closed. A stopped, expired, missing, or mismatched credit authority never releases an order.
+3. **Exact status allow rules.** Card requires `authorized` plus bound evidence; bank transfer requires the exact pre-release pending state plus one exact bank-match evidence and atomically advances to `paid`; cash on delivery and credit account require their exact accepted non-provider state. `voided`, `failed`, pending-in-the-wrong-method, selection-required, unknown, null, or otherwise mismatched status always denies before warehouse-task creation.
+4. **Hostile regression coverage.** Add deterministic assertions that fail on: null card prepared/evidence IDs; a forged `authorized` string without bound evidence; stale or mismatched card evidence; active credit terms paired with any non-credit method; stopped/expired credit terms; bank or credit with `voided`/`failed`/wrong status; and any warehouse-task insert before these checks. Preserve and re-run the accepted R1-01/R1-02 coverage.
+
+**Boundaries:**
+
+- SQL remains visibly `DRAFT_DO_NOT_APPLY` and ends in the single terminal `ROLLBACK`.
+- No provider payload/signature/webhook/secret/network implementation, no PayPay Bank adapter, and no caller-authoritative success flag.
+- No SQL execution, database, Supabase, Docker, Colima, Auth, HTTP, provider, Git delivery, GitHub comment, Ready conversion, merge, or deployment.
+- All protected paths remain metadata-only. `ScreensPreview.tsx` content is never opened, read, diffed, copied, staged, or modified.
+- A2 terminal-Claude execution requires a later explicit owner authorization plus an exact non-triggering PR instruction. This governance commit does not authorize that execution.
+
+**Exit:** A later authorized terminal-Claude session returns `GYEON_ORDER_V3_C5_B_R1_A2_SOURCE_CORRECTION_RESULT_V1`; MacBook Codex independently verifies the hostile paths and exact three-file scope before any implementation commit is considered.
+
 ### GYEON-ORDER-V3-C5-C — Disposable-database acceptance design and execution gates
 
 **Status:** AUTHORIZED FOR GOVERNANCE CANDIDATE AND ONE READ-ONLY DIAGNOSIS ONLY. Harness implementation and disposable execution are not yet authorized.

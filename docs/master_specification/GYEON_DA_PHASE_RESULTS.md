@@ -1738,3 +1738,54 @@ current_gate:
 decision: GYEON_ORDER_V3_C5_B_R1_GOVERNANCE_AUTHORIZED_FOR_COMMIT_PUSH_AND_NONTRIGGERING_PR_INSTRUCTION
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF; STAGE_AND_COMMIT_ONLY_THE_THREE_GOVERNANCE_PATHS; NORMAL_PUSH; POST_ONE_PR36_INSTRUCTION_WITHOUT_AT_CLAUDE; THEN_START_ONE_TERMINAL_CLAUDE_R1_REPAIR"
 ```
+
+## GYEON-ORDER-V3-C5-B-R1 — Terminal repair result rejected; A2 correction governance authorized
+
+```yaml
+phase: GYEON_ORDER_V3_C5_B_R1_A2_PAYMENT_AUTHORITY_CORRECTION_GOVERNANCE
+status: GOVERNANCE_ONLY_AUTHORIZED_PENDING_EXACT_COMMIT_AND_NORMAL_PUSH
+date: 2026-08-29
+append_only: true
+objective: "Record the independent rejection of the R1 payment-authority candidate and define a bounded A2 correction without losing the accepted R1-01/R1-02 work."
+authorization: "The owner explicitly authorized creation of the C5-B R1-A2 correction directive, an exact governance-only local commit, and normal push to the existing Draft PR #36 branch. PR comment, external transmission, terminal-Claude A2 execution, implementation stage/commit/push, database work, Ready conversion, merge, and deployment are not authorized by this entry."
+r1_execution:
+  directive: GYEON_ORDER_V3_C5_B_R1_SOURCE_REPAIR_V1
+  result: GYEON_ORDER_V3_C5_B_R1_SOURCE_REPAIR_RESULT_V1
+  claude_verdict: READY_FOR_CODEX_READ_ONLY_REVIEW
+  codex_verdict: CHANGES_REQUIRED_SOURCE
+  execution_head: e6d78156c79ecd4a5d68ad88869f09db1b654192
+  execution_tree: 5438e4c33e7445d4eaa537cb53de5e9c2e31bacd
+  focused_tests: "58/58 PASS; exit 0; independently reproduced by Codex"
+  diff_check: PASS
+accepted_r1_repairs:
+  - "R1-01 identical non-null classification-version enforcement and mixed-version denial."
+  - "R1-02 immutable qualification snapshot insert/exact replay/conflict denial."
+rejected_payment_findings:
+  - "Card owner-submit can reach authorized with null prepared/evidence IDs, while release trusts the authorized status without persistent accepted-evidence binding."
+  - "Active credit-account terms do not force credit_account; card, bank, or COD can bypass the dealer credit configuration."
+  - "Bank and credit release branches do not enforce exact accepted payment statuses, so voided/failed/wrong states are not uniformly denied."
+  - "The 58 passing source-contract assertions do not cover these hostile paths."
+dirty_source_baseline:
+  - "supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql — modified — sha256 8313b9d5216049672850f2ff7c5d68d73f228c82b442e6f4df48bb94fd9127a8"
+  - "src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts — modified — sha256 d4fb000235680fbc8d9921d9c02d75dc9f2af8673c5275b44df6aa0c9acc7eba"
+  - "src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts — unchanged — sha256 c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5"
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_B_R1_A2_SOURCE_CORRECTION.md
+future_repair_write_allowlist:
+  - supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql
+  - src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts
+  - src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx — metadata only; never open/read/diff/copy/stage/modify"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql — metadata only/no apply"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql — closed finance artifact"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts — closed finance boundary"
+current_gate:
+  - "Stage and commit exactly the three governance documents; leave the dirty implementation baseline unstaged and uncommitted."
+  - "Normal push only. No force push and no PR comment in this gate."
+  - "No Claude execution, tests, DB, Supabase, Docker, Colima, Auth, provider, Ready, merge, or deployment action occurs."
+decision: GYEON_ORDER_V3_C5_B_R1_A2_GOVERNANCE_AUTHORIZED_FOR_EXACT_COMMIT_AND_NORMAL_PUSH_ONLY
+next: "VERIFY_EXACT_THREE_GOVERNANCE_DOCUMENTS; STAGE_ONLY_THOSE_DOCUMENTS; COMMIT; NORMAL_PUSH; STOP_BEFORE_PR_INSTRUCTION_OR_A2_EXECUTION"
+```
