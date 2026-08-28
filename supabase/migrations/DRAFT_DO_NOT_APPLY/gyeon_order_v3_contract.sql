@@ -207,7 +207,9 @@ alter table public.product_orders
   add column if not exists aggregate_version bigint not null default 1,
   add column if not exists request_fingerprint text,
   add column if not exists card_authority_evidence_id uuid,
-  add column if not exists card_authority_request_fingerprint text;
+  add column if not exists card_authority_request_fingerprint text,
+  add column if not exists payment_contract_kind text,
+  add column if not exists payment_contract_credit_terms_version bigint;
 
 alter table public.product_orders
   drop constraint if exists product_orders_status_check,
@@ -216,7 +218,8 @@ alter table public.product_orders
   drop constraint if exists product_orders_payment_status_check,
   drop constraint if exists product_orders_backorder_policy_check,
   drop constraint if exists product_orders_destination_kind_check,
-  drop constraint if exists product_orders_money_check;
+  drop constraint if exists product_orders_money_check,
+  drop constraint if exists product_orders_payment_contract_check;
 
 alter table public.product_orders
   add constraint product_orders_status_check
@@ -248,6 +251,15 @@ alter table public.product_orders
       and (tax_yen is null or tax_yen >= 0)
       and (grand_total_inc_tax_yen is null or grand_total_inc_tax_yen >= 0)
       and aggregate_version > 0
+    ),
+  -- R2-02: the first successful owner finalize freezes exactly one explicit
+  -- payment-contract snapshot. A submitted order always has one; a draft
+  -- order never does. Only `credit_account` binds a terms version.
+  add constraint product_orders_payment_contract_check
+    check (
+      (payment_contract_kind is null and payment_contract_credit_terms_version is null)
+      or (payment_contract_kind = 'standard_payment' and payment_contract_credit_terms_version is null)
+      or (payment_contract_kind = 'credit_account' and payment_contract_credit_terms_version is not null)
     );
 
 alter table public.product_order_items
@@ -1642,6 +1654,19 @@ begin
       when p_payment_method = 'card' then v_prepared.request_fingerprint
       else card_authority_request_fingerprint
     end,
+    -- R2-02: this is the one and only place a payment-contract snapshot is
+    -- ever written. Reaching this update already proves v_order.status was
+    -- 'draft' (owner-submit finalize is the sole draft-to-submitted path),
+    -- so the snapshot is written exactly once per order and is never
+    -- revisited by a later edit, cancel, or credit-terms change.
+    payment_contract_kind = case
+      when p_payment_method = 'credit_account' then 'credit_account'
+      else 'standard_payment'
+    end,
+    payment_contract_credit_terms_version = case
+      when p_payment_method = 'credit_account' then v_credit.terms_version
+      else null
+    end,
     backorder_policy = p_backorder_policy,
     earliest_ship_date = private.gyeon_order_v3_earliest_ship_date(now()),
     aggregate_version = aggregate_version + 1,
@@ -1697,6 +1722,11 @@ begin
    where o.id = p_order_id and o.dealer_id = p_dealer_id for update;
   if not found or v_order.status <> 'submitted' or v_order.warehouse_accepted_at is not null then
     raise exception using errcode = '55000', message = 'WAREHOUSE_ACCEPTED_ORDER_IMMUTABLE';
+  end if;
+  -- R2-02: a submitted order without an explicit frozen payment-contract
+  -- snapshot fails closed. Nothing is inferred, defaulted, or backfilled.
+  if v_order.payment_contract_kind is null then
+    raise exception using errcode = '55000', message = 'PAYMENT_CONTRACT_SNAPSHOT_MISSING';
   end if;
   if v_order.aggregate_version <> p_expected_version then
     raise exception using errcode = '40001', message = 'ORDER_VERSION_CONFLICT';
@@ -1817,6 +1847,11 @@ begin
    where o.id = p_order_id and o.dealer_id = p_dealer_id for update;
   if not found or v_order.status <> 'submitted' or v_order.warehouse_accepted_at is not null then
     raise exception using errcode = '55000', message = 'WAREHOUSE_ACCEPTED_ORDER_IMMUTABLE';
+  end if;
+  -- R2-02: a submitted order without an explicit frozen payment-contract
+  -- snapshot fails closed. Nothing is inferred, defaulted, or backfilled.
+  if v_order.payment_contract_kind is null then
+    raise exception using errcode = '55000', message = 'PAYMENT_CONTRACT_SNAPSHOT_MISSING';
   end if;
 
   if p_prepared_operation_id is not null then
@@ -2015,11 +2050,12 @@ declare
   v_prior jsonb;
   v_result jsonb;
   v_supply_ok boolean;
-  v_reservation_ok boolean;
+  v_reservation_fingerprint text;
+  v_reservation_evidence_count integer;
+  v_reservation_evidence_id uuid;
   v_bank_fingerprint text;
   v_bank_evidence_count integer;
   v_bank_evidence_id uuid;
-  v_credit_active boolean;
   v_card_evidence public.gyeon_order_external_evidence_v1%rowtype;
 begin
   select * into v_order from public.product_orders o where o.id = p_order_id for update;
@@ -2044,18 +2080,21 @@ begin
     return v_result;
   end if;
 
-  -- A2-02: independent release-time revalidation. An order for an active
-  -- credit dealer using a non-credit method is always denied here, even if
-  -- an earlier prepare/finalize gate was somehow bypassed.
-  select exists (
-    select 1 from public.gyeon_dealer_credit_terms c
-    where c.dealer_id = v_order.dealer_id
-      and c.credit_state = 'active'
-      and c.effective_from <= now()
-      and (c.effective_to is null or c.effective_to > now())
-  ) into v_credit_active;
-  if v_credit_active and v_order.payment_method <> 'credit_account' then
+  -- R2-02: release revalidates the frozen payment-contract snapshot, never
+  -- the mutable current credit-terms row. A later credit-terms activation
+  -- must not retroactively force an already-frozen standard-payment order
+  -- onto credit_account, and a frozen credit_account order can never
+  -- release under a different method. A submitted order without an
+  -- explicit frozen snapshot fails closed; nothing is inferred, defaulted,
+  -- or backfilled from the mutable current row.
+  if v_order.payment_contract_kind is null then
+    raise exception using errcode = '55000', message = 'PAYMENT_CONTRACT_SNAPSHOT_MISSING';
+  end if;
+  if v_order.payment_contract_kind = 'credit_account' and v_order.payment_method <> 'credit_account' then
     raise exception using errcode = '55000', message = 'CREDIT_ACCOUNT_TERMS_FORCE_METHOD';
+  end if;
+  if v_order.payment_contract_kind = 'standard_payment' and v_order.payment_method = 'credit_account' then
+    raise exception using errcode = '55000', message = 'PAYMENT_CONTRACT_SNAPSHOT_MISMATCH';
   end if;
 
   -- Payment-method-specific release authority. Explicit allow rules replace
@@ -2160,9 +2199,14 @@ begin
     if v_order.payment_status <> 'not_required' then
       raise exception using errcode = '55000', message = 'PAYMENT_NOT_RELEASED_TO_WAREHOUSE';
     end if;
+    -- R2-02: revalidate the exact bound terms version, not merely any
+    -- currently active row. A stopped, expired, missing, or otherwise
+    -- different current version is never a substitute for the version
+    -- bound at first finalize.
     if not exists (
       select 1 from public.gyeon_dealer_credit_terms c
       where c.dealer_id = v_order.dealer_id
+        and c.terms_version = v_order.payment_contract_credit_terms_version
         and c.credit_state = 'active'
         and c.effective_from <= now()
         and (c.effective_to is null or c.effective_to > now())
@@ -2186,15 +2230,45 @@ begin
     raise exception using errcode = '55000', message = 'SUPPLY_AUTHORITY_NOT_VERIFIED';
   end if;
 
-  select exists (
-    select 1 from public.gyeon_order_external_evidence_v1 e
-    where e.order_id = p_order_id and e.dealer_id = v_order.dealer_id
-      and e.purpose = 'inventory_reservation'
-      and e.authority = 'server_verified' and e.state = 'succeeded'
-      and (e.expires_at is null or e.expires_at > now())
-  ) into v_reservation_ok;
-  if not (v_reservation_ok or v_order.contains_backorder) then
-    raise exception using errcode = '55000', message = 'INVENTORY_RESERVATION_OR_BACKORDER_EVIDENCE_REQUIRED';
+  -- R2-01: a non-backorder release requires exactly one unconsumed,
+  -- server-verified, successful, unexpired inventory_reservation evidence
+  -- row bound to the exact dealer/order/current version/server-owned
+  -- fingerprint/amount/currency. The candidate is locked and consumed
+  -- exactly once, before the warehouse task is inserted. The separately
+  -- approved backorder authority stays independent: a backorder release
+  -- never searches for or consumes this evidence.
+  if not v_order.contains_backorder then
+    v_reservation_fingerprint := private.gyeon_order_v3_fingerprint(
+      'inventory_reservation', p_order_id, v_order.aggregate_version, '{}'::jsonb
+    );
+
+    with candidate as (
+      select id
+      from public.gyeon_order_external_evidence_v1 e
+      where e.purpose = 'inventory_reservation'
+        and e.dealer_id = v_order.dealer_id
+        and e.order_id = p_order_id
+        and e.order_version = v_order.aggregate_version
+        and e.request_fingerprint = v_reservation_fingerprint
+        and e.amount_inc_tax_yen = v_order.grand_total_inc_tax_yen
+        and e.currency = 'JPY'
+        and e.authority = 'server_verified'
+        and e.state = 'succeeded'
+        and e.consumed_at is null
+        and e.expires_at is not null and e.expires_at > now()
+      for update
+    )
+    select count(*), (array_agg(id))[1] into v_reservation_evidence_count, v_reservation_evidence_id from candidate;
+
+    if v_reservation_evidence_count = 0 then
+      raise exception using errcode = '55000', message = 'INVENTORY_RESERVATION_EVIDENCE_REQUIRED';
+    elsif v_reservation_evidence_count > 1 then
+      raise exception using errcode = '55000', message = 'INVENTORY_RESERVATION_EVIDENCE_AMBIGUOUS';
+    end if;
+
+    update public.gyeon_order_external_evidence_v1
+      set consumed_at = now(), consumed_by_operation = 'warehouse_release'
+    where id = v_reservation_evidence_id;
   end if;
 
   insert into public.gyeon_order_warehouse_tasks (order_id, dealer_id, task_state, task_version)

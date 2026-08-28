@@ -496,16 +496,28 @@ test("a newly succeeded card authorization is queued for void when credit terms 
   );
 });
 
-test("active credit-account terms independently force the payment method at prepare, finalize, and release", () => {
+test("active credit-account terms independently force the payment method at prepare and finalize, while release revalidates the frozen payment-contract snapshot instead of the mutable current row", () => {
   const prepare = functionBlock("public.prepare_gyeon_order_v3_owner_submit_rpc");
   const finalize = functionBlock("public.finalize_gyeon_order_v3_owner_submit_rpc");
   const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
-  for (const block of [prepare, finalize, release]) {
+  for (const block of [prepare, finalize]) {
     assert.match(block, /credit_account_terms_force_method/);
+    assert.match(block, /v_credit_active and p_payment_method <> 'credit_account'/);
   }
-  assert.match(prepare, /v_credit_active and p_payment_method <> 'credit_account'/);
-  assert.match(finalize, /v_credit_active and p_payment_method <> 'credit_account'/);
-  assert.match(release, /v_credit_active and v_order\.payment_method <> 'credit_account'/);
+  assert.match(release, /credit_account_terms_force_method/);
+  assert.match(
+    release,
+    /v_order\.payment_contract_kind = 'credit_account' and v_order\.payment_method <> 'credit_account'/,
+  );
+  assert.match(
+    release,
+    /v_order\.payment_contract_kind = 'standard_payment' and v_order\.payment_method = 'credit_account'/,
+  );
+  assert.doesNotMatch(
+    release,
+    /v_credit_active/,
+    "release must never force the payment method from the mutable current credit-terms row",
+  );
 
   const idxPrepareForce = prepare.indexOf("credit_account_terms_force_method");
   const idxPrepareInsert = prepare.indexOf("insert into public.gyeon_order_prepared_operations_v1");
@@ -520,6 +532,24 @@ test("active credit-account terms independently force the payment method at prep
     idxReleaseForce >= 0 && idxReleaseTaskInsert > idxReleaseForce,
     "release must deny the forced method before any warehouse task is created",
   );
+});
+
+test("a standard-payment order finalized before credit terms activate keeps releasing under its original method, and a frozen credit_account order can never release under another method", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  const idxSnapshotMissing = release.indexOf("payment_contract_snapshot_missing");
+  const idxCreditForce = release.indexOf(
+    "v_order.payment_contract_kind = 'credit_account' and v_order.payment_method <> 'credit_account'",
+  );
+  const idxMismatch = release.indexOf(
+    "v_order.payment_contract_kind = 'standard_payment' and v_order.payment_method = 'credit_account'",
+  );
+  const idxCardBranch = release.indexOf("if v_order.payment_method = 'card' then");
+  assert.match(release, /payment_contract_snapshot_mismatch/);
+  assert.ok(
+    idxSnapshotMissing >= 0 && idxSnapshotMissing < idxCreditForce && idxCreditForce < idxMismatch,
+    "the missing-snapshot guard must run before either payment-contract-kind mismatch guard",
+  );
+  assert.ok(idxMismatch < idxCardBranch, "the payment-contract snapshot is revalidated before any method branch runs");
 });
 
 test("bank and credit release require the exact pre-release payment status, and stopped/expired credit terms are denied", () => {
@@ -608,7 +638,7 @@ test("warehouse release is service-only, creates exactly one unaccepted task, an
   assert.doesNotMatch(signature(release), /p_dealer_role|p_actor_role/);
   assert.match(release, /payment_not_released_to_warehouse/);
   assert.match(release, /supply_authority_not_verified/);
-  assert.match(release, /inventory_reservation_or_backorder_evidence_required/);
+  assert.match(release, /inventory_reservation_evidence_required/);
   assert.match(release, /earliest_ship_date_authority_required/);
   assert.match(
     release,
@@ -744,6 +774,136 @@ test("no function signature accepts a client role, client price, or client evide
     for (const forbiddenArg of FORBIDDEN_CLIENT_AUTHORITY_ARGS) {
       assert.doesNotMatch(args, new RegExp(forbiddenArg));
     }
+  }
+});
+
+// -----------------------------------------------------------------------------
+// C5-B-R2: inventory-evidence and payment-contract snapshot hostile coverage.
+// -----------------------------------------------------------------------------
+
+test("non-backorder warehouse release requires one exact server-verified unexpired unconsumed inventory_reservation evidence row scoped to dealer/order/current version/server-owned fingerprint/amount/currency, locks it, and consumes it exactly once before the warehouse task", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  assert.match(release, /e\.purpose = 'inventory_reservation'/);
+  assert.match(release, /e\.dealer_id = v_order\.dealer_id/);
+  assert.match(release, /e\.order_id = p_order_id/);
+  assert.match(release, /e\.order_version = v_order\.aggregate_version/);
+  assert.match(release, /e\.request_fingerprint = v_reservation_fingerprint/);
+  assert.match(release, /e\.amount_inc_tax_yen = v_order\.grand_total_inc_tax_yen/);
+  assert.match(release, /e\.currency = 'jpy'/);
+  assert.match(release, /e\.authority = 'server_verified'/);
+  assert.match(release, /e\.state = 'succeeded'/);
+  assert.match(release, /e\.consumed_at is null/);
+  assert.match(release, /e\.expires_at is not null and e\.expires_at > now\(\)/);
+  assert.match(release, /inventory_reservation_evidence_required/);
+  assert.match(release, /inventory_reservation_evidence_ambiguous/);
+  assert.doesNotMatch(
+    release,
+    /select exists \( select 1 from public\.gyeon_order_external_evidence_v1 e where e\.order_id = p_order_id and e\.dealer_id = v_order\.dealer_id and e\.purpose = 'inventory_reservation'/,
+    "release must not accept an existence-only inventory-reservation check",
+  );
+  const idxLock = release.lastIndexOf("for update");
+  const idxCandidateCount = release.indexOf(
+    "select count(*), (array_agg(id))[1] into v_reservation_evidence_count, v_reservation_evidence_id from candidate",
+  );
+  const idxAmbiguous = release.indexOf("inventory_reservation_evidence_ambiguous");
+  const idxConsume = release.indexOf(
+    "update public.gyeon_order_external_evidence_v1 set consumed_at = now(), consumed_by_operation = 'warehouse_release'",
+    idxAmbiguous,
+  );
+  const idxTaskInsert = release.indexOf("insert into public.gyeon_order_warehouse_tasks");
+  assert.ok(idxLock > 0 && idxCandidateCount > idxLock, "the reservation candidate is counted from the same locked CTE");
+  assert.ok(idxAmbiguous > idxCandidateCount, "ambiguity must be checked before consumption");
+  assert.ok(idxConsume > idxAmbiguous, "the reservation row is consumed only after the exactly-one check passes");
+  assert.ok(idxTaskInsert > idxConsume, "the warehouse task is created only after inventory-reservation evidence is consumed");
+});
+
+test("a backorder release never searches for or consumes unrelated inventory_reservation evidence", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  const idxGuard = release.indexOf("if not v_order.contains_backorder then");
+  const idxFingerprint = release.indexOf("v_reservation_fingerprint := private.gyeon_order_v3_fingerprint(");
+  const idxTaskInsert = release.indexOf("insert into public.gyeon_order_warehouse_tasks");
+  assert.ok(
+    idxGuard >= 0 && idxFingerprint > idxGuard && idxFingerprint < idxTaskInsert,
+    "the entire reservation lookup must be inside the not-contains_backorder guard",
+  );
+});
+
+test("product_orders gains an explicit immutable payment-contract snapshot distinguishing standard payment from a versioned credit account", () => {
+  const normalizedSql = sql.toLowerCase().replace(/\s+/g, " ");
+  assert.match(normalizedSql, /add column if not exists payment_contract_kind text/);
+  assert.match(normalizedSql, /add column if not exists payment_contract_credit_terms_version bigint/);
+  assert.match(
+    normalizedSql,
+    /add constraint product_orders_payment_contract_check check \( \(payment_contract_kind is null and payment_contract_credit_terms_version is null\) or \(payment_contract_kind = 'standard_payment' and payment_contract_credit_terms_version is null\) or \(payment_contract_kind = 'credit_account' and payment_contract_credit_terms_version is not null\) \)/,
+  );
+});
+
+test("only the first owner-submit finalize writes the payment-contract snapshot, binding the exact credit-terms version for credit_account and nothing for every other method", () => {
+  const finalize = functionBlock("public.finalize_gyeon_order_v3_owner_submit_rpc");
+  assert.match(
+    finalize,
+    /payment_contract_kind = case when p_payment_method = 'credit_account' then 'credit_account' else 'standard_payment' end/,
+  );
+  assert.match(
+    finalize,
+    /payment_contract_credit_terms_version = case when p_payment_method = 'credit_account' then v_credit\.terms_version else null end/,
+  );
+  const idxSnapshotWrite = finalize.indexOf("payment_contract_kind = case");
+  const idxStatusUpdate = finalize.indexOf("update public.product_orders set status = 'submitted'");
+  assert.ok(
+    idxSnapshotWrite > idxStatusUpdate,
+    "the snapshot must be written in the same update that transitions draft to submitted",
+  );
+  // The function only reaches this update after its own draft-only guard,
+  // so the snapshot can only ever be written once per order.
+  assert.match(finalize, /v_order\.status <> 'draft'/);
+});
+
+test("pre-warehouse edit finalize never writes, clears, or infers the payment-contract snapshot on either an amount-changing or amount-preserving edit", () => {
+  const editFinalize = functionBlock("public.finalize_gyeon_order_v3_edit_rpc");
+  assert.doesNotMatch(editFinalize, /payment_contract_kind\s*=/);
+  assert.doesNotMatch(editFinalize, /payment_contract_credit_terms_version\s*=/);
+});
+
+test("edit prepare and edit finalize fail closed on a submitted order with no explicit payment-contract snapshot, without inferring or backfilling one", () => {
+  const editPrepare = functionBlock("public.prepare_gyeon_order_v3_edit_rpc");
+  const editFinalize = functionBlock("public.finalize_gyeon_order_v3_edit_rpc");
+  for (const block of [editPrepare, editFinalize]) {
+    assert.match(block, /payment_contract_snapshot_missing/);
+    assert.match(block, /v_order\.payment_contract_kind is null/);
+  }
+  const idxPrepareGuard = editPrepare.indexOf("payment_contract_snapshot_missing");
+  const idxPrepareLinesCheck = editPrepare.indexOf("order_lines_required");
+  assert.ok(
+    idxPrepareGuard >= 0 && idxPrepareLinesCheck > idxPrepareGuard,
+    "the missing-snapshot guard must run before line replacement is even validated",
+  );
+});
+
+test("credit-account warehouse release revalidates the exact bound credit-terms version and rejects a stopped, expired, missing, or mismatched current version", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  assert.match(release, /elsif v_order\.payment_method = 'credit_account' then/);
+  assert.match(release, /c\.terms_version = v_order\.payment_contract_credit_terms_version/);
+  assert.match(release, /c\.credit_state = 'active'/);
+  assert.match(release, /c\.effective_from <= now\(\)/);
+  assert.match(release, /c\.effective_to is null or c\.effective_to > now\(\)/);
+  assert.match(release, /credit_account_not_enabled/);
+  const creditBranchStart = release.indexOf("elsif v_order.payment_method = 'credit_account' then");
+  const idxVersionCheck = release.indexOf("c.terms_version = v_order.payment_contract_credit_terms_version");
+  assert.ok(creditBranchStart >= 0 && idxVersionCheck > creditBranchStart);
+});
+
+test("no warehouse task can be inserted before the R2 payment-contract-snapshot and inventory-reservation guards", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  const idxTaskInsert = release.indexOf("insert into public.gyeon_order_warehouse_tasks");
+  for (const marker of [
+    "payment_contract_snapshot_missing",
+    "payment_contract_snapshot_mismatch",
+    "inventory_reservation_evidence_required",
+    "inventory_reservation_evidence_ambiguous",
+  ]) {
+    const idx = release.indexOf(marker);
+    assert.ok(idx >= 0 && idx < idxTaskInsert, `${marker} must be checked before the warehouse task insert`);
   }
 });
 
