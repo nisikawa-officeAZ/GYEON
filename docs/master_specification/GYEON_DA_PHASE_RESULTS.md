@@ -1695,3 +1695,46 @@ scope_confirmation:
 decision: GYEON_ORDER_V3_C5_C_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GYEON-ORDER-V3-C5-C — Read-only diagnosis result and C5-B R1 return authorization
+
+```yaml
+phase: GYEON_ORDER_V3_C5_B_R1_SOURCE_INTEGRITY_REPAIR_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_AUTHORIZED_PENDING_COMMIT_AND_PR_INSTRUCTION
+date: 2026-08-29
+append_only: true
+objective: "Record the C5-C source-defect verdict and authorize one bounded three-file C5-B R1 source-integrity repair before any C5-C harness or disposable runtime work."
+authorization: "The owner explicitly approved the three-document governance update, exact stage/local commit, normal push to Draft PR #36, and one non-triggering PR instruction comment without @claude. The owner separately and explicitly approved transmitting the three private implementation files to Anthropic Claude Code for one terminal repair and focused test session. Source-candidate commit/push remains a later separate gate."
+diagnosis:
+  directive: GYEON_ORDER_V3_C5_C_READ_ONLY_DIAGNOSIS_V1
+  result: GYEON_ORDER_V3_C5_C_READ_ONLY_DIAGNOSIS_RESULT_V1
+  verdict: CHANGES_REQUIRED_SOURCE
+  execution_head: 33aac8f1a4e035141c2c0dc12856b7528494e09c
+  execution_tree: c5dbf56af3ccfce99391ac81fc3ac0bbd6c76666
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/36
+  pull_request_state: OPEN/Draft
+  writes_or_tests: false
+source_defects:
+  - "Qualification evaluation may mix per-line classification versions while retaining only the last iterated version in the snapshot."
+  - "Qualification snapshot replay mutates decision/lifecycle/evaluated_at while retaining stale canonical authority fields."
+  - "Warehouse release lacks complete payment-method-specific authority: bank-match consumption, release-time credit revalidation, card split-capture denial, and explicit payment-status allow rules."
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_B_R1_SOURCE_REPAIR.md
+future_repair_write_allowlist:
+  - supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql
+  - src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts
+  - src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts
+protected_paths:
+  - "src/components/estimates/wizard/screens/ScreensPreview.tsx — metadata only; never open/read/diff/copy/stage/modify"
+  - "supabase/migrations/20260801110110_line_link_tokens.sql — metadata only/no apply"
+  - "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql — closed finance artifact"
+  - "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts — closed finance boundary"
+current_gate:
+  - "Only the three governance documents may be changed, staged, committed, pushed, and referenced by one PR comment without @claude."
+  - "No implementation source, test execution, DB, Supabase, Docker, Colima, Auth, provider, Ready, merge, or deployment action occurs in this governance gate."
+  - "After the governance commit/push and exact PR instruction exist, terminal Claude may perform one bounded repair under the committed directive."
+decision: GYEON_ORDER_V3_C5_B_R1_GOVERNANCE_AUTHORIZED_FOR_COMMIT_PUSH_AND_NONTRIGGERING_PR_INSTRUCTION
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF; STAGE_AND_COMMIT_ONLY_THE_THREE_GOVERNANCE_PATHS; NORMAL_PUSH; POST_ONE_PR36_INSTRUCTION_WITHOUT_AT_CLAUDE; THEN_START_ONE_TERMINAL_CLAUDE_R1_REPAIR"
+```

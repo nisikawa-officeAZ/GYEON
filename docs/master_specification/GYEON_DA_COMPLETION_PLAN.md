@@ -273,6 +273,51 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Acceptance target:** E2 source candidate only. C5-C disposable-database acceptance is required before any schema candidate can advance, and production release remains blocked by unresolved external authorities.
 
+### GYEON-ORDER-V3-C5-B-R1 — Source-integrity repair gate
+
+**Status:** AUTHORIZED FOR ONE BOUNDED THREE-FILE REPAIR AND FOCUSED SOURCE-CONTRACT TEST ONLY. Commit, push, database execution, C5-C harness work, and release remain separately gated.
+
+**Reason for return:** The authorized C5-C read-only diagnosis returned `CHANGES_REQUIRED_SOURCE`. C5-C's mandatory fail/burn rule requires a source defect to return to a separately authorized C5-B repair gate before any harness authoring or disposable runtime is started.
+
+**Diagnosis authority:**
+
+- Result: `GYEON_ORDER_V3_C5_C_READ_ONLY_DIAGNOSIS_RESULT_V1`
+- Diagnosed execution HEAD: `33aac8f1a4e035141c2c0dc12856b7528494e09c`
+- Diagnosed execution tree: `c5dbf56af3ccfce99391ac81fc3ac0bbd6c76666`
+- Coordination PR: `https://github.com/nisikawa-officeAZ/GYEON/pull/36` — must remain OPEN/Draft
+
+**Literal implementation allowlist — exactly three existing paths:**
+
+1. `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql`
+2. `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts`
+3. `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts`
+
+No file may be created, deleted, renamed, formatted, staged, or modified outside this list during the repair candidate.
+
+**Required repairs:**
+
+1. **Classification-version integrity.** Qualification evaluation must accept only one identical non-null current server-owned `classification_version` across every order line. Mixed or missing versions fail closed; the last iterated line must never silently become the snapshot authority.
+2. **Immutable qualification replay.** An existing `(order_id, order_version)` snapshot is immutable. Exact canonical replay may return the existing snapshot unchanged. Any changed dealer, mode, rule version, classification version, input fingerprint, decision, lifecycle, or other canonical field fails closed; no conflict path updates historical authority or `evaluated_at`.
+3. **Payment-method-specific warehouse release.** Release must use explicit allow rules rather than a status blocklist. Card authority, bank-match evidence, cash-on-delivery restrictions, and effective credit-account terms are independently revalidated. Bank evidence is fully bound and consumed exactly once in the release transaction. Card split-capture unresolved state, `voided`, unknown, missing, expired, mismatched, reused, or stopped authority fails closed. Existing reservation/backorder and one-unaccepted-task behavior remains unchanged.
+
+**Focused verification:**
+
+- Run exactly the two existing C5-B source-contract test files together with the accepted `tsx` loader command.
+- Add deterministic regression assertions for all three repairs, including hostile mismatch/replay cases and valid method-specific release paths.
+- Run `git diff --check` only on the three allowlisted paths.
+- Record focused test count, exit code, exact changed paths, per-path SHA-256, HEAD/tree, and clean protected-path metadata.
+
+**Boundaries:**
+
+- SQL remains visibly `DRAFT_DO_NOT_APPLY` and retains one terminal `ROLLBACK`.
+- No SQL execution, migration derivation/application, Supabase, database, Docker, Colima, Auth, HTTP, provider, Vercel, deployment, Ready conversion, or merge.
+- No provider payload, signature, webhook, secret, or network implementation.
+- No Office AZ inventory implementation on MacBook.
+- All section 3.1 protected paths remain metadata-only; `ScreensPreview.tsx` content is never opened, read, diffed, copied, staged, or modified.
+- The repair candidate is performed by terminal Claude only. Do not invoke GitHub Claude or add `@claude`.
+
+**Exit:** Claude returns `GYEON_ORDER_V3_C5_B_R1_SOURCE_REPAIR_RESULT_V1`; MacBook Codex independently reviews the exact three-path diff and verification evidence. Source commit/push, C5-C resumption, and any database work remain later separate gates.
+
 ### GYEON-ORDER-V3-C5-C — Disposable-database acceptance design and execution gates
 
 **Status:** AUTHORIZED FOR GOVERNANCE CANDIDATE AND ONE READ-ONLY DIAGNOSIS ONLY. Harness implementation and disposable execution are not yet authorized.
