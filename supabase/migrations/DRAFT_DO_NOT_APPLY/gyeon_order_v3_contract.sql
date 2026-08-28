@@ -205,7 +205,9 @@ alter table public.product_orders
   add column if not exists warehouse_accepted_by uuid,
   add column if not exists warehouse_accepted_at timestamptz,
   add column if not exists aggregate_version bigint not null default 1,
-  add column if not exists request_fingerprint text;
+  add column if not exists request_fingerprint text,
+  add column if not exists card_authority_evidence_id uuid,
+  add column if not exists card_authority_request_fingerprint text;
 
 alter table public.product_orders
   drop constraint if exists product_orders_status_check,
@@ -348,6 +350,28 @@ create table if not exists public.gyeon_order_external_evidence_v1 (
   ),
   check (consumed_at is null or consumed_by_operation is not null)
 );
+
+-- C5-B-R1-A2: server-owned link from an order to the current accepted card
+-- authority. `payment_status = 'authorized'` alone is never authority; a
+-- successful amount-changing edit atomically replaces this link with the
+-- accepted reauthorization evidence, and an amount-preserving edit never
+-- clears it.
+alter table public.product_orders
+  drop constraint if exists product_orders_card_authority_evidence_fk,
+  drop constraint if exists product_orders_card_authority_binding_check;
+
+alter table public.product_orders
+  add constraint product_orders_card_authority_evidence_fk
+    foreign key (card_authority_evidence_id)
+    references public.gyeon_order_external_evidence_v1(id),
+  add constraint product_orders_card_authority_binding_check
+    check (
+      (card_authority_evidence_id is null) = (card_authority_request_fingerprint is null)
+      and (
+        payment_status <> 'authorized'
+        or (card_authority_evidence_id is not null and card_authority_request_fingerprint is not null)
+      )
+    );
 
 -- -----------------------------------------------------------------------------
 -- C5-B: server-recomputed prepared operations. Prepare is a short
@@ -807,6 +831,8 @@ declare
   v_remaining integer;
   v_met boolean;
   v_decision jsonb;
+  v_lifecycle_state text;
+  v_existing_snapshot public.gyeon_order_qualification_snapshots%rowtype;
 begin
   if p_mode not in ('none', 'shop_initial', 'detailer_initial', 'shop_to_detailer') then
     return jsonb_build_object('ok', false, 'code', 'qualification_authority_invalid');
@@ -818,16 +844,35 @@ begin
       'qualifyingAmountExTaxYen', 0, 'amountRemainingExTaxYen', 0,
       'missingRequiredProductCodes', '[]'::jsonb
     );
+    v_lifecycle_state := 'not_applicable';
+
     insert into public.gyeon_order_qualification_snapshots (
       order_id, order_version, dealer_id, evaluation_mode, rule_version,
       classification_version, input_fingerprint, decision, lifecycle_state
     ) values (
       p_order_id, p_order_version, p_dealer_id, p_mode, null, null,
-      p_input_fingerprint, v_decision, 'not_applicable'
+      p_input_fingerprint, v_decision, v_lifecycle_state
     )
-    on conflict (order_id, order_version) do update
-      set decision = excluded.decision, lifecycle_state = excluded.lifecycle_state,
-          evaluated_at = now();
+    on conflict (order_id, order_version) do nothing;
+
+    if not found then
+      select * into v_existing_snapshot
+      from public.gyeon_order_qualification_snapshots s
+      where s.order_id = p_order_id and s.order_version = p_order_version;
+
+      if v_existing_snapshot.dealer_id <> p_dealer_id
+         or v_existing_snapshot.evaluation_mode <> p_mode
+         or v_existing_snapshot.rule_version is not null
+         or v_existing_snapshot.classification_version is not null
+         or v_existing_snapshot.input_fingerprint <> p_input_fingerprint
+         or v_existing_snapshot.decision <> v_decision
+         or v_existing_snapshot.lifecycle_state <> v_lifecycle_state
+      then
+        return jsonb_build_object('ok', false, 'code', 'qualification_snapshot_conflict');
+      end if;
+      v_decision := v_existing_snapshot.decision;
+    end if;
+
     return jsonb_build_object('ok', true, 'rule_version', null, 'classification_version', null, 'decision', v_decision);
   end if;
 
@@ -867,7 +912,11 @@ begin
     if v_line.classification_version is null then
       return jsonb_build_object('ok', false, 'code', 'qualification_authority_stale');
     end if;
-    v_classification_version := v_line.classification_version;
+    if v_classification_version is null then
+      v_classification_version := v_line.classification_version;
+    elsif v_line.classification_version <> v_classification_version then
+      return jsonb_build_object('ok', false, 'code', 'qualification_authority_mixed_classification_version');
+    end if;
     if v_line.classification = 'eligible_chemical' then
       v_qualifying_amount := v_qualifying_amount
         + coalesce(v_line.list_price_ex_tax_snapshot, 0) * v_line.quantity;
@@ -885,18 +934,35 @@ begin
     'amountRemainingExTaxYen', v_remaining,
     'missingRequiredProductCodes', to_jsonb(coalesce(v_missing, array[]::text[]))
   );
+  v_lifecycle_state := case when v_met then 'provisional_met' else 'not_applicable' end;
 
   insert into public.gyeon_order_qualification_snapshots (
     order_id, order_version, dealer_id, evaluation_mode, rule_version,
     classification_version, input_fingerprint, decision, lifecycle_state
   ) values (
     p_order_id, p_order_version, p_dealer_id, p_mode, v_rule.rule_version,
-    v_classification_version, p_input_fingerprint, v_decision,
-    case when v_met then 'provisional_met' else 'not_applicable' end
+    v_classification_version, p_input_fingerprint, v_decision, v_lifecycle_state
   )
-  on conflict (order_id, order_version) do update
-    set decision = excluded.decision, lifecycle_state = excluded.lifecycle_state,
-        evaluated_at = now();
+  on conflict (order_id, order_version) do nothing;
+
+  if not found then
+    select * into v_existing_snapshot
+    from public.gyeon_order_qualification_snapshots s
+    where s.order_id = p_order_id and s.order_version = p_order_version;
+
+    if v_existing_snapshot.dealer_id <> p_dealer_id
+       or v_existing_snapshot.evaluation_mode <> p_mode
+       or coalesce(v_existing_snapshot.rule_version, -1) <> coalesce(v_rule.rule_version, -1)
+       or coalesce(v_existing_snapshot.classification_version, -1) <> coalesce(v_classification_version, -1)
+       or v_existing_snapshot.input_fingerprint <> p_input_fingerprint
+       or v_existing_snapshot.decision <> v_decision
+       or v_existing_snapshot.lifecycle_state <> v_lifecycle_state
+    then
+      return jsonb_build_object('ok', false, 'code', 'qualification_snapshot_conflict');
+    end if;
+    v_decision := v_existing_snapshot.decision;
+    v_met := v_existing_snapshot.lifecycle_state = 'provisional_met';
+  end if;
 
   if not v_met then
     return jsonb_build_object('ok', false, 'code', 'qualification_not_met', 'decision', v_decision);
@@ -1246,6 +1312,7 @@ as $$
 declare
   v_order public.product_orders%rowtype;
   v_credit public.gyeon_dealer_credit_terms%rowtype;
+  v_credit_active boolean := false;
   v_qualification_authority public.gyeon_dealer_qualification_mode_projection%rowtype;
   v_qualification jsonb;
   v_fingerprint text;
@@ -1272,20 +1339,29 @@ begin
   if not v_order.contains_backorder and p_backorder_policy is not null then
     raise exception using errcode = '22023', message = 'BACKORDER_POLICY_NOT_APPLICABLE';
   end if;
+  if p_payment_method not in ('card', 'bank_transfer_prepaid', 'cash_on_delivery', 'credit_account') then
+    raise exception using errcode = '22023', message = 'PAYMENT_METHOD_INVALID';
+  end if;
   if p_payment_method = 'cash_on_delivery' and v_order.destination_kind = 'customer_direct' then
     raise exception using errcode = '22023', message = 'COD_CUSTOMER_DIRECT_FORBIDDEN';
   end if;
-  if p_payment_method = 'credit_account' then
-    select * into v_credit from public.gyeon_dealer_credit_terms c
-     where c.dealer_id = p_dealer_id and c.credit_state = 'active'
-       and c.effective_from <= now()
-       and (c.effective_to is null or c.effective_to > now());
-    if not found then
-      raise exception using errcode = '42501', message = 'CREDIT_ACCOUNT_NOT_ENABLED';
-    end if;
+
+  -- A2-02: active, currently effective credit-account terms force the
+  -- payment method server-side, regardless of the requested method. A
+  -- browser can never keep card/bank/COD selected once the dealer is on
+  -- forced credit terms, and credit_account is always denied without
+  -- active/effective terms.
+  select * into v_credit from public.gyeon_dealer_credit_terms c
+   where c.dealer_id = p_dealer_id
+     and c.effective_from <= now()
+     and (c.effective_to is null or c.effective_to > now());
+  v_credit_active := found and v_credit.credit_state = 'active';
+
+  if v_credit_active and p_payment_method <> 'credit_account' then
+    raise exception using errcode = '42501', message = 'CREDIT_ACCOUNT_TERMS_FORCE_METHOD';
   end if;
-  if p_payment_method not in ('card', 'bank_transfer_prepaid', 'cash_on_delivery', 'credit_account') then
-    raise exception using errcode = '22023', message = 'PAYMENT_METHOD_INVALID';
+  if p_payment_method = 'credit_account' and not v_credit_active then
+    raise exception using errcode = '42501', message = 'CREDIT_ACCOUNT_NOT_ENABLED';
   end if;
 
   -- Server-owned qualification-mode authority. A browser can never select,
@@ -1388,6 +1464,8 @@ as $$
 declare
   v_prepared public.gyeon_order_prepared_operations_v1%rowtype;
   v_order public.product_orders%rowtype;
+  v_credit public.gyeon_dealer_credit_terms%rowtype;
+  v_credit_active boolean := false;
   v_fingerprint text;
   v_prior jsonb;
   v_result jsonb;
@@ -1403,6 +1481,17 @@ begin
     p_dealer_id, p_actor_id, p_idempotency_key, 'owner_submit_finalize', v_fingerprint
   );
   if v_prior is not null then return v_prior; end if;
+
+  -- A2-01: card authority may never be synthesized from status text. A card
+  -- finalize without an exact prepared operation and exact accepted
+  -- evidence fails closed before any lock is taken.
+  if p_payment_method = 'card' and (p_prepared_operation_id is null or p_evidence_id is null) then
+    v_result := jsonb_build_object('ok', false, 'code', 'card_authority_required', 'compensation', 'none');
+    update public.gyeon_order_idempotency_v3 i set
+      order_id = p_order_id, response_payload = v_result, completed_at = now()
+    where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key;
+    return v_result;
+  end if;
 
   -- Deterministic lock order: prepared operation, then order, then evidence.
   if p_prepared_operation_id is not null then
@@ -1426,9 +1515,11 @@ begin
     raise exception using errcode = '55000', message = 'OWNER_SUBMIT_NOT_ALLOWED';
   end if;
 
-  if p_prepared_operation_id is not null then
-    -- Evidence lock and binding check (third in the deterministic order).
-    v_should_compensate := p_evidence_id is not null and exists (
+  -- A3-03: a card authorization can succeed outside PostgreSQL while credit
+  -- terms change before finalize. Identify that exact new authorization
+  -- before the credit-method gate so a denial records a durable void intent.
+  if p_payment_method = 'card' and p_prepared_operation_id is not null then
+    select exists (
       select 1 from public.gyeon_order_external_evidence_v1 e
       where e.id = p_evidence_id
         and e.authority = 'server_verified' and e.state = 'succeeded' and e.consumed_at is null
@@ -1438,8 +1529,47 @@ begin
         and e.request_fingerprint = v_prepared.request_fingerprint
         and e.amount_inc_tax_yen = v_prepared.amount_inc_tax_yen
         and e.currency = v_prepared.currency
-    );
+      for update
+    ) into v_should_compensate;
+  end if;
 
+  -- A2-02: finalize independently preserves the credit-forcing rule; a
+  -- caller may not bypass prepare by supplying another method here.
+  select * into v_credit from public.gyeon_dealer_credit_terms c
+   where c.dealer_id = p_dealer_id
+     and c.effective_from <= now()
+     and (c.effective_to is null or c.effective_to > now());
+  v_credit_active := found and v_credit.credit_state = 'active';
+
+  if v_credit_active and p_payment_method <> 'credit_account' then
+    v_result := jsonb_build_object(
+      'ok', false,
+      'code', 'credit_account_terms_force_method',
+      'compensation', case when v_should_compensate then 'void_new_card_authorization' else 'none' end
+    );
+    if v_should_compensate then
+      insert into public.gyeon_order_external_compensation_outbox (
+        order_id, dealer_id, evidence_id, prepared_operation_id, idempotency_identity
+      ) values (
+        p_order_id, p_dealer_id, p_evidence_id, v_prepared.id,
+        concat('void:', v_prepared.id, ':', p_evidence_id::text)
+      )
+      on conflict (idempotency_identity) do nothing;
+    end if;
+    update public.gyeon_order_idempotency_v3 i set
+      order_id = p_order_id, response_payload = v_result, completed_at = now()
+    where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key;
+    return v_result;
+  end if;
+  if p_payment_method = 'credit_account' and not v_credit_active then
+    v_result := jsonb_build_object('ok', false, 'code', 'credit_account_not_enabled', 'compensation', 'none');
+    update public.gyeon_order_idempotency_v3 i set
+      order_id = p_order_id, response_payload = v_result, completed_at = now()
+    where i.dealer_id = p_dealer_id and i.idempotency_key = p_idempotency_key;
+    return v_result;
+  end if;
+
+  if p_prepared_operation_id is not null then
     if now() >= v_prepared.expires_at then
       v_result := jsonb_build_object('ok', false, 'code', 'prepared_operation_expired',
         'compensation', case when v_should_compensate then 'void_new_card_authorization' else 'none' end);
@@ -1503,6 +1633,14 @@ begin
       when p_payment_method = 'bank_transfer_prepaid' then 'payment_pending'
       when p_payment_method = 'cash_on_delivery' then 'not_required'
       when p_payment_method = 'credit_account' then 'not_required'
+    end,
+    -- A2-01: persist the server-owned link to the accepted card evidence.
+    -- Reaching this update with payment_method = 'card' already proves the
+    -- exact prepared operation and exact accepted evidence were consumed.
+    card_authority_evidence_id = case when p_payment_method = 'card' then p_evidence_id else card_authority_evidence_id end,
+    card_authority_request_fingerprint = case
+      when p_payment_method = 'card' then v_prepared.request_fingerprint
+      else card_authority_request_fingerprint
     end,
     backorder_policy = p_backorder_policy,
     earliest_ship_date = private.gyeon_order_v3_earliest_ship_date(now()),
@@ -1789,6 +1927,15 @@ begin
   update public.product_orders set
     merchandise_list_ex_tax_yen = v_list_ex,
     grand_total_inc_tax_yen = v_list_ex + coalesce(shipping_fee_ex_tax_yen, 0) + coalesce(tax_yen, 0),
+    -- A2-01: reaching this update with p_prepared_operation_id not null
+    -- already proves the reauthorization evidence was consumed, so the
+    -- link is atomically replaced. An amount-preserving edit never took
+    -- the prepared-operation path, so the existing link is preserved.
+    card_authority_evidence_id = case when p_prepared_operation_id is not null then p_evidence_id else card_authority_evidence_id end,
+    card_authority_request_fingerprint = case
+      when p_prepared_operation_id is not null then v_prepared.request_fingerprint
+      else card_authority_request_fingerprint
+    end,
     aggregate_version = aggregate_version + 1,
     request_fingerprint = v_fingerprint,
     updated_at = now()
@@ -1869,6 +2016,11 @@ declare
   v_result jsonb;
   v_supply_ok boolean;
   v_reservation_ok boolean;
+  v_bank_fingerprint text;
+  v_bank_evidence_count integer;
+  v_bank_evidence_id uuid;
+  v_credit_active boolean;
+  v_card_evidence public.gyeon_order_external_evidence_v1%rowtype;
 begin
   select * into v_order from public.product_orders o where o.id = p_order_id for update;
   if not found then raise exception using errcode = 'P0002', message = 'ORDER_NOT_FOUND'; end if;
@@ -1892,9 +2044,135 @@ begin
     return v_result;
   end if;
 
-  if v_order.payment_status in ('selection_required', 'authorization_pending', 'payment_pending', 'failed') then
+  -- A2-02: independent release-time revalidation. An order for an active
+  -- credit dealer using a non-credit method is always denied here, even if
+  -- an earlier prepare/finalize gate was somehow bypassed.
+  select exists (
+    select 1 from public.gyeon_dealer_credit_terms c
+    where c.dealer_id = v_order.dealer_id
+      and c.credit_state = 'active'
+      and c.effective_from <= now()
+      and (c.effective_to is null or c.effective_to > now())
+  ) into v_credit_active;
+  if v_credit_active and v_order.payment_method <> 'credit_account' then
+    raise exception using errcode = '55000', message = 'CREDIT_ACCOUNT_TERMS_FORCE_METHOD';
+  end if;
+
+  -- Payment-method-specific release authority. Explicit allow rules replace
+  -- a status blocklist; every branch independently revalidates its own
+  -- authority at release time instead of trusting stale prepare/finalize state.
+  if v_order.payment_method = 'card' then
+    if v_order.payment_status <> 'authorized' then
+      raise exception using errcode = '55000', message = 'PAYMENT_NOT_RELEASED_TO_WAREHOUSE';
+    end if;
+
+    -- A2-01: `payment_status = 'authorized'` alone is never authority. The
+    -- server-owned link must resolve to accepted evidence bound to this
+    -- exact dealer/order, in the succeeded server-verified state, and
+    -- consumed by the finalize operation that produced it.
+    if v_order.card_authority_evidence_id is null
+       or v_order.card_authority_request_fingerprint is null
+    then
+      raise exception using errcode = '55000', message = 'CARD_AUTHORITY_MISSING';
+    end if;
+
+    select * into v_card_evidence
+    from public.gyeon_order_external_evidence_v1 e
+    where e.id = v_order.card_authority_evidence_id
+    for update;
+
+    if not found
+       or v_card_evidence.dealer_id <> v_order.dealer_id
+       or v_card_evidence.order_id <> p_order_id
+       or v_card_evidence.purpose not in ('initial_authorization', 'edit_reauthorization')
+       or v_card_evidence.authority <> 'server_verified'
+       or v_card_evidence.state <> 'succeeded'
+       or v_card_evidence.expires_at is null
+       or now() >= v_card_evidence.expires_at
+       or v_card_evidence.consumed_at is null
+       or (
+         v_card_evidence.purpose = 'initial_authorization'
+         and v_card_evidence.consumed_by_operation <> 'owner_submit_finalize'
+       )
+       or (
+         v_card_evidence.purpose = 'edit_reauthorization'
+         and v_card_evidence.consumed_by_operation <> 'edit_finalize'
+       )
+       or v_card_evidence.request_fingerprint <> v_order.card_authority_request_fingerprint
+       or v_card_evidence.amount_inc_tax_yen <> v_order.grand_total_inc_tax_yen
+       or v_card_evidence.currency <> 'JPY'
+    then
+      raise exception using errcode = '55000', message = 'CARD_AUTHORITY_INVALID';
+    end if;
+
+    if v_order.contains_backorder and v_order.backorder_policy = 'ship_available_first' then
+      raise exception using errcode = '55000', message = 'CARD_SPLIT_CAPTURE_UNRESOLVED';
+    end if;
+  elsif v_order.payment_method = 'bank_transfer_prepaid' then
+    if v_order.payment_status <> 'payment_pending' then
+      raise exception using errcode = '55000', message = 'PAYMENT_NOT_RELEASED_TO_WAREHOUSE';
+    end if;
+
+    v_bank_fingerprint := private.gyeon_order_v3_fingerprint(
+      'bank_payment_match', p_order_id, v_order.aggregate_version, '{}'::jsonb
+    );
+
+    with candidate as (
+      select id
+      from public.gyeon_order_external_evidence_v1 e
+      where e.purpose = 'bank_payment_match'
+        and e.dealer_id = v_order.dealer_id
+        and e.order_id = p_order_id
+        and e.order_version = v_order.aggregate_version
+        and e.request_fingerprint = v_bank_fingerprint
+        and e.amount_inc_tax_yen = v_order.grand_total_inc_tax_yen
+        and e.currency = 'JPY'
+        and e.authority = 'server_verified'
+        and e.state = 'succeeded'
+        and e.consumed_at is null
+        and e.expires_at is not null and e.expires_at > now()
+      for update
+    )
+    select count(*), (array_agg(id))[1] into v_bank_evidence_count, v_bank_evidence_id from candidate;
+
+    if v_bank_evidence_count = 0 then
+      raise exception using errcode = '55000', message = 'BANK_PAYMENT_MATCH_EVIDENCE_REQUIRED';
+    elsif v_bank_evidence_count > 1 then
+      raise exception using errcode = '55000', message = 'BANK_PAYMENT_MATCH_EVIDENCE_AMBIGUOUS';
+    end if;
+
+    update public.gyeon_order_external_evidence_v1
+      set consumed_at = now(), consumed_by_operation = 'warehouse_release'
+    where id = v_bank_evidence_id;
+
+    -- A2-03: bank evidence consumption atomically advances the order to
+    -- `paid` before any warehouse task is created.
+    update public.product_orders set payment_status = 'paid' where id = p_order_id;
+    v_order.payment_status := 'paid';
+  elsif v_order.payment_method = 'cash_on_delivery' then
+    if v_order.destination_kind = 'customer_direct' then
+      raise exception using errcode = '55000', message = 'COD_CUSTOMER_DIRECT_FORBIDDEN';
+    end if;
+    if v_order.payment_status <> 'not_required' or v_order.owner_review_state <> 'owner_confirmed' then
+      raise exception using errcode = '55000', message = 'PAYMENT_NOT_RELEASED_TO_WAREHOUSE';
+    end if;
+  elsif v_order.payment_method = 'credit_account' then
+    if v_order.payment_status <> 'not_required' then
+      raise exception using errcode = '55000', message = 'PAYMENT_NOT_RELEASED_TO_WAREHOUSE';
+    end if;
+    if not exists (
+      select 1 from public.gyeon_dealer_credit_terms c
+      where c.dealer_id = v_order.dealer_id
+        and c.credit_state = 'active'
+        and c.effective_from <= now()
+        and (c.effective_to is null or c.effective_to > now())
+    ) then
+      raise exception using errcode = '55000', message = 'CREDIT_ACCOUNT_NOT_ENABLED';
+    end if;
+  else
     raise exception using errcode = '55000', message = 'PAYMENT_NOT_RELEASED_TO_WAREHOUSE';
   end if;
+
   if v_order.earliest_ship_date is null then
     raise exception using errcode = '55000', message = 'EARLIEST_SHIP_DATE_AUTHORITY_REQUIRED';
   end if;

@@ -202,6 +202,50 @@ test("qualification helper is server-owned, fails closed without an active rule,
   assert.doesNotMatch(helper, /qualification_verified/);
 });
 
+test("qualification helper requires one identical non-null classification version across every line and fails closed on a mixed version", () => {
+  const helper = functionBlock("private.gyeon_order_v3_evaluate_qualification");
+  const idxMissingGuard = helper.indexOf("if v_line.classification_version is null then");
+  const idxFirstAssign = helper.indexOf("if v_classification_version is null then");
+  const idxMixedGuard = helper.indexOf(
+    "elsif v_line.classification_version <> v_classification_version then",
+  );
+  const idxMixedCode = helper.indexOf("qualification_authority_mixed_classification_version");
+  const idxAccumulate = helper.indexOf("v_qualifying_amount := v_qualifying_amount");
+  assert.ok(idxMissingGuard >= 0, "must still deny a missing per-line classification version");
+  assert.ok(idxFirstAssign > idxMissingGuard, "first valid version must become the candidate version");
+  assert.ok(idxMixedGuard > idxFirstAssign, "a later differing version must be rejected");
+  assert.ok(idxMixedCode > idxMixedGuard, "mixed versions must return a distinct stable code");
+  assert.ok(idxAccumulate > idxMixedCode, "the version check must run before qualifying-amount accumulation");
+  assert.doesNotMatch(
+    helper,
+    /v_classification_version := v_line\.classification_version;\s*if v_line\.classification = 'eligible_chemical'/,
+    "the last iterated line must never silently overwrite the snapshot version",
+  );
+});
+
+test("qualification snapshot insert is immutable: no conflict path updates decision, lifecycle_state, or evaluated_at", () => {
+  const helper = functionBlock("private.gyeon_order_v3_evaluate_qualification");
+  assert.doesNotMatch(helper, /on conflict \(order_id, order_version\) do update/);
+  const doNothingMatches = [...helper.matchAll(/on conflict \(order_id, order_version\) do nothing/g)];
+  assert.equal(doNothingMatches.length, 2, "both the none-mode and evaluated snapshots must be insert-only");
+  assert.doesNotMatch(helper, /evaluated_at = now\(\)/);
+});
+
+test("qualification snapshot replay returns the existing immutable snapshot unchanged on exact match and a stable conflict code on any canonical-field mismatch", () => {
+  const helper = functionBlock("private.gyeon_order_v3_evaluate_qualification");
+  assert.match(helper, /qualification_snapshot_conflict/);
+  assert.match(helper, /v_existing_snapshot\.dealer_id <> p_dealer_id/);
+  assert.match(helper, /v_existing_snapshot\.evaluation_mode <> p_mode/);
+  assert.match(helper, /v_existing_snapshot\.input_fingerprint <> p_input_fingerprint/);
+  assert.match(helper, /v_existing_snapshot\.decision <> v_decision/);
+  assert.match(helper, /v_existing_snapshot\.lifecycle_state <> v_lifecycle_state/);
+  assert.match(helper, /v_decision := v_existing_snapshot\.decision;/);
+  const idxSelectExisting = helper.indexOf("select * into v_existing_snapshot");
+  const idxConflictCheck = helper.indexOf("v_existing_snapshot.dealer_id <> p_dealer_id");
+  const idxReplayAssign = helper.lastIndexOf("v_decision := v_existing_snapshot.decision;");
+  assert.ok(idxSelectExisting >= 0 && idxConflictCheck > idxSelectExisting && idxReplayAssign > idxConflictCheck);
+});
+
 test("earliest ship date requires explicit calendar rows instead of weekend assumptions", () => {
   const calendar = functionBlock("private.gyeon_order_v3_earliest_ship_date");
   assert.match(calendar, /public\.gyeon_warehouse_calendar_days/);
@@ -265,14 +309,29 @@ for (const kind of [
     assert.doesNotMatch(conflictSection, /raise exception/);
   });
 
-  test(`${kind.label} finalize inserts exactly one compensation-outbox row only on the void_new_card_authorization path, never raising`, () => {
+  test(`${kind.label} finalize records durable idempotent compensation only on an accepted void path, never raising`, () => {
     const block = functionBlock(kind.finalizeName);
     assert.match(block, /'compensation'.*'void_new_card_authorization'.*'none'/);
     assert.match(block, /insert into public\.gyeon_order_external_compensation_outbox/);
     assert.match(block, /on conflict \(idempotency_identity\) do nothing/);
     const idxCompensationGuard = block.indexOf("if v_result is not null and (v_result ->> 'compensation') = 'void_new_card_authorization' then");
-    const idxInsert = block.indexOf("insert into public.gyeon_order_external_compensation_outbox");
-    assert.ok(idxCompensationGuard >= 0 && idxInsert > idxCompensationGuard);
+    const idxConflictInsert = block.indexOf(
+      "insert into public.gyeon_order_external_compensation_outbox",
+      idxCompensationGuard,
+    );
+    assert.ok(idxCompensationGuard >= 0 && idxConflictInsert > idxCompensationGuard);
+    if (kind.label === "owner-submit") {
+      const idxCreditGuard = block.indexOf("if v_should_compensate then");
+      const idxCreditInsert = block.indexOf(
+        "insert into public.gyeon_order_external_compensation_outbox",
+        idxCreditGuard,
+      );
+      const idxCreditReturn = block.indexOf("return v_result;", idxCreditGuard);
+      assert.ok(
+        idxCreditGuard >= 0 && idxCreditInsert > idxCreditGuard && idxCreditReturn > idxCreditInsert,
+        "the credit-term race must durably queue its void before returning",
+      );
+    }
   });
 
   test(`${kind.label} finalize consumes evidence and the prepared operation before any commercial mutation`, () => {
@@ -295,6 +354,220 @@ for (const kind of [
     assert.match(args, /p_evidence_id uuid default null/);
   });
 }
+
+// -----------------------------------------------------------------------------
+// C5-B-R1-A2: hostile payment-authority regression coverage.
+// -----------------------------------------------------------------------------
+
+test("product_orders gains a server-owned card authority link bound by foreign key to accepted external evidence", () => {
+  const normalizedSql = sql.toLowerCase().replace(/\s+/g, " ");
+  assert.match(normalizedSql, /add column if not exists card_authority_evidence_id uuid/);
+  assert.match(normalizedSql, /add column if not exists card_authority_request_fingerprint text/);
+  assert.match(
+    normalizedSql,
+    /add constraint product_orders_card_authority_evidence_fk foreign key \(card_authority_evidence_id\) references public\.gyeon_order_external_evidence_v1\(id\)/,
+  );
+  assert.match(
+    normalizedSql,
+    /add constraint product_orders_card_authority_binding_check check \( \(card_authority_evidence_id is null\) = \(card_authority_request_fingerprint is null\)/,
+  );
+  assert.match(
+    normalizedSql,
+    /payment_status <> 'authorized' or \(card_authority_evidence_id is not null and card_authority_request_fingerprint is not null\)/,
+  );
+});
+
+test("card finalize fails closed on a null prepared operation or evidence id, before locking anything", () => {
+  const block = functionBlock("public.finalize_gyeon_order_v3_owner_submit_rpc");
+  assert.match(block, /card_authority_required/);
+  assert.match(
+    block,
+    /p_payment_method = 'card' and \(p_prepared_operation_id is null or p_evidence_id is null\)/,
+  );
+  const idxGuard = block.indexOf("card_authority_required");
+  const idxPreparedLock = block.indexOf("from public.gyeon_order_prepared_operations_v1");
+  assert.ok(
+    idxGuard >= 0 && idxPreparedLock > idxGuard,
+    "the card-authority guard must run before the prepared operation is locked",
+  );
+});
+
+test("owner-submit finalize persists the card authority link only for card, only after evidence is consumed", () => {
+  const block = functionBlock("public.finalize_gyeon_order_v3_owner_submit_rpc");
+  assert.match(
+    block,
+    /card_authority_evidence_id = case when p_payment_method = 'card' then p_evidence_id else card_authority_evidence_id end/,
+  );
+  assert.match(
+    block,
+    /when p_payment_method = 'card' then v_prepared\.request_fingerprint else card_authority_request_fingerprint/,
+  );
+  const idxConsume = block.indexOf(
+    "set consumed_at = now(), consumed_by_operation = 'owner_submit_finalize'",
+  );
+  const idxLink = block.indexOf("card_authority_evidence_id = case when p_payment_method = 'card'");
+  assert.ok(
+    idxConsume >= 0 && idxLink > idxConsume,
+    "the link is written only after the prepared operation and evidence were consumed",
+  );
+});
+
+test("edit finalize atomically replaces the card authority link on a successful reauthorization, and preserves it on an amount-preserving edit", () => {
+  const block = functionBlock("public.finalize_gyeon_order_v3_edit_rpc");
+  assert.match(
+    block,
+    /card_authority_evidence_id = case when p_prepared_operation_id is not null then p_evidence_id else card_authority_evidence_id end/,
+  );
+  assert.match(
+    block,
+    /when p_prepared_operation_id is not null then v_prepared\.request_fingerprint else card_authority_request_fingerprint/,
+  );
+});
+
+test("card release never trusts payment_status = 'authorized' alone; it revalidates the persistently bound card authority", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  assert.match(release, /card_authority_missing/);
+  assert.match(release, /card_authority_invalid/);
+  assert.match(release, /v_order\.card_authority_evidence_id is null/);
+  assert.match(release, /v_order\.card_authority_request_fingerprint is null/);
+  assert.match(release, /v_card_evidence\.dealer_id <> v_order\.dealer_id/);
+  assert.match(release, /v_card_evidence\.order_id <> p_order_id/);
+  assert.match(release, /v_card_evidence\.purpose not in \('initial_authorization', 'edit_reauthorization'\)/);
+  assert.match(release, /v_card_evidence\.authority <> 'server_verified'/);
+  assert.match(release, /v_card_evidence\.state <> 'succeeded'/);
+  assert.match(release, /v_card_evidence\.expires_at is null/);
+  assert.match(release, /now\(\) >= v_card_evidence\.expires_at/);
+  assert.match(release, /v_card_evidence\.consumed_at is null/);
+  assert.match(
+    release,
+    /v_card_evidence\.purpose = 'initial_authorization' and v_card_evidence\.consumed_by_operation <> 'owner_submit_finalize'/,
+  );
+  assert.match(
+    release,
+    /v_card_evidence\.purpose = 'edit_reauthorization' and v_card_evidence\.consumed_by_operation <> 'edit_finalize'/,
+  );
+  assert.match(
+    release,
+    /v_card_evidence\.request_fingerprint <> v_order\.card_authority_request_fingerprint/,
+  );
+  assert.match(release, /v_card_evidence\.amount_inc_tax_yen <> v_order\.grand_total_inc_tax_yen/);
+  assert.match(release, /v_card_evidence\.currency <> 'jpy'/);
+  const idxAuthorizedCheck = release.indexOf("v_order.payment_status <> 'authorized'");
+  const idxAuthorityMissing = release.indexOf("card_authority_missing");
+  const idxAuthorityInvalid = release.indexOf("card_authority_invalid");
+  const idxSplitCapture = release.indexOf("card_split_capture_unresolved");
+  const idxTaskInsert = release.indexOf("insert into public.gyeon_order_warehouse_tasks");
+  assert.ok(
+    idxAuthorizedCheck >= 0 && idxAuthorityMissing > idxAuthorizedCheck,
+    "the authorized status text alone must not be sufficient",
+  );
+  assert.ok(idxAuthorityInvalid > idxAuthorityMissing);
+  assert.ok(
+    idxSplitCapture > idxAuthorityInvalid,
+    "the bound card authority must be revalidated before the split-capture check",
+  );
+  assert.ok(idxTaskInsert > idxSplitCapture, "no warehouse task may be created before card authority is revalidated");
+});
+
+test("a newly succeeded card authorization is queued for void when credit terms become active before finalize", () => {
+  const finalize = functionBlock("public.finalize_gyeon_order_v3_owner_submit_rpc");
+  const idxEvidenceCandidate = finalize.indexOf("a3-03:");
+  const idxCreditForce = finalize.indexOf("credit_account_terms_force_method");
+  const idxCompensationInsert = finalize.indexOf(
+    "insert into public.gyeon_order_external_compensation_outbox",
+    idxCreditForce,
+  );
+  const idxCreditReturn = finalize.indexOf("return v_result;", idxCreditForce);
+  assert.ok(
+    idxEvidenceCandidate >= 0 && idxEvidenceCandidate < idxCreditForce,
+    "successful evidence must be identified before the credit-method denial",
+  );
+  assert.match(
+    finalize.slice(idxEvidenceCandidate, idxCreditForce),
+    /e\.request_fingerprint = v_prepared\.request_fingerprint/,
+  );
+  assert.match(
+    finalize.slice(idxCreditForce, idxCreditReturn),
+    /case when v_should_compensate then 'void_new_card_authorization' else 'none' end/,
+  );
+  assert.ok(
+    idxCompensationInsert > idxCreditForce && idxCompensationInsert < idxCreditReturn,
+    "the durable void intent must be inserted before the credit-method denial returns",
+  );
+});
+
+test("active credit-account terms independently force the payment method at prepare, finalize, and release", () => {
+  const prepare = functionBlock("public.prepare_gyeon_order_v3_owner_submit_rpc");
+  const finalize = functionBlock("public.finalize_gyeon_order_v3_owner_submit_rpc");
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  for (const block of [prepare, finalize, release]) {
+    assert.match(block, /credit_account_terms_force_method/);
+  }
+  assert.match(prepare, /v_credit_active and p_payment_method <> 'credit_account'/);
+  assert.match(finalize, /v_credit_active and p_payment_method <> 'credit_account'/);
+  assert.match(release, /v_credit_active and v_order\.payment_method <> 'credit_account'/);
+
+  const idxPrepareForce = prepare.indexOf("credit_account_terms_force_method");
+  const idxPrepareInsert = prepare.indexOf("insert into public.gyeon_order_prepared_operations_v1");
+  assert.ok(
+    idxPrepareForce >= 0 && idxPrepareInsert > idxPrepareForce,
+    "prepare must deny the forced method before any prepared operation is created",
+  );
+
+  const idxReleaseForce = release.indexOf("credit_account_terms_force_method");
+  const idxReleaseTaskInsert = release.indexOf("insert into public.gyeon_order_warehouse_tasks");
+  assert.ok(
+    idxReleaseForce >= 0 && idxReleaseTaskInsert > idxReleaseForce,
+    "release must deny the forced method before any warehouse task is created",
+  );
+});
+
+test("bank and credit release require the exact pre-release payment status, and stopped/expired credit terms are denied", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  assert.match(release, /v_order\.payment_status <> 'payment_pending'/);
+  const bankBranchStart = release.indexOf("elsif v_order.payment_method = 'bank_transfer_prepaid' then");
+  const bankStatusCheck = release.indexOf("v_order.payment_status <> 'payment_pending'");
+  assert.ok(bankBranchStart >= 0 && bankStatusCheck > bankBranchStart);
+
+  const creditBranchStart = release.indexOf("elsif v_order.payment_method = 'credit_account' then");
+  const creditStatusCheck = release.lastIndexOf("v_order.payment_status <> 'not_required'");
+  assert.ok(
+    creditBranchStart >= 0 && creditStatusCheck > creditBranchStart,
+    "credit-account release must require the exact not_required status",
+  );
+  assert.match(release, /credit_account_not_enabled/);
+  assert.match(release, /c\.credit_state = 'active'/);
+  assert.match(release, /c\.effective_from <= now\(\)/);
+  assert.match(release, /c\.effective_to is null or c\.effective_to > now\(\)/);
+});
+
+test("bank evidence consumption atomically advances payment_status to paid before the warehouse task is created", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  assert.match(release, /update public\.product_orders set payment_status = 'paid' where id = p_order_id/);
+  const idxConsume = release.indexOf("update public.gyeon_order_external_evidence_v1 set consumed_at = now()");
+  const idxPaid = release.indexOf("update public.product_orders set payment_status = 'paid'");
+  const idxTaskInsert = release.indexOf("insert into public.gyeon_order_warehouse_tasks");
+  assert.ok(idxConsume >= 0 && idxPaid > idxConsume, "the order advances to paid only after bank evidence is consumed");
+  assert.ok(idxTaskInsert > idxPaid, "no warehouse task may be created before the order is marked paid");
+});
+
+test("no warehouse task can be inserted before every A2-01/A2-02/A2-03 authority and status guard", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  const idxTaskInsert = release.indexOf("insert into public.gyeon_order_warehouse_tasks");
+  for (const marker of [
+    "credit_account_terms_force_method",
+    "card_authority_missing",
+    "card_authority_invalid",
+    "card_split_capture_unresolved",
+    "bank_payment_match_evidence_required",
+    "bank_payment_match_evidence_ambiguous",
+    "cod_customer_direct_forbidden",
+    "credit_account_not_enabled",
+  ]) {
+    const idx = release.indexOf(marker);
+    assert.ok(idx >= 0 && idx < idxTaskInsert, `${marker} must be checked before the warehouse task insert`);
+  }
+});
 
 test("idempotency claims atomically, locks a conflict, and rejects a different fingerprint", () => {
   const helper = functionBlock("private.gyeon_order_v3_claim_idempotency");
@@ -351,6 +624,81 @@ test("warehouse release is service-only, creates exactly one unaccepted task, an
     normalized,
     /grant execute on function public\.release_gyeon_order_v3_warehouse_rpc\([^;]+\) to authenticated/,
   );
+  assert.doesNotMatch(
+    release,
+    /payment_status in \('selection_required', 'authorization_pending', 'payment_pending', 'failed'\)/,
+    "the payment gate must be method-specific, not a status blocklist",
+  );
+});
+
+test("card release requires the accepted authorization state and denies unresolved split-capture with a ship-available-first backorder", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  assert.match(release, /if v_order\.payment_method = 'card' then/);
+  assert.match(release, /v_order\.payment_status <> 'authorized'/);
+  assert.match(release, /card_split_capture_unresolved/);
+  assert.match(
+    release,
+    /v_order\.contains_backorder and v_order\.backorder_policy = 'ship_available_first'/,
+  );
+});
+
+test("bank-transfer release requires one exact server-verified unexpired unconsumed bank_payment_match evidence row scoped to dealer/order/current version/fingerprint/amount/currency, and consumes it exactly once", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  assert.match(release, /elsif v_order\.payment_method = 'bank_transfer_prepaid' then/);
+  assert.match(release, /e\.purpose = 'bank_payment_match'/);
+  assert.match(release, /e\.dealer_id = v_order\.dealer_id/);
+  assert.match(release, /e\.order_id = p_order_id/);
+  assert.match(release, /e\.order_version = v_order\.aggregate_version/);
+  assert.match(release, /e\.request_fingerprint = v_bank_fingerprint/);
+  assert.match(release, /e\.amount_inc_tax_yen = v_order\.grand_total_inc_tax_yen/);
+  assert.match(release, /e\.currency = 'jpy'/);
+  assert.match(release, /e\.authority = 'server_verified'/);
+  assert.match(release, /e\.state = 'succeeded'/);
+  assert.match(release, /e\.consumed_at is null/);
+  assert.match(release, /e\.expires_at is not null and e\.expires_at > now\(\)/);
+  assert.match(release, /bank_payment_match_evidence_required/);
+  assert.match(release, /bank_payment_match_evidence_ambiguous/);
+  assert.match(
+    release,
+    /update public\.gyeon_order_external_evidence_v1 set consumed_at = now\(\), consumed_by_operation = 'warehouse_release'/,
+  );
+  const idxLock = release.indexOf("for update");
+  const idxCount = release.indexOf("select count(*), (array_agg(id))[1] into v_bank_evidence_count, v_bank_evidence_id from candidate;");
+  const idxAmbiguous = release.indexOf("bank_payment_match_evidence_ambiguous");
+  const idxConsume = release.indexOf("update public.gyeon_order_external_evidence_v1 set consumed_at = now()");
+  const idxTaskInsert = release.indexOf("insert into public.gyeon_order_warehouse_tasks");
+  assert.ok(idxLock >= 0 && idxCount > idxLock, "candidate evidence must be locked before it is counted");
+  assert.ok(idxAmbiguous > idxCount, "ambiguity must be checked before consumption");
+  assert.ok(idxConsume > idxAmbiguous, "evidence is consumed only after the exactly-one check passes");
+  assert.ok(idxTaskInsert > idxConsume, "the warehouse task is created only after bank evidence is consumed");
+});
+
+test("cash-on-delivery release denies customer-direct destination and requires the already owner-confirmed not-required payment state", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  assert.match(release, /elsif v_order\.payment_method = 'cash_on_delivery' then/);
+  assert.match(release, /cod_customer_direct_forbidden/);
+  assert.match(release, /v_order\.destination_kind = 'customer_direct'/);
+  assert.match(
+    release,
+    /v_order\.payment_status <> 'not_required' or v_order\.owner_review_state <> 'owner_confirmed'/,
+  );
+});
+
+test("credit-account release revalidates active, currently effective dealer credit terms and denies otherwise", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  assert.match(release, /elsif v_order\.payment_method = 'credit_account' then/);
+  assert.match(release, /credit_account_not_enabled/);
+  assert.match(release, /c\.credit_state = 'active'/);
+  assert.match(release, /c\.effective_from <= now\(\)/);
+  assert.match(release, /c\.effective_to is null or c\.effective_to > now\(\)/);
+});
+
+test("an unknown or unhandled payment method always denies release before any warehouse task is created", () => {
+  const release = functionBlock("public.release_gyeon_order_v3_warehouse_rpc");
+  const idxElse = release.indexOf("else raise exception using errcode = '55000', message = 'payment_not_released_to_warehouse';");
+  const idxTaskInsert = release.indexOf("insert into public.gyeon_order_warehouse_tasks");
+  assert.ok(idxElse >= 0, "an else branch must deny any payment method outside the four explicit allow rules");
+  assert.ok(idxTaskInsert > idxElse);
 });
 
 test("warehouse acceptance requires both expected versions, locks and consumes an existing task, and never inserts one", () => {
