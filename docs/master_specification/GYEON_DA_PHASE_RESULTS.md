@@ -1936,3 +1936,59 @@ scope_confirmation:
 decision: GYEON_ORDER_V3_C5_B_R2_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GYEON-ORDER-V3-C5-C-R3 — R2-bound harness diagnosis governance candidate
+
+```yaml
+phase: GYEON_ORDER_V3_C5_C_R3_R2_BOUND_HARNESS_DIAGNOSIS_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED
+date: 2026-08-29
+append_only: true
+objective: "Bind C5-C to the pushed R2 source, replace the stale A3 diagnosis boundary, and require one narrow read-only harness-readiness diagnosis before any C5-C harness authoring."
+authorization: "The owner explicitly approved starting the C5-C R2-bound governance update. This authorizes exactly four uncommitted governance-document changes only. Stage, commit, push, PR mutation, Claude invocation/external transmission, harness implementation, tests, DB, Supabase, Docker, Colima, Auth, provider, Ready, merge, and deployment remain separate gates."
+predecessor:
+  branch: agent/gyeon-order-v3-c5-external-authority-design
+  source_commit: 3403918d0166c30c44abb95bad1c8a7335877cab
+  source_tree: 1d1617a49bc1dd1e4b21515fec4940c3fdc4f827
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/36
+  pull_request_state: OPEN/Draft
+  sql_sha256: d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73
+  rpc_test_sha256: dbc7be4c08195c944eb00a0c28dc839736340b7c0df3e31ad617bdfa957a4159
+  migration_test_sha256: c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5
+  focused_tests: PASS_77_OF_77
+  diff_check: PASS
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS.md
+future_harness_candidate_allowlist:
+  - scripts/e2e/gyeon-order-v3-c5c/config.toml
+  - scripts/e2e/gyeon-order-v3-c5c/setup.sh
+  - scripts/e2e/gyeon-order-v3-c5c/schema-rls.test.sql
+  - scripts/e2e/gyeon-order-v3-c5c/qualification-evidence.test.sql
+  - scripts/e2e/gyeon-order-v3-c5c/prepare-finalize-warehouse.test.sql
+  - scripts/e2e/gyeon-order-v3-c5c/real-auth.mjs
+  - scripts/e2e/gyeon-order-v3-c5c/concurrency.mjs
+  - scripts/e2e/gyeon-order-v3-c5c/capture-evidence.sh
+  - scripts/e2e/gyeon-order-v3-c5c/cleanup.sh
+diagnosis_contract:
+  directive_id: GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_V1
+  required_result: GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_RESULT_V1
+  accepted_ready_verdict: READY_FOR_HARNESS_IMPLEMENTATION
+  stop_verdicts:
+    - CHANGES_REQUIRED_SOURCE
+    - CHANGES_REQUIRED_PLAN
+    - BLOCKED_READ_SCOPE
+  note: "The result document is not a harness implementation path; it belongs to the later disposable-execution result-recording gate."
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "Only the exact four governance paths may change in this candidate."
+  - "No source, harness, test execution, Git index/commit/remote, PR, Claude, runtime, database, Supabase, Docker, Colima, Auth, provider, inventory implementation, Ready, merge, or deployment state changes."
+decision: GYEON_ORDER_V3_C5_C_R3_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```

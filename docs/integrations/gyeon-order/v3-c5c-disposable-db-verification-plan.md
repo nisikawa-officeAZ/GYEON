@@ -2,19 +2,19 @@
 
 ## 1. 文書情報
 
-- 計画ID: `GYEON-ORDER-V3-C5-C-R2-A3-BOUND-DISPOSABLE-DB-ACCEPTANCE-PLAN`
+- 計画ID: `GYEON-ORDER-V3-C5-C-R3-R2-BOUND-DISPOSABLE-DB-ACCEPTANCE-PLAN`
 - 対象branch: `agent/gyeon-order-v3-c5-external-authority-design`
-- 対象commit: `37573c3f9cc476b8d7911221a8696ee61109b9bf`
-- 対象tree: `c94ca1944e1c2d54b5728943501fbc07edc9668a`
+- 対象commit: `3403918d0166c30c44abb95bad1c8a7335877cab`
+- 対象tree: `1d1617a49bc1dd1e4b21515fec4940c3fdc4f827`
 - 対象SQL: `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql`
-- 対象SQL SHA-256: `7b72c49baa7a42e56e23959bfc69919c181ba7f51b4aa186aa69edfa575015f4`
-- RPC契約test SHA-256: `990a94cdd7417de89348e5a357a33a6766ee9f6b07289cc0f89be3494852b0ba`
+- 対象SQL SHA-256: `d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73`
+- RPC契約test SHA-256: `dbc7be4c08195c944eb00a0c28dc839736340b7c0df3e31ad617bdfa957a4159`
 - migration契約test SHA-256: `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
 - SQL状態: `DRAFT_DO_NOT_APPLY / terminal ROLLBACK`
 - 更新日: 2026-08-29
-- 現在状態: `RETURNED_TO_C5_B_R2_SOURCE_REPAIR / NOT_EXECUTED`
+- 現在状態: `R2_SOURCE_PUSHED / R2_BOUND_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE / NOT_EXECUTED`
 
-この文書はDB実行権限ではない。A3-bound read-only診断がsource defectを確認したため、C5-CはC5-B R2へ戻っている。読取専用診断、source修正、検証資産実装、静的受入、使い捨てDB実行、commit、push、migration昇格、環境適用を別ゲートとして扱う。
+この文書はDB実行権限ではない。C5-B R2 sourceはcommit `3403918d0166c30c44abb95bad1c8a7335877cab`としてPR #36へ通常push済みで、focused source-contract testは`77/77` PASSである。次はR2 sourceとC4 harnessを対象にした1回の読取専用診断だけを行い、その結果が`READY_FOR_HARNESS_IMPLEMENTATION`の場合に限り、検証資産実装を別承認する。読取専用診断、検証資産実装、静的受入、使い捨てDB実行、結果記録、commit、push、migration昇格、環境適用を別ゲートとして扱う。
 
 ## 2. 結論
 
@@ -166,7 +166,7 @@ fresh suffixごとに次の形式を使う。
 - C5-B 3ファイルとC5-A pure-contract 2ファイルのhashを記録する。
 - protected pathはpathname／mode／blob／Git stateだけを記録する。
 - Node、Supabase CLI、Colima/Docker、psql、PostgreSQL image versionを記録する。
-- A3 source test `68/68`のcommit provenanceを記録し、C5-Cではsource testを再実行しない。
+- R2 source test `77/77`のcommit provenanceを記録し、C5-Cではsource testを再実行しない。
 
 ### C5C-1: fresh runtime and exact replay
 
@@ -414,25 +414,25 @@ Office AZ inventory実装、provider仕様、qualification履歴正本、保護�
 - token、password、secret key、raw provider payloadのログ出力。
 - allowlist外source defectまたはOffice AZ inventory実装要求。
 
-## 11. 読取専用診断の確認項目
+## 11. R2-bound読取専用診断の確認項目
 
-Claudeは実装・テスト前に、現在のSQLとC4 harnessを読取専用で調べ、次を返す。
+Claudeは実装・テスト前に、R2 sourceとC4 harnessを読取専用で調べ、次を返す。A3-bound診断結果をR2 sourceへ流用してはならない。
 
 1. C5-B object／function／signature／lock順序の完全一覧。
 2. C4 harnessで再利用できる構造と、変更せず参照だけにすべき部分。
 3. C5-Cで新規作成すべき正確な検証資産allowlist。
 4. fixture dependency／cleanup順序。
 5. success pathに必要なserver-owned fixtureだけの一覧。
-6. A3で修復済みのclassification-version統一、qualification snapshot不変性、card authority binding、expiry、purpose/consumption対応、edit時の置換／保持、finalize前credit-race compensationが実行検証可能か。
+6. A3までに修復済みのclassification-version統一、qualification snapshot不変性、card authority binding、expiry、purpose/consumption対応、edit時の置換／保持、finalize前credit-race compensationが実行検証可能か。
 7. 各raceの2接続SQL手順とobserver assertion。
 8. 最初の成功したowner finalizeでserver-owned payment-contract snapshotを保存し、standard-payment／credit-account modeとcreditの場合のexact terms versionを拘束できるか。editで保持され、missing snapshotがfail-closedか。
 9. finalize後のcredit activationがstandard-payment snapshotへ遡及せず、自動voidなしでoriginal payment authorityを維持する一方、credit snapshotがexact terms versionをrelease時に再検証するか。
 10. `inventory_reservation` evidenceのexact unique validation、row lock、task insert前のatomic one-time consumptionがrelease transaction内でfail-closedか。backorderが無関係なevidenceを消費しないか。
-11. C5-C実行前に追加source repairまたは新しいowner契約判断が必要かの判定。
+11. C5-C実行前に追加source repair、新しいowner契約判断、またはharness計画修正が必要かの判定。
 
-## 12. 後続の実行資産候補allowlist
+## 12. 後続のharness実装候補allowlist
 
-読取専用診断で過不足を確定するまで実装しない。現時点の候補は次の10パスだけである。
+R2-bound読取専用診断で過不足を確認するまで実装しない。harness source実装候補は次の9パスだけである。結果文書は実DB実行後の別ゲートで作成するため、この実装allowlistへ含めない。
 
 1. `scripts/e2e/gyeon-order-v3-c5c/config.toml`
 2. `scripts/e2e/gyeon-order-v3-c5c/setup.sh`
@@ -443,18 +443,17 @@ Claudeは実装・テスト前に、現在のSQLとC4 harnessを読取専用で�
 7. `scripts/e2e/gyeon-order-v3-c5c/concurrency.mjs`
 8. `scripts/e2e/gyeon-order-v3-c5c/capture-evidence.sh`
 9. `scripts/e2e/gyeon-order-v3-c5c/cleanup.sh`
-10. `docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-result.md`
 
 既存C4資産はaccepted evidenceとして変更しない。C5-C資産から参照・比較はできるが、コピー元の契約を黙って変更しない。
 
 ## 13. 次のゲート
 
-1. C5-B R2計画、ledger、更新済み本計画、新R2 repair指示書から成る正確な4文書の未コミット差分をCodexが検証する。
+1. completion plan、ledger、更新済み本計画、新R2-bound読取専用診断指示書から成る正確な4文書の未コミット差分をCodexが検証する。
 2. ownerが正確な4文書のstage／local commitを別途承認する。
 3. ownerが通常pushを別途承認する。
-4. ownerが新R2指示書の外部送信とClaude source repairを別途承認する。
-5. Claudeがexact three-file source candidateとfocused test結果を返し、Codexが独立受入する。
-6. source candidateのcommit／pushを別々に承認・完了した後、C5-C predecessor hashとruntime assertionsを更新する。
-7. harness実装、静的検証、disposable DB実行、結果記録、Git deliveryをそれぞれ別承認にする。
+4. CodexがPR #36へ非起動のR2-bound読取専用診断指示コメントを投稿し、ownerが非公開文書のClaude Code外部送信を別途明示承認する。
+5. Claudeが`GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_RESULT_V1`を返し、Codexが独立受入する。
+6. 診断結果が`READY_FOR_HARNESS_IMPLEMENTATION`の場合だけ、9パスのharness実装を別承認する。`CHANGES_REQUIRED_SOURCE`または`CHANGES_REQUIRED_PLAN`なら実装せず別ガバナンスへ戻る。
+7. harness静的受入、disposable DB実行、結果文書作成、Git deliveryをそれぞれ別承認にする。
 
 C5-C合格後も、正式migration昇格、Dev-Next／production適用、provider接続、Ready、merge、deployは未承認のままである。

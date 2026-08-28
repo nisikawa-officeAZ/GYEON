@@ -385,7 +385,7 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 
 ### GYEON-ORDER-V3-C5-B-R2 — Inventory evidence and payment-contract snapshot repair
 
-**Status:** GOVERNANCE CANDIDATE READY / UNCOMMITTED. Authorization remains limited to exactly four governance-document changes; source repair, tests, database/Supabase work, Git delivery, PR mutation, and Claude invocation remain separately gated.
+**Status:** SOURCE REPAIR ACCEPTED, COMMITTED, AND PUSHED. C5-C R2-bound diagnosis, harness implementation, disposable execution, and database application remain separately gated.
 
 **Reason for return:** The A3-bound C5-C read-only diagnosis returned `CHANGES_REQUIRED_SOURCE`. Independent MacBook Codex review confirmed that warehouse release currently checks only whether an `inventory_reservation` evidence row exists; it does not prove an exact unique dealer/order/version/fingerprint/amount/currency binding, lock that row, or consume it atomically. The same diagnosis exposed a business-contract gap: mutable dealer credit terms could retroactively alter the payment path of an already owner-confirmed order.
 
@@ -416,7 +416,18 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 - Release locks that exact evidence row and consumes it atomically before inserting the warehouse task. Zero candidates, multiple candidates, mismatch, expiry, reuse, or a wrong purpose/consumption pairing fails closed before task creation.
 - The separately approved backorder authority remains independent. A backorder path must not consume unrelated reservation evidence or treat arbitrary reservation evidence as authority.
 
-**Governance write allowlist — exactly four paths:**
+**Accepted R2 source:**
+
+- Branch: `agent/gyeon-order-v3-c5-external-authority-design`
+- Commit: `3403918d0166c30c44abb95bad1c8a7335877cab`
+- Tree: `1d1617a49bc1dd1e4b21515fec4940c3fdc4f827`
+- SQL SHA-256: `d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73`
+- RPC-contract test SHA-256: `dbc7be4c08195c944eb00a0c28dc839736340b7c0df3e31ad617bdfa957a4159`
+- Migration-contract test SHA-256: `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5` — unchanged
+- Verification: exact focused command `77/77` PASS, exit `0`; `git diff --check` PASS
+- Delivery: normal push to PR #36; PR remains OPEN/Draft
+
+**Historical R2 governance write allowlist — exactly four paths:**
 
 1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
@@ -429,39 +440,55 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 2. `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts`
 3. `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts`
 
-**Current boundary:** This gate authors and validates the four governance documents only. Do not stage, commit, push, post to PR #36, invoke Claude, run tests, start Docker/Colima/Supabase, connect to a database, derive/apply SQL, or modify any source file. A later repair remains source-only under the exact three-file allowlist and retains the single terminal `ROLLBACK`.
+**Current boundary:** R2 source delivery is complete. The guarded SQL remains under `DRAFT_DO_NOT_APPLY` with its terminal `ROLLBACK`; no local, shared, staging, or production database was contacted. The next gate is one R2-bound read-only harness diagnosis. It does not authorize harness writes, tests, Docker/Colima/Supabase, database access, SQL derivation/application, or provider work.
 
-**Exit:** MacBook Codex verifies the exact four-document candidate and `git diff --check`, then requests separate authorization for exact stage and local commit. Push, external transmission/Claude execution, source review, tests, and C5-C resumption remain later gates.
+**Exit:** Refresh C5-C to the exact R2 commit/tree/hashes and obtain separate authorization for one read-only harness diagnosis. Harness authoring begins only after a `READY_FOR_HARNESS_IMPLEMENTATION` diagnosis is independently accepted.
 
 ### GYEON-ORDER-V3-C5-C — Disposable-database acceptance design and execution gates
 
-**Status:** RETURNED TO C5-B R2 GOVERNANCE / NOT EXECUTED. Harness implementation, disposable execution, Git delivery, and PR mutation remain unauthorized.
+**Status:** R2 SOURCE PUSHED / R2-BOUND READ-ONLY DIAGNOSIS GOVERNANCE CANDIDATE / NOT EXECUTED. Harness implementation, disposable execution, Git delivery, and PR mutation remain unauthorized.
 
 **Objective:** Prove the pushed C5-B database source candidate on one fresh loopback-only PostgreSQL 17 disposable Supabase runtime, including real signed Auth/PostgREST requests, exact RLS/grant behavior, prepare/finalize evidence consumption, server-owned qualification, durable compensation, warehouse-task release timing, and genuine separate-connection races.
 
 **Predecessor:**
 
 - Branch: `agent/gyeon-order-v3-c5-external-authority-design`
-- Commit: `37573c3f9cc476b8d7911221a8696ee61109b9bf`
-- Tree: `c94ca1944e1c2d54b5728943501fbc07edc9668a`
-- Source verification: focused contract tests `68/68` PASS and `git diff --check` PASS
+- Commit: `3403918d0166c30c44abb95bad1c8a7335877cab`
+- Tree: `1d1617a49bc1dd1e4b21515fec4940c3fdc4f827`
+- SQL SHA-256: `d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73`
+- RPC-contract test SHA-256: `dbc7be4c08195c944eb00a0c28dc839736340b7c0df3e31ad617bdfa957a4159`
+- Migration-contract test SHA-256: `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
+- Source verification: focused contract tests `77/77` PASS and `git diff --check` PASS
 - Known environment limitation: full-project typecheck is not an acceptance signal in the isolated worktree because repository dependencies and archived UI type roots are unresolved
 
-**Superseded C5-C R2 governance write allowlist (historical):**
+**Current C5-C R3 governance write allowlist — exactly four paths:**
 
 - `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 - `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 - `docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md`
-- `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_A3_READ_ONLY_DIAGNOSIS_V2.md` (new)
+- `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS.md` (new)
 
-**Current return boundary:**
+**Current diagnosis boundary:**
 
-- Preserve `CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_READ_ONLY_DIAGNOSIS.md` byte-for-byte as historical V1 evidence. V2 supersedes it only for a future A3-bound diagnosis.
-- C5-C does not resume from the A3 source. C5-B R2 must first repair exact inventory-reservation validation/consumption and add the explicit payment-contract snapshot accepted by the owner.
-- When C5-C later resumes, it must treat classification-version integrity, immutable qualification replay, card-authority binding, payment-contract snapshot persistence, non-retroactive credit activation, exact credit-version revalidation, and inventory-evidence one-time consumption as mandatory executable assertions.
-- The prior post-finalize credit-activation question is resolved: the already-confirmed order keeps its frozen standard-payment contract, remains eligible for release when its original payment authority is valid, and does not create an automatic card-void intent merely because credit terms activate later.
-- The A3 result-recording commit/push and PR result comment do not authorize a new Claude invocation, harness change, or disposable run.
-- Do not stage, commit, push, post to PR #36, invoke Claude, create or edit the C5-C harness, start Colima/Docker/Supabase, connect to any database, derive/apply SQL, create fixtures, run pgTAP/Auth/concurrency checks, or otherwise mutate Git in this gate.
+- Preserve both earlier C5-C diagnosis directives byte-for-byte as historical evidence. Neither is current execution authority for the R2 source.
+- One new R2-bound read-only diagnosis must confirm that the source is ready for harness authoring and that the nine-path candidate allowlist is sufficient.
+- The diagnosis may inspect only its committed literal read scope and may not write files, run tests, start Docker/Colima/Supabase, connect to a database, derive/apply SQL, create fixtures, run pgTAP/Auth/concurrency checks, or mutate Git/PR state.
+- Harness implementation requires a later explicit owner authorization and a `READY_FOR_HARNESS_IMPLEMENTATION` result accepted by MacBook Codex.
+- `CHANGES_REQUIRED_SOURCE`, `CHANGES_REQUIRED_PLAN`, or `BLOCKED_READ_SCOPE` stops harness authoring and returns to a separate governance gate.
+
+**Future harness implementation candidate — exactly nine new paths:**
+
+1. `scripts/e2e/gyeon-order-v3-c5c/config.toml`
+2. `scripts/e2e/gyeon-order-v3-c5c/setup.sh`
+3. `scripts/e2e/gyeon-order-v3-c5c/schema-rls.test.sql`
+4. `scripts/e2e/gyeon-order-v3-c5c/qualification-evidence.test.sql`
+5. `scripts/e2e/gyeon-order-v3-c5c/prepare-finalize-warehouse.test.sql`
+6. `scripts/e2e/gyeon-order-v3-c5c/real-auth.mjs`
+7. `scripts/e2e/gyeon-order-v3-c5c/concurrency.mjs`
+8. `scripts/e2e/gyeon-order-v3-c5c/capture-evidence.sh`
+9. `scripts/e2e/gyeon-order-v3-c5c/cleanup.sh`
+
+The result document is excluded from harness implementation. It belongs to the later disposable-execution result-recording gate.
 
 **Required later evidence:**
 
