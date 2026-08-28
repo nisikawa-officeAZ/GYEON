@@ -1789,3 +1789,46 @@ current_gate:
 decision: GYEON_ORDER_V3_C5_B_R1_A2_GOVERNANCE_AUTHORIZED_FOR_EXACT_COMMIT_AND_NORMAL_PUSH_ONLY
 next: "VERIFY_EXACT_THREE_GOVERNANCE_DOCUMENTS; STAGE_ONLY_THOSE_DOCUMENTS; COMMIT; NORMAL_PUSH; STOP_BEFORE_PR_INSTRUCTION_OR_A2_EXECUTION"
 ```
+
+## GYEON-ORDER-V3-C5-B-R1-A3 — Direct payment-authority closure accepted and pushed
+
+```yaml
+phase: GYEON_ORDER_V3_C5_B_R1_A3_DIRECT_PAYMENT_AUTHORITY_CLOSURE
+status: SOURCE_CANDIDATE_ACCEPTED_COMMITTED_PUSHED_C5_C_RESUMPTION_NOT_AUTHORIZED
+date: 2026-08-29
+append_only: true
+objective: "Close the three residual A2 payment-authority defects without another broad Claude repair loop, while retaining the accepted R1-01/R1-02 and A2 work."
+authorization: "The owner explicitly authorized a one-time MacBook Codex direct repair limited to the two already-modified implementation paths, exact focused verification, exact two-file stage/local commit, normal push to Draft PR #36, then a separate two-document result record commit/push and one PR result comment. No DB, Supabase, provider, Ready, merge, or deployment authority was granted."
+exception_boundary:
+  reason: "Reduce repeated Anthropic credit consumption after the A2 candidate passed source tests but failed independent Codex review."
+  scope: "A3 only; this does not silently replace the ordinary Claude-first and separate-gate protocol."
+source:
+  branch: agent/gyeon-order-v3-c5-external-authority-design
+  commit: 37573c3f9cc476b8d7911221a8696ee61109b9bf
+  tree: c94ca1944e1c2d54b5728943501fbc07edc9668a
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/36
+  pull_request_state: OPEN/Draft
+  sql_sha256: 7b72c49baa7a42e56e23959bfc69919c181ba7f51b4aa186aa69edfa575015f4
+  rpc_test_sha256: 990a94cdd7417de89348e5a357a33a6766ee9f6b07289cc0f89be3494852b0ba
+  migration_test_sha256_unchanged: c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5
+accepted_repairs:
+  - "Persisted exact server-owned card evidence ID plus accepted request fingerprint; authorized status alone cannot release an order."
+  - "Release rejects missing, expired, voided, mismatched, wrongly consumed, or purpose/consumption-inconsistent card evidence before warehouse-task insertion."
+  - "A successful new card authorization receives a durable idempotent void intent if active credit terms force finalize denial."
+  - "Amount-changing edit atomically replaces both card-authority fields; amount-preserving edit preserves both."
+verification:
+  command: "node --import /Users/atsushinishikawa/dealeros/node_modules/tsx/dist/loader.mjs --test src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts"
+  result: PASS_68_OF_68
+  diff_check: PASS
+  committed_worktree: CLEAN
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "Exactly two implementation paths were committed in 37573c3; no protected path was opened, read, diffed, copied, staged, or modified beyond allowed metadata checks."
+  - "No database, Supabase project, Docker, Colima, Auth, HTTP, PSP, bank API, provider, inventory, Ready conversion, merge, deployment, or destructive action occurred."
+decision: GYEON_ORDER_V3_C5_B_R1_A3_E2_SOURCE_CANDIDATE_ACCEPTED
+next: "REFRESH_C5_C_HASH_BOUND_GOVERNANCE_TO_37573C3_THEN_REQUEST_SEPARATE_HARNESS_OR_DISPOSABLE_EXECUTION_AUTHORIZATION"
+```

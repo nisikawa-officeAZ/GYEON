@@ -357,18 +357,44 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 
 **Exit:** A later authorized terminal-Claude session returns `GYEON_ORDER_V3_C5_B_R1_A2_SOURCE_CORRECTION_RESULT_V1`; MacBook Codex independently verifies the hostile paths and exact three-file scope before any implementation commit is considered.
 
+### GYEON-ORDER-V3-C5-B-R1-A3 — Codex direct payment-authority closure
+
+**Status:** SOURCE CANDIDATE ACCEPTED, COMMITTED, AND PUSHED. C5-C disposable-database execution remains separately gated.
+
+**Owner-authorized exception:** After the A2 terminal-Claude candidate passed its focused tests but MacBook Codex found three residual payment-authority defects, the owner explicitly authorized MacBook Codex to perform one direct, two-file A3 correction to avoid another high-credit Claude loop. This is a narrow exception for A3 only; it does not silently replace the normal phase protocol.
+
+**Accepted source:**
+
+- Branch: `agent/gyeon-order-v3-c5-external-authority-design`
+- Commit: `37573c3f9cc476b8d7911221a8696ee61109b9bf`
+- Tree: `c94ca1944e1c2d54b5728943501fbc07edc9668a`
+- `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql` — SHA-256 `7b72c49baa7a42e56e23959bfc69919c181ba7f51b4aa186aa69edfa575015f4`
+- `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts` — SHA-256 `990a94cdd7417de89348e5a357a33a6766ee9f6b07289cc0f89be3494852b0ba`
+- `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts` — unchanged, SHA-256 `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
+
+**Accepted A3 closure:**
+
+1. The order persistently binds the accepted card-evidence ID and its exact server-owned request fingerprint; authorized status without the complete binding fails closed.
+2. Warehouse release rejects missing, expired, voided, mismatched, wrongly consumed, or purpose/consumption-inconsistent card authority before task creation.
+3. If credit-account terms become active after a new external card authorization succeeds but before finalize, the denial transaction inserts one idempotent `void_new_card_authorization` compensation intent before returning.
+4. Amount-changing card edit replaces both authority link fields; amount-preserving edit preserves both.
+
+**Verification:** Exact focused command passed `68/68`, `git diff --check` passed, the worktree was clean after commit, and PR #36 plus the remote branch resolved to the exact accepted commit. No database, Supabase project, provider, Ready conversion, merge, or deployment action occurred.
+
+**Exit:** Refresh C5-C's hash-bound predecessor to this commit, then obtain a separate authorization before any harness change or disposable runtime execution.
+
 ### GYEON-ORDER-V3-C5-C — Disposable-database acceptance design and execution gates
 
-**Status:** AUTHORIZED FOR GOVERNANCE CANDIDATE AND ONE READ-ONLY DIAGNOSIS ONLY. Harness implementation and disposable execution are not yet authorized.
+**Status:** GOVERNANCE EXISTS, BUT ITS HASH-BOUND PREDECESSOR MUST BE REFRESHED TO A3 BEFORE ANY RESUMPTION. Harness implementation and disposable execution are not authorized by the A3 result-recording gate.
 
 **Objective:** Prove the pushed C5-B database source candidate on one fresh loopback-only PostgreSQL 17 disposable Supabase runtime, including real signed Auth/PostgREST requests, exact RLS/grant behavior, prepare/finalize evidence consumption, server-owned qualification, durable compensation, warehouse-task release timing, and genuine separate-connection races.
 
 **Predecessor:**
 
 - Branch: `agent/gyeon-order-v3-c5-external-authority-design`
-- Commit: `1ae0f7e91f3889ea08c894bcb589bb35a15303ec`
-- Tree: `a6f7fde6b4b9b8c15689ccd5124f17632c6e9f92`
-- Source verification: focused contract tests `50/50` PASS and `git diff --check` PASS
+- Commit: `37573c3f9cc476b8d7911221a8696ee61109b9bf`
+- Tree: `c94ca1944e1c2d54b5728943501fbc07edc9668a`
+- Source verification: focused contract tests `68/68` PASS and `git diff --check` PASS
 - Known environment limitation: full-project typecheck is not an acceptance signal in the isolated worktree because repository dependencies and archived UI type roots are unresolved
 
 **Governance write allowlist:**
@@ -380,8 +406,8 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 
 **Current authorization boundary:**
 
-- Create and independently review the exact four-document uncommitted governance candidate.
-- After separate commit/push approval, publish the Claude read-only diagnosis instruction on Draft PR #36 and run one bounded read-only diagnosis.
+- Preserve the existing C5-C governance design as historical evidence and refresh its source hashes before a later execution authorization.
+- The A3 result-recording commit/push and PR result comment do not authorize a new Claude invocation, harness change, or disposable run.
 - Do not create or edit the C5-C harness, start Colima/Docker/Supabase, connect to any database, derive/apply SQL, create fixtures, run pgTAP/Auth/concurrency checks, or mutate Git in this gate.
 
 **Required later evidence:**
