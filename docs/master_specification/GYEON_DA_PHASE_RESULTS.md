@@ -1874,3 +1874,65 @@ scope_confirmation:
 decision: GYEON_ORDER_V3_C5_C_R2_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GYEON-ORDER-V3-C5-B-R2 — Inventory evidence and payment-contract snapshot governance
+
+```yaml
+phase: GYEON_ORDER_V3_C5_B_R2_INVENTORY_EVIDENCE_AND_PAYMENT_CONTRACT_SNAPSHOT_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED
+date: 2026-08-29
+append_only: true
+objective: "Return the A3-bound C5-C diagnosis to one bounded C5-B source-repair contract for exact inventory-reservation evidence consumption and an explicit non-retroactive payment-contract snapshot."
+authorization: "The owner explicitly authorized exactly four uncommitted governance-document changes only. Stage, commit, push, PR mutation, Claude invocation/external transmission, tests, DB, Supabase, Docker, Colima, provider, Ready, merge, and deployment remain unauthorized."
+diagnosis:
+  result_id: GYEON_ORDER_V3_C5_C_A3_READ_ONLY_DIAGNOSIS_RESULT_V2
+  verdict: CHANGES_REQUIRED_SOURCE
+  execution_head: 5b8624c5a30fa961268e9a4535b935a6d00e7407
+  execution_tree: 9615cd5a754a11bd14c49dce23e7ee6ee1f36b27
+  execution_mode: "One terminal Claude invocation; read-only tools only; no Bash, write, test, DB, network, Git, or PR action."
+codex_verification:
+  - "Warehouse release currently uses an existence check for inventory_reservation evidence rather than exact unique dealer/order/version/fingerprint/amount/currency validation."
+  - "The row is not locked or consumed atomically before warehouse-task creation, so missing exact binding, ambiguity, and reuse are not proven fail-closed."
+  - "The existing focused test checks the error code but does not prove exact evidence binding and one-time consumption."
+  - "The existing evidence helper already demonstrates the intended strict validation/consumption pattern, but release does not use the equivalent contract for inventory reservation."
+  - "Current credit terms are mutable dealer state; without a frozen order-level payment contract, later activation can retroactively alter warehouse-release behavior."
+owner_decision:
+  - "The first successful owner confirmation/finalize freezes an explicit server-owned payment-contract snapshot."
+  - "The snapshot distinguishes standard payment from credit account and binds the exact terms version when credit account applies."
+  - "Later credit activation never retroactively changes an already-confirmed standard-payment order and never automatically voids its existing card authorization."
+  - "Pre-warehouse edits preserve the snapshot; cancel plus new order evaluates current terms as a new contract."
+  - "Credit-account release revalidates the exact bound terms version; missing, stopped, expired, or mismatched authority fails closed."
+  - "A submitted order with no snapshot fails closed; no inference, guessed default, or automatic backfill is permitted."
+inventory_contract:
+  - "Non-backorder release requires exactly one unconsumed, server-verified, successful, unexpired inventory_reservation evidence bound to exact dealer/order/current version/server-owned fingerprint/amount/currency."
+  - "Release locks and consumes that evidence atomically before warehouse-task creation; zero, ambiguous, mismatched, expired, or reused authority fails closed."
+  - "Backorder authority stays separate and never consumes unrelated reservation evidence."
+predecessor:
+  branch: agent/gyeon-order-v3-c5-external-authority-design
+  source_commit: 37573c3f9cc476b8d7911221a8696ee61109b9bf
+  source_tree: c94ca1944e1c2d54b5728943501fbc07edc9668a
+  governance_head: 5b8624c5a30fa961268e9a4535b935a6d00e7407
+  governance_tree: 9615cd5a754a11bd14c49dce23e7ee6ee1f36b27
+  sql_sha256: 7b72c49baa7a42e56e23959bfc69919c181ba7f51b4aa186aa69edfa575015f4
+  rpc_test_sha256: 990a94cdd7417de89348e5a357a33a6766ee9f6b07289cc0f89be3494852b0ba
+  migration_test_sha256: c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_B_R2_INVENTORY_EVIDENCE_AND_PAYMENT_CONTRACT_SNAPSHOT_REPAIR.md
+future_source_write_allowlist:
+  - supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql
+  - src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts
+  - src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "Only the four governance documents may change in this candidate."
+  - "No source, test execution, Git index/commit/remote, PR, Claude, DB, Supabase, Docker, Colima, Auth, provider, inventory implementation, Ready, merge, or deployment state changes."
+decision: GYEON_ORDER_V3_C5_B_R2_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```

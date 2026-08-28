@@ -383,9 +383,59 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 
 **Exit:** Refresh C5-C's hash-bound predecessor to this commit, then obtain a separate authorization before any harness change or disposable runtime execution.
 
+### GYEON-ORDER-V3-C5-B-R2 — Inventory evidence and payment-contract snapshot repair
+
+**Status:** GOVERNANCE CANDIDATE READY / UNCOMMITTED. Authorization remains limited to exactly four governance-document changes; source repair, tests, database/Supabase work, Git delivery, PR mutation, and Claude invocation remain separately gated.
+
+**Reason for return:** The A3-bound C5-C read-only diagnosis returned `CHANGES_REQUIRED_SOURCE`. Independent MacBook Codex review confirmed that warehouse release currently checks only whether an `inventory_reservation` evidence row exists; it does not prove an exact unique dealer/order/version/fingerprint/amount/currency binding, lock that row, or consume it atomically. The same diagnosis exposed a business-contract gap: mutable dealer credit terms could retroactively alter the payment path of an already owner-confirmed order.
+
+**Predecessor:**
+
+- Branch: `agent/gyeon-order-v3-c5-external-authority-design`
+- Accepted source commit: `37573c3f9cc476b8d7911221a8696ee61109b9bf`
+- Accepted source tree: `c94ca1944e1c2d54b5728943501fbc07edc9668a`
+- Current governance/execution HEAD: `5b8624c5a30fa961268e9a4535b935a6d00e7407`
+- Current governance/execution tree: `9615cd5a754a11bd14c49dce23e7ee6ee1f36b27`
+- SQL SHA-256: `7b72c49baa7a42e56e23959bfc69919c181ba7f51b4aa186aa69edfa575015f4`
+- RPC-contract test SHA-256: `990a94cdd7417de89348e5a357a33a6766ee9f6b07289cc0f89be3494852b0ba`
+- Migration-contract test SHA-256: `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
+- Diagnosis result: `GYEON_ORDER_V3_C5_C_A3_READ_ONLY_DIAGNOSIS_RESULT_V2` — `CHANGES_REQUIRED_SOURCE`
+
+**Owner-ratified payment contract:**
+
+1. The first successful owner-confirmation/finalize freezes one explicit server-owned payment-contract snapshot on the order. The snapshot distinguishes standard payment from credit account and records the exact credit-terms version when credit account governs the order.
+2. Credit terms activated after that first successful finalize do not retroactively change an already-confirmed standard-payment order and do not automatically void its existing card authorization.
+3. If active and effective credit terms govern the dealer at the first successful finalize, the order must use `credit_account`; card, bank transfer, and cash on delivery fail closed.
+4. Amount-changing and amount-preserving pre-warehouse edits preserve the frozen payment-contract snapshot. Cancelling and creating a new order evaluates the then-current terms as a new contract.
+5. A credit-account order must revalidate its exact bound terms version at warehouse release. Missing, stopped, expired, mismatched, or otherwise invalid bound terms fail closed.
+6. A submitted order with no explicit payment-contract snapshot fails closed. No mutable-current-row inference, automatic backfill, or guessed default is allowed.
+
+**Required inventory-reservation repair:**
+
+- Non-backorder warehouse release requires exactly one unconsumed, server-verified, successful, unexpired `inventory_reservation` evidence row bound to the exact dealer, order, current order version, server-owned request fingerprint, amount, and currency.
+- Release locks that exact evidence row and consumes it atomically before inserting the warehouse task. Zero candidates, multiple candidates, mismatch, expiry, reuse, or a wrong purpose/consumption pairing fails closed before task creation.
+- The separately approved backorder authority remains independent. A backorder path must not consume unrelated reservation evidence or treat arbitrary reservation evidence as authority.
+
+**Governance write allowlist — exactly four paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md`
+4. `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_B_R2_INVENTORY_EVIDENCE_AND_PAYMENT_CONTRACT_SNAPSHOT_REPAIR.md` (new)
+
+**Future source-repair allowlist — exactly three existing paths:**
+
+1. `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql`
+2. `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts`
+3. `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts`
+
+**Current boundary:** This gate authors and validates the four governance documents only. Do not stage, commit, push, post to PR #36, invoke Claude, run tests, start Docker/Colima/Supabase, connect to a database, derive/apply SQL, or modify any source file. A later repair remains source-only under the exact three-file allowlist and retains the single terminal `ROLLBACK`.
+
+**Exit:** MacBook Codex verifies the exact four-document candidate and `git diff --check`, then requests separate authorization for exact stage and local commit. Push, external transmission/Claude execution, source review, tests, and C5-C resumption remain later gates.
+
 ### GYEON-ORDER-V3-C5-C — Disposable-database acceptance design and execution gates
 
-**Status:** C5-C R2 A3-BOUND GOVERNANCE CANDIDATE AUTHORIZED FOR EXACTLY FOUR UNCOMMITTED DOCUMENT CHANGES. Harness implementation, Claude invocation, disposable execution, Git delivery, and PR mutation remain unauthorized.
+**Status:** RETURNED TO C5-B R2 GOVERNANCE / NOT EXECUTED. Harness implementation, disposable execution, Git delivery, and PR mutation remain unauthorized.
 
 **Objective:** Prove the pushed C5-B database source candidate on one fresh loopback-only PostgreSQL 17 disposable Supabase runtime, including real signed Auth/PostgREST requests, exact RLS/grant behavior, prepare/finalize evidence consumption, server-owned qualification, durable compensation, warehouse-task release timing, and genuine separate-connection races.
 
@@ -397,19 +447,19 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 - Source verification: focused contract tests `68/68` PASS and `git diff --check` PASS
 - Known environment limitation: full-project typecheck is not an acceptance signal in the isolated worktree because repository dependencies and archived UI type roots are unresolved
 
-**Governance write allowlist:**
+**Superseded C5-C R2 governance write allowlist (historical):**
 
 - `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 - `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 - `docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md`
 - `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_A3_READ_ONLY_DIAGNOSIS_V2.md` (new)
 
-**Current authorization boundary:**
+**Current return boundary:**
 
 - Preserve `CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_READ_ONLY_DIAGNOSIS.md` byte-for-byte as historical V1 evidence. V2 supersedes it only for a future A3-bound diagnosis.
-- Refresh C5-C to the A3 source commit/tree and exact source hashes. Treat the repaired classification-version and immutable-snapshot rules as mandatory regression assertions rather than unresolved defect candidates.
-- Add explicit disposable assertions for persisted card-evidence ID/fingerprint binding, evidence expiry, purpose/consumption pairing, amount-changing authority replacement, amount-preserving authority preservation, and credit-activation compensation.
-- Before harness implementation, determine whether credit terms becoming active after a card order has finalized but before warehouse release must create a durable void compensation intent. If current source cannot prove a safe terminal outcome, classify it as `CONTRACT_DECISION_REQUIRED` or `CHANGES_REQUIRED_SOURCE`; do not invent behavior in the harness.
+- C5-C does not resume from the A3 source. C5-B R2 must first repair exact inventory-reservation validation/consumption and add the explicit payment-contract snapshot accepted by the owner.
+- When C5-C later resumes, it must treat classification-version integrity, immutable qualification replay, card-authority binding, payment-contract snapshot persistence, non-retroactive credit activation, exact credit-version revalidation, and inventory-evidence one-time consumption as mandatory executable assertions.
+- The prior post-finalize credit-activation question is resolved: the already-confirmed order keeps its frozen standard-payment contract, remains eligible for release when its original payment authority is valid, and does not create an automatic card-void intent merely because credit terms activate later.
 - The A3 result-recording commit/push and PR result comment do not authorize a new Claude invocation, harness change, or disposable run.
 - Do not stage, commit, push, post to PR #36, invoke Claude, create or edit the C5-C harness, start Colima/Docker/Supabase, connect to any database, derive/apply SQL, create fixtures, run pgTAP/Auth/concurrency checks, or otherwise mutate Git in this gate.
 

@@ -12,9 +12,9 @@
 - migration契約test SHA-256: `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
 - SQL状態: `DRAFT_DO_NOT_APPLY / terminal ROLLBACK`
 - 更新日: 2026-08-29
-- 現在状態: `R2_GOVERNANCE_CANDIDATE / NOT_EXECUTED`
+- 現在状態: `RETURNED_TO_C5_B_R2_SOURCE_REPAIR / NOT_EXECUTED`
 
-この文書はDB実行権限ではない。C5-Cは、読取専用診断、検証資産実装、静的受入、使い捨てDB実行、ソース修正、commit、push、migration昇格、環境適用を別ゲートとして扱う。
+この文書はDB実行権限ではない。A3-bound read-only診断がsource defectを確認したため、C5-CはC5-B R2へ戻っている。読取専用診断、source修正、検証資産実装、静的受入、使い捨てDB実行、commit、push、migration昇格、環境適用を別ゲートとして扱う。
 
 ## 2. 結論
 
@@ -69,7 +69,22 @@ C5-Cで有効なpurposeは次の4つだけである。
 - amount-changing editは受理済み`edit_reauthorization` evidenceへauthority bindingを置換する。
 - amount-preserving editは既存のcard authority bindingを消去・置換しない。
 
-### 3.5 倉庫task
+### 3.5 支払契約snapshot
+
+- 最初の成功したowner-confirmation/finalizeは、server-ownedな支払契約snapshotを注文へ永続化する。
+- snapshotは`standard_payment`と`credit_account`を区別し、credit accountの場合は適用したexact terms versionを保持する。
+- owner finalize後に掛け売り条件が有効化されても、既に確定したstandard-payment注文へ遡及しない。既存card authorizationを自動voidせず、original payment authorityが有効ならreleaseを継続できる。
+- owner finalize時点でactive/effectiveな掛け売り条件がある場合は`credit_account`だけを許可する。
+- pre-warehouse editは金額変更の有無にかかわらず同じsnapshotを保持する。cancel後の新規注文だけが最新条件を再評価する。
+- credit-account releaseはsnapshotへ結合したexact terms versionを再検証する。missing、stopped、expired、mismatchedはfail-closed。
+- submitted orderのsnapshot欠落をmutableなcurrent terms、既定値、推測、または自動backfillで補わない。
+
+### 3.6 inventory evidenceと倉庫task
+
+- non-backorder releaseは、exact dealer/order/current version/server-owned fingerprint/amount/currencyへ結合した`inventory_reservation` evidenceをちょうど1件要求する。
+- evidenceはserver-verified、successful、unexpired、unconsumedでなければならない。release transaction内でrow lockし、warehouse task insert前に一度だけconsumeする。
+- 0件、複数件、mismatch、expired、reused、wrong purpose、wrong consumption pairingはtask作成前にfail-closed。
+- backorderは独立した正式authorityを使用し、無関係なreservation evidenceを検索・消費しない。
 
 - 支払・供給・予約／BO・営業日authorityが揃ったservice-only releaseで、`unaccepted` taskを一度だけ作る。
 - dealer browserはrelease／acceptできない。
@@ -269,15 +284,19 @@ token、password、anon key、service key全文は保存しない。証拠には
 - exception rollbackでintentを失わない。
 - original order／original authorizationは不変。
 - `void_new_card_authorization` intentは1件だけ。
-- provider成功後、finalize前にcredit-account termsが有効化された競合でもintentはdurableかつ一意である。
+- provider成功後、finalize前にcredit-account termsが有効化され、初回支払契約を確定できない競合でもintentはdurableかつ一意である。
 
 ### C5C-6: warehouse release and acceptance
 
 - bank transferは`bank_payment_match`未消費／不一致ではreleaseしない。
-- inventoryは`inventory_reservation`未消費／不一致ではreleaseしない。
+- non-backorder inventoryはexact dealer/order/current version/server-owned fingerprint/amount/currencyへ結合した、server-verified／successful／unexpired／unconsumedの`inventory_reservation` evidenceをちょうど1件要求する。release transaction内でlockし、task insert前に一度だけconsumeする。0件、複数件、不一致、期限切れ、再利用はfail-closed。
+- backorder authorityはreservation evidenceと分離し、無関係な`inventory_reservation` evidenceを消費しない。
 - card、COD、credit accountのpayment readinessを支払契約どおり確認する。
 - card releaseは永続card authority binding、期限、exact fingerprint、purposeとprepared-operation consumptionの対応を再検証する。
-- card order finalize後からwarehouse release前にcredit-account termsが有効化された場合、release拒否だけで十分か、既存card authorizationのdurable void compensationも必須かをV2 read-only診断で確定する。安全な終端がsourceで保証されない場合はharnessへ進まず、`C5C_CHANGES_REQUIRED_SOURCE`または`C5C_CONTRACT_DECISION_REQUIRED`へ分類する。
+- releaseは初回owner finalizeで保存したpayment-contract snapshotを使用し、mutableな現在のtermsから支払方法を再決定しない。
+- standard-payment snapshotの確定後にcredit-account termsが有効化されても注文へ遡及せず、自動void intentを作らない。original payment authorityが有効ならreleaseできる。
+- credit-account snapshotは結合済みexact terms versionのactive/effective状態を再検証し、missing／stopped／expired／mismatchedならreleaseしない。
+- submitted orderにpayment-contract snapshotがなければ、推測・自動backfillをせずreleaseしない。
 - supply projectionが`NOT_CONFIGURED`／`STALE`／`ERROR`ならreleaseしない。
 - backorder policyとwarehouse calendar未設定はfail-closed。
 - 土曜日を固定休業日にしない。
@@ -298,7 +317,7 @@ token、password、anon key、service key全文は保存しない。証拠には
 7. warehouse accept二重実行。
 8. cancelとwarehouse release／acceptの競合。
 9. 新card authorization成功とfinalize直前のcredit-account terms有効化。
-10. card finalize完了後、warehouse release直前のcredit-account terms有効化。
+10. standard-payment snapshotを伴うcard finalize完了後、warehouse release直前のcredit-account terms有効化。snapshotとoriginal card authorityを保持し、自動void intentなしでrelease可能であることを証明する。
 
 合格条件:
 
@@ -376,7 +395,9 @@ Office AZ inventory実装、provider仕様、qualification履歴正本、保護�
 
 ### `C5C_CONTRACT_DECISION_REQUIRED`
 
-card finalize後からwarehouse release前にcredit-account termsが有効化された場合など、安全な外部与信の終端がsourceと正式契約のどちらからも一意に決まらない場合。harnessで挙動を発明せず、ownerの契約判断と別のsource gateへ戻る。
+安全な外部与信の終端がsourceと正式契約のどちらからも一意に決まらない新しい事象が見つかった場合。harnessで挙動を発明せず、ownerの契約判断と別のsource gateへ戻る。
+
+2026-08-29に、card finalize後からwarehouse release前のcredit-account terms有効化についてはowner判断が確定した。最初の成功したowner finalizeでpayment-contract snapshotを固定し、後日のcredit activationをstandard-payment注文へ遡及させず、自動voidしない。この特定事象は今後`C5C_CONTRACT_DECISION_REQUIRED`ではなく、snapshot契約のsource／runtime適合として判定する。
 
 ## 10. 停止条件
 
@@ -402,11 +423,12 @@ Claudeは実装・テスト前に、現在のSQLとC4 harnessを読取専用で�
 3. C5-Cで新規作成すべき正確な検証資産allowlist。
 4. fixture dependency／cleanup順序。
 5. success pathに必要なserver-owned fixtureだけの一覧。
-6. A3で修復済みのclassification-version統一、snapshot不変性、card authority binding、expiry、purpose/consumption対応、edit時の置換／保持、finalize前credit-race compensationが実行検証可能か。
+6. A3で修復済みのclassification-version統一、qualification snapshot不変性、card authority binding、expiry、purpose/consumption対応、edit時の置換／保持、finalize前credit-race compensationが実行検証可能か。
 7. 各raceの2接続SQL手順とobserver assertion。
-8. card finalize後からwarehouse release前のcredit-account terms有効化に、durable void compensationが必要か、そのsource契約が現在保証されているか。
-9. `inventory_reservation` evidenceのexact validation／consumptionがrelease transaction内でfail-closedか。
-10. C5-C実行前にsource repairまたはowner契約判断が必要かの判定。
+8. 最初の成功したowner finalizeでserver-owned payment-contract snapshotを保存し、standard-payment／credit-account modeとcreditの場合のexact terms versionを拘束できるか。editで保持され、missing snapshotがfail-closedか。
+9. finalize後のcredit activationがstandard-payment snapshotへ遡及せず、自動voidなしでoriginal payment authorityを維持する一方、credit snapshotがexact terms versionをrelease時に再検証するか。
+10. `inventory_reservation` evidenceのexact unique validation、row lock、task insert前のatomic one-time consumptionがrelease transaction内でfail-closedか。backorderが無関係なevidenceを消費しないか。
+11. C5-C実行前に追加source repairまたは新しいowner契約判断が必要かの判定。
 
 ## 12. 後続の実行資産候補allowlist
 
@@ -427,11 +449,12 @@ Claudeは実装・テスト前に、現在のSQLとC4 harnessを読取専用で�
 
 ## 13. 次のゲート
 
-1. このR2計画と新V2指示書を含む正確な4文書の未コミット差分をCodexが検証する。
+1. C5-B R2計画、ledger、更新済み本計画、新R2 repair指示書から成る正確な4文書の未コミット差分をCodexが検証する。
 2. ownerが正確な4文書のstage／local commitを別途承認する。
 3. ownerが通常pushを別途承認する。
-4. ownerが新V2指示書の外部送信とClaude read-only診断を別途承認する。
-5. CodexがClaude診断を受入れ、source decisionと最小harness allowlistを確定する。
-6. harness実装、静的検証、disposable DB実行、結果記録、Git deliveryをそれぞれ別承認にする。
+4. ownerが新R2指示書の外部送信とClaude source repairを別途承認する。
+5. Claudeがexact three-file source candidateとfocused test結果を返し、Codexが独立受入する。
+6. source candidateのcommit／pushを別々に承認・完了した後、C5-C predecessor hashとruntime assertionsを更新する。
+7. harness実装、静的検証、disposable DB実行、結果記録、Git deliveryをそれぞれ別承認にする。
 
 C5-C合格後も、正式migration昇格、Dev-Next／production適用、provider接続、Ready、merge、deployは未承認のままである。
