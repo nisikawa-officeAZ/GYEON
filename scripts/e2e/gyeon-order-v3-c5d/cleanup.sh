@@ -58,18 +58,29 @@ PROTECTED_PATHS=(
   "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql"
   "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts"
 )
-declare -A PROTECTED_BLOBS=(
-  ["src/components/estimates/wizard/screens/ScreensPreview.tsx"]="c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
-  ["supabase/migrations/20260801110110_line_link_tokens.sql"]="accd22345054cc44f89156fd78eaba6dfe4242a4"
-  ["supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql"]="32fda49583ae1217bc13711784ad8fa31744726c"
-  ["src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts"]="fe3c80f22fd80dcbfab076082473216dda582c14"
-)
-declare -A PROTECTED_MODES=(
-  ["src/components/estimates/wizard/screens/ScreensPreview.tsx"]="100644"
-  ["supabase/migrations/20260801110110_line_link_tokens.sql"]="100644"
-  ["supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql"]="100644"
-  ["src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts"]="100644"
-)
+
+# macOS ships Bash 3.2, which has no associative arrays. Keep the protected
+# metadata as literal case mappings so cleanup can run on the default shell
+# without weakening the exact pathname/mode/blob contract.
+protected_blob_for() {
+  case "$1" in
+    "src/components/estimates/wizard/screens/ScreensPreview.tsx") printf '%s' "c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f" ;;
+    "supabase/migrations/20260801110110_line_link_tokens.sql") printf '%s' "accd22345054cc44f89156fd78eaba6dfe4242a4" ;;
+    "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql") printf '%s' "32fda49583ae1217bc13711784ad8fa31744726c" ;;
+    "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts") printf '%s' "fe3c80f22fd80dcbfab076082473216dda582c14" ;;
+    *) return 1 ;;
+  esac
+}
+
+protected_mode_for() {
+  case "$1" in
+    "src/components/estimates/wizard/screens/ScreensPreview.tsx"|\
+    "supabase/migrations/20260801110110_line_link_tokens.sql"|\
+    "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql"|\
+    "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts") printf '%s' "100644" ;;
+    *) return 1 ;;
+  esac
+}
 
 fail() {
   printf 'C5D_CLEANUP_ERROR: %s\n' "$1" >&2
@@ -159,12 +170,14 @@ for path in "${PROTECTED_PATHS[@]}"; do
   entry="$(git -C "$REPO_ROOT" ls-files -s -- "$path" 2>/dev/null || true)"
   mode="$(printf '%s' "$entry" | awk '{print $1}')"
   blob="$(printf '%s' "$entry" | awk '{print $2}')"
+  expected_mode="$(protected_mode_for "$path")" || fail "protected path mode contract missing: $path"
+  expected_blob="$(protected_blob_for "$path")" || fail "protected path blob contract missing: $path"
   PROTECTED_METADATA_JSON="$(python3 -c "
 import json, sys
 items = json.loads(sys.argv[1])
 items.append({'path': sys.argv[2], 'mode': sys.argv[3] or None, 'blob': sys.argv[4] or None, 'expected_mode': sys.argv[5], 'expected_blob': sys.argv[6]})
 print(json.dumps(items))
-" "$PROTECTED_METADATA_JSON" "$path" "$mode" "$blob" "${PROTECTED_MODES[$path]}" "${PROTECTED_BLOBS[$path]}")"
+" "$PROTECTED_METADATA_JSON" "$path" "$mode" "$blob" "$expected_mode" "$expected_blob")"
 done
 
 log "source metadata computed: formal_sha256=$FORMAL_HASH harness_files=${#HARNESS_FILES[@]} protected_paths=${#PROTECTED_PATHS[@]}"

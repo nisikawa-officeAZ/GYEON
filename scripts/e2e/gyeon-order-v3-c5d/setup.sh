@@ -54,18 +54,29 @@ PROTECTED_PATHS=(
   "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql"
   "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts"
 )
-declare -A PROTECTED_BLOBS=(
-  ["src/components/estimates/wizard/screens/ScreensPreview.tsx"]="c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
-  ["supabase/migrations/20260801110110_line_link_tokens.sql"]="accd22345054cc44f89156fd78eaba6dfe4242a4"
-  ["supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql"]="32fda49583ae1217bc13711784ad8fa31744726c"
-  ["src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts"]="fe3c80f22fd80dcbfab076082473216dda582c14"
-)
-declare -A PROTECTED_MODES=(
-  ["src/components/estimates/wizard/screens/ScreensPreview.tsx"]="100644"
-  ["supabase/migrations/20260801110110_line_link_tokens.sql"]="100644"
-  ["supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql"]="100644"
-  ["src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts"]="100644"
-)
+
+# macOS ships Bash 3.2, which has no associative arrays. Keep the protected
+# metadata as literal case mappings so the harness runs on the default shell
+# without weakening the exact pathname/mode/blob contract.
+protected_blob_for() {
+  case "$1" in
+    "src/components/estimates/wizard/screens/ScreensPreview.tsx") printf '%s' "c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f" ;;
+    "supabase/migrations/20260801110110_line_link_tokens.sql") printf '%s' "accd22345054cc44f89156fd78eaba6dfe4242a4" ;;
+    "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql") printf '%s' "32fda49583ae1217bc13711784ad8fa31744726c" ;;
+    "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts") printf '%s' "fe3c80f22fd80dcbfab076082473216dda582c14" ;;
+    *) return 1 ;;
+  esac
+}
+
+protected_mode_for() {
+  case "$1" in
+    "src/components/estimates/wizard/screens/ScreensPreview.tsx"|\
+    "supabase/migrations/20260801110110_line_link_tokens.sql"|\
+    "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql"|\
+    "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts") printf '%s' "100644" ;;
+    *) return 1 ;;
+  esac
+}
 
 IN_FAIL=0
 
@@ -234,9 +245,11 @@ for path in "${PROTECTED_PATHS[@]}"; do
   mode="$(printf '%s' "$entry" | awk '{print $1}')"
   blob="$(printf '%s' "$entry" | awk '{print $2}')"
   status="$(git -C "$REPO_ROOT" status --porcelain -- "$path")"
+  expected_mode="$(protected_mode_for "$path")" || fail "protected path mode contract missing: $path"
+  expected_blob="$(protected_blob_for "$path")" || fail "protected path blob contract missing: $path"
   [[ -n "$blob" ]] || fail "protected path metadata missing: $path"
-  [[ "$mode" == "${PROTECTED_MODES[$path]}" ]] || fail "protected path mode drift: $path (found $mode)"
-  [[ "$blob" == "${PROTECTED_BLOBS[$path]}" ]] || fail "protected path blob drift: $path"
+  [[ "$mode" == "$expected_mode" ]] || fail "protected path mode drift: $path (found $mode)"
+  [[ "$blob" == "$expected_blob" ]] || fail "protected path blob drift: $path"
   [[ -z "$status" ]] || fail "protected path is not clean: $path"
 done
 
@@ -264,7 +277,9 @@ mkdir -p "$LANE_DIR/evidence"
 
 {
   for path in "${PROTECTED_PATHS[@]}"; do
-    printf 'path=%s mode=%s blob=%s (hard-gated)\n' "$path" "${PROTECTED_MODES[$path]}" "${PROTECTED_BLOBS[$path]}"
+    expected_mode="$(protected_mode_for "$path")" || fail "protected path mode contract missing: $path"
+    expected_blob="$(protected_blob_for "$path")" || fail "protected path blob contract missing: $path"
+    printf 'path=%s mode=%s blob=%s (hard-gated)\n' "$path" "$expected_mode" "$expected_blob"
   done
 } > "$LANE_DIR/evidence/protected-paths.txt"
 
