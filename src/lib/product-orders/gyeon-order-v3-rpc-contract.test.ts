@@ -5,7 +5,7 @@ import test from "node:test";
 
 const SQL_PATH = join(
   process.cwd(),
-  "supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql",
+  "supabase/migrations/20260829101726_gyeon_order_v3_contract.sql",
 );
 const sql = readFileSync(SQL_PATH, "utf8");
 

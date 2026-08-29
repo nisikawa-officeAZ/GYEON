@@ -1,23 +1,88 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 
-const SQL_PATH = join(
+const DRAFT_SQL_PATH = join(
   process.cwd(),
   "supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql",
+);
+const FORMAL_MIGRATION_BASENAME = "20260829101726_gyeon_order_v3_contract.sql";
+const FORMAL_SQL_PATH = join(
+  process.cwd(),
+  "supabase/migrations",
+  FORMAL_MIGRATION_BASENAME,
 );
 const README_PATH = join(
   process.cwd(),
   "supabase/migrations/DRAFT_DO_NOT_APPLY/README.md",
 );
-const sql = readFileSync(SQL_PATH, "utf8");
+const draftSql = readFileSync(DRAFT_SQL_PATH, "utf8");
+const formalSql = readFileSync(FORMAL_SQL_PATH, "utf8");
+const sql = formalSql;
 const normalized = sql.toLowerCase().replace(/\s+/g, " ");
 const executable = sql
   .replace(/--.*$/gm, "")
   .toLowerCase()
   .replace(/\s+/g, " ");
 const readme = readFileSync(README_PATH, "utf8");
+
+const DRAFT_HEADER = `-- =============================================================================
+-- GYEON_ORDER_V3_C3_R1_SOURCE_ONLY
+-- GYEON_ORDER_V3_C5_B_EXTERNAL_AUTHORITY_DB_SOURCE_ONLY
+-- DRAFT_DO_NOT_APPLY: design candidate only. Never apply to any database.
+-- Requires C5-C disposable-DB replay, pgTAP, real JWT/RLS and concurrency proof.
+--
+-- C5-B adds: a generic versioned external-evidence object (renamed from the
+-- narrow payment-evidence draft), prepared-operation binding for owner-submit
+-- and pre-warehouse-edit, a server-owned versioned qualification authority,
+-- an append-only compensation outbox, and a release/accept warehouse-task
+-- split so a task is created as unaccepted only when authorities are ready
+-- and warehouse acceptance always consumes an existing task.
+-- =============================================================================`;
+
+const FORMAL_HEADER = `-- =============================================================================
+-- GYEON_ORDER_V3_C5_D_FORMAL_MIGRATION
+-- Promoted from the C5-C accepted immutable DRAFT provenance.
+-- Source DRAFT SHA-256: d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73
+--
+-- This formal migration remains a source candidate until it passes the C5-D
+-- fresh disposable, populated legacy-upgrade, and CLI-native runner gates.
+-- Shared, staging, or production application requires a separate owner gate.
+-- =============================================================================`;
+
+const DRAFT_FOOTER = `-- Deliberately roll back if this file is accidentally executed as a script.
+-- Formal migration promotion must remove this guard only after C5-C acceptance.
+rollback;`;
+
+const FORMAL_FOOTER = `-- Forward-only formal migration candidate.
+-- Database application requires a separate owner-approved environment gate.
+commit;`;
+
+function replaceExactlyOnce(source: string, from: string, to: string, label: string): string {
+  const first = source.indexOf(from);
+  assert.notEqual(first, -1, `${label} source block must exist`);
+  assert.equal(source.indexOf(from, first + from.length), -1, `${label} source block must be unique`);
+  return source.slice(0, first) + to + source.slice(first + from.length);
+}
+
+function removeFullLineComments(source: string): string {
+  return source
+    .split("\n")
+    .filter((line) => !/^\s*--/.test(line))
+    .join("\n");
+}
+
+const expectedFormal = replaceExactlyOnce(
+  replaceExactlyOnce(draftSql, DRAFT_HEADER, FORMAL_HEADER, "header"),
+  DRAFT_FOOTER,
+  FORMAL_FOOTER,
+  "footer",
+);
+const promotedDraftExecutable = removeFullLineComments(
+  replaceExactlyOnce(draftSql, "rollback;", "commit;", "terminal guard"),
+);
+const formalExecutable = removeFullLineComments(formalSql);
 
 const NEW_C5_B_TABLES = [
   "gyeon_order_external_evidence_v1",
@@ -30,14 +95,30 @@ const NEW_C5_B_TABLES = [
 ];
 
 test("draft is visibly source-only and self-rolls back if executed accidentally", () => {
-  assert.match(sql, /GYEON_ORDER_V3_C3_R1_SOURCE_ONLY/);
-  assert.match(sql, /GYEON_ORDER_V3_C5_B_EXTERNAL_AUTHORITY_DB_SOURCE_ONLY/);
-  assert.match(sql, /DRAFT_DO_NOT_APPLY/);
-  assert.match(normalized, /begin;/);
-  assert.match(normalized, /set local lock_timeout = '5s'/);
-  assert.match(normalized, /set local statement_timeout = '30s'/);
-  assert.match(normalized, /rollback;\s*$/);
-  assert.match(readme, /DB接続を伴う検証はC4まで禁止です/);
+  const draftNormalized = draftSql.toLowerCase().replace(/\s+/g, " ");
+  assert.match(draftSql, /GYEON_ORDER_V3_C3_R1_SOURCE_ONLY/);
+  assert.match(draftSql, /GYEON_ORDER_V3_C5_B_EXTERNAL_AUTHORITY_DB_SOURCE_ONLY/);
+  assert.match(draftSql, /DRAFT_DO_NOT_APPLY/);
+  assert.match(draftNormalized, /begin;/);
+  assert.match(draftNormalized, /set local lock_timeout = '5s'/);
+  assert.match(draftNormalized, /set local statement_timeout = '30s'/);
+  assert.match(draftNormalized, /rollback;\s*$/);
+  assert.match(readme, /immutable provenance/);
+  assert.match(readme, /末尾の `ROLLBACK` を維持します/);
+});
+
+test("formal migration is the one exact deterministic promotion of the accepted DRAFT", () => {
+  assert.equal(formalSql, expectedFormal);
+  assert.equal(formalExecutable, promotedDraftExecutable);
+  assert.match(formalSql, /GYEON_ORDER_V3_C5_D_FORMAL_MIGRATION/);
+  assert.match(formalSql, /commit;\s*$/i);
+  assert.doesNotMatch(formalSql, /^rollback;\s*$/im);
+
+  const formalCandidates = readdirSync(join(process.cwd(), "supabase/migrations"))
+    .filter((name) => /^\d{14}_gyeon_order_v3_contract\.sql$/.test(name));
+  assert.deepEqual(formalCandidates, [FORMAL_MIGRATION_BASENAME]);
+  assert.match(readme, new RegExp(FORMAL_MIGRATION_BASENAME.replace(".", "\\.")));
+  assert.match(readme, /bd1a7742725c3f2a7bb42a3dbe5889b6e86bf6d213a0a550e6dd48f460d6d91b/);
 });
 
 test("commercial status is exactly the six-state V3 aggregate", () => {

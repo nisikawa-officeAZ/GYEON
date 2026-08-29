@@ -2127,3 +2127,265 @@ boundary:
   - "No provider, hosted Supabase, production DB, migration promotion, PR Ready, merge, or deployment authority is implied."
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GYEON-ORDER-V3-C5-D — Formal migration promotion governance candidate
+
+```yaml
+phase: GYEON_ORDER_V3_C5_D_FORMAL_MIGRATION_PROMOTION_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_FORMAL_SQL_NOT_CREATED
+date: 2026-08-29
+append_only: true
+plan_id: GYEON_ORDER_V3_C5_D_FORMAL_MIGRATION_PROMOTION_PLAN_V1
+directive_id: GYEON_ORDER_V3_C5_D_FORMAL_MIGRATION_PROMOTION_V1
+objective: "Define the exact source, parity, disposable-upgrade, CLI-runner, fail/burn, and rollback boundaries required to promote the C5-C-accepted guarded GYEON Order V3 SQL into a formal migration without yet creating or applying SQL."
+authorization: "The owner explicitly approved C5-D governance-document authoring only. Exactly four documentation paths may change. Formal SQL creation, Claude transmission/execution, tests, Supabase CLI, DB/Supabase/Docker/Colima/Auth/PostgREST, provider access, Git delivery, PR mutation, shared/staging/production application, Ready, merge, and deployment remain separate gates."
+main_base:
+  commit: 96a66c3fb5969718418da1ef4c75fe62407b48aa
+  tree: d8d6d3bdd5d809714896fe006d73910e175f130d
+  pr_36_state: SQUASH_MERGED
+  pr_36_source_head: 5b523e60e2c404896a78644ce569b7a9f1ba7527
+  automatic_vercel_deployment: SUCCESS
+  database_migration_applied: false
+  provider_connected: false
+predecessor:
+  result_id: GYEON_ORDER_V3_C5_C_DISPOSABLE_DB_VERIFICATION_RESULT_V1
+  verdict: C5C_DISPOSABLE_DB_PASS
+  evidence_class: E2_LOCAL_DISPOSABLE_DB
+  draft_sql_sha256: d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73
+  accepted_runtime_sha256: 93d69dbdcf20910ab81ea9a809dacd250156fd0a5ef728f48db4a793f539cf67
+  accepted_runtime_transformation: "exactly one terminal rollback; -> commit;"
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/integrations/gyeon-order/v3-c5d-formal-migration-promotion-plan.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_D_FORMAL_MIGRATION_PROMOTION.md
+future_source_candidate_write_allowlist:
+  - supabase/migrations/<SUPABASE_CLI_GENERATED_TIMESTAMP>_gyeon_order_v3_contract.sql
+  - supabase/migrations/DRAFT_DO_NOT_APPLY/README.md
+  - src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts
+  - src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts
+promotion_contract:
+  - "Create the formal file only with `supabase migration new gyeon_order_v3_contract` after separately authorized implementation begins."
+  - "Keep the DRAFT SQL immutable, hash-bound, and terminal-ROLLBACK as C5-C provenance."
+  - "Allow only formal-state full-line comment replacements and exactly one final rollback-to-commit guard replacement."
+  - "Prove an exact expected-formal byte stream and executable-byte parity; broad whitespace normalization is not acceptance evidence."
+  - "Point canonical RPC contract assertions at the exact generated formal migration while retaining separate DRAFT guard assertions."
+mandatory_later_disposable_gates:
+  - "Fresh full formal migration replay with no DRAFT runtime derivative."
+  - "Populated upgrade path: representative legacy product_orders and product_order_items rows exist before formal C5-D apply and remain coherent after it."
+  - "Supabase CLI-native migration runner path matching the intended later environment procedure, after discovering exact commands through current CLI help."
+  - "Rerun pgTAP, real Auth/PostgREST, genuine separate-connection concurrency, advisor, query-plan, secret-scan, cleanup, and retained-evidence integrity gates with a fresh suffix."
+known_risks:
+  - "C5-C proved a direct psql-applied runtime derivative, not the future timestamped formal migration through the CLI-native runner."
+  - "C5-C replay applied the C5 SQL before business fixtures, so populated legacy-row upgrade compatibility is not yet accepted."
+  - "The formal migration adds columns and immediate constraints inside one transaction; existing row compatibility and lock/statement timeout behavior require separate evidence."
+rollback_or_recovery: "Before any environment apply, discard or revert only the candidate. After formal apply, never edit/delete/rename the applied migration; use a new forward-only compensating migration under a separate owner-approved gate."
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "No SQL or source file was created or modified."
+  - "No test, Supabase CLI, database, Docker, Colima, Auth, PostgREST, provider, network, Git index/commit/remote, PR, environment, Ready, merge, or deployment action occurred in this governance-authoring gate."
+decision: GYEON_ORDER_V3_C5_D_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
+
+## GYEON-ORDER-V3-C5-D-R1 — Execution-HEAD precondition correction
+
+```yaml
+phase: GYEON_ORDER_V3_C5_D_R1_EXECUTION_HEAD_PRECONDITION_CORRECTION
+status: GOVERNANCE_CORRECTION_CANDIDATE_UNCOMMITTED_FORMAL_SQL_NOT_CREATED
+date: 2026-08-29
+append_only: true
+authorization: "The owner explicitly approved an exact three-document R1 governance correction, its stage/local commit, and normal push to Draft PR #37. SQL/source/test/harness edits, Claude transmission/execution, Supabase CLI, database/provider access, PR comments, Ready, merge, and deployment remain prohibited."
+predecessor:
+  branch: agent/gyeon-order-v3-c5d-formal-migration-promotion
+  governance_commit: 48eea86697205fbf0fa5179fa87a608132978831
+  governance_tree: 2dc9a7d07041f531091350f3e934362857b9c772
+  main_base_commit: 96a66c3fb5969718418da1ef4c75fe62407b48aa
+  main_base_tree: d8d6d3bdd5d809714896fe006d73910e175f130d
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/37
+  pull_request_state: OPEN/Draft
+defect:
+  - "The V1 directive required the checked-out implementation HEAD to equal the main base commit even though the directive exists only in the later governance commit. A compliant Claude invocation would therefore stop before editing and waste an invocation."
+correction:
+  - "MacBook Codex supplies the exact accepted governance execution HEAD/tree at invocation; Claude hard-gates the checked-out branch/HEAD/tree to those values."
+  - "The fixed main commit/tree remain the immutable ancestry/base boundary and are not confused with the checked-out execution HEAD."
+  - "The committed delta from main base to execution HEAD must be exactly the four C5-D governance paths, preventing unrelated governance/source drift."
+write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_D_FORMAL_MIGRATION_PROMOTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "Only the exact three governance documents change."
+  - "No SQL, source, test, harness, Supabase CLI, DB/Supabase/Docker/Colima/Auth/PostgREST, provider, Claude, environment, Ready, merge, or deployment action occurs."
+decision: GYEON_ORDER_V3_C5_D_R1_GOVERNANCE_CORRECTION_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_COMMIT_AND_NORMAL_PUSH_TO_DRAFT_PR_37"
+```
+
+## GYEON-ORDER-V3-C5-D-R2 — Codex-direct source-candidate exception governance
+
+```yaml
+phase: GYEON_ORDER_V3_C5_D_R2_CODEX_DIRECT_SOURCE_CANDIDATE_EXCEPTION
+status: GOVERNANCE_EXCEPTION_CANDIDATE_UNCOMMITTED_FORMAL_SQL_NOT_CREATED
+date: 2026-08-29
+append_only: true
+authorization: "The owner explicitly approved switching the C5-D four-path uncommitted source candidate from terminal Claude to MacBook Codex after the Claude Bash permission gate and subsequent external-transmission permission flow failed. This is a one-phase exception to avoid further Claude credit and operator-time waste."
+predecessor:
+  branch: agent/gyeon-order-v3-c5d-formal-migration-promotion
+  execution_head: 653cd3eff2b58529f0051577b06092ca3274af59
+  execution_tree: a29b492da2269dab9b56c4facae6e1521999ed20
+  main_base_commit: 96a66c3fb5969718418da1ef4c75fe62407b48aa
+  main_base_tree: d8d6d3bdd5d809714896fe006d73910e175f130d
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/37
+  pull_request_state: OPEN/Draft
+reason:
+  - "The only Claude run that reached the directive stopped because Bash permission denied the required Supabase CLI commands; Claude reported no file changes and a clean worktree."
+  - "The next restricted launcher attempt was rejected before Claude execution, and the explicit network permission flow returned no grant. Repeating that path would create additional cost without source progress."
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_source_candidate_write_allowlist:
+  - supabase/migrations/<SUPABASE_CLI_GENERATED_TIMESTAMP>_gyeon_order_v3_contract.sql
+  - supabase/migrations/DRAFT_DO_NOT_APPLY/README.md
+  - src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts
+  - src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts
+unchanged_contract:
+  - "Use current Supabase CLI help and `supabase migration new gyeon_order_v3_contract`; never invent the timestamp."
+  - "Keep the DRAFT SQL immutable and terminal-ROLLBACK; allow only approved full-line comment replacements and one final rollback-to-commit replacement in the formal migration."
+  - "Prove deterministic exact expected-formal parity and executable-byte parity without broad whitespace normalization."
+  - "Run only the directive's exact focused tests and static checks in the source-candidate gate."
+  - "Keep every protected path metadata-only; ScreensPreview.tsx content remains unopened and untouched."
+boundary:
+  - "This governance candidate creates no formal migration and changes no SQL, source, test, harness, dependency, or config file."
+  - "Stage, commit, push, PR mutation, DB/Supabase/Docker/Colima/Auth/PostgREST/provider access, shared/staging/production application, Ready, merge, deployment, and later disposable verification remain separate gates."
+  - "No further Claude invocation is authorized for this source-candidate gate."
+decision: GYEON_ORDER_V3_C5_D_R2_CODEX_DIRECT_EXCEPTION_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SOURCE_CANDIDATE_EXECUTION_CONFIRMATION"
+```
+
+## GYEON-ORDER-V3-C5-D-R3 — Formal migration source-candidate static acceptance
+
+```yaml
+phase: GYEON_ORDER_V3_C5_D_R3_FORMAL_MIGRATION_SOURCE_CANDIDATE
+status: SOURCE_CANDIDATE_LOCALLY_COMMITTED_STATIC_GATES_PASS_RUNTIME_NOT_RUN
+date: 2026-08-29
+append_only: true
+result_id: GYEON_ORDER_V3_C5_D_SOURCE_CANDIDATE_RESULT_V1
+authorization: "The owner first authorized the bounded MacBook Codex direct source-candidate exception and later separately authorized stage and local commit of exactly the four C5-D source paths. Push, PR mutation, database/runtime work, provider access, environment application, Ready, merge, and deployment were not authorized."
+repository:
+  branch: agent/gyeon-order-v3-c5d-formal-migration-promotion
+  exception_governance_commit: 049e02fe2d68f3eaa4a9612c6018dc63630ad1be
+  exception_governance_tree: d7c66fafbd81f5b1fb80f0ca98dd6b0cf6b44315
+  source_commit: c7806331dcbb035448704e09c625cd4870681142
+  source_tree: 0fc735bd9f04d6bc54664e5874faa08e82cbdb60
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/37
+  pull_request_state_at_last_verified_governance_gate: OPEN/Draft
+  pushed_in_this_gate: false
+source_write_set:
+  - supabase/migrations/20260829101726_gyeon_order_v3_contract.sql
+  - supabase/migrations/DRAFT_DO_NOT_APPLY/README.md
+  - src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts
+  - src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts
+source_identity:
+  draft_path: supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql
+  draft_sha256: d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73
+  formal_path: supabase/migrations/20260829101726_gyeon_order_v3_contract.sql
+  formal_sha256: bd1a7742725c3f2a7bb42a3dbe5889b6e86bf6d213a0a550e6dd48f460d6d91b
+  formal_candidate_count: 1
+supabase_cli_sequence:
+  - "SUPABASE_TELEMETRY_DISABLED=1 supabase --help"
+  - "SUPABASE_TELEMETRY_DISABLED=1 supabase migration --help"
+  - "SUPABASE_TELEMETRY_DISABLED=1 supabase migration new gyeon_order_v3_contract"
+static_verification:
+  deterministic_expected_formal: PASS
+  executable_byte_parity: PASS
+  draft_immutable_and_terminal_rollback: PASS
+  exact_one_formal_candidate: PASS
+  focused_test_command: "node --import /Users/atsushinishikawa/dealeros/node_modules/tsx/dist/loader.mjs --test src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts"
+  tests: 78
+  passed: 78
+  failed: 0
+  skipped: 0
+  todo: 0
+  diff_check: PASS
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "This result accepts only the locally committed static source candidate; it is not disposable-database, shared, staging, or production evidence."
+  - "No DB/Supabase runtime, Docker, Colima, Auth, PostgREST, provider, hosted project, push, PR mutation, environment application, Ready, merge, or deployment action occurred."
+  - "The mandatory fresh formal replay, populated legacy-data upgrade, CLI-native migration runner, pgTAP, real Auth/PostgREST, separate-connection concurrency, advisor, query-plan, secret, cleanup, and retained-evidence gates remain outstanding."
+decision: GYEON_ORDER_V3_C5_D_SOURCE_CANDIDATE_STATIC_PASS_LOCAL_COMMIT
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
+
+## GYEON-ORDER-V3-C5-D-R4 — Disposable harness governance candidate
+
+```yaml
+phase: GYEON_ORDER_V3_C5_D_R4_DISPOSABLE_HARNESS_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_HARNESS_NOT_IMPLEMENTED_DB_NOT_RUN
+date: 2026-08-29
+append_only: true
+plan_id: GYEON_ORDER_V3_C5_D_DISPOSABLE_DB_VERIFICATION_PLAN_V1
+directive_id: GYEON_ORDER_V3_C5_D_DISPOSABLE_HARNESS_IMPLEMENTATION_V1
+authorization: "The owner authorized C5-D disposable-harness governance authoring only. This permits exactly four documentation-path changes and no harness implementation, external AI transmission, Git delivery, Colima/Docker, database/Supabase runtime, Auth/PostgREST, provider/network access, PR mutation, environment application, Ready, merge, or deployment."
+source_authority:
+  branch: agent/gyeon-order-v3-c5d-formal-migration-promotion
+  head: d06cd8a45d404c3e66c086341b80b0a5436b260b
+  tree: 575347f7daf693fa3923d6efe9f5ff1b4078ae5e
+  upstream_ahead_behind: "0 0"
+  source_commit: c7806331dcbb035448704e09c625cd4870681142
+  formal_path: supabase/migrations/20260829101726_gyeon_order_v3_contract.sql
+  formal_sha256: bd1a7742725c3f2a7bb42a3dbe5889b6e86bf6d213a0a550e6dd48f460d6d91b
+  draft_sha256: d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73
+  previous_migration_version: "20260826143000"
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/integrations/gyeon-order/v3-c5d-disposable-db-verification-plan.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_D_DISPOSABLE_DB_HARNESS_IMPLEMENTATION.md
+future_harness_write_allowlist:
+  - scripts/e2e/gyeon-order-v3-c5d/config.toml
+  - scripts/e2e/gyeon-order-v3-c5d/setup.sh
+  - scripts/e2e/gyeon-order-v3-c5d/capture-evidence.sh
+  - scripts/e2e/gyeon-order-v3-c5d/cleanup.sh
+  - scripts/e2e/gyeon-order-v3-c5d/real-auth.mjs
+  - scripts/e2e/gyeon-order-v3-c5d/concurrency.mjs
+  - scripts/e2e/gyeon-order-v3-c5d/schema-rls.test.sql
+  - scripts/e2e/gyeon-order-v3-c5d/qualification-evidence.test.sql
+  - scripts/e2e/gyeon-order-v3-c5d/prepare-finalize-warehouse.test.sql
+  - scripts/e2e/gyeon-order-v3-c5d/populated-upgrade.test.sql
+required_runtime_lanes:
+  A_fresh: "One isolated local runtime applies the complete formal chain through Supabase CLI and reruns pgTAP, real Auth/PostgREST, business, concurrency, advisor, query-plan, secret, and cleanup gates."
+  B_populated: "A second isolated runtime stops at version 20260826143000, creates representative legacy orders/items across multiple dealers and statuses, applies the formal migration through Supabase CLI, and proves pre/post preservation plus new constraints."
+  C_runner: "A third isolated runtime stops at version 20260826143000 without fixtures, proves the formal migration pending, applies it exactly once with `supabase migration up --local`, and proves the CLI ledger with zero direct-psql formal application."
+runtime_contract:
+  - "All three lanes are loopback-only, unlinked, outside the worktree and /private/tmp, and use distinct project IDs and ports under one fresh suffix."
+  - "Any failure burns the full suffix/evidence set; the same suffix is never repaired or rerun into acceptance."
+  - "The existing C5-C harness remains unchanged and is read-only reference only."
+  - "The formal migration is copied byte-identically; DRAFT is never copied or executed; protected LINE migration is metadata-only and recorded as excluded_protected."
+  - "psql may create/check fixtures and run tests but may never apply the formal migration; formal apply is Supabase CLI-native."
+static_implementation_gate:
+  - "Only telemetry-disabled Supabase --version/help discovery, bash -n, node --check, exact ten-path checks, no-index diff-check, static contract matches, and protected metadata checks may run."
+  - "No setup, capture, cleanup, database-affecting Supabase CLI, Colima, Docker, psql, SQL, Auth, PostgREST, HTTP, provider, network, Git delivery, or PR action may run during harness authoring."
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "Exactly four governance documents change; no harness, migration, source, test, dependency, lockfile, config, UI, provider, or Office AZ inventory implementation path changes."
+  - "No external transmission, Git stage/commit/push, Colima/Docker, DB/Supabase runtime, Auth/PostgREST, provider/network, environment, Ready, merge, or deployment action occurs."
+decision: GYEON_ORDER_V3_C5_D_R4_HARNESS_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
