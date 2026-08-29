@@ -2551,3 +2551,83 @@ closeout_write_allowlist:
 decision: PREVIEW_ACCEPTED_CLOSEOUT_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-PRICING-RECOVERY-R1-R3 — Production acceptance and phase closure
+
+```yaml
+phase: GDA_ESTIMATE_PRICING_RECOVERY_R1_PRODUCTION_CLOSEOUT
+status: PRODUCTION_ACCEPTED_PHASE_CLOSED
+date: 2026-08-30
+append_only: true
+acceptance_id: GDA_ESTIMATE_PRICING_RECOVERY_R1_PRODUCTION_ACCEPTED
+authorization: "The owner separately approved PR #41 Ready conversion, squash merge to main, the resulting automatic Vercel deployment, and authenticated production verification. This record does not authorize any database mutation, data backfill, manual deployment, PPF implementation, or reopening of the completed pricing-recovery scope."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/41
+  pull_request_result: SQUASH_MERGED
+  main_commit: 81fd36bf5c73cb84b872deaf4ab3211a634fbe1f
+  main_tree: 0fc2f7877ab846ac7d9700986ee0f68d4e88f4b0
+  source_commit_before_squash: 9f9b1e61d5b9960a3a35f9c6d1c5e1f1dad5ef3b
+  closeout_commit_before_squash: 9fd1b57e26961c119c6ebb2d04054a364a8036a7
+production_evidence:
+  automatic_vercel_deployment: SUCCESS
+  authenticated_route: /estimates/new
+  rendered_authority: "新規見積 seven-step wizard and customer-registration form"
+  unavailable_text_count: 0
+  browser_warning_error_count: 0
+  save_or_database_mutation: false
+  verdict: GDA_ESTIMATE_PRICING_RECOVERY_R1_PRODUCTION_ACCEPTED
+accepted_behavior:
+  - "A natural coating-only service_price_settings object opens the Estimate Wizard."
+  - "Absent or explicit-null legacy service sections mean no override; present malformed values still fail closed."
+  - "Valid V3.4 coating remains mandatory for a non-null service settings object."
+boundary:
+  - "No migration, data backfill, production-row mutation, database/Supabase application, or manual deployment occurred."
+  - "The production deployment was the normal automatic deployment caused by the authorized merge."
+  - "PPF offering control is not part of this result and proceeds only in GDA-ESTIMATE-PPF-OFFERING-R1."
+decision: GDA_ESTIMATE_PRICING_RECOVERY_R1_PRODUCTION_ACCEPTED
+next: "AUTHOR_EXACT_THREE_DOCUMENT_GDA_ESTIMATE_PPF_OFFERING_R1_GOVERNANCE_CANDIDATE"
+```
+
+## GDA-ESTIMATE-PPF-OFFERING-R1 — Read-only diagnosis governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_PPF_OFFERING_R1_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_READ_ONLY_DIAGNOSIS_NOT_SENT
+date: 2026-08-30
+append_only: true
+directive_id: GDA_ESTIMATE_PPF_OFFERING_R1_READ_ONLY_DIAGNOSIS_V1
+authorization: "The owner explicitly authorized creating a dedicated branch/worktree from the latest main and authoring exactly three governance documents. Claude transmission, diagnosis execution, source/test/migration/SQL changes, tests, Git delivery, database/Supabase/provider access, Preview or production changes, Ready, merge, and deployment remain separate and unauthorized."
+repository:
+  branch: agent/estimate-ppf-offering-r1
+  fixed_source_base_commit: 81fd36bf5c73cb84b872deaf4ab3211a634fbe1f
+  fixed_source_base_tree: 0fc2f7877ab846ac7d9700986ee0f68d4e88f4b0
+  upstream: origin/main
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-ppf-offering-r1
+  worktree_state_before_authoring: clean
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PPF_OFFERING_R1_READ_ONLY_DIAGNOSIS.md
+frozen_behavior:
+  - "PPF offered: the main PPF control is selectable."
+  - "PPF offered: partial PPF remains available as an attached option even when coating is the only main category selected."
+  - "PPF not offered: the PPF control remains visible, disabled, and gray, with a plain-language store-setting reason."
+  - "PPF not offered: independent PPF, partial PPF, pricing, stale draft state, manipulated payloads, and persisted PPF lines are rejected or removed under one server-owned contract."
+observed_source_conflicts:
+  - "Step 3 renders its own static category list and receives no service-offering map, so PPF can be selected regardless of the current dealer setting."
+  - "Step 4 filters opted-out managed families out of visible categories, which conflicts with the approved visible-disabled PPF state."
+  - "The current Step-4 binding test explicitly asserts hide-when-off behavior."
+  - "The authoritative save orchestrator loads the current runtime but does not use serviceOfferings to reject PPF draft content before pricing, mapping, and persistence."
+  - "The pricing adapter activates PPF from selected draft state, and the latest atomic-save function accepts PPF category lines without reading dealer_service_offerings."
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "Exactly the three governance paths may change in this candidate."
+  - "No source, test, migration, SQL, RPC, UI implementation, dependency, config, generated artifact, or protected path changes."
+  - "No Claude transmission or execution, test/typecheck/build, DB/Supabase/Auth/browser/Vercel/provider access, stage, commit, push, PR mutation, Preview/production apply, Ready, merge, or deployment."
+decision: GDA_ESTIMATE_PPF_OFFERING_R1_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```

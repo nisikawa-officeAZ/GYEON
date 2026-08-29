@@ -725,7 +725,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-PRICING-RECOVERY-R1 — Preview authoritative-pricing recovery
 
-**Status:** COMPLETE — `GDA_ESTIMATE_PRICING_RECOVERY_R1_PREVIEW_ACCEPTED`. The bounded reader repair is committed and pushed to PR #41 at `9f9b1e61d5b9960a3a35f9c6d1c5e1f1dad5ef3b`; Vercel deployed it successfully, and MacBook Codex independently verified the authenticated Preview Estimate Wizard route. Ready, merge, and production deployment remain separate gates.
+**Status:** COMPLETE — `GDA_ESTIMATE_PRICING_RECOVERY_R1_PRODUCTION_ACCEPTED`. The bounded reader repair was accepted in Preview, PR #41 was squash-merged to `main` as `81fd36bf5c73cb84b872deaf4ab3211a634fbe1f` with tree `0fc2f7877ab846ac7d9700986ee0f68d4e88f4b0`, the automatic Vercel production deployment succeeded, and MacBook Codex independently verified the authenticated production Estimate Wizard route.
 
 **Objective:** Restore the Estimate Wizard Preview route by making the strict reader safely accept the natural coating-only sparse object produced by independent settings persistence, without weakening fail-closed validation of any value that is actually present.
 
@@ -779,29 +779,59 @@ The result document was excluded from harness implementation and was created lat
 - The four protected blobs remained unchanged: `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14`.
 - PR #41 Vercel checks passed. In the authenticated Preview route `/estimates/new`, the seven-step `新規見積` wizard and customer-registration form rendered, `見積を開始できません` matched zero elements, and captured browser warnings/errors were zero.
 
-**Accepted boundary:** This phase proves the observed coating-only row can open the Estimate Wizard without weakening present-value validation. It does not make a `window_film_v1`-only object valid and does not implement PPF offering control. No migration, data backfill, Preview-row mutation, DB apply, Ready transition, merge, or production deployment occurred.
+**Production acceptance:** After the separately approved Ready and squash-merge gates, `main` reached `81fd36bf5c73cb84b872deaf4ab3211a634fbe1f`. The automatic Vercel production deployment succeeded. In the authenticated production route `/estimates/new`, the seven-step `新規見積` wizard and customer-registration form rendered, `見積を開始できません` matched zero elements, and captured browser warnings/errors were zero.
+
+**Accepted boundary:** This phase proves the observed coating-only row can open the Estimate Wizard in production without weakening present-value validation. It does not make a `window_film_v1`-only object valid and does not implement PPF offering control. No migration, data backfill, production-row mutation, database application, or manual deployment occurred; the production deployment was the normal automatic deployment caused by the authorized merge.
 
 **Closeout write allowlist — exactly two paths:**
 
 1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 
-**Exit:** Record and separately deliver this two-document Preview-acceptance closeout. Then begin `GDA-ESTIMATE-PPF-OFFERING-R1` as the next independent phase and PR; do not mix it into PR #41.
+**Exit:** `GDA_ESTIMATE_PRICING_RECOVERY_R1_PRODUCTION_ACCEPTED`. Begin `GDA-ESTIMATE-PPF-OFFERING-R1` as the next independent phase and PR; do not reopen or mix it into PR #41.
 
 ### GDA-ESTIMATE-PPF-OFFERING-R1 — PPF availability and partial-PPF control
 
-**Status:** QUEUED — owner-approved next phase after GDA-ESTIMATE-PRICING-RECOVERY-R1. Diagnosis and implementation are not yet authorized.
+**Status:** AUTHORIZED FOR GOVERNANCE AUTHORING ONLY — the dedicated branch/worktree and exactly three governance documents may be created. Claude transmission, diagnosis execution, implementation, tests, Git delivery, database access, Preview/production changes, Ready, merge, and deployment are not authorized by this gate.
 
 **Objective:** Make the Estimate Wizard obey the server-owned PPF offering setting consistently in UI, navigation, pricing, draft restoration, and save authorization.
 
 **Frozen behavior:**
 
-- When PPF is offered, the main PPF control is selectable and partial PPF remains available as an attached option even when the operator selects coating only.
+- When PPF is offered, the main PPF control is selectable. Partial PPF remains available as an attached option even when the operator selects coating only; the operator must not be forced to select the main PPF category merely to add partial PPF.
 - When PPF is not offered, the PPF control remains visible but disabled and gray, with a plain-language reason that the store setting disables PPF.
 - When PPF is not offered, independent PPF, partial PPF, PPF pricing, stale draft values, manipulated client payloads, and saved-estimate PPF lines are rejected or removed under one server-owned contract.
 - Hiding the control completely is not the approved default because it makes a configured restriction indistinguishable from a missing function or rendering defect.
 
-**Boundary:** No implementation allowlist is inferred before the pricing-recovery phase closes and a bounded read-only diagnosis maps the real PPF call chain. This phase must not be mixed into the Preview pricing-recovery PR.
+**Governance base:**
+
+- Branch: `agent/estimate-ppf-offering-r1`
+- Fixed source-base commit: `81fd36bf5c73cb84b872deaf4ab3211a634fbe1f`
+- Fixed source-base tree: `0fc2f7877ab846ac7d9700986ee0f68d4e88f4b0`
+- Worktree: `work/dealeros-estimate-ppf-offering-r1`
+- Responsible diagnosis agent after a later gate: MacBook Claude
+- Independent acceptance authority: MacBook Codex
+- Product authority: Office AZ
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PPF_OFFERING_R1_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Current source observations to be independently diagnosed:**
+
+- Step 3 currently renders a static PPF control without receiving the authoritative offering map.
+- Step 4 currently filters an opted-out PPF family out of the visible sections instead of showing the approved disabled-gray state.
+- Existing Step-4 contract tests explicitly preserve the old hide-when-off behavior and therefore require deliberate replacement rather than accidental drift.
+- The server save orchestrator resolves the current dealer-bound runtime, including service offerings, but does not yet prove that selected or priced PPF content is allowed before mapping and persistence.
+- The current PPF pricing path is selected from draft state; the latest atomic-save SQL accepts the `ppf` category but does not itself read the dealer offering row.
+
+**Required read-only diagnosis:** Map the exact end-to-end PPF authority from offering persistence through runtime configuration, Step-3 presentation, Step-4 full/partial selection, pricing, draft restoration, hostile save intent, DTO/RPC persistence, and saved-estimate behavior. Return the smallest literal later write phases and focused verification commands that enforce one server-owned rule without redesigning the approved UI.
+
+**Boundary:** This governance gate changes no source, test, migration, SQL, RPC, UI implementation, dependency, config, generated artifact, or protected path. It runs no test, typecheck, build, runtime, database, Supabase, Auth, browser, Vercel, provider, or external-service command. It does not transmit private files to Claude and does not stage, commit, push, create or mutate a PR, mark Ready, merge, or deploy. The phase remains separate from the completed pricing-recovery PR.
+
+**Exit:** MacBook Codex verifies the exact three-document governance candidate and `git diff --check`, then requests a separate stage/local-commit authorization. Claude transmission and the one read-only diagnosis require another explicit authorization after the governance commit is accepted.
 
 ### GDA-3 — Completion Desk
 
