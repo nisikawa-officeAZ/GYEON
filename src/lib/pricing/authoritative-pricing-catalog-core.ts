@@ -110,6 +110,20 @@ function reqNonBlankString(v: unknown): string {
   if (typeof v !== "string" || v.trim() === "") bail();
   return v;
 }
+/**
+ * Read a top-level legacy service section that is optional under V3.4: absent or explicit `null`
+ * means "no override" for that family (returns `undefined`); any other present value must be a
+ * plain object, which the caller then runs through the SAME complete validation as before this
+ * change — a present malformed section still fails the entire catalog closed via `bail()`.
+ */
+function optionalSection(
+  spc: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> | undefined {
+  if (!Object.prototype.hasOwnProperty.call(spc, key) || spc[key] === null) return undefined;
+  return reqObject(spc[key]);
+}
+
 /** Validate EVERY entry (own enumerable) of a stored map, including entries under non-canonical ids. */
 function validateStringMap(map: Record<string, unknown>): void {
   for (const [, v] of Object.entries(map)) reqString(v);
@@ -168,18 +182,21 @@ function overlayMenus(
 }
 
 /**
- * Apply a `service_price_settings` object onto the catalog overrides. The COMPLETE stored schema is
- * validated FIRST (every section, container, array item, and map entry — including entries under
- * non-canonical ids), then canonical-id overlays are applied. A field is never optional merely
- * because the current mapper does not consume it.
+ * Apply a `service_price_settings` object onto the catalog overrides. Coating (V3.4) is mandatory
+ * whenever this object is non-null. The five legacy sections — `ppf`, `window_film`, `maintenance`,
+ * `carwash`, `room_cleaning` — are each optional: absent or explicit `null` means no override for
+ * that family and the corresponding `DEFAULT_PRICING_CATALOG` values pass through unchanged (this is
+ * the natural coating-only shape `save_coating_v34_settings` writes). A PRESENT non-null section
+ * still runs the COMPLETE stored-schema validation it always did (every container, array item, and
+ * map entry — including entries under non-canonical ids) before any canonical-id overlay is applied.
  */
 function applyServiceOverrides(spcRaw: unknown, out: Partial<PricingCatalog>): void {
   const spc = reqObject(spcRaw);
-  const ppf = reqObject(spc.ppf);
-  const window_film = reqObject(spc.window_film);
-  const maintenance = reqObject(spc.maintenance);
-  const carwash = reqObject(spc.carwash);
-  const room_cleaning = reqObject(spc.room_cleaning);
+  const ppf = optionalSection(spc, "ppf");
+  const window_film = optionalSection(spc, "window_film");
+  const maintenance = optionalSection(spc, "maintenance");
+  const carwash = optionalSection(spc, "carwash");
+  const room_cleaning = optionalSection(spc, "room_cleaning");
 
   // ── coating: the V3.4 seven-size direct-price contract is the ONLY authoritative coating
   // source. Legacy scalar/multiplier data, an unresolved legacy-review candidate, an invalid
@@ -199,24 +216,26 @@ function applyServiceOverrides(spcRaw: unknown, out: Partial<PricingCatalog>): v
     reqPrice,
   );
 
-  // ── ppf service overview: labels only, but fully validated ──
-  reqBoolean(ppf.active);
-  const planLabels = reqObject(ppf.plan_labels);
-  validateStringMap(planLabels);
+  // ── ppf service overview: labels only, but fully validated when present ──
+  if (ppf !== undefined) {
+    reqBoolean(ppf.active);
+    const planLabels = reqObject(ppf.plan_labels);
+    validateStringMap(planLabels);
+  }
 
   // ── window film ──
-  const wfBase = reqObject(window_film.base_prices);
-  const wfGrade = reqObject(window_film.grade_coeff);
+  const wfBase = window_film !== undefined ? reqObject(window_film.base_prices) : {};
+  const wfGrade = window_film !== undefined ? reqObject(window_film.grade_coeff) : {};
   validatePriceMap(wfBase);
   validateCoeffMap(wfGrade);
 
   // ── menus: full item schema (id/name non-blank, price ≥ 0) ──
-  const maintMenus = validateMenus(maintenance.menus);
-  const washMenus = validateMenus(carwash.menus);
+  const maintMenus = maintenance !== undefined ? validateMenus(maintenance.menus) : [];
+  const washMenus = carwash !== undefined ? validateMenus(carwash.menus) : [];
 
   // ── room cleaning ──
-  const rcBase = reqObject(room_cleaning.base_prices);
-  const rcCond = reqObject(room_cleaning.condition_coeff);
+  const rcBase = room_cleaning !== undefined ? reqObject(room_cleaning.base_prices) : {};
+  const rcCond = room_cleaning !== undefined ? reqObject(room_cleaning.condition_coeff) : {};
   validatePriceMap(rcBase);
   validateCoeffMap(rcCond);
 
