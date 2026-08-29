@@ -406,6 +406,13 @@ rm -f "$EVIDENCE_DIR/supabase-status.env" "$EVIDENCE_DIR/.start.raw.log" \
       "$EVIDENCE_DIR/migration-manifest.txt"
 
 if [[ "$WAS_BURNED" == "false" ]]; then
+  # Successful runs retain only the canonical evidence set. These four files
+  # are run-control, duplicate, or empty stderr artifacts; burned runs keep
+  # them above for diagnosis.
+  rm -f "$EVIDENCE_DIR/attempt-completed.txt" \
+        "$EVIDENCE_DIR/migration-replay-outcome.ndjson" \
+        "$EVIDENCE_DIR/real-auth.stderr.txt" \
+        "$EVIDENCE_DIR/concurrency.stderr.txt"
   ACTUAL_FILES="$(find "$EVIDENCE_DIR" -maxdepth 1 -type f ! -name '.*' -exec basename {} \; | sort)"
   EXPECTED_FILES="$(printf '%s\n' "${CANONICAL_18[@]}" | sort)"
   [[ "$ACTUAL_FILES" == "$EXPECTED_FILES" ]] || fail "a successful run must retain exactly the canonical 18 named artifacts before evidence copy; found a mismatch"
