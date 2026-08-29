@@ -444,11 +444,11 @@ results.append({
     'capture_completed': $( [[ "$CAPTURE_COMPLETED" == "true" ]] && echo True || echo False ),
     'start_attempted': $( [[ "$START_ATTEMPTED" == "true" ]] && echo True || echo False ),
     'stop_exit': '$STOP_EXIT', 'fixture_rows_remaining': '$FIXTURE_ROWS_REMAINING',
-    'teardown_reason': $( [[ -n "$TEARDOWN_REASON" ]] && python3 -c "import json,sys;print(json.dumps(sys.argv[1]))" "$TEARDOWN_REASON" || echo null ),
+    'teardown_reason': sys.argv[4] or None,
     'run_facts': json.loads(sys.argv[2]), 'commands': json.loads(sys.argv[3]),
 })
 print(json.dumps(results))
-" "$LANE_RESULTS_JSON" "$LANE_FACTS_JSON" "$LANE_COMMANDS_JSON")"
+" "$LANE_RESULTS_JSON" "$LANE_FACTS_JSON" "$LANE_COMMANDS_JSON" "$TEARDOWN_REASON")"
 done
 
 log "all lanes processed: was_burned=$WAS_BURNED"
