@@ -28,9 +28,14 @@ grant select, insert on c5c3_scratch to authenticated, service_role;
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
   email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
-) values (
+) values
+(
   '00000000-0000-0000-0000-000000000000','c5c30000-0000-4000-8000-000000000001',
   'authenticated','authenticated','c5c3-owner@example.invalid','',now(),'{}','{}',now(),now()
+),
+(
+  '00000000-0000-0000-0000-000000000000','c5c30000-0000-4000-8000-000000000099',
+  'authenticated','authenticated','c5c-warehouse@example.invalid','',now(),'{}','{}',now(),now()
 );
 
 insert into public.dealers(id,name,dealer_type,status) values
@@ -318,15 +323,15 @@ insert into public.gyeon_order_external_evidence_v1(
   amount_inc_tax_yen,currency,authority,state,server_verified_at,expires_at,payload_hash
 )
 select
-  'c5c38000-0000-4000-8000-000000000003','inventory_reservation','office_az_stub','evt-o1-inv-1',
-  'c5c31000-0000-4000-8000-000000000001','c5c36000-0000-4000-8000-000000000001',4,
+  'c5c38000-0000-4000-8000-000000000003'::uuid,'inventory_reservation','office_az_stub','evt-o1-inv-1',
+  'c5c31000-0000-4000-8000-000000000001'::uuid,'c5c36000-0000-4000-8000-000000000001'::uuid,4,
   private.gyeon_order_v3_fingerprint('inventory_reservation','c5c36000-0000-4000-8000-000000000001',4,'{}'::jsonb),
   o.grand_total_inc_tax_yen,'JPY','server_verified','succeeded',now(),now()+interval '10 minutes','hash-o1-inv-1'
 from public.product_orders o where o.id = 'c5c36000-0000-4000-8000-000000000001'
 union all
 select
-  'c5c38000-0000-4000-8000-000000000004','inventory_reservation','office_az_stub','evt-o1-inv-2',
-  'c5c31000-0000-4000-8000-000000000001','c5c36000-0000-4000-8000-000000000001',4,
+  'c5c38000-0000-4000-8000-000000000004'::uuid,'inventory_reservation','office_az_stub','evt-o1-inv-2',
+  'c5c31000-0000-4000-8000-000000000001'::uuid,'c5c36000-0000-4000-8000-000000000001'::uuid,4,
   private.gyeon_order_v3_fingerprint('inventory_reservation','c5c36000-0000-4000-8000-000000000001',4,'{}'::jsonb),
   o.grand_total_inc_tax_yen,'JPY','server_verified','succeeded',now(),now()+interval '10 minutes','hash-o1-inv-2'
 from public.product_orders o where o.id = 'c5c36000-0000-4000-8000-000000000001';

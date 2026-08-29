@@ -262,7 +262,7 @@ delete from public.product_order_items
 select is(
   (select ((private.gyeon_order_v3_evaluate_qualification(
     'c5c21000-0000-4000-8000-000000000001','c5c26000-0000-4000-8000-000000000001',5,'detailer_initial','fp-detailer-missing'
-  ) -> 'decision') -> 'missingRequiredProductCodes') ? 'C5C2-REQ',
+  ) -> 'decision') -> 'missingRequiredProductCodes') ? 'C5C2-REQ'),
   true,
   '17 detailer_initial reports the exact missing required product code'
 );
