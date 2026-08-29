@@ -572,6 +572,8 @@ The result document was excluded from harness implementation and was created lat
 
 **R4 disposable-harness governance candidate:** The source and result commits were normally pushed through HEAD `d06cd8a45d404c3e66c086341b80b0a5436b260b`. The next candidate adds `docs/integrations/gyeon-order/v3-c5d-disposable-db-verification-plan.md` and `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_D_DISPOSABLE_DB_HARNESS_IMPLEMENTATION.md`, updates this completion plan, and appends the phase ledger. It requires three isolated loopback-only runtime lanes: A fresh full-chain replay, B populated legacy upgrade from version `20260826143000`, and C CLI-native pending migration proof. The existing C5-C harness remains immutable read-only reference; the future C5-D harness is restricted to ten new paths under `scripts/e2e/gyeon-order-v3-c5d/`. This governance candidate performs no harness implementation, external transmission, Git delivery, Colima/Docker/DB/Supabase runtime, Auth/PostgREST, provider, environment, Ready, merge, or deployment action.
 
+**Owner pause — 2026-08-29:** The owner explicitly paused C5-D-R4 before harness implementation so the blocking Estimate Wizard Preview pricing failure can be recovered first. The existing C5-D source, governance candidate, hashes, and evidence remain preserved. No C5-D harness path, database, provider, environment, PR, Ready, merge, or deployment action is authorized while the pause is active.
+
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
 **Objective:** Correct the owner-rejected estimate/pricing settings navigation before deeper settings-page redesign. The `見積・価格 / ESTIMATES & PRICING` group must expose exactly four real cards in the approved order, remove misleading state badges from those four navigation cards, and replace unrelated generic imagery with dedicated semantic line icons while preserving the accepted TOP visual language and existing business behavior.
@@ -720,6 +722,86 @@ The result document was excluded from harness implementation and was created lat
 **Prohibited:** Any source/test/migration/config/document edit by Claude; test/typecheck/build/runtime execution; DB/Supabase/Auth/Storage/LINE/Vercel/external-service access; branch/worktree/stage/commit/push/Ready/merge/deploy; live legacy-data query; accepted-UI redesign.
 
 **Exit:** MacBook Codex independently verifies the one C2 report and either records `CHANGES_REQUIRED` with one exact correction or accepts an exact first implementation phase. No code is required or permitted in C2.
+
+### GDA-ESTIMATE-PRICING-RECOVERY-R1 — Preview authoritative-pricing recovery
+
+**Status:** COMPLETE — `GDA_ESTIMATE_PRICING_RECOVERY_R1_PREVIEW_ACCEPTED`. The bounded reader repair is committed and pushed to PR #41 at `9f9b1e61d5b9960a3a35f9c6d1c5e1f1dad5ef3b`; Vercel deployed it successfully, and MacBook Codex independently verified the authenticated Preview Estimate Wizard route. Ready, merge, and production deployment remain separate gates.
+
+**Objective:** Restore the Estimate Wizard Preview route by making the strict reader safely accept the natural coating-only sparse object produced by independent settings persistence, without weakening fail-closed validation of any value that is actually present.
+
+**Owner decision:** C5-D-R4 is temporarily paused. This recovery phase runs first because the Estimate Wizard cannot start in the current Dev-Next Preview. After recovery acceptance, the separately queued PPF offering-control phase runs next.
+
+**Observed read-only evidence:**
+
+- Preview authentication, the active dealer membership, active staff row, dealer rank, service-offering read, lifecycle state, revision equality, and required global catalog counts all resolve successfully.
+- `dealer_service_offerings.ppf` is `true` in the affected Preview tenant.
+- The affected `dealer_settings.service_price_settings` object contains only the top-level `coating` member.
+- `authoritative-pricing-catalog-core.ts` requires the complete non-null service settings structure, including `ppf`, `window_film`, `maintenance`, `carwash`, and `room_cleaning`; the sparse row therefore fails closed before the wizard renders.
+- No application crash or HTTP 500 was observed. The route intentionally rendered the generic unavailable state.
+
+**Accepted diagnosis:** `GDA_ESTIMATE_PRICING_RECOVERY_R1_READ_ONLY_DIAGNOSIS_RESULT_V1` returned `READY_FOR_IMPLEMENTATION_GOVERNANCE`. MacBook Codex independently confirmed the write/read call chain, clean state, protected metadata, and two-file repair boundary, but rejected one overbroad sentence in the report: the proposed repair does not make a `window_film_v1`-only object valid because coating remains mandatory. The implementation contract therefore fixes the observed coating-only row only and must not claim to close the separately queued PPF/coating-offering behavior.
+
+**Implementation-governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PRICING_RECOVERY_R1_IMPLEMENTATION.md` (new)
+
+**Accepted root cause:** `save_coating_v34_settings` applies `jsonb_set(coalesce(service_price_settings, '{}'), '{coating}', ...)`, so a null row naturally becomes a coating-only object. The strict reader then unconditionally requires `ppf`, `window_film`, `maintenance`, `carwash`, and `room_cleaning` before it resolves the valid V3.4 coating payload. The first absent member therefore becomes `malformed`, collapses to `pricing-catalog-failed`, and the route renders the generic unavailable state.
+
+**Accepted implementation architecture:**
+
+- Change only the pure strict reader so absence or explicit null of the five legacy service sections means no override for that section; canonical defaults fill the omitted family exactly as they already do when the whole column is null.
+- If any of those five keys is present and non-null, preserve its existing complete validation unchanged; malformed present data still fails closed.
+- Keep V3.4 coating mandatory for every non-null `service_price_settings` object in this narrow recovery phase.
+- Keep `ppf_price_tables`, `window_film_v1`, tenant/RLS behavior, unset-versus-zero semantics, seven sizes, independent coating layers, and historical finalized estimates unchanged.
+- Do not add a migration or update the existing Preview row. The existing coating-only row is remediated by the compatible read path; rollback is a plain Git revert of the two-file source commit.
+
+**Implemented source write allowlist — exactly two paths:**
+
+1. `src/lib/pricing/authoritative-pricing-catalog-core.ts`
+2. `src/lib/pricing/authoritative-pricing-catalog-core.test.ts`
+
+**Required focused regression coverage:**
+
+- A V3.4 coating-only object resolves successfully and all five absent families retain canonical defaults.
+- Absent and explicit-null forms of each of the five optional legacy sections resolve as no override.
+- Every present-but-malformed optional section still returns `malformed`.
+- A complete six-key legacy-compatible object preserves existing output parity.
+- A fully null service column preserves canonical-default behavior.
+- A `window_film_v1`-only object without valid V3.4 coating remains `malformed`; this explicitly prevents the implementation from claiming the contradiction found in the diagnosis narrative.
+
+**Accepted implementation and verification:**
+
+- Governance commit `f5a38194c383a83aea97a5c65fb75fcfc301c9c8` and source commit `9f9b1e61d5b9960a3a35f9c6d1c5e1f1dad5ef3b` were separately approved, locally committed, and normally pushed to `agent/preview-pricing-recovery-r1`; no force push occurred.
+- Claude changed exactly the two source-allowlist paths. MacBook Codex independently inspected the diff and reran the focused suite: 31/31 tests passed and `git diff --check` passed.
+- Full-project `tsc --noEmit --incremental false` still exits 2 because the isolated worktree has pre-existing archived-UI/dependency/type-root failures. For the two target paths, only the pre-existing unresolved `node:test`, `node:assert/strict`, and `node:fs` imports at unchanged test lines 10-12 remain; no changed implementation line adds a type error. This phase must not be described as full-project typecheck green.
+- The four protected blobs remained unchanged: `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14`.
+- PR #41 Vercel checks passed. In the authenticated Preview route `/estimates/new`, the seven-step `新規見積` wizard and customer-registration form rendered, `見積を開始できません` matched zero elements, and captured browser warnings/errors were zero.
+
+**Accepted boundary:** This phase proves the observed coating-only row can open the Estimate Wizard without weakening present-value validation. It does not make a `window_film_v1`-only object valid and does not implement PPF offering control. No migration, data backfill, Preview-row mutation, DB apply, Ready transition, merge, or production deployment occurred.
+
+**Closeout write allowlist — exactly two paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Exit:** Record and separately deliver this two-document Preview-acceptance closeout. Then begin `GDA-ESTIMATE-PPF-OFFERING-R1` as the next independent phase and PR; do not mix it into PR #41.
+
+### GDA-ESTIMATE-PPF-OFFERING-R1 — PPF availability and partial-PPF control
+
+**Status:** QUEUED — owner-approved next phase after GDA-ESTIMATE-PRICING-RECOVERY-R1. Diagnosis and implementation are not yet authorized.
+
+**Objective:** Make the Estimate Wizard obey the server-owned PPF offering setting consistently in UI, navigation, pricing, draft restoration, and save authorization.
+
+**Frozen behavior:**
+
+- When PPF is offered, the main PPF control is selectable and partial PPF remains available as an attached option even when the operator selects coating only.
+- When PPF is not offered, the PPF control remains visible but disabled and gray, with a plain-language reason that the store setting disables PPF.
+- When PPF is not offered, independent PPF, partial PPF, PPF pricing, stale draft values, manipulated client payloads, and saved-estimate PPF lines are rejected or removed under one server-owned contract.
+- Hiding the control completely is not the approved default because it makes a configured restriction indistinguishable from a missing function or rendering defect.
+
+**Boundary:** No implementation allowlist is inferred before the pricing-recovery phase closes and a bounded read-only diagnosis maps the real PPF call chain. This phase must not be mixed into the Preview pricing-recovery PR.
 
 ### GDA-3 — Completion Desk
 

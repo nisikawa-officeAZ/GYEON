@@ -457,6 +457,66 @@ test("4e. input objects are not mutated by resolution", async () => {
   assert.equal(JSON.stringify(p), pSnap, "ppf input unchanged");
 });
 
+// ── 6. Optional legacy sections (GDA-ESTIMATE-PRICING-RECOVERY-R1) ────────────────
+//
+// save_coating_v34_settings persists jsonb_set(coalesce(service_price_settings, '{}'), '{coating}',
+// ..., true), so a null settings row naturally becomes a coating-only object. ppf, window_film,
+// maintenance, carwash, and room_cleaning are each optional under V3.4: absent or explicit null means
+// no override for that family; a present value still runs the SAME complete validation as before.
+// V3.4 coating itself stays mandatory for every non-null service_price_settings object — this is the
+// exact R1 scope boundary Codex required (6d: a window_film_v1-only object without valid coating is
+// not solved here; GDA-ESTIMATE-PPF-OFFERING-R1 remains a separate queued phase).
+
+const COATING_ONLY_SPC = { coating: VALID_COATING_V34 };
+const OPTIONAL_FAMILY_KEYS = ["ppf", "window_film", "maintenance", "carwash", "room_cleaning"] as const;
+
+test("6a. a V3.4 coating-only object with ppf_price_tables === null resolves ok:true and every non-coating family equals the canonical default", async () => {
+  const cat = okCatalog(await resolveRow(COATING_ONLY_SPC, null));
+  assert.deepEqual(cat.coatingV34, VALID_COATING_V34, "coating resolves from the sparse coating-only payload");
+  assert.deepEqual(cat.windowParts, DEFAULT_PRICING_CATALOG.windowParts, "window_film family stays canonical default");
+  assert.deepEqual(cat.windowGrades, DEFAULT_PRICING_CATALOG.windowGrades, "window_film family stays canonical default");
+  assert.deepEqual(cat.maintenanceMenus, DEFAULT_PRICING_CATALOG.maintenanceMenus, "maintenance family stays canonical default");
+  assert.deepEqual(cat.carwashMenus, DEFAULT_PRICING_CATALOG.carwashMenus, "carwash family stays canonical default");
+  assert.deepEqual(cat.roomCleanParts, DEFAULT_PRICING_CATALOG.roomCleanParts, "room_cleaning family stays canonical default");
+  assert.deepEqual(cat.roomCleanConditions, DEFAULT_PRICING_CATALOG.roomCleanConditions, "room_cleaning family stays canonical default");
+  assert.deepEqual(cat.ppfPlanPrices, DEFAULT_PRICING_CATALOG.ppfPlanPrices, "ppf_price_tables stays canonical default (null column)");
+  assert.deepEqual(cat.ppfFilmTypes, DEFAULT_PRICING_CATALOG.ppfFilmTypes, "ppf_price_tables stays canonical default (null column)");
+  assert.deepEqual(cat.ppfVehicleRanks, DEFAULT_PRICING_CATALOG.ppfVehicleRanks, "ppf_price_tables stays canonical default (null column)");
+  assert.deepEqual(cat.ppfFrontGlass, DEFAULT_PRICING_CATALOG.ppfFrontGlass, "ppf_price_tables stays canonical default (null column)");
+  assert.deepEqual(cat.ppfSingleParts, DEFAULT_PRICING_CATALOG.ppfSingleParts, "ppf_price_tables stays canonical default (null column)");
+});
+
+test("6b. each of the five optional sections resolves identically whether absent or explicit null", async () => {
+  const baseline = okCatalog(await resolveRow(COATING_ONLY_SPC, null));
+  for (const key of OPTIONAL_FAMILY_KEYS) {
+    const absent = { coating: VALID_COATING_V34 } as Record<string, unknown>;
+    const explicitNull = { coating: VALID_COATING_V34, [key]: null };
+    assert.deepEqual(okCatalog(await resolveRow(absent, null)), baseline, `${key} absent matches the all-absent baseline`);
+    assert.deepEqual(okCatalog(await resolveRow(explicitNull, null)), baseline, `${key} explicit null matches the all-absent baseline`);
+  }
+});
+
+test("6c. each optional section, when present, still fails closed on malformed content", async () => {
+  const validSix = () => withCoatingV34(cloneSpc());
+
+  await assertMalformed({ ...validSix(), ppf: { active: "yes", plan_labels: {} } }, VALID_PPF, "present ppf.active wrong type");
+  await assertMalformed({ ...validSix(), window_film: { base_prices: [], grade_coeff: {} } }, VALID_PPF, "present window_film.base_prices wrong type");
+  await assertMalformed({ ...validSix(), maintenance: { menus: [{ id: "A" }] } }, VALID_PPF, "present maintenance menu missing fields");
+  await assertMalformed({ ...validSix(), carwash: { menus: "nope" } }, VALID_PPF, "present carwash.menus wrong type");
+  await assertMalformed({ ...validSix(), room_cleaning: { base_prices: {}, condition_coeff: [1] } }, VALID_PPF, "present room_cleaning.condition_coeff wrong type");
+});
+
+test("6d. a window_film_v1-only object without valid V3.4 coating remains malformed (R1 scope boundary)", async () => {
+  await assertMalformed({ window_film_v1: VALID_WINDOW_FILM_V1 }, null, "window_film_v1 alone does not satisfy mandatory V3.4 coating");
+});
+
+test("6e. a coating-only sparse input is not mutated by resolution", async () => {
+  const s = { coating: JSON.parse(JSON.stringify(VALID_COATING_V34)) };
+  const sSnap = JSON.stringify(s);
+  await resolveRow(s, null);
+  assert.equal(JSON.stringify(s), sSnap, "sparse coating-only input unchanged");
+});
+
 // ── 5. Type / security guards ──────────────────────────────────────────────────────
 
 // The wrapper's TYPE only — `typeof import(...)` is erased at runtime, so `server-only` never runs.
