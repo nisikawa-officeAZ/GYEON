@@ -446,7 +446,7 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 
 ### GYEON-ORDER-V3-C5-C — Disposable-database acceptance design and execution gates
 
-**Status:** `C5C_DISPOSABLE_DB_PASS` / RESULT COMMITTED AND PUSHED / PR #36 READY / NOT MERGED. C5-C E2 local disposable acceptance is complete. Formal migration promotion, shared or production application, provider connection, merge, and deployment remain separately unauthorized.
+**Status:** `C5C_DISPOSABLE_DB_PASS` / RESULT COMMITTED AND PUSHED / PR #36 SQUASH-MERGED TO MAIN. C5-C E2 local disposable acceptance is complete. Formal migration promotion, shared or production application, provider connection, and manual deployment remain separately unauthorized.
 
 **Objective:** Prove the pushed C5-B database source candidate on one fresh loopback-only PostgreSQL 17 disposable Supabase runtime, including real signed Auth/PostgREST requests, exact RLS/grant behavior, prepare/finalize evidence consumption, server-owned qualification, durable compensation, warehouse-task release timing, and genuine separate-connection races.
 
@@ -469,7 +469,7 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 - Raw proof: migration replay 110 applied plus one protected exclusion; pgTAP `186/186`; real Auth/PostgREST `35/35`; genuine separate-connection assertions `11/11`; warning-only DB lint; four query-plan captures; `SECRET_SCAN_CLEAN`; all named fixture families zero.
 - Evidence integrity: 19 canonical non-hidden files, 18 manifest artifact hashes, zero mismatch, and successful retained copy, hash verification, project stop, and exact runtime removal.
 - Result record commit/tree: `8144e0baf9c715ddc72ee835797646d2bbfe0a2d` / `3aba01289f52ecc7808174fb647b28becf61edf9`.
-- PR #36 is OPEN and Ready, its HEAD is the result-record commit, and its Vercel checks passed at the pre-merge audit. It has not been merged.
+- PR #36 was squash-merged to `main` as commit `96a66c3fb5969718418da1ef4c75fe62407b48aa` with tree `d8d6d3bdd5d809714896fe006d73910e175f130d`. Its Vercel automatic deployment completed successfully; this merge/deployment did not apply a database migration or connect a provider.
 - Evidence class remains `E2_LOCAL_DISPOSABLE_DB`; no shared, staging, production, hosted-provider, or E3 authority is inferred.
 
 **Historical C5-C R4 governance write allowlist — exactly four paths:**
@@ -526,7 +526,43 @@ The result document was excluded from harness implementation and was created lat
 
 **Responsibility:** MacBook Claude performed the bounded diagnosis and harness candidate work under its exact directives. MacBook Codex independently accepted scope, executed the separately approved disposable run, and reviewed the raw evidence. Mac Studio remains the sole Office AZ inventory implementation owner.
 
-**Acceptance result:** `C5C_DISPOSABLE_DB_PASS`. This is E2 local verification strengthened by disposable-database evidence. C5-C is not E3 because no authorized shared or staging environment was contacted. PR Ready conversion is complete, but formal migration promotion, Dev-Next or production application, provider connection, merge, and deployment remain separately unauthorized.
+**Acceptance result:** `C5C_DISPOSABLE_DB_PASS`. This is E2 local verification strengthened by disposable-database evidence. C5-C is not E3 because no authorized shared or staging environment was contacted. PR #36 merge and its Vercel automatic deployment are complete, but formal migration promotion, Dev-Next or production database application, and provider connection remain separately unauthorized.
+
+### GYEON-ORDER-V3-C5-D — Formal migration promotion
+
+**Status:** GOVERNANCE CANDIDATE UNCOMMITTED / FORMAL MIGRATION NOT CREATED / DATABASE NOT CONTACTED.
+
+**Objective:** Promote the C5-C-accepted guarded SQL into one new timestamped formal migration without changing executable semantics, then prove the exact formal file through a separate fresh disposable replay, populated legacy-data upgrade, and Supabase CLI-native migration path before any shared-environment application.
+
+**Base authority:**
+
+- `main` commit: `96a66c3fb5969718418da1ef4c75fe62407b48aa`
+- `main` tree: `d8d6d3bdd5d809714896fe006d73910e175f130d`
+- DRAFT SQL SHA-256: `d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73`
+- C5-C runtime derivative SHA-256: `93d69dbdcf20910ab81ea9a809dacd250156fd0a5ef728f48db4a793f539cf67`
+- C5-C guard transformation: exactly one terminal `rollback;` to `commit;`
+
+**Governance documents:**
+
+- `docs/integrations/gyeon-order/v3-c5d-formal-migration-promotion-plan.md`
+- `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_D_FORMAL_MIGRATION_PROMOTION.md`
+
+**Governance-only authorization:** The owner authorized the four-document C5-D governance candidate only. This authorization does not permit formal SQL creation, Supabase CLI execution, tests, DB/Supabase/Docker/Colima/Auth/PostgREST access, provider connection, Git delivery, PR mutation, environment application, Ready, merge, or deployment.
+
+**Future source-candidate write allowlist — separately authorized later:**
+
+1. `supabase/migrations/<SUPABASE_CLI_GENERATED_TIMESTAMP>_gyeon_order_v3_contract.sql` (new)
+2. `supabase/migrations/DRAFT_DO_NOT_APPLY/README.md`
+3. `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts`
+4. `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts`
+
+**Mandatory promotion contract:** Use `supabase migration new gyeon_order_v3_contract`; keep the DRAFT SQL immutable and terminal-ROLLBACK; permit only formal-state full-line comment replacements plus one terminal `ROLLBACK` to `COMMIT`; prove the formal executable SQL is byte-equivalent to the accepted derivative and that no second formal candidate exists.
+
+**Mandatory post-source verification:** A later fresh C5-D runtime must apply the formal migration itself, never a DRAFT-derived runtime file. It must cover (A) full fresh replay, (B) baseline plus representative populated legacy orders/items before the C5-D migration, and (C) the Supabase CLI-native migration-runner path intended for later environment use. The full pgTAP, real Auth/PostgREST, separate-connection concurrency, advisor, query-plan, secret, cleanup, and evidence-integrity gates are rerun with a fresh suffix.
+
+**Rollback boundary:** Before environment application, discard/revert only the candidate. After any formal application, never rewrite migration history; recover only through a new forward-only compensating migration under a separate owner-approved gate.
+
+**Exit:** First verify and deliver this exact four-document governance candidate. Claude external transmission and formal migration source authoring require a later separate owner authorization. Shared/staging/production application and provider connection remain later gates even after C5-D local acceptance.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
