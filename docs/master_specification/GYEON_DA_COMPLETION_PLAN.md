@@ -530,7 +530,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GYEON-ORDER-V3-C5-D — Formal migration promotion
 
-**Status:** PR #37 BRANCH PUSHED THROUGH `d06cd8a45d404c3e66c086341b80b0a5436b260b` / FORMAL MIGRATION SOURCE STATIC TESTS 78/78 PASS / R4 DISPOSABLE HARNESS GOVERNANCE CANDIDATE UNCOMMITTED / HARNESS NOT IMPLEMENTED / DATABASE NOT CONTACTED.
+**Status:** `C5D_FORMAL_MIGRATION_DISPOSABLE_PASS` / PR #37 SQUASH-MERGED TO `main` AT `48de96bbf5518be3fd7fd8a3964dfd7975716165` / PRODUCTION MIGRATION NOT APPLIED.
 
 **Objective:** Promote the C5-C-accepted guarded SQL into one new timestamped formal migration without changing executable semantics, then prove the exact formal file through a separate fresh disposable replay, populated legacy-data upgrade, and Supabase CLI-native migration path before any shared-environment application.
 
@@ -571,6 +571,24 @@ The result document was excluded from harness implementation and was created lat
 **R3 source-candidate result:** After separate owner approvals for direct source authoring and then exact four-path stage/local commit, MacBook Codex created `supabase/migrations/20260829101726_gyeon_order_v3_contract.sql` through the discovered Supabase CLI migration command, kept the accepted DRAFT immutable at SHA-256 `d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73`, and produced formal SHA-256 `bd1a7742725c3f2a7bb42a3dbe5889b6e86bf6d213a0a550e6dd48f460d6d91b`. Deterministic expected-formal and executable-byte parity checks passed, exactly one formal candidate exists, the focused migration/RPC source-contract suite passed 78/78, and `git diff --check` passed. The exact four-path source commit is `c7806331dcbb035448704e09c625cd4870681142` with tree `0fc735bd9f04d6bc54664e5874faa08e82cbdb60`. This is static source-candidate acceptance only: no disposable database replay, populated legacy upgrade, CLI-native migration-runner proof, provider connection, push, PR mutation, shared/staging/production application, Ready, merge, or deployment is authorized or completed.
 
 **R4 disposable-harness governance candidate:** The source and result commits were normally pushed through HEAD `d06cd8a45d404c3e66c086341b80b0a5436b260b`. The next candidate adds `docs/integrations/gyeon-order/v3-c5d-disposable-db-verification-plan.md` and `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_D_DISPOSABLE_DB_HARNESS_IMPLEMENTATION.md`, updates this completion plan, and appends the phase ledger. It requires three isolated loopback-only runtime lanes: A fresh full-chain replay, B populated legacy upgrade from version `20260826143000`, and C CLI-native pending migration proof. The existing C5-C harness remains immutable read-only reference; the future C5-D harness is restricted to ten new paths under `scripts/e2e/gyeon-order-v3-c5d/`. This governance candidate performs no harness implementation, external transmission, Git delivery, Colima/Docker/DB/Supabase runtime, Auth/PostgREST, provider, environment, Ready, merge, or deployment action.
+
+**R5 disposable result and merge:** The owner separately authorized the fresh C5-D runtime. Fresh suffix `20260829T121449Z-eae07b` passed the three required lanes. Evidence recorded 58/58 artifact hashes, pgTAP `186/186`, real Auth/PostgREST `35/35`, genuine separate-connection concurrency `11/11`, populated legacy upgrade `26`, clean secret scans, zero retained fixtures, complete cleanup, and exact runtime removal. The retained manifest SHA-256 is `2271abb4a20c1c29a9091f009b87fd7dfe7f50504ea8d3947d78ce432f90b753`. PR #37 was then separately authorized and squash-merged to `main` as `48de96bbf5518be3fd7fd8a3964dfd7975716165`, tree `e25590d276237f643e9b1408e6c47d192388de07`. No shared/staging/production migration, provider connection, or manual deployment occurred.
+
+### GYEON-ORDER-V3-C5-E1 — Production migration ledger reconciliation governance
+
+**Status:** `GOVERNANCE_CANDIDATE_UNCOMMITTED / PRODUCTION_UNCHANGED / APPLY_NO_GO`.
+
+**Objective:** Reconcile the difference between GitHub `main` and `DealerOS-Prod` migration history without applying frozen LINE work, Dev-only provisioning, or any unapproved SQL, then define a fail-closed path to prove exactly four production candidates through a separate dry-run gate.
+
+**Read-only audit:** `DealerOS-Prod` (`dmvyaykhibmphrmekjbb`) is `ACTIVE_HEALTHY` on PostgreSQL `17.6.1.147`. Its migration ledger contains 104 entries through `20260824151255`; GitHub `main` contains 111 top-level SQL migrations. Seven versions are absent on production. Three older versions are outside the current production scope: Dev-applied provisioning `20260731115631`, its search-path hardening `20260801000649`, and protected/frozen LINE migration `20260801110110`. Four newer versions are the only current production candidates: `20260825151059`, `20260826010000`, `20260826143000`, and `20260829101726`. The Order V3 objects are absent, production product orders/items are both empty, and no mutation occurred during the audit.
+
+**Chosen design candidate:** Use a fresh worktree-external promotion bundle. Represent the 104 already-applied production migrations only as zero-byte version/name placeholders, include byte-identical SQL only for the exact four approved candidates, and omit the three deferred/frozen versions. First prove the bundle with `supabase db push --dry-run --project-ref dmvyaykhibmphrmekjbb --skip-vault`. The dry-run must list exactly the four candidates in timestamp order. Placeholder execution, `--linked`, `--include-all`, seed, migration repair, MCP production write, Dashboard SQL, and direct `psql` apply are prohibited.
+
+**Plan:** `docs/integrations/gyeon-order/v3-c5e1-production-migration-ledger-reconciliation-plan.md`.
+
+**Current authorization:** Exact three-document governance candidate only: this completion plan, the append-only phase ledger, and the new C5-E1 plan. No stage, commit, push, PR mutation, script/harness creation, Supabase login/link, dry-run, migration apply, SQL mutation, provider, environment, Ready, merge, deployment, or production smoke is authorized.
+
+**Next gate:** Independently verify the exact three-document candidate and `git diff --check`, then request separate stage/local-commit authorization. C5-E2 implementation and production-mutation-free dry-run remain later separately authorized gates.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
