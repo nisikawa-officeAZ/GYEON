@@ -409,6 +409,30 @@ set -a
 source "$RUNTIME_DIR/evidence/supabase-status.env"
 set +a
 
+# A bare `supabase start` does not necessarily create the CLI-managed
+# migration ledger until the CLI itself applies a migration. This harness
+# applies files directly with psql, so initialise the current Supabase CLI
+# ledger shape before recording any successfully applied 14-digit migration.
+MIGRATION_LEDGER_INIT_LOG="$RUNTIME_DIR/evidence/.migration-ledger-init.raw.log"
+set +e
+psql "${DB_URL:-}" -X -v ON_ERROR_STOP=1 -q > "$MIGRATION_LEDGER_INIT_LOG" 2>&1 <<'SQL'
+create schema if not exists supabase_migrations;
+create table if not exists supabase_migrations.schema_migrations (
+  version text primary key,
+  statements text[],
+  name text
+);
+alter table supabase_migrations.schema_migrations
+  add column if not exists statements text[];
+alter table supabase_migrations.schema_migrations
+  add column if not exists name text;
+SQL
+MIGRATION_LEDGER_INIT_EXIT=$?
+set -e
+log_cmd "psql initialise supabase_migrations.schema_migrations" "$MIGRATION_LEDGER_INIT_EXIT"
+[[ "$MIGRATION_LEDGER_INIT_EXIT" -eq 0 ]] || fail "schema_migrations ledger initialisation failed with exit $MIGRATION_LEDGER_INIT_EXIT"
+rm -f "$MIGRATION_LEDGER_INIT_LOG"
+
 # ---------------------------------------------------------------------------
 # C5C-1 (part 3): apply each staged migration individually via a direct
 # psql -f invocation, in filename order. Start time, finish time, exit code,
@@ -437,13 +461,13 @@ while IFS= read -r -d '' staged_file; do STAGED_FILES+=("$staged_file"); done < 
 for staged_index in "${!STAGED_FILES[@]}"; do
   staged_file="${STAGED_FILES[$staged_index]}"
   migration_name="$(basename "$staged_file")"
-  started_at="$(date -u '+%Y-%m-%dT%H:%M:%S.%3NZ' 2>/dev/null || date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  started_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
   PER_MIGRATION_LOG="$RUNTIME_DIR/evidence/.migration-apply.raw.log"
   set +e
   psql "${DB_URL:-}" -X -v ON_ERROR_STOP=1 -v VERBOSITY=verbose -f "$staged_file" > "$PER_MIGRATION_LOG" 2>&1
   MIGRATION_EXIT=$?
   set -e
-  finished_at="$(date -u '+%Y-%m-%dT%H:%M:%S.%3NZ' 2>/dev/null || date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  finished_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
   log_cmd "psql -f $migration_name" "$MIGRATION_EXIT"
 
   sqlstate=""
@@ -513,14 +537,16 @@ PY
     # attribution purposes (required 7/9: the per-migration psql -f capture
     # above is the actual attribution source), but a harness that cannot
     # even keep its own bookkeeping consistent does not silently continue.
+    MIGRATION_LEDGER_INSERT_LOG="$RUNTIME_DIR/evidence/.migration-ledger-insert.raw.log"
     set +e
     psql "${DB_URL:-}" -X -v ON_ERROR_STOP=1 -q -c \
-      "insert into supabase_migrations.schema_migrations(version, name) values ('$version', '$migration_name') on conflict (version) do nothing;" \
-      >/dev/null 2>&1
+      "insert into supabase_migrations.schema_migrations(version, name, statements) values ('$version', '$migration_name', null) on conflict (version) do nothing;" \
+      > "$MIGRATION_LEDGER_INSERT_LOG" 2>&1
     SCHEMA_MIGRATIONS_INSERT_EXIT=$?
     set -e
     log_cmd "psql insert supabase_migrations.schema_migrations ($migration_name)" "$SCHEMA_MIGRATIONS_INSERT_EXIT"
     [[ "$SCHEMA_MIGRATIONS_INSERT_EXIT" -eq 0 ]] || fail "schema_migrations ledger insert failed for $migration_name with exit $SCHEMA_MIGRATIONS_INSERT_EXIT"
+    rm -f "$MIGRATION_LEDGER_INSERT_LOG"
   fi
 done
 

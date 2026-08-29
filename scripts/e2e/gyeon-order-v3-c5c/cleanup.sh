@@ -74,6 +74,8 @@ log "cleanup started for runtime_dir=$RUNTIME_DIR project_id=${PROJECT_ID:-<none
 
 START_ATTEMPTED="false"
 [[ -e "$EVIDENCE_DIR/start-attempted.txt" ]] && START_ATTEMPTED="true"
+FIXTURE_ATTEMPTED="false"
+[[ -e "$EVIDENCE_DIR/attempt-started.txt" ]] && FIXTURE_ATTEMPTED="true"
 
 # ---------------------------------------------------------------------------
 # required 1/2: fixture teardown as a real bash FUNCTION (not a subshell),
@@ -210,35 +212,45 @@ DB_STARTED="false"
 TEARDOWN_EXIT=0
 if [[ -f "$EVIDENCE_DIR/supabase-status.env" ]]; then
   DB_STARTED="true"
-  C5C_DB_URL=""
-  while IFS= read -r status_line; do
-    if [[ "$status_line" == DB_URL=* ]]; then
-      C5C_DB_URL="${status_line#DB_URL=}"
-      C5C_DB_URL="${C5C_DB_URL#\"}"
-      C5C_DB_URL="${C5C_DB_URL%\"}"
-      C5C_DB_URL="${C5C_DB_URL#\'}"
-      C5C_DB_URL="${C5C_DB_URL%\'}"
-      break
-    fi
-  done < "$EVIDENCE_DIR/supabase-status.env"
-
-  if [[ -z "$C5C_DB_URL" ]]; then
-    TEARDOWN_EXIT=1
-    TEARDOWN_REASON="local status file is present but did not provide a database URL"
+  if [[ "$FIXTURE_ATTEMPTED" != "true" ]]; then
+    # capture-evidence.sh writes attempt-started.txt before creating any C5-C
+    # fixture. A setup failure before that marker can leave a deliberately
+    # partial schema, so querying or deleting later C5-B-only tables would be
+    # both unnecessary and invalid. The fresh runtime has no fixture rows.
+    FIXTURE_ROWS_REMAINING="0"
+    PER_FAMILY_REPORT="not_applicable_fixture_attempt_never_started"
+    log "attempt-started.txt absent; no C5-C fixture was created, so partial-schema fixture teardown is safely skipped"
   else
-    case "$C5C_DB_URL" in
-      postgresql://*127.0.0.1:*|postgresql://*localhost:*)
-        log "supabase-status.env present; database-level fixture teardown will run before supabase stop"
-        set +e
-        run_fixture_teardown
-        TEARDOWN_EXIT=$?
-        set -e
-        ;;
-      *)
-        TEARDOWN_EXIT=1
-        TEARDOWN_REASON="database endpoint is not loopback-only"
-        ;;
-    esac
+    C5C_DB_URL=""
+    while IFS= read -r status_line; do
+      if [[ "$status_line" == DB_URL=* ]]; then
+        C5C_DB_URL="${status_line#DB_URL=}"
+        C5C_DB_URL="${C5C_DB_URL#\"}"
+        C5C_DB_URL="${C5C_DB_URL%\"}"
+        C5C_DB_URL="${C5C_DB_URL#\'}"
+        C5C_DB_URL="${C5C_DB_URL%\'}"
+        break
+      fi
+    done < "$EVIDENCE_DIR/supabase-status.env"
+
+    if [[ -z "$C5C_DB_URL" ]]; then
+      TEARDOWN_EXIT=1
+      TEARDOWN_REASON="local status file is present but did not provide a database URL"
+    else
+      case "$C5C_DB_URL" in
+        postgresql://*127.0.0.1:*|postgresql://*localhost:*)
+          log "supabase-status.env present; database-level fixture teardown will run before supabase stop"
+          set +e
+          run_fixture_teardown
+          TEARDOWN_EXIT=$?
+          set -e
+          ;;
+        *)
+          TEARDOWN_EXIT=1
+          TEARDOWN_REASON="database endpoint is not loopback-only"
+          ;;
+      esac
+    fi
   fi
   if [[ "$TEARDOWN_EXIT" -ne 0 ]]; then
     log "fixture teardown FAILED: ${TEARDOWN_REASON:-unknown reason}; supabase stop is still attempted before this script fails"
@@ -373,6 +385,7 @@ fi
 rm -f "$EVIDENCE_DIR/supabase-status.env" "$EVIDENCE_DIR/.start.raw.log" \
       "$EVIDENCE_DIR/.migration-apply.raw.log" "$EVIDENCE_DIR/burned.txt" \
       "$EVIDENCE_DIR/cleanup-started.txt" "$EVIDENCE_DIR/start-attempted.txt" \
+      "$EVIDENCE_DIR/attempt-started.txt" \
       "$EVIDENCE_DIR/start-succeeded.txt" "$EVIDENCE_DIR/project-id.txt" \
       "$EVIDENCE_DIR/runtime-dir.txt" "$EVIDENCE_DIR/db-port.txt" \
       "$EVIDENCE_DIR/mount-probe.txt" "$EVIDENCE_DIR/protected-paths.txt" \
