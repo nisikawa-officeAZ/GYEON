@@ -2064,3 +2064,66 @@ scope_confirmation:
 decision: GYEON_ORDER_V3_C5_C_R4_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_CONTRACTS_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GYEON-ORDER-V3-C5-C — Disposable database verification accepted
+
+```yaml
+phase: GYEON_ORDER_V3_C5_C_DISPOSABLE_DB_VERIFICATION
+status: C5C_DISPOSABLE_DB_PASS_RESULT_RECORDED_UNCOMMITTED
+date: 2026-08-29
+append_only: true
+result_id: GYEON_ORDER_V3_C5_C_DISPOSABLE_DB_VERIFICATION_RESULT_V1
+objective: "Record the independently reviewed C5-C local disposable-database execution without promoting it to shared-environment, production, provider, migration, Ready, merge, or deployment approval."
+authorization: "The owner explicitly approved the result-recording gate only. This authorizes exactly the new C5-C result document and this append-only phase-results entry as uncommitted worktree changes. Stage, commit, push, PR mutation, provider connection, shared DB, staging, production, migration promotion, Ready, merge, and deployment remain separate gates."
+candidate:
+  branch: agent/gyeon-order-v3-c5-external-authority-design
+  execution_head: a8bea097cee6060c0eca52d7c11a560da5f60c6f
+  execution_tree: 5adb744aee61fb59487879bcc524590ee2c2c8aa
+  upstream: origin/agent/gyeon-order-v3-c5-external-authority-design
+  ahead_behind: "0/0"
+  source_commit: 3403918d0166c30c44abb95bad1c8a7335877cab
+  source_tree: 1d1617a49bc1dd1e4b21515fec4940c3fdc4f827
+runtime:
+  evidence_class: E2_LOCAL_DISPOSABLE_DB
+  suffix: 20260829T071034Z-z6m3r8
+  project_id: gyeonorderv3c5c20260829T071034Zz6m3r8
+  retained_evidence: /Users/atsushinishikawa/Documents/Codex/runtime/gyeon-order-v3-c5c-evidence/gyeon-order-v3-c5c.20260829T071034Z-z6m3r8
+verification:
+  migration_replay: "PASS: 110 applied; protected LINE migration excluded exactly once"
+  pgtap: "PASS: 101/101 + 37/37 + 48/48 = 186/186; no not-ok, TODO, NOTESTS, or skipped assertion"
+  real_auth_postgrest: "PASS: 35/35; secrets_logged=false"
+  concurrency: "PASS: 10 business races plus one independent third-observer assertion; 11/11"
+  race_10: "PASS: creditCode=0, releaseCode=0, taskState=unaccepted, snapshotUnchanged=standard_payment, noAutoVoid=0"
+  backend_pid_proof: "PASS: 11 records, every pair distinct; third observer saw two simultaneously active backends"
+  db_lint: "PASS at --fail-on error; warning-only findings retained"
+  query_plans: "PASS: four EXPLAIN ANALYZE BUFFERS captures"
+  secret_scan: "PASS: SECRET_SCAN_CLEAN; grep exit 1 means zero prohibited-pattern matches under the harness contract"
+cleanup:
+  fixture_rows_remaining: 0
+  supabase_stop_exit: 0
+  copy_exit: 0
+  retained_hash_verification_exit: 0
+  runtime_removal_exit: 0
+  exact_runtime_absent: true
+  colima_stopped: true
+artifact_integrity:
+  canonical_non_hidden_files: 19
+  manifest_artifact_entries: 18
+  artifact_hash_mismatches: 0
+  manifest_sha256: b9c27407b20fa77abc6f20ff202e6d712eca4234725726b759513c7df9e66cb9
+  finalized_after_cleanup: true
+  was_burned: false
+burned_suffixes_not_reusable:
+  - 20260829T064120Z-k7p4m9
+  - 20260829T065846Z-v4q7n2
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: C5C_DISPOSABLE_DB_PASS
+boundary:
+  - "This is E2 local disposable acceptance, not E3/shared/staging/production evidence."
+  - "No provider, hosted Supabase, production DB, migration promotion, PR Ready, merge, or deployment authority is implied."
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
