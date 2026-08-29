@@ -21,7 +21,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 (globalThis as unknown as { React: typeof React }).React = React;
 
 import EstimateWizard from "../EstimateWizard";
-import { Step4Estimate } from "./Step4Estimate";
+import { Step4Estimate, attachedPartialPpfPatch } from "./Step4Estimate";
 import { createStep4Bindings, type Step4UpdateStore } from "./step4-bindings";
 import { initialCanonicalDraft, projectStore, applyStorePatch, type WizardStorePatch } from "../bridge/ew-ui1-controller";
 import { initialWizardStore, type WizardStore } from "../wizard-types";
@@ -556,6 +556,90 @@ test("PPF incomplete directs the operator to an ADMINISTRATOR, never to dealer s
     assert.ok(html.includes("管理者にお問い合わせください"), `${rank}: administrator-directed message`);
     assert.equal(html.includes("見積ウィザード設定"), false, `${rank}: must not point at dealer settings`);
   }
+});
+
+// ── 8d. GDA-ESTIMATE-PPF-OFFERING-R1-A — attached partial PPF from coating-only selection ──
+
+const ATTACHED_PARTIAL_PPF_LABEL = "部分PPFを追加";
+
+test("attachedPartialPpfPatch: appends ppf, preserves existing category order, sets only installationMethod=partial", () => {
+  assert.deepEqual(attachedPartialPpfPatch(["coating"]), {
+    categories: ["coating", "ppf"],
+    services: { ppf: { installationMethod: "partial" } },
+  });
+  assert.deepEqual(attachedPartialPpfPatch(["window", "coating"]), {
+    categories: ["window", "coating", "ppf"],
+    services: { ppf: { installationMethod: "partial" } },
+  });
+});
+
+test("attachedPartialPpfPatch: does not duplicate an already-present ppf category", () => {
+  const patch = attachedPartialPpfPatch(["coating", "ppf"]);
+  assert.deepEqual(patch.categories, ["coating", "ppf"]);
+  assert.equal((patch.categories ?? []).filter((c) => c === "ppf").length, 1);
+});
+
+test("coating-only + PPF offered and configured renders the attached partial-PPF action", () => {
+  const html = render(<Step4Estimate api={makeApi(["coating"]).api} shopRank="detailer" screenConfig={SC} />);
+  assert.ok(html.includes(ATTACHED_PARTIAL_PPF_LABEL), "attached action rendered");
+  assert.ok(html.includes("Q² ONE EVO"), "existing coating section content still renders alongside it");
+});
+
+test("PPF not offered: coating-only selection shows no attached action", () => {
+  const offConfig: WizardScreenConfiguration = { ...SC, serviceOfferings: { ...SC.serviceOfferings, ppf: false } };
+  const html = render(<Step4Estimate api={makeApi(["coating"]).api} shopRank="detailer" screenConfig={offConfig} />);
+  assert.equal(html.includes(ATTACHED_PARTIAL_PPF_LABEL), false, "no attached action when PPF is not offered");
+});
+
+test("PPF already selected: no attached action; the existing PPF tab remains authoritative", () => {
+  const html = render(<Step4Estimate api={makeApi(["coating", "ppf"]).api} shopRank="detailer" screenConfig={SC} />);
+  assert.equal(html.includes(ATTACHED_PARTIAL_PPF_LABEL), false, "no attached action once main PPF is already selected");
+});
+
+test("attached action absent for a non-coating selection even when PPF is offered", () => {
+  const html = render(<Step4Estimate api={makeApi(["maintenance"]).api} shopRank="detailer" screenConfig={SC} />);
+  assert.equal(html.includes(ATTACHED_PARTIAL_PPF_LABEL), false, "no attached action without coating selected");
+});
+
+test("PPF offered but prerequisites incomplete: attached action renders disabled with the existing administrator reason", () => {
+  const noPpf: WizardScreenConfiguration = { ...SC, ppfMethods: [], ppfParts: [], ppfTypeGroups: [] };
+  const html = render(<Step4Estimate api={makeApi(["coating"]).api} shopRank="detailer" screenConfig={noPpf} />);
+  assert.ok(html.includes(ATTACHED_PARTIAL_PPF_LABEL), "attached action still rendered, not hidden as opt-out");
+  assert.ok(html.includes("管理者にお問い合わせください"), "existing administrator-directed setup reason shown");
+  assert.equal(html.includes("見積ウィザード設定"), false, "must not mislabel this as dealer opt-out");
+  assert.match(
+    readFileSync(STEP_SRC, "utf8"),
+    /disabled=\{!attachedPartialPpfComplete\}/,
+    "the attached action is disabled, not hidden, when incomplete",
+  );
+});
+
+test("activating the attached action applies exactly one canonical patch through api.updateStore and opens the PPF section", () => {
+  const raw = readFileSync(STEP_SRC, "utf8");
+  assert.match(
+    raw,
+    /api\.updateStore\(attachedPartialPpfPatch\(categories\)\)/,
+    "the enabled action applies the pure canonical patch through the single api.updateStore route",
+  );
+  assert.match(raw, /setActiveSection\(["']ppf["']\)/, "activating the action opens the existing PPF section");
+  assert.match(
+    raw,
+    /onClick=\{attachedPartialPpfComplete \? onAttachPartialPpf : undefined\}/,
+    "the canonical patch is reachable only while PPF prerequisites are complete",
+  );
+});
+
+test("selecting main PPF still exposes both full and partial installation methods", () => {
+  const scWithBothMethods: WizardScreenConfiguration = {
+    ...SC,
+    ppfMethods: [
+      { id: "full", label: "ZZFULLMETHOD" },
+      { id: "partial", label: "ZZPARTIALMETHOD" },
+    ],
+  };
+  const html = render(<Step4Estimate api={makeApi(["ppf"]).api} shopRank="detailer" screenConfig={scWithBothMethods} />);
+  assert.ok(html.includes("ZZFULLMETHOD"), "full method selectable");
+  assert.ok(html.includes("ZZPARTIALMETHOD"), "partial method selectable");
 });
 
 // ── 9. EstimateWizard requires and threads shopRank + screenConfig ─────────────────
