@@ -530,7 +530,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GYEON-ORDER-V3-C5-D — Formal migration promotion
 
-**Status:** GOVERNANCE COMMITTED AND PUSHED / DRAFT PR #37 OPEN / R2 CODEX-DIRECT SOURCE-CANDIDATE EXCEPTION GOVERNANCE AUTHORIZED / FORMAL MIGRATION NOT CREATED / DATABASE NOT CONTACTED.
+**Status:** PR #37 LAST VERIFIED OPEN/DRAFT / R2 CODEX-DIRECT EXCEPTION GOVERNANCE LOCALLY COMMITTED / FORMAL MIGRATION SOURCE CANDIDATE LOCALLY COMMITTED / STATIC CONTRACT TESTS 78/78 PASS / PUSH, DISPOSABLE VERIFICATION, AND DATABASE APPLICATION NOT AUTHORIZED.
 
 **Objective:** Promote the C5-C-accepted guarded SQL into one new timestamped formal migration without changing executable semantics, then prove the exact formal file through a separate fresh disposable replay, populated legacy-data upgrade, and Supabase CLI-native migration path before any shared-environment application.
 
@@ -549,7 +549,7 @@ The result document was excluded from harness implementation and was created lat
 
 **Governance-only authorization:** The owner authorized the four-document C5-D governance candidate only. This authorization does not permit formal SQL creation, Supabase CLI execution, tests, DB/Supabase/Docker/Colima/Auth/PostgREST access, provider connection, Git delivery, PR mutation, environment application, Ready, merge, or deployment.
 
-**Future source-candidate write allowlist — separately authorized later:**
+**Source-candidate write allowlist — later authorized under R2 and committed under R3:**
 
 1. `supabase/migrations/<SUPABASE_CLI_GENERATED_TIMESTAMP>_gyeon_order_v3_contract.sql` (new)
 2. `supabase/migrations/DRAFT_DO_NOT_APPLY/README.md`
@@ -562,11 +562,13 @@ The result document was excluded from harness implementation and was created lat
 
 **Rollback boundary:** Before environment application, discard/revert only the candidate. After any formal application, never rewrite migration history; recover only through a new forward-only compensating migration under a separate owner-approved gate.
 
-**Exit:** First verify and deliver this exact four-document governance candidate. Claude external transmission and formal migration source authoring require a later separate owner authorization. Shared/staging/production application and provider connection remain later gates even after C5-D local acceptance.
+**Current exit boundary:** Verify and record the exact two-document R3 result candidate, then request separate stage/local-commit authorization. Any push remains a later gate. Fresh disposable verification of the formal migration and every shared/staging/production application or provider connection remain separately unauthorized.
 
 **R1 correction:** The original directive incorrectly required the checked-out implementation HEAD to equal the main base commit. That would reject the delivered governance commit containing the directive. R1 replaces this self-defeating condition with two independent checks: Codex supplies the exact accepted execution HEAD/tree at invocation, and the fixed main base commit/tree must remain its ancestor/base boundary. The committed delta from main to execution HEAD must remain exactly the four C5-D governance paths. R1 changes only this directive, this completion plan, and the append-only phase ledger; no SQL, source, test, runtime, database, provider, or Claude execution is included.
 
 **R2 owner-authorized Codex-direct exception:** The owner explicitly authorized MacBook Codex to create the one C5-D uncommitted source candidate directly after repeated external-Claude permission failures. This is a narrow exception for C5-D source-candidate authoring only, chosen to prevent further Claude credit and operator-time waste. It does not alter the four-path source allowlist, the required `supabase --help` / `supabase migration --help` / `supabase migration new gyeon_order_v3_contract` sequence, the exact parity contract, the static focused-test gate, or any protected-path rule. It does not authorize stage, commit, push, PR mutation, database/Supabase runtime access, provider connection, shared/staging/production application, Ready, merge, deployment, or the later fresh disposable verification. The external-Claude run that reached the directive stopped because its Bash permission mode denied the required Supabase CLI commands; it changed no files. Later launcher attempts were rejected before Claude execution or returned no network grant. No further Claude invocation is permitted for this source-candidate gate.
+
+**R3 source-candidate result:** After separate owner approvals for direct source authoring and then exact four-path stage/local commit, MacBook Codex created `supabase/migrations/20260829101726_gyeon_order_v3_contract.sql` through the discovered Supabase CLI migration command, kept the accepted DRAFT immutable at SHA-256 `d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73`, and produced formal SHA-256 `bd1a7742725c3f2a7bb42a3dbe5889b6e86bf6d213a0a550e6dd48f460d6d91b`. Deterministic expected-formal and executable-byte parity checks passed, exactly one formal candidate exists, the focused migration/RPC source-contract suite passed 78/78, and `git diff --check` passed. The exact four-path source commit is `c7806331dcbb035448704e09c625cd4870681142` with tree `0fc735bd9f04d6bc54664e5874faa08e82cbdb60`. This is static source-candidate acceptance only: no disposable database replay, populated legacy upgrade, CLI-native migration-runner proof, provider connection, push, PR mutation, shared/staging/production application, Ready, merge, or deployment is authorized or completed.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 

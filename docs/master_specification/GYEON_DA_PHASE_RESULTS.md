@@ -2270,3 +2270,61 @@ boundary:
 decision: GYEON_ORDER_V3_C5_D_R2_CODEX_DIRECT_EXCEPTION_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SOURCE_CANDIDATE_EXECUTION_CONFIRMATION"
 ```
+
+## GYEON-ORDER-V3-C5-D-R3 — Formal migration source-candidate static acceptance
+
+```yaml
+phase: GYEON_ORDER_V3_C5_D_R3_FORMAL_MIGRATION_SOURCE_CANDIDATE
+status: SOURCE_CANDIDATE_LOCALLY_COMMITTED_STATIC_GATES_PASS_RUNTIME_NOT_RUN
+date: 2026-08-29
+append_only: true
+result_id: GYEON_ORDER_V3_C5_D_SOURCE_CANDIDATE_RESULT_V1
+authorization: "The owner first authorized the bounded MacBook Codex direct source-candidate exception and later separately authorized stage and local commit of exactly the four C5-D source paths. Push, PR mutation, database/runtime work, provider access, environment application, Ready, merge, and deployment were not authorized."
+repository:
+  branch: agent/gyeon-order-v3-c5d-formal-migration-promotion
+  exception_governance_commit: 049e02fe2d68f3eaa4a9612c6018dc63630ad1be
+  exception_governance_tree: d7c66fafbd81f5b1fb80f0ca98dd6b0cf6b44315
+  source_commit: c7806331dcbb035448704e09c625cd4870681142
+  source_tree: 0fc735bd9f04d6bc54664e5874faa08e82cbdb60
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/37
+  pull_request_state_at_last_verified_governance_gate: OPEN/Draft
+  pushed_in_this_gate: false
+source_write_set:
+  - supabase/migrations/20260829101726_gyeon_order_v3_contract.sql
+  - supabase/migrations/DRAFT_DO_NOT_APPLY/README.md
+  - src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts
+  - src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts
+source_identity:
+  draft_path: supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql
+  draft_sha256: d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73
+  formal_path: supabase/migrations/20260829101726_gyeon_order_v3_contract.sql
+  formal_sha256: bd1a7742725c3f2a7bb42a3dbe5889b6e86bf6d213a0a550e6dd48f460d6d91b
+  formal_candidate_count: 1
+supabase_cli_sequence:
+  - "SUPABASE_TELEMETRY_DISABLED=1 supabase --help"
+  - "SUPABASE_TELEMETRY_DISABLED=1 supabase migration --help"
+  - "SUPABASE_TELEMETRY_DISABLED=1 supabase migration new gyeon_order_v3_contract"
+static_verification:
+  deterministic_expected_formal: PASS
+  executable_byte_parity: PASS
+  draft_immutable_and_terminal_rollback: PASS
+  exact_one_formal_candidate: PASS
+  focused_test_command: "node --import /Users/atsushinishikawa/dealeros/node_modules/tsx/dist/loader.mjs --test src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts"
+  tests: 78
+  passed: 78
+  failed: 0
+  skipped: 0
+  todo: 0
+  diff_check: PASS
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "This result accepts only the locally committed static source candidate; it is not disposable-database, shared, staging, or production evidence."
+  - "No DB/Supabase runtime, Docker, Colima, Auth, PostgREST, provider, hosted project, push, PR mutation, environment application, Ready, merge, or deployment action occurred."
+  - "The mandatory fresh formal replay, populated legacy-data upgrade, CLI-native migration runner, pgTAP, real Auth/PostgREST, separate-connection concurrency, advisor, query-plan, secret, cleanup, and retained-evidence gates remain outstanding."
+decision: GYEON_ORDER_V3_C5_D_SOURCE_CANDIDATE_STATIC_PASS_LOCAL_COMMIT
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
