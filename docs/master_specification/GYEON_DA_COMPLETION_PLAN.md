@@ -446,7 +446,7 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 
 ### GYEON-ORDER-V3-C5-C — Disposable-database acceptance design and execution gates
 
-**Status:** R2 SOURCE PUSHED / R2-BOUND READ-ONLY DIAGNOSIS GOVERNANCE CANDIDATE / NOT EXECUTED. Harness implementation, disposable execution, Git delivery, and PR mutation remain unauthorized.
+**Status:** R2-BOUND READ-ONLY DIAGNOSIS ACCEPTED / HARNESS IMPLEMENTATION GOVERNANCE CANDIDATE / NOT IMPLEMENTED. Harness execution, disposable execution, Git delivery, and PR mutation remain unauthorized.
 
 **Objective:** Prove the pushed C5-B database source candidate on one fresh loopback-only PostgreSQL 17 disposable Supabase runtime, including real signed Auth/PostgREST requests, exact RLS/grant behavior, prepare/finalize evidence consumption, server-owned qualification, durable compensation, warehouse-task release timing, and genuine separate-connection races.
 
@@ -461,22 +461,24 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 - Source verification: focused contract tests `77/77` PASS and `git diff --check` PASS
 - Known environment limitation: full-project typecheck is not an acceptance signal in the isolated worktree because repository dependencies and archived UI type roots are unresolved
 
-**Current C5-C R3 governance write allowlist — exactly four paths:**
+**Current C5-C R4 governance write allowlist — exactly four paths:**
 
 - `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 - `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 - `docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md`
-- `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS.md` (new)
+- `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_HARNESS_IMPLEMENTATION.md` (new)
 
-**Current diagnosis boundary:**
+**Accepted R2-bound diagnosis:**
 
-- Preserve both earlier C5-C diagnosis directives byte-for-byte as historical evidence. Neither is current execution authority for the R2 source.
-- One new R2-bound read-only diagnosis must confirm that the source is ready for harness authoring and that the nine-path candidate allowlist is sufficient.
-- The diagnosis may inspect only its committed literal read scope and may not write files, run tests, start Docker/Colima/Supabase, connect to a database, derive/apply SQL, create fixtures, run pgTAP/Auth/concurrency checks, or mutate Git/PR state.
-- Harness implementation requires a later explicit owner authorization and a `READY_FOR_HARNESS_IMPLEMENTATION` result accepted by MacBook Codex.
-- `CHANGES_REQUIRED_SOURCE`, `CHANGES_REQUIRED_PLAN`, or `BLOCKED_READ_SCOPE` stops harness authoring and returns to a separate governance gate.
+- Directive: `GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_V1`.
+- Accepted result: `GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_RESULT_V1` — `READY_FOR_HARNESS_IMPLEMENTATION`.
+- Execution HEAD/tree: `960835a58a01ff249dcc0e99c72b5542b003042e` / `2b09af16fafa1e2b5ba0c6da30f507dced0fb0b1`.
+- The first terminal-Claude invocation is not acceptance evidence because it did not return the complete result and disclosed one prohibited `gh pr view` call. The corrected invocation returned the complete result with zero write, test, database, network, Git, or PR action.
+- MacBook Codex independently confirmed the exact R2 source hashes, clean worktree/index, protected blobs, payment-contract snapshot structure, inventory-reservation lock/consume-before-task ordering, and stale C4 RPC references.
+- Claude's phrase “17-file manifest” was a counting error. The canonical plan lists exactly 19 required evidence artifacts; the implementation directive fixes the count without changing the evidence contract.
+- The diagnosis found no required C5-B source repair, owner decision, plan expansion, or write-allowlist change before harness authoring.
 
-**Future harness implementation candidate — exactly nine new paths:**
+**Future harness implementation allowlist — exactly nine new paths:**
 
 1. `scripts/e2e/gyeon-order-v3-c5c/config.toml`
 2. `scripts/e2e/gyeon-order-v3-c5c/setup.sh`
@@ -489,6 +491,14 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 9. `scripts/e2e/gyeon-order-v3-c5c/cleanup.sh`
 
 The result document is excluded from harness implementation. It belongs to the later disposable-execution result-recording gate.
+
+**Harness implementation boundary:**
+
+- The committed implementation directive is `GYEON_ORDER_V3_C5_C_HARNESS_IMPLEMENTATION_V1`.
+- A later explicit owner authorization, exact accepted execution HEAD/tree, non-triggering PR routing comment, and explicit external-transmission authorization are required before Claude may create the nine-path candidate.
+- The implementation phase may run only `bash -n`, `node --check`, the directive's untracked-aware `git diff --no-index --check /dev/null` loop, and the exact stale-identifier search.
+- It may not start or contact Supabase, Docker, Colima, PostgreSQL, Auth, PostgREST, a hosted project, or any provider; it may not execute setup, pgTAP, SQL, real-Auth, concurrency, evidence capture, or cleanup.
+- Static acceptance, harness stage/commit, harness push, disposable-runtime execution, result recording, and any database application remain separate later gates.
 
 **Required later evidence:**
 

@@ -1992,3 +1992,75 @@ scope_confirmation:
 decision: GYEON_ORDER_V3_C5_C_R3_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GYEON-ORDER-V3-C5-C-R4 — R2-bound diagnosis accepted; harness implementation governance candidate
+
+```yaml
+phase: GYEON_ORDER_V3_C5_C_R4_HARNESS_IMPLEMENTATION_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_HARNESS_NOT_IMPLEMENTED
+date: 2026-08-29
+append_only: true
+objective: "Record the accepted R2-bound harness-readiness diagnosis and define one exact nine-path, uncommitted C5-C harness implementation candidate with static verification only."
+authorization: "The owner explicitly authorized exactly four uncommitted governance-document changes only. Stage, commit, push, PR mutation, implementation execution, Claude external transmission, tests beyond later static syntax checks, DB, Supabase, Docker, Colima, Auth, PostgREST, provider, Ready, merge, and deployment remain separate gates."
+predecessor:
+  branch: agent/gyeon-order-v3-c5-external-authority-design
+  governance_head: 960835a58a01ff249dcc0e99c72b5542b003042e
+  governance_tree: 2b09af16fafa1e2b5ba0c6da30f507dced0fb0b1
+  source_commit: 3403918d0166c30c44abb95bad1c8a7335877cab
+  source_tree: 1d1617a49bc1dd1e4b21515fec4940c3fdc4f827
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/36
+  pull_request_state: OPEN/Draft
+  sql_sha256: d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73
+  rpc_test_sha256: dbc7be4c08195c944eb00a0c28dc839736340b7c0df3e31ad617bdfa957a4159
+  migration_test_sha256: c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5
+  focused_source_tests: PASS_77_OF_77
+diagnosis:
+  directive_id: GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_V1
+  result_id: GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_RESULT_V1
+  accepted_verdict: READY_FOR_HARNESS_IMPLEMENTATION
+  first_invocation: "REJECTED_AS_ACCEPTANCE_EVIDENCE: complete result was not returned and one prohibited gh pr view call was disclosed. It caused no repository or PR mutation."
+  corrected_invocation: "ACCEPTED: complete required result returned; zero file write, test, DB/Supabase/Docker/Colima/Auth/PostgREST, network, Git, or PR action."
+codex_verification:
+  - "Branch/HEAD/tree, clean worktree/index, three R2 source hashes, and four protected blobs matched exactly."
+  - "Payment-contract snapshot fields/checks and inventory-reservation exact lock/consume-before-task ordering are present in the allowed SQL and RPC-contract test."
+  - "C4 schema/business/real-Auth content contains removed table/RPC names and is SUPERSEDED_PROHIBITED as content; only patterns may be reused."
+  - "The nine-path harness allowlist is sufficient; no C5-B source repair, owner contract decision, or plan expansion is required before authoring."
+  - "The diagnosis phrase 17-file manifest was a counting error. The canonical plan section 8 enumerates exactly 19 evidence artifacts; the implementation directive fixes that count."
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_HARNESS_IMPLEMENTATION.md
+future_harness_write_allowlist:
+  - scripts/e2e/gyeon-order-v3-c5c/config.toml
+  - scripts/e2e/gyeon-order-v3-c5c/setup.sh
+  - scripts/e2e/gyeon-order-v3-c5c/schema-rls.test.sql
+  - scripts/e2e/gyeon-order-v3-c5c/qualification-evidence.test.sql
+  - scripts/e2e/gyeon-order-v3-c5c/prepare-finalize-warehouse.test.sql
+  - scripts/e2e/gyeon-order-v3-c5c/real-auth.mjs
+  - scripts/e2e/gyeon-order-v3-c5c/concurrency.mjs
+  - scripts/e2e/gyeon-order-v3-c5c/capture-evidence.sh
+  - scripts/e2e/gyeon-order-v3-c5c/cleanup.sh
+future_static_verification_only:
+  - "bash -n on setup.sh, capture-evidence.sh, and cleanup.sh"
+  - "node --check on real-auth.mjs and concurrency.mjs"
+  - "untracked-aware git diff --no-index --check /dev/null loop on the nine new paths; expected clean-file status 1 with empty output"
+  - "zero-match search for the three superseded C4 identifiers"
+implementation_contract:
+  directive_id: GYEON_ORDER_V3_C5_C_HARNESS_IMPLEMENTATION_V1
+  required_result: GYEON_ORDER_V3_C5_C_HARNESS_IMPLEMENTATION_RESULT_V1
+  accepted_candidate_verdict: PASS_HARNESS_CANDIDATE
+  stop_verdicts:
+    - CHANGES_REQUIRED
+    - BLOCKED_ALLOWLIST
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "Only the exact four governance paths may change in this candidate."
+  - "No harness path, source, C4 evidence, result document, Git index/commit/remote, PR, Claude, runtime, database, Supabase, Docker, Colima, Auth, PostgREST, provider, inventory implementation, Ready, merge, or deployment state changes."
+decision: GYEON_ORDER_V3_C5_C_R4_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_CONTRACTS_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```

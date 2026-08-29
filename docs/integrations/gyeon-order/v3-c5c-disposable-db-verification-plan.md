@@ -2,7 +2,7 @@
 
 ## 1. 文書情報
 
-- 計画ID: `GYEON-ORDER-V3-C5-C-R3-R2-BOUND-DISPOSABLE-DB-ACCEPTANCE-PLAN`
+- 計画ID: `GYEON-ORDER-V3-C5-C-R4-HARNESS-IMPLEMENTATION-GOVERNANCE-PLAN`
 - 対象branch: `agent/gyeon-order-v3-c5-external-authority-design`
 - 対象commit: `3403918d0166c30c44abb95bad1c8a7335877cab`
 - 対象tree: `1d1617a49bc1dd1e4b21515fec4940c3fdc4f827`
@@ -12,9 +12,9 @@
 - migration契約test SHA-256: `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
 - SQL状態: `DRAFT_DO_NOT_APPLY / terminal ROLLBACK`
 - 更新日: 2026-08-29
-- 現在状態: `R2_SOURCE_PUSHED / R2_BOUND_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE / NOT_EXECUTED`
+- 現在状態: `R2_BOUND_DIAGNOSIS_ACCEPTED / HARNESS_IMPLEMENTATION_GOVERNANCE_CANDIDATE / HARNESS_NOT_IMPLEMENTED / DB_NOT_EXECUTED`
 
-この文書はDB実行権限ではない。C5-B R2 sourceはcommit `3403918d0166c30c44abb95bad1c8a7335877cab`としてPR #36へ通常push済みで、focused source-contract testは`77/77` PASSである。次はR2 sourceとC4 harnessを対象にした1回の読取専用診断だけを行い、その結果が`READY_FOR_HARNESS_IMPLEMENTATION`の場合に限り、検証資産実装を別承認する。読取専用診断、検証資産実装、静的受入、使い捨てDB実行、結果記録、commit、push、migration昇格、環境適用を別ゲートとして扱う。
+この文書はDB実行権限ではない。C5-B R2 sourceはcommit `3403918d0166c30c44abb95bad1c8a7335877cab`としてPR #36へ通常push済みで、focused source-contract testは`77/77` PASSである。R2-bound読取専用診断`GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_RESULT_V1`は、MacBook Codexの独立確認後に`READY_FOR_HARNESS_IMPLEMENTATION`として受理された。次は正確な9パスの未コミットharness候補作成と静的構文確認だけを別承認する。harness実装、静的受入、Git delivery、使い捨てDB実行、結果記録、migration昇格、環境適用を別ゲートとして扱う。
 
 ## 2. 結論
 
@@ -414,9 +414,18 @@ Office AZ inventory実装、provider仕様、qualification履歴正本、保護�
 - token、password、secret key、raw provider payloadのログ出力。
 - allowlist外source defectまたはOffice AZ inventory実装要求。
 
-## 11. R2-bound読取専用診断の確認項目
+## 11. R2-bound読取専用診断の受入記録
 
-Claudeは実装・テスト前に、R2 sourceとC4 harnessを読取専用で調べ、次を返す。A3-bound診断結果をR2 sourceへ流用してはならない。
+受理した診断:
+
+- Directive: `GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_V1`
+- Result: `GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_RESULT_V1`
+- Verdict: `READY_FOR_HARNESS_IMPLEMENTATION`
+- Execution HEAD/tree: `960835a58a01ff249dcc0e99c72b5542b003042e` / `2b09af16fafa1e2b5ba0c6da30f507dced0fb0b1`
+- Source hashes: 本計画§1の3件と完全一致。
+- Scope: zero write、zero test、zero DB/Supabase/Docker/Colima/Auth/PostgREST、zero network、zero Git/PR mutation。
+
+診断とCodex独立確認で次を確定した。
 
 1. C5-B object／function／signature／lock順序の完全一覧。
 2. C4 harnessで再利用できる構造と、変更せず参照だけにすべき部分。
@@ -428,11 +437,13 @@ Claudeは実装・テスト前に、R2 sourceとC4 harnessを読取専用で調�
 8. 最初の成功したowner finalizeでserver-owned payment-contract snapshotを保存し、standard-payment／credit-account modeとcreditの場合のexact terms versionを拘束できるか。editで保持され、missing snapshotがfail-closedか。
 9. finalize後のcredit activationがstandard-payment snapshotへ遡及せず、自動voidなしでoriginal payment authorityを維持する一方、credit snapshotがexact terms versionをrelease時に再検証するか。
 10. `inventory_reservation` evidenceのexact unique validation、row lock、task insert前のatomic one-time consumptionがrelease transaction内でfail-closedか。backorderが無関係なevidenceを消費しないか。
-11. C5-C実行前に追加source repair、新しいowner契約判断、またはharness計画修正が必要かの判定。
+11. C5-C実行前に追加source repair、新しいowner契約判断、またはharness計画修正は不要。
+12. C4の`schema-rls.test.sql`、`business-contract.test.sql`、`real-auth.mjs`内の旧RPC名・旧table名は`SUPERSEDED_PROHIBITED`で、構造／idiomだけを新9パスへ移植する。
+13. 診断本文の「17-file manifest」は数え間違いであり、本計画§8の正本は19ファイルである。実装指示書は19ファイルを固定する。
 
-## 12. 後続のharness実装候補allowlist
+## 12. harness実装allowlist
 
-R2-bound読取専用診断で過不足を確認するまで実装しない。harness source実装候補は次の9パスだけである。結果文書は実DB実行後の別ゲートで作成するため、この実装allowlistへ含めない。
+R2-bound読取専用診断で過不足を確認済みである。harness source実装候補は次の9パスだけである。結果文書は実DB実行後の別ゲートで作成するため、この実装allowlistへ含めない。
 
 1. `scripts/e2e/gyeon-order-v3-c5c/config.toml`
 2. `scripts/e2e/gyeon-order-v3-c5c/setup.sh`
@@ -446,14 +457,16 @@ R2-bound読取専用診断で過不足を確認するまで実装しない。har
 
 既存C4資産はaccepted evidenceとして変更しない。C5-C資産から参照・比較はできるが、コピー元の契約を黙って変更しない。
 
+実装契約は`GYEON_ORDER_V3_C5_C_HARNESS_IMPLEMENTATION_V1`とする。実装時に許可する実行は、3本のshell scriptへの`bash -n`、2本の`.mjs`への`node --check`、未stage新規9パスを対象にした`git diff --no-index --check /dev/null` loop、旧C4 identifierのzero-match確認だけである。setup、pgTAP、SQL、Supabase CLI、Docker、Colima、psql、Auth、PostgREST、concurrency、evidence capture、cleanupは実行しない。
+
 ## 13. 次のゲート
 
-1. completion plan、ledger、更新済み本計画、新R2-bound読取専用診断指示書から成る正確な4文書の未コミット差分をCodexが検証する。
+1. completion plan、ledger、更新済み本計画、新harness実装指示書から成る正確な4文書の未コミット差分をCodexが検証する。
 2. ownerが正確な4文書のstage／local commitを別途承認する。
 3. ownerが通常pushを別途承認する。
-4. CodexがPR #36へ非起動のR2-bound読取専用診断指示コメントを投稿し、ownerが非公開文書のClaude Code外部送信を別途明示承認する。
-5. Claudeが`GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_RESULT_V1`を返し、Codexが独立受入する。
-6. 診断結果が`READY_FOR_HARNESS_IMPLEMENTATION`の場合だけ、9パスのharness実装を別承認する。`CHANGES_REQUIRED_SOURCE`または`CHANGES_REQUIRED_PLAN`なら実装せず別ガバナンスへ戻る。
-7. harness静的受入、disposable DB実行、結果文書作成、Git deliveryをそれぞれ別承認にする。
+4. CodexがPR #36へ非起動のharness実装routing commentを投稿する。
+5. ownerが非公開実装指示書のClaude Code外部送信と、9パス限定の未コミット候補作成・静的確認を別途明示承認する。
+6. Claudeが`GYEON_ORDER_V3_C5_C_HARNESS_IMPLEMENTATION_RESULT_V1`を返し、Codexが9パス、mode、静的結果、RLS/Auth/concurrency/evidence/cleanup契約を独立受入する。
+7. harness stage／commit、通常push、disposable DB実行、結果文書作成、結果Git deliveryをそれぞれ別承認にする。
 
 C5-C合格後も、正式migration昇格、Dev-Next／production適用、provider接続、Ready、merge、deployは未承認のままである。
