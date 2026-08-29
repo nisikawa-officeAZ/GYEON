@@ -1,0 +1,63 @@
+# GYEON_ORDER_V3_C5D_DISPOSABLE_TEMPLATE
+# Shared by all three C5-D lanes (fresh/populated/runner); setup.sh renders
+# one instance per lane with lane-distinct project_id and ports.
+# This file is copied into a fresh disposable runtime outside the repository
+# worktree. It is never used as the repository's root Supabase configuration,
+# never linked to a hosted project, and never applied against a shared or
+# production database.
+
+project_id = "__C5D_PROJECT_ID__"
+
+[api]
+enabled = true
+port = __C5D_API_PORT__
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = __C5D_DB_PORT__
+shadow_port = __C5D_SHADOW_PORT__
+major_version = 17
+
+[db.pooler]
+enabled = false
+
+[db.seed]
+enabled = false
+
+[realtime]
+enabled = false
+
+[studio]
+enabled = true
+port = __C5D_STUDIO_PORT__
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+port = __C5D_INBUCKET_PORT__
+smtp_port = __C5D_SMTP_PORT__
+pop3_port = __C5D_POP3_PORT__
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:__C5D_APP_PORT__"
+additional_redirect_urls = ["http://127.0.0.1:__C5D_APP_PORT__"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false
