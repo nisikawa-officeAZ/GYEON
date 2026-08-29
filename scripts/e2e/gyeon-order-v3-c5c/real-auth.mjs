@@ -230,7 +230,7 @@ for (const table of [
   'gyeon_order_qualification_snapshots', 'gyeon_order_external_compensation_outbox',
   'gyeon_order_warehouse_tasks',
 ]) {
-  const readAttempt = await request(`/rest/v1/${table}?select=id`, { token: users.owner.token });
+  const readAttempt = await request(`/rest/v1/${table}?select=*`, { token: users.owner.token });
   record(`authenticated cannot read ${table} directly`, [401, 403].includes(readAttempt.status), `HTTP ${readAttempt.status}`);
   const writeAttempt = await request(`/rest/v1/${table}`, { method: 'POST', token: users.owner.token, body: {}, prefer: 'return=minimal' });
   record(`authenticated cannot write ${table} directly`, [401, 403, 400].includes(writeAttempt.status), `HTTP ${writeAttempt.status}`);
