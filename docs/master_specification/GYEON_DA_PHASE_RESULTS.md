@@ -2389,3 +2389,114 @@ scope_confirmation:
 decision: GYEON_ORDER_V3_C5_D_R4_HARNESS_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GYEON-ORDER-V3-C5-D-R5 — Formal migration disposable PASS and PR #37 merge
+
+```yaml
+phase: GYEON_ORDER_V3_C5_D_R5_FORMAL_MIGRATION_DISPOSABLE_AND_MERGE
+status: C5D_FORMAL_MIGRATION_DISPOSABLE_PASS_PR37_SQUASH_MERGED_PRODUCTION_NOT_APPLIED
+date: 2026-08-29
+append_only: true
+result_id: GYEON_ORDER_V3_C5_D_FORMAL_MIGRATION_DISPOSABLE_RESULT_V1
+authorization: "The owner separately authorized the fresh C5-D disposable runtime, result publication, PR Ready conversion, and later squash merge. Production migration application was never included."
+source:
+  branch: agent/gyeon-order-v3-c5d-formal-migration-promotion
+  execution_head: a9d5d222fd1d4c726f91f3ea81d1d10e4adb5dc8
+  execution_tree: e25590d276237f643e9b1408e6c47d192388de07
+  formal_path: supabase/migrations/20260829101726_gyeon_order_v3_contract.sql
+  formal_sha256: bd1a7742725c3f2a7bb42a3dbe5889b6e86bf6d213a0a550e6dd48f460d6d91b
+runtime:
+  suffix: 20260829T121449Z-eae07b
+  verdict: C5D_FORMAL_MIGRATION_DISPOSABLE_PASS
+  manifest: /Users/atsushinishikawa/Documents/Codex/runtime/gyeon-order-v3-c5d-evidence/gyeon-order-v3-c5d.20260829T121449Z-eae07b/manifest.json
+  manifest_sha256: 2271abb4a20c1c29a9091f009b87fd7dfe7f50504ea8d3947d78ce432f90b753
+  artifact_hashes: 58/58_PASS
+  pgtap: 186/186_PASS
+  populated_upgrade: 26_PASS
+  real_auth_postgrest: 35/35_PASS
+  separate_connection_concurrency: 11/11_PASS
+  secret_scan: CLEAN
+  fixtures_after_cleanup: ZERO
+  runtime_removed: true
+  nonblocking_lint_warnings: 4_OLDER_MIGRATION_WARNINGS
+github:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/37
+  result_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/37#issuecomment-5462383062
+  state: MERGED
+  merged_at: 2026-08-29T12:22:55Z
+  main_commit: 48de96bbf5518be3fd7fd8a3964dfd7975716165
+  main_tree: e25590d276237f643e9b1408e6c47d192388de07
+boundary:
+  - "No shared, staging, or production migration was applied."
+  - "No external provider was connected."
+  - "Production apply remains a separate owner-approved gate."
+decision: GYEON_ORDER_V3_C5_D_R5_ACCEPTED_MERGED_PRODUCTION_UNCHANGED
+next: "READ_ONLY_PRODUCTION_MIGRATION_PREFLIGHT"
+```
+
+## GYEON-ORDER-V3-C5-E1 — Production migration ledger reconciliation governance candidate
+
+```yaml
+phase: GYEON_ORDER_V3_C5_E1_PRODUCTION_MIGRATION_LEDGER_RECONCILIATION
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_PRODUCTION_UNCHANGED_APPLY_NO_GO
+date: 2026-08-29
+append_only: true
+plan_id: GYEON_ORDER_V3_C5_E1_PRODUCTION_MIGRATION_LEDGER_RECONCILIATION_PLAN_V1
+authorization: "The owner authorized read-only production preflight and then C5-E1 ledger-reconciliation design. This permits exactly three governance-document changes. Stage, commit, push, PR mutation, script/harness creation, login/link, dry-run, migration apply, SQL mutation, provider, deployment, and production smoke remain separate gates."
+source_authority:
+  github_main_commit: 48de96bbf5518be3fd7fd8a3964dfd7975716165
+  github_main_tree: e25590d276237f643e9b1408e6c47d192388de07
+  audit_worktree_head: a9d5d222fd1d4c726f91f3ea81d1d10e4adb5dc8
+  audit_worktree_tree: e25590d276237f643e9b1408e6c47d192388de07
+  audit_source_worktree_clean_before_governance_edits: true
+production:
+  project_name: DealerOS-Prod
+  project_ref: dmvyaykhibmphrmekjbb
+  status: ACTIVE_HEALTHY
+  postgres: 17.6.1.147
+  migration_count: 104
+  latest_migration: 20260824151255
+  product_orders_rows: 0
+  product_order_items_rows: 0
+main_migration_count: 111
+missing_on_production:
+  excluded_dev_or_frozen:
+    - 20260731115631_gyeon_dealer_provisioning
+    - 20260801000649_gyeon_provisioning_pin_function_search_path
+    - 20260801110110_line_link_tokens
+  production_candidates:
+    - 20260825151059_persist_existing_vehicle_confirmed_body_size
+    - 20260826010000_ppf_r1_atomic_price_persistence
+    - 20260826143000_window_film_v1_atomic_persistence
+    - 20260829101726_gyeon_order_v3_contract
+verdict: NO_GO_MIGRATION_LEDGER_DRIFT
+selected_design:
+  - "Create a fresh promotion bundle outside the Git worktree."
+  - "Represent the 104 production-applied versions as zero-byte version/name placeholders without copying protected SQL content."
+  - "Include byte-identical SQL only for the exact four production candidates and hard-gate their GitHub main hashes."
+  - "Omit the two Dev-only provisioning versions and the protected frozen LINE version."
+  - "Prove a production-mutation-free dry-run that lists exactly the four candidates in order before any apply approval."
+prohibitions:
+  - linked_target
+  - include_all
+  - include_seed
+  - migration_repair
+  - mcp_production_write
+  - dashboard_sql_apply
+  - direct_psql_apply
+  - protected_content_access
+write_allowlist:
+  - docs/integrations/gyeon-order/v3-c5e1-production-migration-ledger-reconciliation-plan.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "No production or shared database mutation occurred."
+  - "No Git stage, commit, push, PR mutation, login/link, dry-run, provider, or deployment occurred."
+decision: GYEON_ORDER_V3_C5_E1_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
