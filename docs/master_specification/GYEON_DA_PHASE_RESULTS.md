@@ -2389,3 +2389,49 @@ scope_confirmation:
 decision: GYEON_ORDER_V3_C5_D_R4_HARNESS_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-2A-OCR-R1 — Estimate Wizard single-scan OCR diagnosis governance
+
+```yaml
+phase: GDA_2A_ESTIMATE_WIZARD_OCR_UNIFIED_R1_GOVERNANCE
+status: GOVERNANCE_DELIVERY_AND_DRAFT_PR_AUTHORIZED_READ_ONLY_DIAGNOSIS_PENDING
+date: 2026-08-29
+append_only: true
+directive_id: GDA_ESTIMATE_WIZARD_OCR_UNIFIED_R1_READ_ONLY_DIAGNOSIS_V1
+authorization: "The owner explicitly authorized exactly three governance-document changes, their exact stage/local commit, normal push, and creation of one OCR-specific coordination Draft PR. Source/test edits, test execution, source commit/push, PR instruction comment, Claude external transmission after governance, DB/Supabase/provider access, Preview, Ready, merge, deployment, and production mutation remain separate gates."
+priority_reason: "An authenticated production walkthrough plus the owner's prior real OCR test established a GYEON DA intake blocker: Step-1 OCR reflects customer data but the same reviewed result does not populate Step-2 vehicle data, forcing duplicate scan/manual entry before the September 6 guided demonstration."
+base:
+  repository: nisikawa-officeAZ/GYEON
+  branch: main
+  commit: 48de96bbf5518be3fd7fd8a3964dfd7975716165
+  tree: e25590d276237f643e9b1408e6c47d192388de07
+candidate:
+  branch: agent/estimate-wizard-ocr-unified-r1
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-ocr-r1
+  coordination_pr: PENDING_CREATION_AFTER_EXACT_GOVERNANCE_PUSH
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_UNIFIED_R1_READ_ONLY_DIAGNOSIS.md
+owner_contract:
+  - "One reviewed vehicle-registration OCR result reflects customer and vehicle draft fields; a second scan is not required."
+  - "OCR reflection is draft-only; no customer, vehicle, estimate, OCR record, file, or DB write occurs before explicit save."
+  - "Blank OCR values preserve operator-entered values."
+  - "3M uses OCR dimensions and exactly SS/S/M/ML/L/LL/XL; recommendation and confirmed size remain distinct."
+  - "Step-2 rescan reuses one typed mapper; existing identity, duplicate, pricing, discount, save, PDF, PPF, coating, auth, and tenant contracts remain frozen."
+read_only_next_gate:
+  result_id: GDA_ESTIMATE_WIZARD_OCR_UNIFIED_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  execution: "Only after the exact governance commit is pushed, the Draft PR exists, and MacBook Codex publishes the newest matching non-triggering Claude-targeted read-only instruction."
+  implementation_authorized: false
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "This candidate changes exactly three governance documents and no source, test, dependency, lockfile, config, migration, database, provider, UI, or protected content."
+  - "GYEON Order C5-D R4 remains frozen and unchanged while this direct GYEON DA blocker takes priority."
+  - "The earlier terminal-Claude attempt stopped before diagnosis or edit because this phase did not yet exist; its source diff was zero."
+decision: GDA_2A_OCR_R1_GOVERNANCE_READY_FOR_EXACT_DELIVERY
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_STAGE_COMMIT_PUSH_AND_CREATE_DRAFT_PR_AS_AUTHORIZED"
+```
