@@ -440,6 +440,7 @@ select public.finalize_gyeon_order_v3_owner_submit_rpc('${dealerId}','${ownerId}
   const cleanDenial = finalOrder === 'draft:none' && compCount === '1';
   const ok = proven && creditRace.code === 0 && finalizeRace.code === 0 && (cleanSuccess || cleanDenial);
   record('race 9: new-authorization-vs-credit-activation race is always either a clean success or exactly one compensation intent', ok, { finalOrder, compCount });
+  await query(`delete from public.gyeon_dealer_credit_terms where dealer_id = '${dealerId}'`, 'r9-credit-cleanup');
 }
 
 // ===========================================================================
@@ -482,7 +483,13 @@ select public.release_gyeon_order_v3_warehouse_rpc('${orderId}','${ownerId}','${
   const snapshotUnchanged = await query(`select payment_contract_kind from public.product_orders where id='${orderId}'`, 'race10-snapshot');
   const noAutoVoid = await query(`select count(*) from public.gyeon_order_external_compensation_outbox where evidence_id='${cardEvidenceId}'`, 'race10-outbox');
   const ok = proven && creditRace.code === 0 && releaseRace.code === 0 && taskState === 'unaccepted' && snapshotUnchanged === 'standard_payment' && noAutoVoid === '0';
-  record('race 10: warehouse release completes under the frozen standard-payment contract despite a concurrent credit-terms activation', ok, { taskState, snapshotUnchanged, noAutoVoid });
+  record('race 10: warehouse release completes under the frozen standard-payment contract despite a concurrent credit-terms activation', ok, {
+    creditCode: creditRace.code,
+    releaseCode: releaseRace.code,
+    taskState,
+    snapshotUnchanged,
+    noAutoVoid,
+  });
 }
 
 // ---------------------------------------------------------------------------
