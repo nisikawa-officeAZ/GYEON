@@ -5,9 +5,11 @@
 // simulation is never accepted as a substitute for this proof.
 
 import { randomUUID } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 
 const CONFIRM = 'I_UNDERSTAND_GYEON_ORDER_V3_C5C_IS_DISPOSABLE';
 const apiUrl = process.env.C5C_API_URL;
+const dbUrl = process.env.C5C_DB_URL;
 const anonKey = process.env.C5C_ANON_KEY;
 const serviceKey = process.env.C5C_SERVICE_ROLE_KEY;
 
@@ -16,10 +18,13 @@ function fail(message) {
 }
 
 if (process.env.GYEON_ORDER_V3_C5C_DISPOSABLE_CONFIRM !== CONFIRM) fail('explicit disposable confirmation is missing');
-if (!apiUrl || !anonKey || !serviceKey) fail('C5C_API_URL, C5C_ANON_KEY and C5C_SERVICE_ROLE_KEY are required');
+if (!apiUrl || !dbUrl || !anonKey || !serviceKey) fail('C5C_API_URL, C5C_DB_URL, C5C_ANON_KEY and C5C_SERVICE_ROLE_KEY are required');
 const parsedApi = new URL(apiUrl);
 if (!['127.0.0.1', 'localhost', '::1'].includes(parsedApi.hostname)) fail('API URL must be loopback-only');
 if (/supabase\.(co|in)|pooler\.supabase/.test(apiUrl)) fail('API URL must never resolve to a hosted Supabase host');
+const parsedDb = new URL(dbUrl);
+if (!['127.0.0.1', 'localhost', '::1'].includes(parsedDb.hostname)) fail('database URL must be loopback-only');
+if (/supabase\.(co|in)|pooler\.supabase/.test(dbUrl)) fail('database URL must never resolve to a hosted Supabase host');
 
 const runId = process.env.GYEON_ORDER_V3_C5C_SUFFIX ?? randomUUID().slice(0, 8);
 const password = `C5C-${randomUUID()}-aA1!`;
@@ -61,6 +66,51 @@ async function request(path, { method = 'GET', key = anonKey, token = key, body,
   return { status: response.status, payload };
 }
 
+function safeApiError(payload) {
+  if (!payload || typeof payload !== 'object') return 'no_error_code';
+  const code = typeof payload.code === 'string' ? payload.code.slice(0, 80) : 'no_error_code';
+  return `code=${code}`;
+}
+
+// The C5-B runtime SQL is applied after the local Supabase stack starts.
+// Force PostgREST to reload only its local schema cache before any real HTTP
+// assertion. Credentials stay in the child environment, never command args
+// or evidence output.
+try {
+  execFileSync('psql', ['-X', '-v', 'ON_ERROR_STOP=1', '-q', '-c', "notify pgrst, 'reload schema';"], {
+    env: {
+      ...process.env,
+      PGHOST: parsedDb.hostname,
+      PGPORT: parsedDb.port,
+      PGUSER: decodeURIComponent(parsedDb.username),
+      PGPASSWORD: decodeURIComponent(parsedDb.password),
+      PGDATABASE: decodeURIComponent(parsedDb.pathname.replace(/^\//, '')),
+    },
+    stdio: 'ignore',
+    timeout: REQUEST_TIMEOUT_MS,
+  });
+} catch {
+  fail('local PostgREST schema reload notification failed');
+}
+
+let schemaCacheReady = false;
+let lastSchemaStatus = 'not_requested';
+let lastSchemaCode = 'no_error_code';
+for (let attempt = 0; attempt < 40; attempt += 1) {
+  const probe = await request('/rest/v1/gyeon_ordering_memberships?select=dealer_id&limit=0', {
+    key: serviceKey,
+    token: serviceKey,
+  });
+  lastSchemaStatus = probe.status;
+  lastSchemaCode = safeApiError(probe.payload);
+  if (probe.status === 200) {
+    schemaCacheReady = true;
+    break;
+  }
+  await new Promise((resolve) => setTimeout(resolve, 250));
+}
+if (!schemaCacheReady) fail(`local PostgREST schema cache did not become ready: HTTP ${lastSchemaStatus} ${lastSchemaCode}`);
+
 async function createUser(label) {
   const email = `c5c-${label}-${runId}@example.invalid`;
   const created = await request('/auth/v1/admin/users', {
@@ -83,7 +133,7 @@ async function serviceInsert(table, rows, { onConflict } = {}) {
   const response = await request(path, {
     method: 'POST', key: serviceKey, token: serviceKey, body: rows, prefer,
   });
-  if (response.status !== 201) fail(`service fixture insert failed for ${table}: HTTP ${response.status}`);
+  if (response.status !== 201) fail(`service fixture insert failed for ${table}: HTTP ${response.status} ${safeApiError(response.payload)}`);
 }
 
 async function rpc(name, token, body) {

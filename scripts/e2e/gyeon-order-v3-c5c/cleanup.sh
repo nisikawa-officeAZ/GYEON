@@ -91,7 +91,13 @@ FIXTURE_ROWS_REMAINING="n/a"
 PER_FAMILY_REPORT=""
 
 sql_uuid_array() {
-  if [[ -z "$1" ]]; then printf "array[]::uuid[]"; else printf "array['%s']::uuid[]" "${1//,/\',\'}"; fi
+  if [[ -z "$1" ]]; then
+    printf "array[]::uuid[]"
+  else
+    local joined
+    joined="$(printf '%s' "$1" | sed "s/,/','/g")"
+    printf "array['%s']::uuid[]" "$joined"
+  fi
 }
 
 run_fixture_teardown() {
