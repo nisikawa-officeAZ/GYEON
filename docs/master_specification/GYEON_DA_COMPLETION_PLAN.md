@@ -48,7 +48,7 @@ The following decisions remain binding until this file is changed, reviewed, exp
 
 1. **GYEON DA completion is the MacBook priority.**
 2. **SaaS commercialization is deferred until after GYEON DA field completion.**
-3. **GYEON order Draft PR #7 is frozen.** It may be resumed only when this plan records a direct GYEON DA completion dependency and the user approves that phase.
+3. **GYEON order Draft PR #7 remains historical and frozen.** The separately accepted V3 C4 foundation on `main` may be hardened only through an explicitly recorded GYEON-order phase. The current exception is limited to C5 external-authority contract hardening because dealer product procurement is an operational dependency for delivering GYEON services. This exception does not authorize UI expansion, provider connection, Office AZ inventory implementation on MacBook, migration application, deployment, or production release.
 4. **Office AZ inventory is not MacBook implementation scope.** Mac Studio owns the complete Office AZ inventory foundation. MacBook may define integration contracts and perform independent review only.
 5. **The closed finance track stays closed.** Accepted invoice, payment, monthly-statement, and PDF-artifact contracts are not redesigned unless a verified regression blocks GYEON DA.
 6. **AI assists; humans decide.** AI may draft, summarize, classify, or recommend. It must not issue invoices, send customer messages, overwrite customer/vehicle records, apply migrations, or perform destructive actions without the required human approval.
@@ -75,7 +75,7 @@ The following paths are excluded from content inspection and modification unless
 ### 3.2 Excluded delivery tracks
 
 - SaaS catalogue, commercial billing expansion, white label, and generic SaaS rollout.
-- GYEON product-order expansion while Draft PR #7 is frozen.
+- GYEON product-order expansion outside an explicitly recorded V3 C5 contract-hardening phase.
 - Office AZ inventory implementation, migrations, tests, deployment, and operations.
 - EC integration and inventory-to-EC availability.
 - Marketing automation that does not directly remove current detailer administrative work.
@@ -226,6 +226,307 @@ This is event-driven phase governance. It does not reinstate a background pollin
 **Acceptance target:** E3 for the authorized staging environment and no regression in the accepted estimate/pricing/security contracts.
 
 **Constraint:** GDA-1 defines the literal allowlist. No speculative redesign is allowed.
+
+### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
+
+**Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.
+
+**Direct GYEON DA dependency:** A detailer cannot deliver a GYEON service without procuring the approved products. C5-B is therefore allowed only as an operational-supply safety dependency. GYEON DA completion remains the primary MacBook mission, and this exception must not expand into generic commerce, EC, or MacBook-owned Office AZ inventory.
+
+**Base candidate:**
+
+- Branch: `agent/gyeon-order-v3-c5-external-authority-design`
+- C5-A commit: `a3da60d662bc8da7ad09f17740fc7975dd917f35`
+- Governance commit: `4f60c23dab963d151e56ec11dfa076ea0472c2c1`
+- C5-B source commit: `1ae0f7e91f3889ea08c894bcb589bb35a15303ec`
+- C5-B source tree: `a6f7fde6b4b9b8c15689ccd5124f17632c6e9f92`
+- Coordination PR: `https://github.com/nisikawa-officeAZ/GYEON/pull/36` — OPEN/Draft
+
+**Literal source allowlist:**
+
+- `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql`
+- `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts`
+- `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts`
+
+**Required behavior:**
+
+- Replace client-controllable `qualification_verified` text with a server-owned, versioned qualification authority and bound evaluation snapshot.
+- Strengthen external evidence with purpose, provider event identity, dealer/order/version/fingerprint/amount/currency binding, expiry, server verification, and one-time consumption.
+- Separate prepare and finalize transactions so no PSP, bank, inventory, or email call occurs while an order row lock is held.
+- Preserve the original order and original authorization on provider failure, unknown response, stale preparation, or version conflict; record only a compensation intent for a newly succeeded but unusable authorization.
+- Create exactly one `unaccepted` warehouse task when payment, supply, reservation/backorder, and calendar authorities are ready. Warehouse acceptance must consume that existing task and must not create the task for the first time.
+- Keep card PSP, PayPay Bank, Office AZ reservation, and email providers as fail-closed stubs. Provider-specific authentication, signatures, webhooks, secrets, and network calls are outside C5-B.
+- Keep the SQL file visibly `DRAFT_DO_NOT_APPLY` and transactionally self-rolling-back if executed accidentally.
+
+**Verification candidate:**
+
+- Focused TypeScript source-contract tests covering the three literal source paths.
+- Strict targeted TypeScript check for the modified contract tests.
+- `git diff --check` limited to the allowlist.
+- No Supabase project connection, local database execution, migration generation, migration history mutation, or external provider request in C5-B.
+
+**Protected paths:** All paths in section 3.1 remain metadata-only or closed. `ScreensPreview.tsx` must never be opened, read, diffed, copied, staged, or modified.
+
+**Responsibility:** Office AZ is product authority; MacBook Codex owns specification and independent acceptance; MacBook Claude performs bounded diagnosis/implementation/tests after the mandatory Draft-PR instruction exists; Mac Studio remains the sole Office AZ inventory implementation owner.
+
+**State boundary:** C5-B reached the pushed E2 source-candidate boundary at commit `1ae0f7e91f3889ea08c894bcb589bb35a15303ec`. The SQL remains under `DRAFT_DO_NOT_APPLY`, PR #36 remains Draft, and no local/hosted database, provider, migration apply, Ready conversion, merge, or deployment is authorized by C5-B.
+
+**Acceptance target:** E2 source candidate only. C5-C disposable-database acceptance is required before any schema candidate can advance, and production release remains blocked by unresolved external authorities.
+
+### GYEON-ORDER-V3-C5-B-R1 — Source-integrity repair gate
+
+**Status:** AUTHORIZED FOR ONE BOUNDED THREE-FILE REPAIR AND FOCUSED SOURCE-CONTRACT TEST ONLY. Commit, push, database execution, C5-C harness work, and release remain separately gated.
+
+**Reason for return:** The authorized C5-C read-only diagnosis returned `CHANGES_REQUIRED_SOURCE`. C5-C's mandatory fail/burn rule requires a source defect to return to a separately authorized C5-B repair gate before any harness authoring or disposable runtime is started.
+
+**Diagnosis authority:**
+
+- Result: `GYEON_ORDER_V3_C5_C_READ_ONLY_DIAGNOSIS_RESULT_V1`
+- Diagnosed execution HEAD: `33aac8f1a4e035141c2c0dc12856b7528494e09c`
+- Diagnosed execution tree: `c5dbf56af3ccfce99391ac81fc3ac0bbd6c76666`
+- Coordination PR: `https://github.com/nisikawa-officeAZ/GYEON/pull/36` — must remain OPEN/Draft
+
+**Literal implementation allowlist — exactly three existing paths:**
+
+1. `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql`
+2. `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts`
+3. `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts`
+
+No file may be created, deleted, renamed, formatted, staged, or modified outside this list during the repair candidate.
+
+**Required repairs:**
+
+1. **Classification-version integrity.** Qualification evaluation must accept only one identical non-null current server-owned `classification_version` across every order line. Mixed or missing versions fail closed; the last iterated line must never silently become the snapshot authority.
+2. **Immutable qualification replay.** An existing `(order_id, order_version)` snapshot is immutable. Exact canonical replay may return the existing snapshot unchanged. Any changed dealer, mode, rule version, classification version, input fingerprint, decision, lifecycle, or other canonical field fails closed; no conflict path updates historical authority or `evaluated_at`.
+3. **Payment-method-specific warehouse release.** Release must use explicit allow rules rather than a status blocklist. Card authority, bank-match evidence, cash-on-delivery restrictions, and effective credit-account terms are independently revalidated. Bank evidence is fully bound and consumed exactly once in the release transaction. Card split-capture unresolved state, `voided`, unknown, missing, expired, mismatched, reused, or stopped authority fails closed. Existing reservation/backorder and one-unaccepted-task behavior remains unchanged.
+
+**Focused verification:**
+
+- Run exactly the two existing C5-B source-contract test files together with the accepted `tsx` loader command.
+- Add deterministic regression assertions for all three repairs, including hostile mismatch/replay cases and valid method-specific release paths.
+- Run `git diff --check` only on the three allowlisted paths.
+- Record focused test count, exit code, exact changed paths, per-path SHA-256, HEAD/tree, and clean protected-path metadata.
+
+**Boundaries:**
+
+- SQL remains visibly `DRAFT_DO_NOT_APPLY` and retains one terminal `ROLLBACK`.
+- No SQL execution, migration derivation/application, Supabase, database, Docker, Colima, Auth, HTTP, provider, Vercel, deployment, Ready conversion, or merge.
+- No provider payload, signature, webhook, secret, or network implementation.
+- No Office AZ inventory implementation on MacBook.
+- All section 3.1 protected paths remain metadata-only; `ScreensPreview.tsx` content is never opened, read, diffed, copied, staged, or modified.
+- The repair candidate is performed by terminal Claude only. Do not invoke GitHub Claude or add `@claude`.
+
+**Exit:** Claude returns `GYEON_ORDER_V3_C5_B_R1_SOURCE_REPAIR_RESULT_V1`; MacBook Codex independently reviews the exact three-path diff and verification evidence. Source commit/push, C5-C resumption, and any database work remain later separate gates.
+
+### GYEON-ORDER-V3-C5-B-R1-A2 — Payment-authority correction gate
+
+**Status:** GOVERNANCE DOCUMENT AUTHORING, EXACT GOVERNANCE-ONLY COMMIT, AND NORMAL PUSH ARE AUTHORIZED. Terminal Claude execution, implementation commit/push, database work, PR instruction/comment, and release remain separately gated.
+
+**Reason for correction:** The R1 terminal-Claude candidate returned `READY_FOR_CODEX_READ_ONLY_REVIEW`, and its focused source-contract tests passed 58/58. Independent MacBook Codex review nevertheless returned `CHANGES_REQUIRED_SOURCE` because the tests did not cover three required hostile payment paths and the SQL still permitted them.
+
+**Required dirty-source baseline before any A2 execution:**
+
+- Governance HEAD before this documentation commit: `e6d78156c79ecd4a5d68ad88869f09db1b654192`
+- Governance tree before this documentation commit: `5438e4c33e7445d4eaa537cb53de5e9c2e31bacd`
+- `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql` — modified, SHA-256 `8313b9d5216049672850f2ff7c5d68d73f228c82b442e6f4df48bb94fd9127a8`
+- `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts` — modified, SHA-256 `d4fb000235680fbc8d9921d9c02d75dc9f2af8673c5275b44df6aa0c9acc7eba`
+- `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts` — unchanged, SHA-256 `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
+
+The dirty R1 source candidate is intentionally retained and must not be staged, committed, reverted, cleaned, stashed, or overwritten by the governance-only commit.
+
+**Literal future implementation allowlist — exactly three existing paths:**
+
+1. `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql`
+2. `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts`
+3. `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts`
+
+**Required A2 corrections:**
+
+1. **Bound card authority.** Card owner-submit finalize must fail closed unless the exact prepared operation and exact accepted evidence are supplied and consumed. Persist a server-owned link from the submitted order to the immutable accepted evidence that is the current card authority. Release must verify that link and its dealer/order/fingerprint/amount/currency/state/consumption binding; `payment_status = 'authorized'` alone is never authority. A successful amount-changing edit must atomically replace the current link with the accepted reauthorization evidence, while an amount-preserving edit must not erase it.
+2. **Forced credit-account terms.** If active and currently effective credit-account terms exist for the dealer, prepare, finalize, and release must reject card, bank transfer, and cash on delivery. If `credit_account` is selected without active/effective terms, it must fail closed. A stopped, expired, missing, or mismatched credit authority never releases an order.
+3. **Exact status allow rules.** Card requires `authorized` plus bound evidence; bank transfer requires the exact pre-release pending state plus one exact bank-match evidence and atomically advances to `paid`; cash on delivery and credit account require their exact accepted non-provider state. `voided`, `failed`, pending-in-the-wrong-method, selection-required, unknown, null, or otherwise mismatched status always denies before warehouse-task creation.
+4. **Hostile regression coverage.** Add deterministic assertions that fail on: null card prepared/evidence IDs; a forged `authorized` string without bound evidence; stale or mismatched card evidence; active credit terms paired with any non-credit method; stopped/expired credit terms; bank or credit with `voided`/`failed`/wrong status; and any warehouse-task insert before these checks. Preserve and re-run the accepted R1-01/R1-02 coverage.
+
+**Boundaries:**
+
+- SQL remains visibly `DRAFT_DO_NOT_APPLY` and ends in the single terminal `ROLLBACK`.
+- No provider payload/signature/webhook/secret/network implementation, no PayPay Bank adapter, and no caller-authoritative success flag.
+- No SQL execution, database, Supabase, Docker, Colima, Auth, HTTP, provider, Git delivery, GitHub comment, Ready conversion, merge, or deployment.
+- All protected paths remain metadata-only. `ScreensPreview.tsx` content is never opened, read, diffed, copied, staged, or modified.
+- A2 terminal-Claude execution requires a later explicit owner authorization plus an exact non-triggering PR instruction. This governance commit does not authorize that execution.
+
+**Exit:** A later authorized terminal-Claude session returns `GYEON_ORDER_V3_C5_B_R1_A2_SOURCE_CORRECTION_RESULT_V1`; MacBook Codex independently verifies the hostile paths and exact three-file scope before any implementation commit is considered.
+
+### GYEON-ORDER-V3-C5-B-R1-A3 — Codex direct payment-authority closure
+
+**Status:** SOURCE CANDIDATE ACCEPTED, COMMITTED, AND PUSHED. C5-C disposable-database execution remains separately gated.
+
+**Owner-authorized exception:** After the A2 terminal-Claude candidate passed its focused tests but MacBook Codex found three residual payment-authority defects, the owner explicitly authorized MacBook Codex to perform one direct, two-file A3 correction to avoid another high-credit Claude loop. This is a narrow exception for A3 only; it does not silently replace the normal phase protocol.
+
+**Accepted source:**
+
+- Branch: `agent/gyeon-order-v3-c5-external-authority-design`
+- Commit: `37573c3f9cc476b8d7911221a8696ee61109b9bf`
+- Tree: `c94ca1944e1c2d54b5728943501fbc07edc9668a`
+- `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql` — SHA-256 `7b72c49baa7a42e56e23959bfc69919c181ba7f51b4aa186aa69edfa575015f4`
+- `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts` — SHA-256 `990a94cdd7417de89348e5a357a33a6766ee9f6b07289cc0f89be3494852b0ba`
+- `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts` — unchanged, SHA-256 `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
+
+**Accepted A3 closure:**
+
+1. The order persistently binds the accepted card-evidence ID and its exact server-owned request fingerprint; authorized status without the complete binding fails closed.
+2. Warehouse release rejects missing, expired, voided, mismatched, wrongly consumed, or purpose/consumption-inconsistent card authority before task creation.
+3. If credit-account terms become active after a new external card authorization succeeds but before finalize, the denial transaction inserts one idempotent `void_new_card_authorization` compensation intent before returning.
+4. Amount-changing card edit replaces both authority link fields; amount-preserving edit preserves both.
+
+**Verification:** Exact focused command passed `68/68`, `git diff --check` passed, the worktree was clean after commit, and PR #36 plus the remote branch resolved to the exact accepted commit. No database, Supabase project, provider, Ready conversion, merge, or deployment action occurred.
+
+**Exit:** Refresh C5-C's hash-bound predecessor to this commit, then obtain a separate authorization before any harness change or disposable runtime execution.
+
+### GYEON-ORDER-V3-C5-B-R2 — Inventory evidence and payment-contract snapshot repair
+
+**Status:** SOURCE REPAIR ACCEPTED, COMMITTED, AND PUSHED. C5-C R2-bound diagnosis, harness implementation, disposable execution, and database application remain separately gated.
+
+**Reason for return:** The A3-bound C5-C read-only diagnosis returned `CHANGES_REQUIRED_SOURCE`. Independent MacBook Codex review confirmed that warehouse release currently checks only whether an `inventory_reservation` evidence row exists; it does not prove an exact unique dealer/order/version/fingerprint/amount/currency binding, lock that row, or consume it atomically. The same diagnosis exposed a business-contract gap: mutable dealer credit terms could retroactively alter the payment path of an already owner-confirmed order.
+
+**Predecessor:**
+
+- Branch: `agent/gyeon-order-v3-c5-external-authority-design`
+- Accepted source commit: `37573c3f9cc476b8d7911221a8696ee61109b9bf`
+- Accepted source tree: `c94ca1944e1c2d54b5728943501fbc07edc9668a`
+- Current governance/execution HEAD: `5b8624c5a30fa961268e9a4535b935a6d00e7407`
+- Current governance/execution tree: `9615cd5a754a11bd14c49dce23e7ee6ee1f36b27`
+- SQL SHA-256: `7b72c49baa7a42e56e23959bfc69919c181ba7f51b4aa186aa69edfa575015f4`
+- RPC-contract test SHA-256: `990a94cdd7417de89348e5a357a33a6766ee9f6b07289cc0f89be3494852b0ba`
+- Migration-contract test SHA-256: `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
+- Diagnosis result: `GYEON_ORDER_V3_C5_C_A3_READ_ONLY_DIAGNOSIS_RESULT_V2` — `CHANGES_REQUIRED_SOURCE`
+
+**Owner-ratified payment contract:**
+
+1. The first successful owner-confirmation/finalize freezes one explicit server-owned payment-contract snapshot on the order. The snapshot distinguishes standard payment from credit account and records the exact credit-terms version when credit account governs the order.
+2. Credit terms activated after that first successful finalize do not retroactively change an already-confirmed standard-payment order and do not automatically void its existing card authorization.
+3. If active and effective credit terms govern the dealer at the first successful finalize, the order must use `credit_account`; card, bank transfer, and cash on delivery fail closed.
+4. Amount-changing and amount-preserving pre-warehouse edits preserve the frozen payment-contract snapshot. Cancelling and creating a new order evaluates the then-current terms as a new contract.
+5. A credit-account order must revalidate its exact bound terms version at warehouse release. Missing, stopped, expired, mismatched, or otherwise invalid bound terms fail closed.
+6. A submitted order with no explicit payment-contract snapshot fails closed. No mutable-current-row inference, automatic backfill, or guessed default is allowed.
+
+**Required inventory-reservation repair:**
+
+- Non-backorder warehouse release requires exactly one unconsumed, server-verified, successful, unexpired `inventory_reservation` evidence row bound to the exact dealer, order, current order version, server-owned request fingerprint, amount, and currency.
+- Release locks that exact evidence row and consumes it atomically before inserting the warehouse task. Zero candidates, multiple candidates, mismatch, expiry, reuse, or a wrong purpose/consumption pairing fails closed before task creation.
+- The separately approved backorder authority remains independent. A backorder path must not consume unrelated reservation evidence or treat arbitrary reservation evidence as authority.
+
+**Accepted R2 source:**
+
+- Branch: `agent/gyeon-order-v3-c5-external-authority-design`
+- Commit: `3403918d0166c30c44abb95bad1c8a7335877cab`
+- Tree: `1d1617a49bc1dd1e4b21515fec4940c3fdc4f827`
+- SQL SHA-256: `d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73`
+- RPC-contract test SHA-256: `dbc7be4c08195c944eb00a0c28dc839736340b7c0df3e31ad617bdfa957a4159`
+- Migration-contract test SHA-256: `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5` — unchanged
+- Verification: exact focused command `77/77` PASS, exit `0`; `git diff --check` PASS
+- Delivery: normal push to PR #36; PR remains OPEN/Draft
+
+**Historical R2 governance write allowlist — exactly four paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md`
+4. `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_B_R2_INVENTORY_EVIDENCE_AND_PAYMENT_CONTRACT_SNAPSHOT_REPAIR.md` (new)
+
+**Future source-repair allowlist — exactly three existing paths:**
+
+1. `supabase/migrations/DRAFT_DO_NOT_APPLY/gyeon_order_v3_contract.sql`
+2. `src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts`
+3. `src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts`
+
+**Current boundary:** R2 source delivery is complete. The guarded SQL remains under `DRAFT_DO_NOT_APPLY` with its terminal `ROLLBACK`; no local, shared, staging, or production database was contacted. The next gate is one R2-bound read-only harness diagnosis. It does not authorize harness writes, tests, Docker/Colima/Supabase, database access, SQL derivation/application, or provider work.
+
+**Exit:** Refresh C5-C to the exact R2 commit/tree/hashes and obtain separate authorization for one read-only harness diagnosis. Harness authoring begins only after a `READY_FOR_HARNESS_IMPLEMENTATION` diagnosis is independently accepted.
+
+### GYEON-ORDER-V3-C5-C — Disposable-database acceptance design and execution gates
+
+**Status:** `C5C_DISPOSABLE_DB_PASS` / RESULT COMMITTED AND PUSHED / PR #36 READY / NOT MERGED. C5-C E2 local disposable acceptance is complete. Formal migration promotion, shared or production application, provider connection, merge, and deployment remain separately unauthorized.
+
+**Objective:** Prove the pushed C5-B database source candidate on one fresh loopback-only PostgreSQL 17 disposable Supabase runtime, including real signed Auth/PostgREST requests, exact RLS/grant behavior, prepare/finalize evidence consumption, server-owned qualification, durable compensation, warehouse-task release timing, and genuine separate-connection races.
+
+**Predecessor:**
+
+- Branch: `agent/gyeon-order-v3-c5-external-authority-design`
+- Commit: `3403918d0166c30c44abb95bad1c8a7335877cab`
+- Tree: `1d1617a49bc1dd1e4b21515fec4940c3fdc4f827`
+- SQL SHA-256: `d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73`
+- RPC-contract test SHA-256: `dbc7be4c08195c944eb00a0c28dc839736340b7c0df3e31ad617bdfa957a4159`
+- Migration-contract test SHA-256: `c071ba016e10419f4412bdc93c4c34c43130dffbe25d228d51533646672ab5c5`
+- Source verification: focused contract tests `77/77` PASS and `git diff --check` PASS
+- Known environment limitation: full-project typecheck is not an acceptance signal in the isolated worktree because repository dependencies and archived UI type roots are unresolved
+
+**Accepted C5-C execution and result delivery:**
+
+- Accepted disposable execution HEAD/tree: `a8bea097cee6060c0eca52d7c11a560da5f60c6f` / `5adb744aee61fb59487879bcc524590ee2c2c8aa`.
+- Accepted fresh suffix: `20260829T071034Z-z6m3r8`; the exact runtime was removed after retained-evidence verification.
+- Result: `GYEON_ORDER_V3_C5_C_DISPOSABLE_DB_VERIFICATION_RESULT_V1` — `C5C_DISPOSABLE_DB_PASS`.
+- Raw proof: migration replay 110 applied plus one protected exclusion; pgTAP `186/186`; real Auth/PostgREST `35/35`; genuine separate-connection assertions `11/11`; warning-only DB lint; four query-plan captures; `SECRET_SCAN_CLEAN`; all named fixture families zero.
+- Evidence integrity: 19 canonical non-hidden files, 18 manifest artifact hashes, zero mismatch, and successful retained copy, hash verification, project stop, and exact runtime removal.
+- Result record commit/tree: `8144e0baf9c715ddc72ee835797646d2bbfe0a2d` / `3aba01289f52ecc7808174fb647b28becf61edf9`.
+- PR #36 is OPEN and Ready, its HEAD is the result-record commit, and its Vercel checks passed at the pre-merge audit. It has not been merged.
+- Evidence class remains `E2_LOCAL_DISPOSABLE_DB`; no shared, staging, production, hosted-provider, or E3 authority is inferred.
+
+**Historical C5-C R4 governance write allowlist — exactly four paths:**
+
+- `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+- `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+- `docs/integrations/gyeon-order/v3-c5c-disposable-db-verification-plan.md`
+- `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_C_HARNESS_IMPLEMENTATION.md` (new)
+
+**Accepted R2-bound diagnosis:**
+
+- Directive: `GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_V1`.
+- Accepted result: `GYEON_ORDER_V3_C5_C_R2_READ_ONLY_HARNESS_DIAGNOSIS_RESULT_V1` — `READY_FOR_HARNESS_IMPLEMENTATION`.
+- Execution HEAD/tree: `960835a58a01ff249dcc0e99c72b5542b003042e` / `2b09af16fafa1e2b5ba0c6da30f507dced0fb0b1`.
+- The first terminal-Claude invocation is not acceptance evidence because it did not return the complete result and disclosed one prohibited `gh pr view` call. The corrected invocation returned the complete result with zero write, test, database, network, Git, or PR action.
+- MacBook Codex independently confirmed the exact R2 source hashes, clean worktree/index, protected blobs, payment-contract snapshot structure, inventory-reservation lock/consume-before-task ordering, and stale C4 RPC references.
+- Claude's phrase “17-file manifest” was a counting error. The canonical plan lists exactly 19 required evidence artifacts; the implementation directive fixes the count without changing the evidence contract.
+- The diagnosis found no required C5-B source repair, owner decision, plan expansion, or write-allowlist change before harness authoring.
+
+**Accepted harness implementation allowlist — exactly nine paths:**
+
+1. `scripts/e2e/gyeon-order-v3-c5c/config.toml`
+2. `scripts/e2e/gyeon-order-v3-c5c/setup.sh`
+3. `scripts/e2e/gyeon-order-v3-c5c/schema-rls.test.sql`
+4. `scripts/e2e/gyeon-order-v3-c5c/qualification-evidence.test.sql`
+5. `scripts/e2e/gyeon-order-v3-c5c/prepare-finalize-warehouse.test.sql`
+6. `scripts/e2e/gyeon-order-v3-c5c/real-auth.mjs`
+7. `scripts/e2e/gyeon-order-v3-c5c/concurrency.mjs`
+8. `scripts/e2e/gyeon-order-v3-c5c/capture-evidence.sh`
+9. `scripts/e2e/gyeon-order-v3-c5c/cleanup.sh`
+
+The result document was excluded from harness implementation and was created later in the separately approved result-recording gate.
+
+**Historical harness implementation boundary — completed under separate approvals:**
+
+- The committed implementation directive is `GYEON_ORDER_V3_C5_C_HARNESS_IMPLEMENTATION_V1`.
+- The owner separately authorized the exact accepted execution HEAD/tree, external transmission, nine-path harness candidate, static verification, harness Git delivery, fresh disposable execution, result recording, result Git delivery, result comment, and Ready conversion.
+- Harness implementation used only `bash -n`, `node --check`, the directive's untracked-aware `git diff --no-index --check /dev/null` loop, and the exact stale-identifier search before its separately approved runtime execution.
+- Hosted Supabase, shared or production PostgreSQL, and external providers were not contacted. The accepted runtime was loopback-only and disposable.
+- Formal migration promotion, environment application, provider integration, merge, and deployment remain later separate gates.
+
+**Required execution evidence — satisfied by the accepted run:**
+
+- Exact committed-migration replay plus one hash-bound runtime derivative of the C5-B guarded SQL with only its terminal `ROLLBACK` changed to `COMMIT`.
+- PostgreSQL 17 and current pinned Supabase CLI identity.
+- pgTAP schema/RLS/grant/function tests with no plan mismatch, skip, todo, or `NOTESTS`.
+- Real local GoTrue tokens and PostgREST requests; SQL-only claim strings or service-role success are not authorization proof.
+- Two simultaneous independent database connections plus a third observer proving distinct backend PIDs for every required race.
+- Exact fixture cleanup, runtime teardown, raw evidence manifest, secret-redaction proof, and unchanged repository/protected-path metadata.
+
+**Mandatory fail/burn rule:** Any replay, pgTAP, real-Auth, business-contract, concurrency, evidence, or cleanup failure burns the suffix and evidence set. The failed runtime is never repaired or rerun into acceptance. A source defect returns to a separately authorized C5-B repair gate; an environment defect requires a new owner-approved C5-C attempt with a fresh suffix.
+
+**Protected paths:** All section 3.1 paths remain protected. `ScreensPreview.tsx` stays pathname/mode/blob/Git-state only. The LINE migration remains excluded from disposable replay unless a separate LINE phase authorizes it; no hosted/linked project may be contacted.
+
+**Responsibility:** MacBook Claude performed the bounded diagnosis and harness candidate work under its exact directives. MacBook Codex independently accepted scope, executed the separately approved disposable run, and reviewed the raw evidence. Mac Studio remains the sole Office AZ inventory implementation owner.
+
+**Acceptance result:** `C5C_DISPOSABLE_DB_PASS`. This is E2 local verification strengthened by disposable-database evidence. C5-C is not E3 because no authorized shared or staging environment was contacted. PR Ready conversion is complete, but formal migration promotion, Dev-Next or production application, provider connection, merge, and deployment remain separately unauthorized.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
