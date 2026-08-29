@@ -227,6 +227,87 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Constraint:** GDA-1 defines the literal allowlist. No speculative redesign is allowed.
 
+### GDA-2A-OCR-R1 — Estimate Wizard single-scan customer/vehicle reflection diagnosis
+
+**Status:** READ-ONLY DIAGNOSIS ACCEPTED WITH ONE CODEX CORRECTION. IMPLEMENTATION-DIRECTIVE
+GOVERNANCE DELIVERY IS AUTHORIZED. SOURCE IMPLEMENTATION, TEST EXECUTION, SOURCE COMMIT/PUSH,
+PREVIEW, READY, MERGE, DEPLOYMENT, AND PRODUCTION ACTION REMAIN SEPARATELY UNAUTHORIZED.
+
+**Priority reason:** An authenticated production walkthrough confirmed that the Estimate Wizard's
+Step-1 vehicle-registration OCR review can reflect customer fields while the vehicle values from the
+same OCR result do not appear on Step 2. This forces a second scan or manual re-entry, directly
+violates the approved single-scan intake journey, and is a blocker for the September 6 guided field
+demonstration. This narrow GDA-2 defect gate temporarily takes implementation priority; the unrelated
+GYEON Order C5-D R4 governance candidate remains frozen and unchanged until this phase exits.
+
+**Governance base:**
+
+- Repository: `nisikawa-officeAZ/GYEON`
+- Base branch: `main`
+- Base commit: `48de96bbf5518be3fd7fd8a3964dfd7975716165`
+- Base tree: `e25590d276237f643e9b1408e6c47d192388de07`
+- Candidate branch: `agent/estimate-wizard-ocr-unified-r1`
+- Coordination Draft PR: created only after the exact governance commit is normally pushed
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_UNIFIED_R1_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Frozen owner decisions:**
+
+- One operator-confirmed OCR result must be capable of reflecting both customer and vehicle draft
+  fields before navigation to Step 2; a second OCR scan must not be required.
+- OCR reflection updates draft state only. No customer, vehicle, estimate, OCR record, file, or DB row
+  is created or updated until the existing explicit save action succeeds.
+- Missing or blank OCR fields never clear an operator-entered value.
+- Vehicle size remains exactly `SS / S / M / ML / L / LL / XL`; `XXL` is forbidden.
+- OCR length/width/height feed the accepted 3M estimator. The recommended size is blue and adjacent
+  sizes are amber, but OCR never writes or changes the operator-authoritative confirmed size.
+- The Step-2 OCR entry may remain as an explicit rescan/correction route, but it must share one typed
+  mapping contract with Step 1 rather than keep a duplicate mapper.
+- Existing-customer/vehicle identity, duplicate advisory, pricing, discounts, save, PDF, PPF,
+  coating, authorization, tenant, and persistence contracts remain unchanged.
+
+**Accepted diagnosis:** Claude returned
+`GDA_ESTIMATE_WIZARD_OCR_UNIFIED_R1_READ_ONLY_DIAGNOSIS_RESULT_V1` with
+`READY_FOR_IMPLEMENTATION`. MacBook Codex independently verified the exact HEAD/tree, clean
+worktree/index, unchanged protected blobs, and the primary source evidence. The accepted root cause
+is that Step 1 applies only the customer OCR patch and drops vehicle fields, while Step 2 owns a
+second inline vehicle mapper and the only path to the transient 3M recommendation state. The
+accepted repair uses one combined canonical store patch and one shared typed vehicle mapper.
+
+**MacBook Codex correction:** A `typeof value === "string"` check does not reject an empty or
+whitespace-only string. The shared vehicle mapper must trim solely to decide whether a value is
+blank, omit every blank key, and never clear operator-entered draft text. The applied value may be
+trimmed consistently with the existing customer OCR core, but no further normalization is allowed.
+Tests must cover both `""` and whitespace-only OCR values.
+
+**Evidence:** The accepted result is recorded at
+`https://github.com/nisikawa-officeAZ/GYEON/pull/40#issuecomment-5462738620`.
+
+**Accepted future implementation allowlist — not authorized by governance delivery:**
+
+1. `src/components/estimates/wizard/EstimateWizard.tsx`
+2. `src/components/estimates/wizard/steps/Step1Customer.tsx`
+3. `src/components/estimates/wizard/steps/Step2Vehicle.tsx`
+4. `src/lib/ocr/wizard-vehicle-ocr-apply-core.ts` (new)
+5. `src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts` (new)
+6. `src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx` (new)
+7. `src/components/estimates/wizard/validity/wizard-step-validity.ts` (stale comment only)
+8. `src/components/estimates/wizard/validity/wizard-step-validity.test.ts` (stale wording only)
+
+**Protected boundary:** Every path in section 3.1 remains protected. In particular,
+`src/components/estimates/wizard/screens/ScreensPreview.tsx` is pathname/mode/blob/Git-state only
+and must never be opened, read, diffed, copied, staged, or modified.
+
+**Next gate:** Commit and normally push the implementation directive and this append-only governance
+record. MacBook Claude may receive the directive and edit the eight accepted paths only after a new
+explicit owner authorization for external transmission, source implementation, and test execution.
+Commit, push, Preview, Ready, merge, deployment, and production actions after implementation remain
+separate gates.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.
