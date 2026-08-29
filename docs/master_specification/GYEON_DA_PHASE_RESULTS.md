@@ -2495,3 +2495,59 @@ boundary:
 decision: IMPLEMENTATION_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-PRICING-RECOVERY-R1-R2 — Implementation acceptance and Preview closeout
+
+```yaml
+phase: GDA_ESTIMATE_PRICING_RECOVERY_R1_IMPLEMENTATION_AND_PREVIEW_ACCEPTANCE
+status: PREVIEW_ACCEPTED_CLOSEOUT_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+implementation_result_id: GDA_ESTIMATE_PRICING_RECOVERY_R1_IMPLEMENTATION_RESULT_V1
+acceptance_id: GDA_ESTIMATE_PRICING_RECOVERY_R1_PREVIEW_ACCEPTED
+authorization: "The owner separately authorized private-file transmission to Anthropic Claude Code, the exact two-file implementation and specified tests, the exact two-file stage/local commit, the normal non-force push, authenticated Preview verification, and finally this exact two-document closeout authoring. This entry does not authorize closeout stage/commit/push, Ready, merge, production deployment, database mutation, or the next PPF phase."
+repository:
+  branch: agent/preview-pricing-recovery-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/41
+  governance_commit: f5a38194c383a83aea97a5c65fb75fcfc301c9c8
+  source_commit: 9f9b1e61d5b9960a3a35f9c6d1c5e1f1dad5ef3b
+  pushed_head: 9f9b1e61d5b9960a3a35f9c6d1c5e1f1dad5ef3b
+  pull_request_state_at_acceptance: OPEN/Draft
+  pull_request_changed_files_at_acceptance: 6
+implementation:
+  responsible_agent: Anthropic Claude Code
+  changed_paths:
+    - src/lib/pricing/authoritative-pricing-catalog-core.ts
+    - src/lib/pricing/authoritative-pricing-catalog-core.test.ts
+  behavior: "Absent or explicit-null ppf, window_film, maintenance, carwash, and room_cleaning sections now mean no override; present non-null values retain complete fail-closed validation. Valid V3.4 coating remains mandatory for a non-null service settings object."
+codex_independent_acceptance:
+  exact_two_path_diff: PASS
+  focused_tests: PASS_31_OF_31
+  git_diff_check: PASS
+  changed_line_type_errors: ZERO
+  full_project_typecheck: KNOWN_ENVIRONMENT_FAILURE_NOT_GREEN
+  full_project_typecheck_detail: "The isolated worktree retains broad pre-existing archived-UI/dependency/type-root failures. Target-path output is limited to unchanged test imports for node:test, node:assert/strict, and node:fs at lines 10-12; the implementation core reports no error."
+  protected_metadata: PASS_UNCHANGED
+preview_evidence:
+  deployment_check: VERCEL_PASS
+  deployment_id: 4DPRGDNv9ZtWbgGqeTpCyXb5b34u
+  authenticated_route: /estimates/new
+  rendered_authority: "新規見積 seven-step wizard and customer-registration form"
+  unavailable_text_count: 0
+  browser_warning_error_count: 0
+  verdict: GDA_ESTIMATE_PRICING_RECOVERY_R1_PREVIEW_ACCEPTED
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "No migration, SQL, RPC, persistence backfill, Preview-row mutation, database/Supabase apply, Ready, merge, or production deployment occurred."
+  - "This result fixes and proves the observed coating-only settings row only. A window_film_v1-only object without valid V3.4 coating remains malformed."
+  - "PPF offering control remains queued as GDA-ESTIMATE-PPF-OFFERING-R1 in a separate phase and PR."
+closeout_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+decision: PREVIEW_ACCEPTED_CLOSEOUT_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```

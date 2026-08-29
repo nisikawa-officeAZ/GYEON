@@ -725,7 +725,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-PRICING-RECOVERY-R1 — Preview authoritative-pricing recovery
 
-**Status:** ACTIVE — the bounded Claude read-only diagnosis is accepted with one Codex scope correction. The owner authorized implementation-governance authoring only. Source repair, tests, Git delivery, database mutation, Preview application, and deployment are not yet authorized.
+**Status:** COMPLETE — `GDA_ESTIMATE_PRICING_RECOVERY_R1_PREVIEW_ACCEPTED`. The bounded reader repair is committed and pushed to PR #41 at `9f9b1e61d5b9960a3a35f9c6d1c5e1f1dad5ef3b`; Vercel deployed it successfully, and MacBook Codex independently verified the authenticated Preview Estimate Wizard route. Ready, merge, and production deployment remain separate gates.
 
 **Objective:** Restore the Estimate Wizard Preview route by making the strict reader safely accept the natural coating-only sparse object produced by independent settings persistence, without weakening fail-closed validation of any value that is actually present.
 
@@ -741,7 +741,7 @@ The result document was excluded from harness implementation and was created lat
 
 **Accepted diagnosis:** `GDA_ESTIMATE_PRICING_RECOVERY_R1_READ_ONLY_DIAGNOSIS_RESULT_V1` returned `READY_FOR_IMPLEMENTATION_GOVERNANCE`. MacBook Codex independently confirmed the write/read call chain, clean state, protected metadata, and two-file repair boundary, but rejected one overbroad sentence in the report: the proposed repair does not make a `window_film_v1`-only object valid because coating remains mandatory. The implementation contract therefore fixes the observed coating-only row only and must not claim to close the separately queued PPF/coating-offering behavior.
 
-**Current governance write allowlist — exactly three paths:**
+**Implementation-governance write allowlist — exactly three paths:**
 
 1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
@@ -757,7 +757,7 @@ The result document was excluded from harness implementation and was created lat
 - Keep `ppf_price_tables`, `window_film_v1`, tenant/RLS behavior, unset-versus-zero semantics, seven sizes, independent coating layers, and historical finalized estimates unchanged.
 - Do not add a migration or update the existing Preview row. The existing coating-only row is remediated by the compatible read path; rollback is a plain Git revert of the two-file source commit.
 
-**Future implementation write allowlist — exactly two paths:**
+**Implemented source write allowlist — exactly two paths:**
 
 1. `src/lib/pricing/authoritative-pricing-catalog-core.ts`
 2. `src/lib/pricing/authoritative-pricing-catalog-core.test.ts`
@@ -771,11 +771,22 @@ The result document was excluded from harness implementation and was created lat
 - A fully null service column preserves canonical-default behavior.
 - A `window_film_v1`-only object without valid V3.4 coating remains `malformed`; this explicitly prevents the implementation from claiming the contradiction found in the diagnosis narrative.
 
-**Implementation authority:** The exact execution identity, literal read/write allowlists, tests, protected paths, prohibitions, and required result are defined by `CLAUDE_DIRECTIVE_GDA_ESTIMATE_PRICING_RECOVERY_R1_IMPLEMENTATION.md`. Its creation does not authorize transmission to Claude or source implementation. Those remain separate owner gates.
+**Accepted implementation and verification:**
 
-**Current prohibitions:** Source/test/migration/config edits; test/typecheck/build/runtime execution; DB/Supabase/Auth/Storage/LINE/Vercel access; external transmission of the implementation directive; branch/worktree/index/commit/push/PR/Ready/merge/deployment mutation; protected-path content access.
+- Governance commit `f5a38194c383a83aea97a5c65fb75fcfc301c9c8` and source commit `9f9b1e61d5b9960a3a35f9c6d1c5e1f1dad5ef3b` were separately approved, locally committed, and normally pushed to `agent/preview-pricing-recovery-r1`; no force push occurred.
+- Claude changed exactly the two source-allowlist paths. MacBook Codex independently inspected the diff and reran the focused suite: 31/31 tests passed and `git diff --check` passed.
+- Full-project `tsc --noEmit --incremental false` still exits 2 because the isolated worktree has pre-existing archived-UI/dependency/type-root failures. For the two target paths, only the pre-existing unresolved `node:test`, `node:assert/strict`, and `node:fs` imports at unchanged test lines 10-12 remain; no changed implementation line adds a type error. This phase must not be described as full-project typecheck green.
+- The four protected blobs remained unchanged: `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14`.
+- PR #41 Vercel checks passed. In the authenticated Preview route `/estimates/new`, the seven-step `新規見積` wizard and customer-registration form rendered, `見積を開始できません` matched zero elements, and captured browser warnings/errors were zero.
 
-**Exit:** Commit and push the exact three-document implementation-governance candidate only after separate approvals, then separately authorize one bounded Claude implementation against the exact two-file source allowlist. Source acceptance, Preview verification, Ready, merge, and deployment remain later gates.
+**Accepted boundary:** This phase proves the observed coating-only row can open the Estimate Wizard without weakening present-value validation. It does not make a `window_film_v1`-only object valid and does not implement PPF offering control. No migration, data backfill, Preview-row mutation, DB apply, Ready transition, merge, or production deployment occurred.
+
+**Closeout write allowlist — exactly two paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Exit:** Record and separately deliver this two-document Preview-acceptance closeout. Then begin `GDA-ESTIMATE-PPF-OFFERING-R1` as the next independent phase and PR; do not mix it into PR #41.
 
 ### GDA-ESTIMATE-PPF-OFFERING-R1 — PPF availability and partial-PPF control
 
