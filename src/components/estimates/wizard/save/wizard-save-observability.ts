@@ -110,28 +110,29 @@ const CODE_SEVERITY: Record<ReportableCode, ObservabilitySeverity> = {
 // ── Pre-persist failure vocabulary ──────────────────────────────────────────────
 //
 // Severity is stated PER FAILURE and is deliberately NOT derived from CODE_SEVERITY.
-// Four failures share `VALIDATION_ERROR` but do not share a severity:
+// Five failures share `VALIDATION_ERROR` but do not share a severity:
 // `stale-config-revision` is `warn` because the operator priced against a catalog
-// that has since changed — a real race worth noticing — while a malformed intent or a
-// failed DTO check is `info`, an ordinary correctable rejection. Deriving severity
-// from the code would flatten that distinction and there would be no way to restate
-// it without inventing a second code.
+// that has since changed — a real race worth noticing — while a malformed intent, a
+// PPF-off rejection, or a failed DTO check is `info`, an ordinary correctable
+// rejection. Deriving severity from the code would flatten that distinction and
+// there would be no way to restate it without inventing a second code.
 
 const PRE_PERSIST: Record<
   WizardSaveReportableFailure,
   { readonly stage: string; readonly code: ReportableCode; readonly severity: ObservabilitySeverity }
 > = {
-  "invalid-intent":            { stage: "intent-validation",    code: "VALIDATION_ERROR",         severity: "info"  },
-  "unauthenticated":           { stage: "authentication",       code: "UNAUTHENTICATED",          severity: "info"  },
-  "actor-context-unavailable": { stage: "authentication",       code: "SAVE_FAILED",              severity: "error" },
-  "forbidden":                 { stage: "permission",           code: "PERMISSION_DENIED",        severity: "warn"  },
-  "tenant-context-unavailable":{ stage: "dealer-context",       code: "DEALER_CONTEXT_REQUIRED",  severity: "warn"  },
-  "runtime-config-unavailable":{ stage: "dealer-context",       code: "SAVE_FAILED",              severity: "error" },
-  "stale-config-revision":     { stage: "config-revision",      code: "VALIDATION_ERROR",         severity: "warn"  },
-  "server-pricing-failed":     { stage: "pricing-completeness", code: "PRICING_INCOMPLETE",       severity: "info"  },
-  "save-mapping-failed":       { stage: "save-mapping",         code: "VALIDATION_ERROR",         severity: "info"  },
-  "save-validation-failed":    { stage: "validation",           code: "VALIDATION_ERROR",         severity: "info"  },
-  "persist-invariant":         { stage: "rpc",                  code: PERSIST_INVARIANT_FAILED,   severity: "error" },
+  "invalid-intent":             { stage: "intent-validation",    code: "VALIDATION_ERROR",         severity: "info"  },
+  "unauthenticated":            { stage: "authentication",       code: "UNAUTHENTICATED",          severity: "info"  },
+  "actor-context-unavailable":  { stage: "authentication",       code: "SAVE_FAILED",              severity: "error" },
+  "forbidden":                  { stage: "permission",           code: "PERMISSION_DENIED",        severity: "warn"  },
+  "tenant-context-unavailable": { stage: "dealer-context",       code: "DEALER_CONTEXT_REQUIRED",  severity: "warn"  },
+  "runtime-config-unavailable": { stage: "dealer-context",       code: "SAVE_FAILED",              severity: "error" },
+  "stale-config-revision":      { stage: "config-revision",      code: "VALIDATION_ERROR",         severity: "warn"  },
+  "service-not-offered":        { stage: "service-offering",     code: "VALIDATION_ERROR",         severity: "info"  },
+  "server-pricing-failed":      { stage: "pricing-completeness", code: "PRICING_INCOMPLETE",       severity: "info"  },
+  "save-mapping-failed":        { stage: "save-mapping",         code: "VALIDATION_ERROR",         severity: "info"  },
+  "save-validation-failed":     { stage: "validation",           code: "VALIDATION_ERROR",         severity: "info"  },
+  "persist-invariant":          { stage: "rpc",                  code: PERSIST_INVARIANT_FAILED,   severity: "error" },
 };
 
 /** The exact maps, exported so a test can prove exhaustiveness at runtime too. */

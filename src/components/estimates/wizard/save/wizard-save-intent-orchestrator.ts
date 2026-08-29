@@ -27,6 +27,7 @@ import type { EstimateSaveActorContext, EstimateSaveActorContextResolution } fro
 import type { AuthoritativeWizardRuntimeConfiguration } from "@/lib/wizard-catalog/wizard-runtime-config";
 import type { computeWizardPricingFromConfig } from "../pricing/compute-wizard-pricing-from-config";
 import type { WizardPricingResult } from "../pricing/wizard-pricing-types";
+import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
 import type {
   ConfigSaveMapperFailure, ConfigSaveMapperResult, mapWizardDraftToSaveRequestFromConfig,
 } from "./estimate-save-mapper-from-config";
@@ -39,6 +40,32 @@ import type {
   WizardSaveFailureReporter, WizardSaveIntentFailure, WizardSaveIntentResult,
   WizardSaveReportableFailure, WizardSaveIntentValidation,
 } from "./wizard-save-intent-types";
+
+/**
+ * PPF-OFFERING-R1-B — detect PPF-bearing canonical draft state.
+ *
+ * The structurally required PPF configuration section always exists on every draft
+ * (`serviceConfiguration.ppf` is not optional), so its mere presence is never PPF
+ * intent. Only a selected `ppf` category, OR any field inside that section that
+ * differs from the canonical initial default, counts. `vehicleCoefficientInput` is
+ * compared against the exact canonical default string `"1.0"` rather than a parsed
+ * number, matching how the draft carries it — a differently-formatted but
+ * numerically-equal string (e.g. `"1.00"`) is still non-default input.
+ */
+export function isPpfBearingDraft(draft: EstimateWizardDraftV22): boolean {
+  if (draft.serviceSelection.selectedCategories.includes("ppf")) return true;
+  const ppf = draft.serviceConfiguration.ppf;
+  return (
+    ppf.installationMethod !== null ||
+    ppf.fullCoverage !== null ||
+    ppf.selectedPartIds.length > 0 ||
+    Object.keys(ppf.quantitiesByPart).length > 0 ||
+    ppf.ppfTypeId !== null ||
+    ppf.unitPriceInput !== "" ||
+    ppf.vehicleCoefficientInput !== "1.0" ||
+    ppf.interiorRows.length > 0
+  );
+}
 
 /**
  * Injected dependencies. Note what is NOT here: no dealer id, no user id, no role, no catalog, no
@@ -180,6 +207,15 @@ export async function runWizardSaveIntent(
   if (intent.expectedConfigRevision !== runtime.lifecycle.currentRevision) {
     report(deps, "stale-config-revision", context.dealerId);
     return failPlain("stale-config-revision");
+  }
+
+  // ── 7b. The current dealer-bound runtime is the ONLY PPF-offering authority. A PPF-bearing
+  //        draft is rejected here — before pricing, mapping, DTO validation, or persistence run —
+  //        when the offering is off. No offering flag, rank, or catalog inference is accepted from
+  //        the client; only `runtime.screenConfig.serviceOfferings.ppf` decides. ──
+  if (runtime.screenConfig.serviceOfferings.ppf === false && isPpfBearingDraft(intent.draft)) {
+    report(deps, "service-not-offered", context.dealerId);
+    return failPlain("service-not-offered");
   }
 
   // ── 8. Reprice ON THE SERVER, from the SERVER's runtime inputs only. The client sent no totals,
