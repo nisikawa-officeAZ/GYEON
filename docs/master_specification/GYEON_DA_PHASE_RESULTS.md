@@ -2631,3 +2631,85 @@ boundary:
 decision: GDA_ESTIMATE_PPF_OFFERING_R1_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-PPF-OFFERING-R1-D1 — Claude read-only diagnosis result
+
+```yaml
+phase: GDA_ESTIMATE_PPF_OFFERING_R1_READ_ONLY_DIAGNOSIS
+status: COMPLETE_CHANGES_REQUIRED_GOVERNANCE
+date: 2026-08-30
+append_only: true
+result_id: GDA_ESTIMATE_PPF_OFFERING_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+verdict: CHANGES_REQUIRED_GOVERNANCE
+authorization: "The owner explicitly authorized one transmission of the private mandatory governance documents and the directive's 32 source files to Anthropic Claude Code for read-only diagnosis. No edit, test, Git mutation, database/Supabase/provider access, Preview/production action, or second invocation was authorized."
+execution:
+  branch: agent/estimate-ppf-offering-r1
+  head: d1a4cd29ac611e4cf42002a7c51a49239423808d
+  tree: 95ed2d42ca1a9b8c1260c3a083b21fa826537e71
+  fixed_source_base_commit: 81fd36bf5c73cb84b872deaf4ab3211a634fbe1f
+  fixed_source_base_tree: 0fc2f7877ab846ac7d9700986ee0f68d4e88f4b0
+  fixed_base_ancestry: PASS
+  exact_governance_delta_paths: 3
+  clean_before: true
+  clean_after: true
+confirmed_conflicts:
+  - "Step 3 renders a static PPF control and receives no dealer service-offering authority."
+  - "Step 4 hides opted-out PPF instead of presenting the owner-approved disabled state."
+  - "Coating-only selection has no attached partial-PPF entry point."
+  - "Pricing activates PPF from draft selection/configuration without a direct offering input."
+  - "The server save orchestrator reloads runtime but does not deny PPF when the offering is off."
+  - "The current atomic-save RPC accepts PPF service lines without independently reading dealer_service_offerings."
+accepted_contract:
+  - "One existing WizardPpfDraft represents both full and partial PPF."
+  - "Partial PPF uses the existing ppf category, partial installation method, R1 pricing identity, DTO, RPC payload, and persisted ppf line category."
+  - "No owner business decision remains."
+codex_review:
+  authority_chain_findings: ACCEPTED
+  immediate_combined_implementation: REJECTED
+  reason:
+    - "The returned Phase B referenced one write path that the diagnosis had not opened."
+    - "The earliest client normalization point was not fixed."
+    - "The SQL test/harness path was not literal."
+    - "Missing implementation is expected and is not by itself a governance defect."
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_DIAGNOSIS_AND_SPLIT_IMPLEMENTATION_GOVERNANCE
+next: "AUTHOR_PHASE_A_UI_STATE_DIRECTIVE_ONLY; KEEP_SERVER_AND_SQL_ENFORCEMENT_SEPARATE"
+```
+
+## GDA-ESTIMATE-PPF-OFFERING-R1-A-G1 — UI/state implementation governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_PPF_OFFERING_R1_A_UI_STATE_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_IMPLEMENTATION_NOT_SENT
+date: 2026-08-30
+append_only: true
+directive_id: GDA_ESTIMATE_PPF_OFFERING_R1_A_UI_STATE_IMPLEMENTATION_V1
+authorization: "The owner authorized authoring exactly three governance documents for Phase A. Source implementation, tests, Claude transmission, Git delivery, server save/RPC/SQL changes, DB/Supabase/provider access, Preview/production actions, Ready, merge, and deployment remain unauthorized."
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PPF_OFFERING_R1_A_UI_STATE_IMPLEMENTATION.md
+implementation_write_allowlist:
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step3Category.tsx
+  - src/components/estimates/wizard/steps/Step3Category.test.tsx
+  - src/components/estimates/wizard/steps/Step4Estimate.tsx
+  - src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx
+frozen_behavior:
+  - "PPF offered: Step-3 PPF is enabled/selectable."
+  - "PPF off: Step-3 PPF remains visible, disabled, gray, with the exact store-setting reason, and emits no patch."
+  - "Coating-only plus offered/configured PPF shows a compact attached action labelled 部分PPFを追加."
+  - "The attached action applies one canonical patch: append existing ppf category and set existing installationMethod to partial, then open the existing PPF section."
+  - "No second PPF model, category, price route, line identity, or persistence shape."
+  - "PPF off hides the attached action; incomplete PPF shows the existing administrator-directed setup reason."
+boundary:
+  - "Phase A changes no pricing, save, RPC, SQL, migration, DB, provider, setting, OCR, size, or rank contract."
+  - "Phase A cannot be independently merged to production before server and RPC enforcement gates complete."
+  - "No stage, commit, push, Claude transmission, test execution, Preview/production action, Ready, merge, or deployment is authorized by this authoring gate."
+decision: GDA_ESTIMATE_PPF_OFFERING_R1_A_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```

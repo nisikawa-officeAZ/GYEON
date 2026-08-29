@@ -792,7 +792,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-PPF-OFFERING-R1 — PPF availability and partial-PPF control
 
-**Status:** AUTHORIZED FOR GOVERNANCE AUTHORING ONLY — the dedicated branch/worktree and exactly three governance documents may be created. Claude transmission, diagnosis execution, implementation, tests, Git delivery, database access, Preview/production changes, Ready, merge, and deployment are not authorized by this gate.
+**Status:** READ-ONLY DIAGNOSIS COMPLETE / PHASE A IMPLEMENTATION GOVERNANCE AUTHORING AUTHORIZED — Claude returned `GDA_ESTIMATE_PPF_OFFERING_R1_READ_ONLY_DIAGNOSIS_RESULT_V1` with `CHANGES_REQUIRED_GOVERNANCE`. MacBook Codex accepted the authority-chain findings but rejected immediate implementation because the combined UI/server/SQL allowlists were not all implementation-ready. The owner then authorized authoring exactly three governance documents for the bounded Phase A UI/state implementation. Source implementation, tests, Claude transmission, Git delivery, database access, Preview/production changes, Ready, merge, and deployment remain unauthorized by this gate.
 
 **Objective:** Make the Estimate Wizard obey the server-owned PPF offering setting consistently in UI, navigation, pricing, draft restoration, and save authorization.
 
@@ -829,9 +829,41 @@ The result document was excluded from harness implementation and was created lat
 
 **Required read-only diagnosis:** Map the exact end-to-end PPF authority from offering persistence through runtime configuration, Step-3 presentation, Step-4 full/partial selection, pricing, draft restoration, hostile save intent, DTO/RPC persistence, and saved-estimate behavior. Return the smallest literal later write phases and focused verification commands that enforce one server-owned rule without redesigning the approved UI.
 
+**Read-only diagnosis result:**
+
+- Result identifier: `GDA_ESTIMATE_PPF_OFFERING_R1_READ_ONLY_DIAGNOSIS_RESULT_V1`
+- Verdict: `CHANGES_REQUIRED_GOVERNANCE`
+- Execution HEAD/tree: `d1a4cd29ac611e4cf42002a7c51a49239423808d` / `95ed2d42ca1a9b8c1260c3a083b21fa826537e71`
+- The committed governance delta contained exactly the required three paths, the worktree remained clean, and all four protected blobs matched.
+- Confirmed conflicts: Step 3 does not receive the PPF offering switch; Step 4 removes opted-out PPF instead of presenting the approved disabled state; coating-only selection has no attached partial-PPF entry; server save and the current atomic RPC do not independently deny PPF while the dealer offering is off.
+- MacBook Codex correction: missing implementation is expected and is not itself a governance defect. The `CHANGES_REQUIRED_GOVERNANCE` consequence is retained because the returned server phase referenced one file that had not been read, the earliest client normalization point was not fixed, and the SQL verification path was not literal. Those gaps must be resolved in separate later governance; they do not block the bounded Phase A UI/state work.
+
+**Phase A — UI/state behavior only:**
+
+- Step 3 receives the authoritative `screenConfig.serviceOfferings.ppf` value from the existing server-resolved runtime.
+- PPF offered: the Step-3 PPF control remains enabled and selectable.
+- PPF not offered: the same control remains visible, disabled, gray, and displays exactly `店舗設定でPPFが「提供しない」に設定されています。` It must emit no canonical-state patch.
+- PPF offered and coating selected without main PPF: Step 4 shows a compact attached-action entry `部分PPFを追加`. Activating it applies one canonical patch that adds the existing `ppf` category and sets the existing PPF `installationMethod` to `partial`, then opens the existing PPF section. It creates no second PPF model, category, line identity, or price path.
+- The attached action is absent when PPF is not offered, absent when PPF is already selected, and visibly disabled with the existing administrator setup reason when PPF is offered but its global prerequisites are incomplete.
+- Phase A does not claim server authorization. Stale or hostile PPF draft rejection remains mandatory Phase B/C work and Phase A cannot be merged to production independently of those gates.
+
+**Phase A literal implementation write allowlist — exactly five paths:**
+
+1. `src/components/estimates/wizard/EstimateWizard.tsx`
+2. `src/components/estimates/wizard/steps/Step3Category.tsx`
+3. `src/components/estimates/wizard/steps/Step3Category.test.tsx` (new)
+4. `src/components/estimates/wizard/steps/Step4Estimate.tsx`
+5. `src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx`
+
+**Phase A governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PPF_OFFERING_R1_A_UI_STATE_IMPLEMENTATION.md` (new)
+
 **Boundary:** This governance gate changes no source, test, migration, SQL, RPC, UI implementation, dependency, config, generated artifact, or protected path. It runs no test, typecheck, build, runtime, database, Supabase, Auth, browser, Vercel, provider, or external-service command. It does not transmit private files to Claude and does not stage, commit, push, create or mutate a PR, mark Ready, merge, or deploy. The phase remains separate from the completed pricing-recovery PR.
 
-**Exit:** MacBook Codex verifies the exact three-document governance candidate and `git diff --check`, then requests a separate stage/local-commit authorization. Claude transmission and the one read-only diagnosis require another explicit authorization after the governance commit is accepted.
+**Exit:** MacBook Codex verifies the exact Phase A three-document governance candidate and `git diff --check`, then requests separate stage/local-commit authorization. Push and transmission of the Phase A directive/private source to Claude require later explicit gates. Phase B server authorization and Phase C RPC enforcement remain unimplemented and separately governed.
 
 ### GDA-3 — Completion Desk
 
