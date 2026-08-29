@@ -725,9 +725,9 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-PRICING-RECOVERY-R1 — Preview authoritative-pricing recovery
 
-**Status:** ACTIVE — governance candidate and one bounded Claude read-only diagnosis authorized. Source repair, tests, Git delivery, database mutation, Preview application, and deployment are not yet authorized.
+**Status:** ACTIVE — the bounded Claude read-only diagnosis is accepted with one Codex scope correction. The owner authorized implementation-governance authoring only. Source repair, tests, Git delivery, database mutation, Preview application, and deployment are not yet authorized.
 
-**Objective:** Restore the Estimate Wizard Preview route without weakening the fail-closed authoritative-pricing contract, and prevent a settings screen from persisting a sparse `service_price_settings` payload that later blocks estimate startup.
+**Objective:** Restore the Estimate Wizard Preview route by making the strict reader safely accept the natural coating-only sparse object produced by independent settings persistence, without weakening fail-closed validation of any value that is actually present.
 
 **Owner decision:** C5-D-R4 is temporarily paused. This recovery phase runs first because the Estimate Wizard cannot start in the current Dev-Next Preview. After recovery acceptance, the separately queued PPF offering-control phase runs next.
 
@@ -739,24 +739,43 @@ The result document was excluded from harness implementation and was created lat
 - `authoritative-pricing-catalog-core.ts` requires the complete non-null service settings structure, including `ppf`, `window_film`, `maintenance`, `carwash`, and `room_cleaning`; the sparse row therefore fails closed before the wizard renders.
 - No application crash or HTTP 500 was observed. The route intentionally rendered the generic unavailable state.
 
+**Accepted diagnosis:** `GDA_ESTIMATE_PRICING_RECOVERY_R1_READ_ONLY_DIAGNOSIS_RESULT_V1` returned `READY_FOR_IMPLEMENTATION_GOVERNANCE`. MacBook Codex independently confirmed the write/read call chain, clean state, protected metadata, and two-file repair boundary, but rejected one overbroad sentence in the report: the proposed repair does not make a `window_film_v1`-only object valid because coating remains mandatory. The implementation contract therefore fixes the observed coating-only row only and must not claim to close the separately queued PPF/coating-offering behavior.
+
 **Current governance write allowlist — exactly three paths:**
 
 1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
-3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PRICING_RECOVERY_R1_READ_ONLY_DIAGNOSIS.md` (new)
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PRICING_RECOVERY_R1_IMPLEMENTATION.md` (new)
 
-**Read-only diagnosis authority:** The exact branch/base/read allowlist, protected paths, prohibitions, and required result are defined by `CLAUDE_DIRECTIVE_GDA_ESTIMATE_PRICING_RECOVERY_R1_READ_ONLY_DIAGNOSIS.md`. Claude may inspect only; it may not edit, test, access Supabase or any external service, or mutate Git.
+**Accepted root cause:** `save_coating_v34_settings` applies `jsonb_set(coalesce(service_price_settings, '{}'), '{coating}', ...)`, so a null row naturally becomes a coating-only object. The strict reader then unconditionally requires `ppf`, `window_film`, `maintenance`, `carwash`, and `room_cleaning` before it resolves the valid V3.4 coating payload. The first absent member therefore becomes `malformed`, collapses to `pricing-catalog-failed`, and the route renders the generic unavailable state.
 
-**Required diagnosis outcome:**
+**Accepted implementation architecture:**
 
-- Identify the exact write path that can create a coating-only `service_price_settings` object from a null or incomplete row.
-- Decide whether the repair belongs in persistence initialization, strict read compatibility, a forward-only data migration, or a combination, without fabricating shop prices or weakening malformed-data rejection.
-- Define a literal implementation allowlist, exact focused tests, mixed-version behavior, existing-row remediation, rollback boundary, and an authenticated Preview acceptance sequence.
-- Preserve the distinction between unset and explicit zero, all seven-size coating contracts, independent PPF tables, rank/matrix rules, tenant isolation, and fail-closed pricing.
+- Change only the pure strict reader so absence or explicit null of the five legacy service sections means no override for that section; canonical defaults fill the omitted family exactly as they already do when the whole column is null.
+- If any of those five keys is present and non-null, preserve its existing complete validation unchanged; malformed present data still fails closed.
+- Keep V3.4 coating mandatory for every non-null `service_price_settings` object in this narrow recovery phase.
+- Keep `ppf_price_tables`, `window_film_v1`, tenant/RLS behavior, unset-versus-zero semantics, seven sizes, independent coating layers, and historical finalized estimates unchanged.
+- Do not add a migration or update the existing Preview row. The existing coating-only row is remediated by the compatible read path; rollback is a plain Git revert of the two-file source commit.
 
-**Prohibited:** Source/test/migration/config edits; test/typecheck/build/runtime execution; DB/Supabase/Auth/Storage/LINE/Vercel access; external transmission before a separate authorization; branch/worktree/index/commit/push/PR/Ready/merge/deployment mutation; protected-path content access.
+**Future implementation write allowlist — exactly two paths:**
 
-**Exit:** MacBook Codex accepts or rejects the read-only diagnosis. Only an accepted result can establish a later source-repair allowlist. Source implementation, database repair, Preview apply, and delivery remain separate gates.
+1. `src/lib/pricing/authoritative-pricing-catalog-core.ts`
+2. `src/lib/pricing/authoritative-pricing-catalog-core.test.ts`
+
+**Required focused regression coverage:**
+
+- A V3.4 coating-only object resolves successfully and all five absent families retain canonical defaults.
+- Absent and explicit-null forms of each of the five optional legacy sections resolve as no override.
+- Every present-but-malformed optional section still returns `malformed`.
+- A complete six-key legacy-compatible object preserves existing output parity.
+- A fully null service column preserves canonical-default behavior.
+- A `window_film_v1`-only object without valid V3.4 coating remains `malformed`; this explicitly prevents the implementation from claiming the contradiction found in the diagnosis narrative.
+
+**Implementation authority:** The exact execution identity, literal read/write allowlists, tests, protected paths, prohibitions, and required result are defined by `CLAUDE_DIRECTIVE_GDA_ESTIMATE_PRICING_RECOVERY_R1_IMPLEMENTATION.md`. Its creation does not authorize transmission to Claude or source implementation. Those remain separate owner gates.
+
+**Current prohibitions:** Source/test/migration/config edits; test/typecheck/build/runtime execution; DB/Supabase/Auth/Storage/LINE/Vercel access; external transmission of the implementation directive; branch/worktree/index/commit/push/PR/Ready/merge/deployment mutation; protected-path content access.
+
+**Exit:** Commit and push the exact three-document implementation-governance candidate only after separate approvals, then separately authorize one bounded Claude implementation against the exact two-file source allowlist. Source acceptance, Preview verification, Ready, merge, and deployment remain later gates.
 
 ### GDA-ESTIMATE-PPF-OFFERING-R1 — PPF availability and partial-PPF control
 

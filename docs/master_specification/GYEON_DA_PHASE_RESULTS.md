@@ -2429,3 +2429,69 @@ boundary:
 decision: GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-PRICING-RECOVERY-R1-R1 — Read-only diagnosis acceptance and implementation governance
+
+```yaml
+phase: GDA_ESTIMATE_PRICING_RECOVERY_R1_DIAGNOSIS_ACCEPTANCE_AND_IMPLEMENTATION_GOVERNANCE
+status: IMPLEMENTATION_GOVERNANCE_CANDIDATE_UNCOMMITTED_SOURCE_NOT_CHANGED_TESTS_NOT_RUN
+date: 2026-08-30
+append_only: true
+diagnosis_result_id: GDA_ESTIMATE_PRICING_RECOVERY_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+authorization: "The owner explicitly authorized transmission of the PR #41 diagnosis directive, AGENTS.md, completion plan, phase ledger, and the directive's fifteen-file read allowlist to Anthropic Claude Code for exactly one bounded read-only diagnosis. After the diagnosis, the owner separately authorized authoring exactly three implementation-governance documents. Source repair, tests, stage, commit, push, PR mutation, DB/Supabase/provider access, Preview change, Ready, merge, and deployment remain prohibited."
+repository:
+  branch: agent/preview-pricing-recovery-r1
+  diagnosis_governance_head: 862f2c18424249596df77feb6666c94ca7616c7b
+  diagnosis_governance_tree: 8429598f8ef4dc2dd613bdad10ccedb687099e85
+  fixed_source_base_commit: 48de96bbf5518be3fd7fd8a3964dfd7975716165
+  fixed_source_base_tree: e25590d276237f643e9b1408e6c47d192388de07
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/41
+  pull_request_state_at_diagnosis: OPEN/Draft
+diagnosis_execution:
+  agent: Anthropic Claude Code
+  model: sonnet
+  effort: high
+  max_budget_usd: 3
+  session_persistence: disabled
+  mode: read_only
+  verdict: READY_FOR_IMPLEMENTATION_GOVERNANCE
+  actual_cost: NOT_REPORTED
+accepted_root_cause:
+  - "save_coating_v34_settings uses jsonb_set(coalesce(existing service_price_settings, '{}'), '{coating}', p_coating, true), so a null row naturally becomes a coating-only object."
+  - "applyServiceOverrides unconditionally requires ppf, window_film, maintenance, carwash, and room_cleaning before accepting the valid V3.4 coating payload."
+  - "The first absent key throws MALFORMED; the catalog resolver returns malformed; runtime collapses that to pricing-catalog-failed; /estimates/new renders the generic unavailable state."
+codex_acceptance:
+  call_chain: PASS_INDEPENDENTLY_VERIFIED
+  before_after_worktree_clean: PASS
+  execution_identity: PASS
+  exact_three_path_governance_delta: PASS
+  protected_metadata: PASS
+  result_scope: ACCEPTED_WITH_ONE_CORRECTION
+scope_correction:
+  - "The diagnosis narrative said the reader repair also closes a window_film_v1-only case, while its own regression requirement kept that case malformed."
+  - "R1 fixes the observed coating-only row only. Valid V3.4 coating remains mandatory for every non-null service settings object."
+  - "PPF-only, window-film-only, and coating-disabled behavior is not accepted as solved and must not be claimed by the implementation result."
+accepted_architecture:
+  - "At the pure strict reader, absence or explicit null of ppf, window_film, maintenance, carwash, or room_cleaning means no override for that family."
+  - "A present non-null optional section retains the complete existing validation and still fails closed when malformed."
+  - "No persistence initialization, data backfill, migration, RPC change, Preview-row update, or fabricated store-specific price is required."
+  - "Rollback is a plain Git revert of the future two-file source commit."
+future_source_write_allowlist:
+  - src/lib/pricing/authoritative-pricing-catalog-core.ts
+  - src/lib/pricing/authoritative-pricing-catalog-core.test.ts
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PRICING_RECOVERY_R1_IMPLEMENTATION.md
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "No source, test, migration, SQL, RPC, UI, config, dependency, lockfile, generated artifact, or protected path changed in this governance-authoring gate."
+  - "No test, typecheck, build, DB/Supabase/Auth/Storage/Docker/Colima/Vercel/provider access, stage, commit, push, PR mutation, Preview apply, Ready, merge, or deployment occurred."
+  - "The implementation directive is not authorized for external transmission or execution by this entry."
+decision: IMPLEMENTATION_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
