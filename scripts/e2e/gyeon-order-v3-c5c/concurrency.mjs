@@ -430,7 +430,8 @@ values ('${evidenceId}','initial_authorization','stub_card_psp','evt-race9-${suf
 
   const activateCreditSql = `${WIDEN}
 insert into public.gyeon_dealer_credit_terms(dealer_id,credit_state,terms_version,effective_from) values ('${dealerId}','active',1,now());`;
-  const finalizeSql = claimSql(ownerId, `select public.finalize_gyeon_order_v3_owner_submit_rpc('${dealerId}','${ownerId}','${orderId}',1,'${randomUUID()}','card',null,'${preparedId}','${evidenceId}');`);
+  const finalizeSql = claimSql(ownerId, `${WIDEN}
+select public.finalize_gyeon_order_v3_owner_submit_rpc('${dealerId}','${ownerId}','${orderId}',1,'${randomUUID()}','card',null,'${preparedId}','${evidenceId}');`);
 
   const { a: creditRace, b: finalizeRace, proven } = await raceTwo('race-9', activateCreditSql, 'race9-credit', finalizeSql, 'race9-finalize');
   const finalOrder = await query(`select coalesce(status,'')||':'||coalesce(payment_contract_kind,'none') from public.product_orders where id='${orderId}'`, 'race9-order');
@@ -454,17 +455,27 @@ insert into public.gyeon_dealer_credit_terms(dealer_id,credit_state,terms_versio
   const reservationId = randomUUID();
   await query(`
 ${draftOrderSql(orderId)}
-update public.product_orders set status='submitted', owner_review_state='owner_confirmed', payment_method='card', payment_status='authorized', payment_contract_kind='standard_payment', earliest_ship_date=(now() at time zone 'Asia/Tokyo')::date, aggregate_version=2 where id='${orderId}';
 insert into public.gyeon_order_external_evidence_v1(id,purpose,provider,provider_event_id,dealer_id,order_id,order_version,request_fingerprint,amount_inc_tax_yen,currency,authority,state,server_verified_at,expires_at,consumed_at,consumed_by_operation,payload_hash)
 values ('${cardEvidenceId}','initial_authorization','stub_card_psp','evt-race10-card-${suffix}','${dealerId}','${orderId}',1,'fp-race10-card',22000,'JPY','server_verified','succeeded',now(),now()+interval '10 minutes',now(),'owner_submit_finalize','hash-race10-card');
-update public.product_orders set card_authority_evidence_id='${cardEvidenceId}', card_authority_request_fingerprint='fp-race10-card' where id='${orderId}';
+update public.product_orders
+set status='submitted',
+    owner_review_state='owner_confirmed',
+    payment_method='card',
+    payment_status='authorized',
+    payment_contract_kind='standard_payment',
+    earliest_ship_date=(now() at time zone 'Asia/Tokyo')::date,
+    aggregate_version=2,
+    card_authority_evidence_id='${cardEvidenceId}',
+    card_authority_request_fingerprint='fp-race10-card'
+where id='${orderId}';
 insert into public.gyeon_order_external_evidence_v1(id,purpose,provider,provider_event_id,dealer_id,order_id,order_version,request_fingerprint,amount_inc_tax_yen,currency,authority,state,server_verified_at,expires_at,payload_hash)
 select '${reservationId}','inventory_reservation','office_az_stub','evt-race10-inv-${suffix}','${dealerId}','${orderId}',2,private.gyeon_order_v3_fingerprint('inventory_reservation','${orderId}',2,'{}'::jsonb),22000,'JPY','server_verified','succeeded',now(),now()+interval '10 minutes','hash-race10-inv';
 `, 'r10-fixture');
 
   const activateCreditSql = `${WIDEN}
 insert into public.gyeon_dealer_credit_terms(dealer_id,credit_state,terms_version,effective_from) values ('${dealerId}','active',1,now());`;
-  const releaseSql = `select public.release_gyeon_order_v3_warehouse_rpc('${orderId}','${ownerId}','${randomUUID()}');`;
+  const releaseSql = `${WIDEN}
+select public.release_gyeon_order_v3_warehouse_rpc('${orderId}','${ownerId}','${randomUUID()}');`;
 
   const { a: creditRace, b: releaseRace, proven } = await raceTwo('race-10', activateCreditSql, 'race10-credit', releaseSql, 'race10-release');
   const taskState = await query(`select task_state from public.gyeon_order_warehouse_tasks where order_id='${orderId}'`, 'race10-task');
