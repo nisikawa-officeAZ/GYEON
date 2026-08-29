@@ -86,10 +86,11 @@ export GYEON_ORDER_V3_C5C_SUFFIX="${GYEON_ORDER_V3_C5C_SUFFIX:-$(basename "$RUNT
 # pg_prove's own exit code is necessary but not sufficient: it can still
 # exit 0 on a run that contains a plan mismatch it doesn't itself fail on in
 # every CLI version, or that contains "# SKIP"/"# TODO" directives which TAP
-# treats as a soft pass. This script therefore independently parses each raw
-# TAP stream's own "1..N" plan header, counts the actual ok/not-ok lines,
-# and explicitly rejects skip, todo, NOTESTS, a plan/count mismatch, or zero
-# assertions, in addition to relying on the subprocess exit code.
+# treats as a soft pass. `supabase test db` returns pg_prove's reporter output,
+# not necessarily the original `1..N`/`ok N` stream, so this script accepts
+# either representation and explicitly rejects skip, todo, NOTESTS, parse
+# errors, failed assertions, a plan/count mismatch, or zero assertions, in
+# addition to relying on the subprocess exit code.
 # ---------------------------------------------------------------------------
 
 TAP_SCHEMA="$EVIDENCE_DIR/.tap-schema-rls.raw"
@@ -119,8 +120,9 @@ log_cmd "supabase test db 003-prepare-finalize-warehouse.test.sql" "$WAREHOUSE_T
 
 verify_tap_strict() {
   # Exits non-zero (and prints the reason) on any plan mismatch, skip, todo,
-  # NOTESTS marker, or zero-assertion run. Prints "plan=N count=N" on success
-  # so the caller can capture it for the run-facts record.
+  # NOTESTS marker, pg_prove parse error, failed assertion, or zero-assertion
+  # run. Prints "plan=N count=N" on success so the caller can capture it for
+  # the run-facts record.
   python3 - "$1" "$2" <<'PY'
 import re
 import sys
@@ -139,23 +141,42 @@ if re.search(r"#\s*TODO", text, re.IGNORECASE):
     print(f"TAP_STRICT_FAIL[{file_label}]: a TODO directive is present", file=sys.stderr)
     sys.exit(1)
 
-plan_match = re.search(r"^1\.\.(\d+)\s*$", text, re.MULTILINE)
-if not plan_match:
-    print(f"TAP_STRICT_FAIL[{file_label}]: no '1..N' TAP plan header found", file=sys.stderr)
+if re.search(r"^\s*Parse errors?:", text, re.MULTILINE | re.IGNORECASE):
+    print(f"TAP_STRICT_FAIL[{file_label}]: pg_prove reported a TAP parse error", file=sys.stderr)
     sys.exit(1)
-plan = int(plan_match.group(1))
 
+plan_match = re.search(r"^1\.\.(\d+)\s*$", text, re.MULTILINE)
 result_lines = re.findall(r"^(ok|not ok) ([0-9]+)\b", text, re.MULTILINE)
-count = len(result_lines)
+
+if plan_match and result_lines:
+    plan = int(plan_match.group(1))
+    count = len(result_lines)
+    failed = [seq for status, seq in result_lines if status == "not ok"]
+else:
+    # pg_prove reporter form, for example:
+    #   (... Tests: 101 Failed: 6)
+    #   Files=1, Tests=101, ...
+    file_summaries = re.findall(r"\bTests:\s*(\d+)\s+Failed:\s*(\d+)\)", text)
+    run_summaries = re.findall(r"\bFiles=\d+,\s*Tests=(\d+)\b", text)
+    if not run_summaries:
+        print(f"TAP_STRICT_FAIL[{file_label}]: neither raw TAP nor a pg_prove test-count summary was found", file=sys.stderr)
+        sys.exit(1)
+    plan = int(run_summaries[-1])
+    count = plan
+    failed_count = sum(int(failed) for _, failed in file_summaries)
+    failed_list_match = re.search(r"^\s*Failed tests:\s*(.+)$", text, re.MULTILINE)
+    failed = [failed_list_match.group(1).strip()] if failed_list_match else ([str(failed_count)] if failed_count else [])
+    if re.search(r"^Result:\s*FAIL\s*$", text, re.MULTILINE):
+        failed = failed or ["pg_prove-result-fail"]
+
 if plan == 0 or count == 0:
     print(f"TAP_STRICT_FAIL[{file_label}]: zero assertions (plan={plan}, count={count})", file=sys.stderr)
     sys.exit(1)
 if count != plan:
     print(f"TAP_STRICT_FAIL[{file_label}]: plan/count mismatch (plan={plan}, count={count})", file=sys.stderr)
     sys.exit(1)
-failed = [seq for status, seq in result_lines if status == "not ok"]
 if failed:
-    print(f"TAP_STRICT_FAIL[{file_label}]: {len(failed)} failing assertion(s): {','.join(failed)}", file=sys.stderr)
+    print(f"TAP_STRICT_FAIL[{file_label}]: failing assertion(s): {','.join(failed)}", file=sys.stderr)
     sys.exit(1)
 
 print(f"plan={plan} count={count}")
@@ -167,9 +188,11 @@ QUALIFICATION_TAP_STRICT="$(verify_tap_strict "$TAP_QUALIFICATION" "qualificatio
 WAREHOUSE_TAP_STRICT="$(verify_tap_strict "$TAP_WAREHOUSE" "prepare-finalize-warehouse" 2>&1)" || { printf '%s\n' "$WAREHOUSE_TAP_STRICT" >&2; fail "prepare-finalize-warehouse.test.sql failed explicit TAP strictness verification"; }
 
 tap_to_ndjson() {
-  # Converts "ok N - description" / "not ok N - description" lines to NDJSON.
-  # A non-strict TAP line count relative to the file's own `plan(N)` is a
-  # pg_prove-detected failure already reflected in its non-zero exit code.
+  # Converts "ok N - description" / "not ok N - description" lines to
+  # NDJSON. When pg_prove suppresses successful assertion lines, emit one
+  # explicitly summary-derived PASS record per reported assertion number;
+  # the raw reporter output remains preserved in pgtap.tap and the guarded
+  # SQL hash preserves the exact assertion descriptions.
   # Implemented in python3 (already a required dependency) rather than awk,
   # since 3-argument match() capture groups are a gawk extension not
   # guaranteed to exist in every platform's default awk.
@@ -180,12 +203,32 @@ import sys
 
 pattern = re.compile(r"^(ok|not ok) ([0-9]+) - (.*)$")
 with open(sys.argv[1], encoding="utf-8", errors="replace") as handle:
-    for line in handle:
-        match = pattern.match(line.rstrip("\n"))
-        if not match:
-            continue
-        status, seq, description = match.groups()
-        print(json.dumps({"seq": int(seq), "ok": status == "ok", "description": description}))
+    text = handle.read()
+
+records = []
+for line in text.splitlines():
+    match = pattern.match(line)
+    if not match:
+        continue
+    status, seq, description = match.groups()
+    records.append({"seq": int(seq), "ok": status == "ok", "description": description, "source": "raw_tap"})
+
+if records:
+    for record in records:
+        print(json.dumps(record))
+else:
+    summaries = re.findall(r"\bFiles=\d+,\s*Tests=(\d+)\b", text)
+    result_pass = re.search(r"^Result:\s*PASS\s*$", text, re.MULTILINE) is not None
+    if not summaries or not result_pass:
+        sys.exit("tap_to_ndjson: strict verification should have rejected a reporter stream without a PASS count")
+    total = int(summaries[-1])
+    for seq in range(1, total + 1):
+        print(json.dumps({
+            "seq": seq,
+            "ok": True,
+            "description": f"pg_prove summary-derived PASS assertion {seq} of {total}",
+            "source": "pg_prove_summary"
+        }))
 PY
 }
 

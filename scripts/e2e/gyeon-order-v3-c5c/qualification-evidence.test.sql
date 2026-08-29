@@ -85,10 +85,13 @@ insert into public.product_order_items(
 -- Qualification authority-state gate (prepare_gyeon_order_v3_owner_submit_rpc)
 -- ===========================================================================
 
-set local role authenticated;
 select set_config('request.jwt.claim.sub','c5c20000-0000-4000-8000-000000000001',true);
 select set_config('request.jwt.claims','{"sub":"c5c20000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 
+-- Authority fixtures are written only by the disposable test owner. The
+-- authenticated role is assumed narrowly around dealer-facing RPC calls so
+-- this proof never grants or relies on browser-write access to projections.
+set local role authenticated;
 select is(
   (select (public.prepare_gyeon_order_v3_owner_submit_rpc(
     'c5c21000-0000-4000-8000-000000000001','c5c20000-0000-4000-8000-000000000001',
@@ -96,6 +99,7 @@ select is(
   'qualification_authority_not_configured',
   '01 no qualification-mode projection row fails closed as not-configured'
 );
+reset role;
 
 insert into public.gyeon_dealer_qualification_mode_projection(
   id,dealer_id,qualification_mode,projection_version,authority_state,effective_from,effective_to
@@ -104,6 +108,7 @@ insert into public.gyeon_dealer_qualification_mode_projection(
   now()-interval '2 day',now()-interval '1 day'
 );
 
+set local role authenticated;
 select is(
   (select (public.prepare_gyeon_order_v3_owner_submit_rpc(
     'c5c21000-0000-4000-8000-000000000001','c5c20000-0000-4000-8000-000000000001',
@@ -111,6 +116,7 @@ select is(
   'qualification_authority_stale',
   '02 only a past-effective projection is stale, never treated as not-configured'
 );
+reset role;
 
 insert into public.gyeon_dealer_qualification_mode_projection(
   id,dealer_id,qualification_mode,projection_version,authority_state,effective_from
@@ -118,6 +124,7 @@ insert into public.gyeon_dealer_qualification_mode_projection(
   'c5c27000-0000-4000-8000-000000000002','c5c21000-0000-4000-8000-000000000001','shop_initial',2,'STALE',now()-interval '1 hour'
 );
 
+set local role authenticated;
 select is(
   (select (public.prepare_gyeon_order_v3_owner_submit_rpc(
     'c5c21000-0000-4000-8000-000000000001','c5c20000-0000-4000-8000-000000000001',
@@ -125,11 +132,13 @@ select is(
   'qualification_authority_stale',
   '03 an explicit current STALE projection fails closed as stale'
 );
+reset role;
 
 update public.gyeon_dealer_qualification_mode_projection
   set authority_state = 'ERROR'
   where id = 'c5c27000-0000-4000-8000-000000000002';
 
+set local role authenticated;
 select is(
   (select (public.prepare_gyeon_order_v3_owner_submit_rpc(
     'c5c21000-0000-4000-8000-000000000001','c5c20000-0000-4000-8000-000000000001',
@@ -137,11 +146,13 @@ select is(
   'qualification_authority_error',
   '04 an explicit current ERROR projection fails closed as error'
 );
+reset role;
 
 update public.gyeon_dealer_qualification_mode_projection
   set authority_state = 'NOT_CONFIGURED'
   where id = 'c5c27000-0000-4000-8000-000000000002';
 
+set local role authenticated;
 select is(
   (select (public.prepare_gyeon_order_v3_owner_submit_rpc(
     'c5c21000-0000-4000-8000-000000000001','c5c20000-0000-4000-8000-000000000001',
@@ -149,7 +160,6 @@ select is(
   'qualification_authority_not_configured',
   '05 an explicit current NOT_CONFIGURED projection fails closed as not-configured'
 );
-
 reset role;
 
 -- ===========================================================================

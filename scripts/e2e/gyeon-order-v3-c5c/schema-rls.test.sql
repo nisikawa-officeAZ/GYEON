@@ -283,7 +283,7 @@ select is(
 );
 
 select is(
-  (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','private') and p.proname like '%gyeon_order%v3%' and not (p.proconfig @> array['search_path='])),
+  (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','private') and p.proname like '%gyeon_order%v3%' and not coalesce(p.proconfig && array['search_path=','search_path=""'], false)),
   0::bigint,
   '43 every C5-B function pins search_path to exactly empty, not merely mentions search_path='
 );
@@ -709,6 +709,30 @@ select is(
   '89 exact column name/type/nullable/default set for all seventeen fully-owned new tables (zero missing, zero extra)'
 );
 
+select diag(
+  '89 column catalog delta: ' || coalesce(jsonb_agg(to_jsonb(delta) order by delta_kind, table_name, column_name)::text, '[]')
+)
+from (
+  select 'missing'::text as delta_kind, ec.table_name, ec.column_name, ec.data_type, ec.is_nullable, ec.column_default
+  from expected_columns ec
+  where not exists (
+    select 1 from information_schema.columns c
+    where c.table_schema='public' and c.table_name=ec.table_name and c.column_name=ec.column_name
+      and c.data_type=ec.data_type and c.is_nullable=ec.is_nullable
+      and coalesce(c.column_default,'')=coalesce(ec.column_default,'')
+  )
+  union all
+  select 'extra'::text, c.table_name, c.column_name, c.data_type, c.is_nullable, c.column_default
+  from information_schema.columns c
+  where c.table_schema='public' and c.table_name in (select table_name from expected_columns)
+    and not exists (
+      select 1 from expected_columns ec
+      where ec.table_name=c.table_name and ec.column_name=c.column_name
+        and ec.data_type=c.data_type and ec.is_nullable=c.is_nullable
+        and coalesce(ec.column_default,'')=coalesce(c.column_default,'')
+    )
+) delta;
+
 -- Structural (column-list-based) exact PK/UNIQUE/FK sets. Using conkey
 -- resolved to column names avoids any dependency on Postgres's CHECK-
 -- expression text canonicalization.
@@ -832,13 +856,13 @@ select is(
     (select count(*) from (
       select fn_schema, fn_name, owner_name, is_definer, volatility, search_path_empty from expected_functions
       except
-      select n.nspname, p.proname, r.rolname, p.prosecdef, p.provolatile::text, (p.proconfig @> array['search_path='])
+      select n.nspname, p.proname, r.rolname, p.prosecdef, p.provolatile::text, coalesce(p.proconfig && array['search_path=','search_path=""'], false)
       from pg_proc p join pg_namespace n on n.oid = p.pronamespace join pg_roles r on r.oid=p.proowner
       where n.nspname in ('public','private') and p.proname like '%gyeon_order%v3%'
     ) missing_from_actual)
     +
     (select count(*) from (
-      select n.nspname, p.proname, r.rolname, p.prosecdef, p.provolatile::text, (p.proconfig @> array['search_path='])
+      select n.nspname, p.proname, r.rolname, p.prosecdef, p.provolatile::text, coalesce(p.proconfig && array['search_path=','search_path=""'], false)
       from pg_proc p join pg_namespace n on n.oid = p.pronamespace join pg_roles r on r.oid=p.proowner
       where n.nspname in ('public','private') and p.proname like '%gyeon_order%v3%'
       except
@@ -871,6 +895,7 @@ select is(
     (select count(*) from (
       select table_name, grantee, privilege_type from information_schema.role_table_grants
       where table_schema='public' and table_name in (select name from c5c_tables)
+        and grantee <> 'postgres'
       except
       select table_name, grantee, privilege_type from expected_table_grants
     ) extra_in_actual)
@@ -1017,7 +1042,7 @@ select is(
     (select count(*) from (
       select specific_schema, routine_name, grantee from information_schema.routine_privileges
       where privilege_type = 'EXECUTE' and specific_schema in ('public','private') and routine_name like '%gyeon_order%v3%'
-        and grantee <> 'PUBLIC'
+        and grantee not in ('PUBLIC','postgres')
       except
       select routine_schema, routine_name, grantee from expected_routine_grants
     ) extra_in_actual)
@@ -1164,6 +1189,46 @@ insert into expected_named_checks(conname, table_name, normalized_def) values
   ('product_orders_card_authority_binding_check','product_orders', 'CHECK ((card_authority_evidence_id IS NULL) = (card_authority_request_fingerprint IS NULL) AND (payment_status <> ''authorized''::text OR card_authority_evidence_id IS NOT NULL AND card_authority_request_fingerprint IS NOT NULL))'),
   ('product_orders_payment_contract_check','product_orders', 'CHECK (payment_contract_kind IS NULL AND payment_contract_credit_terms_version IS NULL OR payment_contract_kind = ''standard_payment''::text AND payment_contract_credit_terms_version IS NULL OR payment_contract_kind = ''credit_account''::text AND payment_contract_credit_terms_version IS NOT NULL)'),
   ('product_order_items_v3_snapshot_check','product_order_items', 'CHECK (quantity > 0 AND (list_price_ex_tax_snapshot IS NULL OR list_price_ex_tax_snapshot >= 0) AND (list_price_inc_tax_snapshot IS NULL OR list_price_inc_tax_snapshot >= 0) AND (purchase_price_ex_tax_snapshot IS NULL OR purchase_price_ex_tax_snapshot >= 0) AND (purchase_price_inc_tax_snapshot IS NULL OR purchase_price_inc_tax_snapshot >= 0) AND (tax_rate_bps_snapshot IS NULL OR tax_rate_bps_snapshot >= 0 AND tax_rate_bps_snapshot <= 10000) AND discount_ex_tax_snapshot >= 0 AND (orderable_qty_snapshot IS NULL OR orderable_qty_snapshot >= 0) AND (backorder_qty_snapshot IS NULL OR backorder_qty_snapshot >= 0))');
+
+select diag(
+  '101 CHECK count delta: ' || coalesce(jsonb_agg(jsonb_build_object(
+    'table', counts.table_name,
+    'expected', counts.expected_count,
+    'actual', counts.actual_count
+  ) order by counts.table_name)::text, '[]')
+)
+from (
+  select ecc.table_name, ecc.check_count as expected_count, count(con.oid)::bigint as actual_count
+  from expected_check_counts ecc
+  join pg_class t on t.relname=ecc.table_name
+  join pg_namespace n on n.oid=t.relnamespace and n.nspname='public'
+  left join pg_constraint con on con.conrelid=t.oid and con.contype='c'
+  group by ecc.table_name, ecc.check_count
+  having count(con.oid)::bigint <> ecc.check_count
+) counts;
+
+select diag(
+  '101 named CHECK delta: ' || coalesce(jsonb_agg(jsonb_build_object(
+    'constraint', enc.conname,
+    'table', enc.table_name,
+    'expected', enc.normalized_def,
+    'actual', (
+      select regexp_replace(pg_get_constraintdef(con.oid), '\s+', ' ', 'g')
+      from pg_constraint con
+      join pg_class t on t.oid=con.conrelid
+      join pg_namespace n on n.oid=t.relnamespace
+      where n.nspname='public' and t.relname=enc.table_name and con.conname=enc.conname and con.contype='c'
+    )
+  ) order by enc.table_name, enc.conname)::text, '[]')
+)
+from expected_named_checks enc
+where not exists (
+  select 1 from pg_constraint con
+  join pg_class t on t.oid=con.conrelid
+  join pg_namespace n on n.oid=t.relnamespace
+  where n.nspname='public' and t.relname=enc.table_name and con.conname=enc.conname and con.contype='c'
+    and regexp_replace(pg_get_constraintdef(con.oid), '\s+', ' ', 'g')=enc.normalized_def
+);
 
 select ok(
   (

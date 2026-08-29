@@ -17,6 +17,7 @@ set local search_path = extensions, pg_temp, public, pg_catalog;
 select plan(48);
 
 create temp table c5c3_scratch(key text primary key, value jsonb);
+grant select, insert on c5c3_scratch to authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- Shared fixtures. Qualification mode is fixed to 'none' so this file proves
@@ -73,7 +74,6 @@ insert into public.gyeon_warehouse_calendar_days(warehouse_date, operating_mode,
 select ((now() at time zone 'Asia/Tokyo')::date + g), 'normal', 1439, 1
 from generate_series(0,6) g;
 
-set local role authenticated;
 select set_config('request.jwt.claim.sub','c5c30000-0000-4000-8000-000000000001',true);
 select set_config('request.jwt.claims','{"sub":"c5c30000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 
@@ -96,12 +96,14 @@ insert into public.product_order_items(
   'c5c36000-0000-4000-8000-000000000001','c5c33000-0000-4000-8000-000000000001','C5C3-A','C5C3 Product A',22000,1,15000,20000
 );
 
+set local role authenticated;
 insert into c5c3_scratch values ('o1_prepare', (
   select public.prepare_gyeon_order_v3_owner_submit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
     'c5c36000-0000-4000-8000-000000000001',1,'card',null
   )
 ));
+reset role;
 
 select is(
   (select (value ->> 'requires_external_authorization')::boolean from c5c3_scratch where key = 'o1_prepare'),
@@ -126,6 +128,7 @@ select
   'server_verified','succeeded',now(),now()+interval '10 minutes','hash-o1-auth'
 from c5c3_scratch where key = 'o1_prepare';
 
+set local role authenticated;
 insert into c5c3_scratch values ('o1_finalize', (
   select public.finalize_gyeon_order_v3_owner_submit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
@@ -135,6 +138,7 @@ insert into c5c3_scratch values ('o1_finalize', (
     'c5c38000-0000-4000-8000-000000000001'
   )
 ));
+reset role;
 
 select is(
   (select (value ->> 'ok')::boolean from c5c3_scratch where key = 'o1_finalize'),
@@ -180,6 +184,7 @@ select is(
 
 -- Idempotent replay: identical inputs, same idempotency key, must not
 -- re-consume evidence or re-advance aggregate_version.
+set local role authenticated;
 select is(
   (select (public.finalize_gyeon_order_v3_owner_submit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
@@ -191,6 +196,7 @@ select is(
   true,
   '10 identical idempotent replay of finalize returns the canonical prior result'
 );
+reset role;
 
 select is(
   (select aggregate_version from public.product_orders where id = 'c5c36000-0000-4000-8000-000000000001'),
@@ -199,6 +205,7 @@ select is(
 );
 
 -- Amount-changing edit: replace the single line with two lines of Product B.
+set local role authenticated;
 insert into c5c3_scratch values ('o1_edit_prepare', (
   select public.prepare_gyeon_order_v3_edit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
@@ -206,6 +213,7 @@ insert into c5c3_scratch values ('o1_edit_prepare', (
     '[{"product_id":"c5c33000-0000-4000-8000-000000000002","quantity":2}]'::jsonb
   )
 ));
+reset role;
 
 select is(
   (select value ->> 'action' from c5c3_scratch where key = 'o1_edit_prepare'),
@@ -224,6 +232,7 @@ select
   'server_verified','succeeded',now(),now()+interval '10 minutes','hash-o1-edit'
 from c5c3_scratch where key = 'o1_edit_prepare';
 
+set local role authenticated;
 insert into c5c3_scratch values ('o1_edit_finalize', (
   select public.finalize_gyeon_order_v3_edit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
@@ -233,6 +242,7 @@ insert into c5c3_scratch values ('o1_edit_finalize', (
     'c5c38000-0000-4000-8000-000000000002'
   )
 ));
+reset role;
 
 select is(
   (select (value ->> 'ok')::boolean from c5c3_scratch where key = 'o1_edit_finalize'),
@@ -260,6 +270,7 @@ select is(
 
 -- Amount-preserving edit: same single line and same total; no external
 -- authorization is required and the existing card authority link survives.
+set local role authenticated;
 insert into c5c3_scratch values ('o1_edit2_prepare', (
   select public.prepare_gyeon_order_v3_edit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
@@ -267,6 +278,7 @@ insert into c5c3_scratch values ('o1_edit2_prepare', (
     '[{"product_id":"c5c33000-0000-4000-8000-000000000002","quantity":2}]'::jsonb
   )
 ));
+reset role;
 
 select is(
   (select value ->> 'action' from c5c3_scratch where key = 'o1_edit2_prepare'),
@@ -274,6 +286,7 @@ select is(
   '17 an amount-preserving edit never requires external reauthorization'
 );
 
+set local role authenticated;
 insert into c5c3_scratch values ('o1_edit2_finalize', (
   select public.finalize_gyeon_order_v3_edit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
@@ -281,6 +294,7 @@ insert into c5c3_scratch values ('o1_edit2_finalize', (
     '[{"product_id":"c5c33000-0000-4000-8000-000000000002","quantity":2}]'::jsonb
   )
 ));
+reset role;
 
 select is(
   (select card_authority_evidence_id from public.product_orders where id = 'c5c36000-0000-4000-8000-000000000001'),
@@ -290,12 +304,14 @@ select is(
 
 -- Release requires a server-verified inventory_reservation evidence bound to
 -- the exact dealer/order/current version/fingerprint/amount/currency.
+set local role service_role;
 select throws_ok(
   $$select public.release_gyeon_order_v3_warehouse_rpc(
     'c5c36000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000099','c5c39000-0000-4000-8000-000000000004')$$,
   '55000','INVENTORY_RESERVATION_EVIDENCE_REQUIRED',
   '19 warehouse release without inventory-reservation evidence fails closed'
 );
+reset role;
 
 insert into public.gyeon_order_external_evidence_v1(
   id,purpose,provider,provider_event_id,dealer_id,order_id,order_version,request_fingerprint,
@@ -315,22 +331,26 @@ select
   o.grand_total_inc_tax_yen,'JPY','server_verified','succeeded',now(),now()+interval '10 minutes','hash-o1-inv-2'
 from public.product_orders o where o.id = 'c5c36000-0000-4000-8000-000000000001';
 
+set local role service_role;
 select throws_ok(
   $$select public.release_gyeon_order_v3_warehouse_rpc(
     'c5c36000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000099','c5c39000-0000-4000-8000-000000000005')$$,
   '55000','INVENTORY_RESERVATION_EVIDENCE_AMBIGUOUS',
   '20 two exact-matching inventory-reservation candidates fail closed as ambiguous'
 );
+reset role;
 
 update public.gyeon_order_external_evidence_v1
   set state = 'voided'
   where id = 'c5c38000-0000-4000-8000-000000000004';
 
+set local role service_role;
 insert into c5c3_scratch values ('o1_release', (
   select public.release_gyeon_order_v3_warehouse_rpc(
     'c5c36000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000099','c5c39000-0000-4000-8000-000000000006'
   )
 ));
+reset role;
 
 select is(
   (select (value ->> 'ok')::boolean from c5c3_scratch where key = 'o1_release'),
@@ -357,6 +377,7 @@ select is(
 );
 
 -- Replay of release is a service-only no-op; it never creates a second task.
+set local role service_role;
 select is(
   (select (public.release_gyeon_order_v3_warehouse_rpc(
     'c5c36000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000099','c5c39000-0000-4000-8000-000000000007'
@@ -364,6 +385,7 @@ select is(
   'noop_existing',
   '25 replaying release against an order that already has a task is a no-op'
 );
+reset role;
 
 select is(
   (select count(*) from public.gyeon_order_warehouse_tasks where order_id = 'c5c36000-0000-4000-8000-000000000001'),
@@ -372,25 +394,31 @@ select is(
 );
 
 -- Warehouse accept: locks and consumes the existing task; never inserts one.
+set local role service_role;
 select throws_ok(
   $$select public.accept_gyeon_order_v3_warehouse_rpc(
     'c5c36000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000099',4,99,'c5c39000-0000-4000-8000-000000000008')$$,
   '40001','TASK_VERSION_CONFLICT',
   '27 accept with the wrong expected task version fails closed'
 );
+reset role;
 
+set local role service_role;
 select throws_ok(
   $$select public.accept_gyeon_order_v3_warehouse_rpc(
     'c5c36000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000099',99,1,'c5c39000-0000-4000-8000-000000000009')$$,
   '40001','ORDER_VERSION_CONFLICT',
   '28 accept with the wrong expected order version fails closed'
 );
+reset role;
 
+set local role service_role;
 insert into c5c3_scratch values ('o1_accept', (
   select public.accept_gyeon_order_v3_warehouse_rpc(
     'c5c36000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000099',4,1,'c5c39000-0000-4000-8000-00000000000a'
   )
 ));
+reset role;
 
 select is(
   (select status from public.product_orders where id = 'c5c36000-0000-4000-8000-000000000001'),
@@ -404,12 +432,14 @@ select is(
   '30 successful accept consumes the existing task instead of inserting a new one'
 );
 
+set local role service_role;
 select throws_ok(
   $$select public.accept_gyeon_order_v3_warehouse_rpc(
     'c5c36000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000099',5,2,'c5c39000-0000-4000-8000-00000000000b')$$,
   '55000','WAREHOUSE_ACCEPT_NOT_ALLOWED',
   '31 accept on an already-approved order is denied before a second task insert'
 );
+reset role;
 
 -- ===========================================================================
 -- Order O2: card finalize without a prepared operation or evidence fails
@@ -430,6 +460,7 @@ insert into public.product_order_items(
   'c5c36000-0000-4000-8000-000000000002','c5c33000-0000-4000-8000-000000000001','C5C3-A','C5C3 Product A',22000,1,15000,20000
 );
 
+set local role authenticated;
 insert into c5c3_scratch values ('o2_finalize', (
   select public.finalize_gyeon_order_v3_owner_submit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
@@ -437,6 +468,7 @@ insert into c5c3_scratch values ('o2_finalize', (
     'card',null,null,null
   )
 ));
+reset role;
 
 select is(
   (select value ->> 'code' from c5c3_scratch where key = 'o2_finalize'),
@@ -469,12 +501,14 @@ insert into public.product_order_items(
   'c5c36000-0000-4000-8000-000000000003','c5c33000-0000-4000-8000-000000000001','C5C3-A','C5C3 Product A',22000,1,15000,20000
 );
 
+set local role authenticated;
 insert into c5c3_scratch values ('o3_prepare', (
   select public.prepare_gyeon_order_v3_owner_submit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
     'c5c36000-0000-4000-8000-000000000003',1,'card',null
   )
 ));
+reset role;
 
 insert into public.gyeon_order_external_evidence_v1(
   id,purpose,provider,provider_event_id,dealer_id,order_id,order_version,request_fingerprint,
@@ -492,6 +526,7 @@ from c5c3_scratch where key = 'o3_prepare';
 insert into public.gyeon_dealer_credit_terms(dealer_id,credit_state,terms_version,effective_from) values
   ('c5c31000-0000-4000-8000-000000000001','active',1,now()-interval '1 minute');
 
+set local role authenticated;
 insert into c5c3_scratch values ('o3_finalize', (
   select public.finalize_gyeon_order_v3_owner_submit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
@@ -501,6 +536,7 @@ insert into c5c3_scratch values ('o3_finalize', (
     'c5c38000-0000-4000-8000-000000000005'
   )
 ));
+reset role;
 
 select is(
   (select value ->> 'code' from c5c3_scratch where key = 'o3_finalize'),
@@ -534,6 +570,7 @@ select is(
 
 -- Replay (retry with a different idempotency key, simulating a client retry
 -- after the same denial) must never create a second compensation row.
+set local role authenticated;
 select (public.finalize_gyeon_order_v3_owner_submit_rpc(
   'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
   'c5c36000-0000-4000-8000-000000000003',1,'c5c39000-0000-4000-8000-00000000000e',
@@ -541,6 +578,7 @@ select (public.finalize_gyeon_order_v3_owner_submit_rpc(
   (select value ->> 'prepared_operation_id' from c5c3_scratch where key = 'o3_prepare')::uuid,
   'c5c38000-0000-4000-8000-000000000005'
 ));
+reset role;
 
 select is(
   (select count(*) from public.gyeon_order_external_compensation_outbox where evidence_id = 'c5c38000-0000-4000-8000-000000000005'),
@@ -567,6 +605,7 @@ insert into public.product_order_items(
   'c5c36000-0000-4000-8000-000000000004','c5c33000-0000-4000-8000-000000000001','C5C3-A','C5C3 Product A',22000,1,15000,20000
 );
 
+set local role authenticated;
 select throws_ok(
   $$select public.prepare_gyeon_order_v3_owner_submit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
@@ -574,6 +613,7 @@ select throws_ok(
   '42501','CREDIT_ACCOUNT_TERMS_FORCE_METHOD',
   '40 active credit-account terms force credit_account and reject card at prepare time, before any prepared row'
 );
+reset role;
 
 select is(
   (select count(*) from public.gyeon_order_prepared_operations_v1 where order_id = 'c5c36000-0000-4000-8000-000000000004'),
@@ -581,6 +621,7 @@ select is(
   '41 the rejected prepare call never creates a prepared operation'
 );
 
+set local role authenticated;
 insert into c5c3_scratch values ('o4_finalize', (
   select public.finalize_gyeon_order_v3_owner_submit_rpc(
     'c5c31000-0000-4000-8000-000000000001','c5c30000-0000-4000-8000-000000000001',
@@ -588,6 +629,7 @@ insert into c5c3_scratch values ('o4_finalize', (
     'credit_account',null,null,null
   )
 ));
+reset role;
 
 select is(
   (select (value ->> 'ok')::boolean from c5c3_scratch where key = 'o4_finalize'),
@@ -609,13 +651,13 @@ select is(
 
 update public.gyeon_dealer_credit_terms set credit_state = 'stopped' where dealer_id = 'c5c31000-0000-4000-8000-000000000001';
 
+set local role service_role;
 select throws_ok(
   $$select public.release_gyeon_order_v3_warehouse_rpc(
     'c5c36000-0000-4000-8000-000000000004','c5c30000-0000-4000-8000-000000000099','c5c39000-0000-4000-8000-000000000010')$$,
   '55000','CREDIT_ACCOUNT_NOT_ENABLED',
   '45 warehouse release revalidates the exact bound terms version and denies once it is stopped'
 );
-
 reset role;
 
 -- ===========================================================================
