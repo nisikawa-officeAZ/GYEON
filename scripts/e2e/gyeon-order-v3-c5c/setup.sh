@@ -446,7 +446,7 @@ for staged_index in "${!STAGED_FILES[@]}"; do
   finished_at="$(date -u '+%Y-%m-%dT%H:%M:%S.%3NZ' 2>/dev/null || date -u '+%Y-%m-%dT%H:%M:%SZ')"
   log_cmd "psql -f $migration_name" "$MIGRATION_EXIT"
 
-  sqlstate="null"
+  sqlstate=""
   if [[ "$MIGRATION_EXIT" -ne 0 ]]; then
     # required 7: match the ACTUAL `psql -v VERBOSITY=verbose` error format,
     # where the SQLSTATE is rendered immediately after "ERROR:" (e.g.
@@ -460,16 +460,29 @@ with open('$PER_MIGRATION_LOG', encoding='utf-8', errors='replace') as handle:
 match = re.search(r'ERROR:\s*([0-9A-Z]{5}):', text)
 if not match:
     match = re.search(r'SQLSTATE[:\s]+([0-9A-Za-z]{5})', text, re.IGNORECASE)
-print('\"%s\"' % match.group(1) if match else 'null')
+print(match.group(1) if match else '')
 ")"
   fi
-  python3 -c "
+  set +e
+  python3 - "$migration_name" "$started_at" "$finished_at" "$MIGRATION_EXIT" "$sqlstate" >> "$MIGRATION_OUTCOME" <<'PY'
 import json
+import sys
+
+migration, started_at, finished_at, exit_code_raw, sqlstate_raw = sys.argv[1:6]
+exit_code = int(exit_code_raw)
 print(json.dumps({
-    'migration': '$migration_name', 'status': $([[ "$MIGRATION_EXIT" -eq 0 ]] && echo '\"applied\"' || echo '\"failed\"'),
-    'started_at': '$started_at', 'finished_at': '$finished_at',
-    'exit_code': $MIGRATION_EXIT, 'sqlstate': $sqlstate,
-}))" >> "$MIGRATION_OUTCOME"
+    'migration': migration,
+    'status': 'applied' if exit_code == 0 else 'failed',
+    'started_at': started_at,
+    'finished_at': finished_at,
+    'exit_code': exit_code,
+    'sqlstate': sqlstate_raw or None,
+}))
+PY
+  MIGRATION_OUTCOME_WRITE_EXIT=$?
+  set -e
+  log_cmd "python3 append migration outcome ($migration_name)" "$MIGRATION_OUTCOME_WRITE_EXIT"
+  [[ "$MIGRATION_OUTCOME_WRITE_EXIT" -eq 0 ]] || fail "migration outcome serialization failed for $migration_name with exit $MIGRATION_OUTCOME_WRITE_EXIT"
   rm -f "$PER_MIGRATION_LOG"
 
   if [[ "$MIGRATION_EXIT" -ne 0 ]]; then

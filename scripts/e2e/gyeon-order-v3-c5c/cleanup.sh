@@ -44,7 +44,7 @@ with open('$EVIDENCE_DIR/.command-ledger.ndjson', 'a', encoding='utf-8') as hand
 [[ -n "$RUNTIME_DIR" ]] || fail "GYEON_ORDER_V3_C5C_RUNTIME_DIR is required and must not be blank"
 case "$RUNTIME_DIR" in
   *'*'*|*'?'*|*'['*) fail "runtime path must not contain glob characters" ;;
-  /|"$HOME"|"$HOME"/|~|~/*) fail "runtime path must never resolve to \$HOME, ~, or /" ;;
+  /|"$HOME"|"$HOME"/|\~|\~/*) fail "runtime path must never resolve to \$HOME, ~, or /" ;;
   ..|*/../*|../*|*/..) fail "runtime path must not contain a parent-directory reference" ;;
 esac
 [[ "$RUNTIME_DIR" =~ ^${RUNTIME_PARENT//\//\\/}/gyeon-order-v3-c5c\.[0-9]{8}T[0-9]{6}Z-[a-z0-9]{6}$ ]] || fail "runtime path does not match the exact dedicated disposable pattern"
