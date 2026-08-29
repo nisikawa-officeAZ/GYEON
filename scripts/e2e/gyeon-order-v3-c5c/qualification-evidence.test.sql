@@ -538,6 +538,7 @@ select throws_ok(
     'c5c21000-0000-4000-8000-000000000001','c5c26000-0000-4000-8000-000000000001',1,'fp-dup',10000,'JPY',
     'server_verified','succeeded',now(),now()+interval '10 minutes','hash-dup')$$,
   '23505',
+  null,
   '34 a duplicate (provider, provider_event_id) is rejected by the unique constraint'
 );
 
