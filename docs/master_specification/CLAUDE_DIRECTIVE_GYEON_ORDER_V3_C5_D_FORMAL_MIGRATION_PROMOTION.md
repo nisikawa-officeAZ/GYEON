@@ -6,10 +6,12 @@
 - Phase: `GYEON_ORDER_V3_C5_D_FORMAL_MIGRATION_PROMOTION`
 - Mode: `BOUNDED_SOURCE_CANDIDATE`
 - Repository: `nisikawa-officeAZ/GYEON`
-- Required base branch: `main`
-- Required base commit: `96a66c3fb5969718418da1ef4c75fe62407b48aa`
-- Required base tree: `d8d6d3bdd5d809714896fe006d73910e175f130d`
-- Proposed work branch: `agent/gyeon-order-v3-c5d-formal-migration-promotion`
+- Required main base commit: `96a66c3fb5969718418da1ef4c75fe62407b48aa`
+- Required main base tree: `d8d6d3bdd5d809714896fe006d73910e175f130d`
+- Required execution branch: `agent/gyeon-order-v3-c5d-formal-migration-promotion`
+- Required execution HEAD: the invocation-supplied accepted governance commit that contains this directive
+- Required execution tree: the tree of the invocation-supplied accepted governance commit
+- Invocation requirement: MacBook Codex must state the exact accepted execution HEAD/tree; Claude must stop if the checked-out values differ
 - Predecessor result: `GYEON_ORDER_V3_C5_C_DISPOSABLE_DB_VERIFICATION_RESULT_V1`
 - Predecessor verdict: `C5C_DISPOSABLE_DB_PASS`
 - Evidence target: uncommitted E2 source candidate
@@ -31,13 +33,19 @@ Read completely before any implementation:
 
 Stop with `BLOCKED_BASE_OR_SCOPE` before editing if any condition fails:
 
-- checked-out base is not exact commit/tree above;
+- checked-out branch is not the required execution branch;
+- checked-out HEAD/tree does not exactly match the invocation-supplied accepted execution HEAD/tree;
+- required main base commit is not an ancestor of the execution HEAD;
+- required main base commit does not have the required main base tree;
+- the committed path delta from the required main base to the execution HEAD is not exactly the four C5-D governance paths recorded in the completion plan;
 - index or worktree is not clean before the candidate begins;
 - DRAFT SQL hash is not `d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73`;
 - DRAFT terminal `rollback;` is not exactly one final SQL statement;
 - an existing formal `*_gyeon_order_v3_contract.sql` already exists;
 - any protected blob differs from the recorded values;
 - another path is required.
+
+Do not require the execution HEAD to equal the main base commit. The execution HEAD must contain this delivered governance directive; main is the immutable ancestry/base boundary, not the checked-out implementation HEAD.
 
 ## Literal read scope
 

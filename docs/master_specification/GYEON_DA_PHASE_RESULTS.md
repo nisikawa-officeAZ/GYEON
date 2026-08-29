@@ -2191,3 +2191,41 @@ scope_confirmation:
 decision: GYEON_ORDER_V3_C5_D_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GYEON-ORDER-V3-C5-D-R1 — Execution-HEAD precondition correction
+
+```yaml
+phase: GYEON_ORDER_V3_C5_D_R1_EXECUTION_HEAD_PRECONDITION_CORRECTION
+status: GOVERNANCE_CORRECTION_CANDIDATE_UNCOMMITTED_FORMAL_SQL_NOT_CREATED
+date: 2026-08-29
+append_only: true
+authorization: "The owner explicitly approved an exact three-document R1 governance correction, its stage/local commit, and normal push to Draft PR #37. SQL/source/test/harness edits, Claude transmission/execution, Supabase CLI, database/provider access, PR comments, Ready, merge, and deployment remain prohibited."
+predecessor:
+  branch: agent/gyeon-order-v3-c5d-formal-migration-promotion
+  governance_commit: 48eea86697205fbf0fa5179fa87a608132978831
+  governance_tree: 2dc9a7d07041f531091350f3e934362857b9c772
+  main_base_commit: 96a66c3fb5969718418da1ef4c75fe62407b48aa
+  main_base_tree: d8d6d3bdd5d809714896fe006d73910e175f130d
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/37
+  pull_request_state: OPEN/Draft
+defect:
+  - "The V1 directive required the checked-out implementation HEAD to equal the main base commit even though the directive exists only in the later governance commit. A compliant Claude invocation would therefore stop before editing and waste an invocation."
+correction:
+  - "MacBook Codex supplies the exact accepted governance execution HEAD/tree at invocation; Claude hard-gates the checked-out branch/HEAD/tree to those values."
+  - "The fixed main commit/tree remain the immutable ancestry/base boundary and are not confused with the checked-out execution HEAD."
+  - "The committed delta from main base to execution HEAD must be exactly the four C5-D governance paths, preventing unrelated governance/source drift."
+write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_D_FORMAL_MIGRATION_PROMOTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "Only the exact three governance documents change."
+  - "No SQL, source, test, harness, Supabase CLI, DB/Supabase/Docker/Colima/Auth/PostgREST, provider, Claude, environment, Ready, merge, or deployment action occurs."
+decision: GYEON_ORDER_V3_C5_D_R1_GOVERNANCE_CORRECTION_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_COMMIT_AND_NORMAL_PUSH_TO_DRAFT_PR_37"
+```

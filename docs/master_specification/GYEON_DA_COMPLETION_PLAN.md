@@ -530,7 +530,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GYEON-ORDER-V3-C5-D — Formal migration promotion
 
-**Status:** GOVERNANCE CANDIDATE UNCOMMITTED / FORMAL MIGRATION NOT CREATED / DATABASE NOT CONTACTED.
+**Status:** GOVERNANCE COMMITTED AND PUSHED / DRAFT PR #37 OPEN / R1 EXECUTION-HEAD PRECONDITION CORRECTION AUTHORIZED / FORMAL MIGRATION NOT CREATED / DATABASE NOT CONTACTED.
 
 **Objective:** Promote the C5-C-accepted guarded SQL into one new timestamped formal migration without changing executable semantics, then prove the exact formal file through a separate fresh disposable replay, populated legacy-data upgrade, and Supabase CLI-native migration path before any shared-environment application.
 
@@ -563,6 +563,8 @@ The result document was excluded from harness implementation and was created lat
 **Rollback boundary:** Before environment application, discard/revert only the candidate. After any formal application, never rewrite migration history; recover only through a new forward-only compensating migration under a separate owner-approved gate.
 
 **Exit:** First verify and deliver this exact four-document governance candidate. Claude external transmission and formal migration source authoring require a later separate owner authorization. Shared/staging/production application and provider connection remain later gates even after C5-D local acceptance.
+
+**R1 correction:** The original directive incorrectly required the checked-out implementation HEAD to equal the main base commit. That would reject the delivered governance commit containing the directive. R1 replaces this self-defeating condition with two independent checks: Codex supplies the exact accepted execution HEAD/tree at invocation, and the fixed main base commit/tree must remain its ancestor/base boundary. The committed delta from main to execution HEAD must remain exactly the four C5-D governance paths. R1 changes only this directive, this completion plan, and the append-only phase ledger; no SQL, source, test, runtime, database, provider, or Claude execution is included.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
