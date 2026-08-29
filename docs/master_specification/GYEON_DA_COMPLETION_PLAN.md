@@ -792,7 +792,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-PPF-OFFERING-R1 — PPF availability and partial-PPF control
 
-**Status:** READ-ONLY DIAGNOSIS COMPLETE / PHASE A IMPLEMENTATION GOVERNANCE AUTHORING AUTHORIZED — Claude returned `GDA_ESTIMATE_PPF_OFFERING_R1_READ_ONLY_DIAGNOSIS_RESULT_V1` with `CHANGES_REQUIRED_GOVERNANCE`. MacBook Codex accepted the authority-chain findings but rejected immediate implementation because the combined UI/server/SQL allowlists were not all implementation-ready. The owner then authorized authoring exactly three governance documents for the bounded Phase A UI/state implementation. Source implementation, tests, Claude transmission, Git delivery, database access, Preview/production changes, Ready, merge, and deployment remain unauthorized by this gate.
+**Status:** PHASE A SOURCE ACCEPTED, COMMITTED, AND PUSHED / PHASE B SERVER-SAVE GOVERNANCE CANDIDATE AUTHORING AUTHORIZED — Phase A is locally verified at E2 and delivered on the dedicated branch. Phase B is limited to one five-file server-save enforcement candidate. Phase C RPC/SQL enforcement, database access, Preview/production changes, Ready, merge, and deployment remain separately unauthorized.
 
 **Objective:** Make the Estimate Wizard obey the server-owned PPF offering setting consistently in UI, navigation, pricing, draft restoration, and save authorization.
 
@@ -861,9 +861,40 @@ The result document was excluded from harness implementation and was created lat
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PPF_OFFERING_R1_A_UI_STATE_IMPLEMENTATION.md` (new)
 
-**Boundary:** This governance gate changes no source, test, migration, SQL, RPC, UI implementation, dependency, config, generated artifact, or protected path. It runs no test, typecheck, build, runtime, database, Supabase, Auth, browser, Vercel, provider, or external-service command. It does not transmit private files to Claude and does not stage, commit, push, create or mutate a PR, mark Ready, merge, or deploy. The phase remains separate from the completed pricing-recovery PR.
+**Accepted Phase A source:**
 
-**Exit:** MacBook Codex verifies the exact Phase A three-document governance candidate and `git diff --check`, then requests separate stage/local-commit authorization. Push and transmission of the Phase A directive/private source to Claude require later explicit gates. Phase B server authorization and Phase C RPC enforcement remain unimplemented and separately governed.
+- Commit: `58d5b044117a33233eb4899550fb9e75a91b8c40`
+- Tree: `66b369a49efdd1536a3800e30b0394f84b51f370`
+- Delivery: normal push to `origin/agent/estimate-ppf-offering-r1`; no force push.
+- Scope: exactly the five Phase-A implementation paths.
+- Verification: PPF-focused Step-3 and Step-4 cases `14/14` PASS, `npm run typecheck` PASS, and `git diff --check` PASS. The full two-file command retained five pre-existing window-film failures that were reproduced unchanged at the fixed source base; they are not a Phase-A regression.
+- The four protected blobs remained unchanged. The worktree was clean after commit and the remote branch HEAD matched the exact commit.
+- Phase A remains non-mergeable by itself because server-save and direct-RPC enforcement are still required.
+
+**Phase B — authoritative server-save enforcement:**
+
+- After the current runtime is loaded, tenant identity is proved, and the expected configuration revision matches, the pure save orchestrator must reject a PPF-bearing validated draft when `runtime.screenConfig.serviceOfferings.ppf` is false.
+- A required structurally present but canonical-default PPF configuration is not PPF intent. Selected `ppf` or any non-default PPF configuration is PPF intent and fails closed before pricing, mapping, DTO validation, or persistence.
+- The stable public failure is `service-not-offered`; it produces exactly one sanitized pre-persist event at stage `service-offering`, code `VALIDATION_ERROR`, severity `info`.
+- Phase B does not silently rewrite a stale/hostile draft and does not change Server Action wiring, pricing, mapping, DTOs, persistence, RPC, SQL, or migrations.
+
+**Phase B literal implementation write allowlist — exactly five existing paths:**
+
+1. `src/components/estimates/wizard/save/wizard-save-intent-orchestrator.ts`
+2. `src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts`
+3. `src/components/estimates/wizard/save/wizard-save-intent-types.ts`
+4. `src/components/estimates/wizard/save/wizard-save-observability.ts`
+5. `src/components/estimates/wizard/save/wizard-save-observability.test.ts`
+
+**Phase B governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PPF_OFFERING_R1_B_SERVER_SAVE_ENFORCEMENT.md` (new)
+
+**Boundary:** This governance candidate changes exactly the three Phase-B governance paths. It changes no source, test, migration, SQL, RPC, UI implementation, dependency, config, generated artifact, or protected path. It runs no implementation test, typecheck, build, runtime, database, Supabase, Auth, browser, Vercel, provider, or external-service command. It does not transmit private files to Claude and does not stage, commit, push, create or mutate a PR, mark Ready, merge, or deploy.
+
+**Exit:** MacBook Codex verifies the exact Phase-B three-document governance candidate and `git diff --check`, then requests separate stage/local-commit authorization. Push and transmission of the Phase-B directive/private source to Claude require later explicit gates. Phase C RPC/SQL enforcement remains unimplemented and separately governed.
 
 ### GDA-3 — Completion Desk
 

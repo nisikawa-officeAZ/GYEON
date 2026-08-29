@@ -2713,3 +2713,91 @@ boundary:
 decision: GDA_ESTIMATE_PPF_OFFERING_R1_A_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-PPF-OFFERING-R1-A — UI/state source acceptance and delivery
+
+```yaml
+phase: GDA_ESTIMATE_PPF_OFFERING_R1_A_UI_STATE_IMPLEMENTATION
+status: SOURCE_ACCEPTED_COMMITTED_PUSHED_E2
+date: 2026-08-30
+append_only: true
+result_id: GDA_ESTIMATE_PPF_OFFERING_R1_A_UI_STATE_IMPLEMENTATION_RESULT_V1
+authorization: "The owner separately authorized private transmission to Anthropic Claude Code, the bounded five-file implementation, focused verification, one Codex correction limited to two allowlisted files, exact five-file stage/local commit, and normal push. Ready, merge, deployment, server-save enforcement, RPC/SQL enforcement, and database access were not authorized."
+repository:
+  branch: agent/estimate-ppf-offering-r1
+  predecessor_commit: 20b742babf0dc2ed17929b14076ed77568a27e5b
+  source_commit: 58d5b044117a33233eb4899550fb9e75a91b8c40
+  source_tree: 66b369a49efdd1536a3800e30b0394f84b51f370
+  remote_head_match: true
+  force_push: false
+changed_paths:
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step3Category.tsx
+  - src/components/estimates/wizard/steps/Step3Category.test.tsx
+  - src/components/estimates/wizard/steps/Step4Estimate.tsx
+  - src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx
+sha256:
+  EstimateWizard.tsx: cba2f9533953438257ce8b79d94e86a7b3a1d0e5e8273af422ff92ff12d14e94
+  Step3Category.tsx: 7e2dd8c8772282067996303630549eb0a6171a754320b9584d6ddb244a96cc86
+  Step3Category.test.tsx: 4b8ebc16298f36dfc13778d392cf74347283ceef53757a0297cf83ab71e5fd79
+  Step4Estimate.tsx: 94408ec15dc2aa26c63b822904e77f69ccb169856a5176dad871af18757f89b7
+  Step4Estimate.binding.test.tsx: 916671fda102717d44c922494c0cf594c0eda209c10ea66099ecd8466b2104d3
+accepted_behavior:
+  - "Step 3 receives the existing server-resolved PPF offering boolean."
+  - "PPF off remains visible, disabled, gray, and explains the store setting; it emits no patch and stale PPF is not counted as selected."
+  - "Coating-only plus offered/configured PPF exposes the attached 部分PPFを追加 action."
+  - "The action reuses the one canonical PPF category, draft model, partial method, section, and price/persistence identity."
+verification:
+  ppf_targeted_tests: "14/14 PASS"
+  typecheck: "npm run typecheck PASS"
+  diff_check: PASS
+  full_two_file_observation: "49 total, 44 pass, 5 pre-existing window-film failures"
+  fixed_base_reproduction: "The same five window-film failures reproduced against an unchanged fixed-HEAD snapshot; no Phase-A PPF regression."
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "No pricing, save, RPC, SQL, migration, database, provider, Preview, production, Ready, merge, or deployment action occurred."
+  - "Phase A cannot be independently merged before Phase B and Phase C enforcement are accepted."
+decision: GDA_ESTIMATE_PPF_OFFERING_R1_A_SOURCE_ACCEPTED_PUSHED_E2
+next: "AUTHOR_PHASE_B_SERVER_SAVE_ENFORCEMENT_GOVERNANCE_CANDIDATE"
+```
+
+## GDA-ESTIMATE-PPF-OFFERING-R1-B-G1 — Server-save enforcement governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_PPF_OFFERING_R1_B_SERVER_SAVE_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_IMPLEMENTATION_NOT_SENT
+date: 2026-08-30
+append_only: true
+directive_id: GDA_ESTIMATE_PPF_OFFERING_R1_B_SERVER_SAVE_ENFORCEMENT_V1
+authorization: "The owner authorized authoring the Phase-B implementation directive. This governance candidate updates exactly the completion plan, append-only result ledger, and new Phase-B directive. Source implementation, tests, Claude transmission, Git delivery, RPC/SQL/migration work, database/Supabase/provider access, Preview/production actions, Ready, merge, and deployment remain unauthorized."
+repository:
+  branch: agent/estimate-ppf-offering-r1
+  phase_a_predecessor_commit: 58d5b044117a33233eb4899550fb9e75a91b8c40
+  phase_a_predecessor_tree: 66b369a49efdd1536a3800e30b0394f84b51f370
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PPF_OFFERING_R1_B_SERVER_SAVE_ENFORCEMENT.md
+future_implementation_write_allowlist:
+  - src/components/estimates/wizard/save/wizard-save-intent-orchestrator.ts
+  - src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts
+  - src/components/estimates/wizard/save/wizard-save-intent-types.ts
+  - src/components/estimates/wizard/save/wizard-save-observability.ts
+  - src/components/estimates/wizard/save/wizard-save-observability.test.ts
+frozen_behavior:
+  - "Current dealer-bound runtime serviceOfferings.ppf is the sole server authority."
+  - "After tenant and revision guards, PPF-off plus PPF-bearing intent returns service-not-offered before pricing or persistence."
+  - "The structurally required canonical-default PPF section is not PPF intent; selected ppf or any non-default PPF configuration is."
+  - "The denial emits one sanitized service-offering / VALIDATION_ERROR / info event."
+  - "PPF-on full and partial flows and all non-PPF families remain unchanged."
+boundary:
+  - "Phase B does not change Server Action wiring, pricing, mapper, DTO, persistence, RPC, SQL, migration, DB, or client draft state."
+  - "Phase C direct-RPC/SQL enforcement remains mandatory and separately governed."
+  - "No stage, commit, push, private transmission, implementation/test execution, PR mutation, Preview/production action, Ready, merge, or deployment is authorized by this authoring gate."
+decision: GDA_ESTIMATE_PPF_OFFERING_R1_B_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
