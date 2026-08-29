@@ -145,6 +145,7 @@ delete from public.product_orders where dealer_id = any($DEALER_IDS_SQL);
 delete from public.gyeon_dealer_credit_terms where dealer_id = any($DEALER_IDS_SQL);
 delete from public.gyeon_dealer_qualification_mode_projection where dealer_id = any($DEALER_IDS_SQL);
 delete from public.gyeon_ordering_memberships where dealer_id = any($DEALER_IDS_SQL);
+delete from public.dealer_wizard_catalog_lifecycle where dealer_id = any($DEALER_IDS_SQL);
 delete from public.dealer_members where dealer_id = any($DEALER_IDS_SQL) or user_id = any($USER_IDS_SQL);
 -- required 1: preserved product identifiers used directly, never a live
 -- subquery against gyeon_products (which this same transaction deletes
@@ -183,6 +184,7 @@ union all select 'qualification_rules', (select count(*) from public.gyeon_quali
 union all select 'ordering_memberships', (select count(*) from public.gyeon_ordering_memberships where dealer_id = any($DEALER_IDS_SQL))
 union all select 'credit_terms', (select count(*) from public.gyeon_dealer_credit_terms where dealer_id = any($DEALER_IDS_SQL))
 union all select 'qualification_mode_projection', (select count(*) from public.gyeon_dealer_qualification_mode_projection where dealer_id = any($DEALER_IDS_SQL))
+union all select 'wizard_catalog_lifecycle', (select count(*) from public.dealer_wizard_catalog_lifecycle where dealer_id = any($DEALER_IDS_SQL))
 union all select 'dealer_members', (select count(*) from public.dealer_members where dealer_id = any($DEALER_IDS_SQL) or user_id = any($USER_IDS_SQL))
 union all select 'orders', (select count(*) from public.product_orders where dealer_id = any($DEALER_IDS_SQL))
 union all select 'order_items', (select count(*) from public.product_order_items where order_id = any($ORDER_IDS_SQL))

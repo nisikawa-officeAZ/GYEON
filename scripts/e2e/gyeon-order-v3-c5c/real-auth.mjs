@@ -183,8 +183,8 @@ const yesterday = new Date(Date.now() - 86400000).toISOString();
 const twoDaysAgo = new Date(Date.now() - 2 * 86400000).toISOString();
 
 await serviceInsert('gyeon_ordering_memberships', [
-  { dealer_id: ids.dealerA, membership_status: 'active', buyer_rank: 'detailer', effective_from: yesterday },
-  { dealer_id: ids.dealerB, membership_status: 'active', buyer_rank: 'detailer', effective_from: yesterday },
+  { dealer_id: ids.dealerA, membership_status: 'active', buyer_rank: 'detailer', effective_from: yesterday, effective_to: null },
+  { dealer_id: ids.dealerB, membership_status: 'active', buyer_rank: 'detailer', effective_from: yesterday, effective_to: null },
   { dealer_id: ids.dealerC, membership_status: 'active', buyer_rank: 'detailer', effective_from: twoDaysAgo, effective_to: yesterday },
 ]);
 
