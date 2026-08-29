@@ -2229,3 +2229,44 @@ scope_confirmation:
 decision: GYEON_ORDER_V3_C5_D_R1_GOVERNANCE_CORRECTION_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_COMMIT_AND_NORMAL_PUSH_TO_DRAFT_PR_37"
 ```
+
+## GYEON-ORDER-V3-C5-D-R2 — Codex-direct source-candidate exception governance
+
+```yaml
+phase: GYEON_ORDER_V3_C5_D_R2_CODEX_DIRECT_SOURCE_CANDIDATE_EXCEPTION
+status: GOVERNANCE_EXCEPTION_CANDIDATE_UNCOMMITTED_FORMAL_SQL_NOT_CREATED
+date: 2026-08-29
+append_only: true
+authorization: "The owner explicitly approved switching the C5-D four-path uncommitted source candidate from terminal Claude to MacBook Codex after the Claude Bash permission gate and subsequent external-transmission permission flow failed. This is a one-phase exception to avoid further Claude credit and operator-time waste."
+predecessor:
+  branch: agent/gyeon-order-v3-c5d-formal-migration-promotion
+  execution_head: 653cd3eff2b58529f0051577b06092ca3274af59
+  execution_tree: a29b492da2269dab9b56c4facae6e1521999ed20
+  main_base_commit: 96a66c3fb5969718418da1ef4c75fe62407b48aa
+  main_base_tree: d8d6d3bdd5d809714896fe006d73910e175f130d
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/37
+  pull_request_state: OPEN/Draft
+reason:
+  - "The only Claude run that reached the directive stopped because Bash permission denied the required Supabase CLI commands; Claude reported no file changes and a clean worktree."
+  - "The next restricted launcher attempt was rejected before Claude execution, and the explicit network permission flow returned no grant. Repeating that path would create additional cost without source progress."
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_source_candidate_write_allowlist:
+  - supabase/migrations/<SUPABASE_CLI_GENERATED_TIMESTAMP>_gyeon_order_v3_contract.sql
+  - supabase/migrations/DRAFT_DO_NOT_APPLY/README.md
+  - src/lib/product-orders/gyeon-order-v3-migration-contract.test.ts
+  - src/lib/product-orders/gyeon-order-v3-rpc-contract.test.ts
+unchanged_contract:
+  - "Use current Supabase CLI help and `supabase migration new gyeon_order_v3_contract`; never invent the timestamp."
+  - "Keep the DRAFT SQL immutable and terminal-ROLLBACK; allow only approved full-line comment replacements and one final rollback-to-commit replacement in the formal migration."
+  - "Prove deterministic exact expected-formal parity and executable-byte parity without broad whitespace normalization."
+  - "Run only the directive's exact focused tests and static checks in the source-candidate gate."
+  - "Keep every protected path metadata-only; ScreensPreview.tsx content remains unopened and untouched."
+boundary:
+  - "This governance candidate creates no formal migration and changes no SQL, source, test, harness, dependency, or config file."
+  - "Stage, commit, push, PR mutation, DB/Supabase/Docker/Colima/Auth/PostgREST/provider access, shared/staging/production application, Ready, merge, deployment, and later disposable verification remain separate gates."
+  - "No further Claude invocation is authorized for this source-candidate gate."
+decision: GYEON_ORDER_V3_C5_D_R2_CODEX_DIRECT_EXCEPTION_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SOURCE_CANDIDATE_EXECUTION_CONFIRMATION"
+```

@@ -530,7 +530,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GYEON-ORDER-V3-C5-D — Formal migration promotion
 
-**Status:** GOVERNANCE COMMITTED AND PUSHED / DRAFT PR #37 OPEN / R1 EXECUTION-HEAD PRECONDITION CORRECTION AUTHORIZED / FORMAL MIGRATION NOT CREATED / DATABASE NOT CONTACTED.
+**Status:** GOVERNANCE COMMITTED AND PUSHED / DRAFT PR #37 OPEN / R2 CODEX-DIRECT SOURCE-CANDIDATE EXCEPTION GOVERNANCE AUTHORIZED / FORMAL MIGRATION NOT CREATED / DATABASE NOT CONTACTED.
 
 **Objective:** Promote the C5-C-accepted guarded SQL into one new timestamped formal migration without changing executable semantics, then prove the exact formal file through a separate fresh disposable replay, populated legacy-data upgrade, and Supabase CLI-native migration path before any shared-environment application.
 
@@ -565,6 +565,8 @@ The result document was excluded from harness implementation and was created lat
 **Exit:** First verify and deliver this exact four-document governance candidate. Claude external transmission and formal migration source authoring require a later separate owner authorization. Shared/staging/production application and provider connection remain later gates even after C5-D local acceptance.
 
 **R1 correction:** The original directive incorrectly required the checked-out implementation HEAD to equal the main base commit. That would reject the delivered governance commit containing the directive. R1 replaces this self-defeating condition with two independent checks: Codex supplies the exact accepted execution HEAD/tree at invocation, and the fixed main base commit/tree must remain its ancestor/base boundary. The committed delta from main to execution HEAD must remain exactly the four C5-D governance paths. R1 changes only this directive, this completion plan, and the append-only phase ledger; no SQL, source, test, runtime, database, provider, or Claude execution is included.
+
+**R2 owner-authorized Codex-direct exception:** The owner explicitly authorized MacBook Codex to create the one C5-D uncommitted source candidate directly after repeated external-Claude permission failures. This is a narrow exception for C5-D source-candidate authoring only, chosen to prevent further Claude credit and operator-time waste. It does not alter the four-path source allowlist, the required `supabase --help` / `supabase migration --help` / `supabase migration new gyeon_order_v3_contract` sequence, the exact parity contract, the static focused-test gate, or any protected-path rule. It does not authorize stage, commit, push, PR mutation, database/Supabase runtime access, provider connection, shared/staging/production application, Ready, merge, deployment, or the later fresh disposable verification. The external-Claude run that reached the directive stopped because its Bash permission mode denied the required Supabase CLI commands; it changed no files. Later launcher attempts were rejected before Claude execution or returned no network grant. No further Claude invocation is permitted for this source-candidate gate.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
