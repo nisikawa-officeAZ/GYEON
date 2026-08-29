@@ -446,7 +446,7 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 
 ### GYEON-ORDER-V3-C5-C — Disposable-database acceptance design and execution gates
 
-**Status:** R2-BOUND READ-ONLY DIAGNOSIS ACCEPTED / HARNESS IMPLEMENTATION GOVERNANCE CANDIDATE / NOT IMPLEMENTED. Harness execution, disposable execution, Git delivery, and PR mutation remain unauthorized.
+**Status:** `C5C_DISPOSABLE_DB_PASS` / RESULT COMMITTED AND PUSHED / PR #36 READY / NOT MERGED. C5-C E2 local disposable acceptance is complete. Formal migration promotion, shared or production application, provider connection, merge, and deployment remain separately unauthorized.
 
 **Objective:** Prove the pushed C5-B database source candidate on one fresh loopback-only PostgreSQL 17 disposable Supabase runtime, including real signed Auth/PostgREST requests, exact RLS/grant behavior, prepare/finalize evidence consumption, server-owned qualification, durable compensation, warehouse-task release timing, and genuine separate-connection races.
 
@@ -461,7 +461,18 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 - Source verification: focused contract tests `77/77` PASS and `git diff --check` PASS
 - Known environment limitation: full-project typecheck is not an acceptance signal in the isolated worktree because repository dependencies and archived UI type roots are unresolved
 
-**Current C5-C R4 governance write allowlist — exactly four paths:**
+**Accepted C5-C execution and result delivery:**
+
+- Accepted disposable execution HEAD/tree: `a8bea097cee6060c0eca52d7c11a560da5f60c6f` / `5adb744aee61fb59487879bcc524590ee2c2c8aa`.
+- Accepted fresh suffix: `20260829T071034Z-z6m3r8`; the exact runtime was removed after retained-evidence verification.
+- Result: `GYEON_ORDER_V3_C5_C_DISPOSABLE_DB_VERIFICATION_RESULT_V1` — `C5C_DISPOSABLE_DB_PASS`.
+- Raw proof: migration replay 110 applied plus one protected exclusion; pgTAP `186/186`; real Auth/PostgREST `35/35`; genuine separate-connection assertions `11/11`; warning-only DB lint; four query-plan captures; `SECRET_SCAN_CLEAN`; all named fixture families zero.
+- Evidence integrity: 19 canonical non-hidden files, 18 manifest artifact hashes, zero mismatch, and successful retained copy, hash verification, project stop, and exact runtime removal.
+- Result record commit/tree: `8144e0baf9c715ddc72ee835797646d2bbfe0a2d` / `3aba01289f52ecc7808174fb647b28becf61edf9`.
+- PR #36 is OPEN and Ready, its HEAD is the result-record commit, and its Vercel checks passed at the pre-merge audit. It has not been merged.
+- Evidence class remains `E2_LOCAL_DISPOSABLE_DB`; no shared, staging, production, hosted-provider, or E3 authority is inferred.
+
+**Historical C5-C R4 governance write allowlist — exactly four paths:**
 
 - `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 - `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
@@ -478,7 +489,7 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 - Claude's phrase “17-file manifest” was a counting error. The canonical plan lists exactly 19 required evidence artifacts; the implementation directive fixes the count without changing the evidence contract.
 - The diagnosis found no required C5-B source repair, owner decision, plan expansion, or write-allowlist change before harness authoring.
 
-**Future harness implementation allowlist — exactly nine new paths:**
+**Accepted harness implementation allowlist — exactly nine paths:**
 
 1. `scripts/e2e/gyeon-order-v3-c5c/config.toml`
 2. `scripts/e2e/gyeon-order-v3-c5c/setup.sh`
@@ -490,17 +501,17 @@ The dirty R1 source candidate is intentionally retained and must not be staged, 
 8. `scripts/e2e/gyeon-order-v3-c5c/capture-evidence.sh`
 9. `scripts/e2e/gyeon-order-v3-c5c/cleanup.sh`
 
-The result document is excluded from harness implementation. It belongs to the later disposable-execution result-recording gate.
+The result document was excluded from harness implementation and was created later in the separately approved result-recording gate.
 
-**Harness implementation boundary:**
+**Historical harness implementation boundary — completed under separate approvals:**
 
 - The committed implementation directive is `GYEON_ORDER_V3_C5_C_HARNESS_IMPLEMENTATION_V1`.
-- A later explicit owner authorization, exact accepted execution HEAD/tree, non-triggering PR routing comment, and explicit external-transmission authorization are required before Claude may create the nine-path candidate.
-- The implementation phase may run only `bash -n`, `node --check`, the directive's untracked-aware `git diff --no-index --check /dev/null` loop, and the exact stale-identifier search.
-- It may not start or contact Supabase, Docker, Colima, PostgreSQL, Auth, PostgREST, a hosted project, or any provider; it may not execute setup, pgTAP, SQL, real-Auth, concurrency, evidence capture, or cleanup.
-- Static acceptance, harness stage/commit, harness push, disposable-runtime execution, result recording, and any database application remain separate later gates.
+- The owner separately authorized the exact accepted execution HEAD/tree, external transmission, nine-path harness candidate, static verification, harness Git delivery, fresh disposable execution, result recording, result Git delivery, result comment, and Ready conversion.
+- Harness implementation used only `bash -n`, `node --check`, the directive's untracked-aware `git diff --no-index --check /dev/null` loop, and the exact stale-identifier search before its separately approved runtime execution.
+- Hosted Supabase, shared or production PostgreSQL, and external providers were not contacted. The accepted runtime was loopback-only and disposable.
+- Formal migration promotion, environment application, provider integration, merge, and deployment remain later separate gates.
 
-**Required later evidence:**
+**Required execution evidence — satisfied by the accepted run:**
 
 - Exact committed-migration replay plus one hash-bound runtime derivative of the C5-B guarded SQL with only its terminal `ROLLBACK` changed to `COMMIT`.
 - PostgreSQL 17 and current pinned Supabase CLI identity.
@@ -513,9 +524,9 @@ The result document is excluded from harness implementation. It belongs to the l
 
 **Protected paths:** All section 3.1 paths remain protected. `ScreensPreview.tsx` stays pathname/mode/blob/Git-state only. The LINE migration remains excluded from disposable replay unless a separate LINE phase authorizes it; no hosted/linked project may be contacted.
 
-**Responsibility:** MacBook Claude performs bounded read-only diagnosis and later separately authorized harness/verification work. MacBook Codex independently accepts scope and raw evidence. Mac Studio remains the sole Office AZ inventory implementation owner.
+**Responsibility:** MacBook Claude performed the bounded diagnosis and harness candidate work under its exact directives. MacBook Codex independently accepted scope, executed the separately approved disposable run, and reviewed the raw evidence. Mac Studio remains the sole Office AZ inventory implementation owner.
 
-**Acceptance target:** E2 local verification strengthened by disposable-database evidence. C5-C is not E3 because no authorized shared/staging environment is contacted. It does not authorize formal migration promotion, Dev-Next or production application, provider connection, Ready conversion, merge, or deployment.
+**Acceptance result:** `C5C_DISPOSABLE_DB_PASS`. This is E2 local verification strengthened by disposable-database evidence. C5-C is not E3 because no authorized shared or staging environment was contacted. PR Ready conversion is complete, but formal migration promotion, Dev-Next or production application, provider connection, merge, and deployment remain separately unauthorized.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
