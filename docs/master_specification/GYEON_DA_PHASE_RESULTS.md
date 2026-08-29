@@ -2389,3 +2389,43 @@ scope_confirmation:
 decision: GYEON_ORDER_V3_C5_D_R4_HARNESS_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-PRICING-RECOVERY-R1 — Owner-prioritized Preview recovery governance
+
+```yaml
+phase: GDA_ESTIMATE_PRICING_RECOVERY_R1_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_READ_ONLY_DIAGNOSIS_NOT_SENT
+date: 2026-08-29
+append_only: true
+authorization: "The owner explicitly paused GYEON-ORDER-V3-C5-D-R4 and authorized the sequence: first recover the blocking Estimate Wizard Preview pricing configuration, then implement PPF offering control as a separate phase and PR. This gate authorizes governance authoring only; Claude transmission, source repair, tests, Git delivery, database mutation/application, Preview change, Ready, merge, and deployment remain separate."
+repository:
+  branch: agent/preview-pricing-recovery-r1
+  fixed_source_base_commit: 48de96bbf5518be3fd7fd8a3964dfd7975716165
+  fixed_source_base_tree: e25590d276237f643e9b1408e6c47d192388de07
+  execution_identity: "MacBook Codex must provide the exact accepted governance commit/tree after the separate local-commit gate; it must descend from the fixed source base with exactly the three governance paths."
+  worktree_state_before_authoring: clean
+owner_sequence:
+  - "Pause C5-D-R4 without altering its candidate or evidence."
+  - "Run GDA-ESTIMATE-PRICING-RECOVERY-R1 first."
+  - "After recovery acceptance, run GDA-ESTIMATE-PPF-OFFERING-R1 in a separate PR."
+observed_read_only_evidence:
+  - "Preview auth, membership, staff, rank, lifecycle, revision, offerings, and required global catalog counts resolve."
+  - "The affected service_price_settings object contains only coating."
+  - "The strict authoritative pricing reader requires the complete non-null service settings structure and therefore fails closed before rendering the wizard."
+  - "PPF is enabled in the affected Preview tenant, so the unavailable page is not caused by the PPF offering switch."
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PRICING_RECOVERY_R1_READ_ONLY_DIAGNOSIS.md
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "No source, test, migration, config, dependency, lockfile, or UI implementation file changes."
+  - "No Claude transmission, test, build, database/Supabase/Auth/Vercel/provider access, Git delivery, PR mutation, Ready, merge, or deployment."
+  - "The PPF offering-control phase is queued only and must not be mixed into pricing recovery."
+decision: GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
