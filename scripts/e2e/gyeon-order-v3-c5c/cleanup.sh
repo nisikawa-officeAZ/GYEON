@@ -139,9 +139,15 @@ delete from public.gyeon_order_qualification_snapshots where dealer_id = any($DE
 delete from public.gyeon_order_owner_review_events where dealer_id = any($DEALER_IDS_SQL);
 delete from public.gyeon_order_prepared_operations_v1 where dealer_id = any($DEALER_IDS_SQL);
 delete from public.gyeon_order_idempotency_v3 where dealer_id = any($DEALER_IDS_SQL);
+update public.product_orders
+set payment_status = case when payment_status = 'authorized' then 'voided' else payment_status end,
+    card_authority_evidence_id = null,
+    card_authority_request_fingerprint = null
+where dealer_id = any($DEALER_IDS_SQL)
+  and (card_authority_evidence_id is not null or card_authority_request_fingerprint is not null);
+delete from public.gyeon_order_external_evidence_v1 where dealer_id = any($DEALER_IDS_SQL);
 delete from public.product_order_items where order_id = any($ORDER_IDS_SQL);
 delete from public.product_orders where dealer_id = any($DEALER_IDS_SQL);
-delete from public.gyeon_order_external_evidence_v1 where dealer_id = any($DEALER_IDS_SQL);
 delete from public.gyeon_dealer_credit_terms where dealer_id = any($DEALER_IDS_SQL);
 delete from public.gyeon_dealer_qualification_mode_projection where dealer_id = any($DEALER_IDS_SQL);
 delete from public.gyeon_ordering_memberships where dealer_id = any($DEALER_IDS_SQL);

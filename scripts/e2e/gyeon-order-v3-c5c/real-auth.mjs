@@ -390,7 +390,15 @@ if (orderId) {
       p_dealer_id: ids.dealerA, p_actor_id: users.owner.id, p_order_id: orderId,
       p_expected_version: 99, p_idempotency_key: randomUUID(),
     });
-    record('owner real token cancel with a stale expected version fails closed', ![200, 201].includes(ownerCancelDenied.status), `HTTP ${ownerCancelDenied.status}`);
+    const ownerCancelDeniedIsVersionConflict =
+      ownerCancelDenied.status === 500
+      && ownerCancelDenied.payload?.code === '40001'
+      && ownerCancelDenied.payload?.message === 'ORDER_VERSION_CONFLICT';
+    record(
+      'owner real token cancel with a stale expected version fails closed',
+      ownerCancelDeniedIsVersionConflict,
+      `HTTP ${ownerCancelDenied.status} ${safeApiError(ownerCancelDenied.payload)}`,
+    );
 
     // Positive owner path: a real cancel with the correct current expected
     // version must succeed, not merely be denied in every tested scenario.

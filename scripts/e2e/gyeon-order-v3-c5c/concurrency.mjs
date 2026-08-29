@@ -243,8 +243,22 @@ select public.cancel_gyeon_order_v3_before_warehouse_rpc('${dealerId}','${ownerI
   const { a, b, proven } = await raceTwo('race-3', finalizeSql, 'race3-a', cancelSql, 'race3-b');
   const finalState = await query(`select status from public.product_orders where id='${orderId}'`, 'race3-state');
   const oneWinner = ['submitted', 'cancelled'].includes(finalState);
-  const ok = proven && a.code === 0 && b.code === 0 && oneWinner;
-  record('race 3: finalize and cancel on the same order/version resolve to exactly one winning status', ok, { finalState });
+  const outcomes = [a, b];
+  const successes = outcomes.filter((outcome) => outcome.code === 0).length;
+  const loser = outcomes.find((outcome) => outcome.code !== 0);
+  const expectedLoser = Boolean(
+    loser
+    && !loser.timedOut
+    && /ORDER_VERSION_CONFLICT|OWNER_SUBMIT_NOT_ALLOWED/.test(loser.stderr),
+  );
+  const ok = proven && successes === 1 && expectedLoser && oneWinner;
+  record('race 3: finalize and cancel on the same order/version resolve to exactly one winning status', ok, {
+    finalState,
+    successes,
+    aCode: a.code,
+    bCode: b.code,
+    loserReason: expectedLoser ? 'expected_conflict' : 'unexpected',
+  });
 }
 
 // ===========================================================================
@@ -314,10 +328,19 @@ select public.finalize_gyeon_order_v3_edit_rpc('${dealerId}','${ownerId}','${ord
   const cardEvidenceId = randomUUID();
   await query(`
 ${draftOrderSql(orderId)}
-update public.product_orders set status='submitted', owner_review_state='owner_confirmed', payment_method='card', payment_status='authorized', payment_contract_kind='standard_payment', earliest_ship_date=(now() at time zone 'Asia/Tokyo')::date, aggregate_version=2 where id='${orderId}';
 insert into public.gyeon_order_external_evidence_v1(id,purpose,provider,provider_event_id,dealer_id,order_id,order_version,request_fingerprint,amount_inc_tax_yen,currency,authority,state,server_verified_at,expires_at,consumed_at,consumed_by_operation,payload_hash)
 values ('${cardEvidenceId}','initial_authorization','stub_card_psp','evt-race6-card-${suffix}','${dealerId}','${orderId}',1,'fp-race6-card',22000,'JPY','server_verified','succeeded',now(),now()+interval '10 minutes',now(),'owner_submit_finalize','hash-race6-card');
-update public.product_orders set card_authority_evidence_id='${cardEvidenceId}', card_authority_request_fingerprint='fp-race6-card' where id='${orderId}';
+update public.product_orders
+set status='submitted',
+    owner_review_state='owner_confirmed',
+    payment_method='card',
+    payment_status='authorized',
+    payment_contract_kind='standard_payment',
+    earliest_ship_date=(now() at time zone 'Asia/Tokyo')::date,
+    aggregate_version=2,
+    card_authority_evidence_id='${cardEvidenceId}',
+    card_authority_request_fingerprint='fp-race6-card'
+where id='${orderId}';
 insert into public.gyeon_order_external_evidence_v1(id,purpose,provider,provider_event_id,dealer_id,order_id,order_version,request_fingerprint,amount_inc_tax_yen,currency,authority,state,server_verified_at,expires_at,payload_hash)
 select '${reservationId}','inventory_reservation','office_az_stub','evt-race6-inv-${suffix}','${dealerId}','${orderId}',2,private.gyeon_order_v3_fingerprint('inventory_reservation','${orderId}',2,'{}'::jsonb),22000,'JPY','server_verified','succeeded',now(),now()+interval '10 minutes','hash-race6-inv';
 `, 'r6-fixture');
