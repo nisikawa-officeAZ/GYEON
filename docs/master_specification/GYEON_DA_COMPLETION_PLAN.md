@@ -229,9 +229,9 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 ### GDA-2A-OCR-R1 — Estimate Wizard single-scan customer/vehicle reflection diagnosis
 
-**Status:** GOVERNANCE DELIVERY AND COORDINATION DRAFT PR AUTHORIZED. ONE READ-ONLY CLAUDE
-DIAGNOSIS IS THE NEXT GATE. SOURCE IMPLEMENTATION, TEST EXECUTION, SOURCE COMMIT/PUSH, PREVIEW,
-MERGE, DEPLOYMENT, AND PRODUCTION ACTION REMAIN SEPARATELY UNAUTHORIZED.
+**Status:** READ-ONLY DIAGNOSIS ACCEPTED WITH ONE CODEX CORRECTION. IMPLEMENTATION-DIRECTIVE
+GOVERNANCE DELIVERY IS AUTHORIZED. SOURCE IMPLEMENTATION, TEST EXECUTION, SOURCE COMMIT/PUSH,
+PREVIEW, READY, MERGE, DEPLOYMENT, AND PRODUCTION ACTION REMAIN SEPARATELY UNAUTHORIZED.
 
 **Priority reason:** An authenticated production walkthrough confirmed that the Estimate Wizard's
 Step-1 vehicle-registration OCR review can reflect customer fields while the vehicle values from the
@@ -270,31 +270,43 @@ GYEON Order C5-D R4 governance candidate remains frozen and unchanged until this
 - Existing-customer/vehicle identity, duplicate advisory, pricing, discounts, save, PDF, PPF,
   coating, authorization, tenant, and persistence contracts remain unchanged.
 
-**Read-only diagnosis:** The committed directive defines the exact read scope, protected paths,
-required root-cause and call-chain proof, provisional implementation boundary, focused future tests,
-and result schema. Diagnosis may read only; it may not edit, execute tests, access a database or
-external service, mutate Git/GitHub, or implement the repair.
+**Accepted diagnosis:** Claude returned
+`GDA_ESTIMATE_WIZARD_OCR_UNIFIED_R1_READ_ONLY_DIAGNOSIS_RESULT_V1` with
+`READY_FOR_IMPLEMENTATION`. MacBook Codex independently verified the exact HEAD/tree, clean
+worktree/index, unchanged protected blobs, and the primary source evidence. The accepted root cause
+is that Step 1 applies only the customer OCR patch and drops vehicle fields, while Step 2 owns a
+second inline vehicle mapper and the only path to the transient 3M recommendation state. The
+accepted repair uses one combined canonical store patch and one shared typed vehicle mapper.
 
-**Provisional future source allowlist — diagnosis must confirm or narrow it; not authorized here:**
+**MacBook Codex correction:** A `typeof value === "string"` check does not reject an empty or
+whitespace-only string. The shared vehicle mapper must trim solely to decide whether a value is
+blank, omit every blank key, and never clear operator-entered draft text. The applied value may be
+trimmed consistently with the existing customer OCR core, but no further normalization is allowed.
+Tests must cover both `""` and whitespace-only OCR values.
+
+**Evidence:** The accepted result is recorded at
+`https://github.com/nisikawa-officeAZ/GYEON/pull/40#issuecomment-5462738620`.
+
+**Accepted future implementation allowlist — not authorized by governance delivery:**
 
 1. `src/components/estimates/wizard/EstimateWizard.tsx`
 2. `src/components/estimates/wizard/steps/Step1Customer.tsx`
 3. `src/components/estimates/wizard/steps/Step2Vehicle.tsx`
-4. `src/lib/ocr/wizard-vehicle-ocr-apply-core.ts` (new only if the diagnosis proves it necessary)
-5. `src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts` (new only if necessary)
-6. `src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx` (new only if necessary)
-7. `src/components/estimates/wizard/steps/existing-entity-selection.test.tsx`
-8. `src/components/estimates/wizard/validity/wizard-step-validity.ts` (stale comments only)
-9. `src/components/estimates/wizard/validity/wizard-step-validity.test.ts` (fixture wording only)
+4. `src/lib/ocr/wizard-vehicle-ocr-apply-core.ts` (new)
+5. `src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts` (new)
+6. `src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx` (new)
+7. `src/components/estimates/wizard/validity/wizard-step-validity.ts` (stale comment only)
+8. `src/components/estimates/wizard/validity/wizard-step-validity.test.ts` (stale wording only)
 
 **Protected boundary:** Every path in section 3.1 remains protected. In particular,
 `src/components/estimates/wizard/screens/ScreensPreview.tsx` is pathname/mode/blob/Git-state only
 and must never be opened, read, diffed, copied, staged, or modified.
 
-**Exit:** MacBook Claude returns
-`GDA_ESTIMATE_WIZARD_OCR_UNIFIED_R1_READ_ONLY_DIAGNOSIS_RESULT_V1`; MacBook Codex independently
-verifies the base, read scope, root cause, exact implementation allowlist, tests, and frozen
-boundaries. Any source implementation begins only after a new explicit owner authorization.
+**Next gate:** Commit and normally push the implementation directive and this append-only governance
+record. MacBook Claude may receive the directive and edit the eight accepted paths only after a new
+explicit owner authorization for external transmission, source implementation, and test execution.
+Commit, push, Preview, Ready, merge, deployment, and production actions after implementation remain
+separate gates.
 
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 

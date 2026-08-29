@@ -2435,3 +2435,48 @@ scope_confirmation:
 decision: GDA_2A_OCR_R1_GOVERNANCE_READY_FOR_EXACT_DELIVERY
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_STAGE_COMMIT_PUSH_AND_CREATE_DRAFT_PR_AS_AUTHORIZED"
 ```
+
+## GDA-2A-OCR-R1-A — Unified OCR implementation governance
+
+```yaml
+phase: GDA_2A_ESTIMATE_WIZARD_OCR_UNIFIED_R1_IMPLEMENTATION_GOVERNANCE
+status: IMPLEMENTATION_DIRECTIVE_DELIVERY_AUTHORIZED_SOURCE_IMPLEMENTATION_NOT_AUTHORIZED
+date: 2026-08-29
+append_only: true
+diagnosis_result_id: GDA_ESTIMATE_WIZARD_OCR_UNIFIED_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+diagnosis_verdict: READY_FOR_IMPLEMENTATION
+diagnosis_evidence: https://github.com/nisikawa-officeAZ/GYEON/pull/40#issuecomment-5462738620
+codex_acceptance:
+  git_identity: "HEAD 30ed569aa7750148a9d07e5c4ecd6d4db28c166a; tree 6b267c4edf6a8f622e330e77167476b5a9cee318; parent 48de96bbf5518be3fd7fd8a3964dfd7975716165; parent tree e25590d276237f643e9b1408e6c47d192388de07"
+  scope: "Claude read only, executed no tests, and produced zero Git diff; MacBook Codex independently confirmed the source root cause and protected blob identities."
+  correction: "A string type check alone accepts empty and whitespace-only OCR text. The implementation must omit blank keys after trim and must prove that operator-entered values survive both empty and whitespace-only OCR values."
+authorization: "The owner explicitly authorized posting the accepted diagnosis to PR #40 and creating, staging, locally committing, and normally pushing exactly this implementation-governance delivery. Source/test edits, test execution, Claude external transmission of the implementation directive, source commit/push, DB/Supabase/provider access, Preview, Ready, merge, deployment, and production mutation remain separate gates."
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_UNIFIED_R1_IMPLEMENTATION.md
+future_source_write_allowlist:
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step1Customer.tsx
+  - src/components/estimates/wizard/steps/Step2Vehicle.tsx
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.ts
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts
+  - src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx
+  - src/components/estimates/wizard/validity/wizard-step-validity.ts
+  - src/components/estimates/wizard/validity/wizard-step-validity.test.ts
+source_contract:
+  - "One reviewed OCR result produces exactly one combined customer and vehicle canonical store update."
+  - "The existing customer mapper remains authoritative; one new pure typed vehicle mapper is shared by Step 1 and Step 2."
+  - "Missing, empty, or whitespace-only OCR values never clear operator-entered text."
+  - "3M remains transient recommendation evidence over exactly SS/S/M/ML/L/LL/XL and never writes confirmedSize."
+  - "No persistence or external side effect occurs before the existing explicit save action."
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+directive_id: GDA_ESTIMATE_WIZARD_OCR_UNIFIED_R1_IMPLEMENTATION_V1
+required_result_id: GDA_ESTIMATE_WIZARD_OCR_UNIFIED_R1_IMPLEMENTATION_RESULT_V1
+decision: GDA_2A_OCR_R1_IMPLEMENTATION_GOVERNANCE_READY_FOR_EXACT_DELIVERY
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_STAGE_COMMIT_AND_NORMALLY_PUSH_AS_AUTHORIZED"
+```
