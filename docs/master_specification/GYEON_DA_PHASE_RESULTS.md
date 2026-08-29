@@ -2328,3 +2328,64 @@ boundary:
 decision: GYEON_ORDER_V3_C5_D_SOURCE_CANDIDATE_STATIC_PASS_LOCAL_COMMIT
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GYEON-ORDER-V3-C5-D-R4 — Disposable harness governance candidate
+
+```yaml
+phase: GYEON_ORDER_V3_C5_D_R4_DISPOSABLE_HARNESS_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_HARNESS_NOT_IMPLEMENTED_DB_NOT_RUN
+date: 2026-08-29
+append_only: true
+plan_id: GYEON_ORDER_V3_C5_D_DISPOSABLE_DB_VERIFICATION_PLAN_V1
+directive_id: GYEON_ORDER_V3_C5_D_DISPOSABLE_HARNESS_IMPLEMENTATION_V1
+authorization: "The owner authorized C5-D disposable-harness governance authoring only. This permits exactly four documentation-path changes and no harness implementation, external AI transmission, Git delivery, Colima/Docker, database/Supabase runtime, Auth/PostgREST, provider/network access, PR mutation, environment application, Ready, merge, or deployment."
+source_authority:
+  branch: agent/gyeon-order-v3-c5d-formal-migration-promotion
+  head: d06cd8a45d404c3e66c086341b80b0a5436b260b
+  tree: 575347f7daf693fa3923d6efe9f5ff1b4078ae5e
+  upstream_ahead_behind: "0 0"
+  source_commit: c7806331dcbb035448704e09c625cd4870681142
+  formal_path: supabase/migrations/20260829101726_gyeon_order_v3_contract.sql
+  formal_sha256: bd1a7742725c3f2a7bb42a3dbe5889b6e86bf6d213a0a550e6dd48f460d6d91b
+  draft_sha256: d04517f479a956ba50f7d1b7ce636f8fc57b7e02d81f47b0adf457e1e12e2e73
+  previous_migration_version: "20260826143000"
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/integrations/gyeon-order/v3-c5d-disposable-db-verification-plan.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_C5_D_DISPOSABLE_DB_HARNESS_IMPLEMENTATION.md
+future_harness_write_allowlist:
+  - scripts/e2e/gyeon-order-v3-c5d/config.toml
+  - scripts/e2e/gyeon-order-v3-c5d/setup.sh
+  - scripts/e2e/gyeon-order-v3-c5d/capture-evidence.sh
+  - scripts/e2e/gyeon-order-v3-c5d/cleanup.sh
+  - scripts/e2e/gyeon-order-v3-c5d/real-auth.mjs
+  - scripts/e2e/gyeon-order-v3-c5d/concurrency.mjs
+  - scripts/e2e/gyeon-order-v3-c5d/schema-rls.test.sql
+  - scripts/e2e/gyeon-order-v3-c5d/qualification-evidence.test.sql
+  - scripts/e2e/gyeon-order-v3-c5d/prepare-finalize-warehouse.test.sql
+  - scripts/e2e/gyeon-order-v3-c5d/populated-upgrade.test.sql
+required_runtime_lanes:
+  A_fresh: "One isolated local runtime applies the complete formal chain through Supabase CLI and reruns pgTAP, real Auth/PostgREST, business, concurrency, advisor, query-plan, secret, and cleanup gates."
+  B_populated: "A second isolated runtime stops at version 20260826143000, creates representative legacy orders/items across multiple dealers and statuses, applies the formal migration through Supabase CLI, and proves pre/post preservation plus new constraints."
+  C_runner: "A third isolated runtime stops at version 20260826143000 without fixtures, proves the formal migration pending, applies it exactly once with `supabase migration up --local`, and proves the CLI ledger with zero direct-psql formal application."
+runtime_contract:
+  - "All three lanes are loopback-only, unlinked, outside the worktree and /private/tmp, and use distinct project IDs and ports under one fresh suffix."
+  - "Any failure burns the full suffix/evidence set; the same suffix is never repaired or rerun into acceptance."
+  - "The existing C5-C harness remains unchanged and is read-only reference only."
+  - "The formal migration is copied byte-identically; DRAFT is never copied or executed; protected LINE migration is metadata-only and recorded as excluded_protected."
+  - "psql may create/check fixtures and run tests but may never apply the formal migration; formal apply is Supabase CLI-native."
+static_implementation_gate:
+  - "Only telemetry-disabled Supabase --version/help discovery, bash -n, node --check, exact ten-path checks, no-index diff-check, static contract matches, and protected metadata checks may run."
+  - "No setup, capture, cleanup, database-affecting Supabase CLI, Colima, Docker, psql, SQL, Auth, PostgREST, HTTP, provider, network, Git delivery, or PR action may run during harness authoring."
+protected_paths:
+  ScreensPreview_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+scope_confirmation:
+  - "Exactly four governance documents change; no harness, migration, source, test, dependency, lockfile, config, UI, provider, or Office AZ inventory implementation path changes."
+  - "No external transmission, Git stage/commit/push, Colima/Docker, DB/Supabase runtime, Auth/PostgREST, provider/network, environment, Ready, merge, or deployment action occurs."
+decision: GYEON_ORDER_V3_C5_D_R4_HARNESS_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
