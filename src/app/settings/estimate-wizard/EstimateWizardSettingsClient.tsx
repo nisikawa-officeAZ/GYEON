@@ -546,52 +546,6 @@ export default function EstimateWizardSettingsClient({ view, panelId = null }: {
         </div>
       )}
 
-      {/* ── B2-E2G: 施工メニュー提供設定 ───────────────────────────────────────────
-          Which services this shop offers at all. Deliberately ABOVE the catalog sections: a dealer
-          decides what they sell before they configure the details of it, and an opted-out family's
-          catalog section is not something they need to look at. Rank is never mentioned — it does
-          not participate in this decision. */}
-      {panelId === "section-service-offerings" && (
-      <section className={`${glassSectionCls} scroll-mt-4`}>
-        <div className="flex flex-col gap-1">
-          <h2 className="text-sm font-bold text-[#edf3fc]">施工メニュー提供設定</h2>
-          <p className="text-xs text-[#95a4bc] leading-relaxed">
-            この店舗で提供する施工メニューを選択します。オフにしたメニューは見積ウィザードに表示されません。
-          </p>
-          <p className="text-[11px] text-amber-300/80 leading-relaxed">
-            オンにしたメニューを見積で使用するには、対応するメニュー内容の登録と、設定内容の確認（レビュー確定）が必要です。
-          </p>
-        </div>
-
-        <ul className="flex flex-col divide-y divide-[#263955]">
-          {SERVICE_FAMILIES.map((family) => {
-            const on = view.serviceOfferings[family];
-            return (
-              <li key={family} className="flex items-center justify-between gap-3 py-2.5">
-                <span className="text-xs text-[#c3cee2]">{SERVICE_FAMILY_LABEL_JA[family]}</span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={on}
-                  aria-label={`${SERVICE_FAMILY_LABEL_JA[family]}を提供する`}
-                  data-testid={`offering-toggle-${family}`}
-                  disabled={!canEdit || isPending}
-                  onClick={() => onToggleOffering(family, !on)}
-                  className={`min-h-[44px] px-4 rounded-full text-xs font-semibold border transition-colors disabled:opacity-40 ${
-                    on
-                      ? "bg-gradient-to-br from-[#60a5fa] to-[#2563eb] text-white border-transparent shadow-[0_2px_8px_rgba(37,99,235,.35)] hover:brightness-110"
-                      : "bg-[#0b1220]/70 text-[#8191ad] border-[#263955] hover:border-[#3b6eb4] hover:text-[#c3cee2]"
-                  }`}
-                >
-                  {on ? "提供する" : "提供しない"}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-      )}
-
       {/* Configuration status card */}
       {panelId && (
       <section className={glassSectionCls}>
@@ -635,6 +589,52 @@ export default function EstimateWizardSettingsClient({ view, panelId = null }: {
             {status.lastReview.reviewerLabelJa ? `／${status.lastReview.reviewerLabelJa}` : ""}
           </div>
         )}
+      </section>
+      )}
+
+      {/* ── B2-E2G: 施工メニュー提供設定 ───────────────────────────────────────────
+          Which services this shop offers at all. Deliberately ABOVE the catalog sections: a dealer
+          decides what they sell before they configure the details of it, and an opted-out family's
+          catalog section is not something they need to look at. Rank is never mentioned — it does
+          not participate in this decision. */}
+      {panelId === "section-service-offerings" && (
+      <section className={`${glassSectionCls} scroll-mt-4`}>
+        <div className="flex flex-col gap-1">
+          <h2 className="text-sm font-bold text-[#edf3fc]">施工メニュー提供設定</h2>
+          <p className="text-xs text-[#95a4bc] leading-relaxed">
+            この店舗で提供する施工メニューを選択します。オフにしたメニューは見積ウィザードに表示されません。
+          </p>
+          <p className="text-[11px] text-amber-300/80 leading-relaxed">
+            オンにしたメニューを見積で使用するには、対応するメニュー内容の登録と、設定内容の確認（レビュー確定）が必要です。
+          </p>
+        </div>
+
+        <ul className="flex flex-col divide-y divide-[#263955]">
+          {SERVICE_FAMILIES.map((family) => {
+            const on = view.serviceOfferings[family];
+            return (
+              <li key={family} className="flex items-center justify-between gap-3 py-2.5">
+                <span className="text-xs text-[#c3cee2]">{SERVICE_FAMILY_LABEL_JA[family]}</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={on}
+                  aria-label={`${SERVICE_FAMILY_LABEL_JA[family]}を提供する`}
+                  data-testid={`offering-toggle-${family}`}
+                  disabled={!canEdit || isPending}
+                  onClick={() => onToggleOffering(family, !on)}
+                  className={`min-h-[44px] px-4 rounded-full text-xs font-semibold border transition-colors disabled:opacity-40 ${
+                    on
+                      ? "bg-gradient-to-br from-[#60a5fa] to-[#2563eb] text-white border-transparent shadow-[0_2px_8px_rgba(37,99,235,.35)] hover:brightness-110"
+                      : "bg-[#0b1220]/70 text-[#8191ad] border-[#263955] hover:border-[#3b6eb4] hover:text-[#c3cee2]"
+                  }`}
+                >
+                  {on ? "提供する" : "提供しない"}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </section>
       )}
 
