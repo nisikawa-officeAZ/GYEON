@@ -896,6 +896,60 @@ The result document was excluded from harness implementation and was created lat
 
 **Exit:** MacBook Codex verifies the exact Phase-B three-document governance candidate and `git diff --check`, then requests separate stage/local-commit authorization. Push and transmission of the Phase-B directive/private source to Claude require later explicit gates. Phase C RPC/SQL enforcement remains unimplemented and separately governed.
 
+### GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1 — all managed-service save enforcement
+
+**Status:** READ-ONLY DIAGNOSIS GOVERNANCE CANDIDATE AUTHORING AUTHORIZED — PR #42 put the existing PPF-only server-save guard on `main`; PR #43 aligned the Step-3 presentation for all five managed service families. The four non-PPF families still require authoritative save enforcement. No source implementation, test execution, SQL/RPC change, database access, Git delivery, or deployment is authorized by this authoring gate.
+
+**Objective:** Make the current dealer-owned offering switches one enforceable contract for every managed Estimate Wizard service family, not merely a client-side display rule.
+
+**Current main authority:**
+
+- Base commit: `7aca4e7dfcebb4bd71cb8d1d2db0dbda71644110`
+- Base tree: `bde678a017a875b46df56bfe0c054670c61128ec`
+- PR #42 predecessor: `4fdb58a9678e36c8198f83ee3bbb4cb0b5949293`
+- Dedicated governance branch: `plan/estimate-managed-service-offering-enforcement-r1`
+- Dedicated worktree: `work/dealeros-estimate-managed-service-enforcement-r1`
+
+**Frozen business contract:**
+
+- The five managed families are `window_film`, `ppf`, `maintenance`, `room_cleaning`, and `car_wash`.
+- Their canonical Wizard categories are respectively `window`, `ppf`, `maintenance`, `roomclean`, and `carwash`. The mapping in `src/lib/estimates/service-categories.ts` is the only mapping authority and must not be re-spelled in another module.
+- `coating` and `other` are not governed by this offering-switch contract and remain unchanged.
+- Step 3 keeps the PR #43 behavior: all seven controls have the same fixed height; an unavailable managed service remains visible, gray, disabled, unselected, and accompanied by its store-setting reason.
+- The current dealer-bound runtime `screenConfig.serviceOfferings` is the only server save authority. Client flags, UI disabled state, shop rank, catalog presence, and stale draft display are not authority.
+- After actor/tenant validation and exact configuration-revision validation, but before pricing, mapping, DTO validation, or persistence, any intent for an unavailable managed family returns the existing stable failure `service-not-offered`.
+- A category selection is service intent. Any non-default value in that family's structurally required configuration section is also service intent, even when the category was removed or the client was manipulated.
+- A structurally present configuration section that exactly matches the canonical initial draft is not service intent.
+- The server must not silently clear, rewrite, normalize away, or partially save unavailable service intent.
+- Rejection continues to emit one sanitized `service-offering` / `VALIDATION_ERROR` / `info` observability event with the resolved dealer id and no customer, vehicle, pricing, draft, or raw configuration detail.
+- PPF full/partial behavior, pricing, OCR, seven-size body classification, rank rules, coupons, DTOs, idempotency, and all accepted unrelated flows remain unchanged.
+
+**Confirmed gap at this base:**
+
+- `wizard-save-intent-orchestrator.ts` has an authoritative predicate and guard for PPF only.
+- The same orchestrator has no equivalent guard for `window_film`, `maintenance`, `room_cleaning`, or `car_wash`.
+- Therefore Step 3 correctly blocks normal interaction, but stale or manipulated drafts for those four families can still reach server pricing and persistence.
+- Direct RPC/SQL enforcement is not proved by the PR #42/#43 source delta and remains a separate bypass-resistance phase.
+
+**Required read-only diagnosis:**
+
+- Verify the exact canonical-default and non-default intent signals for all five managed families.
+- Verify guard ordering, stable failure ownership, and existing observability exhaustiveness.
+- Trace direct callers beyond the orchestrator and identify the smallest separate RPC/SQL enforcement phase and literal disposable-database test path.
+- Return exact later implementation allowlists and commands. Do not implement, test, contact a database, or change Git during diagnosis.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Protected paths:** The four repository protected paths remain metadata-only and must retain blobs `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14`.
+
+**Boundary:** This phase authors governance only. Claude transmission/execution, source/test changes, package changes, stage, commit, push, PR mutation, migrations, SQL/RPC changes, database/Supabase/Auth/browser/Vercel/provider access, Ready, merge, and deployment are separate and unauthorized.
+
+**Exit:** MacBook Codex verifies the exact three-document diff and `git diff --check`, then requests separate authorization for exact-path staging and local commit. Private transmission to Claude and the one-time read-only diagnosis require later explicit authorization.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

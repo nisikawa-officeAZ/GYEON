@@ -2801,3 +2801,46 @@ boundary:
 decision: GDA_ESTIMATE_PPF_OFFERING_R1_B_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-G1 — Read-only diagnosis governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_READ_ONLY_DIAGNOSIS_NOT_SENT
+date: 2026-08-30
+append_only: true
+directive_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_READ_ONLY_DIAGNOSIS_V1
+authorization: "The owner authorized formal repair-specification authoring after Codex confirmed that PR #43 aligns the Step-3 UI for all five managed families but the authoritative save orchestrator enforces the offering switch only for PPF. This gate permits exactly three governance-document edits. Claude transmission/execution, source/test/SQL/RPC changes, test execution, Git delivery, database/Supabase/provider access, Preview/production actions, Ready, merge, and deployment remain unauthorized."
+repository:
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  fixed_source_base_commit: 7aca4e7dfcebb4bd71cb8d1d2db0dbda71644110
+  fixed_source_base_tree: bde678a017a875b46df56bfe0c054670c61128ec
+  upstream: origin/main
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-managed-service-enforcement-r1
+  worktree_state_before_authoring: clean
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_READ_ONLY_DIAGNOSIS.md
+frozen_contract:
+  - "The five managed families are window_film, ppf, maintenance, room_cleaning, and car_wash; their category mapping is imported from the existing single source of truth."
+  - "Step-3 PR #43 layout and visible-disabled behavior are frozen; coating and other remain unmanaged."
+  - "The current dealer-bound runtime offering map is the only server authority."
+  - "Unavailable selected-category or non-default family configuration intent returns the existing service-not-offered failure after tenant/revision validation and before pricing or persistence."
+  - "Canonical-default structural sections are not intent; stale or hostile values are rejected and never silently removed."
+  - "Direct RPC/SQL bypass resistance remains a distinct later phase and cannot be inferred from the server action."
+confirmed_gap:
+  - "The current orchestrator exports isPpfBearingDraft and guards only runtime.screenConfig.serviceOfferings.ppf."
+  - "No equivalent authoritative guard exists there for window_film, maintenance, room_cleaning, or car_wash."
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "Exactly the three governance paths may change in this candidate."
+  - "No source, test, migration, SQL, RPC, UI, dependency, config, generated artifact, or protected path change is authorized."
+  - "No private transmission, diagnosis execution, test/typecheck/build, stage, commit, push, PR mutation, DB/Supabase/Auth/browser/Vercel/provider access, Preview/production action, Ready, merge, or deployment is authorized."
+decision: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
