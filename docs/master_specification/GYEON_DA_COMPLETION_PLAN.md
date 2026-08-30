@@ -898,7 +898,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1 — all managed-service save enforcement
 
-**Status:** PHASE A SERVER-SAVE ENFORCEMENT ACCEPTED, COMMITTED, AND PUSHED / PHASE B DIRECT-RPC/SQL READ-ONLY DIAGNOSIS GOVERNANCE CANDIDATE AUTHORING AUTHORIZED — PR #42 put the existing PPF-only server-save guard on `main`; PR #43 aligned the Step-3 presentation for all five managed service families. Phase A now enforces all five managed families in the authoritative server-save orchestrator at commit `1bb530f3105055707b7387f6492ede3078402f36`. Direct RPC/SQL bypass resistance remains unproved and is the separate Phase B. This gate authors only the three Phase-B governance documents; it authorizes no SQL, migration, pgTAP, harness, database, provider, deployment, or Git-delivery action.
+**Status:** PHASE A ACCEPTED AND PUSHED / PHASE B DIRECT-RPC/SQL DIAGNOSIS ACCEPTED WITH FOLLOW-UP REQUIRED / PHASE B-R1 HARNESS AND CONCURRENCY READ-ONLY GOVERNANCE AUTHORING AUTHORIZED — Phase A enforces all five managed families in the authoritative server-save orchestrator at commit `1bb530f3105055707b7387f6492ede3078402f36`. Phase B proved that the server-only RPC has no independent offering guard. Before implementation governance, one bounded follow-up must establish the reusable PostgreSQL 17 direct-RPC harness structure and resolve the exact offering-change concurrency contract. No SQL, migration, test, harness, database, provider, deployment, or Git-delivery action is authorized by this authoring gate.
 
 **Objective:** Make the current dealer-owned offering switches one enforceable contract for every managed Estimate Wizard service family, not merely a client-side display rule.
 
@@ -1019,6 +1019,32 @@ The result document was excluded from harness implementation and was created lat
 **Phase B boundary:** This authoring candidate changes only the three governance paths above. It does not transmit private files to Claude; inspect or change SQL/RPC/migrations/tests/harnesses; run tests, typecheck, build, databases, Supabase, Docker, browser, network, or provider commands; or stage, commit, push, mutate PR #44, mark Ready, merge, or deploy.
 
 **Phase B governance exit:** MacBook Codex verifies the exact three-document candidate and `git diff --check`, then requests separate exact-path stage/local-commit authorization. Governance push and the one-time private read-only Claude diagnosis require later explicit gates. SQL/test/harness implementation remains unauthorized until the diagnosis is independently accepted.
+
+**Accepted Phase B read-only diagnosis:**
+
+- Result: `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS_RESULT_V1`
+- Acceptance: `ACCEPTED_WITH_FOLLOW_UP_REQUIRED`
+- Verdict: `CHANGES_REQUIRED_SQL_AND_TESTS`
+- Governance execution HEAD/tree: `70f13f465b7cc05462a34b61bc6a5d3b61080da1` / `355edb957d59aa91c1e81274e72b4370285e6acb`
+- Claude execution: one non-persistent Sonnet diagnosis, high effort, `2.5704507 USD` under the `3 USD` cap, no web search/fetch, no subagent, and no mutation. One protected-metadata loop command was denied; the four blobs were later verified through permitted individual metadata reads and independently matched by Codex.
+- The active RPC is `public.save_estimate_from_wizard(uuid, uuid, jsonb)`, `SECURITY INVOKER`, with server-only `service_role` EXECUTE.
+- MacBook Codex independently confirmed that its active SQL body never reads `dealer_service_offerings`; therefore all five managed families lack direct-RPC fail-closed protection even though the accepted Phase-A application path is guarded.
+- The smallest later source direction is one new forward-only replacement migration plus focused additions to `supabase/tests/estimate_wizard_atomic_save.test.sql`; historical migrations remain immutable.
+- The existing B7-4 harness is PostgreSQL 15 and browser/Playwright-oriented, so it cannot prove the required PostgreSQL 17 direct-RPC contract.
+- A nine-file accepted C5-C PostgreSQL 17/direct-RPC/concurrency harness exists, but its contents were outside the Phase-B read allowlist and were not inspected by Claude.
+- The prior report did not fully resolve whether the guard belongs after C.7 or after C.9, whether the existing advisory lock can serialize offering changes, or how the missing-row OFF race is defined. These are mandatory Phase B-R1 follow-up questions, not implementation discretion.
+
+**Phase B-R1 objective:** Read only the nine existing C5-C harness references plus the minimum four SQL/race references. Return the exact reusable harness contract, proposed new harness path allowlist, PostgreSQL 17 fresh-runtime sequence, real-claim/direct-RPC cases, and one unambiguous concurrency decision. Do not implement or execute anything.
+
+**Phase B-R1 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_HARNESS_REFERENCE_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Phase B-R1 boundary:** This candidate changes only those three governance paths. It does not read or transmit the nine C5-C file contents to an external service; change source, migration, test, or harness files; execute tests or runtime; access a database/provider; or stage, commit, push, mutate PR #44, mark Ready, merge, or deploy.
+
+**Phase B-R1 exit:** MacBook Codex verifies the exact three-document candidate and `git diff --check`, then requests separate stage/local-commit authorization. Push and private external transmission of the follow-up allowlist require later explicit gates. SQL and harness implementation remain unauthorized until the follow-up result is independently accepted.
 
 ### GDA-3 — Completion Desk
 

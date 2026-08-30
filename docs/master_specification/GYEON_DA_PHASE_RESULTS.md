@@ -2956,3 +2956,88 @@ boundary:
 decision: ACCEPT_PHASE_A_AUTHOR_PHASE_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS_GOVERNANCE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-B-D1/R1-G1 — Direct-RPC diagnosis acceptance and harness-reference follow-up governance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIAGNOSIS_ACCEPTANCE_AND_R1_FOLLOW_UP_GOVERNANCE
+status: PHASE_B_DIAGNOSIS_ACCEPTED_WITH_FOLLOW_UP_REQUIRED_R1_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+diagnosis_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS_RESULT_V1
+follow_up_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_HARNESS_REFERENCE_READ_ONLY_DIAGNOSIS_RESULT_V1
+authorization: "The owner approved recording the Phase-B result as ACCEPTED_WITH_FOLLOW_UP_REQUIRED and authoring exactly three governance documents for one bounded C5-C harness-reference and SQL-concurrency read-only follow-up. External transmission, source/migration/test/harness edits, executable verification, database/Supabase/provider access, Git delivery, PR mutation, Preview/production actions, Ready, merge, and deployment remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/44
+  pull_request_state_after_diagnosis: OPEN_DRAFT
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  diagnosis_governance_head: 70f13f465b7cc05462a34b61bc6a5d3b61080da1
+  diagnosis_governance_tree: 355edb957d59aa91c1e81274e72b4370285e6acb
+  changed_files_on_pr: 7
+diagnosis_execution:
+  agent: Anthropic Claude Code
+  model: claude-sonnet-5
+  effort: high
+  no_session_persistence: true
+  max_budget_usd: 3
+  actual_cost_usd: 2.5704507
+  web_search_requests: 0
+  web_fetch_requests: 0
+  subagents: 0
+  permission_denials: 1
+  permission_denial_effect: "One multi-path git ls-tree loop for protected metadata was denied. Individual permitted metadata checks and Codex independent checks later confirmed all four blobs."
+  mutation: false
+  verdict: CHANGES_REQUIRED_SQL_AND_TESTS
+accepted_findings:
+  - "The active RPC is public.save_estimate_from_wizard(uuid, uuid, jsonb), SECURITY INVOKER, and executable only by service_role."
+  - "The active RPC body performs no dealer_service_offerings lookup; direct service-role callers therefore bypass all five managed-family offering switches."
+  - "The accepted Phase-A application path rejects disabled managed-family intent before pricing and persistence, but that does not prove the RPC itself."
+  - "The smallest later SQL direction is one new forward-only replacement migration plus focused estimate_wizard_atomic_save pgTAP coverage."
+  - "The existing B7-4 reference pins PostgreSQL 15 and is browser-oriented, so it is not acceptable for the required PostgreSQL 17 direct-RPC proof."
+codex_independent_verification:
+  head_tree_and_clean_state: PASS
+  pr_open_draft_and_head_match: PASS
+  active_function_signature_security_search_path: PASS
+  service_role_only_execute_acl: PASS
+  active_rpc_offering_lookup_absent: PASS
+  five_family_payload_categories_present: PASS
+  phase_a_guard_pre_persist: PASS
+  b7_4_postgresql_major_version: 15
+  c5c_reference_path_count: 9
+  protected_blob_match: PASS
+follow_up_required:
+  - "Read the nine accepted gyeon-order-v3-c5c PostgreSQL 17/direct-RPC/concurrency harness files and classify reusable versus order-specific structure."
+  - "Return the exact new Estimate Wizard harness path allowlist, responsibilities, runtime sequence, evidence, cleanup, hash, timeout, and burn contract."
+  - "Resolve the conflict between placing the offering guard after C.7 and saying it should read after the C.9 advisory lock."
+  - "Prove whether the existing lock serializes offering updates and define unambiguous statement-time or serialized semantics for a concurrent missing/false/true change."
+r1_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_HARNESS_REFERENCE_READ_ONLY_DIAGNOSIS.md
+future_external_read_allowlist:
+  - scripts/e2e/gyeon-order-v3-c5c/setup.sh
+  - scripts/e2e/gyeon-order-v3-c5c/cleanup.sh
+  - scripts/e2e/gyeon-order-v3-c5c/capture-evidence.sh
+  - scripts/e2e/gyeon-order-v3-c5c/config.toml
+  - scripts/e2e/gyeon-order-v3-c5c/real-auth.mjs
+  - scripts/e2e/gyeon-order-v3-c5c/concurrency.mjs
+  - scripts/e2e/gyeon-order-v3-c5c/schema-rls.test.sql
+  - scripts/e2e/gyeon-order-v3-c5c/qualification-evidence.test.sql
+  - scripts/e2e/gyeon-order-v3-c5c/prepare-finalize-warehouse.test.sql
+  - supabase/migrations/20260728150348_dealer_service_offerings.sql
+  - supabase/migrations/20260825151059_persist_existing_vehicle_confirmed_body_size.sql
+  - supabase/tests/estimate_wizard_atomic_save.test.sql
+  - package.json
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "This governance candidate changes exactly the three R1 governance paths."
+  - "No external transmission of the nine C5-C contents occurred in this authoring gate."
+  - "No source, migration, test, harness, dependency, config, generated artifact, or protected path is changed."
+  - "No test/typecheck/build/runtime, DB/Supabase/Docker/browser/network/provider access, stage, commit, push, PR mutation, Ready, merge, or deployment is authorized or performed."
+decision: ACCEPTED_WITH_FOLLOW_UP_REQUIRED_AUTHOR_B_R1_HARNESS_AND_CONCURRENCY_READ_ONLY_GOVERNANCE
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
