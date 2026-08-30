@@ -12,9 +12,10 @@ Allowed verdicts:
 - `CHANGES_REQUIRED_R1_PLAN`
 - `BLOCKED_EVIDENCE`
 
-This directive authorizes diagnosis only. Except for the exact
-controller-owned transport logging in section 7.1 and the exact ephemeral
-Claude CLI Bash session-environment lifecycle in section 7.2, it authorizes no
+This directive authorizes diagnosis only. The current invocation contract is
+R1-A4 in section 7.3. It supersedes the failed R1-A3 Bash/session-environment
+launcher in section 7.2. Except for the controller-owned input-bundle lifecycle
+in section 3 and output transport logging in section 7.1, it authorizes no
 file, Git, PR, provider, Supabase project, database, backup, runtime, or
 deployment mutation.
 
@@ -28,38 +29,75 @@ deployment mutation.
   `edec294889a063dacf18b8ed0108d922dd0af2bc`
 - MacBook Codex must supply the exact committed governance execution HEAD and
   tree containing this directive.
-- MacBook Codex must also supply a timestamped controller attestation for the
-  repository identity and that PR `#47` is `OPEN` / `Draft`. Claude must record
-  both as controller-attested rather than independently verified; this
-  diagnosis does not authorize remote-URL inspection, GitHub, or network
-  access.
+- MacBook Codex must supply a timestamped controller attestation for the
+  repository identity, exact committed source hashes, clean worktree/index,
+  upstream `0 0`, protected metadata, and that PR `#47` is `OPEN` / `Draft`.
+  Claude must record all of these as controller-attested rather than
+  independently verified; the R1-A4 no-tool invocation does not authorize
+  remote-URL inspection, GitHub, shell, file, or network access.
 - The committed delta from the predecessor to the execution HEAD must contain
   exactly the three governance paths recorded in the latest phase ledger.
 - Required upstream ahead/behind at invocation: `0 0`
 
-Stop with `BLOCKED_EVIDENCE` before content reads if identity, ancestry, exact
-three-path governance delta, upstream state, or clean worktree/index differs.
+Stop with `BLOCKED_EVIDENCE` before substantive analysis if the serialized
+controller attestation reports a mismatch in identity, ancestry, exact
+three-path governance delta, upstream state, clean worktree/index, protected
+metadata, source hashes, excerpt manifest, or input-bundle hash.
 
-## 3. Bootstrap and required first reads — exact order
+## 3. Controller-built bounded input bundle — exact order
 
-Bootstrap exception: Claude may read this directive exactly once before the
-identity gate solely to obtain its rules. Record that bootstrap read. It is not
-the first substantive authority read and must not be repeated after the gate.
+R1-A4 replaces Claude file-tool reads with one controller-built, immutable,
+bounded plaintext bundle supplied on standard input. The bundle must be built
+from the exact committed execution HEAD, not the working-tree copies. It must
+serialize the following twelve private Git paths in this exact order and label
+every full-file or line-range excerpt with the path, committed mode/blob,
+full-source SHA-256, selection, and excerpt SHA-256:
 
-After all section 2 identity checks pass, read the following substantive
-authorities in this exact order:
+1. this directive — full file;
+2. `AGENTS.md` — full file;
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md` — lines 899–1147;
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md` — line 3296 through
+   end of file;
+5. `docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md`
+   — full file;
+6. `docs/master_specification/ENVIRONMENT_LEDGER.md` — lines 1–130;
+7. `docs/master_specification/ENVIRONMENT_REMEDIATION_PLAN.md` — lines 1–214
+   and 361–407;
+8. `supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql`
+   — lines 1–70, 390–430, 620–720, 840–880, and 950–980;
+9. `scripts/e2e/gda-estimate-managed-service-offering-r1-fb/config.toml` — full
+   file;
+10. `scripts/e2e/gda-estimate-managed-service-offering-r1-fb/setup.sh` — lines
+    1–90, 110–230, 300–380, and 400–533;
+11. `scripts/e2e/gda-estimate-managed-service-offering-r1-fb/capture-evidence.sh`
+    — lines 1–120, 200–270, and 310–444; and
+12. `scripts/e2e/gda-estimate-managed-service-offering-r1-fb/cleanup.sh` — lines
+    1–90, 230–390, and 440–529.
 
-1. `AGENTS.md`
-2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
-3. the latest accepted and pending entries in
-   `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
-4. `docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md`
-5. `docs/master_specification/ENVIRONMENT_LEDGER.md`
-6. `docs/master_specification/ENVIRONMENT_REMEDIATION_PLAN.md`
+The controller must fail closed if any requested range exceeds the committed
+file length, a path is absent, a source hash differs from its preflight
+manifest, or the final bundle contains fewer or more than twelve path blocks.
+The bundle must precede the path blocks with the timestamped section 2
+attestation and end with a fixed end-of-bundle sentinel. After the file is
+finalized, the controller computes its byte count and SHA-256 and supplies
+those two values in a short launcher prompt envelope outside the bundle file.
+The bundle must never contain its own final hash. Claude receives the prompt
+envelope and the bundle stream but never the bundle pathname.
 
-## 4. Literal additional read allowlist
+The controller may create one fresh mode-700 input directory outside the Git
+worktree and exactly one mode-600 input-bundle file inside it. This input root
+must be different from the section 7.1 output transport root. Claude may
+receive the bundle only through standard input and must not receive its path.
+After Claude exits, the controller must delete that exact input file and
+directory and prove both absent. The required post-run status is
+`POST_RUN_CONTROLLER_INPUT_BUNDLE_CLEANUP_REQUIRED` until that proof is
+complete. No input bundle may be retained, committed, posted to GitHub, or
+reused.
 
-Read only these additional Git-tracked files:
+## 4. Literal source allowlist represented in the input bundle
+
+The following are the only additional Git-tracked sources represented by
+bounded excerpts in section 3:
 
 1. `supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql`
 2. `scripts/e2e/gda-estimate-managed-service-offering-r1-fb/config.toml`
@@ -67,9 +105,10 @@ Read only these additional Git-tracked files:
 4. `scripts/e2e/gda-estimate-managed-service-offering-r1-fb/capture-evidence.sh`
 5. `scripts/e2e/gda-estimate-managed-service-offering-r1-fb/cleanup.sh`
 
-Do not open any other source, migration, test, harness, configuration, generated
-artifact, runtime evidence, environment file, credential store, shell history,
-or user file.
+Claude must not use file tools or open any source directly. Do not include any
+other source, migration, test, harness, configuration, generated artifact,
+runtime evidence, environment file, credential store, shell history, or user
+file in the bundle.
 
 ## 5. Protected metadata-only paths
 
@@ -98,10 +137,11 @@ or derive content from them.
   project creation, backup restore, rollback execution, or shared-environment
   fixture.
 
-## 7. Permitted command discovery
+## 7. Controller-only command discovery
 
-Commands may be used only to prove repository identity, protected metadata,
-and local CLI syntax. Every Supabase CLI command must set
+R1-A4 grants Claude no tools and no command execution. The controller may use
+the following read-only local commands only to create and attest the input
+bundle. Every Supabase CLI help command must set
 `SUPABASE_TELEMETRY_DISABLED=1`.
 
 Permitted categories:
@@ -129,10 +169,11 @@ The help output is syntax evidence only. Do not execute `projects list`,
 `backups list`, `backups restore`, `db dump`, `db query`, `link`, or any command
 that contacts a project, database, provider, or network service.
 
-The invoking controller must grant the command matcher for every exact command
-above, including the literal `@{upstream}` ref and the exact `git diff-tree`
-form. A tool-policy denial is evidence failure; do not request broader shell
-access or silently substitute another command.
+The controller must serialize relevant command output, command text, and exit
+code into the bundle. Claude must distinguish all such evidence as
+controller-attested. A controller command denial or nonzero result is evidence
+failure; do not request broader shell access or silently substitute another
+command.
 
 ### 7.1 Controller-owned transport logging exception
 
@@ -167,47 +208,46 @@ controller's explicit cleanup decision.
 
 ### 7.2 Exact ephemeral Claude CLI Bash session-environment exception
 
-Claude Code `2.1.226` creates a local Bash session-environment path before its
-first permitted Bash command. Without that path, the Bash tool stops with
-`EPERM` before the repository identity gate can run. This is Claude CLI runtime
-infrastructure, not repository evidence and not a Claude-directed content
-write.
+Historical R1-A3 contract only. It is superseded and prohibited for the R1-A4
+invocation because Claude receives `--tools ""` and must not invoke Bash. Do not
+create, grant, inspect, or delete any R1-A4 session-environment UUID path. If a
+new session-environment path is created during R1-A4, reject the result as
+`BLOCKED_EVIDENCE`, clean it only under a separately verified exact-path
+controller decision, and burn that invocation.
 
-For one invocation only, MacBook Codex must:
+The prior UUID and its lifecycle are recorded in the phase ledger only. They
+are not inputs, evidence artifacts, or reusable authority for R1-A4. The
+section 7.1 output transport remains exactly two files and no
+session-environment artifact may be counted with it.
 
-1. generate one fresh UUID and pass it with `--session-id <uuid>`;
-2. prove the exact path
-   `/Users/atsushinishikawa/.claude/session-env/<uuid>` does not exist;
-3. create exactly that directory as controller-owned mode `700` infrastructure;
-4. grant write access only to that exact UUID path for the bounded invocation;
-5. use `--no-session-persistence`, `--safe-mode`, `--disable-slash-commands`,
-   and `--no-chrome`;
-6. permit no MCP server and no background or subagent session;
-7. after Claude exits, inspect only pathname/type/mode/count metadata, never
-   file contents, and delete only that exact UUID path; and
-8. prove that exact UUID path no longer exists.
+### 7.3 R1-A4 one-turn no-tool diagnosis contract
 
-No Claude or Codex step may read, print, copy, hash, transmit, or infer the
-contents of the session-environment path. No sibling under
-`/Users/atsushinishikawa/.claude/session-env`, no other `.claude` path, and no
-credential, Keychain item, shell history, environment file, or user setting is
-authorized. If the exact UUID path already exists, if any write escapes it, or
-if exact-path deletion or absence proof fails, stop with `BLOCKED_EVIDENCE`.
-Do not reuse a failed UUID.
+The exact R1-A4 launcher contract is:
 
-At invocation, MacBook Codex supplies the UUID and exact session-environment
-path as controller attestation. Claude must report:
+- one fresh invocation, no reused session ID or failed runtime;
+- the section 3 mode-600 input bundle supplied on standard input, with its
+  final byte count and SHA-256 supplied only in the external launcher prompt
+  envelope;
+- `--print`, `--input-format text`, and `--output-format json`;
+- `--tools ""`, `--no-session-persistence`, `--safe-mode`,
+  `--disable-slash-commands`, and `--no-chrome`;
+- no MCP server, file tool, Bash tool, web tool, background task, or subagent;
+- reasoning effort `medium` and maximum model budget `$2.00`;
+- one final response only, no exploratory tool turns; and
+- concise output, no source reproduction, with a target ceiling of 6,000
+  words.
 
-- the expected session-environment path;
-- that it did not read or transmit session-environment content;
-- that final cleanup is
-  `POST_RUN_CONTROLLER_SESSION_ENV_CLEANUP_REQUIRED`; and
-- that every repository, Git, provider, Supabase, database, deployment, and
-  non-allowlisted file mutation remained false.
+Claude must analyze only the serialized bundle. It must not ask to read more
+files, repeat source excerpts, or treat omitted portions as inspected. Any
+claim about repository, PR, CLI syntax, protected metadata, or file integrity
+must be labelled controller-attested. Any conclusion requiring omitted source
+content must be listed as an unresolved evidence requirement rather than
+inferred.
 
-The section 7.1 transport directory still must contain exactly two files. The
-ephemeral session-environment path is a separate controller/runtime lifecycle
-and is never counted as a transport artifact or accepted as retained evidence.
+The `$2.00` limit is a hard stop, not acceptance evidence. If the process exits
+for budget, timeout, missing marker, missing verdict, tool access, extra
+transport artifacts, or session-environment creation, classify the run as
+failed and do not raise the budget without a new governance decision.
 
 ## 8. Required diagnosis
 
@@ -293,12 +333,12 @@ owner approval question. Separate:
 
 ## 9. Absolute prohibitions
 
-- No Claude-tool file edit, creation, deletion, chmod, stage, commit, push, PR
-  mutation, branch mutation, stash, restore, reset, or cleanup. The only file
-  lifecycle exceptions are the exact controller-owned transport logging
-  contract in section 7.1 and the exact controller-bounded Claude CLI runtime
-  session-environment lifecycle in section 7.2; neither grants repository,
-  evidence-content, credential, or general `.claude` write authority.
+- No Claude tool of any kind. No file edit, creation, deletion, chmod, stage,
+  commit, push, PR mutation, branch mutation, stash, restore, reset, or
+  cleanup. The only file lifecycle exceptions are the controller-owned
+  single-file input bundle in section 3 and two-file output transport in
+  section 7.1; neither grants repository, credential, session-environment, or
+  general `.claude` write authority.
 - No private evidence transmission beyond the approved read allowlist.
 - No credential, token, password, JWT, connection string, environment file,
   shell history, Keychain secret, or dashboard-session read.
@@ -317,9 +357,11 @@ owner approval question. Separate:
 Return:
 
 1. result identity and one allowed verdict;
-2. repository/PR/HEAD/tree/upstream and protected metadata evidence;
-3. exact files read and exact commands run with exit codes, distinguishing the
-   controller-attested PR state from locally verified Git evidence;
+2. controller-attested repository/PR/HEAD/tree/upstream, protected metadata,
+   source/excerpt manifest, and input-bundle hash evidence;
+3. exact twelve path blocks and selections represented in the bundle, plus
+   exact controller commands and exit codes; do not claim direct file or shell
+   access;
 4. Staging-only target-scope decision and Production deferral confirmation;
 5. exact later backup/recovery-point proof contract;
 6. exact encrypted rollback-artifact contract;
@@ -327,15 +369,16 @@ Return:
 8. exact five-minute roles/decision procedure and unresolved owner decisions;
 9. literal future allowlists, evidence schema, stop/cleanup/cost boundaries;
 10. mutation matrix proving every prohibited class remained false, plus the
-    controller-attested expected transport count/modes, the literal final hash
-    status `POST_RUN_CONTROLLER_VERIFICATION_REQUIRED`, the exact expected
-    session-environment path, and the literal cleanup status
-    `POST_RUN_CONTROLLER_SESSION_ENV_CLEANUP_REQUIRED`; and
+    controller-attested expected output transport count/modes, the literal
+    output hash status `POST_RUN_CONTROLLER_VERIFICATION_REQUIRED`, no
+    session-environment path, and the literal input cleanup status
+    `POST_RUN_CONTROLLER_INPUT_BUNDLE_CLEANUP_REQUIRED`; and
 11. the single precise next owner-approval question.
 
 Stop after returning the result. Do not perform any future execution step.
 
-MacBook Codex must append its separate post-run transport verification and
-exact session-environment deletion/absence proof before accepting any verdict.
-No Claude verdict is accepted from an unverified or extra-file transport
-directory, a reused session UUID, or a retained session-environment path.
+MacBook Codex must append its separate post-run output transport verification,
+input-bundle deletion/absence proof, and zero session-environment creation
+proof before accepting any verdict. No Claude verdict is accepted from an
+unverified or extra-file transport directory, retained input bundle, any new
+session-environment path, missing marker/verdict, budget stop, or tool use.

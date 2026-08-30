@@ -3976,3 +3976,95 @@ protected_blobs:
 decision: ACCEPT_MARKERLESS_ENVIRONMENT_BLOCK_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A3_SESSION_ENV_CORRECTION_CANDIDATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_FIXED_SESSION_UUID_EXACT_PATH_ONLY_RUNTIME_LIFECYCLE_CONTENT_NON_READ_POST_RUN_EXACT_DELETE_ABSENCE_PROOF_TRANSPORT_CONTRACT_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_TRANSMISSION_CLAUDE_RETRY_PROVIDER_READS_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-A4 — Budget stop accepted; bounded one-turn diagnosis correction
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_BOUNDED_ONE_TURN_DIAGNOSIS_CORRECTION
+status: R1_A4_BLOCKED_BUDGET_ACCEPTED_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly authorized correction of the same exact three governance documents only after the separately approved R1-A3 Anthropic run stopped at its model budget without a marker or verdict. Stage, commit, push, revised PR comment, renewed private transmission, another Claude invocation, provider/Supabase/database access, runtime, restore, Ready, merge, deployment, history repair, and rollback remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_controller_preflight: OPEN_DRAFT
+  diagnosis_head: 8aa869fb8cb69b2182110422018e6d1d6e18beeb
+  diagnosis_tree: c1b8b36b7f7385731dbbf5c39e065a333ff9dc6c
+  predecessor: 998d17de891ca5c8b339f18288b6fd4416281d14
+  upstream_ahead_behind_after_diagnosis: "0 0"
+  exact_governance_delta_path_count: 3
+published_instruction:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469200225
+  marker: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_A3_RESTORE_READINESS_READ_ONLY_DIAGNOSIS_INSTRUCTION_V1
+  status: PUBLISHED_INVOKED_RESULT_REJECTED_SUPERSEDE_BEFORE_RETRY
+claude_result:
+  required_marker_present: false
+  allowed_verdict_present: false
+  codex_classification: BLOCKED_BUDGET_NOT_R1_READINESS
+  process_subtype: error_max_budget_usd
+  process_exit: 0
+  duration_ms: 201716
+  turns: 33
+  cost_usd: 2.1149743
+  configured_budget_usd: 2.00
+  web_search_requests: 0
+  web_fetch_requests: 0
+  permission_denials: 0
+  cache_creation_input_tokens: 155517
+  cache_read_input_tokens: 1681157
+  output_tokens: 8135
+  result_bytes: 1577
+  result_sha256: f6f96154e2c5de8bc65febd44e4d65e4580bc7edb3656cdf25913af7d53948af
+  stderr_bytes: 0
+  stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+session_environment_cleanup:
+  session_uuid: 1F671B17-87D1-4330-A6CF-5983F04626C5
+  metadata_only_child_count: 0
+  exact_path_removed: true
+  exact_path_absent_after_cleanup: true
+  uuid_burned: true
+r1_a4_contract:
+  source_path_count: 12
+  source_basis: EXACT_COMMITTED_EXECUTION_HEAD
+  input_transport: ONE_MODE_600_BOUNDED_BUNDLE_IN_FRESH_MODE_700_ROOT
+  input_delivery: STDIN_ONLY
+  input_self_hash: PROHIBITED
+  final_input_size_and_hash_delivery: EXTERNAL_LAUNCHER_PROMPT_ENVELOPE
+  claude_io_flags: "--print --input-format text --output-format json"
+  output_transport: EXACTLY_TWO_MODE_600_FILES_IN_SEPARATE_FRESH_MODE_700_ROOT
+  claude_tools: NONE
+  claude_turns: ONE_FINAL_RESPONSE_ONLY
+  reasoning_effort: medium
+  hard_budget_usd: 2.00
+  target_output_ceiling_words: 6000
+  session_environment_creation: PROHIBITED
+  input_cleanup_literal_status: POST_RUN_CONTROLLER_INPUT_BUNDLE_CLEANUP_REQUIRED
+  output_hash_literal_status: POST_RUN_CONTROLLER_VERIFICATION_REQUIRED
+  reject_on:
+    - SOURCE_OR_EXCERPT_HASH_MISMATCH
+    - PATH_BLOCK_COUNT_NOT_EXACTLY_TWELVE
+    - TOOL_USE
+    - SESSION_ENVIRONMENT_CREATION
+    - BUDGET_OR_TIMEOUT_STOP
+    - MISSING_MARKER_OR_VERDICT
+    - RETAINED_INPUT_BUNDLE
+    - OUTPUT_ARTIFACT_COUNT_NOT_EXACTLY_TWO
+execution_boundary:
+  private_files_retransmitted: false
+  claude_reinvoked: false
+  repository_or_git_mutation: false
+  provider_access: false
+  supabase_or_database_access: false
+  runtime_or_restore: false
+  staging_or_production_write: false
+  ready: false
+  merged: false
+  deployed: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_A3_BUDGET_STOP_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A4_BOUNDED_ONE_TURN_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_TWELVE_PATH_BOUNDED_BUNDLE_CONTRACT_COMMITTED_SOURCE_AND_EXCERPT_HASHES_SEPARATE_INPUT_OUTPUT_ROOTS_NO_TOOL_LAUNCHER_ZERO_SESSION_ENV_POST_RUN_INPUT_DELETION_OUTPUT_VERIFICATION_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_TRANSMISSION_CLAUDE_RETRY_PROVIDER_READS_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```

@@ -315,6 +315,44 @@ fresh disposable verification are separately accepted.
   is never retained evidence and never expands repository, credential,
   provider, database, migration, harness, or deployment authority.
 
+### R1-A4 bounded one-turn input correction — 2026-08-30
+
+- R1-A3 governance was committed and normally pushed at HEAD
+  `8aa869fb8cb69b2182110422018e6d1d6e18beeb`, tree
+  `c1b8b36b7f7385731dbbf5c39e065a333ff9dc6c`, and published without automatic
+  invocation at
+  `https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469200225`.
+- The separately approved R1-A3 Claude run used fresh UUID
+  `1F671B17-87D1-4330-A6CF-5983F04626C5`. Exact-path session-environment
+  initialization succeeded, Claude ran for `201716 ms` and `33` turns, then
+  stopped at `error_max_budget_usd` after `$2.1149743`. It returned neither the
+  required marker nor an allowed verdict and is classified
+  `BLOCKED_BUDGET_NOT_R1_READINESS`.
+- The rejected JSON transport was 1,577 bytes with SHA-256
+  `f6f96154e2c5de8bc65febd44e4d65e4580bc7edb3656cdf25913af7d53948af`;
+  stderr was empty with SHA-256
+  `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+  Permission denials and web search/fetch calls were zero. No formal diagnosis
+  was accepted.
+- MacBook Codex inspected the exact UUID path as empty metadata-only runtime
+  infrastructure, removed only that path, and proved it absent. Git remained
+  clean, upstream remained `0 0`, execution HEAD/tree remained unchanged, and
+  all four protected blobs remained exact.
+- Raising the model budget alone is rejected. R1-A4 preserves the exact twelve
+  private-path contract but replaces repeated tool-driven reads with one
+  controller-built mode-600 bounded excerpt bundle from committed HEAD. The
+  bundle is supplied on standard input to a one-turn `--tools ""` invocation,
+  then deleted exactly with absence proof.
+- The finalized input bundle does not contain its own hash. MacBook Codex
+  computes its final byte count and SHA-256 after closing it and supplies those
+  values in a short external launcher prompt envelope, preventing another
+  self-reference defect.
+- The input bundle and the two-file output transport use separate fresh
+  mode-700 roots. Any range/hash/count mismatch, tool use, session-environment
+  creation, budget stop, missing marker/verdict, retained input bundle, or extra
+  output file rejects the run. Budget stays capped at `$2.00` and effort is
+  reduced to `medium`.
+
 ## 5. Selected execution strategy
 
 The selected candidate is now:
@@ -773,17 +811,19 @@ as `READY_FOR_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE`.
 FB-I1-E2 is accepted as `E2_LOCAL_DISPOSABLE_DB`. The first R1 diagnosis
 stopped validly as `BLOCKED_EVIDENCE`; it is not R1 readiness acceptance. The
 R1-A2 diagnosis result is rejected because the Claude CLI Bash runtime could
-not create its exact session-environment path. The current gate is
-exact-three-document R1-A3 ephemeral session-environment governance correction
+not create its exact session-environment path. R1-A3 resolved that environment
+block, but its diagnosis is rejected because repeated tool-driven reads reached
+the model budget before producing a marker or verdict. The current gate is
+exact-three-document R1-A4 bounded one-turn input governance correction
 authoring only.
 
-Verify the corrected bootstrap/read order, controller-attested PR boundary,
-literal Git metadata commands, exact three-path proof command, two-file
-transport-log exception, post-run controller hash responsibility, fresh fixed
-session UUID, exact-path-only mode-700 runtime lifecycle, content non-read,
-post-run exact deletion/absence proof, protected metadata, clean index, and
-`git diff --check`. Then request separate exact-path stage/local commit
-authorization. Normal push, revised PR instruction publication, renewed
+Verify the exact twelve-path serialized excerpt order, committed-source and
+excerpt hashes, controller-attested PR/Git/protected metadata, separate
+single-file input and two-file output roots, no-tool launcher, no
+session-environment creation, post-run input deletion/absence proof, output
+transport verification, hard cost/turn boundary, protected metadata, clean
+index, and `git diff --check`. Then request separate exact-path stage/local
+commit authorization. Normal push, revised PR instruction publication, renewed
 private transmission, another Claude diagnosis, provider read-only
 verification, encrypted rollback capture, disposable restore proof,
 conditional rollback approval, Ready, merge, migration application, history
