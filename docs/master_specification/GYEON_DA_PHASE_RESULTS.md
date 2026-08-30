@@ -3433,3 +3433,95 @@ boundary:
 decision: ACCEPT_BLOCKED_EVIDENCE_AND_REPAIRED_PRIVATE_PACKAGE_RESULT_RECORD_CANDIDATE
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_PROTECTED_METADATA_SIBLING_MANIFEST_IDENTITY_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. PR_RESULT_COMMENT_SUPERSEDING_INVOCATION_PRIVATE_RETRANSMISSION_CLAUDE_RETRY_IMPLEMENTATION_DATABASE_AND_RELEASE_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-FB-I1 — Accepted diagnosis and implementation-governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE
+status: FB_G1_DIAGNOSIS_ACCEPTED_FB_I1_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+diagnosis_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_READ_ONLY_DIAGNOSIS_RESULT_V1
+authorization: "The owner explicitly authorized one fresh Claude Code read-only diagnosis after separately and explicitly approving Anthropic transmission of the exact five private governance files, ten Git-tracked implementation/reference files, and ten corrected private evidence files. After MacBook Codex independently accepted that result, the owner authorized local-only creation of the FB-I1 implementation directive plus updates to the remediation plan and this append-only phase ledger. This gate does not authorize implementation, migration generation, harness edits, tests, stage, commit, push, PR mutation, private retransmission, Claude implementation execution, Supabase/database/provider access, Staging, Production, migration/history action, Ready, merge, or deployment."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  accepted_diagnosis_head: 5ba7877e8829f88fa6abac10fc377b86cfdc3c99
+  accepted_diagnosis_tree: 4b2b29379b9d1a00ec2b5bf3ed0c28d528b0d97c
+  governance_base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  committed_delta_from_governance_base: EXACT_THREE_GOVERNANCE_PATHS
+claude_diagnosis:
+  verdict: READY_FOR_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE
+  model: claude-sonnet-5
+  tools:
+    - Read
+    - Grep
+    - Glob
+  permission_denials: 0
+  web_search_requests: 0
+  web_fetch_requests: 0
+  total_cost_usd: 1.8495765
+  mutations: 0
+codex_acceptance:
+  verdict: ACCEPTED
+  branch_clean_after_claude: true
+  exact_head_tree_reverified: true
+  protected_blobs_reverified: true
+  private_manifest_verification: "9/9 PASS"
+  existing_test_authorities_reverified: "217 + 39 = 256; unchanged"
+  accepted_r1b_harness_phase_identity_reverified: true
+canonical_identities:
+  private_manifest_sha256: ffffc7e7a8578ddc33d411c0701a29dceb41eff31c4c3445510cb9f404e66a28
+  live_function_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  live_prosrc_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  predecessor_prosrc_sha256: cc38e8ec48076ffaf2652c5729732b2485d9b603189083ee55a51acfb3d27959
+  required_candidate_prosrc_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+accepted_bridge_contract:
+  source_authority: CAPTURED_LIVE_PRODUCTION_FUNCTION
+  deterministic_insertions:
+    - CANONICAL_SEVEN_BODY_SIZE_KEY_VALIDATION_AT_ORIGINAL_C6_POSITION
+    - ATOMIC_EXISTING_VEHICLE_BODY_SIZE_PERSISTENCE_AT_ORIGINAL_C10_POSITION
+    - C9A_FIVE_FAMILY_OFFERING_GUARD_AFTER_REPLAY_CONFLICT_BEFORE_FIRST_C10_WRITE
+  preserve_live_metadata_and_acl: true
+  preserve_unrelated_live_statements_and_behavior: true
+  historical_migrations_immutable: true
+  direct_apply_of_20260830160000_ineligible: true
+future_implementation_write_contract:
+  migration_generation_command: "supabase migration new estimate_managed_service_production_forward_bridge"
+  migration_path: "supabase/migrations/<CLI_GENERATED_TIMESTAMP>_estimate_managed_service_production_forward_bridge.sql"
+  migration_count: 1
+  sibling_harness_paths:
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/config.toml
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/setup.sh
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/offering-guard.test.sql
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/real-auth.mjs
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/concurrency.mjs
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/capture-evidence.sh
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/cleanup.sh
+  total_future_write_paths: 8
+  existing_pgtap_modified: false
+  existing_r1b_harness_modified: false
+current_governance_write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_IMPLEMENTATION.md
+static_implementation_stop_boundary:
+  - "One CLI-generated migration plus seven sibling-harness paths only."
+  - "No SQL, pgTAP, Auth, RPC, concurrency, database, Docker, Colima, provider, Staging, or Production execution."
+  - "No stage, commit, push, PR mutation, Ready, merge, migration-history action, or deployment."
+later_e2_boundary:
+  postgres_major: 17
+  unchanged_pgtap_required: "256/256"
+  real_auth_postgrest_required: true
+  direct_rpc_required: true
+  separate_connection_concurrency_required: true
+  cleanup_and_evidence_integrity_required: true
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: AUTHOR_EXACT_THREE_DOCUMENT_FB_I1_IMPLEMENTATION_GOVERNANCE_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_DYNAMIC_MIGRATION_PATH_CONTRACT_PROTECTED_METADATA_PRIVATE_MANIFEST_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. PRIVATE_RETRANSMISSION_CLAUDE_IMPLEMENTATION_MIGRATION_GENERATION_HARNESS_EDIT_STATIC_EXECUTION_DISPOSABLE_RUNTIME_DATABASE_AND_RELEASE_REMAIN_SEPARATE."
+```

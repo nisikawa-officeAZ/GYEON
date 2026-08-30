@@ -4,8 +4,8 @@
 
 | Field | Value |
 |---|---|
-| Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_EVIDENCE_REPAIR_RESULT_RECORDING` |
-| Status | `FB_G1_BLOCKED_EVIDENCE_REPACKAGED_RESULT_RECORD_CANDIDATE_UNCOMMITTED` |
+| Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE` |
+| Status | `FB_G1_DIAGNOSIS_ACCEPTED_FB_I1_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT` |
 | Date | 2026-08-30 |
 | Product owner | Office AZ |
 | Technical authority | MacBook Codex |
@@ -20,16 +20,19 @@
 | R0 verdict | `CHANGES_REQUIRED_FORWARD_BRIDGE` |
 | R0 Production writes | `0` |
 
-This result-recording gate authorizes only the two governance paths below. It does
-not authorize source or migration edits, SQL execution, database writes,
-migration-history repair, Staging or Production application, fixture creation,
-Auth operations, Git stage/commit/push, branch or PR mutation, private external
-transmission, Claude execution, deployment, or rollback execution.
+This implementation-governance authoring gate authorizes only the three
+governance paths below. It does not authorize source, migration, test, or
+harness implementation, SQL execution, database writes, migration-history
+repair, Staging or Production application, fixture creation, Auth operations,
+Git stage/commit/push, branch or PR mutation, private external transmission,
+Claude implementation execution, deployment, or rollback execution.
 
-**Literal write allowlist for this result-recording gate — exactly two paths:**
+**Literal write allowlist for this governance-authoring gate — exactly three
+paths:**
 
 1. `docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md`
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_IMPLEMENTATION.md`
 
 The binding environment identity and safety rules remain those in
 `ENVIRONMENT_LEDGER.md`. This plan narrows the general execution-mechanism
@@ -180,6 +183,34 @@ fresh disposable verification are separately accepted.
   diagnosis passes the repaired evidence gate and MacBook Codex independently
   accepts it.
 
+### FB-G1 accepted read-only diagnosis — 2026-08-30
+
+- Coordination PR #47 remained `OPEN` / `Draft` with exact HEAD
+  `5ba7877e8829f88fa6abac10fc377b86cfdc3c99`, tree
+  `4b2b29379b9d1a00ec2b5bf3ed0c28d528b0d97c`, and three committed governance
+  paths.
+- After Claude Code OAuth recovery, the owner explicitly approved transmission
+  of the exact private governance, Git-tracked, and repaired-evidence
+  allowlists for one fresh read-only diagnosis.
+- Claude returned
+  `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_READ_ONLY_DIAGNOSIS_RESULT_V1`
+  with verdict `READY_FOR_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE`.
+- Claude used only `Read`, `Grep`, and `Glob`, incurred cost `$1.8495765`, had
+  zero permission denials, and made zero file, Git, PR, database, Supabase,
+  provider, Preview, Production, or deployment mutation.
+- MacBook Codex independently accepted the result after confirming the clean
+  branch, exact HEAD/tree, protected blobs, repaired private manifest
+  `9/9 PASS`, canonical hashes, unchanged `217 + 39 = 256` test authorities,
+  and the accepted R1-B harness's phase-specific hard-coded identity.
+- The deterministic bridge contract is live authority plus exactly three
+  accepted insertions: canonical-seven `bodySizeKey` validation, atomic
+  existing-vehicle `body_size` persistence, and C.9a managed-service offering
+  enforcement. The resulting canonical body must equal SHA-256
+  `df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6`.
+- No existing pgTAP file is eligible for modification. The future implementation
+  creates one CLI-generated forward-only migration and one seven-file sibling
+  harness, then stops before runtime execution.
+
 ## 5. Selected execution strategy
 
 The selected candidate is now:
@@ -285,8 +316,8 @@ action remain later gates.
 
 ### FB-G1-E1 — Evidence-package correction and blocked-result recording
 
-**Mode:** Completed local-only evidence packaging; current two-document
-result-recording candidate is uncommitted.
+**Mode:** Completed local-only evidence packaging and committed/pushed
+two-document blocked-result record. Retained as historical evidence.
 
 The original private evidence root is immutable. The corrected sibling root is
 the only eligible evidence input for a later diagnosis retry and must first
@@ -295,18 +326,38 @@ again. A retry requires a separate private-transmission and Claude-execution
 approval and must remain tool-disabled, session-nonpersistent, cost-bounded,
 and read-only.
 
-This gate does not authorize stage, commit, push, a PR result or superseding
-instruction comment, Claude retry, SQL/test/harness implementation, Supabase or
-database access, migration/history mutation, Ready, merge, or deployment.
+Those former stop boundaries were enforced at the E1 gate. Later, separately
+authorized actions delivered the E1 record, posted its PR result, transmitted
+the corrected allowlists, and ran the accepted FB-G1 retry. E1 itself never
+authorized SQL/test/harness implementation, Supabase or database access,
+migration/history mutation, Ready, merge, or deployment.
 
-### FB-I1 — Future forward-bridge implementation and E2 acceptance
+### FB-I1 — Forward-bridge implementation governance and later E2 acceptance
 
-FB-I1 is not authorized by this document. It becomes eligible only if the
-FB-G1 read-only result is independently accepted. The future implementation
-must create one new migration with `supabase migration new`, leave both
-historical migration files immutable, and pass the exact static, pgTAP,
-PostgreSQL 17 disposable, real Auth/PostgREST, direct-RPC,
-separate-connection, cleanup, and evidence-integrity gates approved from FB-G1.
+**Current mode:** exact-three-document governance authoring only. The accepted
+FB-G1 result makes FB-I1 eligible but does not authorize implementation.
+
+The committed implementation directive must require MacBook Claude, after a
+separate external-transmission and eight-path implementation approval, to:
+
+1. discover the current Supabase CLI contract with `--help`;
+2. generate exactly one migration using
+   `supabase migration new estimate_managed_service_production_forward_bridge`;
+3. construct that migration deterministically from the captured live function
+   and the three accepted insertion blocks;
+4. require the canonical candidate body SHA-256 exactly
+   `df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6`;
+5. leave the two historical migrations and existing `217 + 39` test files
+   immutable;
+6. create only the seven new
+   `scripts/e2e/gda-estimate-managed-service-offering-r1-fb/` sibling-harness
+   files; and
+7. run static checks only, then stop with an uncommitted eight-path candidate.
+
+Disposable PostgreSQL 17, unchanged `256/256` pgTAP, real Auth/PostgREST,
+direct RPC, true separate-connection concurrency, metadata/ACL, cleanup, and
+evidence-integrity execution are a later explicit FB-I1-E2 gate. They are not
+part of governance authoring or the static implementation candidate gate.
 
 R1-R10 below are suspended until FB-I1 has an accepted source body hash and
 fresh E2 evidence. When they resume, every reference to the apply artifact must
@@ -529,17 +580,20 @@ Stop immediately, make no same-run repair, and do not retry when:
 
 ## 10. Immediate next gate
 
-R0 remains complete with `CHANGES_REQUIRED_FORWARD_BRIDGE`; the first FB-G1
-diagnosis is retained as `BLOCKED_EVIDENCE`, and the corrected private sibling
-package has passed local evidence verification.
+R0 remains complete with `CHANGES_REQUIRED_FORWARD_BRIDGE`; the initial
+`BLOCKED_EVIDENCE` result remains recorded; the corrected sibling package
+passed verification; and the fresh FB-G1 diagnosis is independently accepted
+as `READY_FOR_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE`.
 
-The current gate is exact-two-document result recording only. Verify the two
-paths, protected metadata, sibling evidence manifest identity, clean index, and
-`git diff --check`, then request separate exact-path stage/local-commit and
-normal-push authorization. A PR result comment, superseding invocation comment,
-private retransmission, and one fresh Claude diagnosis retry remain separately
-unauthorized.
+The current gate is exact-three-document FB-I1 governance authoring only.
+Verify the new directive against the accepted diagnosis, the exact three-path
+diff, protected metadata, private manifest identity, clean index, and
+`git diff --check`. Then request separate exact-path stage/local-commit and
+normal-push authorization.
 
-Until a fresh FB-G1 diagnosis is independently accepted and FB-I1 reaches
-accepted fresh E2 evidence, no R1 restore-readiness, Staging, or Production
-apply instruction may be issued.
+Private retransmission, Claude implementation, migration generation, harness
+implementation, static execution, disposable runtime execution, PR mutation,
+Ready, merge, migration application, history repair, Staging, Production, and
+deployment remain separate and unauthorized. Until FB-I1 reaches accepted
+fresh E2 evidence, no R1 restore-readiness or shared-environment instruction may
+be issued.
