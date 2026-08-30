@@ -3369,3 +3369,67 @@ boundaries:
 decision: AUTHOR_EXACT_THREE_DOCUMENT_FB_G1_GOVERNANCE_CANDIDATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_FRESH_BRANCH_CREATION_AND_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_DRAFT_PR_PRIVATE_TRANSMISSION_CLAUDE_EXECUTION_IMPLEMENTATION_DATABASE_AND_RELEASE_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-FB-G1-E1 — Blocked diagnosis and evidence-package correction
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_EVIDENCE_REPAIR_RESULT_RECORDING
+status: FB_G1_BLOCKED_EVIDENCE_REPACKAGED_RESULT_RECORD_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_READ_ONLY_DIAGNOSIS_RESULT_V1
+authorization: "The owner explicitly authorized one bounded tool-disabled Claude read-only diagnosis using the private R0 evidence, then separately authorized preserving the original evidence and creating and locally verifying one exact allowlist-only sibling package, and finally authorized this exact two-document result-recording candidate. This gate does not authorize stage, commit, push, PR mutation, retransmission, Claude retry, implementation, tests, Supabase/database/provider access, migration/history action, Ready, merge, or deployment."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  head: f919ece7d6a9a40dab14767469083333465b88b1
+  tree: 3428e4fb737f2c32afd9a9aacd149f5658aa4eed
+  changed_files_before_result_recording: 3
+  upstream_ahead_behind_before_result_recording: "0 0"
+claude_diagnosis:
+  verdict: BLOCKED_EVIDENCE
+  model: claude-sonnet-5
+  tool_access: NONE
+  no_session_persistence: true
+  total_cost_usd: 2.9321622
+  mutations: 0
+blocking_evidence:
+  canonical_allowlisted_file: live.functiondef.canonical.sql
+  canonical_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  original_manifest_recorded_different_file: live.functiondef.sql
+  original_manifest_different_file_sha256: 97df618c8988b471970c2a5a0c07230230b1a8aedb1bad31e29a46ea003ae862
+  classification: MANIFEST_FILENAME_AND_CANONICAL_IDENTITY_MISMATCH
+evidence_repair:
+  original_root_preserved: true
+  sibling_root: /private/tmp/gda-r0-fb-g1.tnMnGJ
+  sibling_root_mode: "700"
+  file_count: 10
+  file_mode: "600"
+  manifest_listed_artifact_count: 9
+  manifest_verification: "9/9 PASS"
+  manifest_sha256: ffffc7e7a8578ddc33d411c0701a29dceb41eff31c4c3445510cb9f404e66a28
+  copied_artifact_cmp: "9/9 IDENTICAL"
+  allowlisted_files:
+    - live.functiondef.canonical.sql
+    - live.minus-one-newline.sql
+    - predecessor.prosrc.sql
+    - target.prosrc.sql
+    - predecessor-live.diff
+    - predecessor-target.diff
+    - dependencies.json
+    - migration-list.txt
+    - r0-semantic-result.json
+    - SHA256SUMS.txt
+canonical_identities:
+  live_function_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  live_prosrc_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  predecessor_prosrc_sha256: cc38e8ec48076ffaf2652c5729732b2485d9b603189083ee55a51acfb3d27959
+  target_prosrc_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+boundary:
+  - "The BLOCKED_EVIDENCE result is accepted as a valid stop, not as implementation acceptance."
+  - "Claude's preliminary target-body observation remains non-authoritative until a fresh diagnosis passes the corrected evidence gate and MacBook Codex independently accepts it."
+  - "No Git, PR, Claude, database, Supabase, migration, history, provider, Preview, Production, Ready, merge, or deployment action occurred during the evidence repair or this authoring gate."
+decision: ACCEPT_BLOCKED_EVIDENCE_AND_REPAIRED_PRIVATE_PACKAGE_RESULT_RECORD_CANDIDATE
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_PROTECTED_METADATA_SIBLING_MANIFEST_IDENTITY_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. PR_RESULT_COMMENT_SUPERSEDING_INVOCATION_PRIVATE_RETRANSMISSION_CLAUDE_RETRY_IMPLEMENTATION_DATABASE_AND_RELEASE_REMAIN_SEPARATE."
+```
