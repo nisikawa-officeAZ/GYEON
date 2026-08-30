@@ -4,7 +4,7 @@ Marker:
 `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION_V1`
 
 Status:
-`DRAFT_NOT_ACTIVE_OWNER_ROLE_ASSIGNMENT_AND_SEPARATE_ACTIVATION_REQUIRED`
+`DRAFT_NOT_ACTIVE_SEPARATE_ACTIVATION_REQUIRED`
 
 Date: 2026-08-31
 
@@ -63,17 +63,18 @@ Their presence never substitutes for the durable custody roots above.
 
 ## 4. Required role assignment before activation
 
-All four roles are currently unassigned. This document remains inactive until
-the owner records one accountable identity for each role. Stop Authority and
-Rollback Authority must be different identities. Operator and Verifier must
-also be different identities.
+The owner has recorded one accountable identity for each role. Stop Authority
+and Rollback Authority are different human identities. Operator and Verifier
+are different technical agents with separate execution and acceptance duties.
+This document remains inactive until the owner separately activates this exact
+version.
 
 | Role | Assignment | Authority |
 |---|---|---|
-| Operator | `OWNER_ASSIGNMENT_REQUIRED` | Freeze activity, collect only authorized evidence, and execute nothing during the decision window. |
-| Verifier | `OWNER_ASSIGNMENT_REQUIRED` | Independently compare exact target, source, artifact, metadata, and evidence. |
-| Stop Authority | `OWNER_ASSIGNMENT_REQUIRED` | Choose only `CONTINUE_STOPPED` or `ESCALATE_ROLLBACK_REVIEW`. |
-| Rollback Authority | `OWNER_ASSIGNMENT_REQUIRED` | Choose only `APPROVE_EXACT_HASH` or `DENY`; cannot execute rollback. |
+| Operator | `MacBook Claude Code` | Freeze activity, collect only authorized evidence, and execute nothing during the decision window. |
+| Verifier | `MacBook Codex` | Independently compare exact target, source, artifact, metadata, and evidence. |
+| Stop Authority | `西川 篤志 / Owner` | Choose only `CONTINUE_STOPPED` or `ESCALATE_ROLLBACK_REVIEW`. |
+| Rollback Authority | `倉庫担当者 小尾野` | Choose only `APPROVE_EXACT_HASH` or `DENY`; cannot execute rollback. |
 
 No role may self-verify its own action. A named exception to role separation
 requires a separate written owner decision and creates a new document version;
@@ -157,19 +158,20 @@ objects, retry after failure, touch Production, mark Ready, merge, or deploy.
 ## 9. Activation decision
 
 Current decision:
-`NOT_ACTIVE_OWNER_ROLE_ASSIGNMENT_AND_SEPARATE_EXPLICIT_ACTIVATION_REQUIRED`.
+`NOT_ACTIVE_SEPARATE_EXPLICIT_ACTIVATION_REQUIRED`.
 
 Creating, reviewing, committing, pushing, or publishing this document does not
-activate it. Activation requires the owner to provide all four accountable
-assignments and explicitly approve this exact version for Staging ref
-`vhiuiwolnlvlwvoaingd`. Rollback execution remains a later separate gate even
-after activation.
+activate it. The four assignments in section 4 are now complete. Activation
+still requires the owner to explicitly approve this exact version for Staging
+ref `vhiuiwolnlvlwvoaingd`. Rollback execution remains a later separate gate
+even after activation.
 
 ## 10. Current authorization boundary
 
-The owner authorized only authoring this pre-authorization instrument and the
+The owner identified `倉庫担当者 小尾野` as Rollback Authority and authorized
+recording the complete four-role assignment in this instrument and the
 corresponding two-document governance update candidate. Stage, local commit,
-normal push, PR publication, role assignment, activation, transient-source
-deletion, database/provider access, rollback execution, R2, schema/history
-write, Ready, merge, deployment, and every Production action remain separate
-and unauthorized.
+normal push, PR publication, activation, transient-source deletion,
+database/provider access, rollback execution, R2, schema/history write, Ready,
+merge, deployment, and every Production action remain separate and
+unauthorized.

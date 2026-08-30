@@ -4508,3 +4508,56 @@ protected_blobs:
 decision: ACCEPT_R1_C3_PREAUTHORIZATION_INSTRUMENT_AUTHORING_CANDIDATE_INACTIVE_ROLE_ASSIGNMENT_AND_SEPARATE_ACTIVATION_REQUIRED
 next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_SCOPE_BINDINGS_TRIGGER_CONTRACT_ROLE_ASSIGNMENT_GAPS_INACTIVE_STATUS_FIVE_MINUTE_SEQUENCE_NO_EXECUTION_AUTHORITY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_PUBLICATION_ROLE_ASSIGNMENT_ACTIVATION_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C3-A1 — Accountable role assignment
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_A1_ACCOUNTABLE_ROLE_ASSIGNMENT
+status: R1_C3_ROLE_ASSIGNMENT_CANDIDATE_UNCOMMITTED_INACTIVE
+date: 2026-08-31
+append_only: true
+authorization: "The owner identified 倉庫担当者 小尾野 as Rollback Authority after accepting the proposed separation: Operator MacBook Claude Code, Verifier MacBook Codex, Stop Authority 西川 篤志 / Owner, and Rollback Authority 倉庫担当者 小尾野. The owner authorized recording these assignments in the exact three governance paths only. Stage, commit, push, PR mutation, activation, transient deletion, database/provider access, rollback execution, R2, shared write, Ready, merge, deployment, history repair, and Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  authoring_head: 3e94cb58cf47e0f6ce61d9dfc8d1d7bcdfe11e6a
+  authoring_tree: fb0d64930220042fed45943abdb437e6ee779791
+  base: main
+  upstream_ahead_behind: "0 0"
+role_assignment:
+  operator: MacBook Claude Code
+  verifier: MacBook Codex
+  stop_authority: 西川 篤志 / Owner
+  rollback_authority: 倉庫担当者 小尾野
+  operator_verifier_separated: true
+  stop_rollback_authorities_separated: true
+  stop_rollback_authorities_different_humans: true
+authority_limits:
+  operator_may_authorize_own_work: false
+  verifier_may_execute_rollback: false
+  stop_authority_may_approve_exact_hash: false
+  rollback_authority_may_execute_rollback: false
+activation:
+  assignments_complete: true
+  document_active: false
+  separate_exact_version_activation_required: true
+  silence_implies_activation: false
+  rollback_execution_authorized: false
+execution_boundary:
+  exact_three_governance_paths_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  database_or_provider_contact: false
+  shared_staging_or_production_write: false
+  transient_source_deletion: false
+  r2_started: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_C3_FOUR_ROLE_ASSIGNMENT_COMPLETE_CANDIDATE_PREAUTHORIZATION_REMAINS_INACTIVE
+next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_NAMES_ROLE_SEPARATION_INACTIVE_STATUS_NO_EXECUTION_AUTHORITY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_PUBLICATION_ACTIVATION_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```

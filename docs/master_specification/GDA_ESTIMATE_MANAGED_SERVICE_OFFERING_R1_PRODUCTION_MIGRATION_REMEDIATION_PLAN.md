@@ -964,16 +964,17 @@ ref, function signature, migration hash, old/target body hashes, rollback
 ciphertext hash, decrypted capture hash, and custody-manifest hash recorded in
 that instrument.
 
-The instrument is intentionally `DRAFT_NOT_ACTIVE`. Four accountable
-identities remain owner decisions: Operator, Verifier, Stop Authority, and
-Rollback Authority. Stop Authority and Rollback Authority must remain
-separate; Operator and Verifier must remain separate. Silence, timeout,
-ambiguity, stale evidence, target/hash drift, or an unavailable role means
-`DENY_AND_REMAIN_STOPPED`.
+The instrument remains intentionally `DRAFT_NOT_ACTIVE`, but its four
+accountable assignments are now complete: Operator `MacBook Claude Code`,
+Verifier `MacBook Codex`, Stop Authority `西川 篤志 / Owner`, and Rollback
+Authority `倉庫担当者 小尾野`. Stop Authority and Rollback Authority remain
+different human identities; Operator and Verifier remain separate technical
+agents. Silence, timeout, ambiguity, stale evidence, target/hash drift, or an
+unavailable role means `DENY_AND_REMAIN_STOPPED`.
 
 Verify the exact three-path candidate, all bound identities and hashes,
 inactive status, trigger exclusions, five-minute sequence, protected metadata,
 clean index, and `git diff --check`. Then request separate exact-path
-stage/local-commit authorization. Normal push, PR publication, role assignment,
-activation, rollback execution, R2 Staging preflight, schema/history write,
-Ready, merge, deployment, and every Production action remain separate.
+stage/local-commit authorization. Normal push, PR publication, activation,
+rollback execution, R2 Staging preflight, schema/history write, Ready, merge,
+deployment, and every Production action remain separate.
