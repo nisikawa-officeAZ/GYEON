@@ -3110,3 +3110,79 @@ boundary:
 decision: AUTHOR_B_R2_SQL_AND_HARNESS_IMPLEMENTATION_GOVERNANCE_WITH_CODEX_CORRECTED_ORDERING
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-B-R2-I1/A1-G1 — B-R2 candidate returned for harness-only correction
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_IMPLEMENTATION_REVIEW_AND_A1_HARNESS_CORRECTION_GOVERNANCE
+status: B_R2_SQL_PROVISIONALLY_ACCEPTED_HARNESS_CHANGES_REQUIRED_A1_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+b_r2_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_SQL_HARNESS_IMPLEMENTATION_RESULT_V1
+a1_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_A1_HARNESS_CORRECTION_RESULT_V1
+authorization: "The owner authorized authoring exactly three B-R2-A1 governance documents after MacBook Codex independently reviewed the retained B-R2 candidate. This gate preserves the existing uncommitted nine-path candidate and does not authorize private external transmission, five-path correction, executable verification, database/Supabase/Docker/Colima/provider access, Git delivery, PR mutation, Preview/production action, Ready, merge, migration application, or deployment."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/44
+  pull_request_state_at_review: OPEN_DRAFT
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  b_r2_governance_head: c4c3b9825c5596e0c7d2b0728c25881d9b550952
+  b_r2_governance_tree: b7d78864048a874c231fb02ea186a242fa088a5a
+  worktree_candidate_path_count: 9
+  index_clean: true
+b_r2_execution:
+  agent: Anthropic Claude Code
+  verdict: CANDIDATE_READY_FOR_CODEX_REVIEW
+  actual_cost_usd: 7.9618
+  mutation_scope: exact_nine_candidate_paths_uncommitted
+candidate_sha256:
+  supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql: 9319203d67ce42d8f54998b3db0e4af6c0f45ada36c7b20b7c51c047cbfcd499
+  supabase/tests/estimate_wizard_atomic_save.test.sql: 5c85aef563241bd5b1e82d618131ef3b756f2d85a170e57d00b0f157c25d30b5
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/config.toml: 5644922a3fbcf798abb54d9c57ca61a6574952c5a5b1be04ed872e26ee1b371c
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh: 39665cb674e4f8efb6ca1fef31f3aee3e8e6350b71514f293d883a5302915d65
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql: 6b9ea95438d1954fd616bac336188668994a2432ba86668c695d7bb8e8094cc0
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/real-auth.mjs: 448966fe0c7ed7f6558fef8cc478bc93d504b1a70c46b3c65ecdb93310959ecf
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs: 05fe3a9a5dd8fa5006ab1219e04b9ac05ce937a5406d6281a4923f0098c80e59
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh: 747a81fa7f43b67f9aa5e97e3f5eb79e2dbc573a95d00f09a712a890753fbdf3
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/cleanup.sh: 79550f085b81d0ff7d06329685bca0413fabdcd6d27910848c512b52066cdb84
+codex_sql_review:
+  decision: PROVISIONALLY_ACCEPTED_FROZEN_IN_A1
+  accepted:
+    - "The new forward-only migration preserves C.9 exact-replay/DUPLICATE_SUBMISSION precedence and inserts one set-based C.9a guard before C.10."
+    - "The five category-family mappings, missing/false semantics, stable sanitized service-not-offered error, and unrelated-category behavior are structurally present."
+    - "Static shell/MJS syntax and tracked diff checks reported no implementation syntax defect; no SQL/runtime test was executed."
+codex_candidate_decision: CHANGES_REQUIRED_HARNESS_ONLY
+blocking_findings:
+  - "Race 2 relies on fixed 400ms/600ms sleeps and searches for a non-granted relation lock on document_sequences. PostgreSQL row-lock waits are not reliably represented by that predicate, so it does not prove the required C.10 block point."
+  - "Race 1 omits the exact current post-disable metadata.configurationRevision and therefore does not execute the frozen deterministic disable-before-snapshot contract."
+  - "setup.sh hash-gates the extended canonical pgTAP file but copies and capture-evidence.sh executes only the dedicated offering-guard test. The canonical extension is never runtime-proved."
+  - "setup.sh records upstream ahead/behind but does not require exact 0 0."
+  - "setup.sh records protected path metadata but does not fail closed on exact mode, blob, and clean status."
+  - "The pgTAP additions do not prove lifecycle-revision zero mutation and pin only coating/other instead of all required unmanaged categories including interior/glass."
+  - "capture-evidence.sh treats every grep exit other than 0 as clean, so a scan error can be misreported as SECRET_SCAN_CLEAN."
+a1_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_A1_HARNESS_CORRECTION.md
+a1_future_correction_write_allowlist:
+  - supabase/tests/estimate_wizard_atomic_save.test.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh
+frozen_candidate_paths:
+  - supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/config.toml
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/real-auth.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/cleanup.sh
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "The retained B-R2 candidate remains uncommitted and unexecuted."
+  - "A1 must hard-gate upstream 0 0, protected mode/blob/status, and both pgTAP source identities; execute both TAP files independently in a later runtime; add lifecycle and interior/glass coverage; repair both deterministic races; and fail closed on secret-scan errors."
+  - "No source/test/harness correction, private transmission, runtime/test execution, DB/Supabase/Docker/Colima/Auth/PostgREST/provider access, stage, commit, push, PR mutation, Ready, merge, migration application, or deployment is authorized or performed by this authoring gate."
+decision: RETURN_B_R2_FOR_EXACT_FIVE_PATH_HARNESS_CORRECTION
+next: "VERIFY_EXACT_THREE_GOVERNANCE_DOCUMENTS_RETAINED_NINE_PATH_HASHES_FROZEN_FOUR_CANDIDATE_PATHS_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_LOCAL_COMMIT_AND_PUSH_AUTHORIZATION"
+```

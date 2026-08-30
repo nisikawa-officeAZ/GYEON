@@ -898,7 +898,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1 — all managed-service save enforcement
 
-**Status:** PHASE A ACCEPTED AND PUSHED / PHASE B-R1 READ-ONLY DIAGNOSIS ACCEPTED WITH CODEX CORRECTIONS / PHASE B-R2 SQL-AND-HARNESS IMPLEMENTATION GOVERNANCE AUTHORING AUTHORIZED — Phase A enforces all five managed families in the authoritative server-save orchestrator at commit `1bb530f3105055707b7387f6492ede3078402f36`. Phase B proved that the server-only RPC has no independent offering guard. Phase B-R1 identified the reusable PostgreSQL 17 harness pattern, but its proposed guard placement and replay description conflicted. MacBook Codex fixes the contract below before implementation. This authoring gate changes governance only; no SQL, migration, test, harness, database, provider, deployment, or Git-delivery action is authorized.
+**Status:** PHASE A ACCEPTED AND PUSHED / PHASE B-R2 SQL CANDIDATE PROVISIONALLY ACCEPTED / PHASE B-R2 HARNESS RETURNED `CHANGES_REQUIRED_HARNESS_ONLY` / PHASE B-R2-A1 HARNESS-CORRECTION GOVERNANCE AUTHORING AUTHORIZED — Phase A enforces all five managed families in the authoritative server-save orchestrator at commit `1bb530f3105055707b7387f6492ede3078402f36`. The retained B-R2 candidate adds the required direct-RPC SQL guard, canonical pgTAP additions, and seven-file disposable harness, but independent Codex review found that the harness cannot yet prove the required deterministic runtime contract. A1 freezes the accepted migration and limits correction to five test/harness files. This authoring gate changes governance only; no SQL candidate rewrite, harness correction execution, database, provider, deployment, or Git-delivery action is authorized.
 
 **Objective:** Make the current dealer-owned offering switches one enforceable contract for every managed Estimate Wizard service family, not merely a client-side display rule.
 
@@ -1095,6 +1095,42 @@ The result document was excluded from harness implementation and was created lat
 **Phase B-R2 current authoring boundary:** This gate changes only the three governance paths. It does not transmit private files to Claude; change migration, pgTAP, harness, application, dependency, configuration, generated artifact, or protected content; execute tests or runtime; access database/Supabase/Docker/Colima/browser/network/provider; or stage, commit, push, mutate PR #44, mark Ready, merge, or deploy.
 
 **Phase B-R2 governance exit:** MacBook Codex verifies the exact three-document diff, directive consistency, protected metadata, clean pre-edit base, and `git diff --check`, then requests separate exact-path stage/local-commit authorization. Governance push, private Claude transmission, nine-path implementation, static verification, disposable execution, source delivery, Ready, merge, database application, and deployment remain separate gates.
+
+**Phase B-R2 implementation candidate and independent decision:**
+
+- Governance execution HEAD/tree: `c4c3b9825c5596e0c7d2b0728c25881d9b550952` / `b7d78864048a874c231fb02ea186a242fa088a5a`.
+- Claude returned `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_SQL_HARNESS_IMPLEMENTATION_RESULT_V1` with `CANDIDATE_READY_FOR_CODEX_REVIEW`; the candidate remains uncommitted and dirty in exactly the authorized nine paths.
+- MacBook Codex provisionally accepted the new migration's single set-based C.9a guard, exact five mappings, missing/false denial, stable sanitized error, C.9 replay/conflict precedence, C.10 pre-write placement, and static syntax.
+- MacBook Codex returned the overall candidate as `CHANGES_REQUIRED_HARNESS_ONLY`. No disposable runtime, SQL, pgTAP, Auth, PostgREST, RPC, concurrency, provider, Preview, production, stage, commit, push, PR mutation, Ready, merge, migration application, or deployment occurred.
+
+**Phase B-R2-A1 — retained-candidate harness correction:**
+
+- A1 keeps all nine B-R2 candidate paths present but permits edits to exactly five existing paths: the canonical atomic-save pgTAP file, `setup.sh`, the dedicated offering-guard pgTAP file, `concurrency.mjs`, and `capture-evidence.sh`.
+- The new migration, `config.toml`, `real-auth.mjs`, and `cleanup.sh` are frozen byte-for-byte. Every other repository path remains frozen.
+- `setup.sh` must hard-fail unless upstream ahead/behind is exactly `0 0`, every protected path has exact `100644` mode/blob/clean status, and the committed source hashes match. Record-only checks are not acceptance gates.
+- The future runtime must copy and execute both the dedicated offering-guard pgTAP and the extended canonical atomic-save pgTAP, each with its own strict non-zero plan/count/pass evidence. Hashing the canonical test without executing it is prohibited.
+- Both pgTAP files must add lifecycle-revision zero-mutation proof and pin all active unmanaged categories, including `coating`, `other`, `interior`, and `glass`, while retaining every existing managed-family, replay, conflict, cross-tenant, and zero-write assertion.
+- Disable-before-snapshot concurrency must query and inject the exact post-disable configuration revision, then prove the rejected save itself changes no lifecycle revision or business row.
+- Snapshot-before-disable concurrency must replace fixed sleeps and the unreliable non-granted relation-lock predicate with bounded polling that proves distinct holder/save/observer PIDs, `wait_event_type = 'Lock'`, `pg_blocking_pids(save_pid)` containing the holder, relation-lock evidence on `document_sequences`, and non-completion before the disable commits.
+- Secret scanning must fail closed: grep `0` means a detected match, `1` alone means clean, and any other status is a scan failure.
+
+**Phase B-R2-A1 correction write allowlist — exactly five paths:**
+
+1. `supabase/tests/estimate_wizard_atomic_save.test.sql`
+2. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh`
+3. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql`
+4. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs`
+5. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh`
+
+**Phase B-R2-A1 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_A1_HARNESS_CORRECTION.md` (new)
+
+**Phase B-R2-A1 current boundary:** This gate authors the exact three governance paths only while preserving the existing dirty nine-path candidate. It does not transmit private files, run Claude, alter candidate source/test/harness files, execute tests or runtime, access database/Supabase/Docker/Colima/Auth/PostgREST/browser/network/provider, or stage, commit, push, mutate PR #44, mark Ready, merge, apply a migration, or deploy.
+
+**Phase B-R2-A1 governance exit:** MacBook Codex verifies the three governance-document edits, exact retained nine-path candidate hashes, frozen four candidate files, protected metadata, clean index, and `git diff --check`. Stage/local commit and normal push of the three governance documents require separate explicit owner authorization. Private transmission and the five-path correction require another explicit authorization after governance delivery.
 
 ### GDA-3 — Completion Desk
 
