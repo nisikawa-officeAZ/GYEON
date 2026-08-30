@@ -137,6 +137,7 @@ delete from public.vehicles where dealer_id = any($DEALER_IDS_SQL);
 delete from public.customers where dealer_id = any($DEALER_IDS_SQL);
 delete from public.document_sequences where dealer_id = any($DEALER_IDS_SQL);
 delete from public.dealer_service_offerings where dealer_id = any($DEALER_IDS_SQL);
+delete from public.dealer_wizard_catalog_lifecycle where dealer_id = any($DEALER_IDS_SQL);
 delete from public.dealer_members where dealer_id = any($DEALER_IDS_SQL) or user_id = any($USER_IDS_SQL);
 delete from public.dealers where id = any($DEALER_IDS_SQL);
 delete from auth.users where id = any($USER_IDS_SQL);
@@ -157,6 +158,7 @@ select 'dealers', (select count(*) from public.dealers where id = any($DEALER_ID
 union all select 'users', (select count(*) from auth.users where id = any($USER_IDS_SQL))
 union all select 'dealer_members', (select count(*) from public.dealer_members where dealer_id = any($DEALER_IDS_SQL) or user_id = any($USER_IDS_SQL))
 union all select 'dealer_service_offerings', (select count(*) from public.dealer_service_offerings where dealer_id = any($DEALER_IDS_SQL))
+union all select 'dealer_wizard_catalog_lifecycle', (select count(*) from public.dealer_wizard_catalog_lifecycle where dealer_id = any($DEALER_IDS_SQL))
 union all select 'document_sequences', (select count(*) from public.document_sequences where dealer_id = any($DEALER_IDS_SQL))
 union all select 'customers', (select count(*) from public.customers where dealer_id = any($DEALER_IDS_SQL))
 union all select 'vehicles', (select count(*) from public.vehicles where dealer_id = any($DEALER_IDS_SQL))
