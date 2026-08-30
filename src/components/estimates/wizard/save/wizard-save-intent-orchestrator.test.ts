@@ -42,7 +42,13 @@ async function realActorContext() {
 
 // ── Minimal but structurally complete runtime configuration ──
 function runtimeConfig(
-  over: { dealerId?: string; currentRevision?: number; ppfOffered?: boolean } = {},
+  over: {
+    dealerId?: string; currentRevision?: number;
+    // MANAGED-SERVICE-OFFERING-R1-A: one opt-in flag per managed family, each defaulting OFF —
+    // mirrors the exact all-OFF-by-default contract in service-categories.ts.
+    ppfOffered?: boolean; windowFilmOffered?: boolean; maintenanceOffered?: boolean;
+    roomCleaningOffered?: boolean; carWashOffered?: boolean;
+  } = {},
 ): AuthoritativeWizardRuntimeConfiguration {
   return {
     ok: true,
@@ -50,11 +56,13 @@ function runtimeConfig(
     shopRank: "shop",
     catalog: DEFAULT_PRICING_CATALOG,
     screenConfig: {
-      // B2-E2G: every managed family opted OUT — this fixture configures none of them, except PPF
-      // when a test explicitly opts it in via `ppfOffered`.
+      // B2-E2G: every managed family opted OUT unless a test explicitly opts one in.
       serviceOfferings: {
-        window_film: false, ppf: over.ppfOffered ?? false,
-        maintenance: false, room_cleaning: false, car_wash: false,
+        window_film: over.windowFilmOffered ?? false,
+        ppf: over.ppfOffered ?? false,
+        maintenance: over.maintenanceOffered ?? false,
+        room_cleaning: over.roomCleaningOffered ?? false,
+        car_wash: over.carWashOffered ?? false,
       },
       maintenanceMenus: [], washMenus: [], roomMenus: [], filmTypes: [], windowAreas: [],
       otherWorkPresets: [], storeGlobalOptions: [], coupons: [], ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
@@ -74,6 +82,13 @@ function runtimeConfig(
 function draftWith(over: {
   selectedCategories?: EstimateWizardDraftV22["serviceSelection"]["selectedCategories"];
   ppf?: Partial<EstimateWizardDraftV22["serviceConfiguration"]["ppf"]>;
+  // MANAGED-SERVICE-OFFERING-R1-A: the same canonical-initial-state override pattern, extended to
+  // the four generalized families. Omitted keys stay at their exact canonical default, unchanged
+  // from every existing PPF-only call site.
+  windowFilm?: Partial<EstimateWizardDraftV22["serviceConfiguration"]["windowFilm"]>;
+  bodyMaintenance?: Partial<EstimateWizardDraftV22["serviceConfiguration"]["bodyMaintenance"]>;
+  carWash?: Partial<EstimateWizardDraftV22["serviceConfiguration"]["carWash"]>;
+  roomCleaning?: Partial<EstimateWizardDraftV22["serviceConfiguration"]["roomCleaning"]>;
 } = {}): EstimateWizardDraftV22 {
   return {
     ...initialEstimateWizardDraftV22,
@@ -81,6 +96,10 @@ function draftWith(over: {
     serviceConfiguration: {
       ...initialEstimateWizardDraftV22.serviceConfiguration,
       ppf: { ...initialEstimateWizardDraftV22.serviceConfiguration.ppf, ...(over.ppf ?? {}) },
+      windowFilm: { ...initialEstimateWizardDraftV22.serviceConfiguration.windowFilm, ...(over.windowFilm ?? {}) },
+      bodyMaintenance: { ...initialEstimateWizardDraftV22.serviceConfiguration.bodyMaintenance, ...(over.bodyMaintenance ?? {}) },
+      carWash: { ...initialEstimateWizardDraftV22.serviceConfiguration.carWash, ...(over.carWash ?? {}) },
+      roomCleaning: { ...initialEstimateWizardDraftV22.serviceConfiguration.roomCleaning, ...(over.roomCleaning ?? {}) },
     },
   };
 }
@@ -445,16 +464,21 @@ test("the rejection reports exactly one service-not-offered event with the resol
   assert.deepEqual(h.reports[0], { failure: "service-not-offered", dealerId: DEALER });
 });
 
-test("all non-PPF families remain unaffected while PPF is off", async () => {
+// MANAGED-SERVICE-OFFERING-R1-A: `coating` and `other` are outside `SERVICE_FAMILIES` and stay
+// unmanaged by construction, regardless of any managed family's offering state. This replaces the
+// prior PPF-only-era assertion that window/maintenance/carwash/roomclean were "unaffected" while
+// PPF was off — that was exactly the gap this phase closes; those four families are now
+// independently covered by the disabled-family-intent tests below.
+test("coating and other are never blocked by the service-offering guard, regardless of managed-family offerings", async () => {
   const over: Parameters<typeof draftWith>[0] = {
-    selectedCategories: ["coating", "window", "maintenance", "carwash", "roomclean", "other"],
+    selectedCategories: ["coating", "other"],
   };
   const { deps, trace } = makeDeps({
     validateIntent: () => validationFor(draftWith(over)),
-    loadRuntimeConfig: async () => runtimeConfig({ ppfOffered: false }),
+    loadRuntimeConfig: async () => runtimeConfig({}),
   });
   await runWizardSaveIntent({}, deps);
-  assert.ok(trace.includes("computePricing"), "non-PPF categories are never blocked by the PPF-offering guard");
+  assert.ok(trace.includes("computePricing"), "coating/other are never blocked by the service-offering guard");
   assert.ok(trace.includes("persist"));
 });
 
@@ -466,6 +490,245 @@ test("a THROWING reporter cannot change the typed service-not-offered result", a
   });
   const r = await runWizardSaveIntent({}, deps);
   assertFailure(r, "service-not-offered", "unchanged by a throwing reporter");
+  assert.equal(trace.includes("computePricing"), false);
+});
+
+// ── MANAGED-SERVICE-OFFERING-R1-A: generalized guard for all five managed families ───────────
+//
+// Runs at the SAME 7b position as the PPF-only guard above, using the exact same stable failure,
+// guard ordering, and sanitized observability contract. Only the family-aware intent predicate is
+// new; nothing below changes downstream ordering, pricing, mapping, DTO validation, or persistence.
+
+test("all five managed families off, canonical-default sections, no managed categories: proceeds to the existing downstream sequence", async () => {
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith()),
+    loadRuntimeConfig: async () => runtimeConfig({}),
+  });
+  await runWizardSaveIntent({}, deps);
+  assert.deepEqual(trace, [
+    "validateIntent", "resolveActorContext", "loadRuntimeConfig",
+    "computePricing", "mapSaveRequest", "validateSaveRequest", "persist",
+  ], "the structurally required default sections are not intent for any family");
+});
+
+test("each family: selected canonical category while off returns exactly service-not-offered before pricing, mapping, DTO validation, or persistence", async () => {
+  const cases: Array<[string, EstimateWizardDraftV22["serviceSelection"]["selectedCategories"][number]]> = [
+    ["window_film", "window"],
+    ["ppf", "ppf"],
+    ["maintenance", "maintenance"],
+    ["room_cleaning", "roomclean"],
+    ["car_wash", "carwash"],
+  ];
+  for (const [label, category] of cases) {
+    const { deps, trace } = makeDeps({
+      validateIntent: () => validationFor(draftWith({ selectedCategories: [category] })),
+      loadRuntimeConfig: async () => runtimeConfig({}),
+    });
+    const r = await runWizardSaveIntent({}, deps);
+    assertFailure(r, "service-not-offered", label);
+    assert.equal(trace.includes("computePricing"), false, `${label}: pricing never ran`);
+    assert.equal(trace.includes("mapSaveRequest"), false, `${label}: mapper never ran`);
+    assert.equal(trace.includes("validateSaveRequest"), false, `${label}: DTO validation never ran`);
+    assert.equal(trace.includes("persist"), false, `${label}: persistence never ran`);
+  }
+});
+
+test("window_film: each non-default signal is independently rejected while off, including optional/missing-compatible fields", async () => {
+  const cases: Array<[string, Partial<EstimateWizardDraftV22["serviceConfiguration"]["windowFilm"]>]> = [
+    ["selectedAreaIds", { selectedAreaIds: ["a1"] }],
+    ["filmTypeId", { filmTypeId: "f1" }],
+    ["unitPriceInput", { unitPriceInput: "1000" }],
+    ["selectedPackageCode", { selectedPackageCode: "pkg1" }],
+    ["selectedOptionIds", { selectedOptionIds: ["o1"] }],
+    ["optionQuantities", { optionQuantities: { o1: 1 } }],
+  ];
+  for (const [label, over] of cases) {
+    const { deps, trace } = makeDeps({
+      validateIntent: () => validationFor(draftWith({ windowFilm: over })),
+      loadRuntimeConfig: async () => runtimeConfig({}),
+    });
+    const r = await runWizardSaveIntent({}, deps);
+    assertFailure(r, "service-not-offered", label);
+    assert.equal(trace.includes("computePricing"), false, `${label}: pricing never ran`);
+    assert.equal(trace.includes("persist"), false, `${label}: persistence never ran`);
+  }
+
+  // Optional/missing-compatible: a draft carrying `undefined` (never sent, not merely defaulted)
+  // for every optional window-film field must behave exactly like the canonical default — never
+  // throw, never falsely count as intent.
+  const undefinedOptionalDraft: EstimateWizardDraftV22 = draftWith();
+  const withUndefinedOptionals: EstimateWizardDraftV22 = {
+    ...undefinedOptionalDraft,
+    serviceConfiguration: {
+      ...undefinedOptionalDraft.serviceConfiguration,
+      windowFilm: {
+        selectedAreaIds: [], filmTypeId: null, unitPriceInput: "",
+        selectedPackageCode: undefined, selectedOptionIds: undefined, optionQuantities: undefined,
+      },
+    },
+  };
+  const { deps: depsOk, trace: traceOk } = makeDeps({
+    validateIntent: () => validationFor(withUndefinedOptionals),
+    loadRuntimeConfig: async () => runtimeConfig({}),
+  });
+  await runWizardSaveIntent({}, depsOk);
+  assert.ok(traceOk.includes("computePricing"), "undefined optional window-film fields are not intent");
+
+  // A non-default optional field must still reject even when the OTHER optional fields are
+  // entirely absent (`undefined`) rather than at their canonical default.
+  const hostileOptionalOnly: EstimateWizardDraftV22 = {
+    ...undefinedOptionalDraft,
+    serviceConfiguration: {
+      ...undefinedOptionalDraft.serviceConfiguration,
+      windowFilm: {
+        selectedAreaIds: [], filmTypeId: null, unitPriceInput: "",
+        selectedPackageCode: "pkg1", selectedOptionIds: undefined, optionQuantities: undefined,
+      },
+    },
+  };
+  const { deps: depsBad, trace: traceBad } = makeDeps({
+    validateIntent: () => validationFor(hostileOptionalOnly),
+    loadRuntimeConfig: async () => runtimeConfig({}),
+  });
+  const rBad = await runWizardSaveIntent({}, depsBad);
+  assertFailure(rBad, "service-not-offered", "selectedPackageCode set, other optionals absent");
+  assert.equal(traceBad.includes("computePricing"), false);
+});
+
+test("maintenance: each non-default signal is independently rejected while off", async () => {
+  const cases: Array<[string, Partial<EstimateWizardDraftV22["serviceConfiguration"]["bodyMaintenance"]>]> = [
+    ["menuId", { menuId: "m1" }],
+    ["unitPriceInput", { unitPriceInput: "1000" }],
+  ];
+  for (const [label, over] of cases) {
+    const { deps, trace } = makeDeps({
+      validateIntent: () => validationFor(draftWith({ bodyMaintenance: over })),
+      loadRuntimeConfig: async () => runtimeConfig({}),
+    });
+    const r = await runWizardSaveIntent({}, deps);
+    assertFailure(r, "service-not-offered", label);
+    assert.equal(trace.includes("computePricing"), false, `${label}: pricing never ran`);
+    assert.equal(trace.includes("persist"), false, `${label}: persistence never ran`);
+  }
+});
+
+test("car_wash: each non-default signal is independently rejected while off", async () => {
+  const cases: Array<[string, Partial<EstimateWizardDraftV22["serviceConfiguration"]["carWash"]>]> = [
+    ["menuId", { menuId: "m1" }],
+    ["unitPriceInput", { unitPriceInput: "1000" }],
+  ];
+  for (const [label, over] of cases) {
+    const { deps, trace } = makeDeps({
+      validateIntent: () => validationFor(draftWith({ carWash: over })),
+      loadRuntimeConfig: async () => runtimeConfig({}),
+    });
+    const r = await runWizardSaveIntent({}, deps);
+    assertFailure(r, "service-not-offered", label);
+    assert.equal(trace.includes("computePricing"), false, `${label}: pricing never ran`);
+    assert.equal(trace.includes("persist"), false, `${label}: persistence never ran`);
+  }
+});
+
+test("room_cleaning: each non-default signal is independently rejected while off", async () => {
+  const cases: Array<[string, Partial<EstimateWizardDraftV22["serviceConfiguration"]["roomCleaning"]>]> = [
+    ["selectedMenuIds", { selectedMenuIds: ["m1"] }],
+    ["unitPricesByMenu", { unitPricesByMenu: { m1: "1000" } }],
+  ];
+  for (const [label, over] of cases) {
+    const { deps, trace } = makeDeps({
+      validateIntent: () => validationFor(draftWith({ roomCleaning: over })),
+      loadRuntimeConfig: async () => runtimeConfig({}),
+    });
+    const r = await runWizardSaveIntent({}, deps);
+    assertFailure(r, "service-not-offered", label);
+    assert.equal(trace.includes("computePricing"), false, `${label}: pricing never ran`);
+    assert.equal(trace.includes("persist"), false, `${label}: persistence never ran`);
+  }
+});
+
+test("each family offered preserves its selected and configured path to the existing downstream sequence", async () => {
+  const cases: Array<[
+    string,
+    Parameters<typeof draftWith>[0],
+    Parameters<typeof runtimeConfig>[0],
+  ]> = [
+    ["window_film", { selectedCategories: ["window"], windowFilm: { selectedAreaIds: ["a1"] } }, { windowFilmOffered: true }],
+    ["ppf", { selectedCategories: ["ppf"], ppf: { installationMethod: "full", fullCoverage: "front_full" } }, { ppfOffered: true }],
+    ["maintenance", { selectedCategories: ["maintenance"], bodyMaintenance: { menuId: "m1" } }, { maintenanceOffered: true }],
+    ["room_cleaning", { selectedCategories: ["roomclean"], roomCleaning: { selectedMenuIds: ["m1"] } }, { roomCleaningOffered: true }],
+    ["car_wash", { selectedCategories: ["carwash"], carWash: { menuId: "m1" } }, { carWashOffered: true }],
+  ];
+  for (const [label, draftOver, rtOver] of cases) {
+    const { deps, trace } = makeDeps({
+      validateIntent: () => validationFor(draftWith(draftOver)),
+      loadRuntimeConfig: async () => runtimeConfig(rtOver),
+    });
+    await runWizardSaveIntent({}, deps);
+    assert.deepEqual(trace, [
+      "validateIntent", "resolveActorContext", "loadRuntimeConfig",
+      "computePricing", "mapSaveRequest", "validateSaveRequest", "persist",
+    ], `${label}: reaches the existing downstream sequence unchanged`);
+  }
+});
+
+test("one disabled family is rejected even when other selected families are offered", async () => {
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith({
+      selectedCategories: ["window", "maintenance"],
+      bodyMaintenance: { menuId: "m1" },
+    })),
+    // maintenance is offered; window_film stays off and must still be rejected.
+    loadRuntimeConfig: async () => runtimeConfig({ maintenanceOffered: true }),
+  });
+  const r = await runWizardSaveIntent({}, deps);
+  assertFailure(r, "service-not-offered", "window_film off while maintenance offered");
+  assert.equal(trace.includes("computePricing"), false);
+});
+
+test("a stale revision takes precedence over a non-PPF service-offering rejection", async () => {
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith({ selectedCategories: ["window"] })),
+    loadRuntimeConfig: async () => runtimeConfig({ windowFilmOffered: false, currentRevision: 999 }),
+  });
+  const r = await runWizardSaveIntent({}, deps);
+  assertFailure(r, "stale-config-revision", "stale precedes window_film-off");
+  assert.deepEqual(trace, ["validateIntent", "resolveActorContext", "loadRuntimeConfig"]);
+});
+
+test("a dealer/runtime mismatch still takes precedence over a non-PPF service-offering rejection", async () => {
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith({ selectedCategories: ["carwash"] })),
+    loadRuntimeConfig: async () => runtimeConfig({ carWashOffered: false, dealerId: OTHER_DEALER }),
+  });
+  const r = await runWizardSaveIntent({}, deps);
+  assertFailure(r, "tenant-context-unavailable", "mismatch precedes car_wash-off");
+  assert.deepEqual(trace, ["validateIntent", "resolveActorContext", "loadRuntimeConfig"]);
+});
+
+test("a non-PPF rejection reports exactly one service-not-offered event with the resolved dealer id and no family or raw detail", async () => {
+  const h = makeDeps({
+    validateIntent: () => validationFor(draftWith({ selectedCategories: ["roomclean"] })),
+    loadRuntimeConfig: async () => runtimeConfig({}),
+  });
+  const r = await runWizardSaveIntent({}, h.deps);
+  assert.equal(r.ok, false);
+  assert.deepEqual(Object.keys(r).sort(), ["failure", "ok"], "no detail carried");
+  assert.equal(h.reports.length, 1, "exactly one record");
+  assert.deepEqual(h.reports[0], { failure: "service-not-offered", dealerId: DEALER });
+  const serialized = JSON.stringify(h.reports[0]);
+  for (const forbidden of ["roomclean", "room_cleaning", "family"]) {
+    assert.equal(serialized.includes(forbidden), false, `payload exposes ${forbidden}`);
+  }
+});
+
+test("a THROWING reporter cannot change a non-PPF service-not-offered result", async () => {
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith({ selectedCategories: ["maintenance"] })),
+    loadRuntimeConfig: async () => runtimeConfig({}),
+    reportFailure: () => { throw new Error("reporting outage"); },
+  });
+  const r = await runWizardSaveIntent({}, deps);
+  assertFailure(r, "service-not-offered", "unchanged by a throwing reporter (maintenance)");
   assert.equal(trace.includes("computePricing"), false);
 });
 
@@ -690,12 +953,17 @@ test("the orchestrator source contains NO prohibited runtime dependency", () => 
   assert.equal(/service_role|SERVICE_ROLE|user_metadata|app_metadata/.test(code), false);
 });
 
-test("the orchestrator imports the persistence CONTRACT only as a type", () => {
+test("the orchestrator imports exactly two runtime values; the persistence CONTRACT and everything else stay import type", () => {
   const code = codeOf(ORCH_SRC);
-  // The one runtime import is the stable error-code map; everything else is `import type`.
+  // MANAGED-SERVICE-OFFERING-R1-A: a second runtime import is now required — the directive
+  // explicitly mandates importing the existing family list and family-to-category mapping as
+  // VALUES (they are consulted at runtime, not just typed), rather than re-spelling them. The
+  // invariant this test protects — every OTHER dependency, including the persistence contract,
+  // stays `import type` — is unchanged.
   const runtimeImports = (code.match(/^import\s+(?!type)/gm) ?? []).length;
-  assert.equal(runtimeImports, 1, "exactly one runtime import (the error-code constants)");
+  assert.equal(runtimeImports, 2, "exactly two runtime imports (the error-code constants; the service-family authority)");
   assert.match(code, /import\s+\{\s*ESTIMATE_SAVE_ACTION_ERRORS\s*\}/);
+  assert.match(code, /import\s+\{\s*SERVICE_FAMILIES,\s*SERVICE_FAMILY_CATEGORY\s*\}\s+from\s+["']@\/lib\/estimates\/service-categories["']/);
 });
 
 test("the action begins with \"use server\"", () => {

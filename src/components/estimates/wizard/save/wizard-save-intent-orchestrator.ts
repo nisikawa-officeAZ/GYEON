@@ -28,6 +28,8 @@ import type { AuthoritativeWizardRuntimeConfiguration } from "@/lib/wizard-catal
 import type { computeWizardPricingFromConfig } from "../pricing/compute-wizard-pricing-from-config";
 import type { WizardPricingResult } from "../pricing/wizard-pricing-types";
 import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
+import { SERVICE_FAMILIES, SERVICE_FAMILY_CATEGORY } from "@/lib/estimates/service-categories";
+import type { ServiceFamily, ServiceOfferings } from "@/lib/estimates/service-categories";
 import type {
   ConfigSaveMapperFailure, ConfigSaveMapperResult, mapWizardDraftToSaveRequestFromConfig,
 } from "./estimate-save-mapper-from-config";
@@ -64,6 +66,73 @@ export function isPpfBearingDraft(draft: EstimateWizardDraftV22): boolean {
     ppf.unitPriceInput !== "" ||
     ppf.vehicleCoefficientInput !== "1.0" ||
     ppf.interiorRows.length > 0
+  );
+}
+
+/**
+ * MANAGED-SERVICE-OFFERING-R1-A — generalized family-aware intent predicate.
+ *
+ * Category selection is intent for every managed family by construction — the single
+ * `SERVICE_FAMILY_CATEGORY` mapping decides which category, so it is never re-spelled
+ * here. The switch below only inspects the ONE structurally required configuration
+ * section that corresponds to `family`, using the exact canonical-default-vs-intent
+ * rule approved for that family. `ppf` delegates to the existing, unchanged
+ * `isPpfBearingDraft` so its nine-signal behavior stays byte-for-byte identical.
+ *
+ * A section is declared structurally required by `EstimateWizardDraftV22`, but pre-existing
+ * validated/test draft values are not guaranteed to carry every field the type now declares.
+ * A missing section is therefore treated the same as a present-and-canonical one — no intent —
+ * exactly like the canonical-default rule above it; only a selected category can still supply
+ * intent when a section is absent.
+ */
+export function isManagedServiceFamilyBearingDraft(
+  draft: EstimateWizardDraftV22,
+  family: ServiceFamily,
+): boolean {
+  if (draft.serviceSelection.selectedCategories.includes(SERVICE_FAMILY_CATEGORY[family])) return true;
+  switch (family) {
+    case "ppf":
+      return isPpfBearingDraft(draft);
+    case "window_film": {
+      const s = draft.serviceConfiguration.windowFilm;
+      if (!s) return false;
+      return (
+        s.selectedAreaIds.length > 0 ||
+        s.filmTypeId !== null ||
+        s.unitPriceInput !== "" ||
+        (s.selectedPackageCode ?? null) !== null ||
+        (s.selectedOptionIds?.length ?? 0) > 0 ||
+        Object.keys(s.optionQuantities ?? {}).length > 0
+      );
+    }
+    case "maintenance": {
+      const s = draft.serviceConfiguration.bodyMaintenance;
+      if (!s) return false;
+      return s.menuId !== null || s.unitPriceInput !== "";
+    }
+    case "room_cleaning": {
+      const s = draft.serviceConfiguration.roomCleaning;
+      if (!s) return false;
+      return s.selectedMenuIds.length > 0 || Object.keys(s.unitPricesByMenu).length > 0;
+    }
+    case "car_wash": {
+      const s = draft.serviceConfiguration.carWash;
+      if (!s) return false;
+      return s.menuId !== null || s.unitPriceInput !== "";
+    }
+  }
+}
+
+/**
+ * MANAGED-SERVICE-OFFERING-R1-A — true when ANY family the dealer has NOT opted into
+ * carries intent. `SERVICE_FAMILIES` order decides scan order only; the caller never
+ * learns WHICH family matched, so the public failure and its observability record
+ * stay exactly as sanitized as the PPF-only guard this generalizes. `coating` and
+ * `other` are absent from `SERVICE_FAMILIES` and are therefore never inspected here.
+ */
+function hasDisabledManagedServiceIntent(offerings: ServiceOfferings, draft: EstimateWizardDraftV22): boolean {
+  return SERVICE_FAMILIES.some(
+    (family) => offerings[family] === false && isManagedServiceFamilyBearingDraft(draft, family),
   );
 }
 
@@ -209,11 +278,13 @@ export async function runWizardSaveIntent(
     return failPlain("stale-config-revision");
   }
 
-  // ── 7b. The current dealer-bound runtime is the ONLY PPF-offering authority. A PPF-bearing
-  //        draft is rejected here — before pricing, mapping, DTO validation, or persistence run —
-  //        when the offering is off. No offering flag, rank, or catalog inference is accepted from
-  //        the client; only `runtime.screenConfig.serviceOfferings.ppf` decides. ──
-  if (runtime.screenConfig.serviceOfferings.ppf === false && isPpfBearingDraft(intent.draft)) {
+  // ── 7b. The current dealer-bound runtime is the ONLY service-offering authority, for all five
+  //        managed families. A draft bearing intent for a family the dealer has not opted into is
+  //        rejected here — before pricing, mapping, DTO validation, or persistence run. No offering
+  //        flag, rank, or catalog inference is accepted from the client; only
+  //        `runtime.screenConfig.serviceOfferings` decides. `coating` and `other` are unmanaged and
+  //        are never inspected. ──
+  if (hasDisabledManagedServiceIntent(runtime.screenConfig.serviceOfferings, intent.draft)) {
     report(deps, "service-not-offered", context.dealerId);
     return failPlain("service-not-offered");
   }
