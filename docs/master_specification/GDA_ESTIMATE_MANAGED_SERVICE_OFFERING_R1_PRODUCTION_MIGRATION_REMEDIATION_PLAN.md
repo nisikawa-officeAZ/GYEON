@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_GOVERNANCE` |
-| Status | `R1_A5_CLAUDE_TRANSPORT_PASS_CONTENT_CHANGES_REQUIRED_CORRECTION_CANDIDATE_UNCOMMITTED` |
+| Status | `R1_C1_A1_COMMAND_CONTRACT_CORRECTION_CANDIDATE_UNCOMMITTED` |
 | Date | 2026-08-30 |
 | Product owner | Office AZ |
 | Technical authority | MacBook Codex |
@@ -401,6 +401,41 @@ fresh disposable verification are separately accepted.
 - R1-A5 is documentation-only. The retained two-file Claude output root remains
   private evidence. It is not deleted, transmitted, or treated as authority to
   run provider reads, database capture, restore, rollback, or shared writes.
+
+### R1-C1 provider/backup pass and capture-command stop — 2026-08-30
+
+- Exact Staging identity passed read-only verification:
+  `DealerOS-Dev-Next` / `vhiuiwolnlvlwvoaingd` / `ap-northeast-1` /
+  `ACTIVE_HEALTHY`, PostgreSQL `17.6.1.147`, engine `17`, release channel `ga`.
+- Backup listing passed: `walg_enabled=true`, `pitr_enabled=false`, seven
+  physical backups, all `COMPLETED`. Latest listed backup ID `1517480443` was
+  inserted at `2026-08-29T17:06:22.382Z`. `physical_backup_data` was empty.
+  This proves listing and recency only; it does not prove a successful restore
+  or point-in-time recovery.
+- The owner then authorized R1-C1 read-only function capture plus encrypted
+  Git-external storage. The first attempt used the R1-A5 literal command class
+  without `--linked`. CLI `2.116.0` returned
+  `LegacyDbQueryMutuallyExclusiveFlagsError`: `--project-ref` applies only with
+  `--linked`.
+- The parser stopped before a database query or function-body capture. No
+  ciphertext was created, and no Staging write occurred. The 198-byte error
+  JSON SHA-256 is
+  `d40dd920a87a9775bcbec99574229e776509ae6555d0a53dcea697303ed0cfa2`;
+  stderr was empty. Burned suffix `DJ4eiW` is not reusable.
+- The unused encryption secret and its exact root were deleted and proved
+  absent. The mode-700 failure root
+  `/private/tmp/gda-r1-c1-evidence.DJ4eiW` remains private evidence containing
+  only the mode-600 read-only SQL, error JSON, and empty stderr. It grants no
+  retry or shared-environment authority.
+- R1-C1-A1 corrects the command to
+  `SUPABASE_TELEMETRY_DISABLED=1 supabase db query --linked --project-ref vhiuiwolnlvlwvoaingd --file <exact-mode-600-read-only-sql-file> --output-format json`.
+  The CLI-required `--linked` flag does not authorize `supabase link`.
+  `supabase/.temp/project-ref` must be absent before and after the future
+  command, and its presence is a terminal stop.
+- A retry requires a fresh suffix, fresh evidence and secret roots, exact
+  pre/post absence checks, one 30-second attempt, and separate owner approval.
+  R1-C1-A1 changes only the exact three governance documents and performs no
+  retry.
 
 ## 5. Selected execution strategy
 
@@ -865,16 +900,16 @@ block, but its diagnosis is rejected because repeated tool-driven reads reached
 the model budget before producing a marker or verdict. R1-A4 then passed its
 bounded one-turn transport and execution mechanics, but MacBook Codex rejects
 Claude's READY verdict as `CHANGES_REQUIRED_R1_PLAN`. The current gate is
-exact-three-document R1-A5 content correction authoring only.
+exact-three-document R1-C1-A1 command-contract correction authoring only after
+the provider/backup gate passed and the first capture attempt stopped locally.
 
-Verify the R1-A4 evidence record, exact 300-second authority sequence, exact
-provider/API and Supabase CLI command classes, exact accepted response fields,
-exact timeouts/retries, corrected local tool inventory, OpenSSL/APFS cleanup
-contract, protected metadata, exact three-path working-tree delta, clean index,
-and `git diff --check`. Then request separate exact-path stage/local commit
-authorization. Normal push, revised PR instruction publication, renewed private
-transmission, another Claude diagnosis, provider read-only verification,
-encrypted rollback capture, disposable restore proof, conditional rollback
-approval, Ready, merge, migration application, history repair,
-Staging/Production write, deployment, and rollback execution remain separate
-and unauthorized.
+Verify the exact failed-attempt evidence, burned suffix, absence of captured
+function data and ciphertext, secret-root cleanup, corrected `--linked` plus
+exact-ref command, pre/post `supabase/.temp/project-ref` absence contract,
+one-attempt deadline, protected metadata, exact three-path working-tree delta,
+clean index, and `git diff --check`. Then request separate exact-path
+stage/local commit authorization. Normal push, PR result publication, fresh
+capture retry, encrypted rollback capture, disposable restore proof,
+conditional rollback approval, Ready, merge, migration application, history
+repair, Staging/Production write, deployment, and rollback execution remain
+separate and unauthorized.

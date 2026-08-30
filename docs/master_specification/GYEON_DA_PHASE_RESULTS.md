@@ -4167,3 +4167,98 @@ protected_blobs:
 decision: REJECT_R1_A4_READY_VERDICT_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A5_CORRECTION_CANDIDATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_R1_A4_EVIDENCE_300_SECOND_DECISION_SEQUENCE_PROVIDER_ENDPOINTS_RESPONSE_FIELDS_COMMAND_CLASSES_TIMEOUTS_RETRIES_LOCAL_TOOL_INVENTORY_OPENSSL_APFS_CLEANUP_CONTRACT_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_RETRANSMISSION_CLAUDE_RERUN_PROVIDER_READS_DATABASE_CAPTURE_RESTORE_ROLLBACK_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C1-A1 — Provider/backup read pass; capture command stopped before DB query
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C1_CAPTURE_COMMAND_CONTRACT_CORRECTION
+status: R1_C1_A1_COMMAND_CONTRACT_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly authorized the Staging project and backup read-only gate, then separately authorized one R1-C1 read-only function capture and encrypted Git-external evidence attempt. After the CLI parser stopped before the database query, the owner authorized correcting the same exact three governance documents only. Stage, commit, push, PR mutation, capture retry, database access, encryption, restore, rollback, Ready, merge, deployment, history repair, and Staging/Production write remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_last_verification: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  execution_head: 574f121cc847a98b475c538da41bec1543c25dce
+  execution_tree: 9ee09274544489be05bac39b5943562d4da420da
+  upstream_ahead_behind_after_attempt: "0 0"
+  exact_governance_write_path_count: 3
+published_result:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469390594
+  marker: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_A5_CODEX_CORRECTION_RESULT_V1
+  status: PUBLISHED_NOT_INVOKED
+provider_read_only_result:
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  status: ACTIVE_HEALTHY
+  postgres_version: 17.6.1.147
+  postgres_engine: "17"
+  release_channel: ga
+  walg_enabled: true
+  pitr_enabled: false
+  physical_backup_count: 7
+  completed_backup_count: 7
+  latest_backup_id: 1517480443
+  latest_backup_inserted_at: "2026-08-29T17:06:22.382Z"
+  physical_backup_data_empty: true
+  classification: PROVIDER_BACKUP_LIST_PASS_RESTORE_PROOF_PENDING
+r1_c1_failed_attempt:
+  classification: BLOCKED_COMMAND_CONTRACT_NO_DATABASE_QUERY
+  burned_suffix: DJ4eiW
+  cli_version: 2.116.0
+  process_exit: 1
+  error_code: LegacyDbQueryMutuallyExclusiveFlagsError
+  error_summary: "--project-ref requires --linked for db query"
+  database_query_executed: false
+  function_definition_captured: false
+  function_body_captured: false
+  ciphertext_created: false
+  staging_write: false
+failure_evidence:
+  retained_root: /private/tmp/gda-r1-c1-evidence.DJ4eiW
+  root_mode: "700"
+  sql_file: capture-function-read-only.sql
+  sql_bytes: 1212
+  sql_mode: "600"
+  sql_sha256: 41bca71643c96dc1de22493304714466edaf534f8988fea04bcc59ac4ddf45a3
+  result_file: function-capture.json
+  result_bytes: 198
+  result_mode: "600"
+  result_sha256: d40dd920a87a9775bcbec99574229e776509ae6555d0a53dcea697303ed0cfa2
+  stderr_file: function-capture.stderr
+  stderr_bytes: 0
+  stderr_mode: "600"
+  stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+secret_cleanup:
+  deleted_secret_root: /private/tmp/gda-r1-c1-secret.ZAipsZ
+  unused_secret_deleted: true
+  exact_root_absent_after_cleanup: true
+corrected_command_contract:
+  command: "SUPABASE_TELEMETRY_DISABLED=1 supabase db query --linked --project-ref vhiuiwolnlvlwvoaingd --file <exact-mode-600-read-only-sql-file> --output-format json"
+  supabase_link_command_authorized: false
+  local_temp_project_ref_precondition: ABSENT
+  local_temp_project_ref_postcondition: ABSENT
+  fresh_suffix_required: true
+  same_suffix_retry: false
+  attempt_limit: 1
+  controller_deadline_seconds: 30
+execution_boundary:
+  exact_three_governance_documents_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  capture_retry: false
+  database_query_after_parser_stop: false
+  encryption_or_restore: false
+  rollback_authorization_or_execution: false
+  staging_or_production_write: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_PROVIDER_BACKUP_LIST_PASS_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_C1_A1_COMMAND_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_FAILED_ATTEMPT_HASHES_BURNED_SUFFIX_NO_FUNCTION_CAPTURE_NO_CIPHERTEXT_SECRET_ROOT_ABSENCE_CORRECTED_LINKED_EXACT_REF_COMMAND_TEMP_PROJECT_REF_PRE_POST_ABSENCE_ONE_ATTEMPT_DEADLINE_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_PR_COMMENT_FRESH_CAPTURE_RETRY_DATABASE_ACCESS_ENCRYPTION_RESTORE_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```

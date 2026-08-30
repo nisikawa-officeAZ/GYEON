@@ -475,12 +475,13 @@ Official references:
 
 ### 11.4 Exact live-function capture contract
 
-Supabase CLI `2.116.0` locally confirms support for
-`supabase db query --project-ref --file`. The later capture gate may therefore
-use only:
+Supabase CLI `2.116.0` locally confirms support for `supabase db query`. The
+R1-C1 parser stop proved that explicit `--project-ref` is accepted only when
+paired with `--linked`. The corrected later capture gate may therefore use
+only:
 
 ```text
-SUPABASE_TELEMETRY_DISABLED=1 supabase db query --project-ref vhiuiwolnlvlwvoaingd --file <exact-mode-600-read-only-sql-file> --output-format json
+SUPABASE_TELEMETRY_DISABLED=1 supabase db query --linked --project-ref vhiuiwolnlvlwvoaingd --file <exact-mode-600-read-only-sql-file> --output-format json
 ```
 
 The SQL file must be inside a fresh mode-700 evidence root outside Git. It must
@@ -489,6 +490,12 @@ catalog/function-definition reads for the exact signature
 `public.save_estimate_from_wizard(uuid,uuid,jsonb)`, and contain no DDL, DML,
 transactional write, helper creation, or credential. The command has one
 attempt and a 30-second controller wall-clock deadline.
+
+`--linked` is only the CLI target-selection mode required by this command. It
+does not authorize `supabase link` and must not create or rely on
+`supabase/.temp/project-ref`. Before and after the command, the controller must
+prove that exact path absent. If it exists at either boundary, stop without
+reading it, do not run the query, and require a new governance decision.
 
 ### 11.5 Exact encryption, timeout, and cleanup contract
 
@@ -535,3 +542,53 @@ instruction, private retransmission, Claude rerun, provider read, database
 capture, encrypted artifact creation, disposable restore, rollback approval or
 execution, Ready, merge, history repair, Staging/Production write, and
 deployment each remain separate and unauthorized.
+
+## 12. R1-C1-A1 capture-command correction
+
+The first owner-approved R1-C1 attempt used the incomplete R1-A5 command class
+without `--linked`. Supabase CLI stopped locally with
+`LegacyDbQueryMutuallyExclusiveFlagsError` before a database query or function
+capture occurred. This is a command-contract failure, not a Staging database
+failure.
+
+### 12.1 Burned attempt evidence
+
+- Execution HEAD remained
+  `574f121cc847a98b475c538da41bec1543c25dce`; upstream remained `0 0`.
+- Burned suffix: `DJ4eiW`; it must never be reused.
+- Retained private failure root:
+  `/private/tmp/gda-r1-c1-evidence.DJ4eiW`, mode `700`.
+- Read-only SQL: 1,212 bytes, mode `600`, SHA-256
+  `41bca71643c96dc1de22493304714466edaf534f8988fea04bcc59ac4ddf45a3`.
+- Error JSON: 198 bytes, mode `600`, SHA-256
+  `d40dd920a87a9775bcbec99574229e776509ae6555d0a53dcea697303ed0cfa2`.
+- Stderr: 0 bytes, mode `600`, SHA-256
+  `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+- No function definition or body was captured. No encryption artifact was
+  created. The unused secret and exact secret root
+  `/private/tmp/gda-r1-c1-secret.ZAipsZ` were deleted and proved absent.
+- `supabase/.temp/project-ref` was absent before correction authoring. Git and
+  all four protected blobs remained unchanged.
+
+### 12.2 Fresh retry preconditions
+
+A future retry requires a separate owner authorization and all of the
+following:
+
+1. a fresh unused suffix, fresh mode-700 evidence root, and separate fresh
+   mode-700 secret root;
+2. the corrected literal command from section 11.4 with both `--linked` and
+   exact `--project-ref vhiuiwolnlvlwvoaingd`;
+3. `supabase/.temp/project-ref` absent before and after the command, with no
+   `supabase link` invocation;
+4. the exact same mode-600 read-only SQL body or a separately hash-accepted
+   replacement;
+5. one attempt, 30-second controller deadline, no same-suffix repair or retry;
+6. zero function/body output to terminal, Git, PR, or conversation; and
+7. encryption, decrypt-and-compare, plaintext unlink, hash, and absence proof
+   only after a successful exact-one-row capture.
+
+R1-C1-A1 authoring does not authorize the fresh retry, stage, commit, push, PR
+comment, private transmission, Claude invocation, provider listing, database
+query, encryption, restore, rollback, Ready, merge, history repair,
+Staging/Production write, or deployment.
