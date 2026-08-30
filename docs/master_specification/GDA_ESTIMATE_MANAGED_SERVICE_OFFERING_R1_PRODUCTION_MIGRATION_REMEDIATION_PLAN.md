@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_GOVERNANCE` |
-| Status | `R1_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT` |
+| Status | `R1_A1_DIAGNOSIS_GOVERNANCE_CORRECTION_CANDIDATE_UNCOMMITTED` |
 | Date | 2026-08-30 |
 | Product owner | Office AZ |
 | Technical authority | MacBook Codex |
@@ -210,6 +210,42 @@ fresh disposable verification are separately accepted.
 - No existing pgTAP file is eligible for modification. The future implementation
   creates one CLI-generated forward-only migration and one seven-file sibling
   harness, then stops before runtime execution.
+
+### R1-A1 restore-readiness diagnosis stop and governance correction — 2026-08-30
+
+- The committed R1-G1 governance execution identity was HEAD
+  `3dfaeb1a6d785da19523ea3b1f0871c26fc70880`, tree
+  `a8ed1b4e874f9a585bad9df7c1438624c288844f`, with upstream `0 0` and exactly
+  the three governance paths authorized by this plan.
+- Under explicit owner approval, one nonpersistent MacBook Claude diagnosis
+  returned marker
+  `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_READ_ONLY_DIAGNOSIS_RESULT_V1`
+  with verdict `BLOCKED_EVIDENCE`.
+- The run cost `$0.2297618`, completed successfully at the process boundary,
+  used zero web search/fetch, and made zero Git, PR, provider, Supabase,
+  database, runtime, deployment, or rollback mutation.
+- MacBook Codex independently accepted the verdict as a valid fail-closed stop,
+  not as R1 execution readiness. HEAD, tree, clean status, upstream `0 0`, exact
+  three-path delta, protected blobs, and `git diff --check` were independently
+  confirmed after the run.
+- Four governance defects caused or would repeat the block:
+  1. the invocation command matcher denied the otherwise-authorized literal
+     upstream-ref check;
+  2. the directive required an exact three-path delta but did not permit
+     `git diff-tree` or an equivalent path-enumeration command;
+  3. the directive's first-read order placed the directive after authorities
+     even though it must be bootstrap-read to learn that order; and
+  4. the absolute no-file rule did not distinguish Claude writes from the two
+     controller-owned transport logs required to prevent result loss.
+- R1-A1 corrects only those four defects. It also makes repository identity and
+  PR state explicitly timestamped MacBook Codex attestations so Claude never
+  inspects a remote URL or contacts GitHub. It does not broaden provider,
+  database, source, migration, harness, credential, runtime, or
+  shared-environment scope.
+- The private controller result is retained outside Git as mode `600`; only its
+  redacted SHA-256
+  `841e6d05f61ce769185929594445dbf90bc9a94d85ba7374e9cec41b6f167119`
+  is recorded here.
 
 ## 5. Selected execution strategy
 
@@ -666,14 +702,18 @@ R0 remains complete with `CHANGES_REQUIRED_FORWARD_BRIDGE`; the initial
 passed verification; and the fresh FB-G1 diagnosis is independently accepted
 as `READY_FOR_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE`.
 
-FB-I1-E2 is accepted as `E2_LOCAL_DISPOSABLE_DB` and its result is committed,
-pushed, and posted to PR #47. The current gate is exact-three-document R1-G1
-read-only-diagnosis governance authoring only.
+FB-I1-E2 is accepted as `E2_LOCAL_DISPOSABLE_DB`. The first R1 diagnosis
+stopped validly as `BLOCKED_EVIDENCE`; it is not R1 readiness acceptance. The
+current gate is exact-three-document R1-A1 diagnosis-governance correction
+authoring only.
 
-Verify the new directive, exact three-path diff, protected metadata, clean
-index, and `git diff --check`, then request separate exact-path stage/local
-commit authorization. Normal push, PR instruction publication, private
-transmission, Claude diagnosis, provider read-only verification, encrypted
-rollback capture, disposable restore proof, conditional rollback approval,
-Ready, merge, migration application, history repair, Staging/Production write,
-deployment, and rollback execution remain separate and unauthorized.
+Verify the corrected bootstrap/read order, controller-attested PR boundary,
+literal Git metadata commands, exact three-path proof command, two-file
+transport-log exception, protected metadata, clean index, and
+`git diff --check`. Then request separate exact-path stage/local commit
+authorization. Normal push, revised PR instruction publication, renewed
+private transmission, another Claude diagnosis, provider read-only
+verification, encrypted rollback capture, disposable restore proof,
+conditional rollback approval, Ready, merge, migration application, history
+repair, Staging/Production write, deployment, and rollback execution remain
+separate and unauthorized.

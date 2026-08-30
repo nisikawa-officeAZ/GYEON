@@ -3759,3 +3759,71 @@ protected_blobs:
 decision: AUTHOR_EXACT_THREE_DOCUMENT_R1_G1_DIAGNOSIS_GOVERNANCE_CANDIDATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_PR_INSTRUCTION_PUBLICATION_PRIVATE_TRANSMISSION_CLAUDE_DIAGNOSIS_PROVIDER_READS_ENCRYPTED_CAPTURE_DISPOSABLE_RESTORE_AND_ALL_WRITES_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-A1 — Diagnosis blocked; governance correction candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_DIAGNOSIS_GOVERNANCE_CORRECTION
+status: R1_A1_BLOCKED_EVIDENCE_ACCEPTED_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly approved one repeat transmission of the directive-authorized twelve private Git files to Anthropic Claude Code for a nonpersistent read-only diagnosis after the first controller-output loss. After MacBook Codex reported the recovered BLOCKED_EVIDENCE result and four governance defects, the owner explicitly authorized correction of the same exact three governance files only. Stage, commit, push, PR mutation, renewed private transmission, another Claude invocation, provider/Supabase/database access, runtime, restore, Ready, merge, deployment, history repair, and rollback remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_controller_preflight: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  diagnosis_head: 3dfaeb1a6d785da19523ea3b1f0871c26fc70880
+  diagnosis_tree: a8ed1b4e874f9a585bad9df7c1438624c288844f
+  predecessor: 998d17de891ca5c8b339f18288b6fd4416281d14
+  upstream_ahead_behind_after_diagnosis: "0 0"
+  exact_governance_delta_path_count: 3
+claude_result:
+  marker: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_READ_ONLY_DIAGNOSIS_RESULT_V1
+  verdict: BLOCKED_EVIDENCE
+  process_result: SUCCESS_EXIT_0
+  duration_ms: 114302
+  turns: 10
+  cost_usd: 0.2297618
+  web_search_requests: 0
+  web_fetch_requests: 0
+  result_sha256: 841e6d05f61ce769185929594445dbf90bc9a94d85ba7374e9cec41b6f167119
+  stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+codex_acceptance:
+  classification: VALID_FAIL_CLOSED_STOP_NOT_R1_READINESS
+  head_tree_clean_status: PASS
+  upstream_zero_zero: PASS
+  exact_three_path_delta: PASS
+  protected_metadata: PASS
+  diff_check: PASS
+governance_defects:
+  - INVOCATION_MATCHER_DENIED_LITERAL_UPSTREAM_REF_COMMAND
+  - EXACT_THREE_PATH_DELTA_REQUIRED_WITHOUT_A_PERMITTED_PATH_ENUMERATION_COMMAND
+  - DIRECTIVE_BOOTSTRAP_READ_CONFLICTED_WITH_REQUIRED_FIRST_READ_ORDER
+  - NO_FILE_RULE_DID_NOT_DISTINGUISH_CLAUDE_WRITES_FROM_CONTROLLER_TRANSPORT_LOGS
+r1_a1_corrections:
+  - BOOTSTRAP_READ_DIRECTIVE_ONCE_THEN_READ_SIX_SUBSTANTIVE_AUTHORITIES_IN_ORDER
+  - CONTROLLER_ATTEST_REPOSITORY_AND_PR_STATE_WITHOUT_REMOTE_URL_INSPECTION
+  - PERMIT_EXACT_UPSTREAM_REV_LIST_AND_DIFF_TREE_THREE_PATH_PROOF
+  - REQUIRE_INVOCATION_MATCHERS_FOR_EACH_LITERAL_GIT_COMMAND
+  - ALLOW_EXACTLY_TWO_MODE_600_CONTROLLER_TRANSPORT_LOGS_OUTSIDE_GIT
+  - SEPARATE_CLAUDE_MUTATION_MATRIX_FROM_CONTROLLER_TRANSPORT_ARTIFACTS
+execution_boundary:
+  provider_access: false
+  supabase_project_or_backup_listing: false
+  database_access: false
+  credentials_read: false
+  source_migration_or_harness_edit: false
+  git_or_pr_mutation_by_diagnosis: false
+  runtime_or_restore: false
+  staging_or_production_write: false
+  ready: false
+  merged: false
+  deployed: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_BLOCKED_EVIDENCE_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A1_GOVERNANCE_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_CORRECTION_BOOTSTRAP_ORDER_CONTROLLER_ATTESTATION_LITERAL_COMMAND_ALLOWLIST_TRANSPORT_LOG_EXCEPTION_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_PR_COMMENT_RETRANSMISSION_CLAUDE_RERUN_PROVIDER_READS_ENCRYPTED_CAPTURE_DISPOSABLE_RESTORE_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```

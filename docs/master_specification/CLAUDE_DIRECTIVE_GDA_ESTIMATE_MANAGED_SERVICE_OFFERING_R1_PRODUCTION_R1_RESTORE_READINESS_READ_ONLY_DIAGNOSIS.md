@@ -12,8 +12,10 @@ Allowed verdicts:
 - `CHANGES_REQUIRED_R1_PLAN`
 - `BLOCKED_EVIDENCE`
 
-This directive authorizes diagnosis only. It authorizes no file, Git, PR,
-provider, Supabase project, database, backup, runtime, or deployment mutation.
+This directive authorizes diagnosis only. Except for the exact
+controller-owned transport logging in section 7.1, it authorizes no file, Git,
+PR, provider, Supabase project, database, backup, runtime, or deployment
+mutation.
 
 ## 2. Repository identity
 
@@ -25,6 +27,11 @@ provider, Supabase project, database, backup, runtime, or deployment mutation.
   `edec294889a063dacf18b8ed0108d922dd0af2bc`
 - MacBook Codex must supply the exact committed governance execution HEAD and
   tree containing this directive.
+- MacBook Codex must also supply a timestamped controller attestation for the
+  repository identity and that PR `#47` is `OPEN` / `Draft`. Claude must record
+  both as controller-attested rather than independently verified; this
+  diagnosis does not authorize remote-URL inspection, GitHub, or network
+  access.
 - The committed delta from the predecessor to the execution HEAD must contain
   exactly the three governance paths recorded in the latest phase ledger.
 - Required upstream ahead/behind at invocation: `0 0`
@@ -32,7 +39,14 @@ provider, Supabase project, database, backup, runtime, or deployment mutation.
 Stop with `BLOCKED_EVIDENCE` before content reads if identity, ancestry, exact
 three-path governance delta, upstream state, or clean worktree/index differs.
 
-## 3. Required first reads — exact order
+## 3. Bootstrap and required first reads — exact order
+
+Bootstrap exception: Claude may read this directive exactly once before the
+identity gate solely to obtain its rules. Record that bootstrap read. It is not
+the first substantive authority read and must not be repeated after the gate.
+
+After all section 2 identity checks pass, read the following substantive
+authorities in this exact order:
 
 1. `AGENTS.md`
 2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
@@ -41,7 +55,6 @@ three-path governance delta, upstream state, or clean worktree/index differs.
 4. `docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md`
 5. `docs/master_specification/ENVIRONMENT_LEDGER.md`
 6. `docs/master_specification/ENVIRONMENT_REMEDIATION_PLAN.md`
-7. this directive
 
 ## 4. Literal additional read allowlist
 
@@ -93,8 +106,13 @@ and local CLI syntax. Every Supabase CLI command must set
 Permitted categories:
 
 - `pwd`
-- `git rev-parse`, `git status --porcelain`, `git rev-list`, and `git ls-tree`
-  limited to the required identity and protected paths
+- `git rev-parse HEAD` and `git rev-parse HEAD^{tree}`
+- `git status --porcelain`
+- `git rev-list --left-right --count HEAD...@{upstream}`
+- `git rev-list <predecessor>..HEAD` and its `--count` form
+- `git diff-tree --no-commit-id --name-only -r <predecessor> HEAD` solely to
+  prove the exact three-path governance delta
+- `git ls-tree -r HEAD -- <four protected paths>` for protected metadata only
 - SHA-256 of files in sections 3 and 4 only
 - `command -v` for `age`, `gpg`, `openssl`, and `security`
 - version/help output for detected encryption tools only
@@ -109,6 +127,27 @@ Permitted categories:
 The help output is syntax evidence only. Do not execute `projects list`,
 `backups list`, `backups restore`, `db dump`, `db query`, `link`, or any command
 that contacts a project, database, provider, or network service.
+
+The invoking controller must grant the command matcher for every exact command
+above, including the literal `@{upstream}` ref and the exact `git diff-tree`
+form. A tool-policy denial is evidence failure; do not request broader shell
+access or silently substitute another command.
+
+### 7.1 Controller-owned transport logging exception
+
+To prevent result loss, MacBook Codex may create one fresh mode-700 directory
+outside the Git worktree and exactly two mode-600 transport files within it:
+
+- Claude JSON result;
+- stderr capture.
+
+Shell redirection into those two paths is controller-owned transport, not a
+Claude file tool or repository mutation. Claude remains prohibited from every
+file write. The result must separately report Claude-tool mutations as false
+and controller transport artifacts as exactly two. The transport files must
+contain no credentials, environment values, database rows, or protected-path
+content; record their SHA-256 locally and retain or remove them only under the
+controller's explicit cleanup decision.
 
 ## 8. Required diagnosis
 
@@ -194,8 +233,10 @@ owner approval question. Separate:
 
 ## 9. Absolute prohibitions
 
-- No file edit, creation, deletion, chmod, stage, commit, push, PR mutation,
-  branch mutation, stash, restore, reset, or cleanup.
+- No Claude-tool file edit, creation, deletion, chmod, stage, commit, push, PR
+  mutation, branch mutation, stash, restore, reset, or cleanup. The only file
+  creation exception is the exact controller-owned transport logging contract
+  in section 7.1; it grants no repository or evidence-content write.
 - No private evidence transmission beyond the approved read allowlist.
 - No credential, token, password, JWT, connection string, environment file,
   shell history, Keychain secret, or dashboard-session read.
@@ -215,14 +256,16 @@ Return:
 
 1. result identity and one allowed verdict;
 2. repository/PR/HEAD/tree/upstream and protected metadata evidence;
-3. exact files read and exact commands run with exit codes;
+3. exact files read and exact commands run with exit codes, distinguishing the
+   controller-attested PR state from locally verified Git evidence;
 4. Staging-only target-scope decision and Production deferral confirmation;
 5. exact later backup/recovery-point proof contract;
 6. exact encrypted rollback-artifact contract;
 7. exact PostgreSQL 17 disposable restore-proof contract;
 8. exact five-minute roles/decision procedure and unresolved owner decisions;
 9. literal future allowlists, evidence schema, stop/cleanup/cost boundaries;
-10. mutation matrix proving every prohibited class remained false; and
+10. mutation matrix proving every prohibited class remained false, plus the
+    exact count/mode/hash of controller-owned transport artifacts; and
 11. the single precise next owner-approval question.
 
 Stop after returning the result. Do not perform any future execution step.
