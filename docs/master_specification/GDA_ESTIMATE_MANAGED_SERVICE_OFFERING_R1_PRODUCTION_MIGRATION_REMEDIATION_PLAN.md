@@ -4,12 +4,12 @@
 
 | Field | Value |
 |---|---|
-| Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE` |
-| Status | `FB_G1_DIAGNOSIS_ACCEPTED_FB_I1_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT` |
+| Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_DISPOSABLE_E2` |
+| Status | `FB_I1_E2_LOCAL_DISPOSABLE_DB_ACCEPTED_RESULT_RECORDING` |
 | Date | 2026-08-30 |
 | Product owner | Office AZ |
 | Technical authority | MacBook Codex |
-| Implementation / executable verification | MacBook Claude only after a later explicit gate |
+| Implementation / executable verification | Static implementation accepted; MacBook Codex E2 accepted |
 | Staging | `DealerOS-Dev-Next` / `vhiuiwolnlvlwvoaingd` / `ap-northeast-1` |
 | Production | `DealerOS-Prod` / `dmvyaykhibmphrmekjbb` / `ap-northeast-1` |
 | Former direct target / read-only reference | `supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql` |
@@ -332,12 +332,14 @@ the corrected allowlists, and ran the accepted FB-G1 retry. E1 itself never
 authorized SQL/test/harness implementation, Supabase or database access,
 migration/history mutation, Ready, merge, or deployment.
 
-### FB-I1 — Forward-bridge implementation governance and later E2 acceptance
+### FB-I1 — Forward-bridge implementation and E2 acceptance
 
-**Current mode:** exact-three-document governance authoring only. The accepted
-FB-G1 result makes FB-I1 eligible but does not authorize implementation.
+**Current mode:** static implementation and fresh local disposable E2 are
+accepted. The bridge source and sibling harness are committed and pushed on
+PR #47, which remains `OPEN` / `Draft`. Shared-environment work remains
+unauthorized.
 
-The committed implementation directive must require MacBook Claude, after a
+The committed implementation directive required MacBook Claude, after a
 separate external-transmission and eight-path implementation approval, to:
 
 1. discover the current Supabase CLI contract with `--help`;
@@ -356,12 +358,47 @@ separate external-transmission and eight-path implementation approval, to:
 
 Disposable PostgreSQL 17, unchanged `256/256` pgTAP, real Auth/PostgREST,
 direct RPC, true separate-connection concurrency, metadata/ACL, cleanup, and
-evidence-integrity execution are a later explicit FB-I1-E2 gate. They are not
-part of governance authoring or the static implementation candidate gate.
+evidence-integrity execution were completed under the separately authorized
+FB-I1-E2 gate recorded below.
 
-R1-R10 below are suspended until FB-I1 has an accepted source body hash and
-fresh E2 evidence. When they resume, every reference to the apply artifact must
-mean the accepted bridge migration, not
+### FB-I1-E2 accepted local disposable result — 2026-08-30
+
+- Accepted source HEAD/tree: `f15c5862043a0ebb853b3bac3f5c37ccbddf025a` /
+  `5a901d9a4f0c69186cf730213bdef778f0ea78f6`.
+- Accepted fresh suffix: `20260830T130013Z-e2a001`; the exact runtime directory
+  was removed after evidence copy and independent retained-hash verification.
+- PostgreSQL `17.6`; all 112 eligible migrations applied. The protected LINE
+  migration remained excluded and unopened.
+- pgTAP passed `256/256`: canonical atomic-save `217/217` and sibling offering
+  guard `39/39`.
+- Real local Auth/PostgREST assertions passed `6/6`; genuine separate-connection
+  concurrency assertions passed `13/13`, with distinct backend PIDs for every
+  controlled interleaving.
+- The generated bridge applied successfully in the disposable runtime. Its
+  extracted function body SHA-256 remained
+  `df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6`;
+  `SECURITY INVOKER`, the pinned search path, and service-role-only EXECUTE were
+  preserved.
+- Database lint had zero error-level findings and four warning-only findings.
+  Three query-plan captures remained index-backed.
+- Cleanup proved zero rows for every named dealer, actor, offering, lifecycle,
+  sequence, customer, vehicle, estimate, and estimate-item fixture.
+- Evidence integrity passed with 16 final artifacts, 15 manifest-listed hashes,
+  zero mismatches, and manifest SHA-256
+  `60b4cc6344ebacacbd3da36465ba9098c392f42b0aab27793bb29fa96f85ef23`.
+  Retained evidence is outside Git at
+  `/Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-fb-evidence/gda-estimate-offering-fb.20260830T130013Z-e2a001`.
+- Secret scanning was clean. Supabase stop, evidence copy, retained-hash
+  verification, and exact runtime removal all returned zero; project-container
+  residue was zero.
+- Evidence class is `E2_LOCAL_DISPOSABLE_DB`. No hosted Supabase project,
+  shared/Staging/Production database, provider, Preview, or production system
+  was contacted. No migration was applied outside the fresh disposable runtime.
+- Verdict: `ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL`.
+
+FB-I1 now has an accepted source body hash and fresh E2 evidence, so R1 is
+eligible only after a new explicit owner authorization. Every reference below
+to the apply artifact means the accepted bridge migration, not
 `20260830160000_estimate_managed_service_offering_guard.sql`.
 
 ### R1 — Restore and rollback readiness
@@ -585,15 +622,12 @@ R0 remains complete with `CHANGES_REQUIRED_FORWARD_BRIDGE`; the initial
 passed verification; and the fresh FB-G1 diagnosis is independently accepted
 as `READY_FOR_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE`.
 
-The current gate is exact-three-document FB-I1 governance authoring only.
-Verify the new directive against the accepted diagnosis, the exact three-path
-diff, protected metadata, private manifest identity, clean index, and
-`git diff --check`. Then request separate exact-path stage/local-commit and
-normal-push authorization.
+FB-I1-E2 is accepted as `E2_LOCAL_DISPOSABLE_DB`. The current gate is the exact
+two-document result record and its local commit. Normal push and the PR result
+comment require separate authorization.
 
-Private retransmission, Claude implementation, migration generation, harness
-implementation, static execution, disposable runtime execution, PR mutation,
-Ready, merge, migration application, history repair, Staging, Production, and
-deployment remain separate and unauthorized. Until FB-I1 reaches accepted
-fresh E2 evidence, no R1 restore-readiness or shared-environment instruction may
-be issued.
+After result delivery, the next technical gate is R1 restore and rollback
+readiness. R1 is provider/backup verification only and authorizes no schema
+write. PR Ready conversion, merge, migration application, history repair,
+Staging, Production, deployment, and rollback execution remain separate and
+unauthorized.

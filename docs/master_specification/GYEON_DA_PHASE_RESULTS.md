@@ -3621,3 +3621,90 @@ execution_boundary:
 decision: ACCEPT_STATIC_IMPLEMENTATION_AND_LOCAL_COMMIT
 next: "VERIFY_THE_EXACT_TWO_DOCUMENT_GOVERNANCE_DIFF_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_RESULT_COMMENT_DISPOSABLE_E2_RUNTIME_READY_MERGE_MIGRATION_APPLICATION_AND_DEPLOYMENT_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-FB-I1-E2 — Fresh local disposable PostgreSQL 17 acceptance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_DISPOSABLE_E2
+status: DISPOSABLE_DB_PASS_E2_LOCAL
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly authorized PR #47 Disposable E2 runtime verification. After MacBook Codex independently accepted the complete retained evidence, the owner authorized this exact two-document result record, exact-path stage, and local commit. Push, PR mutation/comment, Ready, merge, shared-environment access, migration application, history repair, deployment, and rollback execution remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  execution_head: f15c5862043a0ebb853b3bac3f5c37ccbddf025a
+  execution_tree: 5a901d9a4f0c69186cf730213bdef778f0ea78f6
+  changed_files_at_execution: 12
+  upstream_ahead_behind_at_execution: "0 0"
+runtime:
+  fresh_suffix: 20260830T130013Z-e2a001
+  postgres: "17.6"
+  runtime_path: /Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-fb.20260830T130013Z-e2a001
+  retained_evidence_path: /Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-fb-evidence/gda-estimate-offering-fb.20260830T130013Z-e2a001
+  runtime_removed: true
+  project_containers_after_cleanup: 0
+source_identity:
+  generated_bridge_migration: supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql
+  migration_sha256: 7406c5f11f1feb352ceb737db7844af8904f33e7a82f9679dfed40319a528cf8
+  extracted_function_body_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+  canonical_atomic_pgtap_sha256: eaa6122e0fff62b92e1a20c14f6a56b30b1da5d5567106a48aa886dc8fbf7829
+  sibling_offering_pgtap_sha256: 10e7cabe7327914549ea3b0f0ad0e5e8a8b86acce6b4a6eec03ba492169ac764
+migration_replay:
+  eligible_migration_status_records_applied: 112
+  protected_line_migration_excluded: true
+  generated_forward_bridge_apply_exit: 0
+tests:
+  canonical_atomic_save_pgtap: "217/217 PASS"
+  sibling_offering_guard_pgtap: "39/39 PASS"
+  aggregate_pgtap: "256/256 PASS"
+  real_auth_postgrest_direct_rpc: "6/6 PASS"
+  separate_connection_concurrency: "13/13 PASS"
+  concurrency_backend_pids:
+    race_1: "562 vs 565"
+    race_2: "holder 568; save 569; observer 571; disable 572"
+schema_security:
+  security_invoker: true
+  search_path_pinned: true
+  service_role_execute: true
+  authenticated_execute: false
+  dealer_service_offerings_rls: true
+  dealer_service_offerings_policy_count: 3
+  dealer_service_offerings_trigger_count: 2
+quality:
+  database_lint_error_count: 0
+  database_lint_warning_count: 4
+  query_plan_capture_count: 3
+  query_plans_index_backed: true
+evidence_integrity:
+  final_file_count: 16
+  manifest_listed_hash_count: 15
+  hash_mismatch_count: 0
+  manifest_sha256: 60b4cc6344ebacacbd3da36465ba9098c392f42b0aab27793bb29fa96f85ef23
+  secret_scan: CLEAN
+cleanup:
+  named_fixture_residue: 0
+  supabase_stop_exit: 0
+  retained_evidence_copy_exit: 0
+  retained_hash_verification_exit: 0
+  exact_runtime_removal_exit: 0
+execution_boundary:
+  evidence_class: E2_LOCAL_DISPOSABLE_DB
+  hosted_supabase_contacted: false
+  shared_staging_or_production_database_contacted: false
+  provider_preview_or_production_contacted: false
+  migration_applied_outside_disposable_runtime: false
+  pushed_by_this_gate: false
+  pr_mutated_by_this_gate: false
+  ready: false
+  merged: false
+  deployed: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_RESULT_RECORD_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_STAGE_AND_LOCAL_COMMIT_THE_TWO_DOCUMENTS_ONLY. NORMAL_PUSH_AND_PR_RESULT_COMMENT_REQUIRE_SEPARATE_AUTHORIZATION. AFTER_DELIVERY_R1_RESTORE_AND_ROLLBACK_READINESS_IS_THE_NEXT_TECHNICAL_GATE_WITH_NO_SCHEMA_WRITE."
+```
