@@ -143,10 +143,25 @@ outside the Git worktree and exactly two mode-600 transport files within it:
 
 Shell redirection into those two paths is controller-owned transport, not a
 Claude file tool or repository mutation. Claude remains prohibited from every
-file write. The result must separately report Claude-tool mutations as false
-and controller transport artifacts as exactly two. The transport files must
-contain no credentials, environment values, database rows, or protected-path
-content; record their SHA-256 locally and retain or remove them only under the
+file write. At invocation, MacBook Codex supplies the fresh transport root,
+the two filenames, and their required modes as controller attestation. Claude
+must report:
+
+- Claude-tool mutations are false;
+- controller transport artifact count is expected to be exactly two;
+- directory mode is expected `700` and both file modes are expected `600`;
+- final artifact hashes are `POST_RUN_CONTROLLER_VERIFICATION_REQUIRED`.
+
+Claude must not attempt to inspect, read, hash, or self-hash the transport
+files. A result file cannot contain its own final SHA-256 without changing that
+hash.
+
+After Claude exits, MacBook Codex independently verifies exactly two files,
+their final modes, byte counts, SHA-256 values, process exit status, and empty
+or captured stderr. Those post-run values form a separate controller evidence
+record and are not fields Claude can know while generating the result. The
+transport files must contain no credentials, environment values, database
+rows, or protected-path content; retain or remove them only under the
 controller's explicit cleanup decision.
 
 ## 8. Required diagnosis
@@ -265,7 +280,12 @@ Return:
 8. exact five-minute roles/decision procedure and unresolved owner decisions;
 9. literal future allowlists, evidence schema, stop/cleanup/cost boundaries;
 10. mutation matrix proving every prohibited class remained false, plus the
-    exact count/mode/hash of controller-owned transport artifacts; and
+    controller-attested expected transport count/modes and the literal final
+    hash status `POST_RUN_CONTROLLER_VERIFICATION_REQUIRED`; and
 11. the single precise next owner-approval question.
 
 Stop after returning the result. Do not perform any future execution step.
+
+MacBook Codex must append its separate post-run transport verification before
+accepting any verdict. No Claude verdict is accepted from an unverified or
+extra-file transport directory.

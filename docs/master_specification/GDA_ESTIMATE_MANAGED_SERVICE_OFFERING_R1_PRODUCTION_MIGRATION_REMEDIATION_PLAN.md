@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_GOVERNANCE` |
-| Status | `R1_A1_DIAGNOSIS_GOVERNANCE_CORRECTION_CANDIDATE_UNCOMMITTED` |
+| Status | `R1_A2_POST_RUN_TRANSPORT_HASH_CORRECTION_CANDIDATE_UNCOMMITTED` |
 | Date | 2026-08-30 |
 | Product owner | Office AZ |
 | Technical authority | MacBook Codex |
@@ -246,6 +246,32 @@ fresh disposable verification are separately accepted.
   redacted SHA-256
   `841e6d05f61ce769185929594445dbf90bc9a94d85ba7374e9cec41b6f167119`
   is recorded here.
+
+### R1-A2 pre-invocation transport self-hash correction — 2026-08-30
+
+- R1-A1 was committed and pushed at HEAD
+  `93dcdcd691cda7079fecf0ab96e24f75a8388fc0`, tree
+  `1e82c4bf02a84323d7857409e8e027fdd39a84db`, then published to PR #47 as
+  instruction comment
+  `https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469075854`
+  with status `PUBLISHED_NOT_INVOKED`.
+- During the separately approved Claude preflight, MacBook Codex identified an
+  impossible self-reference before process launch: the directive required
+  Claude's answer to contain the final SHA-256 of the file that would contain
+  that same answer. Writing the hash would change the file and its hash.
+- Claude was not started, cost remained `$0`, and no private file was
+  transmitted. The fresh empty transport directory was proved empty and
+  removed exactly. Git, PR, provider, Supabase, database, runtime, Staging,
+  Production, deployment, and rollback remained unchanged.
+- R1-A2 separates evidence responsibility. Claude reports the expected
+  two-file count/modes and literal status
+  `POST_RUN_CONTROLLER_VERIFICATION_REQUIRED`; after process exit, MacBook
+  Codex independently records exact file count, modes, byte counts, SHA-256,
+  exit status, and stderr state.
+- This correction grants no new read, shell, provider, database, runtime, or
+  repository authority. A result is unacceptable unless the independent
+  post-run transport verification passes with exactly two files and no secret
+  material.
 
 ## 5. Selected execution strategy
 
@@ -704,12 +730,13 @@ as `READY_FOR_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE`.
 
 FB-I1-E2 is accepted as `E2_LOCAL_DISPOSABLE_DB`. The first R1 diagnosis
 stopped validly as `BLOCKED_EVIDENCE`; it is not R1 readiness acceptance. The
-current gate is exact-three-document R1-A1 diagnosis-governance correction
-authoring only.
+current gate is exact-three-document R1-A2 post-run transport-hash governance
+correction authoring only.
 
 Verify the corrected bootstrap/read order, controller-attested PR boundary,
 literal Git metadata commands, exact three-path proof command, two-file
-transport-log exception, protected metadata, clean index, and
+transport-log exception, post-run controller hash responsibility, protected
+metadata, clean index, and
 `git diff --check`. Then request separate exact-path stage/local commit
 authorization. Normal push, revised PR instruction publication, renewed
 private transmission, another Claude diagnosis, provider read-only

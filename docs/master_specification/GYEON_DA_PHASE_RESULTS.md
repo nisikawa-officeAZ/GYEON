@@ -3827,3 +3827,59 @@ protected_blobs:
 decision: ACCEPT_BLOCKED_EVIDENCE_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A1_GOVERNANCE_CORRECTION_CANDIDATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_CORRECTION_BOOTSTRAP_ORDER_CONTROLLER_ATTESTATION_LITERAL_COMMAND_ALLOWLIST_TRANSPORT_LOG_EXCEPTION_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_PR_COMMENT_RETRANSMISSION_CLAUDE_RERUN_PROVIDER_READS_ENCRYPTED_CAPTURE_DISPOSABLE_RESTORE_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-A2 — Pre-invocation transport self-hash correction candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_POST_RUN_TRANSPORT_HASH_GOVERNANCE_CORRECTION
+status: R1_A2_PREFLIGHT_STOP_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "After R1-A1 commit, normal push, and instruction publication, the owner explicitly approved one read-only Anthropic Claude Code invocation over the directive-authorized twelve private Git files. MacBook Codex stopped before invocation after detecting the impossible result-file self-hash contract. The owner then explicitly authorized correction of the same three governance files only. Stage, commit, push, revised PR comment, private transmission, Claude invocation, provider/Supabase/database access, runtime, restore, Ready, merge, deployment, history repair, and rollback remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  published_instruction: https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469075854
+  published_instruction_status: PUBLISHED_NOT_INVOKED_SUPERSEDE_BEFORE_USE
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  preflight_head: 93dcdcd691cda7079fecf0ab96e24f75a8388fc0
+  preflight_tree: 1e82c4bf02a84323d7857409e8e027fdd39a84db
+  upstream_ahead_behind: "0 0"
+preflight_stop:
+  claude_process_started: false
+  private_files_transmitted: 0
+  cost_usd: 0
+  defect: RESULT_FILE_CANNOT_CONTAIN_ITS_OWN_FINAL_SHA256
+  empty_transport_root_removed: true
+r1_a2_contract:
+  claude_reports:
+    - CLAUDE_TOOL_MUTATIONS_FALSE
+    - EXPECTED_TRANSPORT_FILE_COUNT_2
+    - EXPECTED_DIRECTORY_MODE_700
+    - EXPECTED_FILE_MODES_600_600
+    - FINAL_HASH_STATUS_POST_RUN_CONTROLLER_VERIFICATION_REQUIRED
+  macbook_codex_post_run_verifies:
+    - EXACT_FILE_COUNT
+    - FINAL_MODES
+    - BYTE_COUNTS
+    - FINAL_SHA256_VALUES
+    - PROCESS_EXIT_STATUS
+    - STDERR_STATE
+    - NO_SECRET_MATERIAL
+execution_boundary:
+  git_or_pr_mutation_by_preflight: false
+  provider_access: false
+  supabase_or_database_access: false
+  credentials_read: false
+  runtime_or_restore: false
+  staging_or_production_write: false
+  ready: false
+  merged: false
+  deployed: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R1_A2_POST_RUN_TRANSPORT_HASH_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_POST_RUN_HASH_RESPONSIBILITY_BOOTSTRAP_ORDER_LITERAL_COMMAND_ALLOWLIST_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_TRANSMISSION_CLAUDE_INVOCATION_PROVIDER_READS_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```
