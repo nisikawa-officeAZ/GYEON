@@ -437,6 +437,46 @@ fresh disposable verification are separately accepted.
   R1-C1-A1 changes only the exact three governance documents and performs no
   retry.
 
+### R1-C1 encrypted capture and R1-C2 disposable restore pass — 2026-08-30
+
+- The owner-authorized fresh R1-C1 retry used suffix `I7kjNs`, the corrected
+  `--linked` plus exact-ref command, and one read-only query. It returned the
+  exact Staging function once with exit `0`; `supabase/.temp/project-ref`
+  remained absent.
+- The captured old body/definition SHA-256 values are
+  `818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136` /
+  `b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a`.
+  Ciphertext SHA-256 is
+  `7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c`;
+  decrypt-and-compare passed and the plaintext was unlinked and proved absent.
+- The capture evidence root remains mode `700` outside Git at
+  `/private/tmp/gda-r1-c1-evidence.I7kjNs`; its `SHA256SUMS.txt` SHA-256 is
+  `52602a3d00fbc73cb0627e99542f25f19703a42b1716df617eeb9f2a47ec63d3`.
+  The mode-700 secret root remains separate and no secret is recorded here.
+- The owner then authorized fresh suffix `20260830T150757Z-a23e1a` for R1-C2.
+  PostgreSQL `17.6` replayed all `112` eligible migrations, excluded the one
+  protected LINE migration, restored and exactly verified the encrypted old
+  function, and then restored accepted bridge body SHA-256
+  `df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6`.
+- The unrelated catalog fingerprint remained
+  `1a28975fc6638456fceec60be6baade181fa8e1bc07b02fdb09788e20f32c985`
+  across both replacements. Fixture residue, matching containers, and matching
+  volumes were all zero.
+- The exact runtime was removed. Retained evidence lives outside Git at
+  `/Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1-restore-evidence/gda-estimate-offering-r1-restore.20260830T150757Z-a23e1a`.
+  Its `manifest.json` / `SHA256SUMS.txt` SHA-256 values are
+  `f277d06059a7f4751d4f270f2886ec7e469ef0c90b9765f46a99cb1b6388bb8c` /
+  `a5228d0b0a9c9a8e8ee0b616cd1eff60c98d7f10c25cdd248d26f7b5ebdd3a13`.
+- Technical verdict candidate:
+  `ACCEPT_R1_C1_ENCRYPTED_CAPTURE_AND_R1_C2_LOCAL_DISPOSABLE_RESTORE_PASS_CUSTODY_PENDING`.
+  R1 is not durable rollback readiness because the only ciphertext and its
+  separate secret currently remain under `/private/tmp`, which may be cleared
+  by reboot or OS cleanup. A separate R1-C2A durable-custody gate must copy and
+  hash-verify the ciphertext into persistent Git-external storage, protect the
+  secret in a different durable location, prove decrypt-and-compare without
+  plaintext retention, and decide transient cleanup before conditional
+  rollback approval, R2, or any shared write.
+
 ## 5. Selected execution strategy
 
 The selected candidate is now:
@@ -887,29 +927,23 @@ Stop immediately, make no same-run repair, and do not retry when:
 
 ## 10. Immediate next gate
 
-R0 remains complete with `CHANGES_REQUIRED_FORWARD_BRIDGE`; the initial
-`BLOCKED_EVIDENCE` result remains recorded; the corrected sibling package
-passed verification; and the fresh FB-G1 diagnosis is independently accepted
-as `READY_FOR_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE`.
+R1-C1 encrypted capture and R1-C2 PostgreSQL 17 disposable restoration now
+pass as a documentation candidate. The burned `DJ4eiW` failure remains
+immutable evidence and is not erased by the later successful suffixes.
 
-FB-I1-E2 is accepted as `E2_LOCAL_DISPOSABLE_DB`. The first R1 diagnosis
-stopped validly as `BLOCKED_EVIDENCE`; it is not R1 readiness acceptance. The
-R1-A2 diagnosis result is rejected because the Claude CLI Bash runtime could
-not create its exact session-environment path. R1-A3 resolved that environment
-block, but its diagnosis is rejected because repeated tool-driven reads reached
-the model budget before producing a marker or verdict. R1-A4 then passed its
-bounded one-turn transport and execution mechanics, but MacBook Codex rejects
-Claude's READY verdict as `CHANGES_REQUIRED_R1_PLAN`. The current gate is
-exact-three-document R1-C1-A1 command-contract correction authoring only after
-the provider/backup gate passed and the first capture attempt stopped locally.
+Verify the exact three-document delta, capture/restore hashes, runtime-removal
+evidence, protected metadata, clean index, and `git diff --check`. Then request
+separate exact-path stage/local-commit authorization. Normal push and PR result
+publication remain separate.
 
-Verify the exact failed-attempt evidence, burned suffix, absence of captured
-function data and ciphertext, secret-root cleanup, corrected `--linked` plus
-exact-ref command, pre/post `supabase/.temp/project-ref` absence contract,
-one-attempt deadline, protected metadata, exact three-path working-tree delta,
-clean index, and `git diff --check`. Then request separate exact-path
-stage/local commit authorization. Normal push, PR result publication, fresh
-capture retry, encrypted rollback capture, disposable restore proof,
-conditional rollback approval, Ready, merge, migration application, history
-repair, Staging/Production write, deployment, and rollback execution remain
-separate and unauthorized.
+After result delivery, the next technical gate is R1-C2A durable rollback
+artifact custody. It must preserve ciphertext hash
+`7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c`,
+keep the secret separately protected, prove decrypt-and-compare without
+retaining plaintext, and record durable custody without secret values.
+
+Only after R1-C2A passes may the owner consider a separate R1-C3 conditional
+rollback pre-authorization using the existing five-minute role and
+stop-authority contract. Silence or timeout never implies approval. Neither
+gate authorizes rollback execution, R2 Staging preflight, schema/history write,
+Ready, merge, deployment, or any Production action.

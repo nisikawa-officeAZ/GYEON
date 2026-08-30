@@ -592,3 +592,100 @@ R1-C1-A1 authoring does not authorize the fresh retry, stage, commit, push, PR
 comment, private transmission, Claude invocation, provider listing, database
 query, encryption, restore, rollback, Ready, merge, history repair,
 Staging/Production write, or deployment.
+
+## 13. R1-C1 successful capture and R1-C2 local restore result
+
+After the R1-C1-A1 correction was committed and normally pushed, the owner
+separately authorized one fresh R1-C1 retry and then one local disposable
+restore proof. These execution results supersede only the stale future-action
+language in section 12.2; the burned `DJ4eiW` attempt remains immutable
+failure evidence.
+
+### 13.1 R1-C1 fresh encrypted capture
+
+- Execution HEAD/tree remained
+  `c8dd6ca259a8402d1537e1d509fbe39a88751199` /
+  `e014e8bd978858085df0680d246bfda8fed2af49`; upstream remained `0 0` and
+  the worktree/index remained clean.
+- Fresh suffix `I7kjNs` used the corrected section 11.4 command exactly once.
+  The query exited `0` and returned exactly one
+  `public.save_estimate_from_wizard(uuid,uuid,jsonb)` candidate.
+- The captured object was PostgreSQL `plpgsql`, owner `postgres`, volatility
+  `v`, parallel mode `u`, `SECURITY INVOKER`, pinned
+  `search_path=pg_catalog, public, pg_temp`, and explicit EXECUTE only for
+  `postgres` and `service_role`.
+- Captured canonical-body SHA-256 was
+  `818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136`;
+  captured function-definition SHA-256 was
+  `b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a`.
+- Plaintext capture SHA-256 was
+  `33096a6f5fc295071b8bb06d6ebcf293febd187f25aa04bb8adc9ba19e15edda`.
+  OpenSSL AES-256-CBC/PBKDF2 encryption and decrypt-and-compare passed;
+  ciphertext SHA-256 was
+  `7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c`.
+  The exact plaintext was unlinked and proved absent.
+- The mode-700 capture root is
+  `/private/tmp/gda-r1-c1-evidence.I7kjNs`; its mode-600
+  `SHA256SUMS.txt` SHA-256 is
+  `52602a3d00fbc73cb0627e99542f25f19703a42b1716df617eeb9f2a47ec63d3`.
+  The mode-700 secret root remains separate, contains one mode-600 secret,
+  and no secret value or function body is recorded in Git.
+- `supabase/.temp/project-ref` remained absent. No Staging write, provider
+  write, Git write, restore, or rollback occurred in R1-C1.
+
+### 13.2 R1-C2 PostgreSQL 17 disposable restore proof
+
+- Fresh suffix `20260830T150757Z-a23e1a` used PostgreSQL `17.6` in a
+  loopback-only runtime outside the worktree and `/private/tmp`.
+- All `112` eligible migrations replayed successfully; the one protected LINE
+  migration remained excluded and unopened. There were zero failed or
+  not-reached migrations.
+- The encrypted Staging definition was streamed directly into the local
+  database without retaining a plaintext function-definition file. Exact
+  definition/body hashes, signature, owner, language, volatility, parallel
+  mode, `SECURITY INVOKER`, search path, ACL, strictness, leakproof state, and
+  return contract all matched the R1-C1 capture.
+- Reapplying the accepted forward-bridge migration restored body SHA-256
+  `df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6`;
+  before/after bridge metadata was byte-identical.
+- The unrelated catalog fingerprint remained
+  `1a28975fc6638456fceec60be6baade181fa8e1bc07b02fdb09788e20f32c985`
+  before old-definition restore, after old-definition restore, and after
+  bridge replacement. Fixture residue was zero.
+- The retained mode-700 evidence root is
+  `/Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1-restore-evidence/gda-estimate-offering-r1-restore.20260830T150757Z-a23e1a`.
+  Its `manifest.json` SHA-256 is
+  `f277d06059a7f4751d4f270f2886ec7e469ef0c90b9765f46a99cb1b6388bb8c`
+  and `SHA256SUMS.txt` SHA-256 is
+  `a5228d0b0a9c9a8e8ee0b616cd1eff60c98d7f10c25cdd248d26f7b5ebdd3a13`;
+  independent retained-hash verification passed.
+- The exact disposable runtime was stopped and removed. Matching containers
+  and volumes were both zero. Colima was already running and was not stopped
+  by this gate.
+- No hosted Supabase, shared Staging/Production database, provider, Git, PR,
+  migration-history, Ready, merge, deployment, or shared rollback action was
+  performed by R1-C2.
+
+### 13.3 Result-record boundary
+
+R1-C1 capture and R1-C2 local restoration are technically proven, but R1 is
+not yet durable rollback readiness. The only encrypted function artifact and
+its separately stored decryption secret currently remain under
+`/private/tmp`. That location may be cleared by reboot or operating-system
+cleanup. The durable retained R1-C2 evidence root proves the test result but
+does not itself contain the encrypted rollback function or its secret.
+
+Before conditional rollback pre-authorization, a separate R1-C2A owner gate
+must copy the ciphertext into a durable mode-700 Git-external custody root,
+place the decryption secret in a different durable protected location, verify
+the copied ciphertext hash, decrypt-and-compare without retaining plaintext,
+record custody metadata without secret values, and only then decide whether
+the transient `/private/tmp` copies may be removed. R1-C2A file copy, secret
+custody, verification, and transient deletion are not authorized by this
+result-record candidate.
+
+The owner authorized only this exact-three-document result-record candidate.
+Stage, local commit, normal push, PR result publication, conditional rollback
+pre-authorization or execution, R2 Staging preflight, schema/history write,
+Ready, merge, deployment, and every Production action remain separate and
+unauthorized.

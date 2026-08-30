@@ -4262,3 +4262,105 @@ protected_blobs:
 decision: ACCEPT_PROVIDER_BACKUP_LIST_PASS_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_C1_A1_COMMAND_CORRECTION_CANDIDATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_FAILED_ATTEMPT_HASHES_BURNED_SUFFIX_NO_FUNCTION_CAPTURE_NO_CIPHERTEXT_SECRET_ROOT_ABSENCE_CORRECTED_LINKED_EXACT_REF_COMMAND_TEMP_PROJECT_REF_PRE_POST_ABSENCE_ONE_ATTEMPT_DEADLINE_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_PR_COMMENT_FRESH_CAPTURE_RETRY_DATABASE_ACCESS_ENCRYPTION_RESTORE_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C2 — Encrypted capture and local disposable restore pass
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C2_LOCAL_RESTORE_RESULT_RECORD
+status: R1_C2_RESULT_RECORD_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "After the corrected command contract was delivered, the owner separately authorized one fresh R1-C1 retry and then one fresh local disposable R1-C2 restore proof. After MacBook Codex independently verified both results and cleanup, the owner authorized authoring this exact-three-document result-record candidate only. Stage, commit, push, PR mutation, conditional rollback approval/execution, R2, shared write, Ready, merge, deployment, history repair, and Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_record_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  execution_head: c8dd6ca259a8402d1537e1d509fbe39a88751199
+  execution_tree: e014e8bd978858085df0680d246bfda8fed2af49
+  base: main
+  changed_files_before_record_candidate: 13
+  upstream_ahead_behind: "0 0"
+r1_c1_capture:
+  fresh_suffix: I7kjNs
+  query_attempts: 1
+  query_exit: 0
+  exact_candidate_count: 1
+  exact_signature: public.save_estimate_from_wizard(uuid,uuid,jsonb)
+  security_invoker: true
+  owner: postgres
+  language: plpgsql
+  volatility: v
+  parallel_mode: u
+  search_path: "pg_catalog, public, pg_temp"
+  explicit_execute_roles:
+    - postgres
+    - service_role
+  canonical_body_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  function_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  plaintext_capture_sha256: 33096a6f5fc295071b8bb06d6ebcf293febd187f25aa04bb8adc9ba19e15edda
+  ciphertext_sha256: 7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c
+  decrypt_compare: PASS
+  plaintext_present_after_cleanup: false
+  capture_root: /private/tmp/gda-r1-c1-evidence.I7kjNs
+  capture_root_mode: "700"
+  capture_sha256sums_sha256: 52602a3d00fbc73cb0627e99542f25f19703a42b1716df617eeb9f2a47ec63d3
+  secret_root_separate: true
+  secret_value_recorded: false
+  local_temp_project_ref_pre_post: ABSENT
+  staging_write: false
+r1_c2_restore:
+  fresh_suffix: 20260830T150757Z-a23e1a
+  started_at_utc: "2026-08-30T15:11:40Z"
+  completed_at_utc: "2026-08-30T15:11:41Z"
+  postgres_version: "17.6"
+  target: LOOPBACK_ONLY
+  eligible_migrations_applied: 112
+  protected_line_migrations_excluded: 1
+  failed_migrations: 0
+  old_definition_restore: PASS
+  old_body_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  old_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  old_metadata_acl_search_path_exact: true
+  bridge_replacement: PASS
+  bridge_body_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+  bridge_metadata_before_after_exact: true
+  unrelated_catalog_fingerprint: 1a28975fc6638456fceec60be6baade181fa8e1bc07b02fdb09788e20f32c985
+  unrelated_objects_unchanged: true
+  fixture_residue_rows: 0
+  retained_evidence_root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1-restore-evidence/gda-estimate-offering-r1-restore.20260830T150757Z-a23e1a
+  manifest_sha256: f277d06059a7f4751d4f270f2886ec7e469ef0c90b9765f46a99cb1b6388bb8c
+  sha256sums_sha256: a5228d0b0a9c9a8e8ee0b616cd1eff60c98d7f10c25cdd248d26f7b5ebdd3a13
+cleanup:
+  supabase_stop_exit: 0
+  matching_containers: 0
+  matching_volumes: 0
+  exact_runtime_removed: true
+  colima_stopped_by_gate: false
+execution_boundary:
+  exact_three_governance_documents_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  hosted_supabase_contacted_by_r1_c2: false
+  shared_staging_or_production_write: false
+  provider_write: false
+  migration_history_write_shared: false
+  conditional_rollback_authorized_or_executed: false
+  ready_or_merge_or_deploy: false
+durable_custody:
+  ciphertext_current_location_class: PRIVATE_TMP_TRANSIENT
+  secret_current_location_class: PRIVATE_TMP_TRANSIENT_SEPARATE_ROOT
+  ciphertext_and_secret_separated: true
+  ciphertext_hash_verified: true
+  local_restore_proved: true
+  durable_ciphertext_copy_present: false
+  durable_secret_custody_present: false
+  reboot_survival_proved: false
+  r1_durable_rollback_readiness: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_C1_ENCRYPTED_CAPTURE_AND_R1_C2_LOCAL_DISPOSABLE_RESTORE_TECHNICAL_PASS_CUSTODY_PENDING_RECORD_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_CAPTURE_AND_RESTORE_HASHES_EVIDENCE_MANIFESTS_RUNTIME_REMOVAL_ZERO_CONTAINER_VOLUME_RESIDUE_TRANSIENT_CUSTODY_LIMIT_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. AFTER_DELIVERY_R1_C2A_DURABLE_CIPHERTEXT_AND_SEPARATE_SECRET_CUSTODY_IS_THE_NEXT_TECHNICAL_GATE. NORMAL_PUSH_PR_RESULT_PUBLICATION_R1_C2A_FILE_ACTIONS_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```
