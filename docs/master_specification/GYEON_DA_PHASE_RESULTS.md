@@ -4627,3 +4627,75 @@ protected_blobs:
 decision: ACCEPT_OWNER_ACTIVATION_DECISION_EXACT_INSTRUMENT_AND_STAGING_REF_RECORD_CANDIDATE_OPERATIONAL_USE_BLOCKED_UNTIL_GIT_DELIVERY_VERIFIED
 next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_ACTIVATION_RECORD_INSTRUMENT_COMMIT_TREE_BLOB_SHA256_TARGET_REF_ROLE_ASSIGNMENTS_DECISION_LIMITS_OPERATIONAL_BLOCK_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_PUBLICATION_OPERATIONAL_USE_ACCEPTANCE_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C3-A3 — Operational-use acceptance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_A3_OPERATIONAL_USE_ACCEPTANCE
+status: R1_C3_OPERATIONAL_USE_ACCEPTANCE_RECORD_CANDIDATE_UNCOMMITTED_GIT_DELIVERY_REQUIRED
+date: 2026-08-31
+append_only: true
+authorization: "After the exact activation-record commit was normally pushed and independently verified at PR #47 remote HEAD, the owner authorized recording Staging-only operational-use acceptance. This authorizes one new acceptance record and the corresponding remediation-plan and append-only result-ledger updates only. Stage, commit, push, PR mutation, R2, provider/database access, Staging apply, rollback execution, shared write, history repair, Ready, merge, deployment, and every Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_acceptance: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  activation_delivery_head: 02fca03c18441d7ae1a91a98d92e08410e27bc50
+  activation_delivery_tree: 1b8a0754af326dd080a3483ae1fd276433ec5cc1
+  base: main
+  changed_files: 15
+  upstream_ahead_behind_after_push: "0 0"
+  worktree_and_index_after_push: clean
+  push_mode: NORMAL_NON_FORCE
+accepted_instrument:
+  path: docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION.md
+  git_blob: 4f8afaecce49d9162be9c274761a7f4c15e4de46
+  sha256: 9e23067a7b6c9a3b8b7b8c0eab489ffb9db710b23fca402c53ee944829459237
+activation_record:
+  path: docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_ACTIVATION_RECORD.md
+  git_blob: 283eed686e646ace2b643de97083302156cba6aa
+  sha256: 69b5dd9f2c5ab287de32446b9fe7e52e7c893a6d424af63a74ea61be323973dd
+target:
+  environment: Staging
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  production_ref_authorized: false
+role_assignment:
+  operator: MacBook Claude Code
+  verifier: MacBook Codex
+  stop_authority: 西川 篤志 / Owner
+  rollback_authority: 倉庫担当者 小尾野
+operational_use:
+  owner_acceptance_recorded: true
+  recorded_at_utc: "2026-08-30T22:52:22Z"
+  exact_instrument_hash_bound: true
+  exact_staging_ref_bound: true
+  five_minute_decision_procedure_only: true
+  effective_after_acceptance_record_git_delivery_verified: true
+  rollback_execution_authorized: false
+authority:
+  r2_staging_preflight: false
+  provider_or_database_access: false
+  staging_apply_or_runtime_verification: false
+  decryption_or_plaintext_creation: false
+  rollback_execution: false
+  migration_history_write: false
+  transient_source_deletion: false
+  production_action: false
+  ready_merge_deploy: false
+execution_boundary:
+  exact_three_governance_paths_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  database_or_provider_contact: false
+  shared_staging_or_production_write: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_C3_STAGING_ONLY_OPERATIONAL_USE_ACCEPTANCE_RECORD_CANDIDATE_GIT_DELIVERY_REQUIRED
+next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_ACCEPTANCE_RECORD_REMOTE_ACTIVATION_DELIVERY_EVIDENCE_INSTRUMENT_AND_ACTIVATION_HASHES_TARGET_REF_ROLE_ASSIGNMENTS_FIVE_MINUTE_ONLY_BOUNDARY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_VERIFICATION_R2_STAGING_READ_ONLY_PREFLIGHT_PROVIDER_DATABASE_ACCESS_STAGING_APPLY_ROLLBACK_EXECUTION_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```

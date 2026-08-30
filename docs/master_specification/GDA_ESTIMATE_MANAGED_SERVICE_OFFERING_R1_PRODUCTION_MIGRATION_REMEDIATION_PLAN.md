@@ -996,3 +996,26 @@ request separate exact-path stage/local-commit authorization.
 Activation permits only the 300-second decision procedure. It does not
 authorize provider/database access, rollback execution, R2 Staging preflight,
 schema/history write, Ready, merge, deployment, or any Production action.
+
+The activation-record commit was normally pushed to PR `#47` as remote HEAD
+`02fca03c18441d7ae1a91a98d92e08410e27bc50` and independently verified with
+PR state OPEN/Draft, base `main`, local/upstream divergence `0/0`, and a clean
+worktree/index. The exact instrument SHA-256
+`9e23067a7b6c9a3b8b7b8c0eab489ffb9db710b23fca402c53ee944829459237`
+and activation-record SHA-256
+`69b5dd9f2c5ab287de32446b9fe7e52e7c893a6d424af63a74ea61be323973dd`
+remain bound to exact Staging ref `vhiuiwolnlvlwvoaingd` only.
+
+The owner has accepted operational use of that exact instrument under the
+existing five-minute decision contract. The separate acceptance is recorded
+in
+`GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_OPERATIONAL_USE_ACCEPTANCE.md`.
+It is not operationally effective until that new record, this plan update, and
+the append-only result entry are committed together, normally pushed, and
+verified at the PR remote HEAD.
+
+This operational-use acceptance still does not authorize R2 Staging preflight,
+provider/database access, Staging apply, decryption, rollback execution,
+history repair, transient deletion, Ready, merge, deployment, or any Production
+action. The next technical gate remains a separately authorized R2 Staging
+read-only preflight after the acceptance-record Git delivery is complete.
