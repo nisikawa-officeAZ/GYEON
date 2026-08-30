@@ -3525,3 +3525,99 @@ protected_blobs:
 decision: AUTHOR_EXACT_THREE_DOCUMENT_FB_I1_IMPLEMENTATION_GOVERNANCE_CANDIDATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_DYNAMIC_MIGRATION_PATH_CONTRACT_PROTECTED_METADATA_PRIVATE_MANIFEST_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. PRIVATE_RETRANSMISSION_CLAUDE_IMPLEMENTATION_MIGRATION_GENERATION_HARNESS_EDIT_STATIC_EXECUTION_DISPOSABLE_RUNTIME_DATABASE_AND_RELEASE_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-FB-I1-S1 — Static implementation accepted and locally committed
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_STATIC_IMPLEMENTATION_ACCEPTANCE
+status: FB_I1_STATIC_IMPLEMENTATION_ACCEPTED_LOCAL_COMMIT_NOT_PUSHED
+date: 2026-08-30
+append_only: true
+implementation_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_IMPLEMENTATION_RESULT_V1
+authorization: "The owner explicitly approved Anthropic transmission of the exact private governance/reference/evidence read set and the bounded eight-path implementation. After two Claude working-directory failures, the owner separately approved one operational exception: MacBook Codex generated the single migration from the verified repository root, Claude edited with Bash disabled, and MacBook Codex performed every static check. The owner then explicitly approved exact-eight-path stage and local commit, followed by this exact two-document governance correction and result record. No push, PR mutation, database/runtime/test execution, provider access, Ready, merge, migration application, history repair, or deployment is authorized by this record."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_before_local_commit: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  implementation_base_head: 90d7f6ca888d47b8a8641094cd43e3bb74664a9b
+  implementation_base_tree: 81b685af3bc384c5a37bebd84c5d028d51f3b34d
+  local_implementation_commit: 7f5860600fbdd8ce1b9b4bed7f070873d1a66159
+  local_implementation_tree: 381f7987af498fd8bf0fe88cb97647f413932ed2
+  upstream_state_after_local_implementation_commit: AHEAD_1_NOT_PUSHED
+claude_attempts:
+  - attempt: 1
+    cost_usd: 3.0800516
+    result: BURNED_WRONG_CWD_EMPTY_MIGRATION_OUTSIDE_REPOSITORY
+    repository_mutations: 0
+    retained_failure_path: /private/tmp/gda-r0-fb-g1.tnMnGJ
+  - attempt: 2
+    cost_usd: 1.2257206
+    result: BLOCKED_BASE_MISMATCH_BEFORE_GENERATION
+    repository_mutations: 0
+  - attempt: 3
+    cost_usd: 4.7106098
+    result: CANDIDATE_WRITTEN_FOR_CODEX_STATIC_REVIEW
+    bash_enabled: false
+    write_path_count: 8
+  total_cost_usd: 9.016382
+operational_exception:
+  migration_generator: MACBOOK_CODEX
+  pre_generation_pwd_and_toplevel_match: true
+  cli_command: "supabase migration new estimate_managed_service_production_forward_bridge"
+  cli_invocation_count_in_accepted_attempt: 1
+  generated_migration: supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql
+  claude_tools:
+    - Read
+    - Glob
+    - Grep
+    - Edit
+    - Write
+  claude_bash_or_shell_access: false
+exact_implementation_paths:
+  - supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/config.toml
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/setup.sh
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/offering-guard.test.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/real-auth.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/concurrency.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/capture-evidence.sh
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/cleanup.sh
+static_acceptance:
+  exact_path_count: 8
+  migration_file_sha256: 7406c5f11f1feb352ceb737db7844af8904f33e7a82f9679dfed40319a528cf8
+  extracted_function_body_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+  accepted_target_body_cmp: PASS_BYTE_IDENTICAL
+  existing_atomic_pgtap_plan: 217
+  existing_atomic_pgtap_sha256: eaa6122e0fff62b92e1a20c14f6a56b30b1da5d5567106a48aa886dc8fbf7829
+  sibling_offering_plan: 39
+  accepted_and_sibling_offering_sha256: 10e7cabe7327914549ea3b0f0ad0e5e8a8b86acce6b4a6eec03ba492169ac764
+  sibling_offering_cmp: PASS_BYTE_IDENTICAL
+  shell_syntax: "3/3 PASS"
+  node_syntax: "2/2 PASS"
+  whitespace_check: PASS
+  protected_blobs_unchanged: true
+  historical_migrations_unchanged: true
+  existing_test_authorities_unchanged: true
+  index_clean_after_commit: true
+governance_correction:
+  prior_text: TWO_TARGET_COMMENT_ONLY_EDITS
+  accepted_text: THREE_TARGET_COMMENT_ONLY_EDITS
+  annotations:
+    - C7_CROSS_REFERENCE
+    - C9_REPLAY_PRECEDENCE_NOTE
+    - C10A_ORDERING_NOTE
+  reason: "The exact accepted target body and both Git-tracked target-body sources contain all three annotations; the accepted target hash is unchanged."
+execution_boundary:
+  database_or_supabase_runtime_started: false
+  sql_or_pgtap_executed: false
+  auth_postgrest_rpc_or_concurrency_executed: false
+  docker_or_colima_started: false
+  hosted_or_shared_environment_contacted: false
+  provider_preview_or_production_contacted: false
+  pushed: false
+  ready: false
+  merged: false
+  deployed: false
+decision: ACCEPT_STATIC_IMPLEMENTATION_AND_LOCAL_COMMIT
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_GOVERNANCE_DIFF_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_RESULT_COMMENT_DISPOSABLE_E2_RUNTIME_READY_MERGE_MIGRATION_APPLICATION_AND_DEPLOYMENT_REMAIN_SEPARATE."
+```

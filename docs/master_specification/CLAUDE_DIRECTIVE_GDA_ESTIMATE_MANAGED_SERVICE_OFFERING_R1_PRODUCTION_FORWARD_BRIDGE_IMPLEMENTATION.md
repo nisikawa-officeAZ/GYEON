@@ -173,7 +173,9 @@ configuration, or generated evidence.
    the same atomic subtransaction and before the new-vehicle branch.
 5. Insert verbatim the target's C.9a set-based five-family offering guard after
    exact replay/conflict handling and before the first C.10 write. Preserve the
-   two target comment-only edits required for exact accepted body parity.
+   three target comment-only edits required for exact accepted body parity:
+   the C.7 cross-reference, C.9 replay-precedence note, and C.10a ordering
+   note.
 6. The mapping remains exact: `window -> window_film`, `ppf -> ppf`,
    `maintenance -> maintenance`, `roomclean -> room_cleaning`, and
    `carwash -> car_wash`. Missing or non-true rows deny with exactly
