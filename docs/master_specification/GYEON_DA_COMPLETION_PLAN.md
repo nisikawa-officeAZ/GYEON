@@ -898,7 +898,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1 — all managed-service save enforcement
 
-**Status:** PHASE A ACCEPTED AND PUSHED / PHASE B DIRECT-RPC/SQL DIAGNOSIS ACCEPTED WITH FOLLOW-UP REQUIRED / PHASE B-R1 HARNESS AND CONCURRENCY READ-ONLY GOVERNANCE AUTHORING AUTHORIZED — Phase A enforces all five managed families in the authoritative server-save orchestrator at commit `1bb530f3105055707b7387f6492ede3078402f36`. Phase B proved that the server-only RPC has no independent offering guard. Before implementation governance, one bounded follow-up must establish the reusable PostgreSQL 17 direct-RPC harness structure and resolve the exact offering-change concurrency contract. No SQL, migration, test, harness, database, provider, deployment, or Git-delivery action is authorized by this authoring gate.
+**Status:** PHASE A ACCEPTED AND PUSHED / PHASE B-R1 READ-ONLY DIAGNOSIS ACCEPTED WITH CODEX CORRECTIONS / PHASE B-R2 SQL-AND-HARNESS IMPLEMENTATION GOVERNANCE AUTHORING AUTHORIZED — Phase A enforces all five managed families in the authoritative server-save orchestrator at commit `1bb530f3105055707b7387f6492ede3078402f36`. Phase B proved that the server-only RPC has no independent offering guard. Phase B-R1 identified the reusable PostgreSQL 17 harness pattern, but its proposed guard placement and replay description conflicted. MacBook Codex fixes the contract below before implementation. This authoring gate changes governance only; no SQL, migration, test, harness, database, provider, deployment, or Git-delivery action is authorized.
 
 **Objective:** Make the current dealer-owned offering switches one enforceable contract for every managed Estimate Wizard service family, not merely a client-side display rule.
 
@@ -1045,6 +1045,56 @@ The result document was excluded from harness implementation and was created lat
 **Phase B-R1 boundary:** This candidate changes only those three governance paths. It does not read or transmit the nine C5-C file contents to an external service; change source, migration, test, or harness files; execute tests or runtime; access a database/provider; or stage, commit, push, mutate PR #44, mark Ready, merge, or deploy.
 
 **Phase B-R1 exit:** MacBook Codex verifies the exact three-document candidate and `git diff --check`, then requests separate stage/local-commit authorization. Push and private external transmission of the follow-up allowlist require later explicit gates. SQL and harness implementation remain unauthorized until the follow-up result is independently accepted.
+
+**Accepted Phase B-R1 follow-up diagnosis with Codex corrections:**
+
+- Result: `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_HARNESS_REFERENCE_READ_ONLY_DIAGNOSIS_RESULT_V1`
+- Claude verdict: `READY_FOR_SQL_AND_HARNESS_IMPLEMENTATION_GOVERNANCE`
+- Codex acceptance: `ACCEPTED_WITH_CODEX_CORRECTIONS_REQUIRED`
+- Governance execution HEAD/tree: `7a6d622b5e08072b954012d969e8e79ddc38129b` / `553f4d2f794a555bfbba32339aea86e22c6fbaca`
+- Claude execution: one non-persistent Sonnet diagnosis, high effort, `2.1492711 USD` under the `3 USD` cap, no web search/fetch, no subagent, no permission denial, and no mutation.
+- Accepted harness finding: reuse the C5-C structure for PostgreSQL 17, fresh unique runtime naming outside the worktree and `/private/tmp`, loopback-only Auth/PostgREST/PostgreSQL, exact source identity gates, real local tokens, separate OS-process database connections, bounded timeouts, raw evidence, SHA-256 manifest, cleanup, and burn-on-failure. Do not reuse GYEON-order fixtures, tables, RPC names, assertions, principals, or evidence vocabulary.
+- Accepted harness path set: exactly seven new files under `scripts/e2e/gda-estimate-managed-service-offering-r1-b/`: `config.toml`, `setup.sh`, `offering-guard.test.sql`, `real-auth.mjs`, `concurrency.mjs`, `capture-evidence.sh`, and `cleanup.sh`.
+- Corrected SQL ordering: C.7 validates every service line; C.8 builds the canonical fingerprint; C.9 acquires the existing same-`(dealer,key)` advisory lock and returns exact replay or raises `DUPLICATE_SUBMISSION`; the new offering guard runs once after that C.9 decision and before the first C.10 write.
+- Exact replay therefore keeps its existing zero-write success even if the offering is later disabled. Same key plus a materially different payload keeps `DUPLICATE_SUBMISSION` precedence. Only a genuinely new save evaluates current offering state.
+- The guard must derive the distinct managed families from the already validated service categories and perform one set-based anti-authorization query. Per-line or per-family successive queries are prohibited because PostgreSQL `READ COMMITTED` can use a different snapshot for each command.
+- The one guard statement's start snapshot is authoritative. Missing row or `enabled IS NOT TRUE` means OFF at that instant. A concurrent enable committed after the snapshot does not authorize that save; a concurrent disable committed after the snapshot does not retroactively invalidate it. The existing idempotency advisory lock does not serialize offering-setting writes and must not be described as doing so.
+- Concurrency proof must use two controlled interleavings, not one nondeterministic test accepting either outcome: disable committed before the guard snapshot must reject with zero writes; guard snapshot acquired while enabled before a later disable commits may complete successfully under that snapshot, with no partial or torn persistence.
+- Phase A remains frozen. Its pre-RPC application guard can reject a later retry after an offering change, whereas direct RPC exact replay returns the original success. That cross-layer behavior is recorded for a later separate alignment gate; it must not weaken the RPC idempotency contract or broaden Phase B-R2.
+
+**Phase B-R2 — forward-only SQL and dedicated harness implementation governance:**
+
+- Objective: produce one uncommitted source candidate that adds direct-RPC fail-closed offering enforcement and the dedicated PostgreSQL 17 verification harness without executing a database.
+- New migration path: `supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql`.
+- The migration must replace the active `public.save_estimate_from_wizard(uuid, uuid, jsonb)` definition forward-only, preserve its signature, `SECURITY INVOKER`, search path, service-role-only execution boundary, all validation, fingerprinting, idempotency, numbering, atomicity, result shape, and unrelated behavior, and add only the corrected C.9a offering guard.
+- Category-to-family mapping is exactly `window -> window_film`, `ppf -> ppf`, `maintenance -> maintenance`, `roomclean -> room_cleaning`, and `carwash -> car_wash`. `coating`, `other`, and every existing unmanaged category remain unaffected.
+- Disabled-family failure is the stable sanitized `VALIDATION_ERROR: service-not-offered`. It must occur before C.10 and leave zero customer, vehicle, estimate, estimate-item, document-number, revision, idempotency, or related mutation.
+- pgTAP must pin all five mappings; absent, false, and true states; mixed managed families; unmanaged-family non-regression; cross-tenant non-authorization; exact replay and conflicting replay precedence; and zero-write rejection.
+- The harness must prove real loopback Auth/PostgREST service-role RPC access, dealer/actor validation, five-family absent/false/true and mixed cases, cross-tenant denial, exact replay/conflict, deterministic two-interleaving concurrency, evidence hashing, cleanup, and burned-attempt behavior.
+
+**Phase B-R2 future implementation write allowlist — exactly nine paths:**
+
+1. `supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql` (new)
+2. `supabase/tests/estimate_wizard_atomic_save.test.sql`
+3. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/config.toml` (new)
+4. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh` (new)
+5. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql` (new)
+6. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/real-auth.mjs` (new)
+7. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs` (new)
+8. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh` (new)
+9. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/cleanup.sh` (new)
+
+**Phase B-R2 implementation verification boundary:** A later explicitly authorized Claude invocation may edit only the nine paths and run only `bash -n` on the three shell files, `node --check` on the two MJS files, the directive's bounded static searches, and `git diff --check`. It must not start PostgreSQL, Supabase, Docker, or Colima; run pgTAP, Auth, PostgREST, RPC, or concurrency; stage, commit, push, or contact any shared/provider environment. Fresh disposable execution is a later separate gate after Codex accepts the uncommitted candidate.
+
+**Phase B-R2 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_SQL_HARNESS_IMPLEMENTATION.md` (new)
+
+**Phase B-R2 current authoring boundary:** This gate changes only the three governance paths. It does not transmit private files to Claude; change migration, pgTAP, harness, application, dependency, configuration, generated artifact, or protected content; execute tests or runtime; access database/Supabase/Docker/Colima/browser/network/provider; or stage, commit, push, mutate PR #44, mark Ready, merge, or deploy.
+
+**Phase B-R2 governance exit:** MacBook Codex verifies the exact three-document diff, directive consistency, protected metadata, clean pre-edit base, and `git diff --check`, then requests separate exact-path stage/local-commit authorization. Governance push, private Claude transmission, nine-path implementation, static verification, disposable execution, source delivery, Ready, merge, database application, and deployment remain separate gates.
 
 ### GDA-3 — Completion Desk
 

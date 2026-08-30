@@ -3041,3 +3041,72 @@ boundary:
 decision: ACCEPTED_WITH_FOLLOW_UP_REQUIRED_AUTHOR_B_R1_HARNESS_AND_CONCURRENCY_READ_ONLY_GOVERNANCE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-B-R1-A1/B-R2-G1 — Follow-up diagnosis accepted with Codex corrections; SQL/harness implementation governance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_ACCEPTANCE_AND_B_R2_IMPLEMENTATION_GOVERNANCE
+status: B_R1_ACCEPTED_WITH_CODEX_CORRECTIONS_B_R2_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+diagnosis_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_HARNESS_REFERENCE_READ_ONLY_DIAGNOSIS_RESULT_V1
+implementation_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_SQL_HARNESS_IMPLEMENTATION_RESULT_V1
+authorization: "The owner approved authoring exactly three governance documents after MacBook Codex independently classified the Phase B-R1 Claude result as ACCEPTED_WITH_CODEX_CORRECTIONS_REQUIRED. This gate does not authorize private external transmission, nine-path implementation, static or executable verification, database/Supabase/Docker/Colima/provider access, Git delivery, PR mutation, Preview/production action, Ready, merge, migration application, or deployment."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/44
+  pull_request_state_at_authoring_start: OPEN_DRAFT
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  predecessor_head: 7a6d622b5e08072b954012d969e8e79ddc38129b
+  predecessor_tree: 553f4d2f794a555bfbba32339aea86e22c6fbaca
+  worktree_and_index_at_authoring_start: CLEAN
+diagnosis_execution:
+  agent: Anthropic Claude Code
+  model: claude-sonnet-5
+  effort: high
+  no_session_persistence: true
+  max_budget_usd: 3
+  actual_cost_usd: 2.1492711
+  web_search_requests: 0
+  web_fetch_requests: 0
+  subagents: 0
+  permission_denials: 0
+  mutation: false
+  claude_verdict: READY_FOR_SQL_AND_HARNESS_IMPLEMENTATION_GOVERNANCE
+codex_decision: ACCEPTED_WITH_CODEX_CORRECTIONS_REQUIRED
+accepted_findings:
+  - "The accepted C5-C harness provides the reusable PostgreSQL 17, fresh-runtime, loopback-only, real-auth/direct-RPC, separate-connection concurrency, evidence, cleanup, hash, and burn structure."
+  - "The smallest dedicated harness is seven new files: config.toml, setup.sh, offering-guard.test.sql, real-auth.mjs, concurrency.mjs, capture-evidence.sh, and cleanup.sh."
+  - "The existing same-(dealer,idempotency-key) advisory lock does not serialize dealer_service_offerings writes."
+codex_corrections:
+  - "The offering guard belongs after the C.9 exact-replay/DUPLICATE_SUBMISSION decision and before the first C.10 write, not after C.7."
+  - "Exact replay keeps the original zero-write success after a later offering change; same-key different-payload keeps DUPLICATE_SUBMISSION precedence."
+  - "All required managed families are evaluated in one set-based statement; per-line or per-family successive SELECTs are forbidden under READ COMMITTED."
+  - "The one guard statement's start snapshot is authoritative; missing or enabled=false is OFF at that instant."
+  - "Concurrency proof uses two controlled interleavings: disable-before-snapshot rejection and snapshot-before-disable successful completion, never one nondeterministic either-outcome test."
+  - "Phase A's pre-RPC retry behavior is a later separate alignment concern and cannot weaken direct-RPC idempotency in B-R2."
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_SQL_HARNESS_IMPLEMENTATION.md
+future_implementation_write_allowlist:
+  - supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql
+  - supabase/tests/estimate_wizard_atomic_save.test.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/config.toml
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/real-auth.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/cleanup.sh
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "This candidate changes exactly the three B-R2 governance paths."
+  - "No migration, pgTAP, harness, application source, dependency, configuration, generated artifact, or protected content is changed."
+  - "No private external transmission, test/typecheck/build/runtime, DB/Supabase/Docker/Colima/browser/network/provider access, stage, commit, push, PR mutation, Ready, merge, migration application, or deployment is authorized or performed."
+decision: AUTHOR_B_R2_SQL_AND_HARNESS_IMPLEMENTATION_GOVERNANCE_WITH_CODEX_CORRECTED_ORDERING
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
