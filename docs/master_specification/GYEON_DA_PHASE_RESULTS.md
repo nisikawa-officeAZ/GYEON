@@ -4699,3 +4699,71 @@ protected_blobs:
 decision: ACCEPT_R1_C3_STAGING_ONLY_OPERATIONAL_USE_ACCEPTANCE_RECORD_CANDIDATE_GIT_DELIVERY_REQUIRED
 next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_ACCEPTANCE_RECORD_REMOTE_ACTIVATION_DELIVERY_EVIDENCE_INSTRUMENT_AND_ACTIVATION_HASHES_TARGET_REF_ROLE_ASSIGNMENTS_FIVE_MINUTE_ONLY_BOUNDARY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_VERIFICATION_R2_STAGING_READ_ONLY_PREFLIGHT_PROVIDER_DATABASE_ACCESS_STAGING_APPLY_ROLLBACK_EXECUTION_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R2-G1 — Staging read-only preflight governance and history-identity correction
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R2_STAGING_READ_ONLY_PREFLIGHT_GOVERNANCE
+status: R2_STAGING_READ_ONLY_PREFLIGHT_DIRECTIVE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-31
+append_only: true
+authorization: "After R1-C3 operational-use acceptance was committed, normally pushed, and remotely verified, the owner authorized R2 Staging read-only preflight directive authoring. MacBook Codex identified that R5/R9 incorrectly named superseded version 20260830160000 for history reconciliation even though the exact executable Forward Bridge is version 20260830121816. The owner explicitly approved correcting R5/R9 to the exact executed version and keeping 20260830160000 superseded, directly ineligible, and unrecorded. This gate changes exactly the remediation plan, append-only result ledger, and new R2 directive. Stage, commit, push, PR mutation, private transmission, Claude execution, provider/database access, evidence creation, R3, rollback execution, migration-history write, Ready, merge, deployment, and every Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  authoring_head: 301dc99366f7a7634e80f7f260a099863ee86ef7
+  authoring_tree: b4eb50bc77bf693e2002c9215d4b0648cb212502
+  base: main
+  changed_files_before_candidate: 16
+  upstream_ahead_behind: "0 0"
+  worktree_and_index_before_candidate: clean
+governance_write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R2_STAGING_READ_ONLY_PREFLIGHT.md
+history_identity_correction:
+  exact_executable_version: "20260830121816"
+  exact_executable_path: supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql
+  exact_executable_sha256: 7406c5f11f1feb352ceb737db7844af8904f33e7a82f9679dfed40319a528cf8
+  later_staging_history_version: "20260830121816"
+  later_production_history_version: "20260830121816"
+  superseded_version: "20260830160000"
+  superseded_disposition: EXCLUDED_SUPERSEDED_DIRECT_APPLY_PROHIBITED_NOT_RECORDED
+  history_write_now: false
+r2_target:
+  environment: Staging
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  production_ref_contact_authorized: false
+r2_future_execution:
+  result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R2_STAGING_READ_ONLY_PREFLIGHT_RESULT_V1
+  provider_read_only: SEPARATE_OWNER_GATE_REQUIRED
+  database_read_only: SEPARATE_OWNER_GATE_REQUIRED
+  private_repository_transmission: SEPARATE_OWNER_GATE_REQUIRED
+  git_external_evidence_creation: SEPARATE_OWNER_GATE_REQUIRED
+  database_write: false
+  migration_or_history_write: false
+  r3_execution_artifact_generation: false
+  staging_apply: false
+  rollback_execution: false
+  production_action: false
+current_execution_boundary:
+  exact_three_governance_paths_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  claude_invoked: false
+  private_files_transmitted: false
+  evidence_created: false
+  provider_or_database_contact: false
+  shared_staging_or_production_write: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: AUTHOR_R2_STAGING_READ_ONLY_PREFLIGHT_DIRECTIVE_AND_CORRECT_HISTORY_TO_EXACT_EXECUTED_FORWARD_BRIDGE_VERSION
+next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_R5_R9_HISTORY_IDENTITY_R2_DIRECTIVE_READ_AND_COMMAND_ALLOWLIST_ACCEPTED_SOURCE_HASHES_EXPECTED_NINE_VERSION_MISSING_SET_HASH_ONLY_FUNCTION_CAPTURE_DEPENDENCY_ACTIVITY_LOCK_EVIDENCE_CONTRACT_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_PUBLICATION_PRIVATE_TRANSMISSION_CLAUDE_EXECUTION_PROVIDER_DATABASE_READS_R3_ROLLBACK_HISTORY_WRITE_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```

@@ -4,12 +4,12 @@
 
 | Field | Value |
 |---|---|
-| Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_GOVERNANCE` |
-| Status | `R1_C1_A1_COMMAND_CONTRACT_CORRECTION_CANDIDATE_UNCOMMITTED` |
+| Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R2_STAGING_READ_ONLY_PREFLIGHT_GOVERNANCE` |
+| Status | `R2_STAGING_READ_ONLY_PREFLIGHT_DIRECTIVE_CANDIDATE_UNCOMMITTED_NOT_SENT` |
 | Date | 2026-08-30 |
 | Product owner | Office AZ |
 | Technical authority | MacBook Codex |
-| Implementation / executable verification | R1 diagnosis by MacBook Claude only after separate private-transmission approval |
+| Implementation / executable verification | R2 read-only preflight by MacBook Claude only after separate Git delivery, private-transmission, provider-read, and database-read approval |
 | Staging | `DealerOS-Dev-Next` / `vhiuiwolnlvlwvoaingd` / `ap-northeast-1` |
 | Production | `DealerOS-Prod` / `dmvyaykhibmphrmekjbb` / `ap-northeast-1` |
 | Former direct target / read-only reference | `supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql` |
@@ -32,7 +32,7 @@ paths:**
 
 1. `docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md`
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
-3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_READ_ONLY_DIAGNOSIS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R2_STAGING_READ_ONLY_PREFLIGHT.md`
 
 The binding environment identity and safety rules remain those in
 `ENVIRONMENT_LEDGER.md`. This plan narrows the general execution-mechanism
@@ -794,13 +794,17 @@ separately approved exact rollback artifact, then verify restoration.
 ### R5 — Staging migration-history reconciliation
 
 Only after R4 proves exact target statement identity may a separate owner gate
-mark version `20260830160000` as applied in the Staging migration ledger.
+mark version `20260830121816` as applied in the Staging migration ledger.
+
+Version `20260830160000` is the superseded former direct target. It remains
+`EXCLUDED_SUPERSEDED_DIRECT_APPLY_PROHIBITED_NOT_RECORDED` and must not be
+executed or marked applied by this release.
 
 The history command must name exactly one version and exact Staging ref. It may
 not include earlier missing versions. Immediately after repair, re-run the
 migration list and prove:
 
-- `20260830160000` is recorded;
+- `20260830121816` is recorded;
 - no other version changed;
 - schema/function hashes did not change; and
 - the frozen LINE version remains absent.
@@ -854,9 +858,10 @@ Acceptance requires:
 ### R9 — Production migration-history reconciliation
 
 Only after R8 passes may a separate explicit owner gate mark exactly version
-`20260830160000` applied for exact Production ref. Reconcile the post-repair
-ledger and prove no other history row changed. The seven excluded versions
-remain absent and retain their classifications.
+`20260830121816` applied for exact Production ref. Reconcile the post-repair
+ledger and prove no other history row changed. Version `20260830160000`
+remains superseded, directly ineligible, and unrecorded. The seven other
+excluded versions remain absent and retain their classifications.
 
 ### R10 — Closeout
 
@@ -895,7 +900,7 @@ Stop immediately, make no same-run repair, and do not retry when:
   success alone;
 - a concurrency claim uses one database connection;
 - cleanup cannot prove zero residue; or
-- history repair would touch more than `20260830160000`.
+- history repair would touch any version other than `20260830121816`.
 
 ## 8. Evidence and command safety contract
 
@@ -1019,3 +1024,42 @@ provider/database access, Staging apply, decryption, rollback execution,
 history repair, transient deletion, Ready, merge, deployment, or any Production
 action. The next technical gate remains a separately authorized R2 Staging
 read-only preflight after the acceptance-record Git delivery is complete.
+
+## 11. R2 Staging read-only preflight governance
+
+The R1-C3 operational-use acceptance record was committed and normally pushed
+to PR `#47` at remote HEAD
+`301dc99366f7a7634e80f7f260a099863ee86ef7`. PR `#47` remained OPEN/Draft
+against `main`, local/upstream divergence was `0/0`, and the worktree/index
+were clean. R1 is therefore accepted for its exact Staging-only 300-second
+decision procedure; no rollback trigger or execution authority exists now.
+
+Before authoring R2, MacBook Codex found and reported a migration-history
+identity contradiction: R3 executes the exact Forward Bridge file/version
+`20260830121816`, while the former R5/R9 text named superseded version
+`20260830160000`. The owner explicitly approved correction. R5/R9 now record
+only the exact executed Forward Bridge version `20260830121816`.
+`20260830160000` remains
+`EXCLUDED_SUPERSEDED_DIRECT_APPLY_PROHIBITED_NOT_RECORDED`.
+
+The R2 directive is
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R2_STAGING_READ_ONLY_PREFLIGHT.md`.
+Its later execution is limited to exact Staging identity/backup reads, one
+hash-and-metadata-only read-only SQL query, migration-ledger reconciliation,
+dependency and aggregate lock/activity checks, and Git-external secret-free
+evidence capture. It returns no function body or customer data.
+
+This authoring gate changes exactly the remediation plan, append-only result
+ledger, and new R2 directive. It does not transmit private repository content,
+invoke Claude, create evidence, access Supabase/provider/database, link a
+project, run SQL, generate an R3 execution artifact, change migration history,
+stage, commit, push, mutate PR `#47`, mark Ready, merge, deploy, or perform any
+Staging/Production write.
+
+Verify the exact three-document candidate, corrected R5/R9 version identity,
+directive allowlists, accepted hashes, protected metadata, clean index, and
+`git diff --check`. Then request separate exact-path stage/local-commit
+authorization. Normal push, PR instruction publication, private transmission,
+Claude execution, provider/database read-only access, R3, rollback execution,
+history repair, Ready, merge, deployment, and every Production action remain
+separate gates.
