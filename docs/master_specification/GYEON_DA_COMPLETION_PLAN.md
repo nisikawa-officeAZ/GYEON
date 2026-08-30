@@ -898,7 +898,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1 — all managed-service save enforcement
 
-**Status:** READ-ONLY DIAGNOSIS GOVERNANCE CANDIDATE AUTHORING AUTHORIZED — PR #42 put the existing PPF-only server-save guard on `main`; PR #43 aligned the Step-3 presentation for all five managed service families. The four non-PPF families still require authoritative save enforcement. No source implementation, test execution, SQL/RPC change, database access, Git delivery, or deployment is authorized by this authoring gate.
+**Status:** READ-ONLY DIAGNOSIS ACCEPTED / PHASE A SERVER-SAVE IMPLEMENTATION GOVERNANCE CANDIDATE AUTHORING AUTHORIZED — PR #42 put the existing PPF-only server-save guard on `main`; PR #43 aligned the Step-3 presentation for all five managed service families. Claude and MacBook Codex independently confirmed that the four non-PPF families still require authoritative server-save enforcement and that direct RPC/SQL enforcement remains a separate Phase B. No source implementation, test execution, SQL/RPC change, database access, Git delivery, or deployment is authorized by this authoring gate.
 
 **Objective:** Make the current dealer-owned offering switches one enforceable contract for every managed Estimate Wizard service family, not merely a client-side display rule.
 
@@ -949,6 +949,55 @@ The result document was excluded from harness implementation and was created lat
 **Boundary:** This phase authors governance only. Claude transmission/execution, source/test changes, package changes, stage, commit, push, PR mutation, migrations, SQL/RPC changes, database/Supabase/Auth/browser/Vercel/provider access, Ready, merge, and deployment are separate and unauthorized.
 
 **Exit:** MacBook Codex verifies the exact three-document diff and `git diff --check`, then requests separate authorization for exact-path staging and local commit. Private transmission to Claude and the one-time read-only diagnosis require later explicit authorization.
+
+**Accepted read-only diagnosis:**
+
+- Result: `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_READ_ONLY_DIAGNOSIS_RESULT_V1`
+- Verdict: `CHANGES_REQUIRED_SERVER_AND_SQL`
+- Governance HEAD/tree: `387d8993d542a001ff2c9f2e54ff275789591f9d` / `035cf5f2b2884635e3834e6026720558e71f48db`
+- Claude execution: one non-persistent Sonnet diagnosis, high effort, no permission denials, no subagent, no mutation, `2.7157178 USD` total cost under the `3 USD` cap.
+- MacBook Codex independently confirmed the PPF-only guard, all four missing family guards, canonical defaults, unchanged protected blobs, clean worktree, and absence of `dealer_service_offerings` checks in the current atomic-save migration chain.
+- Existing pgTAP coverage exists at `supabase/tests/estimate_wizard_atomic_save.test.sql` and `supabase/tests/estimate_wizard_dml_integrity.test.sql`; no dedicated disposable execution harness was found. Harness creation belongs only to separately governed Phase B.
+
+**Phase A — authoritative server-save generalization:**
+
+- Replace the PPF-only decision at the existing post-revision/pre-pricing guard with one pure five-family decision using the existing `SERVICE_FAMILIES` and `SERVICE_FAMILY_CATEGORY` authority.
+- Preserve `isPpfBearingDraft` behavior exactly. Extend the same canonical-default-versus-intent rule to `windowFilm`, `bodyMaintenance`, `carWash`, and `roomCleaning`.
+- Window-film intent signals are selected `window`, non-empty `selectedAreaIds`, non-null `filmTypeId`, non-empty `unitPriceInput`, non-null `selectedPackageCode`, non-empty `selectedOptionIds`, or any `optionQuantities` key.
+- Maintenance intent signals are selected `maintenance`, non-null `menuId`, or non-empty `unitPriceInput`.
+- Car-wash intent signals are selected `carwash`, non-null `menuId`, or non-empty `unitPriceInput`.
+- Room-cleaning intent signals are selected `roomclean`, non-empty `selectedMenuIds`, or any `unitPricesByMenu` key.
+- If any disabled family carries intent, return the existing `service-not-offered` result after actor/tenant/revision checks and before pricing, mapping, DTO validation, or persistence.
+- Do not expose the family, raw draft, customer, vehicle, pricing, or configuration detail. Reuse the existing sanitized observability contract without changing its types or mapping.
+- Preserve PR #43 UI, PPF full/partial behavior, coating/other behavior, pricing, OCR, seven-size classification, rank, coupon, DTO, idempotency, and tenant contracts.
+
+**Phase A implementation write allowlist — exactly two paths:**
+
+1. `src/components/estimates/wizard/save/wizard-save-intent-orchestrator.ts`
+2. `src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts`
+
+**Phase A governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_A_SERVER_SAVE_IMPLEMENTATION.md` (new)
+
+**Phase A required verification:**
+
+- Focused orchestrator and observability tests must pass without deleting or weakening existing assertions.
+- `npm run typecheck` must pass or report a clearly reproduced environment-only blocker without changing dependencies.
+- `git diff --check` must pass and the final unstaged diff must contain only the two implementation paths actually changed.
+- No database, Supabase, browser, Vercel, provider, Preview, or production execution belongs to Phase A.
+
+**Phase A exit:** MacBook Codex verifies the exact three-document governance candidate and requests separate stage/local-commit authorization. Governance push, private Claude transmission, source implementation, tests, source commit/push, PR comments, Ready, merge, deployment, and Phase-B SQL work remain separate gates.
+
+**Phase B — direct RPC/SQL enforcement, queued only:**
+
+- Add one new forward-only migration; never edit historical migrations in place.
+- Make `public.save_estimate_from_wizard` independently deny service lines for disabled managed families under the same dealer-owned authority.
+- Extend existing pgTAP coverage and add a dedicated disposable local-DB harness because none exists today.
+- Keep real tenant claims, role boundaries, direct-RPC bypass coverage, and fail-closed test-plan completeness mandatory.
+- Phase B is not authorized by Phase A governance or implementation approval.
 
 ### GDA-3 — Completion Desk
 
