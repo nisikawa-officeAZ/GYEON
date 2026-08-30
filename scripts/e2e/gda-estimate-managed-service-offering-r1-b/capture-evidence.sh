@@ -394,7 +394,7 @@ import sys
  canonical_exit, canonical_plan, canonical_count,
  offering_exit, offering_plan, offering_count,
  aggregate_plan, aggregate_count,
- real_auth_exit, concurrency_exit) = sys.argv[1:12]
+ real_auth_exit, concurrency_exit) = sys.argv[1:13]
 
 facts = {
     "runtime_dir": runtime_dir,

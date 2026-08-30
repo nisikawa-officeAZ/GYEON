@@ -129,7 +129,9 @@ run_fixture_teardown() {
   psql "$R1B_DB_URL" -X -v ON_ERROR_STOP=1 -q <<SQL >> "$CLEANUP_LOG" 2>&1
 begin;
 
+set local role service_role;
 delete from public.estimate_items where estimate_id = any($ESTIMATE_IDS_SQL);
+reset role;
 delete from public.estimates where id = any($ESTIMATE_IDS_SQL);
 delete from public.vehicles where dealer_id = any($DEALER_IDS_SQL);
 delete from public.customers where dealer_id = any($DEALER_IDS_SQL);
