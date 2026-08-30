@@ -927,23 +927,37 @@ Stop immediately, make no same-run repair, and do not retry when:
 
 ## 10. Immediate next gate
 
-R1-C1 encrypted capture and R1-C2 PostgreSQL 17 disposable restoration now
-pass as a documentation candidate. The burned `DJ4eiW` failure remains
-immutable evidence and is not erased by the later successful suffixes.
+R1-C1 encrypted capture, R1-C2 PostgreSQL 17 disposable restoration, and
+R1-C2A local persistent custody now pass as a documentation candidate. The
+burned `DJ4eiW` failure remains immutable evidence and is not erased by the
+later successful suffixes.
 
-Verify the exact three-document delta, capture/restore hashes, runtime-removal
-evidence, protected metadata, clean index, and `git diff --check`. Then request
-separate exact-path stage/local-commit authorization. Normal push and PR result
-publication remain separate.
+R1-C2A copied the accepted ciphertext into the mode-700 Git-external root
+`/Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1-rollback-custody/ciphertext.20260830T152354Z-I7kjNs`
+and placed the secret in the different mode-700 protected root
+`/Users/atsushinishikawa/Documents/Codex/secure/gda-estimate-offering-r1-rollback-secrets/secret.20260830T152354Z-I7kjNs`.
+The ciphertext retained SHA-256
+`7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c`.
+Stream-only decrypt-and-compare produced the accepted plaintext SHA-256
+`33096a6f5fc295071b8bb06d6ebcf293febd187f25aa04bb8adc9ba19e15edda`
+without creating or retaining a plaintext file. The secret-free custody
+manifest SHA-256 is
+`388c48ad91e6093f1a7dfcbe880d7733a6dbd1a407bf811f0d3c6c1cbc762d39`.
 
-After result delivery, the next technical gate is R1-C2A durable rollback
-artifact custody. It must preserve ciphertext hash
-`7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c`,
-keep the secret separately protected, prove decrypt-and-compare without
-retaining plaintext, and record durable custody without secret values.
+The original `/private/tmp` ciphertext and secret remain present; cleanup is a
+separate decision. Actual reboot-survival, off-device backup, and Keychain or
+hardware-backed secret custody are not proven. This does not invalidate the
+local persistent-custody result, but it prevents any claim of device-loss
+disaster recovery.
 
-Only after R1-C2A passes may the owner consider a separate R1-C3 conditional
-rollback pre-authorization using the existing five-minute role and
-stop-authority contract. Silence or timeout never implies approval. Neither
-gate authorizes rollback execution, R2 Staging preflight, schema/history write,
-Ready, merge, deployment, or any Production action.
+Verify the exact three-document delta, custody paths, modes and hashes,
+stream-only decrypt result, transient-source retention, protected metadata,
+clean index, and `git diff --check`. Then request separate exact-path
+stage/local-commit authorization. Normal push and PR result publication remain
+separate.
+
+Only after the R1-C2A result record is delivered may the owner consider a
+separate R1-C3 conditional rollback pre-authorization using the existing
+five-minute role and stop-authority contract. Silence or timeout never implies
+approval. R1-C3 would not authorize rollback execution, R2 Staging preflight,
+schema/history write, Ready, merge, deployment, or any Production action.

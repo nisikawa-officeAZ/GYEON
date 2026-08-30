@@ -4364,3 +4364,76 @@ protected_blobs:
 decision: ACCEPT_R1_C1_ENCRYPTED_CAPTURE_AND_R1_C2_LOCAL_DISPOSABLE_RESTORE_TECHNICAL_PASS_CUSTODY_PENDING_RECORD_CANDIDATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_CAPTURE_AND_RESTORE_HASHES_EVIDENCE_MANIFESTS_RUNTIME_REMOVAL_ZERO_CONTAINER_VOLUME_RESIDUE_TRANSIENT_CUSTODY_LIMIT_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. AFTER_DELIVERY_R1_C2A_DURABLE_CIPHERTEXT_AND_SEPARATE_SECRET_CUSTODY_IS_THE_NEXT_TECHNICAL_GATE. NORMAL_PUSH_PR_RESULT_PUBLICATION_R1_C2A_FILE_ACTIONS_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C2A — Durable ciphertext and separate secret custody
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C2A_DURABLE_CUSTODY_RESULT_RECORD
+status: R1_C2A_RESULT_RECORD_CANDIDATE_UNCOMMITTED
+date: 2026-08-31
+append_only: true
+authorization: "After the R1-C1/R1-C2 exact-three-document result record was committed and normally pushed, the owner separately authorized R1-C2A durable custody. After MacBook Codex completed and independently verified the file-copy, mode, hash, stream-decrypt, plaintext-absence, transient-retention, Git-clean, and protected-blob evidence, the owner authorized authoring this exact-three-document R1-C2A result-record candidate only. Stage, commit, push, PR mutation, transient deletion, R1-C3, rollback execution, R2, shared write, Ready, merge, deployment, history repair, and Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_record_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  execution_head: e3788617303c092679e169801ccdbd02aaa6c2ba
+  execution_tree: 1c80685c92d703fd022984c4a1643f852988477c
+  base: main
+  changed_files_before_record_candidate: 13
+  upstream_ahead_behind: "0 0"
+durable_ciphertext_custody:
+  source_capture_suffix: I7kjNs
+  custody_suffix: 20260830T152354Z-I7kjNs
+  root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1-rollback-custody/ciphertext.20260830T152354Z-I7kjNs
+  root_mode: "700"
+  file: function-capture.json.enc
+  file_mode: "600"
+  ciphertext_sha256: 7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c
+  expected_ciphertext_hash_exact: true
+  source_manifest_redacted_sha256: 7d5406738d3dca94589add09be9384573be2ffff35d5c23e80f0e1dd4dd0ab4e
+  custody_manifest_redacted_sha256: 388c48ad91e6093f1a7dfcbe880d7733a6dbd1a407bf811f0d3c6c1cbc762d39
+separate_secret_custody:
+  root: /Users/atsushinishikawa/Documents/Codex/secure/gda-estimate-offering-r1-rollback-secrets/secret.20260830T152354Z-I7kjNs
+  root_mode: "700"
+  file_mode: "600"
+  same_root_as_ciphertext: false
+  secret_value_recorded: false
+  secret_hash_recorded: false
+verification:
+  encryption: "aes-256-cbc; pbkdf2; iter=310000; salt=yes"
+  expected_plaintext_sha256: 33096a6f5fc295071b8bb06d6ebcf293febd187f25aa04bb8adc9ba19e15edda
+  streamed_decrypt_sha256: 33096a6f5fc295071b8bb06d6ebcf293febd187f25aa04bb8adc9ba19e15edda
+  decrypt_compare: PASS_STREAM_ONLY
+  plaintext_file_created: false
+  plaintext_file_retained: false
+transient_sources:
+  private_tmp_ciphertext_retained: true
+  private_tmp_secret_retained: true
+  transient_cleanup_authorized: false
+limitations:
+  actual_reboot_survival_tested: false
+  off_device_backup_proved: false
+  macos_keychain_custody_proved: false
+  hardware_backed_secret_custody_proved: false
+  local_persistent_custody_proved: true
+  device_loss_disaster_recovery_proved: false
+execution_boundary:
+  exact_three_governance_documents_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  database_or_provider_contact: false
+  shared_staging_or_production_write: false
+  migration_history_write_shared: false
+  conditional_rollback_preauthorized: false
+  rollback_executed: false
+  r2_started: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_C2A_LOCAL_PERSISTENT_CIPHERTEXT_AND_SEPARATE_SECRET_CUSTODY_PASS_TRANSIENT_RETAINED_DEVICE_LOSS_RECOVERY_NOT_PROVED_RECORD_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DURABLE_PATHS_MODES_CIPHERTEXT_AND_MANIFEST_HASHES_STREAM_ONLY_DECRYPT_MATCH_PLAINTEXT_FILE_ABSENCE_TRANSIENT_SOURCE_RETENTION_LIMITATIONS_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_RESULT_PUBLICATION_TRANSIENT_DELETION_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```

@@ -689,3 +689,56 @@ Stage, local commit, normal push, PR result publication, conditional rollback
 pre-authorization or execution, R2 Staging preflight, schema/history write,
 Ready, merge, deployment, and every Production action remain separate and
 unauthorized.
+
+## 14. R1-C2A durable custody result
+
+After the R1-C1/R1-C2 result record was committed and normally pushed, the
+owner separately authorized the R1-C2A durable-custody gate. The gate copied
+the already-encrypted rollback artifact and its already-existing decryption
+secret out of `/private/tmp` into two different persistent Git-external roots.
+It did not query or write a database, contact a provider, change Git, retain
+plaintext, or authorize rollback.
+
+### 14.1 Durable ciphertext custody
+
+- The mode-700 ciphertext custody root is
+  `/Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1-rollback-custody/ciphertext.20260830T152354Z-I7kjNs`.
+- Its mode-600 `function-capture.json.enc` SHA-256 is
+  `7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c`,
+  exactly matching the accepted R1-C1 ciphertext hash.
+- The source redacted manifest was copied with SHA-256
+  `7d5406738d3dca94589add09be9384573be2ffff35d5c23e80f0e1dd4dd0ab4e`.
+- The mode-600 secret-free custody manifest SHA-256 is
+  `388c48ad91e6093f1a7dfcbe880d7733a6dbd1a407bf811f0d3c6c1cbc762d39`.
+
+### 14.2 Separate secret custody and verification
+
+- The secret is held in a different mode-700 persistent protected root:
+  `/Users/atsushinishikawa/Documents/Codex/secure/gda-estimate-offering-r1-rollback-secrets/secret.20260830T152354Z-I7kjNs`.
+- The secret file remains mode `600`. No secret value or secret hash was
+  printed, logged, committed, or placed in the custody manifest.
+- OpenSSL AES-256-CBC/PBKDF2 with `310000` iterations streamed decrypted bytes
+  directly into SHA-256. The resulting hash was
+  `33096a6f5fc295071b8bb06d6ebcf293febd187f25aa04bb8adc9ba19e15edda`,
+  exactly matching the accepted plaintext-capture hash.
+- No plaintext file was created or retained during R1-C2A.
+
+### 14.3 Custody boundary and remaining limitations
+
+R1-C2A satisfies the local durable ciphertext, separate-secret, exact-hash,
+and no-retained-plaintext custody contract. The original ciphertext and secret
+under `/private/tmp` remain present because transient deletion was not included
+in this gate. No rollback execution or conditional rollback pre-authorization
+was performed.
+
+An actual reboot-survival test, off-device backup, and macOS Keychain custody
+were not performed and must not be inferred. The current secret is protected by
+separate location and mode `600`, not by a proved Keychain or hardware-backed
+secret store. R1-C2A therefore proves local persistent custody but does not by
+itself prove device-loss disaster recovery.
+
+The owner authorized only this exact-three-document R1-C2A result-record
+candidate. Stage, local commit, normal push, PR result publication, transient
+source deletion, R1-C3 conditional rollback pre-authorization, rollback
+execution, R2 Staging preflight, schema/history write, Ready, merge,
+deployment, and every Production action remain separate and unauthorized.
