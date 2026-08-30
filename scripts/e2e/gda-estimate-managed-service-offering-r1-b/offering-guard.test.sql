@@ -238,9 +238,9 @@ SELECT throws_matching(
   'mixed ppf(on)+maintenance(off) payload rejects on the one OFF family');
 RESET ROLE;
 INSERT INTO t_life_counts VALUES ('after_mixed_reject', pg_temp.lifecycle_rev(pg_temp.uid('dealer_mixed')));
-SET LOCAL ROLE service_role;
 SELECT is((SELECT l FROM t_life_counts WHERE k='after_mixed_reject'), (SELECT l FROM t_life_counts WHERE k='before_mixed_reject'),
   'the mixed-family rejection does not advance the dealer''s configuration-revision lifecycle');
+SET LOCAL ROLE service_role;
 INSERT INTO t_mixed_counts SELECT 'after',
   (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),
   (SELECT count(*) FROM public.vehicles),  (SELECT count(*) FROM public.estimate_items);
@@ -282,9 +282,9 @@ SELECT is((pg_temp.call(pg_temp.uid('dealer_single'), pg_temp.uid('u_single'), p
   'true', 'exact replay after a later disable still returns the original success');
 RESET ROLE;
 INSERT INTO t_life_counts VALUES ('after_replay_after_disable', pg_temp.lifecycle_rev(pg_temp.uid('dealer_single')));
-SET LOCAL ROLE service_role;
 SELECT is((SELECT l FROM t_life_counts WHERE k='after_replay_after_disable'), (SELECT l FROM t_life_counts WHERE k='before_replay_after_disable'),
   'the exact replay after a later disable does not advance the dealer''s configuration-revision lifecycle (snapshot taken AFTER the disable commit)');
+SET LOCAL ROLE service_role;
 INSERT INTO t_replay_counts SELECT 'after',
   (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),
   (SELECT count(*) FROM public.vehicles),  (SELECT count(*) FROM public.estimate_items);
