@@ -4,12 +4,12 @@
 
 | Field | Value |
 |---|---|
-| Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_DISPOSABLE_E2` |
-| Status | `FB_I1_E2_LOCAL_DISPOSABLE_DB_ACCEPTED_RESULT_RECORDING` |
+| Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_GOVERNANCE` |
+| Status | `R1_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT` |
 | Date | 2026-08-30 |
 | Product owner | Office AZ |
 | Technical authority | MacBook Codex |
-| Implementation / executable verification | Static implementation accepted; MacBook Codex E2 accepted |
+| Implementation / executable verification | R1 diagnosis by MacBook Claude only after separate private-transmission approval |
 | Staging | `DealerOS-Dev-Next` / `vhiuiwolnlvlwvoaingd` / `ap-northeast-1` |
 | Production | `DealerOS-Prod` / `dmvyaykhibmphrmekjbb` / `ap-northeast-1` |
 | Former direct target / read-only reference | `supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql` |
@@ -20,7 +20,7 @@
 | R0 verdict | `CHANGES_REQUIRED_FORWARD_BRIDGE` |
 | R0 Production writes | `0` |
 
-This implementation-governance authoring gate authorizes only the three
+This R1 diagnosis-governance authoring gate authorizes only the three
 governance paths below. It does not authorize source, migration, test, or
 harness implementation, SQL execution, database writes, migration-history
 repair, Staging or Production application, fixture creation, Auth operations,
@@ -32,7 +32,7 @@ paths:**
 
 1. `docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md`
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
-3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_IMPLEMENTATION.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_READ_ONLY_DIAGNOSIS.md`
 
 The binding environment identity and safety rules remain those in
 `ENVIRONMENT_LEDGER.md`. This plan narrows the general execution-mechanism
@@ -418,6 +418,50 @@ Before any Staging or Production write:
 
 Missing restore evidence is an immediate stop.
 
+### R1-G1 — Restore-readiness read-only diagnosis governance
+
+**Current mode:** exact-three-document governance authoring only. R1-G1 does
+not access Supabase projects, backups, databases, provider APIs, or private
+runtime evidence.
+
+The immediate R1 target is Staging `DealerOS-Dev-Next` /
+`vhiuiwolnlvlwvoaingd`. Production restore/PITR evidence is intentionally
+deferred to the fresh Production change-window preflight in R6 because an R1
+Production timestamp would be stale before Production application.
+
+The later diagnosis must return:
+
+1. the exact read-only Supabase CLI or Management API commands that prove the
+   Staging project identity, backup type, available recovery range, and latest
+   recoverable UTC point without invoking restore;
+2. the exact read-only SQL and evidence contract for capturing the current
+   Staging `save_estimate_from_wizard(uuid,uuid,jsonb)` definition, owner,
+   security mode, search path, language, volatility, parallel mode, and ACL;
+3. a secure encryption method selected only after detecting available local
+   tools, with the decryption secret stored separately from the encrypted
+   rollback artifact and never printed or committed;
+4. a fresh PostgreSQL 17 disposable restoration proof that changes no shared
+   environment and leaves an independently verified evidence manifest;
+5. a five-minute decision procedure separating operator, verifier, stop
+   authority, and rollback authority; and
+6. the exact later execution allowlists, commands, stop conditions, retained
+   evidence, cleanup contract, and conditional rollback approval question.
+
+The diagnosis may inspect only its literal Git read allowlist and protected
+metadata. It may run Git metadata commands and local `supabase --help`
+discovery with telemetry disabled. It may not list provider projects or
+backups, query a database, capture live SQL, create or restore a project, start
+a disposable runtime, read credentials, modify files, stage, commit, push,
+post a PR result, mark Ready, merge, apply a migration, repair history, deploy,
+or execute rollback.
+
+**R1-G1 governance exit:** MacBook Codex verifies the exact three-document
+candidate, protected metadata, clean index, and `git diff --check`, then asks
+for separate exact-path stage/local-commit authorization. Normal push, PR
+instruction publication, private transmission, Claude diagnosis, provider
+read-only verification, encrypted capture, disposable restore proof, and every
+write remain separate gates.
+
 ### R2 — Staging preflight
 
 **Target:** `DealerOS-Dev-Next` / `vhiuiwolnlvlwvoaingd`.
@@ -622,12 +666,14 @@ R0 remains complete with `CHANGES_REQUIRED_FORWARD_BRIDGE`; the initial
 passed verification; and the fresh FB-G1 diagnosis is independently accepted
 as `READY_FOR_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE`.
 
-FB-I1-E2 is accepted as `E2_LOCAL_DISPOSABLE_DB`. The current gate is the exact
-two-document result record and its local commit. Normal push and the PR result
-comment require separate authorization.
+FB-I1-E2 is accepted as `E2_LOCAL_DISPOSABLE_DB` and its result is committed,
+pushed, and posted to PR #47. The current gate is exact-three-document R1-G1
+read-only-diagnosis governance authoring only.
 
-After result delivery, the next technical gate is R1 restore and rollback
-readiness. R1 is provider/backup verification only and authorizes no schema
-write. PR Ready conversion, merge, migration application, history repair,
-Staging, Production, deployment, and rollback execution remain separate and
-unauthorized.
+Verify the new directive, exact three-path diff, protected metadata, clean
+index, and `git diff --check`, then request separate exact-path stage/local
+commit authorization. Normal push, PR instruction publication, private
+transmission, Claude diagnosis, provider read-only verification, encrypted
+rollback capture, disposable restore proof, conditional rollback approval,
+Ready, merge, migration application, history repair, Staging/Production write,
+deployment, and rollback execution remain separate and unauthorized.

@@ -3708,3 +3708,54 @@ protected_blobs:
 decision: ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL
 next: "VERIFY_THE_EXACT_TWO_DOCUMENT_RESULT_RECORD_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_STAGE_AND_LOCAL_COMMIT_THE_TWO_DOCUMENTS_ONLY. NORMAL_PUSH_AND_PR_RESULT_COMMENT_REQUIRE_SEPARATE_AUTHORIZATION. AFTER_DELIVERY_R1_RESTORE_AND_ROLLBACK_READINESS_IS_THE_NEXT_TECHNICAL_GATE_WITH_NO_SCHEMA_WRITE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-G1 — Restore-readiness diagnosis governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_READ_ONLY_DIAGNOSIS_GOVERNANCE
+status: R1_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+authorization: "After FB-I1-E2 acceptance, result delivery, and PR comment publication, the owner explicitly authorized starting R1 restore and rollback readiness. This authoring gate changes exactly three governance documents. It does not authorize stage, commit, push, PR mutation, private external transmission, Claude invocation, provider/Supabase/database access, backup restore, project creation, encrypted live capture, disposable runtime, migration/history action, shared-environment write, Ready, merge, deployment, or rollback execution."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  base_head: 998d17de891ca5c8b339f18288b6fd4416281d14
+  base_tree: edec294889a063dacf18b8ed0108d922dd0af2bc
+  upstream_ahead_behind: "0 0"
+active_target:
+  environment: STAGING
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  production_restore_evidence: DEFER_TO_R6_FRESH_CHANGE_WINDOW_PREFLIGHT
+governance_write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_READ_ONLY_DIAGNOSIS.md
+diagnosis_boundary:
+  provider_access: false
+  database_access: false
+  credentials_read: false
+  live_function_capture: false
+  backup_restore: false
+  project_creation: false
+  disposable_runtime: false
+  file_mutation_by_claude: false
+  allowed_local_discovery: GIT_METADATA_AND_SUPABASE_HELP_ONLY
+required_result:
+  - EXACT_READ_ONLY_STAGING_BACKUP_AND_RECOVERY_POINT_COMMANDS
+  - EXACT_READ_ONLY_STAGING_RPC_DEFINITION_AND_METADATA_CAPTURE
+  - SECRET_SEPARATED_ENCRYPTED_ROLLBACK_ARTIFACT_CONTRACT
+  - POSTGRESQL_17_DISPOSABLE_RESTORE_PROOF_CONTRACT
+  - FIVE_MINUTE_OPERATOR_VERIFIER_STOP_AND_ROLLBACK_AUTHORITY_PROCEDURE
+  - LITERAL_FUTURE_ALLOWLISTS_COMMANDS_STOP_CONDITIONS_CLEANUP_AND_EVIDENCE_SCHEMA
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R1_G1_DIAGNOSIS_GOVERNANCE_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_PR_INSTRUCTION_PUBLICATION_PRIVATE_TRANSMISSION_CLAUDE_DIAGNOSIS_PROVIDER_READS_ENCRYPTED_CAPTURE_DISPOSABLE_RESTORE_AND_ALL_WRITES_REMAIN_SEPARATE."
+```
