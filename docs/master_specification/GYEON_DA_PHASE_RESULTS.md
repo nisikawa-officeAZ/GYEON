@@ -4068,3 +4068,102 @@ protected_blobs:
 decision: ACCEPT_R1_A3_BUDGET_STOP_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A4_BOUNDED_ONE_TURN_CORRECTION_CANDIDATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_TWELVE_PATH_BOUNDED_BUNDLE_CONTRACT_COMMITTED_SOURCE_AND_EXCERPT_HASHES_SEPARATE_INPUT_OUTPUT_ROOTS_NO_TOOL_LAUNCHER_ZERO_SESSION_ENV_POST_RUN_INPUT_DELETION_OUTPUT_VERIFICATION_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_TRANSMISSION_CLAUDE_RETRY_PROVIDER_READS_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-A5 — R1-A4 transport accepted; READY verdict rejected with Codex corrections
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_A4_RESULT_ACCEPTANCE_AND_R1_A5_PLAN_CORRECTION
+status: R1_A5_CLAUDE_TRANSPORT_PASS_CONTENT_CHANGES_REQUIRED_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly authorized correcting the same exact three governance documents only after MacBook Codex independently reviewed the completed R1-A4 diagnosis. This gate records the R1-A4 evidence and fixes four plan defects. Stage, commit, push, revised PR comment, private retransmission, another Claude invocation, provider/Supabase/database access, encrypted capture, runtime, restore, rollback, Ready, merge, deployment, history repair, and Staging/Production write remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_controller_preflight: OPEN_DRAFT
+  diagnosis_head: 735278778107a7b28e1d6d25313da387388093dd
+  diagnosis_tree: 56fe9c00b38aa3f28379d921fef616adff8cb122
+  upstream_ahead_behind_after_diagnosis: "0 0"
+  exact_governance_delta_path_count: 3
+published_instruction:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469291428
+  marker: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_A4_RESTORE_READINESS_READ_ONLY_DIAGNOSIS_INSTRUCTION_V1
+  status: PUBLISHED_INVOKED_RESULT_REVIEWED
+input_bundle:
+  exact_path_block_count: 12
+  bytes: 273162
+  sha256: 3d347c3371f77816f1f121070418e7537395012c0c4165d9a4a70a1f1517c8e2
+  deleted_root: /private/tmp/gda-r1-a4-input.lUpRMm
+  input_root_deleted: true
+  input_root_absent_after_cleanup: true
+output_transport:
+  retained_private_root: /private/tmp/gda-r1-a4-output.W6m59R
+  exact_file_count: 2
+  exact_file_modes: "600 600"
+  result_file: claude-result.json
+  stderr_file: claude-stderr.txt
+  repository_authority: false
+claude_result:
+  required_marker_count: 1
+  reported_verdict: READY_FOR_R1_EXECUTION_GOVERNANCE
+  codex_classification: CHANGES_REQUIRED_R1_PLAN
+  process_subtype: success
+  is_error: false
+  duration_ms: 51277
+  turns: 1
+  cost_usd: 0.8820647
+  web_search_requests: 0
+  web_fetch_requests: 0
+  result_bytes: 9787
+  result_sha256: 970805499f833e8315bc34bcb747d620e5253cd09c135b5f6110bf7e94da352a
+  stderr_bytes: 0
+  stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+session_environment:
+  pre_child_count: 291
+  post_child_count: 291
+  pre_pathname_set_sha256: b6fff36d94516937ebddbcec412047daaf1cb3c146978e133bc054bf317ef308
+  post_pathname_set_sha256: b6fff36d94516937ebddbcec412047daaf1cb3c146978e133bc054bf317ef308
+  new_session_environment_path_count: 0
+codex_corrections:
+  - EXACT_300_SECOND_ROLE_AND_DECISION_SEQUENCE
+  - EXACT_PROJECT_AND_BACKUP_MANAGEMENT_API_ENDPOINTS_AND_RESPONSE_FIELDS
+  - EXACT_COMMAND_CLASSES_TIMEOUTS_RETRIES_AND_STOP_RULES
+  - CORRECT_LOCAL_TOOL_DISCOVERY_GPG_AGENT_PRESENT
+provider_contract:
+  staging_ref: vhiuiwolnlvlwvoaingd
+  project_endpoint: "GET /v1/projects/vhiuiwolnlvlwvoaingd"
+  backup_endpoint: "GET /v1/projects/vhiuiwolnlvlwvoaingd/database/backups"
+  health_endpoint_status: DEFERRED_NO_GUESSED_SERVICES_ENUM
+  bounded_status_field: project.status
+  official_backup_reference: https://supabase.com/docs/reference/api/v1-list-all-backups
+cli_contract:
+  supabase_cli_version: 2.116.0
+  db_query_project_ref_file_supported: true
+  exact_capture_class: "SUPABASE_TELEMETRY_DISABLED=1 supabase db query --project-ref vhiuiwolnlvlwvoaingd --file <exact-mode-600-read-only-sql-file> --output-format json"
+local_tool_inventory:
+  gpg: /opt/homebrew/bin/gpg
+  gpg_agent: /opt/homebrew/bin/gpg-agent
+  openssl: /opt/homebrew/bin/openssl
+  security: /usr/bin/security
+  rm: /bin/rm
+  age: ABSENT
+  shred: ABSENT
+  selected_cipher: OPENSSL_3_6_3_AES_256_CBC_PBKDF2_310000_MINIMUM
+execution_boundary:
+  exact_three_governance_documents_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  private_retransmission_or_claude_reinvocation: false
+  provider_access: false
+  supabase_or_database_access: false
+  encrypted_capture_or_runtime_or_restore: false
+  rollback_authorization_or_execution: false
+  staging_or_production_write: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: REJECT_R1_A4_READY_VERDICT_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A5_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_R1_A4_EVIDENCE_300_SECOND_DECISION_SEQUENCE_PROVIDER_ENDPOINTS_RESPONSE_FIELDS_COMMAND_CLASSES_TIMEOUTS_RETRIES_LOCAL_TOOL_INVENTORY_OPENSSL_APFS_CLEANUP_CONTRACT_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_RETRANSMISSION_CLAUDE_RERUN_PROVIDER_READS_DATABASE_CAPTURE_RESTORE_ROLLBACK_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```

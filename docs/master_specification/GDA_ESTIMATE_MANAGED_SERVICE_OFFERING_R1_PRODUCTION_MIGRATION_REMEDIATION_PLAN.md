@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_GOVERNANCE` |
-| Status | `R1_A2_POST_RUN_TRANSPORT_HASH_CORRECTION_CANDIDATE_UNCOMMITTED` |
+| Status | `R1_A5_CLAUDE_TRANSPORT_PASS_CONTENT_CHANGES_REQUIRED_CORRECTION_CANDIDATE_UNCOMMITTED` |
 | Date | 2026-08-30 |
 | Product owner | Office AZ |
 | Technical authority | MacBook Codex |
@@ -352,6 +352,55 @@ fresh disposable verification are separately accepted.
   creation, budget stop, missing marker/verdict, retained input bundle, or extra
   output file rejects the run. Budget stays capped at `$2.00` and effort is
   reduced to `medium`.
+
+### R1-A5 Codex correction of the R1-A4 READY verdict — 2026-08-30
+
+- R1-A4 ran against committed HEAD
+  `735278778107a7b28e1d6d25313da387388093dd`, tree
+  `56fe9c00b38aa3f28379d921fef616adff8cb122`, from the non-triggering
+  instruction at
+  `https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469291428`.
+- The controller-built input contained exactly 12 path blocks, 273,162 bytes,
+  SHA-256
+  `3d347c3371f77816f1f121070418e7537395012c0c4165d9a4a70a1f1517c8e2`.
+  After the run, its exact root was removed and proved absent.
+- Claude completed one no-tool turn in 51,277 ms for `$0.8820647`; the
+  9,787-byte result SHA-256 was
+  `970805499f833e8315bc34bcb747d620e5253cd09c135b5f6110bf7e94da352a`;
+  stderr was empty. The session-environment child count (`291`) and pathname
+  set SHA-256
+  `b6fff36d94516937ebddbcec412047daaf1cb3c146978e133bc054bf317ef308`
+  were unchanged before and after the run.
+- Transport, cleanup, marker, one-turn, cost, no-tool, protected-metadata, and
+  zero-mutation mechanics pass. Claude reported
+  `READY_FOR_R1_EXECUTION_GOVERNANCE`, but MacBook Codex rejects that verdict
+  and records `CHANGES_REQUIRED_R1_PLAN` for four content defects:
+  1. the five-minute authority response named roles but did not provide a
+     minute-by-minute decision procedure;
+  2. the exact Management API backup endpoint and accepted response fields
+     were omitted;
+  3. timeouts and future command allowlists remained approximate; and
+  4. `gpg-agent` was incorrectly reported unavailable.
+- R1-A5 fixes those defects without performing R1: the directive now contains
+  an exact 300-second role sequence; exact Staging project and backup provider
+  reads; exact function-capture command class supported by Supabase CLI
+  `2.116.0`; exact statement, lock, command, encryption, local-runtime, cleanup,
+  and decision deadlines; and exact retry/stop rules.
+- Official provider reads are limited to exact project ref
+  `vhiuiwolnlvlwvoaingd`, CLI `projects list` and `backups list`, or Management
+  API `GET /v1/projects/{ref}` and
+  `GET /v1/projects/{ref}/database/backups`. The undocumented health-service
+  enum is not guessed; project `status` is the bounded status proof until a
+  separately authorized exact health-query contract exists.
+- Local discovery confirms `/opt/homebrew/bin/gpg`,
+  `/opt/homebrew/bin/gpg-agent`, `/opt/homebrew/bin/openssl`,
+  `/usr/bin/security`, and `/bin/rm`; `age` and `shred` are absent. The selected
+  artifact cipher is OpenSSL `3.6.3` AES-256-CBC with PBKDF2, fresh salt, and
+  at least 310,000 iterations. `/bin/rm` is recorded only as unlink cleanup;
+  no APFS/SSD secure-overwrite claim is made.
+- R1-A5 is documentation-only. The retained two-file Claude output root remains
+  private evidence. It is not deleted, transmitted, or treated as authority to
+  run provider reads, database capture, restore, rollback, or shared writes.
 
 ## 5. Selected execution strategy
 
@@ -813,19 +862,19 @@ stopped validly as `BLOCKED_EVIDENCE`; it is not R1 readiness acceptance. The
 R1-A2 diagnosis result is rejected because the Claude CLI Bash runtime could
 not create its exact session-environment path. R1-A3 resolved that environment
 block, but its diagnosis is rejected because repeated tool-driven reads reached
-the model budget before producing a marker or verdict. The current gate is
-exact-three-document R1-A4 bounded one-turn input governance correction
-authoring only.
+the model budget before producing a marker or verdict. R1-A4 then passed its
+bounded one-turn transport and execution mechanics, but MacBook Codex rejects
+Claude's READY verdict as `CHANGES_REQUIRED_R1_PLAN`. The current gate is
+exact-three-document R1-A5 content correction authoring only.
 
-Verify the exact twelve-path serialized excerpt order, committed-source and
-excerpt hashes, controller-attested PR/Git/protected metadata, separate
-single-file input and two-file output roots, no-tool launcher, no
-session-environment creation, post-run input deletion/absence proof, output
-transport verification, hard cost/turn boundary, protected metadata, clean
-index, and `git diff --check`. Then request separate exact-path stage/local
-commit authorization. Normal push, revised PR instruction publication, renewed
-private transmission, another Claude diagnosis, provider read-only
-verification, encrypted rollback capture, disposable restore proof,
-conditional rollback approval, Ready, merge, migration application, history
-repair, Staging/Production write, deployment, and rollback execution remain
-separate and unauthorized.
+Verify the R1-A4 evidence record, exact 300-second authority sequence, exact
+provider/API and Supabase CLI command classes, exact accepted response fields,
+exact timeouts/retries, corrected local tool inventory, OpenSSL/APFS cleanup
+contract, protected metadata, exact three-path working-tree delta, clean index,
+and `git diff --check`. Then request separate exact-path stage/local commit
+authorization. Normal push, revised PR instruction publication, renewed private
+transmission, another Claude diagnosis, provider read-only verification,
+encrypted rollback capture, disposable restore proof, conditional rollback
+approval, Ready, merge, migration application, history repair,
+Staging/Production write, deployment, and rollback execution remain separate
+and unauthorized.

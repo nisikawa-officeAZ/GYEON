@@ -12,12 +12,13 @@ Allowed verdicts:
 - `CHANGES_REQUIRED_R1_PLAN`
 - `BLOCKED_EVIDENCE`
 
-This directive authorizes diagnosis only. The current invocation contract is
-R1-A4 in section 7.3. It supersedes the failed R1-A3 Bash/session-environment
-launcher in section 7.2. Except for the controller-owned input-bundle lifecycle
-in section 3 and output transport logging in section 7.1, it authorizes no
-file, Git, PR, provider, Supabase project, database, backup, runtime, or
-deployment mutation.
+This directive historically authorized the completed R1-A4 diagnosis under
+section 7.3. R1-A4 superseded the failed R1-A3 Bash/session-environment
+launcher in section 7.2. Its transport passed, but its READY verdict is rejected
+and corrected by the documentation-only R1-A5 contract in section 11. No new
+invocation is currently authorized. This document authorizes no file outside
+the exact governance allowlist, Git, PR, provider, Supabase project, database,
+backup, runtime, or deployment mutation.
 
 ## 2. Repository identity
 
@@ -382,3 +383,155 @@ input-bundle deletion/absence proof, and zero session-environment creation
 proof before accepting any verdict. No Claude verdict is accepted from an
 unverified or extra-file transport directory, retained input bundle, any new
 session-environment path, missing marker/verdict, budget stop, or tool use.
+
+## 11. R1-A5 Codex acceptance corrections
+
+R1-A4 transport and invocation mechanics passed, but its reported verdict
+`READY_FOR_R1_EXECUTION_GOVERNANCE` is not accepted. MacBook Codex classifies
+the diagnosis content as `CHANGES_REQUIRED_R1_PLAN`. This section supersedes
+the incomplete portions of that result. It is a documentation-only correction
+and grants no provider, Supabase, database, backup, restore, runtime, Git, PR,
+Staging, Production, or rollback action.
+
+### 11.1 R1-A4 evidence disposition
+
+- Committed execution HEAD:
+  `735278778107a7b28e1d6d25313da387388093dd`; tree:
+  `56fe9c00b38aa3f28379d921fef616adff8cb122`.
+- Published non-triggering instruction:
+  `https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469291428`.
+- Input bundle: 12 exact path blocks, 273,162 bytes, SHA-256
+  `3d347c3371f77816f1f121070418e7537395012c0c4165d9a4a70a1f1517c8e2`;
+  the exact input root was deleted and proved absent after the run.
+- Claude completed one no-tool turn in 51,277 ms for `$0.8820647`. The result
+  transport was 9,787 bytes with SHA-256
+  `970805499f833e8315bc34bcb747d620e5253cd09c135b5f6110bf7e94da352a`;
+  stderr was empty. The required marker occurred exactly once.
+- The session-environment pathname set remained unchanged: child count `291`
+  and pathname-set SHA-256
+  `b6fff36d94516937ebddbcec412047daaf1cb3c146978e133bc054bf317ef308`
+  before and after the run.
+- No repository, protected blob, Git, PR, provider, database, runtime, or
+  deployment mutation occurred. The two-file output root remains private
+  evidence and is not a reusable action authority.
+
+### 11.2 Exact five-minute decision procedure
+
+The owner must map four distinct people or accountable roles before R1
+execution. No human name is inferred. Stop Authority and Rollback Authority
+must remain separate unless the owner explicitly approves a named exception.
+
+| Deadline | Accountable role | Required action |
+|---|---|---|
+| `T+00:00` | Operator | Freeze the R1 action; record exact target ref, observed failure, execution HEAD, artifact hash, and last successful boundary. Run nothing further. |
+| `T+00:30` | Verifier | Independently compare target ref, HEAD/tree, artifact hash, protected metadata, and preflight evidence with the accepted manifest. |
+| `T+01:30` | Operator | Provide only the already-authorized bounded read-only outputs; do not gather new data outside the manifest. |
+| `T+02:30` | Verifier | Return `PASS_EXACT_MANIFEST` or `FAIL_STOP` against the literal rollback triggers. Any uncertainty is `FAIL_STOP`. |
+| `T+03:00` | Stop Authority | Choose only `CONTINUE_STOPPED` or `ESCALATE_ROLLBACK_REVIEW`; silence means `CONTINUE_STOPPED`. |
+| `T+03:30` | Rollback Authority | Verify separate pre-authorization, exact target ref, exact ciphertext/plaintext hashes, role separation, and communication readiness. Any missing item is `DENY`. |
+| `T+04:30` | Rollback Authority | Issue a recorded `APPROVE_EXACT_HASH` or `DENY`. Approval must bind the exact artifact hash and one target ref. |
+| `T+05:00` | Operator | If and only if the exact approval exists, stop and wait for the separately authorized rollback-execution gate. Otherwise remain stopped. Do not execute rollback in this decision window. |
+
+The entire decision window is exactly 300 seconds. It decides whether to seek
+the separately authorized rollback-execution gate; it never executes rollback.
+
+### 11.3 Exact provider identity and backup proof contract
+
+The later provider read-only gate may use only these exact command classes for
+Staging ref `vhiuiwolnlvlwvoaingd`:
+
+```text
+SUPABASE_TELEMETRY_DISABLED=1 supabase projects list --output-format json
+SUPABASE_TELEMETRY_DISABLED=1 supabase backups list --project-ref vhiuiwolnlvlwvoaingd --output-format json
+```
+
+If CLI output is insufficient, the only Management API fallbacks are:
+
+```text
+GET https://api.supabase.com/v1/projects/vhiuiwolnlvlwvoaingd
+GET https://api.supabase.com/v1/projects/vhiuiwolnlvlwvoaingd/database/backups
+```
+
+The bearer token must be supplied only in an `Authorization` header from a
+separate secret source. It must never appear in a command argument, output,
+manifest, Git diff, or PR comment. Accept the project identity response only if
+`ref`, `name`, `region`, `status`, and database version/engine/release-channel
+fields are present and match the canonical ledger. Accept backup evidence only
+if `region`, `walg_enabled`, `pitr_enabled`, every backup `id`,
+`is_physical_backup`, `status`, and `inserted_at`, plus the earliest/latest
+physical recovery-point timestamps when returned, are captured and redacted.
+
+The service-health endpoint is not placed on the executable allowlist because
+the locally available official reference does not expose the accepted
+`services` enum values. Project `status` is the bounded provider-status proof.
+A future health-endpoint call requires a new exact query contract after the
+enum is independently confirmed; it must not be guessed.
+
+Official references:
+
+- `https://supabase.com/docs/reference/api/v1-list-all-backups`
+- `https://supabase.com/docs/guides/platform/backups`
+- `https://supabase.com/docs/reference/api/getting-started`
+
+### 11.4 Exact live-function capture contract
+
+Supabase CLI `2.116.0` locally confirms support for
+`supabase db query --project-ref --file`. The later capture gate may therefore
+use only:
+
+```text
+SUPABASE_TELEMETRY_DISABLED=1 supabase db query --project-ref vhiuiwolnlvlwvoaingd --file <exact-mode-600-read-only-sql-file> --output-format json
+```
+
+The SQL file must be inside a fresh mode-700 evidence root outside Git. It must
+set `statement_timeout = '15000ms'` and `lock_timeout = '3000ms'`, perform only
+catalog/function-definition reads for the exact signature
+`public.save_estimate_from_wizard(uuid,uuid,jsonb)`, and contain no DDL, DML,
+transactional write, helper creation, or credential. The command has one
+attempt and a 30-second controller wall-clock deadline.
+
+### 11.5 Exact encryption, timeout, and cleanup contract
+
+Local discovery is corrected as follows:
+
+- present: `/opt/homebrew/bin/gpg`, `/opt/homebrew/bin/gpg-agent`,
+  `/opt/homebrew/bin/openssl`, `/usr/bin/security`, and `/bin/rm`;
+- absent: `age` and `shred`;
+- selected encryption implementation: OpenSSL `3.6.3`, AES-256-CBC with
+  PBKDF2, a fresh salt, and at least 310,000 iterations.
+
+The passphrase is obtained from a separate secret source and passed on standard
+input; it is never stored in Git, printed, logged, or placed in process
+arguments. The plaintext capture exists only as a mode-600 file in a fresh
+mode-700 encrypted-at-rest evidence root. After ciphertext creation, plaintext
+and ciphertext SHA-256 verification, and a successful decrypt-and-compare
+check, delete the exact plaintext with `/bin/rm` and prove it absent. Do not
+claim secure overwrite: APFS and SSD behavior makes `/bin/rm` an unlink, not a
+cryptographic erasure guarantee. The safety control is encrypted storage plus
+the shortest possible plaintext lifetime.
+
+Literal deadlines and retries:
+
+| Class | Deadline | Retry rule |
+|---|---:|---|
+| Each provider CLI/API read | 30 seconds | At most one retry for HTTP 429 or 5xx only; no retry for 401, 403, identity mismatch, or response-shape mismatch |
+| Whole provider/backup gate | 120 seconds | Stop when exhausted |
+| Live-function SQL capture | 30 seconds; SQL statement 15 seconds; lock 3 seconds | One attempt only |
+| Encryption or decrypt-compare | 60 seconds each | One attempt only |
+| Hash verification | 30 seconds | One attempt only |
+| Fresh local PostgreSQL 17 setup | 900 seconds | Failed suffix is burned |
+| Local restore and verification | 300 seconds | No same-runtime repair or retry |
+| Local cleanup and zero-residue proof | 300 seconds | Cleanup failure is terminal |
+| Whole local disposable gate | 1,800 seconds | Stop when exhausted |
+| Rollback authority decision | 300 seconds | No implied approval at timeout |
+
+### 11.6 R1-A5 decision and next gate
+
+The accepted result is
+`R1_A4_TRANSPORT_PASS_CONTENT_CHANGES_REQUIRED_R1_PLAN`. R1 execution is not
+ready. The only current authority is authoring and verifying these exact three
+governance-document corrections. Stage, local commit, normal push, revised PR
+instruction, private retransmission, Claude rerun, provider read, database
+capture, encrypted artifact creation, disposable restore, rollback approval or
+execution, Ready, merge, history repair, Staging/Production write, and
+deployment each remain separate and unauthorized.
