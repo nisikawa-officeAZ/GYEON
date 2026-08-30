@@ -4561,3 +4561,69 @@ protected_blobs:
 decision: ACCEPT_R1_C3_FOUR_ROLE_ASSIGNMENT_COMPLETE_CANDIDATE_PREAUTHORIZATION_REMAINS_INACTIVE
 next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_NAMES_ROLE_SEPARATION_INACTIVE_STATUS_NO_EXECUTION_AUTHORITY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_PUBLICATION_ACTIVATION_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C3-A2 — Exact instrument activation decision
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_A2_EXACT_INSTRUMENT_ACTIVATION
+status: R1_C3_OWNER_ACTIVATED_RECORD_CANDIDATE_UNCOMMITTED_OPERATIONAL_USE_BLOCKED
+date: 2026-08-31
+append_only: true
+authorization: "The owner explicitly approved activation of exact R1-C3 instrument SHA-256 9e23067a7b6c9a3b8b7b8c0eab489ffb9db710b23fca402c53ee944829459237 for Staging ref vhiuiwolnlvlwvoaingd only. The activation decision does not authorize rollback execution, database/provider access, R2, shared writes, Production, Ready, merge, or deployment. The owner also authorized authoring one new activation record and corresponding remediation-plan and append-only result-ledger updates only. Stage, commit, push, PR mutation, and operational-use acceptance remain separate."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  authoring_head: 3418a377c6bdacf3d00ee38867248de9ec40219b
+  authoring_tree: 439a0b01f9b86e29c16f06fe69207886bf23d636
+  base: main
+  upstream_ahead_behind: "0 0"
+activated_instrument:
+  path: docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION.md
+  commit: 3418a377c6bdacf3d00ee38867248de9ec40219b
+  tree: 439a0b01f9b86e29c16f06fe69207886bf23d636
+  git_blob: 4f8afaecce49d9162be9c274761a7f4c15e4de46
+  sha256: 9e23067a7b6c9a3b8b7b8c0eab489ffb9db710b23fca402c53ee944829459237
+target:
+  environment: Staging
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  production_ref_authorized: false
+role_assignment:
+  operator: MacBook Claude Code
+  verifier: MacBook Codex
+  stop_authority: 西川 篤志 / Owner
+  rollback_authority: 倉庫担当者 小尾野
+activation:
+  owner_decision_recorded: true
+  decision_recorded_at_utc: "2026-08-30T22:48:56Z"
+  exact_instrument_hash_approved: true
+  exact_staging_ref_approved: true
+  operational_use_blocked_until_git_delivery_verified: true
+  rollback_execution_authorized: false
+authority:
+  five_minute_review_after_future_separately_authorized_staging_apply: true
+  provider_or_database_access: false
+  decryption_or_plaintext_creation: false
+  rollback_execution: false
+  r2_staging_preflight: false
+  migration_history_write: false
+  production_action: false
+  ready_merge_deploy: false
+execution_boundary:
+  exact_three_governance_paths_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  database_or_provider_contact: false
+  shared_staging_or_production_write: false
+  transient_source_deletion: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_OWNER_ACTIVATION_DECISION_EXACT_INSTRUMENT_AND_STAGING_REF_RECORD_CANDIDATE_OPERATIONAL_USE_BLOCKED_UNTIL_GIT_DELIVERY_VERIFIED
+next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_ACTIVATION_RECORD_INSTRUMENT_COMMIT_TREE_BLOB_SHA256_TARGET_REF_ROLE_ASSIGNMENTS_DECISION_LIMITS_OPERATIONAL_BLOCK_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_PUBLICATION_OPERATIONAL_USE_ACCEPTANCE_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```

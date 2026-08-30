@@ -978,3 +978,21 @@ clean index, and `git diff --check`. Then request separate exact-path
 stage/local-commit authorization. Normal push, PR publication, activation,
 rollback execution, R2 Staging preflight, schema/history write, Ready, merge,
 deployment, and every Production action remain separate.
+
+The owner has now explicitly activated exact R1-C3 instrument SHA-256
+`9e23067a7b6c9a3b8b7b8c0eab489ffb9db710b23fca402c53ee944829459237`
+at commit `3418a377c6bdacf3d00ee38867248de9ec40219b` for exact Staging ref
+`vhiuiwolnlvlwvoaingd` only. The immutable instrument itself is not edited;
+the decision is bound in the separate
+`GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_ACTIVATION_RECORD.md`.
+
+Operational use remains blocked until the exact activation-record,
+remediation-plan, and result-ledger paths are committed together, normally
+pushed to PR `#47`, and independently verified at the remote HEAD. Verify the
+exact instrument commit/tree/blob/SHA-256, target ref, four assignments,
+decision limits, protected metadata, clean index, and `git diff --check`, then
+request separate exact-path stage/local-commit authorization.
+
+Activation permits only the 300-second decision procedure. It does not
+authorize provider/database access, rollback execution, R2 Staging preflight,
+schema/history write, Ready, merge, deployment, or any Production action.
