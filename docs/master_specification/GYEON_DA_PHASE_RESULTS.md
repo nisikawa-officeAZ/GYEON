@@ -2906,3 +2906,53 @@ boundary:
 decision: ACCEPT_DIAGNOSIS_AUTHOR_PHASE_A_SERVER_SAVE_GOVERNANCE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-A1/B-G1 — Phase-A source acceptance and Phase-B diagnosis governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PHASE_A_ACCEPTANCE_AND_PHASE_B_DIAGNOSIS_GOVERNANCE
+status: PHASE_A_ACCEPTED_COMMITTED_PUSHED_PHASE_B_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+phase_b_directive_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS_RESULT_V1
+authorization: "The owner authorized authoring the Phase-A acceptance record and the Phase-B direct-RPC/SQL read-only diagnosis directive in exactly three governance documents. Phase-B Claude transmission, SQL/migration/pgTAP/harness edits, executable verification, database/Supabase/provider access, Git delivery, PR mutation, Preview/production actions, Ready, merge, and deployment remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/44
+  pull_request_state_at_acceptance: OPEN_DRAFT
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  phase_a_source_commit: 1bb530f3105055707b7387f6492ede3078402f36
+  phase_a_source_tree: daddebc2e89919b22cdb534d1cb91c07b3474787
+  source_commit_pushed: true
+phase_a_exact_source_delta:
+  - src/components/estimates/wizard/save/wizard-save-intent-orchestrator.ts
+  - src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts
+phase_a_acceptance:
+  first_independent_focused_run: "68/94 PASS; 26 failures exposed undefined access when optional managed-family configuration sections were structurally absent."
+  repair: "Within the same two-path allowlist, a missing window-film, maintenance, room-cleaning, or car-wash section is treated as no configuration intent unless its canonical category is selected."
+  final_focused_tests: "94/94 PASS"
+  typecheck: "npm run typecheck PASS"
+  diff_check: PASS
+  decision: ACCEPTED
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+phase_b_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS.md
+phase_b_frozen_contract:
+  - "Managed families remain exactly window_film, ppf, maintenance, room_cleaning, and car_wash; coating and other remain outside this contract."
+  - "dealer_service_offerings is the dealer-owned SQL authority; missing or enabled=false means OFF, and another tenant's row cannot authorize a caller."
+  - "The RPC must derive actor and dealer from authenticated tenant authority and must not trust client offering flags, rank, UI state, or a service-role shortcut."
+  - "Disabled managed-family direct-RPC intent must fail atomically with zero estimate, item, revision, idempotency, numbering, or related mutation."
+  - "Historical migrations are immutable; any later repair is one new forward-only migration."
+  - "Later acceptance requires static evidence, pgTAP, and a fresh loopback-only PostgreSQL 17 disposable direct-RPC runtime with real claims."
+boundary:
+  - "This candidate changes exactly the three Phase-B governance paths."
+  - "No SQL, RPC, migration, pgTAP, disposable harness, application source, dependency, configuration, generated artifact, or protected path is changed."
+  - "No private transmission to Claude, test/typecheck/build/runtime execution, database/Supabase/Docker/browser/network/provider access, stage, commit, push, PR mutation, Ready, merge, or deployment is authorized or performed by this authoring gate."
+decision: ACCEPT_PHASE_A_AUTHOR_PHASE_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS_GOVERNANCE
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```

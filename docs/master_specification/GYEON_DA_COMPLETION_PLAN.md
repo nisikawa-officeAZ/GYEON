@@ -898,7 +898,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1 — all managed-service save enforcement
 
-**Status:** READ-ONLY DIAGNOSIS ACCEPTED / PHASE A SERVER-SAVE IMPLEMENTATION GOVERNANCE CANDIDATE AUTHORING AUTHORIZED — PR #42 put the existing PPF-only server-save guard on `main`; PR #43 aligned the Step-3 presentation for all five managed service families. Claude and MacBook Codex independently confirmed that the four non-PPF families still require authoritative server-save enforcement and that direct RPC/SQL enforcement remains a separate Phase B. No source implementation, test execution, SQL/RPC change, database access, Git delivery, or deployment is authorized by this authoring gate.
+**Status:** PHASE A SERVER-SAVE ENFORCEMENT ACCEPTED, COMMITTED, AND PUSHED / PHASE B DIRECT-RPC/SQL READ-ONLY DIAGNOSIS GOVERNANCE CANDIDATE AUTHORING AUTHORIZED — PR #42 put the existing PPF-only server-save guard on `main`; PR #43 aligned the Step-3 presentation for all five managed service families. Phase A now enforces all five managed families in the authoritative server-save orchestrator at commit `1bb530f3105055707b7387f6492ede3078402f36`. Direct RPC/SQL bypass resistance remains unproved and is the separate Phase B. This gate authors only the three Phase-B governance documents; it authorizes no SQL, migration, pgTAP, harness, database, provider, deployment, or Git-delivery action.
 
 **Objective:** Make the current dealer-owned offering switches one enforceable contract for every managed Estimate Wizard service family, not merely a client-side display rule.
 
@@ -991,13 +991,34 @@ The result document was excluded from harness implementation and was created lat
 
 **Phase A exit:** MacBook Codex verifies the exact three-document governance candidate and requests separate stage/local-commit authorization. Governance push, private Claude transmission, source implementation, tests, source commit/push, PR comments, Ready, merge, deployment, and Phase-B SQL work remain separate gates.
 
-**Phase B — direct RPC/SQL enforcement, queued only:**
+**Accepted Phase A source result:**
 
-- Add one new forward-only migration; never edit historical migrations in place.
-- Make `public.save_estimate_from_wizard` independently deny service lines for disabled managed families under the same dealer-owned authority.
-- Extend existing pgTAP coverage and add a dedicated disposable local-DB harness because none exists today.
-- Keep real tenant claims, role boundaries, direct-RPC bypass coverage, and fail-closed test-plan completeness mandatory.
-- Phase B is not authorized by Phase A governance or implementation approval.
+- Accepted commit: `1bb530f3105055707b7387f6492ede3078402f36`
+- Accepted tree: `daddebc2e89919b22cdb534d1cb91c07b3474787`
+- Pull request: `#44`, still `OPEN/Draft` at acceptance.
+- Exact source delta: `wizard-save-intent-orchestrator.ts` and `wizard-save-intent-orchestrator.test.ts` only.
+- The first independent focused run exposed a compatibility gap for structurally missing optional managed-family sections: `68/94` passed and `26/94` failed before acceptance. The candidate was repaired within the same two-path allowlist so missing sections carry no configuration intent unless their category is selected.
+- Final focused verification: `94/94 PASS`; `npm run typecheck PASS`; `git diff --check PASS`.
+- Protected blobs remained `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14`.
+- Phase A was locally committed and normally pushed to the PR #44 branch. It did not change SQL/RPC/migrations, access a database or provider, mark Ready, merge, or deploy.
+
+**Phase B — direct RPC/SQL enforcement, read-only diagnosis governance candidate:**
+
+- Current gate: author one bounded read-only diagnosis directive that determines the active RPC contract and the smallest later forward-only migration, pgTAP, and fresh disposable direct-RPC proof. No implementation is authorized.
+- Any later repair must add one new forward-only migration and must never edit historical migrations in place.
+- `public.save_estimate_from_wizard` must independently deny disabled managed-family intent using authenticated dealer ownership and `dealer_service_offerings`; missing and false both mean OFF.
+- Existing pgTAP coverage must be extended later, and a dedicated fresh loopback-only PostgreSQL 17 disposable harness with real tenant claims and direct RPC calls remains mandatory because no dedicated harness exists today.
+- Static inspection, pgTAP, and fresh disposable execution are separate later acceptance layers; none can be substituted by UI or server-action evidence.
+
+**Phase B governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Phase B boundary:** This authoring candidate changes only the three governance paths above. It does not transmit private files to Claude; inspect or change SQL/RPC/migrations/tests/harnesses; run tests, typecheck, build, databases, Supabase, Docker, browser, network, or provider commands; or stage, commit, push, mutate PR #44, mark Ready, merge, or deploy.
+
+**Phase B governance exit:** MacBook Codex verifies the exact three-document candidate and `git diff --check`, then requests separate exact-path stage/local-commit authorization. Governance push and the one-time private read-only Claude diagnosis require later explicit gates. SQL/test/harness implementation remains unauthorized until the diagnosis is independently accepted.
 
 ### GDA-3 — Completion Desk
 
