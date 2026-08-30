@@ -956,8 +956,24 @@ clean index, and `git diff --check`. Then request separate exact-path
 stage/local-commit authorization. Normal push and PR result publication remain
 separate.
 
-Only after the R1-C2A result record is delivered may the owner consider a
-separate R1-C3 conditional rollback pre-authorization using the existing
-five-minute role and stop-authority contract. Silence or timeout never implies
-approval. R1-C3 would not authorize rollback execution, R2 Staging preflight,
-schema/history write, Ready, merge, deployment, or any Production action.
+The R1-C3 conditional rollback pre-authorization instrument is now authored as
+a documentation candidate at
+`GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION.md`.
+It binds only the accepted bridge implementation commit/tree, exact Staging
+ref, function signature, migration hash, old/target body hashes, rollback
+ciphertext hash, decrypted capture hash, and custody-manifest hash recorded in
+that instrument.
+
+The instrument is intentionally `DRAFT_NOT_ACTIVE`. Four accountable
+identities remain owner decisions: Operator, Verifier, Stop Authority, and
+Rollback Authority. Stop Authority and Rollback Authority must remain
+separate; Operator and Verifier must remain separate. Silence, timeout,
+ambiguity, stale evidence, target/hash drift, or an unavailable role means
+`DENY_AND_REMAIN_STOPPED`.
+
+Verify the exact three-path candidate, all bound identities and hashes,
+inactive status, trigger exclusions, five-minute sequence, protected metadata,
+clean index, and `git diff --check`. Then request separate exact-path
+stage/local-commit authorization. Normal push, PR publication, role assignment,
+activation, rollback execution, R2 Staging preflight, schema/history write,
+Ready, merge, deployment, and every Production action remain separate.

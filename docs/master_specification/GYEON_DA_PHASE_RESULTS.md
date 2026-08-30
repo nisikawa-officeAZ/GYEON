@@ -4437,3 +4437,74 @@ protected_blobs:
 decision: ACCEPT_R1_C2A_LOCAL_PERSISTENT_CIPHERTEXT_AND_SEPARATE_SECRET_CUSTODY_PASS_TRANSIENT_RETAINED_DEVICE_LOSS_RECOVERY_NOT_PROVED_RECORD_CANDIDATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DURABLE_PATHS_MODES_CIPHERTEXT_AND_MANIFEST_HASHES_STREAM_ONLY_DECRYPT_MATCH_PLAINTEXT_FILE_ABSENCE_TRANSIENT_SOURCE_RETENTION_LIMITATIONS_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_RESULT_PUBLICATION_TRANSIENT_DELETION_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C3 — Conditional rollback pre-authorization instrument authoring
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION_AUTHORING
+status: R1_C3_PREAUTHORIZATION_INSTRUMENT_CANDIDATE_UNCOMMITTED_INACTIVE
+date: 2026-08-31
+append_only: true
+authorization: "After the R1-C2A exact-three-document result record was committed and normally pushed, the owner authorized creation of the R1-C3 conditional rollback pre-authorization instrument. The authorization covers one new instrument and corresponding remediation-plan and result-ledger updates only. Stage, commit, push, PR mutation, role assignment, activation, transient deletion, database/provider access, rollback execution, R2, shared write, Ready, merge, deployment, history repair, and Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  authoring_head: 79f380c3ac7dd01380209d67ce1603f63b280ae7
+  authoring_tree: 62360cae13060a827484145efc7221db99dbd7e8
+  base: main
+  upstream_ahead_behind: "0 0"
+scope_binding:
+  environment: Staging
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  implementation_commit: 7f5860600fbdd8ce1b9b4bed7f070873d1a66159
+  implementation_tree: 381f7987af498fd8bf0fe88cb97647f413932ed2
+  bridge_migration: supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql
+  bridge_migration_sha256: 7406c5f11f1feb352ceb737db7844af8904f33e7a82f9679dfed40319a528cf8
+  function_signature: public.save_estimate_from_wizard(uuid,uuid,jsonb)
+  preapply_body_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  preapply_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  target_body_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+  rollback_ciphertext_sha256: 7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c
+  decrypted_capture_sha256: 33096a6f5fc295071b8bb06d6ebcf293febd187f25aa04bb8adc9ba19e15edda
+  custody_manifest_sha256: 388c48ad91e6093f1a7dfcbe880d7733a6dbd1a407bf811f0d3c6c1cbc762d39
+role_assignment:
+  operator: OWNER_ASSIGNMENT_REQUIRED
+  verifier: OWNER_ASSIGNMENT_REQUIRED
+  stop_authority: OWNER_ASSIGNMENT_REQUIRED
+  rollback_authority: OWNER_ASSIGNMENT_REQUIRED
+  operator_verifier_separated: REQUIRED_NOT_YET_PROVED
+  stop_rollback_authorities_separated: REQUIRED_NOT_YET_PROVED
+decision_contract:
+  window_seconds: 300
+  timeout_extends_authority: false
+  silence_implies_approval: false
+  default: DENY_AND_REMAIN_STOPPED
+  final_decisions:
+    - APPROVE_EXACT_HASH
+    - DENY
+activation:
+  document_created: true
+  active: false
+  owner_role_assignment_complete: false
+  separate_exact_version_activation_recorded: false
+  rollback_execution_authorized: false
+execution_boundary:
+  exact_three_governance_paths_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  database_or_provider_contact: false
+  shared_staging_or_production_write: false
+  transient_source_deletion: false
+  r2_started: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_C3_PREAUTHORIZATION_INSTRUMENT_AUTHORING_CANDIDATE_INACTIVE_ROLE_ASSIGNMENT_AND_SEPARATE_ACTIVATION_REQUIRED
+next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_SCOPE_BINDINGS_TRIGGER_CONTRACT_ROLE_ASSIGNMENT_GAPS_INACTIVE_STATUS_FIVE_MINUTE_SEQUENCE_NO_EXECUTION_AUTHORITY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_PUBLICATION_ROLE_ASSIGNMENT_ACTIVATION_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```
