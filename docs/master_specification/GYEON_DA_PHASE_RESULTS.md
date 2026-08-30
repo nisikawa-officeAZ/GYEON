@@ -3292,3 +3292,80 @@ environment_and_release_boundary:
 decision: ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK, POST_THE_AUTHORIZED_PR_RESULT_COMMENT, THEN REQUEST_SEPARATE EXACT-PATH STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. READY, MERGE, MIGRATION_APPLICATION, PREVIEW, AND DEPLOYMENT REMAIN SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-FB-G1 — R0 forward-bridge decision and read-only diagnosis governance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_READ_ONLY_DIAGNOSIS_GOVERNANCE
+status: R0_CHANGES_REQUIRED_FORWARD_BRIDGE_FB_G1_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+authorization: "After R0 completed with zero Production writes, the owner authorized authoring the formal forward-bridge instruction. This gate changes exactly three governance paths. It does not authorize branch creation, stage, commit, push, PR creation/mutation, private evidence transmission, Claude execution, SQL/test/harness implementation, Supabase/database access, migration/history changes, backup/PITR action, Staging/Production access, Ready, merge, or deployment."
+repository:
+  source_plan_pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/46
+  source_plan_pull_request_state: MERGED
+  governance_base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  governance_base_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  current_local_commit_before_candidate: 6905ac4f859e9c5ca595822c0544f233c6dae80d
+  current_local_tree_before_candidate: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  future_branch: plan/estimate-managed-service-production-forward-bridge-r1
+  future_coordination_pr: NOT_CREATED
+r0:
+  mode: PRODUCTION_READ_ONLY
+  exact_project_name: DealerOS-Prod
+  exact_project_ref: dmvyaykhibmphrmekjbb
+  region: ap-northeast-1
+  verdict: CHANGES_REQUIRED_FORWARD_BRIDGE
+  production_write_count: 0
+  git_write_count_before_governance_authoring: 0
+  project_link_created: false
+  migration_or_history_action: false
+  live_function_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  live_prosrc_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  predecessor_prosrc_sha256: cc38e8ec48076ffaf2652c5729732b2485d9b603189083ee55a51acfb3d27959
+  target_prosrc_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+  live_metadata:
+    owner: postgres
+    security: SECURITY_INVOKER
+    language: plpgsql
+    volatility: volatile
+    parallel: unsafe
+    search_path: "pg_catalog, public, pg_temp"
+    service_role_execute: true
+    authenticated_execute: false
+    anon_execute: false
+  semantic_delta:
+    - "The live body lacks the predecessor's supplied bodySizeKey type and canonical-seven validation block."
+    - "The live body lacks the predecessor's existing-vehicle UPDATE public.vehicles SET body_size block inside the atomic save subtransaction."
+    - "The predecessor-to-target semantic addition remains the accepted set-based C.9a five-family service-offering guard."
+  dependency_check: PASS
+  remote_unrecorded_local_versions:
+    - "20260731115631"
+    - "20260801000649"
+    - "20260801110110"
+    - "20260825151059"
+    - "20260826010000"
+    - "20260826143000"
+    - "20260829101726"
+    - "20260830160000"
+governance_write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_READ_ONLY_DIAGNOSIS.md
+private_evidence_boundary:
+  stored_outside_git: true
+  owner_approval_required_before_anthropic_transmission: true
+  full_function_content_in_git_or_pr: false
+  production_requery_by_claude: false
+frozen_contract:
+  - "The two historical migrations remain immutable and the merged target is not eligible for direct Staging or Production apply."
+  - "The future bridge starts from the captured live function and adds only canonical-seven bodySizeKey validation, atomic existing-vehicle body_size persistence, and the accepted C.9a guard."
+  - "Signature, owner, SECURITY INVOKER, search_path, language, volatility, parallel mode, ACL, tenant, revision, pricing, idempotency, numbering, and atomicity remain unchanged."
+  - "The future migration must be created with supabase migration new only after a separately accepted diagnosis and explicit implementation authorization."
+boundaries:
+  - "FB-G1 currently authors governance only; no private evidence is transmitted and Claude is not invoked."
+  - "The plan's existing R1 remains restore/rollback readiness. It is suspended until a new bridge reaches accepted fresh E2 evidence."
+  - "No bulk db push, include-all, migration-directory replay, historical migration edit, migration-history repair, or protected LINE action is allowed."
+decision: AUTHOR_EXACT_THREE_DOCUMENT_FB_G1_GOVERNANCE_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_FRESH_BRANCH_CREATION_AND_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_DRAFT_PR_PRIVATE_TRANSMISSION_CLAUDE_EXECUTION_IMPLEMENTATION_DATABASE_AND_RELEASE_REMAIN_SEPARATE."
+```

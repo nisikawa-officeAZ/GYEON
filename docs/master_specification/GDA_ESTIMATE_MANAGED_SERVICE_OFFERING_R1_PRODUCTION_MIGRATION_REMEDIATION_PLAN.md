@@ -4,28 +4,33 @@
 
 | Field | Value |
 |---|---|
-| Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLANNING` |
-| Status | `PLAN_ONLY_COMPLETE_APPLY_BLOCKED_PENDING_FUNCTION_RECONCILIATION` |
+| Phase | `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_GOVERNANCE` |
+| Status | `R0_COMPLETE_FORWARD_BRIDGE_REQUIRED_FB_G1_GOVERNANCE_CANDIDATE_UNCOMMITTED` |
 | Date | 2026-08-30 |
 | Product owner | Office AZ |
 | Technical authority | MacBook Codex |
 | Implementation / executable verification | MacBook Claude only after a later explicit gate |
 | Staging | `DealerOS-Dev-Next` / `vhiuiwolnlvlwvoaingd` / `ap-northeast-1` |
 | Production | `DealerOS-Prod` / `dmvyaykhibmphrmekjbb` / `ap-northeast-1` |
-| Target migration | `supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql` |
-| Target file SHA-256 | `9319203d67ce42d8f54998b3db0e4af6c0f45ada36c7b20b7c51c047cbfcd499` |
-| Target function body SHA-256 | `df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6` |
+| Former direct target / read-only reference | `supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql` |
+| Former direct-target file SHA-256 | `9319203d67ce42d8f54998b3db0e4af6c0f45ada36c7b20b7c51c047cbfcd499` |
+| Former direct-target function body SHA-256 | `df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6` |
 | PR / merged source | PR #44 / squash commit `a0ab427c666b4197969e918a715e0d120e96f71d` |
 | Evidence level before this plan | `E2_LOCAL_DISPOSABLE_DB` |
+| R0 verdict | `CHANGES_REQUIRED_FORWARD_BRIDGE` |
+| R0 Production writes | `0` |
 
-This document authorizes only this plan file. It does not authorize source or
-migration edits, SQL execution, database writes, migration-history repair,
-Staging or Production application, fixture creation, Auth operations, Git
-stage/commit/push, PR mutation, deployment, or rollback execution.
+This authoring gate authorizes only the three governance paths below. It does
+not authorize source or migration edits, SQL execution, database writes,
+migration-history repair, Staging or Production application, fixture creation,
+Auth operations, Git stage/commit/push, branch or PR mutation, private external
+transmission, Claude execution, deployment, or rollback execution.
 
-**Literal write allowlist for this authoring gate — exactly one path:**
+**Literal write allowlist for this authoring gate — exactly three paths:**
 
-- `docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md`
+1. `docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_READ_ONLY_DIAGNOSIS.md`
 
 The binding environment identity and safety rules remain those in
 `ENVIRONMENT_LEDGER.md`. This plan narrows the general execution-mechanism
@@ -101,28 +106,62 @@ The following was observed against exact Production ref
 | Expected predecessor body SHA-256 | `cc38e8ec48076ffaf2652c5729732b2485d9b603189083ee55a51acfb3d27959` |
 | Expected target body SHA-256 | `df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6` |
 
-Required schema columns and helper functions for the accepted target were
-observed, and the live RPC contains the seven-size existing-vehicle
-`bodySizeKey` persistence markers. However, its body hash does not equal the
-expected predecessor. Object presence is not exact statement equivalence.
+Required schema columns, helper functions, the idempotency index, and the live
+RPC metadata were observed. The later exact R0 comparison corrected the earlier
+marker-only inference: the live body contains one `bodySizeKey` reference but
+does **not** contain the predecessor's supplied-value validation block or its
+existing-vehicle `UPDATE public.vehicles ... SET body_size` block. Object or
+marker presence was therefore not statement equivalence.
 
 ### Current decision
 
-`PRODUCTION_DIRECT_APPLY_BLOCKED_PENDING_EXACT_FUNCTION_RECONCILIATION`
+`PRODUCTION_DIRECT_APPLY_BLOCKED_FORWARD_BRIDGE_REQUIRED`
 
-Applying the target now could silently replace an out-of-band or later
-Production change. The mismatch must be classified before any shared database
-write.
+Applying the target now would cross an unaccepted semantic gap. R0 classified
+that gap and requires one new forward-only bridge from the captured live
+authority. No shared database write is eligible until the bridge source and its
+fresh disposable verification are separately accepted.
+
+### R0 accepted result — 2026-08-30
+
+- Exact Production ref: `dmvyaykhibmphrmekjbb` / `DealerOS-Prod` /
+  `ap-northeast-1`.
+- Live function definition SHA-256:
+  `b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a`.
+- Live canonical `prosrc` SHA-256:
+  `818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136`.
+- Expected predecessor `prosrc` SHA-256:
+  `cc38e8ec48076ffaf2652c5729732b2485d9b603189083ee55a51acfb3d27959`.
+- Accepted target `prosrc` SHA-256:
+  `df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6`.
+- Live metadata: owner `postgres`, `SECURITY INVOKER`, PL/pgSQL, volatile,
+  parallel-unsafe, `search_path=pg_catalog, public, pg_temp`, ACL exactly
+  `postgres=EXECUTE` and `service_role=EXECUTE`; `anon` and `authenticated`
+  cannot execute.
+- Semantic delta 1: live lacks predecessor body lines 345-357, which validate
+  supplied `vehicle.bodySizeKey` type and the canonical seven-size set.
+- Semantic delta 2: live lacks predecessor body lines 723-735, which persist a
+  confirmed size to an existing dealer/customer-owned vehicle inside the save
+  subtransaction.
+- The predecessor-to-target semantic addition remains the accepted C.9a
+  managed-service offering guard at target body lines 581-621.
+- All required tables, columns, helper functions, and
+  `estimates_dealer_idempotency_key_uidx` exist with the expected types.
+- Eight local migration versions remain remotely unrecorded. No migration,
+  history, link, Git, customer, or Production write occurred during R0.
 
 ## 5. Selected execution strategy
 
-The selected candidate is:
+The selected candidate is now:
 
-`EXACT_TARGET_STATEMENT_EXECUTION_WITH_SEPARATE_HISTORY_RECONCILIATION`
+`NEW_FORWARD_ONLY_BRIDGE_FROM_CAPTURED_LIVE_AUTHORITY`
 
-It is eligible only if Gate R0 proves that the live predecessor is semantically
-equivalent to the accepted source predecessor, or a separately reviewed new
-forward-only bridge migration is produced and passes the full E2 suite.
+The old exact-target-statement route is ineligible because R0 proved that the
+live function is not semantically equivalent to the expected predecessor. One
+new Supabase-CLI-generated migration must begin from the captured live function
+and add only the two accepted body-size blocks plus the accepted C.9a guard. It
+must pass a fresh full E2 disposable suite before R1 restore readiness or any
+shared-environment gate can begin.
 
 The following alternatives are rejected for this release:
 
@@ -175,6 +214,58 @@ predecessor and differs from the target only by the accepted C.9a guard.
 from the reconciled live authority plus the accepted C.9a guard, then repeat
 the complete local disposable verification under a new explicit phase. Do not
 apply the currently merged target file.
+
+**R0 result:** `CHANGES_REQUIRED_FORWARD_BRIDGE`. The live function lacks the
+two accepted existing-vehicle body-size blocks described in section 4. The
+currently merged target file is permanently ineligible for direct Staging or
+Production application under this plan.
+
+### FB-G1 — Forward-bridge read-only diagnosis governance
+
+**Mode:** Governance authoring now; one bounded MacBook Claude read-only
+diagnosis only after separate Git delivery and private-transmission approvals.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_READ_ONLY_DIAGNOSIS.md`
+
+**Diagnosis objective:** Independently classify the exact captured live,
+predecessor, and target bodies; define one deterministic bridge-construction
+algorithm; preserve the live signature/security/ACL/metadata; and return the
+smallest later migration, pgTAP, and disposable-harness write allowlists.
+
+**Private evidence boundary:** The full live function evidence stays outside
+Git. It may be sent to Anthropic only after explicit owner approval and only
+through the literal private-evidence allowlist in the FB-G1 directive. The
+report must contain hashes and semantic summaries, never the full function.
+
+**Current authoring boundary:** This gate creates or updates only the three
+governance files above. It does not create a branch, stage, commit, push, create
+or mutate a PR, transmit private evidence, invoke Claude, edit SQL/tests/harness,
+run tests, access Supabase, or apply any database or history change.
+
+**Exit:** Verify the exact three-document diff, directive consistency,
+protected metadata, and `git diff --check`; then request separate exact-path
+fresh-branch creation plus stage/local-commit authorization. Normal push, Draft
+PR creation, private external transmission, Claude execution, forward-bridge
+implementation, fresh disposable execution, and every shared-environment
+action remain later gates.
+
+### FB-I1 — Future forward-bridge implementation and E2 acceptance
+
+FB-I1 is not authorized by this document. It becomes eligible only if the
+FB-G1 read-only result is independently accepted. The future implementation
+must create one new migration with `supabase migration new`, leave both
+historical migration files immutable, and pass the exact static, pgTAP,
+PostgreSQL 17 disposable, real Auth/PostgREST, direct-RPC,
+separate-connection, cleanup, and evidence-integrity gates approved from FB-G1.
+
+R1-R10 below are suspended until FB-I1 has an accepted source body hash and
+fresh E2 evidence. When they resume, every reference to the apply artifact must
+mean the accepted bridge migration, not
+`20260830160000_estimate_managed_service_offering_guard.sql`.
 
 ### R1 — Restore and rollback readiness
 
@@ -392,9 +483,13 @@ Stop immediately, make no same-run repair, and do not retry when:
 
 ## 10. Immediate next gate
 
-The next eligible gate is **R0 — exact live-function reconciliation**, and it
-is read-only. Its future literal write allowlist is empty. It may create only
-private temporary evidence outside Git and a later redacted result document
-after separate authorization.
+R0 is complete with `CHANGES_REQUIRED_FORWARD_BRIDGE`.
 
-Until R0 passes, no Staging or Production apply instruction may be issued.
+The next eligible gate is **FB-G1 — forward-bridge read-only diagnosis
+governance**. Its current literal write allowlist is exactly the three
+governance paths listed above. This authoring gate does not authorize stage,
+commit, push, PR creation/mutation, private external transmission, Claude
+execution, SQL implementation, tests, Supabase, or database access.
+
+Until FB-I1 reaches accepted fresh E2 evidence, no R1 restore-readiness,
+Staging, or Production apply instruction may be issued.
