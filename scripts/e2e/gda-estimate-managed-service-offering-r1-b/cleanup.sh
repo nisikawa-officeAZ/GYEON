@@ -357,6 +357,16 @@ rm -f "$EVIDENCE_DIR/supabase-status.env" "$EVIDENCE_DIR/.start.raw.log" \
       "$EVIDENCE_DIR/migration-manifest.txt"
 
 if [[ "$WAS_BURNED" == "false" ]]; then
+  [[ -f "$EVIDENCE_DIR/pgtap-canonical-atomic-save.tap" ]] || fail "canonical atomic-save TAP evidence is missing before canonical artifact packaging"
+  [[ -f "$EVIDENCE_DIR/pgtap-offering-guard.tap" ]] || fail "offering-guard TAP evidence is missing before canonical artifact packaging"
+  {
+    cat "$EVIDENCE_DIR/pgtap-canonical-atomic-save.tap"
+    printf '\n'
+    cat "$EVIDENCE_DIR/pgtap-offering-guard.tap"
+  } > "$EVIDENCE_DIR/pgtap.tap"
+  rm -f "$EVIDENCE_DIR/pgtap-canonical-atomic-save.tap" \
+        "$EVIDENCE_DIR/pgtap-offering-guard.tap" \
+        "$EVIDENCE_DIR/canonical-atomic-save-results.ndjson"
   rm -f "$EVIDENCE_DIR/attempt-completed.txt" \
         "$EVIDENCE_DIR/migration-replay-outcome.ndjson" \
         "$EVIDENCE_DIR/real-auth.stderr.txt" \
