@@ -273,6 +273,48 @@ fresh disposable verification are separately accepted.
   post-run transport verification passes with exactly two files and no secret
   material.
 
+### R1-A3 Claude CLI Bash session-environment correction — 2026-08-30
+
+- R1-A2 was committed and pushed at HEAD
+  `9a1a819059872fffc5271b059aec6540b7d10867`, tree
+  `d5d6271ae662c537318a5c02391b951928b40c59`, then published to PR #47 as
+  instruction comment
+  `https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469125404`
+  with status `PUBLISHED_NOT_INVOKED`.
+- The owner explicitly approved the directive-authorized twelve-file Anthropic
+  transmission and one R1-A2 diagnosis. The first launcher preflight stopped
+  before any model invocation because the empty MCP configuration shape was
+  invalid. Its result file remained zero bytes; stderr was 97 bytes with
+  SHA-256
+  `527402a1802b7997c67036cd7e8e596f497547ae44b649ce8a135201ebc6f59b`.
+- A corrected launcher then reached Anthropic and exited successfully after
+  `19,891 ms`, six turns, and cost `$0.0626758`, but returned no required result
+  marker and no allowed verdict. MacBook Codex therefore rejected it as
+  `BLOCKED_ENVIRONMENT_NOT_R1_READINESS`.
+- Claude reported that every Bash attempt failed before the repository gate
+  with
+  `EPERM: operation not permitted, mkdir '/Users/atsushinishikawa/.claude/session-env/a0de36ce-e60d-4d33-9b0e-cd975353f1f6'`.
+  Claude also reported no source-file read, no file edit, and no external
+  service contact beyond the Anthropic model call. Web search/fetch remained
+  zero.
+- The rejected result JSON was 2,908 bytes with SHA-256
+  `97ffe429ef5647c44f21d2f9146b7af48b9e73b5ec8e8da73f42558cbd809cfd`;
+  stderr was empty with SHA-256
+  `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+  MacBook Codex independently confirmed clean Git state, upstream `0 0`, the
+  exact execution HEAD/tree, unchanged protected blobs, and `git diff --check`.
+- R1-A3 authorizes no broad `.claude` write. For one invocation, MacBook Codex
+  supplies a fresh fixed `--session-id`, proves its exact
+  `/Users/atsushinishikawa/.claude/session-env/<uuid>` path absent, creates only
+  that mode-700 path, grants write access only there, and never reads or
+  transmits its contents. After Claude exits, Codex inspects metadata only,
+  deletes that exact UUID path, and proves zero residue. A failed UUID is never
+  reused.
+- The separate result/stderr transport contract remains exactly two mode-600
+  files in one fresh mode-700 root. Session-environment runtime infrastructure
+  is never retained evidence and never expands repository, credential,
+  provider, database, migration, harness, or deployment authority.
+
 ## 5. Selected execution strategy
 
 The selected candidate is now:
@@ -730,13 +772,16 @@ as `READY_FOR_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE`.
 
 FB-I1-E2 is accepted as `E2_LOCAL_DISPOSABLE_DB`. The first R1 diagnosis
 stopped validly as `BLOCKED_EVIDENCE`; it is not R1 readiness acceptance. The
-current gate is exact-three-document R1-A2 post-run transport-hash governance
-correction authoring only.
+R1-A2 diagnosis result is rejected because the Claude CLI Bash runtime could
+not create its exact session-environment path. The current gate is
+exact-three-document R1-A3 ephemeral session-environment governance correction
+authoring only.
 
 Verify the corrected bootstrap/read order, controller-attested PR boundary,
 literal Git metadata commands, exact three-path proof command, two-file
-transport-log exception, post-run controller hash responsibility, protected
-metadata, clean index, and
+transport-log exception, post-run controller hash responsibility, fresh fixed
+session UUID, exact-path-only mode-700 runtime lifecycle, content non-read,
+post-run exact deletion/absence proof, protected metadata, clean index, and
 `git diff --check`. Then request separate exact-path stage/local commit
 authorization. Normal push, revised PR instruction publication, renewed
 private transmission, another Claude diagnosis, provider read-only

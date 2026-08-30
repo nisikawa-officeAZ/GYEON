@@ -13,9 +13,10 @@ Allowed verdicts:
 - `BLOCKED_EVIDENCE`
 
 This directive authorizes diagnosis only. Except for the exact
-controller-owned transport logging in section 7.1, it authorizes no file, Git,
-PR, provider, Supabase project, database, backup, runtime, or deployment
-mutation.
+controller-owned transport logging in section 7.1 and the exact ephemeral
+Claude CLI Bash session-environment lifecycle in section 7.2, it authorizes no
+file, Git, PR, provider, Supabase project, database, backup, runtime, or
+deployment mutation.
 
 ## 2. Repository identity
 
@@ -164,6 +165,50 @@ transport files must contain no credentials, environment values, database
 rows, or protected-path content; retain or remove them only under the
 controller's explicit cleanup decision.
 
+### 7.2 Exact ephemeral Claude CLI Bash session-environment exception
+
+Claude Code `2.1.226` creates a local Bash session-environment path before its
+first permitted Bash command. Without that path, the Bash tool stops with
+`EPERM` before the repository identity gate can run. This is Claude CLI runtime
+infrastructure, not repository evidence and not a Claude-directed content
+write.
+
+For one invocation only, MacBook Codex must:
+
+1. generate one fresh UUID and pass it with `--session-id <uuid>`;
+2. prove the exact path
+   `/Users/atsushinishikawa/.claude/session-env/<uuid>` does not exist;
+3. create exactly that directory as controller-owned mode `700` infrastructure;
+4. grant write access only to that exact UUID path for the bounded invocation;
+5. use `--no-session-persistence`, `--safe-mode`, `--disable-slash-commands`,
+   and `--no-chrome`;
+6. permit no MCP server and no background or subagent session;
+7. after Claude exits, inspect only pathname/type/mode/count metadata, never
+   file contents, and delete only that exact UUID path; and
+8. prove that exact UUID path no longer exists.
+
+No Claude or Codex step may read, print, copy, hash, transmit, or infer the
+contents of the session-environment path. No sibling under
+`/Users/atsushinishikawa/.claude/session-env`, no other `.claude` path, and no
+credential, Keychain item, shell history, environment file, or user setting is
+authorized. If the exact UUID path already exists, if any write escapes it, or
+if exact-path deletion or absence proof fails, stop with `BLOCKED_EVIDENCE`.
+Do not reuse a failed UUID.
+
+At invocation, MacBook Codex supplies the UUID and exact session-environment
+path as controller attestation. Claude must report:
+
+- the expected session-environment path;
+- that it did not read or transmit session-environment content;
+- that final cleanup is
+  `POST_RUN_CONTROLLER_SESSION_ENV_CLEANUP_REQUIRED`; and
+- that every repository, Git, provider, Supabase, database, deployment, and
+  non-allowlisted file mutation remained false.
+
+The section 7.1 transport directory still must contain exactly two files. The
+ephemeral session-environment path is a separate controller/runtime lifecycle
+and is never counted as a transport artifact or accepted as retained evidence.
+
 ## 8. Required diagnosis
 
 ### 8.1 Backup and recovery-point proof
@@ -250,8 +295,10 @@ owner approval question. Separate:
 
 - No Claude-tool file edit, creation, deletion, chmod, stage, commit, push, PR
   mutation, branch mutation, stash, restore, reset, or cleanup. The only file
-  creation exception is the exact controller-owned transport logging contract
-  in section 7.1; it grants no repository or evidence-content write.
+  lifecycle exceptions are the exact controller-owned transport logging
+  contract in section 7.1 and the exact controller-bounded Claude CLI runtime
+  session-environment lifecycle in section 7.2; neither grants repository,
+  evidence-content, credential, or general `.claude` write authority.
 - No private evidence transmission beyond the approved read allowlist.
 - No credential, token, password, JWT, connection string, environment file,
   shell history, Keychain secret, or dashboard-session read.
@@ -280,12 +327,15 @@ Return:
 8. exact five-minute roles/decision procedure and unresolved owner decisions;
 9. literal future allowlists, evidence schema, stop/cleanup/cost boundaries;
 10. mutation matrix proving every prohibited class remained false, plus the
-    controller-attested expected transport count/modes and the literal final
-    hash status `POST_RUN_CONTROLLER_VERIFICATION_REQUIRED`; and
+    controller-attested expected transport count/modes, the literal final hash
+    status `POST_RUN_CONTROLLER_VERIFICATION_REQUIRED`, the exact expected
+    session-environment path, and the literal cleanup status
+    `POST_RUN_CONTROLLER_SESSION_ENV_CLEANUP_REQUIRED`; and
 11. the single precise next owner-approval question.
 
 Stop after returning the result. Do not perform any future execution step.
 
-MacBook Codex must append its separate post-run transport verification before
-accepting any verdict. No Claude verdict is accepted from an unverified or
-extra-file transport directory.
+MacBook Codex must append its separate post-run transport verification and
+exact session-environment deletion/absence proof before accepting any verdict.
+No Claude verdict is accepted from an unverified or extra-file transport
+directory, a reused session UUID, or a retained session-environment path.

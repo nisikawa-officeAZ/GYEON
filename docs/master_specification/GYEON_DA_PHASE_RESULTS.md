@@ -3883,3 +3883,96 @@ protected_blobs:
 decision: AUTHOR_EXACT_THREE_DOCUMENT_R1_A2_POST_RUN_TRANSPORT_HASH_CORRECTION_CANDIDATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_POST_RUN_HASH_RESPONSIBILITY_BOOTSTRAP_ORDER_LITERAL_COMMAND_ALLOWLIST_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_TRANSMISSION_CLAUDE_INVOCATION_PROVIDER_READS_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-A3 — Claude CLI session-environment correction candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_CLAUDE_CLI_SESSION_ENV_GOVERNANCE_CORRECTION
+status: R1_A3_BLOCKED_ENVIRONMENT_ACCEPTED_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly approved transmission of the directive-authorized twelve private Git files to Anthropic Claude Code and one R1-A2 read-only diagnosis. After MacBook Codex rejected the markerless environment-blocked result, the owner explicitly authorized correction of the same exact three governance files only to add a fresh fixed Claude CLI session UUID, exact-path-only ephemeral session-env creation, metadata-only verification, exact cleanup, and zero-residue proof. Stage, commit, push, revised PR comment, renewed private transmission, another Claude invocation, broad .claude access, credential read, provider/Supabase/database access, runtime, restore, Ready, merge, deployment, history repair, and rollback remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_controller_preflight: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  diagnosis_head: 9a1a819059872fffc5271b059aec6540b7d10867
+  diagnosis_tree: d5d6271ae662c537318a5c02391b951928b40c59
+  predecessor: 998d17de891ca5c8b339f18288b6fd4416281d14
+  upstream_ahead_behind_after_diagnosis: "0 0"
+  exact_governance_delta_path_count: 3
+published_instruction:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469125404
+  marker: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_A2_RESTORE_READINESS_READ_ONLY_DIAGNOSIS_INSTRUCTION_V1
+  status: PUBLISHED_INVOKED_RESULT_REJECTED_SUPERSEDE_BEFORE_RETRY
+launcher_preflight_stop:
+  process_exit: 1
+  model_invoked: false
+  result_bytes: 0
+  stderr_bytes: 97
+  stderr_sha256: 527402a1802b7997c67036cd7e8e596f497547ae44b649ce8a135201ebc6f59b
+  cause: INVALID_EMPTY_MCP_CONFIGURATION_SHAPE
+  cost_usd: 0
+claude_result:
+  required_marker_present: false
+  allowed_verdict_present: false
+  codex_classification: BLOCKED_ENVIRONMENT_NOT_R1_READINESS
+  process_exit: 0
+  duration_ms: 19891
+  turns: 6
+  cost_usd: 0.0626758
+  web_search_requests: 0
+  web_fetch_requests: 0
+  result_bytes: 2908
+  result_sha256: 97ffe429ef5647c44f21d2f9146b7af48b9e73b5ec8e8da73f42558cbd809cfd
+  stderr_bytes: 0
+  stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  reported_source_files_read: 0
+  reported_file_edits: 0
+  reported_external_service_contacts_except_anthropic: 0
+environment_block:
+  cli_version: 2.1.226
+  operation: CLAUDE_BASH_SESSION_ENV_INITIALIZATION
+  error: "EPERM mkdir /Users/atsushinishikawa/.claude/session-env/a0de36ce-e60d-4d33-9b0e-cd975353f1f6"
+  failed_session_uuid_burned: a0de36ce-e60d-4d33-9b0e-cd975353f1f6
+r1_a3_contract:
+  controller_preflight:
+    - GENERATE_FRESH_FIXED_SESSION_UUID
+    - PASS_EXACT_UUID_WITH_CLAUDE_SESSION_ID_OPTION
+    - PROVE_EXACT_SESSION_ENV_PATH_ABSENT
+    - CREATE_ONLY_EXACT_MODE_700_SESSION_ENV_PATH
+    - GRANT_WRITE_ONLY_TO_EXACT_UUID_PATH
+  invocation:
+    - NO_SESSION_PERSISTENCE
+    - SAFE_MODE
+    - SLASH_COMMANDS_DISABLED
+    - CHROME_DISABLED
+    - MCP_DISABLED
+    - NO_BACKGROUND_OR_SUBAGENT
+    - NEVER_READ_PRINT_COPY_HASH_OR_TRANSMIT_SESSION_ENV_CONTENT
+  controller_post_run:
+    - INSPECT_PATHNAME_TYPE_MODE_COUNT_METADATA_ONLY
+    - DELETE_ONLY_EXACT_UUID_PATH
+    - PROVE_EXACT_PATH_ABSENT
+    - DO_NOT_REUSE_FAILED_UUID
+  claude_literal_status: POST_RUN_CONTROLLER_SESSION_ENV_CLEANUP_REQUIRED
+  transport_contract_unchanged: EXACTLY_TWO_MODE_600_FILES_IN_FRESH_MODE_700_ROOT
+execution_boundary:
+  broad_claude_directory_access: false
+  credential_keychain_history_or_environment_content_read: false
+  repository_or_git_mutation: false
+  provider_access: false
+  supabase_or_database_access: false
+  runtime_or_restore: false
+  staging_or_production_write: false
+  ready: false
+  merged: false
+  deployed: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_MARKERLESS_ENVIRONMENT_BLOCK_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A3_SESSION_ENV_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_FIXED_SESSION_UUID_EXACT_PATH_ONLY_RUNTIME_LIFECYCLE_CONTENT_NON_READ_POST_RUN_EXACT_DELETE_ABSENCE_PROOF_TRANSPORT_CONTRACT_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_TRANSMISSION_CLAUDE_RETRY_PROVIDER_READS_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```
