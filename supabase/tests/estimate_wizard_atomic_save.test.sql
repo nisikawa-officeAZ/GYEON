@@ -24,7 +24,7 @@ GRANT USAGE ON SCHEMA r56c_pgtap TO authenticated, service_role;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA r56c_pgtap TO authenticated, service_role;
 SET LOCAL search_path = r56c_pgtap, pg_temp, public, auth, extensions;
 
-SELECT plan(175);
+SELECT plan(217);
 
 -- ─── Fixtures ───────────────────────────────────────────────────────────────
 CREATE TEMP TABLE t_ids (k text PRIMARY KEY, v uuid);
@@ -73,6 +73,42 @@ INSERT INTO public.dealer_members (dealer_id, user_id, role, status) VALUES
 INSERT INTO public.dealer_staff (dealer_id, user_id, role, status) VALUES
   (pg_temp.uid('dealer_a'), pg_temp.uid('u_promoted'), 'owner',    'active'),
   (pg_temp.uid('dealer_a'), pg_temp.uid('u_demoted'),  'readonly', 'active');
+
+-- ─── R1-B-R2: dealer_service_offerings fixtures ────────────────────────────
+-- Every canonical payload() line above carries category 'maintenance'. Section
+-- 13 below adds an independent direct-RPC offering guard, so dealers A-E must
+-- each carry an enabled 'maintenance' offering row here or every section 1-12
+-- assertion above would regress under the new guard. This is additive fixture
+-- setup only; it changes no existing assertion.
+INSERT INTO public.dealer_service_offerings (dealer_id, family, enabled) VALUES
+  (pg_temp.uid('dealer_a'), 'maintenance', true),
+  (pg_temp.uid('dealer_b'), 'maintenance', true),
+  (pg_temp.uid('dealer_c'), 'maintenance', true),
+  (pg_temp.uid('dealer_d'), 'maintenance', true),
+  (pg_temp.uid('dealer_e'), 'maintenance', true);
+
+-- Dedicated dealers F/G/H isolate section 13's offering-guard assertions from
+-- every sequence/number/fixture assumption made in sections 1-12.
+INSERT INTO t_ids (k, v) VALUES
+  ('dealer_f',   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+  ('u_owner_f',  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  ('dealer_g',   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'),
+  ('u_owner_g',  'ffffffff-ffff-4fff-8fff-ffffffffffff'),
+  ('dealer_h',   '00000000-0000-4000-8000-000000000000'),
+  ('u_owner_h',  '3f3f3f3f-3f3f-43f3-83f3-3f3f3f3f3f3f');
+
+INSERT INTO auth.users (id, email)
+SELECT v, k || '@example.test' FROM t_ids WHERE k IN ('u_owner_f', 'u_owner_g', 'u_owner_h');
+
+INSERT INTO public.dealers (id, name) VALUES
+  (pg_temp.uid('dealer_f'), 'Dealer F (offering guard: single family)'),
+  (pg_temp.uid('dealer_g'), 'Dealer G (offering guard: mixed / cross-tenant source)'),
+  (pg_temp.uid('dealer_h'), 'Dealer H (offering guard: no rows / cross-tenant target)');
+
+INSERT INTO public.dealer_members (dealer_id, user_id, role, status) VALUES
+  (pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), 'owner', 'active'),
+  (pg_temp.uid('dealer_g'), pg_temp.uid('u_owner_g'), 'owner', 'active'),
+  (pg_temp.uid('dealer_h'), pg_temp.uid('u_owner_h'), 'owner', 'active');
 
 -- ─── R64A-F1 sequence-selection fixtures (session role; RLS is bypassed) ────
 -- Dealer D proves the DETERMINISTIC configuration pick. Two estimate rows whose
@@ -209,6 +245,34 @@ CREATE OR REPLACE FUNCTION pg_temp.existing_vehicle_payload(
                '{vehicle,mode}', '"existing"'),
              '{vehicle,vehicleId}', to_jsonb(pg_temp.rid('veh_a1')::text)),
            '{vehicle,bodySizeKey}', p_body_size);
+$$;
+
+-- R1-B-R2: single-line payload with a caller-chosen category, reusing the
+-- canonical payload's shape. wizardCategory mirrors category, matching how
+-- the orchestrator/DTO always pair them; manualPricingIdentity stays the
+-- canonical free-text string since C.7 never requires it to match category.
+CREATE OR REPLACE FUNCTION pg_temp.category_payload(p_key text, p_category text)
+RETURNS jsonb LANGUAGE sql STABLE AS $$
+  SELECT jsonb_set(
+           jsonb_set(
+             jsonb_set(pg_temp.payload(p_key),
+               '{services,0,category}', to_jsonb(p_category)),
+             '{services,0,wizardCategory}', to_jsonb(p_category)),
+           '{services,0,lineId}', to_jsonb('manual:' || p_category || ':line-a'));
+$$;
+
+-- R1-B-R2: a two-line payload for the mixed-payload rejection case. Both
+-- lines carry distinct lineIds so C.7's duplicate-lineId guard never fires.
+CREATE OR REPLACE FUNCTION pg_temp.two_category_payload(
+  p_key text, p_category_1 text, p_category_2 text
+) RETURNS jsonb LANGUAGE sql STABLE AS $$
+  SELECT jsonb_set(
+           pg_temp.category_payload(p_key, p_category_1),
+           '{services}',
+           (pg_temp.category_payload(p_key, p_category_1) -> 'services') ||
+           jsonb_build_array(jsonb_set(
+             pg_temp.category_payload(p_key, p_category_2) -> 'services' -> 0,
+             '{lineId}', to_jsonb('manual:' || p_category_2 || ':line-b'))));
 $$;
 
 -- B7-0A: THREE arguments. The estimate number is no longer a parameter -- the RPC
@@ -934,8 +998,279 @@ DROP TRIGGER c3b_fault_trg ON public.estimate_items;
 SELECT is((SELECT body_size FROM public.vehicles WHERE id = pg_temp.rid('veh_a1')),
   'M', 'post-update failure rolls the existing vehicle size back atomically');
 
+-- ═══ 13. R1-B-R2: direct-RPC managed-service offering guard (C.9a) ═════════
+-- Dedicated dealers F/G/H isolate this section from every sequence/number/
+-- fixture assumption made by sections 1-12 above. Dealers A-E already gained
+-- an enabled 'maintenance' offering in the fixtures above so none of those
+-- sections regress under the new guard.
+
+-- ── 13a/13g. Category -> family mapping; missing/false/true; zero mutation ──
+-- One representative reject/reject/permit cycle per family. The exact
+-- category -> family mapping is pinned BY this behavior: a category maps to
+-- exactly the family whose enabled state controls that category's own save.
+-- The window case additionally proves a disabled-family rejection allocates
+-- no document number and writes no customer, vehicle, estimate, or item.
+
+-- Server-owned lifecycle-revision reader for the zero-mutation proofs below.
+-- Direct lifecycle/fixture reads run under the session (superuser) role.
+-- Every save RPC runs under service_role, matching sections 1-12 and the
+-- production-only EXECUTE contract. RESET ROLE / SET LOCAL ROLE boundaries
+-- below are therefore part of the test authority, not incidental setup.
+CREATE OR REPLACE FUNCTION pg_temp.lifecycle_rev(p_dealer uuid)
+RETURNS bigint LANGUAGE sql STABLE AS $$
+  SELECT current_configuration_revision FROM public.dealer_wizard_catalog_lifecycle WHERE dealer_id = p_dealer;
+$$;
+CREATE TEMP TABLE t_life_counts (k text PRIMARY KEY, l bigint);
+
+-- window -> window_film (also proves zero mutation on rejection)
+CREATE TEMP TABLE t_offering_seq (k text PRIMARY KEY, v bigint);
+INSERT INTO t_offering_seq VALUES ('before_window_reject', pg_temp.seq(pg_temp.uid('dealer_f')));
+CREATE TEMP TABLE t_offering_counts (k text PRIMARY KEY, c bigint, e bigint, v bigint, i bigint);
+INSERT INTO t_offering_counts SELECT 'before_window_reject',
+  (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),
+  (SELECT count(*) FROM public.vehicles),  (SELECT count(*) FROM public.estimate_items);
+INSERT INTO t_life_counts VALUES ('before_window_missing_reject', pg_temp.lifecycle_rev(pg_temp.uid('dealer_f')));
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offwindowkey0001', 'window')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'window: missing dealer_service_offerings row -> service-not-offered');
+RESET ROLE;
+INSERT INTO t_life_counts VALUES ('after_window_missing_reject', pg_temp.lifecycle_rev(pg_temp.uid('dealer_f')));
+SELECT is((SELECT l FROM t_life_counts WHERE k='after_window_missing_reject'), (SELECT l FROM t_life_counts WHERE k='before_window_missing_reject'),
+  'the missing-row rejection does not advance the dealer''s configuration-revision lifecycle');
+SELECT is(pg_temp.seq(pg_temp.uid('dealer_f')), (SELECT v FROM t_offering_seq WHERE k='before_window_reject'),
+  'the missing-row rejection allocated zero document numbers');
+INSERT INTO t_offering_counts SELECT 'after_window_reject',
+  (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),
+  (SELECT count(*) FROM public.vehicles),  (SELECT count(*) FROM public.estimate_items);
+SELECT is((SELECT c FROM t_offering_counts WHERE k='after_window_reject'), (SELECT c FROM t_offering_counts WHERE k='before_window_reject'), 'the missing-row rejection wrote no customer');
+SELECT is((SELECT v FROM t_offering_counts WHERE k='after_window_reject'), (SELECT v FROM t_offering_counts WHERE k='before_window_reject'), 'the missing-row rejection wrote no vehicle');
+SELECT is((SELECT e FROM t_offering_counts WHERE k='after_window_reject'), (SELECT e FROM t_offering_counts WHERE k='before_window_reject'), 'the missing-row rejection wrote no estimate');
+SELECT is((SELECT i FROM t_offering_counts WHERE k='after_window_reject'), (SELECT i FROM t_offering_counts WHERE k='before_window_reject'), 'the missing-row rejection wrote no items');
+SELECT ok(NOT EXISTS (SELECT 1 FROM public.estimates WHERE dealer_id = pg_temp.uid('dealer_f') AND idempotency_key = 'offwindowkey0001'),
+  'the missing-row rejection left no idempotency/estimate record for that key');
+INSERT INTO public.dealer_service_offerings (dealer_id, family, enabled) VALUES (pg_temp.uid('dealer_f'), 'window_film', false);
+INSERT INTO t_life_counts VALUES ('before_window_disabled_reject', pg_temp.lifecycle_rev(pg_temp.uid('dealer_f')));
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offwindowkey0001', 'window')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'window: enabled=false -> service-not-offered');
+RESET ROLE;
+INSERT INTO t_life_counts VALUES ('after_window_disabled_reject', pg_temp.lifecycle_rev(pg_temp.uid('dealer_f')));
+SELECT is((SELECT l FROM t_life_counts WHERE k='after_window_disabled_reject'), (SELECT l FROM t_life_counts WHERE k='before_window_disabled_reject'),
+  'the enabled=false rejection does not advance the dealer''s configuration-revision lifecycle (snapshot taken AFTER the offering-disable commit)');
+UPDATE public.dealer_service_offerings SET enabled = true WHERE dealer_id = pg_temp.uid('dealer_f') AND family = 'window_film';
+SET LOCAL ROLE service_role;
+SELECT is(
+  (pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offwindowkey0001', 'window')) ->> 'idempotent_replay'),
+  'false', 'window -> window_film: enabled=true permits a genuinely new save');
+RESET ROLE;
+
+-- ppf -> ppf
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offppfkey00000001', 'ppf')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'ppf: missing dealer_service_offerings row -> service-not-offered');
+RESET ROLE;
+INSERT INTO public.dealer_service_offerings (dealer_id, family, enabled) VALUES (pg_temp.uid('dealer_f'), 'ppf', false);
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offppfkey00000001', 'ppf')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'ppf: enabled=false -> service-not-offered');
+RESET ROLE;
+UPDATE public.dealer_service_offerings SET enabled = true WHERE dealer_id = pg_temp.uid('dealer_f') AND family = 'ppf';
+SET LOCAL ROLE service_role;
+SELECT is(
+  (pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offppfkey00000001', 'ppf')) ->> 'idempotent_replay'),
+  'false', 'ppf -> ppf: enabled=true permits a genuinely new save');
+RESET ROLE;
+
+-- maintenance -> maintenance (dealer_f, independent of dealers A-E's rows)
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offmaintkey000001', 'maintenance')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'maintenance: missing dealer_service_offerings row -> service-not-offered');
+RESET ROLE;
+INSERT INTO public.dealer_service_offerings (dealer_id, family, enabled) VALUES (pg_temp.uid('dealer_f'), 'maintenance', false);
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offmaintkey000001', 'maintenance')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'maintenance: enabled=false -> service-not-offered');
+RESET ROLE;
+UPDATE public.dealer_service_offerings SET enabled = true WHERE dealer_id = pg_temp.uid('dealer_f') AND family = 'maintenance';
+SET LOCAL ROLE service_role;
+SELECT is(
+  (pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offmaintkey000001', 'maintenance')) ->> 'idempotent_replay'),
+  'false', 'maintenance -> maintenance: enabled=true permits a genuinely new save');
+RESET ROLE;
+
+-- roomclean -> room_cleaning
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offroomckey000001', 'roomclean')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'roomclean: missing dealer_service_offerings row -> service-not-offered');
+RESET ROLE;
+INSERT INTO public.dealer_service_offerings (dealer_id, family, enabled) VALUES (pg_temp.uid('dealer_f'), 'room_cleaning', false);
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offroomckey000001', 'roomclean')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'roomclean: enabled=false -> service-not-offered');
+RESET ROLE;
+UPDATE public.dealer_service_offerings SET enabled = true WHERE dealer_id = pg_temp.uid('dealer_f') AND family = 'room_cleaning';
+SET LOCAL ROLE service_role;
+SELECT is(
+  (pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offroomckey000001', 'roomclean')) ->> 'idempotent_replay'),
+  'false', 'roomclean -> room_cleaning: enabled=true permits a genuinely new save');
+RESET ROLE;
+
+-- carwash -> car_wash
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offcarwkey0000001', 'carwash')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'carwash: missing dealer_service_offerings row -> service-not-offered');
+RESET ROLE;
+INSERT INTO public.dealer_service_offerings (dealer_id, family, enabled) VALUES (pg_temp.uid('dealer_f'), 'car_wash', false);
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offcarwkey0000001', 'carwash')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'carwash: enabled=false -> service-not-offered');
+RESET ROLE;
+UPDATE public.dealer_service_offerings SET enabled = true WHERE dealer_id = pg_temp.uid('dealer_f') AND family = 'car_wash';
+SET LOCAL ROLE service_role;
+SELECT is(
+  (pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offcarwkey0000001', 'carwash')) ->> 'idempotent_replay'),
+  'false', 'carwash -> car_wash: enabled=true permits a genuinely new save');
+RESET ROLE;
+
+-- ── 13b. Mixed payload rejects when ANY required family is OFF; zero writes ─
+INSERT INTO public.dealer_service_offerings (dealer_id, family, enabled) VALUES
+  (pg_temp.uid('dealer_g'), 'ppf', true),
+  (pg_temp.uid('dealer_g'), 'window_film', true);
+-- maintenance carries NO row for dealer_g: absence means OFF.
+CREATE TEMP TABLE t_mixed_counts (k text PRIMARY KEY, c bigint, e bigint, v bigint, i bigint);
+INSERT INTO t_mixed_counts SELECT 'before',
+  (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),
+  (SELECT count(*) FROM public.vehicles),  (SELECT count(*) FROM public.estimate_items);
+INSERT INTO t_life_counts VALUES ('before_mixed_reject', pg_temp.lifecycle_rev(pg_temp.uid('dealer_g')));
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_g'), pg_temp.uid('u_owner_g'),
+       pg_temp.two_category_payload('mixedoffkey00001', 'ppf', 'maintenance')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'mixed ppf(on)+maintenance(off) payload rejects on the one OFF family');
+RESET ROLE;
+INSERT INTO t_life_counts VALUES ('after_mixed_reject', pg_temp.lifecycle_rev(pg_temp.uid('dealer_g')));
+SELECT is((SELECT l FROM t_life_counts WHERE k='after_mixed_reject'), (SELECT l FROM t_life_counts WHERE k='before_mixed_reject'),
+  'the mixed-family rejection does not advance the dealer''s configuration-revision lifecycle');
+INSERT INTO t_mixed_counts SELECT 'after',
+  (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),
+  (SELECT count(*) FROM public.vehicles),  (SELECT count(*) FROM public.estimate_items);
+SELECT is((SELECT c FROM t_mixed_counts WHERE k='after'), (SELECT c FROM t_mixed_counts WHERE k='before'), 'mixed rejection wrote no customer');
+SELECT is((SELECT v FROM t_mixed_counts WHERE k='after'), (SELECT v FROM t_mixed_counts WHERE k='before'), 'mixed rejection wrote no vehicle');
+SELECT is((SELECT e FROM t_mixed_counts WHERE k='after'), (SELECT e FROM t_mixed_counts WHERE k='before'), 'mixed rejection wrote no estimate');
+SELECT is((SELECT i FROM t_mixed_counts WHERE k='after'), (SELECT i FROM t_mixed_counts WHERE k='before'), 'mixed rejection wrote no items');
+
+-- ── 13c. coating and other remain outside this contract ──────────────────
+-- dealer_h carries ZERO dealer_service_offerings rows at all.
+SET LOCAL ROLE service_role;
+SELECT is(
+  (pg_temp.call(pg_temp.uid('dealer_h'), pg_temp.uid('u_owner_h'), pg_temp.category_payload('coatingoffkey001', 'coating')) ->> 'idempotent_replay'),
+  'false', 'coating saves with zero dealer_service_offerings rows: unmanaged, unaffected');
+SELECT is(
+  (pg_temp.call(pg_temp.uid('dealer_h'), pg_temp.uid('u_owner_h'), pg_temp.category_payload('otheroffkey000001', 'other')) ->> 'idempotent_replay'),
+  'false', 'other saves with zero dealer_service_offerings rows: unmanaged, unaffected');
+SELECT is(
+  (pg_temp.call(pg_temp.uid('dealer_h'), pg_temp.uid('u_owner_h'), pg_temp.category_payload('interioroffkey01', 'interior')) ->> 'idempotent_replay'),
+  'false', 'interior saves with zero dealer_service_offerings rows: unmanaged, unaffected');
+SELECT is(
+  (pg_temp.call(pg_temp.uid('dealer_h'), pg_temp.uid('u_owner_h'), pg_temp.category_payload('glassoffkey0000001', 'glass')) ->> 'idempotent_replay'),
+  'false', 'glass saves with zero dealer_service_offerings rows: unmanaged, unaffected');
+RESET ROLE;
+
+-- ── 13d. Another dealer's enabled row never authorizes the caller ────────
+-- dealer_g has ppf ENABLED (from 13b); dealer_h has no row for any family.
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_h'), pg_temp.uid('u_owner_h'), pg_temp.category_payload('crosstenantkey01', 'ppf')) $$,
+  '^VALIDATION_ERROR: service-not-offered$',
+  'dealer G''s enabled ppf row does not authorize dealer H''s save');
+RESET ROLE;
+
+-- ── 13e. Exact replay keeps its original success after a later disable ───
+SET LOCAL ROLE service_role;
+SELECT is(
+  (pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('replayoffkey0001', 'maintenance')) ->> 'idempotent_replay'),
+  'false', 'baseline save for the replay-after-disable case succeeds while maintenance is enabled');
+RESET ROLE;
+CREATE TEMP TABLE t_replay_counts (k text PRIMARY KEY, c bigint, e bigint, v bigint, i bigint);
+INSERT INTO t_replay_counts SELECT 'before',
+  (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),
+  (SELECT count(*) FROM public.vehicles),  (SELECT count(*) FROM public.estimate_items);
+UPDATE public.dealer_service_offerings SET enabled = false WHERE dealer_id = pg_temp.uid('dealer_f') AND family = 'maintenance';
+INSERT INTO t_life_counts VALUES ('before_replay_after_disable', pg_temp.lifecycle_rev(pg_temp.uid('dealer_f')));
+SET LOCAL ROLE service_role;
+SELECT is(
+  (pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('replayoffkey0001', 'maintenance')) ->> 'idempotent_replay'),
+  'true', 'exact replay after a later disable still returns the original success');
+RESET ROLE;
+INSERT INTO t_life_counts VALUES ('after_replay_after_disable', pg_temp.lifecycle_rev(pg_temp.uid('dealer_f')));
+SELECT is((SELECT l FROM t_life_counts WHERE k='after_replay_after_disable'), (SELECT l FROM t_life_counts WHERE k='before_replay_after_disable'),
+  'the exact replay after a later disable does not advance the dealer''s configuration-revision lifecycle (snapshot taken AFTER the disable commit)');
+INSERT INTO t_replay_counts SELECT 'after',
+  (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),
+  (SELECT count(*) FROM public.vehicles),  (SELECT count(*) FROM public.estimate_items);
+SELECT is((SELECT c FROM t_replay_counts WHERE k='after'), (SELECT c FROM t_replay_counts WHERE k='before'), 'the disabled-offering replay wrote no customer');
+SELECT is((SELECT e FROM t_replay_counts WHERE k='after'), (SELECT e FROM t_replay_counts WHERE k='before'), 'the disabled-offering replay wrote no estimate');
+SELECT is((SELECT v FROM t_replay_counts WHERE k='after'), (SELECT v FROM t_replay_counts WHERE k='before'), 'the disabled-offering replay wrote no vehicle');
+SELECT is((SELECT i FROM t_replay_counts WHERE k='after'), (SELECT i FROM t_replay_counts WHERE k='before'), 'the disabled-offering replay wrote no items');
+
+-- ── 13f. Same key + materially different payload stays DUPLICATE_SUBMISSION,
+--         even though the relevant family is now OFF ────────────────────
+SET LOCAL ROLE service_role;
+SELECT throws_matching(
+  $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'),
+       jsonb_set(pg_temp.category_payload('replayoffkey0001', 'maintenance'), '{customer,name}', '"別人二号"')) $$,
+  'DUPLICATE_SUBMISSION',
+  'same key + different payload remains DUPLICATE_SUBMISSION precedence even though maintenance is now OFF');
+RESET ROLE;
+
 SELECT * FROM finish();
 ROLLBACK;
+
+-- ============================================================================
+-- R1_B_R2_OFFERING_GUARD_CONCURRENCY_GATE
+--
+-- NOT COVERED ABOVE and NOT REPORTED AS PASSED. The two required deterministic
+-- offering/save interleavings cannot be expressed in one pgTAP session; they
+-- require two separate OS-process database connections plus a third observer,
+-- exactly like R56C_EXTERNAL_CONCURRENCY_GATE above. Execute these separately
+-- via scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs:
+--
+--   1. Disable-before-snapshot: commit enabled=false for the relevant family,
+--      build a payload carrying the current post-change configuration
+--      revision, then start a fresh direct RPC save. It MUST return
+--      'VALIDATION_ERROR: service-not-offered'; observer counts for customer,
+--      vehicle, estimate, item, document number, and idempotency MUST remain
+--      unchanged.
+--   2. Snapshot-before-disable: begin with the family enabled. Hold the
+--      target estimate's document_sequences row so the save passes C.9a and
+--      blocks at the first C.10 number-allocation write. Prove the save
+--      backend is waiting there (distinct backend PID, pg_stat_activity
+--      evidence), commit the offering disable from a separate connection,
+--      release the number-row lock, and require the save to complete
+--      successfully from its earlier guard snapshot -- one complete estimate
+--      with every expected item and no partial/torn state.
+-- ============================================================================
 
 -- ============================================================================
 -- R56C_EXTERNAL_CONCURRENCY_GATE

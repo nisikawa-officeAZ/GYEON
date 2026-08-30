@@ -2801,3 +2801,494 @@ boundary:
 decision: GDA_ESTIMATE_PPF_OFFERING_R1_B_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-G1 — Read-only diagnosis governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNCOMMITTED_READ_ONLY_DIAGNOSIS_NOT_SENT
+date: 2026-08-30
+append_only: true
+directive_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_READ_ONLY_DIAGNOSIS_V1
+authorization: "The owner authorized formal repair-specification authoring after Codex confirmed that PR #43 aligns the Step-3 UI for all five managed families but the authoritative save orchestrator enforces the offering switch only for PPF. This gate permits exactly three governance-document edits. Claude transmission/execution, source/test/SQL/RPC changes, test execution, Git delivery, database/Supabase/provider access, Preview/production actions, Ready, merge, and deployment remain unauthorized."
+repository:
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  fixed_source_base_commit: 7aca4e7dfcebb4bd71cb8d1d2db0dbda71644110
+  fixed_source_base_tree: bde678a017a875b46df56bfe0c054670c61128ec
+  upstream: origin/main
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-managed-service-enforcement-r1
+  worktree_state_before_authoring: clean
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_READ_ONLY_DIAGNOSIS.md
+frozen_contract:
+  - "The five managed families are window_film, ppf, maintenance, room_cleaning, and car_wash; their category mapping is imported from the existing single source of truth."
+  - "Step-3 PR #43 layout and visible-disabled behavior are frozen; coating and other remain unmanaged."
+  - "The current dealer-bound runtime offering map is the only server authority."
+  - "Unavailable selected-category or non-default family configuration intent returns the existing service-not-offered failure after tenant/revision validation and before pricing or persistence."
+  - "Canonical-default structural sections are not intent; stale or hostile values are rejected and never silently removed."
+  - "Direct RPC/SQL bypass resistance remains a distinct later phase and cannot be inferred from the server action."
+confirmed_gap:
+  - "The current orchestrator exports isPpfBearingDraft and guards only runtime.screenConfig.serviceOfferings.ppf."
+  - "No equivalent authoritative guard exists there for window_film, maintenance, room_cleaning, or car_wash."
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "Exactly the three governance paths may change in this candidate."
+  - "No source, test, migration, SQL, RPC, UI, dependency, config, generated artifact, or protected path change is authorized."
+  - "No private transmission, diagnosis execution, test/typecheck/build, stage, commit, push, PR mutation, DB/Supabase/Auth/browser/Vercel/provider access, Preview/production action, Ready, merge, or deployment is authorized."
+decision: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-D1/A-G1 — Diagnosis acceptance and Phase-A governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_DIAGNOSIS_ACCEPTANCE_AND_PHASE_A_GOVERNANCE
+status: DIAGNOSIS_ACCEPTED_PHASE_A_GOVERNANCE_CANDIDATE_UNCOMMITTED_IMPLEMENTATION_NOT_SENT
+date: 2026-08-30
+append_only: true
+diagnosis_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+implementation_directive_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_A_SERVER_SAVE_IMPLEMENTATION_V1
+authorization: "The owner explicitly authorized one private, non-persistent, maximum-3-USD Anthropic Claude Code read-only diagnosis and later authorized authoring exactly three Phase-A governance documents. Source/test changes, test execution, Git delivery, PR comments, SQL/RPC/migration work, database/Supabase/provider access, Preview/production actions, Ready, merge, and deployment remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/44
+  pull_request_state: OPEN_DRAFT
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  diagnosis_governance_head: 387d8993d542a001ff2c9f2e54ff275789591f9d
+  diagnosis_governance_tree: 035cf5f2b2884635e3834e6026720558e71f48db
+  fixed_source_base_commit: 7aca4e7dfcebb4bd71cb8d1d2db0dbda71644110
+  fixed_source_base_tree: bde678a017a875b46df56bfe0c054670c61128ec
+diagnosis_execution:
+  agent: Anthropic Claude Code
+  model: claude-sonnet-5
+  effort: high
+  max_budget_usd: 3
+  actual_cost_usd: 2.7157178
+  no_session_persistence: true
+  permission_denials: 0
+  mutation: false
+  verdict: CHANGES_REQUIRED_SERVER_AND_SQL
+accepted_findings:
+  - "The authoritative save orchestrator enforces runtime.screenConfig.serviceOfferings only for PPF."
+  - "Window film, maintenance, car wash, and room cleaning have canonical non-default intent signals but no equivalent pre-pricing server guard."
+  - "The existing service-not-offered result and observability mapping are already family-agnostic and need no content change."
+  - "The current save_estimate_from_wizard migration chain never reads dealer_service_offerings, so direct RPC enforcement is a separate mandatory phase."
+codex_independent_verification:
+  worktree_clean_after_diagnosis: true
+  head_tree_match: true
+  four_missing_server_guards: confirmed
+  atomic_save_offering_lookup_count: 0
+  existing_pgtap_paths:
+    - supabase/tests/estimate_wizard_atomic_save.test.sql
+    - supabase/tests/estimate_wizard_dml_integrity.test.sql
+  dedicated_disposable_harness: NOT_FOUND
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_A_SERVER_SAVE_IMPLEMENTATION.md
+future_phase_a_write_allowlist:
+  - src/components/estimates/wizard/save/wizard-save-intent-orchestrator.ts
+  - src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "Exactly the three Phase-A governance paths may change in this candidate."
+  - "No source, test, UI, migration, SQL, RPC, dependency, config, generated artifact, or protected path change is authorized."
+  - "No private transmission, implementation/test execution, stage, commit, push, PR mutation, DB/Supabase/Auth/browser/Vercel/provider access, Preview/production action, Ready, merge, or deployment is authorized."
+decision: ACCEPT_DIAGNOSIS_AUTHOR_PHASE_A_SERVER_SAVE_GOVERNANCE
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-A1/B-G1 — Phase-A source acceptance and Phase-B diagnosis governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PHASE_A_ACCEPTANCE_AND_PHASE_B_DIAGNOSIS_GOVERNANCE
+status: PHASE_A_ACCEPTED_COMMITTED_PUSHED_PHASE_B_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+phase_b_directive_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS_RESULT_V1
+authorization: "The owner authorized authoring the Phase-A acceptance record and the Phase-B direct-RPC/SQL read-only diagnosis directive in exactly three governance documents. Phase-B Claude transmission, SQL/migration/pgTAP/harness edits, executable verification, database/Supabase/provider access, Git delivery, PR mutation, Preview/production actions, Ready, merge, and deployment remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/44
+  pull_request_state_at_acceptance: OPEN_DRAFT
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  phase_a_source_commit: 1bb530f3105055707b7387f6492ede3078402f36
+  phase_a_source_tree: daddebc2e89919b22cdb534d1cb91c07b3474787
+  source_commit_pushed: true
+phase_a_exact_source_delta:
+  - src/components/estimates/wizard/save/wizard-save-intent-orchestrator.ts
+  - src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts
+phase_a_acceptance:
+  first_independent_focused_run: "68/94 PASS; 26 failures exposed undefined access when optional managed-family configuration sections were structurally absent."
+  repair: "Within the same two-path allowlist, a missing window-film, maintenance, room-cleaning, or car-wash section is treated as no configuration intent unless its canonical category is selected."
+  final_focused_tests: "94/94 PASS"
+  typecheck: "npm run typecheck PASS"
+  diff_check: PASS
+  decision: ACCEPTED
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+phase_b_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS.md
+phase_b_frozen_contract:
+  - "Managed families remain exactly window_film, ppf, maintenance, room_cleaning, and car_wash; coating and other remain outside this contract."
+  - "dealer_service_offerings is the dealer-owned SQL authority; missing or enabled=false means OFF, and another tenant's row cannot authorize a caller."
+  - "The RPC must derive actor and dealer from authenticated tenant authority and must not trust client offering flags, rank, UI state, or a service-role shortcut."
+  - "Disabled managed-family direct-RPC intent must fail atomically with zero estimate, item, revision, idempotency, numbering, or related mutation."
+  - "Historical migrations are immutable; any later repair is one new forward-only migration."
+  - "Later acceptance requires static evidence, pgTAP, and a fresh loopback-only PostgreSQL 17 disposable direct-RPC runtime with real claims."
+boundary:
+  - "This candidate changes exactly the three Phase-B governance paths."
+  - "No SQL, RPC, migration, pgTAP, disposable harness, application source, dependency, configuration, generated artifact, or protected path is changed."
+  - "No private transmission to Claude, test/typecheck/build/runtime execution, database/Supabase/Docker/browser/network/provider access, stage, commit, push, PR mutation, Ready, merge, or deployment is authorized or performed by this authoring gate."
+decision: ACCEPT_PHASE_A_AUTHOR_PHASE_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS_GOVERNANCE
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-B-D1/R1-G1 — Direct-RPC diagnosis acceptance and harness-reference follow-up governance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIAGNOSIS_ACCEPTANCE_AND_R1_FOLLOW_UP_GOVERNANCE
+status: PHASE_B_DIAGNOSIS_ACCEPTED_WITH_FOLLOW_UP_REQUIRED_R1_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+diagnosis_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS_RESULT_V1
+follow_up_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_HARNESS_REFERENCE_READ_ONLY_DIAGNOSIS_RESULT_V1
+authorization: "The owner approved recording the Phase-B result as ACCEPTED_WITH_FOLLOW_UP_REQUIRED and authoring exactly three governance documents for one bounded C5-C harness-reference and SQL-concurrency read-only follow-up. External transmission, source/migration/test/harness edits, executable verification, database/Supabase/provider access, Git delivery, PR mutation, Preview/production actions, Ready, merge, and deployment remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/44
+  pull_request_state_after_diagnosis: OPEN_DRAFT
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  diagnosis_governance_head: 70f13f465b7cc05462a34b61bc6a5d3b61080da1
+  diagnosis_governance_tree: 355edb957d59aa91c1e81274e72b4370285e6acb
+  changed_files_on_pr: 7
+diagnosis_execution:
+  agent: Anthropic Claude Code
+  model: claude-sonnet-5
+  effort: high
+  no_session_persistence: true
+  max_budget_usd: 3
+  actual_cost_usd: 2.5704507
+  web_search_requests: 0
+  web_fetch_requests: 0
+  subagents: 0
+  permission_denials: 1
+  permission_denial_effect: "One multi-path git ls-tree loop for protected metadata was denied. Individual permitted metadata checks and Codex independent checks later confirmed all four blobs."
+  mutation: false
+  verdict: CHANGES_REQUIRED_SQL_AND_TESTS
+accepted_findings:
+  - "The active RPC is public.save_estimate_from_wizard(uuid, uuid, jsonb), SECURITY INVOKER, and executable only by service_role."
+  - "The active RPC body performs no dealer_service_offerings lookup; direct service-role callers therefore bypass all five managed-family offering switches."
+  - "The accepted Phase-A application path rejects disabled managed-family intent before pricing and persistence, but that does not prove the RPC itself."
+  - "The smallest later SQL direction is one new forward-only replacement migration plus focused estimate_wizard_atomic_save pgTAP coverage."
+  - "The existing B7-4 reference pins PostgreSQL 15 and is browser-oriented, so it is not acceptable for the required PostgreSQL 17 direct-RPC proof."
+codex_independent_verification:
+  head_tree_and_clean_state: PASS
+  pr_open_draft_and_head_match: PASS
+  active_function_signature_security_search_path: PASS
+  service_role_only_execute_acl: PASS
+  active_rpc_offering_lookup_absent: PASS
+  five_family_payload_categories_present: PASS
+  phase_a_guard_pre_persist: PASS
+  b7_4_postgresql_major_version: 15
+  c5c_reference_path_count: 9
+  protected_blob_match: PASS
+follow_up_required:
+  - "Read the nine accepted gyeon-order-v3-c5c PostgreSQL 17/direct-RPC/concurrency harness files and classify reusable versus order-specific structure."
+  - "Return the exact new Estimate Wizard harness path allowlist, responsibilities, runtime sequence, evidence, cleanup, hash, timeout, and burn contract."
+  - "Resolve the conflict between placing the offering guard after C.7 and saying it should read after the C.9 advisory lock."
+  - "Prove whether the existing lock serializes offering updates and define unambiguous statement-time or serialized semantics for a concurrent missing/false/true change."
+r1_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_HARNESS_REFERENCE_READ_ONLY_DIAGNOSIS.md
+future_external_read_allowlist:
+  - scripts/e2e/gyeon-order-v3-c5c/setup.sh
+  - scripts/e2e/gyeon-order-v3-c5c/cleanup.sh
+  - scripts/e2e/gyeon-order-v3-c5c/capture-evidence.sh
+  - scripts/e2e/gyeon-order-v3-c5c/config.toml
+  - scripts/e2e/gyeon-order-v3-c5c/real-auth.mjs
+  - scripts/e2e/gyeon-order-v3-c5c/concurrency.mjs
+  - scripts/e2e/gyeon-order-v3-c5c/schema-rls.test.sql
+  - scripts/e2e/gyeon-order-v3-c5c/qualification-evidence.test.sql
+  - scripts/e2e/gyeon-order-v3-c5c/prepare-finalize-warehouse.test.sql
+  - supabase/migrations/20260728150348_dealer_service_offerings.sql
+  - supabase/migrations/20260825151059_persist_existing_vehicle_confirmed_body_size.sql
+  - supabase/tests/estimate_wizard_atomic_save.test.sql
+  - package.json
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "This governance candidate changes exactly the three R1 governance paths."
+  - "No external transmission of the nine C5-C contents occurred in this authoring gate."
+  - "No source, migration, test, harness, dependency, config, generated artifact, or protected path is changed."
+  - "No test/typecheck/build/runtime, DB/Supabase/Docker/browser/network/provider access, stage, commit, push, PR mutation, Ready, merge, or deployment is authorized or performed."
+decision: ACCEPTED_WITH_FOLLOW_UP_REQUIRED_AUTHOR_B_R1_HARNESS_AND_CONCURRENCY_READ_ONLY_GOVERNANCE
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-B-R1-A1/B-R2-G1 — Follow-up diagnosis accepted with Codex corrections; SQL/harness implementation governance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_ACCEPTANCE_AND_B_R2_IMPLEMENTATION_GOVERNANCE
+status: B_R1_ACCEPTED_WITH_CODEX_CORRECTIONS_B_R2_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+diagnosis_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_HARNESS_REFERENCE_READ_ONLY_DIAGNOSIS_RESULT_V1
+implementation_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_SQL_HARNESS_IMPLEMENTATION_RESULT_V1
+authorization: "The owner approved authoring exactly three governance documents after MacBook Codex independently classified the Phase B-R1 Claude result as ACCEPTED_WITH_CODEX_CORRECTIONS_REQUIRED. This gate does not authorize private external transmission, nine-path implementation, static or executable verification, database/Supabase/Docker/Colima/provider access, Git delivery, PR mutation, Preview/production action, Ready, merge, migration application, or deployment."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/44
+  pull_request_state_at_authoring_start: OPEN_DRAFT
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  predecessor_head: 7a6d622b5e08072b954012d969e8e79ddc38129b
+  predecessor_tree: 553f4d2f794a555bfbba32339aea86e22c6fbaca
+  worktree_and_index_at_authoring_start: CLEAN
+diagnosis_execution:
+  agent: Anthropic Claude Code
+  model: claude-sonnet-5
+  effort: high
+  no_session_persistence: true
+  max_budget_usd: 3
+  actual_cost_usd: 2.1492711
+  web_search_requests: 0
+  web_fetch_requests: 0
+  subagents: 0
+  permission_denials: 0
+  mutation: false
+  claude_verdict: READY_FOR_SQL_AND_HARNESS_IMPLEMENTATION_GOVERNANCE
+codex_decision: ACCEPTED_WITH_CODEX_CORRECTIONS_REQUIRED
+accepted_findings:
+  - "The accepted C5-C harness provides the reusable PostgreSQL 17, fresh-runtime, loopback-only, real-auth/direct-RPC, separate-connection concurrency, evidence, cleanup, hash, and burn structure."
+  - "The smallest dedicated harness is seven new files: config.toml, setup.sh, offering-guard.test.sql, real-auth.mjs, concurrency.mjs, capture-evidence.sh, and cleanup.sh."
+  - "The existing same-(dealer,idempotency-key) advisory lock does not serialize dealer_service_offerings writes."
+codex_corrections:
+  - "The offering guard belongs after the C.9 exact-replay/DUPLICATE_SUBMISSION decision and before the first C.10 write, not after C.7."
+  - "Exact replay keeps the original zero-write success after a later offering change; same-key different-payload keeps DUPLICATE_SUBMISSION precedence."
+  - "All required managed families are evaluated in one set-based statement; per-line or per-family successive SELECTs are forbidden under READ COMMITTED."
+  - "The one guard statement's start snapshot is authoritative; missing or enabled=false is OFF at that instant."
+  - "Concurrency proof uses two controlled interleavings: disable-before-snapshot rejection and snapshot-before-disable successful completion, never one nondeterministic either-outcome test."
+  - "Phase A's pre-RPC retry behavior is a later separate alignment concern and cannot weaken direct-RPC idempotency in B-R2."
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_SQL_HARNESS_IMPLEMENTATION.md
+future_implementation_write_allowlist:
+  - supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql
+  - supabase/tests/estimate_wizard_atomic_save.test.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/config.toml
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/real-auth.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/cleanup.sh
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "This candidate changes exactly the three B-R2 governance paths."
+  - "No migration, pgTAP, harness, application source, dependency, configuration, generated artifact, or protected content is changed."
+  - "No private external transmission, test/typecheck/build/runtime, DB/Supabase/Docker/Colima/browser/network/provider access, stage, commit, push, PR mutation, Ready, merge, migration application, or deployment is authorized or performed."
+decision: AUTHOR_B_R2_SQL_AND_HARNESS_IMPLEMENTATION_GOVERNANCE_WITH_CODEX_CORRECTED_ORDERING
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_AND_LOCAL_COMMIT_APPROVAL"
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-B-R2-I1/A1-G1 — B-R2 candidate returned for harness-only correction
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_IMPLEMENTATION_REVIEW_AND_A1_HARNESS_CORRECTION_GOVERNANCE
+status: B_R2_SQL_PROVISIONALLY_ACCEPTED_HARNESS_CHANGES_REQUIRED_A1_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+b_r2_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_SQL_HARNESS_IMPLEMENTATION_RESULT_V1
+a1_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_A1_HARNESS_CORRECTION_RESULT_V1
+authorization: "The owner authorized authoring exactly three B-R2-A1 governance documents after MacBook Codex independently reviewed the retained B-R2 candidate. This gate preserves the existing uncommitted nine-path candidate and does not authorize private external transmission, five-path correction, executable verification, database/Supabase/Docker/Colima/provider access, Git delivery, PR mutation, Preview/production action, Ready, merge, migration application, or deployment."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/44
+  pull_request_state_at_review: OPEN_DRAFT
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  b_r2_governance_head: c4c3b9825c5596e0c7d2b0728c25881d9b550952
+  b_r2_governance_tree: b7d78864048a874c231fb02ea186a242fa088a5a
+  worktree_candidate_path_count: 9
+  index_clean: true
+b_r2_execution:
+  agent: Anthropic Claude Code
+  verdict: CANDIDATE_READY_FOR_CODEX_REVIEW
+  actual_cost_usd: 7.9618
+  mutation_scope: exact_nine_candidate_paths_uncommitted
+candidate_sha256:
+  supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql: 9319203d67ce42d8f54998b3db0e4af6c0f45ada36c7b20b7c51c047cbfcd499
+  supabase/tests/estimate_wizard_atomic_save.test.sql: 5c85aef563241bd5b1e82d618131ef3b756f2d85a170e57d00b0f157c25d30b5
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/config.toml: 5644922a3fbcf798abb54d9c57ca61a6574952c5a5b1be04ed872e26ee1b371c
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh: 39665cb674e4f8efb6ca1fef31f3aee3e8e6350b71514f293d883a5302915d65
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql: 6b9ea95438d1954fd616bac336188668994a2432ba86668c695d7bb8e8094cc0
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/real-auth.mjs: 448966fe0c7ed7f6558fef8cc478bc93d504b1a70c46b3c65ecdb93310959ecf
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs: 05fe3a9a5dd8fa5006ab1219e04b9ac05ce937a5406d6281a4923f0098c80e59
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh: 747a81fa7f43b67f9aa5e97e3f5eb79e2dbc573a95d00f09a712a890753fbdf3
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/cleanup.sh: 79550f085b81d0ff7d06329685bca0413fabdcd6d27910848c512b52066cdb84
+codex_sql_review:
+  decision: PROVISIONALLY_ACCEPTED_FROZEN_IN_A1
+  accepted:
+    - "The new forward-only migration preserves C.9 exact-replay/DUPLICATE_SUBMISSION precedence and inserts one set-based C.9a guard before C.10."
+    - "The five category-family mappings, missing/false semantics, stable sanitized service-not-offered error, and unrelated-category behavior are structurally present."
+    - "Static shell/MJS syntax and tracked diff checks reported no implementation syntax defect; no SQL/runtime test was executed."
+codex_candidate_decision: CHANGES_REQUIRED_HARNESS_ONLY
+blocking_findings:
+  - "Race 2 relies on fixed 400ms/600ms sleeps and searches for a non-granted relation lock on document_sequences. PostgreSQL row-lock waits are not reliably represented by that predicate, so it does not prove the required C.10 block point."
+  - "Race 1 omits the exact current post-disable metadata.configurationRevision and therefore does not execute the frozen deterministic disable-before-snapshot contract."
+  - "setup.sh hash-gates the extended canonical pgTAP file but copies and capture-evidence.sh executes only the dedicated offering-guard test. The canonical extension is never runtime-proved."
+  - "setup.sh records upstream ahead/behind but does not require exact 0 0."
+  - "setup.sh records protected path metadata but does not fail closed on exact mode, blob, and clean status."
+  - "The pgTAP additions do not prove lifecycle-revision zero mutation and pin only coating/other instead of all required unmanaged categories including interior/glass."
+  - "capture-evidence.sh treats every grep exit other than 0 as clean, so a scan error can be misreported as SECRET_SCAN_CLEAN."
+a1_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_A1_HARNESS_CORRECTION.md
+a1_future_correction_write_allowlist:
+  - supabase/tests/estimate_wizard_atomic_save.test.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh
+frozen_candidate_paths:
+  - supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/config.toml
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/real-auth.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-b/cleanup.sh
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+boundary:
+  - "The retained B-R2 candidate remains uncommitted and unexecuted."
+  - "A1 must hard-gate upstream 0 0, protected mode/blob/status, and both pgTAP source identities; execute both TAP files independently in a later runtime; add lifecycle and interior/glass coverage; repair both deterministic races; and fail closed on secret-scan errors."
+  - "No source/test/harness correction, private transmission, runtime/test execution, DB/Supabase/Docker/Colima/Auth/PostgREST/provider access, stage, commit, push, PR mutation, Ready, merge, migration application, or deployment is authorized or performed by this authoring gate."
+decision: RETURN_B_R2_FOR_EXACT_FIVE_PATH_HARNESS_CORRECTION
+next: "VERIFY_EXACT_THREE_GOVERNANCE_DOCUMENTS_RETAINED_NINE_PATH_HASHES_FROZEN_FOUR_CANDIDATE_PATHS_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_LOCAL_COMMIT_AND_PUSH_AUTHORIZATION"
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-B-R2-A2 — Disposable database acceptance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_DISPOSABLE_DATABASE_ACCEPTANCE
+status: DISPOSABLE_DB_PASS_RESULT_RECORD_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_DISPOSABLE_DB_VERIFICATION_RESULT_V1
+authorization: "The owner authorized the bounded cleanup correction, static verification, exact-path stage/local commits, normal pushes to PR #44, fresh disposable-database verification, and then this two-document result-ledger update plus one PR result comment. This result-recording gate does not authorize staging, committing, or pushing these two documentation edits; Ready conversion, merge, migration application, Preview/production access, and deployment remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/44
+  pull_request_state_at_acceptance: OPEN_DRAFT
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  merge_base: 7aca4e7dfcebb4bd71cb8d1d2db0dbda71644110
+  accepted_head: 8fd745ebdd1bb02aab2820f4fb45cce707dca1b3
+  accepted_tree: fce6c6da6806662df67087b1631d7f18a5e53847
+  upstream_ahead_behind: "0 0"
+  worktree_before_result_recording: CLEAN
+  pull_request_changed_files: 19
+accepted_delivery_commits:
+  implementation_and_harness: 6ca71ac
+  role_boundary_correction: 8b87760
+  evidence_and_cleanup_correction: bb32d7f
+  lifecycle_cleanup_correction: dbbfb53
+  canonical_tap_packaging_correction: 8fd745e
+accepted_source_hashes:
+  supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql: 9319203d67ce42d8f54998b3db0e4af6c0f45ada36c7b20b7c51c047cbfcd499
+  supabase/tests/estimate_wizard_atomic_save.test.sql: eaa6122e0fff62b92e1a20c14f6a56b30b1da5d5567106a48aa886dc8fbf7829
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/config.toml: 5644922a3fbcf798abb54d9c57ca61a6574952c5a5b1be04ed872e26ee1b371c
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh: b68547c887b33b27e22481aafd36910b840ad9a98b5f529652b05d28b6d164d7
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql: 10e7cabe7327914549ea3b0f0ad0e5e8a8b86acce6b4a6eec03ba492169ac764
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/real-auth.mjs: 448966fe0c7ed7f6558fef8cc478bc93d504b1a70c46b3c65ecdb93310959ecf
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs: 71cf9d9667b2ac7feb962cba494e321294eb6e3cabef459d2440432143b5cf91
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh: 06754a7971c15d1fc9ee223c8de7c2d786cc199afa7f976d4d417bd29fd0aad1
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/cleanup.sh: 7e40351db8dfcbe9c8c12a537cd1bcf4e645a049a2610f9ce5f4cbf64d4396cb
+accepted_runtime:
+  suffix: 20260830T091640Z-333258
+  project_id: gdaoffr1b20260830T091640Z333258
+  database_port: 56621
+  loopback_only: true
+  postgres_major: 17
+  supabase_cli: 2.116.0
+  retained_evidence: /Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1b-evidence/gda-estimate-offering-r1b.20260830T091640Z-333258
+verification:
+  migration_numeric_failures: 0
+  protected_migration_exclusions: 1
+  pgtap_canonical_atomic_save: "217/217 PASS"
+  pgtap_offering_guard: "39/39 PASS"
+  pgtap_aggregate: "256/256 PASS"
+  real_auth_postgrest: "6/6 PASS"
+  separate_connection_concurrency: "13/13 PASS"
+  database_lint: "PASS; warning-only; zero error-level issues"
+  query_plan_captures: 3
+  secret_scan: SECRET_SCAN_CLEAN
+  unexpected_nonzero_commands: 0
+cleanup:
+  fixture_delete_transaction: PASS
+  named_zero_row_proof:
+    dealers: 0
+    users: 0
+    dealer_members: 0
+    dealer_service_offerings: 0
+    dealer_wizard_catalog_lifecycle: 0
+    document_sequences: 0
+    customers: 0
+    vehicles: 0
+    estimates: 0
+    estimate_items: 0
+  supabase_stop_exit: 0
+  retained_copy_exit: 0
+  retained_hash_verification_exit: 0
+  runtime_removal_exit: 0
+evidence_integrity:
+  final_artifact_count: 16
+  manifest_listed_artifact_count: 15
+  manifest_hash_failures: 0
+  manifest_finalized_last: true
+burned_attempts:
+  - suffix: 20260830T091046Z-42f7e6
+    classification: PRECONDITION_FAILED_BEFORE_TEST_EXECUTION
+    reason: disposable confirmation omitted from capture invocation
+    reused: false
+  - suffix: 20260830T091248Z-aab146
+    classification: EVIDENCE_PACKAGING_FAILED_AFTER_EXECUTABLE_AND_CLEANUP_PASS
+    reason: capture produced split TAP artifacts while cleanup expected one canonical pgtap.tap
+    reused: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+environment_and_release_boundary:
+  evidence_level: E2_LOCAL_DISPOSABLE_DB
+  hosted_supabase_contacted: false
+  shared_or_production_database_contacted: false
+  external_provider_contacted: false
+  preview_contacted: false
+  production_contacted: false
+  migration_applied_outside_disposable_runtime: false
+  ready: false
+  merged: false
+  deployed: false
+decision: ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK, POST_THE_AUTHORIZED_PR_RESULT_COMMENT, THEN REQUEST_SEPARATE EXACT-PATH STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. READY, MERGE, MIGRATION_APPLICATION, PREVIEW, AND DEPLOYMENT REMAIN SEPARATE."
+```

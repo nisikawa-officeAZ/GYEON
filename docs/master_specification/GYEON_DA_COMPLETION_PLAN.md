@@ -896,6 +896,255 @@ The result document was excluded from harness implementation and was created lat
 
 **Exit:** MacBook Codex verifies the exact Phase-B three-document governance candidate and `git diff --check`, then requests separate stage/local-commit authorization. Push and transmission of the Phase-B directive/private source to Claude require later explicit gates. Phase C RPC/SQL enforcement remains unimplemented and separately governed.
 
+### GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1 — all managed-service save enforcement
+
+**Status:** PHASE A ACCEPTED AND PUSHED / PHASE B-R2 SQL AND HARNESS ACCEPTED, COMMITTED, AND PUSHED / `DISPOSABLE_DB_PASS` AT E2 LOCAL / PR #44 OPEN/DRAFT — Phase A enforces all five managed families in the authoritative server-save orchestrator at commit `1bb530f3105055707b7387f6492ede3078402f36`. Phase B-R2 adds the direct-RPC SQL guard, canonical pgTAP coverage, and dedicated PostgreSQL 17 disposable harness. The accepted final execution HEAD is `8fd745ebdd1bb02aab2820f4fb45cce707dca1b3`; the fresh suffix `20260830T091640Z-333258` passed migration replay, pgTAP, real Auth/PostgREST, separate-connection concurrency, cleanup, zero-row, stop, secret-scan, and evidence-integrity gates. Shared/staging/production migration application, Preview verification, Ready conversion, merge, and deployment remain separately unauthorized.
+
+**Objective:** Make the current dealer-owned offering switches one enforceable contract for every managed Estimate Wizard service family, not merely a client-side display rule.
+
+**Current main authority:**
+
+- Base commit: `7aca4e7dfcebb4bd71cb8d1d2db0dbda71644110`
+- Base tree: `bde678a017a875b46df56bfe0c054670c61128ec`
+- PR #42 predecessor: `4fdb58a9678e36c8198f83ee3bbb4cb0b5949293`
+- Dedicated governance branch: `plan/estimate-managed-service-offering-enforcement-r1`
+- Dedicated worktree: `work/dealeros-estimate-managed-service-enforcement-r1`
+
+**Frozen business contract:**
+
+- The five managed families are `window_film`, `ppf`, `maintenance`, `room_cleaning`, and `car_wash`.
+- Their canonical Wizard categories are respectively `window`, `ppf`, `maintenance`, `roomclean`, and `carwash`. The mapping in `src/lib/estimates/service-categories.ts` is the only mapping authority and must not be re-spelled in another module.
+- `coating` and `other` are not governed by this offering-switch contract and remain unchanged.
+- Step 3 keeps the PR #43 behavior: all seven controls have the same fixed height; an unavailable managed service remains visible, gray, disabled, unselected, and accompanied by its store-setting reason.
+- The current dealer-bound runtime `screenConfig.serviceOfferings` is the only server save authority. Client flags, UI disabled state, shop rank, catalog presence, and stale draft display are not authority.
+- After actor/tenant validation and exact configuration-revision validation, but before pricing, mapping, DTO validation, or persistence, any intent for an unavailable managed family returns the existing stable failure `service-not-offered`.
+- A category selection is service intent. Any non-default value in that family's structurally required configuration section is also service intent, even when the category was removed or the client was manipulated.
+- A structurally present configuration section that exactly matches the canonical initial draft is not service intent.
+- The server must not silently clear, rewrite, normalize away, or partially save unavailable service intent.
+- Rejection continues to emit one sanitized `service-offering` / `VALIDATION_ERROR` / `info` observability event with the resolved dealer id and no customer, vehicle, pricing, draft, or raw configuration detail.
+- PPF full/partial behavior, pricing, OCR, seven-size body classification, rank rules, coupons, DTOs, idempotency, and all accepted unrelated flows remain unchanged.
+
+**Confirmed gap at this base:**
+
+- `wizard-save-intent-orchestrator.ts` has an authoritative predicate and guard for PPF only.
+- The same orchestrator has no equivalent guard for `window_film`, `maintenance`, `room_cleaning`, or `car_wash`.
+- Therefore Step 3 correctly blocks normal interaction, but stale or manipulated drafts for those four families can still reach server pricing and persistence.
+- Direct RPC/SQL enforcement is not proved by the PR #42/#43 source delta and remains a separate bypass-resistance phase.
+
+**Required read-only diagnosis:**
+
+- Verify the exact canonical-default and non-default intent signals for all five managed families.
+- Verify guard ordering, stable failure ownership, and existing observability exhaustiveness.
+- Trace direct callers beyond the orchestrator and identify the smallest separate RPC/SQL enforcement phase and literal disposable-database test path.
+- Return exact later implementation allowlists and commands. Do not implement, test, contact a database, or change Git during diagnosis.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Protected paths:** The four repository protected paths remain metadata-only and must retain blobs `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14`.
+
+**Boundary:** This phase authors governance only. Claude transmission/execution, source/test changes, package changes, stage, commit, push, PR mutation, migrations, SQL/RPC changes, database/Supabase/Auth/browser/Vercel/provider access, Ready, merge, and deployment are separate and unauthorized.
+
+**Exit:** MacBook Codex verifies the exact three-document diff and `git diff --check`, then requests separate authorization for exact-path staging and local commit. Private transmission to Claude and the one-time read-only diagnosis require later explicit authorization.
+
+**Accepted read-only diagnosis:**
+
+- Result: `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_READ_ONLY_DIAGNOSIS_RESULT_V1`
+- Verdict: `CHANGES_REQUIRED_SERVER_AND_SQL`
+- Governance HEAD/tree: `387d8993d542a001ff2c9f2e54ff275789591f9d` / `035cf5f2b2884635e3834e6026720558e71f48db`
+- Claude execution: one non-persistent Sonnet diagnosis, high effort, no permission denials, no subagent, no mutation, `2.7157178 USD` total cost under the `3 USD` cap.
+- MacBook Codex independently confirmed the PPF-only guard, all four missing family guards, canonical defaults, unchanged protected blobs, clean worktree, and absence of `dealer_service_offerings` checks in the current atomic-save migration chain.
+- Existing pgTAP coverage exists at `supabase/tests/estimate_wizard_atomic_save.test.sql` and `supabase/tests/estimate_wizard_dml_integrity.test.sql`; no dedicated disposable execution harness was found. Harness creation belongs only to separately governed Phase B.
+
+**Phase A — authoritative server-save generalization:**
+
+- Replace the PPF-only decision at the existing post-revision/pre-pricing guard with one pure five-family decision using the existing `SERVICE_FAMILIES` and `SERVICE_FAMILY_CATEGORY` authority.
+- Preserve `isPpfBearingDraft` behavior exactly. Extend the same canonical-default-versus-intent rule to `windowFilm`, `bodyMaintenance`, `carWash`, and `roomCleaning`.
+- Window-film intent signals are selected `window`, non-empty `selectedAreaIds`, non-null `filmTypeId`, non-empty `unitPriceInput`, non-null `selectedPackageCode`, non-empty `selectedOptionIds`, or any `optionQuantities` key.
+- Maintenance intent signals are selected `maintenance`, non-null `menuId`, or non-empty `unitPriceInput`.
+- Car-wash intent signals are selected `carwash`, non-null `menuId`, or non-empty `unitPriceInput`.
+- Room-cleaning intent signals are selected `roomclean`, non-empty `selectedMenuIds`, or any `unitPricesByMenu` key.
+- If any disabled family carries intent, return the existing `service-not-offered` result after actor/tenant/revision checks and before pricing, mapping, DTO validation, or persistence.
+- Do not expose the family, raw draft, customer, vehicle, pricing, or configuration detail. Reuse the existing sanitized observability contract without changing its types or mapping.
+- Preserve PR #43 UI, PPF full/partial behavior, coating/other behavior, pricing, OCR, seven-size classification, rank, coupon, DTO, idempotency, and tenant contracts.
+
+**Phase A implementation write allowlist — exactly two paths:**
+
+1. `src/components/estimates/wizard/save/wizard-save-intent-orchestrator.ts`
+2. `src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts`
+
+**Phase A governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_A_SERVER_SAVE_IMPLEMENTATION.md` (new)
+
+**Phase A required verification:**
+
+- Focused orchestrator and observability tests must pass without deleting or weakening existing assertions.
+- `npm run typecheck` must pass or report a clearly reproduced environment-only blocker without changing dependencies.
+- `git diff --check` must pass and the final unstaged diff must contain only the two implementation paths actually changed.
+- No database, Supabase, browser, Vercel, provider, Preview, or production execution belongs to Phase A.
+
+**Phase A exit:** MacBook Codex verifies the exact three-document governance candidate and requests separate stage/local-commit authorization. Governance push, private Claude transmission, source implementation, tests, source commit/push, PR comments, Ready, merge, deployment, and Phase-B SQL work remain separate gates.
+
+**Accepted Phase A source result:**
+
+- Accepted commit: `1bb530f3105055707b7387f6492ede3078402f36`
+- Accepted tree: `daddebc2e89919b22cdb534d1cb91c07b3474787`
+- Pull request: `#44`, still `OPEN/Draft` at acceptance.
+- Exact source delta: `wizard-save-intent-orchestrator.ts` and `wizard-save-intent-orchestrator.test.ts` only.
+- The first independent focused run exposed a compatibility gap for structurally missing optional managed-family sections: `68/94` passed and `26/94` failed before acceptance. The candidate was repaired within the same two-path allowlist so missing sections carry no configuration intent unless their category is selected.
+- Final focused verification: `94/94 PASS`; `npm run typecheck PASS`; `git diff --check PASS`.
+- Protected blobs remained `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14`.
+- Phase A was locally committed and normally pushed to the PR #44 branch. It did not change SQL/RPC/migrations, access a database or provider, mark Ready, merge, or deploy.
+
+**Phase B — direct RPC/SQL enforcement, read-only diagnosis governance candidate:**
+
+- Current gate: author one bounded read-only diagnosis directive that determines the active RPC contract and the smallest later forward-only migration, pgTAP, and fresh disposable direct-RPC proof. No implementation is authorized.
+- Any later repair must add one new forward-only migration and must never edit historical migrations in place.
+- `public.save_estimate_from_wizard` must independently deny disabled managed-family intent using authenticated dealer ownership and `dealer_service_offerings`; missing and false both mean OFF.
+- Existing pgTAP coverage must be extended later, and a dedicated fresh loopback-only PostgreSQL 17 disposable harness with real tenant claims and direct RPC calls remains mandatory because no dedicated harness exists today.
+- Static inspection, pgTAP, and fresh disposable execution are separate later acceptance layers; none can be substituted by UI or server-action evidence.
+
+**Phase B governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Phase B boundary:** This authoring candidate changes only the three governance paths above. It does not transmit private files to Claude; inspect or change SQL/RPC/migrations/tests/harnesses; run tests, typecheck, build, databases, Supabase, Docker, browser, network, or provider commands; or stage, commit, push, mutate PR #44, mark Ready, merge, or deploy.
+
+**Phase B governance exit:** MacBook Codex verifies the exact three-document candidate and `git diff --check`, then requests separate exact-path stage/local-commit authorization. Governance push and the one-time private read-only Claude diagnosis require later explicit gates. SQL/test/harness implementation remains unauthorized until the diagnosis is independently accepted.
+
+**Accepted Phase B read-only diagnosis:**
+
+- Result: `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_DIRECT_RPC_SQL_READ_ONLY_DIAGNOSIS_RESULT_V1`
+- Acceptance: `ACCEPTED_WITH_FOLLOW_UP_REQUIRED`
+- Verdict: `CHANGES_REQUIRED_SQL_AND_TESTS`
+- Governance execution HEAD/tree: `70f13f465b7cc05462a34b61bc6a5d3b61080da1` / `355edb957d59aa91c1e81274e72b4370285e6acb`
+- Claude execution: one non-persistent Sonnet diagnosis, high effort, `2.5704507 USD` under the `3 USD` cap, no web search/fetch, no subagent, and no mutation. One protected-metadata loop command was denied; the four blobs were later verified through permitted individual metadata reads and independently matched by Codex.
+- The active RPC is `public.save_estimate_from_wizard(uuid, uuid, jsonb)`, `SECURITY INVOKER`, with server-only `service_role` EXECUTE.
+- MacBook Codex independently confirmed that its active SQL body never reads `dealer_service_offerings`; therefore all five managed families lack direct-RPC fail-closed protection even though the accepted Phase-A application path is guarded.
+- The smallest later source direction is one new forward-only replacement migration plus focused additions to `supabase/tests/estimate_wizard_atomic_save.test.sql`; historical migrations remain immutable.
+- The existing B7-4 harness is PostgreSQL 15 and browser/Playwright-oriented, so it cannot prove the required PostgreSQL 17 direct-RPC contract.
+- A nine-file accepted C5-C PostgreSQL 17/direct-RPC/concurrency harness exists, but its contents were outside the Phase-B read allowlist and were not inspected by Claude.
+- The prior report did not fully resolve whether the guard belongs after C.7 or after C.9, whether the existing advisory lock can serialize offering changes, or how the missing-row OFF race is defined. These are mandatory Phase B-R1 follow-up questions, not implementation discretion.
+
+**Phase B-R1 objective:** Read only the nine existing C5-C harness references plus the minimum four SQL/race references. Return the exact reusable harness contract, proposed new harness path allowlist, PostgreSQL 17 fresh-runtime sequence, real-claim/direct-RPC cases, and one unambiguous concurrency decision. Do not implement or execute anything.
+
+**Phase B-R1 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_HARNESS_REFERENCE_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Phase B-R1 boundary:** This candidate changes only those three governance paths. It does not read or transmit the nine C5-C file contents to an external service; change source, migration, test, or harness files; execute tests or runtime; access a database/provider; or stage, commit, push, mutate PR #44, mark Ready, merge, or deploy.
+
+**Phase B-R1 exit:** MacBook Codex verifies the exact three-document candidate and `git diff --check`, then requests separate stage/local-commit authorization. Push and private external transmission of the follow-up allowlist require later explicit gates. SQL and harness implementation remain unauthorized until the follow-up result is independently accepted.
+
+**Accepted Phase B-R1 follow-up diagnosis with Codex corrections:**
+
+- Result: `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R1_HARNESS_REFERENCE_READ_ONLY_DIAGNOSIS_RESULT_V1`
+- Claude verdict: `READY_FOR_SQL_AND_HARNESS_IMPLEMENTATION_GOVERNANCE`
+- Codex acceptance: `ACCEPTED_WITH_CODEX_CORRECTIONS_REQUIRED`
+- Governance execution HEAD/tree: `7a6d622b5e08072b954012d969e8e79ddc38129b` / `553f4d2f794a555bfbba32339aea86e22c6fbaca`
+- Claude execution: one non-persistent Sonnet diagnosis, high effort, `2.1492711 USD` under the `3 USD` cap, no web search/fetch, no subagent, no permission denial, and no mutation.
+- Accepted harness finding: reuse the C5-C structure for PostgreSQL 17, fresh unique runtime naming outside the worktree and `/private/tmp`, loopback-only Auth/PostgREST/PostgreSQL, exact source identity gates, real local tokens, separate OS-process database connections, bounded timeouts, raw evidence, SHA-256 manifest, cleanup, and burn-on-failure. Do not reuse GYEON-order fixtures, tables, RPC names, assertions, principals, or evidence vocabulary.
+- Accepted harness path set: exactly seven new files under `scripts/e2e/gda-estimate-managed-service-offering-r1-b/`: `config.toml`, `setup.sh`, `offering-guard.test.sql`, `real-auth.mjs`, `concurrency.mjs`, `capture-evidence.sh`, and `cleanup.sh`.
+- Corrected SQL ordering: C.7 validates every service line; C.8 builds the canonical fingerprint; C.9 acquires the existing same-`(dealer,key)` advisory lock and returns exact replay or raises `DUPLICATE_SUBMISSION`; the new offering guard runs once after that C.9 decision and before the first C.10 write.
+- Exact replay therefore keeps its existing zero-write success even if the offering is later disabled. Same key plus a materially different payload keeps `DUPLICATE_SUBMISSION` precedence. Only a genuinely new save evaluates current offering state.
+- The guard must derive the distinct managed families from the already validated service categories and perform one set-based anti-authorization query. Per-line or per-family successive queries are prohibited because PostgreSQL `READ COMMITTED` can use a different snapshot for each command.
+- The one guard statement's start snapshot is authoritative. Missing row or `enabled IS NOT TRUE` means OFF at that instant. A concurrent enable committed after the snapshot does not authorize that save; a concurrent disable committed after the snapshot does not retroactively invalidate it. The existing idempotency advisory lock does not serialize offering-setting writes and must not be described as doing so.
+- Concurrency proof must use two controlled interleavings, not one nondeterministic test accepting either outcome: disable committed before the guard snapshot must reject with zero writes; guard snapshot acquired while enabled before a later disable commits may complete successfully under that snapshot, with no partial or torn persistence.
+- Phase A remains frozen. Its pre-RPC application guard can reject a later retry after an offering change, whereas direct RPC exact replay returns the original success. That cross-layer behavior is recorded for a later separate alignment gate; it must not weaken the RPC idempotency contract or broaden Phase B-R2.
+
+**Phase B-R2 — forward-only SQL and dedicated harness implementation governance:**
+
+- Objective: produce one uncommitted source candidate that adds direct-RPC fail-closed offering enforcement and the dedicated PostgreSQL 17 verification harness without executing a database.
+- New migration path: `supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql`.
+- The migration must replace the active `public.save_estimate_from_wizard(uuid, uuid, jsonb)` definition forward-only, preserve its signature, `SECURITY INVOKER`, search path, service-role-only execution boundary, all validation, fingerprinting, idempotency, numbering, atomicity, result shape, and unrelated behavior, and add only the corrected C.9a offering guard.
+- Category-to-family mapping is exactly `window -> window_film`, `ppf -> ppf`, `maintenance -> maintenance`, `roomclean -> room_cleaning`, and `carwash -> car_wash`. `coating`, `other`, and every existing unmanaged category remain unaffected.
+- Disabled-family failure is the stable sanitized `VALIDATION_ERROR: service-not-offered`. It must occur before C.10 and leave zero customer, vehicle, estimate, estimate-item, document-number, revision, idempotency, or related mutation.
+- pgTAP must pin all five mappings; absent, false, and true states; mixed managed families; unmanaged-family non-regression; cross-tenant non-authorization; exact replay and conflicting replay precedence; and zero-write rejection.
+- The harness must prove real loopback Auth/PostgREST service-role RPC access, dealer/actor validation, five-family absent/false/true and mixed cases, cross-tenant denial, exact replay/conflict, deterministic two-interleaving concurrency, evidence hashing, cleanup, and burned-attempt behavior.
+
+**Phase B-R2 future implementation write allowlist — exactly nine paths:**
+
+1. `supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql` (new)
+2. `supabase/tests/estimate_wizard_atomic_save.test.sql`
+3. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/config.toml` (new)
+4. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh` (new)
+5. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql` (new)
+6. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/real-auth.mjs` (new)
+7. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs` (new)
+8. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh` (new)
+9. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/cleanup.sh` (new)
+
+**Phase B-R2 implementation verification boundary:** A later explicitly authorized Claude invocation may edit only the nine paths and run only `bash -n` on the three shell files, `node --check` on the two MJS files, the directive's bounded static searches, and `git diff --check`. It must not start PostgreSQL, Supabase, Docker, or Colima; run pgTAP, Auth, PostgREST, RPC, or concurrency; stage, commit, push, or contact any shared/provider environment. Fresh disposable execution is a later separate gate after Codex accepts the uncommitted candidate.
+
+**Phase B-R2 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_SQL_HARNESS_IMPLEMENTATION.md` (new)
+
+**Phase B-R2 current authoring boundary:** This gate changes only the three governance paths. It does not transmit private files to Claude; change migration, pgTAP, harness, application, dependency, configuration, generated artifact, or protected content; execute tests or runtime; access database/Supabase/Docker/Colima/browser/network/provider; or stage, commit, push, mutate PR #44, mark Ready, merge, or deploy.
+
+**Phase B-R2 governance exit:** MacBook Codex verifies the exact three-document diff, directive consistency, protected metadata, clean pre-edit base, and `git diff --check`, then requests separate exact-path stage/local-commit authorization. Governance push, private Claude transmission, nine-path implementation, static verification, disposable execution, source delivery, Ready, merge, database application, and deployment remain separate gates.
+
+**Phase B-R2 implementation candidate and independent decision:**
+
+- Governance execution HEAD/tree: `c4c3b9825c5596e0c7d2b0728c25881d9b550952` / `b7d78864048a874c231fb02ea186a242fa088a5a`.
+- Claude returned `GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_SQL_HARNESS_IMPLEMENTATION_RESULT_V1` with `CANDIDATE_READY_FOR_CODEX_REVIEW`; the candidate remains uncommitted and dirty in exactly the authorized nine paths.
+- MacBook Codex provisionally accepted the new migration's single set-based C.9a guard, exact five mappings, missing/false denial, stable sanitized error, C.9 replay/conflict precedence, C.10 pre-write placement, and static syntax.
+- MacBook Codex returned the overall candidate as `CHANGES_REQUIRED_HARNESS_ONLY`. No disposable runtime, SQL, pgTAP, Auth, PostgREST, RPC, concurrency, provider, Preview, production, stage, commit, push, PR mutation, Ready, merge, migration application, or deployment occurred.
+
+**Phase B-R2-A1 — retained-candidate harness correction:**
+
+- A1 keeps all nine B-R2 candidate paths present but permits edits to exactly five existing paths: the canonical atomic-save pgTAP file, `setup.sh`, the dedicated offering-guard pgTAP file, `concurrency.mjs`, and `capture-evidence.sh`.
+- The new migration, `config.toml`, `real-auth.mjs`, and `cleanup.sh` are frozen byte-for-byte. Every other repository path remains frozen.
+- `setup.sh` must hard-fail unless upstream ahead/behind is exactly `0 0`, every protected path has exact `100644` mode/blob/clean status, and the committed source hashes match. Record-only checks are not acceptance gates.
+- The future runtime must copy and execute both the dedicated offering-guard pgTAP and the extended canonical atomic-save pgTAP, each with its own strict non-zero plan/count/pass evidence. Hashing the canonical test without executing it is prohibited.
+- Both pgTAP files must add lifecycle-revision zero-mutation proof and pin all active unmanaged categories, including `coating`, `other`, `interior`, and `glass`, while retaining every existing managed-family, replay, conflict, cross-tenant, and zero-write assertion.
+- Disable-before-snapshot concurrency must query and inject the exact post-disable configuration revision, then prove the rejected save itself changes no lifecycle revision or business row.
+- Snapshot-before-disable concurrency must replace fixed sleeps and the unreliable non-granted relation-lock predicate with bounded polling that proves distinct holder/save/observer PIDs, `wait_event_type = 'Lock'`, `pg_blocking_pids(save_pid)` containing the holder, relation-lock evidence on `document_sequences`, and non-completion before the disable commits.
+- Secret scanning must fail closed: grep `0` means a detected match, `1` alone means clean, and any other status is a scan failure.
+
+**Phase B-R2-A1 correction write allowlist — exactly five paths:**
+
+1. `supabase/tests/estimate_wizard_atomic_save.test.sql`
+2. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh`
+3. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql`
+4. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs`
+5. `scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh`
+
+**Phase B-R2-A1 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_A1_HARNESS_CORRECTION.md` (new)
+
+**Phase B-R2-A1 current boundary:** This gate authors the exact three governance paths only while preserving the existing dirty nine-path candidate. It does not transmit private files, run Claude, alter candidate source/test/harness files, execute tests or runtime, access database/Supabase/Docker/Colima/Auth/PostgREST/browser/network/provider, or stage, commit, push, mutate PR #44, mark Ready, merge, apply a migration, or deploy.
+
+**Phase B-R2-A1 governance exit:** MacBook Codex verifies the three governance-document edits, exact retained nine-path candidate hashes, frozen four candidate files, protected metadata, clean index, and `git diff --check`. Stage/local commit and normal push of the three governance documents require separate explicit owner authorization. Private transmission and the five-path correction require another explicit authorization after governance delivery.
+
+**Accepted Phase B-R2 implementation and disposable verification:**
+
+- Source and harness delivery reached commit `6ca71ac`, followed by bounded harness-only corrections at `8b87760`, `bb32d7f`, `dbbfb53`, and `8fd745e`. The final commit/tree is `8fd745ebdd1bb02aab2820f4fb45cce707dca1b3` / `fce6c6da6806662df67087b1631d7f18a5e53847`, normally pushed to PR #44 with upstream ahead/behind `0 0`.
+- Accepted fresh suffix: `20260830T091640Z-333258`. The exact runtime was removed after successful evidence copy and retained-hash verification.
+- pgTAP passed `256/256`: canonical atomic-save `217/217` and dedicated offering guard `39/39`.
+- Real local Auth/PostgREST assertions passed `6/6`; genuine separate-connection concurrency assertions passed `13/13` with zero failures.
+- Database lint completed with warning-only findings and no error-level issue. Three query-plan captures completed. Secret scanning returned `SECRET_SCAN_CLEAN`.
+- Cleanup deleted all fixtures and proved zero rows for dealers, users, dealer members, dealer service offerings, dealer wizard catalog lifecycle, document sequences, customers, vehicles, estimates, and estimate items. Supabase stop, retained evidence copy, retained hash verification, and exact runtime removal all returned zero.
+- Evidence integrity: 16 final artifacts, 15 manifest-listed pre-manifest hashes, and zero hash mismatch. The retained evidence root is `/Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1b-evidence/gda-estimate-offering-r1b.20260830T091640Z-333258`.
+- Two prior suffixes are burned and excluded from acceptance: `20260830T091046Z-42f7e6` stopped before test execution because the disposable-confirmation precondition was omitted; `20260830T091248Z-aab146` passed executable tests and database teardown but failed canonical artifact packaging. Neither suffix was repaired or reused into acceptance.
+- Evidence class is `E2_LOCAL_DISPOSABLE_DB`. No hosted Supabase project, shared/staging/production database, external provider, Preview, or production environment was contacted. No migration was applied outside the fresh local disposable runtime.
+- PR #44 remains `OPEN/Draft`. Ready conversion, merge, migration promotion/application, deployment, and E3 environment verification remain separate owner-approval gates.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
