@@ -104,6 +104,7 @@ export type WizardSaveIntentFailure =
   | "tenant-context-unavailable"
   | "runtime-config-unavailable"
   | "stale-config-revision"
+  | "service-not-offered"
   | "server-pricing-failed"
   | "save-mapping-failed"
   | "save-validation-failed"
@@ -126,7 +127,7 @@ export type WizardSaveIntentFailure =
 // writing `reportFailure({ failure: "persistence-failed" })` in a post-persist
 // remapping arm does not compile.
 
-/** The ten failures that can occur before `deps.persist` is ever invoked. */
+/** The eleven failures that can occur before `deps.persist` is ever invoked. */
 export type WizardSavePrePersistFailure = Exclude<
   WizardSaveIntentFailure,
   "persistence-unavailable" | "persistence-conflict" | "persistence-failed"

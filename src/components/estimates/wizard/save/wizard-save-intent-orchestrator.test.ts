@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 
-import { runWizardSaveIntent, type WizardSaveIntentDeps } from "./wizard-save-intent-orchestrator";
+import { runWizardSaveIntent, isPpfBearingDraft, type WizardSaveIntentDeps } from "./wizard-save-intent-orchestrator";
 import type {
   WizardSaveFailureReport, WizardSaveIntentResult, WizardSaveIntentValidation,
 } from "./wizard-save-intent-types";
@@ -21,6 +21,7 @@ import type { EstimateSaveRequest } from "./estimate-save-dto";
 import type { EstimateSaveActionResult } from "./estimate-save-orchestration-types";
 import type { EstimateSaveValidationResult } from "./estimate-save-errors";
 import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
+import { initialEstimateWizardDraftV22 } from "../draft/wizard-draft-state";
 
 const USER = "u0000000-0000-0000-0000-000000000001";
 const DEALER = "d0000000-0000-0000-0000-00000000000a";
@@ -40,15 +41,21 @@ async function realActorContext() {
 }
 
 // ── Minimal but structurally complete runtime configuration ──
-function runtimeConfig(over: { dealerId?: string; currentRevision?: number } = {}): AuthoritativeWizardRuntimeConfiguration {
+function runtimeConfig(
+  over: { dealerId?: string; currentRevision?: number; ppfOffered?: boolean } = {},
+): AuthoritativeWizardRuntimeConfiguration {
   return {
     ok: true,
     dealerId: over.dealerId ?? DEALER,
     shopRank: "shop",
     catalog: DEFAULT_PRICING_CATALOG,
     screenConfig: {
-      // B2-E2G: every managed family opted OUT — this fixture configures none of them.
-      serviceOfferings: { window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
+      // B2-E2G: every managed family opted OUT — this fixture configures none of them, except PPF
+      // when a test explicitly opts it in via `ppfOffered`.
+      serviceOfferings: {
+        window_film: false, ppf: over.ppfOffered ?? false,
+        maintenance: false, room_cleaning: false, car_wash: false,
+      },
       maintenanceMenus: [], washMenus: [], roomMenus: [], filmTypes: [], windowAreas: [],
       otherWorkPresets: [], storeGlobalOptions: [], coupons: [], ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
     },
@@ -56,6 +63,25 @@ function runtimeConfig(over: { dealerId?: string; currentRevision?: number } = {
       ppfMethods: [], filmTypes: [], maintenanceMenus: [], washMenus: [], roomCleaningMenus: [], storeGlobalOptions: [],
     },
     lifecycle: { state: "CATALOG_REVIEWED", currentRevision: over.currentRevision ?? 3, reviewedRevision: over.currentRevision ?? 3 },
+  };
+}
+
+// ── PPF-OFFERING-R1-B fixtures ────────────────────────────────────────────────
+//
+// A structurally complete draft, built from the SAME canonical initial state the
+// live wizard starts from, so "canonical default PPF section" in these tests means
+// exactly what it means in production — never a re-spelled shape.
+function draftWith(over: {
+  selectedCategories?: EstimateWizardDraftV22["serviceSelection"]["selectedCategories"];
+  ppf?: Partial<EstimateWizardDraftV22["serviceConfiguration"]["ppf"]>;
+} = {}): EstimateWizardDraftV22 {
+  return {
+    ...initialEstimateWizardDraftV22,
+    serviceSelection: { selectedCategories: over.selectedCategories ?? [] },
+    serviceConfiguration: {
+      ...initialEstimateWizardDraftV22.serviceConfiguration,
+      ppf: { ...initialEstimateWizardDraftV22.serviceConfiguration.ppf, ...(over.ppf ?? {}) },
+    },
   };
 }
 
@@ -72,9 +98,15 @@ function completePricing(over: Partial<WizardPricingResult> = {}): WizardPricing
 
 const REQUEST = { customer: { mode: "existing", customerId: "c-1" } } as unknown as EstimateSaveRequest;
 
-// A draft object is never inspected by the orchestrator (the validator already reconstructed it), so
-// the trace-level identity is what matters here.
-const DRAFT = { version: "2.2" } as unknown as EstimateWizardDraftV22;
+// A draft object's BUSINESS content is never inspected by the orchestrator beyond the PPF-offering
+// guard below (the validator already reconstructed it), so the trace-level identity is what matters
+// for every other stage. The PPF section sits at its canonical initial defaults and no `ppf` category
+// is selected, so this fixture is never PPF-bearing regardless of the fixture's PPF-offering setting.
+const DRAFT = {
+  version: "2.2",
+  serviceSelection: { selectedCategories: [] },
+  serviceConfiguration: { ppf: initialEstimateWizardDraftV22.serviceConfiguration.ppf },
+} as unknown as EstimateWizardDraftV22;
 
 const okValidation = (): WizardSaveIntentValidation => ({
   ok: true,
@@ -278,6 +310,163 @@ test("a matching revision proceeds", async () => {
   const { deps, trace } = makeDeps({ loadRuntimeConfig: async () => runtimeConfig({ currentRevision: 3 }) });
   await runWizardSaveIntent({}, deps);
   assert.ok(trace.includes("computePricing"));
+});
+
+// ── 7b. PPF-OFFERING-R1-B: server-owned PPF-offering rejection ───────────────
+//
+// Runs AFTER the revision guard and BEFORE pricing. `runtime.screenConfig.serviceOfferings.ppf`
+// is the sole authority — no client flag, rank, or catalog inference is consulted.
+
+const validationFor = (draft: EstimateWizardDraftV22): WizardSaveIntentValidation => ({
+  ok: true,
+  intent: { draft, expectedConfigRevision: 3, idempotencyKey: KEY },
+});
+
+test("isPpfBearingDraft: the pure predicate matches the frozen nine-signal contract", () => {
+  assert.equal(isPpfBearingDraft(draftWith()), false, "canonical default, no selected ppf");
+  assert.equal(isPpfBearingDraft(draftWith({ selectedCategories: ["ppf"] })), true, "selected ppf");
+  assert.equal(isPpfBearingDraft(draftWith({ ppf: { installationMethod: "partial" } })), true);
+  assert.equal(isPpfBearingDraft(draftWith({ ppf: { fullCoverage: "front_full" } })), true);
+  assert.equal(isPpfBearingDraft(draftWith({ ppf: { selectedPartIds: ["p1"] } })), true);
+  assert.equal(isPpfBearingDraft(draftWith({ ppf: { quantitiesByPart: { p1: 1 } } })), true);
+  assert.equal(isPpfBearingDraft(draftWith({ ppf: { ppfTypeId: "t1" } })), true);
+  assert.equal(isPpfBearingDraft(draftWith({ ppf: { unitPriceInput: "1000" } })), true);
+  assert.equal(isPpfBearingDraft(draftWith({ ppf: { vehicleCoefficientInput: "1.1" } })), true);
+  assert.equal(isPpfBearingDraft(draftWith({ ppf: { interiorRows: [{ id: "r1", location: "dash", amount: "1000" }] } })), true);
+});
+
+test("PPF off, canonical default PPF section, no selected ppf: proceeds to pricing and persistence", async () => {
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith()),
+    loadRuntimeConfig: async () => runtimeConfig({ ppfOffered: false }),
+  });
+  await runWizardSaveIntent({}, deps);
+  assert.deepEqual(trace, [
+    "validateIntent", "resolveActorContext", "loadRuntimeConfig",
+    "computePricing", "mapSaveRequest", "validateSaveRequest", "persist",
+  ], "the structurally required default section is not PPF intent");
+});
+
+test("PPF off plus selected ppf: exactly service-not-offered, nothing downstream runs", async () => {
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith({ selectedCategories: ["ppf"] })),
+    loadRuntimeConfig: async () => runtimeConfig({ ppfOffered: false }),
+  });
+  const r = await runWizardSaveIntent({}, deps);
+  assertFailure(r, "service-not-offered", "ppf selected while off");
+  assert.deepEqual(trace, ["validateIntent", "resolveActorContext", "loadRuntimeConfig"]);
+  assert.equal(trace.includes("computePricing"), false, "pricing never ran");
+  assert.equal(trace.includes("mapSaveRequest"), false, "mapper never ran");
+  assert.equal(trace.includes("validateSaveRequest"), false, "DTO validation never ran");
+  assert.equal(trace.includes("persist"), false, "persistence never ran");
+});
+
+test("PPF off plus partial configuration without the category: rejected before pricing", async () => {
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith({ ppf: { installationMethod: "partial" } })),
+    loadRuntimeConfig: async () => runtimeConfig({ ppfOffered: false }),
+  });
+  const r = await runWizardSaveIntent({}, deps);
+  assertFailure(r, "service-not-offered", "partial method set, category not selected");
+  assert.equal(trace.includes("computePricing"), false);
+});
+
+test("each of the nine PPF-bearing signals is independently rejected while off", async () => {
+  const cases: Array<[string, Parameters<typeof draftWith>[0]]> = [
+    ["selected ppf category", { selectedCategories: ["ppf"] }],
+    ["installationMethod", { ppf: { installationMethod: "full" } }],
+    ["fullCoverage", { ppf: { fullCoverage: "front_full" } }],
+    ["selectedPartIds", { ppf: { selectedPartIds: ["p1"] } }],
+    ["quantitiesByPart", { ppf: { quantitiesByPart: { p1: 1 } } }],
+    ["ppfTypeId", { ppf: { ppfTypeId: "t1" } }],
+    ["unitPriceInput", { ppf: { unitPriceInput: "1000" } }],
+    ["vehicleCoefficientInput", { ppf: { vehicleCoefficientInput: "1.1" } }],
+    ["interiorRows", { ppf: { interiorRows: [{ id: "r1", location: "dash", amount: "1000" }] } }],
+  ];
+  for (const [label, over] of cases) {
+    const { deps, trace } = makeDeps({
+      validateIntent: () => validationFor(draftWith(over)),
+      loadRuntimeConfig: async () => runtimeConfig({ ppfOffered: false }),
+    });
+    const r = await runWizardSaveIntent({}, deps);
+    assertFailure(r, "service-not-offered", label);
+    assert.equal(trace.includes("computePricing"), false, `${label}: pricing never ran`);
+    assert.equal(trace.includes("persist"), false, `${label}: persistence never ran`);
+  }
+});
+
+test("PPF offered preserves the full and partial PPF paths and reaches the downstream sequence", async () => {
+  const cases: Array<[string, Parameters<typeof draftWith>[0]]> = [
+    ["full", { selectedCategories: ["ppf"], ppf: { installationMethod: "full", fullCoverage: "front_full" } }],
+    ["partial", { selectedCategories: ["ppf"], ppf: { installationMethod: "partial", selectedPartIds: ["p1"] } }],
+  ];
+  for (const [label, over] of cases) {
+    const { deps, trace } = makeDeps({
+      validateIntent: () => validationFor(draftWith(over)),
+      loadRuntimeConfig: async () => runtimeConfig({ ppfOffered: true }),
+    });
+    await runWizardSaveIntent({}, deps);
+    assert.deepEqual(trace, [
+      "validateIntent", "resolveActorContext", "loadRuntimeConfig",
+      "computePricing", "mapSaveRequest", "validateSaveRequest", "persist",
+    ], `${label}: reaches the existing downstream sequence unchanged`);
+  }
+});
+
+test("a stale revision takes precedence over a PPF-off rejection", async () => {
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith({ selectedCategories: ["ppf"] })),
+    loadRuntimeConfig: async () => runtimeConfig({ ppfOffered: false, currentRevision: 999 }),
+  });
+  const r = await runWizardSaveIntent({}, deps);
+  assertFailure(r, "stale-config-revision", "stale precedes PPF-off");
+  assert.deepEqual(trace, ["validateIntent", "resolveActorContext", "loadRuntimeConfig"]);
+});
+
+test("a dealer/runtime mismatch still takes precedence over a PPF-off rejection", async () => {
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith({ selectedCategories: ["ppf"] })),
+    loadRuntimeConfig: async () => runtimeConfig({ ppfOffered: false, dealerId: OTHER_DEALER }),
+  });
+  const r = await runWizardSaveIntent({}, deps);
+  assertFailure(r, "tenant-context-unavailable", "mismatch precedes PPF-off");
+  assert.deepEqual(trace, ["validateIntent", "resolveActorContext", "loadRuntimeConfig"]);
+});
+
+test("the rejection reports exactly one service-not-offered event with the resolved dealer id and no detail", async () => {
+  const h = makeDeps({
+    validateIntent: () => validationFor(draftWith({ selectedCategories: ["ppf"] })),
+    loadRuntimeConfig: async () => runtimeConfig({ ppfOffered: false }),
+  });
+  const r = await runWizardSaveIntent({}, h.deps);
+  assert.equal(r.ok, false);
+  assert.deepEqual(Object.keys(r).sort(), ["failure", "ok"], "no detail carried");
+  assert.equal(h.reports.length, 1, "exactly one record");
+  assert.deepEqual(h.reports[0], { failure: "service-not-offered", dealerId: DEALER });
+});
+
+test("all non-PPF families remain unaffected while PPF is off", async () => {
+  const over: Parameters<typeof draftWith>[0] = {
+    selectedCategories: ["coating", "window", "maintenance", "carwash", "roomclean", "other"],
+  };
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith(over)),
+    loadRuntimeConfig: async () => runtimeConfig({ ppfOffered: false }),
+  });
+  await runWizardSaveIntent({}, deps);
+  assert.ok(trace.includes("computePricing"), "non-PPF categories are never blocked by the PPF-offering guard");
+  assert.ok(trace.includes("persist"));
+});
+
+test("a THROWING reporter cannot change the typed service-not-offered result", async () => {
+  const { deps, trace } = makeDeps({
+    validateIntent: () => validationFor(draftWith({ selectedCategories: ["ppf"] })),
+    loadRuntimeConfig: async () => runtimeConfig({ ppfOffered: false }),
+    reportFailure: () => { throw new Error("reporting outage"); },
+  });
+  const r = await runWizardSaveIntent({}, deps);
+  assertFailure(r, "service-not-offered", "unchanged by a throwing reporter");
+  assert.equal(trace.includes("computePricing"), false);
 });
 
 // ── 8/9. Server repricing ────────────────────────────────────────────────────
@@ -573,7 +762,7 @@ test("the action generates its own requestId and does not accept one", () => {
   assert.equal(/requestId[^\n]*idempotencyKey|idempotencyKey[^\n]*requestId/.test(code), false);
 });
 
-// ── Zero importers ───────────────────────────────────────────────────────────
+// ── Production route mounting boundary ───────────────────────────────────────
 
 function walk(dir: string): string[] {
   const out: string[] = [];
@@ -585,14 +774,12 @@ function walk(dir: string): string[] {
   return out;
 }
 
-test("the new action has ZERO importers anywhere in src/", () => {
+test("the production estimate page is the action's only route importer", () => {
   const importers: string[] = [];
-  for (const file of walk("src")) {
-    if (file.endsWith(`${ACTION_MODULE}.ts`)) continue;             // the action itself
-    if (file.endsWith("wizard-save-intent-orchestrator.test.ts")) continue; // this test (source text only)
+  for (const file of walk("src/app")) {
     if (readFileSync(file, "utf8").includes(ACTION_MODULE)) importers.push(file);
   }
-  assert.deepEqual(importers, [], `the action must remain unmounted; found importers: ${importers.join(", ")}`);
+  assert.deepEqual(importers, ["src/app/estimates/new/page.tsx"]);
 });
 
 test("the save barrel does not re-export the new action and has no wildcard export", () => {
@@ -601,12 +788,9 @@ test("the save barrel does not re-export the new action and has no wildcard expo
   assert.equal(/export\s+\*/.test(barrel), false, "no wildcard export could pick it up");
 });
 
-test("ScreensPreview and every route/page still ignore the new action", () => {
-  const preview = readFileSync("src/components/estimates/wizard/screens/ScreensPreview.tsx", "utf8");
-  assert.equal(preview.includes(ACTION_MODULE), false, "ScreensPreview does not import it");
-  for (const file of walk("src/app")) {
-    assert.equal(readFileSync(file, "utf8").includes(ACTION_MODULE), false, `${file} must not import the action`);
-  }
+test("the production estimate page imports the action module exactly once", () => {
+  const route = readFileSync("src/app/estimates/new/page.tsx", "utf8");
+  assert.equal(route.split(ACTION_MODULE).length - 1, 1);
 });
 
 // ── OBS-1L-B7: exactly one operational record, and who owns it ───────────────

@@ -43,6 +43,7 @@ const ALL_CODES: EstimateSaveActionErrorCode[] =
 const ALL_FAILURES: WizardSaveReportableFailure[] = [
   "invalid-intent", "unauthenticated", "actor-context-unavailable", "forbidden",
   "tenant-context-unavailable", "runtime-config-unavailable", "stale-config-revision",
+  "service-not-offered",
   "server-pricing-failed", "save-mapping-failed", "save-validation-failed", "persist-invariant",
 ];
 
@@ -55,7 +56,7 @@ const ALL_FAILURES: WizardSaveReportableFailure[] = [
 test("every stage, code and failure is mapped — no map has a hole", () => {
   assert.equal(Object.keys(WIZARD_SAVE_MAPS.STAGE_SLUG).length, 7);
   assert.equal(Object.keys(WIZARD_SAVE_MAPS.CODE_SEVERITY).length, 13);
-  assert.equal(Object.keys(WIZARD_SAVE_MAPS.PRE_PERSIST).length, 11);
+  assert.equal(Object.keys(WIZARD_SAVE_MAPS.PRE_PERSIST).length, 12);
 
   for (const s of ALL_STAGES) assert.ok(WIZARD_SAVE_MAPS.STAGE_SLUG[s], `stage ${s} unmapped`);
   for (const c of ALL_CODES) assert.ok(WIZARD_SAVE_MAPS.CODE_SEVERITY[c], `code ${c} unmapped`);
@@ -143,20 +144,21 @@ test("a success (null code) is info and carries a null code", () => {
   assert.equal(events[0].stage, "done");
 });
 
-test("severity is NOT derived from the code — four VALIDATION_ERROR failures differ", () => {
+test("severity is NOT derived from the code — five VALIDATION_ERROR failures differ", () => {
   const severityOf = (failure: WizardSaveReportableFailure) => {
     const { events, sink } = collector();
     reportWizardSaveFailure(REQ, { failure }, sink);
     return { severity: events[0].severity, code: events[0].code };
   };
-  // All four carry VALIDATION_ERROR...
-  for (const f of ["invalid-intent", "stale-config-revision", "save-mapping-failed", "save-validation-failed"] as const) {
+  // All five carry VALIDATION_ERROR...
+  for (const f of ["invalid-intent", "stale-config-revision", "service-not-offered", "save-mapping-failed", "save-validation-failed"] as const) {
     assert.equal(severityOf(f).code, "VALIDATION_ERROR", `${f} code`);
   }
   // ...but a stale revision is a real race worth noticing, while the rest are ordinary
   // correctable rejections. Deriving severity from the code would flatten that.
   assert.equal(severityOf("stale-config-revision").severity, "warn");
   assert.equal(severityOf("invalid-intent").severity, "info");
+  assert.equal(severityOf("service-not-offered").severity, "info");
   assert.equal(severityOf("save-mapping-failed").severity, "info");
   assert.equal(severityOf("save-validation-failed").severity, "info");
 });
@@ -169,6 +171,31 @@ test("persist-invariant is an error carrying its own internal code", () => {
   assert.equal(events[0].stage, "rpc");
   // It must not be confusable with a code the service itself can produce.
   assert.equal(ALL_CODES.includes(PERSIST_INVARIANT_FAILED as EstimateSaveActionErrorCode), false);
+});
+
+// ── PPF-OFFERING-R1-B: service-not-offered mapping ──────────────────────────
+
+test("service-not-offered maps to stage service-offering, code VALIDATION_ERROR, severity info", () => {
+  const { events, sink } = collector();
+  reportWizardSaveFailure(REQ, { failure: "service-not-offered", dealerId: DEALER }, sink);
+  assert.equal(events.length, 1);
+  assert.equal(events[0].stage, "service-offering");
+  assert.equal(events[0].code, "VALIDATION_ERROR");
+  assert.equal(events[0].severity, "info");
+  assert.equal(events[0].dealerId, DEALER);
+});
+
+test("service-not-offered's event carries only allowlisted keys and no PPF/customer/vehicle/draft content", () => {
+  const { events, sink } = collector();
+  reportWizardSaveFailure(REQ, { failure: "service-not-offered", dealerId: DEALER }, sink);
+  assert.deepEqual(
+    Object.keys(events[0]).sort(),
+    ["code", "dealerId", "env", "event", "release", "requestId", "severity", "stage"],
+  );
+  const serialized = JSON.stringify(events[0]);
+  for (const forbidden of ["ppf", "installationMethod", "selectedPartIds", "draft", "customer", "vehicle"]) {
+    assert.equal(serialized.toLowerCase().includes(forbidden.toLowerCase()), false, `payload exposes ${forbidden}`);
+  }
 });
 
 // ── 4. Event identity ───────────────────────────────────────────────────────

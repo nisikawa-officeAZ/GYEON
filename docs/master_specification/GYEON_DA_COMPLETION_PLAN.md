@@ -725,7 +725,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-PRICING-RECOVERY-R1 — Preview authoritative-pricing recovery
 
-**Status:** COMPLETE — `GDA_ESTIMATE_PRICING_RECOVERY_R1_PREVIEW_ACCEPTED`. The bounded reader repair is committed and pushed to PR #41 at `9f9b1e61d5b9960a3a35f9c6d1c5e1f1dad5ef3b`; Vercel deployed it successfully, and MacBook Codex independently verified the authenticated Preview Estimate Wizard route. Ready, merge, and production deployment remain separate gates.
+**Status:** COMPLETE — `GDA_ESTIMATE_PRICING_RECOVERY_R1_PRODUCTION_ACCEPTED`. The bounded reader repair was accepted in Preview, PR #41 was squash-merged to `main` as `81fd36bf5c73cb84b872deaf4ab3211a634fbe1f` with tree `0fc2f7877ab846ac7d9700986ee0f68d4e88f4b0`, the automatic Vercel production deployment succeeded, and MacBook Codex independently verified the authenticated production Estimate Wizard route.
 
 **Objective:** Restore the Estimate Wizard Preview route by making the strict reader safely accept the natural coating-only sparse object produced by independent settings persistence, without weakening fail-closed validation of any value that is actually present.
 
@@ -779,29 +779,122 @@ The result document was excluded from harness implementation and was created lat
 - The four protected blobs remained unchanged: `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14`.
 - PR #41 Vercel checks passed. In the authenticated Preview route `/estimates/new`, the seven-step `新規見積` wizard and customer-registration form rendered, `見積を開始できません` matched zero elements, and captured browser warnings/errors were zero.
 
-**Accepted boundary:** This phase proves the observed coating-only row can open the Estimate Wizard without weakening present-value validation. It does not make a `window_film_v1`-only object valid and does not implement PPF offering control. No migration, data backfill, Preview-row mutation, DB apply, Ready transition, merge, or production deployment occurred.
+**Production acceptance:** After the separately approved Ready and squash-merge gates, `main` reached `81fd36bf5c73cb84b872deaf4ab3211a634fbe1f`. The automatic Vercel production deployment succeeded. In the authenticated production route `/estimates/new`, the seven-step `新規見積` wizard and customer-registration form rendered, `見積を開始できません` matched zero elements, and captured browser warnings/errors were zero.
+
+**Accepted boundary:** This phase proves the observed coating-only row can open the Estimate Wizard in production without weakening present-value validation. It does not make a `window_film_v1`-only object valid and does not implement PPF offering control. No migration, data backfill, production-row mutation, database application, or manual deployment occurred; the production deployment was the normal automatic deployment caused by the authorized merge.
 
 **Closeout write allowlist — exactly two paths:**
 
 1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 
-**Exit:** Record and separately deliver this two-document Preview-acceptance closeout. Then begin `GDA-ESTIMATE-PPF-OFFERING-R1` as the next independent phase and PR; do not mix it into PR #41.
+**Exit:** `GDA_ESTIMATE_PRICING_RECOVERY_R1_PRODUCTION_ACCEPTED`. Begin `GDA-ESTIMATE-PPF-OFFERING-R1` as the next independent phase and PR; do not reopen or mix it into PR #41.
 
 ### GDA-ESTIMATE-PPF-OFFERING-R1 — PPF availability and partial-PPF control
 
-**Status:** QUEUED — owner-approved next phase after GDA-ESTIMATE-PRICING-RECOVERY-R1. Diagnosis and implementation are not yet authorized.
+**Status:** PHASE A SOURCE ACCEPTED, COMMITTED, AND PUSHED / PHASE B SERVER-SAVE GOVERNANCE CANDIDATE AUTHORING AUTHORIZED — Phase A is locally verified at E2 and delivered on the dedicated branch. Phase B is limited to one five-file server-save enforcement candidate. Phase C RPC/SQL enforcement, database access, Preview/production changes, Ready, merge, and deployment remain separately unauthorized.
 
 **Objective:** Make the Estimate Wizard obey the server-owned PPF offering setting consistently in UI, navigation, pricing, draft restoration, and save authorization.
 
 **Frozen behavior:**
 
-- When PPF is offered, the main PPF control is selectable and partial PPF remains available as an attached option even when the operator selects coating only.
+- When PPF is offered, the main PPF control is selectable. Partial PPF remains available as an attached option even when the operator selects coating only; the operator must not be forced to select the main PPF category merely to add partial PPF.
 - When PPF is not offered, the PPF control remains visible but disabled and gray, with a plain-language reason that the store setting disables PPF.
 - When PPF is not offered, independent PPF, partial PPF, PPF pricing, stale draft values, manipulated client payloads, and saved-estimate PPF lines are rejected or removed under one server-owned contract.
 - Hiding the control completely is not the approved default because it makes a configured restriction indistinguishable from a missing function or rendering defect.
 
-**Boundary:** No implementation allowlist is inferred before the pricing-recovery phase closes and a bounded read-only diagnosis maps the real PPF call chain. This phase must not be mixed into the Preview pricing-recovery PR.
+**Governance base:**
+
+- Branch: `agent/estimate-ppf-offering-r1`
+- Fixed source-base commit: `81fd36bf5c73cb84b872deaf4ab3211a634fbe1f`
+- Fixed source-base tree: `0fc2f7877ab846ac7d9700986ee0f68d4e88f4b0`
+- Worktree: `work/dealeros-estimate-ppf-offering-r1`
+- Responsible diagnosis agent after a later gate: MacBook Claude
+- Independent acceptance authority: MacBook Codex
+- Product authority: Office AZ
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PPF_OFFERING_R1_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Current source observations to be independently diagnosed:**
+
+- Step 3 currently renders a static PPF control without receiving the authoritative offering map.
+- Step 4 currently filters an opted-out PPF family out of the visible sections instead of showing the approved disabled-gray state.
+- Existing Step-4 contract tests explicitly preserve the old hide-when-off behavior and therefore require deliberate replacement rather than accidental drift.
+- The server save orchestrator resolves the current dealer-bound runtime, including service offerings, but does not yet prove that selected or priced PPF content is allowed before mapping and persistence.
+- The current PPF pricing path is selected from draft state; the latest atomic-save SQL accepts the `ppf` category but does not itself read the dealer offering row.
+
+**Required read-only diagnosis:** Map the exact end-to-end PPF authority from offering persistence through runtime configuration, Step-3 presentation, Step-4 full/partial selection, pricing, draft restoration, hostile save intent, DTO/RPC persistence, and saved-estimate behavior. Return the smallest literal later write phases and focused verification commands that enforce one server-owned rule without redesigning the approved UI.
+
+**Read-only diagnosis result:**
+
+- Result identifier: `GDA_ESTIMATE_PPF_OFFERING_R1_READ_ONLY_DIAGNOSIS_RESULT_V1`
+- Verdict: `CHANGES_REQUIRED_GOVERNANCE`
+- Execution HEAD/tree: `d1a4cd29ac611e4cf42002a7c51a49239423808d` / `95ed2d42ca1a9b8c1260c3a083b21fa826537e71`
+- The committed governance delta contained exactly the required three paths, the worktree remained clean, and all four protected blobs matched.
+- Confirmed conflicts: Step 3 does not receive the PPF offering switch; Step 4 removes opted-out PPF instead of presenting the approved disabled state; coating-only selection has no attached partial-PPF entry; server save and the current atomic RPC do not independently deny PPF while the dealer offering is off.
+- MacBook Codex correction: missing implementation is expected and is not itself a governance defect. The `CHANGES_REQUIRED_GOVERNANCE` consequence is retained because the returned server phase referenced one file that had not been read, the earliest client normalization point was not fixed, and the SQL verification path was not literal. Those gaps must be resolved in separate later governance; they do not block the bounded Phase A UI/state work.
+
+**Phase A — UI/state behavior only:**
+
+- Step 3 receives the authoritative `screenConfig.serviceOfferings.ppf` value from the existing server-resolved runtime.
+- PPF offered: the Step-3 PPF control remains enabled and selectable.
+- PPF not offered: the same control remains visible, disabled, gray, and displays exactly `店舗設定でPPFが「提供しない」に設定されています。` It must emit no canonical-state patch.
+- PPF offered and coating selected without main PPF: Step 4 shows a compact attached-action entry `部分PPFを追加`. Activating it applies one canonical patch that adds the existing `ppf` category and sets the existing PPF `installationMethod` to `partial`, then opens the existing PPF section. It creates no second PPF model, category, line identity, or price path.
+- The attached action is absent when PPF is not offered, absent when PPF is already selected, and visibly disabled with the existing administrator setup reason when PPF is offered but its global prerequisites are incomplete.
+- Phase A does not claim server authorization. Stale or hostile PPF draft rejection remains mandatory Phase B/C work and Phase A cannot be merged to production independently of those gates.
+
+**Phase A literal implementation write allowlist — exactly five paths:**
+
+1. `src/components/estimates/wizard/EstimateWizard.tsx`
+2. `src/components/estimates/wizard/steps/Step3Category.tsx`
+3. `src/components/estimates/wizard/steps/Step3Category.test.tsx` (new)
+4. `src/components/estimates/wizard/steps/Step4Estimate.tsx`
+5. `src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx`
+
+**Phase A governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PPF_OFFERING_R1_A_UI_STATE_IMPLEMENTATION.md` (new)
+
+**Accepted Phase A source:**
+
+- Commit: `58d5b044117a33233eb4899550fb9e75a91b8c40`
+- Tree: `66b369a49efdd1536a3800e30b0394f84b51f370`
+- Delivery: normal push to `origin/agent/estimate-ppf-offering-r1`; no force push.
+- Scope: exactly the five Phase-A implementation paths.
+- Verification: PPF-focused Step-3 and Step-4 cases `14/14` PASS, `npm run typecheck` PASS, and `git diff --check` PASS. The full two-file command retained five pre-existing window-film failures that were reproduced unchanged at the fixed source base; they are not a Phase-A regression.
+- The four protected blobs remained unchanged. The worktree was clean after commit and the remote branch HEAD matched the exact commit.
+- Phase A remains non-mergeable by itself because server-save and direct-RPC enforcement are still required.
+
+**Phase B — authoritative server-save enforcement:**
+
+- After the current runtime is loaded, tenant identity is proved, and the expected configuration revision matches, the pure save orchestrator must reject a PPF-bearing validated draft when `runtime.screenConfig.serviceOfferings.ppf` is false.
+- A required structurally present but canonical-default PPF configuration is not PPF intent. Selected `ppf` or any non-default PPF configuration is PPF intent and fails closed before pricing, mapping, DTO validation, or persistence.
+- The stable public failure is `service-not-offered`; it produces exactly one sanitized pre-persist event at stage `service-offering`, code `VALIDATION_ERROR`, severity `info`.
+- Phase B does not silently rewrite a stale/hostile draft and does not change Server Action wiring, pricing, mapping, DTOs, persistence, RPC, SQL, or migrations.
+
+**Phase B literal implementation write allowlist — exactly five existing paths:**
+
+1. `src/components/estimates/wizard/save/wizard-save-intent-orchestrator.ts`
+2. `src/components/estimates/wizard/save/wizard-save-intent-orchestrator.test.ts`
+3. `src/components/estimates/wizard/save/wizard-save-intent-types.ts`
+4. `src/components/estimates/wizard/save/wizard-save-observability.ts`
+5. `src/components/estimates/wizard/save/wizard-save-observability.test.ts`
+
+**Phase B governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PPF_OFFERING_R1_B_SERVER_SAVE_ENFORCEMENT.md` (new)
+
+**Boundary:** This governance candidate changes exactly the three Phase-B governance paths. It changes no source, test, migration, SQL, RPC, UI implementation, dependency, config, generated artifact, or protected path. It runs no implementation test, typecheck, build, runtime, database, Supabase, Auth, browser, Vercel, provider, or external-service command. It does not transmit private files to Claude and does not stage, commit, push, create or mutate a PR, mark Ready, merge, or deploy.
+
+**Exit:** MacBook Codex verifies the exact Phase-B three-document governance candidate and `git diff --check`, then requests separate stage/local-commit authorization. Push and transmission of the Phase-B directive/private source to Claude require later explicit gates. Phase C RPC/SQL enforcement remains unimplemented and separately governed.
 
 ### GDA-3 — Completion Desk
 

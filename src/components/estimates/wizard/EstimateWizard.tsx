@@ -125,7 +125,7 @@ export default function EstimateWizard({
           onSizeEstimate={setBodySizeEstimate}
         />
       )}
-      {api.step === 3 && <Step3Category api={api} />}
+      {api.step === 3 && <Step3Category api={api} ppfOffered={screenConfig.serviceOfferings.ppf} />}
       {api.step === 4 && <Step4Estimate api={api} shopRank={shopRank} screenConfig={screenConfig} />}
       {api.step === 5 && <Step5Discount api={api} />}
       {api.step === 6 && <Step6Notes api={api} />}

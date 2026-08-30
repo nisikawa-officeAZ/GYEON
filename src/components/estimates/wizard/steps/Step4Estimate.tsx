@@ -27,6 +27,7 @@ import {
 } from "@/lib/estimates/service-categories";
 import type { EstimateWizardApi } from "../useEstimateWizard";
 import type { WizardRuntimeInputs } from "../contract/wizard-runtime-inputs";
+import type { WizardStorePatch } from "../bridge/ew-ui1-to-draft";
 
 import { Step4Estimate as Step4EstimateShell } from "../screens/Step4Estimate";
 import { CoatingSelector } from "../screens/CoatingSelector";
@@ -87,6 +88,25 @@ const SETUP_REQUIRED_REASON: Readonly<Record<ServiceFamily, string>> = {
  */
 const WINDOW_AREAS_UNAVAILABLE_REASON =
   "ウィンドウフィルム設定で、提供する部位またはセットの金額と所要時間を登録してください。";
+
+/**
+ * GDA-ESTIMATE-PPF-OFFERING-R1-A — the compact attached action offered from the coating section
+ * when the operator has not selected the main PPF category. Exact label per the frozen directive.
+ */
+const ATTACHED_PARTIAL_PPF_LABEL = "部分PPFを追加";
+
+/**
+ * Pure, directly testable canonical patch for the attached-partial-PPF action. It reuses the
+ * EXISTING `ppf` category and the existing `services.ppf.installationMethod` field — no second
+ * PPF model, category, price route, or line identity. The existing category order is preserved;
+ * `ppf` is appended only when absent, so calling this twice never duplicates it.
+ */
+export function attachedPartialPpfPatch(categories: readonly string[]): WizardStorePatch {
+  return {
+    categories: categories.includes("ppf") ? categories : [...categories, "ppf"],
+    services: { ppf: { installationMethod: "partial" } },
+  };
+}
 
 export interface Step4EstimateProps extends WizardRuntimeInputs {
   api: EstimateWizardApi;
@@ -161,27 +181,55 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
   // Row-creation callbacks surface the fail-closed result to the operator; success clears the notice.
   const withRowResult = (run: () => RowCreateResult) => () => setRowIdError(run().ok ? null : ROW_ID_ERROR_MESSAGE);
 
+  // ── GDA-ESTIMATE-PPF-OFFERING-R1-A — attached partial PPF from a coating-only-so-far selection ──
+  // Visible only while the operator has not selected the main PPF category and the dealer offers
+  // PPF at all; absent when PPF is off (opt-out) or already selected (the existing PPF tab and
+  // full/partial flow remain authoritative in that case).
+  const showAttachedPartialPpf = categories.includes("coating") && !categories.includes("ppf") && offerings.ppf;
+  const attachedPartialPpfComplete = familyComplete.ppf;
+  const onAttachPartialPpf = () => {
+    api.updateStore(attachedPartialPpfPatch(categories));
+    setActiveSection("ppf");
+  };
+
   const sectionContent = (() => {
     switch (resolvedActive) {
       case "coating":
         return (
-          <CoatingSelector
-            shopRank={shopRank}
-            coatingLocked={coatingLocked}
-            lockReason={COATING_LOCK_REASON}
-            selectedLayerCount={cfg.coating.layerCount}
-            selectedLayer1ProductId={cfg.coating.layer1Id}
-            selectedLayer2ProductId={cfg.coating.layer2Id}
-            selectedLayer3ProductId={cfg.coating.layer3Id}
-            availableLayer1Products={firstLayerOptions(shopRank)}
-            availableLayer2Products={secondLayerOptions(cfg.coating.layer1Id)}
-            availableLayer3Products={thirdLayerOptions(cfg.coating.layer1Id)}
-            onLayerCountChange={bindings.coating.onLayerCountChange}
-            onLayer1Change={bindings.coating.onLayer1Change}
-            onLayer2Change={bindings.coating.onLayer2Change}
-            onLayer3Change={bindings.coating.onLayer3Change}
-            onAddOrUpdate={() => {}}
-          />
+          <div className="flex flex-col gap-3">
+            <CoatingSelector
+              shopRank={shopRank}
+              coatingLocked={coatingLocked}
+              lockReason={COATING_LOCK_REASON}
+              selectedLayerCount={cfg.coating.layerCount}
+              selectedLayer1ProductId={cfg.coating.layer1Id}
+              selectedLayer2ProductId={cfg.coating.layer2Id}
+              selectedLayer3ProductId={cfg.coating.layer3Id}
+              availableLayer1Products={firstLayerOptions(shopRank)}
+              availableLayer2Products={secondLayerOptions(cfg.coating.layer1Id)}
+              availableLayer3Products={thirdLayerOptions(cfg.coating.layer1Id)}
+              onLayerCountChange={bindings.coating.onLayerCountChange}
+              onLayer1Change={bindings.coating.onLayer1Change}
+              onLayer2Change={bindings.coating.onLayer2Change}
+              onLayer3Change={bindings.coating.onLayer3Change}
+              onAddOrUpdate={() => {}}
+            />
+            {showAttachedPartialPpf && (
+              <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={attachedPartialPpfComplete ? onAttachPartialPpf : undefined}
+                  disabled={!attachedPartialPpfComplete}
+                  className="self-start text-xs font-medium text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-4 min-h-[44px] rounded-lg transition-colors"
+                >
+                  {ATTACHED_PARTIAL_PPF_LABEL}
+                </button>
+                {!attachedPartialPpfComplete && (
+                  <p className="text-[11px] text-slate-500">{lockReasonFor("ppf")}</p>
+                )}
+              </div>
+            )}
+          </div>
         );
       case "ppf":
         return (
