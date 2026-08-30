@@ -3186,3 +3186,109 @@ boundary:
 decision: RETURN_B_R2_FOR_EXACT_FIVE_PATH_HARNESS_CORRECTION
 next: "VERIFY_EXACT_THREE_GOVERNANCE_DOCUMENTS_RETAINED_NINE_PATH_HASHES_FROZEN_FOUR_CANDIDATE_PATHS_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_LOCAL_COMMIT_AND_PUSH_AUTHORIZATION"
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-B-R2-A2 — Disposable database acceptance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_DISPOSABLE_DATABASE_ACCEPTANCE
+status: DISPOSABLE_DB_PASS_RESULT_RECORD_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_B_R2_DISPOSABLE_DB_VERIFICATION_RESULT_V1
+authorization: "The owner authorized the bounded cleanup correction, static verification, exact-path stage/local commits, normal pushes to PR #44, fresh disposable-database verification, and then this two-document result-ledger update plus one PR result comment. This result-recording gate does not authorize staging, committing, or pushing these two documentation edits; Ready conversion, merge, migration application, Preview/production access, and deployment remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/44
+  pull_request_state_at_acceptance: OPEN_DRAFT
+  branch: plan/estimate-managed-service-offering-enforcement-r1
+  merge_base: 7aca4e7dfcebb4bd71cb8d1d2db0dbda71644110
+  accepted_head: 8fd745ebdd1bb02aab2820f4fb45cce707dca1b3
+  accepted_tree: fce6c6da6806662df67087b1631d7f18a5e53847
+  upstream_ahead_behind: "0 0"
+  worktree_before_result_recording: CLEAN
+  pull_request_changed_files: 19
+accepted_delivery_commits:
+  implementation_and_harness: 6ca71ac
+  role_boundary_correction: 8b87760
+  evidence_and_cleanup_correction: bb32d7f
+  lifecycle_cleanup_correction: dbbfb53
+  canonical_tap_packaging_correction: 8fd745e
+accepted_source_hashes:
+  supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql: 9319203d67ce42d8f54998b3db0e4af6c0f45ada36c7b20b7c51c047cbfcd499
+  supabase/tests/estimate_wizard_atomic_save.test.sql: eaa6122e0fff62b92e1a20c14f6a56b30b1da5d5567106a48aa886dc8fbf7829
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/config.toml: 5644922a3fbcf798abb54d9c57ca61a6574952c5a5b1be04ed872e26ee1b371c
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/setup.sh: b68547c887b33b27e22481aafd36910b840ad9a98b5f529652b05d28b6d164d7
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/offering-guard.test.sql: 10e7cabe7327914549ea3b0f0ad0e5e8a8b86acce6b4a6eec03ba492169ac764
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/real-auth.mjs: 448966fe0c7ed7f6558fef8cc478bc93d504b1a70c46b3c65ecdb93310959ecf
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/concurrency.mjs: 71cf9d9667b2ac7feb962cba494e321294eb6e3cabef459d2440432143b5cf91
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/capture-evidence.sh: 06754a7971c15d1fc9ee223c8de7c2d786cc199afa7f976d4d417bd29fd0aad1
+  scripts/e2e/gda-estimate-managed-service-offering-r1-b/cleanup.sh: 7e40351db8dfcbe9c8c12a537cd1bcf4e645a049a2610f9ce5f4cbf64d4396cb
+accepted_runtime:
+  suffix: 20260830T091640Z-333258
+  project_id: gdaoffr1b20260830T091640Z333258
+  database_port: 56621
+  loopback_only: true
+  postgres_major: 17
+  supabase_cli: 2.116.0
+  retained_evidence: /Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1b-evidence/gda-estimate-offering-r1b.20260830T091640Z-333258
+verification:
+  migration_numeric_failures: 0
+  protected_migration_exclusions: 1
+  pgtap_canonical_atomic_save: "217/217 PASS"
+  pgtap_offering_guard: "39/39 PASS"
+  pgtap_aggregate: "256/256 PASS"
+  real_auth_postgrest: "6/6 PASS"
+  separate_connection_concurrency: "13/13 PASS"
+  database_lint: "PASS; warning-only; zero error-level issues"
+  query_plan_captures: 3
+  secret_scan: SECRET_SCAN_CLEAN
+  unexpected_nonzero_commands: 0
+cleanup:
+  fixture_delete_transaction: PASS
+  named_zero_row_proof:
+    dealers: 0
+    users: 0
+    dealer_members: 0
+    dealer_service_offerings: 0
+    dealer_wizard_catalog_lifecycle: 0
+    document_sequences: 0
+    customers: 0
+    vehicles: 0
+    estimates: 0
+    estimate_items: 0
+  supabase_stop_exit: 0
+  retained_copy_exit: 0
+  retained_hash_verification_exit: 0
+  runtime_removal_exit: 0
+evidence_integrity:
+  final_artifact_count: 16
+  manifest_listed_artifact_count: 15
+  manifest_hash_failures: 0
+  manifest_finalized_last: true
+burned_attempts:
+  - suffix: 20260830T091046Z-42f7e6
+    classification: PRECONDITION_FAILED_BEFORE_TEST_EXECUTION
+    reason: disposable confirmation omitted from capture invocation
+    reused: false
+  - suffix: 20260830T091248Z-aab146
+    classification: EVIDENCE_PACKAGING_FAILED_AFTER_EXECUTABLE_AND_CLEANUP_PASS
+    reason: capture produced split TAP artifacts while cleanup expected one canonical pgtap.tap
+    reused: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+environment_and_release_boundary:
+  evidence_level: E2_LOCAL_DISPOSABLE_DB
+  hosted_supabase_contacted: false
+  shared_or_production_database_contacted: false
+  external_provider_contacted: false
+  preview_contacted: false
+  production_contacted: false
+  migration_applied_outside_disposable_runtime: false
+  ready: false
+  merged: false
+  deployed: false
+decision: ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK, POST_THE_AUTHORIZED_PR_RESULT_COMMENT, THEN REQUEST_SEPARATE EXACT-PATH STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. READY, MERGE, MIGRATION_APPLICATION, PREVIEW, AND DEPLOYMENT REMAIN SEPARATE."
+```

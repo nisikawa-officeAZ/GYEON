@@ -898,7 +898,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1 — all managed-service save enforcement
 
-**Status:** PHASE A ACCEPTED AND PUSHED / PHASE B-R2 SQL CANDIDATE PROVISIONALLY ACCEPTED / PHASE B-R2 HARNESS RETURNED `CHANGES_REQUIRED_HARNESS_ONLY` / PHASE B-R2-A1 HARNESS-CORRECTION GOVERNANCE AUTHORING AUTHORIZED — Phase A enforces all five managed families in the authoritative server-save orchestrator at commit `1bb530f3105055707b7387f6492ede3078402f36`. The retained B-R2 candidate adds the required direct-RPC SQL guard, canonical pgTAP additions, and seven-file disposable harness, but independent Codex review found that the harness cannot yet prove the required deterministic runtime contract. A1 freezes the accepted migration and limits correction to five test/harness files. This authoring gate changes governance only; no SQL candidate rewrite, harness correction execution, database, provider, deployment, or Git-delivery action is authorized.
+**Status:** PHASE A ACCEPTED AND PUSHED / PHASE B-R2 SQL AND HARNESS ACCEPTED, COMMITTED, AND PUSHED / `DISPOSABLE_DB_PASS` AT E2 LOCAL / PR #44 OPEN/DRAFT — Phase A enforces all five managed families in the authoritative server-save orchestrator at commit `1bb530f3105055707b7387f6492ede3078402f36`. Phase B-R2 adds the direct-RPC SQL guard, canonical pgTAP coverage, and dedicated PostgreSQL 17 disposable harness. The accepted final execution HEAD is `8fd745ebdd1bb02aab2820f4fb45cce707dca1b3`; the fresh suffix `20260830T091640Z-333258` passed migration replay, pgTAP, real Auth/PostgREST, separate-connection concurrency, cleanup, zero-row, stop, secret-scan, and evidence-integrity gates. Shared/staging/production migration application, Preview verification, Ready conversion, merge, and deployment remain separately unauthorized.
 
 **Objective:** Make the current dealer-owned offering switches one enforceable contract for every managed Estimate Wizard service family, not merely a client-side display rule.
 
@@ -1131,6 +1131,19 @@ The result document was excluded from harness implementation and was created lat
 **Phase B-R2-A1 current boundary:** This gate authors the exact three governance paths only while preserving the existing dirty nine-path candidate. It does not transmit private files, run Claude, alter candidate source/test/harness files, execute tests or runtime, access database/Supabase/Docker/Colima/Auth/PostgREST/browser/network/provider, or stage, commit, push, mutate PR #44, mark Ready, merge, apply a migration, or deploy.
 
 **Phase B-R2-A1 governance exit:** MacBook Codex verifies the three governance-document edits, exact retained nine-path candidate hashes, frozen four candidate files, protected metadata, clean index, and `git diff --check`. Stage/local commit and normal push of the three governance documents require separate explicit owner authorization. Private transmission and the five-path correction require another explicit authorization after governance delivery.
+
+**Accepted Phase B-R2 implementation and disposable verification:**
+
+- Source and harness delivery reached commit `6ca71ac`, followed by bounded harness-only corrections at `8b87760`, `bb32d7f`, `dbbfb53`, and `8fd745e`. The final commit/tree is `8fd745ebdd1bb02aab2820f4fb45cce707dca1b3` / `fce6c6da6806662df67087b1631d7f18a5e53847`, normally pushed to PR #44 with upstream ahead/behind `0 0`.
+- Accepted fresh suffix: `20260830T091640Z-333258`. The exact runtime was removed after successful evidence copy and retained-hash verification.
+- pgTAP passed `256/256`: canonical atomic-save `217/217` and dedicated offering guard `39/39`.
+- Real local Auth/PostgREST assertions passed `6/6`; genuine separate-connection concurrency assertions passed `13/13` with zero failures.
+- Database lint completed with warning-only findings and no error-level issue. Three query-plan captures completed. Secret scanning returned `SECRET_SCAN_CLEAN`.
+- Cleanup deleted all fixtures and proved zero rows for dealers, users, dealer members, dealer service offerings, dealer wizard catalog lifecycle, document sequences, customers, vehicles, estimates, and estimate items. Supabase stop, retained evidence copy, retained hash verification, and exact runtime removal all returned zero.
+- Evidence integrity: 16 final artifacts, 15 manifest-listed pre-manifest hashes, and zero hash mismatch. The retained evidence root is `/Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1b-evidence/gda-estimate-offering-r1b.20260830T091640Z-333258`.
+- Two prior suffixes are burned and excluded from acceptance: `20260830T091046Z-42f7e6` stopped before test execution because the disposable-confirmation precondition was omitted; `20260830T091248Z-aab146` passed executable tests and database teardown but failed canonical artifact packaging. Neither suffix was repaired or reused into acceptance.
+- Evidence class is `E2_LOCAL_DISPOSABLE_DB`. No hosted Supabase project, shared/staging/production database, external provider, Preview, or production environment was contacted. No migration was applied outside the fresh local disposable runtime.
+- PR #44 remains `OPEN/Draft`. Ready conversion, merge, migration promotion/application, deployment, and E3 environment verification remain separate owner-approval gates.
 
 ### GDA-3 — Completion Desk
 
