@@ -6,8 +6,13 @@
 
 import type { EstimateWizardApi } from "../useEstimateWizard";
 import { Card, SectionTitle, SelectButton } from "../ui";
+import {
+  serviceFamilyForCategory,
+  type ServiceCategoryId,
+  type ServiceOfferings,
+} from "@/lib/estimates/service-categories";
 
-const CATEGORIES: Array<{ id: string; label: string; icon: string }> = [
+const CATEGORIES: Array<{ id: ServiceCategoryId; label: string; icon: string }> = [
   { id: "coating",     label: "コーティング",         icon: "✨" },
   { id: "ppf",         label: "PPF",                 icon: "🛡" },
   { id: "window",      label: "ウィンドウフィルム",   icon: "🪟" },
@@ -20,11 +25,28 @@ const CATEGORIES: Array<{ id: string; label: string; icon: string }> = [
 /** Exact operator-facing reason shown when the dealer's store setting disables PPF. */
 export const PPF_NOT_OFFERED_REASON = "店舗設定でPPFが「提供しない」に設定されています。";
 
-export function Step3Category({ api, ppfOffered }: { api: EstimateWizardApi; ppfOffered: boolean }) {
+export function serviceNotOfferedReason(label: string): string {
+  return label === "PPF"
+    ? PPF_NOT_OFFERED_REASON
+    : `店舗設定で${label}が「提供しない」に設定されています。`;
+}
+
+export function Step3Category({
+  api,
+  serviceOfferings,
+}: {
+  api: EstimateWizardApi;
+  serviceOfferings: ServiceOfferings;
+}) {
   const selected = api.store.categories;
+  const isOffered = (id: ServiceCategoryId) => {
+    const family = serviceFamilyForCategory(id);
+    return family === null || serviceOfferings[family];
+  };
   // Presentation follows the CURRENT offering authority. Keep stale canonical input untouched for
-  // the later server-enforcement phase, but never count an unavailable PPF selection as active.
-  const effectiveSelected = ppfOffered ? selected : selected.filter((id) => id !== "ppf");
+  // server enforcement, but never render or count an unavailable service selection as active.
+  const effectiveSelected = selected.filter((id) => isOffered(id as ServiceCategoryId));
+  const unavailableCategories = CATEGORIES.filter((cat) => !isOffered(cat.id));
   const toggle = (id: string) =>
     api.updateStore({
       categories: selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id],
@@ -36,30 +58,29 @@ export function Step3Category({ api, ppfOffered }: { api: EstimateWizardApi; ppf
       <p className="text-[11px] text-slate-500 mb-3">選択したカテゴリのみが次の「見積」ステップに表示されます。PPFの部分施工は見積ステップ内で分岐します。</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {CATEGORIES.map((cat) => {
-          // B2/GDA-ESTIMATE-PPF-OFFERING-R1-A — PPF alone is authority-gated by the dealer's own
-          // service-offering switch. A stale selected id must never render as active while the
-          // authoritative offering is off, so `selected` and `onClick` are both suppressed here
-          // rather than only visually dimmed.
-          const ppfDisabled = cat.id === "ppf" && !ppfOffered;
+          const disabled = !isOffered(cat.id);
           return (
             <SelectButton
               key={cat.id}
-              selected={ppfDisabled ? false : selected.includes(cat.id)}
-              onClick={ppfDisabled ? undefined : () => toggle(cat.id)}
-              disabled={ppfDisabled}
+              selected={disabled ? false : selected.includes(cat.id)}
+              onClick={disabled ? undefined : () => toggle(cat.id)}
+              disabled={disabled}
               density="touch"
+              className="h-[72px]"
             >
-              <span className="flex items-center gap-2">
-                <span aria-hidden>{cat.icon}</span>
-                <span className="font-medium">{cat.label}</span>
+              <span className="flex min-w-0 items-center gap-2">
+                <span aria-hidden className="shrink-0">{cat.icon}</span>
+                <span className="font-medium leading-tight">{cat.label}</span>
               </span>
             </SelectButton>
           );
         })}
       </div>
-      {!ppfOffered && (
-        <p className="text-[11px] text-amber-400 mt-2">{PPF_NOT_OFFERED_REASON}</p>
-      )}
+      {unavailableCategories.map((cat) => (
+        <p key={cat.id} className="text-[11px] text-amber-400 mt-2">
+          {serviceNotOfferedReason(cat.label)}
+        </p>
+      ))}
       {effectiveSelected.length > 0 && (
         <p className="text-[11px] text-slate-400 mt-3">選択中: {effectiveSelected.length} カテゴリ</p>
       )}
