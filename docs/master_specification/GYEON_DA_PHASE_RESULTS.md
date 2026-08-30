@@ -3292,3 +3292,1478 @@ environment_and_release_boundary:
 decision: ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK, POST_THE_AUTHORIZED_PR_RESULT_COMMENT, THEN REQUEST_SEPARATE EXACT-PATH STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. READY, MERGE, MIGRATION_APPLICATION, PREVIEW, AND DEPLOYMENT REMAIN SEPARATE."
 ```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-FB-G1 — R0 forward-bridge decision and read-only diagnosis governance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_READ_ONLY_DIAGNOSIS_GOVERNANCE
+status: R0_CHANGES_REQUIRED_FORWARD_BRIDGE_FB_G1_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+authorization: "After R0 completed with zero Production writes, the owner authorized authoring the formal forward-bridge instruction. This gate changes exactly three governance paths. It does not authorize branch creation, stage, commit, push, PR creation/mutation, private evidence transmission, Claude execution, SQL/test/harness implementation, Supabase/database access, migration/history changes, backup/PITR action, Staging/Production access, Ready, merge, or deployment."
+repository:
+  source_plan_pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/46
+  source_plan_pull_request_state: MERGED
+  governance_base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  governance_base_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  current_local_commit_before_candidate: 6905ac4f859e9c5ca595822c0544f233c6dae80d
+  current_local_tree_before_candidate: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  future_branch: plan/estimate-managed-service-production-forward-bridge-r1
+  future_coordination_pr: NOT_CREATED
+r0:
+  mode: PRODUCTION_READ_ONLY
+  exact_project_name: DealerOS-Prod
+  exact_project_ref: dmvyaykhibmphrmekjbb
+  region: ap-northeast-1
+  verdict: CHANGES_REQUIRED_FORWARD_BRIDGE
+  production_write_count: 0
+  git_write_count_before_governance_authoring: 0
+  project_link_created: false
+  migration_or_history_action: false
+  live_function_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  live_prosrc_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  predecessor_prosrc_sha256: cc38e8ec48076ffaf2652c5729732b2485d9b603189083ee55a51acfb3d27959
+  target_prosrc_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+  live_metadata:
+    owner: postgres
+    security: SECURITY_INVOKER
+    language: plpgsql
+    volatility: volatile
+    parallel: unsafe
+    search_path: "pg_catalog, public, pg_temp"
+    service_role_execute: true
+    authenticated_execute: false
+    anon_execute: false
+  semantic_delta:
+    - "The live body lacks the predecessor's supplied bodySizeKey type and canonical-seven validation block."
+    - "The live body lacks the predecessor's existing-vehicle UPDATE public.vehicles SET body_size block inside the atomic save subtransaction."
+    - "The predecessor-to-target semantic addition remains the accepted set-based C.9a five-family service-offering guard."
+  dependency_check: PASS
+  remote_unrecorded_local_versions:
+    - "20260731115631"
+    - "20260801000649"
+    - "20260801110110"
+    - "20260825151059"
+    - "20260826010000"
+    - "20260826143000"
+    - "20260829101726"
+    - "20260830160000"
+governance_write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_READ_ONLY_DIAGNOSIS.md
+private_evidence_boundary:
+  stored_outside_git: true
+  owner_approval_required_before_anthropic_transmission: true
+  full_function_content_in_git_or_pr: false
+  production_requery_by_claude: false
+frozen_contract:
+  - "The two historical migrations remain immutable and the merged target is not eligible for direct Staging or Production apply."
+  - "The future bridge starts from the captured live function and adds only canonical-seven bodySizeKey validation, atomic existing-vehicle body_size persistence, and the accepted C.9a guard."
+  - "Signature, owner, SECURITY INVOKER, search_path, language, volatility, parallel mode, ACL, tenant, revision, pricing, idempotency, numbering, and atomicity remain unchanged."
+  - "The future migration must be created with supabase migration new only after a separately accepted diagnosis and explicit implementation authorization."
+boundaries:
+  - "FB-G1 currently authors governance only; no private evidence is transmitted and Claude is not invoked."
+  - "The plan's existing R1 remains restore/rollback readiness. It is suspended until a new bridge reaches accepted fresh E2 evidence."
+  - "No bulk db push, include-all, migration-directory replay, historical migration edit, migration-history repair, or protected LINE action is allowed."
+decision: AUTHOR_EXACT_THREE_DOCUMENT_FB_G1_GOVERNANCE_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_FRESH_BRANCH_CREATION_AND_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_DRAFT_PR_PRIVATE_TRANSMISSION_CLAUDE_EXECUTION_IMPLEMENTATION_DATABASE_AND_RELEASE_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-FB-G1-E1 — Blocked diagnosis and evidence-package correction
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_EVIDENCE_REPAIR_RESULT_RECORDING
+status: FB_G1_BLOCKED_EVIDENCE_REPACKAGED_RESULT_RECORD_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_READ_ONLY_DIAGNOSIS_RESULT_V1
+authorization: "The owner explicitly authorized one bounded tool-disabled Claude read-only diagnosis using the private R0 evidence, then separately authorized preserving the original evidence and creating and locally verifying one exact allowlist-only sibling package, and finally authorized this exact two-document result-recording candidate. This gate does not authorize stage, commit, push, PR mutation, retransmission, Claude retry, implementation, tests, Supabase/database/provider access, migration/history action, Ready, merge, or deployment."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  head: f919ece7d6a9a40dab14767469083333465b88b1
+  tree: 3428e4fb737f2c32afd9a9aacd149f5658aa4eed
+  changed_files_before_result_recording: 3
+  upstream_ahead_behind_before_result_recording: "0 0"
+claude_diagnosis:
+  verdict: BLOCKED_EVIDENCE
+  model: claude-sonnet-5
+  tool_access: NONE
+  no_session_persistence: true
+  total_cost_usd: 2.9321622
+  mutations: 0
+blocking_evidence:
+  canonical_allowlisted_file: live.functiondef.canonical.sql
+  canonical_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  original_manifest_recorded_different_file: live.functiondef.sql
+  original_manifest_different_file_sha256: 97df618c8988b471970c2a5a0c07230230b1a8aedb1bad31e29a46ea003ae862
+  classification: MANIFEST_FILENAME_AND_CANONICAL_IDENTITY_MISMATCH
+evidence_repair:
+  original_root_preserved: true
+  sibling_root: /private/tmp/gda-r0-fb-g1.tnMnGJ
+  sibling_root_mode: "700"
+  file_count: 10
+  file_mode: "600"
+  manifest_listed_artifact_count: 9
+  manifest_verification: "9/9 PASS"
+  manifest_sha256: ffffc7e7a8578ddc33d411c0701a29dceb41eff31c4c3445510cb9f404e66a28
+  copied_artifact_cmp: "9/9 IDENTICAL"
+  allowlisted_files:
+    - live.functiondef.canonical.sql
+    - live.minus-one-newline.sql
+    - predecessor.prosrc.sql
+    - target.prosrc.sql
+    - predecessor-live.diff
+    - predecessor-target.diff
+    - dependencies.json
+    - migration-list.txt
+    - r0-semantic-result.json
+    - SHA256SUMS.txt
+canonical_identities:
+  live_function_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  live_prosrc_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  predecessor_prosrc_sha256: cc38e8ec48076ffaf2652c5729732b2485d9b603189083ee55a51acfb3d27959
+  target_prosrc_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+boundary:
+  - "The BLOCKED_EVIDENCE result is accepted as a valid stop, not as implementation acceptance."
+  - "Claude's preliminary target-body observation remains non-authoritative until a fresh diagnosis passes the corrected evidence gate and MacBook Codex independently accepts it."
+  - "No Git, PR, Claude, database, Supabase, migration, history, provider, Preview, Production, Ready, merge, or deployment action occurred during the evidence repair or this authoring gate."
+decision: ACCEPT_BLOCKED_EVIDENCE_AND_REPAIRED_PRIVATE_PACKAGE_RESULT_RECORD_CANDIDATE
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_PROTECTED_METADATA_SIBLING_MANIFEST_IDENTITY_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. PR_RESULT_COMMENT_SUPERSEDING_INVOCATION_PRIVATE_RETRANSMISSION_CLAUDE_RETRY_IMPLEMENTATION_DATABASE_AND_RELEASE_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-FB-I1 — Accepted diagnosis and implementation-governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE
+status: FB_G1_DIAGNOSIS_ACCEPTED_FB_I1_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+diagnosis_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_READ_ONLY_DIAGNOSIS_RESULT_V1
+authorization: "The owner explicitly authorized one fresh Claude Code read-only diagnosis after separately and explicitly approving Anthropic transmission of the exact five private governance files, ten Git-tracked implementation/reference files, and ten corrected private evidence files. After MacBook Codex independently accepted that result, the owner authorized local-only creation of the FB-I1 implementation directive plus updates to the remediation plan and this append-only phase ledger. This gate does not authorize implementation, migration generation, harness edits, tests, stage, commit, push, PR mutation, private retransmission, Claude implementation execution, Supabase/database/provider access, Staging, Production, migration/history action, Ready, merge, or deployment."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  accepted_diagnosis_head: 5ba7877e8829f88fa6abac10fc377b86cfdc3c99
+  accepted_diagnosis_tree: 4b2b29379b9d1a00ec2b5bf3ed0c28d528b0d97c
+  governance_base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  committed_delta_from_governance_base: EXACT_THREE_GOVERNANCE_PATHS
+claude_diagnosis:
+  verdict: READY_FOR_FORWARD_BRIDGE_IMPLEMENTATION_GOVERNANCE
+  model: claude-sonnet-5
+  tools:
+    - Read
+    - Grep
+    - Glob
+  permission_denials: 0
+  web_search_requests: 0
+  web_fetch_requests: 0
+  total_cost_usd: 1.8495765
+  mutations: 0
+codex_acceptance:
+  verdict: ACCEPTED
+  branch_clean_after_claude: true
+  exact_head_tree_reverified: true
+  protected_blobs_reverified: true
+  private_manifest_verification: "9/9 PASS"
+  existing_test_authorities_reverified: "217 + 39 = 256; unchanged"
+  accepted_r1b_harness_phase_identity_reverified: true
+canonical_identities:
+  private_manifest_sha256: ffffc7e7a8578ddc33d411c0701a29dceb41eff31c4c3445510cb9f404e66a28
+  live_function_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  live_prosrc_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  predecessor_prosrc_sha256: cc38e8ec48076ffaf2652c5729732b2485d9b603189083ee55a51acfb3d27959
+  required_candidate_prosrc_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+accepted_bridge_contract:
+  source_authority: CAPTURED_LIVE_PRODUCTION_FUNCTION
+  deterministic_insertions:
+    - CANONICAL_SEVEN_BODY_SIZE_KEY_VALIDATION_AT_ORIGINAL_C6_POSITION
+    - ATOMIC_EXISTING_VEHICLE_BODY_SIZE_PERSISTENCE_AT_ORIGINAL_C10_POSITION
+    - C9A_FIVE_FAMILY_OFFERING_GUARD_AFTER_REPLAY_CONFLICT_BEFORE_FIRST_C10_WRITE
+  preserve_live_metadata_and_acl: true
+  preserve_unrelated_live_statements_and_behavior: true
+  historical_migrations_immutable: true
+  direct_apply_of_20260830160000_ineligible: true
+future_implementation_write_contract:
+  migration_generation_command: "supabase migration new estimate_managed_service_production_forward_bridge"
+  migration_path: "supabase/migrations/<CLI_GENERATED_TIMESTAMP>_estimate_managed_service_production_forward_bridge.sql"
+  migration_count: 1
+  sibling_harness_paths:
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/config.toml
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/setup.sh
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/offering-guard.test.sql
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/real-auth.mjs
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/concurrency.mjs
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/capture-evidence.sh
+    - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/cleanup.sh
+  total_future_write_paths: 8
+  existing_pgtap_modified: false
+  existing_r1b_harness_modified: false
+current_governance_write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_IMPLEMENTATION.md
+static_implementation_stop_boundary:
+  - "One CLI-generated migration plus seven sibling-harness paths only."
+  - "No SQL, pgTAP, Auth, RPC, concurrency, database, Docker, Colima, provider, Staging, or Production execution."
+  - "No stage, commit, push, PR mutation, Ready, merge, migration-history action, or deployment."
+later_e2_boundary:
+  postgres_major: 17
+  unchanged_pgtap_required: "256/256"
+  real_auth_postgrest_required: true
+  direct_rpc_required: true
+  separate_connection_concurrency_required: true
+  cleanup_and_evidence_integrity_required: true
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: AUTHOR_EXACT_THREE_DOCUMENT_FB_I1_IMPLEMENTATION_GOVERNANCE_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_DYNAMIC_MIGRATION_PATH_CONTRACT_PROTECTED_METADATA_PRIVATE_MANIFEST_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. PRIVATE_RETRANSMISSION_CLAUDE_IMPLEMENTATION_MIGRATION_GENERATION_HARNESS_EDIT_STATIC_EXECUTION_DISPOSABLE_RUNTIME_DATABASE_AND_RELEASE_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-FB-I1-S1 — Static implementation accepted and locally committed
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_STATIC_IMPLEMENTATION_ACCEPTANCE
+status: FB_I1_STATIC_IMPLEMENTATION_ACCEPTED_LOCAL_COMMIT_NOT_PUSHED
+date: 2026-08-30
+append_only: true
+implementation_result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_IMPLEMENTATION_RESULT_V1
+authorization: "The owner explicitly approved Anthropic transmission of the exact private governance/reference/evidence read set and the bounded eight-path implementation. After two Claude working-directory failures, the owner separately approved one operational exception: MacBook Codex generated the single migration from the verified repository root, Claude edited with Bash disabled, and MacBook Codex performed every static check. The owner then explicitly approved exact-eight-path stage and local commit, followed by this exact two-document governance correction and result record. No push, PR mutation, database/runtime/test execution, provider access, Ready, merge, migration application, history repair, or deployment is authorized by this record."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_before_local_commit: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  implementation_base_head: 90d7f6ca888d47b8a8641094cd43e3bb74664a9b
+  implementation_base_tree: 81b685af3bc384c5a37bebd84c5d028d51f3b34d
+  local_implementation_commit: 7f5860600fbdd8ce1b9b4bed7f070873d1a66159
+  local_implementation_tree: 381f7987af498fd8bf0fe88cb97647f413932ed2
+  upstream_state_after_local_implementation_commit: AHEAD_1_NOT_PUSHED
+claude_attempts:
+  - attempt: 1
+    cost_usd: 3.0800516
+    result: BURNED_WRONG_CWD_EMPTY_MIGRATION_OUTSIDE_REPOSITORY
+    repository_mutations: 0
+    retained_failure_path: /private/tmp/gda-r0-fb-g1.tnMnGJ
+  - attempt: 2
+    cost_usd: 1.2257206
+    result: BLOCKED_BASE_MISMATCH_BEFORE_GENERATION
+    repository_mutations: 0
+  - attempt: 3
+    cost_usd: 4.7106098
+    result: CANDIDATE_WRITTEN_FOR_CODEX_STATIC_REVIEW
+    bash_enabled: false
+    write_path_count: 8
+  total_cost_usd: 9.016382
+operational_exception:
+  migration_generator: MACBOOK_CODEX
+  pre_generation_pwd_and_toplevel_match: true
+  cli_command: "supabase migration new estimate_managed_service_production_forward_bridge"
+  cli_invocation_count_in_accepted_attempt: 1
+  generated_migration: supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql
+  claude_tools:
+    - Read
+    - Glob
+    - Grep
+    - Edit
+    - Write
+  claude_bash_or_shell_access: false
+exact_implementation_paths:
+  - supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/config.toml
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/setup.sh
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/offering-guard.test.sql
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/real-auth.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/concurrency.mjs
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/capture-evidence.sh
+  - scripts/e2e/gda-estimate-managed-service-offering-r1-fb/cleanup.sh
+static_acceptance:
+  exact_path_count: 8
+  migration_file_sha256: 7406c5f11f1feb352ceb737db7844af8904f33e7a82f9679dfed40319a528cf8
+  extracted_function_body_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+  accepted_target_body_cmp: PASS_BYTE_IDENTICAL
+  existing_atomic_pgtap_plan: 217
+  existing_atomic_pgtap_sha256: eaa6122e0fff62b92e1a20c14f6a56b30b1da5d5567106a48aa886dc8fbf7829
+  sibling_offering_plan: 39
+  accepted_and_sibling_offering_sha256: 10e7cabe7327914549ea3b0f0ad0e5e8a8b86acce6b4a6eec03ba492169ac764
+  sibling_offering_cmp: PASS_BYTE_IDENTICAL
+  shell_syntax: "3/3 PASS"
+  node_syntax: "2/2 PASS"
+  whitespace_check: PASS
+  protected_blobs_unchanged: true
+  historical_migrations_unchanged: true
+  existing_test_authorities_unchanged: true
+  index_clean_after_commit: true
+governance_correction:
+  prior_text: TWO_TARGET_COMMENT_ONLY_EDITS
+  accepted_text: THREE_TARGET_COMMENT_ONLY_EDITS
+  annotations:
+    - C7_CROSS_REFERENCE
+    - C9_REPLAY_PRECEDENCE_NOTE
+    - C10A_ORDERING_NOTE
+  reason: "The exact accepted target body and both Git-tracked target-body sources contain all three annotations; the accepted target hash is unchanged."
+execution_boundary:
+  database_or_supabase_runtime_started: false
+  sql_or_pgtap_executed: false
+  auth_postgrest_rpc_or_concurrency_executed: false
+  docker_or_colima_started: false
+  hosted_or_shared_environment_contacted: false
+  provider_preview_or_production_contacted: false
+  pushed: false
+  ready: false
+  merged: false
+  deployed: false
+decision: ACCEPT_STATIC_IMPLEMENTATION_AND_LOCAL_COMMIT
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_GOVERNANCE_DIFF_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_RESULT_COMMENT_DISPOSABLE_E2_RUNTIME_READY_MERGE_MIGRATION_APPLICATION_AND_DEPLOYMENT_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-FB-I1-E2 — Fresh local disposable PostgreSQL 17 acceptance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_FORWARD_BRIDGE_DISPOSABLE_E2
+status: DISPOSABLE_DB_PASS_E2_LOCAL
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly authorized PR #47 Disposable E2 runtime verification. After MacBook Codex independently accepted the complete retained evidence, the owner authorized this exact two-document result record, exact-path stage, and local commit. Push, PR mutation/comment, Ready, merge, shared-environment access, migration application, history repair, deployment, and rollback execution remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  execution_head: f15c5862043a0ebb853b3bac3f5c37ccbddf025a
+  execution_tree: 5a901d9a4f0c69186cf730213bdef778f0ea78f6
+  changed_files_at_execution: 12
+  upstream_ahead_behind_at_execution: "0 0"
+runtime:
+  fresh_suffix: 20260830T130013Z-e2a001
+  postgres: "17.6"
+  runtime_path: /Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-fb.20260830T130013Z-e2a001
+  retained_evidence_path: /Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-fb-evidence/gda-estimate-offering-fb.20260830T130013Z-e2a001
+  runtime_removed: true
+  project_containers_after_cleanup: 0
+source_identity:
+  generated_bridge_migration: supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql
+  migration_sha256: 7406c5f11f1feb352ceb737db7844af8904f33e7a82f9679dfed40319a528cf8
+  extracted_function_body_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+  canonical_atomic_pgtap_sha256: eaa6122e0fff62b92e1a20c14f6a56b30b1da5d5567106a48aa886dc8fbf7829
+  sibling_offering_pgtap_sha256: 10e7cabe7327914549ea3b0f0ad0e5e8a8b86acce6b4a6eec03ba492169ac764
+migration_replay:
+  eligible_migration_status_records_applied: 112
+  protected_line_migration_excluded: true
+  generated_forward_bridge_apply_exit: 0
+tests:
+  canonical_atomic_save_pgtap: "217/217 PASS"
+  sibling_offering_guard_pgtap: "39/39 PASS"
+  aggregate_pgtap: "256/256 PASS"
+  real_auth_postgrest_direct_rpc: "6/6 PASS"
+  separate_connection_concurrency: "13/13 PASS"
+  concurrency_backend_pids:
+    race_1: "562 vs 565"
+    race_2: "holder 568; save 569; observer 571; disable 572"
+schema_security:
+  security_invoker: true
+  search_path_pinned: true
+  service_role_execute: true
+  authenticated_execute: false
+  dealer_service_offerings_rls: true
+  dealer_service_offerings_policy_count: 3
+  dealer_service_offerings_trigger_count: 2
+quality:
+  database_lint_error_count: 0
+  database_lint_warning_count: 4
+  query_plan_capture_count: 3
+  query_plans_index_backed: true
+evidence_integrity:
+  final_file_count: 16
+  manifest_listed_hash_count: 15
+  hash_mismatch_count: 0
+  manifest_sha256: 60b4cc6344ebacacbd3da36465ba9098c392f42b0aab27793bb29fa96f85ef23
+  secret_scan: CLEAN
+cleanup:
+  named_fixture_residue: 0
+  supabase_stop_exit: 0
+  retained_evidence_copy_exit: 0
+  retained_hash_verification_exit: 0
+  exact_runtime_removal_exit: 0
+execution_boundary:
+  evidence_class: E2_LOCAL_DISPOSABLE_DB
+  hosted_supabase_contacted: false
+  shared_staging_or_production_database_contacted: false
+  provider_preview_or_production_contacted: false
+  migration_applied_outside_disposable_runtime: false
+  pushed_by_this_gate: false
+  pr_mutated_by_this_gate: false
+  ready: false
+  merged: false
+  deployed: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_RESULT_RECORD_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_STAGE_AND_LOCAL_COMMIT_THE_TWO_DOCUMENTS_ONLY. NORMAL_PUSH_AND_PR_RESULT_COMMENT_REQUIRE_SEPARATE_AUTHORIZATION. AFTER_DELIVERY_R1_RESTORE_AND_ROLLBACK_READINESS_IS_THE_NEXT_TECHNICAL_GATE_WITH_NO_SCHEMA_WRITE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-G1 — Restore-readiness diagnosis governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_READ_ONLY_DIAGNOSIS_GOVERNANCE
+status: R1_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-30
+append_only: true
+authorization: "After FB-I1-E2 acceptance, result delivery, and PR comment publication, the owner explicitly authorized starting R1 restore and rollback readiness. This authoring gate changes exactly three governance documents. It does not authorize stage, commit, push, PR mutation, private external transmission, Claude invocation, provider/Supabase/database access, backup restore, project creation, encrypted live capture, disposable runtime, migration/history action, shared-environment write, Ready, merge, deployment, or rollback execution."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  base_head: 998d17de891ca5c8b339f18288b6fd4416281d14
+  base_tree: edec294889a063dacf18b8ed0108d922dd0af2bc
+  upstream_ahead_behind: "0 0"
+active_target:
+  environment: STAGING
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  production_restore_evidence: DEFER_TO_R6_FRESH_CHANGE_WINDOW_PREFLIGHT
+governance_write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_READ_ONLY_DIAGNOSIS.md
+diagnosis_boundary:
+  provider_access: false
+  database_access: false
+  credentials_read: false
+  live_function_capture: false
+  backup_restore: false
+  project_creation: false
+  disposable_runtime: false
+  file_mutation_by_claude: false
+  allowed_local_discovery: GIT_METADATA_AND_SUPABASE_HELP_ONLY
+required_result:
+  - EXACT_READ_ONLY_STAGING_BACKUP_AND_RECOVERY_POINT_COMMANDS
+  - EXACT_READ_ONLY_STAGING_RPC_DEFINITION_AND_METADATA_CAPTURE
+  - SECRET_SEPARATED_ENCRYPTED_ROLLBACK_ARTIFACT_CONTRACT
+  - POSTGRESQL_17_DISPOSABLE_RESTORE_PROOF_CONTRACT
+  - FIVE_MINUTE_OPERATOR_VERIFIER_STOP_AND_ROLLBACK_AUTHORITY_PROCEDURE
+  - LITERAL_FUTURE_ALLOWLISTS_COMMANDS_STOP_CONDITIONS_CLEANUP_AND_EVIDENCE_SCHEMA
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R1_G1_DIAGNOSIS_GOVERNANCE_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_CONSISTENCY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_PR_INSTRUCTION_PUBLICATION_PRIVATE_TRANSMISSION_CLAUDE_DIAGNOSIS_PROVIDER_READS_ENCRYPTED_CAPTURE_DISPOSABLE_RESTORE_AND_ALL_WRITES_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-A1 — Diagnosis blocked; governance correction candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_DIAGNOSIS_GOVERNANCE_CORRECTION
+status: R1_A1_BLOCKED_EVIDENCE_ACCEPTED_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly approved one repeat transmission of the directive-authorized twelve private Git files to Anthropic Claude Code for a nonpersistent read-only diagnosis after the first controller-output loss. After MacBook Codex reported the recovered BLOCKED_EVIDENCE result and four governance defects, the owner explicitly authorized correction of the same exact three governance files only. Stage, commit, push, PR mutation, renewed private transmission, another Claude invocation, provider/Supabase/database access, runtime, restore, Ready, merge, deployment, history repair, and rollback remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_controller_preflight: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  diagnosis_head: 3dfaeb1a6d785da19523ea3b1f0871c26fc70880
+  diagnosis_tree: a8ed1b4e874f9a585bad9df7c1438624c288844f
+  predecessor: 998d17de891ca5c8b339f18288b6fd4416281d14
+  upstream_ahead_behind_after_diagnosis: "0 0"
+  exact_governance_delta_path_count: 3
+claude_result:
+  marker: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_RESTORE_READINESS_READ_ONLY_DIAGNOSIS_RESULT_V1
+  verdict: BLOCKED_EVIDENCE
+  process_result: SUCCESS_EXIT_0
+  duration_ms: 114302
+  turns: 10
+  cost_usd: 0.2297618
+  web_search_requests: 0
+  web_fetch_requests: 0
+  result_sha256: 841e6d05f61ce769185929594445dbf90bc9a94d85ba7374e9cec41b6f167119
+  stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+codex_acceptance:
+  classification: VALID_FAIL_CLOSED_STOP_NOT_R1_READINESS
+  head_tree_clean_status: PASS
+  upstream_zero_zero: PASS
+  exact_three_path_delta: PASS
+  protected_metadata: PASS
+  diff_check: PASS
+governance_defects:
+  - INVOCATION_MATCHER_DENIED_LITERAL_UPSTREAM_REF_COMMAND
+  - EXACT_THREE_PATH_DELTA_REQUIRED_WITHOUT_A_PERMITTED_PATH_ENUMERATION_COMMAND
+  - DIRECTIVE_BOOTSTRAP_READ_CONFLICTED_WITH_REQUIRED_FIRST_READ_ORDER
+  - NO_FILE_RULE_DID_NOT_DISTINGUISH_CLAUDE_WRITES_FROM_CONTROLLER_TRANSPORT_LOGS
+r1_a1_corrections:
+  - BOOTSTRAP_READ_DIRECTIVE_ONCE_THEN_READ_SIX_SUBSTANTIVE_AUTHORITIES_IN_ORDER
+  - CONTROLLER_ATTEST_REPOSITORY_AND_PR_STATE_WITHOUT_REMOTE_URL_INSPECTION
+  - PERMIT_EXACT_UPSTREAM_REV_LIST_AND_DIFF_TREE_THREE_PATH_PROOF
+  - REQUIRE_INVOCATION_MATCHERS_FOR_EACH_LITERAL_GIT_COMMAND
+  - ALLOW_EXACTLY_TWO_MODE_600_CONTROLLER_TRANSPORT_LOGS_OUTSIDE_GIT
+  - SEPARATE_CLAUDE_MUTATION_MATRIX_FROM_CONTROLLER_TRANSPORT_ARTIFACTS
+execution_boundary:
+  provider_access: false
+  supabase_project_or_backup_listing: false
+  database_access: false
+  credentials_read: false
+  source_migration_or_harness_edit: false
+  git_or_pr_mutation_by_diagnosis: false
+  runtime_or_restore: false
+  staging_or_production_write: false
+  ready: false
+  merged: false
+  deployed: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_BLOCKED_EVIDENCE_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A1_GOVERNANCE_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_CORRECTION_BOOTSTRAP_ORDER_CONTROLLER_ATTESTATION_LITERAL_COMMAND_ALLOWLIST_TRANSPORT_LOG_EXCEPTION_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_PR_COMMENT_RETRANSMISSION_CLAUDE_RERUN_PROVIDER_READS_ENCRYPTED_CAPTURE_DISPOSABLE_RESTORE_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-A2 — Pre-invocation transport self-hash correction candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_POST_RUN_TRANSPORT_HASH_GOVERNANCE_CORRECTION
+status: R1_A2_PREFLIGHT_STOP_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "After R1-A1 commit, normal push, and instruction publication, the owner explicitly approved one read-only Anthropic Claude Code invocation over the directive-authorized twelve private Git files. MacBook Codex stopped before invocation after detecting the impossible result-file self-hash contract. The owner then explicitly authorized correction of the same three governance files only. Stage, commit, push, revised PR comment, private transmission, Claude invocation, provider/Supabase/database access, runtime, restore, Ready, merge, deployment, history repair, and rollback remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  published_instruction: https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469075854
+  published_instruction_status: PUBLISHED_NOT_INVOKED_SUPERSEDE_BEFORE_USE
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  preflight_head: 93dcdcd691cda7079fecf0ab96e24f75a8388fc0
+  preflight_tree: 1e82c4bf02a84323d7857409e8e027fdd39a84db
+  upstream_ahead_behind: "0 0"
+preflight_stop:
+  claude_process_started: false
+  private_files_transmitted: 0
+  cost_usd: 0
+  defect: RESULT_FILE_CANNOT_CONTAIN_ITS_OWN_FINAL_SHA256
+  empty_transport_root_removed: true
+r1_a2_contract:
+  claude_reports:
+    - CLAUDE_TOOL_MUTATIONS_FALSE
+    - EXPECTED_TRANSPORT_FILE_COUNT_2
+    - EXPECTED_DIRECTORY_MODE_700
+    - EXPECTED_FILE_MODES_600_600
+    - FINAL_HASH_STATUS_POST_RUN_CONTROLLER_VERIFICATION_REQUIRED
+  macbook_codex_post_run_verifies:
+    - EXACT_FILE_COUNT
+    - FINAL_MODES
+    - BYTE_COUNTS
+    - FINAL_SHA256_VALUES
+    - PROCESS_EXIT_STATUS
+    - STDERR_STATE
+    - NO_SECRET_MATERIAL
+execution_boundary:
+  git_or_pr_mutation_by_preflight: false
+  provider_access: false
+  supabase_or_database_access: false
+  credentials_read: false
+  runtime_or_restore: false
+  staging_or_production_write: false
+  ready: false
+  merged: false
+  deployed: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R1_A2_POST_RUN_TRANSPORT_HASH_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_POST_RUN_HASH_RESPONSIBILITY_BOOTSTRAP_ORDER_LITERAL_COMMAND_ALLOWLIST_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_TRANSMISSION_CLAUDE_INVOCATION_PROVIDER_READS_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-A3 — Claude CLI session-environment correction candidate
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_CLAUDE_CLI_SESSION_ENV_GOVERNANCE_CORRECTION
+status: R1_A3_BLOCKED_ENVIRONMENT_ACCEPTED_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly approved transmission of the directive-authorized twelve private Git files to Anthropic Claude Code and one R1-A2 read-only diagnosis. After MacBook Codex rejected the markerless environment-blocked result, the owner explicitly authorized correction of the same exact three governance files only to add a fresh fixed Claude CLI session UUID, exact-path-only ephemeral session-env creation, metadata-only verification, exact cleanup, and zero-residue proof. Stage, commit, push, revised PR comment, renewed private transmission, another Claude invocation, broad .claude access, credential read, provider/Supabase/database access, runtime, restore, Ready, merge, deployment, history repair, and rollback remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_controller_preflight: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  diagnosis_head: 9a1a819059872fffc5271b059aec6540b7d10867
+  diagnosis_tree: d5d6271ae662c537318a5c02391b951928b40c59
+  predecessor: 998d17de891ca5c8b339f18288b6fd4416281d14
+  upstream_ahead_behind_after_diagnosis: "0 0"
+  exact_governance_delta_path_count: 3
+published_instruction:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469125404
+  marker: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_A2_RESTORE_READINESS_READ_ONLY_DIAGNOSIS_INSTRUCTION_V1
+  status: PUBLISHED_INVOKED_RESULT_REJECTED_SUPERSEDE_BEFORE_RETRY
+launcher_preflight_stop:
+  process_exit: 1
+  model_invoked: false
+  result_bytes: 0
+  stderr_bytes: 97
+  stderr_sha256: 527402a1802b7997c67036cd7e8e596f497547ae44b649ce8a135201ebc6f59b
+  cause: INVALID_EMPTY_MCP_CONFIGURATION_SHAPE
+  cost_usd: 0
+claude_result:
+  required_marker_present: false
+  allowed_verdict_present: false
+  codex_classification: BLOCKED_ENVIRONMENT_NOT_R1_READINESS
+  process_exit: 0
+  duration_ms: 19891
+  turns: 6
+  cost_usd: 0.0626758
+  web_search_requests: 0
+  web_fetch_requests: 0
+  result_bytes: 2908
+  result_sha256: 97ffe429ef5647c44f21d2f9146b7af48b9e73b5ec8e8da73f42558cbd809cfd
+  stderr_bytes: 0
+  stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  reported_source_files_read: 0
+  reported_file_edits: 0
+  reported_external_service_contacts_except_anthropic: 0
+environment_block:
+  cli_version: 2.1.226
+  operation: CLAUDE_BASH_SESSION_ENV_INITIALIZATION
+  error: "EPERM mkdir /Users/atsushinishikawa/.claude/session-env/a0de36ce-e60d-4d33-9b0e-cd975353f1f6"
+  failed_session_uuid_burned: a0de36ce-e60d-4d33-9b0e-cd975353f1f6
+r1_a3_contract:
+  controller_preflight:
+    - GENERATE_FRESH_FIXED_SESSION_UUID
+    - PASS_EXACT_UUID_WITH_CLAUDE_SESSION_ID_OPTION
+    - PROVE_EXACT_SESSION_ENV_PATH_ABSENT
+    - CREATE_ONLY_EXACT_MODE_700_SESSION_ENV_PATH
+    - GRANT_WRITE_ONLY_TO_EXACT_UUID_PATH
+  invocation:
+    - NO_SESSION_PERSISTENCE
+    - SAFE_MODE
+    - SLASH_COMMANDS_DISABLED
+    - CHROME_DISABLED
+    - MCP_DISABLED
+    - NO_BACKGROUND_OR_SUBAGENT
+    - NEVER_READ_PRINT_COPY_HASH_OR_TRANSMIT_SESSION_ENV_CONTENT
+  controller_post_run:
+    - INSPECT_PATHNAME_TYPE_MODE_COUNT_METADATA_ONLY
+    - DELETE_ONLY_EXACT_UUID_PATH
+    - PROVE_EXACT_PATH_ABSENT
+    - DO_NOT_REUSE_FAILED_UUID
+  claude_literal_status: POST_RUN_CONTROLLER_SESSION_ENV_CLEANUP_REQUIRED
+  transport_contract_unchanged: EXACTLY_TWO_MODE_600_FILES_IN_FRESH_MODE_700_ROOT
+execution_boundary:
+  broad_claude_directory_access: false
+  credential_keychain_history_or_environment_content_read: false
+  repository_or_git_mutation: false
+  provider_access: false
+  supabase_or_database_access: false
+  runtime_or_restore: false
+  staging_or_production_write: false
+  ready: false
+  merged: false
+  deployed: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_MARKERLESS_ENVIRONMENT_BLOCK_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A3_SESSION_ENV_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_FIXED_SESSION_UUID_EXACT_PATH_ONLY_RUNTIME_LIFECYCLE_CONTENT_NON_READ_POST_RUN_EXACT_DELETE_ABSENCE_PROOF_TRANSPORT_CONTRACT_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_TRANSMISSION_CLAUDE_RETRY_PROVIDER_READS_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-A4 — Budget stop accepted; bounded one-turn diagnosis correction
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_BOUNDED_ONE_TURN_DIAGNOSIS_CORRECTION
+status: R1_A4_BLOCKED_BUDGET_ACCEPTED_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly authorized correction of the same exact three governance documents only after the separately approved R1-A3 Anthropic run stopped at its model budget without a marker or verdict. Stage, commit, push, revised PR comment, renewed private transmission, another Claude invocation, provider/Supabase/database access, runtime, restore, Ready, merge, deployment, history repair, and rollback remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_controller_preflight: OPEN_DRAFT
+  diagnosis_head: 8aa869fb8cb69b2182110422018e6d1d6e18beeb
+  diagnosis_tree: c1b8b36b7f7385731dbbf5c39e065a333ff9dc6c
+  predecessor: 998d17de891ca5c8b339f18288b6fd4416281d14
+  upstream_ahead_behind_after_diagnosis: "0 0"
+  exact_governance_delta_path_count: 3
+published_instruction:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469200225
+  marker: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_A3_RESTORE_READINESS_READ_ONLY_DIAGNOSIS_INSTRUCTION_V1
+  status: PUBLISHED_INVOKED_RESULT_REJECTED_SUPERSEDE_BEFORE_RETRY
+claude_result:
+  required_marker_present: false
+  allowed_verdict_present: false
+  codex_classification: BLOCKED_BUDGET_NOT_R1_READINESS
+  process_subtype: error_max_budget_usd
+  process_exit: 0
+  duration_ms: 201716
+  turns: 33
+  cost_usd: 2.1149743
+  configured_budget_usd: 2.00
+  web_search_requests: 0
+  web_fetch_requests: 0
+  permission_denials: 0
+  cache_creation_input_tokens: 155517
+  cache_read_input_tokens: 1681157
+  output_tokens: 8135
+  result_bytes: 1577
+  result_sha256: f6f96154e2c5de8bc65febd44e4d65e4580bc7edb3656cdf25913af7d53948af
+  stderr_bytes: 0
+  stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+session_environment_cleanup:
+  session_uuid: 1F671B17-87D1-4330-A6CF-5983F04626C5
+  metadata_only_child_count: 0
+  exact_path_removed: true
+  exact_path_absent_after_cleanup: true
+  uuid_burned: true
+r1_a4_contract:
+  source_path_count: 12
+  source_basis: EXACT_COMMITTED_EXECUTION_HEAD
+  input_transport: ONE_MODE_600_BOUNDED_BUNDLE_IN_FRESH_MODE_700_ROOT
+  input_delivery: STDIN_ONLY
+  input_self_hash: PROHIBITED
+  final_input_size_and_hash_delivery: EXTERNAL_LAUNCHER_PROMPT_ENVELOPE
+  claude_io_flags: "--print --input-format text --output-format json"
+  output_transport: EXACTLY_TWO_MODE_600_FILES_IN_SEPARATE_FRESH_MODE_700_ROOT
+  claude_tools: NONE
+  claude_turns: ONE_FINAL_RESPONSE_ONLY
+  reasoning_effort: medium
+  hard_budget_usd: 2.00
+  target_output_ceiling_words: 6000
+  session_environment_creation: PROHIBITED
+  input_cleanup_literal_status: POST_RUN_CONTROLLER_INPUT_BUNDLE_CLEANUP_REQUIRED
+  output_hash_literal_status: POST_RUN_CONTROLLER_VERIFICATION_REQUIRED
+  reject_on:
+    - SOURCE_OR_EXCERPT_HASH_MISMATCH
+    - PATH_BLOCK_COUNT_NOT_EXACTLY_TWELVE
+    - TOOL_USE
+    - SESSION_ENVIRONMENT_CREATION
+    - BUDGET_OR_TIMEOUT_STOP
+    - MISSING_MARKER_OR_VERDICT
+    - RETAINED_INPUT_BUNDLE
+    - OUTPUT_ARTIFACT_COUNT_NOT_EXACTLY_TWO
+execution_boundary:
+  private_files_retransmitted: false
+  claude_reinvoked: false
+  repository_or_git_mutation: false
+  provider_access: false
+  supabase_or_database_access: false
+  runtime_or_restore: false
+  staging_or_production_write: false
+  ready: false
+  merged: false
+  deployed: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_A3_BUDGET_STOP_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A4_BOUNDED_ONE_TURN_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_TWELVE_PATH_BOUNDED_BUNDLE_CONTRACT_COMMITTED_SOURCE_AND_EXCERPT_HASHES_SEPARATE_INPUT_OUTPUT_ROOTS_NO_TOOL_LAUNCHER_ZERO_SESSION_ENV_POST_RUN_INPUT_DELETION_OUTPUT_VERIFICATION_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_TRANSMISSION_CLAUDE_RETRY_PROVIDER_READS_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-A5 — R1-A4 transport accepted; READY verdict rejected with Codex corrections
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_A4_RESULT_ACCEPTANCE_AND_R1_A5_PLAN_CORRECTION
+status: R1_A5_CLAUDE_TRANSPORT_PASS_CONTENT_CHANGES_REQUIRED_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly authorized correcting the same exact three governance documents only after MacBook Codex independently reviewed the completed R1-A4 diagnosis. This gate records the R1-A4 evidence and fixes four plan defects. Stage, commit, push, revised PR comment, private retransmission, another Claude invocation, provider/Supabase/database access, encrypted capture, runtime, restore, rollback, Ready, merge, deployment, history repair, and Staging/Production write remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_controller_preflight: OPEN_DRAFT
+  diagnosis_head: 735278778107a7b28e1d6d25313da387388093dd
+  diagnosis_tree: 56fe9c00b38aa3f28379d921fef616adff8cb122
+  upstream_ahead_behind_after_diagnosis: "0 0"
+  exact_governance_delta_path_count: 3
+published_instruction:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469291428
+  marker: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_A4_RESTORE_READINESS_READ_ONLY_DIAGNOSIS_INSTRUCTION_V1
+  status: PUBLISHED_INVOKED_RESULT_REVIEWED
+input_bundle:
+  exact_path_block_count: 12
+  bytes: 273162
+  sha256: 3d347c3371f77816f1f121070418e7537395012c0c4165d9a4a70a1f1517c8e2
+  deleted_root: /private/tmp/gda-r1-a4-input.lUpRMm
+  input_root_deleted: true
+  input_root_absent_after_cleanup: true
+output_transport:
+  retained_private_root: /private/tmp/gda-r1-a4-output.W6m59R
+  exact_file_count: 2
+  exact_file_modes: "600 600"
+  result_file: claude-result.json
+  stderr_file: claude-stderr.txt
+  repository_authority: false
+claude_result:
+  required_marker_count: 1
+  reported_verdict: READY_FOR_R1_EXECUTION_GOVERNANCE
+  codex_classification: CHANGES_REQUIRED_R1_PLAN
+  process_subtype: success
+  is_error: false
+  duration_ms: 51277
+  turns: 1
+  cost_usd: 0.8820647
+  web_search_requests: 0
+  web_fetch_requests: 0
+  result_bytes: 9787
+  result_sha256: 970805499f833e8315bc34bcb747d620e5253cd09c135b5f6110bf7e94da352a
+  stderr_bytes: 0
+  stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+session_environment:
+  pre_child_count: 291
+  post_child_count: 291
+  pre_pathname_set_sha256: b6fff36d94516937ebddbcec412047daaf1cb3c146978e133bc054bf317ef308
+  post_pathname_set_sha256: b6fff36d94516937ebddbcec412047daaf1cb3c146978e133bc054bf317ef308
+  new_session_environment_path_count: 0
+codex_corrections:
+  - EXACT_300_SECOND_ROLE_AND_DECISION_SEQUENCE
+  - EXACT_PROJECT_AND_BACKUP_MANAGEMENT_API_ENDPOINTS_AND_RESPONSE_FIELDS
+  - EXACT_COMMAND_CLASSES_TIMEOUTS_RETRIES_AND_STOP_RULES
+  - CORRECT_LOCAL_TOOL_DISCOVERY_GPG_AGENT_PRESENT
+provider_contract:
+  staging_ref: vhiuiwolnlvlwvoaingd
+  project_endpoint: "GET /v1/projects/vhiuiwolnlvlwvoaingd"
+  backup_endpoint: "GET /v1/projects/vhiuiwolnlvlwvoaingd/database/backups"
+  health_endpoint_status: DEFERRED_NO_GUESSED_SERVICES_ENUM
+  bounded_status_field: project.status
+  official_backup_reference: https://supabase.com/docs/reference/api/v1-list-all-backups
+cli_contract:
+  supabase_cli_version: 2.116.0
+  db_query_project_ref_file_supported: true
+  exact_capture_class: "SUPABASE_TELEMETRY_DISABLED=1 supabase db query --project-ref vhiuiwolnlvlwvoaingd --file <exact-mode-600-read-only-sql-file> --output-format json"
+local_tool_inventory:
+  gpg: /opt/homebrew/bin/gpg
+  gpg_agent: /opt/homebrew/bin/gpg-agent
+  openssl: /opt/homebrew/bin/openssl
+  security: /usr/bin/security
+  rm: /bin/rm
+  age: ABSENT
+  shred: ABSENT
+  selected_cipher: OPENSSL_3_6_3_AES_256_CBC_PBKDF2_310000_MINIMUM
+execution_boundary:
+  exact_three_governance_documents_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  private_retransmission_or_claude_reinvocation: false
+  provider_access: false
+  supabase_or_database_access: false
+  encrypted_capture_or_runtime_or_restore: false
+  rollback_authorization_or_execution: false
+  staging_or_production_write: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: REJECT_R1_A4_READY_VERDICT_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_A5_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_R1_A4_EVIDENCE_300_SECOND_DECISION_SEQUENCE_PROVIDER_ENDPOINTS_RESPONSE_FIELDS_COMMAND_CLASSES_TIMEOUTS_RETRIES_LOCAL_TOOL_INVENTORY_OPENSSL_APFS_CLEANUP_CONTRACT_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_REVISED_PR_COMMENT_PRIVATE_RETRANSMISSION_CLAUDE_RERUN_PROVIDER_READS_DATABASE_CAPTURE_RESTORE_ROLLBACK_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C1-A1 — Provider/backup read pass; capture command stopped before DB query
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C1_CAPTURE_COMMAND_CONTRACT_CORRECTION
+status: R1_C1_A1_COMMAND_CONTRACT_CORRECTION_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "The owner explicitly authorized the Staging project and backup read-only gate, then separately authorized one R1-C1 read-only function capture and encrypted Git-external evidence attempt. After the CLI parser stopped before the database query, the owner authorized correcting the same exact three governance documents only. Stage, commit, push, PR mutation, capture retry, database access, encryption, restore, rollback, Ready, merge, deployment, history repair, and Staging/Production write remain unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_last_verification: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  execution_head: 574f121cc847a98b475c538da41bec1543c25dce
+  execution_tree: 9ee09274544489be05bac39b5943562d4da420da
+  upstream_ahead_behind_after_attempt: "0 0"
+  exact_governance_write_path_count: 3
+published_result:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/47#issuecomment-5469390594
+  marker: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_A5_CODEX_CORRECTION_RESULT_V1
+  status: PUBLISHED_NOT_INVOKED
+provider_read_only_result:
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  status: ACTIVE_HEALTHY
+  postgres_version: 17.6.1.147
+  postgres_engine: "17"
+  release_channel: ga
+  walg_enabled: true
+  pitr_enabled: false
+  physical_backup_count: 7
+  completed_backup_count: 7
+  latest_backup_id: 1517480443
+  latest_backup_inserted_at: "2026-08-29T17:06:22.382Z"
+  physical_backup_data_empty: true
+  classification: PROVIDER_BACKUP_LIST_PASS_RESTORE_PROOF_PENDING
+r1_c1_failed_attempt:
+  classification: BLOCKED_COMMAND_CONTRACT_NO_DATABASE_QUERY
+  burned_suffix: DJ4eiW
+  cli_version: 2.116.0
+  process_exit: 1
+  error_code: LegacyDbQueryMutuallyExclusiveFlagsError
+  error_summary: "--project-ref requires --linked for db query"
+  database_query_executed: false
+  function_definition_captured: false
+  function_body_captured: false
+  ciphertext_created: false
+  staging_write: false
+failure_evidence:
+  retained_root: /private/tmp/gda-r1-c1-evidence.DJ4eiW
+  root_mode: "700"
+  sql_file: capture-function-read-only.sql
+  sql_bytes: 1212
+  sql_mode: "600"
+  sql_sha256: 41bca71643c96dc1de22493304714466edaf534f8988fea04bcc59ac4ddf45a3
+  result_file: function-capture.json
+  result_bytes: 198
+  result_mode: "600"
+  result_sha256: d40dd920a87a9775bcbec99574229e776509ae6555d0a53dcea697303ed0cfa2
+  stderr_file: function-capture.stderr
+  stderr_bytes: 0
+  stderr_mode: "600"
+  stderr_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+secret_cleanup:
+  deleted_secret_root: /private/tmp/gda-r1-c1-secret.ZAipsZ
+  unused_secret_deleted: true
+  exact_root_absent_after_cleanup: true
+corrected_command_contract:
+  command: "SUPABASE_TELEMETRY_DISABLED=1 supabase db query --linked --project-ref vhiuiwolnlvlwvoaingd --file <exact-mode-600-read-only-sql-file> --output-format json"
+  supabase_link_command_authorized: false
+  local_temp_project_ref_precondition: ABSENT
+  local_temp_project_ref_postcondition: ABSENT
+  fresh_suffix_required: true
+  same_suffix_retry: false
+  attempt_limit: 1
+  controller_deadline_seconds: 30
+execution_boundary:
+  exact_three_governance_documents_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  capture_retry: false
+  database_query_after_parser_stop: false
+  encryption_or_restore: false
+  rollback_authorization_or_execution: false
+  staging_or_production_write: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_PROVIDER_BACKUP_LIST_PASS_AND_AUTHOR_EXACT_THREE_DOCUMENT_R1_C1_A1_COMMAND_CORRECTION_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_FAILED_ATTEMPT_HASHES_BURNED_SUFFIX_NO_FUNCTION_CAPTURE_NO_CIPHERTEXT_SECRET_ROOT_ABSENCE_CORRECTED_LINKED_EXACT_REF_COMMAND_TEMP_PROJECT_REF_PRE_POST_ABSENCE_ONE_ATTEMPT_DEADLINE_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. PUSH_PR_COMMENT_FRESH_CAPTURE_RETRY_DATABASE_ACCESS_ENCRYPTION_RESTORE_AND_ALL_SHARED_WRITES_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C2 — Encrypted capture and local disposable restore pass
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C2_LOCAL_RESTORE_RESULT_RECORD
+status: R1_C2_RESULT_RECORD_CANDIDATE_UNCOMMITTED
+date: 2026-08-30
+append_only: true
+authorization: "After the corrected command contract was delivered, the owner separately authorized one fresh R1-C1 retry and then one fresh local disposable R1-C2 restore proof. After MacBook Codex independently verified both results and cleanup, the owner authorized authoring this exact-three-document result-record candidate only. Stage, commit, push, PR mutation, conditional rollback approval/execution, R2, shared write, Ready, merge, deployment, history repair, and Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_record_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  execution_head: c8dd6ca259a8402d1537e1d509fbe39a88751199
+  execution_tree: e014e8bd978858085df0680d246bfda8fed2af49
+  base: main
+  changed_files_before_record_candidate: 13
+  upstream_ahead_behind: "0 0"
+r1_c1_capture:
+  fresh_suffix: I7kjNs
+  query_attempts: 1
+  query_exit: 0
+  exact_candidate_count: 1
+  exact_signature: public.save_estimate_from_wizard(uuid,uuid,jsonb)
+  security_invoker: true
+  owner: postgres
+  language: plpgsql
+  volatility: v
+  parallel_mode: u
+  search_path: "pg_catalog, public, pg_temp"
+  explicit_execute_roles:
+    - postgres
+    - service_role
+  canonical_body_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  function_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  plaintext_capture_sha256: 33096a6f5fc295071b8bb06d6ebcf293febd187f25aa04bb8adc9ba19e15edda
+  ciphertext_sha256: 7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c
+  decrypt_compare: PASS
+  plaintext_present_after_cleanup: false
+  capture_root: /private/tmp/gda-r1-c1-evidence.I7kjNs
+  capture_root_mode: "700"
+  capture_sha256sums_sha256: 52602a3d00fbc73cb0627e99542f25f19703a42b1716df617eeb9f2a47ec63d3
+  secret_root_separate: true
+  secret_value_recorded: false
+  local_temp_project_ref_pre_post: ABSENT
+  staging_write: false
+r1_c2_restore:
+  fresh_suffix: 20260830T150757Z-a23e1a
+  started_at_utc: "2026-08-30T15:11:40Z"
+  completed_at_utc: "2026-08-30T15:11:41Z"
+  postgres_version: "17.6"
+  target: LOOPBACK_ONLY
+  eligible_migrations_applied: 112
+  protected_line_migrations_excluded: 1
+  failed_migrations: 0
+  old_definition_restore: PASS
+  old_body_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  old_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  old_metadata_acl_search_path_exact: true
+  bridge_replacement: PASS
+  bridge_body_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+  bridge_metadata_before_after_exact: true
+  unrelated_catalog_fingerprint: 1a28975fc6638456fceec60be6baade181fa8e1bc07b02fdb09788e20f32c985
+  unrelated_objects_unchanged: true
+  fixture_residue_rows: 0
+  retained_evidence_root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1-restore-evidence/gda-estimate-offering-r1-restore.20260830T150757Z-a23e1a
+  manifest_sha256: f277d06059a7f4751d4f270f2886ec7e469ef0c90b9765f46a99cb1b6388bb8c
+  sha256sums_sha256: a5228d0b0a9c9a8e8ee0b616cd1eff60c98d7f10c25cdd248d26f7b5ebdd3a13
+cleanup:
+  supabase_stop_exit: 0
+  matching_containers: 0
+  matching_volumes: 0
+  exact_runtime_removed: true
+  colima_stopped_by_gate: false
+execution_boundary:
+  exact_three_governance_documents_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  hosted_supabase_contacted_by_r1_c2: false
+  shared_staging_or_production_write: false
+  provider_write: false
+  migration_history_write_shared: false
+  conditional_rollback_authorized_or_executed: false
+  ready_or_merge_or_deploy: false
+durable_custody:
+  ciphertext_current_location_class: PRIVATE_TMP_TRANSIENT
+  secret_current_location_class: PRIVATE_TMP_TRANSIENT_SEPARATE_ROOT
+  ciphertext_and_secret_separated: true
+  ciphertext_hash_verified: true
+  local_restore_proved: true
+  durable_ciphertext_copy_present: false
+  durable_secret_custody_present: false
+  reboot_survival_proved: false
+  r1_durable_rollback_readiness: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_C1_ENCRYPTED_CAPTURE_AND_R1_C2_LOCAL_DISPOSABLE_RESTORE_TECHNICAL_PASS_CUSTODY_PENDING_RECORD_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_CAPTURE_AND_RESTORE_HASHES_EVIDENCE_MANIFESTS_RUNTIME_REMOVAL_ZERO_CONTAINER_VOLUME_RESIDUE_TRANSIENT_CUSTODY_LIMIT_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. AFTER_DELIVERY_R1_C2A_DURABLE_CIPHERTEXT_AND_SEPARATE_SECRET_CUSTODY_IS_THE_NEXT_TECHNICAL_GATE. NORMAL_PUSH_PR_RESULT_PUBLICATION_R1_C2A_FILE_ACTIONS_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C2A — Durable ciphertext and separate secret custody
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C2A_DURABLE_CUSTODY_RESULT_RECORD
+status: R1_C2A_RESULT_RECORD_CANDIDATE_UNCOMMITTED
+date: 2026-08-31
+append_only: true
+authorization: "After the R1-C1/R1-C2 exact-three-document result record was committed and normally pushed, the owner separately authorized R1-C2A durable custody. After MacBook Codex completed and independently verified the file-copy, mode, hash, stream-decrypt, plaintext-absence, transient-retention, Git-clean, and protected-blob evidence, the owner authorized authoring this exact-three-document R1-C2A result-record candidate only. Stage, commit, push, PR mutation, transient deletion, R1-C3, rollback execution, R2, shared write, Ready, merge, deployment, history repair, and Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_record_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  execution_head: e3788617303c092679e169801ccdbd02aaa6c2ba
+  execution_tree: 1c80685c92d703fd022984c4a1643f852988477c
+  base: main
+  changed_files_before_record_candidate: 13
+  upstream_ahead_behind: "0 0"
+durable_ciphertext_custody:
+  source_capture_suffix: I7kjNs
+  custody_suffix: 20260830T152354Z-I7kjNs
+  root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-estimate-offering-r1-rollback-custody/ciphertext.20260830T152354Z-I7kjNs
+  root_mode: "700"
+  file: function-capture.json.enc
+  file_mode: "600"
+  ciphertext_sha256: 7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c
+  expected_ciphertext_hash_exact: true
+  source_manifest_redacted_sha256: 7d5406738d3dca94589add09be9384573be2ffff35d5c23e80f0e1dd4dd0ab4e
+  custody_manifest_redacted_sha256: 388c48ad91e6093f1a7dfcbe880d7733a6dbd1a407bf811f0d3c6c1cbc762d39
+separate_secret_custody:
+  root: /Users/atsushinishikawa/Documents/Codex/secure/gda-estimate-offering-r1-rollback-secrets/secret.20260830T152354Z-I7kjNs
+  root_mode: "700"
+  file_mode: "600"
+  same_root_as_ciphertext: false
+  secret_value_recorded: false
+  secret_hash_recorded: false
+verification:
+  encryption: "aes-256-cbc; pbkdf2; iter=310000; salt=yes"
+  expected_plaintext_sha256: 33096a6f5fc295071b8bb06d6ebcf293febd187f25aa04bb8adc9ba19e15edda
+  streamed_decrypt_sha256: 33096a6f5fc295071b8bb06d6ebcf293febd187f25aa04bb8adc9ba19e15edda
+  decrypt_compare: PASS_STREAM_ONLY
+  plaintext_file_created: false
+  plaintext_file_retained: false
+transient_sources:
+  private_tmp_ciphertext_retained: true
+  private_tmp_secret_retained: true
+  transient_cleanup_authorized: false
+limitations:
+  actual_reboot_survival_tested: false
+  off_device_backup_proved: false
+  macos_keychain_custody_proved: false
+  hardware_backed_secret_custody_proved: false
+  local_persistent_custody_proved: true
+  device_loss_disaster_recovery_proved: false
+execution_boundary:
+  exact_three_governance_documents_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  database_or_provider_contact: false
+  shared_staging_or_production_write: false
+  migration_history_write_shared: false
+  conditional_rollback_preauthorized: false
+  rollback_executed: false
+  r2_started: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_C2A_LOCAL_PERSISTENT_CIPHERTEXT_AND_SEPARATE_SECRET_CUSTODY_PASS_TRANSIENT_RETAINED_DEVICE_LOSS_RECOVERY_NOT_PROVED_RECORD_CANDIDATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_DIFF_DURABLE_PATHS_MODES_CIPHERTEXT_AND_MANIFEST_HASHES_STREAM_ONLY_DECRYPT_MATCH_PLAINTEXT_FILE_ABSENCE_TRANSIENT_SOURCE_RETENTION_LIMITATIONS_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_RESULT_PUBLICATION_TRANSIENT_DELETION_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C3 — Conditional rollback pre-authorization instrument authoring
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION_AUTHORING
+status: R1_C3_PREAUTHORIZATION_INSTRUMENT_CANDIDATE_UNCOMMITTED_INACTIVE
+date: 2026-08-31
+append_only: true
+authorization: "After the R1-C2A exact-three-document result record was committed and normally pushed, the owner authorized creation of the R1-C3 conditional rollback pre-authorization instrument. The authorization covers one new instrument and corresponding remediation-plan and result-ledger updates only. Stage, commit, push, PR mutation, role assignment, activation, transient deletion, database/provider access, rollback execution, R2, shared write, Ready, merge, deployment, history repair, and Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  authoring_head: 79f380c3ac7dd01380209d67ce1603f63b280ae7
+  authoring_tree: 62360cae13060a827484145efc7221db99dbd7e8
+  base: main
+  upstream_ahead_behind: "0 0"
+scope_binding:
+  environment: Staging
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  implementation_commit: 7f5860600fbdd8ce1b9b4bed7f070873d1a66159
+  implementation_tree: 381f7987af498fd8bf0fe88cb97647f413932ed2
+  bridge_migration: supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql
+  bridge_migration_sha256: 7406c5f11f1feb352ceb737db7844af8904f33e7a82f9679dfed40319a528cf8
+  function_signature: public.save_estimate_from_wizard(uuid,uuid,jsonb)
+  preapply_body_sha256: 818e91850d669158a18908108e134117389948e56a42e0032dbfda7c6d882136
+  preapply_definition_sha256: b745a920543a1bba59333cbe80f139a8f8c03a3fad2bac78e6614b74d580603a
+  target_body_sha256: df49de1e6b8cf9767f32730cabdce5134b865678c63ab2d2a5c011400a2db7a6
+  rollback_ciphertext_sha256: 7222922b30d80139967750c2a9fbb91e8aff22ae1dc2bb6e253bc75be642cb4c
+  decrypted_capture_sha256: 33096a6f5fc295071b8bb06d6ebcf293febd187f25aa04bb8adc9ba19e15edda
+  custody_manifest_sha256: 388c48ad91e6093f1a7dfcbe880d7733a6dbd1a407bf811f0d3c6c1cbc762d39
+role_assignment:
+  operator: OWNER_ASSIGNMENT_REQUIRED
+  verifier: OWNER_ASSIGNMENT_REQUIRED
+  stop_authority: OWNER_ASSIGNMENT_REQUIRED
+  rollback_authority: OWNER_ASSIGNMENT_REQUIRED
+  operator_verifier_separated: REQUIRED_NOT_YET_PROVED
+  stop_rollback_authorities_separated: REQUIRED_NOT_YET_PROVED
+decision_contract:
+  window_seconds: 300
+  timeout_extends_authority: false
+  silence_implies_approval: false
+  default: DENY_AND_REMAIN_STOPPED
+  final_decisions:
+    - APPROVE_EXACT_HASH
+    - DENY
+activation:
+  document_created: true
+  active: false
+  owner_role_assignment_complete: false
+  separate_exact_version_activation_recorded: false
+  rollback_execution_authorized: false
+execution_boundary:
+  exact_three_governance_paths_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  database_or_provider_contact: false
+  shared_staging_or_production_write: false
+  transient_source_deletion: false
+  r2_started: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_C3_PREAUTHORIZATION_INSTRUMENT_AUTHORING_CANDIDATE_INACTIVE_ROLE_ASSIGNMENT_AND_SEPARATE_ACTIVATION_REQUIRED
+next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_SCOPE_BINDINGS_TRIGGER_CONTRACT_ROLE_ASSIGNMENT_GAPS_INACTIVE_STATUS_FIVE_MINUTE_SEQUENCE_NO_EXECUTION_AUTHORITY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_PUBLICATION_ROLE_ASSIGNMENT_ACTIVATION_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C3-A1 — Accountable role assignment
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_A1_ACCOUNTABLE_ROLE_ASSIGNMENT
+status: R1_C3_ROLE_ASSIGNMENT_CANDIDATE_UNCOMMITTED_INACTIVE
+date: 2026-08-31
+append_only: true
+authorization: "The owner identified 倉庫担当者 小尾野 as Rollback Authority after accepting the proposed separation: Operator MacBook Claude Code, Verifier MacBook Codex, Stop Authority 西川 篤志 / Owner, and Rollback Authority 倉庫担当者 小尾野. The owner authorized recording these assignments in the exact three governance paths only. Stage, commit, push, PR mutation, activation, transient deletion, database/provider access, rollback execution, R2, shared write, Ready, merge, deployment, history repair, and Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  authoring_head: 3e94cb58cf47e0f6ce61d9dfc8d1d7bcdfe11e6a
+  authoring_tree: fb0d64930220042fed45943abdb437e6ee779791
+  base: main
+  upstream_ahead_behind: "0 0"
+role_assignment:
+  operator: MacBook Claude Code
+  verifier: MacBook Codex
+  stop_authority: 西川 篤志 / Owner
+  rollback_authority: 倉庫担当者 小尾野
+  operator_verifier_separated: true
+  stop_rollback_authorities_separated: true
+  stop_rollback_authorities_different_humans: true
+authority_limits:
+  operator_may_authorize_own_work: false
+  verifier_may_execute_rollback: false
+  stop_authority_may_approve_exact_hash: false
+  rollback_authority_may_execute_rollback: false
+activation:
+  assignments_complete: true
+  document_active: false
+  separate_exact_version_activation_required: true
+  silence_implies_activation: false
+  rollback_execution_authorized: false
+execution_boundary:
+  exact_three_governance_paths_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  database_or_provider_contact: false
+  shared_staging_or_production_write: false
+  transient_source_deletion: false
+  r2_started: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_C3_FOUR_ROLE_ASSIGNMENT_COMPLETE_CANDIDATE_PREAUTHORIZATION_REMAINS_INACTIVE
+next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_NAMES_ROLE_SEPARATION_INACTIVE_STATUS_NO_EXECUTION_AUTHORITY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_PUBLICATION_ACTIVATION_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C3-A2 — Exact instrument activation decision
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_A2_EXACT_INSTRUMENT_ACTIVATION
+status: R1_C3_OWNER_ACTIVATED_RECORD_CANDIDATE_UNCOMMITTED_OPERATIONAL_USE_BLOCKED
+date: 2026-08-31
+append_only: true
+authorization: "The owner explicitly approved activation of exact R1-C3 instrument SHA-256 9e23067a7b6c9a3b8b7b8c0eab489ffb9db710b23fca402c53ee944829459237 for Staging ref vhiuiwolnlvlwvoaingd only. The activation decision does not authorize rollback execution, database/provider access, R2, shared writes, Production, Ready, merge, or deployment. The owner also authorized authoring one new activation record and corresponding remediation-plan and append-only result-ledger updates only. Stage, commit, push, PR mutation, and operational-use acceptance remain separate."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  authoring_head: 3418a377c6bdacf3d00ee38867248de9ec40219b
+  authoring_tree: 439a0b01f9b86e29c16f06fe69207886bf23d636
+  base: main
+  upstream_ahead_behind: "0 0"
+activated_instrument:
+  path: docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION.md
+  commit: 3418a377c6bdacf3d00ee38867248de9ec40219b
+  tree: 439a0b01f9b86e29c16f06fe69207886bf23d636
+  git_blob: 4f8afaecce49d9162be9c274761a7f4c15e4de46
+  sha256: 9e23067a7b6c9a3b8b7b8c0eab489ffb9db710b23fca402c53ee944829459237
+target:
+  environment: Staging
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  production_ref_authorized: false
+role_assignment:
+  operator: MacBook Claude Code
+  verifier: MacBook Codex
+  stop_authority: 西川 篤志 / Owner
+  rollback_authority: 倉庫担当者 小尾野
+activation:
+  owner_decision_recorded: true
+  decision_recorded_at_utc: "2026-08-30T22:48:56Z"
+  exact_instrument_hash_approved: true
+  exact_staging_ref_approved: true
+  operational_use_blocked_until_git_delivery_verified: true
+  rollback_execution_authorized: false
+authority:
+  five_minute_review_after_future_separately_authorized_staging_apply: true
+  provider_or_database_access: false
+  decryption_or_plaintext_creation: false
+  rollback_execution: false
+  r2_staging_preflight: false
+  migration_history_write: false
+  production_action: false
+  ready_merge_deploy: false
+execution_boundary:
+  exact_three_governance_paths_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  database_or_provider_contact: false
+  shared_staging_or_production_write: false
+  transient_source_deletion: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_OWNER_ACTIVATION_DECISION_EXACT_INSTRUMENT_AND_STAGING_REF_RECORD_CANDIDATE_OPERATIONAL_USE_BLOCKED_UNTIL_GIT_DELIVERY_VERIFIED
+next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_ACTIVATION_RECORD_INSTRUMENT_COMMIT_TREE_BLOB_SHA256_TARGET_REF_ROLE_ASSIGNMENTS_DECISION_LIMITS_OPERATIONAL_BLOCK_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_PUBLICATION_OPERATIONAL_USE_ACCEPTANCE_ROLLBACK_EXECUTION_R2_SHARED_WRITES_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R1-C3-A3 — Operational-use acceptance
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_A3_OPERATIONAL_USE_ACCEPTANCE
+status: R1_C3_OPERATIONAL_USE_ACCEPTANCE_RECORD_CANDIDATE_UNCOMMITTED_GIT_DELIVERY_REQUIRED
+date: 2026-08-31
+append_only: true
+authorization: "After the exact activation-record commit was normally pushed and independently verified at PR #47 remote HEAD, the owner authorized recording Staging-only operational-use acceptance. This authorizes one new acceptance record and the corresponding remediation-plan and append-only result-ledger updates only. Stage, commit, push, PR mutation, R2, provider/database access, Staging apply, rollback execution, shared write, history repair, Ready, merge, deployment, and every Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_acceptance: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  activation_delivery_head: 02fca03c18441d7ae1a91a98d92e08410e27bc50
+  activation_delivery_tree: 1b8a0754af326dd080a3483ae1fd276433ec5cc1
+  base: main
+  changed_files: 15
+  upstream_ahead_behind_after_push: "0 0"
+  worktree_and_index_after_push: clean
+  push_mode: NORMAL_NON_FORCE
+accepted_instrument:
+  path: docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_CONDITIONAL_ROLLBACK_PREAUTHORIZATION.md
+  git_blob: 4f8afaecce49d9162be9c274761a7f4c15e4de46
+  sha256: 9e23067a7b6c9a3b8b7b8c0eab489ffb9db710b23fca402c53ee944829459237
+activation_record:
+  path: docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R1_C3_ACTIVATION_RECORD.md
+  git_blob: 283eed686e646ace2b643de97083302156cba6aa
+  sha256: 69b5dd9f2c5ab287de32446b9fe7e52e7c893a6d424af63a74ea61be323973dd
+target:
+  environment: Staging
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  production_ref_authorized: false
+role_assignment:
+  operator: MacBook Claude Code
+  verifier: MacBook Codex
+  stop_authority: 西川 篤志 / Owner
+  rollback_authority: 倉庫担当者 小尾野
+operational_use:
+  owner_acceptance_recorded: true
+  recorded_at_utc: "2026-08-30T22:52:22Z"
+  exact_instrument_hash_bound: true
+  exact_staging_ref_bound: true
+  five_minute_decision_procedure_only: true
+  effective_after_acceptance_record_git_delivery_verified: true
+  rollback_execution_authorized: false
+authority:
+  r2_staging_preflight: false
+  provider_or_database_access: false
+  staging_apply_or_runtime_verification: false
+  decryption_or_plaintext_creation: false
+  rollback_execution: false
+  migration_history_write: false
+  transient_source_deletion: false
+  production_action: false
+  ready_merge_deploy: false
+execution_boundary:
+  exact_three_governance_paths_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  database_or_provider_contact: false
+  shared_staging_or_production_write: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_R1_C3_STAGING_ONLY_OPERATIONAL_USE_ACCEPTANCE_RECORD_CANDIDATE_GIT_DELIVERY_REQUIRED
+next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_ACCEPTANCE_RECORD_REMOTE_ACTIVATION_DELIVERY_EVIDENCE_INSTRUMENT_AND_ACTIVATION_HASHES_TARGET_REF_ROLE_ASSIGNMENTS_FIVE_MINUTE_ONLY_BOUNDARY_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_VERIFICATION_R2_STAGING_READ_ONLY_PREFLIGHT_PROVIDER_DATABASE_ACCESS_STAGING_APPLY_ROLLBACK_EXECUTION_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```
+
+## GDA-ESTIMATE-MANAGED-SERVICE-OFFERING-R1-PRODUCTION-R2-G1 — Staging read-only preflight governance and history-identity correction
+
+```yaml
+phase: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R2_STAGING_READ_ONLY_PREFLIGHT_GOVERNANCE
+status: R2_STAGING_READ_ONLY_PREFLIGHT_DIRECTIVE_CANDIDATE_UNCOMMITTED_NOT_SENT
+date: 2026-08-31
+append_only: true
+authorization: "After R1-C3 operational-use acceptance was committed, normally pushed, and remotely verified, the owner authorized R2 Staging read-only preflight directive authoring. MacBook Codex identified that R5/R9 incorrectly named superseded version 20260830160000 for history reconciliation even though the exact executable Forward Bridge is version 20260830121816. The owner explicitly approved correcting R5/R9 to the exact executed version and keeping 20260830160000 superseded, directly ineligible, and unrecorded. This gate changes exactly the remediation plan, append-only result ledger, and new R2 directive. Stage, commit, push, PR mutation, private transmission, Claude execution, provider/database access, evidence creation, R3, rollback execution, migration-history write, Ready, merge, deployment, and every Production action remain separate and unauthorized."
+repository:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/47
+  pull_request_state_at_authoring: OPEN_DRAFT
+  branch: plan/estimate-managed-service-production-forward-bridge-r1
+  authoring_head: 301dc99366f7a7634e80f7f260a099863ee86ef7
+  authoring_tree: b4eb50bc77bf693e2002c9215d4b0648cb212502
+  base: main
+  changed_files_before_candidate: 16
+  upstream_ahead_behind: "0 0"
+  worktree_and_index_before_candidate: clean
+governance_write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_MIGRATION_REMEDIATION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R2_STAGING_READ_ONLY_PREFLIGHT.md
+history_identity_correction:
+  exact_executable_version: "20260830121816"
+  exact_executable_path: supabase/migrations/20260830121816_estimate_managed_service_production_forward_bridge.sql
+  exact_executable_sha256: 7406c5f11f1feb352ceb737db7844af8904f33e7a82f9679dfed40319a528cf8
+  later_staging_history_version: "20260830121816"
+  later_production_history_version: "20260830121816"
+  superseded_version: "20260830160000"
+  superseded_disposition: EXCLUDED_SUPERSEDED_DIRECT_APPLY_PROHIBITED_NOT_RECORDED
+  history_write_now: false
+r2_target:
+  environment: Staging
+  project_name: DealerOS-Dev-Next
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  production_ref_contact_authorized: false
+r2_future_execution:
+  result_id: GDA_ESTIMATE_MANAGED_SERVICE_OFFERING_R1_PRODUCTION_R2_STAGING_READ_ONLY_PREFLIGHT_RESULT_V1
+  provider_read_only: SEPARATE_OWNER_GATE_REQUIRED
+  database_read_only: SEPARATE_OWNER_GATE_REQUIRED
+  private_repository_transmission: SEPARATE_OWNER_GATE_REQUIRED
+  git_external_evidence_creation: SEPARATE_OWNER_GATE_REQUIRED
+  database_write: false
+  migration_or_history_write: false
+  r3_execution_artifact_generation: false
+  staging_apply: false
+  rollback_execution: false
+  production_action: false
+current_execution_boundary:
+  exact_three_governance_paths_modified: true
+  stage_or_commit: false
+  push_or_pr_mutation: false
+  claude_invoked: false
+  private_files_transmitted: false
+  evidence_created: false
+  provider_or_database_contact: false
+  shared_staging_or_production_write: false
+  ready_or_merge_or_deploy: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: AUTHOR_R2_STAGING_READ_ONLY_PREFLIGHT_DIRECTIVE_AND_CORRECT_HISTORY_TO_EXACT_EXECUTED_FORWARD_BRIDGE_VERSION
+next: "VERIFY_THE_EXACT_THREE_PATH_DIFF_R5_R9_HISTORY_IDENTITY_R2_DIRECTIVE_READ_AND_COMMAND_ALLOWLIST_ACCEPTED_SOURCE_HASHES_EXPECTED_NINE_VERSION_MISSING_SET_HASH_ONLY_FUNCTION_CAPTURE_DEPENDENCY_ACTIVITY_LOCK_EVIDENCE_CONTRACT_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION. NORMAL_PUSH_PR_PUBLICATION_PRIVATE_TRANSMISSION_CLAUDE_EXECUTION_PROVIDER_DATABASE_READS_R3_ROLLBACK_HISTORY_WRITE_READY_MERGE_DEPLOYMENT_AND_PRODUCTION_ACTIONS_REMAIN_SEPARATE."
+```
