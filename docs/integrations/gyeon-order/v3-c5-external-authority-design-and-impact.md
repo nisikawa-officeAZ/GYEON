@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | `GYEON-ORDER-V3-C5-EXTERNAL-AUTHORITY-DESIGN-R1` |
-| 状態 | `C5-A_COMMITTED_LOCAL_NOT_PUSHED / C5-B_GOVERNANCE_CANDIDATE_UNCOMMITTED` |
+| 状態 | `STRIPE_PROVIDER_OWNER_RATIFIED / UPFRONT_FULL_PAYMENT_CONTRACT_OWNER_RATIFIED / DOCUMENTATION_CANDIDATE_UNCOMMITTED / PROVIDER_NOT_CONNECTED` |
 | 作成日 | 2026-08-27 |
 | 基準commit | `d1f8ef9e94c3a7ea4ed5003489c9098b6327918a` |
 | 前提 | C4 DB foundation pass、release blocked by external authority |
@@ -21,7 +21,7 @@ C5以降は、外部APIをPostgreSQLトランザクション内から直接呼�
 1. ブラウザの成功フラグ、金額、資格判定、在庫数、支払状態を信用しない。
 2. 外部通信中に注文行ロックを保持しない。
 3. 証跡は注文、店舗、金額、通貨、注文version、要求fingerprintへ結び付け、別注文へ転用できなくする。
-4. 外部処理失敗、応答不明、version競合では元注文と元与信を維持し、倉庫へ流さない。
+4. 外部処理失敗または応答不明では元注文を維持し、決済成功後のversion競合は返金compensationが完了するまで倉庫へ流さない。
 
 ## 2. 調査結果
 
@@ -40,8 +40,8 @@ C5以降は、外部APIをPostgreSQLトランザクション内から直接呼�
 | 領域 | 現状 | 判定 |
 |---|---|---|
 | 初回資格 | `rules_snapshot.qualification_verified` が文字列 `true` かだけを確認し、未接続時は `QUALIFICATION_AUTHORITY_NOT_CONFIGURED` で停止 | クライアント由来になり得るため正本として不可。停止動作は維持する |
-| 注文編集 | `SERVER_REPRICE_EDIT_ADAPTER_NOT_CONFIGURED` で常に停止 | 正しいfail-closed。二段階再価格・再与信が必要 |
-| カード | server verified evidenceの器はあるが、PSP adapter／失効／消費契約がない | provider契約後に別ゲートで接続 |
+| 注文編集 | `SERVER_REPRICE_EDIT_ADAPTER_NOT_CONFIGURED` で常に停止 | 決済前のserver再価格だけを許可し、カード全額決済後の金額変更は拒否する契約へ修正が必要 |
+| カード | 採用PSPはStripe、注文確定時の全額即時決済に確定したが、Stripe adapter／API version／即時売上確定／返金／Webhook契約がない | provider接続は別ゲート。既存の与信保持・再与信・分割capture前提は適用禁止 |
 | 銀行振込 | `payment_pending` までは表現できるが、PayPay銀行webhook・照合・重複防止がない | provider公式契約待ち。推測実装禁止 |
 | 倉庫キュー | 現行SQLは倉庫受付RPCの中で初めてtaskを作る | 正式仕様と逆。支払解放時に `unaccepted` taskを先に作る |
 | 在庫 | Office AZ読み取り投影はあるが、注文引当／解放の正本APIがない | 数量表示だけで販売確定してはならない |
@@ -61,7 +61,7 @@ C5以降は、外部APIをPostgreSQLトランザクション内から直接呼�
 | 商品・ランク別価格 | Office AZ商品管理 | version付きoffer投影と注文時snapshot | 商品ID・数量のみ |
 | 正式在庫・引当・棚卸待ち・発注可能数 | Office AZ inventory | version付き供給投影、予約証跡ID | 不可 |
 | 初回／upgrade資格 | DealerOS server business authority | 対象mode、rule version、発送・返品fact、判定snapshot | 不可 |
-| カード与信 | 採用PSP | provider event、amount、currency、order version、fingerprintを結ぶ証跡 | token化されたprovider入力だけ |
+| カード決済・返金 | Stripe | PaymentIntent／Charge／Refundのprovider event、amount、currency、order version、fingerprintを結ぶ証跡 | Stripeがtoken化したprovider入力だけ |
 | 銀行入金 | PayPay銀行＋DealerOS照合worker | immutable webhook inbox、照合結果、注文への一意割当 | 不可 |
 | 代引 | DealerOS注文契約＋倉庫発送実績 | 初回代引回収対象額snapshot、後送分再請求禁止fact | 支払方式の選択のみ |
 | 掛け売り | スーパーアドミン設定＋月次請求authority | 有効なterms version、発送済み数量、請求書snapshot | 不可 |
@@ -74,13 +74,13 @@ C5以降は、外部APIをPostgreSQLトランザクション内から直接呼�
 
 既存 `gyeon_order_payment_evidence` は基礎として使えるが、少なくとも次を追加または別のappend-only event表で保持する必要がある。
 
-- `purpose`: `initial_authorization / edit_reauthorization / bank_payment_match / void / capture`
+- `purpose`: `full_payment / partial_refund / full_refund / bank_payment_match`
 - `provider` と `provider_event_id`。provider内で一意にする。
 - `order_id / dealer_id / order_version`
 - canonical request `fingerprint`
 - `amount_inc_tax_yen / currency`
 - `state` と `server_verified_at`
-- `expires_at`。有効期限のない証跡として扱わない。
+- `expires_at`。処理準備・未確定証跡には期限を必須化する。確定済みの全額決済・部分返金・全額返金は失効する許可証ではなくimmutableな決済事実として保持する。
 - `consumed_at / consumed_by_operation`。同じ成功証跡を二重利用しない。
 - raw payloadそのものではなく、必要最小限の正規化値とpayload hash。秘密・カード番号・銀行認証情報を保存しない。
 
@@ -88,7 +88,7 @@ DBのfinalize RPCは次をすべて満たす証跡だけを採用する。
 
 1. service-owned経路で作成されている。
 2. 注文、店舗、目的、金額、通貨、注文version、fingerprintが完全一致する。
-3. success状態で、期限内、未消費である。
+3. providerで確定したsuccess状態かつserver検証済みで、未消費である。期限を持つ処理準備証跡だけは期限内であることも要求する。
 4. provider event IDが過去に別処理へ割り当てられていない。
 5. 注文行ロック取得後にも注文versionが一致する。
 
@@ -115,26 +115,37 @@ DBのfinalize RPCは次をすべて満たす証跡だけを採用する。
 
 ## 6. カード決済と注文編集
 
+### 6.0 Stripe provider決定と未接続境界
+
+- オーナーは採用カードPSPをStripeに確定した。接続対象はStripe PaymentsのPaymentIntents APIを正式候補とする。
+- Stripe口座は取得済みだが、口座ID、APIキー、Webhook secretその他の秘密情報は本リポジトリへ記録しない。
+- この決定は文書上の業務契約確定であり、Stripe SDK、API呼び出し、PaymentIntent作成、売上確定、取消、返金、Webhook route、環境変数、DB変更、sandbox、staging、production接続を許可しない。
+- カード注文は、オーナー最終発注時にバックオーダー分を含む税込支払総額を1回で即時売上確定する。分割発送でも決済は分割せず、マルチキャプチャー、SetupIntentによる発送ごとの追加請求、与信保持・延長は採用しない。
+- `ship_available_first` と `ship_when_complete` は物流方針だけであり、カード決済額・決済回数を変更しない。JCBを含むカードブランドで同じ全額先払い契約を用いる。
+- 発送不能、確定欠品または注文取消時だけ、正本の未履行額に基づく部分返金または全額返金を行う。自動追加請求、無断の支払方法変更、無断の発送方針変更は行わない。
+- 正確なAPI version、実アカウントで利用可能なカードブランド、即時売上確定、取消、部分／全額返金、再送、event finality、署名、照合方法は `NOT_CONFIGURED` とする。採用フローはIC+またはマルチキャプチャー有効化を前提にしない。
+- 既存C5-B/C5-D候補はカード与信・再与信・与信証跡を前提としており、この新しい決済契約とは不整合である。前向きな別修正と再検証が完了するまで共有・staging・productionへ適用してはならない。
+
 ### 6.1 owner最終発注
 
 1. Server Actionがsession、dealer、owner roleを確認する。
 2. prepare RPCが注文version、商品、価格、送料、資格、供給、配送、同意を再計算し、canonical fingerprintと支払額を返す。
 3. DBトランザクションを終了する。
-4. サーバーがPSPへ与信を要求する。
-5. PSP成功結果を、注文version・fingerprint・金額へ結んだ証跡として保存する。
+4. サーバーがPSPへ、注文総額の即時売上確定を冪等キー付きで要求する。
+5. PSP成功結果を、注文version・fingerprint・全額・通貨へ結んだ決済済み証跡として保存する。
 6. finalize submit RPCが注文をロックし、証跡を検証・消費して `submitted` へ遷移する。
-7. version競合時は注文を変更せず、新規与信の取消をcompensation outboxへ登録する。
+7. 決済成功後のversion競合では注文を変更せず、同額の全額返金をcompensation outboxへ1件だけ登録し、返金完了まで倉庫taskを作らない。
 
-### 6.2 倉庫受付前の金額変更
+### 6.2 決済前編集と決済後ロック
 
-1. prepare edit RPCが置換行をserver repricingし、旧額、新額、注文version、edit fingerprintを返す。
-2. 金額が同一ならPSP再与信なしでfinalize可能。
-3. 金額が変わるカード注文は、DBロック外で新額の与信を取得する。
-4. finalize edit RPCがversionと証跡を確認し、注文・明細・新証跡消費を一つのtransactionでcommitする。
-5. commit後に旧与信取消をoutbox処理する。
-6. 新与信失敗、応答不明、finalize競合では元注文・元明細・元与信・versionを維持する。
+1. カード決済前のdraftは、server repricingを通して商品追加、削除、数量、配送先、コメントを変更できる。
+2. オーナー最終発注時に最新versionを再計算し、完全一致した総額だけを決済する。
+3. カード全額決済後は、倉庫受付前であっても商品追加、削除、数量変更その他の金額変更を拒否する。
+4. 取消、発送不能または確定欠品だけを返金理由として受け付け、返金額は正本注文と未履行額からサーバーが算定する。
+5. 返金失敗または応答不明では元の決済済み注文を維持し、手動確認状態へ移す。返金成功証跡なしに取消・減額を確定しない。
+6. 決済後の増額、保存カードへの自動追加請求、新しいPaymentIntentの自動作成は禁止する。追加商品が必要な場合は別注文とする。
 
-PSPへ通信している間にDBロックを保持する実装と、「先に旧与信を解除してから新与信を試す」実装は禁止する。
+PSPへ通信している間にDBロックを保持する実装、返金成功前に注文額を減らす実装、同一返金を二重実行する実装は禁止する。
 
 ## 7. PayPay銀行・前払い照合
 
@@ -159,7 +170,7 @@ PSPへ通信している間にDBロックを保持する実装と、「先に旧
 
 | 支払方式 | task作成条件 |
 |---|---|
-| カード | owner submit済み＋有効なカード与信証跡 |
+| カード | owner submit済み＋注文全額と完全一致する決済済み証跡 |
 | 銀行振込・前払い | owner submit済み＋exact match済み入金証跡 |
 | 代引 | owner submit済み。顧客直送は禁止 |
 | 掛け売り | owner submit済み＋有効な掛け売りterms version |
@@ -195,8 +206,8 @@ Office AZを唯一の在庫所有者として維持する。DealerOSには読み
 1. 同一owner submitを同時実行し、注文・証跡消費・倉庫task・通知が各1件だけになる。
 2. owner cancelとwarehouse acceptの競合で一方だけがcommitする。
 3. warehouse accept二重実行でtaskと注文versionが一度だけ進む。
-4. 同じedit tokenへの再与信成功と失敗が競合しても、失敗側が元注文を壊さない。
-5. PSP成功後に注文versionが変わった場合、注文は不変で新与信取消outboxが1件だけできる。
+4. 決済済み注文への金額変更要求が倉庫受付と競合しても、商品・数量・決済額が一切変わらない。
+5. PSP全額決済成功後に注文versionが変わった場合、注文は不変で全額返金outboxが1件だけできる。
 6. 同じPayPay銀行eventの再送で入金証跡とwarehouse taskが重複しない。
 7. 同じ銀行取引IDを2注文へ割り当てられない。
 8. inventory reservationとcancel／editが競合して負在庫、二重引当、解放漏れを起こさない。
@@ -235,7 +246,7 @@ Office AZを唯一の在庫所有者として維持する。DealerOSには読み
 
 ### C5-E: provider connection
 
-- 採用PSPの公式contract
+- Stripeの公式contract、正確なAPI version、利用可能ブランド、全額即時売上確定、取消、部分／全額返金
 - PayPay銀行の公式contract
 - secret management、signature、replay、timeout、reconciliation
 - provider sandbox E2E
@@ -268,8 +279,8 @@ C5-Bのsource-only候補は次の3パスに限定する。
 
 次はユーザー決定またはprovider公式契約が得られるまで推測実装しない。
 
-1. 採用するカードPSPと、与信・売上確定・取消・返金・webhook契約。
-2. カードでBO分割発送する場合の売上確定額と回数。
+1. Stripe Payments / PaymentIntents APIの正確なversionと、全額即時売上確定・取消・部分／全額返金・webhookの公式契約。
+2. Stripe実アカウントで利用可能な日本向けカードブランドとsandboxでのブランド別成功・失敗契約。
 3. PayPay銀行APIの署名、event ID、再送、照会、sandbox契約。
 4. Office AZ在庫authorityが同一DBか別systemか、および予約APIの所有者。
 5. 通知先メールの正本、件数、追加権限。
