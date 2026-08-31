@@ -576,13 +576,15 @@ The result document was excluded from harness implementation and was created lat
 
 ### GYEON-ORDER-V3-C5-E0 — Stripe provider selection governance
 
-**Status:** OWNER RATIFIED / DOCUMENTATION CANDIDATE UNCOMMITTED / PROVIDER NOT CONNECTED.
+**Status:** OWNER RATIFIED / STRIPE RESPONSE RECEIVED / UPFRONT FULL-PAYMENT CONTRACT DOCUMENTATION CANDIDATE UNCOMMITTED / PROVIDER NOT CONNECTED.
 
-**Decision:** Stripe is the canonical card PSP for GYEON dealer ordering. The intended product surface is Stripe Payments with the PaymentIntents API. The owner already has a Stripe account, but no account identifier, API key, Webhook secret, or other secret may be written into specifications or source control.
+**Decision:** Stripe is the canonical card PSP for GYEON dealer ordering. The intended product surface is Stripe Payments with the PaymentIntents API. The owner already has a Stripe account, but no account identifier, API key, Webhook secret, or other secret may be written into specifications or source control. The owner subsequently ratified one upfront full-payment contract for all card brands, including JCB.
 
-**Business contract for back-order split shipment:** Each shipment captures only the immutable tax-inclusive payable JPY amount of the items actually shipped in that shipment. Capture count equals the authoritative shipment count, and cumulative captures never exceed the whole-order authorization.
+**Business contract for card payment and back-order shipment:** At owner final submit, charge and capture the entire immutable tax-inclusive payable JPY order total once, including back-ordered items. `ship_available_first` and `ship_when_complete` are logistics choices only and never change card amount or capture count. No multicapture, shipment-by-shipment PaymentIntent, SetupIntent-based later charge, authorization extension, or automatic post-payment increase is used. A confirmed cancellation, non-fulfillable item, or final shortage is resolved only by an exact server-calculated partial or full refund. Additional items require a separate order.
 
-**Mandatory fail-closed boundary:** Provider selection is not provider readiness. Exact API version, IC+ eligibility, multicapture enablement, supported Japan card brands, authorization validity, retry/finality, and Webhook verification remain `NOT_CONFIGURED`. Public Stripe documentation shows Japan JCB outside the supported regions for multicapture. Until Stripe confirms the account and brand contract in writing, card payment combined with `ship_available_first` remains blocked. No automatic payment-method change, full early capture, reauthorization, or shipping-policy substitution may be invented.
+**Mandatory fail-closed boundary:** Provider selection and the business decision are not provider readiness. Exact API version, actual account card-brand availability, immediate capture, cancellation, partial/full refund, idempotency, retry/finality, and Webhook signature/reconciliation remain `NOT_CONFIGURED`. IC+ eligibility, multicapture enablement, JCB multicapture support, and authorization-extension windows are no longer dependencies of the selected flow. Card payment remains unavailable until the exact full-payment/refund contract passes a separately authorized provider sandbox gate. No automatic payment-method change, post-payment amount edit, additional saved-card charge, or shipping-policy substitution may be invented.
+
+**Existing source incompatibility:** The accepted C5-B/C5-D database artifacts bind card authorization and reauthorization evidence. They do not implement this newly ratified full-payment and refund contract. C5-D remains paused, and those artifacts must not be applied to any shared, staging, or production environment until one forward-only correction phase and fresh disposable verification replace the stale card-authority behavior without weakening the accepted qualification, inventory, payment-method, or warehouse-task boundaries.
 
 **Documentation-only allowlist:**
 
@@ -593,7 +595,7 @@ The result document was excluded from harness implementation and was created lat
 
 **Excluded:** Application source, tests, dependencies, Stripe SDK, environment variables, Webhook routes, DB or migration changes, Supabase, provider contact or mutation, sandbox, staging, production, stage, commit, push, PR mutation, Ready, merge, and deployment.
 
-**Next gate:** Obtain an official Stripe response for the exact account and intended Japan brands, record a versioned provider contract, and only then seek separate authorization for C5-E provider-specific diagnosis and implementation. This governance record does not interrupt or supersede the currently active Estimate Wizard phase.
+**Next gate:** Independently verify this exact four-document decision delta, then request separate stage/local-commit and normal-push authorization. Provider-specific diagnosis must then map the smallest forward-only correction from authorization evidence to full-payment/refund evidence and pin the exact Stripe API/Webhook/sandbox contract. No provider connection, source correction, database work, PR mutation, merge, or deployment is authorized by this documentation gate, and it does not interrupt the currently active Estimate Wizard phase.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 

@@ -3334,3 +3334,57 @@ boundary:
 decision: RECORD_STRIPE_AS_CANONICAL_PSP_AND_KEEP_PROVIDER_DEPENDENT_SPLIT_CAPTURE_BLOCKED
 next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK, POST_ONE_STUDIO_DECISION_COMMENT, THEN STOP. OBTAIN_AN_OFFICIAL_STRIPE_RESPONSE_BEFORE_ANY_PROVIDER_SPECIFIC_IMPLEMENTATION."
 ```
+
+## GYEON-ORDER-V3-C5-E0-R1 — Upfront full-card-payment contract
+
+```yaml
+phase: GYEON_ORDER_V3_C5_E0_R1_UPFRONT_FULL_CARD_PAYMENT_CONTRACT
+status: OWNER_RATIFIED_DOCUMENTATION_CANDIDATE_UNCOMMITTED
+date: 2026-08-31
+append_only: true
+authorization: "After receiving Stripe's multicapture and JCB-alternative response, the owner explicitly rejected unnecessary complexity and ratified charging the entire order at final submit, shipping later, prohibiting post-payment item/amount edits, and using refunds only for cancellation or non-fulfillment. This authorizes the same exact four-document decision update only; Git delivery and implementation remain separate."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  predecessor_commit: de902608c3cdcd75d911b59c4682722d784fe1cf
+  predecessor_tree: fd4ec88a3324fbcae94e0bff8845e631030de4ed
+  base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  base_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  branch: docs/gyeon-order-stripe-provider-decision
+owner_decision:
+  canonical_card_psp: Stripe
+  card_charge_timing: OWNER_FINAL_SUBMIT
+  card_charge_amount: FULL_TAX_INCLUSIVE_ORDER_TOTAL_INCLUDING_BACKORDER
+  capture_count: ONE
+  applies_to_jcb: true
+  shipping_policy_changes_payment: false
+  multicapture_required: false
+  ic_plus_required_by_selected_flow: false
+  setup_intent_later_charge: prohibited
+  post_payment_item_or_amount_edit: prohibited
+  added_items_after_payment: SEPARATE_ORDER_REQUIRED
+  cancellation_or_nonfulfillment: EXACT_SERVER_CALCULATED_PARTIAL_OR_FULL_REFUND
+provider_contract:
+  provider_response_received_by_owner: true
+  exact_api_version: NOT_CONFIGURED
+  actual_account_brand_availability: NOT_CONFIGURED
+  immediate_capture_contract: NOT_CONFIGURED
+  cancellation_and_refund_contract: NOT_CONFIGURED
+  webhook_signature_replay_finality_reconciliation: NOT_CONFIGURED
+  note: "Stripe support's multicapture count narrative is not adopted as authority for this flow; official public documentation states at most 50 captures per PaymentIntent, but the selected contract uses exactly one capture."
+source_impact:
+  existing_c5b_c5d_card_model: STALE_AUTHORIZATION_AND_REAUTHORIZATION_CONTRACT
+  shared_staging_production_application: BLOCKED
+  required_before_application: FORWARD_ONLY_CARD_PAYMENT_REFUND_CORRECTION_AND_FRESH_DISPOSABLE_VERIFICATION
+allowlist:
+  - docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md
+  - docs/integrations/gyeon-order/v3-c5-external-authority-design-and-impact.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundary:
+  - "No application source, test, dependency, SDK, environment variable, Webhook route, DB, migration, Supabase, provider mutation/contact, sandbox, staging, or production action is authorized or performed."
+  - "No stage, commit, push, PR mutation, Ready, merge, or deployment is authorized or performed."
+  - "C5-D remains paused and no existing authorization-based migration artifact may be applied while this contract mismatch exists."
+  - "The currently active Estimate Wizard phase is not interrupted or superseded."
+decision: REPLACE_SPLIT_CAPTURE_WITH_ONE_UPFRONT_FULL_CARD_PAYMENT_AND_REFUND_ONLY_EXCEPTION
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. PROVIDER_DIAGNOSIS_SOURCE_CORRECTION_DB_RUNTIME_PR_MUTATION_MERGE_AND_DEPLOYMENT_REMAIN_SEPARATE."
+```
