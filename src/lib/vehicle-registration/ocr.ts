@@ -12,6 +12,7 @@ import { normalizeVehicleFields } from "./vehicle-normalize";
 import { buildOcrQualityReport, type OcrQualityReport } from "./ocr-quality";
 import { getGyeonManagedApiKey } from "@/lib/ai/gyeon-managed-key";
 import { OCR_MODEL, OCR_TEMPERATURE, OCR_MAX_TOKENS, OCR_PROMPT_VERSION } from "@/lib/ai/ocr-config";
+import { extractLocalPdfModel, resolvePdfModel } from "./pdf-model-text-extractor";
 
 const OCR_PROVIDER   = "openai";
 const OCR_TIMEOUT_MS = 55_000; // 55s — OpenAI cold-start can take ~30s; give headroom
@@ -301,15 +302,45 @@ export async function analyzeVehicleRegistrationImage(
   }
   const apiKey = keyResult.apiKey;
 
+  // R4: bounded local PDF text-layer 型式 extraction runs CONCURRENTLY with the OpenAI
+  // call below (never awaited before it) for every eligible digital PDF — not only when
+  // the AI result later turns out blank. Image/HEIC/JPEG/PNG/WebP requests never reach
+  // this branch, so unpdf is never dynamically imported for them.
+  const localPdfModelPromise: Promise<string | null> =
+    mimeType === "application/pdf"
+      ? extractLocalPdfModel(Buffer.from(imageBase64, "base64"), mimeType)
+      : Promise.resolve(null);
+
   const first = await callOpenAI(imageBase64, mimeType, apiKey);
+  const localModel = await localPdfModelPromise;
+
+  if (!("error" in first)) {
+    applyLocalPdfModel(first.result, localModel);
+  }
 
   if ("error" in first && RETRYABLE_CODES.includes(first.error)) {
     console.log("[OCR] Transient error:", first.error, "— retrying once in 2 s …");
     await sleep(2_000);
     const second = await callOpenAI(imageBase64, mimeType, apiKey);
+    if (!("error" in second)) {
+      applyLocalPdfModel(second.result, localModel);
+    }
     console.log("[OCR] Retry result:", "error" in second ? second.error : "success");
     return second;
   }
 
   return first;
+}
+
+/**
+ * Apply the frozen precedence in place: explicit local PDF 型式 > nonblank AI model >
+ * omitted/manual. Never writes an explicit `undefined` key — an already-absent `model`
+ * stays genuinely absent rather than becoming a present-but-undefined key.
+ */
+function applyLocalPdfModel(
+  result: VehicleRegistrationOcrResult,
+  localModel: string | null,
+): void {
+  const resolved = resolvePdfModel(localModel, result.model);
+  if (resolved !== undefined) result.model = resolved;
 }
