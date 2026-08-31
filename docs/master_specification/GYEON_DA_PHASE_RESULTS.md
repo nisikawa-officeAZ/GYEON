@@ -3923,3 +3923,87 @@ prohibited_actions_confirmed:
 decision: AUTHOR_R3_G2_THREE_PATH_GOVERNANCE_CORRECTION_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
 ```
+
+## GDA-2A-OCR-PDF-MODEL-FALLBACK-R3-D1 — V2 diagnosis and Codex disposition
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS
+status: ROOT_CAUSE_ACCEPTED_IMPLEMENTATION_RECOMMENDATION_CORRECTED_OWNER_DECISION_RESOLVED
+date: 2026-09-01
+append_only: true
+dispatch:
+  directive_id: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_V2
+  result_id: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_RESULT_V2
+  dispatch_head: 51c0d539a4cfa2741bc78170ca763c245de0c543
+  dispatch_tree: 7392a03e12d31eb102cb20983a679b8df5d8b8e6
+  invocation_count: 1
+  claude_verdict: OWNER_DECISION_REQUIRED_PDF_TEXT_EXTRACTION_AUTHORITY
+accepted_root_cause:
+  - "Digital PDFs are sent to OpenAI as an opaque PDF file part; the application does not deterministically read the embedded text layer."
+  - "The provider returned blank model in two authenticated Preview attempts despite the explicit prompt."
+  - "The sanitizer correctly omits blank model, and the accepted Wizard mapper cannot emit vehicleCode without a nonblank result.model."
+  - "No existing PDF text extraction dependency or deterministic fallback exists in the repository."
+codex_correction:
+  finding: "Claude simultaneously confirmed explicit PDF 型式 > AI model while proposing local parsing only when AI model is blank. Those statements are contradictory."
+  corrected_precedence: "Run bounded local parsing for every eligible digital PDF and select explicit unambiguous PDF 型式 over nonblank AI model; otherwise retain AI; otherwise omit/manual."
+  rejected_option: "Do not hand-write a zlib-only PDF parser because Japanese Type0/CID fonts, ToUnicode maps, object streams, and other real-world encodings make that unsafe and difficult to verify."
+no_state_change:
+  files_or_git: true
+  tests_or_dependencies: true
+  real_pdf_or_personal_data: true
+  provider_db_preview_production: true
+decision: ACCEPT_R3_ROOT_CAUSE_REJECT_CONTRADICTORY_IMPLEMENTATION_SECTION_AND_ADVANCE_TO_OWNER_DEPENDENCY_SELECTION
+```
+
+## GDA-2A-OCR-PDF-MODEL-FALLBACK-R4-G1 — Owner-selected local parser governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R4_IMPLEMENTATION_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-01
+append_only: true
+owner_decision: "Adopt a free local-only OSS PDF text extractor; no paid connection or per-request service. The owner approved formal selection and R4 governance authoring."
+selection:
+  package: unpdf
+  version: 1.8.1
+  pin: exact_no_caret_or_tilde
+  license: MIT
+  npm_engine: node_gte_22
+  npm_unpacked_size_bytes: 2141399
+  optional_peer_not_installed: "@napi-rs/canvas"
+  runtime_verified: "Vercel project nisikawa-5024s-projects/dealeros reports Node.js 24.x."
+  external_service_or_per_request_fee: false
+  rejected:
+    - "pdf-parse@2.4.5 because it is materially larger and includes unnecessary canvas/native dependency for this text-only task."
+    - "Hand-written PDF content-stream parser because it cannot safely cover Japanese font encodings within this bounded phase."
+official_evidence:
+  - https://www.npmjs.com/package/unpdf/v/1.8.1
+  - https://github.com/unjs/unpdf
+source_baseline:
+  commit: 51c0d539a4cfa2741bc78170ca763c245de0c543
+  tree: 7392a03e12d31eb102cb20983a679b8df5d8b8e6
+future_exact_write_allowlist:
+  - package.json
+  - package-lock.json
+  - src/lib/vehicle-registration/pdf-model-text-extractor.ts
+  - src/lib/vehicle-registration/pdf-model-text-extractor.test.ts
+  - src/lib/vehicle-registration/ocr.ts
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R4_IMPLEMENTATION.md
+frozen_contract:
+  - "Parser runs locally for every eligible digital PDF concurrently with AI; explicit PDF 型式 wins over AI."
+  - "5 MiB, 3-page, and 3-second local limits; text only; no canvas; no PDF text logging."
+  - "Scanned/encrypted/malformed/ambiguous/conflicting/oversized/timed-out input fails closed to AI/manual without erasure."
+  - "Real certificate PDF and personal data remain outside Git, Claude, fixtures, logs, and evidence."
+prohibited_actions_confirmed:
+  dependency_install_or_source_edit: false
+  claude_or_external_private_source_transmission: false
+  executable_test: false
+  stage_commit_push: false
+  pr_comment_ready_merge_deploy: false
+  database_provider_preview_production: false
+decision: AUTHOR_EXACT_THREE_PATH_R4_IMPLEMENTATION_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```

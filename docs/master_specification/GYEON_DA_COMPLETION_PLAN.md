@@ -348,7 +348,7 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 ### GDA-2A-OCR-PDF-MODEL-FALLBACK-R3 — Deterministic digital-PDF 型式 diagnosis governance
 
-**Status:** R3-G1 GOVERNANCE PUSHED AT `3e3fad7f6d5803985e6286f5d22a1d2e9bee7f1d`, BUT ITS SELF-REFERENTIAL HEAD PIN IS REJECTED / R3-G2 GOVERNANCE CORRECTION CANDIDATE UNSTAGED/UNCOMMITTED. No R3 diagnosis result or implementation authority is accepted.
+**Status:** R3-G2 GOVERNANCE PUSHED AT `51c0d539a4cfa2741bc78170ca763c245de0c543` / V2 READ-ONLY DIAGNOSIS COMPLETED / ROOT CAUSE ACCEPTED / CLAUDE IMPLEMENTATION RECOMMENDATION CORRECTED BY MACBOOK CODEX / OWNER SELECTED `unpdf@1.8.1` / R4 IMPLEMENTATION GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. No source implementation, dependency installation, executable test, Git delivery, Preview, Ready, merge, or deployment is authorized by this status.
 
 **Objective:** Diagnose the smallest server-only, zero-per-request-fee fallback that reads the explicit printed `型式` value from a digital PDF text layer when the AI result omits `model`, without inferring vehicle name or grade and without exposing customer data.
 
@@ -383,6 +383,56 @@ This is event-driven phase governance. It does not reinstate a background pollin
 **Current boundary:** This gate authors only the three governance paths. It does not transmit private files, invoke Claude, edit source/tests/dependencies/configuration, run executable tests, access DB/Supabase/provider/browser/Preview/production, stage, commit, push, mutate PR #48, mark Ready, merge, or deploy.
 
 **Exit:** MacBook Codex verifies the exact three-path R3-G2 governance diff, protected metadata, and `git diff --check`, then requests a separate exact-path stage/local-commit authorization. Push, corrected V2 Claude dispatch with externally fixed HEAD/tree, diagnosis execution, implementation, Preview verification, Ready, merge, and deployment remain later gates.
+
+**2026-09-01 V2 diagnosis disposition:** Claude proved the direct failure chain: the digital PDF reaches OpenAI as an opaque PDF file part, the provider can return blank `model`, the sanitizer then omits it, and the already-correct Wizard mapper has no `vehicleCode` to apply. The repository contains no PDF text extraction dependency or fallback. MacBook Codex accepts that root cause but rejects the returned implementation section as written because it simultaneously claimed `explicit PDF 型式 > AI model` and proposed running the parser only when AI `model` is blank. The corrected contract runs bounded local PDF text extraction for every eligible digital PDF in parallel with AI and always prefers an unambiguous explicit PDF `型式` over AI output.
+
+### GDA-2A-OCR-PDF-MODEL-FALLBACK-R4 — Local deterministic PDF 型式 implementation
+
+**Status:** OWNER-SELECTED IMPLEMENTATION GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. Claude execution, dependency installation, source editing, tests, stage, commit, push, Preview, Ready, merge, and deployment remain separately gated.
+
+**Owner decision:** Adopt exactly `unpdf@1.8.1` as a pinned local-only PDF text extraction dependency. It is MIT licensed, bundles a serverless PDF.js build, requires Node.js 22 or later, has an optional canvas peer that is not needed for text extraction, and makes no external service call. DealerOS Vercel project inspection on 2026-09-01 reported Node.js `24.x`, so the runtime requirement is satisfied. Do not select `pdf-parse`, hand-write a PDF parser, install `@napi-rs/canvas`, or introduce another provider/package without a new owner decision.
+
+**Fixed source baseline:**
+
+- Repository: `nisikawa-officeAZ/GYEON`
+- Draft PR: `#48`
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Source baseline commit: `51c0d539a4cfa2741bc78170ca763c245de0c543`
+- Source baseline tree: `7392a03e12d31eb102cb20983a679b8df5d8b8e6`
+- Base: `main` at `501ede8c06b0c397a47996f9dfe0833f8779376c`
+
+**Frozen implementation contract:**
+
+- Pin dependency exactly as `"unpdf": "1.8.1"`; no caret, tilde, alternate PDF package, native canvas package, provider, API, secret, environment variable, database, migration, or Vercel configuration change.
+- Dynamically load `unpdf` only for `application/pdf`; image and HEIC/JPEG/PNG/WebP behavior remains unchanged.
+- Start local PDF text extraction concurrently with the existing OpenAI OCR request. It must not add a sequential wait to the normal one-minute estimate flow beyond a hard local-parser budget of 3 seconds.
+- Run the local parser for every eligible digital PDF, not only when AI returns blank. Precedence is `unambiguous explicit PDF text-layer 型式 > nonblank AI model > omitted/manual`.
+- The local parser is limited to at most 5 MiB and 3 pages. Larger/page-excess, scanned/image-only, encrypted, malformed, ambiguous, conflicting, timed-out, or parser-failed PDFs return no local match and fall through without failing the existing AI OCR request.
+- Use text extraction only. Do not render pages or extract images. Do not install the optional `@napi-rs/canvas` peer. Disable PDF JavaScript evaluation, bound image allocation defensively, release/destroy parser resources, and never log PDF text or extracted personal data.
+- Match only a bare printed `型式` label and its adjacent value. `原動機の型式`, `型式指定番号`, and `類別区分番号` are hostile neighboring labels and may never supply or override 型式.
+- Preserve the raw explicit PDF value for review; the already-accepted Wizard mapper alone performs NFKC normalization before assigning `vehicleCode`.
+- An empty or failed local result never clears AI or operator-entered values. Grade and vehicle name remain manual under the accepted contract.
+- No real certificate PDF or personal data may enter Git, fixtures, Claude, logs, or generated evidence. Authenticated owner Preview testing with the real PDF remains a later, separately authorized gate.
+
+**Future source write allowlist — exactly five paths:**
+
+1. `package.json`
+2. `package-lock.json`
+3. `src/lib/vehicle-registration/pdf-model-text-extractor.ts` (new)
+4. `src/lib/vehicle-registration/pdf-model-text-extractor.test.ts` (new)
+5. `src/lib/vehicle-registration/ocr.ts`
+
+**Required focused verification:** Pure label-contract cases must include full-width `６ＢＡ－ＪＧ３`, hostile neighboring labels, same-value duplicates, conflicting duplicates, missing label, scanned/no-text, encrypted/corrupt/oversized/page-excess/timeout behavior, raw-value preservation, local-over-AI precedence, AI fallback, and omission without erasure. Run the new extractor suite, the existing OCR dimensions contract, the existing Wizard OCR apply-core suite, project typecheck, dependency/lock audit proving `unpdf@1.8.1` and no canvas/PDF alternative, and `git diff --check`.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R4_IMPLEMENTATION.md` (new)
+
+**Current boundary:** This gate authors only those three governance paths. It does not install `unpdf`, edit source/tests/package files, invoke Claude, run executable tests, access DB/Supabase/OpenAI/browser/Preview/production, stage, commit, push, comment on PR #48, mark Ready, merge, or deploy.
+
+**Exit:** MacBook Codex verifies the exact three-path R4 governance diff, protected metadata, and `git diff --check`, then requests separate exact-path stage/local-commit authorization. Push and one bounded Claude implementation invocation remain later owner gates.
 
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
