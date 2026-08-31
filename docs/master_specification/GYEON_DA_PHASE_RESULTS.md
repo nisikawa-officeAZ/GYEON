@@ -3711,3 +3711,87 @@ decision: ACCEPT_SHARED_OCR_GRADE_MANUAL_ONLY_SOURCE_CANDIDATE_UNSTAGED_UNCOMMIT
 remaining_boundary: "No free authoritative vehicle-name map exists. Vehicle name remains manual unless the certificate itself supplies a distinct nonblank name. Postal reverse lookup remains a separate unresolved parent-phase item."
 next: "OWNER_MAY_SEPARATELY_AUTHORIZE_LITERAL_STAGE_AND_LOCAL_COMMIT_FOR_THE_COMPLETE_CURRENT_OCR_CANDIDATE; PUSH_PR_READY_MERGE_DEPLOY_REMAIN_SEPARATE."
 ```
+
+## GDA-2A-OCR-PRINTED-MODEL-FIELD-R2 — Diagnosis and source candidate accepted
+
+```yaml
+phase: GDA_VEHICLE_REGISTRATION_OCR_PRINTED_MODEL_FIELD_R2
+status: SOURCE_CANDIDATE_ACCEPTED_UNSTAGED_UNCOMMITTED_PREVIEW_UNVERIFIED
+date: 2026-08-31
+append_only: true
+owner_authorization:
+  diagnosis: "The owner explicitly approved transmission of the bounded seventeen-file read scope to Anthropic Claude Code for one read-only diagnosis. The PDF and personal data were excluded."
+  implementation: "The owner separately explicitly approved transmission and editing of exactly five private source/test files plus the specified focused tests. Stage, commit, push, Preview, Ready, merge, and deployment were not authorized."
+repository:
+  repo: nisikawa-officeAZ/GYEON
+  pr: 48
+  pr_state_at_execution: OPEN_DRAFT
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  fixed_head: a9ef0b8dd88e19c6154090fcce59171ebb1e198a
+  fixed_tree: 6026bdfa41049cf998227362f8561a041e60c18a
+  index: CLEAN
+instruction_comments:
+  diagnosis: https://github.com/nisikawa-officeAZ/GYEON/pull/48#issuecomment-5478532156
+  implementation: https://github.com/nisikawa-officeAZ/GYEON/pull/48#issuecomment-5478619926
+diagnosis:
+  result_id: GDA_VEHICLE_REGISTRATION_OCR_PRINTED_MODEL_FIELD_R2_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_verdict: READY_FOR_PROMPT_SCHEMA_REPAIR
+  codex_disposition: ACCEPTED_WITH_ALLOWLIST_CORRECTION
+  accepted_root_cause: "The provider receives bare model/vehicle_name/model_code JSON keys without Japanese printed-field bindings. TypeScript comments never reach the provider; every deterministic post-provider stage already preserves and maps a nonblank result.model correctly."
+  codex_correction: "Claude's two-path implementation list contradicted its own requirement to add a deterministic prompt-contract test. The accepted source/test allowlist therefore contains five paths and includes raw-evidence preservation plus Wizard-only NFKC normalization already approved by the owner."
+  pdf_text_extraction: "No approved existing deterministic embedded-PDF-text dependency exists. New dependency/provider authority remains separate and is not required for the prompt repair."
+observed_non_pii_evidence:
+  vehicle_name: ホンダ
+  printed_model: ６ＢＡ－ＪＧ３
+  type_designation_number: "19777"
+  classification_number: "0007"
+  pdf_or_personal_data_transmitted_to_claude: false
+implementation:
+  result_id: GDA_VEHICLE_REGISTRATION_OCR_PRINTED_MODEL_FIELD_R2_IMPLEMENTATION_RESULT_V1
+  claude_verdict: BLOCKED_ENVIRONMENT_SOURCE_COMPLETE
+  codex_disposition: ACCEPT_SOURCE_CANDIDATE_E2_SOURCE
+  exact_changed_paths:
+    - src/lib/vehicle-registration/ocr.ts
+    - src/lib/ai/ocr-config.ts
+    - src/lib/vehicle-registration/ocr-dimensions-contract.test.ts
+    - src/lib/ocr/wizard-vehicle-ocr-apply-core.ts
+    - src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts
+  behavior:
+    - "Prompt binds printed 車名, 型式, and 型式指定番号 and forbids substitution from 類別区分番号 or 原動機の型式."
+    - "OCR_PROMPT_VERSION is vehicle-ocr-2026-08-31.1."
+    - "Reviewed result.model preserves the printed full-width evidence."
+    - "Wizard apply alone normalizes 型式 with Unicode NFKC: ６ＢＡ－ＪＧ３ -> 6BA-JG3."
+    - "Maker, vehicle name, grade, plate, customer, and all other fields retain no-NFKC behavior."
+    - "Blank/absent/non-string 型式 omits vehicleCode and cannot clear operator input."
+verification:
+  claude_focused_partial: "wizard vehicle mapper 20/20 PASS; OCR contract file load was blocked by isolated-worktree @supabase/supabase-js resolution."
+  codex_command: "env NODE_PATH=/Users/atsushinishikawa/dealeros/node_modules node --import /Users/atsushinishikawa/dealeros/node_modules/tsx/dist/loader.mjs --test src/lib/vehicle-registration/ocr-dimensions-contract.test.ts src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts"
+  dependency_proof: "Candidate and shared dependency source package-lock SHA-256 both equal 423d295f85d537b12c375aabb8e5fef336c77139a756b19c02a4ba1719f20866. No install, copy, symlink, or dependency change occurred."
+  tests: 28
+  passed: 28
+  failed: 0
+  exit_code: 0
+  diff_check: PASS
+source_sha256:
+  src/lib/vehicle-registration/ocr.ts: 1f26cc50a070b06b616dc0f314e7273c700ef2f3fd8cf7960ffb63beaca13477
+  src/lib/ai/ocr-config.ts: 83a56c3b80de8c24a4cd1da1203238a3ebd16ef5142c4ce88755c8af3e709a0b
+  src/lib/vehicle-registration/ocr-dimensions-contract.test.ts: d8be97ace863673a8bbc3fd57d9b834130c6dab7387fa76fee1506fe51b6b5d2
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.ts: d984aa1cd1ccbf72a2c8a3d6472eae2fc5a8c674ea3dfe460f5accaa41170132
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts: 0c9e3e37e39fc44ad9281fe29b39b7e85d5c8d5663c597435a80a61aaf7bfa7c
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  stage: false
+  commit: false
+  push: false
+  database_or_supabase: false
+  provider_or_live_ocr: false
+  preview_or_production: false
+  ready_merge_deploy: false
+decision: ACCEPT_R2_SOURCE_CANDIDATE_E2_SOURCE_UNSTAGED_UNCOMMITTED
+remaining_boundary: "Authenticated Preview verification with the owner-supplied certificate is mandatory after separately authorized Git delivery. Deterministic embedded-PDF-text extraction and postal/address completion remain separate unresolved phases."
+next: "VERIFY_THE_EXACT_SEVEN_PATH_COMBINED_DIFF_AND_DIFF_CHECK, THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION. PUSH_REMAINS_SEPARATE."
+```

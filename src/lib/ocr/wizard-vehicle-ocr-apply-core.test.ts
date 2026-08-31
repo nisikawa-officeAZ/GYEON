@@ -188,11 +188,38 @@ test("trims surrounding OCR whitespace but keeps interior spacing untouched", ()
   assert.equal(patch.model, "クラウン RS");
 });
 
-test("performs no NFKC folding, aliasing, or fallback mapping on the applied value", () => {
+test("performs no NFKC folding, aliasing, or fallback mapping on maker", () => {
   // Half-width katakana must survive verbatim: match normalization is a DIFFERENT module's
   // concern (the duplicate core), never this one's.
   const patch = buildWizardVehicleOcrPatch({ maker: "ﾄﾖﾀ" });
   assert.equal(patch.maker, "ﾄﾖﾀ", "the applied value must not be NFKC-folded here");
+});
+
+test("performs no NFKC folding on vehicle_name (draft model)", () => {
+  const patch = buildWizardVehicleOcrPatch({ vehicle_name: "クラウン　ＲＳ" });
+  assert.equal(patch.model, "クラウン　ＲＳ", "vehicle name/model text must not be NFKC-folded");
+});
+
+// ── vehicleCode is the ONLY field NFKC-normalized, because it is a machine-matched code ──
+
+test("NFKC-normalizes only vehicleCode: full-width 型式 becomes a half-width code", () => {
+  const patch = buildWizardVehicleOcrPatch({ model: "６ＢＡ－ＪＧ３" });
+  assert.equal(patch.vehicleCode, "6BA-JG3");
+});
+
+test("an already half-width vehicleCode is unchanged by NFKC normalization", () => {
+  const patch = buildWizardVehicleOcrPatch({ model: "ABA-XXX" });
+  assert.equal(patch.vehicleCode, "ABA-XXX");
+});
+
+test("blank/whitespace-only 型式 still omits vehicleCode and never clears operator input", () => {
+  assert.equal("vehicleCode" in buildWizardVehicleOcrPatch({ model: "" }), false);
+  assert.equal("vehicleCode" in buildWizardVehicleOcrPatch({ model: "   " }), false);
+});
+
+test("a non-string 型式 is ignored exactly like an absent field, even with NFKC normalization added", () => {
+  const patch = buildWizardVehicleOcrPatch({ model: 12345 as unknown as string });
+  assert.equal("vehicleCode" in patch, false);
 });
 
 // ── operator-entered text survives a missing/blank OCR value (proven at the store level too) ──

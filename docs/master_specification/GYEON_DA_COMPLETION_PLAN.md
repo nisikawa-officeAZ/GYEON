@@ -315,6 +315,35 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **2026-08-31 shared-flow decision:** The owner confirmed that grade is manual-only in the shared vehicle-registration OCR flow as well. The OCR extraction prompt, sanitizer, deterministic normalization, review field list, and upload result summary must not request, derive, display, select, apply, or summarize grade. The optional legacy result type may remain for backward compatibility, but all active extraction/review behavior must ignore it. This is a seven-path bounded correction with no provider call, external master, database, migration, dependency, Git delivery, or deployment.
 
+### GDA-2A-OCR-PRINTED-MODEL-FIELD-R2 — Printed 型式 extraction and Wizard code normalization
+
+**Status:** SOURCE CANDIDATE ACCEPTED UNSTAGED/UNCOMMITTED. Prompt/schema repair and focused source tests are accepted at E2 source level; authenticated Preview OCR verification, Git delivery, Ready, merge, and deployment remain separate gates.
+
+**Observed evidence:** The owner supplied one visually clear vehicle-registration PDF whose embedded text layer contains distinct printed fields `車名=ホンダ`, `型式=６ＢＡ－ＪＧ３`, `型式指定番号=19777`, and `類別区分番号=0007`. Preview OCR populated maker and other vehicle fields but left the Wizard 型式 field blank. The PDF itself and all personal data were excluded from Claude transmission and repository fixtures.
+
+**Accepted root cause:** The OpenAI extraction prompt exposed bare JSON keys `vehicle_name`, `maker`, `model`, and `model_code` without binding them to the Japanese printed labels. TypeScript comments correctly described `model` as 型式, but those comments never reached the provider. Sanitizer, review, apply, and Wizard mapping already passed a nonblank `result.model` through to `vehicleCode`; the loss occurred at extraction time.
+
+**Accepted implementation contract:**
+
+- The prompt explicitly binds `vehicle_name` to printed 車名, `model` to printed 型式, and `model_code` to printed 型式指定番号. 車名, 型式, 型式指定番号, 類別区分番号, and 原動機の型式 remain separate concepts and must never substitute for one another.
+- `OCR_PROMPT_VERSION` is bumped to `vehicle-ocr-2026-08-31.1`.
+- Sanitized/reviewed `VehicleRegistrationOcrResult.model` preserves the raw printed full-width evidence for operator review.
+- Only the accepted Wizard apply mapping normalizes the reviewed 型式 with Unicode NFKC, so `６ＢＡ－ＪＧ３` becomes draft `vehicleCode=6BA-JG3`. Maker, vehicle name, grade, plate, customer, and every other field retain the existing no-NFKC contract.
+- Blank, whitespace-only, absent, or non-string 型式 omits `vehicleCode` and never erases operator input.
+- No model-name or grade inference, vehicle master, PDF parser, dependency, provider, API, environment, database, migration, generated dataset, or live-file fixture is added.
+
+**Literal source write allowlist — exactly five paths:**
+
+1. `src/lib/vehicle-registration/ocr.ts`
+2. `src/lib/ai/ocr-config.ts`
+3. `src/lib/vehicle-registration/ocr-dimensions-contract.test.ts`
+4. `src/lib/ocr/wizard-vehicle-ocr-apply-core.ts`
+5. `src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts`
+
+**Accepted verification:** MacBook Codex independently inspected the complete five-path diff and reran the two focused suites using the existing identical-lockfile dependency tree through `NODE_PATH`; `28/28 PASS` and `git diff --check PASS`. No dependency was installed, copied, linked, or changed. The index stayed clean, only the five allowlisted source/test paths were dirty, and all four protected blobs remained unchanged.
+
+**Remaining boundary:** Prompt repair improves the live AI extraction contract but cannot prove provider behavior deterministically. Authenticated Preview verification with the owner-supplied certificate is mandatory after separately authorized Git delivery and deployment. Deterministic embedded-PDF-text extraction would require a new dependency/authority decision and is not part of R2. The parent postal/address phase remains incomplete and unchanged.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.

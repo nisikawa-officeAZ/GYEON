@@ -16,7 +16,8 @@ import { OCR_MODEL, OCR_TEMPERATURE, OCR_MAX_TOKENS, OCR_PROMPT_VERSION } from "
 const OCR_PROVIDER   = "openai";
 const OCR_TIMEOUT_MS = 55_000; // 55s — OpenAI cold-start can take ~30s; give headroom
 
-const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証）を読み取るAIアシスタントです。
+/** Exported for source-contract tests only; the runtime call site still uses this constant directly. */
+export const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証）を読み取るAIアシスタントです。
 提供された画像から以下の項目を抽出し、厳密にJSONのみで返してください。
 
 抽出ルール:
@@ -24,6 +25,12 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
 - 不明・読み取れない・不鮮明な項目は空文字列 "" を返す
 - 値を推測・補完・創作しないこと
 - 日付はYYYY-MM-DD形式に正規化
+- 車名(vehicle_name)・型式(model)・型式指定番号(model_code)・類別区分番号・原動機の型式は5つとも別概念であり、絶対に混同・代入し合わないこと
+  - vehicle_name: 車検証に印字された「車名」欄をそのまま抽出する。型式からモデル名を推測しないこと
+  - maker: 車検証に明確に記載されたメーカー名のみを抽出する。車名からメーカーやモデルを創作しないこと
+  - model: 車検証に印字された「型式」欄をそのまま抽出する（例: ６ＢＡ－ＪＧ３）。車名・型式指定番号・類別区分番号・原動機の型式を絶対に代入しないこと
+  - model_code: 車検証に印字された「型式指定番号」欄のみを抽出する（例: 19777）。類別区分番号や型式を代入しないこと
+  - 類別区分番号・原動機の型式はこの出力JSONスキーマに対応するキーが存在しないため、読み取れても他のどのキーにも代入せず出力しないこと
 - first_registration_date（初度登録年月）と registration_date（登録年月日）は別項目。統合しないこと
   - first_registration_date: 「初度登録年月」＝最初に登録された年月（YYYY-MM）。年式・車齢の推定に使用
   - registration_date: 「登録年月日」＝現在の登録日（YYYY-MM-DD）。新規/中古/名義変更など現在の登録時期

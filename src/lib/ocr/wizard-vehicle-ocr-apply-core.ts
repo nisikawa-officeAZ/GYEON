@@ -23,7 +23,9 @@
 // (`typeof value === "string"` alone accepts `""` and whitespace-only text, which is wrong). A
 // blank value is OMITTED entirely — never emitted as an empty string — so a certificate field
 // that read badly can never clear text the operator already typed. The APPLIED value is the
-// trimmed text and nothing more: no NFKC folding, aliasing, fallback mapping, or inference.
+// trimmed text and nothing more: no aliasing, fallback mapping, or inference. The single
+// exception is `vehicleCode` (built from 型式/result.model), which is additionally
+// NFKC-normalized because it is a machine-matched code, not display text — see its own comment.
 
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
 
@@ -90,8 +92,12 @@ export function buildWizardVehicleOcrPatch(
   const model = applied(result.vehicle_name);
   if (model !== null) patch.model = model;
 
+  // 型式 (result.model) is the only field NFKC-normalized here — it becomes vehicleCode,
+  // a machine-matched code, so full-width digits/letters/hyphen (e.g. "６ＢＡ－ＪＧ３")
+  // must fold to their half-width form (e.g. "6BA-JG3"). Every other field in this core
+  // stays exactly as printed; see the no-NFKC test for maker below.
   const vehicleCode = applied(result.model);
-  if (vehicleCode !== null) patch.vehicleCode = vehicleCode;
+  if (vehicleCode !== null) patch.vehicleCode = vehicleCode.normalize("NFKC");
 
   const displacement = applied(result.displacement);
   if (displacement !== null) patch.displacement = displacement;
