@@ -18,6 +18,7 @@ import {
   vehicleSelectionPatch,
 } from "./existing-entity-selection";
 import { willSaveExistingVehicle } from "../validity/wizard-step-validity";
+import { buildWizardVehicleOcrPatch } from "@/lib/ocr/wizard-vehicle-ocr-apply-core";
 import { OcrEntry } from "../OcrEntry";
 import { Card, SectionTitle, Field, TextInput, SelectButton, ChoiceGrid } from "../ui";
 import {
@@ -171,25 +172,10 @@ export function Step2Vehicle({
           <SectionTitle>車両登録</SectionTitle>
           <OcrEntry
             onApply={(f) => {
-              const rec = f as Record<string, unknown>;
-              const patch: EditableVehiclePatch = {};
-              if (typeof rec.maker === "string") patch.maker = rec.maker;
-              if (typeof rec.vehicle_name === "string") patch.model = rec.vehicle_name;
-              if (typeof rec.grade === "string") patch.grade = rec.grade;
-              if (typeof rec.model === "string") patch.vehicleCode = rec.model;
-              if (typeof rec.displacement === "string") patch.displacement = rec.displacement;
-              if (typeof rec.chassis_number === "string") patch.vin = rec.chassis_number;
-              if (typeof rec.first_registration_date === "string") patch.firstRegYearMonth = rec.first_registration_date;
-              if (typeof rec.registration_date === "string") patch.registrationDate = rec.registration_date;
-              if (typeof rec.inspection_expiry_date === "string") patch.inspectionExpiry = rec.inspection_expiry_date;
-              if (typeof rec.color === "string") patch.color = rec.color;
-              const plate = [
-                rec.license_plate_region,
-                rec.license_plate_class,
-                rec.license_plate_kana,
-                rec.license_plate_number,
-              ].filter((value): value is string => typeof value === "string" && value.trim() !== "").join(" ");
-              if (plate) patch.plateNumber = plate;
+              // GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_A — Step 2 remains an explicit
+              // rescan/correction route, but shares ONE typed mapper with Step 1 rather than a
+              // duplicate inline mapping.
+              const patch: EditableVehiclePatch = buildWizardVehicleOcrPatch(f);
 
               // OCR dimensions produce a recommendation only. The operator's
               // confirmedSize remains untouched until a size button is pressed.
@@ -205,11 +191,14 @@ export function Step2Vehicle({
             <Field label="メーカー" value={v.maker}>
               <TextInput value={v.maker} onChange={(x) => setV({ maker: x })} placeholder="トヨタ" />
             </Field>
-            <Field label="車名" required value={v.model} hint="車検証から取得不可 — 常に手入力必須">
+            <Field label="車名" required value={v.model} hint="車検証に記載があれば自動反映されます。車種の自動判定は行わないため、記載がない場合は手入力してください（必須）">
               <TextInput value={v.model} onChange={(x) => setV({ model: x })} placeholder="クラウン" required />
             </Field>
             <Field label="型式" value={v.vehicleCode}>
               <TextInput value={v.vehicleCode} onChange={(x) => setV({ vehicleCode: x })} placeholder="ABA-XXX" />
+            </Field>
+            <Field label="グレード" value={v.grade} hint="車検証からは取得できないため、常に手入力です（任意）">
+              <TextInput value={v.grade} onChange={(x) => setV({ grade: x })} placeholder="RS" />
             </Field>
             <Field label="排気量" value={v.displacement}>
               <TextInput value={v.displacement} onChange={(x) => setV({ displacement: x })} placeholder="1998cc" />

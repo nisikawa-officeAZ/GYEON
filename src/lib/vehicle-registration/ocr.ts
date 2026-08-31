@@ -47,7 +47,6 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
   "vehicle_name": "",
   "maker": "",
   "model": "",
-  "grade": "",
   "model_code": "",
   "chassis_number": "",
   "license_plate_region": "",
@@ -99,7 +98,7 @@ const RETRYABLE_CODES: OcrErrorCode[] = ["TIMEOUT", "CONNECT_ERROR", "OPENAI_SER
 
 const STRING_FIELDS: Array<keyof VehicleRegistrationOcrResult> = [
   "owner_name", "user_name", "owner_name_kana", "user_name_kana", "owner_address", "user_address",
-  "vehicle_name", "maker", "model", "grade", "model_code", "chassis_number",
+  "vehicle_name", "maker", "model", "model_code", "chassis_number",
   "license_plate_region", "license_plate_class", "license_plate_kana", "license_plate_number",
   "first_registration_date", "registration_date", "inspection_expiry_date",
   "vehicle_type", "use_type", "private_or_business", "body_shape",
@@ -237,17 +236,16 @@ async function callOpenAI(
       return { error: "EMPTY_RESPONSE" };
     }
 
-    // Deterministic maker/model/grade normalization (do not rely on the AI alone).
-    // メーカー / 車名 / グレード are separated; 車名 is the MODEL only (never the maker),
-    // and stays blank when only the maker was detected (e.g. "フェラーリ").
+    // Deterministic maker/model normalization (do not rely on the AI alone).
+    // メーカー / 車名 are separated; 車名 is the MODEL remainder only (never the maker),
+    // and stays blank when only the maker was detected (e.g. "フェラーリ"). Grade is
+    // always manual — OCR never populates or overwrites it.
     const norm = normalizeVehicleFields({
       maker:       sanitized.maker,
       vehicleName: sanitized.vehicle_name,
-      grade:       sanitized.grade,
     });
     sanitized.maker        = norm.maker;   // メーカー
-    sanitized.vehicle_name = norm.model;   // 車名 (model only; blank when only maker)
-    sanitized.grade        = norm.grade;   // グレード (blank unless detected)
+    sanitized.vehicle_name = norm.model;   // 車名 (full non-maker remainder)
 
     // ボディカラー is MANUAL required — the AI must never auto-fill it.
     delete (sanitized as Record<string, unknown>).color;

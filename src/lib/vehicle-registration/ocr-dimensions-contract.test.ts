@@ -33,3 +33,14 @@ test("rejects invalid dimensions, unit mistakes, and invalid confidence", () => 
   assert.equal(result.height_mm, undefined);
   assert.equal(result.dimension_confidence, undefined);
 });
+
+test("grade is manual-only: a nonblank OCR grade is discarded, never sanitized", () => {
+  // grade remains a legacy-typed input field for backward compatibility, but the
+  // sanitizer must never accept or emit it — grade is always manual.
+  const result = sanitizeVehicleRegistrationOcrResult({
+    maker: "トヨタ",
+    grade: "アスリート",
+  });
+  assert.equal(result.maker, "トヨタ");
+  assert.equal("grade" in result, false, "sanitizer must never emit grade");
+});

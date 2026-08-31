@@ -15,7 +15,6 @@ interface OcrTestCase {
   expect: {
     maker:              string;
     model:              string;
-    grade:              string;
     ownerUserSeparated: boolean;
     recommendedSource:  "user" | "owner";
     customerName:       string;
@@ -25,33 +24,32 @@ interface OcrTestCase {
 
 export const OCR_TEST_CASES: OcrTestCase[] = [
   {
-    name: "1) owner = user (individual) — maker/model/grade split",
+    name: "1) owner = user (individual) — maker split, full model remainder preserved (no grade split)",
     input: { owner_name: "山田 太郎", user_name: "山田 太郎", vehicle_name: "トヨタ クラウン アスリート" },
-    expect: { maker: "トヨタ", model: "クラウン", grade: "アスリート", ownerUserSeparated: false, recommendedSource: "user", customerName: "山田 太郎", customerType: "individual" },
+    expect: { maker: "トヨタ", model: "クラウン アスリート", ownerUserSeparated: false, recommendedSource: "user", customerName: "山田 太郎", customerType: "individual" },
   },
   {
     name: "2) owner != user, finance/dealer owner — maker only (車名 blank)",
     input: { owner_name: "株式会社アプラス", user_name: "佐藤 花子", vehicle_name: "フェラーリ" },
-    expect: { maker: "フェラーリ", model: "", grade: "", ownerUserSeparated: true, recommendedSource: "user", customerName: "佐藤 花子", customerType: "individual" },
+    expect: { maker: "フェラーリ", model: "", ownerUserSeparated: true, recommendedSource: "user", customerName: "佐藤 花子", customerType: "individual" },
   },
   {
     name: "3) corporation user",
     input: { owner_name: "株式会社山田製作所", user_name: "株式会社山田製作所", vehicle_name: "日産 キャラバン" },
-    expect: { maker: "日産", model: "キャラバン", grade: "", ownerUserSeparated: false, recommendedSource: "user", customerName: "株式会社山田製作所", customerType: "corporation" },
+    expect: { maker: "日産", model: "キャラバン", ownerUserSeparated: false, recommendedSource: "user", customerName: "株式会社山田製作所", customerType: "corporation" },
   },
 ];
 
 export interface OcrTestResult { name: string; pass: boolean; failures: string[] }
 
 export function runOcrTestCase(tc: OcrTestCase): OcrTestResult {
-  const norm     = normalizeVehicleFields({ maker: tc.input.maker, vehicleName: tc.input.vehicle_name, grade: tc.input.grade });
+  const norm     = normalizeVehicleFields({ maker: tc.input.maker, vehicleName: tc.input.vehicle_name });
   const analysis = analyzeOcrCustomer(tc.input);
   const resolved = resolveCustomer(tc.input, analysis.recommendedSource);
 
   const checks: [string, unknown, unknown][] = [
     ["maker",              norm.maker,                 tc.expect.maker],
     ["model",              norm.model,                 tc.expect.model],
-    ["grade",              norm.grade,                 tc.expect.grade],
     ["ownerUserSeparated", analysis.ownerUserSeparated, tc.expect.ownerUserSeparated],
     ["recommendedSource",  analysis.recommendedSource,  tc.expect.recommendedSource],
     ["customerName",       resolved.name,               tc.expect.customerName],

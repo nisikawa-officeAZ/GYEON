@@ -3292,3 +3292,422 @@ environment_and_release_boundary:
 decision: ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK, POST_THE_AUTHORIZED_PR_RESULT_COMMENT, THEN REQUEST_SEPARATE EXACT-PATH STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. READY, MERGE, MIGRATION_APPLICATION, PREVIEW, AND DEPLOYMENT REMAIN SEPARATE."
 ```
+## GDA-2A-OCR-POSTAL-R1 — Dedicated branch and diagnosis governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1
+status: DEDICATED_BRANCH_CREATED_READ_ONLY_DIAGNOSIS_AUTHORIZED_IMPLEMENTATION_CONDITIONAL
+date: 2026-08-31
+append_only: true
+objective: "Restore one-scan customer/vehicle draft application, postal-to-address fill, OCR-address-to-postal resolution, and focused regression proof while preserving the existing 3M seven-size contract."
+authorization: "The owner authorized advancing these four points as one dedicated repair phase on a separate branch through Claude diagnosis and, only after diagnosis acceptance and within the exact approved boundary, Claude implementation. Stage, commit, push, PR creation/update, Ready, merge, deployment, provider configuration, and production action were not authorized."
+repository:
+  repo: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  fixed_base_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-ocr-postal-unified-r1
+  initial_status: CLEAN
+reference_only:
+  coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/40
+  prior_source_commit: db7ce44b8af20cd48e64ba79492419cec03c94b2
+  boundary: "The prior eight-path single-scan repair is reference evidence only. Its branch is behind current main and must not be merged or cherry-picked as a whole."
+owner_confirmed_outcomes:
+  - "One reviewed OCR apply populates customer and vehicle drafts atomically."
+  - "Postal code fills Estimate Wizard address."
+  - "OCR-derived address fills postal code only from an exact authoritative result."
+  - "Focused regression tests cover customer, vehicle, postal/address, and unchanged 3M seven-size behavior."
+diagnosis_directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_READ_ONLY_DIAGNOSIS.md
+implementation_directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_IMPLEMENTATION.md
+governance_candidate_paths:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_IMPLEMENTATION.md
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+phase_isolation:
+  - "PR #47 remains a separate read-only Staging preflight and receives no write or comment from this phase."
+  - "No source/test edit, executable test, database/Supabase/provider access, dependency/config change, stage, commit, push, PR mutation, Ready, merge, deployment, or production action has occurred at this governance checkpoint."
+reverse_lookup_fail_closed_gate: "If no existing approved address-to-postal authority exists, diagnosis must return OWNER_DECISION_REQUIRED_REVERSE_LOOKUP_AUTHORITY before implementation."
+decision: AUTHORIZE_ONE_READ_ONLY_CLAUDE_DIAGNOSIS_THEN_INDEPENDENT_CODEX_REVIEW
+next: "PUBLISH_THE_BOUNDED_DIAGNOSIS_INSTRUCTION_TO_THE_EXISTING_OCR_COORDINATION_DRAFT_PR_AND_RUN_TERMINAL_CLAUDE_READ_ONLY; DO_NOT_IMPLEMENT_UNTIL_DIAGNOSIS_IS_ACCEPTED"
+```
+
+## GDA-2A-OCR-POSTAL-R1-D1/A-G1 — Diagnosis partial acceptance and single-scan implementation gate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_D1_AND_A_SINGLE_SCAN
+status: DIAGNOSIS_SINGLE_SCAN_ACCEPTED_REVERSE_LOOKUP_REJECTED_A_IMPLEMENTATION_AUTHORIZED
+date: 2026-08-31
+append_only: true
+diagnosis_result_id: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+claude_reported_verdict: READY_FOR_IMPLEMENTATION
+codex_disposition: PARTIAL_ACCEPTANCE_CHANGES_REQUIRED_REVERSE_LOOKUP
+accepted_findings:
+  - "Current Step 1 applies only the customer OCR patch; vehicle data requires a separate Step-2 scan."
+  - "One combined updateStore call is required for atomic customer/vehicle application."
+  - "Prior commit db7ce44 contains a portable eight-path single-scan repair whose exact paths can be reimplemented against current main without importing its unrelated branch history."
+  - "Current 3M thresholds and SS/S/M/ML/L/LL/XL contract can remain unchanged."
+rejected_finding:
+  - "Extracting an already printed postal code from OCR address text is not address-to-postal reverse lookup and does not satisfy the accepted bidirectional postal/address contract."
+active_a_directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_IMPLEMENTATION.md
+active_a_write_allowlist:
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step1Customer.tsx
+  - src/components/estimates/wizard/steps/Step2Vehicle.tsx
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.ts
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts
+  - src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx
+  - src/components/estimates/wizard/validity/wizard-step-validity.ts
+  - src/components/estimates/wizard/validity/wizard-step-validity.test.ts
+frozen_in_a:
+  - "All postal/address helpers and tests; no reverse provider, dataset, dependency, environment, API, database, or migration choice."
+  - "All four protected paths; PR #47; Git delivery and every external environment."
+git_boundary: "A implementation and focused tests only. Leave source unstaged/uncommitted; no PR mutation by Claude."
+parent_phase_status: INCOMPLETE_PENDING_POSTAL_REVERSE_LOOKUP_AUTHORITY
+decision: AUTHORIZE_EXACT_EIGHT_PATH_SINGLE_SCAN_IMPLEMENTATION_AND_FOCUSED_TESTS
+next: "PUBLISH_THE_NON_TRIGGERING_A_IMPLEMENTATION_INSTRUCTION_ON_PR40_THEN_RUN_ONE_TERMINAL_CLAUDE_IMPLEMENTATION; CODEX_REVIEWS_BEFORE_ANY_GIT_DELIVERY"
+```
+
+## GDA-2A-OCR-POSTAL-R1-A — Single-scan source candidate accepted
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_A_SINGLE_SCAN_IMPLEMENTATION
+status: SOURCE_CANDIDATE_ACCEPTED_UNSTAGED_UNCOMMITTED_PARENT_PHASE_INCOMPLETE
+date: 2026-08-31
+append_only: true
+result_id: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_A_SINGLE_SCAN_IMPLEMENTATION_RESULT_V1
+authorization: "The owner explicitly authorized Anthropic Claude Code to edit and test only the diagnosis-accepted files after Codex diagnosis review. Stage, commit, and push were explicitly forbidden."
+repository:
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  fixed_head: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  fixed_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-ocr-postal-unified-r1
+  index: CLEAN
+  source_delivery: UNSTAGED_UNCOMMITTED
+claude_execution:
+  initial_verdict: BLOCKED_ENVIRONMENT
+  reason: "Claude completed the source/test candidate and diff check but its Bash permission scope denied the shared absolute loader path."
+  source_mutation_scope: EXACT_EIGHT_PATHS
+codex_environment_revalidation:
+  package_lock_sha256_candidate: 423d295f85d537b12c375aabb8e5fef336c77139a756b19c02a4ba1719f20866
+  package_lock_sha256_dependency_source: 423d295f85d537b12c375aabb8e5fef336c77139a756b19c02a4ba1719f20866
+  dependency_method: "Temporary node_modules symlink to the identical-lockfile dependency source; no install/copy/change; exact symlink removed and absence proved after tests."
+  test_files: 7
+  tests: 177
+  passed: 177
+  failed: 0
+  diff_check: PASS
+codex_correction:
+  path: src/components/estimates/wizard/validity/wizard-step-validity.test.ts
+  change: "Corrected one pre-existing stale source-match symbol from preselectionStorePatch to initialPreselectionStorePatch; no production/business assertion or fixture change."
+accepted_source_paths:
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step1Customer.tsx
+  - src/components/estimates/wizard/steps/Step2Vehicle.tsx
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.ts
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts
+  - src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx
+  - src/components/estimates/wizard/validity/wizard-step-validity.ts
+  - src/components/estimates/wizard/validity/wizard-step-validity.test.ts
+source_sha256:
+  src/components/estimates/wizard/EstimateWizard.tsx: 24f116708582ef70ff49d379f81f346bf25229b438233d2c71bfa7ff4b255624
+  src/components/estimates/wizard/steps/Step1Customer.tsx: c8b7246b45fbfc88c7d47572f2d506f5f70e655b9c7984455bf3e9b7242dd662
+  src/components/estimates/wizard/steps/Step2Vehicle.tsx: 913ab138a73e655119702f710cd296ca5b47b30f2c5554fa993e4a0360b34249
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.ts: edefc4ae111928607ef9dcc6c0257f3a4062b3d9b34703b08e202f46b397a268
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts: 4afc01d1eb71cb6aa775c0a1062cec935a20d5818476f32d33313862bb7a58a1
+  src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx: eddbec519a6c0fa991c393e32adf3cd46d8bc47a02e201f761e45bbcd8a27338
+  src/components/estimates/wizard/validity/wizard-step-validity.ts: 4ee059780c77ffbd600131eba464aca305903fda6b71a8e2e46ce038ecd505a7
+  src/components/estimates/wizard/validity/wizard-step-validity.test.ts: 85c10051250ae0a0d2e29c2352f960e9dcd2a5d71063363291fb07f2e277c537
+behavior_proof:
+  - "One Step-1 OCR apply invokes updateStore exactly once with both customer and vehicle patches."
+  - "Blank OCR values omit keys and preserve operator-entered values."
+  - "Step 1 and Step 2 reuse one pure typed vehicle mapper."
+  - "3M thresholds and SS/S/M/ML/L/LL/XL remain unchanged; confirmedSize is never written by OCR."
+  - "OCR applies in-memory draft state only; explicit save remains the sole persistence boundary."
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  stage: false
+  commit: false
+  push: false
+  pr_source_mutation: false
+  database_or_supabase: false
+  provider_or_network_from_candidate: false
+  preview_or_production: false
+parent_phase_status: INCOMPLETE_PENDING_POSTAL_FORWARD_AND_TRUE_REVERSE_LOOKUP
+decision: ACCEPT_SINGLE_SCAN_SOURCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+next: "OWNER_SELECTS_OR_AUTHORIZES_THE_ADDRESS_TO_POSTAL_AUTHORITY; THEN CLAUDE_DIAGNOSES_AND_IMPLEMENTS_THE_REMAINING_POSTAL_FORWARD_REVERSE_TEST_SCOPE. GIT_DELIVERY_REMAINS_SEPARATE."
+```
+
+## GDA-2A-OCR-VEHICLE-MASTER-R1-D1 — Owner-ratified diagnosis gate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_VEHICLE_MASTER_RESOLUTION_R1_READ_ONLY_DIAGNOSIS
+status: READ_ONLY_DIAGNOSIS_AUTHORIZED_NOT_YET_EXECUTED
+date: 2026-08-31
+append_only: true
+objective: "Diagnose the exact source, field, persistence, and authoritative-data contract needed to identify vehicle name and grade from reviewed certificate evidence without making generative AI the authority."
+authorization: "The owner ratified deterministic vehicle-master matching based on type-designation number, classification number, model/type, and first-registration evidence; AI is limited to normalization and candidate ranking. The owner then authorized one Claude read-only diagnosis. No source edit, test, stage, commit, push, DB/provider action, or implementation is authorized."
+repository:
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  fixed_head: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  fixed_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/40
+frozen_candidate:
+  phase: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_A_SINGLE_SCAN_IMPLEMENTATION
+  status: ACCEPTED_UNSTAGED_UNCOMMITTED
+  changed_source_paths: 8
+  focused_tests: "177/177 PASS"
+  mutation_during_d1: FORBIDDEN
+required_result_id: GDA_ESTIMATE_WIZARD_OCR_VEHICLE_MASTER_RESOLUTION_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+decision_gate: "Return OWNER_DECISION_REQUIRED_VEHICLE_MASTER_AUTHORITY if the repository has no approved licensed current vehicle master or resolver; AI inference is not an acceptable substitute."
+protected_paths:
+  - src/components/estimates/wizard/screens/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+prohibited:
+  - file mutation or executable tests
+  - database, Supabase, provider, browser, web search, or production access
+  - stage, commit, push, Ready, merge, deployment, or migration work
+decision: AUTHORIZE_ONE_BOUNDED_CLAUDE_READ_ONLY_DIAGNOSIS_AFTER_CODEX_PUBLISHES_THE_EXACT_INSTRUCTION
+next: "CREATE_AND_VERIFY_THE_LITERAL_READ_SCOPE_AND_NON_TRIGGERING_PR40_INSTRUCTION, THEN_RUN_ONE_TERMINAL_CLAUDE_READ_ONLY_DIAGNOSIS."
+```
+
+## GDA-2A-OCR-VEHICLE-MASTER-R1-D1 — Claude diagnosis and Codex disposition
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_VEHICLE_MASTER_RESOLUTION_R1_READ_ONLY_DIAGNOSIS
+status: DIAGNOSIS_ACCEPTED_WITH_CODEX_ALLOWLIST_CORRECTION_OWNER_DECISION_REQUIRED
+date: 2026-08-31
+append_only: true
+instruction_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/40#issuecomment-5477780380
+result_id: GDA_ESTIMATE_WIZARD_OCR_VEHICLE_MASTER_RESOLUTION_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+claude_verdict: READY_FOR_OWNER_DATA_AUTHORITY_DECISION
+required_blocker: OWNER_DECISION_REQUIRED_VEHICLE_MASTER_AUTHORITY
+accepted_findings:
+  - "型式 is captured as OCR model and maps to the wizard vehicleCode/vehicles.vehicle_code path."
+  - "型式指定番号 is captured as OCR model_code but is excluded from the operator review, wizard draft, and persistence schema."
+  - "The four-digit 類別区分番号 is absent from the OCR prompt, result type, review UI, wizard draft, and persistence schema."
+  - "The three-digit registration-plate 分類番号 is a different license_plate_class field and must never be treated as 類別区分番号."
+  - "No current licensed authoritative vehicle master or approved resolver exists in the repository."
+  - "The OCR documentation claims grade inference from type-designation evidence, but executable source performs no authoritative master lookup."
+codex_correction:
+  rejected: "Claude's four-path field-exposure allowlist is not implementation-complete if a new distinct designation field is to reach typed wizard state or persistence."
+  required: "Codex must define review-only capture versus typed draft and saved-evidence behavior before issuing any exact future write allowlist."
+fail_closed_resolution:
+  - EXACT_MATCH
+  - MULTIPLE_CANDIDATES
+  - NO_MATCH
+  - INSUFFICIENT_EVIDENCE
+  - PROVIDER_UNAVAILABLE
+  rule: "Only authoritative exact match may produce an auto-fill proposal; every application remains operator-confirmed and no non-exact outcome overwrites typed values."
+execution:
+  claude_api_calls: 1
+  max_budget_usd: 3
+  tools: "Read,Glob,Grep only"
+  file_mutation_by_claude: false
+  tests_or_build: false
+  database_or_supabase: false
+  provider_web_browser_search: false
+  stage_commit_push: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_CORE_DIAGNOSIS_RETURN_FOR_OWNER_VEHICLE_MASTER_AUTHORITY_SELECTION
+next: "OWNER_SELECTS_OR_AUTHORIZES_READ_ONLY_VENDOR_LICENSE_API_COMPARISON_FOR_A_CURRENT_VEHICLE_MASTER; FIELD_CAPTURE_AND_RESOLUTION_IMPLEMENTATION_REMAIN_SEPARATE."
+```
+
+## GDA-2A-OCR-MANUAL-MODEL-GRADE-R1 — Owner decision and bounded correction gate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_MANUAL_MODEL_GRADE_R1_IMPLEMENTATION
+status: OWNER_DECISION_RECORDED_BOUNDED_IMPLEMENTATION_AUTHORIZED_UNSTAGED_ONLY
+date: 2026-08-31
+append_only: true
+owner_decision:
+  vehicle_master: "No paid provider and no external vehicle-master connection. A future free internal exact-match table may be considered separately."
+  vehicle_name: "Do not infer or block. Preserve certificate-supplied distinct vehicle_name; otherwise require manual entry."
+  grade: "Always blank/manual. OCR must never populate or overwrite grade."
+  performance: "Customer/vehicle OCR application and 3M recommendation must not wait for vehicle-name or grade resolution; preserve the one-minute estimate target."
+repository:
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  fixed_head: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  fixed_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  source_state: ACCEPTED_DIRTY_UNSTAGED_UNCOMMITTED_SINGLE_SCAN_CANDIDATE
+directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_MANUAL_MODEL_GRADE_R1_IMPLEMENTATION.md
+exact_write_allowlist:
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.ts
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts
+  - src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx
+  - src/components/estimates/wizard/steps/Step2Vehicle.tsx
+prohibited:
+  - AI/fuzzy/paid/external vehicle resolution
+  - database/Supabase/provider/browser/web access
+  - dependency/configuration/migration change
+  - stage/commit/push/PR mutation/Ready/merge/deploy/production
+decision: AUTHORIZE_ONE_BOUNDED_CLAUDE_IMPLEMENTATION_AND_FOCUSED_TEST_RUN
+next: "RUN_ONE_TERMINAL_CLAUDE_IMPLEMENTATION_WITH_THE_EXACT_FOUR_PATH_ALLOWLIST; CODEX_REVIEWS_BEFORE_ANY_GIT_DELIVERY."
+```
+
+## GDA-2A-OCR-MANUAL-MODEL-GRADE-R1 — Source candidate accepted
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_MANUAL_MODEL_GRADE_R1_IMPLEMENTATION
+status: SOURCE_CANDIDATE_ACCEPTED_UNSTAGED_UNCOMMITTED
+date: 2026-08-31
+append_only: true
+result_id: GDA_ESTIMATE_WIZARD_OCR_MANUAL_MODEL_GRADE_R1_IMPLEMENTATION_RESULT_V1
+claude_execution:
+  source_edit: COMPLETED_WITHIN_EXACT_FOUR_PATH_ALLOWLIST
+  focused_test_attempt: BLOCKED_BY_CLAUDE_BASH_PERMISSION_CONFIRMATION
+  stage_commit_push: false
+codex_independent_acceptance:
+  exact_changed_source_paths: 4
+  focused_test_files: 7
+  tests: 182
+  passed: 182
+  failed: 0
+  typecheck: PASS
+  diff_check: PASS
+  dependency_method: "Temporary node_modules symlink to the identical-lockfile dependency source for React-resolving tests; no install/copy/change; symlink removed and absence proved."
+  package_lock_sha256_candidate: 423d295f85d537b12c375aabb8e5fef336c77139a756b19c02a4ba1719f20866
+  package_lock_sha256_dependency_source: 423d295f85d537b12c375aabb8e5fef336c77139a756b19c02a4ba1719f20866
+accepted_delta_paths:
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.ts
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts
+  - src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx
+  - src/components/estimates/wizard/steps/Step2Vehicle.tsx
+source_sha256:
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.ts: 032f3adbb7775b3469390e9fbceb4c06f5662b22d34e3505f96133cdc94548dc
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts: 32c3d06dd8a521e5fd82fac38fb4317d02c2bf8dad3971795729a4c11d18f7d1
+  src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx: 253a2de477228d7236de9eda22a5e9e0c3c457d7bee38ead7640f0bd4b0074e3
+  src/components/estimates/wizard/steps/Step2Vehicle.tsx: 4600e283dd2056f7b91b9e5b4b1b532c58397bfc03ae51cfce8c5d7fffe8cd8f
+accepted_behavior:
+  - "OCR_APPLICABLE_VEHICLE_DRAFT_FIELDS contains ten fields and excludes grade."
+  - "A nonblank OCR grade is ignored and cannot overwrite an operator-entered grade."
+  - "The active Step-2 form exposes a manual optional grade input."
+  - "The certificate-supplied distinct vehicle_name behavior remains non-fabricating; model/type continues to map only to vehicleCode."
+  - "No lookup, wait, AI, API, database, provider, dependency, migration, or configuration was added."
+  - "One-scan customer/vehicle application, physical-dimension 3M recommendation, and the seven-size contract remain unchanged."
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  stage: false
+  commit: false
+  push: false
+  pr_mutation: false
+  database_or_supabase: false
+  provider_or_external_vehicle_master: false
+  deployment_or_production: false
+decision: ACCEPT_MANUAL_MODEL_GRADE_SOURCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+remaining_boundary: "The shared OCR review still retains legacy grade evidence for non-wizard flows; removing it globally is a separate cross-flow decision. A free internal exact vehicle-name table does not currently exist and must not be fabricated inside this phase."
+next: "OWNER_DECIDES WHETHER_TO_DELIVER_THE_CURRENT_OCR_SOURCE_CANDIDATE_BY_A_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_GATE; POSTAL_REVERSE_LOOKUP_AND_ANY_FUTURE_INTERNAL_VEHICLE_NAME_MAP_REMAIN_SEPARATE."
+```
+
+## GDA-2A-OCR-GRADE-MANUAL-ONLY-R1 — Shared-flow correction gate
+
+```yaml
+phase: GDA_VEHICLE_REGISTRATION_OCR_GRADE_MANUAL_ONLY_R1_IMPLEMENTATION
+status: OWNER_AUTHORIZED_BOUNDED_IMPLEMENTATION_UNSTAGED_ONLY
+date: 2026-08-31
+append_only: true
+owner_decision: "Grade is manual-only across the shared OCR flow. Remove extraction, derivation, review display/selection, apply, and detected-summary behavior."
+directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_VEHICLE_REGISTRATION_OCR_GRADE_MANUAL_ONLY_R1_IMPLEMENTATION.md
+exact_write_allowlist:
+  - src/lib/vehicle-registration/ocr.ts
+  - src/lib/vehicle-registration/vehicle-normalize.ts
+  - src/lib/vehicle-registration/ocr-test-cases.ts
+  - src/lib/vehicle-registration/ocr-dimensions-contract.test.ts
+  - src/components/vehicle-registration/VehicleRegistrationOcrReview.tsx
+  - src/components/vehicle-registration/VehicleRegistrationUpload.tsx
+  - src/lib/vehicle-registration/ocr-customer-mapping.test.ts
+frozen:
+  - "Optional legacy VehicleRegistrationOcrResult.grade type remains for backward compatibility."
+  - "Estimate Wizard manual grade field and all accepted customer/type/dimension/3M behavior."
+  - "No AI/fuzzy/external vehicle-name or grade resolution."
+prohibited:
+  - database/Supabase/provider/browser/web/OCR-upload access
+  - dependency/configuration/migration change
+  - stage/commit/push/PR mutation/Ready/merge/deploy/production
+decision: AUTHORIZE_ONE_BOUNDED_CLAUDE_IMPLEMENTATION_AND_FOCUSED_TEST_RUN
+next: "RUN_ONE_TERMINAL_CLAUDE_IMPLEMENTATION_WITH_THE_EXACT_SEVEN_PATH_ALLOWLIST; CODEX_REVIEWS_BEFORE_ANY_GIT_DELIVERY."
+```
+
+## GDA-2A-OCR-GRADE-MANUAL-ONLY-R1 — Shared-flow source candidate accepted
+
+```yaml
+phase: GDA_VEHICLE_REGISTRATION_OCR_GRADE_MANUAL_ONLY_R1_IMPLEMENTATION
+status: SOURCE_CANDIDATE_ACCEPTED_UNSTAGED_UNCOMMITTED
+date: 2026-08-31
+append_only: true
+result_id: GDA_VEHICLE_REGISTRATION_OCR_GRADE_MANUAL_ONLY_R1_IMPLEMENTATION_RESULT_V1
+claude_execution:
+  source_edit: COMPLETED_WITHIN_EXACT_SEVEN_PATH_ALLOWLIST
+  source_verdict: PASS
+  executable_verification: BLOCKED_ENVIRONMENT_NO_LOCAL_DEPENDENCIES
+  stage_commit_push: false
+codex_independent_acceptance:
+  exact_changed_source_paths: 7
+  current_candidate_focused_test_files: 9
+  tests: 204
+  passed: 204
+  failed: 0
+  typecheck: PASS
+  diff_check: PASS
+  dependency_method: "Temporary node_modules symlink to the identical-lockfile dependency source; no install/copy/change; symlink removed and absence proved."
+accepted_delta_paths:
+  - src/lib/vehicle-registration/ocr.ts
+  - src/lib/vehicle-registration/vehicle-normalize.ts
+  - src/lib/vehicle-registration/ocr-test-cases.ts
+  - src/lib/vehicle-registration/ocr-dimensions-contract.test.ts
+  - src/components/vehicle-registration/VehicleRegistrationOcrReview.tsx
+  - src/components/vehicle-registration/VehicleRegistrationUpload.tsx
+  - src/lib/vehicle-registration/ocr-customer-mapping.test.ts
+source_sha256:
+  src/lib/vehicle-registration/ocr.ts: 04d1673abb3bd55e345593f48c10ca4592dd5cad603fa23d3c5204c8ca40317b
+  src/lib/vehicle-registration/vehicle-normalize.ts: 70c84fcda6bcfc7459cc8710efe7f4e351670e745fd0d8b7c1ec0713b6879ec5
+  src/lib/vehicle-registration/ocr-test-cases.ts: d8f4d5b482c8b640c52bad7fe1a63ac09c03aaa6f9d8dbd9a4d9e36fc34632c1
+  src/lib/vehicle-registration/ocr-dimensions-contract.test.ts: 8e4063f2cfbd3c46a5465e6c7afe0c49449e1de4c515e6142870a0bacafb0866
+  src/components/vehicle-registration/VehicleRegistrationOcrReview.tsx: 3bc216f949b9ffc0da8f953c6bcae3b152318ad6498a8ab8881a536457c19a2b
+  src/components/vehicle-registration/VehicleRegistrationUpload.tsx: 5329c8932f7bab69a42fb0af9a6597bc6ad1fcde3491404090e51db9a26d77d1
+  src/lib/vehicle-registration/ocr-customer-mapping.test.ts: 3d3f9bf634b6538b5037a66738b194e3372fdaee7bb51a1949321ae1fd497fee
+accepted_behavior:
+  - "The OCR prompt no longer requests grade."
+  - "The sanitizer discards provider-supplied grade text."
+  - "Vehicle normalization no longer accepts, derives, or returns grade."
+  - "The full non-maker vehicle-name remainder is preserved as model text rather than split into grade tokens."
+  - "The shared review and upload summary no longer display or select grade."
+  - "The optional legacy VehicleRegistrationOcrResult.grade type remains unchanged for backward compatibility."
+  - "The Estimate Wizard manual grade field, one-scan customer/vehicle application, dimensions, 3M recommendation, and seven-size contract remain accepted."
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  stage: false
+  commit: false
+  push: false
+  pr_mutation: false
+  database_or_supabase: false
+  provider_or_ocr_upload: false
+  deployment_or_production: false
+decision: ACCEPT_SHARED_OCR_GRADE_MANUAL_ONLY_SOURCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+remaining_boundary: "No free authoritative vehicle-name map exists. Vehicle name remains manual unless the certificate itself supplies a distinct nonblank name. Postal reverse lookup remains a separate unresolved parent-phase item."
+next: "OWNER_MAY_SEPARATELY_AUTHORIZE_LITERAL_STAGE_AND_LOCAL_COMMIT_FOR_THE_COMPLETE_CURRENT_OCR_CANDIDATE; PUSH_PR_READY_MERGE_DEPLOY_REMAIN_SEPARATE."
+```

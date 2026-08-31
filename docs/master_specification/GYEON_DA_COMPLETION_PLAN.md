@@ -227,6 +227,94 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Constraint:** GDA-1 defines the literal allowlist. No speculative redesign is allowed.
 
+### GDA-2A-OCR-POSTAL-R1 — Single-scan customer/vehicle and bidirectional postal completion
+
+**Objective:** Restore the accepted Estimate Wizard intake contract so one reviewed vehicle-registration OCR result updates both customer and vehicle drafts, postal code and address assist each other in both directions, and the existing 3M seven-size recommendation remains correct and operator-editable.
+
+**Owner-confirmed four-point outcome:**
+
+1. One confirmed OCR apply updates customer and vehicle draft fields together; Step 2 must not require a second scan.
+2. A valid postal code can fill the address in the Estimate Wizard.
+3. An OCR-derived address can resolve and fill the postal code when an exact, authoritative result is available.
+4. Focused regression coverage proves customer, vehicle, postal/address, and unchanged 3M `SS/S/M/ML/L/LL/XL` behavior.
+
+**Current branch boundary:**
+
+- Dedicated branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Fixed base commit: `501ede8c06b0c397a47996f9dfe0833f8779376c`
+- Fixed base tree: `fda91137ce537f5a6f60f82d229b6aa1ac6c13e6`
+- Existing PR #40 / commit `db7ce44b8af20cd48e64ba79492419cec03c94b2` is read-only reference evidence for the earlier single-scan customer/vehicle repair; it must not be merged or cherry-picked blindly because it is behind current `main` and its full branch delta contains unrelated/superseded changes.
+- PR #47 and its Staging read-only preflight remain isolated; this phase must not edit, stage, commit, push, comment on, or otherwise mutate PR #47.
+
+**Execution order:**
+
+1. Claude performs one bounded read-only diagnosis and returns the exact root cause, provider/data-authority boundary for address-to-postal resolution, literal implementation allowlist, and focused test plan.
+2. MacBook Codex independently accepts or rejects that diagnosis. Diagnosis and implementation are separate gates.
+3. Only if the diagnosis proves that all four outcomes can be implemented without an unapproved provider, dependency, secret, environment variable, database, or API contract may Claude perform the bounded implementation in this branch.
+4. If reverse lookup requires a new provider, dataset, dependency, secret, environment variable, API route, database table, or legal/operational commitment, Claude must stop with `OWNER_DECISION_REQUIRED_REVERSE_LOOKUP_AUTHORITY`; the other three outcomes must not be presented as completion of this four-point phase.
+
+**Frozen contracts:**
+
+- OCR updates wizard draft state only. No customer, vehicle, estimate, OCR record, file, or database write occurs before explicit save.
+- Empty/whitespace OCR values never erase operator-entered values.
+- Existing owner/user selection, duplicate advisory, registration mode, saved identity, tenant/auth, pricing, discounts, PPF, coating, PDF, LINE, and routes remain unchanged.
+- Existing 3M thresholds and exactly seven size keys `SS/S/M/ML/L/LL/XL` remain unchanged. `XXL`, automatic confirmed-size mutation, aliasing, fallback conversion, and threshold redesign are forbidden.
+- Postal lookup must fail safely: no result, ambiguous result, malformed input, timeout, or provider failure leaves the operator-entered value intact and displays no fabricated postal code/address.
+- No UI redesign. Only the minimum input assistance, loading/error/ambiguity state, and accessibility changes required by the accepted behavior are allowed.
+
+**Protected paths:**
+
+- `src/components/estimates/wizard/screens/ScreensPreview.tsx` — pathname/mode/blob/status metadata only; never open, read, diff, copy, stage, or modify.
+- `supabase/migrations/20260801110110_line_link_tokens.sql` — metadata only.
+- `supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql` — metadata only.
+- `src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts` — metadata only.
+
+**Responsibility:** The owner defines behavior and separately authorizes delivery gates. Claude owns bounded diagnosis, implementation, and executable focused tests. MacBook Codex owns governance, exact-scope review, independent acceptance, and later Git-delivery decisions. Stage, commit, push, PR creation/update, Ready, merge, deployment, provider configuration, and production action remain separate.
+
+**Acceptance target:** One current-main-based, unstaged/uncommitted source candidate with all four behaviors proved by focused tests and `git diff --check`, or an explicit owner-decision blocker for reverse-lookup authority. No partial implementation may be called phase completion.
+
+**2026-08-31 diagnosis disposition:** The atomic one-scan customer/vehicle and unchanged 3M findings are accepted for bounded A implementation. The diagnosis attempt to treat extraction of an already printed `〒NNN-NNNN` as address-to-postal reverse lookup is rejected because it does not satisfy the accepted bidirectional contract. A may implement only the eight-path single-scan repair; the parent four-point phase remains incomplete until reverse-lookup authority and the postal tests are separately resolved.
+
+**2026-08-31 A result:** The eight-path single-scan source candidate is independently accepted unstaged/uncommitted. One reviewed Step-1 OCR result now feeds one combined customer/vehicle store patch and the existing transient 3M recommendation; Step 2 reuses the same mapper for optional correction. The seven focused files report `177/177 PASS`, `git diff --check` passes, and protected blobs are unchanged. A pre-existing stale test symbol was corrected inside the already allowlisted validity test without changing business logic. Postal/address work remains frozen and the parent four-point phase remains open.
+
+### GDA-2A-OCR-VEHICLE-MASTER-R1-D1 — Vehicle name/grade authority read-only diagnosis
+
+**Status:** OWNER-RATIFIED READ-ONLY DIAGNOSIS AUTHORIZED. No implementation, test execution, Git delivery, database/provider action, or vehicle-master selection is authorized.
+
+**Objective:** Determine the exact contract required to resolve a reviewed vehicle-registration OCR result into a vehicle name and grade without allowing a generative model to become the data authority. The intended deterministic key is the reviewed certificate evidence headed by type-designation number, classification number, model/type, and first-registration month. AI may normalize labels and rank already-authoritative candidates only; it must never fabricate or independently confirm a vehicle name or grade.
+
+**Current boundary:**
+
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Fixed HEAD/tree: `501ede8c06b0c397a47996f9dfe0833f8779376c` / `fda91137ce537f5a6f60f82d229b6aa1ac6c13e6`
+- The accepted eight-path GDA-2A-OCR-POSTAL-R1-A candidate remains unstaged/uncommitted and frozen against further modification during D1.
+- The postal/address remainder stays open and frozen; this diagnosis does not select a reverse-postal provider or claim the parent phase complete.
+
+**Required diagnosis:**
+
+1. Distinguish the certificate's model/type, type-designation number, four-digit classification number, and the three-digit registration-plate classification number. The last two must never share one field or be treated as aliases.
+2. Identify the current OCR prompt/type/sanitizer/review/mapping gaps, including whether the four-digit classification number is absent and whether existing `model_code` naming is semantically ambiguous.
+3. Trace the current wizard and persistence contract for maker, vehicle name, grade, vehicle code/type, and any designation/classification evidence. Identify every schema or migration gap without editing it.
+4. Confirm whether this repository already contains an authoritative, licensed and current vehicle master or approved resolver. Source presence, an LLM prompt, public search results, or a historical document is not authority.
+5. Specify a fail-closed resolver result contract for `EXACT_MATCH`, `MULTIPLE_CANDIDATES`, `NO_MATCH`, `INSUFFICIENT_EVIDENCE`, and `PROVIDER_UNAVAILABLE`, preserving operator-entered values and requiring human confirmation.
+6. Return the smallest literal future implementation allowlist, focused test plan, data-license/provider decision, privacy/cost boundary, and whether a database migration or external API contract would be required.
+
+**Prohibitions:** No file change; no executable test; no dependency/config/environment change; no database, Supabase, provider, browser, web-search, or production access; no stage, commit, push, PR mutation other than the non-triggering diagnosis instruction owned by Codex; and no access to protected path content. `ScreensPreview.tsx` remains pathname/mode/blob/status metadata only.
+
+**Decision gate:** If no existing approved authoritative master/resolver is found, return `OWNER_DECISION_REQUIRED_VEHICLE_MASTER_AUTHORITY`. Do not propose AI inference as a substitute. A later implementation requires a separately accepted diagnosis, exact write allowlist, and explicit owner authorization.
+
+**2026-08-31 D1 result:** Claude returned `READY_FOR_OWNER_DATA_AUTHORITY_DECISION` with `OWNER_DECISION_REQUIRED_VEHICLE_MASTER_AUTHORITY`. MacBook Codex independently accepted the core findings: current OCR captures `型式` and `型式指定番号`, but the operator review excludes `型式指定番号`; the four-digit `類別区分番号` does not exist in the OCR/schema/wizard/persistence chain; the three-digit registration-plate `分類番号` is a separate field and must never be reused; no licensed current vehicle master/resolver exists in the repository; and the OCR documentation incorrectly claims a type-designation-based grade derivation that executable source does not implement. Claude's proposed four-path field-exposure allowlist is rejected as incomplete because adding a distinct designation field to the typed wizard draft necessarily affects typed state/UI/save or must remain review-only. No implementation is authorized until Codex defines an exact behavior boundary and the owner selects the vehicle-master authority.
+
+### GDA-2A-OCR-MANUAL-MODEL-GRADE-R1 — One-minute estimate fail-fast correction
+
+**Owner decision:** Paid/provider vehicle-master connections are not used. Vehicle-name inference must never delay the one-minute estimate flow. Because the repository contains no free approved internal exact-match authority, OCR continues to apply the certificate maker, type/model code, physical dimensions and already accepted fields immediately, while vehicle name remains operator-entered unless the certificate supplies a distinct nonblank vehicle name. Grade is always manual: OCR must never emit or overwrite it, and the active vehicle step must expose a manual grade field.
+
+**Implementation boundary:** Correct only the accepted unstaged single-scan candidate's OCR mapper, its focused unit/integration tests, and the active Step-2 vehicle form. Do not add AI, fuzzy matching, paid or external API access, a database resolver, a mapping table, a loading gate, a wait, a migration, a dependency, or configuration. The later free internal exact-match map is a separate owner-authorized phase and may run only as an optional non-blocking enhancement.
+
+**Acceptance target:** OCR applies customer and vehicle data once; manufacturer/type/dimensions and 3M recommendation remain unchanged; OCR never emits grade; operator-entered grade survives; manual grade input is visible; unsupported automatic vehicle-name identification is not promised; focused tests and `git diff --check` pass; source remains unstaged/uncommitted.
+
+**2026-08-31 shared-flow decision:** The owner confirmed that grade is manual-only in the shared vehicle-registration OCR flow as well. The OCR extraction prompt, sanitizer, deterministic normalization, review field list, and upload result summary must not request, derive, display, select, apply, or summarize grade. The optional legacy result type may remain for backward compatibility, but all active extraction/review behavior must ignore it. This is a seven-path bounded correction with no provider call, external master, database, migration, dependency, Git delivery, or deployment.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.

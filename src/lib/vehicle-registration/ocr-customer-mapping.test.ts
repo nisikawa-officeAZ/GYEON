@@ -18,6 +18,7 @@ import {
   resolveCustomer,
 } from "./ocr-customer-mapping";
 import { OCR_TEST_CASES, runOcrTestCase } from "./ocr-test-cases";
+import { normalizeVehicleFields } from "./vehicle-normalize";
 
 // ── the regression this phase exists to fix ─────────────────────────────────────
 
@@ -217,6 +218,22 @@ test("corporation detection is unaffected", () => {
   const r = { owner_name: "株式会社山田製作所", owner_address: "東京都港区1-2-3" };
   assert.equal(resolveCustomer(r, "owner").customerType, "corporation");
   assert.equal(resolveCustomer({ owner_name: "山田太郎" }, "owner").customerType, "individual");
+});
+
+// ── grade is manual-only: never derived from the vehicle-name remainder ─────────
+
+test("the full non-maker vehicle-name remainder is preserved as model, never split into a grade", () => {
+  const norm = normalizeVehicleFields({ maker: undefined, vehicleName: "トヨタ クラウン アスリート" });
+  assert.equal(norm.maker, "トヨタ");
+  assert.equal(norm.model, "クラウン アスリート", "the remainder after the maker must stay whole");
+  assert.equal("grade" in norm, false, "normalizeVehicleFields must never return a grade field");
+});
+
+test("normalizeVehicleFields no longer accepts a grade input field", () => {
+  // @ts-expect-error grade is not part of the normalizeVehicleFields input contract
+  const norm = normalizeVehicleFields({ maker: "トヨタ", vehicleName: "クラウン", grade: "アスリート" });
+  assert.equal(norm.model, "クラウン");
+  assert.equal("grade" in norm, false);
 });
 
 // ── the existing fixture table must not move ────────────────────────────────────

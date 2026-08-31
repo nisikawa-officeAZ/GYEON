@@ -114,6 +114,7 @@ export default function EstimateWizard({
           vehicles={vehicles}
           customerSearchInvoker={customerSearchInvoker}
           duplicateCheckInvoker={duplicateCheckInvoker}
+          onSizeEstimate={setBodySizeEstimate}
         />
       )}
       {api.step === 2 && (
