@@ -3388,3 +3388,63 @@ boundary:
 decision: REPLACE_SPLIT_CAPTURE_WITH_ONE_UPFRONT_FULL_CARD_PAYMENT_AND_REFUND_ONLY_EXCEPTION
 next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. PROVIDER_DIAGNOSIS_SOURCE_CORRECTION_DB_RUNTIME_PR_MUTATION_MERGE_AND_DEPLOYMENT_REMAIN_SEPARATE."
 ```
+
+## GYEON-ORDER-V3-C5-E0-R2 — Decision Git delivery and PR metadata correction
+
+```yaml
+phase: GYEON_ORDER_V3_C5_E0_R2_DECISION_GIT_DELIVERY_AND_PR_METADATA_CORRECTION
+status: DECISION_COMMIT_PUSHED_OPEN_PR_AWAITING_FINAL_REVIEW
+date: 2026-08-31
+append_only: true
+authorization: "After the final audit identified stale split-capture language in PR #49 metadata and missing Git-delivery state in the plan and ledger, the owner authorized the exact correction commit and PR metadata update. This gate does not authorize provider, database, migration, Ready, merge, or deployment work."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  base_branch: main
+  base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  decision_branch: docs/gyeon-order-stripe-provider-decision
+  predecessor_commit: de902608c3cdcd75d911b59c4682722d784fe1cf
+  decision_commit: b6c7d4a27cd2d307ab56e81dd73a0d810934cb94
+  decision_tree: 8fc1d7c1f967f18934d21ca15e0fe02b7475e899
+  remote_head_verified: b6c7d4a27cd2d307ab56e81dd73a0d810934cb94
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/49
+decision_delta:
+  exact_changed_path_count: 4
+  exact_changed_paths:
+    - docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md
+    - docs/integrations/gyeon-order/v3-c5-external-authority-design-and-impact.md
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  git_diff_check: PASS
+  business_contract: ONE_UPFRONT_FULL_CARD_PAYMENT_AND_REFUND_ONLY_EXCEPTION
+  provider_runtime_status: NOT_CONFIGURED
+delivery:
+  decision_commit_created: true
+  normal_push_completed: true
+  force_push: false
+  pr_state_at_audit: OPEN
+  pr_is_draft_at_audit: false
+  pr_mergeable_at_audit: MERGEABLE
+  pr_merge_state_at_audit: CLEAN
+  vercel_checks: SUCCESS_2_OF_2
+  ready_transition_performed_by_this_gate: false
+  merged: false
+  deployed: false
+protected_evidence:
+  ScreensPreview_tsx_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_migration_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_boundary_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+correction_scope:
+  source_paths:
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  pr_metadata:
+    - title
+    - body
+  historical_e0_and_e0_r1_records_rewritten: false
+boundary:
+  - "No application source, test, dependency, Stripe SDK, environment variable, Webhook route, DB, migration, Supabase, provider, sandbox, staging, production, or deployment action is authorized or performed."
+  - "Ready, merge, migration application, provider diagnosis, source correction, and production release remain separate gates."
+decision: RECORD_PUSHED_DECISION_AND_REPLACE_STALE_PR_METADATA
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_CORRECTION_DIFF_AND_PR_METADATA, THEN REQUEST_SEPARATE NORMAL_PUSH_AUTHORIZATION IF NEEDED. READY_AND_MERGE_REMAIN_SEPARATE."
+```

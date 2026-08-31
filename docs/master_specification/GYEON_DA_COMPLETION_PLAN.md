@@ -576,7 +576,7 @@ The result document was excluded from harness implementation and was created lat
 
 ### GYEON-ORDER-V3-C5-E0 — Stripe provider selection governance
 
-**Status:** OWNER RATIFIED / STRIPE RESPONSE RECEIVED / UPFRONT FULL-PAYMENT CONTRACT DOCUMENTATION CANDIDATE UNCOMMITTED / PROVIDER NOT CONNECTED.
+**Status:** OWNER RATIFIED / STRIPE RESPONSE RECEIVED / UPFRONT FULL-PAYMENT DECISION COMMIT PUSHED / PR #49 OPEN / PROVIDER NOT CONNECTED.
 
 **Decision:** Stripe is the canonical card PSP for GYEON dealer ordering. The intended product surface is Stripe Payments with the PaymentIntents API. The owner already has a Stripe account, but no account identifier, API key, Webhook secret, or other secret may be written into specifications or source control. The owner subsequently ratified one upfront full-payment contract for all card brands, including JCB.
 
@@ -593,9 +593,9 @@ The result document was excluded from harness implementation and was created lat
 3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 
-**Excluded:** Application source, tests, dependencies, Stripe SDK, environment variables, Webhook routes, DB or migration changes, Supabase, provider contact or mutation, sandbox, staging, production, stage, commit, push, PR mutation, Ready, merge, and deployment.
+**Delivery result:** The exact four-document decision was committed as `b6c7d4a27cd2d307ab56e81dd73a0d810934cb94` with tree `8fc1d7c1f967f18934d21ca15e0fe02b7475e899`, normally pushed to `docs/gyeon-order-stripe-provider-decision`, and opened as PR #49. The PR remains open and unmerged. No provider, database, migration, Supabase, sandbox, staging, production, or deployment action was performed.
 
-**Next gate:** Independently verify this exact four-document decision delta, then request separate stage/local-commit and normal-push authorization. Provider-specific diagnosis must then map the smallest forward-only correction from authorization evidence to full-payment/refund evidence and pin the exact Stripe API/Webhook/sandbox contract. No provider connection, source correction, database work, PR mutation, merge, or deployment is authorized by this documentation gate, and it does not interrupt the currently active Estimate Wizard phase.
+**Next gate:** Correct PR #49 metadata and append the delivery result without rewriting the historical E0/E0-R1 records, then independently re-audit the exact documentation delta. Ready/merge remain separate. Provider-specific diagnosis must later map the smallest forward-only correction from authorization evidence to full-payment/refund evidence and pin the exact Stripe API/Webhook/sandbox contract. No provider connection, source correction, database work, migration application, merge, or deployment is authorized by this documentation gate, and it does not interrupt the currently active Estimate Wizard phase.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
