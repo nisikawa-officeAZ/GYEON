@@ -3881,3 +3881,45 @@ prohibited_actions_confirmed:
 decision: AUTHOR_THREE_PATH_R3_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_LOCAL_COMMIT_AUTHORIZATION"
 ```
+
+## GDA-2A-OCR-PDF-MODEL-FALLBACK-R3-G2 — Self-referential HEAD pin correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_GOVERNANCE_HEAD_BINDING_CORRECTION
+status: GOVERNANCE_CORRECTION_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-01
+append_only: true
+trigger: "After the owner-authorized normal push of R3-G1, MacBook Codex identified that fixing the checked-out HEAD inside the directive to its own parent commit is structurally self-referential and would force BLOCKED_CANDIDATE_DRIFT after every valid governance commit."
+r3_g1_delivery:
+  commit: 3e3fad7f6d5803985e6286f5d22a1d2e9bee7f1d
+  tree: 5406d5eccd1aec5a49dfd84e5d8bd0595d603cb9
+  parent: 3d75d3156b3c11f5968a8126ca7b620b30f32882
+  push: NORMAL_NON_FORCE
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/48
+  pull_request_state_after_push: OPEN_DRAFT
+  remote_head_after_push: 3e3fad7f6d5803985e6286f5d22a1d2e9bee7f1d
+  changed_files_after_push: 24
+rejected_contract: "The V1 directive treated the source baseline commit as the checked-out fixed HEAD even though the directive existed only in a descendant governance commit."
+corrected_contract:
+  directive_id: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_V2
+  result_id: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_RESULT_V2
+  fixed_source_baseline_commit: 3d75d3156b3c11f5968a8126ca7b620b30f32882
+  fixed_source_baseline_tree: 90011cf90b07e7488963e393a23b4a69da9f690e
+  dispatch_binding: "A later owner-approved dispatch supplies exact DISPATCH_HEAD and DISPATCH_TREE outside the directive."
+  ancestry_gate: "The source baseline must be an ancestor of DISPATCH_HEAD."
+  delta_gate: "Only the exact three governance paths may differ between the source baseline and DISPATCH_HEAD."
+  failure: BLOCKED_CANDIDATE_DRIFT
+exact_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS.md
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_or_test_edit: false
+  executable_test: false
+  stage_commit_push: false
+  pr_comment_or_metadata: false
+  database_provider_preview_production: false
+decision: AUTHOR_R3_G2_THREE_PATH_GOVERNANCE_CORRECTION_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```

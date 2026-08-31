@@ -2,9 +2,9 @@
 
 ## 1. Status and authority
 
-- Directive ID: `GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_V1`
-- Result ID: `GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_RESULT_V1`
-- Status: governance candidate; not executable until this file is committed, normally pushed, and a later owner-approved corrected dispatch is issued.
+- Directive ID: `GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_V2`
+- Result ID: `GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_RESULT_V2`
+- Status: R3-G2 governance correction candidate; not executable until this correction is committed, normally pushed, and a later owner-approved dispatch fixes the exact dispatch HEAD and tree outside this file.
 - Product authority: Office AZ / owner.
 - Specification and independent acceptance: MacBook Codex.
 - Diagnosis agent after a later separate gate: Anthropic Claude Code.
@@ -12,16 +12,22 @@
 
 PR #48 comment `5478848763` preceded this Git governance and named the wrong protected path. Its `eyes` reaction is not a result. Do not treat that invocation, or any later unbound response to it, as implementation authority. A corrected dispatch must reference the committed version of this directive.
 
-## 2. Fixed candidate
+## 2. Fixed source baseline and dispatch binding
 
 - Repository: `nisikawa-officeAZ/GYEON`
 - PR: `#48`, required `OPEN/Draft`
 - Base: `main` at `501ede8c06b0c397a47996f9dfe0833f8779376c`
 - Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
-- HEAD: `3d75d3156b3c11f5968a8126ca7b620b30f32882`
-- Tree: `90011cf90b07e7488963e393a23b4a69da9f690e`
+- Source baseline commit: `3d75d3156b3c11f5968a8126ca7b620b30f32882`
+- Source baseline tree: `90011cf90b07e7488963e393a23b4a69da9f690e`
 
-If any identity differs, stop with `BLOCKED_CANDIDATE_DRIFT`. Do not guess, fetch a replacement branch, or broaden scope.
+The later owner-approved dispatch must state exact `DISPATCH_HEAD` and `DISPATCH_TREE` values. The checked-out HEAD and tree must equal those values, the source baseline commit must be an ancestor of `DISPATCH_HEAD`, and every path changed from the source baseline through `DISPATCH_HEAD` must be one of these governance paths only:
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS.md`
+
+This directive intentionally does not contain its own commit hash. If the dispatch omits the exact HEAD/tree, any identity differs, ancestry fails, or another path changed after the source baseline, stop with `BLOCKED_CANDIDATE_DRIFT`. Do not guess, fetch a replacement branch, or broaden scope.
 
 ## 3. Required first reads
 
@@ -93,9 +99,9 @@ If the fallback requires a new dependency, provider, API, dataset, secret, envir
 
 Return one report to MacBook Codex with:
 
-1. `RESULT_ID`: `GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_RESULT_V1`
+1. `RESULT_ID`: `GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_RESULT_V2`
 2. `VERDICT`: `IMPLEMENTATION_READY`, `OWNER_DECISION_REQUIRED_PDF_TEXT_EXTRACTION_AUTHORITY`, `CHANGES_REQUIRED`, `BLOCKED_CANDIDATE_DRIFT`, or `BLOCKED_READ_SCOPE`
-3. Exact PR/branch/HEAD/tree proof
+3. Exact PR/branch/dispatch HEAD/tree, source-baseline ancestry, and governance-only delta proof
 4. Proven call chain with file and line evidence
 5. Root cause
 6. Existing dependency/fallback finding

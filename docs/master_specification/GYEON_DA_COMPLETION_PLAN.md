@@ -348,20 +348,22 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 ### GDA-2A-OCR-PDF-MODEL-FALLBACK-R3 — Deterministic digital-PDF 型式 diagnosis governance
 
-**Status:** GOVERNANCE CORRECTION CANDIDATE UNSTAGED/UNCOMMITTED. No R3 diagnosis result or implementation authority is accepted.
+**Status:** R3-G1 GOVERNANCE PUSHED AT `3e3fad7f6d5803985e6286f5d22a1d2e9bee7f1d`, BUT ITS SELF-REFERENTIAL HEAD PIN IS REJECTED / R3-G2 GOVERNANCE CORRECTION CANDIDATE UNSTAGED/UNCOMMITTED. No R3 diagnosis result or implementation authority is accepted.
 
 **Objective:** Diagnose the smallest server-only, zero-per-request-fee fallback that reads the explicit printed `型式` value from a digital PDF text layer when the AI result omits `model`, without inferring vehicle name or grade and without exposing customer data.
 
-**Fixed candidate:**
+**Fixed source baseline:**
 
 - Repository: `nisikawa-officeAZ/GYEON`
 - Draft PR: `#48`
 - Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
-- HEAD: `3d75d3156b3c11f5968a8126ca7b620b30f32882`
-- Tree: `90011cf90b07e7488963e393a23b4a69da9f690e`
+- Source baseline commit: `3d75d3156b3c11f5968a8126ca7b620b30f32882`
+- Source baseline tree: `90011cf90b07e7488963e393a23b4a69da9f690e`
 - Base: `main` at `501ede8c06b0c397a47996f9dfe0833f8779376c`
 
-**Governance correction:** PR #48 comment `5478848763` requested R3 diagnosis before R3 was recorded in this plan or the phase ledger and named `src/components/dev/ScreensPreview.tsx` instead of the actual protected path `src/components/estimates/wizard/screens/ScreensPreview.tsx`. Claude only added the `eyes` reaction; no valid result was posted. That invocation is not acceptance evidence and must not be reused as implementation authority. A future dispatch must reference the committed form of `CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS.md` and the correct protected path.
+**Governance correction:** PR #48 comment `5478848763` requested R3 diagnosis before R3 was recorded in this plan or the phase ledger and named `src/components/dev/ScreensPreview.tsx` instead of the actual protected path `src/components/estimates/wizard/screens/ScreensPreview.tsx`. Claude only added the `eyes` reaction; no valid result was posted. That invocation is not acceptance evidence and must not be reused as implementation authority. R3-G1 then committed and pushed the three governance paths, but incorrectly required the checked-out HEAD to equal the source baseline commit that necessarily preceded the governance commit. That self-reference would force `BLOCKED_CANDIDATE_DRIFT` after every valid governance commit and is rejected. R3-G2 fixes the source baseline separately and requires a later owner-approved dispatch to bind the exact dispatch HEAD/tree externally.
+
+**Dispatch binding:** The corrected directive must not contain its own commit hash. A later owner-approved dispatch must state the exact `DISPATCH_HEAD` and `DISPATCH_TREE`; Claude must prove that the source baseline is its ancestor and that only the same three governance paths changed between the source baseline and dispatch HEAD. Missing binding, ancestry failure, or any other changed path is fail-closed.
 
 **Frozen diagnosis contract:**
 
@@ -376,11 +378,11 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
-3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS.md` (new)
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS.md`
 
 **Current boundary:** This gate authors only the three governance paths. It does not transmit private files, invoke Claude, edit source/tests/dependencies/configuration, run executable tests, access DB/Supabase/provider/browser/Preview/production, stage, commit, push, mutate PR #48, mark Ready, merge, or deploy.
 
-**Exit:** MacBook Codex verifies the exact three-path governance diff, protected metadata, and `git diff --check`, then requests a separate exact-path stage/local-commit authorization. Push, corrected Claude dispatch, diagnosis execution, implementation, Preview verification, Ready, merge, and deployment remain later gates.
+**Exit:** MacBook Codex verifies the exact three-path R3-G2 governance diff, protected metadata, and `git diff --check`, then requests a separate exact-path stage/local-commit authorization. Push, corrected V2 Claude dispatch with externally fixed HEAD/tree, diagnosis execution, implementation, Preview verification, Ready, merge, and deployment remain later gates.
 
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
