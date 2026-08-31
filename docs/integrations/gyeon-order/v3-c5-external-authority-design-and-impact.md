@@ -3,7 +3,7 @@
 | 項目 | 内容 |
 |---|---|
 | 文書ID | `GYEON-ORDER-V3-C5-EXTERNAL-AUTHORITY-DESIGN-R1` |
-| 状態 | `C5-A_COMMITTED_LOCAL_NOT_PUSHED / C5-B_GOVERNANCE_CANDIDATE_UNCOMMITTED` |
+| 状態 | `C5-A_COMMITTED_LOCAL_NOT_PUSHED / C5-B_GOVERNANCE_CANDIDATE_UNCOMMITTED / STRIPE_PROVIDER_OWNER_RATIFIED_DOCUMENTATION_CANDIDATE_UNCOMMITTED` |
 | 作成日 | 2026-08-27 |
 | 基準commit | `d1f8ef9e94c3a7ea4ed5003489c9098b6327918a` |
 | 前提 | C4 DB foundation pass、release blocked by external authority |
@@ -41,7 +41,7 @@ C5以降は、外部APIをPostgreSQLトランザクション内から直接呼�
 |---|---|---|
 | 初回資格 | `rules_snapshot.qualification_verified` が文字列 `true` かだけを確認し、未接続時は `QUALIFICATION_AUTHORITY_NOT_CONFIGURED` で停止 | クライアント由来になり得るため正本として不可。停止動作は維持する |
 | 注文編集 | `SERVER_REPRICE_EDIT_ADAPTER_NOT_CONFIGURED` で常に停止 | 正しいfail-closed。二段階再価格・再与信が必要 |
-| カード | server verified evidenceの器はあるが、PSP adapter／失効／消費契約がない | provider契約後に別ゲートで接続 |
+| カード | 採用PSPはStripeに確定したが、Stripe adapter／API version／失効／消費／Webhook契約がない | Stripe公式契約確認後に別ゲートで接続 |
 | 銀行振込 | `payment_pending` までは表現できるが、PayPay銀行webhook・照合・重複防止がない | provider公式契約待ち。推測実装禁止 |
 | 倉庫キュー | 現行SQLは倉庫受付RPCの中で初めてtaskを作る | 正式仕様と逆。支払解放時に `unaccepted` taskを先に作る |
 | 在庫 | Office AZ読み取り投影はあるが、注文引当／解放の正本APIがない | 数量表示だけで販売確定してはならない |
@@ -61,7 +61,7 @@ C5以降は、外部APIをPostgreSQLトランザクション内から直接呼�
 | 商品・ランク別価格 | Office AZ商品管理 | version付きoffer投影と注文時snapshot | 商品ID・数量のみ |
 | 正式在庫・引当・棚卸待ち・発注可能数 | Office AZ inventory | version付き供給投影、予約証跡ID | 不可 |
 | 初回／upgrade資格 | DealerOS server business authority | 対象mode、rule version、発送・返品fact、判定snapshot | 不可 |
-| カード与信 | 採用PSP | provider event、amount、currency、order version、fingerprintを結ぶ証跡 | token化されたprovider入力だけ |
+| カード与信 | Stripe | provider event、amount、currency、order version、fingerprintを結ぶ証跡 | Stripeがtoken化したprovider入力だけ |
 | 銀行入金 | PayPay銀行＋DealerOS照合worker | immutable webhook inbox、照合結果、注文への一意割当 | 不可 |
 | 代引 | DealerOS注文契約＋倉庫発送実績 | 初回代引回収対象額snapshot、後送分再請求禁止fact | 支払方式の選択のみ |
 | 掛け売り | スーパーアドミン設定＋月次請求authority | 有効なterms version、発送済み数量、請求書snapshot | 不可 |
@@ -114,6 +114,16 @@ DBのfinalize RPCは次をすべて満たす証跡だけを採用する。
 `rules_snapshot ->> 'qualification_verified'` のboolean文字列は廃止候補とし、`qualification_authority_id / rule_version / evaluated_at / input_fingerprint / provisional_decision` の参照へ置き換える。
 
 ## 6. カード決済と注文編集
+
+### 6.0 Stripe provider決定と未接続境界
+
+- オーナーは採用カードPSPをStripeに確定した。接続対象はStripe PaymentsのPaymentIntents APIを正式候補とする。
+- Stripe口座は取得済みだが、口座ID、APIキー、Webhook secretその他の秘密情報は本リポジトリへ記録しない。
+- この決定はprovider選定だけであり、Stripe SDK、API呼び出し、PaymentIntent作成、与信、売上確定、取消、返金、Webhook route、環境変数、DB変更、sandbox、staging、production接続を許可しない。
+- 正確なAPI version、IC+契約、複数回売上確定機能の有効化、利用可能ブランド、与信期限、再送、event finality、照合方法は `NOT_CONFIGURED` とする。
+- バックオーダー分割発送の業務契約は「各発送の確定済み税込支払額を発送ごとに売上確定し、売上確定回数を正本の発送回数と一致させ、累計額を当初承認額以下に保つ」とする。
+- 公開Stripe文書では複数回売上確定はIC+料金体系の機能で有効化確認が必要であり、日本のJCBは対象地域外である。したがって公式回答まではカード決済と `ship_available_first` の組み合わせをfail-closedで停止する。
+- 与信期限切れ、ブランド非対応、複数回売上確定不可時の代替契約は未確定であり、支払方法変更、一括売上確定、再与信、発送方針変更を自動決定しない。
 
 ### 6.1 owner最終発注
 
@@ -235,7 +245,7 @@ Office AZを唯一の在庫所有者として維持する。DealerOSには読み
 
 ### C5-E: provider connection
 
-- 採用PSPの公式contract
+- Stripeの公式contract、正確なAPI version、IC+／複数回売上確定の有効化、利用可能ブランド、与信期限
 - PayPay銀行の公式contract
 - secret management、signature、replay、timeout、reconciliation
 - provider sandbox E2E
@@ -268,8 +278,8 @@ C5-Bのsource-only候補は次の3パスに限定する。
 
 次はユーザー決定またはprovider公式契約が得られるまで推測実装しない。
 
-1. 採用するカードPSPと、与信・売上確定・取消・返金・webhook契約。
-2. カードでBO分割発送する場合の売上確定額と回数。
+1. Stripe Payments / PaymentIntents APIの正確なversionと、与信・売上確定・取消・返金・webhookの公式契約。
+2. BO分割発送で必要な複数回売上確定のStripe口座上の有効化、日本で利用するカードブランド対応、与信期限切れ時の代替契約。売上確定額と回数の業務契約自体は確定済み。
 3. PayPay銀行APIの署名、event ID、再送、照会、sandbox契約。
 4. Office AZ在庫authorityが同一DBか別systemか、および予約APIの所有者。
 5. 通知先メールの正本、件数、追加権限。

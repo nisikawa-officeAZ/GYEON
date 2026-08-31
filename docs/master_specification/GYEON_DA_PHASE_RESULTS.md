@@ -3292,3 +3292,45 @@ environment_and_release_boundary:
 decision: ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK, POST_THE_AUTHORIZED_PR_RESULT_COMMENT, THEN REQUEST_SEPARATE EXACT-PATH STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. READY, MERGE, MIGRATION_APPLICATION, PREVIEW, AND DEPLOYMENT REMAIN SEPARATE."
 ```
+
+## GYEON-ORDER-V3-C5-E0 — Stripe provider selection governance
+
+```yaml
+phase: GYEON_ORDER_V3_C5_E0_STRIPE_PROVIDER_SELECTION_GOVERNANCE
+status: OWNER_RATIFIED_DOCUMENTATION_CANDIDATE_UNCOMMITTED
+date: 2026-08-31
+append_only: true
+authorization: "The owner confirmed that an existing Stripe account will be used and explicitly ratified recording Stripe as the canonical card PSP in the Book and Studio specifications. This gate authorizes four documentation changes and one Studio decision comment only; provider implementation or connection and Git delivery remain separate."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  base_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  branch: docs/gyeon-order-stripe-provider-decision
+owner_decision:
+  canonical_card_psp: Stripe
+  intended_product: Stripe Payments / PaymentIntents API
+  stripe_account_exists: true
+  account_identifiers_or_secrets_recorded: false
+  provider_connection_status: NOT_CONFIGURED
+  exact_api_version: NOT_CONFIGURED
+  multicapture_account_enablement: PENDING_STRIPE_CONFIRMATION
+  japan_jcb_multicapture: PUBLIC_STRIPE_DOCUMENTATION_SHOWS_UNSUPPORTED_REGION
+business_contract:
+  split_capture_amount: "Exact immutable tax-inclusive payable JPY amount shipped in each authoritative shipment"
+  capture_count: "Exactly the authoritative shipment count"
+  cumulative_limit: "Must not exceed the whole-order authorization"
+fail_closed:
+  - "Card payment plus ship_available_first remains blocked until Stripe confirms account enablement, Japan brand support, authorization validity, and multicapture contract."
+  - "No automatic payment-method change, full early capture, reauthorization, or shipping-policy substitution may be inferred."
+allowlist:
+  - docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md
+  - docs/integrations/gyeon-order/v3-c5-external-authority-design-and-impact.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundary:
+  - "No application source, test, dependency, SDK, environment variable, Webhook route, DB, migration, Supabase, provider mutation/contact, sandbox, staging, or production action is authorized or performed."
+  - "No stage, commit, push, PR mutation, Ready, merge, or deployment is authorized or performed."
+  - "The currently active Estimate Wizard phase is not interrupted or superseded."
+decision: RECORD_STRIPE_AS_CANONICAL_PSP_AND_KEEP_PROVIDER_DEPENDENT_SPLIT_CAPTURE_BLOCKED
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK, POST_ONE_STUDIO_DECISION_COMMENT, THEN STOP. OBTAIN_AN_OFFICIAL_STRIPE_RESPONSE_BEFORE_ANY_PROVIDER_SPECIFIC_IMPLEMENTATION."
+```

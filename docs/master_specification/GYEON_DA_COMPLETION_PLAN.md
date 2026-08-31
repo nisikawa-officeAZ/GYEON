@@ -574,6 +574,27 @@ The result document was excluded from harness implementation and was created lat
 
 **Owner pause — 2026-08-29:** The owner explicitly paused C5-D-R4 before harness implementation so the blocking Estimate Wizard Preview pricing failure can be recovered first. The existing C5-D source, governance candidate, hashes, and evidence remain preserved. No C5-D harness path, database, provider, environment, PR, Ready, merge, or deployment action is authorized while the pause is active.
 
+### GYEON-ORDER-V3-C5-E0 — Stripe provider selection governance
+
+**Status:** OWNER RATIFIED / DOCUMENTATION CANDIDATE UNCOMMITTED / PROVIDER NOT CONNECTED.
+
+**Decision:** Stripe is the canonical card PSP for GYEON dealer ordering. The intended product surface is Stripe Payments with the PaymentIntents API. The owner already has a Stripe account, but no account identifier, API key, Webhook secret, or other secret may be written into specifications or source control.
+
+**Business contract for back-order split shipment:** Each shipment captures only the immutable tax-inclusive payable JPY amount of the items actually shipped in that shipment. Capture count equals the authoritative shipment count, and cumulative captures never exceed the whole-order authorization.
+
+**Mandatory fail-closed boundary:** Provider selection is not provider readiness. Exact API version, IC+ eligibility, multicapture enablement, supported Japan card brands, authorization validity, retry/finality, and Webhook verification remain `NOT_CONFIGURED`. Public Stripe documentation shows Japan JCB outside the supported regions for multicapture. Until Stripe confirms the account and brand contract in writing, card payment combined with `ship_available_first` remains blocked. No automatic payment-method change, full early capture, reauthorization, or shipping-policy substitution may be invented.
+
+**Documentation-only allowlist:**
+
+1. `docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md`
+2. `docs/integrations/gyeon-order/v3-c5-external-authority-design-and-impact.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Excluded:** Application source, tests, dependencies, Stripe SDK, environment variables, Webhook routes, DB or migration changes, Supabase, provider contact or mutation, sandbox, staging, production, stage, commit, push, PR mutation, Ready, merge, and deployment.
+
+**Next gate:** Obtain an official Stripe response for the exact account and intended Japan brands, record a versioned provider contract, and only then seek separate authorization for C5-E provider-specific diagnosis and implementation. This governance record does not interrupt or supersede the currently active Estimate Wizard phase.
+
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
 **Objective:** Correct the owner-rejected estimate/pricing settings navigation before deeper settings-page redesign. The `見積・価格 / ESTIMATES & PRICING` group must expose exactly four real cards in the approved order, remove misleading state badges from those four navigation cards, and replace unrelated generic imagery with dedicated semantic line icons while preserving the accepted TOP visual language and existing business behavior.
