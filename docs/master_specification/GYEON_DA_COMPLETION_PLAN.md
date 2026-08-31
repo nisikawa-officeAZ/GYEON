@@ -317,7 +317,7 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 ### GDA-2A-OCR-PRINTED-MODEL-FIELD-R2 — Printed 型式 extraction and Wizard code normalization
 
-**Status:** SOURCE CANDIDATE ACCEPTED UNSTAGED/UNCOMMITTED. Prompt/schema repair and focused source tests are accepted at E2 source level; authenticated Preview OCR verification, Git delivery, Ready, merge, and deployment remain separate gates.
+**Status:** SOURCE DELIVERED ON DRAFT PR #48 / AUTHENTICATED PREVIEW REJECTED THE PROMPT-ONLY FIX / R3 GOVERNANCE CORRECTION CANDIDATE UNSTAGED. The R2 source and tests remain accepted at E2, but live provider behavior did not populate the printed `型式`; R2 is not E3 and is not production-accepted.
 
 **Observed evidence:** The owner supplied one visually clear vehicle-registration PDF whose embedded text layer contains distinct printed fields `車名=ホンダ`, `型式=６ＢＡ－ＪＧ３`, `型式指定番号=19777`, and `類別区分番号=0007`. Preview OCR populated maker and other vehicle fields but left the Wizard 型式 field blank. The PDF itself and all personal data were excluded from Claude transmission and repository fixtures.
 
@@ -342,7 +342,45 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Accepted verification:** MacBook Codex independently inspected the complete five-path diff and reran the two focused suites using the existing identical-lockfile dependency tree through `NODE_PATH`; `28/28 PASS` and `git diff --check PASS`. No dependency was installed, copied, linked, or changed. The index stayed clean, only the five allowlisted source/test paths were dirty, and all four protected blobs remained unchanged.
 
-**Remaining boundary:** Prompt repair improves the live AI extraction contract but cannot prove provider behavior deterministically. Authenticated Preview verification with the owner-supplied certificate is mandatory after separately authorized Git delivery and deployment. Deterministic embedded-PDF-text extraction would require a new dependency/authority decision and is not part of R2. The parent postal/address phase remains incomplete and unchanged.
+**Git delivery and Preview evidence:** The complete accepted OCR candidate was committed and normally pushed to Draft PR #48 in two commits: `a9ef0b8dd88e19c6154090fcce59171ebb1e198a` and `3d75d3156b3c11f5968a8126ca7b620b30f32882`. Current HEAD/tree are `3d75d3156b3c11f5968a8126ca7b620b30f32882` / `90011cf90b07e7488963e393a23b4a69da9f690e`. The Vercel Preview deployment completed, but two owner-run vehicle-registration PDF uploads produced maker and chassis evidence while leaving `model` empty. The supplied digital PDF has a distinct embedded text-layer value `型式 ６ＢＡ－ＪＧ３`; therefore the prompt-only repair is insufficient in live behavior.
+
+**Remaining boundary:** R3 must determine whether a server-only, zero-per-request-fee deterministic text-layer fallback can be added for digital PDFs without making inference or a vehicle master authoritative. Images and scanned PDFs remain on the current AI path. Grade and vehicle name remain manual under the accepted rules. Postal/address completion remains a separate unresolved parent-phase item.
+
+### GDA-2A-OCR-PDF-MODEL-FALLBACK-R3 — Deterministic digital-PDF 型式 diagnosis governance
+
+**Status:** GOVERNANCE CORRECTION CANDIDATE UNSTAGED/UNCOMMITTED. No R3 diagnosis result or implementation authority is accepted.
+
+**Objective:** Diagnose the smallest server-only, zero-per-request-fee fallback that reads the explicit printed `型式` value from a digital PDF text layer when the AI result omits `model`, without inferring vehicle name or grade and without exposing customer data.
+
+**Fixed candidate:**
+
+- Repository: `nisikawa-officeAZ/GYEON`
+- Draft PR: `#48`
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- HEAD: `3d75d3156b3c11f5968a8126ca7b620b30f32882`
+- Tree: `90011cf90b07e7488963e393a23b4a69da9f690e`
+- Base: `main` at `501ede8c06b0c397a47996f9dfe0833f8779376c`
+
+**Governance correction:** PR #48 comment `5478848763` requested R3 diagnosis before R3 was recorded in this plan or the phase ledger and named `src/components/dev/ScreensPreview.tsx` instead of the actual protected path `src/components/estimates/wizard/screens/ScreensPreview.tsx`. Claude only added the `eyes` reaction; no valid result was posted. That invocation is not acceptance evidence and must not be reused as implementation authority. A future dispatch must reference the committed form of `CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS.md` and the correct protected path.
+
+**Frozen diagnosis contract:**
+
+- Required precedence proposal: explicit digital-PDF text-layer `型式` > nonblank AI `model` > omitted/manual. The diagnosis must confirm or correct this proposal.
+- `型式`, `原動機の型式`, `型式指定番号`, and `類別区分番号` remain distinct. No substitution or inference is permitted.
+- Empty, ambiguous, malformed, or unavailable extraction never overwrites operator input.
+- The real PDF and all personal data are excluded from Claude transmission and repository fixtures.
+- Images and scanned PDFs remain on the current AI path. Grade remains manual. Vehicle name remains manual unless the certificate itself supplies a distinct nonblank name.
+- No paid provider, per-request-fee service, vehicle master, AI vehicle inference, database, migration, secret, or production connection is authorized.
+
+**R3 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Current boundary:** This gate authors only the three governance paths. It does not transmit private files, invoke Claude, edit source/tests/dependencies/configuration, run executable tests, access DB/Supabase/provider/browser/Preview/production, stage, commit, push, mutate PR #48, mark Ready, merge, or deploy.
+
+**Exit:** MacBook Codex verifies the exact three-path governance diff, protected metadata, and `git diff --check`, then requests a separate exact-path stage/local-commit authorization. Push, corrected Claude dispatch, diagnosis execution, implementation, Preview verification, Ready, merge, and deployment remain later gates.
 
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 

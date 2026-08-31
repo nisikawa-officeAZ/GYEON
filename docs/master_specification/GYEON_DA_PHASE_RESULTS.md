@@ -3795,3 +3795,89 @@ decision: ACCEPT_R2_SOURCE_CANDIDATE_E2_SOURCE_UNSTAGED_UNCOMMITTED
 remaining_boundary: "Authenticated Preview verification with the owner-supplied certificate is mandatory after separately authorized Git delivery. Deterministic embedded-PDF-text extraction and postal/address completion remain separate unresolved phases."
 next: "VERIFY_THE_EXACT_SEVEN_PATH_COMBINED_DIFF_AND_DIFF_CHECK, THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION. PUSH_REMAINS_SEPARATE."
 ```
+
+## GDA-2A-OCR-PRINTED-MODEL-FIELD-R2-D1 — Git delivery and Preview rejection
+
+```yaml
+phase: GDA_VEHICLE_REGISTRATION_OCR_PRINTED_MODEL_FIELD_R2_DELIVERY_AND_PREVIEW
+status: SOURCE_COMMITTED_PUSHED_PREVIEW_PROVIDER_BEHAVIOR_REJECTED_R3_REQUIRED
+date: 2026-09-01
+append_only: true
+repository:
+  repo: nisikawa-officeAZ/GYEON
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/48
+  pull_request_state: OPEN_DRAFT
+  base_main: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  first_delivery_commit: a9ef0b8dd88e19c6154090fcce59171ebb1e198a
+  current_head: 3d75d3156b3c11f5968a8126ca7b620b30f32882
+  current_tree: 90011cf90b07e7488963e393a23b4a69da9f690e
+  delivery_mode: NORMAL_PUSH_NO_FORCE
+accepted_source_evidence:
+  focused_tests: "28/28 PASS for R2; earlier combined OCR candidate 204/204 PASS"
+  diff_check: PASS
+  protected_paths_unchanged: true
+preview_evidence:
+  deployment: READY
+  owner_upload_attempts: 2
+  sanitized_observation: "Maker and chassis evidence were nonblank, but AI model was empty and the Wizard 型式 stayed blank. The digital PDF text layer contains a distinct printed 型式 value ６ＢＡ－ＪＧ３."
+  personal_data_recorded_or_transmitted: false
+  verdict: PROMPT_ONLY_REPAIR_NOT_E3
+remaining:
+  - "Diagnose deterministic digital-PDF text-layer fallback without inference."
+  - "Postal-code/address bidirectional completion remains unresolved and separate."
+  - "Ready, merge, production deployment, and phase closure remain unauthorized."
+decision: ACCEPT_R2_E2_SOURCE_DELIVERY_REJECT_LIVE_PROVIDER_COMPLETION_CLAIM
+next: "GOVERN_R3_READ_ONLY_DIAGNOSIS_BEFORE_ANY_FALLBACK_IMPLEMENTATION"
+```
+
+## GDA-2A-OCR-PDF-MODEL-FALLBACK-R3-G1 — Read-only diagnosis governance correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_CLAUDE_RESULT_NOT_ACCEPTED
+date: 2026-09-01
+append_only: true
+authorization: "The owner approved returning MacBook Codex to the DealerOS critical path and authoring exactly three R3 governance files as an unstaged/uncommitted candidate. External transmission, a new Claude invocation, source implementation, executable tests, Git delivery, Preview/production action, Ready, merge, and deployment are not authorized by this gate."
+fixed_candidate:
+  repo: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  required_state: OPEN_DRAFT
+  base_main: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  head: 3d75d3156b3c11f5968a8126ca7b620b30f32882
+  tree: 90011cf90b07e7488963e393a23b4a69da9f690e
+prior_pr_instruction:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/48#issuecomment-5478848763
+  claude_reaction: eyes_only
+  result_posted: false
+  governance_defect: "R3 was absent from the Git plan/ledger and the comment named src/components/dev/ScreensPreview.tsx instead of the protected src/components/estimates/wizard/screens/ScreensPreview.tsx."
+  disposition: NOT_ACCEPTANCE_EVIDENCE_DO_NOT_USE_FOR_IMPLEMENTATION
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS.md
+diagnosis_contract:
+  objective: "Determine the smallest server-only zero-per-request-fee digital-PDF text-layer 型式 fallback and exact future implementation/test allowlist."
+  proposed_precedence: "explicit PDF text-layer 型式 > nonblank AI model > omitted/manual"
+  distinct_fields:
+    - 型式
+    - 原動機の型式
+    - 型式指定番号
+    - 類別区分番号
+  real_pdf_or_personal_data_transmission: FORBIDDEN
+  implementation_authorized: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_or_test_edit: false
+  executable_test: false
+  database_provider_preview_production: false
+  stage_commit_push_pr_ready_merge_deploy: false
+decision: AUTHOR_THREE_PATH_R3_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_LOCAL_COMMIT_AUTHORIZATION"
+```
