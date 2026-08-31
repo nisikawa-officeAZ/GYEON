@@ -434,6 +434,44 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Exit:** MacBook Codex verifies the exact three-path R4 governance diff, protected metadata, and `git diff --check`, then requests separate exact-path stage/local-commit authorization. Push and one bounded Claude implementation invocation remain later owner gates.
 
+### GDA-2A-OCR-POSTAL-MASTER-R1 — Japan Post internal DB authority and diagnosis governance
+
+**Status:** OWNER-RATIFIED DATA-AUTHORITY / GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. This status authorizes only the three governance-document changes listed below. It does not authorize source or migration creation, CSV download/import, database access, executable verification, Claude transmission, Git delivery, PR mutation, Ready, merge, or deployment.
+
+**Owner decision:** Use the official Japan Post nationwide UTF-8 postal-code CSV as the postal/address source of truth. Load its normalized records into a dedicated internal database master; never store the master inside customer records and never send an OCR-derived customer address to a third-party reverse-lookup service at request time. Both postal-code-to-address assistance and OCR-address-to-postal assistance must resolve against the same versioned internal master.
+
+**Fixed behavior contract:**
+
+- Resolution is deterministic and fail-closed. AI inference, fuzzy guessing, general web search, and provider fallback are prohibited.
+- Forward lookup accepts a normalized valid seven-digit postal code and may return only authoritative master data.
+- Reverse lookup normalizes Unicode width, supported hyphen variants, and whitespace, then uses an exact governed address-prefix rule. Only one unambiguous postal code may be auto-filled. Zero matches, multiple postal codes, malformed input, unavailable master, timeout, or error leaves the postal field blank or unchanged for manual entry.
+- Existing nonblank operator-entered postal/address values are never overwritten automatically. OCR and lookup update Wizard draft state only; explicit Estimate Wizard save remains the sole persistence boundary.
+- The master is updated by a controlled administrator/import operation with source date, import batch/version, checksum, and rollback evidence. Runtime requests never download Japan Post data.
+- The master must remain server-owned and outside direct browser access. The diagnosis must choose and prove the least-privilege private-schema or equivalently fail-closed design; service-role credentials must never reach client code.
+- Customer/vehicle identity, OCR single-scan behavior, vehicle 型式, grade-manual policy, pricing, discounts, PPF/coating, routes, and exactly seven size keys `SS/S/M/ML/L/LL/XL` remain unchanged.
+
+**Source and coordination baseline:**
+
+- Repository: `nisikawa-officeAZ/GYEON`
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Source baseline commit/tree: `ee243fa982cd9520ff0607ea2caeb78797fdb6de` / `9f8f5b1be1724e570826289e872efae3ca21c400`
+- Draft PR: `#48`, `OPEN/Draft`, base `main` at `501ede8c06b0c397a47996f9dfe0833f8779376c`
+- A later dispatch must bind its own exact `DISPATCH_HEAD` and `DISPATCH_TREE`; the source baseline must be its ancestor, and only the exact three governance paths may differ between them.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Required read-only diagnosis output:** Claude must return the exact current forward-lookup wiring gap; server/auth call seam; recommended schema and privileges; master columns, keys, constraints, and indexes; deterministic forward/reverse normalization and ambiguity contract; controlled bulk-import/update and rollback design; UI loading/no-match/ambiguity/error behavior; focused source, migration, pgTAP/unit/integration test plan; and the smallest literal future implementation allowlist. Migration apply, data import, shared environment access, and runtime verification must remain later independent gates.
+
+**Protected paths:** `src/components/estimates/wizard/screens/ScreensPreview.tsx`, the protected LINE migration, the protected monthly-invoice migration, and the monthly-invoice boundary test remain pathname/mode/blob/status metadata only and may never be opened, read, diffed, copied, staged, or modified by this phase.
+
+**Responsibility:** The owner selected the data authority and separately authorizes every delivery gate. Claude owns one bounded read-only diagnosis and, only after Codex acceptance and a new authorization, bounded implementation/tests. MacBook Codex owns governance, literal-scope review, protected-metadata verification, and acceptance. Stage, commit, push, diagnosis dispatch, implementation, migration apply/import, Preview, Ready, merge, and deployment remain separate.
+
+**Exit:** Verify the exact three-path governance candidate, protected metadata, and `git diff --check`; then request separate literal stage/local-commit authorization. After a later normal push and explicit dispatch authorization, run exactly one Claude read-only diagnosis. No source or database work begins before that diagnosis is accepted.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.

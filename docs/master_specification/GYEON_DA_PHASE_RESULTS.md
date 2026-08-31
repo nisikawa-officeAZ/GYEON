@@ -4007,3 +4007,55 @@ prohibited_actions_confirmed:
 decision: AUTHOR_EXACT_THREE_PATH_R4_IMPLEMENTATION_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R1-G1 — Japan Post DB authority governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS_GOVERNANCE
+status: OWNER_RATIFIED_DB_AUTHORITY_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-01
+append_only: true
+owner_decision:
+  authority: "Japan Post official nationwide UTF-8 postal-code CSV"
+  storage: "Dedicated internal database master; never the customer table"
+  runtime_external_reverse_lookup: false
+  customer_address_external_transmission: false
+  lookup_directions:
+    - POSTAL_TO_ADDRESS
+    - OCR_ADDRESS_TO_POSTAL
+  resolution: "Deterministic exact and unique only; no AI, fuzzy guess, web search, or provider fallback"
+  fail_closed: "Zero/multiple/error/unavailable leaves blank or operator value unchanged for manual entry"
+  update: "Controlled versioned import with source date, checksum, batch identity, and rollback evidence"
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: ee243fa982cd9520ff0607ea2caeb78797fdb6de
+  tree: 9f8f5b1be1724e570826289e872efae3ca21c400
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+dispatch_contract:
+  directive_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS_V1
+  result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  binding: "A later owner-approved dispatch supplies exact DISPATCH_HEAD and DISPATCH_TREE. Source baseline must be its ancestor and delta must be exactly the three governance paths."
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_test_migration_or_dataset_edit: false
+  csv_download_or_import: false
+  executable_test_or_build: false
+  database_supabase_auth_storage_provider_access: false
+  stage_commit_push_pr_mutation: false
+  preview_ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_POSTAL_MASTER_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
