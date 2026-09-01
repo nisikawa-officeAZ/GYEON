@@ -9,13 +9,47 @@ import {
   calculateEarliestShipDate,
   canDealerPerformV3Action,
   canTransitionGyeonOrderV3,
+  decideOwnerFinalSubmitCharge,
   decideWarehouseRelease,
   evaluateInitialQualification,
   quoteGyeonOrderV3Shipping,
   shipmentDateChangeNotification,
   transitionOwnerReview,
   validatePromotionalCart,
+  type CardBrand,
+  type CardPaymentEvidenceCheck,
+  type ExternalAuthorityEvidence,
 } from "./gyeon-order-v3-contract-core";
+
+const NOW = "2026-08-27T06:00:00.000Z";
+
+const validCardEvidence: ExternalAuthorityEvidence = {
+  id: "evidence-1",
+  authority: "server_verified",
+  provider: "psp-test",
+  providerEventId: "provider-event-1",
+  purpose: "full_payment_charge",
+  state: "succeeded",
+  dealerId: "dealer-1",
+  orderId: "order-1",
+  orderVersion: 3,
+  requestFingerprint: "fingerprint-1",
+  amountIncTaxYen: 33_000,
+  currency: "JPY",
+  serverVerifiedAtIso: "2026-08-27T05:58:00.000Z",
+  expiresAtIso: "2026-08-27T06:10:00.000Z",
+  consumedAtIso: null,
+};
+
+const validCardPaymentEvidenceCheck: CardPaymentEvidenceCheck = {
+  evidence: validCardEvidence,
+  dealerId: "dealer-1",
+  orderId: "order-1",
+  orderVersion: 3,
+  requestFingerprint: "fingerprint-1",
+  payableAmountIncTaxYen: 33_000,
+  nowIso: NOW,
+};
 
 const baseReleaseInput = {
   paymentMethod: "card" as const,
@@ -23,7 +57,7 @@ const baseReleaseInput = {
   creditAccountActive: false,
   customerDirect: false,
   ownerSubmitted: true,
-  cardAuthorized: true,
+  cardPaymentEvidenceCheck: validCardPaymentEvidenceCheck,
   bankPaymentMatched: false,
   hasBackorder: false,
   backorderShippingPolicy: null,
@@ -255,13 +289,14 @@ test("unknown price and shipping fee fail closed instead of becoming zero", () =
 test("four payment methods have their specified warehouse release triggers", () => {
   assert.deepEqual(decideWarehouseRelease(baseReleaseInput), {
     ok: true,
-    trigger: "card_authorized",
+    trigger: "card_payment_succeeded",
+    consumeEvidenceId: "evidence-1",
   });
   assert.deepEqual(
     decideWarehouseRelease({
       ...baseReleaseInput,
       paymentMethod: "bank_transfer_prepaid",
-      cardAuthorized: false,
+      cardPaymentEvidenceCheck: null,
       bankPaymentMatched: true,
     }),
     { ok: true, trigger: "bank_matched" },
@@ -270,7 +305,7 @@ test("four payment methods have their specified warehouse release triggers", () 
     decideWarehouseRelease({
       ...baseReleaseInput,
       paymentMethod: "cash_on_delivery",
-      cardAuthorized: false,
+      cardPaymentEvidenceCheck: null,
     }),
     { ok: true, trigger: "owner_submitted" },
   );
@@ -280,22 +315,94 @@ test("four payment methods have their specified warehouse release triggers", () 
       paymentMethod: "credit_account",
       creditAccountConfigured: true,
       creditAccountActive: true,
-      cardAuthorized: false,
+      cardPaymentEvidenceCheck: null,
     }),
     { ok: true, trigger: "owner_submitted" },
   );
 });
 
-test("payment evidence and credit-account selection fail closed", () => {
-  assert.deepEqual(decideWarehouseRelease({ ...baseReleaseInput, cardAuthorized: false }), {
+test("card warehouse release requires exact structured server-verified succeeded evidence and rejects every historical/invalid evidence shape", () => {
+  assert.deepEqual(decideWarehouseRelease(baseReleaseInput), {
+    ok: true,
+    trigger: "card_payment_succeeded",
+    consumeEvidenceId: "evidence-1",
+  });
+  assert.deepEqual(decideWarehouseRelease({ ...baseReleaseInput, cardPaymentEvidenceCheck: null }), {
     ok: false,
-    code: "card_authorization_required",
+    code: "evidence_missing",
   });
   assert.deepEqual(
     decideWarehouseRelease({
       ...baseReleaseInput,
+      cardPaymentEvidenceCheck: {
+        ...validCardPaymentEvidenceCheck,
+        evidence: { ...validCardEvidence, authority: "unverified" },
+      },
+    }),
+    { ok: false, code: "evidence_not_server_verified" },
+  );
+  assert.deepEqual(
+    decideWarehouseRelease({
+      ...baseReleaseInput,
+      cardPaymentEvidenceCheck: {
+        ...validCardPaymentEvidenceCheck,
+        evidence: { ...validCardEvidence, state: "pending" },
+      },
+    }),
+    { ok: false, code: "evidence_not_succeeded" },
+  );
+  assert.deepEqual(
+    decideWarehouseRelease({
+      ...baseReleaseInput,
+      cardPaymentEvidenceCheck: {
+        ...validCardPaymentEvidenceCheck,
+        evidence: { ...validCardEvidence, consumedAtIso: "2026-08-27T05:59:00.000Z" },
+      },
+    }),
+    { ok: false, code: "evidence_consumed" },
+  );
+  assert.deepEqual(
+    decideWarehouseRelease({
+      ...baseReleaseInput,
+      cardPaymentEvidenceCheck: { ...validCardPaymentEvidenceCheck, nowIso: "2026-08-27T06:11:00.000Z" },
+    }),
+    { ok: false, code: "evidence_expired" },
+  );
+  assert.deepEqual(
+    decideWarehouseRelease({
+      ...baseReleaseInput,
+      cardPaymentEvidenceCheck: {
+        ...validCardPaymentEvidenceCheck,
+        evidence: { ...validCardEvidence, orderId: "order-2" },
+      },
+    }),
+    { ok: false, code: "evidence_order_binding_mismatch" },
+  );
+  assert.deepEqual(
+    decideWarehouseRelease({
+      ...baseReleaseInput,
+      cardPaymentEvidenceCheck: { ...validCardPaymentEvidenceCheck, payableAmountIncTaxYen: 33_001 },
+    }),
+    { ok: false, code: "evidence_amount_mismatch" },
+  );
+  assert.deepEqual(
+    decideWarehouseRelease({
+      ...baseReleaseInput,
+      cardPaymentEvidenceCheck: {
+        ...validCardPaymentEvidenceCheck,
+        evidence: { ...validCardEvidence, serverVerifiedAtIso: "2026-08-27T06:01:00.000Z" },
+      },
+    }),
+    { ok: false, code: "evidence_invalid" },
+  );
+});
+
+test("credit-account selection fails closed", () => {
+  assert.deepEqual(
+    decideWarehouseRelease({
+      ...baseReleaseInput,
       paymentMethod: "bank_transfer_prepaid",
-      cardAuthorized: false,
+      cardPaymentEvidenceCheck: null,
     }),
     { ok: false, code: "bank_payment_match_required" },
   );
@@ -312,7 +419,7 @@ test("payment evidence and credit-account selection fail closed", () => {
     decideWarehouseRelease({
       ...baseReleaseInput,
       paymentMethod: "credit_account",
-      cardAuthorized: false,
+      cardPaymentEvidenceCheck: null,
     }),
     { ok: false, code: "credit_account_selection_forbidden" },
   );
@@ -324,16 +431,17 @@ test("cash on delivery is forbidden for customer-direct delivery", () => {
       ...baseReleaseInput,
       paymentMethod: "cash_on_delivery",
       customerDirect: true,
-      cardAuthorized: false,
+      cardPaymentEvidenceCheck: null,
     }),
     { ok: false, code: "cash_on_delivery_direct_ship_forbidden" },
   );
 });
 
-test("backorder shipping policy is required only when backorder exists", () => {
+test("backorder shipping policy is required only when backorder exists, and never blocks card capture", () => {
   assert.deepEqual(decideWarehouseRelease(baseReleaseInput), {
     ok: true,
-    trigger: "card_authorized",
+    trigger: "card_payment_succeeded",
+    consumeEvidenceId: "evidence-1",
   });
   assert.deepEqual(
     decideWarehouseRelease({ ...baseReleaseInput, hasBackorder: true }),
@@ -345,11 +453,120 @@ test("backorder shipping policy is required only when backorder exists", () => {
       hasBackorder: true,
       backorderShippingPolicy: "ship_available_first",
     }),
-    { ok: false, code: "card_split_capture_unresolved" },
+    { ok: true, trigger: "card_payment_succeeded", consumeEvidenceId: "evidence-1" },
+  );
+  assert.deepEqual(
+    decideWarehouseRelease({
+      ...baseReleaseInput,
+      hasBackorder: true,
+      backorderShippingPolicy: "ship_when_complete",
+    }),
+    { ok: true, trigger: "card_payment_succeeded", consumeEvidenceId: "evidence-1" },
   );
 });
 
-test("commercial edits are locked after warehouse acceptance and card amount changes require reauthorization", () => {
+test("card warehouse release propagates the exact validated evidence ID rather than a fixed value", () => {
+  assert.deepEqual(
+    decideWarehouseRelease({
+      ...baseReleaseInput,
+      cardPaymentEvidenceCheck: {
+        ...validCardPaymentEvidenceCheck,
+        evidence: { ...validCardEvidence, id: "evidence-distinct-42" },
+      },
+    }),
+    { ok: true, trigger: "card_payment_succeeded", consumeEvidenceId: "evidence-distinct-42" },
+  );
+});
+
+test("JCB follows the same single full-payment flow because no card-brand branch exists", () => {
+  assert.deepEqual(
+    decideWarehouseRelease({ ...baseReleaseInput, hasBackorder: true, backorderShippingPolicy: "ship_available_first" }),
+    decideWarehouseRelease({ ...baseReleaseInput, hasBackorder: true, backorderShippingPolicy: "ship_when_complete" }),
+  );
+});
+
+test("owner final submit charges the full immutable payable total, including backorder, exactly once, regardless of shipping policy or card brand", () => {
+  const policies: readonly ("ship_available_first" | "ship_when_complete")[] = [
+    "ship_available_first",
+    "ship_when_complete",
+  ];
+  const cardBrands: readonly CardBrand[] = ["visa", "mastercard", "jcb", "amex"];
+  const results = policies.flatMap((backorderShippingPolicy) =>
+    cardBrands.map((cardBrand) =>
+      decideOwnerFinalSubmitCharge({
+        nonBackorderPayableAmountIncTaxYen: 25_000,
+        backorderPayableAmountIncTaxYen: 8_000,
+        backorderShippingPolicy,
+        cardBrand,
+      }),
+    ),
+  );
+  for (const result of results) {
+    assert.deepEqual(result, {
+      ok: true,
+      chargeAmountIncTaxYen: 33_000,
+      captureCount: 1,
+    });
+  }
+
+  const jcbResult = decideOwnerFinalSubmitCharge({
+    nonBackorderPayableAmountIncTaxYen: 25_000,
+    backorderPayableAmountIncTaxYen: 8_000,
+    backorderShippingPolicy: "ship_when_complete",
+    cardBrand: "jcb",
+  });
+  const visaResult = decideOwnerFinalSubmitCharge({
+    nonBackorderPayableAmountIncTaxYen: 25_000,
+    backorderPayableAmountIncTaxYen: 8_000,
+    backorderShippingPolicy: "ship_available_first",
+    cardBrand: "visa",
+  });
+  assert.deepEqual(jcbResult, visaResult);
+});
+
+test("owner final submit charge fails closed on invalid backorder or non-backorder amounts", () => {
+  assert.deepEqual(
+    decideOwnerFinalSubmitCharge({
+      nonBackorderPayableAmountIncTaxYen: -1,
+      backorderPayableAmountIncTaxYen: 0,
+      backorderShippingPolicy: null,
+      cardBrand: "visa",
+    }),
+    { ok: false, code: "invalid_amount" },
+  );
+  assert.deepEqual(
+    decideOwnerFinalSubmitCharge({
+      nonBackorderPayableAmountIncTaxYen: 0,
+      backorderPayableAmountIncTaxYen: 0,
+      backorderShippingPolicy: null,
+      cardBrand: "jcb",
+    }),
+    { ok: false, code: "invalid_amount" },
+  );
+});
+
+test("owner final submit charge fails closed when backorder amount is positive and shipping policy is missing", () => {
+  assert.deepEqual(
+    decideOwnerFinalSubmitCharge({
+      nonBackorderPayableAmountIncTaxYen: 25_000,
+      backorderPayableAmountIncTaxYen: 8_000,
+      backorderShippingPolicy: null,
+      cardBrand: "visa",
+    }),
+    { ok: false, code: "backorder_shipping_policy_required" },
+  );
+  assert.deepEqual(
+    decideOwnerFinalSubmitCharge({
+      nonBackorderPayableAmountIncTaxYen: 25_000,
+      backorderPayableAmountIncTaxYen: 0,
+      backorderShippingPolicy: null,
+      cardBrand: "visa",
+    }),
+    { ok: true, chargeAmountIncTaxYen: 25_000, captureCount: 1 },
+  );
+});
+
+test("commercial edits are locked after warehouse acceptance, and every submitted card edit is forbidden as post-payment", () => {
   assert.deepEqual(
     assessCommercialEdit({
       status: "approved",
@@ -373,7 +590,7 @@ test("commercial edits are locked after warehouse acceptance and card amount cha
     }),
     {
       ok: false,
-      code: "card_reauthorization_required",
+      code: "post_payment_amount_edit_forbidden",
       payableAmountYen: 10_000,
       preserveOriginal: true,
     },
@@ -383,12 +600,11 @@ test("commercial edits are locked after warehouse acceptance and card amount cha
       status: "submitted",
       paymentMethod: "card",
       currentPayableAmountYen: 10_000,
-      proposedPayableAmountYen: 12_000,
-      cardReauthorizationSucceeded: false,
+      proposedPayableAmountYen: 10_000,
     }),
     {
       ok: false,
-      code: "card_reauthorization_failed",
+      code: "post_payment_amount_edit_forbidden",
       payableAmountYen: 10_000,
       preserveOriginal: true,
     },
@@ -396,10 +612,9 @@ test("commercial edits are locked after warehouse acceptance and card amount cha
   assert.deepEqual(
     assessCommercialEdit({
       status: "submitted",
-      paymentMethod: "card",
+      paymentMethod: "bank_transfer_prepaid",
       currentPayableAmountYen: 10_000,
       proposedPayableAmountYen: 12_000,
-      cardReauthorizationSucceeded: true,
     }),
     { ok: true, payableAmountYen: 12_000, preserveOriginal: false },
   );

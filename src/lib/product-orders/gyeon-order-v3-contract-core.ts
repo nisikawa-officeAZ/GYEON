@@ -281,8 +281,266 @@ export type GyeonOrderPaymentMethod =
   | "credit_account";
 export type BackorderShippingPolicy = "ship_available_first" | "ship_when_complete";
 
+/**
+ * Structured, server-owned evidence of an external-authority (PSP, bank)
+ * fact. A caller-owned boolean cannot prove purpose, order binding, amount,
+ * currency, or freshness, so warehouse release and refund decisions consume
+ * and validate this shape instead of trusting an asserted flag.
+ */
+export type ExternalEvidencePurpose =
+  | "full_payment_charge"
+  | "bank_payment_match"
+  | "inventory_reservation"
+  | "refund";
+
+export type ExternalEvidenceState = "pending" | "succeeded" | "failed" | "voided";
+
+export interface ExternalAuthorityEvidence {
+  id: string;
+  authority: "server_verified" | "unverified";
+  provider: string;
+  providerEventId: string;
+  purpose: ExternalEvidencePurpose;
+  state: ExternalEvidenceState;
+  dealerId: string;
+  orderId: string;
+  orderVersion: number;
+  requestFingerprint: string;
+  amountIncTaxYen: number;
+  currency: string;
+  serverVerifiedAtIso: string;
+  expiresAtIso: string;
+  consumedAtIso: string | null;
+}
+
+export interface ExternalEvidenceExpectation {
+  purpose: ExternalEvidencePurpose;
+  dealerId: string;
+  orderId: string;
+  orderVersion: number;
+  requestFingerprint: string;
+  amountIncTaxYen: number;
+  currency: "JPY";
+  nowIso: string;
+}
+
+export type ExternalEvidenceValidation =
+  | { ok: true; evidenceId: string }
+  | {
+      ok: false;
+      code:
+        | "evidence_missing"
+        | "evidence_invalid"
+        | "evidence_not_server_verified"
+        | "evidence_not_succeeded"
+        | "evidence_expired"
+        | "evidence_consumed"
+        | "evidence_purpose_mismatch"
+        | "evidence_order_binding_mismatch"
+        | "evidence_version_mismatch"
+        | "evidence_fingerprint_mismatch"
+        | "evidence_amount_mismatch"
+        | "evidence_currency_mismatch";
+    };
+
+export type ExternalEvidenceFailureCode = Extract<
+  ExternalEvidenceValidation,
+  { ok: false }
+>["code"];
+
+export function isNonBlank(value: string): boolean {
+  return value.trim().length > 0;
+}
+
+export function parseIsoInstant(value: string): number | null {
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function isValidVersion(value: number): boolean {
+  return Number.isInteger(value) && value > 0;
+}
+
+export function isValidYen(value: number): boolean {
+  return Number.isSafeInteger(value) && value >= 0;
+}
+
+/**
+ * Rejects missing, unsigned/unverified, authorization-only or pending,
+ * duplicate/consumed, expired, mismatched, and out-of-order evidence. Only
+ * an evidence record that is server-verified, succeeded, unconsumed,
+ * unexpired, and bound to the exact purpose/order/version/fingerprint/
+ * amount/currency is accepted.
+ */
+export function validateExternalAuthorityEvidence(
+  evidence: ExternalAuthorityEvidence | null,
+  expected: ExternalEvidenceExpectation,
+): ExternalEvidenceValidation {
+  if (evidence == null) return { ok: false, code: "evidence_missing" };
+
+  const verifiedAt = parseIsoInstant(evidence.serverVerifiedAtIso);
+  const expiresAt = parseIsoInstant(evidence.expiresAtIso);
+  const now = parseIsoInstant(expected.nowIso);
+  if (
+    !isNonBlank(evidence.id) ||
+    !isNonBlank(evidence.provider) ||
+    !isNonBlank(evidence.providerEventId) ||
+    !isNonBlank(evidence.dealerId) ||
+    !isNonBlank(evidence.orderId) ||
+    !isNonBlank(evidence.requestFingerprint) ||
+    !isValidVersion(evidence.orderVersion) ||
+    !isValidYen(evidence.amountIncTaxYen) ||
+    verifiedAt == null ||
+    expiresAt == null ||
+    now == null ||
+    verifiedAt > now ||
+    expiresAt <= verifiedAt
+  ) {
+    return { ok: false, code: "evidence_invalid" };
+  }
+  if (evidence.authority !== "server_verified") {
+    return { ok: false, code: "evidence_not_server_verified" };
+  }
+  if (evidence.state !== "succeeded") {
+    return { ok: false, code: "evidence_not_succeeded" };
+  }
+  if (evidence.consumedAtIso != null) {
+    return { ok: false, code: "evidence_consumed" };
+  }
+  if (now >= expiresAt) return { ok: false, code: "evidence_expired" };
+  if (evidence.purpose !== expected.purpose) {
+    return { ok: false, code: "evidence_purpose_mismatch" };
+  }
+  if (evidence.dealerId !== expected.dealerId || evidence.orderId !== expected.orderId) {
+    return { ok: false, code: "evidence_order_binding_mismatch" };
+  }
+  if (evidence.orderVersion !== expected.orderVersion) {
+    return { ok: false, code: "evidence_version_mismatch" };
+  }
+  if (evidence.requestFingerprint !== expected.requestFingerprint) {
+    return { ok: false, code: "evidence_fingerprint_mismatch" };
+  }
+  if (evidence.amountIncTaxYen !== expected.amountIncTaxYen) {
+    return { ok: false, code: "evidence_amount_mismatch" };
+  }
+  if (evidence.currency !== expected.currency) {
+    return { ok: false, code: "evidence_currency_mismatch" };
+  }
+  return { ok: true, evidenceId: evidence.id };
+}
+
+/**
+ * A durable succeeded-payment snapshot used only to authorize refunds. It is
+ * distinct from the one-time consumable `ExternalAuthorityEvidence` used for
+ * warehouse release/finalization: refunds must be able to reference a
+ * succeeded payment long after that evidence record has been consumed. The
+ * refund cap is always derived from a validated record, never from a
+ * caller-supplied number.
+ */
+export interface SucceededPaymentRecord {
+  id: string;
+  authority: "server_verified" | "unverified";
+  provider: string;
+  providerPaymentId: string;
+  purpose: "full_payment_charge";
+  state: ExternalEvidenceState;
+  dealerId: string;
+  orderId: string;
+  orderVersion: number;
+  requestFingerprint: string;
+  amountIncTaxYen: number;
+  currency: string;
+}
+
+export interface SucceededPaymentExpectation {
+  dealerId: string;
+  orderId: string;
+  orderVersion: number;
+  requestFingerprint: string;
+  currency: "JPY";
+}
+
+export type SucceededPaymentValidation =
+  | { ok: true; succeededAmountIncTaxYen: number }
+  | {
+      ok: false;
+      code:
+        | "succeeded_payment_missing"
+        | "succeeded_payment_invalid"
+        | "succeeded_payment_not_server_verified"
+        | "succeeded_payment_not_succeeded"
+        | "succeeded_payment_purpose_mismatch"
+        | "succeeded_payment_order_binding_mismatch"
+        | "succeeded_payment_version_mismatch"
+        | "succeeded_payment_fingerprint_mismatch"
+        | "succeeded_payment_currency_mismatch";
+    };
+
+export type SucceededPaymentFailureCode = Extract<
+  SucceededPaymentValidation,
+  { ok: false }
+>["code"];
+
+/**
+ * Rejects a missing record, blank provider/payment identifiers, an
+ * unverified authority, a non-succeeded state, a non-payment purpose, and
+ * any order/version/fingerprint/currency mismatch. Only a fully validated
+ * record's own amount is ever used as the refund cap.
+ */
+export function validateSucceededPaymentRecord(
+  record: SucceededPaymentRecord | null,
+  expected: SucceededPaymentExpectation,
+): SucceededPaymentValidation {
+  if (record == null) return { ok: false, code: "succeeded_payment_missing" };
+  if (
+    !isNonBlank(record.provider) ||
+    !isNonBlank(record.providerPaymentId) ||
+    !isNonBlank(record.dealerId) ||
+    !isNonBlank(record.orderId) ||
+    !isNonBlank(record.requestFingerprint) ||
+    !isValidVersion(record.orderVersion) ||
+    !isValidYen(record.amountIncTaxYen) ||
+    record.amountIncTaxYen <= 0
+  ) {
+    return { ok: false, code: "succeeded_payment_invalid" };
+  }
+  if (record.authority !== "server_verified") {
+    return { ok: false, code: "succeeded_payment_not_server_verified" };
+  }
+  if (record.state !== "succeeded") {
+    return { ok: false, code: "succeeded_payment_not_succeeded" };
+  }
+  if (record.purpose !== "full_payment_charge") {
+    return { ok: false, code: "succeeded_payment_purpose_mismatch" };
+  }
+  if (record.dealerId !== expected.dealerId || record.orderId !== expected.orderId) {
+    return { ok: false, code: "succeeded_payment_order_binding_mismatch" };
+  }
+  if (record.orderVersion !== expected.orderVersion) {
+    return { ok: false, code: "succeeded_payment_version_mismatch" };
+  }
+  if (record.requestFingerprint !== expected.requestFingerprint) {
+    return { ok: false, code: "succeeded_payment_fingerprint_mismatch" };
+  }
+  if (record.currency !== expected.currency) {
+    return { ok: false, code: "succeeded_payment_currency_mismatch" };
+  }
+  return { ok: true, succeededAmountIncTaxYen: record.amountIncTaxYen };
+}
+
+export interface CardPaymentEvidenceCheck {
+  evidence: ExternalAuthorityEvidence | null;
+  dealerId: string;
+  orderId: string;
+  orderVersion: number;
+  requestFingerprint: string;
+  payableAmountIncTaxYen: number;
+  nowIso: string;
+}
+
 export type WarehouseReleaseDecision =
-  | { ok: true; trigger: "card_authorized" | "bank_matched" | "owner_submitted" }
+  | { ok: true; trigger: "card_payment_succeeded"; consumeEvidenceId: string }
+  | { ok: true; trigger: "bank_matched" | "owner_submitted" }
   | {
       ok: false;
       code:
@@ -291,20 +549,30 @@ export type WarehouseReleaseDecision =
         | "credit_account_required"
         | "credit_account_inactive"
         | "cash_on_delivery_direct_ship_forbidden"
-        | "card_authorization_required"
         | "bank_payment_match_required"
         | "owner_submission_required"
         | "backorder_policy_required"
-        | "card_split_capture_unresolved";
+        | ExternalEvidenceFailureCode;
     };
 
+/**
+ * Card release requires exact structured server-verified succeeded-payment
+ * evidence, validated against the exact purpose/order/version/fingerprint/
+ * amount/currency, not a caller-owned authorization boolean. The entire
+ * tax-inclusive payable total (including back-ordered items) is charged and
+ * captured exactly once at owner final submit; ship_available_first and
+ * ship_when_complete are logistics choices only and never change the
+ * capture count or amount. On success the exact validated `consumeEvidenceId`
+ * is returned so the persistence layer can atomically consume the one-time
+ * release evidence.
+ */
 export function decideWarehouseRelease(input: {
   paymentMethod: GyeonOrderPaymentMethod | null;
   creditAccountConfigured: boolean;
   creditAccountActive: boolean;
   customerDirect: boolean;
   ownerSubmitted: boolean;
-  cardAuthorized: boolean;
+  cardPaymentEvidenceCheck: CardPaymentEvidenceCheck | null;
   bankPaymentMatched: boolean;
   hasBackorder: boolean;
   backorderShippingPolicy: BackorderShippingPolicy | null;
@@ -326,17 +594,22 @@ export function decideWarehouseRelease(input: {
   if (input.hasBackorder && input.backorderShippingPolicy == null) {
     return { ok: false, code: "backorder_policy_required" };
   }
-  if (
-    method === "card" &&
-    input.hasBackorder &&
-    input.backorderShippingPolicy === "ship_available_first"
-  ) {
-    return { ok: false, code: "card_split_capture_unresolved" };
-  }
   if (method === "card") {
-    return input.cardAuthorized
-      ? { ok: true, trigger: "card_authorized" }
-      : { ok: false, code: "card_authorization_required" };
+    const check = input.cardPaymentEvidenceCheck;
+    if (check == null) return { ok: false, code: "evidence_missing" };
+    const validation = validateExternalAuthorityEvidence(check.evidence, {
+      purpose: "full_payment_charge",
+      dealerId: check.dealerId,
+      orderId: check.orderId,
+      orderVersion: check.orderVersion,
+      requestFingerprint: check.requestFingerprint,
+      amountIncTaxYen: check.payableAmountIncTaxYen,
+      currency: "JPY",
+      nowIso: check.nowIso,
+    });
+    return validation.ok
+      ? { ok: true, trigger: "card_payment_succeeded", consumeEvidenceId: validation.evidenceId }
+      : { ok: false, code: validation.code };
   }
   if (method === "bank_transfer_prepaid") {
     return input.bankPaymentMatched
@@ -348,21 +621,66 @@ export function decideWarehouseRelease(input: {
     : { ok: false, code: "owner_submission_required" };
 }
 
+export type CardBrand = "visa" | "mastercard" | "jcb" | "amex";
+
+export type OwnerFinalSubmitChargeDecision =
+  | { ok: true; chargeAmountIncTaxYen: number; captureCount: 1 }
+  | { ok: false; code: "invalid_amount" | "backorder_shipping_policy_required" };
+
+/**
+ * Owner final submit charges and captures the entire immutable tax-inclusive
+ * payable total exactly once. Backorder amount is an explicit separate input
+ * (summed here) rather than folded into one opaque total, and card brand is
+ * an explicit input, so identical results across shipping policies and card
+ * brands are proven by varying real inputs rather than by their absence. A
+ * positive backorder amount with no shipping policy fails closed instead of
+ * silently charging without a resolved logistics choice; when present, the
+ * policy never changes the charged amount or capture count, and JCB follows
+ * the identical flow.
+ */
+export function decideOwnerFinalSubmitCharge(input: {
+  nonBackorderPayableAmountIncTaxYen: number;
+  backorderPayableAmountIncTaxYen: number;
+  backorderShippingPolicy: BackorderShippingPolicy | null;
+  cardBrand: CardBrand;
+}): OwnerFinalSubmitChargeDecision {
+  if (
+    !isSafeNonNegativeInteger(input.nonBackorderPayableAmountIncTaxYen) ||
+    !isSafeNonNegativeInteger(input.backorderPayableAmountIncTaxYen)
+  ) {
+    return { ok: false, code: "invalid_amount" };
+  }
+  if (input.backorderPayableAmountIncTaxYen > 0 && input.backorderShippingPolicy == null) {
+    return { ok: false, code: "backorder_shipping_policy_required" };
+  }
+  const total = input.nonBackorderPayableAmountIncTaxYen + input.backorderPayableAmountIncTaxYen;
+  if (!Number.isSafeInteger(total) || total <= 0) {
+    return { ok: false, code: "invalid_amount" };
+  }
+  return { ok: true, chargeAmountIncTaxYen: total, captureCount: 1 };
+}
+
 export type CommercialEditDecision =
   | { ok: true; payableAmountYen: number; preserveOriginal: false }
   | {
       ok: false;
-      code: "warehouse_already_accepted" | "card_reauthorization_required" | "card_reauthorization_failed";
+      code: "warehouse_already_accepted" | "post_payment_amount_edit_forbidden";
       payableAmountYen: number;
       preserveOriginal: true;
     };
 
+/**
+ * Card charges the full payable total once at owner final submit, so a
+ * submitted card order has already been paid. Every item, quantity, or
+ * payable-total edit on a submitted card order is therefore denied;
+ * additional items require a separate order. Historical card
+ * reauthorization on edit is unreachable. Non-card methods are unchanged.
+ */
 export function assessCommercialEdit(input: {
   status: GyeonOrderV3Status;
   paymentMethod: GyeonOrderPaymentMethod;
   currentPayableAmountYen: number;
   proposedPayableAmountYen: number;
-  cardReauthorizationSucceeded?: boolean;
 }): CommercialEditDecision {
   if (!isCommercialOrderEditable(input.status)) {
     return {
@@ -372,27 +690,13 @@ export function assessCommercialEdit(input: {
       preserveOriginal: true,
     };
   }
-  if (
-    input.status === "submitted" &&
-    input.paymentMethod === "card" &&
-    input.currentPayableAmountYen !== input.proposedPayableAmountYen
-  ) {
-    if (input.cardReauthorizationSucceeded == null) {
-      return {
-        ok: false,
-        code: "card_reauthorization_required",
-        payableAmountYen: input.currentPayableAmountYen,
-        preserveOriginal: true,
-      };
-    }
-    if (!input.cardReauthorizationSucceeded) {
-      return {
-        ok: false,
-        code: "card_reauthorization_failed",
-        payableAmountYen: input.currentPayableAmountYen,
-        preserveOriginal: true,
-      };
-    }
+  if (input.status === "submitted" && input.paymentMethod === "card") {
+    return {
+      ok: false,
+      code: "post_payment_amount_edit_forbidden",
+      payableAmountYen: input.currentPayableAmountYen,
+      preserveOriginal: true,
+    };
   }
   return {
     ok: true,
