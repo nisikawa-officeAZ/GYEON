@@ -472,6 +472,62 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Exit:** Verify the exact three-path governance candidate, protected metadata, and `git diff --check`; then request separate literal stage/local-commit authorization. After a later normal push and explicit dispatch authorization, run exactly one Claude read-only diagnosis. No source or database work begins before that diagnosis is accepted.
 
+### GDA-2A-OCR-POSTAL-MASTER-R2 — Corrected source and import implementation governance
+
+**Status:** R1 READ-ONLY DIAGNOSIS COMPLETED / CLAUDE VERDICT REJECTED AS WRITTEN / CORE ROOT CAUSE AND PRIVATE-RPC DIRECTION ACCEPTED / R2 CORRECTED IMPLEMENTATION GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. This gate authorizes only the three governance-document changes below. Migration allocation, implementation, tests, CSV acquisition/import, database access, stage, commit, push, Preview, Ready, merge, and deployment remain separate.
+
+**Accepted R1 findings:** The canonical Estimate Wizard renders postal/address as plain draft inputs and never calls the existing `src/lib/geo/postal-lookup.ts`. That legacy helper directly calls ZipCloud from the browser and is not reused. A new authenticated Server Action seam, request-scoped Supabase client, private master tables, and narrow public SECURITY DEFINER RPCs are the correct architecture. OCR/lookup remain draft-only until the unchanged explicit Estimate Wizard save.
+
+**Codex corrections — mandatory:**
+
+1. The official UTF-8 address CSV is the 15-column, one-postal-record-per-line `utf_ken_all` dataset. It contains town-address postal codes and explicitly excludes large-office individual postal codes. Do not invent or implement `is_large_office_or_special` in this phase.
+2. Preserve all official columns, including JIS municipality code and flags 10–15. Derive normalized lookup keys separately; never replace the source values.
+3. Records whose town field is `以下に掲載がない場合`, `市区町村名の次に番地がくる場合`, or `市区町村名一円` are non-specific. They are excluded from reverse auto-resolution and never treated as an exact town. A forward lookup that reaches a non-specific or multi-town result returns `AMBIGUOUS`; it performs no partial address write.
+4. Any forward or reverse result with zero matches, multiple address candidates, multiple distinct postal codes, flag 10 (`一町域が二以上の郵便番号`), non-specific town text, invalid input, stale response, timeout, or unavailable master performs no auto-fill. The UI shows a short manual-entry notice only; no candidate picker and no partial prefecture/city write are added.
+5. Only `FOUND` may update a blank target field. A response may apply only if the normalized source value is unchanged and the target remains blank when the response returns. Existing operator input always wins.
+6. The import implementation is part of the allowlist, not a later undefined task. A repository CLI consumes an already downloaded and extracted official UTF-8 CSV, calculates/checks SHA-256, validates exactly 15 fields and official flags, uploads bounded JSON batches through service-role-only import RPCs, and logs counts/batch/checksum only—never row addresses. It does not download data or expose an admin UI.
+7. Use versioned immutable batch rows plus one active-batch pointer. Import stages and validates a new batch before one atomic pointer promotion. Rollback changes the pointer to a prior validated/promoted batch; it does not rewrite or delete the accepted master generation.
+8. Reverse lookup must use a concrete index-narrowing contract. Store a deterministic fixed-length `address_prefix_head` derived from the normalized specific address, filter active rows by `(batch_id, address_prefix_head)`, then evaluate exact `starts_with(input, address_key)` and longest-key/unique-postal rules. Do not claim that `input LIKE address_key || '%'` alone uses a btree prefix index.
+
+**Migration-path allocation gate:** Supabase migration files must be created with `supabase migration new jp_postal_master`. Because that command determines the timestamped filename, the exact `MIGRATION_PATH` is bound later by MacBook Codex after a separate owner-approved one-file allocation gate. The implementation directive is non-executable until the dispatch supplies that literal path and proves it is the only empty untracked migration file. Claude must never create or rename a different migration path.
+
+**Future implementation write allowlist:** The later dispatch-bound `MIGRATION_PATH` plus exactly these 22 literal paths:
+
+1. `src/lib/geo/jp-postal-master-contract.ts` (new)
+2. `src/lib/geo/jp-postal-master-contract.test.ts` (new)
+3. `src/lib/geo/jp-postal-master-actions.ts` (new)
+4. `src/lib/geo/jp-postal-master-actions.test.ts` (new)
+5. `src/lib/geo/jp-postal-master-csv.ts` (new)
+6. `src/lib/geo/jp-postal-master-csv.test.ts` (new)
+7. `scripts/postal-master/import-japan-post.ts` (new)
+8. `scripts/postal-master/import-japan-post.test.ts` (new)
+9. `src/components/estimates/wizard/contract/wizard-runtime-inputs.ts`
+10. `src/app/estimates/new/page.tsx`
+11. `src/components/estimates/wizard/production/ProductionEstimateWizard.tsx`
+12. `src/components/estimates/wizard/EstimateWizard.tsx`
+13. `src/components/estimates/wizard/steps/Step1Customer.tsx`
+14. `src/components/estimates/wizard/steps/postal-master-apply.ts` (new)
+15. `src/components/estimates/wizard/steps/postal-master-apply.test.ts` (new)
+16. `src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx`
+17. `src/lib/geo/jp-postal-master-migration-contract.test.ts` (new)
+18. `supabase/tests/jp_postal_master_rpc.test.sql` (new)
+19. `supabase/tests/data_api_matrix.test.sql`
+20. `supabase/tests/grant_rls_role_matrix.test.sql`
+21. `supabase/tests/catalog_manifest.test.sql`
+22. `docs/master_specification/CATALOG_MANIFEST.md`
+
+No package, lockfile, dependency, existing ZipCloud helper, OCR mapper, save RPC, customer/vehicle schema, route, provider, secret, environment, or protected-path change is allowed.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R2_IMPLEMENTATION.md` (new)
+
+**Current boundary:** Author and verify only those three governance paths. Do not allocate the migration, invoke Claude, edit implementation paths, run executable tests, download/import CSV, access Supabase/database/provider/Preview/production, stage, commit, push, mutate PR #48, mark Ready, merge, or deploy.
+
+**Exit:** MacBook Codex verifies the exact three-path R2 governance diff, protected metadata, and `git diff --check`, then requests separate literal stage/local-commit authorization. Normal push, CLI migration-path allocation, Claude implementation, local/disposable verification, Git delivery, data import, and every environment action remain later gates.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.

@@ -4059,3 +4059,71 @@ prohibited_actions_confirmed:
 decision: AUTHOR_EXACT_THREE_PATH_POSTAL_MASTER_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R1-D1 / R2-G1 — Diagnosis correction and implementation governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R2_IMPLEMENTATION_GOVERNANCE
+status: R1_DIAGNOSIS_COMPLETED_CLAUDE_VERDICT_REJECTED_AS_WRITTEN_R2_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-01
+append_only: true
+r1_dispatch:
+  directive_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS_V1
+  result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  dispatch_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/48#issuecomment-5486452709
+  dispatch_head: 01781ace8ab4dd1d5d6888b9b3bb25f60dce0562
+  dispatch_tree: 6e76febba0db66bb1fd8a302819109beb4d1fce6
+  invocation_count: 1
+  isolation: "Thirty authorized repository files plus one Codex dispatch-evidence note; no .git, protected content, PDF, PII, secret, dataset, or environment value; read-only filesystem; Read/Glob/Grep tools only; isolated copy deleted after result."
+  claude_verdict: IMPLEMENTATION_GOVERNANCE_READY
+codex_disposition: CHANGES_REQUIRED
+accepted:
+  - "Wizard postal/address fields have no lookup invocation; the existing browser ZipCloud helper is outside the canonical Wizard and is not reused."
+  - "Use authenticated server actions, request-scoped Supabase client, private versioned master tables, narrow SECURITY DEFINER RPCs, and explicit-save-only persistence."
+rejected_or_corrected:
+  - "utf_ken_all excludes large-office individual postal codes; remove invented large-office source handling."
+  - "Official non-specific town labels never identify an exact town and are excluded from reverse auto-resolution."
+  - "Ambiguous results never partially fill prefecture/city and never open a picker; preserve the target and require manual entry."
+  - "The implementation allowlist must include a concrete CSV parser and controlled CLI import path."
+  - "Versioned immutable batches plus an atomic active-batch pointer replace the proposed 120k-row effective_to rewrite."
+  - "Reverse matching requires a concrete indexed prefix-head prefilter before longest exact prefix/unique postal evaluation."
+  - "The report's isolated-file count statement was inaccurate; Codex observed 31 total files, not the report's 29."
+official_contract:
+  source: https://www.post.japanpost.jp/service/search/zipcode/download/utf-zip.html
+  format: https://www.post.japanpost.jp/service/search/zipcode/download/utf-readme.html
+  columns: 15
+  rows_are_one_postal_record_per_line: true
+  copyright_claimed_by_japan_post_for_postal_data: false
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 01781ace8ab4dd1d5d6888b9b3bb25f60dce0562
+  tree: 6e76febba0db66bb1fd8a302819109beb4d1fce6
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/48
+  pull_request_state: OPEN_DRAFT
+migration_allocation:
+  command: supabase migration new jp_postal_master
+  timing: "Separate owner-approved gate after governance commit/push and before implementation dispatch"
+  dispatch_binding: "MIGRATION_PATH must be the exact CLI-created empty untracked file and the only untracked migration."
+future_write_allowlist_count: 23
+future_write_allowlist_contract: "One dispatch-bound MIGRATION_PATH plus exactly the 22 literal paths recorded in the completion plan and R2 directive."
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R2_IMPLEMENTATION.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  migration_allocation_or_source_edit: false
+  claude_or_external_transmission: false
+  executable_test_or_build: false
+  csv_download_or_import: false
+  database_supabase_auth_storage_provider_access: false
+  stage_commit_push_pr_mutation: false
+  preview_ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_R2_CORRECTED_IMPLEMENTATION_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
