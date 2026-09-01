@@ -34,6 +34,10 @@ import { buildWizardCustomerOcrPatch } from "@/lib/ocr/wizard-customer-ocr-apply
 import { buildWizardVehicleOcrPatch } from "@/lib/ocr/wizard-vehicle-ocr-apply-core";
 import { estimateBodySizeFromVehicleRegistrationOcr, BODY_SIZE_KEYS } from "@/lib/vehicles/body-size-estimate";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
+import type {
+  JpPostalForwardLookupInvoker,
+  JpPostalReverseLookupInvoker,
+} from "../contract/wizard-runtime-inputs";
 
 // `jsx: "preserve"` compiles JSX to React.createElement against a global React (see file header).
 (globalThis as { React?: typeof React }).React = React;
@@ -87,10 +91,13 @@ function captureOcrOnApply(renderFn: () => string): OnApply {
 function captureStep1OnApply(
   over: StoreOver,
   onSizeEstimate: (e: ReturnType<typeof estimateBodySizeFromVehicleRegistrationOcr> | null) => void,
+  // GDA-2A-OCR-POSTAL-MASTER-R2 — optional extra props (the postal-master lookup seams), additive
+  // and defaulted to {} so every pre-existing 2-argument call site is unaffected.
+  extra: { addressToPostalInvoker?: JpPostalReverseLookupInvoker; postalToAddressInvoker?: JpPostalForwardLookupInvoker } = {},
 ): { onApply: OnApply; writes: WizardStorePatch[] } {
   const { api, writes } = fakeApi(over);
   const onApply = captureOcrOnApply(() => renderToStaticMarkup(
-    React.createElement(Step1Customer, { api, customers: [], vehicles: [], onSizeEstimate }),
+    React.createElement(Step1Customer, { api, customers: [], vehicles: [], onSizeEstimate, ...extra }),
   ));
   return { onApply, writes };
 }
@@ -320,4 +327,78 @@ test("one Step-1 OCR apply never calls updateStore more than once, even across r
   onApply({ maker: "ホンダ" });
   assert.equal(writes.length, 2, "two separate apply EVENTS still produce exactly one write each");
   assert.equal(Object.keys(writes[1]).length, 1, "the second apply's patch carries only what it supplied");
+});
+
+// ── GDA-2A-OCR-POSTAL-MASTER-R2: OCR-address-to-postal, one-shot ────────────────
+
+const flushMicrotasks = async () => { for (let i = 0; i < 4; i += 1) await Promise.resolve(); };
+
+test("POSTAL: an OCR-supplied nonblank address triggers address-to-postal exactly once when the postal target is blank", async () => {
+  const calls: unknown[] = [];
+  const addressToPostalInvoker: JpPostalReverseLookupInvoker = async (raw: unknown) => {
+    calls.push(raw);
+    return { code: "FOUND", postalCode: "1000001" };
+  };
+  const { onApply, writes } = captureStep1OnApply(
+    // NOTE: `address` is pre-set to the value the OCR patch will apply. The test double's
+    // `updateStore` only records patches — it does not mutate `store.customer` the way the real
+    // reducer does — so this simulates the REAL app's post-patch state that `customerRef.current`
+    // would observe by the time the async invoker response arrives (React commits the synchronous
+    // OCR patch to the store long before any network round-trip resolves).
+    { customer: { regMethod: "ocr", postal: "", address: "東京都港区1-2-3" } },
+    () => {},
+    { addressToPostalInvoker },
+  );
+  onApply(FULL_OCR_RESULT);
+  await flushMicrotasks();
+
+  assert.equal(calls.length, 1, "address-to-postal is invoked exactly once");
+  assert.equal(calls[0], "東京都港区1-2-3", "invoked with the OCR-applied address, unmodified");
+  assert.equal(writes.length, 2, "the original OCR patch write, then one async postal-fill write");
+  const secondCustomer = writes[1].customer as Record<string, unknown> | undefined;
+  assert.ok(secondCustomer, "PRECONDITION: the second write carries a customer section");
+  assert.equal((secondCustomer as Record<string, unknown>).postal, "100-0001");
+});
+
+test("POSTAL: address-to-postal never fires when the postal field is already nonblank", async () => {
+  const calls: unknown[] = [];
+  const addressToPostalInvoker: JpPostalReverseLookupInvoker = async (raw: unknown) => { calls.push(raw); return { code: "FOUND", postalCode: "1000001" }; };
+  const { onApply, writes } = captureStep1OnApply(
+    { customer: { regMethod: "ocr", postal: "999-9999" } },
+    () => {},
+    { addressToPostalInvoker },
+  );
+  onApply(FULL_OCR_RESULT);
+  await flushMicrotasks();
+
+  assert.equal(calls.length, 0, "no lookup call when the postal target is already filled");
+  assert.equal(writes.length, 1, "only the original OCR patch write occurs");
+});
+
+test("POSTAL: OCR apply performs no address-to-postal call and no extra write when no invoker is supplied", async () => {
+  const { onApply, writes } = captureStep1OnApply({ customer: { regMethod: "ocr", postal: "" } }, () => {});
+  onApply(FULL_OCR_RESULT);
+  await flushMicrotasks();
+  assert.equal(writes.length, 1, "absent invoker means no second write");
+});
+
+test("POSTAL: address-to-postal never writes for a non-FOUND result", async () => {
+  const addressToPostalInvoker: JpPostalReverseLookupInvoker = async () => ({ code: "NOT_FOUND" });
+  const { onApply, writes } = captureStep1OnApply(
+    { customer: { regMethod: "ocr", postal: "" } }, () => {}, { addressToPostalInvoker },
+  );
+  onApply(FULL_OCR_RESULT);
+  await flushMicrotasks();
+  assert.equal(writes.length, 1, "a NOT_FOUND result never issues a second write");
+});
+
+test("POSTAL: an OCR result with no readable address performs no address-to-postal call", async () => {
+  const calls: unknown[] = [];
+  const addressToPostalInvoker: JpPostalReverseLookupInvoker = async (raw: unknown) => { calls.push(raw); return { code: "FOUND", postalCode: "1000001" }; };
+  const { onApply } = captureStep1OnApply(
+    { customer: { regMethod: "ocr", postal: "" } }, () => {}, { addressToPostalInvoker },
+  );
+  onApply({ maker: "トヨタ", vehicle_name: "クラウン" }); // no owner_address field at all
+  await flushMicrotasks();
+  assert.equal(calls.length, 0, "no address supplied by this OCR result means no reverse-lookup call");
 });

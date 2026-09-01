@@ -45,11 +45,19 @@ import type {
   WizardDuplicateCandidate,
   WizardDuplicateCheckFailureCode,
   WizardDuplicateReason,
+  WizardPostalMasterLookupInputs,
 } from "../contract/wizard-runtime-inputs";
 import { effectiveExistingCustomer, customerSelectionPatch } from "./existing-entity-selection";
 import { buildWizardCustomerOcrPatch } from "@/lib/ocr/wizard-customer-ocr-apply-core";
 import { buildWizardVehicleOcrPatch } from "@/lib/ocr/wizard-vehicle-ocr-apply-core";
 import { estimateBodySizeFromVehicleRegistrationOcr, type BodySizeEstimate } from "@/lib/vehicles/body-size-estimate";
+import { normalizeJpPostalCode, normalizeJpAddressInput, type JpPostalLookupResultCode } from "@/lib/geo/jp-postal-master-contract";
+import {
+  shouldTriggerPostalToAddress,
+  shouldTriggerAddressToPostal,
+  planPostalToAddressApply,
+  planAddressToPostalApply,
+} from "./postal-master-apply";
 import { OcrEntry } from "../OcrEntry";
 import {
   Card, SectionTitle, Field, TextInput, SelectButton, ToggleButton, ChoiceGrid,
@@ -99,8 +107,30 @@ function candidateSignature(candidates: readonly WizardDuplicateCandidate[]): st
   return candidates.map((c) => c.id).sort().join("|");
 }
 
+/**
+ * GDA-2A-OCR-POSTAL-MASTER-R2 — operator-facing text per non-FOUND postal-master result code.
+ * `INVALID_INPUT` maps to the empty string and is never rendered: the trigger conditions already
+ * require a well-formed input before either invoker is ever called, so this code should not occur
+ * in practice, and it is exactly as "nothing to tell the operator" as the duplicate check's
+ * `NOT_APPLICABLE`.
+ */
+const POSTAL_LOOKUP_MESSAGE: Record<Exclude<JpPostalLookupResultCode, "FOUND">, string> = {
+  INVALID_INPUT: "",
+  NOT_FOUND: "該当する住所が見つかりませんでした。住所を直接入力してください。",
+  AMBIGUOUS: "候補が複数あるため自動入力できません。住所を直接入力してください。",
+  MASTER_UNAVAILABLE: "郵便番号検索を利用できません。住所を直接入力してください。",
+};
+
+const ADDRESS_LOOKUP_MESSAGE: Record<Exclude<JpPostalLookupResultCode, "FOUND">, string> = {
+  INVALID_INPUT: "",
+  NOT_FOUND: "住所から郵便番号を特定できませんでした。郵便番号を直接入力してください。",
+  AMBIGUOUS: "候補が複数あるため自動入力できません。郵便番号を直接入力してください。",
+  MASTER_UNAVAILABLE: "郵便番号検索を利用できません。郵便番号を直接入力してください。",
+};
+
 export function Step1Customer({
-  api, customers, vehicles, customerSearchInvoker, duplicateCheckInvoker, onSizeEstimate,
+  api, customers, vehicles, customerSearchInvoker, duplicateCheckInvoker,
+  postalToAddressInvoker, addressToPostalInvoker, onSizeEstimate,
 }: {
   api: EstimateWizardApi;
   /** GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_A — OPTIONAL: the same host-owned transient 3M
@@ -108,7 +138,7 @@ export function Step1Customer({
    *  callers remain compatible. */
   onSizeEstimate?: (estimate: BodySizeEstimate | null) => void;
 } & WizardExistingEntityInputs & WizardCustomerSearchInputs
-  & WizardDuplicateCheckInputs) {
+  & WizardDuplicateCheckInputs & WizardPostalMasterLookupInputs) {
   const c = api.store.customer;
   const v = api.store.vehicle;
   const [query, setQuery] = useState("");
@@ -205,6 +235,46 @@ export function Step1Customer({
   const showDuplicatePanel =
     dupCandidates.length > 0 && dupDismissed !== dupSignature && c.regMethod !== "search";
 
+  // ── GDA-2A-OCR-POSTAL-MASTER-R2: bidirectional postal/address assist ────────────────────────
+  // ADVISORY-FILL ONLY, never blocking. `customerRef` always holds the latest draft so an async
+  // lookup response can re-check "is the source input unchanged and the target still blank" at
+  // RESPONSE time (not merely at request time) before ever calling `setC` — the same
+  // stale-response and zero-write discipline `postal-master-apply.ts` enforces.
+  const customerRef = useRef(c);
+  customerRef.current = c;
+
+  const [postalLookupNotice, setPostalLookupNotice] = useState<string | null>(null);
+  const [addressLookupNotice, setAddressLookupNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!postalToAddressInvoker) return;
+    if (!shouldTriggerPostalToAddress(c.postal, c.address)) { setPostalLookupNotice(null); return; }
+    const sourcePostalCode = normalizeJpPostalCode(c.postal);
+    if (sourcePostalCode === null) return;
+    let current = true;
+    const timer = setTimeout(() => {
+      void postalToAddressInvoker(c.postal).then((result) => {
+        if (!current) return;
+        const plan = planPostalToAddressApply({
+          requestSnapshot: { sourcePostalCode },
+          currentPostalInput: customerRef.current.postal,
+          currentAddressTarget: customerRef.current.address,
+          result,
+        });
+        if (plan.apply) {
+          setC({ address: plan.address });
+          setPostalLookupNotice(null);
+        } else {
+          setPostalLookupNotice(result.code === "FOUND" ? null : POSTAL_LOOKUP_MESSAGE[result.code] || null);
+        }
+      }).catch(() => {
+        if (!current) return;
+        setPostalLookupNotice(POSTAL_LOOKUP_MESSAGE.MASTER_UNAVAILABLE);
+      });
+    }, 400);
+    return () => { current = false; clearTimeout(timer); };
+  }, [c.postal, c.address, postalToAddressInvoker]);
+
   // EFFECTIVE, not merely stored: the mode must say "search" AND the id must still
   // resolve uniquely. A stale id from a previous mode must not keep the CREATE
   // fields hidden.
@@ -263,6 +333,34 @@ export function Step1Customer({
                 ...(Object.keys(vehiclePatch).length > 0 ? { vehicle: vehiclePatch } : {}),
               };
               if (Object.keys(patch).length > 0) api.updateStore(patch);
+
+              // GDA-2A-OCR-POSTAL-MASTER-R2 — OCR-address-to-postal, ONE-SHOT: fires only when
+              // THIS OCR patch itself supplies a nonblank address and the postal target was blank
+              // BEFORE this patch (read from `c`, the pre-patch draft — never from the patch
+              // itself, which carries no postal field). A manually typed address does not retrigger
+              // this path; only a freshly reviewed OCR result does.
+              const ocrAddress = customerPatch.address;
+              if (addressToPostalInvoker && typeof ocrAddress === "string" && c.postal.trim() === "") {
+                const sourceAddress = normalizeJpAddressInput(ocrAddress);
+                if (sourceAddress !== null) {
+                  void addressToPostalInvoker(ocrAddress).then((result) => {
+                    const plan = planAddressToPostalApply({
+                      requestSnapshot: { sourceAddress },
+                      currentAddressInput: customerRef.current.address,
+                      currentPostalTarget: customerRef.current.postal,
+                      result,
+                    });
+                    if (plan.apply) {
+                      setC({ postal: plan.postalCode });
+                      setAddressLookupNotice(null);
+                    } else {
+                      setAddressLookupNotice(result.code === "FOUND" ? null : ADDRESS_LOOKUP_MESSAGE[result.code] || null);
+                    }
+                  }).catch(() => {
+                    setAddressLookupNotice(ADDRESS_LOOKUP_MESSAGE.MASTER_UNAVAILABLE);
+                  });
+                }
+              }
 
               // Spreading the customer patch into the draft is what feeds the applied name into
               // the B2-D duplicate check: the effect below watches c.name / c.kana / c.phone and
@@ -380,9 +478,15 @@ export function Step1Customer({
             <TextInput value={c.lineId} onChange={(x) => setC({ lineId: x })} placeholder="line-id" />
           </Field>
         </ChoiceGrid>
+        {postalLookupNotice && (
+          <p className="text-[11px] text-slate-500" data-testid="postal-to-address-notice">{postalLookupNotice}</p>
+        )}
         <Field label="住所" value={c.address}>
           <TextInput value={c.address} onChange={(x) => setC({ address: x })} placeholder="都道府県・市区町村・番地" />
         </Field>
+        {addressLookupNotice && (
+          <p className="text-[11px] text-slate-500" data-testid="address-to-postal-notice">{addressLookupNotice}</p>
+        )}
       </div>
       )}
 
