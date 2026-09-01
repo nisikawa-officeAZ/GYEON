@@ -1554,3 +1554,35 @@ Any proposed change to mission, fixed decisions, phase order, completion standar
 3. Identify time, risk, security, and field-work impact.
 4. Receive explicit user approval.
 5. Be committed and recorded in the result ledger before implementation follows the new decision.
+
+## 11. Active bounded OCR residual closure — R6 chassis-number Step-2 field
+
+**Accepted diagnosis evidence:** One owner-authorized, non-persistent terminal Claude Code diagnosis at PR #48 fixed source baseline `c6155bfa7ae342e6a0a9394e1c7eddf9bfdfacd6` / tree `e77931bc7c1f4f1bff91b2b4769f45a9cbf67163` returned `GDA_ESTIMATE_WIZARD_OCR_PREVIEW_GAP_R5_READ_ONLY_DIAGNOSIS_RESULT_V2`. MacBook Codex independently accepted the following split disposition:
+
+- Postal reverse lookup is already wired in source. Its observed `MASTER_UNAVAILABLE` requires a separate Preview-environment migration/active-master-batch gate and authorizes no source edit here.
+- Vehicle-name inference remains blocked until the owner approves a complete, trustworthy, free local exact-match authority. Grade remains manual-only. Neither item is part of R6.
+- Reviewed `chassis_number` already reaches `patch.vin`, Wizard vehicle draft, canonical save mapping, DTO, and `vehicles.vin`; the active Step-2 form alone lacks an editable chassis-number field. R6 is therefore a presentation-only repair.
+
+**R6 objective:** Add one visible, editable `車台番号` field to the active Step-2 new-vehicle form, bound to `v.vin` and emitting the existing one-key `setV({ vin: value })` patch. Prove that OCR-populated VIN is displayed, operator correction emits only `vehicle.vin`, blank OCR never erases an operator value, and unrelated vehicle fields remain unchanged.
+
+**R6 future implementation write allowlist — exactly two paths:**
+
+1. `src/components/estimates/wizard/steps/Step2Vehicle.tsx`
+2. `src/components/estimates/wizard/steps/Step2Vehicle.test.tsx` (new)
+
+**R6 frozen contracts:** No change to OCR extraction, customer/vehicle combined apply, postal lookup, vehicle-name behavior, grade, body-size rules, existing-vehicle selection, save authority, DTO/schema/migration/RPC/provider/environment, or explicit-save-only persistence. `src/components/estimates/wizard/screens/ScreensPreview.tsx` remains metadata-only and must never be opened, read, diffed, copied, staged, or modified.
+
+**R6 authorized verification after separate dispatch:**
+
+- `node --import tsx --test src/components/estimates/wizard/steps/Step2Vehicle.test.tsx`
+- `node --import tsx --test src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx`
+- `npm run typecheck`
+- `git diff --check -- src/components/estimates/wizard/steps/Step2Vehicle.tsx src/components/estimates/wizard/steps/Step2Vehicle.test.tsx`
+
+**R6 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_CHASSIS_UI_R6_IMPLEMENTATION.md` (new)
+
+**Current gate:** Author and independently verify only the three governance paths above. No private-file transmission, Claude implementation invocation, source/test edit, executable test, stage, commit, push, PR mutation, database/Supabase/provider/Preview/production access, Ready, merge, migration, or deployment is authorized by this governance-authoring gate. Governance delivery, private transmission, two-path implementation, verification, source delivery, and Preview validation remain separate gates.

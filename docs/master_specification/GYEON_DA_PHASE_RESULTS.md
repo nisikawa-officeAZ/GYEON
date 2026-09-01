@@ -4127,3 +4127,56 @@ prohibited_actions_confirmed:
 decision: AUTHOR_EXACT_THREE_PATH_R2_CORRECTED_IMPLEMENTATION_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
 ```
+
+## GDA-2A-OCR-CHASSIS-UI-R6-G1 — Accepted R5 diagnosis and implementation governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_CHASSIS_UI_R6_IMPLEMENTATION_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-02
+append_only: true
+authorization: "The owner approved proceeding to the chassis-number input implementation phase. This gate authors exactly three governance files only; private transmission, implementation, tests, Git delivery, environment access, and deployment remain separate."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: c6155bfa7ae342e6a0a9394e1c7eddf9bfdfacd6
+  tree: e77931bc7c1f4f1bff91b2b4769f45a9cbf67163
+r5_terminal_diagnosis:
+  result_id: GDA_ESTIMATE_WIZARD_OCR_PREVIEW_GAP_R5_READ_ONLY_DIAGNOSIS_RESULT_V2
+  execution: "One owner-authorized non-persistent Anthropic Claude Code invocation; tools disabled; exit 0; 34/34 authorized files supplied; no GitHub comment or mutation."
+  result_sha256: e86011fe2847803742612475ef8db811999462907b6546fd8656f6fc8b624288
+  claude_primary_verdict: OWNER_DECISION_REQUIRED_VEHICLE_NAME_MAPPING_AUTHORITY
+  codex_disposition:
+    postal: ENVIRONMENT_ACTIVATION_REQUIRED_POSTAL_MASTER_SEPARATE_GATE
+    vehicle_name: OWNER_DECISION_REQUIRED_NO_R6_EDIT
+    chassis: IMPLEMENTATION_SCOPE_READY_PRESENTATION_ONLY
+accepted_chassis_chain:
+  - "OCR chassis_number maps to patch.vin and the Wizard vehicle draft."
+  - "The canonical field contract and both save mappers carry VIN to the new-vehicle DTO and vehicles.vin."
+  - "The active src/components/estimates/wizard/steps/Step2Vehicle.tsx renders no editable v.vin field."
+future_exact_write_allowlist:
+  - src/components/estimates/wizard/steps/Step2Vehicle.tsx
+  - src/components/estimates/wizard/steps/Step2Vehicle.test.tsx
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_CHASSIS_UI_R6_IMPLEMENTATION.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  private_external_transmission: false
+  source_or_test_edit: false
+  executable_test_or_typecheck: false
+  stage_commit_push_pr_mutation: false
+  database_supabase_provider_preview_production: false
+  ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_R6_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
