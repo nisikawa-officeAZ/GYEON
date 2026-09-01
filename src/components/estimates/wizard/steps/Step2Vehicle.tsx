@@ -197,6 +197,9 @@ export function Step2Vehicle({
             <Field label="型式" value={v.vehicleCode}>
               <TextInput value={v.vehicleCode} onChange={(x) => setV({ vehicleCode: x })} placeholder="ABA-XXX" />
             </Field>
+            <Field label="車台番号" value={v.vin}>
+              <TextInput value={v.vin} onChange={(x) => setV({ vin: x })} placeholder="ABC-1234567" />
+            </Field>
             <Field label="グレード" value={v.grade} hint="車検証からは取得できないため、常に手入力です（任意）">
               <TextInput value={v.grade} onChange={(x) => setV({ grade: x })} placeholder="RS" />
             </Field>
