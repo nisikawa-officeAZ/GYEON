@@ -3448,3 +3448,68 @@ boundary:
 decision: RECORD_PUSHED_DECISION_AND_REPLACE_STALE_PR_METADATA
 next: "VERIFY_THE_EXACT_TWO_DOCUMENT_CORRECTION_DIFF_AND_PR_METADATA, THEN REQUEST_SEPARATE NORMAL_PUSH_AUTHORIZATION IF NEEDED. READY_AND_MERGE_REMAIN_SEPARATE."
 ```
+
+## GYEON-ORDER-V3-D16-P2B0 — Book full-payment/refund contract alignment governance
+
+```yaml
+phase: GYEON_ORDER_V3_D16_P2B0_BOOK_PAYMENT_CONTRACT_ALIGNMENT
+status: GOVERNANCE_DELIVERY_AUTHORIZED_SOURCE_NOT_YET_CHANGED
+date: 2026-09-01
+append_only: true
+authorization: "The owner authorized a dedicated branch/worktree, exactly three governance-document changes, one local governance commit, one normal non-force push, and one new Draft PR. The owner separately authorized sending the private governance and exact four source files to Anthropic Claude Code and one bounded four-file implementation/test run, but source implementation can begin only after the governance PR and newest Claude-targeted instruction exist. Claude may not stage, commit, push, or mutate the PR."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_source_base_commit: b79296305f60374849e983163109b5ec297379d1
+  fixed_source_base_tree: 102146dfe671e8fe33b60983bcbbf6fff7907688
+  dedicated_branch: agent/gyeon-order-d16-p2b0-book-contract-alignment
+  dedicated_worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-d16-p2b0-book-contract-alignment
+studio_reference:
+  repository: nisikawa-officeAZ/detaileros-inventory-foundation
+  phase: GYEON_ORDER_V3_D16_P2A_SINGLE_FULL_CHARGE_PURE_CONTRACT
+  pull_request: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/pull/73
+  merge_commit: 55a2df26a3bf7ac023c4844b26f95b22ee56683c
+diagnosis:
+  current_card_release_trigger: card_authorized
+  current_caller_condition: cardAuthorized
+  stale_split_block_reason: card_split_capture_unresolved
+  stale_edit_action: prepare_card_reauthorization
+  stale_compensation: void_new_card_authorization
+  focused_prechange_tests: PASS_40_OF_40_BUT_PROVE_SUPERSEDED_CONTRACT
+  first_claude_attempt: BLOCKED_GOVERNANCE_PRECONDITION_ZERO_EDITS_ZERO_TESTS
+owner_contract:
+  final_submit_actor: SHOP_OWNER_ONLY
+  charge_timing: OWNER_FINAL_SUBMIT
+  charge_amount: FULL_IMMUTABLE_TAX_INCLUSIVE_JPY_PAYABLE_TOTAL_INCLUDING_BACKORDER
+  capture_count: ONE
+  shipping_policy_changes_payment: false
+  jcb_special_branch: false
+  warehouse_release_card_evidence: SERVER_VERIFIED_PAYMENT_SUCCEEDED_ONLY
+  historical_authorization_split_multicapture_setupintent_paths: PROHIBITED
+  post_payment_amount_edit: post_payment_amount_edit_forbidden
+  added_items: SEPARATE_ORDER_REQUIRED
+  cancellation_or_nonfulfillment: EXACT_SERVER_CALCULATED_PARTIAL_OR_FULL_REFUND
+  cumulative_refund_cap: SUCCEEDED_PAYMENT_AMOUNT
+  duplicate_refund_operation: DENY
+  post_payment_finalization_failure_compensation: EXACT_FULL_REFUND_REQUIRED
+governance_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_D16_P2B0_BOOK_PAYMENT_CONTRACT_ALIGNMENT.md
+future_source_allowlist:
+  - src/lib/product-orders/gyeon-order-v3-contract-core.ts
+  - src/lib/product-orders/gyeon-order-v3-contract-core.test.ts
+  - src/lib/product-orders/gyeon-order-v3-external-authority-core.ts
+  - src/lib/product-orders/gyeon-order-v3-external-authority-core.test.ts
+protected_paths:
+  - src/components/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+boundary:
+  - "No source, test, Stripe SDK/API/Webhook, provider/network, DB, SQL, migration, Supabase, package, lockfile, UI, route, environment, secret, Studio-source, shared/staging/production, Ready, merge, or deployment change is part of this governance commit."
+  - "Existing C5-B/C5-D database artifacts remain stale and blocked from application until a later separately authorized forward-only correction and fresh disposable verification."
+  - "The governance Draft PR does not itself accept or deliver a source candidate."
+decision: AUTHORIZE_GOVERNANCE_DELIVERY_THEN_RETRY_ONE_BOUNDED_CLAUDE_SOURCE_GATE
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_PROTECTED_METADATA, CREATE_ONE_LOCAL_GOVERNANCE_COMMIT, NORMAL_PUSH, AND NEW_DRAFT_PR, THEN PUBLISH_THE_EXACT_EXECUTION_IDENTITY_AND_FOUR_FILE_CLAUDE_INSTRUCTION. AFTER_ONE_CLAUDE_RUN, MACBOOK_CODEX_INDEPENDENTLY_AUDITS_BEFORE_ANY_SOURCE_GIT_ACTION."
+```
