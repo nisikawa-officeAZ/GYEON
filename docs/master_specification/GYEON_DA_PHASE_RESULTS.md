@@ -3513,3 +3513,55 @@ boundary:
 decision: AUTHORIZE_GOVERNANCE_DELIVERY_THEN_RETRY_ONE_BOUNDED_CLAUDE_SOURCE_GATE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_PROTECTED_METADATA, CREATE_ONE_LOCAL_GOVERNANCE_COMMIT, NORMAL_PUSH, AND NEW_DRAFT_PR, THEN PUBLISH_THE_EXACT_EXECUTION_IDENTITY_AND_FOUR_FILE_CLAUDE_INSTRUCTION. AFTER_ONE_CLAUDE_RUN, MACBOOK_CODEX_INDEPENDENTLY_AUDITS_BEFORE_ANY_SOURCE_GIT_ACTION."
 ```
+
+## GYEON-ORDER-V3-D16-P2B1 — Stripe pre-connection read-only diagnosis governance
+
+```yaml
+phase: GYEON_ORDER_V3_D16_P2B1_STRIPE_PRECONNECTION_READ_ONLY_DIAGNOSIS
+status: OWNER_AUTHORIZED_GOVERNANCE_CANDIDATE_UNCOMMITTED
+date: 2026-09-01
+append_only: true
+authorization: "The owner explicitly authorized creating, committing, normally pushing, and opening one Draft PR for exactly three D16-P2B1 governance files, then transmitting the exact corrected private read allowlist to Anthropic Claude Code for one read-only diagnosis. No implementation or test execution is authorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_source_base_commit: 35fa921b786572d5a780dd34d45cdbab9d938260
+  fixed_source_base_tree: baa4017ee17185645ac46fcea72f6fa3da13d7fe
+  dedicated_branch: agent/gyeon-order-d16-p2b1-stripe-read-only-diagnosis
+  dedicated_worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-d16-p2b1-stripe-read-only-diagnosis
+preflight:
+  d16_p2b0_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/50
+  d16_p2b0_merge_commit: 35fa921b786572d5a780dd34d45cdbab9d938260
+  stripe_sdk_dependency: ABSENT
+  stripe_route: ABSENT
+  stripe_env_placeholder: ABSENT
+  immutable_stripe_webhook_inbox: ABSENT
+  durable_succeeded_payment_record: ABSENT
+  append_only_refund_ledger: ABSENT
+  formal_db_contract: STALE_AUTHORIZATION_REAUTHORIZATION_AND_VOID_MODEL
+  generic_product_order_direct_crud: PRESENT_REQUIRES_BYPASS_DIAGNOSIS
+  generic_finance_payment_reuse: PROHIBITED
+governance_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_D16_P2B1_STRIPE_PRECONNECTION_READ_ONLY_DIAGNOSIS.md
+private_read_scope:
+  exact_literal_count: 25
+  excluded_examples:
+    - .env.example
+    - package_lockfiles
+    - secret_bearing_environment_files
+required_result_marker: GYEON_ORDER_V3_D16_P2B1_STRIPE_PRECONNECTION_READ_ONLY_DIAGNOSIS_RESULT_V1
+protected_paths:
+  - src/components/estimates/wizard/screens/ScreensPreview.tsx
+  - src/components/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+boundary:
+  - "Claude may read only the exact 25 private paths and may not edit or run tests."
+  - "No package lockfile, secret value, UI source, unrelated finance source, other migration, Studio source, Stripe/Supabase/DB/provider/network, environment mutation, sandbox, staging, production, or deployment access is authorized."
+  - "Source correction, DB migration, provider adapter, Webhook, sandbox, stage, commit, push, migration apply, Ready, merge, and deployment remain later separate gates."
+decision: AUTHORIZE_EXACT_THREE_FILE_GOVERNANCE_DELIVERY_THEN_ONE_EXACT_25_PATH_PRIVATE_READ_ONLY_DIAGNOSIS
+next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_PROTECTED_METADATA, CREATE_ONE_LOCAL_GOVERNANCE_COMMIT, NORMAL_PUSH, OPEN_ONE_DRAFT_PR, PUBLISH_THE_EXACT_EXECUTION_IDENTITY, THEN RUN_CLAUDE_ONCE_AND_INDEPENDENTLY_AUDIT_THE_RESULT."
+```
