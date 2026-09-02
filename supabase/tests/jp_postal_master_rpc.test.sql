@@ -42,7 +42,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET LOCAL search_path = extensions, pg_temp, public, pg_catalog;
 
-SELECT plan(74);
+SELECT plan(75);
 
 -- ===========================================================================
 -- 01-08: schema, tables, columns, indexes
