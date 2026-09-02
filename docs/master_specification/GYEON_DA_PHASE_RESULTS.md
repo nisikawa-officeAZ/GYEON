@@ -3645,3 +3645,50 @@ boundary:
 decision: ACCEPT_CORRECTED_DIAGNOSIS_AS_LOCAL_GOVERNANCE_CANDIDATE
 next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_PROTECTED_METADATA, THEN REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_TO_PR_51. DO_NOT_START_IMPLEMENTATION_OR_BOOK_INVENTORY_C1."
 ```
+
+## GYEON-ORDER-V3-D16-P2B1-R2 — R1 governance delivery reconciliation
+
+```yaml
+phase: GYEON_ORDER_V3_D16_P2B1_R2_R1_GOVERNANCE_DELIVERY_RECONCILIATION
+status: PASS_R1_GOVERNANCE_COMMITTED_PUSHED_CHECKS_PASS_PR_REMAINS_DRAFT
+date: 2026-09-03
+append_only: true
+authorization: "The owner explicitly authorized staging and locally committing exactly the three R1 governance paths, then separately authorized a normal non-force push of that fixed commit to the existing PR #51 branch. Ready, merge, implementation, provider, DB, migration, and deployment were not authorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/51
+  branch: agent/gyeon-order-d16-p2b1-stripe-read-only-diagnosis
+  base_branch: main
+delivery:
+  commit: 241eb33347a4b3af3090f0536c340a1026359c31
+  tree: 91b64d2ad62d692c39b2a23ffe7f2df65ea03599
+  parent: f77f32d8ec908e4da76dd9a7f1406e4026cc1465
+  normal_push_completed: true
+  force_push: false
+  changed_paths_in_commit: 3
+  changed_paths_in_pr_total: 4
+  pr_total_path_explanation: ORIGINAL_P2B1_DIRECTIVE_PLUS_THREE_R1_GOVERNANCE_PATHS
+github_audit:
+  pr_state: OPEN
+  pr_is_draft: true
+  pr_base: main
+  pr_head: 241eb33347a4b3af3090f0536c340a1026359c31
+  head_matches_delivery_commit: true
+  merge_state: CLEAN
+  vercel: PASS
+  vercel_preview_comments: PASS
+protected_metadata:
+  ScreensPreview_tsx_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_migration_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_boundary_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+current_two_document_reconciliation_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundary:
+  - "This reconciliation corrects only the current delivery state in the completion plan and appends this immutable ledger entry."
+  - "No application source, test, Stripe SDK, dependency, lockfile, adapter, Webhook, DB, SQL, migration, Supabase, provider, environment, Vercel configuration, staging, production, or deployment action is authorized or performed."
+  - "Ready and merge remain separate owner gates. Book inventory C1 remains not started."
+decision: ACCEPT_R1_GOVERNANCE_DELIVERY_AND_HOLD_PR_DRAFT
+next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF, THEN REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_STAGE_AND_LOCAL_COMMIT. NORMAL_PUSH, READY, MERGE, AND BOOK_INVENTORY_C1_REMAIN_SEPARATE."
+```

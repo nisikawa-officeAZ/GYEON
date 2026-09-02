@@ -634,7 +634,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### GYEON-ORDER-V3-D16-P2B1 — Stripe pre-connection read-only diagnosis
 
-**Status:** R1 CORRECTED DIAGNOSIS ACCEPTED LOCALLY / EXACT THREE-FILE GOVERNANCE RECORD UNCOMMITTED / NO IMPLEMENTATION AUTHORIZED.
+**Status:** R1 CORRECTED DIAGNOSIS ACCEPTED / EXACT THREE-FILE GOVERNANCE RECORD COMMITTED AND NORMALLY PUSHED TO OPEN DRAFT PR #51 / CHECKS PASS / NO IMPLEMENTATION AUTHORIZED.
 
 **Objective:** Map the smallest safe Book-side forward correction from the stale C5-B/C5-D card-authorization database model to the merged D16-P2B0 one-upfront-full-payment and refund contract before any Stripe SDK, API, Webhook, database, migration, sandbox, or deployment implementation.
 
@@ -666,7 +666,9 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 3. `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_D16_P2B1_R1_DIAGNOSIS_RESULT_CORRECTION.md`
 
-**Current exit gate:** The corrected diagnosis is accepted as a local governance candidate only. Verify the exact three-path diff and protected metadata, then request separate owner authorization before stage, local commit, or normal push to PR #51. No application source, DB migration, Stripe adapter, Webhook, dependency, sandbox, provider configuration, environment mutation, Ready, merge, deployment, or Book inventory C1 work is authorized by the R1 result.
+**Delivery and acceptance:** The exact three-path R1 governance record was committed as `241eb33347a4b3af3090f0536c340a1026359c31`, tree `91b64d2ad62d692c39b2a23ffe7f2df65ea03599`, parent `f77f32d8ec908e4da76dd9a7f1406e4026cc1465`, and normally non-force pushed to the existing PR #51 branch. GitHub independently reports PR #51 as OPEN/Draft, base `main`, HEAD equal to that commit, merge state CLEAN, and both Vercel checks successful. The new commit changes exactly the three R1 governance paths; the PR contains four paths overall because it also contains the original P2B1 directive from its first commit.
+
+**Current exit gate:** The D16-P2B1 diagnosis record is delivered and checks pass. A separate owner gate is required before Ready-for-review, and merge remains a later separate gate. No application source, DB migration, Stripe adapter, Webhook, dependency, sandbox, provider configuration, environment mutation, deployment, or Book inventory C1 work is authorized by the R1 result or its delivery.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
