@@ -528,6 +528,41 @@ No package, lockfile, dependency, existing ZipCloud helper, OCR mapper, save RPC
 
 **Exit:** MacBook Codex verifies the exact three-path R2 governance diff, protected metadata, and `git diff --check`, then requests separate literal stage/local-commit authorization. Normal push, CLI migration-path allocation, Claude implementation, local/disposable verification, Git delivery, data import, and every environment action remain later gates.
 
+### GDA-2A-OCR-POSTAL-MASTER-R3 — Pre-activation safety repair diagnosis governance
+
+**Status:** SOURCE SAFETY AUDIT RETURNED `CHANGES_REQUIRED` / R3 READ-ONLY DIAGNOSIS GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. This gate authors only the exact three governance paths below. It does not authorize Claude dispatch, source repair, tests, migration apply, CSV import, database access, stage, commit, push, PR mutation, Preview, Ready, merge, or deployment.
+
+**Why R3 is mandatory:** The postal source candidate exists at commit `c6155bfa7ae342e6a0a9394e1c7eddf9bfdfacd6`, but it is not safe to activate as written. The later postal migration revokes `authenticated` usage from the shared `private` schema even though the earlier GYEON order migration grants `authenticated` execution of a function in that schema. It also revokes privileges across every table in the shared schema rather than only the new postal objects. In addition, the target development project has earlier unapplied local migrations, so a normal all-pending migration push cannot be described as a postal-only action. The importer can strand a `staged`/`validating` batch after an interruption and has no explicit target-project-ref guard or validate-only mode.
+
+**Diagnosis objectives — all mandatory:**
+
+1. Prove the exact shared-schema privilege regression and propose the smallest object-scoped repair that preserves every existing `private`-schema consumer.
+2. Prove the pending-migration chain and return a safe activation decision. The result must never recommend a command that silently applies unrelated or unapproved migrations.
+3. Define a fail-closed interrupted-import lifecycle: deterministic resume or explicit abort/reject, concurrency behavior, idempotency, checksum/source-date binding, and rollback evidence.
+4. Define importer environment guards: explicit expected project ref, normalized URL/ref verification, validate-only mode, safe confirmation/logging, and no secret disclosure.
+5. Return the smallest literal future repair allowlist and executable verification plan, including disposable PostgreSQL/Supabase runtime, privilege regression proof, failure injection, and import recovery.
+
+**Current dispatch baseline:**
+
+- Repository: `nisikawa-officeAZ/GYEON`
+- Pull request: `#48`, `OPEN/Draft`, base `main`
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Commit/tree: `d220c480947d09f0f21d834301e037a86d5f2d88` / `92fdcdbde39e56cdb6e8adf7f32e779292fbb62b`
+- PR head: `d220c480947d09f0f21d834301e037a86d5f2d88`
+- A later owner-approved dispatch must bind its own exact `DISPATCH_HEAD` and `DISPATCH_TREE`, prove this baseline is its ancestor, and prove that only the exact three governance paths below differ.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_READ_ONLY_REPAIR_DIAGNOSIS.md` (new)
+
+**Protected paths:** `src/components/estimates/wizard/screens/ScreensPreview.tsx`, the protected LINE migration, the protected monthly-invoice migration, and the monthly-invoice boundary test remain pathname/mode/blob/status metadata only. Their contents may never be opened, read, diffed, copied, staged, or modified by this phase.
+
+**Responsibility and gate separation:** Claude owns one later owner-approved bounded read-only diagnosis. MacBook Codex owns this governance candidate and later independent acceptance. Diagnosis, repair, executable tests, disposable runtime, migration-chain decision, environment preflight, migration apply, CSV acquisition/import, Git delivery, Preview, Ready, merge, and deployment are separate gates.
+
+**Exit:** Verify the exact three-path candidate, protected blob metadata, and `git diff --check`; then request separate literal stage/local-commit authorization. Do not dispatch Claude or modify source before that later authorization and delivery gate.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.

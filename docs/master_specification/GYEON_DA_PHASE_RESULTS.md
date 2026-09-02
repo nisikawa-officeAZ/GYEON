@@ -4228,3 +4228,55 @@ prohibited_actions_confirmed:
 decision: AUTHOR_EXACT_THREE_PATH_R7_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R3-G1 — Pre-activation safety repair diagnosis governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_READ_ONLY_REPAIR_DIAGNOSIS_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-02
+append_only: true
+authorization: "The owner approved preparing a Claude read-only diagnosis for the postal migration and import procedure. This gate authors exactly three governance paths only; dispatch, repair, tests, Git delivery, database access, migration apply, and data import remain separate."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: d220c480947d09f0f21d834301e037a86d5f2d88
+  tree: 92fdcdbde39e56cdb6e8adf7f32e779292fbb62b
+  observed_origin_main: 49a1dc4c396e50d5869f372a399c9ca1c10bc300
+audit_disposition: CHANGES_REQUIRED
+mandatory_findings_to_diagnose:
+  - "The later postal migration revokes authenticated usage from the shared private schema, conflicting with the earlier GYEON order migration's authenticated private-function contract."
+  - "The postal migration contains a schema-wide table privilege revoke that can alter unrelated private-schema objects; the repair must be object-scoped."
+  - "The development project migration history is behind multiple earlier local migrations, so a normal all-pending push is not a postal-only action."
+  - "An interrupted import can strand a staged or validating batch with no exposed resume or abort/reject recovery contract."
+  - "The importer accepts URL and service-role key without an explicit expected-project-ref guard or validate-only mode."
+environment_snapshot_read_only:
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  state: ACTIVE_HEALTHY
+  postal_migration_applied: false
+  postal_tables_and_rpcs_present: false
+  database_writes: false
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_READ_ONLY_REPAIR_DIAGNOSIS.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_test_migration_or_dataset_edit: false
+  executable_test_or_build: false
+  database_supabase_auth_storage_provider_access: false
+  migration_apply_or_csv_import: false
+  stage_commit_push_pr_mutation: false
+  preview_ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_POSTAL_R3_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
