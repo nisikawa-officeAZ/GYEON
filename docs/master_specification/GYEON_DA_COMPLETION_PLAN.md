@@ -601,6 +601,37 @@ No package, lockfile, dependency, existing ZipCloud helper, OCR mapper, save RPC
 
 **Exit:** Verify the exact three-path governance candidate, protected blob metadata, and `git diff --check`; then request separate literal stage/local-commit authorization. Normal push and the later five-file Claude implementation/test dispatch remain separate authorizations.
 
+### GDA-2A-OCR-POSTAL-MASTER-R5 — Disposable DB harness governance ratification
+
+**Status:** R4 SOURCE/F1 COMPLETED AND PUSHED / PR `#48` OPEN/DRAFT / VERCEL SUCCESS / R5 DESIGN COMMIT `90dee723eac9b2b035b1af998ae5531b31a8cf1b` PUSHED / FIRST CLAUDE IMPLEMENTATION INVOCATION STOPPED BEFORE WRITES BECAUSE PLAN/LEDGER RATIFICATION WAS MISSING / EXACT TWO-AUTHORITY-PATH RATIFICATION CANDIDATE UNSTAGED/UNCOMMITTED. No harness path, database, Supabase runtime, hosted environment, migration application, real CSV import, Git delivery, Ready, merge, or deployment is authorized by this status.
+
+**Ratified design:** `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md` and `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md` are the R5 design authorities. R5 uses two fresh loopback-only disposable lanes: `fresh` proves CLI-native full-chain migration replay, postal pgTAP, grants/RLS, real local Auth/PostgREST lookup, shared-`private`-schema non-regression, and lint; `import` proves the service-role import RPC state machine with deterministic synthetic rows, interruption/resume, duplicate-sequence zero-write success, promotion, safe status metadata, and terminal fail-closed behavior.
+
+**Canonical project-ref boundary:** The production importer intentionally rejects local URLs. R5 must not add a localhost override, test bypass, DNS/hosts/TLS proxy, source patch, or hosted-project substitute. The disposable import lane calls the local service-role PostgREST RPC directly from its harness driver. The production importer is limited to offline `--validate-only` proof plus fail-closed `NON_CANONICAL_SUPABASE_URL` proof before client construction. A real mutating importer run remains a later Development-only data-import gate.
+
+**Future harness implementation write allowlist — exactly seven new paths:**
+
+1. `scripts/e2e/gda-estimate-postal-master-r5/config.toml`
+2. `scripts/e2e/gda-estimate-postal-master-r5/setup.sh`
+3. `scripts/e2e/gda-estimate-postal-master-r5/capture-evidence.sh`
+4. `scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh`
+5. `scripts/e2e/gda-estimate-postal-master-r5/real-auth.mjs`
+6. `scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs`
+7. `scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql`
+
+No existing source, migration, test, dependency, lockfile, repository config, UI, provider code, or existing E2E harness may be changed. Harness implementation is static-only: no setup/capture/cleanup execution, Colima, Docker, psql, SQL, Auth, PostgREST, database-affecting Supabase command, hosted access, or network. Supabase `--version`/`--help`, shell syntax, Node syntax, SQL static checks, exact-path verification, diff-check, and protected metadata checks are the only implementation-time commands.
+
+**Governance stop evidence:** One owner-approved non-persistent Claude Code invocation read the explicitly approved 21 private files and returned without creating any harness file. It identified the missing completion-plan and append-only-ledger ratification. The invocation result is accepted only as a governance stop, not as harness implementation or runtime evidence. The next invocation must use `dontAsk` with an explicit command allowlist so unapproved `gh` or network commands cannot run.
+
+**Current ratification write allowlist — exactly two existing paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Fixed ratification baseline:** PR `#48`, branch `agent/estimate-wizard-ocr-postal-unified-r1`, commit/tree `90dee723eac9b2b035b1af998ae5531b31a8cf1b` / `5080f83ff831f0506390e274bef82d2e1062e556`, PR state `OPEN/Draft`, base `main`, and Vercel `SUCCESS`.
+
+**Exit:** MacBook Codex verifies the exact two-authority-path diff, protected blob metadata, unchanged R5 design files, and `git diff --check`; then requests separate literal stage/local-commit authorization. Normal push and any second Claude transmission/implementation invocation remain later separate owner gates. Harness runtime is a further independent gate after static candidate acceptance and Git delivery.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.

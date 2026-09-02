@@ -4412,3 +4412,75 @@ prohibited_actions_confirmed:
 decision: CORRECT_TO_EXACT_14_READ_PATHS_AND_RETAIN_EXACT_5_WRITE_PATHS
 next: "VERIFY_EXACT_THREE_PATH_DIFF_STAGE_LOCAL_COMMIT_NORMAL_PUSH_THEN_STOP_BEFORE_CLAUDE_IMPLEMENTATION_REDISPATCH"
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-G1 — Disposable harness authority ratification
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_HARNESS_GOVERNANCE_RATIFICATION
+status: EXACT_TWO_AUTHORITY_PATH_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner approved adding the missing R5 ratification to the completion plan and append-only phase ledger only. Stage, commit, push, Claude redispatch, harness implementation, database runtime, hosted access, migration apply, and real CSV import remain separate."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 90dee723eac9b2b035b1af998ae5531b31a8cf1b
+  tree: 5080f83ff831f0506390e274bef82d2e1062e556
+  vercel: SUCCESS
+r5_design_authorities:
+  plan: docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+  directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+  design_commit: 90dee723eac9b2b035b1af998ae5531b31a8cf1b
+ratified_runtime_architecture:
+  lanes:
+    - fresh
+    - import
+  loopback_only: true
+  fresh_suffix_required: true
+  failed_suffix_burn_required: true
+  synthetic_rows_only: true
+  linked_or_hosted_project_access: false
+  canonical_project_ref_bypass: false
+  production_importer_local_write: false
+future_exact_harness_write_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5/config.toml
+  - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/capture-evidence.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/real-auth.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql
+first_claude_invocation:
+  external_transmission_owner_approved: true
+  private_files_approved_and_read: 21
+  session_persisted: false
+  result: BLOCKED_MISSING_PLAN_AND_LEDGER_RATIFICATION
+  harness_files_created: 0
+  existing_files_changed: 0
+  database_or_supabase_runtime: false
+  git_delivery_or_pr_mutation: false
+  accepted_as_implementation_evidence: false
+  next_invocation_permission_mode: dontAsk
+  unapproved_gh_or_network_commands_allowed_next_time: false
+exact_current_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  harness_implementation_or_runtime: false
+  claude_redispatch_or_external_transmission: false
+  source_migration_test_dependency_or_lockfile_edit: false
+  database_supabase_auth_postgrest_provider_or_hosted_access: false
+  migration_apply_or_csv_import: false
+  stage_commit_push_pr_mutation: false
+  preview_ready_merge_deploy: false
+decision: RATIFY_R5_IN_EXACT_TWO_AUTHORITY_PATHS_ONLY
+next: "VERIFY_EXACT_TWO_PATH_DIFF_PROTECTED_METADATA_R5_DESIGN_HASHES_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
