@@ -402,3 +402,82 @@ test("POSTAL: an OCR result with no readable address performs no address-to-post
   await flushMicrotasks();
   assert.equal(calls.length, 0, "no address supplied by this OCR result means no reverse-lookup call");
 });
+
+// ── GDA_ESTIMATE_WIZARD_OCR_CUSTOMER_MARKER_POSTAL_R7: markers / directional phrases ────────────
+//
+// 車検証 OCR text routinely carries placeholder text (blank, an asterisk redaction, 同上, or a
+// directional phrase such as 使用者住所に同じ) instead of a real value. These prove the marker /
+// directional-phrase resolution in ocr-customer-mapping.ts reaches all the way through the shared
+// customer core to the combined wizard update and the postal-lookup seam.
+
+test("INTEGRATION: marker-only customer fields plus normal vehicle fields still yield ONE combined write with zero postal lookups, and the omitted customer section is what preserves the operator's existing name/address", async () => {
+  const calls: unknown[] = [];
+  const addressToPostalInvoker: JpPostalReverseLookupInvoker = async (raw: unknown) => {
+    calls.push(raw);
+    return { code: "FOUND", postalCode: "1000001" };
+  };
+  // Real-looking synthetic operator-entered values already on the store BEFORE this OCR apply.
+  // The marker-only OCR result below must never overwrite them — the mechanism is that
+  // "customer" is left out of the patch entirely, so there is nothing in the write that could
+  // clobber operatorName/operatorAddress once a reducer applies it.
+  const operatorName = "手入力操作太郎";
+  const operatorAddress = "東京都新宿区9-9-9";
+  const { onApply, writes } = captureStep1OnApply(
+    { customer: { regMethod: "ocr", postal: "", name: operatorName, address: operatorAddress } },
+    () => {},
+    { addressToPostalInvoker },
+  );
+  onApply({
+    owner_name:    "＊＊＊",  // asterisk-only marker — unusable
+    owner_address: "同上",    // unusable — never a directional phrase
+    maker:         "トヨタ",
+    vehicle_name:  "クラウン",
+  });
+  await flushMicrotasks();
+
+  assert.equal(writes.length, 1, "marker-only customer text never produces a second async write");
+  assert.equal("vehicle" in writes[0], true, "the normal vehicle patch is still applied");
+  assert.equal(
+    "customer" in writes[0], false,
+    "an entirely marker-only customer section is omitted, not sent as {} — this omission is exactly " +
+    "what preserves the operator-entered name/address, since a patch with no customer key cannot " +
+    "overwrite either field",
+  );
+  assert.equal(calls.length, 0, "marker text must never reach the postal lookup");
+});
+
+test("POSTAL: a directional-phrase-resolved owner_address triggers address-to-postal exactly once", async () => {
+  const calls: unknown[] = [];
+  const addressToPostalInvoker: JpPostalReverseLookupInvoker = async (raw: unknown) => {
+    calls.push(raw);
+    return { code: "FOUND", postalCode: "1000001" };
+  };
+  const { onApply, writes } = captureStep1OnApply(
+    { customer: { regMethod: "ocr", postal: "", address: "東京都港区1-2-3" } },
+    () => {},
+    { addressToPostalInvoker },
+  );
+  onApply({
+    owner_name:    "山田太郎",
+    owner_address: "使用者住所に同じ", // resolves one hop to the concrete user_address below
+    user_address:  "東京都港区1-2-3",
+  });
+  await flushMicrotasks();
+
+  assert.equal(calls.length, 1, "the directional phrase resolved to a concrete address, so the lookup fires exactly once");
+  assert.equal(calls[0], "東京都港区1-2-3");
+  assert.equal(writes.length, 2, "the original OCR patch write, then one async postal-fill write");
+});
+
+test("POSTAL: an unresolved directional owner_address (opposite absent) never triggers address-to-postal", async () => {
+  const calls: unknown[] = [];
+  const addressToPostalInvoker: JpPostalReverseLookupInvoker = async (raw: unknown) => { calls.push(raw); return { code: "FOUND", postalCode: "1000001" }; };
+  const { onApply, writes } = captureStep1OnApply(
+    { customer: { regMethod: "ocr", postal: "" } }, () => {}, { addressToPostalInvoker },
+  );
+  onApply({ owner_name: "山田太郎", owner_address: "使用者住所に同じ" }); // no user_address at all
+  await flushMicrotasks();
+
+  assert.equal(calls.length, 0, "an unresolved directional phrase leaves the address unusable — no lookup call");
+  assert.equal(writes.length, 1, "no second write when no postal lookup fires");
+});
