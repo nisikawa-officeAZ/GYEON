@@ -89,7 +89,7 @@ R4_MANIFEST_PATHS=(
 r4_manifest_blob_for() {
   case "$1" in
     "supabase/migrations/20260901001246_jp_postal_master.sql") printf '%s' "65d2dd2096c29bceaf0060ffaf0f7b77117f0ede" ;;
-    "supabase/tests/jp_postal_master_rpc.test.sql") printf '%s' "9832459e92176498944353d38e02ddee4db444ea" ;;
+    "supabase/tests/jp_postal_master_rpc.test.sql") printf '%s' "81894d341dde80eb5bfda418629ae932aaa5cd93" ;;
     "src/lib/geo/jp-postal-master-migration-contract.test.ts") printf '%s' "2b653364d0938e55787395cdfd845c9bcfcb1f30" ;;
     "scripts/postal-master/import-japan-post.ts") printf '%s' "49fea46a9e1b3f013d72c385f22107321b046cbd" ;;
     "scripts/postal-master/import-japan-post.test.ts") printf '%s' "71f9fa3e07e648205d916101b835367c7fbd10a6" ;;
