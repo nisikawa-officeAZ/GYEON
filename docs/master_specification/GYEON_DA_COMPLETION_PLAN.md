@@ -1586,3 +1586,30 @@ Any proposed change to mission, fixed decisions, phase order, completion standar
 3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_CHASSIS_UI_R6_IMPLEMENTATION.md` (new)
 
 **Current gate:** Author and independently verify only the three governance paths above. No private-file transmission, Claude implementation invocation, source/test edit, executable test, stage, commit, push, PR mutation, database/Supabase/provider/Preview/production access, Ready, merge, migration, or deployment is authorized by this governance-authoring gate. Governance delivery, private transmission, two-path implementation, verification, source delivery, and Preview validation remain separate gates.
+
+### GDA-2A-OCR-CUSTOMER-MARKER-POSTAL-R7 — Customer marker normalization and postal handoff diagnosis
+
+**Status:** READ-ONLY DIAGNOSIS GOVERNANCE CANDIDATE AUTHORIZED — The owner reported authenticated PR #48 Preview evidence that one OCR apply now carries vehicle type and chassis number but places `***` into the customer name/address and leaves postal code blank. PR #48 must remain Draft and must not be marked Ready until the customer/postal chain is corrected and reverified.
+
+**Observed source risk:** The shared owner/user mapper trims raw strings but does not classify asterisk-only or directional repetition markers. Nonblank marker text can therefore be treated as a named party, become an authoritative `customer_candidate_name`/`customer_candidate_address`, and reach the Wizard customer patch. The one-shot address-to-postal path then receives an unusable marker rather than a usable address. Separately, a usable address still requires the target environment to contain the accepted Japan Post migration and one active imported batch; source presence is not environment proof.
+
+**R7 diagnosis objective:** Independently trace the complete marker-to-customer and customer-address-to-postal chains; define a literal, direction-aware marker contract that preserves the existing owner/user anti-mixing rule; return the smallest later implementation/test allowlist; and specify a separate read-only environment proof for the Japan Post master. Real PDFs, PII, customer data, environment values, and database rows are excluded from the Claude packet and result.
+
+**Source baseline:**
+
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Pull request: `#48`, required `OPEN/Draft`
+- Commit: `13c0798979129302b1845d5d6e0542210dce29c4`
+- Tree: `0300f36c482ab7ea008f7e8e128d6aa9a67cfd98`
+- Responsible diagnosis agent after a separate external-transmission gate: MacBook terminal Claude Code
+- Independent acceptance: MacBook Codex
+
+**R7 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_CUSTOMER_MARKER_POSTAL_R7_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Frozen contracts:** One reviewed OCR apply may update customer and vehicle drafts together, blank/unusable OCR never erases operator input, explicit final save remains the sole persistence boundary, vehicle name and grade remain manual under their accepted authority, R6 chassis UI remains unchanged, and postal resolution remains exact/unique/fail-closed through the private Japan Post master. No AI/fuzzy/web postal lookup, provider fallback, schema redesign, DB mutation, or production action belongs to R7 diagnosis.
+
+**Current gate:** Author and independently verify only the exact three governance paths. No private-source transmission, Claude invocation, source/test implementation, executable test, stage, commit, push, PR mutation, database/Supabase/provider/Preview/production access, Ready, merge, migration, import, or deployment is authorized. Governance delivery, private transmission, one read-only diagnosis, diagnosis acceptance, implementation governance, implementation, verification, source delivery, environment activation, and Preview revalidation remain separate gates.

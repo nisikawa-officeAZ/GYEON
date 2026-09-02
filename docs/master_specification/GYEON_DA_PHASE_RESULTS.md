@@ -4180,3 +4180,51 @@ prohibited_actions_confirmed:
 decision: AUTHOR_EXACT_THREE_PATH_R6_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
 ```
+
+## GDA-2A-OCR-CUSTOMER-MARKER-POSTAL-R7-G1 — Preview regression diagnosis governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_CUSTOMER_MARKER_POSTAL_R7_READ_ONLY_DIAGNOSIS_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-02
+append_only: true
+authorization: "The owner reported that authenticated PR #48 Preview OCR now carries vehicle data but leaves customer name/address as *** and postal code blank, and approved proceeding to the R7 Claude diagnosis/repair-instruction phase. This gate authors exactly three diagnosis-governance paths only. Diagnosis and implementation remain separate."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  required_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 13c0798979129302b1845d5d6e0542210dce29c4
+  tree: 0300f36c482ab7ea008f7e8e128d6aa9a67cfd98
+preview_observation:
+  vehicle_type_and_chassis: REFLECTED
+  customer_name: MARKER_TEXT_INSTEAD_OF_CUSTOMER
+  customer_address: MARKER_TEXT_INSTEAD_OF_ADDRESS
+  postal_code: BLANK
+codex_source_hypothesis_to_diagnose:
+  - "The shared owner/user mapper treats any trimmed nonblank marker such as *** as ordinary party data."
+  - "The review payload promotes the resolved marker to authoritative customer candidate fields."
+  - "The Wizard patch then supplies the marker address to the one-shot address-to-postal chain."
+  - "A valid address still needs separate environment proof of migration plus one active imported Japan Post batch."
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_CUSTOMER_MARKER_POSTAL_R7_READ_ONLY_DIAGNOSIS.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  private_external_transmission: false
+  real_pdf_pii_or_customer_data_transmission: false
+  claude_invocation: false
+  source_test_or_migration_edit: false
+  executable_test_or_build: false
+  database_supabase_csv_import_or_environment_access: false
+  stage_commit_push_pr_mutation: false
+  ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_R7_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
