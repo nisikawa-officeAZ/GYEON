@@ -634,7 +634,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### GYEON-ORDER-V3-D16-P2B1 — Stripe pre-connection read-only diagnosis
 
-**Status:** OWNER AUTHORIZED GOVERNANCE DELIVERY AND ONE PRIVATE READ-ONLY CLAUDE DIAGNOSIS / GOVERNANCE CANDIDATE NOT YET DELIVERED.
+**Status:** R1 CORRECTED DIAGNOSIS ACCEPTED LOCALLY / EXACT THREE-FILE GOVERNANCE RECORD UNCOMMITTED / NO IMPLEMENTATION AUTHORIZED.
 
 **Objective:** Map the smallest safe Book-side forward correction from the stale C5-B/C5-D card-authorization database model to the merged D16-P2B0 one-upfront-full-payment and refund contract before any Stripe SDK, API, Webhook, database, migration, sandbox, or deployment implementation.
 
@@ -656,7 +656,17 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Boundaries:** Diagnosis is private-file read-only. No edits, tests, typecheck, build, dependency install, lockfile read, Stripe/Supabase/DB/provider/network contact, environment-secret access, Git mutation, PR mutation, Ready, merge, migration application, sandbox, staging, production, or deployment is permitted to Claude. MacBook Codex may create and deliver only the exact three governance paths and publish the newest instruction on the dedicated Draft PR under the owner's explicit authorization.
 
-**Exit gate:** One Claude result with marker `GYEON_ORDER_V3_D16_P2B1_STRIPE_PRECONNECTION_READ_ONLY_DIAGNOSIS_RESULT_V1`, followed by independent MacBook Codex acceptance. Source correction, DB migration, provider adapter, Webhook, sandbox, stage, commit, push, migration apply, environment configuration, Ready, merge, and deployment each require later separate authorization.
+**Original diagnosis disposition:** The one-time 25-file read-only Claude diagnosis returned the required P2B1 marker and identified the central stale authorization/reauthorization/void contract, direct generic CRUD bypass, missing Stripe/Webhook persistence, and required provider/DB separation. MacBook Codex rejected its claimed `PASS_DIAGNOSIS_COMPLETE` because it omitted the required 25-file SHA-256 block, omitted `prepare_gyeon_order_v3_edit_rpc` from the proposed forward correction, omitted explicit provider retrieval and Webhook worker files, omitted `package-lock.json`, and did not supply literal later allowlists.
+
+**R1 result correction:** Under the owner's separate approval, Claude received no original private source files. It received only the R1 directive, the prior result transcript, MacBook Codex correction facts, and the MacBook Codex 25-file hash attestations. The tool-disabled, read-only correction returned `GYEON_ORDER_V3_D16_P2B1_R1_STRIPE_PRECONNECTION_DIAGNOSIS_RESULT_V1 / PASS_CORRECTION_COMPLETE`. MacBook Codex independently accepted the correction: all five stale RPCs are in scope; PaymentIntent and Refund create/retrieve operations are explicit; raw-body Webhook acceptance and asynchronous reconciliation are separate; direct-CRUD cutover, forward-only DB work, Stripe adapter/Webhook/dependency work, and disposable sandbox work are four distinct future gates; D16-P2B0 pure source remains accepted and is not reopened.
+
+**R1 governance record allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_D16_P2B1_R1_DIAGNOSIS_RESULT_CORRECTION.md`
+
+**Current exit gate:** The corrected diagnosis is accepted as a local governance candidate only. Verify the exact three-path diff and protected metadata, then request separate owner authorization before stage, local commit, or normal push to PR #51. No application source, DB migration, Stripe adapter, Webhook, dependency, sandbox, provider configuration, environment mutation, Ready, merge, deployment, or Book inventory C1 work is authorized by the R1 result.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 

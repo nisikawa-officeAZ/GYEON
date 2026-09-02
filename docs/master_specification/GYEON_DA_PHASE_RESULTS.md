@@ -3565,3 +3565,83 @@ boundary:
 decision: AUTHORIZE_EXACT_THREE_FILE_GOVERNANCE_DELIVERY_THEN_ONE_EXACT_25_PATH_PRIVATE_READ_ONLY_DIAGNOSIS
 next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_PROTECTED_METADATA, CREATE_ONE_LOCAL_GOVERNANCE_COMMIT, NORMAL_PUSH, OPEN_ONE_DRAFT_PR, PUBLISH_THE_EXACT_EXECUTION_IDENTITY, THEN RUN_CLAUDE_ONCE_AND_INDEPENDENTLY_AUDIT_THE_RESULT."
 ```
+
+## GYEON-ORDER-V3-D16-P2B1-R1 — Stripe pre-connection diagnosis result correction
+
+```yaml
+phase: GYEON_ORDER_V3_D16_P2B1_R1_STRIPE_PRECONNECTION_DIAGNOSIS_RESULT_CORRECTION
+status: PASS_CORRECTION_COMPLETE_ACCEPTED_LOCALLY_GOVERNANCE_RECORD_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The owner explicitly authorized creating one delta-only correction directive, sending that directive with the prior result transcript, MacBook Codex correction facts, and 25 hash attestations to Anthropic Claude Code, and executing one tool-disabled read-only correction. The original 25 private source files were not authorized for retransmission and were not retransmitted. Stage, commit, push, PR mutation, implementation, tests, DB, provider, and deployment remained unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/51
+  base_branch: main
+  execution_head: f77f32d8ec908e4da76dd9a7f1406e4026cc1465
+  execution_tree: be989afd0d5394340e372ee51c780c3ae33a9174
+  execution_parent: 35fa921b786572d5a780dd34d45cdbab9d938260
+original_result:
+  marker: GYEON_ORDER_V3_D16_P2B1_STRIPE_PRECONNECTION_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claimed_verdict: PASS_DIAGNOSIS_COMPLETE
+  codex_disposition: CHANGES_REQUIRED
+  correct_core_findings: true
+  defects:
+    - OMITTED_PREPARE_EDIT_RPC_FROM_FORWARD_CORRECTION
+    - PROVIDER_RETRIEVAL_NOT_IN_ADAPTER_SURFACE
+    - WEBHOOK_WORKER_NOT_IN_LITERAL_ALLOWLIST
+    - LATER_ALLOWLISTS_NOT_LITERAL
+    - PACKAGE_LOCKFILE_OMITTED
+    - REQUIRED_25_FILE_SHA256_BLOCK_OMITTED
+    - DRAFT_FORMAL_RELATIONSHIP_IMPRECISE
+    - ACCEPTED_PURE_CONTRACT_UNNECESSARILY_REOPENED
+    - DIRECT_CRUD_CUTOVER_NOT_SEPARATED
+    - LEGACY_FINANCE_BOUNDARY_OVERCLAIMED_FROM_UNREAD_PROTECTED_CONTENT
+r1_invocation:
+  directive: docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_D16_P2B1_R1_DIAGNOSIS_RESULT_CORRECTION.md
+  invoked_directive_sha256: 89e42d916f8026b39748d2d3edd4ef0b0a2e5f1fb4e25fed7e1e6471b07c12d5
+  recorded_directive_sha256: 314e6a55a987c58cee6bd4d9258e9976d35b770b7b17ab689b5762f7634689fc
+  post_acceptance_normalization: TRAILING_BLANK_LINE_REMOVED_ONLY
+  private_source_retransmitted: false
+  tools_enabled: false
+  tests_run: false
+  result_marker: GYEON_ORDER_V3_D16_P2B1_R1_STRIPE_PRECONNECTION_DIAGNOSIS_RESULT_V1
+  claude_verdict: PASS_CORRECTION_COMPLETE
+codex_acceptance:
+  verdict: PASS
+  five_stale_rpcs_complete: true
+  payment_intent_create_retrieve_explicit: true
+  refund_create_retrieve_explicit: true
+  webhook_route_worker_separated: true
+  dependency_lockfile_in_future_gate: true
+  twenty_five_hash_attestations_complete: true
+  draft_formal_difference_corrected: true
+  pure_contract_repair: NOT_REQUIRED_ON_CURRENT_EVIDENCE
+  direct_crud_cutover_separated: true
+  protected_finance_content_read: false
+future_gates:
+  - DIRECT_CRUD_BOOK_CUTOVER
+  - FORWARD_ONLY_DB_MIGRATION_AND_DB_CONTRACT_TESTS
+  - STRIPE_ADAPTER_WEBHOOK_WORKER_TESTS_AND_DEPENDENCIES
+  - DISPOSABLE_STRIPE_SANDBOX_HARNESS
+not_configured:
+  - exact_stripe_api_version
+  - live_account_mode_and_identity
+  - live_japan_card_brand_availability
+  - webhook_endpoint_url_and_secret
+  - generated_forward_migration_literal_path
+  - refund_and_reconciliation_rpc_names
+  - final_payment_and_refund_table_names
+  - historical_enum_retention_policy
+  - schema_application_and_deployment_timing
+governance_record_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_D16_P2B1_R1_DIAGNOSIS_RESULT_CORRECTION.md
+boundary:
+  - "No application source, pure source, DB, SQL, migration, Stripe SDK, dependency, lockfile, adapter, Webhook, worker, sandbox, environment, secret, Supabase, provider, Vercel, staging, production, or deployment change was authorized or performed."
+  - "No stage, commit, push, PR comment, Ready, merge, or Book inventory C1 action was authorized or performed."
+  - "The R1 directive and governance record are local uncommitted candidates until a separate owner Git authorization."
+decision: ACCEPT_CORRECTED_DIAGNOSIS_AS_LOCAL_GOVERNANCE_CANDIDATE
+next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_PROTECTED_METADATA, THEN REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_TO_PR_51. DO_NOT_START_IMPLEMENTATION_OR_BOOK_INVENTORY_C1."
+```
