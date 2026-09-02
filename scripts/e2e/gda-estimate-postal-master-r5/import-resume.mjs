@@ -307,7 +307,7 @@ if (phase === '1') {
   const { runImportCli } = await import(pathToFileURL(importerPath).href);
 
   const runtimeDir = path.dirname(fileURLToPath(import.meta.url));
-  const csvHeader = '99999,,0000007,ｼﾞｯｹﾝｹﾝ,ｺﾞｳｾｲｼ,ｺﾞｳｾｲﾁｮｳ,実験県〔GDA-R5-SYNTHETIC〕,合成市〔GDA-R5-SYNTHETIC〕,合成町四丁目〔GDA-R5-SYNTHETIC〕,0,0,0,0,0,0\n';
+  const csvHeader = '99999,000,0000007,ｼﾞｯｹﾝｹﾝ,ｺﾞｳｾｲｼ,ｺﾞｳｾｲﾁｮｳ,実験県〔GDA-R5-SYNTHETIC〕,合成市〔GDA-R5-SYNTHETIC〕,合成町四丁目〔GDA-R5-SYNTHETIC〕,0,0,0,0,0,0\n';
   const csvSha256 = createHash('sha256').update(csvHeader, 'utf8').digest('hex');
   const csvPath = path.join(runtimeDir, `.gda-postal-r5-synthetic-${runId}.csv`);
   writeFileSync(csvPath, csvHeader, 'utf8');
