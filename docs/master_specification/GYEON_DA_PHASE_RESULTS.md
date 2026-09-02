@@ -5001,3 +5001,86 @@ prohibited_actions_confirmed:
 decision: APPEND_DELIVERY_SCOPE_CLARIFICATION_CODEX_ACCEPTANCE_PENDING
 next: "READY_FOR_CODEX_STATIC_REVIEW, NOT PASS. Separate owner authorization is required for Codex static acceptance, followed by a further separate owner authorization to stage and locally commit exactly all 11 paths. Normal push and disposable runtime verification remain later separate gates."
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A8 — Disposable failure repair acceptance and hash-pin synchronization governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_RUNTIME_R1_HASH_PIN_SYNC_GOVERNANCE
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_RUNTIME_R1_HASH_PIN_SYNC_GOVERNANCE_RESULT_V1
+status: OWNER_RATIFIED_GOVERNANCE_DELIVERY_AUTHORIZED
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner explicitly authorized MacBook Codex to append this R5-R1 phase to the completion plan and append-only ledger, stage and locally commit exactly those two governance files, normally non-force push that one commit to the PR #48 branch, and only after verified delivery rerun Claude once to synchronize exact migration hash/blob literals in exactly three existing files. The two accepted source-repair paths must remain unstaged and uncommitted. No functional/hash candidate Git delivery or database/runtime retry is authorized."
+current_authority:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  execution_commit: 8f4afd7fbf66efd323b32432f7ca8b80b3048d16
+  execution_tree: 80fb723611e7ca769851743fc3027cf0191045b8
+  harness_delivery_commit: 953d60d5b2c47d5d48fbc2259ac1e30569c997db
+historical_state_correction: "The earlier R5 status and A7 entry are preserved as historical evidence but no longer describe the current state. The 11-path harness candidate was committed and pushed, a disposable run was attempted and burned, and the resulting two-file source repair plus three-file hash-pin synchronization are now the active bounded candidate."
+burned_disposable_attempt:
+  suffix: 20260902T141000Z-r5e2a1
+  reuse_forbidden: true
+  retained_evidence_root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T141000Z-r5e2a1
+  manifest_sha256: a1e1648de3225f6da14aecb53ca791de58318f322b6ee38710f89a9760260802
+  fresh_lane_stopped_and_removed: true
+  import_lane_stopped_and_removed: true
+  shared_or_hosted_environment_contacted: false
+failures_and_repairs:
+  migration_failure: "The importer state record selected id/status but later referenced expected_row_count. Both matching selects now include expected_row_count."
+  fixture_failure: "Two unique reverse-lookup fixtures used flagMultiPostalPerTown=1 and therefore produced AMBIGUOUS instead of the required FOUND. Both values now use 0."
+accepted_unstaged_source_repair:
+  - path: supabase/migrations/20260901001246_jp_postal_master.sql
+    sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+    prospective_git_blob: 65d2dd2096c29bceaf0060ffaf0f7b77117f0ede
+  - path: scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql
+    sha256: 6794c8164927aa1f2bad14713696b1e9d916fc687429b5cb5f6cda5d4a8d149f
+    prospective_git_blob: 8c6b48a296784721b658e3c769852e88fffbacdf
+source_repair_state: UNSTAGED_UNCOMMITTED_UNPUSHED
+exact_governance_delivery_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+governance_delivery_authority:
+  stage_exact_two_paths: true
+  one_local_commit: true
+  one_normal_non_force_push_to_pr48_branch: true
+  source_repair_must_remain_unstaged: true
+post_governance_claude_write_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+literal_pin_synchronization:
+  old_migration_sha256: 2325168075511e7a1657f6c2b2299109a41a0181ac590a86817cf94d44467f7a
+  new_migration_sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+  old_migration_git_blob: f81b5a70a760d6350f27ed8c9c0cc87194f775dc
+  new_migration_git_blob: 65d2dd2096c29bceaf0060ffaf0f7b77117f0ede
+  expected_old_sha_occurrences_before: 5
+  expected_old_blob_occurrences_before: 3
+  required_old_occurrences_after: 0
+  status_prose_edit_allowed: false
+permitted_post_sync_checks:
+  - bash -n scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - bash -n scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - bounded literal occurrence searches across the exact three paths
+  - git diff --check restricted to the exact three paths
+protected_metadata:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions:
+  - stage_commit_or_push_the_two_source_repair_paths_in_this_governance_gate
+  - stage_commit_or_push_the_later_three_hash_sync_paths
+  - database_or_supabase_runtime_execution
+  - burned_suffix_reuse_or_repair
+  - fresh_suffix_creation_or_runtime_retry
+  - docker_or_colima_or_auth_or_postgrest_execution
+  - shared_staging_or_production_access
+  - provider_or_deployment_or_ready_or_merge_action
+  - protected_path_content_access_or_change
+decision: RATIFY_R5_R1_AND_DELIVER_EXACT_TWO_GOVERNANCE_PATHS
+next: "Stage, locally commit, and normally push exactly the two governance paths while preserving the accepted source repair unstaged. After remote identity verification, invoke Claude once for the exact three-file literal hash/blob synchronization. Codex then independently reviews the resulting five-file dirty candidate and stops before any functional/hash stage, commit, push, or runtime retry."
+```

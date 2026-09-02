@@ -632,6 +632,41 @@ No existing source, migration, test, dependency, lockfile, repository config, UI
 
 **Exit:** MacBook Codex verifies the exact two-authority-path diff, protected blob metadata, unchanged R5 design files, and `git diff --check`; then requests separate literal stage/local-commit authorization. Normal push and any second Claude transmission/implementation invocation remain later separate owner gates. Harness runtime is a further independent gate after static candidate acceptance and Git delivery.
 
+#### GDA-2A-OCR-POSTAL-MASTER-R5-R1 — Disposable failure repair and hash-pin synchronization
+
+**Status:** OWNER RATIFIED / EXACT TWO-DOCUMENT GOVERNANCE DELIVERY AUTHORIZED / SOURCE REPAIR ACCEPTED AS AN UNSTAGED CANDIDATE / THREE-FILE HASH-PIN SYNCHRONIZATION AUTHORIZED AFTER GOVERNANCE PUSH / RUNTIME RETRY NOT AUTHORIZED.
+
+**Current authority:** PR `#48` remains `OPEN/Draft` on branch `agent/estimate-wizard-ocr-postal-unified-r1`. The current execution base is commit `8f4afd7fbf66efd323b32432f7ca8b80b3048d16`, tree `80fb723611e7ca769851743fc3027cf0191045b8`. The R5 harness was delivered by commit `953d60d5b2c47d5d48fbc2259ac1e30569c997db` and the current branch then merged `main` without changing the R5 contract. This subsection supersedes the stale current-state wording in the earlier R5 status and A7 ledger entry; those historical records remain append-only evidence.
+
+**Burned disposable attempt:** Fresh suffix `20260902T141000Z-r5e2a1` is permanently burned and must never be repaired, resumed, or reused. Its retained evidence root is `/Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T141000Z-r5e2a1`, with manifest SHA-256 `a1e1648de3225f6da14aecb53ca791de58318f322b6ee38710f89a9760260802`. Both loopback-only disposable lanes stopped and were removed. No shared, hosted, staging, or production database was contacted.
+
+**Accepted failure diagnosis and source-only repair candidate:**
+
+1. The import-state SQL selected `id, status` but later accessed `v_existing.expected_row_count`; both matching selects now include `expected_row_count` in `supabase/migrations/20260901001246_jp_postal_master.sql`.
+2. Two reverse-lookup test fixtures declared `flagMultiPostalPerTown` as `1` while requiring a unique `FOUND` result; both fixtures now use `0` in `scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql`.
+3. The two-file repair is accepted as source-only and remains unstaged, uncommitted, and unpushed. Its exact current identities are migration SHA-256 `76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d`, prospective Git blob `65d2dd2096c29bceaf0060ffaf0f7b77117f0ede`, and runtime-contract SHA-256 `6794c8164927aa1f2bad14713696b1e9d916fc687429b5cb5f6cda5d4a8d149f`, prospective Git blob `8c6b48a296784721b658e3c769852e88fffbacdf`.
+
+**This governance-delivery allowlist — exactly two existing paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+Only those two documents may be staged, locally committed once, and normally non-force pushed to the PR `#48` branch in this gate. The two dirty source-repair paths must remain unstaged, uncommitted, byte-identical, and outside the governance commit.
+
+**Post-delivery Claude synchronization allowlist — exactly three existing paths:**
+
+1. `scripts/e2e/gda-estimate-postal-master-r5/setup.sh`
+2. `scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh`
+3. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md`
+
+After the two-document governance push is independently verified, one bounded non-persistent Claude Code invocation may edit only those three paths. It must replace the old migration SHA-256 `2325168075511e7a1657f6c2b2299109a41a0181ac590a86817cf94d44467f7a` with `76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d`, and the old migration Git blob `f81b5a70a760d6350f27ed8c9c0cc87194f775dc` with `65d2dd2096c29bceaf0060ffaf0f7b77117f0ede`. The old SHA appears three times in `setup.sh`, once in `cleanup.sh`, and once in the verification plan; the old blob appears twice in `setup.sh` and once in `cleanup.sh`. After synchronization, both old values must occur zero times across the three-file allowlist. No status prose or unrelated value may change.
+
+**Permitted post-sync checks:** `bash -n` on `setup.sh` and `cleanup.sh`, bounded literal occurrence checks, exact-path `git diff --check`, and Git status/diff metadata limited to confirming the five dirty functional/hash paths. Claude must not stage, commit, push, mutate PR metadata/comments, access a database or Supabase runtime, start Docker or Colima, contact a provider or hosted environment, rerun the burned suffix, create a fresh suffix, or alter the accepted two-file source repair.
+
+**Protected-path boundary:** `ScreensPreview.tsx` remains pathname/mode/blob/Git-state only. The LINE migration, monthly-invoice migration, and monthly-invoice boundary test remain metadata-only and unchanged at blobs `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14` respectively.
+
+**Exit:** MacBook Codex verifies the two-document governance commit and normal push, then independently reviews the Claude three-file literal synchronization. Stage, commit, push, disposable runtime retry, environment activation, Ready, merge, and deployment for the resulting five-file functional/hash candidate remain separate owner-approval gates.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.
