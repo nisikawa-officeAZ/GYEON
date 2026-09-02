@@ -59,7 +59,7 @@ REQUIRED_PR_DRAFT="true"
 REQUIRED_PR_BASE="main"
 MIGRATION_BASENAME="20260901001246_jp_postal_master.sql"
 MIGRATION_VERSION="20260901001246"
-EXPECTED_MIGRATION_SHA256="2325168075511e7a1657f6c2b2299109a41a0181ac590a86817cf94d44467f7a"
+EXPECTED_MIGRATION_SHA256="76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d"
 LINE_MIGRATION_BASENAME="20260801110110_line_link_tokens.sql"
 POSTAL_PGTAP_BASENAME="jp_postal_master_rpc.test.sql"
 
@@ -98,7 +98,7 @@ protected_mode_for() {
 # reads. A drifted blob for any one of these fails closed.
 r4_manifest_blob_for() {
   case "$1" in
-    "supabase/migrations/20260901001246_jp_postal_master.sql") printf '%s' "f81b5a70a760d6350f27ed8c9c0cc87194f775dc" ;;
+    "supabase/migrations/20260901001246_jp_postal_master.sql") printf '%s' "65d2dd2096c29bceaf0060ffaf0f7b77117f0ede" ;;
     "supabase/tests/jp_postal_master_rpc.test.sql") printf '%s' "9832459e92176498944353d38e02ddee4db444ea" ;;
     "src/lib/geo/jp-postal-master-migration-contract.test.ts") printf '%s' "2b653364d0938e55787395cdfd845c9bcfcb1f30" ;;
     "scripts/postal-master/import-japan-post.ts") printf '%s' "49fea46a9e1b3f013d72c385f22107321b046cbd" ;;
@@ -111,7 +111,7 @@ r4_manifest_blob_for() {
 # from disk, matching the accepted-metadata contract supplied at invocation.
 r4_manifest_sha256_for() {
   case "$1" in
-    "supabase/migrations/20260901001246_jp_postal_master.sql") printf '%s' "2325168075511e7a1657f6c2b2299109a41a0181ac590a86817cf94d44467f7a" ;;
+    "supabase/migrations/20260901001246_jp_postal_master.sql") printf '%s' "76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d" ;;
     "supabase/tests/jp_postal_master_rpc.test.sql") printf '%s' "5859bc01453e7a172e52ff3eddaf75bf1ab04e0c2a81d963cb6b40176b2360dc" ;;
     "src/lib/geo/jp-postal-master-migration-contract.test.ts") printf '%s' "6685578850c2f0d4078e2a78aa9563d3e6b389908242c8184cde02bdad92ca60" ;;
     "scripts/postal-master/import-japan-post.ts") printf '%s' "46d0029e70fee826c6b06be5c182e85865805c0f4a2f67f11bc44be009af6ab6" ;;
@@ -435,14 +435,14 @@ r4_manifest_paths = [
     "scripts/postal-master/import-japan-post.test.ts",
 ]
 r4_manifest_blobs = {
-    "supabase/migrations/20260901001246_jp_postal_master.sql": "f81b5a70a760d6350f27ed8c9c0cc87194f775dc",
+    "supabase/migrations/20260901001246_jp_postal_master.sql": "65d2dd2096c29bceaf0060ffaf0f7b77117f0ede",
     "supabase/tests/jp_postal_master_rpc.test.sql": "9832459e92176498944353d38e02ddee4db444ea",
     "src/lib/geo/jp-postal-master-migration-contract.test.ts": "2b653364d0938e55787395cdfd845c9bcfcb1f30",
     "scripts/postal-master/import-japan-post.ts": "49fea46a9e1b3f013d72c385f22107321b046cbd",
     "scripts/postal-master/import-japan-post.test.ts": "71f9fa3e07e648205d916101b835367c7fbd10a6",
 }
 r4_manifest_sha256 = {
-    "supabase/migrations/20260901001246_jp_postal_master.sql": "2325168075511e7a1657f6c2b2299109a41a0181ac590a86817cf94d44467f7a",
+    "supabase/migrations/20260901001246_jp_postal_master.sql": "76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d",
     "supabase/tests/jp_postal_master_rpc.test.sql": "5859bc01453e7a172e52ff3eddaf75bf1ab04e0c2a81d963cb6b40176b2360dc",
     "src/lib/geo/jp-postal-master-migration-contract.test.ts": "6685578850c2f0d4078e2a78aa9563d3e6b389908242c8184cde02bdad92ca60",
     "scripts/postal-master/import-japan-post.ts": "46d0029e70fee826c6b06be5c182e85865805c0f4a2f67f11bc44be009af6ab6",

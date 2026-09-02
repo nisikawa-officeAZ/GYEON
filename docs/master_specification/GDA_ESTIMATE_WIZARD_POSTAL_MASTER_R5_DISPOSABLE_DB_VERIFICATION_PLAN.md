@@ -10,7 +10,7 @@
 - R4-F1 source HEAD: `3c3532b40ac4db84061b17aaf575b8af9297e139`
 - R4-F1 source tree: `9186b0660018920db19283f1a85ee2224cfae97e`
 - 対象migration: `supabase/migrations/20260901001246_jp_postal_master.sql`
-- migration SHA-256: `2325168075511e7a1657f6c2b2299109a41a0181ac590a86817cf94d44467f7a`
+- migration SHA-256: `76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d`
 - 監査時Supabase CLI: `2.116.0`
 - 作成日: 2026-09-02
 

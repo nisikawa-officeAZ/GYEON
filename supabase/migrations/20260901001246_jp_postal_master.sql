@@ -377,7 +377,7 @@ begin
 
   -- Repair A1-5: lock the identity row (if one already exists) for the rest of this transaction so a
   -- concurrent begin/append/finalize/rollback against the same batch serializes instead of racing.
-  select id, status into v_existing
+  select id, status, expected_row_count into v_existing
   from private.jp_postal_import_batches
   where source_date = p_source_date and sha256 = p_sha256
   for update;
@@ -396,7 +396,7 @@ begin
       return jsonb_build_object('result_code', 'OK', 'batch_id', v_batch_id, 'already_promoted', false);
     end if;
 
-    select id, status into v_existing
+    select id, status, expected_row_count into v_existing
     from private.jp_postal_import_batches
     where source_date = p_source_date and sha256 = p_sha256
     for update;
