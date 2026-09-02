@@ -56,13 +56,19 @@ content-protected; metadata is mode `100644`, blob
 | RLS relation flags | 82 | 82 |
 | Policies | 190 | 190 |
 | Relation ACL atomic grants | 463 | 463 |
-| Function EXECUTE ACL grants | 24 | 24 |
+| Function EXECUTE ACL grants | 30 | 30 |
 | Storage buckets | 5 | 5 |
-| Functions | 64 | 64 |
+| Functions | 70 | 70 |
 | Triggers | 59 | 59 |
 | Extension capability classifications | 38 | 0 expected-present rows |
 | Schema classifications | 6 | 1 application-owned row |
-| **Total** | **2,807** | **2,764** |
+| **Total** | **2,819** | **2,776** |
+
+Function and Function EXECUTE ACL grant counts include the 6 rows added by the
+GDA-2A-OCR-POSTAL-MASTER-R2-A1 correction described in section 7 (64→70
+functions, 24→30 EXECUTE ACL grants; both `expected_function` and
+`expected_function_execute_acl` in `supabase/tests/catalog_manifest.test.sql`
+now carry these rows).
 
 The 43-row difference is deliberate: 38 extension-capability classifications
 and five non-application schema classifications remain design traceability,
@@ -130,3 +136,60 @@ mixing are excluded. The next gate must first independently review this static
 candidate. Disposable migration replay and pgTAP execution require a separate
 explicit owner approval and a fresh isolated local environment. Commit, push,
 Ready, merge, and deployment are later independent gates.
+
+## 7. GDA-2A-OCR-POSTAL-MASTER-R2 addendum (2026-09-01)
+
+`supabase/migrations/20260901001246_jp_postal_master.sql` adds a new `private`
+schema and six new `public` schema RPCs. This addendum is, like the rest of
+this document, `STATIC_UNCOMMITTED_CANDIDATE_NOT_RUNTIME_PROOF`: no migration
+replay, pgTAP execution, or database connection occurred while authoring it.
+
+Catalog impact, scoped to what the R12C-era suites actually check:
+
+- `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R2_IMPLEMENTATION.md`
+  is the governing directive; `supabase/tests/jp_postal_master_rpc.test.sql`
+  (new, `plan(40)`) is the dedicated pgTAP candidate for the new schema/RPCs.
+- `supabase/tests/grant_rls_role_matrix.test.sql`'s `expected_function_execute_acl`
+  grows from 24 to 30 rows (6 new `public` RPC grants: 2 to `authenticated`,
+  4 to `service_role`). The three new `private` schema tables carry zero
+  anon/authenticated grants and zero RLS policies, so — because sections 01-15
+  of that file are scoped to `n.nspname = 'public'` and sections 16+ to
+  `n.nspname in ('public', 'storage')` — they are correctly out of scope for
+  every existing relation/policy assertion in that file and require no
+  `public`-relation-count (82) or policy-count (190) change.
+- `supabase/tests/data_api_matrix.test.sql`'s embedded literal inventory grows
+  from 98 to 100 rows (2 new `.rpc(...)` literals — the two `authenticated`-only
+  lookup RPCs called from `src/lib/geo/jp-postal-master-actions.ts`). The four
+  `service_role`-only import RPCs are not literals in `src` (they are called
+  from `scripts/postal-master/import-japan-post.ts`, outside `src`, via a
+  non-literal function-name variable) and are therefore correctly absent from
+  that inventory.
+- This document's section 2/3 canonical `public`-schema relation/column/etc.
+  counts (82 relations, 1,154 columns, and so on) are unaffected: every new
+  table in this migration lives in the new `private` schema, which this
+  document's existing scope does not enumerate. A full reconciliation of the
+  `private` schema's own relation/column/index/trigger counts, and of this
+  document's "Schema classifications" row, is deferred to the later disposable
+  migration-replay/pgTAP gate referenced in section 6, consistent with that
+  gate already being the sole authority for runtime-verified catalog claims.
+- GDA-2A-OCR-POSTAL-MASTER-R2-A1 (2026-09-01) corrected the gap this section
+  previously admitted: `supabase/tests/catalog_manifest.test.sql`'s
+  `expected_function` and `expected_function_execute_acl` fixtures now carry
+  the 6 new `public` functions (64→70) and their 6 EXECUTE ACL grant rows
+  (24→30; 2 to `authenticated` for the lookup RPCs, 4 to `service_role` for
+  the import RPCs), and assertions 51, 55, and 61 were updated to the
+  corrected 30/70 counts. Both `actual_function` and `actual_trigger` in that
+  file are scoped to `n.nspname = 'public'`, so the migration's new `private`
+  schema function (the `jp_postal_import_batches` identity-immutability
+  trigger function) and its trigger are correctly out of scope for this
+  file and require no fixture row — consistent with section 2/3 already
+  excluding the `private` schema's own relations/columns from this
+  document's enumeration. `volatility`/`security type`/argument-identity
+  values for the 6 new rows are derived directly from the migration's own
+  `CREATE FUNCTION` statements (a source-available fact, not a live-catalog
+  guess); only the excluded, traceability-only `normalized_definition` field
+  (per section 5) was not attempted byte-exact. This file is still
+  `STATIC_UNCOMMITTED_CANDIDATE_NOT_RUNTIME_PROOF`: no migration replay,
+  pgTAP execution, or database connection has occurred, so the corrected
+  assertions remain unverified against a live catalog until the later
+  disposable-DB gate in section 6 actually runs them.

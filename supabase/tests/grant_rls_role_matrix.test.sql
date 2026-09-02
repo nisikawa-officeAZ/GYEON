@@ -50,6 +50,18 @@
 -- server-authority assertion below (39) are the only service_role usages;
 -- service_role is never used as dealer-facing authorization proof.
 
+-- GDA-2A-OCR-POSTAL-MASTER-R2 addendum (2026-09-01): supabase/migrations/20260901001246_jp_postal_master.sql
+-- adds 6 new `public` schema RPCs (2 authenticated-only lookup functions, 4 service_role-only
+-- import functions), reflected below by extending `expected_function_execute_acl` from 24 to 30
+-- rows and updating the three 24-row assertion messages accordingly. That migration's three new
+-- `private` schema tables (`jp_postal_import_batches`, `jp_postal_master`, `jp_postal_active_batch`)
+-- are correctly OUT OF SCOPE for every section of this file: every relation/policy assertion here
+-- is explicitly scoped to `n.nspname = 'public'` (sections 01-15) or `n.nspname in ('public',
+-- 'storage')` (sections 16+), and the new tables carry zero anon/authenticated grants and zero RLS
+-- policies, so they cannot appear in or affect any assertion in this file. This addendum was
+-- authored as a static source candidate only (no database was started) and has not itself been
+-- pgTAP-executed; the later disposable-DB gate that runs this whole file is unchanged.
+
 BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
@@ -81,6 +93,13 @@ values
   ('public', 'create_monthly_statement_draft_rpc', 'uuid, uuid, uuid, date', 'authenticated', 'EXECUTE', FALSE),
   ('public', 'get_next_document_number', 'uuid, text, integer, text, integer, text', 'authenticated', 'EXECUTE', FALSE),
   ('public', 'issue_monthly_statement_rpc', 'uuid, uuid', 'service_role', 'EXECUTE', FALSE),
+  -- GDA-2A-OCR-POSTAL-MASTER-R2 — added by supabase/migrations/20260901001246_jp_postal_master.sql.
+  ('public', 'jp_postal_import_append', 'uuid, integer, jsonb', 'service_role', 'EXECUTE', FALSE),
+  ('public', 'jp_postal_import_begin', 'date, text, integer', 'service_role', 'EXECUTE', FALSE),
+  ('public', 'jp_postal_import_finalize', 'uuid', 'service_role', 'EXECUTE', FALSE),
+  ('public', 'jp_postal_import_rollback', 'uuid', 'service_role', 'EXECUTE', FALSE),
+  ('public', 'jp_postal_master_lookup_forward', 'text', 'authenticated', 'EXECUTE', FALSE),
+  ('public', 'jp_postal_master_lookup_reverse', 'text', 'authenticated', 'EXECUTE', FALSE),
   ('public', 'pg_version', '', 'service_role', 'EXECUTE', FALSE),
   ('public', 'record_payment_with_allocations_rpc', 'uuid, uuid, text, uuid, uuid, numeric, numeric, numeric, date, text, text, text, text, text, text, text, jsonb', 'authenticated', 'EXECUTE', FALSE),
   ('public', 'record_payment_with_allocations_rpc', 'uuid, uuid, text, uuid, uuid, numeric, numeric, numeric, date, text, text, text, text, text, text, text, jsonb', 'service_role', 'EXECUTE', FALSE),
@@ -231,8 +250,8 @@ select is(
 -- canonical set, bounded to authenticated/service_role)
 select is(
   (select count(*)::bigint from actual_function_execute_acl),
-  24::bigint,
-  '11 function_execute_acl EXACT_COUNT: expected 24 canonical EXECUTE grant rows for the bounded application grantee set'
+  30::bigint,
+  '11 function_execute_acl EXACT_COUNT: expected 30 canonical EXECUTE grant rows for the bounded application grantee set (24 pre-existing + 6 added by supabase/migrations/20260901001246_jp_postal_master.sql)'
 );
 
 select diag(d.line) from (
@@ -270,7 +289,7 @@ select is(
     select function_schema, function_name, identity_argument_types, grantee, privilege_type, is_grantable from expected_function_execute_acl
   ) unexpected),
   0::bigint,
-  '13 function_execute_acl NO_UNEXPECTED: no live EXECUTE grant row within the bounded application grantee set may present an identity or field value absent from the canonical 24-row set'
+  '13 function_execute_acl NO_UNEXPECTED: no live EXECUTE grant row within the bounded application grantee set may present an identity or field value absent from the canonical 30-row set'
 );
 
 select is(
@@ -296,7 +315,7 @@ select is(
       where n.nspname = 'public' and p.prokind = 'f' and r.rolname = 'anon')
   ),
   0::bigint,
-  '15 function_execute_acl NO_WEAKER: no WITH GRANT OPTION on any of the 24 canonical grants, and anon must hold zero EXECUTE grants on public functions'
+  '15 function_execute_acl NO_WEAKER: no WITH GRANT OPTION on any of the 30 canonical grants, and anon must hold zero EXECUTE grants on public functions'
 );
 
 -- 16-20: policy (public + storage RLS policies, canonical 190-row bound,

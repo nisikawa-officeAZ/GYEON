@@ -12,11 +12,13 @@ import { normalizeVehicleFields } from "./vehicle-normalize";
 import { buildOcrQualityReport, type OcrQualityReport } from "./ocr-quality";
 import { getGyeonManagedApiKey } from "@/lib/ai/gyeon-managed-key";
 import { OCR_MODEL, OCR_TEMPERATURE, OCR_MAX_TOKENS, OCR_PROMPT_VERSION } from "@/lib/ai/ocr-config";
+import { extractLocalPdfModel, resolvePdfModel } from "./pdf-model-text-extractor";
 
 const OCR_PROVIDER   = "openai";
 const OCR_TIMEOUT_MS = 55_000; // 55s — OpenAI cold-start can take ~30s; give headroom
 
-const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証）を読み取るAIアシスタントです。
+/** Exported for source-contract tests only; the runtime call site still uses this constant directly. */
+export const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証）を読み取るAIアシスタントです。
 提供された画像から以下の項目を抽出し、厳密にJSONのみで返してください。
 
 抽出ルール:
@@ -24,6 +26,12 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
 - 不明・読み取れない・不鮮明な項目は空文字列 "" を返す
 - 値を推測・補完・創作しないこと
 - 日付はYYYY-MM-DD形式に正規化
+- 車名(vehicle_name)・型式(model)・型式指定番号(model_code)・類別区分番号・原動機の型式は5つとも別概念であり、絶対に混同・代入し合わないこと
+  - vehicle_name: 車検証に印字された「車名」欄をそのまま抽出する。型式からモデル名を推測しないこと
+  - maker: 車検証に明確に記載されたメーカー名のみを抽出する。車名からメーカーやモデルを創作しないこと
+  - model: 車検証に印字された「型式」欄をそのまま抽出する（例: ６ＢＡ－ＪＧ３）。車名・型式指定番号・類別区分番号・原動機の型式を絶対に代入しないこと
+  - model_code: 車検証に印字された「型式指定番号」欄のみを抽出する（例: 19777）。類別区分番号や型式を代入しないこと
+  - 類別区分番号・原動機の型式はこの出力JSONスキーマに対応するキーが存在しないため、読み取れても他のどのキーにも代入せず出力しないこと
 - first_registration_date（初度登録年月）と registration_date（登録年月日）は別項目。統合しないこと
   - first_registration_date: 「初度登録年月」＝最初に登録された年月（YYYY-MM）。年式・車齢の推定に使用
   - registration_date: 「登録年月日」＝現在の登録日（YYYY-MM-DD）。新規/中古/名義変更など現在の登録時期
@@ -47,7 +55,6 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
   "vehicle_name": "",
   "maker": "",
   "model": "",
-  "grade": "",
   "model_code": "",
   "chassis_number": "",
   "license_plate_region": "",
@@ -99,7 +106,7 @@ const RETRYABLE_CODES: OcrErrorCode[] = ["TIMEOUT", "CONNECT_ERROR", "OPENAI_SER
 
 const STRING_FIELDS: Array<keyof VehicleRegistrationOcrResult> = [
   "owner_name", "user_name", "owner_name_kana", "user_name_kana", "owner_address", "user_address",
-  "vehicle_name", "maker", "model", "grade", "model_code", "chassis_number",
+  "vehicle_name", "maker", "model", "model_code", "chassis_number",
   "license_plate_region", "license_plate_class", "license_plate_kana", "license_plate_number",
   "first_registration_date", "registration_date", "inspection_expiry_date",
   "vehicle_type", "use_type", "private_or_business", "body_shape",
@@ -237,17 +244,16 @@ async function callOpenAI(
       return { error: "EMPTY_RESPONSE" };
     }
 
-    // Deterministic maker/model/grade normalization (do not rely on the AI alone).
-    // メーカー / 車名 / グレード are separated; 車名 is the MODEL only (never the maker),
-    // and stays blank when only the maker was detected (e.g. "フェラーリ").
+    // Deterministic maker/model normalization (do not rely on the AI alone).
+    // メーカー / 車名 are separated; 車名 is the MODEL remainder only (never the maker),
+    // and stays blank when only the maker was detected (e.g. "フェラーリ"). Grade is
+    // always manual — OCR never populates or overwrites it.
     const norm = normalizeVehicleFields({
       maker:       sanitized.maker,
       vehicleName: sanitized.vehicle_name,
-      grade:       sanitized.grade,
     });
     sanitized.maker        = norm.maker;   // メーカー
-    sanitized.vehicle_name = norm.model;   // 車名 (model only; blank when only maker)
-    sanitized.grade        = norm.grade;   // グレード (blank unless detected)
+    sanitized.vehicle_name = norm.model;   // 車名 (full non-maker remainder)
 
     // ボディカラー is MANUAL required — the AI must never auto-fill it.
     delete (sanitized as Record<string, unknown>).color;
@@ -296,15 +302,45 @@ export async function analyzeVehicleRegistrationImage(
   }
   const apiKey = keyResult.apiKey;
 
+  // R4: bounded local PDF text-layer 型式 extraction runs CONCURRENTLY with the OpenAI
+  // call below (never awaited before it) for every eligible digital PDF — not only when
+  // the AI result later turns out blank. Image/HEIC/JPEG/PNG/WebP requests never reach
+  // this branch, so unpdf is never dynamically imported for them.
+  const localPdfModelPromise: Promise<string | null> =
+    mimeType === "application/pdf"
+      ? extractLocalPdfModel(Buffer.from(imageBase64, "base64"), mimeType)
+      : Promise.resolve(null);
+
   const first = await callOpenAI(imageBase64, mimeType, apiKey);
+  const localModel = await localPdfModelPromise;
+
+  if (!("error" in first)) {
+    applyLocalPdfModel(first.result, localModel);
+  }
 
   if ("error" in first && RETRYABLE_CODES.includes(first.error)) {
     console.log("[OCR] Transient error:", first.error, "— retrying once in 2 s …");
     await sleep(2_000);
     const second = await callOpenAI(imageBase64, mimeType, apiKey);
+    if (!("error" in second)) {
+      applyLocalPdfModel(second.result, localModel);
+    }
     console.log("[OCR] Retry result:", "error" in second ? second.error : "success");
     return second;
   }
 
   return first;
+}
+
+/**
+ * Apply the frozen precedence in place: explicit local PDF 型式 > nonblank AI model >
+ * omitted/manual. Never writes an explicit `undefined` key — an already-absent `model`
+ * stays genuinely absent rather than becoming a present-but-undefined key.
+ */
+function applyLocalPdfModel(
+  result: VehicleRegistrationOcrResult,
+  localModel: string | null,
+): void {
+  const resolved = resolvePdfModel(localModel, result.model);
+  if (resolved !== undefined) result.model = resolved;
 }

@@ -36,13 +36,13 @@ const CUSTOMER_FIELDS: ReviewField[] = [
   "user_address",
 ];
 
-// Field order per spec: メーカー → 車名 → グレード → 型式 → … → ボディカラー.
+// Field order per spec: メーカー → 車名 → 型式 → … → ボディカラー.
+// グレード is always manual — OCR never requests, derives, or displays it here.
 // Fuel is intentionally excluded from this flow. ボディサイズ is estimated in the
 // wizard (3M), not an OCR field, so it is not part of this OCR review table.
 const VEHICLE_FIELDS: ReviewField[] = [
   "maker",                   // メーカー
   "vehicle_name",            // 車名
-  "grade",                   // グレード
   "model",                   // 型式
   "chassis_number",          // 車台番号
   "license_plate_region",    // ナンバー地域

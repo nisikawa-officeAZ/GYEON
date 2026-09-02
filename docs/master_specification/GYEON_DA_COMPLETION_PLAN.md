@@ -227,6 +227,525 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Constraint:** GDA-1 defines the literal allowlist. No speculative redesign is allowed.
 
+### GDA-2A-OCR-POSTAL-R1 — Single-scan customer/vehicle and bidirectional postal completion
+
+**Objective:** Restore the accepted Estimate Wizard intake contract so one reviewed vehicle-registration OCR result updates both customer and vehicle drafts, postal code and address assist each other in both directions, and the existing 3M seven-size recommendation remains correct and operator-editable.
+
+**Owner-confirmed four-point outcome:**
+
+1. One confirmed OCR apply updates customer and vehicle draft fields together; Step 2 must not require a second scan.
+2. A valid postal code can fill the address in the Estimate Wizard.
+3. An OCR-derived address can resolve and fill the postal code when an exact, authoritative result is available.
+4. Focused regression coverage proves customer, vehicle, postal/address, and unchanged 3M `SS/S/M/ML/L/LL/XL` behavior.
+
+**Current branch boundary:**
+
+- Dedicated branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Fixed base commit: `501ede8c06b0c397a47996f9dfe0833f8779376c`
+- Fixed base tree: `fda91137ce537f5a6f60f82d229b6aa1ac6c13e6`
+- Existing PR #40 / commit `db7ce44b8af20cd48e64ba79492419cec03c94b2` is read-only reference evidence for the earlier single-scan customer/vehicle repair; it must not be merged or cherry-picked blindly because it is behind current `main` and its full branch delta contains unrelated/superseded changes.
+- PR #47 and its Staging read-only preflight remain isolated; this phase must not edit, stage, commit, push, comment on, or otherwise mutate PR #47.
+
+**Execution order:**
+
+1. Claude performs one bounded read-only diagnosis and returns the exact root cause, provider/data-authority boundary for address-to-postal resolution, literal implementation allowlist, and focused test plan.
+2. MacBook Codex independently accepts or rejects that diagnosis. Diagnosis and implementation are separate gates.
+3. Only if the diagnosis proves that all four outcomes can be implemented without an unapproved provider, dependency, secret, environment variable, database, or API contract may Claude perform the bounded implementation in this branch.
+4. If reverse lookup requires a new provider, dataset, dependency, secret, environment variable, API route, database table, or legal/operational commitment, Claude must stop with `OWNER_DECISION_REQUIRED_REVERSE_LOOKUP_AUTHORITY`; the other three outcomes must not be presented as completion of this four-point phase.
+
+**Frozen contracts:**
+
+- OCR updates wizard draft state only. No customer, vehicle, estimate, OCR record, file, or database write occurs before explicit save.
+- Empty/whitespace OCR values never erase operator-entered values.
+- Existing owner/user selection, duplicate advisory, registration mode, saved identity, tenant/auth, pricing, discounts, PPF, coating, PDF, LINE, and routes remain unchanged.
+- Existing 3M thresholds and exactly seven size keys `SS/S/M/ML/L/LL/XL` remain unchanged. `XXL`, automatic confirmed-size mutation, aliasing, fallback conversion, and threshold redesign are forbidden.
+- Postal lookup must fail safely: no result, ambiguous result, malformed input, timeout, or provider failure leaves the operator-entered value intact and displays no fabricated postal code/address.
+- No UI redesign. Only the minimum input assistance, loading/error/ambiguity state, and accessibility changes required by the accepted behavior are allowed.
+
+**Protected paths:**
+
+- `src/components/estimates/wizard/screens/ScreensPreview.tsx` — pathname/mode/blob/status metadata only; never open, read, diff, copy, stage, or modify.
+- `supabase/migrations/20260801110110_line_link_tokens.sql` — metadata only.
+- `supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql` — metadata only.
+- `src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts` — metadata only.
+
+**Responsibility:** The owner defines behavior and separately authorizes delivery gates. Claude owns bounded diagnosis, implementation, and executable focused tests. MacBook Codex owns governance, exact-scope review, independent acceptance, and later Git-delivery decisions. Stage, commit, push, PR creation/update, Ready, merge, deployment, provider configuration, and production action remain separate.
+
+**Acceptance target:** One current-main-based, unstaged/uncommitted source candidate with all four behaviors proved by focused tests and `git diff --check`, or an explicit owner-decision blocker for reverse-lookup authority. No partial implementation may be called phase completion.
+
+**2026-08-31 diagnosis disposition:** The atomic one-scan customer/vehicle and unchanged 3M findings are accepted for bounded A implementation. The diagnosis attempt to treat extraction of an already printed `〒NNN-NNNN` as address-to-postal reverse lookup is rejected because it does not satisfy the accepted bidirectional contract. A may implement only the eight-path single-scan repair; the parent four-point phase remains incomplete until reverse-lookup authority and the postal tests are separately resolved.
+
+**2026-08-31 A result:** The eight-path single-scan source candidate is independently accepted unstaged/uncommitted. One reviewed Step-1 OCR result now feeds one combined customer/vehicle store patch and the existing transient 3M recommendation; Step 2 reuses the same mapper for optional correction. The seven focused files report `177/177 PASS`, `git diff --check` passes, and protected blobs are unchanged. A pre-existing stale test symbol was corrected inside the already allowlisted validity test without changing business logic. Postal/address work remains frozen and the parent four-point phase remains open.
+
+### GDA-2A-OCR-VEHICLE-MASTER-R1-D1 — Vehicle name/grade authority read-only diagnosis
+
+**Status:** OWNER-RATIFIED READ-ONLY DIAGNOSIS AUTHORIZED. No implementation, test execution, Git delivery, database/provider action, or vehicle-master selection is authorized.
+
+**Objective:** Determine the exact contract required to resolve a reviewed vehicle-registration OCR result into a vehicle name and grade without allowing a generative model to become the data authority. The intended deterministic key is the reviewed certificate evidence headed by type-designation number, classification number, model/type, and first-registration month. AI may normalize labels and rank already-authoritative candidates only; it must never fabricate or independently confirm a vehicle name or grade.
+
+**Current boundary:**
+
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Fixed HEAD/tree: `501ede8c06b0c397a47996f9dfe0833f8779376c` / `fda91137ce537f5a6f60f82d229b6aa1ac6c13e6`
+- The accepted eight-path GDA-2A-OCR-POSTAL-R1-A candidate remains unstaged/uncommitted and frozen against further modification during D1.
+- The postal/address remainder stays open and frozen; this diagnosis does not select a reverse-postal provider or claim the parent phase complete.
+
+**Required diagnosis:**
+
+1. Distinguish the certificate's model/type, type-designation number, four-digit classification number, and the three-digit registration-plate classification number. The last two must never share one field or be treated as aliases.
+2. Identify the current OCR prompt/type/sanitizer/review/mapping gaps, including whether the four-digit classification number is absent and whether existing `model_code` naming is semantically ambiguous.
+3. Trace the current wizard and persistence contract for maker, vehicle name, grade, vehicle code/type, and any designation/classification evidence. Identify every schema or migration gap without editing it.
+4. Confirm whether this repository already contains an authoritative, licensed and current vehicle master or approved resolver. Source presence, an LLM prompt, public search results, or a historical document is not authority.
+5. Specify a fail-closed resolver result contract for `EXACT_MATCH`, `MULTIPLE_CANDIDATES`, `NO_MATCH`, `INSUFFICIENT_EVIDENCE`, and `PROVIDER_UNAVAILABLE`, preserving operator-entered values and requiring human confirmation.
+6. Return the smallest literal future implementation allowlist, focused test plan, data-license/provider decision, privacy/cost boundary, and whether a database migration or external API contract would be required.
+
+**Prohibitions:** No file change; no executable test; no dependency/config/environment change; no database, Supabase, provider, browser, web-search, or production access; no stage, commit, push, PR mutation other than the non-triggering diagnosis instruction owned by Codex; and no access to protected path content. `ScreensPreview.tsx` remains pathname/mode/blob/status metadata only.
+
+**Decision gate:** If no existing approved authoritative master/resolver is found, return `OWNER_DECISION_REQUIRED_VEHICLE_MASTER_AUTHORITY`. Do not propose AI inference as a substitute. A later implementation requires a separately accepted diagnosis, exact write allowlist, and explicit owner authorization.
+
+**2026-08-31 D1 result:** Claude returned `READY_FOR_OWNER_DATA_AUTHORITY_DECISION` with `OWNER_DECISION_REQUIRED_VEHICLE_MASTER_AUTHORITY`. MacBook Codex independently accepted the core findings: current OCR captures `型式` and `型式指定番号`, but the operator review excludes `型式指定番号`; the four-digit `類別区分番号` does not exist in the OCR/schema/wizard/persistence chain; the three-digit registration-plate `分類番号` is a separate field and must never be reused; no licensed current vehicle master/resolver exists in the repository; and the OCR documentation incorrectly claims a type-designation-based grade derivation that executable source does not implement. Claude's proposed four-path field-exposure allowlist is rejected as incomplete because adding a distinct designation field to the typed wizard draft necessarily affects typed state/UI/save or must remain review-only. No implementation is authorized until Codex defines an exact behavior boundary and the owner selects the vehicle-master authority.
+
+### GDA-2A-OCR-MANUAL-MODEL-GRADE-R1 — One-minute estimate fail-fast correction
+
+**Owner decision:** Paid/provider vehicle-master connections are not used. Vehicle-name inference must never delay the one-minute estimate flow. Because the repository contains no free approved internal exact-match authority, OCR continues to apply the certificate maker, type/model code, physical dimensions and already accepted fields immediately, while vehicle name remains operator-entered unless the certificate supplies a distinct nonblank vehicle name. Grade is always manual: OCR must never emit or overwrite it, and the active vehicle step must expose a manual grade field.
+
+**Implementation boundary:** Correct only the accepted unstaged single-scan candidate's OCR mapper, its focused unit/integration tests, and the active Step-2 vehicle form. Do not add AI, fuzzy matching, paid or external API access, a database resolver, a mapping table, a loading gate, a wait, a migration, a dependency, or configuration. The later free internal exact-match map is a separate owner-authorized phase and may run only as an optional non-blocking enhancement.
+
+**Acceptance target:** OCR applies customer and vehicle data once; manufacturer/type/dimensions and 3M recommendation remain unchanged; OCR never emits grade; operator-entered grade survives; manual grade input is visible; unsupported automatic vehicle-name identification is not promised; focused tests and `git diff --check` pass; source remains unstaged/uncommitted.
+
+**2026-08-31 shared-flow decision:** The owner confirmed that grade is manual-only in the shared vehicle-registration OCR flow as well. The OCR extraction prompt, sanitizer, deterministic normalization, review field list, and upload result summary must not request, derive, display, select, apply, or summarize grade. The optional legacy result type may remain for backward compatibility, but all active extraction/review behavior must ignore it. This is a seven-path bounded correction with no provider call, external master, database, migration, dependency, Git delivery, or deployment.
+
+### GDA-2A-OCR-PRINTED-MODEL-FIELD-R2 — Printed 型式 extraction and Wizard code normalization
+
+**Status:** SOURCE DELIVERED ON DRAFT PR #48 / AUTHENTICATED PREVIEW REJECTED THE PROMPT-ONLY FIX / R3 GOVERNANCE CORRECTION CANDIDATE UNSTAGED. The R2 source and tests remain accepted at E2, but live provider behavior did not populate the printed `型式`; R2 is not E3 and is not production-accepted.
+
+**Observed evidence:** The owner supplied one visually clear vehicle-registration PDF whose embedded text layer contains distinct printed fields `車名=ホンダ`, `型式=６ＢＡ－ＪＧ３`, `型式指定番号=19777`, and `類別区分番号=0007`. Preview OCR populated maker and other vehicle fields but left the Wizard 型式 field blank. The PDF itself and all personal data were excluded from Claude transmission and repository fixtures.
+
+**Accepted root cause:** The OpenAI extraction prompt exposed bare JSON keys `vehicle_name`, `maker`, `model`, and `model_code` without binding them to the Japanese printed labels. TypeScript comments correctly described `model` as 型式, but those comments never reached the provider. Sanitizer, review, apply, and Wizard mapping already passed a nonblank `result.model` through to `vehicleCode`; the loss occurred at extraction time.
+
+**Accepted implementation contract:**
+
+- The prompt explicitly binds `vehicle_name` to printed 車名, `model` to printed 型式, and `model_code` to printed 型式指定番号. 車名, 型式, 型式指定番号, 類別区分番号, and 原動機の型式 remain separate concepts and must never substitute for one another.
+- `OCR_PROMPT_VERSION` is bumped to `vehicle-ocr-2026-08-31.1`.
+- Sanitized/reviewed `VehicleRegistrationOcrResult.model` preserves the raw printed full-width evidence for operator review.
+- Only the accepted Wizard apply mapping normalizes the reviewed 型式 with Unicode NFKC, so `６ＢＡ－ＪＧ３` becomes draft `vehicleCode=6BA-JG3`. Maker, vehicle name, grade, plate, customer, and every other field retain the existing no-NFKC contract.
+- Blank, whitespace-only, absent, or non-string 型式 omits `vehicleCode` and never erases operator input.
+- No model-name or grade inference, vehicle master, PDF parser, dependency, provider, API, environment, database, migration, generated dataset, or live-file fixture is added.
+
+**Literal source write allowlist — exactly five paths:**
+
+1. `src/lib/vehicle-registration/ocr.ts`
+2. `src/lib/ai/ocr-config.ts`
+3. `src/lib/vehicle-registration/ocr-dimensions-contract.test.ts`
+4. `src/lib/ocr/wizard-vehicle-ocr-apply-core.ts`
+5. `src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts`
+
+**Accepted verification:** MacBook Codex independently inspected the complete five-path diff and reran the two focused suites using the existing identical-lockfile dependency tree through `NODE_PATH`; `28/28 PASS` and `git diff --check PASS`. No dependency was installed, copied, linked, or changed. The index stayed clean, only the five allowlisted source/test paths were dirty, and all four protected blobs remained unchanged.
+
+**Git delivery and Preview evidence:** The complete accepted OCR candidate was committed and normally pushed to Draft PR #48 in two commits: `a9ef0b8dd88e19c6154090fcce59171ebb1e198a` and `3d75d3156b3c11f5968a8126ca7b620b30f32882`. Current HEAD/tree are `3d75d3156b3c11f5968a8126ca7b620b30f32882` / `90011cf90b07e7488963e393a23b4a69da9f690e`. The Vercel Preview deployment completed, but two owner-run vehicle-registration PDF uploads produced maker and chassis evidence while leaving `model` empty. The supplied digital PDF has a distinct embedded text-layer value `型式 ６ＢＡ－ＪＧ３`; therefore the prompt-only repair is insufficient in live behavior.
+
+**Remaining boundary:** R3 must determine whether a server-only, zero-per-request-fee deterministic text-layer fallback can be added for digital PDFs without making inference or a vehicle master authoritative. Images and scanned PDFs remain on the current AI path. Grade and vehicle name remain manual under the accepted rules. Postal/address completion remains a separate unresolved parent-phase item.
+
+### GDA-2A-OCR-PDF-MODEL-FALLBACK-R3 — Deterministic digital-PDF 型式 diagnosis governance
+
+**Status:** R3-G2 GOVERNANCE PUSHED AT `51c0d539a4cfa2741bc78170ca763c245de0c543` / V2 READ-ONLY DIAGNOSIS COMPLETED / ROOT CAUSE ACCEPTED / CLAUDE IMPLEMENTATION RECOMMENDATION CORRECTED BY MACBOOK CODEX / OWNER SELECTED `unpdf@1.8.1` / R4 IMPLEMENTATION GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. No source implementation, dependency installation, executable test, Git delivery, Preview, Ready, merge, or deployment is authorized by this status.
+
+**Objective:** Diagnose the smallest server-only, zero-per-request-fee fallback that reads the explicit printed `型式` value from a digital PDF text layer when the AI result omits `model`, without inferring vehicle name or grade and without exposing customer data.
+
+**Fixed source baseline:**
+
+- Repository: `nisikawa-officeAZ/GYEON`
+- Draft PR: `#48`
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Source baseline commit: `3d75d3156b3c11f5968a8126ca7b620b30f32882`
+- Source baseline tree: `90011cf90b07e7488963e393a23b4a69da9f690e`
+- Base: `main` at `501ede8c06b0c397a47996f9dfe0833f8779376c`
+
+**Governance correction:** PR #48 comment `5478848763` requested R3 diagnosis before R3 was recorded in this plan or the phase ledger and named `src/components/dev/ScreensPreview.tsx` instead of the actual protected path `src/components/estimates/wizard/screens/ScreensPreview.tsx`. Claude only added the `eyes` reaction; no valid result was posted. That invocation is not acceptance evidence and must not be reused as implementation authority. R3-G1 then committed and pushed the three governance paths, but incorrectly required the checked-out HEAD to equal the source baseline commit that necessarily preceded the governance commit. That self-reference would force `BLOCKED_CANDIDATE_DRIFT` after every valid governance commit and is rejected. R3-G2 fixes the source baseline separately and requires a later owner-approved dispatch to bind the exact dispatch HEAD/tree externally.
+
+**Dispatch binding:** The corrected directive must not contain its own commit hash. A later owner-approved dispatch must state the exact `DISPATCH_HEAD` and `DISPATCH_TREE`; Claude must prove that the source baseline is its ancestor and that only the same three governance paths changed between the source baseline and dispatch HEAD. Missing binding, ancestry failure, or any other changed path is fail-closed.
+
+**Frozen diagnosis contract:**
+
+- Required precedence proposal: explicit digital-PDF text-layer `型式` > nonblank AI `model` > omitted/manual. The diagnosis must confirm or correct this proposal.
+- `型式`, `原動機の型式`, `型式指定番号`, and `類別区分番号` remain distinct. No substitution or inference is permitted.
+- Empty, ambiguous, malformed, or unavailable extraction never overwrites operator input.
+- The real PDF and all personal data are excluded from Claude transmission and repository fixtures.
+- Images and scanned PDFs remain on the current AI path. Grade remains manual. Vehicle name remains manual unless the certificate itself supplies a distinct nonblank name.
+- No paid provider, per-request-fee service, vehicle master, AI vehicle inference, database, migration, secret, or production connection is authorized.
+
+**R3 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS.md`
+
+**Current boundary:** This gate authors only the three governance paths. It does not transmit private files, invoke Claude, edit source/tests/dependencies/configuration, run executable tests, access DB/Supabase/provider/browser/Preview/production, stage, commit, push, mutate PR #48, mark Ready, merge, or deploy.
+
+**Exit:** MacBook Codex verifies the exact three-path R3-G2 governance diff, protected metadata, and `git diff --check`, then requests a separate exact-path stage/local-commit authorization. Push, corrected V2 Claude dispatch with externally fixed HEAD/tree, diagnosis execution, implementation, Preview verification, Ready, merge, and deployment remain later gates.
+
+**2026-09-01 V2 diagnosis disposition:** Claude proved the direct failure chain: the digital PDF reaches OpenAI as an opaque PDF file part, the provider can return blank `model`, the sanitizer then omits it, and the already-correct Wizard mapper has no `vehicleCode` to apply. The repository contains no PDF text extraction dependency or fallback. MacBook Codex accepts that root cause but rejects the returned implementation section as written because it simultaneously claimed `explicit PDF 型式 > AI model` and proposed running the parser only when AI `model` is blank. The corrected contract runs bounded local PDF text extraction for every eligible digital PDF in parallel with AI and always prefers an unambiguous explicit PDF `型式` over AI output.
+
+### GDA-2A-OCR-PDF-MODEL-FALLBACK-R4 — Local deterministic PDF 型式 implementation
+
+**Status:** OWNER-SELECTED IMPLEMENTATION GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. Claude execution, dependency installation, source editing, tests, stage, commit, push, Preview, Ready, merge, and deployment remain separately gated.
+
+**Owner decision:** Adopt exactly `unpdf@1.8.1` as a pinned local-only PDF text extraction dependency. It is MIT licensed, bundles a serverless PDF.js build, requires Node.js 22 or later, has an optional canvas peer that is not needed for text extraction, and makes no external service call. DealerOS Vercel project inspection on 2026-09-01 reported Node.js `24.x`, so the runtime requirement is satisfied. Do not select `pdf-parse`, hand-write a PDF parser, install `@napi-rs/canvas`, or introduce another provider/package without a new owner decision.
+
+**Fixed source baseline:**
+
+- Repository: `nisikawa-officeAZ/GYEON`
+- Draft PR: `#48`
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Source baseline commit: `51c0d539a4cfa2741bc78170ca763c245de0c543`
+- Source baseline tree: `7392a03e12d31eb102cb20983a679b8df5d8b8e6`
+- Base: `main` at `501ede8c06b0c397a47996f9dfe0833f8779376c`
+
+**Frozen implementation contract:**
+
+- Pin dependency exactly as `"unpdf": "1.8.1"`; no caret, tilde, alternate PDF package, native canvas package, provider, API, secret, environment variable, database, migration, or Vercel configuration change.
+- Dynamically load `unpdf` only for `application/pdf`; image and HEIC/JPEG/PNG/WebP behavior remains unchanged.
+- Start local PDF text extraction concurrently with the existing OpenAI OCR request. It must not add a sequential wait to the normal one-minute estimate flow beyond a hard local-parser budget of 3 seconds.
+- Run the local parser for every eligible digital PDF, not only when AI returns blank. Precedence is `unambiguous explicit PDF text-layer 型式 > nonblank AI model > omitted/manual`.
+- The local parser is limited to at most 5 MiB and 3 pages. Larger/page-excess, scanned/image-only, encrypted, malformed, ambiguous, conflicting, timed-out, or parser-failed PDFs return no local match and fall through without failing the existing AI OCR request.
+- Use text extraction only. Do not render pages or extract images. Do not install the optional `@napi-rs/canvas` peer. Disable PDF JavaScript evaluation, bound image allocation defensively, release/destroy parser resources, and never log PDF text or extracted personal data.
+- Match only a bare printed `型式` label and its adjacent value. `原動機の型式`, `型式指定番号`, and `類別区分番号` are hostile neighboring labels and may never supply or override 型式.
+- Preserve the raw explicit PDF value for review; the already-accepted Wizard mapper alone performs NFKC normalization before assigning `vehicleCode`.
+- An empty or failed local result never clears AI or operator-entered values. Grade and vehicle name remain manual under the accepted contract.
+- No real certificate PDF or personal data may enter Git, fixtures, Claude, logs, or generated evidence. Authenticated owner Preview testing with the real PDF remains a later, separately authorized gate.
+
+**Future source write allowlist — exactly five paths:**
+
+1. `package.json`
+2. `package-lock.json`
+3. `src/lib/vehicle-registration/pdf-model-text-extractor.ts` (new)
+4. `src/lib/vehicle-registration/pdf-model-text-extractor.test.ts` (new)
+5. `src/lib/vehicle-registration/ocr.ts`
+
+**Required focused verification:** Pure label-contract cases must include full-width `６ＢＡ－ＪＧ３`, hostile neighboring labels, same-value duplicates, conflicting duplicates, missing label, scanned/no-text, encrypted/corrupt/oversized/page-excess/timeout behavior, raw-value preservation, local-over-AI precedence, AI fallback, and omission without erasure. Run the new extractor suite, the existing OCR dimensions contract, the existing Wizard OCR apply-core suite, project typecheck, dependency/lock audit proving `unpdf@1.8.1` and no canvas/PDF alternative, and `git diff --check`.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R4_IMPLEMENTATION.md` (new)
+
+**Current boundary:** This gate authors only those three governance paths. It does not install `unpdf`, edit source/tests/package files, invoke Claude, run executable tests, access DB/Supabase/OpenAI/browser/Preview/production, stage, commit, push, comment on PR #48, mark Ready, merge, or deploy.
+
+**Exit:** MacBook Codex verifies the exact three-path R4 governance diff, protected metadata, and `git diff --check`, then requests separate exact-path stage/local-commit authorization. Push and one bounded Claude implementation invocation remain later owner gates.
+
+### GDA-2A-OCR-POSTAL-MASTER-R1 — Japan Post internal DB authority and diagnosis governance
+
+**Status:** OWNER-RATIFIED DATA-AUTHORITY / GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. This status authorizes only the three governance-document changes listed below. It does not authorize source or migration creation, CSV download/import, database access, executable verification, Claude transmission, Git delivery, PR mutation, Ready, merge, or deployment.
+
+**Owner decision:** Use the official Japan Post nationwide UTF-8 postal-code CSV as the postal/address source of truth. Load its normalized records into a dedicated internal database master; never store the master inside customer records and never send an OCR-derived customer address to a third-party reverse-lookup service at request time. Both postal-code-to-address assistance and OCR-address-to-postal assistance must resolve against the same versioned internal master.
+
+**Fixed behavior contract:**
+
+- Resolution is deterministic and fail-closed. AI inference, fuzzy guessing, general web search, and provider fallback are prohibited.
+- Forward lookup accepts a normalized valid seven-digit postal code and may return only authoritative master data.
+- Reverse lookup normalizes Unicode width, supported hyphen variants, and whitespace, then uses an exact governed address-prefix rule. Only one unambiguous postal code may be auto-filled. Zero matches, multiple postal codes, malformed input, unavailable master, timeout, or error leaves the postal field blank or unchanged for manual entry.
+- Existing nonblank operator-entered postal/address values are never overwritten automatically. OCR and lookup update Wizard draft state only; explicit Estimate Wizard save remains the sole persistence boundary.
+- The master is updated by a controlled administrator/import operation with source date, import batch/version, checksum, and rollback evidence. Runtime requests never download Japan Post data.
+- The master must remain server-owned and outside direct browser access. The diagnosis must choose and prove the least-privilege private-schema or equivalently fail-closed design; service-role credentials must never reach client code.
+- Customer/vehicle identity, OCR single-scan behavior, vehicle 型式, grade-manual policy, pricing, discounts, PPF/coating, routes, and exactly seven size keys `SS/S/M/ML/L/LL/XL` remain unchanged.
+
+**Source and coordination baseline:**
+
+- Repository: `nisikawa-officeAZ/GYEON`
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Source baseline commit/tree: `ee243fa982cd9520ff0607ea2caeb78797fdb6de` / `9f8f5b1be1724e570826289e872efae3ca21c400`
+- Draft PR: `#48`, `OPEN/Draft`, base `main` at `501ede8c06b0c397a47996f9dfe0833f8779376c`
+- A later dispatch must bind its own exact `DISPATCH_HEAD` and `DISPATCH_TREE`; the source baseline must be its ancestor, and only the exact three governance paths may differ between them.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Required read-only diagnosis output:** Claude must return the exact current forward-lookup wiring gap; server/auth call seam; recommended schema and privileges; master columns, keys, constraints, and indexes; deterministic forward/reverse normalization and ambiguity contract; controlled bulk-import/update and rollback design; UI loading/no-match/ambiguity/error behavior; focused source, migration, pgTAP/unit/integration test plan; and the smallest literal future implementation allowlist. Migration apply, data import, shared environment access, and runtime verification must remain later independent gates.
+
+**Protected paths:** `src/components/estimates/wizard/screens/ScreensPreview.tsx`, the protected LINE migration, the protected monthly-invoice migration, and the monthly-invoice boundary test remain pathname/mode/blob/status metadata only and may never be opened, read, diffed, copied, staged, or modified by this phase.
+
+**Responsibility:** The owner selected the data authority and separately authorizes every delivery gate. Claude owns one bounded read-only diagnosis and, only after Codex acceptance and a new authorization, bounded implementation/tests. MacBook Codex owns governance, literal-scope review, protected-metadata verification, and acceptance. Stage, commit, push, diagnosis dispatch, implementation, migration apply/import, Preview, Ready, merge, and deployment remain separate.
+
+**Exit:** Verify the exact three-path governance candidate, protected metadata, and `git diff --check`; then request separate literal stage/local-commit authorization. After a later normal push and explicit dispatch authorization, run exactly one Claude read-only diagnosis. No source or database work begins before that diagnosis is accepted.
+
+### GDA-2A-OCR-POSTAL-MASTER-R2 — Corrected source and import implementation governance
+
+**Status:** R1 READ-ONLY DIAGNOSIS COMPLETED / CLAUDE VERDICT REJECTED AS WRITTEN / CORE ROOT CAUSE AND PRIVATE-RPC DIRECTION ACCEPTED / R2 CORRECTED IMPLEMENTATION GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. This gate authorizes only the three governance-document changes below. Migration allocation, implementation, tests, CSV acquisition/import, database access, stage, commit, push, Preview, Ready, merge, and deployment remain separate.
+
+**Accepted R1 findings:** The canonical Estimate Wizard renders postal/address as plain draft inputs and never calls the existing `src/lib/geo/postal-lookup.ts`. That legacy helper directly calls ZipCloud from the browser and is not reused. A new authenticated Server Action seam, request-scoped Supabase client, private master tables, and narrow public SECURITY DEFINER RPCs are the correct architecture. OCR/lookup remain draft-only until the unchanged explicit Estimate Wizard save.
+
+**Codex corrections — mandatory:**
+
+1. The official UTF-8 address CSV is the 15-column, one-postal-record-per-line `utf_ken_all` dataset. It contains town-address postal codes and explicitly excludes large-office individual postal codes. Do not invent or implement `is_large_office_or_special` in this phase.
+2. Preserve all official columns, including JIS municipality code and flags 10–15. Derive normalized lookup keys separately; never replace the source values.
+3. Records whose town field is `以下に掲載がない場合`, `市区町村名の次に番地がくる場合`, or `市区町村名一円` are non-specific. They are excluded from reverse auto-resolution and never treated as an exact town. A forward lookup that reaches a non-specific or multi-town result returns `AMBIGUOUS`; it performs no partial address write.
+4. Any forward or reverse result with zero matches, multiple address candidates, multiple distinct postal codes, flag 10 (`一町域が二以上の郵便番号`), non-specific town text, invalid input, stale response, timeout, or unavailable master performs no auto-fill. The UI shows a short manual-entry notice only; no candidate picker and no partial prefecture/city write are added.
+5. Only `FOUND` may update a blank target field. A response may apply only if the normalized source value is unchanged and the target remains blank when the response returns. Existing operator input always wins.
+6. The import implementation is part of the allowlist, not a later undefined task. A repository CLI consumes an already downloaded and extracted official UTF-8 CSV, calculates/checks SHA-256, validates exactly 15 fields and official flags, uploads bounded JSON batches through service-role-only import RPCs, and logs counts/batch/checksum only—never row addresses. It does not download data or expose an admin UI.
+7. Use versioned immutable batch rows plus one active-batch pointer. Import stages and validates a new batch before one atomic pointer promotion. Rollback changes the pointer to a prior validated/promoted batch; it does not rewrite or delete the accepted master generation.
+8. Reverse lookup must use a concrete index-narrowing contract. Store a deterministic fixed-length `address_prefix_head` derived from the normalized specific address, filter active rows by `(batch_id, address_prefix_head)`, then evaluate exact `starts_with(input, address_key)` and longest-key/unique-postal rules. Do not claim that `input LIKE address_key || '%'` alone uses a btree prefix index.
+
+**Migration-path allocation gate:** Supabase migration files must be created with `supabase migration new jp_postal_master`. Because that command determines the timestamped filename, the exact `MIGRATION_PATH` is bound later by MacBook Codex after a separate owner-approved one-file allocation gate. The implementation directive is non-executable until the dispatch supplies that literal path and proves it is the only empty untracked migration file. Claude must never create or rename a different migration path.
+
+**Future implementation write allowlist:** The later dispatch-bound `MIGRATION_PATH` plus exactly these 22 literal paths:
+
+1. `src/lib/geo/jp-postal-master-contract.ts` (new)
+2. `src/lib/geo/jp-postal-master-contract.test.ts` (new)
+3. `src/lib/geo/jp-postal-master-actions.ts` (new)
+4. `src/lib/geo/jp-postal-master-actions.test.ts` (new)
+5. `src/lib/geo/jp-postal-master-csv.ts` (new)
+6. `src/lib/geo/jp-postal-master-csv.test.ts` (new)
+7. `scripts/postal-master/import-japan-post.ts` (new)
+8. `scripts/postal-master/import-japan-post.test.ts` (new)
+9. `src/components/estimates/wizard/contract/wizard-runtime-inputs.ts`
+10. `src/app/estimates/new/page.tsx`
+11. `src/components/estimates/wizard/production/ProductionEstimateWizard.tsx`
+12. `src/components/estimates/wizard/EstimateWizard.tsx`
+13. `src/components/estimates/wizard/steps/Step1Customer.tsx`
+14. `src/components/estimates/wizard/steps/postal-master-apply.ts` (new)
+15. `src/components/estimates/wizard/steps/postal-master-apply.test.ts` (new)
+16. `src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx`
+17. `src/lib/geo/jp-postal-master-migration-contract.test.ts` (new)
+18. `supabase/tests/jp_postal_master_rpc.test.sql` (new)
+19. `supabase/tests/data_api_matrix.test.sql`
+20. `supabase/tests/grant_rls_role_matrix.test.sql`
+21. `supabase/tests/catalog_manifest.test.sql`
+22. `docs/master_specification/CATALOG_MANIFEST.md`
+
+No package, lockfile, dependency, existing ZipCloud helper, OCR mapper, save RPC, customer/vehicle schema, route, provider, secret, environment, or protected-path change is allowed.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R2_IMPLEMENTATION.md` (new)
+
+**Current boundary:** Author and verify only those three governance paths. Do not allocate the migration, invoke Claude, edit implementation paths, run executable tests, download/import CSV, access Supabase/database/provider/Preview/production, stage, commit, push, mutate PR #48, mark Ready, merge, or deploy.
+
+**Exit:** MacBook Codex verifies the exact three-path R2 governance diff, protected metadata, and `git diff --check`, then requests separate literal stage/local-commit authorization. Normal push, CLI migration-path allocation, Claude implementation, local/disposable verification, Git delivery, data import, and every environment action remain later gates.
+
+### GDA-2A-OCR-POSTAL-MASTER-R3 — Pre-activation safety repair diagnosis governance
+
+**Status:** SOURCE SAFETY AUDIT RETURNED `CHANGES_REQUIRED` / R3 READ-ONLY DIAGNOSIS GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. This gate authors only the exact three governance paths below. It does not authorize Claude dispatch, source repair, tests, migration apply, CSV import, database access, stage, commit, push, PR mutation, Preview, Ready, merge, or deployment.
+
+**Why R3 is mandatory:** The postal source candidate exists at commit `c6155bfa7ae342e6a0a9394e1c7eddf9bfdfacd6`, but it is not safe to activate as written. The later postal migration revokes `authenticated` usage from the shared `private` schema even though the earlier GYEON order migration grants `authenticated` execution of a function in that schema. It also revokes privileges across every table in the shared schema rather than only the new postal objects. In addition, the target development project has earlier unapplied local migrations, so a normal all-pending migration push cannot be described as a postal-only action. The importer can strand a `staged`/`validating` batch after an interruption and has no explicit target-project-ref guard or validate-only mode.
+
+**Diagnosis objectives — all mandatory:**
+
+1. Prove the exact shared-schema privilege regression and propose the smallest object-scoped repair that preserves every existing `private`-schema consumer.
+2. Prove the pending-migration chain and return a safe activation decision. The result must never recommend a command that silently applies unrelated or unapproved migrations.
+3. Define a fail-closed interrupted-import lifecycle: deterministic resume or explicit abort/reject, concurrency behavior, idempotency, checksum/source-date binding, and rollback evidence.
+4. Define importer environment guards: explicit expected project ref, normalized URL/ref verification, validate-only mode, safe confirmation/logging, and no secret disclosure.
+5. Return the smallest literal future repair allowlist and executable verification plan, including disposable PostgreSQL/Supabase runtime, privilege regression proof, failure injection, and import recovery.
+
+**Current dispatch baseline:**
+
+- Repository: `nisikawa-officeAZ/GYEON`
+- Pull request: `#48`, `OPEN/Draft`, base `main`
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Commit/tree: `d220c480947d09f0f21d834301e037a86d5f2d88` / `92fdcdbde39e56cdb6e8adf7f32e779292fbb62b`
+- PR head: `d220c480947d09f0f21d834301e037a86d5f2d88`
+- A later owner-approved dispatch must bind its own exact `DISPATCH_HEAD` and `DISPATCH_TREE`, prove this baseline is its ancestor, and prove that only the exact three governance paths below differ.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_READ_ONLY_REPAIR_DIAGNOSIS.md` (new)
+
+**Protected paths:** `src/components/estimates/wizard/screens/ScreensPreview.tsx`, the protected LINE migration, the protected monthly-invoice migration, and the monthly-invoice boundary test remain pathname/mode/blob/status metadata only. Their contents may never be opened, read, diffed, copied, staged, or modified by this phase.
+
+**Responsibility and gate separation:** Claude owns one later owner-approved bounded read-only diagnosis. MacBook Codex owns this governance candidate and later independent acceptance. Diagnosis, repair, executable tests, disposable runtime, migration-chain decision, environment preflight, migration apply, CSV acquisition/import, Git delivery, Preview, Ready, merge, and deployment are separate gates.
+
+**R3-A1 dispatch correction:** The pre-dispatch existence check proved that repository path `supabase/config.toml` does not exist. It is not replaced by an unrelated E2E harness configuration. The mandatory complete read scope is corrected from 25 to 24 existing paths by removing only that nonexistent entry. The first attempted dispatch stopped before Claude invocation, transmitted zero files, and consumed no diagnosis run. This correction changes only the same exact three governance paths; source, tests, migrations, data, environments, and protected paths remain untouched.
+
+**Exit:** Verify the exact three-path candidate, protected blob metadata, and `git diff --check`; then request separate literal stage/local-commit authorization. Do not dispatch Claude or modify source before that later authorization and delivery gate.
+
+### GDA-2A-OCR-POSTAL-MASTER-R4 — Bounded pre-activation source repair governance
+
+**Status:** R3 READ-ONLY DIAGNOSIS COMPLETED / ROOT CAUSES ACCEPTED / CLAUDE ABORT-DESIGN PROPOSAL CORRECTED BY CODEX / R4 IMPLEMENTATION GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. This gate authors only the exact three governance paths below. It does not authorize source edits, tests, Claude transmission, Git delivery, database access, migration apply, CSV import, Preview, Ready, merge, or deployment.
+
+**Accepted R3 findings:** The postal migration strips `authenticated` schema usage required by the earlier GYEON-order private-function/RLS contract; its schema-wide table revoke is overbroad; interrupted imports are not resumable; duplicate append sequences are described as idempotent but are surfaced to the CLI as failures; the importer does not bind writes to an expected Supabase project ref and has no offline validate-only mode; and normal migration application cannot be called postal-only until remote history proves all earlier migrations are already applied.
+
+**Codex repair contract — mandatory:**
+
+1. Remove the postal migration's destructive shared-schema privilege reset. Replace the all-private-tables revoke with explicit revokes against only the three postal tables. Preserve the existing authenticated GYEON-order private-function contract and keep all postal tables inaccessible directly to browser roles.
+2. Add one service-role-only status RPC keyed by exact source date, SHA-256, and expected row count. It returns only safe batch/status/sequence metadata and never a postal address or source row.
+3. Make `staged`/`validating` imports deterministically resumable. The CLI must skip already accepted sequences and treat a concurrent duplicate sequence as a zero-write successful no-op. It must re-check status after a begin race.
+4. Do not add an abort/delete/reset path in R4. Do not delete partial master rows, recycle a terminal `rejected` identity, or relabel a reset batch as `staged`. `rejected`, `rolled_back`, and promoted-but-superseded identities remain fail-closed.
+5. Require an explicit expected project ref for every mutating mode. Require a separately typed confirmation project ref, parse the canonical project ref from `SUPABASE_URL`, and require all three values to match before client creation or RPC. Custom/ambiguous hosts fail closed in R4.
+6. Add import `--validate-only`: read, checksum, parse, normalize, count, and chunk locally with no Supabase URL/key requirement, client creation, network, or RPC. Logs remain limited to source date, checksum, safe counts, project ref, batch id, and state—never rows, addresses, URLs, or secrets.
+7. The development-project migration-history comparison, disposable database runtime, environment migration apply, and real Japan Post CSV import remain later independent gates.
+
+**Future implementation write allowlist — exactly five existing paths:**
+
+1. `supabase/migrations/20260901001246_jp_postal_master.sql`
+2. `supabase/tests/jp_postal_master_rpc.test.sql`
+3. `src/lib/geo/jp-postal-master-migration-contract.test.ts`
+4. `scripts/postal-master/import-japan-post.ts`
+5. `scripts/postal-master/import-japan-post.test.ts`
+
+**Current source baseline:** PR `#48` must remain `OPEN/Draft`, base `main`, branch `agent/estimate-wizard-ocr-postal-unified-r1`, at commit/tree `99e7e20629ff4c4b5037c4263cce16bc39eceb05` / `6cd7dc8f1ee6689c3358f6f2b3111571c48d0aa8` before this governance candidate. A later dispatch must bind its own exact committed/pushed head and prove that only the three governance paths below changed from this source baseline.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R4_IMPLEMENTATION.md` (new)
+
+**R4-A1 dispatch correction:** Pre-dispatch dependency tracing proved that the focused importer test necessarily loads `src/lib/geo/jp-postal-master-csv.ts` and `src/lib/geo/jp-postal-master-contract.ts`, while the `tsx` loader uses `tsconfig.json` for the `@/*` path mapping. These three existing files are added as read-only dependencies, increasing the complete read scope from 11 to 14 paths. The implementation write allowlist remains exactly five paths. The attempted 11-file dispatch stopped before Claude invocation; zero files were transmitted and no implementation run was consumed.
+
+**Exit:** Verify the exact three-path governance candidate, protected blob metadata, and `git diff --check`; then request separate literal stage/local-commit authorization. Normal push and the later five-file Claude implementation/test dispatch remain separate authorizations.
+
+### GDA-2A-OCR-POSTAL-MASTER-R5 — Disposable DB harness governance ratification
+
+**Status:** R4 SOURCE/F1 COMPLETED AND PUSHED / PR `#48` OPEN/DRAFT / VERCEL SUCCESS / R5 DESIGN COMMIT `90dee723eac9b2b035b1af998ae5531b31a8cf1b` PUSHED / R5 RATIFICATION COMMIT `6f7e38996cdc6845d1cb7d87e78dc81ef37bfb74` PUSHED / FIRST CLAUDE IMPLEMENTATION INVOCATION STOPPED BEFORE WRITES BECAUSE PLAN/LEDGER RATIFICATION WAS MISSING / A LATER INVOCATION CREATED THE SEVEN-PATH HARNESS CANDIDATE, WHICH REMAINS GIT-UNTRACKED/UNSTAGED/UNCOMMITTED / CODEX STATIC REVIEW RETURNED CHANGES-REQUIRED DEFECTS / FIRST REPAIR ATTEMPT PARTIALLY CHANGED `setup.sh`/`capture-evidence.sh`/`cleanup.sh` BUT ENDED INCOMPLETE / SECOND SEVEN-FILE REPAIR ATTEMPT CHANGED NOTHING / BOUNDED FOUR-DOCUMENT DEALER-BOUNDARY/RUNTIME-LOCATION DOC REPAIR COMPLETED (`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DOC_REPAIR_RESULT_V1`) / CODEX STATIC RE-REVIEW OF THE HARNESS CANDIDATE FOUND TWO REMAINING SOURCE FINDINGS A (OS-TEMP EXCLUSION NOT ENFORCED IN SOURCE ACROSS `setup.sh`/`capture-evidence.sh`/`cleanup.sh`) AND B (`real-auth.mjs`/`import-resume.mjs`/`runtime-contract.test.sql` FIXTURE POSTAL/JIS VALUES RESEMBLING REAL JAPAN POST DATA) PLUS STALE GOVERNANCE STATUS (FINDING C) / BOUNDED THREE-SHELL-SCRIPT OS-TEMP EXCLUSION SOURCE REPAIR (FINDING A) NOW COMPLETED / A FINAL STATIC REPAIR (`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR_RESULT_V1`) APPLIED FINDINGS A, B, AND C TOGETHER AS ONE CANDIDATE / CODEX STATIC REVIEW OF THAT CANDIDATE RETURNED `CHANGES_REQUIRED_HARNESS`: THE SYNTHETIC POSTAL/JIS FIXTURE CORRECTION WAS ACCEPTED, BUT THE OS-TEMP FAIL-CLOSED ORDERING WAS DEFECTIVE BECAUSE `setup.sh`/`capture-evidence.sh`/`cleanup.sh` COULD EACH WRITE BURN EVIDENCE INTO AN UNVALIDATED RUNTIME/SUFFIX/LANE/RETAINED-DESTINATION PATH FROM INSIDE THE VERY FAILURE PATH TRIGGERED BY THAT PATH'S OWN EXCLUDED-ROOT REJECTION / THIS REPAIR (`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1`) INTRODUCES A `PATHS_VALIDATED` GATE IN ALL THREE SHELL SCRIPTS SO ORDINARY FAILURE HANDLING AND THE EXIT TRAP MAY WRITE BURN EVIDENCE ONLY AFTER THE RELEVANT PATHS ARE PROVEN OUTSIDE EVERY EXCLUDED ROOT, WITH A NON-WRITING PREVALIDATION REJECTION OTHERWISE / CODEX STATIC REVIEW OF THAT CANDIDATE AGAIN RETURNED `CHANGES_REQUIRED_HARNESS`: IN `cleanup.sh`, THE RETAINED-DESTINATION EXISTENCE CHECK RAN BEFORE `PATHS_VALIDATED=1`, SO A SAFE-BUT-ALREADY-EXISTING `RETAINED_DIR` CAUSED `fail()` TO EXIT WITHOUT BURNING THE SAFE EXISTING SUFFIX / A FIRST CLOSEOUT DISPATCH INVOCATION (CLAUDE SESSION `d5ca2074-2f62-4bc6-b407-3e2e84d10970`) USED ONE UNAUTHORIZED BUT READ-ONLY BASH COMMAND, `wc -l`, SOLELY ON `GYEON_DA_COMPLETION_PLAN.md` AND `GYEON_DA_PHASE_RESULTS.md`; CODEX DETECTED IT, STOPPED THE INVOCATION, AND CONFIRMED NO EDITS OCCURRED, SO IT IS NOT AN ACCEPTED REPAIR RUN / THE SUCCESSFUL REPLACEMENT DISPATCH USED ONLY READ/EDIT AND PRODUCED THE OS-TEMP GUARD REPAIR CANDIDATE, AND CODEX THEN FOUND THE RETAINED-DESTINATION-EXISTS BURN GAP / A FINAL CLOSEOUT REPAIR (`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_CLOSEOUT_REPAIR_RESULT_V1`) MOVES THE `PATHS_VALIDATED=1` TRANSITION IN `cleanup.sh` TO IMMEDIATELY AFTER ALL FOUR CANONICAL EXCLUDED-ROOT CHECKS AND BEFORE THE RETAINED-DESTINATION EXISTENCE CHECK, SO A SAFE-BUT-EXISTING RETAINED DESTINATION NOW BURNS THE EXISTING SAFE SUFFIX VIA THE VALIDATED FAILURE PATH, WITH LITERAL UNSAFE-PATH CHECKS REMAINING BEFORE THE GATE AND EVERY OTHER MKDIR/WRITE/COPY/REMOVAL REMAINING AFTER VALIDATION, UNWEAKENED; THIS CLOSEOUT INVOCATION USED ONLY READ/EDIT AND IS UNSTAGED/UNCOMMITTED/UNPUSHED / DATABASE AND RUNTIME EXECUTION REMAIN UNRUN / CANDIDATE REMAINS UNSTAGED/UNCOMMITTED/UNPUSHED. This status and the R5 design/ratification documents grant no runtime or Git-delivery authority; every action remains separately gated. No harness path, database, Supabase runtime, hosted environment, migration application, real CSV import, Git delivery, Ready, merge, or deployment is authorized by this status. Codex static acceptance of this candidate remains pending.
+
+**Ratified design:** `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md` and `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md` are the R5 design authorities. R5 uses two fresh loopback-only disposable lanes: `fresh` proves CLI-native full-chain migration replay, postal pgTAP, grants/RLS, real local Auth/PostgREST lookup, shared-`private`-schema non-regression, and lint; `import` proves the service-role import RPC state machine with deterministic synthetic rows, interruption/resume, duplicate-sequence zero-write success, promotion, safe status metadata, and terminal fail-closed behavior.
+
+**Canonical project-ref boundary:** The production importer intentionally rejects local URLs. R5 must not add a localhost override, test bypass, DNS/hosts/TLS proxy, source patch, or hosted-project substitute. The disposable import lane calls the local service-role PostgREST RPC directly from its harness driver. The production importer is limited to offline `--validate-only` proof plus fail-closed `NON_CANONICAL_SUPABASE_URL` proof before client construction. A real mutating importer run remains a later Development-only data-import gate.
+
+**Future harness implementation write allowlist — exactly seven new paths:**
+
+1. `scripts/e2e/gda-estimate-postal-master-r5/config.toml`
+2. `scripts/e2e/gda-estimate-postal-master-r5/setup.sh`
+3. `scripts/e2e/gda-estimate-postal-master-r5/capture-evidence.sh`
+4. `scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh`
+5. `scripts/e2e/gda-estimate-postal-master-r5/real-auth.mjs`
+6. `scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs`
+7. `scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql`
+
+No existing source, migration, test, dependency, lockfile, repository config, UI, provider code, or existing E2E harness may be changed. Harness implementation is static-only: no setup/capture/cleanup execution, Colima, Docker, psql, SQL, Auth, PostgREST, database-affecting Supabase command, hosted access, or network. Supabase `--version`/`--help`, shell syntax, Node syntax, SQL static checks, exact-path verification, diff-check, and protected metadata checks are the only implementation-time commands.
+
+**Governance stop evidence:** One owner-approved non-persistent Claude Code invocation read the explicitly approved 21 private files and returned without creating any harness file. It identified the missing completion-plan and append-only-ledger ratification. The invocation result is accepted only as a governance stop, not as harness implementation or runtime evidence. The next invocation must use `dontAsk` with an explicit command allowlist so unapproved `gh` or network commands cannot run.
+
+**Current ratification write allowlist — exactly two existing paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Fixed ratification baseline:** PR `#48`, branch `agent/estimate-wizard-ocr-postal-unified-r1`, commit/tree `90dee723eac9b2b035b1af998ae5531b31a8cf1b` / `5080f83ff831f0506390e274bef82d2e1062e556`, PR state `OPEN/Draft`, base `main`, and Vercel `SUCCESS`.
+
+**Exit:** MacBook Codex verifies the exact two-authority-path diff, protected blob metadata, unchanged R5 design files, and `git diff --check`; then requests separate literal stage/local-commit authorization. Normal push and any second Claude transmission/implementation invocation remain later separate owner gates. Harness runtime is a further independent gate after static candidate acceptance and Git delivery.
+
+#### GDA-2A-OCR-POSTAL-MASTER-R5-R1 — Disposable failure repair and hash-pin synchronization
+
+**Status:** OWNER RATIFIED / EXACT TWO-DOCUMENT GOVERNANCE DELIVERY AUTHORIZED / SOURCE REPAIR ACCEPTED AS AN UNSTAGED CANDIDATE / THREE-FILE HASH-PIN SYNCHRONIZATION AUTHORIZED AFTER GOVERNANCE PUSH / RUNTIME RETRY NOT AUTHORIZED.
+
+**Current authority:** PR `#48` remains `OPEN/Draft` on branch `agent/estimate-wizard-ocr-postal-unified-r1`. The current execution base is commit `8f4afd7fbf66efd323b32432f7ca8b80b3048d16`, tree `80fb723611e7ca769851743fc3027cf0191045b8`. The R5 harness was delivered by commit `953d60d5b2c47d5d48fbc2259ac1e30569c997db` and the current branch then merged `main` without changing the R5 contract. This subsection supersedes the stale current-state wording in the earlier R5 status and A7 ledger entry; those historical records remain append-only evidence.
+
+**Burned disposable attempt:** Fresh suffix `20260902T141000Z-r5e2a1` is permanently burned and must never be repaired, resumed, or reused. Its retained evidence root is `/Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T141000Z-r5e2a1`, with manifest SHA-256 `a1e1648de3225f6da14aecb53ca791de58318f322b6ee38710f89a9760260802`. Both loopback-only disposable lanes stopped and were removed. No shared, hosted, staging, or production database was contacted.
+
+**Accepted failure diagnosis and source-only repair candidate:**
+
+1. The import-state SQL selected `id, status` but later accessed `v_existing.expected_row_count`; both matching selects now include `expected_row_count` in `supabase/migrations/20260901001246_jp_postal_master.sql`.
+2. Two reverse-lookup test fixtures declared `flagMultiPostalPerTown` as `1` while requiring a unique `FOUND` result; both fixtures now use `0` in `scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql`.
+3. The two-file repair is accepted as source-only and remains unstaged, uncommitted, and unpushed. Its exact current identities are migration SHA-256 `76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d`, prospective Git blob `65d2dd2096c29bceaf0060ffaf0f7b77117f0ede`, and runtime-contract SHA-256 `6794c8164927aa1f2bad14713696b1e9d916fc687429b5cb5f6cda5d4a8d149f`, prospective Git blob `8c6b48a296784721b658e3c769852e88fffbacdf`.
+
+**This governance-delivery allowlist — exactly two existing paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+Only those two documents may be staged, locally committed once, and normally non-force pushed to the PR `#48` branch in this gate. The two dirty source-repair paths must remain unstaged, uncommitted, byte-identical, and outside the governance commit.
+
+**Post-delivery Claude synchronization allowlist — exactly three existing paths:**
+
+1. `scripts/e2e/gda-estimate-postal-master-r5/setup.sh`
+2. `scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh`
+3. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md`
+
+After the two-document governance push is independently verified, one bounded non-persistent Claude Code invocation may edit only those three paths. It must replace the old migration SHA-256 `2325168075511e7a1657f6c2b2299109a41a0181ac590a86817cf94d44467f7a` with `76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d`, and the old migration Git blob `f81b5a70a760d6350f27ed8c9c0cc87194f775dc` with `65d2dd2096c29bceaf0060ffaf0f7b77117f0ede`. The old SHA appears three times in `setup.sh`, once in `cleanup.sh`, and once in the verification plan; the old blob appears twice in `setup.sh` and once in `cleanup.sh`. After synchronization, both old values must occur zero times across the three-file allowlist. No status prose or unrelated value may change.
+
+**Permitted post-sync checks:** `bash -n` on `setup.sh` and `cleanup.sh`, bounded literal occurrence checks, exact-path `git diff --check`, and Git status/diff metadata limited to confirming the five dirty functional/hash paths. Claude must not stage, commit, push, mutate PR metadata/comments, access a database or Supabase runtime, start Docker or Colima, contact a provider or hosted environment, rerun the burned suffix, create a fresh suffix, or alter the accepted two-file source repair.
+
+**Protected-path boundary:** `ScreensPreview.tsx` remains pathname/mode/blob/Git-state only. The LINE migration, monthly-invoice migration, and monthly-invoice boundary test remain metadata-only and unchanged at blobs `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14` respectively.
+
+**Exit:** MacBook Codex verifies the two-document governance commit and normal push, then independently reviews the Claude three-file literal synchronization. Stage, commit, push, disposable runtime retry, environment activation, Ready, merge, and deployment for the resulting five-file functional/hash candidate remain separate owner-approval gates.
+
+#### GDA-2A-OCR-POSTAL-MASTER-R5-R2 — pgTAP plan-count repair governance
+
+**Status:** GOVERNANCE AUTHORING AUTHORIZED / DISPOSABLE ATTEMPT BURNED / `CHANGES_REQUIRED_SOURCE` / ONE-FILE SOURCE REPAIR NOT YET AUTHORIZED / DATABASE RERUN NOT AUTHORIZED.
+
+**Current authority:** PR `#48` remains `OPEN/Draft`, base `main`, on branch `agent/estimate-wizard-ocr-postal-unified-r1` at commit `71570c3f7ac37f97b97002a83aa18b94e8193a62`, tree `1566df7ff5e57de26c2ada038b117d7a1e0abfac`, with Vercel `SUCCESS`. Commit `71570c3f7ac37f97b97002a83aa18b94e8193a62` delivered the exact five R5-R1 functional/hash paths by normal non-force push. The worktree was clean before this three-document governance candidate was authored.
+
+**Burned disposable attempt:** Fresh suffix `20260902T144100Z-123caa` is permanently burned and must never be resumed, repaired, or reused. Its retained evidence root is `/Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T144100Z-123caa`; aggregate manifest SHA-256 is `7ba16efe081e536abab4df342c8a67916e819e4d2bcee30ddc2722debbeed066`. The manifest contains 32 retained artifacts and independent recomputation found zero artifact-hash mismatches. Both disposable lanes stopped successfully, the runtime path was removed, no R5 container remained, and Git HEAD/tree/worktree returned unchanged and clean. No shared, hosted, staging, production, provider, or deployment environment was contacted.
+
+**Runtime result and accepted diagnosis:** Both fresh and import lane setup completed full migration replay and migration-ledger verification. In the fresh lane, `runtime-contract.test.sql` passed `20/20`. The existing `supabase/tests/jp_postal_master_rpc.test.sql` assertions themselves all passed, but pgTAP returned exit `1` because it planned 74 tests and ran 75. The added assertion `has_function('public', 'jp_postal_import_rollback', ARRAY['uuid'], '20b import rollback RPC exists')` increased the total to 75, while line 45 still declares `SELECT plan(74);`. This bad plan is an executable-test source defect, so the overall attempt is invalid. Fresh execution stopped before later Auth/lint gates and import capture was intentionally not run.
+
+**Future one-file source-repair allowlist — exactly one existing path:**
+
+1. `supabase/tests/jp_postal_master_rpc.test.sql`
+
+The only permitted future edit is the literal one-line replacement `SELECT plan(74);` → `SELECT plan(75);`. Assertion bodies, assertion order, human-readable assertion labels (including the existing label beginning `74`), SQL behavior, migrations, harness files, runtime fixtures, dependencies, and every other path must remain byte-identical. Renumbering labels is expressly unnecessary and forbidden in this repair.
+
+**Future static acceptance only:** After a separate owner authorization for implementation, the candidate may be checked only for the unique `plan(75)` literal, unchanged assertion structure, exact one-path diff, and `git diff --check` on that one file. No executable test, Supabase command, database, Docker, Colima, Auth, PostgREST, import, network, or fresh suffix is authorized by this governance record.
+
+**Current governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R2_PGTAP_PLAN_REPAIR.md` (new)
+
+This gate authorizes authoring and static review of those three governance paths only. It does not authorize external transmission, Claude invocation, source editing, tests, database/runtime access, suffix creation, stage, commit, push, PR mutation, Ready, merge, or deployment.
+
+**Protected-path boundary:** `ScreensPreview.tsx` remains pathname/mode/blob/Git-state only. The protected blob identities remain `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14` for ScreensPreview, LINE migration, monthly-invoice migration, and monthly-invoice boundary test respectively.
+
+**Exit:** MacBook Codex verifies the exact three-document governance diff, the unchanged one-file repair target, protected metadata, clean diff format, and absence of every unrelated change. It then stops and requests a separate owner authorization to stage and locally commit only these three governance files. Governance push, external transmission, one-file Claude repair, source delivery, and a new fresh disposable runtime remain later independent gates.
+
+#### GDA-2A-OCR-POSTAL-MASTER-R5-R3 — pgTAP manifest hash-pin synchronization governance
+
+**Status:** R5-R2 ONE-LINE SOURCE REPAIR COMMITTED AND PUSHED / PR `#48` OPEN/DRAFT / VERCEL SUCCESS / PRE-RUNTIME REVIEW FOUND STALE HARNESS HASH PINS / `CHANGES_REQUIRED_HARNESS_HASH_SYNC` / NO NEW SUFFIX ISSUED / DATABASE RERUN NOT STARTED / GOVERNANCE AUTHORING AUTHORIZED ONLY.
+
+**Current authority:** PR `#48` remains `OPEN/Draft`, base `main`, branch `agent/estimate-wizard-ocr-postal-unified-r1`, at commit `233487590cc60d8b4ba315bfbd422a571d888481`, tree `212cc46284a19bcb1ec6e58cbb57499153340a10`, with Vercel `SUCCESS`. Commit `233487590cc60d8b4ba315bfbd422a571d888481` contains exactly the accepted `SELECT plan(74);` → `SELECT plan(75);` repair in `supabase/tests/jp_postal_master_rpc.test.sql`. The worktree is clean.
+
+**Fail-closed pre-runtime finding:** The repaired pgTAP file now has Git blob `81894d341dde80eb5bfda418629ae932aaa5cd93` and SHA-256 `c77fe474dd038b0de04d9e038c3191003a230f27884a6834ec85635fa1e153cd`. The R5 harness still pins the pre-repair blob `9832459e92176498944353d38e02ddee4db444ea` three times across `setup.sh` and `cleanup.sh`, and the pre-repair SHA-256 `5859bc01453e7a172e52ff3eddaf75bf1ab04e0c2a81d963cb6b40176b2360dc` twice in `setup.sh`. Running the harness in that state would correctly fail before database startup as source drift. MacBook Codex therefore did not generate a suffix, create a runtime path, start Supabase/Docker containers, or contact any database or hosted environment.
+
+**Future harness synchronization write allowlist — exactly two existing paths:**
+
+1. `scripts/e2e/gda-estimate-postal-master-r5/setup.sh`
+2. `scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh`
+
+The future repair must perform exactly five literal replacements within those two paths: replace all three occurrences of old blob `9832459e92176498944353d38e02ddee4db444ea` with new blob `81894d341dde80eb5bfda418629ae932aaa5cd93`, and replace both occurrences of old SHA-256 `5859bc01453e7a172e52ff3eddaf75bf1ab04e0c2a81d963cb6b40176b2360dc` with new SHA-256 `c77fe474dd038b0de04d9e038c3191003a230f27884a6834ec85635fa1e153cd`. No code flow, command, condition, comment, status prose, formatting, migration pin, other manifest entry, or unrelated byte may change.
+
+**Future static acceptance only:** After separate owner authorization, Claude may make the exact five literal replacements using only Read/Edit/Grep. MacBook Codex will independently require old-value counts `0`, new-blob count `3`, new-SHA count `2` across the exact two-file allowlist, an exact two-path diff containing only those replacements, `bash -n` for both scripts, and `git diff --check`. No suffix creation, Supabase, database, Docker, Colima, test, Auth, PostgREST, import, Git delivery, or network/provider action is authorized by this governance record.
+
+**Current governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC.md` (new)
+
+This gate authorizes authoring and static review of those three governance paths only. It does not authorize harness editing, private-source transmission, Claude invocation, suffix creation, tests, database/runtime access, stage, commit, push, PR mutation, Ready, merge, or deployment.
+
+**Protected-path boundary:** `ScreensPreview.tsx` remains pathname/mode/blob/Git-state only. Protected blob identities remain `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14`.
+
+**Exit:** MacBook Codex verifies the exact three-document governance candidate, confirms both harness targets remain byte-identical to HEAD, checks protected metadata and diff format, and stops. Stage/local commit of these three governance files, normal push, external transmission, two-file Claude synchronization, synchronization delivery, and the fresh Disposable DB rerun remain separate owner-approval gates.
+
+#### GDA-2A-OCR-POSTAL-MASTER-R5-R3-A1 — Claude replacement-dispatch execution authority
+
+**Status:** FIRST R5-R3 CLAUDE INVOCATION `BLOCKED` WITH ZERO EDITS / OWNER AUTHORIZED R5-R3-A1 AUTHORITY RECORDING / ONE REPLACEMENT DISPATCH AUTHORIZED ONLY AFTER EXACT THREE-DOCUMENT GOVERNANCE DELIVERY / HARNESS AND DATABASE STILL UNCHANGED.
+
+**Reason for this addendum:** The first owner-approved R5-R3 Claude invocation read the exact six allowed files and stopped with `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC_RESULT_V1 / BLOCKED`. It correctly treated the then-current directive status `GOVERNANCE CANDIDATE ONLY — NOT EXECUTION AUTHORITY` and A10 field `authorization_granted_now: false` as stronger than the invocation prompt. It edited zero files, used no Bash/test/Git/database/Supabase/Docker/Colima/WebFetch/WebSearch/provider/hosted-environment tool, created no suffix, and left HEAD/tree/worktree unchanged. Repeating that unchanged instruction is forbidden.
+
+**Superseding owner authority:** On 2026-09-03 the owner explicitly authorized R5-R3-A1 to record execution authority in the completion plan, append-only phase ledger, and existing R5-R3 directive. Once those exact three governance files are delivered in one normal commit whose parent is `a4d7c9a8e2393c4cfc35b32b1ca830f73c3111c8`, and MacBook Codex independently confirms PR `#48` remains `OPEN/Draft`, base `main`, remote HEAD equals that delivered governance commit, Vercel is `SUCCESS`, and the worktree is clean, exactly one non-persistent replacement Claude invocation is authorized. That replacement may transmit/read the exact six-file read scope and edit only the exact two harness paths already fixed by R5-R3. A10's earlier `authorization_granted_now: false` is historical and is superseded by this addendum after the three-document delivery condition is met.
+
+**Governance execution-identity contract:** The future delivered governance commit/tree cannot be known until the separately authorized local commit is created. It must be a direct child of `a4d7c9a8e2393c4cfc35b32b1ca830f73c3111c8`, contain exactly the following three paths, and be normally non-force pushed to the existing PR `#48` branch. MacBook Codex must supply the verified delivered HEAD/tree and PR/Vercel facts in the replacement invocation prompt; Claude may rely on that prompt solely for those post-document identity facts.
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC.md`
+
+**Replacement dispatch scope:** Claude may read exactly `AGENTS.md`, the three governance files above, `scripts/e2e/gda-estimate-postal-master-r5/setup.sh`, and `scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh`. It may edit only the two harness scripts and make only the three old-blob plus two old-SHA replacements specified by R5-R3. Only Read/Edit/Grep are permitted. The invocation is consumed whether it returns a candidate, fails, or blocks; no automatic retry is allowed.
+
+**Current gate boundary:** This addendum authorizes authoring and static review of exactly the three governance files only. It does not authorize their stage, commit, or push in the current gate. It also does not execute the replacement dispatch now, edit either harness file, create a suffix, run a test/database/Supabase/Docker action, or deliver any resulting harness candidate. Those actions remain gated by the delivery condition and the exact scope above; harness stage/commit/push and the fresh Disposable DB attempt remain later separate owner approvals.
+
+**Exit:** MacBook Codex verifies the exact three-document authority diff, unchanged harness blobs, protected metadata, and `git diff --check`, then requests separate approval to stage and locally commit the three governance files. After a separately approved normal push and verified delivery conditions, the recorded one-time replacement Claude dispatch authority becomes active.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.
@@ -1311,3 +1830,104 @@ Any proposed change to mission, fixed decisions, phase order, completion standar
 3. Identify time, risk, security, and field-work impact.
 4. Receive explicit user approval.
 5. Be committed and recorded in the result ledger before implementation follows the new decision.
+
+## 11. Active bounded OCR residual closure — R6 chassis-number Step-2 field
+
+**Accepted diagnosis evidence:** One owner-authorized, non-persistent terminal Claude Code diagnosis at PR #48 fixed source baseline `c6155bfa7ae342e6a0a9394e1c7eddf9bfdfacd6` / tree `e77931bc7c1f4f1bff91b2b4769f45a9cbf67163` returned `GDA_ESTIMATE_WIZARD_OCR_PREVIEW_GAP_R5_READ_ONLY_DIAGNOSIS_RESULT_V2`. MacBook Codex independently accepted the following split disposition:
+
+- Postal reverse lookup is already wired in source. Its observed `MASTER_UNAVAILABLE` requires a separate Preview-environment migration/active-master-batch gate and authorizes no source edit here.
+- Vehicle-name inference remains blocked until the owner approves a complete, trustworthy, free local exact-match authority. Grade remains manual-only. Neither item is part of R6.
+- Reviewed `chassis_number` already reaches `patch.vin`, Wizard vehicle draft, canonical save mapping, DTO, and `vehicles.vin`; the active Step-2 form alone lacks an editable chassis-number field. R6 is therefore a presentation-only repair.
+
+**R6 objective:** Add one visible, editable `車台番号` field to the active Step-2 new-vehicle form, bound to `v.vin` and emitting the existing one-key `setV({ vin: value })` patch. Prove that OCR-populated VIN is displayed, operator correction emits only `vehicle.vin`, blank OCR never erases an operator value, and unrelated vehicle fields remain unchanged.
+
+**R6 future implementation write allowlist — exactly two paths:**
+
+1. `src/components/estimates/wizard/steps/Step2Vehicle.tsx`
+2. `src/components/estimates/wizard/steps/Step2Vehicle.test.tsx` (new)
+
+**R6 frozen contracts:** No change to OCR extraction, customer/vehicle combined apply, postal lookup, vehicle-name behavior, grade, body-size rules, existing-vehicle selection, save authority, DTO/schema/migration/RPC/provider/environment, or explicit-save-only persistence. `src/components/estimates/wizard/screens/ScreensPreview.tsx` remains metadata-only and must never be opened, read, diffed, copied, staged, or modified.
+
+**R6 authorized verification after separate dispatch:**
+
+- `node --import tsx --test src/components/estimates/wizard/steps/Step2Vehicle.test.tsx`
+- `node --import tsx --test src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx`
+- `npm run typecheck`
+- `git diff --check -- src/components/estimates/wizard/steps/Step2Vehicle.tsx src/components/estimates/wizard/steps/Step2Vehicle.test.tsx`
+
+**R6 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_CHASSIS_UI_R6_IMPLEMENTATION.md` (new)
+
+**Current gate:** Author and independently verify only the three governance paths above. No private-file transmission, Claude implementation invocation, source/test edit, executable test, stage, commit, push, PR mutation, database/Supabase/provider/Preview/production access, Ready, merge, migration, or deployment is authorized by this governance-authoring gate. Governance delivery, private transmission, two-path implementation, verification, source delivery, and Preview validation remain separate gates.
+
+### GDA-2A-OCR-CUSTOMER-MARKER-POSTAL-R7 — Customer marker normalization and postal handoff diagnosis
+
+**Status:** READ-ONLY DIAGNOSIS GOVERNANCE CANDIDATE AUTHORIZED — The owner reported authenticated PR #48 Preview evidence that one OCR apply now carries vehicle type and chassis number but places `***` into the customer name/address and leaves postal code blank. PR #48 must remain Draft and must not be marked Ready until the customer/postal chain is corrected and reverified.
+
+**Observed source risk:** The shared owner/user mapper trims raw strings but does not classify asterisk-only or directional repetition markers. Nonblank marker text can therefore be treated as a named party, become an authoritative `customer_candidate_name`/`customer_candidate_address`, and reach the Wizard customer patch. The one-shot address-to-postal path then receives an unusable marker rather than a usable address. Separately, a usable address still requires the target environment to contain the accepted Japan Post migration and one active imported batch; source presence is not environment proof.
+
+**R7 diagnosis objective:** Independently trace the complete marker-to-customer and customer-address-to-postal chains; define a literal, direction-aware marker contract that preserves the existing owner/user anti-mixing rule; return the smallest later implementation/test allowlist; and specify a separate read-only environment proof for the Japan Post master. Real PDFs, PII, customer data, environment values, and database rows are excluded from the Claude packet and result.
+
+**Source baseline:**
+
+- Branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- Pull request: `#48`, required `OPEN/Draft`
+- Commit: `13c0798979129302b1845d5d6e0542210dce29c4`
+- Tree: `0300f36c482ab7ea008f7e8e128d6aa9a67cfd98`
+- Responsible diagnosis agent after a separate external-transmission gate: MacBook terminal Claude Code
+- Independent acceptance: MacBook Codex
+
+**R7 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_CUSTOMER_MARKER_POSTAL_R7_READ_ONLY_DIAGNOSIS.md` (new)
+
+**Frozen contracts:** One reviewed OCR apply may update customer and vehicle drafts together, blank/unusable OCR never erases operator input, explicit final save remains the sole persistence boundary, vehicle name and grade remain manual under their accepted authority, R6 chassis UI remains unchanged, and postal resolution remains exact/unique/fail-closed through the private Japan Post master. No AI/fuzzy/web postal lookup, provider fallback, schema redesign, DB mutation, or production action belongs to R7 diagnosis.
+
+**Current gate:** Author and independently verify only the exact three governance paths. No private-source transmission, Claude invocation, source/test implementation, executable test, stage, commit, push, PR mutation, database/Supabase/provider/Preview/production access, Ready, merge, migration, import, or deployment is authorized. Governance delivery, private transmission, one read-only diagnosis, diagnosis acceptance, implementation governance, implementation, verification, source delivery, environment activation, and Preview revalidation remain separate gates.
+
+## 12. R5-R4 bounded residual closure — synthetic old-postal fixture repair
+
+**Status:** DISPOSABLE ATTEMPT BURNED / `CHANGES_REQUIRED_HARNESS_FIXTURE_ONLY` / GOVERNANCE AUTHORING AUTHORIZED / SOURCE REPAIR, GIT DELIVERY, AND RUNTIME RETRY NOT AUTHORIZED.
+
+**Current source authority:** PR `#48` remains `OPEN/Draft`, base `main`, branch `agent/estimate-wizard-ocr-postal-unified-r1`, at commit/tree `35226bb55b8106dbced6859f9a0825de331dc2d6` / `7ef1f6e509bb8039488135758b399858ea8d5e64`. The worktree and index were clean before this governance candidate was authored.
+
+**Burned attempt:** Suffix `20260902T153304Z-182ee3` is permanently burned and must never be resumed, repaired, or reused. Both loopback-only disposable lanes completed setup and full migration replay. The fresh lane passed the existing postal pgTAP `75/75`, the runtime-contract pgTAP `20/20`, real Auth/PostgREST `9/9`, and DB lint. Import phase 1 passed `3/3`; import phase 2 passed `23/25` and then failed closed. Cleanup stopped each lane exactly once, removed the exact suffix runtime with exit `0`, left zero matching containers, retained 39 artifacts with zero recomputed hash mismatches, and finalized aggregate manifest SHA-256 `b538bdc26023d43b3d38f38d536d6f1119501ae1faa03a7444685497b02ea1f2` at `/Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T153304Z-182ee3/manifest.json`. No shared, hosted, Preview, staging, production, provider, or deployment environment was contacted.
+
+**Accepted root cause:** The production-importer proof fixture in `scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs` contains `99999,,0000007`, leaving the second Japan Post CSV field, `oldPostalCode`, empty. `src/lib/geo/jp-postal-master-csv.ts` requires that field to contain one to five ASCII digits. Both final production-importer assertions therefore stopped before their intended validate-only and canonical-URL boundary checks with `CSV_PARSE_INVALID_OLD_POSTAL_CODE`. This is a harness fixture defect, not accepted evidence of a migration, database-contract, Auth, PostgREST, or production-importer defect.
+
+**Consumed ungoverned dispatch:** After the owner approved proceeding with a dedicated repair phase, one terminal Claude Code invocation read exactly the five instructed paths, independently confirmed the same root cause, and correctly returned `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FIXTURE_REPAIR_RESULT_V1` with `BLOCKED_UNGOVERNED_INSTRUCTION`. It edited zero files and used no Bash, Git, test, database, Supabase, Docker, web, or provider tool. Session `caed03be-dcce-4fe6-b6a3-4b0b3ec56199` is consumed and must not be resumed or treated as implementation authority.
+
+**Future one-file repair allowlist — exactly one existing path:**
+
+1. `scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs`
+
+The only permitted future edit is the literal replacement `99999,,0000007` → `99999,000,0000007` in the single synthetic CSV string used by the two real production-importer proofs. `000` is an intentionally synthetic three-digit old-postal fixture. No other source, test, fixture, comment, formatting, migration, dependency, lockfile, configuration, or governance byte may change in that implementation candidate.
+
+**Future static verification:** The old literal must occur zero times and the new literal exactly once in the one-file allowlist; the exact diff must contain only that replacement; `node --check scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs` and exact-path `git diff --check` must pass. No database or Disposable runtime execution belongs to the source-repair gate.
+
+**Current governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR.md` (new)
+
+**Current gate:** Author and independently verify only those three governance paths. R6/R7 source work remains unchanged and no parallel implementation is authorized. This gate does not authorize source repair, another Claude transmission/invocation, executable test, new suffix, database/Supabase/Docker/Colima action, stage, commit, push, PR comment or metadata mutation, Ready, merge, migration application, import, deployment, or any hosted-environment access.
+
+**Exit:** MacBook Codex verifies the exact three-document governance candidate, unchanged repair target, protected metadata, and exact-path `git diff --check`, then stops for separate stage/local-commit authorization. Normal push, Draft-PR instruction publication, private-source transmission, one replacement Claude implementation, source delivery, and a new fresh Disposable DB attempt remain later independent gates.
+
+### R5-R4-A1 — replacement-dispatch execution authority correction
+
+**Reason for this addendum:** After R5-R4 governance commit `38fd915c317cc2442d1e197aead025414f8b0dad` was normally pushed and the governance-only instruction was published at `https://github.com/nisikawa-officeAZ/GYEON/pull/48#issuecomment-5517269091`, the owner separately authorized transmission of the exact six private files and the one-literal repair. The resulting terminal Claude session `9808456b-7d77-44d6-b0e1-402c0b3e70e6` read exactly those six paths but correctly returned `BLOCKED`: the committed directive still said `NOT IMPLEMENTATION AUTHORITY`, ledger A12 still said `authorization_granted_now: false`, and the published comment explicitly said `DO NOT EXECUTE FROM THIS COMMENT`. It edited zero files and used no prohibited tool. That session is consumed and must not be resumed or retried unchanged.
+
+**Superseding owner authority:** The owner's separate implementation approval authorizes MacBook Codex to record exactly one replacement-dispatch authority in the completion plan, append-only phase ledger, and existing R5-R4 directive. This authority activates only after those exact three governance files are delivered in one normal non-force commit whose direct parent is `38fd915c317cc2442d1e197aead025414f8b0dad`; PR `#48` remains `OPEN/Draft`, base `main`; remote HEAD equals that governance commit; Vercel is `SUCCESS`; the worktree/index is clean; and MacBook Codex publishes a new superseding PR comment that identifies comment `5517269091` and states that execution is authorized. A12's `authorization_granted_now: false` remains historical and is superseded only after all activation conditions pass.
+
+**Replacement dispatch:** Once activated, exactly one new non-persistent Claude invocation may read the exact six paths and edit the exact one path already listed in the R5-R4 directive, using only Read/Grep/Edit. It may replace only `99999,,0000007` with `99999,000,0000007`. The invocation is consumed whether it returns a candidate, fails, or blocks. No automatic retry is authorized.
+
+**Current gate boundary:** This addendum authorizes authoring and static review of exactly the same three R5-R4 governance paths only. It does not authorize their stage, commit, push, the superseding PR comment, another private-file transmission or Claude invocation, source editing, testing, suffix creation, database/Supabase/Docker/Colima access, source delivery, Ready, merge, migration application, import, deployment, or hosted-environment access.
+
+**Exit:** MacBook Codex verifies the exact three-document authority candidate, unchanged repair target, protected metadata, and `git diff --check`, then requests separate exact-path stage/local-commit authorization. Normal push and the superseding PR comment remain separate gates. Only after every activation condition is independently verified may the single replacement Claude implementation be dispatched.

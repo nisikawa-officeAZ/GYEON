@@ -3292,7 +3292,6 @@ environment_and_release_boundary:
 decision: ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK, POST_THE_AUTHORIZED_PR_RESULT_COMMENT, THEN REQUEST_SEPARATE EXACT-PATH STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. READY, MERGE, MIGRATION_APPLICATION, PREVIEW, AND DEPLOYMENT REMAIN SEPARATE."
 ```
-
 ## GYEON-ORDER-V3-C5-E0 — Stripe provider selection governance
 
 ```yaml
@@ -3512,4 +3511,1971 @@ boundary:
   - "The governance Draft PR does not itself accept or deliver a source candidate."
 decision: AUTHORIZE_GOVERNANCE_DELIVERY_THEN_RETRY_ONE_BOUNDED_CLAUDE_SOURCE_GATE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_PROTECTED_METADATA, CREATE_ONE_LOCAL_GOVERNANCE_COMMIT, NORMAL_PUSH, AND NEW_DRAFT_PR, THEN PUBLISH_THE_EXACT_EXECUTION_IDENTITY_AND_FOUR_FILE_CLAUDE_INSTRUCTION. AFTER_ONE_CLAUDE_RUN, MACBOOK_CODEX_INDEPENDENTLY_AUDITS_BEFORE_ANY_SOURCE_GIT_ACTION."
+```
+
+## GDA-2A-OCR-POSTAL-R1 — Dedicated branch and diagnosis governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1
+status: DEDICATED_BRANCH_CREATED_READ_ONLY_DIAGNOSIS_AUTHORIZED_IMPLEMENTATION_CONDITIONAL
+date: 2026-08-31
+append_only: true
+objective: "Restore one-scan customer/vehicle draft application, postal-to-address fill, OCR-address-to-postal resolution, and focused regression proof while preserving the existing 3M seven-size contract."
+authorization: "The owner authorized advancing these four points as one dedicated repair phase on a separate branch through Claude diagnosis and, only after diagnosis acceptance and within the exact approved boundary, Claude implementation. Stage, commit, push, PR creation/update, Ready, merge, deployment, provider configuration, and production action were not authorized."
+repository:
+  repo: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  fixed_base_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-ocr-postal-unified-r1
+  initial_status: CLEAN
+reference_only:
+  coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/40
+  prior_source_commit: db7ce44b8af20cd48e64ba79492419cec03c94b2
+  boundary: "The prior eight-path single-scan repair is reference evidence only. Its branch is behind current main and must not be merged or cherry-picked as a whole."
+owner_confirmed_outcomes:
+  - "One reviewed OCR apply populates customer and vehicle drafts atomically."
+  - "Postal code fills Estimate Wizard address."
+  - "OCR-derived address fills postal code only from an exact authoritative result."
+  - "Focused regression tests cover customer, vehicle, postal/address, and unchanged 3M seven-size behavior."
+diagnosis_directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_READ_ONLY_DIAGNOSIS.md
+implementation_directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_IMPLEMENTATION.md
+governance_candidate_paths:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_IMPLEMENTATION.md
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+phase_isolation:
+  - "PR #47 remains a separate read-only Staging preflight and receives no write or comment from this phase."
+  - "No source/test edit, executable test, database/Supabase/provider access, dependency/config change, stage, commit, push, PR mutation, Ready, merge, deployment, or production action has occurred at this governance checkpoint."
+reverse_lookup_fail_closed_gate: "If no existing approved address-to-postal authority exists, diagnosis must return OWNER_DECISION_REQUIRED_REVERSE_LOOKUP_AUTHORITY before implementation."
+decision: AUTHORIZE_ONE_READ_ONLY_CLAUDE_DIAGNOSIS_THEN_INDEPENDENT_CODEX_REVIEW
+next: "PUBLISH_THE_BOUNDED_DIAGNOSIS_INSTRUCTION_TO_THE_EXISTING_OCR_COORDINATION_DRAFT_PR_AND_RUN_TERMINAL_CLAUDE_READ_ONLY; DO_NOT_IMPLEMENT_UNTIL_DIAGNOSIS_IS_ACCEPTED"
+```
+
+## GDA-2A-OCR-POSTAL-R1-D1/A-G1 — Diagnosis partial acceptance and single-scan implementation gate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_D1_AND_A_SINGLE_SCAN
+status: DIAGNOSIS_SINGLE_SCAN_ACCEPTED_REVERSE_LOOKUP_REJECTED_A_IMPLEMENTATION_AUTHORIZED
+date: 2026-08-31
+append_only: true
+diagnosis_result_id: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+claude_reported_verdict: READY_FOR_IMPLEMENTATION
+codex_disposition: PARTIAL_ACCEPTANCE_CHANGES_REQUIRED_REVERSE_LOOKUP
+accepted_findings:
+  - "Current Step 1 applies only the customer OCR patch; vehicle data requires a separate Step-2 scan."
+  - "One combined updateStore call is required for atomic customer/vehicle application."
+  - "Prior commit db7ce44 contains a portable eight-path single-scan repair whose exact paths can be reimplemented against current main without importing its unrelated branch history."
+  - "Current 3M thresholds and SS/S/M/ML/L/LL/XL contract can remain unchanged."
+rejected_finding:
+  - "Extracting an already printed postal code from OCR address text is not address-to-postal reverse lookup and does not satisfy the accepted bidirectional postal/address contract."
+active_a_directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_IMPLEMENTATION.md
+active_a_write_allowlist:
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step1Customer.tsx
+  - src/components/estimates/wizard/steps/Step2Vehicle.tsx
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.ts
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts
+  - src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx
+  - src/components/estimates/wizard/validity/wizard-step-validity.ts
+  - src/components/estimates/wizard/validity/wizard-step-validity.test.ts
+frozen_in_a:
+  - "All postal/address helpers and tests; no reverse provider, dataset, dependency, environment, API, database, or migration choice."
+  - "All four protected paths; PR #47; Git delivery and every external environment."
+git_boundary: "A implementation and focused tests only. Leave source unstaged/uncommitted; no PR mutation by Claude."
+parent_phase_status: INCOMPLETE_PENDING_POSTAL_REVERSE_LOOKUP_AUTHORITY
+decision: AUTHORIZE_EXACT_EIGHT_PATH_SINGLE_SCAN_IMPLEMENTATION_AND_FOCUSED_TESTS
+next: "PUBLISH_THE_NON_TRIGGERING_A_IMPLEMENTATION_INSTRUCTION_ON_PR40_THEN_RUN_ONE_TERMINAL_CLAUDE_IMPLEMENTATION; CODEX_REVIEWS_BEFORE_ANY_GIT_DELIVERY"
+```
+
+## GDA-2A-OCR-POSTAL-R1-A — Single-scan source candidate accepted
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_A_SINGLE_SCAN_IMPLEMENTATION
+status: SOURCE_CANDIDATE_ACCEPTED_UNSTAGED_UNCOMMITTED_PARENT_PHASE_INCOMPLETE
+date: 2026-08-31
+append_only: true
+result_id: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_A_SINGLE_SCAN_IMPLEMENTATION_RESULT_V1
+authorization: "The owner explicitly authorized Anthropic Claude Code to edit and test only the diagnosis-accepted files after Codex diagnosis review. Stage, commit, and push were explicitly forbidden."
+repository:
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  fixed_head: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  fixed_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-ocr-postal-unified-r1
+  index: CLEAN
+  source_delivery: UNSTAGED_UNCOMMITTED
+claude_execution:
+  initial_verdict: BLOCKED_ENVIRONMENT
+  reason: "Claude completed the source/test candidate and diff check but its Bash permission scope denied the shared absolute loader path."
+  source_mutation_scope: EXACT_EIGHT_PATHS
+codex_environment_revalidation:
+  package_lock_sha256_candidate: 423d295f85d537b12c375aabb8e5fef336c77139a756b19c02a4ba1719f20866
+  package_lock_sha256_dependency_source: 423d295f85d537b12c375aabb8e5fef336c77139a756b19c02a4ba1719f20866
+  dependency_method: "Temporary node_modules symlink to the identical-lockfile dependency source; no install/copy/change; exact symlink removed and absence proved after tests."
+  test_files: 7
+  tests: 177
+  passed: 177
+  failed: 0
+  diff_check: PASS
+codex_correction:
+  path: src/components/estimates/wizard/validity/wizard-step-validity.test.ts
+  change: "Corrected one pre-existing stale source-match symbol from preselectionStorePatch to initialPreselectionStorePatch; no production/business assertion or fixture change."
+accepted_source_paths:
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step1Customer.tsx
+  - src/components/estimates/wizard/steps/Step2Vehicle.tsx
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.ts
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts
+  - src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx
+  - src/components/estimates/wizard/validity/wizard-step-validity.ts
+  - src/components/estimates/wizard/validity/wizard-step-validity.test.ts
+source_sha256:
+  src/components/estimates/wizard/EstimateWizard.tsx: 24f116708582ef70ff49d379f81f346bf25229b438233d2c71bfa7ff4b255624
+  src/components/estimates/wizard/steps/Step1Customer.tsx: c8b7246b45fbfc88c7d47572f2d506f5f70e655b9c7984455bf3e9b7242dd662
+  src/components/estimates/wizard/steps/Step2Vehicle.tsx: 913ab138a73e655119702f710cd296ca5b47b30f2c5554fa993e4a0360b34249
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.ts: edefc4ae111928607ef9dcc6c0257f3a4062b3d9b34703b08e202f46b397a268
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts: 4afc01d1eb71cb6aa775c0a1062cec935a20d5818476f32d33313862bb7a58a1
+  src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx: eddbec519a6c0fa991c393e32adf3cd46d8bc47a02e201f761e45bbcd8a27338
+  src/components/estimates/wizard/validity/wizard-step-validity.ts: 4ee059780c77ffbd600131eba464aca305903fda6b71a8e2e46ce038ecd505a7
+  src/components/estimates/wizard/validity/wizard-step-validity.test.ts: 85c10051250ae0a0d2e29c2352f960e9dcd2a5d71063363291fb07f2e277c537
+behavior_proof:
+  - "One Step-1 OCR apply invokes updateStore exactly once with both customer and vehicle patches."
+  - "Blank OCR values omit keys and preserve operator-entered values."
+  - "Step 1 and Step 2 reuse one pure typed vehicle mapper."
+  - "3M thresholds and SS/S/M/ML/L/LL/XL remain unchanged; confirmedSize is never written by OCR."
+  - "OCR applies in-memory draft state only; explicit save remains the sole persistence boundary."
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  stage: false
+  commit: false
+  push: false
+  pr_source_mutation: false
+  database_or_supabase: false
+  provider_or_network_from_candidate: false
+  preview_or_production: false
+parent_phase_status: INCOMPLETE_PENDING_POSTAL_FORWARD_AND_TRUE_REVERSE_LOOKUP
+decision: ACCEPT_SINGLE_SCAN_SOURCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+next: "OWNER_SELECTS_OR_AUTHORIZES_THE_ADDRESS_TO_POSTAL_AUTHORITY; THEN CLAUDE_DIAGNOSES_AND_IMPLEMENTS_THE_REMAINING_POSTAL_FORWARD_REVERSE_TEST_SCOPE. GIT_DELIVERY_REMAINS_SEPARATE."
+```
+
+## GDA-2A-OCR-VEHICLE-MASTER-R1-D1 — Owner-ratified diagnosis gate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_VEHICLE_MASTER_RESOLUTION_R1_READ_ONLY_DIAGNOSIS
+status: READ_ONLY_DIAGNOSIS_AUTHORIZED_NOT_YET_EXECUTED
+date: 2026-08-31
+append_only: true
+objective: "Diagnose the exact source, field, persistence, and authoritative-data contract needed to identify vehicle name and grade from reviewed certificate evidence without making generative AI the authority."
+authorization: "The owner ratified deterministic vehicle-master matching based on type-designation number, classification number, model/type, and first-registration evidence; AI is limited to normalization and candidate ranking. The owner then authorized one Claude read-only diagnosis. No source edit, test, stage, commit, push, DB/provider action, or implementation is authorized."
+repository:
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  fixed_head: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  fixed_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/40
+frozen_candidate:
+  phase: GDA_ESTIMATE_WIZARD_OCR_POSTAL_UNIFIED_R1_A_SINGLE_SCAN_IMPLEMENTATION
+  status: ACCEPTED_UNSTAGED_UNCOMMITTED
+  changed_source_paths: 8
+  focused_tests: "177/177 PASS"
+  mutation_during_d1: FORBIDDEN
+required_result_id: GDA_ESTIMATE_WIZARD_OCR_VEHICLE_MASTER_RESOLUTION_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+decision_gate: "Return OWNER_DECISION_REQUIRED_VEHICLE_MASTER_AUTHORITY if the repository has no approved licensed current vehicle master or resolver; AI inference is not an acceptable substitute."
+protected_paths:
+  - src/components/estimates/wizard/screens/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+prohibited:
+  - file mutation or executable tests
+  - database, Supabase, provider, browser, web search, or production access
+  - stage, commit, push, Ready, merge, deployment, or migration work
+decision: AUTHORIZE_ONE_BOUNDED_CLAUDE_READ_ONLY_DIAGNOSIS_AFTER_CODEX_PUBLISHES_THE_EXACT_INSTRUCTION
+next: "CREATE_AND_VERIFY_THE_LITERAL_READ_SCOPE_AND_NON_TRIGGERING_PR40_INSTRUCTION, THEN_RUN_ONE_TERMINAL_CLAUDE_READ_ONLY_DIAGNOSIS."
+```
+
+## GDA-2A-OCR-VEHICLE-MASTER-R1-D1 — Claude diagnosis and Codex disposition
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_VEHICLE_MASTER_RESOLUTION_R1_READ_ONLY_DIAGNOSIS
+status: DIAGNOSIS_ACCEPTED_WITH_CODEX_ALLOWLIST_CORRECTION_OWNER_DECISION_REQUIRED
+date: 2026-08-31
+append_only: true
+instruction_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/40#issuecomment-5477780380
+result_id: GDA_ESTIMATE_WIZARD_OCR_VEHICLE_MASTER_RESOLUTION_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+claude_verdict: READY_FOR_OWNER_DATA_AUTHORITY_DECISION
+required_blocker: OWNER_DECISION_REQUIRED_VEHICLE_MASTER_AUTHORITY
+accepted_findings:
+  - "型式 is captured as OCR model and maps to the wizard vehicleCode/vehicles.vehicle_code path."
+  - "型式指定番号 is captured as OCR model_code but is excluded from the operator review, wizard draft, and persistence schema."
+  - "The four-digit 類別区分番号 is absent from the OCR prompt, result type, review UI, wizard draft, and persistence schema."
+  - "The three-digit registration-plate 分類番号 is a different license_plate_class field and must never be treated as 類別区分番号."
+  - "No current licensed authoritative vehicle master or approved resolver exists in the repository."
+  - "The OCR documentation claims grade inference from type-designation evidence, but executable source performs no authoritative master lookup."
+codex_correction:
+  rejected: "Claude's four-path field-exposure allowlist is not implementation-complete if a new distinct designation field is to reach typed wizard state or persistence."
+  required: "Codex must define review-only capture versus typed draft and saved-evidence behavior before issuing any exact future write allowlist."
+fail_closed_resolution:
+  - EXACT_MATCH
+  - MULTIPLE_CANDIDATES
+  - NO_MATCH
+  - INSUFFICIENT_EVIDENCE
+  - PROVIDER_UNAVAILABLE
+  rule: "Only authoritative exact match may produce an auto-fill proposal; every application remains operator-confirmed and no non-exact outcome overwrites typed values."
+execution:
+  claude_api_calls: 1
+  max_budget_usd: 3
+  tools: "Read,Glob,Grep only"
+  file_mutation_by_claude: false
+  tests_or_build: false
+  database_or_supabase: false
+  provider_web_browser_search: false
+  stage_commit_push: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+decision: ACCEPT_CORE_DIAGNOSIS_RETURN_FOR_OWNER_VEHICLE_MASTER_AUTHORITY_SELECTION
+next: "OWNER_SELECTS_OR_AUTHORIZES_READ_ONLY_VENDOR_LICENSE_API_COMPARISON_FOR_A_CURRENT_VEHICLE_MASTER; FIELD_CAPTURE_AND_RESOLUTION_IMPLEMENTATION_REMAIN_SEPARATE."
+```
+
+## GDA-2A-OCR-MANUAL-MODEL-GRADE-R1 — Owner decision and bounded correction gate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_MANUAL_MODEL_GRADE_R1_IMPLEMENTATION
+status: OWNER_DECISION_RECORDED_BOUNDED_IMPLEMENTATION_AUTHORIZED_UNSTAGED_ONLY
+date: 2026-08-31
+append_only: true
+owner_decision:
+  vehicle_master: "No paid provider and no external vehicle-master connection. A future free internal exact-match table may be considered separately."
+  vehicle_name: "Do not infer or block. Preserve certificate-supplied distinct vehicle_name; otherwise require manual entry."
+  grade: "Always blank/manual. OCR must never populate or overwrite grade."
+  performance: "Customer/vehicle OCR application and 3M recommendation must not wait for vehicle-name or grade resolution; preserve the one-minute estimate target."
+repository:
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  fixed_head: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  fixed_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  source_state: ACCEPTED_DIRTY_UNSTAGED_UNCOMMITTED_SINGLE_SCAN_CANDIDATE
+directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_MANUAL_MODEL_GRADE_R1_IMPLEMENTATION.md
+exact_write_allowlist:
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.ts
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts
+  - src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx
+  - src/components/estimates/wizard/steps/Step2Vehicle.tsx
+prohibited:
+  - AI/fuzzy/paid/external vehicle resolution
+  - database/Supabase/provider/browser/web access
+  - dependency/configuration/migration change
+  - stage/commit/push/PR mutation/Ready/merge/deploy/production
+decision: AUTHORIZE_ONE_BOUNDED_CLAUDE_IMPLEMENTATION_AND_FOCUSED_TEST_RUN
+next: "RUN_ONE_TERMINAL_CLAUDE_IMPLEMENTATION_WITH_THE_EXACT_FOUR_PATH_ALLOWLIST; CODEX_REVIEWS_BEFORE_ANY_GIT_DELIVERY."
+```
+
+## GDA-2A-OCR-MANUAL-MODEL-GRADE-R1 — Source candidate accepted
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_MANUAL_MODEL_GRADE_R1_IMPLEMENTATION
+status: SOURCE_CANDIDATE_ACCEPTED_UNSTAGED_UNCOMMITTED
+date: 2026-08-31
+append_only: true
+result_id: GDA_ESTIMATE_WIZARD_OCR_MANUAL_MODEL_GRADE_R1_IMPLEMENTATION_RESULT_V1
+claude_execution:
+  source_edit: COMPLETED_WITHIN_EXACT_FOUR_PATH_ALLOWLIST
+  focused_test_attempt: BLOCKED_BY_CLAUDE_BASH_PERMISSION_CONFIRMATION
+  stage_commit_push: false
+codex_independent_acceptance:
+  exact_changed_source_paths: 4
+  focused_test_files: 7
+  tests: 182
+  passed: 182
+  failed: 0
+  typecheck: PASS
+  diff_check: PASS
+  dependency_method: "Temporary node_modules symlink to the identical-lockfile dependency source for React-resolving tests; no install/copy/change; symlink removed and absence proved."
+  package_lock_sha256_candidate: 423d295f85d537b12c375aabb8e5fef336c77139a756b19c02a4ba1719f20866
+  package_lock_sha256_dependency_source: 423d295f85d537b12c375aabb8e5fef336c77139a756b19c02a4ba1719f20866
+accepted_delta_paths:
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.ts
+  - src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts
+  - src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx
+  - src/components/estimates/wizard/steps/Step2Vehicle.tsx
+source_sha256:
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.ts: 032f3adbb7775b3469390e9fbceb4c06f5662b22d34e3505f96133cdc94548dc
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts: 32c3d06dd8a521e5fd82fac38fb4317d02c2bf8dad3971795729a4c11d18f7d1
+  src/components/estimates/wizard/steps/estimate-wizard-ocr-apply.test.tsx: 253a2de477228d7236de9eda22a5e9e0c3c457d7bee38ead7640f0bd4b0074e3
+  src/components/estimates/wizard/steps/Step2Vehicle.tsx: 4600e283dd2056f7b91b9e5b4b1b532c58397bfc03ae51cfce8c5d7fffe8cd8f
+accepted_behavior:
+  - "OCR_APPLICABLE_VEHICLE_DRAFT_FIELDS contains ten fields and excludes grade."
+  - "A nonblank OCR grade is ignored and cannot overwrite an operator-entered grade."
+  - "The active Step-2 form exposes a manual optional grade input."
+  - "The certificate-supplied distinct vehicle_name behavior remains non-fabricating; model/type continues to map only to vehicleCode."
+  - "No lookup, wait, AI, API, database, provider, dependency, migration, or configuration was added."
+  - "One-scan customer/vehicle application, physical-dimension 3M recommendation, and the seven-size contract remain unchanged."
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  stage: false
+  commit: false
+  push: false
+  pr_mutation: false
+  database_or_supabase: false
+  provider_or_external_vehicle_master: false
+  deployment_or_production: false
+decision: ACCEPT_MANUAL_MODEL_GRADE_SOURCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+remaining_boundary: "The shared OCR review still retains legacy grade evidence for non-wizard flows; removing it globally is a separate cross-flow decision. A free internal exact vehicle-name table does not currently exist and must not be fabricated inside this phase."
+next: "OWNER_DECIDES WHETHER_TO_DELIVER_THE_CURRENT_OCR_SOURCE_CANDIDATE_BY_A_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_GATE; POSTAL_REVERSE_LOOKUP_AND_ANY_FUTURE_INTERNAL_VEHICLE_NAME_MAP_REMAIN_SEPARATE."
+```
+
+## GDA-2A-OCR-GRADE-MANUAL-ONLY-R1 — Shared-flow correction gate
+
+```yaml
+phase: GDA_VEHICLE_REGISTRATION_OCR_GRADE_MANUAL_ONLY_R1_IMPLEMENTATION
+status: OWNER_AUTHORIZED_BOUNDED_IMPLEMENTATION_UNSTAGED_ONLY
+date: 2026-08-31
+append_only: true
+owner_decision: "Grade is manual-only across the shared OCR flow. Remove extraction, derivation, review display/selection, apply, and detected-summary behavior."
+directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_VEHICLE_REGISTRATION_OCR_GRADE_MANUAL_ONLY_R1_IMPLEMENTATION.md
+exact_write_allowlist:
+  - src/lib/vehicle-registration/ocr.ts
+  - src/lib/vehicle-registration/vehicle-normalize.ts
+  - src/lib/vehicle-registration/ocr-test-cases.ts
+  - src/lib/vehicle-registration/ocr-dimensions-contract.test.ts
+  - src/components/vehicle-registration/VehicleRegistrationOcrReview.tsx
+  - src/components/vehicle-registration/VehicleRegistrationUpload.tsx
+  - src/lib/vehicle-registration/ocr-customer-mapping.test.ts
+frozen:
+  - "Optional legacy VehicleRegistrationOcrResult.grade type remains for backward compatibility."
+  - "Estimate Wizard manual grade field and all accepted customer/type/dimension/3M behavior."
+  - "No AI/fuzzy/external vehicle-name or grade resolution."
+prohibited:
+  - database/Supabase/provider/browser/web/OCR-upload access
+  - dependency/configuration/migration change
+  - stage/commit/push/PR mutation/Ready/merge/deploy/production
+decision: AUTHORIZE_ONE_BOUNDED_CLAUDE_IMPLEMENTATION_AND_FOCUSED_TEST_RUN
+next: "RUN_ONE_TERMINAL_CLAUDE_IMPLEMENTATION_WITH_THE_EXACT_SEVEN_PATH_ALLOWLIST; CODEX_REVIEWS_BEFORE_ANY_GIT_DELIVERY."
+```
+
+## GDA-2A-OCR-GRADE-MANUAL-ONLY-R1 — Shared-flow source candidate accepted
+
+```yaml
+phase: GDA_VEHICLE_REGISTRATION_OCR_GRADE_MANUAL_ONLY_R1_IMPLEMENTATION
+status: SOURCE_CANDIDATE_ACCEPTED_UNSTAGED_UNCOMMITTED
+date: 2026-08-31
+append_only: true
+result_id: GDA_VEHICLE_REGISTRATION_OCR_GRADE_MANUAL_ONLY_R1_IMPLEMENTATION_RESULT_V1
+claude_execution:
+  source_edit: COMPLETED_WITHIN_EXACT_SEVEN_PATH_ALLOWLIST
+  source_verdict: PASS
+  executable_verification: BLOCKED_ENVIRONMENT_NO_LOCAL_DEPENDENCIES
+  stage_commit_push: false
+codex_independent_acceptance:
+  exact_changed_source_paths: 7
+  current_candidate_focused_test_files: 9
+  tests: 204
+  passed: 204
+  failed: 0
+  typecheck: PASS
+  diff_check: PASS
+  dependency_method: "Temporary node_modules symlink to the identical-lockfile dependency source; no install/copy/change; symlink removed and absence proved."
+accepted_delta_paths:
+  - src/lib/vehicle-registration/ocr.ts
+  - src/lib/vehicle-registration/vehicle-normalize.ts
+  - src/lib/vehicle-registration/ocr-test-cases.ts
+  - src/lib/vehicle-registration/ocr-dimensions-contract.test.ts
+  - src/components/vehicle-registration/VehicleRegistrationOcrReview.tsx
+  - src/components/vehicle-registration/VehicleRegistrationUpload.tsx
+  - src/lib/vehicle-registration/ocr-customer-mapping.test.ts
+source_sha256:
+  src/lib/vehicle-registration/ocr.ts: 04d1673abb3bd55e345593f48c10ca4592dd5cad603fa23d3c5204c8ca40317b
+  src/lib/vehicle-registration/vehicle-normalize.ts: 70c84fcda6bcfc7459cc8710efe7f4e351670e745fd0d8b7c1ec0713b6879ec5
+  src/lib/vehicle-registration/ocr-test-cases.ts: d8f4d5b482c8b640c52bad7fe1a63ac09c03aaa6f9d8dbd9a4d9e36fc34632c1
+  src/lib/vehicle-registration/ocr-dimensions-contract.test.ts: 8e4063f2cfbd3c46a5465e6c7afe0c49449e1de4c515e6142870a0bacafb0866
+  src/components/vehicle-registration/VehicleRegistrationOcrReview.tsx: 3bc216f949b9ffc0da8f953c6bcae3b152318ad6498a8ab8881a536457c19a2b
+  src/components/vehicle-registration/VehicleRegistrationUpload.tsx: 5329c8932f7bab69a42fb0af9a6597bc6ad1fcde3491404090e51db9a26d77d1
+  src/lib/vehicle-registration/ocr-customer-mapping.test.ts: 3d3f9bf634b6538b5037a66738b194e3372fdaee7bb51a1949321ae1fd497fee
+accepted_behavior:
+  - "The OCR prompt no longer requests grade."
+  - "The sanitizer discards provider-supplied grade text."
+  - "Vehicle normalization no longer accepts, derives, or returns grade."
+  - "The full non-maker vehicle-name remainder is preserved as model text rather than split into grade tokens."
+  - "The shared review and upload summary no longer display or select grade."
+  - "The optional legacy VehicleRegistrationOcrResult.grade type remains unchanged for backward compatibility."
+  - "The Estimate Wizard manual grade field, one-scan customer/vehicle application, dimensions, 3M recommendation, and seven-size contract remain accepted."
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  stage: false
+  commit: false
+  push: false
+  pr_mutation: false
+  database_or_supabase: false
+  provider_or_ocr_upload: false
+  deployment_or_production: false
+decision: ACCEPT_SHARED_OCR_GRADE_MANUAL_ONLY_SOURCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+remaining_boundary: "No free authoritative vehicle-name map exists. Vehicle name remains manual unless the certificate itself supplies a distinct nonblank name. Postal reverse lookup remains a separate unresolved parent-phase item."
+next: "OWNER_MAY_SEPARATELY_AUTHORIZE_LITERAL_STAGE_AND_LOCAL_COMMIT_FOR_THE_COMPLETE_CURRENT_OCR_CANDIDATE; PUSH_PR_READY_MERGE_DEPLOY_REMAIN_SEPARATE."
+```
+
+## GDA-2A-OCR-PRINTED-MODEL-FIELD-R2 — Diagnosis and source candidate accepted
+
+```yaml
+phase: GDA_VEHICLE_REGISTRATION_OCR_PRINTED_MODEL_FIELD_R2
+status: SOURCE_CANDIDATE_ACCEPTED_UNSTAGED_UNCOMMITTED_PREVIEW_UNVERIFIED
+date: 2026-08-31
+append_only: true
+owner_authorization:
+  diagnosis: "The owner explicitly approved transmission of the bounded seventeen-file read scope to Anthropic Claude Code for one read-only diagnosis. The PDF and personal data were excluded."
+  implementation: "The owner separately explicitly approved transmission and editing of exactly five private source/test files plus the specified focused tests. Stage, commit, push, Preview, Ready, merge, and deployment were not authorized."
+repository:
+  repo: nisikawa-officeAZ/GYEON
+  pr: 48
+  pr_state_at_execution: OPEN_DRAFT
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  fixed_head: a9ef0b8dd88e19c6154090fcce59171ebb1e198a
+  fixed_tree: 6026bdfa41049cf998227362f8561a041e60c18a
+  index: CLEAN
+instruction_comments:
+  diagnosis: https://github.com/nisikawa-officeAZ/GYEON/pull/48#issuecomment-5478532156
+  implementation: https://github.com/nisikawa-officeAZ/GYEON/pull/48#issuecomment-5478619926
+diagnosis:
+  result_id: GDA_VEHICLE_REGISTRATION_OCR_PRINTED_MODEL_FIELD_R2_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_verdict: READY_FOR_PROMPT_SCHEMA_REPAIR
+  codex_disposition: ACCEPTED_WITH_ALLOWLIST_CORRECTION
+  accepted_root_cause: "The provider receives bare model/vehicle_name/model_code JSON keys without Japanese printed-field bindings. TypeScript comments never reach the provider; every deterministic post-provider stage already preserves and maps a nonblank result.model correctly."
+  codex_correction: "Claude's two-path implementation list contradicted its own requirement to add a deterministic prompt-contract test. The accepted source/test allowlist therefore contains five paths and includes raw-evidence preservation plus Wizard-only NFKC normalization already approved by the owner."
+  pdf_text_extraction: "No approved existing deterministic embedded-PDF-text dependency exists. New dependency/provider authority remains separate and is not required for the prompt repair."
+observed_non_pii_evidence:
+  vehicle_name: ホンダ
+  printed_model: ６ＢＡ－ＪＧ３
+  type_designation_number: "19777"
+  classification_number: "0007"
+  pdf_or_personal_data_transmitted_to_claude: false
+implementation:
+  result_id: GDA_VEHICLE_REGISTRATION_OCR_PRINTED_MODEL_FIELD_R2_IMPLEMENTATION_RESULT_V1
+  claude_verdict: BLOCKED_ENVIRONMENT_SOURCE_COMPLETE
+  codex_disposition: ACCEPT_SOURCE_CANDIDATE_E2_SOURCE
+  exact_changed_paths:
+    - src/lib/vehicle-registration/ocr.ts
+    - src/lib/ai/ocr-config.ts
+    - src/lib/vehicle-registration/ocr-dimensions-contract.test.ts
+    - src/lib/ocr/wizard-vehicle-ocr-apply-core.ts
+    - src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts
+  behavior:
+    - "Prompt binds printed 車名, 型式, and 型式指定番号 and forbids substitution from 類別区分番号 or 原動機の型式."
+    - "OCR_PROMPT_VERSION is vehicle-ocr-2026-08-31.1."
+    - "Reviewed result.model preserves the printed full-width evidence."
+    - "Wizard apply alone normalizes 型式 with Unicode NFKC: ６ＢＡ－ＪＧ３ -> 6BA-JG3."
+    - "Maker, vehicle name, grade, plate, customer, and all other fields retain no-NFKC behavior."
+    - "Blank/absent/non-string 型式 omits vehicleCode and cannot clear operator input."
+verification:
+  claude_focused_partial: "wizard vehicle mapper 20/20 PASS; OCR contract file load was blocked by isolated-worktree @supabase/supabase-js resolution."
+  codex_command: "env NODE_PATH=/Users/atsushinishikawa/dealeros/node_modules node --import /Users/atsushinishikawa/dealeros/node_modules/tsx/dist/loader.mjs --test src/lib/vehicle-registration/ocr-dimensions-contract.test.ts src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts"
+  dependency_proof: "Candidate and shared dependency source package-lock SHA-256 both equal 423d295f85d537b12c375aabb8e5fef336c77139a756b19c02a4ba1719f20866. No install, copy, symlink, or dependency change occurred."
+  tests: 28
+  passed: 28
+  failed: 0
+  exit_code: 0
+  diff_check: PASS
+source_sha256:
+  src/lib/vehicle-registration/ocr.ts: 1f26cc50a070b06b616dc0f314e7273c700ef2f3fd8cf7960ffb63beaca13477
+  src/lib/ai/ocr-config.ts: 83a56c3b80de8c24a4cd1da1203238a3ebd16ef5142c4ce88755c8af3e709a0b
+  src/lib/vehicle-registration/ocr-dimensions-contract.test.ts: d8be97ace863673a8bbc3fd57d9b834130c6dab7387fa76fee1506fe51b6b5d2
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.ts: d984aa1cd1ccbf72a2c8a3d6472eae2fc5a8c674ea3dfe460f5accaa41170132
+  src/lib/ocr/wizard-vehicle-ocr-apply-core.test.ts: 0c9e3e37e39fc44ad9281fe29b39b7e85d5c8d5663c597435a80a61aaf7bfa7c
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  stage: false
+  commit: false
+  push: false
+  database_or_supabase: false
+  provider_or_live_ocr: false
+  preview_or_production: false
+  ready_merge_deploy: false
+decision: ACCEPT_R2_SOURCE_CANDIDATE_E2_SOURCE_UNSTAGED_UNCOMMITTED
+remaining_boundary: "Authenticated Preview verification with the owner-supplied certificate is mandatory after separately authorized Git delivery. Deterministic embedded-PDF-text extraction and postal/address completion remain separate unresolved phases."
+next: "VERIFY_THE_EXACT_SEVEN_PATH_COMBINED_DIFF_AND_DIFF_CHECK, THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION. PUSH_REMAINS_SEPARATE."
+```
+
+## GDA-2A-OCR-PRINTED-MODEL-FIELD-R2-D1 — Git delivery and Preview rejection
+
+```yaml
+phase: GDA_VEHICLE_REGISTRATION_OCR_PRINTED_MODEL_FIELD_R2_DELIVERY_AND_PREVIEW
+status: SOURCE_COMMITTED_PUSHED_PREVIEW_PROVIDER_BEHAVIOR_REJECTED_R3_REQUIRED
+date: 2026-09-01
+append_only: true
+repository:
+  repo: nisikawa-officeAZ/GYEON
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/48
+  pull_request_state: OPEN_DRAFT
+  base_main: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  first_delivery_commit: a9ef0b8dd88e19c6154090fcce59171ebb1e198a
+  current_head: 3d75d3156b3c11f5968a8126ca7b620b30f32882
+  current_tree: 90011cf90b07e7488963e393a23b4a69da9f690e
+  delivery_mode: NORMAL_PUSH_NO_FORCE
+accepted_source_evidence:
+  focused_tests: "28/28 PASS for R2; earlier combined OCR candidate 204/204 PASS"
+  diff_check: PASS
+  protected_paths_unchanged: true
+preview_evidence:
+  deployment: READY
+  owner_upload_attempts: 2
+  sanitized_observation: "Maker and chassis evidence were nonblank, but AI model was empty and the Wizard 型式 stayed blank. The digital PDF text layer contains a distinct printed 型式 value ６ＢＡ－ＪＧ３."
+  personal_data_recorded_or_transmitted: false
+  verdict: PROMPT_ONLY_REPAIR_NOT_E3
+remaining:
+  - "Diagnose deterministic digital-PDF text-layer fallback without inference."
+  - "Postal-code/address bidirectional completion remains unresolved and separate."
+  - "Ready, merge, production deployment, and phase closure remain unauthorized."
+decision: ACCEPT_R2_E2_SOURCE_DELIVERY_REJECT_LIVE_PROVIDER_COMPLETION_CLAIM
+next: "GOVERN_R3_READ_ONLY_DIAGNOSIS_BEFORE_ANY_FALLBACK_IMPLEMENTATION"
+```
+
+## GDA-2A-OCR-PDF-MODEL-FALLBACK-R3-G1 — Read-only diagnosis governance correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_CLAUDE_RESULT_NOT_ACCEPTED
+date: 2026-09-01
+append_only: true
+authorization: "The owner approved returning MacBook Codex to the DealerOS critical path and authoring exactly three R3 governance files as an unstaged/uncommitted candidate. External transmission, a new Claude invocation, source implementation, executable tests, Git delivery, Preview/production action, Ready, merge, and deployment are not authorized by this gate."
+fixed_candidate:
+  repo: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  required_state: OPEN_DRAFT
+  base_main: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  head: 3d75d3156b3c11f5968a8126ca7b620b30f32882
+  tree: 90011cf90b07e7488963e393a23b4a69da9f690e
+prior_pr_instruction:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/48#issuecomment-5478848763
+  claude_reaction: eyes_only
+  result_posted: false
+  governance_defect: "R3 was absent from the Git plan/ledger and the comment named src/components/dev/ScreensPreview.tsx instead of the protected src/components/estimates/wizard/screens/ScreensPreview.tsx."
+  disposition: NOT_ACCEPTANCE_EVIDENCE_DO_NOT_USE_FOR_IMPLEMENTATION
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS.md
+diagnosis_contract:
+  objective: "Determine the smallest server-only zero-per-request-fee digital-PDF text-layer 型式 fallback and exact future implementation/test allowlist."
+  proposed_precedence: "explicit PDF text-layer 型式 > nonblank AI model > omitted/manual"
+  distinct_fields:
+    - 型式
+    - 原動機の型式
+    - 型式指定番号
+    - 類別区分番号
+  real_pdf_or_personal_data_transmission: FORBIDDEN
+  implementation_authorized: false
+protected_blobs:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_or_test_edit: false
+  executable_test: false
+  database_provider_preview_production: false
+  stage_commit_push_pr_ready_merge_deploy: false
+decision: AUTHOR_THREE_PATH_R3_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_STAGE_LOCAL_COMMIT_AUTHORIZATION"
+```
+
+## GDA-2A-OCR-PDF-MODEL-FALLBACK-R3-G2 — Self-referential HEAD pin correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_GOVERNANCE_HEAD_BINDING_CORRECTION
+status: GOVERNANCE_CORRECTION_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-01
+append_only: true
+trigger: "After the owner-authorized normal push of R3-G1, MacBook Codex identified that fixing the checked-out HEAD inside the directive to its own parent commit is structurally self-referential and would force BLOCKED_CANDIDATE_DRIFT after every valid governance commit."
+r3_g1_delivery:
+  commit: 3e3fad7f6d5803985e6286f5d22a1d2e9bee7f1d
+  tree: 5406d5eccd1aec5a49dfd84e5d8bd0595d603cb9
+  parent: 3d75d3156b3c11f5968a8126ca7b620b30f32882
+  push: NORMAL_NON_FORCE
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/48
+  pull_request_state_after_push: OPEN_DRAFT
+  remote_head_after_push: 3e3fad7f6d5803985e6286f5d22a1d2e9bee7f1d
+  changed_files_after_push: 24
+rejected_contract: "The V1 directive treated the source baseline commit as the checked-out fixed HEAD even though the directive existed only in a descendant governance commit."
+corrected_contract:
+  directive_id: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_V2
+  result_id: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_RESULT_V2
+  fixed_source_baseline_commit: 3d75d3156b3c11f5968a8126ca7b620b30f32882
+  fixed_source_baseline_tree: 90011cf90b07e7488963e393a23b4a69da9f690e
+  dispatch_binding: "A later owner-approved dispatch supplies exact DISPATCH_HEAD and DISPATCH_TREE outside the directive."
+  ancestry_gate: "The source baseline must be an ancestor of DISPATCH_HEAD."
+  delta_gate: "Only the exact three governance paths may differ between the source baseline and DISPATCH_HEAD."
+  failure: BLOCKED_CANDIDATE_DRIFT
+exact_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS.md
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_or_test_edit: false
+  executable_test: false
+  stage_commit_push: false
+  pr_comment_or_metadata: false
+  database_provider_preview_production: false
+decision: AUTHOR_R3_G2_THREE_PATH_GOVERNANCE_CORRECTION_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
+
+## GDA-2A-OCR-PDF-MODEL-FALLBACK-R3-D1 — V2 diagnosis and Codex disposition
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS
+status: ROOT_CAUSE_ACCEPTED_IMPLEMENTATION_RECOMMENDATION_CORRECTED_OWNER_DECISION_RESOLVED
+date: 2026-09-01
+append_only: true
+dispatch:
+  directive_id: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_V2
+  result_id: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R3_READ_ONLY_DIAGNOSIS_RESULT_V2
+  dispatch_head: 51c0d539a4cfa2741bc78170ca763c245de0c543
+  dispatch_tree: 7392a03e12d31eb102cb20983a679b8df5d8b8e6
+  invocation_count: 1
+  claude_verdict: OWNER_DECISION_REQUIRED_PDF_TEXT_EXTRACTION_AUTHORITY
+accepted_root_cause:
+  - "Digital PDFs are sent to OpenAI as an opaque PDF file part; the application does not deterministically read the embedded text layer."
+  - "The provider returned blank model in two authenticated Preview attempts despite the explicit prompt."
+  - "The sanitizer correctly omits blank model, and the accepted Wizard mapper cannot emit vehicleCode without a nonblank result.model."
+  - "No existing PDF text extraction dependency or deterministic fallback exists in the repository."
+codex_correction:
+  finding: "Claude simultaneously confirmed explicit PDF 型式 > AI model while proposing local parsing only when AI model is blank. Those statements are contradictory."
+  corrected_precedence: "Run bounded local parsing for every eligible digital PDF and select explicit unambiguous PDF 型式 over nonblank AI model; otherwise retain AI; otherwise omit/manual."
+  rejected_option: "Do not hand-write a zlib-only PDF parser because Japanese Type0/CID fonts, ToUnicode maps, object streams, and other real-world encodings make that unsafe and difficult to verify."
+no_state_change:
+  files_or_git: true
+  tests_or_dependencies: true
+  real_pdf_or_personal_data: true
+  provider_db_preview_production: true
+decision: ACCEPT_R3_ROOT_CAUSE_REJECT_CONTRADICTORY_IMPLEMENTATION_SECTION_AND_ADVANCE_TO_OWNER_DEPENDENCY_SELECTION
+```
+
+## GDA-2A-OCR-PDF-MODEL-FALLBACK-R4-G1 — Owner-selected local parser governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R4_IMPLEMENTATION_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-01
+append_only: true
+owner_decision: "Adopt a free local-only OSS PDF text extractor; no paid connection or per-request service. The owner approved formal selection and R4 governance authoring."
+selection:
+  package: unpdf
+  version: 1.8.1
+  pin: exact_no_caret_or_tilde
+  license: MIT
+  npm_engine: node_gte_22
+  npm_unpacked_size_bytes: 2141399
+  optional_peer_not_installed: "@napi-rs/canvas"
+  runtime_verified: "Vercel project nisikawa-5024s-projects/dealeros reports Node.js 24.x."
+  external_service_or_per_request_fee: false
+  rejected:
+    - "pdf-parse@2.4.5 because it is materially larger and includes unnecessary canvas/native dependency for this text-only task."
+    - "Hand-written PDF content-stream parser because it cannot safely cover Japanese font encodings within this bounded phase."
+official_evidence:
+  - https://www.npmjs.com/package/unpdf/v/1.8.1
+  - https://github.com/unjs/unpdf
+source_baseline:
+  commit: 51c0d539a4cfa2741bc78170ca763c245de0c543
+  tree: 7392a03e12d31eb102cb20983a679b8df5d8b8e6
+future_exact_write_allowlist:
+  - package.json
+  - package-lock.json
+  - src/lib/vehicle-registration/pdf-model-text-extractor.ts
+  - src/lib/vehicle-registration/pdf-model-text-extractor.test.ts
+  - src/lib/vehicle-registration/ocr.ts
+governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_PDF_MODEL_FALLBACK_R4_IMPLEMENTATION.md
+frozen_contract:
+  - "Parser runs locally for every eligible digital PDF concurrently with AI; explicit PDF 型式 wins over AI."
+  - "5 MiB, 3-page, and 3-second local limits; text only; no canvas; no PDF text logging."
+  - "Scanned/encrypted/malformed/ambiguous/conflicting/oversized/timed-out input fails closed to AI/manual without erasure."
+  - "Real certificate PDF and personal data remain outside Git, Claude, fixtures, logs, and evidence."
+prohibited_actions_confirmed:
+  dependency_install_or_source_edit: false
+  claude_or_external_private_source_transmission: false
+  executable_test: false
+  stage_commit_push: false
+  pr_comment_ready_merge_deploy: false
+  database_provider_preview_production: false
+decision: AUTHOR_EXACT_THREE_PATH_R4_IMPLEMENTATION_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R1-G1 — Japan Post DB authority governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS_GOVERNANCE
+status: OWNER_RATIFIED_DB_AUTHORITY_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-01
+append_only: true
+owner_decision:
+  authority: "Japan Post official nationwide UTF-8 postal-code CSV"
+  storage: "Dedicated internal database master; never the customer table"
+  runtime_external_reverse_lookup: false
+  customer_address_external_transmission: false
+  lookup_directions:
+    - POSTAL_TO_ADDRESS
+    - OCR_ADDRESS_TO_POSTAL
+  resolution: "Deterministic exact and unique only; no AI, fuzzy guess, web search, or provider fallback"
+  fail_closed: "Zero/multiple/error/unavailable leaves blank or operator value unchanged for manual entry"
+  update: "Controlled versioned import with source date, checksum, batch identity, and rollback evidence"
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: ee243fa982cd9520ff0607ea2caeb78797fdb6de
+  tree: 9f8f5b1be1724e570826289e872efae3ca21c400
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+dispatch_contract:
+  directive_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS_V1
+  result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  binding: "A later owner-approved dispatch supplies exact DISPATCH_HEAD and DISPATCH_TREE. Source baseline must be its ancestor and delta must be exactly the three governance paths."
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_test_migration_or_dataset_edit: false
+  csv_download_or_import: false
+  executable_test_or_build: false
+  database_supabase_auth_storage_provider_access: false
+  stage_commit_push_pr_mutation: false
+  preview_ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_POSTAL_MASTER_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R1-D1 / R2-G1 — Diagnosis correction and implementation governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R2_IMPLEMENTATION_GOVERNANCE
+status: R1_DIAGNOSIS_COMPLETED_CLAUDE_VERDICT_REJECTED_AS_WRITTEN_R2_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-01
+append_only: true
+r1_dispatch:
+  directive_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS_V1
+  result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  dispatch_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/48#issuecomment-5486452709
+  dispatch_head: 01781ace8ab4dd1d5d6888b9b3bb25f60dce0562
+  dispatch_tree: 6e76febba0db66bb1fd8a302819109beb4d1fce6
+  invocation_count: 1
+  isolation: "Thirty authorized repository files plus one Codex dispatch-evidence note; no .git, protected content, PDF, PII, secret, dataset, or environment value; read-only filesystem; Read/Glob/Grep tools only; isolated copy deleted after result."
+  claude_verdict: IMPLEMENTATION_GOVERNANCE_READY
+codex_disposition: CHANGES_REQUIRED
+accepted:
+  - "Wizard postal/address fields have no lookup invocation; the existing browser ZipCloud helper is outside the canonical Wizard and is not reused."
+  - "Use authenticated server actions, request-scoped Supabase client, private versioned master tables, narrow SECURITY DEFINER RPCs, and explicit-save-only persistence."
+rejected_or_corrected:
+  - "utf_ken_all excludes large-office individual postal codes; remove invented large-office source handling."
+  - "Official non-specific town labels never identify an exact town and are excluded from reverse auto-resolution."
+  - "Ambiguous results never partially fill prefecture/city and never open a picker; preserve the target and require manual entry."
+  - "The implementation allowlist must include a concrete CSV parser and controlled CLI import path."
+  - "Versioned immutable batches plus an atomic active-batch pointer replace the proposed 120k-row effective_to rewrite."
+  - "Reverse matching requires a concrete indexed prefix-head prefilter before longest exact prefix/unique postal evaluation."
+  - "The report's isolated-file count statement was inaccurate; Codex observed 31 total files, not the report's 29."
+official_contract:
+  source: https://www.post.japanpost.jp/service/search/zipcode/download/utf-zip.html
+  format: https://www.post.japanpost.jp/service/search/zipcode/download/utf-readme.html
+  columns: 15
+  rows_are_one_postal_record_per_line: true
+  copyright_claimed_by_japan_post_for_postal_data: false
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 01781ace8ab4dd1d5d6888b9b3bb25f60dce0562
+  tree: 6e76febba0db66bb1fd8a302819109beb4d1fce6
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/48
+  pull_request_state: OPEN_DRAFT
+migration_allocation:
+  command: supabase migration new jp_postal_master
+  timing: "Separate owner-approved gate after governance commit/push and before implementation dispatch"
+  dispatch_binding: "MIGRATION_PATH must be the exact CLI-created empty untracked file and the only untracked migration."
+future_write_allowlist_count: 23
+future_write_allowlist_contract: "One dispatch-bound MIGRATION_PATH plus exactly the 22 literal paths recorded in the completion plan and R2 directive."
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R2_IMPLEMENTATION.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  migration_allocation_or_source_edit: false
+  claude_or_external_transmission: false
+  executable_test_or_build: false
+  csv_download_or_import: false
+  database_supabase_auth_storage_provider_access: false
+  stage_commit_push_pr_mutation: false
+  preview_ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_R2_CORRECTED_IMPLEMENTATION_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
+
+## GDA-2A-OCR-CHASSIS-UI-R6-G1 — Accepted R5 diagnosis and implementation governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_CHASSIS_UI_R6_IMPLEMENTATION_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-02
+append_only: true
+authorization: "The owner approved proceeding to the chassis-number input implementation phase. This gate authors exactly three governance files only; private transmission, implementation, tests, Git delivery, environment access, and deployment remain separate."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: c6155bfa7ae342e6a0a9394e1c7eddf9bfdfacd6
+  tree: e77931bc7c1f4f1bff91b2b4769f45a9cbf67163
+r5_terminal_diagnosis:
+  result_id: GDA_ESTIMATE_WIZARD_OCR_PREVIEW_GAP_R5_READ_ONLY_DIAGNOSIS_RESULT_V2
+  execution: "One owner-authorized non-persistent Anthropic Claude Code invocation; tools disabled; exit 0; 34/34 authorized files supplied; no GitHub comment or mutation."
+  result_sha256: e86011fe2847803742612475ef8db811999462907b6546fd8656f6fc8b624288
+  claude_primary_verdict: OWNER_DECISION_REQUIRED_VEHICLE_NAME_MAPPING_AUTHORITY
+  codex_disposition:
+    postal: ENVIRONMENT_ACTIVATION_REQUIRED_POSTAL_MASTER_SEPARATE_GATE
+    vehicle_name: OWNER_DECISION_REQUIRED_NO_R6_EDIT
+    chassis: IMPLEMENTATION_SCOPE_READY_PRESENTATION_ONLY
+accepted_chassis_chain:
+  - "OCR chassis_number maps to patch.vin and the Wizard vehicle draft."
+  - "The canonical field contract and both save mappers carry VIN to the new-vehicle DTO and vehicles.vin."
+  - "The active src/components/estimates/wizard/steps/Step2Vehicle.tsx renders no editable v.vin field."
+future_exact_write_allowlist:
+  - src/components/estimates/wizard/steps/Step2Vehicle.tsx
+  - src/components/estimates/wizard/steps/Step2Vehicle.test.tsx
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_CHASSIS_UI_R6_IMPLEMENTATION.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  private_external_transmission: false
+  source_or_test_edit: false
+  executable_test_or_typecheck: false
+  stage_commit_push_pr_mutation: false
+  database_supabase_provider_preview_production: false
+  ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_R6_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
+
+## GDA-2A-OCR-CUSTOMER-MARKER-POSTAL-R7-G1 — Preview regression diagnosis governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_CUSTOMER_MARKER_POSTAL_R7_READ_ONLY_DIAGNOSIS_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-02
+append_only: true
+authorization: "The owner reported that authenticated PR #48 Preview OCR now carries vehicle data but leaves customer name/address as *** and postal code blank, and approved proceeding to the R7 Claude diagnosis/repair-instruction phase. This gate authors exactly three diagnosis-governance paths only. Diagnosis and implementation remain separate."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  required_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 13c0798979129302b1845d5d6e0542210dce29c4
+  tree: 0300f36c482ab7ea008f7e8e128d6aa9a67cfd98
+preview_observation:
+  vehicle_type_and_chassis: REFLECTED
+  customer_name: MARKER_TEXT_INSTEAD_OF_CUSTOMER
+  customer_address: MARKER_TEXT_INSTEAD_OF_ADDRESS
+  postal_code: BLANK
+codex_source_hypothesis_to_diagnose:
+  - "The shared owner/user mapper treats any trimmed nonblank marker such as *** as ordinary party data."
+  - "The review payload promotes the resolved marker to authoritative customer candidate fields."
+  - "The Wizard patch then supplies the marker address to the one-shot address-to-postal chain."
+  - "A valid address still needs separate environment proof of migration plus one active imported Japan Post batch."
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_CUSTOMER_MARKER_POSTAL_R7_READ_ONLY_DIAGNOSIS.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  private_external_transmission: false
+  real_pdf_pii_or_customer_data_transmission: false
+  claude_invocation: false
+  source_test_or_migration_edit: false
+  executable_test_or_build: false
+  database_supabase_csv_import_or_environment_access: false
+  stage_commit_push_pr_mutation: false
+  ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_R7_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R3-G1 — Pre-activation safety repair diagnosis governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_READ_ONLY_REPAIR_DIAGNOSIS_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-02
+append_only: true
+authorization: "The owner approved preparing a Claude read-only diagnosis for the postal migration and import procedure. This gate authors exactly three governance paths only; dispatch, repair, tests, Git delivery, database access, migration apply, and data import remain separate."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: d220c480947d09f0f21d834301e037a86d5f2d88
+  tree: 92fdcdbde39e56cdb6e8adf7f32e779292fbb62b
+  observed_origin_main: 49a1dc4c396e50d5869f372a399c9ca1c10bc300
+audit_disposition: CHANGES_REQUIRED
+mandatory_findings_to_diagnose:
+  - "The later postal migration revokes authenticated usage from the shared private schema, conflicting with the earlier GYEON order migration's authenticated private-function contract."
+  - "The postal migration contains a schema-wide table privilege revoke that can alter unrelated private-schema objects; the repair must be object-scoped."
+  - "The development project migration history is behind multiple earlier local migrations, so a normal all-pending push is not a postal-only action."
+  - "An interrupted import can strand a staged or validating batch with no exposed resume or abort/reject recovery contract."
+  - "The importer accepts URL and service-role key without an explicit expected-project-ref guard or validate-only mode."
+environment_snapshot_read_only:
+  project_ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  state: ACTIVE_HEALTHY
+  postal_migration_applied: false
+  postal_tables_and_rpcs_present: false
+  database_writes: false
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_READ_ONLY_REPAIR_DIAGNOSIS.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_test_migration_or_dataset_edit: false
+  executable_test_or_build: false
+  database_supabase_auth_storage_provider_access: false
+  migration_apply_or_csv_import: false
+  stage_commit_push_pr_mutation: false
+  preview_ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_POSTAL_R3_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R3-A1 — Dispatch read-scope path correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_A1_DISPATCH_SCOPE_CORRECTION
+status: CORRECTION_CANDIDATE_AUTHORIZED_FOR_EXACT_THREE_PATH_COMMIT_AND_NORMAL_PUSH
+date: 2026-09-02
+append_only: true
+trigger:
+  attempted_dispatch_invoked_claude: false
+  files_transmitted: 0
+  diagnosis_run_consumed: false
+  preflight_failure: "MISSING_ALLOWLIST_PATH: supabase/config.toml"
+correction:
+  action: REMOVE_NONEXISTENT_PATH_ONLY
+  removed_path: supabase/config.toml
+  replacement_path: null
+  mandatory_complete_read_scope_count_before: 25
+  mandatory_complete_read_scope_count_after: 24
+rationale: "No canonical supabase/config.toml exists in the repository. Unrelated E2E harness config files are not valid substitutes and are outside this diagnosis."
+exact_write_and_delivery_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_READ_ONLY_REPAIR_DIAGNOSIS.md
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_test_migration_or_dataset_edit: false
+  executable_test_or_build: false
+  database_supabase_auth_storage_provider_access: false
+  migration_apply_or_csv_import: false
+  preview_ready_merge_deploy: false
+decision: CORRECT_TO_EXACT_24_EXISTING_READ_PATHS
+next: "VERIFY_EXACT_THREE_PATH_DIFF_STAGE_LOCAL_COMMIT_NORMAL_PUSH_THEN_STOP_BEFORE_CLAUDE_REDISPATCH"
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R4-G1 — Accepted diagnosis and bounded repair governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R4_IMPLEMENTATION_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-02
+append_only: true
+r3_diagnosis:
+  result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_READ_ONLY_REPAIR_DIAGNOSIS_RESULT_V1
+  claude_verdict: READY_FOR_BOUNDED_POSTAL_R3_REPAIR
+  invocation_count: 1
+  tools_used: 0
+  web_requests: 0
+  session_persisted: false
+  files_supplied: 24
+  claude_file_git_database_or_provider_mutation: false
+codex_disposition: ROOT_CAUSES_ACCEPTED_IMPLEMENTATION_CONTRACT_CORRECTED
+accepted_findings:
+  - "The postal migration revokes authenticated usage on the shared private schema and breaks the earlier GYEON-order private-function/RLS contract."
+  - "The all-tables private-schema revoke is overbroad and must become object-scoped."
+  - "Staged/validating imports are stranded after interruption and duplicate sequence currently surfaces as a CLI failure."
+  - "Mutating CLI modes lack expected-project-ref binding and validate-only operation."
+  - "Remote migration history must be proved before any all-pending migration command is authorized."
+codex_corrections:
+  - "R4 uses resume/status and idempotent duplicate-sequence success; it does not add Claude's proposed abort/delete/reset path."
+  - "Rejected, rolled-back, and promoted-but-superseded identities remain terminal and fail closed."
+  - "The verified no-postal-migration statement applies only to the observed development project, not every environment."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 99e7e20629ff4c4b5037c4263cce16bc39eceb05
+  tree: 6cd7dc8f1ee6689c3358f6f2b3111571c48d0aa8
+future_exact_write_allowlist:
+  - supabase/migrations/20260901001246_jp_postal_master.sql
+  - supabase/tests/jp_postal_master_rpc.test.sql
+  - src/lib/geo/jp-postal-master-migration-contract.test.ts
+  - scripts/postal-master/import-japan-post.ts
+  - scripts/postal-master/import-japan-post.test.ts
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R4_IMPLEMENTATION.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  source_or_test_edit: false
+  claude_or_external_transmission: false
+  executable_test_or_build: false
+  database_supabase_provider_or_environment_access: false
+  migration_apply_or_csv_import: false
+  stage_commit_push_pr_mutation: false
+  preview_ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_POSTAL_R4_IMPLEMENTATION_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R4-A1 — Implementation read-scope dependency correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R4_A1_READ_SCOPE_CORRECTION
+status: CORRECTION_AUTHORIZED_FOR_EXACT_THREE_PATH_COMMIT_AND_NORMAL_PUSH
+date: 2026-09-02
+append_only: true
+trigger:
+  claude_invoked: false
+  files_transmitted: 0
+  implementation_run_consumed: false
+  reason: "Focused importer tests load two postal contracts and tsx resolves the @ alias through tsconfig.json."
+correction:
+  mandatory_complete_read_scope_count_before: 11
+  mandatory_complete_read_scope_count_after: 14
+  added_read_only_paths:
+    - src/lib/geo/jp-postal-master-csv.ts
+    - src/lib/geo/jp-postal-master-contract.ts
+    - tsconfig.json
+  implementation_write_allowlist_count: 5
+  implementation_write_allowlist_changed: false
+exact_write_and_delivery_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R4_IMPLEMENTATION.md
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_or_test_edit: false
+  executable_test_or_build: false
+  database_supabase_provider_or_environment_access: false
+  migration_apply_or_csv_import: false
+  preview_ready_merge_deploy: false
+decision: CORRECT_TO_EXACT_14_READ_PATHS_AND_RETAIN_EXACT_5_WRITE_PATHS
+next: "VERIFY_EXACT_THREE_PATH_DIFF_STAGE_LOCAL_COMMIT_NORMAL_PUSH_THEN_STOP_BEFORE_CLAUDE_IMPLEMENTATION_REDISPATCH"
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-G1 — Disposable harness authority ratification
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_HARNESS_GOVERNANCE_RATIFICATION
+status: EXACT_TWO_AUTHORITY_PATH_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner approved adding the missing R5 ratification to the completion plan and append-only phase ledger only. Stage, commit, push, Claude redispatch, harness implementation, database runtime, hosted access, migration apply, and real CSV import remain separate."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 90dee723eac9b2b035b1af998ae5531b31a8cf1b
+  tree: 5080f83ff831f0506390e274bef82d2e1062e556
+  vercel: SUCCESS
+r5_design_authorities:
+  plan: docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+  directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+  design_commit: 90dee723eac9b2b035b1af998ae5531b31a8cf1b
+ratified_runtime_architecture:
+  lanes:
+    - fresh
+    - import
+  loopback_only: true
+  fresh_suffix_required: true
+  failed_suffix_burn_required: true
+  synthetic_rows_only: true
+  linked_or_hosted_project_access: false
+  canonical_project_ref_bypass: false
+  production_importer_local_write: false
+future_exact_harness_write_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5/config.toml
+  - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/capture-evidence.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/real-auth.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql
+first_claude_invocation:
+  external_transmission_owner_approved: true
+  private_files_approved_and_read: 21
+  session_persisted: false
+  result: BLOCKED_MISSING_PLAN_AND_LEDGER_RATIFICATION
+  harness_files_created: 0
+  existing_files_changed: 0
+  database_or_supabase_runtime: false
+  git_delivery_or_pr_mutation: false
+  accepted_as_implementation_evidence: false
+  next_invocation_permission_mode: dontAsk
+  unapproved_gh_or_network_commands_allowed_next_time: false
+exact_current_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  harness_implementation_or_runtime: false
+  claude_redispatch_or_external_transmission: false
+  source_migration_test_dependency_or_lockfile_edit: false
+  database_supabase_auth_postgrest_provider_or_hosted_access: false
+  migration_apply_or_csv_import: false
+  stage_commit_push_pr_mutation: false
+  preview_ready_merge_deploy: false
+decision: RATIFY_R5_IN_EXACT_TWO_AUTHORITY_PATHS_ONLY
+next: "VERIFY_EXACT_TWO_PATH_DIFF_PROTECTED_METADATA_R5_DESIGN_HASHES_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A2-V3 — Harness dealer-boundary/runtime-location doc repair (result-pending)
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_A2_V3_DOC_REPAIR
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DOC_REPAIR_RESULT_V1
+status: DOCUMENTATION_REPAIR_APPLIED_HARNESS_RESULT_PENDING
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized one bounded documentation-only repair restricted to exactly four existing governance paths, using only Read and Edit, to correct the postal-master lookup RPC dealer-boundary contract, the fixture/runtime/retained-evidence location contract, and the accurate historical state of the R5 harness candidate and its two repair attempts. This entry records that correction only; it does not authorize Bash, tests, Git, network, database, Supabase, Docker, HTTP, provider, deployment, staging, commit, or push."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 6f7e38996cdc6845d1cb7d87e78dc81ef37bfb74
+  tree: b6ac23b9d0e237aca1d1b66b858eb15dd62b9c50
+exact_current_write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+repaired_items:
+  dealer_lookup_rpc_contract: "Postal master is dealer-independent global reference data; the lookup RPC carries no dealer id and returns no dealer-owned data. Any authenticated user with at least one active dealer_members membership succeeds, including an active member of a different dealer than any other test dealer. Anon, no membership, and inactive-only membership fail. Removed the prior cross-dealer denial requirement from the R5 plan and directive."
+  fixture_and_evidence_location_contract: "Fixtures remain deterministic and unmistakably fictional, created only inside the dedicated disposable runtime, outside the Git worktree and outside /private/tmp. Retained evidence stays outside the worktree under the same exclusion. General OS tmpdir ($TMPDIR, /tmp, /var/folders, or any other os.tmpdir()-equivalent location) is now explicitly forbidden in addition to /private/tmp in both the R5 plan and the R5 directive."
+recorded_state:
+  design_and_ratification: PUSHED
+  first_implementation_invocation: STOPPED_BEFORE_WRITES_MISSING_RATIFICATION
+  harness_candidate: SEVEN_PATH_CREATED_GIT_UNTRACKED_UNSTAGED_UNCOMMITTED
+  codex_static_review: CHANGES_REQUIRED_DEFECTS_FOUND
+  first_repair_attempt: PARTIAL_SETUP_CAPTURE_CLEANUP_CHANGED_INCOMPLETE
+  second_repair_attempt: SEVEN_FILE_NO_CHANGE
+  database_and_runtime_execution: UNRUN
+  authority_granted_by_these_documents: NONE_RUNTIME_OR_GIT_DELIVERY
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  bash_or_shell_execution: false
+  executable_test_or_build: false
+  git_add_commit_push_or_pr_mutation: false
+  network_access: false
+  database_or_supabase_access: false
+  docker_or_colima_runtime: false
+  http_requests: false
+  provider_calls: false
+  deployment_or_ready_or_merge: false
+  staging_or_production_access: false
+  files_read_or_edited_outside_the_four_path_allowlist: false
+decision: RECORD_DOC_REPAIR_HARNESS_CANDIDATE_RESULT_REMAINS_PENDING
+next: "SEPARATE OWNER AUTHORIZATION REQUIRED FOR HARNESS CANDIDATE REPAIR COMPLETION, CODEX STATIC RE-REVIEW, STAGE/COMMIT/PUSH OF THE FOUR GOVERNANCE PATHS, AND ANY DATABASE OR RUNTIME EXECUTION."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A4 — Final static repair (findings A/B/C) applied as candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR_RESULT_V1
+status: FINAL_STATIC_REPAIR_APPLIED_AS_CANDIDATE_CODEX_ACCEPTANCE_PENDING
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized one bounded repair restricted to exactly ten existing paths (the six harness implementation files plus the four governance documents), using only Read and Edit, to repair the two remaining source findings A and B that Codex static re-review found after the prior four-document doc repair, and to bring governance status wording forward accurately as finding C. This entry records that repair only; it does not authorize Bash, tests, Git, network, database, Supabase, Docker, HTTP, provider, deployment, staging, commit, or push."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 6f7e38996cdc6845d1cb7d87e78dc81ef37bfb74
+  tree: b6ac23b9d0e237aca1d1b66b858eb15dd62b9c50
+exact_current_write_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/capture-evidence.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/real-auth.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+repaired_findings:
+  finding_a_os_temp_exclusion_source_enforcement: "setup.sh now fails closed before creating any runtime if the resolved (canonicalized/symlink-realpath'd) runtime parent or runtime path is inside the Git worktree, /private/tmp, /tmp, /var/folders, the current $TMPDIR after canonicalization, or the general OS temp root reported by python3 tempfile.gettempdir(). capture-evidence.sh revalidates the same boundary against its supplied runtime parent and runtime path before use. cleanup.sh revalidates the same boundary for both the suffix runtime path and the retained-evidence parent/destination before creating, copying, or removing anything. Each script defines its own Bash-3.2-compatible gda_r5_realpath/gda_r5_assert_outside_excluded_roots helper pair using the existing required python3 dependency; no shared library file was added because none is in the ten-path allowlist. Existing non-destructive safety, exact-prefix validation, two-lane behavior, burn semantics, and the default /Users/atsushinishikawa/Documents/Codex/runtime path remain unchanged. No fail-closed check was weakened, and no new variable is named HOME (pre-existing $HOME literals in cleanup.sh were left untouched)."
+  finding_b_synthetic_fixture_data: "Postal/JIS fixture values that resembled or could collide with real Japan Post data were replaced with deterministic clearly-reserved synthetic values in the reserved namespace JIS 99990-99999 and postal 0000001-0000099 (still five numeric characters for JIS and seven for postal), across real-auth.mjs (jisCode 01199 -> 99999; postalCode 9990100 -> 0000001), import-resume.mjs (jisCode 01100 -> 99991 and 01199 -> 99999; postalCodes 9990001/9990002/9990003/9990004/9990005/9990009 -> 0000002/0000003/0000004/0000007/0000005/0000006), and runtime-contract.test.sql (jisCodes 01180/01280/01380 -> 99992/99993/99994; postalCodes 9930000/9990831/9990001 -> 0000010/0000020/0000030, including the query literals 999-0001/993-0000/999-0831 -> 000-0040/000-0010/000-0020). The intentional RC-A ambiguous-pair duplicate (two rows sharing postal 0000010 with genuinely different addresses) was preserved as the one intentional duplicate; every other value is now unique. Every existing assertion's semantics (FOUND, AMBIGUOUS, NOT_FOUND, MASTER_UNAVAILABLE, active-batch filtering, supersede/rollback, resume, rejected identity, importer validate-only/local-URL-refusal) is unchanged. Dealer labels lacking the literal marker ('R5 Real Auth Dealer A'/'B' in real-auth.mjs, 'RC Synthetic Dealer' in runtime-contract.test.sql) now carry '〔GDA-R5-SYNTHETIC〕'; import-resume.mjs already carried it. Misleading header comments in runtime-contract.test.sql ('two distinct real addresses', 'a real reverse NOT_FOUND') were corrected to 'two distinct synthetic fixture addresses' and 'a real runtime/request path reverse NOT_FOUND using synthetic fixture data'; no comment now implies fixture addresses are real."
+  finding_c_governance_status_accuracy: "The plan, directive, and completion-plan status/current-state wording now records: the bounded four-document repair (R5-A2-V3) completed; the bounded three-shell-script OS-temp exclusion repair (finding A) completed; Codex static re-review found the two remaining source findings A/B plus stale status; this final repair (this result marker) is now applied as a candidate across the exact ten-file allowlist; runtime/DB remain unrun; the candidate remains unstaged/uncommitted/unpushed; and no Git delivery or runtime authority is granted by any of these three documents. This ledger entry is appended without altering or removing the prior GDA-2A-OCR-POSTAL-MASTER-R5-A2-V3 result-pending entry."
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  bash_or_shell_execution: false
+  executable_test_or_build: false
+  git_add_commit_push_or_pr_mutation: false
+  network_access: false
+  database_or_supabase_access: false
+  docker_or_colima_runtime: false
+  http_requests: false
+  provider_calls: false
+  deployment_or_ready_or_merge: false
+  staging_or_production_access: false
+  files_read_or_edited_outside_the_ten_path_allowlist: false
+  codex_pass_or_executable_verification_claimed: false
+decision: APPLY_FINDINGS_A_B_C_AS_ONE_STATIC_REPAIR_CANDIDATE_CODEX_ACCEPTANCE_PENDING
+next: "READY_FOR_CODEX_STATIC_REVIEW, NOT PASS. Separate owner/Codex authorization is required for final static acceptance, stage/local-commit/push of the ten-path candidate, and any database or runtime execution."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A5 — OS-temp fail-closed ordering repair (write-before-validation)
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1
+status: READY_FOR_CODEX_STATIC_REVIEW_NOT_PASS
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized one bounded repair restricted to exactly seven existing paths (the three harness shell scripts plus the four governance documents), using only Read and Edit, to repair the OS-temp fail-closed write-before-validation ordering defect that Codex static review found in the prior GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR_RESULT_V1 candidate. This entry records that repair only; it does not authorize Bash, tests, Git, network, database, Supabase, Docker, HTTP, provider, deployment, staging, commit, or push."
+codex_static_verdict_on_prior_candidate: "CHANGES_REQUIRED_HARNESS. The synthetic postal/JIS fixture correction (finding B) was accepted, but OS-temp fail-closed ordering (finding A's repair) was defective."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 6f7e38996cdc6845d1cb7d87e78dc81ef37bfb74
+  tree: b6ac23b9d0e237aca1d1b66b858eb15dd62b9c50
+exact_current_write_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/capture-evidence.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+defect_repaired: "In setup.sh, LANE_DIR/SUFFIX_DIR were assigned before the excluded-root check on LANE_DIR ran; a rejection from that very check called fail(), which unconditionally mkdir'd and wrote burned.txt into the just-rejected LANE_DIR/SUFFIX_DIR. In capture-evidence.sh, RUNTIME_DIR was read from the environment before any validation, and fail()/the EXIT trap unconditionally derived SUFFIX_DIR_FOR_BURN=dirname(RUNTIME_DIR) and wrote burned.txt there even when the runtime-parent/runtime-path excluded-root check itself was what failed. In cleanup.sh, SUFFIX_DIR was assigned before its own excluded-root check ran, with the same fail()-writes-into-the-rejected-path defect, and RETAINED_EVIDENCE_PARENT/RETAINED_DIR were validated only immediately before their own mkdir/copy rather than before suffix-level cleanup-started.txt, aggregate-log, and lane stop/processing work began."
+repair_applied:
+  paths_validated_gate: "All three shell scripts now declare PATHS_VALIDATED=0 near IN_FAIL (cleanup.sh has no IN_FAIL/EXIT-trap, so it is declared standalone) and gate every directory/file write inside fail() (and, in setup.sh/capture-evidence.sh, inside the on_unexpected_exit EXIT trap) behind PATHS_VALIDATED -eq 1. Before that gate is set, fail() and the EXIT trap only print to stderr and exit; they perform no mkdir, no burned.txt write, and no aggregate-log write."
+  setup_sh_gate_point: "PATHS_VALIDATED=1 is set only after gda_r5_assert_outside_excluded_roots succeeds for both the suffix path (SUFFIX_DIR) and the lane runtime path (LANE_DIR), and strictly before the existing already-burned/already-set-up existence checks that may call fail()."
+  capture_evidence_sh_gate_point: "PATHS_VALIDATED=1 is set only after gda_r5_assert_outside_excluded_roots succeeds for both the runtime parent (RUNTIME_PARENT) and the runtime path (RUNTIME_DIR), strictly before the evidence-file-existence and linked-project checks that may call fail() using RUNTIME_DIR-derived paths."
+  cleanup_sh_gate_point_and_reorder: "cleanup.sh now validates, in order, the runtime parent (RUNTIME_PARENT, newly added), the suffix path (SUFFIX_DIR), the retained-evidence parent (RETAINED_EVIDENCE_PARENT), and the derived retained destination (RETAINED_DIR, including its not-already-exists check) — all moved before cleanup-started.txt, AGGREGATE_LOG creation, WAS_BURNED/source-metadata computation, and the per-lane stop/processing loop. PATHS_VALIDATED=1 is set only after all four validations pass. The later retained-evidence section no longer recomputes or re-validates RETAINED_DIR/RETAINED_EVIDENCE_PARENT; it only performs the already-validated mkdir."
+  canonicalization_error_guard: "gda_r5_assert_outside_excluded_roots in all three scripts now explicitly checks the exit status and non-emptiness of every gda_r5_realpath/tempfile.gettempdir() python3 call and calls fail() on any canonicalization failure, so a canonicalization error itself fails closed through the same non-writing-until-validated fail() rather than an implicit set -e/EXIT-trap path."
+  unweakened_requirements: "Fresh-suffix format, burn-on-failure, one-shot cleanup (cleanup-started.txt), exact gda-postal-r5.* prefix removal, migration/harness/R4-manifest/protected-path hash and metadata checks, and required evidence artifacts are all unchanged in content; only the timing of when a burn write is permitted was corrected. Every fail() call still exits 1 immediately regardless of PATHS_VALIDATED."
+  bash_3_2_compatibility: "No associative arrays, no bashisms beyond what the candidate already used; PATHS_VALIDATED is a plain integer-string variable compared with -eq, matching the existing IN_FAIL pattern."
+governance_docs_updated:
+  - "GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md: status line and section 1.1 now record the CHANGES_REQUIRED_HARNESS verdict and this repair as an applied, Codex-acceptance-pending candidate."
+  - "CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md: current-known-state paragraph now records the same verdict and repair."
+  - "GYEON_DA_COMPLETION_PLAN.md: the GDA-2A-OCR-POSTAL-MASTER-R5 status line now records the same verdict and repair; no other section of this plan was read or edited beyond what the seven-file allowlist required to state this correction."
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  bash_or_shell_execution: false
+  executable_test_or_build: false
+  git_add_commit_push_or_pr_mutation: false
+  network_access: false
+  database_or_supabase_access: false
+  docker_or_colima_runtime: false
+  http_requests: false
+  provider_calls: false
+  deployment_or_ready_or_merge: false
+  staging_or_production_access: false
+  files_read_or_edited_outside_the_seven_path_allowlist: false
+  codex_pass_or_executable_verification_claimed: false
+self_review_method: "Read-based static self-review only (Bash/tests/Git forbidden): re-read every edited region in place after editing and traced, by hand, every fail()/on_unexpected_exit call site against the new PATHS_VALIDATED gate and the new validation ordering in each of the three scripts."
+decision: APPLY_OS_TEMP_GUARD_REPAIR_AS_CANDIDATE_CODEX_ACCEPTANCE_PENDING
+next: "READY_FOR_CODEX_STATIC_REVIEW, NOT PASS. Separate owner/Codex authorization is required for static acceptance, stage/local-commit/push of the seven-path candidate, and any database or runtime execution."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A6 — Final closeout repair (retained-destination-exists burn gap)
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_CLOSEOUT_REPAIR
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_CLOSEOUT_REPAIR_RESULT_V1
+status: READY_FOR_CODEX_STATIC_REVIEW_NOT_PASS
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized one bounded repair restricted to exactly five existing paths (cleanup.sh plus the four governance documents), using only Read and Edit, to repair the retained-destination-exists burn gap that Codex static review found in the prior GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1 candidate, and to record the intervening aborted dispatch accurately. This entry records that repair only; it does not authorize Bash, tests, Git, network, database, Supabase, Docker, HTTP, provider, deployment, staging, commit, or push."
+codex_static_verdict_on_prior_candidate: "CHANGES_REQUIRED_HARNESS with exactly two closeout findings."
+aborted_dispatch:
+  claude_session_id: d5ca2074-2f62-4bc6-b407-3e2e84d10970
+  unauthorized_command: "wc -l"
+  command_scope:
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  read_only: true
+  codex_detected_and_stopped: true
+  edits_produced: 0
+  accepted_as_repair_run: false
+successful_replacement_dispatch:
+  tools_used:
+    - Read
+    - Edit
+  produced_candidate: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1
+  codex_finding_after_acceptance_review: "retained-destination-exists burn gap in cleanup.sh"
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 6f7e38996cdc6845d1cb7d87e78dc81ef37bfb74
+  tree: b6ac23b9d0e237aca1d1b66b858eb15dd62b9c50
+exact_current_write_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+defect_repaired: "cleanup.sh evaluated the retained-destination existence check `[[ ! -e \"$RETAINED_DIR\" ]] || fail ...` before PATHS_VALIDATED was set to 1. When the runtime parent, suffix path, retained-evidence parent, and derived retained destination were all safe (outside every excluded root) but RETAINED_DIR already existed, fail() exited without burning the safe existing suffix (PATHS_VALIDATED was still 0, so fail()'s burn-write block was skipped), weakening the one-attempt/no-retry contract."
+repair_applied:
+  gate_move: "PATHS_VALIDATED=1 is now assigned immediately after the four canonical excluded-root checks (runtime parent, suffix path, retained-evidence parent, retained-evidence destination) succeed, and strictly before the `[[ ! -e \"$RETAINED_DIR\" ]]` existence check. The literal unsafe-path checks (glob characters, HOME/root, parent-directory references, empty/unsafe RETAINED_DIR) remain before the gate, unchanged."
+  resulting_behavior: "A safe-but-already-existing RETAINED_DIR now triggers fail() after PATHS_VALIDATED=1, so fail() burns the existing safe suffix (writes SUFFIX_DIR/burned.txt when SUFFIX_DIR exists) before exiting 1, instead of exiting unburned."
+  unweakened_requirements: "Every mkdir, cleanup-started.txt write, aggregate-log write, lane stop/processing, evidence copy, hash comparison, per-lane and aggregate manifest write, and suffix-runtime removal remains strictly after PATHS_VALIDATED=1, unchanged in content and order relative to each other."
+  bash_3_2_compatibility: "No associative arrays or bashisms were introduced; PATHS_VALIDATED remains a plain integer-string variable, matching the existing pattern."
+governance_docs_updated:
+  - "GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md: status line and section 1.1 now record the second CHANGES_REQUIRED_HARNESS verdict, the aborted d5ca2074 dispatch, the successful OS-temp-guard replacement dispatch, and this closeout repair as an applied, Codex-acceptance-pending candidate."
+  - "CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md: current-known-state paragraph now records the same verdict, aborted dispatch, replacement dispatch, and repair."
+  - "GYEON_DA_COMPLETION_PLAN.md: the GDA-2A-OCR-POSTAL-MASTER-R5 status line now records the same verdict, aborted dispatch, replacement dispatch, and repair; no other section of this plan was read or edited beyond what the five-file allowlist required to state this correction."
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  bash_or_shell_execution: false
+  executable_test_or_build: false
+  git_add_commit_push_or_pr_mutation: false
+  network_access: false
+  database_or_supabase_access: false
+  docker_or_colima_runtime: false
+  http_requests: false
+  provider_calls: false
+  deployment_or_ready_or_merge: false
+  staging_or_production_access: false
+  files_read_or_edited_outside_the_five_path_allowlist: false
+  codex_pass_or_executable_verification_claimed: false
+self_review_method: "Read-based static self-review only (Bash/tests/Git forbidden): re-read the edited region of cleanup.sh in place after editing and traced, by hand, the full preflight sequence from the literal SUFFIX_DIR checks through the RETAINED_DIR literal check, the four canonical excluded-root checks, the PATHS_VALIDATED=1 assignment, and the retained-destination existence check, confirming the existence check now runs strictly after the gate while every literal unsafe-path check remains strictly before it."
+decision: APPLY_FINAL_CLOSEOUT_REPAIR_AS_CANDIDATE_CODEX_ACCEPTANCE_PENDING
+next: "READY_FOR_CODEX_STATIC_REVIEW, NOT PASS. Separate owner/Codex authorization is required for final static acceptance, stage/local-commit/push of the five-path candidate, and any database or runtime execution."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A7 — Delivery-scope clarification
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DELIVERY_SCOPE_CLARIFICATION
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_A7_DELIVERY_SCOPE_CLARIFICATION_RESULT_V1
+status: READY_FOR_CODEX_STATIC_REVIEW_NOT_PASS
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized one bounded append-only governance correction restricted to exactly one existing path (this ledger), using only Read and Edit, to clarify that the A6 five-path repair allowlist is not the Git delivery scope and to record the exact aggregate delivery candidate. This entry records that clarification only; it does not authorize Bash, tests, Git, network, database, Supabase, Docker, HTTP, provider, deployment, staging, commit, or push."
+clarification:
+  a6_five_path_candidate_scope: "The phrase 'five-path candidate' in GDA-2A-OCR-POSTAL-MASTER-R5-A6 describes only the bounded final-closeout repair write allowlist (cleanup.sh plus the four governance documents). It is NOT the Git delivery scope for this phase."
+  exact_git_delivery_candidate_path_count: 11
+  exact_git_delivery_candidate_composition: "Seven new harness paths plus four modified governance documents."
+  exact_git_delivery_candidate_paths:
+    - scripts/e2e/gda-estimate-postal-master-r5/config.toml
+    - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/capture-evidence.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/real-auth.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql
+    - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+    - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  partial_delivery_forbidden: "Partial delivery of only the five A6 repair-allowlist paths, or only the seven new harness paths, is forbidden. The exact aggregate 11-path set above is the only valid delivery candidate."
+  candidate_state: "Unstaged, uncommitted, unpushed, and runtime/DB unrun."
+  authority_granted: "This append-only clarification grants no stage, commit, push, runtime, database, Supabase, or environment authority."
+exact_current_write_allowlist:
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  bash_or_shell_execution: false
+  executable_test_or_build: false
+  git_add_commit_push_or_pr_mutation: false
+  network_access: false
+  database_or_supabase_access: false
+  docker_or_colima_runtime: false
+  http_requests: false
+  provider_calls: false
+  deployment_or_ready_or_merge: false
+  staging_or_production_access: false
+  files_read_or_edited_outside_the_one_path_allowlist: false
+  codex_pass_or_executable_verification_claimed: false
+decision: APPEND_DELIVERY_SCOPE_CLARIFICATION_CODEX_ACCEPTANCE_PENDING
+next: "READY_FOR_CODEX_STATIC_REVIEW, NOT PASS. Separate owner authorization is required for Codex static acceptance, followed by a further separate owner authorization to stage and locally commit exactly all 11 paths. Normal push and disposable runtime verification remain later separate gates."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A8 — Disposable failure repair acceptance and hash-pin synchronization governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_RUNTIME_R1_HASH_PIN_SYNC_GOVERNANCE
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_RUNTIME_R1_HASH_PIN_SYNC_GOVERNANCE_RESULT_V1
+status: OWNER_RATIFIED_GOVERNANCE_DELIVERY_AUTHORIZED
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner explicitly authorized MacBook Codex to append this R5-R1 phase to the completion plan and append-only ledger, stage and locally commit exactly those two governance files, normally non-force push that one commit to the PR #48 branch, and only after verified delivery rerun Claude once to synchronize exact migration hash/blob literals in exactly three existing files. The two accepted source-repair paths must remain unstaged and uncommitted. No functional/hash candidate Git delivery or database/runtime retry is authorized."
+current_authority:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  execution_commit: 8f4afd7fbf66efd323b32432f7ca8b80b3048d16
+  execution_tree: 80fb723611e7ca769851743fc3027cf0191045b8
+  harness_delivery_commit: 953d60d5b2c47d5d48fbc2259ac1e30569c997db
+historical_state_correction: "The earlier R5 status and A7 entry are preserved as historical evidence but no longer describe the current state. The 11-path harness candidate was committed and pushed, a disposable run was attempted and burned, and the resulting two-file source repair plus three-file hash-pin synchronization are now the active bounded candidate."
+burned_disposable_attempt:
+  suffix: 20260902T141000Z-r5e2a1
+  reuse_forbidden: true
+  retained_evidence_root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T141000Z-r5e2a1
+  manifest_sha256: a1e1648de3225f6da14aecb53ca791de58318f322b6ee38710f89a9760260802
+  fresh_lane_stopped_and_removed: true
+  import_lane_stopped_and_removed: true
+  shared_or_hosted_environment_contacted: false
+failures_and_repairs:
+  migration_failure: "The importer state record selected id/status but later referenced expected_row_count. Both matching selects now include expected_row_count."
+  fixture_failure: "Two unique reverse-lookup fixtures used flagMultiPostalPerTown=1 and therefore produced AMBIGUOUS instead of the required FOUND. Both values now use 0."
+accepted_unstaged_source_repair:
+  - path: supabase/migrations/20260901001246_jp_postal_master.sql
+    sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+    prospective_git_blob: 65d2dd2096c29bceaf0060ffaf0f7b77117f0ede
+  - path: scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql
+    sha256: 6794c8164927aa1f2bad14713696b1e9d916fc687429b5cb5f6cda5d4a8d149f
+    prospective_git_blob: 8c6b48a296784721b658e3c769852e88fffbacdf
+source_repair_state: UNSTAGED_UNCOMMITTED_UNPUSHED
+exact_governance_delivery_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+governance_delivery_authority:
+  stage_exact_two_paths: true
+  one_local_commit: true
+  one_normal_non_force_push_to_pr48_branch: true
+  source_repair_must_remain_unstaged: true
+post_governance_claude_write_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+literal_pin_synchronization:
+  old_migration_sha256: 2325168075511e7a1657f6c2b2299109a41a0181ac590a86817cf94d44467f7a
+  new_migration_sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+  old_migration_git_blob: f81b5a70a760d6350f27ed8c9c0cc87194f775dc
+  new_migration_git_blob: 65d2dd2096c29bceaf0060ffaf0f7b77117f0ede
+  expected_old_sha_occurrences_before: 5
+  expected_old_blob_occurrences_before: 3
+  required_old_occurrences_after: 0
+  status_prose_edit_allowed: false
+permitted_post_sync_checks:
+  - bash -n scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - bash -n scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - bounded literal occurrence searches across the exact three paths
+  - git diff --check restricted to the exact three paths
+protected_metadata:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions:
+  - stage_commit_or_push_the_two_source_repair_paths_in_this_governance_gate
+  - stage_commit_or_push_the_later_three_hash_sync_paths
+  - database_or_supabase_runtime_execution
+  - burned_suffix_reuse_or_repair
+  - fresh_suffix_creation_or_runtime_retry
+  - docker_or_colima_or_auth_or_postgrest_execution
+  - shared_staging_or_production_access
+  - provider_or_deployment_or_ready_or_merge_action
+  - protected_path_content_access_or_change
+decision: RATIFY_R5_R1_AND_DELIVER_EXACT_TWO_GOVERNANCE_PATHS
+next: "Stage, locally commit, and normally push exactly the two governance paths while preserving the accepted source repair unstaged. After remote identity verification, invoke Claude once for the exact three-file literal hash/blob synchronization. Codex then independently reviews the resulting five-file dirty candidate and stops before any functional/hash stage, commit, push, or runtime retry."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A9 — Disposable attempt 2 failure and pgTAP plan repair governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R2_PGTAP_PLAN_REPAIR_GOVERNANCE
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R2_PGTAP_PLAN_REPAIR_GOVERNANCE_RESULT_V1
+status: CHANGES_REQUIRED_SOURCE_GOVERNANCE_AUTHORING_AUTHORIZED
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized MacBook Codex to create or update exactly three governance documents for the R5-R2 pgTAP plan-count repair. No source edit, external transmission, Claude invocation, executable test, database/runtime action, stage, commit, or push is authorized."
+current_authority:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  head: 71570c3f7ac37f97b97002a83aa18b94e8193a62
+  tree: 1566df7ff5e57de26c2ada038b117d7a1e0abfac
+  vercel: SUCCESS
+  r5_r1_five_path_delivery_commit: 71570c3f7ac37f97b97002a83aa18b94e8193a62
+burned_disposable_attempt:
+  suffix: 20260902T144100Z-123caa
+  reuse_forbidden: true
+  retained_evidence_root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T144100Z-123caa
+  aggregate_manifest_sha256: 7ba16efe081e536abab4df342c8a67916e819e4d2bcee30ddc2722debbeed066
+  retained_artifact_count: 32
+  recomputed_artifact_hash_mismatch_count: 0
+  fresh_lane_removed: true
+  import_lane_removed: true
+  runtime_path_removed: true
+  residual_r5_containers: 0
+  shared_hosted_staging_or_production_contacted: false
+execution_results:
+  fresh_setup_full_migration_replay: PASS
+  fresh_migration_ledger: PASS
+  import_setup_full_migration_replay: PASS
+  import_migration_ledger: PASS
+  fresh_runtime_contract: 20_OF_20_PASS
+  fresh_existing_postal_pgtap: "EXIT_1_BAD_PLAN_PLANNED_74_RAN_75; all assertion bodies passed"
+  fresh_later_auth_and_lint: NOT_RUN_AFTER_FAIL_CLOSED_STOP
+  import_capture: NOT_RUN_AFTER_FRESH_FAILURE
+accepted_root_cause:
+  file: supabase/tests/jp_postal_master_rpc.test.sql
+  stale_plan_literal: SELECT plan(74);
+  actual_assertion_count: 75
+  added_assertion: "has_function public.jp_postal_import_rollback(uuid), human label 20b"
+  classification: CHANGES_REQUIRED_SOURCE_PGTAP_PLAN_COUNT_ONLY
+future_source_repair:
+  exact_write_allowlist:
+    - supabase/tests/jp_postal_master_rpc.test.sql
+  exact_edit: "Replace only SELECT plan(74); with SELECT plan(75);"
+  assertion_body_change_forbidden: true
+  assertion_order_change_forbidden: true
+  human_label_renumbering_forbidden: true
+  migration_harness_or_fixture_change_forbidden: true
+  authorization_granted_now: false
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R2_PGTAP_PLAN_REPAIR.md
+protected_metadata:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions:
+  - edit_the_one_file_source_repair_target_in_this_gate
+  - transmit_private_files_or_invoke_claude
+  - run_tests_or_database_or_supabase_runtime
+  - create_or_reuse_a_disposable_suffix
+  - stage_commit_push_or_mutate_pr_metadata
+  - access_shared_staging_production_provider_or_deployment
+  - read_or_change_protected_path_content
+decision: AUTHOR_EXACT_THREE_R5_R2_GOVERNANCE_PATHS_ONLY
+next: "MacBook Codex performs static acceptance of the exact three-document governance candidate and stops. A separate owner authorization is required to stage and locally commit those three documents. Normal push, private-source transmission, Claude one-file implementation, source delivery, and a fresh disposable rerun remain independent later gates."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A10 — Pre-runtime stale pgTAP manifest hash-pin finding and R5-R3 governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC_GOVERNANCE
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC_GOVERNANCE_RESULT_V1
+status: CHANGES_REQUIRED_HARNESS_HASH_SYNC_GOVERNANCE_AUTHORING_AUTHORIZED
+date: 2026-09-03
+append_only: true
+owner_authorization: "The owner authorized MacBook Codex to create or update exactly three governance documents for the R5-R3 pgTAP manifest hash-pin synchronization. No harness edit, private-source transmission, Claude invocation, test, suffix creation, database/runtime action, stage, commit, or push is authorized."
+current_authority:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  head: 233487590cc60d8b4ba315bfbd422a571d888481
+  tree: 212cc46284a19bcb1ec6e58cbb57499153340a10
+  vercel: SUCCESS
+  r5_r2_source_delivery_commit: 233487590cc60d8b4ba315bfbd422a571d888481
+pre_runtime_stop:
+  suffix_issued: false
+  runtime_path_created: false
+  supabase_or_database_started: false
+  docker_container_started: false
+  shared_hosted_staging_or_production_contacted: false
+  classification: CHANGES_REQUIRED_HARNESS_HASH_SYNC
+repaired_pgtap_identity:
+  path: supabase/tests/jp_postal_master_rpc.test.sql
+  git_blob: 81894d341dde80eb5bfda418629ae932aaa5cd93
+  sha256: c77fe474dd038b0de04d9e038c3191003a230f27884a6834ec85635fa1e153cd
+stale_pin_finding:
+  old_git_blob: 9832459e92176498944353d38e02ddee4db444ea
+  old_sha256: 5859bc01453e7a172e52ff3eddaf75bf1ab04e0c2a81d963cb6b40176b2360dc
+  old_blob_occurrences_in_future_write_allowlist: 3
+  old_sha_occurrences_in_future_write_allowlist: 2
+  setup_old_blob_occurrences: 2
+  setup_old_sha_occurrences: 2
+  cleanup_old_blob_occurrences: 1
+  cleanup_old_sha_occurrences: 0
+future_harness_sync:
+  exact_write_allowlist:
+    - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  exact_edit: "Replace the three old pgTAP blob literals with 81894d341dde80eb5bfda418629ae932aaa5cd93 and the two old pgTAP SHA-256 literals with c77fe474dd038b0de04d9e038c3191003a230f27884a6834ec85635fa1e153cd."
+  required_old_blob_occurrences_after: 0
+  required_old_sha_occurrences_after: 0
+  required_new_blob_occurrences_after: 3
+  required_new_sha_occurrences_after: 2
+  code_flow_comment_formatting_or_other_manifest_change_forbidden: true
+  authorization_granted_now: false
+future_static_checks:
+  - exact old/new literal occurrence counts across the exact two write paths
+  - exact two-path diff containing only five literal replacements
+  - bash -n scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - bash -n scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - git diff --check restricted to the exact two paths
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC.md
+protected_metadata:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions:
+  - edit_the_two_harness_targets_in_this_governance_gate
+  - transmit_private_files_or_invoke_claude
+  - create_a_suffix_or_runtime_path
+  - run_tests_or_database_or_supabase_or_docker
+  - stage_commit_push_or_mutate_pr_metadata
+  - access_shared_staging_production_provider_or_deployment
+  - read_or_change_protected_path_content
+decision: AUTHOR_EXACT_THREE_R5_R3_GOVERNANCE_PATHS_ONLY
+next: "MacBook Codex performs static acceptance of the exact three-document governance candidate and stops. Separate owner authorizations are required for governance stage/local commit, normal push, private-source transmission, Claude two-file synchronization, synchronization delivery, and a new fresh Disposable DB attempt."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A11 — R5-R3 Claude replacement-dispatch execution authority
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_A1_REPLACEMENT_DISPATCH_AUTHORITY
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_A1_REPLACEMENT_DISPATCH_AUTHORITY_RESULT_V1
+status: OWNER_AUTHORIZED_AUTHORITY_RECORDING_REPLACEMENT_DISPATCH_CONDITIONAL_ON_GOVERNANCE_DELIVERY
+date: 2026-09-03
+append_only: true
+owner_authorization: "After the first R5-R3 Claude invocation stopped BLOCKED with zero edits, the owner authorized MacBook Codex to update exactly the completion plan, append-only phase ledger, and existing R5-R3 directive to record one replacement-dispatch execution authority. This current gate edits only those three governance files; their stage/commit/push and the replacement Claude invocation do not occur in this gate."
+first_invocation:
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC_RESULT_V1
+  verdict: BLOCKED
+  reason: "The read-scope authorities still stated NOT EXECUTION AUTHORITY and authorization_granted_now=false."
+  exact_read_path_count: 6
+  edited_path_count: 0
+  harness_or_other_bytes_changed: false
+  bash_test_git_database_supabase_docker_colima_used: false
+  webfetch_websearch_provider_or_hosted_environment_contacted: false
+  suffix_or_runtime_created: false
+  invocation_consumed: true
+  automatic_retry_forbidden: true
+authority_base:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  parent_head: a4d7c9a8e2393c4cfc35b32b1ca830f73c3111c8
+  parent_tree: 0f63364c27803607f1f28ccaf0360b19729f0899
+  parent_vercel: SUCCESS
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC.md
+delivery_activation_conditions:
+  direct_parent_must_equal: a4d7c9a8e2393c4cfc35b32b1ca830f73c3111c8
+  delivery_commit_path_count: 3
+  delivery_commit_paths_must_equal_current_governance_write_allowlist: true
+  normal_non_force_push_required: true
+  remote_pr_head_must_equal_delivered_governance_commit: true
+  pr_must_remain_open_draft_base_main: true
+  vercel_must_be_success: true
+  worktree_and_index_must_be_clean: true
+  codex_must_supply_verified_delivered_head_and_tree_in_prompt: true
+supersession:
+  supersedes_a10_authorization_granted_now_false_after_delivery: true
+  authorization_state_after_all_delivery_conditions_pass: ONE_REPLACEMENT_CLAUDE_DISPATCH_AUTHORIZED
+replacement_dispatch:
+  exact_read_allowlist:
+    - AGENTS.md
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+    - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC.md
+    - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  exact_write_allowlist:
+    - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  permitted_tools:
+    - Read
+    - Edit
+    - Grep
+  exact_old_blob_replacements: 3
+  exact_old_sha256_replacements: 2
+  consumed_on_candidate_failure_or_block: true
+  no_retry_without_new_owner_authorization: true
+current_gate_prohibitions:
+  - stage_commit_or_push_the_three_governance_files
+  - invoke_claude_or_transmit_private_files_now
+  - edit_the_two_harness_paths_now
+  - create_a_suffix_or_runtime_path
+  - run_tests_or_database_or_supabase_or_docker
+  - access_shared_staging_production_provider_or_deployment
+  - read_or_change_protected_path_content
+decision: RECORD_R5_R3_A1_REPLACEMENT_AUTHORITY_IN_EXACT_THREE_GOVERNANCE_PATHS
+next: "MacBook Codex statically verifies this exact three-document candidate and stops for separate stage/local-commit approval. After separately approved normal push and all activation conditions pass, exactly one replacement Claude dispatch is authorized. Harness delivery and fresh Disposable DB execution remain later separate owner gates."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A12 — Disposable attempt 3 fixture failure and R5-R4 governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR_GOVERNANCE
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR_GOVERNANCE_RESULT_V1
+status: CHANGES_REQUIRED_HARNESS_FIXTURE_ONLY_GOVERNANCE_AUTHORING_AUTHORIZED
+date: 2026-09-03
+append_only: true
+owner_authorization: "The owner approved proceeding with a dedicated repair phase after the R5 Disposable result exposed a one-field synthetic CSV defect. This gate authors exactly three governance files. It does not authorize stage, commit, push, PR mutation, a replacement Claude invocation, source editing, tests, or runtime retry."
+current_authority:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  head: 35226bb55b8106dbced6859f9a0825de331dc2d6
+  tree: 7ef1f6e509bb8039488135758b399858ea8d5e64
+  vercel: SUCCESS
+burned_disposable_attempt:
+  suffix: 20260902T153304Z-182ee3
+  reuse_forbidden: true
+  retained_evidence_root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T153304Z-182ee3
+  aggregate_manifest_sha256: b538bdc26023d43b3d38f38d536d6f1119501ae1faa03a7444685497b02ea1f2
+  retained_artifact_count: 39
+  recomputed_artifact_hash_mismatch_count: 0
+  runtime_removal_exit: 0
+  residual_matching_containers: 0
+  shared_hosted_preview_staging_or_production_contacted: false
+execution_results:
+  fresh_setup_full_migration_replay: PASS
+  fresh_postal_pgtap: 75_OF_75_PASS
+  fresh_runtime_contract_pgtap: 20_OF_20_PASS
+  fresh_real_auth_postgrest: 9_OF_9_PASS
+  fresh_db_lint: PASS
+  import_phase_1: 3_OF_3_PASS
+  import_phase_2: 23_OF_25_PASS
+  failed_assertions:
+    - production_importer_validate_only_zero_client_construction
+    - production_importer_loopback_url_rejected_before_client_construction
+  common_observed_error: CSV_PARSE_INVALID_OLD_POSTAL_CODE
+accepted_root_cause:
+  parser_path: src/lib/geo/jp-postal-master-csv.ts
+  harness_path: scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  old_literal: "99999,,0000007"
+  required_new_literal: "99999,000,0000007"
+  classification: CHANGES_REQUIRED_HARNESS_FIXTURE_ONLY
+consumed_claude_dispatch:
+  session_id: caed03be-dcce-4fe6-b6a3-4b0b3ec56199
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FIXTURE_REPAIR_RESULT_V1
+  verdict: BLOCKED_UNGOVERNED_INSTRUCTION
+  read_path_count: 5
+  edited_path_count: 0
+  prohibited_action_count: 0
+  automatic_retry_authorized: false
+future_source_repair:
+  exact_write_allowlist:
+    - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  exact_edit: "Replace only 99999,,0000007 with 99999,000,0000007 in the production-importer synthetic CSV string."
+  old_literal_occurrences_after: 0
+  new_literal_occurrences_after: 1
+  authorization_granted_now: false
+future_static_checks:
+  - bounded old/new literal occurrence counts
+  - exact one-path and one-literal diff review
+  - node --check scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  - git diff --check -- scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR.md
+protected_metadata:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions:
+  - edit_the_one_file_source_repair_target_in_this_gate
+  - invoke_claude_or_transmit_private_files_again
+  - run_tests_or_create_a_new_suffix_or_runtime
+  - access_database_supabase_docker_colima_or_hosted_environment
+  - stage_commit_push_or_mutate_pr
+  - ready_merge_migration_import_or_deployment
+  - read_or_change_protected_path_content
+decision: AUTHOR_EXACT_THREE_R5_R4_GOVERNANCE_PATHS_ONLY
+next: "MacBook Codex statically verifies the exact three-document governance candidate and stops. Separate owner approvals are required for exact-path stage/local commit, normal push, Draft-PR instruction publication, private-source transmission, replacement Claude implementation, source delivery, and a new Disposable DB attempt."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A13 — R5-R4 replacement-dispatch authority correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_A1_REPLACEMENT_DISPATCH_AUTHORITY
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_A1_REPLACEMENT_DISPATCH_AUTHORITY_RESULT_V1
+status: OWNER_AUTHORIZED_AUTHORITY_RECORDING_CONDITIONAL_ON_GOVERNANCE_DELIVERY
+date: 2026-09-03
+append_only: true
+owner_authorization: "After R5-R4 governance delivery and a second zero-edit Claude block, the owner explicitly authorized transmission of the exact six private files and the one-literal implementation. This gate records that authority in exactly three governance files. Stage, commit, push, PR comment, replacement invocation, source edit, test, and runtime remain separate gates."
+second_blocked_invocation:
+  session_id: 9808456b-7d77-44d6-b0e1-402c0b3e70e6
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR_RESULT_V1
+  verdict: BLOCKED
+  reason: "Committed directive and A12 still denied implementation authority, and comment 5517269091 was governance-only with DO NOT EXECUTE wording."
+  read_paths: 6
+  edited_paths: 0
+  prohibited_actions_taken: false
+  invocation_consumed: true
+  retry_unchanged_forbidden: true
+authority_base:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  parent_head: 38fd915c317cc2442d1e197aead025414f8b0dad
+  parent_tree: b99fb2712a149da01990a6aa80680839ada91039
+  parent_vercel: SUCCESS
+  prior_governance_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/48#issuecomment-5517269091
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR.md
+delivery_activation_conditions:
+  direct_parent_must_equal: 38fd915c317cc2442d1e197aead025414f8b0dad
+  delivery_commit_path_count: 3
+  normal_non_force_push_required: true
+  remote_pr_head_must_equal_delivered_commit: true
+  pr_must_remain_open_draft_base_main: true
+  vercel_must_be_success: true
+  worktree_and_index_must_be_clean: true
+  superseding_pr_comment_must_identify: 5517269091
+  superseding_pr_comment_must_state_execution_authorized: true
+  codex_must_supply_verified_delivered_head_tree_and_comment_url: true
+supersession:
+  supersedes_a12_authorization_granted_now_false_after_activation: true
+  authorization_state_after_all_conditions_pass: ONE_REPLACEMENT_CLAUDE_DISPATCH_AUTHORIZED
+replacement_dispatch:
+  exact_read_allowlist:
+    - AGENTS.md
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+    - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR.md
+    - src/lib/geo/jp-postal-master-csv.ts
+    - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  exact_write_allowlist:
+    - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  exact_edit: "Replace only 99999,,0000007 with 99999,000,0000007."
+  permitted_tools:
+    - Read
+    - Grep
+    - Edit
+  consumed_on_candidate_failure_or_block: true
+  no_automatic_retry: true
+current_gate_prohibitions:
+  - stage_commit_or_push_the_three_governance_files
+  - publish_the_superseding_pr_comment_now
+  - transmit_private_files_or_invoke_claude_again_now
+  - edit_the_source_target_now
+  - run_tests_or_create_a_suffix_or_runtime
+  - access_database_supabase_docker_colima_or_hosted_environment
+  - source_delivery_ready_merge_migration_import_or_deployment
+  - read_or_change_protected_path_content
+decision: RECORD_R5_R4_A1_REPLACEMENT_AUTHORITY_IN_EXACT_THREE_GOVERNANCE_PATHS
+next: "MacBook Codex statically verifies the exact three-document authority candidate and stops for separate stage/local-commit approval. Normal push and a superseding PR comment are later gates. Only after all activation conditions pass may one new non-persistent Claude implementation dispatch run."
 ```

@@ -1,11 +1,11 @@
-// Post-OCR normalization for maker / model / grade.
+// Post-OCR normalization for maker / model.
 //
 // The AI is NOT trusted alone to split these. In a Japanese 車検証 the 車名
 // (vehicle_name) is usually the MAKER (トヨタ / フェラーリ), sometimes a combined
-// "トヨタ クラウン". We deterministically:
+// "トヨタ クラウン アスリート". We deterministically:
 //   - detect the MAKER against a known-maker list,
-//   - strip it from the vehicle_name to recover the MODEL name,
-//   - keep GRADE only if OCR clearly detected it (never fabricated).
+//   - strip it from the vehicle_name to recover the full MODEL remainder.
+// Grade is always manual — OCR never derives or emits it.
 //
 // Pure module. Safe for client or server import.
 
@@ -24,7 +24,6 @@ const KNOWN_MAKERS: string[] = [
 export interface NormalizedVehicle {
   maker: string;
   model: string;
-  grade: string;
   /** true when normalization changed the raw OCR values. */
   changed: boolean;
 }
@@ -34,22 +33,19 @@ function tidy(s: string | null | undefined): string {
 }
 
 /**
- * Normalize maker/model/grade from raw OCR fields.
+ * Normalize maker/model from raw OCR fields.
  * - maker: from the OCR maker if it's a known maker, else detected inside 車名.
- * - model (車名): the FIRST token of 車名 after the maker is stripped. Blank when
- *   only the maker was detected (e.g. "フェラーリ" → maker=フェラーリ, model="").
- * - grade: the OCR grade if present, else the REMAINING tokens after the model
- *   (e.g. "トヨタ クラウン アスリート" → model=クラウン, grade=アスリート). Never fabricated
- *   beyond what the 車名 string actually contained.
+ * - model (車名): the COMPLETE remaining text of 車名 after the maker is stripped
+ *   (e.g. "トヨタ クラウン アスリート" → model="クラウン アスリート"). Blank when only the
+ *   maker was detected (e.g. "フェラーリ" → maker=フェラーリ, model=""). The remainder is
+ *   never split into trailing grade tokens — grade is always manual.
  */
 export function normalizeVehicleFields(input: {
   maker?:       string | null;
   vehicleName?: string | null;
-  grade?:       string | null;
 }): NormalizedVehicle {
   const rawMaker = tidy(input.maker);
   const rawName  = tidy(input.vehicleName);
-  const rawGrade = tidy(input.grade);
 
   let maker = "";
 
@@ -64,20 +60,13 @@ export function normalizeVehicleFields(input: {
   // 3) Fallback: keep a raw maker verbatim if nothing matched.
   if (!maker && rawMaker) maker = rawMaker;
 
-  // 4) Split the 車名 remainder (maker stripped) into model + grade tokens.
+  // 4) The 車名 remainder (maker stripped) is kept whole as the model.
   let model = "";
-  let gradeDerived = "";
   if (rawName) {
     const remainder = tidy(maker ? rawName.replace(maker, "") : rawName);
-    if (remainder && remainder !== maker) {
-      const tokens = remainder.split(" ").filter(Boolean);
-      model        = tokens[0] ?? "";
-      gradeDerived = tokens.slice(1).join(" ");
-    }
+    if (remainder && remainder !== maker) model = remainder;
   }
 
-  const grade = rawGrade || gradeDerived; // OCR grade wins; never fabricated beyond 車名 tokens
-
-  const changed = maker !== rawMaker || model !== rawName || grade !== rawGrade;
-  return { maker, model, grade, changed };
+  const changed = maker !== rawMaker || model !== rawName;
+  return { maker, model, changed };
 }
