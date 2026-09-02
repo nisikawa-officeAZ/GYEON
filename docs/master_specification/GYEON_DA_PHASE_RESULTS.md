@@ -5315,3 +5315,90 @@ current_gate_prohibitions:
 decision: RECORD_R5_R3_A1_REPLACEMENT_AUTHORITY_IN_EXACT_THREE_GOVERNANCE_PATHS
 next: "MacBook Codex statically verifies this exact three-document candidate and stops for separate stage/local-commit approval. After separately approved normal push and all activation conditions pass, exactly one replacement Claude dispatch is authorized. Harness delivery and fresh Disposable DB execution remain later separate owner gates."
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A12 — Disposable attempt 3 fixture failure and R5-R4 governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR_GOVERNANCE
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR_GOVERNANCE_RESULT_V1
+status: CHANGES_REQUIRED_HARNESS_FIXTURE_ONLY_GOVERNANCE_AUTHORING_AUTHORIZED
+date: 2026-09-03
+append_only: true
+owner_authorization: "The owner approved proceeding with a dedicated repair phase after the R5 Disposable result exposed a one-field synthetic CSV defect. This gate authors exactly three governance files. It does not authorize stage, commit, push, PR mutation, a replacement Claude invocation, source editing, tests, or runtime retry."
+current_authority:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  head: 35226bb55b8106dbced6859f9a0825de331dc2d6
+  tree: 7ef1f6e509bb8039488135758b399858ea8d5e64
+  vercel: SUCCESS
+burned_disposable_attempt:
+  suffix: 20260902T153304Z-182ee3
+  reuse_forbidden: true
+  retained_evidence_root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T153304Z-182ee3
+  aggregate_manifest_sha256: b538bdc26023d43b3d38f38d536d6f1119501ae1faa03a7444685497b02ea1f2
+  retained_artifact_count: 39
+  recomputed_artifact_hash_mismatch_count: 0
+  runtime_removal_exit: 0
+  residual_matching_containers: 0
+  shared_hosted_preview_staging_or_production_contacted: false
+execution_results:
+  fresh_setup_full_migration_replay: PASS
+  fresh_postal_pgtap: 75_OF_75_PASS
+  fresh_runtime_contract_pgtap: 20_OF_20_PASS
+  fresh_real_auth_postgrest: 9_OF_9_PASS
+  fresh_db_lint: PASS
+  import_phase_1: 3_OF_3_PASS
+  import_phase_2: 23_OF_25_PASS
+  failed_assertions:
+    - production_importer_validate_only_zero_client_construction
+    - production_importer_loopback_url_rejected_before_client_construction
+  common_observed_error: CSV_PARSE_INVALID_OLD_POSTAL_CODE
+accepted_root_cause:
+  parser_path: src/lib/geo/jp-postal-master-csv.ts
+  harness_path: scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  old_literal: "99999,,0000007"
+  required_new_literal: "99999,000,0000007"
+  classification: CHANGES_REQUIRED_HARNESS_FIXTURE_ONLY
+consumed_claude_dispatch:
+  session_id: caed03be-dcce-4fe6-b6a3-4b0b3ec56199
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FIXTURE_REPAIR_RESULT_V1
+  verdict: BLOCKED_UNGOVERNED_INSTRUCTION
+  read_path_count: 5
+  edited_path_count: 0
+  prohibited_action_count: 0
+  automatic_retry_authorized: false
+future_source_repair:
+  exact_write_allowlist:
+    - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  exact_edit: "Replace only 99999,,0000007 with 99999,000,0000007 in the production-importer synthetic CSV string."
+  old_literal_occurrences_after: 0
+  new_literal_occurrences_after: 1
+  authorization_granted_now: false
+future_static_checks:
+  - bounded old/new literal occurrence counts
+  - exact one-path and one-literal diff review
+  - node --check scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  - git diff --check -- scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR.md
+protected_metadata:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions:
+  - edit_the_one_file_source_repair_target_in_this_gate
+  - invoke_claude_or_transmit_private_files_again
+  - run_tests_or_create_a_new_suffix_or_runtime
+  - access_database_supabase_docker_colima_or_hosted_environment
+  - stage_commit_push_or_mutate_pr
+  - ready_merge_migration_import_or_deployment
+  - read_or_change_protected_path_content
+decision: AUTHOR_EXACT_THREE_R5_R4_GOVERNANCE_PATHS_ONLY
+next: "MacBook Codex statically verifies the exact three-document governance candidate and stops. Separate owner approvals are required for exact-path stage/local commit, normal push, Draft-PR instruction publication, private-source transmission, replacement Claude implementation, source delivery, and a new Disposable DB attempt."
+```

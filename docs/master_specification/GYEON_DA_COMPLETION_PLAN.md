@@ -1889,3 +1889,33 @@ Any proposed change to mission, fixed decisions, phase order, completion standar
 **Frozen contracts:** One reviewed OCR apply may update customer and vehicle drafts together, blank/unusable OCR never erases operator input, explicit final save remains the sole persistence boundary, vehicle name and grade remain manual under their accepted authority, R6 chassis UI remains unchanged, and postal resolution remains exact/unique/fail-closed through the private Japan Post master. No AI/fuzzy/web postal lookup, provider fallback, schema redesign, DB mutation, or production action belongs to R7 diagnosis.
 
 **Current gate:** Author and independently verify only the exact three governance paths. No private-source transmission, Claude invocation, source/test implementation, executable test, stage, commit, push, PR mutation, database/Supabase/provider/Preview/production access, Ready, merge, migration, import, or deployment is authorized. Governance delivery, private transmission, one read-only diagnosis, diagnosis acceptance, implementation governance, implementation, verification, source delivery, environment activation, and Preview revalidation remain separate gates.
+
+## 12. R5-R4 bounded residual closure — synthetic old-postal fixture repair
+
+**Status:** DISPOSABLE ATTEMPT BURNED / `CHANGES_REQUIRED_HARNESS_FIXTURE_ONLY` / GOVERNANCE AUTHORING AUTHORIZED / SOURCE REPAIR, GIT DELIVERY, AND RUNTIME RETRY NOT AUTHORIZED.
+
+**Current source authority:** PR `#48` remains `OPEN/Draft`, base `main`, branch `agent/estimate-wizard-ocr-postal-unified-r1`, at commit/tree `35226bb55b8106dbced6859f9a0825de331dc2d6` / `7ef1f6e509bb8039488135758b399858ea8d5e64`. The worktree and index were clean before this governance candidate was authored.
+
+**Burned attempt:** Suffix `20260902T153304Z-182ee3` is permanently burned and must never be resumed, repaired, or reused. Both loopback-only disposable lanes completed setup and full migration replay. The fresh lane passed the existing postal pgTAP `75/75`, the runtime-contract pgTAP `20/20`, real Auth/PostgREST `9/9`, and DB lint. Import phase 1 passed `3/3`; import phase 2 passed `23/25` and then failed closed. Cleanup stopped each lane exactly once, removed the exact suffix runtime with exit `0`, left zero matching containers, retained 39 artifacts with zero recomputed hash mismatches, and finalized aggregate manifest SHA-256 `b538bdc26023d43b3d38f38d536d6f1119501ae1faa03a7444685497b02ea1f2` at `/Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T153304Z-182ee3/manifest.json`. No shared, hosted, Preview, staging, production, provider, or deployment environment was contacted.
+
+**Accepted root cause:** The production-importer proof fixture in `scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs` contains `99999,,0000007`, leaving the second Japan Post CSV field, `oldPostalCode`, empty. `src/lib/geo/jp-postal-master-csv.ts` requires that field to contain one to five ASCII digits. Both final production-importer assertions therefore stopped before their intended validate-only and canonical-URL boundary checks with `CSV_PARSE_INVALID_OLD_POSTAL_CODE`. This is a harness fixture defect, not accepted evidence of a migration, database-contract, Auth, PostgREST, or production-importer defect.
+
+**Consumed ungoverned dispatch:** After the owner approved proceeding with a dedicated repair phase, one terminal Claude Code invocation read exactly the five instructed paths, independently confirmed the same root cause, and correctly returned `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FIXTURE_REPAIR_RESULT_V1` with `BLOCKED_UNGOVERNED_INSTRUCTION`. It edited zero files and used no Bash, Git, test, database, Supabase, Docker, web, or provider tool. Session `caed03be-dcce-4fe6-b6a3-4b0b3ec56199` is consumed and must not be resumed or treated as implementation authority.
+
+**Future one-file repair allowlist — exactly one existing path:**
+
+1. `scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs`
+
+The only permitted future edit is the literal replacement `99999,,0000007` → `99999,000,0000007` in the single synthetic CSV string used by the two real production-importer proofs. `000` is an intentionally synthetic three-digit old-postal fixture. No other source, test, fixture, comment, formatting, migration, dependency, lockfile, configuration, or governance byte may change in that implementation candidate.
+
+**Future static verification:** The old literal must occur zero times and the new literal exactly once in the one-file allowlist; the exact diff must contain only that replacement; `node --check scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs` and exact-path `git diff --check` must pass. No database or Disposable runtime execution belongs to the source-repair gate.
+
+**Current governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR.md` (new)
+
+**Current gate:** Author and independently verify only those three governance paths. R6/R7 source work remains unchanged and no parallel implementation is authorized. This gate does not authorize source repair, another Claude transmission/invocation, executable test, new suffix, database/Supabase/Docker/Colima action, stage, commit, push, PR comment or metadata mutation, Ready, merge, migration application, import, deployment, or any hosted-environment access.
+
+**Exit:** MacBook Codex verifies the exact three-document governance candidate, unchanged repair target, protected metadata, and exact-path `git diff --check`, then stops for separate stage/local-commit authorization. Normal push, Draft-PR instruction publication, private-source transmission, one replacement Claude implementation, source delivery, and a new fresh Disposable DB attempt remain later independent gates.
