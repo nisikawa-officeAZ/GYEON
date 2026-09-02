@@ -5160,3 +5160,80 @@ prohibited_actions:
 decision: AUTHOR_EXACT_THREE_R5_R2_GOVERNANCE_PATHS_ONLY
 next: "MacBook Codex performs static acceptance of the exact three-document governance candidate and stops. A separate owner authorization is required to stage and locally commit those three documents. Normal push, private-source transmission, Claude one-file implementation, source delivery, and a fresh disposable rerun remain independent later gates."
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A10 — Pre-runtime stale pgTAP manifest hash-pin finding and R5-R3 governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC_GOVERNANCE
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC_GOVERNANCE_RESULT_V1
+status: CHANGES_REQUIRED_HARNESS_HASH_SYNC_GOVERNANCE_AUTHORING_AUTHORIZED
+date: 2026-09-03
+append_only: true
+owner_authorization: "The owner authorized MacBook Codex to create or update exactly three governance documents for the R5-R3 pgTAP manifest hash-pin synchronization. No harness edit, private-source transmission, Claude invocation, test, suffix creation, database/runtime action, stage, commit, or push is authorized."
+current_authority:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  head: 233487590cc60d8b4ba315bfbd422a571d888481
+  tree: 212cc46284a19bcb1ec6e58cbb57499153340a10
+  vercel: SUCCESS
+  r5_r2_source_delivery_commit: 233487590cc60d8b4ba315bfbd422a571d888481
+pre_runtime_stop:
+  suffix_issued: false
+  runtime_path_created: false
+  supabase_or_database_started: false
+  docker_container_started: false
+  shared_hosted_staging_or_production_contacted: false
+  classification: CHANGES_REQUIRED_HARNESS_HASH_SYNC
+repaired_pgtap_identity:
+  path: supabase/tests/jp_postal_master_rpc.test.sql
+  git_blob: 81894d341dde80eb5bfda418629ae932aaa5cd93
+  sha256: c77fe474dd038b0de04d9e038c3191003a230f27884a6834ec85635fa1e153cd
+stale_pin_finding:
+  old_git_blob: 9832459e92176498944353d38e02ddee4db444ea
+  old_sha256: 5859bc01453e7a172e52ff3eddaf75bf1ab04e0c2a81d963cb6b40176b2360dc
+  old_blob_occurrences_in_future_write_allowlist: 3
+  old_sha_occurrences_in_future_write_allowlist: 2
+  setup_old_blob_occurrences: 2
+  setup_old_sha_occurrences: 2
+  cleanup_old_blob_occurrences: 1
+  cleanup_old_sha_occurrences: 0
+future_harness_sync:
+  exact_write_allowlist:
+    - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  exact_edit: "Replace the three old pgTAP blob literals with 81894d341dde80eb5bfda418629ae932aaa5cd93 and the two old pgTAP SHA-256 literals with c77fe474dd038b0de04d9e038c3191003a230f27884a6834ec85635fa1e153cd."
+  required_old_blob_occurrences_after: 0
+  required_old_sha_occurrences_after: 0
+  required_new_blob_occurrences_after: 3
+  required_new_sha_occurrences_after: 2
+  code_flow_comment_formatting_or_other_manifest_change_forbidden: true
+  authorization_granted_now: false
+future_static_checks:
+  - exact old/new literal occurrence counts across the exact two write paths
+  - exact two-path diff containing only five literal replacements
+  - bash -n scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - bash -n scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - git diff --check restricted to the exact two paths
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC.md
+protected_metadata:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions:
+  - edit_the_two_harness_targets_in_this_governance_gate
+  - transmit_private_files_or_invoke_claude
+  - create_a_suffix_or_runtime_path
+  - run_tests_or_database_or_supabase_or_docker
+  - stage_commit_push_or_mutate_pr_metadata
+  - access_shared_staging_production_provider_or_deployment
+  - read_or_change_protected_path_content
+decision: AUTHOR_EXACT_THREE_R5_R3_GOVERNANCE_PATHS_ONLY
+next: "MacBook Codex performs static acceptance of the exact three-document governance candidate and stops. Separate owner authorizations are required for governance stage/local commit, normal push, private-source transmission, Claude two-file synchronization, synchronization delivery, and a new fresh Disposable DB attempt."
+```

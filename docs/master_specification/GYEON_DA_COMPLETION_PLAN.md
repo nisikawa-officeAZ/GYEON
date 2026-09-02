@@ -697,6 +697,35 @@ This gate authorizes authoring and static review of those three governance paths
 
 **Exit:** MacBook Codex verifies the exact three-document governance diff, the unchanged one-file repair target, protected metadata, clean diff format, and absence of every unrelated change. It then stops and requests a separate owner authorization to stage and locally commit only these three governance files. Governance push, external transmission, one-file Claude repair, source delivery, and a new fresh disposable runtime remain later independent gates.
 
+#### GDA-2A-OCR-POSTAL-MASTER-R5-R3 — pgTAP manifest hash-pin synchronization governance
+
+**Status:** R5-R2 ONE-LINE SOURCE REPAIR COMMITTED AND PUSHED / PR `#48` OPEN/DRAFT / VERCEL SUCCESS / PRE-RUNTIME REVIEW FOUND STALE HARNESS HASH PINS / `CHANGES_REQUIRED_HARNESS_HASH_SYNC` / NO NEW SUFFIX ISSUED / DATABASE RERUN NOT STARTED / GOVERNANCE AUTHORING AUTHORIZED ONLY.
+
+**Current authority:** PR `#48` remains `OPEN/Draft`, base `main`, branch `agent/estimate-wizard-ocr-postal-unified-r1`, at commit `233487590cc60d8b4ba315bfbd422a571d888481`, tree `212cc46284a19bcb1ec6e58cbb57499153340a10`, with Vercel `SUCCESS`. Commit `233487590cc60d8b4ba315bfbd422a571d888481` contains exactly the accepted `SELECT plan(74);` → `SELECT plan(75);` repair in `supabase/tests/jp_postal_master_rpc.test.sql`. The worktree is clean.
+
+**Fail-closed pre-runtime finding:** The repaired pgTAP file now has Git blob `81894d341dde80eb5bfda418629ae932aaa5cd93` and SHA-256 `c77fe474dd038b0de04d9e038c3191003a230f27884a6834ec85635fa1e153cd`. The R5 harness still pins the pre-repair blob `9832459e92176498944353d38e02ddee4db444ea` three times across `setup.sh` and `cleanup.sh`, and the pre-repair SHA-256 `5859bc01453e7a172e52ff3eddaf75bf1ab04e0c2a81d963cb6b40176b2360dc` twice in `setup.sh`. Running the harness in that state would correctly fail before database startup as source drift. MacBook Codex therefore did not generate a suffix, create a runtime path, start Supabase/Docker containers, or contact any database or hosted environment.
+
+**Future harness synchronization write allowlist — exactly two existing paths:**
+
+1. `scripts/e2e/gda-estimate-postal-master-r5/setup.sh`
+2. `scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh`
+
+The future repair must perform exactly five literal replacements within those two paths: replace all three occurrences of old blob `9832459e92176498944353d38e02ddee4db444ea` with new blob `81894d341dde80eb5bfda418629ae932aaa5cd93`, and replace both occurrences of old SHA-256 `5859bc01453e7a172e52ff3eddaf75bf1ab04e0c2a81d963cb6b40176b2360dc` with new SHA-256 `c77fe474dd038b0de04d9e038c3191003a230f27884a6834ec85635fa1e153cd`. No code flow, command, condition, comment, status prose, formatting, migration pin, other manifest entry, or unrelated byte may change.
+
+**Future static acceptance only:** After separate owner authorization, Claude may make the exact five literal replacements using only Read/Edit/Grep. MacBook Codex will independently require old-value counts `0`, new-blob count `3`, new-SHA count `2` across the exact two-file allowlist, an exact two-path diff containing only those replacements, `bash -n` for both scripts, and `git diff --check`. No suffix creation, Supabase, database, Docker, Colima, test, Auth, PostgREST, import, Git delivery, or network/provider action is authorized by this governance record.
+
+**Current governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC.md` (new)
+
+This gate authorizes authoring and static review of those three governance paths only. It does not authorize harness editing, private-source transmission, Claude invocation, suffix creation, tests, database/runtime access, stage, commit, push, PR mutation, Ready, merge, or deployment.
+
+**Protected-path boundary:** `ScreensPreview.tsx` remains pathname/mode/blob/Git-state only. Protected blob identities remain `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14`.
+
+**Exit:** MacBook Codex verifies the exact three-document governance candidate, confirms both harness targets remain byte-identical to HEAD, checks protected metadata and diff format, and stops. Stage/local commit of these three governance files, normal push, external transmission, two-file Claude synchronization, synchronization delivery, and the fresh Disposable DB rerun remain separate owner-approval gates.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.
