@@ -979,6 +979,64 @@ The result document was excluded from harness implementation and was created lat
 
 **Owner pause — 2026-08-29:** The owner explicitly paused C5-D-R4 before harness implementation so the blocking Estimate Wizard Preview pricing failure can be recovered first. The existing C5-D source, governance candidate, hashes, and evidence remain preserved. No C5-D harness path, database, provider, environment, PR, Ready, merge, or deployment action is authorized while the pause is active.
 
+### GYEON-ORDER-V3-C5-E0 — Stripe provider selection governance
+
+**Status:** OWNER RATIFIED / STRIPE RESPONSE RECEIVED / UPFRONT FULL-PAYMENT DECISION COMMIT PUSHED / PR #49 OPEN / PROVIDER NOT CONNECTED.
+
+**Decision:** Stripe is the canonical card PSP for GYEON dealer ordering. The intended product surface is Stripe Payments with the PaymentIntents API. The owner already has a Stripe account, but no account identifier, API key, Webhook secret, or other secret may be written into specifications or source control. The owner subsequently ratified one upfront full-payment contract for all card brands, including JCB.
+
+**Business contract for card payment and back-order shipment:** At owner final submit, charge and capture the entire immutable tax-inclusive payable JPY order total once, including back-ordered items. `ship_available_first` and `ship_when_complete` are logistics choices only and never change card amount or capture count. No multicapture, shipment-by-shipment PaymentIntent, SetupIntent-based later charge, authorization extension, or automatic post-payment increase is used. A confirmed cancellation, non-fulfillable item, or final shortage is resolved only by an exact server-calculated partial or full refund. Additional items require a separate order.
+
+**Mandatory fail-closed boundary:** Provider selection and the business decision are not provider readiness. Exact API version, actual account card-brand availability, immediate capture, cancellation, partial/full refund, idempotency, retry/finality, and Webhook signature/reconciliation remain `NOT_CONFIGURED`. IC+ eligibility, multicapture enablement, JCB multicapture support, and authorization-extension windows are no longer dependencies of the selected flow. Card payment remains unavailable until the exact full-payment/refund contract passes a separately authorized provider sandbox gate. No automatic payment-method change, post-payment amount edit, additional saved-card charge, or shipping-policy substitution may be invented.
+
+**Existing source incompatibility:** The accepted C5-B/C5-D database artifacts bind card authorization and reauthorization evidence. They do not implement this newly ratified full-payment and refund contract. C5-D remains paused, and those artifacts must not be applied to any shared, staging, or production environment until one forward-only correction phase and fresh disposable verification replace the stale card-authority behavior without weakening the accepted qualification, inventory, payment-method, or warehouse-task boundaries.
+
+**Documentation-only allowlist:**
+
+1. `docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md`
+2. `docs/integrations/gyeon-order/v3-c5-external-authority-design-and-impact.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Delivery result:** The exact four-document decision was committed as `b6c7d4a27cd2d307ab56e81dd73a0d810934cb94` with tree `8fc1d7c1f967f18934d21ca15e0fe02b7475e899`, normally pushed to `docs/gyeon-order-stripe-provider-decision`, and opened as PR #49. The PR remains open and unmerged. No provider, database, migration, Supabase, sandbox, staging, production, or deployment action was performed.
+
+**Next gate:** Correct PR #49 metadata and append the delivery result without rewriting the historical E0/E0-R1 records, then independently re-audit the exact documentation delta. Ready/merge remain separate. Provider-specific diagnosis must later map the smallest forward-only correction from authorization evidence to full-payment/refund evidence and pin the exact Stripe API/Webhook/sandbox contract. No provider connection, source correction, database work, migration application, merge, or deployment is authorized by this documentation gate, and it does not interrupt the currently active Estimate Wizard phase.
+
+### GYEON-ORDER-V3-D16-P2B0 — Book full-payment/refund contract alignment
+
+**Status:** GOVERNANCE DELIVERY AUTHORIZED / BOOK SOURCE IMPLEMENTATION SEPARATELY AUTHORIZED AFTER DEDICATED DRAFT PR INSTRUCTION / SOURCE NOT YET CHANGED.
+
+**Objective:** Replace the Book pure-source card branch that still models authorization, reauthorization, and split-capture blocking with the owner-ratified one-upfront-full-payment contract already accepted by Studio D16-P2A. This is a pure contract and focused-test alignment phase only. It intentionally precedes Stripe runtime, Webhook, database, migration, and deployment work.
+
+**Fixed source authority:** `main` commit `b79296305f60374849e983163109b5ec297379d1`, tree `102146dfe671e8fe33b60983bcbbf6fff7907688`. Dedicated branch: `agent/gyeon-order-d16-p2b0-book-contract-alignment`. Studio reference authority: Foundation PR #73, merged as `55a2df26a3bf7ac023c4844b26f95b22ee56683c`. Book remains canonical for its own runtime contract; Studio artifacts are reference evidence and are never edited by this phase.
+
+**Accepted diagnosis:** The current Book pure source releases card orders from `card_authorized`, accepts a caller-owned `cardAuthorized` condition, contains `card_split_capture_unresolved`, prepares edit reauthorization, and compensates by voiding a new card authorization. Its focused tests pass, but they prove the superseded business contract. Passing stale tests is therefore not acceptance evidence for D16-P2B0.
+
+**Owner contract:** At owner final submit, charge and capture the entire immutable tax-inclusive JPY payable total once, including back-orders. Shipping policy never changes card amount or capture count. JCB uses the same flow. Card warehouse release requires exact server-verified succeeded-payment evidence. Post-payment amount edits are rejected with `post_payment_amount_edit_forbidden`; additions require a separate order. Confirmed cancellation or non-fulfillment uses only an exact server-calculated partial or full refund, with a cumulative cap at the succeeded amount and duplicate-operation rejection. A failure after succeeded payment requires full-refund compensation, not authorization voiding.
+
+**Governance delivery allowlist:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_D16_P2B0_BOOK_PAYMENT_CONTRACT_ALIGNMENT.md`
+
+The owner authorized one local governance commit, one normal non-force push, and one new Draft PR containing exactly these three paths. The PR number is recorded in PR metadata and its instruction after creation; it is not guessed in this plan.
+
+**Future exact source allowlist after the governance PR and newest Claude-targeted instruction exist:**
+
+1. `src/lib/product-orders/gyeon-order-v3-contract-core.ts`
+2. `src/lib/product-orders/gyeon-order-v3-contract-core.test.ts`
+3. `src/lib/product-orders/gyeon-order-v3-external-authority-core.ts`
+4. `src/lib/product-orders/gyeon-order-v3-external-authority-core.test.ts`
+
+Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_ORDER_V3_D16_P2B0_BOOK_PAYMENT_CONTRACT_ALIGNMENT.md`, after verifying the dedicated open Draft PR, exact execution identity, clean index/worktree, and newest non-superseded instruction. The source candidate must not be staged, committed, or pushed by Claude.
+
+**Verification:** Run the exact two focused Node test files once and exact four-path `git diff --check` once. Prove owner-only final submit, full amount including back-orders, one capture under both shipment policies, identical JCB behavior, succeeded-evidence release, fail-closed evidence rejection, unreachable historical split/multicapture/authorization paths, forbidden post-payment amount edits, exact bounded refund behavior, and preservation of non-card gates.
+
+**Boundaries:** No Stripe SDK/API/Webhook or account contact; no DB, SQL, migration, Supabase, package, lockfile, UI, route, environment, secret, Studio-source, shared/staging/production, Ready, merge, or deployment action. Existing stale C5-B/C5-D database artifacts remain blocked and require a later separately authorized forward-only correction and disposable verification. Protected paths remain metadata-only.
+
+**Exit gate:** Deliver the exact three-document governance commit and Draft PR, publish the exact execution identity and four-file instruction on that PR, then rerun Claude once for the bounded source candidate. MacBook Codex must independently audit the four-file result before any source stage, commit, push, provider, database, or release request.
+
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
 **Objective:** Correct the owner-rejected estimate/pricing settings navigation before deeper settings-page redesign. The `見積・価格 / ESTIMATES & PRICING` group must expose exactly four real cards in the approved order, remove misleading state badges from those four navigation cards, and replace unrelated generic imagery with dedicated semantic line icons while preserving the accepted TOP visual language and existing business behavior.

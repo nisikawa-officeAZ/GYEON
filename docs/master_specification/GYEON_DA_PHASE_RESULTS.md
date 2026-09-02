@@ -3292,6 +3292,227 @@ environment_and_release_boundary:
 decision: ACCEPT_DISPOSABLE_DB_PASS_E2_LOCAL
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF_AND_DIFF_CHECK, POST_THE_AUTHORIZED_PR_RESULT_COMMENT, THEN REQUEST_SEPARATE EXACT-PATH STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. READY, MERGE, MIGRATION_APPLICATION, PREVIEW, AND DEPLOYMENT REMAIN SEPARATE."
 ```
+## GYEON-ORDER-V3-C5-E0 — Stripe provider selection governance
+
+```yaml
+phase: GYEON_ORDER_V3_C5_E0_STRIPE_PROVIDER_SELECTION_GOVERNANCE
+status: OWNER_RATIFIED_DOCUMENTATION_CANDIDATE_UNCOMMITTED
+date: 2026-08-31
+append_only: true
+authorization: "The owner confirmed that an existing Stripe account will be used and explicitly ratified recording Stripe as the canonical card PSP in the Book and Studio specifications. This gate authorizes four documentation changes and one Studio decision comment only; provider implementation or connection and Git delivery remain separate."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  base_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  branch: docs/gyeon-order-stripe-provider-decision
+owner_decision:
+  canonical_card_psp: Stripe
+  intended_product: Stripe Payments / PaymentIntents API
+  stripe_account_exists: true
+  account_identifiers_or_secrets_recorded: false
+  provider_connection_status: NOT_CONFIGURED
+  exact_api_version: NOT_CONFIGURED
+  multicapture_account_enablement: PENDING_STRIPE_CONFIRMATION
+  japan_jcb_multicapture: PUBLIC_STRIPE_DOCUMENTATION_SHOWS_UNSUPPORTED_REGION
+business_contract:
+  split_capture_amount: "Exact immutable tax-inclusive payable JPY amount shipped in each authoritative shipment"
+  capture_count: "Exactly the authoritative shipment count"
+  cumulative_limit: "Must not exceed the whole-order authorization"
+fail_closed:
+  - "Card payment plus ship_available_first remains blocked until Stripe confirms account enablement, Japan brand support, authorization validity, and multicapture contract."
+  - "No automatic payment-method change, full early capture, reauthorization, or shipping-policy substitution may be inferred."
+allowlist:
+  - docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md
+  - docs/integrations/gyeon-order/v3-c5-external-authority-design-and-impact.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundary:
+  - "No application source, test, dependency, SDK, environment variable, Webhook route, DB, migration, Supabase, provider mutation/contact, sandbox, staging, or production action is authorized or performed."
+  - "No stage, commit, push, PR mutation, Ready, merge, or deployment is authorized or performed."
+  - "The currently active Estimate Wizard phase is not interrupted or superseded."
+decision: RECORD_STRIPE_AS_CANONICAL_PSP_AND_KEEP_PROVIDER_DEPENDENT_SPLIT_CAPTURE_BLOCKED
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK, POST_ONE_STUDIO_DECISION_COMMENT, THEN STOP. OBTAIN_AN_OFFICIAL_STRIPE_RESPONSE_BEFORE_ANY_PROVIDER_SPECIFIC_IMPLEMENTATION."
+```
+
+## GYEON-ORDER-V3-C5-E0-R1 — Upfront full-card-payment contract
+
+```yaml
+phase: GYEON_ORDER_V3_C5_E0_R1_UPFRONT_FULL_CARD_PAYMENT_CONTRACT
+status: OWNER_RATIFIED_DOCUMENTATION_CANDIDATE_UNCOMMITTED
+date: 2026-08-31
+append_only: true
+authorization: "After receiving Stripe's multicapture and JCB-alternative response, the owner explicitly rejected unnecessary complexity and ratified charging the entire order at final submit, shipping later, prohibiting post-payment item/amount edits, and using refunds only for cancellation or non-fulfillment. This authorizes the same exact four-document decision update only; Git delivery and implementation remain separate."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  predecessor_commit: de902608c3cdcd75d911b59c4682722d784fe1cf
+  predecessor_tree: fd4ec88a3324fbcae94e0bff8845e631030de4ed
+  base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  base_tree: fda91137ce537f5a6f60f82d229b6aa1ac6c13e6
+  branch: docs/gyeon-order-stripe-provider-decision
+owner_decision:
+  canonical_card_psp: Stripe
+  card_charge_timing: OWNER_FINAL_SUBMIT
+  card_charge_amount: FULL_TAX_INCLUSIVE_ORDER_TOTAL_INCLUDING_BACKORDER
+  capture_count: ONE
+  applies_to_jcb: true
+  shipping_policy_changes_payment: false
+  multicapture_required: false
+  ic_plus_required_by_selected_flow: false
+  setup_intent_later_charge: prohibited
+  post_payment_item_or_amount_edit: prohibited
+  added_items_after_payment: SEPARATE_ORDER_REQUIRED
+  cancellation_or_nonfulfillment: EXACT_SERVER_CALCULATED_PARTIAL_OR_FULL_REFUND
+provider_contract:
+  provider_response_received_by_owner: true
+  exact_api_version: NOT_CONFIGURED
+  actual_account_brand_availability: NOT_CONFIGURED
+  immediate_capture_contract: NOT_CONFIGURED
+  cancellation_and_refund_contract: NOT_CONFIGURED
+  webhook_signature_replay_finality_reconciliation: NOT_CONFIGURED
+  note: "Stripe support's multicapture count narrative is not adopted as authority for this flow; official public documentation states at most 50 captures per PaymentIntent, but the selected contract uses exactly one capture."
+source_impact:
+  existing_c5b_c5d_card_model: STALE_AUTHORIZATION_AND_REAUTHORIZATION_CONTRACT
+  shared_staging_production_application: BLOCKED
+  required_before_application: FORWARD_ONLY_CARD_PAYMENT_REFUND_CORRECTION_AND_FRESH_DISPOSABLE_VERIFICATION
+allowlist:
+  - docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md
+  - docs/integrations/gyeon-order/v3-c5-external-authority-design-and-impact.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundary:
+  - "No application source, test, dependency, SDK, environment variable, Webhook route, DB, migration, Supabase, provider mutation/contact, sandbox, staging, or production action is authorized or performed."
+  - "No stage, commit, push, PR mutation, Ready, merge, or deployment is authorized or performed."
+  - "C5-D remains paused and no existing authorization-based migration artifact may be applied while this contract mismatch exists."
+  - "The currently active Estimate Wizard phase is not interrupted or superseded."
+decision: REPLACE_SPLIT_CAPTURE_WITH_ONE_UPFRONT_FULL_CARD_PAYMENT_AND_REFUND_ONLY_EXCEPTION
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_DIFF_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_EXACT_PATH_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATION. PROVIDER_DIAGNOSIS_SOURCE_CORRECTION_DB_RUNTIME_PR_MUTATION_MERGE_AND_DEPLOYMENT_REMAIN_SEPARATE."
+```
+
+## GYEON-ORDER-V3-C5-E0-R2 — Decision Git delivery and PR metadata correction
+
+```yaml
+phase: GYEON_ORDER_V3_C5_E0_R2_DECISION_GIT_DELIVERY_AND_PR_METADATA_CORRECTION
+status: DECISION_COMMIT_PUSHED_OPEN_PR_AWAITING_FINAL_REVIEW
+date: 2026-08-31
+append_only: true
+authorization: "After the final audit identified stale split-capture language in PR #49 metadata and missing Git-delivery state in the plan and ledger, the owner authorized the exact correction commit and PR metadata update. This gate does not authorize provider, database, migration, Ready, merge, or deployment work."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  base_branch: main
+  base_commit: 501ede8c06b0c397a47996f9dfe0833f8779376c
+  decision_branch: docs/gyeon-order-stripe-provider-decision
+  predecessor_commit: de902608c3cdcd75d911b59c4682722d784fe1cf
+  decision_commit: b6c7d4a27cd2d307ab56e81dd73a0d810934cb94
+  decision_tree: 8fc1d7c1f967f18934d21ca15e0fe02b7475e899
+  remote_head_verified: b6c7d4a27cd2d307ab56e81dd73a0d810934cb94
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/49
+decision_delta:
+  exact_changed_path_count: 4
+  exact_changed_paths:
+    - docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md
+    - docs/integrations/gyeon-order/v3-c5-external-authority-design-and-impact.md
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  git_diff_check: PASS
+  business_contract: ONE_UPFRONT_FULL_CARD_PAYMENT_AND_REFUND_ONLY_EXCEPTION
+  provider_runtime_status: NOT_CONFIGURED
+delivery:
+  decision_commit_created: true
+  normal_push_completed: true
+  force_push: false
+  pr_state_at_audit: OPEN
+  pr_is_draft_at_audit: false
+  pr_mergeable_at_audit: MERGEABLE
+  pr_merge_state_at_audit: CLEAN
+  vercel_checks: SUCCESS_2_OF_2
+  ready_transition_performed_by_this_gate: false
+  merged: false
+  deployed: false
+protected_evidence:
+  ScreensPreview_tsx_blob: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens_migration_blob: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration_blob: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_boundary_test_blob: fe3c80f22fd80dcbfab076082473216dda582c14
+correction_scope:
+  source_paths:
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  pr_metadata:
+    - title
+    - body
+  historical_e0_and_e0_r1_records_rewritten: false
+boundary:
+  - "No application source, test, dependency, Stripe SDK, environment variable, Webhook route, DB, migration, Supabase, provider, sandbox, staging, production, or deployment action is authorized or performed."
+  - "Ready, merge, migration application, provider diagnosis, source correction, and production release remain separate gates."
+decision: RECORD_PUSHED_DECISION_AND_REPLACE_STALE_PR_METADATA
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_CORRECTION_DIFF_AND_PR_METADATA, THEN REQUEST_SEPARATE NORMAL_PUSH_AUTHORIZATION IF NEEDED. READY_AND_MERGE_REMAIN_SEPARATE."
+```
+
+## GYEON-ORDER-V3-D16-P2B0 — Book full-payment/refund contract alignment governance
+
+```yaml
+phase: GYEON_ORDER_V3_D16_P2B0_BOOK_PAYMENT_CONTRACT_ALIGNMENT
+status: GOVERNANCE_DELIVERY_AUTHORIZED_SOURCE_NOT_YET_CHANGED
+date: 2026-09-01
+append_only: true
+authorization: "The owner authorized a dedicated branch/worktree, exactly three governance-document changes, one local governance commit, one normal non-force push, and one new Draft PR. The owner separately authorized sending the private governance and exact four source files to Anthropic Claude Code and one bounded four-file implementation/test run, but source implementation can begin only after the governance PR and newest Claude-targeted instruction exist. Claude may not stage, commit, push, or mutate the PR."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_source_base_commit: b79296305f60374849e983163109b5ec297379d1
+  fixed_source_base_tree: 102146dfe671e8fe33b60983bcbbf6fff7907688
+  dedicated_branch: agent/gyeon-order-d16-p2b0-book-contract-alignment
+  dedicated_worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-d16-p2b0-book-contract-alignment
+studio_reference:
+  repository: nisikawa-officeAZ/detaileros-inventory-foundation
+  phase: GYEON_ORDER_V3_D16_P2A_SINGLE_FULL_CHARGE_PURE_CONTRACT
+  pull_request: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/pull/73
+  merge_commit: 55a2df26a3bf7ac023c4844b26f95b22ee56683c
+diagnosis:
+  current_card_release_trigger: card_authorized
+  current_caller_condition: cardAuthorized
+  stale_split_block_reason: card_split_capture_unresolved
+  stale_edit_action: prepare_card_reauthorization
+  stale_compensation: void_new_card_authorization
+  focused_prechange_tests: PASS_40_OF_40_BUT_PROVE_SUPERSEDED_CONTRACT
+  first_claude_attempt: BLOCKED_GOVERNANCE_PRECONDITION_ZERO_EDITS_ZERO_TESTS
+owner_contract:
+  final_submit_actor: SHOP_OWNER_ONLY
+  charge_timing: OWNER_FINAL_SUBMIT
+  charge_amount: FULL_IMMUTABLE_TAX_INCLUSIVE_JPY_PAYABLE_TOTAL_INCLUDING_BACKORDER
+  capture_count: ONE
+  shipping_policy_changes_payment: false
+  jcb_special_branch: false
+  warehouse_release_card_evidence: SERVER_VERIFIED_PAYMENT_SUCCEEDED_ONLY
+  historical_authorization_split_multicapture_setupintent_paths: PROHIBITED
+  post_payment_amount_edit: post_payment_amount_edit_forbidden
+  added_items: SEPARATE_ORDER_REQUIRED
+  cancellation_or_nonfulfillment: EXACT_SERVER_CALCULATED_PARTIAL_OR_FULL_REFUND
+  cumulative_refund_cap: SUCCEEDED_PAYMENT_AMOUNT
+  duplicate_refund_operation: DENY
+  post_payment_finalization_failure_compensation: EXACT_FULL_REFUND_REQUIRED
+governance_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_D16_P2B0_BOOK_PAYMENT_CONTRACT_ALIGNMENT.md
+future_source_allowlist:
+  - src/lib/product-orders/gyeon-order-v3-contract-core.ts
+  - src/lib/product-orders/gyeon-order-v3-contract-core.test.ts
+  - src/lib/product-orders/gyeon-order-v3-external-authority-core.ts
+  - src/lib/product-orders/gyeon-order-v3-external-authority-core.test.ts
+protected_paths:
+  - src/components/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+boundary:
+  - "No source, test, Stripe SDK/API/Webhook, provider/network, DB, SQL, migration, Supabase, package, lockfile, UI, route, environment, secret, Studio-source, shared/staging/production, Ready, merge, or deployment change is part of this governance commit."
+  - "Existing C5-B/C5-D database artifacts remain stale and blocked from application until a later separately authorized forward-only correction and fresh disposable verification."
+  - "The governance Draft PR does not itself accept or deliver a source candidate."
+decision: AUTHORIZE_GOVERNANCE_DELIVERY_THEN_RETRY_ONE_BOUNDED_CLAUDE_SOURCE_GATE
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_PROTECTED_METADATA, CREATE_ONE_LOCAL_GOVERNANCE_COMMIT, NORMAL_PUSH, AND NEW_DRAFT_PR, THEN PUBLISH_THE_EXACT_EXECUTION_IDENTITY_AND_FOUR_FILE_CLAUDE_INSTRUCTION. AFTER_ONE_CLAUDE_RUN, MACBOOK_CODEX_INDEPENDENTLY_AUDITS_BEFORE_ANY_SOURCE_GIT_ACTION."
+```
+
 ## GDA-2A-OCR-POSTAL-R1 — Dedicated branch and diagnosis governance candidate
 
 ```yaml

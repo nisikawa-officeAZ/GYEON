@@ -4,15 +4,19 @@ import test from "node:test";
 import {
   assessPreparedOperationFinalization,
   decideBankPaymentMatch,
+  decideOrderRefund,
   decideWarehouseAcceptance,
   decideWarehouseTaskCreation,
   evaluateQualificationAuthorityForSubmit,
   planPreWarehouseCommercialEdit,
   transitionQualificationLifecycle,
   validateExternalAuthorityEvidence,
+  validateSucceededPaymentRecord,
   type ExternalAuthorityEvidence,
   type ExternalEvidenceExpectation,
   type PreparedExternalOperation,
+  type RefundLedgerEntry,
+  type SucceededPaymentRecord,
 } from "./gyeon-order-v3-external-authority-core";
 
 const NOW = "2026-08-27T06:00:00.000Z";
@@ -22,7 +26,7 @@ const baseEvidence: ExternalAuthorityEvidence = {
   authority: "server_verified",
   provider: "psp-test",
   providerEventId: "provider-event-1",
-  purpose: "initial_authorization",
+  purpose: "full_payment_charge",
   state: "succeeded",
   dealerId: "dealer-1",
   orderId: "order-1",
@@ -36,7 +40,7 @@ const baseEvidence: ExternalAuthorityEvidence = {
 };
 
 const evidenceExpectation = {
-  purpose: "initial_authorization" as const,
+  purpose: "full_payment_charge" as const,
   dealerId: "dealer-1",
   orderId: "order-1",
   orderVersion: 3,
@@ -55,9 +59,31 @@ const prepared: PreparedExternalOperation = {
   requestFingerprint: "fingerprint-1",
   amountIncTaxYen: 33_000,
   currency: "JPY",
-  evidencePurpose: "initial_authorization",
+  evidencePurpose: "full_payment_charge",
   preparedAtIso: "2026-08-27T05:57:00.000Z",
   expiresAtIso: "2026-08-27T06:05:00.000Z",
+};
+
+const succeededPayment: SucceededPaymentRecord = {
+  id: "payment-record-1",
+  authority: "server_verified",
+  provider: "psp-test",
+  providerPaymentId: "provider-payment-1",
+  purpose: "full_payment_charge",
+  state: "succeeded",
+  dealerId: "dealer-1",
+  orderId: "order-1",
+  orderVersion: 3,
+  requestFingerprint: "fingerprint-1",
+  amountIncTaxYen: 33_000,
+  currency: "JPY",
+};
+
+const refundBinding = {
+  dealerId: "dealer-1",
+  orderId: "order-1",
+  orderVersion: 3,
+  requestFingerprint: "fingerprint-1",
 };
 
 const baseWarehouseInput = {
@@ -72,7 +98,13 @@ const baseWarehouseInput = {
   creditAccountActive: false,
   customerDirect: false,
   ownerSubmitted: true,
-  cardAuthorized: true,
+  cardPaymentEvidence: baseEvidence,
+  dealerId: "dealer-1",
+  orderId: "order-1",
+  orderVersion: 3,
+  requestFingerprint: "fingerprint-1",
+  payableAmountIncTaxYen: 33_000,
+  nowIso: NOW,
   bankPaymentMatched: false,
   hasBackorder: false,
   backorderShippingPolicy: null,
@@ -122,7 +154,7 @@ test("unverified, pending, consumed, and expired evidence fail closed", () => {
 
 test("evidence cannot be moved across purpose, order, version, fingerprint, amount, or currency", () => {
   const cases: Array<[Partial<ExternalEvidenceExpectation>, string]> = [
-    [{ purpose: "edit_reauthorization" as const }, "evidence_purpose_mismatch"],
+    [{ purpose: "refund" as const }, "evidence_purpose_mismatch"],
     [{ orderId: "order-2" }, "evidence_order_binding_mismatch"],
     [{ orderVersion: 4 }, "evidence_version_mismatch"],
     [{ requestFingerprint: "different" }, "evidence_fingerprint_mismatch"],
@@ -156,12 +188,12 @@ test("finalize consumes one exact evidence only after version and fingerprint re
       ok: true,
       consumeEvidenceId: "evidence-1",
       preserveOriginal: false,
-      compensation: "none",
+      compensation: { required: false },
     },
   );
 });
 
-test("a version race preserves the order and requests new-card-authorization void", () => {
+test("a version race preserves the order and requires an exact full refund amount, never an authorization void", () => {
   assert.deepEqual(
     assessPreparedOperationFinalization({
       prepared,
@@ -174,7 +206,7 @@ test("a version race preserves the order and requests new-card-authorization voi
       ok: false,
       code: "order_version_conflict",
       preserveOriginal: true,
-      compensation: "void_new_card_authorization",
+      compensation: { required: true, refundAmountIncTaxYen: 33_000 },
     },
   );
   assert.deepEqual(
@@ -189,12 +221,48 @@ test("a version race preserves the order and requests new-card-authorization voi
       ok: false,
       code: "order_version_conflict",
       preserveOriginal: true,
-      compensation: "none",
+      compensation: { required: false },
     },
   );
 });
 
-test("expired preparation preserves the original and never treats PSP success as committed", () => {
+test("a request-fingerprint race preserves the order and requires an exact full refund amount", () => {
+  assert.deepEqual(
+    assessPreparedOperationFinalization({
+      prepared,
+      currentOrderVersion: 3,
+      currentRequestFingerprint: "different-fingerprint",
+      evidence: baseEvidence,
+      nowIso: NOW,
+    }),
+    {
+      ok: false,
+      code: "request_fingerprint_conflict",
+      preserveOriginal: true,
+      compensation: { required: true, refundAmountIncTaxYen: 33_000 },
+    },
+  );
+});
+
+test("an invalid prepared operation never claims compensation is required", () => {
+  assert.deepEqual(
+    assessPreparedOperationFinalization({
+      prepared: { ...prepared, id: "" },
+      currentOrderVersion: 3,
+      currentRequestFingerprint: "fingerprint-1",
+      evidence: baseEvidence,
+      nowIso: NOW,
+    }),
+    {
+      ok: false,
+      code: "prepared_operation_invalid",
+      preserveOriginal: true,
+      compensation: { required: false },
+    },
+  );
+});
+
+test("expired preparation preserves the original, never treats PSP success as committed, and refunds the exact amount rather than voiding", () => {
   assert.deepEqual(
     assessPreparedOperationFinalization({
       prepared,
@@ -207,12 +275,75 @@ test("expired preparation preserves the original and never treats PSP success as
       ok: false,
       code: "prepared_operation_expired",
       preserveOriginal: true,
-      compensation: "void_new_card_authorization",
+      compensation: { required: true, refundAmountIncTaxYen: 33_000 },
     },
   );
 });
 
-test("failed external evidence never mutates the original order", () => {
+test("compensation on a version race runs the complete evidence validator and never triggers for a structurally invalid, expired, or blank-provider record", () => {
+  assert.deepEqual(
+    assessPreparedOperationFinalization({
+      prepared,
+      currentOrderVersion: 4,
+      currentRequestFingerprint: "fingerprint-1",
+      evidence: { ...baseEvidence, provider: "" },
+      nowIso: NOW,
+    }),
+    {
+      ok: false,
+      code: "order_version_conflict",
+      preserveOriginal: true,
+      compensation: { required: false },
+    },
+  );
+  assert.deepEqual(
+    assessPreparedOperationFinalization({
+      prepared,
+      currentOrderVersion: 4,
+      currentRequestFingerprint: "fingerprint-1",
+      evidence: { ...baseEvidence, consumedAtIso: "2026-08-27T05:59:00.000Z" },
+      nowIso: NOW,
+    }),
+    {
+      ok: false,
+      code: "order_version_conflict",
+      preserveOriginal: true,
+      compensation: { required: false },
+    },
+  );
+  assert.deepEqual(
+    assessPreparedOperationFinalization({
+      prepared,
+      currentOrderVersion: 4,
+      currentRequestFingerprint: "fingerprint-1",
+      evidence: { ...baseEvidence, expiresAtIso: "2026-08-27T05:59:00.000Z" },
+      nowIso: NOW,
+    }),
+    {
+      ok: false,
+      code: "order_version_conflict",
+      preserveOriginal: true,
+      compensation: { required: false },
+    },
+  );
+  assert.deepEqual(
+    assessPreparedOperationFinalization({
+      prepared,
+      currentOrderVersion: 4,
+      currentRequestFingerprint: "fingerprint-1",
+      evidence: null,
+      nowIso: NOW,
+    }),
+    {
+      ok: false,
+      code: "order_version_conflict",
+      preserveOriginal: true,
+      compensation: { required: false },
+    },
+  );
+});
+
+test("failed external evidence never mutates the original order and requires no compensation", () => {
   assert.deepEqual(
     assessPreparedOperationFinalization({
       prepared,
@@ -225,12 +356,12 @@ test("failed external evidence never mutates the original order", () => {
       ok: false,
       code: "evidence_not_succeeded",
       preserveOriginal: true,
-      compensation: "none",
+      compensation: { required: false },
     },
   );
 });
 
-test("only a submitted card order with a changed amount needs reauthorization", () => {
+test("a submitted card order can never be pre-warehouse edited because it is already paid; non-card methods are unchanged", () => {
   assert.deepEqual(
     planPreWarehouseCommercialEdit({
       orderStatus: "submitted",
@@ -239,11 +370,7 @@ test("only a submitted card order with a changed amount needs reauthorization", 
       currentAmountIncTaxYen: 30_000,
       proposedAmountIncTaxYen: 31_000,
     }),
-    {
-      ok: true,
-      action: "prepare_card_reauthorization",
-      evidencePurpose: "edit_reauthorization",
-    },
+    { ok: false, code: "post_payment_amount_edit_forbidden", preserveOriginal: true },
   );
   assert.deepEqual(
     planPreWarehouseCommercialEdit({
@@ -253,11 +380,17 @@ test("only a submitted card order with a changed amount needs reauthorization", 
       currentAmountIncTaxYen: 30_000,
       proposedAmountIncTaxYen: 30_000,
     }),
-    {
-      ok: true,
-      action: "finalize_without_external_authorization",
-      evidencePurpose: null,
-    },
+    { ok: false, code: "post_payment_amount_edit_forbidden", preserveOriginal: true },
+  );
+  assert.deepEqual(
+    planPreWarehouseCommercialEdit({
+      orderStatus: "submitted",
+      warehouseAccepted: false,
+      paymentMethod: "bank_transfer_prepaid",
+      currentAmountIncTaxYen: 30_000,
+      proposedAmountIncTaxYen: 31_000,
+    }),
+    { ok: true, action: "finalize_without_external_authorization" },
   );
   assert.deepEqual(
     planPreWarehouseCommercialEdit({
@@ -268,6 +401,257 @@ test("only a submitted card order with a changed amount needs reauthorization", 
       proposedAmountIncTaxYen: 31_000,
     }),
     { ok: false, code: "warehouse_already_accepted", preserveOriginal: true },
+  );
+});
+
+test("a confirmed cancellation authorizes only an exact server-calculated refund bounded by the validated succeeded payment", () => {
+  const priorRefunds: RefundLedgerEntry[] = [];
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "confirmed_cancellation",
+      succeededPayment,
+      ...refundBinding,
+      priorRefunds,
+      serverCalculatedRefundAmountIncTaxYen: 10_000,
+      operationKey: "refund-1",
+    }),
+    { ok: true, kind: "partial", refundAmountIncTaxYen: 10_000 },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "confirmed_non_fulfillable_item",
+      succeededPayment,
+      ...refundBinding,
+      priorRefunds,
+      serverCalculatedRefundAmountIncTaxYen: 33_000,
+      operationKey: "refund-2",
+    }),
+    { ok: true, kind: "full", refundAmountIncTaxYen: 33_000 },
+  );
+});
+
+test("an unconfirmed refund reason fails closed regardless of amount", () => {
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: null,
+      succeededPayment,
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: 10_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "refund_reason_not_confirmed" },
+  );
+});
+
+test("refund authorization is bound to an immutable server-verified succeeded-payment record, not a free caller-named amount", () => {
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment: null,
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "succeeded_payment_missing" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment: { ...succeededPayment, authority: "unverified" },
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "succeeded_payment_not_server_verified" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment: { ...succeededPayment, state: "pending" },
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "succeeded_payment_not_succeeded" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment: { ...succeededPayment, provider: "" },
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "succeeded_payment_invalid" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment: { ...succeededPayment, providerPaymentId: "" },
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "succeeded_payment_invalid" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment: { ...succeededPayment, amountIncTaxYen: 0 },
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "succeeded_payment_invalid" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment: { ...succeededPayment, orderVersion: 4 },
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "succeeded_payment_version_mismatch" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment: { ...succeededPayment, requestFingerprint: "different" },
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "succeeded_payment_fingerprint_mismatch" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment: { ...succeededPayment, orderId: "order-2" },
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "succeeded_payment_order_binding_mismatch" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment: { ...succeededPayment, currency: "USD" },
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "succeeded_payment_currency_mismatch" },
+  );
+});
+
+test("cumulative refunds never exceed the succeeded payment and a duplicate operation key fails closed", () => {
+  const priorRefunds: RefundLedgerEntry[] = [{ operationKey: "refund-1", amountIncTaxYen: 20_000 }];
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment,
+      ...refundBinding,
+      priorRefunds,
+      serverCalculatedRefundAmountIncTaxYen: 20_000,
+      operationKey: "refund-2",
+    }),
+    { ok: false, code: "refund_exceeds_succeeded_payment" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment,
+      ...refundBinding,
+      priorRefunds,
+      serverCalculatedRefundAmountIncTaxYen: 13_000,
+      operationKey: "refund-1",
+    }),
+    { ok: false, code: "refund_operation_already_recorded" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment,
+      ...refundBinding,
+      priorRefunds,
+      serverCalculatedRefundAmountIncTaxYen: 13_000,
+      operationKey: "refund-3",
+    }),
+    { ok: true, kind: "full", refundAmountIncTaxYen: 13_000 },
+  );
+});
+
+test("a corrupted or duplicate prior refund ledger fails closed instead of being summed", () => {
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment,
+      ...refundBinding,
+      priorRefunds: [{ operationKey: "refund-1", amountIncTaxYen: -5_000 }],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-2",
+    }),
+    { ok: false, code: "refund_ledger_corrupted" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment,
+      ...refundBinding,
+      priorRefunds: [
+        { operationKey: "refund-1", amountIncTaxYen: 5_000 },
+        { operationKey: "refund-1", amountIncTaxYen: 5_000 },
+      ],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-2",
+    }),
+    { ok: false, code: "refund_ledger_corrupted" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment,
+      ...refundBinding,
+      priorRefunds: [{ operationKey: "", amountIncTaxYen: 5_000 }],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-2",
+    }),
+    { ok: false, code: "refund_ledger_corrupted" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment,
+      ...refundBinding,
+      priorRefunds: [{ operationKey: "refund-1", amountIncTaxYen: Number.MAX_SAFE_INTEGER }],
+      serverCalculatedRefundAmountIncTaxYen: 1_000,
+      operationKey: "refund-2",
+    }),
+    { ok: false, code: "refund_ledger_corrupted" },
+  );
+  assert.deepEqual(
+    decideOrderRefund({
+      reason: "final_shortage",
+      succeededPayment,
+      ...refundBinding,
+      priorRefunds: [],
+      serverCalculatedRefundAmountIncTaxYen: Number.MAX_SAFE_INTEGER,
+      operationKey: "refund-2",
+    }),
+    { ok: false, code: "refund_exceeds_succeeded_payment" },
   );
 });
 
@@ -455,19 +839,53 @@ test("bank payment is matched only after exact server-side reconciliation", () =
   });
 });
 
-test("warehouse task is created as unaccepted when card release and authorities are ready", () => {
+test("warehouse task is created as unaccepted when card release and authorities are ready, propagating the exact validated evidence ID for atomic consumption", () => {
   assert.deepEqual(decideWarehouseTaskCreation(baseWarehouseInput), {
     ok: true,
     action: "create_unaccepted",
-    trigger: "card_authorized",
+    trigger: "card_payment_succeeded",
+    consumeEvidenceId: "evidence-1",
   });
+  assert.deepEqual(
+    decideWarehouseTaskCreation({
+      ...baseWarehouseInput,
+      cardPaymentEvidence: { ...baseEvidence, id: "evidence-distinct-77" },
+    }),
+    {
+      ok: true,
+      action: "create_unaccepted",
+      trigger: "card_payment_succeeded",
+      consumeEvidenceId: "evidence-distinct-77",
+    },
+  );
+});
+
+test("warehouse task creation rejects missing, unverified, and duplicate/consumed card payment evidence", () => {
+  assert.deepEqual(
+    decideWarehouseTaskCreation({ ...baseWarehouseInput, cardPaymentEvidence: null }),
+    { ok: false, code: "payment_release_blocked", paymentCode: "evidence_missing" },
+  );
+  assert.deepEqual(
+    decideWarehouseTaskCreation({
+      ...baseWarehouseInput,
+      cardPaymentEvidence: { ...baseEvidence, authority: "unverified" },
+    }),
+    { ok: false, code: "payment_release_blocked", paymentCode: "evidence_not_server_verified" },
+  );
+  assert.deepEqual(
+    decideWarehouseTaskCreation({
+      ...baseWarehouseInput,
+      cardPaymentEvidence: { ...baseEvidence, consumedAtIso: "2026-08-27T05:59:00.000Z" },
+    }),
+    { ok: false, code: "payment_release_blocked", paymentCode: "evidence_consumed" },
+  );
 });
 
 test("bank orders do not create a warehouse task before exact payment match", () => {
   const bank = {
     ...baseWarehouseInput,
     paymentMethod: "bank_transfer_prepaid" as const,
-    cardAuthorized: false,
+    cardPaymentEvidence: null,
     bankPaymentMatched: false,
   };
   assert.deepEqual(decideWarehouseTaskCreation(bank), {
