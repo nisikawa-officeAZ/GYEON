@@ -634,7 +634,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### GYEON-ORDER-V3-D16-P2B1 — Stripe pre-connection read-only diagnosis
 
-**Status:** R1 CORRECTED DIAGNOSIS ACCEPTED / EXACT THREE-FILE GOVERNANCE RECORD COMMITTED AND NORMALLY PUSHED TO OPEN DRAFT PR #51 / CHECKS PASS / NO IMPLEMENTATION AUTHORIZED.
+**Status:** CLOSED — R1 CORRECTED DIAGNOSIS ACCEPTED / GOVERNANCE RECORD DELIVERED / PR #51 MERGED TO `main` AS `f75242a1e79bb0dc6c18926cf8a004874d4ec278` / NO STRIPE IMPLEMENTATION AUTHORIZED.
 
 **Objective:** Map the smallest safe Book-side forward correction from the stale C5-B/C5-D card-authorization database model to the merged D16-P2B0 one-upfront-full-payment and refund contract before any Stripe SDK, API, Webhook, database, migration, sandbox, or deployment implementation.
 
@@ -666,9 +666,49 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 3. `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ORDER_V3_D16_P2B1_R1_DIAGNOSIS_RESULT_CORRECTION.md`
 
-**Delivery and acceptance:** The exact three-path R1 governance record was committed as `241eb33347a4b3af3090f0536c340a1026359c31`, tree `91b64d2ad62d692c39b2a23ffe7f2df65ea03599`, parent `f77f32d8ec908e4da76dd9a7f1406e4026cc1465`, and normally non-force pushed to the existing PR #51 branch. GitHub independently reports PR #51 as OPEN/Draft, base `main`, HEAD equal to that commit, merge state CLEAN, and both Vercel checks successful. The new commit changes exactly the three R1 governance paths; the PR contains four paths overall because it also contains the original P2B1 directive from its first commit.
+**Delivery and acceptance:** The exact three-path R1 governance record was committed as `241eb33347a4b3af3090f0536c340a1026359c31`, tree `91b64d2ad62d692c39b2a23ffe7f2df65ea03599`, parent `f77f32d8ec908e4da76dd9a7f1406e4026cc1465`, and normally non-force pushed to the existing PR #51 branch. The two-document delivery reconciliation followed as `5cda3753f5af1aa425f9a111d4948647aef2fac2`. Both Vercel checks passed, the owner separately authorized Ready and merge, and PR #51 was merged normally to `main` as `f75242a1e79bb0dc6c18926cf8a004874d4ec278`, tree `82981feb3e26d2bc70db2c11cf708063e56d6ccd`. No manual deployment, application source, database, provider, or Stripe implementation was part of the merge.
 
-**Current exit gate:** The D16-P2B1 diagnosis record is delivered and checks pass. A separate owner gate is required before Ready-for-review, and merge remains a later separate gate. No application source, DB migration, Stripe adapter, Webhook, dependency, sandbox, provider configuration, environment mutation, deployment, or Book inventory C1 work is authorized by the R1 result or its delivery.
+**Current exit gate:** The D16-P2B1 diagnosis-governance phase is closed at the merged main identity above. Its result does not authorize application source, DB migration, Stripe adapter, Webhook, dependency, sandbox, provider configuration, environment mutation, or deployment. Book inventory C1 is governed independently by the phase below.
+
+### INV001-P19-BOOK-C1 — Foundation V2 consumer-binding read-only diagnosis
+
+**Status:** OWNER REAUTHORIZED AGAINST CURRENT BOOK MAIN / DIRECTIVE READY LOCALLY / COMPLETION PLAN AND RESULT LEDGER REGISTRATION AUTHORIZED / GOVERNANCE DELIVERY AND PRIVATE-FILE TRANSMISSION NOT YET AUTHORIZED.
+
+**Objective:** Diagnose the smallest safe Book-owned server consumer/adaptor boundary for the accepted Foundation V2 inventory runtime without copying Foundation business rules, treating Book-local dealer inventory as Office AZ authority, implementing Android, or contacting a database/provider/environment.
+
+**Fixed authorities:**
+
+- Book repository: `nisikawa-officeAZ/GYEON`.
+- Book fixed `main`: commit `f75242a1e79bb0dc6c18926cf8a004874d4ec278`, tree `82981feb3e26d2bc70db2c11cf708063e56d6ccd`.
+- Foundation repository: `nisikawa-officeAZ/detaileros-inventory-foundation`.
+- Foundation fixed `main`: commit `c0cc42de8ef1e95482b31a981a7d2d6e2571fa8e`, tree `c2e925295e1e0384010e6744a5c7ec15cb7668a1`.
+- Foundation status: `FOUNDATION_HANDOFF_READY_NOT_PRODUCTION_READY`.
+- Foundation P20: not required and not authorized by source completion through P19.
+
+**Governing directive:**
+
+- Path: `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_C1_FOUNDATION_V2_CONSUMER_BINDING_DIAGNOSIS.md`.
+- Required result marker: `INV001_P19_BOOK_C1_FOUNDATION_V2_CONSUMER_BINDING_DIAGNOSIS_RESULT_V1`.
+- Current local directive SHA-256: `9b74b76ca3e5fea4b88c0a37b2d4c2f4652b8fdc5fb74451e98d541bcc4e9150`.
+- Proposed dedicated branch: `agent/inv001-p19-book-c1-foundation-v2-consumer-binding-diagnosis`.
+- Exact private read scope: 31 Book paths and 10 Foundation paths, all listed literally in the directive.
+
+**Accepted diagnosis boundary:**
+
+1. Office AZ is the sole inventory owner and Foundation is the canonical inventory contract/runtime authority.
+2. Existing Book `dealer_stock_levels`, receiving, movements, stocktaking, and logistics actions are dealer-local or compatibility surfaces until a later authorized cutover proves otherwise.
+3. Book must not create a second product master, shadow catalogue, competing Office AZ ledger, fallback-to-local authority, or silent dual write.
+4. Foundation hosts no live HTTP service. Runtime delivery into Book is `NOT_CONFIGURED` and must not be guessed as package copy, source copy, submodule, HTTP, or database coupling.
+5. The 18 accepted Foundation commands, `INV001-P18_RUNTIME_SNAPSHOT_V3`, separate CSV surfaces, and Mobile golden contracts retain their exact meanings. `confirm_shipment` is not automatically coupled to `ship_fulfillment`.
+6. Android transport, authentication, local persistence/offline queue, camera/operator UX, signing, distribution, and M1-M6 remain `NOT_CONFIGURED` and outside C1.
+
+**Required read-only result:** Classify the allowed Book inventory/logistics modules; map authority conflicts and current direct CRUD; prove whether any existing Foundation bridge exists; identify the delivery-mechanism and auth/tenancy gaps; propose the smallest server-only adaptor; preserve fail-closed error/recovery behavior; separate current UI compatibility from later cutover; and return literal non-overlapping allowlists for later pure adaptor, transport/package, authenticated route, compatibility UI, disposable verification, and Android phases. Unknown facts remain `NOT_CONFIGURED`.
+
+**Studio autonomy boundary:** Studio's bounded autonomy is recorded in Foundation Issue #39 comments `5517985580` and `5517994562`. It permits Foundation-only work through a verified Ready PR but never Book/Android edits or merge. Studio must not invent P20. If the accepted Book C1 result exposes a Foundation-owned compatibility defect that does not change the accepted contract meaning, Studio may use that authority; contract or product-authority changes return to the owner and MacBook Codex.
+
+**Current authorization:** The owner reauthorized C1 planning against the current fixed Book main and separately authorized this two-document registration. The directive remains an untracked local candidate. No stage, commit, push, branch, Draft PR, private-file transmission to Anthropic, Claude invocation, test, source implementation, DB, migration, Supabase, provider, HTTP, Android, deployment, or production action is authorized by this registration.
+
+**Exit gate:** Verify the exact three-path governance candidate consisting of this plan, the result ledger, and the new directive. Governance Git delivery requires a separate owner gate. Only after committed governance, Draft-PR instruction, fresh fixed-identity verification, and separate exact-file transmission authorization may Claude run the one read-only diagnosis.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 

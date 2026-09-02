@@ -3692,3 +3692,75 @@ boundary:
 decision: ACCEPT_R1_GOVERNANCE_DELIVERY_AND_HOLD_PR_DRAFT
 next: "VERIFY_EXACT_TWO_DOCUMENT_DIFF, THEN REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_STAGE_AND_LOCAL_COMMIT. NORMAL_PUSH, READY, MERGE, AND BOOK_INVENTORY_C1_REMAIN_SEPARATE."
 ```
+
+## INV001-P19-BOOK-C1 — Foundation V2 consumer-binding diagnosis governance registration
+
+```yaml
+phase: INV001_P19_BOOK_C1_FOUNDATION_V2_CONSUMER_BINDING_DIAGNOSIS
+status: OWNER_REAUTHORIZED_DIRECTIVE_READY_LOCALLY_TWO_DOCUMENT_REGISTRATION_COMPLETE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After the prior Book plan was correctly closed as BLOCKED_HEAD_MOVED, the owner explicitly reauthorized Book C1 against current Book main and then explicitly authorized registering C1 in the completion plan and result ledger. This authorization does not include Git delivery or private-file transmission."
+issue_39_evidence:
+  old_plan_blocked_result: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5517952592
+  head_moved_reconciliation_review: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5517957203
+  current_head_reauthorization: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5517965438
+  directive_ready_report: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5517970991
+  studio_bounded_autonomy: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5517985580
+  studio_ready_amendment: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5517994562
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: f75242a1e79bb0dc6c18926cf8a004874d4ec278
+  fixed_tree: 82981feb3e26d2bc70db2c11cf708063e56d6ccd
+  predecessor_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/51
+  predecessor_pr_state: MERGED
+foundation:
+  repository: nisikawa-officeAZ/detaileros-inventory-foundation
+  fixed_commit: c0cc42de8ef1e95482b31a981a7d2d6e2571fa8e
+  fixed_tree: c2e925295e1e0384010e6744a5c7ec15cb7668a1
+  disposition: FOUNDATION_HANDOFF_READY_NOT_PRODUCTION_READY
+  p20: NOT_REQUIRED_NOT_AUTHORIZED
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_C1_FOUNDATION_V2_CONSUMER_BINDING_DIAGNOSIS.md
+  sha256: 9b74b76ca3e5fea4b88c0a37b2d4c2f4652b8fdc5fb74451e98d541bcc4e9150
+  git_state: UNTRACKED_LOCAL_CANDIDATE
+  result_marker: INV001_P19_BOOK_C1_FOUNDATION_V2_CONSUMER_BINDING_DIAGNOSIS_RESULT_V1
+  proposed_branch: agent/inv001-p19-book-c1-foundation-v2-consumer-binding-diagnosis
+private_read_scope:
+  book_exact_paths: 31
+  foundation_exact_paths: 10
+  transmission_authorized: false
+protected_paths:
+  - src/components/estimates/wizard/screens/ScreensPreview.tsx
+  - src/components/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+governance_candidate_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_C1_FOUNDATION_V2_CONSUMER_BINDING_DIAGNOSIS.md
+contract_boundary:
+  inventory_owner: OFFICE_AZ_ONLY
+  canonical_runtime_authority: FOUNDATION_V2
+  book_local_inventory_as_office_az_authority: PROHIBITED
+  second_product_master_or_shadow_ledger: PROHIBITED
+  foundation_live_http: NOT_CONFIGURED
+  runtime_delivery_mechanism: NOT_CONFIGURED
+  android_m1_m6: NOT_CONFIGURED
+  confirm_shipment_auto_wires_ship_fulfillment: false
+not_authorized:
+  - stage
+  - commit
+  - push
+  - branch_or_pr_creation
+  - private_file_transmission
+  - claude_invocation
+  - source_or_test_implementation
+  - test_typecheck_build_or_install
+  - db_migration_supabase_or_provider_action
+  - http_android_deployment_or_production_action
+decision: REGISTER_BOOK_C1_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_THE_EXACT_THREE_PATH_GOVERNANCE_DIFF_AND_PROTECTED_METADATA, THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_LOCAL_COMMIT_NORMAL_PUSH_AND_DRAFT_PR. PRIVATE_FILE_TRANSMISSION_AND_CLAUDE_INVOCATION_REMAIN_A_LATER_SEPARATE_GATE."
+```
