@@ -5237,3 +5237,81 @@ prohibited_actions:
 decision: AUTHOR_EXACT_THREE_R5_R3_GOVERNANCE_PATHS_ONLY
 next: "MacBook Codex performs static acceptance of the exact three-document governance candidate and stops. Separate owner authorizations are required for governance stage/local commit, normal push, private-source transmission, Claude two-file synchronization, synchronization delivery, and a new fresh Disposable DB attempt."
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A11 — R5-R3 Claude replacement-dispatch execution authority
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_A1_REPLACEMENT_DISPATCH_AUTHORITY
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_A1_REPLACEMENT_DISPATCH_AUTHORITY_RESULT_V1
+status: OWNER_AUTHORIZED_AUTHORITY_RECORDING_REPLACEMENT_DISPATCH_CONDITIONAL_ON_GOVERNANCE_DELIVERY
+date: 2026-09-03
+append_only: true
+owner_authorization: "After the first R5-R3 Claude invocation stopped BLOCKED with zero edits, the owner authorized MacBook Codex to update exactly the completion plan, append-only phase ledger, and existing R5-R3 directive to record one replacement-dispatch execution authority. This current gate edits only those three governance files; their stage/commit/push and the replacement Claude invocation do not occur in this gate."
+first_invocation:
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC_RESULT_V1
+  verdict: BLOCKED
+  reason: "The read-scope authorities still stated NOT EXECUTION AUTHORITY and authorization_granted_now=false."
+  exact_read_path_count: 6
+  edited_path_count: 0
+  harness_or_other_bytes_changed: false
+  bash_test_git_database_supabase_docker_colima_used: false
+  webfetch_websearch_provider_or_hosted_environment_contacted: false
+  suffix_or_runtime_created: false
+  invocation_consumed: true
+  automatic_retry_forbidden: true
+authority_base:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  parent_head: a4d7c9a8e2393c4cfc35b32b1ca830f73c3111c8
+  parent_tree: 0f63364c27803607f1f28ccaf0360b19729f0899
+  parent_vercel: SUCCESS
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC.md
+delivery_activation_conditions:
+  direct_parent_must_equal: a4d7c9a8e2393c4cfc35b32b1ca830f73c3111c8
+  delivery_commit_path_count: 3
+  delivery_commit_paths_must_equal_current_governance_write_allowlist: true
+  normal_non_force_push_required: true
+  remote_pr_head_must_equal_delivered_governance_commit: true
+  pr_must_remain_open_draft_base_main: true
+  vercel_must_be_success: true
+  worktree_and_index_must_be_clean: true
+  codex_must_supply_verified_delivered_head_and_tree_in_prompt: true
+supersession:
+  supersedes_a10_authorization_granted_now_false_after_delivery: true
+  authorization_state_after_all_delivery_conditions_pass: ONE_REPLACEMENT_CLAUDE_DISPATCH_AUTHORIZED
+replacement_dispatch:
+  exact_read_allowlist:
+    - AGENTS.md
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+    - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC.md
+    - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  exact_write_allowlist:
+    - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  permitted_tools:
+    - Read
+    - Edit
+    - Grep
+  exact_old_blob_replacements: 3
+  exact_old_sha256_replacements: 2
+  consumed_on_candidate_failure_or_block: true
+  no_retry_without_new_owner_authorization: true
+current_gate_prohibitions:
+  - stage_commit_or_push_the_three_governance_files
+  - invoke_claude_or_transmit_private_files_now
+  - edit_the_two_harness_paths_now
+  - create_a_suffix_or_runtime_path
+  - run_tests_or_database_or_supabase_or_docker
+  - access_shared_staging_production_provider_or_deployment
+  - read_or_change_protected_path_content
+decision: RECORD_R5_R3_A1_REPLACEMENT_AUTHORITY_IN_EXACT_THREE_GOVERNANCE_PATHS
+next: "MacBook Codex statically verifies this exact three-document candidate and stops for separate stage/local-commit approval. After separately approved normal push and all activation conditions pass, exactly one replacement Claude dispatch is authorized. Harness delivery and fresh Disposable DB execution remain later separate owner gates."
+```

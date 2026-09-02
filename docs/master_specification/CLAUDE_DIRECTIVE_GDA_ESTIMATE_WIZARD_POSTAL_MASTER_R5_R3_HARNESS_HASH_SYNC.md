@@ -4,11 +4,11 @@ Instruction ID: `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC`
 
 Required result marker: `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC_RESULT_V1`
 
-Status: `GOVERNANCE CANDIDATE ONLY — NOT EXECUTION AUTHORITY`
+Status: `R5-R3-A1 OWNER AUTHORITY RECORDED — ONE REPLACEMENT DISPATCH ACTIVATES ONLY AFTER EXACT THREE-DOCUMENT GOVERNANCE DELIVERY`
 
 ## 1. Objective
 
-Prepare one future bounded synchronization of the R5 harness manifest pins after the accepted pgTAP plan-count repair changed the committed identity of `supabase/tests/jp_postal_master_rpc.test.sql`. This document does not authorize Claude invocation, private-file transmission, harness editing, tests, Git delivery, suffix creation, or database/runtime execution.
+Prepare one bounded synchronization of the R5 harness manifest pins after the accepted pgTAP plan-count repair changed the committed identity of `supabase/tests/jp_postal_master_rpc.test.sql`. The original R5-R3 governance candidate did not authorize execution. R5-R3-A1 now records one replacement-dispatch authority, but it activates only after the exact governance-delivery conditions in section 2.1 are independently verified. This current document-editing gate does not itself execute Claude, edit the harness, run tests, deliver Git changes, create a suffix, or access a database/runtime.
 
 ## 2. Fixed authority
 
@@ -21,6 +21,19 @@ Prepare one future bounded synchronization of the R5 harness manifest pins after
 - Worktree/index: clean before governance authoring
 
 The fixed HEAD contains exactly the accepted `SELECT plan(74);` → `SELECT plan(75);` change in the pgTAP file.
+
+### 2.1 R5-R3-A1 superseding execution authority
+
+The first R5-R3 Claude invocation returned this directive's required result marker with verdict `BLOCKED` and edited zero files because the read-scope authorities still said `NOT EXECUTION AUTHORITY` and `authorization_granted_now: false`. That invocation is consumed and must not be retried unchanged.
+
+On 2026-09-03 the owner explicitly authorized R5-R3-A1 to record one replacement-dispatch execution authority. A10's earlier `authorization_granted_now: false` remains historical but is superseded only after all of these conditions are met:
+
+1. This directive, `GYEON_DA_COMPLETION_PLAN.md`, and `GYEON_DA_PHASE_RESULTS.md` are delivered together in exactly one normal non-force commit.
+2. That governance commit is a direct child of `a4d7c9a8e2393c4cfc35b32b1ca830f73c3111c8` and changes exactly those three governance paths.
+3. MacBook Codex verifies PR `#48` remains `OPEN/Draft`, base `main`, remote HEAD equals the delivered governance commit, Vercel is `SUCCESS`, and the worktree/index is clean.
+4. MacBook Codex supplies the verified delivered governance HEAD/tree and these PR/Vercel facts in the replacement invocation prompt.
+
+When all four conditions pass, exactly one non-persistent replacement Claude invocation is authorized to transmit/read the six paths in section 4 and edit only the two paths in section 5 using only Read/Edit/Grep. This authorization is consumed whether the invocation produces a candidate, fails, or blocks. No automatic retry is authorized. Stage/commit/push of the resulting harness candidate and every Disposable DB action remain separate owner-approval gates.
 
 ## 3. Accepted pre-runtime finding
 
@@ -36,9 +49,9 @@ The harness still contains:
 
 This mismatch would correctly fail closed as source drift before database startup. MacBook Codex therefore issued no suffix, created no runtime path, started no Supabase/database/Docker container, and contacted no hosted environment.
 
-## 4. Future read scope
+## 4. Authorized replacement-dispatch read scope
 
-Only after separate owner approval for private-source transmission and Claude execution, Claude may read exactly:
+After all R5-R3-A1 activation conditions in section 2.1 pass, the one replacement Claude invocation may read exactly:
 
 1. `AGENTS.md`
 2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
@@ -49,7 +62,7 @@ Only after separate owner approval for private-source transmission and Claude ex
 
 No other path may be opened, searched, copied, transmitted, or changed.
 
-## 5. Future write allowlist — exactly two existing paths
+## 5. Authorized replacement-dispatch write allowlist — exactly two existing paths
 
 1. `scripts/e2e/gda-estimate-postal-master-r5/setup.sh`
 2. `scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh`
@@ -74,7 +87,7 @@ Do not modify code flow, shell commands, conditions, comments, status prose, for
 
 ## 7. Tool and execution boundary
 
-If later invoked under separate approval, Claude is limited to `Read`, `Edit`, and `Grep` on the exact scopes above. Claude must not use Bash or any shell, run syntax checks or tests, create a suffix/runtime path, start Supabase/Docker/Colima, access PostgreSQL/Auth/PostgREST, use Git/GitHub, invoke WebFetch/WebSearch or any additional network tool, contact providers or hosted environments, or perform Ready, merge, or deployment actions.
+When invoked after section 2.1 is satisfied, Claude is limited to `Read`, `Edit`, and `Grep` on the exact scopes above. Claude must not use Bash or any shell, run syntax checks or tests, create a suffix/runtime path, start Supabase/Docker/Colima, access PostgreSQL/Auth/PostgREST, use Git/GitHub, invoke WebFetch/WebSearch or any additional network tool, contact providers or hosted environments, or perform Ready, merge, or deployment actions.
 
 MacBook Codex will independently perform the later static checks:
 

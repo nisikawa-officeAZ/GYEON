@@ -726,6 +726,26 @@ This gate authorizes authoring and static review of those three governance paths
 
 **Exit:** MacBook Codex verifies the exact three-document governance candidate, confirms both harness targets remain byte-identical to HEAD, checks protected metadata and diff format, and stops. Stage/local commit of these three governance files, normal push, external transmission, two-file Claude synchronization, synchronization delivery, and the fresh Disposable DB rerun remain separate owner-approval gates.
 
+#### GDA-2A-OCR-POSTAL-MASTER-R5-R3-A1 — Claude replacement-dispatch execution authority
+
+**Status:** FIRST R5-R3 CLAUDE INVOCATION `BLOCKED` WITH ZERO EDITS / OWNER AUTHORIZED R5-R3-A1 AUTHORITY RECORDING / ONE REPLACEMENT DISPATCH AUTHORIZED ONLY AFTER EXACT THREE-DOCUMENT GOVERNANCE DELIVERY / HARNESS AND DATABASE STILL UNCHANGED.
+
+**Reason for this addendum:** The first owner-approved R5-R3 Claude invocation read the exact six allowed files and stopped with `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC_RESULT_V1 / BLOCKED`. It correctly treated the then-current directive status `GOVERNANCE CANDIDATE ONLY — NOT EXECUTION AUTHORITY` and A10 field `authorization_granted_now: false` as stronger than the invocation prompt. It edited zero files, used no Bash/test/Git/database/Supabase/Docker/Colima/WebFetch/WebSearch/provider/hosted-environment tool, created no suffix, and left HEAD/tree/worktree unchanged. Repeating that unchanged instruction is forbidden.
+
+**Superseding owner authority:** On 2026-09-03 the owner explicitly authorized R5-R3-A1 to record execution authority in the completion plan, append-only phase ledger, and existing R5-R3 directive. Once those exact three governance files are delivered in one normal commit whose parent is `a4d7c9a8e2393c4cfc35b32b1ca830f73c3111c8`, and MacBook Codex independently confirms PR `#48` remains `OPEN/Draft`, base `main`, remote HEAD equals that delivered governance commit, Vercel is `SUCCESS`, and the worktree is clean, exactly one non-persistent replacement Claude invocation is authorized. That replacement may transmit/read the exact six-file read scope and edit only the exact two harness paths already fixed by R5-R3. A10's earlier `authorization_granted_now: false` is historical and is superseded by this addendum after the three-document delivery condition is met.
+
+**Governance execution-identity contract:** The future delivered governance commit/tree cannot be known until the separately authorized local commit is created. It must be a direct child of `a4d7c9a8e2393c4cfc35b32b1ca830f73c3111c8`, contain exactly the following three paths, and be normally non-force pushed to the existing PR `#48` branch. MacBook Codex must supply the verified delivered HEAD/tree and PR/Vercel facts in the replacement invocation prompt; Claude may rely on that prompt solely for those post-document identity facts.
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R3_HARNESS_HASH_SYNC.md`
+
+**Replacement dispatch scope:** Claude may read exactly `AGENTS.md`, the three governance files above, `scripts/e2e/gda-estimate-postal-master-r5/setup.sh`, and `scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh`. It may edit only the two harness scripts and make only the three old-blob plus two old-SHA replacements specified by R5-R3. Only Read/Edit/Grep are permitted. The invocation is consumed whether it returns a candidate, fails, or blocks; no automatic retry is allowed.
+
+**Current gate boundary:** This addendum authorizes authoring and static review of exactly the three governance files only. It does not authorize their stage, commit, or push in the current gate. It also does not execute the replacement dispatch now, edit either harness file, create a suffix, run a test/database/Supabase/Docker action, or deliver any resulting harness candidate. Those actions remain gated by the delivery condition and the exact scope above; harness stage/commit/push and the fresh Disposable DB attempt remain later separate owner approvals.
+
+**Exit:** MacBook Codex verifies the exact three-document authority diff, unchanged harness blobs, protected metadata, and `git diff --check`, then requests separate approval to stage and locally commit the three governance files. After a separately approved normal push and verified delivery conditions, the recorded one-time replacement Claude dispatch authority becomes active.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.
