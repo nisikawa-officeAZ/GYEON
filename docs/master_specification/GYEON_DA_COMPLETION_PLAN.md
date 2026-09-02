@@ -561,6 +561,8 @@ No package, lockfile, dependency, existing ZipCloud helper, OCR mapper, save RPC
 
 **Responsibility and gate separation:** Claude owns one later owner-approved bounded read-only diagnosis. MacBook Codex owns this governance candidate and later independent acceptance. Diagnosis, repair, executable tests, disposable runtime, migration-chain decision, environment preflight, migration apply, CSV acquisition/import, Git delivery, Preview, Ready, merge, and deployment are separate gates.
 
+**R3-A1 dispatch correction:** The pre-dispatch existence check proved that repository path `supabase/config.toml` does not exist. It is not replaced by an unrelated E2E harness configuration. The mandatory complete read scope is corrected from 25 to 24 existing paths by removing only that nonexistent entry. The first attempted dispatch stopped before Claude invocation, transmitted zero files, and consumed no diagnosis run. This correction changes only the same exact three governance paths; source, tests, migrations, data, environments, and protected paths remain untouched.
+
 **Exit:** Verify the exact three-path candidate, protected blob metadata, and `git diff --check`; then request separate literal stage/local-commit authorization. Do not dispatch Claude or modify source before that later authorization and delivery gate.
 
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate

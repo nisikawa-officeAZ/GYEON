@@ -4280,3 +4280,37 @@ prohibited_actions_confirmed:
 decision: AUTHOR_EXACT_THREE_PATH_POSTAL_R3_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R3-A1 — Dispatch read-scope path correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_A1_DISPATCH_SCOPE_CORRECTION
+status: CORRECTION_CANDIDATE_AUTHORIZED_FOR_EXACT_THREE_PATH_COMMIT_AND_NORMAL_PUSH
+date: 2026-09-02
+append_only: true
+trigger:
+  attempted_dispatch_invoked_claude: false
+  files_transmitted: 0
+  diagnosis_run_consumed: false
+  preflight_failure: "MISSING_ALLOWLIST_PATH: supabase/config.toml"
+correction:
+  action: REMOVE_NONEXISTENT_PATH_ONLY
+  removed_path: supabase/config.toml
+  replacement_path: null
+  mandatory_complete_read_scope_count_before: 25
+  mandatory_complete_read_scope_count_after: 24
+rationale: "No canonical supabase/config.toml exists in the repository. Unrelated E2E harness config files are not valid substitutes and are outside this diagnosis."
+exact_write_and_delivery_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_READ_ONLY_REPAIR_DIAGNOSIS.md
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_test_migration_or_dataset_edit: false
+  executable_test_or_build: false
+  database_supabase_auth_storage_provider_access: false
+  migration_apply_or_csv_import: false
+  preview_ready_merge_deploy: false
+decision: CORRECT_TO_EXACT_24_EXISTING_READ_PATHS
+next: "VERIFY_EXACT_THREE_PATH_DIFF_STAGE_LOCAL_COMMIT_NORMAL_PUSH_THEN_STOP_BEFORE_CLAUDE_REDISPATCH"
+```

@@ -53,7 +53,6 @@ Read only these paths completely:
 22. `src/components/estimates/wizard/steps/postal-master-apply.ts`
 23. `src/components/estimates/wizard/steps/postal-master-apply.test.ts`
 24. `package.json`
-25. `supabase/config.toml`
 
 If one additional existing path is essential, stop with `BLOCKED_READ_SCOPE` and identify the exact path and reason. Do not read it.
 
