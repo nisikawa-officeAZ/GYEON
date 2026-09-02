@@ -5084,3 +5084,79 @@ prohibited_actions:
 decision: RATIFY_R5_R1_AND_DELIVER_EXACT_TWO_GOVERNANCE_PATHS
 next: "Stage, locally commit, and normally push exactly the two governance paths while preserving the accepted source repair unstaged. After remote identity verification, invoke Claude once for the exact three-file literal hash/blob synchronization. Codex then independently reviews the resulting five-file dirty candidate and stops before any functional/hash stage, commit, push, or runtime retry."
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A9 — Disposable attempt 2 failure and pgTAP plan repair governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R2_PGTAP_PLAN_REPAIR_GOVERNANCE
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R2_PGTAP_PLAN_REPAIR_GOVERNANCE_RESULT_V1
+status: CHANGES_REQUIRED_SOURCE_GOVERNANCE_AUTHORING_AUTHORIZED
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized MacBook Codex to create or update exactly three governance documents for the R5-R2 pgTAP plan-count repair. No source edit, external transmission, Claude invocation, executable test, database/runtime action, stage, commit, or push is authorized."
+current_authority:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  head: 71570c3f7ac37f97b97002a83aa18b94e8193a62
+  tree: 1566df7ff5e57de26c2ada038b117d7a1e0abfac
+  vercel: SUCCESS
+  r5_r1_five_path_delivery_commit: 71570c3f7ac37f97b97002a83aa18b94e8193a62
+burned_disposable_attempt:
+  suffix: 20260902T144100Z-123caa
+  reuse_forbidden: true
+  retained_evidence_root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T144100Z-123caa
+  aggregate_manifest_sha256: 7ba16efe081e536abab4df342c8a67916e819e4d2bcee30ddc2722debbeed066
+  retained_artifact_count: 32
+  recomputed_artifact_hash_mismatch_count: 0
+  fresh_lane_removed: true
+  import_lane_removed: true
+  runtime_path_removed: true
+  residual_r5_containers: 0
+  shared_hosted_staging_or_production_contacted: false
+execution_results:
+  fresh_setup_full_migration_replay: PASS
+  fresh_migration_ledger: PASS
+  import_setup_full_migration_replay: PASS
+  import_migration_ledger: PASS
+  fresh_runtime_contract: 20_OF_20_PASS
+  fresh_existing_postal_pgtap: "EXIT_1_BAD_PLAN_PLANNED_74_RAN_75; all assertion bodies passed"
+  fresh_later_auth_and_lint: NOT_RUN_AFTER_FAIL_CLOSED_STOP
+  import_capture: NOT_RUN_AFTER_FRESH_FAILURE
+accepted_root_cause:
+  file: supabase/tests/jp_postal_master_rpc.test.sql
+  stale_plan_literal: SELECT plan(74);
+  actual_assertion_count: 75
+  added_assertion: "has_function public.jp_postal_import_rollback(uuid), human label 20b"
+  classification: CHANGES_REQUIRED_SOURCE_PGTAP_PLAN_COUNT_ONLY
+future_source_repair:
+  exact_write_allowlist:
+    - supabase/tests/jp_postal_master_rpc.test.sql
+  exact_edit: "Replace only SELECT plan(74); with SELECT plan(75);"
+  assertion_body_change_forbidden: true
+  assertion_order_change_forbidden: true
+  human_label_renumbering_forbidden: true
+  migration_harness_or_fixture_change_forbidden: true
+  authorization_granted_now: false
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R2_PGTAP_PLAN_REPAIR.md
+protected_metadata:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions:
+  - edit_the_one_file_source_repair_target_in_this_gate
+  - transmit_private_files_or_invoke_claude
+  - run_tests_or_database_or_supabase_runtime
+  - create_or_reuse_a_disposable_suffix
+  - stage_commit_push_or_mutate_pr_metadata
+  - access_shared_staging_production_provider_or_deployment
+  - read_or_change_protected_path_content
+decision: AUTHOR_EXACT_THREE_R5_R2_GOVERNANCE_PATHS_ONLY
+next: "MacBook Codex performs static acceptance of the exact three-document governance candidate and stops. A separate owner authorization is required to stage and locally commit those three documents. Normal push, private-source transmission, Claude one-file implementation, source delivery, and a fresh disposable rerun remain independent later gates."
+```

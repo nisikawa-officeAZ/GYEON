@@ -667,6 +667,36 @@ After the two-document governance push is independently verified, one bounded no
 
 **Exit:** MacBook Codex verifies the two-document governance commit and normal push, then independently reviews the Claude three-file literal synchronization. Stage, commit, push, disposable runtime retry, environment activation, Ready, merge, and deployment for the resulting five-file functional/hash candidate remain separate owner-approval gates.
 
+#### GDA-2A-OCR-POSTAL-MASTER-R5-R2 — pgTAP plan-count repair governance
+
+**Status:** GOVERNANCE AUTHORING AUTHORIZED / DISPOSABLE ATTEMPT BURNED / `CHANGES_REQUIRED_SOURCE` / ONE-FILE SOURCE REPAIR NOT YET AUTHORIZED / DATABASE RERUN NOT AUTHORIZED.
+
+**Current authority:** PR `#48` remains `OPEN/Draft`, base `main`, on branch `agent/estimate-wizard-ocr-postal-unified-r1` at commit `71570c3f7ac37f97b97002a83aa18b94e8193a62`, tree `1566df7ff5e57de26c2ada038b117d7a1e0abfac`, with Vercel `SUCCESS`. Commit `71570c3f7ac37f97b97002a83aa18b94e8193a62` delivered the exact five R5-R1 functional/hash paths by normal non-force push. The worktree was clean before this three-document governance candidate was authored.
+
+**Burned disposable attempt:** Fresh suffix `20260902T144100Z-123caa` is permanently burned and must never be resumed, repaired, or reused. Its retained evidence root is `/Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260902T144100Z-123caa`; aggregate manifest SHA-256 is `7ba16efe081e536abab4df342c8a67916e819e4d2bcee30ddc2722debbeed066`. The manifest contains 32 retained artifacts and independent recomputation found zero artifact-hash mismatches. Both disposable lanes stopped successfully, the runtime path was removed, no R5 container remained, and Git HEAD/tree/worktree returned unchanged and clean. No shared, hosted, staging, production, provider, or deployment environment was contacted.
+
+**Runtime result and accepted diagnosis:** Both fresh and import lane setup completed full migration replay and migration-ledger verification. In the fresh lane, `runtime-contract.test.sql` passed `20/20`. The existing `supabase/tests/jp_postal_master_rpc.test.sql` assertions themselves all passed, but pgTAP returned exit `1` because it planned 74 tests and ran 75. The added assertion `has_function('public', 'jp_postal_import_rollback', ARRAY['uuid'], '20b import rollback RPC exists')` increased the total to 75, while line 45 still declares `SELECT plan(74);`. This bad plan is an executable-test source defect, so the overall attempt is invalid. Fresh execution stopped before later Auth/lint gates and import capture was intentionally not run.
+
+**Future one-file source-repair allowlist — exactly one existing path:**
+
+1. `supabase/tests/jp_postal_master_rpc.test.sql`
+
+The only permitted future edit is the literal one-line replacement `SELECT plan(74);` → `SELECT plan(75);`. Assertion bodies, assertion order, human-readable assertion labels (including the existing label beginning `74`), SQL behavior, migrations, harness files, runtime fixtures, dependencies, and every other path must remain byte-identical. Renumbering labels is expressly unnecessary and forbidden in this repair.
+
+**Future static acceptance only:** After a separate owner authorization for implementation, the candidate may be checked only for the unique `plan(75)` literal, unchanged assertion structure, exact one-path diff, and `git diff --check` on that one file. No executable test, Supabase command, database, Docker, Colima, Auth, PostgREST, import, network, or fresh suffix is authorized by this governance record.
+
+**Current governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R2_PGTAP_PLAN_REPAIR.md` (new)
+
+This gate authorizes authoring and static review of those three governance paths only. It does not authorize external transmission, Claude invocation, source editing, tests, database/runtime access, suffix creation, stage, commit, push, PR mutation, Ready, merge, or deployment.
+
+**Protected-path boundary:** `ScreensPreview.tsx` remains pathname/mode/blob/Git-state only. The protected blob identities remain `c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f`, `accd22345054cc44f89156fd78eaba6dfe4242a4`, `32fda49583ae1217bc13711784ad8fa31744726c`, and `fe3c80f22fd80dcbfab076082473216dda582c14` for ScreensPreview, LINE migration, monthly-invoice migration, and monthly-invoice boundary test respectively.
+
+**Exit:** MacBook Codex verifies the exact three-document governance diff, the unchanged one-file repair target, protected metadata, clean diff format, and absence of every unrelated change. It then stops and requests a separate owner authorization to stage and locally commit only these three governance files. Governance push, external transmission, one-file Claude repair, source delivery, and a new fresh disposable runtime remain later independent gates.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.
