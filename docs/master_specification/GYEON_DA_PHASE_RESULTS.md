@@ -5402,3 +5402,80 @@ prohibited_actions:
 decision: AUTHOR_EXACT_THREE_R5_R4_GOVERNANCE_PATHS_ONLY
 next: "MacBook Codex statically verifies the exact three-document governance candidate and stops. Separate owner approvals are required for exact-path stage/local commit, normal push, Draft-PR instruction publication, private-source transmission, replacement Claude implementation, source delivery, and a new Disposable DB attempt."
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A13 — R5-R4 replacement-dispatch authority correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_A1_REPLACEMENT_DISPATCH_AUTHORITY
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_A1_REPLACEMENT_DISPATCH_AUTHORITY_RESULT_V1
+status: OWNER_AUTHORIZED_AUTHORITY_RECORDING_CONDITIONAL_ON_GOVERNANCE_DELIVERY
+date: 2026-09-03
+append_only: true
+owner_authorization: "After R5-R4 governance delivery and a second zero-edit Claude block, the owner explicitly authorized transmission of the exact six private files and the one-literal implementation. This gate records that authority in exactly three governance files. Stage, commit, push, PR comment, replacement invocation, source edit, test, and runtime remain separate gates."
+second_blocked_invocation:
+  session_id: 9808456b-7d77-44d6-b0e1-402c0b3e70e6
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR_RESULT_V1
+  verdict: BLOCKED
+  reason: "Committed directive and A12 still denied implementation authority, and comment 5517269091 was governance-only with DO NOT EXECUTE wording."
+  read_paths: 6
+  edited_paths: 0
+  prohibited_actions_taken: false
+  invocation_consumed: true
+  retry_unchanged_forbidden: true
+authority_base:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state_required: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  parent_head: 38fd915c317cc2442d1e197aead025414f8b0dad
+  parent_tree: b99fb2712a149da01990a6aa80680839ada91039
+  parent_vercel: SUCCESS
+  prior_governance_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/48#issuecomment-5517269091
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR.md
+delivery_activation_conditions:
+  direct_parent_must_equal: 38fd915c317cc2442d1e197aead025414f8b0dad
+  delivery_commit_path_count: 3
+  normal_non_force_push_required: true
+  remote_pr_head_must_equal_delivered_commit: true
+  pr_must_remain_open_draft_base_main: true
+  vercel_must_be_success: true
+  worktree_and_index_must_be_clean: true
+  superseding_pr_comment_must_identify: 5517269091
+  superseding_pr_comment_must_state_execution_authorized: true
+  codex_must_supply_verified_delivered_head_tree_and_comment_url: true
+supersession:
+  supersedes_a12_authorization_granted_now_false_after_activation: true
+  authorization_state_after_all_conditions_pass: ONE_REPLACEMENT_CLAUDE_DISPATCH_AUTHORIZED
+replacement_dispatch:
+  exact_read_allowlist:
+    - AGENTS.md
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+    - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR.md
+    - src/lib/geo/jp-postal-master-csv.ts
+    - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  exact_write_allowlist:
+    - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  exact_edit: "Replace only 99999,,0000007 with 99999,000,0000007."
+  permitted_tools:
+    - Read
+    - Grep
+    - Edit
+  consumed_on_candidate_failure_or_block: true
+  no_automatic_retry: true
+current_gate_prohibitions:
+  - stage_commit_or_push_the_three_governance_files
+  - publish_the_superseding_pr_comment_now
+  - transmit_private_files_or_invoke_claude_again_now
+  - edit_the_source_target_now
+  - run_tests_or_create_a_suffix_or_runtime
+  - access_database_supabase_docker_colima_or_hosted_environment
+  - source_delivery_ready_merge_migration_import_or_deployment
+  - read_or_change_protected_path_content
+decision: RECORD_R5_R4_A1_REPLACEMENT_AUTHORITY_IN_EXACT_THREE_GOVERNANCE_PATHS
+next: "MacBook Codex statically verifies the exact three-document authority candidate and stops for separate stage/local-commit approval. Normal push and a superseding PR comment are later gates. Only after all activation conditions pass may one new non-persistent Claude implementation dispatch run."
+```

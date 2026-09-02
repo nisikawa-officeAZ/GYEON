@@ -4,13 +4,13 @@ Instruction ID: `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR`
 
 Required result marker: `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR_RESULT_V1`
 
-Status: `GOVERNANCE CANDIDATE — NOT IMPLEMENTATION AUTHORITY`
+Status: `R5-R4-A1 OWNER AUTHORITY RECORDED — ONE REPLACEMENT DISPATCH ACTIVATES ONLY AFTER EXACT THREE-DOCUMENT GOVERNANCE DELIVERY AND A SUPERSEDING PR COMMENT`
 
 ## 1. Objective
 
 Repair one synthetic Japan Post CSV field in the R5 import-resume harness. The burned Disposable attempt proved that the fixture reaches the real production importer with an empty `oldPostalCode`, so parsing stops before the intended validate-only and canonical-URL boundary assertions.
 
-This document does not authorize implementation, private-source transmission, Claude invocation, tests, Git delivery, or another Disposable attempt. Those remain later independent gates after this governance candidate is committed, normally pushed, and published on the active Draft PR.
+This current governance-authoring state does not by itself authorize implementation, private-source transmission, Claude invocation, tests, Git delivery, or another Disposable attempt. Section 3.1 records the owner's one-replacement authority, which activates only after the exact governance delivery and superseding-PR-comment conditions are independently verified. Source delivery and another Disposable attempt remain later independent gates.
 
 ## 2. Fixed authority and evidence
 
@@ -28,11 +28,22 @@ This document does not authorize implementation, private-source transmission, Cl
 
 `src/lib/geo/jp-postal-master-csv.ts` requires `oldPostalCode` to contain one to five ASCII digits. The production-importer proof fixture in `scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs` contains `99999,,0000007`, so its second field is empty. The two final proof assertions both stop during CSV parsing and do not reach their intended validate-only or canonical-URL checks.
 
-One earlier Claude session, `caed03be-dcce-4fe6-b6a3-4b0b3ec56199`, independently confirmed the diagnosis but correctly returned `BLOCKED_UNGOVERNED_INSTRUCTION` with zero edits. That session is consumed and must not be resumed or counted as implementation.
+Two earlier Claude sessions independently confirmed the diagnosis and made zero edits. Session `caed03be-dcce-4fe6-b6a3-4b0b3ec56199` stopped because no R5-R4 governance existed. After governance commit `38fd915c317cc2442d1e197aead025414f8b0dad` and governance-only PR comment `5517269091`, session `9808456b-7d77-44d6-b0e1-402c0b3e70e6` stopped because this directive and ledger A12 still denied implementation authority. Both sessions are consumed and must not be resumed or retried unchanged.
+
+### 3.1 R5-R4-A1 superseding execution authority
+
+On 2026-09-03 the owner separately authorized transmission of the exact six private files and the one-literal implementation. This authority activates only after all of the following conditions pass:
+
+1. This directive, `GYEON_DA_COMPLETION_PLAN.md`, and `GYEON_DA_PHASE_RESULTS.md` are delivered together in exactly one normal non-force commit whose direct parent is `38fd915c317cc2442d1e197aead025414f8b0dad`.
+2. MacBook Codex verifies PR `#48` remains `OPEN/Draft`, base `main`, remote HEAD equals the delivered governance commit, Vercel is `SUCCESS`, and the worktree/index is clean.
+3. MacBook Codex publishes a new superseding PR comment that identifies governance-only comment `5517269091`, states that R5-R4-A1 execution is authorized, and records the delivered HEAD/tree and exact six-read/one-write/one-literal boundary.
+4. MacBook Codex supplies the verified delivered HEAD/tree and superseding comment URL to one new non-persistent terminal Claude invocation.
+
+Once all four conditions pass, exactly one replacement Claude invocation is authorized. It is consumed whether it returns a candidate, fails, or blocks. No automatic retry is authorized. Stage/commit/push of the resulting source candidate and any new Disposable attempt remain separate owner gates.
 
 ## 4. Future Claude read allowlist — exactly six paths
 
-Only after separate owner authorization following governance delivery may one new non-persistent Claude invocation read exactly:
+Only after every R5-R4-A1 activation condition in section 3.1 passes may one new non-persistent Claude invocation read exactly:
 
 1. `AGENTS.md`
 2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
@@ -67,7 +78,7 @@ No other byte may change. Do not alter the direct-RPC synthetic rows, comments, 
 
 ## 7. Tool and execution boundary
 
-A later separately authorized Claude implementation may use only `Read`, `Grep`, and `Edit` on the exact scopes above. It must not use Bash, Git, GitHub, WebFetch, WebSearch, tests, Node execution, DB, Supabase, Docker, Colima, HTTP, Auth, PostgREST, providers, Preview, staging, production, Ready, merge, migration application, import, or deployment.
+The single activated Claude implementation may use only `Read`, `Grep`, and `Edit` on the exact scopes above. It must not use Bash, Git, GitHub, WebFetch, WebSearch, tests, Node execution, DB, Supabase, Docker, Colima, HTTP, Auth, PostgREST, providers, Preview, staging, production, Ready, merge, migration application, import, or deployment.
 
 MacBook Codex will independently perform only these static checks after the candidate exists:
 
@@ -90,7 +101,7 @@ Source stage/commit/push and every new Disposable attempt require later separate
 
 ## 9. Required future result
 
-After separate implementation authorization, return one report headed by:
+After the single replacement implementation authority in section 3.1 is activated, return one report headed by:
 
 `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_R4_FIXTURE_REPAIR_RESULT_V1`
 
