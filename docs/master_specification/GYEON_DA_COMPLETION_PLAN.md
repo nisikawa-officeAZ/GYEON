@@ -597,6 +597,8 @@ No package, lockfile, dependency, existing ZipCloud helper, OCR mapper, save RPC
 2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R4_IMPLEMENTATION.md` (new)
 
+**R4-A1 dispatch correction:** Pre-dispatch dependency tracing proved that the focused importer test necessarily loads `src/lib/geo/jp-postal-master-csv.ts` and `src/lib/geo/jp-postal-master-contract.ts`, while the `tsx` loader uses `tsconfig.json` for the `@/*` path mapping. These three existing files are added as read-only dependencies, increasing the complete read scope from 11 to 14 paths. The implementation write allowlist remains exactly five paths. The attempted 11-file dispatch stopped before Claude invocation; zero files were transmitted and no implementation run was consumed.
+
 **Exit:** Verify the exact three-path governance candidate, protected blob metadata, and `git diff --check`; then request separate literal stage/local-commit authorization. Normal push and the later five-file Claude implementation/test dispatch remain separate authorizations.
 
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate

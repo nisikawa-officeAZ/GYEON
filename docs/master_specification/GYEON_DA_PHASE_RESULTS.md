@@ -4376,3 +4376,39 @@ prohibited_actions_confirmed:
 decision: AUTHOR_EXACT_THREE_PATH_POSTAL_R4_IMPLEMENTATION_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R4-A1 — Implementation read-scope dependency correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R4_A1_READ_SCOPE_CORRECTION
+status: CORRECTION_AUTHORIZED_FOR_EXACT_THREE_PATH_COMMIT_AND_NORMAL_PUSH
+date: 2026-09-02
+append_only: true
+trigger:
+  claude_invoked: false
+  files_transmitted: 0
+  implementation_run_consumed: false
+  reason: "Focused importer tests load two postal contracts and tsx resolves the @ alias through tsconfig.json."
+correction:
+  mandatory_complete_read_scope_count_before: 11
+  mandatory_complete_read_scope_count_after: 14
+  added_read_only_paths:
+    - src/lib/geo/jp-postal-master-csv.ts
+    - src/lib/geo/jp-postal-master-contract.ts
+    - tsconfig.json
+  implementation_write_allowlist_count: 5
+  implementation_write_allowlist_changed: false
+exact_write_and_delivery_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R4_IMPLEMENTATION.md
+prohibited_actions_confirmed:
+  claude_or_external_transmission: false
+  source_or_test_edit: false
+  executable_test_or_build: false
+  database_supabase_provider_or_environment_access: false
+  migration_apply_or_csv_import: false
+  preview_ready_merge_deploy: false
+decision: CORRECT_TO_EXACT_14_READ_PATHS_AND_RETAIN_EXACT_5_WRITE_PATHS
+next: "VERIFY_EXACT_THREE_PATH_DIFF_STAGE_LOCAL_COMMIT_NORMAL_PUSH_THEN_STOP_BEFORE_CLAUDE_IMPLEMENTATION_REDISPATCH"
+```

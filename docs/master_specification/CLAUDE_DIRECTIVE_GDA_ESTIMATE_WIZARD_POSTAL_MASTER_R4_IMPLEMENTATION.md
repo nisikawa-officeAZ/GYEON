@@ -36,6 +36,9 @@ Read only these paths completely:
 9. `scripts/postal-master/import-japan-post.ts`
 10. `scripts/postal-master/import-japan-post.test.ts`
 11. `package.json`
+12. `src/lib/geo/jp-postal-master-csv.ts`
+13. `src/lib/geo/jp-postal-master-contract.ts`
+14. `tsconfig.json`
 
 If another path is essential, stop with `BLOCKED_READ_SCOPE`, name the exact path, and do not read or edit it.
 
