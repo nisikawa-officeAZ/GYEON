@@ -565,6 +565,40 @@ No package, lockfile, dependency, existing ZipCloud helper, OCR mapper, save RPC
 
 **Exit:** Verify the exact three-path candidate, protected blob metadata, and `git diff --check`; then request separate literal stage/local-commit authorization. Do not dispatch Claude or modify source before that later authorization and delivery gate.
 
+### GDA-2A-OCR-POSTAL-MASTER-R4 — Bounded pre-activation source repair governance
+
+**Status:** R3 READ-ONLY DIAGNOSIS COMPLETED / ROOT CAUSES ACCEPTED / CLAUDE ABORT-DESIGN PROPOSAL CORRECTED BY CODEX / R4 IMPLEMENTATION GOVERNANCE CANDIDATE UNSTAGED/UNCOMMITTED. This gate authors only the exact three governance paths below. It does not authorize source edits, tests, Claude transmission, Git delivery, database access, migration apply, CSV import, Preview, Ready, merge, or deployment.
+
+**Accepted R3 findings:** The postal migration strips `authenticated` schema usage required by the earlier GYEON-order private-function/RLS contract; its schema-wide table revoke is overbroad; interrupted imports are not resumable; duplicate append sequences are described as idempotent but are surfaced to the CLI as failures; the importer does not bind writes to an expected Supabase project ref and has no offline validate-only mode; and normal migration application cannot be called postal-only until remote history proves all earlier migrations are already applied.
+
+**Codex repair contract — mandatory:**
+
+1. Remove the postal migration's destructive shared-schema privilege reset. Replace the all-private-tables revoke with explicit revokes against only the three postal tables. Preserve the existing authenticated GYEON-order private-function contract and keep all postal tables inaccessible directly to browser roles.
+2. Add one service-role-only status RPC keyed by exact source date, SHA-256, and expected row count. It returns only safe batch/status/sequence metadata and never a postal address or source row.
+3. Make `staged`/`validating` imports deterministically resumable. The CLI must skip already accepted sequences and treat a concurrent duplicate sequence as a zero-write successful no-op. It must re-check status after a begin race.
+4. Do not add an abort/delete/reset path in R4. Do not delete partial master rows, recycle a terminal `rejected` identity, or relabel a reset batch as `staged`. `rejected`, `rolled_back`, and promoted-but-superseded identities remain fail-closed.
+5. Require an explicit expected project ref for every mutating mode. Require a separately typed confirmation project ref, parse the canonical project ref from `SUPABASE_URL`, and require all three values to match before client creation or RPC. Custom/ambiguous hosts fail closed in R4.
+6. Add import `--validate-only`: read, checksum, parse, normalize, count, and chunk locally with no Supabase URL/key requirement, client creation, network, or RPC. Logs remain limited to source date, checksum, safe counts, project ref, batch id, and state—never rows, addresses, URLs, or secrets.
+7. The development-project migration-history comparison, disposable database runtime, environment migration apply, and real Japan Post CSV import remain later independent gates.
+
+**Future implementation write allowlist — exactly five existing paths:**
+
+1. `supabase/migrations/20260901001246_jp_postal_master.sql`
+2. `supabase/tests/jp_postal_master_rpc.test.sql`
+3. `src/lib/geo/jp-postal-master-migration-contract.test.ts`
+4. `scripts/postal-master/import-japan-post.ts`
+5. `scripts/postal-master/import-japan-post.test.ts`
+
+**Current source baseline:** PR `#48` must remain `OPEN/Draft`, base `main`, branch `agent/estimate-wizard-ocr-postal-unified-r1`, at commit/tree `99e7e20629ff4c4b5037c4263cce16bc39eceb05` / `6cd7dc8f1ee6689c3358f6f2b3111571c48d0aa8` before this governance candidate. A later dispatch must bind its own exact committed/pushed head and prove that only the three governance paths below changed from this source baseline.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R4_IMPLEMENTATION.md` (new)
+
+**Exit:** Verify the exact three-path governance candidate, protected blob metadata, and `git diff --check`; then request separate literal stage/local-commit authorization. Normal push and the later five-file Claude implementation/test dispatch remain separate authorizations.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.

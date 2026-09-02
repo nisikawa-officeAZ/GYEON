@@ -4314,3 +4314,65 @@ prohibited_actions_confirmed:
 decision: CORRECT_TO_EXACT_24_EXISTING_READ_PATHS
 next: "VERIFY_EXACT_THREE_PATH_DIFF_STAGE_LOCAL_COMMIT_NORMAL_PUSH_THEN_STOP_BEFORE_CLAUDE_REDISPATCH"
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R4-G1 — Accepted diagnosis and bounded repair governance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R4_IMPLEMENTATION_GOVERNANCE
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-02
+append_only: true
+r3_diagnosis:
+  result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R3_READ_ONLY_REPAIR_DIAGNOSIS_RESULT_V1
+  claude_verdict: READY_FOR_BOUNDED_POSTAL_R3_REPAIR
+  invocation_count: 1
+  tools_used: 0
+  web_requests: 0
+  session_persisted: false
+  files_supplied: 24
+  claude_file_git_database_or_provider_mutation: false
+codex_disposition: ROOT_CAUSES_ACCEPTED_IMPLEMENTATION_CONTRACT_CORRECTED
+accepted_findings:
+  - "The postal migration revokes authenticated usage on the shared private schema and breaks the earlier GYEON-order private-function/RLS contract."
+  - "The all-tables private-schema revoke is overbroad and must become object-scoped."
+  - "Staged/validating imports are stranded after interruption and duplicate sequence currently surfaces as a CLI failure."
+  - "Mutating CLI modes lack expected-project-ref binding and validate-only operation."
+  - "Remote migration history must be proved before any all-pending migration command is authorized."
+codex_corrections:
+  - "R4 uses resume/status and idempotent duplicate-sequence success; it does not add Claude's proposed abort/delete/reset path."
+  - "Rejected, rolled-back, and promoted-but-superseded identities remain terminal and fail closed."
+  - "The verified no-postal-migration statement applies only to the observed development project, not every environment."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 99e7e20629ff4c4b5037c4263cce16bc39eceb05
+  tree: 6cd7dc8f1ee6689c3358f6f2b3111571c48d0aa8
+future_exact_write_allowlist:
+  - supabase/migrations/20260901001246_jp_postal_master.sql
+  - supabase/tests/jp_postal_master_rpc.test.sql
+  - src/lib/geo/jp-postal-master-migration-contract.test.ts
+  - scripts/postal-master/import-japan-post.ts
+  - scripts/postal-master/import-japan-post.test.ts
+exact_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R4_IMPLEMENTATION.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  source_or_test_edit: false
+  claude_or_external_transmission: false
+  executable_test_or_build: false
+  database_supabase_provider_or_environment_access: false
+  migration_apply_or_csv_import: false
+  stage_commit_push_pr_mutation: false
+  preview_ready_merge_deploy: false
+decision: AUTHOR_EXACT_THREE_PATH_POSTAL_R4_IMPLEMENTATION_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
+```
