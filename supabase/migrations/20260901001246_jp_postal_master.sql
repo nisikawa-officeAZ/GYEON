@@ -17,7 +17,10 @@
 
 create schema if not exists private;
 
-revoke all on schema private from public, anon, authenticated, service_role;
+-- The `private` schema is shared with earlier migrations. Never reset schema-wide privileges here:
+-- in particular, the GYEON-order contract grants authenticated callers USAGE so its narrow
+-- `private.gyeon_order_v3_can_read_dealer(uuid)` RLS helper remains callable. Postal import code
+-- needs only the following additive service-role schema grant; postal tables remain object-denied.
 grant usage on schema private to service_role;
 
 -- ── Tables ────────────────────────────────────────────────────────────────────────────────────
@@ -130,7 +133,9 @@ alter table private.jp_postal_active_batch enable row level security;
 -- No role -- including service_role -- receives a direct table grant on any private table (repair
 -- A1-4). service_role writes exclusively through the SECURITY DEFINER import RPCs below, whose
 -- function owner privileges (not the caller's own table grants) perform the actual read/write.
-revoke all on all tables in schema private from public, anon, authenticated, service_role;
+revoke all on table private.jp_postal_import_batches from public, anon, authenticated, service_role;
+revoke all on table private.jp_postal_master from public, anon, authenticated, service_role;
+revoke all on table private.jp_postal_active_batch from public, anon, authenticated, service_role;
 
 -- ── Public RPCs — authenticated forward/reverse lookup ───────────────────────────────────────
 --
@@ -275,12 +280,79 @@ grant execute on function public.jp_postal_master_lookup_reverse(text) to authen
 
 -- ── Public RPCs — service-role-only controlled import ────────────────────────────────────────
 --
--- Repair A1-3: authorization for the four import RPCs below is enforced EXCLUSIVELY by the
+-- Authorization for the five import RPCs below is enforced EXCLUSIVELY by the
 -- `revoke all ... grant execute ... to service_role` posture on each function (Postgres/PostgREST
 -- grant-level authorization), never by an internal `auth.role()` check. `auth.role()` depends on
 -- Supabase Auth request-context helpers that are absent from a disposable pgTAP session and from any
 -- plain `SET ROLE`/`SET SESSION AUTHORIZATION` switch, so it cannot be exercised or proven there; the
 -- GRANT/REVOKE posture works identically in PostgREST and in a bare `SET LOCAL ROLE service_role`.
+
+create or replace function public.jp_postal_import_status(
+  p_source_date date,
+  p_sha256 text,
+  p_expected_row_count integer
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_batch private.jp_postal_import_batches%rowtype;
+  v_active_batch_id uuid;
+begin
+  if p_source_date is null then
+    return jsonb_build_object('result_code', 'INVALID_SOURCE_DATE');
+  end if;
+  if p_sha256 is null or p_sha256 !~ '^[0-9a-f]{64}$' then
+    return jsonb_build_object('result_code', 'INVALID_SHA256');
+  end if;
+  if p_expected_row_count is null or p_expected_row_count < 0 then
+    return jsonb_build_object('result_code', 'INVALID_EXPECTED_ROW_COUNT');
+  end if;
+
+  select * into v_batch
+  from private.jp_postal_import_batches
+  where source_date = p_source_date and sha256 = p_sha256;
+
+  if not found then
+    return jsonb_build_object(
+      'result_code', 'NOT_FOUND',
+      'expected_row_count', p_expected_row_count,
+      'appended_sequences', '[]'::jsonb,
+      'is_active', false
+    );
+  end if;
+
+  if v_batch.expected_row_count is distinct from p_expected_row_count then
+    return jsonb_build_object(
+      'result_code', 'EXPECTED_ROW_COUNT_MISMATCH',
+      'batch_id', v_batch.id,
+      'status', v_batch.status,
+      'expected_row_count', v_batch.expected_row_count,
+      'appended_sequences', to_jsonb(v_batch.appended_sequences),
+      'is_active', false
+    );
+  end if;
+
+  select batch_id into v_active_batch_id
+  from private.jp_postal_active_batch
+  where singleton;
+
+  return jsonb_build_object(
+    'result_code', 'OK',
+    'batch_id', v_batch.id,
+    'status', v_batch.status,
+    'expected_row_count', v_batch.expected_row_count,
+    'appended_sequences', to_jsonb(v_batch.appended_sequences),
+    'is_active', v_active_batch_id is not distinct from v_batch.id
+  );
+end;
+$$;
+
+revoke all on function public.jp_postal_import_status(date, text, integer) from public, anon, authenticated, service_role;
+grant execute on function public.jp_postal_import_status(date, text, integer) to service_role;
 
 create or replace function public.jp_postal_import_begin(p_source_date date, p_sha256 text, p_expected_row_count integer)
 returns jsonb
@@ -293,10 +365,13 @@ declare
   v_active_batch_id uuid;
   v_batch_id uuid;
 begin
-  if p_sha256 !~ '^[0-9a-f]{64}$' then
+  if p_source_date is null then
+    return jsonb_build_object('result_code', 'INVALID_SOURCE_DATE');
+  end if;
+  if p_sha256 is null or p_sha256 !~ '^[0-9a-f]{64}$' then
     return jsonb_build_object('result_code', 'INVALID_SHA256');
   end if;
-  if p_expected_row_count < 0 then
+  if p_expected_row_count is null or p_expected_row_count < 0 then
     return jsonb_build_object('result_code', 'INVALID_EXPECTED_ROW_COUNT');
   end if;
 
@@ -327,10 +402,13 @@ begin
     for update;
   end if;
 
+  if v_existing.expected_row_count is distinct from p_expected_row_count then
+    return jsonb_build_object('result_code', 'EXPECTED_ROW_COUNT_MISMATCH');
+  end if;
   if v_existing.status in ('staged', 'validating') then
-    -- Repair A2-3: a second begin for an identity that is still staged/validating is a stable
-    -- non-OK conflict. No resume protocol exists in this correction, so this branch must never
-    -- expose a batch_id or any other writable/resumable success shape.
+    -- Begin remains a stable non-OK result for an identity another runner may have created. The
+    -- caller must re-read the service-role status RPC once and resume only the exact identity/count;
+    -- begin itself never exposes a writable batch id through this race outcome.
     return jsonb_build_object('result_code', 'IMPORT_IN_PROGRESS');
   end if;
   if v_existing.status = 'promoted' then
@@ -389,11 +467,11 @@ begin
     return jsonb_build_object('result_code', 'INVALID_BATCH_SIZE');
   end if;
 
-  -- Repair A1-1: a sequence already recorded as appended (a resumed/replayed `begin` followed by the
-  -- identical `append` call) is a stable, zero-row-write result -- never a second physical insert of
-  -- the same rows.
+  -- A sequence already recorded as appended is a successful, explicit, zero-row-write no-op. The
+  -- caller may have learned an older status immediately before another importer appended the same
+  -- sequence, so returning a failure here would make the resume protocol race-prone.
   if p_sequence = ANY(v_appended_sequences) then
-    return jsonb_build_object('result_code', 'DUPLICATE_SEQUENCE');
+    return jsonb_build_object('result_code', 'OK', 'appended_count', 0, 'already_appended', true);
   end if;
 
   -- Repair A1-6: fail-closed payload validation, evaluated over every row BEFORE any insert, so an
@@ -473,7 +551,7 @@ begin
 
   get diagnostics v_inserted = row_count;
 
-  return jsonb_build_object('result_code', 'OK', 'appended_count', v_inserted);
+  return jsonb_build_object('result_code', 'OK', 'appended_count', v_inserted, 'already_appended', false);
 end;
 $$;
 

@@ -23,7 +23,8 @@
 -- the fixtures, never through a bare SELECT while service_role is active. (2) jp_postal_import_finalize
 -- and jp_postal_import_rollback now both lock the singleton pointer FIRST, before any batch row, in
 -- the same order, closing a preventable finalize/rollback deadlock cycle. (3) A second begin for a
--- still staged/validating identity now returns IMPORT_IN_PROGRESS instead of a resumable OK. (4) The
+-- still staged/validating identity returns IMPORT_IN_PROGRESS, while the separate status RPC
+-- supplies exact resume evidence. (4) The
 -- append row-payload validation now rejects NULL sequence, NULL/non-array rows, non-object elements,
 -- and any element whose required field is missing or holds the wrong JSON scalar type.
 --
@@ -41,7 +42,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET LOCAL search_path = extensions, pg_temp, public, pg_catalog;
 
-SELECT plan(65);
+SELECT plan(74);
 
 -- ===========================================================================
 -- 01-08: schema, tables, columns, indexes
@@ -86,6 +87,7 @@ SELECT is(
 SELECT is(
   (SELECT count(*)::bigint FROM information_schema.role_table_grants
     WHERE table_schema = 'private'
+      AND table_name IN ('jp_postal_import_batches', 'jp_postal_master', 'jp_postal_active_batch')
       AND grantee IN ('anon', 'authenticated', 'service_role', 'public')),
   0::bigint,
   '14 no anon/authenticated/service_role/public grant exists on any private schema table (repair A1-4)'
@@ -110,8 +112,9 @@ SELECT is(
 -- ===========================================================================
 SELECT has_function('public', 'jp_postal_master_lookup_forward', ARRAY['text'], '17 forward lookup RPC exists');
 SELECT has_function('public', 'jp_postal_master_lookup_reverse', ARRAY['text'], '18 reverse lookup RPC exists');
-SELECT has_function('public', 'jp_postal_import_begin', ARRAY['date', 'text', 'integer'], '19 import begin RPC exists');
-SELECT has_function('public', 'jp_postal_import_rollback', ARRAY['uuid'], '20 import rollback RPC exists');
+SELECT has_function('public', 'jp_postal_import_status', ARRAY['date', 'text', 'integer'], '19 import status RPC exists');
+SELECT has_function('public', 'jp_postal_import_begin', ARRAY['date', 'text', 'integer'], '20 import begin RPC exists');
+SELECT has_function('public', 'jp_postal_import_rollback', ARRAY['uuid'], '20b import rollback RPC exists');
 
 SELECT is(
   (SELECT count(*)::bigint FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
@@ -125,7 +128,7 @@ SELECT is(
 SELECT is(
   (SELECT count(*)::bigint FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
     WHERE n.nspname = 'public' AND p.proname IN (
-      'jp_postal_import_begin', 'jp_postal_import_append', 'jp_postal_import_finalize', 'jp_postal_import_rollback'
+      'jp_postal_import_status', 'jp_postal_import_begin', 'jp_postal_import_append', 'jp_postal_import_finalize', 'jp_postal_import_rollback'
     ) AND (has_function_privilege('anon', p.oid, 'EXECUTE') OR has_function_privilege('authenticated', p.oid, 'EXECUTE'))),
   0::bigint,
   '22 neither anon nor authenticated has EXECUTE on any of the four import RPCs'
@@ -139,12 +142,12 @@ SELECT is(
     WHERE n.nspname = 'public'
       AND p.proname IN (
         'jp_postal_master_lookup_forward', 'jp_postal_master_lookup_reverse',
-        'jp_postal_import_begin', 'jp_postal_import_append', 'jp_postal_import_finalize', 'jp_postal_import_rollback'
+        'jp_postal_import_status', 'jp_postal_import_begin', 'jp_postal_import_append', 'jp_postal_import_finalize', 'jp_postal_import_rollback'
       )
       AND p.prosecdef
       AND NOT (p.proconfig IS NOT NULL AND 'search_path=""' = ANY (p.proconfig))),
   0::bigint,
-  '23 every one of the six new SECURITY DEFINER functions pins search_path to empty'
+  '23 every one of the seven new SECURITY DEFINER functions pins search_path to empty'
 );
 
 -- ===========================================================================
@@ -328,8 +331,20 @@ SELECT is(
         "flagMultiPostalPerTown":"0","flagKoazaBanchi":"0","flagHasChome":"0","flagMultiTownPerPostal":"0",
         "updateFlag":"0","changeReasonCode":"0"}]'::jsonb
    )) ->> 'result_code'),
-  'DUPLICATE_SEQUENCE',
-  '31 repair A1-1: replaying sequence 0 for an already-appended batch is a stable zero-write no-op'
+  'OK',
+  '31 repair R4: replaying sequence 0 is an explicit successful zero-write no-op'
+);
+SELECT is(
+  (SELECT (public.jp_postal_import_append(
+     pg_temp.jpm_batch_id(repeat('b', 64)), 0,
+     '[{"jisCode":"13101","oldPostalCode":"100","postalCode":"1000001",
+        "prefectureKana":"ﾄｳｷﾖｳﾄ","cityKana":"ﾁﾖﾀﾞｸ","townKana":"ﾁﾖﾀﾞ",
+        "prefectureKanji":"東京都","cityKanji":"千代田区","townKanji":"千代田",
+        "flagMultiPostalPerTown":"0","flagKoazaBanchi":"0","flagHasChome":"0","flagMultiTownPerPostal":"0",
+        "updateFlag":"0","changeReasonCode":"0"}]'::jsonb
+   )) ->> 'already_appended'),
+  'true',
+  '31b repair R4: duplicate sequence explicitly reports already_appended=true'
 );
 SELECT is(
   pg_temp.jpm_master_row_count(repeat('b', 64)),
@@ -496,8 +511,8 @@ SELECT is(
 RESET ROLE;
 
 -- ===========================================================================
--- 54-57: repair A2-3 -- a second begin for a still in-progress (staged) identity is a stable
--- non-OK conflict, never a resumable/writable success, and no path exists to append against it.
+-- 54-57: begin itself never returns resumable data for an in-progress identity. The R4 status
+-- assertions below separately prove the service-role-only resume path.
 -- ===========================================================================
 SET LOCAL ROLE service_role;
 SELECT ok(
@@ -576,8 +591,56 @@ SELECT is(
 );
 RESET ROLE;
 
--- 65: no test above left a dangling role switch.
-SELECT is(current_user, session_user, '65 the transaction role has been reset to the session role');
+-- R4 status/resume contract: service-role-only identity/count/status metadata and fail-closed state.
+SET LOCAL ROLE authenticated;
+SELECT throws_ok(
+  $$ SELECT public.jp_postal_import_status('2026-09-07'::date, repeat('9', 64), 1); $$,
+  '42501',
+  NULL,
+  '66 authenticated cannot execute the service-role-only status RPC'
+);
+RESET ROLE;
+
+SET LOCAL ROLE service_role;
+SELECT is(
+  (public.jp_postal_import_status('2026-09-09'::date, repeat('6', 64), 1)) ->> 'result_code',
+  'NOT_FOUND',
+  '67 status reports NOT_FOUND for a fresh identity'
+);
+SELECT is(
+  (public.jp_postal_import_status('2026-09-07'::date, repeat('9', 64), 1)) ->> 'status',
+  'staged',
+  '68 status exposes the resumable staged state'
+);
+SELECT is(
+  (public.jp_postal_import_status('2026-09-07'::date, repeat('9', 64), 1)) ->> 'batch_id',
+  pg_temp.jpm_batch_id(repeat('9', 64))::text,
+  '69 status exposes the exact resumable batch id'
+);
+SELECT is(
+  (public.jp_postal_import_status('2026-09-07'::date, repeat('9', 64), 2)) ->> 'result_code',
+  'EXPECTED_ROW_COUNT_MISMATCH',
+  '70 status fails closed when expected count differs for an existing identity'
+);
+SELECT is(
+  (public.jp_postal_import_status('2026-09-01'::date, repeat('b', 64), 4)) -> 'appended_sequences',
+  '[0]'::jsonb,
+  '71 status returns stable appended-sequence evidence'
+);
+SELECT is(
+  (public.jp_postal_import_status('2026-09-01'::date, repeat('b', 64), 4)) ->> 'is_active',
+  'true',
+  '72 current promoted generation is marked active'
+);
+SELECT is(
+  (public.jp_postal_import_status('2026-09-06'::date, repeat('8', 64), 1)) ->> 'status',
+  'rolled_back',
+  '73 terminal rolled-back identity remains visible and non-resumable'
+);
+RESET ROLE;
+
+-- 74: no test above left a dangling role switch.
+SELECT is(current_user, session_user, '74 the transaction role has been reset to the session role');
 
 SELECT * FROM finish();
 ROLLBACK;

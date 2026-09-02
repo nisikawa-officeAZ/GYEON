@@ -15,6 +15,11 @@ import path from "node:path";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MIGRATION_PATH = path.resolve(__dirname, "../../../supabase/migrations/20260901001246_jp_postal_master.sql");
 const sql = readFileSync(MIGRATION_PATH, "utf8");
+const GYEON_ORDER_MIGRATION_PATH = path.resolve(
+  __dirname,
+  "../../../supabase/migrations/20260829101726_gyeon_order_v3_contract.sql",
+);
+const gyeonOrderSql = readFileSync(GYEON_ORDER_MIGRATION_PATH, "utf8");
 
 test("migration file is present and non-empty", () => {
   assert.equal(sql.length > 0, true);
@@ -33,20 +38,29 @@ test("every security definer function pins search_path to empty", () => {
 
 // ── Privileges: default-deny then minimum grants ────────────────────────────
 
-test("schema private is revoked from every role before any grant", () => {
-  const revokeIdx = sql.indexOf("revoke all on schema private from public, anon, authenticated, service_role");
-  const grantIdx = sql.indexOf("grant usage on schema private to service_role");
-  assert.equal(revokeIdx >= 0, true);
-  assert.equal(grantIdx > revokeIdx, true);
+test("postal migration never resets shared private-schema privileges", () => {
+  assert.equal(/revoke\s+all\s+on\s+schema\s+private/i.test(sql), false);
+  assert.equal(/revoke\s+all\s+on\s+all\s+tables\s+in\s+schema\s+private/i.test(sql), false);
+  assert.match(sql, /grant usage on schema private to service_role/);
 });
 
-test("repair A1-4: no role, including service_role, receives a direct table grant on any private table", () => {
-  const revokeIdx = sql.indexOf("revoke all on all tables in schema private from public, anon, authenticated, service_role");
-  assert.equal(revokeIdx >= 0, true);
+test("postal migration revokes direct access on exactly the three postal tables", () => {
   for (const table of ["jp_postal_import_batches", "jp_postal_master", "jp_postal_active_batch"]) {
+    assert.match(
+      sql,
+      new RegExp(`revoke all on table private\\.${table} from public, anon, authenticated, service_role`),
+    );
     const grantRegex = new RegExp(`grant [^;]*on private\\.${table}`, "i");
     assert.equal(grantRegex.test(sql), false, `expected no direct grant of any kind on private.${table}`);
   }
+});
+
+test("earlier GYEON-order migration retains authenticated private-schema/function authority", () => {
+  assert.match(gyeonOrderSql, /grant usage on schema private to authenticated/);
+  assert.match(
+    gyeonOrderSql,
+    /grant execute on function private\.gyeon_order_v3_can_read_dealer\(uuid\) to authenticated/,
+  );
 });
 
 test("no role/table pair grants direct access to a browser-reachable role (anon/authenticated) on any private table", () => {
@@ -67,8 +81,9 @@ test("the two lookup RPCs are revoked from every role then granted only to authe
   }
 });
 
-test("the four import RPCs are revoked from every role then granted only to service_role", () => {
+test("the five import RPCs are revoked from every role then granted only to service_role", () => {
   const importFns = [
+    "jp_postal_import_status\\(date, text, integer\\)",
     "jp_postal_import_begin\\(date, text, integer\\)",
     "jp_postal_import_append\\(uuid, integer, jsonb\\)",
     "jp_postal_import_finalize\\(uuid\\)",
@@ -104,10 +119,30 @@ test("repair A1-3: no import RPC depends on auth.role(); authorization is GRANT-
   assert.equal(/auth\.role\(\)/.test(importSection), false);
 });
 
-test("repair A1-1: the batch identity row carries append-sequence evidence and append rejects a duplicate", () => {
+test("duplicate append sequence is an explicit successful zero-write no-op", () => {
   assert.match(sql, /appended_sequences\s+integer\[\]\s+not null default '\{\}'/);
   assert.match(sql, /if p_sequence = ANY\(v_appended_sequences\) then/);
-  assert.match(sql, /'result_code', 'DUPLICATE_SEQUENCE'/);
+  assert.match(sql, /'result_code', 'OK', 'appended_count', 0, 'already_appended', true/);
+});
+
+test("service-role status RPC is keyed by identity/count and returns only stable safe metadata", () => {
+  const statusIdx = sql.indexOf("function public.jp_postal_import_status");
+  const beginIdx = sql.indexOf("function public.jp_postal_import_begin");
+  const statusBody = sql.slice(statusIdx, beginIdx);
+  assert.match(statusBody, /where source_date = p_source_date and sha256 = p_sha256/);
+  assert.match(statusBody, /v_batch\.expected_row_count is distinct from p_expected_row_count/);
+  assert.match(statusBody, /'result_code', 'EXPECTED_ROW_COUNT_MISMATCH'/);
+  for (const field of ["batch_id", "status", "expected_row_count", "appended_sequences", "is_active"]) {
+    assert.match(statusBody, new RegExp(`'${field}'`));
+  }
+  assert.equal(/postal_code|address_key|prefecture|city_kanji|town_kanji/.test(statusBody), false);
+});
+
+test("repair adds no abort/delete/truncate/reset or terminal-batch recycling path", () => {
+  assert.equal(/jp_postal_import_abort/i.test(sql), false);
+  assert.equal(/delete\s+from\s+private\.jp_postal/i.test(sql), false);
+  assert.equal(/truncate\s+(table\s+)?private\.jp_postal/i.test(sql), false);
+  assert.equal(/set\s+status\s*=\s*'staged'/.test(sql), false);
 });
 
 test("repair A1-5: begin/append/finalize/rollback each lock their batch row with SELECT ... FOR UPDATE", () => {
@@ -403,7 +438,7 @@ test("repair A3: the test-27/test-28 identity-b fixture performs exactly one beg
 test("repair A3: the intentional identity-i conflict replay (tests 54-57) still calls begin repeatedly to prove IMPORT_IN_PROGRESS", () => {
   const rpcSqlPath = path.resolve(__dirname, "../../../supabase/tests/jp_postal_master_rpc.test.sql");
   const rpcSql = readFileSync(rpcSqlPath, "utf8");
-  const blockStart = rpcSql.indexOf("-- 54-57: repair A2-3");
+  const blockStart = rpcSql.indexOf("-- 54-57: begin itself never returns resumable data");
   const blockEnd = rpcSql.indexOf("-- 58-64: repair A2-4");
   assert.equal(blockStart >= 0, true, "missing the test 54-57 fixture comment marker");
   assert.equal(blockEnd > blockStart, true, "missing the test 58-64 fixture comment marker");
