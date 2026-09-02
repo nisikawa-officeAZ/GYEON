@@ -672,7 +672,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-C1 — Foundation V2 consumer-binding read-only diagnosis
 
-**Status:** OWNER REAUTHORIZED AGAINST CURRENT BOOK MAIN / DIRECTIVE READY LOCALLY / COMPLETION PLAN AND RESULT LEDGER REGISTRATION AUTHORIZED / GOVERNANCE DELIVERY AND PRIVATE-FILE TRANSMISSION NOT YET AUTHORIZED.
+**Status:** READ-ONLY DIAGNOSIS COMPLETE / CODEX SUBSTANTIVE ACCEPTANCE WITH MANDATORY GOVERNANCE CORRECTIONS / PR #53 REMAINS OPEN DRAFT / NO IMPLEMENTATION AUTHORIZED.
 
 **Objective:** Diagnose the smallest safe Book-owned server consumer/adaptor boundary for the accepted Foundation V2 inventory runtime without copying Foundation business rules, treating Book-local dealer inventory as Office AZ authority, implementing Android, or contacting a database/provider/environment.
 
@@ -706,9 +706,35 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Studio autonomy boundary:** Studio's bounded autonomy is recorded in Foundation Issue #39 comments `5517985580` and `5517994562`. It permits Foundation-only work through a verified Ready PR but never Book/Android edits or merge. Studio must not invent P20. If the accepted Book C1 result exposes a Foundation-owned compatibility defect that does not change the accepted contract meaning, Studio may use that authority; contract or product-authority changes return to the owner and MacBook Codex.
 
-**Current authorization:** The owner reauthorized C1 planning against the current fixed Book main and separately authorized this two-document registration. The directive remains an untracked local candidate. No stage, commit, push, branch, Draft PR, private-file transmission to Anthropic, Claude invocation, test, source implementation, DB, migration, Supabase, provider, HTTP, Android, deployment, or production action is authorized by this registration.
+**Delivery and diagnosis:** The three-path C1 governance candidate was committed as `dd2bb58a68ddffbc6c87efe5c1dd4265eb0785ae`, tree `5f71abe6345d2ec6abe86b62089e11d7152d1869`, parent `f75242a1e79bb0dc6c18926cf8a004874d4ec278`, normally non-force pushed, and opened as Book Draft PR #53. The owner then separately authorized exactly 31 Book and 10 Foundation private files for one tool-disabled, read-only Claude invocation. All 41 MacBook Codex preflight hashes matched. Claude returned the required result marker with `PASS_DIAGNOSIS_COMPLETE`; MacBook Codex accepted the substantive diagnosis subject to mandatory corrections in PR #53 comment `5518147879`.
 
-**Exit gate:** Verify the exact three-path governance candidate consisting of this plan, the result ledger, and the new directive. Governance Git delivery requires a separate owner gate. Only after committed governance, Draft-PR instruction, fresh fixed-identity verification, and separate exact-file transmission authorization may Claude run the one read-only diagnosis.
+**Accepted result boundary:** No Book-to-Foundation bridge is proven; runtime delivery and product identity remain `NOT_CONFIGURED`; existing Book inventory remains dealer-local/compatibility state; and location-count, reservation, adjustment-taxonomy, stocktake-model, and product-identity conflicts require explicit disposition. C1 authorizes no source implementation, dependency, lockfile, DB/migration, provider, Android, deployment, or production action.
+
+**Exit gate:** C1 diagnosis is closed only with the Codex corrections. PR #53 remains Draft and merge remains an owner gate. The next governance-only phase is C2 below.
+
+### INV001-P19-BOOK-C2 — Foundation runtime delivery and product identity decision
+
+**Status:** DIRECTIVE CREATED LOCALLY / GOVERNANCE CANDIDATE UNCOMMITTED / NO PRIVATE-FILE TRANSMISSION OR CLAUDE INVOCATION AUTHORIZED.
+
+**Objective:** Produce an owner-ready decision package for exactly two unresolved C1 boundaries: the mechanism that delivers the sealed Foundation runtime to Book and the identity contract that binds Book catalogue references to Foundation inventory products.
+
+**Governing directive:**
+
+- Path: `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_C2_FOUNDATION_RUNTIME_DELIVERY_AND_PRODUCT_IDENTITY_DECISION.md`.
+- Required result marker: `INV001_P19_BOOK_C2_FOUNDATION_RUNTIME_DELIVERY_AND_PRODUCT_IDENTITY_DECISION_RESULT_V1`.
+- Current local directive SHA-256: `595c643697d6735e537d93902abeb262acad120f4345d42c9d0481beb05b2c99`.
+- Proposed branch: `agent/inv001-p19-book-c2-runtime-delivery-product-identity-decision`.
+- Proposed private read scope: exactly 16 Book files and 4 Foundation files, all listed literally in the directive.
+
+**Decision A candidates:** private immutable package artifact; new live Foundation service; Git dependency/submodule; vendored/copied source; or database-mediated coupling. Claude may compare and recommend but the selected mechanism remains `OWNER_DECISION_REQUIRED`.
+
+**Decision B candidates:** canonical Foundation product ID plus explicit Book mapping; a proven already-shared immutable ID; JAN as canonical identity; or Book `gyeon_products.id` as Foundation identity. Claude may compare and recommend but the selected identity remains `OWNER_DECISION_REQUIRED`.
+
+**Hard boundary:** No implementation, package install/publication, registry, dependency or lockfile change, route/RPC, product remap, table/migration/backfill, dual-write, source copy, Android, provider, deployment, or production work. Any later allowlist must be literal and contain no wildcard.
+
+**Current authorization:** The owner authorized creation of the next C2 directive after posting the C1 correction. This authorizes only the local three-path governance candidate consisting of this plan, the result ledger, and the new C2 directive. It does not authorize stage, commit, push, branch/PR mutation, private-file transmission, Claude invocation, tests, or implementation.
+
+**Exit gate:** Verify the exact three-path local governance diff and protected-path metadata. Stage/local commit, normal push/Draft PR, and exact private-file transmission remain separate owner gates.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
