@@ -117,12 +117,13 @@ export function parseImportCliArgs(argv: readonly string[]): CliArgsParseResult 
   if (!expectedProjectRef) return { ok: false, error: "INVALID_EXPECTED_PROJECT_REF" };
 
   const confirmProjectRefRaw = flags.get("--confirm-project-ref");
-  const confirmProjectRef = confirmProjectRefRaw === undefined
+  const normalizedConfirmProjectRef = confirmProjectRefRaw === undefined
     ? undefined
     : normalizeSupabaseProjectRef(confirmProjectRefRaw);
-  if (confirmProjectRefRaw !== undefined && !confirmProjectRef) {
+  if (confirmProjectRefRaw !== undefined && !normalizedConfirmProjectRef) {
     return { ok: false, error: "INVALID_CONFIRM_PROJECT_REF" };
   }
+  const confirmProjectRef = normalizedConfirmProjectRef ?? undefined;
 
   if (hasRollback) {
     const rollbackBatchId = flags.get("--rollback-batch") as string;
