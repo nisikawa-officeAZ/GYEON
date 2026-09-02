@@ -4484,3 +4484,299 @@ prohibited_actions_confirmed:
 decision: RATIFY_R5_IN_EXACT_TWO_AUTHORITY_PATHS_ONLY
 next: "VERIFY_EXACT_TWO_PATH_DIFF_PROTECTED_METADATA_R5_DESIGN_HASHES_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_LITERAL_STAGE_AND_LOCAL_COMMIT_AUTHORIZATION"
 ```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A2-V3 — Harness dealer-boundary/runtime-location doc repair (result-pending)
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_A2_V3_DOC_REPAIR
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DOC_REPAIR_RESULT_V1
+status: DOCUMENTATION_REPAIR_APPLIED_HARNESS_RESULT_PENDING
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized one bounded documentation-only repair restricted to exactly four existing governance paths, using only Read and Edit, to correct the postal-master lookup RPC dealer-boundary contract, the fixture/runtime/retained-evidence location contract, and the accurate historical state of the R5 harness candidate and its two repair attempts. This entry records that correction only; it does not authorize Bash, tests, Git, network, database, Supabase, Docker, HTTP, provider, deployment, staging, commit, or push."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 6f7e38996cdc6845d1cb7d87e78dc81ef37bfb74
+  tree: b6ac23b9d0e237aca1d1b66b858eb15dd62b9c50
+exact_current_write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+repaired_items:
+  dealer_lookup_rpc_contract: "Postal master is dealer-independent global reference data; the lookup RPC carries no dealer id and returns no dealer-owned data. Any authenticated user with at least one active dealer_members membership succeeds, including an active member of a different dealer than any other test dealer. Anon, no membership, and inactive-only membership fail. Removed the prior cross-dealer denial requirement from the R5 plan and directive."
+  fixture_and_evidence_location_contract: "Fixtures remain deterministic and unmistakably fictional, created only inside the dedicated disposable runtime, outside the Git worktree and outside /private/tmp. Retained evidence stays outside the worktree under the same exclusion. General OS tmpdir ($TMPDIR, /tmp, /var/folders, or any other os.tmpdir()-equivalent location) is now explicitly forbidden in addition to /private/tmp in both the R5 plan and the R5 directive."
+recorded_state:
+  design_and_ratification: PUSHED
+  first_implementation_invocation: STOPPED_BEFORE_WRITES_MISSING_RATIFICATION
+  harness_candidate: SEVEN_PATH_CREATED_GIT_UNTRACKED_UNSTAGED_UNCOMMITTED
+  codex_static_review: CHANGES_REQUIRED_DEFECTS_FOUND
+  first_repair_attempt: PARTIAL_SETUP_CAPTURE_CLEANUP_CHANGED_INCOMPLETE
+  second_repair_attempt: SEVEN_FILE_NO_CHANGE
+  database_and_runtime_execution: UNRUN
+  authority_granted_by_these_documents: NONE_RUNTIME_OR_GIT_DELIVERY
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  bash_or_shell_execution: false
+  executable_test_or_build: false
+  git_add_commit_push_or_pr_mutation: false
+  network_access: false
+  database_or_supabase_access: false
+  docker_or_colima_runtime: false
+  http_requests: false
+  provider_calls: false
+  deployment_or_ready_or_merge: false
+  staging_or_production_access: false
+  files_read_or_edited_outside_the_four_path_allowlist: false
+decision: RECORD_DOC_REPAIR_HARNESS_CANDIDATE_RESULT_REMAINS_PENDING
+next: "SEPARATE OWNER AUTHORIZATION REQUIRED FOR HARNESS CANDIDATE REPAIR COMPLETION, CODEX STATIC RE-REVIEW, STAGE/COMMIT/PUSH OF THE FOUR GOVERNANCE PATHS, AND ANY DATABASE OR RUNTIME EXECUTION."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A4 — Final static repair (findings A/B/C) applied as candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR_RESULT_V1
+status: FINAL_STATIC_REPAIR_APPLIED_AS_CANDIDATE_CODEX_ACCEPTANCE_PENDING
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized one bounded repair restricted to exactly ten existing paths (the six harness implementation files plus the four governance documents), using only Read and Edit, to repair the two remaining source findings A and B that Codex static re-review found after the prior four-document doc repair, and to bring governance status wording forward accurately as finding C. This entry records that repair only; it does not authorize Bash, tests, Git, network, database, Supabase, Docker, HTTP, provider, deployment, staging, commit, or push."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 6f7e38996cdc6845d1cb7d87e78dc81ef37bfb74
+  tree: b6ac23b9d0e237aca1d1b66b858eb15dd62b9c50
+exact_current_write_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/capture-evidence.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/real-auth.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+repaired_findings:
+  finding_a_os_temp_exclusion_source_enforcement: "setup.sh now fails closed before creating any runtime if the resolved (canonicalized/symlink-realpath'd) runtime parent or runtime path is inside the Git worktree, /private/tmp, /tmp, /var/folders, the current $TMPDIR after canonicalization, or the general OS temp root reported by python3 tempfile.gettempdir(). capture-evidence.sh revalidates the same boundary against its supplied runtime parent and runtime path before use. cleanup.sh revalidates the same boundary for both the suffix runtime path and the retained-evidence parent/destination before creating, copying, or removing anything. Each script defines its own Bash-3.2-compatible gda_r5_realpath/gda_r5_assert_outside_excluded_roots helper pair using the existing required python3 dependency; no shared library file was added because none is in the ten-path allowlist. Existing non-destructive safety, exact-prefix validation, two-lane behavior, burn semantics, and the default /Users/atsushinishikawa/Documents/Codex/runtime path remain unchanged. No fail-closed check was weakened, and no new variable is named HOME (pre-existing $HOME literals in cleanup.sh were left untouched)."
+  finding_b_synthetic_fixture_data: "Postal/JIS fixture values that resembled or could collide with real Japan Post data were replaced with deterministic clearly-reserved synthetic values in the reserved namespace JIS 99990-99999 and postal 0000001-0000099 (still five numeric characters for JIS and seven for postal), across real-auth.mjs (jisCode 01199 -> 99999; postalCode 9990100 -> 0000001), import-resume.mjs (jisCode 01100 -> 99991 and 01199 -> 99999; postalCodes 9990001/9990002/9990003/9990004/9990005/9990009 -> 0000002/0000003/0000004/0000007/0000005/0000006), and runtime-contract.test.sql (jisCodes 01180/01280/01380 -> 99992/99993/99994; postalCodes 9930000/9990831/9990001 -> 0000010/0000020/0000030, including the query literals 999-0001/993-0000/999-0831 -> 000-0040/000-0010/000-0020). The intentional RC-A ambiguous-pair duplicate (two rows sharing postal 0000010 with genuinely different addresses) was preserved as the one intentional duplicate; every other value is now unique. Every existing assertion's semantics (FOUND, AMBIGUOUS, NOT_FOUND, MASTER_UNAVAILABLE, active-batch filtering, supersede/rollback, resume, rejected identity, importer validate-only/local-URL-refusal) is unchanged. Dealer labels lacking the literal marker ('R5 Real Auth Dealer A'/'B' in real-auth.mjs, 'RC Synthetic Dealer' in runtime-contract.test.sql) now carry '〔GDA-R5-SYNTHETIC〕'; import-resume.mjs already carried it. Misleading header comments in runtime-contract.test.sql ('two distinct real addresses', 'a real reverse NOT_FOUND') were corrected to 'two distinct synthetic fixture addresses' and 'a real runtime/request path reverse NOT_FOUND using synthetic fixture data'; no comment now implies fixture addresses are real."
+  finding_c_governance_status_accuracy: "The plan, directive, and completion-plan status/current-state wording now records: the bounded four-document repair (R5-A2-V3) completed; the bounded three-shell-script OS-temp exclusion repair (finding A) completed; Codex static re-review found the two remaining source findings A/B plus stale status; this final repair (this result marker) is now applied as a candidate across the exact ten-file allowlist; runtime/DB remain unrun; the candidate remains unstaged/uncommitted/unpushed; and no Git delivery or runtime authority is granted by any of these three documents. This ledger entry is appended without altering or removing the prior GDA-2A-OCR-POSTAL-MASTER-R5-A2-V3 result-pending entry."
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  bash_or_shell_execution: false
+  executable_test_or_build: false
+  git_add_commit_push_or_pr_mutation: false
+  network_access: false
+  database_or_supabase_access: false
+  docker_or_colima_runtime: false
+  http_requests: false
+  provider_calls: false
+  deployment_or_ready_or_merge: false
+  staging_or_production_access: false
+  files_read_or_edited_outside_the_ten_path_allowlist: false
+  codex_pass_or_executable_verification_claimed: false
+decision: APPLY_FINDINGS_A_B_C_AS_ONE_STATIC_REPAIR_CANDIDATE_CODEX_ACCEPTANCE_PENDING
+next: "READY_FOR_CODEX_STATIC_REVIEW, NOT PASS. Separate owner/Codex authorization is required for final static acceptance, stage/local-commit/push of the ten-path candidate, and any database or runtime execution."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A5 — OS-temp fail-closed ordering repair (write-before-validation)
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1
+status: READY_FOR_CODEX_STATIC_REVIEW_NOT_PASS
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized one bounded repair restricted to exactly seven existing paths (the three harness shell scripts plus the four governance documents), using only Read and Edit, to repair the OS-temp fail-closed write-before-validation ordering defect that Codex static review found in the prior GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR_RESULT_V1 candidate. This entry records that repair only; it does not authorize Bash, tests, Git, network, database, Supabase, Docker, HTTP, provider, deployment, staging, commit, or push."
+codex_static_verdict_on_prior_candidate: "CHANGES_REQUIRED_HARNESS. The synthetic postal/JIS fixture correction (finding B) was accepted, but OS-temp fail-closed ordering (finding A's repair) was defective."
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 6f7e38996cdc6845d1cb7d87e78dc81ef37bfb74
+  tree: b6ac23b9d0e237aca1d1b66b858eb15dd62b9c50
+exact_current_write_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/capture-evidence.sh
+  - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+defect_repaired: "In setup.sh, LANE_DIR/SUFFIX_DIR were assigned before the excluded-root check on LANE_DIR ran; a rejection from that very check called fail(), which unconditionally mkdir'd and wrote burned.txt into the just-rejected LANE_DIR/SUFFIX_DIR. In capture-evidence.sh, RUNTIME_DIR was read from the environment before any validation, and fail()/the EXIT trap unconditionally derived SUFFIX_DIR_FOR_BURN=dirname(RUNTIME_DIR) and wrote burned.txt there even when the runtime-parent/runtime-path excluded-root check itself was what failed. In cleanup.sh, SUFFIX_DIR was assigned before its own excluded-root check ran, with the same fail()-writes-into-the-rejected-path defect, and RETAINED_EVIDENCE_PARENT/RETAINED_DIR were validated only immediately before their own mkdir/copy rather than before suffix-level cleanup-started.txt, aggregate-log, and lane stop/processing work began."
+repair_applied:
+  paths_validated_gate: "All three shell scripts now declare PATHS_VALIDATED=0 near IN_FAIL (cleanup.sh has no IN_FAIL/EXIT-trap, so it is declared standalone) and gate every directory/file write inside fail() (and, in setup.sh/capture-evidence.sh, inside the on_unexpected_exit EXIT trap) behind PATHS_VALIDATED -eq 1. Before that gate is set, fail() and the EXIT trap only print to stderr and exit; they perform no mkdir, no burned.txt write, and no aggregate-log write."
+  setup_sh_gate_point: "PATHS_VALIDATED=1 is set only after gda_r5_assert_outside_excluded_roots succeeds for both the suffix path (SUFFIX_DIR) and the lane runtime path (LANE_DIR), and strictly before the existing already-burned/already-set-up existence checks that may call fail()."
+  capture_evidence_sh_gate_point: "PATHS_VALIDATED=1 is set only after gda_r5_assert_outside_excluded_roots succeeds for both the runtime parent (RUNTIME_PARENT) and the runtime path (RUNTIME_DIR), strictly before the evidence-file-existence and linked-project checks that may call fail() using RUNTIME_DIR-derived paths."
+  cleanup_sh_gate_point_and_reorder: "cleanup.sh now validates, in order, the runtime parent (RUNTIME_PARENT, newly added), the suffix path (SUFFIX_DIR), the retained-evidence parent (RETAINED_EVIDENCE_PARENT), and the derived retained destination (RETAINED_DIR, including its not-already-exists check) — all moved before cleanup-started.txt, AGGREGATE_LOG creation, WAS_BURNED/source-metadata computation, and the per-lane stop/processing loop. PATHS_VALIDATED=1 is set only after all four validations pass. The later retained-evidence section no longer recomputes or re-validates RETAINED_DIR/RETAINED_EVIDENCE_PARENT; it only performs the already-validated mkdir."
+  canonicalization_error_guard: "gda_r5_assert_outside_excluded_roots in all three scripts now explicitly checks the exit status and non-emptiness of every gda_r5_realpath/tempfile.gettempdir() python3 call and calls fail() on any canonicalization failure, so a canonicalization error itself fails closed through the same non-writing-until-validated fail() rather than an implicit set -e/EXIT-trap path."
+  unweakened_requirements: "Fresh-suffix format, burn-on-failure, one-shot cleanup (cleanup-started.txt), exact gda-postal-r5.* prefix removal, migration/harness/R4-manifest/protected-path hash and metadata checks, and required evidence artifacts are all unchanged in content; only the timing of when a burn write is permitted was corrected. Every fail() call still exits 1 immediately regardless of PATHS_VALIDATED."
+  bash_3_2_compatibility: "No associative arrays, no bashisms beyond what the candidate already used; PATHS_VALIDATED is a plain integer-string variable compared with -eq, matching the existing IN_FAIL pattern."
+governance_docs_updated:
+  - "GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md: status line and section 1.1 now record the CHANGES_REQUIRED_HARNESS verdict and this repair as an applied, Codex-acceptance-pending candidate."
+  - "CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md: current-known-state paragraph now records the same verdict and repair."
+  - "GYEON_DA_COMPLETION_PLAN.md: the GDA-2A-OCR-POSTAL-MASTER-R5 status line now records the same verdict and repair; no other section of this plan was read or edited beyond what the seven-file allowlist required to state this correction."
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  bash_or_shell_execution: false
+  executable_test_or_build: false
+  git_add_commit_push_or_pr_mutation: false
+  network_access: false
+  database_or_supabase_access: false
+  docker_or_colima_runtime: false
+  http_requests: false
+  provider_calls: false
+  deployment_or_ready_or_merge: false
+  staging_or_production_access: false
+  files_read_or_edited_outside_the_seven_path_allowlist: false
+  codex_pass_or_executable_verification_claimed: false
+self_review_method: "Read-based static self-review only (Bash/tests/Git forbidden): re-read every edited region in place after editing and traced, by hand, every fail()/on_unexpected_exit call site against the new PATHS_VALIDATED gate and the new validation ordering in each of the three scripts."
+decision: APPLY_OS_TEMP_GUARD_REPAIR_AS_CANDIDATE_CODEX_ACCEPTANCE_PENDING
+next: "READY_FOR_CODEX_STATIC_REVIEW, NOT PASS. Separate owner/Codex authorization is required for static acceptance, stage/local-commit/push of the seven-path candidate, and any database or runtime execution."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A6 — Final closeout repair (retained-destination-exists burn gap)
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_CLOSEOUT_REPAIR
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_CLOSEOUT_REPAIR_RESULT_V1
+status: READY_FOR_CODEX_STATIC_REVIEW_NOT_PASS
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized one bounded repair restricted to exactly five existing paths (cleanup.sh plus the four governance documents), using only Read and Edit, to repair the retained-destination-exists burn gap that Codex static review found in the prior GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1 candidate, and to record the intervening aborted dispatch accurately. This entry records that repair only; it does not authorize Bash, tests, Git, network, database, Supabase, Docker, HTTP, provider, deployment, staging, commit, or push."
+codex_static_verdict_on_prior_candidate: "CHANGES_REQUIRED_HARNESS with exactly two closeout findings."
+aborted_dispatch:
+  claude_session_id: d5ca2074-2f62-4bc6-b407-3e2e84d10970
+  unauthorized_command: "wc -l"
+  command_scope:
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  read_only: true
+  codex_detected_and_stopped: true
+  edits_produced: 0
+  accepted_as_repair_run: false
+successful_replacement_dispatch:
+  tools_used:
+    - Read
+    - Edit
+  produced_candidate: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1
+  codex_finding_after_acceptance_review: "retained-destination-exists burn gap in cleanup.sh"
+source_baseline:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: 48
+  pull_request_state: OPEN_DRAFT
+  base_branch: main
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 6f7e38996cdc6845d1cb7d87e78dc81ef37bfb74
+  tree: b6ac23b9d0e237aca1d1b66b858eb15dd62b9c50
+exact_current_write_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+defect_repaired: "cleanup.sh evaluated the retained-destination existence check `[[ ! -e \"$RETAINED_DIR\" ]] || fail ...` before PATHS_VALIDATED was set to 1. When the runtime parent, suffix path, retained-evidence parent, and derived retained destination were all safe (outside every excluded root) but RETAINED_DIR already existed, fail() exited without burning the safe existing suffix (PATHS_VALIDATED was still 0, so fail()'s burn-write block was skipped), weakening the one-attempt/no-retry contract."
+repair_applied:
+  gate_move: "PATHS_VALIDATED=1 is now assigned immediately after the four canonical excluded-root checks (runtime parent, suffix path, retained-evidence parent, retained-evidence destination) succeed, and strictly before the `[[ ! -e \"$RETAINED_DIR\" ]]` existence check. The literal unsafe-path checks (glob characters, HOME/root, parent-directory references, empty/unsafe RETAINED_DIR) remain before the gate, unchanged."
+  resulting_behavior: "A safe-but-already-existing RETAINED_DIR now triggers fail() after PATHS_VALIDATED=1, so fail() burns the existing safe suffix (writes SUFFIX_DIR/burned.txt when SUFFIX_DIR exists) before exiting 1, instead of exiting unburned."
+  unweakened_requirements: "Every mkdir, cleanup-started.txt write, aggregate-log write, lane stop/processing, evidence copy, hash comparison, per-lane and aggregate manifest write, and suffix-runtime removal remains strictly after PATHS_VALIDATED=1, unchanged in content and order relative to each other."
+  bash_3_2_compatibility: "No associative arrays or bashisms were introduced; PATHS_VALIDATED remains a plain integer-string variable, matching the existing pattern."
+governance_docs_updated:
+  - "GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md: status line and section 1.1 now record the second CHANGES_REQUIRED_HARNESS verdict, the aborted d5ca2074 dispatch, the successful OS-temp-guard replacement dispatch, and this closeout repair as an applied, Codex-acceptance-pending candidate."
+  - "CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md: current-known-state paragraph now records the same verdict, aborted dispatch, replacement dispatch, and repair."
+  - "GYEON_DA_COMPLETION_PLAN.md: the GDA-2A-OCR-POSTAL-MASTER-R5 status line now records the same verdict, aborted dispatch, replacement dispatch, and repair; no other section of this plan was read or edited beyond what the five-file allowlist required to state this correction."
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  bash_or_shell_execution: false
+  executable_test_or_build: false
+  git_add_commit_push_or_pr_mutation: false
+  network_access: false
+  database_or_supabase_access: false
+  docker_or_colima_runtime: false
+  http_requests: false
+  provider_calls: false
+  deployment_or_ready_or_merge: false
+  staging_or_production_access: false
+  files_read_or_edited_outside_the_five_path_allowlist: false
+  codex_pass_or_executable_verification_claimed: false
+self_review_method: "Read-based static self-review only (Bash/tests/Git forbidden): re-read the edited region of cleanup.sh in place after editing and traced, by hand, the full preflight sequence from the literal SUFFIX_DIR checks through the RETAINED_DIR literal check, the four canonical excluded-root checks, the PATHS_VALIDATED=1 assignment, and the retained-destination existence check, confirming the existence check now runs strictly after the gate while every literal unsafe-path check remains strictly before it."
+decision: APPLY_FINAL_CLOSEOUT_REPAIR_AS_CANDIDATE_CODEX_ACCEPTANCE_PENDING
+next: "READY_FOR_CODEX_STATIC_REVIEW, NOT PASS. Separate owner/Codex authorization is required for final static acceptance, stage/local-commit/push of the five-path candidate, and any database or runtime execution."
+```
+
+## GDA-2A-OCR-POSTAL-MASTER-R5-A7 — Delivery-scope clarification
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DELIVERY_SCOPE_CLARIFICATION
+result_id: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_A7_DELIVERY_SCOPE_CLARIFICATION_RESULT_V1
+status: READY_FOR_CODEX_STATIC_REVIEW_NOT_PASS
+date: 2026-09-02
+append_only: true
+owner_authorization: "The owner authorized one bounded append-only governance correction restricted to exactly one existing path (this ledger), using only Read and Edit, to clarify that the A6 five-path repair allowlist is not the Git delivery scope and to record the exact aggregate delivery candidate. This entry records that clarification only; it does not authorize Bash, tests, Git, network, database, Supabase, Docker, HTTP, provider, deployment, staging, commit, or push."
+clarification:
+  a6_five_path_candidate_scope: "The phrase 'five-path candidate' in GDA-2A-OCR-POSTAL-MASTER-R5-A6 describes only the bounded final-closeout repair write allowlist (cleanup.sh plus the four governance documents). It is NOT the Git delivery scope for this phase."
+  exact_git_delivery_candidate_path_count: 11
+  exact_git_delivery_candidate_composition: "Seven new harness paths plus four modified governance documents."
+  exact_git_delivery_candidate_paths:
+    - scripts/e2e/gda-estimate-postal-master-r5/config.toml
+    - scripts/e2e/gda-estimate-postal-master-r5/setup.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/capture-evidence.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh
+    - scripts/e2e/gda-estimate-postal-master-r5/real-auth.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql
+    - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN.md
+    - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_HARNESS_IMPLEMENTATION.md
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  partial_delivery_forbidden: "Partial delivery of only the five A6 repair-allowlist paths, or only the seven new harness paths, is forbidden. The exact aggregate 11-path set above is the only valid delivery candidate."
+  candidate_state: "Unstaged, uncommitted, unpushed, and runtime/DB unrun."
+  authority_granted: "This append-only clarification grants no stage, commit, push, runtime, database, Supabase, or environment authority."
+exact_current_write_allowlist:
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected_metadata_baseline:
+  ScreensPreview: c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  line_link_tokens: accd22345054cc44f89156fd78eaba6dfe4242a4
+  monthly_invoice_migration: 32fda49583ae1217bc13711784ad8fa31744726c
+  monthly_invoice_test: fe3c80f22fd80dcbfab076082473216dda582c14
+prohibited_actions_confirmed:
+  bash_or_shell_execution: false
+  executable_test_or_build: false
+  git_add_commit_push_or_pr_mutation: false
+  network_access: false
+  database_or_supabase_access: false
+  docker_or_colima_runtime: false
+  http_requests: false
+  provider_calls: false
+  deployment_or_ready_or_merge: false
+  staging_or_production_access: false
+  files_read_or_edited_outside_the_one_path_allowlist: false
+  codex_pass_or_executable_verification_claimed: false
+decision: APPEND_DELIVERY_SCOPE_CLARIFICATION_CODEX_ACCEPTANCE_PENDING
+next: "READY_FOR_CODEX_STATIC_REVIEW, NOT PASS. Separate owner authorization is required for Codex static acceptance, followed by a further separate owner authorization to stage and locally commit exactly all 11 paths. Normal push and disposable runtime verification remain later separate gates."
+```

@@ -15,6 +15,10 @@
 
 This directive is governance only. It does not authorize Claude transmission or invocation, file writes, tests, Git delivery, Colima/Docker/database/Supabase runtime, Auth/PostgREST, provider/network access, hosted environment access, migration application, CSV import, PR mutation, Ready, merge, or deployment. Every action remains separately gated.
 
+## Current known state (2026-09-02)
+
+Design and ratification are pushed to PR #48. A first implementation invocation stopped before any write because plan/ledger ratification was missing. A later invocation created the seven-path harness candidate listed in the write allowlist below; it remains Git-untracked, unstaged, and uncommitted. Codex static review found defects requiring repair (`CHANGES_REQUIRED`). A first repair attempt partially changed `setup.sh`, `capture-evidence.sh`, and `cleanup.sh` but ended incomplete. A second seven-file repair attempt changed nothing. The bounded four-document dealer-boundary/runtime-location doc repair (`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DOC_REPAIR_RESULT_V1`) then completed. Codex static re-review of the harness candidate found two remaining source findings — A) the OS-temp exclusion was not enforced in source across `setup.sh`/`capture-evidence.sh`/`cleanup.sh`, and B) `real-auth.mjs`/`import-resume.mjs`/`runtime-contract.test.sql` used postal/JIS fixture values resembling or colliding with real Japan Post data — plus stale governance status wording (finding C). The bounded three-shell-script OS-temp exclusion repair (finding A) is now completed, and a final repair (result marker `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR_RESULT_V1`) applied findings A, B, and C together as one candidate. Codex static review of that candidate returned `CHANGES_REQUIRED_HARNESS`: the synthetic postal/JIS fixture correction (finding B) was accepted, but the OS-temp fail-closed ordering in finding A's repair was defective — `setup.sh`/`capture-evidence.sh`/`cleanup.sh` could each write burn evidence (`mkdir`, `burned.txt`) into an unvalidated `LANE_DIR`/`SUFFIX_DIR`/`RUNTIME_DIR`/retained-destination path from inside the very failure path triggered by that path's own excluded-root rejection. This repair (result marker `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1`) introduces a `PATHS_VALIDATED` gate in all three shell scripts: canonical runtime parent, suffix path, and lane path (plus, in `cleanup.sh`, retained-evidence parent and derived retained destination) are all validated outside every excluded root before ordinary failure handling or the EXIT trap may write burn evidence; a prevalidation rejection is non-writing (stderr and exit only). Codex static review of that candidate again returned `CHANGES_REQUIRED_HARNESS`: in `cleanup.sh`, the retained-destination existence check (`[[ ! -e "$RETAINED_DIR" ]]`) ran before `PATHS_VALIDATED=1`, so when the four canonical paths were safe but `RETAINED_DIR` already existed, `fail()` exited without burning the safe existing suffix, weakening the one-attempt/no-retry contract. A first closeout dispatch invocation (Claude session `d5ca2074-2f62-4bc6-b407-3e2e84d10970`) used one unauthorized but read-only Bash command, `wc -l`, solely on `GYEON_DA_COMPLETION_PLAN.md` and `GYEON_DA_PHASE_RESULTS.md`; Codex detected it, stopped the invocation, and confirmed it produced no edits, so it is not an accepted repair run. The successful replacement dispatch used only Read/Edit and produced the OS-temp guard repair candidate described above; Codex then found the retained-destination-exists burn gap. This repair (result marker `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_CLOSEOUT_REPAIR_RESULT_V1`) moves the `PATHS_VALIDATED=1` transition in `cleanup.sh` to immediately after all four canonical excluded-root checks and before the `[[ ! -e "$RETAINED_DIR" ]]` check, so a safe-but-already-existing retained destination now calls the validated failure path and burns the existing safe suffix; the literal unsafe-path checks remain before the gate, and every other mkdir, cleanup-started write, aggregate-log write, lane operation, copy, and removal remains after validation, unweakened. No database or runtime execution has occurred. This closeout invocation used only Read/Edit and is unstaged, uncommitted, unpushed, and pending Codex static review. The candidate remains Git-untracked, unstaged, uncommitted, and unpushed. This directive and the R5 design plan grant no runtime or Git-delivery authority; every action remains separately gated.
+
 ## Required first reads
 
 Read completely before implementation:
@@ -81,13 +85,14 @@ The harness must:
 - require confirmation literal `I_UNDERSTAND_GDA_POSTAL_R5_IS_DISPOSABLE`;
 - require invocation-supplied accepted HEAD/tree and GitHub PR headRefOid equality;
 - require an unused UTC timestamp plus six-lowercase-alphanumeric suffix;
-- create runtime only outside the worktree and outside `/private/tmp`;
+- create runtime only outside the worktree, outside `/private/tmp`, and outside any general OS tmpdir (`$TMPDIR`, `/tmp`, `/var/folders`, or any other `os.tmpdir()`-equivalent location);
+- retain evidence only outside the worktree, outside `/private/tmp`, and outside any general OS tmpdir, using the same exclusion rule as the runtime;
 - reject existing runtime paths, linked projects, hosted/pooler URLs, non-loopback hosts, and source drift before start;
 - allocate distinct project IDs and all relevant ports per lane;
 - stage formal migrations byte-identically, exclude `DRAFT_DO_NOT_APPLY`, and record the protected LINE migration as `excluded_protected` without reading it;
 - apply migrations only through current local Supabase CLI native commands discovered from `--help`;
 - never apply the target migration through `psql -f`;
-- use deterministic synthetic rows only; never download Japan Post data or store real names/addresses;
+- use deterministic, unmistakably fictional synthetic rows only, generated solely inside the disposable runtime; never download Japan Post data or store real names/addresses;
 - call local service-role RPC directly only from the R5 import test driver;
 - verify the production importer rejects localhost as `NON_CANONICAL_SUPABASE_URL` before client creation;
 - never add a localhost/test bypass to production importer;
@@ -104,8 +109,8 @@ The candidate must implement evidence capture for:
 - full formal migration replay and exactly-one target migration ledger entry;
 - execution of the existing postal pgTAP file through local `supabase test db` behavior;
 - direct table privilege denial for browser roles and contract-correct service access;
-- real authenticated active-member lookup success;
-- anon, inactive, missing-membership, and cross-dealer denial;
+- real authenticated active-member lookup success, including success for an authenticated user whose only active `dealer_members` membership belongs to a dealer different from any other test dealer (the lookup RPC is dealer-independent global reference data, carries no dealer id, and returns no dealer-owned data, so cross-dealer denial must not be required);
+- anon, missing-membership, and inactive-only-membership denial;
 - normalized postal lookup, multiple candidates, empty result, active-batch filtering, bounded input;
 - preservation of the existing GYEON-order private-function/RLS contract;
 - `db lint` error count zero.

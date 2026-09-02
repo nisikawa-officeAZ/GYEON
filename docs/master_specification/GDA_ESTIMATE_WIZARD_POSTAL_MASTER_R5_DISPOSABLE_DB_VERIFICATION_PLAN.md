@@ -3,7 +3,7 @@
 ## 1. 文書情報
 
 - 計画ID: `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN_V1`
-- 状態: `DESIGN_CANDIDATE_UNSTAGED_UNCOMMITTED / HARNESS_NOT_IMPLEMENTED / DB_NOT_RUN`
+- 状態: `DESIGN_AND_RATIFICATION_PUSHED / HARNESS_CANDIDATE_CREATED_SEVEN_PATH_UNCOMMITTED / CODEX_STATIC_REVIEW_CHANGES_REQUIRED / FIRST_REPAIR_ATTEMPT_INCOMPLETE_PARTIAL_SETUP_CAPTURE_CLEANUP / SECOND_SEVEN_FILE_REPAIR_NO_CHANGE / FOUR_DOCUMENT_DEALER_BOUNDARY_AND_RUNTIME_LOCATION_DOC_REPAIR_COMPLETED / THREE_SHELL_SCRIPT_OS_TEMP_EXCLUSION_SOURCE_REPAIR_COMPLETED / CODEX_STATIC_RE_REVIEW_FOUND_FINDINGS_A_B_PLUS_STALE_STATUS / GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR_RESULT_V1_APPLIED_AS_CANDIDATE / CODEX_STATIC_VERDICT_CHANGES_REQUIRED_HARNESS_OS_TEMP_FAIL_CLOSED_ORDERING / GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1_APPLIED_AS_CANDIDATE / CODEX_STATIC_VERDICT_CHANGES_REQUIRED_HARNESS_RETAINED_DESTINATION_EXISTS_BURN_GAP / ABORTED_DISPATCH_D5CA2074_READ_ONLY_UNAUTHORIZED_WC_NO_EDITS_NOT_ACCEPTED / GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_CLOSEOUT_REPAIR_RESULT_V1_APPLIED_AS_CANDIDATE / DB_NOT_RUN / RUNTIME_NOT_RUN / CANDIDATE_UNSTAGED_UNCOMMITTED_UNPUSHED`
 - Repository: `nisikawa-officeAZ/GYEON`
 - 対象PR: `#48` (`OPEN/Draft`, base `main`)
 - 対象branch: `agent/estimate-wizard-ocr-postal-unified-r1`
@@ -15,6 +15,28 @@
 - 作成日: 2026-09-02
 
 この文書は限定設計だけである。harness実装、外部AI送信、Git stage/commit/push、Colima/Docker/DB/Supabase runtime、Auth/PostgREST、共有・development・staging・production接続、migration適用、実データ投入、PR変更、Ready、merge、deploymentを許可しない。
+
+## 1.1 現在の状態（2026-09-02）
+
+- 本設計文書とR5ガバナンス比准は、いずれもpush済みでありPR `#48`（`OPEN/Draft`, base `main`）に反映されている。
+- 最初のharness実装invocationは、計画/台帳の比准欠落を理由に、いかなる書き込みも行わずに停止した。
+- 比准後の後続invocationが、セクション9に列挙する7 pathsからなるharness候補を作成した。この候補は現在もGit未追跡・未staged・未commitのままである。
+- Codexによる静的レビューは、この候補に修理が必要な欠陥があると判定した（`CHANGES_REQUIRED`）。
+- 最初の修理試行は`setup.sh`、`capture-evidence.sh`、`cleanup.sh`の一部を変更したが、未完了のまま終了した。
+- 2回目の7-file修理試行は、候補に対して何も変更しなかった。
+- 4-document（本計画・directive・completion plan・phase results ledger）のdealer-boundary/runtime-location doc repairは完了済みである（`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DOC_REPAIR_RESULT_V1`）。
+- その後Codexが静的再レビューを行い、残存する2件のsource findings（A: OS一時ディレクトリ除外がsource上で強制されていない、B: fixtureの郵便番号/JISコードが実在の日本郵便データに類似・衝突しうる）と、本ステータス記述の陳腐化（finding C）を検出した。
+- 本repair（結果マーカー`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR_RESULT_V1`）は、finding A（`setup.sh`/`capture-evidence.sh`/`cleanup.sh`のOS一時ディレクトリ除外をsource強制）、finding B（`real-auth.mjs`/`import-resume.mjs`/`runtime-contract.test.sql`のfixtureをsynthetic化）、finding C（本ステータス更新）を候補として適用済みである。
+- その後Codexが本候補を静的レビューし、`CHANGES_REQUIRED_HARNESS`と判定した。synthetic postal/JISフィクスチャの修正（finding B）自体は妥当だが、OS一時ディレクトリ除外のfail-closed順序に欠陥があった。`setup.sh`/`capture-evidence.sh`/`cleanup.sh`いずれも、`LANE_DIR`/`SUFFIX_DIR`/`RUNTIME_DIR`/`RETAINED_DIR`等のruntime/suffix/lane/retained-evidence pathをOS一時ディレクトリ除外チェックで拒否するその`fail()`呼び出し自体が、まだ未検証（除外チェックに失敗したかもしれない）そのpathへ`mkdir`やburn evidence書き込みを行いうるという欠陥があった。
+- 本repair（結果マーカー`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1`）は、三つのshell scriptすべてに`PATHS_VALIDATED`ゲートを導入し、canonical runtime parent・suffix path・lane path（および`cleanup.sh`ではretained-evidence parent/derived destinationも含む）の除外チェックが全て成功した後にのみ、通常の`fail()`ハンドラおよびEXIT trapがburn evidenceを書き込めるようにした。ゲート成立前の拒否は非書き込み（stderrへの出力とexitのみ）である。あわせて`gda_r5_realpath`/`gda_r5_assert_outside_excluded_roots`のcanonicalizationエラー自体も、未検証destinationへの書き込みなしにfail-closedとなるよう明示的なエラーハンドリングを追加した。fresh suffix、burn-on-failure、one-shot cleanup、exact-prefix removal、hash、protected-file、evidence要件はいずれも弱めていない。Bash 3.2互換は維持している。
+- その後Codexが`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1`候補を静的レビューし、再び`CHANGES_REQUIRED_HARNESS`と判定した。`cleanup.sh`のretained-destination存在チェック（`[[ ! -e "$RETAINED_DIR" ]]`）が`PATHS_VALIDATED=1`より前で実行されており、runtime parent・suffix path・retained-evidence parent・derived retained destinationの4 pathが安全でもRETAINED_DIRが既に存在する場合、`fail()`が既存の安全なsuffixをburnせずに終了してしまうというone-attempt/no-retry契約を弱める欠陥だった。
+- 最初のcloseout dispatch invocation（Claudeセッション`d5ca2074-2f62-4bc6-b407-3e2e84d10970`）は、`GYEON_DA_COMPLETION_PLAN.md`と`GYEON_DA_PHASE_RESULTS.md`だけに対して未承認だが読み取り専用の`wc -l`コマンドを1回使用した。Codexがこれを検知してinvocationを停止し、いかなる書き込みも発生しなかったことを確認した。このinvocationはrepair実行として受理されない。
+- 後続の代替dispatch invocationはRead/Editのみを使用し、上記のOS-temp guard repair候補（`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1`）を作成したが、Codexはその後、上記のretained-destination-exists burn gapを検出した。
+- 本repair（結果マーカー`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_CLOSEOUT_REPAIR_RESULT_V1`）は、`cleanup.sh`において`PATHS_VALIDATED=1`への遷移を、4つのcanonical excluded-root checkすべての直後・`[[ ! -e "$RETAINED_DIR" ]]`チェックの直前へ移動した。literalな unsafe-path checkはゲート前のままである。これにより、4 pathが安全だがRETAINED_DIRが既に存在する場合も、検証済みの失敗経路（`fail()`）を通り、既存の安全なsuffixをburnするようになった。他のmkdir、cleanup-started書き込み、aggregate-log書き込み、lane operation、copy、removalはすべて検証後のままであり、弱められていない。Bash 3.2互換は維持している。
+- 本closeout invocationはRead/Editのみを使用し、Git未staged・未commit・未push、DB/runtime未実行のままであり、Codexの静的レビュー待ちである。
+- DBおよびruntimeの実行は一度も行われていない。
+- 本candidateは現在もGit未追跡・未staged・未commit・未pushのままである。
+- 本設計文書とR5ガバナンス比准は、いかなる場合もruntime実行またはGit delivery（stage/commit/push）の権限を与えない。各操作は本文書とは別のゲートで個別に承認される。
 
 ## 2. 結論
 
@@ -43,7 +65,7 @@ R4 importerは、書込み時の`SUPABASE_URL`を厳密に `https://<20文字pro
 
 ## 4. 実行単位
 
-1回のowner-approved attemptは、Git worktree外かつ`/private/tmp`外の未使用suffixに2つのruntime laneを作る。
+1回のowner-approved attemptは、Git worktree外、`/private/tmp`外、かつ一般的なOSの一時ディレクトリ（`$TMPDIR`、`/tmp`、`/var/folders`、`os.tmpdir()`が指す場所などを含む）外の未使用suffixに2つのruntime laneを作る。一般的なOS一時ディレクトリの使用は明示的に禁止する。
 
 ```text
 /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5.<UTC timestamp>-<6 lowercase alnum>/fresh
@@ -57,6 +79,7 @@ R4 importerは、書込み時の`SUPABASE_URL`を厳密に `https://<20文字pro
 - `.temp/project-ref`、linked project、hosted URL、pooler URL、Production/Development refを検出したら開始前に停止する。
 - 片方でも失敗したらattempt全体をburnし、同じsuffixを修理・再実行しない。
 - cleanupは途中失敗でも両laneへ停止・削除を1回ずつ試みる。
+- retained evidenceも同じくGit worktree外、`/private/tmp`外、一般的なOS一時ディレクトリ外に保存する。
 
 ## 5. 実行前hard gate
 
@@ -68,7 +91,7 @@ R4 importerは、書込み時の`SUPABASE_URL`を厳密に `https://<20文字pro
 - R4の正確な5 source/test pathsのpathname/mode/blob/SHA-256
 - `supabase/config.toml`および`supabase/.temp/project-ref`がrepositoryに存在しないこと
 - Supabase CLI、Node、Git、Colima、Docker、PostgreSQL clientの実version
-- runtime rootがworktree外、`/private/tmp`外、未使用であること
+- runtime rootがworktree外、`/private/tmp`外、一般的なOS一時ディレクトリ（`$TMPDIR`/`/tmp`/`/var/folders`等）外、未使用であること
 - confirmation literal `I_UNDERSTAND_GDA_POSTAL_R5_IS_DISPOSABLE`
 - protected 4 pathsのpathname/mode/blob/Git state（内容は読まない）
 
@@ -88,7 +111,7 @@ R4 importerは、書込み時の`SUPABASE_URL`を厳密に `https://<20文字pro
 2. `supabase migration list --local`相当で`20260901001246`がちょうど1件適用済みであることを示す。
 3. `supabase test db`相当で`supabase/tests/jp_postal_master_rpc.test.sql`を実DB実行し、全assertionを数えて記録する。
 4. anon、authenticated、service_roleのdirect table accessが契約どおり拒否されることを確認する。
-5. authenticated active dealer memberだけがlookup RPCを利用でき、anon、inactive user、cross-dealer context、missing membershipは拒否されることを、実際のAuth session cookie/JWTとPostgREST requestで確認する。
+5. 郵便番号マスターはdealerに紐付かないglobal reference dataであり、lookup RPCはdealer idを持たず、dealer所有データを一切返さない。少なくとも1件のactive `dealer_members` membershipを持つauthenticated userは、そのmembershipがどのdealerのものであっても成功することを、実際のAuth session cookie/JWTとPostgREST requestで確認する（別dealerのactive memberでも成功する）。anon、membership無し、inactiveだけのmembershipは拒否されることを同様に確認する。cross-dealer denialは要求しない。
 6. 郵便番号正規化、複数候補、空結果、active batchのみ参照、入力上限を実RPCで確認する。
 7. R4が保護する既存GYEON-order private-function/RLS契約を、既存pgTAPまたは限定した実queryで再確認する。postal migrationによる共有schemaの破壊がないことを示す。
 8. `supabase db lint --local --schema public --level warning --fail-on error`相当を実行し、error 0を要求する。
