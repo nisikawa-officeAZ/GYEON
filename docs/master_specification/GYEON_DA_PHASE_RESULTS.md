@@ -4848,3 +4848,96 @@ not_authorized:
 decision: REGISTER_OWNER_RATIFIED_ROUTE_SEPARATION_AND_KEEP_D5_IMPLEMENTATION_BLOCKED
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_ROUTE_SEPARATION_C3_RESERVATION_CORRECTION_D2_D4_DEPENDENCY_WALL_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
 ```
+
+## INV001-P19-BOOK-D2-Q2 — P20C private-package handoff alignment candidate
+
+```yaml
+phase: INV001_P19_BOOK_D2_Q2_P20C_PRIVATE_PACKAGE_HANDOFF_ALIGNMENT
+marker: INV001_P19_BOOK_D2_Q2_P20C_PRIVATE_PACKAGE_HANDOFF_ALIGNMENT_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_GATE2_PUBLICATION_BLOCKED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner ratified the Book D2 package-handoff evidence boundary and authorized creation and local verification of exactly three governance documents only. This authorizes no Foundation or Studio implementation, package publication/download/install, registry authentication, credential action, Claude invocation, private-source transmission, dependency or lockfile change, source/test edit, executable application test, stage, commit, push, PR mutation, DB, Supabase, Auth, provider, Android, staging, production, or deployment action."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: 42617a4142814f17188ef8b537da0b48ae11e4d2
+  fixed_tree: 704660393c4c1f3b7a8df831d7c3d085331b9670
+  branch: agent/inv001-p19-book-d2-q2-package-handoff-alignment
+foundation_gate_1:
+  repository: nisikawa-officeAZ/detaileros-inventory-foundation
+  pull_request: 80
+  source_head: ea1044f0e0acdf475200622e2bd5ec96ce8eee34
+  merge_commit: 2e2ff839652361e879463138f11329d8176cdebe
+  merge_tree: c991400af0adafd346eb7c47f45f13d0b39d4a7e
+  merge_parents:
+    - a5764f7821b02769ef2d4fba40d432abdc76fa56
+    - ea1044f0e0acdf475200622e2bd5ec96ce8eee34
+  main_ci: SUCCESS
+  result: PASS_MERGED_TREE_PIN_HELD
+  result_evidence: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5525721369
+  reconciliation: PASS_GATE1_ACCEPTED
+  reconciliation_evidence: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5525778832
+foundation_gate_2:
+  immutable_private_package_publication: NOT_EXECUTED
+  publication_receipt_accepted: false
+  book_d2_may_start: false
+future_package:
+  name: "@nisikawa-officeaz/detaileros-inventory-foundation"
+  version: 0.1.0
+  registry: GitHub Packages
+  visibility: private
+  source_merge_commit: 2e2ff839652361e879463138f11329d8176cdebe
+  source_tree: c991400af0adafd346eb7c47f45f13d0b39d4a7e
+  overwrite_same_version: PROHIBITED
+mandatory_gate_2_handoff_evidence:
+  - github_actions_publication_provenance_and_immutable_run_url
+  - exact_foundation_merge_commit_and_tree
+  - exact_package_name_version_registry_and_private_visibility
+  - published_registry_tarball_sha512_or_integrity
+  - complete_tarball_file_catalogue
+  - export_and_declaration_catalogue_for_five_d1_surfaces_and_eighteen_commands
+  - publication_timestamp_and_no_overwrite_declaration
+  - forbidden_file_exclusion_proof
+sbom:
+  requirement: OPTIONAL_LATER
+  book_d2_gate_a_blocker: false
+consumer_install_proof:
+  gate_a_prerequisite: false
+  first_execution_gate: GATE_B1_AFTER_GATE_A_ACCEPTANCE_AND_SEPARATE_OWNER_AUTHORIZATION
+future_claude_gate_a:
+  authorized_now: false
+  allowed_after_separate_owner_authorization:
+    - exact_book_gate_a_files
+    - published_private_package_artifact_or_exact_extracted_published_contents
+    - non_secret_registry_metadata_and_integrity
+    - tarball_export_and_declaration_catalogues
+    - shipped_integration_contract_and_release_manifest_json
+    - accepted_gate_1_and_gate_2_handoff_receipts
+  prohibited:
+    - foundation_repository_private_source
+    - src/package/inventoryRuntime.ts
+    - foundation_tests_migrations_draft_sql_workflow_source_or_unrelated_docs
+preserved_d2_gates:
+  gate_a: BLOCKED_GATE2_PUBLICATION_RECEIPT
+  gate_b1: BLOCKED_GATE_A_ACCEPTANCE
+  gate_b1_allowlist:
+    - .npmrc
+    - package.json
+    - package-lock.json
+  gate_b2: BLOCKED_GATE_B1_ACCEPTANCE
+  gate_b2_allowlist:
+    - src/lib/inventory/foundation/foundation-runtime-package.ts
+    - src/lib/inventory/foundation/foundation-runtime-package.test.ts
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_Q2_P20C_PRIVATE_PACKAGE_HANDOFF_ALIGNMENT.md
+  sha256: 0fe90831fa2af9217c92a1cbe1a4a56516b2bcc6bf45f8c697d84474ac1027a0
+  result_marker: INV001_P19_BOOK_D2_Q2_P20C_PRIVATE_PACKAGE_HANDOFF_ALIGNMENT_RESULT_V1
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_Q2_P20C_PRIVATE_PACKAGE_HANDOFF_ALIGNMENT.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+implementation_authorized: false
+decision: ALIGN_D2_TO_ACCEPTED_P20C_GATE1_AND_OWNER_EVIDENCE_POLICY_KEEP_D2_BLOCKED_UNTIL_GATE2_PUBLICATION_ACCEPTANCE
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_BOOK_AND_FOUNDATION_IDENTITIES_GATE1_RECEIPT_GATE2_HOLD_MANDATORY_EVIDENCE_OPTIONAL_SBOM_NON_CIRCULAR_GATE_ORDER_PUBLISHED_ARTIFACT_ONLY_CLAUDE_BOUNDARY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
+```

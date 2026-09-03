@@ -800,7 +800,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Current blocker:** The fixed Foundation `package.json` is named `detaileros-inventory-foundation`, is version `0.1.0`, has `private: true`, and declares no `main`, `exports`, `types`, `files`, or build/publish script. No accepted P19 evidence proves a published tarball, immutable integrity, declarations, scoped package identity, or commit/tree binding. Book must not install or wrap a guessed artifact.
 
-**Required Foundation prerequisite:** A separate Foundation-owned publication phase must prove the private scoped package identity `@nisikawa-officeaz/detaileros-inventory-foundation`, exact version, source commit/tree, tarball integrity, provenance/SBOM, file/declaration/export catalogue, consumer compatibility, credential-safe installation, and rollback. Book does not publish or repair Foundation in D2.
+**Required Foundation prerequisite (updated by D2-Q2):** A separate Foundation-owned publication phase must prove the private scoped package identity `@nisikawa-officeaz/detaileros-inventory-foundation`, exact version, source commit/tree, published tarball SHA-512/integrity, GitHub Actions publication provenance, complete file/declaration/export catalogue, private visibility, publication timestamp, forbidden-file exclusion, and no-overwrite rule. SBOM is optional later. Actual authenticated consumer installation belongs to Book Gate B1 and is not a Gate A prerequisite. Book does not publish or repair Foundation in D2.
 
 **Gate separation:**
 
@@ -833,11 +833,33 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_Q1R1_FOUNDATION_LANDING_ACCEPTANCE_AND_PACKAGE_PUBLICATION_HOLD.md`. Current local SHA-256: `333e013e99a6f72ffabf348a3766b7d0f3e6aadb01f29d0bec8e3aa8335048b5`. Proposed branch: `agent/inv001-p19-book-d2-q1r1-foundation-landing-hold`.
 
-**Decision:** Keep D2 Gate A, B1, and B2 blocked. Book must not install, copy, vendor, emulate, wrap, or publish Foundation. The next unblocker is a separately Owner-authorized Foundation-owned immutable private package publication phase that proves exact scoped identity, semantic version, source binding, exports/types/files, clean build, tarball integrity/catalogue, provenance/SBOM, private visibility, credential-safe install, rollback, and forbidden-file exclusion.
+**Decision (updated by D2-Q2):** Keep D2 Gate A, B1, and B2 blocked. Book must not install, copy, vendor, emulate, wrap, or publish Foundation. The next unblocker is a separately Owner-authorized Foundation-owned immutable private package publication phase that proves exact scoped identity, semantic version, source binding, exports/types/files, clean build, published tarball SHA-512/integrity and complete catalogue, GitHub Actions publication provenance, private visibility, publication timestamp, no-overwrite rule, and forbidden-file exclusion. SBOM is optional later; credential-safe consumer installation belongs to the later Book Gate B1.
 
 **Current boundary:** Exactly the new directive, this completion-plan entry, and one append-only phase-results entry. No private-source transmission, Claude invocation, package/registry action, credential request, dependency/lockfile/source/test edit, executable test, stage, commit, push, PR mutation, Ready, merge, DB, Supabase, migration, Auth, provider, Android, deployment, staging, or production action is authorized.
 
 **Exit gate:** Independently verify the exact three-document diff, directive hash, Foundation landing identity, package blocker, registry-evidence classification, D2 hold, Foundation ownership, protected metadata, and `git diff --check`; then request a separate Owner gate for stage and local commit.
+
+### INV001-P19-BOOK-D2-Q2 — P20C private-package handoff alignment
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / FOUNDATION GATE 1 ACCEPTED / FOUNDATION GATE 2 PACKAGE PUBLICATION NOT EXECUTED / BOOK D2 BLOCKED.
+
+**Objective:** Replace the stale D2/Q1R1 package-readiness and Claude read-scope assumptions with the Owner-ratified P20C handoff boundary while preserving D1 and the separated D2 Gate A/B1/B2 execution model.
+
+**Fixed Book authority:** `main` commit `42617a4142814f17188ef8b537da0b48ae11e4d2`, tree `704660393c4c1f3b7a8df831d7c3d085331b9670`; candidate branch `agent/inv001-p19-book-d2-q2-package-handoff-alignment`.
+
+**Accepted Foundation Gate 1:** PR #80 source head `ea1044f0e0acdf475200622e2bd5ec96ce8eee34` was normally merged as `2e2ff839652361e879463138f11329d8176cdebe`, tree `c991400af0adafd346eb7c47f45f13d0b39d4a7e`. The merge-tree pin and successful CI were independently accepted in Foundation Issue #39 comment `5525778832`. This proves candidate landing only; it does not prove package publication or installability.
+
+**Future package handoff:** `@nisikawa-officeaz/detaileros-inventory-foundation@0.1.0` through private GitHub Packages, bound one-to-one to the accepted Foundation merge tree with no version overwrite. Gate 2 must provide GitHub Actions publication provenance, exact merge commit/tree, registry identity and visibility, published tarball SHA-512/integrity, complete tarball file catalogue, export/declaration catalogue, publication timestamp, excluded-file proof, and no-overwrite declaration.
+
+**Owner evidence decision:** SBOM is optional later and is not a Book D2 Gate A blocker. Actual consumer-install proof is not a Gate A prerequisite because Gate B1 is the first Book install. Gate A consumes accepted publication metadata/artifact/catalogues/declarations/handoff evidence; Gate B1 later performs authenticated installation and exact lockfile pin.
+
+**Claude boundary:** No Claude invocation is authorized now. A later separately authorized Gate A may transmit exact Book files and the published private package artifact/metadata/handoff evidence only. Foundation repository private source—including `src/package/inventoryRuntime.ts`—tests, migrations, Draft SQL, workflow source, and unrelated docs must not be transmitted.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_Q2_P20C_PRIVATE_PACKAGE_HANDOFF_ALIGNMENT.md`. Candidate SHA-256: `0fe90831fa2af9217c92a1cbe1a4a56516b2bcc6bf45f8c697d84474ac1027a0`. Proposed branch: `agent/inv001-p19-book-d2-q2-package-handoff-alignment`.
+
+**Current boundary:** Exactly the new D2-Q2 directive, this completion-plan entry, and one append-only phase-results entry. No Foundation/Studio implementation, package publication/download/install, registry authentication, credential action, private-source transmission, Claude invocation, dependency/lockfile/source/test edit, executable application test, stage, commit, push, PR mutation, DB, Supabase, Auth, provider, Android, staging, production, or deployment is authorized.
+
+**Exit gate:** Verify the exact three-document diff, directive hash, Book and Foundation identities, Gate 1 receipt, Gate 2 hold, mandatory evidence, optional-SBOM decision, non-circular Gate A/B1 order, published-artifact-only Claude boundary, protected metadata, and `git diff --check`; then request a separate Owner gate for stage and local commit.
 
 ### INV001-P19-BOOK-D3A — Foundation persistence governance preparation
 
