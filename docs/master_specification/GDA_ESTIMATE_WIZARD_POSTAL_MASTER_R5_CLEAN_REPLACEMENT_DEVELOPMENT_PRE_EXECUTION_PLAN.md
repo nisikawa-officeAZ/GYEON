@@ -6,7 +6,7 @@
 |---|---|
 | Phase | `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION` |
 | Marker | `GDA_POSTAL_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN_V1` |
-| Status | `PLAN_CANDIDATE_READY_EXECUTION_BLOCKED` |
+| Status | `CR0_DELIVERED_CR1_DIRECTIVE_CANDIDATE_EXECUTION_BLOCKED` |
 | Date | 2026-09-03 |
 | Repository | `nisikawa-officeAZ/GYEON` |
 | Branch | `agent/gda-estimate-ocr-postal-clean-replacement-r1` |
@@ -127,7 +127,8 @@ result record. A PASS in one gate does not authorize the next.
 
 - Freeze a new execution HEAD/tree.
 - Enumerate every current top-level formal migration with path, mode, blob, and
-  SHA-256 without reading protected LINE content.
+  SHA-256 for non-protected paths. Record pathname, mode, blob, and clean state
+  only for the protected LINE migration without reading its content.
 - Reconcile the R5 one-exclusion replay with the old B-R3 three-exclusion
   policy.
 - Decide whether the two provisioning migrations are executed while the
@@ -308,3 +309,17 @@ acceptance passes at the final execution identity. The region is fixed at
 These references support the region immutability, clean-project-versus-clone
 distinction, manual reconfiguration requirements, Storage object separation,
 and Auth/JWT cutover risks. They do not authorize any platform action.
+
+## 12. CR0 delivery and CR1 governance handoff
+
+CR0 was committed as `4e3aa471ed776ccd360cd6405ccdc850fced5aaa`,
+tree `e7cadd5903ab29143e55a03ccb4a71cffe8bdfe1`, and normally pushed to
+PR #67. The branch was synchronized `0 0`; PR #67 remained OPEN/Draft and
+MERGEABLE; Vercel and Vercel Preview Comments both passed. No platform or
+database action occurred.
+
+The next governance candidate adds
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION.md`
+and updates this plan, the completion plan, and the append-only phase ledger.
+It defines a one-time, tool-disabled, twelve-file read-only diagnosis. This
+candidate does not authorize private-file transmission or Claude execution.

@@ -5071,3 +5071,51 @@ boundaries:
 decision: PLAN_CANDIDATE_READY_EXECUTION_BLOCKED
 next: "Independently verify this exact four-document candidate with the replacement region fixed at ap-northeast-1. After separate documentation delivery gates, author and deliver a Claude-targeted read-only CR1 current-manifest reconciliation directive. Project creation remains blocked."
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR0 delivery and CR1 directive candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION_GOVERNANCE
+marker: GDA_POSTAL_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION_DIRECTIVE_V1
+status: CR0_DELIVERED_CR1_GOVERNANCE_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner approved CR1 read-only manifest directive authoring while the PR #67 check completed. This authorizes exactly four documentation paths only. It does not authorize private-source transmission, Claude execution, stage, commit, push, PR mutation, project creation, cost confirmation, migration replay/application, database, provider, Ready, merge, or deployment."
+cr0_delivery:
+  commit: 4e3aa471ed776ccd360cd6405ccdc850fced5aaa
+  tree: e7cadd5903ab29143e55a03ccb4a71cffe8bdfe1
+  normal_non_force_push: true
+  upstream_ahead_behind: "0 0"
+  pr_67:
+    state: OPEN
+    draft: true
+    base: main
+    head_matches: true
+    mergeable: MERGEABLE
+    vercel: PASS
+    vercel_preview_comments: PASS
+cr1_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_private_read_allowlist_count: 12
+future_result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION_RESULT_V1
+required_manifest_inputs:
+  top_level_formal_sql_paths: 113
+  protected_line_content_access: PROHIBITED
+  disputed_provisioning_paths: 2
+  accepted_r4_product_storage_paths: 2
+owner_ratified_region: ap-northeast-1
+boundaries:
+  private_files_transmitted: false
+  claude_invoked: false
+  test_or_runtime_executed: false
+  project_created: false
+  cost_confirmed: false
+  database_or_provider_contacted: false
+  git_staged_committed_or_pushed_for_cr1: false
+  pr_ready_merged_or_deployed: false
+decision: CR1_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "Verify the exact four-document candidate, directive consistency, twelve-file read allowlist, protected metadata, and diff check. Stage/local commit and normal push require separate Owner gates. Private transmission and one-time Claude diagnosis require another explicit authorization after delivery."
+```

@@ -1548,7 +1548,9 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5-CR0 — Clean replacement Development pre-execution plan
 
-**Status:** PLAN CANDIDATE READY / EXECUTION BLOCKED / PROJECT NOT CREATED.
+**Status:** CR0 PLAN COMMITTED AND NORMALLY PUSHED / CHECKS PASS / CR1
+READ-ONLY DIRECTIVE GOVERNANCE CANDIDATE AUTHORIZED / DIAGNOSIS NOT RUN /
+PROJECT NOT CREATED.
 
 **Objective:** Convert the accepted R5 local disposable result and the blocked
 Development schema/ledger preflight into a safe serial clean-replacement plan
@@ -1596,6 +1598,33 @@ deployment is authorized.
 and normal push require later separate explicit approvals. The next executable
 phase is not project creation; it is a committed Claude-targeted read-only CR1
 manifest-reconciliation gate.
+
+**CR0 delivery:** Commit `4e3aa471ed776ccd360cd6405ccdc850fced5aaa`,
+tree `e7cadd5903ab29143e55a03ccb4a71cffe8bdfe1`, was normally pushed to
+PR #67. The remote branch matched `0 0`; PR #67 remained OPEN/Draft and
+MERGEABLE; Vercel and Vercel Preview Comments passed.
+
+**CR1 governance candidate:** The exact current directive is
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION.md`.
+It limits the future one-time diagnosis to twelve private paths and a
+Codex-supplied 113-path metadata attestation. It requires one exact decision
+between including both provisioning migrations as disabled infrastructure or
+excluding both, and it rechecks whether the accepted R4 product-policy/five-
+bucket forward repair already closes the historical prerequisite. It prohibits
+project/DB/provider/network execution and cannot return a project-creation
+verdict.
+
+**CR1 governance write allowlist — exactly four paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION.md` (new)
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**CR1 current boundary:** Documentation only. Private-file transmission,
+Claude execution, tests, runtime, Supabase/DB/project/provider/network access,
+source repair, stage, commit, push, PR mutation, Ready, merge, and deployment
+remain separately unauthorized.
 
 ### GDA-3 — Completion Desk
 
