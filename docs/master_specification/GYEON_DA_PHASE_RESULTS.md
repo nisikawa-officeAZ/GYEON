@@ -5726,3 +5726,99 @@ implementation_authorized: false
 decision: ALIGN_D2_TO_ACCEPTED_P20C_GATE1_AND_OWNER_EVIDENCE_POLICY_KEEP_D2_BLOCKED_UNTIL_GATE2_PUBLICATION_ACCEPTANCE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_BOOK_AND_FOUNDATION_IDENTITIES_GATE1_RECEIPT_GATE2_HOLD_MANDATORY_EVIDENCE_OPTIONAL_SBOM_NON_CIRCULAR_GATE_ORDER_PUBLISHED_ARTIFACT_ONLY_CLAUDE_BOUNDARY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6 blocked result and CR6-R1 hosted mechanism governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1_HOSTED_REPLAY_MECHANISM_CORRECTION_GOVERNANCE
+marker: GDA_POSTAL_R5_CR6_R1_HOSTED_REPLAY_MECHANISM_CORRECTION_DIRECTIVE_V1
+status: CR6_BLOCKED_REPLAY_MECHANISM_CR6_R1_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After the Owner-authorized CR6 tool-disabled diagnosis returned BLOCKED_REPLAY_MECHANISM and MacBook Codex independently accepted the stop with one official-source rationale correction, the Owner authorized CR6-R1 directive authoring only. This authorization is limited to exactly four documentation paths. It does not authorize private-file transmission, Claude invocation, harness/source/test implementation, Git stage/commit/push, Supabase/DB/project/provider access, SQL, migration replay, data transfer, real postal import, Vercel change, Ready, merge, cutover, retirement, or deployment."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  pre_authoring_head: 0dd1f7691bbeefdc09035c87567abca27b2e3ebc
+  pre_authoring_tree: 1255fc641fe180a7514b40a6bb65e3d6c3261e6a
+  upstream_ahead_behind_before_authoring: "0 0"
+  pr_state_before_authoring: OPEN/Draft
+  base: main
+  remote_head_matched_before_authoring: true
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+prior_cr6:
+  phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_EXACT_HOSTED_MIGRATION_REPLAY_PREFLIGHT
+  invocation_head: 73a63e660808a337d61a2488b818ac5d2e7c69d7
+  invocation_tree: 20c2c2e0d6301d80773f15f202081e004ac1a618
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_EXACT_HOSTED_MIGRATION_REPLAY_PREFLIGHT_RESULT_V1
+  verdict: BLOCKED_REPLAY_MECHANISM
+  result_sha256: 29216399e7fb1351385921a0558521d9d90effdd40a99764987a8d4a76d560ed
+  hosted_project_contacted: false
+  database_or_provider_modified: false
+codex_independent_audit:
+  stop_verdict: ACCEPTED
+  corrected_fact: "Supabase CLI v2.116.0 source proves sequential stop after a migration application error. The remaining blocker is not absence of stop proof. It is exact hosted isolated-workdir staging plus partial-application quarantine and credential-safe evidence."
+  cli_version: 2.116.0
+  cli_tag_object: 88a1f645050693664730a99e21c09d119e0df436
+  cli_commit: 997a1e69a4a83466964ed874d3a604c88a7b3866
+  cli_tree: 656e3836031e686f10cc6f6ca41e90724c8029d5
+  named_migration_exclusion_flag: ABSENT
+  pipeline_incompatible_partial_commit_risk: CONFIRMED
+fixed_target:
+  organization: officeAZ
+  organization_id: ivlpkysdjbrkcozrvzwg
+  project_name: DealerOS-Dev-Clean-R5
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  region: ap-northeast-1
+  postgres_version: 17.6.1.166
+  provider_state_recorded_by_cr5: ACTIVE_HEALTHY
+fixed_manifest:
+  formal_migrations: 113
+  replay_migrations: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  other_exclusions: 0
+  aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  postal_sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+cr6_r1_future_diagnosis:
+  authorized_now: false
+  mode_after_separate_owner_authorization: ONE_TOOL_DISABLED_READ_ONLY_STATIC_MECHANISM_DIAGNOSIS
+  control_directive_count: 1
+  repository_supporting_file_count: 14
+  total_repository_file_payload_count: 15
+  additional_non_repository_evidence:
+    - exact_prior_cr6_report
+    - metadata_only_113_migration_table
+    - dated_non_secret_cli_help
+    - exact_official_v2_116_0_source_files_named_by_directive
+    - codex_source_audit_note
+  maximum_next_verdict: READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION
+required_future_harness_properties:
+  - offline_manifest_and_exclusion_proof_before_network
+  - isolated_workdir_with_exactly_112_migrations
+  - exact_project_ref_binding
+  - argument_array_without_shell_interpolation
+  - one_apply_process_no_retry
+  - maximum_duration_30_minutes
+  - volatile_raw_output_then_redacted_retention
+  - fail_closed_secret_scan_and_evidence_hashing
+  - partial_failure_quarantine_without_repair_reset_delete_or_recreate
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1_HOSTED_REPLAY_MECHANISM_CORRECTION.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  private_files_transmitted: false
+  claude_invoked: false
+  harness_source_test_dependency_or_migration_changed: false
+  test_or_runtime_executed: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: REGISTER_CR6_R1_HOSTED_REPLAY_MECHANISM_CORRECTION_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_FOUR_DOCUMENT_DIFF_DIRECTIVE_INPUT_COUNT_OFFICIAL_CLI_IDENTITY_CORRECTED_FAILURE_SEMANTICS_FUTURE_IMPLEMENTATION_CEILING_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL"
+```

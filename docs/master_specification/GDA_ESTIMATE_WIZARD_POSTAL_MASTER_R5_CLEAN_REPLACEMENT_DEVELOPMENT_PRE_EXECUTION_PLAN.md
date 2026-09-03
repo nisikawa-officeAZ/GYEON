@@ -6,7 +6,7 @@
 |---|---|
 | Phase | `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION` |
 | Marker | `GDA_POSTAL_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN_V1` |
-| Status | `CR0_DELIVERED_CR1_DIRECTIVE_CANDIDATE_EXECUTION_BLOCKED` |
+| Status | `CR6_BLOCKED_REPLAY_MECHANISM_CR6_R1_GOVERNANCE_CANDIDATE` |
 | Date | 2026-09-03 |
 | Repository | `nisikawa-officeAZ/GYEON` |
 | Branch | `agent/gda-estimate-ocr-postal-clean-replacement-r1` |
@@ -293,12 +293,21 @@ track.
 
 ## 10. Current stop condition
 
-CR1 is Owner-ratified and `CR2_NOT_REQUIRED`. The next allowed action is
-delivery of the committed CR3 read-only preflight directive, followed only
-after another explicit Owner gate by its one-time static review. Project
-creation is not the next action. The replacement must not be created until a
-separately authorized fresh CR3 disposable attempt passes at its final
-execution identity. The region remains fixed at `ap-northeast-1`.
+CR1 is Owner-ratified, `CR2_NOT_REQUIRED`, CR3 passed, CR4 passed, and CR5
+created exactly one empty replacement project. The prior CR6 static preflight
+correctly returned `BLOCKED_REPLAY_MECHANISM`. No hosted migration has been
+applied.
+
+The current allowed action is CR6-R1 documentation authoring only. CR6-R1 must
+define a hosted-specific isolated-workdir harness contract and partial-failure
+quarantine behavior. It must account for the official CLI source evidence that
+sequential application stops after an error while pipeline-incompatible SQL
+may already have committed outside the final history-writing batch.
+
+The empty project remains fixed as `DealerOS-Dev-Clean-R5` /
+`nqvnjqcxgngqsqkbpdfi` in `ap-northeast-1`. No database connection, link,
+migration, retry, repair, data transfer, real Japan Post CSV import, Vercel
+binding, cutover, Ready conversion, merge, or deployment is authorized.
 
 ## 11. Official platform references checked for this plan
 
@@ -394,3 +403,52 @@ transmission, Claude invocation, test, runtime, Supabase/DB/provider action,
 project creation, migration replay/application, data transfer, real postal
 import, configuration, cutover, retirement, PR mutation, Ready, merge, or
 deployment.
+
+## 15. CR3 acceptance through CR5 creation
+
+The accepted fresh CR3 attempt used suffix
+`20260903T114441Z-6698d3`, replayed the exact 112-file manifest in both local
+lanes, passed postal pgTAP `75/75`, runtime-contract pgTAP `20/20`, real
+Auth/PostgREST `9/9`, import interruption/resume `3/3` plus `25/25`, and left
+zero suffix-matching runtime resources. It did not contact a hosted project.
+
+CR4 fixed organization `officeAZ`, project name `DealerOS-Dev-Clean-R5`,
+region `ap-northeast-1`, default Micro, no paid add-ons, and the accepted USD
+10 monthly cost. CR5 then created exactly one empty project with ref
+`nqvnjqcxgngqsqkbpdfi`. Provider state was `ACTIVE_HEALTHY`, PostgreSQL was
+`17.6.1.166`, and no database connection or migration application occurred.
+
+The conservative lifecycle clock uses provider creation time
+`2026-09-03T11:52:15.655049Z`. Automatic review is
+`2026-09-27 20:52:15 JST`; the mandatory pause or retirement decision deadline
+is `2026-10-04 20:52:15 JST`. Neither pause nor deletion is authorized.
+
+## 16. CR6 blocked result and CR6-R1 governance
+
+The tool-disabled CR6 preflight at HEAD/tree
+`73a63e660808a337d61a2488b818ac5d2e7c69d7` /
+`20c2c2e0d6301d80773f15f202081e004ac1a618` returned
+`BLOCKED_REPLAY_MECHANISM`. MacBook Codex accepted the stop and independently
+verified Supabase CLI `v2.116.0` source.
+
+The source proves sequential stop after a migration error, but it also records
+that pipeline-incompatible statements may execute outside the migration
+transaction and may remain committed without a history row after a mid-file
+failure. The CLI exposes no named-file exclusion flag. CR6 therefore remains
+blocked until a hosted-specific wrapper proves exact isolated staging,
+one-target/one-attempt execution, credential-safe evidence, a 30-minute
+watchdog, and fail-closed project quarantine without retry or repair.
+
+The governing CR6-R1 directive is
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1_HOSTED_REPLAY_MECHANISM_CORRECTION.md`.
+Its documentation write allowlist is exactly:
+
+1. that new directive;
+2. this clean-replacement plan;
+3. `GYEON_DA_COMPLETION_PLAN.md`; and
+4. `GYEON_DA_PHASE_RESULTS.md`.
+
+This candidate authorizes no private-file transmission, Claude invocation,
+harness implementation, tests, Git stage/commit/push, Supabase/DB/provider
+access, project binding, migration replay, data transfer, real postal import,
+Vercel change, Ready conversion, merge, or deployment.

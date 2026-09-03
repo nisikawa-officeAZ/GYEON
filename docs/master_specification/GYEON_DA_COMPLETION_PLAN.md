@@ -1849,6 +1849,51 @@ stage/local commit and normal push. CR6 exact hosted migration replay remains
 unauthorized until its own bounded directive, independent acceptance, and
 fresh Owner execution gate.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6 blocked result and CR6-R1 hosted mechanism correction
+
+**Status:** `CR6_BLOCKED_REPLAY_MECHANISM_CR6_R1_GOVERNANCE_CANDIDATE_UNCOMMITTED`
+
+The Owner authorized one tool-disabled, read-only CR6 preflight against the
+empty replacement-project identity and fixed 112-file manifest. Claude
+returned `BLOCKED_REPLAY_MECHANISM`. MacBook Codex independently accepted the
+stop, verified the result artifact SHA-256
+`29216399e7fb1351385921a0558521d9d90effdd40a99764987a8d4a76d560ed`,
+and refined the rationale using the official Supabase CLI `v2.116.0` source.
+
+The CLI applies pending migrations sequentially and stops after an application
+error. However, it exposes no named-file exclusion flag, and its own
+side-effect contract warns that pipeline-incompatible statements can commit
+outside the migration transaction before the final history row. A failed
+replay can therefore leave partial hosted state even though later migrations
+do not run.
+
+CR6-R1 is documentation-only. It defines a later static diagnosis for the
+smallest hosted-specific harness that must stage exactly 112 migrations in an
+isolated workdir, omit only the protected LINE migration, bind exactly one
+project, execute at most once with a 30-minute watchdog, retain only redacted
+secret-clean evidence, and quarantine any partial failure without retry,
+repair, reset, deletion, or recreation.
+
+**CR6-R1 four-document allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1_HOSTED_REPLAY_MECHANISM_CORRECTION.md`
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** No private-file transmission, Claude invocation, harness
+or test implementation, dependency/source/migration/protected-path change,
+Git stage/commit/push, Supabase/DB/Auth/Storage/provider/Vercel access, project
+binding, migration replay, data transfer, real Japan Post CSV import, Ready,
+merge, cutover, retirement, or deployment is authorized.
+
+**Next phase after delivery:** independently review the exact four-document
+candidate, directive input count, official CLI evidence identity, corrected
+failure semantics, future implementation ceiling, protected metadata, and
+`git diff --check`. Stage/local commit and normal push require separate Owner
+approvals. A future tool-disabled CR6-R1 diagnosis requires another explicit
+Owner authorization and cannot authorize hosted replay.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
