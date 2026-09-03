@@ -889,7 +889,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-D4A — Office AZ inventory-operator authority governance
 
-**Status:** GOVERNANCE MERGED THROUGH PR #61 / OWNER AUTHORITY POLICY RATIFIED / D4A-R1 FORMAL-SPEC CORRECTION CANDIDATE UNSTAGED AND UNCOMMITTED / AUTHORITY IMPLEMENTATION BLOCKED.
+**Status:** GOVERNANCE MERGED THROUGH PR #61 / OWNER AUTHORITY POLICY RATIFIED / D4A-R1 FORMAL-SPEC CORRECTION MERGED THROUGH PR #62 AS `f85a35266dfdea6e1986982bfea0e451186fbd13` / AUTHORITY IMPLEMENTATION BLOCKED.
 
 **Objective:** Resolve the Office AZ human/service operator, capability, location, suspension/revocation, and high-risk approval model that D4 requires, without reusing dealer roles, UI state, `authenticated`, user metadata, admin-client access, or service-role possession as authorization.
 
@@ -918,6 +918,30 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 **Safety boundary:** Snapshot import/recovery requires re-authentication, reason, pre-backup, explicit confirmation, and append-only audit. Future locations require a new Owner decision and explicit server-side activation. Unknown capabilities, ambiguous assignments, inactive/suspended/revoked operators, stale authority, and missing location grants deny before any Foundation call.
 
 **Implementation status:** `NOT_CONFIGURED`. Policy approval and the initial warehouse-operator designation for 小尾野氏 do not create an account, Auth claim, database row, RLS policy, GRANT, migration, or live permission.
+
+**Delivery:** D4A-R1 was committed as `3dd0bef132eff4995b0b6621fbbc0df28f17d888`, independently verified as an exact four-document change with passing checks and unchanged protected metadata, then normally merged through PR #62 as `f85a35266dfdea6e1986982bfea0e451186fbd13`, tree `a6c9537a242124cf6d48d81488cda217ffa592dc`.
+
+### INV001-P19-BOOK-D5A — Compatibility/cutover UI governance
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / D5 IMPLEMENTATION BLOCKED UNTIL D1-D4 AND D4A AUTHORITY IMPLEMENTATION ARE ACCEPTED.
+
+**Objective:** Define the fail-closed UI cutover from legacy Book dealer-stock surfaces to Foundation-derived Office AZ state without relabeling dealer-local rows, exposing the private Foundation package to browser code, duplicating calculations, falling back to old tables, or dual-writing.
+
+**Fixed Book authority:** `main` commit `f85a35266dfdea6e1986982bfea0e451186fbd13`, tree `a6c9537a242124cf6d48d81488cda217ffa592dc`. D1 is closed. D2 is blocked by the unpublished immutable Foundation package. D3A, D3B, D4, and the D4A live authority implementation remain incomplete.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D5A_COMPATIBILITY_CUTOVER_UI.md`. Proposed branch: `agent/inv001-p19-book-d5a-compatibility-ui-governance`.
+
+**Current conflict:** `src/app/inventory/InventoryClient.tsx` reads and mutates dealer-local inventory through `inventory-actions.ts` and `receiving-actions.ts`. `src/app/admin/logistics/inventory/LogisticsInventoryClient.tsx` receives rows calculated from dealer stock and order tables through an admin-client loader. Neither surface is the accepted Office AZ owner/location/status model, and neither may be relabeled as Foundation inventory.
+
+**C3 scope warning:** C3 reserved only the two Client Components and one new focused test for D5. Their Server Component loaders and legacy DTO/action dependencies are outside that list. Gate A must prove the three paths sufficient or return the minimum literal scope correction. No implementation may hide the mismatch in client props or a generic endpoint.
+
+**Required boundary:** Explicit `NOT_CONFIGURED`, `FORBIDDEN`, `LOADING`, `READY`, `STALE`, `ERROR`, `COMMAND_PENDING`, `COMMAND_ACCEPTED`, and `COMMAND_REJECTED` states; proven zero distinct from unknown; sanitized D4 DTOs only; exact capability/location control; no optimistic authoritative quantity; no automatic retry; no package/persistence/admin client in browser code; no legacy fallback or dual write.
+
+**Route decision:** `/inventory` is currently dealer-local. Gate A must identify whether it remains outside Foundation cutover or requires a separate Owner-approved repurposing. `/admin/logistics/inventory` is the candidate Office AZ view but must use D4/D4A authority rather than broad admin-client access.
+
+**Current boundary:** Exact three governance documents only. No private-source transmission, Claude invocation, UI/route/action/DTO/test edit, package, Auth, DB, Supabase, migration, implementation, executable test, stage, commit, push, PR mutation, Ready, merge, Android, provider, staging, deployment, or production action is authorized.
+
+**Exit gate:** Verify the exact three-document diff, directive hash, fixed base, current-source conflict evidence, route-audience blocker, exact 24-path proposed read scope, C3 scope sufficiency gate, D1-D4 dependency wall, no-fallback/no-dual-write contract, D6 separation, and protected metadata; then request a separate Owner stage/local-commit gate.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
