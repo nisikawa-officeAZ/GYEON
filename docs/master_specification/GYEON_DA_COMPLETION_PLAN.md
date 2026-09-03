@@ -1938,6 +1938,48 @@ Stage/local commit and normal push require separate Owner approvals. Only
 after delivery may the Owner separately authorize the nine-file static
 CR6-R1A diagnosis.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2 hosted replay harness offline implementation directive
+
+**Status:** `CR6_R1A_ACCEPTED_CR6_R2_DIRECTIVE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+CR6-R1A was committed and normally pushed at
+`bd59b08ae1268c6db3bbb5b44142066b90c2be70`, tree
+`03d5c4d58f79ea0b1dab75bd527c394acc2474ce`. Its separately authorized
+tool-disabled diagnosis returned
+`READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION`. MacBook Codex
+accepted the result after independently confirming fourteen exact future
+write paths, seven runtime/test pairs, eighteen offline requirements, two
+command arrays, and the nine-file diagnosis boundary.
+
+The new CR6-R2 directive converts that accepted contract into a bounded
+offline implementation phase. A later, separately authorized Claude run may
+create exactly fourteen new `.mjs` files under
+`scripts/e2e/gda-estimate-postal-master-r5-cr6/` and run `node --check`, one
+seven-test `node --test` command, `git diff --check`, and no-index whitespace
+checks for all fourteen new untracked files. Every process, filesystem, Git,
+clock, timer, evidence, and environment effect must be dependency-injected;
+tests may use only fakes or in-memory adapters.
+
+**CR6-R2 directive-authoring allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2_HOSTED_REPLAY_HARNESS_OFFLINE_IMPLEMENTATION.md`
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** Documentation candidate only. No Claude invocation,
+private-file transmission, harness/test implementation, executable test,
+Supabase CLI use, network, hosted project, database, provider, Vercel,
+migration replay, data transfer, Git stage/commit/push, PR mutation, Ready,
+merge, deployment, cutover, or retirement is authorized.
+
+**Next phase after delivery:** Independently verify this exact four-document
+candidate, the fourteen-path/seven-pair/thirteen-read-file arithmetic, both
+command arrays, protected metadata, clean index, and `git diff --check`.
+Stage/local commit and normal push require separate Owner approvals. Only
+after delivery may the Owner separately authorize one bounded CR6-R2 offline
+implementation invocation.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

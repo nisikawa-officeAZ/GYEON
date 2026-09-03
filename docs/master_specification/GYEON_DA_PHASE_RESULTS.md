@@ -5935,3 +5935,92 @@ boundaries:
 decision: REGISTER_CR6_R1A_RESULT_CONSISTENCY_CORRECTION_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_FOUR_DOCUMENT_DIFF_FOURTEEN_PATHS_SEVEN_PAIRS_EIGHTEEN_TEST_REQUIREMENTS_TWO_COMMAND_ARRAYS_NINE_FILE_DIAGNOSIS_BOUNDARY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2 offline harness implementation directive candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2_HOSTED_REPLAY_HARNESS_OFFLINE_IMPLEMENTATION_GOVERNANCE
+marker: GDA_POSTAL_R5_CR6_R2_HOSTED_REPLAY_HARNESS_OFFLINE_IMPLEMENTATION_DIRECTIVE_V1
+status: CR6_R2_DIRECTIVE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After MacBook Codex accepted the CR6-R1A static diagnosis, the Owner authorized a documentation-only CR6-R2 implementation directive. This authorizes exactly four governance documents. It does not authorize private-file transmission, Claude invocation, harness/test implementation, executable tests, Supabase CLI, network, Hosted Supabase, DB/provider/Vercel access, migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  pre_authoring_head: bd59b08ae1268c6db3bbb5b44142066b90c2be70
+  pre_authoring_tree: 03d5c4d58f79ea0b1dab75bd527c394acc2474ce
+  upstream_ahead_behind_before_authoring: "0 0"
+  pr_state_before_authoring: OPEN/Draft
+  base: main
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+accepted_cr6_r1a:
+  delivered_commit: bd59b08ae1268c6db3bbb5b44142066b90c2be70
+  delivered_tree: 03d5c4d58f79ea0b1dab75bd527c394acc2474ce
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1A_RESULT_CONSISTENCY_CORRECTION_RESULT_V1
+  claude_verdict: READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION
+  codex_adjudication: PASS
+  model: claude-sonnet-5
+  tool_use: false
+  web_requests: 0
+  repository_changed: false
+future_cr6_r2_contract:
+  authorized_now: false
+  exact_write_path_count: 14
+  runtime_module_count: 7
+  paired_test_count: 7
+  mandatory_offline_requirement_count: 18
+  command_array_count: 2
+  control_directive_count: 1
+  repository_supporting_file_count: 12
+  total_repository_read_payload_count: 13
+  exact_write_paths:
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.test.mjs
+allowed_future_offline_verification:
+  - node_check_exact_fourteen_new_mjs_files
+  - one_node_test_command_naming_exact_seven_tests
+  - git_diff_check
+  - fourteen_no_index_whitespace_checks_for_new_untracked_files
+  - read_only_git_identity_status_diff_and_protected_metadata
+forbidden_future_cr6_r2_actions:
+  - real_supabase_binary_invocation_including_version_or_help
+  - network_or_dns
+  - hosted_project_or_database_contact
+  - real_process_spawn_in_tests
+  - package_or_lockfile_change
+  - existing_file_modification
+  - git_stage_commit_push_or_pr_mutation
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2_HOSTED_REPLAY_HARNESS_OFFLINE_IMPLEMENTATION.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  private_files_transmitted: false
+  claude_invoked: false
+  harness_or_test_files_created: false
+  executable_tests_run: false
+  supabase_cli_or_network_used: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: REGISTER_CR6_R2_OFFLINE_HARNESS_IMPLEMENTATION_DIRECTIVE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_FOUR_DOCUMENT_DIFF_FOURTEEN_WRITE_PATHS_SEVEN_PAIRS_EIGHTEEN_REQUIREMENTS_THIRTEEN_READ_FILES_TWO_COMMAND_ARRAYS_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL"
+```

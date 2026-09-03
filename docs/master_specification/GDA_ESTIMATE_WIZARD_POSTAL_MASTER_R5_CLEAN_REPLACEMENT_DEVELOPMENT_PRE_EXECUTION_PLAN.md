@@ -6,7 +6,7 @@
 |---|---|
 | Phase | `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION` |
 | Marker | `GDA_POSTAL_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN_V1` |
-| Status | `CR6_R1_READY_RESULT_REJECTED_CR6_R1A_GOVERNANCE_CANDIDATE` |
+| Status | `CR6_R1A_ACCEPTED_CR6_R2_DIRECTIVE_CANDIDATE` |
 | Date | 2026-09-03 |
 | Repository | `nisikawa-officeAZ/GYEON` |
 | Branch | `agent/gda-estimate-ocr-postal-clean-replacement-r1` |
@@ -299,18 +299,22 @@ correctly returned `BLOCKED_REPLAY_MECHANISM`. No hosted migration has been
 applied.
 
 CR6-R1 was delivered and two separately authorized tool-disabled diagnoses
-were completed. The first stopped at `BLOCKED_CLI_EVIDENCE`. The corrected
-invocation received the missing CLI evidence and returned
-`READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION`, but MacBook
-Codex rejected that result as `CHANGES_REQUIRED` because the reported file
-count did not match its path list, a required test file was outside that list,
-test ownership was incomplete, and one help-derived claim lacked supplied
-evidence.
+were completed. The first stopped at `BLOCKED_CLI_EVIDENCE`. MacBook Codex
+rejected the second result as `CHANGES_REQUIRED` because its file count, path
+list, test ownership, and supplied-evidence boundary contradicted each other.
 
-The current allowed action is CR6-R1A documentation correction only. It fixes
-the future implementation allowlist at fourteen new files with seven exact
-runtime/test pairs and adds the missing `migration list --help` evidence. No
-CR6-R2 implementation is authorized.
+CR6-R1A corrected those defects, was committed as
+`bd59b08ae1268c6db3bbb5b44142066b90c2be70`, normally pushed to PR #67, and
+then passed the separately authorized static diagnosis with
+`READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION`. MacBook Codex
+accepted that result after verifying fourteen future implementation paths,
+seven runtime/test pairs, eighteen requirements, two command arrays, and the
+nine-file diagnosis input boundary.
+
+The current allowed action is CR6-R2 directive authoring only. It may change
+the new directive and the same three governance trackers. Harness
+implementation, Claude invocation, executable tests, and hosted access remain
+unauthorized.
 
 The empty project remains fixed as `DealerOS-Dev-Clean-R5` /
 `nqvnjqcxgngqsqkbpdfi` in `ap-northeast-1`. No database connection, link,
@@ -488,3 +492,36 @@ It fixes exactly fourteen future implementation files, seven runtime/test
 pairs, eighteen mandatory offline requirements, both CLI argument arrays, and
 a nine-repository-file correction-diagnosis input boundary. CR6-R1A remains
 documentation-only and cannot authorize hosted execution.
+
+## 18. CR6-R1A acceptance and CR6-R2 directive candidate
+
+CR6-R1A was delivered at commit/tree
+`bd59b08ae1268c6db3bbb5b44142066b90c2be70` /
+`03d5c4d58f79ea0b1dab75bd527c394acc2474ce`. The separately authorized
+tool-disabled diagnosis returned
+`READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION`, and MacBook
+Codex accepted it. That acceptance resolves the CR6-R1 result-consistency
+defects; it does not itself authorize implementation.
+
+The governing CR6-R2 directive candidate is
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2_HOSTED_REPLAY_HARNESS_OFFLINE_IMPLEMENTATION.md`.
+It freezes exactly fourteen new harness/test paths as seven one-to-one pairs,
+an exact thirteen-file implementation read payload consisting of the control
+directive plus twelve supporting repository files, eighteen mandatory offline
+requirements, and the two fixed Supabase CLI argument arrays. The future
+harness must be fully dependency-injected and tested without starting a real
+process, contacting a network, or accessing a hosted project.
+
+The current documentation allowlist is exactly:
+
+1. that new CR6-R2 directive;
+2. this clean-replacement plan;
+3. `GYEON_DA_COMPLETION_PLAN.md`; and
+4. `GYEON_DA_PHASE_RESULTS.md`.
+
+This candidate authorizes no private-file transmission, Claude invocation,
+source or test creation, executable test, Supabase CLI invocation, network,
+database, provider, Vercel, migration, Git stage/commit/push, PR mutation,
+Ready, merge, deployment, cutover, or retirement. After the four-document
+candidate is independently verified and separately committed and pushed, the
+Owner may separately authorize one bounded CR6-R2 offline implementation.
