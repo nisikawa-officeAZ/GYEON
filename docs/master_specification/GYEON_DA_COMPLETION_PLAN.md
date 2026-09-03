@@ -714,7 +714,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-C2 — Foundation runtime delivery and product identity decision
 
-**Status:** DIRECTIVE CREATED LOCALLY / GOVERNANCE CANDIDATE UNCOMMITTED / NO PRIVATE-FILE TRANSMISSION OR CLAUDE INVOCATION AUTHORIZED.
+**Status:** READ-ONLY DECISION PACKAGE COMPLETE / OWNER DECISIONS RATIFIED IN PR #54 / PR REMAINS OPEN DRAFT / NO IMPLEMENTATION AUTHORIZED.
 
 **Objective:** Produce an owner-ready decision package for exactly two unresolved C1 boundaries: the mechanism that delivers the sealed Foundation runtime to Book and the identity contract that binds Book catalogue references to Foundation inventory products.
 
@@ -732,9 +732,39 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Hard boundary:** No implementation, package install/publication, registry, dependency or lockfile change, route/RPC, product remap, table/migration/backfill, dual-write, source copy, Android, provider, deployment, or production work. Any later allowlist must be literal and contain no wildcard.
 
-**Current authorization:** The owner authorized creation of the next C2 directive after posting the C1 correction. This authorizes only the local three-path governance candidate consisting of this plan, the result ledger, and the new C2 directive. It does not authorize stage, commit, push, branch/PR mutation, private-file transmission, Claude invocation, tests, or implementation.
+**Delivery and result:** The exact three-path C2 governance candidate was committed as `81e03a381b29ce8357182317bb5890d0a76055ee`, tree `8ace929836ac3847bb2566dbf41f2f2cbb7d8b69`, parent `dd2bb58a68ddffbc6c87efe5c1dd4265eb0785ae`, normally non-force pushed, and opened as Draft PR #54. After separate authorization, one tool-disabled read-only Claude invocation received exactly 16 Book and 4 Foundation files. Claude returned `PASS_DECISION_PACKAGE_READY`. MacBook Codex accepted the substantive result, corrected two abbreviated manifest paths, and recorded the Owner decisions in PR #54 comment `5518304280`.
 
-**Exit gate:** Verify the exact three-path local governance diff and protected-path metadata. Stage/local commit, normal push/Draft PR, and exact private-file transmission remain separate owner gates.
+**Ratified decisions:** Use a private immutable GitHub Packages artifact; execute the Foundation runtime server-side only; persist through new Foundation-specific tables in the existing DealerOS Supabase environment; keep Foundation's immutable product ID canonical and bind it one-to-one to the Book catalogue ID; and supersede the existing Book pure Office AZ inventory cores only after verified cutover. No implementation is authorized by these decisions.
+
+**Exit gate:** C2 is closed as a decision package. PR #54 remains Draft and Ready/merge remain separate Owner gates. The documentation-only C3 ratification candidate follows.
+
+### INV001-P19-BOOK-C3 — Owner decision ratification
+
+**Status:** LOCAL THREE-PATH GOVERNANCE CANDIDATE CREATED / UNCOMMITTED / NO IMPLEMENTATION AUTHORIZED.
+
+**Objective:** Convert the accepted C2 Owner decisions into Book governance and publish literal, non-overlapping proposed allowlists for later Book phases without starting implementation.
+
+**Governing directive:**
+
+- Path: `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_C3_OWNER_DECISION_RATIFICATION.md`.
+- Result marker: `INV001_P19_BOOK_C3_OWNER_DECISION_RATIFICATION_RESULT_V1`.
+- Current local directive SHA-256: `fdc1253d7ac60cdfe3713f6b6fe8e49aef0d127af890018effacbaa6a6603f22`.
+- Proposed branch: `agent/inv001-p19-book-c3-owner-decision-ratification`.
+- C3 exact change scope: the new directive, this completion plan, and the phase-results ledger only.
+
+**Ratified architecture:**
+
+1. Foundation runtime delivery: private immutable GitHub Packages artifact, proposed package identity `@nisikawa-officeaz/detaileros-inventory-foundation`, exact version/commit/tree/integrity pin.
+2. Execution: Book server-only boundary; no browser/client/Android direct runtime import.
+3. Persistence: new Foundation-specific tables in the existing DealerOS Supabase environment; existing local inventory tables remain non-authoritative.
+4. Product identity: Foundation immutable product ID is canonical; Book owns a one-to-one integration mapping to `gyeon_products.id`; JAN/SKU are evidence only.
+5. Legacy cores: non-authoritative until verified cutover, then separately retired or reduced.
+
+**Future phase separation:** D1 pure adaptor; D2 package consumer; D3A persistence; D3B product mapping; D4 authenticated server boundary; D5 compatibility UI; D6 disposable/authenticated verification; D7 legacy retirement. Android remains a separate unresolved project gate. Every proposed Book path is literal and non-overlapping in the C3 directive.
+
+**Current authorization:** The Owner authorized creation of the C3 directive and updates to this plan and ledger only. No branch creation, stage, commit, push, PR mutation, Claude/private-source transmission, package publication, dependency installation, implementation, tests, DB/Supabase, Android, provider, deployment, or production action is authorized.
+
+**Exit gate:** Verify the exact three-path diff, directive hash, literal allowlists, and protected metadata. C3 stage/local commit requires the next explicit Owner gate.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 

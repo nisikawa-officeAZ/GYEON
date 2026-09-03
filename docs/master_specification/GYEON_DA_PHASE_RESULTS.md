@@ -3870,3 +3870,95 @@ not_authorized:
 decision: REGISTER_LOCAL_C2_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_PROTECTED_METADATA, THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
 ```
+
+## INV001-P19-BOOK-C2 — Decision package accepted and Owner decisions ratified
+
+```yaml
+phase: INV001_P19_BOOK_C2_FOUNDATION_RUNTIME_DELIVERY_AND_PRODUCT_IDENTITY_DECISION
+status: DECISION_PACKAGE_COMPLETE_OWNER_DECISIONS_RATIFIED_NO_IMPLEMENTATION_AUTHORITY
+date: 2026-09-03
+append_only: true
+book_pr:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/54
+  state: OPEN_DRAFT
+  base: main
+  head: 81e03a381b29ce8357182317bb5890d0a76055ee
+  tree: 8ace929836ac3847bb2566dbf41f2f2cbb7d8b69
+  changed_paths: 3
+  checks: PASS_2_OF_2
+claude_execution:
+  invocations: 1
+  tools: DISABLED
+  mode: READ_ONLY
+  exit_code: 0
+  result_marker: INV001_P19_BOOK_C2_FOUNDATION_RUNTIME_DELIVERY_AND_PRODUCT_IDENTITY_DECISION_RESULT_V1
+  verdict: PASS_DECISION_PACKAGE_READY
+  book_files: 16
+  foundation_files: 4
+  path_mode_blob_sha256_preflight: PASS_20_OF_20
+codex_acceptance:
+  marker: INV001_P19_BOOK_C2_CODEX_ACCEPTANCE_AND_OWNER_DECISION_V1
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/54#issuecomment-5518304280
+  result_format_correction: TWO_ABBREVIATED_PATHS_RESTORED_FROM_INDEPENDENT_MANIFEST
+owner_decisions:
+  runtime_delivery: PRIVATE_IMMUTABLE_GITHUB_PACKAGES_ARTIFACT
+  runtime_execution: BOOK_SERVER_ONLY
+  proposed_package: "@nisikawa-officeaz/detaileros-inventory-foundation"
+  persistence: EXISTING_DEALEROS_SUPABASE_WITH_DEDICATED_FOUNDATION_TABLES
+  existing_book_inventory_tables_as_foundation_authority: PROHIBITED
+  product_identity: FOUNDATION_IMMUTABLE_PRODUCT_ID_WITH_EXPLICIT_BOOK_MAPPING
+  mapping_owner: BOOK_INTEGRATION_BOUNDARY
+  jan_or_sku_as_canonical_identity: false
+  legacy_book_pure_cores: SUPERSEDE_AFTER_VERIFIED_CUTOVER
+not_authorized:
+  - github_package_publication_or_registry_configuration
+  - dependency_or_lockfile_change
+  - db_migration_rls_rpc_backfill_or_supabase_action
+  - source_test_route_ui_or_android_implementation
+  - staging_deployment_or_production
+decision: CLOSE_C2_AND_ADVANCE_TO_DOCUMENTATION_ONLY_C3
+next: INV001_P19_BOOK_C3_OWNER_DECISION_RATIFICATION
+```
+
+## INV001-P19-BOOK-C3 — Owner decision ratification governance candidate
+
+```yaml
+phase: INV001_P19_BOOK_C3_OWNER_DECISION_RATIFICATION
+status: LOCAL_THREE_PATH_GOVERNANCE_CANDIDATE_CREATED_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner approved creation of the C3 directive and updates to the completion plan and phase-results ledger. No branch, stage, commit, push, PR mutation, Claude transmission, implementation, test, DB, provider, Android, deployment, or production action is included."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  c2_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/54
+  c2_head: 81e03a381b29ce8357182317bb5890d0a76055ee
+  c2_tree: 8ace929836ac3847bb2566dbf41f2f2cbb7d8b69
+foundation:
+  repository: nisikawa-officeAZ/detaileros-inventory-foundation
+  fixed_commit: c0cc42de8ef1e95482b31a981a7d2d6e2571fa8e
+  fixed_tree: c2e925295e1e0384010e6744a5c7ec15cb7668a1
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_C3_OWNER_DECISION_RATIFICATION.md
+  sha256: fdc1253d7ac60cdfe3713f6b6fe8e49aef0d127af890018effacbaa6a6603f22
+  result_marker: INV001_P19_BOOK_C3_OWNER_DECISION_RATIFICATION_RESULT_V1
+  proposed_branch: agent/inv001-p19-book-c3-owner-decision-ratification
+exact_change_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_C3_OWNER_DECISION_RATIFICATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_book_phases:
+  - D1_PURE_ADAPTOR_CONTRACT
+  - D2_PRIVATE_PACKAGE_CONSUMER
+  - D3A_FOUNDATION_PERSISTENCE
+  - D3B_PRODUCT_IDENTITY_MAPPING
+  - D4_AUTHENTICATED_SERVER_BOUNDARY
+  - D5_COMPATIBILITY_CUTOVER_UI
+  - D6_DISPOSABLE_AND_AUTHENTICATED_VERIFICATION
+  - D7_VERIFIED_LEGACY_CORE_RETIREMENT
+android: NOT_CONFIGURED_SEPARATE_PROJECT_GATE
+claude_required: false
+implementation_authorized: false
+decision: REGISTER_OWNER_DECISIONS_AND_LITERAL_FUTURE_SCOPES_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_DIRECTIVE_HASH_LITERAL_ALLOWLISTS_AND_PROTECTED_METADATA_THEN_REQUEST_SEPARATE_STAGE_LOCAL_COMMIT_GATE."
+```
