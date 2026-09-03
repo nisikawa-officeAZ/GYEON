@@ -6,7 +6,7 @@
 |---|---|
 | Phase | `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION` |
 | Marker | `GDA_POSTAL_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN_V1` |
-| Status | `CR6_R1A_ACCEPTED_CR6_R2_DIRECTIVE_CANDIDATE` |
+| Status | `CR6_R2_CODEX_CHANGES_REQUIRED_CR6_R2A_GOVERNANCE_CANDIDATE` |
 | Date | 2026-09-03 |
 | Repository | `nisikawa-officeAZ/GYEON` |
 | Branch | `agent/gda-estimate-ocr-postal-clean-replacement-r1` |
@@ -525,3 +525,50 @@ database, provider, Vercel, migration, Git stage/commit/push, PR mutation,
 Ready, merge, deployment, cutover, or retirement. After the four-document
 candidate is independently verified and separately committed and pushed, the
 Owner may separately authorize one bounded CR6-R2 offline implementation.
+
+## 19. CR6-R2 independent audit and CR6-R2A repair governance
+
+CR6-R2 was delivered at commit/tree
+`00ba2dec6be946ad12b5446748b370d4510a6a90` /
+`798b762b5a3882c1245903a9c1b153cb2207e0e6`. The Owner then separately
+authorized one offline Claude implementation with the exact thirteen-file
+input boundary and fourteen new-file allowlist. Claude created exactly the
+fourteen harness/test files and returned `BLOCKED_ENVIRONMENT` only because
+its command permission layer denied the required no-index whitespace checks.
+
+MacBook Codex independently completed those checks. All fourteen files passed
+`node --check`; the exact seven-test command passed `82/82`; all fourteen
+no-index whitespace checks had the expected clean-difference result; and
+`git diff --check` passed. No existing or protected file changed, and no real
+Supabase CLI or migration process, network, Hosted Supabase, DB, provider,
+Vercel, Auth, Storage, migration, Git delivery, Ready, merge, or deployment
+action occurred. Offline Node verification processes did run.
+
+The candidate is nevertheless `CHANGES_REQUIRED`. The tests did not prove the
+actual safety contract: complete manifest identity and fixed aggregate
+enforcement are not wired into preflight; timeout does not terminate the child
+and is reset between list/apply; the sanitized environment is not passed to
+spawn; evidence adapter exceptions and unsafe/duplicate retention keys are not
+fail-closed; non-string secret-scan input is reported clean; and preflight does
+not directly validate the fixed project ref or contain adapter rejection.
+
+The governing correction candidate is
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2A_OFFLINE_HARNESS_CONTRACT_REPAIR.md`.
+It freezes the exact pre-repair SHA-256 identities of all fourteen files,
+defines eight mandatory correction groups, preserves the same fourteen-path
+write allowlist, and fixes the future repair read payload at exactly nineteen
+repository files (`1` control + `4` support + `14` candidate files).
+
+The current documentation allowlist is exactly:
+
+1. that new CR6-R2A directive;
+2. this clean-replacement plan;
+3. `GYEON_DA_COMPLETION_PLAN.md`; and
+4. `GYEON_DA_PHASE_RESULTS.md`.
+
+This authoring phase does not authorize stage, commit, push, Claude repair,
+tests, Supabase CLI, network, Hosted Supabase, DB/provider/Vercel access,
+migration replay, data transfer, real postal import, PR mutation, Ready,
+merge, deployment, cutover, or retirement. After the exact four-document
+candidate is independently accepted, Git delivery and one bounded repair
+invocation remain separate Owner gates.

@@ -1940,7 +1940,7 @@ CR6-R1A diagnosis.
 
 ### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2 hosted replay harness offline implementation directive
 
-**Status:** `CR6_R1A_ACCEPTED_CR6_R2_DIRECTIVE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+**Status:** `CR6_R2_CODEX_CHANGES_REQUIRED_CR6_R2A_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
 
 CR6-R1A was committed and normally pushed at
 `bd59b08ae1268c6db3bbb5b44142066b90c2be70`, tree
@@ -1979,6 +1979,54 @@ command arrays, protected metadata, clean index, and `git diff --check`.
 Stage/local commit and normal push require separate Owner approvals. Only
 after delivery may the Owner separately authorize one bounded CR6-R2 offline
 implementation invocation.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2A offline harness contract repair
+
+**Status:** `GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+CR6-R2 was committed and normally pushed at
+`00ba2dec6be946ad12b5446748b370d4510a6a90`, tree
+`798b762b5a3882c1245903a9c1b153cb2207e0e6`. The Owner separately authorized
+one offline Claude implementation. Claude created exactly fourteen authorized
+harness/test files and returned `BLOCKED_ENVIRONMENT` because its permission
+layer denied the fourteen no-index whitespace checks.
+
+MacBook Codex independently ran the complete mechanical verification: all
+fourteen files passed `node --check`, the exact seven-test command passed
+`82/82`, all fourteen no-index checks returned the expected clean-difference
+result, and `git diff --check` passed. The protected blobs and every existing
+repository file remained unchanged. No Supabase CLI, network, hosted project,
+database, provider, Vercel, Auth, Storage, migration, stage, commit, push,
+Ready, merge, or deployment action occurred.
+
+MacBook Codex adjudicated the candidate `CHANGES_REQUIRED`. The fixed
+112-migration aggregate and complete canonical manifest are not enforced by
+preflight; timeout does not terminate the child and creates separate 30-minute
+windows; environment sanitation is not wired to spawn; evidence adapter
+exceptions and unsafe/duplicate retention keys are not fail-closed;
+non-string secret-scan input is reported clean; and preflight accepts an
+unvalidated target and uncaught adapter rejection.
+
+The new CR6-R2A directive preserves the same exact fourteen-file repair
+allowlist, freezes their pre-repair hashes, requires hostile regression tests,
+and defines a future exact nineteen-file read payload. The current authoring
+allowlist is only:
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2A_OFFLINE_HARNESS_CONTRACT_REPAIR.md`;
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`;
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation authoring only. The existing fourteen
+candidate files remain unstaged and byte-identical. Claude repair, executable
+tests, Git stage/commit/push, Supabase/DB/provider/Vercel access, hosted
+preflight/replay, PR mutation, Ready, merge, deployment, cutover, and retirement
+remain separately unauthorized.
+
+**Next phase after delivery:** Independently audit the exact four-document
+candidate and frozen fourteen candidate hashes. Literal-path stage/local
+commit and normal push require separate Owner approvals. Only after delivery
+may the Owner separately authorize one bounded CR6-R2A repair invocation.
 
 ### GDA-3 — Completion Desk
 

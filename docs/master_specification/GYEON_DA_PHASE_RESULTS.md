@@ -6024,3 +6024,85 @@ boundaries:
 decision: REGISTER_CR6_R2_OFFLINE_HARNESS_IMPLEMENTATION_DIRECTIVE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_FOUR_DOCUMENT_DIFF_FOURTEEN_WRITE_PATHS_SEVEN_PAIRS_EIGHTEEN_REQUIREMENTS_THIRTEEN_READ_FILES_TWO_COMMAND_ARRAYS_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2A offline harness contract repair governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2A_OFFLINE_HARNESS_CONTRACT_REPAIR_GOVERNANCE
+marker: GDA_POSTAL_R5_CR6_R2A_OFFLINE_HARNESS_CONTRACT_REPAIR_DIRECTIVE_V1
+status: CR6_R2A_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After MacBook Codex independently rejected the first CR6-R2 offline harness candidate, the Owner authorized a documentation-only CR6-R2A correction directive. This authorization permits exactly one new directive and updates to three governance trackers. It does not authorize Claude repair, source/test changes, executable tests, Supabase CLI, network, Hosted Supabase, DB/provider/Vercel access, migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  pre_authoring_head: 00ba2dec6be946ad12b5446748b370d4510a6a90
+  pre_authoring_tree: 798b762b5a3882c1245903a9c1b153cb2207e0e6
+  upstream_ahead_behind_before_authoring: "0 0"
+  pr_state_before_authoring: OPEN/Draft
+  base: main
+  remote_head_matched_before_authoring: true
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+cr6_r2_invocation:
+  authorized_by_owner: true
+  exact_repository_input_count: 13
+  exact_new_file_count: 14
+  claude_model: claude-sonnet-5
+  claude_session_id: d47893c6-9b58-425b-a69a-58046adf4b3d
+  reported_cost_usd: 11.356811100000003
+  reported_verdict: BLOCKED_ENVIRONMENT
+  reported_blocker: git_diff_no_index_permission_denied
+  offline_node_verification_processes_used: true
+  real_supabase_or_migration_process_used: false
+  network_used: false
+codex_independent_audit:
+  adjudication: CHANGES_REQUIRED
+  exact_candidate_file_count: 14
+  node_check: PASS_14_OF_14
+  node_test: PASS_82_OF_82
+  node_test_failures: 0
+  no_index_whitespace_checks: PASS_14_OF_14_EXPECTED_EXIT_1_ZERO_OUTPUT
+  git_diff_check: PASS
+  existing_file_changes: 0
+  protected_blob_changes: 0
+  staged_or_committed_files: 0
+  findings:
+    - complete_canonical_manifest_and_fixed_aggregate_not_enforced_by_preflight
+    - timeout_does_not_terminate_or_confirm_child_exit
+    - list_and_apply_each_receive_fresh_30_minute_timeout
+    - sanitized_environment_not_passed_to_spawn
+    - evidence_adapter_exceptions_escape_quarantine_result
+    - unsafe_or_duplicate_retention_keys_not_rejected
+    - invalid_secret_scan_input_reported_clean
+    - fixed_project_ref_and_adapter_failures_not_fail_closed_in_preflight
+future_cr6_r2a_contract:
+  authorized_now: false
+  exact_read_payload_count: 19
+  control_file_count: 1
+  supporting_file_count: 4
+  candidate_file_count: 14
+  exact_write_path_count: 14
+  new_source_or_test_paths_allowed: 0
+  maximum_success_verdict: PASS_OFFLINE_CANDIDATE_READY_FOR_CODEX_REAUDIT
+  hosted_execution_authorized: false
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2A_OFFLINE_HARNESS_CONTRACT_REPAIR.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  existing_fourteen_candidate_files_modified_under_r2a_authoring: false
+  claude_repair_invoked: false
+  executable_tests_run_under_r2a_authoring: false
+  supabase_cli_or_network_used: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: REGISTER_CR6_R2_CODEX_CHANGES_REQUIRED_AND_CR6_R2A_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_FOUR_DOCUMENT_DIFF_FROZEN_FOURTEEN_HASHES_EIGHT_REPAIR_GROUPS_NINETEEN_FILE_FUTURE_READ_PAYLOAD_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL"
+```
