@@ -887,6 +887,28 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Exit gate:** Verify the exact three-path governance-only diff, directive hash, dependency and operator-authority blockers, request/auth/HTTP fail-closed contracts, D6 separation, and protected metadata; then request a separate Owner stage/local-commit gate.
 
+### INV001-P19-BOOK-D4A — Office AZ inventory-operator authority governance
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / AUTHORITY IMPLEMENTATION BLOCKED.
+
+**Objective:** Resolve the Office AZ human/service operator, capability, location, suspension/revocation, and high-risk approval model that D4 requires, without reusing dealer roles, UI state, `authenticated`, user metadata, admin-client access, or service-role possession as authorization.
+
+**Fixed Book authority:** `main` commit `c799b14b15a95177442e4505807d57056292e4d1`, tree `d8eacb42802d7b9d8fbf20875c46c087e5f0b790`. D4 governance is merged through PR #60. D2 package publication/consumer, D3A persistence, and D3B mapping implementations remain incomplete.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY.md`. Proposed branch: `agent/inv001-p19-book-d4a-office-az-operator-authority-governance`.
+
+**Ratified boundary:** `OFFICE_AZ` is the only current live owner; three locations are location scopes under one Office AZ total; dealer roles never grant Office AZ inventory authority; actor and operator remain distinct; unresolved authority denies before every Foundation call.
+
+**Formal contradiction:** The current V3 formal-decision role table gives inbound confirmation only to super admin, while the later Owner decision grants it to warehouse operator, warehouse manager, and super admin. The later decision is recorded as the intended reconciliation, but no grant may be implemented until an explicit Owner decision result and formal-spec correction are delivered.
+
+**Provisional model:** Separate normalized warehouse-operator, warehouse-manager, inventory-super-admin, and narrow service identities; explicit closed capabilities; explicit location grants; active-only status; validity and authority version; no self-grant; append-only assignment/revocation/denial audit. Super admin is not implicitly all-location or all-command.
+
+**Gate separation:** Gate A exact-scope tool-disabled read-only diagnosis; explicit Owner decision for every unresolved command and authority source; separately governed formal-spec correction; D2/D3A/D3B closure; separately approved pure authority/resolver/schema/RLS implementation; independent source acceptance; D6 real SSR-cookie/RLS/revocation/concurrency verification.
+
+**Current boundary:** Governance documents only. No private-source transmission, Claude invocation, role grant, auth session, DB/Supabase, migration, package, implementation, executable test, stage, commit, push, PR mutation, Ready, merge, Android, provider, staging, deployment, or production action is authorized.
+
+**Exit gate:** Verify the exact three-document governance diff, directive hash, formal-role contradiction, ratified/proposed/unresolved distinctions, closed command disposition, D4/D6 separation, and protected metadata; then request a separate Owner stage/local-commit gate.
+
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
 **Objective:** Correct the owner-rejected estimate/pricing settings navigation before deeper settings-page redesign. The `見積・価格 / ESTIMATES & PRICING` group must expose exactly four real cards in the approved order, remove misleading state badges from those four navigation cards, and replace unrelated generic imagery with dedicated semantic line icons while preserving the accepted TOP visual language and existing business behavior.
