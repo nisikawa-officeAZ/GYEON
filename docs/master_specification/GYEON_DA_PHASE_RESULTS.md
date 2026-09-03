@@ -4596,3 +4596,110 @@ not_authorized:
 decision: REGISTER_OWNER_RATIFIED_AUTHORITY_POLICY_AND_FORMAL_SPEC_RECONCILIATION_CANDIDATE_ONLY
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_DIRECTIVE_HASH_ALL_18_COMMANDS_FIVE_SURFACES_FORMAL_RECONCILIATION_FUTURE_LOCATION_DENY_NAMED_OPERATOR_POLICY_ONLY_IMPLEMENTATION_DENY_D4_D6_SEPARATION_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
 ```
+
+## INV001-P19-BOOK-D4A-R1 — Merged closure
+
+```yaml
+phase: INV001_P19_BOOK_D4A_R1_OWNER_AUTHORITY_DECISION_AND_FORMAL_SPEC_RECONCILIATION
+status: CLOSED_MERGED_SPECIFICATION_ONLY_AUTHORITY_IMPLEMENTATION_NOT_CONFIGURED
+date: 2026-09-03
+source_commit: 3dd0bef132eff4995b0b6621fbbc0df28f17d888
+merge_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/62
+merge_commit: f85a35266dfdea6e1986982bfea0e451186fbd13
+merge_tree: a6c9537a242124cf6d48d81488cda217ffa592dc
+merge_parents:
+  - 6fc4fe5bfcd681f04945c7ae7844dac61273cd3d
+  - 3dd0bef132eff4995b0b6621fbbc0df28f17d888
+audit:
+  exact_changed_paths: 4
+  head_match: PASS
+  parent_match: PASS
+  protected_blob_identity: PASS
+  diff_check: PASS
+  vercel: PASS
+  vercel_preview_comments: PASS
+boundary:
+  policy_ratified: true
+  auth_db_rls_grant_live_assignment: NOT_EXECUTED
+  implementation_status: NOT_CONFIGURED
+decision: CLOSE_D4A_R1_SPECIFICATION_AND_KEEP_LIVE_AUTHORITY_FAIL_CLOSED
+next: SELECT_NEXT_BOOK_INDEPENDENT_GOVERNANCE_PHASE_WITHOUT_UNBLOCKING_D2
+```
+
+## INV001-P19-BOOK-D5A — Compatibility/cutover UI governance candidate
+
+```yaml
+phase: INV001_P19_BOOK_D5A_COMPATIBILITY_CUTOVER_UI_GOVERNANCE
+marker: INV001_P19_BOOK_D5A_COMPATIBILITY_CUTOVER_UI_GOVERNANCE_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_D5_IMPLEMENTATION_BLOCKED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner approved creation of the D5A three-document governance candidate only. This authorizes local source reading needed to define the governance contract and local documentation verification, but no private-source transmission, Claude invocation, UI/source/test change, executable test, stage, commit, push, PR mutation, package, Auth, DB, Supabase, migration, provider, Android, deployment, staging, or production action."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: f85a35266dfdea6e1986982bfea0e451186fbd13
+  fixed_tree: a6c9537a242124cf6d48d81488cda217ffa592dc
+  branch: agent/inv001-p19-book-d5a-compatibility-ui-governance
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D5A_COMPATIBILITY_CUTOVER_UI.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+dependencies:
+  d1_pure_adaptor: CLOSED
+  d2_private_package_consumer: BLOCKED_FOUNDATION_PACKAGE_UNPUBLISHED
+  d3a_persistence: INCOMPLETE
+  d3b_product_mapping: INCOMPLETE
+  d4_authenticated_server_boundary: INCOMPLETE
+  d4a_live_authority_implementation: NOT_CONFIGURED
+current_conflicts:
+  dealer_inventory_client: LEGACY_DEALER_LOCAL_READ_WRITE
+  dealer_inventory_page_loader: LEGACY_DEALER_LOCAL_ROWS
+  logistics_inventory_client: LEGACY_DEALER_GROUPED_ROWS
+  logistics_inventory_loader: ADMIN_CLIENT_AND_LOCAL_AVAILABILITY_CALCULATION
+  foundation_authority_match: FAIL
+c3_reserved_implementation_paths:
+  - src/app/inventory/InventoryClient.tsx
+  - src/app/admin/logistics/inventory/LogisticsInventoryClient.tsx
+  - src/lib/inventory/foundation/foundation-cutover-ui.test.ts
+c3_scope_status: GATE_A_MUST_PROVE_SUFFICIENT_OR_RETURN_LITERAL_SCOPE_CORRECTION
+route_decision:
+  dealer_inventory_route: OWNER_DECISION_REQUIRED_IF_REPURPOSED
+  logistics_admin_route: CANDIDATE_OFFICE_AZ_VIEW_REQUIRES_D4_D4A
+cutover_contract:
+  foundation_package_in_browser: PROHIBITED
+  legacy_fallback: PROHIBITED
+  dual_write: PROHIBITED
+  dual_read_as_authority: PROHIBITED
+  client_quantity_calculation_as_authority: PROHIBITED
+  optimistic_authoritative_quantity: PROHIBITED
+  automatic_retry_or_command_chaining: PROHIBITED
+  zero_distinct_from_unknown: REQUIRED
+  sanitized_d4_dto_only: REQUIRED
+  capability_and_location_scope: REQUIRED
+required_ui_states:
+  - NOT_CONFIGURED
+  - FORBIDDEN
+  - LOADING
+  - READY
+  - STALE
+  - ERROR
+  - COMMAND_PENDING
+  - COMMAND_ACCEPTED
+  - COMMAND_REJECTED
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D5A_COMPATIBILITY_CUTOVER_UI.md
+  diagnosis_marker: INV001_P19_BOOK_D5A_COMPATIBILITY_CUTOVER_UI_DIAGNOSIS_RESULT_V1
+  implementation_marker: INV001_P19_BOOK_D5_COMPATIBILITY_CUTOVER_UI_IMPLEMENTATION_RESULT_V1
+  proposed_exact_read_paths: 24
+protected_content: METADATA_ONLY_UNCHANGED_REQUIRED
+implementation_authorized: false
+not_authorized:
+  - private_source_transmission_or_claude_invocation
+  - ui_route_action_dto_test_or_dependency_edit
+  - package_auth_db_supabase_migration_or_provider_action
+  - executable_test_stage_commit_push_pr_ready_or_merge
+  - android_deployment_staging_or_production
+decision: REGISTER_D5A_GOVERNANCE_CANDIDATE_AND_KEEP_ALL_D5_RUNTIME_ACTIONS_BLOCKED
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_FIXED_BASE_24_READ_PATHS_CURRENT_LEGACY_CONFLICT_ROUTE_AUDIENCE_BLOCKER_C3_SCOPE_GATE_NO_FALLBACK_NO_DUAL_WRITE_D1_D4_DEPENDENCIES_D6_SEPARATION_AND_PROTECTED_METADATA_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
+```
