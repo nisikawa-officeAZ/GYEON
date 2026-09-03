@@ -5564,3 +5564,72 @@ boundaries:
 decision: CR4_COST_AND_IDENTITY_CONFIRMED_STOP_BEFORE_PROJECT_CREATION
 next: "Independently verify the exact three-document candidate, provider cost, Owner-ratified identity, 31-day maximum lifetime, unchanged three-project inventory, and stop-before-creation boundary. Stage/local commit and normal push require separate Owner approvals. CR5 empty project creation remains unauthorized until a fresh explicit external-mutation gate."
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR5 empty replacement-project creation recording
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR5_EMPTY_REPLACEMENT_PROJECT_CREATION_RECORDING
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR5_EMPTY_REPLACEMENT_PROJECT_CREATION_V1
+status: PASS_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After CR4 was recorded and normally pushed, the Owner explicitly authorized creation of exactly one empty Supabase project in officeAZ using the fixed DealerOS-Dev-Clean-R5 name, ap-northeast-1 region, default Micro compute, no paid add-ons, and the accepted USD 10 monthly project cost confirmation. The Owner later authorized a result candidate limited to exactly three documentation paths and conservative lifecycle correction using the earlier provider timestamp. Database access, SQL, migration replay/application, restore, data transfer, Storage/Auth payload access, secrets, configuration, real postal import, Vercel binding, Git stage/commit/push, PR mutation, Ready, merge, cutover, retirement, and deployment remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  execution_head: ec9e30d2a7865efad0739165724530e9e829befa
+  execution_tree: f75ec6ce2eca8d22f5152523409ad9f046ebe087
+project:
+  organization_name: officeAZ
+  organization_id: ivlpkysdjbrkcozrvzwg
+  name: DealerOS-Dev-Clean-R5
+  ref: nqvnjqcxgngqsqkbpdfi
+  region: ap-northeast-1
+  status: ACTIVE_HEALTHY
+  postgres_engine: "17"
+  postgres_version: 17.6.1.166
+  release_channel: ga
+  compute: "Micro — official paid-project default; creation response omits explicit size"
+  paid_add_on_operation_requested_or_executed: false
+  provider_created_at_utc: 2026-09-03T11:52:15.655049Z
+  provider_created_at_jst: 2026-09-03T20:52:15.655049+09:00
+verification:
+  local_invocation_observed_from: 2026-09-03T21:03:03+09:00
+  local_verification_observed_through: 2026-09-03T21:03:59+09:00
+  provider_timestamp_precedes_local_window_by_approximately_minutes: 11
+  cause_inferred: false
+  project_count_before_creation: 3
+  project_count_after_creation: 4
+  get_project_and_list_projects_identity_match: true
+lifecycle:
+  safety_clock: EARLIER_PROVIDER_CREATED_AT
+  automatic_review: 2026-09-27T20:52:15+09:00
+  mandatory_pause_or_retirement_decision_deadline: 2026-10-04T20:52:15+09:00
+  supersedes_cr4_planning_time: true
+  pause_or_deletion_authorized: false
+write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR5_EMPTY_REPLACEMENT_PROJECT_CREATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  exactly_one_hosted_project_created: true
+  existing_hosted_project_mutated: false
+  new_project_provider_metadata_read: true
+  new_project_database_connected_or_queried: false
+  sql_executed: false
+  migration_replayed_or_applied: false
+  old_development_restored_or_cloned: false
+  data_exported_imported_copied_or_restored: false
+  auth_or_storage_payload_read: false
+  secret_or_api_key_read: false
+  provider_configuration_or_add_on_changed_after_creation: false
+  application_or_vercel_binding_changed: false
+  real_japan_post_csv_imported: false
+  source_migration_test_harness_dependency_or_protected_path_changed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CR5_EMPTY_REPLACEMENT_PROJECT_CREATED_STOP_BEFORE_HOSTED_REPLAY
+next: "Independently verify the exact three-document candidate, created project identity, provider/local time evidence, conservative 31-day deadline, default-Micro evidence boundary, and all negative execution flags. Stage/local commit and normal push require separate Owner approvals. CR6 exact hosted migration replay remains unauthorized pending its own directive and execution gate."
+```

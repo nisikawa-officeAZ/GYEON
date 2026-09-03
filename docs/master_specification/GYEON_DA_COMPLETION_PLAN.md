@@ -1796,6 +1796,37 @@ CR4 candidate. Stage/local commit and normal push require separate Owner
 approvals. CR5 empty project creation remains a distinct external-mutation gate
 requiring fresh explicit Owner authorization.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR5 empty replacement-project creation
+
+**Status:** `PASS_CANDIDATE_UNCOMMITTED`
+
+The Owner explicitly authorized one empty project after CR4 delivery. Supabase
+created `DealerOS-Dev-Clean-R5` with ref `nqvnjqcxgngqsqkbpdfi` in organization
+`officeAZ` and region `ap-northeast-1`. The provider reports
+`ACTIVE_HEALTHY`, PostgreSQL `17.6.1.166`, engine `17`, and release channel
+`ga`. Official paid-plan defaults and the accepted USD 10 project cost bind it
+to default Micro; no compute upgrade or paid add-on action was requested.
+
+The provider `created_at` value is `2026-09-03 20:52:15.655049 JST`, about
+eleven minutes earlier than the observed local creation/verification window of
+`21:03:03–21:03:59 JST`. The cause is not inferred. The earlier provider time
+is used conservatively, so automatic review is now
+`2026-09-27 20:52:15 JST` and the mandatory pause/retirement decision deadline
+is `2026-10-04 20:52:15 JST`. These values supersede the CR4 planning times
+and do not themselves authorize pause or deletion.
+
+No database connection, SQL, migration replay/application, old-project
+restore, data transfer, Storage/Auth payload access, secret/configuration
+change, real Japan Post import, Vercel binding, or deployment occurred. The
+formal result candidate is
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR5_EMPTY_REPLACEMENT_PROJECT_CREATION.md`.
+
+**Next phase after delivery:** independently review the exact three-document
+CR5 candidate, then require separate Owner approvals for literal-path
+stage/local commit and normal push. CR6 exact hosted migration replay remains
+unauthorized until its own bounded directive, independent acceptance, and
+fresh Owner execution gate.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
