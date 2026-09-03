@@ -4848,3 +4848,85 @@ not_authorized:
 decision: REGISTER_OWNER_RATIFIED_ROUTE_SEPARATION_AND_KEEP_D5_IMPLEMENTATION_BLOCKED
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_ROUTE_SEPARATION_C3_RESERVATION_CORRECTION_D2_D4_DEPENDENCY_WALL_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
 ```
+
+## GDA-ESTIMATE-WIZARD-OCR-POSTAL-CLEAN-REPLACEMENT-R1 — Governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_OCR_POSTAL_CLEAN_REPLACEMENT_R1_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_OCR_POSTAL_CLEAN_REPLACEMENT_R1_IMPLEMENTATION_INSTRUCTION_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner approved creation and local verification of exactly three governance documents for a clean current-main replacement of PR #48's final technical state. No private-source transmission, Claude invocation, source edit, executable test, DB, Supabase, migration application, provider, stage, commit, push, PR mutation, Ready, merge, Preview, staging, production, or deployment action is included."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: 42617a4142814f17188ef8b537da0b48ae11e4d2
+  fixed_tree: 704660393c4c1f3b7a8df831d7c3d085331b9670
+  candidate_branch: agent/gda-estimate-ocr-postal-clean-replacement-r1-governance
+source_snapshot:
+  pull_request: 48
+  branch: agent/estimate-wizard-ocr-postal-unified-r1
+  commit: 1b170827fd373cbbbc1044906fee6f65da8e310f
+  tree: 03eadeddfd0b5838a4502de0678334eb0925a74a
+  merge_base: 49a1dc4c396e50d5869f372a399c9ca1c10bc300
+  ahead_of_merge_base: 33
+  behind_current_main: 31
+diagnosis:
+  delivery_verdict: CHANGES_REQUIRED
+  changed_paths_in_pr: 69
+  retained_technical_paths: 50
+  excluded_historical_governance_paths: 19
+  technical_overlap_with_current_main: 0
+  current_governance_overlap_paths: 2
+  fixture_repair_present: true
+  required_fixture_result_marker_present: false
+  fresh_post_repair_disposable_evidence_present: false
+delivery_decision:
+  merge_pr48: PROHIBITED
+  rebase_pr48: PROHIBITED
+  broad_cherry_pick: PROHIBITED
+  clean_branch_from_current_main: REQUIRED_AFTER_SEPARATE_AUTHORIZATION
+  exact_final_blob_materialization: REQUIRED_AFTER_SEPARATE_AUTHORIZATION
+  source_inference_or_redesign: PROHIBITED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_CLEAN_REPLACEMENT_R1_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+directive_sha256: 6bfd6639e07df339b50ed4adc523befb17994f5b97ffef9be7649c1d10b7416c
+future_implementation_allowlist_count: 50
+future_excluded_governance_count: 19
+product_contract:
+  one_scan_customer_and_vehicle_apply: REQUIRED
+  redaction_marker_decode: PROHIBITED
+  maker_apply: REQUIRED
+  printed_model_code_to_vehicle_code: REQUIRED
+  chassis_apply: REQUIRED
+  grade: MANUAL_ONLY
+  model_name_inference_from_model_code: OUT_OF_SCOPE
+  paid_or_external_vehicle_master: PROHIBITED
+  postal_planners: FAIL_CLOSED
+  postal_runtime_requires_migration_and_master_data: true
+future_disposable_acceptance:
+  postal_pgtap: 75_of_75
+  runtime_pgtap: 20_of_20
+  real_auth_postgrest: 9_of_9
+  import_phase_one: 3_of_3
+  import_phase_two: 25_of_25
+  fresh_never_used_suffix: REQUIRED
+  failed_suffix_reuse: PROHIBITED
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  src/components/ScreensPreview.tsx: ABSENT
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+implementation_authorized: false
+not_authorized:
+  - private_source_transmission_or_claude_invocation
+  - fifty_path_source_materialization_or_executable_test
+  - db_supabase_migration_provider_or_environment_action
+  - stage_commit_push_pr_ready_merge_or_deploy
+decision: REGISTER_CLEAN_REPLACEMENT_GOVERNANCE_AND_KEEP_IMPLEMENTATION_BLOCKED
+next: "VERIFY_EXACT_THREE_DOCUMENT_UNSTAGED_DIFF_DIRECTIVE_COUNTS_FIXED_IDENTITIES_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
+```

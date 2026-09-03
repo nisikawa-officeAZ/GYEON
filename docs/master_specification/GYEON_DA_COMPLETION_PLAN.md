@@ -227,6 +227,32 @@ This is event-driven phase governance. It does not reinstate a background pollin
 
 **Constraint:** GDA-1 defines the literal allowlist. No speculative redesign is allowed.
 
+### GDA-ESTIMATE-WIZARD-OCR-POSTAL-CLEAN-REPLACEMENT-R1 — clean current-main replacement
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / IMPLEMENTATION NOT AUTHORIZED.
+
+**Objective:** Recover the accepted customer/vehicle one-scan OCR and Japan Post postal-master work from heavily diverged Draft PR #48 without replaying its historical governance or overwriting current `main` decisions.
+
+**Fixed identities:** Target base is current `main` commit `42617a4142814f17188ef8b537da0b48ae11e4d2`, tree `704660393c4c1f3b7a8df831d7c3d085331b9670`. Technical source snapshot is PR #48 commit `1b170827fd373cbbbc1044906fee6f65da8e310f`, tree `03eadeddfd0b5838a4502de0678334eb0925a74a`. Its merge base is `49a1dc4c396e50d5869f372a399c9ca1c10bc300`; at diagnosis it was 33 commits ahead and 31 behind current `main`.
+
+**Delivery decision:** Create a new clean branch from the fixed current-main identity and reproduce the exact final PR #48 technical blobs for only the directive's literal 50-path allowlist. Do not merge, rebase, or broad-cherry-pick PR #48. Exclude its 17 historical Claude directives and its copies of this plan and the result ledger. Current governance remains authored from current `main` only.
+
+**Required behavior:** One confirmed OCR result applies usable customer and vehicle data together; redaction markers such as `***` are ignored; maker, printed 型式 to `vehicleCode`, and chassis number are applied; grade remains manual; model name is not inferred from 型式; local positioned-PDF 型式 fallback is preserved; postal/address planners fail closed; postal auto-fill requires separately authorized migration and authoritative Japan Post data import.
+
+**Governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_OCR_POSTAL_CLEAN_REPLACEMENT_R1_IMPLEMENTATION.md` (new)
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Future implementation allowlist:** Exactly 50 paths, listed literally in the directive. No wildcard or adjacent cleanup is permitted. The five protected paths remain metadata-only.
+
+**Acceptance gates:** Exact 50-path source-blob parity, focused source tests, typecheck/build, and `git diff --check`; then a fresh never-used PostgreSQL 17 disposable suffix proving postal pgTAP `75/75`, runtime pgTAP `20/20`, real Auth/PostgREST `9/9`, importer phase one `3/3`, importer phase two `25/25`, cleanup, secret scan, and evidence integrity; then a separately authorized authenticated Preview field test. A historical or failed suffix is never acceptance evidence.
+
+**Current boundary:** Only the three governance documents may change. No private-source transmission, Claude invocation, 50-path materialization, executable test, DB/Supabase/migration/provider action, stage, commit, push, PR mutation, Ready, merge, Preview, staging, production, or deployment is authorized.
+
+**Exit:** Verify the exact three-document unstaged diff, directive path counts, fixed identities, protected metadata, and `git diff --check`; then request a separate Owner stage/local-commit gate.
+
 ### GYEON-ORDER-V3-C5-B — External-authority DB source-only candidate
 
 **Objective:** Convert the accepted C5-A pure contracts into a fail-closed database source candidate for qualification authority, external evidence consumption, prepare/finalize operations, and warehouse-task release timing. This phase protects the ordering path from browser-controlled qualification, reused payment evidence, long external calls inside database locks, and premature warehouse release.
