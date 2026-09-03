@@ -3962,3 +3962,92 @@ implementation_authorized: false
 decision: REGISTER_OWNER_DECISIONS_AND_LITERAL_FUTURE_SCOPES_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_DIRECTIVE_HASH_LITERAL_ALLOWLISTS_AND_PROTECTED_METADATA_THEN_REQUEST_SEPARATE_STAGE_LOCAL_COMMIT_GATE."
 ```
+
+## INV001-P19-BOOK-C3 — Owner decision ratification merged closure
+
+```yaml
+phase: INV001_P19_BOOK_C3_OWNER_DECISION_RATIFICATION
+status: CLOSED_MERGED_TO_MAIN_NO_IMPLEMENTATION_AUTHORITY
+date: 2026-09-03
+append_only: true
+book_pr:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/55
+  state: MERGED
+  base: main
+  head: ecab1afd58e1df4c0e2b022f3b7268cebd772dfb
+  head_tree: e341a26719354cbdc193d6414e0175771b67d05f
+  changed_paths: 3
+  checks: PASS_2_OF_2
+merge:
+  method: NORMAL_MERGE_NON_FORCE
+  merged_at: 2026-09-03T00:20:57Z
+  commit: 8516506fe700348b4e8436fbc6d53ce44747ca2e
+  tree: e341a26719354cbdc193d6414e0175771b67d05f
+  parents:
+    - eb6fbc1c658ee291e48f7926def8a3cf7e48b2a3
+    - ecab1afd58e1df4c0e2b022f3b7268cebd772dfb
+exact_paths:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_C3_OWNER_DECISION_RATIFICATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+not_authorized:
+  - private_source_transmission_or_claude_invocation
+  - package_dependency_db_route_ui_or_android_implementation
+  - supabase_provider_staging_deployment_or_production
+decision: CLOSE_C3_AND_ALLOW_SEPARATE_D1_GOVERNANCE_CREATION_ONLY
+next: INV001_P19_BOOK_D1_PURE_ADAPTOR_CONTRACT
+```
+
+## INV001-P19-BOOK-D1 — Pure adaptor contract governance candidate
+
+```yaml
+phase: INV001_P19_BOOK_D1_PURE_ADAPTOR_CONTRACT
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner approved proceeding from merged C3 to creation of the D1 directive and governance record only. No private-source transmission, Claude invocation, source implementation, tests, stage, commit, push, PR mutation, DB, provider, Android, deployment, or production action is included."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: 8516506fe700348b4e8436fbc6d53ce44747ca2e
+  fixed_tree: e341a26719354cbdc193d6414e0175771b67d05f
+  proposed_branch: agent/inv001-p19-book-d1-pure-adaptor-contract
+foundation:
+  repository: nisikawa-officeAZ/detaileros-inventory-foundation
+  fixed_commit: c0cc42de8ef1e95482b31a981a7d2d6e2571fa8e
+  fixed_tree: c2e925295e1e0384010e6744a5c7ec15cb7668a1
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D1_PURE_ADAPTOR_CONTRACT.md
+  sha256: 8ccb505ac386149896f13831eab61c6f922336ae1dd02c59452fcc472826190d
+  diagnosis_result_marker: INV001_P19_BOOK_D1_PURE_ADAPTOR_CONTRACT_DIAGNOSIS_RESULT_V1
+  implementation_result_marker: INV001_P19_BOOK_D1_PURE_ADAPTOR_CONTRACT_IMPLEMENTATION_RESULT_V1
+governance_candidate_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D1_PURE_ADAPTOR_CONTRACT.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+gate_a_private_read_scope_proposed:
+  book_exact_paths: 13
+  foundation_exact_paths: 4
+  transmission_authorized: false
+gate_b_implementation_allowlist:
+  - src/lib/inventory/foundation/foundation-adaptor-types.ts
+  - src/lib/inventory/foundation/foundation-adaptor-core.ts
+  - src/lib/inventory/foundation/foundation-adaptor-core.test.ts
+  implementation_authorized: false
+contract_boundary:
+  inventory_owner: OFFICE_AZ_ONLY
+  canonical_runtime_authority: FOUNDATION_V2
+  runtime_port: PURE_INJECTED_SERVER_INTENT
+  business_rule_duplication: PROHIBITED
+  package_db_route_ui_android_access: PROHIBITED_IN_D1
+  retry_or_automatic_command_chaining: PROHIBITED
+  partial_or_unknown_result: FAIL_CLOSED
+not_authorized:
+  - stage_commit_push_or_pr_mutation
+  - private_file_transmission_or_claude_invocation
+  - source_or_test_implementation
+  - dependency_lockfile_package_registry_or_publication
+  - db_migration_supabase_provider_http_ui_android_deployment_or_production
+decision: REGISTER_LOCAL_D1_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_GOVERNANCE_DIFF_DIRECTIVE_HASH_LITERAL_ALLOWLISTS_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
+```
