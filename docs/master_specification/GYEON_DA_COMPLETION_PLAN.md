@@ -1626,6 +1626,37 @@ Claude execution, tests, runtime, Supabase/DB/project/provider/network access,
 source repair, stage, commit, push, PR mutation, Ready, merge, and deployment
 remain separately unauthorized.
 
+**CR1 execution result:** One Owner-authorized, tool-disabled, read-only CR1
+diagnosis completed against source-evidence HEAD/tree
+`216d8cf9aa0dd9135f224aabe90dd5e800fc800e` /
+`0b9f494a1714dd4d6f002ae3c284ee623d6592a9`. Claude recommended the current
+112-migration manifest, excluding only the protected LINE migration, retaining
+both provisioning migrations as disabled infrastructure, treating the accepted
+product-policy/five-bucket forward repair as closed, and moving next to CR3
+fresh disposable governance with `CR2_NOT_REQUIRED`. The report omitted the
+mandatory literal `verdict:` line and exact top-level schema, so MacBook Codex
+classifies the artifact as `CHANGES_REQUIRED_GOVERNANCE`; the substantive
+recommendation is not yet Owner-ratified.
+
+**CR1-R1 format-correction governance candidate:** The exact directive is
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION.md`.
+It permits a future Claude invocation to receive only that directive and the
+exact prior Claude report. It prohibits retransmission of the twelve private
+CR1 files and 113-path metadata table, prohibits new diagnosis or changed
+findings, and requires a mechanical rewrite into the literal result schema.
+
+**CR1-R1 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION.md` (new)
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**CR1-R1 current boundary:** Documentation authoring only. A second Claude
+invocation, prior-report transmission, tests, runtime, Supabase/DB/project/
+provider/network access, source changes, stage, commit, push, PR mutation,
+Ready, merge, migration apply, cutover, retirement, and deployment remain
+separately unauthorized.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

@@ -5119,3 +5119,79 @@ boundaries:
 decision: CR1_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "Verify the exact four-document candidate, directive consistency, twelve-file read allowlist, protected metadata, and diff check. Stage/local commit and normal push require separate Owner gates. Private transmission and one-time Claude diagnosis require another explicit authorization after delivery."
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR1 result and CR1-R1 format-correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION_GOVERNANCE
+marker: GDA_POSTAL_R5_CR1_R1_RESULT_FORMAT_CORRECTION_DIRECTIVE_V1
+status: CHANGES_REQUIRED_GOVERNANCE_CR1_R1_DIRECTIVE_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner explicitly approved recording the completed CR1 result as CHANGES_REQUIRED_GOVERNANCE and authoring a format-only CR1-R1 directive. This authorization is limited to exactly three documentation paths. It does not authorize another Claude invocation, retransmission of private source or migration metadata, tests, runtime, Git stage/commit/push, PR mutation, Supabase/DB/project/provider action, Ready, merge, migration apply, cutover, retirement, or deployment."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+cr1_execution_identity:
+  head: 216d8cf9aa0dd9135f224aabe90dd5e800fc800e
+  tree: 0b9f494a1714dd4d6f002ae3c284ee623d6592a9
+  index_and_worktree_before_execution: CLEAN
+  upstream_ahead_behind_before_execution: "0 0"
+  pr_state: OPEN/Draft
+  base: main
+  remote_head_matched: true
+  vercel: PASS
+  vercel_preview_comments: PASS
+cr1_execution:
+  successful_claude_invocations: 1
+  tool_access: DISABLED
+  permission_mode: dontAsk
+  session_persistence: DISABLED
+  private_allowlisted_files_transmitted: 12
+  migration_metadata_paths_transmitted: 113
+  additional_files_transmitted: 0
+  source_or_git_modified_by_execution: false
+cr1_substantive_recommendation_candidate:
+  formal_top_level_migrations: 113
+  executable_manifest_count: 112
+  exact_exclusion:
+    - supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_manifest_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  provisioning_pair_disposition: INCLUDE_SCHEMA_KEEP_FEATURE_DISABLED
+  postal_target_status: PRESENT_AND_HASH_MATCHED_IN_ATTESTATION
+  product_policy_and_storage_prerequisite: CLOSED_BY_ACCEPTED_FORWARD_REPAIR
+  source_blocker_before_cr3: NONE_REPORTED
+  cr2: CR2_NOT_REQUIRED_CANDIDATE
+  next_candidate: CR3_FRESH_DISPOSABLE_GOVERNANCE
+cr1_format_audit:
+  result_marker_present: true
+  mandatory_verdict_line_present: false
+  exact_top_level_structure_present: false
+  substantive_contradiction_found: false
+  codex_classification: CHANGES_REQUIRED_GOVERNANCE
+  owner_manifest_ratification_complete: false
+cr1_r1_input_boundary:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION.md
+  - exact_prior_claude_report_text
+  retransmit_twelve_private_files: false
+  retransmit_113_path_metadata: false
+  new_diagnosis: false
+  changed_findings: false
+cr1_r1_governance_write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  claude_reinvoked_by_this_phase: false
+  prior_report_transmitted_by_this_phase: false
+  source_test_or_runtime_changed: false
+  test_or_runtime_executed: false
+  project_created: false
+  database_or_provider_contacted: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CHANGES_REQUIRED_GOVERNANCE_CR1_R1_FORMAT_ONLY_DIRECTIVE_READY_FOR_CODEX_REVIEW
+next: "Independently verify the exact three-document diff and literal frozen findings. Stage/local commit and normal push require separate Owner approval. Only after delivery may the Owner separately authorize one format-only Claude invocation carrying this directive and the exact prior report; no private source or 113-path metadata may be retransmitted."
+```
