@@ -136,7 +136,12 @@ function assertStatusPayloadSafe(payload, label) {
   const unexpected = keys.filter((key) => !SAFE_STATUS_KEYS.has(key));
   record(`${label}: status RPC response contains only safe metadata keys`, unexpected.length === 0, `unexpected keys: ${unexpected.join(',') || 'none'}`);
   const serialized = JSON.stringify(payload ?? {});
-  record(`${label}: status RPC response never contains a non-ASCII (address-shaped) value`, !/[^\x00-\x7f]/.test(serialized), 'non-ASCII byte detected in status payload');
+  const hasNonAscii = /[^\x00-\x7f]/.test(serialized);
+  record(
+    `${label}: status RPC response never contains a non-ASCII (address-shaped) value`,
+    !hasNonAscii,
+    hasNonAscii ? 'non-ASCII byte detected in status payload' : 'no non-ASCII byte detected in status payload',
+  );
 }
 
 // ---------------------------------------------------------------------------
