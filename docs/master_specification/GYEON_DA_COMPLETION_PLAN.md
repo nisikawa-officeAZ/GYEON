@@ -943,11 +943,11 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-D5A — Compatibility/cutover UI governance
 
-**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / D5 IMPLEMENTATION BLOCKED UNTIL D1-D4 AND D4A AUTHORITY IMPLEMENTATION ARE ACCEPTED.
+**Status:** GOVERNANCE MERGED THROUGH PR #63 / GATE A DIAGNOSIS ACCEPTED WITH D5A-R2 CORRECTION / ROUTE AUDIENCE OWNER-RATIFIED / D5 IMPLEMENTATION BLOCKED UNTIL D2-D4 AND D4A AUTHORITY IMPLEMENTATION ARE ACCEPTED.
 
 **Objective:** Define the fail-closed UI cutover from legacy Book dealer-stock surfaces to Foundation-derived Office AZ state without relabeling dealer-local rows, exposing the private Foundation package to browser code, duplicating calculations, falling back to old tables, or dual-writing.
 
-**Fixed Book authority:** `main` commit `f85a35266dfdea6e1986982bfea0e451186fbd13`, tree `a6c9537a242124cf6d48d81488cda217ffa592dc`. D1 is closed. D2 is blocked by the unpublished immutable Foundation package. D3A, D3B, D4, and the D4A live authority implementation remain incomplete.
+**Original governance authority:** `main` commit `f85a35266dfdea6e1986982bfea0e451186fbd13`, tree `a6c9537a242124cf6d48d81488cda217ffa592dc`. The D5A governance source was merged through PR #63 as `e69917e97df695b1ede9487969afb73381c22bd4`. The current route-decision authority is Book `main` commit `3d7ff378ba189c1e45e273bc9e023d95ca75ffd5`, tree `6ad7815cc73c4c8a63c9e6b51706eac492dc4c56`. D1 is closed. D2 remains blocked by unproven immutable package-consumer evidence; registry state is `NOT_VERIFIED_CREDENTIAL_SCOPE`, not proof of package absence. D3A, D3B, D4, and the D4A live authority implementation remain incomplete.
 
 **Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D5A_COMPATIBILITY_CUTOVER_UI.md`. Proposed branch: `agent/inv001-p19-book-d5a-compatibility-ui-governance`.
 
@@ -957,11 +957,23 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Required boundary:** Explicit `NOT_CONFIGURED`, `FORBIDDEN`, `LOADING`, `READY`, `STALE`, `ERROR`, `COMMAND_PENDING`, `COMMAND_ACCEPTED`, and `COMMAND_REJECTED` states; proven zero distinct from unknown; sanitized D4 DTOs only; exact capability/location control; no optimistic authoritative quantity; no automatic retry; no package/persistence/admin client in browser code; no legacy fallback or dual write.
 
-**Route decision:** `/inventory` is currently dealer-local. Gate A must identify whether it remains outside Foundation cutover or requires a separate Owner-approved repurposing. `/admin/logistics/inventory` is the candidate Office AZ view but must use D4/D4A authority rather than broad admin-client access.
+**Route decision:** The Owner has ratified that `/inventory` remains the dealer-local inventory surface and stays outside the Office AZ Foundation D5 cutover. `/admin/logistics/inventory` is the sole current Book UI candidate for the future Office AZ Foundation view, but it must use D4/D4A authority rather than broad admin-client access. The two routes may not share Foundation quantities, authority, DTOs, commands, fallback, or reconciliation truth.
 
-**Current boundary:** Exact three governance documents only. No private-source transmission, Claude invocation, UI/route/action/DTO/test edit, package, Auth, DB, Supabase, migration, implementation, executable test, stage, commit, push, PR mutation, Ready, merge, Android, provider, staging, deployment, or production action is authorized.
+**Accepted diagnosis:** One owner-authorized tool-disabled read-only pass and its bounded corrections produced `INV001_P19_BOOK_D5A_COMPATIBILITY_CUTOVER_UI_DIAGNOSIS_RESULT_V1`. MacBook Codex accepted R1 together with `D5A-R2_CORRECTION_ADDENDUM`: all 24 approved hashes and the fixed main identity matched; the primary verdict is `BLOCKED_D1_D4_PRECONDITION`; the C3 three-path reservation is insufficient; D4 failures, actor/operator separation, product-mapping denial, server-returned command state, and exact proposed tests are corrected. No implementation or repository/environment mutation occurred.
 
-**Exit gate:** Verify the exact three-document diff, directive hash, fixed base, current-source conflict evidence, route-audience blocker, exact 24-path proposed read scope, C3 scope sufficiency gate, D1-D4 dependency wall, no-fallback/no-dual-write contract, D6 separation, and protected metadata; then request a separate Owner stage/local-commit gate.
+**Current boundary:** The D5A-R1 route-decision candidate changes exactly the new decision directive, this completion plan, and the phase-results ledger. No UI/route/action/DTO/test edit, package, Auth, DB, Supabase, migration, implementation, executable test, stage, commit, push, PR mutation, Ready, merge, Android, provider, staging, deployment, or production action is authorized.
+
+**Exit gate:** Verify the exact D5A-R1 three-document diff, directive hash, route separation, C3 reservation correction, D2-D4/D4A dependency wall, no-fallback/no-dual-write contract, protected metadata, and `git diff --check`; then request a separate Owner stage/local-commit gate.
+
+### INV001-P19-BOOK-D5A-R1 — Route audience decision
+
+**Decision marker:** `INV001_P19_BOOK_D5A_R1_ROUTE_AUDIENCE_DECISION_V1`.
+
+**Owner-ratified separation:** `/inventory` remains dealer-local and outside Foundation D5. It may not display or mutate Office AZ Foundation state, contribute to the Office AZ total, or act as fallback/reconciliation authority. `/admin/logistics/inventory` is the sole current Book UI candidate for the future Office AZ Foundation view and must later consume only sanitized D4/D4A server-owned DTOs.
+
+**Scope consequence:** `src/app/inventory/InventoryClient.tsx` is removed from the Office AZ D5 planning set. The future logistics cutover must re-evaluate the minimum literal scope after D4 closure, including its Server Component loader, client view, D4 DTO-consumption boundary, focused UI contract test, and exact loader test. These are proposals only; no implementation path is authorized.
+
+**Current candidate:** Branch `agent/inv001-p19-book-d5a-r1-route-audience-decision`, fixed base `3d7ff378ba189c1e45e273bc9e023d95ca75ffd5` / `6ad7815cc73c4c8a63c9e6b51706eac492dc4c56`, exact three-document local governance allowlist, unstaged and uncommitted. Stage, commit, push, PR mutation, implementation, tests, package/registry, DB, provider, and deployment remain separate gates.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 

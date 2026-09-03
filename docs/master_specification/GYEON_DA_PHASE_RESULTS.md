@@ -4779,3 +4779,72 @@ not_authorized:
   - db_supabase_migration_auth_provider_android_deployment_staging_or_production
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_FOUNDATION_PR79_LANDING_PACKAGE_BLOCKER_REGISTRY_SCOPE_CLASSIFICATION_D2_HOLD_FOUNDATION_OWNERSHIP_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
 ```
+
+## INV001-P19-BOOK-D5A-R1 — Route audience decision candidate
+
+```yaml
+phase: INV001_P19_BOOK_D5A_R1_ROUTE_AUDIENCE_DECISION
+marker: INV001_P19_BOOK_D5A_R1_ROUTE_AUDIENCE_DECISION_V1
+status: LOCAL_GOVERNANCE_DECISION_CANDIDATE_UNSTAGED_UNCOMMITTED_D5_IMPLEMENTATION_BLOCKED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner accepted the D5A diagnosis and explicitly ratified that /inventory remains dealer-local while /admin/logistics/inventory is the sole current Office AZ Foundation UI candidate. The Owner then authorized creation and local verification of exactly three governance documents. No stage, commit, push, PR mutation, source implementation, executable test, package, registry, Auth, DB, Supabase, provider, Android, staging, production, or deployment action is included."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: 3d7ff378ba189c1e45e273bc9e023d95ca75ffd5
+  fixed_tree: 6ad7815cc73c4c8a63c9e6b51706eac492dc4c56
+  branch: agent/inv001-p19-book-d5a-r1-route-audience-decision
+  d5a_governance_merge_pr: 63
+  d5a_governance_merge_commit: e69917e97df695b1ede9487969afb73381c22bd4
+diagnosis:
+  result_marker: INV001_P19_BOOK_D5A_COMPATIBILITY_CUTOVER_UI_DIAGNOSIS_RESULT_V1
+  accepted_revision_pair:
+    - D5A_R1_FULL_REPORT
+    - D5A_R2_CORRECTION_ADDENDUM
+  primary_verdict: BLOCKED_D1_D4_PRECONDITION
+  approved_read_paths: 24
+  all_path_hashes_match: true
+  ordered_hash_manifest_sha256: 443a491f5e0852fe64cd4b26815105c5d051cbe89d92bf03b8ea5f0d95117b7d
+  c3_three_path_scope: INSUFFICIENT
+  registry_state: NOT_VERIFIED_CREDENTIAL_SCOPE
+  repository_or_environment_mutation: false
+owner_route_decision:
+  dealer_inventory_route: DEALER_LOCAL_REMAINS_OUTSIDE_FOUNDATION_D5
+  office_az_foundation_candidate_route: /admin/logistics/inventory
+  shared_foundation_quantity_or_authority: PROHIBITED
+  legacy_fallback_or_reconciliation_authority: PROHIBITED
+  office_az_total_contribution_from_dealer_local_route: PROHIBITED
+c3_reservation_correction:
+  remove_from_office_az_d5_planning:
+    - src/app/inventory/InventoryClient.tsx
+  retain_as_future_candidate:
+    - src/app/admin/logistics/inventory/LogisticsInventoryClient.tsx
+    - src/lib/inventory/foundation/foundation-cutover-ui.test.ts
+  minimum_scope_recheck_after_d4: REQUIRED
+exact_candidate_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D5A_R1_ROUTE_AUDIENCE_DECISION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+dependencies:
+  d1_pure_adaptor: CLOSED
+  d2_private_package_consumer: BLOCKED_UNPROVEN_IMMUTABLE_PACKAGE_AND_REGISTRY_NOT_VERIFIED
+  d3a_persistence: INCOMPLETE
+  d3b_product_mapping: INCOMPLETE
+  d4_authenticated_server_boundary: INCOMPLETE
+  d4a_live_authority: NOT_CONFIGURED
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  src/components/ScreensPreview.tsx: ABSENT
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+implementation_authorized: false
+not_authorized:
+  - stage_commit_push_pr_ready_or_merge
+  - ui_route_action_dto_test_or_dependency_edit
+  - package_registry_auth_db_supabase_migration_or_provider_action
+  - android_staging_production_or_deployment
+decision: REGISTER_OWNER_RATIFIED_ROUTE_SEPARATION_AND_KEEP_D5_IMPLEMENTATION_BLOCKED
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_ROUTE_SEPARATION_C3_RESERVATION_CORRECTION_D2_D4_DEPENDENCY_WALL_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
+```
