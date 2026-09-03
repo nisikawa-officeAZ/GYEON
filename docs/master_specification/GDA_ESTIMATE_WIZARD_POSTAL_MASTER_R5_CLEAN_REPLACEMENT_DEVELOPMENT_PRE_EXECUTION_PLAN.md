@@ -293,11 +293,12 @@ track.
 
 ## 10. Current stop condition
 
-The next allowed action is CR0 review followed by the CR1 read-only manifest
-reconciliation. Project creation is not the next action. The replacement must
-not be created until the manifest contradiction is closed and CR3 disposable
-acceptance passes at the final execution identity. The region is fixed at
-`ap-northeast-1`.
+CR1 is Owner-ratified and `CR2_NOT_REQUIRED`. The next allowed action is
+delivery of the committed CR3 read-only preflight directive, followed only
+after another explicit Owner gate by its one-time static review. Project
+creation is not the next action. The replacement must not be created until a
+separately authorized fresh CR3 disposable attempt passes at its final
+execution identity. The region remains fixed at `ap-northeast-1`.
 
 ## 11. Official platform references checked for this plan
 
@@ -310,7 +311,7 @@ These references support the region immutability, clean-project-versus-clone
 distinction, manual reconfiguration requirements, Storage object separation,
 and Auth/JWT cutover risks. They do not authorize any platform action.
 
-## 12. CR0 delivery and CR1 governance handoff
+## 12. CR0 delivery and CR1 governance handoff (historical)
 
 CR0 was committed as `4e3aa471ed776ccd360cd6405ccdc850fced5aaa`,
 tree `e7cadd5903ab29143e55a03ccb4a71cffe8bdfe1`, and normally pushed to
@@ -318,8 +319,50 @@ PR #67. The branch was synchronized `0 0`; PR #67 remained OPEN/Draft and
 MERGEABLE; Vercel and Vercel Preview Comments both passed. No platform or
 database action occurred.
 
-The next governance candidate adds
+At that checkpoint, the next governance candidate added
 `CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION.md`
 and updates this plan, the completion plan, and the append-only phase ledger.
-It defines a one-time, tool-disabled, twelve-file read-only diagnosis. This
-candidate does not authorize private-file transmission or Claude execution.
+It defined a one-time, tool-disabled, twelve-file read-only diagnosis. That
+candidate did not authorize private-file transmission or Claude execution.
+
+## 13. CR1 Owner ratification and CR3 preflight governance
+
+The Owner formally ratified the CR1 manifest decision on 2026-09-03:
+
+- exactly 113 unique top-level formal migration SQL files exist at the
+  ratification source identity;
+- exactly 112 migrations form the executable clean-replacement manifest;
+- `supabase/migrations/20260801110110_line_link_tokens.sql` is the sole
+  exclusion;
+- both provisioning migrations remain included as inert schema under
+  `INCLUDE_SCHEMA_KEEP_FEATURE_DISABLED`;
+- GYEON partner onboarding remains disabled;
+- the accepted product-policy and canonical five-bucket forward repair is
+  closed;
+- the ratified 112-file aggregate SHA-256 is
+  `0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb`;
+  and
+- `CR2_NOT_REQUIRED`.
+
+The manifest contradiction recorded earlier in this plan is therefore closed.
+The next governance phase is
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT`.
+Its directive is
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md`.
+That directive defines a later one-time, tool-disabled, read-only static review
+of thirteen exact private paths plus a Codex-supplied non-secret metadata
+attestation. It must decide whether the accepted seven-file R5 harness may be
+reused unchanged or requires the smallest literal repair before one separately
+authorized fresh disposable CR3 attempt.
+
+This governance candidate is limited to exactly four documentation paths:
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md`
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+No private-file transmission, Claude invocation, test, runtime, Supabase/DB/
+provider action, project creation, migration replay/application, data transfer,
+real postal import, configuration, cutover, retirement, Git stage/commit/push,
+PR mutation, Ready, merge, or deployment is authorized by this candidate.

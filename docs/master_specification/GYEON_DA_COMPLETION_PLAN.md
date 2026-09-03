@@ -1668,14 +1668,15 @@ third Claude invocation. The transparent normalized artifact is
 `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_CODEX_NORMALIZED_RESULT.md`.
 No other finding changed.
 
-**CR1 acceptance candidate:** The normalized result is ready for the Owner's
-manifest ratification. It recommends exactly 112 executable migrations,
+**CR1 pre-ratification acceptance candidate (historical):** At that checkpoint,
+the normalized result was ready for the Owner's manifest ratification. It
+recommended exactly 112 executable migrations,
 excludes only `20260801110110_line_link_tokens.sql`, keeps both provisioning
 migrations as disabled infrastructure, closes the product-policy/five-bucket
 prerequisite, records `CR2_NOT_REQUIRED`, and identifies CR3 fresh disposable
-governance as the minimum next gate. This is not yet authorization to author or
-execute CR3, create a Supabase project, replay/apply migrations, contact a
-provider, cut over, retire, merge, or deploy.
+governance as the minimum next gate. That candidate was not authorization to
+author or execute CR3, create a Supabase project, replay/apply migrations,
+contact a provider, cut over, retire, merge, or deploy.
 
 **CR1 normalized-result write allowlist — exactly three paths:**
 
@@ -1683,10 +1684,43 @@ provider, cut over, retire, merge, or deploy.
 2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
 3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
 
-**Current boundary:** Documentation candidate only. Stage, commit, push, PR
+**Boundary at that checkpoint (historical):** Documentation candidate only.
+Stage, commit, push, PR
 mutation, CR3 authoring/execution, tests, runtime, Supabase/DB/project/provider
 access, migration apply, cutover, retirement, Ready, merge, and deployment
-remain separately unauthorized.
+remained separately unauthorized.
+
+**CR1 Owner ratification:** On 2026-09-03 the Owner formally ratified exactly
+112 executable migrations from 113 unique top-level formal migration SQL
+files. The sole exclusion is
+`supabase/migrations/20260801110110_line_link_tokens.sql`. Both provisioning
+migrations are included as inert schema under
+`INCLUDE_SCHEMA_KEEP_FEATURE_DISABLED`; GYEON partner onboarding remains
+disabled. The accepted product-policy/canonical five-bucket forward repair is
+closed, the aggregate manifest SHA-256 is
+`0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb`, and
+the phase decision is `CR2_NOT_REQUIRED`.
+
+**CR3 fresh-disposable preflight governance candidate:** The next directive is
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md`.
+It governs a later separately authorized, one-time, tool-disabled, read-only
+static review. The future review is limited to thirteen exact private files and
+a Codex-supplied non-secret metadata attestation. It must return either
+`REUSE_EXISTING_R5_HARNESS_UNCHANGED` or the smallest exact repair need before
+any new disposable runtime is considered.
+
+**CR3 governance write allowlist — exactly four paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md` (new)
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current CR3 boundary:** Directive authoring only. Private-file transmission,
+Claude execution, tests, runtime, Supabase/DB/project/provider access,
+migration replay/application, project creation, data transfer, real Japan Post
+CSV import, configuration, cutover, retirement, stage, commit, push, PR
+mutation, Ready, merge, and deployment remain separately unauthorized.
 
 ### GDA-3 — Completion Desk
 

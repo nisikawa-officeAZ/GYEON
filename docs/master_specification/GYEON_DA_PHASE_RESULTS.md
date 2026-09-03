@@ -5274,3 +5274,67 @@ boundaries:
 decision: READY_FOR_OWNER_CR1_MANIFEST_RATIFICATION
 next: "Independently verify the exact three-document candidate, the one-string correction, normalized schema, hashes, protected-path metadata, and diff check. Stage/local commit and normal push require separate Owner approval. CR3 authoring or execution remains a later separate Owner gate after explicit manifest ratification."
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR1 Owner ratification and CR3 fresh-disposable preflight governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_OWNER_RATIFICATION_AND_CR3_FRESH_DISPOSABLE_PREFLIGHT_GOVERNANCE
+marker: GDA_POSTAL_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_DIRECTIVE_V1
+status: CR1_OWNER_RATIFIED_CR2_NOT_REQUIRED_CR3_DIRECTIVE_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner formally ratified the normalized CR1 manifest and authorized CR3 directive authoring only. This authorization is limited to exactly four documentation paths. It does not authorize private-file transmission, Claude execution, tests, runtime, Supabase/DB/project/provider action, migration replay/application, data transfer, real postal import, Git stage/commit/push, PR mutation, Ready, merge, cutover, retirement, or deployment."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  ratification_source_head: 9f319b222a4f8f671cd7ffaaad8ec95486b9d72e
+  ratification_source_tree: 99bf62b6ca68432820595cc3807777411df4e4fd
+  upstream_ahead_behind_before_authoring: "0 0"
+  pr_state_before_authoring: OPEN/Draft
+  base: main
+  remote_head_matched_before_authoring: true
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+owner_ratified_cr1_manifest:
+  formal_top_level_migration_count: 113
+  executable_manifest_count: 112
+  exact_exclusion:
+    - supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_manifest_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  provisioning_pair_disposition: INCLUDE_SCHEMA_KEEP_FEATURE_DISABLED
+  gyeon_partner_onboarding: DISABLED
+  product_policy_and_canonical_five_bucket_forward_repair: CLOSED
+  cr2: CR2_NOT_REQUIRED
+  replacement_region: ap-northeast-1
+cr3_governance:
+  directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md
+  future_result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_RESULT_V1
+  future_mode: ONE_TOOL_DISABLED_READ_ONLY_STATIC_PREFLIGHT_AFTER_SEPARATE_OWNER_AUTHORIZATION
+  future_private_read_allowlist_count: 13
+  required_harness_decision:
+    - REUSE_EXISTING_R5_HARNESS_UNCHANGED
+    - REPAIR_REQUIRED
+  runtime_authorized_by_this_directive: false
+write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  private_files_transmitted: false
+  claude_invoked: false
+  source_test_harness_or_migration_changed: false
+  test_or_runtime_executed: false
+  supabase_db_project_or_provider_contacted: false
+  project_created: false
+  migration_replayed_or_applied: false
+  data_exported_or_imported: false
+  real_japan_post_csv_imported: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CR1_OWNER_RATIFIED_CR2_NOT_REQUIRED_CR3_DIRECTIVE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "Independently verify the exact four-document candidate, literal manifest decision, thirteen-file future read allowlist, fixed source/harness metadata, required result schema, protected-path boundary, and diff check. Stage/local commit and normal push require separate Owner approvals. Only after delivery may the Owner separately authorize one CR3 static preflight; a fresh disposable runtime remains another later gate."
+```
