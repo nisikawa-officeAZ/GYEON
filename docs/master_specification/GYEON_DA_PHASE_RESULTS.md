@@ -4051,3 +4051,122 @@ not_authorized:
 decision: REGISTER_LOCAL_D1_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_GOVERNANCE_DIFF_DIRECTIVE_HASH_LITERAL_ALLOWLISTS_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
 ```
+
+## INV001-P19-BOOK-D1 — Pure adaptor contract merged closure
+
+```yaml
+phase: INV001_P19_BOOK_D1_PURE_ADAPTOR_CONTRACT
+status: CLOSED_MERGED_TO_MAIN
+date: 2026-09-03
+append_only: true
+book:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/56
+  source_commit: cb4c5e92d480cb1211d8614efaa13d8c9e2e03b8
+  merge_commit: 79632bd0f6af769a9145e6f1c1de2b4558b23189
+  landed_tree: 4e81f89e6bbe2b7f4e7fe839c80c20ae6deb5bb8
+  base_branch: main
+  merge_method: NORMAL_MERGE_COMMIT
+  source_branch_deleted: false
+accepted_paths:
+  - src/lib/inventory/foundation/foundation-adaptor-types.ts
+  - src/lib/inventory/foundation/foundation-adaptor-core.ts
+  - src/lib/inventory/foundation/foundation-adaptor-core.test.ts
+accepted_contract:
+  surfaces: 5
+  runtime_commands: 18
+  integration_contract_version: "2.0"
+  owner_identity: OFFICE_AZ_OR_ATTRACTION
+  actor_operator: DISTINCT_AND_FORWARDED
+  snapshot_export: INV001-P18_RUNTIME_SNAPSHOT_V3
+  snapshot_import:
+    - INV001-P12_RUNTIME_SNAPSHOT_V1
+    - INV001-P17_RUNTIME_SNAPSHOT_V2
+    - INV001-P18_RUNTIME_SNAPSHOT_V3
+  malformed_or_unknown_result: FAIL_CLOSED
+  thrown_or_rejected_error: SANITIZED_FIXED_FAILURE
+  retry_or_automatic_chain: PROHIBITED
+independent_correction:
+  initial_candidate_verdict: CHANGES_REQUIRED
+  repaired:
+    - PRESERVE_AND_FORWARD_COMPLETE_BOOK_CONTEXT
+    - MALFORMED_RUNTIME_CALLERS_RETURN_INVALID_REQUEST_WITHOUT_RAW_THROW
+    - EXACT_RECOVERY_EXPORT_NAME_EVALUATE_FOUNDATION_RECOVERY_EVIDENCE
+verification:
+  focused_test: PASS_71_OF_71
+  typecheck: PASS
+  malformed_input_probe: PASS
+  diff_check: PASS
+  github_checks: PASS_2_OF_2
+not_authorized:
+  - d2_package_or_registry_access
+  - d3_persistence_or_product_mapping
+  - route_ui_android_provider_deployment_staging_or_production
+decision: CLOSE_D1_AND_ALLOW_SEPARATE_D2_GOVERNANCE_CREATION_ONLY
+next: INV001_P19_BOOK_D2_PRIVATE_PACKAGE_CONSUMER
+```
+
+## INV001-P19-BOOK-D2 — Private package consumer governance candidate
+
+```yaml
+phase: INV001_P19_BOOK_D2_PRIVATE_PACKAGE_CONSUMER
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_BLOCKED_PACKAGE_UNPUBLISHED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner approved proceeding from merged D1 to creation and local verification of the D2 directive and governance record only. No private-source transmission, Claude invocation, Foundation publication/edit, package/registry access, dependency change, install, source implementation, executable test, stage, commit, push, PR mutation, DB, provider, UI, Android, deployment, staging, or production action is included."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: 79632bd0f6af769a9145e6f1c1de2b4558b23189
+  fixed_tree: 4e81f89e6bbe2b7f4e7fe839c80c20ae6deb5bb8
+  proposed_branch: agent/inv001-p19-book-d2-private-package-consumer
+foundation:
+  repository: nisikawa-officeAZ/detaileros-inventory-foundation
+  current_fixed_commit: c0cc42de8ef1e95482b31a981a7d2d6e2571fa8e
+  current_fixed_tree: c2e925295e1e0384010e6744a5c7ec15cb7668a1
+  required_package_identity: "@nisikawa-officeaz/detaileros-inventory-foundation"
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_PRIVATE_PACKAGE_CONSUMER.md
+  sha256: d13dcb64f9780bc5ed361b9a040d2be7b419726956a218ae05d5ceb7bfc88f84
+  diagnosis_marker: INV001_P19_BOOK_D2_PRIVATE_PACKAGE_CONSUMER_DIAGNOSIS_RESULT_V1
+  dependency_pin_marker: INV001_P19_BOOK_D2_PRIVATE_PACKAGE_DEPENDENCY_PIN_RESULT_V1
+  wrapper_marker: INV001_P19_BOOK_D2_PRIVATE_PACKAGE_WRAPPER_IMPLEMENTATION_RESULT_V1
+governance_candidate_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_PRIVATE_PACKAGE_CONSUMER.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+current_blocker:
+  foundation_package_name: detaileros-inventory-foundation
+  foundation_package_version: 0.1.0
+  foundation_private_flag: true
+  main_exports_types_files_build_publish: NOT_CONFIGURED
+  immutable_registry_artifact_integrity_provenance: NOT_PROVEN
+required_foundation_prerequisite:
+  owner: FOUNDATION_STUDIO
+  action: SEPARATE_PRIVATE_IMMUTABLE_PACKAGE_PUBLICATION_PHASE
+  book_must_not_publish_or_repair_foundation: true
+d2_gate_a:
+  mode: TOOL_DISABLED_READ_ONLY_DIAGNOSIS
+  book_exact_paths: 13
+  foundation_exact_paths: 13
+  publication_evidence_required: true
+  transmission_authorized: false
+d2_gate_b1_allowlist:
+  - .npmrc
+  - package.json
+  - package-lock.json
+  registry_or_install_authorized: false
+d2_gate_b2_allowlist:
+  - src/lib/inventory/foundation/foundation-runtime-package.ts
+  - src/lib/inventory/foundation/foundation-runtime-package.test.ts
+  implementation_authorized: false
+not_authorized:
+  - stage_commit_push_or_pr_mutation
+  - private_file_transmission_or_claude_invocation
+  - foundation_repository_edit_or_package_publication
+  - registry_login_token_output_package_install_or_dependency_change
+  - d3_db_migration_mapping_d4_route_d5_ui_d6_runtime_d7_retirement
+  - android_provider_deployment_staging_or_production
+decision: REGISTER_LOCAL_D2_GOVERNANCE_CANDIDATE_AND_FAIL_CLOSED_ON_UNPUBLISHED_PACKAGE
+next: "VERIFY_EXACT_THREE_PATH_GOVERNANCE_DIFF_DIRECTIVE_HASH_BLOCKER_LITERAL_SCOPES_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
+```

@@ -768,11 +768,11 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-D1 — Pure adaptor contract
 
-**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / NO PRIVATE-SOURCE TRANSMISSION OR IMPLEMENTATION AUTHORIZED.
+**Status:** CLOSED / PR #56 MERGED NORMALLY TO `main` / D1 PURE CONTRACT ACCEPTED / NO D2, PACKAGE, DB, ROUTE, UI, ANDROID, STAGING, OR PRODUCTION AUTHORIZED BY D1.
 
 **Objective:** Define and then, through separately approved gates, implement the smallest pure TypeScript Book adaptor contract that forwards the sealed Foundation V2 commands and snapshot boundary without copying Foundation rules or contacting a package, database, route, provider, UI, Android, or deployment environment.
 
-**Fixed authority:** Book `main` commit `8516506fe700348b4e8436fbc6d53ce44747ca2e`, tree `e341a26719354cbdc193d6414e0175771b67d05f`; Foundation commit `c0cc42de8ef1e95482b31a981a7d2d6e2571fa8e`, tree `c2e925295e1e0384010e6744a5c7ec15cb7668a1`.
+**Original fixed authority:** Book `main` commit `8516506fe700348b4e8436fbc6d53ce44747ca2e`, tree `e341a26719354cbdc193d6414e0175771b67d05f`; Foundation commit `c0cc42de8ef1e95482b31a981a7d2d6e2571fa8e`, tree `c2e925295e1e0384010e6744a5c7ec15cb7668a1`.
 
 **Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D1_PURE_ADAPTOR_CONTRACT.md`. Proposed branch: `agent/inv001-p19-book-d1-pure-adaptor-contract`.
 
@@ -784,9 +784,40 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Required boundary:** Preserve all 18 Foundation command names and `INV001-P18_RUNTIME_SNAPSHOT_V3`; keep actor/operator and canonical identities explicit; inject a pure runtime port; forward once with no retry or automatic command chaining; return typed fail-closed results; and import neither package, persistence, legacy Book core, route, UI, nor Foundation source.
 
-**Current authorization:** Creation and local verification of the D1 governance candidate only. Stage, commit, push, PR mutation, private-source transmission, Claude invocation, source implementation, tests, dependency/package work, DB/Supabase, UI, Android, provider, deployment, and production remain separate gates.
+**Delivery and closure:** The governance candidate was delivered through PR #56. After separately authorized Gate A and Gate A-R1 diagnosis, MacBook Codex accepted the corrected five-surface contract. Gate B created exactly the three allowed files. An independent review rejected the first candidate because it discarded `bookContext`, threw raw `TypeError` for malformed runtime callers, and shortened the accepted recovery export name. Claude corrected those defects within the same three-file scope. Final verification passed 71/71 focused tests, `npx tsc --noEmit`, malformed-input runtime probes, and diff checks. Source commit `cb4c5e92d480cb1211d8614efaa13d8c9e2e03b8` was normally pushed. PR #56 passed both checks, was separately marked Ready, and was normally merged to `main` as `79632bd0f6af769a9145e6f1c1de2b4558b23189`, tree `4e81f89e6bbe2b7f4e7fe839c80c20ae6deb5bb8`.
 
-**Exit gate:** Verify the exact three-path governance diff, directive hash, protected metadata, and literal read/implementation allowlists; then request a separate Owner gate for stage and local commit.
+**Exit gate:** D1 is closed. It supplies a pure injected boundary only and does not prove that a consumable Foundation package exists. D2 begins only through the separately governed package-readiness phase below.
+
+### INV001-P19-BOOK-D2 — Private package consumer
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / CURRENTLY BLOCKED BY MISSING IMMUTABLE PUBLISHED FOUNDATION PACKAGE EVIDENCE.
+
+**Objective:** Bind D1's accepted Book-owned pure adaptor to one exact private immutable Foundation GitHub Packages artifact, server-side only, without copying Foundation source, duplicating rules, guessing persistence, or exposing package access to browser, UI, or Android code.
+
+**Fixed authority:** Book `main` commit `79632bd0f6af769a9145e6f1c1de2b4558b23189`, tree `4e81f89e6bbe2b7f4e7fe839c80c20ae6deb5bb8`; current Foundation commit `c0cc42de8ef1e95482b31a981a7d2d6e2571fa8e`, tree `c2e925295e1e0384010e6744a5c7ec15cb7668a1`.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_PRIVATE_PACKAGE_CONSUMER.md`. Current local SHA-256: `d13dcb64f9780bc5ed361b9a040d2be7b419726956a218ae05d5ceb7bfc88f84`. Proposed branch: `agent/inv001-p19-book-d2-private-package-consumer`.
+
+**Current blocker:** The fixed Foundation `package.json` is named `detaileros-inventory-foundation`, is version `0.1.0`, has `private: true`, and declares no `main`, `exports`, `types`, `files`, or build/publish script. No accepted P19 evidence proves a published tarball, immutable integrity, declarations, scoped package identity, or commit/tree binding. Book must not install or wrap a guessed artifact.
+
+**Required Foundation prerequisite:** A separate Foundation-owned publication phase must prove the private scoped package identity `@nisikawa-officeaz/detaileros-inventory-foundation`, exact version, source commit/tree, tarball integrity, provenance/SBOM, file/declaration/export catalogue, consumer compatibility, credential-safe installation, and rollback. Book does not publish or repair Foundation in D2.
+
+**Gate separation:**
+
+1. Gate A: separately authorized tool-disabled read-only compatibility diagnosis after publication evidence exists.
+2. Gate B1: separately authorized `.npmrc` registry declaration plus exact `package.json` and `package-lock.json` pin; registry access is an external gate and no token may be committed or printed.
+3. Gate B2: separately authorized server-only package wrapper and focused test.
+4. Stage/commit, push/Draft PR, independent acceptance, Ready, merge, D3A persistence, D3B mapping, route, UI, disposable runtime, Android, staging, and production remain separate gates.
+
+**D2 exact implementation allowlist:**
+
+- Gate B1: `.npmrc`, `package.json`, `package-lock.json`.
+- Gate B2: `src/lib/inventory/foundation/foundation-runtime-package.ts`, `src/lib/inventory/foundation/foundation-runtime-package.test.ts`.
+- The three merged D1 files are read-only throughout D2.
+
+**Current authorization:** Create and verify exactly the D2 directive plus this completion-plan update and the phase-results ledger entry. No private-source transmission, Claude invocation, Foundation edit/publication, package/registry access, install, source implementation, executable test, stage, commit, push, PR mutation, DB, provider, UI, Android, deployment, staging, or production action is included.
+
+**Exit gate:** Verify the exact three-path governance candidate, directive hash, current package blocker, literal read/change scopes, and protected metadata; then request a separate Owner gate for stage and local commit. Gate A remains blocked until Foundation publication evidence is independently accepted.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
