@@ -819,6 +819,26 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Exit gate:** Verify the exact three-path governance candidate, directive hash, current package blocker, literal read/change scopes, and protected metadata; then request a separate Owner gate for stage and local commit. Gate A remains blocked until Foundation publication evidence is independently accepted.
 
+### INV001-P19-BOOK-D2-Q1R1 — Foundation landing acceptance and package-publication hold
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / FOUNDATION Q1R1 LANDING ACCEPTED / D2 REMAINS BLOCKED BY UNPROVEN IMMUTABLE PACKAGE PUBLICATION.
+
+**Objective:** Bind the independently accepted Foundation PR #79 landing to Book governance without falsely treating a documentation/hash correction as a published package or beginning D2 package work.
+
+**Fixed authorities:** Book `main` commit `e69917e97df695b1ede9487969afb73381c22bd4`, tree `153bccf1babc279d323c38060c1678e645a7e5c9`; Foundation `main` commit `a5764f7821b02769ef2d4fba40d432abdc76fa56`, tree `958d3517cec45432131d41b4962d0676cd56aced`; reviewed Foundation source `9982d70aa358ebe2c1900d183a42eab7c8a0d65f`.
+
+**Accepted landing:** Foundation PR #79 merged normally and preserved the P18 base separately from the PR #78 P19 landing identity. The exact seven-path delta, artifact hashes, combined hash, 26 focused assertions, 1,030 whole-suite tests, typecheck, CI, and diff check passed independent MacBook Codex review. Acceptance evidence is Foundation Issue #39 comment `5521647803`.
+
+**Blocking finding:** The accepted Foundation `package.json` remains `detaileros-inventory-foundation@0.1.0`, `private: true`, with no `main`, `exports`, `types`, `files`, build, or publish declaration. Current GitHub credentials lack `read:packages`; HTTP 403 is classified as `NOT_VERIFIED_CREDENTIAL_SCOPE`, not proof of package absence. No immutable scoped artifact, integrity, catalogue, provenance, or consumer-install evidence is accepted.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_Q1R1_FOUNDATION_LANDING_ACCEPTANCE_AND_PACKAGE_PUBLICATION_HOLD.md`. Current local SHA-256: `333e013e99a6f72ffabf348a3766b7d0f3e6aadb01f29d0bec8e3aa8335048b5`. Proposed branch: `agent/inv001-p19-book-d2-q1r1-foundation-landing-hold`.
+
+**Decision:** Keep D2 Gate A, B1, and B2 blocked. Book must not install, copy, vendor, emulate, wrap, or publish Foundation. The next unblocker is a separately Owner-authorized Foundation-owned immutable private package publication phase that proves exact scoped identity, semantic version, source binding, exports/types/files, clean build, tarball integrity/catalogue, provenance/SBOM, private visibility, credential-safe install, rollback, and forbidden-file exclusion.
+
+**Current boundary:** Exactly the new directive, this completion-plan entry, and one append-only phase-results entry. No private-source transmission, Claude invocation, package/registry action, credential request, dependency/lockfile/source/test edit, executable test, stage, commit, push, PR mutation, Ready, merge, DB, Supabase, migration, Auth, provider, Android, deployment, staging, or production action is authorized.
+
+**Exit gate:** Independently verify the exact three-document diff, directive hash, Foundation landing identity, package blocker, registry-evidence classification, D2 hold, Foundation ownership, protected metadata, and `git diff --check`; then request a separate Owner gate for stage and local commit.
+
 ### INV001-P19-BOOK-D3A — Foundation persistence governance preparation
 
 **Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / IMPLEMENTATION BLOCKED UNTIL D2 FULL CLOSURE.
