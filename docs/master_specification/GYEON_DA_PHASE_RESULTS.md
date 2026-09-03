@@ -5491,3 +5491,76 @@ boundaries:
 decision: CR3_FRESH_DISPOSABLE_ACCEPTED_READY_FOR_DOCUMENT_REVIEW
 next: "Independently review the exact three-document candidate and retained evidence linkage, then require separate Owner authorization for literal-path stage/local commit and another separate authorization for normal push. CR4 hosted project cost and creation preflight remains a later separate Owner gate and must stop before project creation."
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR4 hosted project cost and creation preflight recording
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR4_HOSTED_PROJECT_COST_AND_CREATION_PREFLIGHT_RECORDING
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR4_HOSTED_PROJECT_COST_AND_CREATION_PREFLIGHT_V1
+status: PASS_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner separately authorized CR4 read-only organization and cost preflight, selected officeAZ, acknowledged the provider-reported monthly USD 10 project cost, authorized issuance of the cost-confirmation identifier, and then authorized a result candidate limited to exactly three documentation paths. No project creation, DB access, migration replay/application, data transfer, provider configuration mutation, real postal import, secret access, Git stage/commit/push, PR mutation, Ready, merge, cutover, retirement, or deployment was authorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  recording_base_head: ee17c602260857f15d2a54532a17cd3ffe6429c2
+  recording_base_tree: ec84dca3bc422216b7050e6ce5e0e5d16d05a108
+cost:
+  interface: Supabase project get_cost
+  organization_name: officeAZ
+  organization_id: ivlpkysdjbrkcozrvzwg
+  organization_plan: pro
+  type: project
+  recurrence: monthly
+  amount_usd_before_tax: 10
+  ceiling_usd_before_tax: 12
+  ceiling_result: PASS
+  compute: Micro
+  paid_add_ons: NONE
+  maximum_lifetime_days: 31
+  confirmation_id: BGoZHqqJd2JYMt+cWSDFH7qDeNkZZAwbTytJrHy7r+E=
+ratified_identity:
+  project_name: DealerOS-Dev-Clean-R5
+  region: ap-northeast-1
+  planned_creation_time: 2026-09-03T21:30:00+09:00
+  automatic_review_time: 2026-09-27T21:30:00+09:00
+  mandatory_pause_or_retirement_decision_deadline: 2026-10-04T21:30:00+09:00
+provider_inventory:
+  accessible_organization_count: 1
+  project_count_before_confirmation: 3
+  project_count_after_confirmation: 3
+  replacement_project_exists_after_confirmation: false
+  existing_projects:
+    - name: DealerOS-Dev
+      ref: fbieiotihlmpfzybowbt
+      region: ap-northeast-2
+      status: ACTIVE_HEALTHY
+    - name: DealerOS-Prod
+      ref: dmvyaykhibmphrmekjbb
+      region: ap-northeast-1
+      status: ACTIVE_HEALTHY
+    - name: DealerOS-Dev-Next
+      ref: vhiuiwolnlvlwvoaingd
+      region: ap-northeast-1
+      status: ACTIVE_HEALTHY
+write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR4_HOSTED_PROJECT_COST_AND_CREATION_PREFLIGHT.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  hosted_project_created: false
+  database_connected_or_queried: false
+  migration_replayed_or_applied: false
+  data_exported_imported_copied_or_restored: false
+  real_japan_post_csv_imported: false
+  secret_or_billing_instrument_read: false
+  existing_project_mutated: false
+  source_migration_test_harness_dependency_or_protected_path_changed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CR4_COST_AND_IDENTITY_CONFIRMED_STOP_BEFORE_PROJECT_CREATION
+next: "Independently verify the exact three-document candidate, provider cost, Owner-ratified identity, 31-day maximum lifetime, unchanged three-project inventory, and stop-before-creation boundary. Stage/local commit and normal push require separate Owner approvals. CR5 empty project creation remains unauthorized until a fresh explicit external-mutation gate."
+```

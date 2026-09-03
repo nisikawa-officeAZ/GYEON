@@ -1767,6 +1767,35 @@ cost evidence, and obtain a fresh Owner cost confirmation. It must not create
 a project. Micro compute, no paid add-ons, maximum life 31 days, and the USD 12
 before-tax ceiling remain mandatory.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR4 hosted project cost and creation preflight
+
+**Status:** `PASS_CANDIDATE_UNCOMMITTED`
+
+The Owner selected Supabase organization `officeAZ`
+(`ivlpkysdjbrkcozrvzwg`). The provider cost interface returned USD 10 monthly
+for a new project, below the USD 12 before-tax ceiling, and the Owner explicitly
+acknowledged that cost. The cost-confirmation identifier was issued without
+creating a project.
+
+The bounded CR5 identity is `DealerOS-Dev-Clean-R5` in
+`ap-northeast-1`, Micro compute only, no paid add-ons, with planned creation at
+`2026-09-03 21:30 JST`, automatic review at `2026-09-27 21:30 JST`, and a
+mandatory pause/retirement decision deadline of `2026-10-04 21:30 JST`.
+Provider inventory remained exactly the existing three projects after cost
+confirmation; the replacement project does not exist.
+
+The formal result candidate is
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR4_HOSTED_PROJECT_COST_AND_CREATION_PREFLIGHT.md`.
+This recording is limited to three documentation paths. It does not authorize
+project creation, DB access, migration replay/application, data transfer,
+provider configuration changes, real postal import, Git stage/commit/push, PR
+mutation, Ready, merge, cutover, retirement, or deployment.
+
+**Next phase after delivery:** independently review the exact three-document
+CR4 candidate. Stage/local commit and normal push require separate Owner
+approvals. CR5 empty project creation remains a distinct external-mutation gate
+requiring fresh explicit Owner authorization.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
