@@ -3,10 +3,10 @@
 ## 1. 文書情報
 
 - 計画ID: `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_VERIFICATION_PLAN_V1`
-- 状態: `DESIGN_AND_RATIFICATION_PUSHED / HARNESS_CANDIDATE_CREATED_SEVEN_PATH_UNCOMMITTED / CODEX_STATIC_REVIEW_CHANGES_REQUIRED / FIRST_REPAIR_ATTEMPT_INCOMPLETE_PARTIAL_SETUP_CAPTURE_CLEANUP / SECOND_SEVEN_FILE_REPAIR_NO_CHANGE / FOUR_DOCUMENT_DEALER_BOUNDARY_AND_RUNTIME_LOCATION_DOC_REPAIR_COMPLETED / THREE_SHELL_SCRIPT_OS_TEMP_EXCLUSION_SOURCE_REPAIR_COMPLETED / CODEX_STATIC_RE_REVIEW_FOUND_FINDINGS_A_B_PLUS_STALE_STATUS / GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR_RESULT_V1_APPLIED_AS_CANDIDATE / CODEX_STATIC_VERDICT_CHANGES_REQUIRED_HARNESS_OS_TEMP_FAIL_CLOSED_ORDERING / GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1_APPLIED_AS_CANDIDATE / CODEX_STATIC_VERDICT_CHANGES_REQUIRED_HARNESS_RETAINED_DESTINATION_EXISTS_BURN_GAP / ABORTED_DISPATCH_D5CA2074_READ_ONLY_UNAUTHORIZED_WC_NO_EDITS_NOT_ACCEPTED / GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_CLOSEOUT_REPAIR_RESULT_V1_APPLIED_AS_CANDIDATE / DB_NOT_RUN / RUNTIME_NOT_RUN / CANDIDATE_UNSTAGED_UNCOMMITTED_UNPUSHED`
+- 状態: `DESIGN_AND_RATIFICATION_PUSHED / HARNESS_CANDIDATE_CREATED_SEVEN_PATH_UNCOMMITTED / CODEX_STATIC_REVIEW_CHANGES_REQUIRED / FIRST_REPAIR_ATTEMPT_INCOMPLETE_PARTIAL_SETUP_CAPTURE_CLEANUP / SECOND_SEVEN_FILE_REPAIR_NO_CHANGE / FOUR_DOCUMENT_DEALER_BOUNDARY_AND_RUNTIME_LOCATION_DOC_REPAIR_COMPLETED / THREE_SHELL_SCRIPT_OS_TEMP_EXCLUSION_SOURCE_REPAIR_COMPLETED / CODEX_STATIC_RE_REVIEW_FOUND_FINDINGS_A_B_PLUS_STALE_STATUS / GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_STATIC_REPAIR_RESULT_V1_APPLIED_AS_CANDIDATE / CODEX_STATIC_VERDICT_CHANGES_REQUIRED_HARNESS_OS_TEMP_FAIL_CLOSED_ORDERING / GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_OS_TEMP_GUARD_REPAIR_RESULT_V1_APPLIED_AS_CANDIDATE / CODEX_STATIC_VERDICT_CHANGES_REQUIRED_HARNESS_RETAINED_DESTINATION_EXISTS_BURN_GAP / ABORTED_DISPATCH_D5CA2074_READ_ONLY_UNAUTHORIZED_WC_NO_EDITS_NOT_ACCEPTED / GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_CLOSEOUT_REPAIR_RESULT_V1_APPLIED_AS_CANDIDATE / CLEAN_REPLACEMENT_COMMITTED_PUSHED_PR67 / PR67_HARNESS_IDENTITY_REPAIR_CANDIDATE_UNCOMMITTED / DB_NOT_RUN / RUNTIME_NOT_RUN`
 - Repository: `nisikawa-officeAZ/GYEON`
-- 対象PR: `#48` (`OPEN/Draft`, base `main`)
-- 対象branch: `agent/estimate-wizard-ocr-postal-unified-r1`
+- 対象PR: `#67` (`OPEN/Draft`, base `main`)
+- 対象branch: `agent/gda-estimate-ocr-postal-clean-replacement-r1`
 - R4-F1 source HEAD: `3c3532b40ac4db84061b17aaf575b8af9297e139`
 - R4-F1 source tree: `9186b0660018920db19283f1a85ee2224cfae97e`
 - 対象migration: `supabase/migrations/20260901001246_jp_postal_master.sql`
@@ -16,11 +16,11 @@
 
 この文書は限定設計だけである。harness実装、外部AI送信、Git stage/commit/push、Colima/Docker/DB/Supabase runtime、Auth/PostgREST、共有・development・staging・production接続、migration適用、実データ投入、PR変更、Ready、merge、deploymentを許可しない。
 
-## 1.1 現在の状態（2026-09-02）
+## 1.1 現在の状態（2026-09-03）
 
-- 本設計文書とR5ガバナンス比准は、いずれもpush済みでありPR `#48`（`OPEN/Draft`, base `main`）に反映されている。
+- 本設計文書、R5ガバナンス比准、R5 source/harnessはclean replacementとしてpush済みであり、PR `#67`（`OPEN/Draft`, base `main`）に反映されている。
 - 最初のharness実装invocationは、計画/台帳の比准欠落を理由に、いかなる書き込みも行わずに停止した。
-- 比准後の後続invocationが、セクション9に列挙する7 pathsからなるharness候補を作成した。この候補は現在もGit未追跡・未staged・未commitのままである。
+- 比准後の後続invocationが、セクション9に列挙する7 pathsからなるharness候補を作成した。当時、この候補はGit未追跡・未staged・未commitだったが、現在はclean replacementとしてPR `#67`へcommit・push済みである。
 - Codexによる静的レビューは、この候補に修理が必要な欠陥があると判定した（`CHANGES_REQUIRED`）。
 - 最初の修理試行は`setup.sh`、`capture-evidence.sh`、`cleanup.sh`の一部を変更したが、未完了のまま終了した。
 - 2回目の7-file修理試行は、候補に対して何も変更しなかった。
@@ -35,7 +35,7 @@
 - 本repair（結果マーカー`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_FINAL_CLOSEOUT_REPAIR_RESULT_V1`）は、`cleanup.sh`において`PATHS_VALIDATED=1`への遷移を、4つのcanonical excluded-root checkすべての直後・`[[ ! -e "$RETAINED_DIR" ]]`チェックの直前へ移動した。literalな unsafe-path checkはゲート前のままである。これにより、4 pathが安全だがRETAINED_DIRが既に存在する場合も、検証済みの失敗経路（`fail()`）を通り、既存の安全なsuffixをburnするようになった。他のmkdir、cleanup-started書き込み、aggregate-log書き込み、lane operation、copy、removalはすべて検証後のままであり、弱められていない。Bash 3.2互換は維持している。
 - 本closeout invocationはRead/Editのみを使用し、Git未staged・未commit・未push、DB/runtime未実行のままであり、Codexの静的レビュー待ちである。
 - DBおよびruntimeの実行は一度も行われていない。
-- 本candidateは現在もGit未追跡・未staged・未commit・未pushのままである。
+- R5 source/harnessはPR `#67`へcommit・push済みである。PR `#67`を対象とする本3-file identity repair候補は、DB/runtime未実行かつGit未staged・未commit・未pushのままである。
 - 本設計文書とR5ガバナンス比准は、いかなる場合もruntime実行またはGit delivery（stage/commit/push）の権限を与えない。各操作は本文書とは別のゲートで個別に承認される。
 
 ## 2. 結論
