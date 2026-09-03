@@ -5394,3 +5394,100 @@ boundaries:
 decision: CR3_R1_INVOCATION_BOUNDARY_CORRECTED_READY_FOR_CODEX_REVIEW
 next: "Independently verify the exact four-document diff, the 1-plus-13-equals-14 payload contract, marker consistency, unchanged substantive decisions, protected-path boundary, and diff check. Stage/local commit and normal push require separate Owner approvals. Claude transmission and one-time static preflight require another explicit Owner authorization after delivery."
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR3 fresh disposable acceptance recording
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_ACCEPTANCE_RECORDING
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_ACCEPTANCE_V1
+status: PASS_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner separately authorized the corrected one-time tool-disabled static preflight, then separately authorized one fresh local disposable CR3 execution, and finally authorized recording the accepted result in exactly three documentation paths. This authorization does not include source/migration/test/harness/dependency/protected-path changes, hosted Supabase/provider action, real postal data, Git stage/commit/push, PR mutation, Ready, merge, or deployment."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  execution_head: 5dba6d17529b58d1c3d54eef8fb10e57fed3b87b
+  execution_tree: ba16a604222430d1b76ffa7688d6a4117a8b0219
+  base: main
+  pr_state_at_preflight: OPEN/Draft
+  remote_head_matched_at_preflight: true
+  mergeable_at_preflight: MERGEABLE
+  vercel_at_preflight: PASS
+  vercel_preview_comments_at_preflight: PASS
+  worktree_before_and_after_execution: CLEAN
+  upstream_ahead_behind_before_and_after_execution: "0 0"
+static_preflight:
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_RESULT_V1
+  claude_verdict: READY_FOR_CR3_FRESH_DISPOSABLE_EXECUTION_AUTHORIZATION
+  codex_independent_acceptance: PASS
+  harness_decision: REUSE_EXISTING_R5_HARNESS_UNCHANGED
+  blocked_inputs: NONE
+  repository_payload_count: 14
+  additional_repository_files: 0
+execution:
+  suffix: 20260903T114441Z-6698d3
+  classification: GDA_POSTAL_R5_DISPOSABLE_DB_PASS
+  lanes:
+    fresh:
+      setup_exit: 0
+      capture_exit: 0
+      pgtap_postal: 75/75_PASS
+      pgtap_runtime_contract: 20/20_PASS
+      real_auth_postgrest: 9/9_PASS
+      db_lint_exit: 0
+      secret_scan: SECRET_SCAN_CLEAN
+      stop_exit: 0
+    import:
+      setup_exit: 0
+      capture_exit: 0
+      phase_1: 3/3_PASS
+      phase_2: 25/25_PASS
+      distinct_process_ids: true
+      secret_scan: SECRET_SCAN_CLEAN
+      stop_exit: 0
+  cleanup_exit: 0
+  runtime_removal_exit: 0
+  was_burned: false
+  residual_suffix_containers_volumes_networks: 0
+manifest:
+  formal_top_level_migration_count: 113
+  staged_count_each_lane: 112
+  exact_exclusion:
+    - supabase/migrations/20260801110110_line_link_tokens.sql
+  other_exclusions: 0
+  retained_migration_manifest_sha256: 722b59ffe2b2252e826783b125df2ac1b4d2468d46743c01da0e726fe2543326
+  postal_version_ledger_count_each_lane: 1
+  target_migration_hash_matches: true
+evidence:
+  retained_directory: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260903T114441Z-6698d3
+  aggregate_manifest: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260903T114441Z-6698d3/manifest.json
+  aggregate_manifest_sha256: f9a3b2f52e9d948293cf016eb0127c94068414ad708d7b076fec44d79a902e60
+  retained_artifact_hashes_verified: 38/38
+  source_contract_revalidation_mismatches_each_lane: 0
+  protected_content_opened_read_diffed_copied_or_hashed: false
+non_blocking_observations:
+  - "Supabase CLI warns that [inbucket] is deprecated in favor of [local_smtp]."
+  - "db lint exited 0 and reported four pre-existing warnings outside the postal contract; no error was reported."
+write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_ACCEPTANCE.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  local_disposable_supabase_created_and_removed: true
+  local_ratified_migrations_replayed: true
+  synthetic_test_data_only: true
+  hosted_supabase_project_created: false
+  development_staging_or_production_contacted: false
+  external_supabase_or_provider_contacted: false
+  hosted_migration_applied: false
+  real_japan_post_csv_imported: false
+  real_customer_or_address_data_used: false
+  source_migration_test_harness_dependency_or_protected_path_changed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CR3_FRESH_DISPOSABLE_ACCEPTED_READY_FOR_DOCUMENT_REVIEW
+next: "Independently review the exact three-document candidate and retained evidence linkage, then require separate Owner authorization for literal-path stage/local commit and another separate authorization for normal push. CR4 hosted project cost and creation preflight remains a later separate Owner gate and must stop before project creation."
+```

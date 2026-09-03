@@ -1738,6 +1738,35 @@ project/provider access, migration replay/application, project creation, data
 transfer, real Japan Post CSV import, configuration, cutover, retirement, PR
 mutation, Ready, merge, and deployment remain separately unauthorized.
 
+**CR3 fresh disposable acceptance:** On 2026-09-03 the Owner separately
+authorized the corrected one-time static preflight and, after Claude returned
+`READY_FOR_CR3_FRESH_DISPOSABLE_EXECUTION_AUTHORIZATION` and Codex accepted it,
+one fresh local disposable execution. The accepted suffix is
+`20260903T114441Z-6698d3`. Both `fresh` and `import` lanes completed setup,
+capture, stop, and cleanup with exit `0`; the exact runtime path was removed.
+Each lane replayed the ratified manifest with 112 staged migrations and the
+protected LINE migration as the sole exclusion. Postal pgTAP passed `75/75`,
+runtime-contract pgTAP passed `20/20`, real Auth/PostgREST passed `9/9`, and
+import interruption/resume passed `3/3` plus `25/25`. Both secret scans were
+clean, all 38 retained artifacts matched the aggregate manifest, and no
+suffix-matching Docker container, volume, or network remained. The retained
+aggregate manifest SHA-256 is
+`f9a3b2f52e9d948293cf016eb0127c94068414ad708d7b076fec44d79a902e60`.
+The formal acceptance artifact is
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_ACCEPTANCE.md`.
+
+**Current CR3 acceptance-record boundary:** Exactly three documentation paths
+only. No source, migration, test, harness, dependency, protected path, DB,
+Supabase, provider, hosted project, Vercel configuration, real postal data, or
+application runtime is changed. Stage, commit, push, PR mutation, Ready, merge,
+and deployment require later separate authorization.
+
+**Next phase after delivery:** `CR4 — Hosted project cost and creation
+preflight`. CR4 must select the exact Supabase organization, retrieve current
+cost evidence, and obtain a fresh Owner cost confirmation. It must not create
+a project. Micro compute, no paid add-ons, maximum life 31 days, and the USD 12
+before-tax ceiling remain mandatory.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
