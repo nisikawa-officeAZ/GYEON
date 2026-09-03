@@ -4311,3 +4311,93 @@ not_authorized:
 decision: REGISTER_LOCAL_D3B_GOVERNANCE_CANDIDATE_ONLY_AND_KEEP_IMPLEMENTATION_BLOCKED
 next: "VERIFY_EXACT_THREE_PATH_GOVERNANCE_DIFF_DIRECTIVE_HASH_DEPENDENCY_BLOCKERS_MAPPING_AUTHORITY_FAIL_CLOSED_RULES_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
 ```
+
+## INV001-P19-BOOK-D4 — Authenticated server boundary governance candidate
+
+```yaml
+phase: INV001_P19_BOOK_D4_AUTHENTICATED_SERVER_BOUNDARY
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_BLOCKED_ON_D2_D3A_D3B_AND_OPERATOR_AUTHORITY
+date: 2026-09-03
+append_only: true
+authorization: "The Owner authorized continued Book work and D4 authenticated-server-boundary governance preparation. This permits creation and local verification of the exact three-document governance candidate only; no private-source transmission, Claude invocation, package/registry action, migration/DB/Supabase/Auth connection, browser, implementation, executable test, stage, commit, push, PR mutation, Ready, merge, Android, provider, staging, deployment, or production action is included."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: f27ff9b85bb5dd1e821ba21da7b41d2bea9e0f71
+  fixed_tree: 8c37779327c803ac710bdc06d8e37b9fd27f7107
+  proposed_branch: agent/inv001-p19-book-d4-authenticated-server-boundary-governance
+dependencies:
+  d2_private_package_consumer: INCOMPLETE
+  d3a_foundation_persistence: INCOMPLETE
+  d3b_product_mapping: INCOMPLETE
+  office_az_operator_authority: NOT_CONFIGURED
+  d4_gate_a_authorized: false
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D4_AUTHENTICATED_SERVER_BOUNDARY.md
+  diagnosis_marker: INV001_P19_BOOK_D4_AUTHENTICATED_SERVER_BOUNDARY_DIAGNOSIS_RESULT_V1
+  implementation_marker: INV001_P19_BOOK_D4_AUTHENTICATED_SERVER_BOUNDARY_IMPLEMENTATION_RESULT_V1
+governance_candidate_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D4_AUTHENTICATED_SERVER_BOUNDARY.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+current_findings:
+  get_current_dealer_multi_membership: ARBITRARY_TENANT_RISK_NOT_D4_AUTHORITY
+  require_staff_capability: DEALER_BUSINESS_PERMISSION_NOT_OFFICE_AZ_INVENTORY_AUTHORITY
+  estimate_save_actor_context: COHERENT_CONTEXT_PATTERN_ONLY_NOT_INVENTORY_CAPABILITY
+  dealer_owner_manager_staff: NEVER_SUFFICIENT_FOR_OFFICE_AZ_INVENTORY_COMMAND
+  attraction_live_owner_authority: NOT_CONFIGURED
+trust_contract:
+  verified_request_identity: REQUIRED
+  verified_session_freshness_or_revocation_contract: REQUIRED
+  exactly_one_or_explicitly_selected_tenant: REQUIRED
+  actor_and_operator_semantics: DISTINCT_NEVER_DEFAULTED
+  office_az_owner_operator_capability_location: REQUIRED
+  product_mapping_request_idempotency_version_evidence: SERVER_BOUND_AND_REQUIRED_WHERE_APPLICABLE
+  login_or_authenticated_role_alone: NEVER_AUTHORIZATION
+  user_metadata_authorization: PROHIBITED
+  client_authority_fields: UNTRUSTED_INTENT_ONLY
+  missing_authority: NOT_CONFIGURED_AND_ZERO_DOWNSTREAM_CALLS
+http_and_action_contract:
+  server_actions_and_routes: PUBLIC_ENTRY_POINTS_REQUIRE_INDEPENDENT_AUTHN_AUTHZ
+  generic_foundation_proxy: PROHIBITED
+  authenticated_response_cache: NO_STORE
+  route_mutation_csrf_same_origin: REQUIRED
+  cors: DENY_BY_DEFAULT
+  media_type_body_size_and_shape_validation: REQUIRED
+  raw_error_secret_token_cookie_evidence_response_or_log: PROHIBITED
+  admin_or_service_role_in_browser_callable_boundary: PROHIBITED
+official_freshness_review:
+  supabase_changelog_checked: 2026-09-03
+  supabase_ssr_auth_rls_docs_checked: 2026-09-03
+  nextjs_15_data_security_and_current_auth_route_docs_checked: 2026-09-03
+  data_api_auto_exposure_inference: PROHIBITED
+  implementation_time_recheck_required: true
+gate_order:
+  - D2_D3A_D3B_FULL_CLOSURE
+  - OFFICE_AZ_OPERATOR_AUTHORITY_RESOLUTION
+  - D4_GATE_A_TOOL_DISABLED_READ_ONLY_DIAGNOSIS
+  - D4_GATE_B_EXACT_UNCOMMITTED_IMPLEMENTATION
+  - D4_GATE_C_INDEPENDENT_SOURCE_ACCEPTANCE_AND_SEPARATE_DELIVERY
+  - D6_REAL_REQUEST_AND_DISPOSABLE_VERIFICATION
+proposed_gate_a_book_paths: 39
+proposed_implementation_paths:
+  - src/lib/inventory/foundation/foundation-server-actions.ts
+  - src/lib/inventory/foundation/foundation-server-actions.test.ts
+  - src/app/api/inventory/foundation/route.ts
+  - src/app/api/inventory/foundation/route.test.ts
+scope_correction_if_four_paths_insufficient: OWNER_APPROVAL_REQUIRED
+d6_separation:
+  real_login_and_ssr_cookies: NOT_EXECUTED_IN_D4
+  rls_claims_and_session_revocation: NOT_EXECUTED_IN_D4
+  csrf_http_and_separate_connection_proof: NOT_EXECUTED_IN_D4
+  shared_preview_staging_production: NOT_AUTHORIZED
+not_authorized:
+  - private_source_transmission_or_claude_invocation
+  - package_registry_dependency_lockfile_action
+  - migration_database_supabase_auth_browser_or_provider_action
+  - implementation_or_executable_test
+  - stage_commit_push_pr_ready_or_merge
+  - d5_d6_execution_d7_android_deployment_staging_or_production
+decision: REGISTER_LOCAL_D4_GOVERNANCE_CANDIDATE_ONLY_AND_FAIL_CLOSED_ON_UNRESOLVED_OPERATOR_AUTHORITY
+next: "VERIFY_EXACT_THREE_PATH_GOVERNANCE_DIFF_DIRECTIVE_HASH_DEPENDENCY_AND_OPERATOR_BLOCKERS_AUTH_REQUEST_HTTP_D6_SEPARATION_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
+```

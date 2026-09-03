@@ -865,6 +865,28 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Exit gate:** Verify the three-path governance-only diff, directive hash, dependency blockers, one-to-one/fail-closed contract, migration gate, and protected metadata; then request a separate Owner stage/local-commit gate.
 
+### INV001-P19-BOOK-D4 — Authenticated server boundary governance preparation
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / IMPLEMENTATION BLOCKED UNTIL D2, D3A, AND D3B FULL CLOSURE AND OFFICE AZ OPERATOR AUTHORITY RESOLUTION.
+
+**Objective:** Predefine the only authenticated Book server command/query boundary allowed to call the accepted Foundation runtime, persistence, and product-mapping layers. Every request must bind verified identity, actor, operator, Office AZ owner, dealer/tenant, capability, location, product mapping, request/idempotency/version identities, and server-owned authorization evidence.
+
+**Fixed Book authority:** `main` commit `f27ff9b85bb5dd1e821ba21da7b41d2bea9e0f71`, tree `8c37779327c803ac710bdc06d8e37b9fd27f7107`. D3B governance is merged through PR #59. D2 package consumption, D3A persistence, D3B mapping, and the Office AZ inventory-operator authority source remain incomplete.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D4_AUTHENTICATED_SERVER_BOUNDARY.md`. Proposed branch: `agent/inv001-p19-book-d4-authenticated-server-boundary-governance`.
+
+**Current blockers:** Existing `getCurrentDealer()` may choose an arbitrary tenant when multiple active memberships exist. Existing dealer roles and `requireStaffCapability()` do not prove Office AZ inventory-operator authority. `getEstimateSaveActorContext()` is a reusable coherent-context pattern only, not inventory capability authority. Missing operator/capability/location authority remains `NOT_CONFIGURED` and denies every affected command.
+
+**Ratified security boundary:** Login, `authenticated`, UI visibility, client role/dealer/operator fields, or dealer `owner`/`manager`/`staff` alone never authorize Office AZ inventory. Both Server Actions and Route Handlers are public entry points and must independently authenticate, authorize, validate, bind server-owned context, return sanitized no-store DTOs, and fail before any downstream call. No route/action may import an admin/service-role client or become a generic Foundation proxy.
+
+**Gate separation:** D2/D3A/D3B closure and operator-authority resolution; Gate A tool-disabled read-only diagnosis; Gate B exact four-path uncommitted source/test candidate; Gate C independent source acceptance and separately authorized delivery; D6 later real SSR-cookie/request-scope/RLS/CSRF/disposable verification.
+
+**Proposed implementation scope:** `foundation-server-actions.ts`, its focused test, the Foundation inventory Route Handler, and its focused test. Gate A must return a literal scope correction rather than inventing extra files if a separate pure authority core, DTO, audit, or rate-limit boundary is required.
+
+**Current boundary:** Governance preparation only. No private-source transmission, Claude invocation, package/registry action, migration/DB/Supabase connection, auth session, browser, implementation, executable test, stage, commit, push, PR mutation, Ready, merge, Android, provider, staging, or production action is authorized.
+
+**Exit gate:** Verify the exact three-path governance-only diff, directive hash, dependency and operator-authority blockers, request/auth/HTTP fail-closed contracts, D6 separation, and protected metadata; then request a separate Owner stage/local-commit gate.
+
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
 **Objective:** Correct the owner-rejected estimate/pricing settings navigation before deeper settings-page redesign. The `見積・価格 / ESTIMATES & PRICING` group must expose exactly four real cards in the approved order, remove misleading state badges from those four navigation cards, and replace unrelated generic imagery with dedicated semantic line icons while preserving the accepted TOP visual language and existing business behavior.
