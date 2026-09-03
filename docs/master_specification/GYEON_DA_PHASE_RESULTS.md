@@ -4401,3 +4401,96 @@ not_authorized:
 decision: REGISTER_LOCAL_D4_GOVERNANCE_CANDIDATE_ONLY_AND_FAIL_CLOSED_ON_UNRESOLVED_OPERATOR_AUTHORITY
 next: "VERIFY_EXACT_THREE_PATH_GOVERNANCE_DIFF_DIRECTIVE_HASH_DEPENDENCY_AND_OPERATOR_BLOCKERS_AUTH_REQUEST_HTTP_D6_SEPARATION_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
 ```
+
+## INV001-P19-BOOK-D4A — Office AZ inventory-operator authority governance candidate
+
+```yaml
+phase: INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_IMPLEMENTATION_BLOCKED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner approved starting the Office AZ inventory-operator authority governance design. This permits creation and local verification of the exact three-document governance candidate only; no private-source transmission, Claude invocation, authority grant, Auth/DB/Supabase action, migration, implementation, executable test, stage, commit, push, PR mutation, Ready, merge, Android, provider, staging, deployment, or production action is included."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: c799b14b15a95177442e4505807d57056292e4d1
+  fixed_tree: d8eacb42802d7b9d8fbf20875c46c087e5f0b790
+  proposed_branch: agent/inv001-p19-book-d4a-office-az-operator-authority-governance
+dependencies:
+  d2_private_package_consumer: INCOMPLETE_BLOCKED_FOUNDATION_PACKAGE_UNPUBLISHED
+  d3a_foundation_persistence: INCOMPLETE
+  d3b_product_mapping: INCOMPLETE
+  d4_governance_pr_60: MERGED
+  office_az_operator_authority: NOT_CONFIGURED
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY.md
+  diagnosis_marker: INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY_DIAGNOSIS_RESULT_V1
+  owner_decision_marker: INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY_OWNER_DECISION_V1
+  implementation_marker: INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY_IMPLEMENTATION_RESULT_V1
+governance_candidate_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+ratified:
+  live_owner: OFFICE_AZ_ONLY
+  physical_locations: 3
+  location_is_not_owner: true
+  total_on_hand: DERIVED_SUM_OF_THREE_LOCATION_BALANCES
+  dealer_roles_grant_office_az_inventory: NEVER
+  actor_operator: DISTINCT_NEVER_DEFAULTED
+  missing_or_stale_authority: DENY_WITH_ZERO_FOUNDATION_CALLS
+formal_role_contradiction:
+  current_v3_document: SUPER_ADMIN_INBOUND_CONFIRMATION_ONLY
+  later_owner_decision: WAREHOUSE_OPERATOR_WAREHOUSE_MANAGER_AND_SUPER_ADMIN
+  disposition: RECORD_LATER_OWNER_INTENT_BUT_BLOCK_IMPLEMENTATION_UNTIL_EXPLICIT_RECONCILIATION_AND_FORMAL_SPEC_CORRECTION
+existing_sources:
+  dealer_members_and_dealer_staff: DEALER_BUSINESS_AUTHORITY_ONLY
+  require_staff_capability: NOT_OFFICE_AZ_INVENTORY_AUTHORITY
+  get_current_dealer: ARBITRARY_MULTI_MEMBERSHIP_RISK
+  estimate_save_actor_context: PATTERN_ONLY_NOT_INVENTORY_AUTHORITY
+  enterprise_warehouse_manager: DOCUMENTED_BUT_RUNTIME_ASSIGNMENT_CAPABILITY_LOCATION_AND_REVOCATION_NOT_PROVEN
+  service_role_or_admin_client: NEVER_AUTHORITY
+proposed_roles_not_live_grants:
+  - office_az_warehouse_operator
+  - office_az_warehouse_manager
+  - office_az_inventory_super_admin
+  - office_az_inventory_service
+authority_contract:
+  explicit_capabilities: REQUIRED
+  explicit_location_ids: REQUIRED
+  active_status_only: REQUIRED
+  validity_and_authority_version: REQUIRED
+  actor_operator_user_linkage: SERVER_RESOLVED
+  self_grant_or_self_reactivation: PROHIBITED
+  assignment_revocation_denial_audit: APPEND_ONLY_REQUIRED
+  super_admin_blanket_all_location_or_command: PROHIBITED_UNLESS_SEPARATELY_RATIFIED
+command_disposition:
+  inbound_confirmation_three_human_roles: OWNER_INTENT_REQUIRES_FORMAL_RECONCILIATION
+  pick_pack_ship_warehouse_roles: RATIFIED_ROLE_INTENT_MAPPING_PENDING
+  reservation_and_orchestration: UNRESOLVED_SYSTEM_IDENTITY_DENY
+  adjustment_transfer_stocktake_return_restock: UNRESOLVED_DENY
+  audit_snapshot_recovery_authorization: UNRESOLVED_DENY
+gate_order:
+  - D4A_GATE_A_TOOL_DISABLED_READ_ONLY_DIAGNOSIS
+  - D4A_EXPLICIT_OWNER_DECISION
+  - FORMAL_ROLE_SPEC_CORRECTION
+  - D2_D3A_D3B_FULL_CLOSURE
+  - SEPARATE_AUTHORITY_SCHEMA_RLS_SOURCE_IMPLEMENTATION
+  - INDEPENDENT_SOURCE_ACCEPTANCE_AND_SEPARATE_DELIVERY
+  - D6_REAL_REQUEST_RLS_REVOCATION_CONCURRENCY_VERIFICATION
+proposed_gate_a_book_paths: 22
+implementation_paths_authorized: false
+d6_separation:
+  real_login_and_ssr_cookie: NOT_EXECUTED
+  active_suspended_revoked_operator: NOT_EXECUTED
+  cross_owner_and_location_rls: NOT_EXECUTED
+  concurrent_revocation_and_separate_connections: NOT_EXECUTED
+not_authorized:
+  - private_source_transmission_or_claude_invocation
+  - role_grant_auth_database_supabase_or_migration_action
+  - implementation_executable_test_or_package_action
+  - stage_commit_push_pr_ready_or_merge
+  - android_provider_deployment_staging_or_production
+decision: REGISTER_LOCAL_D4A_GOVERNANCE_CANDIDATE_AND_DENY_ALL_UNRESOLVED_OFFICE_AZ_OPERATOR_CAPABILITIES
+next: "VERIFY_EXACT_THREE_DOCUMENT_GOVERNANCE_DIFF_DIRECTIVE_HASH_FORMAL_ROLE_CONTRADICTION_RATIFIED_PROPOSED_UNRESOLVED_DENY_MATRIX_D4_D6_SEPARATION_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
+```
