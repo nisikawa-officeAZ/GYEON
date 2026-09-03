@@ -845,6 +845,26 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Exit gate:** Verify the exact three-path governance-only diff and directive hash, then request a separate Owner gate for stage/local commit. D3A Gate A remains blocked until D2 is fully closed and its merged package wrapper identity is fixed.
 
+### INV001-P19-BOOK-D3B — Product identity mapping governance preparation
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / IMPLEMENTATION BLOCKED UNTIL D2 AND D3A FULL CLOSURE.
+
+**Objective:** Predefine the one-to-one mapping between Foundation immutable product identity and `gyeon_products.id` without creating another product master, modifying `gyeon_products`, or treating JAN/SKU/name matching as authority.
+
+**Fixed Book authority:** `main` commit `00f2df7dc5574d0a06a219cb51b4629f1f337f9b`, tree `b770a987a5573beb4249bfef68dea2926e751f82`. D3A governance is merged through PR #58, but D2 package consumption and D3A persistence implementation remain incomplete.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D3B_PRODUCT_IDENTITY_MAPPING.md`. Proposed branch: `agent/inv001-p19-book-d3b-product-mapping-governance`.
+
+**Ratified behavior:** Foundation product ID is canonical for Foundation inventory; `gyeon_products.id` remains the Book catalogue reference; a Book-owned one-to-one mapping relates them. JAN, SKU, and names are review evidence only. Missing, duplicate, ambiguous, stale, retired, changed-evidence, inactive, malformed, and cross-owner mappings fail closed. Missing accepted mapping returns `NOT_CONFIGURED` and authorizes no inventory or EC quantity action.
+
+**Gate separation:** D2 and D3A closure; Gate A read-only diagnosis; Gate B0 Supabase CLI migration-path generation; Gate B1 four-path uncommitted candidate; Gate C fresh disposable RLS/uniqueness/race verification; separately authorized delivery and environment gates.
+
+**Proposed implementation scope:** one CLI-created mapping migration, `foundation-product-mapping.ts`, its focused test, and `inv001-foundation-product-mapping-disposable.mjs`. The historical C3 filename is a reservation only until the CLI-generated exact path is reconciled.
+
+**Current boundary:** Governance preparation only. No private-source transmission, Claude invocation, migration/DB/package access, implementation, executable test, stage, commit, push, PR mutation, Ready, merge, Android, provider, staging, or production action is authorized.
+
+**Exit gate:** Verify the three-path governance-only diff, directive hash, dependency blockers, one-to-one/fail-closed contract, migration gate, and protected metadata; then request a separate Owner stage/local-commit gate.
+
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
 **Objective:** Correct the owner-rejected estimate/pricing settings navigation before deeper settings-page redesign. The `見積・価格 / ESTIMATES & PRICING` group must expose exactly four real cards in the approved order, remove misleading state badges from those four navigation cards, and replace unrelated generic imagery with dedicated semantic line icons while preserving the accepted TOP visual language and existing business behavior.
