@@ -4170,3 +4170,70 @@ not_authorized:
 decision: REGISTER_LOCAL_D2_GOVERNANCE_CANDIDATE_AND_FAIL_CLOSED_ON_UNPUBLISHED_PACKAGE
 next: "VERIFY_EXACT_THREE_PATH_GOVERNANCE_DIFF_DIRECTIVE_HASH_BLOCKER_LITERAL_SCOPES_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
 ```
+
+## INV001-P19-BOOK-D3A — Foundation persistence governance candidate
+
+```yaml
+phase: INV001_P19_BOOK_D3A_FOUNDATION_PERSISTENCE
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_BLOCKED_UNTIL_D2_CLOSED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner directed Book work to continue while Foundation Studio is temporarily unavailable. This authorizes creation and local verification of the D3A governance candidate only. No private-source transmission, Claude invocation, package access, migration creation, DB/Supabase connection, implementation, executable test, stage, commit, push, PR mutation, provider, Android, deployment, staging, or production action is included."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: 2e1df23f1aa64b7c9ca2a608f36f2dccd107cf7b
+  fixed_tree: 1116b7e768a1a1ca1cfd5bff99263f235cf6bcb8
+  proposed_branch: agent/inv001-p19-book-d3a-persistence-governance
+d2_dependency:
+  governance_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/57
+  governance_merge: 2e1df23f1aa64b7c9ca2a608f36f2dccd107cf7b
+  package_publication: INCOMPLETE
+  dependency_pin: INCOMPLETE
+  runtime_wrapper: INCOMPLETE
+  d3a_gate_a_authorized: false
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D3A_FOUNDATION_PERSISTENCE.md
+  diagnosis_marker: INV001_P19_BOOK_D3A_FOUNDATION_PERSISTENCE_DIAGNOSIS_RESULT_V1
+  implementation_marker: INV001_P19_BOOK_D3A_FOUNDATION_PERSISTENCE_IMPLEMENTATION_RESULT_V1
+  disposable_marker: INV001_P19_BOOK_D3A_FOUNDATION_PERSISTENCE_DISPOSABLE_RESULT_V1
+governance_candidate_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D3A_FOUNDATION_PERSISTENCE.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+gate_order:
+  - D2_FULL_CLOSURE
+  - D3A_GATE_A_TOOL_DISABLED_READ_ONLY_DIAGNOSIS
+  - D3A_GATE_B0_SUPABASE_CLI_MIGRATION_PATH_RESERVATION
+  - D3A_GATE_B1_UNCOMMITTED_IMPLEMENTATION
+  - D3A_GATE_C_FRESH_DISPOSABLE_VERIFICATION
+  - SEPARATE_STAGE_COMMIT_PUSH_REVIEW_READY_MERGE
+supabase_contract:
+  new_foundation_specific_objects_only: true
+  exposed_tables_rls_required: true
+  authenticated_role_alone_is_not_authorization: true
+  user_metadata_authorization: PROHIBITED
+  browser_raw_mutation: PROHIBITED
+  public_security_definer: PROHIBITED
+  shared_staging_production_apply: NOT_AUTHORIZED
+  disposable_real_claims_and_separate_connections_required: true
+migration_path:
+  c3_historical_proposal: supabase/migrations/20260903010000_foundation_inventory_runtime.sql
+  hand_created_or_guessed_path: PROHIBITED
+  required_creation_method: supabase_migration_new_after_separate_gate
+  exact_path_reconciliation_required_before_sql: true
+proposed_implementation_paths:
+  - CLI_CREATED_MIGRATION_PATH_TO_BE_RECONCILED
+  - src/lib/inventory/foundation/foundation-persistence-adaptor.ts
+  - src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts
+  - scripts/e2e/inv001-foundation-persistence-disposable.mjs
+not_authorized:
+  - private_source_transmission_or_claude_invocation
+  - package_registry_or_dependency_action
+  - migration_creation_db_connection_or_schema_change
+  - implementation_or_executable_test
+  - stage_commit_push_or_pr_mutation
+  - d3b_d4_d5_d6_d7_android_provider_deployment_staging_or_production
+decision: REGISTER_LOCAL_D3A_GOVERNANCE_CANDIDATE_ONLY_AND_KEEP_IMPLEMENTATION_BLOCKED
+next: "VERIFY_EXACT_THREE_PATH_GOVERNANCE_DIFF_DIRECTIVE_HASH_D2_BLOCKER_GATE_ORDER_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
+```
