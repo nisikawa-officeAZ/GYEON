@@ -1701,11 +1701,13 @@ closed, the aggregate manifest SHA-256 is
 `0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb`, and
 the phase decision is `CR2_NOT_REQUIRED`.
 
-**CR3 fresh-disposable preflight governance candidate:** The next directive is
+**CR3 fresh-disposable preflight governance candidate (superseded):** The
+original directive was
 `CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md`.
-It governs a later separately authorized, one-time, tool-disabled, read-only
-static review. The future review is limited to thirteen exact private files and
-a Codex-supplied non-secret metadata attestation. It must return either
+It intended to govern a later separately authorized, one-time, tool-disabled,
+read-only static review. Its wording limited the future review to thirteen
+private supporting files but did not separately count the directive control
+input. It must return either
 `REUSE_EXISTING_R5_HARNESS_UNCHANGED` or the smallest exact repair need before
 any new disposable runtime is considered.
 
@@ -1720,6 +1722,20 @@ any new disposable runtime is considered.
 Claude execution, tests, runtime, Supabase/DB/project/provider access,
 migration replay/application, project creation, data transfer, real Japan Post
 CSV import, configuration, cutover, retirement, stage, commit, push, PR
+mutation, Ready, merge, and deployment remain separately unauthorized.
+
+**CR3-R1 invocation-boundary correction:** The corrected directive marker is
+`GDA_POSTAL_R5_CR3_R1_FRESH_DISPOSABLE_PREFLIGHT_DIRECTIVE_V1`. A future
+invocation may receive exactly one committed directive as its governing control
+input plus exactly thirteen private supporting files, for an exact total of
+fourteen repository files. Zero other repository files may be transmitted or
+opened. The required Claude result marker and all CR1 manifest, region, source,
+harness, protected-path, and runtime decisions remain unchanged.
+
+**Current CR3-R1 boundary:** Documentation correction only. Stage, commit,
+push, private-file transmission, Claude execution, tests, runtime, Supabase/DB/
+project/provider access, migration replay/application, project creation, data
+transfer, real Japan Post CSV import, configuration, cutover, retirement, PR
 mutation, Ready, merge, and deployment remain separately unauthorized.
 
 ### GDA-3 — Completion Desk

@@ -5,12 +5,14 @@
 | Field | Value |
 |---|---|
 | Phase | `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT` |
-| Directive | `GDA_POSTAL_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_DIRECTIVE_V1` |
+| Directive | `GDA_POSTAL_R5_CR3_R1_FRESH_DISPOSABLE_PREFLIGHT_DIRECTIVE_V1` |
 | Required result marker | `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_RESULT_V1` |
 | Mode | One tool-disabled, read-only preflight after separate Owner authorization |
 | Repository | `nisikawa-officeAZ/GYEON` |
 | Coordination PR | [PR #67](https://github.com/nisikawa-officeAZ/GYEON/pull/67) |
 | Ratification source HEAD / tree | `9f319b222a4f8f671cd7ffaaad8ec95486b9d72e` / `99bf62b6ca68432820595cc3807777411df4e4fd` |
+| R1 correction source HEAD / tree | `2ac6f9fa5f736eefbffdf28877fe793b8526eb65` / `c4e7a9f847a33bc97adba1ae4cbbec0720d4149f` |
+| Supersedes | `GDA_POSTAL_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_DIRECTIVE_V1` |
 | Ratified manifest | 112 executable migrations; protected LINE migration is the sole exclusion |
 | Replacement region | Owner-ratified `ap-northeast-1` |
 
@@ -71,10 +73,14 @@ The preflight must determine:
 This is a static evidence review only. It must not execute any command, test,
 runtime, or environment check.
 
-## 4. Exact private read allowlist
+## 4. Exact invocation input boundary
 
-After separate Owner authorization, Claude may receive and read exactly these
-thirteen files and no others:
+After separate Owner authorization, the Claude invocation may receive and read
+exactly fourteen repository files in these two classes and no others:
+
+- Governing control input (`1`): this committed directive file,
+  `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md`.
+- Private supporting inputs (`13`): the following exact files.
 
 1. `AGENTS.md`
 2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
@@ -90,10 +96,12 @@ thirteen files and no others:
 12. `scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs`
 13. `scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql`
 
-A direct dependency outside this list must be named by exact path in the
-mandatory blocked-inputs result field. It must not be opened, requested
-broadly, or inferred. Any
-scope expansion requires a new committed directive and separate Owner approval.
+The directive is not one of the thirteen supporting files. Therefore the exact
+repository-file payload count is `1 + 13 = 14`. A direct dependency outside
+the one control input and thirteen-file supporting allowlist must be named by
+exact path in the mandatory blocked-inputs result field. It must not be opened,
+requested broadly, or inferred. Any scope expansion requires a new committed
+directive and separate Owner approval.
 
 ## 5. Codex-supplied non-secret metadata attestation
 
@@ -103,7 +111,9 @@ MacBook Codex supplies with a later invocation:
   ahead/behind;
 - PR #67 OPEN/Draft, base `main`, exact remote HEAD, mergeability, and current
   checks;
-- SHA-256 plus mode/Git blob for all thirteen allowlisted files;
+- SHA-256 plus mode/Git blob for the one committed directive control input;
+- SHA-256 plus mode/Git blob for all thirteen supporting allowlisted files;
+- exact repository-file payload count `14` and zero additional files;
 - SHA-256 plus mode/Git blob for the exact seven harness files and exact five
   R4 source/test contract files;
 - all 113 top-level formal migration pathnames in byte-sorted order;
@@ -255,7 +265,8 @@ Claude must not:
   tests, typecheck, build, package installation, Supabase CLI, PostgreSQL,
   Docker, Colima, Auth, PostgREST, Storage, browser, Vercel, provider, or any
   external service;
-- open or request a file outside the exact thirteen-file allowlist;
+- open or request a file outside the one directive control input and exact
+  thirteen-file supporting allowlist;
 - inspect `.env*`, secrets, keys, tokens, credentials, real user/customer/
   vehicle/address rows, Auth identities, or Storage objects;
 - open, read, diff, copy, or hash the protected LINE migration or

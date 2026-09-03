@@ -5338,3 +5338,59 @@ boundaries:
 decision: CR1_OWNER_RATIFIED_CR2_NOT_REQUIRED_CR3_DIRECTIVE_CANDIDATE_READY_FOR_CODEX_REVIEW
 next: "Independently verify the exact four-document candidate, literal manifest decision, thirteen-file future read allowlist, fixed source/harness metadata, required result schema, protected-path boundary, and diff check. Stage/local commit and normal push require separate Owner approvals. Only after delivery may the Owner separately authorize one CR3 static preflight; a fresh disposable runtime remains another later gate."
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR3-R1 invocation-boundary governance correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_R1_INVOCATION_BOUNDARY_GOVERNANCE_CORRECTION
+marker: GDA_POSTAL_R5_CR3_R1_FRESH_DISPOSABLE_PREFLIGHT_DIRECTIVE_V1
+status: CHANGES_REQUIRED_GOVERNANCE_CLOSED_CR3_R1_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After the read-only send-time preflight found that the original thirteen-file wording omitted the directive itself, the Owner authorized a correction limited to the same exact four documentation paths. Stage, commit, push, private-file transmission, Claude invocation, tests, runtime, Supabase/DB/project/provider action, migration replay/application, data transfer, real postal import, PR mutation, Ready, merge, cutover, retirement, and deployment remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  correction_source_head: 2ac6f9fa5f736eefbffdf28877fe793b8526eb65
+  correction_source_tree: c4e7a9f847a33bc97adba1ae4cbbec0720d4149f
+  upstream_ahead_behind_before_authoring: "0 0"
+  pr_state_before_authoring: OPEN/Draft
+  base: main
+  remote_head_matched_before_authoring: true
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PENDING
+  vercel_preview_comments_before_authoring: PASS
+defect:
+  classification: CHANGES_REQUIRED_GOVERNANCE
+  original_wording: THIRTEEN_FILES_AND_NO_OTHERS
+  omitted_input: COMMITTED_CR3_DIRECTIVE_ITSELF
+  source_harness_or_manifest_defect: false
+corrected_invocation_boundary:
+  directive_control_input_count: 1
+  private_supporting_file_allowlist_count: 13
+  exact_total_repository_file_payload_count: 14
+  additional_repository_files_allowed: 0
+  required_result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_RESULT_V1
+  substantive_manifest_or_runtime_decision_changed: false
+write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  private_files_transmitted: false
+  claude_invoked: false
+  source_test_harness_or_migration_changed: false
+  test_or_runtime_executed: false
+  supabase_db_project_or_provider_contacted: false
+  project_created: false
+  migration_replayed_or_applied: false
+  data_exported_or_imported: false
+  real_japan_post_csv_imported: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CR3_R1_INVOCATION_BOUNDARY_CORRECTED_READY_FOR_CODEX_REVIEW
+next: "Independently verify the exact four-document diff, the 1-plus-13-equals-14 payload contract, marker consistency, unchanged substantive decisions, protected-path boundary, and diff check. Stage/local commit and normal push require separate Owner approvals. Claude transmission and one-time static preflight require another explicit Owner authorization after delivery."
+```

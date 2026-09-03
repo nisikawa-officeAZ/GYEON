@@ -349,10 +349,12 @@ The next governance phase is
 `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT`.
 Its directive is
 `CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md`.
-That directive defines a later one-time, tool-disabled, read-only static review
-of thirteen exact private paths plus a Codex-supplied non-secret metadata
-attestation. It must decide whether the accepted seven-file R5 harness may be
-reused unchanged or requires the smallest literal repair before one separately
+The original directive candidate intended a later one-time, tool-disabled,
+read-only static review of thirteen exact private supporting paths plus a
+Codex-supplied non-secret metadata attestation. CR3-R1 below corrects its
+ambiguous omission of the directive itself from the invocation input count.
+The review must decide whether the accepted seven-file R5 harness may be reused
+unchanged or requires the smallest literal repair before one separately
 authorized fresh disposable CR3 attempt.
 
 This governance candidate is limited to exactly four documentation paths:
@@ -366,3 +368,29 @@ No private-file transmission, Claude invocation, test, runtime, Supabase/DB/
 provider action, project creation, migration replay/application, data transfer,
 real postal import, configuration, cutover, retirement, Git stage/commit/push,
 PR mutation, Ready, merge, or deployment is authorized by this candidate.
+
+## 14. CR3-R1 invocation-boundary correction
+
+The Owner authorized one documentation-only correction after the send-time
+preflight found that the original directive said Claude could receive exactly
+thirteen files while omitting the directive itself from that count. The
+corrected contract is literal:
+
+- one committed CR3-R1 directive is the governing control input;
+- thirteen exact private supporting files are the supporting-input allowlist;
+- the total repository-file payload is exactly fourteen files; and
+- zero additional repository files may be sent or opened.
+
+The corrected directive marker is
+`GDA_POSTAL_R5_CR3_R1_FRESH_DISPOSABLE_PREFLIGHT_DIRECTIVE_V1`. The required
+Claude result marker remains
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_RESULT_V1`.
+No manifest, source, harness, test, database, region, or business decision
+changed.
+
+The CR3-R1 correction remains limited to the same exact four documentation
+paths listed in section 13. It authorizes no stage, commit, push, private-file
+transmission, Claude invocation, test, runtime, Supabase/DB/provider action,
+project creation, migration replay/application, data transfer, real postal
+import, configuration, cutover, retirement, PR mutation, Ready, merge, or
+deployment.
