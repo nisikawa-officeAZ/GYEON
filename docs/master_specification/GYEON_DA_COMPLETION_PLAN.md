@@ -1851,7 +1851,7 @@ fresh Owner execution gate.
 
 ### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6 blocked result and CR6-R1 hosted mechanism correction
 
-**Status:** `CR6_BLOCKED_REPLAY_MECHANISM_CR6_R1_GOVERNANCE_CANDIDATE_UNCOMMITTED`
+**Status:** `CR6_R1_READY_RESULT_REJECTED_CR6_R1A_GOVERNANCE_CANDIDATE_UNCOMMITTED`
 
 The Owner authorized one tool-disabled, read-only CR6 preflight against the
 empty replacement-project identity and fixed 112-file manifest. Claude
@@ -1893,6 +1893,50 @@ failure semantics, future implementation ceiling, protected metadata, and
 `git diff --check`. Stage/local commit and normal push require separate Owner
 approvals. A future tool-disabled CR6-R1 diagnosis requires another explicit
 Owner authorization and cannot authorize hosted replay.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R1A result consistency correction
+
+**Status:** `CR6_R1A_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+CR6-R1 was committed as
+`a848e73d6561a1a2da3f02ec9b3fd30d7e7c84a8`, tree
+`f898b490b9f9c155e4e16cbd5343f29bf918a327`, and normally pushed to OPEN/Draft
+PR #67. The first tool-disabled diagnosis returned `BLOCKED_CLI_EVIDENCE`.
+The corrected invocation received the missing public CLI source and help
+evidence and returned
+`READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION`.
+
+MacBook Codex rejected the READY verdict as `CHANGES_REQUIRED`: the report's
+declared nine-file count contradicted its eleven listed paths, it required an
+unlisted `finalize-evidence.test.mjs`, orchestration test ownership was not
+one-to-one, and it cited `migration list --help` without that transcript being
+part of the supplied evidence.
+
+CR6-R1A fixes the future implementation allowlist at exactly fourteen new
+files under `scripts/e2e/gda-estimate-postal-master-r5-cr6/`, paired as seven
+runtime modules and seven tests. It also freezes both CLI argument arrays,
+adds the missing `migration list --help` evidence, fixes eighteen offline test
+requirements, and separates the nine authorized repository inputs from
+additional public evidence.
+
+**CR6-R1A four-document allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1A_RESULT_CONSISTENCY_CORRECTION.md`
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** No Claude invocation, CR6-R2 implementation, test run,
+Git stage/commit/push, Supabase/DB/provider/Vercel access, project binding,
+migration replay, data transfer, real Japan Post import, Ready, merge,
+deployment, cutover, or retirement is authorized by this documentation phase.
+
+**Next phase after delivery:** independently verify the exact four-document
+diff, the fourteen-path/seven-pair/eighteen-test arithmetic, both command
+arrays, protected-path immutability, clean index, and `git diff --check`.
+Stage/local commit and normal push require separate Owner approvals. Only
+after delivery may the Owner separately authorize the nine-file static
+CR6-R1A diagnosis.
 
 ### GDA-3 — Completion Desk
 

@@ -6,7 +6,7 @@
 |---|---|
 | Phase | `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION` |
 | Marker | `GDA_POSTAL_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN_V1` |
-| Status | `CR6_BLOCKED_REPLAY_MECHANISM_CR6_R1_GOVERNANCE_CANDIDATE` |
+| Status | `CR6_R1_READY_RESULT_REJECTED_CR6_R1A_GOVERNANCE_CANDIDATE` |
 | Date | 2026-09-03 |
 | Repository | `nisikawa-officeAZ/GYEON` |
 | Branch | `agent/gda-estimate-ocr-postal-clean-replacement-r1` |
@@ -298,11 +298,19 @@ created exactly one empty replacement project. The prior CR6 static preflight
 correctly returned `BLOCKED_REPLAY_MECHANISM`. No hosted migration has been
 applied.
 
-The current allowed action is CR6-R1 documentation authoring only. CR6-R1 must
-define a hosted-specific isolated-workdir harness contract and partial-failure
-quarantine behavior. It must account for the official CLI source evidence that
-sequential application stops after an error while pipeline-incompatible SQL
-may already have committed outside the final history-writing batch.
+CR6-R1 was delivered and two separately authorized tool-disabled diagnoses
+were completed. The first stopped at `BLOCKED_CLI_EVIDENCE`. The corrected
+invocation received the missing CLI evidence and returned
+`READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION`, but MacBook
+Codex rejected that result as `CHANGES_REQUIRED` because the reported file
+count did not match its path list, a required test file was outside that list,
+test ownership was incomplete, and one help-derived claim lacked supplied
+evidence.
+
+The current allowed action is CR6-R1A documentation correction only. It fixes
+the future implementation allowlist at fourteen new files with seven exact
+runtime/test pairs and adds the missing `migration list --help` evidence. No
+CR6-R2 implementation is authorized.
 
 The empty project remains fixed as `DealerOS-Dev-Clean-R5` /
 `nqvnjqcxgngqsqkbpdfi` in `ap-northeast-1`. No database connection, link,
@@ -452,3 +460,31 @@ This candidate authorizes no private-file transmission, Claude invocation,
 harness implementation, tests, Git stage/commit/push, Supabase/DB/provider
 access, project binding, migration replay, data transfer, real postal import,
 Vercel change, Ready conversion, merge, or deployment.
+
+## 17. CR6-R1 diagnostic adjudication and CR6-R1A correction
+
+CR6-R1 was committed as
+`a848e73d6561a1a2da3f02ec9b3fd30d7e7c84a8`, tree
+`f898b490b9f9c155e4e16cbd5343f29bf918a327`, and normally pushed to PR #67.
+PR #67 remained OPEN/Draft, base `main`, and MERGEABLE; both Vercel checks
+passed.
+
+The first authorized CR6-R1 static diagnosis returned
+`BLOCKED_CLI_EVIDENCE`. A second authorized invocation received Supabase CLI
+`2.116.0` version/help evidence plus the two fixed official source files and
+returned `READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION`.
+MacBook Codex did not accept that READY result because:
+
+1. the report declared nine implementation files but listed eleven;
+2. it required `finalize-evidence.test.mjs` outside its own allowlist;
+3. it did not assign an exact test owner to every orchestration module;
+4. it relied on `migration list --help` without receiving that transcript; and
+5. its closing evidence attestation conflated the repository-file boundary
+   with the separately supplied public-source evidence.
+
+The governing correction is
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1A_RESULT_CONSISTENCY_CORRECTION.md`.
+It fixes exactly fourteen future implementation files, seven runtime/test
+pairs, eighteen mandatory offline requirements, both CLI argument arrays, and
+a nine-repository-file correction-diagnosis input boundary. CR6-R1A remains
+documentation-only and cannot authorize hosted execution.
