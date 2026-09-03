@@ -10,7 +10,7 @@
 | Mode | One tool-disabled, read-only static preflight after separate Owner authorization |
 | Repository | `nisikawa-officeAZ/GYEON` |
 | Coordination PR | [PR #67](https://github.com/nisikawa-officeAZ/GYEON/pull/67) |
-| Candidate source HEAD / tree | `87d5be6eac50e3bac12ba8af09b1293ce1fdf827` / `c5a8ac8fdbd73e7f746fb889339ac5acc16f011e` |
+| Pre-directive baseline HEAD / tree | `87d5be6eac50e3bac12ba8af09b1293ce1fdf827` / `c5a8ac8fdbd73e7f746fb889339ac5acc16f011e` |
 | Target Supabase project | `DealerOS-Dev-Clean-R5` / `nqvnjqcxgngqsqkbpdfi` |
 | Target organization | `officeAZ` / `ivlpkysdjbrkcozrvzwg` |
 | Target region | `ap-northeast-1` |
@@ -128,8 +128,8 @@ files and no others:
 10. `scripts/e2e/gda-estimate-postal-master-r5/capture-evidence.sh`
 11. `scripts/e2e/gda-estimate-postal-master-r5/cleanup.sh`
 12. `scripts/e2e/gda-estimate-postal-master-r5/real-auth.mjs`
-13. `scripts/e2e/gda-estimate-postal-master-r5/concurrency.mjs`
-14. `scripts/e2e/gda-estimate-postal-master-r5/run.sh`
+13. `scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs`
+14. `scripts/e2e/gda-estimate-postal-master-r5/runtime-contract.test.sql`
 
 It may also receive one byte-sorted metadata-only table for all 113 formal
 top-level migration paths containing pathname, mode, Git blob, inclusion or
@@ -153,7 +153,10 @@ payload, or old-Development data may be supplied.
 
 Confirm from the supplied static evidence that:
 
-- the candidate source identity matches Section 1;
+- the actual invocation HEAD/tree is supplied explicitly, descends from the
+  pre-directive baseline in Section 1, and differs from that baseline only by
+  the committed CR6 directive and any separately accepted documentation-only
+  correction commits;
 - the repository index and worktree are clean and local/remote divergence is
   `0 0` at invocation time;
 - PR #67 remains OPEN and Draft against `main`;
