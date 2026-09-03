@@ -11,7 +11,10 @@
 - Fixed Book base commit/tree: `c799b14b15a95177442e4505807d57056292e4d1` / `d8eacb42802d7b9d8fbf20875c46c087e5f0b790`
 - Proposed governance branch: `agent/inv001-p19-book-d4a-office-az-operator-authority-governance`
 - D4 governance PR: `https://github.com/nisikawa-officeAZ/GYEON/pull/60`
-- Current mode: governance preparation only
+- D4A governance PR: `https://github.com/nisikawa-officeAZ/GYEON/pull/61`
+- D4A merged commit/tree: `6fc4fe5bfcd681f04945c7ae7844dac61273cd3d` / `b948ea068b171bbd8d52117b6313c7682f403457`
+- Owner-decision correction branch: `agent/inv001-p19-book-d4a-r1-owner-authority-decision`
+- Current mode: Owner-ratified authority decision and formal-spec reconciliation only
 
 D4A resolves the missing Office AZ inventory-operator authority that blocks D4. It does not implement authentication, create a migration, grant a role, expose a route, call Foundation, or authorize any inventory command.
 
@@ -24,7 +27,7 @@ D4A resolves the missing Office AZ inventory-operator authority that blocks D4. 
 5. Login, Supabase `authenticated`, UI visibility, a client role string, a dealer membership, `admin_users`, or service-role access alone is never authorization.
 6. Actor and operator are distinct. Neither may be defaulted from the other.
 7. Missing, inactive, suspended, revoked, ambiguous, stale, unreadable, unknown, cross-owner, or out-of-location authority fails closed before any Foundation call.
-8. The later Owner decision that inbound confirmation may be performed by a warehouse operator, warehouse manager, or super admin supersedes the older narrower row only after the formal-spec contradiction is recorded and reconciled under an explicit Owner gate.
+8. The Owner decision dated 2026-09-03 formally grants inbound confirmation to a warehouse operator, warehouse manager, and super admin within their location scope and supersedes the older narrower row.
 
 ## 3. Existing Evidence and Authority Gaps
 
@@ -37,28 +40,23 @@ D4A resolves the missing Office AZ inventory-operator authority that blocks D4. 
 - `ENTERPRISE_ORGANIZATION_SPEC.md` names `warehouse_manager`, but current runtime enforcement, active assignments, status/revocation, location grants, and command capabilities are not proven.
 - Existing `super_admin` descriptions that rely on service-role bypass are not acceptable command authorization for D4A.
 
-### Formal-spec contradiction
+### Resolved formal-spec contradiction
 
-`SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md` currently assigns:
+Before this D4A-R1 correction, `SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md` assigned:
 
 - warehouse operator: work queue, pick, inspection, shipping-label confirmation, shipping information;
 - warehouse manager: warehouse-operator permissions plus exception handling, unaccepted-order review, and reminder handling;
 - super admin: shop/rule/calendar settings and inbound confirmation.
 
-The later Owner decision grants inbound confirmation to all three roles. Until an explicit reconciliation updates the formal authority, D4A must report `BLOCKED_FORMAL_ROLE_CONTRADICTION` and must not implement the inbound grant by inference.
+The Owner approved the closed authority matrix on 2026-09-03. `SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md` is corrected in the same governance candidate so that inbound confirmation belongs to warehouse operator, warehouse manager, and super admin within their location scope. The former `BLOCKED_FORMAL_ROLE_CONTRADICTION` condition is resolved at the specification level only; no live grant or implementation is authorized.
 
-### Still unresolved
+### Still unresolved for implementation
 
 - canonical operator identity and assignment data source;
 - exact relationship, if any, to enterprise organization roles;
-- role assignment and revocation administrator;
-- explicit location grants and whether super admin is location-unbounded;
-- adjustment, transfer, stocktake, return/restock, audit, snapshot, recovery, and emergency authority;
-- machine/service identities for reservation and order-orchestration commands;
-- separation-of-duty and second-approval requirements for high-risk commands;
 - exact persistence/RLS/RPC boundary and migration ownership.
 
-All unresolved permissions remain denied. No least-privilege proposal below is a live grant.
+The business-policy decisions are closed below. Implementation details remain denied until a separate gate accepts the canonical data source, schema, RLS, RPC, resolver, tests, and literal paths. No ratified business row is a live grant.
 
 ## 4. Proposed Authority Object
 
@@ -90,16 +88,17 @@ Requirements:
 - status, grants, location scope, validity, and version are read together or bound by an accepted transaction/version contract;
 - zero or multiple current operator assignments fail closed;
 - an operator may have no implicit location access;
-- super admin receives only explicit capabilities and locations unless the Owner separately ratifies an all-location rule;
+- super admin receives the closed capabilities below and explicit access to the three current Office AZ locations only;
+- a future location is never added automatically and requires a new Owner decision plus server-side activation;
 - authority may not fall back to dealer roles, JWT user metadata, stale cached app metadata, environment flags, or service-role availability;
 - self-grant, self-reactivation, and self-expansion are prohibited;
 - assignment, grant, suspension, revocation, and denied high-risk attempts require append-only audit evidence.
 
 ## 5. Role Vocabulary
 
-The following IDs are proposed normalized identifiers, not yet implementation constants:
+The following IDs are Owner-ratified normalized role identifiers, but are not yet implementation constants or live grants:
 
-| Proposed role | Japanese label | Boundary |
+| Ratified role ID | Japanese label | Boundary |
 |---|---|---|
 | `office_az_warehouse_operator` | 倉庫担当者 | Assigned-location physical warehouse work only |
 | `office_az_warehouse_manager` | 倉庫管理者 | Operator work plus separately granted exception/supervision capabilities |
@@ -110,7 +109,7 @@ Dealer and GYEON Japan catalogue roles are outside this vocabulary. Role labels 
 
 ## 6. Capability Vocabulary
 
-Gate A must accept, correct, or reject a closed capability list. Minimum candidates are:
+The Owner ratifies the following closed capability vocabulary. Gate A must map it to the minimum implementation without widening it:
 
 - `inventory.quantity.read`
 - `inventory.audit.read`
@@ -137,29 +136,31 @@ Gate A must accept, correct, or reject a closed capability list. Minimum candida
 
 Unknown capabilities deny. A broad `inventory.manage` capability is prohibited.
 
-## 7. Provisional Command Disposition
+## 7. Owner-Ratified Command Disposition
 
-This table separates ratified business behavior from unresolved grants. `PROPOSED` is not authorization.
+The policy is final. `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` means that the business decision is fixed but the command must continue to deny until the later implementation gate is completed.
 
 | Foundation command/surface | Warehouse operator | Warehouse manager | Super admin | System identity | Status |
 |---|---|---|---|---|---|
-| quantity/status query | assigned locations | assigned locations | explicit locations | narrow read service | `PROPOSED` |
-| `receive_supplier_shipment` | yes | yes | yes | no | `OWNER_DECISION_REQUIRES_FORMAL_RECONCILIATION` |
-| `pick_fulfillment` | assigned location | assigned location | explicit grant | no | `RATIFIED_ROLE_INTENT_MAPPING_PENDING` |
-| `pack_fulfillment` | assigned location | assigned location | explicit grant | no | `RATIFIED_ROLE_INTENT_MAPPING_PENDING` |
-| `ship_fulfillment` | assigned location | assigned location | explicit grant | no | `RATIFIED_ROLE_INTENT_MAPPING_PENDING` |
-| `open_fulfillment` | no implicit grant | no implicit grant | no implicit grant | order service candidate | `UNRESOLVED_DENY` |
-| `reserve`, `cancel_reservation`, `confirm_shipment` | no | no | no implicit grant | order service candidate | `UNRESOLVED_DENY` |
-| `adjust_inventory` | no | explicit grant candidate | explicit grant candidate | no | `UNRESOLVED_DENY` |
-| `return_fulfillment`, `restock_fulfillment` | no implicit grant | explicit grant candidate | explicit grant candidate | no | `UNRESOLVED_DENY` |
-| `request_transfer` | no implicit grant | explicit grant candidate | explicit grant candidate | no | `UNRESOLVED_DENY` |
-| `dispatch_transfer`, `receive_transfer` | assigned-location candidate | assigned-location candidate | explicit grant candidate | no | `UNRESOLVED_DENY` |
-| `stocktake_open` | no | explicit grant candidate | explicit grant candidate | no | `UNRESOLVED_DENY` |
-| `stocktake_finalize_line` | assigned-location candidate | assigned-location candidate | explicit grant candidate | no | `UNRESOLVED_DENY` |
-| `stocktake_complete` | no | explicit grant candidate | explicit grant candidate | no | `UNRESOLVED_DENY` |
-| `authorize_with_evidence` | no | no | no direct UI grant | narrow authority service candidate | `UNRESOLVED_DENY` |
-| audit read | no implicit raw access | scoped candidate | scoped candidate | no | `UNRESOLVED_DENY` |
-| snapshot export/import and recovery evaluation | no | no implicit grant | separately approved emergency candidate | recovery service candidate | `UNRESOLVED_DENY` |
+| quantity/status query | assigned locations | assigned locations | current three locations | narrow read service | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `receive_supplier_shipment` | assigned location | assigned location | current three locations | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `pick_fulfillment` | assigned location | assigned location | current three locations | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `pack_fulfillment` | assigned location | assigned location | current three locations | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `ship_fulfillment` | assigned location | assigned location | current three locations | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `open_fulfillment` | no | no | no direct human execution | order service only | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `reserve`, `cancel_reservation`, `confirm_shipment` | no | no | no direct human execution | order service only | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `adjust_inventory` | no | assigned location with reason | current three locations with reason | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `return_fulfillment`, `restock_fulfillment` | no | assigned location | current three locations | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `request_transfer` | no | assigned locations | current three locations | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `dispatch_transfer`, `receive_transfer` | authorized source/destination locations | authorized source/destination locations | current three locations | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `stocktake_open` | no | assigned location | current three locations | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `stocktake_finalize_line` | assigned location | assigned location | current three locations | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `stocktake_complete` | no | assigned location | current three locations | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| `authorize_with_evidence` | no | no | no direct human execution | narrow authority service only | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| audit read | no | assigned scope | current three locations and all operator events | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| snapshot export | no | no | allowed | narrow snapshot service | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| snapshot import and recovery evaluation | no | no | re-authentication, reason, pre-backup, explicit confirmation, and audit required | narrow recovery service | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
+| operator assignment, suspension, revocation, and permission management | no | no | allowed; self-grant and self-reactivation prohibited | no | `RATIFIED_POLICY_IMPLEMENTATION_NOT_AUTHORIZED` |
 
 Every command must also bind exact owner, location, product mapping, request, idempotency, aggregate version, actor/operator, and evidence requirements from D4. A role match without all bindings denies.
 
@@ -172,6 +173,8 @@ Every command must also bind exact owner, location, product mapping, request, id
 5. Cross-location quantity visibility requires an explicit read capability; one-location assignment must not leak other-location balances.
 6. The EC sellable/reservable location subset remains `NOT_CONFIGURED`; D4A must not derive it from operator grants.
 7. A command lacking a required location or naming an unrecognized/retired location denies before invocation.
+8. Super admin covers exactly the three current locations. A future location remains denied until a separate Owner decision and server-side activation.
+9. The initial named operational assignment for 小尾野氏 is warehouse operator only. This statement does not create an Auth, DB, RLS, or account grant.
 
 ## 9. Server, Database, and RLS Boundary
 
@@ -200,28 +203,27 @@ After separate Owner authorization for every private file, Claude may read the e
 Allowed verdicts:
 
 - `PASS_AUTHORITY_DECISIONS_READY`
-- `BLOCKED_FORMAL_ROLE_CONTRADICTION`
 - `CHANGES_REQUIRED_AUTHORITY_SOURCE`
 - `CHANGES_REQUIRED_READ_SCOPE`
 - `BLOCKED_D2_D3A_D3B_PRECONDITION`
 - `BLOCKED_GOVERNANCE_PRECONDITION`
 
-### Owner decision gate
+### Owner decision gate — completed at policy level
 
-The Owner must explicitly accept or correct:
+The Owner accepted the following on 2026-09-03 under marker `INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY_OWNER_DECISION_V1`:
 
 1. the canonical three role IDs;
 2. the inbound reconciliation;
-3. every unresolved command/surface row;
+3. every 18-command and five-surface row in section 7;
 4. super-admin location scope;
 5. operator assignment/revocation authority;
-6. high-risk second-approval rules;
+6. high-risk safeguards: re-authentication, reason, pre-backup, explicit confirmation, and audit for snapshot import/recovery; no additional second-human approval is introduced by this decision;
 7. human versus service identity boundaries;
-8. the separate authority persistence owner and migration scope.
+8. authority persistence remains a separate later implementation scope and may not be combined silently with D3A.
 
 ### Future implementation gate
 
-Only after the Owner decision, D2/D3A/D3B closure, corrected formal specification, and a separately approved literal allowlist may Claude create an uncommitted authority implementation candidate. Gate A must determine the minimum pure core, resolver, tests, and migration/RLS paths. No implementation path is authorized by this directive.
+Only after D2/D3A/D3B closure and a separately approved literal allowlist may Claude create an uncommitted authority implementation candidate. A future Gate A must determine the minimum pure core, resolver, tests, and migration/RLS paths against the now-ratified policy. No implementation path is authorized by this directive.
 
 ### D6 verification gate
 
@@ -290,11 +292,11 @@ Only pathname, mode, blob identity, and clean/dirty state supplied by MacBook Co
 - No auth, staff, inventory, Foundation, route, UI, migration, dependency, lockfile, configuration, protected, or generated source edit.
 - No login, Auth, DB, Supabase, provider, registry, browser, Android, shared/staging/production, deployment, or customer-data access.
 - No role or capability grant from dealer role, UI state, `authenticated`, user metadata, service-role possession, or arbitrary membership.
-- No implicit super-admin all-location/all-command grant.
+- No super-admin access beyond the three current locations or the closed command matrix; future locations and unknown commands deny.
 - No implementation, executable test, stage, commit, push, PR mutation, Ready, merge, tag, release, or production-ready declaration.
 
 ## 15. Exit Gate
 
-D4A governance is ready for delivery only after the exact three-document diff, directive hash, formal-role contradiction, ratified-versus-proposed matrix, unresolved-deny behavior, D4/D6 separation, and protected metadata pass independent verification.
+D4A-R1 governance is ready for delivery only after the exact four-document diff, directive hash, formal-spec reconciliation, closed Owner-ratified matrix, implementation-deny behavior, D4/D6 separation, and protected metadata pass independent verification.
 
-D4A implementation remains blocked until Gate A, explicit Owner decisions, formal-spec correction, D2/D3A/D3B closure, separate implementation authorization, and exact schema/RLS/source allowlists are accepted.
+D4A implementation remains blocked until D2/D3A/D3B closure, a fresh exact-scope Gate A diagnosis, separate implementation authorization, and exact schema/RLS/source allowlists are accepted.

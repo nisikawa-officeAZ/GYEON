@@ -4494,3 +4494,105 @@ not_authorized:
 decision: REGISTER_LOCAL_D4A_GOVERNANCE_CANDIDATE_AND_DENY_ALL_UNRESOLVED_OFFICE_AZ_OPERATOR_CAPABILITIES
 next: "VERIFY_EXACT_THREE_DOCUMENT_GOVERNANCE_DIFF_DIRECTIVE_HASH_FORMAL_ROLE_CONTRADICTION_RATIFIED_PROPOSED_UNRESOLVED_DENY_MATRIX_D4_D6_SEPARATION_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
 ```
+
+## INV001-P19-BOOK-D4A-R1 — Owner authority decision and formal-spec reconciliation candidate
+
+```yaml
+phase: INV001_P19_BOOK_D4A_R1_OWNER_AUTHORITY_DECISION_AND_FORMAL_SPEC_RECONCILIATION
+marker: INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY_OWNER_DECISION_V1
+status: LOCAL_GOVERNANCE_SPECIFICATION_CANDIDATE_UNSTAGED_UNCOMMITTED_IMPLEMENTATION_BLOCKED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner explicitly approved the proposed Office AZ role and command matrix as the formal decision. This authorizes creation and local verification of the exact four-document governance/specification candidate only. It does not authorize private-source transmission, Claude invocation, stage, commit, push, PR mutation, Auth, DB, Supabase, migration, implementation, executable tests, grants, deployment, or production action."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: 6fc4fe5bfcd681f04945c7ae7844dac61273cd3d
+  fixed_tree: b948ea068b171bbd8d52117b6313c7682f403457
+  branch: agent/inv001-p19-book-d4a-r1-owner-authority-decision
+  d4a_governance_pr_61: MERGED
+exact_candidate_allowlist:
+  - docs/master_specification/SPEC_GYEON_ORDER_001_DEALER_ORDER_FORMAL_DECISION_V3.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+formal_reconciliation:
+  previous_inbound_row: SUPER_ADMIN_ONLY
+  corrected_inbound_roles:
+    - office_az_warehouse_operator
+    - office_az_warehouse_manager
+    - office_az_inventory_super_admin
+  status: RESOLVED_AT_POLICY_LEVEL_IMPLEMENTATION_NOT_AUTHORIZED
+ratified_roles:
+  office_az_warehouse_operator:
+    label: 倉庫担当者
+    scope: ASSIGNED_LOCATIONS
+  office_az_warehouse_manager:
+    label: 倉庫管理者
+    scope: ASSIGNED_LOCATIONS
+  office_az_inventory_super_admin:
+    label: スーパーアドミン
+    scope: EXACT_CURRENT_THREE_LOCATIONS
+  office_az_inventory_service:
+    label: システム実行主体
+    scope: CLOSED_MACHINE_COMMANDS_ONLY
+named_initial_assignment:
+  person: 小尾野
+  role: office_az_warehouse_operator
+  status: POLICY_DESIGNATION_ONLY_NO_LIVE_GRANT
+human_command_policy:
+  all_three_human_roles:
+    - receive_supplier_shipment
+  warehouse_operator_and_above:
+    - pick_fulfillment
+    - pack_fulfillment
+    - ship_fulfillment
+    - dispatch_transfer
+    - receive_transfer
+    - stocktake_finalize_line
+  warehouse_manager_and_super_admin:
+    - adjust_inventory
+    - return_fulfillment
+    - restock_fulfillment
+    - request_transfer
+    - stocktake_open
+    - stocktake_complete
+service_only_commands:
+  - authorize_with_evidence
+  - open_fulfillment
+  - reserve
+  - cancel_reservation
+  - confirm_shipment
+five_surfaces:
+  quantity_status_read: OPERATOR_ASSIGNED_MANAGER_ASSIGNED_SUPER_ADMIN_CURRENT_THREE
+  audit_read: MANAGER_SCOPED_SUPER_ADMIN_ALL_CURRENT_THREE
+  snapshot_export: SUPER_ADMIN_ONLY
+  snapshot_import_recovery: SUPER_ADMIN_ONLY_WITH_REAUTH_REASON_PREBACKUP_CONFIRMATION_AUDIT
+  operator_management: SUPER_ADMIN_ONLY_NO_SELF_GRANT_OR_SELF_REACTIVATION
+location_policy:
+  live_owner: OFFICE_AZ_ONLY
+  current_locations: 3
+  super_admin_scope: EXACT_CURRENT_THREE_LOCATIONS
+  future_location_auto_grant: PROHIBITED
+  future_location_activation: NEW_OWNER_DECISION_AND_EXPLICIT_SERVER_ACTIVATION_REQUIRED
+security_boundary:
+  dealer_roles_grant_office_az_inventory: NEVER
+  authenticated_or_ui_visibility_grants_authority: NEVER
+  client_or_user_metadata_grants_authority: NEVER
+  service_role_or_admin_client_possession_grants_authority: NEVER
+  rls_and_grants: SEPARATE_EXPLICIT_CONTROLS_REQUIRED
+  missing_stale_ambiguous_inactive_suspended_revoked_or_out_of_location: DENY_BEFORE_FOUNDATION_CALL
+  implementation_status: NOT_CONFIGURED
+dependencies:
+  d2_private_package_consumer: INCOMPLETE_BLOCKED_FOUNDATION_PACKAGE_UNPUBLISHED
+  d3a_foundation_persistence: INCOMPLETE
+  d3b_product_mapping: INCOMPLETE
+not_authorized:
+  - private_source_transmission_or_claude_invocation
+  - auth_db_supabase_migration_rls_grant_or_live_account_change
+  - implementation_or_executable_test
+  - stage_commit_push_pr_ready_merge
+  - android_provider_deployment_staging_or_production
+decision: REGISTER_OWNER_RATIFIED_AUTHORITY_POLICY_AND_FORMAL_SPEC_RECONCILIATION_CANDIDATE_ONLY
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_DIRECTIVE_HASH_ALL_18_COMMANDS_FIVE_SURFACES_FORMAL_RECONCILIATION_FUTURE_LOCATION_DENY_NAMED_OPERATOR_POLICY_ONLY_IMPLEMENTATION_DENY_D4_D6_SEPARATION_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
+```
