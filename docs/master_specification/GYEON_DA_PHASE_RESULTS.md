@@ -4941,3 +4941,86 @@ boundaries:
 decision: GDA_POSTAL_R5_DISPOSABLE_DB_PASS
 next: "Request a separate Owner gate for Development read-only migration-history preflight. Development migration apply and real Japan Post CSV import remain two later, separate Owner gates."
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — Development read-only schema/ledger preflight
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DEVELOPMENT_READ_ONLY_SCHEMA_LEDGER_PREFLIGHT
+marker: GDA_POSTAL_R5_DEVELOPMENT_READ_ONLY_PREFLIGHT_BLOCKED_SCHEMA_DRIFT
+status: CHANGES_REQUIRED_APPLY_BLOCKED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner separately approved a Development migration-history read-only preflight, then approved a read-only live schema versus ledger reconciliation, and finally approved recording the result in exactly this verification plan and append-only ledger. No migration apply, history repair, data write/import, project creation, Git stage/commit/push, PR mutation, Staging/Production database access, provider mutation, cutover, merge, or deployment was authorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  head: 4ce73f99bca0c43617007d90125da209fb2ea699
+  pull_request_state: OPEN/Draft
+  base_branch: main
+  github_checks:
+    vercel: PASS
+    vercel_preview_comments: PASS
+development_identity:
+  project_name: DealerOS-Dev
+  project_ref: fbieiotihlmpfzybowbt
+  region: ap-northeast-2
+  project_status: ACTIVE_HEALTHY
+  postgres_version: "17.6"
+migration_ledger:
+  remote_count: 2
+  remote_versions:
+    - "000"
+    - "001"
+  local_sql_file_count: 113
+  target_version: "20260901001246"
+  target_recorded_remote: false
+schema_reconciliation:
+  representative_later_tables_present:
+    migration_038_public_work_orders: true
+    migration_047_public_gyeon_products: true
+    migration_068_public_vehicle_registration_ocr_sessions: true
+    migration_095_public_gyeon_ai_usage_log: true
+  migration_096_partial:
+    public_gyeon_ai_usage_log_response_ms: true
+    public_pg_version_function: false
+  representative_markers_097_through_102_present: true
+  migration_103:
+    public_wizard_catalog_items: false
+    public_wiz_is_any_active_member_function: false
+  classification: MANUAL_APPLY_PARTIAL_APPLY_AND_UNRECORDED_LEDGER_MIXED_SCHEMA_DRIFT
+postal_target:
+  migration: supabase/migrations/20260901001246_jp_postal_master.sql
+  migration_sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+  private_schema_present: false
+  private_jp_postal_import_batches_present: false
+  private_jp_postal_master_present: false
+  private_jp_postal_active_batch_present: false
+  lookup_rpc_count_present: 0
+  import_rpc_count_present: 0
+  required_public_wiz_is_any_active_member_present: false
+  direct_target_apply_safe: false
+governance:
+  binding_environment_ruling: CLEAN_REPLACEMENT_DEVELOPMENT
+  authority: docs/master_specification/ENVIRONMENT_LEDGER.md_GATE_B_R3A
+  current_development_read_only: true
+  in_place_history_relabel: REJECTED
+  bulk_db_push: PROHIBITED
+boundaries:
+  queries: SELECT_AND_MANAGEMENT_METADATA_ONLY
+  development_database_modified: false
+  development_migration_applied: false
+  development_history_repaired: false
+  real_japan_post_csv_imported: false
+  staging_database_contacted: false
+  production_database_contacted: false
+  staging_and_production_management_identity_metadata_only: true
+  git_changed_by_preflight: false
+  provider_modified: false
+  project_created: false
+  cutover_performed: false
+  merged: false
+  deployed: false
+decision: GDA_POSTAL_R5_DEVELOPMENT_READ_ONLY_PREFLIGHT_BLOCKED_SCHEMA_DRIFT
+next: "Keep current Development read-only. Do not apply the postal target or run bulk db push. Continue only through the already accepted clean-replacement Development gate sequence; project creation, retained-data copy, full replay, acceptance, cutover, real Japan Post CSV import, and retirement each remain separately authorized operations."
+```
