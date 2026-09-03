@@ -1657,6 +1657,37 @@ provider/network access, source changes, stage, commit, push, PR mutation,
 Ready, merge, migration apply, cutover, retirement, and deployment remain
 separately unauthorized.
 
+**CR1-R1 execution and Codex normalization:** One separately Owner-authorized,
+tool-disabled format-only invocation returned the required marker, literal
+`verdict: READY_FOR_CR1_MANIFEST_RATIFICATION`, and all eleven required fields
+in order. It preserved the 112-migration/LINE-only-exclusion recommendation,
+but one duplicated protected LINE Git blob was mistranscribed. Git metadata
+proved the canonical blob is `accd22345054cc44f89156fd78eaba6dfe4242a4`.
+The Owner authorized MacBook Codex to replace that one string only without a
+third Claude invocation. The transparent normalized artifact is
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_CODEX_NORMALIZED_RESULT.md`.
+No other finding changed.
+
+**CR1 acceptance candidate:** The normalized result is ready for the Owner's
+manifest ratification. It recommends exactly 112 executable migrations,
+excludes only `20260801110110_line_link_tokens.sql`, keeps both provisioning
+migrations as disabled infrastructure, closes the product-policy/five-bucket
+prerequisite, records `CR2_NOT_REQUIRED`, and identifies CR3 fresh disposable
+governance as the minimum next gate. This is not yet authorization to author or
+execute CR3, create a Supabase project, replay/apply migrations, contact a
+provider, cut over, retire, merge, or deploy.
+
+**CR1 normalized-result write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_CODEX_NORMALIZED_RESULT.md` (new)
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** Documentation candidate only. Stage, commit, push, PR
+mutation, CR3 authoring/execution, tests, runtime, Supabase/DB/project/provider
+access, migration apply, cutover, retirement, Ready, merge, and deployment
+remain separately unauthorized.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

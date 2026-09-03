@@ -5195,3 +5195,82 @@ boundaries:
 decision: CHANGES_REQUIRED_GOVERNANCE_CR1_R1_FORMAT_ONLY_DIRECTIVE_READY_FOR_CODEX_REVIEW
 next: "Independently verify the exact three-document diff and literal frozen findings. Stage/local commit and normal push require separate Owner approval. Only after delivery may the Owner separately authorize one format-only Claude invocation carrying this directive and the exact prior report; no private source or 113-path metadata may be retransmitted."
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR1-R1 execution and Codex-normalized acceptance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_CODEX_NORMALIZED_ACCEPTANCE_CANDIDATE
+marker: GDA_POSTAL_R5_CR1_R1_CODEX_NORMALIZED_ACCEPTANCE_CANDIDATE_V1
+status: READY_FOR_OWNER_MANIFEST_RATIFICATION_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner separately authorized one CR1-R1 format-only Claude invocation using only the committed directive and exact prior Claude report. After Codex found one altered protected LINE blob, the Owner authorized no third Claude invocation and authorized Codex to replace that one erroneous blob with the Git-attested value and record a formal acceptance candidate. This authorizes exactly three documentation paths only; stage, commit, push, PR mutation, CR3, database, provider, migration apply, Ready, merge, and deployment remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  execution_head: 556ab5a851a23237c02d1b537db8410a082eb77b
+  execution_tree: f1c5e1a9ef2bf53d09947253af548292f32ac424
+  upstream_ahead_behind: "0 0"
+  pr_state: OPEN/Draft
+  base: main
+  remote_head_matched: true
+  vercel: PASS
+  vercel_preview_comments: PASS
+cr1_r1_execution:
+  successful_invocations: 1
+  tools: DISABLED
+  mode: FORMAT_ONLY_READ_ONLY
+  transmitted_inputs:
+    - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION.md
+    - exact_prior_claude_report_text
+  retransmitted_private_source_files: 0
+  retransmitted_migration_metadata_table: false
+  output_marker_present: true
+  output_verdict: READY_FOR_CR1_MANIFEST_RATIFICATION
+  required_field_count: 11
+  required_field_order: PASS
+codex_correction:
+  classification_before_correction: CHANGES_REQUIRED_GOVERNANCE
+  field: scope_and_protected_path_evidence.LINE_git_blob
+  claude_returned: accd22345054f3a17cc85e313b62d5bb6a4fda3f
+  git_attested: accd22345054cc44f89156fd78eaba6dfe4242a4
+  same_report_correct_value_present_under_113_path_attestation: true
+  owner_authorized_single_string_replacement: true
+  other_values_changed: false
+normalized_artifact:
+  path: docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_CODEX_NORMALIZED_RESULT.md
+  provenance_disclosed: true
+  raw_error_disclosed: true
+  corrected_value_disclosed: true
+manifest_acceptance_candidate:
+  formal_top_level_migration_count: 113
+  executable_manifest_count: 112
+  exact_exclusion:
+    - supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_manifest_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  provisioning_pair_disposition: INCLUDE_SCHEMA_KEEP_FEATURE_DISABLED
+  postal_target_sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+  product_policy_and_storage_prerequisite: CLOSED
+  remaining_source_blocker_before_cr3: NONE
+  cr2: CR2_NOT_REQUIRED
+  minimum_next_gate: CR3_FRESH_DISPOSABLE_GOVERNANCE
+  owner_manifest_ratified: false
+write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_CODEX_NORMALIZED_RESULT.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  third_claude_invocation: false
+  source_test_or_runtime_changed: false
+  protected_content_opened: false
+  test_or_runtime_executed: false
+  project_created: false
+  database_or_provider_contacted: false
+  migration_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: READY_FOR_OWNER_CR1_MANIFEST_RATIFICATION
+next: "Independently verify the exact three-document candidate, the one-string correction, normalized schema, hashes, protected-path metadata, and diff check. Stage/local commit and normal push require separate Owner approval. CR3 authoring or execution remains a later separate Owner gate after explicit manifest ratification."
+```
