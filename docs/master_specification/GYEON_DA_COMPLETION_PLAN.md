@@ -889,25 +889,35 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-D4A — Office AZ inventory-operator authority governance
 
-**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / AUTHORITY IMPLEMENTATION BLOCKED.
+**Status:** GOVERNANCE MERGED THROUGH PR #61 / OWNER AUTHORITY POLICY RATIFIED / D4A-R1 FORMAL-SPEC CORRECTION CANDIDATE UNSTAGED AND UNCOMMITTED / AUTHORITY IMPLEMENTATION BLOCKED.
 
 **Objective:** Resolve the Office AZ human/service operator, capability, location, suspension/revocation, and high-risk approval model that D4 requires, without reusing dealer roles, UI state, `authenticated`, user metadata, admin-client access, or service-role possession as authorization.
 
-**Fixed Book authority:** `main` commit `c799b14b15a95177442e4505807d57056292e4d1`, tree `d8eacb42802d7b9d8fbf20875c46c087e5f0b790`. D4 governance is merged through PR #60. D2 package publication/consumer, D3A persistence, and D3B mapping implementations remain incomplete.
+**Fixed Book authority:** D4A governance is merged through PR #61 at commit `6fc4fe5bfcd681f04945c7ae7844dac61273cd3d`, tree `b948ea068b171bbd8d52117b6313c7682f403457`. D4 governance is merged through PR #60. D2 package publication/consumer, D3A persistence, and D3B mapping implementations remain incomplete.
 
 **Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY.md`. Proposed branch: `agent/inv001-p19-book-d4a-office-az-operator-authority-governance`.
 
 **Ratified boundary:** `OFFICE_AZ` is the only current live owner; three locations are location scopes under one Office AZ total; dealer roles never grant Office AZ inventory authority; actor and operator remain distinct; unresolved authority denies before every Foundation call.
 
-**Formal contradiction:** The current V3 formal-decision role table gives inbound confirmation only to super admin, while the later Owner decision grants it to warehouse operator, warehouse manager, and super admin. The later decision is recorded as the intended reconciliation, but no grant may be implemented until an explicit Owner decision result and formal-spec correction are delivered.
+**Formal reconciliation:** On 2026-09-03 the Owner approved warehouse operator, warehouse manager, and super admin inbound confirmation within their location scopes and ratified the closed 18-command/five-surface matrix. The V3 formal-decision role table and authority section are corrected by D4A-R1. This closes the policy contradiction but does not create a live grant.
 
-**Provisional model:** Separate normalized warehouse-operator, warehouse-manager, inventory-super-admin, and narrow service identities; explicit closed capabilities; explicit location grants; active-only status; validity and authority version; no self-grant; append-only assignment/revocation/denial audit. Super admin is not implicitly all-location or all-command.
+**Ratified model:** Separate normalized warehouse-operator, warehouse-manager, inventory-super-admin, and narrow service identities; explicit closed capabilities; explicit location grants; active-only status; validity and authority version; no self-grant; append-only assignment/revocation/denial audit. Super admin covers exactly the three current locations and the closed matrix. Future locations are never automatic. 小尾野氏 is designated as warehouse operator at the policy level only.
 
-**Gate separation:** Gate A exact-scope tool-disabled read-only diagnosis; explicit Owner decision for every unresolved command and authority source; separately governed formal-spec correction; D2/D3A/D3B closure; separately approved pure authority/resolver/schema/RLS implementation; independent source acceptance; D6 real SSR-cookie/RLS/revocation/concurrency verification.
+**Gate separation:** D4A-R1 exact four-document formal-spec correction; separate stage/local-commit delivery gates; D2/D3A/D3B closure; a fresh exact-scope tool-disabled Gate A diagnosis against the ratified policy; separately approved pure authority/resolver/schema/RLS implementation; independent source acceptance; D6 real SSR-cookie/RLS/revocation/concurrency verification.
 
-**Current boundary:** Governance documents only. No private-source transmission, Claude invocation, role grant, auth session, DB/Supabase, migration, package, implementation, executable test, stage, commit, push, PR mutation, Ready, merge, Android, provider, staging, deployment, or production action is authorized.
+**Current boundary:** Exact four governance/specification documents only. No private-source transmission, Claude invocation, role grant, auth session, DB/Supabase, migration, package, implementation, executable test, stage, commit, push, PR mutation, Ready, merge, Android, provider, staging, deployment, or production action is authorized.
 
-**Exit gate:** Verify the exact three-document governance diff, directive hash, formal-role contradiction, ratified/proposed/unresolved distinctions, closed command disposition, D4/D6 separation, and protected metadata; then request a separate Owner stage/local-commit gate.
+**Exit gate:** Verify the exact four-document governance/specification diff, directive hash, formal-role reconciliation, all 18 commands and five surfaces, future-location denial, named initial operator role, implementation-deny boundary, D4/D6 separation, and protected metadata; then request a separate Owner stage/local-commit gate.
+
+### INV001-P19-BOOK-D4A-R1 — Owner authority decision and formal-spec reconciliation
+
+**Decision marker:** `INV001_P19_BOOK_D4A_OFFICE_AZ_OPERATOR_AUTHORITY_OWNER_DECISION_V1`.
+
+**Owner-ratified policy:** Warehouse operator may read assigned-location inventory, confirm inbound, pick, pack, ship, dispatch/receive transfers, and enter stocktake quantities. Warehouse manager adds returns/restock, reasoned adjustment, transfer request, stocktake open/complete, and scoped audit read. Super admin adds the same functions across the three current locations, all-location audit, operator management, snapshot export, and guarded snapshot import/recovery. Reservation and orchestration commands remain service-identity only. Dealer roles receive no Office AZ inventory authority.
+
+**Safety boundary:** Snapshot import/recovery requires re-authentication, reason, pre-backup, explicit confirmation, and append-only audit. Future locations require a new Owner decision and explicit server-side activation. Unknown capabilities, ambiguous assignments, inactive/suspended/revoked operators, stale authority, and missing location grants deny before any Foundation call.
+
+**Implementation status:** `NOT_CONFIGURED`. Policy approval and the initial warehouse-operator designation for 小尾野氏 do not create an account, Auth claim, database row, RLS policy, GRANT, migration, or live permission.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
