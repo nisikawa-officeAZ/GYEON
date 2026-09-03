@@ -3764,3 +3764,109 @@ not_authorized:
 decision: REGISTER_BOOK_C1_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_THE_EXACT_THREE_PATH_GOVERNANCE_DIFF_AND_PROTECTED_METADATA, THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_LOCAL_COMMIT_NORMAL_PUSH_AND_DRAFT_PR. PRIVATE_FILE_TRANSMISSION_AND_CLAUDE_INVOCATION_REMAIN_A_LATER_SEPARATE_GATE."
 ```
+
+## INV001-P19-BOOK-C1 — Read-only diagnosis and Codex corrected acceptance
+
+```yaml
+phase: INV001_P19_BOOK_C1_FOUNDATION_V2_CONSUMER_BINDING_DIAGNOSIS
+status: DIAGNOSIS_COMPLETE_SUBSTANCE_ACCEPTED_WITH_MANDATORY_CODEX_CORRECTIONS
+date: 2026-09-03
+append_only: true
+book_pr:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/53
+  state: OPEN_DRAFT
+  base: main
+  head: dd2bb58a68ddffbc6c87efe5c1dd4265eb0785ae
+  tree: 5f71abe6345d2ec6abe86b62089e11d7152d1869
+  parent: f75242a1e79bb0dc6c18926cf8a004874d4ec278
+  changed_paths: 3
+  checks: PASS_2_OF_2
+claude_execution:
+  invocations: 1
+  tools: DISABLED
+  mode: READ_ONLY
+  exit_code: 0
+  result_marker: INV001_P19_BOOK_C1_FOUNDATION_V2_CONSUMER_BINDING_DIAGNOSIS_RESULT_V1
+  reported_verdict: PASS_DIAGNOSIS_COMPLETE
+  book_files: 31
+  foundation_files: 10
+  macbook_preflight_hashes: PASS_41_OF_41
+codex_acceptance:
+  marker: INV001_P19_BOOK_C1_CODEX_CONDITIONAL_ACCEPTANCE_AND_CORRECTION_V1
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/53#issuecomment-5518147879
+  verdict: ACCEPT_DIAGNOSIS_SUBSTANCE_WITH_MANDATORY_GOVERNANCE_CORRECTIONS
+accepted_findings:
+  existing_book_foundation_bridge: NOT_PROVEN_IN_ALLOWED_SCOPE
+  runtime_delivery_mechanism: NOT_CONFIGURED
+  product_identity_binding: NOT_CONFIGURED
+  book_local_inventory_authority: COMPATIBILITY_ONLY
+  dual_or_shadow_write: PROHIBITED
+  android_m1_m6: NOT_CONFIGURED
+identified_conflicts:
+  - LOCATION_COUNT
+  - RESERVATION_CALCULATION
+  - ADJUSTMENT_TAXONOMY
+  - STOCKTAKE_MODELS
+  - PRODUCT_IDENTITY
+mandatory_corrections:
+  wildcard_allowlist: REJECTED
+  android_literal_paths: DEFER_UNTIL_ANDROID_PROJECT_AND_M1_M6_ARE_FIXED
+  partial_result: FAIL_CLOSED
+  actor_operator_distinction: REQUIRED
+  protected_paths: PATHNAMES_REFERENCED_CONTENT_NOT_READ_OR_TRANSMITTED
+actions:
+  source_edits: 0
+  tests: 0
+  git_or_pr_mutation_by_claude: 0
+  db_supabase_provider_http_android_deployment_production: 0
+decision: CLOSE_C1_DIAGNOSIS_WITH_CODEX_CORRECTIONS_NO_IMPLEMENTATION_AUTHORITY
+next: INV001_P19_BOOK_C2_FOUNDATION_RUNTIME_DELIVERY_AND_PRODUCT_IDENTITY_DECISION
+```
+
+## INV001-P19-BOOK-C2 — Runtime delivery and product identity decision governance candidate
+
+```yaml
+phase: INV001_P19_BOOK_C2_FOUNDATION_RUNTIME_DELIVERY_AND_PRODUCT_IDENTITY_DECISION
+status: DIRECTIVE_CREATED_LOCALLY_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The owner approved posting the C1 correction and proceeding to creation of the next directive. This authorizes only the local C2 governance candidate; it does not authorize Git delivery, private-file transmission, Claude invocation, tests, or implementation."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  c1_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/53
+  c1_head: dd2bb58a68ddffbc6c87efe5c1dd4265eb0785ae
+  c1_tree: 5f71abe6345d2ec6abe86b62089e11d7152d1869
+foundation:
+  repository: nisikawa-officeAZ/detaileros-inventory-foundation
+  fixed_commit: c0cc42de8ef1e95482b31a981a7d2d6e2571fa8e
+  fixed_tree: c2e925295e1e0384010e6744a5c7ec15cb7668a1
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_C2_FOUNDATION_RUNTIME_DELIVERY_AND_PRODUCT_IDENTITY_DECISION.md
+  sha256: 595c643697d6735e537d93902abeb262acad120f4345d42c9d0481beb05b2c99
+  result_marker: INV001_P19_BOOK_C2_FOUNDATION_RUNTIME_DELIVERY_AND_PRODUCT_IDENTITY_DECISION_RESULT_V1
+  proposed_branch: agent/inv001-p19-book-c2-runtime-delivery-product-identity-decision
+private_read_scope_proposed:
+  book_exact_paths: 16
+  foundation_exact_paths: 4
+  transmission_authorized: false
+decision_scope:
+  runtime_delivery: OWNER_DECISION_REQUIRED
+  product_identity: OWNER_DECISION_REQUIRED
+  preferred_candidates_to_evaluate:
+    runtime_delivery: PRIVATE_IMMUTABLE_PACKAGE_ARTIFACT
+    product_identity: FOUNDATION_IMMUTABLE_PRODUCT_ID_WITH_EXPLICIT_BOOK_MAPPING
+governance_candidate_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_C2_FOUNDATION_RUNTIME_DELIVERY_AND_PRODUCT_IDENTITY_DECISION.md
+not_authorized:
+  - stage_commit_push_or_pr_mutation
+  - private_file_transmission_or_claude_invocation
+  - tests_typecheck_build_install_or_package_publication
+  - source_route_rpc_or_generated_client_implementation
+  - product_remap_table_migration_backfill_or_dual_write
+  - db_supabase_provider_android_deployment_or_production
+decision: REGISTER_LOCAL_C2_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_AND_PROTECTED_METADATA, THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
+```
