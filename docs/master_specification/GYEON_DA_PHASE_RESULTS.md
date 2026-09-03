@@ -4237,3 +4237,77 @@ not_authorized:
 decision: REGISTER_LOCAL_D3A_GOVERNANCE_CANDIDATE_ONLY_AND_KEEP_IMPLEMENTATION_BLOCKED
 next: "VERIFY_EXACT_THREE_PATH_GOVERNANCE_DIFF_DIRECTIVE_HASH_D2_BLOCKER_GATE_ORDER_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
 ```
+
+## INV001-P19-BOOK-D3B — Product identity mapping governance candidate
+
+```yaml
+phase: INV001_P19_BOOK_D3B_PRODUCT_IDENTITY_MAPPING
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_BLOCKED_UNTIL_D2_AND_D3A_CLOSED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner authorized continued Book work while Foundation Studio is temporarily unavailable. This permits creation and local verification of the D3B governance candidate only; no private-source transmission, Claude invocation, package/registry action, migration/DB connection, implementation, executable test, stage, commit, push, PR mutation, provider, Android, staging, deployment, or production action is included."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: 00f2df7dc5574d0a06a219cb51b4629f1f337f9b
+  fixed_tree: b770a987a5573beb4249bfef68dea2926e751f82
+  proposed_branch: agent/inv001-p19-book-d3b-product-mapping-governance
+dependencies:
+  d2_private_package_consumer: INCOMPLETE
+  d3a_foundation_persistence_implementation: INCOMPLETE
+  d3b_gate_a_authorized: false
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D3B_PRODUCT_IDENTITY_MAPPING.md
+  diagnosis_marker: INV001_P19_BOOK_D3B_PRODUCT_IDENTITY_MAPPING_DIAGNOSIS_RESULT_V1
+  implementation_marker: INV001_P19_BOOK_D3B_PRODUCT_IDENTITY_MAPPING_IMPLEMENTATION_RESULT_V1
+  disposable_marker: INV001_P19_BOOK_D3B_PRODUCT_IDENTITY_MAPPING_DISPOSABLE_RESULT_V1
+governance_candidate_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D3B_PRODUCT_IDENTITY_MAPPING.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+authority:
+  foundation_product_id: CANONICAL_FOR_FOUNDATION_INVENTORY
+  gyeon_products_id: BOOK_CATALOGUE_REFERENCE
+  mapping: BOOK_OWNED_ONE_TO_ONE_INTEGRATION_MAPPING
+  jan_sku_name: REVIEW_EVIDENCE_ONLY_NEVER_AUTHORITY
+  second_product_master: PROHIBITED
+  gyeon_products_mutation_by_d3b: PROHIBITED
+fail_closed:
+  missing_mapping: NOT_CONFIGURED
+  duplicate_ambiguous_stale_retired_inactive_cross_owner_malformed: DENY
+  automatic_jan_sku_name_mapping: PROHIBITED
+  silent_remap_or_repair: PROHIBITED
+  inventory_or_ec_quantity_without_mapping: PROHIBITED
+gate_order:
+  - D2_AND_D3A_FULL_CLOSURE
+  - D3B_GATE_A_TOOL_DISABLED_READ_ONLY_DIAGNOSIS
+  - D3B_GATE_B0_SUPABASE_CLI_MIGRATION_PATH_RESERVATION
+  - D3B_GATE_B1_UNCOMMITTED_IMPLEMENTATION
+  - D3B_GATE_C_FRESH_DISPOSABLE_VERIFICATION
+  - SEPARATE_STAGE_COMMIT_PUSH_REVIEW_READY_MERGE
+migration_path:
+  c3_historical_proposal: supabase/migrations/20260903011000_foundation_product_mapping.sql
+  hand_created_or_guessed_path: PROHIBITED
+  required_creation_method: supabase_migration_new_foundation_product_mapping_after_separate_gate
+  exact_path_reconciliation_required_before_sql: true
+proposed_implementation_paths:
+  - CLI_CREATED_MIGRATION_PATH_TO_BE_RECONCILED
+  - src/lib/inventory/foundation/foundation-product-mapping.ts
+  - src/lib/inventory/foundation/foundation-product-mapping.test.ts
+  - scripts/e2e/inv001-foundation-product-mapping-disposable.mjs
+verification_contract:
+  rls_and_exact_grants: REQUIRED
+  genuine_trusted_claims: REQUIRED
+  separate_connection_uniqueness_race: REQUIRED
+  append_only_mapping_evidence: REQUIRED
+  unchanged_gyeon_products_and_existing_inventory: REQUIRED
+  shared_preview_staging_production: NOT_AUTHORIZED
+not_authorized:
+  - private_source_transmission_or_claude_invocation
+  - package_registry_migration_db_or_schema_action
+  - implementation_or_executable_test
+  - stage_commit_push_pr_ready_or_merge
+  - d4_d5_d6_d7_android_provider_deployment_staging_or_production
+decision: REGISTER_LOCAL_D3B_GOVERNANCE_CANDIDATE_ONLY_AND_KEEP_IMPLEMENTATION_BLOCKED
+next: "VERIFY_EXACT_THREE_PATH_GOVERNANCE_DIFF_DIRECTIVE_HASH_DEPENDENCY_BLOCKERS_MAPPING_AUTHORITY_FAIL_CLOSED_RULES_AND_PROTECTED_METADATA_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
+```
