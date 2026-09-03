@@ -740,7 +740,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-C3 — Owner decision ratification
 
-**Status:** LOCAL THREE-PATH GOVERNANCE CANDIDATE CREATED / UNCOMMITTED / NO IMPLEMENTATION AUTHORIZED.
+**Status:** CLOSED / PR #55 MERGED NORMALLY TO `main` / NO IMPLEMENTATION AUTHORIZED BY C3.
 
 **Objective:** Convert the accepted C2 Owner decisions into Book governance and publish literal, non-overlapping proposed allowlists for later Book phases without starting implementation.
 
@@ -762,9 +762,31 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Future phase separation:** D1 pure adaptor; D2 package consumer; D3A persistence; D3B product mapping; D4 authenticated server boundary; D5 compatibility UI; D6 disposable/authenticated verification; D7 legacy retirement. Android remains a separate unresolved project gate. Every proposed Book path is literal and non-overlapping in the C3 directive.
 
-**Current authorization:** The Owner authorized creation of the C3 directive and updates to this plan and ledger only. No branch creation, stage, commit, push, PR mutation, Claude/private-source transmission, package publication, dependency installation, implementation, tests, DB/Supabase, Android, provider, deployment, or production action is authorized.
+**Delivery and closure:** The exact three-path C3 candidate was committed as `ecab1afd58e1df4c0e2b022f3b7268cebd772dfb`, tree `e341a26719354cbdc193d6414e0175771b67d05f`, normally pushed, and opened as PR #55. MacBook Codex independently verified the literal three-path delta and passing checks. After separate Owner approvals, PR #55 was marked Ready and merged normally to `main` as `8516506fe700348b4e8436fbc6d53ce44747ca2e`, tree `e341a26719354cbdc193d6414e0175771b67d05f`.
 
-**Exit gate:** Verify the exact three-path diff, directive hash, literal allowlists, and protected metadata. C3 stage/local commit requires the next explicit Owner gate.
+**Exit gate:** C3 is closed. Its merge authorizes no implementation, package, DB, UI, Android, staging, or production action. D1 begins only through the separate governance candidate below.
+
+### INV001-P19-BOOK-D1 — Pure adaptor contract
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / NO PRIVATE-SOURCE TRANSMISSION OR IMPLEMENTATION AUTHORIZED.
+
+**Objective:** Define and then, through separately approved gates, implement the smallest pure TypeScript Book adaptor contract that forwards the sealed Foundation V2 commands and snapshot boundary without copying Foundation rules or contacting a package, database, route, provider, UI, Android, or deployment environment.
+
+**Fixed authority:** Book `main` commit `8516506fe700348b4e8436fbc6d53ce44747ca2e`, tree `e341a26719354cbdc193d6414e0175771b67d05f`; Foundation commit `c0cc42de8ef1e95482b31a981a7d2d6e2571fa8e`, tree `c2e925295e1e0384010e6744a5c7ec15cb7668a1`.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D1_PURE_ADAPTOR_CONTRACT.md`. Proposed branch: `agent/inv001-p19-book-d1-pure-adaptor-contract`.
+
+**Gate separation:** Gate A is one separately authorized tool-disabled read-only diagnosis over exactly 13 Book and 4 Foundation files. Gate B may start only after Codex accepts Gate A and the Owner separately authorizes editing and focused verification. Gate B is restricted to three new paths:
+
+1. `src/lib/inventory/foundation/foundation-adaptor-types.ts`
+2. `src/lib/inventory/foundation/foundation-adaptor-core.ts`
+3. `src/lib/inventory/foundation/foundation-adaptor-core.test.ts`
+
+**Required boundary:** Preserve all 18 Foundation command names and `INV001-P18_RUNTIME_SNAPSHOT_V3`; keep actor/operator and canonical identities explicit; inject a pure runtime port; forward once with no retry or automatic command chaining; return typed fail-closed results; and import neither package, persistence, legacy Book core, route, UI, nor Foundation source.
+
+**Current authorization:** Creation and local verification of the D1 governance candidate only. Stage, commit, push, PR mutation, private-source transmission, Claude invocation, source implementation, tests, dependency/package work, DB/Supabase, UI, Android, provider, deployment, and production remain separate gates.
+
+**Exit gate:** Verify the exact three-path governance diff, directive hash, protected metadata, and literal read/implementation allowlists; then request a separate Owner gate for stage and local commit.
 
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
