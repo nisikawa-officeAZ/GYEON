@@ -64,6 +64,7 @@ rollback_or_recovery: ""
 decision: ""
 next: ""
 ```
+
 ## GDA-0 — Baseline audit and plan ratification
 
 ```yaml
@@ -4847,4 +4848,96 @@ not_authorized:
   - android_staging_production_or_deployment
 decision: REGISTER_OWNER_RATIFIED_ROUTE_SEPARATION_AND_KEEP_D5_IMPLEMENTATION_BLOCKED
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_ROUTE_SEPARATION_C3_RESERVATION_CORRECTION_D2_D4_DEPENDENCY_WALL_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — Local disposable DB acceptance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_ACCEPTANCE
+marker: GDA_POSTAL_R5_DISPOSABLE_DB_PASS
+status: PASS_LOCAL_DISPOSABLE_DB_DEVELOPMENT_STAGING_PRODUCTION_NOT_CONTACTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner separately approved PR #67 harness identity repair, exact-path local commits and normal non-force pushes, the first local disposable attempt, the one-file evidence-detail correction, and one fresh rerun. The Owner then approved recording the accepted result in exactly this verification plan and append-only ledger. This record does not authorize stage, commit, push, PR mutation, Development preflight, hosted migration application, real Japan Post CSV import, provider, Ready, merge, staging, production, or deployment."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  pull_request_state: OPEN/Draft
+  base_branch: main
+  changed_files: 50
+  accepted_head: 1ea1b5f2e3970184610721f261607b5e3f64656c
+  accepted_tree: 573c1db1526331c0cd569622da2a68168b118786
+  upstream_ahead_behind_after_runtime: "0 0"
+  github_checks:
+    vercel: PASS
+    vercel_preview_comments: PASS
+source_contract:
+  migration: supabase/migrations/20260901001246_jp_postal_master.sql
+  migration_sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+  harness_files: 7
+  r4_source_test_paths: 5
+  protected_paths: 4
+  source_contract_mismatches: 0
+attempt_history:
+  first_attempt:
+    suffix: 20260903T085447Z-5af594
+    classification: CHANGES_REQUIRED_HARNESS
+    reason: "DB behavior passed, but three successful non-ASCII safety assertions emitted a contradictory failure-detail literal. The evidence defect was not accepted as formal PASS."
+    aggregate_manifest_sha256: 0e36c5a43a7fd689cf323b767f74eaf14ab3be174669ecdcb5473cee13f0058b
+    runtime_removed: true
+    containers_removed: true
+    suffix_reused: false
+  evidence_detail_repair:
+    commit: 1ea1b5f2e3970184610721f261607b5e3f64656c
+    tree: 573c1db1526331c0cd569622da2a68168b118786
+    changed_path: scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+    normal_non_force_push: true
+accepted_attempt:
+  suffix: 20260903T090318Z-54ce39
+  runtime_root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5.20260903T090318Z-54ce39
+  retained_evidence: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260903T090318Z-54ce39
+  aggregate_manifest_sha256: 92af4ed809cd42476810a00786b0c6d7d86888186f23fc761fde2c9f5c2cff31
+  was_burned: false
+  fresh:
+    migration_list_state: BOTH
+    migration_ledger_count: 1
+    postal_pgtap: PASS_75_OF_75
+    runtime_contract_pgtap: PASS_20_OF_20
+    real_auth_postgrest: PASS_9_OF_9
+    db_lint_error_count: 0
+    secret_scan: CLEAN
+    stop_exit: 0
+  import:
+    migration_list_state: BOTH
+    migration_ledger_count: 1
+    phase_1: PASS_3_OF_3
+    phase_2: PASS_25_OF_25
+    distinct_processes: true
+    corrected_non_ascii_evidence: PASS_3_OF_3
+    production_importer_validate_only_zero_client_zero_rpc: PASS
+    production_importer_loopback_rejection_before_client: PASS
+    secret_scan: CLEAN
+    stop_exit: 0
+  cleanup:
+    runtime_removal_exit: 0
+    runtime_removed: true
+    containers_removed: true
+    retained_artifact_hashes: MATCH
+non_blocking_warnings:
+  db_lint_existing_warning_count: 4
+  supabase_inbucket_config_deprecation: 1
+boundaries:
+  hosted_supabase_contacted: false
+  development_contacted: false
+  staging_contacted: false
+  production_contacted: false
+  provider_contacted: false
+  real_japan_post_csv_imported: false
+  git_changed_by_runtime: false
+  pr_ready: false
+  merged: false
+  deployed_by_this_phase: false
+decision: GDA_POSTAL_R5_DISPOSABLE_DB_PASS
+next: "Request a separate Owner gate for Development read-only migration-history preflight. Development migration apply and real Japan Post CSV import remain two later, separate Owner gates."
 ```
