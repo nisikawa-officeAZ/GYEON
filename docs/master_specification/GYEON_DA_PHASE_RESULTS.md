@@ -4703,3 +4703,79 @@ not_authorized:
 decision: REGISTER_D5A_GOVERNANCE_CANDIDATE_AND_KEEP_ALL_D5_RUNTIME_ACTIONS_BLOCKED
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_FIXED_BASE_24_READ_PATHS_CURRENT_LEGACY_CONFLICT_ROUTE_AUDIENCE_BLOCKER_C3_SCOPE_GATE_NO_FALLBACK_NO_DUAL_WRITE_D1_D4_DEPENDENCIES_D6_SEPARATION_AND_PROTECTED_METADATA_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
 ```
+
+## INV001-P19-BOOK-D2-Q1R1 — Foundation landing acceptance and package-publication hold
+
+```yaml
+phase: INV001_P19_BOOK_D2_Q1R1_FOUNDATION_LANDING_ACCEPTANCE_AND_PACKAGE_PUBLICATION_HOLD
+marker: INV001_P19_BOOK_D2_Q1R1_FOUNDATION_LANDING_ACCEPTANCE_AND_PACKAGE_PUBLICATION_HOLD_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_D2_BLOCKED_FOUNDATION_PACKAGE_UNPUBLISHED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner approved the Book D2 pre-start Foundation landing acceptance audit and creation of the formal instruction only. This authorizes an exact three-document local governance candidate and local documentation verification, but no private-source transmission, Claude invocation, Foundation edit/publication, package/registry action, credential request, dependency/lockfile/source/test change, executable application test, stage, commit, push, PR mutation, DB, Supabase, migration, Auth, provider, Android, deployment, staging, or production action."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: e69917e97df695b1ede9487969afb73381c22bd4
+  fixed_tree: 153bccf1babc279d323c38060c1678e645a7e5c9
+  branch: agent/inv001-p19-book-d2-q1r1-foundation-landing-hold
+  d2_governance_merge_pr: 57
+  d2_governance_merge_commit: 2e1df23f1aa64b7c9ca2a608f36f2dccd107cf7b
+foundation:
+  repository: nisikawa-officeAZ/detaileros-inventory-foundation
+  merge_pr: 79
+  merged_commit: a5764f7821b02769ef2d4fba40d432abdc76fa56
+  merged_tree: 958d3517cec45432131d41b4962d0676cd56aced
+  reviewed_source_commit: 9982d70aa358ebe2c1900d183a42eab7c8a0d65f
+  prior_main_parent: c0cc42de8ef1e95482b31a981a7d2d6e2571fa8e
+  q1r1_acceptance_comment: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5521647803
+landing_acceptance:
+  exact_changed_paths: 7
+  p18_base_preserved: PASS
+  p19_pr78_landing_identity: PASS
+  q1r1_self_reference_absent: PASS
+  artifact_hashes: PASS
+  combined_hash: 6c0e8015bf023f702fe2c81de08d5938f619e921100b975bf41261340526bbd5
+  focused_tests: PASS_5_OF_5_PLUS_5_OF_5_PLUS_16_OF_16
+  whole_suite: PASS_73_FILES_1030_TESTS
+  typecheck: PASS
+  github_ci: PASS
+  diff_check: PASS
+package_preflight:
+  name: detaileros-inventory-foundation
+  version: 0.1.0
+  private: true
+  main: NOT_CONFIGURED
+  exports: NOT_CONFIGURED
+  types: NOT_CONFIGURED
+  files: NOT_CONFIGURED
+  build_script: NOT_CONFIGURED
+  publish_script: NOT_CONFIGURED
+  immutable_artifact_integrity_catalogue_provenance: NOT_PROVEN
+registry_evidence:
+  github_packages_list: BLOCKED_HTTP_403_READ_PACKAGES_SCOPE_REQUIRED
+  classification: NOT_VERIFIED_CREDENTIAL_SCOPE
+  package_absence_claimed: false
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_Q1R1_FOUNDATION_LANDING_ACCEPTANCE_AND_PACKAGE_PUBLICATION_HOLD.md
+  sha256: 333e013e99a6f72ffabf348a3766b7d0f3e6aadb01f29d0bec8e3aa8335048b5
+  result_marker: INV001_P19_BOOK_D2_Q1R1_FOUNDATION_LANDING_ACCEPTANCE_AND_PACKAGE_PUBLICATION_HOLD_RESULT_V1
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_Q1R1_FOUNDATION_LANDING_ACCEPTANCE_AND_PACKAGE_PUBLICATION_HOLD.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+decision:
+  foundation_landing: ACCEPTED
+  d2_gate_a: BLOCKED_FOUNDATION_PACKAGE_UNPUBLISHED
+  d2_gate_b1: BLOCKED
+  d2_gate_b2: BLOCKED
+  book_must_not_publish_or_repair_foundation: true
+  next_unblocker: SEPARATE_OWNER_AUTHORIZED_FOUNDATION_IMMUTABLE_PRIVATE_PACKAGE_PUBLICATION_PHASE
+not_authorized:
+  - private_source_transmission_or_claude_invocation
+  - foundation_edit_build_publish_or_registry_login
+  - package_install_dependency_lockfile_wrapper_or_d1_change
+  - executable_application_test_stage_commit_push_pr_ready_or_merge
+  - db_supabase_migration_auth_provider_android_deployment_staging_or_production
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_FOUNDATION_PR79_LANDING_PACKAGE_BLOCKER_REGISTRY_SCOPE_CLASSIFICATION_D2_HOLD_FOUNDATION_OWNERSHIP_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_A_SEPARATE_OWNER_GATE_FOR_STAGE_AND_LOCAL_COMMIT."
+```
