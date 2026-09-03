@@ -819,6 +819,32 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Exit gate:** Verify the exact three-path governance candidate, directive hash, current package blocker, literal read/change scopes, and protected metadata; then request a separate Owner gate for stage and local commit. Gate A remains blocked until Foundation publication evidence is independently accepted.
 
+### INV001-P19-BOOK-D3A — Foundation persistence governance preparation
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / IMPLEMENTATION BLOCKED UNTIL D2 FULL CLOSURE.
+
+**Objective:** Predefine the Book-side durable persistence, least-privilege RLS/grant, transaction, idempotency, optimistic-concurrency, append-only audit, snapshot, recovery, and disposable-verification gates required by the sealed Foundation V2 runtime without creating or applying a migration.
+
+**Fixed Book authority:** `main` commit `2e1df23f1aa64b7c9ca2a608f36f2dccd107cf7b`, tree `1116b7e768a1a1ca1cfd5bff99263f235cf6bcb8`. D2 governance is merged through PR #57, but D2 package publication, dependency pin, and runtime wrapper remain incomplete.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D3A_FOUNDATION_PERSISTENCE.md`. Proposed branch: `agent/inv001-p19-book-d3a-persistence-governance`.
+
+**Current boundary:** Governance preparation only. No private-source transmission, Claude invocation, package/registry access, migration creation, database connection, implementation, executable test, stage, commit, push, PR mutation, provider, Android, deployment, staging, or production action is authorized.
+
+**Gate separation:**
+
+1. Gate A: after D2 closure, separately authorized tool-disabled read-only persistence diagnosis.
+2. Gate B0: separately authorized local Supabase CLI migration-path creation and literal allowlist reconciliation; the historical C3 filename remains a proposal, not a hand-created migration.
+3. Gate B1: separately authorized four-path uncommitted migration/adaptor/test/harness candidate.
+4. Gate C: separately authorized fresh disposable PostgreSQL/Supabase verification with genuine request claims and separate-connection concurrency.
+5. Stage/commit, push/Draft PR, independent review, Ready, merge, and any shared/staging/production apply remain separate gates.
+
+**Proposed implementation scope:** one CLI-created Foundation migration, `foundation-persistence-adaptor.ts`, its focused test, and `inv001-foundation-persistence-disposable.mjs`. Exact migration path must be reconciled before implementation. Existing migrations and local inventory cores stay unchanged.
+
+**Security posture:** Office AZ is the only currently authorized live inventory owner; SQL is persistence, not business-rule authority; exposed tables require RLS; authentication alone is not authorization; browser raw writes, service-role exposure, user-metadata authorization, public privileged functions, dual-write, retries, rule duplication, and production in-memory fallback are prohibited.
+
+**Exit gate:** Verify the exact three-path governance-only diff and directive hash, then request a separate Owner gate for stage/local commit. D3A Gate A remains blocked until D2 is fully closed and its merged package wrapper identity is fixed.
+
 ### GDA-UI-S8A — Estimate/pricing settings top-navigation correction
 
 **Objective:** Correct the owner-rejected estimate/pricing settings navigation before deeper settings-page redesign. The `見積・価格 / ESTIMATES & PRICING` group must expose exactly four real cards in the approved order, remove misleading state badges from those four navigation cards, and replace unrelated generic imagery with dedicated semantic line icons while preserving the accepted TOP visual language and existing business behavior.
