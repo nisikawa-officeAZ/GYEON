@@ -1546,6 +1546,57 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 - Evidence class is `E2_LOCAL_DISPOSABLE_DB`. No hosted Supabase project, shared/staging/production database, external provider, Preview, or production environment was contacted. No migration was applied outside the fresh local disposable runtime.
 - PR #44 remains `OPEN/Draft`. Ready conversion, merge, migration promotion/application, deployment, and E3 environment verification remain separate owner-approval gates.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5-CR0 — Clean replacement Development pre-execution plan
+
+**Status:** PLAN CANDIDATE READY / EXECUTION BLOCKED / PROJECT NOT CREATED.
+
+**Objective:** Convert the accepted R5 local disposable result and the blocked
+Development schema/ledger preflight into a safe serial clean-replacement plan
+without applying the postal migration to the drifted Development project.
+
+**Authority:**
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`.
+Planning HEAD/tree is
+`297ad4b23731a273c134c1ef0f00aff832aedc57` /
+`35d572270f84134f8254e1377ccbd198fc67841d`; PR #67 remains OPEN/Draft.
+
+**Blocking reconciliation:** Current Git contains 113 top-level formal
+migration SQL files. The accepted R5 runtime staged 112 and excluded only the
+protected LINE migration, while the older B-R3 manifest had 101 files, 98
+executable paths, and excluded the provisioning pair plus LINE. A new literal
+manifest decision is mandatory before any replacement-project creation or
+hosted replay. The Owner ratified `ap-northeast-1` on 2026-09-03 as the clean
+replacement region because Staging and Production already use that Japan
+region, whereas current Development uses `ap-northeast-2`. Any later request
+with another region must stop as a plan change.
+
+**Serial boundary:** Plan acceptance; current literal-manifest reconciliation;
+conditional prerequisite repair; fresh disposable full-chain acceptance;
+cost/organization/name/region/shutdown confirmation; empty project creation;
+exact hosted replay; read-only old-Development export manifest; separately
+approved retained data/Auth/Storage import; separately approved configuration
+and real Japan Post CSV import; old/new acceptance; Development cutover; and a
+later independent old-project retirement decision. Every item is a separate
+owner gate.
+
+**Current four-document allowlist:**
+
+1. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md` (new)
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+4. `docs/master_specification/INDEX.md`
+
+**Current boundary:** Documentation candidate only. No Supabase project, cost
+confirmation, migration replay/apply, database write, data export/import,
+Storage/Auth/provider/Vercel mutation, secret rotation, postal CSV import,
+cutover, retirement, stage, commit, push, PR mutation, Ready, merge, or
+deployment is authorized.
+
+**Exit:** Independently verify the exact four-document diff. Stage/local commit
+and normal push require later separate explicit approvals. The next executable
+phase is not project creation; it is a committed Claude-targeted read-only CR1
+manifest-reconciliation gate.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

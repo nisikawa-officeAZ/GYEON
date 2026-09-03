@@ -17,6 +17,7 @@ The following supporting documents govern the current GYEON Detailer Agent compl
 | Agent Session Bootstrap | `../../AGENTS.md` | Direction locked; committed | Mandatory first read for new Codex, Claude, Cursor, and Studio sessions. |
 | GYEON DA Completion Plan | `GYEON_DA_COMPLETION_PLAN.md` | Direction ratified; committed | Current execution authority: mission, ownership, fixed decisions, residual register, strict phase order, and completion standard. |
 | GYEON DA Phase Results | `GYEON_DA_PHASE_RESULTS.md` | Active ledger | Append-only phase evidence, acceptance decisions, Git state, verification, and external-action record. |
+| Postal R5 Clean Replacement Development Pre-execution Plan | `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md` | Plan candidate; execution blocked | Serial clean-replacement gates, current 113-file manifest contradiction, region/cost/retention decisions, acceptance, cutover, and rollback boundary. |
 | Reservation Conversion Contract | `GYEON_DA_RESERVATION_CONVERSION_CONTRACT.md` | Accepted, committed, and pushed at commit 09c564de; implementation separately unauthorized | Reservation → estimate → work-order conversion contract: prefill authority, direct-work-order exception, state machine, idempotency, numbering, and RLS/authorization boundary. |
 
 ---

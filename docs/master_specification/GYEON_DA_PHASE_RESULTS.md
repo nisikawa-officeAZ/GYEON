@@ -5024,3 +5024,50 @@ boundaries:
 decision: GDA_POSTAL_R5_DEVELOPMENT_READ_ONLY_PREFLIGHT_BLOCKED_SCHEMA_DRIFT
 next: "Keep current Development read-only. Do not apply the postal target or run bulk db push. Continue only through the already accepted clean-replacement Development gate sequence; project creation, retained-data copy, full replay, acceptance, cutover, real Japan Post CSV import, and retirement each remain separately authorized operations."
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — Clean replacement Development pre-execution plan candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION
+marker: GDA_POSTAL_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN_V1
+status: PLAN_CANDIDATE_READY_EXECUTION_BLOCKED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner approved proceeding to the clean replacement Development pre-execution planning phase only. No project creation, cost confirmation, migration replay/application, database write, data export/import, provider/configuration mutation, stage, commit, push, PR mutation, Ready, merge, or deployment is authorized by this plan candidate."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  pull_request_state_at_preflight: OPEN/Draft
+  planning_head: 297ad4b23731a273c134c1ef0f00aff832aedc57
+  planning_tree: 35d572270f84134f8254e1377ccbd198fc67841d
+current_manifest_measurement:
+  top_level_formal_sql_files: 113
+  r5_staged: 112
+  r5_excluded_protected: 1
+  r5_runtime_manifest_sha256: 722b59ffe2b2252e826783b125df2ac1b4d2468d46743c01da0e726fe2543326
+  current_line_only_exclusion_manifest_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  current_three_exclusion_manifest_sha256: 6421db3345c185a72fb14cc255a32d47f0e62e5b92c888a352d0a4a1da18249b
+blocking_reconciliations:
+  migration_manifest: "R5 excluded LINE only; accepted historical B-R3 excluded the provisioning pair plus LINE. One current literal manifest must be owner-ratified and freshly disposable-proved."
+  region: OWNER_RATIFIED_AP_NORTHEAST_1
+  region_decision_date: 2026-09-03
+  organization_project_name_shutdown_date: LATER_PROJECT_CREATION_GATE
+plan_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/INDEX.md
+boundaries:
+  project_created: false
+  cost_confirmation_requested: false
+  development_database_modified: false
+  migration_applied: false
+  data_exported_or_imported: false
+  real_japan_post_csv_imported: false
+  auth_storage_provider_vercel_modified: false
+  git_staged_committed_or_pushed: false
+  pr_ready_merged_or_deployed: false
+decision: PLAN_CANDIDATE_READY_EXECUTION_BLOCKED
+next: "Independently verify this exact four-document candidate with the replacement region fixed at ap-northeast-1. After separate documentation delivery gates, author and deliver a Claude-targeted read-only CR1 current-manifest reconciliation directive. Project creation remains blocked."
+```

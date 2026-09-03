@@ -1,0 +1,310 @@
+# GDA Estimate Wizard Postal Master R5 — Clean Replacement Development Pre-execution Plan
+
+## 1. Status and purpose
+
+| Field | Value |
+|---|---|
+| Phase | `GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION` |
+| Marker | `GDA_POSTAL_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN_V1` |
+| Status | `PLAN_CANDIDATE_READY_EXECUTION_BLOCKED` |
+| Date | 2026-09-03 |
+| Repository | `nisikawa-officeAZ/GYEON` |
+| Branch | `agent/gda-estimate-ocr-postal-clean-replacement-r1` |
+| Planning HEAD / tree | `297ad4b23731a273c134c1ef0f00aff832aedc57` / `35d572270f84134f8254e1377ccbd198fc67841d` |
+| Pull request | [PR #67](https://github.com/nisikawa-officeAZ/GYEON/pull/67), OPEN/Draft at planning preflight |
+
+This document defines the serial gates required to replace the drifted
+Development Supabase project with a clean project built from an accepted Git
+migration manifest. It is an execution plan only. It does not create a
+project, apply SQL, export or import data, change a provider, change Vercel,
+rotate a secret, cut over an application, retire the old project, stage,
+commit, or push Git changes.
+
+## 2. Binding facts
+
+1. Current Development is `DealerOS-Dev`, ref `fbieiotihlmpfzybowbt`, region
+   `ap-northeast-2`, PostgreSQL `17.6`, and must remain read-only.
+2. Its remote migration ledger contains only `000` and `001`, while the live
+   schema contains later objects and partial later changes. The accepted
+   classification is
+   `MANUAL_APPLY_PARTIAL_APPLY_AND_UNRECORDED_LEDGER_MIXED_SCHEMA_DRIFT`.
+3. Direct application of
+   `supabase/migrations/20260901001246_jp_postal_master.sql` is unsafe because
+   its required `public.wiz_is_any_active_member()` dependency and the target
+   postal objects are absent.
+4. Gate B-R3A already selected a clean replacement Development project and
+   rejected in-place migration-history relabeling. Side-by-side forward
+   reconciliation is fallback only.
+5. R5 accepted a loopback-only PostgreSQL 17 disposable run at source commit
+   `1ea1b5f2e3970184610721f261607b5e3f64656c`; aggregate retained-evidence
+   SHA-256 is
+   `92af4ed809cd42476810a00786b0c6d7d86888186f23fc761fde2c9f5c2cff31`.
+   The postal migration SHA-256 remains
+   `76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d`.
+6. R5 proved local disposable behavior only. It did not prove a hosted
+   replacement, retained-data import, real Japan Post CSV import, cutover, or
+   production behavior.
+
+## 3. Blocking manifest contradiction
+
+The old Gate B-R3C/R3D manifest was measured when Git contained 101 migration
+files. It selected 98 executable paths and excluded exactly:
+
+1. `supabase/migrations/20260731115631_gyeon_dealer_provisioning.sql`
+2. `supabase/migrations/20260801000649_gyeon_provisioning_pin_function_search_path.sql`
+3. `supabase/migrations/20260801110110_line_link_tokens.sql`
+
+The current planning HEAD contains 113 top-level formal migration SQL files.
+The accepted R5 harness staged 112 and excluded only the protected LINE
+migration. Its retained `migration-manifest.txt` contains 112 `staged` rows,
+one `excluded_protected` row, and SHA-256
+`722b59ffe2b2252e826783b125df2ac1b4d2468d46743c01da0e726fe2543326`.
+
+Two current source-manifest candidates therefore exist:
+
+| Candidate | Executable paths | Exclusions | Current aggregate SHA-256 |
+|---|---:|---:|---|
+| R5-equivalent | 112 | LINE only | `0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb` |
+| Old B-R3 policy carried forward | 110 | provisioning pair plus LINE | `6421db3345c185a72fb14cc255a32d47f0e62e5b92c888a352d0a4a1da18249b` |
+
+The aggregate values above are planning measurements produced from sorted
+`SHA-256 path` rows at the planning HEAD; they are not authorization to replay
+either candidate. A new literal manifest decision is mandatory. Project
+creation and hosted replay are blocked until that decision is documented,
+independently verified, committed, and normally pushed.
+
+The LINE migration remains metadata-only. Its content must not be opened,
+read, diffed, copied, staged, or executed. GYEON partner onboarding remains
+disabled unless a separate owner-approved phase explicitly changes that
+business decision.
+
+## 4. Region and project identity decision
+
+The Owner ratified `ap-northeast-1` on 2026-09-03 as the replacement
+Development region. The current environments are split:
+
+- current Development: `ap-northeast-2`;
+- Staging and Production: `ap-northeast-1`.
+
+Decision: use `ap-northeast-1` for the clean replacement so Development,
+Staging, and Production use the same Japan region. Supabase projects are bound
+to their selected infrastructure region; changing region later requires a new
+project and another migration. Any project-creation request with a different
+region must stop and return to the Owner as a plan change.
+
+The organization, exact project name, database password handling, and shutdown
+date must be fixed in the later project-creation instruction. No identifier or
+secret may be guessed. No secret value may be written to Git or command output.
+
+## 5. Data disposition
+
+| Class | Binding disposition |
+|---|---|
+| Keep only after explicit row-domain approval | Required active Auth identities; their dealer/member/staff/admin relationships; owner-identified irreplaceable transaction examples; Storage objects referenced by retained rows. |
+| Regenerate | Schema, functions, RLS, grants, migration history, accepted fixtures, Storage buckets and policies, and non-secret configuration. |
+| Do not import by default | Staging/UAT evidence, audit/activity rows, notifications, queues/logs, OCR temporary state, failed jobs, AI usage, and trial/billing test artifacts. |
+| Freeze; do not enable or copy | LINE link-token behavior and GYEON partner onboarding. |
+| Reconfigure or rotate separately | Supabase URLs and keys, service credentials, Auth/SMTP, Vercel variables, cron/OCR/OpenAI/news-provider settings, Realtime, extensions, webhooks, and replicas. |
+
+The default-discard classification does not authorize deletion from the old
+Development project. No real customer or vehicle data is written into Git
+evidence. Retained-data decisions use counts, identifiers where indispensable,
+and redacted transformation rules.
+
+## 6. Serial execution gates
+
+Each gate below requires its own explicit owner authorization and its own
+result record. A PASS in one gate does not authorize the next.
+
+### CR0 — Plan acceptance
+
+- Verify that this plan changes documentation only.
+- Preserve the owner-ratified replacement region `ap-northeast-1`.
+- Stage, commit, and push this plan only after separate approvals.
+- Exit: accepted immutable planning identity; no Supabase or DB write.
+
+### CR1 — Current literal manifest reconciliation
+
+- Freeze a new execution HEAD/tree.
+- Enumerate every current top-level formal migration with path, mode, blob, and
+  SHA-256 without reading protected LINE content.
+- Reconcile the R5 one-exclusion replay with the old B-R3 three-exclusion
+  policy.
+- Decide whether the two provisioning migrations are executed while the
+  onboarding feature remains disabled, or excluded from the replacement.
+- Recheck the historical `gyeon_products` SELECT-policy and five-bucket
+  prerequisite findings against current Git; stale findings must not be
+  carried forward without current proof.
+- Publish a Claude-targeted read-only directive before the independent
+  manifest diagnosis. No runtime or source write occurs in CR1.
+- Exit: one literal non-frozen manifest, one exclusion list, one combined hash,
+  and zero unresolved dependency or policy contradiction.
+
+### CR2 — Prerequisite source repairs, only if CR1 requires them
+
+- Author separate exact-path repair gates.
+- Keep diagnosis, repair, verification, commit, and push separate.
+- Do not edit historical migrations. Any database correction is forward-only.
+- Exit: all required source repairs accepted and delivered, or a recorded
+  `NOT_REQUIRED` decision with evidence.
+
+### CR3 — Fresh disposable full-chain acceptance
+
+- Use one fresh loopback-only PostgreSQL 17/Supabase runtime outside the
+  repository and all protected roots.
+- Replay the exact CR1 manifest through the intended CLI-native path.
+- Run fixed non-zero plans for migration ledger, schema/RLS/grants, Storage
+  metadata, functions/triggers, Data API exposure, real request-scope Auth,
+  concurrency, business surfaces, and the R5 postal/import-resume contract.
+- Prove the postal version appears exactly once in the disposable migration
+  ledger.
+- Fail/burn the suffix on any replay, assertion, evidence, secret-scan, cleanup,
+  or teardown failure. Do not repair a failed runtime into acceptance.
+- Exit: retained hash-bound evidence and exact runtime removal.
+
+### CR4 — Hosted project cost and creation preflight
+
+- Ask the owner to select the exact Supabase organization.
+- Retrieve the current project cost through the Supabase cost interface and
+  present it to the owner.
+- Require a fresh explicit cost confirmation.
+- Hard limits: Micro compute only; maximum life 31 days; no paid add-ons; stop
+  if estimated cost exceeds USD 12 before tax, compute exceeds Micro, or any
+  add-on appears.
+- Record the exact planned creation time, automatic review date, and mandatory
+  pause/retirement date.
+- Exit: cost confirmation ID and owner-ratified organization, name, region, and
+  shutdown date. Still no project exists.
+
+### CR5 — Empty replacement-project creation
+
+- Create exactly one project using only the CR4 identities.
+- Make no database restore from the old Development project. A restore would
+  copy the drifted schema and defeat the clean-baseline decision.
+- Record new project ref, region, PostgreSQL version, compute tier, status, and
+  creation timestamp without printing credentials.
+- Apply only separately approved non-secret baseline configuration.
+- Exit: empty isolated replacement project. No application migration, retained
+  data, Storage object, secret, Vercel variable, or cutover.
+
+### CR6 — Exact hosted migration replay
+
+- Apply only the immutable CR1 manifest, in order, using the separately proved
+  mechanism.
+- Do not run an unconstrained bulk `db push`.
+- Prove migration ledger count/path parity, object definitions, policies,
+  grants, triggers, functions, Data API exposure, extension versions, and zero
+  unexpected external-capable jobs or hooks.
+- Keep partner onboarding disabled and LINE frozen.
+- Exit: schema-only hosted acceptance with no retained business data.
+
+### CR7 — Old-Development export inventory and transformation manifest
+
+- Query the old Development project read-only.
+- Record table-domain counts, required Auth relationship counts, Storage object
+  inventory, and transformation rules without recording secrets or customer
+  payloads in Git.
+- Obtain row-domain owner decisions for every `KEEP_IF_EXPLICITLY_JUSTIFIED`
+  exception.
+- Exit: approved export/import manifest. No copy yet.
+
+### CR8 — Retained data, Auth, and Storage import
+
+- Import only the CR7-approved subset under a separate write gate.
+- Preserve referential identity and one-tenant boundaries.
+- Treat Auth migration and new-project JWT/key behavior as a separate login
+  contract; do not silently reuse JWT secrets.
+- Recreate Storage buckets/policies first, then copy only approved objects and
+  verify object hashes plus metadata parity.
+- Exit: exact imported counts, zero unauthorized domain rows, and rollback
+  evidence.
+
+### CR9 — Configuration and real postal dataset
+
+- Reconfigure/rotate each secret and provider independently; secrets remain
+  outside Git and logs.
+- Recreate Auth redirect/provider/SMTP, Realtime, extension, Webhook, cron, and
+  Vercel configuration only through literal approved manifests.
+- Import the real Japan Post CSV only after the schema and import contract are
+  accepted. This is separate from migration apply and requires resumable,
+  duplicate-safe, non-ASCII-safe evidence.
+- Exit: non-secret configuration parity, secret-presence checks without value
+  disclosure, and accepted postal dataset counts.
+
+### CR10 — Old/new acceptance and application cutover
+
+- Compare schema, ledger, RLS/grants, Auth, retained row counts, Storage,
+  functions, cron, and application-critical RPCs.
+- Run authenticated request-scope Estimate Wizard OCR/postal smoke against the
+  replacement without mutating Production.
+- Cut over Development Vercel variables only under a separate owner-approved
+  gate after a rollback target and operator are named.
+- Exit: accepted Development application smoke and documented rollback timer.
+
+### CR11 — Stabilization and old-project retirement decision
+
+- Keep old Development unchanged and read-only during the observation window.
+- Monitor errors, Auth/login behavior, OCR, postal lookup, Storage, and critical
+  RPCs without enabling production changes.
+- Retirement or deletion of the old project requires a later independent
+  destructive-action decision after backup and rollback expiry. It is never an
+  automatic consequence of cutover.
+
+## 7. Acceptance evidence required at every executable gate
+
+- Exact repository HEAD/tree, branch, clean index/worktree, and upstream
+  ahead/behind.
+- Literal allowlist, actual changed paths, modes, blobs, per-path SHA-256, and
+  combined manifest hash.
+- Protected-path metadata only; no protected content access.
+- Exact command/test plans, counts, exit codes, raw evidence paths, and secret
+  scan.
+- Explicit flags for Git, database, Supabase, Auth, Storage, provider, Vercel,
+  Staging, Production, merge, and deployment contact.
+- Burned attempt identities and reason; no suffix reuse.
+- Rollback boundary and next separately authorized gate.
+
+## 8. Protected paths
+
+The following remain protected throughout this plan:
+
+- `src/components/estimates/wizard/screens/ScreensPreview.tsx`
+- `supabase/migrations/20260801110110_line_link_tokens.sql`
+- `supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql`
+- `src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts`
+
+`ScreensPreview.tsx` and the LINE migration are pathname/mode/blob/Git-state
+metadata only. This plan does not reopen the closed monthly-invoice finance
+track.
+
+## 9. Responsibility
+
+- Owner: region, organization, cost, retention exceptions, cutover, and
+  retirement decisions.
+- MacBook Codex: plan governance, exact-scope preflight, independent evidence
+  acceptance, and next-gate control.
+- MacBook Claude: only separately authorized read-only diagnosis, bounded
+  source repair, and executable verification under a committed literal
+  directive.
+- Supabase: project/platform operations only after cost confirmation and exact
+  owner authorization.
+- Studio and Android: no implementation role in this replacement phase.
+
+## 10. Current stop condition
+
+The next allowed action is CR0 review followed by the CR1 read-only manifest
+reconciliation. Project creation is not the next action. The replacement must
+not be created until the manifest contradiction is closed and CR3 disposable
+acceptance passes at the final execution identity. The region is fixed at
+`ap-northeast-1`.
+
+## 11. Official platform references checked for this plan
+
+- [Change Project Region](https://supabase.com/docs/guides/troubleshooting/change-project-region-eWJo5Z)
+- [Restore to a new project](https://supabase.com/docs/guides/platform/clone-project)
+- [Restore Dashboard backup](https://supabase.com/docs/guides/platform/migrating-within-supabase/dashboard-restore)
+- [Migrating Auth Users Between Supabase Projects](https://supabase.com/docs/guides/troubleshooting/migrating-auth-users-between-projects)
+
+These references support the region immutability, clean-project-versus-clone
+distinction, manual reconfiguration requirements, Storage object separation,
+and Auth/JWT cutover risks. They do not authorize any platform action.
