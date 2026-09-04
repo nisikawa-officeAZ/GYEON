@@ -6258,3 +6258,92 @@ boundaries:
 decision: AUTHOR_CR6_R3_THREE_PATH_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_THREE_PATH_DOCUMENTATION_DIFF_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; DO_NOT_START_ADAPTER_IMPLEMENTATION_OR_HOSTED_EXECUTION"
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3A canonical manifest serialization correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3A_CANONICAL_MANIFEST_SERIALIZATION_CORRECTION_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3A_CANONICAL_MANIFEST_SERIALIZATION_CORRECTION_GOVERNANCE_V1
+status: CHANGES_REQUIRED_DIRECTIVE_CORRECTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-04
+append_only: true
+objective: "Close the missing canonical aggregate byte contract before any CR6-R3 adapter implementation begins."
+authorization: "After MacBook Codex rejected the completed CR6-R3 read-only diagnosis, the Owner explicitly approved CR6-R3A correction-directive authoring. This authorization permits exactly one new directive and updates to the completion plan and append-only result ledger. It does not authorize Claude invocation, private-file transmission, source/test implementation, executable tests, Supabase CLI, network, Hosted Supabase, database/provider access, migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  predecessor_head: 7d148084d5799109b5d92f5d9f7b8a14e1dd58ba
+  predecessor_tree: 3dfea1c7ece8c3faaaaef44ff07c5a80a4e66a19
+  upstream_ahead_behind_before_authoring: "0 0"
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+prior_cr6_r3_diagnosis:
+  instruction_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5534021615
+  claude_result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_reported_verdict: READY_FOR_TWO_FILE_OFFLINE_IMPLEMENTATION
+  claude_finding_11: EXACT_AGGREGATE_SERIALIZATION_NOT_SPECIFIED_IN_AUTHORIZED_INPUT
+  codex_acceptance_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5534115420
+  codex_adjudication: CHANGES_REQUIRED_DIRECTIVE
+  implementation_started: false
+blocking_defect:
+  existing_core_behavior: CALLER_SUPPLIED_HASH_FUNCTION_RETURN_VALUE_ONLY_COMPARED_TO_FIXED_LITERAL
+  existing_test_behavior: CONSTANT_RETURN_FUNCTION_ACCEPTED_AS_VALID_HASH_AUTHORITY
+  risk: FIXED_AGGREGATE_GATE_COULD_BE_NON_EVIDENTIARY
+corrected_serialization:
+  formal_path_count: 113
+  staged_row_count: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  row_format: "<64 lowercase hex sha256><two ASCII spaces><repository-relative UTF-8 path><LF>"
+  final_lf_required: true
+  ordering: BUFFER_BYTE_COMPARE_ON_REPOSITORY_RELATIVE_PATH
+  monthly_invoice_attested_sha256_literal: 1f0f0f491e0e083c8163cb309b3846c035629c6930e83b180dc2e9ffdab86255
+  reproduced_aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  reproduction_match: true
+  protected_line_content_read: false
+  protected_monthly_invoice_content_read: false
+corrected_authority_contract:
+  canonical_source: FIXED_GIT_COMMIT_TREE_METADATA_AND_FIXED_GIT_BLOBS
+  actual_source: INDEPENDENT_FRESH_ISOLATED_WORKDIR_ENUMERATION
+  concrete_hash: NODE_CRYPTO_SHA256_OVER_EXACT_SERIALIZATION
+  caller_supplied_hash_or_manifest_authority: PROHIBITED
+  constant_return_hash: PROHIBITED
+  hostile_tests_required:
+    - alternate_separator_or_line_ending
+    - missing_final_lf_or_json_serialization
+    - substituted_missing_or_extra_entry
+    - reordered_actual_or_canonical_input
+    - mode_or_blob_drift
+    - ordinary_or_protected_monthly_digest_drift
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+fixed_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_contact: PROHIBITED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3A_CANONICAL_MANIFEST_SERIALIZATION_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist_unchanged:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+boundaries:
+  claude_rediagnosis_invoked: false
+  private_files_transmitted: false
+  adapter_implemented_or_tested: false
+  existing_fourteen_harness_files_modified: false
+  protected_content_opened: false
+  supabase_cli_or_network_used: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3A_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_SERIALIZATION_REPRODUCTION_FROZEN_FOURTEEN_HASH_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; NORMAL_PUSH_AND_CLAUDE_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
+```

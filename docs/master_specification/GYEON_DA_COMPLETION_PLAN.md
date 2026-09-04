@@ -2111,6 +2111,51 @@ request a separate Owner approval to stage and locally commit only these three
 governance paths. CR6-R3 adapter implementation remains a later independent
 authorization gate.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3A canonical manifest serialization correction
+
+**Status:** `CR6_R3A_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At committed PR #67 HEAD `7d148084d5799109b5d92f5d9f7b8a14e1dd58ba`,
+tree `3dfea1c7ece8c3faaaaef44ff07c5a80a4e66a19`, Claude completed the
+one-time CR6-R3 read-only diagnosis and reported that the two-file adapter was
+ready. MacBook Codex rejected that readiness because the authorized contract
+did not specify how to serialize the fixed 112-entry aggregate and the existing
+core/tests accept a constant-return aggregate function.
+
+CR6-R3A fully supersedes CR6-R3 and fixes the exact byte contract as one row per
+staged migration in repository-relative path byte order:
+`<lowercase sha256><two ASCII spaces><path><LF>`, including the final LF. The
+protected LINE migration contributes no row. The protected monthly-invoice row
+uses the already attested literal content digest without agent access to its SQL
+text. A governance-time local reproduction, excluding both protected contents
+from reads, reproduced the accepted aggregate exactly:
+`0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb`.
+
+The corrected directive also requires independent canonical-Git and
+actual-isolated-workdir derivation paths, a concrete `node:crypto` serializer,
+no caller-supplied hash/canonical authority, and hostile tests for alternate
+serialization, constant returns, substitution, reorder, mode/blob drift, and
+content-hash drift.
+
+**CR6-R3A governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3A_CANONICAL_MANIFEST_SERIALIZATION_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation authoring and local read-only verification
+only. Claude re-diagnosis, private-file transmission, adapter implementation,
+executable tests, Supabase CLI, network, hosted project, DB/provider access,
+migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment,
+cutover, and retirement remain unauthorized.
+
+**Next:** Independently verify the exact three-document diff, serialization
+reproduction, frozen fourteen-file hash, protected metadata, clean index, and
+`git diff --check`. Then request separate Owner authorization to stage and
+locally commit exactly these three governance paths. Normal push remains a
+later separate gate. Only after delivery may a new superseding one-time
+read-only Claude diagnosis be proposed.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
