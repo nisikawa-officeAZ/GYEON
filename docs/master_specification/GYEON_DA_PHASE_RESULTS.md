@@ -6193,3 +6193,68 @@ boundaries:
 decision: ACCEPT_CR6_R2B_R2C_RECOVERED_OFFLINE_HARNESS_AND_AUTHOR_TWO_DOCUMENT_GOVERNANCE_RECORD_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_TWO_DOCUMENT_GOVERNANCE_DIFF_AND_RECORDED_FOURTEEN_HASHES_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL_FOR_THE_TWO_GOVERNANCE_PATHS; AFTER GOVERNANCE DELIVERY, USE THE HELD OWNER AUTHORIZATION TO STAGE_AND_LOCALLY_COMMIT_EXACTLY_THE_ACCEPTED_FOURTEEN_SOURCE_TEST_PATHS; STOP_BEFORE_PUSH"
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3 hosted execution adapter governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3_HOSTED_EXECUTION_ADAPTER_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3_HOSTED_EXECUTION_ADAPTER_GOVERNANCE_V1
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-04
+append_only: true
+objective: "Define the smallest future real-adapter boundary for the accepted CR6 offline harness without executing or contacting the hosted replacement project."
+authorization: "After PR #67 HEAD 8026931afc005a2583ddaa46ecc7a61894786933 passed Vercel and Vercel Preview Comments, the Owner authorized documentation-only CR6-R3 directive authoring. This permits exactly three governance paths. It does not authorize Claude invocation, adapter implementation, executable tests, Supabase CLI linked commands, network, Hosted Supabase, database/provider access, migration replay, evidence upload, Git delivery, PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  head: 8026931afc005a2583ddaa46ecc7a61894786933
+  tree: 18c11148b16dc42c9511f0eee1f773fa2a0c3c5e
+  base: main
+  state: OPEN
+  draft: true
+  upstream_ahead_behind: "0 0"
+  changed_files: 80
+checks:
+  vercel_preview_comments: PASS
+  vercel: PASS
+local_cli_discovery:
+  supabase_version_probe_attempted: true
+  exit_code: 1
+  result: BLOCKED_LOCAL_TELEMETRY_TEMP_WRITE_EPERM_NO_VERSION_RETURNED
+  accepted_as_compatibility_evidence: false
+  linked_command_run: false
+  hosted_project_contacted: false
+push_protection:
+  exact_fixture_path: scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.test.mjs
+  exact_fixture_line: 9
+  classification: FALSE_POSITIVE_TEST_FIXTURE_ONLY
+  repository_secret_scanning_disabled: false
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+  node_test: PASS_150_OF_150
+  hosted_execution_entrypoint_complete: false
+fixed_future_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_target_contact: PROHIBITED
+governance_authoring_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3_HOSTED_EXECUTION_ADAPTER.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+boundaries:
+  claude_invoked: false
+  adapter_implemented_or_tested: false
+  supabase_cli_linked_command_run: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  evidence_uploaded: false
+  governance_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3_THREE_PATH_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_PATH_DOCUMENTATION_DIFF_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; DO_NOT_START_ADAPTER_IMPLEMENTATION_OR_HOSTED_EXECUTION"
+```

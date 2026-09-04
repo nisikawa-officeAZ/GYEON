@@ -2069,6 +2069,48 @@ accepted fourteen source/test files using literal paths. Reverify the commit
 tree, protected blobs, and exact changed paths. Stop before push and request a
 separate Owner approval.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3 hosted execution adapter directive
+
+**Status:** `CR6_R3_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+The accepted CR6 offline harness and its two-document governance record were
+delivered to PR #67 as two normal commits through HEAD
+`8026931afc005a2583ddaa46ecc7a61894786933`, tree
+`18c11148b16dc42c9511f0eee1f773fa2a0c3c5e`. The local branch and upstream are
+`0 0`; PR #67 remains OPEN/Draft against `main`; Vercel and Vercel Preview
+Comments both passed. GitHub Push Protection classified one deliberate fake
+Stripe-shaped redaction fixture as a secret. The Owner explicitly authorized
+only that exact test fixture to be marked false positive; repository secret
+scanning was not disabled.
+
+The fourteen accepted files are dependency-injected offline cores. They do not
+provide a reviewed real-process/filesystem/evidence entrypoint and therefore
+do not yet authorize or safely perform a hosted replay. CR6-R3 defines a future
+two-file execution-adapter candidate while leaving all fourteen accepted files,
+all migrations, application source, configuration, and protected paths
+immutable.
+
+**CR6-R3 governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3_HOSTED_EXECUTION_ADAPTER.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** The Owner authorized authoring this documentation-only
+directive and governance record. No Claude invocation, adapter implementation,
+executable test, Supabase CLI linked command, network, Hosted Supabase, database,
+migration replay, evidence upload, stage, commit, push, PR mutation, Ready,
+merge, deployment, cutover, or retirement is authorized. One local
+`supabase --version` discovery probe failed before returning a version because
+the CLI could not write its telemetry temporary file (`EPERM`). It performed no
+linked command or hosted-project contact and is recorded as failed discovery,
+not acceptance evidence.
+
+**Next:** Independently verify the exact three-path documentation diff. Then
+request a separate Owner approval to stage and locally commit only these three
+governance paths. CR6-R3 adapter implementation remains a later independent
+authorization gate.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
