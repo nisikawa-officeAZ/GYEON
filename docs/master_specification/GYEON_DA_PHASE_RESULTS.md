@@ -6106,3 +6106,90 @@ boundaries:
 decision: REGISTER_CR6_R2_CODEX_CHANGES_REQUIRED_AND_CR6_R2A_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_FOUR_DOCUMENT_DIFF_FROZEN_FOURTEEN_HASHES_EIGHT_REPAIR_GROUPS_NINETEEN_FILE_FUTURE_READ_PAYLOAD_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL"
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2B/R2C recovered offline harness acceptance governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2B_R2C_RECOVERED_OFFLINE_HARNESS_ACCEPTANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2C_OFFLINE_HARNESS_ACCEPTANCE_V1
+status: PASS_OFFLINE_CANDIDATE_ACCEPTED_GOVERNANCE_RECORD_UNSTAGED_UNCOMMITTED
+date: 2026-09-04
+append_only: true
+objective: "Record the independently verified recovery and final fail-closed correction of the exact fourteen-file CR6 hosted-replay offline harness candidate, without authorizing any hosted or database action."
+authorization: "The Owner explicitly authorized persistent-checkout regeneration, the bounded CR6-R2B four-defect repair, the bounded CR6-R2C two-file canonical-table exactness repair, independent executable verification, and authoring exactly this completion-plan update plus this append-only result. The Owner also explicitly approved a future literal fourteen-file stage/local commit, but that approval is held until this governance record is independently verified and locally committed. Push remains separately unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  base_head: bbff657ffe5547b49c34eb9e795434b2fffe8d3b
+  base_tree: 50fe65d5ddef760a047e6bf5638c8b1b16cab955
+  upstream_ahead_behind: "0 0"
+  source_candidate_commit: UNCOMMITTED
+candidate:
+  directory: scripts/e2e/gda-estimate-postal-master-r5-cr6
+  exact_file_count: 14
+  file_mode: "100644"
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+  per_path_sha256:
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.mjs: 6d0b57efe6184e638a845b6c8586657b8f8a0567cdd4c3e7c0861b2faf9da309
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.test.mjs: 76294b9890daead78bfb2ef3ec358523ead5a5f1ea71f2a8baaac3a5ee4f83dc
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.mjs: 1838655f199e45a1c63795ccce76443d6e4b1f317452e0ae04f04a37af90be3d
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.test.mjs: d3389704b83a798a51b8719302ec4e13ae3656ba592681e095a6464f99103b59
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.mjs: e8b405bdbc75e00bc0d88919036d4adcb2df82a83c5a7c0fe33bc3d730ed4c64
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.test.mjs: f44c4793a3d926791d739a175ddff572d19656d2937f00bfab2490b247fef4dc
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.mjs: c185deb235a38946bfc6c2019e674fdd3113bda09cc7008d182ccab7d08feac3
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.test.mjs: c2b9332b8fbcf05d27bc7ded6f8c6c94f7ee38165cce401fec9eec5965d752f2
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.mjs: 762e6b333692e915efa44474993131570d692ef5dd8936d2cf8e31883725d396
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.test.mjs: 64914855626a16d3eb6fea05c0a509df7da76ace4519d531e260a01a6cc0797f
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.mjs: 7b01b9898bc247ccce1e3036b6601560b1d97b29120f87753dfa2c7ca7d51579
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.test.mjs: e097220ef5937084426ba294e2b5d5065b929c507bd61e5bbf4e1d36117aac5f
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.mjs: 0b6adcfd28b22344333e399fa77df6520a8ab163a08360920dfca909ed866903
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.test.mjs: b80efc89099bbde287d9f622c1e7945c5f1a017322e85b9b150b30cb09e6afe3
+claude_repairs:
+  cr6_r2b:
+    session_id: 1434f75c-9682-4e13-b77a-66a137f9358f
+    reported_cost_usd: 3.0902325000000004
+    edited_path_count: 6
+    terminal_status: SUCCESS
+  cr6_r2c:
+    session_id: eda2c310-7d66-42b8-a84f-6f792d155289
+    reported_cost_usd: 1.1619706
+    edited_path_count: 2
+    terminal_status: SUCCESS
+  accepted_repair_cost_usd_total: 4.2522031
+codex_independent_audit:
+  adjudication: PASS_OFFLINE_CANDIDATE_ACCEPTED
+  node_check: PASS_14_OF_14
+  node_test_command: "node --test scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.test.mjs"
+  node_test: PASS_150_OF_150
+  node_test_failures: 0
+  node_test_cancelled: 0
+  node_test_skipped: 0
+  node_test_todo: 0
+  hostile_reproduction_cases: PASS_ALL_EXPECTED_FAIL_CLOSED_AND_VALID_EXACT_TABLE_SUCCEEDED
+  no_index_whitespace_checks: PASS_14_OF_14_EXPECTED_EXIT_1_ZERO_OUTPUT
+  git_diff_check: PASS
+  file_modes: PASS_14_OF_14_100644
+  index_clean: true
+  evidence_location: LOCAL_CONSOLE_ONLY_NOT_COMMITTED
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: "100644 blob c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
+  supabase/migrations/20260801110110_line_link_tokens.sql: "100644 blob accd22345054cc44f89156fd78eaba6dfe4242a4"
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: "100644 blob 32fda49583ae1217bc13711784ad8fa31744726c"
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: "100644 blob fe3c80f22fd80dcbfab076082473216dda582c14"
+governance_authoring_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  source_candidate_staged_or_committed: false
+  governance_candidate_staged_or_committed: false
+  normal_push_performed: false
+  supabase_cli_or_network_used: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  provider_or_vercel_contacted: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: ACCEPT_CR6_R2B_R2C_RECOVERED_OFFLINE_HARNESS_AND_AUTHOR_TWO_DOCUMENT_GOVERNANCE_RECORD_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_TWO_DOCUMENT_GOVERNANCE_DIFF_AND_RECORDED_FOURTEEN_HASHES_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL_FOR_THE_TWO_GOVERNANCE_PATHS; AFTER GOVERNANCE DELIVERY, USE THE HELD OWNER AUTHORIZATION TO STAGE_AND_LOCALLY_COMMIT_EXACTLY_THE_ACCEPTED_FOURTEEN_SOURCE_TEST_PATHS; STOP_BEFORE_PUSH"
+```

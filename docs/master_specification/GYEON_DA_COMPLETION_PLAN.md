@@ -2028,6 +2028,47 @@ candidate and frozen fourteen candidate hashes. Literal-path stage/local
 commit and normal push require separate Owner approvals. Only after delivery
 may the Owner separately authorize one bounded CR6-R2A repair invocation.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2B/R2C recovered offline harness acceptance
+
+**Status:** `CR6_R2C_OFFLINE_HARNESS_ACCEPTED_GOVERNANCE_RECORD_UNSTAGED_UNCOMMITTED`
+
+After the temporary recovery checkout was lost during the authorized computer
+restart, the Owner authorized reconstruction in the persistent PR #67 checkout
+and bounded Claude repair. MacBook Codex rejected the first reconstructed
+candidate because exact manifest authority and evidence finalization were not
+fail-closed. CR6-R2B repaired those four defects. MacBook Codex then found that
+the canonical table itself could still be reordered or omit an ordinary
+SHA-256, so CR6-R2C completed one final two-file correction.
+
+MacBook Codex independently accepted the resulting exact fourteen-file offline
+harness candidate at base HEAD `bbff657ffe5547b49c34eb9e795434b2fffe8d3b`,
+tree `50fe65d5ddef760a047e6bf5638c8b1b16cab955`. All fourteen files passed
+`node --check`; the exact seven-test command passed `150/150` with zero failure,
+skip, cancellation, or todo; the hostile direct reproductions rejected missing
+authorities, reordered actual and canonical manifests, protected content
+hashes, malformed or incomplete canonical entries, unsafe evidence input, and
+secret-bearing retained read-back. The valid exact canonical table continued
+to pass. All fourteen no-index whitespace checks, `git diff --check`, file-mode,
+clean-index, upstream `0 0`, and protected-blob gates passed.
+
+The accepted source candidate is limited to the fourteen files under
+`scripts/e2e/gda-estimate-postal-master-r5-cr6/`. No hosted replay, Supabase
+CLI, database, provider, network, Vercel, migration application, PR mutation,
+Ready conversion, merge, deployment, cutover, or retirement was executed or
+accepted. The source candidate remains untracked and uncommitted.
+
+**Current boundary:** This two-document governance record is the only active
+authoring allowlist. The Owner's prior explicit authorization to stage and
+locally commit exactly the accepted fourteen source/test files is held until
+this governance record is independently verified and committed. It does not
+authorize push. Governance commit, fourteen-file source commit, normal push,
+hosted preflight, and hosted replay remain separate gates.
+
+**Next phase after governance delivery:** Stage and locally commit exactly the
+accepted fourteen source/test files using literal paths. Reverify the commit
+tree, protected blobs, and exact changed paths. Stop before push and request a
+separate Owner approval.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
