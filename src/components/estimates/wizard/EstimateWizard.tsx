@@ -27,7 +27,7 @@ import { WizardShell, type WizardTotals } from "./WizardShell";
 import type { WizardHostRuntimeInputs } from "./contract/wizard-pricing-runtime-inputs";
 import type {
   WizardExistingEntityInputs, WizardPreselectionInputs, WizardCustomerSearchInputs,
-  WizardDuplicateCheckInputs,
+  WizardDuplicateCheckInputs, WizardPostalMasterLookupInputs,
 } from "./contract/wizard-runtime-inputs";
 import { initialPreselectionStorePatch } from "./steps/existing-entity-selection";
 import type { WizardSaveBinding } from "./save/WizardSavePanel";
@@ -47,7 +47,9 @@ export interface EstimateWizardProps
     // B2.2B — threaded to Step 1 only. Optional: a non-production mount renders without a search
     // seam and simply shows no search surface.
     WizardCustomerSearchInputs,
-    WizardDuplicateCheckInputs {
+    WizardDuplicateCheckInputs,
+    // GDA-2A-OCR-POSTAL-MASTER-R2 — threaded to Step 1 only, same optionality discipline.
+    WizardPostalMasterLookupInputs {
   mode?: "create" | "edit";
   /**
    * B7-2C — OPTIONAL presentation seam, threaded only to Step 7.
@@ -68,6 +70,8 @@ export default function EstimateWizard({
   customers, vehicles, defaultCustomerId, defaultVehicleId, serverPrefill, saveBinding,
   customerSearchInvoker,
   duplicateCheckInvoker,
+  postalToAddressInvoker,
+  addressToPostalInvoker,
 }: EstimateWizardProps) {
   // B7-2A — preselection is resolved BEFORE the first hook initialization and folded
   // in as the initial store patch, so it becomes part of the draft's very first
@@ -114,6 +118,9 @@ export default function EstimateWizard({
           vehicles={vehicles}
           customerSearchInvoker={customerSearchInvoker}
           duplicateCheckInvoker={duplicateCheckInvoker}
+          postalToAddressInvoker={postalToAddressInvoker}
+          addressToPostalInvoker={addressToPostalInvoker}
+          onSizeEstimate={setBodySizeEstimate}
         />
       )}
       {api.step === 2 && (

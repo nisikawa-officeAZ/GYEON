@@ -11,6 +11,7 @@
 // in screens/step-types.ts, so no shape is re-declared or duplicated here.
 
 import type { ServiceOfferings } from "@/lib/estimates/service-categories";
+import type { JpPostalForwardLookupResult, JpPostalReverseLookupResult } from "@/lib/geo/jp-postal-master-contract";
 import type { WindowFilmSettingsV1 } from "@/lib/pricing/window-film-v1-contract";
 import type {
   ShopRank,
@@ -287,6 +288,27 @@ export interface WizardReservationPrefill {
   readonly vehicleId: string | null;
   readonly category: WizardReservationPrefillCategory;
   readonly notesInternal: string | null;
+}
+
+// ── GDA-2A-OCR-POSTAL-MASTER-R2 — postal-master lookup seams ────────────────
+//
+// Same discipline as the search/duplicate-check seams above: declared as TYPES so a `"use client"`
+// module (Step1Customer) calls them without importing a Server Action or a Supabase client, and the
+// server route injects the real implementations exactly once. There is deliberately no dealer
+// parameter — the postal master is not tenant data, and the RPC itself independently re-verifies
+// the caller's own active dealer membership.
+
+export type JpPostalForwardLookupInvoker = (rawPostalCode: unknown) => Promise<JpPostalForwardLookupResult>;
+export type JpPostalReverseLookupInvoker = (rawAddress: unknown) => Promise<JpPostalReverseLookupResult>;
+
+/**
+ * OPTIONAL by design, exactly like the search/duplicate-check seams. A mount without either invoker
+ * simply performs no lookup for that direction — absent means "this surface cannot look up", never
+ * "there is no match".
+ */
+export interface WizardPostalMasterLookupInputs {
+  readonly postalToAddressInvoker?: JpPostalForwardLookupInvoker;
+  readonly addressToPostalInvoker?: JpPostalReverseLookupInvoker;
 }
 
 /**

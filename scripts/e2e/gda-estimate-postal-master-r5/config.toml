@@ -1,0 +1,66 @@
+# GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_TEMPLATE
+# Shared by both R5 lanes (fresh/import); setup.sh renders one instance per
+# lane with a lane-distinct project_id and ports. This file is copied into a
+# fresh disposable runtime outside the repository worktree. It is never used
+# as the repository's root Supabase configuration, never linked to a hosted
+# project, and never applied against a shared or production database.
+
+project_id = "__R5_PROJECT_ID__"
+
+[api]
+enabled = true
+port = __R5_API_PORT__
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = __R5_DB_PORT__
+shadow_port = __R5_SHADOW_PORT__
+major_version = 17
+
+[db.pooler]
+enabled = false
+
+[db.seed]
+enabled = false
+
+[realtime]
+enabled = false
+
+[studio]
+enabled = true
+port = __R5_STUDIO_PORT__
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+port = __R5_INBUCKET_PORT__
+smtp_port = __R5_SMTP_PORT__
+pop3_port = __R5_POP3_PORT__
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:__R5_APP_PORT__"
+additional_redirect_urls = ["http://127.0.0.1:__R5_APP_PORT__"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[edge_runtime]
+enabled = false
+
+# Left disabled from the start of this harness: a shared vector/analytics
+# container has twice failed against this host's Colima docker.sock mount in
+# unrelated disposable-DB attempts, and analytics evidence is not required by
+# the R5 verification plan.
+[analytics]
+enabled = false
