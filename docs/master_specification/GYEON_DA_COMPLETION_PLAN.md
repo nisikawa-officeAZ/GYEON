@@ -2340,6 +2340,47 @@ index/upstream, and `git diff --check`; then request a separate exact-three-file
 stage/local-commit gate. Push and eighteen-file CR6-R3E diagnosis remain later
 separate gates.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3F synthetic-exit classification correction
+
+**Status:** `CR6_R3F_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At PR #67 HEAD `da3a2a158f214c3e51cac87d678cfd9de4bab5ec`, tree
+`0a735d45dcd67c0e451f581a2e4ac9d900515f3c`, Claude completed the
+one-time CR6-R3E tool-disabled diagnosis and returned
+`CHANGES_REQUIRED_DIRECTIVE`. MacBook Codex accepted the ambiguity, rejected
+the proposed unknown exitInfo flag, and posted the corrected public-safe
+adjudication at
+[PR #67 comment 5554790593](https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554790593).
+
+CR6-R3F fully supersedes CR6-R3E and preserves every accepted Git,
+protected-content, migration, Supabase CLI `v2.116.0`, durable burn/lock,
+evidence, and two-file implementation boundary.
+
+The remaining mapping is now exhaustive. Executable, argv, project ref,
+workdir/cwd, or sanitized-environment identity drift produces the existing
+exact `targetMismatch:true` synthetic result. Burn-record, active-lock, or
+stage-order drift produces the existing exact `ledgerMismatch:true` synthetic
+result. Neither path launches a real OS/Supabase process, and neither adds a
+new field to frozen exitInfo. Deadline remains exclusively owned by frozen
+`runWithTimeout` and its injected monotonic timer.
+
+**CR6-R3F governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3F_SYNTHETIC_EXIT_CLASSIFICATION_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation and read-only verification only. No Claude
+re-diagnosis, private transmission, adapter implementation/test, Supabase CLI,
+hosted project/database/provider contact, migration replay, Git
+stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or
+retirement is authorized.
+
+**Next:** Verify the exact three-document diff, complete synthetic mapping,
+unchanged fourteen-file hash, protected metadata, clean index/upstream, and
+`git diff --check`; then request a separate exact-three-file stage/local-commit
+gate. Push and eighteen-file CR6-R3F diagnosis remain later separate gates.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
