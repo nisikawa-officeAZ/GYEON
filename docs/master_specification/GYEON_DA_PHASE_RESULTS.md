@@ -6454,3 +6454,97 @@ boundaries:
 decision: AUTHOR_CR6_R3B_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_FROZEN_FOURTEEN_HASH_PROTECTED_GIT_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; NORMAL_PUSH_AND_EIGHTEEN_FILE_CLAUDE_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3C protected metadata and preflight materialization correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_PROTECTED_METADATA_AND_PREFLIGHT_MATERIALIZATION_CORRECTION_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_PROTECTED_METADATA_AND_PREFLIGHT_MATERIALIZATION_CORRECTION_GOVERNANCE_V1
+status: CHANGES_REQUIRED_DIRECTIVE_CORRECTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-05
+append_only: true
+objective: "Close the two remaining CR6-R3B directive contradictions before any adapter implementation begins."
+authorization: "After the Owner explicitly authorized the CR6-R3B eighteen-file tool-disabled diagnosis, Claude returned CHANGES_REQUIRED_DIRECTIVE and MacBook Codex independently accepted both findings. The Owner then authorized one public-safe PR result record plus CR6-R3C documentation authoring only. This permits exactly one new directive plus completion-plan and append-only phase-result updates. It does not authorize another Claude invocation, private-file transmission, source/test implementation, executable tests, Git or Supabase CLI execution for implementation, hosted project/database/provider access, migration replay, Git stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  predecessor_head: 33c1ec65292e2d7112f73130a2446408541e96b1
+  predecessor_tree: f373ec66ba47e8e68db7a399d451e831e0ce23e0
+  upstream_ahead_behind_before_authoring: "0 0"
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+prior_cr6_r3b_diagnosis:
+  instruction_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5553972075
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_verdict: CHANGES_REQUIRED_DIRECTIVE
+  codex_acceptance_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554059993
+  codex_adjudication: CHANGES_REQUIRED_DIRECTIVE_ACCEPTED
+  implementation_started: false
+accepted_findings:
+  - CLOSED_LS_TREE_SCOPE_CANNOT_ACQUIRE_TWO_NON_MIGRATION_PROTECTED_PATHS
+  - PREFLIGHT_ONLY_HAS_NO_AUTHORIZED_112_FILE_ACTUAL_MATERIALIZATION_PATH
+authoring_self_audit:
+  rejected_recursive_combined_record_count: 117
+  rejection_reason: "Recursive supabase/migrations enumeration also returns two nested DRAFT_DO_NOT_APPLY files and therefore cannot satisfy an exact formal-top-level migration contract."
+  accepted_migration_subtree_direct_child_count: 114
+  accepted_external_protected_count: 2
+corrected_git_metadata_contract:
+  exact_ls_tree_invocation_count: 2
+  migration_subtree_record_count: 114
+  migration_record_count: 113
+  fixed_draft_tree_record_count: 1
+  fixed_draft_tree_object: b6b9b1bd0cefedd0a08a40ef7c2c55c4fa5f4018
+  nested_draft_paths_returned: false
+  external_protected_record_count: 2
+  non_migration_protected_record_count: 2
+  all_four_protected_metadata_from_two_independently_validated_git_responses: true
+  extra_or_missing_record: FAIL_CLOSED
+corrected_mode_contract:
+  local_materialization_blob_count_each_mode: 112
+  preflight_only_local_isolated_writes: ALLOWED
+  preflight_only_linked_supabase_command: PROHIBITED
+  preflight_only_hosted_contact: PROHIBITED
+  preflight_only_burn_execution_attempt: PROHIBITED
+  preflight_only_retained_hosted_evidence: PROHIBITED
+  preflight_only_secure_local_cleanup: REQUIRED
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+fixed_manifest:
+  formal_count: 113
+  staged_count: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+fixed_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_contact: PROHIBITED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_PROTECTED_METADATA_AND_PREFLIGHT_MATERIALIZATION_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist_unchanged:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+future_rediagnosis:
+  exact_file_count: 18
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_READ_ONLY_DIAGNOSIS_RESULT_V1
+boundaries:
+  public_safe_pr_result_record_posted: true
+  claude_r3c_rediagnosis_invoked: false
+  private_files_retransmitted_after_r3b: false
+  adapter_implemented_or_tested: false
+  existing_fourteen_harness_files_modified: false
+  protected_content_opened: false
+  supabase_cli_or_hosted_contact_used: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3C_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_FROZEN_FOURTEEN_HASH_PROTECTED_GIT_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; NORMAL_PUSH_AND_EIGHTEEN_FILE_CLAUDE_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
+```

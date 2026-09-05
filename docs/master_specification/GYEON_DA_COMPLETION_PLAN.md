@@ -2206,6 +2206,51 @@ separate Owner approval to stage and locally commit exactly those three paths.
 Normal push and the one-time eighteen-file CR6-R3B re-diagnosis remain later
 separate gates.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3C protected metadata and preflight materialization correction
+
+**Status:** `CR6_R3C_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At committed PR #67 HEAD `33c1ec65292e2d7112f73130a2446408541e96b1`,
+tree `f373ec66ba47e8e68db7a399d451e831e0ce23e0`, Claude completed the
+one-time CR6-R3B tool-disabled read-only diagnosis and returned
+`CHANGES_REQUIRED_DIRECTIVE`. MacBook Codex independently accepted both
+findings and recorded the public-safe result at
+[PR #67 comment 5554059993](https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554059993).
+
+CR6-R3C fully supersedes CR6-R3B and preserves every accepted R3B contract. It
+uses two exact fixed `git ls-tree` requests: one non-recursive request against
+the migration subtree, requiring 113 top-level SQL blobs plus the single fixed
+`DRAFT_DO_NOT_APPLY` tree record, and one request requiring exactly the two
+non-migration protected paths. Nested draft files are never returned. All four
+protected mode/blob identities are derived across those two independently
+validated responses. It also applies the local 112-blob materialization and
+independent actual-workdir inspection to both explicit modes.
+
+`preflight-only` is now defined precisely: it may write and inspect one fresh
+local isolated tree and must securely delete it before return, but it cannot
+construct or spawn a linked Supabase command, contact hosted state, burn an
+execution attempt, or retain hosted evidence. `execute-once` retains the later
+separate Owner approval, burn-before-linked-spawn, no-retry, quarantine, and
+evidence-finalization requirements.
+
+**CR6-R3C governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_PROTECTED_METADATA_AND_PREFLIGHT_MATERIALIZATION_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation authoring and local read-only verification
+only. Claude re-diagnosis, private-file transmission, adapter implementation,
+executable tests, Supabase CLI, hosted project/database/provider access,
+migration replay, Git stage/commit/push, further PR mutation, Ready, merge,
+deployment, cutover, and retirement remain unauthorized.
+
+**Next:** Verify only the exact three-document diff, unchanged fourteen-file
+hash, protected Git metadata, clean index, and `git diff --check`. Then request
+separate Owner approval to stage and locally commit exactly these three paths.
+Normal push and the one-time eighteen-file CR6-R3C re-diagnosis remain later
+separate gates.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
