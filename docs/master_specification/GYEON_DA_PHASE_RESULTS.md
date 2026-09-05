@@ -6347,3 +6347,110 @@ boundaries:
 decision: AUTHOR_CR6_R3A_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_SERIALIZATION_REPRODUCTION_FROZEN_FOURTEEN_HASH_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; NORMAL_PUSH_AND_CLAUDE_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3B Git acquisition and delegation correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_GIT_ACQUISITION_AND_DELEGATION_CORRECTION_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_GIT_ACQUISITION_AND_DELEGATION_CORRECTION_GOVERNANCE_V1
+status: CHANGES_REQUIRED_DIRECTIVE_CORRECTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-05
+append_only: true
+objective: "Close the four remaining CR6-R3A directive gaps before any adapter implementation begins."
+authorization: "After Claude returned CHANGES_REQUIRED_DIRECTIVE for CR6-R3A and MacBook Codex independently accepted the result, the Owner authorized CR6-R3B documentation authoring only. This permits exactly one new directive plus completion-plan and append-only phase-result updates. It does not authorize Claude invocation, private-file transmission, source/test implementation, executable tests, Git or Supabase CLI execution for implementation, network, Hosted Supabase, database/provider access, migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  predecessor_head: d1e634ceb22c194ba2703aa6043e0306dff50ccd
+  predecessor_tree: 14962186fa1aac848d19b66f4a5920489fa2b69d
+  upstream_ahead_behind_before_authoring: "0 0"
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+prior_cr6_r3a_diagnosis:
+  instruction_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5534178181
+  claude_result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3A_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_reported_verdict: CHANGES_REQUIRED_DIRECTIVE
+  codex_acceptance_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5553913054
+  codex_adjudication: CHANGES_REQUIRED_DIRECTIVE
+  implementation_started: false
+accepted_findings:
+  - EXACT_GIT_ACQUISITION_ARGV_BYTE_FRAMING_AND_BOUNDS_UNSPECIFIED
+  - PUBLIC_AUTHORITY_PROHIBITION_VERSUS_INTERNAL_CORE_DELEGATION_AMBIGUOUS
+  - PROTECTED_MONTHLY_DIGEST_ATTESTATION_PROVENANCE_ABSENT_FROM_DIAGNOSIS_SCOPE
+  - CLI_DISCOVERY_VOLATILE_OUTPUT_RETENTION_AND_COMPATIBILITY_RULES_INCOMPLETE
+corrected_contract:
+  public_input_exact: "{ mode, attemptId, confirmation, repoRoot, runtimeRoot, evidenceRoot }"
+  caller_authority_fields: PROHIBITED
+  git_executable: /usr/bin/git
+  git_shell: false
+  git_ls_tree_framing: NUL_DELIMITED_BYTES
+  git_cat_file_framing: EXACT_SIZE_BATCH_BYTES
+  canonical_ordinary_blob_count: 111
+  materialization_staged_blob_count: 112
+  git_metadata_timeout_ms: 30000
+  git_batch_timeout_ms: 120000
+  git_metadata_stdout_max_bytes: 1048576
+  git_stderr_max_bytes: 65536
+  git_batch_object_max_bytes: 16777216
+  git_batch_aggregate_max_bytes: 268435456
+  implementation_identity: SINGLE_ACCEPTED_GOVERNANCE_PARENT_AND_EXACT_TWO_PATH_DIFF_THEN_DERIVED_CURRENT_HEAD_TREE
+  actual_authority: INDEPENDENT_ISOLATED_WORKDIR_ENUMERATION_AND_BYTE_HASHING
+  existing_core_injection: INTERNAL_ONLY_NOT_PUBLIC_CALLER_AUTHORITY
+  supabase_executable: /opt/homebrew/Cellar/supabase/2.116.0/bin/supabase
+  supabase_bin_symlink: VALIDATE_ONLY_NEVER_SPAWN
+  cli_discovery_timeout_ms: 10000
+  cli_discovery_stdout_max_bytes: 2097152
+  cli_discovery_stderr_max_bytes: 262144
+  cli_discovery_raw_output: VOLATILE_MEMORY_ONLY_NEVER_RETAINED_OR_PRINTED
+  cli_discovery_retained_evidence: VERSION_EXIT_SIGNAL_TIMEOUT_PROMPT_TRUNCATION_BYTE_COUNTS_AND_STDOUT_STDERR_SHA256
+monthly_invoice_attestation:
+  source_document: docs/master_specification/ENVIRONMENT_REMEDIATION_PLAN.md
+  source_document_blob: 5f7a39b287a7484b5d2fa8490bf8780bbf5a8f8f
+  source_section: "13.2 Canonical 98-path executable manifest"
+  authority_url: https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261032333
+  pinned_head: 96c0d5cb34f60396242ea89ae0cf4d0aac92f59e
+  pinned_tree: aa544700b66971473f5c7127289bfffd76b8b024
+  row_format: "<sha256><two ASCII spaces><repository-relative path><LF>"
+  sha256_literal: 1f0f0f491e0e083c8163cb309b3846c035629c6930e83b180dc2e9ffdab86255
+  protected_content_read: false
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+fixed_manifest:
+  formal_count: 113
+  staged_count: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+fixed_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_contact: PROHIBITED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_GIT_ACQUISITION_AND_DELEGATION_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist_unchanged:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+future_rediagnosis:
+  exact_file_count: 18
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_READ_ONLY_DIAGNOSIS_RESULT_V1
+boundaries:
+  claude_rediagnosis_invoked: false
+  private_files_transmitted: false
+  adapter_implemented_or_tested: false
+  existing_fourteen_harness_files_modified: false
+  protected_content_opened: false
+  supabase_cli_or_network_used: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3B_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_FROZEN_FOURTEEN_HASH_PROTECTED_GIT_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; NORMAL_PUSH_AND_EIGHTEEN_FILE_CLAUDE_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
+```

@@ -2156,6 +2156,56 @@ locally commit exactly these three governance paths. Normal push remains a
 later separate gate. Only after delivery may a new superseding one-time
 read-only Claude diagnosis be proposed.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3B Git acquisition and delegation correction
+
+**Status:** `CR6_R3B_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At committed PR #67 HEAD `d1e634ceb22c194ba2703aa6043e0306dff50ccd`,
+tree `14962186fa1aac848d19b66f4a5920489fa2b69d`, Claude completed the
+one-time CR6-R3A read-only diagnosis and returned
+`CHANGES_REQUIRED_DIRECTIVE`. MacBook Codex independently accepted that result
+at [PR #67 comment 5553913054](https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5553913054).
+
+CR6-R3B fully supersedes CR6-R3A while preserving its exact 112-row aggregate
+serialization. It closes the four remaining gaps by fixing exact no-shell Git
+argv and NUL/`cat-file --batch` parsing, defining the adapter's narrow public
+input and internal delegation into frozen `runPreflight`, embedding the exact
+monthly-invoice digest attestation provenance, and defining bounded volatile
+CLI-discovery output plus retained hashes/status/compatibility evidence.
+
+The contract also avoids a circular self-hash: a later implementation
+authorization must name the accepted CR6-R3B governance parent, and the adapter
+must prove that its current commit has that single parent and changes exactly
+the two implementation paths before passing its derived current HEAD/tree to
+the frozen core. The local Supabase executable is pinned to the current resolved
+Homebrew binary rather than incorrectly rejecting the `/opt/homebrew/bin`
+symlink that Homebrew normally installs.
+
+The external caller may provide only
+`{ mode, attemptId, confirmation, repoRoot, runtimeRoot, evidenceRoot }`.
+Expected identity, project ref, canonical/actual manifests, hash implementation,
+executables, argv, environment, and process/evidence authorities are pinned and
+derived internally. Existing core test-only dependency injection remains
+unchanged; it is not exposed through the new production entrypoint.
+
+**CR6-R3B governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_GIT_ACQUISITION_AND_DELEGATION_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation authoring and local read-only verification
+only. Claude re-diagnosis, private-file transmission, adapter implementation,
+executable tests, Supabase CLI, network, hosted project, DB/provider access,
+migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment,
+cutover, and retirement remain unauthorized.
+
+**Next:** Verify only the three-document diff, unchanged fourteen-file hash,
+protected Git metadata, clean index, and `git diff --check`. Then request a
+separate Owner approval to stage and locally commit exactly those three paths.
+Normal push and the one-time eighteen-file CR6-R3B re-diagnosis remain later
+separate gates.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
