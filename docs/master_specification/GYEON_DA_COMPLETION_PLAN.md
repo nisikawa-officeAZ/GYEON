@@ -2251,6 +2251,50 @@ separate Owner approval to stage and locally commit exactly these three paths.
 Normal push and the one-time eighteen-file CR6-R3C re-diagnosis remain later
 separate gates.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3D attempt-id and CLI result mapping correction
+
+**Status:** `CR6_R3D_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At PR #67 HEAD `c7e0fa7785e2c82cbe2457cc4ab5c0877ac1fd4c`, tree
+`62237a98b0ade85d13cccfba8b8ca108b68a388f`, Claude completed the
+one-time CR6-R3C tool-disabled diagnosis and returned
+`CHANGES_REQUIRED_DIRECTIVE`. MacBook Codex accepted both findings and posted
+the public-safe adjudication at
+[PR #67 comment 5554222300](https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554222300).
+
+CR6-R3D fully supersedes CR6-R3C. It changes the public `attemptId` grammar to
+the frozen quarantine core's exact `^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$` and
+pins the real process-result mapping to official Supabase CLI `v2.116.0`
+release commit `997a1e6`.
+
+The replacement-project list gate now accepts only one exact JSON success
+envelope with exactly 112 canonical local versions and an empty `remote` value
+for every row. Any remote history or row/stream drift sets `ledgerMismatch`
+and prevents migration-up. Target identity is proven before spawn from the
+internally pinned executable, argv project ref, isolated workdir, cwd, and
+environment because the CLI success JSON contains no project ref. JSON mode is
+non-interactive, stdin is closed, prompt markers and prompt error envelopes map
+to `promptDetected`, and every unknown/malformed response quarantines.
+Migration-up success requires exactly 112 canonical absolute applied paths and
+matching progress lines.
+
+**CR6-R3D governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3D_ATTEMPT_ID_AND_CLI_RESULT_MAPPING_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation and read-only verification only. No Claude
+re-diagnosis, private transmission, adapter implementation/test, Supabase CLI,
+hosted project/database/provider contact, migration replay, Git
+stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or
+retirement is authorized.
+
+**Next:** Verify the exact three-document diff, official-source references,
+unchanged fourteen-file hash, protected metadata, clean index/upstream, and
+`git diff --check`; then request a separate three-file stage/local-commit gate.
+Push and eighteen-file CR6-R3D diagnosis remain later separate gates.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

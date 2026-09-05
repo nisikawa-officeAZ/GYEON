@@ -6548,3 +6548,91 @@ boundaries:
 decision: AUTHOR_CR6_R3C_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_FROZEN_FOURTEEN_HASH_PROTECTED_GIT_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; NORMAL_PUSH_AND_EIGHTEEN_FILE_CLAUDE_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
 ```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3D attempt-id and CLI result mapping correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3D_ATTEMPT_ID_AND_CLI_RESULT_MAPPING_CORRECTION_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3D_ATTEMPT_ID_AND_CLI_RESULT_MAPPING_CORRECTION_GOVERNANCE_V1
+status: CHANGES_REQUIRED_DIRECTIVE_CORRECTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-05
+append_only: true
+objective: "Close the two CR6-R3C directive contradictions without beginning adapter implementation."
+authorization: "The Owner authorized one public-safe PR result record and exact three-document CR6-R3D authoring. This does not authorize another Claude run/private transmission, implementation/tests, Git or Supabase CLI execution for implementation, hosted/DB/provider access, migration replay, stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  predecessor_head: c7e0fa7785e2c82cbe2457cc4ab5c0877ac1fd4c
+  predecessor_tree: 62237a98b0ade85d13cccfba8b8ca108b68a388f
+  upstream_ahead_behind_before_authoring: "0 0"
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+prior_cr6_r3c_diagnosis:
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_verdict: CHANGES_REQUIRED_DIRECTIVE
+  codex_acceptance_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554222300
+  codex_adjudication: CHANGES_REQUIRED_DIRECTIVE_ACCEPTED
+accepted_findings:
+  - ATTEMPT_ID_GRAMMAR_DIFFERS_FROM_FROZEN_QUARANTINE_CORE
+  - REAL_CLI_OUTPUT_TO_FROZEN_EXIT_INFO_MAPPING_UNSPECIFIED
+official_cli_authority:
+  repository: supabase/cli
+  release: v2.116.0
+  commit: 997a1e6
+  network_contact: OFFICIAL_GITHUB_SOURCE_READ_ONLY_ONLY
+  hosted_project_or_database_contact: false
+corrected_attempt_id:
+  regex: "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+  dot_allowed: false
+  maximum_total_characters: 128
+corrected_process_mapping:
+  target_mismatch: PRE_SPAWN_INTERNAL_EXECUTABLE_ARGV_PROJECT_REF_WORKDIR_CWD_ENVIRONMENT_IDENTITY_ONLY
+  list_success_top_level_keys: [migrations, message]
+  list_success_message: Migrations listed
+  list_exact_rows: 112
+  list_all_remote_values: EMPTY_STRING
+  any_list_shape_or_stream_drift: LEDGER_MISMATCH_AND_NO_UP_SPAWN
+  up_success_top_level_keys: [applied, message]
+  up_success_message: Migrations applied
+  up_exact_applied_paths: 112
+  any_up_shape_or_stream_drift: LEDGER_MISMATCH_AND_QUARANTINE
+  json_mode_interactive: false
+  stdin: CLOSED
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+fixed_manifest:
+  formal_count: 113
+  staged_count: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+fixed_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_contact: PROHIBITED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3D_ATTEMPT_ID_AND_CLI_RESULT_MAPPING_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist_unchanged:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+future_rediagnosis:
+  exact_file_count: 18
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3D_READ_ONLY_DIAGNOSIS_RESULT_V1
+boundaries:
+  public_safe_pr_result_record_posted: true
+  claude_r3d_rediagnosis_invoked: false
+  adapter_implemented_or_tested: false
+  existing_fourteen_harness_files_modified: false
+  protected_content_opened: false
+  supabase_cli_execution_for_implementation: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3D_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_OFFICIAL_SOURCE_BINDING_FROZEN_FOURTEEN_HASH_PROTECTED_METADATA_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; PUSH_AND_EIGHTEEN_FILE_R3D_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
+```
