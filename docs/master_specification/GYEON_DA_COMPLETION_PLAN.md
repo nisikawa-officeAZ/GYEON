@@ -2295,6 +2295,51 @@ unchanged fourteen-file hash, protected metadata, clean index/upstream, and
 `git diff --check`; then request a separate three-file stage/local-commit gate.
 Push and eighteen-file CR6-R3D diagnosis remain later separate gates.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3E durable burn ledger and logical-spawn correction
+
+**Status:** `CR6_R3E_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At PR #67 HEAD `8a803272e28ddeac338f73d61fd784a4960ebb69`, tree
+`1d67ffe56f69cc2638ad06a600b1bf80a74449f5`, Claude completed the
+one-time CR6-R3D tool-disabled diagnosis and returned
+`CHANGES_REQUIRED_DIRECTIVE`. MacBook Codex independently accepted both
+findings and posted the public-safe adjudication at
+[PR #67 comment 5554729245](https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554729245).
+
+CR6-R3E fully supersedes CR6-R3D. It preserves the accepted migration,
+protected-content, Git, Supabase CLI `v2.116.0`, output mapping, and two-file
+implementation boundaries while closing two remaining process-safety gaps.
+
+The burn ledger is no longer caller-selected or memory-only. It uses a fixed
+MacBook path outside the worktree, one exclusive mode-0600 canonical burn file
+per fixed project-ref/attempt-id, exact read-back, file and directory fsync,
+and a mode-0700 project execution lock. Existing, partial, malformed, or
+uncertain records remain fail-closed and are never repaired or removed
+automatically. A real linked process cannot launch until the record is durable.
+
+The frozen core's `adapters.process.spawn()` call is explicitly a logical
+adapter call. On target mismatch the adapter returns a synthetic handle and
+exact `targetMismatch:true` exitInfo without launching any real OS/Supabase
+process. Tests count logical calls and real launches separately.
+
+**CR6-R3E governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3E_DURABLE_BURN_LEDGER_AND_LOGICAL_SPAWN_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation and read-only verification only. No Claude
+re-diagnosis, private transmission, adapter implementation/test, Supabase CLI,
+hosted project/database/provider contact, migration replay, Git
+stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or
+retirement is authorized.
+
+**Next:** Verify the exact three-document diff, durable-ledger and logical-spawn
+closure, unchanged fourteen-file hash, protected metadata, clean
+index/upstream, and `git diff --check`; then request a separate exact-three-file
+stage/local-commit gate. Push and eighteen-file CR6-R3E diagnosis remain later
+separate gates.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
