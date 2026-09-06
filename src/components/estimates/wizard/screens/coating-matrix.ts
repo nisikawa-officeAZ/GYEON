@@ -76,8 +76,13 @@ export function firstLayerOptions(rank: ShopRank): CoatingProductOption[] {
   return toOptions(FIRST_LAYER_BY_RANK[rank]);
 }
 
-export function secondLayerOptions(firstLayerId: string | null): CoatingProductOption[] {
-  return firstLayerId ? toOptions(LAYER2_BY_FIRST[firstLayerId] ?? []) : [];
+/** GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1: `cancoat-pro-evo` is Certified-only even as a
+ *  second layer. An omitted rank fails closed (excluded) exactly like every non-Certified rank —
+ *  callers must supply the authoritative rank to see it at all. */
+export function secondLayerOptions(firstLayerId: string | null, rank?: ShopRank): CoatingProductOption[] {
+  if (!firstLayerId) return [];
+  const ids = LAYER2_BY_FIRST[firstLayerId] ?? [];
+  return toOptions(rank === "certified" ? ids : ids.filter((id) => id !== "cancoat-pro-evo"));
 }
 
 export function thirdLayerOptions(firstLayerId: string | null): CoatingProductOption[] {

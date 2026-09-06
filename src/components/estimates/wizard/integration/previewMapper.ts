@@ -88,7 +88,7 @@ export function mapWizardDraftToPreview(draft: EstimateWizardDraftV22, ctx: Prev
     if (cat === "coating") {
       const co = cfg.coating;
       const l1 = firstLayerOptions(ctx.shopRank).find((o) => o.id === co.layer1Id)?.label;
-      const l2 = secondLayerOptions(co.layer1Id).find((o) => o.id === co.layer2Id)?.label;
+      const l2 = secondLayerOptions(co.layer1Id, ctx.shopRank).find((o) => o.id === co.layer2Id)?.label;
       const l3 = thirdLayerOptions(co.layer1Id).find((o) => o.id === co.layer3Id)?.label;
       const parts = [l1, l2, l3].filter(Boolean) as string[];
       serviceLines.push({

@@ -700,6 +700,28 @@ test("binding module is pure (imports no React) and uses the row-ID authority", 
   assert.equal(/\.length\s*\+|\+\+|Seq|counter/.test(code), false, "no counter/length-based ids");
 });
 
+// ── GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1: second-layer CANCOAT PRO EVO is rank-aware ────
+
+test("second-layer CANCOAT PRO EVO is absent from the rendered host for shop/detailer/ppf_installer but present for certified", () => {
+  const services = fresh();
+  services.coating = { ...services.coating, layerCount: 2, layer1Id: "one-evo" };
+  for (const rank of ["shop", "detailer", "ppf_installer"] as const) {
+    const html = render(<Step4Estimate api={makeApi(["coating"], services).api} shopRank={rank} screenConfig={SC} />);
+    assert.equal(html.includes("Q² CANCOAT PRO EVO"), false, `${rank} must never render CANCOAT PRO EVO as a layer option`);
+  }
+  const certifiedHtml = render(<Step4Estimate api={makeApi(["coating"], services).api} shopRank="certified" screenConfig={SC} />);
+  assert.ok(certifiedHtml.includes("Q² CANCOAT PRO EVO"), "certified must still render CANCOAT PRO EVO as a layer-2 option");
+});
+
+test("Step4Estimate.tsx threads the authoritative shopRank into secondLayerOptions (source guard)", () => {
+  const raw = readFileSync(STEP_SRC, "utf8");
+  assert.match(
+    raw,
+    /secondLayerOptions\(cfg\.coating\.layer1Id, shopRank\)/,
+    "the second-layer call site must pass the authoritative shopRank",
+  );
+});
+
 test("PPF price + coefficient placeholders stay null/omitted; no example price literal", () => {
   const raw = readFileSync(STEP_SRC, "utf8");
   assert.match(raw, /displayedUnitPrice=\{null\}/, "PPF displayedUnitPrice null");

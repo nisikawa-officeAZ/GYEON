@@ -401,7 +401,7 @@ export default function EstimateWizardContainer({
               selectedLayer2ProductId={cfg.coating.layer2Id}
               selectedLayer3ProductId={cfg.coating.layer3Id}
               availableLayer1Products={firstLayerOptions(shopRank)}
-              availableLayer2Products={secondLayerOptions(cfg.coating.layer1Id)}
+              availableLayer2Products={secondLayerOptions(cfg.coating.layer1Id, shopRank)}
               availableLayer3Products={thirdLayerOptions(cfg.coating.layer1Id)}
               onLayerCountChange={(n) => update((d) => updateServiceConfiguration(d, "coating", { layerCount: n }))}
               onLayer1Change={(id) => update((d) => updateServiceConfiguration(d, "coating", { layer1Id: id, layer2Id: null, layer3Id: null }))}
