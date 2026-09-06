@@ -2381,6 +2381,85 @@ unchanged fourteen-file hash, protected metadata, clean index/upstream, and
 `git diff --check`; then request a separate exact-three-file stage/local-commit
 gate. Push and eighteen-file CR6-R3F diagnosis remain later separate gates.
 
+### GDA-DEMO-20260907 — Estimate Wizard demo-blocking hotfix R1
+
+**Status:** `READ_ONLY_DIAGNOSIS_ACCEPTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+**Priority decision:** The Owner made the 2026-09-07 Estimate Wizard demo the
+temporary MacBook priority. The existing postal-master CR6-R3K work, artifacts,
+and PR history remain preserved but are held until a separate Owner resumption
+decision. This is a bounded interruption, not a CR6 cancellation or scope merge.
+
+**Fixed execution identity:**
+
+- repository: `nisikawa-officeAZ/GYEON`;
+- coordination PR: `https://github.com/nisikawa-officeAZ/GYEON/pull/67` —
+  `OPEN / Draft / base main`;
+- branch: `agent/gda-estimate-ocr-postal-clean-replacement-r1`;
+- HEAD: `8ec828736856ed0ba2f9bbb5117d00e680af31c4`;
+- tree: `2c3108d9d8405574dddca9e89f82ad3d480aea07`;
+- Preview deployment: `dpl_BkBJw1KWqoPLj7BGJQ2NcQUGLxD5`;
+- Preview alias:
+  `dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app`.
+
+**Owner-confirmed blockers:**
+
+1. OCR-applied address does not populate the postal-code field in Preview.
+2. `Q² CANCOAT PRO EVO`, a Certified-only product, is rendered for the
+   `detailer` rank.
+3. The enabled `保存` and `保存してPDFを開く` actions render dark text and require
+   explicit white text.
+
+**Accepted diagnosis:** The Owner authorized exactly nineteen private files to
+be sent once to Anthropic Claude Code with tools and persistence disabled.
+Claude returned
+`GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1_READ_ONLY_DIAGNOSIS_RESULT_V1`
+with `PASS_TO_IMPLEMENT`. MacBook Codex independently accepted the bounded
+findings: postal application wiring is present and the blocker is missing
+Preview-bound non-production DB objects/data; second-layer coating selection is
+not rank-aware; and both ready-state save buttons lack an explicit white-text
+class. No tracked, staged, Git, database, provider, Vercel, or deployment
+mutation occurred.
+
+**Governance allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Future implementation allowlist — exactly seven paths:**
+
+1. `src/components/estimates/wizard/screens/coating-matrix.ts`;
+2. `src/components/estimates/wizard/screens/coating-window-reconciliation.test.ts`;
+3. `src/components/estimates/wizard/steps/Step4Estimate.tsx`;
+4. `src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx`;
+5. `src/components/estimates/wizard/production/EstimateWizardContainer.tsx`;
+6. `src/components/estimates/wizard/save/WizardSavePanel.tsx`; and
+7. `src/components/estimates/wizard/save/WizardSavePanel.test.tsx`.
+
+`secondLayerOptions` must fail closed for an omitted or non-Certified rank, both
+authorized call sites must pass authoritative `shopRank`, and Certified
+behavior must remain unchanged. Only the two enabled ready-state save actions
+receive explicit white text. Postal source is not edited.
+
+**Protected path:**
+`src/components/estimates/wizard/screens/ScreensPreview.tsx` remains
+pathname/mode/hash/Git-state only. Pre-governance metadata is mode
+`-rw-r--r--`, size `31076`, SHA-256
+`d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e`.
+
+**Current boundary:** Only the exact three-document governance candidate and
+one public-safe PR #67 instruction comment are authorized. No seven-file
+implementation, tests, private-source retransmission, dependency action,
+stage, commit, push, Supabase/database access, migration apply, Japan Post data
+import, Vercel mutation, deployment, Ready, or merge is authorized.
+
+**Next:** Independently verify the exact three-document diff, append the public
+instruction URL to the result ledger, and request a separate Owner
+authorization for the exact seven-file Claude implementation and its exact
+verification commands. Postal environment activation remains a later,
+separately authorized database gate after the Preview binding is identified.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

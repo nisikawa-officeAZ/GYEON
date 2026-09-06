@@ -6811,3 +6811,86 @@ boundaries:
 decision: AUTHOR_CR6_R3F_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_SYNTHETIC_EXIT_CLASSIFICATION_FROZEN_FOURTEEN_HASH_PROTECTED_METADATA_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; PUSH_AND_EIGHTEEN_FILE_R3F_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
 ```
+
+## GDA-DEMO-20260907 — Estimate Wizard hotfix R1 diagnosis acceptance and governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1
+marker: GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1_GOVERNANCE_V1
+status: READ_ONLY_DIAGNOSIS_ACCEPTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-06
+append_only: true
+objective: "Register the Owner-confirmed demo blockers, accepted bounded diagnosis, exact future seven-file repair, and separate postal environment gate without starting implementation."
+authorization: "The Owner first authorized exactly nineteen private files to be sent once to Anthropic Claude Code for a tool-disabled, read-only diagnosis. After MacBook Codex accepted the result, the Owner authorized only the exact three-document governance registration and one public-safe PR #67 instruction comment. No implementation, tests, retransmission, stage, commit, push, database, migration, import, Vercel mutation, deployment, Ready, or merge is authorized."
+priority:
+  active: GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1
+  held_without_cancellation: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3K_R1
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_head: 8ec828736856ed0ba2f9bbb5117d00e680af31c4
+  fixed_tree: 2c3108d9d8405574dddca9e89f82ad3d480aea07
+  upstream_ahead_behind: "0 0"
+preview:
+  deployment_id: dpl_BkBJw1KWqoPLj7BGJQ2NcQUGLxD5
+  alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+owner_blockers:
+  - OCR_ADDRESS_DOES_NOT_POPULATE_POSTAL_CODE
+  - CERTIFIED_ONLY_CANCOAT_PRO_RENDERED_FOR_DETAILER
+  - READY_SAVE_ACTIONS_LACK_WHITE_TEXT
+diagnosis:
+  invocation: ANTHROPIC_CLAUDE_CODE_TOOL_DISABLED_READ_ONLY_ONE_TIME
+  exact_private_file_count: 19
+  result_marker: GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  verdict: PASS_TO_IMPLEMENT
+  codex_adjudication: PASS_TO_IMPLEMENT_ACCEPTED_WITH_SEPARATE_POSTAL_ENVIRONMENT_GATE
+accepted_findings:
+  postal: UI_AND_SERVER_ACTION_WIRING_PRESENT_DB_OBJECTS_AND_PROMOTED_OFFICIAL_DATA_MISSING_IN_NON_PRODUCTION_CANDIDATES
+  coating: SECOND_LAYER_OPTIONS_NOT_RANK_AWARE_WHILE_PRICING_FAILS_CLOSED
+  save_actions: TWO_READY_BUTTONS_LACK_EXPLICIT_TEXT_WHITE
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_exact_implementation_allowlist:
+  - src/components/estimates/wizard/screens/coating-matrix.ts
+  - src/components/estimates/wizard/screens/coating-window-reconciliation.test.ts
+  - src/components/estimates/wizard/steps/Step4Estimate.tsx
+  - src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx
+  - src/components/estimates/wizard/production/EstimateWizardContainer.tsx
+  - src/components/estimates/wizard/save/WizardSavePanel.tsx
+  - src/components/estimates/wizard/save/WizardSavePanel.test.tsx
+future_verification:
+  - node --import tsx --test src/components/estimates/wizard/screens/coating-window-reconciliation.test.ts
+  - node --import tsx --test src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx
+  - node --import tsx --test src/components/estimates/wizard/save/WizardSavePanel.test.tsx
+  - node --import tsx --test src/components/estimates/wizard/production/ProductionEstimateWizard.test.tsx
+  - npm run typecheck
+  - git diff --check -- EXACT_SEVEN_PATHS
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+public_instruction:
+  target: PR_67
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5562207548
+boundaries:
+  source_implemented_or_tested: false
+  postal_source_edit_proposed: false
+  private_source_retransmitted_after_diagnosis: false
+  dependency_changed_or_installed: false
+  git_staged_committed_or_pushed: false
+  supabase_or_database_contacted_after_diagnosis: false
+  migration_or_import_executed: false
+  vercel_changed_or_deployed: false
+  ready_or_merged: false
+decision: REGISTER_DEMO_HOTFIX_R1_GOVERNANCE_AND_PUBLIC_SAFE_PR_INSTRUCTION_ONLY
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_PROTECTED_METADATA_POST_ONE_PR67_INSTRUCTION_RECORD_ITS_URL_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_SEVEN_FILE_CLAUDE_IMPLEMENTATION; KEEP_POSTAL_ENVIRONMENT_ACTIVATION_SEPARATE"
+```
