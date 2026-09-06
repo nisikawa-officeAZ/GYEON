@@ -127,7 +127,8 @@ test("S2: new vehicle with a trimmed model is valid", () => {
 });
 
 test("S2 REGRESSION: OCR-applied maker/plate WITHOUT a manually entered model stays invalid", () => {
-  // The vehicle OCR apply path populates only maker and plate_number — never model.
+  // OCR may prefill model from 車名 when present, but this fixture supplies only maker and
+  // plate — the operator must still confirm or enter a vehicle name before this step is valid.
   assert.equal(step2Valid(inp(draft({ maker: "トヨタ", plateNumber: "滋賀 330 に 1234" }))), false);
 });
 
@@ -333,7 +334,7 @@ test("F2-R1: checkmarks derive from steps BEHIND the operator via stepIsValid on
 
 test("the host passes the reference arrays into the hook as navigation inputs", () => {
   const host = codeOf("src/components/estimates/wizard/EstimateWizard.tsx");
-  assert.match(host, /useEstimateWizard\(\s*preselectionStorePatch\([\s\S]*?\),\s*\{ customers, vehicles \},?\s*\)/,
+  assert.match(host, /useEstimateWizard\(\s*initialPreselectionStorePatch\([\s\S]*?\),\s*\{ customers, vehicles \},?\s*\)/,
     "the hook receives { customers, vehicles }");
 });
 

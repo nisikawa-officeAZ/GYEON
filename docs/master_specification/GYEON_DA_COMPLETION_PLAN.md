@@ -1568,6 +1568,898 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 - Evidence class is `E2_LOCAL_DISPOSABLE_DB`. No hosted Supabase project, shared/staging/production database, external provider, Preview, or production environment was contacted. No migration was applied outside the fresh local disposable runtime.
 - PR #44 remains `OPEN/Draft`. Ready conversion, merge, migration promotion/application, deployment, and E3 environment verification remain separate owner-approval gates.
 
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5-CR0 — Clean replacement Development pre-execution plan
+
+**Status:** CR0 PLAN COMMITTED AND NORMALLY PUSHED / CHECKS PASS / CR1
+READ-ONLY DIRECTIVE GOVERNANCE CANDIDATE AUTHORIZED / DIAGNOSIS NOT RUN /
+PROJECT NOT CREATED.
+
+**Objective:** Convert the accepted R5 local disposable result and the blocked
+Development schema/ledger preflight into a safe serial clean-replacement plan
+without applying the postal migration to the drifted Development project.
+
+**Authority:**
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`.
+Planning HEAD/tree is
+`297ad4b23731a273c134c1ef0f00aff832aedc57` /
+`35d572270f84134f8254e1377ccbd198fc67841d`; PR #67 remains OPEN/Draft.
+
+**Blocking reconciliation:** Current Git contains 113 top-level formal
+migration SQL files. The accepted R5 runtime staged 112 and excluded only the
+protected LINE migration, while the older B-R3 manifest had 101 files, 98
+executable paths, and excluded the provisioning pair plus LINE. A new literal
+manifest decision is mandatory before any replacement-project creation or
+hosted replay. The Owner ratified `ap-northeast-1` on 2026-09-03 as the clean
+replacement region because Staging and Production already use that Japan
+region, whereas current Development uses `ap-northeast-2`. Any later request
+with another region must stop as a plan change.
+
+**Serial boundary:** Plan acceptance; current literal-manifest reconciliation;
+conditional prerequisite repair; fresh disposable full-chain acceptance;
+cost/organization/name/region/shutdown confirmation; empty project creation;
+exact hosted replay; read-only old-Development export manifest; separately
+approved retained data/Auth/Storage import; separately approved configuration
+and real Japan Post CSV import; old/new acceptance; Development cutover; and a
+later independent old-project retirement decision. Every item is a separate
+owner gate.
+
+**Current four-document allowlist:**
+
+1. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md` (new)
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+4. `docs/master_specification/INDEX.md`
+
+**Current boundary:** Documentation candidate only. No Supabase project, cost
+confirmation, migration replay/apply, database write, data export/import,
+Storage/Auth/provider/Vercel mutation, secret rotation, postal CSV import,
+cutover, retirement, stage, commit, push, PR mutation, Ready, merge, or
+deployment is authorized.
+
+**Exit:** Independently verify the exact four-document diff. Stage/local commit
+and normal push require later separate explicit approvals. The next executable
+phase is not project creation; it is a committed Claude-targeted read-only CR1
+manifest-reconciliation gate.
+
+**CR0 delivery:** Commit `4e3aa471ed776ccd360cd6405ccdc850fced5aaa`,
+tree `e7cadd5903ab29143e55a03ccb4a71cffe8bdfe1`, was normally pushed to
+PR #67. The remote branch matched `0 0`; PR #67 remained OPEN/Draft and
+MERGEABLE; Vercel and Vercel Preview Comments passed.
+
+**CR1 governance candidate:** The exact current directive is
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION.md`.
+It limits the future one-time diagnosis to twelve private paths and a
+Codex-supplied 113-path metadata attestation. It requires one exact decision
+between including both provisioning migrations as disabled infrastructure or
+excluding both, and it rechecks whether the accepted R4 product-policy/five-
+bucket forward repair already closes the historical prerequisite. It prohibits
+project/DB/provider/network execution and cannot return a project-creation
+verdict.
+
+**CR1 governance write allowlist — exactly four paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION.md` (new)
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**CR1 current boundary:** Documentation only. Private-file transmission,
+Claude execution, tests, runtime, Supabase/DB/project/provider/network access,
+source repair, stage, commit, push, PR mutation, Ready, merge, and deployment
+remain separately unauthorized.
+
+**CR1 execution result:** One Owner-authorized, tool-disabled, read-only CR1
+diagnosis completed against source-evidence HEAD/tree
+`216d8cf9aa0dd9135f224aabe90dd5e800fc800e` /
+`0b9f494a1714dd4d6f002ae3c284ee623d6592a9`. Claude recommended the current
+112-migration manifest, excluding only the protected LINE migration, retaining
+both provisioning migrations as disabled infrastructure, treating the accepted
+product-policy/five-bucket forward repair as closed, and moving next to CR3
+fresh disposable governance with `CR2_NOT_REQUIRED`. The report omitted the
+mandatory literal `verdict:` line and exact top-level schema, so MacBook Codex
+classifies the artifact as `CHANGES_REQUIRED_GOVERNANCE`; the substantive
+recommendation is not yet Owner-ratified.
+
+**CR1-R1 format-correction governance candidate:** The exact directive is
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION.md`.
+It permits a future Claude invocation to receive only that directive and the
+exact prior Claude report. It prohibits retransmission of the twelve private
+CR1 files and 113-path metadata table, prohibits new diagnosis or changed
+findings, and requires a mechanical rewrite into the literal result schema.
+
+**CR1-R1 governance write allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION.md` (new)
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**CR1-R1 current boundary:** Documentation authoring only. A second Claude
+invocation, prior-report transmission, tests, runtime, Supabase/DB/project/
+provider/network access, source changes, stage, commit, push, PR mutation,
+Ready, merge, migration apply, cutover, retirement, and deployment remain
+separately unauthorized.
+
+**CR1-R1 execution and Codex normalization:** One separately Owner-authorized,
+tool-disabled format-only invocation returned the required marker, literal
+`verdict: READY_FOR_CR1_MANIFEST_RATIFICATION`, and all eleven required fields
+in order. It preserved the 112-migration/LINE-only-exclusion recommendation,
+but one duplicated protected LINE Git blob was mistranscribed. Git metadata
+proved the canonical blob is `accd22345054cc44f89156fd78eaba6dfe4242a4`.
+The Owner authorized MacBook Codex to replace that one string only without a
+third Claude invocation. The transparent normalized artifact is
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_CODEX_NORMALIZED_RESULT.md`.
+No other finding changed.
+
+**CR1 pre-ratification acceptance candidate (historical):** At that checkpoint,
+the normalized result was ready for the Owner's manifest ratification. It
+recommended exactly 112 executable migrations,
+excludes only `20260801110110_line_link_tokens.sql`, keeps both provisioning
+migrations as disabled infrastructure, closes the product-policy/five-bucket
+prerequisite, records `CR2_NOT_REQUIRED`, and identifies CR3 fresh disposable
+governance as the minimum next gate. That candidate was not authorization to
+author or execute CR3, create a Supabase project, replay/apply migrations,
+contact a provider, cut over, retire, merge, or deploy.
+
+**CR1 normalized-result write allowlist — exactly three paths:**
+
+1. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_CODEX_NORMALIZED_RESULT.md` (new)
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Boundary at that checkpoint (historical):** Documentation candidate only.
+Stage, commit, push, PR
+mutation, CR3 authoring/execution, tests, runtime, Supabase/DB/project/provider
+access, migration apply, cutover, retirement, Ready, merge, and deployment
+remained separately unauthorized.
+
+**CR1 Owner ratification:** On 2026-09-03 the Owner formally ratified exactly
+112 executable migrations from 113 unique top-level formal migration SQL
+files. The sole exclusion is
+`supabase/migrations/20260801110110_line_link_tokens.sql`. Both provisioning
+migrations are included as inert schema under
+`INCLUDE_SCHEMA_KEEP_FEATURE_DISABLED`; GYEON partner onboarding remains
+disabled. The accepted product-policy/canonical five-bucket forward repair is
+closed, the aggregate manifest SHA-256 is
+`0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb`, and
+the phase decision is `CR2_NOT_REQUIRED`.
+
+**CR3 fresh-disposable preflight governance candidate (superseded):** The
+original directive was
+`CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md`.
+It intended to govern a later separately authorized, one-time, tool-disabled,
+read-only static review. Its wording limited the future review to thirteen
+private supporting files but did not separately count the directive control
+input. It must return either
+`REUSE_EXISTING_R5_HARNESS_UNCHANGED` or the smallest exact repair need before
+any new disposable runtime is considered.
+
+**CR3 governance write allowlist — exactly four paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md` (new)
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current CR3 boundary:** Directive authoring only. Private-file transmission,
+Claude execution, tests, runtime, Supabase/DB/project/provider access,
+migration replay/application, project creation, data transfer, real Japan Post
+CSV import, configuration, cutover, retirement, stage, commit, push, PR
+mutation, Ready, merge, and deployment remain separately unauthorized.
+
+**CR3-R1 invocation-boundary correction:** The corrected directive marker is
+`GDA_POSTAL_R5_CR3_R1_FRESH_DISPOSABLE_PREFLIGHT_DIRECTIVE_V1`. A future
+invocation may receive exactly one committed directive as its governing control
+input plus exactly thirteen private supporting files, for an exact total of
+fourteen repository files. Zero other repository files may be transmitted or
+opened. The required Claude result marker and all CR1 manifest, region, source,
+harness, protected-path, and runtime decisions remain unchanged.
+
+**Current CR3-R1 boundary:** Documentation correction only. Stage, commit,
+push, private-file transmission, Claude execution, tests, runtime, Supabase/DB/
+project/provider access, migration replay/application, project creation, data
+transfer, real Japan Post CSV import, configuration, cutover, retirement, PR
+mutation, Ready, merge, and deployment remain separately unauthorized.
+
+**CR3 fresh disposable acceptance:** On 2026-09-03 the Owner separately
+authorized the corrected one-time static preflight and, after Claude returned
+`READY_FOR_CR3_FRESH_DISPOSABLE_EXECUTION_AUTHORIZATION` and Codex accepted it,
+one fresh local disposable execution. The accepted suffix is
+`20260903T114441Z-6698d3`. Both `fresh` and `import` lanes completed setup,
+capture, stop, and cleanup with exit `0`; the exact runtime path was removed.
+Each lane replayed the ratified manifest with 112 staged migrations and the
+protected LINE migration as the sole exclusion. Postal pgTAP passed `75/75`,
+runtime-contract pgTAP passed `20/20`, real Auth/PostgREST passed `9/9`, and
+import interruption/resume passed `3/3` plus `25/25`. Both secret scans were
+clean, all 38 retained artifacts matched the aggregate manifest, and no
+suffix-matching Docker container, volume, or network remained. The retained
+aggregate manifest SHA-256 is
+`f9a3b2f52e9d948293cf016eb0127c94068414ad708d7b076fec44d79a902e60`.
+The formal acceptance artifact is
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_ACCEPTANCE.md`.
+
+**Current CR3 acceptance-record boundary:** Exactly three documentation paths
+only. No source, migration, test, harness, dependency, protected path, DB,
+Supabase, provider, hosted project, Vercel configuration, real postal data, or
+application runtime is changed. Stage, commit, push, PR mutation, Ready, merge,
+and deployment require later separate authorization.
+
+**Next phase after delivery:** `CR4 — Hosted project cost and creation
+preflight`. CR4 must select the exact Supabase organization, retrieve current
+cost evidence, and obtain a fresh Owner cost confirmation. It must not create
+a project. Micro compute, no paid add-ons, maximum life 31 days, and the USD 12
+before-tax ceiling remain mandatory.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR4 hosted project cost and creation preflight
+
+**Status:** `PASS_CANDIDATE_UNCOMMITTED`
+
+The Owner selected Supabase organization `officeAZ`
+(`ivlpkysdjbrkcozrvzwg`). The provider cost interface returned USD 10 monthly
+for a new project, below the USD 12 before-tax ceiling, and the Owner explicitly
+acknowledged that cost. The cost-confirmation identifier was issued without
+creating a project.
+
+The bounded CR5 identity is `DealerOS-Dev-Clean-R5` in
+`ap-northeast-1`, Micro compute only, no paid add-ons, with planned creation at
+`2026-09-03 21:30 JST`, automatic review at `2026-09-27 21:30 JST`, and a
+mandatory pause/retirement decision deadline of `2026-10-04 21:30 JST`.
+Provider inventory remained exactly the existing three projects after cost
+confirmation; the replacement project does not exist.
+
+The formal result candidate is
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR4_HOSTED_PROJECT_COST_AND_CREATION_PREFLIGHT.md`.
+This recording is limited to three documentation paths. It does not authorize
+project creation, DB access, migration replay/application, data transfer,
+provider configuration changes, real postal import, Git stage/commit/push, PR
+mutation, Ready, merge, cutover, retirement, or deployment.
+
+**Next phase after delivery:** independently review the exact three-document
+CR4 candidate. Stage/local commit and normal push require separate Owner
+approvals. CR5 empty project creation remains a distinct external-mutation gate
+requiring fresh explicit Owner authorization.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR5 empty replacement-project creation
+
+**Status:** `PASS_CANDIDATE_UNCOMMITTED`
+
+The Owner explicitly authorized one empty project after CR4 delivery. Supabase
+created `DealerOS-Dev-Clean-R5` with ref `nqvnjqcxgngqsqkbpdfi` in organization
+`officeAZ` and region `ap-northeast-1`. The provider reports
+`ACTIVE_HEALTHY`, PostgreSQL `17.6.1.166`, engine `17`, and release channel
+`ga`. Official paid-plan defaults and the accepted USD 10 project cost bind it
+to default Micro; no compute upgrade or paid add-on action was requested.
+
+The provider `created_at` value is `2026-09-03 20:52:15.655049 JST`, about
+eleven minutes earlier than the observed local creation/verification window of
+`21:03:03–21:03:59 JST`. The cause is not inferred. The earlier provider time
+is used conservatively, so automatic review is now
+`2026-09-27 20:52:15 JST` and the mandatory pause/retirement decision deadline
+is `2026-10-04 20:52:15 JST`. These values supersede the CR4 planning times
+and do not themselves authorize pause or deletion.
+
+No database connection, SQL, migration replay/application, old-project
+restore, data transfer, Storage/Auth payload access, secret/configuration
+change, real Japan Post import, Vercel binding, or deployment occurred. The
+formal result candidate is
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR5_EMPTY_REPLACEMENT_PROJECT_CREATION.md`.
+
+**Next phase after delivery:** independently review the exact three-document
+CR5 candidate, then require separate Owner approvals for literal-path
+stage/local commit and normal push. CR6 exact hosted migration replay remains
+unauthorized until its own bounded directive, independent acceptance, and
+fresh Owner execution gate.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6 blocked result and CR6-R1 hosted mechanism correction
+
+**Status:** `CR6_R1_READY_RESULT_REJECTED_CR6_R1A_GOVERNANCE_CANDIDATE_UNCOMMITTED`
+
+The Owner authorized one tool-disabled, read-only CR6 preflight against the
+empty replacement-project identity and fixed 112-file manifest. Claude
+returned `BLOCKED_REPLAY_MECHANISM`. MacBook Codex independently accepted the
+stop, verified the result artifact SHA-256
+`29216399e7fb1351385921a0558521d9d90effdd40a99764987a8d4a76d560ed`,
+and refined the rationale using the official Supabase CLI `v2.116.0` source.
+
+The CLI applies pending migrations sequentially and stops after an application
+error. However, it exposes no named-file exclusion flag, and its own
+side-effect contract warns that pipeline-incompatible statements can commit
+outside the migration transaction before the final history row. A failed
+replay can therefore leave partial hosted state even though later migrations
+do not run.
+
+CR6-R1 is documentation-only. It defines a later static diagnosis for the
+smallest hosted-specific harness that must stage exactly 112 migrations in an
+isolated workdir, omit only the protected LINE migration, bind exactly one
+project, execute at most once with a 30-minute watchdog, retain only redacted
+secret-clean evidence, and quarantine any partial failure without retry,
+repair, reset, deletion, or recreation.
+
+**CR6-R1 four-document allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1_HOSTED_REPLAY_MECHANISM_CORRECTION.md`
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** No private-file transmission, Claude invocation, harness
+or test implementation, dependency/source/migration/protected-path change,
+Git stage/commit/push, Supabase/DB/Auth/Storage/provider/Vercel access, project
+binding, migration replay, data transfer, real Japan Post CSV import, Ready,
+merge, cutover, retirement, or deployment is authorized.
+
+**Next phase after delivery:** independently review the exact four-document
+candidate, directive input count, official CLI evidence identity, corrected
+failure semantics, future implementation ceiling, protected metadata, and
+`git diff --check`. Stage/local commit and normal push require separate Owner
+approvals. A future tool-disabled CR6-R1 diagnosis requires another explicit
+Owner authorization and cannot authorize hosted replay.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R1A result consistency correction
+
+**Status:** `CR6_R1A_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+CR6-R1 was committed as
+`a848e73d6561a1a2da3f02ec9b3fd30d7e7c84a8`, tree
+`f898b490b9f9c155e4e16cbd5343f29bf918a327`, and normally pushed to OPEN/Draft
+PR #67. The first tool-disabled diagnosis returned `BLOCKED_CLI_EVIDENCE`.
+The corrected invocation received the missing public CLI source and help
+evidence and returned
+`READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION`.
+
+MacBook Codex rejected the READY verdict as `CHANGES_REQUIRED`: the report's
+declared nine-file count contradicted its eleven listed paths, it required an
+unlisted `finalize-evidence.test.mjs`, orchestration test ownership was not
+one-to-one, and it cited `migration list --help` without that transcript being
+part of the supplied evidence.
+
+CR6-R1A fixes the future implementation allowlist at exactly fourteen new
+files under `scripts/e2e/gda-estimate-postal-master-r5-cr6/`, paired as seven
+runtime modules and seven tests. It also freezes both CLI argument arrays,
+adds the missing `migration list --help` evidence, fixes eighteen offline test
+requirements, and separates the nine authorized repository inputs from
+additional public evidence.
+
+**CR6-R1A four-document allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1A_RESULT_CONSISTENCY_CORRECTION.md`
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** No Claude invocation, CR6-R2 implementation, test run,
+Git stage/commit/push, Supabase/DB/provider/Vercel access, project binding,
+migration replay, data transfer, real Japan Post import, Ready, merge,
+deployment, cutover, or retirement is authorized by this documentation phase.
+
+**Next phase after delivery:** independently verify the exact four-document
+diff, the fourteen-path/seven-pair/eighteen-test arithmetic, both command
+arrays, protected-path immutability, clean index, and `git diff --check`.
+Stage/local commit and normal push require separate Owner approvals. Only
+after delivery may the Owner separately authorize the nine-file static
+CR6-R1A diagnosis.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2 hosted replay harness offline implementation directive
+
+**Status:** `CR6_R2_CODEX_CHANGES_REQUIRED_CR6_R2A_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+CR6-R1A was committed and normally pushed at
+`bd59b08ae1268c6db3bbb5b44142066b90c2be70`, tree
+`03d5c4d58f79ea0b1dab75bd527c394acc2474ce`. Its separately authorized
+tool-disabled diagnosis returned
+`READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION`. MacBook Codex
+accepted the result after independently confirming fourteen exact future
+write paths, seven runtime/test pairs, eighteen offline requirements, two
+command arrays, and the nine-file diagnosis boundary.
+
+The new CR6-R2 directive converts that accepted contract into a bounded
+offline implementation phase. A later, separately authorized Claude run may
+create exactly fourteen new `.mjs` files under
+`scripts/e2e/gda-estimate-postal-master-r5-cr6/` and run `node --check`, one
+seven-test `node --test` command, `git diff --check`, and no-index whitespace
+checks for all fourteen new untracked files. Every process, filesystem, Git,
+clock, timer, evidence, and environment effect must be dependency-injected;
+tests may use only fakes or in-memory adapters.
+
+**CR6-R2 directive-authoring allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2_HOSTED_REPLAY_HARNESS_OFFLINE_IMPLEMENTATION.md`
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** Documentation candidate only. No Claude invocation,
+private-file transmission, harness/test implementation, executable test,
+Supabase CLI use, network, hosted project, database, provider, Vercel,
+migration replay, data transfer, Git stage/commit/push, PR mutation, Ready,
+merge, deployment, cutover, or retirement is authorized.
+
+**Next phase after delivery:** Independently verify this exact four-document
+candidate, the fourteen-path/seven-pair/thirteen-read-file arithmetic, both
+command arrays, protected metadata, clean index, and `git diff --check`.
+Stage/local commit and normal push require separate Owner approvals. Only
+after delivery may the Owner separately authorize one bounded CR6-R2 offline
+implementation invocation.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2A offline harness contract repair
+
+**Status:** `GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+CR6-R2 was committed and normally pushed at
+`00ba2dec6be946ad12b5446748b370d4510a6a90`, tree
+`798b762b5a3882c1245903a9c1b153cb2207e0e6`. The Owner separately authorized
+one offline Claude implementation. Claude created exactly fourteen authorized
+harness/test files and returned `BLOCKED_ENVIRONMENT` because its permission
+layer denied the fourteen no-index whitespace checks.
+
+MacBook Codex independently ran the complete mechanical verification: all
+fourteen files passed `node --check`, the exact seven-test command passed
+`82/82`, all fourteen no-index checks returned the expected clean-difference
+result, and `git diff --check` passed. The protected blobs and every existing
+repository file remained unchanged. No Supabase CLI, network, hosted project,
+database, provider, Vercel, Auth, Storage, migration, stage, commit, push,
+Ready, merge, or deployment action occurred.
+
+MacBook Codex adjudicated the candidate `CHANGES_REQUIRED`. The fixed
+112-migration aggregate and complete canonical manifest are not enforced by
+preflight; timeout does not terminate the child and creates separate 30-minute
+windows; environment sanitation is not wired to spawn; evidence adapter
+exceptions and unsafe/duplicate retention keys are not fail-closed;
+non-string secret-scan input is reported clean; and preflight accepts an
+unvalidated target and uncaught adapter rejection.
+
+The new CR6-R2A directive preserves the same exact fourteen-file repair
+allowlist, freezes their pre-repair hashes, requires hostile regression tests,
+and defines a future exact nineteen-file read payload. The current authoring
+allowlist is only:
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2A_OFFLINE_HARNESS_CONTRACT_REPAIR.md`;
+2. `docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md`;
+3. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+4. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation authoring only. The existing fourteen
+candidate files remain unstaged and byte-identical. Claude repair, executable
+tests, Git stage/commit/push, Supabase/DB/provider/Vercel access, hosted
+preflight/replay, PR mutation, Ready, merge, deployment, cutover, and retirement
+remain separately unauthorized.
+
+**Next phase after delivery:** Independently audit the exact four-document
+candidate and frozen fourteen candidate hashes. Literal-path stage/local
+commit and normal push require separate Owner approvals. Only after delivery
+may the Owner separately authorize one bounded CR6-R2A repair invocation.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2B/R2C recovered offline harness acceptance
+
+**Status:** `CR6_R2C_OFFLINE_HARNESS_ACCEPTED_GOVERNANCE_RECORD_UNSTAGED_UNCOMMITTED`
+
+After the temporary recovery checkout was lost during the authorized computer
+restart, the Owner authorized reconstruction in the persistent PR #67 checkout
+and bounded Claude repair. MacBook Codex rejected the first reconstructed
+candidate because exact manifest authority and evidence finalization were not
+fail-closed. CR6-R2B repaired those four defects. MacBook Codex then found that
+the canonical table itself could still be reordered or omit an ordinary
+SHA-256, so CR6-R2C completed one final two-file correction.
+
+MacBook Codex independently accepted the resulting exact fourteen-file offline
+harness candidate at base HEAD `bbff657ffe5547b49c34eb9e795434b2fffe8d3b`,
+tree `50fe65d5ddef760a047e6bf5638c8b1b16cab955`. All fourteen files passed
+`node --check`; the exact seven-test command passed `150/150` with zero failure,
+skip, cancellation, or todo; the hostile direct reproductions rejected missing
+authorities, reordered actual and canonical manifests, protected content
+hashes, malformed or incomplete canonical entries, unsafe evidence input, and
+secret-bearing retained read-back. The valid exact canonical table continued
+to pass. All fourteen no-index whitespace checks, `git diff --check`, file-mode,
+clean-index, upstream `0 0`, and protected-blob gates passed.
+
+The accepted source candidate is limited to the fourteen files under
+`scripts/e2e/gda-estimate-postal-master-r5-cr6/`. No hosted replay, Supabase
+CLI, database, provider, network, Vercel, migration application, PR mutation,
+Ready conversion, merge, deployment, cutover, or retirement was executed or
+accepted. The source candidate remains untracked and uncommitted.
+
+**Current boundary:** This two-document governance record is the only active
+authoring allowlist. The Owner's prior explicit authorization to stage and
+locally commit exactly the accepted fourteen source/test files is held until
+this governance record is independently verified and committed. It does not
+authorize push. Governance commit, fourteen-file source commit, normal push,
+hosted preflight, and hosted replay remain separate gates.
+
+**Next phase after governance delivery:** Stage and locally commit exactly the
+accepted fourteen source/test files using literal paths. Reverify the commit
+tree, protected blobs, and exact changed paths. Stop before push and request a
+separate Owner approval.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3 hosted execution adapter directive
+
+**Status:** `CR6_R3_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+The accepted CR6 offline harness and its two-document governance record were
+delivered to PR #67 as two normal commits through HEAD
+`8026931afc005a2583ddaa46ecc7a61894786933`, tree
+`18c11148b16dc42c9511f0eee1f773fa2a0c3c5e`. The local branch and upstream are
+`0 0`; PR #67 remains OPEN/Draft against `main`; Vercel and Vercel Preview
+Comments both passed. GitHub Push Protection classified one deliberate fake
+Stripe-shaped redaction fixture as a secret. The Owner explicitly authorized
+only that exact test fixture to be marked false positive; repository secret
+scanning was not disabled.
+
+The fourteen accepted files are dependency-injected offline cores. They do not
+provide a reviewed real-process/filesystem/evidence entrypoint and therefore
+do not yet authorize or safely perform a hosted replay. CR6-R3 defines a future
+two-file execution-adapter candidate while leaving all fourteen accepted files,
+all migrations, application source, configuration, and protected paths
+immutable.
+
+**CR6-R3 governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3_HOSTED_EXECUTION_ADAPTER.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** The Owner authorized authoring this documentation-only
+directive and governance record. No Claude invocation, adapter implementation,
+executable test, Supabase CLI linked command, network, Hosted Supabase, database,
+migration replay, evidence upload, stage, commit, push, PR mutation, Ready,
+merge, deployment, cutover, or retirement is authorized. One local
+`supabase --version` discovery probe failed before returning a version because
+the CLI could not write its telemetry temporary file (`EPERM`). It performed no
+linked command or hosted-project contact and is recorded as failed discovery,
+not acceptance evidence.
+
+**Next:** Independently verify the exact three-path documentation diff. Then
+request a separate Owner approval to stage and locally commit only these three
+governance paths. CR6-R3 adapter implementation remains a later independent
+authorization gate.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3A canonical manifest serialization correction
+
+**Status:** `CR6_R3A_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At committed PR #67 HEAD `7d148084d5799109b5d92f5d9f7b8a14e1dd58ba`,
+tree `3dfea1c7ece8c3faaaaef44ff07c5a80a4e66a19`, Claude completed the
+one-time CR6-R3 read-only diagnosis and reported that the two-file adapter was
+ready. MacBook Codex rejected that readiness because the authorized contract
+did not specify how to serialize the fixed 112-entry aggregate and the existing
+core/tests accept a constant-return aggregate function.
+
+CR6-R3A fully supersedes CR6-R3 and fixes the exact byte contract as one row per
+staged migration in repository-relative path byte order:
+`<lowercase sha256><two ASCII spaces><path><LF>`, including the final LF. The
+protected LINE migration contributes no row. The protected monthly-invoice row
+uses the already attested literal content digest without agent access to its SQL
+text. A governance-time local reproduction, excluding both protected contents
+from reads, reproduced the accepted aggregate exactly:
+`0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb`.
+
+The corrected directive also requires independent canonical-Git and
+actual-isolated-workdir derivation paths, a concrete `node:crypto` serializer,
+no caller-supplied hash/canonical authority, and hostile tests for alternate
+serialization, constant returns, substitution, reorder, mode/blob drift, and
+content-hash drift.
+
+**CR6-R3A governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3A_CANONICAL_MANIFEST_SERIALIZATION_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation authoring and local read-only verification
+only. Claude re-diagnosis, private-file transmission, adapter implementation,
+executable tests, Supabase CLI, network, hosted project, DB/provider access,
+migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment,
+cutover, and retirement remain unauthorized.
+
+**Next:** Independently verify the exact three-document diff, serialization
+reproduction, frozen fourteen-file hash, protected metadata, clean index, and
+`git diff --check`. Then request separate Owner authorization to stage and
+locally commit exactly these three governance paths. Normal push remains a
+later separate gate. Only after delivery may a new superseding one-time
+read-only Claude diagnosis be proposed.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3B Git acquisition and delegation correction
+
+**Status:** `CR6_R3B_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At committed PR #67 HEAD `d1e634ceb22c194ba2703aa6043e0306dff50ccd`,
+tree `14962186fa1aac848d19b66f4a5920489fa2b69d`, Claude completed the
+one-time CR6-R3A read-only diagnosis and returned
+`CHANGES_REQUIRED_DIRECTIVE`. MacBook Codex independently accepted that result
+at [PR #67 comment 5553913054](https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5553913054).
+
+CR6-R3B fully supersedes CR6-R3A while preserving its exact 112-row aggregate
+serialization. It closes the four remaining gaps by fixing exact no-shell Git
+argv and NUL/`cat-file --batch` parsing, defining the adapter's narrow public
+input and internal delegation into frozen `runPreflight`, embedding the exact
+monthly-invoice digest attestation provenance, and defining bounded volatile
+CLI-discovery output plus retained hashes/status/compatibility evidence.
+
+The contract also avoids a circular self-hash: a later implementation
+authorization must name the accepted CR6-R3B governance parent, and the adapter
+must prove that its current commit has that single parent and changes exactly
+the two implementation paths before passing its derived current HEAD/tree to
+the frozen core. The local Supabase executable is pinned to the current resolved
+Homebrew binary rather than incorrectly rejecting the `/opt/homebrew/bin`
+symlink that Homebrew normally installs.
+
+The external caller may provide only
+`{ mode, attemptId, confirmation, repoRoot, runtimeRoot, evidenceRoot }`.
+Expected identity, project ref, canonical/actual manifests, hash implementation,
+executables, argv, environment, and process/evidence authorities are pinned and
+derived internally. Existing core test-only dependency injection remains
+unchanged; it is not exposed through the new production entrypoint.
+
+**CR6-R3B governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_GIT_ACQUISITION_AND_DELEGATION_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation authoring and local read-only verification
+only. Claude re-diagnosis, private-file transmission, adapter implementation,
+executable tests, Supabase CLI, network, hosted project, DB/provider access,
+migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment,
+cutover, and retirement remain unauthorized.
+
+**Next:** Verify only the three-document diff, unchanged fourteen-file hash,
+protected Git metadata, clean index, and `git diff --check`. Then request a
+separate Owner approval to stage and locally commit exactly those three paths.
+Normal push and the one-time eighteen-file CR6-R3B re-diagnosis remain later
+separate gates.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3C protected metadata and preflight materialization correction
+
+**Status:** `CR6_R3C_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At committed PR #67 HEAD `33c1ec65292e2d7112f73130a2446408541e96b1`,
+tree `f373ec66ba47e8e68db7a399d451e831e0ce23e0`, Claude completed the
+one-time CR6-R3B tool-disabled read-only diagnosis and returned
+`CHANGES_REQUIRED_DIRECTIVE`. MacBook Codex independently accepted both
+findings and recorded the public-safe result at
+[PR #67 comment 5554059993](https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554059993).
+
+CR6-R3C fully supersedes CR6-R3B and preserves every accepted R3B contract. It
+uses two exact fixed `git ls-tree` requests: one non-recursive request against
+the migration subtree, requiring 113 top-level SQL blobs plus the single fixed
+`DRAFT_DO_NOT_APPLY` tree record, and one request requiring exactly the two
+non-migration protected paths. Nested draft files are never returned. All four
+protected mode/blob identities are derived across those two independently
+validated responses. It also applies the local 112-blob materialization and
+independent actual-workdir inspection to both explicit modes.
+
+`preflight-only` is now defined precisely: it may write and inspect one fresh
+local isolated tree and must securely delete it before return, but it cannot
+construct or spawn a linked Supabase command, contact hosted state, burn an
+execution attempt, or retain hosted evidence. `execute-once` retains the later
+separate Owner approval, burn-before-linked-spawn, no-retry, quarantine, and
+evidence-finalization requirements.
+
+**CR6-R3C governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_PROTECTED_METADATA_AND_PREFLIGHT_MATERIALIZATION_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation authoring and local read-only verification
+only. Claude re-diagnosis, private-file transmission, adapter implementation,
+executable tests, Supabase CLI, hosted project/database/provider access,
+migration replay, Git stage/commit/push, further PR mutation, Ready, merge,
+deployment, cutover, and retirement remain unauthorized.
+
+**Next:** Verify only the exact three-document diff, unchanged fourteen-file
+hash, protected Git metadata, clean index, and `git diff --check`. Then request
+separate Owner approval to stage and locally commit exactly these three paths.
+Normal push and the one-time eighteen-file CR6-R3C re-diagnosis remain later
+separate gates.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3D attempt-id and CLI result mapping correction
+
+**Status:** `CR6_R3D_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At PR #67 HEAD `c7e0fa7785e2c82cbe2457cc4ab5c0877ac1fd4c`, tree
+`62237a98b0ade85d13cccfba8b8ca108b68a388f`, Claude completed the
+one-time CR6-R3C tool-disabled diagnosis and returned
+`CHANGES_REQUIRED_DIRECTIVE`. MacBook Codex accepted both findings and posted
+the public-safe adjudication at
+[PR #67 comment 5554222300](https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554222300).
+
+CR6-R3D fully supersedes CR6-R3C. It changes the public `attemptId` grammar to
+the frozen quarantine core's exact `^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$` and
+pins the real process-result mapping to official Supabase CLI `v2.116.0`
+release commit `997a1e6`.
+
+The replacement-project list gate now accepts only one exact JSON success
+envelope with exactly 112 canonical local versions and an empty `remote` value
+for every row. Any remote history or row/stream drift sets `ledgerMismatch`
+and prevents migration-up. Target identity is proven before spawn from the
+internally pinned executable, argv project ref, isolated workdir, cwd, and
+environment because the CLI success JSON contains no project ref. JSON mode is
+non-interactive, stdin is closed, prompt markers and prompt error envelopes map
+to `promptDetected`, and every unknown/malformed response quarantines.
+Migration-up success requires exactly 112 canonical absolute applied paths and
+matching progress lines.
+
+**CR6-R3D governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3D_ATTEMPT_ID_AND_CLI_RESULT_MAPPING_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation and read-only verification only. No Claude
+re-diagnosis, private transmission, adapter implementation/test, Supabase CLI,
+hosted project/database/provider contact, migration replay, Git
+stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or
+retirement is authorized.
+
+**Next:** Verify the exact three-document diff, official-source references,
+unchanged fourteen-file hash, protected metadata, clean index/upstream, and
+`git diff --check`; then request a separate three-file stage/local-commit gate.
+Push and eighteen-file CR6-R3D diagnosis remain later separate gates.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3E durable burn ledger and logical-spawn correction
+
+**Status:** `CR6_R3E_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At PR #67 HEAD `8a803272e28ddeac338f73d61fd784a4960ebb69`, tree
+`1d67ffe56f69cc2638ad06a600b1bf80a74449f5`, Claude completed the
+one-time CR6-R3D tool-disabled diagnosis and returned
+`CHANGES_REQUIRED_DIRECTIVE`. MacBook Codex independently accepted both
+findings and posted the public-safe adjudication at
+[PR #67 comment 5554729245](https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554729245).
+
+CR6-R3E fully supersedes CR6-R3D. It preserves the accepted migration,
+protected-content, Git, Supabase CLI `v2.116.0`, output mapping, and two-file
+implementation boundaries while closing two remaining process-safety gaps.
+
+The burn ledger is no longer caller-selected or memory-only. It uses a fixed
+MacBook path outside the worktree, one exclusive mode-0600 canonical burn file
+per fixed project-ref/attempt-id, exact read-back, file and directory fsync,
+and a mode-0700 project execution lock. Existing, partial, malformed, or
+uncertain records remain fail-closed and are never repaired or removed
+automatically. A real linked process cannot launch until the record is durable.
+
+The frozen core's `adapters.process.spawn()` call is explicitly a logical
+adapter call. On target mismatch the adapter returns a synthetic handle and
+exact `targetMismatch:true` exitInfo without launching any real OS/Supabase
+process. Tests count logical calls and real launches separately.
+
+**CR6-R3E governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3E_DURABLE_BURN_LEDGER_AND_LOGICAL_SPAWN_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation and read-only verification only. No Claude
+re-diagnosis, private transmission, adapter implementation/test, Supabase CLI,
+hosted project/database/provider contact, migration replay, Git
+stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or
+retirement is authorized.
+
+**Next:** Verify the exact three-document diff, durable-ledger and logical-spawn
+closure, unchanged fourteen-file hash, protected metadata, clean
+index/upstream, and `git diff --check`; then request a separate exact-three-file
+stage/local-commit gate. Push and eighteen-file CR6-R3E diagnosis remain later
+separate gates.
+
+### GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3F synthetic-exit classification correction
+
+**Status:** `CR6_R3F_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+At PR #67 HEAD `da3a2a158f214c3e51cac87d678cfd9de4bab5ec`, tree
+`0a735d45dcd67c0e451f581a2e4ac9d900515f3c`, Claude completed the
+one-time CR6-R3E tool-disabled diagnosis and returned
+`CHANGES_REQUIRED_DIRECTIVE`. MacBook Codex accepted the ambiguity, rejected
+the proposed unknown exitInfo flag, and posted the corrected public-safe
+adjudication at
+[PR #67 comment 5554790593](https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554790593).
+
+CR6-R3F fully supersedes CR6-R3E and preserves every accepted Git,
+protected-content, migration, Supabase CLI `v2.116.0`, durable burn/lock,
+evidence, and two-file implementation boundary.
+
+The remaining mapping is now exhaustive. Executable, argv, project ref,
+workdir/cwd, or sanitized-environment identity drift produces the existing
+exact `targetMismatch:true` synthetic result. Burn-record, active-lock, or
+stage-order drift produces the existing exact `ledgerMismatch:true` synthetic
+result. Neither path launches a real OS/Supabase process, and neither adds a
+new field to frozen exitInfo. Deadline remains exclusively owned by frozen
+`runWithTimeout` and its injected monotonic timer.
+
+**CR6-R3F governance-authoring allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3F_SYNTHETIC_EXIT_CLASSIFICATION_CORRECTION.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Current boundary:** Documentation and read-only verification only. No Claude
+re-diagnosis, private transmission, adapter implementation/test, Supabase CLI,
+hosted project/database/provider contact, migration replay, Git
+stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or
+retirement is authorized.
+
+**Next:** Verify the exact three-document diff, complete synthetic mapping,
+unchanged fourteen-file hash, protected metadata, clean index/upstream, and
+`git diff --check`; then request a separate exact-three-file stage/local-commit
+gate. Push and eighteen-file CR6-R3F diagnosis remain later separate gates.
+
+### GDA-DEMO-20260907 — Estimate Wizard demo-blocking hotfix R1
+
+**Status:** `READ_ONLY_DIAGNOSIS_ACCEPTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED`
+
+**Priority decision:** The Owner made the 2026-09-07 Estimate Wizard demo the
+temporary MacBook priority. The existing postal-master CR6-R3K work, artifacts,
+and PR history remain preserved but are held until a separate Owner resumption
+decision. This is a bounded interruption, not a CR6 cancellation or scope merge.
+
+**Fixed execution identity:**
+
+- repository: `nisikawa-officeAZ/GYEON`;
+- coordination PR: `https://github.com/nisikawa-officeAZ/GYEON/pull/67` —
+  `OPEN / Draft / base main`;
+- branch: `agent/gda-estimate-ocr-postal-clean-replacement-r1`;
+- HEAD: `8ec828736856ed0ba2f9bbb5117d00e680af31c4`;
+- tree: `2c3108d9d8405574dddca9e89f82ad3d480aea07`;
+- Preview deployment: `dpl_BkBJw1KWqoPLj7BGJQ2NcQUGLxD5`;
+- Preview alias:
+  `dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app`.
+
+**Owner-confirmed blockers:**
+
+1. OCR-applied address does not populate the postal-code field in Preview.
+2. `Q² CANCOAT PRO EVO`, a Certified-only product, is rendered for the
+   `detailer` rank.
+3. The enabled `保存` and `保存してPDFを開く` actions render dark text and require
+   explicit white text.
+
+**Accepted diagnosis:** The Owner authorized exactly nineteen private files to
+be sent once to Anthropic Claude Code with tools and persistence disabled.
+Claude returned
+`GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1_READ_ONLY_DIAGNOSIS_RESULT_V1`
+with `PASS_TO_IMPLEMENT`. MacBook Codex independently accepted the bounded
+findings: postal application wiring is present and the blocker is missing
+Preview-bound non-production DB objects/data; second-layer coating selection is
+not rank-aware; and both ready-state save buttons lack an explicit white-text
+class. No tracked, staged, Git, database, provider, Vercel, or deployment
+mutation occurred.
+
+**Governance allowlist — exactly three paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1.md`;
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`; and
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`.
+
+**Future implementation allowlist — exactly seven paths:**
+
+1. `src/components/estimates/wizard/screens/coating-matrix.ts`;
+2. `src/components/estimates/wizard/screens/coating-window-reconciliation.test.ts`;
+3. `src/components/estimates/wizard/steps/Step4Estimate.tsx`;
+4. `src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx`;
+5. `src/components/estimates/wizard/production/EstimateWizardContainer.tsx`;
+6. `src/components/estimates/wizard/save/WizardSavePanel.tsx`; and
+7. `src/components/estimates/wizard/save/WizardSavePanel.test.tsx`.
+
+`secondLayerOptions` must fail closed for an omitted or non-Certified rank, both
+authorized call sites must pass authoritative `shopRank`, and Certified
+behavior must remain unchanged. Only the two enabled ready-state save actions
+receive explicit white text. Postal source is not edited.
+
+**Protected path:**
+`src/components/estimates/wizard/screens/ScreensPreview.tsx` remains
+pathname/mode/hash/Git-state only. Pre-governance metadata is mode
+`-rw-r--r--`, size `31076`, SHA-256
+`d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e`.
+
+**Current boundary:** Only the exact three-document governance candidate and
+one public-safe PR #67 instruction comment are authorized. No seven-file
+implementation, tests, private-source retransmission, dependency action,
+stage, commit, push, Supabase/database access, migration apply, Japan Post data
+import, Vercel mutation, deployment, Ready, or merge is authorized.
+
+**Next:** Independently verify the exact three-document diff, append the public
+instruction URL to the result ledger, and request a separate Owner
+authorization for the exact seven-file Claude implementation and its exact
+verification commands. Postal environment activation remains a later,
+separately authorized database gate after the Preview binding is identified.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

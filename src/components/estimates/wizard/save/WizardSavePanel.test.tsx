@@ -612,3 +612,29 @@ test("21. both ready controls exist, share one attempt, and appear ONLY when rea
   // Still exactly one guard and one core.
   assert.equal((code.match(/useRef\(false\)/g) ?? []).length, 1, "exactly one in-flight guard");
 });
+
+// ── 22. GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1 — explicit white text on both ready buttons ──
+
+test("22. both enabled ready-state save buttons carry an explicit text-white class, in source and rendered output", () => {
+  const code = readFileSync(PANEL_SRC, "utf8");
+  const submitClass = code.match(/data-testid="save-submit"[\s\S]*?className="([^"]*)"/)?.[1] ?? "";
+  const submitPdfClass = code.match(/data-testid="save-submit-pdf"[\s\S]*?className="([^"]*)"/)?.[1] ?? "";
+  assert.ok(submitClass.split(/\s+/).includes("text-white"), "save-submit source must carry text-white");
+  assert.ok(submitPdfClass.split(/\s+/).includes("text-white"), "save-submit-pdf source must carry text-white");
+
+  const readyW = world();
+  const rec = recorder();
+  const html = renderToStaticMarkup(React.createElement(WizardSavePanel, {
+    draft: DRAFT, binding: bindingFor(readyW, async () => OK, rec),
+  }));
+  const submitTag = html.match(/<button[^>]*data-testid="save-submit"[^>]*>/)?.[0] ?? "";
+  const submitPdfTag = html.match(/<button[^>]*data-testid="save-submit-pdf"[^>]*>/)?.[0] ?? "";
+  assert.ok(submitTag.includes("text-white"), "rendered save-submit button must carry text-white");
+  assert.ok(submitPdfTag.includes("text-white"), "rendered save-submit-pdf button must carry text-white");
+
+  // Anti-vacuity: neither retry control nor any other button acquired the class incidentally.
+  for (const testid of ["save-retry-same-key"]) {
+    assert.equal(code.match(new RegExp(`data-testid="${testid}"[\\s\\S]*?className="([^"]*)"`))?.[1]?.includes("text-white") ?? false, false,
+      `${testid} must not carry text-white — only the two ready-state buttons are in scope`);
+  }
+});

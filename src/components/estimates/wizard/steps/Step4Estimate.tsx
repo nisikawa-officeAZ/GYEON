@@ -206,7 +206,7 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
               selectedLayer2ProductId={cfg.coating.layer2Id}
               selectedLayer3ProductId={cfg.coating.layer3Id}
               availableLayer1Products={firstLayerOptions(shopRank)}
-              availableLayer2Products={secondLayerOptions(cfg.coating.layer1Id)}
+              availableLayer2Products={secondLayerOptions(cfg.coating.layer1Id, shopRank)}
               availableLayer3Products={thirdLayerOptions(cfg.coating.layer1Id)}
               onLayerCountChange={bindings.coating.onLayerCountChange}
               onLayer1Change={bindings.coating.onLayer1Change}

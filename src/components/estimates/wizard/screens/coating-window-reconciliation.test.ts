@@ -147,7 +147,7 @@ test("INFINITE BASE and CANCOAT PRO EVO are certified-only", () => {
 });
 
 // ── Layer matrix ─────────────────────────────────────────────────────────────
-const l2 = (first: string) => secondLayerOptions(first).map((o) => o.id);
+const l2 = (first: string, rank?: ShopRank) => secondLayerOptions(first, rank).map((o) => o.id);
 const l3 = (first: string) => thirdLayerOptions(first).map((o) => o.id);
 
 test("CANCOAT EVO upper-layer positives are preserved for ONE/PURE/MOHS", () => {
@@ -168,16 +168,40 @@ test("CANCOAT PRO EVO standalone (certified) fabricates no invented 2nd/3rd laye
   assert.deepEqual(l3("cancoat-pro-evo"), []);
 });
 
-test("CANCOAT PRO EVO is an allowed upper layer over exactly the six approved bases", () => {
+test("CANCOAT PRO EVO is an allowed upper layer over exactly the six approved bases, for certified rank", () => {
   for (const base of SIX_PRO_BASES) {
-    assert.ok(l2(base).includes("cancoat-pro-evo"), `cancoat-pro-evo not allowed over ${base}`);
+    assert.ok(l2(base, "certified").includes("cancoat-pro-evo"), `cancoat-pro-evo not allowed over ${base} for certified`);
   }
 });
 
-test("CANCOAT PRO EVO is rejected above MATTE and above CANCOAT EVO", () => {
-  assert.ok(!l2("matte-evo").includes("cancoat-pro-evo"));
+test("CANCOAT PRO EVO is rejected above MATTE and above CANCOAT EVO, even for certified rank", () => {
+  assert.ok(!l2("matte-evo", "certified").includes("cancoat-pro-evo"));
   assert.ok(!l3("matte-evo").includes("cancoat-pro-evo"));
-  assert.ok(!l2("cancoat-evo").includes("cancoat-pro-evo")); // cancoat-evo standalone has empty layers
+  assert.ok(!l2("cancoat-evo", "certified").includes("cancoat-pro-evo")); // cancoat-evo standalone has empty layers
+});
+
+// ── GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1: second-layer CANCOAT PRO EVO is rank-aware ────
+test("CANCOAT PRO EVO is absent from second-layer options for shop, detailer, and ppf_installer", () => {
+  const NON_CERTIFIED: ShopRank[] = ["shop", "detailer", "ppf_installer"];
+  for (const rank of NON_CERTIFIED) {
+    for (const base of SIX_PRO_BASES) {
+      assert.ok(!l2(base, rank).includes("cancoat-pro-evo"), `cancoat-pro-evo leaked to ${rank} over ${base}`);
+    }
+  }
+});
+
+test("CANCOAT PRO EVO is excluded from second-layer options when the shop rank is omitted (fail closed)", () => {
+  for (const base of SIX_PRO_BASES) {
+    assert.ok(!l2(base).includes("cancoat-pro-evo"), `cancoat-pro-evo leaked with no rank supplied over ${base}`);
+  }
+});
+
+test("non-CANCOAT-PRO second-layer options are unaffected by shop rank", () => {
+  for (const rank of RANKS) {
+    assert.ok(l2("one-evo", rank).includes("cancoat-evo"), `cancoat-evo missing for one-evo at ${rank}`);
+  }
+  assert.deepEqual(l2("matte-evo", "certified"), ["matte-evo"]);
+  assert.deepEqual(l2("syncro-evo", "shop"), ["mohs-evo"], "shop keeps the MOHS upper layer, loses only CANCOAT PRO");
 });
 
 test("INFINITE TOPCOAT is never a standalone/first-layer option", () => {
@@ -197,10 +221,26 @@ test("MATTE exclusions — MATTE-only repeated layer, no CANCOAT of any kind", (
   assert.ok(!l2("matte-evo").includes("cancoat-evo"));
 });
 
-test("no unintended extra second/third-layer options (exact SYNCRO behaviour)", () => {
+test("no unintended extra second/third-layer options (exact SYNCRO behaviour, certified rank)", () => {
   // SYNCRO keeps MOHS (existing) and gains CANCOAT PRO (one of the six bases) — nothing else.
-  assert.deepEqual(l2("syncro-evo"), ["mohs-evo", "cancoat-pro-evo"]);
+  assert.deepEqual(l2("syncro-evo", "certified"), ["mohs-evo", "cancoat-pro-evo"]);
   assert.deepEqual(l3("syncro-evo"), []);
+});
+
+// ── GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1_R2: previewMapper threads the authoritative shopRank ──
+test("preview mapper resolves the certified-only second-layer label only when ctx.shopRank is certified", () => {
+  const d = draft((x) => {
+    x.serviceSelection = { selectedCategories: ["coating"] };
+    x.serviceConfiguration.coating = { ...x.serviceConfiguration.coating, layerCount: 2, layer1Id: "one-evo", layer2Id: "cancoat-pro-evo" };
+  });
+  const certifiedPreview = mapWizardDraftToPreview(d, { shopRank: "certified", priceSummary: { note: "" } });
+  const certifiedLine = certifiedPreview.serviceLines.find((l) => l.name.includes("層コーティング"));
+  assert.ok(certifiedLine?.detail?.includes("Q² CANCOAT PRO EVO"), "certified preview must show the CANCOAT PRO EVO label");
+
+  const detailerPreview = mapWizardDraftToPreview(d, { shopRank: "detailer", priceSummary: { note: "" } });
+  const detailerLine = detailerPreview.serviceLines.find((l) => l.name.includes("層コーティング"));
+  assert.equal(detailerLine?.detail?.includes("Q² CANCOAT PRO EVO") ?? false, false,
+    "non-certified preview must not show the certified-only label");
 });
 
 // ── Window identities ────────────────────────────────────────────────────────
