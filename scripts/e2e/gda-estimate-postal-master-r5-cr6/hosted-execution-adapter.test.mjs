@@ -509,12 +509,10 @@ test('acquireExecutionIdentity succeeds and returns the freshly derived HEAD/tre
   assert.equal(result.tree, VALID_TREE);
 });
 
-test('R3I-C1: the committed-delta allowlist is exactly the two adapter paths plus the two R3H manifest paths', () => {
+test('R3I-C2: the committed-delta allowlist is exactly the two adapter paths', () => {
   assert.deepEqual(EXACT_IMPLEMENTATION_PATHS, [
     'scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs',
     'scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs',
-    'scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.mjs',
-    'scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.test.mjs',
   ]);
 });
 
@@ -531,14 +529,14 @@ test('acquireExecutionIdentity fails when HEAD is a merge commit with two parent
   assert.equal(result.ok, false);
 });
 
-test('acquireExecutionIdentity fails when the changed-path delta is not exactly the four accepted paths', async () => {
+test('acquireExecutionIdentity fails when the changed-path delta is not exactly the two accepted paths', async () => {
   const git = createGitAdapter({ changedPaths: ['scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs'] });
   const result = await acquireExecutionIdentity({ ...buildAdapters(), git });
   assert.equal(result.ok, false);
-  assert.match(result.errors.join(' '), /exactly the 4 accepted paths/);
+  assert.match(result.errors.join(' '), /exactly the 2 accepted paths/);
 });
 
-test('acquireExecutionIdentity fails when an unrelated fifth path is also changed', async () => {
+test('acquireExecutionIdentity fails when an unrelated third path is also changed', async () => {
   const git = createGitAdapter({ changedPaths: [...EXACT_IMPLEMENTATION_PATHS, 'src/unexpected.ts'] });
   const result = await acquireExecutionIdentity({ ...buildAdapters(), git });
   assert.equal(result.ok, false);
@@ -1935,7 +1933,7 @@ test('createFsLedgerAdapter: listBurnRecords fails closed (unknown type) on an e
     assert.equal(enumerated.ok, false, 'an unknown enumeration-race entry must fail closed as burned/ledger uncertainty');
   }));
 
-test('createFsPathInspector: inspectPathNoFollow detects a real symlink path component and reports non-existence for an absent path', () =>
+test('R3I-C3: createFsPathInspector canonicalizes existing and fresh paths while rejecting symlink components', () =>
   withTempDir(async (dir) => {
     const inspector = createFsPathInspector();
     const realDir = joinPath(dir, 'real-target');
@@ -1953,10 +1951,19 @@ test('createFsPathInspector: inspectPathNoFollow detects a real symlink path com
     const absentResult = await inspector.inspectPathNoFollow(joinPath(dir, 'does-not-exist'));
     assert.equal(absentResult.exists, false);
 
+    const freshWorkdir = joinPath(dir, 'fresh-runtime-root', 'preflight-new-attempt');
+    assert.equal(await inspector.realpath(freshWorkdir), freshWorkdir);
+
     const realResult = await inspector.inspectPathNoFollow(realDir);
     assert.equal(realResult.exists, true);
     assert.equal(realResult.hasSymlinkComponent, false);
     assert.equal(realResult.ownedByEffectiveUid, true);
+    assert.equal(await inspector.realpath(realDir), realpathSync(realDir));
+
+    await assert.rejects(
+      () => inspector.realpath(nestedThroughSymlink),
+      /symlink component/,
+    );
   }));
 
 // ---------------------------------------------------------------------------
