@@ -146,6 +146,34 @@ test('R2-04: a seed-shaped filename without a timestamp prefix fails', () => {
   assert.match(result.errors.join(' '), /basename grammar/);
 });
 
+test('R3H: the fixed legacy three-digit migration basename form is accepted', () => {
+  const entries = buildValidRawEntries();
+  entries[0] = {
+    ...entries[0],
+    path: 'supabase/migrations/000_shared_functions.sql',
+  };
+  const ordered = sortedByPath(entries);
+  const result = buildManifest(ordered, {
+    canonicalManifest: validCanonicalManifest(ordered),
+    hashAggregate: validHashAggregate,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.formalCount, REQUIRED_FORMAL_MIGRATION_COUNT);
+});
+
+for (const invalidPrefix of ['0', '00', '0000', '0000000000000', '000000000000000']) {
+  test(`R3H: an unsupported ${invalidPrefix.length}-digit migration prefix fails closed`, () => {
+    const entries = buildValidRawEntries();
+    entries[0] = {
+      ...entries[0],
+      path: `supabase/migrations/${invalidPrefix}_unsupported.sql`,
+    };
+    const result = buildManifest(entries);
+    assert.equal(result.ok, false);
+    assert.match(result.errors.join(' '), /basename grammar/);
+  });
+}
+
 test('R2-04: a duplicate path fails', () => {
   const entries = buildValidRawEntries();
   entries[1] = { ...entries[0] };

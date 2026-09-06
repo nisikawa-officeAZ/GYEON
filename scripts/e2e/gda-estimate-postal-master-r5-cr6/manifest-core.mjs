@@ -7,7 +7,10 @@ export const REQUIRED_FORMAL_MIGRATION_COUNT = 113;
 export const REQUIRED_STAGED_MIGRATION_COUNT = 112;
 export const REQUIRED_ENTRY_MODE = '100644';
 export const MIGRATIONS_DIR_PREFIX = 'supabase/migrations/';
-export const MIGRATION_BASENAME_PATTERN = /^[0-9]{14}_[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*\.sql$/;
+// The fixed canonical history contains both the legacy three-digit sequence
+// form and the current fourteen-digit timestamp form. No other digit length
+// is part of the accepted contract.
+export const MIGRATION_BASENAME_PATTERN = /^(?:[0-9]{3}|[0-9]{14})_[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*\.sql$/;
 
 export const PROTECTED_LINE_MIGRATION_PATH =
   'supabase/migrations/20260801110110_line_link_tokens.sql';
