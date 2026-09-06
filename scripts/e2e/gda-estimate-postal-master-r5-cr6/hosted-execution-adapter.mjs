@@ -119,11 +119,13 @@ export const LEDGER_ROOT =
   '/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/runtime/gda-estimate-postal-master-r5-cr6/burn-ledger-v1';
 
 /**
- * Fixed accepted governance parent and the exact two-file implementation
- * delta required from it. This closes the circular self-hash problem: the
+ * Fixed accepted governance parent and the exact four-file committed delta:
+ * the two hosted-adapter implementation files plus the two R3H manifest
+ * contract corrections required to accept the canonical legacy migration
+ * names. This closes the circular self-hash problem: the
  * adapter never hardcodes its own post-implementation HEAD/tree; it proves
  * the current commit descends from this exact accepted parent by exactly
- * the two allowed paths, then uses the freshly derived current HEAD/tree as
+ * the four allowed paths, then uses the freshly derived current HEAD/tree as
  * identity for every downstream check.
  */
 export const CANONICAL_GOVERNANCE_COMMIT = 'e2371101356ac275e9bf1569fb18f887ad94796b';
@@ -136,6 +138,8 @@ const OBSERVED_MIGRATION_BASENAME_PATTERN = /^(?:[0-9]{3}|[0-9]{14})_[A-Za-z0-9]
 export const EXACT_IMPLEMENTATION_PATHS = [
   'scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs',
   'scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs',
+  'scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.mjs',
+  'scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.test.mjs',
 ];
 
 function errorMessage(error) {
@@ -481,7 +485,8 @@ export async function validateRootIsolation(adapters, roots) {
 /**
  * Acquire and validate Git-derived execution identity through the injected
  * `adapters.git`. Proves the current commit descends from the exact
- * accepted governance parent by exactly the two allowed implementation
+ * accepted governance parent by exactly the four allowed implementation and
+ * R3H manifest-contract
  * paths, and that fixed branch/PR/protected-metadata/clean/upstream
  * identity all hold, before returning the freshly derived current HEAD and
  * tree as the identity used by every downstream check.
@@ -550,7 +555,7 @@ export async function acquireExecutionIdentity(adapters) {
     const expected = [...EXACT_IMPLEMENTATION_PATHS].sort();
     const matches = actual.length === expected.length && actual.every((path, index) => path === expected[index]);
     if (!matches) {
-      errors.push('the committed delta from the accepted governance parent must be exactly the two implementation paths');
+      errors.push(`the committed delta from the accepted governance parent must be exactly the ${EXACT_IMPLEMENTATION_PATHS.length} accepted paths`);
     }
   }
   for (const expected of PROTECTED_PATHS_METADATA) {

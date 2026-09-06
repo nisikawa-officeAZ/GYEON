@@ -509,6 +509,15 @@ test('acquireExecutionIdentity succeeds and returns the freshly derived HEAD/tre
   assert.equal(result.tree, VALID_TREE);
 });
 
+test('R3I-C1: the committed-delta allowlist is exactly the two adapter paths plus the two R3H manifest paths', () => {
+  assert.deepEqual(EXACT_IMPLEMENTATION_PATHS, [
+    'scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs',
+    'scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs',
+    'scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.mjs',
+    'scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.test.mjs',
+  ]);
+});
+
 test('acquireExecutionIdentity fails when HEAD does not have exactly one accepted governance parent', async () => {
   const git = createGitAdapter({ parents: ['c'.repeat(40)] });
   const result = await acquireExecutionIdentity({ ...buildAdapters(), git });
@@ -522,14 +531,14 @@ test('acquireExecutionIdentity fails when HEAD is a merge commit with two parent
   assert.equal(result.ok, false);
 });
 
-test('acquireExecutionIdentity fails when the changed-path delta is not exactly the two implementation paths', async () => {
+test('acquireExecutionIdentity fails when the changed-path delta is not exactly the four accepted paths', async () => {
   const git = createGitAdapter({ changedPaths: ['scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs'] });
   const result = await acquireExecutionIdentity({ ...buildAdapters(), git });
   assert.equal(result.ok, false);
-  assert.match(result.errors.join(' '), /exactly the two implementation paths/);
+  assert.match(result.errors.join(' '), /exactly the 4 accepted paths/);
 });
 
-test('acquireExecutionIdentity fails when an unrelated third path is also changed', async () => {
+test('acquireExecutionIdentity fails when an unrelated fifth path is also changed', async () => {
   const git = createGitAdapter({ changedPaths: [...EXACT_IMPLEMENTATION_PATHS, 'src/unexpected.ts'] });
   const result = await acquireExecutionIdentity({ ...buildAdapters(), git });
   assert.equal(result.ok, false);
