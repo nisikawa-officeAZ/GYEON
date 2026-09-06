@@ -278,7 +278,7 @@ export function parseListOutput(stdoutText, staged) {
   return { ok: true, message: parsed.message };
 }
 
-export const REQUIRED_LIST_STDERR = 'Connecting to remote database...\n';
+export const REQUIRED_LIST_STDERR = 'Initialising login role...\nConnecting to remote database...\n';
 
 export function validateListStderr(stderrText) {
   return stderrText === REQUIRED_LIST_STDERR;

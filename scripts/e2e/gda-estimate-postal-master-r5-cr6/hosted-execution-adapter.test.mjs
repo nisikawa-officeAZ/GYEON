@@ -32,6 +32,7 @@ import {
   parseListOutput,
   parseUpOutput,
   validateListStderr,
+  REQUIRED_LIST_STDERR,
   validateUpStderr,
   buildExpectedUpStderr,
   computeAggregateManifestHash,
@@ -1788,10 +1789,62 @@ test('parseListOutput rejects wrong top-level keys, wrong message, wrong row cou
   assert.equal(parseListOutput(`${JSON.stringify(withDriftedTime)}\n`, staged).ok, false);
 });
 
-test('validateListStderr requires the exact fixed connection line', () => {
-  assert.equal(validateListStderr('Connecting to remote database...\n'), true);
+test('validateListStderr requires the exact fixed two-line role-init-then-connection stderr', () => {
+  assert.equal(validateListStderr('Initialising login role...\nConnecting to remote database...\n'), true);
+  assert.equal(validateListStderr('Connecting to remote database...\n'), false);
   assert.equal(validateListStderr('Connecting to remote database...'), false);
   assert.equal(validateListStderr('unexpected stderr\n'), false);
+});
+
+// R3J-R3: authoritative one-time hosted capture result fixed REQUIRED_LIST_STDERR
+// to the exact two-line "Initialising login role..." + "Connecting to remote
+// database..." LF-terminated form (60 bytes,
+// sha256 b9977cb727ae28f6dfc5ee83a4ca928c7a9f42b11c4757f73dd5a17e85681a5f). These
+// hostile fixtures prove byte-for-byte exactness: only the exact two-line LF
+// form is accepted, and every other close-but-wrong byte sequence is rejected.
+test('validateListStderr: hostile exactness fixtures around the fixed two-line stderr contract', () => {
+  const exact = 'Initialising login role...\nConnecting to remote database...\n';
+  assert.equal(exact.length, 60);
+  assert.equal(createHash('sha256').update(exact, 'utf8').digest('hex'), 'b9977cb727ae28f6dfc5ee83a4ca928c7a9f42b11c4757f73dd5a17e85681a5f');
+  assert.equal(REQUIRED_LIST_STDERR, exact);
+
+  // Exact two-line LF form: accepted.
+  assert.equal(validateListStderr(exact), true);
+
+  // Old one-line form (pre-R3J-R3 contract): rejected.
+  assert.equal(validateListStderr('Connecting to remote database...\n'), false);
+  assert.equal(validateListStderr('Initialising login role...\n'), false);
+
+  // Missing final LF: rejected.
+  assert.equal(validateListStderr(exact.slice(0, -1)), false);
+
+  // Reversed line order: rejected.
+  assert.equal(validateListStderr('Connecting to remote database...\nInitialising login role...\n'), false);
+
+  // Extra prefix line: rejected.
+  assert.equal(validateListStderr(`extra prefix line\n${exact}`), false);
+
+  // Extra suffix line: rejected.
+  assert.equal(validateListStderr(`${exact}extra suffix line\n`), false);
+
+  // CRLF line endings instead of LF: rejected.
+  assert.equal(validateListStderr('Initialising login role...\r\nConnecting to remote database...\r\n'), false);
+  assert.equal(validateListStderr(exact.replace(/\n/g, '\r\n')), false);
+
+  // ANSI escape / control-byte injection anywhere in the text: rejected.
+  assert.equal(validateListStderr(`Initialising login role...\n\x1B[31mConnecting to remote database...\x1B[0m\n`), false);
+  assert.equal(validateListStderr(`\x07${exact}`), false);
+  assert.equal(validateListStderr(exact.replace('Connecting', 'Connecting\x00')), false);
+
+  // Whitespace/case drift: rejected.
+  assert.equal(validateListStderr(exact.toUpperCase()), false);
+  assert.equal(validateListStderr(`${exact} `), false);
+  assert.equal(validateListStderr(` ${exact}`), false);
+  assert.equal(validateListStderr(exact.replace('role...', 'role... ')), false);
+
+  // Empty/undefined/non-string input: rejected.
+  assert.equal(validateListStderr(''), false);
+  assert.equal(validateListStderr(undefined), false);
 });
 
 function validUpStdout(staged, workdir) {
