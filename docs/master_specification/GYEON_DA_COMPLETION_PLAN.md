@@ -2998,3 +2998,49 @@ network-zero gate, protected metadata, preserved unrelated untracked files,
 clean index, upstream identity, and `git diff --check`. Then request separate
 literal-path stage/local commit and normal-push gates. Only after governance
 delivery may the Owner separately authorize one R2C local-only Claude audit.
+
+### GDA-DEMO-20260907-POSTAL-CURRENT-PREVIEW-EMERGENCY-PREFLIGHT-R2D — full-URL no-link provider proof
+
+**Status:** R2C EXECUTION CONSUMED AND INDEPENDENTLY ACCEPTED /
+`PASS_LOCAL_CAUSE_LINK_CONFIRMATION_REQUIRED` / R2D EXACT THREE-DOCUMENT
+GOVERNANCE AUTHORING AUTHORIZED / R2D EXECUTION NOT AUTHORIZED.
+
+R2C proved that the earlier R2B failure occurred locally before the Preview
+request: relative-path `vercel curl` entered the linked-project branch in an
+unlinked temporary directory and stopped at `confirmation_required`. The
+static full-URL branch avoids that local link gate. This supersedes SSO,
+Supabase, database, and application failure as explanations for the R2B
+nonzero exit; it does not establish whether the postal feature works.
+
+R2D defines one unauthenticated GET-only, full-URL request to the fixed Preview
+branch alias and public login route from a fresh repository-external
+directory. It uses one fixed `/usr/bin/curl` process, captures no body or
+headers, follows no redirect, and emits no raw output. Vercel CLI is prohibited
+because its full-URL branch may create an automation-bypass token when none
+exists, which would violate the zero-provider-mutation boundary. R2D also
+permits no cookie, authorization header, bypass secret, Supabase/database
+command, retry, or mutation. A PASS means only that the Preview provider
+hostname returns a public success-or-redirect response. Authenticated postal
+lookup verification remains a later, separately governed phase.
+
+**Governing directive:**
+`docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF.md`.
+
+**Exact governance paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF.md`
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** Documentation authoring only. No stage, commit, push, PR
+mutation, Claude invocation, transmission, Vercel/provider request,
+Supabase/DB contact, migration, import, deployment, Ready, merge, or
+Production contact is authorized.
+
+**Next:** Independently verify the exact three-document diff, consumed R2C
+result, the prohibited Vercel-CLI token-creation path, fixed direct-curl
+identity, exact alias and route, one-request and output-redaction gates,
+protected metadata, preserved untracked files, clean index, upstream identity,
+official Vercel and Supabase change basis, and `git diff --check`. Then request
+a separate literal-path stage/local commit authorization. Push, PR instruction,
+and R2D execution remain later separate gates.

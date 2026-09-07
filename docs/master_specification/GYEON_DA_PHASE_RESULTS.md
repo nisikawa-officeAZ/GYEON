@@ -7662,3 +7662,122 @@ boundaries:
 decision: AUTHOR_EXACT_THREE_DOCUMENT_R2C_LOCAL_CLI_CONTROL_FLOW_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2B_RESULT_LOCAL_CLI_ARTIFACT_HASHES_CONTROL_FLOW_OFFICIAL_VERCEL_BASIS_NETWORK_ZERO_GATE_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_GOVERNANCE_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH"
 ```
+
+## GDA-DEMO-20260907 — R2C accepted result and R2D full-URL no-link provider-proof governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record the independently accepted R2C local-link root cause and define one bounded full-URL GET that proves Preview provider reachability without linking a project, exposing output, or contacting Supabase or the database directly."
+authorization: "The Owner authorized R2D three-document governance authoring only. Stage, commit, push, PR mutation, Claude execution, file transmission, Vercel/provider request, Supabase/DB contact, migration, import, deployment, Ready, merge, and Production contact remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_governance_parent: d2b57727fae5e7094b252070ed71c3c6816ad95d
+  fixed_pre_governance_parent_tree: 75e6007f3604aff3e0b047cd68843430277384ad
+  fixed_pre_governance_parent_parent: 60ec89a8cd9ce5bfc8321fa2ea6755081b9df3ef
+  upstream_ahead_behind_before_authoring: "0 0"
+  vercel_check_at_authoring: SUCCESS
+  vercel_preview_comments_check_at_authoring: SUCCESS
+r2c_consumed_execution:
+  owner_authorized: true
+  claude_cli_version: 2.1.226
+  invocation_count: 1
+  marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_LOCAL_VERCEL_CLI_CONTROL_FLOW_RESULT_V2C
+  verdict: PASS_LOCAL_CAUSE_LINK_CONFIRMATION_REQUIRED
+  repository_identity: PASS
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  head: d2b57727fae5e7094b252070ed71c3c6816ad95d
+  tree: 75e6007f3604aff3e0b047cd68843430277384ad
+  governance_parent: 60ec89a8cd9ce5bfc8321fa2ea6755081b9df3ef
+  governance_delta_exact_three_paths: true
+  protected_metadata_match: true
+  vercel_cli_version: 54.17.3
+  exact_local_artifact_count: 4
+  artifact_modes_sizes_hashes_match: true
+  relative_path_routes_to_linked_project_branch: true
+  ensure_link_precedes_deployment_resolution: true
+  deployment_flag_bypasses_link_requirement: false
+  unlinked_cwd_calls_setup_and_link: true
+  noninteractive_without_yes_can_return_headless: true
+  headless_maps_to_confirmation_required: true
+  r2b_classifier_covered_confirmation_required: false
+  full_url_branch_avoids_relative_path_link_gate: true
+  root_cause: UNLINKED_TEMP_CWD_TRIGGERED_CLI_CONFIRMATION_REQUIRED_BEFORE_DEPLOYMENT_REQUEST
+  network_or_provider_commands: 0
+  vercel_curl_runtime_requests: 0
+  supabase_or_database_contacts: 0
+  raw_prior_r2b_output_read: false
+  credential_or_secret_files_read: false
+  application_or_migration_source_read: false
+  files_written: 0
+  git_mutations: 0
+  retries: 0
+  codex_independent_acceptance: PASS
+r2d_contract:
+  purpose: FULL_URL_NO_LINK_PROVIDER_REACHABILITY_ONLY
+  claude_future_transmission_exact_count: 3
+  preview_alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+  route: /login?next=%2F
+  method: GET
+  direct_curl_path: /usr/bin/curl
+  direct_curl_version: 8.7.1
+  direct_curl_sha256: b636262803922ee1dd0fbf614818473ffa53c811e44fd3278c2270d3af4759d3
+  direct_curl_process_max: 1
+  network_request_max: 1
+  vercel_cli_or_api: PROHIBITED
+  vercel_cli_full_url_reason: PROHIBITED_POTENTIAL_AUTOMATION_BYPASS_TOKEN_CREATION
+  cookie_or_authorization_header: PROHIBITED
+  protection_bypass_read_or_create: PROHIBITED
+  response_body_or_headers: PROHIBITED
+  redirects: PROHIBITED
+  raw_output_emission: PROHIBITED
+  timeout_seconds: 30
+  connect_timeout_seconds: 10
+  combined_output_limit_bytes: 1048576
+  retry: PROHIBITED
+  direct_supabase_or_database_command: PROHIBITED
+  server_side_supabase_activity_claim: PROHIBITED_UNOBSERVABLE
+  success_meaning: PROVIDER_REACHABILITY_ONLY_NOT_APPLICATION_POSTAL_OR_BINDING_PROOF
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_FULL_URL_NO_LINK_PROVIDER_PROOF_RESULT_V2D
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF.md
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+official_basis:
+  vercel_full_url_changelog: https://vercel.com/changelog/use-native-curl-syntax-with-vercel-cli
+  vercel_curl_documentation: https://vercel.com/docs/cli/curl
+  local_vercel_cli_safety_finding: "getFullUrlAndToken can call getOrCreateDeploymentProtectionToken, which creates an automation-bypass token when none exists; Vercel CLI is therefore prohibited in R2D."
+  supabase_breaking_change_review: "No current breaking change applies to this unauthenticated Vercel-hostname GET; no direct Supabase or DB command is permitted and server-side activity is not observed or claimed."
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_for_r2d: false
+  vercel_or_provider_contacted_for_r2d: false
+  supabase_or_database_contacted_for_r2d: false
+  migration_or_postal_import_executed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2C_RESULT_VERCEL_CLI_TOKEN_CREATION_PROHIBITION_FIXED_DIRECT_CURL_IDENTITY_FULL_URL_ONE_REQUEST_OUTPUT_REDACTION_OFFICIAL_PROVIDER_BASIS_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_LOCAL_COMMIT"
+```
