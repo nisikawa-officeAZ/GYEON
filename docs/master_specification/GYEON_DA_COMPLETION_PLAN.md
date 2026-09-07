@@ -2680,6 +2680,71 @@ commit/normal push, one public-safe PR #67 instruction, and one read-only Claude
 preflight. Postal migration, data import, Vercel changes, redeployment, and
 authenticated runtime verification remain later separate gates.
 
+### GDA-DEMO-20260907-POSTAL-CURRENT-PREVIEW-EMERGENCY-PREFLIGHT-R2 — safe deployment binding governance candidate
+
+**Status:** R1 BLOCKED CORRECTLY / R2 EXACT THREE-DOCUMENT GOVERNANCE CANDIDATE
+AUTHORIZED / R2 EXECUTION NOT AUTHORIZED.
+
+**R1 outcome:** After the R1 governance commit
+`a16ba231e91bfa0049b8e38d87577d565be086f9` was normally pushed and its
+public-safe instruction was posted to PR #67, the Owner authorized one local
+Claude preflight with the exact twelve-file scope. Claude returned
+`GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_RESULT_V1` with
+`BLOCKED_SAFE_BINDING_PROOF`. The complete local identity gate passed, but a
+normal request reached Vercel SSO protection and the Claude Vercel MCP required
+authentication. Zero secrets, writes, applies, imports, mutations, Production
+contacts, or retries occurred. MacBook Codex independently reconfirmed the
+unchanged Git state, fixed HEAD/tree/parent, and OPEN/Draft PR head.
+
+**R2 objective:** Prove the exact 20-character Supabase ref embedded in fixed
+Preview deployment `dpl_6TeZEdDpj1AAxL5V8XzJL84PkMtB` without linking the
+repository, exporting environment files, emitting secrets, using current
+project-level configuration as an immutable-deployment substitute, or
+contacting Supabase/DB.
+
+The fixed deployment must identify Git commit
+`b6db05f61d80b39963981b5594c44f3692f57946`; this is deliberately not compared
+to the future R2 governance execution HEAD, which is a later documentation-only
+child of `a16ba231e91bfa0049b8e38d87577d565be086f9`.
+
+**Governing directive:**
+`docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2_SAFE_BINDING.md`.
+It uses an authenticated owner `GET /v13/deployments/{id}` through `vercel api`
+with an in-memory redaction boundary. If the deployment snapshot lacks a usable
+binding, its one predetermined fallback is a bounded GET-only
+`vercel curl --deployment` scan of the login response and same-origin Next.js
+assets. Neither route may print or persist a raw response or complete value.
+
+**Fixed pre-governance identity:** HEAD
+`a16ba231e91bfa0049b8e38d87577d565be086f9`, tree
+`f08bd7df246c7b6ff999b5c79a6bdfbe6c7a2d3e`, parent
+`b6db05f61d80b39963981b5594c44f3692f57946`. A future R2 execution must run
+only from one direct-child governance commit whose delta is exactly the three
+paths below and whose OID equals PR #67's remote head.
+
+**Exact governance paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2_SAFE_BINDING.md`
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**R2 repository read scope:** Exactly five governance paths defined in the R2
+directive. The prior twelve private R1 files are not retransmitted. Application
+source, migrations, environment files, credentials, and protected source
+contents are excluded.
+
+**Current boundary:** Documentation authoring only. No stage, commit, push, PR
+mutation, private-file transmission, Claude invocation, temporary execution
+directory, Vercel request, Supabase/DB/provider contact, migration, postal data,
+redeploy, Ready, merge, or Production action is authorized.
+
+**Next:** Independently verify the exact three-document diff, directive hash,
+R1 evidence, official Vercel method, fail-closed redaction and target gates,
+protected metadata, preserved three unrelated untracked paths, clean index,
+and `git diff --check`. Then request separate literal-path stage/local-commit
+and normal-push gates. Only after governance delivery may the Owner separately
+authorize one R2 tool-enabled read-only binding execution.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
