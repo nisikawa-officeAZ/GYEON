@@ -8004,3 +8004,118 @@ boundaries:
 decision: RECORD_R3_CHANGES_REQUIRED_BOTH_DIRECTIONS_AND_AUTHOR_EXACT_THREE_DOCUMENT_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R3_EVIDENCE_PRIVACY_EXACT_25_FILE_FUTURE_READ_ALLOWLIST_FIXED_IDENTITIES_PROVIDER_NAME_ONLY_STAGING_AGGREGATE_ONLY_VERDICTS_RESULT_SCHEMA_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_SUPABASE_CHANGE_REVIEW_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_LOCAL_COMMIT"
 ```
+
+## GDA-DEMO-20260907 — R4 blocked result correction and R5 Staging migration/import read-only preflight governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT_GOVERNANCE_V1
+date: 2026-09-08
+owner: MacBook Codex
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+objective: "Record and correct the one-time R4 result, preserve the confirmed formal-Staging schema absence, and define a bounded read-only preflight that proves Preview binding, migration readiness, predecessor presence, and dataset metadata before any apply or import."
+authorization: "The Owner authorized R4 result recording and R5 exact three-document governance authoring plus local verification only. Stage, commit, push, PR mutation, Vercel/provider access, Supabase/database access, Claude invocation, private-file transmission, migration, dataset acquisition/import, source/test edits, deployment, Preview re-test, Ready, merge, and Production contact remain unauthorized."
+repository: nisikawa-officeAZ/GYEON
+branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+pull_request:
+  number: 67
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_r5_head: 20032adce2dd007d053e1f37361e0f0d18c8e399
+  fixed_pre_r5_tree: f0f8fd7c201c792388c080ec718ec20cf6f57539
+  fixed_pre_r5_parent: afa39aafabd5f57966f474724a0e24009c864bba
+  upstream_ahead_behind_before_authoring: "0 0"
+  vercel_check_before_authoring: SUCCESS
+  vercel_preview_comments_check_before_authoring: SUCCESS
+r4_consumed_execution:
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS_RESULT_V4
+  claude_reported_verdict: BLOCKED_PROVIDER_METADATA_ACCESS
+  claude_invocation_count: 1
+  tools_enabled: false
+  allowed_files_transmitted: 25
+  disallowed_files_transmitted: 0
+  provider_variable_name_scope_check: BLOCKED_BY_EXECUTION_SAFETY_GATE
+  provider_cli_retry_or_bypass: false
+  provider_values_read_or_emitted: false
+  database_writes: 0
+  provider_writes: 0
+  git_mutations: 0
+  production_contacted: false
+codex_r4_acceptance:
+  classification: CHANGES_REQUIRED_RESULT_CONSISTENCY_WITH_CONFIRMED_STAGING_SCHEMA_ABSENCE
+  corrections:
+    component_forwards_both_invokers: true
+    master_row_count_class_when_table_absent: UNDETERMINED
+    active_batch_row_count_class_when_table_absent: UNDETERMINED
+    public_probe_result_when_table_absent: UNDETERMINED
+  rerun_required: false
+  reason: "The blocked provider boundary is valid, but static forwarding is provable and absent tables cannot support ZERO/MISSING data classifications."
+formal_staging_read_only_evidence:
+  name: DealerOS-Dev-Next
+  ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  identity_match: true
+  health_class: ACTIVE_HEALTHY
+  migration_20260901001246_present: false
+  forward_rpc_present: false
+  reverse_rpc_present: false
+  forward_authenticated_execute: false
+  reverse_authenticated_execute: false
+  active_batch_table_present: false
+  master_table_present: false
+  row_counts_queried: false
+  row_contents_read: false
+  database_writes: 0
+  production_contacted: false
+r5_contract:
+  phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT
+  future_evidence_collection_owner: MacBook Codex
+  future_diagnostic_owner: Anthropic Claude Code
+  future_claude_tools: DISABLED
+  future_private_file_read_and_transmission_allowlist_count: 15
+  provider_evidence_mode: OWNER_AUTHENTICATED_VERCEL_UI_NAMES_SCOPES_AND_PUBLIC_REF_ONLY
+  staging_evidence_mode: EXACT_FORMAL_STAGING_AGGREGATE_AND_EXISTENCE_ONLY
+  dataset_evidence_mode: OWNER_DESIGNATED_LOCAL_METADATA_ONLY_NO_CONTENT
+  migration_apply_authorized: false
+  postal_import_authorized: false
+  preview_retest_authorized: false
+  tests_executed: PROHIBITED_IN_R5
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT_RESULT_V5
+  successful_next_gate: R6_STAGING_MIGRATION_APPLY_GOVERNANCE_ONLY
+fixed_source_hashes:
+  migration_sql: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+  rpc_test_sql: c77fe474dd038b0de04d9e038c3191003a230f27884a6834ec85635fa1e153cd
+  import_program: 46d0029e70fee826c6b06be5c182e85865805c0f4a2f67f11bc44be009af6ab6
+  import_test: 1cc766e86b4d828e5c81fabb8808c373981d9e639ae9407290391515f42168cd
+  migration_contract_test: 6685578850c2f0d4078e2a78aa9563d3e6b389908242c8184cde02bdad92ca60
+  supabase_server: 6786460f23b68b33b496e289e7de35bc10de518e8f5cf8e85b8adb79731d1c85
+  postal_actions: 0b02e7aacf83330308be806f805117dc9ce3ab71a5f2df0ca0cd49ce9a458d5e
+  estimate_page: 9e2ee5f47eed8421856a9d7f645f8052ae47a02adac294b998ca48f148128621
+governance_candidate:
+  directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT.md
+  exact_paths:
+    - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT.md
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  stage: NOT_AUTHORIZED
+  commit: NOT_AUTHORIZED
+  push: NOT_AUTHORIZED
+  provider_access: NOT_AUTHORIZED
+  supabase_access: NOT_AUTHORIZED
+  claude_invocation: NOT_AUTHORIZED
+  private_transmission: NOT_AUTHORIZED
+protected_path:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+  opened_or_read: false
+supabase_change_review:
+  reviewed: true
+  relevant_current_item: NEW_TABLES_NOT_AUTOMATICALLY_EXPOSED_TO_DATA_API
+  effect: "R5 retains explicit function privilege and Data API exposure separation. The migration's private tables are not to be directly exposed; public lookup functions remain the intended API boundary."
+decision: RECORD_R4_BLOCKED_RESULT_WITH_CODEX_CORRECTIONS_AND_AUTHOR_EXACT_THREE_DOCUMENT_R5_READ_ONLY_PREFLIGHT_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R4_CORRECTIONS_CONFIRMED_STAGING_ABSENCE_EXACT_15_FILE_ALLOWLIST_FIXED_HASHES_MANUAL_PROVIDER_UI_BOUNDARY_AGGREGATE_ONLY_STAGING_BOUNDARY_DATASET_METADATA_ONLY_SEPARATED_MIGRATION_IMPORT_RETEST_GATES_RESULT_SCHEMA_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_SUPABASE_CHANGE_REVIEW_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_LOCAL_COMMIT"
+```

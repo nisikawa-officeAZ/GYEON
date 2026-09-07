@@ -3141,3 +3141,56 @@ identity, current Supabase breaking-change review, and `git diff --check`.
 Then request separate authorization to stage and locally commit only these
 three paths. Normal push, PR delivery, private-file transmission, and one R4
 Claude diagnosis remain later separate gates.
+
+### GDA-DEMO-20260907-POSTAL-CURRENT-PREVIEW-R5 — Staging migration and import read-only preflight
+
+**Status:** R4 CLAUDE INVOCATION CONSUMED ONCE /
+`BLOCKED_PROVIDER_METADATA_ACCESS` / CODEX RESULT CONSISTENCY REVIEW
+`CHANGES_REQUIRED_RESULT_CONSISTENCY_WITH_CONFIRMED_STAGING_SCHEMA_ABSENCE` /
+R5 EXACT THREE-DOCUMENT GOVERNANCE CANDIDATE UNSTAGED AND UNCOMMITTED / R5
+EVIDENCE COLLECTION AND CLAUDE EXECUTION NOT AUTHORIZED.
+
+R4 transmitted exactly 25 allowed files to tool-disabled Claude Code and made
+no Git, provider, database, or Production mutation. Claude correctly retained
+the provider-metadata block, but its result is not a complete PASS: the static
+source proves both invokers are forwarded, and absent database tables make row
+counts and probe results `UNDETERMINED`, not `ZERO` or `MISSING`.
+
+MacBook Codex independently confirmed against formal Staging
+`DealerOS-Dev-Next` / `vhiuiwolnlvlwvoaingd` / `ap-northeast-1` that migration
+`20260901001246`, both lookup RPCs, authenticated execute grants, the active
+batch table, and the postal-master table are absent. This is a real environment
+defect capable of explaining both Preview failures. Provider variable-name and
+scope evidence remains unproven because the attempted CLI path was refused by
+the safety gate and was neither retried nor bypassed.
+
+R5 therefore performs only the missing pre-application checks: authenticated
+Vercel UI name/scope and public-ref evidence, formal Staging identity/schema
+reconfirmation, migration predecessor and fixed-source-hash verification, and
+metadata-only dataset readiness. Migration apply and postal import are separate
+later gates with an intervening schema verification stop.
+
+**Governing directive:**
+`docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT.md`.
+
+**Exact governance paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT.md`
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** Documentation authoring and local verification only. No
+stage, commit, push, PR mutation, Vercel/provider access, Supabase/database
+access, Claude invocation, private-file transmission, migration, dataset
+download/import, source/test edit, deployment, Preview re-test, Ready, merge,
+or Production contact is authorized.
+
+**Next:** Independently verify the exact three-document diff, R4 result
+corrections, confirmed formal Staging absence evidence, exact 15-file future
+read allowlist, fixed source hashes, manual provider UI boundary, aggregate-only
+Staging boundary, dataset metadata-only rule, separated migration/import/retest
+gates, verdict matrix, result schema, protected metadata, preserved unrelated
+untracked files, clean index, upstream identity, current Supabase breaking-change
+review, and `git diff --check`. Then request separate authorization to stage
+and locally commit only these three paths. Push, provider/Supabase evidence
+collection, private transmission, and R5 Claude execution remain separate gates.
