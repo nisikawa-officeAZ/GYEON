@@ -2745,6 +2745,56 @@ and `git diff --check`. Then request separate literal-path stage/local-commit
 and normal-push gates. Only after governance delivery may the Owner separately
 authorize one R2 tool-enabled read-only binding execution.
 
+### GDA-DEMO-20260907-POSTAL-CURRENT-PREVIEW-EMERGENCY-PREFLIGHT-R2A — Bash permission correction governance candidate
+
+**Status:** R2 EXECUTION CONSUMED / STOPPED BEFORE BASH / R2A EXACT
+THREE-DOCUMENT GOVERNANCE AUTHORING AUTHORIZED / R2A EXECUTION NOT AUTHORIZED.
+
+The committed and normally pushed R2 governance HEAD is
+`9cb9fe342b365565f7e8a4e6707f9adbbc38c275`, tree
+`7613c88f0da6441d9737b7d03ae28ff1745c09eb`, parent
+`a16ba231e91bfa0049b8e38d87577d565be086f9`. PR #67 remained OPEN/Draft and
+its Vercel check passed before the non-triggering R2 instruction was posted.
+
+After separate Owner authorization, the R2 Claude invocation received the five
+authorized governance files exactly once. Bash was listed through
+`--tools Bash`, but it was not permission-approved under `dontAsk`; Claude
+stopped before its first Bash call. There was no required V2 marker, Git or
+provider access, Vercel request, Supabase/DB contact, local mutation, secret
+emission, or retry. MacBook Codex classified the consumed attempt as
+`CHANGES_REQUIRED_EXECUTION_PERMISSION`.
+
+R2A changes only the wrapper declaration by adding `--allowedTools Bash` while
+retaining `--tools Bash`, `--permission-mode dontAsk`, safe mode, no Chrome,
+no session persistence, and the original R2 fail-closed rules. Anthropic's
+current CLI reference distinguishes available tools from tools allowed to run
+without prompting. Permission bypass and auto mode remain prohibited.
+
+**Governing directive:**
+`docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2A_BASH_PERMISSION_CORRECTION.md`.
+
+**Exact governance paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2A_BASH_PERMISSION_CORRECTION.md`
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Future read/transmission scope:** Exactly six governance files: `AGENTS.md`,
+R1, R2, R2A, the completion plan, and phase results. Application source and
+the prior twelve private R1 source files are excluded. Protected source content
+remains unopened.
+
+**Current boundary:** Documentation authoring only. No stage, commit, push, PR
+mutation, Claude invocation, file transmission, Bash command, Vercel request,
+Supabase/DB/provider contact, migration, postal import, deployment, Ready,
+merge, or Production action is authorized.
+
+**Next:** Independently verify the exact three-document diff, installed CLI
+flags, directive hash, historical R2 output, protected metadata, preserved
+untracked paths, clean index, upstream identity, and `git diff --check`. Then
+request separate stage/local-commit and normal-push gates. R2A execution needs
+another explicit Owner authorization after governance delivery.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
