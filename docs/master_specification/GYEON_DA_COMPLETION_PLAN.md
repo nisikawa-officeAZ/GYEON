@@ -3091,3 +3091,53 @@ schema, protected metadata, preserved unrelated untracked files, clean index,
 upstream identity, current Supabase change review, and `git diff --check`. Then
 request separate authorization to stage and locally commit only these three
 paths. Normal push, PR delivery, and R3 browser execution remain separate gates.
+
+### GDA-DEMO-20260907-POSTAL-CURRENT-PREVIEW-R4 — Staging data-binding read-only diagnosis
+
+**Status:** R3 AUTHENTICATED BROWSER EXECUTION CONSUMED /
+`CHANGES_REQUIRED_BOTH_DIRECTIONS` / R4 EXACT THREE-DOCUMENT GOVERNANCE
+CANDIDATE UNSTAGED AND UNCOMMITTED / R4 CLAUDE EXECUTION NOT AUTHORIZED.
+
+R3 used the latest successful Preview deployment at PR #67 HEAD
+`afa39aafabd5f57966f474724a0e24009c864bba`. The Owner manually initiated OCR
+and reported that the postal code remained empty. MacBook Codex independently
+entered one public non-personal postal code into a clean unsaved manual form;
+after waiting longer than the UI's 400 ms debounce and moving focus away, the
+address remained empty and the explicit postal-lookup-unavailable/manual-entry
+notice became visible.
+No personal value is reproduced in this record, and no estimate, customer,
+database row, provider setting, screenshot, or Git file was created or changed
+by the R3 browser execution.
+
+Because both directions failed, R4 diagnoses the first broken boundary before
+any source repair. It separates the static route/invoker/action/RPC call chain
+from the Preview environment binding and the formal Staging migration, RPC
+grants, active import batch, master row count, and public probe-row presence.
+Production ref `dmvyaykhibmphrmekjbb` is prohibited. The only future database
+target is formal Staging ref `vhiuiwolnlvlwvoaingd`, and even that read-only
+contact requires a later explicit Owner authorization.
+
+**Governing directive:**
+`docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS.md`.
+
+**Exact governance paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS.md`
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** Documentation authoring and local verification only. No
+stage, commit, push, PR mutation, Claude invocation, private-file transmission,
+Vercel/provider access, Supabase/database access, migration, postal import,
+source or test modification, deployment, Preview re-test, Ready, merge, or
+Production contact is authorized.
+
+**Next:** Independently verify the exact three-document diff, R3 evidence and
+privacy boundary, exact 25-file future read allowlist, fixed repository/PR/
+Preview/Staging/Production identities, provider variable-name-only boundary,
+aggregate-only Staging query boundary, verdict matrix, exact result schema,
+protected metadata, preserved unrelated untracked files, clean index, upstream
+identity, current Supabase breaking-change review, and `git diff --check`.
+Then request separate authorization to stage and locally commit only these
+three paths. Normal push, PR delivery, private-file transmission, and one R4
+Claude diagnosis remain later separate gates.

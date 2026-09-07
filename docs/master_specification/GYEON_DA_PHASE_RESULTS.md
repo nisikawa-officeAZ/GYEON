@@ -7891,3 +7891,116 @@ boundaries:
 decision: RECORD_R2D_AS_CHANGES_REQUIRED_WITHOUT_RERUN_AND_AUTHOR_EXACT_THREE_DOCUMENT_R3_AUTHENTICATED_BROWSER_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2D_REJECTION_RETAINED_REACHABILITY_EVIDENCE_R3_TWO_DIRECTION_INDEPENDENCE_AUTHENTICATED_SESSION_PRIVACY_NO_SAVE_NO_MUTATION_VERDICT_MATRIX_RESULT_SCHEMA_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_SUPABASE_CHANGE_REVIEW_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_LOCAL_COMMIT"
 ```
+
+## GDA-DEMO-20260907 — R3 both-direction failure and R4 Staging data-binding diagnosis governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record the authenticated R3 failure in both postal directions and define a bounded read-only diagnosis that distinguishes static invoker/action defects from Preview binding, Staging migration, RPC/grant, active-batch, and master-data failures before repair."
+authorization: "The Owner authorized R3 result recording and R4 exact three-document governance authoring plus local verification only. Stage, commit, push, PR mutation, Claude invocation, private-file transmission, Vercel/provider access, Supabase/DB contact, migration, import, source/test edits, deployment, Preview re-test, Ready, merge, and Production contact remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_r4_head: afa39aafabd5f57966f474724a0e24009c864bba
+  fixed_pre_r4_tree: 7eeab86664a8a13d7c7260cf34a7763e59b58089
+  fixed_pre_r4_parent: 4ae384037dd724b1a6cf797226343f087cddc564
+  upstream_ahead_behind_before_authoring: "0 0"
+  vercel_check_before_r3: SUCCESS
+  vercel_preview_comments_check_before_r3: SUCCESS
+r3_consumed_execution:
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_RESULT_V3
+  verdict: CHANGES_REQUIRED_BOTH_DIRECTIONS
+  preview_alias_match: true
+  authenticated_ui_visible: true
+  owner_present: true
+  owner_selected_document: true
+  test_a:
+    direction: OCR_ADDRESS_TO_POSTAL
+    executed: true
+    customer_name: POPULATED
+    customer_address: UNDETERMINED_REDACTED
+    postal_code: EMPTY
+    postal_behavior: EMPTY_RESULT
+  test_b:
+    direction: MANUAL_PUBLIC_POSTAL_TO_ADDRESS
+    executed: true
+    debounce_waited_longer_than_400ms: true
+    focus_moved_after_input: true
+    address: EMPTY
+    notice: POSTAL_LOOKUP_UNAVAILABLE_MANUAL_ENTRY
+    result: UNAVAILABLE_NOTICE_ADDRESS_EMPTY_AFTER_DEBOUNCE_AND_FOCUS_CHANGE
+  pii_value_recorded: false
+  auth_material_accessed_or_emitted: false
+  codex_screenshot_created: false
+  estimate_saved_or_submitted: false
+  customer_created: false
+  direct_supabase_or_database_contact: false
+  provider_or_vercel_mutation: false
+  git_or_file_mutation: false
+r4_contract:
+  diagnosis_owner: ANTHROPIC_CLAUDE_CODE_AFTER_SEPARATE_EXPLICIT_OWNER_AUTHORIZATION
+  independent_acceptance_owner: MACBOOK_CODEX
+  future_private_file_read_and_transmission_allowlist_count: 25
+  future_operational_target: FORMAL_STAGING_READ_ONLY_ONLY
+  formal_staging_name: DealerOS-Dev-Next
+  formal_staging_ref: vhiuiwolnlvlwvoaingd
+  formal_staging_region: ap-northeast-1
+  production_name: DealerOS-Prod
+  production_ref: dmvyaykhibmphrmekjbb
+  production_contact: PROHIBITED
+  provider_metadata: VARIABLE_NAMES_AND_SCOPES_ONLY
+  provider_env_values: PROHIBITED
+  staging_output: BOOLEAN_CLASSIFICATION_AND_AGGREGATE_COUNT_ONLY
+  database_writes: PROHIBITED
+  migration_or_import_execution: PROHIBITED
+  tests_executed: PROHIBITED_IN_R4
+  source_or_test_edits: PROHIBITED
+  invocation_max: 1
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS_RESULT_V4
+  diagnosis_order:
+    - STATIC_ROUTE_INVOKER_ACTION_RPC_BINDING
+    - PREVIEW_ENV_NAME_SCOPE_AND_PUBLIC_REF_BINDING
+    - STAGING_MIGRATION_RPC_AND_GRANT
+    - STAGING_ACTIVE_BATCH_MASTER_ROWS_AND_PUBLIC_PROBE
+    - FIRST_CAUSAL_BOUNDARY_AND_MINIMUM_REPAIR_SCOPE
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS.md
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+official_basis:
+  supabase_breaking_change_review: "Current items reviewed. R4 must account for new-table Data API exposure/grant separation, but the candidate migration uses public RPCs over private tables; R4 verifies function existence and authenticated execute grants without changing exposure, RLS, or grants."
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_for_r4: false
+  private_files_transmitted: false
+  vercel_or_provider_contacted_for_r4: false
+  supabase_or_database_contacted_for_r4: false
+  migration_or_postal_import_executed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  preview_retested: false
+  ready_or_merged: false
+decision: RECORD_R3_CHANGES_REQUIRED_BOTH_DIRECTIONS_AND_AUTHOR_EXACT_THREE_DOCUMENT_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R3_EVIDENCE_PRIVACY_EXACT_25_FILE_FUTURE_READ_ALLOWLIST_FIXED_IDENTITIES_PROVIDER_NAME_ONLY_STAGING_AGGREGATE_ONLY_VERDICTS_RESULT_SCHEMA_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_SUPABASE_CHANGE_REVIEW_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_LOCAL_COMMIT"
+```
