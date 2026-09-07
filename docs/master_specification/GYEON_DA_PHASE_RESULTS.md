@@ -6998,3 +6998,99 @@ boundaries:
 decision: DELIVER_EXACT_THREE_DOCUMENT_GOVERNANCE_THEN_RUN_ONE_BOUNDED_TWO_FILE_CLAUDE_CANDIDATE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_PROTECTED_METADATA; COMMIT_AND_NORMALLY_PUSH_ONLY_GOVERNANCE; POST_ONE PUBLIC_SAFE PR67 INSTRUCTION; RUN CLAUDE TWO-FILE REPAIR_AND_EXACT_TESTS; STOP_BEFORE_SOURCE_GIT_OR_DEPLOYMENT"
 ```
+
+## GDA-PR67-FULL-CUMULATIVE-AUDIT-R1 — current-state correction and merge hold
+
+```yaml
+phase: GDA_PR67_FULL_CUMULATIVE_AUDIT_R1
+marker: GDA_PR67_FULL_CUMULATIVE_AUDIT_R1_RESULT_V1
+status: CHANGES_REQUIRED_GOVERNANCE_AND_ENVIRONMENT
+date: 2026-09-07
+append_only: true
+objective: "Correct the recorded current state after the accepted PDF repair and independently decide whether the entire cumulative PR #67 may become Ready or merge."
+authorization: "The Owner authorized a correction limited to exactly GYEON_DA_COMPLETION_PLAN.md, GYEON_DA_PHASE_RESULTS.md, and one public-safe PR #67 correction comment. Stage, commit, push, database/Supabase action, postal migration/data import, Vercel mutation, deployment, Ready, and merge remain unauthorized."
+priority:
+  active: GDA_PR67_FULL_CUMULATIVE_AUDIT_R1
+  held_without_cancellation:
+    - GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3K_R1
+    - GDA_DEMO_20260907_POSTAL_ENVIRONMENT_ACTIVATION
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  base_oid: bde532f8266560311b1168dea7a6599763c7ad24
+  mergeable: MERGEABLE
+  head: 1d8474f5c97b9e9e7b70114edb19d654849a6264
+  tree: 51562c01e922ad72e02d80756c462d6874e0fc6b
+  upstream_ahead_behind: "0 0"
+  changed_files: 104
+  additions: 27168
+  deletions: 154
+count_correction:
+  prior_public_wording: "entire 100-file PR"
+  authoritative_github_count: 104
+  prior_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5566761080
+  correction_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5567086913
+pdf_repair:
+  bounded_verdict: PASS
+  governance_commit: ce5181d
+  source_commit: 1d8474f5c97b9e9e7b70114edb19d654849a6264
+  exact_source_paths:
+    - next.config.ts
+    - src/lib/observability/release-identity.test.ts
+  focused_pdf_and_release_identity_tests: 40/40_PASS
+  typecheck: PASS
+  build: PASS_53_OF_53_STATIC_PAGES
+  authenticated_preview_pdf: GENERATED_AND_DISPLAYED
+  vercel: PASS
+  vercel_preview_comments: PASS
+cumulative_verification:
+  changed_typescript_test_files: 17
+  changed_typescript_tests: 425/430_PASS
+  failures: 5
+  failure_scope: src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx_WINDOW_FILM_ASSERTIONS
+  base_reproduction:
+    base_oid: bde532f8266560311b1168dea7a6599763c7ad24
+    result: SAME_39_PASS_5_FAIL
+    classification: PRE_EXISTING_NOT_PR67_REGRESSION_BUT_NOT_ALL_GREEN
+  cr6_node_harness: 304/304_PASS
+  diff_check: PASS
+dependency_audit:
+  current: 8_HIGH_4_MODERATE_0_CRITICAL
+  base: 8_HIGH_4_MODERATE_0_CRITICAL
+  classification: PRE_EXISTING_NOT_INTRODUCED_BY_PR67_PRODUCTION_HARDENING_REMAINS
+postal_environment:
+  ui_and_server_action_wiring: PRESENT
+  non_production_db_objects: ABSENT
+  promoted_official_japan_post_data: ABSENT
+  owner_observed_postal_autofill: NOT_WORKING
+  decision: SEPARATE_HELD_ENVIRONMENT_GATE_REQUIRED
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+governance_correction_paths:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  source_changed: false
+  tests_changed: false
+  dependency_changed_or_installed: false
+  public_safe_pr_correction_posted: true
+  git_staged_committed_or_pushed: false
+  database_or_supabase_contacted: false
+  postal_migration_or_import_executed: false
+  vercel_or_provider_mutated: false
+  ready_or_merged: false
+decision: PR67_FULL_CUMULATIVE_CHANGES_REQUIRED_KEEP_OPEN_DRAFT
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_CORRECTION; REQUEST_SEPARATE_OWNER_AUTHORIZATION_BEFORE_ANY_STAGE_COMMIT_PUSH_OR_POSTAL_ENVIRONMENT_ACTION"
+```

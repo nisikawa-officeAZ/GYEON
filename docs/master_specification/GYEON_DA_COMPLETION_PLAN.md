@@ -2540,6 +2540,65 @@ untouched.
 verification, deployment, Ready conversion, merge, and production verification remain
 later separate Owner gates.
 
+### GDA-PR67-FULL-CUMULATIVE-AUDIT-R1 — current-state correction and merge hold
+
+**Status:** PDF CHROMIUM TRACE REPAIR ACCEPTED / FULL PR `CHANGES_REQUIRED` /
+OPEN DRAFT MUST REMAIN NOT READY.
+
+**Correction authority:** On 2026-09-07 the Owner authorized a current-state
+correction limited to this completion plan, `GYEON_DA_PHASE_RESULTS.md`, and one
+public-safe PR #67 correction comment. This does not authorize stage, commit, push,
+database or Supabase action, postal migration/data import, Vercel mutation,
+deployment, Ready conversion, or merge.
+
+**Correct current identity and size:** PR #67 remains `OPEN / Draft / base main /
+MERGEABLE` at HEAD `1d8474f5c97b9e9e7b70114edb19d654849a6264`, tree
+`51562c01e922ad72e02d80756c462d6874e0fc6b`, with `104` changed files,
+`27168` additions, and `154` deletions. The earlier public acceptance comment's
+description of an "entire 100-file PR" is inaccurate; the authoritative GitHub
+count is `104`.
+
+**PDF phase correction:** The historical pre-delivery wording above is superseded
+for current-state decisions. Governance commit `ce5181d` and source commit
+`1d8474f` are present on the PR branch. The bounded PDF repair changes exactly
+`next.config.ts` and `src/lib/observability/release-identity.test.ts`. The focused
+PDF/release-identity tests pass `40/40`, typecheck passes, the production build
+passes with `53/53` static pages, both Vercel checks pass, and an authenticated
+Preview generated and displayed the estimate PDF. The PDF repair itself is
+accepted; that acceptance does not extend to the cumulative PR.
+
+**Cumulative audit result:** The changed TypeScript test set passes `425/430`.
+The five failures are the existing window-film assertions in
+`Step4Estimate.binding.test.tsx` and reproduce unchanged at the PR base
+`bde532f8266560311b1168dea7a6599763c7ad24`; they are not introduced by PR #67,
+but the cumulative suite is not all-green. The CR6 Node harness passes `304/304`.
+`git diff --check` passes. The protected `ScreensPreview.tsx` remains unopened and
+unchanged at mode `-rw-r--r--`, size `31076`, SHA-256
+`d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e`.
+The three unrelated CR6-R3J/R3K directive files remain untracked and untouched.
+
+**Why Ready/merge remains blocked:** The postal UI and Server Action wiring are
+present, but the required non-production postal DB objects and promoted official
+Japan Post data are still absent. Consequently the Owner-observed postal-code
+auto-fill cannot yet work in the fixed Preview. Postal CR6-R3K and postal
+environment activation remain separate held gates. In addition, the five
+base-existing window-film failures require an explicit accepted exception or a
+separate repair result before claiming an all-green release.
+
+**Dependency observation:** A production-dependency audit reports `8 high` and
+`4 moderate` advisories, and the same set reproduces at the PR base; PR #67 did
+not introduce them. They remain a production-hardening item and are not silently
+treated as resolved by this audit.
+
+**Public correction:** The authorized count and merge-hold correction was posted at
+`https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5567086913`.
+
+**Next:** First deliver this two-document correction under a separate exact stage,
+commit, and normal-push authorization if requested. Then complete the separately
+authorized postal environment activation and retained evidence, decide the
+window-film baseline-failure disposition, rerun the full acceptance gates, and only
+then request a distinct Ready/merge decision.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.
