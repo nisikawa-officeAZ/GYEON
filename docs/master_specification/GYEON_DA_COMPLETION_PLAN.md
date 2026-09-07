@@ -2903,3 +2903,50 @@ Any proposed change to mission, fixed decisions, phase order, completion standar
 3. Identify time, risk, security, and field-work impact.
 4. Receive explicit user approval.
 5. Be committed and recorded in the result ledger before implementation follows the new decision.
+
+### GDA-DEMO-20260907-POSTAL-CURRENT-PREVIEW-EMERGENCY-PREFLIGHT-R2B — Vercel curl failure classification
+
+**Status:** R2A EXECUTION CONSUMED / REPOSITORY AND DEPLOYMENT IDENTITY PASS /
+BINDING STILL UNPROVEN / R2B EXACT THREE-DOCUMENT GOVERNANCE AUTHORING
+AUTHORIZED / R2B EXECUTION NOT AUTHORIZED.
+
+The Owner-authorized R2A run returned marker
+`GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_SAFE_BINDING_RESULT_V2A` with verdict
+`BLOCKED_SAFE_BINDING_PROOF`. The Bash permission correction worked and the
+fixed repository and deployment identities passed. The deployment snapshot
+did not expose a bound environment snapshot, and the one predetermined
+`vercel curl` fallback exited nonzero. No Supabase project ref was derived.
+
+The failure must not be labelled SSO from a nonzero exit alone. Current Vercel
+CLI help and official documentation show that `vercel curl` can also fail
+because a project link is required, a protection-bypass token cannot be
+obtained, account access is denied, the deployment is inaccessible, CLI usage
+is invalid, or the network fails.
+
+R2B performs only one secret-redacted failure-classification attempt. It sends
+only `AGENTS.md`, the R2A directive, and the self-contained R2B directive; runs
+local version/help gates; invokes one fixed-deployment `vercel curl` process in
+a fresh repository-external temporary directory; maps in-memory stdout/stderr
+to a predeclared category; emits no raw output or secret; and stops without a
+binding scan, Supabase/DB contact, retry, link, bypass secret, or mutation.
+
+**Governing directive:**
+`docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2B_VERCEL_CURL_FAILURE_CLASSIFICATION.md`.
+
+**Exact governance paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2B_VERCEL_CURL_FAILURE_CLASSIFICATION.md`
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** Documentation authoring only. No stage, commit, push, PR
+mutation, Claude invocation, file transmission, Vercel request, Supabase/DB
+contact, migration, import, deployment, Ready, merge, or Production contact is
+authorized.
+
+**Next:** Independently verify the exact three-document diff, R2A evidence,
+installed Vercel CLI help, official provider basis, redaction/category gates,
+protected metadata, preserved unrelated untracked files, clean index, upstream
+identity, and `git diff --check`. Then request separate literal-path stage/local
+commit and normal-push gates. Only after governance delivery may the Owner
+separately authorize one R2B diagnostic execution.

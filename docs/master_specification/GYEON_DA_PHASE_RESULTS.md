@@ -7413,3 +7413,117 @@ boundaries:
 decision: AUTHOR_EXACT_THREE_DOCUMENT_R2A_PERMISSION_CORRECTION_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_CLI_PERMISSION_FLAGS_DIRECTIVE_HASH_R2_OUTPUT_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATIONS"
 ```
+
+## GDA-DEMO-20260907 — R2A blocked binding result and R2B Vercel curl failure-classification governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2B_VERCEL_CURL_FAILURE_CLASSIFICATION_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2B_VERCEL_CURL_FAILURE_CLASSIFICATION_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record the consumed R2A result and classify the single unresolved vercel curl failure without exposing secrets, guessing SSO, deriving a Supabase ref, or changing any system."
+authorization: "The Owner authorized R2A result recording and R2B three-document directive authoring only. Stage, commit, push, PR mutation, Claude execution, file transmission, Vercel request, Supabase/DB contact, migration apply, import, deployment, Ready, merge, and Production contact remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_governance_parent: df3320738883dd3e96fea3c68f67fa8eb897443a
+  fixed_pre_governance_parent_tree: 1453171087dea68a7430592f96cb8b48b3cba074
+  fixed_pre_governance_parent_parent: 9cb9fe342b365565f7e8a4e6707f9adbbc38c275
+  upstream_ahead_behind_before_authoring: "0 0"
+r2a_consumed_execution:
+  owner_authorized: true
+  claude_cli_version: 2.1.226
+  invocation_count: 1
+  marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_SAFE_BINDING_RESULT_V2A
+  verdict: BLOCKED_SAFE_BINDING_PROOF
+  permission_correction_tools_bash: true
+  permission_correction_allowed_tools_bash: true
+  permission_mode: dontAsk
+  bash_first_call_executed: true
+  repository_identity: PASS
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  head: df3320738883dd3e96fea3c68f67fa8eb897443a
+  tree: 1453171087dea68a7430592f96cb8b48b3cba074
+  governance_parent: 9cb9fe342b365565f7e8a4e6707f9adbbc38c275
+  governance_delta_exact_three_paths: true
+  pr_open: true
+  pr_draft: true
+  deployment_identity: PASS
+  deployment_id: dpl_6TeZEdDpj1AAxL5V8XzJL84PkMtB
+  project_id: prj_aHtlx2Tsj21TWNDFbO20BN4C7J84
+  alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+  ready: true
+  preview: true
+  deployment_target_field: null
+  git_branch_match: true
+  git_commit_match: true
+  snapshot_bound_environment_present: false
+  binding_method: null
+  supabase_project_ref: null
+  unique_ref_count: 0
+  vercel_curl_command_count: 1
+  vercel_curl_exit: NONZERO
+  failure_cause: UNCLASSIFIED
+  sso_claim_accepted_as_root_cause: false
+  raw_response_persisted: false
+  permission_bypass_used: false
+  secrets_emitted: false
+  vercel_mutations_or_deployments: 0
+  supabase_or_database_contacts: 0
+  database_writes: 0
+  migration_applies: 0
+  imports_or_promotions: 0
+  git_mutations: 0
+  production_contacts: 0
+  retries: 0
+  codex_post_execution_repository_recheck: PASS
+r2b_contract:
+  purpose: CLASSIFY_VERCEL_CURL_FAILURE_ONLY
+  claude_future_transmission_exact_count: 3
+  local_cli_version_and_help_gate: REQUIRED
+  vercel_curl_process_max: 1
+  fixed_deployment_id: dpl_6TeZEdDpj1AAxL5V8XzJL84PkMtB
+  fixed_scope: nisikawa-5024s-projects
+  timeout_seconds: 30
+  combined_output_limit_bytes: 1048576
+  raw_stdout_or_stderr_emission: PROHIBITED
+  secret_or_bypass_value_request: PROHIBITED
+  link_or_project_metadata_creation: PROHIBITED
+  supabase_ref_derivation_or_runtime_scan: PROHIBITED
+  retry: PROHIBITED
+  success_meaning: FAILURE_CATEGORY_ONLY_NOT_BINDING_PROOF
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_VERCEL_CURL_FAILURE_CLASSIFICATION_RESULT_V2B
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2B_VERCEL_CURL_FAILURE_CLASSIFICATION.md
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2B_VERCEL_CURL_FAILURE_CLASSIFICATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_for_r2b: false
+  vercel_contacted_for_r2b: false
+  supabase_or_database_contacted_for_r2b: false
+  migration_or_postal_import_executed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R2B_FAILURE_CLASSIFICATION_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2A_EVIDENCE_LOCAL_VERCEL_HELP_OFFICIAL_PROVIDER_BASIS_REDACTION_CATEGORY_GATES_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_GOVERNANCE_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH"
+```
