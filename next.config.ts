@@ -203,6 +203,10 @@ export const nextConfig: NextConfig = {
       "./src/lib/pdf/chromium-document/design/**",
       "./public/brand/gyeon-classic/logos/combination.svg",
     ],
+    // The Sparticuz Chromium binary is only needed by the estimate-PDF server
+    // function; tracing it into every route ("/**") would bloat every other
+    // serverless function with an unused Chromium binary.
+    "/pdf/estimate": ["./node_modules/@sparticuz/chromium/bin/**"],
   },
   experimental: {
     serverActions: {
