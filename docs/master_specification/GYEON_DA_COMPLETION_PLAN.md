@@ -2599,6 +2599,87 @@ authorized postal environment activation and retained evidence, decide the
 window-film baseline-failure disposition, rerun the full acceptance gates, and only
 then request a distinct Ready/merge decision.
 
+### GDA-DEMO-20260907-POSTAL-CURRENT-PREVIEW-EMERGENCY-PREFLIGHT-R1 — governance candidate
+
+**Status:** EXACT THREE-DOCUMENT GOVERNANCE CANDIDATE AUTHORIZED / CLAUDE AND
+ENVIRONMENT EXECUTION NOT AUTHORIZED.
+
+**Owner authority:** On 2026-09-07 the Owner authorized authoring and registering
+exactly this completion-plan entry,
+`GYEON_DA_PHASE_RESULTS.md`, and
+`CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1.md`.
+This authority does not include stage, commit, push, PR mutation, private-source
+transmission, Claude execution, database or Supabase access, migration apply,
+Japan Post CSV download/import/promotion, Vercel mutation/redeployment, Ready,
+merge, or Production contact.
+
+**Priority and responsibility:** This bounded governance phase is the active
+MacBook Codex task. `GDA_PR67_FULL_CUMULATIVE_AUDIT_R1` remains the accepted
+merge-hold result. The clean-replacement
+`GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3K_R1` and the broader
+`GDA_DEMO_20260907_POSTAL_ENVIRONMENT_ACTIVATION` remain held without
+cancellation. A later MacBook Claude run may perform only the read-only
+preflight after separate Owner authorization and governance delivery.
+
+**Fixed identity:** Repository `nisikawa-officeAZ/GYEON`, PR #67, branch
+`agent/gda-estimate-ocr-postal-clean-replacement-r1`, base `main`. The fixed
+pre-governance parent is
+`b6db05f61d80b39963981b5594c44f3692f57946`, tree
+`0d575a81fe2e4d338f55de19a5d64c03e6373b95`, whose single parent is
+`1d8474f5c97b9e9e7b70114edb19d654849a6264`. A future execution must derive and
+accept only one direct-child governance HEAD whose committed delta is exactly
+the three governance paths below and whose OID equals the remote PR head. This
+avoids fixing the pre-commit OID as the impossible post-delivery execution OID.
+PR #67 is OPEN/Draft/MERGEABLE.
+The fixed READY Preview is deployment `dpl_6TeZEdDpj1AAxL5V8XzJL84PkMtB`, alias
+`dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app`,
+Vercel project `dealeros` / `prj_aHtlx2Tsj21TWNDFbO20BN4C7J84`.
+
+**Read-only facts already established:** `DealerOS-Dev-Clean-R5` /
+`nqvnjqcxgngqsqkbpdfi` is `ACTIVE_HEALTHY` in `ap-northeast-1` on PostgreSQL
+`17.6.1.166`, but currently has zero migrations and zero `public`/`private`
+tables. The repository has the 113 formal migration SQL files, the additive
+postal migration and import tooling, but no real Japan Post CSV. The current
+Preview is authenticated and usable, while its exact Supabase project ref has
+not yet been independently bound to immutable deployment evidence.
+
+**Exact preflight objective:** Determine the fixed Preview deployment's actual
+20-character Supabase project ref without exposing any environment value or
+secret. Classify Production or unknown targets before database contact. For a
+permitted non-production ref, inspect only project/migration/catalog/postal-batch
+and minimum Auth/dealer-baseline metadata. Recommend a later postal-only apply
+gate, data-import-only gate, verify-only gate, or a fail-closed blocker. Do not
+apply or repair anything in this phase.
+
+**Exact governance paths:**
+
+- `docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1.md`
+- `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+- `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+The future read-only repository scope is the literal twelve-path list in the
+directive. The existing three untracked CR6-R3J/R3K directives remain unrelated,
+untracked, unstaged, byte-preserved, and untouched.
+
+**Protected path:**
+`src/components/estimates/wizard/screens/ScreensPreview.tsx` remains
+content-prohibited. Only pathname, mode, size, Git state, and SHA-256 may be
+checked. Expected mode is `-rw-r--r--`, size `31076`, SHA-256
+`d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e`.
+
+**Required future result:**
+`GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_RESULT_V1` with one
+of the directive's explicit PASS/BLOCKED/CHANGES_REQUIRED classifications and
+zero writes, applies, imports, Vercel mutations, Git mutations, Production
+contacts, and retries.
+
+**Next:** Verify the exact three-document diff, hashes, protected metadata,
+untracked-path preservation, clean index, upstream identity, and diff-check.
+Then request a separate Owner authorization for exact governance stage/local
+commit/normal push, one public-safe PR #67 instruction, and one read-only Claude
+preflight. Postal migration, data import, Vercel changes, redeployment, and
+authenticated runtime verification remain later separate gates.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

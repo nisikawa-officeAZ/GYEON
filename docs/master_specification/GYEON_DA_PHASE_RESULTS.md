@@ -7094,3 +7094,104 @@ boundaries:
 decision: PR67_FULL_CUMULATIVE_CHANGES_REQUIRED_KEEP_OPEN_DRAFT
 next: "VERIFY_THE_EXACT_TWO_DOCUMENT_CORRECTION; REQUEST_SEPARATE_OWNER_AUTHORIZATION_BEFORE_ANY_STAGE_COMMIT_PUSH_OR_POSTAL_ENVIRONMENT_ACTION"
 ```
+
+## GDA-DEMO-20260907 — current Preview postal emergency preflight R1 governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Register a fail-closed one-time read-only route that identifies the Supabase project used by the fixed working Preview and determines the smallest later postal-only environment gate without executing it."
+authorization: "The Owner authorized authoring exactly the emergency preflight directive, GYEON_DA_COMPLETION_PLAN.md, and GYEON_DA_PHASE_RESULTS.md. Stage, commit, push, PR mutation, Claude execution/private transmission, database/Supabase access, migration apply, Japan Post CSV download/import/promotion, Vercel mutation/redeployment, Ready, merge, and Production contact remain unauthorized."
+priority:
+  active: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1_GOVERNANCE
+  accepted_predecessor: GDA_PR67_FULL_CUMULATIVE_AUDIT_R1
+  held_without_cancellation:
+    - GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3K_R1
+    - GDA_DEMO_20260907_POSTAL_ENVIRONMENT_ACTIVATION
+responsibility:
+  current_author: MACBOOK_CODEX
+  future_read_only_diagnosis: MACBOOK_CLAUDE_AFTER_SEPARATE_OWNER_AUTHORIZATION
+  studio_participation: NONE
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  mergeable: MERGEABLE
+  fixed_pre_governance_parent: b6db05f61d80b39963981b5594c44f3692f57946
+  fixed_pre_governance_parent_tree: 0d575a81fe2e4d338f55de19a5d64c03e6373b95
+  fixed_pre_governance_parent_parent: 1d8474f5c97b9e9e7b70114edb19d654849a6264
+  required_execution_head: DERIVED_SINGLE_DIRECT_CHILD_OF_FIXED_PRE_GOVERNANCE_PARENT
+  required_execution_delta: EXACT_THREE_GOVERNANCE_PATHS_ONLY
+  upstream_ahead_behind_before_authoring: "0 0"
+preview:
+  vercel_project_name: dealeros
+  vercel_project_id: prj_aHtlx2Tsj21TWNDFbO20BN4C7J84
+  deployment_id: dpl_6TeZEdDpj1AAxL5V8XzJL84PkMtB
+  alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+  target: preview
+  state: READY
+  exact_supabase_project_ref: UNVERIFIED
+read_only_environment_observations:
+  clean_replacement_name: DealerOS-Dev-Clean-R5
+  clean_replacement_ref: nqvnjqcxgngqsqkbpdfi
+  clean_replacement_region: ap-northeast-1
+  clean_replacement_health: ACTIVE_HEALTHY
+  clean_replacement_postgres: 17.6.1.166
+  clean_replacement_migrations: 0
+  clean_replacement_public_private_tables: 0
+  formal_repository_migrations: 113
+  postal_migration_present_in_repository: true
+  postal_import_tool_present_in_repository: true
+  real_japan_post_csv_present_in_repository: false
+target_policy:
+  production_ref: dmvyaykhibmphrmekjbb
+  production_contact: PROHIBITED
+  unknown_ref_contact: PROHIBITED
+  classified_non_production_refs_read_only_only:
+    - nqvnjqcxgngqsqkbpdfi
+    - fbieiotihlmpfzybowbt
+    - vhiuiwolnlvlwvoaingd
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1.md
+  sha256: d0cae4a8593190cc947328bcd6762705924b44a847a87c938bff430f354598a4
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_read_scope:
+  exact_repository_path_count: 12
+  protected_content_readable: false
+required_future_result:
+  marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_RESULT_V1
+  execution_count: ONE_AFTER_SEPARATE_OWNER_AUTHORIZATION
+  writes_applies_imports_deployments_git_mutations_production_contacts_retries: 0
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_or_private_files_transmitted: false
+  database_or_supabase_contacted_for_this_phase: false
+  migration_applied: false
+  postal_data_downloaded_imported_or_promoted: false
+  vercel_mutated_or_redeployed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_EMERGENCY_PREFLIGHT_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_HASHES_PROTECTED_METADATA_UNTRACKED_PRESERVATION_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_GOVERNANCE_STAGE_LOCAL_COMMIT_NORMAL_PUSH_ONE_PUBLIC_SAFE_PR67_INSTRUCTION_AND_ONE_READ_ONLY_CLAUDE_PREFLIGHT"
+```
