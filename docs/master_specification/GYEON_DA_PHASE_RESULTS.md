@@ -7527,3 +7527,138 @@ boundaries:
 decision: AUTHOR_EXACT_THREE_DOCUMENT_R2B_FAILURE_CLASSIFICATION_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2A_EVIDENCE_LOCAL_VERCEL_HELP_OFFICIAL_PROVIDER_BASIS_REDACTION_CATEGORY_GATES_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_GOVERNANCE_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH"
 ```
+
+## GDA-DEMO-20260907 — R2B unknown result and R2C local Vercel CLI control-flow governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2C_LOCAL_VERCEL_CLI_CONTROL_FLOW_AUDIT_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2C_LOCAL_VERCEL_CLI_CONTROL_FLOW_AUDIT_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record the consumed R2B unknown result and prove or reject the local unlinked-cwd confirmation-required cause using only fixed-hash installed Vercel CLI artifacts and zero provider contact."
+authorization: "The Owner authorized R2B result recording and R2C three-document directive authoring only. Stage, commit, push, PR mutation, Claude execution, transmission, provider/network request, Supabase/DB contact, migration, import, deployment, Ready, merge, and Production contact remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_governance_parent: 60ec89a8cd9ce5bfc8321fa2ea6755081b9df3ef
+  fixed_pre_governance_parent_tree: fd6c2f1b3e77ec21e59ea54389c06e4da21a4dac
+  fixed_pre_governance_parent_parent: df3320738883dd3e96fea3c68f67fa8eb897443a
+  upstream_ahead_behind_before_authoring: "0 0"
+r2b_consumed_execution:
+  owner_authorized: true
+  claude_cli_version: 2.1.226
+  invocation_count: 1
+  marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_VERCEL_CURL_FAILURE_CLASSIFICATION_RESULT_V2B
+  verdict: CHANGES_REQUIRED_UNKNOWN_FAILURE
+  repository_identity: PASS
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  head: 60ec89a8cd9ce5bfc8321fa2ea6755081b9df3ef
+  tree: fd6c2f1b3e77ec21e59ea54389c06e4da21a4dac
+  governance_parent: df3320738883dd3e96fea3c68f67fa8eb897443a
+  governance_delta_exact_three_paths: true
+  pr_open: true
+  pr_draft: true
+  vercel_cli_version: 54.17.3
+  vercel_curl_process_count: 1
+  fixed_deployment_id_used: true
+  fixed_scope_used: true
+  exit_code: 1
+  timed_out: false
+  output_limit_exceeded: false
+  category: UNKNOWN_REDACTED
+  raw_stdout_emitted_or_persisted: false
+  raw_stderr_emitted_or_persisted: false
+  secrets_emitted: false
+  temporary_execution_repo_external: true
+  unexpected_link_or_project_metadata: false
+  temporary_execution_cleaned: true
+  vercel_api_or_second_vercel_command_contacts: 0
+  vercel_mutations_or_deployments: 0
+  bypass_secret_requests_or_uses: 0
+  supabase_or_database_contacts: 0
+  database_writes: 0
+  migration_applies: 0
+  imports_or_promotions: 0
+  git_mutations: 0
+  production_contacts: 0
+  retries: 0
+  codex_post_execution_repository_recheck: PASS
+codex_local_cli_discovery:
+  provider_or_network_contact: false
+  installed_version: 54.17.3
+  relative_path_branch: getDeploymentUrlAndToken
+  local_link_checked_before_deployment_resolution: true
+  deployment_flag_bypasses_link_requirement: false
+  unlinked_cwd_calls_setup_and_link: true
+  noninteractive_without_yes_can_return: HEADLESS
+  headless_structured_reason: confirmation_required
+  r2b_classifier_included_confirmation_required: false
+  provisional_root_cause: UNLINKED_TEMP_CWD_TRIGGERED_CLI_CONFIRMATION_REQUIRED_BEFORE_DEPLOYMENT_REQUEST
+  sso_proven: false
+  supabase_or_application_failure_proven: false
+  full_url_branch_candidate: getFullUrlAndToken
+  full_url_candidate_executed: false
+r2c_local_artifacts:
+  - path: /opt/homebrew/Cellar/vercel/54.17.3/libexec/lib/node_modules/vercel/package.json
+    mode: -rw-r--r--
+    size: 6621
+    sha256: fb448f67d81f0f919914d1dd022cc03d728d3cff20c8942477828a7de5ab417c
+  - path: /opt/homebrew/Cellar/vercel/54.17.3/libexec/lib/node_modules/vercel/dist/commands-bulk.js
+    mode: -rw-r--r--
+    size: 1815233
+    sha256: a96b4eec9833cd96162d099a492902804ba135e927247c09296abd50d71e6f64
+  - path: /opt/homebrew/Cellar/vercel/54.17.3/libexec/lib/node_modules/vercel/dist/chunks/chunk-QMMMXYOY.js
+    mode: -rw-r--r--
+    size: 2804
+    sha256: 823ad77096fa1eb47ca423eb3c966a24897a3bdb170d6a18b9462a6a8bc79427
+  - path: /opt/homebrew/Cellar/vercel/54.17.3/libexec/lib/node_modules/vercel/dist/chunks/chunk-FMBDRMTZ.js
+    mode: -rw-r--r--
+    size: 49750
+    sha256: 4d388040cdf9719e328aad297cf63d9a301857a53ef54bf11e98aee28ad964ed
+r2c_contract:
+  purpose: LOCAL_STATIC_CLI_CONTROL_FLOW_ONLY
+  claude_future_transmission_exact_count: 3
+  local_artifact_read_exact_count: 4
+  provider_or_network_commands: PROHIBITED
+  prior_raw_r2b_output_read: PROHIBITED
+  credential_or_secret_access: PROHIBITED
+  vercel_curl_runtime_request: PROHIBITED
+  full_url_candidate_runtime_test: PROHIBITED
+  supabase_ref_derivation: PROHIBITED
+  retry: PROHIBITED
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_LOCAL_VERCEL_CLI_CONTROL_FLOW_RESULT_V2C
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2C_LOCAL_VERCEL_CLI_CONTROL_FLOW_AUDIT.md
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2C_LOCAL_VERCEL_CLI_CONTROL_FLOW_AUDIT.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_for_r2c: false
+  public_official_documentation_read: true
+  operational_provider_or_account_contacted_for_r2c: false
+  supabase_or_database_contacted_for_r2c: false
+  migration_or_postal_import_executed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R2C_LOCAL_CLI_CONTROL_FLOW_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2B_RESULT_LOCAL_CLI_ARTIFACT_HASHES_CONTROL_FLOW_OFFICIAL_VERCEL_BASIS_NETWORK_ZERO_GATE_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_GOVERNANCE_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH"
+```

@@ -2950,3 +2950,51 @@ protected metadata, preserved unrelated untracked files, clean index, upstream
 identity, and `git diff --check`. Then request separate literal-path stage/local
 commit and normal-push gates. Only after governance delivery may the Owner
 separately authorize one R2B diagnostic execution.
+
+### GDA-DEMO-20260907-POSTAL-CURRENT-PREVIEW-EMERGENCY-PREFLIGHT-R2C — local Vercel CLI control-flow audit
+
+**Status:** R2B EXECUTION CONSUMED / UNKNOWN FAILURE RECORDED / LOCAL CLI
+CONTROL-FLOW CAUSE CANDIDATE IDENTIFIED / R2C EXACT THREE-DOCUMENT GOVERNANCE
+AUTHORING AUTHORIZED / R2C EXECUTION NOT AUTHORIZED.
+
+R2B executed one fixed-deployment `vercel curl` process and returned exit code
+`1`, category `UNKNOWN_REDACTED`, and verdict
+`CHANGES_REQUIRED_UNKNOWN_FAILURE`. It emitted or persisted no raw stdout,
+stderr, or secret, performed no retry, and made no Supabase/DB, Git mutation,
+Vercel mutation, deployment, or Production contact.
+
+MacBook Codex then inspected only the locally installed Vercel CLI `54.17.3`
+distribution. The bundled control flow shows that a relative-path
+`vercel curl` command enters `getDeploymentUrlAndToken`, calls `ensureLink`
+before resolving `--deployment`, and still requires a linked project. In the
+fresh unlinked temporary directory, non-interactive execution without `--yes`
+can yield `HEADLESS` / `confirmation_required`. R2B did not include that exact
+safe category, explaining `UNKNOWN_REDACTED`. This is a local orchestration
+cause candidate, not evidence of SSO, Supabase failure, or application failure.
+
+R2C independently verifies that conclusion using four fixed-hash local Vercel
+CLI artifacts. It permits no provider/network command, prior raw R2B output,
+credential access, application source, write, or retry. A full-URL command may
+be identified statically as a future no-link candidate, but R2C cannot execute
+or authorize it.
+
+**Governing directive:**
+`docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2C_LOCAL_VERCEL_CLI_CONTROL_FLOW_AUDIT.md`.
+
+**Exact governance paths:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2C_LOCAL_VERCEL_CLI_CONTROL_FLOW_AUDIT.md`
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** Documentation authoring only. No stage, commit, push, PR
+mutation, Claude invocation, transmission, Vercel/provider request, Supabase/DB
+contact, migration, import, deployment, Ready, merge, or Production contact is
+authorized.
+
+**Next:** Independently verify the exact three-document diff, R2B result,
+installed CLI artifact hashes/control flow, official Vercel CLI documentation,
+network-zero gate, protected metadata, preserved unrelated untracked files,
+clean index, upstream identity, and `git diff --check`. Then request separate
+literal-path stage/local commit and normal-push gates. Only after governance
+delivery may the Owner separately authorize one R2C local-only Claude audit.
