@@ -3044,3 +3044,50 @@ protected metadata, preserved untracked files, clean index, upstream identity,
 official Vercel and Supabase change basis, and `git diff --check`. Then request
 a separate literal-path stage/local commit authorization. Push, PR instruction,
 and R2D execution remain later separate gates.
+
+### GDA-DEMO-20260907-POSTAL-CURRENT-PREVIEW-R3 — authenticated browser postal autofill verification
+
+**Status:** R2D EXECUTION CONSUMED / PROVIDER REACHABILITY EVIDENCE RETAINED /
+`CHANGES_REQUIRED_EXECUTION_SCOPE_AND_RESULT_FORMAT` / R2D WILL NOT BE RERUN /
+R3 EXACT THREE-DOCUMENT GOVERNANCE CANDIDATE UNSTAGED AND UNCOMMITTED / R3
+EXECUTION NOT AUTHORIZED.
+
+R2D established only that the fixed Preview provider hostname returned a 3xx
+response to the single permitted network GET, without redirect follow,
+provider mutation, Supabase/database contact, or Git mutation. The claimed PASS
+is rejected because the run executed prohibited `curl --version`, contradicted
+its own one-process count, emitted the exact HTTP status instead of its allowed
+class, and omitted the required leading result marker. This useful reachability
+evidence is retained, but R2D will not be repeated.
+
+R3 replaces infrastructure inference with direct user-visible evidence in the
+Owner's already-authenticated Preview session. MacBook Codex, not Claude Code,
+will separately verify (A) whether one Owner-triggered OCR action maps customer
+data and derives postal code from address, and (B) whether a public non-personal
+postal code entered into a clean manual form derives the address. No personal
+field values may be recorded. Cookies, tokens, browser storage, network bodies,
+developer tools, direct Supabase/database access, Vercel commands, saving, and
+persistent writes are prohibited.
+
+**Governing runbook:**
+`docs/master_specification/CODEX_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R3_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_VERIFICATION.md`.
+
+**Exact governance paths:**
+
+1. `docs/master_specification/CODEX_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R3_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_VERIFICATION.md`
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Current boundary:** Documentation authoring and local verification only. No
+browser/CUA execution, screenshot, Claude invocation, private-file
+transmission, source or test change, stage, commit, push, PR mutation,
+Vercel/provider action, Supabase/database access, migration, import, save,
+deployment, Ready, merge, or Production contact is authorized.
+
+**Next:** Independently verify the exact three-document diff, the R2D rejection
+and retained evidence, the R3 two-direction independence, authenticated-session
+and privacy boundary, no-save/no-mutation rule, verdict matrix, exact result
+schema, protected metadata, preserved unrelated untracked files, clean index,
+upstream identity, current Supabase change review, and `git diff --check`. Then
+request separate authorization to stage and locally commit only these three
+paths. Normal push, PR delivery, and R3 browser execution remain separate gates.

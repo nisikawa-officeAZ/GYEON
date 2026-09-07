@@ -7781,3 +7781,113 @@ boundaries:
 decision: AUTHOR_EXACT_THREE_DOCUMENT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF_GOVERNANCE_CANDIDATE_ONLY
 next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2C_RESULT_VERCEL_CLI_TOKEN_CREATION_PROHIBITION_FIXED_DIRECT_CURL_IDENTITY_FULL_URL_ONE_REQUEST_OUTPUT_REDACTION_OFFICIAL_PROVIDER_BASIS_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_LOCAL_COMMIT"
 ```
+
+## GDA-DEMO-20260907 — R2D rejected result and R3 authenticated browser postal-autofill governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R3_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_VERIFICATION_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R3_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_VERIFICATION_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record R2D without rerun, reject its claimed PASS while retaining the bounded provider-reachability evidence, and define a privacy-safe authenticated-browser test that independently verifies OCR address-to-postal and manual postal-to-address autofill."
+authorization: "The Owner authorized R2D result recording and R3 exact three-document governance authoring plus local verification only. Browser/CUA execution, screenshots, Claude invocation, private-file transmission, source/test edits, stage, commit, push, PR mutation, Vercel/provider action, Supabase/DB contact, migration, import, save, deployment, Ready, merge, and Production contact remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_r3_head: 4ae384037dd724b1a6cf797226343f087cddc564
+  fixed_pre_r3_tree: 6a07395a8e219a13e00d88f59142322a76a5db05
+  fixed_pre_r3_parent: d2b57727fae5e7094b252070ed71c3c6816ad95d
+  upstream_ahead_behind_before_authoring: "0 0"
+  vercel_check_at_authoring: SUCCESS
+  vercel_preview_comments_check_at_authoring: SUCCESS
+r2d_consumed_execution:
+  owner_authorized: true
+  claude_invocation_count: 1
+  requested_result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_FULL_URL_NO_LINK_PROVIDER_PROOF_RESULT_V2D
+  claimed_verdict: PASS_FULL_URL_PROVIDER_REACHABLE
+  codex_independent_verdict: CHANGES_REQUIRED_EXECUTION_SCOPE_AND_RESULT_FORMAT
+  rerun: PROHIBITED_NOT_REQUIRED
+  useful_evidence:
+    preview_provider_response_class: 3xx
+    permitted_network_get_count: 1
+    redirect_followed: false
+    response_body_or_headers_captured: false
+    provider_mutation: false
+    supabase_or_database_contact: false
+    git_mutation: false
+  rejection_reasons:
+    prohibited_curl_version_process_executed: true
+    actual_curl_process_count: 2
+    reported_curl_process_count: 1
+    exact_http_status_emitted_when_only_class_permitted: true
+    required_leading_result_marker_omitted: true
+  proof_boundary: PREVIEW_PROVIDER_REACHABILITY_ONLY_NOT_AUTH_OR_POSTAL_FUNCTIONALITY
+r3_contract:
+  execution_owner: MACBOOK_CODEX_WITH_OWNER_PRESENT
+  runtime: OWNER_ALREADY_AUTHENTICATED_IN_APP_BROWSER
+  preview_alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+  claude_invoked: false
+  private_file_transmission: PROHIBITED
+  owner_manually_selects_ocr_document: REQUIRED
+  auth_cookie_token_or_browser_storage_access: PROHIBITED
+  browser_devtools_network_body_or_har_capture: PROHIBITED
+  pii_values_in_result: PROHIBITED
+  screenshot_default: PROHIBITED_REQUIRES_SEPARATE_OWNER_APPROVAL_AND_REDACTION
+  direct_supabase_or_database_access: PROHIBITED
+  vercel_cli_api_or_provider_mutation: PROHIBITED
+  estimate_or_customer_save_submit_create: PROHIBITED
+  reversible_unsaved_field_entry: ALLOWED_ONLY_AFTER_SEPARATE_R3_EXECUTION_AUTHORIZATION
+  test_a: OCR_ADDRESS_TO_POSTAL_REVERSE_AUTOFILL
+  test_b: MANUAL_PUBLIC_POSTAL_TO_ADDRESS_FORWARD_AUTOFILL_ON_CLEAN_FORM
+  tests_independent: true
+  result_values_redacted_to_status_classes: true
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_RESULT_V3
+  allowed_verdicts:
+    - PASS_BOTH_DIRECTIONS
+    - CHANGES_REQUIRED_OCR_REVERSE_ONLY
+    - CHANGES_REQUIRED_FORWARD_LOOKUP_ONLY
+    - CHANGES_REQUIRED_BOTH_DIRECTIONS
+    - BLOCKED_AUTH_SESSION
+    - BLOCKED_OWNER_DOCUMENT_SELECTION
+    - BLOCKED_UI_OR_PREVIEW
+    - BLOCKED_PRIVACY_BOUNDARY
+directive:
+  path: docs/master_specification/CODEX_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R3_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_VERIFICATION.md
+exact_governance_allowlist:
+  - docs/master_specification/CODEX_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R3_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_VERIFICATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+official_basis:
+  supabase_breaking_change_review: "Current breaking-change items were reviewed. R3 makes no direct Supabase/Data API/Auth/DB request and therefore does not rely on the affected management logs endpoint, extension-version behavior, OAuth status code, or new-table API exposure behavior."
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  browser_or_cua_executed_for_r3: false
+  screenshot_created: false
+  claude_invoked_for_r3: false
+  private_files_transmitted: false
+  vercel_or_provider_contacted_for_r3: false
+  supabase_or_database_contacted_for_r3: false
+  migration_or_postal_import_executed: false
+  estimate_or_customer_saved_created_or_submitted: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: RECORD_R2D_AS_CHANGES_REQUIRED_WITHOUT_RERUN_AND_AUTHOR_EXACT_THREE_DOCUMENT_R3_AUTHENTICATED_BROWSER_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2D_REJECTION_RETAINED_REACHABILITY_EVIDENCE_R3_TWO_DIRECTION_INDEPENDENCE_AUTHENTICATED_SESSION_PRIVACY_NO_SAVE_NO_MUTATION_VERDICT_MATRIX_RESULT_SCHEMA_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_SUPABASE_CHANGE_REVIEW_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_LOCAL_COMMIT"
+```
