@@ -2460,6 +2460,86 @@ authorization for the exact seven-file Claude implementation and its exact
 verification commands. Postal environment activation remains a later,
 separately authorized database gate after the Preview binding is identified.
 
+### GDA-ESTIMATE-PDF-CHROMIUM-BIN-TRACE-R3 — Preview PDF runtime repair
+
+**Status:** GOVERNANCE DELIVERY AND POST-DELIVERY CLAUDE TWO-FILE SOURCE
+CANDIDATE ARE OWNER-AUTHORIZED / GOVERNANCE NOT YET DELIVERED / SOURCE NOT YET
+CHANGED.
+
+**Priority decision:** The fixed Preview can save an estimate, but its inline PDF route
+fails inside the server renderer. This is the current demo-blocking MacBook priority.
+Postal-master CR6 and the remaining postal-environment activation from
+`GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1` are preserved and held, not cancelled or
+merged into this repair.
+
+**Fixed pre-governance identity:**
+
+- Repository: `nisikawa-officeAZ/GYEON`.
+- Branch: `agent/gda-estimate-ocr-postal-clean-replacement-r1`.
+- Coordination PR: `https://github.com/nisikawa-officeAZ/GYEON/pull/67` —
+  `OPEN / Draft / base main / MERGEABLE`.
+- Pre-governance source HEAD: `83e18e94be3774b58434dff3f7a215619345498b`.
+- Pre-governance source tree: `4ae4238e9382b5bbcbd36bc97d7a755eb933d34f`.
+- Preview deployment: `dpl_AdyEnDo3ZZ7rpKLc8sM2AxQpDqZ8`.
+- Preview URL: `https://dealeros-ixqol6xwe-nisikawa-5024s-projects.vercel.app`.
+
+**Accepted evidence and root cause:** The Owner's original Chrome profile independently
+blocked the direct PDF request with `net::ERR_BLOCKED_BY_CLIENT`. A clean authenticated
+extension-free browser reached the application route but returned
+`PDFの生成に失敗しました`. The fixed Vercel runtime then logged that
+`/var/task/node_modules/@sparticuz/chromium/bin` does not exist and explicitly stated
+that the package must be externalized when bundled. The current config already
+externalizes `puppeteer-core` and `@sparticuz/chromium`, but does not trace the Chromium
+`bin` directory into the estimate-PDF server function. The immediate server failure is
+therefore missing serverless-bundle assets, not estimate save, pricing, OCR, postal,
+customer, vehicle, DB, or authorization logic.
+
+**Governing directive:**
+`docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR.md`,
+SHA-256 `3302640f077952b27d93a9d0b61b53b2cfaf0683f84a019b9760e85d5ce58f9e`.
+
+**Exact governance allowlist — exactly three paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`;
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`; and
+3. `docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR.md`.
+
+The Owner authorized literal-path stage and local commit of only these three governance
+files, one normal non-force push to PR #67, and one public-safe instruction comment.
+
+**Exact source-candidate allowlist — exactly two existing paths:**
+
+1. `next.config.ts`;
+2. `src/lib/observability/release-identity.test.ts`.
+
+After the governance commit is pushed and the newest PR #67 instruction names its exact
+HEAD/tree, the Owner has already authorized one bounded Claude implementation and exact
+verification pass. The source candidate must add
+`"/pdf/estimate": ["./node_modules/@sparticuz/chromium/bin/**"]`, preserve the current
+global trace list and external-package list, and update only the existing config-
+preservation test. The Chromium binary glob must not be added to the global `"/**"`
+entry. Node-version changes, Turbopack disablement, dependency changes, PDF-renderer
+replacement, fallback rendering, and PDF/OCR/postal/pricing/database source changes are
+prohibited.
+
+**Exact post-edit verification:** focused release-identity test; focused estimate-PDF
+route test; `npm run typecheck`; `npm run build`; exact two-path `git diff --check`; exact
+two-path diff; and final status. Dependency installation and package/lockfile changes are
+prohibited.
+
+**Protected and unrelated work:**
+`src/components/estimates/wizard/screens/ScreensPreview.tsx` remains content-prohibited,
+mode `-rw-r--r--`, size `31076`, SHA-256
+`d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e`. The three existing
+untracked CR6-R3J/R3K postal directives remain byte-identical, untracked, unstaged, and
+untouched.
+
+**Result and stop boundary:** Claude must return
+`GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR_RESULT_V1` with `CANDIDATE_READY`,
+`CHANGES_REQUIRED`, or `BLOCKED_ENVIRONMENT`. Source stage, commit, push, Preview
+verification, deployment, Ready conversion, merge, and production verification remain
+later separate Owner gates.
+
 ### GDA-3 — Completion Desk
 
 **Objective:** Reduce the post-service administrative sequence to one review surface.

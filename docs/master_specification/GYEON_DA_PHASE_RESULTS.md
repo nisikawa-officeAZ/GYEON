@@ -6894,3 +6894,107 @@ boundaries:
 decision: REGISTER_DEMO_HOTFIX_R1_GOVERNANCE_AND_PUBLIC_SAFE_PR_INSTRUCTION_ONLY
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_PROTECTED_METADATA_POST_ONE_PR67_INSTRUCTION_RECORD_ITS_URL_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_SEVEN_FILE_CLAUDE_IMPLEMENTATION; KEEP_POSTAL_ENVIRONMENT_ACTIVATION_SEPARATE"
 ```
+
+## GDA-ESTIMATE-PDF-CHROMIUM-BIN-TRACE-R3 — governance and bounded repair authorization
+
+```yaml
+phase: GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR
+marker: GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR_GOVERNANCE_V1
+status: GOVERNANCE_DELIVERY_AND_POST_DELIVERY_CLAUDE_SOURCE_CANDIDATE_AUTHORIZED
+date: 2026-09-07
+append_only: true
+objective: "Trace the existing Sparticuz Chromium binary assets into only the estimate-PDF server function and restore the fixed Preview PDF renderer without changing PDF, save, pricing, OCR, postal, or database behavior."
+authorization: "The Owner explicitly authorized exactly three governance edits, exact-path governance stage/local commit, one normal non-force push to PR #67, one public-safe instruction comment, and then one bounded Claude two-file implementation plus exact verification. Source stage/commit/push, deployment, Preview mutation, Ready, and merge remain prohibited."
+priority:
+  active: GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR
+  held_without_cancellation:
+    - GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3K_R1
+    - GDA_DEMO_20260907_POSTAL_ENVIRONMENT_ACTIVATION
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+  mergeable_before_authoring: MERGEABLE
+  pre_governance_source_head: 83e18e94be3774b58434dff3f7a215619345498b
+  pre_governance_source_tree: 4ae4238e9382b5bbcbd36bc97d7a755eb933d34f
+  index_before_authoring: CLEAN
+preview:
+  deployment_id: dpl_AdyEnDo3ZZ7rpKLc8sM2AxQpDqZ8
+  url: https://dealeros-ixqol6xwe-nisikawa-5024s-projects.vercel.app
+  build_framework: NEXT_15_5_19_TURBOPACK
+  vercel_check: SUCCESS
+  vercel_preview_comments_check: SUCCESS
+observed_evidence:
+  original_chrome_profile: NET_ERR_BLOCKED_BY_CLIENT
+  clean_authenticated_extension_free_browser: APPLICATION_PDF_GENERATION_FAILED
+  server_log: 'The input directory "/var/task/node_modules/@sparticuz/chromium/bin" does not exist.'
+  accepted_root_cause: SPARTICUZ_CHROMIUM_BIN_ABSENT_FROM_SERVERLESS_OUTPUT_TRACE
+  excluded_root_causes:
+    - ESTIMATE_SAVE
+    - PRICING
+    - OCR
+    - POSTAL
+    - CUSTOMER_OR_VEHICLE_DATA
+    - DATABASE
+    - AUTHORIZATION
+configuration_finding:
+  chromium_externalized_already: true
+  puppeteer_core_externalized_already: true
+  chromium_bin_trace_present_before_repair: false
+  required_route_key: /pdf/estimate
+  required_glob: ./node_modules/@sparticuz/chromium/bin/**
+  global_trace_expansion_prohibited: true
+baseline_tests:
+  release_identity: 22_PASS_1_FAIL_STALE_CONFIGURATION_EXPECTATION
+  estimate_pdf_route: 17_PASS
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR.md
+  sha256: 3302640f077952b27d93a9d0b61b53b2cfaf0683f84a019b9760e85d5ce58f9e
+exact_governance_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR.md
+exact_source_candidate_allowlist:
+  - next.config.ts
+  - src/lib/observability/release-identity.test.ts
+exact_verification:
+  - node --import tsx --test src/lib/observability/release-identity.test.ts
+  - node --import tsx --test src/app/pdf/estimate/route.test.ts
+  - npm run typecheck
+  - npm run build
+  - git diff --check -- next.config.ts src/lib/observability/release-identity.test.ts
+  - git diff -- next.config.ts src/lib/observability/release-identity.test.ts
+  - git status --short
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+public_instruction:
+  target: PR_67
+  status: PENDING_GOVERNANCE_DELIVERY
+required_claude_result:
+  marker: GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR_RESULT_V1
+  verdicts:
+    - CANDIDATE_READY
+    - CHANGES_REQUIRED
+    - BLOCKED_ENVIRONMENT
+boundaries:
+  source_changed_before_governance_delivery: false
+  package_or_lockfile_changed: false
+  dependency_installed: false
+  database_or_supabase_contacted: false
+  provider_or_vercel_mutated: false
+  source_staged_committed_or_pushed: false
+  deployed_ready_or_merged: false
+decision: DELIVER_EXACT_THREE_DOCUMENT_GOVERNANCE_THEN_RUN_ONE_BOUNDED_TWO_FILE_CLAUDE_CANDIDATE
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_PROTECTED_METADATA; COMMIT_AND_NORMALLY_PUSH_ONLY_GOVERNANCE; POST_ONE PUBLIC_SAFE PR67 INSTRUCTION; RUN CLAUDE TWO-FILE REPAIR_AND_EXACT_TESTS; STOP_BEFORE_SOURCE_GIT_OR_DEPLOYMENT"
+```
