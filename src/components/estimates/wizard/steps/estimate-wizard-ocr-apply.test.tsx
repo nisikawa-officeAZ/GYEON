@@ -469,6 +469,42 @@ test("POSTAL: a directional-phrase-resolved owner_address triggers address-to-po
   assert.equal(writes.length, 2, "the original OCR patch write, then one async postal-fill write");
 });
 
+// ── GDA_ESTIMATE_WIZARD_OCR_POSTAL_REVERSE_AND_PDF_ADDRESS_INTEGRITY_R1: ref-merge regression ──
+//
+// Proves the fix directly, WITHOUT the "pre-set address to simulate a re-render that already
+// happened" trick the earlier POSTAL tests rely on (see their comment above): the fake store here
+// starts and STAYS at blank postal/address — `updateStore` only records patches — so this can only
+// pass if the production code itself synchronously merges the OCR customer patch into
+// `customerRef` before the async address-to-postal response is read, and then merges THAT
+// response into the latest ref rather than a stale render closure.
+
+test("REGRESSION: a blank-address/blank-postal OCR apply still resolves address-to-postal via the synchronous ref merge, and the postal-fill write carries the OCR-applied customer fields intact", async () => {
+  const calls: unknown[] = [];
+  const addressToPostalInvoker: JpPostalReverseLookupInvoker = async (raw: unknown) => {
+    calls.push(raw);
+    return { code: "FOUND", postalCode: "1000001" };
+  };
+  const { onApply, writes } = captureStep1OnApply(
+    { customer: { regMethod: "ocr", postal: "", address: "" } },
+    () => {},
+    { addressToPostalInvoker },
+  );
+  onApply(FULL_OCR_RESULT);
+  await flushMicrotasks();
+
+  assert.equal(calls.length, 1, "address-to-postal fires exactly once, resolved through the ref — not a stale render closure");
+  assert.equal(calls[0], FULL_OCR_RESULT.owner_address);
+  assert.equal(writes.length, 2, "the original OCR patch write, then one async postal-fill write");
+
+  const postalFillCustomer = writes[1].customer as Record<string, unknown> | undefined;
+  assert.ok(postalFillCustomer, "PRECONDITION: the postal-fill write carries a customer section");
+  assert.equal(postalFillCustomer!.postal, "100-0001");
+  assert.equal(postalFillCustomer!.name, FULL_OCR_RESULT.owner_name,
+    "the OCR-applied name (written in the FIRST patch) survives the SECOND, postal-only async write");
+  assert.equal(postalFillCustomer!.address, FULL_OCR_RESULT.owner_address,
+    "the OCR-applied address survives the postal-fill write rather than reverting to the pre-OCR blank");
+});
+
 test("POSTAL: an unresolved directional owner_address (opposite absent) never triggers address-to-postal", async () => {
   const calls: unknown[] = [];
   const addressToPostalInvoker: JpPostalReverseLookupInvoker = async (raw: unknown) => { calls.push(raw); return { code: "FOUND", postalCode: "1000001" }; };

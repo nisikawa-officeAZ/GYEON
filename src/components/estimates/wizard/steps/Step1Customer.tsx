@@ -243,6 +243,21 @@ export function Step1Customer({
   const customerRef = useRef(c);
   customerRef.current = c;
 
+  /**
+   * GDA_ESTIMATE_WIZARD_OCR_POSTAL_REVERSE_AND_PDF_ADDRESS_INTEGRITY_R1 — an async lookup's
+   * `.then()` closure is bound to whichever render created it, so `c` inside it can be stale by
+   * the time the response arrives (an operator edit, or the OTHER lookup's fill, may have landed
+   * on the store in between). Spreading the always-current `customerRef.current` instead — and
+   * updating the ref synchronously in the same statement — means a later async write can never
+   * silently discard an edit an earlier one already applied, and a second async response arriving
+   * before the next render still sees the first one's effect.
+   */
+  const applyAsyncCustomerPatch = (patch: Partial<typeof c>) => {
+    const merged = { ...customerRef.current, ...patch };
+    customerRef.current = merged;
+    api.updateStore({ customer: merged });
+  };
+
   const [postalLookupNotice, setPostalLookupNotice] = useState<string | null>(null);
   const [addressLookupNotice, setAddressLookupNotice] = useState<string | null>(null);
 
@@ -262,7 +277,7 @@ export function Step1Customer({
           result,
         });
         if (plan.apply) {
-          setC({ address: plan.address });
+          applyAsyncCustomerPatch({ address: plan.address });
           setPostalLookupNotice(null);
         } else {
           setPostalLookupNotice(result.code === "FOUND" ? null : POSTAL_LOOKUP_MESSAGE[result.code] || null);
@@ -334,6 +349,15 @@ export function Step1Customer({
               };
               if (Object.keys(patch).length > 0) api.updateStore(patch);
 
+              // GDA_ESTIMATE_WIZARD_OCR_POSTAL_REVERSE_AND_PDF_ADDRESS_INTEGRITY_R1 — merge the
+              // just-written customer patch into `customerRef` SYNCHRONOUSLY, in this same
+              // handler, rather than waiting for the render this updateStore call schedules. The
+              // address-to-postal lookup below reads `customerRef.current` from its `.then()`,
+              // which can resolve before React has committed that render; without this the ref
+              // would still show the pre-OCR draft and the fill's own stale-response guard would
+              // reject the still-fresh OCR address as "changed".
+              if (patch.customer) customerRef.current = { ...customerRef.current, ...patch.customer };
+
               // GDA-2A-OCR-POSTAL-MASTER-R2 — OCR-address-to-postal, ONE-SHOT: fires only when
               // THIS OCR patch itself supplies a nonblank address and the postal target was blank
               // BEFORE this patch (read from `c`, the pre-patch draft — never from the patch
@@ -351,7 +375,7 @@ export function Step1Customer({
                       result,
                     });
                     if (plan.apply) {
-                      setC({ postal: plan.postalCode });
+                      applyAsyncCustomerPatch({ postal: plan.postalCode });
                       setAddressLookupNotice(null);
                     } else {
                       setAddressLookupNotice(result.code === "FOUND" ? null : ADDRESS_LOOKUP_MESSAGE[result.code] || null);

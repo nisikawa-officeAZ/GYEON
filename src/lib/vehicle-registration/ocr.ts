@@ -12,7 +12,10 @@ import { normalizeVehicleFields } from "./vehicle-normalize";
 import { buildOcrQualityReport, type OcrQualityReport } from "./ocr-quality";
 import { getGyeonManagedApiKey } from "@/lib/ai/gyeon-managed-key";
 import { OCR_MODEL, OCR_TEMPERATURE, OCR_MAX_TOKENS, OCR_PROMPT_VERSION } from "@/lib/ai/ocr-config";
-import { extractLocalPdfModel, resolvePdfModel } from "./pdf-model-text-extractor";
+import {
+  extractLocalPdfModel, resolvePdfModel,
+  extractLocalPdfAddresses, resolvePdfAddress, type LocalPdfAddresses,
+} from "./pdf-model-text-extractor";
 
 const OCR_PROVIDER   = "openai";
 const OCR_TIMEOUT_MS = 55_000; // 55s — OpenAI cold-start can take ~30s; give headroom
@@ -164,6 +167,7 @@ async function callOpenAI(
   fileBase64: string,
   mimeType: string,
   apiKey: string,
+  localAddressesPromise: Promise<LocalPdfAddresses>,
 ): Promise<
   | { result: VehicleRegistrationOcrResult; provider: string; model: string; usage: OcrUsage; promptVersion: string; quality: OcrQualityReport }
   | { error: OcrErrorCode }
@@ -258,6 +262,18 @@ async function callOpenAI(
     // ボディカラー is MANUAL required — the AI must never auto-fill it.
     delete (sanitized as Record<string, unknown>).color;
 
+    // GDA_ESTIMATE_WIZARD_OCR_POSTAL_REVERSE_AND_PDF_ADDRESS_INTEGRITY_R1 — apply the bounded
+    // local PDF text-layer owner/user address correction BEFORE candidate construction below:
+    // analyzeOcrCustomer/resolveCustomer read owner_address/user_address directly, so an
+    // attributable printed address must already be in place by the time they run, exactly like
+    // the frozen local>AI>omitted precedence 型式 already uses. Ambiguous/no-match/non-PDF/timeout
+    // all resolve to `null` here and leave the AI-supplied value untouched.
+    const localAddresses = await localAddressesPromise;
+    const ownerAddress = resolvePdfAddress(localAddresses.ownerAddress, sanitized.owner_address);
+    if (ownerAddress !== undefined) sanitized.owner_address = ownerAddress;
+    const userAddress = resolvePdfAddress(localAddresses.userAddress, sanitized.user_address);
+    if (userAddress !== undefined) sanitized.user_address = userAddress;
+
     // Derive the customer mapping (owner/user rule). Owner AND user raw fields are
     // preserved above; this only records the recommended candidate + flags.
     const analysis = analyzeOcrCustomer(sanitized);
@@ -302,16 +318,21 @@ export async function analyzeVehicleRegistrationImage(
   }
   const apiKey = keyResult.apiKey;
 
-  // R4: bounded local PDF text-layer 型式 extraction runs CONCURRENTLY with the OpenAI
-  // call below (never awaited before it) for every eligible digital PDF — not only when
-  // the AI result later turns out blank. Image/HEIC/JPEG/PNG/WebP requests never reach
-  // this branch, so unpdf is never dynamically imported for them.
+  // R4 / GDA_ESTIMATE_WIZARD_OCR_POSTAL_REVERSE_AND_PDF_ADDRESS_INTEGRITY_R1: bounded local
+  // PDF text-layer 型式 and owner/user address extraction both run CONCURRENTLY with the
+  // OpenAI call below (never awaited before it) for every eligible digital PDF — not only
+  // when the AI result later turns out blank. Image/HEIC/JPEG/PNG/WebP requests never reach
+  // this branch, so unpdf is never dynamically imported for them. The same PDF bytes are
+  // reused for both extractions rather than re-decoded from base64 twice.
+  const pdfBytes = mimeType === "application/pdf" ? Buffer.from(imageBase64, "base64") : null;
   const localPdfModelPromise: Promise<string | null> =
-    mimeType === "application/pdf"
-      ? extractLocalPdfModel(Buffer.from(imageBase64, "base64"), mimeType)
-      : Promise.resolve(null);
+    pdfBytes !== null ? extractLocalPdfModel(pdfBytes, mimeType) : Promise.resolve(null);
+  const localPdfAddressesPromise: Promise<LocalPdfAddresses> =
+    pdfBytes !== null
+      ? extractLocalPdfAddresses(pdfBytes, mimeType)
+      : Promise.resolve({ ownerAddress: null, userAddress: null });
 
-  const first = await callOpenAI(imageBase64, mimeType, apiKey);
+  const first = await callOpenAI(imageBase64, mimeType, apiKey, localPdfAddressesPromise);
   const localModel = await localPdfModelPromise;
 
   if (!("error" in first)) {
@@ -321,7 +342,7 @@ export async function analyzeVehicleRegistrationImage(
   if ("error" in first && RETRYABLE_CODES.includes(first.error)) {
     console.log("[OCR] Transient error:", first.error, "— retrying once in 2 s …");
     await sleep(2_000);
-    const second = await callOpenAI(imageBase64, mimeType, apiKey);
+    const second = await callOpenAI(imageBase64, mimeType, apiKey, localPdfAddressesPromise);
     if (!("error" in second)) {
       applyLocalPdfModel(second.result, localModel);
     }
