@@ -77,12 +77,17 @@ export function useEstimateWizard(
   const store = useMemo(() => projectStore(draft), [draft]);
   const step = clampStep(draft.metadata.currentStep);
 
-  // updateStore validates synchronously and fails CLOSED before scheduling any invalid update.
+  // updateStore validates against the latest canonical draft and fails CLOSED for an invalid patch.
+  // A caller may hold this callback across an async boundary (for example the OCR address-to-postal
+  // fill). Computing inside setDraft prevents that older callback from rebuilding state from the
+  // render it was created in and silently erasing a newer customer/vehicle write.
   const updateStore = useCallback((patch: WizardStorePatch) => {
-    const result = applyStorePatch(draft, patch);
-    if (result.ok) setDraft(result.draft); // valid patch only → update the single canonical draft
-    // invalid/unsupported patch → no state change (fail closed); the current UI never sends these.
-  }, [draft]);
+    setDraft((current) => {
+      const result = applyStorePatch(current, patch);
+      // invalid/unsupported patch → no state change (fail closed); the current UI never sends these.
+      return result.ok ? result.draft : current;
+    });
+  }, []);
 
   // Navigation is backed by canonical metadata.currentStep and resolved through the pure
   // fail-closed transition resolvers. A blocked forward move returns the CURRENT step, so

@@ -505,6 +505,25 @@ test("REGRESSION: a blank-address/blank-postal OCR apply still resolves address-
     "the OCR-applied address survives the postal-fill write rather than reverting to the pre-OCR blank");
 });
 
+test("SOURCE REGRESSION: async callers apply store patches to the latest canonical draft", () => {
+  const hookSource = readFileSync(new URL("../useEstimateWizard.ts", import.meta.url), "utf8");
+  const updateStoreStart = hookSource.indexOf("const updateStore = useCallback");
+  const navigationStart = hookSource.indexOf("// Navigation is backed", updateStoreStart);
+  assert.ok(updateStoreStart >= 0 && navigationStart > updateStoreStart, "updateStore source block is present");
+  const updateStoreSource = hookSource.slice(updateStoreStart, navigationStart);
+
+  assert.match(updateStoreSource, /setDraft\(\(current\) => \{/,
+    "updateStore must use React's functional updater so an async caller cannot use a stale draft");
+  assert.match(updateStoreSource, /applyStorePatch\(current, patch\)/,
+    "the patch must be validated and applied against the latest canonical draft");
+  assert.doesNotMatch(updateStoreSource, /applyStorePatch\(draft, patch\)/,
+    "the stale render snapshot must never be the patch base");
+  assert.match(updateStoreSource, /return result\.ok \? result\.draft : current;/,
+    "invalid patches must remain fail-closed without changing the latest draft");
+  assert.match(updateStoreSource, /\}, \[\]\);/,
+    "the callback identity must remain stable across the async OCR/postal boundary");
+});
+
 test("POSTAL: an unresolved directional owner_address (opposite absent) never triggers address-to-postal", async () => {
   const calls: unknown[] = [];
   const addressToPostalInvoker: JpPostalReverseLookupInvoker = async (raw: unknown) => { calls.push(raw); return { code: "FOUND", postalCode: "1000001" }; };
