@@ -8,6 +8,61 @@
 <link rel="stylesheet" href="./doc-premium.css">
 <link rel="stylesheet" href="./concept-b.css">
 <link rel="stylesheet" href="./estimate-a4-compact.css">
+<style>
+  /* Estimate-only masthead: the DA/store logo and document title are one
+     visual lockup. Shared invoice/delivery/work-report templates stay intact. */
+  .estimate-masthead {
+    display: block;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .estimate-masthead__headline {
+    display: grid;
+    grid-template-columns: 54mm minmax(0, 1fr);
+    gap: 8mm;
+    align-items: center;
+  }
+
+  .estimate-masthead__headline .doc-masthead__brand-box {
+    width: 54mm;
+    height: 17mm;
+  }
+
+  .estimate-masthead__headline .doc-title-block__row {
+    min-width: 0;
+    gap: 9px;
+  }
+
+  .estimate-masthead__headline .doc-title-block__mark {
+    height: 38px;
+  }
+
+  .estimate-masthead__headline .doc-title-block__ja {
+    font-size: 38px;
+    letter-spacing: 0.05em;
+  }
+
+  .estimate-masthead__headline .doc-title-block__en {
+    min-width: 0;
+    padding-bottom: 3px;
+    font-size: 9px;
+    line-height: 1.35;
+    letter-spacing: 0.28em;
+  }
+
+  .estimate-masthead .doc-masthead__meta {
+    margin-top: 2px;
+  }
+
+  .estimate-title-details {
+    padding: 0 0 4px;
+  }
+
+  .estimate-title-details .doc-title-block__rule {
+    margin-top: 4px;
+  }
+</style>
 
 </head>
 <body class="concept-b" data-doc-pack="estimate-v3" data-doc-kind="estimate">
@@ -15,27 +70,27 @@
 <article class="doc-page-v2">
   <div class="doc-edge"></div>
   <!-- ============================================================ MASTHEAD -->
-  <header class="doc-masthead">
-    <div class="doc-masthead__left">
+  <header class="doc-masthead estimate-masthead">
+    <div class="estimate-masthead__headline">
       <div class="doc-masthead__brand-box"><img class="doc-masthead__brand-logo" data-brand-logo="store" alt="" hidden></div>
-      <div class="doc-masthead__meta header-meta-row">
-        <div class="header-meta-left">
-          <span class="doc-masthead__meta-item">Issue Date <strong>2026.07.05</strong></span>
-          <span class="doc-masthead__meta-item">Valid Until <strong>2026.08.04</strong></span>
-          <span class="doc-masthead__meta-item">Currency <strong>JPY (¥)</strong></span>
-        </div>
-        <span class="header-rank" data-row="header-rank" data-brand-field="shop_rank_header"></span>
+      <div class="doc-title-block__row">
+        <span class="doc-title-block__mark"></span>
+        <span class="doc-title-block__ja">見積書</span>
+        <span class="doc-title-block__en">Estimate &nbsp;/&nbsp; Coating &amp; Protection Proposal</span>
       </div>
+    </div>
+    <div class="doc-masthead__meta header-meta-row">
+      <div class="header-meta-left">
+        <span class="doc-masthead__meta-item">Issue Date <strong>2026.07.05</strong></span>
+        <span class="doc-masthead__meta-item">Valid Until <strong>2026.08.04</strong></span>
+        <span class="doc-masthead__meta-item">Currency <strong>JPY (¥)</strong></span>
+      </div>
+      <span class="header-rank" data-row="header-rank" data-brand-field="shop_rank_header"></span>
     </div>
   </header>
 
-  <!-- ============================================================ TITLE -->
-  <section class="doc-title-block">
-    <div class="doc-title-block__row">
-      <span class="doc-title-block__mark"></span>
-      <span class="doc-title-block__ja">見積書</span>
-      <span class="doc-title-block__en">Estimate &nbsp;/&nbsp; Coating &amp; Protection Proposal</span>
-    </div>
+  <!-- ============================================================ TITLE DETAILS -->
+  <section class="doc-title-block estimate-title-details">
     <div class="doc-title-block__rule"></div>
     <div class="doc-title-block__caption">
       <span class="doc-title-block__statement">下記の通りお見積り申し上げます</span>

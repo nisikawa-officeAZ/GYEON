@@ -61,20 +61,21 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreat
 
   return (
     <>
-      {/* Desktop / tablet (>=768px): table-first presentation. */}
+      {/* Tablet / desktop (>=768px): keep the table, but reveal columns only
+          when the viewport can accommodate the sidebar plus their content. */}
       <div className="hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#20304a]">
                 <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">No</th>
-                <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden sm:table-cell">顧客</th>
-                <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden md:table-cell">車両</th>
-                <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">ステータス</th>
-                <th className="text-right text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden md:table-cell">小計</th>
-                <th className="text-right text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden md:table-cell">消費税</th>
+                <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden lg:table-cell">顧客</th>
+                <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden xl:table-cell">車両</th>
+                <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 whitespace-nowrap">ステータス</th>
+                <th className="text-right text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden 2xl:table-cell">小計</th>
+                <th className="text-right text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden 2xl:table-cell">消費税</th>
                 <th className="text-right text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">合計</th>
-                <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden sm:table-cell">作成日</th>
+                <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden 2xl:table-cell">作成日</th>
                 <th className="text-center text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3" />
               </tr>
             </thead>
@@ -89,27 +90,27 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreat
                   <td className="px-3 py-2.5 lg:px-4 lg:py-3 font-medium text-[#edf3fc] whitespace-nowrap">
                     {estimateDisplayNo(e)}
                   </td>
-                  <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] whitespace-nowrap hidden sm:table-cell">
+                  <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] whitespace-nowrap hidden lg:table-cell">
                     {estimateCustomerName(e.customers)}
                   </td>
-                  <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] whitespace-nowrap hidden md:table-cell">
+                  <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] whitespace-nowrap hidden xl:table-cell">
                     {estimateVehicleLabel(e.vehicles)}
                   </td>
-                  <td className="px-3 py-2.5 lg:px-4 lg:py-3">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[e.status] ?? "bg-slate-700 text-slate-300"}`}>
+                  <td className="px-3 py-2.5 lg:px-4 lg:py-3 whitespace-nowrap">
+                    <span className={`inline-flex whitespace-nowrap text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[e.status] ?? "bg-slate-700 text-slate-300"}`}>
                       {estimateStatusLabel(e.status)}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] text-right whitespace-nowrap hidden md:table-cell">
+                  <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] text-right whitespace-nowrap hidden 2xl:table-cell">
                     {formatYen(e.subtotal)}
                   </td>
-                  <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] text-right whitespace-nowrap hidden md:table-cell">
+                  <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] text-right whitespace-nowrap hidden 2xl:table-cell">
                     {formatYen(e.tax_amount ?? e.tax ?? 0)}
                   </td>
                   <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#edf3fc] font-medium text-right whitespace-nowrap">
                     {formatYen(e.total)}
                   </td>
-                  <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#7788a4] text-xs whitespace-nowrap hidden sm:table-cell">
+                  <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#7788a4] text-xs whitespace-nowrap hidden 2xl:table-cell">
                     {formatDate(e.created_at)}
                   </td>
                   <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-center whitespace-nowrap">
