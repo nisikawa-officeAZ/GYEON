@@ -43,7 +43,7 @@ export default function LineNotificationQueueTable({ items, onChanged }: Props) 
   if (items.length === 0) {
     return (
       <div className="bg-[#1e293b] rounded-xl shadow-lg p-10 text-center">
-        <p className="text-sm text-slate-500">通知キューがありません</p>
+        <p className="text-sm text-slate-500">送信待ちの通知はありません</p>
       </div>
     );
   }

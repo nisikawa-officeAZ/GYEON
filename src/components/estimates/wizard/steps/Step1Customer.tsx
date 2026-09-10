@@ -411,7 +411,7 @@ export function Step1Customer({
             // would imply a write this wizard does not perform.
             <div className="rounded-md border border-emerald-700/50 bg-emerald-950/30 px-3 py-2" data-testid="existing-customer-summary">
               <p className="text-xs text-emerald-300">既存顧客を選択中</p>
-              <p className="text-sm mt-1">{selected.displayName}</p>
+              <p className="mt-1 text-sm text-slate-100">{selected.displayName}</p>
               {selected.phone && <p className="text-[11px] text-slate-400">{selected.phone}</p>}
               <button
                 type="button"
