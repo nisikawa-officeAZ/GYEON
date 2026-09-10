@@ -47,7 +47,22 @@ const SC: WizardScreenConfiguration = {
   // B2-E2G — a fully opted-in, fully configured dealer, so every pre-existing assertion keeps
   // exercising the same surface it always did.
   serviceOfferings:   { window_film: true, ppf: true, maintenance: true, room_cleaning: true, car_wash: true },
-  filmTypes:          [{ id: "ft1", label: "ZZFILMTYPE" }],
+  filmTypes:          [{ id: "ft1", label: "ZZFILMTYPE", installationCoefficientBp: 10000 }],
+  windowFilmSettings: {
+    contractVersion: "1.0",
+    revision: 1,
+    areas: {
+      "front-windshield": { isActive: true, priceYen: 15000, durationMinutes: 60 },
+      "front-door-glass": { isActive: false, priceYen: null, durationMinutes: null },
+      "rear-door-glass": { isActive: false, priceYen: null, durationMinutes: null },
+      "triangular-window": { isActive: false, priceYen: null, durationMinutes: null },
+      "quarter-glass": { isActive: false, priceYen: null, durationMinutes: null },
+      "rear-glass": { isActive: false, priceYen: null, durationMinutes: null },
+      "sunroof": { isActive: false, priceYen: null, durationMinutes: null },
+    },
+    packages: [],
+    options: [],
+  },
   windowAreas:        [{ id: "wa1", label: "ZZWINDOWAREA" }],
   maintenanceMenus:   [{ id: "mm1", name: "ZZMAINTMENU", defaultPrice: 5000 }],
   washMenus:          [{ id: "cw1", name: "ZZWASHMENU", defaultPrice: 3000 }],
@@ -463,7 +478,7 @@ test("OPTED OUT: the window-film section is absent for every rank, and nothing e
 
 test("OPTED IN but INCOMPLETE: only window film is locked; the wizard is never blocked", () => {
   const noFilmTypes: WizardScreenConfiguration = { ...SC, filmTypes: [] };   // opted in via SC
-  const noAreas: WizardScreenConfiguration = { ...SC, windowAreas: [] };     // opted in via SC
+  const noAreas: WizardScreenConfiguration = { ...SC, windowAreas: [], windowFilmSettings: null };     // opted in via SC
 
   for (const rank of ALL_RANKS) {
     const win = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={noFilmTypes} />);
@@ -474,7 +489,7 @@ test("OPTED IN but INCOMPLETE: only window film is locked; the wizard is never b
     // Missing AREAS is a distinct state: areas are global catalog rows, so the dealer cannot
     // register them and must not be told to go and do so.
     const areas = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={noAreas} />);
-    assert.ok(areas.includes("ウィンドウフィルムの施工部位が利用できません。管理者にお問い合わせください。"),
+    assert.ok(areas.includes("ウィンドウフィルム設定で、提供する部位またはセットの金額と所要時間を登録してください。"),
       `${rank}: areas-unavailable state shown`);
     assert.equal(areas.includes(FILM_SETUP_REQUIRED), false, `${rank}: must not claim film types are missing`);
 
