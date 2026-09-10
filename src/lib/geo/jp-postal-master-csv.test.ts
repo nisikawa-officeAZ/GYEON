@@ -6,8 +6,8 @@ import { parseJpPostalCsv } from "./jp-postal-master-csv";
 // Synthetic, non-personal rows only. Column order:
 // jisCode,oldPostalCode,postalCode,prefKana,cityKana,townKana,prefKanji,cityKanji,townKanji,
 // flag10,flag11,flag12,flag13,updateFlag,changeReasonCode
-const ROW_A = '13101,100,1000001,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,ﾁﾖﾀﾞ,東京都,千代田区,千代田,0,0,0,0,0,0';
-const ROW_B = '13101,100,1000002,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,ｶｽﾐｶﾞｾｷ,東京都,千代田区,霞が関,0,0,1,0,0,0';
+const ROW_A = '13101,100  ,1000001,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,ﾁﾖﾀﾞ,東京都,千代田区,千代田,0,0,0,0,0,0';
+const ROW_B = '13101,100  ,1000002,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,ｶｽﾐｶﾞｾｷ,東京都,千代田区,霞が関,0,0,1,0,0,0';
 
 test("parses two well-formed synthetic rows covering all 15 fields", () => {
   const result = parseJpPostalCsv(`${ROW_A}\r\n${ROW_B}\r\n`);
@@ -16,7 +16,7 @@ test("parses two well-formed synthetic rows covering all 15 fields", () => {
   assert.equal(result.rows.length, 2);
   assert.deepEqual(result.rows[0], {
     jisCode: "13101",
-    oldPostalCode: "100",
+    oldPostalCode: "100  ",
     postalCode: "1000001",
     prefectureKana: "ﾄｳｷﾖｳﾄ",
     cityKana: "ﾁﾖﾀﾞｸ",
@@ -33,17 +33,33 @@ test("parses two well-formed synthetic rows covering all 15 fields", () => {
   });
 });
 
-test("preserves leading zeroes in the JIS code and old postal code", () => {
-  const row = '01101,60,0600000,ﾎｯｶｲﾄﾞｳ,ｻｯﾎﾟﾛｼﾁｭｳｵｳｸ,ｲｶﾞｲ,北海道,札幌市中央区,以下に掲載がない場合,0,0,0,0,0,0';
+test("preserves leading zeroes and official ASCII-space padding", () => {
+  const row = '01101,060  ,0600000,ﾎｯｶｲﾄﾞｳ,ｻｯﾎﾟﾛｼﾁｭｳｵｳｸ,ｲｶﾞｲ,北海道,札幌市中央区,以下に掲載がない場合,0,0,0,0,0,0';
   const result = parseJpPostalCsv(`${row}\n`);
   assert.equal(result.ok, true);
   if (!result.ok) return;
   assert.equal(result.rows[0].jisCode, "01101");
-  assert.equal(result.rows[0].oldPostalCode, "60");
+  assert.equal(result.rows[0].oldPostalCode, "060  ");
+});
+
+test("accepts a five-digit legacy postal code", () => {
+  const result = parseJpPostalCsv(`${ROW_A.replace("100  ", "12345")}\n`);
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.rows[0].oldPostalCode, "12345");
+});
+
+test("rejects trimmed, over-padded, and tab-padded legacy postal codes", () => {
+  for (const value of ["100", "100   ", "100\t\t"]) {
+    const result = parseJpPostalCsv(`${ROW_A.replace("100  ", value)}\n`);
+    assert.equal(result.ok, false);
+    if (result.ok) continue;
+    assert.equal(result.error, "INVALID_OLD_POSTAL_CODE");
+  }
 });
 
 test("handles a quoted field containing a comma", () => {
-  const row = '13101,100,1000003,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,"ｵｵﾃﾏﾁ,1ﾁｮｳﾒ",東京都,千代田区,"大手町、1丁目",0,0,1,0,0,0';
+  const row = '13101,100  ,1000003,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,"ｵｵﾃﾏﾁ,1ﾁｮｳﾒ",東京都,千代田区,"大手町、1丁目",0,0,1,0,0,0';
   const result = parseJpPostalCsv(`${row}\n`);
   assert.equal(result.ok, true);
   if (!result.ok) return;
@@ -52,7 +68,7 @@ test("handles a quoted field containing a comma", () => {
 });
 
 test("handles an escaped double-quote inside a quoted field", () => {
-  const row = '13101,100,1000004,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,"ﾃｽﾄ""ﾁｮｳ""",東京都,千代田区,"テスト""町""",0,0,0,0,0,0';
+  const row = '13101,100  ,1000004,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,"ﾃｽﾄ""ﾁｮｳ""",東京都,千代田区,"テスト""町""",0,0,0,0,0,0';
   const result = parseJpPostalCsv(`${row}\n`);
   assert.equal(result.ok, true);
   if (!result.ok) return;
@@ -60,7 +76,7 @@ test("handles an escaped double-quote inside a quoted field", () => {
 });
 
 test("rejects a malformed unclosed quote", () => {
-  const row = '13101,100,1000005,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,"ｵｵﾃﾏﾁ,東京都,千代田区,大手町,0,0,0,0,0,0';
+  const row = '13101,100  ,1000005,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,"ｵｵﾃﾏﾁ,東京都,千代田区,大手町,0,0,0,0,0,0';
   const result = parseJpPostalCsv(`${row}\n`);
   assert.equal(result.ok, false);
   if (result.ok) return;
@@ -75,7 +91,7 @@ test("rejects a BOM-prefixed input", () => {
 });
 
 test("rejects an embedded record break (unterminated quote spanning lines)", () => {
-  const text = `13101,100,1000006,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,"ｵｵﾃﾏﾁ\n1ﾁｮｳﾒ",東京都,千代田区,大手町,0,0,0,0,0,0\n`;
+  const text = `13101,100  ,1000006,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,"ｵｵﾃﾏﾁ\n1ﾁｮｳﾒ",東京都,千代田区,大手町,0,0,0,0,0,0\n`;
   const result = parseJpPostalCsv(text);
   assert.equal(result.ok, false);
 });
@@ -88,7 +104,7 @@ test("rejects empty input", () => {
 });
 
 test("rejects a row with too few columns", () => {
-  const row = "13101,100,1000001,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,ﾁﾖﾀﾞ,東京都,千代田区,千代田,0,0,0,0";
+  const row = "13101,100  ,1000001,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,ﾁﾖﾀﾞ,東京都,千代田区,千代田,0,0,0,0";
   const result = parseJpPostalCsv(`${row}\n`);
   assert.equal(result.ok, false);
   if (result.ok) return;
@@ -178,7 +194,7 @@ test("accepts two distinct towns sharing one postal code (not a duplicate)", () 
 });
 
 test("rejects a raw replacement-character sequence as invalid encoding", () => {
-  const result = parseJpPostalCsv(`13101,100,1000001,�,ﾁﾖﾀﾞｸ,ﾁﾖﾀﾞ,東京都,千代田区,千代田,0,0,0,0,0,0\n`);
+  const result = parseJpPostalCsv(`13101,100  ,1000001,�,ﾁﾖﾀﾞｸ,ﾁﾖﾀﾞ,東京都,千代田区,千代田,0,0,0,0,0,0\n`);
   assert.equal(result.ok, false);
   if (result.ok) return;
   assert.equal(result.error, "INVALID_ENCODING");

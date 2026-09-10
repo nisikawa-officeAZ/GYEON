@@ -128,8 +128,11 @@ function splitCsvLine(line: string): string[] | null {
   return fields;
 }
 
-function isAllDigits(s: string): boolean {
-  return s.length > 0 && /^\d+$/.test(s);
+function isOfficialOldPostalCode(s: string): boolean {
+  // Japan Post's legacy-code column is fixed-width: either five digits, or a
+  // three-digit legacy code followed by exactly two ASCII spaces. Preserve the
+  // source value verbatim instead of trimming the official padding.
+  return /^(?:\d{5}|\d{3} {2})$/.test(s);
 }
 
 /**
@@ -183,7 +186,7 @@ export function parseJpPostalCsv(text: string): JpPostalCsvParseResult {
     ] = fields;
 
     if (!/^\d{5}$/.test(jisCode)) return { ok: false, error: "INVALID_JIS_CODE", line: lineNo };
-    if (!isAllDigits(oldPostalCode) || oldPostalCode.length > 5) {
+    if (!isOfficialOldPostalCode(oldPostalCode)) {
       return { ok: false, error: "INVALID_OLD_POSTAL_CODE", line: lineNo };
     }
     if (!/^\d{7}$/.test(postalCode)) return { ok: false, error: "INVALID_POSTAL_CODE", line: lineNo };

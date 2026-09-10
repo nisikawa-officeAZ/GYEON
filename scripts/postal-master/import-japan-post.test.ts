@@ -145,7 +145,7 @@ test("rejects an unknown flag", () => {
 
 const BASE_ROW: JpPostalCsvRow = {
   jisCode: "13101",
-  oldPostalCode: "100",
+  oldPostalCode: "100  ",
   postalCode: "1000001",
   prefectureKana: "ﾄｳｷﾖｳﾄ",
   cityKana: "ﾁﾖﾀﾞｸ",
@@ -192,7 +192,7 @@ test("chunkImportRows rejects a non-positive size", () => {
 
 // ── Orchestration ──────────────────────────────────────────────────────────
 
-const CSV_TEXT = '13101,100,1000001,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,ﾁﾖﾀﾞ,東京都,千代田区,千代田,0,0,0,0,0,0\n';
+const CSV_TEXT = '13101,100  ,1000001,ﾄｳｷﾖｳﾄ,ﾁﾖﾀﾞｸ,ﾁﾖﾀﾞ,東京都,千代田区,千代田,0,0,0,0,0,0\n';
 const CSV_SHA256 = createHash("sha256").update(CSV_TEXT, "utf8").digest("hex");
 
 function fakeRpcClient(overrides: Partial<JpPostalImportRpcClient> = {}): JpPostalImportRpcClient {
