@@ -88,7 +88,7 @@ function ordinaryEntry(seed) {
 
 function buildValidRawEntries() {
   const entries = [];
-  for (let i = 1; i <= 111; i += 1) entries.push(ordinaryEntry(i));
+  for (let i = 1; i <= 112; i += 1) entries.push(ordinaryEntry(i));
   entries.push({ path: PROTECTED_LINE_MIGRATION_PATH, mode: PROTECTED_LINE_MIGRATION_MODE, blob: PROTECTED_LINE_MIGRATION_BLOB, sha256: null });
   entries.push({ path: MONTHLY_INVOICE_MIGRATION_PATH, mode: MONTHLY_INVOICE_MIGRATION_MODE, blob: MONTHLY_INVOICE_MIGRATION_BLOB, sha256: null });
   assert.equal(entries.length, REQUIRED_FORMAL_MIGRATION_COUNT);
@@ -720,12 +720,12 @@ function buildStagedEntries() {
   return buildValidRawEntries().filter((entry) => entry.path !== PROTECTED_LINE_MIGRATION_PATH);
 }
 
-test('preflight-only fails closed when independently inspected file count is not exactly 112', async () => {
+test('preflight-only fails closed when independently inspected file count is not exactly 113', async () => {
   const materializer = createMaterializer({ inspectAllResult: { files: [{ relativePath: 'x', mode: '100644', isRegular: true }] } });
   const adapters = buildAdapters({ materializer });
   const result = await runPreflightOnly(baseInput(), adapters);
   assert.equal(result.ok, false);
-  assert.match(result.errors.join(' '), /exactly 112/);
+  assert.match(result.errors.join(' '), /exactly 113/);
 });
 
 test('preflight-only fails closed when an inspected entry is not a regular mode-100644 file (symlink)', async () => {
@@ -1610,7 +1610,7 @@ test('runHostedExecutionAdapter never touches a caller-supplied second-argument 
   assert.equal(ledger.calls.acquireLock, 0);
 });
 
-test('concrete Git adapter returns independent exact canonical and actual 113-entry manifests using only local Git', async () => {
+test('concrete Git adapter returns independent exact canonical and actual 114-entry manifests using only local Git', async () => {
   const git = createGitCliAdapter(REAL_REPO_ROOT);
   const canonical = await git.getCanonicalManifest();
   const actual = await git.getRawMigrationEntries();
@@ -1631,7 +1631,7 @@ test('fixed manifest-core accepts the authority mix of legacy and timestamp migr
   assert.equal(result.formalCount, REQUIRED_FORMAL_MIGRATION_COUNT);
   assert.equal(result.stagedCount, REQUIRED_STAGED_MIGRATION_COUNT);
   assert.equal(actual.filter((entry) => /^supabase\/migrations\/[0-9]{3}_/.test(entry.path)).length, 76);
-  assert.equal(actual.filter((entry) => /^supabase\/migrations\/[0-9]{14}_/.test(entry.path)).length, 37);
+  assert.equal(actual.filter((entry) => /^supabase\/migrations\/[0-9]{14}_/.test(entry.path)).length, 38);
 });
 
 test('concrete Git adapter supplies pinned PR facts without a hosted lookup', async () => {

@@ -3,8 +3,8 @@
 // every input is injected data and every hash is computed by an injected
 // pure function.
 
-export const REQUIRED_FORMAL_MIGRATION_COUNT = 113;
-export const REQUIRED_STAGED_MIGRATION_COUNT = 112;
+export const REQUIRED_FORMAL_MIGRATION_COUNT = 114;
+export const REQUIRED_STAGED_MIGRATION_COUNT = 113;
 export const REQUIRED_ENTRY_MODE = '100644';
 export const MIGRATIONS_DIR_PREFIX = 'supabase/migrations/';
 // The fixed canonical history contains both the legacy three-digit sequence
@@ -24,7 +24,7 @@ export const MONTHLY_INVOICE_MIGRATION_MODE = '100644';
 export const MONTHLY_INVOICE_MIGRATION_BLOB = '32fda49583ae1217bc13711784ad8fa31744726c';
 
 export const EXPECTED_AGGREGATE_MANIFEST_SHA256 =
-  '0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb';
+  '72db2fba71d4a669be9d0870fabdfb4b3cdad1430b868a4d327209ac8dda274d';
 
 function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -159,10 +159,10 @@ function compareAgainstCanonical(sorted, canonical) {
 }
 
 /**
- * Construct and validate the exact 113-to-112 manifest contract.
+ * Construct and validate the exact 114-to-113 manifest contract.
  * rawEntries: array of { path, mode, blob, sha256 | null }.
  * options.canonicalManifest: required array of the same shape; the exact
- * accepted 113-entry table. Absent, malformed, or wrong-length input fails
+ * accepted 114-entry table. Absent, malformed, or wrong-length input fails
  * closed.
  * options.hashAggregate: required injected pure aggregate hash function.
  * options.expectedAggregateSha256: optional; if supplied it must equal the

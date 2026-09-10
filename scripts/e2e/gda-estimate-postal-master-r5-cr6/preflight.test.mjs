@@ -31,7 +31,7 @@ function ordinaryEntry(seed) {
 }
 function buildValidRawEntries() {
   const entries = [];
-  for (let i = 1; i <= 111; i += 1) entries.push(ordinaryEntry(i));
+  for (let i = 1; i <= 112; i += 1) entries.push(ordinaryEntry(i));
   entries.push({ path: PROTECTED_LINE_MIGRATION_PATH, mode: PROTECTED_LINE_MIGRATION_MODE, blob: PROTECTED_LINE_MIGRATION_BLOB, sha256: null });
   entries.push({ path: MONTHLY_INVOICE_MIGRATION_PATH, mode: MONTHLY_INVOICE_MIGRATION_MODE, blob: MONTHLY_INVOICE_MIGRATION_BLOB, sha256: null });
   assert.equal(entries.length, REQUIRED_FORMAL_MIGRATION_COUNT);
@@ -76,7 +76,7 @@ function createEnvironmentAdapter(snapshot = {}, throwSnapshot = false) {
 }
 
 function hashAggregate(staged) {
-  return staged.length === 112 ? EXPECTED_AGGREGATE_MANIFEST_SHA256 : 'wrong-hash';
+  return staged.length === 113 ? EXPECTED_AGGREGATE_MANIFEST_SHA256 : 'wrong-hash';
 }
 
 function buildInput(overrides = {}) {
@@ -109,7 +109,7 @@ function buildAdapters(overrides = {}) {
 test('a fully consistent invocation returns ok:true with a staged plan', async () => {
   const result = await runPreflight(buildInput(), buildAdapters());
   assert.equal(result.ok, true, JSON.stringify(result.errors));
-  assert.equal(result.plan.manifest.length, 112);
+  assert.equal(result.plan.manifest.length, 113);
   assert.equal(result.plan.projectRef, REQUIRED_PROJECT_REF);
   assert.equal(result.plan.excluded[0].path, PROTECTED_LINE_MIGRATION_PATH);
 });

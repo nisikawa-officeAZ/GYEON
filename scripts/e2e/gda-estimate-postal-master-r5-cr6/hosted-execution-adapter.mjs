@@ -127,8 +127,8 @@ export const LEDGER_ROOT =
  * exactly the two adapter paths, then uses the freshly derived current
  * HEAD/tree as identity for every downstream check.
  */
-export const CANONICAL_GOVERNANCE_COMMIT = 'e2371101356ac275e9bf1569fb18f887ad94796b';
-export const CANONICAL_GOVERNANCE_TREE = 'c52212942d91fb31c423b49ef50536806bdd25ff';
+export const CANONICAL_GOVERNANCE_COMMIT = '3031e0d8aeebecb8234d61565ad03b7bdd1dae22';
+export const CANONICAL_GOVERNANCE_TREE = 'c6ab104dd1ff47cfaf31e6e5d5ad1df33a538bef';
 export const ACCEPTED_GOVERNANCE_PARENT = 'dfd59f95466408783730d46fdd58a5f8a107ca62';
 export const ACCEPTED_GOVERNANCE_TREE = '5e1ffa64fb1598b6ac32fb7e37cf4e4aacc807fd';
 export const DRAFT_MIGRATION_TREE_PATH = 'supabase/migrations/DRAFT_DO_NOT_APPLY';
@@ -239,7 +239,7 @@ function hasExactOwnKeys(value, keys) {
 }
 
 /** Validate the exact list JSON+stderr contract (R3F §7). `staged` must be
- * the accepted, exactly-ordered 112-entry manifest. */
+ * the accepted, exactly-ordered 113-entry manifest. */
 export function parseListOutput(stdoutText, staged) {
   if (!hasExactlyOneTrailingLf(stdoutText)) {
     return { ok: false, errors: ['list stdout must be exactly one UTF-8 JSON object plus one trailing LF'] };
@@ -874,7 +874,7 @@ async function finalizeExecutionEvidence(adapters, input, details) {
 
 /**
  * Independently verify a materialized isolated tree against the accepted
- * staged manifest: the exact 112-path set, exact per-file content hash for
+ * staged manifest: the exact 113-path set, exact per-file content hash for
  * every ordinary entry (the protected monthly entry is never re-hashed, per
  * R3F §5/§8.1), regular type, mode 100644, no symlink, effective-uid
  * ownership, a single hard link, one consistent device across every entry,
@@ -1230,7 +1230,7 @@ export function buildGuardedRealProcessAdapter(adapters, context) {
 
 /**
  * Acquire the accepted preflight plan for either mode: fixed Git
- * acquisition, protected metadata, the exact 111/112 batches, and the
+ * acquisition, protected metadata, the exact 112/113 batches, and the
  * canonical aggregate, all through the frozen `runPreflight`. Neither mode
  * may bypass this or operate without an accepted plan (R1 correction).
  */
@@ -1272,7 +1272,7 @@ async function acquireAcceptedPlan(adapters, identity, input, isolatedWorkdir, b
 
 /**
  * `preflight-only`: locally materializes, independently inspects, and
- * deletes one fresh isolated 112-file tree. It never acquires an execution
+ * deletes one fresh isolated 113-file tree. It never acquires an execution
  * lock, writes a burn record, constructs a linked command, contacts hosted
  * state, or retains hosted evidence.
  *
@@ -1343,8 +1343,8 @@ export async function runPreflightOnly(rawInput, adapters) {
  * `execute-once`: present here but not run against a real hosted project by
  * this implementation phase. It must consume the same accepted preflight
  * plan as `preflight-only` (exact Git acquisition, protected metadata,
- * 111/112 batches, canonical aggregate) and independently verify a fresh
- * isolated 112-file materialization before any target/lock/burn/apply step
+ * 112/113 batches, canonical aggregate) and independently verify a fresh
+ * isolated 113-file materialization before any target/lock/burn/apply step
  * (R1 correction). Target-identity drift and execution-readiness (durable
  * burn/lock/stage-order) drift are mapped to the exact frozen
  * `targetMismatch`/`ledgerMismatch` synthetic outcomes before any real
@@ -1719,7 +1719,7 @@ export function validateAndHashMigrationTree(repoRoot, commit, expectedTree = nu
 
   const protectedPaths = new Set([PROTECTED_LINE_MIGRATION_PATH, MONTHLY_INVOICE_MIGRATION_PATH]);
   const ordinary = sqlEntries.filter((entry) => !protectedPaths.has(entry.path));
-  if (ordinary.length !== 111) throw new Error('ordinary migration blob count must be exactly 111');
+  if (ordinary.length !== 112) throw new Error('ordinary migration blob count must be exactly 112');
   const batchInput = `${ordinary.map((entry) => entry.blob).join('\n')}\n`;
   const batchOutput = runGitSync(repoRoot, ['cat-file', '--batch'], {
     input: batchInput,

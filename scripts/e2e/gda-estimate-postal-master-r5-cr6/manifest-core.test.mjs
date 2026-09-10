@@ -48,7 +48,7 @@ function sortedByPath(entries) {
 
 function buildValidRawEntries() {
   const entries = [];
-  for (let i = 1; i <= 111; i += 1) {
+  for (let i = 1; i <= 112; i += 1) {
     entries.push(ordinaryEntry(i));
   }
   entries.push({
@@ -67,7 +67,7 @@ function buildValidRawEntries() {
   return entries;
 }
 
-test('R2-01: exactly 113 formal migration paths are discovered and accepted', () => {
+test('R2-01: exactly 114 formal migration paths are discovered and accepted', () => {
   const entries = buildValidRawEntries();
   const result = buildManifest(entries, {
     canonicalManifest: validCanonicalManifest(entries),
@@ -77,21 +77,21 @@ test('R2-01: exactly 113 formal migration paths are discovered and accepted', ()
   assert.equal(result.formalCount, REQUIRED_FORMAL_MIGRATION_COUNT);
 });
 
-test('R2-01: a manifest with fewer than 113 entries is rejected', () => {
-  const entries = buildValidRawEntries().slice(0, 112);
+test('R2-01: a manifest with fewer than 114 entries is rejected', () => {
+  const entries = buildValidRawEntries().slice(0, 113);
   const result = buildManifest(entries);
   assert.equal(result.ok, false);
-  assert.match(result.errors[0], /exactly 113/);
+  assert.match(result.errors[0], /exactly 114/);
 });
 
-test('R2-01: a manifest with more than 113 entries is rejected', () => {
+test('R2-01: a manifest with more than 114 entries is rejected', () => {
   const entries = [...buildValidRawEntries(), ordinaryEntry(999)];
   const result = buildManifest(entries);
   assert.equal(result.ok, false);
-  assert.match(result.errors[0], /exactly 113/);
+  assert.match(result.errors[0], /exactly 114/);
 });
 
-test('R2-02: exactly 112 paths are staged in byte order after excluding LINE', () => {
+test('R2-02: exactly 113 paths are staged in byte order after excluding LINE', () => {
   const entries = buildValidRawEntries();
   const result = buildManifest(entries, {
     canonicalManifest: validCanonicalManifest(entries),
@@ -310,9 +310,9 @@ test('R2B-01: buildManifest fails closed when canonicalManifest is malformed (no
   assert.match(result.errors.join(' '), /options.canonicalManifest is required/);
 });
 
-test('R2B-01: buildManifest fails closed when canonicalManifest is not an exact 113-entry accepted table', () => {
+test('R2B-01: buildManifest fails closed when canonicalManifest is not an exact 114-entry accepted table', () => {
   const entries = buildValidRawEntries();
-  const shortCanonical = validCanonicalManifest(entries).slice(0, 112);
+  const shortCanonical = validCanonicalManifest(entries).slice(0, 113);
   const result = buildManifest(entries, { canonicalManifest: shortCanonical, hashAggregate: validHashAggregate });
   assert.equal(result.ok, false);
   assert.match(result.errors.join(' '), /canonical manifest length/);
