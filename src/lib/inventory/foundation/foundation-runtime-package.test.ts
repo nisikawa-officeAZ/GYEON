@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import * as nodeModule from "node:module";
+import path from "node:path";
 import { test } from "node:test";
+import { pathToFileURL } from "node:url";
 
 import {
   INVENTORY_RUNTIME_COMMANDS,
@@ -9,6 +12,7 @@ import {
   INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V2,
   INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V3,
 } from "@nisikawa-officeaz/detaileros-inventory-foundation";
+import { createInventoryInMemoryStore } from "../../../../node_modules/@nisikawa-officeaz/detaileros-inventory-foundation/dist/runtime/inventoryInMemoryStore.js";
 import {
   FOUNDATION_RUNTIME_COMMANDS,
   FOUNDATION_SNAPSHOT_EXPORT_CONTRACT,
@@ -22,6 +26,34 @@ const raw = readFileSync(WRAPPER, "utf8");
 const code = raw
   .replace(/\/\*[\s\S]*?\*\//g, "")
   .replace(/\/\/.*$/gm, "");
+
+const serverOnlyEmptyModule = pathToFileURL(
+  path.resolve("node_modules/next/dist/compiled/server-only/empty.js"),
+).href;
+
+type ResolveResult = { readonly shortCircuit?: boolean; readonly url: string };
+type ResolveHook = (
+  specifier: string,
+  context: unknown,
+  nextResolve: (specifier: string, context: unknown) => ResolveResult,
+) => ResolveResult;
+
+const registerHooks = (
+  nodeModule as unknown as {
+    registerHooks(hooks: { readonly resolve: ResolveHook }): void;
+  }
+).registerHooks;
+
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === "server-only") {
+      return { shortCircuit: true, url: serverOnlyEmptyModule };
+    }
+    return nextResolve(specifier, context);
+  },
+});
+
+const packageModulePromise = import("./foundation-runtime-package.js");
 
 function occurrences(source: string, pattern: RegExp): number {
   return source.match(pattern)?.length ?? 0;
@@ -93,7 +125,7 @@ test("dispatch forwards the command and complete native envelope exactly once", 
 test("all five package surfaces are bound without replacing the injected store", () => {
   assert.equal(occurrences(code, /runtime\.auditLog\(/g), 2);
   assert.equal(occurrences(code, /exportInventoryRuntimeSnapshot\(/g), 1);
-  assert.equal(occurrences(code, /importInventoryRuntimeSnapshot\(/g), 1);
+  assert.equal(occurrences(code, /importInventoryRuntimeSnapshot\(/g), 2);
   assert.equal(
     occurrences(code, /evaluateInventoryRuntimeRecoveryEvidence\(/g),
     1,
@@ -104,6 +136,84 @@ test("all five package surfaces are bound without replacing the injected store",
   );
   assert.equal(code.includes("imported.store"), false);
   assert.equal(code.includes("dependencies.store.commit"), false);
+});
+
+test("the package wrapper executes all five D1 surfaces against a real store", async () => {
+  const { createFoundationRuntimePackagePort } = await packageModulePromise;
+  const store = createInventoryInMemoryStore();
+  const port = createFoundationRuntimePackagePort({ store });
+  const native = Object.freeze({ actor: "book-actor", operator: "book-operator" });
+
+  const dispatch = await port.dispatchCommand({
+    bookContext: {} as never,
+    command: "reserve",
+    native,
+  });
+  assert.deepEqual(dispatch, {
+    tag: "denied",
+    reason: "Foundation package denied authorization.",
+  });
+
+  const audit = await port.readAuditLog({
+    bookContext: {} as never,
+    native,
+  });
+  assert.equal(audit.tag, "success");
+  assert.equal(Array.isArray(audit.tag === "success" ? audit.value : null), true);
+
+  const exported = await port.exportSnapshot({
+    bookContext: {} as never,
+    native,
+  });
+  assert.equal(exported.tag, "success");
+  if (exported.tag !== "success") assert.fail("snapshot export must succeed");
+  assert.equal((exported.value as { readonly revision?: unknown }).revision, 0);
+
+  const imported = await port.importSnapshot({
+    bookContext: {} as never,
+    snapshotContract: INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V3,
+    native: {
+      ...native,
+      payload: exported.tag === "success" ? exported.value : null,
+    },
+  });
+  assert.equal(imported.tag, "success");
+
+  const recovery = await port.evaluateRecoveryEvidence({
+    bookContext: {} as never,
+    native,
+  });
+  assert.equal(recovery.tag, "success");
+});
+
+test("the package wrapper fails closed for malformed snapshot carriers", async () => {
+  const { createFoundationRuntimePackagePort } = await packageModulePromise;
+  const malformedStore = {
+    snapshot: () => ({ revision: 0 }),
+    commit: () => false,
+  } as never;
+  const port = createFoundationRuntimePackagePort({ store: malformedStore });
+  const native = Object.freeze({ actor: "book-actor", operator: "book-operator" });
+
+  assert.deepEqual(
+    await port.exportSnapshot({ bookContext: {} as never, native }),
+    { tag: "unknown" },
+  );
+  assert.deepEqual(
+    await port.importSnapshot({
+      bookContext: {} as never,
+      snapshotContract: INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V3,
+      native: { ...native, payload: { revision: 0 } },
+    }),
+    { tag: "unknown" },
+  );
+  assert.deepEqual(
+    await port.evaluateRecoveryEvidence({ bookContext: {} as never, native }),
+    {
+      tag: "invalid_recovery",
+      reason: "Foundation package rejected recovery evidence.",
+    },
+  );
 });
 
 test("the closed outcome conversion is sanitized and never guesses stale version", () => {

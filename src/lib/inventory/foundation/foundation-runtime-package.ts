@@ -8,6 +8,7 @@ import {
   INVENTORY_RUNTIME_SNAPSHOT_CONTRACT,
   isInventoryRuntimeCommand,
   validateInventoryRuntimeAuditLog,
+  type InventoryRuntimeSnapshot,
   type InventoryRuntimeStore,
 } from "@nisikawa-officeaz/detaileros-inventory-foundation";
 import type {
@@ -46,6 +47,38 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function hasOwn(value: Record<string, unknown>, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function hasOnlyDefinedValues(value: Record<string, unknown>): boolean {
+  try {
+    return Object.values(value).every((entry) => entry !== undefined);
+  } catch {
+    return false;
+  }
+}
+
+function validateRuntimeSnapshot(
+  snapshot: InventoryRuntimeSnapshot,
+): InventoryRuntimeSnapshot | null {
+  const exported = exportInventoryRuntimeSnapshot(snapshot);
+  if (
+    exported.contract !== INVENTORY_RUNTIME_SNAPSHOT_CONTRACT ||
+    !isPlainObject(exported.snapshot) ||
+    !hasOnlyDefinedValues(exported.snapshot)
+  ) {
+    return null;
+  }
+
+  const validated = importInventoryRuntimeSnapshot(exported);
+  if (
+    !validated.ok ||
+    !isPlainObject(validated.snapshot) ||
+    !hasOnlyDefinedValues(validated.snapshot)
+  ) {
+    return null;
+  }
+
+  return exported.snapshot;
 }
 
 function mapDispatchOutcome(
@@ -130,16 +163,11 @@ export function createFoundationRuntimePackagePort(
 
     exportSnapshot() {
       try {
-        const exported = exportInventoryRuntimeSnapshot(
+        const validatedSnapshot = validateRuntimeSnapshot(
           dependencies.store.snapshot(),
         );
-        if (
-          exported.contract !== INVENTORY_RUNTIME_SNAPSHOT_CONTRACT ||
-          !isPlainObject(exported.snapshot)
-        ) {
-          return UNKNOWN_OUTCOME;
-        }
-        return Object.freeze({ tag: "success", value: exported.snapshot });
+        if (validatedSnapshot === null) return UNKNOWN_OUTCOME;
+        return Object.freeze({ tag: "success", value: validatedSnapshot });
       } catch {
         return UNKNOWN_OUTCOME;
       }
@@ -162,8 +190,13 @@ export function createFoundationRuntimePackagePort(
 
     evaluateRecoveryEvidence() {
       try {
+        const snapshot = dependencies.store.snapshot();
+        if (validateRuntimeSnapshot(snapshot) === null) {
+          return INVALID_RECOVERY_OUTCOME;
+        }
+
         const evaluated = evaluateInventoryRuntimeRecoveryEvidence({
-          snapshot: dependencies.store.snapshot(),
+          snapshot,
           auditLog: runtime.auditLog(),
         });
         if (!evaluated.ok) return INVALID_RECOVERY_OUTCOME;
