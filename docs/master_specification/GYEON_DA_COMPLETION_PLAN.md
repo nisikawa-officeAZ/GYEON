@@ -790,7 +790,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-D2 — Private package consumer
 
-**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / CURRENTLY BLOCKED BY MISSING IMMUTABLE PUBLISHED FOUNDATION PACKAGE EVIDENCE.
+**Status:** CLOSED — governance merged through PR #57; the immutable package consumer merged through PR #69; the server-only runtime wrapper merged through PR #70; D2 accepted production closeout is Foundation Issue #39 comment `5635813825`.
 
 **Objective:** Bind D1's accepted Book-owned pure adaptor to one exact private immutable Foundation GitHub Packages artifact, server-side only, without copying Foundation source, duplicating rules, guessing persistence, or exposing package access to browser, UI, or Android code.
 
@@ -798,7 +798,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_PRIVATE_PACKAGE_CONSUMER.md`. Current local SHA-256: `d13dcb64f9780bc5ed361b9a040d2be7b419726956a218ae05d5ceb7bfc88f84`. Proposed branch: `agent/inv001-p19-book-d2-private-package-consumer`.
 
-**Current blocker:** The fixed Foundation `package.json` is named `detaileros-inventory-foundation`, is version `0.1.0`, has `private: true`, and declares no `main`, `exports`, `types`, `files`, or build/publish script. No accepted P19 evidence proves a published tarball, immutable integrity, declarations, scoped package identity, or commit/tree binding. Book must not install or wrap a guessed artifact.
+**Historical blocker, now resolved:** At the original D2 governance base the Foundation package was not publishable and no immutable artifact was proven. P20D2 later published and accepted `@nisikawa-officeaz/detaileros-inventory-foundation@0.1.0`; Book PR #69 pinned it with lockfile integrity `sha512-VIgMOs45cJub1/18jfHGDiqWjMtyO+z+nm8keWXxfgq3cnyA7QJNm5CKQKypHab6+EWEa+YBy+XQvhGcWQ303A==`, and PR #70 merged the exact two-file server-only wrapper. Current Book `main` is `91b4db7a8133bf7bfc0df66534c2acb286bcff27`, tree `1db51156e3d838ff026a1ebeb09936b95a2d8018`.
 
 **Required Foundation prerequisite (updated by D2-Q2):** A separate Foundation-owned publication phase must prove the private scoped package identity `@nisikawa-officeaz/detaileros-inventory-foundation`, exact version, source commit/tree, published tarball SHA-512/integrity, GitHub Actions publication provenance, complete file/declaration/export catalogue, private visibility, publication timestamp, forbidden-file exclusion, and no-overwrite rule. SBOM is optional later. Actual authenticated consumer installation belongs to Book Gate B1 and is not a Gate A prerequisite. Book does not publish or repair Foundation in D2.
 
@@ -815,13 +815,13 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 - Gate B2: `src/lib/inventory/foundation/foundation-runtime-package.ts`, `src/lib/inventory/foundation/foundation-runtime-package.test.ts`.
 - The three merged D1 files are read-only throughout D2.
 
-**Current authorization:** Create and verify exactly the D2 directive plus this completion-plan update and the phase-results ledger entry. No private-source transmission, Claude invocation, Foundation edit/publication, package/registry access, install, source implementation, executable test, stage, commit, push, PR mutation, DB, provider, UI, Android, deployment, staging, or production action is included.
+**Closed boundary:** D2 proves the immutable package dependency, registry/build authentication, server-only wrapper, five D1 surfaces, focused B2 `14/14`, D1 regression `71/71`, typecheck, diff check, and read-only production smoke. It does not prove durable persistence, product mapping, authenticated orchestration, product-order/UI wiring, database concurrency, or legacy retirement.
 
-**Exit gate:** Verify the exact three-path governance candidate, directive hash, current package blocker, literal read/change scopes, and protected metadata; then request a separate Owner gate for stage and local commit. Gate A remains blocked until Foundation publication evidence is independently accepted.
+**Exit gate:** `PASS_B2_ACCEPTED_CLOSED`. D3A begins only through the separately governed P20D2 baseline-reconciliation and read-only-diagnosis gate below.
 
 ### INV001-P19-BOOK-D2-Q1R1 — Foundation landing acceptance and package-publication hold
 
-**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / FOUNDATION Q1R1 LANDING ACCEPTED / D2 REMAINS BLOCKED BY UNPROVEN IMMUTABLE PACKAGE PUBLICATION.
+**Status:** HISTORICAL GOVERNANCE BASELINE / SUPERSEDED BY THE ACCEPTED P20D2 PACKAGE PUBLICATION, PR #69 CONSUMER PIN, AND PR #70 WRAPPER CLOSURE RECORDED ABOVE.
 
 **Objective:** Bind the independently accepted Foundation PR #79 landing to Book governance without falsely treating a documentation/hash correction as a published package or beginning D2 package work.
 
@@ -841,7 +841,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-D2-Q2 — P20C private-package handoff alignment
 
-**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / FOUNDATION GATE 1 ACCEPTED / FOUNDATION GATE 2 PACKAGE PUBLICATION NOT EXECUTED / BOOK D2 BLOCKED.
+**Status:** HISTORICAL GOVERNANCE BASELINE / FOUNDATION GATE 2 AND BOOK D2 LATER CLOSED / SUPERSEDED BY THE ACCEPTED P20D2 CLOSURE RECORDED ABOVE.
 
 **Objective:** Replace the stale D2/Q1R1 package-readiness and Claude read-scope assumptions with the Owner-ratified P20C handoff boundary while preserving D1 and the separated D2 Gate A/B1/B2 execution model.
 
@@ -863,15 +863,15 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-D3A — Foundation persistence governance preparation
 
-**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / IMPLEMENTATION BLOCKED UNTIL D2 FULL CLOSURE.
+**Status:** ORIGINAL GOVERNANCE MERGED THROUGH PR #58 / D2 IS NOW CLOSED / D3A DIAGNOSIS AND IMPLEMENTATION HAVE NOT STARTED / P20D2 BASELINE RECONCILIATION BELOW GOVERNS NEXT.
 
 **Objective:** Predefine the Book-side durable persistence, least-privilege RLS/grant, transaction, idempotency, optimistic-concurrency, append-only audit, snapshot, recovery, and disposable-verification gates required by the sealed Foundation V2 runtime without creating or applying a migration.
 
-**Fixed Book authority:** `main` commit `2e1df23f1aa64b7c9ca2a608f36f2dccd107cf7b`, tree `1116b7e768a1a1ca1cfd5bff99263f235cf6bcb8`. D2 governance is merged through PR #57, but D2 package publication, dependency pin, and runtime wrapper remain incomplete.
+**Historical fixed authority and current reconciliation:** The original governance used Book `main` commit `2e1df23f1aa64b7c9ca2a608f36f2dccd107cf7b`, tree `1116b7e768a1a1ca1cfd5bff99263f235cf6bcb8`, and merged through PR #58 as `00f2df7dc5574d0a06a219cb51b4629f1f337f9b`. D2 is now fully closed at Book `main` commit `91b4db7a8133bf7bfc0df66534c2acb286bcff27`, tree `1db51156e3d838ff026a1ebeb09936b95a2d8018`, after PR #69 and PR #70.
 
-**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D3A_FOUNDATION_PERSISTENCE.md`. Proposed branch: `agent/inv001-p19-book-d3a-persistence-governance`.
+**Governing directives:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D3A_FOUNDATION_PERSISTENCE.md` remains the historical architecture authority. `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS.md` supersedes its stale execution baseline. Current local governance branch: `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1`.
 
-**Current boundary:** Governance preparation only. No private-source transmission, Claude invocation, package/registry access, migration creation, database connection, implementation, executable test, stage, commit, push, PR mutation, provider, Android, deployment, staging, or production action is authorized.
+**Current boundary:** P20D2 governance baseline reconciliation only. No private-source transmission, Claude invocation, package/registry access, migration creation, database connection, implementation, executable test, stage, commit, push, PR mutation, provider, Android, deployment, staging, or production action is authorized.
 
 **Gate separation:**
 
@@ -885,7 +885,35 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Security posture:** Office AZ is the only currently authorized live inventory owner; SQL is persistence, not business-rule authority; exposed tables require RLS; authentication alone is not authorization; browser raw writes, service-role exposure, user-metadata authorization, public privileged functions, dual-write, retries, rule duplication, and production in-memory fallback are prohibited.
 
-**Exit gate:** Verify the exact three-path governance-only diff and directive hash, then request a separate Owner gate for stage/local commit. D3A Gate A remains blocked until D2 is fully closed and its merged package wrapper identity is fixed.
+**Exit gate:** Verify the exact three-path P20D2 governance-only diff, directive hash, B2 closure identities, proposed 43-path Gate A read payload, protected metadata, clean index, and `git diff --check`; then request a separate Owner gate for exact-path stage/local commit. Claude remains blocked until later push/Draft-PR/instruction/transmission gates.
+
+### INV001-P20D2-BOOK-D3A-R1 — Post-B2 baseline reconciliation and persistence diagnosis governance
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / CLAUDE DIAGNOSIS NOT AUTHORIZED.
+
+**Objective:** Record the accepted D2 closure in Book governance and replace the stale D3A execution baseline with one exact future read-only diagnosis contract. This phase creates no persistence implementation and contacts no database or provider.
+
+**Fixed Book authority:** `main` commit `91b4db7a8133bf7bfc0df66534c2acb286bcff27`, tree `1db51156e3d838ff026a1ebeb09936b95a2d8018`.
+
+**Accepted D2 chain:** PR #69 merged the exact `.npmrc`, `package.json`, and `package-lock.json` consumer pin as `e8b3d89e6520d0c5e5e13ef8f100586e51041a86`, tree `3205c57d5716fffd47a741fa8809eb8f33a47e22`. PR #70 merged the two-file server-only wrapper as `91b4db7a8133bf7bfc0df66534c2acb286bcff27`, tree `1db51156e3d838ff026a1ebeb09936b95a2d8018`. The package is `@nisikawa-officeaz/detaileros-inventory-foundation@0.1.0`, pinned to lockfile integrity `sha512-VIgMOs45cJub1/18jfHGDiqWjMtyO+z+nm8keWXxfgq3cnyA7QJNm5CKQKypHab6+EWEa+YBy+XQvhGcWQ303A==`.
+
+**Shipped store contract:** `InventoryRuntimeStore` exposes only `snapshot(): InventoryRuntimeSnapshot` and `commit(expectedRevision, next): boolean`. The B2 wrapper injects this store and binds the five D1 surfaces but creates no durable store, transaction, retry, database connection, product-order wiring, or fallback.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS.md`, SHA-256 `72e9551910b3725c7833e6b7c0819387da208c04cf227993b9088a5d88cbc64a`. Current branch: `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1`. A dedicated coordination Draft PR does not yet exist.
+
+**Exact current governance allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS.md` (new)
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Future Gate A boundary:** One tool-disabled read-only Claude diagnosis may occur only after the governance candidate is separately committed, normally pushed, opened as a dedicated Draft PR, independently verified, and followed by a new fixed-HEAD/tree Owner authorization on that PR. The directive proposes exactly 43 literal read paths and permits no glob or dependency-following access.
+
+**Superseded Issue instructions:** Foundation Issue #39 comments `5635814089`, `5635874792`, and `5636134595` are not executable Book governance. Comment `5635978070` records the append-only correction. They must not start Claude or replace the dedicated Book Draft-PR instruction.
+
+**Current authorization:** Create and locally verify only the exact three governance paths. No stage, commit, push, PR creation or mutation, private-source transmission, Claude invocation, package command, test, typecheck, build, migration creation/application, SQL, DB, Supabase, Auth, Storage, LINE, Vercel, provider, production data, UI/action wiring, D3A implementation, D3B-D7, Android, Studio implementation, or deployment is authorized.
+
+**Exit gate:** Verify the exact three-path diff, new directive SHA-256, Book identity, D2 chain, package pin/integrity, protected path mode/blob/clean state, empty index, and `git diff --check`; then request a separate Owner authorization for literal-path staging and local commit only.
 
 ### INV001-P19-BOOK-D3B — Product identity mapping governance preparation
 

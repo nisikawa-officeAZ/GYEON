@@ -4941,3 +4941,91 @@ implementation_authorized: false
 decision: ALIGN_D2_TO_ACCEPTED_P20C_GATE1_AND_OWNER_EVIDENCE_POLICY_KEEP_D2_BLOCKED_UNTIL_GATE2_PUBLICATION_ACCEPTANCE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_BOOK_AND_FOUNDATION_IDENTITIES_GATE1_RECEIPT_GATE2_HOLD_MANDATORY_EVIDENCE_OPTIONAL_SBOM_NON_CIRCULAR_GATE_ORDER_PUBLISHED_ARTIFACT_ONLY_CLAUDE_BOUNDARY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
 ```
+
+## INV001-P20D2-BOOK-D3A-R1 — Post-B2 baseline reconciliation and persistence diagnosis governance candidate
+
+```yaml
+phase: INV001_P20D2_BOOK_D3A_R1_POST_B2_BASELINE_RECONCILIATION_AND_PERSISTENCE_DIAGNOSIS_GOVERNANCE
+marker: INV001_P20D2_BOOK_D3A_R1_GOVERNANCE_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_CLAUDE_NOT_AUTHORIZED
+date: 2026-09-11
+append_only: true
+authorization: "The Owner approved starting the D3A governance baseline reconciliation only after MacBook Codex explained that B2 was closed but the Book completion plan, result ledger, dedicated D3A Draft PR, and matching Claude instruction were not yet reconciled. This authorizes exactly three local governance-document changes and local non-executable verification. It does not authorize stage, commit, push, PR creation or mutation, private-source transmission, Claude invocation, package command, test, typecheck, build, migration creation/application, SQL, DB, Supabase, Auth, Storage, LINE, Vercel, provider, production data, UI/action wiring, D3A implementation, D3B-D7, Android, Studio implementation, or deployment."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: 91b4db7a8133bf7bfc0df66534c2acb286bcff27
+  fixed_tree: 1db51156e3d838ff026a1ebeb09936b95a2d8018
+  branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+  upstream_ahead_behind_at_start: 0_0
+d2_gate_b1:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/69
+  source_head: 9d2802a46f482e240fddcf380a113741cfe27dd2
+  merge_commit: e8b3d89e6520d0c5e5e13ef8f100586e51041a86
+  merge_tree: 3205c57d5716fffd47a741fa8809eb8f33a47e22
+  exact_changed_paths:
+    - .npmrc
+    - package.json
+    - package-lock.json
+  package: "@nisikawa-officeaz/detaileros-inventory-foundation@0.1.0"
+  resolved_artifact: https://npm.pkg.github.com/download/@nisikawa-officeaz/detaileros-inventory-foundation/0.1.0/ac6b37d8030c94bcf6428de1c4253f3c5bb16062
+  integrity: "sha512-VIgMOs45cJub1/18jfHGDiqWjMtyO+z+nm8keWXxfgq3cnyA7QJNm5CKQKypHab6+EWEa+YBy+XQvhGcWQ303A=="
+  registry_declaration: "@nisikawa-officeaz:registry=https://npm.pkg.github.com"
+  production_preview_closeout_owner_ratification: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5634539855
+d2_gate_b2:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/70
+  accepted_head: fd9da4fa61db19caecb3f69634ea1d5fa978f9c1
+  merge_commit: 91b4db7a8133bf7bfc0df66534c2acb286bcff27
+  merge_tree: 1db51156e3d838ff026a1ebeb09936b95a2d8018
+  exact_changed_paths:
+    - src/lib/inventory/foundation/foundation-runtime-package.ts
+    - src/lib/inventory/foundation/foundation-runtime-package.test.ts
+  focused_b2: PASS_14_OF_14
+  d1_regression: PASS_71_OF_71
+  typecheck: PASS
+  diff_check: PASS
+  production_closeout: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5635813825
+d2_decision: PASS_B2_ACCEPTED_CLOSED
+shipped_store_contract:
+  methods:
+    - "snapshot(): InventoryRuntimeSnapshot"
+    - "commit(expectedRevision: number, next: InventoryRuntimeCommitInput): boolean"
+  wrapper_store_injection: PROVEN
+  wrapper_durable_store: NOT_IMPLEMENTED
+  wrapper_database_transaction: NOT_IMPLEMENTED
+  wrapper_product_order_or_ui_wiring: NOT_IMPLEMENTED
+  wrapper_retry_or_fallback: ABSENT_REQUIRED
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS.md
+  sha256: 72e9551910b3725c7833e6b7c0819387da208c04cf227993b9088a5d88cbc64a
+  result_marker: INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS_RESULT_V1
+  proposed_exact_gate_a_read_paths: 43
+  claude_authorized_now: false
+  coordination_draft_pr: NOT_CREATED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+superseded_issue_instructions:
+  - https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5635814089
+  - https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5635874792
+  - https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5636134595
+issue_correction: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5635978070
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  src/components/ScreensPreview.tsx: ABSENT
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+implementation_authorized: false
+not_authorized:
+  - stage_commit_push_pr_creation_or_mutation
+  - private_source_transmission_or_claude_invocation
+  - package_install_update_publish_or_registry_credential_action
+  - source_test_migration_sql_db_supabase_auth_or_provider_action
+  - product_order_ui_or_action_wiring
+  - d3a_implementation_d3b_d7_android_studio_or_deployment
+decision: RECORD_D2_CLOSURE_AND_CREATE_EXACT_D3A_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_NEW_DIRECTIVE_SHA256_BOOK_IDENTITY_D2_CHAIN_PACKAGE_PIN_AND_INTEGRITY_PROPOSED_43_PATH_PAYLOAD_PROTECTED_METADATA_EMPTY_INDEX_AND_GIT_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_AUTHORIZATION_ONLY."
+```
