@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isDeepStrictEqual } from "node:util";
+
 import {
   createInventoryCommandDispatch,
   evaluateInventoryRuntimeRecoveryEvidence,
@@ -49,22 +51,13 @@ function hasOwn(value: Record<string, unknown>, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(value, key);
 }
 
-function hasOnlyDefinedValues(value: Record<string, unknown>): boolean {
-  try {
-    return Object.values(value).every((entry) => entry !== undefined);
-  } catch {
-    return false;
-  }
-}
-
 function validateRuntimeSnapshot(
   snapshot: InventoryRuntimeSnapshot,
 ): InventoryRuntimeSnapshot | null {
   const exported = exportInventoryRuntimeSnapshot(snapshot);
   if (
     exported.contract !== INVENTORY_RUNTIME_SNAPSHOT_CONTRACT ||
-    !isPlainObject(exported.snapshot) ||
-    !hasOnlyDefinedValues(exported.snapshot)
+    !isPlainObject(exported.snapshot)
   ) {
     return null;
   }
@@ -73,12 +66,12 @@ function validateRuntimeSnapshot(
   if (
     !validated.ok ||
     !isPlainObject(validated.snapshot) ||
-    !hasOnlyDefinedValues(validated.snapshot)
+    !isDeepStrictEqual(exported.snapshot, validated.snapshot)
   ) {
     return null;
   }
 
-  return exported.snapshot;
+  return validated.snapshot;
 }
 
 function mapDispatchOutcome(

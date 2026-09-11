@@ -59,6 +59,19 @@ function occurrences(source: string, pattern: RegExp): number {
   return source.match(pattern)?.length ?? 0;
 }
 
+/** Every top-level snapshot field the package silently defaults when null. */
+const PACKAGE_DEFAULTED_REQUIRED_SNAPSHOT_FIELDS = [
+  "ownerBalances",
+  "quantityStreams",
+  "acceptedNativeCommands",
+  "inventory",
+  "reservationBook",
+  "transfers",
+  "fulfillments",
+  "productCatalog",
+  "csvPreviews",
+] as const;
+
 test("the wrapper is server-only and imports only the package and D1 types", () => {
   assert.match(raw, /^import "server-only";/);
 
@@ -73,6 +86,7 @@ test("the wrapper is server-only and imports only the package and D1 types", () 
     [...sideEffectImports, ...fromImports].sort(),
     [
       "server-only",
+      "node:util",
       "@nisikawa-officeaz/detaileros-inventory-foundation",
       "./foundation-adaptor-types.js",
     ].sort(),
@@ -214,6 +228,85 @@ test("the package wrapper fails closed for malformed snapshot carriers", async (
       reason: "Foundation package rejected recovery evidence.",
     },
   );
+});
+
+test("every package-defaulted required snapshot field fails closed as null: export unknown, recovery invalid_recovery", async () => {
+  const { createFoundationRuntimePackagePort } = await packageModulePromise;
+  const baseline = createInventoryInMemoryStore().snapshot() as unknown as Record<
+    string,
+    unknown
+  >;
+  const native = Object.freeze({ actor: "book-actor", operator: "book-operator" });
+
+  for (const field of PACKAGE_DEFAULTED_REQUIRED_SNAPSHOT_FIELDS) {
+    const malformedSnapshot: Record<string, unknown> = {
+      ...baseline,
+      [field]: null,
+    };
+    const store = {
+      snapshot: () => malformedSnapshot,
+      commit: () => false,
+    } as never;
+    const port = createFoundationRuntimePackagePort({ store });
+
+    assert.deepEqual(
+      await port.exportSnapshot({ bookContext: {} as never, native }),
+      { tag: "unknown" },
+      `export must reject null ${field}`,
+    );
+    assert.deepEqual(
+      await port.evaluateRecoveryEvidence({ bookContext: {} as never, native }),
+      {
+        tag: "invalid_recovery",
+        reason: "Foundation package rejected recovery evidence.",
+      },
+      `recovery must reject null ${field}`,
+    );
+  }
+});
+
+test("port.importSnapshot succeeds for valid V1, V2, and V3 carriers", async () => {
+  const { createFoundationRuntimePackagePort } = await packageModulePromise;
+  const store = createInventoryInMemoryStore();
+  const port = createFoundationRuntimePackagePort({ store });
+  const native = Object.freeze({ actor: "book-actor", operator: "book-operator" });
+  const baseline = store.snapshot() as unknown as Record<string, unknown>;
+
+  const v1Payload = {
+    ownerBalances: baseline.ownerBalances,
+    quantityStreams: baseline.quantityStreams,
+    acceptedNativeCommands: baseline.acceptedNativeCommands,
+    inventory: baseline.inventory,
+    reservationBook: baseline.reservationBook,
+    transfers: baseline.transfers,
+    stocktakeBook: baseline.stocktakeBook,
+    revision: baseline.revision,
+  };
+  const v2Payload = { ...v1Payload, fulfillments: baseline.fulfillments };
+  const v3Payload = {
+    ...v2Payload,
+    productCatalog: baseline.productCatalog,
+    csvPreviews: baseline.csvPreviews,
+  };
+
+  const carriers = [
+    [INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V1, v1Payload],
+    [INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V2, v2Payload],
+    [INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V3, v3Payload],
+  ] as const;
+
+  for (const [snapshotContract, payload] of carriers) {
+    const imported = await port.importSnapshot({
+      bookContext: {} as never,
+      snapshotContract,
+      native: { ...native, payload },
+    });
+    assert.equal(
+      imported.tag,
+      "success",
+      `${snapshotContract} import must succeed`,
+    );
+  }
 });
 
 test("the closed outcome conversion is sanitized and never guesses stale version", () => {
