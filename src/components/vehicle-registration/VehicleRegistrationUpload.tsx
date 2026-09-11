@@ -738,7 +738,7 @@ export default function VehicleRegistrationUpload({
           <div className="flex justify-between gap-2">
             <span>検出車両</span>
             <span className="text-slate-300 text-right">
-              {joinDetected([ocrResult.maker, ocrResult.vehicle_name || ocrResult.model, ocrResult.grade])}
+              {joinDetected([ocrResult.maker, ocrResult.vehicle_name || ocrResult.model])}
             </span>
           </div>
           <div className="flex justify-between gap-2">

@@ -27,6 +27,7 @@ const VEHICLES_CLIENT = read("src/components/vehicles/VehiclesClient.tsx");
 const VEHICLE_SEARCH  = read("src/components/vehicles/VehicleSearch.tsx");
 const VEHICLE_FILTERS = read("src/components/vehicles/VehicleFilters.tsx");
 const VEHICLE_TABLE   = read("src/components/vehicles/VehicleTable.tsx");
+const ESTIMATE_TABLE  = read("src/components/estimates/EstimateTable.tsx");
 
 test("GdaOperationalListSurface is presentational only: no data fetch, no Supabase, no permission import", () => {
   assert.doesNotMatch(SURFACE, /supabase/i);
@@ -75,6 +76,16 @@ test("desktop table containment prevents page overflow (overflow-x-auto retained
   for (const src of [CUSTOMER_TABLE, VEHICLE_TABLE]) {
     assert.match(src, /overflow-x-auto/);
   }
+});
+
+test("estimate table keeps status horizontal and defers wide columns until the viewport can fit them", () => {
+  assert.match(ESTIMATE_TABLE, /whitespace-nowrap">ステータス<\/th>/);
+  assert.match(ESTIMATE_TABLE, /inline-flex whitespace-nowrap text-xs font-medium/);
+  assert.match(ESTIMATE_TABLE, /hidden lg:table-cell">顧客<\/th>/);
+  assert.match(ESTIMATE_TABLE, /hidden xl:table-cell">車両<\/th>/);
+  assert.match(ESTIMATE_TABLE, /hidden 2xl:table-cell">小計<\/th>/);
+  assert.match(ESTIMATE_TABLE, /hidden 2xl:table-cell">消費税<\/th>/);
+  assert.match(ESTIMATE_TABLE, /hidden 2xl:table-cell">作成日<\/th>/);
 });
 
 test("no white/admin-template background classes were reintroduced on the converted surfaces", () => {

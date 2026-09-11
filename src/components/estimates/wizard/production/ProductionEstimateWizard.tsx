@@ -30,7 +30,7 @@ import EstimateWizard from "../EstimateWizard";
 import type { WizardHostRuntimeInputs } from "../contract/wizard-pricing-runtime-inputs";
 import type {
   WizardExistingEntityInputs, WizardPreselectionInputs, WizardCustomerSearchInputs,
-  WizardDuplicateCheckInputs,
+  WizardDuplicateCheckInputs, WizardPostalMasterLookupInputs,
 } from "../contract/wizard-runtime-inputs";
 import type { WizardSaveIntentInvoker } from "../save/wizard-save-intent-types";
 import type { WizardSaveBinding, WizardSaveDestination } from "../save/WizardSavePanel";
@@ -67,7 +67,9 @@ export interface ProductionEstimateWizardProps
     WizardCustomerSearchInputs,
     // B2-D: advisory duplicate warning. Purely additive and, like the search seam, it flows to
     // EstimateWizard through `...hostInputs` untouched.
-    WizardDuplicateCheckInputs {
+    WizardDuplicateCheckInputs,
+    // GDA-2A-OCR-POSTAL-MASTER-R2: postal-master lookup seams. Same pass-through discipline.
+    WizardPostalMasterLookupInputs {
   /** REQUIRED. Injected in B7-3; this module imports no Server Action. */
   readonly saveInvoker: WizardSaveIntentInvoker;
   /** REQUIRED. Server-resolved from the dealer-bound runtime configuration. */

@@ -53,7 +53,7 @@ export function validateCoatingSelection(
   }
 
   if (layer2Id) {
-    if (!secondLayerOptions(layer1Id).some((o) => o.id === layer2Id)) {
+    if (!secondLayerOptions(layer1Id, rank).some((o) => o.id === layer2Id)) {
       return { ok: false, reason: `2層目「${layer2Id}」は「${layer1Id}」の上に施工できません。` };
     }
     if (CERTIFIED_ONLY_UPPER.has(layer2Id) && rank !== "certified") {

@@ -1,11 +1,17 @@
 -- R12E DATA_API_MATRIX candidate
 --
 -- Self-contained pgTAP candidate. Embeds the FULL literal source inventory
--- (80 `.from(...)` literals + 18 `.rpc(...)` literals = 98 rows,
+-- (80 `.from(...)` literals + 20 `.rpc(...)` literals = 100 rows,
 -- exactly as extracted from `src` via:
 --   rg -o --no-filename "\.from\([\"\x27][A-Za-z0-9_]+[\"\x27]\)" src | sort -u   (80 lines)
---   rg -o --no-filename "\.rpc\([\"\x27][A-Za-z0-9_]+[\"\x27]"    src | sort -u   (18 lines)
+--   rg -o --no-filename "\.rpc\([\"\x27][A-Za-z0-9_]+[\"\x27]"    src | sort -u   (20 lines)
 -- ) and classifies every one exactly once. No UNCLASSIFIED rows are permitted.
+--
+-- GDA-2A-OCR-POSTAL-MASTER-R2 addendum (2026-09-01): 2 of the 20 `.rpc(...)` literals
+-- (`jp_postal_master_lookup_forward`, `jp_postal_master_lookup_reverse`) were added by
+-- `src/lib/geo/jp-postal-master-actions.ts`; the extraction command above was not re-run against a
+-- live checkout in this phase (no shell/database access), so this line count is a manual, reasoned
+-- update (18 pre-existing + 2 added), not a re-executed `rg` count.
 --
 -- IMPORTANT LIMITATION (read before trusting this file as "exposure proof"):
 -- Every check below is a catalog/SQL-level check (information_schema, pg_proc,
@@ -138,6 +144,13 @@ INSERT INTO src_inventory (kind, literal, classification, evidence) VALUES
 ('rpc','get_next_document_number','SERVER_ONLY','src/lib/numbering -- server numbering allocator'),
 ('rpc','import_gyeon_provisioning','SERVER_ONLY','src/lib/gyeon -- server provisioning workflow'),
 ('rpc','issue_monthly_statement_rpc','SERVER_ONLY','src/lib/monthly-statements -- server-side statement finalization'),
+-- GDA-2A-OCR-POSTAL-MASTER-R2 — added by src/lib/geo/jp-postal-master-actions.ts. The four
+-- service-role-only import RPCs (jp_postal_import_begin/append/finalize/rollback) are deliberately
+-- absent from this inventory: they are called only from scripts/postal-master/import-japan-post.ts
+-- (outside `src`) via a non-literal function-name variable, so the literal-extraction command this
+-- file documents (`rg ... src`) would not and does not capture them.
+('rpc','jp_postal_master_lookup_forward','CLIENT_EXPOSED','src/lib/geo/jp-postal-master-actions.ts -- authenticated Server Action, postal-code-to-address lookup'),
+('rpc','jp_postal_master_lookup_reverse','CLIENT_EXPOSED','src/lib/geo/jp-postal-master-actions.ts -- authenticated Server Action, address-to-postal-code lookup'),
 ('rpc','pg_version','SERVER_ONLY','src/lib/observability -- server diagnostics/health check'),
 ('rpc','record_payment_with_allocations_rpc','SERVER_ONLY','src/lib/payments -- server allocation engine'),
 ('rpc','save_estimate_from_wizard','SERVER_ONLY','src/components/estimates/wizard/save -- server gateway uses createAdminClient/service_role after server-resolved authority'),
@@ -199,6 +212,7 @@ INSERT INTO expected_rpc (literal) VALUES
 ('attach_monthly_statement_pdf_rpc'),('claim_gyeon_provisioning'),('complete_gyeon_shop_profile'),
 ('consume_line_link_token'),('convert_payment_to_allocated_rpc'),('create_monthly_statement_draft_rpc'),
 ('get_next_document_number'),('import_gyeon_provisioning'),('issue_monthly_statement_rpc'),
+  ('jp_postal_master_lookup_forward'),('jp_postal_master_lookup_reverse'),
   ('pg_version'),('record_payment_with_allocations_rpc'),('save_estimate_from_wizard'),
   ('save_invoice_draft'),('wiz_archive_catalog_item'),('wiz_archive_ppf_coating_adjustment'),
 ('wiz_confirm_catalog_review'),('wiz_upsert_catalog_item'),('wiz_upsert_ppf_coating_adjustment');
@@ -242,14 +256,14 @@ SELECT is(
 
 SELECT is(
   (SELECT count(*) FROM src_inventory WHERE kind = 'rpc'),
-  18::bigint,
-  'exactly 18 .rpc(...) literals embedded after removing the obsolete public.version() no-op caller'
+  20::bigint,
+  'exactly 20 .rpc(...) literals embedded (18 pre-existing + 2 added by src/lib/geo/jp-postal-master-actions.ts)'
 );
 
 SELECT is(
   (SELECT count(*) FROM src_inventory),
-  98::bigint,
-  'exactly 98 total classified rows (80 + 18)'
+  100::bigint,
+  'exactly 100 total classified rows (80 + 20)'
 );
 
 SELECT is(
@@ -260,8 +274,8 @@ SELECT is(
 
 SELECT is(
   (SELECT count(DISTINCT literal) FROM src_inventory WHERE kind = 'rpc'),
-  18::bigint,
-  'all 18 .rpc(...) literals are unique (no duplicate classification rows)'
+  20::bigint,
+  'all 20 .rpc(...) literals are unique (no duplicate classification rows)'
 );
 
 SELECT is(

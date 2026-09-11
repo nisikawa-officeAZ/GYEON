@@ -158,6 +158,23 @@ test("B2-10 the three existing estimate callers are untouched by this binding", 
   }
 });
 
+test("B2-11 estimate masthead keeps the DA/store logo and 見積書 title in one horizontal lockup", () => {
+  const html = read(path.join(DESIGN, "estimate-a4-compact.html"));
+  const mastheadStart = html.indexOf('<header class="doc-masthead estimate-masthead">');
+  const mastheadEnd = html.indexOf("</header>", mastheadStart);
+  assert.ok(mastheadStart >= 0 && mastheadEnd > mastheadStart, "estimate masthead must exist");
+
+  const masthead = html.slice(mastheadStart, mastheadEnd);
+  const headlineStart = masthead.indexOf('<div class="estimate-masthead__headline">');
+  const logo = masthead.indexOf('class="doc-masthead__brand-box"');
+  const title = masthead.indexOf('class="doc-title-block__ja">見積書</span>');
+  assert.ok(headlineStart >= 0 && logo > headlineStart && title > logo, "logo must be followed by the title in the same headline row");
+
+  const titleDetails = html.slice(mastheadEnd, html.indexOf("<!-- ============================================================ PARTIES -->"));
+  assert.doesNotMatch(titleDetails, /doc-title-block__ja/, "the title must not fall back to a second row below the masthead");
+  assert.match(html, /\.estimate-masthead__headline\s*\{[\s\S]*?display: grid;[\s\S]*?grid-template-columns: 54mm minmax\(0, 1fr\);/);
+});
+
 /* ── TEMPLATE-B2-R1: legacy store-logo bridge ─────────────────────────────────────────────── */
 
 import { parseLegacyBrandingLogoUrl, LEGACY_LOGO_MAX_BYTES } from "../../chromium-document/legacy-branding-logo";

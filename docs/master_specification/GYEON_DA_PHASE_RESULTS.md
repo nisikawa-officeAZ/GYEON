@@ -64,6 +64,7 @@ rollback_or_recovery: ""
 decision: ""
 next: ""
 ```
+
 ## GDA-0 — Baseline audit and plan ratification
 
 ```yaml
@@ -4849,6 +4850,790 @@ decision: REGISTER_OWNER_RATIFIED_ROUTE_SEPARATION_AND_KEEP_D5_IMPLEMENTATION_BL
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_ROUTE_SEPARATION_C3_RESERVATION_CORRECTION_D2_D4_DEPENDENCY_WALL_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
 ```
 
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — Local disposable DB acceptance
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DISPOSABLE_DB_ACCEPTANCE
+marker: GDA_POSTAL_R5_DISPOSABLE_DB_PASS
+status: PASS_LOCAL_DISPOSABLE_DB_DEVELOPMENT_STAGING_PRODUCTION_NOT_CONTACTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner separately approved PR #67 harness identity repair, exact-path local commits and normal non-force pushes, the first local disposable attempt, the one-file evidence-detail correction, and one fresh rerun. The Owner then approved recording the accepted result in exactly this verification plan and append-only ledger. This record does not authorize stage, commit, push, PR mutation, Development preflight, hosted migration application, real Japan Post CSV import, provider, Ready, merge, staging, production, or deployment."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  pull_request_state: OPEN/Draft
+  base_branch: main
+  changed_files: 50
+  accepted_head: 1ea1b5f2e3970184610721f261607b5e3f64656c
+  accepted_tree: 573c1db1526331c0cd569622da2a68168b118786
+  upstream_ahead_behind_after_runtime: "0 0"
+  github_checks:
+    vercel: PASS
+    vercel_preview_comments: PASS
+source_contract:
+  migration: supabase/migrations/20260901001246_jp_postal_master.sql
+  migration_sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+  harness_files: 7
+  r4_source_test_paths: 5
+  protected_paths: 4
+  source_contract_mismatches: 0
+attempt_history:
+  first_attempt:
+    suffix: 20260903T085447Z-5af594
+    classification: CHANGES_REQUIRED_HARNESS
+    reason: "DB behavior passed, but three successful non-ASCII safety assertions emitted a contradictory failure-detail literal. The evidence defect was not accepted as formal PASS."
+    aggregate_manifest_sha256: 0e36c5a43a7fd689cf323b767f74eaf14ab3be174669ecdcb5473cee13f0058b
+    runtime_removed: true
+    containers_removed: true
+    suffix_reused: false
+  evidence_detail_repair:
+    commit: 1ea1b5f2e3970184610721f261607b5e3f64656c
+    tree: 573c1db1526331c0cd569622da2a68168b118786
+    changed_path: scripts/e2e/gda-estimate-postal-master-r5/import-resume.mjs
+    normal_non_force_push: true
+accepted_attempt:
+  suffix: 20260903T090318Z-54ce39
+  runtime_root: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5.20260903T090318Z-54ce39
+  retained_evidence: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260903T090318Z-54ce39
+  aggregate_manifest_sha256: 92af4ed809cd42476810a00786b0c6d7d86888186f23fc761fde2c9f5c2cff31
+  was_burned: false
+  fresh:
+    migration_list_state: BOTH
+    migration_ledger_count: 1
+    postal_pgtap: PASS_75_OF_75
+    runtime_contract_pgtap: PASS_20_OF_20
+    real_auth_postgrest: PASS_9_OF_9
+    db_lint_error_count: 0
+    secret_scan: CLEAN
+    stop_exit: 0
+  import:
+    migration_list_state: BOTH
+    migration_ledger_count: 1
+    phase_1: PASS_3_OF_3
+    phase_2: PASS_25_OF_25
+    distinct_processes: true
+    corrected_non_ascii_evidence: PASS_3_OF_3
+    production_importer_validate_only_zero_client_zero_rpc: PASS
+    production_importer_loopback_rejection_before_client: PASS
+    secret_scan: CLEAN
+    stop_exit: 0
+  cleanup:
+    runtime_removal_exit: 0
+    runtime_removed: true
+    containers_removed: true
+    retained_artifact_hashes: MATCH
+non_blocking_warnings:
+  db_lint_existing_warning_count: 4
+  supabase_inbucket_config_deprecation: 1
+boundaries:
+  hosted_supabase_contacted: false
+  development_contacted: false
+  staging_contacted: false
+  production_contacted: false
+  provider_contacted: false
+  real_japan_post_csv_imported: false
+  git_changed_by_runtime: false
+  pr_ready: false
+  merged: false
+  deployed_by_this_phase: false
+decision: GDA_POSTAL_R5_DISPOSABLE_DB_PASS
+next: "Request a separate Owner gate for Development read-only migration-history preflight. Development migration apply and real Japan Post CSV import remain two later, separate Owner gates."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — Development read-only schema/ledger preflight
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_DEVELOPMENT_READ_ONLY_SCHEMA_LEDGER_PREFLIGHT
+marker: GDA_POSTAL_R5_DEVELOPMENT_READ_ONLY_PREFLIGHT_BLOCKED_SCHEMA_DRIFT
+status: CHANGES_REQUIRED_APPLY_BLOCKED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner separately approved a Development migration-history read-only preflight, then approved a read-only live schema versus ledger reconciliation, and finally approved recording the result in exactly this verification plan and append-only ledger. No migration apply, history repair, data write/import, project creation, Git stage/commit/push, PR mutation, Staging/Production database access, provider mutation, cutover, merge, or deployment was authorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  head: 4ce73f99bca0c43617007d90125da209fb2ea699
+  pull_request_state: OPEN/Draft
+  base_branch: main
+  github_checks:
+    vercel: PASS
+    vercel_preview_comments: PASS
+development_identity:
+  project_name: DealerOS-Dev
+  project_ref: fbieiotihlmpfzybowbt
+  region: ap-northeast-2
+  project_status: ACTIVE_HEALTHY
+  postgres_version: "17.6"
+migration_ledger:
+  remote_count: 2
+  remote_versions:
+    - "000"
+    - "001"
+  local_sql_file_count: 113
+  target_version: "20260901001246"
+  target_recorded_remote: false
+schema_reconciliation:
+  representative_later_tables_present:
+    migration_038_public_work_orders: true
+    migration_047_public_gyeon_products: true
+    migration_068_public_vehicle_registration_ocr_sessions: true
+    migration_095_public_gyeon_ai_usage_log: true
+  migration_096_partial:
+    public_gyeon_ai_usage_log_response_ms: true
+    public_pg_version_function: false
+  representative_markers_097_through_102_present: true
+  migration_103:
+    public_wizard_catalog_items: false
+    public_wiz_is_any_active_member_function: false
+  classification: MANUAL_APPLY_PARTIAL_APPLY_AND_UNRECORDED_LEDGER_MIXED_SCHEMA_DRIFT
+postal_target:
+  migration: supabase/migrations/20260901001246_jp_postal_master.sql
+  migration_sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+  private_schema_present: false
+  private_jp_postal_import_batches_present: false
+  private_jp_postal_master_present: false
+  private_jp_postal_active_batch_present: false
+  lookup_rpc_count_present: 0
+  import_rpc_count_present: 0
+  required_public_wiz_is_any_active_member_present: false
+  direct_target_apply_safe: false
+governance:
+  binding_environment_ruling: CLEAN_REPLACEMENT_DEVELOPMENT
+  authority: docs/master_specification/ENVIRONMENT_LEDGER.md_GATE_B_R3A
+  current_development_read_only: true
+  in_place_history_relabel: REJECTED
+  bulk_db_push: PROHIBITED
+boundaries:
+  queries: SELECT_AND_MANAGEMENT_METADATA_ONLY
+  development_database_modified: false
+  development_migration_applied: false
+  development_history_repaired: false
+  real_japan_post_csv_imported: false
+  staging_database_contacted: false
+  production_database_contacted: false
+  staging_and_production_management_identity_metadata_only: true
+  git_changed_by_preflight: false
+  provider_modified: false
+  project_created: false
+  cutover_performed: false
+  merged: false
+  deployed: false
+decision: GDA_POSTAL_R5_DEVELOPMENT_READ_ONLY_PREFLIGHT_BLOCKED_SCHEMA_DRIFT
+next: "Keep current Development read-only. Do not apply the postal target or run bulk db push. Continue only through the already accepted clean-replacement Development gate sequence; project creation, retained-data copy, full replay, acceptance, cutover, real Japan Post CSV import, and retirement each remain separately authorized operations."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — Clean replacement Development pre-execution plan candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION
+marker: GDA_POSTAL_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN_V1
+status: PLAN_CANDIDATE_READY_EXECUTION_BLOCKED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner approved proceeding to the clean replacement Development pre-execution planning phase only. No project creation, cost confirmation, migration replay/application, database write, data export/import, provider/configuration mutation, stage, commit, push, PR mutation, Ready, merge, or deployment is authorized by this plan candidate."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  pull_request_state_at_preflight: OPEN/Draft
+  planning_head: 297ad4b23731a273c134c1ef0f00aff832aedc57
+  planning_tree: 35d572270f84134f8254e1377ccbd198fc67841d
+current_manifest_measurement:
+  top_level_formal_sql_files: 113
+  r5_staged: 112
+  r5_excluded_protected: 1
+  r5_runtime_manifest_sha256: 722b59ffe2b2252e826783b125df2ac1b4d2468d46743c01da0e726fe2543326
+  current_line_only_exclusion_manifest_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  current_three_exclusion_manifest_sha256: 6421db3345c185a72fb14cc255a32d47f0e62e5b92c888a352d0a4a1da18249b
+blocking_reconciliations:
+  migration_manifest: "R5 excluded LINE only; accepted historical B-R3 excluded the provisioning pair plus LINE. One current literal manifest must be owner-ratified and freshly disposable-proved."
+  region: OWNER_RATIFIED_AP_NORTHEAST_1
+  region_decision_date: 2026-09-03
+  organization_project_name_shutdown_date: LATER_PROJECT_CREATION_GATE
+plan_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/INDEX.md
+boundaries:
+  project_created: false
+  cost_confirmation_requested: false
+  development_database_modified: false
+  migration_applied: false
+  data_exported_or_imported: false
+  real_japan_post_csv_imported: false
+  auth_storage_provider_vercel_modified: false
+  git_staged_committed_or_pushed: false
+  pr_ready_merged_or_deployed: false
+decision: PLAN_CANDIDATE_READY_EXECUTION_BLOCKED
+next: "Independently verify this exact four-document candidate with the replacement region fixed at ap-northeast-1. After separate documentation delivery gates, author and deliver a Claude-targeted read-only CR1 current-manifest reconciliation directive. Project creation remains blocked."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR0 delivery and CR1 directive candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION_GOVERNANCE
+marker: GDA_POSTAL_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION_DIRECTIVE_V1
+status: CR0_DELIVERED_CR1_GOVERNANCE_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner approved CR1 read-only manifest directive authoring while the PR #67 check completed. This authorizes exactly four documentation paths only. It does not authorize private-source transmission, Claude execution, stage, commit, push, PR mutation, project creation, cost confirmation, migration replay/application, database, provider, Ready, merge, or deployment."
+cr0_delivery:
+  commit: 4e3aa471ed776ccd360cd6405ccdc850fced5aaa
+  tree: e7cadd5903ab29143e55a03ccb4a71cffe8bdfe1
+  normal_non_force_push: true
+  upstream_ahead_behind: "0 0"
+  pr_67:
+    state: OPEN
+    draft: true
+    base: main
+    head_matches: true
+    mergeable: MERGEABLE
+    vercel: PASS
+    vercel_preview_comments: PASS
+cr1_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_private_read_allowlist_count: 12
+future_result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_CURRENT_MIGRATION_MANIFEST_RECONCILIATION_RESULT_V1
+required_manifest_inputs:
+  top_level_formal_sql_paths: 113
+  protected_line_content_access: PROHIBITED
+  disputed_provisioning_paths: 2
+  accepted_r4_product_storage_paths: 2
+owner_ratified_region: ap-northeast-1
+boundaries:
+  private_files_transmitted: false
+  claude_invoked: false
+  test_or_runtime_executed: false
+  project_created: false
+  cost_confirmed: false
+  database_or_provider_contacted: false
+  git_staged_committed_or_pushed_for_cr1: false
+  pr_ready_merged_or_deployed: false
+decision: CR1_GOVERNANCE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "Verify the exact four-document candidate, directive consistency, twelve-file read allowlist, protected metadata, and diff check. Stage/local commit and normal push require separate Owner gates. Private transmission and one-time Claude diagnosis require another explicit authorization after delivery."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR1 result and CR1-R1 format-correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION_GOVERNANCE
+marker: GDA_POSTAL_R5_CR1_R1_RESULT_FORMAT_CORRECTION_DIRECTIVE_V1
+status: CHANGES_REQUIRED_GOVERNANCE_CR1_R1_DIRECTIVE_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner explicitly approved recording the completed CR1 result as CHANGES_REQUIRED_GOVERNANCE and authoring a format-only CR1-R1 directive. This authorization is limited to exactly three documentation paths. It does not authorize another Claude invocation, retransmission of private source or migration metadata, tests, runtime, Git stage/commit/push, PR mutation, Supabase/DB/project/provider action, Ready, merge, migration apply, cutover, retirement, or deployment."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+cr1_execution_identity:
+  head: 216d8cf9aa0dd9135f224aabe90dd5e800fc800e
+  tree: 0b9f494a1714dd4d6f002ae3c284ee623d6592a9
+  index_and_worktree_before_execution: CLEAN
+  upstream_ahead_behind_before_execution: "0 0"
+  pr_state: OPEN/Draft
+  base: main
+  remote_head_matched: true
+  vercel: PASS
+  vercel_preview_comments: PASS
+cr1_execution:
+  successful_claude_invocations: 1
+  tool_access: DISABLED
+  permission_mode: dontAsk
+  session_persistence: DISABLED
+  private_allowlisted_files_transmitted: 12
+  migration_metadata_paths_transmitted: 113
+  additional_files_transmitted: 0
+  source_or_git_modified_by_execution: false
+cr1_substantive_recommendation_candidate:
+  formal_top_level_migrations: 113
+  executable_manifest_count: 112
+  exact_exclusion:
+    - supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_manifest_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  provisioning_pair_disposition: INCLUDE_SCHEMA_KEEP_FEATURE_DISABLED
+  postal_target_status: PRESENT_AND_HASH_MATCHED_IN_ATTESTATION
+  product_policy_and_storage_prerequisite: CLOSED_BY_ACCEPTED_FORWARD_REPAIR
+  source_blocker_before_cr3: NONE_REPORTED
+  cr2: CR2_NOT_REQUIRED_CANDIDATE
+  next_candidate: CR3_FRESH_DISPOSABLE_GOVERNANCE
+cr1_format_audit:
+  result_marker_present: true
+  mandatory_verdict_line_present: false
+  exact_top_level_structure_present: false
+  substantive_contradiction_found: false
+  codex_classification: CHANGES_REQUIRED_GOVERNANCE
+  owner_manifest_ratification_complete: false
+cr1_r1_input_boundary:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION.md
+  - exact_prior_claude_report_text
+  retransmit_twelve_private_files: false
+  retransmit_113_path_metadata: false
+  new_diagnosis: false
+  changed_findings: false
+cr1_r1_governance_write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  claude_reinvoked_by_this_phase: false
+  prior_report_transmitted_by_this_phase: false
+  source_test_or_runtime_changed: false
+  test_or_runtime_executed: false
+  project_created: false
+  database_or_provider_contacted: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CHANGES_REQUIRED_GOVERNANCE_CR1_R1_FORMAT_ONLY_DIRECTIVE_READY_FOR_CODEX_REVIEW
+next: "Independently verify the exact three-document diff and literal frozen findings. Stage/local commit and normal push require separate Owner approval. Only after delivery may the Owner separately authorize one format-only Claude invocation carrying this directive and the exact prior report; no private source or 113-path metadata may be retransmitted."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR1-R1 execution and Codex-normalized acceptance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_CODEX_NORMALIZED_ACCEPTANCE_CANDIDATE
+marker: GDA_POSTAL_R5_CR1_R1_CODEX_NORMALIZED_ACCEPTANCE_CANDIDATE_V1
+status: READY_FOR_OWNER_MANIFEST_RATIFICATION_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner separately authorized one CR1-R1 format-only Claude invocation using only the committed directive and exact prior Claude report. After Codex found one altered protected LINE blob, the Owner authorized no third Claude invocation and authorized Codex to replace that one erroneous blob with the Git-attested value and record a formal acceptance candidate. This authorizes exactly three documentation paths only; stage, commit, push, PR mutation, CR3, database, provider, migration apply, Ready, merge, and deployment remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  execution_head: 556ab5a851a23237c02d1b537db8410a082eb77b
+  execution_tree: f1c5e1a9ef2bf53d09947253af548292f32ac424
+  upstream_ahead_behind: "0 0"
+  pr_state: OPEN/Draft
+  base: main
+  remote_head_matched: true
+  vercel: PASS
+  vercel_preview_comments: PASS
+cr1_r1_execution:
+  successful_invocations: 1
+  tools: DISABLED
+  mode: FORMAT_ONLY_READ_ONLY
+  transmitted_inputs:
+    - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_RESULT_FORMAT_CORRECTION.md
+    - exact_prior_claude_report_text
+  retransmitted_private_source_files: 0
+  retransmitted_migration_metadata_table: false
+  output_marker_present: true
+  output_verdict: READY_FOR_CR1_MANIFEST_RATIFICATION
+  required_field_count: 11
+  required_field_order: PASS
+codex_correction:
+  classification_before_correction: CHANGES_REQUIRED_GOVERNANCE
+  field: scope_and_protected_path_evidence.LINE_git_blob
+  claude_returned: accd22345054f3a17cc85e313b62d5bb6a4fda3f
+  git_attested: accd22345054cc44f89156fd78eaba6dfe4242a4
+  same_report_correct_value_present_under_113_path_attestation: true
+  owner_authorized_single_string_replacement: true
+  other_values_changed: false
+normalized_artifact:
+  path: docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_CODEX_NORMALIZED_RESULT.md
+  provenance_disclosed: true
+  raw_error_disclosed: true
+  corrected_value_disclosed: true
+manifest_acceptance_candidate:
+  formal_top_level_migration_count: 113
+  executable_manifest_count: 112
+  exact_exclusion:
+    - supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_manifest_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  provisioning_pair_disposition: INCLUDE_SCHEMA_KEEP_FEATURE_DISABLED
+  postal_target_sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+  product_policy_and_storage_prerequisite: CLOSED
+  remaining_source_blocker_before_cr3: NONE
+  cr2: CR2_NOT_REQUIRED
+  minimum_next_gate: CR3_FRESH_DISPOSABLE_GOVERNANCE
+  owner_manifest_ratified: false
+write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_R1_CODEX_NORMALIZED_RESULT.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  third_claude_invocation: false
+  source_test_or_runtime_changed: false
+  protected_content_opened: false
+  test_or_runtime_executed: false
+  project_created: false
+  database_or_provider_contacted: false
+  migration_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: READY_FOR_OWNER_CR1_MANIFEST_RATIFICATION
+next: "Independently verify the exact three-document candidate, the one-string correction, normalized schema, hashes, protected-path metadata, and diff check. Stage/local commit and normal push require separate Owner approval. CR3 authoring or execution remains a later separate Owner gate after explicit manifest ratification."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR1 Owner ratification and CR3 fresh-disposable preflight governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR1_OWNER_RATIFICATION_AND_CR3_FRESH_DISPOSABLE_PREFLIGHT_GOVERNANCE
+marker: GDA_POSTAL_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_DIRECTIVE_V1
+status: CR1_OWNER_RATIFIED_CR2_NOT_REQUIRED_CR3_DIRECTIVE_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner formally ratified the normalized CR1 manifest and authorized CR3 directive authoring only. This authorization is limited to exactly four documentation paths. It does not authorize private-file transmission, Claude execution, tests, runtime, Supabase/DB/project/provider action, migration replay/application, data transfer, real postal import, Git stage/commit/push, PR mutation, Ready, merge, cutover, retirement, or deployment."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  ratification_source_head: 9f319b222a4f8f671cd7ffaaad8ec95486b9d72e
+  ratification_source_tree: 99bf62b6ca68432820595cc3807777411df4e4fd
+  upstream_ahead_behind_before_authoring: "0 0"
+  pr_state_before_authoring: OPEN/Draft
+  base: main
+  remote_head_matched_before_authoring: true
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+owner_ratified_cr1_manifest:
+  formal_top_level_migration_count: 113
+  executable_manifest_count: 112
+  exact_exclusion:
+    - supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_manifest_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  provisioning_pair_disposition: INCLUDE_SCHEMA_KEEP_FEATURE_DISABLED
+  gyeon_partner_onboarding: DISABLED
+  product_policy_and_canonical_five_bucket_forward_repair: CLOSED
+  cr2: CR2_NOT_REQUIRED
+  replacement_region: ap-northeast-1
+cr3_governance:
+  directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md
+  future_result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_RESULT_V1
+  future_mode: ONE_TOOL_DISABLED_READ_ONLY_STATIC_PREFLIGHT_AFTER_SEPARATE_OWNER_AUTHORIZATION
+  future_private_read_allowlist_count: 13
+  required_harness_decision:
+    - REUSE_EXISTING_R5_HARNESS_UNCHANGED
+    - REPAIR_REQUIRED
+  runtime_authorized_by_this_directive: false
+write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  private_files_transmitted: false
+  claude_invoked: false
+  source_test_harness_or_migration_changed: false
+  test_or_runtime_executed: false
+  supabase_db_project_or_provider_contacted: false
+  project_created: false
+  migration_replayed_or_applied: false
+  data_exported_or_imported: false
+  real_japan_post_csv_imported: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CR1_OWNER_RATIFIED_CR2_NOT_REQUIRED_CR3_DIRECTIVE_CANDIDATE_READY_FOR_CODEX_REVIEW
+next: "Independently verify the exact four-document candidate, literal manifest decision, thirteen-file future read allowlist, fixed source/harness metadata, required result schema, protected-path boundary, and diff check. Stage/local commit and normal push require separate Owner approvals. Only after delivery may the Owner separately authorize one CR3 static preflight; a fresh disposable runtime remains another later gate."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR3-R1 invocation-boundary governance correction
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_R1_INVOCATION_BOUNDARY_GOVERNANCE_CORRECTION
+marker: GDA_POSTAL_R5_CR3_R1_FRESH_DISPOSABLE_PREFLIGHT_DIRECTIVE_V1
+status: CHANGES_REQUIRED_GOVERNANCE_CLOSED_CR3_R1_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After the read-only send-time preflight found that the original thirteen-file wording omitted the directive itself, the Owner authorized a correction limited to the same exact four documentation paths. Stage, commit, push, private-file transmission, Claude invocation, tests, runtime, Supabase/DB/project/provider action, migration replay/application, data transfer, real postal import, PR mutation, Ready, merge, cutover, retirement, and deployment remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  correction_source_head: 2ac6f9fa5f736eefbffdf28877fe793b8526eb65
+  correction_source_tree: c4e7a9f847a33bc97adba1ae4cbbec0720d4149f
+  upstream_ahead_behind_before_authoring: "0 0"
+  pr_state_before_authoring: OPEN/Draft
+  base: main
+  remote_head_matched_before_authoring: true
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PENDING
+  vercel_preview_comments_before_authoring: PASS
+defect:
+  classification: CHANGES_REQUIRED_GOVERNANCE
+  original_wording: THIRTEEN_FILES_AND_NO_OTHERS
+  omitted_input: COMMITTED_CR3_DIRECTIVE_ITSELF
+  source_harness_or_manifest_defect: false
+corrected_invocation_boundary:
+  directive_control_input_count: 1
+  private_supporting_file_allowlist_count: 13
+  exact_total_repository_file_payload_count: 14
+  additional_repository_files_allowed: 0
+  required_result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_RESULT_V1
+  substantive_manifest_or_runtime_decision_changed: false
+write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  private_files_transmitted: false
+  claude_invoked: false
+  source_test_harness_or_migration_changed: false
+  test_or_runtime_executed: false
+  supabase_db_project_or_provider_contacted: false
+  project_created: false
+  migration_replayed_or_applied: false
+  data_exported_or_imported: false
+  real_japan_post_csv_imported: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CR3_R1_INVOCATION_BOUNDARY_CORRECTED_READY_FOR_CODEX_REVIEW
+next: "Independently verify the exact four-document diff, the 1-plus-13-equals-14 payload contract, marker consistency, unchanged substantive decisions, protected-path boundary, and diff check. Stage/local commit and normal push require separate Owner approvals. Claude transmission and one-time static preflight require another explicit Owner authorization after delivery."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR3 fresh disposable acceptance recording
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_ACCEPTANCE_RECORDING
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_ACCEPTANCE_V1
+status: PASS_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner separately authorized the corrected one-time tool-disabled static preflight, then separately authorized one fresh local disposable CR3 execution, and finally authorized recording the accepted result in exactly three documentation paths. This authorization does not include source/migration/test/harness/dependency/protected-path changes, hosted Supabase/provider action, real postal data, Git stage/commit/push, PR mutation, Ready, merge, or deployment."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  execution_head: 5dba6d17529b58d1c3d54eef8fb10e57fed3b87b
+  execution_tree: ba16a604222430d1b76ffa7688d6a4117a8b0219
+  base: main
+  pr_state_at_preflight: OPEN/Draft
+  remote_head_matched_at_preflight: true
+  mergeable_at_preflight: MERGEABLE
+  vercel_at_preflight: PASS
+  vercel_preview_comments_at_preflight: PASS
+  worktree_before_and_after_execution: CLEAN
+  upstream_ahead_behind_before_and_after_execution: "0 0"
+static_preflight:
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_PREFLIGHT_RESULT_V1
+  claude_verdict: READY_FOR_CR3_FRESH_DISPOSABLE_EXECUTION_AUTHORIZATION
+  codex_independent_acceptance: PASS
+  harness_decision: REUSE_EXISTING_R5_HARNESS_UNCHANGED
+  blocked_inputs: NONE
+  repository_payload_count: 14
+  additional_repository_files: 0
+execution:
+  suffix: 20260903T114441Z-6698d3
+  classification: GDA_POSTAL_R5_DISPOSABLE_DB_PASS
+  lanes:
+    fresh:
+      setup_exit: 0
+      capture_exit: 0
+      pgtap_postal: 75/75_PASS
+      pgtap_runtime_contract: 20/20_PASS
+      real_auth_postgrest: 9/9_PASS
+      db_lint_exit: 0
+      secret_scan: SECRET_SCAN_CLEAN
+      stop_exit: 0
+    import:
+      setup_exit: 0
+      capture_exit: 0
+      phase_1: 3/3_PASS
+      phase_2: 25/25_PASS
+      distinct_process_ids: true
+      secret_scan: SECRET_SCAN_CLEAN
+      stop_exit: 0
+  cleanup_exit: 0
+  runtime_removal_exit: 0
+  was_burned: false
+  residual_suffix_containers_volumes_networks: 0
+manifest:
+  formal_top_level_migration_count: 113
+  staged_count_each_lane: 112
+  exact_exclusion:
+    - supabase/migrations/20260801110110_line_link_tokens.sql
+  other_exclusions: 0
+  retained_migration_manifest_sha256: 722b59ffe2b2252e826783b125df2ac1b4d2468d46743c01da0e726fe2543326
+  postal_version_ledger_count_each_lane: 1
+  target_migration_hash_matches: true
+evidence:
+  retained_directory: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260903T114441Z-6698d3
+  aggregate_manifest: /Users/atsushinishikawa/Documents/Codex/runtime/gda-postal-r5-evidence/gda-postal-r5.20260903T114441Z-6698d3/manifest.json
+  aggregate_manifest_sha256: f9a3b2f52e9d948293cf016eb0127c94068414ad708d7b076fec44d79a902e60
+  retained_artifact_hashes_verified: 38/38
+  source_contract_revalidation_mismatches_each_lane: 0
+  protected_content_opened_read_diffed_copied_or_hashed: false
+non_blocking_observations:
+  - "Supabase CLI warns that [inbucket] is deprecated in favor of [local_smtp]."
+  - "db lint exited 0 and reported four pre-existing warnings outside the postal contract; no error was reported."
+write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR3_FRESH_DISPOSABLE_ACCEPTANCE.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  local_disposable_supabase_created_and_removed: true
+  local_ratified_migrations_replayed: true
+  synthetic_test_data_only: true
+  hosted_supabase_project_created: false
+  development_staging_or_production_contacted: false
+  external_supabase_or_provider_contacted: false
+  hosted_migration_applied: false
+  real_japan_post_csv_imported: false
+  real_customer_or_address_data_used: false
+  source_migration_test_harness_dependency_or_protected_path_changed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CR3_FRESH_DISPOSABLE_ACCEPTED_READY_FOR_DOCUMENT_REVIEW
+next: "Independently review the exact three-document candidate and retained evidence linkage, then require separate Owner authorization for literal-path stage/local commit and another separate authorization for normal push. CR4 hosted project cost and creation preflight remains a later separate Owner gate and must stop before project creation."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR4 hosted project cost and creation preflight recording
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR4_HOSTED_PROJECT_COST_AND_CREATION_PREFLIGHT_RECORDING
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR4_HOSTED_PROJECT_COST_AND_CREATION_PREFLIGHT_V1
+status: PASS_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "The Owner separately authorized CR4 read-only organization and cost preflight, selected officeAZ, acknowledged the provider-reported monthly USD 10 project cost, authorized issuance of the cost-confirmation identifier, and then authorized a result candidate limited to exactly three documentation paths. No project creation, DB access, migration replay/application, data transfer, provider configuration mutation, real postal import, secret access, Git stage/commit/push, PR mutation, Ready, merge, cutover, retirement, or deployment was authorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  recording_base_head: ee17c602260857f15d2a54532a17cd3ffe6429c2
+  recording_base_tree: ec84dca3bc422216b7050e6ce5e0e5d16d05a108
+cost:
+  interface: Supabase project get_cost
+  organization_name: officeAZ
+  organization_id: ivlpkysdjbrkcozrvzwg
+  organization_plan: pro
+  type: project
+  recurrence: monthly
+  amount_usd_before_tax: 10
+  ceiling_usd_before_tax: 12
+  ceiling_result: PASS
+  compute: Micro
+  paid_add_ons: NONE
+  maximum_lifetime_days: 31
+  confirmation_id: BGoZHqqJd2JYMt+cWSDFH7qDeNkZZAwbTytJrHy7r+E=
+ratified_identity:
+  project_name: DealerOS-Dev-Clean-R5
+  region: ap-northeast-1
+  planned_creation_time: 2026-09-03T21:30:00+09:00
+  automatic_review_time: 2026-09-27T21:30:00+09:00
+  mandatory_pause_or_retirement_decision_deadline: 2026-10-04T21:30:00+09:00
+provider_inventory:
+  accessible_organization_count: 1
+  project_count_before_confirmation: 3
+  project_count_after_confirmation: 3
+  replacement_project_exists_after_confirmation: false
+  existing_projects:
+    - name: DealerOS-Dev
+      ref: fbieiotihlmpfzybowbt
+      region: ap-northeast-2
+      status: ACTIVE_HEALTHY
+    - name: DealerOS-Prod
+      ref: dmvyaykhibmphrmekjbb
+      region: ap-northeast-1
+      status: ACTIVE_HEALTHY
+    - name: DealerOS-Dev-Next
+      ref: vhiuiwolnlvlwvoaingd
+      region: ap-northeast-1
+      status: ACTIVE_HEALTHY
+write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR4_HOSTED_PROJECT_COST_AND_CREATION_PREFLIGHT.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  hosted_project_created: false
+  database_connected_or_queried: false
+  migration_replayed_or_applied: false
+  data_exported_imported_copied_or_restored: false
+  real_japan_post_csv_imported: false
+  secret_or_billing_instrument_read: false
+  existing_project_mutated: false
+  source_migration_test_harness_dependency_or_protected_path_changed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CR4_COST_AND_IDENTITY_CONFIRMED_STOP_BEFORE_PROJECT_CREATION
+next: "Independently verify the exact three-document candidate, provider cost, Owner-ratified identity, 31-day maximum lifetime, unchanged three-project inventory, and stop-before-creation boundary. Stage/local commit and normal push require separate Owner approvals. CR5 empty project creation remains unauthorized until a fresh explicit external-mutation gate."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR5 empty replacement-project creation recording
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR5_EMPTY_REPLACEMENT_PROJECT_CREATION_RECORDING
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR5_EMPTY_REPLACEMENT_PROJECT_CREATION_V1
+status: PASS_CANDIDATE_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After CR4 was recorded and normally pushed, the Owner explicitly authorized creation of exactly one empty Supabase project in officeAZ using the fixed DealerOS-Dev-Clean-R5 name, ap-northeast-1 region, default Micro compute, no paid add-ons, and the accepted USD 10 monthly project cost confirmation. The Owner later authorized a result candidate limited to exactly three documentation paths and conservative lifecycle correction using the earlier provider timestamp. Database access, SQL, migration replay/application, restore, data transfer, Storage/Auth payload access, secrets, configuration, real postal import, Vercel binding, Git stage/commit/push, PR mutation, Ready, merge, cutover, retirement, and deployment remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  execution_head: ec9e30d2a7865efad0739165724530e9e829befa
+  execution_tree: f75ec6ce2eca8d22f5152523409ad9f046ebe087
+project:
+  organization_name: officeAZ
+  organization_id: ivlpkysdjbrkcozrvzwg
+  name: DealerOS-Dev-Clean-R5
+  ref: nqvnjqcxgngqsqkbpdfi
+  region: ap-northeast-1
+  status: ACTIVE_HEALTHY
+  postgres_engine: "17"
+  postgres_version: 17.6.1.166
+  release_channel: ga
+  compute: "Micro — official paid-project default; creation response omits explicit size"
+  paid_add_on_operation_requested_or_executed: false
+  provider_created_at_utc: 2026-09-03T11:52:15.655049Z
+  provider_created_at_jst: 2026-09-03T20:52:15.655049+09:00
+verification:
+  local_invocation_observed_from: 2026-09-03T21:03:03+09:00
+  local_verification_observed_through: 2026-09-03T21:03:59+09:00
+  provider_timestamp_precedes_local_window_by_approximately_minutes: 11
+  cause_inferred: false
+  project_count_before_creation: 3
+  project_count_after_creation: 4
+  get_project_and_list_projects_identity_match: true
+lifecycle:
+  safety_clock: EARLIER_PROVIDER_CREATED_AT
+  automatic_review: 2026-09-27T20:52:15+09:00
+  mandatory_pause_or_retirement_decision_deadline: 2026-10-04T20:52:15+09:00
+  supersedes_cr4_planning_time: true
+  pause_or_deletion_authorized: false
+write_allowlist:
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR5_EMPTY_REPLACEMENT_PROJECT_CREATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  exactly_one_hosted_project_created: true
+  existing_hosted_project_mutated: false
+  new_project_provider_metadata_read: true
+  new_project_database_connected_or_queried: false
+  sql_executed: false
+  migration_replayed_or_applied: false
+  old_development_restored_or_cloned: false
+  data_exported_imported_copied_or_restored: false
+  auth_or_storage_payload_read: false
+  secret_or_api_key_read: false
+  provider_configuration_or_add_on_changed_after_creation: false
+  application_or_vercel_binding_changed: false
+  real_japan_post_csv_imported: false
+  source_migration_test_harness_dependency_or_protected_path_changed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  pr_ready_merged_or_deployed: false
+decision: CR5_EMPTY_REPLACEMENT_PROJECT_CREATED_STOP_BEFORE_HOSTED_REPLAY
+next: "Independently verify the exact three-document candidate, created project identity, provider/local time evidence, conservative 31-day deadline, default-Micro evidence boundary, and all negative execution flags. Stage/local commit and normal push require separate Owner approvals. CR6 exact hosted migration replay remains unauthorized pending its own directive and execution gate."
+```
+
 ## INV001-P19-BOOK-D2-Q2 — P20C private-package handoff alignment candidate
 
 ```yaml
@@ -4940,4 +5725,2397 @@ exact_governance_allowlist:
 implementation_authorized: false
 decision: ALIGN_D2_TO_ACCEPTED_P20C_GATE1_AND_OWNER_EVIDENCE_POLICY_KEEP_D2_BLOCKED_UNTIL_GATE2_PUBLICATION_ACCEPTANCE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_BOOK_AND_FOUNDATION_IDENTITIES_GATE1_RECEIPT_GATE2_HOLD_MANDATORY_EVIDENCE_OPTIONAL_SBOM_NON_CIRCULAR_GATE_ORDER_PUBLISHED_ARTIFACT_ONLY_CLAUDE_BOUNDARY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6 blocked result and CR6-R1 hosted mechanism governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1_HOSTED_REPLAY_MECHANISM_CORRECTION_GOVERNANCE
+marker: GDA_POSTAL_R5_CR6_R1_HOSTED_REPLAY_MECHANISM_CORRECTION_DIRECTIVE_V1
+status: CR6_BLOCKED_REPLAY_MECHANISM_CR6_R1_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After the Owner-authorized CR6 tool-disabled diagnosis returned BLOCKED_REPLAY_MECHANISM and MacBook Codex independently accepted the stop with one official-source rationale correction, the Owner authorized CR6-R1 directive authoring only. This authorization is limited to exactly four documentation paths. It does not authorize private-file transmission, Claude invocation, harness/source/test implementation, Git stage/commit/push, Supabase/DB/project/provider access, SQL, migration replay, data transfer, real postal import, Vercel change, Ready, merge, cutover, retirement, or deployment."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  pre_authoring_head: 0dd1f7691bbeefdc09035c87567abca27b2e3ebc
+  pre_authoring_tree: 1255fc641fe180a7514b40a6bb65e3d6c3261e6a
+  upstream_ahead_behind_before_authoring: "0 0"
+  pr_state_before_authoring: OPEN/Draft
+  base: main
+  remote_head_matched_before_authoring: true
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+prior_cr6:
+  phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_EXACT_HOSTED_MIGRATION_REPLAY_PREFLIGHT
+  invocation_head: 73a63e660808a337d61a2488b818ac5d2e7c69d7
+  invocation_tree: 20c2c2e0d6301d80773f15f202081e004ac1a618
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_EXACT_HOSTED_MIGRATION_REPLAY_PREFLIGHT_RESULT_V1
+  verdict: BLOCKED_REPLAY_MECHANISM
+  result_sha256: 29216399e7fb1351385921a0558521d9d90effdd40a99764987a8d4a76d560ed
+  hosted_project_contacted: false
+  database_or_provider_modified: false
+codex_independent_audit:
+  stop_verdict: ACCEPTED
+  corrected_fact: "Supabase CLI v2.116.0 source proves sequential stop after a migration application error. The remaining blocker is not absence of stop proof. It is exact hosted isolated-workdir staging plus partial-application quarantine and credential-safe evidence."
+  cli_version: 2.116.0
+  cli_tag_object: 88a1f645050693664730a99e21c09d119e0df436
+  cli_commit: 997a1e69a4a83466964ed874d3a604c88a7b3866
+  cli_tree: 656e3836031e686f10cc6f6ca41e90724c8029d5
+  named_migration_exclusion_flag: ABSENT
+  pipeline_incompatible_partial_commit_risk: CONFIRMED
+fixed_target:
+  organization: officeAZ
+  organization_id: ivlpkysdjbrkcozrvzwg
+  project_name: DealerOS-Dev-Clean-R5
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  region: ap-northeast-1
+  postgres_version: 17.6.1.166
+  provider_state_recorded_by_cr5: ACTIVE_HEALTHY
+fixed_manifest:
+  formal_migrations: 113
+  replay_migrations: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  other_exclusions: 0
+  aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  postal_sha256: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+cr6_r1_future_diagnosis:
+  authorized_now: false
+  mode_after_separate_owner_authorization: ONE_TOOL_DISABLED_READ_ONLY_STATIC_MECHANISM_DIAGNOSIS
+  control_directive_count: 1
+  repository_supporting_file_count: 14
+  total_repository_file_payload_count: 15
+  additional_non_repository_evidence:
+    - exact_prior_cr6_report
+    - metadata_only_113_migration_table
+    - dated_non_secret_cli_help
+    - exact_official_v2_116_0_source_files_named_by_directive
+    - codex_source_audit_note
+  maximum_next_verdict: READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION
+required_future_harness_properties:
+  - offline_manifest_and_exclusion_proof_before_network
+  - isolated_workdir_with_exactly_112_migrations
+  - exact_project_ref_binding
+  - argument_array_without_shell_interpolation
+  - one_apply_process_no_retry
+  - maximum_duration_30_minutes
+  - volatile_raw_output_then_redacted_retention
+  - fail_closed_secret_scan_and_evidence_hashing
+  - partial_failure_quarantine_without_repair_reset_delete_or_recreate
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1_HOSTED_REPLAY_MECHANISM_CORRECTION.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  private_files_transmitted: false
+  claude_invoked: false
+  harness_source_test_dependency_or_migration_changed: false
+  test_or_runtime_executed: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: REGISTER_CR6_R1_HOSTED_REPLAY_MECHANISM_CORRECTION_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_FOUR_DOCUMENT_DIFF_DIRECTIVE_INPUT_COUNT_OFFICIAL_CLI_IDENTITY_CORRECTED_FAILURE_SEMANTICS_FUTURE_IMPLEMENTATION_CEILING_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL"
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R1A result consistency correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1A_RESULT_CONSISTENCY_CORRECTION_GOVERNANCE
+marker: GDA_POSTAL_R5_CR6_R1A_RESULT_CONSISTENCY_CORRECTION_DIRECTIVE_V1
+status: CR6_R1A_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After MacBook Codex rejected the corrected CR6-R1 READY result for internal allowlist, test-ownership, and evidence-boundary contradictions, the Owner authorized CR6-R1A documentation-only correction. This authorizes exactly four documentation paths. It does not authorize Claude invocation, CR6-R2 source/test implementation, Git stage/commit/push, Supabase/DB/provider/Vercel access, project binding, SQL, migration replay, data transfer, real postal import, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  pre_authoring_head: a848e73d6561a1a2da3f02ec9b3fd30d7e7c84a8
+  pre_authoring_tree: f898b490b9f9c155e4e16cbd5343f29bf918a327
+  upstream_ahead_behind_before_authoring: "0 0"
+  pr_state_before_authoring: OPEN/Draft
+  base: main
+  remote_head_matched_before_authoring: true
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+delivered_cr6_r1:
+  commit: a848e73d6561a1a2da3f02ec9b3fd30d7e7c84a8
+  tree: f898b490b9f9c155e4e16cbd5343f29bf918a327
+  normal_push: true
+  force_push: false
+first_cr6_r1_diagnosis:
+  verdict: BLOCKED_CLI_EVIDENCE
+  model: claude-sonnet-5
+  tool_use: false
+  web_requests: 0
+  repository_changed: false
+corrected_cr6_r1_diagnosis:
+  reported_verdict: READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION
+  codex_adjudication: CHANGES_REQUIRED
+  model: claude-sonnet-5
+  tool_use: false
+  web_requests: 0
+  repository_changed: false
+  defects:
+    - declared_file_count_9_but_listed_paths_11
+    - finalize_evidence_test_required_but_not_allowlisted
+    - orchestration_test_ownership_not_one_to_one
+    - migration_list_help_claim_not_in_supplied_evidence
+    - repository_file_attestation_conflated_with_public_evidence
+accepted_cli_evidence:
+  version: 2.116.0
+  captured_at_utc: 2026-09-03T13:26:06Z
+  migration_up_flags:
+    - include_all
+    - db_url
+    - linked
+    - local
+    - project_ref
+  migration_list_flags:
+    - db_url
+    - linked
+    - local
+    - project_ref
+    - password
+  global_flags_used_by_contract:
+    - workdir
+    - yes
+    - output_format
+  up_handler_sha256: cbcb77602cc0173d88a6d99bdcd1dfba5a8bac7df02c54d25becd9c4dff50f99
+  side_effects_sha256: 7ee7dda5c5e76a7899f844b5e7347f70164fbfbfe56c655490898abf67482470
+corrected_future_implementation_contract:
+  directory: scripts/e2e/gda-estimate-postal-master-r5-cr6
+  exact_path_count: 14
+  runtime_module_count: 7
+  paired_test_count: 7
+  mandatory_offline_requirement_count: 18
+  exact_paths:
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.test.mjs
+corrected_future_diagnosis:
+  authorized_now: false
+  control_directive_count: 1
+  repository_supporting_file_count: 8
+  total_repository_file_payload_count: 9
+  mode_after_separate_owner_authorization: ONE_TOOL_DISABLED_READ_ONLY_STATIC_CONSISTENCY_DIAGNOSIS
+  maximum_next_verdict: READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1A_RESULT_CONSISTENCY_CORRECTION.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  claude_invoked_under_cr6_r1a: false
+  cr6_r2_implementation_authorized: false
+  harness_source_test_dependency_or_migration_changed: false
+  test_or_runtime_executed: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed_under_cr6_r1a: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: REGISTER_CR6_R1A_RESULT_CONSISTENCY_CORRECTION_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_FOUR_DOCUMENT_DIFF_FOURTEEN_PATHS_SEVEN_PAIRS_EIGHTEEN_TEST_REQUIREMENTS_TWO_COMMAND_ARRAYS_NINE_FILE_DIAGNOSIS_BOUNDARY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL"
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2 offline harness implementation directive candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2_HOSTED_REPLAY_HARNESS_OFFLINE_IMPLEMENTATION_GOVERNANCE
+marker: GDA_POSTAL_R5_CR6_R2_HOSTED_REPLAY_HARNESS_OFFLINE_IMPLEMENTATION_DIRECTIVE_V1
+status: CR6_R2_DIRECTIVE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After MacBook Codex accepted the CR6-R1A static diagnosis, the Owner authorized a documentation-only CR6-R2 implementation directive. This authorizes exactly four governance documents. It does not authorize private-file transmission, Claude invocation, harness/test implementation, executable tests, Supabase CLI, network, Hosted Supabase, DB/provider/Vercel access, migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  pre_authoring_head: bd59b08ae1268c6db3bbb5b44142066b90c2be70
+  pre_authoring_tree: 03d5c4d58f79ea0b1dab75bd527c394acc2474ce
+  upstream_ahead_behind_before_authoring: "0 0"
+  pr_state_before_authoring: OPEN/Draft
+  base: main
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+accepted_cr6_r1a:
+  delivered_commit: bd59b08ae1268c6db3bbb5b44142066b90c2be70
+  delivered_tree: 03d5c4d58f79ea0b1dab75bd527c394acc2474ce
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R1A_RESULT_CONSISTENCY_CORRECTION_RESULT_V1
+  claude_verdict: READY_FOR_CR6_R2_HOSTED_HARNESS_IMPLEMENTATION_AUTHORIZATION
+  codex_adjudication: PASS
+  model: claude-sonnet-5
+  tool_use: false
+  web_requests: 0
+  repository_changed: false
+future_cr6_r2_contract:
+  authorized_now: false
+  exact_write_path_count: 14
+  runtime_module_count: 7
+  paired_test_count: 7
+  mandatory_offline_requirement_count: 18
+  command_array_count: 2
+  control_directive_count: 1
+  repository_supporting_file_count: 12
+  total_repository_read_payload_count: 13
+  exact_write_paths:
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.test.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.mjs
+    - scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.test.mjs
+allowed_future_offline_verification:
+  - node_check_exact_fourteen_new_mjs_files
+  - one_node_test_command_naming_exact_seven_tests
+  - git_diff_check
+  - fourteen_no_index_whitespace_checks_for_new_untracked_files
+  - read_only_git_identity_status_diff_and_protected_metadata
+forbidden_future_cr6_r2_actions:
+  - real_supabase_binary_invocation_including_version_or_help
+  - network_or_dns
+  - hosted_project_or_database_contact
+  - real_process_spawn_in_tests
+  - package_or_lockfile_change
+  - existing_file_modification
+  - git_stage_commit_push_or_pr_mutation
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2_HOSTED_REPLAY_HARNESS_OFFLINE_IMPLEMENTATION.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  private_files_transmitted: false
+  claude_invoked: false
+  harness_or_test_files_created: false
+  executable_tests_run: false
+  supabase_cli_or_network_used: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: REGISTER_CR6_R2_OFFLINE_HARNESS_IMPLEMENTATION_DIRECTIVE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_FOUR_DOCUMENT_DIFF_FOURTEEN_WRITE_PATHS_SEVEN_PAIRS_EIGHTEEN_REQUIREMENTS_THIRTEEN_READ_FILES_TWO_COMMAND_ARRAYS_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL"
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2A offline harness contract repair governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2A_OFFLINE_HARNESS_CONTRACT_REPAIR_GOVERNANCE
+marker: GDA_POSTAL_R5_CR6_R2A_OFFLINE_HARNESS_CONTRACT_REPAIR_DIRECTIVE_V1
+status: CR6_R2A_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-03
+append_only: true
+authorization: "After MacBook Codex independently rejected the first CR6-R2 offline harness candidate, the Owner authorized a documentation-only CR6-R2A correction directive. This authorization permits exactly one new directive and updates to three governance trackers. It does not authorize Claude repair, source/test changes, executable tests, Supabase CLI, network, Hosted Supabase, DB/provider/Vercel access, migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  pre_authoring_head: 00ba2dec6be946ad12b5446748b370d4510a6a90
+  pre_authoring_tree: 798b762b5a3882c1245903a9c1b153cb2207e0e6
+  upstream_ahead_behind_before_authoring: "0 0"
+  pr_state_before_authoring: OPEN/Draft
+  base: main
+  remote_head_matched_before_authoring: true
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+cr6_r2_invocation:
+  authorized_by_owner: true
+  exact_repository_input_count: 13
+  exact_new_file_count: 14
+  claude_model: claude-sonnet-5
+  claude_session_id: d47893c6-9b58-425b-a69a-58046adf4b3d
+  reported_cost_usd: 11.356811100000003
+  reported_verdict: BLOCKED_ENVIRONMENT
+  reported_blocker: git_diff_no_index_permission_denied
+  offline_node_verification_processes_used: true
+  real_supabase_or_migration_process_used: false
+  network_used: false
+codex_independent_audit:
+  adjudication: CHANGES_REQUIRED
+  exact_candidate_file_count: 14
+  node_check: PASS_14_OF_14
+  node_test: PASS_82_OF_82
+  node_test_failures: 0
+  no_index_whitespace_checks: PASS_14_OF_14_EXPECTED_EXIT_1_ZERO_OUTPUT
+  git_diff_check: PASS
+  existing_file_changes: 0
+  protected_blob_changes: 0
+  staged_or_committed_files: 0
+  findings:
+    - complete_canonical_manifest_and_fixed_aggregate_not_enforced_by_preflight
+    - timeout_does_not_terminate_or_confirm_child_exit
+    - list_and_apply_each_receive_fresh_30_minute_timeout
+    - sanitized_environment_not_passed_to_spawn
+    - evidence_adapter_exceptions_escape_quarantine_result
+    - unsafe_or_duplicate_retention_keys_not_rejected
+    - invalid_secret_scan_input_reported_clean
+    - fixed_project_ref_and_adapter_failures_not_fail_closed_in_preflight
+future_cr6_r2a_contract:
+  authorized_now: false
+  exact_read_payload_count: 19
+  control_file_count: 1
+  supporting_file_count: 4
+  candidate_file_count: 14
+  exact_write_path_count: 14
+  new_source_or_test_paths_allowed: 0
+  maximum_success_verdict: PASS_OFFLINE_CANDIDATE_READY_FOR_CODEX_REAUDIT
+  hosted_execution_authorized: false
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2A_OFFLINE_HARNESS_CONTRACT_REPAIR.md
+  - docs/master_specification/GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CLEAN_REPLACEMENT_DEVELOPMENT_PRE_EXECUTION_PLAN.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  existing_fourteen_candidate_files_modified_under_r2a_authoring: false
+  claude_repair_invoked: false
+  executable_tests_run_under_r2a_authoring: false
+  supabase_cli_or_network_used: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: REGISTER_CR6_R2_CODEX_CHANGES_REQUIRED_AND_CR6_R2A_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_FOUR_DOCUMENT_DIFF_FROZEN_FOURTEEN_HASHES_EIGHT_REPAIR_GROUPS_NINETEEN_FILE_FUTURE_READ_PAYLOAD_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL"
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R2B/R2C recovered offline harness acceptance governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2B_R2C_RECOVERED_OFFLINE_HARNESS_ACCEPTANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R2C_OFFLINE_HARNESS_ACCEPTANCE_V1
+status: PASS_OFFLINE_CANDIDATE_ACCEPTED_GOVERNANCE_RECORD_UNSTAGED_UNCOMMITTED
+date: 2026-09-04
+append_only: true
+objective: "Record the independently verified recovery and final fail-closed correction of the exact fourteen-file CR6 hosted-replay offline harness candidate, without authorizing any hosted or database action."
+authorization: "The Owner explicitly authorized persistent-checkout regeneration, the bounded CR6-R2B four-defect repair, the bounded CR6-R2C two-file canonical-table exactness repair, independent executable verification, and authoring exactly this completion-plan update plus this append-only result. The Owner also explicitly approved a future literal fourteen-file stage/local commit, but that approval is held until this governance record is independently verified and locally committed. Push remains separately unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  base_head: bbff657ffe5547b49c34eb9e795434b2fffe8d3b
+  base_tree: 50fe65d5ddef760a047e6bf5638c8b1b16cab955
+  upstream_ahead_behind: "0 0"
+  source_candidate_commit: UNCOMMITTED
+candidate:
+  directory: scripts/e2e/gda-estimate-postal-master-r5-cr6
+  exact_file_count: 14
+  file_mode: "100644"
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+  per_path_sha256:
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.mjs: 6d0b57efe6184e638a845b6c8586657b8f8a0567cdd4c3e7c0861b2faf9da309
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.test.mjs: 76294b9890daead78bfb2ef3ec358523ead5a5f1ea71f2a8baaac3a5ee4f83dc
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.mjs: 1838655f199e45a1c63795ccce76443d6e4b1f317452e0ae04f04a37af90be3d
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.test.mjs: d3389704b83a798a51b8719302ec4e13ae3656ba592681e095a6464f99103b59
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.mjs: e8b405bdbc75e00bc0d88919036d4adcb2df82a83c5a7c0fe33bc3d730ed4c64
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.test.mjs: f44c4793a3d926791d739a175ddff572d19656d2937f00bfab2490b247fef4dc
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.mjs: c185deb235a38946bfc6c2019e674fdd3113bda09cc7008d182ccab7d08feac3
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.test.mjs: c2b9332b8fbcf05d27bc7ded6f8c6c94f7ee38165cce401fec9eec5965d752f2
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.mjs: 762e6b333692e915efa44474993131570d692ef5dd8936d2cf8e31883725d396
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.test.mjs: 64914855626a16d3eb6fea05c0a509df7da76ace4519d531e260a01a6cc0797f
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.mjs: 7b01b9898bc247ccce1e3036b6601560b1d97b29120f87753dfa2c7ca7d51579
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.test.mjs: e097220ef5937084426ba294e2b5d5065b929c507bd61e5bbf4e1d36117aac5f
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.mjs: 0b6adcfd28b22344333e399fa77df6520a8ab163a08360920dfca909ed866903
+    scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.test.mjs: b80efc89099bbde287d9f622c1e7945c5f1a017322e85b9b150b30cb09e6afe3
+claude_repairs:
+  cr6_r2b:
+    session_id: 1434f75c-9682-4e13-b77a-66a137f9358f
+    reported_cost_usd: 3.0902325000000004
+    edited_path_count: 6
+    terminal_status: SUCCESS
+  cr6_r2c:
+    session_id: eda2c310-7d66-42b8-a84f-6f792d155289
+    reported_cost_usd: 1.1619706
+    edited_path_count: 2
+    terminal_status: SUCCESS
+  accepted_repair_cost_usd_total: 4.2522031
+codex_independent_audit:
+  adjudication: PASS_OFFLINE_CANDIDATE_ACCEPTED
+  node_check: PASS_14_OF_14
+  node_test_command: "node --test scripts/e2e/gda-estimate-postal-master-r5-cr6/manifest-core.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/replay-command-core.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/quarantine-core.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/finalize-evidence.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/preflight.test.mjs scripts/e2e/gda-estimate-postal-master-r5-cr6/apply-once.test.mjs"
+  node_test: PASS_150_OF_150
+  node_test_failures: 0
+  node_test_cancelled: 0
+  node_test_skipped: 0
+  node_test_todo: 0
+  hostile_reproduction_cases: PASS_ALL_EXPECTED_FAIL_CLOSED_AND_VALID_EXACT_TABLE_SUCCEEDED
+  no_index_whitespace_checks: PASS_14_OF_14_EXPECTED_EXIT_1_ZERO_OUTPUT
+  git_diff_check: PASS
+  file_modes: PASS_14_OF_14_100644
+  index_clean: true
+  evidence_location: LOCAL_CONSOLE_ONLY_NOT_COMMITTED
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: "100644 blob c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f"
+  supabase/migrations/20260801110110_line_link_tokens.sql: "100644 blob accd22345054cc44f89156fd78eaba6dfe4242a4"
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: "100644 blob 32fda49583ae1217bc13711784ad8fa31744726c"
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: "100644 blob fe3c80f22fd80dcbfab076082473216dda582c14"
+governance_authoring_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  source_candidate_staged_or_committed: false
+  governance_candidate_staged_or_committed: false
+  normal_push_performed: false
+  supabase_cli_or_network_used: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  provider_or_vercel_contacted: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: ACCEPT_CR6_R2B_R2C_RECOVERED_OFFLINE_HARNESS_AND_AUTHOR_TWO_DOCUMENT_GOVERNANCE_RECORD_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_TWO_DOCUMENT_GOVERNANCE_DIFF_AND_RECORDED_FOURTEEN_HASHES_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL_FOR_THE_TWO_GOVERNANCE_PATHS; AFTER GOVERNANCE DELIVERY, USE THE HELD OWNER AUTHORIZATION TO STAGE_AND_LOCALLY_COMMIT_EXACTLY_THE_ACCEPTED_FOURTEEN_SOURCE_TEST_PATHS; STOP_BEFORE_PUSH"
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3 hosted execution adapter governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3_HOSTED_EXECUTION_ADAPTER_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3_HOSTED_EXECUTION_ADAPTER_GOVERNANCE_V1
+status: GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-04
+append_only: true
+objective: "Define the smallest future real-adapter boundary for the accepted CR6 offline harness without executing or contacting the hosted replacement project."
+authorization: "After PR #67 HEAD 8026931afc005a2583ddaa46ecc7a61894786933 passed Vercel and Vercel Preview Comments, the Owner authorized documentation-only CR6-R3 directive authoring. This permits exactly three governance paths. It does not authorize Claude invocation, adapter implementation, executable tests, Supabase CLI linked commands, network, Hosted Supabase, database/provider access, migration replay, evidence upload, Git delivery, PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  head: 8026931afc005a2583ddaa46ecc7a61894786933
+  tree: 18c11148b16dc42c9511f0eee1f773fa2a0c3c5e
+  base: main
+  state: OPEN
+  draft: true
+  upstream_ahead_behind: "0 0"
+  changed_files: 80
+checks:
+  vercel_preview_comments: PASS
+  vercel: PASS
+local_cli_discovery:
+  supabase_version_probe_attempted: true
+  exit_code: 1
+  result: BLOCKED_LOCAL_TELEMETRY_TEMP_WRITE_EPERM_NO_VERSION_RETURNED
+  accepted_as_compatibility_evidence: false
+  linked_command_run: false
+  hosted_project_contacted: false
+push_protection:
+  exact_fixture_path: scripts/e2e/gda-estimate-postal-master-r5-cr6/redaction-core.test.mjs
+  exact_fixture_line: 9
+  classification: FALSE_POSITIVE_TEST_FIXTURE_ONLY
+  repository_secret_scanning_disabled: false
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+  node_test: PASS_150_OF_150
+  hosted_execution_entrypoint_complete: false
+fixed_future_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_target_contact: PROHIBITED
+governance_authoring_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3_HOSTED_EXECUTION_ADAPTER.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+boundaries:
+  claude_invoked: false
+  adapter_implemented_or_tested: false
+  supabase_cli_linked_command_run: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  evidence_uploaded: false
+  governance_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3_THREE_PATH_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_PATH_DOCUMENTATION_DIFF_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; DO_NOT_START_ADAPTER_IMPLEMENTATION_OR_HOSTED_EXECUTION"
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3A canonical manifest serialization correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3A_CANONICAL_MANIFEST_SERIALIZATION_CORRECTION_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3A_CANONICAL_MANIFEST_SERIALIZATION_CORRECTION_GOVERNANCE_V1
+status: CHANGES_REQUIRED_DIRECTIVE_CORRECTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-04
+append_only: true
+objective: "Close the missing canonical aggregate byte contract before any CR6-R3 adapter implementation begins."
+authorization: "After MacBook Codex rejected the completed CR6-R3 read-only diagnosis, the Owner explicitly approved CR6-R3A correction-directive authoring. This authorization permits exactly one new directive and updates to the completion plan and append-only result ledger. It does not authorize Claude invocation, private-file transmission, source/test implementation, executable tests, Supabase CLI, network, Hosted Supabase, database/provider access, migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  predecessor_head: 7d148084d5799109b5d92f5d9f7b8a14e1dd58ba
+  predecessor_tree: 3dfea1c7ece8c3faaaaef44ff07c5a80a4e66a19
+  upstream_ahead_behind_before_authoring: "0 0"
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+prior_cr6_r3_diagnosis:
+  instruction_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5534021615
+  claude_result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_reported_verdict: READY_FOR_TWO_FILE_OFFLINE_IMPLEMENTATION
+  claude_finding_11: EXACT_AGGREGATE_SERIALIZATION_NOT_SPECIFIED_IN_AUTHORIZED_INPUT
+  codex_acceptance_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5534115420
+  codex_adjudication: CHANGES_REQUIRED_DIRECTIVE
+  implementation_started: false
+blocking_defect:
+  existing_core_behavior: CALLER_SUPPLIED_HASH_FUNCTION_RETURN_VALUE_ONLY_COMPARED_TO_FIXED_LITERAL
+  existing_test_behavior: CONSTANT_RETURN_FUNCTION_ACCEPTED_AS_VALID_HASH_AUTHORITY
+  risk: FIXED_AGGREGATE_GATE_COULD_BE_NON_EVIDENTIARY
+corrected_serialization:
+  formal_path_count: 113
+  staged_row_count: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  row_format: "<64 lowercase hex sha256><two ASCII spaces><repository-relative UTF-8 path><LF>"
+  final_lf_required: true
+  ordering: BUFFER_BYTE_COMPARE_ON_REPOSITORY_RELATIVE_PATH
+  monthly_invoice_attested_sha256_literal: 1f0f0f491e0e083c8163cb309b3846c035629c6930e83b180dc2e9ffdab86255
+  reproduced_aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+  reproduction_match: true
+  protected_line_content_read: false
+  protected_monthly_invoice_content_read: false
+corrected_authority_contract:
+  canonical_source: FIXED_GIT_COMMIT_TREE_METADATA_AND_FIXED_GIT_BLOBS
+  actual_source: INDEPENDENT_FRESH_ISOLATED_WORKDIR_ENUMERATION
+  concrete_hash: NODE_CRYPTO_SHA256_OVER_EXACT_SERIALIZATION
+  caller_supplied_hash_or_manifest_authority: PROHIBITED
+  constant_return_hash: PROHIBITED
+  hostile_tests_required:
+    - alternate_separator_or_line_ending
+    - missing_final_lf_or_json_serialization
+    - substituted_missing_or_extra_entry
+    - reordered_actual_or_canonical_input
+    - mode_or_blob_drift
+    - ordinary_or_protected_monthly_digest_drift
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+fixed_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_contact: PROHIBITED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3A_CANONICAL_MANIFEST_SERIALIZATION_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist_unchanged:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+boundaries:
+  claude_rediagnosis_invoked: false
+  private_files_transmitted: false
+  adapter_implemented_or_tested: false
+  existing_fourteen_harness_files_modified: false
+  protected_content_opened: false
+  supabase_cli_or_network_used: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3A_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_SERIALIZATION_REPRODUCTION_FROZEN_FOURTEEN_HASH_PROTECTED_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; NORMAL_PUSH_AND_CLAUDE_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3B Git acquisition and delegation correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_GIT_ACQUISITION_AND_DELEGATION_CORRECTION_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_GIT_ACQUISITION_AND_DELEGATION_CORRECTION_GOVERNANCE_V1
+status: CHANGES_REQUIRED_DIRECTIVE_CORRECTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-05
+append_only: true
+objective: "Close the four remaining CR6-R3A directive gaps before any adapter implementation begins."
+authorization: "After Claude returned CHANGES_REQUIRED_DIRECTIVE for CR6-R3A and MacBook Codex independently accepted the result, the Owner authorized CR6-R3B documentation authoring only. This permits exactly one new directive plus completion-plan and append-only phase-result updates. It does not authorize Claude invocation, private-file transmission, source/test implementation, executable tests, Git or Supabase CLI execution for implementation, network, Hosted Supabase, database/provider access, migration replay, Git stage/commit/push, PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  predecessor_head: d1e634ceb22c194ba2703aa6043e0306dff50ccd
+  predecessor_tree: 14962186fa1aac848d19b66f4a5920489fa2b69d
+  upstream_ahead_behind_before_authoring: "0 0"
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+prior_cr6_r3a_diagnosis:
+  instruction_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5534178181
+  claude_result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3A_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_reported_verdict: CHANGES_REQUIRED_DIRECTIVE
+  codex_acceptance_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5553913054
+  codex_adjudication: CHANGES_REQUIRED_DIRECTIVE
+  implementation_started: false
+accepted_findings:
+  - EXACT_GIT_ACQUISITION_ARGV_BYTE_FRAMING_AND_BOUNDS_UNSPECIFIED
+  - PUBLIC_AUTHORITY_PROHIBITION_VERSUS_INTERNAL_CORE_DELEGATION_AMBIGUOUS
+  - PROTECTED_MONTHLY_DIGEST_ATTESTATION_PROVENANCE_ABSENT_FROM_DIAGNOSIS_SCOPE
+  - CLI_DISCOVERY_VOLATILE_OUTPUT_RETENTION_AND_COMPATIBILITY_RULES_INCOMPLETE
+corrected_contract:
+  public_input_exact: "{ mode, attemptId, confirmation, repoRoot, runtimeRoot, evidenceRoot }"
+  caller_authority_fields: PROHIBITED
+  git_executable: /usr/bin/git
+  git_shell: false
+  git_ls_tree_framing: NUL_DELIMITED_BYTES
+  git_cat_file_framing: EXACT_SIZE_BATCH_BYTES
+  canonical_ordinary_blob_count: 111
+  materialization_staged_blob_count: 112
+  git_metadata_timeout_ms: 30000
+  git_batch_timeout_ms: 120000
+  git_metadata_stdout_max_bytes: 1048576
+  git_stderr_max_bytes: 65536
+  git_batch_object_max_bytes: 16777216
+  git_batch_aggregate_max_bytes: 268435456
+  implementation_identity: SINGLE_ACCEPTED_GOVERNANCE_PARENT_AND_EXACT_TWO_PATH_DIFF_THEN_DERIVED_CURRENT_HEAD_TREE
+  actual_authority: INDEPENDENT_ISOLATED_WORKDIR_ENUMERATION_AND_BYTE_HASHING
+  existing_core_injection: INTERNAL_ONLY_NOT_PUBLIC_CALLER_AUTHORITY
+  supabase_executable: /opt/homebrew/Cellar/supabase/2.116.0/bin/supabase
+  supabase_bin_symlink: VALIDATE_ONLY_NEVER_SPAWN
+  cli_discovery_timeout_ms: 10000
+  cli_discovery_stdout_max_bytes: 2097152
+  cli_discovery_stderr_max_bytes: 262144
+  cli_discovery_raw_output: VOLATILE_MEMORY_ONLY_NEVER_RETAINED_OR_PRINTED
+  cli_discovery_retained_evidence: VERSION_EXIT_SIGNAL_TIMEOUT_PROMPT_TRUNCATION_BYTE_COUNTS_AND_STDOUT_STDERR_SHA256
+monthly_invoice_attestation:
+  source_document: docs/master_specification/ENVIRONMENT_REMEDIATION_PLAN.md
+  source_document_blob: 5f7a39b287a7484b5d2fa8490bf8780bbf5a8f8f
+  source_section: "13.2 Canonical 98-path executable manifest"
+  authority_url: https://github.com/nisikawa-officeAZ/GYEON/pull/2#issuecomment-5261032333
+  pinned_head: 96c0d5cb34f60396242ea89ae0cf4d0aac92f59e
+  pinned_tree: aa544700b66971473f5c7127289bfffd76b8b024
+  row_format: "<sha256><two ASCII spaces><repository-relative path><LF>"
+  sha256_literal: 1f0f0f491e0e083c8163cb309b3846c035629c6930e83b180dc2e9ffdab86255
+  protected_content_read: false
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+fixed_manifest:
+  formal_count: 113
+  staged_count: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+fixed_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_contact: PROHIBITED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_GIT_ACQUISITION_AND_DELEGATION_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist_unchanged:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+future_rediagnosis:
+  exact_file_count: 18
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_READ_ONLY_DIAGNOSIS_RESULT_V1
+boundaries:
+  claude_rediagnosis_invoked: false
+  private_files_transmitted: false
+  adapter_implemented_or_tested: false
+  existing_fourteen_harness_files_modified: false
+  protected_content_opened: false
+  supabase_cli_or_network_used: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  pr_mutated_ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3B_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_FROZEN_FOURTEEN_HASH_PROTECTED_GIT_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; NORMAL_PUSH_AND_EIGHTEEN_FILE_CLAUDE_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3C protected metadata and preflight materialization correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_PROTECTED_METADATA_AND_PREFLIGHT_MATERIALIZATION_CORRECTION_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_PROTECTED_METADATA_AND_PREFLIGHT_MATERIALIZATION_CORRECTION_GOVERNANCE_V1
+status: CHANGES_REQUIRED_DIRECTIVE_CORRECTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-05
+append_only: true
+objective: "Close the two remaining CR6-R3B directive contradictions before any adapter implementation begins."
+authorization: "After the Owner explicitly authorized the CR6-R3B eighteen-file tool-disabled diagnosis, Claude returned CHANGES_REQUIRED_DIRECTIVE and MacBook Codex independently accepted both findings. The Owner then authorized one public-safe PR result record plus CR6-R3C documentation authoring only. This permits exactly one new directive plus completion-plan and append-only phase-result updates. It does not authorize another Claude invocation, private-file transmission, source/test implementation, executable tests, Git or Supabase CLI execution for implementation, hosted project/database/provider access, migration replay, Git stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  predecessor_head: 33c1ec65292e2d7112f73130a2446408541e96b1
+  predecessor_tree: f373ec66ba47e8e68db7a399d451e831e0ce23e0
+  upstream_ahead_behind_before_authoring: "0 0"
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+  mergeable_before_authoring: MERGEABLE
+  vercel_before_authoring: PASS
+  vercel_preview_comments_before_authoring: PASS
+prior_cr6_r3b_diagnosis:
+  instruction_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5553972075
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3B_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_verdict: CHANGES_REQUIRED_DIRECTIVE
+  codex_acceptance_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554059993
+  codex_adjudication: CHANGES_REQUIRED_DIRECTIVE_ACCEPTED
+  implementation_started: false
+accepted_findings:
+  - CLOSED_LS_TREE_SCOPE_CANNOT_ACQUIRE_TWO_NON_MIGRATION_PROTECTED_PATHS
+  - PREFLIGHT_ONLY_HAS_NO_AUTHORIZED_112_FILE_ACTUAL_MATERIALIZATION_PATH
+authoring_self_audit:
+  rejected_recursive_combined_record_count: 117
+  rejection_reason: "Recursive supabase/migrations enumeration also returns two nested DRAFT_DO_NOT_APPLY files and therefore cannot satisfy an exact formal-top-level migration contract."
+  accepted_migration_subtree_direct_child_count: 114
+  accepted_external_protected_count: 2
+corrected_git_metadata_contract:
+  exact_ls_tree_invocation_count: 2
+  migration_subtree_record_count: 114
+  migration_record_count: 113
+  fixed_draft_tree_record_count: 1
+  fixed_draft_tree_object: b6b9b1bd0cefedd0a08a40ef7c2c55c4fa5f4018
+  nested_draft_paths_returned: false
+  external_protected_record_count: 2
+  non_migration_protected_record_count: 2
+  all_four_protected_metadata_from_two_independently_validated_git_responses: true
+  extra_or_missing_record: FAIL_CLOSED
+corrected_mode_contract:
+  local_materialization_blob_count_each_mode: 112
+  preflight_only_local_isolated_writes: ALLOWED
+  preflight_only_linked_supabase_command: PROHIBITED
+  preflight_only_hosted_contact: PROHIBITED
+  preflight_only_burn_execution_attempt: PROHIBITED
+  preflight_only_retained_hosted_evidence: PROHIBITED
+  preflight_only_secure_local_cleanup: REQUIRED
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+fixed_manifest:
+  formal_count: 113
+  staged_count: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+fixed_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_contact: PROHIBITED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_PROTECTED_METADATA_AND_PREFLIGHT_MATERIALIZATION_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist_unchanged:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+future_rediagnosis:
+  exact_file_count: 18
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_READ_ONLY_DIAGNOSIS_RESULT_V1
+boundaries:
+  public_safe_pr_result_record_posted: true
+  claude_r3c_rediagnosis_invoked: false
+  private_files_retransmitted_after_r3b: false
+  adapter_implemented_or_tested: false
+  existing_fourteen_harness_files_modified: false
+  protected_content_opened: false
+  supabase_cli_or_hosted_contact_used: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3C_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_FROZEN_FOURTEEN_HASH_PROTECTED_GIT_METADATA_CLEAN_INDEX_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; NORMAL_PUSH_AND_EIGHTEEN_FILE_CLAUDE_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3D attempt-id and CLI result mapping correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3D_ATTEMPT_ID_AND_CLI_RESULT_MAPPING_CORRECTION_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3D_ATTEMPT_ID_AND_CLI_RESULT_MAPPING_CORRECTION_GOVERNANCE_V1
+status: CHANGES_REQUIRED_DIRECTIVE_CORRECTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-05
+append_only: true
+objective: "Close the two CR6-R3C directive contradictions without beginning adapter implementation."
+authorization: "The Owner authorized one public-safe PR result record and exact three-document CR6-R3D authoring. This does not authorize another Claude run/private transmission, implementation/tests, Git or Supabase CLI execution for implementation, hosted/DB/provider access, migration replay, stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  predecessor_head: c7e0fa7785e2c82cbe2457cc4ab5c0877ac1fd4c
+  predecessor_tree: 62237a98b0ade85d13cccfba8b8ca108b68a388f
+  upstream_ahead_behind_before_authoring: "0 0"
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+prior_cr6_r3c_diagnosis:
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3C_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_verdict: CHANGES_REQUIRED_DIRECTIVE
+  codex_acceptance_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554222300
+  codex_adjudication: CHANGES_REQUIRED_DIRECTIVE_ACCEPTED
+accepted_findings:
+  - ATTEMPT_ID_GRAMMAR_DIFFERS_FROM_FROZEN_QUARANTINE_CORE
+  - REAL_CLI_OUTPUT_TO_FROZEN_EXIT_INFO_MAPPING_UNSPECIFIED
+official_cli_authority:
+  repository: supabase/cli
+  release: v2.116.0
+  commit: 997a1e6
+  network_contact: OFFICIAL_GITHUB_SOURCE_READ_ONLY_ONLY
+  hosted_project_or_database_contact: false
+corrected_attempt_id:
+  regex: "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+  dot_allowed: false
+  maximum_total_characters: 128
+corrected_process_mapping:
+  target_mismatch: PRE_SPAWN_INTERNAL_EXECUTABLE_ARGV_PROJECT_REF_WORKDIR_CWD_ENVIRONMENT_IDENTITY_ONLY
+  list_success_top_level_keys: [migrations, message]
+  list_success_message: Migrations listed
+  list_exact_rows: 112
+  list_all_remote_values: EMPTY_STRING
+  any_list_shape_or_stream_drift: LEDGER_MISMATCH_AND_NO_UP_SPAWN
+  up_success_top_level_keys: [applied, message]
+  up_success_message: Migrations applied
+  up_exact_applied_paths: 112
+  any_up_shape_or_stream_drift: LEDGER_MISMATCH_AND_QUARANTINE
+  json_mode_interactive: false
+  stdin: CLOSED
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+fixed_manifest:
+  formal_count: 113
+  staged_count: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+fixed_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_contact: PROHIBITED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3D_ATTEMPT_ID_AND_CLI_RESULT_MAPPING_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist_unchanged:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+future_rediagnosis:
+  exact_file_count: 18
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3D_READ_ONLY_DIAGNOSIS_RESULT_V1
+boundaries:
+  public_safe_pr_result_record_posted: true
+  claude_r3d_rediagnosis_invoked: false
+  adapter_implemented_or_tested: false
+  existing_fourteen_harness_files_modified: false
+  protected_content_opened: false
+  supabase_cli_execution_for_implementation: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3D_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_OFFICIAL_SOURCE_BINDING_FROZEN_FOURTEEN_HASH_PROTECTED_METADATA_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; PUSH_AND_EIGHTEEN_FILE_R3D_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3E durable burn ledger and logical-spawn correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3E_DURABLE_BURN_LEDGER_AND_LOGICAL_SPAWN_CORRECTION_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3E_DURABLE_BURN_LEDGER_AND_LOGICAL_SPAWN_CORRECTION_GOVERNANCE_V1
+status: CHANGES_REQUIRED_DIRECTIVE_CORRECTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-05
+append_only: true
+objective: "Close the two CR6-R3D persistence/process-boundary contradictions without beginning adapter implementation."
+authorization: "The Owner authorized one public-safe PR result record and exact three-document CR6-R3E authoring. This does not authorize another Claude run/private transmission, implementation/tests, Git or Supabase CLI execution for implementation, hosted/DB/provider access, migration replay, stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  predecessor_head: 8a803272e28ddeac338f73d61fd784a4960ebb69
+  predecessor_tree: 1d67ffe56f69cc2638ad06a600b1bf80a74449f5
+  upstream_ahead_behind_before_authoring: "0 0"
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+prior_cr6_r3d_diagnosis:
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3D_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_verdict: CHANGES_REQUIRED_DIRECTIVE
+  codex_acceptance_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554729245
+  codex_adjudication: CHANGES_REQUIRED_DIRECTIVE_ACCEPTED
+accepted_findings:
+  - DURABLE_BURN_LEDGER_LOCATION_FORMAT_AND_CONCURRENCY_UNSPECIFIED
+  - LOGICAL_PROCESS_ADAPTER_CALL_NOT_DISTINGUISHED_FROM_REAL_OS_SPAWN
+corrected_durable_ledger:
+  caller_selectable: false
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/runtime/gda-estimate-postal-master-r5-cr6/burn-ledger-v1
+  root_mode: "0700"
+  record_granularity: ONE_FILE_PER_FIXED_PROJECT_REF_AND_ATTEMPT_ID
+  record_mode: "0600"
+  create: O_WRONLY_O_CREAT_O_EXCL_O_NOFOLLOW
+  durability: EXACT_WRITE_FILE_FSYNC_READBACK_DIRECTORY_FSYNC_BEFORE_REAL_SPAWN
+  existing_partial_malformed_or_uncertain: PERMANENTLY_BURNED_FAIL_CLOSED
+  automatic_delete_repair_or_age_out: false
+  project_concurrency_lock: ACTIVE_LOCK_ATOMIC_DIRECTORY
+corrected_process_boundary:
+  frozen_logical_spawn_call_preserved: true
+  target_mismatch_logical_calls: 1
+  target_mismatch_real_os_launches: 0
+  mismatch_handle: SYNTHETIC_ONEXIT_TARGET_MISMATCH_TRUE
+  exact_target_real_launch: ONLY_AFTER_LOCK_AND_DURABLE_BURN
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+fixed_manifest:
+  formal_count: 113
+  staged_count: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+fixed_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_contact: PROHIBITED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3E_DURABLE_BURN_LEDGER_AND_LOGICAL_SPAWN_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist_unchanged:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+future_rediagnosis:
+  exact_file_count: 18
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3E_READ_ONLY_DIAGNOSIS_RESULT_V1
+boundaries:
+  public_safe_pr_result_record_posted: true
+  claude_r3e_rediagnosis_invoked: false
+  adapter_implemented_or_tested: false
+  existing_fourteen_harness_files_modified: false
+  protected_content_opened: false
+  supabase_cli_execution_for_implementation: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3E_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DURABLE_LEDGER_LOGICAL_VERSUS_REAL_SPAWN_FROZEN_FOURTEEN_HASH_PROTECTED_METADATA_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; PUSH_AND_EIGHTEEN_FILE_R3E_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
+```
+
+## GDA-ESTIMATE-WIZARD-POSTAL-MASTER-R5 — CR6-R3F synthetic-exit classification correction governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3F_SYNTHETIC_EXIT_CLASSIFICATION_CORRECTION_GOVERNANCE
+marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3F_SYNTHETIC_EXIT_CLASSIFICATION_CORRECTION_GOVERNANCE_V1
+status: CHANGES_REQUIRED_DIRECTIVE_CORRECTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-05
+append_only: true
+objective: "Close the final CR6-R3E synthetic-exit attribution ambiguity without changing frozen core or beginning adapter implementation."
+authorization: "The Owner authorized one public-safe PR result record and exact three-document CR6-R3F authoring. This does not authorize another Claude run/private transmission, implementation/tests, Git or Supabase CLI execution for implementation, hosted/DB/provider access, migration replay, stage/commit/push, further PR mutation, Ready, merge, deployment, cutover, or retirement."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  predecessor_head: da3a2a158f214c3e51cac87d678cfd9de4bab5ec
+  predecessor_tree: 0a735d45dcd67c0e451f581a2e4ac9d900515f3c
+  upstream_ahead_behind_before_authoring: "0 0"
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+prior_cr6_r3e_diagnosis:
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3E_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_verdict: CHANGES_REQUIRED_DIRECTIVE
+  codex_acceptance_url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5554790593
+  codex_adjudication: CHANGES_REQUIRED_DIRECTIVE_ACCEPTED_WITH_CORRECTED_REMEDY
+accepted_finding:
+  - TARGET_IDENTITY_AND_EXECUTION_READINESS_SHARED_ONE_UNDERSPECIFIED_SYNTHETIC_RESULT
+rejected_remedy:
+  new_exit_info_field: burnOrLockInvalid
+  reason: FROZEN_CORE_DOES_NOT_RECOGNIZE_AND_WOULD_FALL_THROUGH_TO_NON_ZERO_EXIT_UNDEFINED
+corrected_synthetic_mapping:
+  target_identity_members:
+    - EXECUTABLE
+    - ARGV_AND_TOKEN_POSITIONS
+    - PROJECT_REF
+    - WORKDIR_AND_CWD
+    - SANITIZED_ENVIRONMENT
+  target_identity_exit_info: TARGET_MISMATCH_TRUE_LEDGER_MISMATCH_FALSE
+  execution_readiness_members:
+    - DURABLE_BURN_RECORD
+    - ACTIVE_LOCK_OWNERSHIP
+    - STAGE_ORDER
+  execution_readiness_exit_info: TARGET_MISMATCH_FALSE_LEDGER_MISMATCH_TRUE
+  deadline_owner: FROZEN_RUN_WITH_TIMEOUT_AND_INJECTED_MONOTONIC_TIMER_ONLY
+  logical_calls_per_synthetic_outcome: 1
+  real_os_launches_per_synthetic_outcome: 0
+  new_frozen_exit_info_field_added: false
+  adapter_evidence_subtypes:
+    - BURN_RECORD_INVALID
+    - ACTIVE_LOCK_INVALID
+    - STAGE_ORDER_INVALID
+accepted_durable_ledger:
+  caller_selectable: false
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/runtime/gda-estimate-postal-master-r5-cr6/burn-ledger-v1
+  record_create: O_WRONLY_O_CREAT_O_EXCL_O_NOFOLLOW
+  durability: EXACT_WRITE_FILE_FSYNC_READBACK_DIRECTORY_FSYNC_BEFORE_REAL_SPAWN
+accepted_offline_harness:
+  exact_file_count: 14
+  combined_sha256_of_sorted_sha256sum_lines: 4e4dac8a8d6c667c586fee010ef7a9909c665333547c74f0ac7b37ccf44f2395
+fixed_manifest:
+  formal_count: 113
+  staged_count: 112
+  sole_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  aggregate_sha256: 0d5414ac1257a287938e141d5c398f3607c3bf2650d38255f520956f15ddb5bb
+fixed_target:
+  project_ref: nqvnjqcxgngqsqkbpdfi
+  production_contact: PROHIBITED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3F_SYNTHETIC_EXIT_CLASSIFICATION_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_implementation_allowlist_unchanged:
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.mjs
+  - scripts/e2e/gda-estimate-postal-master-r5-cr6/hosted-execution-adapter.test.mjs
+future_rediagnosis:
+  exact_file_count: 18
+  result_marker: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3F_READ_ONLY_DIAGNOSIS_RESULT_V1
+boundaries:
+  public_safe_pr_result_record_posted: true
+  claude_r3f_rediagnosis_invoked: false
+  adapter_implemented_or_tested: false
+  existing_fourteen_harness_files_modified: false
+  protected_content_opened: false
+  supabase_cli_execution_for_implementation: false
+  hosted_project_or_database_contacted: false
+  migration_replayed_or_applied: false
+  git_staged_committed_or_pushed: false
+  ready_merged_or_deployed: false
+decision: AUTHOR_CR6_R3F_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_SYNTHETIC_EXIT_CLASSIFICATION_FROZEN_FOURTEEN_HASH_PROTECTED_METADATA_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL; PUSH_AND_EIGHTEEN_FILE_R3F_REDIAGNOSIS_REMAIN_SEPARATE_GATES"
+```
+
+## GDA-DEMO-20260907 — Estimate Wizard hotfix R1 diagnosis acceptance and governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1
+marker: GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1_GOVERNANCE_V1
+status: READ_ONLY_DIAGNOSIS_ACCEPTED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-06
+append_only: true
+objective: "Register the Owner-confirmed demo blockers, accepted bounded diagnosis, exact future seven-file repair, and separate postal environment gate without starting implementation."
+authorization: "The Owner first authorized exactly nineteen private files to be sent once to Anthropic Claude Code for a tool-disabled, read-only diagnosis. After MacBook Codex accepted the result, the Owner authorized only the exact three-document governance registration and one public-safe PR #67 instruction comment. No implementation, tests, retransmission, stage, commit, push, database, migration, import, Vercel mutation, deployment, Ready, or merge is authorized."
+priority:
+  active: GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1
+  held_without_cancellation: GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3K_R1
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_head: 8ec828736856ed0ba2f9bbb5117d00e680af31c4
+  fixed_tree: 2c3108d9d8405574dddca9e89f82ad3d480aea07
+  upstream_ahead_behind: "0 0"
+preview:
+  deployment_id: dpl_BkBJw1KWqoPLj7BGJQ2NcQUGLxD5
+  alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+owner_blockers:
+  - OCR_ADDRESS_DOES_NOT_POPULATE_POSTAL_CODE
+  - CERTIFIED_ONLY_CANCOAT_PRO_RENDERED_FOR_DETAILER
+  - READY_SAVE_ACTIONS_LACK_WHITE_TEXT
+diagnosis:
+  invocation: ANTHROPIC_CLAUDE_CODE_TOOL_DISABLED_READ_ONLY_ONE_TIME
+  exact_private_file_count: 19
+  result_marker: GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  verdict: PASS_TO_IMPLEMENT
+  codex_adjudication: PASS_TO_IMPLEMENT_ACCEPTED_WITH_SEPARATE_POSTAL_ENVIRONMENT_GATE
+accepted_findings:
+  postal: UI_AND_SERVER_ACTION_WIRING_PRESENT_DB_OBJECTS_AND_PROMOTED_OFFICIAL_DATA_MISSING_IN_NON_PRODUCTION_CANDIDATES
+  coating: SECOND_LAYER_OPTIONS_NOT_RANK_AWARE_WHILE_PRICING_FAILS_CLOSED
+  save_actions: TWO_READY_BUTTONS_LACK_EXPLICIT_TEXT_WHITE
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_exact_implementation_allowlist:
+  - src/components/estimates/wizard/screens/coating-matrix.ts
+  - src/components/estimates/wizard/screens/coating-window-reconciliation.test.ts
+  - src/components/estimates/wizard/steps/Step4Estimate.tsx
+  - src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx
+  - src/components/estimates/wizard/production/EstimateWizardContainer.tsx
+  - src/components/estimates/wizard/save/WizardSavePanel.tsx
+  - src/components/estimates/wizard/save/WizardSavePanel.test.tsx
+future_verification:
+  - node --import tsx --test src/components/estimates/wizard/screens/coating-window-reconciliation.test.ts
+  - node --import tsx --test src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx
+  - node --import tsx --test src/components/estimates/wizard/save/WizardSavePanel.test.tsx
+  - node --import tsx --test src/components/estimates/wizard/production/ProductionEstimateWizard.test.tsx
+  - npm run typecheck
+  - git diff --check -- EXACT_SEVEN_PATHS
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+public_instruction:
+  target: PR_67
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5562207548
+boundaries:
+  source_implemented_or_tested: false
+  postal_source_edit_proposed: false
+  private_source_retransmitted_after_diagnosis: false
+  dependency_changed_or_installed: false
+  git_staged_committed_or_pushed: false
+  supabase_or_database_contacted_after_diagnosis: false
+  migration_or_import_executed: false
+  vercel_changed_or_deployed: false
+  ready_or_merged: false
+decision: REGISTER_DEMO_HOTFIX_R1_GOVERNANCE_AND_PUBLIC_SAFE_PR_INSTRUCTION_ONLY
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_PROTECTED_METADATA_POST_ONE_PR67_INSTRUCTION_RECORD_ITS_URL_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_SEVEN_FILE_CLAUDE_IMPLEMENTATION; KEEP_POSTAL_ENVIRONMENT_ACTIVATION_SEPARATE"
+```
+
+## GDA-ESTIMATE-PDF-CHROMIUM-BIN-TRACE-R3 — governance and bounded repair authorization
+
+```yaml
+phase: GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR
+marker: GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR_GOVERNANCE_V1
+status: GOVERNANCE_DELIVERY_AND_POST_DELIVERY_CLAUDE_SOURCE_CANDIDATE_AUTHORIZED
+date: 2026-09-07
+append_only: true
+objective: "Trace the existing Sparticuz Chromium binary assets into only the estimate-PDF server function and restore the fixed Preview PDF renderer without changing PDF, save, pricing, OCR, postal, or database behavior."
+authorization: "The Owner explicitly authorized exactly three governance edits, exact-path governance stage/local commit, one normal non-force push to PR #67, one public-safe instruction comment, and then one bounded Claude two-file implementation plus exact verification. Source stage/commit/push, deployment, Preview mutation, Ready, and merge remain prohibited."
+priority:
+  active: GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR
+  held_without_cancellation:
+    - GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3K_R1
+    - GDA_DEMO_20260907_POSTAL_ENVIRONMENT_ACTIVATION
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state_before_authoring: OPEN
+  draft_before_authoring: true
+  base: main
+  mergeable_before_authoring: MERGEABLE
+  pre_governance_source_head: 83e18e94be3774b58434dff3f7a215619345498b
+  pre_governance_source_tree: 4ae4238e9382b5bbcbd36bc97d7a755eb933d34f
+  index_before_authoring: CLEAN
+preview:
+  deployment_id: dpl_AdyEnDo3ZZ7rpKLc8sM2AxQpDqZ8
+  url: https://dealeros-ixqol6xwe-nisikawa-5024s-projects.vercel.app
+  build_framework: NEXT_15_5_19_TURBOPACK
+  vercel_check: SUCCESS
+  vercel_preview_comments_check: SUCCESS
+observed_evidence:
+  original_chrome_profile: NET_ERR_BLOCKED_BY_CLIENT
+  clean_authenticated_extension_free_browser: APPLICATION_PDF_GENERATION_FAILED
+  server_log: 'The input directory "/var/task/node_modules/@sparticuz/chromium/bin" does not exist.'
+  accepted_root_cause: SPARTICUZ_CHROMIUM_BIN_ABSENT_FROM_SERVERLESS_OUTPUT_TRACE
+  excluded_root_causes:
+    - ESTIMATE_SAVE
+    - PRICING
+    - OCR
+    - POSTAL
+    - CUSTOMER_OR_VEHICLE_DATA
+    - DATABASE
+    - AUTHORIZATION
+configuration_finding:
+  chromium_externalized_already: true
+  puppeteer_core_externalized_already: true
+  chromium_bin_trace_present_before_repair: false
+  required_route_key: /pdf/estimate
+  required_glob: ./node_modules/@sparticuz/chromium/bin/**
+  global_trace_expansion_prohibited: true
+baseline_tests:
+  release_identity: 22_PASS_1_FAIL_STALE_CONFIGURATION_EXPECTATION
+  estimate_pdf_route: 17_PASS
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR.md
+  sha256: 3302640f077952b27d93a9d0b61b53b2cfaf0683f84a019b9760e85d5ce58f9e
+exact_governance_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR.md
+exact_source_candidate_allowlist:
+  - next.config.ts
+  - src/lib/observability/release-identity.test.ts
+exact_verification:
+  - node --import tsx --test src/lib/observability/release-identity.test.ts
+  - node --import tsx --test src/app/pdf/estimate/route.test.ts
+  - npm run typecheck
+  - npm run build
+  - git diff --check -- next.config.ts src/lib/observability/release-identity.test.ts
+  - git diff -- next.config.ts src/lib/observability/release-identity.test.ts
+  - git status --short
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+public_instruction:
+  target: PR_67
+  status: PENDING_GOVERNANCE_DELIVERY
+required_claude_result:
+  marker: GDA_ESTIMATE_PDF_CHROMIUM_BIN_TRACE_R3_REPAIR_RESULT_V1
+  verdicts:
+    - CANDIDATE_READY
+    - CHANGES_REQUIRED
+    - BLOCKED_ENVIRONMENT
+boundaries:
+  source_changed_before_governance_delivery: false
+  package_or_lockfile_changed: false
+  dependency_installed: false
+  database_or_supabase_contacted: false
+  provider_or_vercel_mutated: false
+  source_staged_committed_or_pushed: false
+  deployed_ready_or_merged: false
+decision: DELIVER_EXACT_THREE_DOCUMENT_GOVERNANCE_THEN_RUN_ONE_BOUNDED_TWO_FILE_CLAUDE_CANDIDATE
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_AND_PROTECTED_METADATA; COMMIT_AND_NORMALLY_PUSH_ONLY_GOVERNANCE; POST_ONE PUBLIC_SAFE PR67 INSTRUCTION; RUN CLAUDE TWO-FILE REPAIR_AND_EXACT_TESTS; STOP_BEFORE_SOURCE_GIT_OR_DEPLOYMENT"
+```
+
+## GDA-PR67-FULL-CUMULATIVE-AUDIT-R1 — current-state correction and merge hold
+
+```yaml
+phase: GDA_PR67_FULL_CUMULATIVE_AUDIT_R1
+marker: GDA_PR67_FULL_CUMULATIVE_AUDIT_R1_RESULT_V1
+status: CHANGES_REQUIRED_GOVERNANCE_AND_ENVIRONMENT
+date: 2026-09-07
+append_only: true
+objective: "Correct the recorded current state after the accepted PDF repair and independently decide whether the entire cumulative PR #67 may become Ready or merge."
+authorization: "The Owner authorized a correction limited to exactly GYEON_DA_COMPLETION_PLAN.md, GYEON_DA_PHASE_RESULTS.md, and one public-safe PR #67 correction comment. Stage, commit, push, database/Supabase action, postal migration/data import, Vercel mutation, deployment, Ready, and merge remain unauthorized."
+priority:
+  active: GDA_PR67_FULL_CUMULATIVE_AUDIT_R1
+  held_without_cancellation:
+    - GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3K_R1
+    - GDA_DEMO_20260907_POSTAL_ENVIRONMENT_ACTIVATION
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  base_oid: bde532f8266560311b1168dea7a6599763c7ad24
+  mergeable: MERGEABLE
+  head: 1d8474f5c97b9e9e7b70114edb19d654849a6264
+  tree: 51562c01e922ad72e02d80756c462d6874e0fc6b
+  upstream_ahead_behind: "0 0"
+  changed_files: 104
+  additions: 27168
+  deletions: 154
+count_correction:
+  prior_public_wording: "entire 100-file PR"
+  authoritative_github_count: 104
+  prior_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5566761080
+  correction_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/67#issuecomment-5567086913
+pdf_repair:
+  bounded_verdict: PASS
+  governance_commit: ce5181d
+  source_commit: 1d8474f5c97b9e9e7b70114edb19d654849a6264
+  exact_source_paths:
+    - next.config.ts
+    - src/lib/observability/release-identity.test.ts
+  focused_pdf_and_release_identity_tests: 40/40_PASS
+  typecheck: PASS
+  build: PASS_53_OF_53_STATIC_PAGES
+  authenticated_preview_pdf: GENERATED_AND_DISPLAYED
+  vercel: PASS
+  vercel_preview_comments: PASS
+cumulative_verification:
+  changed_typescript_test_files: 17
+  changed_typescript_tests: 425/430_PASS
+  failures: 5
+  failure_scope: src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx_WINDOW_FILM_ASSERTIONS
+  base_reproduction:
+    base_oid: bde532f8266560311b1168dea7a6599763c7ad24
+    result: SAME_39_PASS_5_FAIL
+    classification: PRE_EXISTING_NOT_PR67_REGRESSION_BUT_NOT_ALL_GREEN
+  cr6_node_harness: 304/304_PASS
+  diff_check: PASS
+dependency_audit:
+  current: 8_HIGH_4_MODERATE_0_CRITICAL
+  base: 8_HIGH_4_MODERATE_0_CRITICAL
+  classification: PRE_EXISTING_NOT_INTRODUCED_BY_PR67_PRODUCTION_HARDENING_REMAINS
+postal_environment:
+  ui_and_server_action_wiring: PRESENT
+  non_production_db_objects: ABSENT
+  promoted_official_japan_post_data: ABSENT
+  owner_observed_postal_autofill: NOT_WORKING
+  decision: SEPARATE_HELD_ENVIRONMENT_GATE_REQUIRED
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+governance_correction_paths:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+boundaries:
+  source_changed: false
+  tests_changed: false
+  dependency_changed_or_installed: false
+  public_safe_pr_correction_posted: true
+  git_staged_committed_or_pushed: false
+  database_or_supabase_contacted: false
+  postal_migration_or_import_executed: false
+  vercel_or_provider_mutated: false
+  ready_or_merged: false
+decision: PR67_FULL_CUMULATIVE_CHANGES_REQUIRED_KEEP_OPEN_DRAFT
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_CORRECTION; REQUEST_SEPARATE_OWNER_AUTHORIZATION_BEFORE_ANY_STAGE_COMMIT_PUSH_OR_POSTAL_ENVIRONMENT_ACTION"
+```
+
+## GDA-DEMO-20260907 — current Preview postal emergency preflight R1 governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Register a fail-closed one-time read-only route that identifies the Supabase project used by the fixed working Preview and determines the smallest later postal-only environment gate without executing it."
+authorization: "The Owner authorized authoring exactly the emergency preflight directive, GYEON_DA_COMPLETION_PLAN.md, and GYEON_DA_PHASE_RESULTS.md. Stage, commit, push, PR mutation, Claude execution/private transmission, database/Supabase access, migration apply, Japan Post CSV download/import/promotion, Vercel mutation/redeployment, Ready, merge, and Production contact remain unauthorized."
+priority:
+  active: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1_GOVERNANCE
+  accepted_predecessor: GDA_PR67_FULL_CUMULATIVE_AUDIT_R1
+  held_without_cancellation:
+    - GDA_ESTIMATE_WIZARD_POSTAL_MASTER_R5_CR6_R3K_R1
+    - GDA_DEMO_20260907_POSTAL_ENVIRONMENT_ACTIVATION
+responsibility:
+  current_author: MACBOOK_CODEX
+  future_read_only_diagnosis: MACBOOK_CLAUDE_AFTER_SEPARATE_OWNER_AUTHORIZATION
+  studio_participation: NONE
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  mergeable: MERGEABLE
+  fixed_pre_governance_parent: b6db05f61d80b39963981b5594c44f3692f57946
+  fixed_pre_governance_parent_tree: 0d575a81fe2e4d338f55de19a5d64c03e6373b95
+  fixed_pre_governance_parent_parent: 1d8474f5c97b9e9e7b70114edb19d654849a6264
+  required_execution_head: DERIVED_SINGLE_DIRECT_CHILD_OF_FIXED_PRE_GOVERNANCE_PARENT
+  required_execution_delta: EXACT_THREE_GOVERNANCE_PATHS_ONLY
+  upstream_ahead_behind_before_authoring: "0 0"
+preview:
+  vercel_project_name: dealeros
+  vercel_project_id: prj_aHtlx2Tsj21TWNDFbO20BN4C7J84
+  deployment_id: dpl_6TeZEdDpj1AAxL5V8XzJL84PkMtB
+  alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+  target: preview
+  state: READY
+  exact_supabase_project_ref: UNVERIFIED
+read_only_environment_observations:
+  clean_replacement_name: DealerOS-Dev-Clean-R5
+  clean_replacement_ref: nqvnjqcxgngqsqkbpdfi
+  clean_replacement_region: ap-northeast-1
+  clean_replacement_health: ACTIVE_HEALTHY
+  clean_replacement_postgres: 17.6.1.166
+  clean_replacement_migrations: 0
+  clean_replacement_public_private_tables: 0
+  formal_repository_migrations: 113
+  postal_migration_present_in_repository: true
+  postal_import_tool_present_in_repository: true
+  real_japan_post_csv_present_in_repository: false
+target_policy:
+  production_ref: dmvyaykhibmphrmekjbb
+  production_contact: PROHIBITED
+  unknown_ref_contact: PROHIBITED
+  classified_non_production_refs_read_only_only:
+    - nqvnjqcxgngqsqkbpdfi
+    - fbieiotihlmpfzybowbt
+    - vhiuiwolnlvlwvoaingd
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1.md
+  sha256: d0cae4a8593190cc947328bcd6762705924b44a847a87c938bff430f354598a4
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R1.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_read_scope:
+  exact_repository_path_count: 12
+  protected_content_readable: false
+required_future_result:
+  marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_RESULT_V1
+  execution_count: ONE_AFTER_SEPARATE_OWNER_AUTHORIZATION
+  writes_applies_imports_deployments_git_mutations_production_contacts_retries: 0
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_or_private_files_transmitted: false
+  database_or_supabase_contacted_for_this_phase: false
+  migration_applied: false
+  postal_data_downloaded_imported_or_promoted: false
+  vercel_mutated_or_redeployed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_EMERGENCY_PREFLIGHT_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_HASHES_PROTECTED_METADATA_UNTRACKED_PRESERVATION_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_GOVERNANCE_STAGE_LOCAL_COMMIT_NORMAL_PUSH_ONE_PUBLIC_SAFE_PR67_INSTRUCTION_AND_ONE_READ_ONLY_CLAUDE_PREFLIGHT"
+```
+
+## GDA-DEMO-20260907 — current Preview postal emergency preflight R1 result and R2 safe-binding governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2_SAFE_BINDING_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2_SAFE_BINDING_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record the correctly blocked R1 run and define one deployment-bound, secret-redacted Vercel proof of the fixed Preview's Supabase project ref without contacting Supabase or a database."
+authorization: "The Owner authorized R2 directive authoring only. Stage, commit, push, PR mutation, private transmission, Claude execution, Vercel request, Supabase/DB/provider contact, migration apply, postal import, deployment, Ready, merge, and Production contact remain unauthorized."
+r1_execution:
+  marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_RESULT_V1
+  verdict: BLOCKED_SAFE_BINDING_PROOF
+  claude_invocation_count: 1
+  local_identity_gate: PASS
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  head: a16ba231e91bfa0049b8e38d87577d565be086f9
+  tree: f08bd7df246c7b6ff999b5c79a6bdfbe6c7a2d3e
+  parent: b6db05f61d80b39963981b5594c44f3692f57946
+  governance_delta_exact_three_paths: true
+  pr_open: true
+  pr_draft: true
+  blocking_facts:
+    - NORMAL_RUNTIME_REQUEST_REACHED_VERCEL_SSO_PROTECTION
+    - CLAUDE_VERCEL_MCP_REQUIRED_AUTHENTICATION
+    - FIXED_DEPLOYMENT_SUPABASE_REF_NOT_PROVEN
+  database_writes: 0
+  migration_applies: 0
+  imports_or_promotions: 0
+  vercel_mutations_or_deployments: 0
+  git_mutations: 0
+  production_contacts: 0
+  retries: 0
+  secrets_emitted: false
+  codex_independent_recheck: PASS
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  mergeable: MERGEABLE
+  fixed_pre_governance_parent: a16ba231e91bfa0049b8e38d87577d565be086f9
+  fixed_pre_governance_parent_tree: f08bd7df246c7b6ff999b5c79a6bdfbe6c7a2d3e
+  fixed_pre_governance_parent_parent: b6db05f61d80b39963981b5594c44f3692f57946
+  required_execution_head: DERIVED_SINGLE_DIRECT_CHILD_OF_FIXED_PRE_GOVERNANCE_PARENT
+  required_execution_delta: EXACT_THREE_GOVERNANCE_PATHS_ONLY
+preview:
+  vercel_cli_observed_version: 54.17.3
+  project_name: dealeros
+  project_id: prj_aHtlx2Tsj21TWNDFbO20BN4C7J84
+  deployment_id: dpl_6TeZEdDpj1AAxL5V8XzJL84PkMtB
+  alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+  target: preview
+  state: READY
+  expected_git_branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  expected_git_commit: b6db05f61d80b39963981b5594c44f3692f57946
+  compare_git_commit_to_r2_execution_head: false
+  exact_supabase_project_ref: UNVERIFIED
+r2_binding_contract:
+  primary: VERCEL_AUTHENTICATED_DEPLOYMENT_SNAPSHOT_GET_WITH_IN_MEMORY_REDACTION
+  fallback: VERCEL_CURL_FIXED_DEPLOYMENT_GET_ONLY_BOUNDED_NEXTJS_ASSET_SCAN
+  current_project_env_alone_is_binding_proof: false
+  repository_link_or_env_export: PROHIBITED
+  raw_response_or_complete_value_emission: PROHIBITED
+  supabase_or_database_contact: PROHIBITED
+  accepted_non_production_refs:
+    - nqvnjqcxgngqsqkbpdfi
+    - fbieiotihlmpfzybowbt
+    - vhiuiwolnlvlwvoaingd
+  production_ref: dmvyaykhibmphrmekjbb
+  production_action: STOP_WITHOUT_CONTACT
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2_SAFE_BINDING.md
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2_SAFE_BINDING.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_repository_read_scope:
+  exact_count: 5
+  r1_private_twelve_retransmitted: false
+  application_or_migration_source_readable: false
+  protected_content_readable: false
+required_future_result:
+  marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_SAFE_BINDING_RESULT_V2
+  execution_count: ONE_AFTER_GOVERNANCE_DELIVERY_AND_SEPARATE_OWNER_AUTHORIZATION
+  success_verdict: PASS_TO_R3_TARGETED_SUPABASE_READ_ONLY_PREFLIGHT
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_for_r2: false
+  vercel_contacted_for_r2: false
+  supabase_or_database_contacted_for_r2: false
+  migration_or_postal_import_executed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R2_SAFE_BINDING_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_R1_EVIDENCE_OFFICIAL_VERCEL_METHOD_REDACTION_TARGET_GATES_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATIONS"
+```
+
+## GDA-DEMO-20260907 — R2 consumed permission stop and R2A Bash permission correction governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2A_BASH_PERMISSION_CORRECTION_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2A_BASH_PERMISSION_CORRECTION_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record the consumed R2 permission denial and correct only the Claude CLI Bash permission declaration without widening the R2 read-only binding contract."
+authorization: "The Owner authorized R2A three-document directive authoring only. Stage, commit, push, PR mutation, private-file transmission, Claude execution, Bash execution, Vercel request, Supabase/DB/provider contact, migration apply, postal import, deployment, Ready, merge, and Production contact remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_governance_parent: 9cb9fe342b365565f7e8a4e6707f9adbbc38c275
+  fixed_pre_governance_parent_tree: 7613c88f0da6441d9737b7d03ae28ff1745c09eb
+  fixed_pre_governance_parent_parent: a16ba231e91bfa0049b8e38d87577d565be086f9
+  upstream_ahead_behind_before_authoring: "0 0"
+r2_consumed_execution:
+  owner_authorized: true
+  claude_cli_auth_verified: true
+  invocation_count: 1
+  files_transmitted_exact_count: 5
+  tools_available: Bash
+  allowed_tools_declared: false
+  permission_mode: dontAsk
+  required_result_marker_present: false
+  codex_verdict: CHANGES_REQUIRED_EXECUTION_PERMISSION
+  claude_reported_reason: BASH_ACCESS_DENIED_BY_PERMISSION_SETTINGS
+  bash_tool_calls_executed: 0
+  git_or_github_checks_executed_by_claude: 0
+  vercel_contacts: 0
+  supabase_or_database_contacts: 0
+  database_writes: 0
+  migration_applies: 0
+  imports_or_promotions: 0
+  git_mutations: 0
+  production_contacts: 0
+  retries: 0
+  secrets_emitted: false
+  codex_post_stop_git_recheck: PASS
+r2a_permission_contract:
+  claude_code_version: 2.1.226
+  safe_mode: true
+  chrome: disabled
+  session_persistence: disabled
+  permission_mode: dontAsk
+  tools: Bash
+  allowed_tools: Bash
+  permission_bypass: PROHIBITED
+  auto_mode: PROHIBITED
+  scope_change_from_r2: PERMISSION_DECLARATION_ONLY
+  one_new_attempt_after_separate_owner_authorization: true
+  retry_of_consumed_r2: false
+preview:
+  project_id: prj_aHtlx2Tsj21TWNDFbO20BN4C7J84
+  deployment_id: dpl_6TeZEdDpj1AAxL5V8XzJL84PkMtB
+  alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+  expected_git_branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  expected_git_commit: b6db05f61d80b39963981b5594c44f3692f57946
+  exact_supabase_project_ref: UNVERIFIED
+  production_ref: dmvyaykhibmphrmekjbb
+  production_contact: PROHIBITED
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2A_BASH_PERMISSION_CORRECTION.md
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2A_BASH_PERMISSION_CORRECTION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_repository_transmission_scope:
+  exact_count: 6
+  application_or_migration_source_transmitted: false
+  r1_private_twelve_retransmitted: false
+  protected_content_transmitted: false
+required_future_result:
+  marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_SAFE_BINDING_RESULT_V2A
+  execution_count: ONE_AFTER_GOVERNANCE_DELIVERY_AND_SEPARATE_OWNER_AUTHORIZATION
+  permission_blocker: BLOCKED_BASH_PERMISSION
+  success_verdict: PASS_TO_R3_TARGETED_SUPABASE_READ_ONLY_PREFLIGHT
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_for_r2a: false
+  vercel_contacted_for_r2a: false
+  supabase_or_database_contacted_for_r2a: false
+  migration_or_postal_import_executed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R2A_PERMISSION_CORRECTION_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_CLI_PERMISSION_FLAGS_DIRECTIVE_HASH_R2_OUTPUT_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH_AUTHORIZATIONS"
+```
+
+## GDA-DEMO-20260907 — R2A blocked binding result and R2B Vercel curl failure-classification governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2B_VERCEL_CURL_FAILURE_CLASSIFICATION_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2B_VERCEL_CURL_FAILURE_CLASSIFICATION_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record the consumed R2A result and classify the single unresolved vercel curl failure without exposing secrets, guessing SSO, deriving a Supabase ref, or changing any system."
+authorization: "The Owner authorized R2A result recording and R2B three-document directive authoring only. Stage, commit, push, PR mutation, Claude execution, file transmission, Vercel request, Supabase/DB contact, migration apply, import, deployment, Ready, merge, and Production contact remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_governance_parent: df3320738883dd3e96fea3c68f67fa8eb897443a
+  fixed_pre_governance_parent_tree: 1453171087dea68a7430592f96cb8b48b3cba074
+  fixed_pre_governance_parent_parent: 9cb9fe342b365565f7e8a4e6707f9adbbc38c275
+  upstream_ahead_behind_before_authoring: "0 0"
+r2a_consumed_execution:
+  owner_authorized: true
+  claude_cli_version: 2.1.226
+  invocation_count: 1
+  marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_SAFE_BINDING_RESULT_V2A
+  verdict: BLOCKED_SAFE_BINDING_PROOF
+  permission_correction_tools_bash: true
+  permission_correction_allowed_tools_bash: true
+  permission_mode: dontAsk
+  bash_first_call_executed: true
+  repository_identity: PASS
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  head: df3320738883dd3e96fea3c68f67fa8eb897443a
+  tree: 1453171087dea68a7430592f96cb8b48b3cba074
+  governance_parent: 9cb9fe342b365565f7e8a4e6707f9adbbc38c275
+  governance_delta_exact_three_paths: true
+  pr_open: true
+  pr_draft: true
+  deployment_identity: PASS
+  deployment_id: dpl_6TeZEdDpj1AAxL5V8XzJL84PkMtB
+  project_id: prj_aHtlx2Tsj21TWNDFbO20BN4C7J84
+  alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+  ready: true
+  preview: true
+  deployment_target_field: null
+  git_branch_match: true
+  git_commit_match: true
+  snapshot_bound_environment_present: false
+  binding_method: null
+  supabase_project_ref: null
+  unique_ref_count: 0
+  vercel_curl_command_count: 1
+  vercel_curl_exit: NONZERO
+  failure_cause: UNCLASSIFIED
+  sso_claim_accepted_as_root_cause: false
+  raw_response_persisted: false
+  permission_bypass_used: false
+  secrets_emitted: false
+  vercel_mutations_or_deployments: 0
+  supabase_or_database_contacts: 0
+  database_writes: 0
+  migration_applies: 0
+  imports_or_promotions: 0
+  git_mutations: 0
+  production_contacts: 0
+  retries: 0
+  codex_post_execution_repository_recheck: PASS
+r2b_contract:
+  purpose: CLASSIFY_VERCEL_CURL_FAILURE_ONLY
+  claude_future_transmission_exact_count: 3
+  local_cli_version_and_help_gate: REQUIRED
+  vercel_curl_process_max: 1
+  fixed_deployment_id: dpl_6TeZEdDpj1AAxL5V8XzJL84PkMtB
+  fixed_scope: nisikawa-5024s-projects
+  timeout_seconds: 30
+  combined_output_limit_bytes: 1048576
+  raw_stdout_or_stderr_emission: PROHIBITED
+  secret_or_bypass_value_request: PROHIBITED
+  link_or_project_metadata_creation: PROHIBITED
+  supabase_ref_derivation_or_runtime_scan: PROHIBITED
+  retry: PROHIBITED
+  success_meaning: FAILURE_CATEGORY_ONLY_NOT_BINDING_PROOF
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_VERCEL_CURL_FAILURE_CLASSIFICATION_RESULT_V2B
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2B_VERCEL_CURL_FAILURE_CLASSIFICATION.md
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2B_VERCEL_CURL_FAILURE_CLASSIFICATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_for_r2b: false
+  vercel_contacted_for_r2b: false
+  supabase_or_database_contacted_for_r2b: false
+  migration_or_postal_import_executed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R2B_FAILURE_CLASSIFICATION_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2A_EVIDENCE_LOCAL_VERCEL_HELP_OFFICIAL_PROVIDER_BASIS_REDACTION_CATEGORY_GATES_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_GOVERNANCE_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH"
+```
+
+## GDA-DEMO-20260907 — R2B unknown result and R2C local Vercel CLI control-flow governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2C_LOCAL_VERCEL_CLI_CONTROL_FLOW_AUDIT_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2C_LOCAL_VERCEL_CLI_CONTROL_FLOW_AUDIT_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record the consumed R2B unknown result and prove or reject the local unlinked-cwd confirmation-required cause using only fixed-hash installed Vercel CLI artifacts and zero provider contact."
+authorization: "The Owner authorized R2B result recording and R2C three-document directive authoring only. Stage, commit, push, PR mutation, Claude execution, transmission, provider/network request, Supabase/DB contact, migration, import, deployment, Ready, merge, and Production contact remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_governance_parent: 60ec89a8cd9ce5bfc8321fa2ea6755081b9df3ef
+  fixed_pre_governance_parent_tree: fd6c2f1b3e77ec21e59ea54389c06e4da21a4dac
+  fixed_pre_governance_parent_parent: df3320738883dd3e96fea3c68f67fa8eb897443a
+  upstream_ahead_behind_before_authoring: "0 0"
+r2b_consumed_execution:
+  owner_authorized: true
+  claude_cli_version: 2.1.226
+  invocation_count: 1
+  marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_VERCEL_CURL_FAILURE_CLASSIFICATION_RESULT_V2B
+  verdict: CHANGES_REQUIRED_UNKNOWN_FAILURE
+  repository_identity: PASS
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  head: 60ec89a8cd9ce5bfc8321fa2ea6755081b9df3ef
+  tree: fd6c2f1b3e77ec21e59ea54389c06e4da21a4dac
+  governance_parent: df3320738883dd3e96fea3c68f67fa8eb897443a
+  governance_delta_exact_three_paths: true
+  pr_open: true
+  pr_draft: true
+  vercel_cli_version: 54.17.3
+  vercel_curl_process_count: 1
+  fixed_deployment_id_used: true
+  fixed_scope_used: true
+  exit_code: 1
+  timed_out: false
+  output_limit_exceeded: false
+  category: UNKNOWN_REDACTED
+  raw_stdout_emitted_or_persisted: false
+  raw_stderr_emitted_or_persisted: false
+  secrets_emitted: false
+  temporary_execution_repo_external: true
+  unexpected_link_or_project_metadata: false
+  temporary_execution_cleaned: true
+  vercel_api_or_second_vercel_command_contacts: 0
+  vercel_mutations_or_deployments: 0
+  bypass_secret_requests_or_uses: 0
+  supabase_or_database_contacts: 0
+  database_writes: 0
+  migration_applies: 0
+  imports_or_promotions: 0
+  git_mutations: 0
+  production_contacts: 0
+  retries: 0
+  codex_post_execution_repository_recheck: PASS
+codex_local_cli_discovery:
+  provider_or_network_contact: false
+  installed_version: 54.17.3
+  relative_path_branch: getDeploymentUrlAndToken
+  local_link_checked_before_deployment_resolution: true
+  deployment_flag_bypasses_link_requirement: false
+  unlinked_cwd_calls_setup_and_link: true
+  noninteractive_without_yes_can_return: HEADLESS
+  headless_structured_reason: confirmation_required
+  r2b_classifier_included_confirmation_required: false
+  provisional_root_cause: UNLINKED_TEMP_CWD_TRIGGERED_CLI_CONFIRMATION_REQUIRED_BEFORE_DEPLOYMENT_REQUEST
+  sso_proven: false
+  supabase_or_application_failure_proven: false
+  full_url_branch_candidate: getFullUrlAndToken
+  full_url_candidate_executed: false
+r2c_local_artifacts:
+  - path: /opt/homebrew/Cellar/vercel/54.17.3/libexec/lib/node_modules/vercel/package.json
+    mode: -rw-r--r--
+    size: 6621
+    sha256: fb448f67d81f0f919914d1dd022cc03d728d3cff20c8942477828a7de5ab417c
+  - path: /opt/homebrew/Cellar/vercel/54.17.3/libexec/lib/node_modules/vercel/dist/commands-bulk.js
+    mode: -rw-r--r--
+    size: 1815233
+    sha256: a96b4eec9833cd96162d099a492902804ba135e927247c09296abd50d71e6f64
+  - path: /opt/homebrew/Cellar/vercel/54.17.3/libexec/lib/node_modules/vercel/dist/chunks/chunk-QMMMXYOY.js
+    mode: -rw-r--r--
+    size: 2804
+    sha256: 823ad77096fa1eb47ca423eb3c966a24897a3bdb170d6a18b9462a6a8bc79427
+  - path: /opt/homebrew/Cellar/vercel/54.17.3/libexec/lib/node_modules/vercel/dist/chunks/chunk-FMBDRMTZ.js
+    mode: -rw-r--r--
+    size: 49750
+    sha256: 4d388040cdf9719e328aad297cf63d9a301857a53ef54bf11e98aee28ad964ed
+r2c_contract:
+  purpose: LOCAL_STATIC_CLI_CONTROL_FLOW_ONLY
+  claude_future_transmission_exact_count: 3
+  local_artifact_read_exact_count: 4
+  provider_or_network_commands: PROHIBITED
+  prior_raw_r2b_output_read: PROHIBITED
+  credential_or_secret_access: PROHIBITED
+  vercel_curl_runtime_request: PROHIBITED
+  full_url_candidate_runtime_test: PROHIBITED
+  supabase_ref_derivation: PROHIBITED
+  retry: PROHIBITED
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_LOCAL_VERCEL_CLI_CONTROL_FLOW_RESULT_V2C
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2C_LOCAL_VERCEL_CLI_CONTROL_FLOW_AUDIT.md
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2C_LOCAL_VERCEL_CLI_CONTROL_FLOW_AUDIT.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_for_r2c: false
+  public_official_documentation_read: true
+  operational_provider_or_account_contacted_for_r2c: false
+  supabase_or_database_contacted_for_r2c: false
+  migration_or_postal_import_executed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R2C_LOCAL_CLI_CONTROL_FLOW_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2B_RESULT_LOCAL_CLI_ARTIFACT_HASHES_CONTROL_FLOW_OFFICIAL_VERCEL_BASIS_NETWORK_ZERO_GATE_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_GOVERNANCE_STAGE_LOCAL_COMMIT_AND_NORMAL_PUSH"
+```
+
+## GDA-DEMO-20260907 — R2C accepted result and R2D full-URL no-link provider-proof governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record the independently accepted R2C local-link root cause and define one bounded full-URL GET that proves Preview provider reachability without linking a project, exposing output, or contacting Supabase or the database directly."
+authorization: "The Owner authorized R2D three-document governance authoring only. Stage, commit, push, PR mutation, Claude execution, file transmission, Vercel/provider request, Supabase/DB contact, migration, import, deployment, Ready, merge, and Production contact remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_governance_parent: d2b57727fae5e7094b252070ed71c3c6816ad95d
+  fixed_pre_governance_parent_tree: 75e6007f3604aff3e0b047cd68843430277384ad
+  fixed_pre_governance_parent_parent: 60ec89a8cd9ce5bfc8321fa2ea6755081b9df3ef
+  upstream_ahead_behind_before_authoring: "0 0"
+  vercel_check_at_authoring: SUCCESS
+  vercel_preview_comments_check_at_authoring: SUCCESS
+r2c_consumed_execution:
+  owner_authorized: true
+  claude_cli_version: 2.1.226
+  invocation_count: 1
+  marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_LOCAL_VERCEL_CLI_CONTROL_FLOW_RESULT_V2C
+  verdict: PASS_LOCAL_CAUSE_LINK_CONFIRMATION_REQUIRED
+  repository_identity: PASS
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  head: d2b57727fae5e7094b252070ed71c3c6816ad95d
+  tree: 75e6007f3604aff3e0b047cd68843430277384ad
+  governance_parent: 60ec89a8cd9ce5bfc8321fa2ea6755081b9df3ef
+  governance_delta_exact_three_paths: true
+  protected_metadata_match: true
+  vercel_cli_version: 54.17.3
+  exact_local_artifact_count: 4
+  artifact_modes_sizes_hashes_match: true
+  relative_path_routes_to_linked_project_branch: true
+  ensure_link_precedes_deployment_resolution: true
+  deployment_flag_bypasses_link_requirement: false
+  unlinked_cwd_calls_setup_and_link: true
+  noninteractive_without_yes_can_return_headless: true
+  headless_maps_to_confirmation_required: true
+  r2b_classifier_covered_confirmation_required: false
+  full_url_branch_avoids_relative_path_link_gate: true
+  root_cause: UNLINKED_TEMP_CWD_TRIGGERED_CLI_CONFIRMATION_REQUIRED_BEFORE_DEPLOYMENT_REQUEST
+  network_or_provider_commands: 0
+  vercel_curl_runtime_requests: 0
+  supabase_or_database_contacts: 0
+  raw_prior_r2b_output_read: false
+  credential_or_secret_files_read: false
+  application_or_migration_source_read: false
+  files_written: 0
+  git_mutations: 0
+  retries: 0
+  codex_independent_acceptance: PASS
+r2d_contract:
+  purpose: FULL_URL_NO_LINK_PROVIDER_REACHABILITY_ONLY
+  claude_future_transmission_exact_count: 3
+  preview_alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+  route: /login?next=%2F
+  method: GET
+  direct_curl_path: /usr/bin/curl
+  direct_curl_version: 8.7.1
+  direct_curl_sha256: b636262803922ee1dd0fbf614818473ffa53c811e44fd3278c2270d3af4759d3
+  direct_curl_process_max: 1
+  network_request_max: 1
+  vercel_cli_or_api: PROHIBITED
+  vercel_cli_full_url_reason: PROHIBITED_POTENTIAL_AUTOMATION_BYPASS_TOKEN_CREATION
+  cookie_or_authorization_header: PROHIBITED
+  protection_bypass_read_or_create: PROHIBITED
+  response_body_or_headers: PROHIBITED
+  redirects: PROHIBITED
+  raw_output_emission: PROHIBITED
+  timeout_seconds: 30
+  connect_timeout_seconds: 10
+  combined_output_limit_bytes: 1048576
+  retry: PROHIBITED
+  direct_supabase_or_database_command: PROHIBITED
+  server_side_supabase_activity_claim: PROHIBITED_UNOBSERVABLE
+  success_meaning: PROVIDER_REACHABILITY_ONLY_NOT_APPLICATION_POSTAL_OR_BINDING_PROOF
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_FULL_URL_NO_LINK_PROVIDER_PROOF_RESULT_V2D
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF.md
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_EMERGENCY_PREFLIGHT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+official_basis:
+  vercel_full_url_changelog: https://vercel.com/changelog/use-native-curl-syntax-with-vercel-cli
+  vercel_curl_documentation: https://vercel.com/docs/cli/curl
+  local_vercel_cli_safety_finding: "getFullUrlAndToken can call getOrCreateDeploymentProtectionToken, which creates an automation-bypass token when none exists; Vercel CLI is therefore prohibited in R2D."
+  supabase_breaking_change_review: "No current breaking change applies to this unauthenticated Vercel-hostname GET; no direct Supabase or DB command is permitted and server-side activity is not observed or claimed."
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_for_r2d: false
+  vercel_or_provider_contacted_for_r2d: false
+  supabase_or_database_contacted_for_r2d: false
+  migration_or_postal_import_executed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_R2D_FULL_URL_NO_LINK_PROVIDER_PROOF_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2C_RESULT_VERCEL_CLI_TOKEN_CREATION_PROHIBITION_FIXED_DIRECT_CURL_IDENTITY_FULL_URL_ONE_REQUEST_OUTPUT_REDACTION_OFFICIAL_PROVIDER_BASIS_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_LOCAL_COMMIT"
+```
+
+## GDA-DEMO-20260907 — R2D rejected result and R3 authenticated browser postal-autofill governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R3_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_VERIFICATION_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R3_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_VERIFICATION_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record R2D without rerun, reject its claimed PASS while retaining the bounded provider-reachability evidence, and define a privacy-safe authenticated-browser test that independently verifies OCR address-to-postal and manual postal-to-address autofill."
+authorization: "The Owner authorized R2D result recording and R3 exact three-document governance authoring plus local verification only. Browser/CUA execution, screenshots, Claude invocation, private-file transmission, source/test edits, stage, commit, push, PR mutation, Vercel/provider action, Supabase/DB contact, migration, import, save, deployment, Ready, merge, and Production contact remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_r3_head: 4ae384037dd724b1a6cf797226343f087cddc564
+  fixed_pre_r3_tree: 6a07395a8e219a13e00d88f59142322a76a5db05
+  fixed_pre_r3_parent: d2b57727fae5e7094b252070ed71c3c6816ad95d
+  upstream_ahead_behind_before_authoring: "0 0"
+  vercel_check_at_authoring: SUCCESS
+  vercel_preview_comments_check_at_authoring: SUCCESS
+r2d_consumed_execution:
+  owner_authorized: true
+  claude_invocation_count: 1
+  requested_result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_FULL_URL_NO_LINK_PROVIDER_PROOF_RESULT_V2D
+  claimed_verdict: PASS_FULL_URL_PROVIDER_REACHABLE
+  codex_independent_verdict: CHANGES_REQUIRED_EXECUTION_SCOPE_AND_RESULT_FORMAT
+  rerun: PROHIBITED_NOT_REQUIRED
+  useful_evidence:
+    preview_provider_response_class: 3xx
+    permitted_network_get_count: 1
+    redirect_followed: false
+    response_body_or_headers_captured: false
+    provider_mutation: false
+    supabase_or_database_contact: false
+    git_mutation: false
+  rejection_reasons:
+    prohibited_curl_version_process_executed: true
+    actual_curl_process_count: 2
+    reported_curl_process_count: 1
+    exact_http_status_emitted_when_only_class_permitted: true
+    required_leading_result_marker_omitted: true
+  proof_boundary: PREVIEW_PROVIDER_REACHABILITY_ONLY_NOT_AUTH_OR_POSTAL_FUNCTIONALITY
+r3_contract:
+  execution_owner: MACBOOK_CODEX_WITH_OWNER_PRESENT
+  runtime: OWNER_ALREADY_AUTHENTICATED_IN_APP_BROWSER
+  preview_alias: dealeros-git-agent-gda-estimate-0307f5-nisikawa-5024s-projects.vercel.app
+  claude_invoked: false
+  private_file_transmission: PROHIBITED
+  owner_manually_selects_ocr_document: REQUIRED
+  auth_cookie_token_or_browser_storage_access: PROHIBITED
+  browser_devtools_network_body_or_har_capture: PROHIBITED
+  pii_values_in_result: PROHIBITED
+  screenshot_default: PROHIBITED_REQUIRES_SEPARATE_OWNER_APPROVAL_AND_REDACTION
+  direct_supabase_or_database_access: PROHIBITED
+  vercel_cli_api_or_provider_mutation: PROHIBITED
+  estimate_or_customer_save_submit_create: PROHIBITED
+  reversible_unsaved_field_entry: ALLOWED_ONLY_AFTER_SEPARATE_R3_EXECUTION_AUTHORIZATION
+  test_a: OCR_ADDRESS_TO_POSTAL_REVERSE_AUTOFILL
+  test_b: MANUAL_PUBLIC_POSTAL_TO_ADDRESS_FORWARD_AUTOFILL_ON_CLEAN_FORM
+  tests_independent: true
+  result_values_redacted_to_status_classes: true
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_RESULT_V3
+  allowed_verdicts:
+    - PASS_BOTH_DIRECTIONS
+    - CHANGES_REQUIRED_OCR_REVERSE_ONLY
+    - CHANGES_REQUIRED_FORWARD_LOOKUP_ONLY
+    - CHANGES_REQUIRED_BOTH_DIRECTIONS
+    - BLOCKED_AUTH_SESSION
+    - BLOCKED_OWNER_DOCUMENT_SELECTION
+    - BLOCKED_UI_OR_PREVIEW
+    - BLOCKED_PRIVACY_BOUNDARY
+directive:
+  path: docs/master_specification/CODEX_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R3_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_VERIFICATION.md
+exact_governance_allowlist:
+  - docs/master_specification/CODEX_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R3_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_VERIFICATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+official_basis:
+  supabase_breaking_change_review: "Current breaking-change items were reviewed. R3 makes no direct Supabase/Data API/Auth/DB request and therefore does not rely on the affected management logs endpoint, extension-version behavior, OAuth status code, or new-table API exposure behavior."
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  browser_or_cua_executed_for_r3: false
+  screenshot_created: false
+  claude_invoked_for_r3: false
+  private_files_transmitted: false
+  vercel_or_provider_contacted_for_r3: false
+  supabase_or_database_contacted_for_r3: false
+  migration_or_postal_import_executed: false
+  estimate_or_customer_saved_created_or_submitted: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  ready_or_merged: false
+decision: RECORD_R2D_AS_CHANGES_REQUIRED_WITHOUT_RERUN_AND_AUTHOR_EXACT_THREE_DOCUMENT_R3_AUTHENTICATED_BROWSER_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R2D_REJECTION_RETAINED_REACHABILITY_EVIDENCE_R3_TWO_DIRECTION_INDEPENDENCE_AUTHENTICATED_SESSION_PRIVACY_NO_SAVE_NO_MUTATION_VERDICT_MATRIX_RESULT_SCHEMA_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_SUPABASE_CHANGE_REVIEW_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_LOCAL_COMMIT"
+```
+
+## GDA-DEMO-20260907 — R3 both-direction failure and R4 Staging data-binding diagnosis governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS_GOVERNANCE_V1
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-07
+append_only: true
+objective: "Record the authenticated R3 failure in both postal directions and define a bounded read-only diagnosis that distinguishes static invoker/action defects from Preview binding, Staging migration, RPC/grant, active-batch, and master-data failures before repair."
+authorization: "The Owner authorized R3 result recording and R4 exact three-document governance authoring plus local verification only. Stage, commit, push, PR mutation, Claude invocation, private-file transmission, Vercel/provider access, Supabase/DB contact, migration, import, source/test edits, deployment, Preview re-test, Ready, merge, and Production contact remain unauthorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-pr67-cr6-recovery-v2
+  branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_r4_head: afa39aafabd5f57966f474724a0e24009c864bba
+  fixed_pre_r4_tree: 7eeab86664a8a13d7c7260cf34a7763e59b58089
+  fixed_pre_r4_parent: 4ae384037dd724b1a6cf797226343f087cddc564
+  upstream_ahead_behind_before_authoring: "0 0"
+  vercel_check_before_r3: SUCCESS
+  vercel_preview_comments_check_before_r3: SUCCESS
+r3_consumed_execution:
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_AUTHENTICATED_BROWSER_POSTAL_AUTOFILL_RESULT_V3
+  verdict: CHANGES_REQUIRED_BOTH_DIRECTIONS
+  preview_alias_match: true
+  authenticated_ui_visible: true
+  owner_present: true
+  owner_selected_document: true
+  test_a:
+    direction: OCR_ADDRESS_TO_POSTAL
+    executed: true
+    customer_name: POPULATED
+    customer_address: UNDETERMINED_REDACTED
+    postal_code: EMPTY
+    postal_behavior: EMPTY_RESULT
+  test_b:
+    direction: MANUAL_PUBLIC_POSTAL_TO_ADDRESS
+    executed: true
+    debounce_waited_longer_than_400ms: true
+    focus_moved_after_input: true
+    address: EMPTY
+    notice: POSTAL_LOOKUP_UNAVAILABLE_MANUAL_ENTRY
+    result: UNAVAILABLE_NOTICE_ADDRESS_EMPTY_AFTER_DEBOUNCE_AND_FOCUS_CHANGE
+  pii_value_recorded: false
+  auth_material_accessed_or_emitted: false
+  codex_screenshot_created: false
+  estimate_saved_or_submitted: false
+  customer_created: false
+  direct_supabase_or_database_contact: false
+  provider_or_vercel_mutation: false
+  git_or_file_mutation: false
+r4_contract:
+  diagnosis_owner: ANTHROPIC_CLAUDE_CODE_AFTER_SEPARATE_EXPLICIT_OWNER_AUTHORIZATION
+  independent_acceptance_owner: MACBOOK_CODEX
+  future_private_file_read_and_transmission_allowlist_count: 25
+  future_operational_target: FORMAL_STAGING_READ_ONLY_ONLY
+  formal_staging_name: DealerOS-Dev-Next
+  formal_staging_ref: vhiuiwolnlvlwvoaingd
+  formal_staging_region: ap-northeast-1
+  production_name: DealerOS-Prod
+  production_ref: dmvyaykhibmphrmekjbb
+  production_contact: PROHIBITED
+  provider_metadata: VARIABLE_NAMES_AND_SCOPES_ONLY
+  provider_env_values: PROHIBITED
+  staging_output: BOOLEAN_CLASSIFICATION_AND_AGGREGATE_COUNT_ONLY
+  database_writes: PROHIBITED
+  migration_or_import_execution: PROHIBITED
+  tests_executed: PROHIBITED_IN_R4
+  source_or_test_edits: PROHIBITED
+  invocation_max: 1
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS_RESULT_V4
+  diagnosis_order:
+    - STATIC_ROUTE_INVOKER_ACTION_RPC_BINDING
+    - PREVIEW_ENV_NAME_SCOPE_AND_PUBLIC_REF_BINDING
+    - STAGING_MIGRATION_RPC_AND_GRANT
+    - STAGING_ACTIVE_BATCH_MASTER_ROWS_AND_PUBLIC_PROBE
+    - FIRST_CAUSAL_BOUNDARY_AND_MINIMUM_REPAIR_SCOPE
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS.md
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+protected:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  content_opened: false
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+preserved_untracked_postal_directives:
+  pre_existing_exact_count: 3
+  action: UNTOUCHED_UNSTAGED_UNTRACKED
+official_basis:
+  supabase_breaking_change_review: "Current items reviewed. R4 must account for new-table Data API exposure/grant separation, but the candidate migration uses public RPCs over private tables; R4 verifies function existence and authenticated execute grants without changing exposure, RLS, or grants."
+boundaries:
+  source_or_test_changed: false
+  dependency_changed_or_installed: false
+  claude_invoked_for_r4: false
+  private_files_transmitted: false
+  vercel_or_provider_contacted_for_r4: false
+  supabase_or_database_contacted_for_r4: false
+  migration_or_postal_import_executed: false
+  git_staged_committed_or_pushed: false
+  pr_mutated: false
+  preview_retested: false
+  ready_or_merged: false
+decision: RECORD_R3_CHANGES_REQUIRED_BOTH_DIRECTIONS_AND_AUTHOR_EXACT_THREE_DOCUMENT_R4_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R3_EVIDENCE_PRIVACY_EXACT_25_FILE_FUTURE_READ_ALLOWLIST_FIXED_IDENTITIES_PROVIDER_NAME_ONLY_STAGING_AGGREGATE_ONLY_VERDICTS_RESULT_SCHEMA_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_SUPABASE_CHANGE_REVIEW_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_LOCAL_COMMIT"
+```
+
+## GDA-DEMO-20260907 — R4 blocked result correction and R5 Staging migration/import read-only preflight governance candidate
+
+```yaml
+phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT_GOVERNANCE
+marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT_GOVERNANCE_V1
+date: 2026-09-08
+owner: MacBook Codex
+status: EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+objective: "Record and correct the one-time R4 result, preserve the confirmed formal-Staging schema absence, and define a bounded read-only preflight that proves Preview binding, migration readiness, predecessor presence, and dataset metadata before any apply or import."
+authorization: "The Owner authorized R4 result recording and R5 exact three-document governance authoring plus local verification only. Stage, commit, push, PR mutation, Vercel/provider access, Supabase/database access, Claude invocation, private-file transmission, migration, dataset acquisition/import, source/test edits, deployment, Preview re-test, Ready, merge, and Production contact remain unauthorized."
+repository: nisikawa-officeAZ/GYEON
+branch: agent/gda-estimate-ocr-postal-clean-replacement-r1
+pull_request:
+  number: 67
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/67
+  state: OPEN
+  draft: true
+  base: main
+  fixed_pre_r5_head: 20032adce2dd007d053e1f37361e0f0d18c8e399
+  fixed_pre_r5_tree: f0f8fd7c201c792388c080ec718ec20cf6f57539
+  fixed_pre_r5_parent: afa39aafabd5f57966f474724a0e24009c864bba
+  upstream_ahead_behind_before_authoring: "0 0"
+  vercel_check_before_authoring: SUCCESS
+  vercel_preview_comments_check_before_authoring: SUCCESS
+r4_consumed_execution:
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_STAGING_DATA_BINDING_READ_ONLY_DIAGNOSIS_RESULT_V4
+  claude_reported_verdict: BLOCKED_PROVIDER_METADATA_ACCESS
+  claude_invocation_count: 1
+  tools_enabled: false
+  allowed_files_transmitted: 25
+  disallowed_files_transmitted: 0
+  provider_variable_name_scope_check: BLOCKED_BY_EXECUTION_SAFETY_GATE
+  provider_cli_retry_or_bypass: false
+  provider_values_read_or_emitted: false
+  database_writes: 0
+  provider_writes: 0
+  git_mutations: 0
+  production_contacted: false
+codex_r4_acceptance:
+  classification: CHANGES_REQUIRED_RESULT_CONSISTENCY_WITH_CONFIRMED_STAGING_SCHEMA_ABSENCE
+  corrections:
+    component_forwards_both_invokers: true
+    master_row_count_class_when_table_absent: UNDETERMINED
+    active_batch_row_count_class_when_table_absent: UNDETERMINED
+    public_probe_result_when_table_absent: UNDETERMINED
+  rerun_required: false
+  reason: "The blocked provider boundary is valid, but static forwarding is provable and absent tables cannot support ZERO/MISSING data classifications."
+formal_staging_read_only_evidence:
+  name: DealerOS-Dev-Next
+  ref: vhiuiwolnlvlwvoaingd
+  region: ap-northeast-1
+  identity_match: true
+  health_class: ACTIVE_HEALTHY
+  migration_20260901001246_present: false
+  forward_rpc_present: false
+  reverse_rpc_present: false
+  forward_authenticated_execute: false
+  reverse_authenticated_execute: false
+  active_batch_table_present: false
+  master_table_present: false
+  row_counts_queried: false
+  row_contents_read: false
+  database_writes: 0
+  production_contacted: false
+r5_contract:
+  phase: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT
+  future_evidence_collection_owner: MacBook Codex
+  future_diagnostic_owner: Anthropic Claude Code
+  future_claude_tools: DISABLED
+  future_private_file_read_and_transmission_allowlist_count: 15
+  provider_evidence_mode: OWNER_AUTHENTICATED_VERCEL_UI_NAMES_SCOPES_AND_PUBLIC_REF_ONLY
+  staging_evidence_mode: EXACT_FORMAL_STAGING_AGGREGATE_AND_EXISTENCE_ONLY
+  dataset_evidence_mode: OWNER_DESIGNATED_LOCAL_METADATA_ONLY_NO_CONTENT
+  migration_apply_authorized: false
+  postal_import_authorized: false
+  preview_retest_authorized: false
+  tests_executed: PROHIBITED_IN_R5
+  result_marker: GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT_RESULT_V5
+  successful_next_gate: R6_STAGING_MIGRATION_APPLY_GOVERNANCE_ONLY
+fixed_source_hashes:
+  migration_sql: 76748b5cae4fc1ba34c4257cb64bc9732da0e316d4c5727bab2ef170141a1f2d
+  rpc_test_sql: c77fe474dd038b0de04d9e038c3191003a230f27884a6834ec85635fa1e153cd
+  import_program: 46d0029e70fee826c6b06be5c182e85865805c0f4a2f67f11bc44be009af6ab6
+  import_test: 1cc766e86b4d828e5c81fabb8808c373981d9e639ae9407290391515f42168cd
+  migration_contract_test: 6685578850c2f0d4078e2a78aa9563d3e6b389908242c8184cde02bdad92ca60
+  supabase_server: 6786460f23b68b33b496e289e7de35bc10de518e8f5cf8e85b8adb79731d1c85
+  postal_actions: 0b02e7aacf83330308be806f805117dc9ce3ab71a5f2df0ca0cd49ce9a458d5e
+  estimate_page: 9e2ee5f47eed8421856a9d7f645f8052ae47a02adac294b998ca48f148128621
+governance_candidate:
+  directive: docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT.md
+  exact_paths:
+    - docs/master_specification/CLAUDE_DIRECTIVE_GDA_DEMO_20260907_POSTAL_CURRENT_PREVIEW_R5_STAGING_MIGRATION_AND_IMPORT_READ_ONLY_PREFLIGHT.md
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  stage: NOT_AUTHORIZED
+  commit: NOT_AUTHORIZED
+  push: NOT_AUTHORIZED
+  provider_access: NOT_AUTHORIZED
+  supabase_access: NOT_AUTHORIZED
+  claude_invocation: NOT_AUTHORIZED
+  private_transmission: NOT_AUTHORIZED
+protected_path:
+  path: src/components/estimates/wizard/screens/ScreensPreview.tsx
+  mode: -rw-r--r--
+  size: 31076
+  sha256: d0901dd4b1aeabb5ca648d356bbeb37e435ffd0114ee3fdbdbd5d32fc3ca515e
+  opened_or_read: false
+supabase_change_review:
+  reviewed: true
+  relevant_current_item: NEW_TABLES_NOT_AUTOMATICALLY_EXPOSED_TO_DATA_API
+  effect: "R5 retains explicit function privilege and Data API exposure separation. The migration's private tables are not to be directly exposed; public lookup functions remain the intended API boundary."
+decision: RECORD_R4_BLOCKED_RESULT_WITH_CODEX_CORRECTIONS_AND_AUTHOR_EXACT_THREE_DOCUMENT_R5_READ_ONLY_PREFLIGHT_GOVERNANCE_CANDIDATE_ONLY
+next: "INDEPENDENTLY_VERIFY_EXACT_THREE_DOCUMENT_DIFF_R4_CORRECTIONS_CONFIRMED_STAGING_ABSENCE_EXACT_15_FILE_ALLOWLIST_FIXED_HASHES_MANUAL_PROVIDER_UI_BOUNDARY_AGGREGATE_ONLY_STAGING_BOUNDARY_DATASET_METADATA_ONLY_SEPARATED_MIGRATION_IMPORT_RETEST_GATES_RESULT_SCHEMA_PROTECTED_METADATA_PRESERVED_UNTRACKED_PATHS_CLEAN_INDEX_UPSTREAM_SUPABASE_CHANGE_REVIEW_AND_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_LOCAL_COMMIT"
 ```

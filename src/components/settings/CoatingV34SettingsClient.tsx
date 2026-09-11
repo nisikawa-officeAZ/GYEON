@@ -119,7 +119,7 @@ function baseProducts(rank: ShopRank): ProductMeta[] {
 
 function upperProducts(rank: ShopRank, layer: "layer2" | "layer3"): ProductMeta[] {
   const products = firstLayerOptions(rank).flatMap((base) =>
-    (layer === "layer2" ? secondLayerOptions(base.id) : thirdLayerOptions(base.id)).flatMap((product) => {
+    (layer === "layer2" ? secondLayerOptions(base.id, rank) : thirdLayerOptions(base.id)).flatMap((product) => {
       const id = toPricingCatalogTopcoatId(product.id);
       return id ? [{ id, label: product.label }] : [];
     }),

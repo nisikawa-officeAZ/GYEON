@@ -87,8 +87,10 @@ export function step2Valid(i: WizardStepValidityInputs): boolean {
       i.draft.vehicle.vehicleId,
     ) !== null;
   }
-  // New branch: 車名 is manual-only and required. Maker/plate (the vehicle-OCR apply
-  // fields) alone are insufficient — the OCR apply path never populates model.
+  // New branch: 車名 is required for navigation. OCR may prefill it from 車名 when the
+  // certificate carries one, but this check does not distinguish an OCR-prefilled value
+  // from a hand-typed one — maker/plate alone (without a model, OCR-applied or typed)
+  // remain insufficient.
   return i.draft.vehicle.newVehicle.model.trim().length > 0;
 }
 

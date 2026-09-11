@@ -47,7 +47,22 @@ const SC: WizardScreenConfiguration = {
   // B2-E2G — a fully opted-in, fully configured dealer, so every pre-existing assertion keeps
   // exercising the same surface it always did.
   serviceOfferings:   { window_film: true, ppf: true, maintenance: true, room_cleaning: true, car_wash: true },
-  filmTypes:          [{ id: "ft1", label: "ZZFILMTYPE" }],
+  filmTypes:          [{ id: "ft1", label: "ZZFILMTYPE", installationCoefficientBp: 10000 }],
+  windowFilmSettings: {
+    contractVersion: "1.0",
+    revision: 1,
+    areas: {
+      "front-windshield": { isActive: true, priceYen: 15000, durationMinutes: 60 },
+      "front-door-glass": { isActive: false, priceYen: null, durationMinutes: null },
+      "rear-door-glass": { isActive: false, priceYen: null, durationMinutes: null },
+      "triangular-window": { isActive: false, priceYen: null, durationMinutes: null },
+      "quarter-glass": { isActive: false, priceYen: null, durationMinutes: null },
+      "rear-glass": { isActive: false, priceYen: null, durationMinutes: null },
+      "sunroof": { isActive: false, priceYen: null, durationMinutes: null },
+    },
+    packages: [],
+    options: [],
+  },
   windowAreas:        [{ id: "wa1", label: "ZZWINDOWAREA" }],
   maintenanceMenus:   [{ id: "mm1", name: "ZZMAINTMENU", defaultPrice: 5000 }],
   washMenus:          [{ id: "cw1", name: "ZZWASHMENU", defaultPrice: 3000 }],
@@ -463,7 +478,7 @@ test("OPTED OUT: the window-film section is absent for every rank, and nothing e
 
 test("OPTED IN but INCOMPLETE: only window film is locked; the wizard is never blocked", () => {
   const noFilmTypes: WizardScreenConfiguration = { ...SC, filmTypes: [] };   // opted in via SC
-  const noAreas: WizardScreenConfiguration = { ...SC, windowAreas: [] };     // opted in via SC
+  const noAreas: WizardScreenConfiguration = { ...SC, windowAreas: [], windowFilmSettings: null };     // opted in via SC
 
   for (const rank of ALL_RANKS) {
     const win = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={noFilmTypes} />);
@@ -474,7 +489,7 @@ test("OPTED IN but INCOMPLETE: only window film is locked; the wizard is never b
     // Missing AREAS is a distinct state: areas are global catalog rows, so the dealer cannot
     // register them and must not be told to go and do so.
     const areas = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={noAreas} />);
-    assert.ok(areas.includes("ウィンドウフィルムの施工部位が利用できません。管理者にお問い合わせください。"),
+    assert.ok(areas.includes("ウィンドウフィルム設定で、提供する部位またはセットの金額と所要時間を登録してください。"),
       `${rank}: areas-unavailable state shown`);
     assert.equal(areas.includes(FILM_SETUP_REQUIRED), false, `${rank}: must not claim film types are missing`);
 
@@ -698,6 +713,28 @@ test("binding module is pure (imports no React) and uses the row-ID authority", 
   assert.equal(/createWizardRowId/.test(code), true, "uses the Web-Crypto row-ID authority");
   // no counter/length/index-based ID fabrication
   assert.equal(/\.length\s*\+|\+\+|Seq|counter/.test(code), false, "no counter/length-based ids");
+});
+
+// ── GDA_DEMO_20260907_ESTIMATE_WIZARD_HOTFIX_R1: second-layer CANCOAT PRO EVO is rank-aware ────
+
+test("second-layer CANCOAT PRO EVO is absent from the rendered host for shop/detailer/ppf_installer but present for certified", () => {
+  const services = fresh();
+  services.coating = { ...services.coating, layerCount: 2, layer1Id: "one-evo" };
+  for (const rank of ["shop", "detailer", "ppf_installer"] as const) {
+    const html = render(<Step4Estimate api={makeApi(["coating"], services).api} shopRank={rank} screenConfig={SC} />);
+    assert.equal(html.includes("Q² CANCOAT PRO EVO"), false, `${rank} must never render CANCOAT PRO EVO as a layer option`);
+  }
+  const certifiedHtml = render(<Step4Estimate api={makeApi(["coating"], services).api} shopRank="certified" screenConfig={SC} />);
+  assert.ok(certifiedHtml.includes("Q² CANCOAT PRO EVO"), "certified must still render CANCOAT PRO EVO as a layer-2 option");
+});
+
+test("Step4Estimate.tsx threads the authoritative shopRank into secondLayerOptions (source guard)", () => {
+  const raw = readFileSync(STEP_SRC, "utf8");
+  assert.match(
+    raw,
+    /secondLayerOptions\(cfg\.coating\.layer1Id, shopRank\)/,
+    "the second-layer call site must pass the authoritative shopRank",
+  );
 });
 
 test("PPF price + coefficient placeholders stay null/omitted; no example price literal", () => {

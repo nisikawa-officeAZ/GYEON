@@ -400,9 +400,16 @@ test("no clock, randomness, package version or worktree state becomes the releas
 test("the existing PWA, PDF, HEIC and Server Action configuration is unchanged", () => {
   assert.equal(nextConfig.reactStrictMode, true);
   assert.deepEqual(nextConfig.serverExternalPackages,
-    ["@react-pdf/renderer", "sharp", "heic-convert", "libheif-js"]);
+    ["@react-pdf/renderer", "sharp", "heic-convert", "libheif-js", "puppeteer-core", "@sparticuz/chromium"]);
   assert.deepEqual(nextConfig.outputFileTracingIncludes, {
-    "/**": ["./src/lib/pdf/fonts/*.ttf", "./src/lib/pdf/brand-assets/*.png"],
+    "/**": [
+      "./src/lib/pdf/fonts/*.ttf",
+      "./src/lib/pdf/brand-assets/*.png",
+      "./src/lib/pdf/design/premium/**",
+      "./src/lib/pdf/chromium-document/design/**",
+      "./public/brand/gyeon-classic/logos/combination.svg",
+    ],
+    "/pdf/estimate": ["./node_modules/@sparticuz/chromium/bin/**"],
   });
   assert.equal(nextConfig.experimental?.serverActions?.bodySizeLimit, "20mb");
 

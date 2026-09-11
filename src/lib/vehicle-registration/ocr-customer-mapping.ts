@@ -19,15 +19,27 @@ export type CustomerType   = "individual" | "corporation" | "unknown";
 export type CustomerSource = "user" | "owner";
 
 export interface OcrCustomerAnalysis {
-  ownerName:             string;
-  ownerAddress:          string;
-  userName:              string;
-  userAddress:           string;
-  ownerUserSeparated:    boolean;       // owner ≠ user
+  ownerName:             string;        // trimmed raw text, exactly as printed
+  ownerAddress:          string;        // trimmed raw text, exactly as printed
+  userName:              string;        // trimmed raw text, exactly as printed
+  userAddress:           string;        // trimmed raw text, exactly as printed
+  ownerUserSeparated:    boolean;       // owner ≠ user, decided from resolved NAMES only
   ownerIsBusinessHolder: boolean;       // owner looks like finance/dealer/leasing/etc.
   requireSelection:      boolean;       // separated & both normal → operator must choose
   recommendedSource:     CustomerSource;// default radio selection
   note:                  string | null; // shown when auto-defaulting to user
+}
+
+/**
+ * Internal-only extension of `OcrCustomerAnalysis` carrying the marker/directional-phrase
+ * RESOLVED values used for identity/postal decisions. Never exported — callers outside this
+ * module only ever see the raw-preserving public shape via `analyzeOcrCustomer`.
+ */
+interface ResolvedOcrCustomerAnalysis extends OcrCustomerAnalysis {
+  resolvedOwnerName:    string; // "" when blank/marker/同上/unresolved directional phrase
+  resolvedUserName:     string; // "" when blank/marker/同上/unresolved directional phrase
+  resolvedOwnerAddress: string; // "" when blank/marker/同上/unresolved directional phrase
+  resolvedUserAddress:  string; // "" when blank/marker/同上/unresolved directional phrase
 }
 
 export const OWNER_BUSINESS_HOLDER_NOTE =
@@ -44,6 +56,79 @@ const OWNER_BUSINESS_HOLDER =
 
 function norm(s: string): string {
   return s.replace(/[\s　]/g, "");
+}
+
+// ── Marker / directional-phrase resolution ──────────────────────────────────────
+//
+// 車検証 OCR text routinely carries placeholder text instead of a real name/address:
+//   - blank, or an asterisk-only redaction (ASCII "***" or full-width "＊＊＊")
+//   - the literal 同上 ("same as above")
+//   - a directional phrase pointing at the OTHER party's line, e.g. 所有者欄に
+//     "使用者に同じ" printed instead of repeating the name already on file.
+//
+// Classification is string-only and NFKC-normalized (so full-width "＊" and half-width
+// "*" match alike); the RAW trimmed text is always preserved on OcrCustomerAnalysis, and
+// only the resolved/classified value is ever blanked out or copied.
+
+type FieldKind = "owner_name" | "owner_address" | "user_name" | "user_address";
+
+// The exact phrase each field may carry to mean "copy the other party's line here".
+const DIRECTIONAL_PHRASE: Record<FieldKind, string> = {
+  owner_name:    "使用者に同じ",
+  owner_address: "使用者住所に同じ",
+  user_name:     "所有者に同じ",
+  user_address:  "所有者住所に同じ",
+};
+
+const OPPOSITE_FIELD: Record<FieldKind, FieldKind> = {
+  owner_name:    "user_name",
+  owner_address: "user_address",
+  user_name:     "owner_name",
+  user_address:  "owner_address",
+};
+
+const ANY_DIRECTIONAL_PHRASE = new Set(Object.values(DIRECTIONAL_PHRASE));
+
+/** NFKC + trim for CLASSIFICATION ONLY — never used as the value stored/copied. */
+function classifyNorm(raw: string): string {
+  return raw.normalize("NFKC").trim();
+}
+
+/** Blank, an asterisk-only redaction (either width), or the literal 同上. */
+function isBlankOrMarkerText(normalized: string): boolean {
+  return normalized === "" || /^\*+$/.test(normalized) || normalized === "同上";
+}
+
+/**
+ * Resolve one field (owner_name / owner_address / user_name / user_address) to either a
+ * concrete usable string or "" (unusable). `rawByField` holds the trimmed raw text of all
+ * four fields so a directional phrase can be resolved against its opposite field.
+ *
+ * Exactly one hop, no recursion: a directional phrase copies the OPPOSITE field's raw text
+ * only when that opposite text is itself concrete — not blank, not a marker/同上, and not
+ * ANY directional phrase (including its own). A phrase in the wrong field (address text in
+ * a name field or vice versa) or naming the wrong party (self-reference) never resolves,
+ * regardless of what the opposite field holds. Name phrases never touch address fields and
+ * address phrases never touch name fields.
+ */
+function resolveField(kind: FieldKind, rawByField: Record<FieldKind, string>): string {
+  const raw = rawByField[kind];
+  const normalized = classifyNorm(raw);
+
+  if (isBlankOrMarkerText(normalized)) return "";
+
+  if (ANY_DIRECTIONAL_PHRASE.has(normalized)) {
+    if (normalized !== DIRECTIONAL_PHRASE[kind]) return ""; // wrong field or wrong party
+    const oppositeRaw        = rawByField[OPPOSITE_FIELD[kind]];
+    const oppositeNormalized = classifyNorm(oppositeRaw);
+    if (isBlankOrMarkerText(oppositeNormalized) || ANY_DIRECTIONAL_PHRASE.has(oppositeNormalized)) {
+      return ""; // opposite is not concrete (blank/marker/同上/directional, including a cycle)
+    }
+    return oppositeRaw;
+  }
+
+  // Meaningful text — even text that merely CONTAINS an asterisk — is concrete as-is.
+  return raw;
 }
 
 /** True when the name looks like a corporation/organization. */
@@ -68,15 +153,35 @@ export function splitIndividualName(full: string): { last: string; first: string
   return { last: t, first: "" };
 }
 
-/** Analyze owner/user to decide recommended customer source and whether to ask. */
-export function analyzeOcrCustomer(r: Partial<VehicleRegistrationOcrResult>): OcrCustomerAnalysis {
+/**
+ * Analyze owner/user to decide recommended customer source and whether to ask, INCLUDING the
+ * internal resolved values used for identity/postal decisions. Not exported — internal callers
+ * in this module use this; external callers use the public `analyzeOcrCustomer` below, which
+ * never exposes the resolved fields.
+ */
+function analyzeOcrCustomerInternal(r: Partial<VehicleRegistrationOcrResult>): ResolvedOcrCustomerAnalysis {
   const ownerName    = (r.owner_name    ?? "").trim();
   const userName     = (r.user_name     ?? "").trim();
   const ownerAddress = (r.owner_address ?? "").trim();
   const userAddress  = (r.user_address  ?? "").trim();
 
-  const separated             = !!userName && !!ownerName && norm(userName) !== norm(ownerName);
-  const ownerIsBusinessHolder = separated && isBusinessOwnerHolder(ownerName);
+  const rawByField: Record<FieldKind, string> = {
+    owner_name: ownerName, owner_address: ownerAddress,
+    user_name:  userName,  user_address:  userAddress,
+  };
+
+  // Resolved, marker/directional-aware values — the ONLY values used for identity/postal
+  // decisions below. The raw trimmed fields above are preserved verbatim on the result.
+  const resolvedOwnerName    = resolveField("owner_name",    rawByField);
+  const resolvedUserName     = resolveField("user_name",     rawByField);
+  const resolvedOwnerAddress = resolveField("owner_address", rawByField);
+  const resolvedUserAddress  = resolveField("user_address",  rawByField);
+
+  // Separated is decided from resolved NAMES only — a directional name phrase can prove two
+  // lines are one person, but an address phrase must never move this classification.
+  const separated             = !!resolvedUserName && !!resolvedOwnerName
+    && norm(resolvedUserName) !== norm(resolvedOwnerName);
+  const ownerIsBusinessHolder = separated && isBusinessOwnerHolder(resolvedOwnerName);
 
   let recommendedSource: CustomerSource;
   let requireSelection: boolean;
@@ -84,7 +189,7 @@ export function analyzeOcrCustomer(r: Partial<VehicleRegistrationOcrResult>): Oc
 
   if (!separated) {
     // Same or only one present → use whichever exists.
-    recommendedSource = userName ? "user" : "owner";
+    recommendedSource = resolvedUserName ? "user" : "owner";
     requireSelection  = false;
     note              = null;
   } else if (ownerIsBusinessHolder) {
@@ -101,8 +206,20 @@ export function analyzeOcrCustomer(r: Partial<VehicleRegistrationOcrResult>): Oc
 
   return {
     ownerName, ownerAddress, userName, userAddress,
+    resolvedOwnerName, resolvedUserName, resolvedOwnerAddress, resolvedUserAddress,
     ownerUserSeparated: separated, ownerIsBusinessHolder,
     requireSelection, recommendedSource, note,
+  };
+}
+
+/** Analyze owner/user to decide recommended customer source and whether to ask. */
+export function analyzeOcrCustomer(r: Partial<VehicleRegistrationOcrResult>): OcrCustomerAnalysis {
+  const a = analyzeOcrCustomerInternal(r);
+  return {
+    ownerName: a.ownerName, ownerAddress: a.ownerAddress,
+    userName: a.userName, userAddress: a.userAddress,
+    ownerUserSeparated: a.ownerUserSeparated, ownerIsBusinessHolder: a.ownerIsBusinessHolder,
+    requireSelection: a.requireSelection, recommendedSource: a.recommendedSource, note: a.note,
   };
 }
 
@@ -120,13 +237,13 @@ export function effectiveCustomerParty(
   r: Partial<VehicleRegistrationOcrResult>,
   source: CustomerSource,
 ): CustomerSource | null {
-  const a = analyzeOcrCustomer(r);
+  const a = analyzeOcrCustomerInternal(r);
   if (source === "user") {
-    if (a.userName) return "user";
-    return a.ownerName ? "owner" : null;
+    if (a.resolvedUserName) return "user";
+    return a.resolvedOwnerName ? "owner" : null;
   }
-  if (a.ownerName) return "owner";
-  return a.userName ? "user" : null;
+  if (a.resolvedOwnerName) return "owner";
+  return a.resolvedUserName ? "user" : null;
 }
 
 /**
@@ -142,8 +259,8 @@ export function effectiveCustomerParty(
  * This is the ONE place cross-line completion is permitted, and it is gated on proven identity —
  * never on the mere absence of a name, which is what made the original rule unsafe.
  */
-function isOneParty(a: OcrCustomerAnalysis): boolean {
-  return !!a.ownerName && !!a.userName && !a.ownerUserSeparated;
+function isOneParty(a: ResolvedOcrCustomerAnalysis): boolean {
+  return !!a.resolvedOwnerName && !!a.resolvedUserName && !a.ownerUserSeparated;
 }
 
 /** NFKC is not applied here: this is display/draft text, not a match key. Trim only. */
@@ -163,7 +280,7 @@ export function resolveCustomer(
   r: Partial<VehicleRegistrationOcrResult>,
   source: CustomerSource,
 ): { name: string; kana: string; address: string; customerType: CustomerType } {
-  const a = analyzeOcrCustomer(r);
+  const a = analyzeOcrCustomerInternal(r);
   const party = effectiveCustomerParty(r, source);
   const oneParty = isOneParty(a);
 
@@ -176,10 +293,11 @@ export function resolveCustomer(
     return party === "user" ? ownerValue : userValue;
   };
 
-  // The name needs no completion step: `party` is non-null precisely when that party HAS a name.
-  const name = party === "user" ? a.userName : party === "owner" ? a.ownerName : "";
+  // The name needs no completion step: `party` is non-null precisely when that party HAS a
+  // resolved name (raw text, or a concrete value copied one hop via a directional phrase).
+  const name = party === "user" ? a.resolvedUserName : party === "owner" ? a.resolvedOwnerName : "";
   const kana = fromParty(trimmed(r.user_name_kana), trimmed(r.owner_name_kana));
-  const address = fromParty(a.userAddress, a.ownerAddress);
+  const address = fromParty(a.resolvedUserAddress, a.resolvedOwnerAddress);
 
   const customerType: CustomerType = !name
     ? "unknown"

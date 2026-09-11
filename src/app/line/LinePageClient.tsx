@@ -105,7 +105,7 @@ export default function LinePageClient({
 
   const TABS: { key: TabKey; label: string }[] = [
     { key: "logs",   label: "送信履歴" },
-    { key: "queue",  label: `通知キュー (${queueStats.scheduled})` },
+    { key: "queue",  label: `送信待ち (${queueStats.scheduled})` },
     { key: "failed", label: `失敗 (${msgStats.this_month_failed})` },
   ];
 
@@ -120,7 +120,7 @@ export default function LinePageClient({
           onClick={handleProcessQueue}
           className="text-xs bg-[#06C755] hover:bg-[#05a847] text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-40"
         >
-          {isPending ? "処理中..." : "キュー処理を実行"}
+          {isPending ? "送信処理中..." : "未送信の通知を送る"}
         </button>
       </div>
 
@@ -164,17 +164,17 @@ export default function LinePageClient({
           accent={lineStats.this_month_new > 0 ? "green" : undefined}
         />
         <StatCard
-          label="キュー失敗"
+          label="送信できなかった通知"
           value={queueStats.failed}
           accent={queueStats.failed > 0 ? "red" : undefined}
         />
         <StatCard
-          label="キュー処理中"
+          label="送信処理中"
           value={queueStats.processing}
           accent={queueStats.processing > 0 ? "amber" : undefined}
         />
         <StatCard
-          label="キュー送信済み"
+          label="送信完了"
           value={queueStats.sent}
           accent="green"
         />
