@@ -5029,3 +5029,85 @@ not_authorized:
 decision: RECORD_D2_CLOSURE_AND_CREATE_EXACT_D3A_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
 next: "VERIFY_EXACT_THREE_PATH_DIFF_NEW_DIRECTIVE_SHA256_BOOK_IDENTITY_D2_CHAIN_PACKAGE_PIN_AND_INTEGRITY_PROPOSED_43_PATH_PAYLOAD_PROTECTED_METADATA_EMPTY_INDEX_AND_GIT_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_AUTHORIZATION_ONLY."
 ```
+
+## INV001-P20D2-BOOK-D3A-B1-G1 — Accepted diagnosis, B0 evidence, and implementation-governance reconciliation candidate
+
+```yaml
+phase: INV001_P20D2_BOOK_D3A_B1_G1_GOVERNANCE_RECONCILIATION
+marker: INV001_P20D2_BOOK_D3A_B1_G1_GOVERNANCE_RECONCILIATION_RESULT_V1
+status: LOCAL_GOVERNANCE_RECONCILIATION_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-12
+append_only: true
+authorization: "The Owner authorized one uncommitted three-document governance reconciliation candidate after the first B1 attempt stopped fail-closed. This authorization covers only the new B1 directive, completion-plan update, append-only result entry, and local non-executable verification. It does not authorize implementation, executable tests, database or provider access, Git delivery, PR or Issue mutation, or any later phase."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_main_commit: 91b4db7a8133bf7bfc0df66534c2acb286bcff27
+  fixed_main_tree: 1db51156e3d838ff026a1ebeb09936b95a2d8018
+  candidate_branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  pre_candidate_head: 141735c03ab6c6068934389a4ead84024c0b0623
+  pre_candidate_tree: e270c889c13443c95951a7716e4bac51d29f0605
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+accepted_d3a_diagnosis:
+  result_marker: INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS_RESULT_V1
+  source_result_sha256: 6e49fed2f5e37ab502fd4ab1e9c11327512fd89d6397e0c02421a07190933579
+  verdict: PASS_D3A_IMPLEMENTATION_GOVERNANCE_READY
+  correction_scope: ADDED_MISSING_VERDICT_ONLY
+  correction_result_sha256: c82a23fb87053737f674687f4500b82a282ce32d503519931468e5368139090a
+b0_path_reservation:
+  command: supabase_migration_new_foundation_inventory_runtime
+  cli_version: 2.116.0
+  exact_path: supabase/migrations/20260912004445_foundation_inventory_runtime.sql
+  git_state: UNTRACKED_PRESERVED_READ_ONLY_DURING_G1
+  mode: "0644"
+  size_bytes: 0
+  sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  ordering_reconciliation: "B0 occurred after accepted Gate A diagnosis and before this B1 governance reconciliation. The deviation is accepted only as an empty CLI path reservation; no SQL, source, test, DB, Git delivery, or provider action occurred and no B1 authority is inferred."
+first_b1_attempt:
+  verdict: BLOCKED_GOVERNANCE_PRECONDITION
+  actions: ZERO
+  result_sha256: 5c2018bf2d5e2d6aaa00a02b0ee441b7e7f394bd50788c2b4218f53fd681b4fe
+  implementation_evidence: false
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION.md
+  sha256: cd24dd9358346d9781966ed041697c8e6a3c648e65844f942ada2691ff186a0d
+  result_marker: INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION_RESULT_V1
+  execution_authorized_now: false
+exact_governance_write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+actual_phase_changed_paths:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+preserved_preexisting_worktree_path:
+  - supabase/migrations/20260912004445_foundation_inventory_runtime.sql
+future_b1_write_allowlist:
+  - supabase/migrations/20260912004445_foundation_inventory_runtime.sql
+  - src/lib/inventory/foundation/foundation-persistence-adaptor.ts
+  - src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts
+  - scripts/e2e/inv001-foundation-persistence-disposable.mjs
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  src/components/ScreensPreview.tsx: ABSENT
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+verification_authorized_and_run:
+  document_scope_and_marker_checks: PASS_LOCAL_NON_EXECUTABLE
+  git_diff_check: PASS
+  executable_test: NOT_AUTHORIZED_NOT_RUN
+  typecheck: NOT_AUTHORIZED_NOT_RUN
+  build: NOT_AUTHORIZED_NOT_RUN
+actions_not_performed:
+  - implementation_or_test_source_edit
+  - migration_sql_write_or_apply_reset_seed_backfill
+  - database_supabase_runtime_auth_storage_line_provider_browser_vercel_or_network_access
+  - private_source_transmission_or_claude_invocation
+  - stage_commit_push_pr_issue_ready_merge_tag_release_or_deploy
+  - d3b_d7_android_or_studio_implementation
+implementation_authorized: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_GOVERNANCE_RECONCILIATION_CANDIDATE_AND_KEEP_B1_FAIL_CLOSED
+next: "VERIFY_EXACT_THREE_DOCUMENT_PHASE_DELTA_DIRECTIVE_HASH_ACCEPTED_D3A_AND_CORRECTION_EVIDENCE_B0_EMPTY_FILE_PRESERVATION_BLOCKED_ATTEMPT_RESULT_BOOK_IDENTITY_PROTECTED_METADATA_EMPTY_INDEX_AND_GIT_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION_ONLY. PUSH_DRAFT_PR_INSTRUCTION_B1_EXECUTION_AND_EXECUTABLE_VERIFICATION_REMAIN_LATER_SEPARATE_GATES."
+```

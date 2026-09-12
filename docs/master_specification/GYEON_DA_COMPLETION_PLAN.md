@@ -915,6 +915,41 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Exit gate:** Verify the exact three-path diff, new directive SHA-256, Book identity, D2 chain, package pin/integrity, protected path mode/blob/clean state, empty index, and `git diff --check`; then request a separate Owner authorization for literal-path staging and local commit only.
 
+### INV001-P20D2-BOOK-D3A-B1-G1 — Accepted diagnosis, B0 evidence, and implementation-governance reconciliation
+
+**Status:** LOCAL GOVERNANCE RECONCILIATION CANDIDATE / UNSTAGED / UNCOMMITTED / B1 EXECUTION BLOCKED UNTIL COMMIT, PUSH, DEDICATED DRAFT PR, FIXED IDENTITY, NEWEST PR INSTRUCTION, AND SEPARATE OWNER AUTHORIZATION.
+
+**Objective:** Reconcile the accepted D3A diagnosis, the one-time CLI-generated B0 migration-path reservation, and the first fail-closed B1 attempt into Git-governed Book authority. This phase authors governance only; it does not create a persistence implementation or execute verification.
+
+**Accepted D3A evidence:** `INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS_RESULT_V1` is accepted at source-result SHA-256 `6e49fed2f5e37ab502fd4ab1e9c11327512fd89d6397e0c02421a07190933579` with verdict `PASS_D3A_IMPLEMENTATION_GOVERNANCE_READY`. Its result-only correction added the missing verdict and nothing else: `CORRECTION_SCOPE=ADDED_MISSING_VERDICT_ONLY`, correction-result SHA-256 `c82a23fb87053737f674687f4500b82a282ce32d503519931468e5368139090a`.
+
+**B0 evidence and ordering reconciliation:** Under separate Owner authorization, MacBook Codex used Supabase CLI `2.116.0` once with `supabase migration new foundation_inventory_runtime`. The exact output is `supabase/migrations/20260912004445_foundation_inventory_runtime.sql`, mode `0644`, size `0`, SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`. B0 occurred before this B1 governance document was committed. That bounded ordering deviation is accepted only because the generated file remained empty and untracked and no SQL, source, test, database, Git delivery, or provider action occurred. It grants no implementation authority and the CLI command must not be repeated in B1.
+
+**Blocked attempt evidence:** The first separately authorized B1 attempt returned `VERDICT=BLOCKED_GOVERNANCE_PRECONDITION` and `ACTIONS=ZERO`, result SHA-256 `5c2018bf2d5e2d6aaa00a02b0ee441b7e7f394bd50788c2b4218f53fd681b4fe`. This was the correct fail-closed result because the tracked documents lacked accepted D3A/B0/B1 governance and no dedicated Draft PR existed. It is not implementation evidence.
+
+**Governing B1 directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION.md`, candidate SHA-256 `cd24dd9358346d9781966ed041697c8e6a3c648e65844f942ada2691ff186a0d`, required future result marker `INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION_RESULT_V1`.
+
+**Exact current governance write allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION.md` (new)
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+The existing untracked B0 file is preserved read-only outside this three-document write allowlist. No other path may change. All section 3.1 protected paths remain metadata-only; `ScreensPreview.tsx` content remains prohibited.
+
+**Future B1 write allowlist after all governance gates pass:**
+
+1. `supabase/migrations/20260912004445_foundation_inventory_runtime.sql`
+2. `src/lib/inventory/foundation/foundation-persistence-adaptor.ts`
+3. `src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts`
+4. `scripts/e2e/inv001-foundation-persistence-disposable.mjs`
+
+The future B1 candidate must preserve the exact two-method `InventoryRuntimeStore` interface and five D1 wrapper surfaces; add one Foundation-specific durable persistence boundary; enforce atomic CAS, idempotency/replay, append-only audit, least-privilege RLS/grants, opaque identity/evidence, validation-only import, and deterministic recovery; forbid browser raw writes, legacy-table reuse, dual write, automatic retry/fallback/reconciliation, D3B mapping, product-order/UI wiring, and Book ownership of Studio inventory. Tests and the disposable harness may be authored but not executed in B1.
+
+**Current authorization:** Exactly the three governance-document edits and local non-executable verification. No implementation or test file edit; no test, typecheck, build, SQL, database, Supabase runtime, Auth, Storage, LINE, provider, browser, Vercel, network, migration apply/reset/seed/backfill, stage, commit, push, PR/Issue mutation, Ready, merge, deployment, D3B-D7, Android, or Studio implementation is authorized.
+
+**Next gates:** Independently verify this exact three-document candidate, directive hash, accepted diagnosis and correction evidence, B0 empty-file preservation, blocked-attempt evidence, Book identity, protected metadata, empty index, and `git diff --check`; then obtain separate Owner authorization for exact-path stage/local commit. Push and dedicated Draft-PR creation require a later gate. Only after the pushed Draft PR, fixed execution identity, newest matching PR instruction, and another separate Owner authorization may Claude run B1 once. Executable verification remains a later separate gate.
+
 ### INV001-P19-BOOK-D3B — Product identity mapping governance preparation
 
 **Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / IMPLEMENTATION BLOCKED UNTIL D2 AND D3A FULL CLOSURE.
