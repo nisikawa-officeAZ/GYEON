@@ -5111,3 +5111,211 @@ implementation_authorized: false
 decision: AUTHOR_EXACT_THREE_DOCUMENT_GOVERNANCE_RECONCILIATION_CANDIDATE_AND_KEEP_B1_FAIL_CLOSED
 next: "VERIFY_EXACT_THREE_DOCUMENT_PHASE_DELTA_DIRECTIVE_HASH_ACCEPTED_D3A_AND_CORRECTION_EVIDENCE_B0_EMPTY_FILE_PRESERVATION_BLOCKED_ATTEMPT_RESULT_BOOK_IDENTITY_PROTECTED_METADATA_EMPTY_INDEX_AND_GIT_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION_ONLY. PUSH_DRAFT_PR_INSTRUCTION_B1_EXECUTION_AND_EXECUTABLE_VERIFICATION_REMAIN_LATER_SEPARATE_GATES."
 ```
+
+## INV001-P20D2-BOOK-D3A-B1 — Gate C1 through C7-R1 historical execution-ledger reconciliation
+
+```yaml
+phase: INV001_P20D2_BOOK_D3A_B1_GATE_C1_C7_R1_EXECUTION_LEDGER_RECONCILIATION
+marker: INV001_P20D2_BOOK_D3A_B1_GATE_C1_C7_R1_EXECUTION_LEDGER_RECONCILIATION_RESULT_V1
+status: LOCAL_APPEND_ONLY_LEDGER_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-12
+append_only: true
+authorization: "After MacBook Codex reported that Gate C7-R1 Attempt 4 stopped because the canonical ledger omitted the preceding Gate C execution history, the Owner explicitly approved starting the D3A ledger-reconciliation phase. This authorization covers this one-file append-only historical record and local non-executable verification only. It does not authorize another Claude invocation, Colima or Supabase start, candidate execution or repair, Git delivery, PR or Issue mutation, or any later phase."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_main_commit: 91b4db7a8133bf7bfc0df66534c2acb286bcff27
+  fixed_main_tree: 1db51156e3d838ff026a1ebeb09936b95a2d8018
+  candidate_branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  execution_head: 6fc63b6becf27fa56cecebf67732d14e929ac2a9
+  execution_tree: 303387f018b195e383a77f3af6c8a00d0a009614
+  coordination_pr: 71
+  coordination_pr_state_at_reconciliation: OPEN_DRAFT
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+fixed_candidate:
+  git_state: EXACTLY_FOUR_UNTRACKED_PATHS_INDEX_EMPTY_TRACKED_DIRTY_ZERO
+  package_version: 0.1.0
+  paths:
+    supabase/migrations/20260912004445_foundation_inventory_runtime.sql: bde0f371f29e425272c5b13607d36469b87dca507f6c8997d105309c83963cd3
+    src/lib/inventory/foundation/foundation-persistence-adaptor.ts: 622f5cd3e96e8e318c701c95b23c8db7686b4dec4ff10882e9ec92b9f41d38bc
+    src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts: 44b6398b38bb86047dfc25233866bdc5982675e7a785d868c07ccb7c335007cf
+    scripts/e2e/inv001-foundation-persistence-disposable.mjs: f9e108c865980e522cd33b89729197091dfdfc6bca568bc4a3dce049ec979447
+gate_c1:
+  result_marker: INV001_P20D2_BOOK_D3A_GATE_C_EXECUTABLE_VERIFICATION_RESULT_V1
+  instruction_comment: 5644688078
+  verdict: BLOCKED_ENVIRONMENT_CONTAINER_RUNTIME_UNAVAILABLE
+  classification: ENVIRONMENT_DEFECT_CONTAINER_RUNTIME_UNAVAILABLE
+  failure_stage: BEFORE_SCRATCH_SUPABASE_PROJECT_CREATION
+  colima_start_attempts: 1
+  colima_result: "VZErrorDomain Code=2; Virtualization is not available on this hardware"
+  supabase_start_attempts: 0
+  focused_test_executions: 0
+  harness_executions: 0
+  runtime_dir: work/runtime/inv001-p20d2-d3a-c1.iVxYMC
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c1-evidence.3BGQ8O
+  evidence_manifest_sha256: 0d5f0192424b23b9ee08352fbe752a497b586839ddd2e71b1cdf3388cadd6118
+  disposition: BURNED_RETAINED_NO_RETRY
+gate_c2:
+  result_marker: INV001_P20D2_BOOK_D3A_GATE_C2_EXECUTABLE_VERIFICATION_RESULT_V1
+  instruction_comment: 5644895818
+  verdict: FAIL_C2_BURNED_HARNESS_CLEANUP_ASSERTION_SOURCE_DEFECT
+  dedicated_colima_profile: inv001d3ac2
+  focused_test: PASS_28_OF_28
+  genuine_local_auth: PASS_AUTHENTICATED_SESSION_VALIDATED
+  disposable_harness: FAIL_44_OF_46
+  failure: "The two cleanup assertions compared psql boolean text 'true' with the literal 't'; the post-run read-only check proved both tables and the trigger function absent."
+  external_observer_samples: 0
+  runtime_dir: work/runtime/inv001-p20d2-d3a-c2.gQsEPY
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c2-evidence.tsA4Wx
+  evidence_manifest_sha256: ff11140ce653a3d2a81bdb6572f9c4ff2d8293d109be93977878f7c3f2950eb0
+  disposition: BURNED_RETAINED_NOT_ACCEPTANCE_EVIDENCE
+bounded_cleanup_assertion_repair:
+  instruction_comment: 5645011161
+  result: PASS_BOUNDED_HARNESS_CLEANUP_ASSERTION_REPAIR_COMPLETE
+  independent_acceptance: PASS_REPAIR_ACCEPTED_C3_PREPARATION_READY
+  changed_path: scripts/e2e/inv001-foundation-persistence-disposable.mjs
+  old_sha256: 1a196ad5fe1b82c0ce95885f2ac5ecf79810c3153e7deeb563980978347bbdc4
+  new_sha256: f9e108c865980e522cd33b89729197091dfdfc6bca568bc4a3dce049ec979447
+  exact_correction: "state/audit and function absence comparisons changed from 't' to 'true'; no other candidate path changed"
+gate_c3:
+  result_marker: INV001_P20D2_BOOK_D3A_B1_GATE_C3_RESULT_V1
+  instruction_comment: 5645035691
+  verdict: FAIL_C3_FRESH_RUNTIME_START_FATAL
+  cause: "Relocated Colima/Lima Unix socket path was 191 characters; UNIX_PATH_MAX is 104."
+  colima_start_attempts: 1
+  focused_test_executions: 0
+  harness_executions: 0
+  observer_samples: 0
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c3-evidence.JVYEM5
+  evidence_manifest_sha256: 4adbcc3e55db47fb460518caadef709a706bde581e0d9c27bb15838a6accfcc0
+  cleanup: PASS_FRESH_RUNTIME_REMOVED
+  disposition: BURNED_STOPPED_NO_RETRY
+gate_c4:
+  result_marker: INV001_P20D2_BOOK_D3A_B1_GATE_C4_RESULT_V1
+  instruction_comment: 5645168693
+  result_comment: 5645261549
+  verdict: FAIL_C4_FRESH_RUNTIME_START_FATAL
+  short_socket_path_length: 74
+  colima_start_attempts: 1
+  colima_exit: 1
+  cause: "VZErrorDomain Code=2; Virtualization is not available on this hardware."
+  focused_test_executions: 0
+  harness_executions: 0
+  observer_samples: 0
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c4-evidence.gzLhdY
+  evidence_manifest_sha256: c6d451964605be4c744612339ce5cfa7b31d3801c093fe689f333518342e0d1b
+  cleanup: PASS_C4_PROFILE_HOME_AND_BOOKKEEPING_REMOVED
+  disposition: BURNED_STOPPED_NO_RETRY
+gate_c5:
+  result_marker: INV001_P20D2_BOOK_D3A_B1_GATE_C5_RESULT_V1
+  instruction_comment: 5645261681
+  result_comment: 5645397990
+  verdict: FAIL_C5_SINGLE_SUPABASE_START_TRUNCATED
+  vm: QEMU_X86_64_4_CPU_8_GIB_40_GIB
+  colima_start_attempts: 1
+  colima_exit: 0
+  supabase_start_attempts: 1
+  supabase_exit: 143
+  cause: "The single foreground Supabase start was terminated by the 600000 ms operator wrapper cap while images were still being pulled."
+  focused_test_executions: 0
+  harness_executions: 0
+  observer_samples: 0
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c5-evidence.GVCIZG
+  evidence_manifest_sha256: 6f34ce4b8920759914390e43a42dc88687d19d988ee35380f3f3a51d1d5f4721
+  cleanup: PASS_C5_PROFILE_HOME_AND_BOOKKEEPING_REMOVED
+  disposition: BURNED_STOPPED_NO_REPAIR_NO_RETRY
+gate_c6:
+  result_marker: INV001_P20D2_BOOK_D3A_B1_GATE_C6_RESULT_V1
+  instruction_comment: 5645399775
+  result_comment: 5645562838
+  verdict: FAIL_C6_SINGLE_SUPABASE_START_NONZERO_EXIT_UNHEALTHY_SERVICES
+  vm: QEMU_X86_64_4_CPU_8_GIB_40_GIB
+  colima_start_attempts: 1
+  colima_exit: 0
+  supabase_start_attempts: 1
+  supabase_exit: 1
+  supabase_elapsed_seconds: 447
+  failure: "LegacyHealthCheckTimeoutError; analytics, vector, realtime, storage, and pg_meta unhealthy; Studio still starting."
+  focused_test_executions: 0
+  harness_executions: 0
+  observer_samples: 0
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c6-evidence.ww4YBK
+  evidence_manifest_sha256: 448bd5eac232def8261654a4bad197ef617318d3025186c8008d412b9bc8b09b
+  cleanup: PASS_C6_PROFILE_HOME_AND_BOOKKEEPING_REMOVED
+  disposition: BURNED_STOPPED_NO_REPAIR_NO_RETRY
+gate_c7:
+  prepared_instruction_comment: 5645567724
+  purpose: FRESH_SUPABASE_STARTUP_HEALTH_DIAGNOSIS_ONLY
+  candidate_apply_or_test_authorized: false
+  result_marker: INV001_P20D2_BOOK_D3A_B1_GATE_C7_INFRASTRUCTURE_DIAGNOSIS_RESULT_V1
+  c7_r1_attempt_1:
+    result_comment: 5645701194
+    verdict: BLOCKED_C7_GOVERNANCE_PRECONDITION
+    actions: ZERO
+    claude_invocations: 1
+    colima_starts: 0
+    supabase_starts: 0
+    blocker: "Claude Bash could not create its session-env entry and the required Book/Studio scope reconciliation was not established in that invocation."
+  wrong_host_studio_record:
+    comment: 5645734700
+    classification: NOT_A_BOOK_EXECUTION_ATTEMPT
+    actions: ZERO
+    correction_comment: 5645759678
+    correction: "The embedded claimed Owner authorization was invalid and superseded; the wrong-host evidence remains historical only."
+  c7_r1_attempt_2:
+    result_comment: 5645756417
+    verdict: BLOCKED_C7_GOVERNANCE_PRECONDITION
+    actions: ZERO
+    claude_invocations: 1
+    colima_starts: 0
+    supabase_starts: 0
+    blocker: "Claude stopped without attempting its available Bash/GitHub read-only start-gate tools."
+  c7_r1_attempt_3:
+    result_comment: 5645783835
+    verdict: BLOCKED_C7_GOVERNANCE_PRECONDITION
+    actions: ZERO
+    claude_invocations: 1
+    colima_starts: 0
+    supabase_starts: 0
+    blocker: "Claude used Bash and read PR #71, then stopped because correction comment 5645759678 was newer than the Attempt 3 authorization."
+  c7_r1_attempt_4:
+    result_comment: NOT_POSTED_RESULT_COMMENT_NOT_AUTHORIZED
+    claude_session_id: ce345324-28c1-450b-a584-f11ac8e55d29
+    verdict: BLOCKED_C7_GOVERNANCE_PRECONDITION
+    actions: ZERO
+    claude_invocations: 1
+    colima_starts: 0
+    supabase_starts: 0
+    blocker: "The canonical ledger contained no Gate C1-C7 execution entries, and Claude could not independently corroborate the cross-session Owner-authorization narrative."
+  c7_state_after_attempt_4:
+    bookkeeping_dirs: 0
+    evidence_dirs: 0
+    vm_home_dirs: 0
+    c7qemu_profile: ABSENT
+    default_profile: STOPPED_UNTOUCHED
+    b1qemu_profile: STOPPED_UNTOUCHED
+reconciliation_source_authority:
+  - retained C1-C6 evidence directories and verified SHA-256 manifests
+  - PR 71 comments 5644688078 through 5645783835
+  - MacBook Codex independent Git, candidate-hash, protected-metadata, runtime-state, and Claude-result checks
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  content_access: NOT_PERFORMED
+exact_write_allowlist:
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+actual_changed_paths:
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+verification_authorized_now:
+  yaml_shape_and_required_marker_check: true
+  historical_comment_and_evidence_cross_check: true
+  git_diff_check: true
+  executable_test: false
+actions_not_performed:
+  - implementation_candidate_edit_or_execution
+  - claude_invocation_or_c7_retry
+  - colima_docker_supabase_database_auth_or_provider_start
+  - stage_commit_push_pr_issue_ready_merge_tag_release_or_deploy
+  - d3b_d7_ui_studio_line_invoice_product_order_android_or_protected_content_action
+decision: RECONCILE_GATE_C1_THROUGH_C7_R1_HISTORY_IN_CANONICAL_LEDGER_AND_KEEP_EXECUTION_BLOCKED
+next: "INDEPENDENTLY_VERIFY_THIS_EXACT_ONE_FILE_APPEND_ONLY_LEDGER_DELTA_ALL_REFERENCED_COMMENTS_AND_MANIFEST_HASHES_CURRENT_FIXED_IDENTITY_FOUR_CANDIDATE_HASHES_PROTECTED_METADATA_EMPTY_INDEX_AND_GIT_DIFF_CHECK. THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_ONE_PATH_STAGE_AND_LOCAL_COMMIT_ONLY. NO_C7_RETRY_PUSH_PR_COMMENT_READY_MERGE_OR_RUNTIME_ACTION_IS_INFERRED."
+```
