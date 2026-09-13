@@ -121,6 +121,8 @@ This is a source and historical-evidence snapshot at baseline `5b1cd6a`. GDA-1 m
 
 This register prevents a future session from treating every placeholder as a completion blocker or overlooking a real operational gap.
 
+The owner-authorized, design-only future-requirements amendment is recorded in section 11. Its G01-G07 gaps are connection prerequisites, not newly authorized implementation phases or evidence of a production regression. Section 11 does not advance deferred ordering, EC, marketing, or SaaS delivery ahead of GYEON DA completion.
+
 ### Completion blockers
 
 - Refresh executable and authenticated evidence for the entire GYEON detailer journey; source presence and historical tests are insufficient.
@@ -1739,3 +1741,97 @@ Any proposed change to mission, fixed decisions, phase order, completion standar
 3. Identify time, risk, security, and field-work impact.
 4. Receive explicit user approval.
 5. Be committed and recorded in the result ledger before implementation follows the new decision.
+
+## 11. Future-requirements design amendment — 2026-09-13
+
+**Phase:** `GYEON_FUTURE_PLAN_AMENDMENT_20260913_R1`.
+
+**Status:** OWNER-AUTHORIZED DESIGN-POLICY RECORD / LOCAL DOCUMENT VERIFIED / GIT DELIVERY PENDING / NO IMPLEMENTATION OR ACTIVATION AUTHORITY.
+
+**Authorization:** The current Owner replied `はい` to: `次は、実装を始めず、正式計画と結果台帳への反映だけ進めてよいですか？` This authorizes the two-document reflection of the reviewed proposal, not source work, executable verification, Claude execution, Studio work, external posting, Git delivery, or environment access. The local design-policy record must still pass document verification and the separate Git delivery gates. It does not satisfy section 10's committed-plan prerequisite for later implementation.
+
+**Fixed proposal:** `GYEON-FUTURE-PLAN-AMENDMENT-20260913-P1`, SHA-256 `a61cfc6da18e789c369e5f0929c4aaaef9736dd9d18941592efec7a099e4f300`, retained at `/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/docs/future-expansion-20260913/FORMAL_PLAN_AMENDMENT_PROPOSAL.md`. The unchanged proposal retains its original proposal-only status as historical evidence; this section records only the newly authorized policy reflection. The essential adopted boundaries are reproduced below so execution authority does not depend on an external local file being available on another host.
+
+**Source basis:** Local Book repository `/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper`, branch `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1`, HEAD `ee4b73e1512aecc44ea1fe51d9367d53f3399c63`, tree `9d9d9b30f5e0c6a59f33da421b1e4f11090d4e8c`. Future-design dictionary `0.2.9-design` has 11 contracts with all features OFF. Its historical 256 passing document checks are not implementation, provider, notification, persistence, recovery, or runtime acceptance. Latest remote/main, applied DB, production, provider, and Studio status were not verified in this gate.
+
+### 11.1 Priority and ownership remain unchanged
+
+- Complete and field-prove GYEON DA first. Design connection boundaries now where they prevent later rework; do not create speculative tables, empty APIs, placeholder buttons, a generic workflow engine, or a second product/inventory authority.
+- C01 product identity, C02 dealer ledger, C03 estimate retail intent, and C04 coating demand are future connection contracts. Their implementation remains in later separately authorized scopes. Do not add warehouse calls to estimate saving.
+- C05 procurement candidates and C06 warehouse supply are the focus of the connection gaps below. A verified daily-workflow dependency, accepted supply prerequisites, and an explicit phase exception are required before implementation.
+- C07 public catalogue, C08 reviewed safety publication, C09 social cases, C10 analytics, and C11 SEO changes remain later work after the core journey. Publication, consent, source rights, withdrawal, retention, and cost policies remain separate gates. Internal `select(*)` data is not an anonymous public API.
+- Office AZ inventory implementation stays Studio-owned. Book owns only its accepted integration boundary and dealer-local domain. Preserve the ratified `/inventory` versus `/admin/logistics/inventory` separation. No parallel ledger, direct Foundation-store bypass, invented command, or dual write is authorized.
+- Draft PR #7 remains frozen, closed finance/monthly-invoice work remains closed, and one active implementation phase remains the rule. D1-D7 identifiers and historical acceptance records are not renumbered or reclassified.
+
+### 11.2 Recorded business policy for future connection
+
+1. Do not count routine holds. Estimates, customer estimate approval, forecasts, and cart additions before the shop enters ordering do not reserve inventory or deduct physical stock.
+2. At the first server-authorized order-screen entry for an attempt, check and allocate the current cart through the accepted warehouse authority. A GET, prefetch, browser clock, or client assertion is not allocation authority. Unknown supply is not zero or confirmed shortage.
+3. Keep the original 15-minute deadline from that first server entry. Leaving, returning, multiple tabs, replay, or quantity changes do not extend it. Expiry may release only the attempt's unconfirmed eligible allocation; confirmed orders and payment-processing/reconciling allocations are exempt. Record payment-start intent before the provider call and serialize local expiry/payment/finalization transitions; do not claim cross-service atomicity.
+4. The orderer chooses backorder or cancellation for shortage quantities only. Keep available quantities, require current supply evidence and reconfirm changed quantity/price, and never auto-submit or charge after a shortage choice. A fully excluded cart creates no order/payment; a backorder-only order does not invent zero-quantity physical allocation.
+5. Before confirmation, decreases release only the unused allocation delta; increases check/allocate only the added delta. Preserve unrelated valid allocations and the original deadline. Block edits during confirmed/payment-processing/reconciling states. Retain late/partial receipts and reconcile rather than blindly retrying or replacing the attempt.
+6. After confirmation, the shop requests cancellation and an authorized administrator reviews it. Only currently unshipped, not-already-cancelled quantities are eligible; shipped quantities use a separate return process. Request, review, execution, refund, and completion evidence are separate states. Approval alone is not cancellation or refund completion.
+7. Effective acceptance of a cancellation request requires durable warehouse evidence that the requested quantities cannot be dispatched. Registration alone is not acceptance. Serialize acceptance/hold with dispatch at the accepted native authority; UI-only blocking is insufficient. Unknown/partial hold success is not complete acceptance.
+8. Rejection removes only that request's hold and reevaluates ordinary conditions without auto-dispatch. Approval retains the hold until actual cancellation completes; unresolved quantities remain held. Completed cancellations never reenter dispatch eligibility. The checkout's 15-minute deadline is not a cancellation-hold timeout.
+9. Dealer physical stock is reduced upon product handover or confirmed actual post-service use. Warehouse allocation, warehouse dispatch, and dealer receipt are distinct facts. Do not infer usage from prediction, mix dealer balances into warehouse totals, or silently rewrite finalized history.
+10. Preserve the existing server-owned warehouse business calendar and cutoff contract. Saturdays are not automatically closed. Calendar changes that revise an existing shipment date retain the accepted dealer bell/email notification requirement; this does not authorize new payment-incident email/SMS channels.
+
+These are design-policy records, not permission to activate the rules on existing orders or deploy them.
+
+### 11.3 Payment ambiguity, notification, and restart recovery
+
+Adopt the following as the connection-design constraints while keeping all operational limits and provider mappings unresolved until separately confirmed:
+
+- Persist the existing payment attempt and recovery identity before calling the provider. Communication timeout, processing, and unverified not-found results are not proof of failure. Preserve the same attempt, approved order revision, expected amount/currency, provider-account reference, allocation references, and original deadline.
+- Unknown outcomes must not create a new charge/key, release stock, cancel, refund, or dispatch. Reconcile through supported provider lookup and verified events matched to the exact account, transaction, attempt, order, amount, and currency. Old/duplicate/conflicting events must not overwrite verified state.
+- Keep incident state and recoverable delivery intent durable together. Restart from stored open incidents, not process memory. Use exclusive versioned worker claims; stale workers cannot commit a resolution. Do not hold database locks across external network calls.
+- Reuse only a verified authorized administrator notification route. Deduplicate by incident/notification-kind/transition-revision and retry the same delivery identity. Ordinary silent-failure notifications are insufficient. Acknowledgement is not payment resolution, and failed delivery does not close the incident. Do not add email/SMS authority by inference.
+- Matched payment success may resume only an already authorized local order transition idempotently. If payment succeeded but local persistence failed, keep reconciling until required local receipts exist. Verified terminal non-completion reevaluates original expiry and ordinary guards; it never creates a fresh lease. A new payment requires a resolved prior attempt and fresh user intent.
+- Lookup budget exhaustion or incident age escalates to human attention, not assumed payment failure or stock release. Do not introduce a manual paid/failed override without authoritative evidence.
+- Existing pure finalization logic may request compensation on a prepared-operation expiry/version conflict. Distinguish that established compensation contract from ambiguous-payment lookup and from the checkout lease. Before wiring, diagnose the exact responsibility and transition boundary; do not execute refunds from the lookup worker or silently weaken the accepted refund contract.
+- Keep payment incidents outside the opaque Foundation inventory snapshot. Preserve tenant/operation authority, real request-scope authentication, function grants/RLS boundaries, and secret redaction. Do not expose service credentials or card details in clients, incidents, notifications, or logs.
+
+**Still unresolved:** actual administrator capability/delivery route, provider evidence/status mapping, lookup interval/backoff/rate limits, maximum automatic check budget, escalation threshold, administrator response/re-escalation policy, and proof of native quantity-specific dispatch hold. Missing configuration blocks activation. This record does not ratify numerical defaults, credentials, notification recipients, provider readiness, or a production deadline.
+
+### 11.4 Connection-gap register
+
+The following observations refer only to the fixed local source basis. They are not a new production incident finding or an executable repair instruction.
+
+| Gap | Local evidence | Required later boundary |
+|---|---|---|
+| G01 order save | `src/components/product-orders/ProductOrderForm.tsx:75`; `src/lib/product-orders/create-product-order.ts:24` | Reuse suitable input UI, but replace the old separated header/item save with authoritative price/quantity/revision/allocation/idempotency and recovery. Prevent the old CRUD path from bypassing the new contract. |
+| G02 payment model | `src/lib/product-orders/gyeon-order-v3-contract-core.ts:641`; `supabase/migrations/20260829101726_gyeon_order_v3_contract.sql:409` and `:521` | Pure full-payment/refund rules and old SQL authorization/reauthorization/void semantics differ. Preserve D16-P2B1's five-RPC scope and forward-only correction; historical migration files and stale passing tests are not new-contract acceptance. |
+| G03 confirmed cancellation | `src/lib/product-orders/update-product-order.ts:10` and `:49` | Replace direct submitted-to-cancelled behavior with separate request/review/execution and line-level eligibility/dispatch-race proof. |
+| G04 persistence wiring | `src/lib/inventory/foundation/foundation-runtime-package.ts:22`; untracked `foundation-persistence-adaptor.ts:35` in the same directory | A synchronous in-memory success is not durable success. Preserve D3A/D3B/D4/D4A gates and verify durable result ordering before wiring UI. Candidate existence is not acceptance. |
+| G05 payment recovery | `src/lib/product-orders/gyeon-order-v3-external-authority-core.ts:141` and `:157`; inspected `src/app/api` routes | No ordering provider/Webhook connection was found in the inspected local source. Separate raw Webhook acceptance, durable evidence, asynchronous reconciliation, compensation, and local finalization. |
+| G06 important notification | `src/lib/notifications/notification.ts:17`; `supabase/migrations/054_notification_activity_timeline.sql:58` | Bell/list presentation is reusable; silent-failure creation is not durable delivery. Verify actual administrator routing, recoverable intent, deduplication, and replay. |
+| G07 warehouse dispatch hold | `src/lib/inventory/foundation/foundation-adaptor-types.ts:49` | The 18-command list has no dedicated hold name; names alone do not prove absence of capability. Verify native specifications and all dispatch paths. Any necessary Foundation contract change needs separate Studio/Owner authority, not a Book-invented operation. |
+
+### 11.5 Dependency order, decisions, and acceptance
+
+Proposal labels P0-P6 below are explanatory only, not new authorized phases:
+
+1. **P0:** Reflect the design policy in this plan and append the result ledger; independently verify, then obtain separate exact-path stage/local-commit and delivery authority.
+2. **P1:** Under later explicit diagnosis authority, refresh one exact Book/Studio source basis, actual candidate acceptance, capabilities, prerequisites, and literal later allowlists. Do not restart a stopped D3A attempt or reuse burned runtime evidence through this amendment.
+3. **P2:** Accept the necessary existing D3A persistence, D3B product identity, D4/D4A live authority, and relevant warehouse capabilities under their own gates.
+4. **P3:** Separately diagnose and implement the bounded order persistence/state/forward-only DB alignment and old-CRUD cutover. Candidate authoring and DB execution/application remain distinct.
+5. **P4:** Separately authorize provider adapter, Webhook acceptance, reconciliation/important-notification wiring, and sandbox/environment proof, after actual operating configuration is accepted.
+6. **P5:** Connect ordering UI only after required server/supply/payment acceptance; prove current cart, shortage choices, original deadline, cancellation review, and protected reconciling states through authenticated requests.
+7. **P6:** Keep Ready, merge, migration/configuration application, deployment, authenticated production smoke, and legacy retirement separately authorized and recorded.
+
+Technical owners must consolidate resolvable technical questions into one evidence-backed options package rather than asking the Owner to relay routine instructions or guess API details. Owner decisions cover actual responsibility/coverage, acceptable response times and operating cost, material native-contract changes, and priority/scope. Do not promise a completion date before prerequisite status and bounded effort are established.
+
+Required later tests cover concurrent shops and oversell prevention; multi-tab/replay/different-payload idempotency; 15-minute expiry versus payment/finalization; partial/all shortage and quantity edits; late and partial native success; cancellation-hold versus dispatch with overlapping requests; crash before provider call, after provider success/before local commit, and after local commit/before response; stale-worker and out-of-order-event rejection; durable notification retries; genuine request-scope tenant/role/revocation/direct-CRUD/RPC denial; and authenticated environment/production evidence. No test in that list is authorized or claimed executed by this document update.
+
+Operational risk: protecting unknown payments can retain stock for a long time. Resolve this through verified lookup, owned response deadlines and escalation, not invented expiry. For rollback, stop new entry while preserving unresolved payment/cancellation/notification evidence and recovery paths. Feature OFF or code revert alone must not abandon in-flight transactions; no destructive history rewrite or dual-write fallback.
+
+### 11.6 This gate's literal scope and exit
+
+Write allowlist, exactly:
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md` — append-only history.
+
+Protected paths remain those in section 3.1; `ScreensPreview.tsx` is metadata-only. The four existing untracked D3A candidates and all six future-design/proposal artifacts remain unchanged. No dependency, code, test, migration, runtime, DB, Auth, provider, credential, browser, Studio, external-post, Git index, commit, push, PR, Ready, merge, or deployment action is included.
+
+**Exit:** Document-only verification and owner handoff, with the two files left unstaged/uncommitted. Record the proposal hash, unchanged source base and candidate hashes, actual write paths, protected metadata, evidence limits, and next separate delivery gate in the result ledger. Do not treat this design record as closure of D3A, a runtime repair, or a new implementation authorization.

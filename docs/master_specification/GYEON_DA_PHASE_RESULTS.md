@@ -5319,3 +5319,102 @@ actions_not_performed:
 decision: RECONCILE_GATE_C1_THROUGH_C7_R1_HISTORY_IN_CANONICAL_LEDGER_AND_KEEP_EXECUTION_BLOCKED
 next: "INDEPENDENTLY_VERIFY_THIS_EXACT_ONE_FILE_APPEND_ONLY_LEDGER_DELTA_ALL_REFERENCED_COMMENTS_AND_MANIFEST_HASHES_CURRENT_FIXED_IDENTITY_FOUR_CANDIDATE_HASHES_PROTECTED_METADATA_EMPTY_INDEX_AND_GIT_DIFF_CHECK. THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_ONE_PATH_STAGE_AND_LOCAL_COMMIT_ONLY. NO_C7_RETRY_PUSH_PR_COMMENT_READY_MERGE_OR_RUNTIME_ACTION_IS_INFERRED."
 ```
+
+## GYEON_FUTURE_PLAN_AMENDMENT_20260913_R1 — owner-authorized design-policy reflection
+
+This entry records a new two-document design gate. It does not edit historical results, accept the untracked D3A implementation, resume the C7 attempt, or turn a future requirement into execution authority.
+
+```yaml
+phase: GYEON_FUTURE_PLAN_AMENDMENT_20260913_R1
+date_jst: 2026-09-13
+status: LOCAL_DOCUMENT_VERIFIED_UNSTAGED_UNCOMMITTED
+responsible: MACBOOK_CODEX
+authorization:
+  source: CURRENT_CONVERSATION
+  question: "次は、実装を始めず、正式計画と結果台帳への反映だけ進めてよいですか？"
+  owner_reply: "はい"
+  scope: TWO_DOCUMENT_DESIGN_POLICY_REFLECTION_ONLY
+  implementation: false
+  runtime_or_activation: false
+  studio_work: false
+  stage_commit_push_or_external_post: false
+proposal:
+  id: GYEON-FUTURE-PLAN-AMENDMENT-20260913-P1
+  path: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/docs/future-expansion-20260913/FORMAL_PLAN_AMENDMENT_PROPOSAL.md
+  sha256: a61cfc6da18e789c369e5f0929c4aaaef9736dd9d18941592efec7a099e4f300
+  design_dictionary_version: 0.2.9-design
+  proposal_and_existing_design_artifacts_modified: false
+source_basis:
+  repo: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+  branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  head: ee4b73e1512aecc44ea1fe51d9367d53f3399c63
+  tree: 9d9d9b30f5e0c6a59f33da421b1e4f11090d4e8c
+  pre_edit_index: EMPTY
+  pre_edit_tracked_worktree: CLEAN
+  remote_main_provider_production_and_latest_studio_status: NOT_VERIFIED
+  pre_edit_plan_sha256: 6df96e839541d6717c7b5e1dd4bb612dd0f87240736a84ac37da9184bccf8db9
+  pre_edit_ledger_sha256: 0a451ef8e9cb90e9fe60b69e288c0c5554bd273374336ad125cdb43198b78b60
+design_policy_recorded:
+  - GYEON_DA_FIRST_NO_PRIORITY_EXPANSION
+  - NORMAL_HOLDS_NOT_COUNTED_SERVER_ORDER_SCREEN_ENTRY_ALLOCATION
+  - ORIGINAL_15_MINUTE_LEASE_NO_EXTENSION_PAYMENT_AND_CONFIRMED_ORDER_PROTECTION
+  - SHORTAGE_ONLY_ORDERER_CHOICE_AND_DELTA_ONLY_CART_EDITS
+  - CONFIRMED_CANCELLATION_REQUEST_REVIEW_EXECUTION_SEPARATION
+  - UNSHIPPED_UNCANCELLED_QUANTITY_ONLY_NATIVE_DISPATCH_HOLD_RECEIPTS
+  - UNKNOWN_PAYMENT_SAME_ATTEMPT_DURABLE_RECONCILIATION_NO_NEW_CHARGE_OR_RELEASE
+  - DURABLE_ADMIN_NOTIFICATION_INTENT_DEDUPLICATION_AND_RESTART_RECOVERY
+  - G01_G07_CONNECTION_GAPS_AND_EXISTING_D3A_D3B_D4_D4A_DEPENDENCIES
+  - DEALER_WAREHOUSE_FINANCE_BOUNDARIES_AND_WAREHOUSE_CALENDAR_PRESERVED
+unresolved_activation_conditions:
+  - native_quantity_specific_dispatch_hold_capability
+  - actual_admin_capability_and_delivery_route
+  - provider_evidence_status_mapping_and_compensation_boundary
+  - lookup_interval_backoff_rate_limits_and_max_check_budget
+  - escalation_threshold_admin_response_and_reescalation_policy
+  - current_prerequisite_acceptance_and_later_literal_implementation_authority
+preserved_untracked_candidates_current_sha256:
+  src/lib/inventory/foundation/foundation-persistence-adaptor.ts: 35c179965a2c8fcf3e02cc5dea1b661ebab36952b983fcf23ceaa13a6251516d
+  src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts: c60f58b42de2fdd9f5c6b676e238552d33ff569dd531e8546c2bddd0ab4fe845
+  supabase/migrations/20260912004445_foundation_inventory_runtime.sql: 04092ac26b63bcad4909ea7d571712fb7bcf4d049ae4cf8c4859c648f7f43b58
+  scripts/e2e/inv001-foundation-persistence-disposable.mjs: df4f44a744678d494a1c6be1409b348199416418b4588ff2962c19644459ddc8
+candidate_evidence_limit: CURRENT_PRESERVATION_BASELINE_ONLY_NOT_HISTORICAL_EQUIVALENCE_OR_ACCEPTANCE
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+  protected_content_access: NOT_PERFORMED
+exact_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+actual_changed_paths:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+verification:
+  kind: DOCUMENT_ONLY
+  result: PASS_DOCUMENT_DELTA_AND_PRESERVATION_ONLY
+  historical_ledger_prefix_preserved: true
+  prior_plan_preserved_except_section_5_1_cross_reference: true
+  git_diff_check: PASS_EXIT_0
+  source_candidate_and_design_hashes_preserved: true
+  preserved_artifact_count: 10
+  exact_two_path_tracked_delta: true
+  index_empty: true
+  protected_metadata_matches: true
+  verification_method: READ_ONLY_NODE_HASH_PREFIX_PATH_AND_MARKER_ASSERTIONS_PLUS_SCOPED_GIT_DIFF_CHECK
+  runtime_or_business_semantics_proven: false
+delivery:
+  staged: false
+  committed: false
+  pushed: false
+  external_post: false
+  ready_merge_or_deployed: false
+actions_not_performed:
+  - source_test_dependency_migration_or_design_dictionary_edit
+  - claude_invocation_or_studio_instruction
+  - database_supabase_auth_provider_credential_or_browser_access
+  - executable_test_typecheck_build_or_runtime_start
+  - stage_commit_push_pr_issue_ready_merge_or_deployment
+decision: RECORD_DESIGN_POLICY_ONLY_KEEP_ALL_IMPLEMENTATION_AND_ACTIVATION_GATES_CLOSED
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_DELTA_AND_PRESERVED_EVIDENCE_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_STAGE_AND_LOCAL_COMMIT_ONLY. DO_NOT_INFER_PUSH_EXTERNAL_POST_CLAUDE_STUDIO_RUNTIME_OR_IMPLEMENTATION_AUTHORITY."
+```
