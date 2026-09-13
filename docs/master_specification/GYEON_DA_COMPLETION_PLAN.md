@@ -1934,3 +1934,46 @@ MacBook Codex may edit only `docs/master_specification/GYEON_DA_COMPLETION_PLAN.
 **Result contract:** `GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1_RESULT_V1`; verdict `DIAGNOSIS_COMPLETE_WITH_LIMITS`, `NEEDS_ADDITIONAL_READ_SCOPE`, or `BLOCKED_GOVERNANCE`. Require field-level findings with paths/lines, reused versus missing boundaries, legacy-quantity protection, explicit finance conflicts, grouped Owner-only decisions, and proposed later literal scopes. No `IMPLEMENTATION_READY` claim while material decisions/evidence are missing. No E0-E5 advance from this governance or a source-only diagnosis.
 
 **Current boundary and exit:** MacBook Codex verifies the three-document candidate, immutable source manifest, retained wrapper draft, four D3A candidates, protected metadata, unchanged HEAD and empty index. No source/test/dependency/schema/config changes, executable tests, DB/Supabase/Auth/browser/provider/credential action, Claude invocation, Studio instruction, external post, stage/commit/push, Ready, merge or deployment. Hand off the local uncommitted candidate; delivery, diagnosis and implementation are separate gates.
+
+## 14. New-estimate customer furigana requirement — 2026-09-13
+
+**Phase:** `GYEON_ESTIMATE_FURIGANA_REQUIRED_PLAN_R1`.
+
+**Status:** OWNER-APPROVED REQUIREMENT / LOCAL PLAN CANDIDATE / SOURCE IMPLEMENTATION NOT STARTED.
+
+**Owner decision:** `見積もりの作成時に今後の検索に必要な要件としてフリガナを必須にしてほしいので変更して下さい`. The subsequent `はい` confirms that a selected existing customer with no furigana must receive supplemental input before a new estimate can be saved, while historical estimates remain unchanged. This is a narrow exception for new-estimate customer identification, not authority for general customer-management implementation.
+
+### 14.1 Required behavior
+
+- Require a nonblank customer/company furigana for every newly created estimate, including manual input, OCR-assisted input, and selection of an existing customer. Reject empty and whitespace-only values, including full-width spaces. Do not infer a reading from a name or silently add a katakana-only restriction that the Owner did not request.
+- For a new customer, show the furigana field as required and give a clear field-level error such as `フリガナを入力してください`. Validate at the authoritative save boundary as well as the UI; a client bypass must not create an estimate without the required reading.
+- For an existing customer whose authoritative stored reading is present, reuse it without requiring redundant entry. When it is missing, provide a distinct supplemental furigana input for the selected customer; do not switch to new-customer mode or create a duplicate customer to work around the reference-only selection contract.
+- Persist the accepted supplemental reading for that same authorized customer so later customer searches and selections can use it. Do not modify unrelated customer fields, other dealers' customers, existing nonblank readings, issued documents, or historical estimate records. Inspect whether historical displays dynamically read customer data and resolve any snapshot conflict before claiming historical preservation.
+- Resolve dealer/customer authorization on the server. Client-supplied IDs, a claimed `hasKana` flag, or cached search results are not proof. Preserve existing authorization and idempotency behavior. Diagnose concurrent supplementation and stale selection handling; do not overwrite a reading another operator supplied meanwhile or claim save success after partial/unknown persistence.
+- This requirement applies to new estimate creation. Do not bulk backfill old customers, rewrite saved/issued history, or add a retrospective constraint that prevents reading or replaying accepted historical records. Editing/resaving an old estimate is not expanded into this requirement by inference.
+
+### 14.2 Source observations and implementation boundary
+
+Fixed local source basis: commit `658a8754b32fb971779b16e2484ecc0494afcb87`, tree `745cc57e616e4b48b19f6afdb328de7fb9f1cb2f`, branch `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1` in the Book runtime-wrapper repository. These are local observations, not runtime or applied-schema evidence:
+
+- `src/components/estimates/wizard/steps/Step1Customer.tsx` has an optional furigana input within new-customer fields; those fields are hidden for an existing-customer selection. Its search contract intentionally returns minimal reference data.
+- `src/components/estimates/wizard/save/estimate-save-dto.ts` represents existing customers using only `mode` and `customerId`, while new-customer `kana` is nullable. The comment maps the whole-string reading to `customers.last_name_kana`; existing split-field records still need diagnosis rather than destructive normalization.
+- `src/components/estimates/wizard/save/estimate-save-mapper-from-config.ts` carries only the ID for an existing customer and maps blank new-customer kana to null.
+- `src/components/estimates/wizard/save/estimate-save-validation.ts` currently checks customer identity/name, not mandatory kana. Presentation-only draft completeness is not a substitute for server persistence validation.
+
+Consequently, changing only an input label is insufficient. Before source work, Claude must diagnose the production route, selected-customer reference/state, authoritative lookup, save intent/DTO validation, persistence/RPC, historical readback and existing tests using a separately registered literal read manifest. Determine the smallest safe supplemental-update/save contract and return exact candidate write/test paths. Do not authorize arbitrary CRM or migration edits from these observations.
+
+Acceptance must cover: blank and whitespace-only new/OCR input; valid new-customer reading and readback; an existing customer with and without a reading; no duplicate customer; direct-save bypass rejection; tenant isolation; stale customer selection/concurrent supplement; failed or unknown save; idempotent retry; unchanged historical/issued records. Source tests, disposable database verification and authenticated staging remain distinct evidence and authority gates.
+
+### 14.3 Sequence, impact and current exit
+
+This requirement is part of the initial estimate release in section 12, not an additional CRM release. It has priority before accepting new-estimate saving. The unrelated initial-document diagnosis and inventory D1-D7 are not restarted or renumbered. Keep one implementation active at a time.
+
+Time/field impact: one additional input is needed only where the reading is missing; existing complete customers should not be re-entered. Schedule depends on the diagnosed persistence change and its verification; no completion date or completed-feature percentage is asserted. Risks are bypassable UI-only enforcement, duplicate customers, cross-tenant changes, partial writes and historical display changes. Diagnose these before choosing a migration or write path.
+
+Current literal write allowlist is only:
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md` — append section 14.
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md` — append this phase record.
+
+MacBook Codex owns this requirement record and independent acceptance; MacBook Claude retains diagnosis, implementation and executable-test ownership. Preserve the protected paths and four retained D3A candidates. Section 10 requires this decision to be committed before implementation follows it. Verify the local two-document diff and historical prefixes, then request the separate Git-delivery gate. A later matching, superseding, non-triggering Draft-PR instruction and authorized Claude diagnosis precede bounded repair. No source/test/schema/config change, live Supabase access, Claude invocation, external post, stage/commit/push, Studio work, Ready, merge or deployment is performed in this document gate.

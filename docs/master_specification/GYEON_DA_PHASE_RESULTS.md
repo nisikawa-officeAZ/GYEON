@@ -5582,3 +5582,47 @@ actions_not_performed:
 decision: REGISTER_BOUNDED_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
 next: VERIFY_THREE_DOCUMENT_DELTA_THEN_OBTAIN_SEPARATE_GIT_DELIVERY_AND_PR_INSTRUCTION_AUTHORITY_NO_CLAUDE_EXECUTION_INFERRED
 ```
+
+## GYEON_ESTIMATE_FURIGANA_REQUIRED_PLAN_R1 — approved new-estimate requirement
+
+```yaml
+phase: GYEON_ESTIMATE_FURIGANA_REQUIRED_PLAN_R1
+date_jst: 2026-09-13
+responsible: MACBOOK_CODEX
+status: LOCAL_REQUIREMENT_RECORD_SOURCE_NOT_IMPLEMENTED
+authorization:
+  source: CURRENT_CONVERSATION
+  requested_change: REQUIRE_CUSTOMER_FURIGANA_WHEN_CREATING_AN_ESTIMATE
+  confirmed_by_owner: EXISTING_CUSTOMER_WITHOUT_FURIGANA_REQUIRES_SUPPLEMENT_BEFORE_NEW_ESTIMATE_SAVE
+  preserve: HISTORICAL_ESTIMATES_AND_ISSUED_DOCUMENTS
+  broad_crm_implementation: NOT_AUTHORIZED
+source_basis:
+  head: 658a8754b32fb971779b16e2484ecc0494afcb87
+  tree: 745cc57e616e4b48b19f6afdb328de7fb9f1cb2f
+  branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  tracked_pre_edit: CLEAN
+  index_pre_edit: EMPTY
+literal_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+contract:
+  applies_to: NEW_ESTIMATE_CREATION_NEW_OCR_AND_EXISTING_CUSTOMERS
+  blank_or_whitespace_only: REJECT
+  existing_complete_customer: REUSE_AUTHORIZED_STORED_READING
+  existing_missing_reading: SUPPLEMENT_SAME_CUSTOMER_WITHOUT_DUPLICATE
+  authoritative_persistence_and_tenant_check: REQUIRED_BEFORE_ACCEPTANCE
+  historical_bulk_backfill_or_rewrite: PROHIBITED
+  inferred_reading_or_unrequested_katakana_only_rule: PROHIBITED
+evidence:
+  kind: LOCAL_SOURCE_OBSERVATIONS_AND_REQUIREMENT_RECORD_ONLY
+  implementation_tests_and_runtime: NOT_RUN
+  live_database_and_production: NOT_INSPECTED
+  evidence_level_advance: NONE
+actions_not_performed:
+  - source_test_schema_dependency_or_config_changes
+  - claude_execution_or_studio_instruction
+  - external_post_or_git_delivery
+  - database_provider_browser_credentials_ready_merge_or_deployment
+decision: RECORD_OWNER_APPROVED_REQUIREMENT_WITHOUT_CLAIMING_IMPLEMENTATION
+next: VERIFY_TWO_DOCUMENT_PRESERVATION_THEN_SEPARATE_GIT_DELIVERY_AND_BOUNDED_CLAUDE_DIAGNOSIS_BEFORE_SOURCE_REPAIR
+```
