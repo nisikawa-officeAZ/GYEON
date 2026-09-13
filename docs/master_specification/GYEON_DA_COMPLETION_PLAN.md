@@ -1906,3 +1906,31 @@ Required later acceptance covers manual work/product rows including quantity 2 �
 MacBook Codex may edit only `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md` and append `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`. Preserve all four untracked D3A candidates and the section 3.1 protected paths; `ScreensPreview.tsx` remains metadata-only. Leave retained wrapper proposals unchanged. No Claude invocation/model change, Studio instruction, app/test/schema/dependency/config edit, test/typecheck/build, DB/Supabase/provider/credential/browser access, external post, stage/commit/push, Ready/merge, or deployment occurs in this gate.
 
 **Exit:** Verify the exact two-document delta, append-only history, preserved candidates/protected metadata, unchanged HEAD/index, and diff whitespace. Leave documents unstaged/uncommitted and hand off the plan change. Implementation remains blocked until the plan delivery and bounded diagnosis/authorization requirements are satisfied. Git delivery needs separate Owner authority; no additional business questionnaire is required merely to finish this document gate.
+
+## 13. Initial document release — read-only diagnosis governance R1
+
+**Phase:** `GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1`.
+
+**Status:** OWNER-AUTHORIZED LOCAL THREE-DOCUMENT GOVERNANCE CANDIDATE / NO CLAUDE EXECUTION OR PRIVATE TRANSMISSION AUTHORIZED.
+
+**Authorization:** The Owner replied `はい` to registration of the prepared diagnosis instruction. This authorizes a local formal directive, this plan entry, and one append-only result-ledger entry only. Stage/commit, push, coordination-PR instruction publication, and Claude execution remain subsequent separately authorized gates.
+
+**Predecessor delivery:** Section 12's two-document plan reflection was committed as `f520297b228c80d80b7627e31da9179e951e0275`, tree `e60f3a908ebf70d6e3965a6f9df28268db03f6db`, and normally pushed to `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1` under separate Owner approvals. Remote branch equality was confirmed in the preceding delivery turn. The old ledger's uncommitted status is preserved as historical event state. This does not assert current PR/CI status, merge, production readiness, or deployment.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1.md`, SHA-256 `47dbf60b8808818c495a9960826da711ef7c45de5b6d41e54cdee7b8582dde78`. It replaces the unposted wrapper draft for future governance delivery, not an already executed or posted instruction.
+
+**Diagnosis scope:** 36 exact immutable source paths in the directive plus four governance inputs (AGENTS.md, full current plan, bounded relevant ledger entries, and this directive): 40 input identities. Diagnose A: additional-row validation, calculation, save, persistence/readback and legacy compatibility; B: confirmed-save/same-screen issuance, approval, independent delivery, later/consolidated invoices, preservation and double-billing boundaries. Ordinary invoice source inspection is allowed in the proposed read scope; closed-finance redesign, protected source content and new CRM remain prohibited. Two targeted SQL files do not prove a complete migration chain or live schema. Missing evidence requires exact additional read scope, not speculation.
+
+**Fixed base versus execution:** The source base is `f520297b228c80d80b7627e31da9179e951e0275` / `e60f3a908ebf70d6e3965a6f9df28268db03f6db`. Later governance delivery necessarily changes HEAD. Before invocation, Codex pins the exact accepted execution HEAD/tree and current governance hashes in the newest matching Draft-PR instruction; source-base ancestry, three-document committed delta and all 36 source hashes must still hold. Do not demand execution HEAD equals the predecessor, include stale ledger ranges, or invent self-referential hashes.
+
+**Current literal write allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1.md` — new.
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md` — append this phase only.
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md` — append-only.
+
+**Before later execution:** Verify the actual active OPEN/Draft coordination PR; record exact execution identity, read manifest/ledger excerpt hashes, protected metadata and four retained candidate hashes; publish the matching non-triggering instruction under section 6.1; obtain execution/private-transmission authority. No PR number is inferred from old inventory work. A changed phase/base/scope needs a superseding instruction. Claude must distinguish Codex-supplied preflight evidence from checks it actually performed.
+
+**Result contract:** `GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1_RESULT_V1`; verdict `DIAGNOSIS_COMPLETE_WITH_LIMITS`, `NEEDS_ADDITIONAL_READ_SCOPE`, or `BLOCKED_GOVERNANCE`. Require field-level findings with paths/lines, reused versus missing boundaries, legacy-quantity protection, explicit finance conflicts, grouped Owner-only decisions, and proposed later literal scopes. No `IMPLEMENTATION_READY` claim while material decisions/evidence are missing. No E0-E5 advance from this governance or a source-only diagnosis.
+
+**Current boundary and exit:** MacBook Codex verifies the three-document candidate, immutable source manifest, retained wrapper draft, four D3A candidates, protected metadata, unchanged HEAD and empty index. No source/test/dependency/schema/config changes, executable tests, DB/Supabase/Auth/browser/provider/credential action, Claude invocation, Studio instruction, external post, stage/commit/push, Ready, merge or deployment. Hand off the local uncommitted candidate; delivery, diagnosis and implementation are separate gates.

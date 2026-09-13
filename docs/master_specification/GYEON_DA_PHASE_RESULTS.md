@@ -5500,3 +5500,85 @@ delivery:
 decision: RECORD_LIMITED_RELEASE_PRIORITY_AND_TWO_DISTINCT_WORKSTREAMS_ONLY
 next: "VERIFY_DOCUMENT_PRESERVATION_AND_HAND_OFF_THE_UNCOMMITTED_TWO_PATH_CANDIDATE. SEPARATE_OWNER_GIT_DELIVERY_AUTHORITY_AND_SECTION_6_1_FIXED_BASE_CLAUDE_DIAGNOSIS_REQUIREMENTS_PRECEDE_IMPLEMENTATION. DO_NOT_RESUME_D3A_OR_REOPEN_CLOSED_FINANCE_BY_INFERENCE."
 ```
+
+## GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1 — formal diagnosis governance candidate
+
+This entry appends predecessor delivery and the newly authorized instruction-registration gate; no prior status or evidence is rewritten.
+
+```yaml
+phase: GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1
+date_jst: 2026-09-13
+status: LOCAL_DOCUMENT_VERIFIED_UNSTAGED_UNCOMMITTED
+responsible: MACBOOK_CODEX
+authorization:
+  source: CURRENT_CONVERSATION
+  proposed_next_step: FORMALLY_REGISTER_PREPARED_READ_ONLY_DIAGNOSIS_INSTRUCTION
+  owner_reply: "はい"
+  scope: THREE_LOCAL_GOVERNANCE_DOCUMENTS_ONLY
+  claude_execution_private_transmission_or_git_delivery: false
+predecessor_delivery:
+  phase: GYEON_INITIAL_DOCUMENT_RELEASE_PLAN_20260913_R1
+  commit: f520297b228c80d80b7627e31da9179e951e0275
+  tree: e60f3a908ebf70d6e3965a6f9df28268db03f6db
+  parent: a9ddf6ac1d3db9bae035bda1e86136ae265a7fc5
+  changed_files: 2
+  local_commit: COMPLETED_UNDER_SEPARATE_OWNER_APPROVAL
+  normal_push: COMPLETED_UNDER_SEPARATE_OWNER_APPROVAL
+  remote_equality: VERIFIED_IN_PRECEDING_DELIVERY_TURN
+  merge_or_manual_deployment: NOT_PERFORMED
+  current_remote_pr_ci_production_state: NOT_REFRESHED_THIS_GATE
+source_basis:
+  repo: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+  branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  head: f520297b228c80d80b7627e31da9179e951e0275
+  tree: e60f3a908ebf70d6e3965a6f9df28268db03f6db
+  tracked_pre_edit: CLEAN
+  index: EMPTY
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1.md
+  sha256: 47dbf60b8808818c495a9960826da711ef7c45de5b6d41e54cdee7b8582dde78
+  pre_commit_correction: REMOVED_ONE_TRAILING_BLANK_LINE_NO_INSTRUCTION_CHANGE
+  immutable_source_paths: 36
+  governance_inputs: 4
+  total_input_identities: 40
+  source_bytes_excluding_governance: 415955
+  execution_identity_and_mutable_governance_hashes: MUST_BE_PINNED_IN_LATER_MATCHING_PR_INSTRUCTION
+  result_marker: GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1_RESULT_V1
+  current_pr_instruction: NOT_POSTED
+  claude_invocations: 0
+retained_wrapper_draft:
+  path: docs/CLAUDE_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_DRAFT_20260913.md
+  base: WRAPPER_DIRECTORY_NOT_BOOK_REPO
+  sha256: 947a7beaaf7bb8907dcfc72191f548dd6da885827ef63c28ab482e4be4e4d7f4
+  changed: false
+exact_write_allowlist_and_actual_changes:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+preservation_contract:
+  prior_plan_and_ledger: PREFIX_UNCHANGED
+  four_untracked_d3a_candidates: EXACT_DIRECTIVE_HASHES_UNCHANGED
+  protected_paths: SECTION_3_1_METADATA_ONLY
+  source_test_database_config_and_model_settings: UNCHANGED
+verification_boundary:
+  kind: DOCUMENT_HASH_MANIFEST_PREFIX_METADATA_AND_DIFF_CHECK_ONLY
+  result: PASS_DOCUMENT_SCOPE_AND_PRESERVATION_ONLY
+  exit_code: 0
+  exact_three_document_candidate: true
+  immutable_source_hashes_matched: 36
+  historical_prefixes_preserved: true
+  protected_and_retained_candidate_hashes_preserved: true
+  head_unchanged_index_empty: true
+  wrapper_draft_unchanged: true
+  git_diff_check: PASS
+  runtime_business_or_production_acceptance: false
+  tests_typecheck_build: NOT_RUN
+  evidence_level_advance: NONE
+actions_not_performed:
+  - source_or_migration_implementation
+  - database_supabase_auth_storage_provider_browser_or_credentials
+  - claude_invocation_private_transmission_or_studio_instruction
+  - stage_commit_push_pr_issue_ready_merge_or_deployment
+decision: REGISTER_BOUNDED_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: VERIFY_THREE_DOCUMENT_DELTA_THEN_OBTAIN_SEPARATE_GIT_DELIVERY_AND_PR_INSTRUCTION_AUTHORITY_NO_CLAUDE_EXECUTION_INFERRED
+```
