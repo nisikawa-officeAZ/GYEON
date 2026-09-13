@@ -5627,6 +5627,136 @@ decision: RECORD_OWNER_APPROVED_REQUIREMENT_WITHOUT_CLAIMING_IMPLEMENTATION
 next: VERIFY_TWO_DOCUMENT_PRESERVATION_THEN_SEPARATE_GIT_DELIVERY_AND_BOUNDED_CLAUDE_DIAGNOSIS_BEFORE_SOURCE_REPAIR
 ```
 
+## GYEON_ESTIMATE_FURIGANA_DIAGNOSIS_R1 — source diagnosis with required corrections
+
+```yaml
+phase: GYEON_ESTIMATE_FURIGANA_DIAGNOSIS_R1
+date_jst: 2026-09-13
+responsible: MACBOOK_CLAUDE_DIAGNOSIS_MACBOOK_CODEX_INDEPENDENT_REVIEW
+authorization: OWNER_YES_TO_NEXT_READ_ONLY_CLAUDE_DIAGNOSIS
+plan_delivery:
+  commit: f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb
+  tree: 227129f55e3c45b5c154f5ee97d8498cadab9808
+  local_commit_and_normal_push: PREVIOUSLY_COMPLETED_UNDER_SEPARATE_APPROVALS
+  coordination_pr: 71
+  pr_state_before_execution: OPEN_DRAFT_MATCHING_HEAD
+instruction:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/71#issuecomment-5653441451
+  supersedes_for_next_diagnosis_only: 5653327506
+  inventory_stop_preserved: 5651260314
+execution:
+  model: claude-opus-5
+  effort: high
+  invocations: 1
+  input_files: 39
+  prompt_bytes: 811593
+  exit_code: 0
+  api_error: false
+  tool_calls: 0
+  web_requests: 0
+  cost_usd: 3.668775
+  raw_verdict: NEEDS_ADDITIONAL_READ_SCOPE
+  report_sha256: 7109953e44856ca70d2e5efecd66b7878ac3e932850466cc46842063f8126806
+evidence_directory: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/evidence/furigana-diagnosis-r1-20260913
+independent_review: CODEX_REVIEW.md
+acceptance:
+  decision: DIAGNOSIS_RECEIVED_WITH_MATERIAL_CORRECTIONS_REQUIRED
+  accepted: MISSING_READING_ENFORCEMENT_AND_REFERENCE_ONLY_SELECTION_REQUIRE_CROSS_LAYER_CHANGE
+  rejected_as_unproven:
+    - MATCH_KANA_NORM_IS_ALWAYS_EQUIVALENT_TO_ANY_NONBLANK_STORED_READING
+    - ATOMIC_SUPPLEMENT_IN_PAYLOAD_INEVITABLY_BREAKS_REPLAY
+    - SEPARATE_CUSTOMER_UPDATE_THEN_ESTIMATE_SAVE_IS_ACCEPTABLE_WITHOUT_PARTIAL_WRITE_REVIEW
+  unresolved: CONTROLLER_BRIDGE_PENDING_REQUEST_AUTHORITY_AND_DOCUMENT_RENDERING_PATHS
+  owner_questions_not_needed: OLD_ESTIMATE_RESAVE_AND_COMPANY_EXEMPTION_ALREADY_SETTLED_BY_SECTION_14
+  implementation_ready: false
+  evidence_level_advance: NONE
+preservation:
+  source_inputs_protected_metadata_and_four_retained_candidates: VERIFIED_UNCHANGED_BY_RUNNER
+  head_and_index: UNCHANGED
+  post_diagnosis_repo_write: APPEND_THIS_LEDGER_ENTRY_ONLY
+actions_not_performed:
+  - source_repair_or_application_tests
+  - database_supabase_auth_storage_provider_or_browser_operations
+  - studio_work_or_inventory_resumption
+  - commit_push_ready_merge_or_deployment
+next: PIN_ADDITIONAL_LITERAL_READ_PATHS_AND_SUPERSEDING_INSTRUCTION_FOR_CORRECTED_DIAGNOSIS_NO_IMPLEMENTATION_AUTHORITY
+```
+
+## GYEON_ESTIMATE_FURIGANA_DIAGNOSIS_R2 — additional source evidence and corrected boundaries
+
+```yaml
+phase: GYEON_ESTIMATE_FURIGANA_DIAGNOSIS_R2
+date_jst: 2026-09-13
+authorization: OWNER_YES_TO_ADDITIONAL_READ_ONLY_DIAGNOSIS
+source_head: f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb
+source_tree: 227129f55e3c45b5c154f5ee97d8498cadab9808
+instruction_url: https://github.com/nisikawa-officeAZ/GYEON/pull/71#issuecomment-5653473744
+supersedes_next_diagnosis_instruction: 5653441451
+execution:
+  model: claude-opus-5
+  effort: high
+  invocations: 1
+  input_files: 51
+  prompt_bytes: 885893
+  exit_code: 0
+  api_error: false
+  tool_calls: 0
+  web_requests: 0
+  cost_usd: 4.198975
+  raw_verdict: NEEDS_ADDITIONAL_READ_SCOPE
+  report_sha256: e27b737b6fafa8ac74aa0386053af410dbaec9ad389affa1b67ed1231527696e
+evidence_directory: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/evidence/furigana-diagnosis-r2-20260913
+independent_review: CODEX_REVIEW.md
+acceptance:
+  decision: ACCEPT_BOUNDED_FINDINGS_WITH_CORRECTIONS
+  raw_implementation_proposal_accepted_as_written: false
+  accepted: ATOMIC_SUPPLEMENT_DIRECTION_AND_BOUNDED_DOCUMENT_CONTEXT_PRESERVATION
+  corrections:
+    - DEDICATED_SUPPLEMENT_MUST_BE_BOUND_TO_SELECTED_CUSTOMER_NOT_REUSED_NEW_CUSTOMER_READING
+    - NEW_SAVE_REQUIRED_CHECK_MUST_NOT_BLOCK_OLD_EXACT_REPLAY_BEFORE_REPLAY_RESOLUTION
+    - ABSENT_OPTIONAL_SUPPLEMENT_MUST_NOT_CHANGE_LEGACY_CUSTOMER_FINGERPRINT
+    - SAME_MOUNT_IS_NOT_PROOF_OF_UNCHANGED_REQUEST_CONTENT
+    - TEST_SOURCE_IS_NOT_EXECUTED_VERIFICATION
+  codex_additional_read_paths:
+    - src/lib/auth/require-staff-capability.ts
+    - src/lib/staff/staff-types.ts
+  role_set_parity: OWNER_MANAGER_STAFF_MATCH_RPC_ROLE_NAMES_ONLY
+  new_owner_business_question: NONE_FROM_THIS_AUTHORIZATION_CHECK
+  source_repair_or_runtime_acceptance: NOT_GRANTED
+  evidence_level_advance: NONE
+preservation:
+  prior_ledger_delta_and_all_supplied_sources: VERIFIED_UNCHANGED_AFTER_CLAUDE
+  protected_metadata_and_four_candidates: VERIFIED_UNCHANGED
+  head_and_index: UNCHANGED
+  new_repository_write: APPEND_THIS_RESULT_ONLY
+actions_not_performed:
+  - source_repair_tests_database_browser_or_studio_actions
+  - commit_push_ready_merge_or_deployment
+next: PREPARE_LITERAL_REPAIR_AND_TEST_AUTHORING_DIRECTIVE_WITH_CODEX_CORRECTIONS_NO_UNAPPROVED_IMPLEMENTATION
+```
+
+## GYEON_ESTIMATE_FURIGANA_REPAIR_DIRECTIVE_DRAFT_R1 — local preparation resumed
+
+- Owner continuation after CRM intake; active work returns to section 14's estimate requirement, not CRM implementation.
+- MacBook Codex reread combined R2 report/review and R1/R2 ledger results. Raw diagnosis is not accepted as a ready-to-execute repair plan.
+- Local wrapper draft: `/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/docs/CLAUDE_FURIGANA_REPAIR_DIRECTIVE_DRAFT_R1.md`.
+- Includes customer-bound supplement, authoritative atomic save, legacy exact replay ordering, absent-field fingerprint compatibility, presence-hint boundary and unexecuted regression matrix. Supabase transaction guidance keeps external calls outside the transaction; no SQL or environment operation performed.
+- Candidate paths are proposals, not approved writes. Final fixture impacts, generated migration identity and execution manifest remain to be fixed before registration/dispatch. No repeated Claude diagnosis invoked.
+- Exact current write scope: wrapper draft above and append-only result ledger. Prior CRM documents, source JSON, diagnostics, four D3A candidates and protected paths retained.
+- Status: LOCAL_DRAFT_PREPARED_NOT_POSTED_NOT_IMPLEMENTED. No source/test/schema edit, test run, DB/browser access, Claude/Studio dispatch, commit/push or deploy. No evidence-level advance.
+- Next: close the literal repair/test scope and migration-generation gate, then register the final instruction before separately authorized execution. This draft alone does not authorize those actions.
+
+## GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1 — exact scope and empty migration
+
+- Authorization: Owner continuation to determine repair paths and DB-change filename; MacBook Codex, scope preparation only.
+- Governing local candidate: plan section 16; `CLAUDE_DIRECTIVE_GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1.md` and `GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1.json` in `docs/master_specification/`.
+- Source basis: f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb. Manifest captures exact hashes for 20 source, 10 test and 12 read-only reference paths, plus four proposed new source/test paths checked absent.
+- Added duplicate lookup projection owner and its targeted test to the later scope; bridge facade remains read-only. No global fixture cleanup authorized.
+- CLI preflight initially failed on a sandbox-denied local telemetry write. Owner granted turn-scoped write access to `/Users/atsushinishikawa/.supabase`; retry succeeded. CLI version 2.116.0 and installed migration-new help inspected. No CLI update or DB connection command run.
+- CLI generated `supabase/migrations/20260913132430_require_estimate_customer_reading.sql`, zero bytes, SHA-256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855. No SQL content or migration apply; not a completed schema change.
+- Exact current writes: two scope documents, append plan section 16, append this result, one empty generated migration. Prior CRM and diagnosis records retained. No Claude/Studio dispatch, implementation, test run, commit/push or deployment.
+- Status: LOCAL_SCOPE_DEFINED_EXECUTION_NOT_AUTHORIZED; no evidence-level advance. Next separate gate: governance delivery and matching instruction registration before repair execution, preserving all unrelated dirty paths.
+
 ## BOOK_D3A_REAL_CONNECTION_SCOPE_REGISTRATION_R1
 
 - Owner approved formal registration of the prepared D3A real-connection scope, not implementation or executable tests.
@@ -5648,3 +5778,24 @@ next: VERIFY_TWO_DOCUMENT_PRESERVATION_THEN_SEPARATE_GIT_DELIVERY_AND_BOUNDED_CL
 - Corrected the directive's governing reference from uncommitted section 17 to registration section 18 and removed one extra terminal blank line. No future read/write scope, operation authority or execution permission is expanded. Current directive SHA-256: c45a96399f7d8b8a22e3fe7ebf59550b47a041835ee539e0111d5ffe60949bb1; the earlier hash and PR comment remain historical registration evidence.
 - The prior default staged whitespace check detected that terminal blank line; its correction is required before commit. Earlier working-tree diff checks did not establish new untracked-file whitespace acceptance.
 - Before any Claude dispatch, publish a superseding matching instruction identifying comment5653626476, this reference/hash correction and the new execution HEAD/tree after separately authorized Git delivery. Push, PR posting, Claude dispatch, implementation, tests, database changes and deployment are not part of this local commit gate.
+
+## GYEON_ESTIMATE_FIRST_OPERATIONAL_RESTART_R1 — Owner pauses Book D3
+
+- Owner explicitly prioritizes estimate creation and operational launch, pausing Book D3. This replaces the active D3 priority, not historical acceptance or Studio's independent approved Foundation work.
+- Local HEAD 9f7230b5e1f05e5e652bf23d8da2ec96f8bb6442 / tree c9cb21bb309dcd11054c72acf0f3e700dd0d4306. PR71 verified OPEN/Draft, remote f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb. Local D3 registration commit is not pushed and does not authorize execution.
+- Plan section 19 and CLAUDE_DIRECTIVE_GYEON_ESTIMATE_FIRST_RESTART_R1.md define the return to furigana repair, manual work/product rows, saved-estimate document actions, limited-release controls and real workflow verification. Retain the full initially approved three-document requirement and no general CRM implementation.
+- Existing 20 source, 10 test and 12 reference hashes match the furigana manifest; four new paths remain absent; generated migration is still zero bytes. All four D3 candidates are unchanged. Reuse combined R1/R2 findings and Codex corrections; no Claude diagnosis or tests were repeated.
+- Current changes are governance only. D3 is paused in the work plan; no process termination or remote runtime state change is claimed. No source/test/SQL change, credential or DB action, Claude/Studio dispatch, commit/push or deployment. External superseding comment verification is appended after posting.
+- Next gate: selective estimate governance delivery under separate Git authority, then bounded furigana implementation and verification. Operational completion, production readiness and completion percentage remain NOT_VERIFIED.
+
+### Priority instruction posted and verified
+
+- PR71 comment https://github.com/nisikawa-officeAZ/GYEON/pull/71#issuecomment-5653656218 was posted once and independently fetched with identical body; SHA-256 118fea307fa24d0c8f992be5a042432b44bfe437b11e6f41c373711ffffd663f. It supersedes active D3 comment5653626476 and the old execution identity, not accepted findings, in furigana comment5653473744. No existing comment was edited.
+- Restart directive SHA-256 17fa4c38880a379e6beda667333ce8643a6266f013207b9de53614ee12dc4aa3. The comment includes all 42 literal existing technical read identities and discloses local uncommitted governance and remote/local HEAD difference. No automatic Claude invocation or Studio instruction was triggered by Codex.
+- Status: OWNER_PRIORITY_RECORDED_AND_COORDINATED / BOOK_D3_PAUSED / ESTIMATE_GOVERNANCE_DELIVERY_PENDING. Initial three-document operational release remains unverified; this record does not claim application implementation.
+
+### Estimate governance local commit gate
+
+- Owner authorized a local commit of estimate-related governance only: the restart directive, furigana directive/manifest, plan sections 16/19 and the furigana diagnosis/preparation/restart ledger entries. CRM intake/decision records and the separate D3 resume checkpoint remain unstaged. The empty migration and all four D3 source candidates are excluded; no source implementation or execution is claimed.
+- Commit preparation removes one terminal blank line from the furigana directive only, without changing its requirements or source/test scope. New directive SHA-256 5e3a2d147b1e5650e1aaa1906b36e4ecc8ab4812510ca0992e7f21027b6e7247; restart directive references the normalized file and has SHA-256 5d8803d91e1f6aaf9b26705d3577900b3bcab4a010ff2a890111daf50b46a70f. Earlier registration hashes and comments remain historical evidence.
+- Before Claude execution, the next separately authorized delivery must publish the new exact execution HEAD/tree and matching hashes in a superseding instruction identifying comment5653656218. This commit gate does not authorize push, external posting, Claude dispatch, tests, database changes, Ready/merge or deployment. The ancestor D3 registration commit remains preserved and inactive; a later normal push includes that documentary history but does not resume D3.

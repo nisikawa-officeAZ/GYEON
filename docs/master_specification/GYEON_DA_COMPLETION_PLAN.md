@@ -1978,6 +1978,25 @@ Current literal write allowlist is only:
 
 MacBook Codex owns this requirement record and independent acceptance; MacBook Claude retains diagnosis, implementation and executable-test ownership. Preserve the protected paths and four retained D3A candidates. Section 10 requires this decision to be committed before implementation follows it. Verify the local two-document diff and historical prefixes, then request the separate Git-delivery gate. A later matching, superseding, non-triggering Draft-PR instruction and authorized Claude diagnosis precede bounded repair. No source/test/schema/config change, live Supabase access, Claude invocation, external post, stage/commit/push, Studio work, Ready, merge or deployment is performed in this document gate.
 
+## 16. Estimate furigana repair scope R1 — local scope closure
+
+**Phase:** `GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1`.
+**Status:** OWNER-CONTINUED SCOPE PREPARATION / LOCAL GOVERNANCE CANDIDATE / NO REPAIR EXECUTION.
+
+Owner replied 「はい」 to determining the repair files and DB-change filename. MacBook Codex may prepare the literal source/test scope and generate an empty migration; no application/SQL authoring, test execution, DB application or Claude dispatch is inferred.
+
+Directive: `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1.md`.
+Manifest: `docs/master_specification/GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1.json`.
+Source basis remains HEAD `f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb`, tree `227129f55e3c45b5c154f5ee97d8498cadab9808`. Read the combined R1/R2 diagnosis and Codex corrections; do not restart identical isolated diagnosis or execute the rejected raw R2 proposal.
+
+The later source upper bound comprises 20 existing source paths, one proposed pure presence helper and one CLI-generated migration. Test authoring upper bound comprises 10 existing and 3 new test/harness paths. All paths are literal in the directive/manifest. Unused paths need not change; any additional dependency requires a superseding scope before edits. The current scope specifically includes the duplicate lookup SELECT owner and strict minimal-reference-key tests, and keeps the unchanged bridge facade read-only.
+
+The generated file is `supabase/migrations/20260913132430_require_estimate_customer_reading.sql`, created by installed CLI 2.116.0 using `supabase migration new require_estimate_customer_reading`. It is empty, not implemented, not applied, not a release artifact and not ready for deployment. Do not create a second timestamp or edit historical migrations. Protected paths and all four D3A candidates remain unchanged.
+
+Current literal write allowlist: the directive and manifest above; this plan section; an append-only result-ledger entry; the one empty migration above. Local CLI settings writes were separately permitted for this turn after the initial telemetry-file permission error. No credential modification was requested; no linked database command was executed.
+
+Keep section 14's no-guessed-readings policy and initial document priority. CRM auto-generation/confirmation is future-only. Before later source work, separately deliver this plan and instruction, pin current execution identities, verify and publish to the real OPEN/Draft coordination PR, and obtain the corresponding repair/private-transmission authority. Tests, DB validation/application and Git/release gates remain separate. This scope preparation confers no evidence-level advance.
+
 ## 18. Book D3A real-connection scope registration R1
 
 Owner approved registering the prepared three-gap scope as a formal Book instruction. MacBook Codex may create `docs/master_specification/CLAUDE_DIRECTIVE_BOOK_D3A_REAL_CONNECTION_SOURCE_R1.md` and `docs/master_specification/BOOK_D3A_REAL_CONNECTION_SCOPE_R1.json`, append this section and the result ledger, and post one non-triggering coordination instruction to the verified active OPEN/Draft PR71. Source basis remains f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb / 227129f55e3c45b5c154f5ee97d8498cadab9808. Stage/commit/push and Claude invocation are not part of registration.
@@ -1987,3 +2006,17 @@ The future source upper bound is twelve new files in wrapper evidence/inv001-dis
 The new read-only preflight is restricted to the fourteen hash-bound references and governing documents. It checks only the new interfaces, private-SQL transport trust boundary and storage primitive; it does not repeat accepted synthetic suites or full D3A diagnosis. Registration does not invoke it. Before source authoring, deliver committed matching governance, publish exact execution identity, accept the bounded preflight and obtain separate source/private-transmission authority. No copied JSON, old comment, fixture grant or canExecute flag creates permission.
 
 Live authentication/bootstrap, grant issue/consumption, database activation, retained-ledger initialization, executable tests, D3A runtime, resource cleanup, Git delivery and deployment remain separately gated. The first future connection deliverable is a verified claim/record receipt only, not permission to run the inventory harness. The document-first release objective stays; furigana repair remains prepared/on hold; CRM records, empty migration and unrelated dirty state remain preserved.
+
+## 19. Owner priority change — pause Book D3, deliver usable estimates first
+
+Owner explicitly requested pausing D3 and prioritizing estimate creation and operational launch. This supersedes the active Book priority in sections 17/18 and the D3 real-connection instruction; it does not delete, revert or upgrade any accepted or pending D3 evidence. Preserve local registration commit 9f7230b and all candidates. No D3 preflight, source work, test, credential/approval activation, runtime or D3-only push is to start. Studio's separate approved Foundation assignment is unchanged.
+
+Active phase: GYEON_ESTIMATE_FIRST_OPERATIONAL_RESTART_R1. Responsible: MacBook Codex governance/independent acceptance; MacBook Claude bounded repair and executable verification. Initial field release retains section 12's estimate, delivery-note and invoice scope. Estimate-only public release is not inferred. Product DB, D3/D1-D7 completion, inventory, ordering and broad CRM are not presumed dependencies. Preserve the approved hand-entered work/product approach and later product-selector connection.
+
+Execution order: (1) resume section 14/16's prepared furigana repair without repeating accepted diagnosis; (2) close numerical manual-row pricing/save/readback with legacy compatibility; (3) confirmed save and explicit same-screen document issuance, preserving financial approval/idempotency; (4) consistent limited-release controls; (5) authenticated staging and device workflow; (6) separately authorized production deployment, smoke and recovery. Do not remove independently issued delivery/later or consolidated invoice requirements to shorten the schedule. Unresolved financial-boundary decisions must be grouped and resolved before their implementation, not before unrelated safe estimate work.
+
+Current source basis: local HEAD 9f7230b5e1f05e5e652bf23d8da2ec96f8bb6442, tree c9cb21bb309dcd11054c72acf0f3e700dd0d4306. The 42 furigana source/test/reference hashes still match their retained manifest; four planned new paths remain absent and its generated migration remains empty. These checks preserve prior evidence, not executable acceptance. New directive: docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ESTIMATE_FIRST_RESTART_R1.md. Keep earlier documents as historical records; the new priority has precedence.
+
+Why: the previous active D3 connection work does not establish an unavoidable prerequisite for initial document use and delays the Owner's first operational outcome. This order removes it from the launch critical path. Schedule and completion percentage remain unverified; do not promise them from source presence. Release risks remain data loss, wrong-customer supplementation, legacy repricing, double issuance, tenant leakage and inaccessible required setup. No security/financial guard may be weakened for speed.
+
+Current literal write scope: this section, append-only GYEON_DA_PHASE_RESULTS.md, the new restart directive, and one non-triggering superseding instruction on verified PR71 under section 6.1. Preserve protected paths, CRM records, D3 sources and evidence. No app/test/SQL edits, Claude invocation, DB/browser/credential operation, stage/commit/push or deploy in this priority-record turn. Section 10's committed-plan prerequisite remains; deliver only needed estimate governance before bounded implementation, with Git and environment gates separate.
