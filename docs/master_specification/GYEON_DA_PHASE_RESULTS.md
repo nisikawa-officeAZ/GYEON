@@ -5626,3 +5626,25 @@ actions_not_performed:
 decision: RECORD_OWNER_APPROVED_REQUIREMENT_WITHOUT_CLAIMING_IMPLEMENTATION
 next: VERIFY_TWO_DOCUMENT_PRESERVATION_THEN_SEPARATE_GIT_DELIVERY_AND_BOUNDED_CLAUDE_DIAGNOSIS_BEFORE_SOURCE_REPAIR
 ```
+
+## BOOK_D3A_REAL_CONNECTION_SCOPE_REGISTRATION_R1
+
+- Owner approved formal registration of the prepared D3A real-connection scope, not implementation or executable tests.
+- Formal directive: docs/master_specification/CLAUDE_DIRECTIVE_BOOK_D3A_REAL_CONNECTION_SOURCE_R1.md; manifest: docs/master_specification/BOOK_D3A_REAL_CONNECTION_SCOPE_R1.json. Plan section 18 records the exact four-document registration scope and one non-triggering PR post.
+- Source basis HEAD f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb / tree 227129f55e3c45b5c154f5ee97d8498cadab9808; live PR71 check OPEN/Draft and same head. Future source upper bound: twelve absent paths; read references: fourteen pinned files. Prior wrapper drafts remain unchanged.
+- The previous gap review is source evidence, not authenticated live proof. The registered preflight targets new connection interfaces only. Central approval, retained records and D3A runtime authority remain distinct.
+- Current checkout documents remain unstaged/uncommitted. Source authoring, Claude dispatch, database/credential/grant operations, tests, Studio work and deployment are not performed. Registration post verification is recorded in a subsequent append below; this entry alone does not claim a successful post.
+
+### Registration post verified
+
+- New non-triggering PR71 comment: https://github.com/nisikawa-officeAZ/GYEON/pull/71#issuecomment-5653626476. Posted once; separately fetched body SHA-256 matches 0069d12be7ab3b7c55cb1f94751cf70c56cf87b87c925cdce7c78e8ccf08d683. Existing comments were not edited.
+- Formal directive SHA-256: 672c48d5b08c3f4f69bf49f8c344bcdc86781d0abe61000ddc1911262437e619. Fourteen reference hashes, four retained candidate hashes, twelve absent future paths, protected metadata and two historical document prefixes verified. Git diff-check passed; index empty; HEAD unchanged.
+- Comment supersedes only the active-work selection in furigana comment5653473744; it retains historical findings and the live STOP in comment5651260314. It supplies the exact non-executing Claude preflight boundary and future source upper bound, with no automatic invocation.
+- Status: SCOPE_REGISTERED_ON_PR_LOCAL_GOVERNANCE_UNCOMMITTED. No source implementation, tests, DB changes, Claude/Studio invocation, commit/push or deploy. Required next gate is explicit governance delivery, followed by separately authorized bounded preflight/source work.
+
+### Local registration commit preparation
+
+- Owner authorized a local commit of only the four registration documents. Earlier CRM, furigana and resume-checkpoint document deltas remain unstaged; source candidates and the empty migration are excluded. Plan section numbering is retained, not renumbered to hide omitted local work.
+- Corrected the directive's governing reference from uncommitted section 17 to registration section 18 and removed one extra terminal blank line. No future read/write scope, operation authority or execution permission is expanded. Current directive SHA-256: c45a96399f7d8b8a22e3fe7ebf59550b47a041835ee539e0111d5ffe60949bb1; the earlier hash and PR comment remain historical registration evidence.
+- The prior default staged whitespace check detected that terminal blank line; its correction is required before commit. Earlier working-tree diff checks did not establish new untracked-file whitespace acceptance.
+- Before any Claude dispatch, publish a superseding matching instruction identifying comment5653626476, this reference/hash correction and the new execution HEAD/tree after separately authorized Git delivery. Push, PR posting, Claude dispatch, implementation, tests, database changes and deployment are not part of this local commit gate.
