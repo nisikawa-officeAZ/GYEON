@@ -17,6 +17,8 @@
 
 This plan is the single current execution authority for completing GYEON Detailer Agent. It supplements the frozen architecture and supersedes older schedules, status pages, roadmaps, chat handoffs, and agent memory when they conflict about priority, ownership, phase, or completion state.
 
+Current limited-release direction: section 12 records the Owner-approved estimate/delivery-note/invoice-first milestone. It takes precedence over older all-feature release sequencing only; it does not declare GDA-7 complete, reopen closed finance, or authorize implementation before its separate gates.
+
 Precedence:
 
 1. Explicit current user authorization.
@@ -1835,3 +1837,72 @@ Write allowlist, exactly:
 Protected paths remain those in section 3.1; `ScreensPreview.tsx` is metadata-only. The four existing untracked D3A candidates and all six future-design/proposal artifacts remain unchanged. No dependency, code, test, migration, runtime, DB, Auth, provider, credential, browser, Studio, external-post, Git index, commit, push, PR, Ready, merge, or deployment action is included.
 
 **Exit:** Document-only verification and owner handoff, with the two files left unstaged/uncommitted. Record the proposal hash, unchanged source base and candidate hashes, actual write paths, protected metadata, evidence limits, and next separate delivery gate in the result ledger. Do not treat this design record as closure of D3A, a runtime repair, or a new implementation authorization.
+
+## 12. Initial three-document release amendment — 2026-09-13
+
+**Phase:** `GYEON_INITIAL_DOCUMENT_RELEASE_PLAN_20260913_R1`.
+
+**Status:** OWNER-AUTHORIZED PLAN REFLECTION / LOCAL DOCUMENT CANDIDATE / NO IMPLEMENTATION, GIT DELIVERY, OR RELEASE AUTHORITY.
+
+**Authorization:** The Owner approved manual additional rows now with catalogue selection later (`ではこの内容で進めて下さい`), and replied `はい` to the current next step: separate additional rows and document issuance order in the formal plan. This gate changes exactly this file and the append-only result ledger. Claude execution, external posting, application edits, tests, DB access, commit/push, and deployment are not part of this gate. Section 10's committed-plan prerequisite remains mandatory before implementation follows this amendment.
+
+**Baseline:** Book worktree `work/dealeros-inv001-p20d2-b2-runtime-wrapper`, branch `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1`, HEAD `a9ddf6ac1d3db9bae035bda1e86136ae265a7fc5`, tree `c256ee69d4d0dc56181419a5908be256e1f21a9e`. This is a local source/document basis, not a refreshed remote/main, environment, or production acceptance.
+
+**Retained references:** Wrapper `docs/GYEON_INITIAL_RELEASE_SCOPE_PROPOSAL_20260913.md`, SHA-256 `075d8f6d74bd328c902a0346efa3d7ba0fc9bc5520d1b709b95c90a6e7bcb32b`, and `docs/ESTIMATE_ADDITIONAL_ITEMS_SPEC_20260913.md`, SHA-256 `41b341e3858fea10b484754af3c076d2fdee1285c5155f244ec5399905e4fd55`. Their historical proposal/review labels remain unchanged. The governing requirements are reproduced here so another host does not need those local files to understand the scope.
+
+### 12.1 Priority, release boundary, and conflict disposition
+
+1. First deliver reliable estimate, delivery-note, and invoice creation, persistence/readback, issuance, PDF viewing, download, and printing to detailers. This is a limited field-release milestone, not full GDA-7 completion.
+2. Then enable customer management, service certificates, and scheduling, in that order. **New CRM implementation or specification expansion is prohibited until the Owner approves its design.** Existing customer/vehicle input and selection needed by estimates may remain; that dependency is not approval to build CRM.
+3. Temporarily gray out other dealer-facing functions rather than deleting data/history. Preserve required login, store/price settings, and genuinely necessary date/confirmation inputs. Do not disable whole mixed-purpose navigation groups or administrator maintenance indiscriminately.
+4. Match menu, cards, links, mobile entry, direct URLs, and server operation entry to the same release boundary while retaining tenant/role authorization. Gray UI alone is not enforcement. Show a readable preparation reason, not a false subscription-plan restriction.
+5. Product-content DB completion, Foundation D1-D7 completion, ordering, inventory, payments expansion, retailer PWA, AI, LINE, and marketing are not presumed prerequisites of this limited release. A demonstrated unavoidable dependency requires explicit scope reconciliation. Preserve existing D3A candidates and evidence; this amendment does not restart C7 or change Studio's independent assignment.
+6. Sections 1, 2, 5.1, and 7 retain the full GYEON DA mission and historical phases, but any interpretation requiring all those functions before the first limited dealer release is superseded by this section. D1-D7/GDA identifiers and acceptance history are not renumbered or retrospectively upgraded. SaaS monetization is still deferred.
+7. Closed finance/monthly-invoice contracts remain closed. The desired pre-invoice delivery flow conflicts with the currently inspected invoice-derived delivery adapter. Record this as an unresolved business-flow design difference, not a proven production regression or permission to remove guards. Required work crossing the closed finance boundary must receive a separate explicit exception after impact diagnosis; otherwise it remains blocked.
+
+### 12.2 Workstream A — manual additional rows and later catalogue connection
+
+- Initial input: work/product kind, name, quantity, unit, unit price, tax category, and notes. Use numerical quantity times unit price, then the existing accepted discount/tax/rounding contract; do not invent a second calculation engine.
+- Preserve row identity/order and required values across validation, save, readback, edit, and all three documents. Validate on the server as well as in the UI. Resolve precision, bounds, tax-exclusive/inclusive display, free versus unset, and permitted tax categories against existing contracts before implementation.
+- Distinguish work/product kind from manual/catalogue origin. Reserve a compatible design for canonical product/variant references and selection-time name/price/version snapshots; no fabricated product IDs, duplicate product master, empty API, or automatic name-based remapping.
+- Later add `GYEON製品から選ぶ` to the same entry area and reuse its row/calculation/save/output contract. Catalogue selection is not enabled in the initial manual-only milestone. Product DB or later price changes must not alter historical saved or issued values.
+- Manual rows, estimates, and catalogue selection do not reserve or deduct inventory. Ordering/allocation remains the separately governed contract in section 11.
+- Current local source observations: `wizard-manual-pricing.ts` fixes other-work quantity at 1 and records entered quantity as metadata; `estimate-save-mapper-from-config.ts` sets manual description to null; `get-estimate.ts` and the inspected document row models do not carry dedicated unit/work-product/per-line-tax fields. These observations identify inspection targets, not tested end-to-end failure or proof that the live DB lacks columns.
+- Preserve legacy quantity-as-note semantics. A new numerical-quantity model must not silently multiply or reprice older rows during readback/resave.
+
+### 12.3 Workstream B — saved estimate and independent document issuance
+
+- Enter and save estimate data first. Only confirmed durable save success permits `保存完了` and issuance controls on that same screen. Saving an estimate is not issuing an estimate document, approving it, completing work, issuing an invoice, or receiving payment.
+- Offer explicit actions for the needed estimate, delivery note, or invoice. Do not issue all three automatically. Required document-specific dates/confirmation may be gathered on the same surface; users must not be forced to navigate back through separate list pages.
+- Support all required paths: invoice without an estimate document or delivery note; delivery note first and related invoice later; multiple delivery notes consolidated into one invoice. A separate input flow with no saved estimate is not added to the initial requirement.
+- Keep save state and each issuance state separate. Saving, failed save, unknown result, or unsaved changes must not be presented as issue-ready. Issuance failure must not be reported as failure of an already successful estimate save. Reopen/download/print must not create a new charge or new document identity.
+- Preserve document-specific immutable issued values and source relationships. Later invoice edits must not rewrite an issued delivery note. Prevent duplicate issuance and double billing across individual and consolidated invoices; never mix tenants or invoice recipients.
+- Do not create dummy invoices, delivery notes, work orders, or completion facts to bypass existing gates. The current `createInvoiceFromEstimate` approved-only condition must be reconciled with the same-screen flow; do not silently auto-approve or remove approval.
+- Reuse accepted finance calculation/issuance boundaries wherever compatible. Current estimate-to-invoice code recalculates totals and does not copy estimate notes/product-origin fields in the inspected path; verify required parity and preservation before changing it. Source observations alone do not establish a regression or authorize closed-finance edits.
+- Required later design decisions: full versus partial delivery, source-line/quantity association, numbering, correction/reissue, invoice approval interaction, consolidation eligibility and tax/rounding, and necessary completion/date inputs. Inspect accepted contracts first and present only actual unresolved business choices together to the Owner. Do not invent monthly-end closing, carryforward statements, automatic billing, payment processing, or allocation extensions.
+
+### 12.4 Ordered delivery and acceptance boundaries
+
+The rows below separate work, not grant source-write authority or rename inventory D1-D7:
+
+| Order | Deliverable | Gate / current evidence |
+|---|---|---|
+| 0 | This limited-release plan and append-only ledger reflection | Document-only candidate; Git delivery separate |
+| 1 | Fixed-base Claude read-only diagnosis of A's remaining validation/persistence/readback paths and B's dependencies/closed-finance conflicts | Not invoked here; exact read list and newest coordination Draft-PR instruction required under 6.1 |
+| 2 | A: common additional-row contract and bounded manual-row candidate | Later explicit literal source allowlist and tests; legacy data preserved |
+| 3 | B: independent issuance/source-link design, then bounded implementation | Owner decisions and any protected-finance exception resolved first; no guard bypass |
+| 4 | Same-screen save/issue actions and limited-release controls | Only after required server behavior is accepted; no broad CRM work |
+| 5 | Authenticated staging / real-device field verification of all initial paths | Separate environment/data-write authority; E3 then E4 evidence |
+| 6 | Exact candidate Git delivery, authorized release, production smoke and recovery record | Separate commit/push/Ready/merge/apply/deploy gates; limited scope only |
+
+One implementation at a time. If shared row/schema contracts are needed by A and B, reconcile those contracts before either implementation, rather than duplicating them. Product contents, SDS/images/videos, and future retailer PWA remain later independent delivery; this plan introduces no source or DB for them.
+
+Required later acceptance covers manual work/product rows including quantity 2 × price 1000 = 2000 before tax/discount; unit/description/order/origin preservation; legacy quantity-note stability; exact totals across save/readback/documents; same-screen confirmed save; all three issuance paths including later/consolidated billing; no duplicate issuance or double billing; cross-tenant/direct-entry denial; readable failure/disabled states; PDF layout/download/print; and recovery after failure/restart without falsely reporting completion. No executable tests or evidence-level advance is claimed here.
+
+**Time and risk:** This order removes product-DB/inventory completion from the first-release critical path but adds genuine independent-delivery design work. No percentage or delivery date is promised until diagnosis fixes scope and dependencies. Key risks are legacy repricing, hidden required setup, double billing, tax divergence, and accidental reopening of finance/CRM.
+
+### 12.5 Exact current write scope and exit
+
+MacBook Codex may edit only `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md` and append `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`. Preserve all four untracked D3A candidates and the section 3.1 protected paths; `ScreensPreview.tsx` remains metadata-only. Leave retained wrapper proposals unchanged. No Claude invocation/model change, Studio instruction, app/test/schema/dependency/config edit, test/typecheck/build, DB/Supabase/provider/credential/browser access, external post, stage/commit/push, Ready/merge, or deployment occurs in this gate.
+
+**Exit:** Verify the exact two-document delta, append-only history, preserved candidates/protected metadata, unchanged HEAD/index, and diff whitespace. Leave documents unstaged/uncommitted and hand off the plan change. Implementation remains blocked until the plan delivery and bounded diagnosis/authorization requirements are satisfied. Git delivery needs separate Owner authority; no additional business questionnaire is required merely to finish this document gate.

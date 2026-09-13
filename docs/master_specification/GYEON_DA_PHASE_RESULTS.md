@@ -5418,3 +5418,85 @@ actions_not_performed:
 decision: RECORD_DESIGN_POLICY_ONLY_KEEP_ALL_IMPLEMENTATION_AND_ACTIVATION_GATES_CLOSED
 next: "VERIFY_THE_EXACT_TWO_DOCUMENT_DELTA_AND_PRESERVED_EVIDENCE_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_STAGE_AND_LOCAL_COMMIT_ONLY. DO_NOT_INFER_PUSH_EXTERNAL_POST_CLAUDE_STUDIO_RUNTIME_OR_IMPLEMENTATION_AUTHORITY."
 ```
+
+## GYEON_INITIAL_DOCUMENT_RELEASE_PLAN_20260913_R1 — limited-release plan reflection
+
+This new document-only gate preserves every prior entry, including historical delivery/status statements. It neither resumes inventory runtime work nor grants application or closed-finance implementation authority.
+
+```yaml
+phase: GYEON_INITIAL_DOCUMENT_RELEASE_PLAN_20260913_R1
+date_jst: 2026-09-13
+status: LOCAL_DOCUMENT_VERIFIED_UNSTAGED_UNCOMMITTED
+responsible: MACBOOK_CODEX
+authorization:
+  source: CURRENT_CONVERSATION
+  proposed_next_step: "追加明細と帳票の発行順序を分けて正式計画へ整理する"
+  owner_reply: "はい"
+  scope: TWO_DOCUMENT_PLAN_AND_LEDGER_REFLECTION_ONLY
+  implementation_or_external_execution: false
+source_basis:
+  repo: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+  branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  head: a9ddf6ac1d3db9bae035bda1e86136ae265a7fc5
+  tree: c256ee69d4d0dc56181419a5908be256e1f21a9e
+  pre_edit_tracked_worktree: CLEAN
+  pre_edit_index: EMPTY
+  remote_main_or_environment_status: NOT_VERIFIED
+  pre_edit_plan_sha256: 107a34ebb82d120df81e1571df672e1244382d44168321e6c21b6d3ad0324473
+  pre_edit_ledger_sha256: b505f1f995a917aa9cad2cf8068b2a0d0db17e9954d8e018e92b701fd79791d0
+retained_reference_sha256:
+  GYEON_INITIAL_RELEASE_SCOPE_PROPOSAL_20260913.md: 075d8f6d74bd328c902a0346efa3d7ba0fc9bc5520d1b709b95c90a6e7bcb32b
+  ESTIMATE_ADDITIONAL_ITEMS_SPEC_20260913.md: 41b341e3858fea10b484754af3c076d2fdee1285c5155f244ec5399905e4fd55
+recorded_policy:
+  - LIMITED_ESTIMATE_DELIVERY_NOTE_INVOICE_FIRST_NOT_GDA7_COMPLETE
+  - LATER_CRM_CERTIFICATES_SCHEDULING_IN_THAT_ORDER
+  - NO_NEW_CRM_IMPLEMENTATION_WITHOUT_OWNER_DESIGN_APPROVAL
+  - MANUAL_WORK_PRODUCT_ROWS_NOW_CATALOGUE_SELECTION_LATER
+  - NUMERICAL_QUANTITY_WITH_LEGACY_QUANTITY_NOTE_PROTECTION
+  - CONFIRMED_SAVE_AND_EXPLICIT_ISSUANCE_ON_SAME_SCREEN
+  - INVOICE_WITHOUT_DELIVERY_DELIVERY_BEFORE_INVOICE_AND_CONSOLIDATION
+  - PRESERVE_ISSUED_VALUES_SOURCE_LINKS_AND_PREVENT_DOUBLE_BILLING
+  - GRAY_OUT_OTHER_FEATURES_WITHOUT_BLOCKING_REQUIRED_EXISTING_INPUTS
+  - INVENTORY_PRODUCT_DB_PWA_NOT_PRESUMED_FIRST_RELEASE_DEPENDENCIES
+  - CLOSED_FINANCE_CONFLICT_REQUIRES_SEPARATE_EXPLICIT_EXCEPTION
+unresolved:
+  - full_or_partial_delivery_source_line_binding_numbering_correction_reissue
+  - approval_gate_and_same_screen_issuance_alignment
+  - consolidation_eligibility_tax_rounding_and_required_dates
+  - exact_future_read_and_write_allowlists_and_environment_readiness
+preserved_untracked_sha256:
+  src/lib/inventory/foundation/foundation-persistence-adaptor.ts: 35c179965a2c8fcf3e02cc5dea1b661ebab36952b983fcf23ceaa13a6251516d
+  src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts: c60f58b42de2fdd9f5c6b676e238552d33ff569dd531e8546c2bddd0ab4fe845
+  supabase/migrations/20260912004445_foundation_inventory_runtime.sql: 04092ac26b63bcad4909ea7d571712fb7bcf4d049ae4cf8c4859c648f7f43b58
+  scripts/e2e/inv001-foundation-persistence-disposable.mjs: df4f44a744678d494a1c6be1409b348199416418b4588ff2962c19644459ddc8
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+  protected_content_access: NOT_PERFORMED
+exact_write_allowlist_and_actual_changes:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+plan_candidate_sha256: ba60d6276ff0461e3279973be0d19f16f2cfd71441407298845d492717978beb
+verification_boundary:
+  kind: DOCUMENT_DELTA_PREFIX_HASH_METADATA_AND_WHITESPACE_ONLY
+  result: PASS_DOCUMENT_SCOPE_AND_PRESERVATION_ONLY
+  verification_exit_code: 0
+  exact_two_path_delta: true
+  historical_prefixes_preserved: true
+  candidate_and_reference_hashes_preserved: true
+  protected_modes_blobs_unchanged: true
+  head_unchanged_index_empty: true
+  git_diff_check: PASS
+  application_tests_typecheck_build: NOT_RUN
+  runtime_or_business_semantics_proven: false
+  evidence_level_advance: NONE
+delivery:
+  stage_commit_push: NOT_PERFORMED
+  external_post_claude_or_studio_instruction: NOT_PERFORMED
+  database_provider_browser_or_credentials: NOT_ACCESSED
+  ready_merge_apply_or_deploy: NOT_PERFORMED
+decision: RECORD_LIMITED_RELEASE_PRIORITY_AND_TWO_DISTINCT_WORKSTREAMS_ONLY
+next: "VERIFY_DOCUMENT_PRESERVATION_AND_HAND_OFF_THE_UNCOMMITTED_TWO_PATH_CANDIDATE. SEPARATE_OWNER_GIT_DELIVERY_AUTHORITY_AND_SECTION_6_1_FIXED_BASE_CLAUDE_DIAGNOSIS_REQUIREMENTS_PRECEDE_IMPLEMENTATION. DO_NOT_RESUME_D3A_OR_REOPEN_CLOSED_FINANCE_BY_INFERENCE."
+```
