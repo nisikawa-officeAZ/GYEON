@@ -6,6 +6,12 @@
 // Real save/PDF/LINE and module navigation wire in Phase 2 (existing logic, unchanged).
 
 import type { EstimateWizardApi } from "../useEstimateWizard";
+import type {
+  WizardExistingCustomerReference,
+  WizardExistingVehicleReference,
+} from "../contract/wizard-runtime-inputs";
+import { effectiveExistingCustomer, effectiveExistingVehicle } from "./existing-entity-selection";
+import { serviceCategoryLabel } from "@/lib/estimates/service-categories";
 import type { WizardSaveBinding } from "../save/WizardSavePanel";
 import { WizardSavePanel } from "../save/WizardSavePanel";
 import { Card, SectionTitle, PhaseTwoNotice } from "../ui";
@@ -16,18 +22,49 @@ import { Card, SectionTitle, PhaseTwoNotice } from "../ui";
 // creates no session or key, reads no browser storage, and performs no pricing,
 // mapping, validation, DB or navigation work — it renders what it is handed.
 
+// GDA-ESTIMATE-REVIEW-DISPLAY-R1: an existing selection stores ONLY an id, never a
+// label, so this step receives the SAME server-supplied reference arrays the
+// selection steps use and resolves the label at render time through the same pure
+// authorities (effectiveExistingCustomer / effectiveExistingVehicle). The resolved
+// server-composed displayName is DISPLAY ONLY — it is never written into the
+// canonical draft, so persistence stays byte-identical. A claimed reference that
+// fails to resolve (missing, stale, duplicate/ambiguous, or owned by another
+// customer) fails closed to the em dash rather than guessing a label; new-entity
+// entries keep their draft-field display.
+
 export function Step7Review({
-  api, saveBinding,
-}: { api: EstimateWizardApi; saveBinding?: WizardSaveBinding }) {
+  api, customers, vehicles, saveBinding,
+}: {
+  api: EstimateWizardApi;
+  customers: readonly WizardExistingCustomerReference[];
+  vehicles: readonly WizardExistingVehicleReference[];
+  saveBinding?: WizardSaveBinding;
+}) {
   const s = api.store;
+
+  const existingCustomer = effectiveExistingCustomer(customers, s.customer.regMethod, s.customer.existingId);
+  const customerLabel = existingCustomer !== null
+    ? existingCustomer.displayName
+    // In existing/search mode an unresolved id must not fall back to the
+    // new-customer draft field — that field describes a record to CREATE.
+    : s.customer.regMethod === "search" ? "—" : (s.customer.name || "—");
+
+  const existingVehicle = effectiveExistingVehicle(vehicles, existingCustomer?.id ?? null, s.vehicle.existingId);
+  // A non-empty existingId is a CLAIMED reference: if it did not resolve under the
+  // effective customer, showing the new-vehicle draft fields would mislabel it.
+  const vehicleReferenceClaimed = typeof s.vehicle.existingId === "string" && s.vehicle.existingId !== "";
+  const vehicleLabel = existingVehicle !== null
+    ? existingVehicle.displayName
+    : vehicleReferenceClaimed ? "—" : ([s.vehicle.maker, s.vehicle.model].filter(Boolean).join(" ") || "—");
+
   return (
     <>
       <Card>
         <SectionTitle>確認</SectionTitle>
         <dl className="text-xs text-slate-300 space-y-1">
-          <div className="flex justify-between"><dt className="text-slate-500">顧客</dt><dd>{s.customer.name || "—"}</dd></div>
-          <div className="flex justify-between"><dt className="text-slate-500">車両</dt><dd>{[s.vehicle.maker, s.vehicle.model].filter(Boolean).join(" ") || "—"}</dd></div>
-          <div className="flex justify-between"><dt className="text-slate-500">作業</dt><dd>{s.categories.join(" / ") || "—"}</dd></div>
+          <div className="flex justify-between"><dt className="text-slate-500">顧客</dt><dd>{customerLabel}</dd></div>
+          <div className="flex justify-between"><dt className="text-slate-500">車両</dt><dd>{vehicleLabel}</dd></div>
+          <div className="flex justify-between"><dt className="text-slate-500">作業</dt><dd>{s.categories.map(serviceCategoryLabel).join(" / ") || "—"}</dd></div>
         </dl>
       </Card>
       {saveBinding
