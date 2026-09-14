@@ -5184,3 +5184,37 @@ merge_authorized: false
 production_deploy_authorized: false
 next: "VERIFY_THIS_EXACT_TWO_DOCUMENT_LOCAL_DELTA_HASHES_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_COMMIT_ONLY."
 ```
+
+## GDA-ESTIMATE-DETAIL-DOCUMENTS-R1 — production closeout
+
+```yaml
+phase: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1
+marker: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1_PRODUCTION_CLOSEOUT_V1
+status: PRODUCTION_RELEASE_COMPLETE
+date: 2026-09-14
+authorization: "The Owner explicitly authorized PR #76 merge and production deployment."
+repository: nisikawa-officeAZ/GYEON
+pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/76
+merged:
+  state: MERGED
+  head_commit: 1f0b3eb10b4d0305f9077806422b43abc71249ac
+  merge_commit: e092e28da0dfc089059b02d294775bc96ad089bc
+  merged_at: 2026-09-14T12:57:34Z
+production:
+  deployment_id: dpl_HMszMjvcQUDs9AWkqELZGiz7D9q3
+  deployment_url: https://dealeros-9262yuel5-nisikawa-5024s-projects.vercel.app
+  canonical_alias: https://app.detailer-ag.com
+  status: READY
+  github_deployment_status: SUCCESS
+authenticated_read_only_smoke:
+  saved_estimate: EST-00001
+  detail_route: /estimates/3432ca51-3641-4244-aade-932bc83a41a9
+  detail_page: PASS
+  invoice_create_control_present: true
+  delivery_note_control: ENABLED
+  delivery_note_route: /pdf/delivery-note?invoiceId=2461afb8-2761-4967-9492-0dfd82b1ba9e
+  delivery_note_route_reached: true
+  data_mutation: false
+verdict: ACCEPTED_PRODUCTION_RELEASE_COMPLETE
+next: "A new same-page invoice workflow phase requires its own governance, Claude read-only diagnosis, authorization, implementation, and acceptance gates."
+```

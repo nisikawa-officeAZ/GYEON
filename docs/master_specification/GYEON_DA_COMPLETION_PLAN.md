@@ -1981,3 +1981,38 @@ acceptance:
   production_deploy: NOT_AUTHORIZED
 next: "VERIFY_THE_EXACT_TWO_DOCUMENT_LOCAL_DELTA_HASHES_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_COMMIT_ONLY."
 ```
+
+## 16. Production closeout — reopened estimate document parity
+
+```yaml
+phase: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1
+marker: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1_PRODUCTION_CLOSEOUT_V1
+date: 2026-09-14
+status: PRODUCTION_RELEASE_COMPLETE
+owner_authorization:
+  merge_and_production_deploy: true
+repository: nisikawa-officeAZ/GYEON
+pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/76
+pull_request_state: MERGED
+head_commit: 1f0b3eb10b4d0305f9077806422b43abc71249ac
+merge_commit: e092e28da0dfc089059b02d294775bc96ad089bc
+production:
+  deployment_id: dpl_HMszMjvcQUDs9AWkqELZGiz7D9q3
+  deployment_status: READY
+  github_deployment_status: SUCCESS
+  canonical_alias: https://app.detailer-ag.com
+authenticated_read_only_smoke:
+  saved_estimate: EST-00001
+  detail_route: /estimates/3432ca51-3641-4244-aade-932bc83a41a9
+  invoice_create_control_present: true
+  delivery_note_control: ENABLED
+  delivery_note_route: /pdf/delivery-note?invoiceId=2461afb8-2761-4967-9492-0dfd82b1ba9e
+  delivery_note_route_reached: true
+  data_mutation: false
+acceptance:
+  source_and_preview: ACCEPTED
+  merge: COMPLETE
+  production_deploy: COMPLETE
+  authenticated_production_smoke: PASS
+next: "START_A_FRESH_GOVERNANCE_AND_READ_ONLY_DIAGNOSIS_PHASE_FOR_SAME_PAGE_INVOICE_WORKFLOW; DO_NOT_MIX_IT_WITH_THE_Genspark_PDF_LOGO_LAYOUT_TASK."
+```
