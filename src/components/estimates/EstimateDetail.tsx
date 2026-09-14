@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   EstimateDB,
@@ -9,10 +9,10 @@ import {
   estimateDisplayNo,
   estimateCustomerName,
 } from "@/lib/estimates/estimate-types";
-import { createInvoiceFromEstimate } from "@/lib/invoices/create-invoice";
 import type { EstimateRelatedInvoice } from "@/lib/invoices/get-invoice";
 import { buildSavedDeliveryNotePath } from "./wizard/production/SavedEstimateDocuments";
-import type { SavedInvoiceSummary } from "./wizard/production/saved-estimate-invoice-controller";
+import SavedEstimateInvoice from "./wizard/production/SavedEstimateInvoice";
+import type { SavedInvoiceActions, SavedInvoiceSummary } from "./wizard/production/saved-estimate-invoice-controller";
 import { sortByCategoryOrder } from "@/lib/estimates/category-order";
 import EstimateSummary from "./EstimateSummary";
 import EstimateStatusControl from "./EstimateStatusControl";
@@ -87,38 +87,28 @@ interface EstimateDetailProps {
   /** GDA_ESTIMATE_DETAIL_DOCUMENTS_R1: server-read, tenant-scoped minimal invoice fields
    *  for the delivery-note document surface. null means no eligible related invoice. */
   relatedInvoice?:      EstimateRelatedInvoice | null;
+  /** GDA_ESTIMATE_DETAIL_INVOICE_SAME_PAGE_R1: route-injected canonical invoice actions. */
+  invoiceActions?:      SavedInvoiceActions;
 }
 
-export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, variant = "modal", dealerDisplayName = null, relatedInvoice = null }: EstimateDetailProps) {
+export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, variant = "modal", dealerDisplayName = null, relatedInvoice = null, invoiceActions }: EstimateDetailProps) {
   const customer = estimate.customers;
   const vehicle  = estimate.vehicles;
   const items    = estimate.estimate_items ?? [];
 
   const customerName = estimateCustomerName(customer);
-  const deliveryNoteHref = resolveDeliveryNoteHref(relatedInvoice);
+  const [invoiceReadback, setInvoiceReadback] = useState<SavedInvoiceSummary | null>(null);
+  const deliveryNoteHref = resolveDeliveryNoteHref(invoiceReadback ?? relatedInvoice);
 
   // F1-R1 — bumped after a LINE attempt that may have logged a row, so the
   // 送付履歴 card refetches without a full-page reload.
   const [historyVersion, setHistoryVersion] = useState(0);
 
-  // Phase 3 Sprint 5 — Estimate → Invoice (one-click, mirrors the WO transition).
   const router = useRouter();
-  const [invError, setInvError] = useState<string | null>(null);
-  const [invPending, startInvoice] = useTransition();
   const isApproved = estimate.status === "approved" || estimate.status === "APPROVED";
-
-  function handleCreateInvoice() {
-    setInvError(null);
-    startInvoice(async () => {
-      const result = await createInvoiceFromEstimate(estimate.id);
-      if ("error" in result) {
-        setInvError(result.error);
-        return;
-      }
-      onClose();
-      router.push("/invoices");
-    });
-  }
+  const handleInvoiceReadback = useCallback((invoice: SavedInvoiceSummary | null) => {
+    if (invoice !== null) setInvoiceReadback(invoice);
+  }, []);
 
   // 「編集する」 navigates to the existing full editor route. No inline save, no
   // new Server Action — the editor owns all save/validation logic.
@@ -183,11 +173,6 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, v
                 施工指示作成
               </button>
             )}
-            {isApproved && (
-              <button onClick={handleCreateInvoice} disabled={invPending} className={`${btn} bg-emerald-700 hover:bg-emerald-600 text-white`}>
-                {invPending ? "作成中..." : "請求書作成"}
-              </button>
-            )}
             <button
               onClick={onClose}
               className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
@@ -199,12 +184,6 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, v
 
         {/* Body */}
         <div className="p-6 flex flex-col gap-4">
-
-          {invError && (
-            <div className="px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10">
-              <p className="text-xs text-red-400">{invError}</p>
-            </div>
-          )}
 
           {/* Customer & Vehicle */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -229,10 +208,47 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, v
           {/* Store/dealer info is intentionally NOT shown here — it belongs only in
               PDF / print / email / LINE output (see src/lib/pdf/dealer-branding.ts). */}
 
+          {/* Invoice — GDA_ESTIMATE_DETAIL_INVOICE_SAME_PAGE_R1. The canonical saved-invoice
+              component performs only explicit operator actions and authoritative readback.
+              Unapproved estimates receive no mutation-capable action object. */}
+          <Card title="請求書">
+            {isApproved ? (
+              <div className="text-slate-100">
+                <SavedEstimateInvoice
+                  key={estimate.id}
+                  estimateId={estimate.id}
+                  actions={invoiceActions}
+                  onInvoice={handleInvoiceReadback}
+                />
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  disabled
+                  aria-disabled="true"
+                  aria-describedby="estimate-detail-invoice-reason"
+                  data-testid="estimate-detail-invoice"
+                  className="rounded-md border border-slate-700 px-4 py-2 text-xs text-slate-500"
+                >
+                  請求書の下書きを作成・確認
+                </button>
+                <p
+                  id="estimate-detail-invoice-reason"
+                  data-testid="estimate-detail-invoice-reason"
+                  className="mt-2 text-[11px] text-amber-300"
+                >
+                  見積の承認が必要です。この画面から自動承認や請求書の作成・発行は行いません。
+                </p>
+              </>
+            )}
+          </Card>
+
           {/* Delivery note — GDA_ESTIMATE_DETAIL_DOCUMENTS_R1. Display only: eligibility
               was already decided server-side (issued+ status, valid persisted delivery
-              date, valid invoice identity). Reopening this screen never creates, issues,
-              or dates an invoice, and never re-renders a different document. */}
+              date, valid invoice identity), or refreshed from a successfully parsed
+              readback after an explicit invoice action. Reopening this screen never
+              creates, issues, or dates an invoice. */}
           <Card title="納品書">
             {deliveryNoteHref ? (
               <a

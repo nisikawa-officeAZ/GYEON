@@ -4,6 +4,10 @@ import { getEstimate } from "@/lib/estimates/get-estimate";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { createClient } from "@/lib/supabase/server";
 import { getInvoiceForEstimate, type EstimateRelatedInvoice } from "@/lib/invoices/get-invoice";
+import { createInvoiceFromEstimate } from "@/lib/invoices/create-invoice";
+import { getInvoice } from "@/lib/invoices/get-invoice";
+import { saveInvoiceDeliveryDate } from "@/lib/invoices/save-invoice-delivery-date";
+import { issueInvoice, getIssuedInvoicePdfUrl } from "@/lib/invoices/issue-invoice";
 import EstimateDetailView from "@/components/estimates/EstimateDetailView";
 
 interface Props {
@@ -64,6 +68,13 @@ export default async function EstimateDetailPage({ params }: Props) {
           estimate={estimate}
           dealerDisplayName={dealerDisplayName}
           relatedInvoice={relatedInvoice}
+          invoiceActions={{
+            create: createInvoiceFromEstimate,
+            read: getInvoice,
+            saveDate: saveInvoiceDeliveryDate,
+            issue: issueInvoice,
+            download: getIssuedInvoicePdfUrl,
+          }}
         />
       </div>
     </MainLayout>
