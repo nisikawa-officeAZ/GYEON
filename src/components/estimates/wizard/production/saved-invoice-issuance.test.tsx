@@ -87,6 +87,24 @@ test("cleanup failure is not hidden by a successful concurrent issuer", async ()
   h.set({ delivery_date: "2026-09-14" }); await h.controller.run(); await h.controller.issue(true);
   assert.match(JSON.stringify(h.last()), /管理者の確認/); assert.doesNotMatch(JSON.stringify(h.last()), /secret|pdfUrl/);
 });
+test("delivery-note link derives only from an issued readback with a saved date, mutating nothing", async () => {
+  const { buildSavedDeliveryNotePath } = await import("./SavedEstimateDocuments");
+  const h = setup(); await h.controller.run();
+  let state = h.last(); assert.equal(state?.kind, "ready");
+  if (state?.kind === "ready") assert.equal(buildSavedDeliveryNotePath(state.invoice), null, "draft without date: no link");
+  await h.controller.saveDeliveryDate("2026-09-14");
+  state = h.last();
+  if (state?.kind === "ready") assert.equal(buildSavedDeliveryNotePath(state.invoice), null, "saved date alone never activates");
+  await h.controller.issue(true);
+  state = h.last(); assert.equal(state?.kind, "ready");
+  const before = h.calls.length;
+  if (state?.kind === "ready") {
+    assert.equal(buildSavedDeliveryNotePath(state.invoice), `/pdf/delivery-note?invoiceId=${iid}`);
+  }
+  assert.equal(h.calls.length, before, "deriving the link performs no action call");
+  assert.equal(h.calls.filter(c => c[0] === "issue").length, 1, "the link never issues");
+});
+
 test("SSR controls require valid saved date plus fresh unchecked consent; cancelled has no controls", () => {
   const h = setup(), invoice = parseSavedInvoice(row(), iid, eid)!;
   const html = renderToStaticMarkup(<SavedInvoiceIssueControls invoice={invoice} actions={h.actions} controller={h.controller} />);

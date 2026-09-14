@@ -13,8 +13,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import SavedEstimateDocuments, {
   classifySavedEstimateCompletion, buildSavedEstimatePdfPath, buildSavedEstimateDetailPath,
+  buildSavedDeliveryNotePath, SavedDeliveryNoteChoice,
   type SavedEstimateDocumentsProps,
 } from "./SavedEstimateDocuments";
+import type { SavedInvoiceSummary } from "./saved-estimate-invoice-controller";
 import { buildEstimatePdfPath, buildEstimatePath } from "./ProductionEstimateWizard";
 
 (globalThis as { React?: typeof React }).React = React;
@@ -137,7 +139,11 @@ test("6. the 保存してPDFを開く intent opens the inline titled preview on 
   }
 });
 
-test("7. delivery note and invoice are GENUINELY disabled, with visible accessible reasons", () => {
+test("7. delivery note and invoice start GENUINELY disabled, with visible accessible reasons", () => {
+  // Static render, no injected actions and no readback yet: the delivery-note
+  // control stays disabled until an eligible issued invoice with a valid
+  // persisted delivery date has been read back, and the invoice control is
+  // disabled because this fixture injects no actions. Neither is permanent.
   for (const html of [render(PROPS_CHOICES), render(PROPS_PDF)]) {
     for (const [id, reasonId] of [
       ["saved-document-delivery-note", "saved-document-delivery-note-reason"],
@@ -146,12 +152,14 @@ test("7. delivery note and invoice are GENUINELY disabled, with visible accessib
       const button = tagOf(html, id);
       assert.ok(button.startsWith("<button"), `${id} is a button, not a link disguised as issuance`);
       assert.ok(button.includes('disabled=""'), `${id} is disabled`);
-      assert.match(button, /aria-disabled="true"/);
       assert.ok(button.includes(`aria-describedby="${reasonId}"`), `${id} points at its reason`);
       assert.ok(html.includes(`id="${reasonId}"`), `${reasonId} is visible text`);
       assert.equal(new RegExp(`<a[^>]*data-testid="${id}"`).test(html), false);
     }
-    assert.ok(html.includes("まだ接続されていません"), "the reason says same-screen issuance is not connected yet");
+    assert.ok(html.includes("納品日を保存し、確定発行した後に表示できます"),
+      "the delivery note becomes available after saving the delivery date and explicit issuance");
+    assert.ok(html.includes("この画面からは作成・承認・発行は行われません"),
+      "the actionless invoice control promises no side effect");
     assert.equal(html.includes("承認済"), false, "no approval is claimed or implied");
   }
 });
@@ -198,11 +206,58 @@ test("9. the surface saves nothing, navigates nowhere, reads no browser global a
   assert.match(codeOf(WRAPPER_SRC), /from "\.\/SavedEstimateDocuments"/, "the host imports the surface, one direction only");
 
   // Repeated preview clicks only flip local presentation state: exactly one
-  // handler, on the estimate-PDF choice; the two unwired controls have none.
+  // handler, on the estimate-PDF choice. The delivery-note control has none —
+  // it activates only through the invoice readback — and the invoice child
+  // owns its own handlers behind injected actions.
   assert.equal((code.match(/onClick=\{\(\) => setPreview\("estimate-pdf"\)\}/g) ?? []).length, 1);
-  assert.equal((code.match(/onClick=/g) ?? []).length, 1, "no handler on the disabled controls");
-  assert.equal((code.match(/encodeURIComponent\(/g) ?? []).length, 2, "every URL segment is encoded");
-  assert.equal((code.match(/isValidEstimateId\(/g) ?? []).length, 3, "classifier + both path helpers validate");
+  assert.equal((code.match(/onClick=/g) ?? []).length, 1, "no handler on the delivery-note control in this surface");
+  assert.equal((code.match(/encodeURIComponent\(/g) ?? []).length, 3, "every URL segment is encoded");
+  assert.equal((code.match(/isValidEstimateId\(/g) ?? []).length, 4, "classifier + all three path helpers validate");
+});
+
+test("11. the delivery-note link exists ONLY for an issued+ readback with a valid persisted date", () => {
+  const IID = "9b2c4d6e-1f35-4a71-9c40-2d8e6f1a5b77";
+  const summary = (over: Partial<SavedInvoiceSummary> = {}): SavedInvoiceSummary => ({
+    id: IID, number: "INV-00031", status: "issued", issueDate: "2026-09-01", dueDate: null,
+    deliveryDate: "2026-08-01", contentVersion: 2, total: 104500, items: [], ...over,
+  });
+  const DN_PATH = `/pdf/delivery-note?invoiceId=${IID}`;
+  assert.equal(buildSavedDeliveryNotePath(summary()), DN_PATH);
+  for (const status of ["paid", "partially_paid", "overdue"] as const) {
+    assert.equal(buildSavedDeliveryNotePath(summary({ status })), DN_PATH, status);
+  }
+  // fail-closed: no readback, wrong status, missing/invalid date, invalid id
+  assert.equal(buildSavedDeliveryNotePath(null), null);
+  for (const status of ["draft", "cancelled"] as const) {
+    assert.equal(buildSavedDeliveryNotePath(summary({ status })), null, status);
+  }
+  for (const deliveryDate of [null, "", "2026-02-30", "2026-8-1", "2026-08-01T05:00:00.000Z"]) {
+    assert.equal(buildSavedDeliveryNotePath(summary({ deliveryDate })), null, String(deliveryDate));
+  }
+  for (const id of ["", "not-a-uuid", "../../admin", `${IID}0`]) {
+    assert.equal(buildSavedDeliveryNotePath(summary({ id })), null, id);
+  }
+
+  // eligible → a plain new-tab anchor to the authenticated route; nothing else in the markup
+  const ready = renderToStaticMarkup(React.createElement(SavedDeliveryNoteChoice, { invoice: summary() }));
+  const anchor = tagOf(ready, "saved-document-delivery-note");
+  assert.ok(anchor.startsWith("<a"), "the active control is a link, not a mutating button");
+  assert.ok(anchor.includes(`href="${DN_PATH}"`));
+  assert.match(anchor, /target="_blank"/);
+  assert.match(anchor, /rel="noopener noreferrer"/);
+  assert.equal(ready.includes("onClick"), false);
+  assert.ok(ready.includes("表示のみで、保存・再発行は行いません"));
+
+  // ineligible → a genuinely disabled control with the accurate guidance, and NO URL
+  for (const invoice of [null, summary({ status: "draft" }), summary({ deliveryDate: null })]) {
+    const blocked = renderToStaticMarkup(React.createElement(SavedDeliveryNoteChoice, { invoice }));
+    const button = tagOf(blocked, "saved-document-delivery-note");
+    assert.ok(button.startsWith("<button"));
+    assert.ok(button.includes('disabled=""'));
+    assert.match(button, /aria-disabled="true"/);
+    assert.equal(blocked.includes("href="), false);
+    assert.ok(blocked.includes("確定発行した後に表示できます"));
+  }
 });
 
 test("10. importing and server-rendering the surface touches NO browser global", () => {

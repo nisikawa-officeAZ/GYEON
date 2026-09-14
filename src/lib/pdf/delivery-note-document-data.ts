@@ -1,15 +1,16 @@
-// The ONE issued-invoice → DeliveryNoteDocumentData adapter (TEMPLATE-C2-DN).
+// The ONE issued-invoice → DeliveryNoteDocumentData adapter (TEMPLATE-C2-DN, date source R1).
 //
 // The delivery note is a monetary document whose SOLE authoritative source is an already-issued
 // invoice: its immutable line items and persisted subtotal/discount/tax/total are read exactly as
 // issued — never recomputed and never sourced from the estimate. The delivery DATE comes only from
-// the linked work order's actual completion timestamp; the delivery NUMBER is derived
-// deterministically from the invoice number (INV → DLV, serial preserved).
+// the invoice's persisted `delivery_date` (納品日, required before issuance); the delivery NUMBER is
+// derived deterministically from the invoice number (INV → DLV, serial preserved).
 //
 // `internal_memo` is unreachable: it is neither read nor representable here. Missing optional fields
 // are omitted, never invented.
 
 import type { InvoiceDB, InvoiceItemDB } from "@/lib/invoices/invoice-types";
+import { isValidCalendarDate } from "@/lib/invoices/invoice-delivery-date";
 import { formatDocumentSerial } from "./document-serial";
 import type { PartyKind } from "@/components/documents/types";
 
@@ -66,18 +67,25 @@ export interface DeliveryNoteDocumentData {
 }
 
 /**
- * The canonical stored invoice number: `INV-YYYY-NNNNN`. The delivery note reuses the SAME serial
- * with the leading document prefix swapped to DLV. Anything that is not exactly this shape —
- * absent, a fallback `INV-<id8>`, a foreign format, or hostile input — is rejected (returns null),
- * so a delivery number is never invented.
+ * The two stored invoice-number shapes a delivery note may be derived from:
+ *   current — `INV-NNNNN`      (the "never"-reset numbering default)
+ *   legacy  — `INV-YYYY-NNNNN` (historical yearly-reset rows)
+ * The delivery note reuses the SAME serial with the leading document prefix swapped to DLV; the
+ * year segment is preserved when stored and NEVER invented when absent. Anything else — absent, a
+ * fallback `INV-<id8>`, monthly `INV-YYYY-MM-NNNNN`, foreign, lowercase, already-DLV, estimate, or
+ * hostile input — is rejected (returns null), so a delivery number is never invented.
  */
-const CANONICAL_INVOICE_NUMBER = /^INV-(\d{4})-(\d{5})$/;
+const CURRENT_INVOICE_NUMBER = /^INV-(\d{5})$/;
+const LEGACY_INVOICE_NUMBER = /^INV-(\d{4})-(\d{5})$/;
 
 export function deliveryNumberFromInvoiceNumber(invoiceNumber: string | null | undefined): string | null {
   if (typeof invoiceNumber !== "string") return null;
-  const m = CANONICAL_INVOICE_NUMBER.exec(invoiceNumber.trim());
-  if (!m) return null;
-  return `DLV-${m[1]}-${m[2]}`;
+  const n = invoiceNumber.trim();
+  const current = CURRENT_INVOICE_NUMBER.exec(n);
+  if (current) return `DLV-${current[1]}`;
+  const legacy = LEGACY_INVOICE_NUMBER.exec(n);
+  if (legacy) return `DLV-${legacy[1]}-${legacy[2]}`;
+  return null;
 }
 
 function text(v: string | null | undefined): string | undefined {
@@ -110,10 +118,10 @@ function toItem(item: InvoiceItemDB): DeliveryNoteDocumentItem {
 /**
  * Build the delivery-note document data from an ISSUED invoice.
  *
- * @param invoice     the issued invoice (RLS-scoped, status/number/work-order/date already gated)
- * @param deliveryDate the work order's actual completion date (ISO YYYY-MM-DD or timestamp)
- * @throws if the delivery number cannot be derived or the delivery date is empty — this adapter
- *         never fabricates either value.
+ * @param invoice     the issued invoice (RLS-scoped, status/number/date already gated)
+ * @param deliveryDate the invoice's persisted delivery_date (strict YYYY-MM-DD)
+ * @throws if the delivery number cannot be derived or the delivery date is not a valid calendar
+ *         date — this adapter never fabricates either value.
  */
 export function toDeliveryNoteDocumentData(invoice: InvoiceDB, deliveryDate: string): DeliveryNoteDocumentData {
   const deliveryNumber = deliveryNumberFromInvoiceNumber(invoice.invoice_number);
@@ -121,8 +129,8 @@ export function toDeliveryNoteDocumentData(invoice: InvoiceDB, deliveryDate: str
     throw new Error("delivery-note-document-data: unsupported invoice number shape");
   }
   const date = (deliveryDate ?? "").trim();
-  if (!date) {
-    throw new Error("delivery-note-document-data: delivery date is required");
+  if (!isValidCalendarDate(date)) {
+    throw new Error("delivery-note-document-data: a valid delivery date is required");
   }
 
   const c = invoice.customers ?? null;

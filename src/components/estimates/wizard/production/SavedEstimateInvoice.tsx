@@ -38,11 +38,16 @@ export function SavedInvoiceIssueControls({ invoice, actions, controller }: {
   </div>;
 }
 
-export default function SavedEstimateInvoice({ estimateId, actions }: { estimateId: string; actions?: SavedInvoiceActions }) {
+export default function SavedEstimateInvoice({ estimateId, actions, onInvoice }: {
+  estimateId: string; actions?: SavedInvoiceActions;
+  /** Reports the latest parsed readback (null outside "ready"). Notification only — never a trigger. */
+  onInvoice?: (invoice: SavedInvoiceSummary | null) => void;
+}) {
   // Parent keys this component by the saved estimate. Mount/reload never creates a record.
   const [state, setState] = useState<SavedInvoiceState>({ kind: "idle" });
   const controller = useMemo(() => actions ? createSavedInvoiceController(estimateId, actions, setState) : null, [estimateId, actions]);
   useEffect(() => () => controller?.cancel(), [controller]);
+  useEffect(() => { onInvoice?.(state.kind === "ready" ? state.invoice : null); }, [state, onInvoice]);
   const pending = state.kind === "pending";
   return (
     <div aria-busy={pending}>

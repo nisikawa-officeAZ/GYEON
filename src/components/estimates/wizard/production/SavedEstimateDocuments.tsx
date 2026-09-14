@@ -9,8 +9,10 @@
 // ── WHAT THIS IS, HONESTLY ───────────────────────────────────────────────────
 // Estimate PDF opens inline through the existing authenticated /pdf route.
 // The invoice child connects explicit draft creation/readback via injected
-// server actions. Missing injections disable it. Delivery-note issuance remains
-// disabled; invoice date entry and final issuance are separate later work.
+// server actions. Missing injections disable it. The delivery note is a plain
+// display link to the existing authenticated /pdf/delivery-note route; it
+// activates ONLY after the related invoice has been read back in an issued+
+// status with a valid persisted delivery date, and it never mutates anything.
 //
 // ── WHY THIS MODULE TOUCHES NO BROWSER GLOBAL AND IMPORTS NO HOST ───────────
 // It takes a validated estimate id, initial preference and injected actions,
@@ -20,7 +22,8 @@
 
 import { useState } from "react";
 import SavedEstimateInvoice from "./SavedEstimateInvoice";
-import type { SavedInvoiceActions } from "./saved-estimate-invoice-controller";
+import { hasIssuedInvoice, type SavedInvoiceActions, type SavedInvoiceSummary } from "./saved-estimate-invoice-controller";
+import { isValidCalendarDate } from "../../../../lib/invoices/invoice-delivery-date";
 
 import { isValidEstimateId } from "../save/wizard-idempotency-session";
 
@@ -64,6 +67,23 @@ export function buildSavedEstimateDetailPath(estimateId: unknown): string | null
   return `/estimates/${encodeURIComponent(estimateId as string)}`;
 }
 
+/**
+ * The delivery-note display path, FAIL-CLOSED on every axis: it exists only for an invoice that
+ * was READ BACK in an allowed issued+ status with a strictly valid persisted delivery date and a
+ * valid UUID. The ONLY value placed in the URL is that validated invoice id — the already-issued
+ * invoice is the sole delivery-note identity. Draft, cancelled, dateless or malformed readbacks
+ * yield no link, never a guess.
+ */
+export function buildSavedDeliveryNotePath(
+  invoice: Pick<SavedInvoiceSummary, "id" | "status" | "deliveryDate"> | null,
+): string | null {
+  if (!invoice) return null;
+  if (!hasIssuedInvoice(invoice.status)) return null;
+  if (!isValidCalendarDate(invoice.deliveryDate)) return null;
+  if (!isValidEstimateId(invoice.id)) return null;
+  return `/pdf/delivery-note?invoiceId=${encodeURIComponent(invoice.id)}`;
+}
+
 // ── Component ───────────────────────────────────────────────────────────────
 
 export type SavedEstimateDocumentsProps = {
@@ -76,8 +96,64 @@ export type SavedEstimateDocumentsProps = {
 
 type PreviewState = "choices" | "estimate-pdf";
 
-const NOT_WIRED_DELIVERY_NOTE =
-  "納品書の同一画面発行はまだ接続されていません。この画面からは発行できません。";
+const DELIVERY_NOTE_BLOCKED =
+  "納品書は、下の請求書で納品日を保存し、確定発行した後に表示できます。この画面から納品書の保存・再発行は行いません。";
+const DELIVERY_NOTE_READY =
+  "発行済みの請求書と保存済みの納品日から表示します。表示のみで、保存・再発行は行いません。";
+
+/**
+ * The delivery-note choice: a plain display link when the read-back invoice is eligible,
+ * otherwise a genuinely disabled control with the accurate reason. No handler in either state —
+ * activation is purely the readback, and the link mutates nothing.
+ */
+export function SavedDeliveryNoteChoice({ invoice }: { invoice: SavedInvoiceSummary | null }) {
+  const path = buildSavedDeliveryNotePath(invoice);
+  if (path === null) {
+    return (
+      <>
+        <button
+          type="button"
+          disabled
+          aria-disabled="true"
+          aria-describedby="saved-document-delivery-note-reason"
+          data-testid="saved-document-delivery-note"
+          className="rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-500"
+        >
+          納品書（PDF）
+        </button>
+        <p
+          id="saved-document-delivery-note-reason"
+          className="mt-1 text-[11px] text-amber-300"
+          data-testid="saved-document-delivery-note-reason"
+        >
+          {DELIVERY_NOTE_BLOCKED}
+        </p>
+      </>
+    );
+  }
+  return (
+    <>
+      <a
+        href={path}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-describedby="saved-document-delivery-note-reason"
+        data-testid="saved-document-delivery-note"
+        className="inline-block rounded-md border border-sky-600 bg-sky-900/40 px-4 py-2 text-sm"
+      >
+        納品書（PDF）を表示
+      </a>
+      <p
+        id="saved-document-delivery-note-reason"
+        className="mt-1 text-[11px] text-slate-400"
+        data-testid="saved-document-delivery-note-reason"
+      >
+        {DELIVERY_NOTE_READY}
+      </p>
+    </>
+  );
+}
+
 export default function SavedEstimateDocuments({ estimateId, initialPdfPreview, invoiceActions }: SavedEstimateDocumentsProps) {
   // Defensive: the props are typed, but the id is re-validated at the last point
   // before it can become a URL, and the preference is accepted only as a literal
@@ -87,6 +163,9 @@ export default function SavedEstimateDocuments({ estimateId, initialPdfPreview, 
   const [preview, setPreview] = useState<PreviewState>(
     initialPdfPreview === true ? "estimate-pdf" : "choices",
   );
+  // The latest invoice readback from the child — the ONLY thing that can activate the
+  // delivery-note link. It starts null, so the link is fail-closed until a real readback.
+  const [readInvoice, setReadInvoice] = useState<SavedInvoiceSummary | null>(null);
 
   if (pdfPath === null || detailPath === null) {
     return (
@@ -127,26 +206,10 @@ export default function SavedEstimateDocuments({ estimateId, initialPdfPreview, 
           </button>
         </li>
         <li>
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            aria-describedby="saved-document-delivery-note-reason"
-            data-testid="saved-document-delivery-note"
-            className="rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-500"
-          >
-            納品書（未接続）
-          </button>
-          <p
-            id="saved-document-delivery-note-reason"
-            className="mt-1 text-[11px] text-amber-300"
-            data-testid="saved-document-delivery-note-reason"
-          >
-            {NOT_WIRED_DELIVERY_NOTE}
-          </p>
+          <SavedDeliveryNoteChoice invoice={readInvoice} />
         </li>
         <li>
-          <SavedEstimateInvoice key={estimateId} estimateId={estimateId} actions={invoiceActions} />
+          <SavedEstimateInvoice key={estimateId} estimateId={estimateId} actions={invoiceActions} onInvoice={setReadInvoice} />
         </li>
       </ul>
 

@@ -1,14 +1,16 @@
-// TEMPLATE-C2-DN — the ONE delivery-note data loader + business gate.
+// TEMPLATE-C2-DN — the ONE delivery-note data loader + business gate (date source R1).
 //
-// A delivery note may only be produced from an ALREADY-ISSUED invoice whose work order carries a
-// real completion date. This module reads through the CALLER'S RLS-scoped client (never the
-// service role), scoped by BOTH the invoice id AND the authenticated dealer id, so a foreign
-// invoice id resolves to nothing. It then applies the approved business contract and returns
-// either the render projection or a coarse typed rejection whose reason never leaks tenant
-// existence, Storage paths, or database internals.
+// A delivery note may only be produced from an ALREADY-ISSUED invoice that carries a valid
+// persisted delivery date (invoices.delivery_date, 納品日 — required before issuance; no work-order
+// link is required). This module reads through the CALLER'S RLS-scoped client (never the service
+// role), scoped by BOTH the invoice id AND the authenticated dealer id, so a foreign invoice id
+// resolves to nothing. It then applies the approved business contract and returns either the
+// render projection or a coarse typed rejection whose reason never leaks tenant existence,
+// Storage paths, or database internals.
 
 import { createClient } from "@/lib/supabase/server";
 import type { InvoiceDB } from "@/lib/invoices/invoice-types";
+import { isValidCalendarDate } from "@/lib/invoices/invoice-delivery-date";
 import { deliveryNumberFromInvoiceNumber } from "./delivery-note-document-data";
 
 /** Invoice statuses for which a delivery note is allowed (issued and beyond). */
@@ -44,12 +46,11 @@ export async function getDeliveryNotePdfData(
     .from("invoices")
     .select(`
       id, dealer_id, customer_id, vehicle_id, estimate_id, work_order_id, completion_report_id,
-      invoice_number, status, title, issue_date, due_date,
+      invoice_number, status, title, issue_date, due_date, delivery_date,
       subtotal, discount_amount, tax_rate, tax_amount, total, paid_amount, balance_due,
       notes, pdf_file_path, pdf_file_url, deleted_at, created_at, updated_at,
       customers ( last_name, first_name, phone, email, postal_code, address1, is_business ),
       vehicles ( maker, model, year, grade, plate_number, color, mileage ),
-      work_orders ( work_order_number, title, status, actual_end_at ),
       invoice_items (
         id, invoice_id, dealer_id, category, item_name, description,
         quantity, unit_price, discount_rate, line_total, sort_order, created_at, updated_at
@@ -66,11 +67,11 @@ export async function getDeliveryNotePdfData(
   const invoice = data as unknown as InvoiceDB;
 
   // Business contract, all fail-closed — every miss collapses to one coarse "not_eligible".
+  // The delivery date is the invoice's persisted delivery_date, strictly validated; a missing or
+  // malformed value is never substituted from a work order, issue_date, or the clock.
   if (!isDeliveryNoteAllowedStatus(invoice.status)) return { kind: "not_eligible" };
   if (!deliveryNumberFromInvoiceNumber(invoice.invoice_number)) return { kind: "not_eligible" };
-  if (!invoice.work_order_id) return { kind: "not_eligible" };
-  const deliveryDate = (invoice.work_orders?.actual_end_at ?? "").toString().trim();
-  if (!deliveryDate) return { kind: "not_eligible" };
+  if (!isValidCalendarDate(invoice.delivery_date)) return { kind: "not_eligible" };
 
-  return { kind: "ok", invoice, deliveryDate };
+  return { kind: "ok", invoice, deliveryDate: invoice.delivery_date };
 }
