@@ -1922,3 +1922,62 @@ gates:
   implementation: REQUIRES_ACCEPTED_DIAGNOSIS_AND_SEPARATE_OWNER_AUTHORIZATION
   verification_commit_push_ready_merge_deploy: EACH_SEPARATE
 ```
+
+## 15. Owner-ratified local acceptance-record candidate — reopened estimate document parity
+
+```yaml
+phase: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1
+marker: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1_ACCEPTANCE_RECORD_V1
+date: 2026-09-14
+status: LOCAL_ACCEPTANCE_RECORD_CANDIDATE_UNSTAGED_UNCOMMITTED
+owner_authorization:
+  - The Owner authorized a local completion-evidence update limited to this completion plan and
+    GYEON_DA_PHASE_RESULTS.md after Codex's final PR #76 review.
+  - Commit, push, PR mutation, merge, deployment, database, Supabase, Storage, environment, and
+    production mutation remain outside this authorization.
+implementation:
+  repository: nisikawa-officeAZ/GYEON
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/76
+  base_commit: 7dbcef0d1606f09918a94fc60cf915becf512f42
+  head_commit: 99682d1e3fe2a2364f6ac1d1a13c7f56544f3dae
+  head_tree: 3d45b52ea51a7072041af4e9c1525c720400d784
+  implementation_paths:
+    - src/app/estimates/[id]/page.tsx
+    - src/components/estimates/EstimateDetailView.tsx
+    - src/components/estimates/EstimateDetail.tsx
+    - src/lib/invoices/get-invoice.ts
+    - src/components/estimates/EstimateDetail.documents.test.tsx
+  implementation_manifest_sha256: aec832145f17201ea848fd682e50b75036335d14f127a60fa7001a03aa706a20
+accepted_behavior:
+  - The reopened saved-estimate detail page shows an active delivery-note PDF link only for one
+    dealer-scoped, non-deleted related invoice in an allowed issued-or-later status with a valid
+    persisted delivery date and valid invoice id.
+  - No invoice, draft, cancelled, malformed date or id, ambiguous result, and read failure remain
+    fail-closed with a disabled control.
+  - Opening the delivery note is display-only and does not create, issue, date, save, or reissue an
+    invoice or mutate the estimate.
+verification:
+  focused_node_tests: PASS_44_OF_44
+  diff_check: PASS
+  vercel: SUCCESS
+  vercel_preview_comments: SUCCESS
+  eligible_preview: PASS_ACTIVE_LINK_AND_ONE_PAGE_DELIVERY_NOTE_JPY_1100
+  ineligible_preview: PASS_DISABLED_WITH_EXPECTED_REASON
+  data_mutation: false
+evidence:
+  implementation_verification: https://github.com/nisikawa-officeAZ/GYEON/pull/76#issuecomment-5663982729
+  push_and_ci: https://github.com/nisikawa-officeAZ/GYEON/pull/76#issuecomment-5664041812
+  ci_completion: https://github.com/nisikawa-officeAZ/GYEON/pull/76#issuecomment-5664065638
+  preview_acceptance: https://github.com/nisikawa-officeAZ/GYEON/pull/76#issuecomment-5664145800
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+acceptance:
+  source_and_runtime_verdict: ACCEPTED
+  governance_record_publication: PENDING_SEPARATE_OWNER_AUTHORIZATION
+  merge: NOT_AUTHORIZED
+  production_deploy: NOT_AUTHORIZED
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_LOCAL_DELTA_HASHES_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_COMMIT_ONLY."
+```
