@@ -1,5 +1,4 @@
-// Supabase server client — not connected yet.
-// Credentials will be configured when Supabase integration is approved by CTO.
+// Request-scoped Supabase client for Server Components, Actions and Route Handlers.
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -29,9 +28,19 @@ export async function createClient() {
         return cookieStore.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) =>
-          cookieStore.set(name, value, options)
-        );
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch (error) {
+          // Next 15 rejects writes while rendering a Server Component. Middleware
+          // owns refresh persistence there. Actions/Route Handlers still write
+          // normally; never hide a different storage/programming failure.
+          if (!(error instanceof Error) || error.message !==
+            "Cookies can only be modified in a Server Action or Route Handler. Read more: https://nextjs.org/docs/app/api-reference/functions/cookies#options") {
+            throw error;
+          }
+        }
       },
     },
   });

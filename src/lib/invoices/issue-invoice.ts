@@ -126,7 +126,7 @@ async function signResolvedArtifact(
   return data.signedUrl;
 }
 
-export async function issueInvoice(invoiceId: string): Promise<IssueInvoiceResult> {
+export async function issueInvoice(invoiceId: string, expectedVersion?: number): Promise<IssueInvoiceResult> {
   const auth = await requireStaffCapability("finance");
   if ("error" in auth) return fail("validation_error");
 
@@ -137,18 +137,22 @@ export async function issueInvoice(invoiceId: string): Promise<IssueInvoiceResul
   if (typeof invoiceId !== "string" || invoiceId.trim() === "") {
     return fail("validation_error");
   }
+  if (expectedVersion !== undefined && (!Number.isSafeInteger(expectedVersion) || expectedVersion < 1)) {
+    return fail("validation_error");
+  }
 
   // Read through the caller's RLS-scoped client, additionally pinned to the
   // session dealer.
   const supabase = await createClient();
   const { data: invoice } = await supabase
     .from("invoices")
-    .select("id, status, pdf_file_path, invoice_number, content_version")
+    .select("id, status, pdf_file_path, invoice_number, content_version, deleted_at")
     .eq("id", invoiceId)
     .eq("dealer_id", dealerId)
     .maybeSingle();
 
   if (!invoice) return fail("validation_error");
+  if (expectedVersion !== undefined && invoice.deleted_at !== null) return fail("conflict");
 
   const decision = evaluateIssueRequest(invoice);
 
@@ -166,6 +170,8 @@ export async function issueInvoice(invoiceId: string): Promise<IssueInvoiceResul
   if (decision.kind === "rejected") {
     return fail(decision.reason === "invoice_artifact_missing" ? "artifact_missing" : "validation_error");
   }
+  // Saved-screen confirmation refers to this exact draft, not a later edit.
+  if (expectedVersion !== undefined && invoice.content_version !== expectedVersion) return fail("conflict");
 
   // ── Render ────────────────────────────────────────────────────────────────
   // Nothing is written yet, so a render failure leaves no state at all.
@@ -193,6 +199,8 @@ export async function issueInvoice(invoiceId: string): Promise<IssueInvoiceResul
   const renderedInvoice = full as InvoiceDB;
   const renderedContentVersion = renderedInvoice.content_version;
   if (typeof renderedContentVersion !== "number") return fail("persistence_error");
+  if (expectedVersion !== undefined && (renderedContentVersion !== expectedVersion
+      || renderedInvoice.deleted_at !== null || renderedInvoice.status !== "draft")) return fail("conflict");
 
   // R4-4: refuse to publish an internally inconsistent snapshot. This runs
   // BEFORE rendering, before any upload, before the document row and before the

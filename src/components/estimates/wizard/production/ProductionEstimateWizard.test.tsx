@@ -6,8 +6,9 @@
 // and the URL helpers are pure and injected, so every lifecycle branch — fresh
 // mount, reload, copied URL, hostile `ws`, second tab, corrupt record, unavailable
 // storage or crypto, Strict-Mode replay, double-clicked start-new, completed
-// redirect, failed redirect — is proved by calling the SHIPPING functions. No DOM,
-// no router, no network, no Server Action, no database.
+// reload, saved-state classification — is proved by calling the SHIPPING
+// functions. The legacy navigation helpers stay covered as COMPATIBILITY only.
+// No DOM, no router, no network, no Server Action, no database.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -22,6 +23,7 @@ import ProductionEstimateWizard, {
   decideWizardBootstrap, runOnce, navigateToEstimate,
   type ProductionEstimateWizardProps, type RunOnceGuard, type NavigationSeam,
 } from "./ProductionEstimateWizard";
+import { classifySavedEstimateCompletion } from "./SavedEstimateDocuments";
 import {
   initializeWizardSession, markWizardSessionPending, markWizardSessionFailed,
   markWizardSessionCompleted,
@@ -358,7 +360,7 @@ test("21. a THROWING storage read → blocked storage-unavailable, no replacemen
 
 // ── 22-23. COMPLETED is redirect-only ───────────────────────────────────────
 
-test("22. a COMPLETED record redirects and NEVER becomes active", () => {
+test("22. a COMPLETED record is terminal — it NEVER becomes active", () => {
   const w = seededWorld();
   markWizardSessionPending(w.deps, w.ws);
   assert.equal(markWizardSessionCompleted(w.deps, w.ws, UUID).ok, true,
@@ -369,6 +371,10 @@ test("22. a COMPLETED record redirects and NEVER becomes active", () => {
   assert.notEqual(d.kind, "active", "a completed session must not mount an editable wizard");
   if (d.kind === "completed") assert.equal(d.estimateId, UUID);
 });
+
+// ── 23-24, 38-39. Legacy navigation helpers — COMPATIBILITY ONLY ──────────
+// `navigateToEstimate` and the path helpers remain exported for existing
+// callers. The shipping completion path no longer navigates (see 40-41).
 
 test("23. only a validated id can navigate; an invalid one navigates ZERO times", () => {
   const seen: string[] = [];
@@ -494,7 +500,7 @@ test("30. the SERVER render is the booting placeholder only — no wizard, no sa
   assert.ok(html.includes("bootstrap-booting"), "PRECONDITION: the booting state rendered");
   for (const absent of [
     "bootstrap-active", "wizard-save-panel", "save-submit",
-    "bootstrap-completed-redirect", "bootstrap-missing-session", "bootstrap-blocked",
+    "bootstrap-saved-estimate", "saved-estimate-documents", "bootstrap-missing-session", "bootstrap-blocked",
   ]) {
     assert.equal(html.includes(absent), false, `server render leaked ${absent}`);
   }
@@ -682,7 +688,7 @@ test("39. an INVALID destination navigates ZERO times and is its own outcome", (
   assert.equal(seen.length, 0);
 });
 
-test("40. a COMPLETED reload still routes to estimate DETAIL, and saves nothing", () => {
+test("40. a COMPLETED reload maps to the SAVED surface — no navigation, no write, no re-save", () => {
   const w = seededWorld();
   markWizardSessionPending(w.deps, w.ws);
   markWizardSessionCompleted(w.deps, w.ws, UUID);
@@ -692,14 +698,47 @@ test("40. a COMPLETED reload still routes to estimate DETAIL, and saves nothing"
   assert.equal(d.kind, "completed");
   if (d.kind !== "completed") return;
 
-  // The reload branch carries no destination, so the default applies.
-  const seen: string[] = [];
-  assert.deepEqual(
-    navigateToEstimate((p) => { seen.push(p); }, d.estimateId),
-    { kind: "navigated", path: `/estimates/${UUID}` },
-  );
-  assert.deepEqual(seen, [`/estimates/${UUID}`], "never the PDF route — the preference is not persisted");
-  assert.equal(w.counts.writes, writesBefore, "the bootstrap wrote nothing: no re-save");
+  // The reload branch carries no destination, so the classifier's default
+  // (`estimate`) applies: the surface opens on the document choices, never the
+  // PDF preview — the preference is not persisted.
+  assert.deepEqual(classifySavedEstimateCompletion(d.estimateId),
+    { kind: "saved", estimateId: UUID, initialPdfPreview: false });
+  assert.equal(classifySavedEstimateCompletion.length, 1, "no navigator seam: nothing to navigate with");
+  assert.equal(w.counts.writes, writesBefore, "the bootstrap wrote nothing: no re-save, no record change");
+  assert.equal(w.counts.replaced, 0, "the wizard URL is left as-is");
+
+  // COMPATIBILITY: the legacy helper still resolves the detail path for its callers.
+  assert.equal(buildPostSavePath(d.estimateId, "estimate"), `/estimates/${UUID}`);
+});
+
+test("41. a verified save is CLASSIFIED into saved state — the shipping callback never navigates", () => {
+  assert.deepEqual(classifySavedEstimateCompletion(UUID, "estimate"),
+    { kind: "saved", estimateId: UUID, initialPdfPreview: false });
+  assert.deepEqual(classifySavedEstimateCompletion(UUID, "pdf"),
+    { kind: "saved", estimateId: UUID, initialPdfPreview: true });
+  // Invalid inputs block — the id first, then the destination.
+  for (const bad of ["", "../../admin", `${UUID}0`, null, undefined, 7, `${UUID}\n`]) {
+    assert.deepEqual(classifySavedEstimateCompletion(bad, "pdf"), { kind: "invalid-estimate-id" }, String(bad));
+  }
+  for (const bad of ["", "PDF", "invoice", "delivery", "/pdf", null, 7, {}, []]) {
+    assert.deepEqual(classifySavedEstimateCompletion(UUID, bad), { kind: "invalid-destination" }, String(bad));
+  }
+
+  const code = codeOf(WRAPPER_SRC);
+  assert.match(code, /const completeSaved = useCallback\(/, "the shipping completion callback exists");
+  assert.match(code, /classifySavedEstimateCompletion\(estimateId, destination\)/, "and it uses the classifier");
+  assert.match(code, /onCompleted=\{completeSaved\}/, "the save binding routes to it");
+  assert.match(code, /completeSaved\(decision\.estimateId\)/, "the completed reload uses the same callback");
+  assert.equal(/navigateToEstimate\(browserNavigate/.test(code), false,
+    "no completion branch navigates: the saved surface stays on the wizard URL");
+  assert.equal((code.match(/window\s*\.\s*location\s*\.\s*assign\(/g) ?? []).length, 1,
+    "the only navigator is the retained compatibility helper");
+  assert.match(code, /readonly kind: "saved"; readonly estimateId: string; readonly initialPdfPreview: boolean/,
+    "the saved state carries an id and a preference, never a path");
+  assert.equal(code.includes("bootstrap-completed-redirect"), false, "the auto-redirect surface is gone");
+  assert.match(code, /data-testid="bootstrap-saved-estimate"/);
+  assert.match(code,
+    /<SavedEstimateDocuments\s+estimateId=\{state\.estimateId\}\s+initialPdfPreview=\{state\.initialPdfPreview\}/);
 });
 
 test("35. initialization appears exactly twice, and the ws branch only recovers", () => {
