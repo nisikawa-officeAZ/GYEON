@@ -1734,3 +1734,71 @@ gates:
   implementation: BLOCKED_UNTIL_GOVERNANCE_COMMIT_AND_DIAGNOSIS_ACCEPTANCE
   verification_commit_push_ready_merge_deploy: EACH_SEPARATE
 ```
+
+## 12. Owner-ratified plan diff — Estimate Wizard final-review display correction
+
+```yaml
+phase: GDA_ESTIMATE_REVIEW_DISPLAY_R1
+marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_PLAN_DIFF_V1
+date: 2026-09-14
+status: OWNER_AUTHORIZED_GOVERNANCE_CANDIDATE_ONLY
+priority: OPERATIONS_FIRST_INITIAL_DOCUMENTS
+owner_decision:
+  - Correct the final review display after the saved-estimate delivery-note Preview verification.
+  - Keep this correction presentation-only and do not reopen customer management, persistence,
+    pricing, PDF, invoice, or delivery-note behavior.
+base:
+  repository: nisikawa-officeAZ/GYEON
+  branch: release/saved-delivery-note-r1
+  commit: 1dc5b2dd197c97d9860ab4511cea8baa084c5954
+  tree: 7d4a235f832ca5ba693ef6fc3cb2f961cd39c38a
+  coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/73
+diagnosis_evidence:
+  comment: https://github.com/nisikawa-officeAZ/GYEON/pull/73#issuecomment-5662483032
+  customer_and_vehicle: CONFIRMED_PRESENTATION_BUG
+  issuer_name_and_tel: CONFIRMED_PREVIEW_TENANT_CONFIGURATION_MISSING_OUTSIDE_THIS_PHASE
+required_behavior:
+  - Existing customer display resolves the effective selected id against the supplied dealer-scoped
+    reference list and renders only the server-composed displayName.
+  - Existing vehicle display resolves the effective selected id under the effective customer and
+    renders only the server-composed displayName.
+  - New customer and new vehicle display preserve the current draft-field behavior.
+  - Missing, stale, duplicate, ambiguous, or wrong-owner references fail closed to the current em dash.
+  - Known service-category ids render through the canonical service-category label authority, including
+    other as その他作業.
+  - No display correction writes reference labels into canonical draft or persistence state.
+proposed_implementation_allowlist:
+  - src/components/estimates/wizard/steps/Step7Review.tsx
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step7Review.test.tsx
+read_only_reused_authorities:
+  - src/components/estimates/wizard/steps/existing-entity-selection.ts
+  - src/components/estimates/wizard/contract/wizard-runtime-inputs.ts
+  - src/components/estimates/wizard/useEstimateWizard.ts
+  - src/lib/estimates/service-categories.ts
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS.md
+  sha256: a93db299ec4c17c322886b80cef699f8c6f47655796a4bd24f491a16fa022ae1
+  result_marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+protected_paths:
+  - src/components/estimates/wizard/screens/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+not_authorized:
+  - source_or_test_implementation
+  - dependency_package_or_lockfile_change
+  - database_supabase_auth_storage_or_environment_change
+  - stage_commit_push_or_pr_mutation
+  - ready_merge_or_deploy
+gates:
+  governance_candidate: LOCAL_ONLY
+  governance_commit_and_push: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  claude_read_only_diagnosis_publication: REQUIRES_GOVERNANCE_DELIVERY
+  implementation: REQUIRES_ACCEPTED_DIAGNOSIS_AND_SEPARATE_OWNER_AUTHORIZATION
+  verification_commit_push_ready_merge_deploy: EACH_SEPARATE
+```

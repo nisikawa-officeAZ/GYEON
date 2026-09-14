@@ -4983,3 +4983,52 @@ not_authorized:
   - ready_merge_or_deploy
 next: "VERIFY_EXACT_THREE_GOVERNANCE_DOCUMENT_DIFF_HASHES_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_COMMIT_PUSH_AND_DRAFT_PR_AUTHORIZATION."
 ```
+
+## GDA-ESTIMATE-REVIEW-DISPLAY-R1 — local governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_REVIEW_DISPLAY_R1
+marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_GOVERNANCE_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-14
+authorization: "The Owner explicitly approved starting the separate final-review display correction after the PR #73 Preview diagnosis. This entry records governance and the future read-only diagnosis boundary only; implementation and every Git/release action remain separately gated."
+repository: nisikawa-officeAZ/GYEON
+base_branch: release/saved-delivery-note-r1
+base_commit: 1dc5b2dd197c97d9860ab4511cea8baa084c5954
+base_tree: 7d4a235f832ca5ba693ef6fc3cb2f961cd39c38a
+candidate_branch: codex/pr73-display-repair-r1
+candidate_worktree: /private/tmp/dealeros-pr73-display-r1
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/73
+diagnosis_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/73#issuecomment-5662483032
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS.md
+  sha256: a93db299ec4c17c322886b80cef699f8c6f47655796a4bd24f491a16fa022ae1
+  result_marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+proposed_implementation_allowlist:
+  - src/components/estimates/wizard/steps/Step7Review.tsx
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step7Review.test.tsx
+accepted_current_facts:
+  existing_customer_display: READS_NEW_ENTITY_FIELD_AND_SHOWS_EM_DASH
+  existing_vehicle_display: READS_NEW_ENTITY_FIELDS_AND_SHOWS_EM_DASH
+  existing_reference_arrays: ALREADY_SUPPLIED_TO_ESTIMATE_WIZARD
+  existing_reference_labels: SERVER_COMPOSED_DISPLAY_NAME
+  saved_identity_persistence: CORRECT_AND_UNCHANGED
+  other_category_display: RAW_INTERNAL_KEY
+  delivery_note_issuer_blank: PREVIEW_SETTINGS_DATA_NOT_CODE_DEFECT_AND_OUTSIDE_THIS_PHASE
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+implementation_authorized: false
+mutation_flags:
+  source_test_dependency_db_supabase_storage_environment: false
+  staged_committed_pushed: false
+  pr_mutated_ready_merged_deployed: false
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_DIRECTIVE_HASH_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_PATH_STAGE_LOCAL_COMMIT_NORMAL_PUSH_AND_PR73_DIAGNOSIS_INSTRUCTION_PUBLICATION."
+```
