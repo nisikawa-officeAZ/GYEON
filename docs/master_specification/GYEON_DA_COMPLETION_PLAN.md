@@ -1729,7 +1729,9 @@ implementation_allowlist:
   - src/lib/pdf/__tests__/template-c2/delivery-note-binding-boundary.test.ts
 gates:
   governance_candidate: LOCAL_ONLY
-  governance_commit_push_and_draft_pr: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  governance_stage_and_local_commit: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  governance_push: REQUIRES_SEPARATE_OWNER_AUTHORIZATION_AFTER_COMMIT_ACCEPTANCE
+  draft_pr_creation: REQUIRES_SEPARATE_OWNER_AUTHORIZATION_AFTER_PUSH
   claude_read_only_diagnosis_publication: REQUIRES_ACTIVE_DRAFT_PR
   implementation: BLOCKED_UNTIL_GOVERNANCE_COMMIT_AND_DIAGNOSIS_ACCEPTANCE
   verification_commit_push_ready_merge_deploy: EACH_SEPARATE
@@ -1854,4 +1856,69 @@ not_authorized:
   - database_supabase_auth_storage_dependency_environment_or_provider_change
   - ready_merge_or_deploy
 next: "VERIFY_AND_PUBLISH_THIS_TWO_DOCUMENT_GOVERNANCE_DELTA_THEN_ISSUE_THE_EXACT_CLAUDE_IMPLEMENTATION_INSTRUCTION; STOP_AFTER_EDITING_WITHOUT_TESTS_OR_GIT_MUTATION."
+```
+
+## 14. Owner-ratified governance candidate — reopened estimate document parity
+
+```yaml
+phase: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1
+marker: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1_PLAN_DIFF_V1
+date: 2026-09-14
+status: OWNER_AUTHORIZED_GOVERNANCE_CANDIDATE_ONLY
+priority: OPERATIONS_FIRST_INITIAL_DOCUMENTS
+owner_decision:
+  - Continue toward field operation of estimate, delivery-note, and invoice output.
+  - Keep customer management, CRM, inventory, ordering, and unrelated features outside this phase.
+confirmed_production_observation:
+  estimate_detail_pdf_display: PRESENT
+  estimate_detail_pdf_download: PRESENT
+  approved_estimate_invoice_creation: PRESENT
+  estimate_detail_delivery_note: ABSENT
+  post_save_same_url_three_document_surface: PRESENT
+required_behavior:
+  - A reopened saved-estimate detail screen exposes the same document choices needed for operations.
+  - Delivery-note display is enabled only from one dealer-scoped non-deleted related invoice whose
+    persisted status and delivery date satisfy the existing delivery-note contract.
+  - No invoice, draft invoice, invalid date, cancelled status, ambiguous result, and read failure
+    remain visibly fail-closed and never create, issue, date, or render a document automatically.
+  - Existing estimate PDF, invoice creation and issuance, pricing, numbering, authorization, RLS,
+    persistence, and document rendering behavior remain unchanged.
+base:
+  repository: nisikawa-officeAZ/GYEON
+  branch: main
+  commit: 7dbcef0d1606f09918a94fc60cf915becf512f42
+  tree: 62534569591c5f49058aae10cf47359bab94fc81
+candidate_branch: fix/estimate-detail-documents-r1
+candidate_worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-detail-documents-r1
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_DETAIL_DOCUMENTS_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+candidate_implementation_ceiling:
+  - src/app/estimates/[id]/page.tsx
+  - src/components/estimates/EstimateDetailView.tsx
+  - src/components/estimates/EstimateDetail.tsx
+  - src/lib/invoices/get-invoice.ts
+  - src/components/estimates/EstimateDetail.documents.test.tsx
+protected_paths:
+  - src/components/estimates/wizard/screens/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+responsibility:
+  specification_acceptance: MacBook Codex
+  diagnosis_and_authorized_implementation: MacBook Claude
+  office_az_inventory: Mac Studio and unchanged
+not_authorized:
+  - source_or_test_implementation
+  - tests_typecheck_build_lint_or_formatter
+  - dependency_package_or_lockfile_change
+  - database_supabase_auth_storage_or_environment_change
+  - stage_commit_push_pr_mutation_ready_merge_or_deploy
+gates:
+  governance_candidate: LOCAL_ONLY
+  governance_commit_push_and_draft_pr: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  claude_read_only_diagnosis_publication: REQUIRES_ACTIVE_DRAFT_PR
+  implementation: REQUIRES_ACCEPTED_DIAGNOSIS_AND_SEPARATE_OWNER_AUTHORIZATION
+  verification_commit_push_ready_merge_deploy: EACH_SEPARATE
 ```

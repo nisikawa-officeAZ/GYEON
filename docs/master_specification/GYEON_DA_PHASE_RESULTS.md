@@ -5077,3 +5077,47 @@ git_publication_authorized: false
 ready_merge_deploy_authorized: false
 next: "VERIFY_THIS_TWO_DOCUMENT_DELTA_AND_REQUEST_THE_SEPARATE_EXACT_PATH_COMMIT_PUSH_AND_PR73_ACCEPTANCE_COMMENT_GATE_BEFORE_CLAUDE_EDITS_SOURCE."
 ```
+
+## GDA-ESTIMATE-DETAIL-DOCUMENTS-R1 — local governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1
+marker: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1_GOVERNANCE_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-14
+authorization: "The Owner approved continuing the operations-first estimate/document path. This entry records only the local governance candidate; Git publication, Claude diagnosis transmission, implementation, verification, and release remain separately gated."
+repository: nisikawa-officeAZ/GYEON
+base_branch: main
+base_commit: 7dbcef0d1606f09918a94fc60cf915becf512f42
+base_tree: 62534569591c5f49058aae10cf47359bab94fc81
+candidate_branch: fix/estimate-detail-documents-r1
+candidate_worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-detail-documents-r1
+production_read_only_observation:
+  url_class: /estimates/<saved-estimate-id>
+  estimate_pdf_display_and_download: PASS
+  approved_estimate_invoice_creation: PASS
+  delivery_note_control: MISSING
+  database_or_document_mutation: false
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_DETAIL_DOCUMENTS_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+candidate_implementation_ceiling:
+  - src/app/estimates/[id]/page.tsx
+  - src/components/estimates/EstimateDetailView.tsx
+  - src/components/estimates/EstimateDetail.tsx
+  - src/lib/invoices/get-invoice.ts
+  - src/components/estimates/EstimateDetail.documents.test.tsx
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+mutation_flags:
+  source_test_dependency_db_supabase_storage_environment: false
+  staged_committed_pushed_or_pr_mutated: false
+  ready_merged_deployed: false
+implementation_authorized: false
+verification_authorized: false
+next: "REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_AND_LOCAL_COMMIT_ONLY; PUSH_DRAFT_PR_CREATION_AND_CLAUDE_DIAGNOSIS_PUBLICATION_REMAIN_LATER_GATES."
+```
