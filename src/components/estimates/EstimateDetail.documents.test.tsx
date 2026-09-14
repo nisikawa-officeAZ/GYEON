@@ -168,7 +168,7 @@ test("14. EstimateDetail reuses SavedEstimateInvoice and removes the old create-
 
 test("15. unapproved estimates expose no mutation-capable invoice workflow", () => {
   const src = codeOf(DETAIL_SRC);
-  assert.match(src, /isApproved \? \(\s*<SavedEstimateInvoice/);
+  assert.match(src, /isApproved \? \(\s*<div className="text-slate-100">\s*<SavedEstimateInvoice/);
   assert.match(src, /data-testid="estimate-detail-invoice"/);
   assert.match(src, /見積の承認が必要です/);
   assert.match(src, /自動承認や請求書の作成・発行は行いません/);
@@ -179,4 +179,9 @@ test("16. delivery-note eligibility may refresh only from a non-null parsed invo
   assert.match(src, /invoiceReadback \?\? relatedInvoice/);
   assert.match(src, /if \(invoice !== null\) setInvoiceReadback\(invoice\)/);
   assert.doesNotMatch(src, /if \(invoice === null\) setInvoiceReadback/);
+});
+
+test("17. same-page invoice content inherits a readable foreground on the dark detail card", () => {
+  const src = codeOf(DETAIL_SRC);
+  assert.match(src, /<div className="text-slate-100">\s*<SavedEstimateInvoice/);
 });

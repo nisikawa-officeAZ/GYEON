@@ -213,12 +213,14 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, v
               Unapproved estimates receive no mutation-capable action object. */}
           <Card title="請求書">
             {isApproved ? (
-              <SavedEstimateInvoice
-                key={estimate.id}
-                estimateId={estimate.id}
-                actions={invoiceActions}
-                onInvoice={handleInvoiceReadback}
-              />
+              <div className="text-slate-100">
+                <SavedEstimateInvoice
+                  key={estimate.id}
+                  estimateId={estimate.id}
+                  actions={invoiceActions}
+                  onInvoice={handleInvoiceReadback}
+                />
+              </div>
             ) : (
               <>
                 <button
