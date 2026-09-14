@@ -68,8 +68,14 @@ function classifyRenderFailure(error: unknown): string {
 
   if (/data binding failed closed/i.test(message)) return "data-binding";
   if (/offline boundary violated/i.test(message)) return "offline-boundary";
-  if (/ERR_FILE_NOT_FOUND|ENOENT/i.test(message)) return "runtime-file-missing";
-  if (/Could not find Chrome|Failed to launch|spawn.+chrome/i.test(message)) return "chromium-launch";
+  if (/The input directory .+ does not exist|externalize @sparticuz\/chromium/i.test(message)) {
+    return "chromium-package-missing";
+  }
+  if (/ERR_FILE_NOT_FOUND|ENOENT|EACCES/i.test(message)) return "runtime-file-missing";
+  if (/Could not find Chrome|Browser was not found|Failed to launch|spawn.+chrome/i.test(message)) {
+    return "chromium-launch";
+  }
+  if (/Protocol error|Target closed|Browser closed/i.test(message)) return "chromium-runtime";
   if (/timeout/i.test(message)) return "render-timeout";
   return "unclassified";
 }
