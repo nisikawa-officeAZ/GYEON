@@ -148,6 +148,7 @@ export default function InvoiceDetail({
             <div className="grid grid-cols-2 gap-4">
               <InfoRow label="発行日" value={inv.issue_date ?? "—"} />
               <InfoRow label="支払期限" value={inv.due_date ?? "—"} />
+              <InfoRow label="納品日" value={invoiceData.delivery_date ?? "—"} />
             </div>
           </div>
 
@@ -314,7 +315,7 @@ export default function InvoiceDetail({
             <InvoicePdfIssueActions
               invoiceId={invoiceData.id}
               status={invoiceData.status}
-              workOrderActualEndAt={invoiceData.work_orders?.actual_end_at ?? null}
+              deliveryDate={invoiceData.delivery_date ?? null}
               onIssued={handleIssued}
             />
           </div>

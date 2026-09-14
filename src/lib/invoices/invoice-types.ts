@@ -92,8 +92,8 @@ export interface InvoiceDB {
     work_order_number: string | null;
     title:             string | null;
     status:            string;
-    // TEMPLATE-C2-DN: the sole delivery-date source; exposed to the invoice detail UI so the
-    // delivery-note action can gate on a registered work completion date.
+    // TEMPLATE-C2-DN-R1: the work order's completion timestamp. NOT the delivery-note date
+    // source — the delivery note gates on the persisted invoices.delivery_date above.
     actual_end_at?:    string | null;
   } | null;
   invoice_items?: InvoiceItemDB[];

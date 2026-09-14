@@ -64,6 +64,7 @@ rollback_or_recovery: ""
 decision: ""
 next: ""
 ```
+
 ## GDA-0 — Baseline audit and plan ratification
 
 ```yaml
@@ -4940,4 +4941,139 @@ exact_governance_allowlist:
 implementation_authorized: false
 decision: ALIGN_D2_TO_ACCEPTED_P20C_GATE1_AND_OWNER_EVIDENCE_POLICY_KEEP_D2_BLOCKED_UNTIL_GATE2_PUBLICATION_ACCEPTANCE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_BOOK_AND_FOUNDATION_IDENTITIES_GATE1_RECEIPT_GATE2_HOLD_MANDATORY_EVIDENCE_OPTIONAL_SBOM_NON_CIRCULAR_GATE_ORDER_PUBLISHED_ARTIFACT_ONLY_CLAUDE_BOUNDARY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
+```
+
+## GDA-SAVED-DELIVERY-NOTE-R1 — local governance candidate
+
+```yaml
+phase: GDA_SAVED_DELIVERY_NOTE_R1
+marker: GDA_SAVED_DELIVERY_NOTE_R1_GOVERNANCE_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-14
+authorization: "The Owner prioritized estimate/document operation and approved proceeding with the saved-estimate delivery-note connection. This entry records only the local governance candidate; Git publication and implementation remain gated separately."
+repository: nisikawa-officeAZ/GYEON
+base_branch: main
+base_commit: 449d26c3ec5879e19e028471931b51cc707f60eb
+base_tree: 1a2a0cab42d097e96d9d3e4ca69da34803c8c249
+candidate_branch: release/saved-delivery-note-r1
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_SAVED_DELIVERY_NOTE_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+diagnosis:
+  existing_route_and_renderer: PRESENT
+  old_work_order_date_gate: INCOMPATIBLE_WITH_OWNER_APPROVED_SAVED_INVOICE_FLOW
+  production_invoice_number_INV_00001: REJECTED_BY_OLD_ADAPTER
+  saved_surface_delivery_note_control: PERMANENTLY_DISABLED
+  database_or_migration_need: NONE_EXPECTED
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+unrelated_worktree_state:
+  lfs_pointer_materialization_paths: 9
+  handling: PRESERVE_AND_EXCLUDE_FROM_ALL_STAGING_AND_DIFF_ACCEPTANCE
+implementation_authorized: false
+not_authorized:
+  - stage_commit_push_or_pr_creation
+  - claude_external_message_before_active_draft_pr
+  - source_or_test_implementation
+  - dependency_migration_supabase_storage_or_environment_change
+  - ready_merge_or_deploy
+next: "VERIFY_EXACT_THREE_GOVERNANCE_DOCUMENT_DIFF_HASHES_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_COMMIT_PUSH_AND_DRAFT_PR_AUTHORIZATION."
+```
+
+## GDA-ESTIMATE-REVIEW-DISPLAY-R1 — local governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_REVIEW_DISPLAY_R1
+marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_GOVERNANCE_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-14
+authorization: "The Owner explicitly approved starting the separate final-review display correction after the PR #73 Preview diagnosis. This entry records governance and the future read-only diagnosis boundary only; implementation and every Git/release action remain separately gated."
+repository: nisikawa-officeAZ/GYEON
+base_branch: release/saved-delivery-note-r1
+base_commit: 1dc5b2dd197c97d9860ab4511cea8baa084c5954
+base_tree: 7d4a235f832ca5ba693ef6fc3cb2f961cd39c38a
+candidate_branch: codex/pr73-display-repair-r1
+candidate_worktree: /private/tmp/dealeros-pr73-display-r1
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/73
+diagnosis_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/73#issuecomment-5662483032
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS.md
+  sha256: a93db299ec4c17c322886b80cef699f8c6f47655796a4bd24f491a16fa022ae1
+  result_marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+proposed_implementation_allowlist:
+  - src/components/estimates/wizard/steps/Step7Review.tsx
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step7Review.test.tsx
+accepted_current_facts:
+  existing_customer_display: READS_NEW_ENTITY_FIELD_AND_SHOWS_EM_DASH
+  existing_vehicle_display: READS_NEW_ENTITY_FIELDS_AND_SHOWS_EM_DASH
+  existing_reference_arrays: ALREADY_SUPPLIED_TO_ESTIMATE_WIZARD
+  existing_reference_labels: SERVER_COMPOSED_DISPLAY_NAME
+  saved_identity_persistence: CORRECT_AND_UNCHANGED
+  other_category_display: RAW_INTERNAL_KEY
+  delivery_note_issuer_blank: PREVIEW_SETTINGS_DATA_NOT_CODE_DEFECT_AND_OUTSIDE_THIS_PHASE
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+implementation_authorized: false
+mutation_flags:
+  source_test_dependency_db_supabase_storage_environment: false
+  staged_committed_pushed: false
+  pr_mutated_ready_merged_deployed: false
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_GOVERNANCE_CANDIDATE_DIRECTIVE_HASH_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_EXACT_PATH_STAGE_LOCAL_COMMIT_NORMAL_PUSH_AND_PR73_DIAGNOSIS_INSTRUCTION_PUBLICATION."
+```
+
+## GDA-ESTIMATE-REVIEW-DISPLAY-R1 — diagnosis accepted and implementation authorized
+
+```yaml
+phase: GDA_ESTIMATE_REVIEW_DISPLAY_R1
+marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_DIAGNOSIS_ACCEPTANCE_V1
+status: DIAGNOSIS_ACCEPTED_IMPLEMENTATION_AUTHORIZED_PENDING_GOVERNANCE_PUBLICATION
+date: 2026-09-14
+authorization: "The Owner approved proceeding to implementation after the diagnosis result and explicitly approved sending the seven allowlisted private source files to Claude."
+repository: nisikawa-officeAZ/GYEON
+branch: release/saved-delivery-note-r1
+execution_commit: 20188dab8cc7ea5a92a471d0122843c98535209b
+execution_tree: ee0c40fd2579b8cc14bec2aa30d3a89a83a10b55
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/73
+diagnosis:
+  marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  verdict: READY_FOR_IMPLEMENTATION_GOVERNANCE
+  claude_report_sha256: 3b8e89b469c3061fc1662b7653387d25201743f80e190d901c3061dbbfbdc341
+  codex_review: ACCEPTED
+  root_cause_customer: NEW_ENTITY_DRAFT_FIELD_RENDERED_FOR_EFFECTIVE_EXISTING_SELECTION
+  root_cause_vehicle: NEW_ENTITY_DRAFT_FIELDS_RENDERED_FOR_EFFECTIVE_EXISTING_SELECTION
+  root_cause_category: RAW_CATEGORY_IDS_RENDERED_WITHOUT_CANONICAL_LABEL_LOOKUP
+  read_scope_expansion_required: false
+  owner_decision_required: false
+implementation_allowlist:
+  - src/components/estimates/wizard/steps/Step7Review.tsx
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step7Review.test.tsx
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+diagnosis_mutation_flags:
+  repository_source_test_dependency_db_supabase_storage_environment: false
+  staged_committed_pushed_or_pr_mutated: false
+  claude_external_plan_file_created: true
+known_limitation:
+  - "Claude plan mode wrote ~/.claude/plans/read-agents-md-and-docs-master-specifica-dreamy-hennessy.md despite the no-create instruction. It is outside the repository and remains untracked by this phase."
+implementation_authorized: true
+verification_authorized: false
+git_publication_authorized: false
+ready_merge_deploy_authorized: false
+next: "VERIFY_THIS_TWO_DOCUMENT_DELTA_AND_REQUEST_THE_SEPARATE_EXACT_PATH_COMMIT_PUSH_AND_PR73_ACCEPTANCE_COMMENT_GATE_BEFORE_CLAUDE_EDITS_SOURCE."
 ```

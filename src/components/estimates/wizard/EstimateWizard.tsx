@@ -129,7 +129,12 @@ export default function EstimateWizard({
       {api.step === 4 && <Step4Estimate api={api} shopRank={shopRank} screenConfig={screenConfig} />}
       {api.step === 5 && <Step5Discount api={api} />}
       {api.step === 6 && <Step6Notes api={api} />}
-      {api.step === 7 && <Step7Review api={api} saveBinding={saveBinding} />}
+      {api.step === 7 && (
+        // GDA-ESTIMATE-REVIEW-DISPLAY-R1: the SAME server-supplied reference arrays
+        // that drive selection and navigation validity also resolve the review
+        // labels, so the review can never show a name those surfaces would refuse.
+        <Step7Review api={api} customers={customers} vehicles={vehicles} saveBinding={saveBinding} />
+      )}
     </WizardShell>
   );
 }

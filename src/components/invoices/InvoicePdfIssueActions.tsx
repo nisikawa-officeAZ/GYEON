@@ -12,6 +12,7 @@
 // paths, bucket names and service-role details never reach the browser.
 
 import { useState, useTransition } from "react";
+import { isValidCalendarDate } from "@/lib/invoices/invoice-delivery-date";
 
 export type IssueSuccessKind = "issued" | "already_issued";
 
@@ -22,11 +23,11 @@ interface InvoicePdfIssueActionsProps {
   invoiceId: string;
   status: string;
   /**
-   * TEMPLATE-C2-DN: the linked work order's actual completion date — the sole delivery-date
-   * source. Null/absent means no completion date is registered, so the delivery note cannot be
-   * produced and the UI explains that instead of generating a document.
+   * TEMPLATE-C2-DN-R1: the invoice's persisted delivery date (invoices.delivery_date, 納品日) —
+   * the sole delivery-date source. Null/absent/invalid means no delivery date is saved, so the
+   * delivery note cannot be produced and the UI explains that instead of generating a document.
    */
-  workOrderActualEndAt?: string | null;
+  deliveryDate?: string | null;
   /**
    * B1-V1-R1: fired ONLY when an issue action actually succeeded, so the
    * surrounding views can leave the draft state without a page reload. A
@@ -39,7 +40,7 @@ interface InvoicePdfIssueActionsProps {
 export default function InvoicePdfIssueActions({
   invoiceId,
   status,
-  workOrderActualEndAt,
+  deliveryDate,
   onIssued,
 }: InvoicePdfIssueActionsProps) {
   const [pending, startTransition] = useTransition();
@@ -48,7 +49,7 @@ export default function InvoicePdfIssueActions({
 
   const isDraft = status === "draft";
   const deliveryNoteAllowed = DELIVERY_NOTE_ALLOWED_STATUSES.includes(status);
-  const hasCompletionDate = typeof workOrderActualEndAt === "string" && workOrderActualEndAt.trim() !== "";
+  const hasDeliveryDate = isValidCalendarDate(deliveryDate);
 
   function run(action: "issue" | "download") {
     setError(null);
@@ -107,10 +108,11 @@ export default function InvoicePdfIssueActions({
           </a>
         )}
 
-        {/* TEMPLATE-C2-DN: the delivery-note action appears only for an allowed (issued+) status
-            AND only when a work completion date is registered. It opens the authenticated
-            delivery-note route in a new tab — it never mutates or reissues the invoice. */}
-        {deliveryNoteAllowed && hasCompletionDate && (
+        {/* TEMPLATE-C2-DN-R1: the delivery-note action appears only for an allowed (issued+)
+            status AND only when a valid delivery date is persisted on the invoice. It opens the
+            authenticated delivery-note route in a new tab — it never mutates or reissues the
+            invoice. */}
+        {deliveryNoteAllowed && hasDeliveryDate && (
           <a
             href={`/pdf/delivery-note?invoiceId=${encodeURIComponent(invoiceId)}`}
             target="_blank"
@@ -128,9 +130,9 @@ export default function InvoicePdfIssueActions({
         </p>
       )}
 
-      {deliveryNoteAllowed && !hasCompletionDate && (
+      {deliveryNoteAllowed && !hasDeliveryDate && (
         <p className="text-[11px] text-amber-400/90">
-          納品書を出力するには、施工指示に作業完了日を登録してください。
+          納品書を出力するには、請求書に納品日が保存されている必要があります。
         </p>
       )}
 

@@ -1676,3 +1676,182 @@ Any proposed change to mission, fixed decisions, phase order, completion standar
 3. Identify time, risk, security, and field-work impact.
 4. Receive explicit user approval.
 5. Be committed and recorded in the result ledger before implementation follows the new decision.
+
+## 11. Owner-ratified plan diff — saved-estimate delivery-note connection
+
+```yaml
+phase: GDA_SAVED_DELIVERY_NOTE_R1
+marker: GDA_SAVED_DELIVERY_NOTE_R1_PLAN_DIFF_V1
+date: 2026-09-14
+priority: OPERATIONS_FIRST_INITIAL_DOCUMENTS
+owner_decision:
+  - Complete reliable estimate, delivery-note, and invoice output before deferred functions.
+  - From the saved-estimate surface, allow the operator to display the estimate PDF, issue or
+    reopen the invoice, and display the delivery-note PDF.
+  - Customer management remains outside this phase and must not be implemented here.
+authoritative_source:
+  delivery_note_identity: already_issued_invoice
+  delivery_date: invoices.delivery_date
+  line_items_and_totals: immutable_issued_invoice_snapshot
+  work_order_required: false
+number_compatibility:
+  current: INV-NNNNN_TO_DLV-NNNNN
+  legacy: INV-YYYY-NNNNN_TO_DLV-YYYY-NNNNN
+  malformed_or_foreign: FAIL_CLOSED
+mutations:
+  estimate_resave: prohibited
+  invoice_issue_by_delivery_note_action: prohibited
+  payment_recording: prohibited
+  delivery_note_database_row: prohibited
+  storage_write: prohibited
+database:
+  migration_required: false
+  supabase_apply_required: false
+security:
+  - request_scope_authentication
+  - caller_scoped_supabase_client_and_rls
+  - invoice_id_and_dealer_id_filters
+  - soft_deleted_invoice_exclusion
+  - issued_or_later_status_gate
+  - strict_saved_delivery_date_and_invoice_number_validation
+  - coarse_foreign_or_ineligible_response
+  - no_service_role
+implementation_allowlist:
+  - src/components/estimates/wizard/production/SavedEstimateDocuments.tsx
+  - src/components/estimates/wizard/production/SavedEstimateDocuments.test.tsx
+  - src/components/estimates/wizard/production/SavedEstimateInvoice.tsx
+  - src/components/estimates/wizard/production/saved-invoice-issuance.test.tsx
+  - src/components/invoices/InvoicePdfIssueActions.tsx
+  - src/components/invoices/InvoiceDetail.tsx
+  - src/lib/invoices/invoice-types.ts
+  - src/lib/pdf/get-delivery-note-pdf-data.ts
+  - src/lib/pdf/delivery-note-document-data.ts
+  - src/lib/pdf/__tests__/template-c2/delivery-note-binding-boundary.test.ts
+gates:
+  governance_candidate: LOCAL_ONLY
+  governance_commit_push_and_draft_pr: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  claude_read_only_diagnosis_publication: REQUIRES_ACTIVE_DRAFT_PR
+  implementation: BLOCKED_UNTIL_GOVERNANCE_COMMIT_AND_DIAGNOSIS_ACCEPTANCE
+  verification_commit_push_ready_merge_deploy: EACH_SEPARATE
+```
+
+## 12. Owner-ratified plan diff — Estimate Wizard final-review display correction
+
+```yaml
+phase: GDA_ESTIMATE_REVIEW_DISPLAY_R1
+marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_PLAN_DIFF_V1
+date: 2026-09-14
+status: OWNER_AUTHORIZED_GOVERNANCE_CANDIDATE_ONLY
+priority: OPERATIONS_FIRST_INITIAL_DOCUMENTS
+owner_decision:
+  - Correct the final review display after the saved-estimate delivery-note Preview verification.
+  - Keep this correction presentation-only and do not reopen customer management, persistence,
+    pricing, PDF, invoice, or delivery-note behavior.
+base:
+  repository: nisikawa-officeAZ/GYEON
+  branch: release/saved-delivery-note-r1
+  commit: 1dc5b2dd197c97d9860ab4511cea8baa084c5954
+  tree: 7d4a235f832ca5ba693ef6fc3cb2f961cd39c38a
+  coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/73
+diagnosis_evidence:
+  comment: https://github.com/nisikawa-officeAZ/GYEON/pull/73#issuecomment-5662483032
+  customer_and_vehicle: CONFIRMED_PRESENTATION_BUG
+  issuer_name_and_tel: CONFIRMED_PREVIEW_TENANT_CONFIGURATION_MISSING_OUTSIDE_THIS_PHASE
+required_behavior:
+  - Existing customer display resolves the effective selected id against the supplied dealer-scoped
+    reference list and renders only the server-composed displayName.
+  - Existing vehicle display resolves the effective selected id under the effective customer and
+    renders only the server-composed displayName.
+  - New customer and new vehicle display preserve the current draft-field behavior.
+  - Missing, stale, duplicate, ambiguous, or wrong-owner references fail closed to the current em dash.
+  - Known service-category ids render through the canonical service-category label authority, including
+    other as その他作業.
+  - No display correction writes reference labels into canonical draft or persistence state.
+proposed_implementation_allowlist:
+  - src/components/estimates/wizard/steps/Step7Review.tsx
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step7Review.test.tsx
+read_only_reused_authorities:
+  - src/components/estimates/wizard/steps/existing-entity-selection.ts
+  - src/components/estimates/wizard/contract/wizard-runtime-inputs.ts
+  - src/components/estimates/wizard/useEstimateWizard.ts
+  - src/lib/estimates/service-categories.ts
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS.md
+  sha256: a93db299ec4c17c322886b80cef699f8c6f47655796a4bd24f491a16fa022ae1
+  result_marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+protected_paths:
+  - src/components/estimates/wizard/screens/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+not_authorized:
+  - source_or_test_implementation
+  - dependency_package_or_lockfile_change
+  - database_supabase_auth_storage_or_environment_change
+  - stage_commit_push_or_pr_mutation
+  - ready_merge_or_deploy
+gates:
+  governance_candidate: LOCAL_ONLY
+  governance_commit_and_push: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  claude_read_only_diagnosis_publication: REQUIRES_GOVERNANCE_DELIVERY
+  implementation: REQUIRES_ACCEPTED_DIAGNOSIS_AND_SEPARATE_OWNER_AUTHORIZATION
+  verification_commit_push_ready_merge_deploy: EACH_SEPARATE
+```
+
+## 13. Owner-ratified implementation boundary — Estimate Wizard final-review display correction
+
+```yaml
+phase: GDA_ESTIMATE_REVIEW_DISPLAY_R1
+marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_IMPLEMENTATION_BOUNDARY_V1
+date: 2026-09-14
+status: OWNER_AUTHORIZED_IMPLEMENTATION_ONLY_PENDING_GIT_PUBLICATION
+owner_authorization:
+  - The Owner authorized proceeding to the final-review display implementation after Claude's
+    read-only diagnosis and Codex acceptance.
+  - The Owner separately approved sending the seven allowlisted private source files to Claude
+    for that diagnosis.
+execution_base:
+  repository: nisikawa-officeAZ/GYEON
+  branch: release/saved-delivery-note-r1
+  commit: 20188dab8cc7ea5a92a471d0122843c98535209b
+  tree: ee0c40fd2579b8cc14bec2aa30d3a89a83a10b55
+  coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/73
+accepted_diagnosis:
+  marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  verdict: READY_FOR_IMPLEMENTATION_GOVERNANCE
+  claude_report_sha256: 3b8e89b469c3061fc1662b7653387d25201743f80e190d901c3061dbbfbdc341
+  codex_independent_review: ACCEPTED
+  repository_mutation: false
+  governance_exception: "Claude plan mode created one report file under ~/.claude/plans despite the no-create instruction; no repository path changed."
+implementation_allowlist:
+  - src/components/estimates/wizard/steps/Step7Review.tsx
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step7Review.test.tsx
+required_behavior:
+  - Resolve an existing customer with effectiveExistingCustomer and render only its server-composed displayName.
+  - Resolve an existing vehicle under the effective customer with effectiveExistingVehicle and render only its server-composed displayName.
+  - Preserve current draft-field rendering for new customer and new vehicle entries.
+  - Fail closed to the current em dash for missing, stale, duplicate, ambiguous, or wrong-owner references.
+  - Render known category ids through serviceCategoryLabel, including other as その他作業.
+  - Preserve save, pricing, DTO, RPC, database, PDF, invoice, delivery-note, tenant, and persistence behavior.
+implementation_agent: MacBook Claude
+acceptance_authority: MacBook Codex
+protected_paths:
+  - src/components/estimates/wizard/screens/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+authorized_now:
+  - edit_only_the_three_implementation_allowlist_paths_after_this_boundary_is_published
+not_authorized:
+  - tests_typecheck_build_lint_or_formatter
+  - stage_commit_push_or_other_pr_mutation
+  - database_supabase_auth_storage_dependency_environment_or_provider_change
+  - ready_merge_or_deploy
+next: "VERIFY_AND_PUBLISH_THIS_TWO_DOCUMENT_GOVERNANCE_DELTA_THEN_ISSUE_THE_EXACT_CLAUDE_IMPLEMENTATION_INSTRUCTION; STOP_AFTER_EDITING_WITHOUT_TESTS_OR_GIT_MUTATION."
+```

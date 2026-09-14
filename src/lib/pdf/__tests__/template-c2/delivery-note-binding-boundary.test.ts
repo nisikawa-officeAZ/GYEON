@@ -32,16 +32,22 @@ const CONTEXT = "src/lib/pdf/chromium-document/delivery-note-document-context.ts
 
 /* ── delivery-number conversion (pure) ──────────────────────────────────── */
 
-test("DN-1 supported INV numbers convert to DLV preserving the serial", () => {
+test("DN-1 exactly the current and legacy INV shapes convert to DLV preserving the serial", () => {
+  // current default numbering ("never" reset): INV-NNNNN
+  assert.equal(deliveryNumberFromInvoiceNumber("INV-00008"), "DLV-00008");
+  assert.equal(deliveryNumberFromInvoiceNumber(" INV-12345 "), "DLV-12345");
+  // legacy yearly-reset rows: INV-YYYY-NNNNN (the stored year is preserved, never invented)
   assert.equal(deliveryNumberFromInvoiceNumber("INV-2026-00008"), "DLV-2026-00008");
   assert.equal(deliveryNumberFromInvoiceNumber(" INV-2030-12345 "), "DLV-2030-12345");
 });
 
-test("DN-2 missing, malformed, hostile, or unsupported invoice numbers fail closed", () => {
+test("DN-2 missing, malformed, hostile, monthly, or unsupported invoice numbers fail closed", () => {
   for (const bad of [
     null, undefined, "", "INV-2026-0008", "INV-2026-000008", "INV/2026/00008",
-    "EST-2026-00008", "DLV-2026-00008", "INV-ABCD-00008", "INV-2026-0000X",
+    "EST-2026-00008", "DLV-2026-00008", "DLV-00008", "INV-ABCD-00008", "INV-2026-0000X",
+    "INV-2026-06-00008", "INV-0008", "INV-000008", "INV-0000X", "INV-A2F9BC01",
     "INV-12345678", "<script>INV-2026-00008</script>", "INV-2026-00008; DROP", "inv-2026-00008",
+    "inv-00008", "MIV-2026-06-00008", "INV- 00008",
   ]) {
     assert.equal(deliveryNumberFromInvoiceNumber(bad as string), null, `should reject: ${String(bad)}`);
   }
@@ -70,8 +76,9 @@ const invoice = {
   total: 104500,
   notes: "表示価格はすべて税込です。\n納品内容・数量をご確認ください。",
   internal_memo: "SECRET-DN-INTERNAL",
-  work_order_id: "00000000-0000-4000-8000-0000000000aa",
-  work_orders: { work_order_number: "WO-1", title: "t", status: "completed", actual_end_at: "2026-08-01T05:00:00.000Z" },
+  // The persisted delivery date is the SOLE date source; no work-order link is required.
+  delivery_date: "2026-08-01",
+  work_order_id: null,
   customers: { last_name: "石井", first_name: "紗也華", phone: "052-000-0000", email: "c@example.jp", postal_code: "460-0002", address1: "名古屋市中区丸の内1-2-3", is_business: false },
   vehicles: { maker: "フェラーリ", model: "458 Italia", year: "2015", grade: "Base", plate_number: "名古屋 332 ひ 3830", color: "ロッソコルサ / Red", mileage: 28400 },
   invoice_items: [
@@ -88,10 +95,13 @@ const brand: BrandProfile = {
 };
 const LOGO = "data:image/png;base64,AAAA";
 
-test("DN-4 the adapter uses issued items and persisted totals, delivery number, and the WO date", () => {
+test("DN-4 the adapter uses issued items and persisted totals, delivery number, and the persisted date", () => {
   const data = toDeliveryNoteDocumentData(invoice, "2026-08-01");
-  assert.equal(data.serial, "DLV/2026/00031"); // formatDocumentSerial(DLV-2026-00031)
+  assert.equal(data.serial, "DLV/2026/00031"); // formatDocumentSerial(DLV-2026-00031), legacy shape
   assert.equal(data.deliveryDate, "2026-08-01");
+  // current-shape number: no year segment exists, so none is invented for display either
+  const current = toDeliveryNoteDocumentData({ ...invoice, invoice_number: "INV-00031" } as InvoiceDB, "2026-08-01");
+  assert.equal(current.serial, "DLV-00031");
   assert.deepEqual(data.items.map((i) => i.name), ["MOHS EVO", "PPF ヘッドライト"]); // persisted sort_order
   assert.equal(data.summary.subtotal, 100000);
   assert.equal(data.summary.discount, 5000);
@@ -110,17 +120,24 @@ test("DN-5 the adapter never recomputes totals and never reads estimate rows", (
   assert.ok(!/subtotal\s*[+\-*/]|reduce\(/.test(src), "adapter must not recompute the summary");
 });
 
-test("DN-6 the adapter fails closed on an unsupported number or a missing delivery date", () => {
+test("DN-6 the adapter fails closed on an unsupported number or a missing/invalid delivery date", () => {
   assert.throws(() => toDeliveryNoteDocumentData({ ...invoice, invoice_number: "EST-2026-00031" } as InvoiceDB, "2026-08-01"));
   assert.throws(() => toDeliveryNoteDocumentData(invoice, ""));
   assert.throws(() => toDeliveryNoteDocumentData(invoice, "   "));
+  // strict calendar validation: impossible dates and raw timestamps are not delivery dates
+  assert.throws(() => toDeliveryNoteDocumentData(invoice, "2026-02-30"));
+  assert.throws(() => toDeliveryNoteDocumentData(invoice, "2026-8-1"));
+  assert.throws(() => toDeliveryNoteDocumentData(invoice, "2026-08-01T05:00:00.000Z"));
 });
 
-test("DN-7 delivery date comes only from the WO date; no current clock in document data", () => {
+test("DN-7 delivery date comes only from the validated persisted invoice date; no clock, no WO", () => {
   const src = codeOf("src/lib/pdf/delivery-note-document-data.ts") + codeOf(LOADER) + codeOf(CONTEXT);
   assert.ok(!/Date\.now|new Date\(\)|toISOString\(\)/.test(src), "document data must not read the current clock");
   const loader = codeOf(LOADER);
-  assert.ok(loader.includes("actual_end_at"), "the loader must source the delivery date from work_orders.actual_end_at");
+  assert.ok(loader.includes("delivery_date"), "the loader must source the delivery date from invoices.delivery_date");
+  assert.ok(loader.includes("isValidCalendarDate(invoice.delivery_date)"), "the persisted date must be strictly validated");
+  assert.ok(!loader.includes("actual_end_at") && !/work_orders\s*\(/.test(loader), "no work-order date source or join remains");
+  assert.ok(!/invoice\.work_order_id\s*\)/.test(loader), "eligibility must not require a work-order link");
   assert.ok(!/issue_date.*deliveryDate|report_date/.test(loader), "no issue_date/report_date substitution");
 });
 
@@ -225,19 +242,25 @@ test("DN-16 the new CSS block is delivery-only and leaves estimate/invoice geome
 
 /* ── UI ──────────────────────────────────────────────────────────────────── */
 
-test("DN-17 the UI action is gated on allowed status + completion date and never mutates the invoice", () => {
+test("DN-17 the UI action is gated on allowed status + persisted delivery date and never mutates the invoice", () => {
   const ui = codeOf("src/components/invoices/InvoicePdfIssueActions.tsx");
   assert.ok(ui.includes('["issued", "paid", "partially_paid", "overdue"]'), "delivery-note allowed-status list");
-  assert.ok(/deliveryNoteAllowed\s*&&\s*hasCompletionDate/.test(ui), "action requires allowed status AND a completion date");
+  assert.ok(ui.includes("isValidCalendarDate(deliveryDate)"), "the delivery date must be strictly validated");
+  assert.ok(/deliveryNoteAllowed\s*&&\s*hasDeliveryDate/.test(ui), "action requires allowed status AND a valid delivery date");
   assert.ok(ui.includes("/pdf/delivery-note?invoiceId="), "action opens the authenticated delivery-note route");
-  assert.ok(/deliveryNoteAllowed\s*&&\s*!hasCompletionDate/.test(ui), "missing-date guidance branch");
-  assert.ok(ui.includes("作業完了日を登録"), "the guidance explains the missing completion date");
+  assert.ok(/deliveryNoteAllowed\s*&&\s*!hasDeliveryDate/.test(ui), "missing-date guidance branch");
+  assert.ok(ui.includes("納品日が保存されている必要"), "the guidance explains the missing delivery date");
+  assert.ok(!/actual_end_at|work_?[Oo]rder/.test(ui), "no work-order date source remains in the UI");
   // the delivery-note control is a plain anchor to the route — no onClick, no issuance call
-  const dnStart = ui.indexOf("deliveryNoteAllowed && hasCompletionDate");
+  const dnStart = ui.indexOf("deliveryNoteAllowed && hasDeliveryDate");
   const dnEnd = ui.indexOf("納品書を表示", dnStart) + 40;
   const dnRegion = ui.slice(dnStart, dnEnd);
   assert.ok(dnRegion.includes("/pdf/delivery-note?invoiceId="), "the DN control links to the route");
   assert.ok(!/onClick|issueInvoice|\.update\(|run\(/.test(dnRegion), "the DN control performs no invoice mutation");
+  // the invoice detail feeds the gate from the persisted invoice date, not a work-order join
+  const detail = codeOf("src/components/invoices/InvoiceDetail.tsx");
+  assert.ok(detail.includes("deliveryDate={invoiceData.delivery_date ?? null}"), "detail passes invoices.delivery_date");
+  assert.ok(!detail.includes("workOrderActualEndAt"), "the obsolete completion-date prop is gone");
 });
 
 /* ── TEMPLATE-C2-DN-R1: string-to-HTML exclusion + correct issued-invoice source claim ────── */
