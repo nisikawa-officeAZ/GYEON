@@ -7,15 +7,20 @@
 
 import { useRouter } from "next/navigation";
 import type { EstimateDB } from "@/lib/estimates/estimate-types";
+import type { EstimateRelatedInvoice } from "@/lib/invoices/get-invoice";
 import EstimateDetail from "./EstimateDetail";
 
 export default function EstimateDetailView({
   estimate,
   dealerDisplayName = null,
+  relatedInvoice = null,
 }: {
   estimate: EstimateDB;
   /** F1-R1: server-resolved dealer_settings.business_name for the LINE default message. */
   dealerDisplayName?: string | null;
+  /** GDA_ESTIMATE_DETAIL_DOCUMENTS_R1: server-read, tenant-scoped minimal invoice fields
+   *  for the delivery-note document surface. null means no eligible related invoice. */
+  relatedInvoice?: EstimateRelatedInvoice | null;
 }) {
   const router = useRouter();
   const isApproved = estimate.status === "approved" || estimate.status === "APPROVED";
@@ -24,6 +29,7 @@ export default function EstimateDetailView({
     <EstimateDetail
       estimate={estimate}
       dealerDisplayName={dealerDisplayName}
+      relatedInvoice={relatedInvoice}
       variant="page"
       onClose={() => router.push("/estimates")}
       onCreateWorkOrder={isApproved ? () => router.push(`/estimates?workorder=${estimate.id}`) : undefined}

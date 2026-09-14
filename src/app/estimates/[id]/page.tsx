@@ -3,6 +3,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { getEstimate } from "@/lib/estimates/get-estimate";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { createClient } from "@/lib/supabase/server";
+import { getInvoiceForEstimate, type EstimateRelatedInvoice } from "@/lib/invoices/get-invoice";
 import EstimateDetailView from "@/components/estimates/EstimateDetailView";
 
 interface Props {
@@ -32,6 +33,18 @@ async function getDealerDisplayName(): Promise<string | null> {
   }
 }
 
+// GDA_ESTIMATE_DETAIL_DOCUMENTS_R1 — the related invoice for the reopened detail
+// screen's delivery-note surface. Any read failure (thrown or otherwise) resolves to
+// null, same as getDealerDisplayName: the estimate detail page must stay usable even
+// when the invoice lookup cannot be trusted.
+async function getRelatedInvoice(estimateId: string): Promise<EstimateRelatedInvoice | null> {
+  try {
+    return await getInvoiceForEstimate(estimateId);
+  } catch {
+    return null;
+  }
+}
+
 // Read-only full-page Estimate detail (Phase 1). getEstimate is dealer-scoped
 // (id AND dealer_id) and returns null for a foreign/invalid id → 404.
 export default async function EstimateDetailPage({ params }: Props) {
@@ -39,12 +52,19 @@ export default async function EstimateDetailPage({ params }: Props) {
   const estimate = await getEstimate(id);
   if (!estimate) notFound();
 
-  const dealerDisplayName = await getDealerDisplayName();
+  const [dealerDisplayName, relatedInvoice] = await Promise.all([
+    getDealerDisplayName(),
+    getRelatedInvoice(estimate.id),
+  ]);
 
   return (
     <MainLayout>
       <div className="max-w-5xl mx-auto py-4">
-        <EstimateDetailView estimate={estimate} dealerDisplayName={dealerDisplayName} />
+        <EstimateDetailView
+          estimate={estimate}
+          dealerDisplayName={dealerDisplayName}
+          relatedInvoice={relatedInvoice}
+        />
       </div>
     </MainLayout>
   );

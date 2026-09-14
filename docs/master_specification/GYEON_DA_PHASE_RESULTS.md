@@ -5077,3 +5077,110 @@ git_publication_authorized: false
 ready_merge_deploy_authorized: false
 next: "VERIFY_THIS_TWO_DOCUMENT_DELTA_AND_REQUEST_THE_SEPARATE_EXACT_PATH_COMMIT_PUSH_AND_PR73_ACCEPTANCE_COMMENT_GATE_BEFORE_CLAUDE_EDITS_SOURCE."
 ```
+
+## GDA-ESTIMATE-DETAIL-DOCUMENTS-R1 — local governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1
+marker: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1_GOVERNANCE_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-14
+authorization: "The Owner approved continuing the operations-first estimate/document path. This entry records only the local governance candidate; Git publication, Claude diagnosis transmission, implementation, verification, and release remain separately gated."
+repository: nisikawa-officeAZ/GYEON
+base_branch: main
+base_commit: 7dbcef0d1606f09918a94fc60cf915becf512f42
+base_tree: 62534569591c5f49058aae10cf47359bab94fc81
+candidate_branch: fix/estimate-detail-documents-r1
+candidate_worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-detail-documents-r1
+production_read_only_observation:
+  url_class: /estimates/<saved-estimate-id>
+  estimate_pdf_display_and_download: PASS
+  approved_estimate_invoice_creation: PASS
+  delivery_note_control: MISSING
+  database_or_document_mutation: false
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_DETAIL_DOCUMENTS_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+candidate_implementation_ceiling:
+  - src/app/estimates/[id]/page.tsx
+  - src/components/estimates/EstimateDetailView.tsx
+  - src/components/estimates/EstimateDetail.tsx
+  - src/lib/invoices/get-invoice.ts
+  - src/components/estimates/EstimateDetail.documents.test.tsx
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+mutation_flags:
+  source_test_dependency_db_supabase_storage_environment: false
+  staged_committed_pushed_or_pr_mutated: false
+  ready_merged_deployed: false
+implementation_authorized: false
+verification_authorized: false
+next: "REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_AND_LOCAL_COMMIT_ONLY; PUSH_DRAFT_PR_CREATION_AND_CLAUDE_DIAGNOSIS_PUBLICATION_REMAIN_LATER_GATES."
+```
+
+## GDA-ESTIMATE-DETAIL-DOCUMENTS-R1 — local acceptance-record candidate
+
+```yaml
+phase: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1
+marker: GDA_ESTIMATE_DETAIL_DOCUMENTS_R1_ACCEPTANCE_RECORD_V1
+status: LOCAL_ACCEPTANCE_RECORD_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-14
+authorization: "The Owner authorized only a local two-document completion-record update after Codex independently reviewed PR #76. No Git publication, merge, deployment, database, Supabase, Storage, environment, or production mutation is authorized by this record."
+repository: nisikawa-officeAZ/GYEON
+pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/76
+base_commit: 7dbcef0d1606f09918a94fc60cf915becf512f42
+head_commit: 99682d1e3fe2a2364f6ac1d1a13c7f56544f3dae
+head_tree: 3d45b52ea51a7072041af4e9c1525c720400d784
+reviewed_implementation_paths:
+  - src/app/estimates/[id]/page.tsx
+  - src/components/estimates/EstimateDetailView.tsx
+  - src/components/estimates/EstimateDetail.tsx
+  - src/lib/invoices/get-invoice.ts
+  - src/components/estimates/EstimateDetail.documents.test.tsx
+implementation_manifest_sha256: aec832145f17201ea848fd682e50b75036335d14f127a60fa7001a03aa706a20
+codex_independent_review:
+  source_scope: PASS
+  tenant_and_soft_delete_scope: PASS
+  eligibility_fail_closed: PASS
+  no_automatic_invoice_or_document_mutation: PASS
+  protected_paths_unchanged: PASS
+  verdict: ACCEPTED
+verification:
+  command: "node --import tsx --test src/components/estimates/EstimateDetail.documents.test.tsx src/components/estimates/wizard/production/SavedEstimateDocuments.test.tsx src/lib/pdf/__tests__/template-c2/delivery-note-binding-boundary.test.ts"
+  tests: PASS_44_OF_44
+  git_diff_check: PASS
+  vercel: SUCCESS
+  vercel_preview_comments: SUCCESS
+preview_acceptance:
+  eligible_saved_estimate: PASS
+  eligible_control: ENABLED_DELIVERY_NOTE_PDF_DISPLAY
+  bound_route: /pdf/delivery-note?invoiceId=<server-read-related-invoice-id>
+  rendered_document: PASS_ONE_PAGE_DELIVERY_NOTE_JPY_1100
+  ineligible_draft_estimate: PASS_DISABLED_WITH_EXPECTED_REASON
+  data_mutation: false
+evidence:
+  implementation_verification: https://github.com/nisikawa-officeAZ/GYEON/pull/76#issuecomment-5663982729
+  push_and_ci: https://github.com/nisikawa-officeAZ/GYEON/pull/76#issuecomment-5664041812
+  ci_completion: https://github.com/nisikawa-officeAZ/GYEON/pull/76#issuecomment-5664065638
+  preview_acceptance: https://github.com/nisikawa-officeAZ/GYEON/pull/76#issuecomment-5664145800
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+mutation_flags:
+  source_test_dependency_db_supabase_storage_environment: false
+  staged_committed_pushed_or_pr_mutated: false
+  ready_merged_deployed: false
+implementation_authorized_and_completed: true
+verification_completed: true
+source_and_runtime_accepted: true
+governance_record_publication_authorized: false
+merge_authorized: false
+production_deploy_authorized: false
+next: "VERIFY_THIS_EXACT_TWO_DOCUMENT_LOCAL_DELTA_HASHES_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_COMMIT_ONLY."
+```
