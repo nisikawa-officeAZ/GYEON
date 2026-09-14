@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   // destination as `?next=` when THEY redirect an authenticated-but-unauthorized user to /login.
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", pathname + request.nextUrl.search);
-  const response = NextResponse.next({
+  let response = NextResponse.next({
     request: { headers: requestHeaders },
   });
 
@@ -62,10 +62,25 @@ export async function middleware(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet, cacheHeaders) {
+        // Refresh the request seen by the *same* Server Component render, not
+        // just the browser's next request. Preserve cookies across SDK batches.
+        const previousCookies = response.cookies.getAll();
+        const previousCacheHeaders = new Headers();
+        for (const name of ["cache-control", "expires", "pragma"]) {
+          const value = response.headers.get(name);
+          if (value !== null) previousCacheHeaders.set(name, value);
+        }
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        const refreshedHeaders = new Headers(request.headers);
+        refreshedHeaders.set("x-pathname", pathname + request.nextUrl.search);
+        response = NextResponse.next({ request: { headers: refreshedHeaders } });
+        previousCookies.forEach((cookie) => response.cookies.set(cookie));
         cookiesToSet.forEach(({ name, value, options }) => {
           response.cookies.set(name, value, options);
         });
+        previousCacheHeaders.forEach((value, name) => response.headers.set(name, value));
+        Object.entries(cacheHeaders ?? {}).forEach(([name, value]) => response.headers.set(name, value));
       },
     },
   });
@@ -78,6 +93,11 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
     const redirectRes = NextResponse.redirect(loginUrl);
+    response.cookies.getAll().forEach((cookie) => redirectRes.cookies.set(cookie));
+    for (const name of ["cache-control", "expires", "pragma"]) {
+      const value = response.headers.get(name);
+      if (value !== null) redirectRes.headers.set(name, value);
+    }
     redirectRes.headers.set("Cache-Control", "no-store"); // never cache the auth redirect
     return redirectRes;
   }
