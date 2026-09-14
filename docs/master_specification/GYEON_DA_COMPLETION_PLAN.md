@@ -1676,3 +1676,61 @@ Any proposed change to mission, fixed decisions, phase order, completion standar
 3. Identify time, risk, security, and field-work impact.
 4. Receive explicit user approval.
 5. Be committed and recorded in the result ledger before implementation follows the new decision.
+
+## 11. Owner-ratified plan diff — saved-estimate delivery-note connection
+
+```yaml
+phase: GDA_SAVED_DELIVERY_NOTE_R1
+marker: GDA_SAVED_DELIVERY_NOTE_R1_PLAN_DIFF_V1
+date: 2026-09-14
+priority: OPERATIONS_FIRST_INITIAL_DOCUMENTS
+owner_decision:
+  - Complete reliable estimate, delivery-note, and invoice output before deferred functions.
+  - From the saved-estimate surface, allow the operator to display the estimate PDF, issue or
+    reopen the invoice, and display the delivery-note PDF.
+  - Customer management remains outside this phase and must not be implemented here.
+authoritative_source:
+  delivery_note_identity: already_issued_invoice
+  delivery_date: invoices.delivery_date
+  line_items_and_totals: immutable_issued_invoice_snapshot
+  work_order_required: false
+number_compatibility:
+  current: INV-NNNNN_TO_DLV-NNNNN
+  legacy: INV-YYYY-NNNNN_TO_DLV-YYYY-NNNNN
+  malformed_or_foreign: FAIL_CLOSED
+mutations:
+  estimate_resave: prohibited
+  invoice_issue_by_delivery_note_action: prohibited
+  payment_recording: prohibited
+  delivery_note_database_row: prohibited
+  storage_write: prohibited
+database:
+  migration_required: false
+  supabase_apply_required: false
+security:
+  - request_scope_authentication
+  - caller_scoped_supabase_client_and_rls
+  - invoice_id_and_dealer_id_filters
+  - soft_deleted_invoice_exclusion
+  - issued_or_later_status_gate
+  - strict_saved_delivery_date_and_invoice_number_validation
+  - coarse_foreign_or_ineligible_response
+  - no_service_role
+implementation_allowlist:
+  - src/components/estimates/wizard/production/SavedEstimateDocuments.tsx
+  - src/components/estimates/wizard/production/SavedEstimateDocuments.test.tsx
+  - src/components/estimates/wizard/production/SavedEstimateInvoice.tsx
+  - src/components/estimates/wizard/production/saved-invoice-issuance.test.tsx
+  - src/components/invoices/InvoicePdfIssueActions.tsx
+  - src/components/invoices/InvoiceDetail.tsx
+  - src/lib/invoices/invoice-types.ts
+  - src/lib/pdf/get-delivery-note-pdf-data.ts
+  - src/lib/pdf/delivery-note-document-data.ts
+  - src/lib/pdf/__tests__/template-c2/delivery-note-binding-boundary.test.ts
+gates:
+  governance_candidate: LOCAL_ONLY
+  governance_commit_push_and_draft_pr: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  claude_read_only_diagnosis_publication: REQUIRES_ACTIVE_DRAFT_PR
+  implementation: BLOCKED_UNTIL_GOVERNANCE_COMMIT_AND_DIAGNOSIS_ACCEPTANCE
+  verification_commit_push_ready_merge_deploy: EACH_SEPARATE
+```

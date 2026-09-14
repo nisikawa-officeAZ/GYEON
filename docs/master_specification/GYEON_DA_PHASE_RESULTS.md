@@ -64,6 +64,7 @@ rollback_or_recovery: ""
 decision: ""
 next: ""
 ```
+
 ## GDA-0 — Baseline audit and plan ratification
 
 ```yaml
@@ -4940,4 +4941,45 @@ exact_governance_allowlist:
 implementation_authorized: false
 decision: ALIGN_D2_TO_ACCEPTED_P20C_GATE1_AND_OWNER_EVIDENCE_POLICY_KEEP_D2_BLOCKED_UNTIL_GATE2_PUBLICATION_ACCEPTANCE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_BOOK_AND_FOUNDATION_IDENTITIES_GATE1_RECEIPT_GATE2_HOLD_MANDATORY_EVIDENCE_OPTIONAL_SBOM_NON_CIRCULAR_GATE_ORDER_PUBLISHED_ARTIFACT_ONLY_CLAUDE_BOUNDARY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
+```
+
+## GDA-SAVED-DELIVERY-NOTE-R1 — local governance candidate
+
+```yaml
+phase: GDA_SAVED_DELIVERY_NOTE_R1
+marker: GDA_SAVED_DELIVERY_NOTE_R1_GOVERNANCE_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-14
+authorization: "The Owner prioritized estimate/document operation and approved proceeding with the saved-estimate delivery-note connection. This entry records only the local governance candidate; Git publication and implementation remain gated separately."
+repository: nisikawa-officeAZ/GYEON
+base_branch: main
+base_commit: 449d26c3ec5879e19e028471931b51cc707f60eb
+base_tree: 1a2a0cab42d097e96d9d3e4ca69da34803c8c249
+candidate_branch: release/saved-delivery-note-r1
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_SAVED_DELIVERY_NOTE_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+diagnosis:
+  existing_route_and_renderer: PRESENT
+  old_work_order_date_gate: INCOMPATIBLE_WITH_OWNER_APPROVED_SAVED_INVOICE_FLOW
+  production_invoice_number_INV_00001: REJECTED_BY_OLD_ADAPTER
+  saved_surface_delivery_note_control: PERMANENTLY_DISABLED
+  database_or_migration_need: NONE_EXPECTED
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+unrelated_worktree_state:
+  lfs_pointer_materialization_paths: 9
+  handling: PRESERVE_AND_EXCLUDE_FROM_ALL_STAGING_AND_DIFF_ACCEPTANCE
+implementation_authorized: false
+not_authorized:
+  - stage_commit_push_or_pr_creation
+  - claude_external_message_before_active_draft_pr
+  - source_or_test_implementation
+  - dependency_migration_supabase_storage_or_environment_change
+  - ready_merge_or_deploy
+next: "VERIFY_EXACT_THREE_GOVERNANCE_DOCUMENT_DIFF_HASHES_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_COMMIT_PUSH_AND_DRAFT_PR_AUTHORIZATION."
 ```
