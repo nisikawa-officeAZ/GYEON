@@ -811,6 +811,85 @@ body.estimate-amount-stress .doc-table-v2 tbody td:nth-child(6) {
 .doc-masthead__brand-logo { width: auto; max-width: 120mm; height: auto; max-height: 17mm; object-fit: contain; object-position: left center; }
 .header-rank:empty { display: none; }
 
+/* PDF-DOCUMENTS-V3.3: move the resolved store/DA logo into the title row.
+   The Japanese and English title group stays centered. The logo is fixed at
+   the left edge and vertically centered in the complete title block. */
+body[data-doc-kind="estimate"] .doc-masthead__brand-box,
+body[data-doc-kind="delivery"] .doc-masthead__brand-box,
+body[data-doc-kind="invoice"] .doc-masthead__brand-box,
+body[data-doc-kind="work_report"] .doc-masthead__brand-box {
+  display: none;
+}
+
+body[data-doc-kind="estimate"] .doc-title-block__row,
+body[data-doc-kind="delivery"] .doc-title-block__row,
+body[data-doc-kind="invoice"] .doc-title-block__row,
+body[data-doc-kind="work_report"] .doc-title-block__row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+body[data-doc-kind="estimate"] .doc-title-block__logo-box,
+body[data-doc-kind="delivery"] .doc-title-block__logo-box,
+body[data-doc-kind="invoice"] .doc-title-block__logo-box,
+body[data-doc-kind="work_report"] .doc-title-block__logo-box {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 52px;
+  overflow: hidden;
+}
+
+.doc-title-block__main {
+  display: flex;
+  align-items: center;
+}
+
+body[data-doc-kind="estimate"] .doc-title-block__en,
+body[data-doc-kind="delivery"] .doc-title-block__en,
+body[data-doc-kind="invoice"] .doc-title-block__en,
+body[data-doc-kind="work_report"] .doc-title-block__en {
+  padding-bottom: 0;
+  letter-spacing: 0.22em;
+  line-height: 1.15;
+  text-align: center;
+}
+
+body.brand-da-fallback[data-doc-kind="work_report"] .doc-title-block__en {
+  transform: translateX(18px);
+}
+
+.doc-title-block__logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center center;
+}
+
+body.brand-da-fallback .doc-title-block__logo-box {
+  width: 176px;
+  height: 50px;
+  left: 8px;
+  top: 50%;
+}
+
+body.brand-da-fallback .doc-title-block__logo {
+  max-width: 176px;
+  max-height: 50px;
+}
+
 /* ── TEMPLATE-B3 (invoice-scoped only) ─────────────────────────────────────────
    The adopted invoice prints ご請求金額 (5 glyphs) where the estimate prints 合計金額 (4), so the
    base grand-total label wraps. The package's doc-kind-invoice override block solves the wrap but
