@@ -2016,3 +2016,59 @@ acceptance:
   authenticated_production_smoke: PASS
 next: "START_A_FRESH_GOVERNANCE_AND_READ_ONLY_DIAGNOSIS_PHASE_FOR_SAME_PAGE_INVOICE_WORKFLOW; DO_NOT_MIX_IT_WITH_THE_Genspark_PDF_LOGO_LAYOUT_TASK."
 ```
+
+## 17. Local governance candidate — reopened estimate same-page invoice workflow
+
+```yaml
+phase: GDA_ESTIMATE_DETAIL_INVOICE_SAME_PAGE_R1
+marker: GDA_ESTIMATE_DETAIL_INVOICE_SAME_PAGE_R1_PLAN_DIFF_V1
+date: 2026-09-14
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+owner_intent:
+  - After a saved estimate is opened, the operator must remain on that detail screen while creating
+    or confirming the related invoice, saving its delivery date, explicitly issuing it, and opening
+    the issued invoice PDF.
+  - Estimate, delivery-note, and invoice document choices must remain available from the operational
+    estimate context without forcing navigation to the invoice list.
+  - Existing approval, authorization, invoice identity, confirmation, issuance, and readback rules
+    must remain authoritative.
+confirmed_baseline:
+  base_commit: 6748ad78d6f577d3db630e631fca6a700e93281d
+  base_tree: fbe7f16b9841d3793fdd6d6369acb28d8e52d012
+  focused_tests: PASS_65_OF_65
+  root_gap: "EstimateDetail creates the invoice and then closes/navigates to /invoices instead of mounting the existing saved-invoice same-page workflow."
+reuse_authority:
+  - src/components/estimates/wizard/production/SavedEstimateInvoice.tsx
+  - src/components/estimates/wizard/production/saved-estimate-invoice-controller.ts
+  - src/lib/invoices/create-invoice.ts
+  - src/lib/invoices/get-invoice.ts
+  - src/lib/invoices/save-invoice-delivery-date.ts
+  - src/lib/invoices/issue-invoice.ts
+candidate_implementation_ceiling:
+  - src/app/estimates/[id]/page.tsx
+  - src/components/estimates/EstimateDetailView.tsx
+  - src/components/estimates/EstimateDetail.tsx
+  - src/components/estimates/EstimateDetail.documents.test.tsx
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+genspark_coordination:
+  pdf_logo_layout_task: SEPARATE_AND_UNTOUCHED
+  shared_implementation_paths: NONE_EXPECTED
+not_authorized:
+  - source_or_test_implementation
+  - tests_typecheck_build_lint_or_formatter
+  - dependency_package_or_lockfile_change
+  - database_supabase_auth_storage_environment_or_production_access
+  - stage_commit_push_pr_mutation_ready_merge_or_deploy
+gates:
+  local_governance_candidate: COMPLETE
+  governance_commit: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  push_and_draft_pr: EACH_SEPARATE
+  claude_read_only_diagnosis_publication: REQUIRES_ACTIVE_DRAFT_PR
+  implementation: REQUIRES_ACCEPTED_DIAGNOSIS_AND_SEPARATE_OWNER_AUTHORIZATION
+  verification_commit_push_ready_merge_deploy: EACH_SEPARATE
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY."
+```
