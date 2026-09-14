@@ -70,7 +70,7 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreat
                 <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">No</th>
                 <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden sm:table-cell">顧客</th>
                 <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden md:table-cell">車両</th>
-                <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">ステータス</th>
+                <th className="min-w-[6.5rem] whitespace-nowrap text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">ステータス</th>
                 <th className="text-right text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden md:table-cell">小計</th>
                 <th className="text-right text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden md:table-cell">消費税</th>
                 <th className="text-right text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">合計</th>
@@ -95,8 +95,8 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreat
                   <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#8191ad] whitespace-nowrap hidden md:table-cell">
                     {estimateVehicleLabel(e.vehicles)}
                   </td>
-                  <td className="px-3 py-2.5 lg:px-4 lg:py-3">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[e.status] ?? "bg-slate-700 text-slate-300"}`}>
+                  <td className="min-w-[6.5rem] whitespace-nowrap px-3 py-2.5 lg:px-4 lg:py-3">
+                    <span className={`inline-flex whitespace-nowrap text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[e.status] ?? "bg-slate-700 text-slate-300"}`}>
                       {estimateStatusLabel(e.status)}
                     </span>
                   </td>

@@ -33,7 +33,9 @@ import {
 // ── Binding ─────────────────────────────────────────────────────────────────
 
 /**
- * R89C — where the operator goes after a verified save.
+ * R89C — the operator's post-save intent, resolved on the SAME screen: `estimate`
+ * presents the saved-document choices, `pdf` presents the inline estimate-PDF
+ * preview first. Neither value navigates away from the wizard.
  *
  * A CLOSED union, deliberately: routing must be able to reject anything that is
  * not one of these two, rather than defaulting an unrecognized runtime value
@@ -275,7 +277,7 @@ export function WizardSavePanel({
     <div className="rounded-md border border-slate-700 bg-slate-900/60 p-3" data-testid="wizard-save-panel">
       {isCompleted && (
         <p className="text-sm text-emerald-300" data-testid="save-state-completed">
-          保存が完了しました。見積を開いています…
+          保存が完了しました。
         </p>
       )}
 

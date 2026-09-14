@@ -19,9 +19,10 @@
 //
 // ── WHY THE BOOTSTRAP DECISIONS ARE PURE FUNCTIONS ──────────────────────────
 // `classifyWizardSessionQuery`, `decideWizardBootstrap`, `runOnce`,
+// `classifySavedEstimateCompletion` (in the saved-surface module), the legacy
 // `navigateToEstimate` and the URL helpers take their world as arguments. Every
 // lifecycle branch — copied tab, hostile `ws`, corrupt record, unavailable
-// storage, Strict-Mode replay, failed redirect — is therefore provable without a
+// storage, Strict-Mode replay, saved-surface handoff — is therefore provable without a
 // DOM, which is the only way this many failure modes get covered honestly.
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -39,6 +40,8 @@ import {
   type ValidatedWizardSession, type WizardSessionDeps,
   type WizardSessionStorage, type WizardSessionCrypto,
 } from "../save/wizard-idempotency-session";
+import SavedEstimateDocuments, { classifySavedEstimateCompletion } from "./SavedEstimateDocuments";
+import type { SavedInvoiceActions } from "./saved-estimate-invoice-controller";
 
 export const WIZARD_SESSION_QUERY_KEY = "ws";
 
@@ -70,6 +73,8 @@ export interface ProductionEstimateWizardProps
     WizardDuplicateCheckInputs {
   /** REQUIRED. Injected in B7-3; this module imports no Server Action. */
   readonly saveInvoker: WizardSaveIntentInvoker;
+  /** Only the saved surface receives these; server actions retain their own guards. */
+  readonly invoiceActions?: SavedInvoiceActions;
   /** REQUIRED. Server-resolved from the dealer-bound runtime configuration. */
   readonly expectedConfigRevision: number;
   /** Preserves EstimateWizard's existing optional mode. */
@@ -88,7 +93,7 @@ type ReadyProductionWizardProps = ProductionEstimateWizardProps & {
 function ReadyProductionWizard(props: ReadyProductionWizardProps) {
   const {
     session, sessionDeps, onCompleted, saveInvoker, expectedConfigRevision,
-    mode, ...hostInputs
+    mode, invoiceActions: _invoiceActions, ...hostInputs
   } = props;
 
   const saveBinding: WizardSaveBinding = {
@@ -258,8 +263,10 @@ export type NavigationOutcome =
  * reported outcome, not a swallowed one: a silent failure would leave the
  * operator staring at a wizard for an estimate that was already saved.
  *
- * `destination` defaults to `"estimate"` for the pre-R89C internal caller (the
- * completed-session reload), whose behaviour is unchanged.
+ * COMPATIBILITY ONLY. Retained, unchanged, for existing callers. The shipping
+ * completion path no longer navigates: it classifies the verified completion
+ * into saved state through `classifySavedEstimateCompletion` and stays on the
+ * wizard URL. `destination` still defaults to `"estimate"`.
  */
 export function navigateToEstimate(
   navigate: NavigationSeam,
@@ -319,8 +326,9 @@ export function decideWizardBootstrap(
         : { kind: "blocked", reason: recovered.reason };
     }
     if (recovered.session.status === "completed") {
-      // Terminal. The id is carried, not a path: only `navigateToEstimate` builds
-      // one, so there is a single validation point rather than two.
+      // Terminal. The id is carried, not a surface: `classifySavedEstimateCompletion`
+      // re-validates it before the saved surface can mount, so there is a single
+      // validation point rather than two.
       return { kind: "completed", estimateId: recovered.session.estimateId };
     }
     return { kind: "active", session: recovered.session };
@@ -362,8 +370,12 @@ function safeCrypto(): WizardSessionCrypto | null {
   }
 }
 
-/** The real navigator. Called only from an effect or an operator callback. */
-function browserNavigate(path: string): void {
+/**
+ * The real navigator — COMPATIBILITY ONLY. Exported so it remains available to
+ * `navigateToEstimate` callers; no completion branch in this host calls it any
+ * more, because a verified save now stays on the wizard URL.
+ */
+export function browserNavigate(path: string): void {
   window.location.assign(path);
 }
 
@@ -373,8 +385,7 @@ type BootstrapState =
   | { readonly kind: "booting" }
   | { readonly kind: "active"; readonly session: ActiveWizardSession; readonly deps: WizardSessionDeps }
   | { readonly kind: "missing-session" }
-  | { readonly kind: "completed"; readonly path: string }
-  | { readonly kind: "redirect-failed" }
+  | { readonly kind: "saved"; readonly estimateId: string; readonly initialPdfPreview: boolean }
   | { readonly kind: "blocked"; readonly reason: string };
 
 export default function ProductionEstimateWizard(props: ProductionEstimateWizardProps) {
@@ -388,14 +399,17 @@ export default function ProductionEstimateWizard(props: ProductionEstimateWizard
   const bootstrapGuard = useRef(false);
   const startNewGuard = useRef(false);
 
-  // `destination` defaults to the estimate detail, which is what the completed-
-  // session reload branch below relies on. A save supplies it explicitly.
-  const completeNavigation = useCallback((estimateId: unknown, destination: unknown = "estimate") => {
-    const outcome = navigateToEstimate(browserNavigate, estimateId, destination);
-    if (outcome.kind === "invalid-estimate-id") { setState({ kind: "blocked", reason: "invalid-estimate-id" }); return; }
-    if (outcome.kind === "invalid-destination") { setState({ kind: "blocked", reason: "invalid-destination" }); return; }
-    if (outcome.kind === "redirect-failed") { setState({ kind: "redirect-failed" }); return; }
-    setState({ kind: "completed", path: outcome.path });
+  // A verified completion — from a save, or from a recovered completed session on
+  // reload — becomes SAVED STATE on the same URL, never a navigation. The
+  // classifier re-validates the id and the destination; anything else blocks.
+  // `destination` defaults to `estimate`, which is what the completed-session
+  // reload branch below relies on: it opens on the document choices, because the
+  // PDF preference is a UI intent that is never persisted. A save supplies it
+  // explicitly.
+  const completeSaved = useCallback((estimateId: unknown, destination: unknown = "estimate") => {
+    const saved = classifySavedEstimateCompletion(estimateId, destination);
+    if (saved.kind !== "saved") { setState({ kind: "blocked", reason: saved.kind }); return; }
+    setState({ kind: "saved", estimateId: saved.estimateId, initialPdfPreview: saved.initialPdfPreview });
   }, []);
 
   const runBootstrap = useCallback(() => {
@@ -425,10 +439,10 @@ export default function ProductionEstimateWizard(props: ProductionEstimateWizard
 
     const decision = decideWizardBootstrap(deps, query, replaceUrl);
     if (decision.kind === "active") { setState({ kind: "active", session: decision.session, deps }); return; }
-    if (decision.kind === "completed") { completeNavigation(decision.estimateId); return; }
+    if (decision.kind === "completed") { completeSaved(decision.estimateId); return; }
     if (decision.kind === "missing-session") { setState({ kind: "missing-session" }); return; }
     setState({ kind: "blocked", reason: decision.reason });
-  }, [completeNavigation]);
+  }, [completeSaved]);
 
   // ── The hydration boundary ─────────────────────────────────────────────
   // No browser API is touched during module evaluation or server render; the first
@@ -485,12 +499,15 @@ export default function ProductionEstimateWizard(props: ProductionEstimateWizard
     );
   }
 
-  if (state.kind === "completed") {
-    return <p className="text-sm text-emerald-300 p-4" data-testid="bootstrap-completed-redirect">保存済みの見積を開いています…</p>;
-  }
-
-  if (state.kind === "redirect-failed") {
-    return <p className="text-sm text-rose-300 p-4" data-testid="bootstrap-redirect-failed">画面を移動できませんでした。担当者へご連絡ください。</p>;
+  if (state.kind === "saved") {
+    // The saved-document surface REPLACES the editable wizard on the same URL.
+    // No stale draft survives a verified save, and nothing here navigates,
+    // saves, mints identity or issues a document.
+    return (
+      <div data-testid="bootstrap-saved-estimate">
+        <SavedEstimateDocuments estimateId={state.estimateId} initialPdfPreview={state.initialPdfPreview} invoiceActions={props.invoiceActions} />
+      </div>
+    );
   }
 
   if (state.kind === "blocked") {
@@ -508,7 +525,7 @@ export default function ProductionEstimateWizard(props: ProductionEstimateWizard
         {...props}
         session={state.session}
         sessionDeps={state.deps}
-        onCompleted={completeNavigation}
+        onCompleted={completeSaved}
       />
     </div>
   );

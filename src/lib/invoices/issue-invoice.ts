@@ -63,6 +63,23 @@ function fail(kind: Exclude<IssueOutcomeKind, "issued" | "already_issued">): Iss
   return { kind, message: describeIssueOutcome(kind) } as IssueInvoiceResult;
 }
 
+function classifyRenderFailure(error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+
+  if (/data binding failed closed/i.test(message)) return "data-binding";
+  if (/offline boundary violated/i.test(message)) return "offline-boundary";
+  if (/The input directory .+ does not exist|externalize @sparticuz\/chromium/i.test(message)) {
+    return "chromium-package-missing";
+  }
+  if (/ERR_FILE_NOT_FOUND|ENOENT|EACCES/i.test(message)) return "runtime-file-missing";
+  if (/Could not find Chrome|Browser was not found|Failed to launch|spawn.+chrome/i.test(message)) {
+    return "chromium-launch";
+  }
+  if (/Protocol error|Target closed|Browser closed/i.test(message)) return "chromium-runtime";
+  if (/timeout/i.test(message)) return "render-timeout";
+  return "unclassified";
+}
+
 /**
  * Resolve the ONE artifact this invoice is allowed to expose, then sign it.
  *
@@ -126,7 +143,7 @@ async function signResolvedArtifact(
   return data.signedUrl;
 }
 
-export async function issueInvoice(invoiceId: string): Promise<IssueInvoiceResult> {
+export async function issueInvoice(invoiceId: string, expectedVersion?: number): Promise<IssueInvoiceResult> {
   const auth = await requireStaffCapability("finance");
   if ("error" in auth) return fail("validation_error");
 
@@ -137,18 +154,22 @@ export async function issueInvoice(invoiceId: string): Promise<IssueInvoiceResul
   if (typeof invoiceId !== "string" || invoiceId.trim() === "") {
     return fail("validation_error");
   }
+  if (expectedVersion !== undefined && (!Number.isSafeInteger(expectedVersion) || expectedVersion < 1)) {
+    return fail("validation_error");
+  }
 
   // Read through the caller's RLS-scoped client, additionally pinned to the
   // session dealer.
   const supabase = await createClient();
   const { data: invoice } = await supabase
     .from("invoices")
-    .select("id, status, pdf_file_path, invoice_number, content_version")
+    .select("id, status, pdf_file_path, invoice_number, content_version, deleted_at")
     .eq("id", invoiceId)
     .eq("dealer_id", dealerId)
     .maybeSingle();
 
   if (!invoice) return fail("validation_error");
+  if (expectedVersion !== undefined && invoice.deleted_at !== null) return fail("conflict");
 
   const decision = evaluateIssueRequest(invoice);
 
@@ -166,6 +187,8 @@ export async function issueInvoice(invoiceId: string): Promise<IssueInvoiceResul
   if (decision.kind === "rejected") {
     return fail(decision.reason === "invoice_artifact_missing" ? "artifact_missing" : "validation_error");
   }
+  // Saved-screen confirmation refers to this exact draft, not a later edit.
+  if (expectedVersion !== undefined && invoice.content_version !== expectedVersion) return fail("conflict");
 
   // ── Render ────────────────────────────────────────────────────────────────
   // Nothing is written yet, so a render failure leaves no state at all.
@@ -193,6 +216,8 @@ export async function issueInvoice(invoiceId: string): Promise<IssueInvoiceResul
   const renderedInvoice = full as InvoiceDB;
   const renderedContentVersion = renderedInvoice.content_version;
   if (typeof renderedContentVersion !== "number") return fail("persistence_error");
+  if (expectedVersion !== undefined && (renderedContentVersion !== expectedVersion
+      || renderedInvoice.deleted_at !== null || renderedInvoice.status !== "draft")) return fail("conflict");
 
   // R4-4: refuse to publish an internally inconsistent snapshot. This runs
   // BEFORE rendering, before any upload, before the document row and before the
@@ -217,7 +242,14 @@ export async function issueInvoice(invoiceId: string): Promise<IssueInvoiceResul
     // carries no stamp, so the legacy stamp fetch is gone from this issuance path.
     const brand = await getBrandProfile(dealerId);
     buffer = await renderInvoiceDocumentPdf(renderedInvoice, brand);
-  } catch {
+  } catch (error) {
+    // Preview diagnostics deliberately emit only a stable category. Never log
+    // the raw renderer message: it may contain runtime paths or provider data.
+    console.error("[invoice issuance] render failed", {
+      invoiceId,
+      category: classifyRenderFailure(error),
+      errorName: error instanceof Error ? error.name : "unknown",
+    });
     return fail("persistence_error");
   }
 
