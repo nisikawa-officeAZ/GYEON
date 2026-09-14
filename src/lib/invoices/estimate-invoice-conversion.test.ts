@@ -86,7 +86,11 @@ test('disposable PG17 conversion: real RLS, rollback, parity and concurrent repl
   assert.match(cid!, /^[a-f0-9]{64}$/);
   const token = process.env.INVOICE_TEST_OWNER;
   assert.match(token ?? '', /^[a-f0-9-]{36}$/);
-  const env = {PATH: '/opt/homebrew/bin:/usr/bin:/bin', DOCKER_HOST: 'unix:///Users/atsushinishikawa/.colima/default/docker.sock'};
+  const env: NodeJS.ProcessEnv = {
+    PATH: '/opt/homebrew/bin:/usr/bin:/bin',
+    DOCKER_HOST: 'unix:///Users/atsushinishikawa/.colima/default/docker.sock',
+    NODE_ENV: 'test',
+  };
   const identity = spawnSync('/opt/homebrew/bin/docker', ['inspect', '--format', '{{index .Config.Labels "codex.invoice-direct"}}|{{.HostConfig.NetworkMode}}|{{json .HostConfig.PortBindings}}', cid!], {encoding: 'utf8', env});
   assert.equal(identity.status, 0); assert.equal(identity.stdout.trim(), `${token}|none|{}`);
   const args = ['exec', '-i', '-e', 'PGOPTIONS=-c statement_timeout=10000 -c lock_timeout=5000', cid!,
