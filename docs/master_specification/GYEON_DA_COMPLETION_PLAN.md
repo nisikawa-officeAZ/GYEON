@@ -1802,3 +1802,56 @@ gates:
   implementation: REQUIRES_ACCEPTED_DIAGNOSIS_AND_SEPARATE_OWNER_AUTHORIZATION
   verification_commit_push_ready_merge_deploy: EACH_SEPARATE
 ```
+
+## 13. Owner-ratified implementation boundary — Estimate Wizard final-review display correction
+
+```yaml
+phase: GDA_ESTIMATE_REVIEW_DISPLAY_R1
+marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_IMPLEMENTATION_BOUNDARY_V1
+date: 2026-09-14
+status: OWNER_AUTHORIZED_IMPLEMENTATION_ONLY_PENDING_GIT_PUBLICATION
+owner_authorization:
+  - The Owner authorized proceeding to the final-review display implementation after Claude's
+    read-only diagnosis and Codex acceptance.
+  - The Owner separately approved sending the seven allowlisted private source files to Claude
+    for that diagnosis.
+execution_base:
+  repository: nisikawa-officeAZ/GYEON
+  branch: release/saved-delivery-note-r1
+  commit: 20188dab8cc7ea5a92a471d0122843c98535209b
+  tree: ee0c40fd2579b8cc14bec2aa30d3a89a83a10b55
+  coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/73
+accepted_diagnosis:
+  marker: GDA_ESTIMATE_REVIEW_DISPLAY_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  verdict: READY_FOR_IMPLEMENTATION_GOVERNANCE
+  claude_report_sha256: 3b8e89b469c3061fc1662b7653387d25201743f80e190d901c3061dbbfbdc341
+  codex_independent_review: ACCEPTED
+  repository_mutation: false
+  governance_exception: "Claude plan mode created one report file under ~/.claude/plans despite the no-create instruction; no repository path changed."
+implementation_allowlist:
+  - src/components/estimates/wizard/steps/Step7Review.tsx
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step7Review.test.tsx
+required_behavior:
+  - Resolve an existing customer with effectiveExistingCustomer and render only its server-composed displayName.
+  - Resolve an existing vehicle under the effective customer with effectiveExistingVehicle and render only its server-composed displayName.
+  - Preserve current draft-field rendering for new customer and new vehicle entries.
+  - Fail closed to the current em dash for missing, stale, duplicate, ambiguous, or wrong-owner references.
+  - Render known category ids through serviceCategoryLabel, including other as その他作業.
+  - Preserve save, pricing, DTO, RPC, database, PDF, invoice, delivery-note, tenant, and persistence behavior.
+implementation_agent: MacBook Claude
+acceptance_authority: MacBook Codex
+protected_paths:
+  - src/components/estimates/wizard/screens/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+authorized_now:
+  - edit_only_the_three_implementation_allowlist_paths_after_this_boundary_is_published
+not_authorized:
+  - tests_typecheck_build_lint_or_formatter
+  - stage_commit_push_or_other_pr_mutation
+  - database_supabase_auth_storage_dependency_environment_or_provider_change
+  - ready_merge_or_deploy
+next: "VERIFY_AND_PUBLISH_THIS_TWO_DOCUMENT_GOVERNANCE_DELTA_THEN_ISSUE_THE_EXACT_CLAUDE_IMPLEMENTATION_INSTRUCTION; STOP_AFTER_EDITING_WITHOUT_TESTS_OR_GIT_MUTATION."
+```
