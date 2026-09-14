@@ -17,6 +17,8 @@ import { buildSavedDeliveryNotePath } from "./wizard/production/SavedEstimateDoc
 import type { SavedInvoiceSummary } from "./wizard/production/saved-estimate-invoice-controller";
 
 const DETAIL_SRC = "src/components/estimates/EstimateDetail.tsx";
+const DETAIL_VIEW_SRC = "src/components/estimates/EstimateDetailView.tsx";
+const DETAIL_ROUTE_SRC = "src/app/estimates/[id]/page.tsx";
 const GET_INVOICE_SRC = "src/lib/invoices/get-invoice.ts";
 
 /** Comment-stripped source, so documentation may name a hazard the code must not use. */
@@ -109,7 +111,7 @@ test("10. EstimateDetail delegates the delivery-note control to buildSavedDelive
      "parallel eligibility check or an unconditional link", () => {
   const src = codeOf(DETAIL_SRC);
   assert.match(src, /buildSavedDeliveryNotePath/);
-  assert.match(src, /resolveDeliveryNoteHref\(relatedInvoice\)/);
+  assert.match(src, /resolveDeliveryNoteHref\(invoiceReadback \?\? relatedInvoice\)/);
   assert.match(src, /data-testid="estimate-detail-delivery-note"/);
   assert.match(src, /deliveryNoteHref \?/);
   // Never an active link rendered unconditionally, and never a second date/status check.
@@ -136,4 +138,45 @@ test("12. getInvoiceForEstimate stays tenant-scoped by BOTH dealer_id and estima
   assert.match(fnBody, /\.eq\("dealer_id", dealer\.dealer_id\)/);
   assert.match(fnBody, /\.is\("deleted_at", null\)/);
   assert.doesNotMatch(fnBody, /service_role|SUPABASE_SERVICE_ROLE/);
+});
+
+// ── Same-page invoice wiring ────────────────────────────────────────────────
+
+test("13. reopened route injects the five canonical invoice actions through EstimateDetailView", () => {
+  const route = codeOf(DETAIL_ROUTE_SRC);
+  const view = codeOf(DETAIL_VIEW_SRC);
+  assert.match(route, /create:\s*createInvoiceFromEstimate/);
+  assert.match(route, /read:\s*getInvoice/);
+  assert.match(route, /saveDate:\s*saveInvoiceDeliveryDate/);
+  assert.match(route, /issue:\s*issueInvoice/);
+  assert.match(route, /download:\s*getIssuedInvoicePdfUrl/);
+  assert.match(route, /invoiceActions=\{\{/);
+  assert.match(view, /invoiceActions:\s*SavedInvoiceActions/);
+  assert.match(view, /invoiceActions=\{invoiceActions\}/);
+});
+
+test("14. EstimateDetail reuses SavedEstimateInvoice and removes the old create-and-navigation path", () => {
+  const src = codeOf(DETAIL_SRC);
+  assert.match(src, /<SavedEstimateInvoice/);
+  assert.match(src, /key=\{estimate\.id\}/);
+  assert.match(src, /actions=\{invoiceActions\}/);
+  assert.match(src, /onInvoice=\{handleInvoiceReadback\}/);
+  assert.doesNotMatch(src, /createInvoiceFromEstimate/);
+  assert.doesNotMatch(src, /router\.push\("\/invoices"\)/);
+  assert.doesNotMatch(src, /handleCreateInvoice/);
+});
+
+test("15. unapproved estimates expose no mutation-capable invoice workflow", () => {
+  const src = codeOf(DETAIL_SRC);
+  assert.match(src, /isApproved \? \(\s*<SavedEstimateInvoice/);
+  assert.match(src, /data-testid="estimate-detail-invoice"/);
+  assert.match(src, /見積の承認が必要です/);
+  assert.match(src, /自動承認や請求書の作成・発行は行いません/);
+});
+
+test("16. delivery-note eligibility may refresh only from a non-null parsed invoice readback", () => {
+  const src = codeOf(DETAIL_SRC);
+  assert.match(src, /invoiceReadback \?\? relatedInvoice/);
+  assert.match(src, /if \(invoice !== null\) setInvoiceReadback\(invoice\)/);
+  assert.doesNotMatch(src, /if \(invoice === null\) setInvoiceReadback/);
 });
