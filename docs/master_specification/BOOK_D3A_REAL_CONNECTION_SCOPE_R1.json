@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "phase": "BOOK_D3A_REAL_CONNECTION_SOURCE_R1_SCOPE",
+  "status": "REGISTERED_SCOPE_CANDIDATE_NOT_COMMITTED",
+  "recordedAt": "2026-09-13T13:37:20.741Z",
+  "wrapperRoot": "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros",
+  "bookRoot": "/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper",
+  "branch": "agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1",
+  "sourceHead": "f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb",
+  "sourceTree": "227129f55e3c45b5c154f5ee97d8498cadab9808",
+  "indexEmpty": true,
+  "currentWriteAllowlist": [
+    "docs/master_specification/CLAUDE_DIRECTIVE_BOOK_D3A_REAL_CONNECTION_SOURCE_R1.md",
+    "docs/master_specification/BOOK_D3A_REAL_CONNECTION_SCOPE_R1.json",
+    "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md",
+    "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  ],
+  "directive": {
+    "path": "docs/master_specification/CLAUDE_DIRECTIVE_BOOK_D3A_REAL_CONNECTION_SOURCE_R1.md",
+    "sha256": "c45a96399f7d8b8a22e3fe7ebf59550b47a041835ee539e0111d5ffe60949bb1"
+  },
+  "futureWriteAllowlist": [
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/auth-source-reader.mjs",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/central-approval-transport.mjs",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/claim-record-contract.mjs",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/retained-record-protocol.mjs",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/retained-record-client.mjs",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/retained-record-worker.mjs",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/connection-coordinator.mjs",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/auth-source-reader.test.mjs",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/claim-record-connection.test.mjs",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/operation-separation.test.mjs",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/README.md",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/real-connection-r1/source-result.json",
+      "requiredState": "ABSENT",
+      "observedAbsent": true
+    }
+  ],
+  "readReferences": [
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/runner.mjs",
+      "sha256": "28e311dbc34ef10fb7dbd78b7dd64d0b9366e56f66722cba1116ffb1bf19312b"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/durable-record-store.mjs",
+      "sha256": "dde80cec024ab9fa05d030b20c7bac2e1b7776ed2da98594bd5b14ed85960ca5"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/durable-record-client.mjs",
+      "sha256": "e63beadcc1cbd7ffd6ade5be95bd0d79dfe50ff013665d44963c90adfb39f60f"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/durable-record-worker.mjs",
+      "sha256": "32a25435dc13a063e898b7066db9ba458dec46e8ca6bb7f6d5438263313bbd2e"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/runner-record-protocol.mjs",
+      "sha256": "f249f63f7a44daf9f2aab02f59b022fb410d0096f59539243d4258d9e54643a8"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/retained-ledger-profile-contract.mjs",
+      "sha256": "717c3f95d44c841f7bdb523a0d41a3ac525db48564cb7679979480fde91f74eb"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/retained-approval-contract.mjs",
+      "sha256": "0ddde530a60e2d5fea3966ea8b65a6ca68b090433c0f78e14c4baa510ce90546"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/retained-isolated-store-protocol.mjs",
+      "sha256": "4572e97eb6b5453e954b3e3ed0322ad14bbae95387aa9633899aa829c0868272"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/retained-isolated-store-worker.mjs",
+      "sha256": "c021061f2577296ecc31e412ab8490cd66912f97a8108d93aa3df0062b212f81"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/retained-record-bridge-client.mjs",
+      "sha256": "86d88b81f855eb604a10b59978dd78a18c7583bb73b0244391dd5e113f507e19"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/retained-record-bridge-protocol.mjs",
+      "sha256": "b07b9c31a8f668f15d6667338e731b70b10e7c1db5dd3868ea7ddeee5b1955cf"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/central-approval-r1/approval-control.sql",
+      "sha256": "77121ec63278dcce0baffea08def08baa4e7355c3ab6d8e523e1d1207ccc0524"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/central-approval-r1/approval-lock-review.sql",
+      "sha256": "fcac9b1590e74e8d269fbc148dd24a1ba11b1db2c12badeb943af43812768f1f"
+    },
+    {
+      "path": "evidence/inv001-disposable-runner-r1-20260913/central-approval-r1/response-loss-closeout-r4.md",
+      "sha256": "b958c177b06320d03eea78c0891999f6dc58a64ce594357af287328c1f027775"
+    }
+  ],
+  "requiredGovernanceReads": [
+    "AGENTS.md",
+    "docs/master_specification/GYEON_DA_COMPLETION_PLAN.md",
+    "docs/master_specification/GYEON_DA_PHASE_RESULTS.md"
+  ],
+  "preservedCandidates": [
+    {
+      "path": "src/lib/inventory/foundation/foundation-persistence-adaptor.ts",
+      "sha256": "35c179965a2c8fcf3e02cc5dea1b661ebab36952b983fcf23ceaa13a6251516d"
+    },
+    {
+      "path": "src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts",
+      "sha256": "c60f58b42de2fdd9f5c6b676e238552d33ff569dd531e8546c2bddd0ab4fe845"
+    },
+    {
+      "path": "supabase/migrations/20260912004445_foundation_inventory_runtime.sql",
+      "sha256": "04092ac26b63bcad4909ea7d571712fb7bcf4d049ae4cf8c4859c648f7f43b58"
+    },
+    {
+      "path": "scripts/e2e/inv001-foundation-persistence-disposable.mjs",
+      "sha256": "df4f44a744678d494a1c6be1409b348199416418b4588ff2962c19644459ddc8"
+    }
+  ],
+  "protectedGitMetadata": [
+    {
+      "path": "src/components/estimates/wizard/screens/ScreensPreview.tsx",
+      "index": "100644 c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f 0\tsrc/components/estimates/wizard/screens/ScreensPreview.tsx",
+      "status": ""
+    },
+    {
+      "path": "supabase/migrations/20260801110110_line_link_tokens.sql",
+      "index": "100644 accd22345054cc44f89156fd78eaba6dfe4242a4 0\tsupabase/migrations/20260801110110_line_link_tokens.sql",
+      "status": ""
+    },
+    {
+      "path": "supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql",
+      "index": "100644 32fda49583ae1217bc13711784ad8fa31744726c 0\tsupabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql",
+      "status": ""
+    },
+    {
+      "path": "src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts",
+      "index": "100644 fe3c80f22fd80dcbfab076082473216dda582c14 0\tsrc/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts",
+      "status": ""
+    }
+  ],
+  "notAuthorized": [
+    "CLAUDE_DISPATCH",
+    "SOURCE_AUTHORING",
+    "TEST_EXECUTION",
+    "NETWORK_CONNECTION_TEST",
+    "DATABASE_CHANGE",
+    "CREDENTIAL_BOOTSTRAP",
+    "GRANT_ISSUE_OR_CLAIM",
+    "LIVE_ACTIVATION",
+    "D3A_RUNTIME",
+    "GIT_DELIVERY",
+    "STUDIO_WORK"
+  ],
+  "remainingBeforeSourceAuthoring": [
+    "Matching governed scope and non-triggering PR instruction",
+    "Explicit source authoring and private-source transmission authority"
+  ],
+  "remainingBeforeLiveUse": [
+    "Verified actor and approval-source pins",
+    "Least-privilege TLS bootstrap",
+    "Accepted storage primitive and isolated verification",
+    "Explicit real connection attempt authority"
+  ],
+  "runtimeReady": false,
+  "historicalPreparation": {
+    "path": "docs/D3A_REAL_CONNECTION_SCOPE_R1.json",
+    "recordedAt": "2026-09-13T13:37:20.741Z"
+  },
+  "coordination": {
+    "pr": "https://github.com/nisikawa-officeAZ/GYEON/pull/71",
+    "registrationOnly": true,
+    "claudeDispatched": false
+  },
+  "preexistingDocumentPrefixes": [
+    {
+      "path": "work/dealeros-inv001-p20d2-b2-runtime-wrapper/docs/master_specification/GYEON_DA_COMPLETION_PLAN.md",
+      "bytes": 238084,
+      "sha256": "3939e980783b66b49dfc4aeaa40397b6596b5f2ee03830174689f2525c308412"
+    },
+    {
+      "path": "work/dealeros-inv001-p20d2-b2-runtime-wrapper/docs/master_specification/GYEON_DA_PHASE_RESULTS.md",
+      "bytes": 373898,
+      "sha256": "31a39ca9294638475cafbb71ad1eed8152b1f33511bc009e2d9f0c739d6c5d7e"
+    }
+  ]
+}

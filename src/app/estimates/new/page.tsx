@@ -31,6 +31,10 @@ import { loadDealerWizardEntityReferences } from "@/lib/estimates/get-dealer-wiz
 // GDA-1R2-C3R — the reservation prefill loader is a server-only read that carries its own
 // capability check and dealer scoping, and fails closed to null for every invalid case.
 import { getReservationPrefill } from "@/lib/reservations/get-reservation-prefill";
+import { createInvoiceFromEstimate } from "@/lib/invoices/create-invoice";
+import { getInvoice } from "@/lib/invoices/get-invoice";
+import { saveInvoiceDeliveryDate } from "@/lib/invoices/save-invoice-delivery-date";
+import { issueInvoice, getIssuedInvoicePdfUrl } from "@/lib/invoices/issue-invoice";
 
 interface Props {
   searchParams: Promise<{
@@ -157,6 +161,8 @@ export default async function EstimateNewPage({ searchParams }: Props) {
           saveInvoker={saveEstimateFromWizardIntentAction}
           customerSearchInvoker={searchDealerCustomersAction}
           duplicateCheckInvoker={findWizardCustomerDuplicatesAction}
+          invoiceActions={{ create: createInvoiceFromEstimate, read: getInvoice,
+            saveDate: saveInvoiceDeliveryDate, issue: issueInvoice, download: getIssuedInvoicePdfUrl }}
         />
       </div>
     </MainLayout>

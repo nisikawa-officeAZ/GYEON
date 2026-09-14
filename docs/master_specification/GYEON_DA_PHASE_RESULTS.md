@@ -4941,3 +4941,861 @@ implementation_authorized: false
 decision: ALIGN_D2_TO_ACCEPTED_P20C_GATE1_AND_OWNER_EVIDENCE_POLICY_KEEP_D2_BLOCKED_UNTIL_GATE2_PUBLICATION_ACCEPTANCE
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_BOOK_AND_FOUNDATION_IDENTITIES_GATE1_RECEIPT_GATE2_HOLD_MANDATORY_EVIDENCE_OPTIONAL_SBOM_NON_CIRCULAR_GATE_ORDER_PUBLISHED_ARTIFACT_ONLY_CLAUDE_BOUNDARY_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_APPROVAL."
 ```
+
+## INV001-P20D2-BOOK-D3A-R1 — Post-B2 baseline reconciliation and persistence diagnosis governance candidate
+
+```yaml
+phase: INV001_P20D2_BOOK_D3A_R1_POST_B2_BASELINE_RECONCILIATION_AND_PERSISTENCE_DIAGNOSIS_GOVERNANCE
+marker: INV001_P20D2_BOOK_D3A_R1_GOVERNANCE_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_CLAUDE_NOT_AUTHORIZED
+date: 2026-09-11
+append_only: true
+authorization: "The Owner approved starting the D3A governance baseline reconciliation only after MacBook Codex explained that B2 was closed but the Book completion plan, result ledger, dedicated D3A Draft PR, and matching Claude instruction were not yet reconciled. This authorizes exactly three local governance-document changes and local non-executable verification. It does not authorize stage, commit, push, PR creation or mutation, private-source transmission, Claude invocation, package command, test, typecheck, build, migration creation/application, SQL, DB, Supabase, Auth, Storage, LINE, Vercel, provider, production data, UI/action wiring, D3A implementation, D3B-D7, Android, Studio implementation, or deployment."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_commit: 91b4db7a8133bf7bfc0df66534c2acb286bcff27
+  fixed_tree: 1db51156e3d838ff026a1ebeb09936b95a2d8018
+  branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+  upstream_ahead_behind_at_start: 0_0
+d2_gate_b1:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/69
+  source_head: 9d2802a46f482e240fddcf380a113741cfe27dd2
+  merge_commit: e8b3d89e6520d0c5e5e13ef8f100586e51041a86
+  merge_tree: 3205c57d5716fffd47a741fa8809eb8f33a47e22
+  exact_changed_paths:
+    - .npmrc
+    - package.json
+    - package-lock.json
+  package: "@nisikawa-officeaz/detaileros-inventory-foundation@0.1.0"
+  resolved_artifact: https://npm.pkg.github.com/download/@nisikawa-officeaz/detaileros-inventory-foundation/0.1.0/ac6b37d8030c94bcf6428de1c4253f3c5bb16062
+  integrity: "sha512-VIgMOs45cJub1/18jfHGDiqWjMtyO+z+nm8keWXxfgq3cnyA7QJNm5CKQKypHab6+EWEa+YBy+XQvhGcWQ303A=="
+  registry_declaration: "@nisikawa-officeaz:registry=https://npm.pkg.github.com"
+  production_preview_closeout_owner_ratification: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5634539855
+d2_gate_b2:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/70
+  accepted_head: fd9da4fa61db19caecb3f69634ea1d5fa978f9c1
+  merge_commit: 91b4db7a8133bf7bfc0df66534c2acb286bcff27
+  merge_tree: 1db51156e3d838ff026a1ebeb09936b95a2d8018
+  exact_changed_paths:
+    - src/lib/inventory/foundation/foundation-runtime-package.ts
+    - src/lib/inventory/foundation/foundation-runtime-package.test.ts
+  focused_b2: PASS_14_OF_14
+  d1_regression: PASS_71_OF_71
+  typecheck: PASS
+  diff_check: PASS
+  production_closeout: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5635813825
+d2_decision: PASS_B2_ACCEPTED_CLOSED
+shipped_store_contract:
+  methods:
+    - "snapshot(): InventoryRuntimeSnapshot"
+    - "commit(expectedRevision: number, next: InventoryRuntimeCommitInput): boolean"
+  wrapper_store_injection: PROVEN
+  wrapper_durable_store: NOT_IMPLEMENTED
+  wrapper_database_transaction: NOT_IMPLEMENTED
+  wrapper_product_order_or_ui_wiring: NOT_IMPLEMENTED
+  wrapper_retry_or_fallback: ABSENT_REQUIRED
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS.md
+  sha256: 72e9551910b3725c7833e6b7c0819387da208c04cf227993b9088a5d88cbc64a
+  result_marker: INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS_RESULT_V1
+  proposed_exact_gate_a_read_paths: 43
+  claude_authorized_now: false
+  coordination_draft_pr: NOT_CREATED
+exact_governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+superseded_issue_instructions:
+  - https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5635814089
+  - https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5635874792
+  - https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5636134595
+issue_correction: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5635978070
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  src/components/ScreensPreview.tsx: ABSENT
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+implementation_authorized: false
+not_authorized:
+  - stage_commit_push_pr_creation_or_mutation
+  - private_source_transmission_or_claude_invocation
+  - package_install_update_publish_or_registry_credential_action
+  - source_test_migration_sql_db_supabase_auth_or_provider_action
+  - product_order_ui_or_action_wiring
+  - d3a_implementation_d3b_d7_android_studio_or_deployment
+decision: RECORD_D2_CLOSURE_AND_CREATE_EXACT_D3A_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: "VERIFY_EXACT_THREE_PATH_DIFF_NEW_DIRECTIVE_SHA256_BOOK_IDENTITY_D2_CHAIN_PACKAGE_PIN_AND_INTEGRITY_PROPOSED_43_PATH_PAYLOAD_PROTECTED_METADATA_EMPTY_INDEX_AND_GIT_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_STAGE_LOCAL_COMMIT_AUTHORIZATION_ONLY."
+```
+
+## INV001-P20D2-BOOK-D3A-B1-G1 — Accepted diagnosis, B0 evidence, and implementation-governance reconciliation candidate
+
+```yaml
+phase: INV001_P20D2_BOOK_D3A_B1_G1_GOVERNANCE_RECONCILIATION
+marker: INV001_P20D2_BOOK_D3A_B1_G1_GOVERNANCE_RECONCILIATION_RESULT_V1
+status: LOCAL_GOVERNANCE_RECONCILIATION_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-12
+append_only: true
+authorization: "The Owner authorized one uncommitted three-document governance reconciliation candidate after the first B1 attempt stopped fail-closed. This authorization covers only the new B1 directive, completion-plan update, append-only result entry, and local non-executable verification. It does not authorize implementation, executable tests, database or provider access, Git delivery, PR or Issue mutation, or any later phase."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_main_commit: 91b4db7a8133bf7bfc0df66534c2acb286bcff27
+  fixed_main_tree: 1db51156e3d838ff026a1ebeb09936b95a2d8018
+  candidate_branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  pre_candidate_head: 141735c03ab6c6068934389a4ead84024c0b0623
+  pre_candidate_tree: e270c889c13443c95951a7716e4bac51d29f0605
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+accepted_d3a_diagnosis:
+  result_marker: INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS_RESULT_V1
+  source_result_sha256: 6e49fed2f5e37ab502fd4ab1e9c11327512fd89d6397e0c02421a07190933579
+  verdict: PASS_D3A_IMPLEMENTATION_GOVERNANCE_READY
+  correction_scope: ADDED_MISSING_VERDICT_ONLY
+  correction_result_sha256: c82a23fb87053737f674687f4500b82a282ce32d503519931468e5368139090a
+b0_path_reservation:
+  command: supabase_migration_new_foundation_inventory_runtime
+  cli_version: 2.116.0
+  exact_path: supabase/migrations/20260912004445_foundation_inventory_runtime.sql
+  git_state: UNTRACKED_PRESERVED_READ_ONLY_DURING_G1
+  mode: "0644"
+  size_bytes: 0
+  sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  ordering_reconciliation: "B0 occurred after accepted Gate A diagnosis and before this B1 governance reconciliation. The deviation is accepted only as an empty CLI path reservation; no SQL, source, test, DB, Git delivery, or provider action occurred and no B1 authority is inferred."
+first_b1_attempt:
+  verdict: BLOCKED_GOVERNANCE_PRECONDITION
+  actions: ZERO
+  result_sha256: 5c2018bf2d5e2d6aaa00a02b0ee441b7e7f394bd50788c2b4218f53fd681b4fe
+  implementation_evidence: false
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION.md
+  sha256: cd24dd9358346d9781966ed041697c8e6a3c648e65844f942ada2691ff186a0d
+  result_marker: INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION_RESULT_V1
+  execution_authorized_now: false
+exact_governance_write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+actual_phase_changed_paths:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+preserved_preexisting_worktree_path:
+  - supabase/migrations/20260912004445_foundation_inventory_runtime.sql
+future_b1_write_allowlist:
+  - supabase/migrations/20260912004445_foundation_inventory_runtime.sql
+  - src/lib/inventory/foundation/foundation-persistence-adaptor.ts
+  - src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts
+  - scripts/e2e/inv001-foundation-persistence-disposable.mjs
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  src/components/ScreensPreview.tsx: ABSENT
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+verification_authorized_and_run:
+  document_scope_and_marker_checks: PASS_LOCAL_NON_EXECUTABLE
+  git_diff_check: PASS
+  executable_test: NOT_AUTHORIZED_NOT_RUN
+  typecheck: NOT_AUTHORIZED_NOT_RUN
+  build: NOT_AUTHORIZED_NOT_RUN
+actions_not_performed:
+  - implementation_or_test_source_edit
+  - migration_sql_write_or_apply_reset_seed_backfill
+  - database_supabase_runtime_auth_storage_line_provider_browser_vercel_or_network_access
+  - private_source_transmission_or_claude_invocation
+  - stage_commit_push_pr_issue_ready_merge_tag_release_or_deploy
+  - d3b_d7_android_or_studio_implementation
+implementation_authorized: false
+decision: AUTHOR_EXACT_THREE_DOCUMENT_GOVERNANCE_RECONCILIATION_CANDIDATE_AND_KEEP_B1_FAIL_CLOSED
+next: "VERIFY_EXACT_THREE_DOCUMENT_PHASE_DELTA_DIRECTIVE_HASH_ACCEPTED_D3A_AND_CORRECTION_EVIDENCE_B0_EMPTY_FILE_PRESERVATION_BLOCKED_ATTEMPT_RESULT_BOOK_IDENTITY_PROTECTED_METADATA_EMPTY_INDEX_AND_GIT_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_EXACT_PATH_STAGE_LOCAL_COMMIT_AUTHORIZATION_ONLY. PUSH_DRAFT_PR_INSTRUCTION_B1_EXECUTION_AND_EXECUTABLE_VERIFICATION_REMAIN_LATER_SEPARATE_GATES."
+```
+
+## INV001-P20D2-BOOK-D3A-B1 — Gate C1 through C7-R1 historical execution-ledger reconciliation
+
+```yaml
+phase: INV001_P20D2_BOOK_D3A_B1_GATE_C1_C7_R1_EXECUTION_LEDGER_RECONCILIATION
+marker: INV001_P20D2_BOOK_D3A_B1_GATE_C1_C7_R1_EXECUTION_LEDGER_RECONCILIATION_RESULT_V1
+status: LOCAL_APPEND_ONLY_LEDGER_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-12
+append_only: true
+authorization: "After MacBook Codex reported that Gate C7-R1 Attempt 4 stopped because the canonical ledger omitted the preceding Gate C execution history, the Owner explicitly approved starting the D3A ledger-reconciliation phase. This authorization covers this one-file append-only historical record and local non-executable verification only. It does not authorize another Claude invocation, Colima or Supabase start, candidate execution or repair, Git delivery, PR or Issue mutation, or any later phase."
+book:
+  repository: nisikawa-officeAZ/GYEON
+  base_branch: main
+  fixed_main_commit: 91b4db7a8133bf7bfc0df66534c2acb286bcff27
+  fixed_main_tree: 1db51156e3d838ff026a1ebeb09936b95a2d8018
+  candidate_branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  execution_head: 6fc63b6becf27fa56cecebf67732d14e929ac2a9
+  execution_tree: 303387f018b195e383a77f3af6c8a00d0a009614
+  coordination_pr: 71
+  coordination_pr_state_at_reconciliation: OPEN_DRAFT
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+fixed_candidate:
+  git_state: EXACTLY_FOUR_UNTRACKED_PATHS_INDEX_EMPTY_TRACKED_DIRTY_ZERO
+  package_version: 0.1.0
+  paths:
+    supabase/migrations/20260912004445_foundation_inventory_runtime.sql: bde0f371f29e425272c5b13607d36469b87dca507f6c8997d105309c83963cd3
+    src/lib/inventory/foundation/foundation-persistence-adaptor.ts: 622f5cd3e96e8e318c701c95b23c8db7686b4dec4ff10882e9ec92b9f41d38bc
+    src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts: 44b6398b38bb86047dfc25233866bdc5982675e7a785d868c07ccb7c335007cf
+    scripts/e2e/inv001-foundation-persistence-disposable.mjs: f9e108c865980e522cd33b89729197091dfdfc6bca568bc4a3dce049ec979447
+gate_c1:
+  result_marker: INV001_P20D2_BOOK_D3A_GATE_C_EXECUTABLE_VERIFICATION_RESULT_V1
+  instruction_comment: 5644688078
+  verdict: BLOCKED_ENVIRONMENT_CONTAINER_RUNTIME_UNAVAILABLE
+  classification: ENVIRONMENT_DEFECT_CONTAINER_RUNTIME_UNAVAILABLE
+  failure_stage: BEFORE_SCRATCH_SUPABASE_PROJECT_CREATION
+  colima_start_attempts: 1
+  colima_result: "VZErrorDomain Code=2; Virtualization is not available on this hardware"
+  supabase_start_attempts: 0
+  focused_test_executions: 0
+  harness_executions: 0
+  runtime_dir: work/runtime/inv001-p20d2-d3a-c1.iVxYMC
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c1-evidence.3BGQ8O
+  evidence_manifest_sha256: 0d5f0192424b23b9ee08352fbe752a497b586839ddd2e71b1cdf3388cadd6118
+  disposition: BURNED_RETAINED_NO_RETRY
+gate_c2:
+  result_marker: INV001_P20D2_BOOK_D3A_GATE_C2_EXECUTABLE_VERIFICATION_RESULT_V1
+  instruction_comment: 5644895818
+  verdict: FAIL_C2_BURNED_HARNESS_CLEANUP_ASSERTION_SOURCE_DEFECT
+  dedicated_colima_profile: inv001d3ac2
+  focused_test: PASS_28_OF_28
+  genuine_local_auth: PASS_AUTHENTICATED_SESSION_VALIDATED
+  disposable_harness: FAIL_44_OF_46
+  failure: "The two cleanup assertions compared psql boolean text 'true' with the literal 't'; the post-run read-only check proved both tables and the trigger function absent."
+  external_observer_samples: 0
+  runtime_dir: work/runtime/inv001-p20d2-d3a-c2.gQsEPY
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c2-evidence.tsA4Wx
+  evidence_manifest_sha256: ff11140ce653a3d2a81bdb6572f9c4ff2d8293d109be93977878f7c3f2950eb0
+  disposition: BURNED_RETAINED_NOT_ACCEPTANCE_EVIDENCE
+bounded_cleanup_assertion_repair:
+  instruction_comment: 5645011161
+  result: PASS_BOUNDED_HARNESS_CLEANUP_ASSERTION_REPAIR_COMPLETE
+  independent_acceptance: PASS_REPAIR_ACCEPTED_C3_PREPARATION_READY
+  changed_path: scripts/e2e/inv001-foundation-persistence-disposable.mjs
+  old_sha256: 1a196ad5fe1b82c0ce95885f2ac5ecf79810c3153e7deeb563980978347bbdc4
+  new_sha256: f9e108c865980e522cd33b89729197091dfdfc6bca568bc4a3dce049ec979447
+  exact_correction: "state/audit and function absence comparisons changed from 't' to 'true'; no other candidate path changed"
+gate_c3:
+  result_marker: INV001_P20D2_BOOK_D3A_B1_GATE_C3_RESULT_V1
+  instruction_comment: 5645035691
+  verdict: FAIL_C3_FRESH_RUNTIME_START_FATAL
+  cause: "Relocated Colima/Lima Unix socket path was 191 characters; UNIX_PATH_MAX is 104."
+  colima_start_attempts: 1
+  focused_test_executions: 0
+  harness_executions: 0
+  observer_samples: 0
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c3-evidence.JVYEM5
+  evidence_manifest_sha256: 4adbcc3e55db47fb460518caadef709a706bde581e0d9c27bb15838a6accfcc0
+  cleanup: PASS_FRESH_RUNTIME_REMOVED
+  disposition: BURNED_STOPPED_NO_RETRY
+gate_c4:
+  result_marker: INV001_P20D2_BOOK_D3A_B1_GATE_C4_RESULT_V1
+  instruction_comment: 5645168693
+  result_comment: 5645261549
+  verdict: FAIL_C4_FRESH_RUNTIME_START_FATAL
+  short_socket_path_length: 74
+  colima_start_attempts: 1
+  colima_exit: 1
+  cause: "VZErrorDomain Code=2; Virtualization is not available on this hardware."
+  focused_test_executions: 0
+  harness_executions: 0
+  observer_samples: 0
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c4-evidence.gzLhdY
+  evidence_manifest_sha256: c6d451964605be4c744612339ce5cfa7b31d3801c093fe689f333518342e0d1b
+  cleanup: PASS_C4_PROFILE_HOME_AND_BOOKKEEPING_REMOVED
+  disposition: BURNED_STOPPED_NO_RETRY
+gate_c5:
+  result_marker: INV001_P20D2_BOOK_D3A_B1_GATE_C5_RESULT_V1
+  instruction_comment: 5645261681
+  result_comment: 5645397990
+  verdict: FAIL_C5_SINGLE_SUPABASE_START_TRUNCATED
+  vm: QEMU_X86_64_4_CPU_8_GIB_40_GIB
+  colima_start_attempts: 1
+  colima_exit: 0
+  supabase_start_attempts: 1
+  supabase_exit: 143
+  cause: "The single foreground Supabase start was terminated by the 600000 ms operator wrapper cap while images were still being pulled."
+  focused_test_executions: 0
+  harness_executions: 0
+  observer_samples: 0
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c5-evidence.GVCIZG
+  evidence_manifest_sha256: 6f34ce4b8920759914390e43a42dc88687d19d988ee35380f3f3a51d1d5f4721
+  cleanup: PASS_C5_PROFILE_HOME_AND_BOOKKEEPING_REMOVED
+  disposition: BURNED_STOPPED_NO_REPAIR_NO_RETRY
+gate_c6:
+  result_marker: INV001_P20D2_BOOK_D3A_B1_GATE_C6_RESULT_V1
+  instruction_comment: 5645399775
+  result_comment: 5645562838
+  verdict: FAIL_C6_SINGLE_SUPABASE_START_NONZERO_EXIT_UNHEALTHY_SERVICES
+  vm: QEMU_X86_64_4_CPU_8_GIB_40_GIB
+  colima_start_attempts: 1
+  colima_exit: 0
+  supabase_start_attempts: 1
+  supabase_exit: 1
+  supabase_elapsed_seconds: 447
+  failure: "LegacyHealthCheckTimeoutError; analytics, vector, realtime, storage, and pg_meta unhealthy; Studio still starting."
+  focused_test_executions: 0
+  harness_executions: 0
+  observer_samples: 0
+  evidence_dir: /private/tmp/inv001-p20d2-d3a-c6-evidence.ww4YBK
+  evidence_manifest_sha256: 448bd5eac232def8261654a4bad197ef617318d3025186c8008d412b9bc8b09b
+  cleanup: PASS_C6_PROFILE_HOME_AND_BOOKKEEPING_REMOVED
+  disposition: BURNED_STOPPED_NO_REPAIR_NO_RETRY
+gate_c7:
+  prepared_instruction_comment: 5645567724
+  purpose: FRESH_SUPABASE_STARTUP_HEALTH_DIAGNOSIS_ONLY
+  candidate_apply_or_test_authorized: false
+  result_marker: INV001_P20D2_BOOK_D3A_B1_GATE_C7_INFRASTRUCTURE_DIAGNOSIS_RESULT_V1
+  c7_r1_attempt_1:
+    result_comment: 5645701194
+    verdict: BLOCKED_C7_GOVERNANCE_PRECONDITION
+    actions: ZERO
+    claude_invocations: 1
+    colima_starts: 0
+    supabase_starts: 0
+    blocker: "Claude Bash could not create its session-env entry and the required Book/Studio scope reconciliation was not established in that invocation."
+  wrong_host_studio_record:
+    comment: 5645734700
+    classification: NOT_A_BOOK_EXECUTION_ATTEMPT
+    actions: ZERO
+    correction_comment: 5645759678
+    correction: "The embedded claimed Owner authorization was invalid and superseded; the wrong-host evidence remains historical only."
+  c7_r1_attempt_2:
+    result_comment: 5645756417
+    verdict: BLOCKED_C7_GOVERNANCE_PRECONDITION
+    actions: ZERO
+    claude_invocations: 1
+    colima_starts: 0
+    supabase_starts: 0
+    blocker: "Claude stopped without attempting its available Bash/GitHub read-only start-gate tools."
+  c7_r1_attempt_3:
+    result_comment: 5645783835
+    verdict: BLOCKED_C7_GOVERNANCE_PRECONDITION
+    actions: ZERO
+    claude_invocations: 1
+    colima_starts: 0
+    supabase_starts: 0
+    blocker: "Claude used Bash and read PR #71, then stopped because correction comment 5645759678 was newer than the Attempt 3 authorization."
+  c7_r1_attempt_4:
+    result_comment: NOT_POSTED_RESULT_COMMENT_NOT_AUTHORIZED
+    claude_session_id: ce345324-28c1-450b-a584-f11ac8e55d29
+    verdict: BLOCKED_C7_GOVERNANCE_PRECONDITION
+    actions: ZERO
+    claude_invocations: 1
+    colima_starts: 0
+    supabase_starts: 0
+    blocker: "The canonical ledger contained no Gate C1-C7 execution entries, and Claude could not independently corroborate the cross-session Owner-authorization narrative."
+  c7_state_after_attempt_4:
+    bookkeeping_dirs: 0
+    evidence_dirs: 0
+    vm_home_dirs: 0
+    c7qemu_profile: ABSENT
+    default_profile: STOPPED_UNTOUCHED
+    b1qemu_profile: STOPPED_UNTOUCHED
+reconciliation_source_authority:
+  - retained C1-C6 evidence directories and verified SHA-256 manifests
+  - PR 71 comments 5644688078 through 5645783835
+  - MacBook Codex independent Git, candidate-hash, protected-metadata, runtime-state, and Claude-result checks
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  content_access: NOT_PERFORMED
+exact_write_allowlist:
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+actual_changed_paths:
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+verification_authorized_now:
+  yaml_shape_and_required_marker_check: true
+  historical_comment_and_evidence_cross_check: true
+  git_diff_check: true
+  executable_test: false
+actions_not_performed:
+  - implementation_candidate_edit_or_execution
+  - claude_invocation_or_c7_retry
+  - colima_docker_supabase_database_auth_or_provider_start
+  - stage_commit_push_pr_issue_ready_merge_tag_release_or_deploy
+  - d3b_d7_ui_studio_line_invoice_product_order_android_or_protected_content_action
+decision: RECONCILE_GATE_C1_THROUGH_C7_R1_HISTORY_IN_CANONICAL_LEDGER_AND_KEEP_EXECUTION_BLOCKED
+next: "INDEPENDENTLY_VERIFY_THIS_EXACT_ONE_FILE_APPEND_ONLY_LEDGER_DELTA_ALL_REFERENCED_COMMENTS_AND_MANIFEST_HASHES_CURRENT_FIXED_IDENTITY_FOUR_CANDIDATE_HASHES_PROTECTED_METADATA_EMPTY_INDEX_AND_GIT_DIFF_CHECK. THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_ONE_PATH_STAGE_AND_LOCAL_COMMIT_ONLY. NO_C7_RETRY_PUSH_PR_COMMENT_READY_MERGE_OR_RUNTIME_ACTION_IS_INFERRED."
+```
+
+## GYEON_FUTURE_PLAN_AMENDMENT_20260913_R1 — owner-authorized design-policy reflection
+
+This entry records a new two-document design gate. It does not edit historical results, accept the untracked D3A implementation, resume the C7 attempt, or turn a future requirement into execution authority.
+
+```yaml
+phase: GYEON_FUTURE_PLAN_AMENDMENT_20260913_R1
+date_jst: 2026-09-13
+status: LOCAL_DOCUMENT_VERIFIED_UNSTAGED_UNCOMMITTED
+responsible: MACBOOK_CODEX
+authorization:
+  source: CURRENT_CONVERSATION
+  question: "次は、実装を始めず、正式計画と結果台帳への反映だけ進めてよいですか？"
+  owner_reply: "はい"
+  scope: TWO_DOCUMENT_DESIGN_POLICY_REFLECTION_ONLY
+  implementation: false
+  runtime_or_activation: false
+  studio_work: false
+  stage_commit_push_or_external_post: false
+proposal:
+  id: GYEON-FUTURE-PLAN-AMENDMENT-20260913-P1
+  path: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/docs/future-expansion-20260913/FORMAL_PLAN_AMENDMENT_PROPOSAL.md
+  sha256: a61cfc6da18e789c369e5f0929c4aaaef9736dd9d18941592efec7a099e4f300
+  design_dictionary_version: 0.2.9-design
+  proposal_and_existing_design_artifacts_modified: false
+source_basis:
+  repo: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+  branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  head: ee4b73e1512aecc44ea1fe51d9367d53f3399c63
+  tree: 9d9d9b30f5e0c6a59f33da421b1e4f11090d4e8c
+  pre_edit_index: EMPTY
+  pre_edit_tracked_worktree: CLEAN
+  remote_main_provider_production_and_latest_studio_status: NOT_VERIFIED
+  pre_edit_plan_sha256: 6df96e839541d6717c7b5e1dd4bb612dd0f87240736a84ac37da9184bccf8db9
+  pre_edit_ledger_sha256: 0a451ef8e9cb90e9fe60b69e288c0c5554bd273374336ad125cdb43198b78b60
+design_policy_recorded:
+  - GYEON_DA_FIRST_NO_PRIORITY_EXPANSION
+  - NORMAL_HOLDS_NOT_COUNTED_SERVER_ORDER_SCREEN_ENTRY_ALLOCATION
+  - ORIGINAL_15_MINUTE_LEASE_NO_EXTENSION_PAYMENT_AND_CONFIRMED_ORDER_PROTECTION
+  - SHORTAGE_ONLY_ORDERER_CHOICE_AND_DELTA_ONLY_CART_EDITS
+  - CONFIRMED_CANCELLATION_REQUEST_REVIEW_EXECUTION_SEPARATION
+  - UNSHIPPED_UNCANCELLED_QUANTITY_ONLY_NATIVE_DISPATCH_HOLD_RECEIPTS
+  - UNKNOWN_PAYMENT_SAME_ATTEMPT_DURABLE_RECONCILIATION_NO_NEW_CHARGE_OR_RELEASE
+  - DURABLE_ADMIN_NOTIFICATION_INTENT_DEDUPLICATION_AND_RESTART_RECOVERY
+  - G01_G07_CONNECTION_GAPS_AND_EXISTING_D3A_D3B_D4_D4A_DEPENDENCIES
+  - DEALER_WAREHOUSE_FINANCE_BOUNDARIES_AND_WAREHOUSE_CALENDAR_PRESERVED
+unresolved_activation_conditions:
+  - native_quantity_specific_dispatch_hold_capability
+  - actual_admin_capability_and_delivery_route
+  - provider_evidence_status_mapping_and_compensation_boundary
+  - lookup_interval_backoff_rate_limits_and_max_check_budget
+  - escalation_threshold_admin_response_and_reescalation_policy
+  - current_prerequisite_acceptance_and_later_literal_implementation_authority
+preserved_untracked_candidates_current_sha256:
+  src/lib/inventory/foundation/foundation-persistence-adaptor.ts: 35c179965a2c8fcf3e02cc5dea1b661ebab36952b983fcf23ceaa13a6251516d
+  src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts: c60f58b42de2fdd9f5c6b676e238552d33ff569dd531e8546c2bddd0ab4fe845
+  supabase/migrations/20260912004445_foundation_inventory_runtime.sql: 04092ac26b63bcad4909ea7d571712fb7bcf4d049ae4cf8c4859c648f7f43b58
+  scripts/e2e/inv001-foundation-persistence-disposable.mjs: df4f44a744678d494a1c6be1409b348199416418b4588ff2962c19644459ddc8
+candidate_evidence_limit: CURRENT_PRESERVATION_BASELINE_ONLY_NOT_HISTORICAL_EQUIVALENCE_OR_ACCEPTANCE
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+  protected_content_access: NOT_PERFORMED
+exact_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+actual_changed_paths:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+verification:
+  kind: DOCUMENT_ONLY
+  result: PASS_DOCUMENT_DELTA_AND_PRESERVATION_ONLY
+  historical_ledger_prefix_preserved: true
+  prior_plan_preserved_except_section_5_1_cross_reference: true
+  git_diff_check: PASS_EXIT_0
+  source_candidate_and_design_hashes_preserved: true
+  preserved_artifact_count: 10
+  exact_two_path_tracked_delta: true
+  index_empty: true
+  protected_metadata_matches: true
+  verification_method: READ_ONLY_NODE_HASH_PREFIX_PATH_AND_MARKER_ASSERTIONS_PLUS_SCOPED_GIT_DIFF_CHECK
+  runtime_or_business_semantics_proven: false
+delivery:
+  staged: false
+  committed: false
+  pushed: false
+  external_post: false
+  ready_merge_or_deployed: false
+actions_not_performed:
+  - source_test_dependency_migration_or_design_dictionary_edit
+  - claude_invocation_or_studio_instruction
+  - database_supabase_auth_provider_credential_or_browser_access
+  - executable_test_typecheck_build_or_runtime_start
+  - stage_commit_push_pr_issue_ready_merge_or_deployment
+decision: RECORD_DESIGN_POLICY_ONLY_KEEP_ALL_IMPLEMENTATION_AND_ACTIVATION_GATES_CLOSED
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_DELTA_AND_PRESERVED_EVIDENCE_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_STAGE_AND_LOCAL_COMMIT_ONLY. DO_NOT_INFER_PUSH_EXTERNAL_POST_CLAUDE_STUDIO_RUNTIME_OR_IMPLEMENTATION_AUTHORITY."
+```
+
+## GYEON_INITIAL_DOCUMENT_RELEASE_PLAN_20260913_R1 — limited-release plan reflection
+
+This new document-only gate preserves every prior entry, including historical delivery/status statements. It neither resumes inventory runtime work nor grants application or closed-finance implementation authority.
+
+```yaml
+phase: GYEON_INITIAL_DOCUMENT_RELEASE_PLAN_20260913_R1
+date_jst: 2026-09-13
+status: LOCAL_DOCUMENT_VERIFIED_UNSTAGED_UNCOMMITTED
+responsible: MACBOOK_CODEX
+authorization:
+  source: CURRENT_CONVERSATION
+  proposed_next_step: "追加明細と帳票の発行順序を分けて正式計画へ整理する"
+  owner_reply: "はい"
+  scope: TWO_DOCUMENT_PLAN_AND_LEDGER_REFLECTION_ONLY
+  implementation_or_external_execution: false
+source_basis:
+  repo: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+  branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  head: a9ddf6ac1d3db9bae035bda1e86136ae265a7fc5
+  tree: c256ee69d4d0dc56181419a5908be256e1f21a9e
+  pre_edit_tracked_worktree: CLEAN
+  pre_edit_index: EMPTY
+  remote_main_or_environment_status: NOT_VERIFIED
+  pre_edit_plan_sha256: 107a34ebb82d120df81e1571df672e1244382d44168321e6c21b6d3ad0324473
+  pre_edit_ledger_sha256: b505f1f995a917aa9cad2cf8068b2a0d0db17e9954d8e018e92b701fd79791d0
+retained_reference_sha256:
+  GYEON_INITIAL_RELEASE_SCOPE_PROPOSAL_20260913.md: 075d8f6d74bd328c902a0346efa3d7ba0fc9bc5520d1b709b95c90a6e7bcb32b
+  ESTIMATE_ADDITIONAL_ITEMS_SPEC_20260913.md: 41b341e3858fea10b484754af3c076d2fdee1285c5155f244ec5399905e4fd55
+recorded_policy:
+  - LIMITED_ESTIMATE_DELIVERY_NOTE_INVOICE_FIRST_NOT_GDA7_COMPLETE
+  - LATER_CRM_CERTIFICATES_SCHEDULING_IN_THAT_ORDER
+  - NO_NEW_CRM_IMPLEMENTATION_WITHOUT_OWNER_DESIGN_APPROVAL
+  - MANUAL_WORK_PRODUCT_ROWS_NOW_CATALOGUE_SELECTION_LATER
+  - NUMERICAL_QUANTITY_WITH_LEGACY_QUANTITY_NOTE_PROTECTION
+  - CONFIRMED_SAVE_AND_EXPLICIT_ISSUANCE_ON_SAME_SCREEN
+  - INVOICE_WITHOUT_DELIVERY_DELIVERY_BEFORE_INVOICE_AND_CONSOLIDATION
+  - PRESERVE_ISSUED_VALUES_SOURCE_LINKS_AND_PREVENT_DOUBLE_BILLING
+  - GRAY_OUT_OTHER_FEATURES_WITHOUT_BLOCKING_REQUIRED_EXISTING_INPUTS
+  - INVENTORY_PRODUCT_DB_PWA_NOT_PRESUMED_FIRST_RELEASE_DEPENDENCIES
+  - CLOSED_FINANCE_CONFLICT_REQUIRES_SEPARATE_EXPLICIT_EXCEPTION
+unresolved:
+  - full_or_partial_delivery_source_line_binding_numbering_correction_reissue
+  - approval_gate_and_same_screen_issuance_alignment
+  - consolidation_eligibility_tax_rounding_and_required_dates
+  - exact_future_read_and_write_allowlists_and_environment_readiness
+preserved_untracked_sha256:
+  src/lib/inventory/foundation/foundation-persistence-adaptor.ts: 35c179965a2c8fcf3e02cc5dea1b661ebab36952b983fcf23ceaa13a6251516d
+  src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts: c60f58b42de2fdd9f5c6b676e238552d33ff569dd531e8546c2bddd0ab4fe845
+  supabase/migrations/20260912004445_foundation_inventory_runtime.sql: 04092ac26b63bcad4909ea7d571712fb7bcf4d049ae4cf8c4859c648f7f43b58
+  scripts/e2e/inv001-foundation-persistence-disposable.mjs: df4f44a744678d494a1c6be1409b348199416418b4588ff2962c19644459ddc8
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+  protected_content_access: NOT_PERFORMED
+exact_write_allowlist_and_actual_changes:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+plan_candidate_sha256: ba60d6276ff0461e3279973be0d19f16f2cfd71441407298845d492717978beb
+verification_boundary:
+  kind: DOCUMENT_DELTA_PREFIX_HASH_METADATA_AND_WHITESPACE_ONLY
+  result: PASS_DOCUMENT_SCOPE_AND_PRESERVATION_ONLY
+  verification_exit_code: 0
+  exact_two_path_delta: true
+  historical_prefixes_preserved: true
+  candidate_and_reference_hashes_preserved: true
+  protected_modes_blobs_unchanged: true
+  head_unchanged_index_empty: true
+  git_diff_check: PASS
+  application_tests_typecheck_build: NOT_RUN
+  runtime_or_business_semantics_proven: false
+  evidence_level_advance: NONE
+delivery:
+  stage_commit_push: NOT_PERFORMED
+  external_post_claude_or_studio_instruction: NOT_PERFORMED
+  database_provider_browser_or_credentials: NOT_ACCESSED
+  ready_merge_apply_or_deploy: NOT_PERFORMED
+decision: RECORD_LIMITED_RELEASE_PRIORITY_AND_TWO_DISTINCT_WORKSTREAMS_ONLY
+next: "VERIFY_DOCUMENT_PRESERVATION_AND_HAND_OFF_THE_UNCOMMITTED_TWO_PATH_CANDIDATE. SEPARATE_OWNER_GIT_DELIVERY_AUTHORITY_AND_SECTION_6_1_FIXED_BASE_CLAUDE_DIAGNOSIS_REQUIREMENTS_PRECEDE_IMPLEMENTATION. DO_NOT_RESUME_D3A_OR_REOPEN_CLOSED_FINANCE_BY_INFERENCE."
+```
+
+## GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1 — formal diagnosis governance candidate
+
+This entry appends predecessor delivery and the newly authorized instruction-registration gate; no prior status or evidence is rewritten.
+
+```yaml
+phase: GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1
+date_jst: 2026-09-13
+status: LOCAL_DOCUMENT_VERIFIED_UNSTAGED_UNCOMMITTED
+responsible: MACBOOK_CODEX
+authorization:
+  source: CURRENT_CONVERSATION
+  proposed_next_step: FORMALLY_REGISTER_PREPARED_READ_ONLY_DIAGNOSIS_INSTRUCTION
+  owner_reply: "はい"
+  scope: THREE_LOCAL_GOVERNANCE_DOCUMENTS_ONLY
+  claude_execution_private_transmission_or_git_delivery: false
+predecessor_delivery:
+  phase: GYEON_INITIAL_DOCUMENT_RELEASE_PLAN_20260913_R1
+  commit: f520297b228c80d80b7627e31da9179e951e0275
+  tree: e60f3a908ebf70d6e3965a6f9df28268db03f6db
+  parent: a9ddf6ac1d3db9bae035bda1e86136ae265a7fc5
+  changed_files: 2
+  local_commit: COMPLETED_UNDER_SEPARATE_OWNER_APPROVAL
+  normal_push: COMPLETED_UNDER_SEPARATE_OWNER_APPROVAL
+  remote_equality: VERIFIED_IN_PRECEDING_DELIVERY_TURN
+  merge_or_manual_deployment: NOT_PERFORMED
+  current_remote_pr_ci_production_state: NOT_REFRESHED_THIS_GATE
+source_basis:
+  repo: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper
+  branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  head: f520297b228c80d80b7627e31da9179e951e0275
+  tree: e60f3a908ebf70d6e3965a6f9df28268db03f6db
+  tracked_pre_edit: CLEAN
+  index: EMPTY
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1.md
+  sha256: 47dbf60b8808818c495a9960826da711ef7c45de5b6d41e54cdee7b8582dde78
+  pre_commit_correction: REMOVED_ONE_TRAILING_BLANK_LINE_NO_INSTRUCTION_CHANGE
+  immutable_source_paths: 36
+  governance_inputs: 4
+  total_input_identities: 40
+  source_bytes_excluding_governance: 415955
+  execution_identity_and_mutable_governance_hashes: MUST_BE_PINNED_IN_LATER_MATCHING_PR_INSTRUCTION
+  result_marker: GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1_RESULT_V1
+  current_pr_instruction: NOT_POSTED
+  claude_invocations: 0
+retained_wrapper_draft:
+  path: docs/CLAUDE_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_DRAFT_20260913.md
+  base: WRAPPER_DIRECTORY_NOT_BOOK_REPO
+  sha256: 947a7beaaf7bb8907dcfc72191f548dd6da885827ef63c28ab482e4be4e4d7f4
+  changed: false
+exact_write_allowlist_and_actual_changes:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+preservation_contract:
+  prior_plan_and_ledger: PREFIX_UNCHANGED
+  four_untracked_d3a_candidates: EXACT_DIRECTIVE_HASHES_UNCHANGED
+  protected_paths: SECTION_3_1_METADATA_ONLY
+  source_test_database_config_and_model_settings: UNCHANGED
+verification_boundary:
+  kind: DOCUMENT_HASH_MANIFEST_PREFIX_METADATA_AND_DIFF_CHECK_ONLY
+  result: PASS_DOCUMENT_SCOPE_AND_PRESERVATION_ONLY
+  exit_code: 0
+  exact_three_document_candidate: true
+  immutable_source_hashes_matched: 36
+  historical_prefixes_preserved: true
+  protected_and_retained_candidate_hashes_preserved: true
+  head_unchanged_index_empty: true
+  wrapper_draft_unchanged: true
+  git_diff_check: PASS
+  runtime_business_or_production_acceptance: false
+  tests_typecheck_build: NOT_RUN
+  evidence_level_advance: NONE
+actions_not_performed:
+  - source_or_migration_implementation
+  - database_supabase_auth_storage_provider_browser_or_credentials
+  - claude_invocation_private_transmission_or_studio_instruction
+  - stage_commit_push_pr_issue_ready_merge_or_deployment
+decision: REGISTER_BOUNDED_READ_ONLY_DIAGNOSIS_GOVERNANCE_CANDIDATE_ONLY
+next: VERIFY_THREE_DOCUMENT_DELTA_THEN_OBTAIN_SEPARATE_GIT_DELIVERY_AND_PR_INSTRUCTION_AUTHORITY_NO_CLAUDE_EXECUTION_INFERRED
+```
+
+## GYEON_ESTIMATE_FURIGANA_REQUIRED_PLAN_R1 — approved new-estimate requirement
+
+```yaml
+phase: GYEON_ESTIMATE_FURIGANA_REQUIRED_PLAN_R1
+date_jst: 2026-09-13
+responsible: MACBOOK_CODEX
+status: LOCAL_REQUIREMENT_RECORD_SOURCE_NOT_IMPLEMENTED
+authorization:
+  source: CURRENT_CONVERSATION
+  requested_change: REQUIRE_CUSTOMER_FURIGANA_WHEN_CREATING_AN_ESTIMATE
+  confirmed_by_owner: EXISTING_CUSTOMER_WITHOUT_FURIGANA_REQUIRES_SUPPLEMENT_BEFORE_NEW_ESTIMATE_SAVE
+  preserve: HISTORICAL_ESTIMATES_AND_ISSUED_DOCUMENTS
+  broad_crm_implementation: NOT_AUTHORIZED
+source_basis:
+  head: 658a8754b32fb971779b16e2484ecc0494afcb87
+  tree: 745cc57e616e4b48b19f6afdb328de7fb9f1cb2f
+  branch: agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1
+  tracked_pre_edit: CLEAN
+  index_pre_edit: EMPTY
+literal_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+contract:
+  applies_to: NEW_ESTIMATE_CREATION_NEW_OCR_AND_EXISTING_CUSTOMERS
+  blank_or_whitespace_only: REJECT
+  existing_complete_customer: REUSE_AUTHORIZED_STORED_READING
+  existing_missing_reading: SUPPLEMENT_SAME_CUSTOMER_WITHOUT_DUPLICATE
+  authoritative_persistence_and_tenant_check: REQUIRED_BEFORE_ACCEPTANCE
+  historical_bulk_backfill_or_rewrite: PROHIBITED
+  inferred_reading_or_unrequested_katakana_only_rule: PROHIBITED
+evidence:
+  kind: LOCAL_SOURCE_OBSERVATIONS_AND_REQUIREMENT_RECORD_ONLY
+  implementation_tests_and_runtime: NOT_RUN
+  live_database_and_production: NOT_INSPECTED
+  evidence_level_advance: NONE
+actions_not_performed:
+  - source_test_schema_dependency_or_config_changes
+  - claude_execution_or_studio_instruction
+  - external_post_or_git_delivery
+  - database_provider_browser_credentials_ready_merge_or_deployment
+decision: RECORD_OWNER_APPROVED_REQUIREMENT_WITHOUT_CLAIMING_IMPLEMENTATION
+next: VERIFY_TWO_DOCUMENT_PRESERVATION_THEN_SEPARATE_GIT_DELIVERY_AND_BOUNDED_CLAUDE_DIAGNOSIS_BEFORE_SOURCE_REPAIR
+```
+
+## GYEON_ESTIMATE_FURIGANA_DIAGNOSIS_R1 — source diagnosis with required corrections
+
+```yaml
+phase: GYEON_ESTIMATE_FURIGANA_DIAGNOSIS_R1
+date_jst: 2026-09-13
+responsible: MACBOOK_CLAUDE_DIAGNOSIS_MACBOOK_CODEX_INDEPENDENT_REVIEW
+authorization: OWNER_YES_TO_NEXT_READ_ONLY_CLAUDE_DIAGNOSIS
+plan_delivery:
+  commit: f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb
+  tree: 227129f55e3c45b5c154f5ee97d8498cadab9808
+  local_commit_and_normal_push: PREVIOUSLY_COMPLETED_UNDER_SEPARATE_APPROVALS
+  coordination_pr: 71
+  pr_state_before_execution: OPEN_DRAFT_MATCHING_HEAD
+instruction:
+  url: https://github.com/nisikawa-officeAZ/GYEON/pull/71#issuecomment-5653441451
+  supersedes_for_next_diagnosis_only: 5653327506
+  inventory_stop_preserved: 5651260314
+execution:
+  model: claude-opus-5
+  effort: high
+  invocations: 1
+  input_files: 39
+  prompt_bytes: 811593
+  exit_code: 0
+  api_error: false
+  tool_calls: 0
+  web_requests: 0
+  cost_usd: 3.668775
+  raw_verdict: NEEDS_ADDITIONAL_READ_SCOPE
+  report_sha256: 7109953e44856ca70d2e5efecd66b7878ac3e932850466cc46842063f8126806
+evidence_directory: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/evidence/furigana-diagnosis-r1-20260913
+independent_review: CODEX_REVIEW.md
+acceptance:
+  decision: DIAGNOSIS_RECEIVED_WITH_MATERIAL_CORRECTIONS_REQUIRED
+  accepted: MISSING_READING_ENFORCEMENT_AND_REFERENCE_ONLY_SELECTION_REQUIRE_CROSS_LAYER_CHANGE
+  rejected_as_unproven:
+    - MATCH_KANA_NORM_IS_ALWAYS_EQUIVALENT_TO_ANY_NONBLANK_STORED_READING
+    - ATOMIC_SUPPLEMENT_IN_PAYLOAD_INEVITABLY_BREAKS_REPLAY
+    - SEPARATE_CUSTOMER_UPDATE_THEN_ESTIMATE_SAVE_IS_ACCEPTABLE_WITHOUT_PARTIAL_WRITE_REVIEW
+  unresolved: CONTROLLER_BRIDGE_PENDING_REQUEST_AUTHORITY_AND_DOCUMENT_RENDERING_PATHS
+  owner_questions_not_needed: OLD_ESTIMATE_RESAVE_AND_COMPANY_EXEMPTION_ALREADY_SETTLED_BY_SECTION_14
+  implementation_ready: false
+  evidence_level_advance: NONE
+preservation:
+  source_inputs_protected_metadata_and_four_retained_candidates: VERIFIED_UNCHANGED_BY_RUNNER
+  head_and_index: UNCHANGED
+  post_diagnosis_repo_write: APPEND_THIS_LEDGER_ENTRY_ONLY
+actions_not_performed:
+  - source_repair_or_application_tests
+  - database_supabase_auth_storage_provider_or_browser_operations
+  - studio_work_or_inventory_resumption
+  - commit_push_ready_merge_or_deployment
+next: PIN_ADDITIONAL_LITERAL_READ_PATHS_AND_SUPERSEDING_INSTRUCTION_FOR_CORRECTED_DIAGNOSIS_NO_IMPLEMENTATION_AUTHORITY
+```
+
+## GYEON_ESTIMATE_FURIGANA_DIAGNOSIS_R2 — additional source evidence and corrected boundaries
+
+```yaml
+phase: GYEON_ESTIMATE_FURIGANA_DIAGNOSIS_R2
+date_jst: 2026-09-13
+authorization: OWNER_YES_TO_ADDITIONAL_READ_ONLY_DIAGNOSIS
+source_head: f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb
+source_tree: 227129f55e3c45b5c154f5ee97d8498cadab9808
+instruction_url: https://github.com/nisikawa-officeAZ/GYEON/pull/71#issuecomment-5653473744
+supersedes_next_diagnosis_instruction: 5653441451
+execution:
+  model: claude-opus-5
+  effort: high
+  invocations: 1
+  input_files: 51
+  prompt_bytes: 885893
+  exit_code: 0
+  api_error: false
+  tool_calls: 0
+  web_requests: 0
+  cost_usd: 4.198975
+  raw_verdict: NEEDS_ADDITIONAL_READ_SCOPE
+  report_sha256: e27b737b6fafa8ac74aa0386053af410dbaec9ad389affa1b67ed1231527696e
+evidence_directory: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/evidence/furigana-diagnosis-r2-20260913
+independent_review: CODEX_REVIEW.md
+acceptance:
+  decision: ACCEPT_BOUNDED_FINDINGS_WITH_CORRECTIONS
+  raw_implementation_proposal_accepted_as_written: false
+  accepted: ATOMIC_SUPPLEMENT_DIRECTION_AND_BOUNDED_DOCUMENT_CONTEXT_PRESERVATION
+  corrections:
+    - DEDICATED_SUPPLEMENT_MUST_BE_BOUND_TO_SELECTED_CUSTOMER_NOT_REUSED_NEW_CUSTOMER_READING
+    - NEW_SAVE_REQUIRED_CHECK_MUST_NOT_BLOCK_OLD_EXACT_REPLAY_BEFORE_REPLAY_RESOLUTION
+    - ABSENT_OPTIONAL_SUPPLEMENT_MUST_NOT_CHANGE_LEGACY_CUSTOMER_FINGERPRINT
+    - SAME_MOUNT_IS_NOT_PROOF_OF_UNCHANGED_REQUEST_CONTENT
+    - TEST_SOURCE_IS_NOT_EXECUTED_VERIFICATION
+  codex_additional_read_paths:
+    - src/lib/auth/require-staff-capability.ts
+    - src/lib/staff/staff-types.ts
+  role_set_parity: OWNER_MANAGER_STAFF_MATCH_RPC_ROLE_NAMES_ONLY
+  new_owner_business_question: NONE_FROM_THIS_AUTHORIZATION_CHECK
+  source_repair_or_runtime_acceptance: NOT_GRANTED
+  evidence_level_advance: NONE
+preservation:
+  prior_ledger_delta_and_all_supplied_sources: VERIFIED_UNCHANGED_AFTER_CLAUDE
+  protected_metadata_and_four_candidates: VERIFIED_UNCHANGED
+  head_and_index: UNCHANGED
+  new_repository_write: APPEND_THIS_RESULT_ONLY
+actions_not_performed:
+  - source_repair_tests_database_browser_or_studio_actions
+  - commit_push_ready_merge_or_deployment
+next: PREPARE_LITERAL_REPAIR_AND_TEST_AUTHORING_DIRECTIVE_WITH_CODEX_CORRECTIONS_NO_UNAPPROVED_IMPLEMENTATION
+```
+
+## GYEON_ESTIMATE_FURIGANA_REPAIR_DIRECTIVE_DRAFT_R1 — local preparation resumed
+
+- Owner continuation after CRM intake; active work returns to section 14's estimate requirement, not CRM implementation.
+- MacBook Codex reread combined R2 report/review and R1/R2 ledger results. Raw diagnosis is not accepted as a ready-to-execute repair plan.
+- Local wrapper draft: `/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/docs/CLAUDE_FURIGANA_REPAIR_DIRECTIVE_DRAFT_R1.md`.
+- Includes customer-bound supplement, authoritative atomic save, legacy exact replay ordering, absent-field fingerprint compatibility, presence-hint boundary and unexecuted regression matrix. Supabase transaction guidance keeps external calls outside the transaction; no SQL or environment operation performed.
+- Candidate paths are proposals, not approved writes. Final fixture impacts, generated migration identity and execution manifest remain to be fixed before registration/dispatch. No repeated Claude diagnosis invoked.
+- Exact current write scope: wrapper draft above and append-only result ledger. Prior CRM documents, source JSON, diagnostics, four D3A candidates and protected paths retained.
+- Status: LOCAL_DRAFT_PREPARED_NOT_POSTED_NOT_IMPLEMENTED. No source/test/schema edit, test run, DB/browser access, Claude/Studio dispatch, commit/push or deploy. No evidence-level advance.
+- Next: close the literal repair/test scope and migration-generation gate, then register the final instruction before separately authorized execution. This draft alone does not authorize those actions.
+
+## GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1 — exact scope and empty migration
+
+- Authorization: Owner continuation to determine repair paths and DB-change filename; MacBook Codex, scope preparation only.
+- Governing local candidate: plan section 16; `CLAUDE_DIRECTIVE_GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1.md` and `GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1.json` in `docs/master_specification/`.
+- Source basis: f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb. Manifest captures exact hashes for 20 source, 10 test and 12 read-only reference paths, plus four proposed new source/test paths checked absent.
+- Added duplicate lookup projection owner and its targeted test to the later scope; bridge facade remains read-only. No global fixture cleanup authorized.
+- CLI preflight initially failed on a sandbox-denied local telemetry write. Owner granted turn-scoped write access to `/Users/atsushinishikawa/.supabase`; retry succeeded. CLI version 2.116.0 and installed migration-new help inspected. No CLI update or DB connection command run.
+- CLI generated `supabase/migrations/20260913132430_require_estimate_customer_reading.sql`, zero bytes, SHA-256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855. No SQL content or migration apply; not a completed schema change.
+- Exact current writes: two scope documents, append plan section 16, append this result, one empty generated migration. Prior CRM and diagnosis records retained. No Claude/Studio dispatch, implementation, test run, commit/push or deployment.
+- Status: LOCAL_SCOPE_DEFINED_EXECUTION_NOT_AUTHORIZED; no evidence-level advance. Next separate gate: governance delivery and matching instruction registration before repair execution, preserving all unrelated dirty paths.
+
+## BOOK_D3A_REAL_CONNECTION_SCOPE_REGISTRATION_R1
+
+- Owner approved formal registration of the prepared D3A real-connection scope, not implementation or executable tests.
+- Formal directive: docs/master_specification/CLAUDE_DIRECTIVE_BOOK_D3A_REAL_CONNECTION_SOURCE_R1.md; manifest: docs/master_specification/BOOK_D3A_REAL_CONNECTION_SCOPE_R1.json. Plan section 18 records the exact four-document registration scope and one non-triggering PR post.
+- Source basis HEAD f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb / tree 227129f55e3c45b5c154f5ee97d8498cadab9808; live PR71 check OPEN/Draft and same head. Future source upper bound: twelve absent paths; read references: fourteen pinned files. Prior wrapper drafts remain unchanged.
+- The previous gap review is source evidence, not authenticated live proof. The registered preflight targets new connection interfaces only. Central approval, retained records and D3A runtime authority remain distinct.
+- Current checkout documents remain unstaged/uncommitted. Source authoring, Claude dispatch, database/credential/grant operations, tests, Studio work and deployment are not performed. Registration post verification is recorded in a subsequent append below; this entry alone does not claim a successful post.
+
+### Registration post verified
+
+- New non-triggering PR71 comment: https://github.com/nisikawa-officeAZ/GYEON/pull/71#issuecomment-5653626476. Posted once; separately fetched body SHA-256 matches 0069d12be7ab3b7c55cb1f94751cf70c56cf87b87c925cdce7c78e8ccf08d683. Existing comments were not edited.
+- Formal directive SHA-256: 672c48d5b08c3f4f69bf49f8c344bcdc86781d0abe61000ddc1911262437e619. Fourteen reference hashes, four retained candidate hashes, twelve absent future paths, protected metadata and two historical document prefixes verified. Git diff-check passed; index empty; HEAD unchanged.
+- Comment supersedes only the active-work selection in furigana comment5653473744; it retains historical findings and the live STOP in comment5651260314. It supplies the exact non-executing Claude preflight boundary and future source upper bound, with no automatic invocation.
+- Status: SCOPE_REGISTERED_ON_PR_LOCAL_GOVERNANCE_UNCOMMITTED. No source implementation, tests, DB changes, Claude/Studio invocation, commit/push or deploy. Required next gate is explicit governance delivery, followed by separately authorized bounded preflight/source work.
+
+### Local registration commit preparation
+
+- Owner authorized a local commit of only the four registration documents. Earlier CRM, furigana and resume-checkpoint document deltas remain unstaged; source candidates and the empty migration are excluded. Plan section numbering is retained, not renumbered to hide omitted local work.
+- Corrected the directive's governing reference from uncommitted section 17 to registration section 18 and removed one extra terminal blank line. No future read/write scope, operation authority or execution permission is expanded. Current directive SHA-256: c45a96399f7d8b8a22e3fe7ebf59550b47a041835ee539e0111d5ffe60949bb1; the earlier hash and PR comment remain historical registration evidence.
+- The prior default staged whitespace check detected that terminal blank line; its correction is required before commit. Earlier working-tree diff checks did not establish new untracked-file whitespace acceptance.
+- Before any Claude dispatch, publish a superseding matching instruction identifying comment5653626476, this reference/hash correction and the new execution HEAD/tree after separately authorized Git delivery. Push, PR posting, Claude dispatch, implementation, tests, database changes and deployment are not part of this local commit gate.
+
+## GYEON_ESTIMATE_FIRST_OPERATIONAL_RESTART_R1 — Owner pauses Book D3
+
+- Owner explicitly prioritizes estimate creation and operational launch, pausing Book D3. This replaces the active D3 priority, not historical acceptance or Studio's independent approved Foundation work.
+- Local HEAD 9f7230b5e1f05e5e652bf23d8da2ec96f8bb6442 / tree c9cb21bb309dcd11054c72acf0f3e700dd0d4306. PR71 verified OPEN/Draft, remote f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb. Local D3 registration commit is not pushed and does not authorize execution.
+- Plan section 19 and CLAUDE_DIRECTIVE_GYEON_ESTIMATE_FIRST_RESTART_R1.md define the return to furigana repair, manual work/product rows, saved-estimate document actions, limited-release controls and real workflow verification. Retain the full initially approved three-document requirement and no general CRM implementation.
+- Existing 20 source, 10 test and 12 reference hashes match the furigana manifest; four new paths remain absent; generated migration is still zero bytes. All four D3 candidates are unchanged. Reuse combined R1/R2 findings and Codex corrections; no Claude diagnosis or tests were repeated.
+- Current changes are governance only. D3 is paused in the work plan; no process termination or remote runtime state change is claimed. No source/test/SQL change, credential or DB action, Claude/Studio dispatch, commit/push or deployment. External superseding comment verification is appended after posting.
+- Next gate: selective estimate governance delivery under separate Git authority, then bounded furigana implementation and verification. Operational completion, production readiness and completion percentage remain NOT_VERIFIED.
+
+### Priority instruction posted and verified
+
+- PR71 comment https://github.com/nisikawa-officeAZ/GYEON/pull/71#issuecomment-5653656218 was posted once and independently fetched with identical body; SHA-256 118fea307fa24d0c8f992be5a042432b44bfe437b11e6f41c373711ffffd663f. It supersedes active D3 comment5653626476 and the old execution identity, not accepted findings, in furigana comment5653473744. No existing comment was edited.
+- Restart directive SHA-256 17fa4c38880a379e6beda667333ce8643a6266f013207b9de53614ee12dc4aa3. The comment includes all 42 literal existing technical read identities and discloses local uncommitted governance and remote/local HEAD difference. No automatic Claude invocation or Studio instruction was triggered by Codex.
+- Status: OWNER_PRIORITY_RECORDED_AND_COORDINATED / BOOK_D3_PAUSED / ESTIMATE_GOVERNANCE_DELIVERY_PENDING. Initial three-document operational release remains unverified; this record does not claim application implementation.
+
+### Estimate governance local commit gate
+
+- Owner authorized a local commit of estimate-related governance only: the restart directive, furigana directive/manifest, plan sections 16/19 and the furigana diagnosis/preparation/restart ledger entries. CRM intake/decision records and the separate D3 resume checkpoint remain unstaged. The empty migration and all four D3 source candidates are excluded; no source implementation or execution is claimed.
+- Commit preparation removes one terminal blank line from the furigana directive only, without changing its requirements or source/test scope. New directive SHA-256 5e3a2d147b1e5650e1aaa1906b36e4ecc8ab4812510ca0992e7f21027b6e7247; restart directive references the normalized file and has SHA-256 5d8803d91e1f6aaf9b26705d3577900b3bcab4a010ff2a890111daf50b46a70f. Earlier registration hashes and comments remain historical evidence.
+- Before Claude execution, the next separately authorized delivery must publish the new exact execution HEAD/tree and matching hashes in a superseding instruction identifying comment5653656218. This commit gate does not authorize push, external posting, Claude dispatch, tests, database changes, Ready/merge or deployment. The ancestor D3 registration commit remains preserved and inactive; a later normal push includes that documentary history but does not resume D3.

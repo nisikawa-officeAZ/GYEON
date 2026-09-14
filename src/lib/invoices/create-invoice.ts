@@ -266,127 +266,70 @@ export async function createInvoiceFromWorkOrder(
   return { success: true, id: inv.id };
 }
 
-// Phase 3 Sprint 5 — Estimate → Invoice transition (mirrors createInvoiceFromWorkOrder).
-// Pre-populates an invoice from an estimate's items; totals are recomputed
-// server-side. Dealer-scoped; dealer_id never accepted from client.
+// One transactional estimate conversion. This entrypoint can replay an existing
+// identity; it does not impose a global one-invoice-per-estimate business rule.
 export async function createInvoiceFromEstimate(
   estimateId: string
 ): Promise<{ error: string } | { success: true; id: string }> {
   const auth = await requireStaffCapability("finance");
   if ("error" in auth) return { error: auth.error };
-
   const dealer = await getCurrentDealer();
-  if (!dealer) return { error: "認証エラー" };
-
-  const supabase = await createClient();
-
-  // Fetch estimate + items (dealer-scoped; totals are server-authoritative).
-  const { data: est, error: estErr } = await supabase
-    .from("estimates")
-    .select(`
-      id, status, customer_id, vehicle_id, estimate_number, title, tax_rate, discount_amount,
-      estimate_items (
-        category, item_name, description, quantity, unit_price, discount_rate, line_total, sort_order
-      )
-    `)
-    .eq("id", estimateId)
-    .eq("dealer_id", dealer.dealer_id)
-    .single();
-
-  if (estErr || !est) return { error: "見積が見つかりません" };
-
-  // Server-side gate (defense-in-depth; the UI already restricts this to approved
-  // estimates): only an approved estimate may be converted to an invoice.
-  const estStatus = String((est as { status?: string }).status ?? "");
-  if (estStatus !== "approved" && estStatus !== "APPROVED") {
-    return { error: "承認済みの見積のみ請求書を作成できます" };
+  if (!dealer || dealer.dealer_id !== auth.dealerId) return { error: "認証エラー" };
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (typeof estimateId !== "string" || !uuid.test(estimateId)) {
+    return { error: "見積が見つかりません" };
   }
 
-  const items = (est.estimate_items as unknown as {
-    category: string; item_name: string; description: string | null;
-    quantity: number; unit_price: number; discount_rate: number;
-    line_total: number; sort_order: number;
-  }[]) ?? [];
-
-  const discount_amount = est.discount_amount ?? 0;
-  const tax_rate        = est.tax_rate ?? 10;
-  const totals = calculateInvoiceTotals(items, discount_amount, tax_rate, 0);
-
-  const resolvedInvoiceNumber = (await getNextDocumentNumber("invoice")) || null;
-
-  // E8.2/E8.3: billing decision date = invoice issue_date. Resolve billing terms
-  // from dealer-level closing/payment days (customer-level overrides are a future
-  // schema step). Closing-payment applies only when BOTH days exist; otherwise
-  // due_date stays null (normal per-invoice behaviour preserved). The trade flag
-  // is never consulted here, so it cannot force closing billing.
+  // Preserve current billing-date rules. Delivery date is deliberately NOT
+  // inferred here; it remains null until supplied by the issuance workflow.
   const issueDate = new Date().toISOString().slice(0, 10);
   let dueDate: string | null = null;
   try {
     const ds = await getCanonicalDealerSettings();
-    const terms = resolveBillingTerms({
+    dueDate = resolveInvoiceDueDate(issueDate, resolveBillingTerms({
       dealerClosingDay: ds.dealer_closing_day,
       dealerPaymentDay: ds.dealer_payment_day,
-    });
-    dueDate = resolveInvoiceDueDate(issueDate, terms);
-  } catch {
-    dueDate = null; // never block invoice creation on billing-terms resolution
-  }
-
-  const { data: inv, error: invErr } = await supabase
-    .from("invoices")
-    .insert({
-      dealer_id:      dealer.dealer_id,
-      customer_id:    est.customer_id ?? null,
-      vehicle_id:     est.vehicle_id ?? null,
-      estimate_id:    est.id,
-      invoice_number: resolvedInvoiceNumber,
-      status:         "draft",
-      title:          est.title ?? "請求書",
-      issue_date:     issueDate,
-      due_date:       dueDate,
-      // MONTHLY-DATA-B1: an estimate carries no delivery date. It stays null until a work order /
-      // completion report supplies one or an operator enters it — issue_date is NEVER copied here.
-      delivery_date:  null,
-      discount_amount,
-      tax_rate,
-      paid_amount:    0,
-      subtotal:       totals.subtotal,
-      tax_amount:     totals.tax_amount,
-      total:          totals.total,
-      balance_due:    totals.balance_due,
-    })
-    .select("id")
-    .single();
-
-  if (invErr || !inv) return { error: invErr?.message ?? "請求書の作成に失敗しました" };
-
-  if (items.length > 0) {
-    const itemRows = items.map((item) => ({
-      invoice_id:    inv.id,
-      dealer_id:     dealer.dealer_id,
-      category:      item.category,
-      item_name:     item.item_name,
-      description:   item.description || null,
-      quantity:      item.quantity,
-      unit_price:    item.unit_price,
-      discount_rate: item.discount_rate,
-      line_total:    lineTotal(item.quantity, item.unit_price, item.discount_rate),
-      sort_order:    item.sort_order,
     }));
-    const { error: itemsErr } = await supabase.from("invoice_items").insert(itemRows);
-    if (itemsErr) {
-      await supabase.from("invoices").delete().eq("id", inv.id);
-      return { error: "明細の保存に失敗しました" };
-    }
+  } catch {
+    dueDate = null;
   }
 
-  void createActivityLog({
-    entity_type: "invoice",
-    entity_id:   inv.id,
-    customer_id: est.customer_id ?? null,
-    action:      "created",
-    title:       `見積から請求書を作成: ${est.estimate_number ?? est.id.slice(0, 8)}`,
-  });
-
-  return { success: true, id: inv.id };
+  const failure = { error: "請求書の作成結果を確認できません。同じ見積から再度確認してください。" };
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("create_invoice_from_estimate_atomic", {
+      p_dealer_id: dealer.dealer_id,
+      p_estimate_id: estimateId,
+      p_issue_date: issueDate,
+      p_due_date: dueDate,
+    });
+    if (error || !data || typeof data !== "object" || Array.isArray(data)) return failure;
+    const result = data as Record<string, unknown>;
+    if (result.outcome === "not-found") return { error: "見積または参照先を確認できません" };
+    if (result.outcome === "not-approved") return { error: "承認済みの見積のみ請求書を作成できます" };
+    if (result.outcome === "conflict") return { error: "関連する請求書を確認してください。新しい請求書は作成していません。" };
+    if (result.outcome === "numbering-conflict") return { error: "請求書の採番設定を確認してください" };
+    if (result.outcome === "invalid-money" || result.outcome === "invalid-input") {
+      return { error: "見積の金額または日付を確認してください" };
+    }
+    if ((result.outcome !== "created" && result.outcome !== "existing")
+        || typeof result.id !== "string" || !uuid.test(result.id)) return failure;
+    if (result.outcome === "created") {
+      if (!(result.customer_id === null
+          || (typeof result.customer_id === "string" && uuid.test(result.customer_id)))
+          || !(result.estimate_number === null || typeof result.estimate_number === "string")) return failure;
+      // A replay never creates a duplicate activity entry. Logging is ancillary:
+      // its failure cannot turn committed conversion into an apparent save failure.
+      void createActivityLog({
+        entity_type: "invoice",
+        entity_id: result.id,
+        customer_id: result.customer_id as string | null,
+        action: "created",
+        title: `見積から請求書を作成: ${result.estimate_number ?? estimateId.slice(0, 8)}`,
+      }).catch(() => {});
+    }
+    return { success: true, id: result.id };
+  } catch {
+    return failure;
+  }
 }

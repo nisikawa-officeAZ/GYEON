@@ -17,6 +17,8 @@
 
 This plan is the single current execution authority for completing GYEON Detailer Agent. It supplements the frozen architecture and supersedes older schedules, status pages, roadmaps, chat handoffs, and agent memory when they conflict about priority, ownership, phase, or completion state.
 
+Current limited-release direction: section 12 records the Owner-approved estimate/delivery-note/invoice-first milestone. It takes precedence over older all-feature release sequencing only; it does not declare GDA-7 complete, reopen closed finance, or authorize implementation before its separate gates.
+
 Precedence:
 
 1. Explicit current user authorization.
@@ -120,6 +122,8 @@ This is a source and historical-evidence snapshot at baseline `5b1cd6a`. GDA-1 m
 ## 5.1 Residual-work register
 
 This register prevents a future session from treating every placeholder as a completion blocker or overlooking a real operational gap.
+
+The owner-authorized, design-only future-requirements amendment is recorded in section 11. Its G01-G07 gaps are connection prerequisites, not newly authorized implementation phases or evidence of a production regression. Section 11 does not advance deferred ordering, EC, marketing, or SaaS delivery ahead of GYEON DA completion.
 
 ### Completion blockers
 
@@ -790,7 +794,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-D2 — Private package consumer
 
-**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / CURRENTLY BLOCKED BY MISSING IMMUTABLE PUBLISHED FOUNDATION PACKAGE EVIDENCE.
+**Status:** CLOSED — governance merged through PR #57; the immutable package consumer merged through PR #69; the server-only runtime wrapper merged through PR #70; D2 accepted production closeout is Foundation Issue #39 comment `5635813825`.
 
 **Objective:** Bind D1's accepted Book-owned pure adaptor to one exact private immutable Foundation GitHub Packages artifact, server-side only, without copying Foundation source, duplicating rules, guessing persistence, or exposing package access to browser, UI, or Android code.
 
@@ -798,7 +802,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D2_PRIVATE_PACKAGE_CONSUMER.md`. Current local SHA-256: `d13dcb64f9780bc5ed361b9a040d2be7b419726956a218ae05d5ceb7bfc88f84`. Proposed branch: `agent/inv001-p19-book-d2-private-package-consumer`.
 
-**Current blocker:** The fixed Foundation `package.json` is named `detaileros-inventory-foundation`, is version `0.1.0`, has `private: true`, and declares no `main`, `exports`, `types`, `files`, or build/publish script. No accepted P19 evidence proves a published tarball, immutable integrity, declarations, scoped package identity, or commit/tree binding. Book must not install or wrap a guessed artifact.
+**Historical blocker, now resolved:** At the original D2 governance base the Foundation package was not publishable and no immutable artifact was proven. P20D2 later published and accepted `@nisikawa-officeaz/detaileros-inventory-foundation@0.1.0`; Book PR #69 pinned it with lockfile integrity `sha512-VIgMOs45cJub1/18jfHGDiqWjMtyO+z+nm8keWXxfgq3cnyA7QJNm5CKQKypHab6+EWEa+YBy+XQvhGcWQ303A==`, and PR #70 merged the exact two-file server-only wrapper. Current Book `main` is `91b4db7a8133bf7bfc0df66534c2acb286bcff27`, tree `1db51156e3d838ff026a1ebeb09936b95a2d8018`.
 
 **Required Foundation prerequisite (updated by D2-Q2):** A separate Foundation-owned publication phase must prove the private scoped package identity `@nisikawa-officeaz/detaileros-inventory-foundation`, exact version, source commit/tree, published tarball SHA-512/integrity, GitHub Actions publication provenance, complete file/declaration/export catalogue, private visibility, publication timestamp, forbidden-file exclusion, and no-overwrite rule. SBOM is optional later. Actual authenticated consumer installation belongs to Book Gate B1 and is not a Gate A prerequisite. Book does not publish or repair Foundation in D2.
 
@@ -815,13 +819,13 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 - Gate B2: `src/lib/inventory/foundation/foundation-runtime-package.ts`, `src/lib/inventory/foundation/foundation-runtime-package.test.ts`.
 - The three merged D1 files are read-only throughout D2.
 
-**Current authorization:** Create and verify exactly the D2 directive plus this completion-plan update and the phase-results ledger entry. No private-source transmission, Claude invocation, Foundation edit/publication, package/registry access, install, source implementation, executable test, stage, commit, push, PR mutation, DB, provider, UI, Android, deployment, staging, or production action is included.
+**Closed boundary:** D2 proves the immutable package dependency, registry/build authentication, server-only wrapper, five D1 surfaces, focused B2 `14/14`, D1 regression `71/71`, typecheck, diff check, and read-only production smoke. It does not prove durable persistence, product mapping, authenticated orchestration, product-order/UI wiring, database concurrency, or legacy retirement.
 
-**Exit gate:** Verify the exact three-path governance candidate, directive hash, current package blocker, literal read/change scopes, and protected metadata; then request a separate Owner gate for stage and local commit. Gate A remains blocked until Foundation publication evidence is independently accepted.
+**Exit gate:** `PASS_B2_ACCEPTED_CLOSED`. D3A begins only through the separately governed P20D2 baseline-reconciliation and read-only-diagnosis gate below.
 
 ### INV001-P19-BOOK-D2-Q1R1 — Foundation landing acceptance and package-publication hold
 
-**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / FOUNDATION Q1R1 LANDING ACCEPTED / D2 REMAINS BLOCKED BY UNPROVEN IMMUTABLE PACKAGE PUBLICATION.
+**Status:** HISTORICAL GOVERNANCE BASELINE / SUPERSEDED BY THE ACCEPTED P20D2 PACKAGE PUBLICATION, PR #69 CONSUMER PIN, AND PR #70 WRAPPER CLOSURE RECORDED ABOVE.
 
 **Objective:** Bind the independently accepted Foundation PR #79 landing to Book governance without falsely treating a documentation/hash correction as a published package or beginning D2 package work.
 
@@ -841,7 +845,7 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-D2-Q2 — P20C private-package handoff alignment
 
-**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / FOUNDATION GATE 1 ACCEPTED / FOUNDATION GATE 2 PACKAGE PUBLICATION NOT EXECUTED / BOOK D2 BLOCKED.
+**Status:** HISTORICAL GOVERNANCE BASELINE / FOUNDATION GATE 2 AND BOOK D2 LATER CLOSED / SUPERSEDED BY THE ACCEPTED P20D2 CLOSURE RECORDED ABOVE.
 
 **Objective:** Replace the stale D2/Q1R1 package-readiness and Claude read-scope assumptions with the Owner-ratified P20C handoff boundary while preserving D1 and the separated D2 Gate A/B1/B2 execution model.
 
@@ -863,15 +867,15 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 ### INV001-P19-BOOK-D3A — Foundation persistence governance preparation
 
-**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / IMPLEMENTATION BLOCKED UNTIL D2 FULL CLOSURE.
+**Status:** ORIGINAL GOVERNANCE MERGED THROUGH PR #58 / D2 IS NOW CLOSED / D3A DIAGNOSIS AND IMPLEMENTATION HAVE NOT STARTED / P20D2 BASELINE RECONCILIATION BELOW GOVERNS NEXT.
 
 **Objective:** Predefine the Book-side durable persistence, least-privilege RLS/grant, transaction, idempotency, optimistic-concurrency, append-only audit, snapshot, recovery, and disposable-verification gates required by the sealed Foundation V2 runtime without creating or applying a migration.
 
-**Fixed Book authority:** `main` commit `2e1df23f1aa64b7c9ca2a608f36f2dccd107cf7b`, tree `1116b7e768a1a1ca1cfd5bff99263f235cf6bcb8`. D2 governance is merged through PR #57, but D2 package publication, dependency pin, and runtime wrapper remain incomplete.
+**Historical fixed authority and current reconciliation:** The original governance used Book `main` commit `2e1df23f1aa64b7c9ca2a608f36f2dccd107cf7b`, tree `1116b7e768a1a1ca1cfd5bff99263f235cf6bcb8`, and merged through PR #58 as `00f2df7dc5574d0a06a219cb51b4629f1f337f9b`. D2 is now fully closed at Book `main` commit `91b4db7a8133bf7bfc0df66534c2acb286bcff27`, tree `1db51156e3d838ff026a1ebeb09936b95a2d8018`, after PR #69 and PR #70.
 
-**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D3A_FOUNDATION_PERSISTENCE.md`. Proposed branch: `agent/inv001-p19-book-d3a-persistence-governance`.
+**Governing directives:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P19_BOOK_D3A_FOUNDATION_PERSISTENCE.md` remains the historical architecture authority. `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS.md` supersedes its stale execution baseline. Current local governance branch: `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1`.
 
-**Current boundary:** Governance preparation only. No private-source transmission, Claude invocation, package/registry access, migration creation, database connection, implementation, executable test, stage, commit, push, PR mutation, provider, Android, deployment, staging, or production action is authorized.
+**Current boundary:** P20D2 governance baseline reconciliation only. No private-source transmission, Claude invocation, package/registry access, migration creation, database connection, implementation, executable test, stage, commit, push, PR mutation, provider, Android, deployment, staging, or production action is authorized.
 
 **Gate separation:**
 
@@ -885,7 +889,70 @@ Claude may edit and test only those four paths, using `CLAUDE_DIRECTIVE_GYEON_OR
 
 **Security posture:** Office AZ is the only currently authorized live inventory owner; SQL is persistence, not business-rule authority; exposed tables require RLS; authentication alone is not authorization; browser raw writes, service-role exposure, user-metadata authorization, public privileged functions, dual-write, retries, rule duplication, and production in-memory fallback are prohibited.
 
-**Exit gate:** Verify the exact three-path governance-only diff and directive hash, then request a separate Owner gate for stage/local commit. D3A Gate A remains blocked until D2 is fully closed and its merged package wrapper identity is fixed.
+**Exit gate:** Verify the exact three-path P20D2 governance-only diff, directive hash, B2 closure identities, proposed 43-path Gate A read payload, protected metadata, clean index, and `git diff --check`; then request a separate Owner gate for exact-path stage/local commit. Claude remains blocked until later push/Draft-PR/instruction/transmission gates.
+
+### INV001-P20D2-BOOK-D3A-R1 — Post-B2 baseline reconciliation and persistence diagnosis governance
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / CLAUDE DIAGNOSIS NOT AUTHORIZED.
+
+**Objective:** Record the accepted D2 closure in Book governance and replace the stale D3A execution baseline with one exact future read-only diagnosis contract. This phase creates no persistence implementation and contacts no database or provider.
+
+**Fixed Book authority:** `main` commit `91b4db7a8133bf7bfc0df66534c2acb286bcff27`, tree `1db51156e3d838ff026a1ebeb09936b95a2d8018`.
+
+**Accepted D2 chain:** PR #69 merged the exact `.npmrc`, `package.json`, and `package-lock.json` consumer pin as `e8b3d89e6520d0c5e5e13ef8f100586e51041a86`, tree `3205c57d5716fffd47a741fa8809eb8f33a47e22`. PR #70 merged the two-file server-only wrapper as `91b4db7a8133bf7bfc0df66534c2acb286bcff27`, tree `1db51156e3d838ff026a1ebeb09936b95a2d8018`. The package is `@nisikawa-officeaz/detaileros-inventory-foundation@0.1.0`, pinned to lockfile integrity `sha512-VIgMOs45cJub1/18jfHGDiqWjMtyO+z+nm8keWXxfgq3cnyA7QJNm5CKQKypHab6+EWEa+YBy+XQvhGcWQ303A==`.
+
+**Shipped store contract:** `InventoryRuntimeStore` exposes only `snapshot(): InventoryRuntimeSnapshot` and `commit(expectedRevision, next): boolean`. The B2 wrapper injects this store and binds the five D1 surfaces but creates no durable store, transaction, retry, database connection, product-order wiring, or fallback.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS.md`, SHA-256 `72e9551910b3725c7833e6b7c0819387da208c04cf227993b9088a5d88cbc64a`. Current branch: `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1`. A dedicated coordination Draft PR does not yet exist.
+
+**Exact current governance allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS.md` (new)
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+**Future Gate A boundary:** One tool-disabled read-only Claude diagnosis may occur only after the governance candidate is separately committed, normally pushed, opened as a dedicated Draft PR, independently verified, and followed by a new fixed-HEAD/tree Owner authorization on that PR. The directive proposes exactly 43 literal read paths and permits no glob or dependency-following access.
+
+**Superseded Issue instructions:** Foundation Issue #39 comments `5635814089`, `5635874792`, and `5636134595` are not executable Book governance. Comment `5635978070` records the append-only correction. They must not start Claude or replace the dedicated Book Draft-PR instruction.
+
+**Current authorization:** Create and locally verify only the exact three governance paths. No stage, commit, push, PR creation or mutation, private-source transmission, Claude invocation, package command, test, typecheck, build, migration creation/application, SQL, DB, Supabase, Auth, Storage, LINE, Vercel, provider, production data, UI/action wiring, D3A implementation, D3B-D7, Android, Studio implementation, or deployment is authorized.
+
+**Exit gate:** Verify the exact three-path diff, new directive SHA-256, Book identity, D2 chain, package pin/integrity, protected path mode/blob/clean state, empty index, and `git diff --check`; then request a separate Owner authorization for literal-path staging and local commit only.
+
+### INV001-P20D2-BOOK-D3A-B1-G1 — Accepted diagnosis, B0 evidence, and implementation-governance reconciliation
+
+**Status:** LOCAL GOVERNANCE RECONCILIATION CANDIDATE / UNSTAGED / UNCOMMITTED / B1 EXECUTION BLOCKED UNTIL COMMIT, PUSH, DEDICATED DRAFT PR, FIXED IDENTITY, NEWEST PR INSTRUCTION, AND SEPARATE OWNER AUTHORIZATION.
+
+**Objective:** Reconcile the accepted D3A diagnosis, the one-time CLI-generated B0 migration-path reservation, and the first fail-closed B1 attempt into Git-governed Book authority. This phase authors governance only; it does not create a persistence implementation or execute verification.
+
+**Accepted D3A evidence:** `INV001_P20D2_BOOK_D3A_R1_PERSISTENCE_READ_ONLY_DIAGNOSIS_RESULT_V1` is accepted at source-result SHA-256 `6e49fed2f5e37ab502fd4ab1e9c11327512fd89d6397e0c02421a07190933579` with verdict `PASS_D3A_IMPLEMENTATION_GOVERNANCE_READY`. Its result-only correction added the missing verdict and nothing else: `CORRECTION_SCOPE=ADDED_MISSING_VERDICT_ONLY`, correction-result SHA-256 `c82a23fb87053737f674687f4500b82a282ce32d503519931468e5368139090a`.
+
+**B0 evidence and ordering reconciliation:** Under separate Owner authorization, MacBook Codex used Supabase CLI `2.116.0` once with `supabase migration new foundation_inventory_runtime`. The exact output is `supabase/migrations/20260912004445_foundation_inventory_runtime.sql`, mode `0644`, size `0`, SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`. B0 occurred before this B1 governance document was committed. That bounded ordering deviation is accepted only because the generated file remained empty and untracked and no SQL, source, test, database, Git delivery, or provider action occurred. It grants no implementation authority and the CLI command must not be repeated in B1.
+
+**Blocked attempt evidence:** The first separately authorized B1 attempt returned `VERDICT=BLOCKED_GOVERNANCE_PRECONDITION` and `ACTIONS=ZERO`, result SHA-256 `5c2018bf2d5e2d6aaa00a02b0ee441b7e7f394bd50788c2b4218f53fd681b4fe`. This was the correct fail-closed result because the tracked documents lacked accepted D3A/B0/B1 governance and no dedicated Draft PR existed. It is not implementation evidence.
+
+**Governing B1 directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION.md`, candidate SHA-256 `cd24dd9358346d9781966ed041697c8e6a3c648e65844f942ada2691ff186a0d`, required future result marker `INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION_RESULT_V1`.
+
+**Exact current governance write allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P20D2_BOOK_D3A_B1_UNCOMMITTED_IMPLEMENTATION.md` (new)
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+
+The existing untracked B0 file is preserved read-only outside this three-document write allowlist. No other path may change. All section 3.1 protected paths remain metadata-only; `ScreensPreview.tsx` content remains prohibited.
+
+**Future B1 write allowlist after all governance gates pass:**
+
+1. `supabase/migrations/20260912004445_foundation_inventory_runtime.sql`
+2. `src/lib/inventory/foundation/foundation-persistence-adaptor.ts`
+3. `src/lib/inventory/foundation/foundation-persistence-adaptor.test.ts`
+4. `scripts/e2e/inv001-foundation-persistence-disposable.mjs`
+
+The future B1 candidate must preserve the exact two-method `InventoryRuntimeStore` interface and five D1 wrapper surfaces; add one Foundation-specific durable persistence boundary; enforce atomic CAS, idempotency/replay, append-only audit, least-privilege RLS/grants, opaque identity/evidence, validation-only import, and deterministic recovery; forbid browser raw writes, legacy-table reuse, dual write, automatic retry/fallback/reconciliation, D3B mapping, product-order/UI wiring, and Book ownership of Studio inventory. Tests and the disposable harness may be authored but not executed in B1.
+
+**Current authorization:** Exactly the three governance-document edits and local non-executable verification. No implementation or test file edit; no test, typecheck, build, SQL, database, Supabase runtime, Auth, Storage, LINE, provider, browser, Vercel, network, migration apply/reset/seed/backfill, stage, commit, push, PR/Issue mutation, Ready, merge, deployment, D3B-D7, Android, or Studio implementation is authorized.
+
+**Next gates:** Independently verify this exact three-document candidate, directive hash, accepted diagnosis and correction evidence, B0 empty-file preservation, blocked-attempt evidence, Book identity, protected metadata, empty index, and `git diff --check`; then obtain separate Owner authorization for exact-path stage/local commit. Push and dedicated Draft-PR creation require a later gate. Only after the pushed Draft PR, fixed execution identity, newest matching PR instruction, and another separate Owner authorization may Claude run B1 once. Executable verification remains a later separate gate.
 
 ### INV001-P19-BOOK-D3B — Product identity mapping governance preparation
 
@@ -1676,3 +1743,280 @@ Any proposed change to mission, fixed decisions, phase order, completion standar
 3. Identify time, risk, security, and field-work impact.
 4. Receive explicit user approval.
 5. Be committed and recorded in the result ledger before implementation follows the new decision.
+
+## 11. Future-requirements design amendment — 2026-09-13
+
+**Phase:** `GYEON_FUTURE_PLAN_AMENDMENT_20260913_R1`.
+
+**Status:** OWNER-AUTHORIZED DESIGN-POLICY RECORD / LOCAL DOCUMENT VERIFIED / GIT DELIVERY PENDING / NO IMPLEMENTATION OR ACTIVATION AUTHORITY.
+
+**Authorization:** The current Owner replied `はい` to: `次は、実装を始めず、正式計画と結果台帳への反映だけ進めてよいですか？` This authorizes the two-document reflection of the reviewed proposal, not source work, executable verification, Claude execution, Studio work, external posting, Git delivery, or environment access. The local design-policy record must still pass document verification and the separate Git delivery gates. It does not satisfy section 10's committed-plan prerequisite for later implementation.
+
+**Fixed proposal:** `GYEON-FUTURE-PLAN-AMENDMENT-20260913-P1`, SHA-256 `a61cfc6da18e789c369e5f0929c4aaaef9736dd9d18941592efec7a099e4f300`, retained at `/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/docs/future-expansion-20260913/FORMAL_PLAN_AMENDMENT_PROPOSAL.md`. The unchanged proposal retains its original proposal-only status as historical evidence; this section records only the newly authorized policy reflection. The essential adopted boundaries are reproduced below so execution authority does not depend on an external local file being available on another host.
+
+**Source basis:** Local Book repository `/Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-inv001-p20d2-b2-runtime-wrapper`, branch `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1`, HEAD `ee4b73e1512aecc44ea1fe51d9367d53f3399c63`, tree `9d9d9b30f5e0c6a59f33da421b1e4f11090d4e8c`. Future-design dictionary `0.2.9-design` has 11 contracts with all features OFF. Its historical 256 passing document checks are not implementation, provider, notification, persistence, recovery, or runtime acceptance. Latest remote/main, applied DB, production, provider, and Studio status were not verified in this gate.
+
+### 11.1 Priority and ownership remain unchanged
+
+- Complete and field-prove GYEON DA first. Design connection boundaries now where they prevent later rework; do not create speculative tables, empty APIs, placeholder buttons, a generic workflow engine, or a second product/inventory authority.
+- C01 product identity, C02 dealer ledger, C03 estimate retail intent, and C04 coating demand are future connection contracts. Their implementation remains in later separately authorized scopes. Do not add warehouse calls to estimate saving.
+- C05 procurement candidates and C06 warehouse supply are the focus of the connection gaps below. A verified daily-workflow dependency, accepted supply prerequisites, and an explicit phase exception are required before implementation.
+- C07 public catalogue, C08 reviewed safety publication, C09 social cases, C10 analytics, and C11 SEO changes remain later work after the core journey. Publication, consent, source rights, withdrawal, retention, and cost policies remain separate gates. Internal `select(*)` data is not an anonymous public API.
+- Office AZ inventory implementation stays Studio-owned. Book owns only its accepted integration boundary and dealer-local domain. Preserve the ratified `/inventory` versus `/admin/logistics/inventory` separation. No parallel ledger, direct Foundation-store bypass, invented command, or dual write is authorized.
+- Draft PR #7 remains frozen, closed finance/monthly-invoice work remains closed, and one active implementation phase remains the rule. D1-D7 identifiers and historical acceptance records are not renumbered or reclassified.
+
+### 11.2 Recorded business policy for future connection
+
+1. Do not count routine holds. Estimates, customer estimate approval, forecasts, and cart additions before the shop enters ordering do not reserve inventory or deduct physical stock.
+2. At the first server-authorized order-screen entry for an attempt, check and allocate the current cart through the accepted warehouse authority. A GET, prefetch, browser clock, or client assertion is not allocation authority. Unknown supply is not zero or confirmed shortage.
+3. Keep the original 15-minute deadline from that first server entry. Leaving, returning, multiple tabs, replay, or quantity changes do not extend it. Expiry may release only the attempt's unconfirmed eligible allocation; confirmed orders and payment-processing/reconciling allocations are exempt. Record payment-start intent before the provider call and serialize local expiry/payment/finalization transitions; do not claim cross-service atomicity.
+4. The orderer chooses backorder or cancellation for shortage quantities only. Keep available quantities, require current supply evidence and reconfirm changed quantity/price, and never auto-submit or charge after a shortage choice. A fully excluded cart creates no order/payment; a backorder-only order does not invent zero-quantity physical allocation.
+5. Before confirmation, decreases release only the unused allocation delta; increases check/allocate only the added delta. Preserve unrelated valid allocations and the original deadline. Block edits during confirmed/payment-processing/reconciling states. Retain late/partial receipts and reconcile rather than blindly retrying or replacing the attempt.
+6. After confirmation, the shop requests cancellation and an authorized administrator reviews it. Only currently unshipped, not-already-cancelled quantities are eligible; shipped quantities use a separate return process. Request, review, execution, refund, and completion evidence are separate states. Approval alone is not cancellation or refund completion.
+7. Effective acceptance of a cancellation request requires durable warehouse evidence that the requested quantities cannot be dispatched. Registration alone is not acceptance. Serialize acceptance/hold with dispatch at the accepted native authority; UI-only blocking is insufficient. Unknown/partial hold success is not complete acceptance.
+8. Rejection removes only that request's hold and reevaluates ordinary conditions without auto-dispatch. Approval retains the hold until actual cancellation completes; unresolved quantities remain held. Completed cancellations never reenter dispatch eligibility. The checkout's 15-minute deadline is not a cancellation-hold timeout.
+9. Dealer physical stock is reduced upon product handover or confirmed actual post-service use. Warehouse allocation, warehouse dispatch, and dealer receipt are distinct facts. Do not infer usage from prediction, mix dealer balances into warehouse totals, or silently rewrite finalized history.
+10. Preserve the existing server-owned warehouse business calendar and cutoff contract. Saturdays are not automatically closed. Calendar changes that revise an existing shipment date retain the accepted dealer bell/email notification requirement; this does not authorize new payment-incident email/SMS channels.
+
+These are design-policy records, not permission to activate the rules on existing orders or deploy them.
+
+### 11.3 Payment ambiguity, notification, and restart recovery
+
+Adopt the following as the connection-design constraints while keeping all operational limits and provider mappings unresolved until separately confirmed:
+
+- Persist the existing payment attempt and recovery identity before calling the provider. Communication timeout, processing, and unverified not-found results are not proof of failure. Preserve the same attempt, approved order revision, expected amount/currency, provider-account reference, allocation references, and original deadline.
+- Unknown outcomes must not create a new charge/key, release stock, cancel, refund, or dispatch. Reconcile through supported provider lookup and verified events matched to the exact account, transaction, attempt, order, amount, and currency. Old/duplicate/conflicting events must not overwrite verified state.
+- Keep incident state and recoverable delivery intent durable together. Restart from stored open incidents, not process memory. Use exclusive versioned worker claims; stale workers cannot commit a resolution. Do not hold database locks across external network calls.
+- Reuse only a verified authorized administrator notification route. Deduplicate by incident/notification-kind/transition-revision and retry the same delivery identity. Ordinary silent-failure notifications are insufficient. Acknowledgement is not payment resolution, and failed delivery does not close the incident. Do not add email/SMS authority by inference.
+- Matched payment success may resume only an already authorized local order transition idempotently. If payment succeeded but local persistence failed, keep reconciling until required local receipts exist. Verified terminal non-completion reevaluates original expiry and ordinary guards; it never creates a fresh lease. A new payment requires a resolved prior attempt and fresh user intent.
+- Lookup budget exhaustion or incident age escalates to human attention, not assumed payment failure or stock release. Do not introduce a manual paid/failed override without authoritative evidence.
+- Existing pure finalization logic may request compensation on a prepared-operation expiry/version conflict. Distinguish that established compensation contract from ambiguous-payment lookup and from the checkout lease. Before wiring, diagnose the exact responsibility and transition boundary; do not execute refunds from the lookup worker or silently weaken the accepted refund contract.
+- Keep payment incidents outside the opaque Foundation inventory snapshot. Preserve tenant/operation authority, real request-scope authentication, function grants/RLS boundaries, and secret redaction. Do not expose service credentials or card details in clients, incidents, notifications, or logs.
+
+**Still unresolved:** actual administrator capability/delivery route, provider evidence/status mapping, lookup interval/backoff/rate limits, maximum automatic check budget, escalation threshold, administrator response/re-escalation policy, and proof of native quantity-specific dispatch hold. Missing configuration blocks activation. This record does not ratify numerical defaults, credentials, notification recipients, provider readiness, or a production deadline.
+
+### 11.4 Connection-gap register
+
+The following observations refer only to the fixed local source basis. They are not a new production incident finding or an executable repair instruction.
+
+| Gap | Local evidence | Required later boundary |
+|---|---|---|
+| G01 order save | `src/components/product-orders/ProductOrderForm.tsx:75`; `src/lib/product-orders/create-product-order.ts:24` | Reuse suitable input UI, but replace the old separated header/item save with authoritative price/quantity/revision/allocation/idempotency and recovery. Prevent the old CRUD path from bypassing the new contract. |
+| G02 payment model | `src/lib/product-orders/gyeon-order-v3-contract-core.ts:641`; `supabase/migrations/20260829101726_gyeon_order_v3_contract.sql:409` and `:521` | Pure full-payment/refund rules and old SQL authorization/reauthorization/void semantics differ. Preserve D16-P2B1's five-RPC scope and forward-only correction; historical migration files and stale passing tests are not new-contract acceptance. |
+| G03 confirmed cancellation | `src/lib/product-orders/update-product-order.ts:10` and `:49` | Replace direct submitted-to-cancelled behavior with separate request/review/execution and line-level eligibility/dispatch-race proof. |
+| G04 persistence wiring | `src/lib/inventory/foundation/foundation-runtime-package.ts:22`; untracked `foundation-persistence-adaptor.ts:35` in the same directory | A synchronous in-memory success is not durable success. Preserve D3A/D3B/D4/D4A gates and verify durable result ordering before wiring UI. Candidate existence is not acceptance. |
+| G05 payment recovery | `src/lib/product-orders/gyeon-order-v3-external-authority-core.ts:141` and `:157`; inspected `src/app/api` routes | No ordering provider/Webhook connection was found in the inspected local source. Separate raw Webhook acceptance, durable evidence, asynchronous reconciliation, compensation, and local finalization. |
+| G06 important notification | `src/lib/notifications/notification.ts:17`; `supabase/migrations/054_notification_activity_timeline.sql:58` | Bell/list presentation is reusable; silent-failure creation is not durable delivery. Verify actual administrator routing, recoverable intent, deduplication, and replay. |
+| G07 warehouse dispatch hold | `src/lib/inventory/foundation/foundation-adaptor-types.ts:49` | The 18-command list has no dedicated hold name; names alone do not prove absence of capability. Verify native specifications and all dispatch paths. Any necessary Foundation contract change needs separate Studio/Owner authority, not a Book-invented operation. |
+
+### 11.5 Dependency order, decisions, and acceptance
+
+Proposal labels P0-P6 below are explanatory only, not new authorized phases:
+
+1. **P0:** Reflect the design policy in this plan and append the result ledger; independently verify, then obtain separate exact-path stage/local-commit and delivery authority.
+2. **P1:** Under later explicit diagnosis authority, refresh one exact Book/Studio source basis, actual candidate acceptance, capabilities, prerequisites, and literal later allowlists. Do not restart a stopped D3A attempt or reuse burned runtime evidence through this amendment.
+3. **P2:** Accept the necessary existing D3A persistence, D3B product identity, D4/D4A live authority, and relevant warehouse capabilities under their own gates.
+4. **P3:** Separately diagnose and implement the bounded order persistence/state/forward-only DB alignment and old-CRUD cutover. Candidate authoring and DB execution/application remain distinct.
+5. **P4:** Separately authorize provider adapter, Webhook acceptance, reconciliation/important-notification wiring, and sandbox/environment proof, after actual operating configuration is accepted.
+6. **P5:** Connect ordering UI only after required server/supply/payment acceptance; prove current cart, shortage choices, original deadline, cancellation review, and protected reconciling states through authenticated requests.
+7. **P6:** Keep Ready, merge, migration/configuration application, deployment, authenticated production smoke, and legacy retirement separately authorized and recorded.
+
+Technical owners must consolidate resolvable technical questions into one evidence-backed options package rather than asking the Owner to relay routine instructions or guess API details. Owner decisions cover actual responsibility/coverage, acceptable response times and operating cost, material native-contract changes, and priority/scope. Do not promise a completion date before prerequisite status and bounded effort are established.
+
+Required later tests cover concurrent shops and oversell prevention; multi-tab/replay/different-payload idempotency; 15-minute expiry versus payment/finalization; partial/all shortage and quantity edits; late and partial native success; cancellation-hold versus dispatch with overlapping requests; crash before provider call, after provider success/before local commit, and after local commit/before response; stale-worker and out-of-order-event rejection; durable notification retries; genuine request-scope tenant/role/revocation/direct-CRUD/RPC denial; and authenticated environment/production evidence. No test in that list is authorized or claimed executed by this document update.
+
+Operational risk: protecting unknown payments can retain stock for a long time. Resolve this through verified lookup, owned response deadlines and escalation, not invented expiry. For rollback, stop new entry while preserving unresolved payment/cancellation/notification evidence and recovery paths. Feature OFF or code revert alone must not abandon in-flight transactions; no destructive history rewrite or dual-write fallback.
+
+### 11.6 This gate's literal scope and exit
+
+Write allowlist, exactly:
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md` — append-only history.
+
+Protected paths remain those in section 3.1; `ScreensPreview.tsx` is metadata-only. The four existing untracked D3A candidates and all six future-design/proposal artifacts remain unchanged. No dependency, code, test, migration, runtime, DB, Auth, provider, credential, browser, Studio, external-post, Git index, commit, push, PR, Ready, merge, or deployment action is included.
+
+**Exit:** Document-only verification and owner handoff, with the two files left unstaged/uncommitted. Record the proposal hash, unchanged source base and candidate hashes, actual write paths, protected metadata, evidence limits, and next separate delivery gate in the result ledger. Do not treat this design record as closure of D3A, a runtime repair, or a new implementation authorization.
+
+## 12. Initial three-document release amendment — 2026-09-13
+
+**Phase:** `GYEON_INITIAL_DOCUMENT_RELEASE_PLAN_20260913_R1`.
+
+**Status:** OWNER-AUTHORIZED PLAN REFLECTION / LOCAL DOCUMENT CANDIDATE / NO IMPLEMENTATION, GIT DELIVERY, OR RELEASE AUTHORITY.
+
+**Authorization:** The Owner approved manual additional rows now with catalogue selection later (`ではこの内容で進めて下さい`), and replied `はい` to the current next step: separate additional rows and document issuance order in the formal plan. This gate changes exactly this file and the append-only result ledger. Claude execution, external posting, application edits, tests, DB access, commit/push, and deployment are not part of this gate. Section 10's committed-plan prerequisite remains mandatory before implementation follows this amendment.
+
+**Baseline:** Book worktree `work/dealeros-inv001-p20d2-b2-runtime-wrapper`, branch `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1`, HEAD `a9ddf6ac1d3db9bae035bda1e86136ae265a7fc5`, tree `c256ee69d4d0dc56181419a5908be256e1f21a9e`. This is a local source/document basis, not a refreshed remote/main, environment, or production acceptance.
+
+**Retained references:** Wrapper `docs/GYEON_INITIAL_RELEASE_SCOPE_PROPOSAL_20260913.md`, SHA-256 `075d8f6d74bd328c902a0346efa3d7ba0fc9bc5520d1b709b95c90a6e7bcb32b`, and `docs/ESTIMATE_ADDITIONAL_ITEMS_SPEC_20260913.md`, SHA-256 `41b341e3858fea10b484754af3c076d2fdee1285c5155f244ec5399905e4fd55`. Their historical proposal/review labels remain unchanged. The governing requirements are reproduced here so another host does not need those local files to understand the scope.
+
+### 12.1 Priority, release boundary, and conflict disposition
+
+1. First deliver reliable estimate, delivery-note, and invoice creation, persistence/readback, issuance, PDF viewing, download, and printing to detailers. This is a limited field-release milestone, not full GDA-7 completion.
+2. Then enable customer management, service certificates, and scheduling, in that order. **New CRM implementation or specification expansion is prohibited until the Owner approves its design.** Existing customer/vehicle input and selection needed by estimates may remain; that dependency is not approval to build CRM.
+3. Temporarily gray out other dealer-facing functions rather than deleting data/history. Preserve required login, store/price settings, and genuinely necessary date/confirmation inputs. Do not disable whole mixed-purpose navigation groups or administrator maintenance indiscriminately.
+4. Match menu, cards, links, mobile entry, direct URLs, and server operation entry to the same release boundary while retaining tenant/role authorization. Gray UI alone is not enforcement. Show a readable preparation reason, not a false subscription-plan restriction.
+5. Product-content DB completion, Foundation D1-D7 completion, ordering, inventory, payments expansion, retailer PWA, AI, LINE, and marketing are not presumed prerequisites of this limited release. A demonstrated unavoidable dependency requires explicit scope reconciliation. Preserve existing D3A candidates and evidence; this amendment does not restart C7 or change Studio's independent assignment.
+6. Sections 1, 2, 5.1, and 7 retain the full GYEON DA mission and historical phases, but any interpretation requiring all those functions before the first limited dealer release is superseded by this section. D1-D7/GDA identifiers and acceptance history are not renumbered or retrospectively upgraded. SaaS monetization is still deferred.
+7. Closed finance/monthly-invoice contracts remain closed. The desired pre-invoice delivery flow conflicts with the currently inspected invoice-derived delivery adapter. Record this as an unresolved business-flow design difference, not a proven production regression or permission to remove guards. Required work crossing the closed finance boundary must receive a separate explicit exception after impact diagnosis; otherwise it remains blocked.
+
+### 12.2 Workstream A — manual additional rows and later catalogue connection
+
+- Initial input: work/product kind, name, quantity, unit, unit price, tax category, and notes. Use numerical quantity times unit price, then the existing accepted discount/tax/rounding contract; do not invent a second calculation engine.
+- Preserve row identity/order and required values across validation, save, readback, edit, and all three documents. Validate on the server as well as in the UI. Resolve precision, bounds, tax-exclusive/inclusive display, free versus unset, and permitted tax categories against existing contracts before implementation.
+- Distinguish work/product kind from manual/catalogue origin. Reserve a compatible design for canonical product/variant references and selection-time name/price/version snapshots; no fabricated product IDs, duplicate product master, empty API, or automatic name-based remapping.
+- Later add `GYEON製品から選ぶ` to the same entry area and reuse its row/calculation/save/output contract. Catalogue selection is not enabled in the initial manual-only milestone. Product DB or later price changes must not alter historical saved or issued values.
+- Manual rows, estimates, and catalogue selection do not reserve or deduct inventory. Ordering/allocation remains the separately governed contract in section 11.
+- Current local source observations: `wizard-manual-pricing.ts` fixes other-work quantity at 1 and records entered quantity as metadata; `estimate-save-mapper-from-config.ts` sets manual description to null; `get-estimate.ts` and the inspected document row models do not carry dedicated unit/work-product/per-line-tax fields. These observations identify inspection targets, not tested end-to-end failure or proof that the live DB lacks columns.
+- Preserve legacy quantity-as-note semantics. A new numerical-quantity model must not silently multiply or reprice older rows during readback/resave.
+
+### 12.3 Workstream B — saved estimate and independent document issuance
+
+- Enter and save estimate data first. Only confirmed durable save success permits `保存完了` and issuance controls on that same screen. Saving an estimate is not issuing an estimate document, approving it, completing work, issuing an invoice, or receiving payment.
+- Offer explicit actions for the needed estimate, delivery note, or invoice. Do not issue all three automatically. Required document-specific dates/confirmation may be gathered on the same surface; users must not be forced to navigate back through separate list pages.
+- Support all required paths: invoice without an estimate document or delivery note; delivery note first and related invoice later; multiple delivery notes consolidated into one invoice. A separate input flow with no saved estimate is not added to the initial requirement.
+- Keep save state and each issuance state separate. Saving, failed save, unknown result, or unsaved changes must not be presented as issue-ready. Issuance failure must not be reported as failure of an already successful estimate save. Reopen/download/print must not create a new charge or new document identity.
+- Preserve document-specific immutable issued values and source relationships. Later invoice edits must not rewrite an issued delivery note. Prevent duplicate issuance and double billing across individual and consolidated invoices; never mix tenants or invoice recipients.
+- Do not create dummy invoices, delivery notes, work orders, or completion facts to bypass existing gates. The current `createInvoiceFromEstimate` approved-only condition must be reconciled with the same-screen flow; do not silently auto-approve or remove approval.
+- Reuse accepted finance calculation/issuance boundaries wherever compatible. Current estimate-to-invoice code recalculates totals and does not copy estimate notes/product-origin fields in the inspected path; verify required parity and preservation before changing it. Source observations alone do not establish a regression or authorize closed-finance edits.
+- Required later design decisions: full versus partial delivery, source-line/quantity association, numbering, correction/reissue, invoice approval interaction, consolidation eligibility and tax/rounding, and necessary completion/date inputs. Inspect accepted contracts first and present only actual unresolved business choices together to the Owner. Do not invent monthly-end closing, carryforward statements, automatic billing, payment processing, or allocation extensions.
+
+### 12.4 Ordered delivery and acceptance boundaries
+
+The rows below separate work, not grant source-write authority or rename inventory D1-D7:
+
+| Order | Deliverable | Gate / current evidence |
+|---|---|---|
+| 0 | This limited-release plan and append-only ledger reflection | Document-only candidate; Git delivery separate |
+| 1 | Fixed-base Claude read-only diagnosis of A's remaining validation/persistence/readback paths and B's dependencies/closed-finance conflicts | Not invoked here; exact read list and newest coordination Draft-PR instruction required under 6.1 |
+| 2 | A: common additional-row contract and bounded manual-row candidate | Later explicit literal source allowlist and tests; legacy data preserved |
+| 3 | B: independent issuance/source-link design, then bounded implementation | Owner decisions and any protected-finance exception resolved first; no guard bypass |
+| 4 | Same-screen save/issue actions and limited-release controls | Only after required server behavior is accepted; no broad CRM work |
+| 5 | Authenticated staging / real-device field verification of all initial paths | Separate environment/data-write authority; E3 then E4 evidence |
+| 6 | Exact candidate Git delivery, authorized release, production smoke and recovery record | Separate commit/push/Ready/merge/apply/deploy gates; limited scope only |
+
+One implementation at a time. If shared row/schema contracts are needed by A and B, reconcile those contracts before either implementation, rather than duplicating them. Product contents, SDS/images/videos, and future retailer PWA remain later independent delivery; this plan introduces no source or DB for them.
+
+Required later acceptance covers manual work/product rows including quantity 2 × price 1000 = 2000 before tax/discount; unit/description/order/origin preservation; legacy quantity-note stability; exact totals across save/readback/documents; same-screen confirmed save; all three issuance paths including later/consolidated billing; no duplicate issuance or double billing; cross-tenant/direct-entry denial; readable failure/disabled states; PDF layout/download/print; and recovery after failure/restart without falsely reporting completion. No executable tests or evidence-level advance is claimed here.
+
+**Time and risk:** This order removes product-DB/inventory completion from the first-release critical path but adds genuine independent-delivery design work. No percentage or delivery date is promised until diagnosis fixes scope and dependencies. Key risks are legacy repricing, hidden required setup, double billing, tax divergence, and accidental reopening of finance/CRM.
+
+### 12.5 Exact current write scope and exit
+
+MacBook Codex may edit only `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md` and append `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`. Preserve all four untracked D3A candidates and the section 3.1 protected paths; `ScreensPreview.tsx` remains metadata-only. Leave retained wrapper proposals unchanged. No Claude invocation/model change, Studio instruction, app/test/schema/dependency/config edit, test/typecheck/build, DB/Supabase/provider/credential/browser access, external post, stage/commit/push, Ready/merge, or deployment occurs in this gate.
+
+**Exit:** Verify the exact two-document delta, append-only history, preserved candidates/protected metadata, unchanged HEAD/index, and diff whitespace. Leave documents unstaged/uncommitted and hand off the plan change. Implementation remains blocked until the plan delivery and bounded diagnosis/authorization requirements are satisfied. Git delivery needs separate Owner authority; no additional business questionnaire is required merely to finish this document gate.
+
+## 13. Initial document release — read-only diagnosis governance R1
+
+**Phase:** `GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1`.
+
+**Status:** OWNER-AUTHORIZED LOCAL THREE-DOCUMENT GOVERNANCE CANDIDATE / NO CLAUDE EXECUTION OR PRIVATE TRANSMISSION AUTHORIZED.
+
+**Authorization:** The Owner replied `はい` to registration of the prepared diagnosis instruction. This authorizes a local formal directive, this plan entry, and one append-only result-ledger entry only. Stage/commit, push, coordination-PR instruction publication, and Claude execution remain subsequent separately authorized gates.
+
+**Predecessor delivery:** Section 12's two-document plan reflection was committed as `f520297b228c80d80b7627e31da9179e951e0275`, tree `e60f3a908ebf70d6e3965a6f9df28268db03f6db`, and normally pushed to `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1` under separate Owner approvals. Remote branch equality was confirmed in the preceding delivery turn. The old ledger's uncommitted status is preserved as historical event state. This does not assert current PR/CI status, merge, production readiness, or deployment.
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1.md`, SHA-256 `47dbf60b8808818c495a9960826da711ef7c45de5b6d41e54cdee7b8582dde78`. It replaces the unposted wrapper draft for future governance delivery, not an already executed or posted instruction.
+
+**Diagnosis scope:** 36 exact immutable source paths in the directive plus four governance inputs (AGENTS.md, full current plan, bounded relevant ledger entries, and this directive): 40 input identities. Diagnose A: additional-row validation, calculation, save, persistence/readback and legacy compatibility; B: confirmed-save/same-screen issuance, approval, independent delivery, later/consolidated invoices, preservation and double-billing boundaries. Ordinary invoice source inspection is allowed in the proposed read scope; closed-finance redesign, protected source content and new CRM remain prohibited. Two targeted SQL files do not prove a complete migration chain or live schema. Missing evidence requires exact additional read scope, not speculation.
+
+**Fixed base versus execution:** The source base is `f520297b228c80d80b7627e31da9179e951e0275` / `e60f3a908ebf70d6e3965a6f9df28268db03f6db`. Later governance delivery necessarily changes HEAD. Before invocation, Codex pins the exact accepted execution HEAD/tree and current governance hashes in the newest matching Draft-PR instruction; source-base ancestry, three-document committed delta and all 36 source hashes must still hold. Do not demand execution HEAD equals the predecessor, include stale ledger ranges, or invent self-referential hashes.
+
+**Current literal write allowlist:**
+
+1. `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1.md` — new.
+2. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md` — append this phase only.
+3. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md` — append-only.
+
+**Before later execution:** Verify the actual active OPEN/Draft coordination PR; record exact execution identity, read manifest/ledger excerpt hashes, protected metadata and four retained candidate hashes; publish the matching non-triggering instruction under section 6.1; obtain execution/private-transmission authority. No PR number is inferred from old inventory work. A changed phase/base/scope needs a superseding instruction. Claude must distinguish Codex-supplied preflight evidence from checks it actually performed.
+
+**Result contract:** `GYEON_INITIAL_DOCUMENT_RELEASE_DIAGNOSIS_R1_RESULT_V1`; verdict `DIAGNOSIS_COMPLETE_WITH_LIMITS`, `NEEDS_ADDITIONAL_READ_SCOPE`, or `BLOCKED_GOVERNANCE`. Require field-level findings with paths/lines, reused versus missing boundaries, legacy-quantity protection, explicit finance conflicts, grouped Owner-only decisions, and proposed later literal scopes. No `IMPLEMENTATION_READY` claim while material decisions/evidence are missing. No E0-E5 advance from this governance or a source-only diagnosis.
+
+**Current boundary and exit:** MacBook Codex verifies the three-document candidate, immutable source manifest, retained wrapper draft, four D3A candidates, protected metadata, unchanged HEAD and empty index. No source/test/dependency/schema/config changes, executable tests, DB/Supabase/Auth/browser/provider/credential action, Claude invocation, Studio instruction, external post, stage/commit/push, Ready, merge or deployment. Hand off the local uncommitted candidate; delivery, diagnosis and implementation are separate gates.
+
+## 14. New-estimate customer furigana requirement — 2026-09-13
+
+**Phase:** `GYEON_ESTIMATE_FURIGANA_REQUIRED_PLAN_R1`.
+
+**Status:** OWNER-APPROVED REQUIREMENT / LOCAL PLAN CANDIDATE / SOURCE IMPLEMENTATION NOT STARTED.
+
+**Owner decision:** `見積もりの作成時に今後の検索に必要な要件としてフリガナを必須にしてほしいので変更して下さい`. The subsequent `はい` confirms that a selected existing customer with no furigana must receive supplemental input before a new estimate can be saved, while historical estimates remain unchanged. This is a narrow exception for new-estimate customer identification, not authority for general customer-management implementation.
+
+### 14.1 Required behavior
+
+- Require a nonblank customer/company furigana for every newly created estimate, including manual input, OCR-assisted input, and selection of an existing customer. Reject empty and whitespace-only values, including full-width spaces. Do not infer a reading from a name or silently add a katakana-only restriction that the Owner did not request.
+- For a new customer, show the furigana field as required and give a clear field-level error such as `フリガナを入力してください`. Validate at the authoritative save boundary as well as the UI; a client bypass must not create an estimate without the required reading.
+- For an existing customer whose authoritative stored reading is present, reuse it without requiring redundant entry. When it is missing, provide a distinct supplemental furigana input for the selected customer; do not switch to new-customer mode or create a duplicate customer to work around the reference-only selection contract.
+- Persist the accepted supplemental reading for that same authorized customer so later customer searches and selections can use it. Do not modify unrelated customer fields, other dealers' customers, existing nonblank readings, issued documents, or historical estimate records. Inspect whether historical displays dynamically read customer data and resolve any snapshot conflict before claiming historical preservation.
+- Resolve dealer/customer authorization on the server. Client-supplied IDs, a claimed `hasKana` flag, or cached search results are not proof. Preserve existing authorization and idempotency behavior. Diagnose concurrent supplementation and stale selection handling; do not overwrite a reading another operator supplied meanwhile or claim save success after partial/unknown persistence.
+- This requirement applies to new estimate creation. Do not bulk backfill old customers, rewrite saved/issued history, or add a retrospective constraint that prevents reading or replaying accepted historical records. Editing/resaving an old estimate is not expanded into this requirement by inference.
+
+### 14.2 Source observations and implementation boundary
+
+Fixed local source basis: commit `658a8754b32fb971779b16e2484ecc0494afcb87`, tree `745cc57e616e4b48b19f6afdb328de7fb9f1cb2f`, branch `agent/inv001-p20d2-d3a-governance-baseline-reconciliation-r1` in the Book runtime-wrapper repository. These are local observations, not runtime or applied-schema evidence:
+
+- `src/components/estimates/wizard/steps/Step1Customer.tsx` has an optional furigana input within new-customer fields; those fields are hidden for an existing-customer selection. Its search contract intentionally returns minimal reference data.
+- `src/components/estimates/wizard/save/estimate-save-dto.ts` represents existing customers using only `mode` and `customerId`, while new-customer `kana` is nullable. The comment maps the whole-string reading to `customers.last_name_kana`; existing split-field records still need diagnosis rather than destructive normalization.
+- `src/components/estimates/wizard/save/estimate-save-mapper-from-config.ts` carries only the ID for an existing customer and maps blank new-customer kana to null.
+- `src/components/estimates/wizard/save/estimate-save-validation.ts` currently checks customer identity/name, not mandatory kana. Presentation-only draft completeness is not a substitute for server persistence validation.
+
+Consequently, changing only an input label is insufficient. Before source work, Claude must diagnose the production route, selected-customer reference/state, authoritative lookup, save intent/DTO validation, persistence/RPC, historical readback and existing tests using a separately registered literal read manifest. Determine the smallest safe supplemental-update/save contract and return exact candidate write/test paths. Do not authorize arbitrary CRM or migration edits from these observations.
+
+Acceptance must cover: blank and whitespace-only new/OCR input; valid new-customer reading and readback; an existing customer with and without a reading; no duplicate customer; direct-save bypass rejection; tenant isolation; stale customer selection/concurrent supplement; failed or unknown save; idempotent retry; unchanged historical/issued records. Source tests, disposable database verification and authenticated staging remain distinct evidence and authority gates.
+
+### 14.3 Sequence, impact and current exit
+
+This requirement is part of the initial estimate release in section 12, not an additional CRM release. It has priority before accepting new-estimate saving. The unrelated initial-document diagnosis and inventory D1-D7 are not restarted or renumbered. Keep one implementation active at a time.
+
+Time/field impact: one additional input is needed only where the reading is missing; existing complete customers should not be re-entered. Schedule depends on the diagnosed persistence change and its verification; no completion date or completed-feature percentage is asserted. Risks are bypassable UI-only enforcement, duplicate customers, cross-tenant changes, partial writes and historical display changes. Diagnose these before choosing a migration or write path.
+
+Current literal write allowlist is only:
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md` — append section 14.
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md` — append this phase record.
+
+MacBook Codex owns this requirement record and independent acceptance; MacBook Claude retains diagnosis, implementation and executable-test ownership. Preserve the protected paths and four retained D3A candidates. Section 10 requires this decision to be committed before implementation follows it. Verify the local two-document diff and historical prefixes, then request the separate Git-delivery gate. A later matching, superseding, non-triggering Draft-PR instruction and authorized Claude diagnosis precede bounded repair. No source/test/schema/config change, live Supabase access, Claude invocation, external post, stage/commit/push, Studio work, Ready, merge or deployment is performed in this document gate.
+
+## 16. Estimate furigana repair scope R1 — local scope closure
+
+**Phase:** `GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1`.
+**Status:** OWNER-CONTINUED SCOPE PREPARATION / LOCAL GOVERNANCE CANDIDATE / NO REPAIR EXECUTION.
+
+Owner replied 「はい」 to determining the repair files and DB-change filename. MacBook Codex may prepare the literal source/test scope and generate an empty migration; no application/SQL authoring, test execution, DB application or Claude dispatch is inferred.
+
+Directive: `docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1.md`.
+Manifest: `docs/master_specification/GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1.json`.
+Source basis remains HEAD `f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb`, tree `227129f55e3c45b5c154f5ee97d8498cadab9808`. Read the combined R1/R2 diagnosis and Codex corrections; do not restart identical isolated diagnosis or execute the rejected raw R2 proposal.
+
+The later source upper bound comprises 20 existing source paths, one proposed pure presence helper and one CLI-generated migration. Test authoring upper bound comprises 10 existing and 3 new test/harness paths. All paths are literal in the directive/manifest. Unused paths need not change; any additional dependency requires a superseding scope before edits. The current scope specifically includes the duplicate lookup SELECT owner and strict minimal-reference-key tests, and keeps the unchanged bridge facade read-only.
+
+The generated file is `supabase/migrations/20260913132430_require_estimate_customer_reading.sql`, created by installed CLI 2.116.0 using `supabase migration new require_estimate_customer_reading`. It is empty, not implemented, not applied, not a release artifact and not ready for deployment. Do not create a second timestamp or edit historical migrations. Protected paths and all four D3A candidates remain unchanged.
+
+Current literal write allowlist: the directive and manifest above; this plan section; an append-only result-ledger entry; the one empty migration above. Local CLI settings writes were separately permitted for this turn after the initial telemetry-file permission error. No credential modification was requested; no linked database command was executed.
+
+Keep section 14's no-guessed-readings policy and initial document priority. CRM auto-generation/confirmation is future-only. Before later source work, separately deliver this plan and instruction, pin current execution identities, verify and publish to the real OPEN/Draft coordination PR, and obtain the corresponding repair/private-transmission authority. Tests, DB validation/application and Git/release gates remain separate. This scope preparation confers no evidence-level advance.
+
+## 18. Book D3A real-connection scope registration R1
+
+Owner approved registering the prepared three-gap scope as a formal Book instruction. MacBook Codex may create `docs/master_specification/CLAUDE_DIRECTIVE_BOOK_D3A_REAL_CONNECTION_SOURCE_R1.md` and `docs/master_specification/BOOK_D3A_REAL_CONNECTION_SCOPE_R1.json`, append this section and the result ledger, and post one non-triggering coordination instruction to the verified active OPEN/Draft PR71. Source basis remains f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb / 227129f55e3c45b5c154f5ee97d8498cadab9808. Stage/commit/push and Claude invocation are not part of registration.
+
+The future source upper bound is twelve new files in wrapper evidence/inv001-disposable-runner-r1-20260913/real-connection-r1, listed literally in the directive and manifest. Existing runner, fixture, archive, SQL and D3A candidates remain unchanged. The candidate concerns genuine actor/Owner-source verification, central claim-to-retained-record connection, and denial of runtime operations under read-only diagnosis authority. It is not the application D4 boundary or Studio inventory implementation.
+
+The new read-only preflight is restricted to the fourteen hash-bound references and governing documents. It checks only the new interfaces, private-SQL transport trust boundary and storage primitive; it does not repeat accepted synthetic suites or full D3A diagnosis. Registration does not invoke it. Before source authoring, deliver committed matching governance, publish exact execution identity, accept the bounded preflight and obtain separate source/private-transmission authority. No copied JSON, old comment, fixture grant or canExecute flag creates permission.
+
+Live authentication/bootstrap, grant issue/consumption, database activation, retained-ledger initialization, executable tests, D3A runtime, resource cleanup, Git delivery and deployment remain separately gated. The first future connection deliverable is a verified claim/record receipt only, not permission to run the inventory harness. The document-first release objective stays; furigana repair remains prepared/on hold; CRM records, empty migration and unrelated dirty state remain preserved.
+
+## 19. Owner priority change — pause Book D3, deliver usable estimates first
+
+Owner explicitly requested pausing D3 and prioritizing estimate creation and operational launch. This supersedes the active Book priority in sections 17/18 and the D3 real-connection instruction; it does not delete, revert or upgrade any accepted or pending D3 evidence. Preserve local registration commit 9f7230b and all candidates. No D3 preflight, source work, test, credential/approval activation, runtime or D3-only push is to start. Studio's separate approved Foundation assignment is unchanged.
+
+Active phase: GYEON_ESTIMATE_FIRST_OPERATIONAL_RESTART_R1. Responsible: MacBook Codex governance/independent acceptance; MacBook Claude bounded repair and executable verification. Initial field release retains section 12's estimate, delivery-note and invoice scope. Estimate-only public release is not inferred. Product DB, D3/D1-D7 completion, inventory, ordering and broad CRM are not presumed dependencies. Preserve the approved hand-entered work/product approach and later product-selector connection.
+
+Execution order: (1) resume section 14/16's prepared furigana repair without repeating accepted diagnosis; (2) close numerical manual-row pricing/save/readback with legacy compatibility; (3) confirmed save and explicit same-screen document issuance, preserving financial approval/idempotency; (4) consistent limited-release controls; (5) authenticated staging and device workflow; (6) separately authorized production deployment, smoke and recovery. Do not remove independently issued delivery/later or consolidated invoice requirements to shorten the schedule. Unresolved financial-boundary decisions must be grouped and resolved before their implementation, not before unrelated safe estimate work.
+
+Current source basis: local HEAD 9f7230b5e1f05e5e652bf23d8da2ec96f8bb6442, tree c9cb21bb309dcd11054c72acf0f3e700dd0d4306. The 42 furigana source/test/reference hashes still match their retained manifest; four planned new paths remain absent and its generated migration remains empty. These checks preserve prior evidence, not executable acceptance. New directive: docs/master_specification/CLAUDE_DIRECTIVE_GYEON_ESTIMATE_FIRST_RESTART_R1.md. Keep earlier documents as historical records; the new priority has precedence.
+
+Why: the previous active D3 connection work does not establish an unavoidable prerequisite for initial document use and delays the Owner's first operational outcome. This order removes it from the launch critical path. Schedule and completion percentage remain unverified; do not promise them from source presence. Release risks remain data loss, wrong-customer supplementation, legacy repricing, double issuance, tenant leakage and inaccessible required setup. No security/financial guard may be weakened for speed.
+
+Current literal write scope: this section, append-only GYEON_DA_PHASE_RESULTS.md, the new restart directive, and one non-triggering superseding instruction on verified PR71 under section 6.1. Preserve protected paths, CRM records, D3 sources and evidence. No app/test/SQL edits, Claude invocation, DB/browser/credential operation, stage/commit/push or deploy in this priority-record turn. Section 10's committed-plan prerequisite remains; deliver only needed estimate governance before bounded implementation, with Git and environment gates separate.

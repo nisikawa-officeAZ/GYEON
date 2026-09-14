@@ -1,0 +1,192 @@
+{
+  "phase": "GYEON_ESTIMATE_FURIGANA_REPAIR_SCOPE_R1",
+  "status": "LOCAL_SCOPE_DEFINED_NOT_EXECUTION_AUTHORITY",
+  "head": "f86e87b8c1dbe8f0e5893518ea2ff20d65afd8fb",
+  "cli_version": "2.116.0",
+  "generated_migration": {
+    "path": "supabase/migrations/20260913132430_require_estimate_customer_reading.sql",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "applied": false
+  },
+  "existing_source": [
+    {
+      "path": "src/components/estimates/wizard/steps/Step1Customer.tsx",
+      "sha256": "3871ac47487c17ec39c7b0c1a508a7a4991bff139b18dea37de3945fd98069f7"
+    },
+    {
+      "path": "src/components/estimates/wizard/steps/existing-entity-selection.ts",
+      "sha256": "0ecef11a5d27a0ca258d06a61a8cbb1affea6d3d4b0f3ab13629c8d0faf7e697"
+    },
+    {
+      "path": "src/components/estimates/wizard/wizard-types.ts",
+      "sha256": "d26111b16608e67ad926dbfbdb233b73c56c24858b67f852b6f357d332935e83"
+    },
+    {
+      "path": "src/components/estimates/wizard/draft/wizard-draft-types.ts",
+      "sha256": "6480033407fb2515f62839632e1b85f48974ec6102d9685ad431b6b1331aa26d"
+    },
+    {
+      "path": "src/components/estimates/wizard/draft/wizard-draft-state.ts",
+      "sha256": "6c17de5bf32f82c47a981b73de49659bb4269718074a186b9c7b736c2fff3578"
+    },
+    {
+      "path": "src/components/estimates/wizard/bridge/ew-ui1-to-draft.ts",
+      "sha256": "bba493b06863e58d5a9d2956acf01ac73f9a80cf001146e7ce2a3cfa1a054b65"
+    },
+    {
+      "path": "src/components/estimates/wizard/bridge/draft-to-ew-ui1.ts",
+      "sha256": "f4cc48d577729ada6505b27dffbb0f62067577c1eb23d47e5ce9330ec1aba51a"
+    },
+    {
+      "path": "src/components/estimates/wizard/contract/ew-ui1-field-contract.ts",
+      "sha256": "2d21d79858abe1f8e3a71df356ed0eb7b8e3839ccba2f5ae8d4ebce9adde3143"
+    },
+    {
+      "path": "src/components/estimates/wizard/validity/wizard-step-validity.ts",
+      "sha256": "169904aed02ce8d23fdd4281c2ed0cca7bd44a9f7a65834ac8fcded531d1d7bf"
+    },
+    {
+      "path": "src/components/estimates/wizard/contract/wizard-runtime-inputs.ts",
+      "sha256": "bfe85b3473b1cf1cd6f2362a9635f4fe5567aaac182c81944508707657ff98b6"
+    },
+    {
+      "path": "src/lib/estimates/wizard-entity-references.ts",
+      "sha256": "768afddb072db3bb83451aa5b48a7c3829c902a16244e0e9d5c942f629977529"
+    },
+    {
+      "path": "src/lib/estimates/dealer-wizard-entity-references.ts",
+      "sha256": "27837ce805adf25023205d7ee69fc74ac8bd77a1e54adfd3ce10da8f7fa849b9"
+    },
+    {
+      "path": "src/lib/estimates/get-dealer-wizard-entity-references.ts",
+      "sha256": "1bba682cce93dabe11fd1953a519466f31580884a0e8ee52f6f7d1e64eb272c5"
+    },
+    {
+      "path": "src/lib/customers/search-dealer-customers-action.ts",
+      "sha256": "3ef6af3dc9c075b1b3fcdee3760b2c8178187eb2f8a74e5e169d3244fa8f649b"
+    },
+    {
+      "path": "src/lib/customers/find-wizard-customer-duplicates-action.ts",
+      "sha256": "7d76eda2637a0a5667e423ee535547a3a78e03cff8f6e891d15599aebe9857ab"
+    },
+    {
+      "path": "src/lib/customers/find-wizard-customer-duplicates-core.ts",
+      "sha256": "0e56613a27b8640290766a479f043ae885a7777111b269e8ff0f65286bd6099a"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/wizard-save-intent-validation.ts",
+      "sha256": "b5bd3fa8d2247312c8b42bd8662fade5b86b224412f5b88eda25b9b7c0351f91"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/estimate-save-dto.ts",
+      "sha256": "fceaf402868f4d251487936a3fe4dcf8973ddc0ca89b274b1395047fd094b4e3"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/estimate-save-mapper-from-config.ts",
+      "sha256": "ca6d5ab093f6e313efe5f285f5337c221cb2e5c8b65e5ab95339f4acfedf737c"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/estimate-save-validation.ts",
+      "sha256": "1ed1e45812da7efbf90d8fa6873dc9e63bd83f8ace6ffe40e6d1d39ab64aac69"
+    }
+  ],
+  "existing_tests": [
+    {
+      "path": "src/components/estimates/wizard/steps/existing-entity-selection.test.tsx",
+      "sha256": "8bfef56608ab3af2486ee3f86c430a41427636577693ef1281e33fe85f7323b8"
+    },
+    {
+      "path": "src/components/estimates/wizard/bridge/ew-ui1-controller.test.ts",
+      "sha256": "7c4d15016f67871ae9b40b3bf45141ea71a4d543999f7d741ab7b4b62bc9fe97"
+    },
+    {
+      "path": "src/components/estimates/wizard/contract/ew-ui1-field-contract.test.ts",
+      "sha256": "34dd6d51c3b3baa51d4358439c9692874171de99932a08953268b49562191cc0"
+    },
+    {
+      "path": "src/components/estimates/wizard/validity/wizard-step-validity.test.ts",
+      "sha256": "930606e818a0f326f4218aa5b52477142f9ed46c5f4ef254136e6480cb554417"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/wizard-save-intent-validation.test.ts",
+      "sha256": "dbea1d26eccea430523f4d0e5583956f0ad4347cc5f5274e20cef0629fb7d434"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/estimate-save-mapper-from-config.test.ts",
+      "sha256": "0c171ce0a92ac36009bb3b6e8ab189e27194333e12b78388ea775e08b7d0b694"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/estimate-save-validation.test.ts",
+      "sha256": "c98ca9f7e63499ce0c6ff88c5d7ed849ed67f2a3b57decc26ea050729a28e6ce"
+    },
+    {
+      "path": "src/lib/estimates/dealer-wizard-entity-references.test.ts",
+      "sha256": "6606b8d1719e997993bf77c816c0311252ba6e35118316df6c0bb911a1ab2904"
+    },
+    {
+      "path": "src/lib/customers/find-wizard-customer-duplicates-core.test.ts",
+      "sha256": "fded56acc702f62d0d0e30d79b30d8076b88a14755278c88e0e831e17746edbd"
+    },
+    {
+      "path": "supabase/tests/estimate_wizard_atomic_save.test.sql",
+      "sha256": "eaa6122e0fff62b92e1a20c14f6a56b30b1da5d5567106a48aa886dc8fbf7829"
+    }
+  ],
+  "new_paths": [
+    "src/lib/customers/customer-reading-presence.ts",
+    "src/lib/customers/customer-reading-presence.test.ts",
+    "src/components/estimates/wizard/steps/Step1Customer.reading.test.tsx",
+    "scripts/e2e/gda-estimate-customer-reading/concurrency.mjs"
+  ],
+  "read_only": [
+    {
+      "path": "src/components/estimates/wizard/bridge/ew-ui1-controller.ts",
+      "sha256": "330c593cdaee2e073a7c350e148b1debda8e4112d027ee9147f9da887df389dc"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/estimate-persistence-payload.ts",
+      "sha256": "506e7075442a4c141afa72cb6717199651d5361a6bc20e0780d801d00a5f353d"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/wizard-save-intent-orchestrator.ts",
+      "sha256": "df091340ff8bc7784c457a7f52015726248e951f6acb059bdd2b9cacf621a365"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/wizard-save-intent-types.ts",
+      "sha256": "ea420494e5f1982516435f5f1e614f94d2c805426c1da6e6ba0e0fef0b4f777e"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/wizard-idempotency-session.ts",
+      "sha256": "7ceb0a649279bd2870317c1c75e3fe1b8d2680bdd47c8717158538ce4affca80"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/WizardSavePanel.tsx",
+      "sha256": "4d521a3af5397e89d69647beeecdd637e926541f9150f82896ac9c263b058940"
+    },
+    {
+      "path": "src/components/estimates/wizard/production/ProductionEstimateWizard.tsx",
+      "sha256": "4140cef434023fb8c669823ab6f894a6df0f43d52d1ae8a46168d9f7d29c4702"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/estimate-save-errors.ts",
+      "sha256": "f72c6e8640d02bd6c2282f6e2f266c79e9b41090fc20c3c2bc70ac9d203c330a"
+    },
+    {
+      "path": "src/components/estimates/wizard/save/supabase-persistence-gateway.ts",
+      "sha256": "a8134c87eb65418a4e4aa491ce15feee55091950bfb229d1715c5879a11e7048"
+    },
+    {
+      "path": "src/lib/auth/require-staff-capability.ts",
+      "sha256": "7196446186957b6ab4513b00c931016095f25a5689dd5e5655c751e1fefde919"
+    },
+    {
+      "path": "src/lib/staff/staff-types.ts",
+      "sha256": "2f4107ebf88b285deca4ea50d970d67c545a0f21f9f07c6ebe87a8e8807c9efd"
+    },
+    {
+      "path": "supabase/migrations/20260830160000_estimate_managed_service_offering_guard.sql",
+      "sha256": "9319203d67ce42d8f54998b3db0e4af6c0f45ada36c7b20b7c51c047cbfcd499"
+    }
+  ]
+}
