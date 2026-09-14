@@ -18,6 +18,40 @@ body {
   gap: 3px;
 }
 
+.doc-masthead--title-inline {
+  border-bottom: 0;
+}
+
+.doc-masthead__headline {
+  display: grid;
+  grid-template-columns: minmax(42mm, 58mm) minmax(0, 1fr);
+  gap: 7mm;
+  align-items: center;
+  min-width: 0;
+}
+
+.doc-masthead__headline .doc-title-block__row {
+  min-width: 0;
+  gap: 8px;
+  align-items: center;
+}
+
+.doc-masthead__headline .doc-title-block__mark {
+  height: 38px;
+}
+
+.doc-masthead__headline .doc-title-block__ja {
+  font-size: 38px;
+}
+
+.doc-masthead__headline .doc-title-block__en {
+  min-width: 0;
+  padding-bottom: 0;
+  font-size: 8.5px;
+  letter-spacing: 0.28em;
+  line-height: 1.45;
+}
+
 .doc-masthead__brand-box {
   width: min(120mm, 100%);
   height: 17mm;
@@ -70,6 +104,10 @@ body {
 
 .doc-title-block {
   padding: 6px 0 4px;
+}
+
+.doc-title-block--continuation {
+  padding-top: 0;
 }
 
 .doc-title-block__row {

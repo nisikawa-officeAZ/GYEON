@@ -21,6 +21,12 @@ const CHROMIUM = path.join(ROOT, "src/lib/pdf/chromium-document");
 const RENDERER = path.join(ROOT, "src/lib/pdf/render-estimate-document.tsx");
 
 const read = (p: string) => readFileSync(p, "utf8");
+const ESTIMATE_HTML = read(path.join(DESIGN, "estimate-a4-compact.html"));
+
+test("B2 header keeps the DA logo and estimate title in one row", () => {
+  assert.match(ESTIMATE_HTML, /doc-masthead__headline[\s\S]*?doc-masthead__brand-box[\s\S]*?doc-title-block__ja">見積書/);
+  assert.equal((ESTIMATE_HTML.match(/doc-title-block__ja">見積書/g) ?? []).length, 1);
+});
 
 function walkTextFiles(dir: string): string[] {
   const out: string[] = [];

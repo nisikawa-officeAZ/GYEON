@@ -19,6 +19,11 @@ const stripComments = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").repl
 const HTML = read(path.join(DESIGN, "invoice-a4-compact.html"));
 const ISSUE = read(path.join(ROOT, "src/lib/invoices/issue-invoice.ts"));
 
+test("B3 header keeps the DA logo and invoice title in one row", () => {
+  assert.match(HTML, /doc-masthead__headline[\s\S]*?doc-masthead__brand-box[\s\S]*?doc-title-block__ja">請求書/);
+  assert.equal((HTML.match(/doc-title-block__ja">請求書/g) ?? []).length, 1);
+});
+
 test("B3-1 the invoice HTML is native: no doc-variant dependency, invoice labels baked in", () => {
   assert.ok(!HTML.includes("doc-variant"), "doc-variant.js must not be referenced");
   assert.ok(HTML.includes('data-doc-kind="invoice"'), "body must be an invoice before any JS runs");
