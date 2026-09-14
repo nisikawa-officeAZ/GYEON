@@ -37,6 +37,7 @@ const data: EstimateDocumentData = {
 const brand: BrandProfile = {
   brandId: "b",
   brandNameJa: "株式会社テストディテイラー",
+  logoUrl: LOGO,
   colors: { primary: "#000" },
   contact: { postalCode: "123-4567", address: "東京都テスト区1-2-3", tel: "03-1234-5678" },
   business: { shopRankLabel: "GYEON Certified Detailer", invoiceRegistrationNumber: "T1234567890123" },
@@ -68,6 +69,9 @@ test("exact Japanese probe strings survive the mapping (year display + plate)", 
 test("logo: embedded dealer bytes are used as-is; non-data URIs are rejected by the builder", () => {
   const ctx = buildEstimateChromiumContext(data, brand, LOGO);
   assert.equal(ctx.storeSettings.storeLogoSrc, LOGO);
+  assert.equal(ctx.storeSettings.storeLogoIsFallback, false);
+  const fallback = buildEstimateChromiumContext(data, { ...brand, logoUrl: undefined }, LOGO);
+  assert.equal(fallback.storeSettings.storeLogoIsFallback, true);
   assert.throws(() => buildEstimateChromiumContext(data, brand, "https://remote.example/logo.png"));
   assert.throws(() => buildEstimateChromiumContext(data, brand, "" as string));
 });

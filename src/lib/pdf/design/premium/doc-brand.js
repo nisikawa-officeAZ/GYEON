@@ -24,6 +24,7 @@
       brandId: input.brandId || input.brand_id || '',
       colors: input.colors || {},
       storeLogoSrc: input.storeLogoSrc || input.logoSrc || input.logo_url || '',
+      storeLogoIsFallback: input.storeLogoIsFallback === true,
       companyName: input.companyName || input.company_name || input.brand_name_ja || input.brandNameJa || '',
       postalCode: input.postalCode || input.postal_code || contact.postal_code || '',
       address: input.address || contact.address || '',
@@ -47,6 +48,7 @@
       root.classList.add('brand-ready');
       return;
     }
+    document.body.classList.toggle('brand-da-fallback', store.storeLogoIsFallback);
     if (store.brandId) document.body.dataset.brand = store.brandId;
     if (store.colors?.primary) root.style.setProperty('--brand-primary', store.colors.primary);
     if (store.colors?.primary_dark) root.style.setProperty('--brand-primary-dark', store.colors.primary_dark);

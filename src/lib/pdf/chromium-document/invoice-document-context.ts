@@ -16,6 +16,7 @@ export interface InvoiceChromiumContext {
   storeSettings: {
     brandId?: string;
     storeLogoSrc: string;
+    storeLogoIsFallback: boolean;
     companyName: string;
     postalCode?: string;
     address?: string;
@@ -81,6 +82,7 @@ export function buildInvoiceChromiumContext(
     storeSettings: {
       brandId: brand.brandId,
       storeLogoSrc: resolvedStoreLogoDataUri,
+      storeLogoIsFallback: !isDataUri(brand.logoUrl),
       companyName: brand.brandNameJa,
       postalCode: brand.contact.postalCode,
       address: brand.contact.address,
