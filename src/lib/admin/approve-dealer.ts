@@ -4,6 +4,10 @@ import { requireAdmin, requireSuperAdmin } from "./require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "./write-audit-log";
 import { DEFAULT_DEALER_RANK } from "@/lib/ranks/dealer-ranks";
+import {
+  buildDealerApprovalSubscriptionState,
+  type DealerApprovalMode,
+} from "./dealer-approval-mode";
 
 function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr);
@@ -19,9 +23,17 @@ export async function approveDealerTrial(
     serviceStartDate?: string;
     trialDays?:       number;
     trialEndDate?:    string;
+    approvalMode?:    DealerApprovalMode;
   }
 ) {
-  const admin = await requireAdmin();
+  const approvalMode: DealerApprovalMode =
+    options?.approvalMode === "permanent_pro_plus" ? "permanent_pro_plus" : "trial";
+  // A permanent free Pro+ account is a commercial privilege, not an ordinary
+  // dealer approval option. Enforce Super Admin authority on the server even
+  // if a caller bypasses the UI.
+  const admin = approvalMode === "permanent_pro_plus"
+    ? await requireSuperAdmin()
+    : await requireAdmin();
   const supabase = createAdminClient();
 
   const today          = new Date().toISOString().split("T")[0];
@@ -31,21 +43,25 @@ export async function approveDealerTrial(
   const trialEnd       = options?.trialEndDate     ?? addDays(serviceStart, trialDays);
   // Rank is mandatory — default to the locked canonical default if unspecified.
   const detailerRank   = options?.detailerRank     ?? DEFAULT_DEALER_RANK;
+  const subscriptionState = buildDealerApprovalSubscriptionState({
+    mode: approvalMode,
+    requestedPlan: plan,
+    serviceStartDate: serviceStart,
+    trialEndDate: trialEnd,
+  });
+  const approvedAt = new Date().toISOString();
 
   const { error } = await supabase
     .from("dealers")
     .update({
       approval_status:          "approved",
       approved_by:              admin.id,
-      approved_at:              new Date().toISOString(),
-      plan,
-      subscription_status:      "trial",
-      trial_plan_type:          plan,
+      approved_at:              approvedAt,
+      ...subscriptionState,
       service_start_date:       serviceStart,
-      trial_start_date:         serviceStart,
-      trial_end_date:           trialEnd,
-      trial_status:             "active",
-      auto_downgrade_plan_type: "basic",
+      ...(approvalMode === "permanent_pro_plus"
+        ? { started_at: approvedAt, expired_at: null }
+        : {}),
       detailer_rank:            detailerRank,
     })
     .eq("id", dealerId);
@@ -87,7 +103,12 @@ export async function approveDealerTrial(
     adminUserId:    admin.id,
     targetDealerId: dealerId,
     action:         "dealer_approved",
-    details:        { plan, trial_end_date: trialEnd, detailer_rank: detailerRank },
+    details: {
+      approval_mode: approvalMode,
+      plan: subscriptionState.plan,
+      trial_end_date: subscriptionState.trial_end_date,
+      detailer_rank: detailerRank,
+    },
   });
 
   return { success: true };
