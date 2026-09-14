@@ -10,12 +10,28 @@ import {
   estimateCustomerName,
 } from "@/lib/estimates/estimate-types";
 import { createInvoiceFromEstimate } from "@/lib/invoices/create-invoice";
+import type { EstimateRelatedInvoice } from "@/lib/invoices/get-invoice";
+import { buildSavedDeliveryNotePath } from "./wizard/production/SavedEstimateDocuments";
+import type { SavedInvoiceSummary } from "./wizard/production/saved-estimate-invoice-controller";
 import { sortByCategoryOrder } from "@/lib/estimates/category-order";
 import EstimateSummary from "./EstimateSummary";
 import EstimateStatusControl from "./EstimateStatusControl";
 import EstimateLineAction from "./EstimateLineAction";
 import EstimateLineHistory from "./EstimateLineHistory";
 import { sendEstimateLine } from "@/lib/line/send-estimate-line";
+
+// GDA_ESTIMATE_DETAIL_DOCUMENTS_R1 — the delivery-note display href, FAIL-CLOSED.
+// Delegates entirely to buildSavedDeliveryNotePath (SavedEstimateDocuments.tsx), the
+// same pure authority the saved-estimate document surface uses, so there is exactly
+// one eligibility decision in the codebase. No related invoice, draft, cancelled/
+// disallowed status, an invalid or missing date, and an ambiguous or failed server
+// read all collapse to `null` before reaching this component, so every one of those
+// states renders identically: no link, never a guess.
+export function resolveDeliveryNoteHref(invoice: EstimateRelatedInvoice | null): string | null {
+  return buildSavedDeliveryNotePath(
+    invoice as Pick<SavedInvoiceSummary, "id" | "status" | "deliveryDate"> | null,
+  );
+}
 
 // v17 workspace card. Presentation only — no data/logic here.
 function Card({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
@@ -68,14 +84,18 @@ interface EstimateDetailProps {
   variant?:             "modal" | "page";
   /** F1-R1: dealer_settings.business_name, server-resolved; null omits the LINE template line. */
   dealerDisplayName?:   string | null;
+  /** GDA_ESTIMATE_DETAIL_DOCUMENTS_R1: server-read, tenant-scoped minimal invoice fields
+   *  for the delivery-note document surface. null means no eligible related invoice. */
+  relatedInvoice?:      EstimateRelatedInvoice | null;
 }
 
-export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, variant = "modal", dealerDisplayName = null }: EstimateDetailProps) {
+export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, variant = "modal", dealerDisplayName = null, relatedInvoice = null }: EstimateDetailProps) {
   const customer = estimate.customers;
   const vehicle  = estimate.vehicles;
   const items    = estimate.estimate_items ?? [];
 
   const customerName = estimateCustomerName(customer);
+  const deliveryNoteHref = resolveDeliveryNoteHref(relatedInvoice);
 
   // F1-R1 — bumped after a LINE attempt that may have logged a row, so the
   // 送付履歴 card refetches without a full-page reload.
@@ -208,6 +228,45 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, v
 
           {/* Store/dealer info is intentionally NOT shown here — it belongs only in
               PDF / print / email / LINE output (see src/lib/pdf/dealer-branding.ts). */}
+
+          {/* Delivery note — GDA_ESTIMATE_DETAIL_DOCUMENTS_R1. Display only: eligibility
+              was already decided server-side (issued+ status, valid persisted delivery
+              date, valid invoice identity). Reopening this screen never creates, issues,
+              or dates an invoice, and never re-renders a different document. */}
+          <Card title="納品書">
+            {deliveryNoteHref ? (
+              <a
+                href={deliveryNoteHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-describedby="estimate-detail-delivery-note-reason"
+                data-testid="estimate-detail-delivery-note"
+                className="inline-block rounded-md border border-sky-600 bg-sky-900/40 px-4 py-2 text-xs text-slate-100"
+              >
+                納品書（PDF）を表示
+              </a>
+            ) : (
+              <button
+                type="button"
+                disabled
+                aria-disabled="true"
+                aria-describedby="estimate-detail-delivery-note-reason"
+                data-testid="estimate-detail-delivery-note"
+                className="rounded-md border border-slate-700 px-4 py-2 text-xs text-slate-500"
+              >
+                納品書（PDF）
+              </button>
+            )}
+            <p
+              id="estimate-detail-delivery-note-reason"
+              data-testid="estimate-detail-delivery-note-reason"
+              className="mt-2 text-[11px] text-amber-300"
+            >
+              {deliveryNoteHref
+                ? "発行済みの請求書と保存済みの納品日から表示します。表示のみで、保存・再発行は行いません。"
+                : "関連する請求書が発行済みで、納品日が保存されると表示できます。この画面から納品書の保存・再発行は行いません。"}
+            </p>
+          </Card>
 
           {/* Service Summary — grouped by the categories actually selected */}
           {items.length > 0 && (

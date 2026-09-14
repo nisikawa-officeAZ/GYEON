@@ -38,6 +38,47 @@ export async function getInvoice(id: string): Promise<InvoiceDB | null> {
   return data as unknown as InvoiceDB;
 }
 
+export type EstimateRelatedInvoice = {
+  readonly id: string;
+  readonly status: string;
+  readonly deliveryDate: string | null;
+};
+
+/**
+ * GDA_ESTIMATE_DETAIL_DOCUMENTS_R1 — the single non-deleted invoice related to one
+ * estimate, tenant-scoped by BOTH dealer_id and estimate_id on the caller's RLS-scoped
+ * client, never service role. Zero rows is not an error (no related invoice yet); more
+ * than one non-deleted candidate is ambiguous and fails closed — this never guesses an
+ * authoritative row. Callers decide document eligibility from the returned fields.
+ */
+export async function getInvoiceForEstimate(estimateId: string): Promise<EstimateRelatedInvoice | null> {
+  const dealer = await getCurrentDealer();
+  if (!dealer) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("invoices")
+    .select("id, status, delivery_date, estimate_id")
+    .eq("estimate_id", estimateId)
+    .eq("dealer_id", dealer.dealer_id)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) {
+    console.error("getInvoiceForEstimate error:", error);
+    return null;
+  }
+  if (!data || typeof data.id !== "string" || data.estimate_id !== estimateId || typeof data.status !== "string") {
+    return null;
+  }
+
+  return {
+    id: data.id,
+    status: data.status,
+    deliveryDate: typeof data.delivery_date === "string" ? data.delivery_date : null,
+  };
+}
+
 export async function getInvoicesByWorkOrder(workOrderId: string): Promise<InvoiceDB[]> {
   const dealer = await getCurrentDealer();
   if (!dealer) return [];
