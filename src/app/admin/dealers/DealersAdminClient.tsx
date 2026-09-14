@@ -15,6 +15,7 @@ import {
 } from "@/lib/admin/gyeon-provisioning-actions";
 import { dryRunGyeonProvisioningCsv, confirmGyeonProvisioningCsv } from "@/lib/admin/gyeon-provisioning-csv";
 import { GYEON_PROVISIONING_RANKS, type GyeonProvisioningAdminRow } from "@/lib/admin/gyeon-provisioning-csv-core";
+import type { DealerApprovalMode } from "@/lib/admin/dealer-approval-mode";
 
 type StatusFilter = "all" | "pending" | "approved" | "rejected" | "suspended";
 type PlanFilter   = "all" | "basic" | "pro" | "pro_plus";
@@ -136,16 +137,19 @@ function ApproveModal({
   onClose,
   onApprove,
   isPending,
+  allowPermanent,
 }: {
   dealer: DealerAdminView;
   onClose: () => void;
-  onApprove: (opts: { detailerRank: string; initialPlan: string; serviceStartDate: string; trialEndDate: string }) => void;
+  onApprove: (opts: { approvalMode: DealerApprovalMode; detailerRank: string; initialPlan: string; serviceStartDate: string; trialEndDate: string }) => void;
   isPending: boolean;
+  allowPermanent: boolean;
 }) {
   const [rank,         setRank]         = useState<string>(DEFAULT_DEALER_RANK);
   const [plan,         setPlan]         = useState("pro_plus");
   const [startDate,    setStartDate]    = useState(today());
   const [trialDays,    setTrialDays]    = useState(30);
+  const [approvalMode, setApprovalMode] = useState<DealerApprovalMode>("trial");
 
   const trialEnd = addDays(startDate, trialDays);
 
@@ -187,6 +191,38 @@ function ApproveModal({
         {/* Configuration */}
         <div className="px-6 py-5 space-y-5">
 
+          {/* Account mode — explicit selection prevents ordinary dealer applicants
+              from accidentally receiving a permanent free Pro+ account. */}
+          <div>
+            <label className="text-xs font-medium text-slate-400 block mb-2">アカウント種別</label>
+            <div className={`grid gap-2 ${allowPermanent ? "grid-cols-2" : "grid-cols-1"}`}>
+              <button
+                onClick={() => setApprovalMode("trial")}
+                className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                  approvalMode === "trial"
+                    ? "border-blue-600/70 bg-blue-900/25 text-blue-200"
+                    : "border-slate-700 bg-slate-800/20 text-slate-500"
+                }`}
+              >
+                <span className="block text-xs font-semibold">通常ディテーラー</span>
+                <span className="block text-[10px] mt-0.5">試用期間後にBasicへ移行</span>
+              </button>
+              {allowPermanent && (
+                <button
+                  onClick={() => setApprovalMode("permanent_pro_plus")}
+                  className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                    approvalMode === "permanent_pro_plus"
+                      ? "border-purple-600/70 bg-purple-900/25 text-purple-200"
+                      : "border-slate-700 bg-slate-800/20 text-slate-500"
+                  }`}
+                >
+                  <span className="block text-xs font-semibold">運営者用</span>
+                  <span className="block text-[10px] mt-0.5">無期限・有効Pro Plus</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Detailer Rank */}
           <div>
             <label className="text-xs font-medium text-slate-400 block mb-2">ディテーラーランク</label>
@@ -220,12 +256,13 @@ function ApproveModal({
               ].map((opt) => (
                 <button
                   key={opt.value}
-                  onClick={() => setPlan(opt.value)}
+                  onClick={() => approvalMode === "trial" && setPlan(opt.value)}
+                  disabled={approvalMode === "permanent_pro_plus"}
                   className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-colors ${
-                    plan === opt.value
+                    (approvalMode === "permanent_pro_plus" ? opt.value === "pro_plus" : plan === opt.value)
                       ? opt.cls
                       : "bg-slate-800/20 border-slate-700/40 text-slate-500 hover:border-slate-600"
-                  }`}
+                  } disabled:cursor-not-allowed disabled:opacity-70`}
                 >
                   {opt.label}
                 </button>
@@ -234,7 +271,7 @@ function ApproveModal({
           </div>
 
           {/* Dates */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid gap-4 ${approvalMode === "trial" ? "grid-cols-2" : "grid-cols-1"}`}>
             <div>
               <label className="text-xs font-medium text-slate-400 block mb-2">
                 サービス開始日
@@ -246,7 +283,7 @@ function ApproveModal({
                 className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 rounded-lg text-slate-200 focus:outline-none focus:border-slate-400"
               />
             </div>
-            <div>
+            {approvalMode === "trial" && <div>
               <label className="text-xs font-medium text-slate-400 block mb-2">
                 試用期間 <span className="text-slate-600 font-normal">(日数)</span>
               </label>
@@ -258,19 +295,27 @@ function ApproveModal({
                 onChange={(e) => setTrialDays(Math.max(1, parseInt(e.target.value) || 30))}
                 className="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-600 rounded-lg text-slate-200 focus:outline-none focus:border-slate-400"
               />
-            </div>
+            </div>}
           </div>
 
           {/* Calculated trial end */}
-          <div className="bg-slate-800/40 border border-slate-700/50 rounded-lg px-4 py-3 flex items-center justify-between">
-            <span className="text-xs text-slate-500">試用終了（自動計算）</span>
-            <span className="text-sm font-semibold text-amber-300">{fmt(trialEnd)}</span>
-          </div>
+          {approvalMode === "trial" ? (
+            <div className="bg-slate-800/40 border border-slate-700/50 rounded-lg px-4 py-3 flex items-center justify-between">
+              <span className="text-xs text-slate-500">試用終了（自動計算）</span>
+              <span className="text-sm font-semibold text-amber-300">{fmt(trialEnd)}</span>
+            </div>
+          ) : (
+            <div className="bg-purple-900/20 border border-purple-700/40 rounded-lg px-4 py-3 text-xs text-purple-200">
+              Pro Plusを無期限で有効化します。試用期限と自動ダウングレードは設定されません。
+            </div>
+          )}
 
           {/* Auto-downgrade notice */}
-          <p className="text-[10px] text-slate-600">
-            試用終了後: {planLabel("basic")}プランへ自動ダウングレード
-          </p>
+          {approvalMode === "trial" && (
+            <p className="text-[10px] text-slate-600">
+              試用終了後: {planLabel("basic")}プランへ自動ダウングレード
+            </p>
+          )}
         </div>
 
         {/* Actions */}
@@ -282,7 +327,7 @@ function ApproveModal({
             キャンセル
           </button>
           <button
-            onClick={() => onApprove({ detailerRank: rank, initialPlan: plan, serviceStartDate: startDate, trialEndDate: trialEnd })}
+            onClick={() => onApprove({ approvalMode, detailerRank: rank, initialPlan: approvalMode === "permanent_pro_plus" ? "pro_plus" : plan, serviceStartDate: startDate, trialEndDate: trialEnd })}
             disabled={isPending}
             className="px-5 py-2 bg-green-700 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
           >
@@ -947,7 +992,7 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
   // ── Action handlers ────────────────────────────────────────────────────────
 
   const handleApprove = (dealer: DealerAdminView, opts: {
-    detailerRank: string; initialPlan: string; serviceStartDate: string; trialEndDate: string;
+    approvalMode: DealerApprovalMode; detailerRank: string; initialPlan: string; serviceStartDate: string; trialEndDate: string;
   }) => {
     setModal({ type: "none" });
     startTransition(async () => {
@@ -956,18 +1001,19 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
         initialPlan:     opts.initialPlan,
         serviceStartDate: opts.serviceStartDate,
         trialEndDate:    opts.trialEndDate,
+        approvalMode:    opts.approvalMode,
       });
       if (result.success) {
         setDealers((prev) => prev.map((d) => d.id === dealer.id ? {
           ...d,
           approval_status:          "approved",
           plan:                     opts.initialPlan,
-          subscription_status:      "trial",
-          trial_status:             "active",
-          trial_plan_type:          opts.initialPlan,
+          subscription_status:      opts.approvalMode === "permanent_pro_plus" ? "active" : "trial",
+          trial_status:             opts.approvalMode === "permanent_pro_plus" ? "none" : "active",
+          trial_plan_type:          opts.approvalMode === "permanent_pro_plus" ? "pro_plus" : opts.initialPlan,
           service_start_date:       opts.serviceStartDate,
-          trial_start_date:         opts.serviceStartDate,
-          trial_end_date:           opts.trialEndDate,
+          trial_start_date:         opts.approvalMode === "permanent_pro_plus" ? null : opts.serviceStartDate,
+          trial_end_date:           opts.approvalMode === "permanent_pro_plus" ? null : opts.trialEndDate,
           auto_downgrade_plan_type: "basic",
           detailer_rank:            opts.detailerRank,
         } : d));
@@ -1444,6 +1490,7 @@ export default function DealersAdminClient({ dealers: initial, archived: initial
           onClose={() => setModal({ type: "none" })}
           onApprove={(opts) => handleApprove(modal.dealer, opts)}
           isPending={isPending}
+          allowPermanent={isSuperAdmin}
         />
       )}
       {modal.type === "reject" && (
