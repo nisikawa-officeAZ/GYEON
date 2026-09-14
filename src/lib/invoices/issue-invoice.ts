@@ -63,6 +63,17 @@ function fail(kind: Exclude<IssueOutcomeKind, "issued" | "already_issued">): Iss
   return { kind, message: describeIssueOutcome(kind) } as IssueInvoiceResult;
 }
 
+function classifyRenderFailure(error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+
+  if (/data binding failed closed/i.test(message)) return "data-binding";
+  if (/offline boundary violated/i.test(message)) return "offline-boundary";
+  if (/ERR_FILE_NOT_FOUND|ENOENT/i.test(message)) return "runtime-file-missing";
+  if (/Could not find Chrome|Failed to launch|spawn.+chrome/i.test(message)) return "chromium-launch";
+  if (/timeout/i.test(message)) return "render-timeout";
+  return "unclassified";
+}
+
 /**
  * Resolve the ONE artifact this invoice is allowed to expose, then sign it.
  *
@@ -225,7 +236,14 @@ export async function issueInvoice(invoiceId: string, expectedVersion?: number):
     // carries no stamp, so the legacy stamp fetch is gone from this issuance path.
     const brand = await getBrandProfile(dealerId);
     buffer = await renderInvoiceDocumentPdf(renderedInvoice, brand);
-  } catch {
+  } catch (error) {
+    // Preview diagnostics deliberately emit only a stable category. Never log
+    // the raw renderer message: it may contain runtime paths or provider data.
+    console.error("[invoice issuance] render failed", {
+      invoiceId,
+      category: classifyRenderFailure(error),
+      errorName: error instanceof Error ? error.name : "unknown",
+    });
     return fail("persistence_error");
   }
 
