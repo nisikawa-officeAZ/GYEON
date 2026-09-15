@@ -70,7 +70,8 @@ export function mapReviewedOcrToLegacyDraft(
       lastName: customerName,
       lastNameKana: customerKana,
       address1: customerAddress,
-      isBusiness: ocr.customer_type === "corporation",
+      // OCR must not decide the legal customer type. The operator opts in explicitly.
+      isBusiness: false,
     },
     vehicle: {
       ...EMPTY_LEGACY_VEHICLE,
@@ -115,16 +116,14 @@ export function validateAndBuildLegacyPayload(
     customer = { mode: "existing", customerId };
   } else if (draft.customer?.mode === "new") {
     const c = draft.customer.data;
-    const lastName = clean(c?.lastName);
-    const firstName = clean(c?.firstName);
-    const lastNameKana = clean(c?.lastNameKana);
-    const firstNameKana = clean(c?.firstNameKana);
-    if (!lastName) errors.lastName = c?.isBusiness ? "会社名は必須です。" : "姓は必須です。";
-    if (!c?.isBusiness && !firstName) errors.firstName = "名は必須です。";
-    if (!lastNameKana && !firstNameKana) errors.furigana = "フリガナは検索に使用するため必須です。";
+    const fullName = clean(c?.lastName);
+    const furigana = clean(c?.lastNameKana);
+    if (!fullName) errors.lastName = c?.isBusiness ? "会社名は必須です。" : "氏名は必須です。";
+    if (!furigana) errors.furigana = "フリガナは検索に使用するため必須です。";
     customer = {
-      mode: "new", lastName, firstName, lastNameKana, firstNameKana,
-      name: [lastName, firstName].filter(Boolean).join(" "),
+      // The canonical customer UI owns one full-name field. Legacy split columns remain blank.
+      mode: "new", lastName: fullName, firstName: "", lastNameKana: furigana, firstNameKana: "",
+      name: fullName,
       phone: clean(c?.phone), email: clean(c?.email), postalCode: clean(c?.postalCode),
       prefecture: clean(c?.prefecture), city: clean(c?.city), address1: clean(c?.address1),
       address2: clean(c?.address2), notes: clean(c?.notes), isBusiness: c?.isBusiness === true,
@@ -179,4 +178,3 @@ export function validateAndBuildLegacyPayload(
   if (Object.keys(errors).length > 0) return { ok: false, fieldErrors: errors };
   return { ok: true, payload: { idempotencyKey, customer, vehicle, history } };
 }
-

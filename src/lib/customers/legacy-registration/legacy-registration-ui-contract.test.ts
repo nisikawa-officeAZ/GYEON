@@ -49,6 +49,19 @@ test("UI reuses approved OCR upload and human review and does not create commerc
   assert.doesNotMatch(action, /createEstimate|createInvoice|createWorkOrder|createPayment/);
 });
 
+test("new customer UI uses one full-name field and one furigana field", () => {
+  assert.match(ui, /customer\.isBusiness \? "会社名" : "氏名"/);
+  assert.match(ui, /<Field label="フリガナ" required/);
+  assert.doesNotMatch(ui, /<Field label="名"/);
+  assert.doesNotMatch(ui, /フリガナ（姓・会社名）|フリガナ（名）/);
+
+  const core = read("src/lib/customers/legacy-registration/legacy-registration-core.ts");
+  assert.match(core, /name: fullName/);
+  assert.match(core, /firstName: ""/);
+  assert.match(core, /firstNameKana: ""/);
+  assert.doesNotMatch(core, /errors\.firstName/);
+});
+
 test("OCR review preserves every field consumed by legacy registration mapping", () => {
   const customerFields = ocrReview.match(/const CUSTOMER_FIELDS:[^=]+\= \[([\s\S]*?)\];/)?.[1] ?? "";
   const vehicleFields = ocrReview.match(/const VEHICLE_FIELDS:[^=]+\= \[([\s\S]*?)\];/)?.[1] ?? "";
@@ -66,6 +79,8 @@ test("OCR review preserves every field consumed by legacy registration mapping",
 
   const core = read("src/lib/customers/legacy-registration/legacy-registration-core.ts");
   assert.match(core, /lastNameKana: customerKana/);
+  assert.match(core, /OCR must not decide the legal customer type/);
+  assert.match(core, /isBusiness: false/);
   assert.match(core, /vehicleCode: clean\(ocr\.model_code\)/);
   assert.match(core, /fuelType: clean\(ocr\.fuel_type\)/);
 });

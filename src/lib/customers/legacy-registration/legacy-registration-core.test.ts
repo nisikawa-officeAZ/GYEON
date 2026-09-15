@@ -9,8 +9,7 @@ import {
 
 const customer = {
   ...EMPTY_LEGACY_CUSTOMER,
-  lastName: "山田",
-  firstName: "太郎",
+  lastName: "山田 太郎",
   lastNameKana: "検索用やまだ",
 };
 
@@ -40,11 +39,34 @@ test("accepts new customer + new vehicle without history and does not require ka
   assert.equal("actor" in result.payload, false);
 });
 
+test("keeps an individual full name and furigana unsplit in the compatibility payload", () => {
+  const result = validateAndBuildLegacyPayload(draft(), "2026-09-15");
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.deepEqual(result.payload.customer, {
+    mode: "new",
+    name: "山田 太郎",
+    lastName: "山田 太郎",
+    firstName: "",
+    lastNameKana: "検索用やまだ",
+    firstNameKana: "",
+    phone: "",
+    email: "",
+    postalCode: "",
+    prefecture: "",
+    city: "",
+    address1: "",
+    address2: "",
+    notes: "",
+    isBusiness: false,
+  });
+});
+
 test("requires furigana for a newly entered customer", () => {
   const result = validateAndBuildLegacyPayload(draft({
     customer: {
       mode: "new",
-      data: { ...customer, lastNameKana: "", firstNameKana: "" },
+      data: { ...customer, lastNameKana: "" },
     },
   }), "2026-09-15");
   assert.equal(result.ok, false);
@@ -93,12 +115,16 @@ test("OCR mapping keeps full names and addresses operator-reviewable without gue
     customer_candidate_name: "山田 太郎",
     customer_candidate_address: "滋賀県大津市テスト町1-2-3",
     owner_name_kana: "ヤマダ タロウ",
+    customer_type: "corporation",
     maker: "トヨタ",
     vehicle_name: "ハリアー",
     color: "推測色",
   });
   assert.equal(mapped.customer.lastName, "山田 太郎");
   assert.equal(mapped.customer.firstName, "");
+  assert.equal(mapped.customer.lastNameKana, "ヤマダ タロウ");
+  assert.equal(mapped.customer.firstNameKana, "");
+  assert.equal(mapped.customer.isBusiness, false);
   assert.equal(mapped.customer.address1, "滋賀県大津市テスト町1-2-3");
   assert.equal(mapped.customer.prefecture, "");
   assert.equal(mapped.vehicle.color, "");

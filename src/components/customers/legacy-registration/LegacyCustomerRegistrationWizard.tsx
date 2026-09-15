@@ -141,7 +141,7 @@ export default function LegacyCustomerRegistrationWizard({
 
   const selectedCustomerName = customerSelection?.mode === "existing"
     ? customerSelection.reference.displayName
-    : [customer.lastName, customer.firstName].filter(Boolean).join(" ");
+    : customer.lastName;
   const selectedVehicleName = vehicleSelection.mode === "existing"
     ? vehicleSelection.reference.displayName
     : [vehicle.maker, vehicle.model].filter(Boolean).join(" ");
@@ -225,9 +225,8 @@ export default function LegacyCustomerRegistrationWizard({
     }
     if (customerSelection.mode === "new") {
       const nextErrors: Record<string, string> = {};
-      if (!customer.lastName.trim()) nextErrors.lastName = customer.isBusiness ? "会社名は必須です。" : "姓は必須です。";
-      if (!customer.isBusiness && !customer.firstName.trim()) nextErrors.firstName = "名は必須です。";
-      if (!customer.lastNameKana.trim() && !customer.firstNameKana.trim()) nextErrors.furigana = "フリガナは必須です。";
+      if (!customer.lastName.trim()) nextErrors.lastName = customer.isBusiness ? "会社名は必須です。" : "氏名は必須です。";
+      if (!customer.lastNameKana.trim()) nextErrors.furigana = "フリガナは必須です。";
       if (Object.keys(nextErrors).length) {
         setErrors(nextErrors);
         setBanner("入力が必要な項目があります。");
@@ -433,10 +432,8 @@ export default function LegacyCustomerRegistrationWizard({
               <input type="checkbox" checked={customer.isBusiness} onChange={(event) => updateCustomer("isBusiness", event.target.checked)} className="h-4 w-4" /> 法人顧客として登録
             </label>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Field label={customer.isBusiness ? "会社名" : "姓"} required value={customer.lastName} onChange={(v) => updateCustomer("lastName", v)} error={errors.lastName} />
-              {!customer.isBusiness && <Field label="名" required value={customer.firstName} onChange={(v) => updateCustomer("firstName", v)} error={errors.firstName} />}
-              <Field label="フリガナ（姓・会社名）" required value={customer.lastNameKana} onChange={(v) => updateCustomer("lastNameKana", v)} error={errors.furigana} />
-              {!customer.isBusiness && <Field label="フリガナ（名）" value={customer.firstNameKana} onChange={(v) => updateCustomer("firstNameKana", v)} />}
+              <div className="sm:col-span-2"><Field label={customer.isBusiness ? "会社名" : "氏名"} required value={customer.lastName} onChange={(v) => updateCustomer("lastName", v)} error={errors.lastName} /></div>
+              <div className="sm:col-span-2"><Field label="フリガナ" required value={customer.lastNameKana} onChange={(v) => updateCustomer("lastNameKana", v)} error={errors.furigana} /></div>
               <Field label="電話番号" value={customer.phone} onChange={(v) => updateCustomer("phone", v)} type="tel" />
               <Field label="メールアドレス" value={customer.email} onChange={(v) => updateCustomer("email", v)} type="email" />
               <Field label="郵便番号" value={customer.postalCode} onChange={(v) => updateCustomer("postalCode", v)} />
@@ -542,7 +539,7 @@ export default function LegacyCustomerRegistrationWizard({
           <div>
             <div className="flex items-center justify-between gap-3"><div><h2 className="text-lg font-bold text-[#edf3fc]">登録内容の最終確認</h2><p className="mt-1 text-xs text-[#8e9db5]">登録後も見積・請求・施工指示は作成されません。</p></div><button type="button" onClick={() => setStep(3)} className="text-sm text-[#8fb0e8]">← 履歴へ</button></div>
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
-              <article className="rounded-2xl border border-[#30415d] bg-[#0c1423] p-4"><h3 className="mb-2 text-sm font-bold text-[#8fb8ff]">01 顧客</h3><dl><SummaryRow label="登録方法" value={customerSelection?.mode === "existing" ? "登録済み顧客を使用" : "新規登録"} /><SummaryRow label="顧客名" value={selectedCustomerName} />{customerSelection?.mode === "new" && <><SummaryRow label="フリガナ" value={[customer.lastNameKana, customer.firstNameKana].filter(Boolean).join(" ")} /><SummaryRow label="電話番号" value={customer.phone} /><SummaryRow label="住所" value={[customer.prefecture, customer.city, customer.address1, customer.address2].filter(Boolean).join(" ")} /></>}</dl></article>
+              <article className="rounded-2xl border border-[#30415d] bg-[#0c1423] p-4"><h3 className="mb-2 text-sm font-bold text-[#8fb8ff]">01 顧客</h3><dl><SummaryRow label="登録方法" value={customerSelection?.mode === "existing" ? "登録済み顧客を使用" : "新規登録"} /><SummaryRow label="顧客名" value={selectedCustomerName} />{customerSelection?.mode === "new" && <><SummaryRow label="フリガナ" value={customer.lastNameKana} /><SummaryRow label="電話番号" value={customer.phone} /><SummaryRow label="住所" value={[customer.prefecture, customer.city, customer.address1, customer.address2].filter(Boolean).join(" ")} /></>}</dl></article>
               <article className="rounded-2xl border border-[#30415d] bg-[#0c1423] p-4"><h3 className="mb-2 text-sm font-bold text-[#8fb8ff]">02 車両</h3><dl><SummaryRow label="登録方法" value={vehicleSelection.mode === "existing" ? "登録済み車両を使用" : "新規登録"} /><SummaryRow label="車両" value={selectedVehicleName} /><SummaryRow label="ナンバー" value={vehicleSelection.mode === "existing" ? vehicleSelection.reference.plateNumber : vehicle.plateNumber} />{vehicleSelection.mode === "new" && <SummaryRow label="VIN" value={vehicle.vin} />}</dl></article>
               <article className="rounded-2xl border border-[#30415d] bg-[#0c1423] p-4 lg:col-span-2"><h3 className="mb-2 text-sm font-bold text-[#8fb8ff]">03 過去履歴</h3>{history.length === 0 ? <p className="text-sm text-[#8e9db5]">履歴なし</p> : <div className="space-y-2">{history.map((row) => <div key={row.clientId} className="rounded-xl bg-[#111b2d] p-3 text-sm text-[#dce6f5]"><strong>{LEGACY_HISTORY_CATEGORIES.find((item) => item.value === row.category)?.label}</strong><span className="ml-3 text-[#8e9db5]">{row.performedOn}</span><span className="mt-1 block">{row.serviceName}</span></div>)}</div>}</article>
             </div>
