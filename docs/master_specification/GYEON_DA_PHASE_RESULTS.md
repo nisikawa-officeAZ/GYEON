@@ -5218,3 +5218,49 @@ authenticated_read_only_smoke:
 verdict: ACCEPTED_PRODUCTION_RELEASE_COMPLETE
 next: "A new same-page invoice workflow phase requires its own governance, Claude read-only diagnosis, authorization, implementation, and acceptance gates."
 ```
+
+## GDA-LEGACY-CUSTOMER-REGISTRATION-R1 — local governance candidate
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_GOVERNANCE_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-15
+authorization: "The Owner approved beginning Phase 1 after accepting the completed legacy-customer registration UI. This record is limited to local governance and the future read-only diagnosis boundary."
+repository: nisikawa-officeAZ/GYEON
+base_branch: main
+base_commit: 7ef5c0902e7eb4f7c7d0308a32d576b616a3a355
+base_tree: c75ee777b8c8f3661d2952604eec6c665bfc2fec
+candidate_branch: agent/gda-legacy-customer-registration-r1-governance
+candidate_worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gda-legacy-customer-r1-governance
+design_archive:
+  sha256: 51273bc4cb17e3fc503daed6ae14eadc2b5855ce97bf84af69ea1b7038e05bff
+  primary_html_sha256: 6ce50e75debd8a660b5d1f34035d46df5b309d01e4e6fd5fc57599e4d61e0b99
+  result: ACCEPTED_AS_UI_REFERENCE
+governance_allowlist:
+  - docs/master_specification/GDA_LEGACY_CUSTOMER_REGISTRATION_IMPLEMENTATION_CONTRACT_V1.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+approved_boundary:
+  dedicated_route: /customers/legacy-registration
+  entry_point: /hub/customers
+  reuse_existing_customer_vehicle_ocr_duplicate_and_membership_authorities: true
+  dedicated_history_table_required: true
+  atomic_idempotent_save_required: true
+  estimates_duplicate_action_cleanup_is_separate: true
+  estimate_invoice_delivery_work_order_payment_inventory_creation: false
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+unrelated_worktree_state:
+  lfs_pointer_materialization_paths: 9
+  handling: PRESERVE_AND_EXCLUDE
+mutation_flags:
+  source_test_dependency_migration_db_supabase_auth_storage_environment: false
+  staged_committed_pushed_or_pr_mutated: false
+  ready_merged_deployed: false
+next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_HASHES_DIRECTIVE_CONTENT_BASE_IDENTITY_PROTECTED_METADATA_LFS_EXCLUSIONS_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY."
+```

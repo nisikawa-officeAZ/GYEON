@@ -2072,3 +2072,69 @@ gates:
   verification_commit_push_ready_merge_deploy: EACH_SEPARATE
 next: "VERIFY_THE_EXACT_TWO_DOCUMENT_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## 18. Local governance candidate — legacy customer registration
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_GOVERNANCE_CANDIDATE_V1
+date: 2026-09-15
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner accepted the completed Genspark legacy-customer UI and explicitly approved beginning Phase 1. Under the repository phase protocol, this first records the local governance and read-only diagnosis boundary only."
+priority: OPERATIONS_FIRST_EXISTING_CUSTOMER_INTAKE
+objective:
+  - Register customers and vehicles that predate Detailer Agent.
+  - Optionally record their prior coating and maintenance history.
+  - Create no estimate, invoice, delivery note, work order, payment, or inventory transaction.
+fixed_base:
+  repository: nisikawa-officeAZ/GYEON
+  branch: main
+  commit: 7ef5c0902e7eb4f7c7d0308a32d576b616a3a355
+  tree: c75ee777b8c8f3661d2952604eec6c665bfc2fec
+candidate:
+  branch: agent/gda-legacy-customer-registration-r1-governance
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gda-legacy-customer-r1-governance
+design_authority:
+  archive_sha256: 51273bc4cb17e3fc503daed6ae14eadc2b5855ce97bf84af69ea1b7038e05bff
+  primary_html_sha256: 6ce50e75debd8a660b5d1f34035d46df5b309d01e4e6fd5fc57599e4d61e0b99
+  classification: APPROVED_UI_REFERENCE_NOT_EXECUTABLE_INSTRUCTIONS
+governance_allowlist:
+  - docs/master_specification/GDA_LEGACY_CUSTOMER_REGISTRATION_IMPLEMENTATION_CONTRACT_V1.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+approved_architecture:
+  route: /customers/legacy-registration
+  navigation: /hub/customers
+  shell: CURRENT_MAIN_LAYOUT_ONLY
+  steps: [customer, vehicle, historical_service, confirmation]
+  ocr: REUSE_AND_REQUIRE_HUMAN_CONFIRMATION
+  history_table: NEW_DEDICATED_VEHICLE_SERVICE_HISTORY
+  save: ONE_SERVER_OWNED_ATOMIC_IDEMPOTENT_TRANSACTION
+  estimates_cleanup: SEPARATE_LATER_COMMIT
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+unrelated_worktree_state:
+  lfs_pointer_materialization_paths: 9
+  handling: PRESERVE_AND_EXCLUDE_FROM_ALL_WRITES_STAGING_AND_DIFF_ACCEPTANCE
+responsibility:
+  product_authority: Office AZ
+  specification_and_acceptance: MacBook Codex
+  later_diagnosis_and_bounded_implementation: MacBook Claude
+not_authorized:
+  - source_test_or_migration_implementation
+  - supabase_cli_sql_database_auth_storage_or_environment_access
+  - test_typecheck_build_formatter_or_dependency_change
+  - stage_commit_push_pr_mutation_ready_merge_or_deploy
+gates:
+  local_governance_candidate: AUTHORIZED_NOW
+  governance_commit: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  push_and_draft_pr: EACH_SEPARATE
+  claude_read_only_diagnosis: REQUIRES_ACTIVE_DRAFT_PR_AND_NEWEST_COMMENT
+  db_server_ui_and_cleanup_implementation: EACH_REQUIRES_ACCEPTED_DIAGNOSIS_AND_SEPARATE_OWNER_AUTHORIZATION
+  migration_apply_preview_merge_and_production: EACH_SEPARATE
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_GOVERNANCE_DIFF_DIRECTIVE_HASH_BASE_IDENTITY_PROTECTED_METADATA_KNOWN_LFS_EXCLUSIONS_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY."
+```
