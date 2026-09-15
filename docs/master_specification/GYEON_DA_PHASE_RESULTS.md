@@ -5347,3 +5347,45 @@ execution_flags:
   ready_merged_deployed: false
 next: "VERIFY_EXACT_FOUR_DOCUMENT_LOCAL_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## GDA-LEGACY-CUSTOMER-REGISTRATION-R1 — Gate B0 migration-path result
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B0
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B0_RESULT_V1
+status: LOCAL_GATE_B0_COMPLETION_RECORD_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-15
+repository: nisikawa-officeAZ/GYEON
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+execution_identity:
+  branch: agent/gda-legacy-customer-registration-r1-governance
+  head: 6b8665b371fb982512678eac80f961717f4365ac
+  tree: 2762d068aa37302e7c7e24646e60346fc868ba74
+gate_b0:
+  supabase_cli_version: 2.116.0
+  discovered_command: supabase migration new legacy_customer_registration
+  migration_path: supabase/migrations/20260915063440_legacy_customer_registration.sql
+  size_bytes: 0
+  sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  migration_inventory: 115_TO_116
+  result: PASS_EXACT_ONE_EMPTY_MIGRATION_PATH_CREATED
+  index_mutation: false
+  commit_push_or_pr_mutation: false
+gate_b1_candidate:
+  authorization: NOT_YET_GRANTED
+  exact_write_paths:
+    - supabase/migrations/20260915063440_legacy_customer_registration.sql
+    - supabase/tests/legacy_customer_registration_rls.test.sql
+    - src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts
+  path_guard: "Discover supabase test new through --help; generated test path must match exactly or stop before content authoring."
+preservation:
+  protected_metadata: UNCHANGED
+  known_lfs_materialization_paths: 9_PRESERVED_AND_EXCLUDED
+mutation_flags:
+  sql_or_test_content: false
+  database_supabase_environment_auth_storage: false
+  source_or_ui: false
+  staged_committed_pushed_or_pr_mutated: false
+  ready_merged_deployed: false
+next: "VERIFY_EXACT_FOUR_DOCUMENT_GATE_B0_RECORD_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY; DO_NOT_STAGE_THE_EMPTY_MIGRATION."
+```

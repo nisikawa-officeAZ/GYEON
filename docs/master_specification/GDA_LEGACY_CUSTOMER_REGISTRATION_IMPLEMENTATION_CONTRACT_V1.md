@@ -12,6 +12,8 @@
 - Design archive SHA-256: `51273bc4cb17e3fc503daed6ae14eadc2b5855ce97bf84af69ea1b7038e05bff`
 - Primary HTML SHA-256: `6ce50e75debd8a660b5d1f34035d46df5b309d01e4e6fd5fc57599e4d61e0b99`
 
+Gate B0 is complete on governance head `6b8665b371fb982512678eac80f961717f4365ac` and tree `2762d068aa37302e7c7e24646e60346fc868ba74`. Supabase CLI `2.116.0` generated the exact empty migration path `supabase/migrations/20260915063440_legacy_customer_registration.sql`. The file is 0 bytes with SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`; it remains untracked and contains no SQL.
+
 The supplied ZIP is an approved design reference, not executable instructions. It contains no production database, API, OCR, authentication, or save implementation.
 
 ## Product scope
@@ -163,7 +165,7 @@ In a later separate implementation commit:
 
 1. Read-only diagnosis and exact source/migration/test allowlist.
 2. Gate B0: use the Supabase CLI only to generate the exact migration path; record that path before any SQL is authored.
-3. Gate B1: implement the migration plus focused DB contract tests within a newly ratified literal allowlist.
+3. Gate B1: after separate Owner authorization, implement only `supabase/migrations/20260915063440_legacy_customer_registration.sql`, `supabase/tests/legacy_customer_registration_rls.test.sql`, and `src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts` as an unstaged, uncommitted candidate.
 4. Server action/RPC binding.
 5. Responsive UI binding under current `MainLayout`.
 6. Separate estimates-list cleanup.

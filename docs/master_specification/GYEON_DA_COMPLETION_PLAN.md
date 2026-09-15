@@ -2222,3 +2222,44 @@ not_authorized:
   - stage_commit_push_pr_mutation_ready_merge_or_deployment
 next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_LOCAL_DB_GOVERNANCE_DELTA_HASHES_PROTECTED_METADATA_LFS_EXCLUSIONS_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## 21. Gate B0 completion — legacy registration migration path
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B0
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B0_RESULT_V1
+date: 2026-09-15
+status: LOCAL_GATE_B0_COMPLETION_RECORD_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner separately authorized Gate B0. This update records its exact result and proposes the literal Gate B1 three-path boundary only."
+governance_head_at_execution: 6b8665b371fb982512678eac80f961717f4365ac
+governance_tree_at_execution: 2762d068aa37302e7c7e24646e60346fc868ba74
+supabase_cli:
+  version: 2.116.0
+  command: supabase migration new legacy_customer_registration
+result:
+  migration_path: supabase/migrations/20260915063440_legacy_customer_registration.sql
+  bytes: 0
+  sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  migration_count_before: 115
+  migration_count_after: 116
+  only_new_path: true
+  staged: false
+  committed: false
+preserved:
+  known_lfs_materialization_paths: 9
+  protected_metadata: UNCHANGED
+gate_b1_literal_write_allowlist:
+  - supabase/migrations/20260915063440_legacy_customer_registration.sql
+  - supabase/tests/legacy_customer_registration_rls.test.sql
+  - src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts
+gate_b1_precondition:
+  - DISCOVER_SUPABASE_TEST_NEW_VIA_HELP
+  - GENERATED_RLS_TEST_PATH_MUST_EQUAL_RATIFIED_PATH
+  - STOP_BEFORE_CONTENT_IF_PATH_DIFFERS
+not_performed:
+  - sql_or_test_authoring
+  - database_auth_storage_or_environment_access
+  - source_or_ui_implementation
+  - stage_commit_push_pr_mutation_ready_merge_or_deployment
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_GATE_B0_RECORD_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY; KEEP_THE_EMPTY_MIGRATION_UNTRACKED."
+```
