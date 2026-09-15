@@ -2177,3 +2177,48 @@ not_authorized:
   - stage_commit_push_pr_mutation_ready_merge_or_deployment
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_LOCAL_CORRECTION_DELTA_DIRECTIVE_HASH_CORRECTED_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## 20. Owner-ratified DB design — legacy registration idempotency
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_DESIGN
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_DESIGN_OWNER_DECISION_V1
+date: 2026-09-15
+status: LOCAL_OWNER_RATIFIED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner explicitly approved the minimal durable registration-receipt table. This authorizes only the local four-document governance candidate; it does not authorize CLI, SQL, tests, database access, Git delivery, or deployment."
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+accepted_governance_head: 9938cc36b6eb3f83791846b284e2d9a9937159e8
+accepted_governance_tree: ae694ee1a7ebfe997b45f74d7a82573aa24ccc80
+r2_diagnosis:
+  marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_COMPLETION_R2_RESULT_V1
+  report_sha256: 81b03c8e09aedc396eff3e6d12fe447d96d70a49afa1cf8ba17b5aeed58eff2a
+  verdict: OWNER_DECISION_REQUIRED
+  content_proven_paths: 23_OF_23
+owner_decisions_resolved:
+  durable_registration_receipt_anchor_for_zero_history_idempotency: APPROVED
+  table: public.legacy_customer_registration_receipts
+  uniqueness: [dealer_id, idempotency_key]
+  canonical_payload_fingerprint: REQUIRED_SERVER_CALCULATED_SHA256
+  equal_key_equal_payload: RETURN_ORIGINAL_IDS_WITHOUT_WRITES
+  equal_key_different_payload: FAIL_CLOSED_STABLE_CONFLICT
+  receipt_update_delete: DENIED_IN_V1
+  function_posture: SECURITY_INVOKER_WITH_EXPLICIT_GRANTS_AND_TENANT_BOUND_RLS
+governance_write_allowlist:
+  - docs/master_specification/GDA_LEGACY_CUSTOMER_REGISTRATION_IMPLEMENTATION_CONTRACT_V1.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_IMPLEMENTATION_PREPARATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_gate_b0:
+  action: SUPABASE_CLI_GENERATES_ONE_EXACT_MIGRATION_PATH_ONLY
+  authorization: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  sql_or_test_authoring: false
+future_gate_b1:
+  action: BOUNDED_UNCOMMITTED_MIGRATION_AND_DB_TEST_CANDIDATE
+  authorization: REQUIRES_SEPARATE_OWNER_AUTHORIZATION_AFTER_B0
+not_authorized:
+  - claude_execution_or_external_transmission
+  - supabase_cli_sql_test_database_auth_storage_or_environment_access
+  - source_or_ui_implementation
+  - stage_commit_push_pr_mutation_ready_merge_or_deployment
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_LOCAL_DB_GOVERNANCE_DELTA_HASHES_PROTECTED_METADATA_LFS_EXCLUSIONS_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY."
+```

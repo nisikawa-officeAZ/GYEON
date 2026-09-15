@@ -2,7 +2,7 @@
 
 ## Status and authority
 
-- Status: `OWNER_APPROVED_DESIGN_GOVERNANCE_CANDIDATE`
+- Status: `OWNER_RATIFIED_DB_DESIGN_GOVERNANCE_CANDIDATE`
 - Product owner: Office AZ
 - Specification and acceptance: MacBook Codex
 - Later diagnosis and bounded implementation: MacBook Claude
@@ -91,17 +91,42 @@ The UI renders their approved Japanese labels. `performed_on` cannot be in the f
 
 V1 supports registration and readback. Post-save edit/delete UI is deferred; later correction uses auditable archive semantics.
 
+## Durable idempotency receipt
+
+The Owner approved a dedicated immutable receipt because a valid registration can contain zero historical-service rows. History rows therefore cannot serve as the durable idempotency anchor.
+
+Create `public.legacy_customer_registration_receipts` with the following minimum contract:
+
+- `id uuid primary key default gen_random_uuid()`
+- `dealer_id uuid not null`
+- `idempotency_key text not null`
+- `payload_fingerprint text not null`
+- `customer_id uuid not null`
+- `vehicle_id uuid not null`
+- `created_by uuid not null`
+- `created_at timestamptz not null default now()`
+- a unique constraint on `(dealer_id, idempotency_key)`
+- foreign keys bound to the canonical dealer, customer, vehicle, and Auth-user identities verified in the target schema
+- a bounded, non-blank idempotency key and a lowercase 64-character SHA-256 fingerprint check
+
+The receipt is append-only in V1. Neither `anon` nor browser-authenticated callers receive direct UPDATE or DELETE authority. A same-dealer replay with the same key and the same canonical payload fingerprint returns the originally resolved `customer_id` and `vehicle_id` and creates nothing. Reusing the same key with a different fingerprint fails closed with a stable sanitized conflict code. A key is never shared across dealers.
+
+The fingerprint must be calculated server-side from the validated canonical registration payload. It must not contain raw PII in logs or error messages.
+
 ## Atomic save contract
 
 The final confirmation calls one idempotent server-owned transaction/RPC. It must:
 
 1. Resolve `auth.uid()`, one active dealer membership, and the required staff capability.
 2. Derive `dealer_id` and actor server-side.
-3. Validate and reserve one idempotency key.
-4. Select or create the customer.
-5. Select or create the vehicle.
-6. Insert zero or more history records.
-7. Commit only if every required operation succeeds.
+3. Canonicalize the validated payload and calculate its server-owned SHA-256 fingerprint.
+4. Lock or reserve one `(dealer_id, idempotency_key)` receipt identity.
+5. If an existing receipt has the same fingerprint, return its original customer and vehicle IDs without writing anything; if the fingerprint differs, fail closed.
+6. Select or create the customer.
+7. Select or create the vehicle.
+8. Insert zero or more history records.
+9. Insert the immutable receipt with the resolved IDs and actor.
+10. Commit only if every required operation succeeds.
 
 Supported combinations:
 
@@ -119,7 +144,10 @@ Any failure rolls back the full transaction. A repeated idempotency key returns 
 - UPDATE policies require both `USING` and `WITH CHECK`.
 - Data API grants and RLS are separate; declare required grants explicitly.
 - Never expose a service-role or secret key to the browser.
-- Prefer invoker rights. If a privileged function is genuinely required, keep it outside exposed schemas, check `auth.uid()` and membership inside the function, revoke `PUBLIC` execution, and grant only the intended role.
+- V1 selects an invoker-rights function. It must rely on explicit table grants plus tenant-bound RLS; authenticated role membership alone is insufficient authorization.
+- Revoke every automatic `anon` and `authenticated` table grant first, then grant back only the operations required by the accepted transaction design.
+- Revoke `PUBLIC` execution on every new function and grant execution only to the intended authenticated role.
+- If a later diagnosis proves invoker rights cannot implement the atomic contract safely, stop with `OWNER_DECISION_REQUIRED`; do not silently replace it with a privileged function.
 - Return stable sanitized error codes; never return raw SQL errors or log PII.
 
 ## Separate estimates-list cleanup
@@ -134,11 +162,12 @@ In a later separate implementation commit:
 ## Implementation phase split
 
 1. Read-only diagnosis and exact source/migration/test allowlist.
-2. Supabase CLI-generated migration plus focused DB contract tests.
-3. Server action/RPC binding.
-4. Responsive UI binding under current `MainLayout`.
-5. Separate estimates-list cleanup.
-6. Independent verification.
-7. Separate commit, push, Preview, migration-apply, merge, and production gates.
+2. Gate B0: use the Supabase CLI only to generate the exact migration path; record that path before any SQL is authored.
+3. Gate B1: implement the migration plus focused DB contract tests within a newly ratified literal allowlist.
+4. Server action/RPC binding.
+5. Responsive UI binding under current `MainLayout`.
+6. Separate estimates-list cleanup.
+7. Independent verification.
+8. Separate commit, push, Preview, migration-apply, merge, and production gates.
 
 No source, migration, database, environment, or deployment work is authorized by this contract file alone.

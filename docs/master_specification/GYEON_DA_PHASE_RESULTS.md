@@ -5303,3 +5303,47 @@ mutation_flags:
   ready_merged_deployed: false
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_LOCAL_CORRECTION_DELTA_DIRECTIVE_HASH_CORRECTED_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## GDA-LEGACY-CUSTOMER-REGISTRATION-R1 — R2 diagnosis acceptance and DB owner decision
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_DESIGN
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_DESIGN_OWNER_DECISION_V1
+status: LOCAL_OWNER_RATIFIED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-15
+repository: nisikawa-officeAZ/GYEON
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+current_branch: agent/gda-legacy-customer-registration-r1-governance
+accepted_governance_head: 9938cc36b6eb3f83791846b284e2d9a9937159e8
+accepted_governance_tree: ae694ee1a7ebfe997b45f74d7a82573aa24ccc80
+r2_result:
+  marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_COMPLETION_R2_RESULT_V1
+  claude_report_sha256: 81b03c8e09aedc396eff3e6d12fe447d96d70a49afa1cf8ba17b5aeed58eff2a
+  reported_verdict: OWNER_DECISION_REQUIRED
+  source_content_verified: 23_OF_23
+  content_findings_acceptance: ACCEPTED
+  identity_note: "The report cited the earlier in-session candidate identity; Codex independently verified the corrected governance branch identity above."
+owner_decision:
+  durable_receipt: APPROVED
+  relation: public.legacy_customer_registration_receipts
+  purpose: ZERO_HISTORY_SAFE_IDEMPOTENCY_ANCHOR
+  payload_fingerprint: REQUIRED
+  replay: SAME_KEY_AND_FINGERPRINT_RETURNS_ORIGINAL_CUSTOMER_AND_VEHICLE_IDS
+  conflict: SAME_KEY_DIFFERENT_FINGERPRINT_FAILS_CLOSED
+  mutation_posture: APPEND_ONLY_NO_AUTHENTICATED_UPDATE_OR_DELETE
+  function_posture: SECURITY_INVOKER
+  rls_and_grants: EXPLICIT_AND_SEPARATE_WITH_ACTIVE_DEALER_MEMBERSHIP
+governance_candidate_paths:
+  - docs/master_specification/GDA_LEGACY_CUSTOMER_REGISTRATION_IMPLEMENTATION_CONTRACT_V1.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_IMPLEMENTATION_PREPARATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+execution_flags:
+  claude_or_external_transmission: false
+  supabase_cli_or_sql: false
+  tests_or_database_runtime: false
+  source_ui_auth_storage_environment: false
+  staged_committed_pushed_or_pr_mutated: false
+  ready_merged_deployed: false
+next: "VERIFY_EXACT_FOUR_DOCUMENT_LOCAL_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY."
+```
