@@ -165,7 +165,7 @@ In a later separate implementation commit:
 
 1. Read-only diagnosis and exact source/migration/test allowlist.
 2. Gate B0: use the Supabase CLI only to generate the exact migration path; record that path before any SQL is authored.
-3. Gate B1: after separate Owner authorization, implement only `supabase/migrations/20260915063440_legacy_customer_registration.sql`, `supabase/tests/legacy_customer_registration_rls.test.sql`, and `src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts` as an unstaged, uncommitted candidate.
+3. Gate B1: after renewed separate Owner authorization, implement only `supabase/migrations/20260915063440_legacy_customer_registration.sql`, `supabase/tests/legacy_customer_registration_rls_test.sql`, and `src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts` as an unstaged, uncommitted candidate. The RLS-test path is the literal output of Supabase CLI `2.116.0`, not a hand-invented filename.
 4. Server action/RPC binding.
 5. Responsive UI binding under current `MainLayout`.
 6. Separate estimates-list cleanup.

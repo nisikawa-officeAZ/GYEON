@@ -5389,3 +5389,45 @@ mutation_flags:
   ready_merged_deployed: false
 next: "VERIFY_EXACT_FOUR_DOCUMENT_GATE_B0_RECORD_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY; DO_NOT_STAGE_THE_EMPTY_MIGRATION."
 ```
+
+## GDA-LEGACY-CUSTOMER-REGISTRATION-R1 — Gate B1 test-path stop and reconciliation
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B1_PATH_RECONCILIATION
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B1_PATH_RECONCILIATION_V1
+status: LOCAL_GOVERNANCE_CORRECTION_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-15
+repository: nisikawa-officeAZ/GYEON
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+attempt_identity:
+  branch: agent/gda-legacy-customer-registration-r1-governance
+  head: 1f8f2324793a12836eb227929cfad7a42f11534c
+  tree: 3c694df8fd4745e92759710d832dce8b3697bd80
+cli_result:
+  version: 2.116.0
+  command: supabase test new legacy_customer_registration_rls
+  proposed_test_path: supabase/tests/legacy_customer_registration_rls.test.sql
+  actual_test_path: supabase/tests/legacy_customer_registration_rls_test.sql
+  actual_size_bytes: 109
+  actual_sha256: c14f4b3051ad7fb09063e9051257c60305717c83a4f33da14460f3cd466933f6
+  verdict: CHANGES_REQUIRED_GOVERNANCE
+  stop_rule_obeyed: true
+corrected_gate_b1:
+  authorization: REQUIRES_RENEWED_SEPARATE_OWNER_AUTHORIZATION_AFTER_CORRECTION_PUBLICATION
+  exact_write_paths:
+    - supabase/migrations/20260915063440_legacy_customer_registration.sql
+    - supabase/tests/legacy_customer_registration_rls_test.sql
+    - src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts
+mutation_flags:
+  cli_generated_test_template_only: true
+  sql_or_test_content_authored: false
+  claude_invoked: false
+  database_supabase_environment_auth_storage: false
+  source_or_ui: false
+  staged_committed_pushed_or_pr_mutated: false
+  ready_merged_deployed: false
+preservation:
+  protected_metadata: UNCHANGED
+  known_lfs_materialization_paths: 9_PRESERVED_AND_EXCLUDED
+next: "VERIFY_EXACT_FOUR_DOCUMENT_PATH_CORRECTION_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY; DO_NOT_STAGE_EITHER_GENERATED_FILE."
+```

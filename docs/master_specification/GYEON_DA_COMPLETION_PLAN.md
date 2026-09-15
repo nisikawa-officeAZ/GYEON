@@ -2263,3 +2263,40 @@ not_performed:
   - stage_commit_push_pr_mutation_ready_merge_or_deployment
 next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_GATE_B0_RECORD_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY; KEEP_THE_EMPTY_MIGRATION_UNTRACKED."
 ```
+
+## 22. Gate B1 test-path reconciliation
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B1_PATH_RECONCILIATION
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B1_PATH_RECONCILIATION_V1
+date: 2026-09-15
+status: LOCAL_GOVERNANCE_CORRECTION_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner authorized correcting the four governance documents to the actual Supabase CLI-generated test path. This does not authorize SQL/test content, Claude execution, Git delivery, database access, or deployment."
+execution_identity:
+  head: 1f8f2324793a12836eb227929cfad7a42f11534c
+  tree: 3c694df8fd4745e92759710d832dce8b3697bd80
+path_discovery:
+  cli_version: 2.116.0
+  help_checked: true
+  command: supabase test new legacy_customer_registration_rls
+  proposed_path: supabase/tests/legacy_customer_registration_rls.test.sql
+  actual_generated_path: supabase/tests/legacy_customer_registration_rls_test.sql
+  generated_bytes: 109
+  generated_sha256: c14f4b3051ad7fb09063e9051257c60305717c83a4f33da14460f3cd466933f6
+  proposed_path_exists: false
+  result: CHANGES_REQUIRED_GOVERNANCE_STOPPED_BEFORE_CONTENT
+corrected_gate_b1_literal_write_allowlist:
+  - supabase/migrations/20260915063440_legacy_customer_registration.sql
+  - supabase/tests/legacy_customer_registration_rls_test.sql
+  - src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts
+current_untracked_generated_files:
+  migration: ZERO_BYTE_UNMODIFIED
+  rls_test: CLI_TEMPLATE_109_BYTES_UNMODIFIED
+not_performed:
+  - claude_execution_or_private_source_transmission
+  - sql_or_test_content_authoring
+  - database_auth_storage_or_environment_access
+  - source_or_ui_implementation
+  - stage_commit_push_pr_mutation_ready_merge_or_deployment
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_PATH_CORRECTION_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY; EXCLUDE_BOTH_UNTRACKED_GENERATED_FILES."
+```
