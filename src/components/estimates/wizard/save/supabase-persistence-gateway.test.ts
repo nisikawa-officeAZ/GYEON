@@ -238,14 +238,14 @@ test("the legacy dealer-bound allocator and the production route guard are untou
     "the production route guard is untouched");
 });
 
-// ── The gateway is bound ONLY by the unreachable authoritative action ────────
+// ── The gateway is bound ONLY by the authoritative action ───────────────────
 
-test("the gateway exports its binding; only the unreachable intent action consumes it", () => {
+test("the gateway exports its binding; only the authoritative intent action consumes it", () => {
   const code = codeOf(GATEWAY);
   assert.match(code, /export const supabasePersistenceGateway/,
     "exported for its one permitted consumer, the authoritative intent action");
-  // Reachability is asserted exhaustively in legacy-save-action-disabled.test.ts; this pins the
-  // one former importer.
+  // The legacy action remains unable to bind the real gateway. Production reachability is pinned
+  // separately to the one accepted create route below.
   const legacy = codeOf(`${SAVE_DIR}save-estimate-from-wizard-action.ts`);
   assert.equal(legacy.includes("supabase" + "PersistenceGateway"), false,
     "the legacy action no longer binds the real gateway");
@@ -253,11 +253,13 @@ test("the gateway exports its binding; only the unreachable intent action consum
 
 // ── B7-0A locked boundaries ─────────────────────────────────────────────────
 
-test("the ten legacy one-argument numbering call sites are intact", () => {
+test("the nine remaining legacy one-argument numbering call sites are intact", () => {
   const CALLERS: Array<[string, number]> = [
     ["src/lib/estimates/create-estimate.ts", 1],
     ["src/lib/invoices/create-invoice.ts", 2],
-    ["src/lib/payments/create-payment.ts", 1],
+    // The accepted atomic payment RPC owns payment identity and intentionally
+    // performs no legacy client-side document-number allocation.
+    ["src/lib/payments/create-payment.ts", 0],
     ["src/lib/work-orders/create-work-order.ts", 1],
     ["src/lib/reservations/create-reservation.ts", 1],
     ["src/lib/reservations/update-reservation.ts", 1],
@@ -271,7 +273,7 @@ test("the ten legacy one-argument numbering call sites are intact", () => {
     assert.equal(hits, expected, `${file}: one-argument call sites`);
     total += hits;
   }
-  assert.equal(total, 10, "ten legacy one-argument call sites in nine files");
+  assert.equal(total, 9, "nine legacy one-argument call sites remain in eight files");
 });
 
 test("the numbering allocator module still exposes both entry points unchanged", () => {
@@ -284,13 +286,9 @@ test("the numbering allocator module still exposes both entry points unchanged",
     "still exactly one numbering RPC call site, untouched by B7-0A");
 });
 
-test("B7-1: the authoritative intent action binds the real gateway and stays unmounted", () => {
-  // The module name is assembled from fragments, NOT spelled contiguously. Both
-  // legacy-save-action-disabled.test.ts and wizard-save-intent-orchestrator.test.ts
-  // assert the action has zero importers by scanning every file under src/ for
-  // this name as PLAIN TEXT, so a file that spells it whole — even one merely
-  // READING the action's source, as here — is reported as an importer. Those two
-  // guards fragment the name for the same reason; the resolved path is identical.
+test("the authoritative intent action binds the real gateway and is mounted only by the production create route", () => {
+  // The module name is assembled from fragments so source-scanning tests do not mistake this
+  // contract test's own source text for a production importer.
   const action = codeOf(
     "src/components/estimates/wizard/save/save-estimate-from-wizard-" + "intent-action.ts",
   );
@@ -300,8 +298,8 @@ test("B7-1: the authoritative intent action binds the real gateway and stays unm
   assert.equal(action.includes("notImplementedPersistenceGateway"), false,
     "the placeholder binding is gone");
 
-  // Armed, but still not reachable: the whole safety of B7-1 rests on this, not on
-  // the binding. Route mounting is a separate, later phase and a separate commit.
+  // B7-3 made the action reachable from exactly one fail-closed server route.
+  // No second app route may create another persistence entry point.
   const appDir = "src/" + "app";
   const { readdirSync, statSync } = require("node:fs") as typeof import("node:fs");
   const walk = (dir: string, out: string[] = []): string[] => {
@@ -314,7 +312,11 @@ test("B7-1: the authoritative intent action binds the real gateway and stays unm
   };
   const mod = "save-estimate-from-wizard-" + "intent-action";
   const routeImporters = walk(appDir).filter((f) => codeOf(f).includes(mod));
-  assert.deepEqual(routeImporters, [], `no route may reach the action yet; found: ${routeImporters.join(", ")}`);
+  assert.deepEqual(
+    routeImporters,
+    ["src/app/estimates/new/page.tsx"],
+    `only the accepted production create route may reach the action; found: ${routeImporters.join(", ")}`,
+  );
 });
 
 test("the new migration adds the three-argument RPC and drops the four-argument one", () => {
