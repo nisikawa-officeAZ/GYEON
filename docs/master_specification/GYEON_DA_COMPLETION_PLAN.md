@@ -2138,3 +2138,42 @@ gates:
   migration_apply_preview_merge_and_production: EACH_SEPARATE
 next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_GOVERNANCE_DIFF_DIRECTIVE_HASH_BASE_IDENTITY_PROTECTED_METADATA_KNOWN_LFS_EXCLUSIONS_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## 19. Local diagnosis-correction candidate — legacy customer registration R2
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DIAGNOSIS_COMPLETION_R2
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DIAGNOSIS_COMPLETION_R2_GOVERNANCE_CANDIDATE_V1
+date: 2026-09-15
+status: LOCAL_GOVERNANCE_CORRECTION_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner explicitly approved sending the exact private diagnosis allowlist to MacBook Claude and approved continuing after the first budget-bounded pass. This record authorizes only the local correction candidate."
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+prior_result:
+  marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  sha256: 9fa89304fc19aebe02b4f99addcbd443bb729d3c19c75b72ef3be03dd0e0ddb0
+  verdict: CHANGES_REQUIRED_GOVERNANCE
+  content_proven_paths: 9
+  remaining_paths: 14
+corrections:
+  protected_line_link_blob: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  prior_incorrect_blob: 100644_accd22345054f3a17cc85e313b62d5bb6a4fda3f
+  prior_remaining_count_text: 13
+  corrected_remaining_count: 14
+completion_directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_COMPLETION_R2.md
+  result_marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_COMPLETION_R2_RESULT_V1
+  exact_private_read_paths: 14
+governance_write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_COMPLETION_R2.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+pending_owner_decisions:
+  - durable_registration_receipt_anchor_for_zero_history_idempotency
+  - rls_bounded_invoker_raw_insert_or_strict_rpc_only_write_boundary
+not_authorized:
+  - source_test_or_migration_implementation
+  - test_typecheck_build_formatter_dependency_or_supabase_cli
+  - database_auth_storage_environment_secret_or_chrome_access
+  - stage_commit_push_pr_mutation_ready_merge_or_deployment
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_LOCAL_CORRECTION_DELTA_DIRECTIVE_HASH_CORRECTED_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_LOCAL_COMMIT_ONLY."
+```

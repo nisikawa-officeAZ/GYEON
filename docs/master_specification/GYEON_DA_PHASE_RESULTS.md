@@ -5264,3 +5264,42 @@ mutation_flags:
   ready_merged_deployed: false
 next: "VERIFY_EXACT_FOUR_DOCUMENT_DIFF_HASHES_DIRECTIVE_CONTENT_BASE_IDENTITY_PROTECTED_METADATA_LFS_EXCLUSIONS_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## GDA-LEGACY-CUSTOMER-REGISTRATION-R1 — diagnosis correction candidate R2
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DIAGNOSIS_COMPLETION_R2
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DIAGNOSIS_COMPLETION_R2_GOVERNANCE_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_CORRECTION_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-15
+repository: nisikawa-officeAZ/GYEON
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+candidate_branch: agent/gda-legacy-customer-registration-r1-governance
+prior_diagnosis:
+  marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  claude_report_sha256: 9fa89304fc19aebe02b4f99addcbd443bb729d3c19c75b72ef3be03dd0e0ddb0
+  verdict: CHANGES_REQUIRED_GOVERNANCE
+  source_content_verified: 9_OF_23
+  source_content_remaining: 14_OF_23
+  repository_mutation: false
+correction:
+  protected_path: supabase/migrations/20260801110110_line_link_tokens.sql
+  corrected_metadata: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  history_handling: APPEND_ONLY_SUPERSESSION_NO_REWRITE
+  unread_count_corrected_from: 13
+  unread_count_corrected_to: 14
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_COMPLETION_R2.md
+  result_marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_COMPLETION_R2_RESULT_V1
+  exact_private_read_allowlist: 14
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+mutation_flags:
+  source_test_dependency_migration_db_supabase_auth_storage_environment: false
+  staged_committed_pushed_or_pr_mutated: false
+  ready_merged_deployed: false
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_LOCAL_CORRECTION_DELTA_DIRECTIVE_HASH_CORRECTED_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_LOCAL_COMMIT_ONLY."
+```
