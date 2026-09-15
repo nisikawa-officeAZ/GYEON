@@ -8,6 +8,7 @@ const read = (relative: string) => fs.readFileSync(path.join(root, relative), "u
 const action = read("src/lib/customers/legacy-registration/actions.ts");
 const page = read("src/app/customers/legacy-registration/page.tsx");
 const ui = read("src/components/customers/legacy-registration/LegacyCustomerRegistrationWizard.tsx");
+const ocrReview = read("src/components/vehicle-registration/VehicleRegistrationOcrReview.tsx");
 const hub = read("src/app/hub/customers/page.tsx");
 
 test("dedicated route injects every server boundary into the client wizard", () => {
@@ -46,6 +47,27 @@ test("UI reuses approved OCR upload and human review and does not create commerc
   assert.match(ui, /mapReviewedOcrToLegacyDraft/);
   assert.match(ui, /見積・請求・施工指示は作成されません/);
   assert.doesNotMatch(action, /createEstimate|createInvoice|createWorkOrder|createPayment/);
+});
+
+test("OCR review preserves every field consumed by legacy registration mapping", () => {
+  const customerFields = ocrReview.match(/const CUSTOMER_FIELDS:[^=]+\= \[([\s\S]*?)\];/)?.[1] ?? "";
+  const vehicleFields = ocrReview.match(/const VEHICLE_FIELDS:[^=]+\= \[([\s\S]*?)\];/)?.[1] ?? "";
+
+  for (const field of ["owner_name_kana", "user_name_kana"]) {
+    assert.match(customerFields, new RegExp(`"${field}"`));
+  }
+  for (const field of ["model_code", "fuel_type"]) {
+    assert.match(vehicleFields, new RegExp(`"${field}"`));
+  }
+  assert.doesNotMatch(vehicleFields, /"model"/);
+
+  assert.match(ocrReview, /const ALL_REVIEW_FIELDS:[\s\S]*CUSTOMER_FIELDS[\s\S]*VEHICLE_FIELDS/);
+  assert.match(ocrReview, /for \(const key of ALL_REVIEW_FIELDS\)[\s\S]*selected\.has\(key\)[\s\S]*payload/);
+
+  const core = read("src/lib/customers/legacy-registration/legacy-registration-core.ts");
+  assert.match(core, /lastNameKana: customerKana/);
+  assert.match(core, /vehicleCode: clean\(ocr\.model_code\)/);
+  assert.match(core, /fuelType: clean\(ocr\.fuel_type\)/);
 });
 
 test("four approved steps and all seven history categories remain present", () => {
