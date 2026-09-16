@@ -38,7 +38,12 @@ import { CarWashSelector } from "../screens/CarWashSelector";
 import { RoomCleaningSelector } from "../screens/RoomCleaningSelector";
 import { OtherWorkSelector } from "../screens/OtherWorkSelector";
 import { StoreGlobalOptionsSelector } from "../screens/StoreGlobalOptionsSelector";
-import { isCoatingAvailableForRank, firstLayerOptions, secondLayerOptions, thirdLayerOptions } from "../screens/coating-matrix";
+import {
+  isCoatingAvailableForRank,
+  firstLayerOptions,
+  secondLayerOptionsForRank,
+  thirdLayerOptionsForRank,
+} from "../screens/coating-matrix";
 
 import { createStep4Bindings, type RowCreateResult } from "./step4-bindings";
 import {
@@ -206,8 +211,8 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
               selectedLayer2ProductId={cfg.coating.layer2Id}
               selectedLayer3ProductId={cfg.coating.layer3Id}
               availableLayer1Products={firstLayerOptions(shopRank)}
-              availableLayer2Products={secondLayerOptions(cfg.coating.layer1Id)}
-              availableLayer3Products={thirdLayerOptions(cfg.coating.layer1Id)}
+              availableLayer2Products={secondLayerOptionsForRank(cfg.coating.layer1Id, shopRank)}
+              availableLayer3Products={thirdLayerOptionsForRank(cfg.coating.layer1Id, shopRank)}
               onLayerCountChange={bindings.coating.onLayerCountChange}
               onLayer1Change={bindings.coating.onLayer1Change}
               onLayer2Change={bindings.coating.onLayer2Change}

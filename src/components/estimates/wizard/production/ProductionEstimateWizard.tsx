@@ -491,7 +491,7 @@ export default function ProductionEstimateWizard(props: ProductionEstimateWizard
           type="button"
           data-testid="bootstrap-start-new"
           onClick={startNewEstimate}
-          className="mt-3 rounded-md border border-slate-600 px-4 py-2 text-sm"
+          className="mt-3 rounded-md border border-slate-600 px-4 py-2 text-sm text-slate-100 hover:bg-slate-800/60 transition-colors"
         >
           新しい見積を開始
         </button>

@@ -16,7 +16,7 @@ export function SavedInvoiceIssueControls({ invoice, actions, controller }: {
   const [confirmed, setConfirmed] = useState(false);
   if (hasIssuedInvoice(invoice.status)) return (
     <button type="button" disabled={!actions?.download} onClick={() => { void controller.download(); }}
-      className="mt-3 rounded-md border border-sky-600 px-4 py-2 text-sm disabled:opacity-50">発行済みPDFを表示</button>
+      className="mt-3 rounded-md border border-sky-600 px-4 py-2 text-sm text-slate-100 disabled:opacity-50">発行済みPDFを表示</button>
   );
   if (invoice.status !== "draft") return null;
   const savedDate = isValidCalendarDate(date) && date === invoice.deliveryDate;
@@ -27,13 +27,13 @@ export function SavedInvoiceIssueControls({ invoice, actions, controller }: {
     </label>
     <button type="button" disabled={!actions?.saveDate || !isValidCalendarDate(date) || savedDate}
       onClick={() => { void controller.saveDeliveryDate(date); }}
-      className="rounded-md border border-slate-600 px-4 py-2 text-sm disabled:opacity-50">納品日を保存</button>
+      className="rounded-md border border-slate-600 px-4 py-2 text-sm text-slate-100 disabled:opacity-50">納品日を保存</button>
     <label className="block text-sm"><input type="checkbox" checked={confirmed} disabled={!savedDate || !actions?.issue}
       onChange={event => setConfirmed(event.target.checked)} className="mr-2" />
       上記の納品日・明細・合計金額を確認しました。確定発行後は内容を変更できません。</label>
     <button type="button" disabled={!actions?.issue || !savedDate || !confirmed}
       onClick={() => { void controller.issue(confirmed); }}
-      className="rounded-md bg-sky-700 px-4 py-2 text-sm disabled:opacity-50">請求書を確定発行してPDFを表示</button>
+      className="rounded-md bg-sky-700 px-4 py-2 text-sm text-white disabled:opacity-50">請求書を確定発行してPDFを表示</button>
     <p className="text-xs text-slate-400">納品日の保存だけでは発行しません。確定発行でも入金処理は行いません。</p>
   </div>;
 }
@@ -54,7 +54,7 @@ export default function SavedEstimateInvoice({ estimateId, actions, onInvoice }:
       <button type="button" disabled={!controller || pending} aria-disabled={!controller || pending}
         aria-describedby="saved-document-invoice-reason" data-testid="saved-document-invoice"
         onClick={() => { void controller?.run(); }}
-        className="rounded-md border border-sky-600 px-4 py-2 text-sm disabled:border-slate-700 disabled:text-slate-500">
+        className="rounded-md border border-sky-600 px-4 py-2 text-sm text-slate-100 disabled:border-slate-700 disabled:text-slate-500">
         {pending ? "請求書を確認中…" : state.kind === "idle" ? "請求書の下書きを作成・確認" : "請求書を再確認"}
       </button>
       <p id="saved-document-invoice-reason" data-testid="saved-document-invoice-reason" className="mt-1 text-xs text-slate-400">

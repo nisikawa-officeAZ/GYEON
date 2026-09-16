@@ -493,7 +493,7 @@ export interface CouponOption {
  *  Dealer-rate / credit-sales rules arrive ONLY as informational text / disabled state. */
 export interface Step5DiscountProps {
   // subtotal (display + validation bounds only — supplied by parent, never recalculated here)
-  subtotal:                 number;
+  subtotal:                 number | null;
   // discount input state (owner-held; existing estimates preload the active mode + value)
   activeDiscountMode:       DiscountMode;
   discountAmountValue:      string;
@@ -517,7 +517,8 @@ export interface Step5DiscountProps {
   onDiscountPercentChange:  (v: string) => void;
   onDiscountClear:          () => void;
   onCouponToggle:           (id: string) => void;
-  onContinue:               () => void;
+  /** Optional because the canonical WizardShell already owns Back/Next navigation. */
+  onContinue?:              () => void;
 }
 
 // ── Screen 6 (Phase 6: Notes and Internal Memo) ─────────────────────────────────

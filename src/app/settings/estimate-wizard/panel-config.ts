@@ -23,6 +23,12 @@ export const ESTIMATE_WIZARD_PANEL_CONFIG = {
     panelId: null,
     sectionId: "store",
   },
+  "coupons": {
+    labelJa: "クーポン設定",
+    labelEn: "COUPON SETTINGS",
+    panelId: null,
+    sectionId: "coupon",
+  },
 } as const;
 
 export type EstimateWizardPanelSlug = keyof typeof ESTIMATE_WIZARD_PANEL_CONFIG;

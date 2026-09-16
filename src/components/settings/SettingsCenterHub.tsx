@@ -57,7 +57,7 @@ type CardAction =
 type IconKey =
   | "store" | "people" | "clock" | "timer" | "palette" | "bell"
   | "estimate" | "chat" | "scan" | "document" | "plan" | "spark"
-  | "estimate_flow" | "coating" | "ppf" | "window_film";
+  | "coupon" | "estimate_flow" | "coating" | "ppf" | "window_film";
 
 interface HubCard {
   id:             string;
@@ -111,6 +111,16 @@ const HUB_GROUPS: HubGroup[] = [
         action:        { kind: "route", href: "/settings/dealer" },
         getState: ({ settings }) =>
           settings.business_name ? "configured" : "not_configured",
+      },
+      {
+        id:            "coupons",
+        icon:          "coupon",
+        label:         "クーポン設定",
+        labelEn:       "COUPON SETTINGS",
+        description:   "見積で使用するクーポンの金額・率・期間・併用可否を設定",
+        minVisibility: "readonly",
+        action:        { kind: "route", href: "/settings/estimate-wizard/coupons" },
+        getState:      () => "active",
       },
       {
         id:            "staff",
@@ -349,6 +359,7 @@ const LEGACY_ICON_PATHS: Record<Exclude<IconKey, "estimate_flow" | "coating" | "
   document: <><path d="M4 2.2h5l3 3v8.6H4z" /><path d="M9 2.2v3h3" /><path d="M6 9h4" /><path d="M6 11.2h4" /></>,
   plan:     <><rect x="2.2" y="3.5" width="11.6" height="9" rx="1.4" /><path d="M2.2 6.6h11.6" /><path d="M5 9.6h3" /></>,
   spark:    <><path d="M8 2.2 9.3 6l3.8 1.3L9.3 8.6 8 12.4 6.7 8.6 2.9 7.3 6.7 6Z" /></>,
+  coupon:   <><path d="M3 4.5h10v2a1.8 1.8 0 0 0 0 3v2H3v-2a1.8 1.8 0 0 0 0-3z" /><path d="M8 5.8v4.4" strokeDasharray="1.2 1.2" /></>,
 };
 
 /** Dedicated semantic line icons for the estimate/pricing navigation cards — exact geometry from the approved GenSpark R2 package (S8B). */

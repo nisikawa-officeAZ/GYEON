@@ -103,12 +103,16 @@ test("5. plain save: 保存完了, three choices, no preview, and the ONLY URL i
   assert.ok(html.includes('data-testid="saved-estimate-documents"'), "PRECONDITION: the surface rendered");
   assert.ok(html.includes("保存完了"));
   assert.match(tagOf(html, "saved-estimate-status"), /role="status"/);
+  assert.match(tagOf(html, "saved-estimate-documents"), /text-slate-100/,
+    "the complete saved-document surface establishes readable dark-theme text");
   for (const id of ["saved-document-estimate-pdf", "saved-document-delivery-note", "saved-document-invoice"]) {
     assert.ok(html.includes(`data-testid="${id}"`), `${id} is offered`);
   }
   assert.equal(html.includes("<iframe"), false, "plain save shows the choices, not the preview");
   assert.equal(html.includes("saved-estimate-pdf-preview"), false);
   assert.match(tagOf(html, "saved-document-estimate-pdf"), /aria-pressed="false"/);
+  assert.match(tagOf(html, "saved-document-estimate-pdf"), /text-slate-100/,
+    "the estimate PDF action must not inherit black text");
   assert.deepEqual(urlsOf(html), [DETAIL_PATH], "no other URL — no draft payload, no invented id");
   assert.ok(html.includes("書類発行ではありません"), "the detail link is labelled as NOT issuance");
   for (const leak of ["save-submit", "wizard-save-panel", "/invoices/", "/delivery", "/work-orders/"]) {

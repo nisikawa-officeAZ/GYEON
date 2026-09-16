@@ -63,6 +63,15 @@ const LAYER3_BY_FIRST: Record<string, string[]> = {
   // matte-evo / syncro-evo: no approved 3rd layer → layer-3 control disabled
 };
 
+/** Products that may only be presented to a certified shop, including upper layers. */
+const CERTIFIED_ONLY_PRODUCTS = new Set<string>([
+  "infinite-base-1",
+  "infinite-base-2",
+  "infinite-topcoat-1",
+  "infinite-topcoat-2",
+  "cancoat-pro-evo",
+]);
+
 function toOptions(ids: string[]): CoatingProductOption[] {
   return ids.map((id) => ({ id, label: COATING_PRODUCT_LABELS[id] ?? id }));
 }
@@ -80,6 +89,26 @@ export function secondLayerOptions(firstLayerId: string | null): CoatingProductO
   return firstLayerId ? toOptions(LAYER2_BY_FIRST[firstLayerId] ?? []) : [];
 }
 
+/** Rank-safe presentation options. The structural matrix remains available to validation/settings. */
+export function secondLayerOptionsForRank(
+  firstLayerId: string | null,
+  rank: ShopRank,
+): CoatingProductOption[] {
+  return secondLayerOptions(firstLayerId).filter(
+    (option) => rank === "certified" || !CERTIFIED_ONLY_PRODUCTS.has(option.id),
+  );
+}
+
 export function thirdLayerOptions(firstLayerId: string | null): CoatingProductOption[] {
   return firstLayerId ? toOptions(LAYER3_BY_FIRST[firstLayerId] ?? []) : [];
+}
+
+/** Rank-safe presentation options for the third layer. */
+export function thirdLayerOptionsForRank(
+  firstLayerId: string | null,
+  rank: ShopRank,
+): CoatingProductOption[] {
+  return thirdLayerOptions(firstLayerId).filter(
+    (option) => rank === "certified" || !CERTIFIED_ONLY_PRODUCTS.has(option.id),
+  );
 }
