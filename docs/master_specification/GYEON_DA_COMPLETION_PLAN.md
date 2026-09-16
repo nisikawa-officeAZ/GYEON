@@ -2072,3 +2072,53 @@ gates:
   verification_commit_push_ready_merge_deploy: EACH_SEPARATE
 next: "VERIFY_THE_EXACT_TWO_DOCUMENT_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## 18. GDA-ESTIMATE-WIZARD-RELEASE-R1 — coupon access and action contrast
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_RELEASE_R1
+marker: GDA_ESTIMATE_WIZARD_RELEASE_R1_PLAN_V1
+date: 2026-09-16
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+owner_authorization: "The Owner approved starting one bounded first-release repair phase covering the missing Step 5 coupon UI, missing Store Operations coupon-settings access, and unreadable Step 7 save-control text."
+repository: nisikawa-officeAZ/GYEON
+branch: fix/estimate-wizard-release-r1
+base_commit: 949f51b82cda9f2f21162237f1e8759037bc8bff
+responsible_machine: MacBook
+responsible_agent: Codex
+scope:
+  - restore_visible_configured_coupon_selection_in_estimate_wizard_step_5
+  - expose_existing_coupon_editor_from_store_operations
+  - add_explicit_readable_text_color_to_save_and_save_then_pdf_controls
+frozen_behavior:
+  - pricing_arithmetic
+  - canonical_draft_and_save_payload_contract
+  - idempotency_and_save_ordering
+  - pdf_generation_and_routing
+  - database_migrations_supabase_storage_auth_and_environment
+candidate_implementation_ceiling:
+  - src/components/estimates/wizard/EstimateWizard.tsx
+  - src/components/estimates/wizard/steps/Step5Discount.tsx
+  - src/components/estimates/wizard/screens/Step5Discount.tsx
+  - src/components/estimates/wizard/screens/DiscountModeSelector.tsx
+  - src/components/estimates/wizard/screens/step-types.ts
+  - src/components/estimates/wizard/save/WizardSavePanel.tsx
+  - src/components/settings/SettingsCenterHub.tsx
+  - src/app/settings/coupons/page.tsx
+  - src/lib/navigation/gda-estimate-wizard-release-ui.test.tsx
+protected_paths:
+  - src/components/estimates/wizard/screens/ScreensPreview.tsx
+  - supabase/migrations/20260801110110_line_link_tokens.sql
+  - supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql
+  - src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
+pre_existing_unrelated_state:
+  lfs_png_paths: 9
+  handling: PRESERVE_AND_EXCLUDE_FROM_ALL_DIFF_STAGE_AND_ACCEPTANCE_ACTIONS
+gates:
+  local_governance: COMPLETE
+  governance_commit_push_and_draft_pr: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  claude_read_only_diagnosis: REQUIRES_ACTIVE_DRAFT_PR_AND_ACCEPTANCE
+  implementation: BLOCKED_PENDING_ACCEPTED_DIAGNOSIS
+  verification_commit_push_preview_merge_deploy: EACH_SEPARATE
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_GOVERNANCE_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_COMMIT_PUSH_AND_DRAFT_PR_CREATION."
+```

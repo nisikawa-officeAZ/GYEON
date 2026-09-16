@@ -5218,3 +5218,31 @@ authenticated_read_only_smoke:
 verdict: ACCEPTED_PRODUCTION_RELEASE_COMPLETE
 next: "A new same-page invoice workflow phase requires its own governance, Claude read-only diagnosis, authorization, implementation, and acceptance gates."
 ```
+
+## GDA-ESTIMATE-WIZARD-RELEASE-R1 — local governance candidate
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_RELEASE_R1
+marker: GDA_ESTIMATE_WIZARD_RELEASE_R1_GOVERNANCE_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-16
+authorization: "The Owner approved starting the bounded first-release wizard repair. This entry authorizes local governance preparation only; source implementation remains blocked until the read-only diagnosis is published and accepted."
+repository: nisikawa-officeAZ/GYEON
+branch: fix/estimate-wizard-release-r1
+base_commit: 949f51b82cda9f2f21162237f1e8759037bc8bff
+confirmed_defects:
+  step5_coupon: STALE_PHASE_TWO_NOTICE_INSTEAD_OF_CONFIGURED_SELECTOR
+  coupon_settings: EXISTING_EDITOR_HAS_NO_STORE_OPERATIONS_ROUTE
+  save_controls: EXPLICIT_TEXT_COLOR_MISSING
+database_or_migration_needed: false
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_WIZARD_RELEASE_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+implementation_authorized: false
+git_publication_authorized: false
+claude_diagnosis_published: false
+unrelated_lfs_png_paths: 9
+protected_paths_unchanged: true
+next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_COMMIT_PUSH_DRAFT_PR_AND_DIAGNOSIS_PUBLICATION."
+```
