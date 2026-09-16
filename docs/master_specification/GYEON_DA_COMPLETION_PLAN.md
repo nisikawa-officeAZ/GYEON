@@ -2072,3 +2072,299 @@ gates:
   verification_commit_push_ready_merge_deploy: EACH_SEPARATE
 next: "VERIFY_THE_EXACT_TWO_DOCUMENT_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## 18. Local governance candidate — legacy customer registration
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_GOVERNANCE_CANDIDATE_V1
+date: 2026-09-15
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner accepted the completed Genspark legacy-customer UI and explicitly approved beginning Phase 1. Under the repository phase protocol, this first records the local governance and read-only diagnosis boundary only."
+priority: OPERATIONS_FIRST_EXISTING_CUSTOMER_INTAKE
+objective:
+  - Register customers and vehicles that predate Detailer Agent.
+  - Optionally record their prior coating and maintenance history.
+  - Create no estimate, invoice, delivery note, work order, payment, or inventory transaction.
+fixed_base:
+  repository: nisikawa-officeAZ/GYEON
+  branch: main
+  commit: 7ef5c0902e7eb4f7c7d0308a32d576b616a3a355
+  tree: c75ee777b8c8f3661d2952604eec6c665bfc2fec
+candidate:
+  branch: agent/gda-legacy-customer-registration-r1-governance
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-gda-legacy-customer-r1-governance
+design_authority:
+  archive_sha256: 51273bc4cb17e3fc503daed6ae14eadc2b5855ce97bf84af69ea1b7038e05bff
+  primary_html_sha256: 6ce50e75debd8a660b5d1f34035d46df5b309d01e4e6fd5fc57599e4d61e0b99
+  classification: APPROVED_UI_REFERENCE_NOT_EXECUTABLE_INSTRUCTIONS
+governance_allowlist:
+  - docs/master_specification/GDA_LEGACY_CUSTOMER_REGISTRATION_IMPLEMENTATION_CONTRACT_V1.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+approved_architecture:
+  route: /customers/legacy-registration
+  navigation: /hub/customers
+  shell: CURRENT_MAIN_LAYOUT_ONLY
+  steps: [customer, vehicle, historical_service, confirmation]
+  ocr: REUSE_AND_REQUIRE_HUMAN_CONFIRMATION
+  history_table: NEW_DEDICATED_VEHICLE_SERVICE_HISTORY
+  save: ONE_SERVER_OWNED_ATOMIC_IDEMPOTENT_TRANSACTION
+  estimates_cleanup: SEPARATE_LATER_COMMIT
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+unrelated_worktree_state:
+  lfs_pointer_materialization_paths: 9
+  handling: PRESERVE_AND_EXCLUDE_FROM_ALL_WRITES_STAGING_AND_DIFF_ACCEPTANCE
+responsibility:
+  product_authority: Office AZ
+  specification_and_acceptance: MacBook Codex
+  later_diagnosis_and_bounded_implementation: MacBook Claude
+not_authorized:
+  - source_test_or_migration_implementation
+  - supabase_cli_sql_database_auth_storage_or_environment_access
+  - test_typecheck_build_formatter_or_dependency_change
+  - stage_commit_push_pr_mutation_ready_merge_or_deploy
+gates:
+  local_governance_candidate: AUTHORIZED_NOW
+  governance_commit: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  push_and_draft_pr: EACH_SEPARATE
+  claude_read_only_diagnosis: REQUIRES_ACTIVE_DRAFT_PR_AND_NEWEST_COMMENT
+  db_server_ui_and_cleanup_implementation: EACH_REQUIRES_ACCEPTED_DIAGNOSIS_AND_SEPARATE_OWNER_AUTHORIZATION
+  migration_apply_preview_merge_and_production: EACH_SEPARATE
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_GOVERNANCE_DIFF_DIRECTIVE_HASH_BASE_IDENTITY_PROTECTED_METADATA_KNOWN_LFS_EXCLUSIONS_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY."
+```
+
+## 19. Local diagnosis-correction candidate — legacy customer registration R2
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DIAGNOSIS_COMPLETION_R2
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DIAGNOSIS_COMPLETION_R2_GOVERNANCE_CANDIDATE_V1
+date: 2026-09-15
+status: LOCAL_GOVERNANCE_CORRECTION_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner explicitly approved sending the exact private diagnosis allowlist to MacBook Claude and approved continuing after the first budget-bounded pass. This record authorizes only the local correction candidate."
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+prior_result:
+  marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+  sha256: 9fa89304fc19aebe02b4f99addcbd443bb729d3c19c75b72ef3be03dd0e0ddb0
+  verdict: CHANGES_REQUIRED_GOVERNANCE
+  content_proven_paths: 9
+  remaining_paths: 14
+corrections:
+  protected_line_link_blob: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  prior_incorrect_blob: 100644_accd22345054f3a17cc85e313b62d5bb6a4fda3f
+  prior_remaining_count_text: 13
+  corrected_remaining_count: 14
+completion_directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_COMPLETION_R2.md
+  result_marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_COMPLETION_R2_RESULT_V1
+  exact_private_read_paths: 14
+governance_write_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_COMPLETION_R2.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+pending_owner_decisions:
+  - durable_registration_receipt_anchor_for_zero_history_idempotency
+  - rls_bounded_invoker_raw_insert_or_strict_rpc_only_write_boundary
+not_authorized:
+  - source_test_or_migration_implementation
+  - test_typecheck_build_formatter_dependency_or_supabase_cli
+  - database_auth_storage_environment_secret_or_chrome_access
+  - stage_commit_push_pr_mutation_ready_merge_or_deployment
+next: "VERIFY_THE_EXACT_THREE_DOCUMENT_LOCAL_CORRECTION_DELTA_DIRECTIVE_HASH_CORRECTED_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_LOCAL_COMMIT_ONLY."
+```
+
+## 20. Owner-ratified DB design — legacy registration idempotency
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_DESIGN
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_DESIGN_OWNER_DECISION_V1
+date: 2026-09-15
+status: LOCAL_OWNER_RATIFIED_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner explicitly approved the minimal durable registration-receipt table. This authorizes only the local four-document governance candidate; it does not authorize CLI, SQL, tests, database access, Git delivery, or deployment."
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+accepted_governance_head: 9938cc36b6eb3f83791846b284e2d9a9937159e8
+accepted_governance_tree: ae694ee1a7ebfe997b45f74d7a82573aa24ccc80
+r2_diagnosis:
+  marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_READ_ONLY_DIAGNOSIS_COMPLETION_R2_RESULT_V1
+  report_sha256: 81b03c8e09aedc396eff3e6d12fe447d96d70a49afa1cf8ba17b5aeed58eff2a
+  verdict: OWNER_DECISION_REQUIRED
+  content_proven_paths: 23_OF_23
+owner_decisions_resolved:
+  durable_registration_receipt_anchor_for_zero_history_idempotency: APPROVED
+  table: public.legacy_customer_registration_receipts
+  uniqueness: [dealer_id, idempotency_key]
+  canonical_payload_fingerprint: REQUIRED_SERVER_CALCULATED_SHA256
+  equal_key_equal_payload: RETURN_ORIGINAL_IDS_WITHOUT_WRITES
+  equal_key_different_payload: FAIL_CLOSED_STABLE_CONFLICT
+  receipt_update_delete: DENIED_IN_V1
+  function_posture: SECURITY_INVOKER_WITH_EXPLICIT_GRANTS_AND_TENANT_BOUND_RLS
+governance_write_allowlist:
+  - docs/master_specification/GDA_LEGACY_CUSTOMER_REGISTRATION_IMPLEMENTATION_CONTRACT_V1.md
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_IMPLEMENTATION_PREPARATION.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+future_gate_b0:
+  action: SUPABASE_CLI_GENERATES_ONE_EXACT_MIGRATION_PATH_ONLY
+  authorization: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  sql_or_test_authoring: false
+future_gate_b1:
+  action: BOUNDED_UNCOMMITTED_MIGRATION_AND_DB_TEST_CANDIDATE
+  authorization: REQUIRES_SEPARATE_OWNER_AUTHORIZATION_AFTER_B0
+not_authorized:
+  - claude_execution_or_external_transmission
+  - supabase_cli_sql_test_database_auth_storage_or_environment_access
+  - source_or_ui_implementation
+  - stage_commit_push_pr_mutation_ready_merge_or_deployment
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_LOCAL_DB_GOVERNANCE_DELTA_HASHES_PROTECTED_METADATA_LFS_EXCLUSIONS_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY."
+```
+
+## 21. Gate B0 completion — legacy registration migration path
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B0
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B0_RESULT_V1
+date: 2026-09-15
+status: LOCAL_GATE_B0_COMPLETION_RECORD_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner separately authorized Gate B0. This update records its exact result and proposes the literal Gate B1 three-path boundary only."
+governance_head_at_execution: 6b8665b371fb982512678eac80f961717f4365ac
+governance_tree_at_execution: 2762d068aa37302e7c7e24646e60346fc868ba74
+supabase_cli:
+  version: 2.116.0
+  command: supabase migration new legacy_customer_registration
+result:
+  migration_path: supabase/migrations/20260915063440_legacy_customer_registration.sql
+  bytes: 0
+  sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  migration_count_before: 115
+  migration_count_after: 116
+  only_new_path: true
+  staged: false
+  committed: false
+preserved:
+  known_lfs_materialization_paths: 9
+  protected_metadata: UNCHANGED
+gate_b1_literal_write_allowlist:
+  - supabase/migrations/20260915063440_legacy_customer_registration.sql
+  - supabase/tests/legacy_customer_registration_rls.test.sql
+  - src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts
+gate_b1_precondition:
+  - DISCOVER_SUPABASE_TEST_NEW_VIA_HELP
+  - GENERATED_RLS_TEST_PATH_MUST_EQUAL_RATIFIED_PATH
+  - STOP_BEFORE_CONTENT_IF_PATH_DIFFERS
+not_performed:
+  - sql_or_test_authoring
+  - database_auth_storage_or_environment_access
+  - source_or_ui_implementation
+  - stage_commit_push_pr_mutation_ready_merge_or_deployment
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_GATE_B0_RECORD_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY; KEEP_THE_EMPTY_MIGRATION_UNTRACKED."
+```
+
+## 22. Gate B1 test-path reconciliation
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B1_PATH_RECONCILIATION
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_DB_GATE_B1_PATH_RECONCILIATION_V1
+date: 2026-09-15
+status: LOCAL_GOVERNANCE_CORRECTION_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner authorized correcting the four governance documents to the actual Supabase CLI-generated test path. This does not authorize SQL/test content, Claude execution, Git delivery, database access, or deployment."
+execution_identity:
+  head: 1f8f2324793a12836eb227929cfad7a42f11534c
+  tree: 3c694df8fd4745e92759710d832dce8b3697bd80
+path_discovery:
+  cli_version: 2.116.0
+  help_checked: true
+  command: supabase test new legacy_customer_registration_rls
+  proposed_path: supabase/tests/legacy_customer_registration_rls.test.sql
+  actual_generated_path: supabase/tests/legacy_customer_registration_rls_test.sql
+  generated_bytes: 109
+  generated_sha256: c14f4b3051ad7fb09063e9051257c60305717c83a4f33da14460f3cd466933f6
+  proposed_path_exists: false
+  result: CHANGES_REQUIRED_GOVERNANCE_STOPPED_BEFORE_CONTENT
+corrected_gate_b1_literal_write_allowlist:
+  - supabase/migrations/20260915063440_legacy_customer_registration.sql
+  - supabase/tests/legacy_customer_registration_rls_test.sql
+  - src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts
+current_untracked_generated_files:
+  migration: ZERO_BYTE_UNMODIFIED
+  rls_test: CLI_TEMPLATE_109_BYTES_UNMODIFIED
+not_performed:
+  - claude_execution_or_private_source_transmission
+  - sql_or_test_content_authoring
+  - database_auth_storage_or_environment_access
+  - source_or_ui_implementation
+  - stage_commit_push_pr_mutation_ready_merge_or_deployment
+next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_PATH_CORRECTION_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY; EXCLUDE_BOTH_UNTRACKED_GENERATED_FILES."
+```
+
+## 23. Local governance reconciliation — legacy registration implementation and Preview proof
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_IMPLEMENTATION_RECONCILIATION
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_IMPLEMENTATION_RECONCILIATION_CANDIDATE_V1
+date: 2026-09-16
+status: LOCAL_GOVERNANCE_RECONCILIATION_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner explicitly authorized correcting the Git source of truth before further normal implementation. This authorization is limited to this completion plan and the append-only phase ledger."
+repository: nisikawa-officeAZ/GYEON
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+branch: agent/gda-legacy-customer-registration-r1-governance
+reconciled_range:
+  predecessor_commit: 170bf1ebe185764253af1ed669a5f452e670196c
+  current_head: 4c7e025122be943a2a78e6b1fd40f72861defbc8
+  current_tree: 8dd7ed7df7c59d3585d0adbc1d9f10f80da2856b
+delivered_commits:
+  - commit: 95b50a0f8acb4e85ba3ec465d029923a8ff2d439
+    tree: 4ea1909b9bc16da89e4fd6abee4fc4a3c380a26f
+    subject: "feat: add legacy customer registration foundation"
+    scope: "three-path DB migration, pgTAP, and migration-contract foundation"
+  - commit: b5c14642b2489d8ec6e5876714da443e2fcfcb26
+    tree: daf4ff677ed24f27ec166355d186dc3ac7efd482
+    subject: "feat(customers): add legacy customer registration flow"
+    scope: "dedicated route, customer navigation, wizard, server action, core contracts, and focused tests"
+  - commit: 8383aedede2ab26a7e2bcdf98ecce2a545338422
+    tree: cc61ede1c90adac2b0b1a675118fb5e0f406ee80
+    subject: "fix(estimates): remove duplicate legacy actions"
+    scope: "remove duplicate estimate-list actions and add focused cleanup contract test"
+  - commit: 07391e0c045d284d7fd8eaa6a26c74d8b2fe93fd
+    tree: 43b6a290c29062c79b2636b34325d106005fd42b
+    subject: "fix(customers): preserve reviewed OCR fields"
+    scope: "preserve the reviewed OCR fields selected for legacy registration"
+  - commit: 4c7e025122be943a2a78e6b1fd40f72861defbc8
+    tree: 8dd7ed7df7c59d3585d0adbc1d9f10f80da2856b
+    subject: "fix(customers): keep legacy names unsplit"
+    scope: "use one customer name field, one furigana field, and keep OCR individual default false"
+preview_evidence:
+  deployment: CSndbb3Ew9qp1MawjdPEW2rRxWHL
+  url: https://dealeros-git-agent-gda-legacy-cu-84cede-nisikawa-5024s-projects.vercel.app
+  checks: [VERCEL_PASS, VERCEL_PREVIEW_COMMENTS_PASS]
+  synthetic_ocr_result:
+    customer_name_field: SINGLE
+    furigana_field: SINGLE
+    business_checkbox_after_apply: UNCHECKED_VALUE_0
+    registration_or_database_write: NOT_PERFORMED
+  evidence_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/79#issuecomment-5689740102
+verification_recorded:
+  focused_static_tests: 31_PASS_0_FAIL
+  git_diff_check: PASS
+  pr_state: OPEN_DRAFT
+  mergeability: MERGEABLE_CLEAN
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+current_evidence_level: E2_SOURCE_AND_PREVIEW_UI_VERIFIED_WITHOUT_FINAL_SAVE
+not_performed:
+  - shared_staging_or_production_migration_application
+  - authenticated_final_registration_save
+  - database_write_or_cleanup
+  - ready_conversion_merge_or_production_deployment
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+next: "VERIFY_THIS_EXACT_TWO_DOCUMENT_RECONCILIATION_DIFF_AND_GIT_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY. NO_FURTHER_SOURCE_OR_DATABASE_IMPLEMENTATION_IS_AUTHORIZED_BY_THIS_RECORD."
+```
