@@ -2103,8 +2103,10 @@ candidate_implementation_ceiling:
   - src/components/estimates/wizard/screens/DiscountModeSelector.tsx
   - src/components/estimates/wizard/screens/step-types.ts
   - src/components/estimates/wizard/save/WizardSavePanel.tsx
+  - src/components/estimates/wizard/save/WizardSavePanel.test.tsx
   - src/components/settings/SettingsCenterHub.tsx
-  - src/app/settings/coupons/page.tsx
+  - src/app/settings/estimate-wizard/panel-config.ts
+  - src/lib/navigation/gda-pricing-settings-ui.test.ts
   - src/lib/navigation/gda-estimate-wizard-release-ui.test.tsx
 protected_paths:
   - src/components/estimates/wizard/screens/ScreensPreview.tsx
@@ -2118,7 +2120,7 @@ gates:
   local_governance: COMPLETE
   governance_commit_push_and_draft_pr: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
   claude_read_only_diagnosis: REQUIRES_ACTIVE_DRAFT_PR_AND_ACCEPTANCE
-  implementation: BLOCKED_PENDING_ACCEPTED_DIAGNOSIS
+  implementation: OWNER_AUTHORIZED_AFTER_ACCEPTED_DIAGNOSIS
   verification_commit_push_preview_merge_deploy: EACH_SEPARATE
 next: "VERIFY_THE_EXACT_THREE_DOCUMENT_GOVERNANCE_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_COMMIT_PUSH_AND_DRAFT_PR_CREATION."
 ```

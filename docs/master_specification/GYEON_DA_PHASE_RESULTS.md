@@ -5246,3 +5246,64 @@ unrelated_lfs_png_paths: 9
 protected_paths_unchanged: true
 next: "VERIFY_EXACT_THREE_DOCUMENT_DIFF_DIRECTIVE_HASH_PROTECTED_METADATA_AND_DIFF_CHECK_THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_COMMIT_PUSH_DRAFT_PR_AND_DIAGNOSIS_PUBLICATION."
 ```
+
+## GDA-ESTIMATE-WIZARD-RELEASE-R1 — diagnosis accepted
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_RELEASE_R1
+marker: GDA_ESTIMATE_WIZARD_RELEASE_R1_DIAGNOSIS_ACCEPTANCE_V1
+status: DIAGNOSIS_ACCEPTED_LOCAL_IMPLEMENTATION_AUTHORIZED
+date: 2026-09-17
+pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/88
+governance_commit: 936db9aa994aa663d52af6a30d6f2daf4e91ff8a
+diagnosis_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/88#issuecomment-5699634207
+acceptance_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/88#issuecomment-5699738735
+claude_marker: GDA_ESTIMATE_WIZARD_RELEASE_R1_READ_ONLY_DIAGNOSIS_RESULT_V1
+claude_verdict: READY_FOR_IMPLEMENTATION_GOVERNANCE
+codex_verdict: ACCEPTED_WITH_SCOPE_CORRECTION
+scope_correction:
+  coupons_patch_authority: ALREADY_PRESENT_IN_EW_UI1_TO_DRAFT
+  new_coupon_settings_page: NOT_REQUIRED
+  existing_generic_panel_route: REUSE
+implementation_authorized: true
+source_commit_push_preview_merge_deploy_authorized: false
+database_migration_supabase_storage_auth_pdf_engine_change: false
+next: "IMPLEMENT_EXACT_ALLOWLIST_RUN_FOCUSED_LOCAL_TESTS_AND_STOP_BEFORE_SOURCE_COMMIT."
+```
+
+## GDA-ESTIMATE-WIZARD-RELEASE-R1 — local implementation verification
+
+```yaml
+phase: GDA_ESTIMATE_WIZARD_RELEASE_R1
+marker: GDA_ESTIMATE_WIZARD_RELEASE_R1_LOCAL_IMPLEMENTATION_RESULT_V1
+status: LOCAL_IMPLEMENTATION_VERIFIED_UNSTAGED_UNCOMMITTED
+date: 2026-09-17
+implemented:
+  step5_configured_coupon_selector: true
+  coupon_control_position: IMMEDIATELY_AFTER_NO_DISCOUNT
+  canonical_coupon_state_patch: REUSED
+  coupon_combinability_guard: REUSED_FROM_EXISTING_REFERENCE
+  store_operations_coupon_settings_card: true
+  generic_coupon_panel_route: REUSED
+  save_button_explicit_light_text: true
+frozen_behavior_unchanged:
+  - pricing_arithmetic
+  - save_payload_mapping
+  - idempotency_and_save_ordering
+  - pdf_generation_and_routing
+  - database_migrations_supabase_storage_auth_and_environment
+verification:
+  focused_ui_and_save_tests: PASS_38_OF_38
+  canonical_coupon_bridge_and_save_mapping_tests: PASS_82_OF_82
+  total_tests: PASS_120_OF_120
+  typescript: PASS
+  git_diff_check: PASS
+  protected_metadata: UNCHANGED
+  unrelated_lfs_png_paths: 9_EXCLUDED
+git_state:
+  source_staged: false
+  source_committed: false
+  source_pushed: false
+  preview_updated: false
+next: "REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_IMPLEMENTATION_AND_TWO_GOVERNANCE_PATHS_STAGE_COMMIT_PUSH_AND_PR88_PREVIEW_UPDATE."
+```

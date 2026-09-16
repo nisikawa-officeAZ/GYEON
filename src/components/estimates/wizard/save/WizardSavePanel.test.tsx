@@ -573,6 +573,8 @@ test("21. both ready controls exist, share one attempt, and appear ONLY when rea
   }));
   assert.ok(readyHtml.includes('data-testid="save-submit"'), "保存");
   assert.ok(readyHtml.includes('data-testid="save-submit-pdf"'), "保存してPDFを開く");
+  assert.match(readyHtml, /data-testid="save-submit"[^>]*class="[^"]*text-emerald-100/);
+  assert.match(readyHtml, /data-testid="save-submit-pdf"[^>]*class="[^"]*text-sky-100/);
 
   // Recovered pending and completed states offer neither fresh control.
   const pendW = world();

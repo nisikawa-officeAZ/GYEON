@@ -13,6 +13,7 @@ const LEGACY_LOADING_PATH = "src/app/settings/estimate-wizard/loading.tsx";
 const WIZARD_LAYOUT_PATH = "src/app/settings/estimate-wizard/layout.tsx";
 const PANEL_LOADING_PATH = "src/app/settings/estimate-wizard/[panel]/loading.tsx";
 const SHARED_PANEL_LOADING_PATH = "src/app/settings/estimate-wizard/EstimateWizardPanelLoading.tsx";
+const SETTINGS_HUB_PATH = "src/components/settings/SettingsCenterHub.tsx";
 
 test("estimate-wizard page remains unchanged (S8B: read-only, no edit needed)", () => {
   const page = read(PAGE_PATH);
@@ -144,4 +145,15 @@ test("approved bilingual UI is protected from browser auto-translation", () => {
   assert.match(layout, /notranslate antialiased/);
   assert.match(page, />見積ウィザード設定</);
   assert.doesNotMatch(page, /簡易ウィザード/);
+});
+
+test("coupon authoring is reachable from Store Operations through the existing generic panel route", () => {
+  const config = read(PANEL_CONFIG_PATH);
+  const hub = read(SETTINGS_HUB_PATH);
+  const panelPage = read(PANEL_PAGE_PATH);
+
+  assert.match(config, /"coupons":\s*\{[\s\S]*labelJa:\s*"クーポン設定"[\s\S]*sectionId:\s*"coupon"/);
+  assert.match(hub, /id:\s*"store_ops"[\s\S]*id:\s*"coupons"[\s\S]*labelEn:\s*"COUPON SETTINGS"/);
+  assert.match(hub, /href:\s*"\/settings\/estimate-wizard\/coupons"/);
+  assert.match(panelPage, /result\.view\.sections\.find\(\(section\) => section\.id === config\.sectionId\)/);
 });

@@ -330,7 +330,7 @@ export function WizardSavePanel({
             type="button"
             data-testid="save-submit"
             onClick={() => attempt("estimate")}
-            className="rounded-md border border-emerald-600 bg-emerald-900/40 px-5 py-2.5 text-sm"
+            className="rounded-md border border-emerald-600 bg-emerald-900/40 px-5 py-2.5 text-sm text-emerald-100"
           >
             保存
           </button>
@@ -338,7 +338,7 @@ export function WizardSavePanel({
             type="button"
             data-testid="save-submit-pdf"
             onClick={() => attempt("pdf")}
-            className="rounded-md border border-sky-600 bg-sky-900/40 px-5 py-2.5 text-sm"
+            className="rounded-md border border-sky-600 bg-sky-900/40 px-5 py-2.5 text-sm text-sky-100"
           >
             保存してPDFを開く
           </button>
