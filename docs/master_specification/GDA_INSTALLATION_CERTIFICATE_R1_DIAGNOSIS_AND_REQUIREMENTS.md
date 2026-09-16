@@ -2,9 +2,9 @@
 
 | Field | Value |
 |---|---|
-| Phase | `GDA_INSTALLATION_CERTIFICATE_R1_A1` |
-| Marker | `GDA_INSTALLATION_CERTIFICATE_R1_READ_ONLY_DIAGNOSIS_V1` |
-| Status | **OWNER_SCOPE_ACCEPTED — CLAUDE DIAGNOSIS BLOCKED BY BUDGET** |
+| Phase | `GDA_INSTALLATION_CERTIFICATE_R1_A2` |
+| Marker | `GDA_INSTALLATION_CERTIFICATE_R1_A2_OWNER_SCOPE_FINAL_V1` |
+| Status | **OWNER_SCOPE_FINAL — READY_FOR_R1_B1_CONTRACT** |
 | Date | 2026-09-16 |
 | Owner | Office AZ / Product Owner |
 | Responsible agent | MacBook Codex |
@@ -99,7 +99,9 @@ src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts
 
 `GYEON_CERTIFICATE_ISSUANCE_CONTROL_SPEC.md`は、CanCoatを専用保証書として扱い、「保証書ではない」という文言を採用しないと定めている。
 
-一方、現在のCanCoatテンプレートとfixtureは「保証書ではない施工証明書」と明記している。両方を同時に正とすることはできない。Ownerが業務決定を確定するまで、CanCoat帳票の本番発行を禁止する。
+一方、現在のCanCoatテンプレートとfixtureは「保証書ではない施工証明書」と明記している。両方を同時に正とすることはできない。
+
+OwnerはR1-A2で、CanCoat施工をR1の共通・非保証施工証明書の対象に含め、CanCoat専用保証書だけをR2へ分離すると決定した。したがってR1では、確認済み施工内容にCanCoatが含まれていても共通施工証明書を発行できる。ただし、現行のCanCoat専用テンプレート、保証文言、保証期間、保証条件、発行枠は使用しない。
 
 ### 4.2 施工証明書と保証書
 
@@ -126,6 +128,7 @@ Ownerが次フェーズとして指定したのは施工証明書である。し
 - 店舗分離、認証、監査ログ
 - 店舗ロゴ未設定時はDA標準ロゴ、設定済みなら店舗ロゴを使用
 - A4表示と印刷の視覚確認
+- CanCoat施工を含む確認済み施工内容への、共通・非保証施工証明書の発行
 
 ### 5.2 R1から除外する
 
@@ -134,7 +137,7 @@ Ownerが次フェーズとして指定したのは施工証明書である。し
 - 商品別保証期間・保証規約
 - 枠返還、失効承認、購入grant
 - PPFメーカー保証の確定文言
-- CanCoat保証の確定
+- CanCoat専用保証書、保証期間、保証条件、商品別保証文言の確定
 - QRによる一般公開照合
 - スーパーアドミンの保証枠管理UI
 
@@ -176,13 +179,14 @@ Ownerが次フェーズとして指定したのは施工証明書である。し
 10. PDFに価格、原価、粗利、社内メモを含めない。
 11. 1件・複数施工項目のA4 PDFを目視確認する。
 12. 未確定の保証文言を表示しない。
+13. CanCoat施工を含む場合も共通・非保証施工証明書として発行し、現行CanCoat専用テンプレートや保証文言を使用しない。
 
 ## 8. 実装フェーズ案
 
 | Phase | 内容 | Mutation |
 |---|---|---|
-| R1-A1 | 現状診断とR1/R2境界 | docs only |
-| R1-A2 | Ownerが「施工証明書のみ先行」を確定し、表示文言と対象を承認 | docs only |
+| R1-A1 | 現状診断とR1/R2境界（完了） | docs only |
+| R1-A2 | Ownerが「施工証明書のみ先行」とCanCoatのR1対象化を確定（完了） | docs only |
 | R1-B1 | eligibility、source projection、adapterの純粋契約とテスト | source/tests only |
 | R1-B2 | issuance snapshot、採番、冪等性、RLS、private document metadata | migration/source/tests only |
 | R1-C1 | 保証文言を含まないR1 PDF、認証route、private Storage保存 | source/tests only |
@@ -198,13 +202,15 @@ Ownerが次フェーズとして指定したのは施工証明書である。し
 ```text
 R1は保証を付けない施工証明書だけを先行する。
 保証書、購入連動発行枠、保証規約、失効、QR公開照合はR2へ分離する。
+CanCoat施工はR1の共通・非保証施工証明書の対象に含める。
+CanCoat専用保証書、保証期間、保証条件、商品別保証文言はR2へ分離する。
 ```
 
-この決定により、既存のInfinity Warranty、PPFメーカー保証、CanCoat保証に関する未確定文言をR1へ表示してはならない。R1の証明対象は施工事実だけである。
+この決定により、既存のInfinity Warranty、PPFメーカー保証、CanCoat保証に関する未確定文言をR1へ表示してはならない。R1の証明対象は施工事実だけである。CanCoat施工を証明する場合も、現行CanCoat専用テンプレートではなく、他の施工内容と同じ共通・非保証施工証明書に確認済み施工項目として記載する。
 
 ## 10. Next gate
 
-Claudeによる独立した読み取り専用診断を実行し、本書の事実と漏れを照合する。MacBook Codexが結果を受理するまで、実装allowlistは作らない。
+R1-B1で、共通・非保証施工証明書のeligibility、正本projection、adapter契約、表示禁止項目、テストallowlistを確定する。R1-B1の別承認まではアプリケーションソースを変更しない。
 
 ## 11. Claude診断実行記録
 
@@ -215,5 +221,10 @@ Claudeによる独立した読み取り専用診断を実行し、本書の事�
 | 1 | Fable / high | USD 0.50 | full bounded diagnosis directive | `Exceeded USD budget`、診断結果なし |
 | 2 | Fable / low | USD 0.50 | template、control spec、canonical completion loader、bounded reference searchだけ | `Exceeded USD budget`、診断結果なし |
 | 3 | Haiku 4.5 / low | USD 0.30 | Attempt 2と同じ最小範囲 | `Exceeded USD budget`、診断結果なし |
+| 4 | Haiku 4.5 / low | USD 0.50上限（実費USD 0.310305） | low-budget bounded read-only diagnosis | `PASS_READ_ONLY_DIAGNOSIS`、実装変更なし |
 
-未完成のClaude応答は受理していない。FableとHaikuの両方が結果生成前に上限へ到達したため、モデル変更だけでは解消しない。追加の自動再試行は禁止し、実装は未認可のまま維持する。次回はOwnerが別途費用上限を承認した場合だけ、独立診断を再実行する。
+Attempt 1〜3の未完成応答は受理していない。Attempt 4では、テンプレート層だけが存在し、認証route、adapter、採番、snapshot、private Storage、冪等性、発行UIが未実装であること、完了報告基盤を再利用できること、CanCoat文言が矛盾することを確認した。
+
+Claudeは「OwnerがCanCoat施工をR1から完全除外した」と解釈したが、当時のOwner決定はCanCoat保証をR2へ分離することまでしか定めていなかったため、その解釈は受理しなかった。2026-09-16、Ownerは追加決定として、CanCoat施工をR1の共通・非保証施工証明書の対象に含めることを明示承認した。MacBook CodexはこのOwner補正を適用したうえで、Attempt 4のその他の診断結果を受理する。
+
+R1-A1/A2の診断・対象確定は完了した。実装は未認可であり、次の独立ゲートはR1-B1契約とallowlistの承認である。
