@@ -43,6 +43,22 @@ test("race resolution is bounded and deletes only this attempt object", () => {
   assert.match(code, /return \{ kind: "cleanup_failed" \}/);
 });
 
+test("ambiguous finalization failure reconciles once before cleanup and never deletes possibly committed bytes", () => {
+  const code = stripComments(read(ACTION));
+  const finalizationError = code.indexOf("if (finalizeError)");
+  const ambiguous = code.indexOf('mapped.kind === "unavailable"', finalizationError);
+  const reconcile = code.indexOf("resolveWinnerOnce(", ambiguous);
+  const cleanup = code.indexOf("cleanupOwnObject(admin, storagePath)", finalizationError);
+  assert.ok(
+    finalizationError >= 0 && ambiguous > finalizationError && reconcile > ambiguous && cleanup > reconcile,
+  );
+  assert.match(
+    code.slice(ambiguous, cleanup),
+    /return recovered\.kind === "ready" \? recovered : \{ kind: "persistence_error" \}/,
+  );
+  assert.equal(code.slice(ambiguous, cleanup).includes("cleanupOwnObject"), false);
+});
+
 test("dealer branding is canonical private bytes and default branding is vendored", () => {
   const code = stripComments(read(ACTION));
   assert.match(code, /brandingStoragePath\(dealerId, "logo"\)/);

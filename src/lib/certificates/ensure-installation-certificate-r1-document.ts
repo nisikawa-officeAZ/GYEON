@@ -220,6 +220,17 @@ export async function ensureInstallationCertificateR1Document(
 
     if (finalizeError) {
       const mapped = mapFinalizeInstallationCertificateR1DocumentRpcError(finalizeError.message);
+      if (mapped.kind === "unavailable") {
+        // A transport failure may arrive after the RPC committed. Reconcile once
+        // and never delete bytes that may already be the canonical document.
+        const recovered = await resolveWinnerOnce(
+          supabase,
+          admin,
+          auth.dealerId,
+          issuanceId,
+        );
+        return recovered.kind === "ready" ? recovered : { kind: "persistence_error" };
+      }
       if (!(await cleanupOwnObject(admin, storagePath))) return { kind: "cleanup_failed" };
       if (mapped.kind === "artifact_conflict") {
         return resolveWinnerOnce(supabase, admin, auth.dealerId, issuanceId);
