@@ -249,6 +249,7 @@ test("11. the delivery-note link exists ONLY for an issued+ readback with a vali
   assert.ok(anchor.includes(`href="${DN_PATH}"`));
   assert.match(anchor, /target="_blank"/);
   assert.match(anchor, /rel="noopener noreferrer"/);
+  assert.match(anchor, /class="[^"]*text-sky-100/, "delivery-note action must stay readable on the dark theme");
   assert.equal(ready.includes("onClick"), false);
   assert.ok(ready.includes("表示のみで、保存・再発行は行いません"));
 
