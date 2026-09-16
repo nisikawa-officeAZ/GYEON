@@ -203,7 +203,8 @@ SELECT is((SELECT snapshot #>> '{customer,name}' FROM public.certificate_issuanc
           '石井 紗也華', 'customer name comes from canonical customer');
 SELECT is((SELECT snapshot #>> '{installation,technician}' FROM public.certificate_issuances),
           '西川 敦司', 'technician comes from completed work order');
-SELECT ok((SELECT snapshot::text !~* '(warranty|unit.?price|subtotal|discount|total|margin|qr)'),
+SELECT ok((SELECT snapshot::text !~* '(warranty|unit.?price|subtotal|discount|total|margin|qr)'
+             FROM public.certificate_issuances),
           'snapshot excludes warranty, money and QR data');
 SELECT matches((SELECT source_fingerprint FROM public.certificate_issuances),
                '^[0-9a-f]{64}$', 'source fingerprint is lowercase SHA-256');
