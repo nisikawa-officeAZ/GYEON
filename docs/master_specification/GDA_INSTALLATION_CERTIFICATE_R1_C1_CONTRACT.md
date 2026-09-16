@@ -159,6 +159,25 @@ The RPC must:
 10. activate the existing immutable-table trigger authority only inside the function and clear it
     before every return.
 
+### 6.1 Immutable-table authority separation
+
+The G1 migration must not extend the existing single boolean authority check so that both RPC
+authority tokens can insert into every immutable R1 table. It must replace the guard with a
+table-aware and row-aware decision that enforces this exact matrix:
+
+| transaction-local authority token | permitted immutable insert |
+| --- | --- |
+| `issue_installation_certificate_r1_v1` | `certificate_issuances`; `certificate_issuance_requests`; `certificate_audit_events` only when `event_type = 'issued'` |
+| `finalize_installation_certificate_r1_document_v1` | `certificate_documents`; `certificate_audit_events` only when `event_type = 'document_stored'` |
+
+All other table, operation, authority-token, and audit-event combinations must fail closed.
+`UPDATE` and `DELETE` remain prohibited for every authority. The finalization RPC must set exactly
+`finalize_installation_certificate_r1_document_v1` with transaction-local scope only after all
+checks and locks succeed, and must clear it before every return. The issuance RPC must retain its
+existing token and must not gain document-finalization authority. Direct SQL, authenticated,
+anonymous, and other service-role paths must not be able to activate either authority through a
+callable helper.
+
 The database cannot recompute the PDF SHA-256 from Storage bytes. The server action must hash the
 buffer before upload and byte-verify every later read against the immutable metadata.
 
