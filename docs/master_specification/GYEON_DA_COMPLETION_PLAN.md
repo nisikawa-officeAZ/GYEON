@@ -2300,3 +2300,71 @@ not_performed:
   - stage_commit_push_pr_mutation_ready_merge_or_deployment
 next: "VERIFY_THE_EXACT_FOUR_DOCUMENT_PATH_CORRECTION_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY; EXCLUDE_BOTH_UNTRACKED_GENERATED_FILES."
 ```
+
+## 23. Local governance reconciliation — legacy registration implementation and Preview proof
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_IMPLEMENTATION_RECONCILIATION
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_IMPLEMENTATION_RECONCILIATION_CANDIDATE_V1
+date: 2026-09-16
+status: LOCAL_GOVERNANCE_RECONCILIATION_CANDIDATE_UNSTAGED_UNCOMMITTED
+authorization: "The Owner explicitly authorized correcting the Git source of truth before further normal implementation. This authorization is limited to this completion plan and the append-only phase ledger."
+repository: nisikawa-officeAZ/GYEON
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+branch: agent/gda-legacy-customer-registration-r1-governance
+reconciled_range:
+  predecessor_commit: 170bf1ebe185764253af1ed669a5f452e670196c
+  current_head: 4c7e025122be943a2a78e6b1fd40f72861defbc8
+  current_tree: 8dd7ed7df7c59d3585d0adbc1d9f10f80da2856b
+delivered_commits:
+  - commit: 95b50a0f8acb4e85ba3ec465d029923a8ff2d439
+    tree: 4ea1909b9bc16da89e4fd6abee4fc4a3c380a26f
+    subject: "feat: add legacy customer registration foundation"
+    scope: "three-path DB migration, pgTAP, and migration-contract foundation"
+  - commit: b5c14642b2489d8ec6e5876714da443e2fcfcb26
+    tree: daf4ff677ed24f27ec166355d186dc3ac7efd482
+    subject: "feat(customers): add legacy customer registration flow"
+    scope: "dedicated route, customer navigation, wizard, server action, core contracts, and focused tests"
+  - commit: 8383aedede2ab26a7e2bcdf98ecce2a545338422
+    tree: cc61ede1c90adac2b0b1a675118fb5e0f406ee80
+    subject: "fix(estimates): remove duplicate legacy actions"
+    scope: "remove duplicate estimate-list actions and add focused cleanup contract test"
+  - commit: 07391e0c045d284d7fd8eaa6a26c74d8b2fe93fd
+    tree: 43b6a290c29062c79b2636b34325d106005fd42b
+    subject: "fix(customers): preserve reviewed OCR fields"
+    scope: "preserve the reviewed OCR fields selected for legacy registration"
+  - commit: 4c7e025122be943a2a78e6b1fd40f72861defbc8
+    tree: 8dd7ed7df7c59d3585d0adbc1d9f10f80da2856b
+    subject: "fix(customers): keep legacy names unsplit"
+    scope: "use one customer name field, one furigana field, and keep OCR individual default false"
+preview_evidence:
+  deployment: CSndbb3Ew9qp1MawjdPEW2rRxWHL
+  url: https://dealeros-git-agent-gda-legacy-cu-84cede-nisikawa-5024s-projects.vercel.app
+  checks: [VERCEL_PASS, VERCEL_PREVIEW_COMMENTS_PASS]
+  synthetic_ocr_result:
+    customer_name_field: SINGLE
+    furigana_field: SINGLE
+    business_checkbox_after_apply: UNCHECKED_VALUE_0
+    registration_or_database_write: NOT_PERFORMED
+  evidence_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/79#issuecomment-5689740102
+verification_recorded:
+  focused_static_tests: 31_PASS_0_FAIL
+  git_diff_check: PASS
+  pr_state: OPEN_DRAFT
+  mergeability: MERGEABLE_CLEAN
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+current_evidence_level: E2_SOURCE_AND_PREVIEW_UI_VERIFIED_WITHOUT_FINAL_SAVE
+not_performed:
+  - shared_staging_or_production_migration_application
+  - authenticated_final_registration_save
+  - database_write_or_cleanup
+  - ready_conversion_merge_or_production_deployment
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+next: "VERIFY_THIS_EXACT_TWO_DOCUMENT_RECONCILIATION_DIFF_AND_GIT_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY. NO_FURTHER_SOURCE_OR_DATABASE_IMPLEMENTATION_IS_AUTHORIZED_BY_THIS_RECORD."
+```

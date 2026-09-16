@@ -5431,3 +5431,63 @@ preservation:
   known_lfs_materialization_paths: 9_PRESERVED_AND_EXCLUDED
 next: "VERIFY_EXACT_FOUR_DOCUMENT_PATH_CORRECTION_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_FOUR_PATH_LOCAL_COMMIT_ONLY; DO_NOT_STAGE_EITHER_GENERATED_FILE."
 ```
+
+## GDA-LEGACY-CUSTOMER-REGISTRATION-R1 — implementation and Preview reconciliation
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_IMPLEMENTATION_RECONCILIATION
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_IMPLEMENTATION_RECONCILIATION_CANDIDATE_V1
+status: LOCAL_GOVERNANCE_RECONCILIATION_CANDIDATE_UNSTAGED_UNCOMMITTED
+date: 2026-09-16
+authorization: "The Owner explicitly authorized correcting the two Git source-of-truth documents before further normal implementation."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+  branch: agent/gda-legacy-customer-registration-r1-governance
+  predecessor_commit: 170bf1ebe185764253af1ed669a5f452e670196c
+  head: 4c7e025122be943a2a78e6b1fd40f72861defbc8
+  tree: 8dd7ed7df7c59d3585d0adbc1d9f10f80da2856b
+candidate:
+  delivered_commits:
+    - 95b50a0f8acb4e85ba3ec465d029923a8ff2d439
+    - b5c14642b2489d8ec6e5876714da443e2fcfcb26
+    - 8383aedede2ab26a7e2bcdf98ecce2a545338422
+    - 07391e0c045d284d7fd8eaa6a26c74d8b2fe93fd
+    - 4c7e025122be943a2a78e6b1fd40f72861defbc8
+  delivered_capabilities:
+    - durable_receipt_and_vehicle_service_history_db_source
+    - atomic_idempotent_invoker_rights_registration_rpc_source
+    - dedicated_existing_customer_registration_route_and_navigation
+    - OCR_review_to_single_name_and_single_furigana_form
+    - business_customer_checkbox_defaults_false_after_OCR_apply
+    - estimate_list_duplicate_action_cleanup
+verification:
+  focused_static_tests: 31_PASS_0_FAIL
+  git_diff_check: PASS
+  vercel_deployment: CSndbb3Ew9qp1MawjdPEW2rRxWHL
+  vercel_checks: PASS
+  synthetic_preview_ocr: PASS
+  synthetic_preview_business_checkbox: UNCHECKED_VALUE_0
+  final_registration_save: NOT_RUN
+  database_runtime: NOT_RUN
+  evidence_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/79#issuecomment-5689740102
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+external_actions:
+  migration_applied: false
+  database_write: false
+  final_registration_saved: false
+  production_deployed: false
+git_actions:
+  source_commits_pushed: true
+  governance_reconciliation_staged: false
+  governance_reconciliation_committed: false
+  governance_reconciliation_pushed: false
+  pr_ready_or_merged: false
+evidence_level: E2_SOURCE_AND_PREVIEW_UI_VERIFIED_WITHOUT_FINAL_SAVE
+decision: "SOURCE_AND_PREVIEW_FACTS_RECONCILED; ENVIRONMENT_DATABASE_ACCEPTANCE_AND_FINAL_SAVE_REMAIN_OPEN"
+next: "VERIFY_THE_EXACT_TWO_DOCUMENT_DIFF_AND_GIT_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY."
+```
