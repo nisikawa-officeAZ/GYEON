@@ -134,6 +134,7 @@ test("the Unavailable notice is fixed copy and leaks no internal reason", () => 
   assert.match(code, /data-testid="estimate-create-unavailable"/);
   assert.match(code, /role="alert"/);
   assert.match(code, /見積を開始できません/, "exact heading");
+  assert.match(fnBodyOf(code, "Unavailable"), /text-xl font-bold text-slate-100/, "readable dark-theme heading");
   assert.match(code,
     /現在この画面をご利用いただけません。時間をおいて再度お試しいただくか、担当者へご連絡ください。/, "exact body");
   // The notice component takes no props and renders no dynamic value.
@@ -149,6 +150,7 @@ test("the SetupRequired notice is actionable, fixed copy, and leaks no internal 
   const code = codeOf(ROUTE);
   assert.match(code, /data-testid="estimate-create-setup-required"/);
   assert.match(code, /見積を開始する前に、見積設定の確認を完了してください。/, "exact body");
+  assert.match(fnBodyOf(code, "SetupRequired"), /text-xl font-bold text-slate-100/, "readable dark-theme heading");
   assert.match(code, /href="\/settings\/estimate-wizard"/, "actionable route to the setup screen");
 
   // Same discipline as Unavailable: no props, no dynamic value, and — critically — the two review

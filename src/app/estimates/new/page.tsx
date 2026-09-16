@@ -58,7 +58,7 @@ function Unavailable() {
     <MainLayout>
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4">
         <div role="alert" data-testid="estimate-create-unavailable" className="max-w-lg mx-auto text-center py-16">
-          <h1 className="text-xl font-bold mb-3">見積を開始できません</h1>
+          <h1 className="text-xl font-bold text-slate-100 mb-3">見積を開始できません</h1>
           <p className="text-sm leading-7 text-slate-300">
             現在この画面をご利用いただけません。時間をおいて再度お試しいただくか、担当者へご連絡ください。
           </p>
@@ -87,7 +87,7 @@ function SetupRequired() {
     <MainLayout>
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4">
         <div role="alert" data-testid="estimate-create-setup-required" className="max-w-lg mx-auto text-center py-16">
-          <h1 className="text-xl font-bold mb-3">見積を開始できません</h1>
+          <h1 className="text-xl font-bold text-slate-100 mb-3">見積を開始できません</h1>
           <p className="text-sm leading-7 text-slate-300">
             見積を開始する前に、見積設定の確認を完了してください。
           </p>

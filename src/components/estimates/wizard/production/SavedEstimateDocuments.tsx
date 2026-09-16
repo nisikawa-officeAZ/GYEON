@@ -139,7 +139,7 @@ export function SavedDeliveryNoteChoice({ invoice }: { invoice: SavedInvoiceSumm
         rel="noopener noreferrer"
         aria-describedby="saved-document-delivery-note-reason"
         data-testid="saved-document-delivery-note"
-        className="inline-block rounded-md border border-sky-600 bg-sky-900/40 px-4 py-2 text-sm"
+        className="inline-block rounded-md border border-sky-600 bg-sky-900/40 px-4 py-2 text-sm text-sky-100"
       >
         納品書（PDF）を表示
       </a>
