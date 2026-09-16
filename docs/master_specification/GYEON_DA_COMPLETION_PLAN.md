@@ -2072,3 +2072,72 @@ gates:
   verification_commit_push_ready_merge_deploy: EACH_SEPARATE
 next: "VERIFY_THE_EXACT_TWO_DOCUMENT_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## 18. Production closeout — reopened estimate same-page invoice workflow
+
+```yaml
+phase: GDA_ESTIMATE_DETAIL_INVOICE_SAME_PAGE_R1
+marker: GDA_ESTIMATE_DETAIL_INVOICE_SAME_PAGE_R1_PRODUCTION_CLOSEOUT_V1
+date: 2026-09-16
+status: PRODUCTION_DEPLOYED_AUTHENTICATED_READ_ONLY_SMOKE_PASS
+authorization: "The Owner authorized an authenticated production read-only verification and then ratified the resulting closeout record plus the next implementation priority."
+repository: nisikawa-officeAZ/GYEON
+pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/78
+delivery:
+  implementation_commit: 87be2c49feb7be33a996408cff44ef292d83d018
+  contrast_repair_commit: c8fd4d6a57353aaf27bc7cfa64847f746667333d
+  merge_commit: 7ef5c0902e7eb4f7c7d0308a32d576b616a3a355
+  merged_at: 2026-09-14T23:48:33Z
+  focused_tests: PASS_39_OF_39
+  vercel_checks: PASS
+production:
+  github_deployment_id: 6448715938
+  deployment_url: https://dealeros-o3gg0kebw-nisikawa-5024s-projects.vercel.app
+  canonical_alias: https://app.detailer-ag.com
+  deployment_status: SUCCESS
+authenticated_read_only_smoke:
+  estimate_number: EST-00001
+  estimate_route: /estimates/3432ca51-3641-4244-aade-932bc83a41a9
+  estimate_status: APPROVED
+  invoice_number: INV-00001
+  invoice_id: 2461afb8-2761-4967-9492-0dfd82b1ba9e
+  invoice_status: ISSUED
+  issue_date: 2026-09-14
+  delivery_date: 2026-09-14
+  total_jpy: 1100
+  same_page_authoritative_readback: PASS
+  issued_pdf_signed_readback: PASS
+  issued_pdf_visual: PASS_ONE_PAGE
+  delivery_note_control: ENABLED
+  new_invoice_created: false
+  invoice_reissued: false
+  invoice_content_changed: false
+  payment_mutated: false
+evidence_level: E3_AUTHENTICATED_PRODUCTION_ENVIRONMENT_VERIFIED
+open_operational_configuration:
+  issuer_store_profile: MISSING_IN_VERIFIED_TENANT
+  required_before_formal_operation: true
+  classification: TENANT_CONFIGURATION_NOT_SAME_PAGE_WORKFLOW_DEFECT
+owner_ratified_next_priority:
+  phase: GDA_INSTALLATION_CERTIFICATE_R1
+  priority: IMMEDIATELY_AFTER_ESTIMATE_DOCUMENT_OPERATION
+  required_design_boundary:
+    - Reuse the saved estimate, customer, vehicle, and performed-service data.
+    - Do not require the operator to re-enter data already held by the accepted estimate workflow.
+  existing_customer_registration_and_other_feature_expansion: AFTER_INSTALLATION_CERTIFICATE
+  implementation_authorized: false
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+current_governance_write_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+not_authorized:
+  - source_test_dependency_or_lockfile_change
+  - database_supabase_auth_storage_or_environment_mutation
+  - installation_certificate_implementation
+  - stage_commit_push_pr_mutation_ready_merge_or_deployment
+next: "VERIFY_THIS_EXACT_TWO_DOCUMENT_CLOSEOUT_AND_PRIORITY_DIFF; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY."
+```

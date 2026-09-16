@@ -5218,3 +5218,66 @@ authenticated_read_only_smoke:
 verdict: ACCEPTED_PRODUCTION_RELEASE_COMPLETE
 next: "A new same-page invoice workflow phase requires its own governance, Claude read-only diagnosis, authorization, implementation, and acceptance gates."
 ```
+
+## GDA-ESTIMATE-DETAIL-INVOICE-SAME-PAGE-R1 — production closeout and next priority
+
+```yaml
+phase: GDA_ESTIMATE_DETAIL_INVOICE_SAME_PAGE_R1
+marker: GDA_ESTIMATE_DETAIL_INVOICE_SAME_PAGE_R1_PRODUCTION_CLOSEOUT_V1
+status: PRODUCTION_DEPLOYED_AUTHENTICATED_READ_ONLY_SMOKE_PASS
+date: 2026-09-16
+authorization: "The Owner authorized the production read-only smoke and ratified this closeout plus installation-certificate priority."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/78
+  implementation_commit: 87be2c49feb7be33a996408cff44ef292d83d018
+  repair_commit: c8fd4d6a57353aaf27bc7cfa64847f746667333d
+  merge_commit: 7ef5c0902e7eb4f7c7d0308a32d576b616a3a355
+verification:
+  focused_tests: PASS_39_OF_39
+  github_and_vercel_checks: PASS
+  github_production_deployment_id: 6448715938
+  production_deployment_status: SUCCESS
+  canonical_alias: https://app.detailer-ag.com
+authenticated_production_smoke:
+  estimate_number: EST-00001
+  estimate_route: /estimates/3432ca51-3641-4244-aade-932bc83a41a9
+  invoice_number: INV-00001
+  invoice_id: 2461afb8-2761-4967-9492-0dfd82b1ba9e
+  invoice_status: ISSUED
+  issue_date: 2026-09-14
+  delivery_date: 2026-09-14
+  total_jpy: 1100
+  same_page_readback: PASS
+  issued_pdf_retrieval: PASS
+  issued_pdf_visual: PASS_ONE_PAGE
+  delivery_note_link: ENABLED
+  route_remained_same_page: true
+  new_invoice_reissue_content_or_payment_mutation: false
+accepted_behavior:
+  - The approved saved-estimate detail displays the existing issued invoice on the same page after one explicit operator confirmation.
+  - The authoritative invoice number, status, dates, saved items, quantities, prices, and total are readable.
+  - The existing issued PDF is retrieved and displayed without reissue or content change.
+  - The delivery-note display remains available from the persisted issued invoice and delivery date.
+evidence_level: E3_AUTHENTICATED_PRODUCTION_ENVIRONMENT_VERIFIED
+open_operational_configuration:
+  issuer_store_profile: MISSING_IN_VERIFIED_TENANT
+  must_be_configured_before_formal_operation: true
+owner_priority_decision:
+  next_phase: GDA_INSTALLATION_CERTIFICATE_R1
+  order: AFTER_ESTIMATE_DOCUMENT_OPERATION_BEFORE_EXISTING_CUSTOMER_AND_OTHER_FEATURE_EXPANSION
+  reuse_saved_estimate_customer_vehicle_and_performed_service_data: REQUIRED
+  duplicate_operator_data_entry: PROHIBITED
+  implementation_authorized: false
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+git_actions:
+  staged: false
+  committed: false
+  pushed: false
+  pr_mutated: false
+next: "VERIFY_THIS_EXACT_TWO_DOCUMENT_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY."
+```
