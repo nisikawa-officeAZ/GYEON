@@ -296,7 +296,7 @@ export function WizardSavePanel({
             data-testid="save-retry-same-key"
             disabled={submitting}
             onClick={() => attempt()}
-            className="mt-2 rounded-md border border-amber-600 px-4 py-2 text-sm"
+            className="mt-2 rounded-md border border-amber-600 px-4 py-2 text-sm text-amber-100"
           >
             同じ保存キーで再試行
           </button>
@@ -311,7 +311,7 @@ export function WizardSavePanel({
             data-testid="save-retry-same-key"
             disabled={submitting}
             onClick={() => attempt()}
-            className="mt-2 rounded-md border border-rose-600 px-4 py-2 text-sm"
+            className="mt-2 rounded-md border border-rose-600 px-4 py-2 text-sm text-rose-100"
           >
             同じ保存キーで再試行
           </button>

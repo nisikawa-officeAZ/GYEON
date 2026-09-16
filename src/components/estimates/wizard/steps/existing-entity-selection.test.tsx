@@ -677,6 +677,20 @@ test("existing-customer display names set a readable dark-theme text color", () 
   );
 });
 
+test("existing-vehicle display names set a readable dark-theme text color", () => {
+  const step2src = readFileSync("src/components/estimates/wizard/steps/Step2Vehicle.tsx", "utf8");
+  assert.match(
+    step2src,
+    /className="text-sm text-slate-100 mt-1">\{selected\.displayName\}/,
+    "selected-vehicle summary must not inherit black text",
+  );
+  assert.match(
+    step2src,
+    /className="w-full text-left text-slate-100 py-2 px-1 hover:bg-slate-800\/60"/,
+    "existing-vehicle rows must not inherit black text",
+  );
+});
+
 test("Step 1 and Step 2 never copy reference display fields into new-record state", () => {
   for (const file of [
     "src/components/estimates/wizard/steps/Step1Customer.tsx",

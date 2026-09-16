@@ -751,6 +751,9 @@ test("35. initialization appears exactly twice, and the ws branch only recovers"
   // Start-new is reachable from exactly one operator surface.
   assert.equal((code.match(/onClick=\{startNewEstimate\}/g) ?? []).length, 1);
   assert.match(code, /data-testid="bootstrap-start-new"/);
+  assert.match(code,
+    /data-testid="bootstrap-start-new"[\s\S]*?className="[^"]*text-slate-100[^"]*"/,
+    "the recovery action must not inherit unreadable black text");
   // The URL is replaced, never pushed — Back must not re-enter a stale session.
   assert.equal(code.includes("history.pushState"), false, "history is replaced, never pushed");
   assert.ok(code.includes("history.replaceState"));

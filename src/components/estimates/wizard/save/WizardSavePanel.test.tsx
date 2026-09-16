@@ -226,6 +226,8 @@ test("5. a remounted PENDING session invokes nothing and offers a separate retry
   assert.equal(rec.invokerCalls.length, 0, "remount is NOT retry authorization");
   assert.ok(html.includes("save-state-unknown"), "the unknown-outcome state is shown");
   assert.ok(html.includes("save-retry-same-key"), "a separate explicit retry control");
+  assert.match(html, /data-testid="save-retry-same-key"[^>]*class="[^"]*text-amber-100[^"]*"/,
+    "the recovered-pending retry stays readable on the dark surface");
   assert.equal(html.includes('data-testid="save-submit"'), false, "the plain Save button is absent");
 });
 
@@ -422,6 +424,8 @@ test("14b. no raw diagnostic, draft or PII is rendered on failure", async () => 
   }));
 
   assert.ok(html.includes("save-state-failed"), "PRECONDITION: the failure state rendered");
+  assert.match(html, /data-testid="save-retry-same-key"[^>]*class="[^"]*text-rose-100[^"]*"/,
+    "the failed-state retry stays readable on the dark surface");
   for (const leak of ["CANARY", "山田太郎", "CUSTOMER_REQUIRED", "customer.name",
                       "save-validation-failed", "saveIssues", w.key]) {
     assert.equal(html.includes(leak), false, `panel renders ${leak}`);
