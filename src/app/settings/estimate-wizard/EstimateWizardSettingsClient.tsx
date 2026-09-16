@@ -572,7 +572,7 @@ export default function EstimateWizardSettingsClient({ view, panelId = null }: {
         </div>
         <p className="text-xs text-[#95a4bc]">{status.statusDetailJa}</p>
 
-        {status.missingSections.length > 0 && (
+        {panelId !== "section-coupon" && status.missingSections.length > 0 && (
           <div className="flex flex-col gap-1 rounded-xl bg-amber-950/30 border border-amber-800/40 px-3 py-2">
             <span className="text-[11px] font-semibold text-amber-300">見積で使えないサービス（確定はできます）</span>
             {status.missingSections.map((m) => (
