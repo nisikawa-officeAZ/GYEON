@@ -8,7 +8,7 @@ export interface CategoryHubItem {
   icon:
     | "invoice" | "payment" | "points" | "sales" | "monthly-statements"
     | "customer" | "vehicle" | "customer-app"
-    | "estimate" | "work-orders" | "completion" | "maintenance"
+    | "estimate" | "work-orders" | "completion" | "certificate" | "maintenance"
     | "reservation" | "calendar"
     | "product-orders" | "products" | "inventory"
     | "line" | "news"
@@ -63,6 +63,9 @@ function HubIcon({ icon }: { icon: CategoryHubItem["icon"] }) {
   }
   if (icon === "completion") {
     return <svg {...common}><path d="M6 3h12v18H6z"/><path d="m9 12 2 2 4-5M9 17h6"/></svg>;
+  }
+  if (icon === "certificate") {
+    return <svg {...common}><path d="M6 3h12v13H6z"/><path d="M9 7h6M9 10h6"/><circle cx="12" cy="16" r="3"/><path d="m10.5 18.5-.5 2.5 2-1 2 1-.5-2.5"/></svg>;
   }
   if (icon === "maintenance") {
     return <svg {...common}><path d="m14.5 6.5 3-3a4 4 0 0 1-5 5L6 15l-3 3 3 3 3-3 6.5-6.5a4 4 0 0 1 5-5l-3 3"/><path d="M5 18h.01"/></svg>;

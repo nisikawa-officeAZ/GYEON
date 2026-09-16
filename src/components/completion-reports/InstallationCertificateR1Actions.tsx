@@ -143,7 +143,7 @@ export default function InstallationCertificateR1Actions({
         disabled={pending}
         className="rounded-lg border border-emerald-500/70 bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-600 disabled:cursor-wait disabled:opacity-60"
       >
-        {pending ? "施工証明書を発行中..." : "施工証明書を発行・表示"}
+        {pending ? "施工証明書を発行中..." : "施工証明書を発行"}
       </button>
       {error && <p className="max-w-xs text-right text-[11px] text-red-300">{error}</p>}
     </div>
