@@ -32,18 +32,20 @@ type ReviewField = keyof Omit<VehicleRegistrationOcrResult, "confidence">;
 const CUSTOMER_FIELDS: ReviewField[] = [
   "owner_name",
   "user_name",
+  "owner_name_kana",
+  "user_name_kana",
   "owner_address",
   "user_address",
 ];
 
-// Field order per spec: メーカー → 車名 → グレード → 型式 → … → ボディカラー.
-// Fuel is intentionally excluded from this flow. ボディサイズ is estimated in the
-// wizard (3M), not an OCR field, so it is not part of this OCR review table.
+// Field order per spec: メーカー → 車名 → グレード → 型式指定番号 → … → ボディカラー.
+// ボディサイズ is estimated in the wizard (3M), not an OCR field, so it is not part
+// of this OCR review table.
 const VEHICLE_FIELDS: ReviewField[] = [
   "maker",                   // メーカー
   "vehicle_name",            // 車名
   "grade",                   // グレード
-  "model",                   // 型式
+  "model_code",              // 型式指定番号
   "chassis_number",          // 車台番号
   "license_plate_region",    // ナンバー地域
   "license_plate_class",     // 分類番号
@@ -53,6 +55,7 @@ const VEHICLE_FIELDS: ReviewField[] = [
   "registration_date",       // 登録年月日
   "inspection_expiry_date",  // 車検満了日
   "displacement",            // 排気量
+  "fuel_type",               // 燃料種類
   "length_mm",               // 長さ（3M計算用）
   "width_mm",                // 幅（3M計算用）
   "height_mm",               // 高さ（3M計算用）
