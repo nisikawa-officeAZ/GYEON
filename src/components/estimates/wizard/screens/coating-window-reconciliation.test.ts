@@ -9,7 +9,9 @@ import assert from "node:assert/strict";
 import {
   firstLayerOptions,
   secondLayerOptions,
+  secondLayerOptionsForRank,
   thirdLayerOptions,
+  thirdLayerOptionsForRank,
   isCoatingAvailableForRank,
   COATING_PRODUCT_LABELS,
 } from "./coating-matrix";
@@ -144,6 +146,23 @@ test("INFINITE BASE and CANCOAT PRO EVO are certified-only", () => {
     assert.ok(!firstLayerOptions("shop").some((o) => o.id === id), `${id} leaked to shop`);
     assert.ok(!firstLayerOptions("detailer").some((o) => o.id === id), `${id} leaked to detailer`);
   }
+});
+
+test("certified-only products never leak into upper-layer choices for lower ranks", () => {
+  for (const rank of ["shop", "detailer", "ppf_installer"] as ShopRank[]) {
+    assert.ok(
+      !secondLayerOptionsForRank("one-evo", rank).some((o) => o.id === "cancoat-pro-evo"),
+      `cancoat-pro-evo leaked into layer 2 for ${rank}`,
+    );
+    assert.ok(
+      !thirdLayerOptionsForRank("infinite-base-1", rank).some((o) => o.id.startsWith("infinite-topcoat-")),
+      `infinite topcoat leaked into layer 3 for ${rank}`,
+    );
+  }
+  assert.ok(
+    secondLayerOptionsForRank("one-evo", "certified").some((o) => o.id === "cancoat-pro-evo"),
+    "certified rank keeps CANCOAT PRO EVO as an approved upper layer",
+  );
 });
 
 // ── Layer matrix ─────────────────────────────────────────────────────────────

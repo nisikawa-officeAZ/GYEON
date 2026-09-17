@@ -124,4 +124,3 @@ export type LegacyCustomerSearchInvoker = (
 export type LegacyVehicleLoader = (customerId: unknown) => Promise<LegacyRegistrationVehicleResult>;
 export type LegacyDuplicateInvoker = (input: unknown) => Promise<LegacyDuplicateResult>;
 export type LegacyRegistrationSaveInvoker = (input: unknown) => Promise<LegacyRegistrationSaveResult>;
-

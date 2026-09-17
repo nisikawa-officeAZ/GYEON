@@ -68,7 +68,10 @@ import { RoomCleaningSelector } from "../screens/RoomCleaningSelector";
 import { OtherWorkSelector } from "../screens/OtherWorkSelector";
 import { StoreGlobalOptionsSelector } from "../screens/StoreGlobalOptionsSelector";
 import {
-  isCoatingAvailableForRank, firstLayerOptions, secondLayerOptions, thirdLayerOptions,
+  isCoatingAvailableForRank,
+  firstLayerOptions,
+  secondLayerOptionsForRank,
+  thirdLayerOptionsForRank,
 } from "../screens/coating-matrix";
 // TYPES ONLY from the screen config modules. No EXAMPLE_* / DEFAULT_* fixture VALUE is imported:
 // every operator-visible collection arrives through `WizardScreenConfiguration` below, so fixture
@@ -401,8 +404,8 @@ export default function EstimateWizardContainer({
               selectedLayer2ProductId={cfg.coating.layer2Id}
               selectedLayer3ProductId={cfg.coating.layer3Id}
               availableLayer1Products={firstLayerOptions(shopRank)}
-              availableLayer2Products={secondLayerOptions(cfg.coating.layer1Id)}
-              availableLayer3Products={thirdLayerOptions(cfg.coating.layer1Id)}
+              availableLayer2Products={secondLayerOptionsForRank(cfg.coating.layer1Id, shopRank)}
+              availableLayer3Products={thirdLayerOptionsForRank(cfg.coating.layer1Id, shopRank)}
               onLayerCountChange={(n) => update((d) => updateServiceConfiguration(d, "coating", { layerCount: n }))}
               onLayer1Change={(id) => update((d) => updateServiceConfiguration(d, "coating", { layer1Id: id, layer2Id: null, layer3Id: null }))}
               onLayer2Change={(id) => update((d) => updateServiceConfiguration(d, "coating", { layer2Id: id }))}

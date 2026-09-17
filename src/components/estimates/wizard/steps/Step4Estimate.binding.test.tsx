@@ -349,6 +349,17 @@ for (const [cat, marker] of Object.entries(SECTION_MARKER)) {
   });
 }
 
+test("coating upper-layer choices enforce the current shop rank in the rendered UI", () => {
+  const services = fresh();
+  services.coating = { ...services.coating, layerCount: 2, layer1Id: "one-evo" };
+
+  const detailer = render(<Step4Estimate api={makeApi(["coating"], services).api} shopRank="detailer" screenConfig={SC} />);
+  assert.equal(detailer.includes("Q² CANCOAT PRO EVO"), false, "detailer must not see certified-only CANCOAT PRO EVO");
+
+  const certified = render(<Step4Estimate api={makeApi(["coating"], services).api} shopRank="certified" screenConfig={SC} />);
+  assert.ok(certified.includes("Q² CANCOAT PRO EVO"), "certified shop keeps the approved CANCOAT PRO EVO option");
+});
+
 test("only the selected categories appear in the section navigation", () => {
   const { api } = makeApi(["maintenance"]);
   const html = render(<Step4Estimate api={api} shopRank="detailer" screenConfig={SC} />);

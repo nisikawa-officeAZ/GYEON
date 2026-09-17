@@ -296,7 +296,7 @@ export function WizardSavePanel({
             data-testid="save-retry-same-key"
             disabled={submitting}
             onClick={() => attempt()}
-            className="mt-2 rounded-md border border-amber-600 px-4 py-2 text-sm"
+            className="mt-2 rounded-md border border-amber-600 px-4 py-2 text-sm text-amber-100"
           >
             同じ保存キーで再試行
           </button>
@@ -311,7 +311,7 @@ export function WizardSavePanel({
             data-testid="save-retry-same-key"
             disabled={submitting}
             onClick={() => attempt()}
-            className="mt-2 rounded-md border border-rose-600 px-4 py-2 text-sm"
+            className="mt-2 rounded-md border border-rose-600 px-4 py-2 text-sm text-rose-100"
           >
             同じ保存キーで再試行
           </button>
@@ -330,7 +330,7 @@ export function WizardSavePanel({
             type="button"
             data-testid="save-submit"
             onClick={() => attempt("estimate")}
-            className="rounded-md border border-emerald-600 bg-emerald-900/40 px-5 py-2.5 text-sm"
+            className="rounded-md border border-emerald-600 bg-emerald-900/40 px-5 py-2.5 text-sm text-emerald-100"
           >
             保存
           </button>
@@ -338,7 +338,7 @@ export function WizardSavePanel({
             type="button"
             data-testid="save-submit-pdf"
             onClick={() => attempt("pdf")}
-            className="rounded-md border border-sky-600 bg-sky-900/40 px-5 py-2.5 text-sm"
+            className="rounded-md border border-sky-600 bg-sky-900/40 px-5 py-2.5 text-sm text-sky-100"
           >
             保存してPDFを開く
           </button>

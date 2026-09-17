@@ -123,7 +123,7 @@ export function Step2Vehicle({
           {selected ? (
             <div className="rounded-md border border-emerald-700/50 bg-emerald-950/30 px-3 py-2" data-testid="existing-vehicle-summary">
               <p className="text-xs text-emerald-300">既存車両を選択中</p>
-              <p className="text-sm mt-1">{selected.displayName}</p>
+              <p className="text-sm text-slate-100 mt-1">{selected.displayName}</p>
               {selected.plateNumber && <p className="text-[11px] text-slate-400">{selected.plateNumber}</p>}
               {/* bodySize is shown for orientation ONLY. It never sets confirmedSize:
                   the operator's final body-size choice is the persistence authority,
@@ -150,7 +150,7 @@ export function Step2Vehicle({
                       key={o.id}
                       type="button"
                       data-testid={`existing-vehicle-option-${o.id}`}
-                      className="w-full text-left py-2 px-1 hover:bg-slate-800/60"
+                      className="w-full text-left text-slate-100 py-2 px-1 hover:bg-slate-800/60"
                       onClick={() => setExistingVehicle(o.id)}
                     >
                       <span className="block text-sm">{o.displayName}</span>

@@ -117,6 +117,7 @@ test("SSR connected invoice control is enabled, disconnected is disabled; neithe
   const html = renderToStaticMarkup(<SavedEstimateDocuments estimateId={estimate} initialPdfPreview={false} invoiceActions={actions} />);
   const button = html.match(/<button[^>]*data-testid="saved-document-invoice"[^>]*>/)?.[0];
   assert.ok(button); assert.doesNotMatch(button, / disabled=""/);
+  assert.match(button, /text-slate-100/, "the enabled invoice action stays readable on the dark surface");
   assert.match(html, /請求書の下書きを作成・確認/); assert.match(html, /保存完了/); assert.equal(calls, 0);
   const disabled = renderToStaticMarkup(<SavedEstimateDocuments estimateId={estimate} initialPdfPreview={false} />);
   assert.match(disabled.match(/<button[^>]*data-testid="saved-document-invoice"[^>]*>/)?.[0] ?? "", / disabled=""/);

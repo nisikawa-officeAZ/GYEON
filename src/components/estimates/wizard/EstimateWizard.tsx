@@ -127,7 +127,9 @@ export default function EstimateWizard({
       )}
       {api.step === 3 && <Step3Category api={api} serviceOfferings={screenConfig.serviceOfferings} />}
       {api.step === 4 && <Step4Estimate api={api} shopRank={shopRank} screenConfig={screenConfig} />}
-      {api.step === 5 && <Step5Discount api={api} />}
+      {api.step === 5 && (
+        <Step5Discount api={api} coupons={screenConfig.coupons} subtotal={pricing.subtotal} />
+      )}
       {api.step === 6 && <Step6Notes api={api} />}
       {api.step === 7 && (
         // GDA-ESTIMATE-REVIEW-DISPLAY-R1: the SAME server-supplied reference arrays

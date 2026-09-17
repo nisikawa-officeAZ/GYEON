@@ -33,8 +33,9 @@ function ModeButton({ active, label, onClick }: { active: boolean; label: string
 }
 
 export function DiscountModeSelector(props: {
-  subtotal: number;
+  subtotal: number | null;
   activeDiscountMode: DiscountMode;
+  couponSelectionActive: boolean;
   discountAmountValue: string;
   discountPercentValue: string;
   convertedDiscountAmount?: number | null;
@@ -46,11 +47,13 @@ export function DiscountModeSelector(props: {
   onDiscountAmountChange: (v: string) => void;
   onDiscountPercentChange: (v: string) => void;
   onDiscountClear: () => void;
+  onCouponSelectionRequest: () => void;
 }) {
   const {
-    subtotal, activeDiscountMode, discountAmountValue, discountPercentValue,
+    subtotal, activeDiscountMode, couponSelectionActive, discountAmountValue, discountPercentValue,
     convertedDiscountAmount, maximumDiscountAmount, minimumDiscountPercent, maximumDiscountPercent,
     discountValidationMessage, onDiscountModeChange, onDiscountAmountChange, onDiscountPercentChange, onDiscountClear,
+    onCouponSelectionRequest,
   } = props;
 
   const isNone = activeDiscountMode === "none";
@@ -63,7 +66,7 @@ export function DiscountModeSelector(props: {
   const pctNum = Number(discountPercentValue);
   const localWarnings: string[] = [];
   if (isAmount && discountAmountValue !== "" && Number.isFinite(amountNum)) {
-    if (amountNum > subtotal) localWarnings.push("値引き額が小計を超えています。");
+    if (subtotal !== null && amountNum > subtotal) localWarnings.push("値引き額が小計を超えています。");
     if (maximumDiscountAmount != null && amountNum > maximumDiscountAmount) {
       localWarnings.push(`最大値引き額（${formatYen(maximumDiscountAmount)}）を超えています。`);
     }
@@ -80,15 +83,18 @@ export function DiscountModeSelector(props: {
     <div className="bg-[#1e293b] rounded-xl shadow-lg p-5">
       <div className="flex items-center justify-between gap-2">
         <h3 className={SECHDR}>値引き</h3>
-        <span className="text-[11px] text-slate-500">小計 {formatYen(subtotal)}</span>
+        <span className="text-[11px] text-slate-500">小計 {subtotal === null ? "—" : formatYen(subtotal)}</span>
       </div>
 
-      {/* モード切替（値引きなし / 金額 / ％ の三者択一・同時適用なし・プルダウンなし）*/}
-      <div className="flex gap-2 mt-3">
+      {/* Manual discount modes stay mutually exclusive. Coupon selection is a separate configured
+          input, so both active states may be shown when the selected coupon permits combination. */}
+      <div className="grid grid-cols-1 gap-2 mt-3 sm:grid-cols-2">
         <ModeButton active={isNone} label="値引きなし" onClick={() => onDiscountModeChange("none")} />
+        <ModeButton active={couponSelectionActive} label="クーポン値引き" onClick={onCouponSelectionRequest} />
         <ModeButton active={isAmount} label="金額値引き" onClick={() => onDiscountModeChange("amount")} />
         <ModeButton active={isPercent} label="％値引き" onClick={() => onDiscountModeChange("percent")} />
       </div>
+      <p className="mt-2 text-[10px] text-slate-500">クーポンの併用可否は店舗設定に従います。</p>
 
       {/* アクティブモードの入力のみ（none は入力なし）*/}
       <div className="mt-3">

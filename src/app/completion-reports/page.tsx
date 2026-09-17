@@ -3,6 +3,7 @@ import FeatureGate from "@/components/plans/FeatureGate";
 import { createClient }     from "@/lib/supabase/server";
 import { getCurrentDealer } from "@/lib/auth/get-current-dealer";
 import { getWorkReportSource } from "@/lib/completion-reports/get-completion-report";
+import InstallationCertificateR1Actions from "@/components/completion-reports/InstallationCertificateR1Actions";
 import {
   completionReportDisplayNo,
   completionReportStatusLabel,
@@ -154,7 +155,7 @@ export default async function CompletionReportsPage() {
 
                     {/* PDF links ONLY when the shared eligibility says ready. */}
                     {source.ready && (
-                      <div className="flex gap-1.5 shrink-0">
+                      <div className="flex flex-wrap justify-end gap-1.5 shrink-0">
                         <a
                           href={`/pdf/work-report?reportId=${encodeURIComponent(report.id)}`}
                           target="_blank"
@@ -171,6 +172,7 @@ export default async function CompletionReportsPage() {
                         >
                           ダウンロード
                         </a>
+                        <InstallationCertificateR1Actions completionReportId={report.id} />
                       </div>
                     )}
                   </div>

@@ -663,6 +663,34 @@ test("the step components never spread a full customer/vehicle projection into a
     "no spread-based selection write remains");
 });
 
+test("existing-customer display names set a readable dark-theme text color", () => {
+  const step1src = readFileSync("src/components/estimates/wizard/steps/Step1Customer.tsx", "utf8");
+  assert.match(
+    step1src,
+    /className="text-sm text-slate-100 mt-1">\{selected\.displayName\}/,
+    "selected-customer summary must not inherit black text",
+  );
+  assert.match(
+    step1src,
+    /className="w-full text-left text-slate-100 py-2 px-1 hover:bg-slate-800\/60"/,
+    "customer search rows must not inherit black text",
+  );
+});
+
+test("existing-vehicle display names set a readable dark-theme text color", () => {
+  const step2src = readFileSync("src/components/estimates/wizard/steps/Step2Vehicle.tsx", "utf8");
+  assert.match(
+    step2src,
+    /className="text-sm text-slate-100 mt-1">\{selected\.displayName\}/,
+    "selected-vehicle summary must not inherit black text",
+  );
+  assert.match(
+    step2src,
+    /className="w-full text-left text-slate-100 py-2 px-1 hover:bg-slate-800\/60"/,
+    "existing-vehicle rows must not inherit black text",
+  );
+});
+
 test("Step 1 and Step 2 never copy reference display fields into new-record state", () => {
   for (const file of [
     "src/components/estimates/wizard/steps/Step1Customer.tsx",

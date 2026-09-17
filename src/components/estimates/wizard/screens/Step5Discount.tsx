@@ -9,6 +9,7 @@
 // (surfaced as informational messages / disabled coupon state). One responsive implementation;
 // no pull-down menus; no swipe. Continue uses a button (does not trigger the unsaved guard).
 
+import { useRef } from "react";
 import { DiscountModeSelector } from "./DiscountModeSelector";
 import { CouponSelector } from "./CouponSelector";
 import type { Step5DiscountProps } from "./step-types";
@@ -22,12 +23,14 @@ export function Step5Discount(props: Step5DiscountProps) {
     onDiscountModeChange, onDiscountAmountChange, onDiscountPercentChange, onDiscountClear,
     onCouponToggle, onContinue,
   } = props;
+  const couponSectionRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="flex flex-col gap-4">
       <DiscountModeSelector
         subtotal={subtotal}
         activeDiscountMode={activeDiscountMode}
+        couponSelectionActive={selectedCouponIds.length > 0}
         discountAmountValue={discountAmountValue}
         discountPercentValue={discountPercentValue}
         convertedDiscountAmount={convertedDiscountAmount}
@@ -39,15 +42,18 @@ export function Step5Discount(props: Step5DiscountProps) {
         onDiscountAmountChange={onDiscountAmountChange}
         onDiscountPercentChange={onDiscountPercentChange}
         onDiscountClear={onDiscountClear}
+        onCouponSelectionRequest={() => couponSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
       />
 
-      <CouponSelector
-        availableCoupons={availableCoupons}
-        selectedCouponIds={selectedCouponIds}
-        disabledCouponIds={disabledCouponIds}
-        disabledReasonByCoupon={disabledReasonByCoupon}
-        onCouponToggle={onCouponToggle}
-      />
+      <div ref={couponSectionRef} className="scroll-mt-4">
+        <CouponSelector
+          availableCoupons={availableCoupons}
+          selectedCouponIds={selectedCouponIds}
+          disabledCouponIds={disabledCouponIds}
+          disabledReasonByCoupon={disabledReasonByCoupon}
+          onCouponToggle={onCouponToggle}
+        />
+      </div>
 
       {/* 親から供給される併用制限 / 掛け率 / 最大値引きなどのメッセージ（発明しない）*/}
       {informationalMessages && informationalMessages.length > 0 && (
@@ -59,7 +65,7 @@ export function Step5Discount(props: Step5DiscountProps) {
         </div>
       )}
 
-      <div>
+      {onContinue && <div>
         <button
           type="button"
           onClick={onContinue}
@@ -70,7 +76,7 @@ export function Step5Discount(props: Step5DiscountProps) {
         <p className="text-[10px] text-slate-600 mt-2">
           合計・税・値引き反映は親（既存ロジック）が担当します。本画面は入力と選択のみを扱います。
         </p>
-      </div>
+      </div>}
     </div>
   );
 }

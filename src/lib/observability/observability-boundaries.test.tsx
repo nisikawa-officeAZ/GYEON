@@ -164,6 +164,14 @@ test("every boundary offers a safe home link to /", () => {
   }
 });
 
+test("the estimates error controls keep an explicit readable dark-theme text color", () => {
+  const html = renderToStaticMarkup(<EstimatesError error={canaryError()} reset={() => {}} />);
+  assert.match(html, /min-h-\[60vh\][^"]*text-slate-100/, "error surface base text");
+  assert.match(html, /<h1 class="[^"]*text-slate-100/, "error heading");
+  assert.match(html, /<button[^>]*class="[^"]*text-slate-100/, "retry action");
+  assert.match(html, /<a href="\/" class="[^"]*text-slate-100/, "home action");
+});
+
 test("uncaught boundaries expose an accessible alert region", () => {
   for (const html of [
     renderToStaticMarkup(<GlobalError error={canaryError()} reset={() => {}} />),

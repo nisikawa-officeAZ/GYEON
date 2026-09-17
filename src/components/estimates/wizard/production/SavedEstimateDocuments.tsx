@@ -139,7 +139,7 @@ export function SavedDeliveryNoteChoice({ invoice }: { invoice: SavedInvoiceSumm
         rel="noopener noreferrer"
         aria-describedby="saved-document-delivery-note-reason"
         data-testid="saved-document-delivery-note"
-        className="inline-block rounded-md border border-sky-600 bg-sky-900/40 px-4 py-2 text-sm"
+        className="inline-block rounded-md border border-sky-600 bg-sky-900/40 px-4 py-2 text-sm text-sky-100"
       >
         納品書（PDF）を表示
       </a>
@@ -179,7 +179,7 @@ export default function SavedEstimateDocuments({ estimateId, initialPdfPreview, 
 
   return (
     <section
-      className="rounded-md border border-slate-700 bg-slate-900/60 p-4"
+      className="rounded-md border border-slate-700 bg-slate-900/60 p-4 text-slate-100"
       aria-labelledby="saved-estimate-documents-heading"
       data-testid="saved-estimate-documents"
     >
@@ -200,7 +200,7 @@ export default function SavedEstimateDocuments({ estimateId, initialPdfPreview, 
             data-testid="saved-document-estimate-pdf"
             aria-pressed={showingPdf}
             onClick={() => setPreview("estimate-pdf")}
-            className="rounded-md border border-sky-600 bg-sky-900/40 px-4 py-2 text-sm"
+            className="rounded-md border border-sky-600 bg-sky-900/40 px-4 py-2 text-sm text-slate-100"
           >
             見積書（PDF）を表示
           </button>

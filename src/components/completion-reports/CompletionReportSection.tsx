@@ -30,6 +30,7 @@ import {
 } from "@/lib/completion-reports/get-completion-report";
 import CompletionReportForm    from "./CompletionReportForm";
 import CompletionReportPreview from "./CompletionReportPreview";
+import InstallationCertificateR1Actions from "./InstallationCertificateR1Actions";
 
 const STATUS_BADGE: Record<string, string> = {
   draft:     "bg-slate-600 text-slate-100",
@@ -188,6 +189,9 @@ export default function CompletionReportSection({ workOrderId }: CompletionRepor
                 >
                   作業内容書をダウンロード
                 </a>
+                <InstallationCertificateR1Actions
+                  completionReportId={view.data.report.id}
+                />
               </>
             ) : view.workReport === null ? (
               <p className="text-[11px] text-slate-500">出力可否を確認中...</p>

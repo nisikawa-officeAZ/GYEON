@@ -70,7 +70,7 @@ test('legacy_customer_registration_receipts exists and is immutable for authenti
   );
   // No UPDATE or DELETE RLS policy on receipts (fail closed under RLS).
   assert.ok(
-    !/CREATE POLICY [^;]*ON public\.legacy_customer_registration_receipts[^;]*FOR (UPDATE|DELETE)/s.test(sql),
+    !/CREATE POLICY [\s\S]*?ON public\.legacy_customer_registration_receipts[\s\S]*?FOR (UPDATE|DELETE)/.test(sql),
     'no UPDATE/DELETE policy on receipts',
   );
 });
