@@ -1,194 +1,264 @@
-import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { Document, View } from "@react-pdf/renderer";
 import React from "react";
 
+import { DocumentPage, SerialFooter, type PagePadding } from "@/components/documents/components";
+import type { BrandProfile, GyeonRank } from "@/components/documents/types";
 import type { InstallationCertificateR1Presentation } from "@/lib/certificates/installation-certificate-r1-artifact-core";
+import { gyeonRankLogo, gyeonWordmark } from "@/lib/pdf/brand-assets";
+import { CertificateCustomerVehicle } from "./CertificateCustomerVehicle";
+import { CertificateFooter } from "./CertificateFooter";
+import { CertificateHeader } from "./CertificateHeader";
+import { CertificateProductSection } from "./CertificateProductSection";
+import { MaintenanceHistoryPage } from "./MaintenanceHistoryPage";
+import { CERTIFICATE_FRONT_SCALE } from "./certificate-scale";
+import type {
+  AppliedProductRow,
+  CertificateDocumentData,
+  CertificateKind,
+} from "./certificate-data";
 
 export interface InstallationCertificateR1DocumentProps {
   readonly data: InstallationCertificateR1Presentation;
   readonly logoDataUri: string;
 }
 
-const navy = "#11203f";
-const gold = "#b99b52";
-const muted = "#5f6673";
-const line = "#cfd4dc";
+const PRIMARY = "#0a2145";
+const PAGE: PagePadding = { top: "16mm", horizontal: "15mm", bottom: "14mm" };
 
-const styles = StyleSheet.create({
-  page: {
-    fontFamily: "NotoSansJP",
-    fontSize: 9.5,
-    color: "#111827",
-    backgroundColor: "#ffffff",
-    paddingTop: 38,
-    paddingBottom: 40,
-    paddingHorizontal: 42,
-  },
-  masthead: { flexDirection: "row", alignItems: "center", minHeight: 76, marginBottom: 14 },
-  logoBox: { width: 122, height: 64, justifyContent: "center", alignItems: "flex-start" },
-  logo: { width: 112, height: 29, objectFit: "contain" },
-  titleBox: { flex: 1, alignItems: "center", justifyContent: "center", paddingRight: 122 },
-  title: { fontFamily: "NotoSansJP-Bold", fontSize: 27, letterSpacing: 3.5, color: navy },
-  subtitle: { fontSize: 9, letterSpacing: 3, color: muted, marginTop: 4 },
-  titleRule: { borderBottomWidth: 2, borderBottomColor: navy, marginBottom: 16 },
-  meta: { flexDirection: "row", justifyContent: "flex-end", gap: 22, marginBottom: 17 },
-  metaPair: { flexDirection: "row", gap: 6 },
-  metaLabel: { color: muted },
-  metaValue: { fontFamily: "NotoSansJP-Bold", color: navy },
-  statement: {
-    backgroundColor: "#f4f6f9",
-    borderLeftWidth: 3,
-    borderLeftColor: gold,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    lineHeight: 1.65,
-    marginBottom: 18,
-  },
-  grid: { flexDirection: "row", gap: 14, marginBottom: 18 },
-  panel: { flex: 1, borderTopWidth: 1.5, borderTopColor: navy, paddingTop: 7 },
-  panelTitle: { fontFamily: "NotoSansJP-Bold", fontSize: 9, letterSpacing: 1.1, color: navy, marginBottom: 8 },
-  principal: { fontFamily: "NotoSansJP-Bold", fontSize: 14, marginBottom: 5 },
-  row: { flexDirection: "row", marginBottom: 3 },
-  label: { width: 62, color: muted, fontSize: 8.5 },
-  value: { flex: 1, fontSize: 8.5 },
-  worksHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1.5,
-    borderBottomColor: navy,
-    paddingBottom: 6,
-  },
-  worksTitle: { fontFamily: "NotoSansJP-Bold", fontSize: 11, letterSpacing: 1.3, color: navy },
-  worksCount: { marginLeft: "auto", color: muted, fontSize: 8.5 },
-  tableHeader: {
-    flexDirection: "row",
-    backgroundColor: "#f4f6f9",
-    borderBottomWidth: 1,
-    borderBottomColor: line,
-    paddingVertical: 6,
-    paddingHorizontal: 7,
-  },
-  tableRow: {
-    flexDirection: "row",
-    borderBottomWidth: 0.7,
-    borderBottomColor: line,
-    paddingVertical: 7,
-    paddingHorizontal: 7,
-  },
-  numberCol: { width: 28 },
-  categoryCol: { width: 86 },
-  workCol: { flex: 1 },
-  tableLabel: { fontFamily: "NotoSansJP-Bold", fontSize: 8, color: muted },
-  itemName: { fontFamily: "NotoSansJP-Bold", fontSize: 9.5 },
-  itemDescription: { fontSize: 8, color: muted, marginTop: 2, lineHeight: 1.45 },
-  issuer: { marginTop: 20, marginLeft: "auto", width: "48%", borderTopWidth: 1, borderTopColor: navy, paddingTop: 8 },
-  issuerName: { fontFamily: "NotoSansJP-Bold", fontSize: 11, color: navy, marginBottom: 4 },
-  issuerLine: { fontSize: 8, color: muted, marginBottom: 2 },
-  footer: {
-    position: "absolute",
-    left: 42,
-    right: 42,
-    bottom: 24,
-    borderTopWidth: 0.7,
-    borderTopColor: line,
-    paddingTop: 6,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  footerText: { fontSize: 7, color: muted },
-});
+type ServiceVisual = Pick<
+  CertificateDocumentData,
+  | "kind"
+  | "titleJa"
+  | "titleEn"
+  | "programLabel"
+  | "programSubLabel"
+  | "intro"
+  | "productLabelEn"
+  | "productLabelJa"
+  | "productColumns"
+  | "footerProgramLine"
+>;
 
-function DetailRow({ label, value }: { label: string; value?: string }) {
-  if (!value) return null;
-  return <View style={styles.row}><Text style={styles.label}>{label}</Text><Text style={styles.value}>{value}</Text></View>;
+const VISUALS: Record<CertificateKind, ServiceVisual> = {
+  coating: {
+    kind: "coating",
+    titleJa: "GYEON コーティング施工証明書",
+    titleEn: "Certificate of Installation / Coating",
+    programLabel: "Coating · Certified Detailer",
+    programSubLabel: "Japan Official Program",
+    intro: "本書は、下記車両に記載の GYEON コーティング施工を実施した事実を証明するものです。",
+    productLabelEn: "Applied Coating",
+    productLabelJa: "施工コーティング内訳",
+    productColumns: {
+      tag: "Category",
+      name: "Product · 施工内容",
+      appliedTo: "Status · 実施状況",
+    },
+    footerProgramLine: "GYEON Coating Japan Certified Detailer",
+  },
+  ppf: {
+    kind: "ppf",
+    titleJa: "GYEON PPF 施工証明書",
+    titleEn: "Certificate of Installation / Paint Protection Film",
+    programLabel: "PPF · Installation Record",
+    programSubLabel: "Japan Official Program",
+    intro: "本書は、下記車両に記載の GYEON PPF 施工を実施した事実を証明するものです。",
+    productLabelEn: "Applied Films",
+    productLabelJa: "施工フィルム内訳",
+    productColumns: {
+      tag: "Category",
+      name: "Applied To · 施工内容",
+      appliedTo: "Film Product · 使用フィルム",
+    },
+    footerProgramLine: "GYEON PPF Japan Installation Record",
+  },
+  cancoat: {
+    kind: "cancoat",
+    titleJa: "GYEON コーティング施工証明書",
+    titleEn: "Certificate of Installation / Coating (CanCoat)",
+    programLabel: "CanCoat · Certified Detailer",
+    programSubLabel: "Japan Official Program",
+    intro: "本書は、下記車両に記載の GYEON CanCoat シリーズ施工を実施した事実を証明するものです。",
+    productLabelEn: "Applied Coating",
+    productLabelJa: "施工コーティング内訳",
+    productColumns: {
+      tag: "Category",
+      name: "Product · 施工内容",
+      appliedTo: "Status · 実施状況",
+    },
+    footerProgramLine: "GYEON CanCoat Japan Installation Record",
+  },
+};
+
+function searchable(value: string | undefined): string {
+  return (value ?? "").normalize("NFKC").toLowerCase();
 }
 
-function issuerAddress(data: InstallationCertificateR1Presentation): string | undefined {
-  const parts = [data.issuer.postalCode ? `〒${data.issuer.postalCode}` : undefined, data.issuer.address]
-    .filter((value): value is string => Boolean(value));
-  return parts.length ? parts.join(" ") : undefined;
+function itemText(item: InstallationCertificateR1Presentation["items"][number]): string {
+  return searchable([item.category, item.name, item.description].filter(Boolean).join(" "));
+}
+
+/**
+ * The visual kind comes only from immutable performed-work rows. PPF wins over CanCoat when a
+ * report contains both so the film-specific product columns remain visible.
+ */
+export function resolveInstallationCertificateR1Kind(
+  items: InstallationCertificateR1Presentation["items"],
+): CertificateKind {
+  const values = items.map(itemText);
+  if (values.some((value) =>
+    value.includes("ppf") ||
+    value.includes("paint protection film") ||
+    value.includes("プロテクションフィルム")
+  )) return "ppf";
+  if (values.some((value) =>
+    value.includes("cancoat") ||
+    value.includes("can coat") ||
+    value.includes("キャンコート")
+  )) return "cancoat";
+  return "coating";
+}
+
+function rankFromIssuer(value: string | undefined): GyeonRank {
+  const normalized = searchable(value).replaceAll("_", "-").replaceAll(" ", "-");
+  if (normalized.includes("ppf") && normalized.includes("installer")) return "ppf-installer";
+  if (normalized.includes("certified") && normalized.includes("detailer")) return "certified-detailer";
+  if (normalized === "detailer") return "detailer";
+  if (normalized === "shop") return "shop";
+  return "detailer";
+}
+
+function rankLabel(rank: GyeonRank): string {
+  if (rank === "certified-detailer") return "Certified Detailer";
+  if (rank === "ppf-installer") return "PPF Installer";
+  if (rank === "shop") return "Shop";
+  return "Detailer";
+}
+
+function serviceProgramLabel(kind: CertificateKind, rank: GyeonRank): string {
+  if (kind === "ppf") {
+    return rank === "ppf-installer" ? "PPF · Installer" : "PPF · Installation Record";
+  }
+  return `${kind === "cancoat" ? "CanCoat" : "Coating"} · ${rankLabel(rank)}`;
+}
+
+function serviceFooterLine(kind: CertificateKind, rank: GyeonRank): string {
+  const service = kind === "ppf" ? "PPF" : kind === "cancoat" ? "CanCoat" : "Coating";
+  return `GYEON ${service} Japan ${kind === "ppf" && rank !== "ppf-installer" ? "Installation Record" : rankLabel(rank)}`;
+}
+
+function toBrand(data: InstallationCertificateR1Presentation, logoDataUri: string): BrandProfile {
+  const rank = rankFromIssuer(data.issuer.detailerRank);
+  return {
+    brandId: "installation-certificate-r1",
+    brandNameJa: data.issuer.displayName,
+    brandNameEn: data.issuer.companyName,
+    logoUrl: logoDataUri,
+    colors: { primary: PRIMARY, primaryDark: "#061532" },
+    contact: {
+      postalCode: data.issuer.postalCode,
+      address: data.issuer.address,
+      tel: data.issuer.tel,
+      email: data.issuer.email,
+    },
+    business: {
+      shopRank: rank,
+      shopRankLabel: data.issuer.detailerRank,
+      invoiceRegistrationNumber: data.issuer.invoiceRegistrationNumber,
+      responsiblePerson: data.installation.technician,
+    },
+    footer: { partnerBrand: "GYEON JAPAN", showPartnerLogo: true },
+    qrLinks: [],
+    rank,
+    rankLogoUrl: gyeonRankLogo(rank),
+    gyeonWordmarkUrl: gyeonWordmark(),
+    partnerProgram: "gyeon",
+  };
+}
+
+function toProducts(
+  kind: CertificateKind,
+  items: InstallationCertificateR1Presentation["items"],
+): AppliedProductRow[] {
+  return items.map((item) => {
+    const tag = item.category.toUpperCase();
+    if (kind === "ppf") {
+      return {
+        tag,
+        name: item.description ?? "—",
+        appliedTo: item.name,
+      };
+    }
+    return {
+      tag,
+      name: item.name,
+      ...(item.description ? { description: item.description } : {}),
+      appliedTo: "実施済み / Completed",
+    };
+  });
+}
+
+function toDocumentData(
+  data: InstallationCertificateR1Presentation,
+  kind: CertificateKind,
+  rank: GyeonRank,
+): CertificateDocumentData {
+  const visual = VISUALS[kind];
+  return {
+    ...visual,
+    programLabel: serviceProgramLabel(kind, rank),
+    footerProgramLine: serviceFooterLine(kind, rank),
+    serial: data.certificateNumber,
+    issueDate: data.issueDate,
+    customer: data.customer,
+    vehicle: {
+      name: data.vehicle.name,
+      year: data.vehicle.year,
+      color: data.vehicle.color,
+      vin: data.vehicle.vin,
+      plate: data.vehicle.plate,
+    },
+    installation: data.installation,
+    products: toProducts(kind, data.items),
+    terms: { left: [], right: [] },
+    care: [],
+    privacyNotice: "",
+  };
+}
+
+function FrontPage({ data, logoDataUri }: InstallationCertificateR1DocumentProps) {
+  const kind = resolveInstallationCertificateR1Kind(data.items);
+  const brand = toBrand(data, logoDataUri);
+  const documentData = toDocumentData(data, kind, brand.rank ?? "detailer");
+  const scale = CERTIFICATE_FRONT_SCALE[kind];
+
+  return (
+    <DocumentPage padding={PAGE}>
+      <CertificateHeader brand={brand} data={documentData} scale={scale} />
+      <CertificateCustomerVehicle data={documentData} scale={scale} />
+      <CertificateProductSection data={documentData} accent={PRIMARY} scale={scale} />
+      <View style={{ flexGrow: 1 }} />
+      <CertificateFooter brand={brand} technician={data.installation.technician} scale={scale} />
+      <SerialFooter
+        serial={data.certificateNumber}
+        label={`${documentData.footerProgramLine} · ${data.certificateNumber}`}
+      />
+    </DocumentPage>
+  );
 }
 
 export function InstallationCertificateR1Document({ data, logoDataUri }: InstallationCertificateR1DocumentProps) {
-  const issuerContact = [data.issuer.tel ? `TEL ${data.issuer.tel}` : undefined, data.issuer.email]
-    .filter((value): value is string => Boolean(value)).join("  ");
-
+  const title = VISUALS[resolveInstallationCertificateR1Kind(data.items)].titleJa;
   return (
-    <Document title={`施工証明書 ${data.certificateNumber}`} author={data.issuer.displayName}>
-      <Page size="A4" orientation="portrait" style={styles.page}>
-        <View style={styles.masthead}>
-          <View style={styles.logoBox}><Image src={logoDataUri} style={styles.logo} /></View>
-          <View style={styles.titleBox}>
-            <Text style={styles.title}>施工証明書</Text>
-            <Text style={styles.subtitle}>INSTALLATION CERTIFICATE</Text>
-          </View>
-        </View>
-        <View style={styles.titleRule} />
-
-        <View style={styles.meta}>
-          <View style={styles.metaPair}><Text style={styles.metaLabel}>証明書番号</Text><Text style={styles.metaValue}>{data.certificateNumber}</Text></View>
-          <View style={styles.metaPair}><Text style={styles.metaLabel}>発行日</Text><Text style={styles.metaValue}>{data.issueDate}</Text></View>
-        </View>
-
-        <Text style={styles.statement}>下記車両に対し、記載の施工を実施したことを証明します。</Text>
-
-        <View style={styles.grid}>
-          <View style={styles.panel}>
-            <Text style={styles.panelTitle}>01  CUSTOMER / お客様</Text>
-            <Text style={styles.principal}>{data.customer.name} {data.customer.honorific}</Text>
-          </View>
-          <View style={styles.panel}>
-            <Text style={styles.panelTitle}>02  VEHICLE / 施工車両</Text>
-            <Text style={styles.principal}>{data.vehicle.name}</Text>
-            <DetailRow label="メーカー" value={data.vehicle.maker} />
-            <DetailRow label="モデル" value={data.vehicle.model} />
-            <DetailRow label="年式" value={data.vehicle.year} />
-            <DetailRow label="グレード" value={data.vehicle.grade} />
-            <DetailRow label="車台番号" value={data.vehicle.vin} />
-            <DetailRow label="登録番号" value={data.vehicle.plate} />
-            <DetailRow label="カラー" value={data.vehicle.color} />
-          </View>
-          <View style={styles.panel}>
-            <Text style={styles.panelTitle}>03  INSTALLATION / 施工情報</Text>
-            <DetailRow label="施工日" value={data.installation.appliedDate} />
-            <DetailRow label="施工担当" value={data.installation.technician} />
-          </View>
-        </View>
-
-        <View style={styles.worksHeader}>
-          <Text style={styles.worksTitle}>04  PERFORMED WORK / 施工内容</Text>
-          <Text style={styles.worksCount}>{data.items.length} items</Text>
-        </View>
-        <View style={styles.tableHeader}>
-          <Text style={[styles.tableLabel, styles.numberCol]}>NO.</Text>
-          <Text style={[styles.tableLabel, styles.categoryCol]}>CATEGORY</Text>
-          <Text style={[styles.tableLabel, styles.workCol]}>ITEM & DESCRIPTION</Text>
-        </View>
-        {data.items.map((item, index) => (
-          <View key={`${index}-${item.category}-${item.name}`} style={styles.tableRow} wrap={false}>
-            <Text style={styles.numberCol}>{String(index + 1).padStart(2, "0")}</Text>
-            <Text style={styles.categoryCol}>{item.category}</Text>
-            <View style={styles.workCol}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              {item.description ? <Text style={styles.itemDescription}>{item.description}</Text> : null}
-            </View>
-          </View>
-        ))}
-
-        <View style={styles.issuer}>
-          <Text style={styles.panelTitle}>ISSUER / 発行元</Text>
-          <Text style={styles.issuerName}>{data.issuer.displayName}</Text>
-          {data.issuer.companyName ? <Text style={styles.issuerLine}>{data.issuer.companyName}</Text> : null}
-          {issuerAddress(data) ? <Text style={styles.issuerLine}>{issuerAddress(data)}</Text> : null}
-          {issuerContact ? <Text style={styles.issuerLine}>{issuerContact}</Text> : null}
-          {data.issuer.invoiceRegistrationNumber ? <Text style={styles.issuerLine}>登録番号 {data.issuer.invoiceRegistrationNumber}</Text> : null}
-          {data.issuer.detailerRank ? <Text style={styles.issuerLine}>{data.issuer.detailerRank}</Text> : null}
-        </View>
-
-        <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>DETAILER AGENT / INSTALLATION CERTIFICATE</Text>
-          <Text style={styles.footerText}>{data.certificateNumber}</Text>
-        </View>
-      </Page>
+    <Document title={`${title} ${data.certificateNumber}`} author={data.issuer.displayName}>
+      <FrontPage data={data} logoDataUri={logoDataUri} />
+      <DocumentPage padding={PAGE}>
+        <MaintenanceHistoryPage accent={PRIMARY} />
+        <SerialFooter
+          serial={data.certificateNumber}
+          label={`GYEON DETAILER AGENT · ${data.certificateNumber}`}
+        />
+      </DocumentPage>
     </Document>
   );
 }

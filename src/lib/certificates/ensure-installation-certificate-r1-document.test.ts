@@ -67,7 +67,7 @@ test("dealer branding is canonical private bytes and default branding is vendore
   assert.equal(code.includes("fetch("), false);
 });
 
-test("renderer is byte-only, local-font and narrow non-warranty template", () => {
+test("renderer is byte-only, local-font and uses the approved service-specific certificate UI", () => {
   const renderer = stripComments(read(RENDERER));
   const template = stripComments(read(TEMPLATE));
   assert.match(renderer, /registerPdfFonts\(\)/);
@@ -77,5 +77,14 @@ test("renderer is byte-only, local-font and narrow non-warranty template", () =>
     assert.equal(template.toLowerCase().includes(forbidden.toLowerCase()), false, forbidden);
   }
   assert.match(template, /施工証明書/);
-  assert.match(template, /INSTALLATION CERTIFICATE/);
+  assert.match(template, /Certificate of Installation/);
+  assert.match(template, /MaintenanceHistoryPage/);
+  assert.match(template, /CertificateHeader/);
+  assert.match(template, /CertificateCustomerVehicle/);
+  assert.match(template, /CertificateProductSection/);
+  assert.match(template, /CertificateFooter/);
+  assert.match(template, /resolveInstallationCertificateR1Kind/);
+  assert.match(template, /SerialFooter/);
+  assert.match(template, /GYEON PPF 施工証明書/);
+  assert.match(template, /CanCoat · Certified Detailer/);
 });
