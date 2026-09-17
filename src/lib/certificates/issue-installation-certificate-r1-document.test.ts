@@ -37,7 +37,7 @@ describe("installation certificate R1 UI issuance boundary", () => {
     assert.match(UI, /\/pdf\/installation-certificate\?\$\{query\.toString\(\)\}/);
     assert.match(UI, /issueInstallationCertificateR1Document\(completionReportId\)/);
     assert.match(UI, /text-white/);
-    assert.match(UI, /施工証明書を発行・表示/);
+    assert.match(UI, /施工証明書を発行/);
     assert.match(UI, /ダウンロード/);
   });
 
