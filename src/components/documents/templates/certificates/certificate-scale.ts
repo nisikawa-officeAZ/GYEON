@@ -19,15 +19,15 @@ export type CertificateScale = number;
  * Each scale is the smallest reduction that document actually needs, measured on the rendered PDF
  * rather than guessed. Coating fits from 0.97 down; 0.95 is taken because it clears the bottom
  * margin by 33pt rather than 27pt. PPF is the dense one — it still spilled at 0.95 / 0.92 / 0.91 /
- * 0.90, first fits at 0.89 with only 22pt of clearance, and is therefore set to 0.88, which clears
- * by 30pt and leaves room for a certificate carrying an extra film row.
+ * 0.90. The generated Japanese fixture can place the closing footer on a nearly blank overflow page
+ * at 0.88 when the local CJK font metrics are used, so 0.86 is the verified cross-runtime value.
  *
  * Nothing is cut to achieve this: every warranty term, exclusion, and legal sentence renders in
  * full, and the title › heading › body › caption › footer hierarchy scales as one.
  */
 export const CERTIFICATE_FRONT_SCALE: Record<"coating" | "ppf" | "cancoat", CertificateScale> = {
   coating: 0.95,
-  ppf: 0.88,
+  ppf: 0.86,
   cancoat: 1,
 };
 

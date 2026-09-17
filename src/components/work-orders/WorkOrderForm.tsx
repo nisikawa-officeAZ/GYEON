@@ -93,7 +93,7 @@ const SELECTABLE_STATUSES: Exclude<WorkOrderStatus, "completed">[] = [
 const COMPLETABLE_STATUSES: WorkOrderStatus[] = ['scheduled', 'in_progress', 'on_hold'];
 
 const inputClass =
-  "bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors min-h-[44px]";
+  "w-full min-w-0 bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#1d4ed8] transition-colors min-h-[44px]";
 const labelClass = "text-xs font-medium text-slate-400";
 
 // Stable domain codes from the completion adapter, in operator language.
@@ -579,7 +579,10 @@ export default function WorkOrderForm({
           <div className="flex flex-col gap-2">
             <label className={labelClass}>実施した作業（1〜100件）</label>
             {completionItems.map((item, index) => (
-              <div key={index} className="grid grid-cols-1 sm:grid-cols-[1fr_1.5fr_1.5fr_auto] gap-2">
+              <div
+                key={index}
+                className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_auto]"
+              >
                 <input
                   type="text"
                   value={item.category}
@@ -605,7 +608,7 @@ export default function WorkOrderForm({
                   type="button"
                   onClick={() => removeCompletionItem(index)}
                   disabled={completionItems.length <= 1 || completing}
-                  className="px-3 py-2 text-xs text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-40"
+                  className="self-stretch whitespace-nowrap px-3 py-2 text-xs text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-40"
                   aria-label="この作業を削除"
                 >
                   削除
