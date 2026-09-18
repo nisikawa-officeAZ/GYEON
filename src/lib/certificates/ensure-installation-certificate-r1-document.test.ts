@@ -30,7 +30,8 @@ test("missing artifact renders and uploads once, immutable, then finalizes once"
   assert.equal((code.match(/renderInstallationCertificateR1DocumentPdf\(/g) ?? []).length, 1);
   assert.equal((code.match(/\.upload\(storagePath, pdfBytes/g) ?? []).length, 1);
   assert.match(code, /contentType: INSTALLATION_CERTIFICATE_R1_DOCUMENT_MIME_TYPE,[\s\S]*upsert: false/);
-  assert.equal((code.match(/"finalize_installation_certificate_r1_document_v1"/g) ?? []).length, 1);
+  assert.match(code, /profile\.finalizeRpc/);
+  assert.match(code, /p_template_version: profile\.templateVersion/);
 });
 
 test("race resolution is bounded and deletes only this attempt object", () => {
@@ -59,32 +60,34 @@ test("ambiguous finalization failure reconciles once before cleanup and never de
   assert.equal(code.slice(ambiguous, cleanup).includes("cleanupOwnObject"), false);
 });
 
-test("dealer branding is canonical private bytes and default branding is vendored", () => {
+test("dealer branding is canonical private bytes and default mode does not duplicate a shop logo", () => {
   const code = stripComments(read(ACTION));
   assert.match(code, /brandingStoragePath\(dealerId, "logo"\)/);
   assert.match(code, /storage\.from\(BRANDING_BUCKET\)\.download\(logoPath\)/);
-  assert.match(code, /public", "brand", "obsidian", "logos", "combination\.svg"/);
+  assert.match(code, /if \(snapshot\.issuer\.logoMode === "da-default"\) \{[\s\S]*return null;[\s\S]*\}/);
+  assert.equal(code.includes('"public", "brand", "obsidian", "logos", "combination.svg"'), false);
   assert.equal(code.includes("fetch("), false);
 });
 
-test("renderer is byte-only, local-font and uses the approved service-specific certificate UI", () => {
+test("renderer is byte-only, local-font and routes to the approved package v3.0.3 templates", () => {
   const renderer = stripComments(read(RENDERER));
   const template = stripComments(read(TEMPLATE));
   assert.match(renderer, /registerPdfFonts\(\)/);
   assert.match(renderer, /toInstallationCertificateR1Presentation\(snapshot\)/);
   assert.equal(renderer.includes("storage"), false);
-  for (const forbidden of ["price", "tax", "discount", "total", "warranty", "qrCode", "publicUrl", "fetch("]) {
+  for (const forbidden of ["price", "tax", "discount", "total", "qrCode", "publicUrl", "fetch("]) {
     assert.equal(template.toLowerCase().includes(forbidden.toLowerCase()), false, forbidden);
   }
-  assert.match(template, /施工証明書/);
-  assert.match(template, /Certificate of Installation/);
-  assert.match(template, /MaintenanceHistoryPage/);
-  assert.match(template, /CertificateHeader/);
-  assert.match(template, /CertificateCustomerVehicle/);
-  assert.match(template, /CertificateProductSection/);
-  assert.match(template, /CertificateFooter/);
-  assert.match(template, /resolveInstallationCertificateR1Kind/);
-  assert.match(template, /SerialFooter/);
-  assert.match(template, /GYEON PPF 施工証明書/);
-  assert.match(template, /CanCoat · Certified Detailer/);
+  assert.match(template, /CertificateDocument/);
+  assert.match(template, /mode="front"/);
+  assert.match(template, /resolveInstallationCertificateKind/);
+  assert.match(template, /approvedCoatingCertificateContent/);
+  assert.match(template, /approvedPpfCertificateContent/);
+  assert.match(template, /approvedCancoatCertificateContent/);
+  assert.equal(template.includes("__fixtures__"), false);
+  assert.match(template, /gyeonRankLogo\(rank\)/);
+  assert.match(template, /gyeonWordmark\(\)/);
+  assert.match(template, /kind === "ppf" \? "ppf-installer"/);
+  assert.equal(template.includes("MaintenanceHistoryPage"), false);
+  assert.equal(template.includes("GYEON DETAILER AGENT"), false);
 });

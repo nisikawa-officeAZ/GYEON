@@ -26,6 +26,12 @@ function pageUrl(customer: string, vehicle: string, page: number): string {
   return suffix === "" ? "/installation-certificates" : `/installation-certificates?${suffix}`;
 }
 
+const CERTIFICATE_KIND_LABELS = {
+  coating: "コーティング",
+  ppf: "PPF",
+  cancoat: "CanCoat",
+} as const;
+
 export default async function InstallationCertificatesPage({ searchParams }: Props) {
   const params = await searchParams;
   const result = await getInstallationCertificates(params);
@@ -129,6 +135,11 @@ export default async function InstallationCertificatesPage({ searchParams }: Pro
                           <span className="rounded-md bg-[#17243a] px-2 py-0.5 text-[10px] text-[#91b9ff]">
                             {item.certificateNumber}
                           </span>
+                          {item.certificateKind && (
+                            <span className="rounded-md border border-emerald-700/60 bg-emerald-900/20 px-2 py-0.5 text-[10px] text-emerald-300">
+                              {CERTIFICATE_KIND_LABELS[item.certificateKind]}
+                            </span>
+                          )}
                         </div>
                         <p className="mt-1 truncate text-sm text-[#c3cee2]">
                           {item.vehicleName}{item.plate ? ` · ${item.plate}` : ""}

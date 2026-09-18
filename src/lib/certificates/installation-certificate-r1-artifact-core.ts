@@ -4,14 +4,20 @@ import {
   INSTALLATION_CERTIFICATE_R1_DOCUMENT_BUCKET,
   INSTALLATION_CERTIFICATE_R1_DOCUMENT_MAX_BYTES,
   INSTALLATION_CERTIFICATE_R1_DOCUMENT_MIME_TYPE,
-  INSTALLATION_CERTIFICATE_R1_DOCUMENT_TEMPLATE_VERSION,
-  buildInstallationCertificateR1DocumentPath,
+  INSTALLATION_CERTIFICATE_R1_DOCUMENT_PROFILE,
+  INSTALLATION_CERTIFICATE_R2_DOCUMENT_PROFILE,
+  buildInstallationCertificateDocumentPath,
   isCanonicalUuid,
+  type InstallationCertificateDocumentProfile,
 } from "./installation-certificate-r1-document-contract";
 
-export interface InstallationCertificateR1Snapshot {
-  readonly schemaVersion: 1;
-  readonly documentClass: "installation-certificate-r1";
+export type InstallationCertificateKind = "coating" | "ppf" | "cancoat";
+export type InstallationCertificateR2DocumentClass =
+  | "installation-certificate-coating-r2"
+  | "installation-certificate-ppf-r2"
+  | "installation-certificate-cancoat-r2";
+
+interface InstallationCertificateSnapshotBase {
   readonly certificateNumber: string;
   readonly issueDate: string;
   readonly customer: { readonly name: string; readonly honorific: "様" | "御中" };
@@ -45,6 +51,21 @@ export interface InstallationCertificateR1Snapshot {
   };
 }
 
+export interface InstallationCertificateR1Snapshot extends InstallationCertificateSnapshotBase {
+  readonly schemaVersion: 1;
+  readonly documentClass: "installation-certificate-r1";
+}
+
+export interface InstallationCertificateR2Snapshot extends InstallationCertificateSnapshotBase {
+  readonly schemaVersion: 2;
+  readonly documentClass: InstallationCertificateR2DocumentClass;
+  readonly certificateKind: InstallationCertificateKind;
+}
+
+export type InstallationCertificateSnapshot =
+  | InstallationCertificateR1Snapshot
+  | InstallationCertificateR2Snapshot;
+
 export interface InstallationCertificateR1DocumentRow {
   readonly id: string;
   readonly dealer_id: string;
@@ -60,13 +81,14 @@ export interface InstallationCertificateR1DocumentRow {
 
 /** Narrow renderer input: it intentionally cannot carry money, memo, warranty, grant, QR or URL. */
 export interface InstallationCertificateR1Presentation {
+  readonly certificateKind?: InstallationCertificateKind;
   readonly certificateNumber: string;
   readonly issueDate: string;
-  readonly customer: InstallationCertificateR1Snapshot["customer"];
-  readonly vehicle: InstallationCertificateR1Snapshot["vehicle"];
-  readonly installation: InstallationCertificateR1Snapshot["installation"];
-  readonly items: InstallationCertificateR1Snapshot["items"];
-  readonly issuer: Pick<InstallationCertificateR1Snapshot["issuer"],
+  readonly customer: InstallationCertificateSnapshot["customer"];
+  readonly vehicle: InstallationCertificateSnapshot["vehicle"];
+  readonly installation: InstallationCertificateSnapshot["installation"];
+  readonly items: InstallationCertificateSnapshot["items"];
+  readonly issuer: Pick<InstallationCertificateSnapshot["issuer"],
     "displayName" | "companyName" | "postalCode" | "address" | "tel" | "email" |
     "invoiceRegistrationNumber" | "detailerRank">;
 }
@@ -85,7 +107,17 @@ export type InstallationCertificateR1ArtifactFailure =
   | "artifact_conflict"
   | "cleanup_failed";
 
-const CERTIFICATE_NUMBER_RE = /^CRT\/IN\/\d{4}\/\d{5,}$/;
+const R1_CERTIFICATE_NUMBER_RE = /^CRT\/IN\/\d{4}\/\d{5,}$/;
+const R2_CERTIFICATE_NUMBER_RE: Record<InstallationCertificateKind, RegExp> = {
+  coating: /^CRT\/CO\/\d{4}\/\d{5,}$/,
+  ppf: /^CRT\/PPF\/\d{4}\/\d{5,}$/,
+  cancoat: /^CRT\/CC\/\d{4}\/\d{5,}$/,
+};
+const R2_DOCUMENT_CLASS: Record<InstallationCertificateKind, InstallationCertificateR2DocumentClass> = {
+  coating: "installation-certificate-coating-r2",
+  ppf: "installation-certificate-ppf-r2",
+  cancoat: "installation-certificate-cancoat-r2",
+};
 const LOWER_HEX_64_RE = /^[0-9a-f]{64}$/;
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
@@ -121,14 +153,23 @@ function isIsoDate(value: unknown): value is string {
 
 export function parseInstallationCertificateR1Snapshot(
   value: unknown,
-): { readonly ok: true; readonly snapshot: InstallationCertificateR1Snapshot } | { readonly ok: false } {
-  if (!isPlainRecord(value) || !hasExactKeys(value, [
+): { readonly ok: true; readonly snapshot: InstallationCertificateSnapshot } | { readonly ok: false } {
+  if (!isPlainRecord(value)) return { ok: false };
+  const isR1 = value.schemaVersion === 1 && value.documentClass === "installation-certificate-r1";
+  const kind = value.certificateKind;
+  const isR2 = value.schemaVersion === 2 &&
+    (kind === "coating" || kind === "ppf" || kind === "cancoat") &&
+    value.documentClass === R2_DOCUMENT_CLASS[kind];
+  if ((!isR1 && !isR2) || !hasExactKeys(value, [
     "schemaVersion", "documentClass", "certificateNumber", "issueDate", "customer",
     "vehicle", "installation", "items", "issuer",
-  ])) return { ok: false };
+  ], isR2 ? ["certificateKind"] : [])) return { ok: false };
 
-  if (value.schemaVersion !== 1 || value.documentClass !== "installation-certificate-r1" ||
-      !isTrimmedText(value.certificateNumber) || !CERTIFICATE_NUMBER_RE.test(value.certificateNumber) ||
+  const certificateNumberValid = isR1
+    ? typeof value.certificateNumber === "string" && R1_CERTIFICATE_NUMBER_RE.test(value.certificateNumber)
+    : typeof value.certificateNumber === "string" && R2_CERTIFICATE_NUMBER_RE[kind as InstallationCertificateKind]
+      .test(value.certificateNumber);
+  if (!isTrimmedText(value.certificateNumber) || !certificateNumberValid ||
       !isIsoDate(value.issueDate)) return { ok: false };
 
   const customer = value.customer;
@@ -169,24 +210,26 @@ export function parseInstallationCertificateR1Snapshot(
       (issuer.logoMode !== "dealer" && issuer.logoMode !== "da-default") ||
       issuerOptional.some((key) => !isOptionalTrimmedText(issuer[key]))) return { ok: false };
 
-  return { ok: true, snapshot: value as unknown as InstallationCertificateR1Snapshot };
+  return { ok: true, snapshot: value as unknown as InstallationCertificateSnapshot };
 }
 
 export function snapshotMatchesIssuance(
-  snapshot: InstallationCertificateR1Snapshot,
+  snapshot: InstallationCertificateSnapshot,
   issuance: { document_class: unknown; source_contract_version: unknown; certificate_number: unknown; issued_on: unknown },
 ): boolean {
-  return issuance.document_class === "installation-certificate-r1" &&
-    issuance.source_contract_version === 1 &&
+  const expectedVersion = snapshot.schemaVersion;
+  return issuance.document_class === snapshot.documentClass &&
+    issuance.source_contract_version === expectedVersion &&
     issuance.certificate_number === snapshot.certificateNumber &&
     issuance.issued_on === snapshot.issueDate;
 }
 
 export function toInstallationCertificateR1Presentation(
-  snapshot: InstallationCertificateR1Snapshot,
+  snapshot: InstallationCertificateSnapshot,
 ): InstallationCertificateR1Presentation {
   const { website: _website, logoMode: _logoMode, ...safeIssuer } = snapshot.issuer;
   return {
+    ...(snapshot.schemaVersion === 2 ? { certificateKind: snapshot.certificateKind } : {}),
     certificateNumber: snapshot.certificateNumber,
     issueDate: snapshot.issueDate,
     customer: snapshot.customer,
@@ -214,8 +257,9 @@ export function validateStoredInstallationCertificateR1Artifact(
   bytes: Uint8Array,
   dealerId: string,
   issuanceId: string,
+  profile: InstallationCertificateDocumentProfile = INSTALLATION_CERTIFICATE_R1_DOCUMENT_PROFILE,
 ): boolean {
-  if (!validateStoredInstallationCertificateR1Metadata(row, dealerId, issuanceId)) return false;
+  if (!validateStoredInstallationCertificateR1Metadata(row, dealerId, issuanceId, profile)) return false;
   if (row.byte_size !== bytes.byteLength || !isCanonicalInstallationCertificateR1Pdf(bytes)) return false;
   return sha256InstallationCertificateR1Pdf(bytes) === row.sha256;
 }
@@ -224,15 +268,24 @@ export function validateStoredInstallationCertificateR1Metadata(
   row: InstallationCertificateR1DocumentRow,
   dealerId: string,
   issuanceId: string,
+  profile: InstallationCertificateDocumentProfile = INSTALLATION_CERTIFICATE_R1_DOCUMENT_PROFILE,
 ): boolean {
   if (!isCanonicalUuid(dealerId) || !isCanonicalUuid(issuanceId) || !isCanonicalUuid(row.id) ||
       row.dealer_id !== dealerId || row.issuance_id !== issuanceId || row.revision !== 1 ||
       row.storage_bucket !== INSTALLATION_CERTIFICATE_R1_DOCUMENT_BUCKET ||
-      row.storage_path !== buildInstallationCertificateR1DocumentPath(dealerId, issuanceId, row.id) ||
+      row.storage_path !== buildInstallationCertificateDocumentPath(dealerId, issuanceId, row.id, profile) ||
       row.mime_type !== INSTALLATION_CERTIFICATE_R1_DOCUMENT_MIME_TYPE ||
-      row.template_version !== INSTALLATION_CERTIFICATE_R1_DOCUMENT_TEMPLATE_VERSION ||
+      row.template_version !== profile.templateVersion ||
       !Number.isSafeInteger(row.byte_size) || row.byte_size < 1 ||
       row.byte_size > INSTALLATION_CERTIFICATE_R1_DOCUMENT_MAX_BYTES ||
       !LOWER_HEX_64_RE.test(row.sha256)) return false;
   return true;
+}
+
+export function installationCertificateDocumentProfileForSnapshot(
+  snapshot: InstallationCertificateSnapshot,
+): InstallationCertificateDocumentProfile {
+  return snapshot.schemaVersion === 2
+    ? INSTALLATION_CERTIFICATE_R2_DOCUMENT_PROFILE
+    : INSTALLATION_CERTIFICATE_R1_DOCUMENT_PROFILE;
 }
