@@ -8,14 +8,10 @@ import { VehicleDB }     from "@/lib/vehicles/vehicle-types";
 import type { DetailerRank } from "@/lib/dealer-settings/dealer-settings-types";
 import GdaOperationalListSurface, { GdaOperationalListActionButton } from "@/components/ui/GdaOperationalListSurface";
 import EstimateTable     from "@/components/estimates/EstimateTable";
-import GyeonServiceForm  from "@/components/gyeon/GyeonServiceForm";
 import WorkOrderForm     from "@/components/work-orders/WorkOrderForm";
-import CustomerVehicleOnboardingWizard from "@/components/onboarding/CustomerVehicleOnboardingWizard";
 
 type ModalState =
   | { mode: "none" }
-  | { mode: "onboarding" }
-  | { mode: "gyeon" }
   | { mode: "work-order";  estimate: EstimateDB };
 
 interface EstimatesClientProps {
@@ -54,18 +50,6 @@ export default function EstimatesClient({ estimates, customers, vehicles, defaul
         titleEn="ESTIMATES"
         action={
           <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
-            <button
-              onClick={() => setModal({ mode: "onboarding" })}
-              className="shrink-0 rounded-xl border border-[#263955] bg-[#111826]/90 px-4 py-2.5 text-sm font-semibold text-[#c3cee2] backdrop-blur-xl transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
-            >
-              顧客・車両登録
-            </button>
-            <button
-              onClick={() => setModal({ mode: "gyeon" })}
-              className="shrink-0 rounded-xl border border-[#263955] bg-[#111826]/90 px-4 py-2.5 text-sm font-semibold text-[#c3cee2] backdrop-blur-xl transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
-            >
-              GYEON見積作成
-            </button>
             <GdaOperationalListActionButton onClick={() => router.push("/estimates/new")}>
               + 新規見積
             </GdaOperationalListActionButton>
@@ -80,67 +64,9 @@ export default function EstimatesClient({ estimates, customers, vehicles, defaul
         />
       </GdaOperationalListSurface>
 
-      {/* Customer & Vehicle Onboarding Modal */}
-      {modal.mode === "onboarding" && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
-          <div
-            className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
-            onClick={closeModal}
-          />
-          <div className="relative w-full max-w-xl bg-[#1e293b] rounded-xl shadow-lg p-6 my-4">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-base font-semibold text-slate-100">顧客・車両登録</h2>
-                <p className="text-xs text-slate-500 mt-0.5">登録後に見積作成画面が開きます</p>
-              </div>
-              <button
-                onClick={closeModal}
-                className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
-              >
-                ✕
-              </button>
-            </div>
-            <CustomerVehicleOnboardingWizard
-              customers={customers}
-              onComplete={(customerId, vehicleId) => {
-                // Hand off to the full-page create editor with the just-registered
-                // customer (+ vehicle) preselected. No estimate is created until save.
-                router.push(`/estimates/new?customer_id=${customerId}${vehicleId ? `&vehicle_id=${vehicleId}` : ""}`);
-              }}
-              onCancel={closeModal}
-            />
-          </div>
-        </div>
-      )}
-
       {/* New Estimate is now a full page — see /estimates/new (+新規見積 navigates there). */}
 
       {/* Estimate Edit is now a full page — see /estimates/[id]/edit (edit action navigates there). */}
-
-      {/* GYEON Service Estimate Modal */}
-      {modal.mode === "gyeon" && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
-          <div
-            className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm"
-            onClick={closeModal}
-          />
-          <div className="relative w-full max-w-2xl bg-[#1e293b] rounded-xl shadow-lg p-6 my-4">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-base font-semibold text-slate-100">GYEON見積</h2>
-                <p className="text-xs text-slate-500 mt-0.5">施工内容見積</p>
-              </div>
-              <button
-                onClick={closeModal}
-                className="w-9 h-9 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-100 hover:bg-slate-700/50 transition-colors text-lg leading-none"
-              >
-                ✕
-              </button>
-            </div>
-            <GyeonServiceForm estimates={estimates} onCancel={closeModal} onSuccess={closeModal} />
-          </div>
-        </div>
-      )}
 
       {/* Estimate Detail is now a full page — see /estimates/[id] (row click navigates there). */}
 
