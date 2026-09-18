@@ -109,7 +109,7 @@ const gopt = (
 const TEST_CONFIG: ConfiguredPricingConfiguration = {
   ppfMethods:         [opt("full", "CFG-PPF-FULL")],
   ppfTypes:           [opt("ppf-type-a", "CFG-PPF-TYPE")],
-  installCoefficientBpByCode: { "ppf-type-a": 12_500 },
+  installCoefficientBpByCode: { "ppf-type-a": 12_500, "film-a": 10_000 },
   filmTypes:          [opt("film-a", "CFG-FILM-A")],
   maintenanceMenus:   [opt("maint-a", "CFG-MAINT-A")],
   washMenus:          [opt("wash-a", "CFG-WASH-A")],
@@ -127,6 +127,21 @@ const PPF_TEST_CATALOG = makePricingCatalog({
     frontFullPricesBySize: { SS: 80_000, S: 90_000, M: 100_000, ML: 110_000, L: 120_000, LL: 130_000, XL: 140_000 },
     fullBodyPricesBySize: { SS: 400_000, S: 450_000, M: 500_000, ML: 550_000, L: 600_000, LL: 650_000, XL: 700_000 },
     partialPartPrices: { bonnet: 40_000 },
+  },
+  windowFilmV1: {
+    contractVersion: "1.0",
+    revision: 1,
+    areas: {
+      "front-windshield": { priceYen: 30_000, durationMinutes: 60, isActive: true },
+      "front-door-glass": { priceYen: null, durationMinutes: null, isActive: false },
+      "rear-door-glass": { priceYen: null, durationMinutes: null, isActive: false },
+      "triangular-window": { priceYen: null, durationMinutes: null, isActive: false },
+      "quarter-glass": { priceYen: null, durationMinutes: null, isActive: false },
+      "rear-glass": { priceYen: null, durationMinutes: null, isActive: false },
+      sunroof: { priceYen: null, durationMinutes: null, isActive: false },
+    },
+    packages: [],
+    options: [],
   },
 });
 
@@ -1270,11 +1285,16 @@ const CATEGORY_CASES: ReadonlyArray<{
     },
   },
   {
-    name: "window", expectLabel: "ウィンドウフィルム（CFG-FILM-A）",
+    name: "window", expectLabel: "ウインドウフィルム（CFG-FILM-A）",
     edit: (d) => {
       d.serviceSelection = { selectedCategories: ["window"] };
       d.serviceConfiguration = { ...d.serviceConfiguration,
-        windowFilm: { ...d.serviceConfiguration.windowFilm, filmTypeId: "film-a", unitPriceInput: "30000" } };
+        windowFilm: {
+          ...d.serviceConfiguration.windowFilm,
+          filmTypeId: "film-a",
+          selectedAreaIds: ["front-windshield"],
+          unitPriceInput: "",
+        } };
     },
   },
   {
