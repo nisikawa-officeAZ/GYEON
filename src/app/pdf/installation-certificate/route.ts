@@ -4,6 +4,9 @@ import { buildContentDisposition } from "@/app/pdf/estimate/pdf-response-headers
 import {
   validateStoredInstallationCertificateR1Artifact,
   validateStoredInstallationCertificateR1Metadata,
+  installationCertificateDocumentProfileForSnapshot,
+  parseInstallationCertificateR1Snapshot,
+  snapshotMatchesIssuance,
   type InstallationCertificateR1DocumentRow,
 } from "@/lib/certificates/installation-certificate-r1-artifact-core";
 import {
@@ -42,11 +45,16 @@ export async function GET(req: NextRequest) {
     // RLS establishes the same-dealer pair before service-role Storage access exists.
     const { data: issuance, error: issuanceError } = await supabase
       .from("certificate_issuances")
-      .select("id, dealer_id, certificate_number")
+      .select("id, dealer_id, certificate_number, document_class, source_contract_version, snapshot, issued_on")
       .eq("id", issuanceId)
       .maybeSingle();
     if (issuanceError) return new Response("Unavailable", { status: 503 });
     if (!issuance) return new Response("Not found", { status: 404 });
+    const parsed = parseInstallationCertificateR1Snapshot(issuance.snapshot);
+    if (!parsed.ok || !snapshotMatchesIssuance(parsed.snapshot, issuance)) {
+      return new Response("Document integrity failure", { status: 500 });
+    }
+    const profile = installationCertificateDocumentProfileForSnapshot(parsed.snapshot);
 
     const { data: documentRow, error: documentError } = await supabase
       .from("certificate_documents")
@@ -59,7 +67,7 @@ export async function GET(req: NextRequest) {
     if (!documentRow) return new Response("Not stored", { status: 409 });
 
     const row = documentRow as unknown as InstallationCertificateR1DocumentRow;
-    if (!validateStoredInstallationCertificateR1Metadata(row, issuance.dealer_id, issuanceId)) {
+    if (!validateStoredInstallationCertificateR1Metadata(row, issuance.dealer_id, issuanceId, profile)) {
       return new Response("Document integrity failure", { status: 500 });
     }
     const admin = createAdminClient();
@@ -69,7 +77,13 @@ export async function GET(req: NextRequest) {
     if (storageError || !stored) return new Response("Unavailable", { status: 503 });
 
     const bytes = Buffer.from(await stored.arrayBuffer());
-    if (!validateStoredInstallationCertificateR1Artifact(row, bytes, issuance.dealer_id, issuanceId)) {
+    if (!validateStoredInstallationCertificateR1Artifact(
+      row,
+      bytes,
+      issuance.dealer_id,
+      issuanceId,
+      profile,
+    )) {
       return new Response("Document integrity failure", { status: 500 });
     }
 

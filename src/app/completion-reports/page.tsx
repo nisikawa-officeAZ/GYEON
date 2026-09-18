@@ -79,7 +79,7 @@ export default async function CompletionReportsPage() {
     return (
       <MainLayout>
         <FeatureGate feature="completion_reports">
-          <div className="max-w-lg mx-auto px-4 py-10 flex flex-col gap-6">
+          <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8">
             <PageHeader />
             <div className="flex flex-col items-center gap-3 rounded-2xl border border-[#263955] bg-[#111826]/90 p-8 text-center backdrop-blur-xl">
               <p className="text-sm font-semibold text-[#edf3fc]">ログインが必要です</p>
@@ -114,7 +114,7 @@ export default async function CompletionReportsPage() {
   return (
     <MainLayout>
       <FeatureGate feature="completion_reports">
-        <div className="max-w-lg mx-auto px-4 py-10 flex flex-col gap-6">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8">
           <PageHeader />
 
           {judged.length === 0 ? (
@@ -133,49 +133,49 @@ export default async function CompletionReportsPage() {
                   key={report.id}
                   className="flex flex-col gap-2 rounded-2xl border border-[#263955] bg-[#0d1420] p-4"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-[#edf3fc] truncate">
-                          {report.title ?? "施工完了報告書"}
-                        </p>
-                        <span
-                          className={`text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 ${
-                            STATUS_BADGE[report.status] ?? "bg-slate-700 text-slate-300"
-                          }`}
-                        >
-                          {completionReportStatusLabel(report.status)}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-[#7788a4] mt-0.5">
-                        {completionReportDisplayNo(report)}
-                        {report.report_date && ` · ${report.report_date}`}
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="break-words text-sm font-medium text-[#edf3fc]">
+                        {report.title ?? "施工完了報告書"}
                       </p>
+                      <span
+                        className={`text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 ${
+                          STATUS_BADGE[report.status] ?? "bg-slate-700 text-slate-300"
+                        }`}
+                      >
+                        {completionReportStatusLabel(report.status)}
+                      </span>
                     </div>
+                    <p className="text-[10px] text-[#7788a4] mt-0.5">
+                      {completionReportDisplayNo(report)}
+                      {report.report_date && ` · ${report.report_date}`}
+                    </p>
+                  </div>
 
-                    {/* PDF links ONLY when the shared eligibility says ready. */}
-                    {source.ready && (
-                      <div className="flex flex-wrap justify-end gap-1.5 shrink-0">
-                        <a
-                          href={`/pdf/work-report?reportId=${encodeURIComponent(report.id)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs rounded-lg border border-[#2f5db8] bg-[#1c4fd6] text-white px-3 py-1.5 transition-colors hover:bg-[#1a45bd]"
-                        >
-                          作業内容書を表示
-                        </a>
-                        <a
-                          href={`/pdf/work-report?reportId=${encodeURIComponent(report.id)}&download=1`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs rounded-lg border border-[#263955] text-[#c3cee2] px-3 py-1.5 transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
-                        >
-                          ダウンロード
-                        </a>
+                  {/* PDF links ONLY when the shared eligibility says ready. */}
+                  {source.ready && (
+                    <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                      <a
+                        href={`/pdf/work-report?reportId=${encodeURIComponent(report.id)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg border border-[#2f5db8] bg-[#1c4fd6] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[#1a45bd]"
+                      >
+                        作業内容書を表示
+                      </a>
+                      <a
+                        href={`/pdf/work-report?reportId=${encodeURIComponent(report.id)}&download=1`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg border border-[#263955] px-3 py-2 text-xs font-medium text-[#c3cee2] transition-colors hover:bg-[#1a2740] hover:text-[#edf3fc]"
+                      >
+                        ダウンロード
+                      </a>
+                      <div className="min-w-0 sm:col-span-2 xl:col-span-1">
                         <InstallationCertificateR1Actions completionReportId={report.id} />
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Exact shared reasons — never a vague "preparing" message. */}
                   {!source.ready && (

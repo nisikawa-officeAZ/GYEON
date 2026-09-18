@@ -54,8 +54,29 @@ test("valid immutable snapshot projects searchable customer and vehicle facts", 
       technician: "施工 太郎",
       hasDocument: true,
       snapshotValid: true,
+      certificateKind: null,
     },
   );
+});
+
+test("R2 kind-specific snapshot projects its canonical kind and serial", () => {
+  const r2 = {
+    ...snapshot,
+    schemaVersion: 2,
+    documentClass: "installation-certificate-ppf-r2",
+    certificateKind: "ppf",
+    certificateNumber: "CRT/PPF/2026/00001",
+  } as const;
+  const item = projectInstallationCertificateListItem({
+    id: "c7777777-7777-4777-8777-777777777777",
+    certificate_number: r2.certificateNumber,
+    issued_on: r2.issueDate,
+    issued_at: "2026-09-17T00:00:00.000Z",
+    snapshot: r2,
+  }, true);
+  assert.equal(item.snapshotValid, true);
+  assert.equal(item.certificateKind, "ppf");
+  assert.equal(item.certificateNumber, "CRT/PPF/2026/00001");
 });
 
 test("identity mismatch fails closed and suppresses PDF availability", () => {

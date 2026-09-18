@@ -159,14 +159,14 @@ export default function CompletionReportSection({ workOrderId }: CompletionRepor
   if (view.mode === "preview") {
     return (
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex flex-col gap-3">
           <button
             onClick={() => setView({ mode: "list" })}
             className="text-xs text-slate-400 hover:text-slate-100 flex items-center gap-1 transition-colors"
           >
             ← 一覧に戻る
           </button>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {/* TEMPLATE-C2-WR + GDA-1W §8: the monetary-free 作業内容書 renders
                 on demand through the authenticated route. The links appear
                 ONLY when the SHARED eligibility contract says ready; the route
@@ -177,7 +177,7 @@ export default function CompletionReportSection({ workOrderId }: CompletionRepor
                   href={`/pdf/work-report?reportId=${encodeURIComponent(view.data.report.id)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-3 py-1.5 rounded-lg transition-colors"
+                  className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg bg-[#1d4ed8] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[#1e40af]"
                 >
                   作業内容書を表示
                 </a>
@@ -185,13 +185,15 @@ export default function CompletionReportSection({ workOrderId }: CompletionRepor
                   href={`/pdf/work-report?reportId=${encodeURIComponent(view.data.report.id)}&download=1`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+                  className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg bg-slate-700 px-3 py-2 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-600"
                 >
                   作業内容書をダウンロード
                 </a>
-                <InstallationCertificateR1Actions
-                  completionReportId={view.data.report.id}
-                />
+                <div className="min-w-0 sm:col-span-2 xl:col-span-1">
+                  <InstallationCertificateR1Actions
+                    completionReportId={view.data.report.id}
+                  />
+                </div>
               </>
             ) : view.workReport === null ? (
               <p className="text-[11px] text-slate-500">出力可否を確認中...</p>
@@ -311,11 +313,11 @@ export default function CompletionReportSection({ workOrderId }: CompletionRepor
           {reports.map((r) => (
             <div
               key={r.id}
-              className="bg-[#0f172a] border border-slate-700 rounded-lg px-4 py-3 flex items-center justify-between gap-3"
+              className="flex flex-col gap-3 rounded-lg border border-slate-700 bg-[#0f172a] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-slate-100 truncate">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="break-words text-sm font-medium text-slate-100">
                     {r.title ?? "施工完了報告書"}
                   </p>
                   <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 ${STATUS_BADGE[r.status] ?? "bg-slate-700 text-slate-300"}`}>
@@ -330,18 +332,18 @@ export default function CompletionReportSection({ workOrderId }: CompletionRepor
                     ` · 版数 ${r.performed_work_version}`}
                 </p>
               </div>
-              <div className="flex gap-1.5 shrink-0">
+              <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
                 <button
                   onClick={() => handleEdit(r)}
                   disabled={pending}
-                  className="text-xs text-slate-400 hover:text-slate-100 hover:bg-slate-700 px-2 py-1 rounded transition-colors disabled:opacity-50"
+                  className="inline-flex min-h-9 flex-1 items-center justify-center whitespace-nowrap rounded px-3 py-1.5 text-xs text-slate-400 transition-colors hover:bg-slate-700 hover:text-slate-100 disabled:opacity-50 sm:flex-none"
                 >
                   修正
                 </button>
                 <button
                   onClick={() => handlePreview(r)}
                   disabled={pending}
-                  className="text-xs text-[#1d4ed8] hover:text-blue-400 font-medium px-2 py-1 transition-colors disabled:opacity-50"
+                  className="inline-flex min-h-9 flex-1 items-center justify-center whitespace-nowrap px-3 py-1.5 text-xs font-medium text-[#5f9cff] transition-colors hover:text-blue-300 disabled:opacity-50 sm:flex-none"
                 >
                   {pending ? "..." : "プレビュー"}
                 </button>
