@@ -61,6 +61,19 @@ export function buildSavedEstimatePdfPath(estimateId: unknown): string | null {
   return `/pdf?estimateId=${encodeURIComponent(estimateId as string)}`;
 }
 
+/**
+ * The authenticated PDF byte stream used only by the inline iframe.
+ *
+ * Embedding the `/pdf` application page would recursively render the DealerOS
+ * shell (sidebar, header and another preview) inside the saved-document surface.
+ * The renderer route returns the PDF itself, so the browser's PDF viewer is the
+ * only UI nested in the iframe.
+ */
+export function buildSavedEstimatePdfEmbedPath(estimateId: unknown): string | null {
+  if (!isValidEstimateId(estimateId)) return null;
+  return `/pdf/estimate?estimateId=${encodeURIComponent(estimateId as string)}`;
+}
+
 /** The saved-estimate detail page — an explicitly labelled fallback link, not issuance. */
 export function buildSavedEstimateDetailPath(estimateId: unknown): string | null {
   if (!isValidEstimateId(estimateId)) return null;
@@ -159,6 +172,7 @@ export default function SavedEstimateDocuments({ estimateId, initialPdfPreview, 
   // before it can become a URL, and the preference is accepted only as a literal
   // `true` — a truthy non-boolean is not an intent.
   const pdfPath = buildSavedEstimatePdfPath(estimateId);
+  const pdfEmbedPath = buildSavedEstimatePdfEmbedPath(estimateId);
   const detailPath = buildSavedEstimateDetailPath(estimateId);
   const [preview, setPreview] = useState<PreviewState>(
     initialPdfPreview === true ? "estimate-pdf" : "choices",
@@ -167,7 +181,7 @@ export default function SavedEstimateDocuments({ estimateId, initialPdfPreview, 
   // delivery-note link. It starts null, so the link is fail-closed until a real readback.
   const [readInvoice, setReadInvoice] = useState<SavedInvoiceSummary | null>(null);
 
-  if (pdfPath === null || detailPath === null) {
+  if (pdfPath === null || pdfEmbedPath === null || detailPath === null) {
     return (
       <div className="p-4" data-testid="saved-estimate-documents-invalid">
         <p className="text-sm text-amber-300">保存済み見積の識別子を確認できません。担当者へご連絡ください。</p>
@@ -217,7 +231,7 @@ export default function SavedEstimateDocuments({ estimateId, initialPdfPreview, 
         <div className="mt-4" data-testid="saved-estimate-pdf-preview">
           <iframe
             title="見積書PDFプレビュー"
-            src={pdfPath}
+            src={pdfEmbedPath}
             className="h-[70vh] w-full rounded-md border border-slate-700 bg-white"
             data-testid="saved-estimate-pdf-iframe"
           />

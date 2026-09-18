@@ -12,7 +12,8 @@ import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import SavedEstimateDocuments, {
-  classifySavedEstimateCompletion, buildSavedEstimatePdfPath, buildSavedEstimateDetailPath,
+  classifySavedEstimateCompletion, buildSavedEstimatePdfPath, buildSavedEstimatePdfEmbedPath,
+  buildSavedEstimateDetailPath,
   buildSavedDeliveryNotePath, SavedDeliveryNoteChoice,
   type SavedEstimateDocumentsProps,
 } from "./SavedEstimateDocuments";
@@ -29,7 +30,8 @@ const codeOf = (p: string): string =>
   readFileSync(p, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
 const UUID = "3f1a7c2e-9b44-4d61-8a0f-5c7e2d9b1a33";
-const PDF_PATH = `/pdf?estimateId=${UUID}`;
+const PDF_PAGE_PATH = `/pdf?estimateId=${UUID}`;
+const PDF_EMBED_PATH = `/pdf/estimate?estimateId=${UUID}`;
 const DETAIL_PATH = `/estimates/${UUID}`;
 
 const BAD_IDS: unknown[] = [
@@ -85,13 +87,15 @@ test("3. an unknown destination blocks — never a silent fallback to either sur
 
 // ── 4. Path helpers ─────────────────────────────────────────────────────────
 
-test("4. the PDF and detail paths use ONLY a validated id, are encoded, and match the host helpers", () => {
-  assert.equal(buildSavedEstimatePdfPath(UUID), PDF_PATH);
+test("4. the PDF page, embed stream and detail paths use ONLY a validated id and are encoded", () => {
+  assert.equal(buildSavedEstimatePdfPath(UUID), PDF_PAGE_PATH);
   assert.equal(buildSavedEstimatePdfPath(UUID), buildEstimatePdfPath(UUID), "the same existing authenticated route");
+  assert.equal(buildSavedEstimatePdfEmbedPath(UUID), PDF_EMBED_PATH);
   assert.equal(buildSavedEstimateDetailPath(UUID), DETAIL_PATH);
   assert.equal(buildSavedEstimateDetailPath(UUID), buildEstimatePath(UUID));
   for (const bad of BAD_IDS) {
     assert.equal(buildSavedEstimatePdfPath(bad), null, `pdf accepted ${String(bad)}`);
+    assert.equal(buildSavedEstimatePdfEmbedPath(bad), null, `pdf embed accepted ${String(bad)}`);
     assert.equal(buildSavedEstimateDetailPath(bad), null, `detail accepted ${String(bad)}`);
   }
 });
@@ -128,15 +132,17 @@ test("6. the 保存してPDFを開く intent opens the inline titled preview on 
   const iframe = tagOf(html, "saved-estimate-pdf-iframe");
   assert.ok(iframe.length > 0, "the inline preview rendered");
   assert.match(iframe, /title="見積書PDFプレビュー"/, "titled for accessibility");
-  assert.ok(iframe.includes(`src="${PDF_PATH}"`), "the existing authenticated /pdf route with ONLY the saved id");
+  assert.ok(iframe.includes(`src="${PDF_EMBED_PATH}"`),
+    "the iframe loads PDF bytes directly and never nests the DealerOS /pdf application page");
 
   const link = tagOf(html, "saved-estimate-pdf-new-tab");
-  assert.ok(link.includes(`href="${PDF_PATH}"`), "the new-tab fallback targets the same route");
+  assert.ok(link.includes(`href="${PDF_PAGE_PATH}"`), "the new-tab fallback retains the full PDF page");
   assert.match(link, /target="_blank"/);
   assert.match(link, /rel="noopener noreferrer"/);
 
   assert.match(tagOf(html, "saved-document-estimate-pdf"), /aria-pressed="true"/);
-  assert.deepEqual(new Set(urlsOf(html)), new Set([PDF_PATH, DETAIL_PATH]), "exactly two URLs, both from the saved id");
+  assert.deepEqual(new Set(urlsOf(html)), new Set([PDF_EMBED_PATH, PDF_PAGE_PATH, DETAIL_PATH]),
+    "the iframe stream, new-tab PDF page and detail fallback all derive only from the saved id");
   // Both intents share one surface; only the initial preview differs.
   for (const id of ["saved-document-estimate-pdf", "saved-document-delivery-note", "saved-document-invoice"]) {
     assert.ok(html.includes(`data-testid="${id}"`), `${id} is still offered`);
@@ -215,8 +221,8 @@ test("9. the surface saves nothing, navigates nowhere, reads no browser global a
   // owns its own handlers behind injected actions.
   assert.equal((code.match(/onClick=\{\(\) => setPreview\("estimate-pdf"\)\}/g) ?? []).length, 1);
   assert.equal((code.match(/onClick=/g) ?? []).length, 1, "no handler on the delivery-note control in this surface");
-  assert.equal((code.match(/encodeURIComponent\(/g) ?? []).length, 3, "every URL segment is encoded");
-  assert.equal((code.match(/isValidEstimateId\(/g) ?? []).length, 4, "classifier + all three path helpers validate");
+  assert.equal((code.match(/encodeURIComponent\(/g) ?? []).length, 4, "every URL segment is encoded");
+  assert.equal((code.match(/isValidEstimateId\(/g) ?? []).length, 5, "classifier + all four path helpers validate");
 });
 
 test("11. the delivery-note link exists ONLY for an issued+ readback with a valid persisted date", () => {
