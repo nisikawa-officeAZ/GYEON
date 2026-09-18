@@ -11,8 +11,12 @@ import {
   INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V1,
   INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V2,
   INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V3,
+  exportInventoryRuntimeSnapshot,
+  importInventoryRuntimeSnapshot,
+  type InventoryRuntimeSnapshot,
 } from "@nisikawa-officeaz/detaileros-inventory-foundation";
 import { createInventoryInMemoryStore } from "../../../../node_modules/@nisikawa-officeaz/detaileros-inventory-foundation/dist/runtime/inventoryInMemoryStore.js";
+import { buildMobileInventoryAcceptedEnvelopeRecord } from "../../../../node_modules/@nisikawa-officeaz/detaileros-inventory-foundation/dist/pure/mobileInventoryMutationEnvelope.js";
 import {
   FOUNDATION_RUNTIME_COMMANDS,
   FOUNDATION_SNAPSHOT_EXPORT_CONTRACT,
@@ -71,6 +75,53 @@ const PACKAGE_DEFAULTED_REQUIRED_SNAPSHOT_FIELDS = [
   "productCatalog",
   "csvPreviews",
 ] as const;
+
+const FOUNDATION_PACKAGE_NAME =
+  "@nisikawa-officeaz/detaileros-inventory-foundation";
+const FOUNDATION_PACKAGE_VERSION = "0.2.1";
+const FOUNDATION_PACKAGE_SHASUM =
+  "0b6e34a28bea08610f924850dda441c8f82ac4eb";
+const FOUNDATION_PACKAGE_INTEGRITY =
+  "sha512-J6kqe5Q6ERq2K/U1IEaHisvUIVfVgGVE3M31CclZYU88mreXf2hfT3prYSdHtLLGdg0YPLtmvj153QmxWhQA7Q==";
+const FOUNDATION_PACKAGE_TARBALL =
+  `https://npm.pkg.github.com/download/${FOUNDATION_PACKAGE_NAME}/` +
+  `${FOUNDATION_PACKAGE_VERSION}/${FOUNDATION_PACKAGE_SHASUM}`;
+
+test("Book pins the exact Foundation 0.2.1 registry artifact", () => {
+  const manifest = JSON.parse(readFileSync("package.json", "utf8")) as {
+    readonly dependencies?: Readonly<Record<string, string>>;
+  };
+  const lock = JSON.parse(readFileSync("package-lock.json", "utf8")) as {
+    readonly packages?: Readonly<
+      Record<
+        string,
+        {
+          readonly dependencies?: Readonly<Record<string, string>>;
+          readonly version?: string;
+          readonly resolved?: string;
+          readonly integrity?: string;
+        }
+      >
+    >;
+  };
+
+  assert.equal(
+    manifest.dependencies?.[FOUNDATION_PACKAGE_NAME],
+    FOUNDATION_PACKAGE_VERSION,
+  );
+  assert.equal(
+    lock.packages?.[""]?.dependencies?.[FOUNDATION_PACKAGE_NAME],
+    FOUNDATION_PACKAGE_VERSION,
+  );
+  assert.deepEqual(
+    lock.packages?.[`node_modules/${FOUNDATION_PACKAGE_NAME}`],
+    {
+      version: FOUNDATION_PACKAGE_VERSION,
+      resolved: FOUNDATION_PACKAGE_TARBALL,
+      integrity: FOUNDATION_PACKAGE_INTEGRITY,
+    },
+  );
+});
 
 test("the wrapper is server-only and imports only the package and D1 types", () => {
   assert.match(raw, /^import "server-only";/);
@@ -306,6 +357,113 @@ test("port.importSnapshot succeeds for valid V1, V2, and V3 carriers", async () 
       "success",
       `${snapshotContract} import must succeed`,
     );
+  }
+});
+
+test("the public 0.2.1 snapshot helpers strictly round-trip an empty mobile carrier", () => {
+  const baseline: InventoryRuntimeSnapshot =
+    createInventoryInMemoryStore().snapshot();
+  const exported = exportInventoryRuntimeSnapshot({
+    ...baseline,
+    acceptedMobileMutationEnvelopes: {},
+  });
+
+  assert.deepEqual(exported.snapshot.acceptedMobileMutationEnvelopes, {});
+  const imported = importInventoryRuntimeSnapshot(exported);
+  assert.equal(imported.ok, true);
+  if (!imported.ok) assert.fail("empty mobile carrier import must succeed");
+  assert.deepEqual(imported.snapshot.acceptedMobileMutationEnvelopes, {});
+  assert.deepEqual(exportInventoryRuntimeSnapshot(imported.snapshot), exported);
+});
+
+test("the public 0.2.1 snapshot helpers strictly round-trip a non-empty mobile carrier", () => {
+  const baseline: InventoryRuntimeSnapshot =
+    createInventoryInMemoryStore().snapshot();
+  const idempotencyKey = "44444444-4444-4444-8444-444444444444";
+  const acceptedRecord = buildMobileInventoryAcceptedEnvelopeRecord({
+    envelope: {
+      protocol: "DEALEROS_OFFICE_AZ_MOBILE_INVENTORY_MUTATION_API_V1",
+      envelopeVersion: 1,
+      kind: "mobile.inventory.mutation",
+      command: "reserve",
+      correlationId: "11111111-1111-4111-8111-111111111111",
+      requestId: "22222222-2222-4222-8222-222222222222",
+      commandId: "33333333-3333-4333-8333-333333333333",
+      idempotencyKey,
+      actorId: "55555555-5555-4555-8555-555555555555",
+      role: "OFFICE_AZ_ADMIN",
+      legalOwner: "OFFICE_AZ",
+      sessionId: "66666666-6666-4666-8666-666666666666",
+      deviceId: "77777777-7777-4777-8777-777777777777",
+      deviceManagement: "COMPANY_MANAGED",
+      connectivity: "online",
+      occurredAt: "2026-09-18T00:00:00.000Z",
+      commandFingerprint: "b".repeat(64),
+      serverAuthorityBound: true,
+      authorization: {},
+      payload: {},
+    },
+    projectedPayload: { productId: "synthetic-product" },
+    authorizationFingerprint: "a".repeat(64),
+  });
+  const acceptedMobileMutationEnvelopes = {
+    [idempotencyKey]: acceptedRecord,
+  };
+  const exported = exportInventoryRuntimeSnapshot({
+    ...baseline,
+    acceptedMobileMutationEnvelopes,
+  });
+
+  assert.deepEqual(
+    exported.snapshot.acceptedMobileMutationEnvelopes,
+    acceptedMobileMutationEnvelopes,
+  );
+  const imported = importInventoryRuntimeSnapshot(exported);
+  assert.equal(imported.ok, true);
+  if (!imported.ok) assert.fail("non-empty mobile carrier import must succeed");
+  assert.deepEqual(
+    imported.snapshot.acceptedMobileMutationEnvelopes,
+    acceptedMobileMutationEnvelopes,
+  );
+  assert.deepEqual(exportInventoryRuntimeSnapshot(imported.snapshot), exported);
+});
+
+test("an old V3 snapshot with no mobile carrier defaults to an empty carrier", () => {
+  const baseline: InventoryRuntimeSnapshot =
+    createInventoryInMemoryStore().snapshot();
+  const oldV3 = structuredClone(
+    exportInventoryRuntimeSnapshot({
+      ...baseline,
+      acceptedMobileMutationEnvelopes: {},
+    }),
+  ) as unknown as {
+    readonly contract: typeof INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V3;
+    readonly snapshot: Record<string, unknown>;
+  };
+  delete oldV3.snapshot.acceptedMobileMutationEnvelopes;
+
+  const imported = importInventoryRuntimeSnapshot(oldV3);
+  assert.equal(imported.ok, true);
+  if (!imported.ok) assert.fail("old V3 snapshot import must succeed");
+  assert.deepEqual(imported.snapshot.acceptedMobileMutationEnvelopes, {});
+});
+
+test("a present malformed mobile carrier fails closed", () => {
+  const baseline: InventoryRuntimeSnapshot =
+    createInventoryInMemoryStore().snapshot();
+  const exported = exportInventoryRuntimeSnapshot({
+    ...baseline,
+    acceptedMobileMutationEnvelopes: {},
+  });
+
+  for (const malformedCarrier of [null, [], { malformed: true }]) {
+    const malformedV3 = structuredClone(exported) as unknown as {
+      readonly contract: typeof INVENTORY_RUNTIME_SNAPSHOT_CONTRACT_V3;
+      readonly snapshot: Record<string, unknown>;
+    };
+    malformedV3.snapshot.acceptedMobileMutationEnvelopes = malformedCarrier;
+    const imported = importInventoryRuntimeSnapshot(malformedV3);
+    assert.equal(imported.ok, false);
   }
 });
 
