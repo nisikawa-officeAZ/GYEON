@@ -635,15 +635,44 @@ test("migration fails closed on owner, revision, lifecycle, and successor drift"
   );
 });
 
-test("disposable script is authored as Gate C only and never auto-runs a database", () => {
+test("disposable Gate C script structurally requires real roles, contention, and cleanup", () => {
   assert.match(script, /I_ACKNOWLEDGE_FRESH_DISPOSABLE_LOCAL_DATABASE_ONLY/);
   assert.match(script, /NON_LOOPBACK_DATABASE_FORBIDDEN/);
   assert.match(script, /20260919103125_foundation_product_mapping.sql/);
-  assert.match(script, /fresh-runtime/);
-  assert.match(script, /genuine-claim/);
-  assert.match(script, /concurrency/);
-  assert.match(script, /rollback/);
-  assert.match(script, /RLS/);
-  assert.match(script, /cleanup/);
+  assert.match(script, /MAPPING_SCHEMA_NOT_FRESH/);
+  assert.match(script, /SENTINEL_PRODUCT_NOT_FRESH/);
+  assert.doesNotMatch(script, /on conflict do nothing/i);
+  assert.match(
+    script,
+    /DATABASE_ROLES = Object\.freeze\(\["anon", "authenticated", "service_role"\]\)/,
+  );
+  assert.match(script, /set local role/);
+  assert.match(script, /request\.jwt\.claims/);
+  assert.match(script, /UNPRIVILEGED_PRIVATE_TABLE_ACCESS_ALLOWED/);
+  assert.match(script, /UNPRIVILEGED_FUNCTION_EXECUTE_ALLOWED/);
+  assert.match(script, /SERVICE_ROLE_RAW_TABLE_ACCESS_ALLOWED/);
+  assert.match(script, /SERVICE_ROLE_FUNCTION_EXECUTE_DENIED/);
+  assert.match(script, /function concurrentApplySql\(\)/);
+  assert.match(script, /apply_confirmed_mapping/);
+  assert.match(script, /'change'/);
+  assert.match(script, /'active', 2, 1/);
+  assert.match(script, /EVIDENCE_C/);
+  assert.match(
+    script,
+    /Promise\.all\(\[[\s\S]*asyncRoleQuery\("service_role", conflictStatement\)[\s\S]*asyncRoleQuery\("service_role", conflictStatement\)/,
+  );
+  assert.match(script, /\["accepted", "stale"\]/);
+  assert.match(script, /CONCURRENCY_REVISION_NOT_EXACTLY_ONE/);
+  assert.match(script, /CONCURRENCY_EVENT_NOT_EXACTLY_ONE/);
+  assert.doesNotMatch(script, /asyncQuery\("select 1"\)/);
+  assert.match(script, /drop schema if exists foundation_product_mapping_private cascade/);
+  assert.match(script, /delete from public\.gyeon_products/);
+  assert.match(script, /CLEANUP_LEFT_MAPPING_SCHEMA/);
+  assert.match(script, /CLEANUP_LEFT_SENTINEL_PRODUCT/);
+  assert.match(script, /INV001_P24_D3B_GATE_C_DISPOSABLE_EVIDENCE_V1/);
+  assert.match(script, /migration_sha256/);
+  assert.match(script, /target: "loopback_disposable_only"/);
+  assert.match(script, /cleanup: cleanupOutcome/);
+  assert.match(script, /secrets_emitted: false/);
   assert.doesNotMatch(script, /docker|colima/i);
 });

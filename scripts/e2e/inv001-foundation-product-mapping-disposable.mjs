@@ -28,7 +28,20 @@ const databaseUrl = process.env.INV001_FOUNDATION_DISPOSABLE_DATABASE_URL;
 const applyAck = process.env.INV001_FOUNDATION_DISPOSABLE_APPLY_ACK;
 
 function stop(message) {
-  process.stderr.write(`BLOCKED=${message}\n`);
+  process.stderr.write(
+    JSON.stringify({
+      marker: "INV001_P24_D3B_GATE_C_DISPOSABLE_EVIDENCE_V1",
+      status: "BLOCKED",
+      error_code: message,
+      cleanup: {
+        schemaDropped: false,
+        sentinelDeleted: false,
+        schemaAbsent: null,
+        sentinelAbsent: null,
+      },
+      secrets_emitted: false,
+    }) + "\n",
+  );
   process.exit(1);
 }
 
@@ -87,6 +100,9 @@ function psql(args, { expectFailure = false } = {}) {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   });
+  if (result.error != null || result.status == null) {
+    throw new Error("PSQL_EXECUTION_FAILED");
+  }
   if (expectFailure) {
     if (result.status === 0) throw new Error("EXPECTED_DATABASE_DENIAL_DID_NOT_OCCUR");
     return "DENIED";
@@ -106,7 +122,10 @@ function assert(condition, code) {
 const FOUNDATION_PRODUCT_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const SUCCESSOR_FOUNDATION_PRODUCT_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab";
 const BOOK_PRODUCT_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+const SENTINEL_SKU = "INV001-D3B-GATE-C-SENTINEL";
 const EVIDENCE_B = "b".repeat(64);
+const EVIDENCE_C = "c".repeat(64);
+const DATABASE_ROLES = Object.freeze(["anon", "authenticated", "service_role"]);
 
 function applyConfirmedMapping({
   owner = "OFFICE_AZ",
@@ -128,6 +147,21 @@ function applyConfirmedMapping({
   `);
 }
 
+function concurrentApplySql() {
+  return (
+    "select foundation_product_mapping_private.apply_confirmed_mapping(" +
+    "'change', '" +
+    FOUNDATION_PRODUCT_ID +
+    "', '" +
+    BOOK_PRODUCT_ID +
+    "'::uuid, 'OFFICE_AZ', 'active', 2, 1, " +
+    "'gate-c-concurrency-user', 'gate-c-dealer', 'server_resolved', " +
+    "'OFFICE_AZ_ADMIN', 'gate-c-concurrency-request', '" +
+    EVIDENCE_C +
+    "', '{}'::jsonb, null)->>'tag'"
+  );
+}
+
 function recordMappingEvent({
   eventKind,
   lifecycle,
@@ -147,16 +181,73 @@ function recordMappingEvent({
   `);
 }
 
-function asyncQuery(statement) {
+function serviceRoleCandidateSql() {
+  return (
+    "select foundation_product_mapping_private.record_mapping_event(" +
+    "'candidate', '" +
+    FOUNDATION_PRODUCT_ID +
+    "', '" +
+    BOOK_PRODUCT_ID +
+    "'::uuid, 'OFFICE_AZ', 'active', 1, 0, " +
+    "'gate-c-role-user', 'gate-c-dealer', 'server_resolved', " +
+    "'OFFICE_AZ_ADMIN', 'gate-c-role-request', '" +
+    EVIDENCE_B +
+    "', '{}'::jsonb, null)->>'tag'"
+  );
+}
+
+function roleQuery(role, statement, { expectFailure = false, claims = null } = {}) {
+  assert(DATABASE_ROLES.includes(role), "UNSUPPORTED_TEST_ROLE");
+  const claimStatement =
+    claims == null
+      ? ""
+      : "set local \"request.jwt.claims\" = '" +
+        JSON.stringify(claims).replaceAll("'", "''") +
+        "';";
+  return psql(
+    [
+      "-A",
+      "-t",
+      "-q",
+      "-c",
+      "begin; set local role " +
+        role +
+        "; " +
+        claimStatement +
+        " " +
+        statement +
+        "; rollback;",
+    ],
+    { expectFailure },
+  );
+}
+
+function asyncRoleQuery(role, statement) {
+  assert(DATABASE_ROLES.includes(role), "UNSUPPORTED_TEST_ROLE");
   return new Promise((resolve, reject) => {
-    const child = spawn("psql", ["-X", "-v", "ON_ERROR_STOP=1", ...connectionArgs, "-A", "-t", "-q", "-c", statement], {
-      env: pgEnvironment,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
+    const child = spawn(
+      "psql",
+      [
+        "-X",
+        "-v",
+        "ON_ERROR_STOP=1",
+        ...connectionArgs,
+        "-A",
+        "-t",
+        "-q",
+        "-c",
+        "begin; set local role " + role + "; " + statement + "; commit;",
+      ],
+      {
+        env: pgEnvironment,
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
     let stdout = "";
     child.stdout.on("data", (chunk) => {
       stdout += chunk;
     });
+    child.on("error", () => reject(new Error("CONCURRENCY_PROCESS_FAILED")));
     child.on("close", (status) => {
       if (status !== 0) reject(new Error("CONCURRENCY_QUERY_FAILED"));
       else resolve(stdout.trim());
@@ -169,12 +260,100 @@ function applyMigration() {
   psql(["-c", sql]);
 }
 
-function cleanup() {
-  query("drop schema if exists foundation_product_mapping_private cascade");
+let ownsMappingSchema = false;
+let ownsSentinelProduct = false;
+
+function cleanupOwnedResources() {
+  let schemaDropped = !ownsMappingSchema;
+  let sentinelDeleted = !ownsSentinelProduct;
+
+  if (ownsMappingSchema) {
+    try {
+      query("drop schema if exists foundation_product_mapping_private cascade");
+      schemaDropped = true;
+    } catch {
+      schemaDropped = false;
+    }
+  }
+  if (ownsSentinelProduct) {
+    try {
+      query(
+        "delete from public.gyeon_products where id = '" +
+          BOOK_PRODUCT_ID +
+          "'::uuid and sku = '" +
+          SENTINEL_SKU +
+          "'",
+      );
+      sentinelDeleted = true;
+    } catch {
+      sentinelDeleted = false;
+    }
+  }
+
+  let schemaAbsent = false;
+  let sentinelAbsent = false;
+  try {
+    schemaAbsent =
+      query(
+        "select count(*) from pg_namespace where nspname = " +
+          "'foundation_product_mapping_private'",
+      ) === "0";
+  } catch {
+    schemaAbsent = false;
+  }
+  try {
+    sentinelAbsent =
+      query(
+        "select count(*) from public.gyeon_products where id = '" +
+          BOOK_PRODUCT_ID +
+          "'::uuid or sku = '" +
+          SENTINEL_SKU +
+          "'",
+      ) === "0";
+  } catch {
+    sentinelAbsent = false;
+  }
+
+  return Object.freeze({
+    schemaDropped,
+    sentinelDeleted,
+    schemaAbsent,
+    sentinelAbsent,
+  });
+}
+
+function fixedErrorCode(error) {
+  const message = error instanceof Error ? error.message : "UNKNOWN_FAILURE";
+  return /^[A-Z0-9_]+$/.test(message) ? message : "UNCLASSIFIED_GATE_C_FAILURE";
 }
 
 try {
   // fresh-runtime
+  const databaseVersion = query("show server_version");
+  assert(
+    query(
+      "select count(*) from pg_roles where rolname in ('anon', 'authenticated', 'service_role')",
+    ) === "3",
+    "REQUIRED_SUPABASE_ROLES_MISSING",
+  );
+  assert(
+    query(
+      "select count(*) from pg_namespace where nspname = " +
+        "'foundation_product_mapping_private'",
+    ) === "0",
+    "MAPPING_SCHEMA_NOT_FRESH",
+  );
+  assert(
+    query(
+      "select count(*) from public.gyeon_products where id = '" +
+        BOOK_PRODUCT_ID +
+        "'::uuid or sku = '" +
+        SENTINEL_SKU +
+        "'",
+    ) === "0",
+    "SENTINEL_PRODUCT_NOT_FRESH",
+  );
+  ownsMappingSchema = true;
   applyMigration();
   assert(
     query("select extname from pg_extension where extname = 'plpgsql' limit 1").length >= 0,
@@ -200,10 +379,50 @@ try {
     "RAW_TABLE_POLICY_PRESENT",
   );
 
-  // B1-R1 owner/revision/lifecycle/successor rollback matrix for the later Gate C.
-  query(`insert into public.gyeon_products (id, sku, product_name)
-    values ('${BOOK_PRODUCT_ID}', 'INV001-D3B-GATE-C', 'INV001 D3B Gate C')
-    on conflict (id) do nothing`);
+  // Harness-owned sentinel. Existing rows are never reused.
+  ownsSentinelProduct = true;
+  query(
+    "insert into public.gyeon_products (id, sku, product_name) values ('" +
+      BOOK_PRODUCT_ID +
+      "'::uuid, '" +
+      SENTINEL_SKU +
+      "', 'INV001 D3B Gate C Sentinel')",
+  );
+
+  // Actual Supabase database roles run in separate psql sessions.
+  const directPrivateRead =
+    "select count(*) from foundation_product_mapping_private.current_mappings";
+  for (const role of ["anon", "authenticated"]) {
+    assert(
+      roleQuery(role, directPrivateRead, { expectFailure: true }) === "DENIED",
+      "UNPRIVILEGED_PRIVATE_TABLE_ACCESS_ALLOWED",
+    );
+    assert(
+      roleQuery(role, serviceRoleCandidateSql(), { expectFailure: true }) === "DENIED",
+      "UNPRIVILEGED_FUNCTION_EXECUTE_ALLOWED",
+    );
+  }
+  assert(
+    roleQuery("service_role", directPrivateRead, { expectFailure: true }) === "DENIED",
+    "SERVICE_ROLE_RAW_TABLE_ACCESS_ALLOWED",
+  );
+  assert(
+    roleQuery("service_role", serviceRoleCandidateSql()) === "recorded",
+    "SERVICE_ROLE_FUNCTION_EXECUTE_DENIED",
+  );
+  for (const role of ["anon", "authenticated"]) {
+    assert(
+      roleQuery(role, directPrivateRead, {
+        expectFailure: true,
+        claims: {
+          role: "service_role",
+          sub: "00000000-0000-4000-8000-000000000001",
+        },
+      }) === "DENIED",
+      "REQUEST_CLAIM_BYPASSED_DATABASE_ROLE",
+    );
+  }
+
   assert(
     applyConfirmedMapping({ eventKind: "confirm", expectedMappingRevision: 0 }) === "accepted",
     "INITIAL_MAPPING_CONFIRM_FAILED",
@@ -279,23 +498,99 @@ try {
     "CANDIDATE_OR_REJECTION_MUTATED_CURRENT_MAPPING",
   );
 
-  // concurrency + rollback of a failed confirmation
-  const conflictA = asyncQuery("select 1");
-  const conflictB = asyncQuery("select 1");
-  await Promise.all([conflictA, conflictB]);
-
-  // cleanup leaves no mapping schema
-  cleanup();
-  assert(
-    query("select count(*) from pg_namespace where nspname = 'foundation_product_mapping_private'") === "0",
-    "CLEANUP_LEFT_MAPPING_SCHEMA",
+  // Two independent service_role connections contend on the same pair/revision.
+  const concurrencyRevisionBefore = Number(
+    query(
+      "select mapping_revision from " +
+        "foundation_product_mapping_private.current_mappings where " +
+        "foundation_product_id = '" +
+        FOUNDATION_PRODUCT_ID +
+        "'",
+    ),
   );
-  process.stdout.write("GATE_C_DISPOSABLE_MATRIX=authored_not_run_in_b1\n");
+  const concurrencyEventCountBefore = Number(
+    query("select count(*) from foundation_product_mapping_private.mapping_events"),
+  );
+  const conflictStatement = concurrentApplySql();
+  const conflictResults = await Promise.all([
+    asyncRoleQuery("service_role", conflictStatement),
+    asyncRoleQuery("service_role", conflictStatement),
+  ]);
+  const concurrencyOutcomes = conflictResults.toSorted();
+  assert(
+    JSON.stringify(concurrencyOutcomes) === JSON.stringify(["accepted", "stale"]),
+    "CONCURRENCY_OUTCOME_MISMATCH",
+  );
+  const concurrencyRevisionAfter = Number(
+    query(
+      "select mapping_revision from " +
+        "foundation_product_mapping_private.current_mappings where " +
+        "foundation_product_id = '" +
+        FOUNDATION_PRODUCT_ID +
+        "'",
+    ),
+  );
+  const concurrencyEventCountAfter = Number(
+    query("select count(*) from foundation_product_mapping_private.mapping_events"),
+  );
+  assert(
+    concurrencyRevisionAfter === concurrencyRevisionBefore + 1,
+    "CONCURRENCY_REVISION_NOT_EXACTLY_ONE",
+  );
+  assert(
+    concurrencyEventCountAfter === concurrencyEventCountBefore + 1,
+    "CONCURRENCY_EVENT_NOT_EXACTLY_ONE",
+  );
+
+  const cleanupOutcome = cleanupOwnedResources();
+  assert(cleanupOutcome.schemaAbsent, "CLEANUP_LEFT_MAPPING_SCHEMA");
+  assert(cleanupOutcome.sentinelAbsent, "CLEANUP_LEFT_SENTINEL_PRODUCT");
+
+  process.stdout.write(
+    JSON.stringify({
+      marker: "INV001_P24_D3B_GATE_C_DISPOSABLE_EVIDENCE_V1",
+      status: "PASS",
+      migration_sha256: migrationSha256,
+      database: {
+        engine: "PostgreSQL",
+        version: databaseVersion,
+        target: "loopback_disposable_only",
+        supabase_roles_present: true,
+      },
+      matrix: {
+        fresh_runtime: "PASS",
+        rls_forced: "PASS",
+        raw_table_policies_absent: "PASS",
+        anon_private_access_denied: "PASS",
+        authenticated_private_access_denied: "PASS",
+        service_role_raw_table_access_denied: "PASS",
+        service_role_function_execute_allowed: "PASS",
+        request_claim_cannot_escalate_role: "PASS",
+        owner_revision_lifecycle_rollback: "PASS",
+        candidate_rejection_non_mutating: "PASS",
+      },
+      concurrency: {
+        connections: 2,
+        role: "service_role",
+        same_pair_and_expected_revision: true,
+        outcomes: concurrencyOutcomes,
+        revision_delta: concurrencyRevisionAfter - concurrencyRevisionBefore,
+        event_delta: concurrencyEventCountAfter - concurrencyEventCountBefore,
+      },
+      cleanup: cleanupOutcome,
+      secrets_emitted: false,
+    }) + "\n",
+  );
 } catch (error) {
-  try {
-    cleanup();
-  } catch {
-    // cleanup must not hide the original assertion
-  }
-  throw error;
+  const cleanupOutcome = cleanupOwnedResources();
+  process.stderr.write(
+    JSON.stringify({
+      marker: "INV001_P24_D3B_GATE_C_DISPOSABLE_EVIDENCE_V1",
+      status: "FAIL",
+      error_code: fixedErrorCode(error),
+      cleanup: cleanupOutcome,
+      secrets_emitted: false,
+    }) + "\n",
+  );
+  process.exitCode = 1;
 }
