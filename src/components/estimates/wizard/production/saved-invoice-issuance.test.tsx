@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { SavedInvoiceIssueControls } from "./SavedEstimateInvoice";
-import { createSavedInvoiceController, parseSavedInvoice, safeInvoicePdfUrl, type SavedInvoiceState, type SavedInvoiceActions } from "./saved-estimate-invoice-controller";
+import { safeInvoicePdfUrl } from "../../../../lib/invoices/invoice-pdf-url";
+import { createSavedInvoiceController, parseSavedInvoice, type SavedInvoiceState, type SavedInvoiceActions } from "./saved-estimate-invoice-controller";
 (globalThis as { React?: typeof React }).React = React;
 const eid = "e1111111-1111-4111-8111-111111111111", iid = "f1111111-1111-4111-8111-111111111111";
 const row = () => ({ id: iid, estimate_id: eid, invoice_number: "INV-1", deleted_at: null,
@@ -26,7 +27,9 @@ test("date save is separate from explicit confirmation; issue then download reus
   await h.controller.saveDeliveryDate("2026-09-14");
   assert.deepEqual(h.calls.find(c => c[0] === "save"), ["save", iid, eid, "2026-09-14", 1]);
   await h.controller.issue(false); assert.equal(h.calls.filter(c => c[0] === "issue").length, 0);
-  await h.controller.issue(true); assert.deepEqual(h.calls.find(c => c[0] === "issue"), ["issue", iid, 2]);
+  const issuedPdf = await h.controller.issue(true);
+  assert.equal(issuedPdf, "https://storage.example/invoice.pdf");
+  assert.deepEqual(h.calls.find(c => c[0] === "issue"), ["issue", iid, 2]);
   await h.controller.issue(true); await h.controller.saveDeliveryDate("2026-09-15"); await h.controller.download();
   assert.equal(h.calls.filter(c => c[0] === "issue").length, 1); assert.equal(h.calls.filter(c => c[0] === "save").length, 1);
   assert.equal(h.calls.filter(c => c[0] === "create").length, 1);
@@ -58,6 +61,19 @@ test("lost issue response reads persisted state, offers download, never retries 
   assert.match(JSON.stringify(h.last()), /発行済みです/); assert.doesNotMatch(JSON.stringify(h.last()), /private token|pdfUrl/);
   await h.controller.download(); assert.match(JSON.stringify(h.last()), /pdfUrl/);
   assert.equal(h.calls.filter(c => c[0] === "create").length, 1);
+});
+test("issued download returns only a validated HTTPS URL for direct one-click display", async () => {
+  const h = setup(); h.set({ status: "issued", delivery_date: "2026-09-14" });
+  await h.controller.run();
+  assert.equal(await h.controller.download(), "https://storage.example/invoice.pdf");
+
+  const unsafe = setup({ download: async () => ({
+    kind: "already_issued",
+    signedUrl: "javascript:alert(1)",
+  }) });
+  unsafe.set({ status: "issued", delivery_date: "2026-09-14" });
+  await unsafe.controller.run();
+  assert.equal(await unsafe.controller.download(), undefined);
 });
 test("read failure after issue holds known identity and blocks further writes until readback", async () => {
   let broken = false, issues = 0;

@@ -1,5 +1,6 @@
 import { isValidEstimateId } from "../save/wizard-idempotency-session";
 import { isValidCalendarDate } from "../../../../lib/invoices/invoice-delivery-date";
+import { safeInvoicePdfUrl } from "../../../../lib/invoices/invoice-pdf-url";
 
 /** Server route injects these actions. No dealer, price, approval or invoice ID is client-authored. */
 export type SavedInvoiceActions = {
@@ -61,14 +62,6 @@ export function parseSavedInvoice(value: unknown, invoiceId: string, estimateId:
 export const hasIssuedInvoice = (status: SavedInvoiceSummary["status"]) =>
   ["issued", "paid", "partially_paid", "overdue"].includes(status);
 
-export function safeInvoicePdfUrl(value: unknown): string | undefined {
-  if (typeof value !== "string") return undefined;
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" && !url.username && !url.password ? url.href : undefined;
-  } catch { return undefined; }
-}
-
 const UNKNOWN = "請求書の作成結果を確認できません。同じ見積から再度確認してください。見積の保存は完了しています。";
 const READ_FAILED = "請求書の番号は確認できましたが、内容を読み込めませんでした。再度確認しても新しい請求書は作りません。";
 
@@ -79,12 +72,16 @@ export function createSavedInvoiceController(estimateId: string, actions: SavedI
   let invoiceId: string | null = null;
   let snapshot: SavedInvoiceSummary | null = null;
 
-  async function operate(kind: "save" | "issue" | "download", date?: string, confirmed = false): Promise<void> {
+  async function operate(
+    kind: "save" | "issue" | "download",
+    date?: string,
+    confirmed = false,
+  ): Promise<string | undefined> {
     const before = snapshot;
-    if (pending || !before || !invoiceId) return;
-    if (kind === "save" && (!actions.saveDate || before.status !== "draft" || !isValidCalendarDate(date))) return;
-    if (kind === "issue" && (!actions.issue || before.status !== "draft" || !confirmed || !isValidCalendarDate(before.deliveryDate))) return;
-    if (kind === "download" && (!actions.download || !hasIssuedInvoice(before.status))) return;
+    if (pending || !before || !invoiceId) return undefined;
+    if (kind === "save" && (!actions.saveDate || before.status !== "draft" || !isValidCalendarDate(date))) return undefined;
+    if (kind === "issue" && (!actions.issue || before.status !== "draft" || !confirmed || !isValidCalendarDate(before.deliveryDate))) return undefined;
+    if (kind === "download" && (!actions.download || !hasIssuedInvoice(before.status))) return undefined;
     pending = true;
     snapshot = null;
     const request = generation;
@@ -97,11 +94,14 @@ export function createSavedInvoiceController(estimateId: string, actions: SavedI
           : kind === "issue" ? await actions.issue!(before.id, before.contentVersion)
             : await actions.download!(before.id);
       } catch { /* A lost response is unknown, not proof that the write failed. */ }
-      if (!current()) return;
+      if (!current()) return undefined;
       const data = await actions.read(before.id);
-      if (!current()) return;
+      if (!current()) return undefined;
       const invoice = parseSavedInvoice(data, before.id, estimateId);
-      if (!invoice) { publish({ kind: "error", message: "操作結果を確認できません。同じ請求書を再確認してください。見積の保存は完了しています。" }); return; }
+      if (!invoice) {
+        publish({ kind: "error", message: "操作結果を確認できません。同じ請求書を再確認してください。見積の保存は完了しています。" });
+        return undefined;
+      }
       snapshot = invoice;
       const result = record(outcome) && !("error" in outcome) ? outcome : null;
       const pdfUrl = result && hasIssuedInvoice(invoice.status)
@@ -121,8 +121,10 @@ export function createSavedInvoiceController(estimateId: string, actions: SavedI
           : "確定発行を確認できません。納品日・明細・権限を確認してください。内容が変更された場合は、最新内容の確認が必要です。";
       }
       publish({ kind: "ready", invoice, message, pdfUrl });
+      return pdfUrl;
     } catch {
       if (current()) publish({ kind: "error", message: "操作結果を確認できません。同じ請求書を再確認してください。見積の保存は完了しています。" });
+      return undefined;
     } finally { if (current()) pending = false; }
   }
   return {
