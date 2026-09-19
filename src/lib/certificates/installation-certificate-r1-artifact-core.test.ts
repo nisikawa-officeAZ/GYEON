@@ -10,6 +10,7 @@ import {
   validateStoredInstallationCertificateR1Artifact,
   validateStoredInstallationCertificateR1Metadata,
 } from "./installation-certificate-r1-artifact-core";
+import { INSTALLATION_CERTIFICATE_R2_DOCUMENT_PROFILE } from "./installation-certificate-r1-document-contract";
 
 const dealerId = "11111111-1111-4111-8111-111111111111";
 const issuanceId = "22222222-2222-4222-8222-222222222222";
@@ -83,6 +84,57 @@ test("snapshot must exactly match immutable issuance identity", () => {
     certificate_number: "CRT/IN/2026/99999",
     issued_on: snapshot.issueDate,
   }), false);
+});
+
+test("strict schema v2 binds kind, document class and canonical prefix", () => {
+  const r2 = {
+    ...snapshot,
+    schemaVersion: 2,
+    documentClass: "installation-certificate-coating-r2",
+    certificateKind: "coating",
+    certificateNumber: "CRT/CO/2026/00001",
+  } as const;
+  const parsed = parseInstallationCertificateR1Snapshot(r2);
+  assert.equal(parsed.ok, true);
+  if (!parsed.ok) return;
+  assert.equal(toInstallationCertificateR1Presentation(parsed.snapshot).certificateKind, "coating");
+  assert.equal(snapshotMatchesIssuance(parsed.snapshot, {
+    document_class: r2.documentClass,
+    source_contract_version: 2,
+    certificate_number: r2.certificateNumber,
+    issued_on: r2.issueDate,
+  }), true);
+  assert.equal(parseInstallationCertificateR1Snapshot({
+    ...r2,
+    certificateNumber: "CRT/IN/2026/00001",
+  }).ok, false);
+  assert.equal(parseInstallationCertificateR1Snapshot({
+    ...r2,
+    documentClass: "installation-certificate-ppf-r2",
+  }).ok, false);
+});
+
+test("R2 stored document identity uses only the R2 path and template", () => {
+  const bytes = Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF\n", "ascii");
+  const row = {
+    id: documentId,
+    dealer_id: dealerId,
+    issuance_id: issuanceId,
+    revision: 1,
+    storage_bucket: "documents",
+    storage_path: `${dealerId}/certificates/installation-r2/${issuanceId}/${documentId}.pdf`,
+    mime_type: "application/pdf",
+    byte_size: bytes.byteLength,
+    sha256: sha256InstallationCertificateR1Pdf(bytes),
+    template_version: "installation-certificate-r2-v1",
+  };
+  assert.equal(validateStoredInstallationCertificateR1Artifact(
+    row,
+    bytes,
+    dealerId,
+    issuanceId,
+    INSTALLATION_CERTIFICATE_R2_DOCUMENT_PROFILE,
+  ), true);
 });
 
 test("canonical PDF metadata, signature, size and SHA-256 are byte exact", () => {

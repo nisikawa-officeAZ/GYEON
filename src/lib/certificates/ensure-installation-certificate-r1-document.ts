@@ -1,8 +1,6 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 
 import { requireStaffCapability } from "@/lib/auth/require-staff-capability";
 import { BRANDING_BUCKET, brandingStoragePath } from "@/lib/branding/branding-types";
@@ -13,14 +11,15 @@ import { createClient } from "@/lib/supabase/server";
 import {
   INSTALLATION_CERTIFICATE_R1_DOCUMENT_BUCKET,
   INSTALLATION_CERTIFICATE_R1_DOCUMENT_MIME_TYPE,
-  INSTALLATION_CERTIFICATE_R1_DOCUMENT_TEMPLATE_VERSION,
-  buildInstallationCertificateR1DocumentPath,
+  buildInstallationCertificateDocumentPath,
   isCanonicalUuid,
-  isFinalizeInstallationCertificateR1DocumentRpcRow,
+  isFinalizeInstallationCertificateDocumentRpcRow,
   mapFinalizeInstallationCertificateR1DocumentRpcError,
+  type InstallationCertificateDocumentProfile,
 } from "./installation-certificate-r1-document-contract";
 import {
   isCanonicalInstallationCertificateR1Pdf,
+  installationCertificateDocumentProfileForSnapshot,
   parseInstallationCertificateR1Snapshot,
   sha256InstallationCertificateR1Pdf,
   snapshotMatchesIssuance,
@@ -28,7 +27,7 @@ import {
   validateStoredInstallationCertificateR1Metadata,
   type InstallationCertificateR1ArtifactFailure,
   type InstallationCertificateR1DocumentRow,
-  type InstallationCertificateR1Snapshot,
+  type InstallationCertificateSnapshot,
 } from "./installation-certificate-r1-artifact-core";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -40,7 +39,6 @@ export type EnsureInstallationCertificateR1DocumentResult =
 const DOCUMENT_SELECT =
   "id, dealer_id, issuance_id, revision, storage_bucket, storage_path, mime_type, byte_size, sha256, template_version";
 const MAX_LOGO_BYTES = 5 * 1024 * 1024;
-const DEFAULT_LOGO_PATH = ["public", "brand", "obsidian", "logos", "combination.svg"] as const;
 
 async function blobBytes(blob: Blob): Promise<Buffer> {
   return Buffer.from(await blob.arrayBuffer());
@@ -57,15 +55,14 @@ function imageDataUri(bytes: Buffer): string | null {
 async function resolveLogoDataUri(
   admin: Admin,
   dealerId: string,
-  snapshot: InstallationCertificateR1Snapshot,
+  snapshot: InstallationCertificateSnapshot,
 ): Promise<string | null> {
   if (snapshot.issuer.logoMode === "da-default") {
-    try {
-      const svg = await readFile(path.join(process.cwd(), ...DEFAULT_LOGO_PATH));
-      return `data:image/svg+xml;base64,${svg.toString("base64")}`;
-    } catch {
-      return null;
-    }
+    // The approved package already renders the GYEON wordmark in the masthead
+    // and the rank badge in the footer. Reusing the DA combination mark as the
+    // shop logo would duplicate GYEON branding, so an unconfigured dealer logo
+    // intentionally renders as the text-only issuing-studio fallback.
+    return null;
   }
 
   const { data: settings, error } = await admin
@@ -95,13 +92,14 @@ async function downloadAndVerify(
   row: InstallationCertificateR1DocumentRow,
   dealerId: string,
   issuanceId: string,
+  profile: InstallationCertificateDocumentProfile,
 ): Promise<boolean> {
-  if (!validateStoredInstallationCertificateR1Metadata(row, dealerId, issuanceId)) return false;
+  if (!validateStoredInstallationCertificateR1Metadata(row, dealerId, issuanceId, profile)) return false;
   const { data, error } = await admin.storage.from(INSTALLATION_CERTIFICATE_R1_DOCUMENT_BUCKET)
     .download(row.storage_path);
   if (error || !data) return false;
   const bytes = await blobBytes(data);
-  return validateStoredInstallationCertificateR1Artifact(row, bytes, dealerId, issuanceId);
+  return validateStoredInstallationCertificateR1Artifact(row, bytes, dealerId, issuanceId, profile);
 }
 
 async function cleanupOwnObject(admin: Admin, storagePath: string): Promise<boolean> {
@@ -115,6 +113,7 @@ async function resolveWinnerOnce(
   admin: Admin,
   dealerId: string,
   issuanceId: string,
+  profile: InstallationCertificateDocumentProfile,
 ): Promise<EnsureInstallationCertificateR1DocumentResult> {
   const { data, error } = await supabase
     .from("certificate_documents")
@@ -126,7 +125,7 @@ async function resolveWinnerOnce(
   if (error) return { kind: "persistence_error" };
   if (!data) return { kind: "artifact_conflict" };
   const row = data as unknown as InstallationCertificateR1DocumentRow;
-  if (!(await downloadAndVerify(admin, row, dealerId, issuanceId))) {
+  if (!(await downloadAndVerify(admin, row, dealerId, issuanceId, profile))) {
     return { kind: "artifact_integrity_error" };
   }
   return { kind: "ready", issuanceId, documentId: row.id };
@@ -167,21 +166,24 @@ export async function ensureInstallationCertificateR1Document(
     if (existingError) return { kind: "persistence_error" };
 
     const admin = createAdminClient();
+    const parsed = parseInstallationCertificateR1Snapshot(issuance.snapshot);
+    if (!parsed.ok || !snapshotMatchesIssuance(parsed.snapshot, issuance)) {
+      return { kind: "snapshot_invalid" };
+    }
+    const profile = installationCertificateDocumentProfileForSnapshot(parsed.snapshot);
+
     if (existing) {
       const row = existing as unknown as InstallationCertificateR1DocumentRow;
-      if (!(await downloadAndVerify(admin, row, auth.dealerId, issuanceId))) {
+      if (!(await downloadAndVerify(admin, row, auth.dealerId, issuanceId, profile))) {
         return { kind: "artifact_integrity_error" };
       }
       return { kind: "ready", issuanceId, documentId: row.id };
     }
 
-    const parsed = parseInstallationCertificateR1Snapshot(issuance.snapshot);
-    if (!parsed.ok || !snapshotMatchesIssuance(parsed.snapshot, issuance)) {
-      return { kind: "snapshot_invalid" };
-    }
-
     const logoDataUri = await resolveLogoDataUri(admin, auth.dealerId, parsed.snapshot);
-    if (!logoDataUri) return { kind: "branding_error" };
+    if (parsed.snapshot.issuer.logoMode === "dealer" && !logoDataUri) {
+      return { kind: "branding_error" };
+    }
 
     let pdfBytes: Buffer;
     try {
@@ -192,7 +194,12 @@ export async function ensureInstallationCertificateR1Document(
     if (!isCanonicalInstallationCertificateR1Pdf(pdfBytes)) return { kind: "render_error" };
 
     const documentId = randomUUID();
-    const storagePath = buildInstallationCertificateR1DocumentPath(auth.dealerId, issuanceId, documentId);
+    const storagePath = buildInstallationCertificateDocumentPath(
+      auth.dealerId,
+      issuanceId,
+      documentId,
+      profile,
+    );
     const sha256 = sha256InstallationCertificateR1Pdf(pdfBytes);
     const { error: uploadError } = await admin.storage
       .from(INSTALLATION_CERTIFICATE_R1_DOCUMENT_BUCKET)
@@ -203,7 +210,7 @@ export async function ensureInstallationCertificateR1Document(
     if (uploadError) return { kind: "storage_error" };
 
     const { data: finalized, error: finalizeError } = await admin.rpc(
-      "finalize_installation_certificate_r1_document_v1",
+      profile.finalizeRpc,
       {
         p_dealer_id: auth.dealerId,
         p_issuance_id: issuanceId,
@@ -213,7 +220,7 @@ export async function ensureInstallationCertificateR1Document(
         p_mime_type: INSTALLATION_CERTIFICATE_R1_DOCUMENT_MIME_TYPE,
         p_byte_size: pdfBytes.byteLength,
         p_sha256: sha256,
-        p_template_version: INSTALLATION_CERTIFICATE_R1_DOCUMENT_TEMPLATE_VERSION,
+        p_template_version: profile.templateVersion,
         p_actor_user_id: actorUserId,
       },
     );
@@ -228,12 +235,13 @@ export async function ensureInstallationCertificateR1Document(
           admin,
           auth.dealerId,
           issuanceId,
+          profile,
         );
         return recovered.kind === "ready" ? recovered : { kind: "persistence_error" };
       }
       if (!(await cleanupOwnObject(admin, storagePath))) return { kind: "cleanup_failed" };
       if (mapped.kind === "artifact_conflict") {
-        return resolveWinnerOnce(supabase, admin, auth.dealerId, issuanceId);
+        return resolveWinnerOnce(supabase, admin, auth.dealerId, issuanceId, profile);
       }
       if (mapped.kind === "not_found") return { kind: "not_found" };
       if (mapped.kind === "permission_denied") return { kind: "permission_denied" };
@@ -244,7 +252,7 @@ export async function ensureInstallationCertificateR1Document(
     }
 
     const finalizedRow: unknown = Array.isArray(finalized) ? finalized[0] : finalized;
-    if (!isFinalizeInstallationCertificateR1DocumentRpcRow(finalizedRow) ||
+    if (!isFinalizeInstallationCertificateDocumentRpcRow(finalizedRow, profile) ||
         finalizedRow.document_id !== documentId || finalizedRow.issuance_id !== issuanceId ||
         finalizedRow.storage_path !== storagePath || finalizedRow.byte_size !== pdfBytes.byteLength ||
         finalizedRow.sha256 !== sha256) {

@@ -23,7 +23,10 @@
 import { useCallback, useRef, useState } from "react";
 
 import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
-import type { WizardSaveIntentInvoker } from "./wizard-save-intent-types";
+import type {
+  WizardSaveIntentFailure,
+  WizardSaveIntentInvoker,
+} from "./wizard-save-intent-types";
 import {
   markWizardSessionPending, markWizardSessionFailed, markWizardSessionCompleted,
   isValidEstimateId,
@@ -100,7 +103,11 @@ export type WizardSaveAttemptDeps = {
    */
   readonly destination?: WizardSaveDestination;
   readonly onSession: (session: ValidatedWizardSession) => void;
-  readonly onOutcome: (outcome: WizardSaveOutcome, blocked?: WizardSaveBlockedReason) => void;
+  readonly onOutcome: (
+    outcome: WizardSaveOutcome,
+    blocked?: WizardSaveBlockedReason,
+    failure?: WizardSaveIntentFailure,
+  ) => void;
 };
 
 // ── The execution core ──────────────────────────────────────────────────────
@@ -179,7 +186,7 @@ export async function runWizardSaveAttempt(deps: WizardSaveAttemptDeps): Promise
         return;
       }
       deps.onSession(failed.session);
-      deps.onOutcome("failed");
+      deps.onOutcome("failed", undefined, result.failure);
       return;
     }
 
@@ -209,10 +216,21 @@ export async function runWizardSaveAttempt(deps: WizardSaveAttemptDeps): Promise
 // ── Component ───────────────────────────────────────────────────────────────
 
 const FAILURE_TEXT = "保存できませんでした。もう一度お試しください。";
+const STALE_CONFIG_TEXT =
+  "見積設定が更新されています。ブラウザでこの画面を再読み込みし、内容を確認してから保存してください。";
 const UNKNOWN_TEXT =
   "保存結果を確認できませんでした。二重登録を避けるため、同じ保存キーで再試行します。";
 const BLOCKED_TEXT =
   "保存を開始できません。この画面を閉じずに、担当者へご連絡ください。";
+
+export function presentWizardSaveFailure(failure: WizardSaveIntentFailure | null): {
+  readonly text: string;
+  readonly retryAllowed: boolean;
+} {
+  return failure === "stale-config-revision"
+    ? { text: STALE_CONFIG_TEXT, retryAllowed: false }
+    : { text: FAILURE_TEXT, retryAllowed: true };
+}
 
 export function WizardSavePanel({
   draft, binding,
@@ -228,6 +246,7 @@ export function WizardSavePanel({
       : "ready",
   );
   const [blocked, setBlocked] = useState<WizardSaveBlockedReason | null>(null);
+  const [failure, setFailure] = useState<WizardSaveIntentFailure | null>(null);
 
   /**
    * The remembered destination — a REF, not state, and deliberately so.
@@ -252,6 +271,7 @@ export function WizardSavePanel({
     if (inFlight.current) return;
     if (destination !== undefined) lastDestination.current = destination;
     setBlocked(null);
+    setFailure(null);
     void runWizardSaveAttempt({
       inFlight,
       draft,
@@ -259,7 +279,11 @@ export function WizardSavePanel({
       // Passed explicitly, from the ref just written — never re-read from state.
       destination: lastDestination.current,
       onSession: setSession,
-      onOutcome: (o, reason) => { setOutcome(o); if (reason) setBlocked(reason); },
+      onOutcome: (o, reason, nextFailure) => {
+        setOutcome(o);
+        if (reason) setBlocked(reason);
+        if (nextFailure) setFailure(nextFailure);
+      },
     });
   }, [draft, binding, session]);
 
@@ -268,6 +292,7 @@ export function WizardSavePanel({
   const recoveredPending = outcome === "unknown";
   const isFailed = outcome === "failed";
   const isCompleted = outcome === "completed";
+  const failurePresentation = presentWizardSaveFailure(failure);
   // The plain Save button exists ONLY for a genuinely fresh attempt. A recovered
   // pending or failed session gets a separate, explicitly-labelled retry control,
   // so an operator can never mistake "try again" for "save a new estimate".
@@ -305,16 +330,18 @@ export function WizardSavePanel({
 
       {isFailed && (
         <div data-testid="save-state-failed">
-          <p className="text-sm text-rose-300">{FAILURE_TEXT}</p>
-          <button
-            type="button"
-            data-testid="save-retry-same-key"
-            disabled={submitting}
-            onClick={() => attempt()}
-            className="mt-2 rounded-md border border-rose-600 px-4 py-2 text-sm text-rose-100"
-          >
-            同じ保存キーで再試行
-          </button>
+          <p className="text-sm text-rose-300">{failurePresentation.text}</p>
+          {failurePresentation.retryAllowed && (
+            <button
+              type="button"
+              data-testid="save-retry-same-key"
+              disabled={submitting}
+              onClick={() => attempt()}
+              className="mt-2 rounded-md border border-rose-600 px-4 py-2 text-sm text-rose-100"
+            >
+              同じ保存キーで再試行
+            </button>
+          )}
         </div>
       )}
 

@@ -44,6 +44,21 @@ const PC: ConfiguredPricingConfiguration = {
     { code: "go-q",  label: "数量オプション",   priceable: true,  quantityRequired: true,  minQuantity: 1, maxQuantity: 5 },
   ],
 };
+const COUPON_ID = "00000000-0000-4000-8000-000000000100";
+const COUPON_PC: ConfiguredPricingConfiguration = {
+  ...PC,
+  coupons: [{
+    couponId: COUPON_ID,
+    code: "uat-100-yen",
+    label: "本番UAT 100円引き",
+    value: { kind: "amount", amountYen: 100 },
+    combinable: true,
+    validFrom: null,
+    validTo: null,
+    isActive: true,
+    displayOrder: 1,
+  }],
+};
 
 function draftWith(
   categories: ServiceCategoryId[],
@@ -65,8 +80,9 @@ const coatingCfg = (l1: string, l2: string | null = null, l3: string | null = nu
 const maintCfg: Partial<WizardServiceConfigurationDraft> = { bodyMaintenance: { menuId: "mm1", unitPriceInput: "5000" } };
 
 function run(draft: EstimateWizardDraftV22, over: Partial<ConfigSaveMapperInput> = {}): ConfigSaveMapperResult {
-  const pricingResult = over.pricingResult ?? computeWizardPricingFromConfig(draft, PC, CATALOG, RANK);
-  return mapWizardDraftToSaveRequestFromConfig({ draft, pricingResult, pricingConfig: PC, catalog: CATALOG, shopRank: RANK, ...over });
+  const pricingConfig = over.pricingConfig ?? PC;
+  const pricingResult = over.pricingResult ?? computeWizardPricingFromConfig(draft, pricingConfig, CATALOG, RANK);
+  return mapWizardDraftToSaveRequestFromConfig({ draft, pricingResult, pricingConfig, catalog: CATALOG, shopRank: RANK, ...over });
 }
 const okReq = (r: ConfigSaveMapperResult) => { assert.equal(r.ok, true); if (!r.ok) throw new Error("unreachable"); return r.request; };
 const expectFail = (r: ConfigSaveMapperResult, reason: ConfigSaveMapperFailure) => {
@@ -359,6 +375,30 @@ test("B1.1-B2: with no coupons the coupon block stays 'none' with an empty snaps
   assert.deepEqual(req.coupon.selectedCouponIds, []);
   assert.deepEqual(req.coupon.applications, []);
   assert.equal(req.coupon.appliedAmount, 0);
+});
+
+test("B1.1-B2: a configured coupon is persisted with its immutable id, authored snapshot, and applied amount", () => {
+  const draft = draftWith(["maintenance"], maintCfg, { selectedCouponIds: [COUPON_ID] });
+  const req = okReq(run(draft, { pricingConfig: COUPON_PC }));
+
+  assert.equal(req.pricing.subtotal, 5000);
+  assert.equal(req.pricing.discountTotal, 100);
+  assert.equal(req.pricing.couponTotal, 100);
+  assert.equal(req.pricing.taxableSubtotal, 4900);
+  assert.equal(req.pricing.taxTotal, 490);
+  assert.equal(req.pricing.grandTotal, 5390);
+  assert.equal(req.coupon.status, "applied");
+  assert.equal(req.coupon.appliedAmount, 100);
+  assert.deepEqual(req.coupon.selectedCouponIds, [COUPON_ID]);
+  assert.deepEqual(req.coupon.applications, [{
+    couponId: COUPON_ID,
+    code: "uat-100-yen",
+    label: "本番UAT 100円引き",
+    discountType: "amount",
+    discountValue: 100,
+    appliedAmount: 100,
+  }]);
+  assert.equal(validateEstimateSaveRequest(req).ok, true);
 });
 
 // ── EST-WIZ-REQ-F1: navigation/save discriminator agreement ──────────────────

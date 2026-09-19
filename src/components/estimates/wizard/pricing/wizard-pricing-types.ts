@@ -2,8 +2,8 @@
 //
 // The Wizard-facing result of running the PRODUCTION pricing engine over the canonical draft.
 // Screen 7 consumes ONLY this type and never performs arithmetic. No price value here is computed
-// by the Wizard — every number originates from the production engine. Coupons are always excluded
-// (deferred); percentage discount is forwarded as intent (never converted to yen here).
+// by the Wizard — every number originates from the production engine. Configured coupon discounts
+// are included by the engine; percentage discount is forwarded as intent (never converted to yen here).
 
 import type { PricingCouponState, PricingDiscountIntent, CatalogLineRole } from "@/lib/pricing/canonical-pricing-engine";
 import type { WizardPricingCompleteness } from "./wizard-pricing-identity";
@@ -64,7 +64,7 @@ export interface WizardPricingResult {
   unresolvedItems: WizardUnresolvedItem[];    // selected priceable services that could not be priced
   subtotal:        number | null;
   discountTotal:   number | null;
-  couponTotal:     number | null; // ALWAYS 0 (coupons deferred)
+  couponTotal:     number | null; // engine-applied configured coupon amount
   taxableSubtotal: number | null;
   taxTotal:        number | null;
   grandTotal:      number | null;

@@ -4,17 +4,17 @@ import React from "react";
 import { InstallationCertificateR1Document } from "@/components/documents/templates/certificates/InstallationCertificateR1Document";
 import {
   toInstallationCertificateR1Presentation,
-  type InstallationCertificateR1Snapshot,
+  type InstallationCertificateSnapshot,
 } from "@/lib/certificates/installation-certificate-r1-artifact-core";
 import { registerPdfFonts } from "./register-fonts";
 
 /** Byte-only, offline renderer. Persistence and Storage authority live in the ensure action. */
 export async function renderInstallationCertificateR1DocumentPdf(
-  snapshot: InstallationCertificateR1Snapshot,
-  logoDataUri: string,
+  snapshot: InstallationCertificateSnapshot,
+  logoDataUri: string | null,
 ): Promise<Buffer> {
-  if (!logoDataUri.startsWith("data:image/")) {
-    throw new TypeError("installation-certificate-r1: offline logo bytes required");
+  if (logoDataUri !== null && !logoDataUri.startsWith("data:image/")) {
+    throw new TypeError("installation-certificate: offline logo bytes required");
   }
   registerPdfFonts();
   const data = toInstallationCertificateR1Presentation(snapshot);

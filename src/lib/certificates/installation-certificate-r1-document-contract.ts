@@ -2,7 +2,36 @@ export const INSTALLATION_CERTIFICATE_R1_DOCUMENT_BUCKET = "documents" as const;
 export const INSTALLATION_CERTIFICATE_R1_DOCUMENT_MIME_TYPE = "application/pdf" as const;
 export const INSTALLATION_CERTIFICATE_R1_DOCUMENT_TEMPLATE_VERSION =
   "installation-certificate-r1-v1" as const;
+export const INSTALLATION_CERTIFICATE_R2_DOCUMENT_TEMPLATE_VERSION =
+  "installation-certificate-r2-v1" as const;
 export const INSTALLATION_CERTIFICATE_R1_DOCUMENT_MAX_BYTES = 20 * 1024 * 1024;
+
+export type InstallationCertificateDocumentVariant = "r1" | "r2";
+
+export interface InstallationCertificateDocumentProfile {
+  readonly variant: InstallationCertificateDocumentVariant;
+  readonly directory: "installation-r1" | "installation-r2";
+  readonly templateVersion:
+    | typeof INSTALLATION_CERTIFICATE_R1_DOCUMENT_TEMPLATE_VERSION
+    | typeof INSTALLATION_CERTIFICATE_R2_DOCUMENT_TEMPLATE_VERSION;
+  readonly finalizeRpc:
+    | "finalize_installation_certificate_r1_document_v1"
+    | "finalize_installation_certificate_r2_document_v1";
+}
+
+export const INSTALLATION_CERTIFICATE_R1_DOCUMENT_PROFILE: InstallationCertificateDocumentProfile = {
+  variant: "r1",
+  directory: "installation-r1",
+  templateVersion: INSTALLATION_CERTIFICATE_R1_DOCUMENT_TEMPLATE_VERSION,
+  finalizeRpc: "finalize_installation_certificate_r1_document_v1",
+};
+
+export const INSTALLATION_CERTIFICATE_R2_DOCUMENT_PROFILE: InstallationCertificateDocumentProfile = {
+  variant: "r2",
+  directory: "installation-r2",
+  templateVersion: INSTALLATION_CERTIFICATE_R2_DOCUMENT_TEMPLATE_VERSION,
+  finalizeRpc: "finalize_installation_certificate_r2_document_v1",
+};
 
 const CANONICAL_UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -29,7 +58,9 @@ export interface FinalizeInstallationCertificateR1DocumentRpcRow {
   readonly mime_type: typeof INSTALLATION_CERTIFICATE_R1_DOCUMENT_MIME_TYPE;
   readonly byte_size: number;
   readonly sha256: string;
-  readonly template_version: typeof INSTALLATION_CERTIFICATE_R1_DOCUMENT_TEMPLATE_VERSION;
+  readonly template_version:
+    | typeof INSTALLATION_CERTIFICATE_R1_DOCUMENT_TEMPLATE_VERSION
+    | typeof INSTALLATION_CERTIFICATE_R2_DOCUMENT_TEMPLATE_VERSION;
   readonly generated_at: string;
   readonly outcome: "created" | "replayed";
   readonly created: boolean;
@@ -58,6 +89,31 @@ export function buildInstallationCertificateR1DocumentPath(
     throw new TypeError("canonical UUIDs are required");
   }
   return `${dealerId}/certificates/installation-r1/${issuanceId}/${documentId}.pdf`;
+}
+
+export function buildInstallationCertificateDocumentPath(
+  dealerId: string,
+  issuanceId: string,
+  documentId: string,
+  profile: InstallationCertificateDocumentProfile,
+): string {
+  if (![dealerId, issuanceId, documentId].every(isCanonicalUuid)) {
+    throw new TypeError("canonical UUIDs are required");
+  }
+  return `${dealerId}/certificates/${profile.directory}/${issuanceId}/${documentId}.pdf`;
+}
+
+export function buildInstallationCertificateR2DocumentPath(
+  dealerId: string,
+  issuanceId: string,
+  documentId: string,
+): string {
+  return buildInstallationCertificateDocumentPath(
+    dealerId,
+    issuanceId,
+    documentId,
+    INSTALLATION_CERTIFICATE_R2_DOCUMENT_PROFILE,
+  );
 }
 
 export function validateFinalizeInstallationCertificateR1DocumentCommand(
@@ -104,6 +160,34 @@ export function isFinalizeInstallationCertificateR1DocumentRpcRow(
   const pathParts = row.storage_path.split("/");
   return pathParts.length === 5 && pathParts[1] === "certificates" &&
     pathParts[2] === "installation-r1" && pathParts[3] === row.issuance_id &&
+    pathParts[4] === `${row.document_id}.pdf` && isCanonicalUuid(pathParts[0]) &&
+    ((row.outcome === "created" && row.created && !row.replayed) ||
+     (row.outcome === "replayed" && !row.created && row.replayed));
+}
+
+export function isFinalizeInstallationCertificateDocumentRpcRow(
+  value: unknown,
+  profile: InstallationCertificateDocumentProfile,
+): value is FinalizeInstallationCertificateR1DocumentRpcRow {
+  if (typeof value !== "object" || value === null) return false;
+  const row = value as Record<string, unknown>;
+  if (typeof row.document_id !== "string" || typeof row.issuance_id !== "string" ||
+      !isCanonicalUuid(row.document_id) || !isCanonicalUuid(row.issuance_id) ||
+      row.storage_bucket !== INSTALLATION_CERTIFICATE_R1_DOCUMENT_BUCKET ||
+      row.mime_type !== INSTALLATION_CERTIFICATE_R1_DOCUMENT_MIME_TYPE ||
+      row.template_version !== profile.templateVersion ||
+      typeof row.byte_size !== "number" || !Number.isSafeInteger(row.byte_size) ||
+      row.byte_size < 1 || row.byte_size > INSTALLATION_CERTIFICATE_R1_DOCUMENT_MAX_BYTES ||
+      typeof row.sha256 !== "string" || !LOWER_HEX_64_RE.test(row.sha256) ||
+      typeof row.storage_path !== "string" || typeof row.generated_at !== "string" ||
+      !Number.isFinite(Date.parse(row.generated_at)) ||
+      (row.outcome !== "created" && row.outcome !== "replayed") ||
+      typeof row.created !== "boolean" || typeof row.replayed !== "boolean") {
+    return false;
+  }
+  const pathParts = row.storage_path.split("/");
+  return pathParts.length === 5 && pathParts[1] === "certificates" &&
+    pathParts[2] === profile.directory && pathParts[3] === row.issuance_id &&
     pathParts[4] === `${row.document_id}.pdf` && isCanonicalUuid(pathParts[0]) &&
     ((row.outcome === "created" && row.created && !row.replayed) ||
      (row.outcome === "replayed" && !row.created && row.replayed));

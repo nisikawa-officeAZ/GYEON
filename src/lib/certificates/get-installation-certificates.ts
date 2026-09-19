@@ -49,7 +49,12 @@ export async function getInstallationCertificates(input: {
       .from("certificate_issuances")
       .select("id, certificate_number, issued_on, issued_at, snapshot", { count: "exact" })
       .eq("dealer_id", dealer.dealer_id)
-      .eq("document_class", "installation-certificate-r1");
+      .in("document_class", [
+        "installation-certificate-r1",
+        "installation-certificate-coating-r2",
+        "installation-certificate-ppf-r2",
+        "installation-certificate-cancoat-r2",
+      ]);
 
     if (filters.customer !== "") {
       query = query.ilike(

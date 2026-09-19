@@ -1,6 +1,7 @@
 import {
   parseInstallationCertificateR1Snapshot,
-  type InstallationCertificateR1Snapshot,
+  type InstallationCertificateKind,
+  type InstallationCertificateSnapshot,
 } from "./installation-certificate-r1-artifact-core";
 
 export const INSTALLATION_CERTIFICATE_PAGE_SIZE = 25;
@@ -26,6 +27,7 @@ export interface InstallationCertificateListItem {
   readonly technician: string;
   readonly hasDocument: boolean;
   readonly snapshotValid: boolean;
+  readonly certificateKind: InstallationCertificateKind | null;
 }
 
 export function normalizeCertificateSearch(value: unknown): string {
@@ -60,6 +62,7 @@ function invalidSnapshotItem(
     technician: "—",
     hasDocument: false,
     snapshotValid: false,
+    certificateKind: null,
   };
 }
 
@@ -69,7 +72,7 @@ export function projectInstallationCertificateListItem(
 ): InstallationCertificateListItem {
   const parsed = parseInstallationCertificateR1Snapshot(row.snapshot);
   if (!parsed.ok) return invalidSnapshotItem(row, hasDocument);
-  const snapshot: InstallationCertificateR1Snapshot = parsed.snapshot;
+  const snapshot: InstallationCertificateSnapshot = parsed.snapshot;
   if (
     snapshot.certificateNumber !== row.certificate_number ||
     snapshot.issueDate !== row.issued_on
@@ -89,5 +92,6 @@ export function projectInstallationCertificateListItem(
     technician: snapshot.installation.technician,
     hasDocument,
     snapshotValid: true,
+    certificateKind: snapshot.schemaVersion === 2 ? snapshot.certificateKind : null,
   };
 }

@@ -14,7 +14,7 @@ import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
-  runWizardSaveAttempt, WizardSavePanel,
+  presentWizardSaveFailure, runWizardSaveAttempt, WizardSavePanel,
   type WizardSaveBinding, type WizardSaveOutcome, type WizardSaveBlockedReason,
   type WizardSaveDestination,
 } from "./WizardSavePanel";
@@ -81,6 +81,7 @@ type Recorder = {
   /** R89C — the destination handed to onCompleted, in call order. */
   destinations: WizardSaveDestination[];
   outcomes: Array<[WizardSaveOutcome, WizardSaveBlockedReason | undefined]>;
+  failures: string[];
   sessions: ValidatedWizardSession[];
 };
 
@@ -100,7 +101,7 @@ function bindingFor(
 }
 
 const recorder = (): Recorder =>
-  ({ invokerCalls: [], completed: [], destinations: [], outcomes: [], sessions: [] });
+  ({ invokerCalls: [], completed: [], destinations: [], outcomes: [], failures: [], sessions: [] });
 
 function attemptDeps(
   w: World, binding: WizardSaveBinding, rec: Recorder,
@@ -112,7 +113,10 @@ function attemptDeps(
     binding,
     destination,
     onSession: (s: ValidatedWizardSession) => { rec.sessions.push(s); },
-    onOutcome: (o: WizardSaveOutcome, b?: WizardSaveBlockedReason) => { rec.outcomes.push([o, b]); },
+    onOutcome: (o: WizardSaveOutcome, b?: WizardSaveBlockedReason, failure?: string) => {
+      rec.outcomes.push([o, b]);
+      if (failure) rec.failures.push(failure);
+    },
   };
 }
 
@@ -264,7 +268,23 @@ test("7. a TYPED failure transitions pending → failed and preserves the key", 
   assert.equal(storedOf(w).status, "failed");
   assert.equal(storedOf(w).key, w.key);
   assert.deepEqual(rec.outcomes.map((o) => o[0]), ["submitting", "failed"]);
+  assert.deepEqual(rec.failures, ["persistence-failed"]);
   assert.equal(rec.completed.length, 0, "no redirect / completion");
+});
+
+test("7b. stale configuration asks for reload and never offers a futile same-mount retry", async () => {
+  const w = world();
+  const rec = recorder();
+  const stale: WizardSaveIntentResult = { ok: false, failure: "stale-config-revision" };
+
+  await runWizardSaveAttempt(attemptDeps(w, bindingFor(w, async () => stale, rec), rec));
+
+  assert.deepEqual(rec.failures, ["stale-config-revision"]);
+  assert.deepEqual(presentWizardSaveFailure("stale-config-revision"), {
+    text: "見積設定が更新されています。ブラウザでこの画面を再読み込みし、内容を確認してから保存してください。",
+    retryAllowed: false,
+  });
+  assert.equal(presentWizardSaveFailure("persistence-failed").retryAllowed, true);
 });
 
 test("8. explicit retry from FAILED reuses the same key and invokes once", async () => {

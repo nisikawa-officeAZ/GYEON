@@ -26,7 +26,7 @@ test("route has coarse missing/not-stored/read/integrity status classes", () => 
 
 test("route downloads one metadata-bound object and returns exact verified bytes privately", () => {
   assert.equal((code.match(/\.download\(row\.storage_path\)/g) ?? []).length, 1);
-  assert.match(code, /validateStoredInstallationCertificateR1Artifact\(row, bytes, issuance\.dealer_id, issuanceId\)/);
+  assert.match(code, /validateStoredInstallationCertificateR1Artifact\([\s\S]*row,[\s\S]*bytes,[\s\S]*issuance\.dealer_id,[\s\S]*issuanceId,[\s\S]*profile/);
   assert.match(code, /new Response\(new Uint8Array\(bytes\)/);
   assert.match(code, /"Content-Type": "application\/pdf"/);
   assert.match(code, /"Cache-Control": "private, no-store"/);

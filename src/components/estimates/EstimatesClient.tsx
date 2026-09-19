@@ -49,9 +49,11 @@ export default function EstimatesClient({ estimates, customers, vehicles, defaul
         titleJa="見積管理"
         titleEn="ESTIMATES"
         action={
-          <GdaOperationalListActionButton onClick={() => router.push("/estimates/new")}>
-            + 新規見積
-          </GdaOperationalListActionButton>
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
+            <GdaOperationalListActionButton onClick={() => router.push("/estimates/new")}>
+              + 新規見積
+            </GdaOperationalListActionButton>
+          </div>
         }
       >
         <EstimateTable

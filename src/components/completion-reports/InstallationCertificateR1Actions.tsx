@@ -3,24 +3,20 @@
 import { useState, useTransition } from "react";
 
 import {
-  issueInstallationCertificateR1Document,
-  type IssueInstallationCertificateR1DocumentResult,
-} from "@/lib/certificates/issue-installation-certificate-r1-document";
+  issueInstallationCertificateR2Documents,
+  type IssueInstallationCertificateR2DocumentsResult,
+  type ReadyInstallationCertificateR2,
+} from "@/lib/certificates/issue-installation-certificate-r2-documents";
 import type {
-  InstallationCertificateR1NotEligibleReason,
-} from "@/lib/certificates/installation-certificate-r1-issuance-contract";
+  InstallationCertificateR2Kind,
+  InstallationCertificateR2NotEligibleReason,
+} from "@/lib/certificates/installation-certificate-r2-issuance-contract";
 
 interface InstallationCertificateR1ActionsProps {
   completionReportId: string;
 }
 
-interface ReadyCertificate {
-  issuanceId: string;
-  certificateNumber: string;
-  issuedOn: string;
-}
-
-const NOT_ELIGIBLE_LABELS: Record<InstallationCertificateR1NotEligibleReason, string> = {
+const NOT_ELIGIBLE_LABELS: Record<InstallationCertificateR2NotEligibleReason, string> = {
   "not-canonical": "正規の完了報告書ではありません。",
   "work-order-not-completed": "作業指示が完了していません。",
   "missing-report-number": "報告書番号が未採番です。",
@@ -34,9 +30,16 @@ const NOT_ELIGIBLE_LABELS: Record<InstallationCertificateR1NotEligibleReason, st
   "missing-technician": "施工担当者が未設定です。",
   "invalid-snapshot-item": "施工内容に不正な項目があります。",
   "missing-issuer-name": "発行店舗名が未設定です。",
+  "certificate-kind-not-applicable": "証明書を発行できるコーティングまたはPPF施工がありません。",
 };
 
-function failureMessage(result: Exclude<IssueInstallationCertificateR1DocumentResult, { kind: "ready" }>): string {
+const KIND_LABELS: Record<InstallationCertificateR2Kind, string> = {
+  coating: "コーティング",
+  ppf: "PPF",
+  cancoat: "CanCoat",
+};
+
+function failureMessage(result: Exclude<IssueInstallationCertificateR2DocumentsResult, { kind: "ready" }>): string {
   switch (result.kind) {
     case "unauthenticated": return "ログイン状態を確認してください。";
     case "invalid_request": return "完了報告書の指定が正しくありません。";
@@ -74,7 +77,7 @@ export default function InstallationCertificateR1Actions({
   completionReportId,
 }: InstallationCertificateR1ActionsProps) {
   const [pending, startTransition] = useTransition();
-  const [ready, setReady] = useState<ReadyCertificate | null>(null);
+  const [ready, setReady] = useState<readonly ReadyInstallationCertificateR2[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   function handleIssue() {
@@ -91,15 +94,15 @@ export default function InstallationCertificateR1Actions({
     setError(null);
     startTransition(async () => {
       try {
-        const result = await issueInstallationCertificateR1Document(completionReportId);
+        const result = await issueInstallationCertificateR2Documents(completionReportId);
         if (result.kind !== "ready") {
           pdfWindow?.close();
           setError(failureMessage(result));
           return;
         }
 
-        setReady(result);
-        pdfWindow?.location.replace(certificateUrl(result.issuanceId));
+        setReady(result.certificates);
+        pdfWindow?.location.replace(certificateUrl(result.certificates[0].issuanceId));
       } catch {
         pdfWindow?.close();
         setError("施工証明書を発行できませんでした。時間をおいて再試行してください。");
@@ -107,30 +110,34 @@ export default function InstallationCertificateR1Actions({
     });
   }
 
-  if (ready) {
+  if (ready.length > 0) {
     return (
-      <div className="flex flex-col items-end gap-1.5" aria-live="polite">
-        <p className="text-[10px] text-emerald-300">
-          発行済み {ready.certificateNumber} · {ready.issuedOn}
-        </p>
-        <div className="flex flex-wrap justify-end gap-1.5">
-          <a
-            href={certificateUrl(ready.issuanceId)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-lg border border-emerald-500/70 bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-500"
-          >
-            施工証明書を表示
-          </a>
-          <a
-            href={certificateUrl(ready.issuanceId, true)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-lg border border-[#263955] px-3 py-1.5 text-xs font-medium text-[#c3cee2] transition-colors hover:bg-[#1a2740] hover:text-white"
-          >
-            ダウンロード
-          </a>
-        </div>
+      <div className="flex w-full flex-col gap-2" aria-live="polite">
+        {ready.map((certificate) => (
+          <div key={certificate.issuanceId} className="flex min-w-0 flex-col gap-1">
+            <p className="break-all text-[10px] text-emerald-300">
+              {KIND_LABELS[certificate.certificateKind]} 発行済み {certificate.certificateNumber} · {certificate.issuedOn}
+            </p>
+            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              <a
+                href={certificateUrl(certificate.issuanceId)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-lg border border-emerald-500/70 bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-500"
+              >
+                {KIND_LABELS[certificate.certificateKind]}証明書を表示
+              </a>
+              <a
+                href={certificateUrl(certificate.issuanceId, true)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-lg border border-[#263955] px-3 py-1.5 text-xs font-medium text-[#c3cee2] transition-colors hover:bg-[#1a2740] hover:text-white"
+              >
+                ダウンロード
+              </a>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

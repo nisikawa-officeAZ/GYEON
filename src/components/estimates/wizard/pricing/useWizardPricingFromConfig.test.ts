@@ -30,6 +30,7 @@ import type { EstimateWizardDraftV22, WizardServiceConfigurationDraft, WizardDis
 import type { ShopRank } from "../screens/step-types";
 import type { ServiceCategoryId } from "@/lib/estimates/service-categories";
 import type { ProductionPricingConfiguration } from "./wizard-manual-pricing-config";
+import type { ConfiguredPricingConfiguration } from "./wizard-pricing-input-adapter-config";
 import { buildWizardPricingInputFromConfig } from "./wizard-pricing-input-adapter-config";
 import { newEstimateWizardDraft } from "../integration/estimateToWizardDraft";
 import { buildEstimateEditorApplyPlan } from "../integration/wizardDraftToEditorPatch";
@@ -49,6 +50,21 @@ const CONFIG: ProductionPricingConfiguration = {
     { code: "go-np", label: "非課金オプション", priceable: false, quantityRequired: false, minQuantity: 1, maxQuantity: null },
     { code: "go-q",  label: "数量オプション",   priceable: true,  quantityRequired: true,  minQuantity: 1, maxQuantity: 5 },
   ],
+};
+
+const COUPON_CONFIG: ConfiguredPricingConfiguration = {
+  ...CONFIG,
+  coupons: [{
+    couponId: "00000000-0000-4000-8000-000000000100",
+    code: "uat-100-yen",
+    label: "本番UAT 100円引き",
+    value: { kind: "amount", amountYen: 100 },
+    combinable: true,
+    validFrom: null,
+    validTo: null,
+    isActive: true,
+    displayOrder: 1,
+  }],
 };
 
 function draftWith(
@@ -259,6 +275,29 @@ test("10. an unconfigured selected coupon fails closed with a visible state", ()
   assert.equal(r.couponTotal, 0, "an unknown coupon never reduces the total");
   assert.equal(r.couponState.status, "selected_not_priced", "unpriced coupon state is visible");
   assert.ok(r.errors.some((e) => e.code === "UNKNOWN_PRICING_REFERENCE"), "unknown coupon error surfaced");
+});
+
+test("10b. a configured coupon identity applies once and produces complete authoritative totals", () => {
+  const couponId = COUPON_CONFIG.coupons![0].couponId;
+  const draft = draftWith(
+    ["maintenance"],
+    { bodyMaintenance: { menuId: "mm1", unitPriceInput: "5000" } },
+    { selectedCouponIds: [couponId] },
+  );
+
+  const r = computeWizardPricingFromConfig(draft, COUPON_CONFIG, DEFAULT_PRICING_CATALOG, RANK);
+
+  assert.equal(r.status, "success");
+  assert.equal(r.completeness, "complete");
+  assert.deepEqual(r.errors, []);
+  assert.deepEqual(r.unresolvedItems, []);
+  assert.deepEqual(r.couponState, { status: "none" });
+  assert.equal(r.subtotal, 5000);
+  assert.equal(r.couponTotal, 100);
+  assert.equal(r.discountTotal, 100, "combined document discount includes the coupon exactly once");
+  assert.equal(r.taxableSubtotal, 4900);
+  assert.equal(r.taxTotal, 490);
+  assert.equal(r.grandTotal, 5390);
 });
 
 // ── 11. Malformed/missing catalog or config cannot throw and cannot fall back ─────

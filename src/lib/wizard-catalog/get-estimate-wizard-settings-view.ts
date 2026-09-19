@@ -27,11 +27,13 @@ import type { EstimateWizardSettingsViewResult } from "./estimate-wizard-setting
 
 const EDITABLE_KINDS = [
   "film_type",
+  "ppf_type_group",
   "maintenance_menu",
   "wash_menu",
   "room_cleaning_menu",
   "other_work_preset",
   "store_global_option",
+  "coupon",
 ] as const;
 
 const LOAD_FAILED_JA = "設定を読み込めませんでした。時間をおいて再度お試しください。";
@@ -70,7 +72,7 @@ export async function getEstimateWizardSettingsView(): Promise<EstimateWizardSet
     if (dealerErr) return { ok: false, reason: "load-failed", messageJa: LOAD_FAILED_JA };
     const productMode = (dealerRow?.product_mode as string | undefined) ?? "gyeon";
 
-    // Active dealer-owned catalog items across the four editable families.
+    // Active dealer-owned catalog items across every settings-authorable family.
     const { data: itemRows, error: itemErr } = await supabase
       .from("wizard_catalog_items")
       .select(
