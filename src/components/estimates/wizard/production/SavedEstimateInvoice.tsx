@@ -14,8 +14,20 @@ export function SavedInvoiceIssueControls({ invoice, actions, controller }: {
 }) {
   const [date, setDate] = useState(invoice.deliveryDate ?? "");
   const [confirmed, setConfirmed] = useState(false);
+
+  function openPdfAfter(action: () => Promise<string | undefined>): void {
+    const pdfWindow = window.open("about:blank", "_blank");
+    if (pdfWindow) pdfWindow.opener = null;
+    void action()
+      .then((pdfUrl) => {
+        if (pdfUrl) pdfWindow?.location.replace(pdfUrl);
+        else pdfWindow?.close();
+      })
+      .catch(() => pdfWindow?.close());
+  }
+
   if (hasIssuedInvoice(invoice.status)) return (
-    <button type="button" disabled={!actions?.download} onClick={() => { void controller.download(); }}
+    <button type="button" disabled={!actions?.download} onClick={() => openPdfAfter(controller.download)}
       className="mt-3 rounded-md border border-sky-600 px-4 py-2 text-sm text-slate-100 disabled:opacity-50">発行済みPDFを表示</button>
   );
   if (invoice.status !== "draft") return null;
@@ -32,7 +44,7 @@ export function SavedInvoiceIssueControls({ invoice, actions, controller }: {
       onChange={event => setConfirmed(event.target.checked)} className="mr-2" />
       上記の納品日・明細・合計金額を確認しました。確定発行後は内容を変更できません。</label>
     <button type="button" disabled={!actions?.issue || !savedDate || !confirmed}
-      onClick={() => { void controller.issue(confirmed); }}
+      onClick={() => openPdfAfter(() => controller.issue(confirmed))}
       className="rounded-md bg-sky-700 px-4 py-2 text-sm text-white disabled:opacity-50">請求書を確定発行してPDFを表示</button>
     <p className="text-xs text-slate-400">納品日の保存だけでは発行しません。確定発行でも入金処理は行いません。</p>
   </div>;

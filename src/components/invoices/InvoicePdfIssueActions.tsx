@@ -13,6 +13,7 @@
 
 import { useState, useTransition } from "react";
 import { isValidCalendarDate } from "@/lib/invoices/invoice-delivery-date";
+import { safeInvoicePdfUrl } from "@/lib/invoices/invoice-pdf-url";
 
 export type IssueSuccessKind = "issued" | "already_issued";
 
@@ -52,22 +53,40 @@ export default function InvoicePdfIssueActions({
   const hasDeliveryDate = isValidCalendarDate(deliveryDate);
 
   function run(action: "issue" | "download") {
+    // Reserve the tab while this trusted user gesture is still active. Waiting
+    // for the server action before window.open causes browsers to block it.
+    // The durable fallback link remains visible if popups are disabled.
+    const pdfWindow = window.open("about:blank", "_blank");
+    if (pdfWindow) pdfWindow.opener = null;
     setError(null);
     startTransition(async () => {
-      const mod = await import("@/lib/invoices/issue-invoice");
-      const result =
-        action === "issue"
-          ? await mod.issueInvoice(invoiceId)
-          : await mod.getIssuedInvoicePdfUrl(invoiceId);
+      try {
+        const mod = await import("@/lib/invoices/issue-invoice");
+        const result =
+          action === "issue"
+            ? await mod.issueInvoice(invoiceId)
+            : await mod.getIssuedInvoicePdfUrl(invoiceId);
 
-      if (result.kind === "issued" || result.kind === "already_issued") {
-        // The signed link survives the state change: it is set before the
-        // callback, and the callback only swaps which controls are rendered.
-        setSignedUrl(result.signedUrl);
-        if (action === "issue") onIssued?.(result.kind);
-        return;
+        if (result.kind === "issued" || result.kind === "already_issued") {
+          const pdfUrl = safeInvoicePdfUrl(result.signedUrl);
+          if (!pdfUrl) {
+            pdfWindow?.close();
+            setError("請求書PDFの安全なURLを取得できませんでした。時間をおいて再試行してください。");
+            return;
+          }
+          // The signed link survives the state change: it is set before the
+          // callback, and the callback only swaps which controls are rendered.
+          setSignedUrl(pdfUrl);
+          pdfWindow?.location.replace(pdfUrl);
+          if (action === "issue") onIssued?.(result.kind);
+          return;
+        }
+        pdfWindow?.close();
+        setError(result.message);
+      } catch {
+        pdfWindow?.close();
+        setError("請求書PDFを取得できませんでした。時間をおいて再試行してください。");
       }
-      setError(result.message);
     });
   }
 
@@ -93,7 +112,7 @@ export default function InvoicePdfIssueActions({
             disabled={pending}
             className={`${btn} bg-slate-700 hover:bg-slate-600 text-slate-200`}
           >
-            {pending ? "準備中..." : "発行済みPDFをダウンロード"}
+            {pending ? "準備中..." : "発行済みPDFを開く"}
           </button>
         )}
 
