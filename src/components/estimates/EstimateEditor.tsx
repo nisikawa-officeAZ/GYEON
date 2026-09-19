@@ -927,7 +927,16 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
               <p className="text-xs text-slate-600">明細がありません。上のサービスから追加するか「＋ 行を追加」で手入力してください。</p>
             ) : (
               <div className="overflow-x-auto -mx-1 px-1">
-                <table className="w-full min-w-[640px] text-xs">
+                <table className="w-full min-w-[640px] table-fixed text-xs">
+                  <colgroup>
+                    <col className="w-28" />
+                    <col />
+                    <col className="w-28" />
+                    <col className="w-[4.5rem]" />
+                    <col className="w-[4.5rem]" />
+                    <col className="w-24" />
+                    <col className="w-20" />
+                  </colgroup>
                   <thead>
                     <tr className="border-b border-slate-700 text-slate-500">
                       <th className="text-left pb-2 pr-2">カテゴリ</th>
@@ -936,36 +945,39 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                       <th className="text-right pb-2 pr-2">数量</th>
                       <th className="text-right pb-2 pr-2">割引%</th>
                       <th className="text-right pb-2 pr-2">小計</th>
-                      <th className="text-center pb-2 pr-2">表示順</th>
-                      <th className="pb-2" />
+                      <th className="text-center pb-2">操作</th>
                     </tr>
                   </thead>
                   <tbody>
                     {items.map((it, index) => (
                       <tr key={it.key} className="border-b border-slate-700/40 last:border-b-0">
-                        <td className="py-1.5 pr-2 text-slate-500 whitespace-nowrap">{CATEGORY_LABEL[it.category] ?? it.category}</td>
+                        <td className="py-1.5 pr-2 text-slate-500">
+                          <span className="block truncate" title={CATEGORY_LABEL[it.category] ?? it.category}>
+                            {CATEGORY_LABEL[it.category] ?? it.category}
+                          </span>
+                        </td>
                         <td className="py-1.5 pr-2">
-                          <input type="text" value={it.item_name} onChange={(e) => updateItem(it.key, { item_name: e.target.value })} className="w-40 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-slate-200" />
+                          <input type="text" value={it.item_name} onChange={(e) => updateItem(it.key, { item_name: e.target.value })} className="w-full min-w-0 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-slate-200" />
                         </td>
                         <td className="py-1.5 pr-2 text-right">
-                          <input type="number" value={it.unit_price} onChange={(e) => updateItem(it.key, { unit_price: Number(e.target.value) || 0 })} className="w-24 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-right text-slate-200" />
+                          <input type="number" value={it.unit_price} onChange={(e) => updateItem(it.key, { unit_price: Number(e.target.value) || 0 })} className="w-full min-w-0 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-right text-slate-200" />
                         </td>
                         <td className="py-1.5 pr-2 text-right">
-                          <input type="number" min={0} value={it.quantity} onChange={(e) => updateItem(it.key, { quantity: Number(e.target.value) || 0 })} className="w-16 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-right text-slate-200" />
+                          <input type="number" min={0} value={it.quantity} onChange={(e) => updateItem(it.key, { quantity: Number(e.target.value) || 0 })} className="w-full min-w-0 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-right text-slate-200" />
                         </td>
                         <td className="py-1.5 pr-2 text-right">
-                          <input type="number" min={0} max={100} value={it.discount_rate} onChange={(e) => updateItem(it.key, { discount_rate: Number(e.target.value) || 0 })} className="w-16 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-right text-slate-200" />
+                          <input type="number" min={0} max={100} value={it.discount_rate} onChange={(e) => updateItem(it.key, { discount_rate: Number(e.target.value) || 0 })} className="w-full min-w-0 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-right text-slate-200" />
                         </td>
                         <td className="py-1.5 pr-2 text-right text-slate-200 whitespace-nowrap">{formatYen(lineTotal(it.quantity, it.unit_price, it.discount_rate))}</td>
-                        <td className="py-1.5 pr-2">
-                          <div className="flex items-center justify-center gap-1">
+                        <td className="py-1.5">
+                          <div className="grid grid-cols-3 items-center gap-1">
                             <button
                               type="button"
                               aria-label={`${it.item_name || "明細"}を上へ`}
                               title="上へ移動"
                               disabled={index === 0}
                               onClick={() => moveItem(index, -1)}
-                              className="w-7 h-7 rounded border border-slate-600 text-slate-300 hover:border-blue-400 hover:text-blue-300 disabled:opacity-25 disabled:hover:border-slate-600 disabled:hover:text-slate-300"
+                              className="h-7 rounded border border-slate-600 text-slate-300 hover:border-blue-400 hover:text-blue-300 disabled:opacity-25 disabled:hover:border-slate-600 disabled:hover:text-slate-300"
                             >↑</button>
                             <button
                               type="button"
@@ -973,12 +985,16 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                               title="下へ移動"
                               disabled={index === items.length - 1}
                               onClick={() => moveItem(index, 1)}
-                              className="w-7 h-7 rounded border border-slate-600 text-slate-300 hover:border-blue-400 hover:text-blue-300 disabled:opacity-25 disabled:hover:border-slate-600 disabled:hover:text-slate-300"
+                              className="h-7 rounded border border-slate-600 text-slate-300 hover:border-blue-400 hover:text-blue-300 disabled:opacity-25 disabled:hover:border-slate-600 disabled:hover:text-slate-300"
                             >↓</button>
+                            <button
+                              type="button"
+                              aria-label={`${it.item_name || "明細"}を削除`}
+                              title="削除"
+                              onClick={() => removeItem(it.key)}
+                              className="h-7 rounded border border-transparent text-slate-500 hover:border-red-500/40 hover:text-red-400"
+                            >✕</button>
                           </div>
-                        </td>
-                        <td className="py-1.5 text-right">
-                          <button type="button" onClick={() => removeItem(it.key)} className="text-slate-500 hover:text-red-400">✕</button>
                         </td>
                       </tr>
                     ))}

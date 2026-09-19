@@ -28,11 +28,16 @@ test("first and last rows cannot move beyond the list", () => {
   assert.deepEqual(moveEditorItem(original, 1, 1).map((row) => row.key), ["a", "b"]);
 });
 
-test("editor exposes Japanese order controls and persists the array index as sort_order", () => {
+test("editor keeps compact order controls in one fixed action column and persists sort_order", () => {
   const source = readFileSync(new URL("./EstimateEditor.tsx", import.meta.url), "utf8");
-  assert.match(source, />表示順</);
+  assert.match(source, /min-w-\[640px\] table-fixed/);
+  assert.match(source, /<col className="w-20" \/>/);
+  assert.match(source, />操作<\/th>/);
+  assert.doesNotMatch(source, />表示順<\/th>/);
+  assert.match(source, /grid grid-cols-3 items-center gap-1/);
   assert.match(source, /aria-label=\{`\$\{it\.item_name \|\| "明細"\}を上へ`\}/);
   assert.match(source, /aria-label=\{`\$\{it\.item_name \|\| "明細"\}を下へ`\}/);
+  assert.match(source, /aria-label=\{`\$\{it\.item_name \|\| "明細"\}を削除`\}/);
   assert.match(source, /sort_order: idx/);
   assert.match(
     source,
