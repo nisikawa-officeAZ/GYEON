@@ -480,6 +480,13 @@ test("the dealer-bound server wrapper scopes every read to the bound tenant", ()
   assert.match(code, /dealer_id\.is\.null,dealer_id\.eq\.\$\{dealerId\}/, "catalog rows: required globals + this dealer only");
 });
 
+test("B1.1-B2: the production dealer-bound wrapper supplies the Japan business date", () => {
+  const code = codeOf(BOUND_WRAPPER_SRC);
+  assert.match(code, /Intl\.DateTimeFormat\(\s*["']en-CA["']/, "uses a deterministic ISO-style formatter");
+  assert.match(code, /timeZone:\s*["']Asia\/Tokyo["']/, "coupon validity uses the Japan business day");
+  assert.match(code, /getCalculationDate:\s*businessCalculationDate/, "threads that date into the authoritative runtime");
+});
+
 test("the arg-less server wrapper is UNCHANGED by this candidate", () => {
   const code = codeOf("src/lib/wizard-catalog/get-authoritative-wizard-runtime-config.ts");
   assert.match(code, /getDealer:\s*getCurrentDealer/, "still wires the current-dealer discovery");
@@ -532,6 +539,44 @@ test("B1.1-B2: dealer coupons project into screenConfig and pricingConfig", asyn
   assert.deepEqual(r.pricingConfig.coupons?.[0].value, { kind: "amount", amountYen: 5000 });
 });
 
+test("B1.1-B2: Step 5 exposes only coupons usable on the server business date", async () => {
+  const rows = [
+    ...globals(), ...menus(),
+    couponRow({ id: "coupon:open", code: "coupon-open", coupon_valid_from: null, coupon_valid_to: null }),
+    couponRow({ id: "coupon:current", code: "coupon-current", coupon_valid_from: "2026-07-26", coupon_valid_to: "2026-07-26" }),
+    couponRow({ id: "coupon:expired", code: "coupon-expired", coupon_valid_from: "2026-07-01", coupon_valid_to: "2026-07-25" }),
+    couponRow({ id: "coupon:future", code: "coupon-future", coupon_valid_from: "2026-07-27", coupon_valid_to: null }),
+  ];
+  const r = await resolveWith(rows, { getCalculationDate: () => "2026-07-26" });
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+
+  assert.deepEqual(
+    r.screenConfig.coupons.map((coupon) => coupon.id),
+    ["coupon:current", "coupon:open"],
+    "expired and future coupons must not be selectable in the estimate wizard",
+  );
+  assert.deepEqual(
+    r.pricingConfig.coupons?.map((coupon) => coupon.couponId),
+    ["coupon:current", "coupon:expired", "coupon:future", "coupon:open"],
+    "the authoritative authored set remains available to pricing for validation and audit",
+  );
+});
+
+test("B1.1-B2: without a valid business date only undated coupons are safe to expose", async () => {
+  const rows = [
+    ...globals(), ...menus(),
+    couponRow({ id: "coupon:open", code: "coupon-open", coupon_valid_from: null, coupon_valid_to: null }),
+    couponRow({ id: "coupon:bounded", code: "coupon-bounded", coupon_valid_from: "2026-07-01", coupon_valid_to: "2026-07-31" }),
+  ];
+  for (const calculationDate of ["", "not-a-date", "2026-02-30"]) {
+    const r = await resolveWith(rows, { getCalculationDate: () => calculationDate });
+    assert.equal(r.ok, true);
+    if (!r.ok) continue;
+    assert.deepEqual(r.screenConfig.coupons.map((coupon) => coupon.id), ["coupon:open"]);
+  }
+});
+
 test("B1.1-B2: a percent coupon is converted from 0–100 to BASIS POINTS exactly once", async () => {
   const r = await resolveWith([
     ...globals(), ...menus(),
@@ -553,6 +598,9 @@ test("B1.1-B2: a malformed or out-of-range coupon row fails closed", async () =>
     { coupon_discount_value: -1 },
     { coupon_discount_value: 1.5 },
     { coupon_discount_type: "percent", coupon_discount_value: 101 },
+    { coupon_valid_from: "2026-02-30" },
+    { coupon_valid_to: "2027-02-29" },
+    { coupon_valid_from: "2026-08-01", coupon_valid_to: "2026-07-01" },
   ] as Partial<WizardCatalogRow>[]) {
     const r = await resolveWith([...globals(), ...menus(), couponRow(bad)]);
     assert.equal(r.ok, false);

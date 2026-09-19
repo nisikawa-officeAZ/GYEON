@@ -17,7 +17,7 @@ import type { RankResolution } from "@/lib/dealer-settings/authoritative-shop-ra
 import type { ShopRank } from "@/components/estimates/wizard/screens/step-types";
 import type { WizardScreenConfiguration } from "@/components/estimates/wizard/contract/wizard-runtime-inputs";
 import type { ConfiguredPricingConfiguration } from "@/components/estimates/wizard/pricing/wizard-pricing-input-adapter-config";
-import type { ConfiguredCoupon } from "@/lib/pricing/configured-coupon-total";
+import { isValidCouponCalendarDate, type ConfiguredCoupon } from "@/lib/pricing/configured-coupon-total";
 import type { PpfCoatingAdjustmentRule } from "./ppf-coating-adjustment-core";
 import type {
   FilmTypeOption, WindowAreaOption, MaintenanceMenu, WashMenu, RoomMenu,
@@ -449,6 +449,13 @@ function buildConfigs(
       return { ok: false, reason: "malformed-coupon-row" };
     }
     if (type === "percent" && value > 100) return { ok: false, reason: "malformed-coupon-row" };
+    if (
+      (r.coupon_valid_from != null && !isValidCouponCalendarDate(r.coupon_valid_from)) ||
+      (r.coupon_valid_to != null && !isValidCouponCalendarDate(r.coupon_valid_to)) ||
+      (r.coupon_valid_from != null && r.coupon_valid_to != null && r.coupon_valid_from > r.coupon_valid_to)
+    ) {
+      return { ok: false, reason: "malformed-coupon-row" };
+    }
     configuredCoupons.push({
       couponId: r.id,
       code: r.code,
@@ -463,6 +470,23 @@ function buildConfigs(
       displayOrder: r.display_order,
     });
   }
+
+  // The pricing resolver correctly rejects an expired/future coupon, but Step 5 previously projected
+  // every active catalog row and therefore let the operator select a coupon that could never be
+  // priced. That turned an otherwise complete estimate into PRICING_INCOMPLETE at save time. Keep
+  // the full authored set in `pricingConfig` for authoritative validation/audit, while exposing only
+  // coupons that are usable on the SAME server-supplied business date. If no calculation date is
+  // available, only undated coupons are safe to expose; a date-bounded coupon is hidden fail-closed.
+  const hasBusinessCalculationDate = isValidCouponCalendarDate(calculationDate);
+  const selectableCouponRows = couponRows.filter((r) => {
+    if (!hasBusinessCalculationDate) {
+      return r.coupon_valid_from == null && r.coupon_valid_to == null;
+    }
+    return (
+      (r.coupon_valid_from == null || r.coupon_valid_from <= calculationDate) &&
+      (r.coupon_valid_to == null || calculationDate <= r.coupon_valid_to)
+    );
+  });
 
   // ── B1.1-B2: PPF installation coefficients, keyed by the item CODE ───────────
   // The wizard's manual PPF identity is the catalog code, so the map is keyed by code and an
@@ -505,7 +529,7 @@ function buildConfigs(
     windowFilmSettings: catalog.windowFilmV1,
     otherWorkPresets: of("other_work_preset", "dealer").map((r): OtherWorkPresetItem => ({ id: r.code, name: r.label_ja ?? "", defaultPrice: r.default_unit_price ?? 0, displayOrder: r.display_order })),
     storeGlobalOptions: of("store_global_option", "dealer").map((r): StoreGlobalOption => ({ id: r.code, name: r.label_ja ?? "", defaultPrice: r.default_unit_price ?? 0, editableUnitPrice: false, quantityRequired: r.quantity_required, minQty: r.min_quantity, maxQty: r.max_quantity ?? undefined, displayOrder: r.display_order })),
-    coupons: couponRows.map((r): CouponOption => ({
+    coupons: selectableCouponRows.map((r): CouponOption => ({
       // The draft stores this value and the pricing resolver matches it against
       // ConfiguredCoupon.couponId. Keep both projections on the immutable DB row id;
       // `code` remains a separate display/audit snapshot in the pricing configuration.

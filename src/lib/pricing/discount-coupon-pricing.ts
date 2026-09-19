@@ -15,6 +15,7 @@
 // Coupon identity is the immutable couponId; labels are snapshot-only and never identity.
 
 import { lineTotal, calculateEstimateTotals, type TotalsItemInput } from "./estimate-totals";
+import { isValidCouponCalendarDate } from "./configured-coupon-total";
 
 export const DISCOUNT_COUPON_CONTRACT_VERSION = "ew-dc-1" as const;
 export type DiscountCouponContractVersion = typeof DISCOUNT_COUPON_CONTRACT_VERSION;
@@ -85,6 +86,7 @@ export type DiscountCouponErrorCode =
   | "UNKNOWN_COUPON"
   | "INVALID_FIXED_AMOUNT"
   | "INVALID_PERCENTAGE"
+  | "INVALID_COUPON_VALIDITY"
   | "COUPON_OUTSIDE_VALIDITY"
   | "NON_COMBINABLE_COUPON_CONFLICT"
   | "INVALID_MANUAL_DISCOUNT"
@@ -135,15 +137,6 @@ const applyPercentage = (base: number, basisPoints: number): number =>
 
 const isInt = (n: number): boolean => Number.isInteger(n);
 
-/** Deterministic YYYY-MM-DD validation with NO Date object (no timezone/system-date inference). */
-function isValidDateStr(s: string): boolean {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
-  if (!m) return false;
-  const mo = Number(m[2]);
-  const d = Number(m[3]);
-  return mo >= 1 && mo <= 12 && d >= 1 && d <= 31;
-}
-
 /** Reduce `remaining` by a fixed/percentage value, clamped to [0, remaining]. Returns applied yen. */
 function applyValue(value: CouponValue | ManualDiscountIntent, remaining: number): number {
   if (value.kind === "none") return 0;
@@ -156,7 +149,7 @@ function applyValue(value: CouponValue | ManualDiscountIntent, remaining: number
 function validate(input: DiscountCouponPricingInput): DiscountCouponError[] {
   const errors: DiscountCouponError[] = [];
 
-  if (!isValidDateStr(input.calculationDate)) {
+  if (!isValidCouponCalendarDate(input.calculationDate)) {
     errors.push({ code: "INVALID_CALCULATION_DATE", message: `calculationDate must be YYYY-MM-DD: ${input.calculationDate}`, field: "calculationDate" });
   }
 
@@ -190,8 +183,14 @@ function validate(input: DiscountCouponPricingInput): DiscountCouponError[] {
       errors.push({ code: "INVALID_PERCENTAGE", message: `coupon ${c.couponId} percentage must be integer basis points in [0, 10000]`, couponId: c.couponId });
     }
 
-    // inclusive validity window (lexicographic compare valid for YYYY-MM-DD)
-    if (isValidDateStr(input.calculationDate)) {
+    const validFromOk = c.validFrom === null || isValidCouponCalendarDate(c.validFrom);
+    const validToOk = c.validTo === null || isValidCouponCalendarDate(c.validTo);
+    if (!validFromOk || !validToOk || (c.validFrom !== null && c.validTo !== null && c.validFrom > c.validTo)) {
+      errors.push({ code: "INVALID_COUPON_VALIDITY", message: `coupon ${c.couponId} has an invalid validity window`, couponId: c.couponId });
+    }
+
+    // inclusive validity window (lexicographic compare is valid after strict YYYY-MM-DD checks)
+    if (isValidCouponCalendarDate(input.calculationDate) && validFromOk && validToOk) {
       if (c.validFrom !== null && input.calculationDate < c.validFrom) {
         errors.push({ code: "COUPON_OUTSIDE_VALIDITY", message: `coupon ${c.couponId} not yet valid (from ${c.validFrom})`, couponId: c.couponId });
       }
@@ -245,7 +244,7 @@ export function computeDiscountCouponPricing(input: DiscountCouponPricingInput):
   //    Any coupon/validation error blocks the whole coupon set (never partially applied).
   const couponBlocking = errors.some((e) =>
     e.code === "DUPLICATE_COUPON_ID" || e.code === "UNKNOWN_COUPON" || e.code === "INVALID_FIXED_AMOUNT" ||
-    e.code === "INVALID_PERCENTAGE" || e.code === "COUPON_OUTSIDE_VALIDITY" || e.code === "NON_COMBINABLE_COUPON_CONFLICT" ||
+    e.code === "INVALID_PERCENTAGE" || e.code === "INVALID_COUPON_VALIDITY" || e.code === "COUPON_OUTSIDE_VALIDITY" || e.code === "NON_COMBINABLE_COUPON_CONFLICT" ||
     e.code === "INVALID_CALCULATION_DATE");
 
   const applications: CouponApplication[] = [];

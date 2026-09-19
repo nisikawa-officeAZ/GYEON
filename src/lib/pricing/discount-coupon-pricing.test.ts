@@ -119,3 +119,20 @@ test("C. invalid calculation date blocks", () => {
   assert.equal(r.valid, false);
   assert.ok(r.errors.some((e) => e.code === "INVALID_CALCULATION_DATE"));
 });
+
+test("C2. impossible calculation dates block and leap dates remain valid", () => {
+  hasErr(base({ calculationDate: "2026-02-30", coupons: [coupon("c1", fixed(1000))] }), "INVALID_CALCULATION_DATE");
+  hasErr(base({ calculationDate: "2027-02-29", coupons: [coupon("c1", fixed(1000))] }), "INVALID_CALCULATION_DATE");
+  assert.equal(computeDiscountCouponPricing(base({ calculationDate: "2028-02-29" })).valid, true);
+});
+
+test("C3. malformed or reversed coupon validity windows block all coupon application", () => {
+  hasErr(base({ coupons: [coupon("bad-from", fixed(1000), { validFrom: "2026-02-30" })] }), "INVALID_COUPON_VALIDITY");
+  hasErr(base({ coupons: [coupon("bad-to", fixed(1000), { validTo: "2027-02-29" })] }), "INVALID_COUPON_VALIDITY");
+  hasErr(base({ coupons: [coupon("reversed", fixed(1000), { validFrom: "2026-08-01", validTo: "2026-07-01" })] }), "INVALID_COUPON_VALIDITY");
+});
+
+test("C4. duplicate coupon identity produces one blocking error per duplicate occurrence", () => {
+  const r = hasErr(base({ coupons: [coupon("dup", fixed(1000)), coupon("dup", fixed(2000))] }), "DUPLICATE_COUPON_ID");
+  assert.equal(r.errors.filter((error) => error.code === "DUPLICATE_COUPON_ID").length, 1);
+});
