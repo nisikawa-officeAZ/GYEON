@@ -14,22 +14,10 @@ export default function TrialBanner() {
   }, []);
 
   if (!status) return null;
-  if (!status.hasActiveTrial && !status.trialEnded) return null;
-
-  if (status.trialEnded) {
-    return (
-      <div
-        className="flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-medium"
-        style={{
-          background:  "rgba(85,85,106,0.20)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          color:       "var(--gs-text-3, #55556a)",
-        }}
-      >
-        <span>Basicプランへ移行済み</span>
-      </div>
-    );
-  }
+  // Trial messaging is useful only while the trial is active. Once a dealer
+  // moves to a paid plan, the canonical plan badge on the home screen owns the
+  // status display; a permanent "migrated" banner would only add noise.
+  if (!status.hasActiveTrial) return null;
 
   if (status.trialEndsToday || status.daysRemaining === 0) {
     return (

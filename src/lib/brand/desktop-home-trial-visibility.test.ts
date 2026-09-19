@@ -20,3 +20,13 @@ test("trial UI obeys the hidden attribute for non-trial accounts", () => {
     "the bootstrap must derive trial visibility from the authenticated trial flag",
   );
 });
+
+test("the authenticated plan is always rendered as the canonical paid-plan badge", () => {
+  assert.ok(HTML.includes("tag.textContent = 'Basic'"));
+  assert.ok(HTML.includes("tag.textContent = 'Pro'"));
+  assert.ok(HTML.includes("tag.textContent = 'Pro+'"));
+  assert.ok(
+    HTML.includes("var plan = ['basic', 'pro', 'pro_plus'].includes(requestedPlan)"),
+    "only canonical plan values may select a paid-plan badge",
+  );
+});
