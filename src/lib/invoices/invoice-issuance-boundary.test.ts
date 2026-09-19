@@ -44,6 +44,7 @@ const CREATE = read("src/lib/invoices/create-invoice.ts");
 const UPDATE = read("src/lib/invoices/update-invoice.ts");
 const DETAIL = read("src/components/invoices/InvoiceDetail.tsx");
 const ACTIONS = read("src/components/invoices/InvoicePdfIssueActions.tsx");
+const PDF_URL = read("src/lib/invoices/invoice-pdf-url.ts");
 const MIGRATION = read("supabase/migrations/20260801132658_invoice_issued_immutability.sql");
 
 // ── The mutable overwrite helper is out of the invoice flow ──────────────────
@@ -208,10 +209,16 @@ test("15. the misleading placeholder and print flow are gone", () => {
 
 test("16. the UI exposes draft-issue and issued-download states", () => {
   assert.match(ACTIONS, /請求書を発行/);
-  assert.match(ACTIONS, /発行済みPDFをダウンロード/);
+  assert.match(ACTIONS, /発行済みPDFを開く/);
   assert.match(ACTIONS, /status === "draft"/);
   assert.match(ACTIONS, /issueInvoice\(invoiceId\)/);
   assert.match(ACTIONS, /getIssuedInvoicePdfUrl\(invoiceId\)/);
+  assert.match(ACTIONS, /window\.open\("about:blank", "_blank"\)/);
+  assert.match(ACTIONS, /safeInvoicePdfUrl\(result\.signedUrl\)/);
+  assert.match(PDF_URL, /url\.protocol === "https:"/);
+  assert.match(PDF_URL, /!url\.username && !url\.password/);
+  assert.match(ACTIONS, /pdfWindow\?\.location\.replace\(pdfUrl\)/);
+  assert.match(ACTIONS, /pdfWindow\?\.close\(\)/);
   assert.match(DETAIL, /<InvoicePdfIssueActions/);
 });
 
@@ -1219,7 +1226,7 @@ test("91. a download never mutates issuance state, and the signed link survives 
     ACTIONS.indexOf("setError(result.message)")
   );
   assert.ok(successBlock.length > 60, "the success branch must be present");
-  const urlAt = successBlock.indexOf("setSignedUrl(result.signedUrl)");
+  const urlAt = successBlock.indexOf("setSignedUrl(pdfUrl)");
   const cbAt = successBlock.indexOf("onIssued?.(");
   assert.ok(urlAt >= 0 && cbAt > urlAt, "the signed URL is stored BEFORE the state switch");
   // The link renders off signedUrl alone, so switching controls cannot remove it.
