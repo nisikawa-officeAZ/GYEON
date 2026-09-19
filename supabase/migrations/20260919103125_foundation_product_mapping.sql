@@ -36,8 +36,16 @@ create table foundation_product_mapping_private.current_mappings (
     check (evidence_reference ~ '^[a-f0-9]{64}$'),
   constraint current_mappings_successor_check
     check (
-      successor_foundation_product_id is null
-      or successor_foundation_product_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      (
+        foundation_lifecycle = 'superseded'
+        and successor_foundation_product_id is not null
+        and successor_foundation_product_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        and successor_foundation_product_id <> foundation_product_id
+      )
+      or (
+        foundation_lifecycle <> 'superseded'
+        and successor_foundation_product_id is null
+      )
     ),
   constraint current_mappings_book_product_fk
     foreign key (book_product_id) references public.gyeon_products (id)
@@ -94,8 +102,23 @@ create table foundation_product_mapping_private.mapping_events (
     check (jsonb_typeof(review_snapshot) = 'object'),
   constraint mapping_events_successor_check
     check (
-      successor_foundation_product_id is null
-      or successor_foundation_product_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      (
+        foundation_lifecycle = 'superseded'
+        and successor_foundation_product_id is not null
+        and successor_foundation_product_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        and successor_foundation_product_id <> foundation_product_id
+      )
+      or (
+        foundation_lifecycle <> 'superseded'
+        and successor_foundation_product_id is null
+      )
+    ),
+  constraint mapping_events_transition_check
+    check (
+      event_kind not in ('suspend', 'retire', 'supersede')
+      or (event_kind = 'suspend' and foundation_lifecycle = 'suspended')
+      or (event_kind = 'retire' and foundation_lifecycle = 'retired')
+      or (event_kind = 'supersede' and foundation_lifecycle = 'superseded')
     )
 );
 
@@ -179,7 +202,19 @@ begin
      or p_request_id is null or p_request_id <> btrim(p_request_id)
      or char_length(p_request_id) not between 1 and 512
      or p_evidence_digest is null or p_evidence_digest !~ '^[a-f0-9]{64}$'
-     or jsonb_typeof(p_review_snapshot) is distinct from 'object' then
+     or jsonb_typeof(p_review_snapshot) is distinct from 'object'
+     or (
+       p_foundation_lifecycle = 'superseded'
+       and (
+         p_successor_foundation_product_id is null
+         or p_successor_foundation_product_id !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+         or p_successor_foundation_product_id = p_foundation_product_id
+       )
+     )
+     or (
+       p_foundation_lifecycle <> 'superseded'
+       and p_successor_foundation_product_id is not null
+     ) then
     return jsonb_build_object('tag', 'denied');
   end if;
 
@@ -194,13 +229,18 @@ begin
        or v_current.book_product_id is distinct from p_book_product_id then
       return jsonb_build_object('tag', 'duplicate');
     end if;
+    if v_current.legal_owner is distinct from p_legal_owner then
+      return jsonb_build_object('tag', 'denied', 'code', 'OWNER_MISMATCH');
+    end if;
+    if v_current.foundation_identity_revision > p_foundation_identity_revision then
+      return jsonb_build_object('tag', 'denied', 'code', 'stale_product_identity');
+    end if;
     if v_current.mapping_revision is distinct from p_expected_mapping_revision then
       return jsonb_build_object('tag', 'stale', 'revision', v_current.mapping_revision);
     end if;
     v_next_revision := v_current.mapping_revision + 1;
     update foundation_product_mapping_private.current_mappings
-       set legal_owner = p_legal_owner,
-           foundation_lifecycle = p_foundation_lifecycle,
+       set foundation_lifecycle = p_foundation_lifecycle,
            foundation_identity_revision = p_foundation_identity_revision,
            mapping_revision = v_next_revision,
            evidence_reference = p_evidence_digest,
@@ -268,6 +308,8 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  v_current foundation_product_mapping_private.current_mappings%rowtype;
 begin
   if p_event_kind not in ('candidate', 'rejection', 'suspend', 'retire', 'supersede') then
     return jsonb_build_object('tag', 'denied');
@@ -290,11 +332,41 @@ begin
      or p_request_id is null or p_request_id <> btrim(p_request_id)
      or char_length(p_request_id) not between 1 and 512
      or p_evidence_digest is null or p_evidence_digest !~ '^[a-f0-9]{64}$'
-     or jsonb_typeof(p_review_snapshot) is distinct from 'object' then
+     or jsonb_typeof(p_review_snapshot) is distinct from 'object'
+     or (
+       p_foundation_lifecycle = 'superseded'
+       and (
+         p_successor_foundation_product_id is null
+         or p_successor_foundation_product_id !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+         or p_successor_foundation_product_id = p_foundation_product_id
+       )
+     )
+     or (
+       p_foundation_lifecycle <> 'superseded'
+       and p_successor_foundation_product_id is not null
+     )
+     or (p_event_kind = 'suspend' and p_foundation_lifecycle <> 'suspended')
+     or (p_event_kind = 'retire' and p_foundation_lifecycle <> 'retired')
+     or (p_event_kind = 'supersede' and p_foundation_lifecycle <> 'superseded') then
     return jsonb_build_object('tag', 'denied');
   end if;
 
   if p_event_kind in ('suspend', 'retire', 'supersede') then
+    select * into v_current
+      from foundation_product_mapping_private.current_mappings
+     where foundation_product_id = p_foundation_product_id
+       and book_product_id = p_book_product_id
+     for update;
+    if not found or v_current.mapping_revision is distinct from p_mapping_revision then
+      return jsonb_build_object('tag', 'stale');
+    end if;
+    if v_current.legal_owner is distinct from p_legal_owner then
+      return jsonb_build_object('tag', 'denied', 'code', 'OWNER_MISMATCH');
+    end if;
+    if v_current.foundation_identity_revision > p_foundation_identity_revision then
+      return jsonb_build_object('tag', 'denied', 'code', 'stale_product_identity');
+    end if;
+
     update foundation_product_mapping_private.current_mappings
        set foundation_lifecycle = p_foundation_lifecycle,
            foundation_identity_revision = p_foundation_identity_revision,

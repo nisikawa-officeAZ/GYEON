@@ -405,6 +405,133 @@ test("confirm requires trusted server context and is atomic", () => {
   assert.equal(staleIdentity.code, "stale_product_identity");
 });
 
+test("confirm keeps the accepted legal owner immutable", () => {
+  const original = store({ current: [accepted()] });
+  const result = mapping.confirmFoundationProductMapping(original, {
+    trustedContext: trusted(),
+    foundationOwner: "ATTRACTION",
+    foundationProductId: FOUNDATION_ID,
+    bookProductId: BOOK_ID,
+    foundationLifecycle: "active",
+    foundationIdentityRevision: 1,
+    expectedMappingRevision: 1,
+    evidenceDigest: DIGEST_B,
+    reviewSnapshot: {},
+  });
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.equal(result.code, "OWNER_MISMATCH");
+  assert.equal(original.current[0]?.legalOwner, "OFFICE_AZ");
+  assert.equal(original.events.length, 0);
+});
+
+test("confirm rejects invalid lifecycle and successor combinations atomically", () => {
+  const cases = [
+    {
+      lifecycle: "superseded" as const,
+      successor: undefined,
+      label: "superseded without successor",
+    },
+    {
+      lifecycle: "active" as const,
+      successor: FOUNDATION_ID_OTHER,
+      label: "successor on active",
+    },
+    {
+      lifecycle: "suspended" as const,
+      successor: FOUNDATION_ID_OTHER,
+      label: "successor on suspended",
+    },
+    {
+      lifecycle: "retired" as const,
+      successor: FOUNDATION_ID_OTHER,
+      label: "successor on retired",
+    },
+    {
+      lifecycle: "superseded" as const,
+      successor: FOUNDATION_ID,
+      label: "self successor",
+    },
+  ];
+
+  for (const item of cases) {
+    const original = store({ current: [accepted()] });
+    const result = mapping.confirmFoundationProductMapping(original, {
+      trustedContext: trusted(),
+      foundationOwner: "OFFICE_AZ",
+      foundationProductId: FOUNDATION_ID,
+      bookProductId: BOOK_ID,
+      foundationLifecycle: item.lifecycle,
+      foundationIdentityRevision: 1,
+      expectedMappingRevision: 1,
+      evidenceDigest: DIGEST_B,
+      reviewSnapshot: {},
+      successorFoundationProductId: item.successor,
+    });
+    assert.equal(result.ok, false, item.label);
+    if (result.ok) continue;
+    assert.equal(result.code, "MALFORMED_MAPPING", item.label);
+    assert.equal(original.current[0]?.foundationLifecycle, "active", item.label);
+    assert.equal(original.events.length, 0, item.label);
+  }
+
+  const valid = mapping.confirmFoundationProductMapping(
+    store({ current: [accepted()] }),
+    {
+      trustedContext: trusted(),
+      foundationOwner: "OFFICE_AZ",
+      foundationProductId: FOUNDATION_ID,
+      bookProductId: BOOK_ID,
+      foundationLifecycle: "superseded",
+      foundationIdentityRevision: 1,
+      expectedMappingRevision: 1,
+      evidenceDigest: DIGEST_B,
+      reviewSnapshot: {},
+      successorFoundationProductId: FOUNDATION_ID_OTHER,
+    },
+  );
+  assert.equal(valid.ok, true);
+  if (valid.ok !== true) return;
+  assert.equal(valid.successorFoundationProductId, FOUNDATION_ID_OTHER);
+});
+
+test("trusted context accepts 512 characters and denies 513", () => {
+  const exactBoundary = "x".repeat(512);
+  const acceptedBoundary = mapping.confirmFoundationProductMapping(store(), {
+    trustedContext: {
+      ...trusted(),
+      authoritySource: exactBoundary,
+    },
+    foundationOwner: "OFFICE_AZ",
+    foundationProductId: FOUNDATION_ID,
+    bookProductId: BOOK_ID,
+    foundationLifecycle: "active",
+    foundationIdentityRevision: 1,
+    expectedMappingRevision: 0,
+    evidenceDigest: DIGEST,
+    reviewSnapshot: {},
+  });
+  assert.equal(acceptedBoundary.ok, true);
+
+  const deniedBoundary = mapping.confirmFoundationProductMapping(store(), {
+    trustedContext: {
+      ...trusted(),
+      authoritySource: "x".repeat(513),
+    },
+    foundationOwner: "OFFICE_AZ",
+    foundationProductId: FOUNDATION_ID,
+    bookProductId: BOOK_ID,
+    foundationLifecycle: "active",
+    foundationIdentityRevision: 1,
+    expectedMappingRevision: 0,
+    evidenceDigest: DIGEST,
+    reviewSnapshot: {},
+  });
+  assert.equal(deniedBoundary.ok, false);
+  if (deniedBoundary.ok) return;
+  assert.equal(deniedBoundary.code, "UNAUTHORIZED");
+});
+
 test("superseded mappings never auto-remap", () => {
   const result = mapping.resolveBookProduct(
     store({
@@ -470,6 +597,42 @@ test("migration statically enforces RLS, grants, uniqueness, FK, and append-only
   assert.match(migration, /insert into foundation_product_mapping_private.mapping_events/);
   assert.match(migration, /exception when unique_violation/);
   assert.match(migration, /exception when others/);
+});
+
+test("migration fails closed on owner, revision, lifecycle, and successor drift", () => {
+  assert.match(
+    migration,
+    /v_current\.legal_owner is distinct from p_legal_owner[\s\S]*OWNER_MISMATCH/,
+  );
+  assert.equal(
+    (migration.match(/v_current\.foundation_identity_revision > p_foundation_identity_revision/g) ?? [])
+      .length,
+    2,
+  );
+  assert.match(
+    migration,
+    /foundation_lifecycle = 'superseded'[\s\S]*successor_foundation_product_id <> foundation_product_id/,
+  );
+  assert.match(
+    migration,
+    /event_kind = 'suspend' and foundation_lifecycle = 'suspended'/,
+  );
+  assert.match(
+    migration,
+    /event_kind = 'retire' and foundation_lifecycle = 'retired'/,
+  );
+  assert.match(
+    migration,
+    /event_kind = 'supersede' and foundation_lifecycle = 'superseded'/,
+  );
+  assert.match(
+    migration,
+    /if p_event_kind in \('suspend', 'retire', 'supersede'\) then[\s\S]*for update/,
+  );
+  assert.match(
+    migration,
+    /p_event_kind not in \('candidate', 'rejection', 'suspend', 'retire', 'supersede'\)/,
+  );
 });
 
 test("disposable script is authored as Gate C only and never auto-runs a database", () => {

@@ -22,7 +22,7 @@ const MIGRATION = path.resolve(
   "supabase/migrations/20260919103125_foundation_product_mapping.sql",
 );
 const EXPECTED_MIGRATION_SHA256 =
-  "0b84e3ec55ac0ef2501cf989c9bda9ac7b32025bd8d4e94fdc7adf39bfcd1061";
+  "281a34011b826871b31377d13182968ee3b87717c18475501433df80931d0cdc";
 const REQUIRED_ACK = "I_ACKNOWLEDGE_FRESH_DISPOSABLE_LOCAL_DATABASE_ONLY";
 const databaseUrl = process.env.INV001_FOUNDATION_DISPOSABLE_DATABASE_URL;
 const applyAck = process.env.INV001_FOUNDATION_DISPOSABLE_APPLY_ACK;
@@ -103,6 +103,50 @@ function assert(condition, code) {
   if (!condition) throw new Error(code);
 }
 
+const FOUNDATION_PRODUCT_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const SUCCESSOR_FOUNDATION_PRODUCT_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab";
+const BOOK_PRODUCT_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+const EVIDENCE_B = "b".repeat(64);
+
+function applyConfirmedMapping({
+  owner = "OFFICE_AZ",
+  lifecycle = "active",
+  identityRevision = 2,
+  expectedMappingRevision = 1,
+  eventKind = "change",
+  successor = null,
+  evidence = EVIDENCE_B,
+} = {}) {
+  const successorSql = successor == null ? "null" : `'${successor}'`;
+  return query(`
+    select foundation_product_mapping_private.apply_confirmed_mapping(
+      '${eventKind}', '${FOUNDATION_PRODUCT_ID}', '${BOOK_PRODUCT_ID}'::uuid,
+      '${owner}', '${lifecycle}', ${identityRevision}, ${expectedMappingRevision},
+      'gate-c-user', 'gate-c-dealer', 'server_resolved', 'OFFICE_AZ_ADMIN',
+      'gate-c-request', '${evidence}', '{}'::jsonb, ${successorSql}
+    )->>'tag'
+  `);
+}
+
+function recordMappingEvent({
+  eventKind,
+  lifecycle,
+  identityRevision = 2,
+  mappingRevision = 1,
+  owner = "OFFICE_AZ",
+  successor = null,
+} = {}) {
+  const successorSql = successor == null ? "null" : `'${successor}'`;
+  return query(`
+    select foundation_product_mapping_private.record_mapping_event(
+      '${eventKind}', '${FOUNDATION_PRODUCT_ID}', '${BOOK_PRODUCT_ID}'::uuid,
+      '${owner}', '${lifecycle}', ${identityRevision}, ${mappingRevision},
+      'gate-c-user', 'gate-c-dealer', 'server_resolved', 'OFFICE_AZ_ADMIN',
+      'gate-c-request', '${EVIDENCE_B}', '{}'::jsonb, ${successorSql}
+    )->>'tag'
+  `);
+}
+
 function asyncQuery(statement) {
   return new Promise((resolve, reject) => {
     const child = spawn("psql", ["-X", "-v", "ON_ERROR_STOP=1", ...connectionArgs, "-A", "-t", "-q", "-c", statement], {
@@ -154,6 +198,85 @@ try {
   assert(
     query("select count(*) from pg_policies where schemaname = 'foundation_product_mapping_private'") === "0",
     "RAW_TABLE_POLICY_PRESENT",
+  );
+
+  // B1-R1 owner/revision/lifecycle/successor rollback matrix for the later Gate C.
+  query(`insert into public.gyeon_products (id, sku, product_name)
+    values ('${BOOK_PRODUCT_ID}', 'INV001-D3B-GATE-C', 'INV001 D3B Gate C')
+    on conflict (id) do nothing`);
+  assert(
+    applyConfirmedMapping({ eventKind: "confirm", expectedMappingRevision: 0 }) === "accepted",
+    "INITIAL_MAPPING_CONFIRM_FAILED",
+  );
+  const acceptedState = query(`select concat_ws('|', legal_owner, foundation_lifecycle,
+    foundation_identity_revision, mapping_revision, evidence_reference,
+    coalesce(successor_foundation_product_id, 'NULL'))
+    from foundation_product_mapping_private.current_mappings
+    where foundation_product_id = '${FOUNDATION_PRODUCT_ID}'`);
+  const acceptedEventCount = query(
+    "select count(*) from foundation_product_mapping_private.mapping_events",
+  );
+
+  assert(
+    applyConfirmedMapping({ owner: "ATTRACTION" }) === "denied",
+    "OWNER_CHANGE_WAS_NOT_DENIED",
+  );
+  assert(
+    applyConfirmedMapping({ identityRevision: 1 }) === "denied",
+    "LOWER_IDENTITY_REVISION_WAS_NOT_DENIED",
+  );
+  assert(
+    applyConfirmedMapping({ lifecycle: "superseded" }) === "denied",
+    "SUPERSEDED_WITHOUT_SUCCESSOR_WAS_NOT_DENIED",
+  );
+  assert(
+    applyConfirmedMapping({ successor: SUCCESSOR_FOUNDATION_PRODUCT_ID }) === "denied",
+    "NON_SUPERSEDED_SUCCESSOR_WAS_NOT_DENIED",
+  );
+  assert(
+    applyConfirmedMapping({
+      lifecycle: "superseded",
+      successor: FOUNDATION_PRODUCT_ID,
+    }) === "denied",
+    "SELF_SUCCESSOR_WAS_NOT_DENIED",
+  );
+  assert(
+    recordMappingEvent({ eventKind: "suspend", lifecycle: "retired" }) === "denied" &&
+      recordMappingEvent({ eventKind: "retire", lifecycle: "suspended" }) === "denied" &&
+      recordMappingEvent({
+        eventKind: "supersede",
+        lifecycle: "active",
+        successor: SUCCESSOR_FOUNDATION_PRODUCT_ID,
+      }) === "denied",
+    "EVENT_LIFECYCLE_MISMATCH_WAS_NOT_DENIED",
+  );
+  assert(
+    query(`select concat_ws('|', legal_owner, foundation_lifecycle,
+      foundation_identity_revision, mapping_revision, evidence_reference,
+      coalesce(successor_foundation_product_id, 'NULL'))
+      from foundation_product_mapping_private.current_mappings
+      where foundation_product_id = '${FOUNDATION_PRODUCT_ID}'`) === acceptedState,
+    "DENIAL_MUTATED_CURRENT_MAPPING",
+  );
+  assert(
+    query("select count(*) from foundation_product_mapping_private.mapping_events") ===
+      acceptedEventCount,
+    "DENIAL_APPENDED_MAPPING_EVENT",
+  );
+
+  const beforeCandidateState = acceptedState;
+  assert(
+    recordMappingEvent({ eventKind: "candidate", lifecycle: "active" }) === "recorded" &&
+      recordMappingEvent({ eventKind: "rejection", lifecycle: "active" }) === "recorded",
+    "NON_MUTATING_EVIDENCE_EVENT_FAILED",
+  );
+  assert(
+    query(`select concat_ws('|', legal_owner, foundation_lifecycle,
+      foundation_identity_revision, mapping_revision, evidence_reference,
+      coalesce(successor_foundation_product_id, 'NULL'))
+      from foundation_product_mapping_private.current_mappings
+      where foundation_product_id = '${FOUNDATION_PRODUCT_ID}'`) === beforeCandidateState,
+    "CANDIDATE_OR_REJECTION_MUTATED_CURRENT_MAPPING",
   );
 
   // concurrency + rollback of a failed confirmation

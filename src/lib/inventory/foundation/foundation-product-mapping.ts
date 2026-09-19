@@ -122,7 +122,12 @@ function deny(code: FoundationProductMappingClosedCode): FoundationProductMappin
 }
 
 function isNonEmptyTrimmed(value: unknown): value is string {
-  return typeof value === "string" && value === value.trim() && value.length > 0;
+  return (
+    typeof value === "string" &&
+    value === value.trim() &&
+    value.length >= 1 &&
+    value.length <= 512
+  );
 }
 
 function parseBookProductId(value: unknown): string | null {
@@ -138,6 +143,20 @@ function trustedContextOk(context: FoundationProductMappingTrustedContext | null
     isNonEmptyTrimmed(context.capabilitySnapshot) &&
     isNonEmptyTrimmed(context.requestId)
   );
+}
+
+function lifecycleSuccessorOk(
+  lifecycle: FoundationProductIdentityLifecycle,
+  foundationProductId: string,
+  successorFoundationProductId: string | null,
+): boolean {
+  if (lifecycle === "superseded") {
+    return (
+      successorFoundationProductId !== null &&
+      successorFoundationProductId !== foundationProductId
+    );
+  }
+  return successorFoundationProductId === null;
 }
 
 function success(record: FoundationProductMappingRecord): FoundationProductMappingSuccess {
@@ -303,6 +322,9 @@ export function confirmFoundationProductMapping(
   }
 
   const canonicalId = productId.value.productId;
+  if (!lifecycleSuccessorOk(input.foundationLifecycle, canonicalId, successor)) {
+    return deny("MALFORMED_MAPPING");
+  }
   const book = store.bookProducts.find((row) => row.bookProductId === bookProductId);
   if (book == null || book.isActive !== true) return deny("BOOK_PRODUCT_INACTIVE");
 
@@ -321,6 +343,7 @@ export function confirmFoundationProductMapping(
   const expectedRevision =
     input.expectedMappingRevision === 0 ? 0 : (expected as { ok: true; value: number }).value;
   if (existing) {
+    if (existing.legalOwner !== owner.value) return deny("OWNER_MISMATCH");
     if (existing.mappingRevision !== expectedRevision) return deny("STALE_MAPPING");
     if (existing.foundationIdentityRevision > identityRevision.value) {
       return deny("stale_product_identity");
