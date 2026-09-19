@@ -506,7 +506,10 @@ function buildConfigs(
     otherWorkPresets: of("other_work_preset", "dealer").map((r): OtherWorkPresetItem => ({ id: r.code, name: r.label_ja ?? "", defaultPrice: r.default_unit_price ?? 0, displayOrder: r.display_order })),
     storeGlobalOptions: of("store_global_option", "dealer").map((r): StoreGlobalOption => ({ id: r.code, name: r.label_ja ?? "", defaultPrice: r.default_unit_price ?? 0, editableUnitPrice: false, quantityRequired: r.quantity_required, minQty: r.min_quantity, maxQty: r.max_quantity ?? undefined, displayOrder: r.display_order })),
     coupons: couponRows.map((r): CouponOption => ({
-      id: r.code,
+      // The draft stores this value and the pricing resolver matches it against
+      // ConfiguredCoupon.couponId. Keep both projections on the immutable DB row id;
+      // `code` remains a separate display/audit snapshot in the pricing configuration.
+      id: r.id,
       name: r.label_ja ?? "",
       discountType: r.coupon_discount_type === "percent" ? "percent" : "amount",
       discountValue: r.coupon_discount_value ?? 0,

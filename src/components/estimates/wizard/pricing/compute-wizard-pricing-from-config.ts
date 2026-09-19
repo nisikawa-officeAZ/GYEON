@@ -39,8 +39,8 @@ import { WIZARD_PRICING_ERRORS, type WizardPricingResult } from "./wizard-pricin
 /**
  * Fresh fail-closed result. Built anew on every call so no imported constant is ever mutated and no
  * two callers share a reference. Every meaningful total is null — never zero — so failed/unavailable
- * pricing can never be mistaken for a real ¥0 total. `couponTotal` is 0 by the contract's own
- * definition (coupons are always deferred), not a disguised amount.
+ * pricing can never be mistaken for a real ¥0 total. `couponTotal` is 0 in this synthetic error
+ * result because no configured coupon can be authoritatively applied after an exception.
  */
 function productionErrorResult(): WizardPricingResult {
   return {
@@ -74,9 +74,10 @@ function productionErrorResult(): WizardPricingResult {
  * provisional); `"complete"` keeps every engine total unchanged.
  *
  * This performs NO arithmetic and does NOT redefine completeness — it only replaces already-computed
- * aggregate numbers with null. `couponTotal` stays 0 (contractually always 0 / deferred, not a
- * disguised amount), and every diagnostic (`status`, `lines`, `unresolvedItems`, `warnings`, `errors`,
- * `couponState`, `discountIntent`) is preserved. Returns a fresh object; the input is never mutated.
+ * aggregate numbers with null. `couponTotal` remains the engine-derived value so diagnostics can
+ * explain the selected coupon, while every customer-facing aggregate is null. Every diagnostic
+ * (`status`, `lines`, `unresolvedItems`, `warnings`, `errors`, `couponState`, `discountIntent`) is
+ * preserved. Returns a fresh object; the input is never mutated.
  */
 function normalizeAggregateTotals(result: WizardPricingResult): WizardPricingResult {
   if (result.completeness !== "unavailable" && result.completeness !== "error") return result;
