@@ -8,7 +8,6 @@ const ITEMS: readonly CategoryHubItem[] = [
   { href: "/work-orders", label: "作業管理", labelEn: "WORK ORDERS", description: "施工予定・担当・作業進捗を確認。", icon: "work-orders" },
   { href: "/completion-reports", label: "完了報告", labelEn: "COMPLETION REPORTS", description: "施工完了後の報告内容と成果物を管理。", icon: "completion" },
   { href: "/installation-certificates", label: "施工証明書管理", labelEn: "INSTALLATION CERTIFICATES", description: "施工証明書の検索・確認・再発行を管理。", icon: "certificate" },
-  { href: "/maintenance", label: "メンテナンス", labelEn: "MAINTENANCE", description: "メンテナンス予定とフォロー対象を確認。", icon: "maintenance" },
 ] as const;
 
 export default function EstimatesHubPage() {

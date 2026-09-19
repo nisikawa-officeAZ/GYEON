@@ -54,7 +54,7 @@ export default function WorkOrderTable({
                 <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden sm:table-cell">顧客</th>
                 <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden md:table-cell">車両</th>
                 <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden lg:table-cell">見積</th>
-                <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">ステータス</th>
+                <th className="min-w-[88px] whitespace-nowrap text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">ステータス</th>
                 <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden md:table-cell">施工予定開始</th>
                 <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3 hidden lg:table-cell">担当者</th>
                 <th className="text-center text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3" />
@@ -85,8 +85,8 @@ export default function WorkOrderTable({
                   <td className="px-3 py-2.5 lg:px-4 lg:py-3 text-[#7788a4] text-xs whitespace-nowrap hidden lg:table-cell">
                     {wo.estimates?.estimate_number ?? "—"}
                   </td>
-                  <td className="px-3 py-2.5 lg:px-4 lg:py-3">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[wo.status] ?? "bg-slate-700 text-slate-300"}`}>
+                  <td className="min-w-[88px] whitespace-nowrap px-3 py-2.5 lg:px-4 lg:py-3">
+                    <span className={`inline-flex min-w-[48px] items-center justify-center whitespace-nowrap text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[wo.status] ?? "bg-slate-700 text-slate-300"}`}>
                       {workOrderStatusLabel(wo.status)}
                     </span>
                   </td>
@@ -132,7 +132,7 @@ export default function WorkOrderTable({
                 <p className="truncate text-[15px] font-bold text-[#edf3fc]">{workOrderDisplayNo(wo)}</p>
                 {wo.title && <p className="truncate text-[11px] text-[#8191ad]">{wo.title}</p>}
               </div>
-              <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[wo.status] ?? "bg-slate-700 text-slate-300"}`}>
+              <span className={`inline-flex min-w-[48px] shrink-0 items-center justify-center whitespace-nowrap text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[wo.status] ?? "bg-slate-700 text-slate-300"}`}>
                 {workOrderStatusLabel(wo.status)}
               </span>
             </div>

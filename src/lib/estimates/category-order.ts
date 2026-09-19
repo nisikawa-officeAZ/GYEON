@@ -36,3 +36,8 @@ export function sortByCategoryOrder<T extends { category: string; sort_order: nu
     .slice()
     .sort((a, b) => categoryRank(a.category) - categoryRank(b.category) || a.sort_order - b.sort_order);
 }
+
+/** Operator-selected estimate line order. Used by estimate edit/detail/PDF only. */
+export function sortByDisplayOrder<T extends { sort_order: number }>(items: readonly T[]): T[] {
+  return items.slice().sort((a, b) => a.sort_order - b.sort_order);
+}

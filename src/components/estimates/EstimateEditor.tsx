@@ -28,16 +28,23 @@ import { buildLineItems, type ServiceInput, type PricedLineItem } from "@/lib/pr
 import { calculateEstimateTotals, lineTotal } from "@/lib/pricing/estimate-totals";
 import { DEFAULT_PRICING_CATALOG, type PricingCatalog } from "@/lib/pricing/pricing-catalog";
 import { getDealerPricingCatalog } from "@/lib/pricing/get-dealer-pricing-catalog";
+import { sortByDisplayOrder } from "@/lib/estimates/category-order";
+import type { ShopRank } from "@/lib/dealer-settings/authoritative-shop-rank-core";
 import dynamic from "next/dynamic";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
 import {
   CATEGORY_LABEL, PPF_QTY_REQUIRED, card, secHdr, lbl, inp, chip,
-  DEFAULT_COUPONS, formatYen, useUnsavedChangesGuard, type EditorItem,
+  DEFAULT_COUPONS, formatYen, moveEditorItem, useUnsavedChangesGuard, type EditorItem,
 } from "./estimate-editor-helpers";
 // Phase 8 — read-only wizard preview bridge. Both imports are LEAF integration modules that pull
 // in NO wizard internals, preserving the Wizard → Adapter → EstimateEditor dependency direction.
 import { WizardPreviewPanel } from "./wizard/integration/WizardPreviewPanel";
 import type { EstimateEditorPreviewData } from "./wizard/integration/previewTypes";
+import {
+  editorFirstLayerOptions,
+  editorTopcoatKeys,
+  isEditorCoatingSelectionAllowed,
+} from "./estimate-editor-coating-eligibility";
 
 // G3 — reuse the existing OCR pipeline (loaded lazily) inside the editor. No OCR
 // logic is duplicated or modified; the same components the onboarding flow uses.
@@ -57,12 +64,14 @@ interface EstimateEditorProps {
   vehicles:           VehicleDB[];
   defaultCustomerId?: string;
   defaultVehicleId?:  string;
+  /** Server-resolved current shop rank. Required by the production edit route. */
+  shopRank?:           ShopRank;
   // Phase 8 — OPTIONAL read-only wizard preview. When set, EstimateEditor renders a read-only
   // preview and performs no production action. Undefined (default) = unchanged production editor.
   wizardPreview?:     EstimateEditorPreviewData | null;
 }
 
-export default function EstimateEditor({ mode, estimate, customers, vehicles, defaultCustomerId, defaultVehicleId, wizardPreview }: EstimateEditorProps) {
+export default function EstimateEditor({ mode, estimate, customers, vehicles, defaultCustomerId, defaultVehicleId, shopRank, wizardPreview }: EstimateEditorProps) {
   const router = useRouter();
   const isEdit = mode === "edit";
 
@@ -101,7 +110,7 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   // ── Items (editable) ────────────────────────────────────────────────────────
   const keyRef = useRef(0);
   const nextKey = () => `k${keyRef.current++}`;
-  const initialItems: EditorItem[] = (estimate?.estimate_items ?? []).map((it) => ({
+  const initialItems: EditorItem[] = sortByDisplayOrder(estimate?.estimate_items ?? []).map((it) => ({
     key:           it.id,
     category:      it.category,
     item_name:     it.item_name,
@@ -172,6 +181,18 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   const filteredVehicles = customerId ? vehicles.filter((v) => v.customer_id === customerId) : vehicles;
 
   const norm = (s: string | null | undefined) => (s ?? "").replace(/[\s　]/g, "");
+
+  // The legacy editor now consumes the SAME approved rank/layer matrix as the
+  // new-estimate wizard. Missing rank is fail-closed (no selectable coating).
+  const availableCoatings = shopRank
+    ? editorFirstLayerOptions(catalog.coatings, shopRank)
+    : [];
+  const availableTopcoat2 = shopRank
+    ? editorTopcoatKeys(catalog, coatingId, 2, shopRank)
+    : [];
+  const availableTopcoat3 = shopRank
+    ? editorTopcoatKeys(catalog, coatingId, 3, shopRank)
+    : [];
 
   // Apply the reviewed OCR result: (1) append the extracted 車検証 info as a
   // reference block to 社内メモ (the existing editable field — mirrors the legacy
@@ -399,6 +420,19 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
 
   // ── Item helpers ────────────────────────────────────────────────────────────
   function appendService(input: ServiceInput) {
+    if (
+      input.type === "coating" &&
+      (!shopRank || !isEditorCoatingSelectionAllowed(
+        catalog,
+        shopRank,
+        input.coatingId,
+        input.topcoat2,
+        input.topcoat3,
+      ))
+    ) {
+      setError("現在の店舗ランクでは選択できないコーティングが含まれています。選択内容を確認してください。");
+      return;
+    }
     const generated: PricedLineItem[] = buildLineItems([input], catalog);
     if (generated.length === 0) return;
     setItems((prev) => [
@@ -429,6 +463,9 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
   }
   function updateItem(key: string, patch: Partial<EditorItem>) {
     setItems((prev) => prev.map((i) => (i.key === key ? { ...i, ...patch } : i)));
+  }
+  function moveItem(index: number, direction: -1 | 1) {
+    setItems((prev) => moveEditorItem(prev, index, direction));
   }
   function removeItem(key: string) { setItems((prev) => prev.filter((i) => i.key !== key)); }
   function addBlankItem() {
@@ -707,30 +744,36 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
               {/* Coating */}
               <div className="border border-slate-700/60 rounded-lg p-3">
                 <p className="text-xs font-semibold text-blue-300 mb-2">コーティング</p>
-                <select value={coatingId} onChange={(e) => setCoatingId(e.target.value)} className={`${inp} mb-2`}>
-                  <option value="">コーティングを選択...</option>
-                  {catalog.coatings.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-                  <select value={topcoat2} onChange={(e) => setTopcoat2(e.target.value)} className={inp}>
-                    <option value="">トップコート2層目なし</option>
-                    {Object.keys(catalog.topcoatBase).map((t) => <option key={t} value={t}>{catalog.topcoatName[t] ?? t}</option>)}
-                  </select>
-                  <select value={topcoat3} onChange={(e) => setTopcoat3(e.target.value)} className={inp}>
-                    <option value="">トップコート3層目なし</option>
-                    {Object.keys(catalog.topcoatBase).map((t) => <option key={t} value={t}>{catalog.topcoatName[t] ?? t}</option>)}
-                  </select>
-                </div>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {catalog.coatingOptions.filter((o) => o.cat === "coating").map((o) => (
-                    <button key={o.id} type="button" onClick={() => setCoatingOpts((p) => toggle(p, o.id))} className={chip(coatingOpts.includes(o.id))}>{o.name}</button>
-                  ))}
-                </div>
-                {/* TASK 2 — enable once a base coating OR at least one coating option
-                    is selected (options such as ハードポリッシュ/鉄粉除去/付着物除去/タッチアップ
-                    alone are valid). calcCoating already emits lines from options only. */}
-                <button type="button" disabled={!coatingId && coatingOpts.length === 0} onClick={() => appendService({ type: "coating", coatingId, sizeKey, topcoat2: topcoat2 || undefined, topcoat3: topcoat3 || undefined, optionIds: coatingOpts })}
-                  className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
+                {shopRank === "ppf_installer" ? (
+                  <p className="text-xs text-amber-300">現在の店舗ランクではコーティングを選択できません。</p>
+                ) : (
+                  <>
+                    <select value={coatingId} onChange={(e) => { setCoatingId(e.target.value); setTopcoat2(""); setTopcoat3(""); }} className={`${inp} mb-2`}>
+                      <option value="">コーティングを選択...</option>
+                      {availableCoatings.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                      <select value={topcoat2} onChange={(e) => setTopcoat2(e.target.value)} className={inp}>
+                        <option value="">トップコート2層目なし</option>
+                        {availableTopcoat2.map((t) => <option key={t} value={t}>{catalog.topcoatName[t] ?? t}</option>)}
+                      </select>
+                      <select value={topcoat3} onChange={(e) => setTopcoat3(e.target.value)} className={inp}>
+                        <option value="">トップコート3層目なし</option>
+                        {availableTopcoat3.map((t) => <option key={t} value={t}>{catalog.topcoatName[t] ?? t}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {catalog.coatingOptions.filter((o) => o.cat === "coating").map((o) => (
+                        <button key={o.id} type="button" onClick={() => setCoatingOpts((p) => toggle(p, o.id))} className={chip(coatingOpts.includes(o.id))}>{o.name}</button>
+                      ))}
+                    </div>
+                    {/* TASK 2 — enable once a base coating OR at least one coating option
+                        is selected (options such as ハードポリッシュ/鉄粉除去/付着物除去/タッチアップ
+                        alone are valid). calcCoating already emits lines from options only. */}
+                    <button type="button" disabled={!coatingId && coatingOpts.length === 0} onClick={() => appendService({ type: "coating", coatingId, sizeKey, topcoat2: topcoat2 || undefined, topcoat3: topcoat3 || undefined, optionIds: coatingOpts })}
+                      className="text-xs text-blue-400 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 disabled:opacity-40 px-3 py-1.5 rounded-lg">明細に追加</button>
+                  </>
+                )}
               </div>
 
               {/* PPF プラン（全体施工） */}
@@ -884,7 +927,7 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
               <p className="text-xs text-slate-600">明細がありません。上のサービスから追加するか「＋ 行を追加」で手入力してください。</p>
             ) : (
               <div className="overflow-x-auto -mx-1 px-1">
-                <table className="w-full min-w-[560px] text-xs">
+                <table className="w-full min-w-[640px] text-xs">
                   <thead>
                     <tr className="border-b border-slate-700 text-slate-500">
                       <th className="text-left pb-2 pr-2">カテゴリ</th>
@@ -893,11 +936,12 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                       <th className="text-right pb-2 pr-2">数量</th>
                       <th className="text-right pb-2 pr-2">割引%</th>
                       <th className="text-right pb-2 pr-2">小計</th>
+                      <th className="text-center pb-2 pr-2">表示順</th>
                       <th className="pb-2" />
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((it) => (
+                    {items.map((it, index) => (
                       <tr key={it.key} className="border-b border-slate-700/40 last:border-b-0">
                         <td className="py-1.5 pr-2 text-slate-500 whitespace-nowrap">{CATEGORY_LABEL[it.category] ?? it.category}</td>
                         <td className="py-1.5 pr-2">
@@ -913,6 +957,26 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
                           <input type="number" min={0} max={100} value={it.discount_rate} onChange={(e) => updateItem(it.key, { discount_rate: Number(e.target.value) || 0 })} className="w-16 bg-[#0f172a] border border-slate-700 rounded px-2 py-1 text-right text-slate-200" />
                         </td>
                         <td className="py-1.5 pr-2 text-right text-slate-200 whitespace-nowrap">{formatYen(lineTotal(it.quantity, it.unit_price, it.discount_rate))}</td>
+                        <td className="py-1.5 pr-2">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              aria-label={`${it.item_name || "明細"}を上へ`}
+                              title="上へ移動"
+                              disabled={index === 0}
+                              onClick={() => moveItem(index, -1)}
+                              className="w-7 h-7 rounded border border-slate-600 text-slate-300 hover:border-blue-400 hover:text-blue-300 disabled:opacity-25 disabled:hover:border-slate-600 disabled:hover:text-slate-300"
+                            >↑</button>
+                            <button
+                              type="button"
+                              aria-label={`${it.item_name || "明細"}を下へ`}
+                              title="下へ移動"
+                              disabled={index === items.length - 1}
+                              onClick={() => moveItem(index, 1)}
+                              className="w-7 h-7 rounded border border-slate-600 text-slate-300 hover:border-blue-400 hover:text-blue-300 disabled:opacity-25 disabled:hover:border-slate-600 disabled:hover:text-slate-300"
+                            >↓</button>
+                          </div>
+                        </td>
                         <td className="py-1.5 text-right">
                           <button type="button" onClick={() => removeItem(it.key)} className="text-slate-500 hover:text-red-400">✕</button>
                         </td>

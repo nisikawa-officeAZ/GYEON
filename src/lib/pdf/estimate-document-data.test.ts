@@ -134,3 +134,14 @@ test("internal_memo, dealer cost and margin never appear in output", () => {
   assert.ok(!("cost" in (d as unknown as Record<string, unknown>)));
   assert.ok(!("margin" in (d as unknown as Record<string, unknown>)));
 });
+
+test("estimate PDF preserves the operator-selected sort_order across categories", () => {
+  const d = toEstimateDocumentData(estimate({
+    estimate_items: [
+      item({ id: "coat", item_name: "Coating", category: "coating", sort_order: 2 }),
+      item({ id: "other", item_name: "Other", category: "other", sort_order: 0 }),
+      item({ id: "window", item_name: "Window", category: "window", sort_order: 1 }),
+    ],
+  }));
+  assert.deepEqual(d.items.map((row) => row.name), ["Other", "Window", "Coating"]);
+});

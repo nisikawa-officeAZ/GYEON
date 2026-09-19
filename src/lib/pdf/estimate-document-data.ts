@@ -13,7 +13,7 @@
 
 import type { EstimateDB, EstimateItemDB, EstimateStatus, EstimateCategory } from "@/lib/estimates/estimate-types";
 import { estimateDisplayNo } from "@/lib/estimates/estimate-types";
-import { sortByCategoryOrder } from "@/lib/estimates/category-order";
+import { sortByDisplayOrder } from "@/lib/estimates/category-order";
 import { formatDocumentSerial } from "./document-serial";
 import type { EstimateDocumentData, EstimateItem } from "@/components/documents/templates/estimate/estimate-data";
 import type { PartyKind } from "@/components/documents/types";
@@ -95,7 +95,7 @@ function toItem(item: EstimateItemDB): EstimateItem {
 export function toEstimateDocumentData(estimate: EstimateDB): EstimateDocumentData {
   const c = estimate.customers ?? null;
   const v = estimate.vehicles ?? null;
-  const items = sortByCategoryOrder(estimate.estimate_items ?? []);
+  const items = sortByDisplayOrder(estimate.estimate_items ?? []);
 
   return {
     // The stored number is untouched; only its presentation changes.
