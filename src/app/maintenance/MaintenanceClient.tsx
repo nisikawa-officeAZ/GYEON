@@ -90,7 +90,7 @@ export default function MaintenanceClient({ initialReminders, stats }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-[20px] font-bold text-[#edf3fc] md:text-[22px]">メンテナンス通知管理</h1>
+          <h1 className="text-[20px] font-bold text-[#edf3fc] md:text-[22px]">メンテナンス管理</h1>
           <p className="mt-1 text-[10px] font-semibold tracking-[0.22em] text-[#7788a4]">MAINTENANCE</p>
         </div>
         <div className="flex items-center gap-2">

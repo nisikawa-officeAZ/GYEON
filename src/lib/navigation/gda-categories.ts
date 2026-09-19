@@ -38,8 +38,8 @@ export interface GdaCategory {
 /** Owner-approved v18 navigation constitution. */
 export const GDA_CATEGORIES: readonly GdaCategory[] = [
   { id: "home", label: "ダッシュボード", labelEn: "HOME", href: "/", icon: "home", paths: ["/", "/dashboard"] },
-  { id: "customers", label: "顧客・車両", labelEn: "CUSTOMERS", href: "/hub/customers", icon: "customers", paths: ["/hub/customers", "/customers", "/vehicles", "/customer-app"], feature: "customers" },
-  { id: "estimates", label: "見積・作業", labelEn: "ESTIMATES", href: "/hub/estimates", icon: "document", paths: ["/hub/estimates", "/estimates", "/work-orders", "/completion-reports", "/maintenance"], feature: "estimates" },
+  { id: "customers", label: "顧客・車両", labelEn: "CUSTOMERS", href: "/hub/customers", icon: "customers", paths: ["/hub/customers", "/customers", "/vehicles", "/customer-app", "/maintenance"], feature: "customers" },
+  { id: "estimates", label: "見積・作業", labelEn: "ESTIMATES", href: "/hub/estimates", icon: "document", paths: ["/hub/estimates", "/estimates", "/work-orders", "/completion-reports"], feature: "estimates" },
   { id: "reservations", label: "予約", labelEn: "RESERVATIONS", href: "/hub/reservations", icon: "calendar", paths: ["/hub/reservations", "/reservations", "/calendar"], feature: "reservations" },
   { id: "billing", label: "請求・入金", labelEn: "BILLING", href: "/billing", icon: "billing", paths: ["/billing", "/invoices", "/payments", "/points", "/sales", "/monthly-statements"], feature: "invoices" },
   { id: "orders", label: "発注・在庫", labelEn: "ORDERS", href: "/hub/orders", icon: "orders", paths: ["/hub/orders", "/product-orders", "/products", "/inventory"], feature: "products" },

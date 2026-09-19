@@ -264,8 +264,8 @@ test("staff-capacity settings adopts bounded cards and preserves every schedulin
 
 test("large categories enter collision-free hubs while every operational leaf route remains available", () => {
   const hubs = [
-    ["customers", "/hub/customers", ["customers", "vehicles", "customer-app"]],
-    ["estimates", "/hub/estimates", ["estimates", "work-orders", "completion-reports", "maintenance"]],
+    ["customers", "/hub/customers", ["customers", "vehicles", "customer-app", "maintenance"]],
+    ["estimates", "/hub/estimates", ["estimates", "work-orders", "completion-reports"]],
     ["reservations", "/hub/reservations", ["reservations", "calendar"]],
     ["orders", "/hub/orders", ["product-orders", "products", "inventory"]],
     ["messages", "/hub/messages", ["line", "news"]],

@@ -56,6 +56,21 @@ export interface EditorItem {
   discount_rate: number;
 }
 
+/** Move one detail row by one position without mutating the current state array. */
+export function moveEditorItem(
+  items: readonly EditorItem[],
+  index: number,
+  direction: -1 | 1,
+): EditorItem[] {
+  const destination = index + direction;
+  if (index < 0 || index >= items.length || destination < 0 || destination >= items.length) {
+    return [...items];
+  }
+  const next = [...items];
+  [next[index], next[destination]] = [next[destination], next[index]];
+  return next;
+}
+
 // §11.1 — warn before leaving with unsaved changes.
 export function useUnsavedChangesGuard(dirty: boolean) {
   useEffect(() => {

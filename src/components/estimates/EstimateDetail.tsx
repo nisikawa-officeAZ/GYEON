@@ -13,7 +13,7 @@ import type { EstimateRelatedInvoice } from "@/lib/invoices/get-invoice";
 import { buildSavedDeliveryNotePath } from "./wizard/production/SavedEstimateDocuments";
 import SavedEstimateInvoice from "./wizard/production/SavedEstimateInvoice";
 import type { SavedInvoiceActions, SavedInvoiceSummary } from "./wizard/production/saved-estimate-invoice-controller";
-import { sortByCategoryOrder } from "@/lib/estimates/category-order";
+import { sortByDisplayOrder } from "@/lib/estimates/category-order";
 import EstimateSummary from "./EstimateSummary";
 import EstimateStatusControl from "./EstimateStatusControl";
 import EstimateLineAction from "./EstimateLineAction";
@@ -288,11 +288,11 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, v
           {items.length > 0 && (
             <Card title="サービス内容">
               <div className="flex flex-col gap-3">
-                {Array.from(new Set(sortByCategoryOrder(items).map((i) => i.category))).map((cat) => (
+                {Array.from(new Set(sortByDisplayOrder(items).map((i) => i.category))).map((cat) => (
                   <div key={cat}>
                     <p className="text-xs font-semibold text-blue-300">{CATEGORY_LABEL[cat] ?? cat}</p>
                     <ul className="mt-1 flex flex-col gap-0.5">
-                      {items.filter((i) => i.category === cat).map((i) => (
+                      {sortByDisplayOrder(items).filter((i) => i.category === cat).map((i) => (
                         <li key={i.id} className="text-xs text-slate-300">
                           ・{i.item_name}
                           {i.description && <span className="text-slate-500">（{i.description}）</span>}
@@ -321,7 +321,7 @@ export default function EstimateDetail({ estimate, onClose, onCreateWorkOrder, v
                     </tr>
                   </thead>
                   <tbody>
-                    {sortByCategoryOrder(items)
+                    {sortByDisplayOrder(items)
                       .map((item: EstimateItemDB) => (
                         <tr key={item.id} className="border-b border-slate-700/40 last:border-b-0">
                           <td className="py-2 pr-3 text-slate-500 whitespace-nowrap">
