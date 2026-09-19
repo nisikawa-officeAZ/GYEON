@@ -4,7 +4,8 @@
 // pricing model. Document totals (subtotal / tax / discount / grand total) come ENTIRELY from the
 // production engine. Displayed lines are split by identity source: catalog lines come from the
 // engine's coating line items; manual lines are surfaced from the resolved operator amounts. This
-// adapter performs NO tax/discount/coupon arithmetic. Coupons are always 0.
+// adapter performs NO tax/discount/coupon arithmetic. Coupon totals are copied from the production
+// engine exactly as calculated; they are never recomputed here.
 
 import { lineTotal } from "@/lib/pricing/canonical-pricing-engine";
 import type { EstimateResult } from "@/lib/pricing/canonical-pricing-engine";
@@ -143,7 +144,7 @@ export function mapProductionResultToWizard(
     unresolvedItems,
     subtotal:        result.subtotal,
     discountTotal,
-    couponTotal:     0,
+    couponTotal:     result.couponDiscount,
     taxableSubtotal: result.taxableAmount,
     taxTotal:        result.taxAmount,
     grandTotal:      result.total,

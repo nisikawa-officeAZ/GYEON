@@ -3,6 +3,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   buildEstimateWizardSettingsView,
@@ -241,6 +242,27 @@ test("coupon is an editable section, not a planned card", () => {
   assert.ok(coupon, "coupon section must exist");
   assert.equal(coupon.kinds.includes("coupon"), true);
   assert.equal("coupon" in v, false, "the planned-only coupon card must no longer exist");
+});
+
+test("the authoritative settings loader reads every settings-authorable kind", () => {
+  const source = readFileSync(
+    "src/lib/wizard-catalog/get-estimate-wizard-settings-view.ts",
+    "utf8",
+  );
+  const allowlist = source.match(/const EDITABLE_KINDS = \[([\s\S]*?)\] as const;/)?.[1] ?? "";
+
+  for (const kind of [
+    "film_type",
+    "ppf_type_group",
+    "maintenance_menu",
+    "wash_menu",
+    "room_cleaning_menu",
+    "other_work_preset",
+    "store_global_option",
+    "coupon",
+  ]) {
+    assert.match(allowlist, new RegExp(`"${kind}"`), `${kind} must be visible after authoring`);
+  }
 });
 
 test("PPF types are an editable section", () => {

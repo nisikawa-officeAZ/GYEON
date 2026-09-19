@@ -521,8 +521,14 @@ test("B1.1-B2: dealer coupons project into screenConfig and pricingConfig", asyn
   assert.equal(r.ok, true);
   if (!r.ok) return;
   assert.equal(r.screenConfig.coupons.length, 1);
-  assert.equal(r.screenConfig.coupons[0].id, "coupon-a");
+  assert.equal(r.screenConfig.coupons[0].id, "coupon:coupon-a");
   assert.equal(r.pricingConfig.coupons?.length, 1);
+  assert.equal(
+    r.screenConfig.coupons[0].id,
+    r.pricingConfig.coupons?.[0].couponId,
+    "the selectable UI identity must exactly match the authoritative pricing identity",
+  );
+  assert.equal(r.pricingConfig.coupons?.[0].code, "coupon-a", "the editable code remains a separate snapshot field");
   assert.deepEqual(r.pricingConfig.coupons?.[0].value, { kind: "amount", amountYen: 5000 });
 });
 
