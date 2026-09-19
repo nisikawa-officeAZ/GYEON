@@ -2193,3 +2193,56 @@ not_authorized:
   - stage_commit_push_pr_mutation_ready_merge_or_deployment
 next: "VERIFY_THIS_EXACT_TWO_DOCUMENT_CLOSEOUT_AND_PRIORITY_DIFF; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## 20. GDA-LEGACY-CUSTOMER-REGISTRATION-R1 — current-main reconciliation
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_MAIN_RECONCILIATION
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_MAIN_RECONCILIATION_RESULT_V1
+date: 2026-09-18
+status: LOCAL_CURRENT_MAIN_CANDIDATE_VERIFIED_UNSTAGED_UNCOMMITTED
+authorization: "The Owner authorized continuing the local PR #79 current-main reconciliation and verification. Commit, push, PR state change, production migration, merge, and deployment remain separate gates."
+repository: nisikawa-officeAZ/GYEON
+coordination_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+fixed_main:
+  commit: 8e789517bbd67b0cbda326ac8e381c6570d7abfa
+  tree: 194b5a89527325dadb68e4e52a99cfb63fe16883
+source_candidate:
+  commit: 0e9037367f0a73ea4a6424713b77fd16d96d4b02
+  tree: 7903082dec2eca317186f37ffb1eca81bfb376fd
+local_candidate:
+  branch: codex/pr79-main-reconcile-v1
+  worktree: /private/tmp/dealeros-pr79-main-sparse.BAOFDW
+  changed_paths: 20
+reconciliation:
+  non_governance_paths_applied_cleanly: 18
+  conflicting_paths:
+    - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+    - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  conflict_resolution: PRESERVE_CURRENT_MAIN_AND_APPEND_ONE_CURRENT_RECONCILIATION_RECORD
+  compatibility_repair:
+    path: src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts
+    reason: ES2018_DOTALL_FLAG_IN_ES2017_PROJECT
+    behavior_change: NONE_TEST_REGEX_ONLY
+verification:
+  focused_node_tests: PASS_31_OF_31
+  typecheck: PASS
+  production_build: PASS
+  disposable_supabase_pgtap: PASS_42_OF_42
+  separate_connection_same_key_concurrency: PASS_NEW_1_REPLAY_1
+  final_counts: RECEIPT_1_CUSTOMER_1_VEHICLE_1_HISTORY_0
+  production_or_shared_database_contacted: false
+  production_migration_applied: false
+protected_paths:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+delivery_gates:
+  local_candidate: COMPLETE
+  commit: REQUIRES_SEPARATE_OWNER_AUTHORIZATION
+  push_and_preview_update: REQUIRES_SEPARATE_OWNER_AUTHORIZATION_AFTER_COMMIT_REVIEW
+  production_migration: REQUIRES_SEPARATE_AUTHORIZED_PHASE
+  ready_merge_and_deploy: EACH_SEPARATE
+next: "VERIFY_EXACT_20_PATH_DIFF_HASHES_AND_GIT_DIFF_CHECK; THEN REQUEST OWNER AUTHORIZATION FOR ONE LITERAL_20_PATH_LOCAL_COMMIT ONLY."
+```

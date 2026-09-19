@@ -5370,3 +5370,67 @@ git_actions:
   pr_mutated: false
 next: "VERIFY_THIS_EXACT_TWO_DOCUMENT_DELTA_AND_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_TWO_PATH_LOCAL_COMMIT_ONLY."
 ```
+
+## GDA-LEGACY-CUSTOMER-REGISTRATION-R1 — current-main reconciliation result
+
+```yaml
+phase: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_MAIN_RECONCILIATION
+marker: GDA_LEGACY_CUSTOMER_REGISTRATION_R1_MAIN_RECONCILIATION_RESULT_V1
+status: LOCAL_CURRENT_MAIN_CANDIDATE_VERIFIED_UNSTAGED_UNCOMMITTED
+date: 2026-09-18
+authorization: "Local current-main reconciliation and verification only. No commit, push, hosted database, Preview mutation, Ready conversion, merge, or deployment was authorized."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/79
+  main_commit: 8e789517bbd67b0cbda326ac8e381c6570d7abfa
+  main_tree: 194b5a89527325dadb68e4e52a99cfb63fe16883
+  pr_head: 0e9037367f0a73ea4a6424713b77fd16d96d4b02
+  pr_tree: 7903082dec2eca317186f37ffb1eca81bfb376fd
+  local_branch: codex/pr79-main-reconcile-v1
+  local_worktree: /private/tmp/dealeros-pr79-main-sparse.BAOFDW
+scope:
+  pr_paths: 20
+  implementation_and_governance_paths_applied_without_content_conflict: 18
+  canonical_documents_reconciled_append_only: 2
+  source_compatibility_correction:
+    path: src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts
+    change: REPLACE_ES2018_DOTALL_FLAG_WITH_ES2017_COMPATIBLE_CHARACTER_CLASS
+    product_behavior_changed: false
+verification:
+  focused_command: "node --import tsx --test src/components/estimates/estimates-list-legacy-action-cleanup.test.ts src/lib/customers/legacy-registration/legacy-registration-core.test.ts src/lib/customers/legacy-registration/legacy-registration-migration-contract.test.ts src/lib/customers/legacy-registration/legacy-registration-ui-contract.test.ts"
+  focused_result: PASS_31_OF_31
+  typecheck_command: npm_run_typecheck
+  typecheck_result: PASS
+  build_command: npm_run_build
+  build_result: PASS
+  build_notes:
+    - TURBOPACK_WEBPACK_CONFIGURATION_WARNING_ONLY
+    - EXPECTED_DYNAMIC_SERVER_USAGE_DIAGNOSTICS_FOR_COOKIE_BACKED_ROUTES
+  disposable_database:
+    supabase_cli: 2.116.0
+    postgres_image: public.ecr.aws/supabase/postgres:17.6.1.165
+    pgtap_result: PASS_42_OF_42
+    separate_connection_concurrency: PASS
+    connection_results: [IDEMPOTENT_REPLAY_FALSE, IDEMPOTENT_REPLAY_TRUE]
+    final_counts: [RECEIPT_1, CUSTOMER_1, VEHICLE_1, HISTORY_0]
+    local_stack_stopped: true
+    colima_restored_to_stopped: true
+external_mutation:
+  shared_or_production_database: false
+  hosted_supabase_auth_storage: false
+  migration_applied_to_hosted_environment: false
+  preview_or_vercel: false
+git_actions:
+  staged: false
+  committed: false
+  pushed: false
+  pr_state_changed: false
+  ready_merged_or_deployed: false
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+verdict: ACCEPTED_LOCAL_CURRENT_MAIN_CANDIDATE
+next: "VERIFY_EXACT_20_PATH_DIFF_HASHES_AND_GIT_DIFF_CHECK; THEN REQUEST OWNER AUTHORIZATION FOR ONE LITERAL_20_PATH_LOCAL_COMMIT ONLY."
+```
