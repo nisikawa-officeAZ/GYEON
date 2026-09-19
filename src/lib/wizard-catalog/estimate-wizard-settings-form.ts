@@ -12,6 +12,7 @@ import {
   type SupportedAuthoringKind,
   type FilmPresentationInput,
 } from "./wizard-catalog-authoring-types";
+import { isValidCouponCalendarDate } from "@/lib/pricing/configured-coupon-total";
 
 export type WizardItemFormErrors = Readonly<Record<string, string>>;
 
@@ -37,11 +38,9 @@ const MSG = {
   couponDiscountType: "クーポンの割引種別が正しくありません",
   couponDiscountValue: "クーポンの割引値は0以上の整数で入力してください",
   couponCombinable: "クーポンの併用可否の指定が正しくありません",
-  couponValidFrom: "有効期間（開始）はYYYY-MM-DD形式で入力してください",
-  couponValidTo: "有効期間（終了）はYYYY-MM-DD形式で入力してください",
+  couponValidFrom: "有効期間（開始）は実在する日付で入力してください",
+  couponValidTo: "有効期間（終了）は開始日以降の実在する日付で入力してください",
 } as const;
-
-const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 // Writable fields per kind (camelCase, client-facing). Anything else is rejected.
 //
@@ -265,14 +264,22 @@ export function validateWizardItemForm(raw: Record<string, unknown>): WizardItem
 
     // Blank/absent means open-ended and persists as an explicit null.
     if (isBlankOptional(raw.couponValidFrom)) couponValidFrom = null;
-    else if (typeof raw.couponValidFrom === "string" && ISO_DATE_RE.test(raw.couponValidFrom.trim())) {
+    else if (typeof raw.couponValidFrom === "string" && isValidCouponCalendarDate(raw.couponValidFrom.trim())) {
       couponValidFrom = raw.couponValidFrom.trim();
     } else errors.couponValidFrom = MSG.couponValidFrom;
 
     if (isBlankOptional(raw.couponValidTo)) couponValidTo = null;
-    else if (typeof raw.couponValidTo === "string" && ISO_DATE_RE.test(raw.couponValidTo.trim())) {
+    else if (typeof raw.couponValidTo === "string" && isValidCouponCalendarDate(raw.couponValidTo.trim())) {
       couponValidTo = raw.couponValidTo.trim();
     } else errors.couponValidTo = MSG.couponValidTo;
+
+    if (
+      couponValidFrom !== undefined && couponValidFrom !== null &&
+      couponValidTo !== undefined && couponValidTo !== null &&
+      couponValidFrom > couponValidTo
+    ) {
+      errors.couponValidTo = MSG.couponValidTo;
+    }
   }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };

@@ -89,7 +89,21 @@ export type ConfiguredCouponResolution =
     };
 
 const isInt = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n);
-const isIsoDate = (s: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(s);
+/** Strict, timezone-independent calendar-date validation shared by display and pricing. */
+export function isValidCouponCalendarDate(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (year < 1 || month < 1 || month > 12 || day < 1) return false;
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = month === 2
+    ? (leapYear ? 29 : 28)
+    : ([4, 6, 9, 11].includes(month) ? 30 : 31);
+  return day <= daysInMonth;
+}
 
 /**
  * Integer-safe percentage of a yen base, in basis points. `Math.round` is the canonical rule —
@@ -151,7 +165,6 @@ export function resolveConfiguredCoupons(
   if (!Number.isFinite(subtotalYen) || subtotalYen < 0) {
     return fail("INVALID_SUBTOTAL", selectedCouponIds, "小計が確定していないため、クーポンを適用できません。");
   }
-
   const seen = new Set<string>();
   for (const id of selectedCouponIds) {
     if (seen.has(id)) {
@@ -170,10 +183,20 @@ export function resolveConfiguredCoupons(
     if (!c.isActive) {
       return fail("INACTIVE_COUPON", [id], `クーポン「${c.label}」は無効化されています。`);
     }
-    if (c.validFrom !== null && (!isIsoDate(c.validFrom) || calculationDate < c.validFrom)) {
+    if (
+      (c.validFrom !== null && !isValidCouponCalendarDate(c.validFrom)) ||
+      (c.validTo !== null && !isValidCouponCalendarDate(c.validTo)) ||
+      (c.validFrom !== null && c.validTo !== null && c.validFrom > c.validTo)
+    ) {
+      return fail("COUPON_OUTSIDE_VALIDITY", [id], `クーポン「${c.label}」の有効期間が不正です。`);
+    }
+    if ((c.validFrom !== null || c.validTo !== null) && !isValidCouponCalendarDate(calculationDate)) {
+      return fail("COUPON_OUTSIDE_VALIDITY", [id], `クーポン「${c.label}」の有効期間を判定できません。`);
+    }
+    if (c.validFrom !== null && calculationDate < c.validFrom) {
       return fail("COUPON_OUTSIDE_VALIDITY", [id], `クーポン「${c.label}」は有効期間外です。`);
     }
-    if (c.validTo !== null && (!isIsoDate(c.validTo) || calculationDate > c.validTo)) {
+    if (c.validTo !== null && calculationDate > c.validTo) {
       return fail("COUPON_OUTSIDE_VALIDITY", [id], `クーポン「${c.label}」は有効期間外です。`);
     }
     if (c.value.kind === "amount" && (!isInt(c.value.amountYen) || c.value.amountYen < 0)) {
