@@ -1,8 +1,8 @@
 // R56B — source guards for the hardened real persistence gateway.
 //
-// B7-1: the gateway is BOUND — by exactly one file, the authoritative intent action, which is
-// itself unreachable (no route, page, component or barrel imports it). The legacy action remains
-// bound to the placeholder gateway and still writes nothing.
+// The gateway is BOUND by exactly one file, the authoritative intent action. The accepted
+// production create route is its only app-route importer. The legacy action remains bound to the
+// placeholder gateway and still writes nothing.
 // Run: node --import tsx --test src/components/estimates/wizard/save/supabase-persistence-gateway.test.ts
 //
 // The gateway begins with `import "server-only"`, so it is NEVER imported here. Its guarantees are
@@ -238,31 +238,31 @@ test("the legacy dealer-bound allocator and the production route guard are untou
     "the production route guard is untouched");
 });
 
-// ── The gateway is bound ONLY by the unreachable authoritative action ────────
+// ── The gateway is bound ONLY by the authoritative production action ─────────
 
-test("the gateway exports its binding; only the unreachable intent action consumes it", () => {
+test("the gateway exports its binding; only the authoritative intent action consumes it", () => {
   const code = codeOf(GATEWAY);
   assert.match(code, /export const supabasePersistenceGateway/,
     "exported for its one permitted consumer, the authoritative intent action");
-  // Reachability is asserted exhaustively in legacy-save-action-disabled.test.ts; this pins the
-  // one former importer.
+  // Production route reachability is asserted in production-route-reachability.test.ts; this pins
+  // the legacy action as a non-consumer.
   const legacy = codeOf(`${SAVE_DIR}save-estimate-from-wizard-action.ts`);
   assert.equal(legacy.includes("supabase" + "PersistenceGateway"), false,
     "the legacy action no longer binds the real gateway");
 });
 
-// ── B7-0A locked boundaries ─────────────────────────────────────────────────
+// ── Current post-invoice-issuance locked boundaries ─────────────────────────
 
-test("the ten legacy one-argument numbering call sites are intact", () => {
+test("the current legacy one-argument numbering boundary is intact", () => {
   const CALLERS: Array<[string, number]> = [
     ["src/lib/estimates/create-estimate.ts", 1],
-    ["src/lib/invoices/create-invoice.ts", 2],
-    ["src/lib/payments/create-payment.ts", 1],
+    ["src/lib/invoices/create-invoice.ts", 1],
+    ["src/lib/payments/create-payment.ts", 0],
     ["src/lib/work-orders/create-work-order.ts", 1],
     ["src/lib/reservations/create-reservation.ts", 1],
     ["src/lib/reservations/update-reservation.ts", 1],
     ["src/lib/product-orders/create-product-order.ts", 1],
-    ["src/lib/completion-reports/create-completion-report.ts", 1],
+    ["src/lib/completion-reports/create-completion-report.ts", 0],
     ["src/lib/maintenance/create-maintenance-reminder.ts", 1],
   ];
   let total = 0;
@@ -271,7 +271,7 @@ test("the ten legacy one-argument numbering call sites are intact", () => {
     assert.equal(hits, expected, `${file}: one-argument call sites`);
     total += hits;
   }
-  assert.equal(total, 10, "ten legacy one-argument call sites in nine files");
+  assert.equal(total, 7, "seven legacy one-argument call sites across nine guarded files");
 });
 
 test("the numbering allocator module still exposes both entry points unchanged", () => {
@@ -284,13 +284,9 @@ test("the numbering allocator module still exposes both entry points unchanged",
     "still exactly one numbering RPC call site, untouched by B7-0A");
 });
 
-test("B7-1: the authoritative intent action binds the real gateway and stays unmounted", () => {
-  // The module name is assembled from fragments, NOT spelled contiguously. Both
-  // legacy-save-action-disabled.test.ts and wizard-save-intent-orchestrator.test.ts
-  // assert the action has zero importers by scanning every file under src/ for
-  // this name as PLAIN TEXT, so a file that spells it whole — even one merely
-  // READING the action's source, as here — is reported as an importer. Those two
-  // guards fragment the name for the same reason; the resolved path is identical.
+test("the authoritative intent action binds the real gateway and is mounted only by the production create route", () => {
+  // The module name is assembled from fragments so this source guard cannot count
+  // its own text as a production reference. The resolved action path is unchanged.
   const action = codeOf(
     "src/components/estimates/wizard/save/save-estimate-from-wizard-" + "intent-action.ts",
   );
@@ -300,8 +296,8 @@ test("B7-1: the authoritative intent action binds the real gateway and stays unm
   assert.equal(action.includes("notImplementedPersistenceGateway"), false,
     "the placeholder binding is gone");
 
-  // Armed, but still not reachable: the whole safety of B7-1 rests on this, not on
-  // the binding. Route mounting is a separate, later phase and a separate commit.
+  // The accepted production phase mounts this action at exactly one app route. Any additional
+  // route importer would create an unreviewed persistence entry point.
   const appDir = "src/" + "app";
   const { readdirSync, statSync } = require("node:fs") as typeof import("node:fs");
   const walk = (dir: string, out: string[] = []): string[] => {
@@ -313,8 +309,12 @@ test("B7-1: the authoritative intent action binds the real gateway and stays unm
     return out;
   };
   const mod = "save-estimate-from-wizard-" + "intent-action";
-  const routeImporters = walk(appDir).filter((f) => codeOf(f).includes(mod));
-  assert.deepEqual(routeImporters, [], `no route may reach the action yet; found: ${routeImporters.join(", ")}`);
+  const routeImporters = walk(appDir).filter((f) => codeOf(f).includes(mod)).sort();
+  assert.deepEqual(
+    routeImporters,
+    ["src/app/estimates/new/page.tsx"],
+    `only the production create route may reach the action; found: ${routeImporters.join(", ")}`,
+  );
 });
 
 test("the new migration adds the three-argument RPC and drops the four-argument one", () => {
