@@ -926,8 +926,8 @@ export default function EstimateEditor({ mode, estimate, customers, vehicles, de
             {items.length === 0 ? (
               <p className="text-xs text-slate-600">明細がありません。上のサービスから追加するか「＋ 行を追加」で手入力してください。</p>
             ) : (
-              <div className="overflow-x-auto -mx-1 px-1">
-                <table className="w-full min-w-[640px] table-fixed text-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] table-fixed text-xs">
                   <colgroup>
                     <col className="w-28" />
                     <col />

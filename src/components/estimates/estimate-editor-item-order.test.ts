@@ -30,7 +30,8 @@ test("first and last rows cannot move beyond the list", () => {
 
 test("editor keeps compact order controls in one fixed action column and persists sort_order", () => {
   const source = readFileSync(new URL("./EstimateEditor.tsx", import.meta.url), "utf8");
-  assert.match(source, /min-w-\[640px\] table-fixed/);
+  assert.match(source, /min-w-\[560px\] table-fixed/);
+  assert.match(source, /<div className="overflow-x-auto">/);
   assert.match(source, /<col className="w-20" \/>/);
   assert.match(source, />操作<\/th>/);
   assert.doesNotMatch(source, />表示順<\/th>/);
