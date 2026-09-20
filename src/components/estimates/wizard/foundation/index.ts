@@ -2,7 +2,7 @@
 //
 // Presentation-only components + tokens. NO pricing / OCR / save / customer / vehicle /
 // estimate business logic. One responsive system (no separate PC/tablet/mobile impls).
-// Not connected to the live EstimateEditor.
+// Presentation primitives for the canonical wizard. There is no legacy editor connection.
 
 export * from "./tokens";
 export * from "./SelectButton";

@@ -17,12 +17,17 @@ import {
   type EstimatePersistenceGateway,
 } from "./estimate-persistence-gateway";
 import { buildEstimateSaveRpcPayload } from "./estimate-persistence-payload";
+import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
 
 export class EstimatePersistenceService {
   constructor(private readonly gateway: EstimatePersistenceGateway) {}
 
   /** Post-auth orchestration. Assumes the caller already authenticated and resolved the dealer. */
-  async save(request: EstimateSaveRequest, ctx: EstimateSaveServerContext): Promise<EstimateSaveActionResult> {
+  async save(
+    request: EstimateSaveRequest,
+    ctx: EstimateSaveServerContext,
+    draftSnapshot?: Readonly<EstimateWizardDraftV22>,
+  ): Promise<EstimateSaveActionResult> {
     const E = ESTIMATE_SAVE_ACTION_ERRORS;
     const base = { requestId: ctx.requestId, dealerId: ctx.dealerId, userId: ctx.userId };
 
@@ -46,7 +51,7 @@ export class EstimatePersistenceService {
 
     // Invoke the gateway (atomic RPC, or the disabled placeholder). Controlled result mapping only.
     try {
-      const gw = await this.gateway.saveEstimate(payload, ctx);
+      const gw = await this.gateway.saveEstimate(payload, ctx, draftSnapshot);
       if (!gw.ok) {
         const code = toActionErrorCode(gw.code);
         logEstimateSaveStage({ ...base, stage: "rpc", validationOk: true, errorCode: code });

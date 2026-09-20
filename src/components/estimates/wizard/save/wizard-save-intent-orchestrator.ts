@@ -149,7 +149,11 @@ export interface WizardSaveIntentDeps {
   readonly computePricing: typeof computeWizardPricingFromConfig;
   readonly mapSaveRequest: typeof mapWizardDraftToSaveRequestFromConfig;
   readonly validateSaveRequest: typeof validateEstimateSaveRequest;
-  readonly persist: (request: EstimateSaveRequest, context: EstimateSaveServerContext) => Promise<EstimateSaveActionResult>;
+  readonly persist: (
+    request: EstimateSaveRequest,
+    context: EstimateSaveServerContext,
+    draftSnapshot: Readonly<EstimateWizardDraftV22>,
+  ) => Promise<EstimateSaveActionResult>;
   readonly requestId: string;
   /**
    * OBS-1L-B7 — pre-persist observability seam.
@@ -364,7 +368,7 @@ export async function runWizardSaveIntent(
       dealerId: context.dealerId,
       userId: context.userId,
       idempotencyKey: intent.idempotencyKey,
-    });
+    }, intent.draft);
   } catch {
     // The seam THREW rather than returning. EstimatePersistenceService emits its
     // record immediately before each of its five returns, so a throw means it

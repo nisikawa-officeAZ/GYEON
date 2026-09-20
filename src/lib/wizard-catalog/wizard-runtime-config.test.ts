@@ -290,10 +290,9 @@ test("server wrapper wires the strict provider only (no fail-open provider / def
   assert.equal(/service_role|SERVICE_ROLE/.test(code), false, "no service-role client");
 });
 
-test("the three legacy fail-open consumers still reference getDealerPricingCatalog (unchanged)", () => {
+test("the remaining legacy fail-open consumers still reference getDealerPricingCatalog", () => {
   for (const p of [
     "src/lib/pricing/get-dealer-pricing-catalog.ts",
-    "src/components/estimates/EstimateEditor.tsx",
     "src/lib/wizard-catalog/get-estimate-wizard-settings-view.ts",
   ]) {
     assert.match(readFileSync(p, "utf8"), /getDealerPricingCatalog/, `${p} keeps its fail-open provider`);

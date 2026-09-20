@@ -40,7 +40,7 @@ test("the gateway is server-only and uses the admin (service-role) client", () =
 test("the gateway calls the atomic RPC exactly once, with server-resolved context", () => {
   const code = codeOf(GATEWAY);
   assert.equal((code.match(/\.rpc\(/g) ?? []).length, 1, "exactly one RPC call");
-  assert.match(code, /\.rpc\(\s*["']save_estimate_from_wizard["']/, "calls the atomic save RPC");
+  assert.match(code, /\.rpc\(\s*["']save_estimate_from_wizard_v2["']/, "calls the snapshot-bearing atomic save RPC");
   assert.match(code, /p_dealer_id:\s*ctx\.dealerId/, "dealer id comes from the server context");
   assert.match(code, /p_actor_user_id:\s*ctx\.userId/, "actor id comes from the server context");
   // The payload must never carry a dealer id.
@@ -142,18 +142,19 @@ test("the gateway performs NO pre-allocation — numbering happens inside the RP
   assert.equal(/getCurrentDealer/.test(code), false, "the gateway never resolves a dealer itself");
 });
 
-test("the gateway calls the atomic RPC exactly once with exactly three arguments", () => {
+test("the gateway calls the snapshot-bearing atomic RPC exactly once with exactly four arguments", () => {
   const code = codeOf(GATEWAY);
   assert.equal((code.match(/\.rpc\(/g) ?? []).length, 1, "exactly one RPC call");
-  assert.match(code, /\.rpc\(\s*["']save_estimate_from_wizard["']/, "the atomic save RPC");
+  assert.match(code, /\.rpc\(\s*["']save_estimate_from_wizard_v2["']/, "the atomic save RPC");
   assert.match(code, /p_dealer_id:\s*ctx\.dealerId/, "dealer id from the server context");
   assert.match(code, /p_actor_user_id:\s*ctx\.userId/, "actor id from the server context");
   assert.match(code, /p_payload:\s*payload/, "the canonical payload");
+  assert.match(code, /p_draft_snapshot:\s*draftSnapshot/, "the immutable canonical draft snapshot");
   // The parameter no longer exists in the RPC; supplying it would be a hard error.
   assert.equal(/p_estimate_number/.test(code), false, "no p_estimate_number is ever sent");
-  // Exactly three p_ arguments, no more.
+  // Exactly four p_ arguments, no more.
   const args = code.match(/p_[a-z_]+:/g) ?? [];
-  assert.deepEqual([...args].sort(), ["p_actor_user_id:", "p_dealer_id:", "p_payload:"]);
+  assert.deepEqual([...args].sort(), ["p_actor_user_id:", "p_dealer_id:", "p_draft_snapshot:", "p_payload:"]);
 });
 
 test("the gateway never manufactures an estimate number", () => {

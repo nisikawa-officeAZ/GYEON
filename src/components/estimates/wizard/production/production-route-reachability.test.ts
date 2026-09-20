@@ -12,8 +12,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
-import { createHash } from "node:crypto";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 
 const ROUTE = "src/app/estimates/new/page.tsx";
 
@@ -203,13 +202,13 @@ test("the real action has exactly ONE production importer: the create route", ()
   assert.deepEqual(importers, [ROUTE], `action importers: ${importers.join(", ")}`);
 });
 
-test("ProductionEstimateWizard has exactly ONE route importer: the create route", () => {
+test("ProductionEstimateWizard is mounted only by the canonical create and revision routes", () => {
   const importers: string[] = [];
   for (const file of walk("src/app")) {
     if (isTest(file)) continue;
     if (codeOf(file).includes("ProductionEstimateWizard")) importers.push(file);
   }
-  assert.deepEqual(importers, [ROUTE], `route importers: ${importers.join(", ")}`);
+  assert.deepEqual(importers.sort(), ["src/app/estimates/[id]/edit/page.tsx", ROUTE], `route importers: ${importers.join(", ")}`);
 });
 
 test("the real gateway still has exactly ONE production importer: the authoritative action", () => {
@@ -229,17 +228,37 @@ test("the save barrel exports neither the real action nor a second adapter", () 
   assert.equal(/export\s+\*/.test(raw), false, "no wildcard export could re-export it");
 });
 
-// ── The two locked existing surfaces remain byte-identical ──────────────────
+// ── Legacy executable surfaces stay unreachable ─────────────────────────────
 
-test("the edit route and EstimateEditor are byte-unchanged", () => {
-  const locked: Record<string, string> = {
-    "src/app/estimates/[id]/edit/page.tsx":
-      "56da7e5dae16842b766e87f63bbb22cba094eb3dd1326aa207d0ead00d8d8de8",
-    "src/components/estimates/EstimateEditor.tsx":
-      "188ba1b50cc5dd4503fa8538a0cb6a6dbac219d691d1d013d5f29b7cdf7f9207",
-  };
-  for (const [file, digest] of Object.entries(locked)) {
-    assert.equal(createHash("sha256").update(readFileSync(file)).digest("hex"), digest,
-      `${file} must remain byte-identical`);
+test("no production route imports the legacy EstimateEditor", () => {
+  const importers = walk("src/app")
+    .filter((file) => !isTest(file))
+    .filter((file) => importsModule(codeOf(file), "components/estimates/EstimateEditor"));
+  assert.deepEqual(importers, [], `legacy editor route importers: ${importers.join(", ")}`);
+});
+
+test("legacy estimate and mock PDF source files are physically absent", () => {
+  for (const file of [
+    "src/components/estimates/EstimateEditor.tsx",
+    "src/components/estimates/estimate-editor-helpers.ts",
+    "src/components/estimates/estimate-editor-coating-eligibility.ts",
+    "src/components/pdf/PDFPreview.tsx",
+    "src/components/pdf/mockPdfEstimate.ts",
+  ]) {
+    assert.equal(existsSync(file), false, `${file} must not be reintroduced`);
   }
+});
+
+test("the edit route fails closed and hands re-creation only to the canonical wizard", () => {
+  const editRoute = codeOf("src/app/estimates/[id]/edit/page.tsx");
+  assert.equal(editRoute.includes("EstimateEditor"), false);
+  assert.match(editRoute, /data-testid="canonical-estimate-edit-boundary"/);
+  assert.match(editRoute, /href=\{`\/estimates\/new\?\$\{query\.toString\(\)\}`\}/);
+  assert.match(editRoute, /元の見積は変更されません/);
+});
+
+test("the canonical preview bridge renders WizardPreviewPanel directly", () => {
+  const bridge = codeOf("src/components/estimates/wizard/integration/WizardEstimatePreviewBridge.tsx");
+  assert.equal(bridge.includes("EstimateEditor"), false);
+  assert.match(bridge, /<WizardPreviewPanel data=\{preview\} \/>/);
 });

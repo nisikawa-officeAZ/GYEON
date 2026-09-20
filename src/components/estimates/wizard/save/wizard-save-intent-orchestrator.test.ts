@@ -173,10 +173,10 @@ function makeDeps(over: Over = {}): {
     },
     mapSaveRequest: (input) => { trace.push("mapSaveRequest"); seen.mapperInput = input; return impl.mapSaveRequest(input); },
     validateSaveRequest: (request) => { trace.push("validateSaveRequest"); return impl.validateSaveRequest(request); },
-    persist: (request, context) => {
+    persist: (request, context, draftSnapshot) => {
       trace.push("persist");
       seen.persistArgs = { request, context };
-      return impl.persist(request, context);
+      return impl.persist(request, context, draftSnapshot);
     },
     requestId: impl.requestId,
     // Deliberately NOT pushed onto `trace`: the existing ordering assertions compare

@@ -81,7 +81,7 @@ export async function saveEstimateFromWizardIntentAction(raw: unknown): Promise<
     computePricing: computeWizardPricingFromConfig,
     mapSaveRequest: mapWizardDraftToSaveRequestFromConfig,
     validateSaveRequest: validateEstimateSaveRequest,
-    persist: (request, context) => persistenceService.save(request, context),
+    persist: (request, context, draftSnapshot) => persistenceService.save(request, context, draftSnapshot),
     requestId,
     // Bound to the SAME id the persistence context carries, so every record from one
     // save attempt correlates — whether it was emitted before persistence by the

@@ -200,7 +200,9 @@ test("9. mobile and desktop total displays follow the same null rule", () => {
 
 test("10. the host stores no pricing input/result in WizardStore / draft / hook state", () => {
   const code = codeOf(HOST_SRC);
-  assert.equal(/useState|useReducer/.test(code), false, "host holds no local state");
+  // Transient OCR/body-size presentation state is legitimate. The invariant is
+  // specifically that pricing inputs/results never become local business state.
+  assert.equal(/useState[^\n]*(?:pricing|totals)|useReducer/.test(code), false, "host stores no pricing state");
   assert.equal(/updateStore\(/.test(code), false, "host never writes services/draft");
   assert.match(code, /useWizardPricingFromConfig\(\s*api\.draft/, "draft is read-only input to pricing");
   assert.match(code, /const\s+totals:\s*WizardTotals\s*=\s*\{/, "result projected into a local view, not stored");
