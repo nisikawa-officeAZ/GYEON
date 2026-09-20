@@ -14,7 +14,12 @@ import { effectiveExistingCustomer, effectiveExistingVehicle } from "./existing-
 import { serviceCategoryLabel } from "@/lib/estimates/service-categories";
 import type { WizardSaveBinding } from "../save/WizardSavePanel";
 import { WizardSavePanel } from "../save/WizardSavePanel";
+import type { WizardPricingResult } from "../pricing/wizard-pricing-types";
+import { orderedWizardPricingLines, wizardPricingLineId } from "../pricing/wizard-line-order";
 import { Card, SectionTitle, PhaseTwoNotice } from "../ui";
+
+const pricingCategoryLabel = (category: string) =>
+  category === "store_global_options" ? "共通オプション" : serviceCategoryLabel(category);
 
 // B7-2C: the save binding is OPTIONAL here on purpose. Only the production wrapper
 // supplies one; bare EstimateWizard mounts (every non-production test) keep the
@@ -33,14 +38,24 @@ import { Card, SectionTitle, PhaseTwoNotice } from "../ui";
 // entries keep their draft-field display.
 
 export function Step7Review({
-  api, customers, vehicles, saveBinding,
+  api, customers, vehicles, pricing, saveBinding,
 }: {
   api: EstimateWizardApi;
   customers: readonly WizardExistingCustomerReference[];
   vehicles: readonly WizardExistingVehicleReference[];
+  pricing: WizardPricingResult;
   saveBinding?: WizardSaveBinding;
 }) {
   const s = api.store;
+  const orderedLines = orderedWizardPricingLines(pricing.lines, api.draft.review.serviceLineOrder);
+
+  const moveLine = (index: number, delta: -1 | 1) => {
+    const target = index + delta;
+    if (target < 0 || target >= orderedLines.length) return;
+    const ids = orderedLines.map(wizardPricingLineId);
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    api.setServiceLineOrder(ids);
+  };
 
   const existingCustomer = effectiveExistingCustomer(customers, s.customer.regMethod, s.customer.existingId);
   const customerLabel = existingCustomer !== null
@@ -66,6 +81,50 @@ export function Step7Review({
           <div className="flex justify-between"><dt className="text-slate-500">車両</dt><dd>{vehicleLabel}</dd></div>
           <div className="flex justify-between"><dt className="text-slate-500">作業</dt><dd>{s.categories.map(serviceCategoryLabel).join(" / ") || "—"}</dd></div>
         </dl>
+      </Card>
+      <Card>
+        <SectionTitle>明細の表示順</SectionTitle>
+        <p className="mb-3 text-xs text-slate-500">保存後の見積詳細とPDFに反映されます。</p>
+        {orderedLines.length === 0 ? (
+          <p className="text-xs text-slate-500">明細がありません。</p>
+        ) : (
+          <ol className="space-y-2">
+            {orderedLines.map((line, index) => (
+              <li
+                key={wizardPricingLineId(line)}
+                className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-slate-700/60 bg-[#0b1220] p-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-100">{line.label}</p>
+                  <p className="truncate text-[11px] text-slate-500">
+                    {pricingCategoryLabel(line.category)}・数量 {line.quantity}
+                    {line.lineTotal !== null ? `・¥${line.lineTotal.toLocaleString("ja-JP")}` : ""}
+                  </p>
+                </div>
+                <div className="grid shrink-0 grid-cols-2 gap-1" aria-label={`${line.label}の表示順`}>
+                  <button
+                    type="button"
+                    aria-label={`${line.label}を上へ`}
+                    onClick={() => moveLine(index, -1)}
+                    disabled={index === 0}
+                    className="inline-flex size-10 items-center justify-center rounded-lg border border-slate-600 text-slate-200 disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`${line.label}を下へ`}
+                    onClick={() => moveLine(index, 1)}
+                    disabled={index === orderedLines.length - 1}
+                    className="inline-flex size-10 items-center justify-center rounded-lg border border-slate-600 text-slate-200 disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    ↓
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
       </Card>
       {saveBinding
         ? <WizardSavePanel draft={api.draft} binding={saveBinding} />

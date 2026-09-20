@@ -74,6 +74,7 @@ export const DEFERRED_FIELD_CONTRACT: readonly FieldContractEntry[] = [
   { ewUiField: "notesCustomer",           canonical: "notes.customerNotes", dto: "notes.customerNotes", db: "estimates.customer_notes", status: "LOSSLESS", note: "EW-UI-2A: bound; strictly separate from internal memo." },
   { ewUiField: "notesInternal",           canonical: "notes.internalMemo", dto: "notes.internalMemo", db: "estimates.internal_memo", status: "LOSSLESS", note: "EW-UI-2A: bound; staff-only, never customer-facing." },
   { ewUiField: "review.previewConfirmed", canonical: "review.previewConfirmed", dto: null, db: null, status: "CONTROLLER_PHASE", note: "preview-only boolean; not exposed by the EW-UI-2A controller write surface yet (updateReview wiring is a later phase)." },
+  { ewUiField: "review.serviceLineOrder", canonical: "review.serviceLineOrder", dto: "services[] order", db: "estimate_items.sort_order", status: "LOSSLESS", note: "Screen 7 writes stable line identities; save ordering becomes sort_order and is reused by detail/PDF." },
   { ewUiField: "dealerRank",              canonical: null, dto: null, db: null, status: "REMOVED_DUPLICATE_AUTHORITY", note: "removed from WizardStore in EW-FC-1A; authoritative rank is a future trusted-host input" },
 ];
 

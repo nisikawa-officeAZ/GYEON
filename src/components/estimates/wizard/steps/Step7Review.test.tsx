@@ -25,6 +25,7 @@ import type {
   WizardExistingCustomerReference,
   WizardExistingVehicleReference,
 } from "../contract/wizard-runtime-inputs";
+import { EMPTY_WIZARD_PRICING_RESULT } from "../pricing/wizard-pricing-types";
 
 const CUSTOMERS: readonly WizardExistingCustomerReference[] = [
   { id: "c1", displayName: "山田 太郎 様", phone: "09011112222" },
@@ -56,7 +57,11 @@ function storeWith(overrides: Partial<Step7Store> = {}): Step7Store {
 // Step 7 reads only api.store (api.draft feeds the OPTIONAL save panel, absent in
 // every test here), so a minimal projection stands in for the full hook.
 function apiFor(store: Step7Store): EstimateWizardApi {
-  return { store, draft: {} } as unknown as EstimateWizardApi;
+  return {
+    store,
+    draft: { review: { serviceLineOrder: [] } },
+    setServiceLineOrder: () => undefined,
+  } as unknown as EstimateWizardApi;
 }
 
 function renderStep(
@@ -65,7 +70,7 @@ function renderStep(
   vehicles: readonly WizardExistingVehicleReference[] = VEHICLES,
 ): string {
   return renderToStaticMarkup(
-    <Step7Review api={apiFor(store)} customers={customers} vehicles={vehicles} />,
+    <Step7Review api={apiFor(store)} customers={customers} vehicles={vehicles} pricing={EMPTY_WIZARD_PRICING_RESULT} />,
   );
 }
 
@@ -198,6 +203,38 @@ describe("Step7Review — service categories use the canonical Japanese labels",
   });
 });
 
+describe("Step7Review — canonical line-order controls stay inside the responsive card", () => {
+  it("renders persisted order with fixed controls and no wide table", () => {
+    const pricing = {
+      ...EMPTY_WIZARD_PRICING_RESULT,
+      lines: [
+        {
+          kind: "catalog" as const, category: "coating", sourceId: "coating:PURE EVO", label: "PURE EVO",
+          quantity: 1, unitPrice: 80_000, lineSubtotal: 80_000, discountAmount: null, taxAmount: null,
+          lineTotal: 80_000, pricingReferenceId: "pure-evo", catalogLineRole: "base" as const,
+        },
+        {
+          kind: "manual" as const, category: "maintenance", sourceId: "maintenance:mm1", label: "メンテナンス",
+          quantity: 1, unitPrice: 5_000, lineSubtotal: 5_000, discountAmount: null, taxAmount: null,
+          lineTotal: 5_000, pricingReferenceId: null, catalogLineRole: null,
+        },
+      ],
+    };
+    const api = {
+      ...apiFor(storeWith()),
+      draft: { review: { serviceLineOrder: ["manual:maintenance:mm1", "catalog:coating:base:pure-evo"] } },
+    } as unknown as EstimateWizardApi;
+    const html = renderToStaticMarkup(
+      <Step7Review api={api} customers={CUSTOMERS} vehicles={VEHICLES} pricing={pricing} />,
+    );
+    assert.ok(html.indexOf("メンテナンス") < html.indexOf("PURE EVO"), "saved order is rendered");
+    assert.match(html, /grid-cols-\[minmax\(0,1fr\)_auto\]/);
+    assert.match(html, /aria-label="メンテナンスを上へ"/);
+    assert.match(html, /aria-label="PURE EVOを下へ"/);
+    assert.doesNotMatch(html, /<table/);
+  });
+});
+
 describe("Step7Review — display resolution never mutates its inputs", () => {
   it("renders against deep-frozen store, draft and reference arrays without writing to them", () => {
     const store = deepFreeze(storeWith({
@@ -212,7 +249,7 @@ describe("Step7Review — display resolution never mutates its inputs", () => {
     // Frozen inputs make any mutation throw; the snapshot comparison then proves
     // the rendered resolution left every supplied object byte-identical.
     const html = renderToStaticMarkup(
-      <Step7Review api={apiFor(store)} customers={customers} vehicles={vehicles} />,
+      <Step7Review api={apiFor(store)} customers={customers} vehicles={vehicles} pricing={EMPTY_WIZARD_PRICING_RESULT} />,
     );
 
     assert.equal(rowValue(html, "顧客"), "山田 太郎 様");
