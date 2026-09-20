@@ -61,12 +61,20 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreat
       <div className="hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[42rem] table-fixed text-sm">
+            <colgroup>
+              <col className="w-28" />
+              <col />
+              <col />
+              <col className="w-24" />
+              <col className="w-24" />
+              <col className="w-64" />
+            </colgroup>
             <thead>
               <tr className="border-b border-[#20304a]">
                 <th className="w-28 text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">No</th>
                 <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">顧客</th>
                 <th className="text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">車両</th>
-                <th className="min-w-[6.5rem] whitespace-nowrap text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">ステータス</th>
+                <th className="w-24 whitespace-nowrap text-center text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">ステータス</th>
                 <th className="w-24 text-left text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">作成日</th>
                 <th className="w-64 text-center text-xs font-medium text-[#7788a4] px-3 py-2.5 lg:px-4 lg:py-3">操作</th>
               </tr>
@@ -100,7 +108,7 @@ export default function EstimateTable({ estimates, onViewDetail, onEdit, onCreat
                       {estimateVehicleLabel(e.vehicles)}
                     </span>
                   </td>
-                  <td className="min-w-[6.5rem] whitespace-nowrap px-3 py-2.5 lg:px-4 lg:py-3">
+                  <td className="w-24 whitespace-nowrap px-3 py-2.5 text-center lg:px-4 lg:py-3">
                     <span className={`inline-flex whitespace-nowrap text-xs font-medium px-2 py-0.5 rounded ${STATUS_BADGE[e.status] ?? "bg-slate-700 text-slate-300"}`}>
                       {estimateStatusLabel(e.status)}
                     </span>

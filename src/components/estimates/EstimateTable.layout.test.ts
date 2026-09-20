@@ -4,13 +4,21 @@ import test from "node:test";
 
 const source = readFileSync(new URL("./EstimateTable.tsx", import.meta.url), "utf8");
 
-test("the desktop status column and badge stay on one horizontal line", () => {
+test("fixed utility columns leave the remaining desktop width to customer and vehicle", () => {
   assert.match(
     source,
-    /<th className="min-w-\[6\.5rem\] whitespace-nowrap[^\"]*">ステータス<\/th>/,
+    /<colgroup>\s*<col className="w-28" \/>\s*<col \/>\s*<col \/>\s*<col className="w-24" \/>\s*<col className="w-24" \/>\s*<col className="w-64" \/>\s*<\/colgroup>/,
+  );
+});
+
+test("the desktop status column has a fixed width and the badge stays on one line", () => {
+  assert.match(
+    source,
+    /<th className="w-24 whitespace-nowrap text-center[^\"]*">ステータス<\/th>/,
   );
   assert.match(
     source,
-    /<td className="min-w-\[6\.5rem\] whitespace-nowrap[^\"]*">\s*<span className=\{`inline-flex whitespace-nowrap/,
+    /<td className="w-24 whitespace-nowrap[^\"]*text-center[^\"]*">\s*<span className=\{`inline-flex whitespace-nowrap/,
   );
+  assert.doesNotMatch(source, /min-w-\[6\.5rem\]/);
 });
