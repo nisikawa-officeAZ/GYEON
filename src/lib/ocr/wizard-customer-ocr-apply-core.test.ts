@@ -11,7 +11,7 @@
 // B2-C.4C: the effective-party tests that used to live here have moved to
 // ocr-customer-mapping.test.ts along with the rule itself. This file no longer owns a second copy
 // of that contract — it tests only what this module actually decides: candidate precedence, the
-// anti-mixing rule, and which draft fields are eligible.
+// anti-mixing rule, address-derived postal codes, and which draft fields are eligible.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -186,19 +186,42 @@ test("the applied fields all come from one party (delegated to the shared resolv
   );
 });
 
-// ── the patch may never widen beyond three fields ───────────────────────────────
+test("extracts and normalizes a postal code printed in the selected party address", () => {
+  const patch = buildWizardCustomerOcrPatch({
+    owner_name: "山田太郎",
+    owner_address: "〒５２０−１２３４ 滋賀県大津市1-2-3",
+  });
+  assert.equal(patch.postal, "520-1234");
+  assert.equal(patch.address, "〒５２０−１２３４ 滋賀県大津市1-2-3");
+});
 
-test("emits only name, kana and address — never phone, email, postal or LINE id", () => {
+test("postal code obeys candidate precedence and never comes from the other party", () => {
+  const patch = buildWizardCustomerOcrPatch({
+    customer_candidate_name: "山田太郎",
+    customer_candidate_address: "〒100-0001 東京都千代田区",
+    user_address: "〒220-0001 神奈川県横浜市",
+  });
+  assert.equal(patch.postal, "100-0001");
+});
+
+test("an address without a printed postal code leaves operator input untouched", () => {
+  const patch = buildWizardCustomerOcrPatch({ owner_name: "山田太郎", owner_address: "滋賀県大津市1-2-3" });
+  assert.equal("postal" in patch, false);
+});
+
+// ── the patch may never widen beyond four fields ────────────────────────────────
+
+test("emits only name, kana, address and address-derived postal — never contact fields", () => {
   const patch = buildWizardCustomerOcrPatch({
     owner_name: "山田太郎",
     owner_name_kana: "ヤマダタロウ",
-    owner_address: "東京都港区1-2-3",
+    owner_address: "〒100-0001 東京都港区1-2-3",
     // Fields a 車検証 does carry, none of which are customer-contact fields:
     chassis_number: "ABC-1234567",
     license_plate_number: "1234",
     color: "白",
   });
-  assert.deepEqual(Object.keys(patch).sort(), ["address", "kana", "name"]);
+  assert.deepEqual(Object.keys(patch).sort(), ["address", "kana", "name", "postal"]);
   for (const key of Object.keys(patch)) {
     assert.ok(
       (OCR_APPLICABLE_DRAFT_FIELDS as readonly string[]).includes(key),

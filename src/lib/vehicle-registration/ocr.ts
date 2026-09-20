@@ -29,6 +29,8 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
   - registration_date: 「登録年月日」＝現在の登録日（YYYY-MM-DD）。新規/中古/名義変更など現在の登録時期
 - ナンバープレートは region/class/kana/number の4項目に分割
 - 所有者(owner)と使用者(user)は必ず別項目として抽出する（両方を保持）
+- 住所の近くに郵便番号が明確に印字されている場合は、省略せず「〒000-0000 住所」の形で対応する
+  owner_address / user_address の先頭に含める。印字がない場合は推測しないこと
 - customer_type: 顧客が個人なら "individual"、法人・会社・店舗なら "corporation"、不明なら "unknown"
 - owner_user_separated: 所有者と使用者が明らかに異なる場合 "true"、同一なら "false"、不明なら "unknown"
 - length_mm / width_mm / height_mm: 車検証に記載された長さ・幅・高さをmm単位の数値で返す。不鮮明・欠損時は null。単位換算以外の推測は禁止
