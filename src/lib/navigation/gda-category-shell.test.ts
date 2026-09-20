@@ -340,9 +340,9 @@ test("TOP plan badge, trial badge, and countdown are driven by separate authenti
   assert.match(top, /trialDays === 0 \? 'トライアル終了' : '残り' \+ trialDays \+ '日'/);
   assert.match(top, /trialDays <= 3/);
   assert.match(top, /trialDays <= 7/);
-  assert.match(top, /tag\.textContent = 'BASIC'/);
-  assert.match(top, /tag\.textContent = 'PRO'/);
-  assert.match(top, /tag\.textContent = 'PRO\+'/);
+  assert.match(top, /tag\.textContent = 'Basic'/);
+  assert.match(top, /tag\.textContent = 'Pro'/);
+  assert.match(top, /tag\.textContent = 'Pro\+'/);
   assert.doesNotMatch(top, /data-plan="pro" data-trial="1"/);
   assert.doesNotMatch(top, /残り180日/);
 });
