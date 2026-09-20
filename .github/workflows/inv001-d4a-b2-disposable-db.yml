@@ -47,6 +47,7 @@ jobs:
       - name: Install locked dependencies without cache
         env:
           NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/inv001-d4a-b2-npmrc
+          NODE_AUTH_TOKEN: ${{ github.token }}
         run: npm ci
 
       - name: Verify exact two-path change set
