@@ -3,7 +3,8 @@
 // Mounts the APPROVED wizard (ScreensPreview) under the existing super-admin Developer Preview area,
 // and 404s outside development so no production route serves it. It reuses the existing wizard
 // implementation verbatim — NO UI redesign, NO save/pricing/RPC/DB change, and it does NOT use the
-// excluded Unified Wizard draft. Production routes and the existing EstimateEditor flow are unchanged.
+// excluded Unified Wizard draft. This development-only preview is not a production estimate path;
+// production create and revision routes use the canonical ProductionEstimateWizard.
 
 import { getCurrentAdmin } from "@/lib/admin/get-current-admin";
 import { getCurrentUser } from "@/lib/auth/get-current-user";

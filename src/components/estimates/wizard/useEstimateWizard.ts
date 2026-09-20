@@ -64,13 +64,19 @@ export function useEstimateWizard(
   // Fail-closed default: without references an existing selection is never effective,
   // so navigation blocks rather than trusting an unverifiable id.
   references: WizardNavigationReferences = EMPTY_NAVIGATION_REFERENCES,
+  initialDraft?: Readonly<EstimateWizardDraftV22>,
 ): EstimateWizardApi {
   const { customers, vehicles } = references;
 
   // ONE state object — the canonical draft. Initial partial store folds through the SAME adapter,
   // and a restored later step is normalized to its first unmet prerequisite before first render.
   const [draft, setDraft] = useState<EstimateWizardDraftV22>(() => {
-    const d = initialCanonicalDraft(initial);
+    // A revision source has already crossed the server validator and is the exact
+    // immutable snapshot of its predecessor. It takes precedence over query/prefill
+    // patches; mixing both would silently overwrite history during hydration.
+    const d = initialDraft === undefined
+      ? initialCanonicalDraft(initial)
+      : setCurrentStep(initialDraft, 1);
     return setCurrentStep(d, normalizeRestoredStep(d.metadata.currentStep, { draft: d, customers, vehicles }));
   });
 

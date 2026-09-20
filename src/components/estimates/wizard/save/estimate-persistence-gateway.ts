@@ -13,6 +13,7 @@
 
 import type { EstimateSaveServerContext } from "./estimate-save-orchestration-types";
 import type { EstimateSaveRpcPayload } from "./estimate-persistence-payload";
+import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
 
 export type EstimateSaveGatewayResult =
   | {
@@ -35,6 +36,7 @@ export interface EstimatePersistenceGateway {
   saveEstimate(
     payload: EstimateSaveRpcPayload,
     context: EstimateSaveServerContext,
+    draftSnapshot?: Readonly<EstimateWizardDraftV22>,
   ): Promise<EstimateSaveGatewayResult>;
 }
 

@@ -42,6 +42,8 @@ import {
 } from "../save/wizard-idempotency-session";
 import SavedEstimateDocuments, { classifySavedEstimateCompletion } from "./SavedEstimateDocuments";
 import type { SavedInvoiceActions } from "./saved-estimate-invoice-controller";
+import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
+import type { WizardRevisionSource } from "../save/revision-save-intent";
 
 export const WIZARD_SESSION_QUERY_KEY = "ws";
 
@@ -79,6 +81,11 @@ export interface ProductionEstimateWizardProps
   readonly expectedConfigRevision: number;
   /** Preserves EstimateWizard's existing optional mode. */
   readonly mode?: "create" | "edit";
+  /** Server-validated immutable predecessor snapshot for a formal revision. */
+  readonly initialDraft?: Readonly<EstimateWizardDraftV22>;
+  /** Both fields are required together when mode=edit; otherwise saving fails closed. */
+  readonly revisionSource?: WizardRevisionSource;
+  readonly revisionSaveInvoker?: WizardSaveIntentInvoker;
 }
 
 // ── Internal ready child: an ACTIVE validated session is REQUIRED ───────────
@@ -93,18 +100,28 @@ type ReadyProductionWizardProps = ProductionEstimateWizardProps & {
 function ReadyProductionWizard(props: ReadyProductionWizardProps) {
   const {
     session, sessionDeps, onCompleted, saveInvoker, expectedConfigRevision,
-    mode, invoiceActions: _invoiceActions, ...hostInputs
+    mode, initialDraft, revisionSource, revisionSaveInvoker,
+    invoiceActions: _invoiceActions, ...hostInputs
   } = props;
+
+  const effectiveSaveInvoker: WizardSaveIntentInvoker = mode === "edit"
+    ? async (raw) => {
+        if (revisionSource === undefined || revisionSaveInvoker === undefined || typeof raw !== "object" || raw === null) {
+          return { ok: false, failure: "invalid-intent", issues: [{ path: "intent", code: "missing-field" }] };
+        }
+        return revisionSaveInvoker(Object.assign({}, raw, revisionSource));
+      }
+    : saveInvoker;
 
   const saveBinding: WizardSaveBinding = {
     expectedConfigRevision,
-    saveInvoker,
+    saveInvoker: effectiveSaveInvoker,
     session,
     sessionDeps,
     onCompleted,
   };
 
-  return <EstimateWizard {...hostInputs} mode={mode} saveBinding={saveBinding} />;
+  return <EstimateWizard {...hostInputs} mode={mode} initialDraft={initialDraft} saveBinding={saveBinding} />;
 }
 
 // ── The URL session-state classifier ────────────────────────────────────────
@@ -493,7 +510,7 @@ export default function ProductionEstimateWizard(props: ProductionEstimateWizard
           onClick={startNewEstimate}
           className="mt-3 rounded-md border border-slate-600 px-4 py-2 text-sm text-slate-100 hover:bg-slate-800/60 transition-colors"
         >
-          新しい見積を開始
+          {props.mode === "edit" ? "新版の作成を開始" : "新しい見積を開始"}
         </button>
       </div>
     );

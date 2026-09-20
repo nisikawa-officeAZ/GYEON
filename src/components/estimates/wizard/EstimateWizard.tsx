@@ -7,8 +7,9 @@
 // rendering the active step. Business logic (pricing / OCR apply / save) is wired to
 // the existing DealerOS modules in Phase 2 — this root does not embed any pricing math.
 //
-// NOTE: not yet mounted on the /estimates routes; the current EstimateEditor stays in
-// place until Phase 2 parity is confirmed (cutover is a separate approved step).
+// This is the sole production estimate-creation UI mounted by `/estimates/new`.
+// The removed legacy EstimateEditor must never be restored as a fallback, preview,
+// feature flag, or error surface. `test:canonical-estimate` enforces that boundary.
 //
 // EW-UI-3C: the host REQUIRES the shared trusted selector inputs (shopRank + screenConfig), threaded
 // to Step4Estimate ONLY.
@@ -39,6 +40,7 @@ import { Step4Estimate } from "./steps/Step4Estimate";
 import { Step5Discount } from "./steps/Step5Discount";
 import { Step6Notes } from "./steps/Step6Notes";
 import { Step7Review } from "./steps/Step7Review";
+import type { EstimateWizardDraftV22 } from "./draft/wizard-draft-types";
 
 export interface EstimateWizardProps
   extends WizardHostRuntimeInputs,
@@ -61,12 +63,14 @@ export interface EstimateWizardProps
    * There is no default and no fabricated fallback: absent means no save surface.
    */
   saveBinding?: WizardSaveBinding;
+  /** Exact immutable predecessor snapshot. Present only for formal revision issuance. */
+  initialDraft?: Readonly<EstimateWizardDraftV22>;
 }
 
 export default function EstimateWizard({
   mode = "create", shopRank, screenConfig, catalog, pricingConfig,
   customers, vehicles, defaultCustomerId, defaultVehicleId, serverPrefill, saveBinding,
-  customerSearchInvoker,
+  customerSearchInvoker, initialDraft,
   duplicateCheckInvoker,
 }: EstimateWizardProps) {
   // B7-2A — preselection is resolved BEFORE the first hook initialization and folded
@@ -88,11 +92,12 @@ export default function EstimateWizard({
     // also drive navigation validity, so an ineffective id can never pass a gate here
     // that the selection surfaces would refuse.
     { customers, vehicles },
+    initialDraft,
   );
   // OCR/3M recommendation is transient presentation evidence only. It survives
   // wizard step navigation, but never becomes persistence authority by itself.
   const [bodySizeEstimate, setBodySizeEstimate] = useState<BodySizeEstimate | null>(null);
-  const title = mode === "edit" ? "見積編集" : "新規見積";
+  const title = mode === "edit" ? "見積を修正して新版を作成" : "新規見積";
 
   // Read-only authoritative pricing over the canonical draft (same config-driven route as apply).
   const pricing = useWizardPricingFromConfig(api.draft, pricingConfig, catalog, shopRank);

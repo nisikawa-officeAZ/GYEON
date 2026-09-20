@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "prebuild": "npm run test:canonical-estimate",
     "build": "next build --turbopack",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "test:canonical-estimate": "node --import tsx --test src/components/estimates/wizard/production/production-route-reachability.test.ts src/components/estimates/wizard/save/estimate-revision-contract.test.ts src/app/pdf/page.test.ts",
     "test:estimate-wizard-integration": "node --import tsx --test src/components/estimates/wizard/integration/estimateWizardIntegration.test.ts",
     "test:b7-4-e2e": "scripts/e2e/b7-4/run-e2e-auto.sh"
   },

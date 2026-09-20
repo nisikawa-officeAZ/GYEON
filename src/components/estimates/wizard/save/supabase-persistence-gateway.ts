@@ -37,7 +37,13 @@ function mapRpcError(rawMessage: string | undefined): { code: string; message: s
 }
 
 export const supabasePersistenceGateway: EstimatePersistenceGateway = {
-  async saveEstimate(payload, ctx): Promise<EstimateSaveGatewayResult> {
+  async saveEstimate(payload, ctx, draftSnapshot): Promise<EstimateSaveGatewayResult> {
+    // A persisted estimate without its canonical draft cannot ever be revised exactly.
+    // The production gateway therefore fails closed; legacy/non-production callers may
+    // still exercise the abstract service with another injected gateway.
+    if (draftSnapshot === undefined) {
+      return { ok: false, code: "SAVE_FAILED", message: "保存中にエラーが発生しました。" };
+    }
     // 1. Single atomic RPC — the ONLY place the number, customer, vehicle, estimate and
     //    items are produced, and they are produced TOGETHER.
     //
@@ -60,10 +66,11 @@ export const supabasePersistenceGateway: EstimatePersistenceGateway = {
     // requires exactly one active membership matching the dealer, resolves the effective role, and
     // scopes every read/write by an explicit dealer predicate.
     const supabase = createAdminClient();
-    const { data, error } = await supabase.rpc("save_estimate_from_wizard", {
+    const { data, error } = await supabase.rpc("save_estimate_from_wizard_v2", {
       p_dealer_id:     ctx.dealerId,   // server-resolved context; never from payload
       p_actor_user_id: ctx.userId,
       p_payload:       payload,
+      p_draft_snapshot: draftSnapshot,
     });
 
     if (error) {
