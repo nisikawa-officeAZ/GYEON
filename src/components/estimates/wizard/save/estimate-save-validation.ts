@@ -37,8 +37,13 @@ export function validateEstimateSaveRequest(req: EstimateSaveRequest): EstimateS
   // Customer required
   if (req.customer.mode === "existing") {
     if (!req.customer.customerId) add(ESTIMATE_SAVE_ERRORS.CUSTOMER_REQUIRED, "customer", "お客様が選択されていません。");
-  } else if (req.customer.name.trim() === "") {
-    add(ESTIMATE_SAVE_ERRORS.CUSTOMER_REQUIRED, "customer.name", "お客様名が未入力です。");
+  } else {
+    if (req.customer.name.trim() === "") {
+      add(ESTIMATE_SAVE_ERRORS.CUSTOMER_REQUIRED, "customer.name", "お客様名が未入力です。");
+    }
+    if (!req.customer.kana || req.customer.kana.trim() === "") {
+      add(ESTIMATE_SAVE_ERRORS.CUSTOMER_REQUIRED, "customer.kana", "フリガナが未入力です。");
+    }
   }
 
   // Vehicle required. EST-WIZ-REQ-F1 (approved rule): a NEW vehicle requires a non-empty

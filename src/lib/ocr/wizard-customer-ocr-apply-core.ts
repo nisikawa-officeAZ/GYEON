@@ -25,9 +25,10 @@
 // against the real duplicate core rather than a local copy of its rules.
 //
 // ── WHY THE PATCH IS A NARROW TYPE RATHER THAN Partial<CustomerDraft> ───────────
-// A 車検証 carries a name, sometimes furigana and an address. It carries no telephone number, no
-// email, no postal code and no LINE id. Typing the return value as the full draft would make
-// `patch.phone = …` a legal edit to this file; typing it as these three fields makes it a compile
+// A 車検証 carries a name, sometimes furigana and an address. When a postal code is printed as part
+// of that SAME address, it can be copied safely too. It carries no telephone number, no email and
+// no LINE id. Typing the return value as the full draft would make
+// `patch.phone = …` a legal edit to this file; typing it as these four fields makes it a compile
 // error. That matters specifically for phone: the duplicate reason precedence is phone > name+kana >
 // name, so an OCR path that could write phone could change which reason an operator is shown. It
 // cannot, because the type gives it nowhere to write.
@@ -43,9 +44,9 @@ import {
  * The ONLY customer-draft fields an OCR result may touch.
  *
  * Exported so a test can assert the emitted key set against it: a future edit that starts writing a
- * fourth field fails that assertion rather than quietly widening what OCR controls.
+ * fifth field fails that assertion rather than quietly widening what OCR controls.
  */
-export const OCR_APPLICABLE_DRAFT_FIELDS = ["name", "kana", "address"] as const;
+export const OCR_APPLICABLE_DRAFT_FIELDS = ["name", "kana", "postal", "address"] as const;
 
 export type OcrApplicableDraftField = (typeof OCR_APPLICABLE_DRAFT_FIELDS)[number];
 
@@ -75,6 +76,16 @@ function applied(raw: unknown): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
+/** Extract a Japanese postal code only from the address belonging to the selected customer party. */
+function postalFromAddress(address: string): string | null {
+  const match = address.match(/(?:〒\s*)?([0-9０-９]{3})\s*[-‐‑‒–—―−ー－]?\s*([0-9０-９]{4})/u);
+  if (!match) return null;
+  const halfWidth = (value: string) => value.replace(/[０-９]/g, (digit) =>
+    String.fromCharCode(digit.charCodeAt(0) - 0xfee0),
+  );
+  return `${halfWidth(match[1])}-${halfWidth(match[2])}`;
+}
+
 /**
  * Build the Screen 1 customer-draft patch from an already-obtained OCR result.
  *
@@ -88,7 +99,8 @@ function applied(raw: unknown): string | null {
  *
  * ── THE ANTI-MIXING RULE ────────────────────────────────────────────────────────
  * When the candidate is authoritative, an ABSENT candidate field stays absent. Address is applied
- * only when the candidate carries one, and kana is not applied at all — there is no
+ * only when the candidate carries one; postal is derived only from that same address. Kana is not
+ * applied at all — there is no
  * `customer_candidate_kana` yet, and deriving one from the raw fields is exactly the mistake this
  * rule exists to prevent: the candidate name may have come from 所有者 while the raw derivation
  * would default to 使用者, producing a name and a kana read off two different lines. An absent
@@ -108,13 +120,17 @@ export function buildWizardCustomerOcrPatch(
   result: Partial<VehicleRegistrationOcrResult>,
   source?: CustomerSource,
 ): WizardCustomerOcrPatch {
-  const patch: { name?: string; kana?: string; address?: string } = {};
+  const patch: { name?: string; kana?: string; postal?: string; address?: string } = {};
 
   const confirmedName = applied(result.customer_candidate_name);
   if (confirmedName !== null) {
     patch.name = confirmedName;
     const confirmedAddress = applied(result.customer_candidate_address);
-    if (confirmedAddress !== null) patch.address = confirmedAddress;
+    if (confirmedAddress !== null) {
+      patch.address = confirmedAddress;
+      const postal = postalFromAddress(confirmedAddress);
+      if (postal !== null) patch.postal = postal;
+    }
     // No kana branch, deliberately. See THE ANTI-MIXING RULE above.
     return patch;
   }
@@ -129,7 +145,11 @@ export function buildWizardCustomerOcrPatch(
   if (kana !== null) patch.kana = kana;
 
   const address = applied(resolved.address);
-  if (address !== null) patch.address = address;
+  if (address !== null) {
+    patch.address = address;
+    const postal = postalFromAddress(address);
+    if (postal !== null) patch.postal = postal;
+  }
 
   return patch;
 }

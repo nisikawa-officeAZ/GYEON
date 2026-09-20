@@ -68,8 +68,9 @@ export function step1Valid(i: WizardStepValidityInputs): boolean {
     // text must never stand in for one.
     return effectiveExistingCustomer(i.customers, c.registrationMethod, c.customerId) !== null;
   }
-  // "new" and "ocr" both produce a new-customer draft; the name is the only requirement.
-  return c.newCustomer.name.trim().length > 0;
+  // "new" and "ocr" both create a customer. Name and furigana are mandatory at navigation time,
+  // matching the final save boundary so a later step can never hide an incomplete customer.
+  return c.newCustomer.name.trim().length > 0 && (c.newCustomer.kana ?? "").trim().length > 0;
 }
 
 export function step2Valid(i: WizardStepValidityInputs): boolean {
@@ -163,9 +164,12 @@ export function blockedReasonJa(current: StepId, i: WizardStepValidityInputs): s
   if (unmet === null) return null; // defensive: unreachable while canAdvanceFrom is false below step 7
   switch (unmet) {
     case 1:
-      return i.draft.customer.registrationMethod === "search"
-        ? "お客様が選択されていません。"
-        : "お客様名が未入力です。";
+      if (i.draft.customer.registrationMethod === "search") {
+        return "お客様が選択されていません。";
+      }
+      return i.draft.customer.newCustomer.name.trim() === ""
+        ? "お客様名が未入力です。"
+        : "フリガナが未入力です。";
     case 2:
       return willSaveExistingVehicle(i.draft)
         ? "車両が選択されていません。"

@@ -333,8 +333,8 @@ export function Step1Customer({
           </Field>
         </div>
         <ChoiceGrid cols={2}>
-          <Field label="フリガナ" value={c.kana}>
-            <TextInput value={c.kana} onChange={(x) => setC({ kana: x })} placeholder="ヤマダタロウ" />
+          <Field label="フリガナ" required value={c.kana}>
+            <TextInput value={c.kana} onChange={(x) => setC({ kana: x })} placeholder="ヤマダタロウ" required />
           </Field>
           <Field label="電話番号" value={c.phone}>
             <TextInput value={c.phone} onChange={(x) => setC({ phone: x })} placeholder="090-0000-0000" type="tel" inputMode="tel" />
