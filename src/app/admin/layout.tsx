@@ -21,18 +21,6 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     // unauthenticated visitor goes to /login, with the original destination preserved as `next`.
     const user = await getCurrentUser();
 
-    // DEV-ONLY exception: the estimate-wizard dev preview must be reachable by an authorized dealer
-    // staff (for real dealer-context save E2E), even though they are not admins. Defer the actual
-    // authorization to the PAGE (it enforces edit capability via requireStaffCapability and redirects
-    // the unauthorized), and render WITHOUT admin chrome — they are not admins. Every OTHER /admin/*
-    // route stays admin-only; production is unaffected (the wizard route notFound()s there).
-    if (user && process.env.NODE_ENV !== "production") {
-      const pathname = (await headers()).get("x-pathname") ?? "";
-      if (pathname.startsWith("/admin/dev-preview/estimate-wizard")) {
-        return <>{children}</>;
-      }
-    }
-
     if (user) redirect("/");
     redirect(loginRedirectTarget((await headers()).get("x-pathname")));
   }

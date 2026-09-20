@@ -14,7 +14,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const codeOf = (path: string): string =>
   readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
@@ -229,14 +229,13 @@ test("exactly one implementation calls the numbering RPC", () => {
     "a single shared RPC call site — no duplicated allocator");
 });
 
-test("the legacy dealer-bound allocator and the production route guard are untouched", () => {
+test("the legacy dealer-bound allocator is untouched and the retired preview route stays absent", () => {
   // The numbering RPC already accepts p_dealer_id and already authorizes on it
   // (046 + 104), so R56D is a pure TypeScript correction.
   const allocator = codeOf(ALLOCATOR);
   assert.match(allocator, /p_dealer_id:\s*dealerId/, "passes the caller's dealer id straight through");
-  const guard = readFileSync("src/app/admin/dev-preview/estimate-wizard/page.tsx", "utf8");
-  assert.match(guard, /NODE_ENV === "production"\)\s*notFound\(\)/,
-    "the production route guard is untouched");
+  assert.equal(existsSync("src/app/admin/dev-preview/estimate-wizard/page.tsx"), false,
+    "the retired estimate-wizard preview route must not be reintroduced");
 });
 
 // ── The gateway is bound ONLY by the authoritative production action ─────────

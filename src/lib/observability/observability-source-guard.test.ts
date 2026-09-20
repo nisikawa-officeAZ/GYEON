@@ -12,7 +12,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 
 const DIR = "src/lib/observability/";
@@ -238,9 +238,8 @@ test("the save barrel exports neither the real gateway nor the intent action", (
   assert.equal(barrel.includes("intent-action"), false);
 });
 
-test("the production dev-preview route guard is untouched", () => {
-  const guard = readFileSync("src/app/admin/dev-preview/estimate-wizard/page.tsx", "utf8");
-  assert.match(guard, /NODE_ENV === "production"\)\s*notFound\(\)/);
+test("the retired estimate-wizard dev-preview route stays physically absent", () => {
+  assert.equal(existsSync("src/app/admin/dev-preview/estimate-wizard/page.tsx"), false);
 });
 
 // ── OBS-1L-B7: the save path has exactly one operational channel ─────────────
