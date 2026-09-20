@@ -55,7 +55,7 @@ jobs:
         run: |
           set -euo pipefail
           actual="$(git diff --name-only --diff-filter=ACDMRTUXB "${{ github.event.pull_request.base.sha }}"...HEAD | LC_ALL=C sort)"
-          expected="$(printf '%s\n' '.github/workflows/inv001-d4a-b2-disposable-db.yml' 'scripts/e2e/inv001-office-az-authority-disposable.mjs' | LC_ALL=C sort)"
+          expected="$(printf '%s\n' '.github/workflows/inv001-d4a-b2-disposable-db.yml' 'package-lock.json' 'package.json' 'scripts/e2e/inv001-office-az-authority-disposable.mjs' | LC_ALL=C sort)"
           test "$actual" = "$expected"
           git diff --check "${{ github.event.pull_request.base.sha }}"...HEAD
 
