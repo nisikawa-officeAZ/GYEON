@@ -1055,8 +1055,8 @@ test("only a genuinely new draft reaches ready in create mode", () => {
   assert.equal(plan.patch.sourceEstimateId, null); // the editor must never write this
 });
 
-// ── 17. The container's draft-ownership mechanism (Phase 8-B2C) ──────────────────
-// EstimateWizardContainer keeps ONE opaque draft for the session and writes reducer results back
+// ── 17. Session draft ownership ───────────────────────────────────────────────────
+// A wizard session keeps ONE opaque draft and writes reducer results back
 // onto its mutable `.draft` body with Object.assign — because no constructor wraps an arbitrary
 // draft in the opaque envelope, and rebuilding one would be the forgery the contract forbids.
 //
@@ -1064,11 +1064,11 @@ test("only a genuinely new draft reaches ready in create mode", () => {
 // never reach the module const or another draft even if a reducer mutated in place. This test pins
 // the end-to-end behaviour: edits land on the session draft, and nothing else moves.
 
-test("the container's reducer write-back never corrupts the shared initial draft", () => {
+test("session reducer write-back never corrupts the shared initial draft", () => {
   const pristine = JSON.stringify(initialEstimateWizardDraftV22);
   const h = newEstimateWizardDraft();
 
-  // Exactly what the container's `update()` does, for each reducer family it uses.
+  // Exercise each reducer family against one session-owned draft.
   Object.assign(h.draft, updateCustomer(h.draft, { customerId: "CUST-TEST" }));
   Object.assign(h.draft, updateVehicle(h.draft, { vehicleId: "VEH-TEST", bodySizeKey: "L" }));
   Object.assign(h.draft, updateServiceSelection(h.draft, { selectedCategories: ["coating"] }));

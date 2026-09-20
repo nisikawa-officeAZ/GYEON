@@ -1,12 +1,12 @@
 // C2C2 — Authoritative Wizard runtime configuration aggregate loader (SERVER ONLY).
 //
-// The single future-host-facing entry that resolves the complete, fail-closed runtime bundle a
-// production EstimateWizardContainer host would need. It accepts NO dealer id, rank, lifecycle, or
+// The single host-facing entry that resolves the complete, fail-closed runtime bundle the canonical
+// production EstimateWizard needs. It accepts NO dealer id, rank, lifecycle, or
 // configuration from the client: dealer comes only from getCurrentDealer(), rank only from
 // getAuthoritativeShopRank(), the authoritative PricingCatalog only from
 // getAuthoritativeDealerPricingCatalog() (fail-closed — never DEFAULT_PRICING_CATALOG), and the Wizard
 // catalog + lifecycle only from authenticated, RLS-scoped Supabase reads. No app route or production
-// component imports this yet — this phase establishes the boundary only.
+// component may bypass this server-owned boundary.
 
 import "server-only";
 import { createClient } from "@/lib/supabase/server";

@@ -21,7 +21,8 @@ import { WIZARD_PRICING_ERRORS, type WizardPricingResult } from "./wizard-pricin
  *  `shopRank` is the AUTHORITATIVE dealer rank (server-derived, passed from the trusted container
  *  boundary). It is optional only so the isolated preview harness may omit it; when omitted, upper
  *  coating layers are not priced and MULTI_LAYER_NOT_MAPPED is surfaced (never a silent partial).
- *  A mounted-runtime caller MUST pass it (EstimateWizardContainer does). */
+ *  The canonical runtime uses the config-driven pricing module instead. Any future mounted caller
+ *  of this low-level path MUST pass the authoritative rank. */
 export function computeWizardPricing(draft: EstimateWizardDraftV22, shopRank?: ShopRank): WizardPricingResult {
   const bundle = buildWizardPricingInput(draft, shopRank);
   try {

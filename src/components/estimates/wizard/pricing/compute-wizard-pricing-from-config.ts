@@ -21,7 +21,7 @@
 // FORBIDDEN here (and enforced by the tests' source guards): DEFAULT_PRICING_CATALOG,
 // buildWizardPricingInput (fixture), useWizardPricing, FIXTURE_PRESENTATION_METADATA,
 // wizard-catalog-fixtures, wizard-manual-pricing (fixture), ScreensPreview,
-// production/EstimateWizardContainer, raw-id label fallback, example/default/preview config.
+// alternate production containers, raw-id label fallback, example/default/preview config.
 //
 // PURE + READ-ONLY: no React state/effects, no API/server-action/save/apply/DB/Supabase/PDF/OCR/route,
 // no randomness, no clock, no identifier generation. Inputs are never mutated and never enter
