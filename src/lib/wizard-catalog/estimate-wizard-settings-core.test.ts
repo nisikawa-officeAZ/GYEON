@@ -265,6 +265,28 @@ test("the authoritative settings loader reads every settings-authorable kind", (
   }
 });
 
+test("the authoritative settings loader selects and maps every coupon rule column", () => {
+  const source = readFileSync(
+    "src/lib/wizard-catalog/get-estimate-wizard-settings-view.ts",
+    "utf8",
+  );
+
+  for (const [column, property] of [
+    ["coupon_discount_type", "couponDiscountType"],
+    ["coupon_discount_value", "couponDiscountValue"],
+    ["coupon_combinable", "couponCombinable"],
+    ["coupon_valid_from", "couponValidFrom"],
+    ["coupon_valid_to", "couponValidTo"],
+  ] as const) {
+    assert.match(source, new RegExp(`\\b${column}\\b`), `${column} must be selected`);
+    assert.match(
+      source,
+      new RegExp(`${property}: \\(r\\.${column}`),
+      `${column} must be mapped to ${property}`,
+    );
+  }
+});
+
 test("PPF types are an editable section", () => {
   const v = buildEstimateWizardSettingsView(raw());
   const ppf = v.sections.find((s) => s.id === "ppf");
