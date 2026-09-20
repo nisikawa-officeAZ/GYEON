@@ -184,11 +184,8 @@ export async function checkSupabaseReadiness(): Promise<ReadinessCheck[]> {
       );
     }
 
-    // Check dealer_settings has onboarding columns (migration 059)
-    const { data: cols, error: colError } = await supabase
-      .rpc("version"); // just a liveness check; column check via information_schema below
-    void cols; void colError;
-
+    // Check dealer_settings has onboarding columns (migration 059).
+    // The query itself is the liveness check; there is no public.version() RPC.
     const { data: onboardingCols, error: schemaError } = await supabase
       .from("dealer_settings")
       .select("onboarding_completed, onboarding_step")

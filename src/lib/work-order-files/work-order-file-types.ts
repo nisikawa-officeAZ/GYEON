@@ -30,6 +30,20 @@ export interface WorkOrderFileDB {
   updated_at:    string;
 }
 
+// Dealer-facing view returned by the private delivery Server Action.
+// Storage paths, legacy public URLs, and the legacy visibility flag never cross
+// the server/client boundary. delivery_url is short-lived and is never stored.
+export type WorkOrderFileView = Omit<
+  WorkOrderFileDB,
+  'file_path' | 'file_url' | 'is_public'
+> & {
+  delivery_url: string;
+};
+
+export type GetWorkOrderFilesResult =
+  | { files: WorkOrderFileView[]; error: null }
+  | { files: []; error: string };
+
 // Fields for INSERT — dealer_id and file_path are always server-set
 export type WorkOrderFileInput = {
   dealer_id:     string;   // server-injected
@@ -47,13 +61,13 @@ export type WorkOrderFileInput = {
   is_public:     boolean;
 };
 
-// Fields allowed for UPDATE (phase/title/description/sort_order/is_public only)
+// Fields allowed for the general metadata UPDATE action.
+// Visibility/publication requires a separate, explicitly authorized workflow.
 export type WorkOrderFileUpdateInput = {
   phase?:       WorkOrderFilePhase;
   title?:       string | null;
   description?: string | null;
   sort_order?:  number;
-  is_public?:   boolean;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -13,7 +13,7 @@ import * as path from "path";
  * pbcopy (no user), wait for CAPTURED, and require exit 0.
  *
  * Canonical order: customer, isolation, vehicle, ws, key, armed, estimate.
- * Also: empty-query isolation proof, same-page Stage-1 latch, armed proof,
+ * Also: shared-term 090 isolation proof, same-page Stage-1 latch, armed proof,
  * exactly one UI-SAVE BEGIN, intentional double dispatch, exactly one done event,
  * exactly one UI-SAVE END. Correctness is then proved by assertions.sql (outside).
  */
@@ -118,13 +118,16 @@ test("B7-4 canonical scenario A — 7 ordered artifacts, armed, double-dispatch,
   const ws = new URL(page.url()).searchParams.get("ws")!;
   console.log(`→ signed in; wizard ws=${ws}`);
 
-  // ── Step 1 — existing customer, EMPTY-query isolation proof ────────────────
+  // ── Step 1 — existing customer, shared-term 090 isolation proof ────────────
   await page.getByRole("button", { name: /既存顧客を検索/ }).click();
   const custSel = page.getByTestId("existing-customer-selector");
   await custSel.waitFor({ state: "visible" });
-  // Leave the query completely empty; wait for the full offered pool to render.
+  // Type the shared search term "090"; both the actor phone (090-0000-0001) and the
+  // foreign-sentinel phone (090-9999-9999) match it pre-tenant-filter, so c2 remaining
+  // absent proves tenant filtering, not merely that the term happens to hide it.
+  await custSel.locator("input").fill("090");
   await page.getByTestId(`existing-customer-option-${C1}`).waitFor({ state: "visible", timeout: 20_000 });
-  // Exact verify.md §4.1 Stage-1 proof (empty query + non-vacuous isolation).
+  // Exact verify.md §4.1 Stage-1 proof (shared-term 090 query + non-vacuous isolation).
   await page.evaluate(({ c1, c2 }) => {
     const sel = document.querySelector('[data-testid="existing-customer-selector"]');
     if (!sel) throw new Error("B7-4 BURN: not in existing-customer mode");
@@ -132,7 +135,7 @@ test("B7-4 canonical scenario A — 7 ordered artifacts, armed, double-dispatch,
     if (inputs.length !== 1) throw new Error("B7-4 BURN: expected exactly 1 selector input, got " + inputs.length);
     const q = inputs[0] as HTMLInputElement;
     if (!(q instanceof HTMLInputElement)) throw new Error("B7-4 BURN: selector input is not an HTMLInputElement");
-    if (q.value !== "") throw new Error("B7-4 BURN: search query is not empty");
+    if (q.value !== "090") throw new Error("B7-4 BURN: search query is not 090");
     const opts = [...sel.querySelectorAll('[data-testid^="existing-customer-option-"]')] as HTMLElement[];
     if (opts.length === 0) throw new Error("B7-4 BURN: zero options - vacuous scan");
     if (!opts.some((o) => o.dataset.testid!.endsWith(c1))) throw new Error("B7-4 BURN: actor customer c1 not offered");
@@ -140,7 +143,7 @@ test("B7-4 canonical scenario A — 7 ordered artifacts, armed, double-dispatch,
     if (/ZZ-SENTINEL-FOREIGN-CUSTOMER/.test(sel.textContent || "")) throw new Error("B7-4 BURN: sentinel text in selector");
     (window as any).__B7_ISO_1 = true;
   }, { c1: C1, c2: C2 });
-  console.log("→ Step1 Stage-1 isolation proof passed (empty query)");
+  console.log("→ Step1 Stage-1 isolation proof passed (query=090)");
   await page.getByTestId(`existing-customer-option-${C1}`).click();
   await expect(page.getByTestId("existing-customer-summary")).toContainText("既存顧客を選択中");
   await expect(page.getByTestId("existing-customer-summary").locator("p")).toContainText(["アクター 太郎"]);
@@ -174,10 +177,25 @@ test("B7-4 canonical scenario A — 7 ordered artifacts, armed, double-dispatch,
 
   // ── Step 3 — category ─────────────────────────────────────────────────────
   await clickNext(page);
-  await page.getByRole("button", { name: /ボディ定期メンテナンス/ }).click();
+  const maintenanceCategory = page.getByRole("button", {
+    name: /^ボディ定期メンテナンス(?: ✓)?$/,
+  });
+  await maintenanceCategory.click();
+  await expect(maintenanceCategory).toHaveAttribute("aria-pressed", "true");
+  const blockedReasons = page.getByTestId("wizard-blocked-reason");
+  await expect(blockedReasons).toHaveCount(2);
+  await expect(blockedReasons).toHaveText(["", ""]);
+  await expect(page.locator("button:visible", { hasText: "次へ" }).first()).toBeEnabled();
+  console.log("→ Step3 maintenance latched (aria-pressed=true, blocker empty, next enabled)");
 
   // ── Step 4 — one manual maintenance line: メンテA @ ¥5000 ──────────────────
   await clickNext(page);
+  await expect(page.getByText(/作業内容（Screen3）でカテゴリが未選択です。/)).toHaveCount(0);
+  const maintenanceSection = page
+    .getByRole("navigation", { name: "施工セクション" })
+    .getByRole("button", { name: "ボディ定期メンテナンス", exact: true });
+  await expect(maintenanceSection).toBeVisible();
+  await expect(maintenanceSection).toHaveAttribute("aria-current", "true");
   await page.getByRole("button", { name: /メンテA/ }).click();
   const price = page.locator('input[type="number"]:visible').first();
   await price.waitFor({ state: "visible" });

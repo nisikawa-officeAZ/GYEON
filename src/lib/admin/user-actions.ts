@@ -10,10 +10,23 @@ export async function disableUserAdmin(userId: string) {
   const admin = await requireAdmin();
   const supabase = createAdminClient();
 
-  // Never suspend the last active Super Admin (or one's own super-admin access).
-  const currentUser = await getCurrentUser();
-  const guardError = await checkSuperAdminRemovalSafe(supabase, userId, currentUser?.id, "停止");
-  if (guardError) return { success: false, error: guardError };
+  // Auth Users must never bypass the dedicated Admin lifecycle. An admin_users
+  // target can only be disabled via disableAdminUser(), which keeps
+  // admin_users.status consistent with the Auth ban and enforces the
+  // self/active-Super-Admin removal guard. A lookup error here is treated
+  // as unsafe (fail closed), not as "not an admin".
+  const { data: linkedAdmin, error: lookupError } = await supabase
+    .from("admin_users")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (lookupError) {
+    return { success: false, error: "管理者情報を確認できなかったため、操作を中止しました" };
+  }
+  if (linkedAdmin) {
+    return { success: false, error: "管理者アカウントは「管理者ユーザー」画面から無効化してください" };
+  }
 
   // Ban the user (Supabase ban = disabled)
   const { error } = await supabase.auth.admin.updateUserById(userId, {
@@ -35,6 +48,21 @@ export async function disableUserAdmin(userId: string) {
 export async function enableUserAdmin(userId: string) {
   const admin = await requireAdmin();
   const supabase = createAdminClient();
+
+  // Same boundary as disableUserAdmin(): an admin_users target must be
+  // re-enabled via the dedicated Admin lifecycle (enableAdminUser()) only.
+  const { data: linkedAdmin, error: lookupError } = await supabase
+    .from("admin_users")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (lookupError) {
+    return { success: false, error: "管理者情報を確認できなかったため、操作を中止しました" };
+  }
+  if (linkedAdmin) {
+    return { success: false, error: "管理者アカウントは「管理者ユーザー」画面から有効化してください" };
+  }
 
   const { error } = await supabase.auth.admin.updateUserById(userId, {
     ban_duration: "none",
@@ -65,65 +93,49 @@ export async function deleteUserAdmin(userId: string) {
 
   const supabase = createAdminClient();
 
-  // Mandatory server-side guard: never hard-delete the last active Super Admin,
+  // Mandatory server-side guard: never hard-delete any active Super Admin,
   // regardless of which entry point (Admin Users / Auth Users) called us or
   // whether the UI button was hidden.
   const guardError = await checkSuperAdminRemovalSafe(supabase, userId, currentUser?.id, "完全削除");
   if (guardError) return { success: false, error: guardError };
 
-  // Orphan cleanup — ONLY performed for an explicit hard delete.
   // dealers.owner_user_id references auth.users with NO ON DELETE rule, so the
-  // auth delete below would fail on that FK unless the pointer is cleared first.
-  // Nulling it preserves the dealer row and ALL business data (customers,
-  // vehicles, estimates, invoices …) — only the owner link is removed.
-  const { data: clearedOwnerDealers } = await supabase
+  // auth delete below would fail on that FK if this user owns a dealer. Rather
+  // than irreversibly nulling that pointer before the Auth deletion even runs,
+  // fail closed: this is a read-only check, and the operator must separately
+  // reassign/clear ownership before the account can be hard-deleted.
+  const { data: ownedDealers, error: ownerLookupError } = await supabase
     .from("dealers")
-    .update({ owner_user_id: null })
-    .eq("owner_user_id", userId)
-    .select("id");
+    .select("id")
+    .eq("owner_user_id", userId);
 
-  // Remove this user's memberships explicitly. dealer_members.user_id is
-  // ON DELETE CASCADE so this would happen anyway, but doing it deterministically
-  // keeps the orphan cleanup auditable rather than implicit.
-  const { data: removedMemberships } = await supabase
-    .from("dealer_members")
-    .delete()
-    .eq("user_id", userId)
-    .select("id");
+  if (ownerLookupError) {
+    return { success: false, error: "所有ディーラーの確認に失敗したため、削除を中止しました" };
+  }
+  if (ownedDealers && ownedDealers.length > 0) {
+    return {
+      success: false,
+      error:
+        "このユーザーはディーラーのオーナーに設定されているため削除できません。" +
+        "先にオーナーを再割り当てまたは解除してください。",
+    };
+  }
 
-  // Remove any admin_users row for this user. admin_users.user_id is also
-  // ON DELETE CASCADE, but we clean it explicitly for symmetry, auditability,
-  // and to stay correct even if that FK rule is ever changed.
-  const { data: removedAdmins } = await supabase
-    .from("admin_users")
-    .delete()
-    .eq("user_id", userId)
-    .select("id");
+  // Auth deletion is the ONLY write this action performs. dealer_members and
+  // admin_users rows for this user are removed by their existing ON DELETE
+  // CASCADE — no irreversible related-DB cleanup runs before the Auth delete.
+  const { error } = await supabase.auth.admin.deleteUser(userId);
+  if (error) {
+    return { success: false, error: error.message };
+  }
 
+  // Success is audited only now that the Auth deletion has actually succeeded.
   await writeAuditLog({
     adminUserId:  admin.id,
     targetUserId: userId,
     action:       "user_deleted",
-    details:      {
-      hard_delete:           true,
-      cleared_owner_dealers: clearedOwnerDealers?.length ?? 0,
-      removed_memberships:   removedMemberships?.length ?? 0,
-      removed_admins:        removedAdmins?.length ?? 0,
-    },
+    details:      { hard_delete: true },
   });
-
-  // Cleanup above already ran, so at this point the blocking FK references are
-  // cleared. If the auth deletion still fails, the account is left in a
-  // recoverable partial state — surface a clear instruction to retry.
-  const { error } = await supabase.auth.admin.deleteUser(userId);
-  if (error) {
-    return {
-      success: false,
-      error:
-        "関連データの削除は完了しましたが、認証ユーザーの削除に失敗しました。" +
-        "もう一度お試しいただくか、管理者にお問い合わせください。",
-    };
-  }
 
   return { success: true };
 }

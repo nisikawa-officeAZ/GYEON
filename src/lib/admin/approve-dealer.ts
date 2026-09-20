@@ -3,7 +3,6 @@
 import { requireAdmin, requireSuperAdmin } from "./require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "./write-audit-log";
-import { deleteUserAdmin } from "./user-actions";
 import { DEFAULT_DEALER_RANK } from "@/lib/ranks/dealer-ranks";
 
 function addDays(dateStr: string, days: number): string {
@@ -124,6 +123,21 @@ export async function suspendDealer(dealerId: string, reason: string) {
   const admin = await requireAdmin();
   const supabase = createAdminClient();
 
+  // Access cut FIRST: suspend all active dealer_members so getCurrentDealer()
+  // returns null, blocking every protected dealer-facing page and server
+  // action. Checking this error is mandatory — a silently-ignored failure here
+  // previously let the dealer-state write below report success while access
+  // was never actually cut. Cutting access before the dealer-state write also
+  // means a later failure below leaves membership already suspended (fail
+  // closed) instead of an inconsistent "suspended dealer, active members".
+  const { error: memberError } = await supabase
+    .from("dealer_members")
+    .update({ status: "suspended" })
+    .eq("dealer_id", dealerId)
+    .eq("status", "active");
+
+  if (memberError) return { success: false, error: memberError.message };
+
   const { error } = await supabase
     .from("dealers")
     .update({
@@ -134,14 +148,6 @@ export async function suspendDealer(dealerId: string, reason: string) {
     .eq("id", dealerId);
 
   if (error) return { success: false, error: error.message };
-
-  // Suspend all active dealer_members so getCurrentDealer() returns null,
-  // blocking access to all protected dealer-facing pages and server actions.
-  await supabase
-    .from("dealer_members")
-    .update({ status: "suspended" })
-    .eq("dealer_id", dealerId)
-    .eq("status", "active");
 
   await writeAuditLog({
     adminUserId:    admin.id,
@@ -224,18 +230,13 @@ export async function deleteDealer(dealerId: string) {
   const admin = await requireSuperAdmin();
   const supabase = createAdminClient();
 
-  const { error } = await supabase
-    .from("dealers")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", dealerId)
-    .is("deleted_at", null);
-
-  if (error) return { success: false, error: error.message };
-
-  // Access cut — suspend every active membership for this dealer so the owner
-  // and staff can no longer authenticate into the dealer app. dealer_id is the
-  // server-action target (Super Admin scoped), never client tenant data; the
-  // update is scoped to this dealer only.
+  // Access cut FIRST — suspend every active membership for this dealer so the
+  // owner and staff can no longer authenticate into the dealer app, BEFORE the
+  // dealer is archived below. dealer_id is the server-action target (Super
+  // Admin scoped), never client tenant data; the update is scoped to this
+  // dealer only. Cutting access before archiving means a later archive-write
+  // failure still leaves access already cut (fail closed) rather than an
+  // archived dealer whose members can still sign in.
   const { data: suspendedMembers, error: memberError } = await supabase
     .from("dealer_members")
     .update({ status: "suspended" })
@@ -246,6 +247,14 @@ export async function deleteDealer(dealerId: string) {
   if (memberError) return { success: false, error: memberError.message };
 
   const suspendedCount = suspendedMembers?.length ?? 0;
+
+  const { error } = await supabase
+    .from("dealers")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", dealerId)
+    .is("deleted_at", null);
+
+  if (error) return { success: false, error: error.message };
 
   await writeAuditLog({
     adminUserId:    admin.id,
@@ -320,64 +329,40 @@ export async function restoreDealer(dealerId: string) {
   return { success: true, reactivatedMembers: reactivatedCount };
 }
 
+// purgeDealer() runtime allow-list: Vercel Preview or a local test/dev
+// runtime ONLY. Production is denied unconditionally, regardless of any other
+// signal — VERCEL_ENV="production" always wins over NODE_ENV.
+function isPurgeDealerRuntimePermitted(): boolean {
+  if (process.env.VERCEL_ENV === "production") return false;
+  if (process.env.VERCEL_ENV === "preview") return true;
+  return process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development";
+}
+
 /**
- * Permanently delete (完全削除) a dealer — Developer Preview / test cleanup only.
- * Super Admin only. IRREVERSIBLE.
+ * Permanently delete (完全削除) a dealer — DISABLED.
+ * Super Admin only (the auth boundary is still enforced).
  *
- * Unlike deleteDealer() (soft archive), this removes the dealer entirely:
- *   - The dealers row is deleted → approval/pending fields go with it, and
- *     dealer_members + related per-dealer records cascade (ON DELETE CASCADE).
- *   - If the dealer's owner is a real, NON-protected auth user, that auth user
- *     is hard-deleted by delegating to the EXISTING safe hard-delete action
- *     (deleteUserAdmin) — the hard-delete + FK-cleanup logic is NOT duplicated
- *     here. Platform/admin accounts (any admin_users row) and the caller are
- *     never deleted.
- *
- * No schema or RLS change. dealer_id is the server-action target (never client
- * tenant data); every operation is scoped to this one dealer.
+ * A true purge would need to delete the dealers row (cascading dealer_members
+ * + related records) AND hard-delete the owner's auth user as one atomic
+ * operation. This phase has no DB transaction/RPC available to make that
+ * atomic, so a partial failure between the two deletes would leave
+ * cross-system partial deletion — an unacceptable outcome for an irreversible
+ * action. Rather than allow that risk, this action is disabled: it always
+ * fails closed, first on a runtime check (never outside Preview/test), then
+ * unconditionally on the missing atomic guarantee. Use deleteDealer()
+ * (soft archive) plus a separate, explicit deleteUserAdmin() call instead.
  */
 export async function purgeDealer(dealerId: string) {
-  const admin = await requireSuperAdmin();
-  const supabase = createAdminClient();
+  await requireSuperAdmin();
 
-  const { data: dealer } = await supabase
-    .from("dealers")
-    .select("id, owner_user_id")
-    .eq("id", dealerId)
-    .maybeSingle();
-
-  if (!dealer) return { success: false, error: "対象のディーラーが見つかりません" };
-
-  const ownerUserId = (dealer.owner_user_id as string | null) ?? null;
-
-  // Hard-delete the owner auth user only if it is safely mapped and NOT a
-  // protected platform/admin account (and not the caller). Reuse the existing
-  // safe hard-delete which clears FK references and deletes auth.users.
-  let authUserDeleted = false;
-  if (ownerUserId && ownerUserId !== admin.user_id) {
-    const { data: adminRow } = await supabase
-      .from("admin_users")
-      .select("id")
-      .eq("user_id", ownerUserId)
-      .maybeSingle();
-
-    if (!adminRow) {
-      const res = await deleteUserAdmin(ownerUserId);
-      if (!res.success) return { success: false, error: res.error };
-      authUserDeleted = true;
-    }
+  if (!isPurgeDealerRuntimePermitted()) {
+    return { success: false, error: "この操作は開発またはプレビュー環境でのみ許可されています" };
   }
 
-  // Remove the dealer row itself (members + related records cascade).
-  const { error } = await supabase.from("dealers").delete().eq("id", dealerId);
-  if (error) return { success: false, error: error.message };
-
-  await writeAuditLog({
-    adminUserId:    admin.id,
-    targetDealerId: dealerId,
-    action:         "dealer_purged",
-    details:        { auth_user_deleted: authUserDeleted, owner_user_id_present: !!ownerUserId },
-  });
-
-  return { success: true, authUserDeleted };
+  return {
+    success: false,
+    error:
+      "完全削除は無効化されています（複数システムにまたがる削除をアトミックに行う手段が" +
+      "実装されるまで）。個別に「アーカイブ」と、必要であれば「ユーザー完全削除」を使用してください。",
+  };
 }

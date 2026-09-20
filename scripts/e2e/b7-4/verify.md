@@ -33,7 +33,8 @@ status while still tearing the stack down where safe:
 4. **the canonical Playwright spec** `scripts/e2e/b7-4/e2e/b7-4.spec.ts`, which drives
    this repo's `capture-evidence.sh` for all **seven** artifacts in canonical order
    **customer → isolation → vehicle → ws → key → armed → estimate**, reproducing the
-   empty-query Stage-1/Stage-2 isolation proofs, the same-page latch, the armed proof,
+   shared-term 090 Stage-1 / Stage-2 isolation proofs, the Step-3 maintenance selection
+   latch, the Step-4 maintenance-section visibility proof, the same-page latch, the armed proof,
    exactly one `UI-SAVE BEGIN`, the intentional same-turn double dispatch
    (`b.click(); b.click();`), exactly one `"stage":"done"`, and one `UI-SAVE END`.
 5. **stop the app**, run **`assertions.sql`** (all 29; `assertions.out` mode 0600),
@@ -125,8 +126,8 @@ The wizard's default registration mode is **新規顧客登録**. You must switc
 Creating a new customer instead of selecting the seeded one invalidates the run.
 
 1. Switch 登録方式 from **新規顧客登録** to **既存顧客を検索**.
-2. Leave the 名前 / 電話番号で絞り込み box **completely empty**.
-3. In DevTools, run the Stage-1 proof (empty-query + non-vacuous isolation):
+2. Type **090** into the 名前 / 電話番号で絞り込み box.
+3. In DevTools, run the Stage-1 proof (shared-term 090 query + non-vacuous isolation):
 
 > **Every DevTools snippet in this runbook is wrapped in a block `{ … }`.** Steps 1
 > and 2 run on the same page without navigation, so a bare top-level `const sel`
@@ -142,7 +143,7 @@ Creating a new customer instead of selecting the seeded one invalidates the run.
   if (inputs.length !== 1) throw new Error("B7-4 BURN: expected exactly 1 selector input, got " + inputs.length);
   const q = inputs[0];
   if (!(q instanceof HTMLInputElement)) throw new Error("B7-4 BURN: selector input is not an HTMLInputElement");
-  if (q.value !== "") throw new Error("B7-4 BURN: search query is not empty");
+  if (q.value !== "090") throw new Error("B7-4 BURN: search query is not 090");
   const opts = [...sel.querySelectorAll('[data-testid^="existing-customer-option-"]')];
   if (opts.length === 0) throw new Error("B7-4 BURN: zero options - vacuous scan");
   if (!opts.some(o => o.dataset.testid.endsWith("b7400000-0000-4000-8000-0000000000c1")))
@@ -155,9 +156,10 @@ Creating a new customer instead of selecting the seeded one invalidates the run.
 }
 ```
 
-> The empty-query proof must come first. `filterCustomers` returns the full
-> selectable pool **only** when the query is empty; under a non-empty query,
-> "c2 absent" could be true merely because the filter hid it. Requiring both
+> The query must be exactly `090`. The seeded actor phone `090-0000-0001` and the
+> seeded foreign-sentinel phone `090-9999-9999` both match `090` before tenant
+> filtering is applied, so "c2 absent" cannot be explained by the search term
+> alone — it can only be explained by tenant-scoped filtering. Requiring both
 > ≥1 option and c1 present is what rules out a vacuous zero-option pass.
 
 4. Click the **アクター 太郎** option.
@@ -232,12 +234,24 @@ scripts/e2e/b7-4/capture-evidence.sh vehicle "$EVID"
 
 ### 4.3 Estimate input — exactly one manual maintenance line
 
+- Seed precondition: the actor dealer has exactly one enabled managed-family
+  offering, **maintenance**; the foreign sentinel has no offering rows. The offering
+  INSERT is also the single trigger-driven catalog revision bump for this atomic
+  bootstrap.
 - Category: **maintenance / ボディ定期メンテナンス**
 - Menu: **メンテA**
 - Manually type the unit price **5000**
 - Activate **明細に追加 / 更新**
 - Quantity is **1** (fixed by the pricing config; there is no quantity control)
 - **No** second line, **no** discount, **no** coupon, **no** note
+
+Before leaving Step 3, the automated path proves all three state gates on the
+same visible category control: **`aria-pressed="true"`**, an empty
+**`wizard-blocked-reason`**, and an enabled visible **次へ** button. After entering
+Step 4 — before looking for メンテA — it proves the no-category placeholder is
+absent and the **ボディ定期メンテナンス** button exists inside the
+**施工セクション** navigation with **`aria-current="true"`**. Any failed latch or
+visibility proof burns the run; no sleep, timeout increase, repair, or retry is allowed.
 
 ### 4.4 Step 7 — expected display
 
@@ -499,12 +513,14 @@ HEAD, index, and the 19 frozen entries must be unchanged; `$EVID` is preserved,
 Any of the following burns the **complete** disposable run. There is no repair,
 and **no same-key retry in canonical scenario A**:
 
-- non-empty Step-1 query
+- Step-1 query not exactly `090`
 - missing actor option (c1 or f1)
 - foreign option (c2 or f2) or sentinel text offered
 - missing isolation latch
 - reload between isolation stages
 - wrong customer or vehicle summary
+- Step-3 maintenance selection not latched, blocked reason nonempty, or Next disabled
+- Step-4 no-category placeholder present or maintenance section absent/inactive
 - wrong Step-7 display (a name appears instead of `—`)
 - missing or malformed ws or key
 - pre-arm record pending, failed, completed, missing or malformed

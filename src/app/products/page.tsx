@@ -1,12 +1,23 @@
 import MainLayout from "@/components/layout/MainLayout";
+import { requireAdmin } from "@/lib/admin/require-admin";
 import { getGyeonProducts, getGyeonProductCategories } from "@/lib/products/get-gyeon-products";
 import type { GyeonProductDB } from "@/lib/products/product-types";
 import ProductsClient from "./ProductsClient";
+
+async function resolveCanImportCsv(): Promise<boolean> {
+  try {
+    await requireAdmin();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export default async function ProductsPage() {
   let products: GyeonProductDB[] = [];
   let categories: string[] = [];
   let loadError = false;
+  const canImportCsv = await resolveCanImportCsv();
 
   try {
     [products, categories] = await Promise.all([
@@ -29,7 +40,11 @@ export default async function ProductsPage() {
             </p>
           </div>
         )}
-        <ProductsClient initialProducts={products} categories={categories} />
+        <ProductsClient
+          initialProducts={products}
+          categories={categories}
+          canImportCsv={canImportCsv}
+        />
       </div>
     </MainLayout>
   );
