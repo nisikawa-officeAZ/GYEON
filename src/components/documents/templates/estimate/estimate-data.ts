@@ -1,4 +1,4 @@
-// PHASE 12B — EstimateTemplate dynamic-data contract.
+// Canonical estimate PDF data contract shared by the production Chromium renderer and document data mapper.
 //
 // The template renders ONLY from this typed input + a BrandProfile. Nothing here (or in any component
 // below) hardcodes a tenant: issuer identity comes from BrandProfile, document data from the caller's
