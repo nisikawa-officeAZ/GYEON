@@ -67,15 +67,58 @@ test("zero price is preserved as a valid value", () => {
   assert.equal(input.defaultUnitPrice, 0);
 });
 
+test("coupon is a supported authoring kind with an explicit rule", () => {
+  const input = ok(validateWizardItemForm({
+    kind: "coupon",
+    labelJa: "100円引き",
+    couponDiscountType: "amount",
+    couponDiscountValue: 100,
+    couponCombinable: false,
+    couponValidFrom: "2026-09-20",
+    couponValidTo: "2026-09-30",
+  }));
+  assert.deepEqual(input, {
+    itemId: null,
+    kind: "coupon",
+    labelJa: "100円引き",
+    couponDiscountType: "amount",
+    couponDiscountValue: 100,
+    couponCombinable: false,
+    couponValidFrom: "2026-09-20",
+    couponValidTo: "2026-09-30",
+  });
+});
+
 // ── rejections ─────────────────────────────────────────────────────────────
 test("blank required name is rejected (Japanese)", () => {
   const e = err(validateWizardItemForm({ kind: "wash_menu", labelJa: "   " }));
   assert.match(e.labelJa, /表示名/);
 });
 
-test("unsupported / coupon kind is rejected", () => {
-  assert.match(err(validateWizardItemForm({ kind: "coupon", labelJa: "x" })).kind, /種別/);
+test("coupon without a rule is rejected, and an unknown kind remains unsupported", () => {
+  const couponErrors = err(validateWizardItemForm({ kind: "coupon", labelJa: "x" }));
+  assert.match(couponErrors.couponDiscountType, /割引種別/);
+  assert.match(couponErrors.couponDiscountValue, /割引値/);
+  assert.match(couponErrors.couponCombinable, /併用可否/);
   assert.match(err(validateWizardItemForm({ kind: "nonsense", labelJa: "x" })).kind, /種別/);
+});
+
+test("coupon validity rejects impossible dates and a reversed range before persistence", () => {
+  const base = {
+    kind: "coupon",
+    labelJa: "x",
+    couponDiscountType: "amount",
+    couponDiscountValue: 100,
+    couponCombinable: false,
+  };
+  assert.match(err(validateWizardItemForm({ ...base, couponValidFrom: "2026-02-30" })).couponValidFrom, /実在する日付/);
+  assert.match(err(validateWizardItemForm({ ...base, couponValidTo: "2027-02-29" })).couponValidTo, /実在する日付/);
+  assert.match(err(validateWizardItemForm({
+    ...base,
+    couponValidFrom: "2026-09-30",
+    couponValidTo: "2026-09-20",
+  })).couponValidTo, /開始日以降/);
+  assert.equal(validateWizardItemForm({ ...base, couponValidFrom: "2028-02-29" }).ok, true);
 });
 
 test("negative price rejected", () => {
