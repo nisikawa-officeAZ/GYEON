@@ -3,11 +3,14 @@ import assert from "node:assert/strict";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const LOCATION_A = "office-az-warehouse";
+const LONG_ID = "x".repeat(513);
 let currentUser: { id: string } | null = { id: USER_ID };
 let rpcData: unknown;
 let rpcError: unknown = null;
 let rpcThrows = false;
 let rpcCalls: Array<[string, Record<string, unknown>]> = [];
+let authCalls = 0;
+let clientCalls = 0;
 
 function candidate(overrides: Record<string, unknown> = {}) {
   return {
@@ -29,18 +32,26 @@ function candidate(overrides: Record<string, unknown> = {}) {
 }
 
 mock.module("@/lib/auth/get-current-user", {
-  namedExports: { getCurrentUser: async () => currentUser },
+  namedExports: {
+    getCurrentUser: async () => {
+      authCalls += 1;
+      return currentUser;
+    },
+  },
 });
 mock.module("server-only", { defaultExport: {} });
 mock.module("@/lib/supabase/server", {
   namedExports: {
-    createClient: async () => ({
-      rpc: async (name: string, args: Record<string, unknown>) => {
-        rpcCalls.push([name, args]);
-        if (rpcThrows) throw new Error("hidden database detail");
-        return { data: rpcData, error: rpcError };
-      },
-    }),
+    createClient: async () => {
+      clientCalls += 1;
+      return {
+        rpc: async (name: string, args: Record<string, unknown>) => {
+          rpcCalls.push([name, args]);
+          if (rpcThrows) throw new Error("hidden database detail");
+          return { data: rpcData, error: rpcError };
+        },
+      };
+    },
   },
 });
 
@@ -59,6 +70,8 @@ beforeEach(() => {
   rpcError = null;
   rpcThrows = false;
   rpcCalls = [];
+  authCalls = 0;
+  clientCalls = 0;
 });
 
 function request(overrides: Record<string, unknown> = {}) {
@@ -72,9 +85,36 @@ function request(overrides: Record<string, unknown> = {}) {
   };
 }
 
+const hostileCases: ReadonlyArray<readonly [string, Record<string, unknown>]> = [
+  ["unknown capability", { capability: "inventory.manage" }],
+  ["null locations", { requiredLocationIds: null }],
+  ["scalar locations", { requiredLocationIds: LOCATION_A }],
+  ["object locations", { requiredLocationIds: { id: LOCATION_A } }],
+  ["blank location", { requiredLocationIds: [""] }],
+  ["padded location", { requiredLocationIds: [` ${LOCATION_A}`] }],
+  ["oversized location", { requiredLocationIds: [LONG_ID] }],
+  ["duplicate locations", { requiredLocationIds: [LOCATION_A, LOCATION_A] }],
+  ["version 0", { expectedAuthorityVersion: 0 }],
+  ["negative version", { expectedAuthorityVersion: -1 }],
+  ["decimal version", { expectedAuthorityVersion: 1.5 }],
+  ["unsafe version", { expectedAuthorityVersion: Number.MAX_SAFE_INTEGER + 1 }],
+  ["string version", { expectedAuthorityVersion: "1" }],
+  ["blank actor", { actorId: "" }],
+  ["padded actor", { actorId: " actor-1" }],
+  ["oversized actor", { actorId: LONG_ID }],
+  ["blank operator", { operatorId: "" }],
+  ["padded operator", { operatorId: " operator-1" }],
+  ["oversized operator", { operatorId: LONG_ID }],
+  ["blank target operator", { targetOperatorId: "" }],
+  ["padded target operator", { targetOperatorId: " operator-2" }],
+  ["oversized target operator", { targetOperatorId: LONG_ID }],
+];
+
 test("authenticated identity is request-scoped and RPC runs exactly once", async () => {
   const result = await resolveAuthority(request());
   assert.equal(result.tag, "authorized");
+  assert.equal(authCalls, 1);
+  assert.equal(clientCalls, 1);
   assert.deepEqual(rpcCalls, [[
     "resolve_office_az_inventory_authority",
     { p_actor_id: "actor-1", p_operator_id: "operator-1" },
@@ -88,6 +128,8 @@ test("authenticated identity is request-scoped and RPC runs exactly once", async
 test("browser authority fields are rejected before RPC", async () => {
   const result = await resolveAuthority(request({ authenticatedUserId: "attacker" }));
   assert.deepEqual(result, { tag: "denied", code: "INVALID_REQUEST" });
+  assert.equal(authCalls, 0);
+  assert.equal(clientCalls, 0);
   assert.equal(rpcCalls.length, 0);
 });
 
@@ -192,3 +234,13 @@ test("unauthenticated, RPC error, throw and malformed payload fail closed", asyn
   rpcData = { candidates: [], knownLocationIds: [], extra: true };
   assert.deepEqual(await resolveAuthority(request()), { tag: "denied", code: "INVALID_AUTHORITY_RECORD" });
 });
+
+for (const [label, overrides] of hostileCases) {
+  test(`resolver rejects ${label} before auth and RPC`, async () => {
+    const result = await resolveAuthority(request(overrides));
+    assert.deepEqual(result, { tag: "denied", code: "INVALID_REQUEST" });
+    assert.equal(authCalls, 0);
+    assert.equal(clientCalls, 0);
+    assert.equal(rpcCalls.length, 0);
+  });
+}
