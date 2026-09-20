@@ -76,7 +76,7 @@ export async function getEstimateWizardSettingsView(): Promise<EstimateWizardSet
     const { data: itemRows, error: itemErr } = await supabase
       .from("wizard_catalog_items")
       .select(
-        "id, code, kind, label_ja, default_unit_price, duration_minutes, display_order, priceable, quantity_required, min_quantity, max_quantity, presentation, is_active, deleted_at",
+        "id, code, kind, label_ja, default_unit_price, duration_minutes, display_order, priceable, quantity_required, min_quantity, max_quantity, presentation, coupon_discount_type, coupon_discount_value, coupon_combinable, coupon_valid_from, coupon_valid_to, is_active, deleted_at",
       )
       .eq("owner_scope", "dealer")
       .eq("dealer_id", dealer.dealer_id)
@@ -177,6 +177,11 @@ export async function getEstimateWizardSettingsView(): Promise<EstimateWizardSet
       minQuantity: (r.min_quantity as number | null) ?? null,
       maxQuantity: (r.max_quantity as number | null) ?? null,
       presentation: r.presentation ?? null,
+      couponDiscountType: (r.coupon_discount_type as string | null) ?? null,
+      couponDiscountValue: (r.coupon_discount_value as number | null) ?? null,
+      couponCombinable: (r.coupon_combinable as boolean | null) ?? null,
+      couponValidFrom: (r.coupon_valid_from as string | null) ?? null,
+      couponValidTo: (r.coupon_valid_to as string | null) ?? null,
       isActive: Boolean(r.is_active),
       deletedAt: (r.deleted_at as string | null) ?? null,
     }));

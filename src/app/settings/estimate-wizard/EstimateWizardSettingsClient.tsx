@@ -32,6 +32,7 @@ import type {
 } from "@/lib/wizard-catalog/estimate-wizard-settings-types";
 import EstimateWizardPanelLoading from "./EstimateWizardPanelLoading";
 import { getEstimateWizardPanelHref } from "./panel-config";
+import { getWizardSettingsItemValueLabel } from "./estimate-wizard-item-label";
 
 // ── S8B — four real Estimate Wizard access cards ────────────────────────────
 // A visual access layer over the existing settings editors. Every reachable card uses
@@ -747,7 +748,7 @@ function SectionCard({
               <div className="flex flex-col min-w-0">
                 <span className="text-sm text-[#edf3fc] truncate">{it.labelJa}</span>
                 <span className="text-[11px] text-[#7788a4]">
-                  {it.priceLabelJa ?? "価格なし"}
+                  {getWizardSettingsItemValueLabel(it)}
                   {it.durationLabelJa ? `・${it.durationLabelJa}` : ""}
                   {it.kind === "store_global_option" && it.quantityRequired ? "・数量指定あり" : ""}
                 </span>
