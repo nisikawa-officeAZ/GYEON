@@ -1,0 +1,91 @@
+name: INV001 D4A B2 disposable database
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - scripts/e2e/inv001-office-az-authority-disposable.mjs
+      - .github/workflows/inv001-d4a-b2-disposable-db.yml
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  disposable-database-validation:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout exact pull request revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up repository Node.js version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Configure run-scoped package read
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          umask 077
+          npm_config_path="${RUNNER_TEMP}/inv001-d4a-b2-npmrc"
+          printf '%s\n' \
+            '@nisikawa-officeaz:registry=https://npm.pkg.github.com' \
+            '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' \
+            'always-auth=true' > "$npm_config_path"
+
+      - name: Install locked dependencies without cache
+        env:
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/inv001-d4a-b2-npmrc
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: npm ci
+
+      - name: Verify exact two-path change set
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git diff --name-only --diff-filter=ACDMRTUXB "${{ github.event.pull_request.base.sha }}"...HEAD | LC_ALL=C sort)"
+          expected="$(printf '%s\n' '.github/workflows/inv001-d4a-b2-disposable-db.yml' 'package-lock.json' 'package.json' 'scripts/e2e/inv001-office-az-authority-disposable.mjs' | LC_ALL=C sort)"
+          test "$actual" = "$expected"
+          git diff --check "${{ github.event.pull_request.base.sha }}"...HEAD
+
+      - name: Run focused authority tests
+        run: >-
+          node --import tsx --experimental-test-module-mocks --test
+          src/lib/inventory/authority/office-az-inventory-authority-core.test.ts
+          src/lib/inventory/authority/resolve-office-az-inventory-authority.test.ts
+          src/lib/inventory/authority/office-az-inventory-authority-actions.test.ts
+          src/lib/inventory/authority/office-az-inventory-authority-migration.test.ts
+
+      - name: Run disposable PostgreSQL validation once
+        run: >-
+          INV001_D4A_B2_ACK=I_ACKNOWLEDGE_FRESH_DISPOSABLE_LOCAL_DATABASE_ONLY
+          INV001_D4A_B2_RESOURCE_LABEL="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}"
+          node scripts/e2e/inv001-office-az-authority-disposable.mjs
+
+      - name: Run typecheck
+        run: npm run typecheck
+
+      - name: Run build
+        run: npm run build
+
+      - name: Always destroy disposable resources and prove no residue
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          INV001_D4A_B2_RESOURCE_LABEL="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}" \
+            node scripts/e2e/inv001-office-az-authority-disposable.mjs --cleanup-residue
+          npm_config_path="${RUNNER_TEMP}/inv001-d4a-b2-npmrc"
+          rm -f "$npm_config_path"
+          test ! -e "$npm_config_path"
