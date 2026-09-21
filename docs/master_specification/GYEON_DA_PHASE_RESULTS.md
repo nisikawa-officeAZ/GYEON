@@ -5434,3 +5434,45 @@ protected_metadata:
 verdict: ACCEPTED_LOCAL_CURRENT_MAIN_CANDIDATE
 next: "VERIFY_EXACT_20_PATH_DIFF_HASHES_AND_GIT_DIFF_CHECK; THEN REQUEST OWNER AUTHORIZATION FOR ONE LITERAL_20_PATH_LOCAL_COMMIT ONLY."
 ```
+
+## GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1 — governance activation
+
+```yaml
+phase: GDA_ESTIMATE_POST_TAX_ADJUSTMENT_R1
+marker: GDA_ESTIMATE_POST_TAX_ADJUSTMENT_R1_GOVERNANCE_ACTIVATION_V1
+status: GOVERNANCE_AUTHORIZED_PENDING_CLAUDE_READ_ONLY_DIAGNOSIS
+date: 2026-09-22
+authorization: "The Owner approved estimate-to-invoice post-tax discount parity and authorized the exact three governance paths, local commit, normal push, Draft PR creation, and one Claude read-only diagnosis instruction."
+repository: nisikawa-officeAZ/GYEON
+branch: fix/estimate-post-tax-adjustment-r1
+fixed_base:
+  commit: a1c748aa2d100a7678f2cec2c47a6d4100e4c1c9
+  tree: 5d418169537bd1e5c3c9cb3a815b8deec82362c4
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_POST_TAX_ADJUSTMENT_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+business_rule:
+  tax_before_document_discount: true
+  formula: subtotal_plus_floor_tax_minus_clamped_discount
+  estimate_invoice_conversion_parity: required
+  line_level_discount_behavior_changed: false
+known_active_mismatch:
+  estimate_totals_candidate: POST_TAX_ADJUSTMENT
+  invoice_types_current: PRE_TAX_DISCOUNT
+  atomic_conversion_current: PRE_TAX_DISCOUNT
+  issuance_validator: REUSES_INVOICE_TYPES
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+mutation_boundary:
+  existing_uncommitted_source_changes: PRESERVE_UNSTAGED_AND_EXCLUDE
+  implementation: false
+  tests_or_typecheck: false
+  database_or_supabase: false
+  source_stage_commit_or_push: false
+  ready_merge_or_deploy: false
+next: "VERIFY_EXACT_THREE_GOVERNANCE_PATHS_COMMIT_NORMAL_PUSH_CREATE_DRAFT_PR_POST_CLAUDE_DIAGNOSIS_AND_STOP_BEFORE_IMPLEMENTATION."
+```
