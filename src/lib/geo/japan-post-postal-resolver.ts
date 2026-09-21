@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import path from "node:path";
 
 interface JapanPostAddressMapFile {
   source: string;
@@ -21,8 +22,8 @@ function isAddressMapFile(value: unknown): value is JapanPostAddressMapFile {
 
 function addressEntries(): Readonly<Record<string, string>> {
   if (cachedEntries !== null) return cachedEntries;
-  const path = new URL("../../data/postal/japan-post-address-map.json", import.meta.url);
-  const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
+  const filePath = path.join(process.cwd(), "src", "data", "postal", "japan-post-address-map.json");
+  const parsed: unknown = JSON.parse(readFileSync(filePath, "utf8"));
   if (!isAddressMapFile(parsed)) {
     throw new Error("Japan Post address map has an invalid structure");
   }
