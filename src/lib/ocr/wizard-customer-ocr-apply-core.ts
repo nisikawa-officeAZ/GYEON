@@ -39,6 +39,11 @@ import {
   resolveCustomer,
   type CustomerSource,
 } from "@/lib/vehicle-registration/ocr-customer-mapping";
+import {
+  addressWithoutLeadingPostal,
+  normalizeJapanesePostalCode,
+  postalCodeFromAddress,
+} from "@/lib/vehicle-registration/postal-normalization";
 
 /**
  * The ONLY customer-draft fields an OCR result may touch.
@@ -74,16 +79,6 @@ function applied(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const trimmed = raw.trim();
   return trimmed === "" ? null : trimmed;
-}
-
-/** Extract a Japanese postal code only from the address belonging to the selected customer party. */
-function postalFromAddress(address: string): string | null {
-  const match = address.match(/(?:〒\s*)?([0-9０-９]{3})\s*[-‐‑‒–—―−ー－]?\s*([0-9０-９]{4})/u);
-  if (!match) return null;
-  const halfWidth = (value: string) => value.replace(/[０-９]/g, (digit) =>
-    String.fromCharCode(digit.charCodeAt(0) - 0xfee0),
-  );
-  return `${halfWidth(match[1])}-${halfWidth(match[2])}`;
 }
 
 /**
@@ -126,10 +121,12 @@ export function buildWizardCustomerOcrPatch(
   if (confirmedName !== null) {
     patch.name = confirmedName;
     const confirmedAddress = applied(result.customer_candidate_address);
+    const confirmedPostal = normalizeJapanesePostalCode(result.customer_candidate_postal_code)
+      ?? postalCodeFromAddress(confirmedAddress);
+    if (confirmedPostal !== null) patch.postal = confirmedPostal;
     if (confirmedAddress !== null) {
-      patch.address = confirmedAddress;
-      const postal = postalFromAddress(confirmedAddress);
-      if (postal !== null) patch.postal = postal;
+      const cleanAddress = addressWithoutLeadingPostal(confirmedAddress);
+      if (cleanAddress !== null) patch.address = cleanAddress;
     }
     // No kana branch, deliberately. See THE ANTI-MIXING RULE above.
     return patch;
@@ -144,12 +141,11 @@ export function buildWizardCustomerOcrPatch(
   const kana = applied(resolved.kana);
   if (kana !== null) patch.kana = kana;
 
+  const postal = normalizeJapanesePostalCode(resolved.postal);
+  if (postal !== null) patch.postal = postal;
+
   const address = applied(resolved.address);
-  if (address !== null) {
-    patch.address = address;
-    const postal = postalFromAddress(address);
-    if (postal !== null) patch.postal = postal;
-  }
+  if (address !== null) patch.address = address;
 
   return patch;
 }

@@ -192,7 +192,7 @@ test("extracts and normalizes a postal code printed in the selected party addres
     owner_address: "〒５２０−１２３４ 滋賀県大津市1-2-3",
   });
   assert.equal(patch.postal, "520-1234");
-  assert.equal(patch.address, "〒５２０−１２３４ 滋賀県大津市1-2-3");
+  assert.equal(patch.address, "滋賀県大津市1-2-3");
 });
 
 test("postal code obeys candidate precedence and never comes from the other party", () => {
@@ -202,6 +202,27 @@ test("postal code obeys candidate precedence and never comes from the other part
     user_address: "〒220-0001 神奈川県横浜市",
   });
   assert.equal(patch.postal, "100-0001");
+  assert.equal(patch.address, "東京都千代田区");
+});
+
+test("uses the independent postal field and keeps the address postal-free", () => {
+  const patch = buildWizardCustomerOcrPatch({
+    owner_name: "有限会社 オフィスアズ",
+    owner_postal_code: "５２３−１２３４",
+    owner_address: "滋賀県愛知郡愛荘町愛知川７７４−４",
+  });
+  assert.equal(patch.postal, "523-1234");
+  assert.equal(patch.address, "滋賀県愛知郡愛荘町愛知川７７４−４");
+});
+
+test("REGRESSION: partial OCR postal never enters postal and is removed from address", () => {
+  const patch = buildWizardCustomerOcrPatch({
+    owner_name: "有限会社 オフィスアズ",
+    owner_postal_code: "523-",
+    owner_address: "〒523- 滋賀県愛知郡愛荘町愛知川７７４−４",
+  });
+  assert.equal("postal" in patch, false, "missing digits must never be guessed");
+  assert.equal(patch.address, "滋賀県愛知郡愛荘町愛知川７７４−４");
 });
 
 test("an address without a printed postal code leaves operator input untouched", () => {

@@ -14,6 +14,11 @@
 //     only the CHOSEN party is reflected to the form.
 
 import type { VehicleRegistrationOcrResult } from "./vehicle-registration-types";
+import {
+  addressWithoutLeadingPostal,
+  normalizeJapanesePostalCode,
+  postalCodeFromAddress,
+} from "./postal-normalization";
 
 export type CustomerType   = "individual" | "corporation" | "unknown";
 export type CustomerSource = "user" | "owner";
@@ -162,7 +167,7 @@ function trimmed(raw: string | undefined): string {
 export function resolveCustomer(
   r: Partial<VehicleRegistrationOcrResult>,
   source: CustomerSource,
-): { name: string; kana: string; address: string; customerType: CustomerType } {
+): { name: string; kana: string; postal: string; address: string; customerType: CustomerType } {
   const a = analyzeOcrCustomer(r);
   const party = effectiveCustomerParty(r, source);
   const oneParty = isOneParty(a);
@@ -179,7 +184,10 @@ export function resolveCustomer(
   // The name needs no completion step: `party` is non-null precisely when that party HAS a name.
   const name = party === "user" ? a.userName : party === "owner" ? a.ownerName : "";
   const kana = fromParty(trimmed(r.user_name_kana), trimmed(r.owner_name_kana));
-  const address = fromParty(a.userAddress, a.ownerAddress);
+  const rawAddress = fromParty(a.userAddress, a.ownerAddress);
+  const rawPostal = fromParty(trimmed(r.user_postal_code), trimmed(r.owner_postal_code));
+  const postal = normalizeJapanesePostalCode(rawPostal) ?? postalCodeFromAddress(rawAddress) ?? "";
+  const address = addressWithoutLeadingPostal(rawAddress) ?? "";
 
   const customerType: CustomerType = !name
     ? "unknown"
@@ -187,5 +195,5 @@ export function resolveCustomer(
       ? "corporation"
       : "individual";
 
-  return { name, kana, address, customerType };
+  return { name, kana, postal, address, customerType };
 }

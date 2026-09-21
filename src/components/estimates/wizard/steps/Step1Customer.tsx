@@ -41,7 +41,8 @@ import type {
   WizardDuplicateReason,
 } from "../contract/wizard-runtime-inputs";
 import { effectiveExistingCustomer, customerSelectionPatch } from "./existing-entity-selection";
-import { buildWizardCustomerOcrPatch } from "@/lib/ocr/wizard-customer-ocr-apply-core";
+import { buildWizardEstimateOcrApplication } from "@/lib/ocr/wizard-estimate-ocr-apply-core";
+import type { BodySizeEstimate } from "@/lib/vehicles/body-size-estimate";
 import { OcrEntry } from "../OcrEntry";
 import {
   Card, SectionTitle, Field, TextInput, SelectButton, ToggleButton, ChoiceGrid,
@@ -92,9 +93,9 @@ function candidateSignature(candidates: readonly WizardDuplicateCandidate[]): st
 }
 
 export function Step1Customer({
-  api, customers, vehicles, customerSearchInvoker, duplicateCheckInvoker,
+  api, customers, vehicles, customerSearchInvoker, duplicateCheckInvoker, onSizeEstimate,
 }: { api: EstimateWizardApi } & WizardExistingEntityInputs & WizardCustomerSearchInputs
-  & WizardDuplicateCheckInputs) {
+  & WizardDuplicateCheckInputs & { onSizeEstimate?: (estimate: BodySizeEstimate | null) => void }) {
   const c = api.store.customer;
   const v = api.store.vehicle;
   const [query, setQuery] = useState("");
@@ -231,18 +232,13 @@ export function Step1Customer({
         <div className="mt-4">
           <OcrEntry
             onApply={(f) => {
-              // B2-C.2 — apply an ALREADY-OBTAINED result to the editable draft, and nothing else.
-              // The patch is built by a pure core: it carries 氏名 / フリガナ / 郵便番号 / 住所 only, and only
-              // where the certificate actually supplied a value, so an unreadable field leaves what
-              // the operator already typed untouched. No customer, vehicle, estimate or OCR record
-              // is created here — this writes to wizard state and issues no request at all.
-              //
-              // Spreading the patch into the draft is what feeds the applied name into the B2-D
-              // duplicate check: the effect below watches c.name / c.kana / c.phone and re-runs on
-              // exactly the same terms as a hand-typed value. There is deliberately no OCR branch
-              // in that path and none is added here.
-              const patch = buildWizardCustomerOcrPatch(f);
-              if (Object.keys(patch).length > 0) setC(patch);
+              // The reviewed result is applied once to BOTH customer and vehicle drafts through the
+              // same pure core Screen 2 uses. A Screen-1 scan must never discard the vehicle half.
+              const applied = buildWizardEstimateOcrApplication(f);
+              if (Object.keys(applied.customer).length > 0 || Object.keys(applied.vehicle).length > 0) {
+                api.updateStore({ customer: applied.customer, vehicle: applied.vehicle });
+              }
+              onSizeEstimate?.(applied.bodySizeEstimate);
             }}
           />
           <p className="text-[11px] text-slate-500 mt-2">読み取り後、フォームへ反映されます。オペレーターが修正可能です。</p>

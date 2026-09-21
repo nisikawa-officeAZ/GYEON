@@ -33,3 +33,19 @@ test("rejects invalid dimensions, unit mistakes, and invalid confidence", () => 
   assert.equal(result.height_mm, undefined);
   assert.equal(result.dimension_confidence, undefined);
 });
+
+test("sanitizes postal fields independently and removes legacy or partial address prefixes", () => {
+  const complete = sanitizeVehicleRegistrationOcrResult({
+    owner_postal_code: "〒５２３−１２３４",
+    owner_address: "〒５２３−１２３４ 滋賀県愛知郡愛荘町愛知川774-4",
+  });
+  assert.equal(complete.owner_postal_code, "523-1234");
+  assert.equal(complete.owner_address, "滋賀県愛知郡愛荘町愛知川774-4");
+
+  const partial = sanitizeVehicleRegistrationOcrResult({
+    owner_postal_code: "523-",
+    owner_address: "〒523- 滋賀県愛知郡愛荘町愛知川774-4",
+  });
+  assert.equal(partial.owner_postal_code, undefined);
+  assert.equal(partial.owner_address, "滋賀県愛知郡愛荘町愛知川774-4");
+});

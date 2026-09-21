@@ -12,6 +12,7 @@ import { normalizeVehicleFields } from "./vehicle-normalize";
 import { buildOcrQualityReport, type OcrQualityReport } from "./ocr-quality";
 import { getGyeonManagedApiKey } from "@/lib/ai/gyeon-managed-key";
 import { OCR_MODEL, OCR_TEMPERATURE, OCR_MAX_TOKENS, OCR_PROMPT_VERSION } from "@/lib/ai/ocr-config";
+import { addressWithoutLeadingPostal, normalizeJapanesePostalCode, postalCodeFromAddress } from "./postal-normalization";
 
 const OCR_PROVIDER   = "openai";
 const OCR_TIMEOUT_MS = 55_000; // 55s — OpenAI cold-start can take ~30s; give headroom
@@ -29,8 +30,9 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
   - registration_date: 「登録年月日」＝現在の登録日（YYYY-MM-DD）。新規/中古/名義変更など現在の登録時期
 - ナンバープレートは region/class/kana/number の4項目に分割
 - 所有者(owner)と使用者(user)は必ず別項目として抽出する（両方を保持）
-- 住所の近くに郵便番号が明確に印字されている場合は、省略せず「〒000-0000 住所」の形で対応する
-  owner_address / user_address の先頭に含める。印字がない場合は推測しないこと
+- 郵便番号は owner_postal_code / user_postal_code に「000-0000」の7桁で分離して返す
+- owner_address / user_address には郵便番号を含めない
+- 7桁全てが明確に読めない場合は郵便番号を空文字とし、推測・補完しない
 - customer_type: 顧客が個人なら "individual"、法人・会社・店舗なら "corporation"、不明なら "unknown"
 - owner_user_separated: 所有者と使用者が明らかに異なる場合 "true"、同一なら "false"、不明なら "unknown"
 - length_mm / width_mm / height_mm: 車検証に記載された長さ・幅・高さをmm単位の数値で返す。不鮮明・欠損時は null。単位換算以外の推測は禁止
@@ -44,6 +46,8 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
   "user_name": "",
   "owner_name_kana": "",
   "user_name_kana": "",
+  "owner_postal_code": "",
+  "user_postal_code": "",
   "owner_address": "",
   "user_address": "",
   "vehicle_name": "",
@@ -100,7 +104,8 @@ export interface OcrUsage {
 const RETRYABLE_CODES: OcrErrorCode[] = ["TIMEOUT", "CONNECT_ERROR", "OPENAI_SERVER_ERROR"];
 
 const STRING_FIELDS: Array<keyof VehicleRegistrationOcrResult> = [
-  "owner_name", "user_name", "owner_name_kana", "user_name_kana", "owner_address", "user_address",
+  "owner_name", "user_name", "owner_name_kana", "user_name_kana",
+  "owner_postal_code", "user_postal_code", "owner_address", "user_address",
   "vehicle_name", "maker", "model", "grade", "model_code", "chassis_number",
   "license_plate_region", "license_plate_class", "license_plate_kana", "license_plate_number",
   "first_registration_date", "registration_date", "inspection_expiry_date",
@@ -129,6 +134,17 @@ export function sanitizeVehicleRegistrationOcrResult(
     if (typeof val === "string" && val.trim() !== "") {
       (sanitized as Record<string, unknown>)[key] = val.trim();
     }
+  }
+  for (const party of ["owner", "user"] as const) {
+    const postalKey = `${party}_postal_code` as const;
+    const addressKey = `${party}_address` as const;
+    const address = sanitized[addressKey];
+    const postal = normalizeJapanesePostalCode(sanitized[postalKey]) ?? postalCodeFromAddress(address);
+    if (postal !== null) sanitized[postalKey] = postal;
+    else delete sanitized[postalKey];
+    const cleanAddress = addressWithoutLeadingPostal(address);
+    if (cleanAddress !== null) sanitized[addressKey] = cleanAddress;
+    else delete sanitized[addressKey];
   }
   for (const key of DIMENSION_FIELDS) {
     const value = sanitizeDimensionMm(parsed[key]);
@@ -260,6 +276,7 @@ async function callOpenAI(
     sanitized.owner_user_separated = analysis.ownerUserSeparated ? "true" : "false";
     const resolved = resolveCustomer(sanitized, analysis.recommendedSource);
     if (resolved.name)    sanitized.customer_candidate_name    = resolved.name;
+    if (resolved.postal)  sanitized.customer_candidate_postal_code = resolved.postal;
     if (resolved.address) sanitized.customer_candidate_address = resolved.address;
     sanitized.customer_type = resolved.customerType;
 
