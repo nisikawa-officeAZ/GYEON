@@ -4,7 +4,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { sanitizeVehicleRegistrationOcrResult } from "./ocr";
+import {
+  enrichPostalCodesFromOfficialAddressData,
+  sanitizeVehicleRegistrationOcrResult,
+} from "./ocr";
 
 test("keeps valid vehicle dimensions as canonical integer millimetres", () => {
   const result = sanitizeVehicleRegistrationOcrResult({
@@ -48,4 +51,13 @@ test("sanitizes postal fields independently and removes legacy or partial addres
   });
   assert.equal(partial.owner_postal_code, undefined);
   assert.equal(partial.owner_address, "滋賀県愛知郡愛荘町愛知川774-4");
+});
+
+test("fills a missing OCR postal from the same address using official Japan Post data", () => {
+  const result = enrichPostalCodesFromOfficialAddressData({
+    owner_name: "有限会社 オフィスアズ",
+    owner_address: "滋賀県愛知郡愛荘町愛知川７７４−４",
+  });
+  assert.equal(result.owner_postal_code, "529-1331");
+  assert.equal(result.owner_address, "滋賀県愛知郡愛荘町愛知川７７４−４");
 });

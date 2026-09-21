@@ -203,6 +203,7 @@ export const nextConfig: NextConfig = {
       "./src/lib/pdf/chromium-document/design/**",
       "./node_modules/@sparticuz/chromium/bin/**",
       "./public/brand/gyeon-classic/logos/combination.svg",
+      "./src/data/postal/japan-post-address-map.json",
     ],
   },
   experimental: {
