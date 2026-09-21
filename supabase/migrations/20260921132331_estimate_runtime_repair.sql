@@ -35,13 +35,30 @@
 --     definitions when missing and validated when present.
 --   * Grants/revokes/comments are re-issued to the canonical least-privilege
 --     end state: entry points EXECUTE only for service_role; PUBLIC, anon and
---     authenticated revoked everywhere.
+--     authenticated revoked everywhere. Step 6b then converges the ACLs
+--     EXACTLY: every grantee outside the literal canonical allowlist (owner;
+--     service_role SELECT, INSERT on the two revision tables; service_role
+--     EXECUTE on the four canonical entry points) is revoked dynamically,
+--     including column-level entries, so an ACL preserved by CREATE OR
+--     REPLACE or an additive historical GRANT cannot survive convergence.
+--     Plain REVOKE only (never CASCADE): a dependent grant chain raises and
+--     fails the repair closed.
 --   * NO business-row backfill: this migration contains no INSERT, UPDATE or
 --     DELETE against customers, vehicles, estimates, estimate_items or any
 --     other business table.
 --   * No CASCADE, no broad exception handler, no migration repair.
---   * Step 7 re-validates identity/security/shape at the end; any violation
---     raises and rolls the entire transaction back.
+--   * Steps 7-7i re-validate identity/security/shape at the end. Step 7h
+--     proves that every accepted all-present table state is EXACTLY the
+--     canonical shape — columns/types/NOT NULL/DEFAULT expressions, every
+--     named constraint with its exact definition (including exact CHECK
+--     expressions and PK/UNIQUE/FK semantics), and every exact named index
+--     definition, with extra columns/constraints/indexes/triggers/policies
+--     rejected — by replaying the VERBATIM canonical DDL into a scratch
+--     schema inside this same transaction and requiring server-rendered
+--     equality with the live tables. Step 7i proves the exact ACL
+--     grantee/privilege end state (no unknown grantee, no grant option, no
+--     column ACL, canonical owner privileges intact). Any violation raises
+--     and rolls the entire transaction back before commit.
 
 BEGIN;
 
@@ -1499,6 +1516,108 @@ COMMENT ON TABLE public.estimate_wizard_snapshots IS
 COMMENT ON TABLE public.estimate_revisions IS
   'Immutable one-successor revision chain. A predecessor is never overwritten.';
 
+-- --- Step 6b: exact ACL convergence to the literal canonical allowlist -------
+-- GRANT is additive and CREATE OR REPLACE FUNCTION preserves a pre-existing
+-- ACL, so in the all-present starting state a grantee outside
+-- PUBLIC/anon/authenticated/service_role (which the static statements above
+-- already reset) could silently retain table privileges or EXECUTE. Every
+-- non-owner grantee — table-level, column-level, and function-level — is
+-- therefore revoked dynamically here, and the exact canonical grants are
+-- re-issued below. Plain REVOKE only (never CASCADE): a dependent grant
+-- chain raises and rolls the whole repair back, so an unknown ACL topology
+-- fails closed instead of being partially truncated. PostgreSQL checks
+-- EXECUTE on a trigger function only at CREATE TRIGGER time against the
+-- trigger's creator, so the owner-only end state on the three trigger
+-- functions cannot break trigger execution.
+DO $acl_converge$
+DECLARE
+  v_rec record;
+BEGIN
+  -- 6b-1. Table-level entries beyond the owner.
+  FOR v_rec IN
+    SELECT DISTINCT n.nspname, c.relname, a.grantee
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      CROSS JOIN LATERAL aclexplode(coalesce(c.relacl, acldefault('r', c.relowner))) a
+     WHERE c.oid IN ('public.estimate_wizard_snapshots'::regclass,
+                     'public.estimate_revisions'::regclass)
+       AND a.grantee <> c.relowner
+  LOOP
+    IF v_rec.grantee = 0 THEN
+      EXECUTE format('REVOKE ALL ON TABLE %I.%I FROM PUBLIC',
+                     v_rec.nspname, v_rec.relname);
+    ELSE
+      EXECUTE format('REVOKE ALL ON TABLE %I.%I FROM %s',
+                     v_rec.nspname, v_rec.relname, v_rec.grantee::regrole);
+    END IF;
+  END LOOP;
+
+  -- 6b-2. Column-level entries. REVOKE at table level does NOT remove
+  -- column-level privileges, so a drifted per-column grant would otherwise
+  -- survive both the static revokes and 6b-1. Canonical state has none.
+  FOR v_rec IN
+    SELECT DISTINCT n.nspname, c.relname, att.attname, a.grantee
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      JOIN pg_attribute att
+        ON att.attrelid = c.oid AND att.attnum > 0 AND NOT att.attisdropped
+       AND att.attacl IS NOT NULL AND cardinality(att.attacl) > 0
+      CROSS JOIN LATERAL aclexplode(att.attacl) a
+     WHERE c.oid IN ('public.estimate_wizard_snapshots'::regclass,
+                     'public.estimate_revisions'::regclass)
+  LOOP
+    IF v_rec.grantee = 0 THEN
+      EXECUTE format('REVOKE ALL (%I) ON TABLE %I.%I FROM PUBLIC',
+                     v_rec.attname, v_rec.nspname, v_rec.relname);
+    ELSE
+      EXECUTE format('REVOKE ALL (%I) ON TABLE %I.%I FROM %s',
+                     v_rec.attname, v_rec.nspname, v_rec.relname,
+                     v_rec.grantee::regrole);
+    END IF;
+  END LOOP;
+
+  -- 6b-3. Function EXECUTE entries beyond the owner, across all seven
+  -- functions of this contract (the four entry points regain their canonical
+  -- service_role EXECUTE immediately below).
+  FOR v_rec IN
+    SELECT DISTINCT n.nspname, p.proname,
+           pg_get_function_identity_arguments(p.oid) AS args, a.grantee
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+     WHERE p.oid IN (
+             'public.save_estimate_from_wizard(uuid,uuid,jsonb)'::regprocedure,
+             'public.save_estimate_from_wizard_v2(uuid,uuid,jsonb,jsonb)'::regprocedure,
+             'public.issue_estimate_revision_from_wizard(uuid,uuid,uuid,text,jsonb,jsonb)'::regprocedure,
+             'public.assert_estimate_wizard_snapshot_v22(jsonb)'::regprocedure,
+             'public.reject_estimate_revision_history_mutation()'::regprocedure,
+             'public.protect_snapshot_backed_estimate_content()'::regprocedure,
+             'public.protect_snapshot_backed_estimate_items()'::regprocedure)
+       AND a.grantee <> p.proowner
+  LOOP
+    IF v_rec.grantee = 0 THEN
+      EXECUTE format('REVOKE ALL ON FUNCTION %I.%I(%s) FROM PUBLIC',
+                     v_rec.nspname, v_rec.proname, v_rec.args);
+    ELSE
+      EXECUTE format('REVOKE ALL ON FUNCTION %I.%I(%s) FROM %s',
+                     v_rec.nspname, v_rec.proname, v_rec.args,
+                     v_rec.grantee::regrole);
+    END IF;
+  END LOOP;
+END
+$acl_converge$;
+
+-- Exact canonical grants, re-issued AFTER the dynamic revoke so both
+-- supported starting states end identically: the revision tables carry
+-- service_role SELECT, INSERT; the four canonical entry points carry
+-- service_role EXECUTE; the three trigger functions stay owner-only.
+GRANT SELECT, INSERT ON TABLE public.estimate_wizard_snapshots TO service_role;
+GRANT SELECT, INSERT ON TABLE public.estimate_revisions TO service_role;
+GRANT EXECUTE ON FUNCTION public.save_estimate_from_wizard(uuid, uuid, jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.save_estimate_from_wizard_v2(uuid, uuid, jsonb, jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.issue_estimate_revision_from_wizard(uuid, uuid, uuid, text, jsonb, jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.assert_estimate_wizard_snapshot_v22(jsonb) TO service_role;
+
 -- --- Step 7: final fail-closed validation ------------------------------------
 -- Runs in BOTH starting states after convergence. Any violation raises and
 -- rolls the whole repair back, so a drifted all-present runtime is never
@@ -1759,5 +1878,326 @@ BEGIN
   END LOOP;
 END
 $validate$;
+
+-- --- Step 7h: exact canonical table equivalence (same-transaction shadow) ----
+-- Presence/count checks alone cannot prove that an all-present runtime is the
+-- canonical one: a weakened CHECK expression, a wrong or extra index, a
+-- missing DEFAULT, or an extra column/constraint would pass them. The exact
+-- canonical DDL from 20260920141616 is therefore replayed VERBATIM into a
+-- scratch schema inside this same transaction, and each live table must match
+-- its shadow EXACTLY on the column set (name, type, NOT NULL, DEFAULT
+-- expression), the complete named-constraint set (name, type, full
+-- server-rendered definition — exact CHECK expressions and PK/UNIQUE/FK
+-- semantics included), and the complete named-index-definition set. Both
+-- sides are rendered by this server in this session, so nothing depends on
+-- hand-maintained expected text. Extra triggers, RLS policies, or FORCE ROW
+-- LEVEL SECURITY on the two revision tables are rejected as non-canonical.
+-- The scratch schema is dropped WITHOUT CASCADE before COMMIT.
+DO $shadow_validate$
+DECLARE
+  v_tbl  text;
+  v_diff bigint;
+BEGIN
+  IF to_regnamespace('estimate_runtime_repair_shadow') IS NOT NULL THEN
+    RAISE EXCEPTION
+      'ESTIMATE_RUNTIME_REPAIR_VALIDATION: scratch schema estimate_runtime_repair_shadow already exists';
+  END IF;
+  EXECUTE 'CREATE SCHEMA estimate_runtime_repair_shadow';
+
+  -- VERBATIM canonical DDL from 20260920141616; the schema name of the
+  -- created object is the only transformation.
+  EXECUTE $ddl$
+CREATE TABLE estimate_runtime_repair_shadow.estimate_wizard_snapshots (
+  estimate_id              uuid PRIMARY KEY REFERENCES public.estimates(id) ON DELETE RESTRICT,
+  dealer_id                uuid NOT NULL REFERENCES public.dealers(id) ON DELETE RESTRICT,
+  schema_version           text NOT NULL CHECK (schema_version = '2.2'),
+  draft_snapshot           jsonb NOT NULL CHECK (jsonb_typeof(draft_snapshot) = 'object'),
+  snapshot_fingerprint     text NOT NULL CHECK (snapshot_fingerprint ~ '^[0-9a-f]{64}$'),
+  configuration_revision   bigint NOT NULL CHECK (configuration_revision >= 0),
+  created_at               timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (dealer_id, estimate_id)
+);
+  $ddl$;
+  EXECUTE $ddl$
+CREATE INDEX estimate_wizard_snapshots_dealer_created_idx
+  ON estimate_runtime_repair_shadow.estimate_wizard_snapshots (dealer_id, created_at DESC);
+  $ddl$;
+  EXECUTE $ddl$
+CREATE TABLE estimate_runtime_repair_shadow.estimate_revisions (
+  id                          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  dealer_id                   uuid NOT NULL REFERENCES public.dealers(id) ON DELETE RESTRICT,
+  root_estimate_id            uuid NOT NULL REFERENCES public.estimates(id) ON DELETE RESTRICT,
+  predecessor_estimate_id     uuid NOT NULL REFERENCES public.estimates(id) ON DELETE RESTRICT,
+  successor_estimate_id       uuid NOT NULL REFERENCES public.estimates(id) ON DELETE RESTRICT,
+  revision_number             integer NOT NULL CHECK (revision_number >= 2),
+  source_snapshot_fingerprint text NOT NULL CHECK (source_snapshot_fingerprint ~ '^[0-9a-f]{64}$'),
+  created_by                  uuid NOT NULL,
+  created_at                  timestamptz NOT NULL DEFAULT now(),
+  CHECK (predecessor_estimate_id <> successor_estimate_id),
+  UNIQUE (predecessor_estimate_id),
+  UNIQUE (successor_estimate_id),
+  UNIQUE (root_estimate_id, revision_number)
+);
+  $ddl$;
+  EXECUTE $ddl$
+CREATE INDEX estimate_revisions_dealer_root_idx
+  ON estimate_runtime_repair_shadow.estimate_revisions (dealer_id, root_estimate_id, revision_number);
+  $ddl$;
+
+  FOREACH v_tbl IN ARRAY ARRAY['estimate_wizard_snapshots', 'estimate_revisions'] LOOP
+    -- Exact column set: name, type, NOT NULL, DEFAULT expression; both
+    -- missing and EXTRA columns count as differences.
+    SELECT count(*) INTO v_diff FROM (
+      (SELECT a.attname::text, format_type(a.atttypid, a.atttypmod) AS typ,
+              a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '') AS dflt
+         FROM pg_attribute a
+         LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+        WHERE a.attrelid = to_regclass('public.' || v_tbl)
+          AND a.attnum > 0 AND NOT a.attisdropped
+       EXCEPT
+       SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+              a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+         FROM pg_attribute a
+         LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+        WHERE a.attrelid = to_regclass('estimate_runtime_repair_shadow.' || v_tbl)
+          AND a.attnum > 0 AND NOT a.attisdropped)
+      UNION ALL
+      (SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+              a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+         FROM pg_attribute a
+         LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+        WHERE a.attrelid = to_regclass('estimate_runtime_repair_shadow.' || v_tbl)
+          AND a.attnum > 0 AND NOT a.attisdropped
+       EXCEPT
+       SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+              a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+         FROM pg_attribute a
+         LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+        WHERE a.attrelid = to_regclass('public.' || v_tbl)
+          AND a.attnum > 0 AND NOT a.attisdropped)
+    ) diff;
+    IF v_diff <> 0 THEN
+      RAISE EXCEPTION
+        'ESTIMATE_RUNTIME_REPAIR_VALIDATION: public.% column set diverges from canonical (% differences)',
+        v_tbl, v_diff;
+    END IF;
+
+    -- Exact complete constraint set: name, type, and full server-rendered
+    -- definition. Covers exact CHECK expressions, PK/UNIQUE/FK semantics,
+    -- and rejects EXTRA constraints of any type.
+    SELECT count(*) INTO v_diff FROM (
+      (SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+         FROM pg_constraint k
+        WHERE k.conrelid = to_regclass('public.' || v_tbl)
+       EXCEPT
+       SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+         FROM pg_constraint k
+        WHERE k.conrelid = to_regclass('estimate_runtime_repair_shadow.' || v_tbl))
+      UNION ALL
+      (SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+         FROM pg_constraint k
+        WHERE k.conrelid = to_regclass('estimate_runtime_repair_shadow.' || v_tbl)
+       EXCEPT
+       SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+         FROM pg_constraint k
+        WHERE k.conrelid = to_regclass('public.' || v_tbl))
+    ) diff;
+    IF v_diff <> 0 THEN
+      RAISE EXCEPTION
+        'ESTIMATE_RUNTIME_REPAIR_VALIDATION: public.% constraint set diverges from canonical (% differences)',
+        v_tbl, v_diff;
+    END IF;
+
+    -- Exact complete named index definitions. The schema qualifier is
+    -- stripped from BOTH sides with the same transformation, so the
+    -- comparison is name + full definition, never schema spelling.
+    SELECT count(*) INTO v_diff FROM (
+      (SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+                ' ON estimate_runtime_repair_shadow.', ' ON '), ' ON public.', ' ON ')
+         FROM pg_index i
+        WHERE i.indrelid = to_regclass('public.' || v_tbl)
+       EXCEPT
+       SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+                ' ON estimate_runtime_repair_shadow.', ' ON '), ' ON public.', ' ON ')
+         FROM pg_index i
+        WHERE i.indrelid = to_regclass('estimate_runtime_repair_shadow.' || v_tbl))
+      UNION ALL
+      (SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+                ' ON estimate_runtime_repair_shadow.', ' ON '), ' ON public.', ' ON ')
+         FROM pg_index i
+        WHERE i.indrelid = to_regclass('estimate_runtime_repair_shadow.' || v_tbl)
+       EXCEPT
+       SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+                ' ON estimate_runtime_repair_shadow.', ' ON '), ' ON public.', ' ON ')
+         FROM pg_index i
+        WHERE i.indrelid = to_regclass('public.' || v_tbl))
+    ) diff;
+    IF v_diff <> 0 THEN
+      RAISE EXCEPTION
+        'ESTIMATE_RUNTIME_REPAIR_VALIDATION: public.% index definitions diverge from canonical (% differences)',
+        v_tbl, v_diff;
+    END IF;
+
+    -- Canonical trigger/policy surface on the revision tables: exactly ONE
+    -- non-internal trigger (validated by name/function/shape in Step 7g),
+    -- zero RLS policies, and no FORCE ROW LEVEL SECURITY.
+    IF (SELECT count(*) FROM pg_trigger g
+         WHERE g.tgrelid = to_regclass('public.' || v_tbl)
+           AND NOT g.tgisinternal) <> 1 THEN
+      RAISE EXCEPTION
+        'ESTIMATE_RUNTIME_REPAIR_VALIDATION: public.% carries a non-canonical trigger set', v_tbl;
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_policy
+                WHERE polrelid = to_regclass('public.' || v_tbl)) THEN
+      RAISE EXCEPTION
+        'ESTIMATE_RUNTIME_REPAIR_VALIDATION: public.% carries an unexpected RLS policy', v_tbl;
+    END IF;
+    IF (SELECT c.relforcerowsecurity FROM pg_class c
+         WHERE c.oid = to_regclass('public.' || v_tbl)) THEN
+      RAISE EXCEPTION
+        'ESTIMATE_RUNTIME_REPAIR_VALIDATION: public.% has non-canonical FORCE ROW LEVEL SECURITY', v_tbl;
+    END IF;
+  END LOOP;
+
+  EXECUTE 'DROP TABLE estimate_runtime_repair_shadow.estimate_revisions';
+  EXECUTE 'DROP TABLE estimate_runtime_repair_shadow.estimate_wizard_snapshots';
+  EXECUTE 'DROP SCHEMA estimate_runtime_repair_shadow';
+END
+$shadow_validate$;
+
+-- --- Step 7i: exact ACL end-state validation ----------------------------------
+-- Excluding PUBLIC/anon/authenticated is not exactness: an unknown grantee
+-- kept by GRANT-additivity or a CREATE OR REPLACE-preserved function ACL must
+-- also be impossible. Every non-owner ACL entry is compared against the
+-- literal canonical allowlist, column ACLs must not exist, and canonical
+-- owner privileges are proven semantically intact.
+DO $acl_validate$
+DECLARE
+  v_rec  record;
+  v_diff bigint;
+  v_priv text;
+BEGIN
+  -- Tables: the non-owner entry set is EXACTLY service_role SELECT, INSERT,
+  -- neither grantable; and no column-level ACL entry exists.
+  FOR v_rec IN
+    SELECT t.tbl FROM (VALUES
+      ('public.estimate_wizard_snapshots'),
+      ('public.estimate_revisions')) AS t(tbl)
+  LOOP
+    SELECT count(*) INTO v_diff FROM (
+      (SELECT a.grantee, a.privilege_type, a.is_grantable
+         FROM pg_class c
+         CROSS JOIN LATERAL aclexplode(coalesce(c.relacl, acldefault('r', c.relowner))) a
+        WHERE c.oid = to_regclass(v_rec.tbl) AND a.grantee <> c.relowner
+       EXCEPT
+       SELECT v.* FROM (VALUES
+         ('service_role'::regrole::oid, 'SELECT'::text, false),
+         ('service_role'::regrole::oid, 'INSERT'::text, false)) AS v(grantee, privilege_type, is_grantable))
+      UNION ALL
+      (SELECT v.* FROM (VALUES
+         ('service_role'::regrole::oid, 'SELECT'::text, false),
+         ('service_role'::regrole::oid, 'INSERT'::text, false)) AS v(grantee, privilege_type, is_grantable)
+       EXCEPT
+       SELECT a.grantee, a.privilege_type, a.is_grantable
+         FROM pg_class c
+         CROSS JOIN LATERAL aclexplode(coalesce(c.relacl, acldefault('r', c.relowner))) a
+        WHERE c.oid = to_regclass(v_rec.tbl) AND a.grantee <> c.relowner)
+    ) diff;
+    IF v_diff <> 0 THEN
+      RAISE EXCEPTION
+        'ESTIMATE_RUNTIME_REPAIR_VALIDATION: % table ACL diverges from the canonical allowlist', v_rec.tbl;
+    END IF;
+
+    IF EXISTS (
+      SELECT 1
+        FROM pg_attribute att
+        CROSS JOIN LATERAL aclexplode(att.attacl) a
+       WHERE att.attrelid = to_regclass(v_rec.tbl)
+         AND att.attnum > 0 AND NOT att.attisdropped
+         AND att.attacl IS NOT NULL AND cardinality(att.attacl) > 0) THEN
+      RAISE EXCEPTION
+        'ESTIMATE_RUNTIME_REPAIR_VALIDATION: % carries a non-canonical column-level ACL', v_rec.tbl;
+    END IF;
+
+    FOREACH v_priv IN ARRAY ARRAY[
+      'SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'] LOOP
+      IF NOT has_table_privilege(
+               (SELECT c.relowner FROM pg_class c WHERE c.oid = to_regclass(v_rec.tbl)),
+               to_regclass(v_rec.tbl), v_priv) THEN
+        RAISE EXCEPTION
+          'ESTIMATE_RUNTIME_REPAIR_VALIDATION: % owner lost canonical % privilege', v_rec.tbl, v_priv;
+      END IF;
+    END LOOP;
+  END LOOP;
+
+  -- Entry points: the non-owner entry set is EXACTLY service_role EXECUTE,
+  -- not grantable.
+  FOR v_rec IN
+    SELECT f.fn FROM (VALUES
+      ('public.save_estimate_from_wizard(uuid,uuid,jsonb)'),
+      ('public.save_estimate_from_wizard_v2(uuid,uuid,jsonb,jsonb)'),
+      ('public.issue_estimate_revision_from_wizard(uuid,uuid,uuid,text,jsonb,jsonb)'),
+      ('public.assert_estimate_wizard_snapshot_v22(jsonb)')) AS f(fn)
+  LOOP
+    SELECT count(*) INTO v_diff FROM (
+      (SELECT a.grantee, a.privilege_type, a.is_grantable
+         FROM pg_proc p
+         CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+        WHERE p.oid = v_rec.fn::regprocedure AND a.grantee <> p.proowner
+       EXCEPT
+       SELECT v.* FROM (VALUES
+         ('service_role'::regrole::oid, 'EXECUTE'::text, false)) AS v(grantee, privilege_type, is_grantable))
+      UNION ALL
+      (SELECT v.* FROM (VALUES
+         ('service_role'::regrole::oid, 'EXECUTE'::text, false)) AS v(grantee, privilege_type, is_grantable)
+       EXCEPT
+       SELECT a.grantee, a.privilege_type, a.is_grantable
+         FROM pg_proc p
+         CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+        WHERE p.oid = v_rec.fn::regprocedure AND a.grantee <> p.proowner)
+    ) diff;
+    IF v_diff <> 0 THEN
+      RAISE EXCEPTION
+        'ESTIMATE_RUNTIME_REPAIR_VALIDATION: % EXECUTE ACL diverges from the canonical allowlist', v_rec.fn;
+    END IF;
+  END LOOP;
+
+  -- Trigger functions: NO non-owner grantee at all.
+  FOR v_rec IN
+    SELECT f.fn FROM (VALUES
+      ('public.reject_estimate_revision_history_mutation()'),
+      ('public.protect_snapshot_backed_estimate_content()'),
+      ('public.protect_snapshot_backed_estimate_items()')) AS f(fn)
+  LOOP
+    IF EXISTS (
+      SELECT 1
+        FROM pg_proc p
+        CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+       WHERE p.oid = v_rec.fn::regprocedure AND a.grantee <> p.proowner) THEN
+      RAISE EXCEPTION
+        'ESTIMATE_RUNTIME_REPAIR_VALIDATION: % grants EXECUTE beyond the owner', v_rec.fn;
+    END IF;
+  END LOOP;
+
+  -- The owner keeps EXECUTE on all seven functions.
+  FOR v_rec IN
+    SELECT f.fn FROM (VALUES
+      ('public.save_estimate_from_wizard(uuid,uuid,jsonb)'),
+      ('public.save_estimate_from_wizard_v2(uuid,uuid,jsonb,jsonb)'),
+      ('public.issue_estimate_revision_from_wizard(uuid,uuid,uuid,text,jsonb,jsonb)'),
+      ('public.assert_estimate_wizard_snapshot_v22(jsonb)'),
+      ('public.reject_estimate_revision_history_mutation()'),
+      ('public.protect_snapshot_backed_estimate_content()'),
+      ('public.protect_snapshot_backed_estimate_items()')) AS f(fn)
+  LOOP
+    IF NOT has_function_privilege(
+             (SELECT p.proowner FROM pg_proc p WHERE p.oid = v_rec.fn::regprocedure),
+             v_rec.fn::regprocedure, 'EXECUTE') THEN
+      RAISE EXCEPTION
+        'ESTIMATE_RUNTIME_REPAIR_VALIDATION: owner lost EXECUTE on %', v_rec.fn;
+    END IF;
+  END LOOP;
+END
+$acl_validate$;
 
 COMMIT;

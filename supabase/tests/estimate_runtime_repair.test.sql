@@ -11,16 +11,40 @@
 --     service_role SELECT, INSERT table privileges;
 --   * the immutability and revision contracts are present;
 --   * migration replay created ZERO business rows (no backfill/update/delete
---     behavior): on a freshly replayed database the estimate family is empty.
+--     behavior): on a freshly replayed database the estimate family is empty;
+--   * the converged tables are EXACTLY canonical: columns/types/NOT NULL/
+--     DEFAULT expressions, exact named constraints (including exact CHECK
+--     expressions and PK/UNIQUE/FK semantics), and exact named index
+--     definitions are proven equal to a same-transaction shadow replay of
+--     the VERBATIM canonical DDL from 20260920141616;
+--   * ACL grantee/privilege sets are EXACT: beyond the owner, the revision
+--     tables carry only service_role SELECT, INSERT (not grantable); the
+--     four entry points carry only service_role EXECUTE (not grantable);
+--     the three trigger functions carry no non-owner EXECUTE; no
+--     column-level ACL and no unknown grantee exists anywhere in scope;
+--   * hostile negative controls prove the drift detectors detect: a seeded
+--     scratch-schema drift replica (weakened CHECK, dropped DEFAULT, extra
+--     column, de-DESCed index, hostile EXECUTE grant) is flagged by the very
+--     comparison queries used for the canonical assertions.
+--
+-- DOCUMENTED LIMITATION: a full replay-mutation scenario — running
+-- 20260921132331 against a deliberately drifted database and observing its
+-- fail-closed abort — cannot live in this post-migration pgTAP file: the
+-- migration has already been applied by the harness, and seeding drift into
+-- the live public objects would mutate canonical state outside this file's
+-- allowlist. Section O therefore proves detector sensitivity against
+-- scratch-schema replicas inside this rolled-back transaction instead.
 --
 -- Standalone pgTAP candidate for a disposable local database that has replayed
--- every committed migration. No fixture rows are inserted; every assertion
--- reads catalogs or counts empty tables, so the file is deterministic and
--- side-effect free (the transaction ends in ROLLBACK regardless).
+-- every committed migration. No fixture rows are inserted into any business
+-- table; assertions read catalogs, count empty tables, or compare against
+-- scratch-schema shadow objects created inside this transaction, and the
+-- transaction ends in ROLLBACK regardless, so the file is deterministic and
+-- side-effect free.
 
 BEGIN;
 
-SELECT plan(52);
+SELECT plan(74);
 
 -- ============================================================
 -- A. Canonical save_estimate_from_wizard
@@ -448,6 +472,532 @@ SELECT ok(
   (SELECT count(*) FROM public.estimate_wizard_snapshots) = 0
   AND (SELECT count(*) FROM public.estimate_revisions) = 0,
   '52: migration replay created no snapshot or revision rows'
+);
+
+-- ============================================================
+-- K. Exact canonical table shape (same-transaction shadow replay)
+--    The canonical DDL from 20260920141616 is replayed VERBATIM into a
+--    scratch schema; live tables must match it EXACTLY. Both sides are
+--    rendered by the same server, so no hand-maintained expected text can
+--    drift. Everything below is rolled back with this transaction.
+-- ============================================================
+CREATE SCHEMA estimate_runtime_repair_shadow_pgtap;
+
+CREATE TABLE estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots (
+  estimate_id              uuid PRIMARY KEY REFERENCES public.estimates(id) ON DELETE RESTRICT,
+  dealer_id                uuid NOT NULL REFERENCES public.dealers(id) ON DELETE RESTRICT,
+  schema_version           text NOT NULL CHECK (schema_version = '2.2'),
+  draft_snapshot           jsonb NOT NULL CHECK (jsonb_typeof(draft_snapshot) = 'object'),
+  snapshot_fingerprint     text NOT NULL CHECK (snapshot_fingerprint ~ '^[0-9a-f]{64}$'),
+  configuration_revision   bigint NOT NULL CHECK (configuration_revision >= 0),
+  created_at               timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (dealer_id, estimate_id)
+);
+CREATE INDEX estimate_wizard_snapshots_dealer_created_idx
+  ON estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots (dealer_id, created_at DESC);
+
+CREATE TABLE estimate_runtime_repair_shadow_pgtap.estimate_revisions (
+  id                          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  dealer_id                   uuid NOT NULL REFERENCES public.dealers(id) ON DELETE RESTRICT,
+  root_estimate_id            uuid NOT NULL REFERENCES public.estimates(id) ON DELETE RESTRICT,
+  predecessor_estimate_id     uuid NOT NULL REFERENCES public.estimates(id) ON DELETE RESTRICT,
+  successor_estimate_id       uuid NOT NULL REFERENCES public.estimates(id) ON DELETE RESTRICT,
+  revision_number             integer NOT NULL CHECK (revision_number >= 2),
+  source_snapshot_fingerprint text NOT NULL CHECK (source_snapshot_fingerprint ~ '^[0-9a-f]{64}$'),
+  created_by                  uuid NOT NULL,
+  created_at                  timestamptz NOT NULL DEFAULT now(),
+  CHECK (predecessor_estimate_id <> successor_estimate_id),
+  UNIQUE (predecessor_estimate_id),
+  UNIQUE (successor_estimate_id),
+  UNIQUE (root_estimate_id, revision_number)
+);
+CREATE INDEX estimate_revisions_dealer_root_idx
+  ON estimate_runtime_repair_shadow_pgtap.estimate_revisions (dealer_id, root_estimate_id, revision_number);
+
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'public.estimate_wizard_snapshots'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped
+     EXCEPT
+     SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped)
+    UNION ALL
+    (SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped
+     EXCEPT
+     SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'public.estimate_wizard_snapshots'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped)
+  ) diff),
+  0::bigint,
+  '53: estimate_wizard_snapshots columns/types/NOT NULL/defaults exactly canonical (no extras)'
+);
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'public.estimate_revisions'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped
+     EXCEPT
+     SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_revisions'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped)
+    UNION ALL
+    (SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_revisions'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped
+     EXCEPT
+     SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'public.estimate_revisions'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped)
+  ) diff),
+  0::bigint,
+  '54: estimate_revisions columns/types/NOT NULL/defaults exactly canonical (no extras)'
+);
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'public.estimate_wizard_snapshots'::regclass
+     EXCEPT
+     SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass)
+    UNION ALL
+    (SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass
+     EXCEPT
+     SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'public.estimate_wizard_snapshots'::regclass)
+  ) diff),
+  0::bigint,
+  '55: estimate_wizard_snapshots named constraint set (incl. exact CHECK expressions) exactly canonical'
+);
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'public.estimate_revisions'::regclass
+     EXCEPT
+     SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_revisions'::regclass)
+    UNION ALL
+    (SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_revisions'::regclass
+     EXCEPT
+     SELECT k.conname::text, k.contype::text, pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'public.estimate_revisions'::regclass)
+  ) diff),
+  0::bigint,
+  '56: estimate_revisions named constraint set (incl. exact CHECK expressions) exactly canonical'
+);
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+              ' ON estimate_runtime_repair_shadow_pgtap.', ' ON '), ' ON public.', ' ON ')
+       FROM pg_index i
+      WHERE i.indrelid = 'public.estimate_wizard_snapshots'::regclass
+     EXCEPT
+     SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+              ' ON estimate_runtime_repair_shadow_pgtap.', ' ON '), ' ON public.', ' ON ')
+       FROM pg_index i
+      WHERE i.indrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass)
+    UNION ALL
+    (SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+              ' ON estimate_runtime_repair_shadow_pgtap.', ' ON '), ' ON public.', ' ON ')
+       FROM pg_index i
+      WHERE i.indrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass
+     EXCEPT
+     SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+              ' ON estimate_runtime_repair_shadow_pgtap.', ' ON '), ' ON public.', ' ON ')
+       FROM pg_index i
+      WHERE i.indrelid = 'public.estimate_wizard_snapshots'::regclass)
+  ) diff),
+  0::bigint,
+  '57: estimate_wizard_snapshots named index definitions exactly canonical (no extras)'
+);
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+              ' ON estimate_runtime_repair_shadow_pgtap.', ' ON '), ' ON public.', ' ON ')
+       FROM pg_index i
+      WHERE i.indrelid = 'public.estimate_revisions'::regclass
+     EXCEPT
+     SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+              ' ON estimate_runtime_repair_shadow_pgtap.', ' ON '), ' ON public.', ' ON ')
+       FROM pg_index i
+      WHERE i.indrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_revisions'::regclass)
+    UNION ALL
+    (SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+              ' ON estimate_runtime_repair_shadow_pgtap.', ' ON '), ' ON public.', ' ON ')
+       FROM pg_index i
+      WHERE i.indrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_revisions'::regclass
+     EXCEPT
+     SELECT replace(replace(pg_get_indexdef(i.indexrelid),
+              ' ON estimate_runtime_repair_shadow_pgtap.', ' ON '), ' ON public.', ' ON ')
+       FROM pg_index i
+      WHERE i.indrelid = 'public.estimate_revisions'::regclass)
+  ) diff),
+  0::bigint,
+  '58: estimate_revisions named index definitions exactly canonical (no extras)'
+);
+
+-- ============================================================
+-- L. Explicit contract-critical CHECK expressions and DEFAULTs
+--    Human-readable direct evidence on top of the shadow equality above.
+-- ============================================================
+SELECT ok(
+  (SELECT position($c$schema_version = '2.2'$c$ IN defs) > 0
+      AND position($c$jsonb_typeof(draft_snapshot) = 'object'$c$ IN defs) > 0
+      AND position($c$snapshot_fingerprint ~ '^[0-9a-f]{64}$'$c$ IN defs) > 0
+      AND position($c$configuration_revision >= 0$c$ IN defs) > 0
+     FROM (SELECT string_agg(pg_get_constraintdef(k.oid), ' ') AS defs
+             FROM pg_constraint k
+            WHERE k.conrelid = 'public.estimate_wizard_snapshots'::regclass
+              AND k.contype = 'c') d),
+  '59: estimate_wizard_snapshots CHECKs carry the four exact canonical expressions'
+);
+SELECT ok(
+  (SELECT position($c$revision_number >= 2$c$ IN defs) > 0
+      AND position($c$source_snapshot_fingerprint ~ '^[0-9a-f]{64}$'$c$ IN defs) > 0
+      AND position($c$predecessor_estimate_id <> successor_estimate_id$c$ IN defs) > 0
+     FROM (SELECT string_agg(pg_get_constraintdef(k.oid), ' ') AS defs
+             FROM pg_constraint k
+            WHERE k.conrelid = 'public.estimate_revisions'::regclass
+              AND k.contype = 'c') d),
+  '60: estimate_revisions CHECKs carry the three exact canonical expressions'
+);
+SELECT ok(
+  (SELECT count(*) = 2 AND bool_and(pg_get_expr(d.adbin, d.adrelid) = 'now()')
+     FROM pg_attrdef d
+     JOIN pg_attribute a ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+    WHERE d.adrelid IN ('public.estimate_wizard_snapshots'::regclass,
+                        'public.estimate_revisions'::regclass)
+      AND a.attname = 'created_at'),
+  '61: created_at defaults to now() on both revision tables'
+);
+SELECT is(
+  (SELECT pg_get_expr(d.adbin, d.adrelid)
+     FROM pg_attrdef d
+     JOIN pg_attribute a ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+    WHERE d.adrelid = 'public.estimate_revisions'::regclass
+      AND a.attname = 'id'),
+  'gen_random_uuid()',
+  '62: estimate_revisions.id defaults to gen_random_uuid()'
+);
+
+-- ============================================================
+-- M. Exact ACL grantee/privilege sets
+--    Not merely "PUBLIC/anon/authenticated excluded": beyond the owner,
+--    NOTHING may hold privileges except the literal canonical allowlist.
+-- ============================================================
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT a.grantee, a.privilege_type, a.is_grantable
+       FROM pg_class c
+       CROSS JOIN LATERAL aclexplode(coalesce(c.relacl, acldefault('r', c.relowner))) a
+      WHERE c.oid = 'public.estimate_wizard_snapshots'::regclass
+        AND a.grantee <> c.relowner
+     EXCEPT
+     SELECT v.* FROM (VALUES
+       ('service_role'::regrole::oid, 'SELECT'::text, false),
+       ('service_role'::regrole::oid, 'INSERT'::text, false)) AS v(g, p, o))
+    UNION ALL
+    (SELECT v.* FROM (VALUES
+       ('service_role'::regrole::oid, 'SELECT'::text, false),
+       ('service_role'::regrole::oid, 'INSERT'::text, false)) AS v(g, p, o)
+     EXCEPT
+     SELECT a.grantee, a.privilege_type, a.is_grantable
+       FROM pg_class c
+       CROSS JOIN LATERAL aclexplode(coalesce(c.relacl, acldefault('r', c.relowner))) a
+      WHERE c.oid = 'public.estimate_wizard_snapshots'::regclass
+        AND a.grantee <> c.relowner)
+  ) diff),
+  0::bigint,
+  '63: estimate_wizard_snapshots non-owner ACL is exactly service_role SELECT, INSERT (not grantable)'
+);
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT a.grantee, a.privilege_type, a.is_grantable
+       FROM pg_class c
+       CROSS JOIN LATERAL aclexplode(coalesce(c.relacl, acldefault('r', c.relowner))) a
+      WHERE c.oid = 'public.estimate_revisions'::regclass
+        AND a.grantee <> c.relowner
+     EXCEPT
+     SELECT v.* FROM (VALUES
+       ('service_role'::regrole::oid, 'SELECT'::text, false),
+       ('service_role'::regrole::oid, 'INSERT'::text, false)) AS v(g, p, o))
+    UNION ALL
+    (SELECT v.* FROM (VALUES
+       ('service_role'::regrole::oid, 'SELECT'::text, false),
+       ('service_role'::regrole::oid, 'INSERT'::text, false)) AS v(g, p, o)
+     EXCEPT
+     SELECT a.grantee, a.privilege_type, a.is_grantable
+       FROM pg_class c
+       CROSS JOIN LATERAL aclexplode(coalesce(c.relacl, acldefault('r', c.relowner))) a
+      WHERE c.oid = 'public.estimate_revisions'::regclass
+        AND a.grantee <> c.relowner)
+  ) diff),
+  0::bigint,
+  '64: estimate_revisions non-owner ACL is exactly service_role SELECT, INSERT (not grantable)'
+);
+SELECT is(
+  (SELECT count(*)
+     FROM pg_attribute att
+     CROSS JOIN LATERAL aclexplode(att.attacl) a
+    WHERE att.attrelid IN ('public.estimate_wizard_snapshots'::regclass,
+                           'public.estimate_revisions'::regclass)
+      AND att.attnum > 0 AND NOT att.attisdropped
+      AND att.attacl IS NOT NULL AND cardinality(att.attacl) > 0),
+  0::bigint,
+  '65: no column-level ACL entry exists on either revision table'
+);
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT p.oid::oid AS fnoid, a.grantee, a.privilege_type, a.is_grantable
+       FROM pg_proc p
+       CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+      WHERE p.oid IN (
+              'public.save_estimate_from_wizard(uuid,uuid,jsonb)'::regprocedure,
+              'public.save_estimate_from_wizard_v2(uuid,uuid,jsonb,jsonb)'::regprocedure,
+              'public.issue_estimate_revision_from_wizard(uuid,uuid,uuid,text,jsonb,jsonb)'::regprocedure,
+              'public.assert_estimate_wizard_snapshot_v22(jsonb)'::regprocedure)
+        AND a.grantee <> p.proowner
+     EXCEPT
+     SELECT v.fn::regprocedure::oid, 'service_role'::regrole::oid, 'EXECUTE'::text, false
+       FROM (VALUES
+         ('public.save_estimate_from_wizard(uuid,uuid,jsonb)'),
+         ('public.save_estimate_from_wizard_v2(uuid,uuid,jsonb,jsonb)'),
+         ('public.issue_estimate_revision_from_wizard(uuid,uuid,uuid,text,jsonb,jsonb)'),
+         ('public.assert_estimate_wizard_snapshot_v22(jsonb)')) AS v(fn))
+    UNION ALL
+    (SELECT v.fn::regprocedure::oid, 'service_role'::regrole::oid, 'EXECUTE'::text, false
+       FROM (VALUES
+         ('public.save_estimate_from_wizard(uuid,uuid,jsonb)'),
+         ('public.save_estimate_from_wizard_v2(uuid,uuid,jsonb,jsonb)'),
+         ('public.issue_estimate_revision_from_wizard(uuid,uuid,uuid,text,jsonb,jsonb)'),
+         ('public.assert_estimate_wizard_snapshot_v22(jsonb)')) AS v(fn)
+     EXCEPT
+     SELECT p.oid::oid, a.grantee, a.privilege_type, a.is_grantable
+       FROM pg_proc p
+       CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+      WHERE p.oid IN (
+              'public.save_estimate_from_wizard(uuid,uuid,jsonb)'::regprocedure,
+              'public.save_estimate_from_wizard_v2(uuid,uuid,jsonb,jsonb)'::regprocedure,
+              'public.issue_estimate_revision_from_wizard(uuid,uuid,uuid,text,jsonb,jsonb)'::regprocedure,
+              'public.assert_estimate_wizard_snapshot_v22(jsonb)'::regprocedure)
+        AND a.grantee <> p.proowner)
+  ) diff),
+  0::bigint,
+  '66: entry-point non-owner EXECUTE ACL is exactly service_role on all four functions (not grantable)'
+);
+SELECT is(
+  (SELECT count(*)
+     FROM pg_proc p
+     CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+    WHERE p.oid IN (
+            'public.reject_estimate_revision_history_mutation()'::regprocedure,
+            'public.protect_snapshot_backed_estimate_content()'::regprocedure,
+            'public.protect_snapshot_backed_estimate_items()'::regprocedure)
+      AND a.grantee <> p.proowner),
+  0::bigint,
+  '67: the three trigger functions hold no non-owner EXECUTE grant at all'
+);
+SELECT ok(
+  (SELECT bool_and(has_table_privilege(c.relowner, c.oid, pr.priv))
+     FROM pg_class c
+     CROSS JOIN unnest(ARRAY['SELECT','INSERT','UPDATE','DELETE',
+                             'TRUNCATE','REFERENCES','TRIGGER']) AS pr(priv)
+    WHERE c.oid IN ('public.estimate_wizard_snapshots'::regclass,
+                    'public.estimate_revisions'::regclass))
+  AND
+  (SELECT bool_and(has_function_privilege(p.proowner, p.oid, 'EXECUTE'))
+     FROM pg_proc p
+    WHERE p.oid IN (
+            'public.save_estimate_from_wizard(uuid,uuid,jsonb)'::regprocedure,
+            'public.save_estimate_from_wizard_v2(uuid,uuid,jsonb,jsonb)'::regprocedure,
+            'public.issue_estimate_revision_from_wizard(uuid,uuid,uuid,text,jsonb,jsonb)'::regprocedure,
+            'public.assert_estimate_wizard_snapshot_v22(jsonb)'::regprocedure,
+            'public.reject_estimate_revision_history_mutation()'::regprocedure,
+            'public.protect_snapshot_backed_estimate_content()'::regprocedure,
+            'public.protect_snapshot_backed_estimate_items()'::regprocedure)),
+  '68: canonical owner privileges remain semantically intact on tables and functions'
+);
+
+-- ============================================================
+-- N. Exact trigger/policy surface on the revision tables
+-- ============================================================
+SELECT ok(
+  (SELECT count(*) FROM pg_trigger g
+    WHERE NOT g.tgisinternal
+      AND g.tgrelid = 'public.estimate_wizard_snapshots'::regclass) = 1
+  AND
+  (SELECT count(*) FROM pg_trigger g
+    WHERE NOT g.tgisinternal
+      AND g.tgrelid = 'public.estimate_revisions'::regclass) = 1,
+  '69: each revision table carries EXACTLY its one canonical trigger (no extras)'
+);
+SELECT ok(
+  NOT EXISTS (SELECT 1 FROM pg_policy
+               WHERE polrelid IN ('public.estimate_wizard_snapshots'::regclass,
+                                  'public.estimate_revisions'::regclass))
+  AND
+  (SELECT bool_and(NOT c.relforcerowsecurity) FROM pg_class c
+    WHERE c.oid IN ('public.estimate_wizard_snapshots'::regclass,
+                    'public.estimate_revisions'::regclass)),
+  '70: revision tables carry zero RLS policies and no FORCE ROW LEVEL SECURITY (canonical)'
+);
+
+-- ============================================================
+-- O. Hostile negative controls: the detectors must actually detect.
+--    A drift replica seeded with a weakened CHECK, a dropped DEFAULT, an
+--    extra column, and a de-DESCed index — plus a scratch function holding a
+--    hostile EXECUTE grant — must be flagged by the very same comparison
+--    queries. All scratch objects roll back with this transaction.
+-- ============================================================
+CREATE TABLE estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots_drift (
+  estimate_id              uuid PRIMARY KEY REFERENCES public.estimates(id) ON DELETE RESTRICT,
+  dealer_id                uuid NOT NULL REFERENCES public.dealers(id) ON DELETE RESTRICT,
+  schema_version           text NOT NULL CHECK (schema_version = '2.2'),
+  draft_snapshot           jsonb NOT NULL CHECK (jsonb_typeof(draft_snapshot) = 'object'),
+  snapshot_fingerprint     text NOT NULL CHECK (snapshot_fingerprint ~ '^[0-9a-f]{64}$'),
+  configuration_revision   bigint NOT NULL CHECK (configuration_revision >= -1),
+  created_at               timestamptz NOT NULL,
+  extra_probe              integer,
+  UNIQUE (dealer_id, estimate_id)
+);
+CREATE INDEX estimate_wizard_snapshots_drift_dealer_created_idx
+  ON estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots_drift (dealer_id, created_at);
+
+CREATE FUNCTION estimate_runtime_repair_shadow_pgtap.acl_probe() RETURNS void
+LANGUAGE sql AS 'SELECT';
+REVOKE ALL ON FUNCTION estimate_runtime_repair_shadow_pgtap.acl_probe() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION estimate_runtime_repair_shadow_pgtap.acl_probe() TO anon;
+
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots_drift'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped
+     EXCEPT
+     SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped)
+    UNION ALL
+    (SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped
+     EXCEPT
+     SELECT a.attname::text, format_type(a.atttypid, a.atttypmod),
+            a.attnotnull, coalesce(pg_get_expr(d.adbin, d.adrelid), '')
+       FROM pg_attribute a
+       LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+      WHERE a.attrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots_drift'::regclass
+        AND a.attnum > 0 AND NOT a.attisdropped)
+  ) diff),
+  3::bigint,
+  '71: column detector flags the extra column and dropped DEFAULT (exactly 3 differences)'
+);
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots_drift'::regclass
+        AND k.contype = 'c'
+     EXCEPT
+     SELECT pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass
+        AND k.contype = 'c')
+    UNION ALL
+    (SELECT pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass
+        AND k.contype = 'c'
+     EXCEPT
+     SELECT pg_get_constraintdef(k.oid)
+       FROM pg_constraint k
+      WHERE k.conrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots_drift'::regclass
+        AND k.contype = 'c')
+  ) diff),
+  2::bigint,
+  '72: CHECK-expression detector flags the weakened configuration_revision bound (exactly 2 differences)'
+);
+SELECT is(
+  (SELECT count(*) FROM (
+    (SELECT substring(pg_get_indexdef(i.indexrelid) FROM ' USING .*$')
+       FROM pg_index i
+      WHERE i.indrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots_drift'::regclass
+     EXCEPT
+     SELECT substring(pg_get_indexdef(i.indexrelid) FROM ' USING .*$')
+       FROM pg_index i
+      WHERE i.indrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass)
+    UNION ALL
+    (SELECT substring(pg_get_indexdef(i.indexrelid) FROM ' USING .*$')
+       FROM pg_index i
+      WHERE i.indrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots'::regclass
+     EXCEPT
+     SELECT substring(pg_get_indexdef(i.indexrelid) FROM ' USING .*$')
+       FROM pg_index i
+      WHERE i.indrelid = 'estimate_runtime_repair_shadow_pgtap.estimate_wizard_snapshots_drift'::regclass)
+  ) diff),
+  2::bigint,
+  '73: index detector flags the de-DESCed index definition (exactly 2 differences)'
+);
+SELECT ok(
+  (SELECT count(*)
+     FROM pg_proc p
+     CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+    WHERE p.oid = 'estimate_runtime_repair_shadow_pgtap.acl_probe()'::regprocedure
+      AND a.grantee <> p.proowner) = 1
+  AND EXISTS (
+    SELECT 1
+      FROM pg_proc p
+      CROSS JOIN LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+     WHERE p.oid = 'estimate_runtime_repair_shadow_pgtap.acl_probe()'::regprocedure
+       AND a.grantee = 'anon'::regrole
+       AND a.privilege_type = 'EXECUTE'),
+  '74: ACL detector surfaces a hostile non-owner EXECUTE grant (anon on the probe function)'
 );
 
 SELECT * FROM finish();
