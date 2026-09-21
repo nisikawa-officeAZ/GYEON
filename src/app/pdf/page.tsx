@@ -3,9 +3,7 @@ import MainLayout              from "@/components/layout/MainLayout";
 import PageTitle               from "@/components/ui/PageTitle";
 import PDFActions              from "@/components/pdf/PDFActions";
 import EstimatePdfFrame        from "@/components/pdf/EstimatePdfFrame";
-import GyeonServicePdfPreview  from "@/components/pdf/GyeonServicePdfPreview";
 import { getEstimatePdfData }      from "@/lib/pdf/get-estimate-pdf-data";
-import { getGyeonServicePdfData }  from "@/lib/pdf/get-gyeon-service-pdf-data";
 import { getEstimates } from "@/lib/estimates/get-estimates";
 import {
   estimateCustomerName,
@@ -17,23 +15,22 @@ import {
 export const dynamic = "force-dynamic";
 
 interface Props {
-  searchParams: Promise<{ estimateId?: string; gyeonId?: string }>;
+  searchParams: Promise<{ estimateId?: string }>;
 }
 
 export default async function PDFPage({ searchParams }: Props) {
-  const { estimateId, gyeonId } = await searchParams;
+  const { estimateId } = await searchParams;
 
   // Both loaders are tenant-scoped server-side. The estimate is fetched here only to decide what to
   // show (and to reject an id that is not this dealer's); the preview itself is rendered by
   // /pdf/estimate, which re-resolves the dealer and re-scopes the query on its own — the id in the
   // URL never grants access on either path.
-  const [estimate, gyeonEstimate, estimates] = await Promise.all([
+  const [estimate, estimates] = await Promise.all([
     estimateId ? getEstimatePdfData(estimateId)  : null,
-    gyeonId    ? getGyeonServicePdfData(gyeonId) : null,
     getEstimates(),
   ]);
 
-  const invalidSelection = (estimateId && !estimate) || (gyeonId && !gyeonEstimate);
+  const invalidSelection = Boolean(estimateId && !estimate);
 
   return (
     <MainLayout>
@@ -47,8 +44,6 @@ export default async function PDFPage({ searchParams }: Props) {
         {/* Preview — the real PDF, from the same renderer the download uses */}
         {estimate && estimateId ? (
           <EstimatePdfFrame estimateId={estimateId} />
-        ) : gyeonEstimate ? (
-          <GyeonServicePdfPreview gyeonEstimate={gyeonEstimate} />
         ) : (
           <section className="bg-[#1e293b] rounded-xl shadow-lg p-4 sm:p-6">
             {invalidSelection ? (

@@ -14,6 +14,8 @@ export type VehicleRegistrationOcrResult = {
   user_name?:              string;  // 使用者氏名
   owner_name_kana?:        string;  // 所有者氏名フリガナ（記載がある場合のみ）
   user_name_kana?:         string;  // 使用者氏名フリガナ（記載がある場合のみ）
+  owner_postal_code?:      string;  // 所有者郵便番号（7桁が明確な場合のみ）
+  user_postal_code?:       string;  // 使用者郵便番号（7桁が明確な場合のみ）
   owner_address?:          string;  // 所有者住所
   user_address?:           string;  // 使用者住所
   vehicle_name?:           string;  // 車名
@@ -43,6 +45,7 @@ export type VehicleRegistrationOcrResult = {
   notes?:                  string;  // 備考・その他
   // ─ Customer mapping (Japanese registration rule: owner ≠ user) ─
   customer_candidate_name?:    string; // 顧客として反映する氏名（使用者優先）
+  customer_candidate_postal_code?: string; // 顧客として反映する郵便番号
   customer_candidate_address?: string; // 顧客として反映する住所
   customer_type?:              string; // individual / corporation / unknown
   owner_user_separated?:       string; // "true" / "false" / "unknown"
@@ -135,6 +138,8 @@ export const OCR_FIELD_LABELS: Record<keyof VehicleRegistrationOcrResult, string
   user_name:              "使用者氏名",
   owner_name_kana:        "所有者氏名フリガナ",
   user_name_kana:         "使用者氏名フリガナ",
+  owner_postal_code:      "所有者郵便番号",
+  user_postal_code:       "使用者郵便番号",
   owner_address:          "所有者住所",
   user_address:           "使用者住所",
   vehicle_name:           "車名",
@@ -163,6 +168,7 @@ export const OCR_FIELD_LABELS: Record<keyof VehicleRegistrationOcrResult, string
   color:                  "ボディカラー",
   notes:                  "備考",
   customer_candidate_name:    "顧客反映氏名",
+  customer_candidate_postal_code: "顧客反映郵便番号",
   customer_candidate_address: "顧客反映住所",
   customer_type:              "顧客種別",
   owner_user_separated:       "所有者・使用者の相違",

@@ -14,7 +14,7 @@
 // screenConfig) arrive as props from EstimateWizard and are used here only — they are never stored
 // in WizardStore, the canonical draft, or hook state. Display prices come only from screenConfig;
 // PPF price/coefficient placeholders stay null. This is NOT the production reference container and
-// imports nothing from production/EstimateWizardContainer or screens/ScreensPreview.
+// imports nothing from alternate production containers or screens/ScreensPreview.
 
 import { useState } from "react";
 

@@ -1,14 +1,13 @@
 // EW-UI-3B — Shared runtime-input contract for the canonical Estimate Wizard host.
 //
 // ONE definition of the trusted, caller-supplied runtime inputs (shopRank + screenConfig), consumed
-// by BOTH the read-only production reference (production/EstimateWizardContainer.tsx) AND the future
-// canonical EW-UI host (EstimateWizard.tsx / useEstimateWizard.ts). Relocated here from the
-// container WITHOUT any shape change so the two hosts can never drift.
+// by the canonical production host (EstimateWizard.tsx / useEstimateWizard.ts) and the shared step
+// contracts. No alternate production container owns or redeclares this shape.
 //
 // Trusted inputs only: there is NO default, NO fixture fallback, and this module imports NO
 // example/preview/default data (no ScreensPreview, no EXAMPLE_*/DEFAULT_*/PREVIEW_*, and it does NOT
-// import the production container). Field types come straight from the approved selector prop types
-// in screens/step-types.ts, so no shape is re-declared or duplicated here.
+// import an alternate production container). Field types come straight from the approved selector
+// prop types in screens/step-types.ts, so no shape is re-declared or duplicated here.
 
 import type { ServiceOfferings } from "@/lib/estimates/service-categories";
 import type { WindowFilmSettingsV1 } from "@/lib/pricing/window-film-v1-contract";

@@ -101,7 +101,7 @@ test("empty and whitespace-only models are rejected; plate/vin/color never subst
 
 // ── Customer rules stay untouched (regression lock) ─────────────────────────
 
-test("customer rules are unchanged by the vehicle correction", () => {
+test("new customer requires both name and furigana", () => {
   const noId: EstimateSaveCustomer = { mode: "existing", customerId: "" };
   const noIdIssues = validateEstimateSaveRequest(baseRequest({ customer: noId }))
     .issues.filter((i) => i.code === ESTIMATE_SAVE_ERRORS.CUSTOMER_REQUIRED);
@@ -110,7 +110,14 @@ test("customer rules are unchanged by the vehicle correction", () => {
   const newOk: EstimateSaveCustomer = {
     mode: "new", name: "山田太郎", phone: null, email: null, postalCode: null, address: null,
     lineId: null, isBusiness: false, tradeRatePercent: null, accountsReceivableAllowed: false,
-    closingDay: null, paymentDay: null, kana: null, creditTerms: null,
+    closingDay: null, paymentDay: null, kana: "ヤマダタロウ", creditTerms: null,
   };
   assert.equal(validateEstimateSaveRequest(baseRequest({ customer: newOk })).ok, true);
+
+  for (const kana of [null, "", "   "]) {
+    const result = validateEstimateSaveRequest(baseRequest({ customer: { ...newOk, kana } }));
+    const issues = result.issues.filter((issue) => issue.field === "customer.kana");
+    assert.equal(issues.length, 1, `kana=${JSON.stringify(kana)} must be rejected`);
+    assert.equal(issues[0].message, "フリガナが未入力です。");
+  }
 });

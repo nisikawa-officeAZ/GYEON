@@ -153,6 +153,8 @@ test("EW-UI-2A/2B: bound fields are LOSSLESS; suggestedSize display-only; review
   // suggestedSize stays display-only; review still controller-phase (unchanged by EW-UI-2B).
   assert.equal(fieldContractFor("vehicle.suggestedSize")!.status, "DISPLAY_ONLY_UNTIL_TYPED_CONTRACT");
   assert.equal(fieldContractFor("review.previewConfirmed")!.status, "CONTROLLER_PHASE");
+  assert.equal(fieldContractFor("review.serviceLineOrder")!.status, "LOSSLESS");
+  assert.equal(fieldContractFor("review.serviceLineOrder")!.db, "estimate_items.sort_order");
 });
 
 test("canonical initial + reset draft discount mode is 'none'", () => {

@@ -45,6 +45,7 @@ type DraftOver = {
   regMethod?: CustomerRegistrationMethod;
   customerId?: string | null;
   name?: string;
+  kana?: string;
   vSourceMode?: "existing" | "new" | null;
   vehicleId?: string | null;
   model?: string;
@@ -65,7 +66,11 @@ function draft(over: DraftOver = {}): EstimateWizardDraftV22 {
       registrationMethod: over.regMethod ?? "new",
       sourceMode: (over.regMethod ?? "new") === "search" ? "existing" : "new",
       customerId: over.customerId ?? null,
-      newCustomer: { ...d.customer.newCustomer, name: over.name ?? "" },
+      newCustomer: {
+        ...d.customer.newCustomer,
+        name: over.name ?? "",
+        kana: over.kana ?? (over.name ? "ヤマダタロウ" : ""),
+      },
     },
     vehicle: {
       ...d.vehicle,
@@ -96,12 +101,23 @@ const allValid = () => draft({ regMethod: "search", customerId: "c-1", vehicleId
 
 // ── Step 1 ──────────────────────────────────────────────────────────────────
 
-test("step 1: new/ocr require a non-empty trimmed name", () => {
+test("step 1: new/ocr require both a non-empty trimmed name and furigana", () => {
   for (const regMethod of ["new", "ocr"] as const) {
     assert.equal(step1Valid(inp(draft({ regMethod }))), false, `${regMethod}: empty name`);
     assert.equal(step1Valid(inp(draft({ regMethod, name: "   " }))), false, `${regMethod}: whitespace name`);
-    assert.equal(step1Valid(inp(draft({ regMethod, name: "山田太郎" }))), true, `${regMethod}: name entered`);
+    assert.equal(step1Valid(inp(draft({ regMethod, name: "山田太郎", kana: "" }))), false, `${regMethod}: kana missing`);
+    assert.equal(step1Valid(inp(draft({ regMethod, name: "山田太郎", kana: "   " }))), false, `${regMethod}: whitespace kana`);
+    assert.equal(step1Valid(inp(draft({ regMethod, name: "山田太郎", kana: "ヤマダタロウ" }))), true, `${regMethod}: both entered`);
   }
+});
+
+test("the canonical Step 1 UI marks furigana required at both field and input boundaries", () => {
+  const step1 = codeOf("src/components/estimates/wizard/steps/Step1Customer.tsx");
+  assert.match(step1, /<Field label="フリガナ" required value=\{c\.kana\}>/);
+  assert.match(
+    step1,
+    /<TextInput value=\{c\.kana\} onChange=\{\(x\) => setC\(\{ kana: x \}\)\} placeholder="ヤマダタロウ" required \/>/,
+  );
 });
 
 test("step 1: search requires a uniquely effective existing customer", () => {
@@ -190,6 +206,7 @@ test("F2-R1: blockedReasonJa — null when advancable or terminal; names the FIR
   assert.equal(blockedReasonJa(7, ok), null, "step 7 has no forward action");
 
   assert.equal(blockedReasonJa(1, inp(draft())), "お客様名が未入力です。", "new/ocr customer");
+  assert.equal(blockedReasonJa(1, inp(draft({ name: "山田太郎", kana: "" }))), "フリガナが未入力です。", "furigana required");
   assert.equal(blockedReasonJa(1, inp(draft({ regMethod: "search" }))), "お客様が選択されていません。", "search customer");
   assert.equal(blockedReasonJa(2, inp(draft({ name: "山田" }))), "車名が未入力です。", "new vehicle");
   assert.equal(
@@ -333,7 +350,7 @@ test("F2-R1: checkmarks derive from steps BEHIND the operator via stepIsValid on
 
 test("the host passes the reference arrays into the hook as navigation inputs", () => {
   const host = codeOf("src/components/estimates/wizard/EstimateWizard.tsx");
-  assert.match(host, /useEstimateWizard\(\s*preselectionStorePatch\([\s\S]*?\),\s*\{ customers, vehicles \},?\s*\)/,
+  assert.match(host, /useEstimateWizard\(\s*initialPreselectionStorePatch\([\s\S]*?\),\s*\{ customers, vehicles \},\s*initialDraft,?\s*\)/,
     "the hook receives { customers, vehicles }");
 });
 

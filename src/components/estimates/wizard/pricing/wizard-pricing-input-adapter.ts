@@ -60,8 +60,8 @@ function manualLineExtendedPrice(l: WizardManualPricingLineInput): number {
 }
 
 // BOUNDARY: `shopRank` is OPTIONAL only for the isolated preview/low-level path (e.g. ScreensPreview).
-// Every mounted-runtime caller reaches this via computeWizardPricing/useWizardPricing, which thread
-// the authoritative rank from EstimateWizardContainer. When omitted, upper layers are NOT priced and
+// The canonical runtime uses the config-driven adapter instead. Any future mounted caller of this
+// low-level path MUST supply the authoritative rank. When omitted, upper layers are NOT priced and
 // MULTI_LAYER_NOT_MAPPED is surfaced — never a silent partial multi-layer total.
 export function buildWizardPricingInput(draft: EstimateWizardDraftV22, shopRank?: ShopRank): WizardPricingInputBundle {
   const warnings: WizardPricingIssue[] = [];

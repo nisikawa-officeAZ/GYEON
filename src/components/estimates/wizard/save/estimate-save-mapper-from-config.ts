@@ -21,6 +21,7 @@ import type { ShopRank } from "../screens/step-types";
 import type { WizardPricingResult } from "../pricing/wizard-pricing-types";
 import type { ProductionPricingConfiguration } from "../pricing/wizard-manual-pricing-config";
 import { buildWizardPricingInputFromConfig } from "../pricing/wizard-pricing-input-adapter-config";
+import { orderByLineIds } from "../pricing/wizard-line-order";
 import type {
   EstimateSaveRequest, EstimateSaveCustomer, EstimateSaveVehicle, EstimateSaveServiceLine,
   EstimateSaveDiscount, EstimateSaveCoupon, EstimateSavePricing,
@@ -357,7 +358,7 @@ function mapInner(input: ConfigSaveMapperInput): ConfigSaveMapperResult {
   const request: EstimateSaveRequest = {
     customer,
     vehicle,
-    services,
+    services: orderByLineIds(services, draft.review.serviceLineOrder, (line) => line.lineId),
     nonPriceableSelections: [], // I. blocking policy preserved: a selected non-priceable option blocks pricing upstream
     discount,
     coupon,

@@ -119,6 +119,7 @@ export default function EstimateWizard({
           vehicles={vehicles}
           customerSearchInvoker={customerSearchInvoker}
           duplicateCheckInvoker={duplicateCheckInvoker}
+          onSizeEstimate={setBodySizeEstimate}
         />
       )}
       {api.step === 2 && (
@@ -140,7 +141,7 @@ export default function EstimateWizard({
         // GDA-ESTIMATE-REVIEW-DISPLAY-R1: the SAME server-supplied reference arrays
         // that drive selection and navigation validity also resolve the review
         // labels, so the review can never show a name those surfaces would refuse.
-        <Step7Review api={api} customers={customers} vehicles={vehicles} saveBinding={saveBinding} />
+        <Step7Review api={api} customers={customers} vehicles={vehicles} pricing={pricing} saveBinding={saveBinding} />
       )}
     </WizardShell>
   );

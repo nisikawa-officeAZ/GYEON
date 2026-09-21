@@ -75,23 +75,25 @@ test("separated parties keep name, kana and address strictly apart", () => {
   const r = {
     owner_name:      "山田太郎",
     owner_name_kana: "ヤマダタロウ",
+    owner_postal_code: "100-0001",
     owner_address:   "東京都港区1-2-3",
     user_name:       "鈴木花子",
     user_name_kana:  "スズキハナコ",
+    user_postal_code: "220-0001",
     user_address:    "神奈川県横浜市4-5-6",
   };
   assert.equal(analyzeOcrCustomer(r).ownerUserSeparated, true);
 
   const owner = resolveCustomer(r, "owner");
   assert.deepEqual(
-    { n: owner.name, k: owner.kana, a: owner.address },
-    { n: "山田太郎", k: "ヤマダタロウ", a: "東京都港区1-2-3" },
+    { n: owner.name, k: owner.kana, p: owner.postal, a: owner.address },
+    { n: "山田太郎", k: "ヤマダタロウ", p: "100-0001", a: "東京都港区1-2-3" },
   );
 
   const user = resolveCustomer(r, "user");
   assert.deepEqual(
-    { n: user.name, k: user.kana, a: user.address },
-    { n: "鈴木花子", k: "スズキハナコ", a: "神奈川県横浜市4-5-6" },
+    { n: user.name, k: user.kana, p: user.postal, a: user.address },
+    { n: "鈴木花子", k: "スズキハナコ", p: "220-0001", a: "神奈川県横浜市4-5-6" },
   );
 });
 
@@ -160,9 +162,19 @@ test("owner-only certificate resolves fully from the owner under either source",
 test("a certificate naming nobody resolves to blanks and customerType unknown", () => {
   const resolved = resolveCustomer({}, "user");
   assert.deepEqual(
-    { n: resolved.name, k: resolved.kana, a: resolved.address, t: resolved.customerType },
-    { n: "", k: "", a: "", t: "unknown" },
+    { n: resolved.name, k: resolved.kana, p: resolved.postal, a: resolved.address, t: resolved.customerType },
+    { n: "", k: "", p: "", a: "", t: "unknown" },
   );
+});
+
+test("partial postal fragments are stripped but never promoted to postal", () => {
+  const resolved = resolveCustomer({
+    owner_name: "有限会社 オフィスアズ",
+    owner_postal_code: "523-",
+    owner_address: "〒523- 滋賀県愛知郡愛荘町愛知川７７４−４",
+  }, "owner");
+  assert.equal(resolved.postal, "");
+  assert.equal(resolved.address, "滋賀県愛知郡愛荘町愛知川７７４−４");
 });
 
 test("blank-string fields are treated as absent, not as values", () => {

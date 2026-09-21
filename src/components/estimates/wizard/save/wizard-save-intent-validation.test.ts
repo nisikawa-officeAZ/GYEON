@@ -97,6 +97,20 @@ test("a valid intent reconstructs successfully", () => {
   assert.equal(r.intent.draft.version, "2.2");
   assert.deepEqual(r.intent.draft.serviceSelection.selectedCategories, ["maintenance", "carwash"]);
   assert.equal(r.intent.draft.serviceConfiguration.bodyMaintenance.menuId, "maint-a");
+  assert.deepEqual(r.intent.draft.review.serviceLineOrder, [], "older 2.2 snapshots default to engine order");
+});
+
+test("service line order is copied exactly and rejects non-string entries", () => {
+  const ids = ["manual:maintenance:mm1", "catalog:coating:base:one-evo"];
+  const accepted = withDraft((d) => { (d.review as Record<string, unknown>).serviceLineOrder = ids; });
+  assert.equal(accepted.ok, true);
+  if (accepted.ok) {
+    assert.deepEqual(accepted.intent.draft.review.serviceLineOrder, ids);
+    assert.notEqual(accepted.intent.draft.review.serviceLineOrder, ids);
+  }
+  assertRejected(withDraft((d) => {
+    (d.review as Record<string, unknown>).serviceLineOrder = ["ok", 1];
+  }), "invalid-type", "serviceLineOrder element");
 });
 
 test("the output shares NO mutable reference with the input", () => {

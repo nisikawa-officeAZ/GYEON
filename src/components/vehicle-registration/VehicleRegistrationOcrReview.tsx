@@ -34,6 +34,8 @@ const CUSTOMER_FIELDS: ReviewField[] = [
   "user_name",
   "owner_name_kana",
   "user_name_kana",
+  "owner_postal_code",
+  "user_postal_code",
   "owner_address",
   "user_address",
 ];
@@ -189,6 +191,16 @@ export default function VehicleRegistrationOcrReview({
 
   function editField(key: string, val: string) {
     setEdited((prev) => ({ ...prev, [key]: val }));
+    // A field that OCR left blank starts unchecked. Once the operator supplies a value it must
+    // become part of the confirmed payload; otherwise pressing 保存 silently discards their edit.
+    if (val.trim() !== "") {
+      setSelected((prev) => {
+        if (prev.has(key)) return prev;
+        const next = new Set(prev);
+        next.add(key);
+        return next;
+      });
+    }
   }
 
   function selectAll(fields: ReviewField[]) {
@@ -211,6 +223,10 @@ export default function VehicleRegistrationOcrReview({
   const customerInput: Partial<VehicleRegistrationOcrResult> = {
     owner_name:    edited.owner_name,
     user_name:     edited.user_name,
+    owner_name_kana: edited.owner_name_kana,
+    user_name_kana: edited.user_name_kana,
+    owner_postal_code: edited.owner_postal_code,
+    user_postal_code: edited.user_postal_code,
     owner_address: edited.owner_address,
     user_address:  edited.user_address,
     customer_type: ocrResult.customer_type,
@@ -261,6 +277,7 @@ export default function VehicleRegistrationOcrReview({
     }
     // Attach the resolved customer (owner/user rule + operator selection).
     if (custResolved.name)    payload.customer_candidate_name    = custResolved.name;
+    if (custResolved.postal)  payload.customer_candidate_postal_code = custResolved.postal;
     if (custResolved.address) payload.customer_candidate_address = custResolved.address;
     payload.customer_type = custResolved.customerType;
     startTransition(() => {

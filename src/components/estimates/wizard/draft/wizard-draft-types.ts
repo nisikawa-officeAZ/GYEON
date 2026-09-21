@@ -131,9 +131,11 @@ export type WizardNotesDraft = {
   internalMemo:  string; // staff-only — NEVER customer-facing
 };
 
-// ── Review (Screen 7) — preview-only (NOT save / submission / approval status) ────
+// ── Review (Screen 7) — confirmation plus operator-selected output order ──────────
 export type WizardReviewDraft = {
   previewConfirmed: boolean;
+  /** Operator-selected PDF/detail line order. Stable persistence ids; [] = engine order. */
+  serviceLineOrder: string[];
 };
 
 // ── Metadata (in-memory only) ────────────────────────────────────────────────────

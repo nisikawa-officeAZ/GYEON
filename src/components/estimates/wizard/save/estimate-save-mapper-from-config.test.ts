@@ -117,6 +117,22 @@ test("ONE + CANCOAT + CANCOAT creates three distinct lineIds", () => {
   assert.equal(new Set(ids).size, 3);
 });
 
+test("operator-selected line order becomes the persisted service array order", () => {
+  const base = draftWith(["coating"], coatingCfg("one-evo", "cancoat-evo"));
+  const draft: EstimateWizardDraftV22 = {
+    ...base,
+    review: {
+      ...base.review,
+      serviceLineOrder: [
+        "catalog:coating:topcoat2:cancoat-evo",
+        "catalog:coating:base:one-evo",
+      ],
+    },
+  };
+  const req = okReq(run(draft));
+  assert.deepEqual(req.services.map((line) => line.lineId), draft.review.serviceLineOrder);
+});
+
 test("catalog ids and roles come directly from the pricing result", () => {
   const draft = draftWith(["coating"], coatingCfg("one-evo", "cancoat-evo", "cancoat-evo"));
   const pr = computeWizardPricingFromConfig(draft, PC, CATALOG, RANK);

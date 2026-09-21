@@ -20,7 +20,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { WIZARD_STEPS, type StepId, type WizardStore } from "./wizard-types";
 import type { EstimateWizardDraftV22 } from "./draft/wizard-draft-types";
-import { setCurrentStep } from "./draft/wizard-draft-state";
+import { setCurrentStep, updateReview } from "./draft/wizard-draft-state";
 import { projectStore, applyStorePatch, initialCanonicalDraft, type WizardStorePatch } from "./bridge/ew-ui1-controller";
 import {
   stepIsValid, maxEnterableStep, resolveNext, resolveJump, normalizeRestoredStep,
@@ -37,6 +37,7 @@ export interface EstimateWizardApi {
   store:       WizardStore;                 // read-only projection of the canonical draft
   draft:       EstimateWizardDraftV22;       // the single authoritative business state (readonly to callers)
   updateStore: (patch: WizardStorePatch) => void;
+  setServiceLineOrder: (lineIds: readonly string[]) => void;
   jumpTo:      (n: number) => void;
   next:        () => void;
   back:        () => void;
@@ -90,6 +91,11 @@ export function useEstimateWizard(
     // invalid/unsupported patch → no state change (fail closed); the current UI never sends these.
   }, [draft]);
 
+  const setServiceLineOrder = useCallback((lineIds: readonly string[]) => {
+    const unique = [...new Set(lineIds.filter((id): id is string => typeof id === "string" && id !== ""))];
+    setDraft((d) => updateReview(d, { serviceLineOrder: unique, previewConfirmed: false }));
+  }, []);
+
   // Navigation is backed by canonical metadata.currentStep and resolved through the pure
   // fail-closed transition resolvers. A blocked forward move returns the CURRENT step, so
   // setCurrentStep rewrites the same value and the canonical step never advances.
@@ -123,6 +129,7 @@ export function useEstimateWizard(
     store,
     draft,
     updateStore,
+    setServiceLineOrder,
     jumpTo,
     next,
     back,

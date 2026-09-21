@@ -16,7 +16,6 @@ const PRESERVE = [
   "/estimates/new?anchor=%23summary",
   "/files/a%2Fb",
   "/search?q=%252F",
-  "/admin/dev-preview/estimate-wizard",
   "/estimates/new?tab=1",
 ];
 

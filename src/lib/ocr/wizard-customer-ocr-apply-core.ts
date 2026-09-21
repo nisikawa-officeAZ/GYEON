@@ -25,9 +25,10 @@
 // against the real duplicate core rather than a local copy of its rules.
 //
 // ── WHY THE PATCH IS A NARROW TYPE RATHER THAN Partial<CustomerDraft> ───────────
-// A 車検証 carries a name, sometimes furigana and an address. It carries no telephone number, no
-// email, no postal code and no LINE id. Typing the return value as the full draft would make
-// `patch.phone = …` a legal edit to this file; typing it as these three fields makes it a compile
+// A 車検証 carries a name, sometimes furigana and an address. When a postal code is printed as part
+// of that SAME address, it can be copied safely too. It carries no telephone number, no email and
+// no LINE id. Typing the return value as the full draft would make
+// `patch.phone = …` a legal edit to this file; typing it as these four fields makes it a compile
 // error. That matters specifically for phone: the duplicate reason precedence is phone > name+kana >
 // name, so an OCR path that could write phone could change which reason an operator is shown. It
 // cannot, because the type gives it nowhere to write.
@@ -38,14 +39,19 @@ import {
   resolveCustomer,
   type CustomerSource,
 } from "@/lib/vehicle-registration/ocr-customer-mapping";
+import {
+  addressWithoutLeadingPostal,
+  normalizeJapanesePostalCode,
+  postalCodeFromAddress,
+} from "@/lib/vehicle-registration/postal-normalization";
 
 /**
  * The ONLY customer-draft fields an OCR result may touch.
  *
  * Exported so a test can assert the emitted key set against it: a future edit that starts writing a
- * fourth field fails that assertion rather than quietly widening what OCR controls.
+ * fifth field fails that assertion rather than quietly widening what OCR controls.
  */
-export const OCR_APPLICABLE_DRAFT_FIELDS = ["name", "kana", "address"] as const;
+export const OCR_APPLICABLE_DRAFT_FIELDS = ["name", "kana", "postal", "address"] as const;
 
 export type OcrApplicableDraftField = (typeof OCR_APPLICABLE_DRAFT_FIELDS)[number];
 
@@ -88,7 +94,8 @@ function applied(raw: unknown): string | null {
  *
  * ── THE ANTI-MIXING RULE ────────────────────────────────────────────────────────
  * When the candidate is authoritative, an ABSENT candidate field stays absent. Address is applied
- * only when the candidate carries one, and kana is not applied at all — there is no
+ * only when the candidate carries one; postal is derived only from that same address. Kana is not
+ * applied at all — there is no
  * `customer_candidate_kana` yet, and deriving one from the raw fields is exactly the mistake this
  * rule exists to prevent: the candidate name may have come from 所有者 while the raw derivation
  * would default to 使用者, producing a name and a kana read off two different lines. An absent
@@ -108,13 +115,19 @@ export function buildWizardCustomerOcrPatch(
   result: Partial<VehicleRegistrationOcrResult>,
   source?: CustomerSource,
 ): WizardCustomerOcrPatch {
-  const patch: { name?: string; kana?: string; address?: string } = {};
+  const patch: { name?: string; kana?: string; postal?: string; address?: string } = {};
 
   const confirmedName = applied(result.customer_candidate_name);
   if (confirmedName !== null) {
     patch.name = confirmedName;
     const confirmedAddress = applied(result.customer_candidate_address);
-    if (confirmedAddress !== null) patch.address = confirmedAddress;
+    const confirmedPostal = normalizeJapanesePostalCode(result.customer_candidate_postal_code)
+      ?? postalCodeFromAddress(confirmedAddress);
+    if (confirmedPostal !== null) patch.postal = confirmedPostal;
+    if (confirmedAddress !== null) {
+      const cleanAddress = addressWithoutLeadingPostal(confirmedAddress);
+      if (cleanAddress !== null) patch.address = cleanAddress;
+    }
     // No kana branch, deliberately. See THE ANTI-MIXING RULE above.
     return patch;
   }
@@ -127,6 +140,9 @@ export function buildWizardCustomerOcrPatch(
 
   const kana = applied(resolved.kana);
   if (kana !== null) patch.kana = kana;
+
+  const postal = normalizeJapanesePostalCode(resolved.postal);
+  if (postal !== null) patch.postal = postal;
 
   const address = applied(resolved.address);
   if (address !== null) patch.address = address;

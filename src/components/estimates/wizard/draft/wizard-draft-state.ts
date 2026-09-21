@@ -45,7 +45,7 @@ export const initialEstimateWizardDraftV22: EstimateWizardDraftV22 = {
   },
   discountAndCoupon: { mode: "none", percentInput: "", amountInput: "", selectedCouponIds: [], adjustmentReason: "" },
   notes: { customerNotes: "", internalMemo: "" },
-  review: { previewConfirmed: false },
+  review: { previewConfirmed: false, serviceLineOrder: [] },
   metadata: { schemaVersion: "2.2", currentStep: 1, lastUpdatedAt: null, source: "estimate-wizard-v2.2" },
 };
 
@@ -143,7 +143,7 @@ export function resetWizardDraft(): EstimateWizardDraftV22 {
     },
     discountAndCoupon: { mode: "none", percentInput: "", amountInput: "", selectedCouponIds: [], adjustmentReason: "" },
     notes: { customerNotes: "", internalMemo: "" },
-    review: { previewConfirmed: false },
+    review: { previewConfirmed: false, serviceLineOrder: [] },
     metadata: { schemaVersion: "2.2", currentStep: 1, lastUpdatedAt: null, source: "estimate-wizard-v2.2" },
   };
 }

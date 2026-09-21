@@ -637,9 +637,16 @@ function readDraft(v: unknown, path: string, issues: Issues): EstimateWizardDraf
   const reRaw = readObject(o.review, `${path}.review`, issues);
   let review: DraftSections["review"] | undefined;
   if (reRaw !== undefined) {
-    requireExactKeys(reRaw, `${path}.review`, ["previewConfirmed"], issues);
+    // serviceLineOrder was added after the first 2.2 snapshots. Absence remains
+    // readable as the authoritative engine order; unknown fields still fail closed.
+    requireExactKeys(reRaw, `${path}.review`, ["previewConfirmed"], issues, ["serviceLineOrder"]);
     const previewConfirmed = readBoolean(reRaw.previewConfirmed, `${path}.review.previewConfirmed`, issues);
-    if (previewConfirmed !== undefined) review = { previewConfirmed };
+    const serviceLineOrder = reRaw.serviceLineOrder === undefined
+      ? []
+      : readStringArray(reRaw.serviceLineOrder, `${path}.review.serviceLineOrder`, issues);
+    if (previewConfirmed !== undefined && serviceLineOrder !== undefined) {
+      review = { previewConfirmed, serviceLineOrder };
+    }
   }
 
   // ── metadata ──

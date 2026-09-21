@@ -1,8 +1,9 @@
 "use client";
 
 // Step 1 — 顧客登録. Default mode = 新規顧客登録 (Architect decision). Switchable to
-// 車検証OCR / 既存顧客を検索 at any time. Required = registration method + 顧客名 only
-// (amber highlight until filled). Business (業者) / credit-sale (掛売り) are two
+// 車検証OCR / 既存顧客を検索 at any time. A new customer requires the
+// registration method, 顧客名 and フリガナ (amber highlight until filled). Business
+// (業者) / credit-sale (掛売り) are two
 // INDEPENDENT toggle buttons. LINE ID + LINE QR only (no other SNS). No finance-company
 // UI.
 //
@@ -21,9 +22,9 @@
 // save itself is still not performed here.
 //
 // B2-C.2: 車検証OCR applies an already-obtained result to the SAME editable draft fields a
-// manual typist fills — 氏名 / フリガナ / 住所 only, each left untouched when the certificate
-// did not carry it. Nothing is auto-registered and no request is issued; the operator reviews
-// and may edit every applied value, and the B2-D duplicate advisory re-runs on the result with
+// manual typist fills — 氏名 / フリガナ / 郵便番号 / 住所, each left untouched when the
+// certificate did not carry it. Nothing is auto-registered and no request is issued; the operator
+// reviews and may edit every applied value, and the B2-D duplicate advisory re-runs on the result with
 // no OCR-specific exception.
 
 import { useEffect, useRef, useState } from "react";
@@ -40,7 +41,8 @@ import type {
   WizardDuplicateReason,
 } from "../contract/wizard-runtime-inputs";
 import { effectiveExistingCustomer, customerSelectionPatch } from "./existing-entity-selection";
-import { buildWizardCustomerOcrPatch } from "@/lib/ocr/wizard-customer-ocr-apply-core";
+import { buildWizardEstimateOcrApplication } from "@/lib/ocr/wizard-estimate-ocr-apply-core";
+import type { BodySizeEstimate } from "@/lib/vehicles/body-size-estimate";
 import { OcrEntry } from "../OcrEntry";
 import {
   Card, SectionTitle, Field, TextInput, SelectButton, ToggleButton, ChoiceGrid,
@@ -91,9 +93,9 @@ function candidateSignature(candidates: readonly WizardDuplicateCandidate[]): st
 }
 
 export function Step1Customer({
-  api, customers, vehicles, customerSearchInvoker, duplicateCheckInvoker,
+  api, customers, vehicles, customerSearchInvoker, duplicateCheckInvoker, onSizeEstimate,
 }: { api: EstimateWizardApi } & WizardExistingEntityInputs & WizardCustomerSearchInputs
-  & WizardDuplicateCheckInputs) {
+  & WizardDuplicateCheckInputs & { onSizeEstimate?: (estimate: BodySizeEstimate | null) => void }) {
   const c = api.store.customer;
   const v = api.store.vehicle;
   const [query, setQuery] = useState("");
@@ -230,18 +232,13 @@ export function Step1Customer({
         <div className="mt-4">
           <OcrEntry
             onApply={(f) => {
-              // B2-C.2 — apply an ALREADY-OBTAINED result to the editable draft, and nothing else.
-              // The patch is built by a pure core: it carries 氏名 / フリガナ / 住所 only, and only
-              // where the certificate actually supplied a value, so an unreadable field leaves what
-              // the operator already typed untouched. No customer, vehicle, estimate or OCR record
-              // is created here — this writes to wizard state and issues no request at all.
-              //
-              // Spreading the patch into the draft is what feeds the applied name into the B2-D
-              // duplicate check: the effect below watches c.name / c.kana / c.phone and re-runs on
-              // exactly the same terms as a hand-typed value. There is deliberately no OCR branch
-              // in that path and none is added here.
-              const patch = buildWizardCustomerOcrPatch(f);
-              if (Object.keys(patch).length > 0) setC(patch);
+              // The reviewed result is applied once to BOTH customer and vehicle drafts through the
+              // same pure core Screen 2 uses. A Screen-1 scan must never discard the vehicle half.
+              const applied = buildWizardEstimateOcrApplication(f);
+              if (Object.keys(applied.customer).length > 0 || Object.keys(applied.vehicle).length > 0) {
+                api.updateStore({ customer: applied.customer, vehicle: applied.vehicle });
+              }
+              onSizeEstimate?.(applied.bodySizeEstimate);
             }}
           />
           <p className="text-[11px] text-slate-500 mt-2">読み取り後、フォームへ反映されます。オペレーターが修正可能です。</p>
@@ -333,8 +330,8 @@ export function Step1Customer({
           </Field>
         </div>
         <ChoiceGrid cols={2}>
-          <Field label="フリガナ" value={c.kana}>
-            <TextInput value={c.kana} onChange={(x) => setC({ kana: x })} placeholder="ヤマダタロウ" />
+          <Field label="フリガナ" required value={c.kana}>
+            <TextInput value={c.kana} onChange={(x) => setC({ kana: x })} placeholder="ヤマダタロウ" required />
           </Field>
           <Field label="電話番号" value={c.phone}>
             <TextInput value={c.phone} onChange={(x) => setC({ phone: x })} placeholder="090-0000-0000" type="tel" inputMode="tel" />

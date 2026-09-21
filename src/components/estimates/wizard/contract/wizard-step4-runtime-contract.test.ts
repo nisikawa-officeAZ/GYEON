@@ -3,7 +3,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 import { createWizardRowId, type WizardRowIdCryptoSource } from "./wizard-row-id";
 import type { WizardRuntimeInputs, WizardScreenConfiguration } from "./wizard-runtime-inputs";
@@ -166,18 +166,8 @@ test("11. wizard-runtime-config imports the shared contract, not the container",
   assert.equal(/production\/EstimateWizardContainer/.test(code), false, "must NOT import from the container");
 });
 
-test("12. EstimateWizardContainer no longer declares its own WizardScreenConfiguration", () => {
-  // Use RAW source with comment-proof patterns: naive comment-stripping is unsafe on this 36KB file,
-  // and none of these exact patterns can appear in prose.
-  const raw = readFileSync(CONTAINER_SRC, "utf8");
-  assert.equal(/export interface WizardScreenConfiguration/.test(raw), false, "local interface must be removed");
-  assert.equal(
-    /import type \{ WizardScreenConfiguration \} from "\.\.\/contract\/wizard-runtime-inputs"/.test(raw),
-    true,
-    "must import the shared type from the contract module",
-  );
-  // the ComponentProps machinery existed only for that interface — gone with it (relocation was type-only)
-  assert.equal(/ComponentProps/.test(raw), false, "unused ComponentProps import must be gone");
+test("12. the retired alternate production container stays physically absent", () => {
+  assert.equal(existsSync(CONTAINER_SRC), false, `${CONTAINER_SRC} must not be reintroduced`);
 });
 
 // ── Shared type shape (compile-time; tsc validates in `npm run typecheck`) ────────

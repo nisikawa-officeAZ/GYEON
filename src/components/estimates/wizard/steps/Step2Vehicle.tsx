@@ -23,10 +23,10 @@ import { Card, SectionTitle, Field, TextInput, SelectButton, ChoiceGrid } from "
 import {
   BODY_SIZE_KEYS,
   adjacentBodySizeKeys,
-  estimateBodySizeFromVehicleRegistrationOcr,
   type BodySizeEstimate,
   type BodySizeKey,
 } from "@/lib/vehicles/body-size-estimate";
+import { buildWizardEstimateOcrApplication } from "@/lib/ocr/wizard-estimate-ocr-apply-core";
 
 const BODY_SIZES = BODY_SIZE_KEYS;
 
@@ -171,31 +171,9 @@ export function Step2Vehicle({
           <SectionTitle>車両登録</SectionTitle>
           <OcrEntry
             onApply={(f) => {
-              const rec = f as Record<string, unknown>;
-              const patch: EditableVehiclePatch = {};
-              if (typeof rec.maker === "string") patch.maker = rec.maker;
-              if (typeof rec.vehicle_name === "string") patch.model = rec.vehicle_name;
-              if (typeof rec.grade === "string") patch.grade = rec.grade;
-              if (typeof rec.model === "string") patch.vehicleCode = rec.model;
-              if (typeof rec.displacement === "string") patch.displacement = rec.displacement;
-              if (typeof rec.chassis_number === "string") patch.vin = rec.chassis_number;
-              if (typeof rec.first_registration_date === "string") patch.firstRegYearMonth = rec.first_registration_date;
-              if (typeof rec.registration_date === "string") patch.registrationDate = rec.registration_date;
-              if (typeof rec.inspection_expiry_date === "string") patch.inspectionExpiry = rec.inspection_expiry_date;
-              if (typeof rec.color === "string") patch.color = rec.color;
-              const plate = [
-                rec.license_plate_region,
-                rec.license_plate_class,
-                rec.license_plate_kana,
-                rec.license_plate_number,
-              ].filter((value): value is string => typeof value === "string" && value.trim() !== "").join(" ");
-              if (plate) patch.plateNumber = plate;
-
-              // OCR dimensions produce a recommendation only. The operator's
-              // confirmedSize remains untouched until a size button is pressed.
-              const estimate = estimateBodySizeFromVehicleRegistrationOcr(f);
-              onSizeEstimate?.(estimate);
-              if (Object.keys(patch).length) setV(patch);
+              const applied = buildWizardEstimateOcrApplication(f);
+              onSizeEstimate?.(applied.bodySizeEstimate);
+              if (Object.keys(applied.vehicle).length > 0) setV(applied.vehicle);
             }}
           />
         </div>
@@ -205,7 +183,7 @@ export function Step2Vehicle({
             <Field label="メーカー" value={v.maker}>
               <TextInput value={v.maker} onChange={(x) => setV({ maker: x })} placeholder="トヨタ" />
             </Field>
-            <Field label="車名" required value={v.model} hint="車検証から取得不可 — 常に手入力必須">
+            <Field label="車名" required value={v.model} hint="OCR結果を確認し、未取得の場合は手入力してください">
               <TextInput value={v.model} onChange={(x) => setV({ model: x })} placeholder="クラウン" required />
             </Field>
             <Field label="型式" value={v.vehicleCode}>
