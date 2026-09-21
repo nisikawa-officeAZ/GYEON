@@ -13,6 +13,7 @@ import { buildOcrQualityReport, type OcrQualityReport } from "./ocr-quality";
 import { getGyeonManagedApiKey } from "@/lib/ai/gyeon-managed-key";
 import { OCR_MODEL, OCR_TEMPERATURE, OCR_MAX_TOKENS, OCR_PROMPT_VERSION } from "@/lib/ai/ocr-config";
 import { addressWithoutLeadingPostal, normalizeJapanesePostalCode, postalCodeFromAddress } from "./postal-normalization";
+import { lookupJapanPostPostalCode } from "@/lib/geo/japan-post-postal-resolver";
 
 const OCR_PROVIDER   = "openai";
 const OCR_TIMEOUT_MS = 55_000; // 55s — OpenAI cold-start can take ~30s; give headroom
@@ -165,6 +166,24 @@ export function sanitizeVehicleRegistrationOcrResult(
   return sanitized;
 }
 
+/**
+ * A 車検証 usually prints an address but not a postal code. Complete OCR evidence wins; otherwise
+ * resolve the SAME party address against the bundled official Japan Post map. Unknown or ambiguous
+ * prefixes remain blank, so a stray fragment such as `〒523-` can never be completed by guesswork.
+ */
+export function enrichPostalCodesFromOfficialAddressData(
+  result: VehicleRegistrationOcrResult,
+): VehicleRegistrationOcrResult {
+  for (const party of ["owner", "user"] as const) {
+    const postalKey = `${party}_postal_code` as const;
+    const addressKey = `${party}_address` as const;
+    if (normalizeJapanesePostalCode(result[postalKey]) !== null) continue;
+    const resolved = lookupJapanPostPostalCode(result[addressKey]);
+    if (resolved !== null) result[postalKey] = resolved;
+  }
+  return result;
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise(r => setTimeout(r, ms));
 }
@@ -246,7 +265,9 @@ async function callOpenAI(
     }
 
     // Build sanitized result — non-empty strings plus strictly validated mm dimensions/confidence.
-    const sanitized = sanitizeVehicleRegistrationOcrResult(parsed);
+    const sanitized = enrichPostalCodesFromOfficialAddressData(
+      sanitizeVehicleRegistrationOcrResult(parsed),
+    );
 
     // If no string field was extracted, treat as unreadable image
     const hasData = STRING_FIELDS.some(k => k in sanitized) || DIMENSION_FIELDS.some(k => k in sanitized);

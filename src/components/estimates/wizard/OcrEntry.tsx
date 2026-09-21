@@ -12,7 +12,7 @@
 // correction → save. OCR LOGIC IS NOT MODIFIED — we only reuse the existing
 // components verbatim.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
 
@@ -31,16 +31,26 @@ export function OcrEntry({
   customerId,
   vehicleId,
   onApply,
-  label = "📄 車検証OCR",
+  label = "📄 車検証を再読み取り",
+  openRequestKey = 0,
 }: {
   customerId?: string;
   vehicleId?: string;
   /** Operator-confirmed OCR fields → parent maps into the wizard store (Phase 2 does full mapping). */
   onApply: (fields: Partial<VehicleRegistrationOcrResult>) => void;
   label?: string;
+  /** Incrementing request from the registration-method card opens the same OCR modal. */
+  openRequestKey?: number;
 }) {
   const [stage, setStage] = useState<Stage>("closed");
   const [pending, setPending] = useState<VehicleRegistrationOcrResult | null>(null);
+
+  useEffect(() => {
+    if (openRequestKey > 0) {
+      setPending(null);
+      setStage("upload");
+    }
+  }, [openRequestKey]);
 
   function close() {
     setStage("closed");

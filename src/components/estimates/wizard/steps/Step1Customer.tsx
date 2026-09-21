@@ -103,6 +103,7 @@ export function Step1Customer({
   const [searchState, setSearchState] = useState<"idle" | "searching" | "done">("idle");
   const [searchError, setSearchError] = useState<string | null>(null);
   const [truncated, setTruncated] = useState(false);
+  const [ocrOpenRequestKey, setOcrOpenRequestKey] = useState(0);
 
   // Debounced server search. The generation guard is what makes this safe: a slow earlier
   // response must never overwrite a newer one, which would show the operator results for a
@@ -211,6 +212,13 @@ export function Step1Customer({
     api.updateStore(customerSelectionPatch(vehicles, nextMethod, nextExistingId, v.existingId));
   };
 
+  const selectRegistrationMethod = (nextMethod: RegMethod) => {
+    setCustomerSelection(c.existingId, nextMethod);
+    if (nextMethod === "ocr") {
+      setOcrOpenRequestKey((current) => current + 1);
+    }
+  };
+
   return (
     <Card>
       <SectionTitle>顧客登録</SectionTitle>
@@ -219,7 +227,7 @@ export function Step1Customer({
       <Field label="登録方式" required value={c.regMethod}>
         <ChoiceGrid cols={3}>
           {REG_METHODS.map((m) => (
-            <SelectButton key={m.id} selected={c.regMethod === m.id} onClick={() => setCustomerSelection(c.existingId, m.id)}>
+            <SelectButton key={m.id} selected={c.regMethod === m.id} onClick={() => selectRegistrationMethod(m.id)}>
               <span className="block font-medium">{m.label}</span>
               <span className="block text-[11px] text-slate-500">{m.sub}</span>
             </SelectButton>
@@ -231,6 +239,7 @@ export function Step1Customer({
       {c.regMethod === "ocr" && (
         <div className="mt-4">
           <OcrEntry
+            openRequestKey={ocrOpenRequestKey}
             onApply={(f) => {
               // The reviewed result is applied once to BOTH customer and vehicle drafts through the
               // same pure core Screen 2 uses. A Screen-1 scan must never discard the vehicle half.
