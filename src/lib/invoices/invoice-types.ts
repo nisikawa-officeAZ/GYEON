@@ -163,12 +163,12 @@ export function calculateInvoiceTotals(
   const subtotal   = items.reduce((s, item) => {
     return s + Math.round(item.quantity * item.unit_price * (1 - item.discount_rate / 100));
   }, 0);
-  // Clamp the estimate-level discount to [0, subtotal] so tax/total/balance never
-  // go negative (mirrors estimate-totals.ts).
-  const discount   = Math.min(Math.max(0, discountAmount || 0), subtotal);
-  const taxBase    = subtotal - discount;
-  const taxAmount  = Math.floor(taxBase * taxRate / 100);
-  const total      = taxBase + taxAmount;
+  // GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1: tax is computed on the FULL subtotal (the
+  // tax base). The document discount is a POST-TAX adjustment, clamped to the gross
+  // [0, subtotal + tax] so the total never goes negative (mirrors estimate-totals.ts).
+  const taxAmount  = Math.floor(subtotal * taxRate / 100);
+  const discount   = Math.min(Math.max(0, discountAmount || 0), subtotal + taxAmount);
+  const total      = subtotal + taxAmount - discount;
   const balanceDue = total - paidAmount;
   return { subtotal, tax_amount: taxAmount, total, balance_due: balanceDue };
 }

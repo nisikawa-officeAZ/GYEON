@@ -295,9 +295,11 @@ test("10b. a configured coupon identity applies once and produces complete autho
   assert.equal(r.subtotal, 5000);
   assert.equal(r.couponTotal, 100);
   assert.equal(r.discountTotal, 100, "combined document discount includes the coupon exactly once");
-  assert.equal(r.taxableSubtotal, 4900);
-  assert.equal(r.taxTotal, 490);
-  assert.equal(r.grandTotal, 5390);
+  // GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1: the tax base IS the subtotal; the document
+  // discount is subtracted AFTER tax (5000 + 500 − 100).
+  assert.equal(r.taxableSubtotal, 5000);
+  assert.equal(r.taxTotal, 500);
+  assert.equal(r.grandTotal, 5400);
 });
 
 // ── 11. Malformed/missing catalog or config cannot throw and cannot fall back ─────

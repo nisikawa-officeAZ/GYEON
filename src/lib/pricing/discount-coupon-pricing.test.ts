@@ -33,20 +33,25 @@ type Expect = {
   couponTotal?: number; totalDiscount?: number; taxableAmount?: number; taxAmount?: number; grandTotal?: number;
 };
 
+// GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1: taxableAmount is the ACTUAL tax base — the full
+// subtotal. Tax is floor(subtotal × rate); discounts are subtracted AFTER tax, so
+// grandTotal = subtotal + tax − totalDiscount. The sequential per-step clamps to the
+// remaining pre-tax subtotal are unchanged; a 100% goods discount therefore still owes
+// the tax (Owner-ratified: subtotal 10000, tax 1000 → grandTotal 1000).
 const CASES: Array<{ name: string; input: DiscountCouponPricingInput; expect: Expect }> = [
   { name: "1. no discount", input: base(), expect: { valid: true, subtotal: 10000, totalDiscount: 0, taxableAmount: 10000, taxAmount: 1000, grandTotal: 11000 } },
-  { name: "2. fixed manual discount", input: base({ manualDiscount: { kind: "fixed", amountYen: 2000 } }), expect: { manualDiscountApplied: 2000, taxableAmount: 8000, taxAmount: 800, grandTotal: 8800 } },
-  { name: "3. percentage manual discount (10%)", input: base({ manualDiscount: { kind: "percentage", basisPoints: 1000 } }), expect: { manualDiscountApplied: 1000, taxableAmount: 9000, taxAmount: 900, grandTotal: 9900 } },
-  { name: "4. dealer/trade discount (10%)", input: base({ dealerTradeBasisPoints: 1000 }), expect: { dealerTradeDiscount: 1000, taxableAmount: 9000, taxAmount: 900, grandTotal: 9900 } },
-  { name: "5. one fixed coupon", input: base({ coupons: [coupon("c1", fixed(3000))] }), expect: { couponTotal: 3000, taxableAmount: 7000, taxAmount: 700, grandTotal: 7700 } },
-  { name: "6. one percentage coupon (20%)", input: base({ coupons: [coupon("c1", pct(2000))] }), expect: { couponTotal: 2000, taxableAmount: 8000, taxAmount: 800, grandTotal: 8800 } },
-  { name: "7. multiple combinable coupons (sequential on remaining)", input: base({ coupons: [coupon("c1", fixed(1000), { displayOrder: 1 }), coupon("c2", pct(1000), { displayOrder: 2 })] }), expect: { couponTotal: 1900, taxableAmount: 8100, taxAmount: 810, grandTotal: 8910 } },
-  { name: "9. manual + multiple coupons", input: base({ manualDiscount: { kind: "fixed", amountYen: 1000 }, coupons: [coupon("c1", fixed(2000), { displayOrder: 1 }), coupon("c2", pct(1000), { displayOrder: 2 })] }), expect: { manualDiscountApplied: 1000, couponTotal: 2700, totalDiscount: 3700, taxableAmount: 6300, taxAmount: 630, grandTotal: 6930 } },
-  { name: "13. inclusive validity boundary applies", input: base({ coupons: [coupon("c1", fixed(3000), { validFrom: DATE, validTo: DATE })] }), expect: { valid: true, couponTotal: 3000, taxableAmount: 7000, grandTotal: 7700 } },
-  { name: "16. discount exceeding subtotal clamps safely", input: base({ manualDiscount: { kind: "fixed", amountYen: 999999 } }), expect: { manualDiscountApplied: 10000, totalDiscount: 10000, taxableAmount: 0, taxAmount: 0, grandTotal: 0 } },
+  { name: "2. fixed manual discount", input: base({ manualDiscount: { kind: "fixed", amountYen: 2000 } }), expect: { manualDiscountApplied: 2000, taxableAmount: 10000, taxAmount: 1000, grandTotal: 9000 } },
+  { name: "3. percentage manual discount (10%)", input: base({ manualDiscount: { kind: "percentage", basisPoints: 1000 } }), expect: { manualDiscountApplied: 1000, taxableAmount: 10000, taxAmount: 1000, grandTotal: 10000 } },
+  { name: "4. dealer/trade discount (10%)", input: base({ dealerTradeBasisPoints: 1000 }), expect: { dealerTradeDiscount: 1000, taxableAmount: 10000, taxAmount: 1000, grandTotal: 10000 } },
+  { name: "5. one fixed coupon", input: base({ coupons: [coupon("c1", fixed(3000))] }), expect: { couponTotal: 3000, taxableAmount: 10000, taxAmount: 1000, grandTotal: 8000 } },
+  { name: "6. one percentage coupon (20%)", input: base({ coupons: [coupon("c1", pct(2000))] }), expect: { couponTotal: 2000, taxableAmount: 10000, taxAmount: 1000, grandTotal: 9000 } },
+  { name: "7. multiple combinable coupons (sequential on remaining)", input: base({ coupons: [coupon("c1", fixed(1000), { displayOrder: 1 }), coupon("c2", pct(1000), { displayOrder: 2 })] }), expect: { couponTotal: 1900, taxableAmount: 10000, taxAmount: 1000, grandTotal: 9100 } },
+  { name: "9. manual + multiple coupons", input: base({ manualDiscount: { kind: "fixed", amountYen: 1000 }, coupons: [coupon("c1", fixed(2000), { displayOrder: 1 }), coupon("c2", pct(1000), { displayOrder: 2 })] }), expect: { manualDiscountApplied: 1000, couponTotal: 2700, totalDiscount: 3700, taxableAmount: 10000, taxAmount: 1000, grandTotal: 7300 } },
+  { name: "13. inclusive validity boundary applies", input: base({ coupons: [coupon("c1", fixed(3000), { validFrom: DATE, validTo: DATE })] }), expect: { valid: true, couponTotal: 3000, taxableAmount: 10000, grandTotal: 8000 } },
+  { name: "16. discount exceeding subtotal clamps to the goods amount; the tax is still owed", input: base({ manualDiscount: { kind: "fixed", amountYen: 999999 } }), expect: { manualDiscountApplied: 10000, totalDiscount: 10000, taxableAmount: 10000, taxAmount: 1000, grandTotal: 1000 } },
   { name: "17. tax uses floor", input: base({ lines: [line(9999)] }), expect: { taxableAmount: 9999, taxAmount: 999, grandTotal: 10998 } },
-  { name: "18. percentage deductions use Math.round (52.5 -> 53)", input: base({ lines: [line(105)], coupons: [coupon("c1", pct(5000))] }), expect: { couponTotal: 53, taxableAmount: 52 } },
-  { name: "19. total never becomes negative", input: base({ manualDiscount: { kind: "fixed", amountYen: 10000 }, coupons: [coupon("c1", fixed(5000))] }), expect: { manualDiscountApplied: 10000, couponTotal: 0, taxableAmount: 0, taxAmount: 0, grandTotal: 0 } },
+  { name: "18. percentage deductions use Math.round (52.5 -> 53)", input: base({ lines: [line(105)], coupons: [coupon("c1", pct(5000))] }), expect: { couponTotal: 53, taxableAmount: 105 } },
+  { name: "19. total never becomes negative", input: base({ manualDiscount: { kind: "fixed", amountYen: 10000 }, coupons: [coupon("c1", fixed(5000))] }), expect: { manualDiscountApplied: 10000, couponTotal: 0, taxableAmount: 10000, taxAmount: 1000, grandTotal: 1000 } },
 ];
 
 for (const c of CASES) {
@@ -110,7 +115,8 @@ test("D. non-combinable single coupon coexists with manual discount", () => {
   assert.equal(r.valid, true); // combinable=false only restricts coupon-to-coupon
   assert.equal(r.manualDiscountApplied, 1000);
   assert.equal(r.couponTotal, 2000);
-  assert.equal(r.taxableAmount, 7000);
+  assert.equal(r.taxableAmount, 10000); // the tax base is the full subtotal (post-tax rule)
+  assert.equal(r.grandTotal, 8000);
 });
 
 // C. explicit calculation date required (no Date.now / implicit system date)

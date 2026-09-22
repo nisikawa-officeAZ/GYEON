@@ -179,6 +179,52 @@ test("12. a malformed or impossible delivery_date is rejected as invalid", () =>
   }
 });
 
+// ── GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1: the shared rule is a post-tax document discount ──
+
+test("14. the shared rule taxes the FULL subtotal and subtracts the discount after tax", () => {
+  // Owner reference case: subtotal 93500, tax 9350, discount 2850, total 100000.
+  assert.deepEqual(
+    calculateInvoiceTotals([{ quantity: 1, unit_price: 93500, discount_rate: 0 }], 2850, 10, 0),
+    { subtotal: 93500, tax_amount: 9350, total: 100000, balance_due: 100000 },
+  );
+  // Zero discount is unchanged by the rule.
+  assert.deepEqual(
+    calculateInvoiceTotals([{ quantity: 1, unit_price: 10000, discount_rate: 0 }], 0, 10, 0),
+    { subtotal: 10000, tax_amount: 1000, total: 11000, balance_due: 11000 },
+  );
+  // A discount above the gross clamps to subtotal + tax; the total is exactly 0.
+  assert.deepEqual(
+    calculateInvoiceTotals([{ quantity: 2, unit_price: 1000, discount_rate: 0 }], 5000, 10, 0),
+    { subtotal: 2000, tax_amount: 200, total: 0, balance_due: 0 },
+  );
+  // Line-level discounts stay a pre-tax line-price input (unchanged).
+  assert.equal(lineTotal(2, 1000, 10), 1800);
+});
+
+test("15. a legacy PRE-TAX snapshot fails closed at issuance (never silently rewritten)", () => {
+  // A draft persisted under the retired rule: subtotal 73200, discount 5000 →
+  // old taxBase 68200, old tax 6820, old total 75020. The validator recomputes with
+  // the ratified post-tax rule (tax 7320) and rejects — the operator re-saves the
+  // draft; nothing is written and no issued document is touched.
+  const legacy = {
+    delivery_date: "2026-08-04",
+    discount_amount: 5000,
+    tax_rate: 10,
+    paid_amount: 0,
+    subtotal: 73200,
+    tax_amount: 6820,
+    total: 75020,
+    balance_due: 75020,
+    invoice_items: BASE_ITEMS.map((i) => ({
+      ...i,
+      line_total: lineTotal(i.quantity, i.unit_price, i.discount_rate),
+    })),
+  };
+  const r = validateIssuanceSnapshot(legacy);
+  assert.equal(r.kind, "invalid");
+  assert.equal(r.kind === "invalid" ? r.reason : "", "tax-amount-mismatch");
+});
+
 test("13. a valid delivery_date passes the gate; the check runs before the money checks", () => {
   const ok = consistentInvoice(BASE_ITEMS) as Record<string, unknown>;
   ok.delivery_date = "2026-08-04";
