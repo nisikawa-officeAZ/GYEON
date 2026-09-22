@@ -5476,3 +5476,64 @@ mutation_boundary:
   ready_merge_or_deploy: false
 next: "VERIFY_EXACT_THREE_GOVERNANCE_PATHS_COMMIT_NORMAL_PUSH_CREATE_DRAFT_PR_POST_CLAUDE_DIAGNOSIS_AND_STOP_BEFORE_IMPLEMENTATION."
 ```
+
+## GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1 — local disposable PostgreSQL 17 acceptance
+
+```yaml
+phase: GDA_ESTIMATE_POST_TAX_ADJUSTMENT_R1
+marker: GDA_ESTIMATE_POST_TAX_ADJUSTMENT_R1_MACBOOK_DISPOSABLE_PG17_ACCEPTANCE_V1
+status: LOCAL_DISPOSABLE_PG17_VERIFIED_PASS_UNSTAGED_UNCOMMITTED
+date: 2026-09-22
+authorization: "The Owner authorized recording the accepted Attempt-C result in this ledger and on coordination Draft PR #116. Commit, push, Ready conversion, merge, hosted migration application, deployment, and production mutation remain separately gated."
+repository:
+  name: nisikawa-officeAZ/GYEON
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/116
+  branch: fix/estimate-post-tax-adjustment-r1
+  head_commit: d3c75a1c424238bb3e4298e952fd2bfb936cfe5c
+  head_tree: a0103a1e6bce603f50dc92a91c1a34091a843934
+runtime_acceptance:
+  result_marker: GDA_ESTIMATE_POST_TAX_ADJUSTMENT_R1_MACBOOK_DISPOSABLE_PG17_RUNTIME_RESULT_V1
+  verdict: PASS
+  attempt: C
+  runtime_identity: gda-estimate-post-tax-db.20260922C
+  postgres_version: "17.6"
+  scaffold_role: supabase_admin
+  migration_role: postgres
+  migration_replay: PASS_123_OF_123
+  protected_migration_exclusion: supabase/migrations/20260801110110_line_link_tokens.sql
+  security_invoker: PASS
+  empty_search_path: PASS
+  function_execute_acl: AUTHENTICATED_ONLY
+  authenticated_jwt_rls: PASS
+  owner_reference_case:
+    subtotal: 93500
+    tax_amount: 9350
+    requested_and_stored_document_discount: 2850
+    total: 100000
+    balance_due: 100000
+  zero_discount_parity: PASS
+  line_discount_unchanged: PASS
+  above_gross_zero_clamp_without_source_rewrite: PASS
+  unauthorized_and_cross_dealer_fail_closed: PASS
+  idempotent_replay: PASS
+  separate_connection_concurrency: PASS_CREATED_1_EXISTING_1_SINGLE_INVOICE_SINGLE_ALLOCATION
+  repository_runtime_test: PASS_17_OF_17
+  disposable_runtime_cleanup: PASS_ZERO_C_CONTAINERS_ZERO_C_VOLUMES
+evidence_level: E2_LOCAL_DISPOSABLE_DATABASE_VERIFIED
+burned_attempts:
+  - gda-estimate-post-tax-db.20260922A
+  - gda-estimate-post-tax-db.20260922B
+remaining_boundary:
+  hosted_auth_postgrest_and_deployed_next_route: NOT_VERIFIED
+  preview_or_production_migration_applied: false
+  source_or_test_changed_by_runtime_acceptance: false
+  commit: false
+  push: false
+  ready_merge_or_deploy: false
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+next: "VERIFY_THE_EXACT_LEDGER_ONLY_DELTA_AND_PR_COMMENT; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_LEDGER_PATH_COMMIT_ONLY."
+```
