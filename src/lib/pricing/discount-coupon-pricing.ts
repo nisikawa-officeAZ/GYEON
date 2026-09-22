@@ -265,7 +265,11 @@ export function computeDiscountCouponPricing(input: DiscountCouponPricingInput):
   const totalDiscount = dealerTradeDiscount + manualDiscountApplied + couponTotal;
   const items: TotalsItemInput[] = input.lines.map((l) => ({ quantity: l.quantity, unit_price: l.unitPrice, discount_rate: l.discountRatePercent }));
   const totals = calculateEstimateTotals(items, totalDiscount, input.taxRatePercent);
-  const taxableAmount = Math.max(0, subtotal - totalDiscount); // guaranteed >= 0 (each step clamps to remaining)
+  // GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1: tax is computed on the FULL subtotal, so the
+  // tax base IS the subtotal. The sequential per-step clamps above are unchanged: each
+  // application still reduces the remaining pre-tax goods amount, so totalDiscount is
+  // already the applied value and grandTotal = subtotal + tax − totalDiscount ≥ tax.
+  const taxableAmount = subtotal;
 
   return {
     contractVersion: DISCOUNT_COUPON_CONTRACT_VERSION,

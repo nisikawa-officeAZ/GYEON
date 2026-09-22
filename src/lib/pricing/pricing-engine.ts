@@ -120,6 +120,11 @@ export interface EstimateResult {
   couponDiscount: number;
   extraDiscount:  number;
   dealerDiscount: number;
+  /** GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1: the engine-APPLIED (clamped) document
+   *  discount from the shared totals authority. Consumers read this directly and
+   *  must never reverse-derive it from subtotal − taxableAmount. */
+  documentDiscount: number;
+  /** The actual tax base. Under the ratified post-tax rule this IS the subtotal. */
   taxableAmount:  number;
   taxAmount:      number;
   total:          number;
@@ -371,8 +376,9 @@ export function calculateEstimate(
   // Calculation integrity (Estimate Completion Sprint 3): the FINAL totals are derived
   // from the SAME authoritative function the server uses on persist
   // (calculateEstimateTotals), so the UI, the saved estimate, and the PDF always agree —
-  // including discount clamping (the combined discount is clamped to [0, subtotal], so a
-  // total can never go negative as it previously could here).
+  // including discount clamping (GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1: the combined
+  // discount is a post-tax adjustment clamped to [0, subtotal + tax], so a total can
+  // never go negative as it previously could here).
   const allItems = calculated.flatMap(r => r.lineItems);
   const subtotal = allItems.reduce(
     (s, i) => s + lineTotal(i.quantity, i.unit_price, i.discount_rate),
@@ -384,7 +390,10 @@ export function calculateEstimate(
   const combinedDiscount = couponDiscount + extraDiscount + dealerDiscount;
 
   const authoritative = calculateEstimateTotals(allItems, combinedDiscount, taxRate);
-  const taxableAmount  = authoritative.subtotal - authoritative.discount_amount;
+  // Post-tax rule: tax is computed on the full subtotal, so the tax base IS the
+  // subtotal. The applied (clamped) document discount is exposed explicitly — it is
+  // never derivable from subtotal − taxableAmount anymore.
+  const taxableAmount = authoritative.subtotal;
 
   return {
     services:       calculated,
@@ -392,6 +401,7 @@ export function calculateEstimate(
     couponDiscount,
     extraDiscount,
     dealerDiscount,
+    documentDiscount: authoritative.discount_amount,
     taxableAmount,
     taxAmount:      authoritative.tax_amount,
     total:          authoritative.total,

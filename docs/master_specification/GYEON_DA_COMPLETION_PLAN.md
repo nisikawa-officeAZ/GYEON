@@ -2246,3 +2246,64 @@ delivery_gates:
   ready_merge_and_deploy: EACH_SEPARATE
 next: "VERIFY_EXACT_20_PATH_DIFF_HASHES_AND_GIT_DIFF_CHECK; THEN REQUEST OWNER AUTHORIZATION FOR ONE LITERAL_20_PATH_LOCAL_COMMIT ONLY."
 ```
+
+## 21. GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1 — estimate and invoice calculation parity
+
+```yaml
+phase: GDA_ESTIMATE_POST_TAX_ADJUSTMENT_R1
+marker: GDA_ESTIMATE_POST_TAX_ADJUSTMENT_R1_PLAN_V1
+date: 2026-09-22
+status: GOVERNANCE_AUTHORIZED_PENDING_CLAUDE_READ_ONLY_DIAGNOSIS
+owner_authorization: "The Owner approved standardizing estimate-to-invoice conversion on the same post-tax discount rule and separately authorized the exact three governance documents, normal push, Draft PR creation, and Claude read-only diagnosis publication."
+repository: nisikawa-officeAZ/GYEON
+branch: fix/estimate-post-tax-adjustment-r1
+fixed_base:
+  commit: a1c748aa2d100a7678f2cec2c47a6d4100e4c1c9
+  tree: 5d418169537bd1e5c3c9cb3a815b8deec82362c4
+business_rule:
+  tax_amount: floor(subtotal * tax_rate / 100)
+  document_discount: POST_TAX_ADJUSTMENT
+  total: subtotal + tax_amount - clamped_discount
+  estimate_to_invoice_conversion: MUST_PRESERVE_IDENTICAL_MONEY_SEMANTICS
+  line_discount_rate: UNCHANGED_PRE_TAX_LINE_PRICE_INPUT
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_GDA_ESTIMATE_POST_TAX_ADJUSTMENT_R1_READ_ONLY_DIAGNOSIS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+diagnosis_read_scope:
+  - AGENTS.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - src/lib/pricing/estimate-totals.ts
+  - src/lib/pricing/estimate-totals.test.ts
+  - src/lib/invoices/invoice-types.ts
+  - src/lib/invoices/create-invoice.ts
+  - src/lib/invoices/update-invoice.ts
+  - src/lib/invoices/invoice-issuance-snapshot.ts
+  - src/lib/invoices/invoice-issuance-snapshot.test.ts
+  - src/lib/invoices/estimate-invoice-conversion.test.ts
+  - src/lib/invoices/invoice-issuance-boundary.test.ts
+  - supabase/migrations/20260913163712_atomic_estimate_invoice_conversion.sql
+protected_paths:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+responsibility:
+  owner: Office AZ
+  specification_and_acceptance: MacBook Codex
+  diagnosis_and_later_authorized_implementation: MacBook Claude
+not_authorized:
+  - source_or_test_implementation
+  - test_typecheck_build_formatter_or_dependency_change
+  - migration_create_or_apply
+  - database_supabase_auth_storage_environment_or_production_access
+  - source_commit_or_push
+  - ready_merge_or_deploy
+gates:
+  governance_commit_push_and_draft_pr: OWNER_AUTHORIZED
+  claude_read_only_diagnosis_publication: OWNER_AUTHORIZED_AFTER_DRAFT_PR_CREATION
+  implementation: REQUIRES_ACCEPTED_DIAGNOSIS_AND_SEPARATE_OWNER_AUTHORIZATION
+  verification_commit_push_preview_merge_deploy: EACH_SEPARATE
+next: "COMMIT_AND_NORMAL_PUSH_EXACT_THREE_GOVERNANCE_PATHS_CREATE_ONE_DRAFT_PR_POST_ONE_CLAUDE_READ_ONLY_DIAGNOSIS_INSTRUCTION_AND_STOP."
+```

@@ -400,9 +400,11 @@ test("B1.1-B2: a configured coupon is persisted with its immutable id, authored 
   assert.equal(req.pricing.subtotal, 5000);
   assert.equal(req.pricing.discountTotal, 100);
   assert.equal(req.pricing.couponTotal, 100);
-  assert.equal(req.pricing.taxableSubtotal, 4900);
-  assert.equal(req.pricing.taxTotal, 490);
-  assert.equal(req.pricing.grandTotal, 5390);
+  // GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1: the persisted tax base IS the subtotal; the
+  // document discount is subtracted AFTER tax (5000 + 500 − 100).
+  assert.equal(req.pricing.taxableSubtotal, 5000);
+  assert.equal(req.pricing.taxTotal, 500);
+  assert.equal(req.pricing.grandTotal, 5400);
   assert.equal(req.coupon.status, "applied");
   assert.equal(req.coupon.appliedAmount, 100);
   assert.deepEqual(req.coupon.selectedCouponIds, [COUPON_ID]);

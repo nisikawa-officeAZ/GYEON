@@ -3,12 +3,12 @@
 // Pure module (no schema, no I/O) — importable by both server actions (for
 // authoritative validation on persist) and client (for UI preview).
 //
-// Convention matches the existing price engine (src/lib/pricing/pricing-engine.ts):
-//   - per-line total = round(quantity × unit_price × (1 − discount_rate%))
-//   - subtotal       = Σ line totals
-//   - taxable        = subtotal − estimate-level discount (clamped to [0, subtotal])
-//   - tax_amount     = floor(taxable × tax_rate%)
-//   - total          = taxable + tax_amount
+// GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1 — Owner-ratified POST-TAX document discount:
+//   - per-line total = round(quantity × unit_price × (1 − discount_rate%))   [unchanged pre-tax line input]
+//   - subtotal       = Σ line totals — this IS the tax base
+//   - tax_amount     = floor(subtotal × tax_rate%)
+//   - discount       = document discount clamped to [0, subtotal + tax_amount]
+//   - total          = subtotal + tax_amount − discount
 //
 // Multiple services in one estimate are supported: items may span several
 // service categories; totals are computed over all of them uniformly.
@@ -44,13 +44,16 @@ export function calculateEstimateTotals(
     0,
   );
 
-  const requestedDiscount = Number.isFinite(discountAmount) ? discountAmount : 0;
-  const discount = Math.min(Math.max(0, requestedDiscount), subtotal);
-
-  const taxable = Math.max(0, subtotal - discount);
+  // Tax is computed on the FULL subtotal (the tax base), BEFORE the document discount.
   const rate = (Number.isFinite(taxRate) && taxRate >= 0) ? taxRate : 10;
-  const tax = Math.floor(taxable * rate / 100);
-  const total = taxable + tax;
+  const tax = Math.floor(subtotal * rate / 100);
+
+  // The document discount is a post-tax adjustment, clamped to the gross amount
+  // [0, subtotal + tax] so the total can never go negative.
+  const requestedDiscount = Number.isFinite(discountAmount) ? discountAmount : 0;
+  const discount = Math.min(Math.max(0, requestedDiscount), subtotal + tax);
+
+  const total = subtotal + tax - discount;
 
   return {
     subtotal,

@@ -79,6 +79,56 @@ test('SQL preserves invoker authorization and bounded creation without global ca
   assert.doesNotMatch(migration.slice(migration.indexOf('v_next :=')), /exception\s+when|return.*conflict/i);
 });
 
+// ── GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1: the forward-only post-tax replacement ──
+
+const postTaxMigration = fs.readFileSync(new URL('../../../supabase/migrations/20260922090000_estimate_invoice_post_tax_adjustment.sql', import.meta.url), 'utf8');
+
+test('post-tax migration replaces ONLY the conversion function with the ratified money block', () => {
+  // Exactly one CREATE OR REPLACE of the conversion function, nothing else defined.
+  assert.equal((postTaxMigration.match(/create or replace function/g) ?? []).length, 1);
+  assert.match(postTaxMigration, /create or replace function public\.create_invoice_from_estimate_atomic\(/);
+  // Ratified order: tax from the FULL subtotal → gross clamp → post-tax total.
+  assert.match(postTaxMigration, /v_tax := floor\(v_subtotal \* v_tax_rate \/ 100::double precision\);/);
+  assert.match(postTaxMigration, /v_x := least\(greatest\(0::double precision, v_discount\), v_subtotal \+ v_tax\);/);
+  assert.match(postTaxMigration, /v_total := v_subtotal \+ v_tax - v_x;/);
+  assert.ok(postTaxMigration.indexOf('v_tax := floor(v_subtotal') < postTaxMigration.indexOf('v_x := least('),
+    'tax is computed before the discount clamp');
+  // The pre-tax computation is gone from the effective definition.
+  assert.doesNotMatch(postTaxMigration, /v_subtotal - least/);
+  // Security, guards, authorization and grants are preserved verbatim.
+  assert.match(postTaxMigration, /security invoker/i);
+  assert.match(postTaxMigration, /set search_path = ''/);
+  assert.match(postTaxMigration, /from public, anon, service_role/);
+  assert.match(postTaxMigration, /grant execute on function public\.create_invoice_from_estimate_atomic\(uuid, uuid, date, date\)\s*\n\s*to authenticated/);
+  assert.doesNotMatch(postTaxMigration, /security definer/i);
+  assert.ok(postTaxMigration.indexOf('into v_authorized') < postTaxMigration.indexOf('for update'));
+  assert.match(postTaxMigration, /9007199254740991/);
+  assert.match(postTaxMigration, /'NaN', 'Infinity', '-Infinity'/);
+  // Forward-only, definition-only: no schema change and no data backfill.
+  assert.doesNotMatch(postTaxMigration, /alter\s+table|create\s+table|create\s+(unique\s+)?index|drop\s+/i);
+  assert.doesNotMatch(postTaxMigration, /^\s*update\s+public\./im);
+});
+
+test('the historical conversion migration remains byte-identical', () => {
+  assert.equal(
+    createHash('sha256').update(fs.readFileSync(new URL('../../../supabase/migrations/20260913163712_atomic_estimate_invoice_conversion.sql', import.meta.url))).digest('hex'),
+    '8a09a70ef65343fa949439063d1e5d54ca48dac977bab551399a72ea6a22e5de',
+    'the accepted 20260913163712 definition must never be edited');
+});
+
+test('canonical JS totals follow the ratified post-tax rule', () => {
+  // Owner reference case.
+  assert.deepEqual(calculateInvoiceTotals([{quantity: 1, unit_price: 93500, discount_rate: 0}], 2850, 10, 0),
+    {subtotal: 93500, tax_amount: 9350, total: 100000, balance_due: 100000});
+  // Above-gross discount clamps to subtotal + tax → total exactly 0 (the SQL mirrors this clamp).
+  assert.deepEqual(calculateInvoiceTotals([{quantity: 2, unit_price: 1000, discount_rate: 0}], 5000, 10, 0),
+    {subtotal: 2000, tax_amount: 200, total: 0, balance_due: 0});
+  // Zero discount unchanged; line-level discount remains a pre-tax line input.
+  assert.deepEqual(calculateInvoiceTotals([{quantity: 1, unit_price: 10000, discount_rate: 50}], 0, 10, 0),
+    {subtotal: 5000, tax_amount: 500, total: 5500, balance_due: 5500});
+  assert.equal(lineTotal(2, 1000, 10), 1800);
+});
+
 // Runtime tests opt in ONLY to an exact owned disposable container, never a DB URL.
 // Without it this explicit skip must not be reported as SQL/concurrency acceptance.
 const cid = process.env.INVOICE_TEST_CONTAINER;

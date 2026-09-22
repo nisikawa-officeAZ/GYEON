@@ -133,8 +133,10 @@ export function mapProductionResultToWizard(
   const status: WizardPricingStatus =
     completeness === "error" ? "error" : pricedCount > 0 ? "success" : "incomplete";
 
-  // Applied (clamped) document discount = subtotal − taxableAmount (engine-derived, not recomputed).
-  const discountTotal = result.subtotal - result.taxableAmount;
+  // GDA-ESTIMATE-POST-TAX-ADJUSTMENT-R1: the applied (clamped) document discount is the
+  // engine's explicit documentDiscount field — copied, never recomputed, and never
+  // reverse-derived from subtotal − taxableAmount (taxableAmount now IS the subtotal).
+  const discountTotal = result.documentDiscount;
 
   return {
     status,
