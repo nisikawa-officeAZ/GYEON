@@ -142,7 +142,9 @@ export async function resolveOfficeAzInventoryAuthority(
 
   try {
     const user = await getCurrentUser();
-    if (!user || !isTrimmedNonEmptyId(user.id)) return denied();
+    if (!user || !isTrimmedNonEmptyId(user.id)) {
+      return { tag: "denied", code: "UNAUTHENTICATED" };
+    }
 
     const supabase = await createClient();
     const { data, error } = await supabase.rpc(AUTHORITY_RPC, {
