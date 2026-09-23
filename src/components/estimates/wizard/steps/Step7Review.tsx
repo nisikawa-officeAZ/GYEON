@@ -127,7 +127,9 @@ export function Step7Review({
         )}
       </Card>
       {saveBinding
-        ? <WizardSavePanel draft={api.draft} binding={saveBinding} />
+        // The SAME read-only pricing result shown above gates the save controls: the panel
+        // refuses a fresh save unless it is unambiguously complete.
+        ? <WizardSavePanel draft={api.draft} pricing={pricing} binding={saveBinding} />
         : <PhaseTwoNotice screen="保存 / PDF / LINE(送信・文章コピー) / 予約カレンダー / 請求書・納品書・納品請求書" />}
     </>
   );

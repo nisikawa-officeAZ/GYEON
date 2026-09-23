@@ -120,11 +120,17 @@ export function mapProductionResultToWizard(
   const hasInvalid = bundle.errors.some((e) => INVALID_CODES.includes(e.code));
   const pricedCount = lines.length;
 
+  // GDA-ESTIMATE-SAVE-PRICING-GUARD-R1: ANY bundle error (e.g. a PPF R1 price-table/coefficient
+  // configuration error raised beside a cleanly priced coating line) means the result is NOT
+  // unambiguously complete. The priced subset is preserved as `partial` for operator diagnosis —
+  // no amount is manufactured — and the error stays visible in `errors`.
+  const hasBundleError = bundle.errors.length > 0;
+
   const completeness: WizardPricingCompleteness = !bundle.hasSelection
     ? "unavailable"
     : hasInvalid
       ? "error"
-      : pricedCount > 0 && unresolvedItems.length > 0
+      : pricedCount > 0 && (unresolvedItems.length > 0 || hasBundleError)
         ? "partial"
         : pricedCount > 0
           ? "complete"

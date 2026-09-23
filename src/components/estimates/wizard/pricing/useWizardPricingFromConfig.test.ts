@@ -249,6 +249,38 @@ test("8b. a partial result keeps numeric priced-subset totals and is not complet
   assert.ok(typeof r.grandTotal === "number" && r.grandTotal > 0, "priced-subset grand total remains numeric");
 });
 
+// ── 8c. GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 — priced coating + PPF configuration error ──
+
+test("8c. a priced coating line beside a PPF R1 configuration error is NEVER complete; the error stays visible", () => {
+  // The confirmed production shape: PPF offered and selected (full / front_full / a type), but the
+  // dealer has NO R1 price table (ppfR1 null) and NO install coefficients. Coating prices cleanly.
+  const draft = draftWith(["coating", "ppf"], {
+    coating: { layerCount: 1, layer1Id: "one-evo", layer2Id: null, layer3Id: null },
+    ppf: {
+      ...resetWizardDraft().serviceConfiguration.ppf,
+      installationMethod: "full", fullCoverage: "front_full", ppfTypeId: "ppf-a", vehicleCoefficientInput: "1.0",
+    },
+  });
+  draft.vehicle.bodySizeKey = "M";
+  const config: ConfiguredPricingConfiguration = { ...CONFIG, ppfTypes: [{ code: "ppf-a", label: "A" }] };
+  const r = computeWizardPricingFromConfig(draft, config, DEFAULT_PRICING_CATALOG, RANK);
+
+  assert.ok(r.lines.some((l) => l.category === "coating"), "PRECONDITION: the coating line is priced");
+  assert.equal(r.lines.some((l) => l.category === "ppf"), false, "no PPF line is invented");
+  const ppfError = r.errors.find((e) => e.code === "PPF_R1_SETTINGS_REQUIRED");
+  assert.ok(ppfError, "the PPF configuration error is surfaced");
+  assert.ok(ppfError!.message.length > 0, "operator-facing error text is present");
+  // The server's save predicate (status + completeness + no errors + no unresolved) refuses this result.
+  // Evaluated before the literal completeness assertion below narrows the type.
+  const serverSaveAllowed =
+    r.status === "success" && r.completeness === "complete" && r.errors.length === 0 && r.unresolvedItems.length === 0;
+  assert.notEqual(r.completeness, "complete", "priced coating + PPF error is never complete");
+  assert.equal(r.completeness, "partial", "the priced subset is kept as partial for diagnosis");
+  assert.ok(typeof r.subtotal === "number" && r.subtotal > 0, "priced-subset subtotal is not manufactured or dropped");
+  assert.equal(serverSaveAllowed, false, "server save predicate refuses on completeness AND on errors");
+  assert.ok(r.errors.length > 0, "errors independently block the server save predicate");
+});
+
 // ── 9. Percentage discount is converted to yen and applied ────────────────────────
 
 test("9. a valid percentage discount is converted to yen and applied", () => {

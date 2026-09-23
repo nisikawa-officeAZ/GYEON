@@ -23,6 +23,7 @@
 import { useCallback, useRef, useState } from "react";
 
 import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
+import type { WizardPricingResult } from "../pricing/wizard-pricing-types";
 import type {
   WizardSaveIntentFailure,
   WizardSaveIntentInvoker,
@@ -232,9 +233,46 @@ export function presentWizardSaveFailure(failure: WizardSaveIntentFailure | null
     : { text: FAILURE_TEXT, retryAllowed: true };
 }
 
+// ── GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 — the client-side pricing gate ───────
+//
+// The server reprices fail-closed and refuses anything that is not unambiguously
+// complete. Mirroring that EXACT predicate here means an operator is told the
+// concrete pricing/configuration reason BEFORE clicking, instead of a generic
+// post-click failure. This gate decides only whether a FRESH save may start; it
+// never touches the recovered pending/failed/completed session states or the
+// same-key retry controls.
+
+const PRICING_NOT_READY_TEXT =
+  "価格が確定していないため保存できません。以下の内容を確認し、設定または選択内容を修正してください。";
+
+/** Exactly the server's completeness predicate. Pure; no message text, no codes. */
+export function isWizardPricingSaveReady(pricing: WizardPricingResult): boolean {
+  return pricing.status === "success"
+    && pricing.completeness === "complete"
+    && pricing.errors.length === 0
+    && pricing.unresolvedItems.length === 0;
+}
+
+/**
+ * Operator-facing reasons: the pricing error and unresolved-item MESSAGES only (already
+ * operator-safe Japanese), de-duplicated, in order. Internal codes are never rendered.
+ */
+export function wizardPricingBlockMessages(pricing: WizardPricingResult): readonly string[] {
+  const out: string[] = [];
+  for (const issue of [...pricing.errors, ...pricing.unresolvedItems]) {
+    const text = issue.message.trim();
+    if (text !== "" && !out.includes(text)) out.push(text);
+  }
+  return out;
+}
+
 export function WizardSavePanel({
-  draft, binding,
-}: { draft: Readonly<EstimateWizardDraftV22>; binding: WizardSaveBinding }) {
+  draft, pricing, binding,
+}: {
+  draft: Readonly<EstimateWizardDraftV22>;
+  pricing: WizardPricingResult;
+  binding: WizardSaveBinding;
+}) {
   const inFlight = useRef(false);
   const [session, setSession] = useState<ValidatedWizardSession>(binding.session);
   const [outcome, setOutcome] = useState<WizardSaveOutcome>(
@@ -263,7 +301,14 @@ export function WizardSavePanel({
    */
   const lastDestination = useRef<WizardSaveDestination>("estimate");
 
+  const pricingReady = isWizardPricingSaveReady(pricing);
+  const pricingBlockMessages = wizardPricingBlockMessages(pricing);
+
   const attempt = useCallback((destination?: WizardSaveDestination) => {
+    // A FRESH attempt is refused while pricing is not unambiguously complete —
+    // the controls are not rendered in that state, and this refuses regardless.
+    // Recovered pending/failed sessions keep their same-key retry unchanged.
+    if (outcome === "ready" && !pricingReady) return;
     // Read the SHARED guard before remembering anything: a second same-tick
     // click must neither start a second invocation nor repoint the destination
     // of the attempt that was already accepted. This is the same ref the
@@ -285,7 +330,7 @@ export function WizardSavePanel({
         if (nextFailure) setFailure(nextFailure);
       },
     });
-  }, [draft, binding, session]);
+  }, [draft, binding, session, outcome, pricingReady]);
 
   const submitting = outcome === "submitting";
   const isBlocked = outcome === "blocked";
@@ -293,10 +338,13 @@ export function WizardSavePanel({
   const isFailed = outcome === "failed";
   const isCompleted = outcome === "completed";
   const failurePresentation = presentWizardSaveFailure(failure);
-  // The plain Save button exists ONLY for a genuinely fresh attempt. A recovered
-  // pending or failed session gets a separate, explicitly-labelled retry control,
-  // so an operator can never mistake "try again" for "save a new estimate".
-  const canSaveFresh = outcome === "ready";
+  // The plain Save button exists ONLY for a genuinely fresh attempt WITH unambiguously
+  // complete pricing. A recovered pending or failed session gets a separate,
+  // explicitly-labelled retry control, so an operator can never mistake "try again"
+  // for "save a new estimate".
+  const canSaveFresh = outcome === "ready" && pricingReady;
+  // The concrete pricing/configuration reason, shown whenever it still matters.
+  const showPricingNotReady = !pricingReady && !isCompleted && !submitting;
 
   return (
     <div className="rounded-md border border-slate-700 bg-slate-900/60 p-3" data-testid="wizard-save-panel">
@@ -304,6 +352,17 @@ export function WizardSavePanel({
         <p className="text-sm text-emerald-300" data-testid="save-state-completed">
           保存が完了しました。
         </p>
+      )}
+
+      {showPricingNotReady && (
+        <div data-testid="save-state-pricing-incomplete" className="mb-2">
+          <p className="text-sm text-amber-300">{PRICING_NOT_READY_TEXT}</p>
+          {pricingBlockMessages.length > 0 && (
+            <ul className="mt-1 list-disc pl-5 text-xs text-amber-100/90" data-testid="save-pricing-reasons">
+              {pricingBlockMessages.map((text) => <li key={text}>{text}</li>)}
+            </ul>
+          )}
+        </div>
       )}
 
       {isBlocked && (

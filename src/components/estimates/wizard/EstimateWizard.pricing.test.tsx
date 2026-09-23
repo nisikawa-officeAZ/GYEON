@@ -18,7 +18,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 // runtime) compile to classic React.createElement. Expose React before any render. TEST-ONLY shim.
 (globalThis as unknown as { React: typeof React }).React = React;
 
-import EstimateWizard from "./EstimateWizard";
+import EstimateWizard, { derivePpfPricingReadiness } from "./EstimateWizard";
+import type { PpfR1PriceSettings } from "@/lib/pricing/ppf-r1-price-contract";
 import { WizardShell, type WizardTotals } from "./WizardShell";
 import { makePricingCatalog } from "@/lib/pricing/pricing-catalog";
 import type { EstimateWizardApi } from "./useEstimateWizard";
@@ -140,14 +141,77 @@ test("2. the host calls useWizardPricingFromConfig with the exact four authorita
 
 // ── 3. only shopRank + screenConfig reach Step4Estimate ───────────────────────────
 
-test("3. only shopRank + screenConfig are passed to Step4Estimate (never catalog/pricingConfig)", () => {
+test("3. only shopRank + screenConfig + derived PPF readiness reach Step4Estimate (never catalog/pricingConfig)", () => {
   const code = codeOf(HOST_SRC);
-  assert.match(code, /<Step4Estimate\s+api=\{api\}\s+shopRank=\{shopRank\}\s+screenConfig=\{screenConfig\}\s*\/>/);
-  // catalog / pricingConfig appear ONLY in the prop destructure and the pricing hook call — never on
-  // any <Step…> element (so exactly two references each: destructure + hook argument).
+  assert.match(code, /<Step4Estimate\s+api=\{api\}\s+shopRank=\{shopRank\}\s+screenConfig=\{screenConfig\}\s+ppfPricingReadiness=\{ppfPricingReadiness\}\s*\/>/);
+  // catalog / pricingConfig never appear on any <Step…> element. Inside the component body they are
+  // consumed by exactly two calls: the pricing hook and the pure readiness derivation.
   assert.equal(/<Step[^>]*\b(catalog|pricingConfig)=/.test(code), false, "no step receives pricing inputs");
-  assert.equal((code.match(/\bcatalog\b/g) ?? []).length, 2, "catalog: destructure + hook only");
-  assert.equal((code.match(/\bpricingConfig\b/g) ?? []).length, 2, "pricingConfig: destructure + hook only");
+  const body = code.slice(code.indexOf("export default function EstimateWizard("));
+  assert.equal((body.match(/\bcatalog\b/g) ?? []).length, 3, "catalog: destructure + hook + readiness derivation only");
+  assert.equal((body.match(/\bpricingConfig\b/g) ?? []).length, 3, "pricingConfig: destructure + hook + readiness derivation only");
+  assert.match(body, /derivePpfPricingReadiness\(catalog, pricingConfig, screenConfig\)/, "derived once from the authoritative inputs");
+});
+
+// ── 3b. GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 — PPF pricing readiness derivation ─────────
+const PPF_R1: PpfR1PriceSettings = {
+  contractVersion: "1.0",
+  frontFullPricesBySize: { SS: 100_000, S: 110_000, M: 120_000, ML: 130_000, L: 140_000, LL: 150_000, XL: null },
+  fullBodyPricesBySize: { SS: 400_000, S: 450_000, M: 500_000, ML: 550_000, L: 600_000, LL: 650_000, XL: 700_000 },
+  partialPartPrices: { bonnet: 40_000 },
+};
+const SC_PPF: WizardScreenConfiguration = {
+  serviceOfferings: { window_film: false, ppf: true, maintenance: false, room_cleaning: false, car_wash: false },
+  filmTypes: [], windowAreas: [], maintenanceMenus: [], washMenus: [], roomMenus: [],
+  otherWorkPresets: [], storeGlobalOptions: [], coupons: [],
+  ppfMethods: [{ id: "full", label: "フル" }],
+  ppfParts: [{ id: "bonnet", label: "ボンネット" }],
+  ppfTypeGroups: [{ id: "gloss", label: "Gloss", products: [{ id: "ppf-a", label: "A" }, { id: "ppf-b", label: "B" }] }],
+};
+
+test("3b. PPF readiness: catalog rows alone are NOT ready — ppfR1 null fails with price-table-missing", () => {
+  // The confirmed production shape: methods/parts/groups present, price table NULL, coefficients NULL.
+  assert.deepEqual(derivePpfPricingReadiness(makePricingCatalog(), { ...PC }, SC_PPF),
+    { ready: false, reason: "price-table-missing" });
+  assert.deepEqual(derivePpfPricingReadiness(makePricingCatalog(), { ...PC, installCoefficientBpByCode: { "ppf-a": 12_500, "ppf-b": 10_000 } }, SC_PPF),
+    { ready: false, reason: "price-table-missing" });
+});
+
+test("3b2. PPF readiness: ppfR1 present but any selectable product coefficient absent/non-positive → not ready", () => {
+  const catalog = makePricingCatalog({ ppfR1: PPF_R1 });
+  const cases: ReadonlyArray<Readonly<Record<string, number>> | undefined> = [
+    undefined,
+    {},
+    { "ppf-a": 12_500 },                    // ppf-b missing
+    { "ppf-a": 12_500, "ppf-b": 0 },        // non-positive
+    { "ppf-a": 12_500, "ppf-b": -1 },
+    { "ppf-a": 12_500, "ppf-b": 1.5 },      // non-integer
+  ];
+  for (const coefficients of cases) {
+    assert.deepEqual(derivePpfPricingReadiness(catalog, { ...PC, installCoefficientBpByCode: coefficients }, SC_PPF),
+      { ready: false, reason: "coefficient-missing" }, JSON.stringify(coefficients));
+  }
+});
+
+test("3b3. PPF readiness: ppfR1 present + every selectable product coefficient valid → ready; disabled products ignored", () => {
+  const catalog = makePricingCatalog({ ppfR1: PPF_R1 });
+  assert.deepEqual(derivePpfPricingReadiness(catalog, { ...PC, installCoefficientBpByCode: { "ppf-a": 12_500, "ppf-b": 10_000 } }, SC_PPF),
+    { ready: true });
+  const withDisabled: WizardScreenConfiguration = {
+    ...SC_PPF,
+    ppfTypeGroups: [{ id: "gloss", label: "Gloss", products: [{ id: "ppf-a", label: "A" }, { id: "ppf-off", label: "OFF", disabled: true }] }],
+  };
+  assert.deepEqual(derivePpfPricingReadiness(catalog, { ...PC, installCoefficientBpByCode: { "ppf-a": 12_500 } }, withDisabled),
+    { ready: true });
+});
+
+test("3b4. the host renders a PPF-offered Step 4 LOCKED when ppfR1 is null (production shape)", () => {
+  const html = render(
+    <EstimateWizard shopRank="detailer" screenConfig={SC_PPF} catalog={makePricingCatalog()} pricingConfig={PC}
+      customers={CUSTOMER_REFS} vehicles={VEHICLE_REFS} />,
+  );
+  assert.ok(html.length > 0, "host renders");
+  assert.equal(html.includes("¥"), false, "no manufactured ¥");
 });
 
 // ── 4–9. fail-closed shell rendering ──────────────────────────────────────────────
