@@ -43,6 +43,10 @@ test("backfills active GYEON dealers and seeds future dealers", () => {
   assert.match(sql, /WHERE product_mode = 'gyeon'[\s\S]*deleted_at IS NULL/);
   assert.match(sql, /CREATE OR REPLACE FUNCTION public\.wiz_init_dealer_lifecycle\(\)/);
   assert.match(sql, /PERFORM public\.wiz_seed_default_estimate_catalog\(NEW\.id\)/);
+  assert.match(
+    sql,
+    /BEGIN\s+PERFORM public\.wiz_seed_default_estimate_catalog\(NEW\.id\);\s+EXCEPTION WHEN OTHERS THEN\s+RAISE WARNING/,
+  );
 });
 
 test("keeps the internal SECURITY DEFINER helper non-callable", () => {

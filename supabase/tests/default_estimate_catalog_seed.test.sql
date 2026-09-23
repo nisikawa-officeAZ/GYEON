@@ -45,10 +45,22 @@ BEGIN
     RAISE EXCEPTION 'maintenance offering was not enabled for a fresh dealer';
   END IF;
 
+  IF (SELECT current_configuration_revision
+        FROM public.dealer_wizard_catalog_lifecycle
+       WHERE dealer_id = v_dealer) <> 1 THEN
+    RAISE EXCEPTION 'fresh seed must invalidate the catalog revision exactly once';
+  END IF;
+
   SELECT public.wiz_seed_default_estimate_catalog(v_dealer) INTO v_result;
   IF v_result ->> 'inserted_items' <> '0'
      OR (SELECT count(*) FROM public.wizard_catalog_items WHERE dealer_id = v_dealer) <> 10 THEN
     RAISE EXCEPTION 'seed is not idempotent: %', v_result;
+  END IF;
+
+  IF (SELECT current_configuration_revision
+        FROM public.dealer_wizard_catalog_lifecycle
+       WHERE dealer_id = v_dealer) <> 1 THEN
+    RAISE EXCEPTION 'idempotent reseed changed the catalog revision';
   END IF;
 
   UPDATE public.wizard_catalog_items
@@ -73,6 +85,61 @@ BEGIN
         WHERE dealer_id = v_dealer AND label_ja = '鉄粉除去' AND deleted_at IS NULL
      ) THEN
     RAISE EXCEPTION 'archived dealer-owned item was duplicated or resurrected';
+  END IF;
+END
+$$;
+
+DO $$
+DECLARE
+  v_dealer constant uuid := '91000000-0000-0000-0000-000000000004';
+  v_direct_seed_failed boolean := false;
+BEGIN
+  UPDATE public.wizard_product_modes
+     SET runtime_enabled = false
+   WHERE mode = 'gyeon';
+
+  INSERT INTO public.dealers
+    (id, name, status, approval_status, product_mode, detailer_rank)
+  VALUES
+    (v_dealer, 'Seed Failure Isolation Test', 'active', 'approved', 'gyeon', 'detailer');
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.dealer_wizard_catalog_lifecycle WHERE dealer_id = v_dealer
+  ) THEN
+    RAISE EXCEPTION 'dealer lifecycle was lost when default seeding failed';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM public.wizard_catalog_items WHERE dealer_id = v_dealer) THEN
+    RAISE EXCEPTION 'failed seed left partial catalog rows';
+  END IF;
+
+  BEGIN
+    PERFORM public.wiz_seed_default_estimate_catalog(v_dealer);
+  EXCEPTION WHEN OTHERS THEN
+    v_direct_seed_failed := true;
+  END;
+
+  IF NOT v_direct_seed_failed THEN
+    RAISE EXCEPTION 'direct migration backfill call did not fail closed';
+  END IF;
+
+  UPDATE public.wizard_product_modes
+     SET runtime_enabled = true
+   WHERE mode = 'gyeon';
+END
+$$;
+
+DO $$
+DECLARE
+  v_dealer constant uuid := '91000000-0000-0000-0000-000000000005';
+BEGIN
+  INSERT INTO public.dealers
+    (id, name, status, approval_status, product_mode, detailer_rank, deleted_at)
+  VALUES
+    (v_dealer, 'Soft Deleted Runtime Test', 'active', 'approved', 'gyeon', 'detailer', clock_timestamp());
+
+  IF EXISTS (SELECT 1 FROM public.wizard_catalog_items WHERE dealer_id = v_dealer) THEN
+    RAISE EXCEPTION 'soft-deleted dealer received defaults';
   END IF;
 END
 $$;
@@ -126,11 +193,24 @@ BEGIN
      )
      OR has_function_privilege('anon', 'public.wiz_seed_default_estimate_catalog(uuid)', 'EXECUTE')
      OR has_function_privilege('authenticated', 'public.wiz_seed_default_estimate_catalog(uuid)', 'EXECUTE')
-     OR has_function_privilege('service_role', 'public.wiz_seed_default_estimate_catalog(uuid)', 'EXECUTE') THEN
-    RAISE EXCEPTION 'internal seed helper is externally executable';
+     OR has_function_privilege('service_role', 'public.wiz_seed_default_estimate_catalog(uuid)', 'EXECUTE')
+     OR EXISTS (
+       SELECT 1
+         FROM pg_proc p
+         CROSS JOIN LATERAL aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) acl
+        WHERE p.oid = 'public.wiz_init_dealer_lifecycle()'::regprocedure
+          AND acl.grantee = 0
+          AND acl.privilege_type = 'EXECUTE'
+     )
+     OR has_function_privilege('anon', 'public.wiz_init_dealer_lifecycle()', 'EXECUTE')
+     OR has_function_privilege('authenticated', 'public.wiz_init_dealer_lifecycle()', 'EXECUTE')
+     OR has_function_privilege('service_role', 'public.wiz_init_dealer_lifecycle()', 'EXECUTE') THEN
+    RAISE EXCEPTION 'internal seed or lifecycle helper is externally executable';
   END IF;
 END
 $$;
+
+SET CONSTRAINTS ALL IMMEDIATE;
 
 SELECT 'DEFAULT_ESTIMATE_CATALOG_RUNTIME_OK' AS result;
 
