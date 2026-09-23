@@ -528,7 +528,20 @@ function buildConfigs(
       .map((item) => ({ id: item.code, label: item.name, priceYen: item.priceYen!, durationMinutes: item.durationMinutes! })),
     windowFilmSettings: catalog.windowFilmV1,
     otherWorkPresets: of("other_work_preset", "dealer").map((r): OtherWorkPresetItem => ({ id: r.code, name: r.label_ja ?? "", defaultPrice: r.default_unit_price ?? 0, displayOrder: r.display_order })),
-    storeGlobalOptions: of("store_global_option", "dealer").map((r): StoreGlobalOption => ({ id: r.code, name: r.label_ja ?? "", defaultPrice: r.default_unit_price ?? 0, editableUnitPrice: false, quantityRequired: r.quantity_required, minQty: r.min_quantity, maxQty: r.max_quantity ?? undefined, displayOrder: r.display_order })),
+    storeGlobalOptions: of("store_global_option", "dealer").map((r): StoreGlobalOption => ({
+      id: r.code,
+      name: r.label_ja ?? "",
+      defaultPrice: r.default_unit_price ?? 0,
+      editableUnitPrice: false,
+      quantityRequired: r.quantity_required,
+      minQty: r.min_quantity,
+      maxQty: r.max_quantity ?? undefined,
+      // Dealer-authored store options currently have no category-applicability field in the
+      // authoring contract. Treat them as store-wide; otherwise the selector's applicability
+      // filter removes every saved option from every estimate category.
+      appliesToAllCategories: true,
+      displayOrder: r.display_order,
+    })),
     coupons: selectableCouponRows.map((r): CouponOption => ({
       // The draft stores this value and the pricing resolver matches it against
       // ConfiguredCoupon.couponId. Keep both projections on the immutable DB row id;

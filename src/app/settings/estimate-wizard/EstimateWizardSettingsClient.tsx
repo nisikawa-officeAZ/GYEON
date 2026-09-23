@@ -33,12 +33,11 @@ import type {
 import EstimateWizardPanelLoading from "./EstimateWizardPanelLoading";
 import { getEstimateWizardPanelHref } from "./panel-config";
 import { getWizardSettingsItemValueLabel } from "./estimate-wizard-item-label";
+import { wizardSectionBadge, type WizardAccessBadgeVariant } from "./estimate-wizard-access-status";
 
 // ── S8B — four real Estimate Wizard access cards ────────────────────────────
 // A visual access layer over the existing settings editors. Every reachable card uses
 // a dedicated child URL; the hub never appends an editor beneath the cards.
-
-type WizardAccessBadgeVariant = "solid_active" | "solid_unset";
 
 function WizardAccessBadgeChip({ variant }: { variant: WizardAccessBadgeVariant }) {
   if (variant === "solid_active") {
@@ -154,7 +153,7 @@ function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessC
       label: "サービスメニュー",
       labelEn: "SERVICE MENUS",
       description: "メンテナンス・洗車・室内清掃のメニューを登録します。",
-      badge: "solid_unset",
+      badge: wizardSectionBadge(view, "service"),
       href: serviceSection ? getEstimateWizardPanelHref("service-menus") : null,
       icon: (
         <>
@@ -168,7 +167,7 @@ function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessC
       label: "その他作業プリセット",
       labelEn: "WORK PRESETS",
       description: "見積時に手入力する作業の名称プリセットです（金額は現場入力）。",
-      badge: "solid_unset",
+      badge: wizardSectionBadge(view, "otherwork"),
       href: otherworkSection ? getEstimateWizardPanelHref("work-presets") : null,
       icon: (
         <>
@@ -184,7 +183,7 @@ function buildWizardAccessCards(view: EstimateWizardSettingsView): WizardAccessC
       label: "店舗オプション",
       labelEn: "SHOP OPTIONS",
       description: "出張費などの店舗共通オプションを登録します。",
-      badge: "solid_unset",
+      badge: wizardSectionBadge(view, "store"),
       href: storeSection ? getEstimateWizardPanelHref("shop-options") : null,
       icon: (
         <>
