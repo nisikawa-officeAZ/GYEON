@@ -69,6 +69,27 @@ function joinDetected(parts: Array<string | null | undefined>): string {
   return joined.length > 0 ? joined : "—";
 }
 
+type OcrActionIconKind = "folder" | "camera" | "close";
+
+function OcrActionIcon({ kind }: { kind: OcrActionIconKind }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="size-6 shrink-0"
+    >
+      {kind === "folder" && <><path d="M3 7.5h6l2-2h10v13H3z" /><path d="M3 9.5h18" /></>}
+      {kind === "camera" && <><path d="M4 8h3l1.5-2h7L17 8h3v10H4z" /><circle cx="12" cy="13" r="3" /></>}
+      {kind === "close" && <><path d="m7 7 10 10" /><path d="m17 7-10 10" /></>}
+    </svg>
+  );
+}
+
 // HEIC/HEIF detection (iPhone default). iOS may report an empty MIME, so match
 // by extension too.
 function isHeicClient(file: File): boolean {
@@ -490,7 +511,7 @@ export default function VehicleRegistrationUpload({
               onClick={() => fileInputRef.current?.click()}
               className="flex flex-col items-center justify-center gap-3 py-8 rounded-xl border-2 border-blue-500/50 bg-blue-950/20 hover:bg-blue-900/30 transition-colors w-full"
             >
-              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">📂</span>
+              <OcrActionIcon kind="folder" />
               <div className="text-center">
                 <p className="text-base font-semibold text-blue-200">写真から選択</p>
                 <p className="text-xs text-blue-300/70 mt-0.5">保存済みの画像・PDFから車検証を読み取り</p>
@@ -502,7 +523,7 @@ export default function VehicleRegistrationUpload({
               onClick={() => void startWebcam()}
               className="flex items-center justify-center gap-2 min-h-12 px-4 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors w-full"
             >
-              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">📷</span>
+              <OcrActionIcon kind="camera" />
               <span className="text-sm text-slate-300">カメラで撮影</span>
             </button>
 
@@ -513,7 +534,7 @@ export default function VehicleRegistrationUpload({
                   onClick={() => cameraInputRef.current?.click()}
                   className="flex items-center justify-center gap-2 min-h-12 px-4 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-400 text-xs transition-colors w-full"
                 >
-                  <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">📷</span>
+                  <OcrActionIcon kind="camera" />
                   <span>端末の標準カメラで撮影</span>
                 </button>
               ) : (
@@ -562,7 +583,7 @@ export default function VehicleRegistrationUpload({
               onClick={capturePhoto}
               className="h-12 min-w-0 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2"
             >
-              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">📸</span>
+              <OcrActionIcon kind="camera" />
               <span>撮影する</span>
             </button>
             <button
@@ -570,7 +591,7 @@ export default function VehicleRegistrationUpload({
               onClick={() => fileInputRef.current?.click()}
               className="h-12 min-w-0 px-3 rounded-xl border border-slate-700 hover:border-blue-500/50 text-slate-300 text-sm transition-colors flex items-center justify-center gap-2"
             >
-              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">📂</span>
+              <OcrActionIcon kind="folder" />
               <span>写真から選択</span>
             </button>
             <button
@@ -578,7 +599,7 @@ export default function VehicleRegistrationUpload({
               onClick={resetToChoice}
               className="h-12 min-w-0 px-3 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-400 text-sm transition-colors flex items-center justify-center gap-2"
             >
-              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">✕</span>
+              <OcrActionIcon kind="close" />
               <span>キャンセル</span>
             </button>
           </div>
