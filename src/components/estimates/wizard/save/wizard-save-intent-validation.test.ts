@@ -113,6 +113,23 @@ test("service line order is copied exactly and rejects non-string entries", () =
   }), "invalid-type", "serviceLineOrder element");
 });
 
+test("final-review line adjustment text is reconstructed and hostile values fail closed", () => {
+  const accepted = withDraft((d) => {
+    const review = d.review as Record<string, unknown>;
+    review.quantityInputsByLine = { "catalog:coating:base:one-evo": "2" };
+    review.unitPriceInputsByLine = { "catalog:coating:base:one-evo": "60000" };
+  });
+  assert.equal(accepted.ok, true);
+  if (accepted.ok) {
+    assert.deepEqual(accepted.intent.draft.review.quantityInputsByLine, { "catalog:coating:base:one-evo": "2" });
+    assert.deepEqual(accepted.intent.draft.review.unitPriceInputsByLine, { "catalog:coating:base:one-evo": "60000" });
+  }
+
+  assertRejected(withDraft((d) => {
+    (d.review as Record<string, unknown>).quantityInputsByLine = { line: 2 };
+  }), "invalid-type", "numeric adjustment value");
+});
+
 test("the output shares NO mutable reference with the input", () => {
   const input = validIntent();
   const r = validateWizardSaveIntent(input);

@@ -369,6 +369,16 @@ export function WizardSavePanel({
           >
             保存してPDFを開く
           </button>
+          <button
+            type="button"
+            data-testid="add-customer-product"
+            disabled
+            aria-disabled="true"
+            title="顧客向け商品の追加は今後対応予定です"
+            className="cursor-not-allowed rounded-md border border-slate-700 bg-slate-800/60 px-5 py-2.5 text-sm text-slate-500 opacity-70"
+          >
+            顧客向け商品を追加
+          </button>
         </div>
       )}
     </div>

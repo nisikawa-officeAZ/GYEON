@@ -232,7 +232,12 @@ function cloneWizardDraft(source: EstimateWizardDraftV22): EstimateWizardDraftV2
       adjustmentReason: source.discountAndCoupon.adjustmentReason,
     },
     notes: { ...source.notes },
-    review: { ...source.review, serviceLineOrder: [...source.review.serviceLineOrder] },
+    review: {
+      ...source.review,
+      serviceLineOrder: [...source.review.serviceLineOrder],
+      quantityInputsByLine: { ...source.review.quantityInputsByLine },
+      unitPriceInputsByLine: { ...source.review.unitPriceInputsByLine },
+    },
     metadata: { ...source.metadata },
   };
 }
