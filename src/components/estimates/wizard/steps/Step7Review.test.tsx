@@ -59,8 +59,9 @@ function storeWith(overrides: Partial<Step7Store> = {}): Step7Store {
 function apiFor(store: Step7Store): EstimateWizardApi {
   return {
     store,
-    draft: { review: { serviceLineOrder: [] } },
+    draft: { review: { serviceLineOrder: [], quantityInputsByLine: {}, unitPriceInputsByLine: {} } },
     setServiceLineOrder: () => undefined,
+    setServiceLineAdjustment: () => undefined,
   } as unknown as EstimateWizardApi;
 }
 
@@ -222,13 +223,22 @@ describe("Step7Review — canonical line-order controls stay inside the responsi
     };
     const api = {
       ...apiFor(storeWith()),
-      draft: { review: { serviceLineOrder: ["manual:maintenance:mm1", "catalog:coating:base:pure-evo"] } },
+      draft: {
+        review: {
+          serviceLineOrder: ["manual:maintenance:mm1", "catalog:coating:base:pure-evo"],
+          quantityInputsByLine: {},
+          unitPriceInputsByLine: {},
+        },
+      },
     } as unknown as EstimateWizardApi;
     const html = renderToStaticMarkup(
       <Step7Review api={api} customers={CUSTOMERS} vehicles={VEHICLES} pricing={pricing} />,
     );
     assert.ok(html.indexOf("メンテナンス") < html.indexOf("PURE EVO"), "saved order is rendered");
-    assert.match(html, /grid-cols-\[minmax\(0,1fr\)_auto\]/);
+    assert.match(html, /明細の詳細/);
+    assert.match(html, /md:grid-cols-\[minmax\(0,1fr\)_6rem_8rem_auto\]/);
+    assert.match(html, /aria-label="メンテナンスの数量"/);
+    assert.match(html, /aria-label="PURE EVOの金額（単価）"/);
     assert.match(html, /aria-label="メンテナンスを上へ"/);
     assert.match(html, /aria-label="PURE EVOを下へ"/);
     assert.doesNotMatch(html, /<table/);

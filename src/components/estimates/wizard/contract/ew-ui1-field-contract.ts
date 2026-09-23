@@ -75,6 +75,8 @@ export const DEFERRED_FIELD_CONTRACT: readonly FieldContractEntry[] = [
   { ewUiField: "notesInternal",           canonical: "notes.internalMemo", dto: "notes.internalMemo", db: "estimates.internal_memo", status: "LOSSLESS", note: "EW-UI-2A: bound; staff-only, never customer-facing." },
   { ewUiField: "review.previewConfirmed", canonical: "review.previewConfirmed", dto: null, db: null, status: "CONTROLLER_PHASE", note: "preview-only boolean; not exposed by the EW-UI-2A controller write surface yet (updateReview wiring is a later phase)." },
   { ewUiField: "review.serviceLineOrder", canonical: "review.serviceLineOrder", dto: "services[] order", db: "estimate_items.sort_order", status: "LOSSLESS", note: "Screen 7 writes stable line identities; save ordering becomes sort_order and is reused by detail/PDF." },
+  { ewUiField: "review.quantityInputsByLine", canonical: "review.quantityInputsByLine", dto: "services[].quantity", db: "estimate_items.quantity", status: "LOSSLESS", note: "Screen 7 quantity overrides use stable line identities and are recomputed by the shared client/server pricing path before save." },
+  { ewUiField: "review.unitPriceInputsByLine", canonical: "review.unitPriceInputsByLine", dto: "services[].unitPrice", db: "estimate_items.unit_price", status: "LOSSLESS", note: "Screen 7 unit-price overrides use stable line identities and are recomputed by the shared client/server pricing path before save." },
   { ewUiField: "dealerRank",              canonical: null, dto: null, db: null, status: "REMOVED_DUPLICATE_AUTHORITY", note: "removed from WizardStore in EW-FC-1A; authoritative rank is a future trusted-host input" },
 ];
 

@@ -38,6 +38,7 @@ export interface EstimateWizardApi {
   draft:       EstimateWizardDraftV22;       // the single authoritative business state (readonly to callers)
   updateStore: (patch: WizardStorePatch) => void;
   setServiceLineOrder: (lineIds: readonly string[]) => void;
+  setServiceLineAdjustment: (lineId: string, quantityInput: string, unitPriceInput: string) => void;
   jumpTo:      (n: number) => void;
   next:        () => void;
   back:        () => void;
@@ -96,6 +97,15 @@ export function useEstimateWizard(
     setDraft((d) => updateReview(d, { serviceLineOrder: unique, previewConfirmed: false }));
   }, []);
 
+  const setServiceLineAdjustment = useCallback((lineId: string, quantityInput: string, unitPriceInput: string) => {
+    if (lineId.trim() === "") return;
+    setDraft((d) => updateReview(d, {
+      quantityInputsByLine: { ...d.review.quantityInputsByLine, [lineId]: quantityInput },
+      unitPriceInputsByLine: { ...d.review.unitPriceInputsByLine, [lineId]: unitPriceInput },
+      previewConfirmed: false,
+    }));
+  }, []);
+
   // Navigation is backed by canonical metadata.currentStep and resolved through the pure
   // fail-closed transition resolvers. A blocked forward move returns the CURRENT step, so
   // setCurrentStep rewrites the same value and the canonical step never advances.
@@ -130,6 +140,7 @@ export function useEstimateWizard(
     draft,
     updateStore,
     setServiceLineOrder,
+    setServiceLineAdjustment,
     jumpTo,
     next,
     back,

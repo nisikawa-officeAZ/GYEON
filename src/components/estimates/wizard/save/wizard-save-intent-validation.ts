@@ -637,15 +637,26 @@ function readDraft(v: unknown, path: string, issues: Issues): EstimateWizardDraf
   const reRaw = readObject(o.review, `${path}.review`, issues);
   let review: DraftSections["review"] | undefined;
   if (reRaw !== undefined) {
-    // serviceLineOrder was added after the first 2.2 snapshots. Absence remains
-    // readable as the authoritative engine order; unknown fields still fail closed.
-    requireExactKeys(reRaw, `${path}.review`, ["previewConfirmed"], issues, ["serviceLineOrder"]);
+    // Review ordering and adjustments were added after the first 2.2 snapshots.
+    // Their absence remains readable as the authoritative engine values.
+    requireExactKeys(reRaw, `${path}.review`, ["previewConfirmed"], issues, [
+      "serviceLineOrder", "quantityInputsByLine", "unitPriceInputsByLine",
+    ]);
     const previewConfirmed = readBoolean(reRaw.previewConfirmed, `${path}.review.previewConfirmed`, issues);
     const serviceLineOrder = reRaw.serviceLineOrder === undefined
       ? []
       : readStringArray(reRaw.serviceLineOrder, `${path}.review.serviceLineOrder`, issues);
-    if (previewConfirmed !== undefined && serviceLineOrder !== undefined) {
-      review = { previewConfirmed, serviceLineOrder };
+    const quantityInputsByLine = reRaw.quantityInputsByLine === undefined
+      ? {}
+      : readStringRecord(reRaw.quantityInputsByLine, `${path}.review.quantityInputsByLine`, issues);
+    const unitPriceInputsByLine = reRaw.unitPriceInputsByLine === undefined
+      ? {}
+      : readStringRecord(reRaw.unitPriceInputsByLine, `${path}.review.unitPriceInputsByLine`, issues);
+    if (
+      previewConfirmed !== undefined && serviceLineOrder !== undefined &&
+      quantityInputsByLine !== undefined && unitPriceInputsByLine !== undefined
+    ) {
+      review = { previewConfirmed, serviceLineOrder, quantityInputsByLine, unitPriceInputsByLine };
     }
   }
 

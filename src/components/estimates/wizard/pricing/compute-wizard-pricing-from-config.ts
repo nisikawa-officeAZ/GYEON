@@ -35,6 +35,7 @@ import { buildWizardPricingInputFromConfig } from "./wizard-pricing-input-adapte
 import type { ProductionPricingConfiguration } from "./wizard-manual-pricing-config";
 import { mapProductionResultToWizard } from "./wizard-pricing-result-adapter";
 import { WIZARD_PRICING_ERRORS, type WizardPricingResult } from "./wizard-pricing-types";
+import { applyWizardReviewLineAdjustments } from "./wizard-review-line-adjustments";
 
 /**
  * Fresh fail-closed result. Built anew on every call so no imported constant is ever mutated and no
@@ -130,7 +131,8 @@ export function computeWizardPricingFromConfig(
 
     // Fail-closed: null the aggregate totals for unavailable/error completeness so unresolved or
     // failed pricing never appears as a genuine ¥0 estimate. Partial/complete totals are untouched.
-    return normalizeAggregateTotals(refined);
+    const adjusted = applyWizardReviewLineAdjustments(refined, bundle, draft.review);
+    return normalizeAggregateTotals(adjusted);
   } catch {
     // No stack trace or internal exception text is exposed — only an operator-safe error.
     return productionErrorResult();
