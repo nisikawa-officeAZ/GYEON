@@ -8,9 +8,20 @@ let currentUser: { id: string } | null = { id: USER_ID };
 let rpcData: unknown;
 let rpcError: unknown = null;
 let rpcThrows = false;
+let rpcReturnsThenable = false;
 let rpcCalls: Array<[string, Record<string, unknown>]> = [];
 let authCalls = 0;
 let clientCalls = 0;
+let bearerClientCalls = 0;
+let bearerGetUserCalls: unknown[] = [];
+let bearerHeader: string | null = "Bearer tok";
+let bearerToken: string | null = "tok";
+let bearerGetUser: { data: { user: { id: string } | null }; error: unknown } = {
+  data: { user: { id: USER_ID } },
+  error: null,
+};
+let bearerRpcData: unknown;
+let bearerRpcError: unknown = null;
 
 function candidate(overrides: Record<string, unknown> = {}) {
   return {
@@ -45,10 +56,43 @@ mock.module("@/lib/supabase/server", {
     createClient: async () => {
       clientCalls += 1;
       return {
-        rpc: async (name: string, args: Record<string, unknown>) => {
+        rpc: (name: string, args: Record<string, unknown>) => {
           rpcCalls.push([name, args]);
           if (rpcThrows) throw new Error("hidden database detail");
-          return { data: rpcData, error: rpcError };
+          const payload = { data: rpcData, error: rpcError };
+          if (!rpcReturnsThenable) {
+            return Promise.resolve(payload);
+          }
+          return {
+            then(
+              onfulfilled?: (value: { data: unknown; error: unknown }) => unknown,
+            ) {
+              return Promise.resolve(onfulfilled ? onfulfilled(payload) : payload);
+            },
+          };
+        },
+      };
+    },
+  },
+});
+mock.module("../mobile/resolve-office-az-inventory-mobile-bearer", {
+  namedExports: {
+    parseAuthorizationBearerHeader: (header: string | null) => {
+      return header === bearerHeader ? bearerToken : null;
+    },
+    createOfficeAzInventoryMobileBearerClient: (header: string | null) => {
+      if (header !== bearerHeader || bearerToken === null) return null;
+      bearerClientCalls += 1;
+      return {
+        auth: {
+          getUser: async (jwt?: string) => {
+            bearerGetUserCalls.push(jwt);
+            return bearerGetUser;
+          },
+        },
+        rpc: async (name: string, args: Record<string, unknown>) => {
+          rpcCalls.push([name, args]);
+          return { data: bearerRpcData, error: bearerRpcError };
         },
       };
     },
@@ -57,11 +101,13 @@ mock.module("@/lib/supabase/server", {
 
 type ResolverModule = typeof import("./resolve-office-az-inventory-authority");
 let resolveAuthority: ResolverModule["resolveOfficeAzInventoryAuthority"];
+let resolveAuthorityForBearer: ResolverModule["resolveOfficeAzInventoryAuthorityForBearerUser"];
 
 before(async () => {
-  ({ resolveOfficeAzInventoryAuthority: resolveAuthority } = await import(
-    "./resolve-office-az-inventory-authority"
-  ));
+  ({
+    resolveOfficeAzInventoryAuthority: resolveAuthority,
+    resolveOfficeAzInventoryAuthorityForBearerUser: resolveAuthorityForBearer,
+  } = await import("./resolve-office-az-inventory-authority"));
 });
 
 beforeEach(() => {
@@ -69,9 +115,17 @@ beforeEach(() => {
   rpcData = { candidates: [candidate()], knownLocationIds: [LOCATION_A] };
   rpcError = null;
   rpcThrows = false;
+  rpcReturnsThenable = false;
   rpcCalls = [];
   authCalls = 0;
   clientCalls = 0;
+  bearerClientCalls = 0;
+  bearerGetUserCalls = [];
+  bearerHeader = "Bearer tok";
+  bearerToken = "tok";
+  bearerGetUser = { data: { user: { id: USER_ID } }, error: null };
+  bearerRpcData = { candidates: [candidate()], knownLocationIds: [LOCATION_A] };
+  bearerRpcError = null;
 });
 
 function request(overrides: Record<string, unknown> = {}) {
@@ -110,11 +164,28 @@ const hostileCases: ReadonlyArray<readonly [string, Record<string, unknown>]> = 
   ["oversized target operator", { targetOperatorId: LONG_ID }],
 ];
 
+test("cookie resolver accepts a non-Promise RPC thenable", async () => {
+  rpcReturnsThenable = true;
+  const result = await resolveAuthority(request());
+  assert.equal(result.tag, "authorized");
+  assert.equal(authCalls, 1);
+  assert.equal(clientCalls, 1);
+  assert.equal(bearerClientCalls, 0);
+  assert.deepEqual(rpcCalls, [[
+    "resolve_office_az_inventory_authority",
+    { p_actor_id: "actor-1", p_operator_id: "operator-1" },
+  ]]);
+  if (result.tag === "authorized") {
+    assert.equal(result.authority.authenticatedUserId, USER_ID);
+  }
+});
+
 test("authenticated identity is request-scoped and RPC runs exactly once", async () => {
   const result = await resolveAuthority(request());
   assert.equal(result.tag, "authorized");
   assert.equal(authCalls, 1);
   assert.equal(clientCalls, 1);
+  assert.equal(bearerClientCalls, 0);
   assert.deepEqual(rpcCalls, [[
     "resolve_office_az_inventory_authority",
     { p_actor_id: "actor-1", p_operator_id: "operator-1" },
@@ -247,3 +318,56 @@ for (const [label, overrides] of hostileCases) {
     assert.equal(rpcCalls.length, 0);
   });
 }
+
+test("bearer resolver uses the Bearer userId and a token-scoped RPC client", async () => {
+  currentUser = { id: "cookie-user" };
+  const result = await resolveAuthorityForBearer(request(), USER_ID, "Bearer tok");
+  assert.equal(result.tag, "authorized");
+  assert.equal(authCalls, 0);
+  assert.equal(clientCalls, 0);
+  assert.equal(bearerClientCalls, 1);
+  assert.deepEqual(bearerGetUserCalls, ["tok"]);
+  assert.deepEqual(rpcCalls, [[
+    "resolve_office_az_inventory_authority",
+    { p_actor_id: "actor-1", p_operator_id: "operator-1" },
+  ]]);
+  if (result.tag === "authorized") {
+    assert.equal(result.authority.authenticatedUserId, USER_ID);
+  }
+});
+
+test("cookie identity cannot substitute for a Bearer principal", async () => {
+  currentUser = { id: USER_ID };
+  bearerGetUser = { data: { user: { id: "other-user" } }, error: null };
+  const result = await resolveAuthorityForBearer(request(), USER_ID, "Bearer tok");
+  assert.deepEqual(result, { tag: "denied", code: "AUTHENTICATED_USER_MISMATCH" });
+  assert.equal(authCalls, 0);
+  assert.equal(clientCalls, 0);
+  assert.equal(rpcCalls.length, 0);
+});
+
+test("missing Bearer header or empty userId fails closed before RPC", async () => {
+  assert.deepEqual(
+    await resolveAuthorityForBearer(request(), USER_ID, null),
+    { tag: "denied", code: "UNAUTHENTICATED" },
+  );
+  assert.deepEqual(
+    await resolveAuthorityForBearer(request(), "  ", "Bearer tok"),
+    { tag: "denied", code: "UNAUTHENTICATED" },
+  );
+  assert.equal(authCalls, 0);
+  assert.equal(clientCalls, 0);
+  assert.equal(rpcCalls.length, 0);
+});
+
+test("browser-injected authenticatedUserId is still rejected on the Bearer path", async () => {
+  const result = await resolveAuthorityForBearer(
+    request({ authenticatedUserId: "attacker" }),
+    USER_ID,
+    "Bearer tok",
+  );
+  assert.deepEqual(result, { tag: "denied", code: "INVALID_REQUEST" });
+  assert.equal(authCalls, 0);
+  assert.equal(bearerClientCalls, 0);
+  assert.equal(rpcCalls.length, 0);
+});

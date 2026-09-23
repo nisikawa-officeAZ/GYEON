@@ -42,6 +42,9 @@ export const OFFICE_AZ_INVENTORY_CAPABILITIES = [
   "inventory.recovery.evaluate",
   "inventory.authorization.issue",
   "inventory.operator.manage",
+  "inventory.device.register",
+  "inventory.session.revoke",
+  "inventory.session.issue",
 ] as const;
 
 export type OfficeAzInventoryCapability =

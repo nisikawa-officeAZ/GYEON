@@ -27,6 +27,7 @@ const WAREHOUSE_OPERATOR_CAPABILITIES = [
   "inventory.transfer.dispatch",
   "inventory.transfer.receive",
   "inventory.stocktake.count",
+  "inventory.session.issue",
 ] as const satisfies readonly OfficeAzInventoryCapability[];
 
 const WAREHOUSE_MANAGER_CAPABILITIES = [
@@ -38,6 +39,7 @@ const WAREHOUSE_MANAGER_CAPABILITIES = [
   "inventory.transfer.request",
   "inventory.stocktake.open",
   "inventory.stocktake.complete",
+  "inventory.session.revoke",
 ] as const satisfies readonly OfficeAzInventoryCapability[];
 
 const SUPER_ADMIN_CAPABILITIES = [
@@ -46,6 +48,7 @@ const SUPER_ADMIN_CAPABILITIES = [
   "inventory.snapshot.import",
   "inventory.recovery.evaluate",
   "inventory.operator.manage",
+  "inventory.device.register",
 ] as const satisfies readonly OfficeAzInventoryCapability[];
 
 const SERVICE_CAPABILITIES = [
