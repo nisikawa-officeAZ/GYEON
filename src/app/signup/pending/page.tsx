@@ -3,7 +3,8 @@
 // Two DISTINCT wait states share this page and must never be confused:
 //   confirm=1  Email verification still required. The Auth user exists but is
 //              unverified; no dealer row exists yet. The password was already
-//              chosen at registration — login must wait for the email link.
+//              chosen at registration — login must wait for the email link
+//              AND, after that, for GYEON Japan approval (never immediate).
 //   confirm=0  Email verification complete. The pending dealer row exists
 //              (approval_status = 'pending'). GYEON Japan approval is a
 //              separate step; authentication succeeds but access stays blocked
@@ -98,7 +99,8 @@ export default async function SignUpPendingPage({ searchParams }: Props) {
                 </p>
                 <p className="text-xs text-[#9999b0] leading-relaxed">
                   パスワードは登録時に設定済みです。新しいパスワードを設定する必要はありません。
-                  メール内のリンクを開いてメールアドレスの確認を完了したあとに、ログインをお試しください。
+                  メール確認が完了しても、すぐにはログインできません。
+                  メール確認後にGYEON Japanが申請内容を審査し、承認後にログイン・ご利用いただけます。
                 </p>
               </>
             ) : (
@@ -165,15 +167,8 @@ export default async function SignUpPendingPage({ searchParams }: Props) {
           {/* CTA — never a primary "log in now" action while a wait state is active */}
           {needsConfirm ? (
             <p className="text-center text-xs text-[#55556a] leading-relaxed">
-              メール確認が完了したら{" "}
-              <Link
-                href="/login"
-                className="underline transition-colors"
-                style={{ color: "var(--gs-blue, #4f8ef7)" }}
-              >
-                ログイン画面
-              </Link>
-              {" "}からログインできます。
+              メール確認後、GYEON Japanが申請内容を審査します。
+              ログインは承認完了後に可能になります。
             </p>
           ) : (
             <Link

@@ -137,10 +137,15 @@ test("6. pending page: confirm=1 means email verification is still required", ()
   assert.match(confirm1, /確認メールを送信しました/);
   assert.match(confirm1, /メール確認が完了するまでログインはできません/);
   assert.match(confirm1, /パスワードは登録時に設定済みです/);
-  assert.match(confirm1, /メール内のリンクを開いてメールアドレスの確認を完了したあとに、ログインをお試しください/);
+  assert.match(confirm1, /メール確認が完了しても、すぐにはログインできません/);
+  assert.match(confirm1, /メール確認後にGYEON Japanが申請内容を審査し、承認後にログイン・ご利用いただけます/);
   // No approval-complete or immediate-login claim in the verification-wait state.
   assert.doesNotMatch(confirm1, /確認が完了しました/);
   assert.doesNotMatch(confirm1, /承認後にアカウントをご利用いただけます/);
+  // Never tell the applicant to log in right after email verification.
+  assert.doesNotMatch(confirm1, /ログインをお試しください/);
+  assert.doesNotMatch(confirm1, /確認を完了したあとに、ログイン/);
+  assert.doesNotMatch(confirm1, /メール確認が完了したら/);
 });
 
 test("7. pending page: confirm=0 means email verified and GYEON Japan approval pending", () => {
@@ -159,9 +164,12 @@ test("7. pending page: confirm=0 means email verified and GYEON Japan approval p
 test("8. pending page CTA never presents immediate login as the next action", () => {
   const source = read(PENDING_PAGE);
   const { confirm1, confirm0 } = ternaryBranches(source);
-  // confirm=1: only an inline link, conditioned on completing email verification.
-  assert.match(confirm1, /メール確認が完了したら[\s\S]*?href="\/login"[\s\S]*?ログイン画面/);
-  assert.doesNotMatch(confirm1, /ログイン画面へ戻る/);
+  // confirm=1: no login link at all — email verification alone never unlocks login.
+  assert.doesNotMatch(confirm1, /href="\/login"/);
+  assert.doesNotMatch(confirm1, /<Link/);
+  assert.doesNotMatch(confirm1, /ログイン画面/);
+  assert.doesNotMatch(confirm1, /からログインできます/);
+  assert.match(confirm1, /メール確認後、GYEON Japanが申請内容を審査します。\s*ログインは承認完了後に可能になります/);
   // confirm=0: a secondary (non-primary) return link that states approval gating.
   assert.match(confirm0, /href="\/login"[\s\S]*?ログイン画面へ戻る（承認後にご利用いただけます）/);
   assert.doesNotMatch(confirm0, /var\(--gs-blue, #4f8ef7\)"\s*\}\}\s*>\s*ログイン画面へ/);
@@ -204,5 +212,25 @@ test("10. no boundary trusts browser-supplied identity, approval, or role", () =
     for (const forbidden of ["approval_status", "dealer_id", "user_id", "is_admin", "role:"]) {
       assert.equal(source.includes(forbidden), false, `${path} must not carry ${forbidden}`);
     }
+  }
+});
+
+test("11. pending page confirm=1 affirms the ordered flow: email verification → GYEON Japan approval → login", () => {
+  const source = read(PENDING_PAGE);
+  const { confirm1 } = ternaryBranches(source);
+  const verifyAt   = confirm1.indexOf('title="メール内のリンクを開く"');
+  const approvalAt = confirm1.indexOf('title="GYEON Japanの承認を待つ"');
+  const loginAt    = confirm1.indexOf('title="承認後にログイン"');
+  assert.ok(verifyAt >= 0 && approvalAt > verifyAt && loginAt > approvalAt, "steps must be verify → approve → login");
+  assert.match(confirm1, /メール確認後、GYEON Japanが申請内容を審査します/);
+  assert.match(confirm1, /承認完了後、登録時に設定したメールアドレスとパスワードでログインできます/);
+  // Every login mention in the verification-wait state is approval-gated or a prohibition.
+  const loginMentions = confirm1.match(/[^。\n"]*ログイン[^。\n"]*/g) ?? [];
+  assert.ok(loginMentions.length > 0);
+  for (const mention of loginMentions) {
+    assert.ok(
+      /承認/.test(mention) || /ログインはできません/.test(mention) || /すぐにはログインできません/.test(mention),
+      `confirm=1 login mention must be approval-gated: ${mention}`,
+    );
   }
 });
