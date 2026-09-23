@@ -5,7 +5,8 @@
 //
 // Complements /api/auth/callback (the PKCE "code" flow). Having both means the
 // reset/confirmation link works regardless of which email-template style the
-// Supabase project uses.
+// Supabase project uses. Both boundaries converge a dealer signup to the SAME
+// post-verification state: /signup/pending?confirm=0 (approval pending).
 
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse }      from "next/server";
@@ -58,16 +59,23 @@ export async function GET(request: Request) {
         }
 
         if (type === "signup") {
-          // Confirmation-required production signup converges here. The
-          // service action derives id/email from this verified session and
-          // creates at most one pending dealer; no browser-supplied user id is
-          // accepted by the service-role boundary.
+          // Confirmation-required production signup converges here.
+          // The service action derives id/email from this verified session and
+          // creates at most one pending dealer; no browser-supplied user id,
+          // dealer id, approval status, or role is accepted.
           const dealer = await createPendingDealer();
-          const suffix =
-            dealer.kind === "created" || dealer.kind === "already-exists"
-              ? ""
-              : "&setup_error=1";
-          return NextResponse.redirect(`${origin}/signup/pending?confirm=0${suffix}`);
+          if (dealer.kind === "created" || dealer.kind === "already-exists") {
+            return NextResponse.redirect(`${origin}/signup/pending?confirm=0`);
+          }
+          if (dealer.kind === "not-dealer-signup") {
+            // A verified non-dealer email confirmation (no dealer-v1 flow
+            // metadata) is not a registration — continue to the requested page.
+            return NextResponse.redirect(`${origin}${next ?? "/"}`);
+          }
+          // Verified, but the pending dealer could not be converged. Keep the
+          // user on the approval-wait surface with an explicit setup notice
+          // rather than an ordinary login screen.
+          return NextResponse.redirect(`${origin}/signup/pending?confirm=0&setup_error=1`);
         }
         return NextResponse.redirect(`${origin}${next ?? "/"}`);
       }
@@ -78,6 +86,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // Fallback — send to login with an error flag
+  // Fallback — send to login with a non-secret error flag. /login renders it as
+  // an authentication-link notice, never as a wrong-credentials message.
   return NextResponse.redirect(`${origin}/login?error=auth_confirm_failed`);
 }

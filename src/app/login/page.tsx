@@ -8,21 +8,44 @@ import { sanitizeNextPath } from "@/lib/auth/sanitize-next-path";
 import Brand from "@/components/ui/Brand";
 import { Suspense } from "react";
 
+// Credential failure copy. This message must be shown ONLY for a rejected
+// email/password sign-in — never for an authentication-link (callback/confirm)
+// failure, which has nothing to do with the credentials the operator typed.
+const INVALID_CREDENTIALS_MESSAGE =
+  "メールアドレスまたはパスワードが正しくありません。";
+
+// Sign-in was rejected because the email has not been verified yet. The
+// password is not wrong; the email link has simply not been completed.
+const EMAIL_NOT_CONFIRMED_MESSAGE =
+  "メールアドレスの確認が完了していません。登録時にお送りした確認メール内のリンクを開いてから、再度ログインしてください。";
+
+// Authentication-link failure flags set by the server-side auth boundaries
+// (/api/auth/callback and /auth/confirm). Rendered as a dedicated notice with a
+// concrete next action; the flags carry no secret and no raw provider error.
+const AUTH_LINK_FAILURE_FLAGS = ["auth_callback_failed", "auth_confirm_failed"] as const;
+const AUTH_LINK_FAILED_MESSAGE =
+  "認証リンクを確認できませんでした。リンクの有効期限切れ、または使用済みの可能性があります。" +
+  "新規登録の方は、確認メール内のリンクをもう一度開いてください。" +
+  "パスワード再設定の方は「パスワードを忘れた方」から再度お手続きください。";
+
+function authLinkNotice(errorFlag: string | null): string | null {
+  if (!errorFlag) return null;
+  return (AUTH_LINK_FAILURE_FLAGS as readonly string[]).includes(errorFlag)
+    ? AUTH_LINK_FAILED_MESSAGE
+    : null;
+}
+
 function LoginForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
-  const [error,    setError]    = useState<string | null>(
-    searchParams.get("registered") === "1"
-      ? null  // will show success note instead
-      : null,
-  );
+  const [error,    setError]    = useState<string | null>(null);
   const [loading,  setLoading]  = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe,   setRememberMe]   = useState(false);
 
-  const justRegistered = searchParams.get("registered") === "1";
+  const authNotice = authLinkNotice(searchParams.get("error"));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,7 +57,15 @@ function LoginForm() {
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
       if (authError) {
-        setError("メールアドレスまたはパスワードが正しくありません。");
+        // Supabase AuthApiError carries a stable `code`. An unverified email is
+        // a distinct state from wrong credentials and must be labelled as such.
+        const code = authError.code ?? "";
+        const msg  = authError.message.toLowerCase();
+        if (code === "email_not_confirmed" || msg.includes("email not confirmed")) {
+          setError(EMAIL_NOT_CONFIRMED_MESSAGE);
+        } else {
+          setError(INVALID_CREDENTIALS_MESSAGE);
+        }
         return;
       }
 
@@ -63,10 +94,13 @@ function LoginForm() {
           <p className="text-xs text-[#55556a]">ショップ管理システムにサインイン</p>
         </div>
 
-        {/* ── Post-registration success note ─────────────────────────────── */}
-        {justRegistered && (
-          <div className="mb-4 px-4 py-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10">
-            <p className="text-xs text-emerald-400 font-medium">アカウントを作成しました。ログインしてください。</p>
+        {/* ── Authentication-link failure notice (not a credentials error) ── */}
+        {authNotice && (
+          <div
+            role="status"
+            className="mb-4 px-4 py-3 rounded-xl border border-amber-500/30 bg-amber-500/10"
+          >
+            <p className="text-xs text-amber-300 font-medium leading-relaxed">{authNotice}</p>
           </div>
         )}
 

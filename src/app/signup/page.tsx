@@ -68,7 +68,13 @@ export default function SignUpPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/login`,
+          // The confirmation link must land on the authenticated callback
+          // boundary, never on the ordinary /login page. /login cannot exchange
+          // the PKCE code, so routing there would leave the email unverified
+          // and invite a wrong-credentials retry. The callback exchanges the
+          // code, derives the pending dealer from the verified session, and
+          // then shows the approval-waiting state.
+          emailRedirectTo: `${window.location.origin}/api/auth/callback`,
           data: {
             // Persist only the display value needed after email verification.
             // Authorization never relies on user_metadata.

@@ -2,6 +2,11 @@
 // Supabase redirects to this endpoint after the user clicks an auth email link.
 // The endpoint exchanges the one-time code for a session, then redirects the
 // user to the appropriate page.
+//
+// This is the emailRedirectTo target for a new dealer signup (PKCE "code"
+// flow). It must never be the ordinary /login page: only this boundary can
+// exchange the code, derive the verified session, and converge the pending
+// dealer before showing the approval-waiting state.
 
 import { NextResponse }  from "next/server";
 import { createClient }  from "@/lib/supabase/server";
@@ -34,12 +39,20 @@ export async function GET(request: Request) {
 
         // PKCE confirmation templates converge through the same verified,
         // session-derived pending-dealer boundary as token_hash templates.
+        // No browser-supplied user id, dealer id, approval status, or role is
+        // accepted; the action reads identity only from the exchanged session.
         const dealer = await createPendingDealer();
         if (dealer.kind === "created" || dealer.kind === "already-exists") {
           return NextResponse.redirect(`${origin}/signup/pending?confirm=0`);
         }
-        // Email confirmation or other auth — go to home
-        return NextResponse.redirect(origin);
+        if (dealer.kind === "not-dealer-signup") {
+          // Verified non-dealer auth (magic link, email change) — go to home.
+          return NextResponse.redirect(origin);
+        }
+        // Verified dealer signup whose pending row could not be converged.
+        // Stay on the approval-wait surface with an explicit setup notice; do
+        // not drop a freshly verified applicant on the home or login screen.
+        return NextResponse.redirect(`${origin}/signup/pending?confirm=0&setup_error=1`);
       }
 
       console.error("[auth/callback] exchangeCodeForSession error:", error.message);
@@ -48,6 +61,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // Fallback — send to login with error flag
+  // Fallback — send to login with a non-secret error flag. /login renders it as
+  // an authentication-link notice, never as a wrong-credentials message.
   return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
 }
