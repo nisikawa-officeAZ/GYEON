@@ -74,7 +74,7 @@ function codeOf(
 
 test("role and capability vocabularies are exact, closed, and fail closed", () => {
   assert.equal(OFFICE_AZ_INVENTORY_AUTHORITY_ROLES.length, 4);
-  assert.equal(OFFICE_AZ_INVENTORY_CAPABILITIES.length, 22);
+  assert.equal(OFFICE_AZ_INVENTORY_CAPABILITIES.length, 25);
   assert.equal(isOfficeAzInventoryAuthorityRole("office_az_warehouse_operator"), true);
   assert.equal(isOfficeAzInventoryAuthorityRole("warehouse_manager"), false);
   assert.equal(isOfficeAzInventoryCapability("inventory.quantity.read"), true);
@@ -106,6 +106,69 @@ test("every configured role/capability family is compatible and widening is deni
     isOfficeAzRoleCapabilityCompatible(
       "office_az_inventory_super_admin",
       "inventory.fulfillment.open",
+    ),
+    false,
+  );
+  assert.equal(
+    isOfficeAzRoleCapabilityCompatible(
+      "office_az_warehouse_operator",
+      "inventory.device.register",
+    ),
+    false,
+  );
+  assert.equal(
+    isOfficeAzRoleCapabilityCompatible(
+      "office_az_warehouse_operator",
+      "inventory.session.revoke",
+    ),
+    false,
+  );
+  assert.equal(
+    isOfficeAzRoleCapabilityCompatible(
+      "office_az_warehouse_manager",
+      "inventory.device.register",
+    ),
+    false,
+  );
+  assert.equal(
+    isOfficeAzRoleCapabilityCompatible(
+      "office_az_warehouse_manager",
+      "inventory.session.revoke",
+    ),
+    true,
+  );
+  assert.equal(
+    isOfficeAzRoleCapabilityCompatible(
+      "office_az_inventory_super_admin",
+      "inventory.device.register",
+    ),
+    true,
+  );
+  assert.equal(
+    isOfficeAzRoleCapabilityCompatible(
+      "office_az_warehouse_operator",
+      "inventory.session.issue",
+    ),
+    true,
+  );
+  assert.equal(
+    isOfficeAzRoleCapabilityCompatible(
+      "office_az_warehouse_manager",
+      "inventory.session.issue",
+    ),
+    true,
+  );
+  assert.equal(
+    isOfficeAzRoleCapabilityCompatible(
+      "office_az_inventory_super_admin",
+      "inventory.session.issue",
+    ),
+    true,
+  );
+  assert.equal(
+    isOfficeAzRoleCapabilityCompatible(
+      "office_az_inventory_service",
+      "inventory.session.issue",
     ),
     false,
   );

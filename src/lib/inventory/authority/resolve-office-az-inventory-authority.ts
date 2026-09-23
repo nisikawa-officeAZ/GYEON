@@ -2,6 +2,10 @@ import "server-only";
 
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { createClient } from "@/lib/supabase/server";
+import {
+  createOfficeAzInventoryMobileBearerClient,
+  parseAuthorizationBearerHeader,
+} from "../mobile/resolve-office-az-inventory-mobile-bearer";
 import { evaluateOfficeAzInventoryAuthority } from "./office-az-inventory-authority-core";
 import {
   OFFICE_AZ_INVENTORY_CAPABILITIES,
@@ -130,9 +134,52 @@ function hasResolverShape(value: unknown): value is {
   );
 }
 
+type AuthorityRpcResult = {
+  data: unknown;
+  error: unknown;
+};
+
+type AuthorityRpcClient = {
+  rpc(
+    name: string,
+    args: { p_actor_id: string; p_operator_id: string },
+  ): PromiseLike<AuthorityRpcResult>;
+};
+
+async function evaluateResolvedSnapshot(
+  parsed: NonNullable<ReturnType<typeof parseResolverRequest>>,
+  authenticatedUserId: string,
+  supabase: AuthorityRpcClient,
+): Promise<OfficeAzInventoryAuthorityEvaluation> {
+  const { data, error } = await supabase.rpc(AUTHORITY_RPC, {
+    p_actor_id: parsed.actorId,
+    p_operator_id: parsed.operatorId,
+  });
+  if (error || !hasResolverShape(data)) return invalidRecord();
+
+  const requestedAtIso = new Date().toISOString();
+  return evaluateOfficeAzInventoryAuthority(
+    data.candidates,
+    {
+      authenticatedUserId,
+      actorId: parsed.actorId,
+      operatorId: parsed.operatorId,
+      owner: OFFICE_AZ_INVENTORY_OWNER,
+      capability: parsed.capability,
+      requiredLocationIds: parsed.requiredLocationIds,
+      expectedAuthorityVersion: parsed.expectedAuthorityVersion,
+      requestedAtIso,
+      ...(parsed.targetOperatorId === undefined
+        ? {}
+        : { targetOperatorId: parsed.targetOperatorId }),
+    },
+    data.knownLocationIds,
+  );
+}
+
 /**
- * request-scoped auth と同一RPCスナップショットだけから権限を解決する。
- * ブラウザが本人ID・role・grant・owner・時刻を注入できる入力面は持たない。
+ * request-scoped cookie auth と同一RPCスナップショットだけから権限を解決する。
+ * D4 callers only. ブラウザが本人ID・role・grant・owner・時刻を注入できる入力面は持たない。
  */
 export async function resolveOfficeAzInventoryAuthority(
   input: unknown,
@@ -147,30 +194,43 @@ export async function resolveOfficeAzInventoryAuthority(
     }
 
     const supabase = await createClient();
-    const { data, error } = await supabase.rpc(AUTHORITY_RPC, {
-      p_actor_id: parsed.actorId,
-      p_operator_id: parsed.operatorId,
-    });
-    if (error || !hasResolverShape(data)) return invalidRecord();
+    return await evaluateResolvedSnapshot(parsed, user.id, supabase);
+  } catch {
+    return invalidRecord();
+  }
+}
 
-    const requestedAtIso = new Date().toISOString();
-    return evaluateOfficeAzInventoryAuthority(
-      data.candidates,
-      {
-        authenticatedUserId: user.id,
-        actorId: parsed.actorId,
-        operatorId: parsed.operatorId,
-        owner: OFFICE_AZ_INVENTORY_OWNER,
-        capability: parsed.capability,
-        requiredLocationIds: parsed.requiredLocationIds,
-        expectedAuthorityVersion: parsed.expectedAuthorityVersion,
-        requestedAtIso,
-        ...(parsed.targetOperatorId === undefined
-          ? {}
-          : { targetOperatorId: parsed.targetOperatorId }),
-      },
-      data.knownLocationIds,
-    );
+/**
+ * Mobile Bearer principal only. Cookie getCurrentUser / cookie createClient
+ * are never consulted. The authority RPC runs on a client scoped to the same
+ * Bearer token that produced authenticatedUserId.
+ */
+export async function resolveOfficeAzInventoryAuthorityForBearerUser(
+  input: unknown,
+  authenticatedUserId: string,
+  authorizationHeader: string | null,
+): Promise<OfficeAzInventoryAuthorityEvaluation> {
+  const parsed = parseResolverRequest(input);
+  if (!parsed) return denied();
+  if (!isTrimmedNonEmptyId(authenticatedUserId)) {
+    return { tag: "denied", code: "UNAUTHENTICATED" };
+  }
+  const token = parseAuthorizationBearerHeader(authorizationHeader);
+  const supabase = createOfficeAzInventoryMobileBearerClient(authorizationHeader);
+  if (token === null || supabase === null) {
+    return { tag: "denied", code: "UNAUTHENTICATED" };
+  }
+
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+    const scopedUserId = data?.user?.id;
+    if (error || typeof scopedUserId !== "string" || scopedUserId.trim().length === 0) {
+      return { tag: "denied", code: "UNAUTHENTICATED" };
+    }
+    if (scopedUserId !== authenticatedUserId) {
+      return { tag: "denied", code: "AUTHENTICATED_USER_MISMATCH" };
+    }
+    return await evaluateResolvedSnapshot(parsed, authenticatedUserId, supabase);
   } catch {
     return invalidRecord();
   }
