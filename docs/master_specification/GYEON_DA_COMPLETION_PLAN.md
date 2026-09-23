@@ -2307,3 +2307,116 @@ gates:
   verification_commit_push_preview_merge_deploy: EACH_SEPARATE
 next: "COMMIT_AND_NORMAL_PUSH_EXACT_THREE_GOVERNANCE_PATHS_CREATE_ONE_DRAFT_PR_POST_ONE_CLAUDE_READ_ONLY_DIAGNOSIS_INSTRUCTION_AND_STOP."
 ```
+
+## 22. INV001-P27-G0 — Android connection prerequisites governance
+
+**Status:** LOCAL GOVERNANCE CANDIDATE / UNSTAGED / UNCOMMITTED / OWNER DECISIONS RATIFIED / NO IMPLEMENTATION AUTHORIZED.
+
+**Objective:** Convert the accepted P27 read-only diagnosis and the eight Owner-ratified decisions into Git governance for the Book-hosted managed-device session (P27-D-06), the runtime-injected inventory API endpoint contract (P27-D-07), and the separate device registration and device/operator revocation contracts (P27-D-10), while reconciling D4 Gate B and the D4A authority migration on current `main`.
+
+**Mission and ownership preserved:** GYEON DA completion remains the MacBook priority and the precedence in section 0 is unchanged. P27 is Book integration/auth work; it does not transfer Foundation inventory-rule ownership from Studio to MacBook, and Studio does not implement Book auth/session code. Office AZ remains the only live inventory owner.
+
+**Fixed Book authority:** detached `main` HEAD `54c32343b4ef57e4e4b703b23540153e529473dd`, tree `633a2fc4ab68c06ebb3002a8e2e481b8df4ce76b`. Accepted diagnosis instruction: Foundation Issue #39 comment `5790917545`; accepted diagnosis result: Foundation Issue #39 comment `5791009334` (`INV001_P27_BOOK_ANDROID_CONNECTION_PREREQUISITES_READ_ONLY_DIAGNOSIS_RESULT_V1`, `READY_FOR_OWNER_DECISIONS`, accepted by Book Codex).
+
+**Governing directive:** `docs/master_specification/CLAUDE_DIRECTIVE_INV001_P27_G0_ANDROID_CONNECTION_PREREQUISITES_GOVERNANCE.md` (marker `INV001_P27_G0_ANDROID_CONNECTION_PREREQUISITES_GOVERNANCE_V1`).
+
+**D4 Gate B reconciliation:** PR #117 was merged normally to `main`: repair head `5465938e519c5849f0530c32030fd2b1bb48dc5b`, merge commit `54c32343b4ef57e4e4b703b23540153e529473dd`, merge tree `633a2fc4ab68c06ebb3002a8e2e481b8df4ce76b`. Build/Turbopack, 132/132 focused tests, path-limited TypeScript, `git diff --check`, replacement Vercel deployment, and fresh independent review all PASS (PR #117 comment `5790801935`). Issue #39 comments `5790862241` and `5790921677` are historical records of an earlier interpretation that the commit/push/PR update and later Ready/merge exceeded the then-literal stop rule; the Owner subsequently and separately authorized the local commit, normal non-force push, one-time CI confirmation, fresh independent review, Ready conversion, and normal merge, each as its own gate, and this section records them as that sequence of separate Owner-authorized gates. No rollback, history rewrite, or additional Git work is authorized or required. D4 technical status is `COMPLETE_ON_GYEON_MAIN`; it supplies the browser SSR-cookie authenticated Foundation boundary only.
+
+**D4A migration reconciliation:** `supabase/migrations/20260920093931_office_az_operator_authority.sql` (blob `4297e9f3af0a4add51fe7bc63fe5ed020a9fa27d`) is present on `main`, added in `f4078fa03e178e302bf7ad57a32995007551128a` through PR #104 (merge `4a9d68567430fc7d01b262269577f98f9a8e3786`); the D4A B2 disposable-database CI workflow `.github/workflows/inv001-d4a-b2-disposable-db.yml` landed through PR #112 (merge `882faa7d2d92471be09b268965e467b406421b04`). Repository evidence proves migration source presence, the fail-closed empty-authority design stated in the migration header, and a `pull_request`-only disposable CI validation path. It does not prove hosted/staging/production application, any seeded or live assignment, location, capability grant, RLS-effective authority, Auth user provisioning, or production authority. Live authority remains `NOT_CONFIGURED`.
+
+**Owner-ratified decisions:**
+
+1. P27 Book auth/session work is the next prerequisite track; it is Book integration/auth work and does not transfer Foundation inventory-rule ownership from Studio to MacBook.
+2. Initial device policy: company-owned/managed devices only; one active device per operator.
+3. Session policy: access token TTL 15 minutes; refresh idle expiry 7 days; absolute session lifetime 30 days; high-risk actions require re-authentication within 5 minutes.
+4. Device registration and revocation authority: Inventory Super Admin only.
+5. Identity/activation: verified Supabase Auth user login plus one-time admin-issued managed-device activation.
+6. Endpoint key: `DEALEROS_INVENTORY_API_BASE_URL`; non-secret; injected per Android build/runtime environment; production value must not be hard-coded or committed.
+7. Record the completed D4 Gate B PR #117 and existing D4A authority migration acceptance before P27 implementation governance depends on them.
+8. Concurrent refresh/reuse: a consumed refresh token replay revokes the entire token family.
+
+**Current evidence:** browser SSR-cookie D4 path PRESENT; per-request operator status/authority-version validation PARTIAL; managed-device session issue/refresh, `DEALEROS_INVENTORY_API_BASE_URL` contract, device registration, per-device/operator-wide revoke, and immediate device-session invalidation NOT_EVIDENCED.
+
+**Accepted architecture:** Book-owned exchange boundary; opaque access/refresh tokens stored hash-only; single-use refresh rotation with whole-family reuse revocation; current device/operator/authority-version/capability/location check on every request before the D4 Foundation boundary; separate super-admin-only registration and revocation web surfaces that device sessions cannot call; Android runtime-injected endpoint origin; cookie/same-origin rules for web and bearer/device-bound rules with CORS deny-by-default for devices.
+
+**Separated future gates:** C1 pure contracts; C2 database source; C3 request handlers; C4 local verification; C5 disposable PG17/Auth/PostgREST/race verification; local commit; push/Draft PR; independent review; Ready; merge; environment configuration/migration apply; Android source; production rollout. Each is a separate Owner gate. The directive retains implementation paths only as PROPOSED ONLY / NOT AUTHORIZED / REQUIRES A FRESH LITERAL GATE, attributed solely to non-authoritative planning input (Studio Issue #39 comment `5790921677`, which is not an accepted diagnosis allowlist and used a stale, superseded endpoint-key name); no implementation path is authorized, and each future gate must independently re-diagnose and fix its exact literal allowlist.
+
+**Current boundary:** Exactly the new directive, this completion-plan section, and one append-only phase-results entry. No source, test, migration, package, lockfile, config, environment, Android, provider, endpoint, DB, Supabase/Auth session, browser, build, typecheck, runtime test, commit, push, PR/comment mutation, Ready, merge, deployment, or production action is authorized.
+
+```yaml
+phase: INV001_P27_G0_ANDROID_CONNECTION_PREREQUISITES_GOVERNANCE
+marker: INV001_P27_G0_ANDROID_CONNECTION_PREREQUISITES_GOVERNANCE_V1
+date: 2026-09-23
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_IMPLEMENTATION_NOT_AUTHORIZED
+owner_authorization: "The Owner ratified the eight P27 decisions and authorized exactly this three-document governance candidate. Implementation, verification, commit, push, PR, Ready, merge, environment, Android, and production remain separate gates."
+repository: nisikawa-officeAZ/GYEON
+fixed_base:
+  commit: 54c32343b4ef57e4e4b703b23540153e529473dd
+  tree: 633a2fc4ab68c06ebb3002a8e2e481b8df4ce76b
+diagnosis:
+  instruction: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5790917545
+  result: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5791009334
+  marker: INV001_P27_BOOK_ANDROID_CONNECTION_PREREQUISITES_READ_ONLY_DIAGNOSIS_RESULT_V1
+  verdict: READY_FOR_OWNER_DECISIONS_ACCEPTED_BY_BOOK_CODEX
+governance_allowlist:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P27_G0_ANDROID_CONNECTION_PREREQUISITES_GOVERNANCE.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+d4_gate_b:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/117
+  state: MERGED_NORMALLY_TO_MAIN
+  repair_head: 5465938e519c5849f0530c32030fd2b1bb48dc5b
+  merge_commit: 54c32343b4ef57e4e4b703b23540153e529473dd
+  merge_tree: 633a2fc4ab68c06ebb3002a8e2e481b8df4ce76b
+  verification: BUILD_TURBOPACK_PASS_FOCUSED_TESTS_132_OF_132_PATH_LIMITED_TYPESCRIPT_PASS_DIFF_CHECK_PASS_REPLACEMENT_VERCEL_SUCCESS_FRESH_INDEPENDENT_REVIEW_PASS
+  owner_authorized_gate_sequence: LOCAL_COMMIT_THEN_NORMAL_NON_FORCE_PUSH_THEN_ONE_TIME_CI_CONFIRMATION_THEN_FRESH_INDEPENDENT_REVIEW_THEN_READY_CONVERSION_THEN_NORMAL_MERGE_EACH_SEPARATELY_OWNER_AUTHORIZED
+  historical_interpretation_comments: ISSUE_39_5790862241_AND_5790921677_SUPERSEDED_BY_SUBSEQUENT_SEPARATE_OWNER_AUTHORIZATION
+  additional_git_work: NONE_NO_ROLLBACK_REWRITE_OR_REWORK_AUTHORIZED_OR_REQUIRED
+d4a_migration:
+  path: supabase/migrations/20260920093931_office_az_operator_authority.sql
+  blob: 4297e9f3af0a4add51fe7bc63fe5ed020a9fa27d
+  landed_via: PR_104_MERGE_4a9d68567430fc7d01b262269577f98f9a8e3786
+  disposable_ci_workflow: .github/workflows/inv001-d4a-b2-disposable-db.yml
+  disposable_ci_landed_via: PR_112_MERGE_882faa7d2d92471be09b268965e467b406421b04
+  proven: SOURCE_PRESENT_ON_MAIN_FAIL_CLOSED_EMPTY_AUTHORITY_DESIGN_PULL_REQUEST_DISPOSABLE_CI_PATH
+  not_proven: HOSTED_OR_PRODUCTION_APPLY_SEEDED_GRANT_LIVE_ASSIGNMENT_AUTH_USER_PROVISIONING_PRODUCTION_AUTHORITY
+  live_authority: NOT_CONFIGURED
+decisions:
+  track: P27_BOOK_AUTH_SESSION_NEXT_PREREQUISITE_NO_FOUNDATION_OWNERSHIP_TRANSFER
+  device_policy: COMPANY_MANAGED_DEVICES_ONLY_ONE_ACTIVE_DEVICE_PER_OPERATOR
+  access_token_ttl_minutes: 15
+  refresh_idle_expiry_days: 7
+  absolute_session_lifetime_days: 30
+  high_risk_reauthentication_window_minutes: 5
+  registration_and_revocation_authority: INVENTORY_SUPER_ADMIN_ONLY
+  identity_activation: SUPABASE_AUTH_USER_LOGIN_PLUS_ONE_TIME_ADMIN_ISSUED_MANAGED_DEVICE_ACTIVATION
+  endpoint_key: DEALEROS_INVENTORY_API_BASE_URL
+  endpoint_key_policy: NON_SECRET_ANDROID_BUILD_RUNTIME_INJECTED_PRODUCTION_NEVER_HARD_CODED_OR_COMMITTED
+  d4_d4a_reconciliation_before_implementation_governance: RECORDED
+  refresh_reuse: CONSUMED_REFRESH_TOKEN_REPLAY_REVOKES_ENTIRE_TOKEN_FAMILY
+future_gates:
+  - C1_PURE_CONTRACTS
+  - C2_DATABASE_SOURCE
+  - C3_REQUEST_HANDLERS
+  - C4_LOCAL_VERIFICATION
+  - C5_DISPOSABLE_PG17_AUTH_POSTGREST_RACE_VERIFICATION
+  - LOCAL_COMMIT
+  - PUSH_DRAFT_PR
+  - INDEPENDENT_REVIEW
+  - READY
+  - MERGE
+  - ENVIRONMENT_CONFIGURATION_MIGRATION_APPLY
+  - ANDROID_SOURCE
+  - PRODUCTION_ROLLOUT
+implementation_allowlists: PROPOSED_ONLY_NOT_AUTHORIZED_REQUIRES_A_FRESH_LITERAL_GATE
+implementation_allowlists_source: STUDIO_ISSUE_39_COMMENT_5790921677_NON_AUTHORITATIVE_PLANNING_INPUT_ONLY_NOT_AN_ACCEPTED_DIAGNOSIS_ALLOWLIST_STALE_KEY_SUPERSEDED_BY_DEALEROS_INVENTORY_API_BASE_URL
+implementation_allowlists_rule: EACH_FUTURE_GATE_INDEPENDENTLY_REDIAGNOSES_AND_FIXES_ITS_EXACT_LITERAL_ALLOWLIST
+not_authorized:
+  - source_test_migration_package_lockfile_config_or_environment_change
+  - db_supabase_auth_session_endpoint_configuration_or_provider_action
+  - android_source
+  - build_typecheck_or_runtime_test
+  - commit_push_pr_or_comment_mutation
+  - ready_merge_deploy_or_production_action
+next: "BOOK_CODEX_INDEPENDENT_READ_ONLY_GOVERNANCE_REVIEW_THEN_SEPARATE_OWNER_GATE_FOR_LITERAL_THREE_PATH_STAGE_AND_LOCAL_COMMIT."
+```
