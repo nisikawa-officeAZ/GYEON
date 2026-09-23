@@ -223,7 +223,10 @@ test("service authority is explicitly not configured", async () => {
 
 test("unauthenticated, RPC error, throw and malformed payload fail closed", async () => {
   currentUser = null;
-  assert.deepEqual(await resolveAuthority(request()), { tag: "denied", code: "INVALID_REQUEST" });
+  assert.deepEqual(await resolveAuthority(request()), { tag: "denied", code: "UNAUTHENTICATED" });
+  assert.equal(authCalls, 1);
+  assert.equal(clientCalls, 0);
+  assert.equal(rpcCalls.length, 0);
   currentUser = { id: USER_ID };
   rpcError = { message: "secret" };
   assert.deepEqual(await resolveAuthority(request()), { tag: "denied", code: "INVALID_AUTHORITY_RECORD" });

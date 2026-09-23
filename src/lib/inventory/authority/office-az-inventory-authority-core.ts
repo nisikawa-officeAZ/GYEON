@@ -16,7 +16,7 @@ import {
   type OfficeAzInventoryAuthorityRequest,
   type OfficeAzInventoryAuthorityRole,
   type OfficeAzInventoryCapability,
-} from "./office-az-inventory-authority-types.js";
+} from "./office-az-inventory-authority-types";
 
 const WAREHOUSE_OPERATOR_CAPABILITIES = [
   "inventory.quantity.read",

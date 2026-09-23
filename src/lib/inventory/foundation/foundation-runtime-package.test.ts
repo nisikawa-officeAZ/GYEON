@@ -21,7 +21,7 @@ import {
   FOUNDATION_RUNTIME_COMMANDS,
   FOUNDATION_SNAPSHOT_EXPORT_CONTRACT,
   FOUNDATION_SNAPSHOT_IMPORT_CONTRACTS,
-} from "./foundation-adaptor-types.js";
+} from "./foundation-adaptor-types";
 
 const WRAPPER =
   "src/lib/inventory/foundation/foundation-runtime-package.ts";
@@ -57,7 +57,7 @@ registerHooks({
   },
 });
 
-const packageModulePromise = import("./foundation-runtime-package.js");
+const packageModulePromise = import("./foundation-runtime-package");
 
 function occurrences(source: string, pattern: RegExp): number {
   return source.match(pattern)?.length ?? 0;
@@ -139,10 +139,10 @@ test("the wrapper is server-only and imports only the package and D1 types", () 
       "server-only",
       "node:util",
       "@nisikawa-officeaz/detaileros-inventory-foundation",
-      "./foundation-adaptor-types.js",
+      "./foundation-adaptor-types",
     ].sort(),
   );
-  assert.match(raw, /import type \{[\s\S]*FoundationPort[\s\S]*\} from "\.\/foundation-adaptor-types\.js";/);
+  assert.match(raw, /import type \{[\s\S]*FoundationPort[\s\S]*\} from "\.\/foundation-adaptor-types";/);
 });
 
 test("the wrapper exposes only the injected-store dependency and D1 factory", () => {
