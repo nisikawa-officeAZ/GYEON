@@ -18,7 +18,7 @@ test("camera action buttons use one icon box and one button height", () => {
   const cameraStage = source.match(/\{\/\* ── Stage: camera[\s\S]*?\{\/\* ── Stage: compressing/)?.[0] ?? "";
 
   assert.equal((cameraStage.match(/h-12 min-w-0/g) ?? []).length, 3);
-  assert.equal((cameraStage.match(/<OcrActionIcon kind=/g) ?? []).length, 3);
+  assert.equal((cameraStage.match(/inline-flex size-6 items-center justify-center/g) ?? []).length, 3);
   for (const label of ["撮影する", "写真から選択", "キャンセル"]) {
     assert.match(cameraStage, new RegExp(label));
   }
@@ -26,8 +26,7 @@ test("camera action buttons use one icon box and one button height", () => {
 
 test("photo and camera source icons use the same visual size", () => {
   const choiceStage = source.match(/\{\/\* ── Stage: choice[\s\S]*?\{\/\* ── Stage: camera/)?.[0] ?? "";
-  assert.match(source, /className="size-6 shrink-0"/);
-  assert.match(choiceStage, /<OcrActionIcon kind="folder" \/>/);
-  assert.match(choiceStage, /<OcrActionIcon kind="camera" \/>/);
-  assert.doesNotMatch(choiceStage, /📂|📷|📸/);
+  assert.match(choiceStage, /size-6 items-center justify-center text-base leading-none">📂/);
+  assert.match(choiceStage, /size-6 items-center justify-center text-xl leading-none">📷/);
+  assert.doesNotMatch(choiceStage, /<svg/);
 });
