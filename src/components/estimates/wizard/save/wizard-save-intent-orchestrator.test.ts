@@ -65,7 +65,7 @@ function runtimeConfig(
         car_wash: over.carWashOffered ?? false,
       },
       maintenanceMenus: [], washMenus: [], roomMenus: [], filmTypes: [], windowAreas: [],
-      otherWorkPresets: [], storeGlobalOptions: [], coupons: [], ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
+      otherWorkPresets: [], storeGlobalOptions: [], coupons: [], ppfMethods: [], ppfParts: [], ppfTypeGroups: [], ppfPricingReady: false,
     },
     pricingConfig: {
       ppfMethods: [], filmTypes: [], maintenanceMenus: [], washMenus: [], roomCleaningMenus: [], storeGlobalOptions: [],

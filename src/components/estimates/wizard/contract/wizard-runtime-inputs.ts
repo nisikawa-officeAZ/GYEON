@@ -66,6 +66,14 @@ export interface WizardScreenConfiguration {
   ppfMethods:         InstallationMethodOption[];
   ppfParts:           PpfPartOption[];
   ppfTypeGroups:      PpfTypeGroup[];
+  /**
+   * True only when every PPF choice exposed above has an authoritative R1
+   * price and installation coefficient.  This is server-derived runtime
+   * readiness, not operator-editable draft state.  Keeping it required makes
+   * a missing wiring path fail closed instead of presenting an unsaveable PPF
+   * estimate.
+   */
+  ppfPricingReady:    boolean;
 }
 
 /**

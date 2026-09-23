@@ -26,6 +26,7 @@ import type {
   WizardExistingVehicleReference,
 } from "../contract/wizard-runtime-inputs";
 import { EMPTY_WIZARD_PRICING_RESULT } from "../pricing/wizard-pricing-types";
+import type { WizardSaveBinding } from "../save/WizardSavePanel";
 
 const CUSTOMERS: readonly WizardExistingCustomerReference[] = [
   { id: "c1", displayName: "山田 太郎 様", phone: "09011112222" },
@@ -254,5 +255,29 @@ describe("Step7Review — display resolution never mutates its inputs", () => {
 
     assert.equal(rowValue(html, "顧客"), "山田 太郎 様");
     assert.equal(JSON.stringify({ store, customers, vehicles }), before);
+  });
+});
+
+describe("Step7Review — fail closed before save when pricing is incomplete", () => {
+  const saveBinding = {
+    session: { status: "ready" },
+  } as unknown as WizardSaveBinding;
+
+  it("shows the pricing reason and does not mount the save panel", () => {
+    const pricing = {
+      ...EMPTY_WIZARD_PRICING_RESULT,
+      completeness: "partial" as const,
+      unresolvedItems: [{
+        category: "ppf", sourceId: "ppf", code: "PPF_R1_SETTINGS_REQUIRED",
+        message: "PPF価格設定が必要です。",
+      }],
+    };
+    const html = renderToStaticMarkup(
+      <Step7Review api={apiFor(storeWith())} customers={CUSTOMERS} vehicles={VEHICLES}
+        pricing={pricing} saveBinding={saveBinding} />,
+    );
+    assert.ok(html.includes("wizard-pricing-incomplete"));
+    assert.ok(html.includes("PPF価格設定が必要です。"));
+    assert.equal(html.includes("wizard-save-panel"), false);
   });
 });

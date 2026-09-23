@@ -186,7 +186,7 @@ const SCREEN_CONFIG: WizardScreenConfiguration = {
   serviceOfferings: { window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
   filmTypes: [], windowAreas: [], maintenanceMenus: [], washMenus: [], roomMenus: [],
   otherWorkPresets: [], storeGlobalOptions: [], coupons: [],
-  ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
+  ppfMethods: [], ppfParts: [], ppfTypeGroups: [], ppfPricingReady: false,
 };
 
 test("13. WizardScreenConfiguration + WizardRuntimeInputs expose the expected fields", () => {
@@ -194,7 +194,7 @@ test("13. WizardScreenConfiguration + WizardRuntimeInputs expose the expected fi
   assert.equal(inputs.shopRank, "detailer");
   // B2-E2G: 11 → 12. `serviceOfferings` joins the contract as a REQUIRED field, so a caller that
   // cannot state the dealer's offerings cannot mount the host — the rule every other field obeys.
-  assert.equal(Object.keys(inputs.screenConfig).length, 12);
+  assert.equal(Object.keys(inputs.screenConfig).length, 13);
   assert.deepEqual(
     Object.keys(inputs.screenConfig.serviceOfferings).sort(),
     ["car_wash", "maintenance", "ppf", "room_cleaning", "window_film"],

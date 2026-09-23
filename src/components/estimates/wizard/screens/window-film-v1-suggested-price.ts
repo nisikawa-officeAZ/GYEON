@@ -1,5 +1,6 @@
 import type { WizardScreenConfiguration } from "../contract/wizard-runtime-inputs";
 import type { WizardWindowFilmDraft } from "../draft/wizard-draft-types";
+import type { WindowFilmAreaCode } from "@/lib/pricing/window-film-v1-contract";
 import { resolveWindowFilmV1Price } from "@/lib/pricing/window-film-v1-price-resolution";
 
 export function isWindowFilmV1RuntimeReady(
@@ -13,13 +14,21 @@ export function isWindowFilmV1RuntimeReady(
     && film.installationCoefficientBp! >= 1_000
     && film.installationCoefficientBp! <= 50_000,
   );
-  const hasActiveArea = Object.values(settings.areas).some((area) =>
-    area.isActive && area.priceYen !== null && area.durationMinutes !== null,
+  const hasSelectableArea = screenConfig.windowAreas.some((area) => {
+    const configured = settings.areas[area.id as WindowFilmAreaCode];
+    return !area.disabled
+      && configured?.isActive === true
+      && configured.priceYen !== null
+      && configured.durationMinutes !== null;
+  });
+  const hasSelectablePackage = (screenConfig.windowFilmPackages ?? []).some((item) =>
+    settings.packages.some((configured) =>
+      configured.code === item.id
+      && configured.isActive
+      && configured.priceYen !== null
+      && configured.durationMinutes !== null),
   );
-  const hasActivePackage = settings.packages.some((item) =>
-    item.isActive && item.priceYen !== null && item.durationMinutes !== null,
-  );
-  return hasValidFilm && (hasActiveArea || hasActivePackage);
+  return hasValidFilm && (hasSelectableArea || hasSelectablePackage);
 }
 
 /**
