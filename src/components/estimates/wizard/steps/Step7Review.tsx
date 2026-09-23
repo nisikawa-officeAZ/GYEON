@@ -48,6 +48,7 @@ export function Step7Review({
 }) {
   const s = api.store;
   const orderedLines = orderedWizardPricingLines(pricing.lines, api.draft.review.serviceLineOrder);
+  const pricingReadyToSave = pricing.completeness === "complete";
 
   const moveLine = (index: number, delta: -1 | 1) => {
     const target = index + delta;
@@ -83,8 +84,8 @@ export function Step7Review({
         </dl>
       </Card>
       <Card>
-        <SectionTitle>明細の表示順</SectionTitle>
-        <p className="mb-3 text-xs text-slate-500">保存後の見積詳細とPDFに反映されます。</p>
+        <SectionTitle>明細の詳細</SectionTitle>
+        <p className="mb-3 text-xs text-slate-500">数量・単価・表示順は、保存後の見積詳細とPDFに反映されます。</p>
         {orderedLines.length === 0 ? (
           <p className="text-xs text-slate-500">明細がありません。</p>
         ) : (
@@ -92,15 +93,52 @@ export function Step7Review({
             {orderedLines.map((line, index) => (
               <li
                 key={wizardPricingLineId(line)}
-                className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-slate-700/60 bg-[#0b1220] p-3"
+                className="grid min-w-0 grid-cols-1 items-end gap-3 rounded-lg border border-slate-700/60 bg-[#0b1220] p-3 md:grid-cols-[minmax(0,1fr)_6rem_8rem_auto]"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-100">{line.label}</p>
-                  <p className="truncate text-[11px] text-slate-500">
-                    {pricingCategoryLabel(line.category)}・数量 {line.quantity}
-                    {line.lineTotal !== null ? `・¥${line.lineTotal.toLocaleString("ja-JP")}` : ""}
-                  </p>
+                  <p className="truncate text-[11px] text-slate-500">{pricingCategoryLabel(line.category)}</p>
                 </div>
+                <label className="grid gap-1 text-[11px] text-slate-400">
+                  <span>数量</span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputMode="numeric"
+                    aria-label={`${line.label}の数量`}
+                    value={api.draft.review.quantityInputsByLine[wizardPricingLineId(line)] ?? String(line.quantity)}
+                    onChange={(event) => api.setServiceLineAdjustment(
+                      wizardPricingLineId(line),
+                      event.target.value,
+                      api.draft.review.unitPriceInputsByLine[wizardPricingLineId(line)] ?? String(line.unitPrice ?? ""),
+                    )}
+                    className="h-10 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 text-right text-sm text-slate-100"
+                  />
+                </label>
+                <label className="grid gap-1 text-[11px] text-slate-400">
+                  <span>金額（単価）</span>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-500">¥</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      aria-label={`${line.label}の金額（単価）`}
+                      aria-invalid={line.unitPrice === null}
+                      placeholder={line.unitPrice === null ? "金額を入力" : undefined}
+                      value={api.draft.review.unitPriceInputsByLine[wizardPricingLineId(line)] ?? String(line.unitPrice ?? "")}
+                      onChange={(event) => api.setServiceLineAdjustment(
+                        wizardPricingLineId(line),
+                        api.draft.review.quantityInputsByLine[wizardPricingLineId(line)] ?? String(line.quantity),
+                        event.target.value,
+                      )}
+                      className="h-10 w-full rounded-lg border border-slate-600 bg-slate-950 pl-7 pr-3 text-right text-sm text-slate-100"
+                    />
+                  </div>
+                  {line.unitPrice === null && <span className="text-amber-400">金額を入力すると保存できます</span>}
+                </label>
                 <div className="grid shrink-0 grid-cols-2 gap-1" aria-label={`${line.label}の表示順`}>
                   <button
                     type="button"
@@ -127,7 +165,19 @@ export function Step7Review({
         )}
       </Card>
       {saveBinding
-        ? <WizardSavePanel draft={api.draft} binding={saveBinding} />
+        ? pricingReadyToSave
+          ? <WizardSavePanel draft={api.draft} binding={saveBinding} />
+          : (
+            <Card>
+              <div role="alert" data-testid="wizard-pricing-incomplete">
+                <p className="text-sm font-medium text-rose-300">価格が未確定の項目があるため保存できません。</p>
+                <p className="mt-1 text-xs text-slate-400">前の画面に戻り、未設定の項目または店舗設定をご確認ください。</p>
+                {[...pricing.unresolvedItems.map((item) => item.message), ...pricing.errors.map((error) => error.message)]
+                  .filter((message, index, messages) => message.length > 0 && messages.indexOf(message) === index)
+                  .map((message) => <p key={message} className="mt-1 text-xs text-amber-300">{message}</p>)}
+              </div>
+            </Card>
+          )
         : <PhaseTwoNotice screen="保存 / PDF / LINE(送信・文章コピー) / 予約カレンダー / 請求書・納品書・納品請求書" />}
     </>
   );

@@ -18,6 +18,7 @@ import type { ShopRank } from "@/components/estimates/wizard/screens/step-types"
 import type { WizardScreenConfiguration } from "@/components/estimates/wizard/contract/wizard-runtime-inputs";
 import type { ConfiguredPricingConfiguration } from "@/components/estimates/wizard/pricing/wizard-pricing-input-adapter-config";
 import { isValidCouponCalendarDate, type ConfiguredCoupon } from "@/lib/pricing/configured-coupon-total";
+import { PPF_R1_BODY_SIZES } from "@/lib/pricing/ppf-r1-price-contract";
 import type { PpfCoatingAdjustmentRule } from "./ppf-coating-adjustment-core";
 import type {
   FilmTypeOption, WindowAreaOption, MaintenanceMenu, WashMenu, RoomMenu,
@@ -499,6 +500,26 @@ function buildConfigs(
     installCoefficientBpByCode[r.code] = bp;
   }
 
+  // PPF is selectable only when EVERY choice shown to the operator can be
+  // priced.  Merely having method/part/product catalog rows is insufficient:
+  // the save boundary correctly rejects a selected PPF line when the dealer's
+  // R1 table or a product coefficient is absent.  Derive one fail-closed
+  // readiness bit from the same authoritative catalog used by pricing so the
+  // UI cannot advertise a path that is guaranteed to fail at save time.
+  const ppfPriceSettings = catalog.ppfR1;
+  const ppfProducts = ppfTypeGroups.flatMap((group) => group.products);
+  const ppfPricingReady = ppfPriceSettings !== null
+    && PPF_R1_BODY_SIZES.every((size) =>
+      ppfPriceSettings.frontFullPricesBySize[size] !== null
+      && ppfPriceSettings.fullBodyPricesBySize[size] !== null)
+    && ppfParts.every((part) => ppfPriceSettings.partialPartPrices[part.id] !== null
+      && ppfPriceSettings.partialPartPrices[part.id] !== undefined)
+    && ppfProducts.length > 0
+    && ppfProducts.every((product) => {
+      const bp = installCoefficientBpByCode[product.id];
+      return Number.isInteger(bp) && bp > 0;
+    });
+
   const ppfCoatingAdjustments: PpfCoatingAdjustmentRule[] = adjustmentRows.map((r) => ({
     ruleId: r.id,
     ppfMethodCode: r.ppf_method_code,
@@ -559,6 +580,7 @@ function buildConfigs(
     ppfMethods,
     ppfParts,
     ppfTypeGroups,
+    ppfPricingReady,
   };
 
   const label = (r: WizardCatalogRow) => ({ code: r.code, label: r.label_ja ?? "" });

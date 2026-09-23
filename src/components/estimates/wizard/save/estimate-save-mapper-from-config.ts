@@ -22,6 +22,10 @@ import type { WizardPricingResult } from "../pricing/wizard-pricing-types";
 import type { ProductionPricingConfiguration } from "../pricing/wizard-manual-pricing-config";
 import { buildWizardPricingInputFromConfig } from "../pricing/wizard-pricing-input-adapter-config";
 import { orderByLineIds } from "../pricing/wizard-line-order";
+import {
+  resolvedCouponApplicationsForSubtotal,
+  resolvedPpfCoatingReductionForLines,
+} from "../pricing/wizard-review-line-adjustments";
 import type {
   EstimateSaveRequest, EstimateSaveCustomer, EstimateSaveVehicle, EstimateSaveServiceLine,
   EstimateSaveDiscount, EstimateSaveCoupon, EstimateSavePricing,
@@ -184,6 +188,7 @@ function mapInner(input: ConfigSaveMapperInput): ConfigSaveMapperResult {
   const services: EstimateSaveServiceLine[] = [];
   const lineIds = new Set<string>();
   const resultCatalog = new Map<string, number>();
+  const adjustedPpfCoatingReduction = resolvedPpfCoatingReductionForLines(pr.lines, bundle);
 
   for (const line of pr.lines) {
     if (line.kind === "catalog") {
@@ -218,6 +223,10 @@ function mapInner(input: ConfigSaveMapperInput): ConfigSaveMapperResult {
       const lineId = `manual:${line.category}:${m.manualPricingIdentity}`;
       if (lineIds.has(lineId)) return fail("duplicate-line-identity", "重複する明細識別子があります。");
       lineIds.add(lineId);
+      const adjustment = bundle.ppfAdjustmentsByIdentity[m.manualPricingIdentity];
+      const metadata = adjustment === undefined
+        ? m.metadata
+        : { ...m.metadata, ppfCoatingAdjustmentReductionYen: adjustedPpfCoatingReduction };
       services.push({
         lineId,
         category: line.category,
@@ -230,7 +239,7 @@ function mapInner(input: ConfigSaveMapperInput): ConfigSaveMapperResult {
         unitPrice: line.unitPrice as number,
         subtotal: line.lineTotal as number,
         selectedOptionReferenceIds: m.optionIdentity ? [m.optionIdentity] : [],
-        metadata: m.metadata,
+        metadata,
       });
     }
   }
@@ -322,14 +331,18 @@ function mapInner(input: ConfigSaveMapperInput): ConfigSaveMapperResult {
     },
     appliedAmount: pr.discountTotal, // engine-applied — copied, never recalculated
   };
+  const resolvedCouponApplications = resolvedCouponApplicationsForSubtotal(
+    bundle.couponApplications,
+    pr.subtotal as number,
+  );
   const coupon: EstimateSaveCoupon = {
     // Every selected coupon, in the authoritative resolved order — not just the first.
-    selectedCouponIds: bundle.couponApplications.map((a) => a.couponId),
-    status: bundle.couponApplications.length > 0 ? "applied" : "none",
+    selectedCouponIds: resolvedCouponApplications.map((a) => a.couponId),
+    status: resolvedCouponApplications.length > 0 ? "applied" : "none",
     appliedAmount: pr.couponTotal, // engine-applied — copied, never recalculated
     // B1.1-B2 — the per-coupon SNAPSHOT. Label, type, authored value and applied yen are frozen
     // here so a later coupon edit or archive cannot change how this estimate is explained.
-    applications: bundle.couponApplications.map((a) => ({
+    applications: resolvedCouponApplications.map((a) => ({
       couponId: a.couponId,
       code: a.code,
       label: a.label,

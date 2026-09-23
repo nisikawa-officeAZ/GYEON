@@ -26,6 +26,7 @@ import type {
   WizardExistingVehicleReference,
 } from "../contract/wizard-runtime-inputs";
 import { EMPTY_WIZARD_PRICING_RESULT } from "../pricing/wizard-pricing-types";
+import type { WizardSaveBinding } from "../save/WizardSavePanel";
 
 const CUSTOMERS: readonly WizardExistingCustomerReference[] = [
   { id: "c1", displayName: "山田 太郎 様", phone: "09011112222" },
@@ -59,8 +60,9 @@ function storeWith(overrides: Partial<Step7Store> = {}): Step7Store {
 function apiFor(store: Step7Store): EstimateWizardApi {
   return {
     store,
-    draft: { review: { serviceLineOrder: [] } },
+    draft: { review: { serviceLineOrder: [], quantityInputsByLine: {}, unitPriceInputsByLine: {} } },
     setServiceLineOrder: () => undefined,
+    setServiceLineAdjustment: () => undefined,
   } as unknown as EstimateWizardApi;
 }
 
@@ -222,16 +224,54 @@ describe("Step7Review — canonical line-order controls stay inside the responsi
     };
     const api = {
       ...apiFor(storeWith()),
-      draft: { review: { serviceLineOrder: ["manual:maintenance:mm1", "catalog:coating:base:pure-evo"] } },
+      draft: {
+        review: {
+          serviceLineOrder: ["manual:maintenance:mm1", "catalog:coating:base:pure-evo"],
+          quantityInputsByLine: {},
+          unitPriceInputsByLine: {},
+        },
+      },
     } as unknown as EstimateWizardApi;
     const html = renderToStaticMarkup(
       <Step7Review api={api} customers={CUSTOMERS} vehicles={VEHICLES} pricing={pricing} />,
     );
     assert.ok(html.indexOf("メンテナンス") < html.indexOf("PURE EVO"), "saved order is rendered");
-    assert.match(html, /grid-cols-\[minmax\(0,1fr\)_auto\]/);
+    assert.match(html, /明細の詳細/);
+    assert.match(html, /md:grid-cols-\[minmax\(0,1fr\)_6rem_8rem_auto\]/);
+    assert.match(html, /aria-label="メンテナンスの数量"/);
+    assert.match(html, /aria-label="PURE EVOの金額（単価）"/);
     assert.match(html, /aria-label="メンテナンスを上へ"/);
     assert.match(html, /aria-label="PURE EVOを下へ"/);
     assert.doesNotMatch(html, /<table/);
+  });
+
+  it("renders an unresolved editable PPF line with a required-price prompt", () => {
+    const pricing = {
+      ...EMPTY_WIZARD_PRICING_RESULT,
+      status: "success" as const,
+      completeness: "partial" as const,
+      lines: [{
+        kind: "manual" as const,
+        category: "ppf",
+        sourceId: "ppf:ppf_review_full_front_full_film-x",
+        label: "PPF フロントフル（PPF X）",
+        quantity: 1,
+        unitPrice: null,
+        lineSubtotal: null,
+        discountAmount: null,
+        taxAmount: null,
+        lineTotal: null,
+        pricingReferenceId: null,
+        catalogLineRole: null,
+      }],
+    };
+    const html = renderToStaticMarkup(
+      <Step7Review api={apiFor(storeWith())} customers={CUSTOMERS} vehicles={VEHICLES} pricing={pricing} />,
+    );
+
+    assert.match(html, /PPF フロントフル（PPF X）/);
+    assert.match(html, /金額を入力すると保存できます/);
+    assert.match(html, /aria-invalid="true"/);
   });
 });
 
@@ -254,5 +294,29 @@ describe("Step7Review — display resolution never mutates its inputs", () => {
 
     assert.equal(rowValue(html, "顧客"), "山田 太郎 様");
     assert.equal(JSON.stringify({ store, customers, vehicles }), before);
+  });
+});
+
+describe("Step7Review — fail closed before save when pricing is incomplete", () => {
+  const saveBinding = {
+    session: { status: "ready" },
+  } as unknown as WizardSaveBinding;
+
+  it("shows the pricing reason and does not mount the save panel", () => {
+    const pricing = {
+      ...EMPTY_WIZARD_PRICING_RESULT,
+      completeness: "partial" as const,
+      unresolvedItems: [{
+        category: "ppf", sourceId: "ppf", code: "PPF_R1_SETTINGS_REQUIRED",
+        message: "PPF価格設定が必要です。",
+      }],
+    };
+    const html = renderToStaticMarkup(
+      <Step7Review api={apiFor(storeWith())} customers={CUSTOMERS} vehicles={VEHICLES}
+        pricing={pricing} saveBinding={saveBinding} />,
+    );
+    assert.ok(html.includes("wizard-pricing-incomplete"));
+    assert.ok(html.includes("PPF価格設定が必要です。"));
+    assert.equal(html.includes("wizard-save-panel"), false);
   });
 });

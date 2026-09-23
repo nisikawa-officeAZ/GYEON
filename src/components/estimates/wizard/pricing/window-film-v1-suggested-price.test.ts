@@ -28,6 +28,7 @@ const settings: WindowFilmSettingsV1 = {
 test("suggested UI price uses the same V1 resolver inputs", () => {
   const screen = {
     filmTypes: [{ id: "film-a", label: "A", installationCoefficientBp: 12_500 }],
+    windowAreas: [{ id: "front-windshield", label: "フロント" }],
     windowFilmSettings: settings,
   } as WizardScreenConfiguration;
   const draft = resetWizardDraft().serviceConfiguration.windowFilm;
@@ -48,11 +49,13 @@ test("copies the suggestion into canonical input while preserving a manual overr
 test("runtime readiness requires V1, a valid active film, and a complete active scope", () => {
   const ready = {
     filmTypes: [{ id: "film-a", label: "A", installationCoefficientBp: 12_500 }],
+    windowAreas: [{ id: "front-windshield", label: "フロント" }],
     windowFilmSettings: settings,
   } as WizardScreenConfiguration;
   assert.equal(isWindowFilmV1RuntimeReady(ready), true);
   assert.equal(isWindowFilmV1RuntimeReady({ ...ready, windowFilmSettings: null }), false);
   assert.equal(isWindowFilmV1RuntimeReady({ ...ready, filmTypes: [] }), false);
+  assert.equal(isWindowFilmV1RuntimeReady({ ...ready, windowAreas: [] }), false);
   assert.equal(isWindowFilmV1RuntimeReady({
     ...ready,
     windowFilmSettings: {

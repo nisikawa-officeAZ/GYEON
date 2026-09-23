@@ -233,7 +233,7 @@ const SC: WizardScreenConfiguration = {
   // B2-E2G: every managed family opted OUT — this fixture configures none of them.
   serviceOfferings: { window_film: false, ppf: false, maintenance: false, room_cleaning: false, car_wash: false },
   filmTypes: [], windowAreas: [], maintenanceMenus: [], washMenus: [], roomMenus: [],
-  otherWorkPresets: [], storeGlobalOptions: [], coupons: [], ppfMethods: [], ppfParts: [], ppfTypeGroups: [],
+  otherWorkPresets: [], storeGlobalOptions: [], coupons: [], ppfMethods: [], ppfParts: [], ppfTypeGroups: [], ppfPricingReady: false,
 };
 const PC: ProductionPricingConfiguration = {
   ppfMethods: [], filmTypes: [], maintenanceMenus: [], washMenus: [], roomCleaningMenus: [], storeGlobalOptions: [],

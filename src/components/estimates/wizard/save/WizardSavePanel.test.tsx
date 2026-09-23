@@ -597,6 +597,8 @@ test("21. both ready controls exist, share one attempt, and appear ONLY when rea
   }));
   assert.ok(readyHtml.includes('data-testid="save-submit"'), "保存");
   assert.ok(readyHtml.includes('data-testid="save-submit-pdf"'), "保存してPDFを開く");
+  assert.ok(readyHtml.includes('data-testid="add-customer-product"'), "顧客向け商品を追加");
+  assert.match(readyHtml, /data-testid="add-customer-product"[^>]*disabled/);
   assert.match(readyHtml, /data-testid="save-submit"[^>]*class="[^"]*text-emerald-100/);
   assert.match(readyHtml, /data-testid="save-submit-pdf"[^>]*class="[^"]*text-sky-100/);
 

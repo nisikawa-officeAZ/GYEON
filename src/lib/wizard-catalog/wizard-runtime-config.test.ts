@@ -221,6 +221,34 @@ test("certified with a valid film type succeeds; PPF groups build parent→produ
   assert.equal(gloss?.products.find((p) => p.id === "prod-0")?.coefficientDisplay, "×1.25");
   assert.deepEqual(r.pricingConfig.ppfTypes?.find((p) => p.code === "prod-0"), { code: "prod-0", label: "prod-0" });
   assert.equal(r.pricingConfig.installCoefficientBpByCode?.["prod-0"], 12_500);
+  assert.equal(r.screenConfig.ppfPricingReady, false, "one coefficient and no R1 prices must fail closed");
+});
+
+test("PPF readiness becomes true only when every exposed choice has authoritative prices and coefficients", async () => {
+  const rows = [...globals(), ...menus()].map((item) =>
+    item.kind === "ppf_type_group" && item.ppf_type_group_id !== null
+      ? { ...item, install_coefficient_bp: 10_000 }
+      : item);
+  const sizes = { SS: 100_000, S: 110_000, M: 120_000, ML: 130_000, L: 140_000, LL: 150_000, XL: 160_000 };
+  const partialPartPrices = Object.fromEntries(
+    Array.from({ length: 16 }, (_, index) => [`part-${index}`, 10_000 + index]),
+  );
+  const catalog = makePricingCatalog({
+    ppfR1: {
+      contractVersion: "1.0",
+      frontFullPricesBySize: sizes,
+      fullBodyPricesBySize: sizes,
+      partialPartPrices,
+    },
+  });
+  const r = await resolveWizardRuntimeConfig(readers({
+    rank: "detailer",
+    rows,
+    catalog: { ok: true, catalog },
+  }));
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.equal(r.screenConfig.ppfPricingReady, true);
 });
 
 // ── Config accepted by the production pricing adapter ────────────────────────
