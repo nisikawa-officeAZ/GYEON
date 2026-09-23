@@ -48,6 +48,7 @@ export function Step7Review({
 }) {
   const s = api.store;
   const orderedLines = orderedWizardPricingLines(pricing.lines, api.draft.review.serviceLineOrder);
+  const pricingReadyToSave = pricing.completeness === "complete";
 
   const moveLine = (index: number, delta: -1 | 1) => {
     const target = index + delta;
@@ -164,7 +165,19 @@ export function Step7Review({
         )}
       </Card>
       {saveBinding
-        ? <WizardSavePanel draft={api.draft} binding={saveBinding} />
+        ? pricingReadyToSave
+          ? <WizardSavePanel draft={api.draft} binding={saveBinding} />
+          : (
+            <Card>
+              <div role="alert" data-testid="wizard-pricing-incomplete">
+                <p className="text-sm font-medium text-rose-300">価格が未確定の項目があるため保存できません。</p>
+                <p className="mt-1 text-xs text-slate-400">前の画面に戻り、未設定の項目または店舗設定をご確認ください。</p>
+                {[...pricing.unresolvedItems.map((item) => item.message), ...pricing.errors.map((error) => error.message)]
+                  .filter((message, index, messages) => message.length > 0 && messages.indexOf(message) === index)
+                  .map((message) => <p key={message} className="mt-1 text-xs text-amber-300">{message}</p>)}
+              </div>
+            </Card>
+          )
         : <PhaseTwoNotice screen="保存 / PDF / LINE(送信・文章コピー) / 予約カレンダー / 請求書・納品書・納品請求書" />}
     </>
   );
