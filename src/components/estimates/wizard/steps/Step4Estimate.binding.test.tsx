@@ -21,7 +21,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 (globalThis as unknown as { React: typeof React }).React = React;
 
 import EstimateWizard from "../EstimateWizard";
-import { Step4Estimate, attachedPartialPpfPatch } from "./Step4Estimate";
+import { Step4Estimate, attachedPartialPpfPatch, type PpfPricingReadiness } from "./Step4Estimate";
+
+// GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 — the host-derived PPF pricing readiness is a REQUIRED Step-4
+// input. Every pre-existing render passes "ready" so it keeps exercising the surface it always did.
+const PPF_READY: PpfPricingReadiness = { ready: true };
 import { createStep4Bindings, type Step4UpdateStore } from "./step4-bindings";
 import { initialCanonicalDraft, projectStore, applyStorePatch, type WizardStorePatch } from "../bridge/ew-ui1-controller";
 import { initialWizardStore, type WizardStore } from "../wizard-types";
@@ -47,8 +51,25 @@ const SC: WizardScreenConfiguration = {
   // B2-E2G — a fully opted-in, fully configured dealer, so every pre-existing assertion keeps
   // exercising the same surface it always did.
   serviceOfferings:   { window_film: true, ppf: true, maintenance: true, room_cleaning: true, car_wash: true },
-  filmTypes:          [{ id: "ft1", label: "ZZFILMTYPE" }],
+  // Window film readiness is decided by the authoritative `isWindowFilmV1RuntimeReady` predicate:
+  // a valid (non-disabled, coefficient-bearing) film AND an active priced/duration area or package
+  // in the V1 settings. A genuinely configured dealer carries both.
+  filmTypes:          [{ id: "ft1", label: "ZZFILMTYPE", installationCoefficientBp: 12_500 }],
   windowAreas:        [{ id: "wa1", label: "ZZWINDOWAREA" }],
+  windowFilmSettings: {
+    contractVersion: "1.0", revision: 1,
+    areas: {
+      "front-windshield":  { priceYen: 30_000, durationMinutes: 60, isActive: true },
+      "front-door-glass":  { priceYen: null, durationMinutes: null, isActive: false },
+      "rear-door-glass":   { priceYen: null, durationMinutes: null, isActive: false },
+      "triangular-window": { priceYen: null, durationMinutes: null, isActive: false },
+      "quarter-glass":     { priceYen: null, durationMinutes: null, isActive: false },
+      "rear-glass":        { priceYen: null, durationMinutes: null, isActive: false },
+      sunroof:             { priceYen: null, durationMinutes: null, isActive: false },
+    },
+    packages: [],
+    options: [],
+  },
   maintenanceMenus:   [{ id: "mm1", name: "ZZMAINTMENU", defaultPrice: 5000 }],
   washMenus:          [{ id: "cw1", name: "ZZWASHMENU", defaultPrice: 3000 }],
   roomMenus:          [{ id: "rc1", name: "ZZROOMMENU", defaultPrice: 4000 }],
@@ -344,7 +365,7 @@ const SECTION_MARKER: Record<string, string> = {
 for (const [cat, marker] of Object.entries(SECTION_MARKER)) {
   test(`category "${cat}" renders its controlled selector section`, () => {
     const { api } = makeApi([cat]);
-    const html = render(<Step4Estimate api={api} shopRank="detailer" screenConfig={SC} />);
+    const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={api} shopRank="detailer" screenConfig={SC} />);
     assert.ok(html.includes(marker), `expected marker ${marker} for ${cat}`);
   });
 }
@@ -353,16 +374,16 @@ test("coating upper-layer choices enforce the current shop rank in the rendered 
   const services = fresh();
   services.coating = { ...services.coating, layerCount: 2, layer1Id: "one-evo" };
 
-  const detailer = render(<Step4Estimate api={makeApi(["coating"], services).api} shopRank="detailer" screenConfig={SC} />);
+  const detailer = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["coating"], services).api} shopRank="detailer" screenConfig={SC} />);
   assert.equal(detailer.includes("Q² CANCOAT PRO EVO"), false, "detailer must not see certified-only CANCOAT PRO EVO");
 
-  const certified = render(<Step4Estimate api={makeApi(["coating"], services).api} shopRank="certified" screenConfig={SC} />);
+  const certified = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["coating"], services).api} shopRank="certified" screenConfig={SC} />);
   assert.ok(certified.includes("Q² CANCOAT PRO EVO"), "certified shop keeps the approved CANCOAT PRO EVO option");
 });
 
 test("only the selected categories appear in the section navigation", () => {
   const { api } = makeApi(["maintenance"]);
-  const html = render(<Step4Estimate api={api} shopRank="detailer" screenConfig={SC} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={api} shopRank="detailer" screenConfig={SC} />);
   assert.ok(html.includes("ボディ定期メンテナンス"), "selected category label present");
   assert.ok(!html.includes("ウィンドウフィルム"), "unselected category label absent");
   assert.ok(!html.includes("その他作業"), "unselected category label absent");
@@ -370,13 +391,13 @@ test("only the selected categories appear in the section navigation", () => {
 
 test("store-global options render as the eighth cross-category section", () => {
   const { api } = makeApi(["coating"]);
-  const html = render(<Step4Estimate api={api} shopRank="detailer" screenConfig={SC} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={api} shopRank="detailer" screenConfig={SC} />);
   assert.ok(html.includes("ZZGLOBALOPT"), "global option rendered though it is not a Screen-3 category");
 });
 
 test("no categories selected → placeholder, no selector/global section", () => {
   const { api } = makeApi([]);
-  const html = render(<Step4Estimate api={api} shopRank="detailer" screenConfig={SC} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={api} shopRank="detailer" screenConfig={SC} />);
   assert.ok(!html.includes("ZZGLOBALOPT"), "global options hidden when nothing selected");
 });
 
@@ -393,14 +414,14 @@ test("no categories selected → placeholder, no selector/global section", () =>
 // `shop` is deliberately the rank under test — it is the rank that was previously excluded from both
 // families, so if any rank rule survived anywhere, this is where it would still show.
 test("shop rank can use BOTH PPF and window film once the dealer opts in", () => {
-  const ppf = render(<Step4Estimate api={makeApi(["ppf"]).api} shopRank="shop" screenConfig={SC} />);
+  const ppf = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["ppf"]).api} shopRank="shop" screenConfig={SC} />);
   assert.ok(ppf.includes("ZZPPFMETHOD"), "shop rank can select PPF methods when opted in and configured");
   assert.equal(
     ppf.includes("GYEONショップランクでは PPF は施工できません。"), false,
     "the retired rank-based PPF lock must not reappear",
   );
 
-  const win = render(<Step4Estimate api={makeApi(["window"]).api} shopRank="shop" screenConfig={SC} />);
+  const win = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["window"]).api} shopRank="shop" screenConfig={SC} />);
   assert.ok(win.includes("ZZFILMTYPE"), "shop rank can select film types when opted in and configured");
   assert.equal(
     win.includes("GYEONショップランクではウィンドウフィルムは選択できません。"), false,
@@ -418,7 +439,7 @@ test("full PPF renders the formal coverage and vehicle-coefficient controls with
     unitPriceInput: "999999",
     vehicleCoefficientInput: "1.2",
   };
-  const html = render(<Step4Estimate api={makeApi(["ppf"], services).api} shopRank="detailer" screenConfig={SC} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["ppf"], services).api} shopRank="detailer" screenConfig={SC} />);
   assert.ok(html.includes("施工範囲を選択"), "coverage selector is visible");
   assert.ok(html.includes("フロントフル"), "front-full choice is visible");
   assert.ok(html.includes("フルボディ"), "full-body choice is visible");
@@ -429,7 +450,7 @@ test("full PPF renders the formal coverage and vehicle-coefficient controls with
 });
 
 test("ppf_installer rank locks coating", () => {
-  const html = render(<Step4Estimate api={makeApi(["coating"]).api} shopRank="ppf_installer" screenConfig={SC} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["coating"]).api} shopRank="ppf_installer" screenConfig={SC} />);
   assert.ok(html.includes("GYEON PPFインストーラーはコーティングを施工できません。"), "coating lock reason shown");
 });
 
@@ -452,7 +473,7 @@ test("OPTED OUT: the window-film section is absent for every rank, and nothing e
   };
 
   for (const rank of ALL_RANKS) {
-    const win = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={optedOut} />);
+    const win = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["window"]).api} shopRank={rank} screenConfig={optedOut} />);
     // ABSENT, not merely locked: no film types, no areas, and no setup prompt either. A dealer who
     // does not sell window film has nothing to fix and must never be nagged to configure it.
     assert.equal(win.includes("ZZFILMTYPE"), false, `${rank}: no film types offered`);
@@ -467,37 +488,50 @@ test("OPTED OUT: the window-film section is absent for every rank, and nothing e
     assert.equal(win.includes("ZZGLOBALOPT"), false, `${rank}: no cross-category section without a selection`);
 
     // Non-film categories are untouched — an opted-out dealer estimates normally.
-    const maint = render(<Step4Estimate api={makeApi(["maintenance"]).api} shopRank={rank} screenConfig={optedOut} />);
+    const maint = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["maintenance"]).api} shopRank={rank} screenConfig={optedOut} />);
     assert.ok(maint.includes("ZZMAINTMENU"), `${rank}: maintenance fully usable while opted out`);
   }
 });
 
 test("OPTED IN but INCOMPLETE: only window film is locked; the wizard is never blocked", () => {
+  // Each variant removes the AUTHORITATIVE readiness field it claims to test (see the SC comment):
+  // no valid film at all, or no active priced/duration area (and no package) in the V1 settings.
   const noFilmTypes: WizardScreenConfiguration = { ...SC, filmTypes: [] };   // opted in via SC
-  const noAreas: WizardScreenConfiguration = { ...SC, windowAreas: [] };     // opted in via SC
+  const noAreas: WizardScreenConfiguration = {                               // opted in via SC
+    ...SC,
+    windowAreas: [],
+    windowFilmSettings: {
+      ...SC.windowFilmSettings!,
+      areas: Object.fromEntries(
+        Object.entries(SC.windowFilmSettings!.areas).map(([code, area]) => [code, { ...area, isActive: false }]),
+      ) as NonNullable<WizardScreenConfiguration["windowFilmSettings"]>["areas"],
+      packages: [],
+    },
+  };
 
   for (const rank of ALL_RANKS) {
-    const win = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={noFilmTypes} />);
+    const win = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["window"]).api} shopRank={rank} screenConfig={noFilmTypes} />);
     assert.ok(win.includes(FILM_SETUP_REQUIRED), `${rank}: setup-required state shown`);
     assert.equal(win.includes("ZZWINDOWAREA"), false, `${rank}: no selectable area while locked`);
     assert.ok(win.includes("ZZGLOBALOPT"), `${rank}: wizard still mounted, not unavailable`);
 
-    // Missing AREAS is a distinct state: areas are global catalog rows, so the dealer cannot
-    // register them and must not be told to go and do so.
-    const areas = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={noAreas} />);
-    assert.ok(areas.includes("ウィンドウフィルムの施工部位が利用できません。管理者にお問い合わせください。"),
+    // Missing AREAS is a distinct state: films exist, but no active priced/duration area or set
+    // resolves from the dealer's window-film settings. The reason names THAT destination, and must
+    // not claim film types are missing.
+    const areas = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["window"]).api} shopRank={rank} screenConfig={noAreas} />);
+    assert.ok(areas.includes("ウィンドウフィルム設定で、提供する部位またはセットの金額と所要時間を登録してください。"),
       `${rank}: areas-unavailable state shown`);
     assert.equal(areas.includes(FILM_SETUP_REQUIRED), false, `${rank}: must not claim film types are missing`);
 
     // Incomplete film setup never blocks a non-film estimate.
-    const maint = render(<Step4Estimate api={makeApi(["maintenance"]).api} shopRank={rank} screenConfig={noFilmTypes} />);
+    const maint = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["maintenance"]).api} shopRank={rank} screenConfig={noFilmTypes} />);
     assert.ok(maint.includes("ZZMAINTMENU"), `${rank}: maintenance fully usable despite incomplete film setup`);
   }
 });
 
 test("OPTED IN and configured: window film is fully usable by every rank", () => {
   for (const rank of ALL_RANKS) {
-    const win = render(<Step4Estimate api={makeApi(["window"]).api} shopRank={rank} screenConfig={SC} />);
+    const win = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["window"]).api} shopRank={rank} screenConfig={SC} />);
     assert.ok(win.includes("ZZFILMTYPE"), `${rank}: film types selectable`);
     assert.ok(win.includes("ZZWINDOWAREA"), `${rank}: installation areas selectable`);
     assert.equal(win.includes(FILM_SETUP_REQUIRED), false, `${rank}: no setup prompt when configured`);
@@ -521,7 +555,7 @@ test("every managed family: OFF hides only itself, ON+configured shows it, for e
   for (const { family, category, marker } of FAMILY_CASES) {
     for (const rank of ALL_RANKS) {
       // OPTED IN + configured → the family's own content renders.
-      const on = render(<Step4Estimate api={makeApi([category]).api} shopRank={rank} screenConfig={SC} />);
+      const on = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi([category]).api} shopRank={rank} screenConfig={SC} />);
       assert.ok(on.includes(marker), `${family}/${rank}: content renders when offered and configured`);
 
       // OPTED OUT → absent, and NOT merely empty: its marker is gone…
@@ -529,13 +563,13 @@ test("every managed family: OFF hides only itself, ON+configured shows it, for e
         ...SC,
         serviceOfferings: { ...SC.serviceOfferings, [family]: false },
       };
-      const off = render(<Step4Estimate api={makeApi([category]).api} shopRank={rank} screenConfig={offConfig} />);
+      const off = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi([category]).api} shopRank={rank} screenConfig={offConfig} />);
       assert.equal(off.includes(marker), false, `${family}/${rank}: content absent when not offered`);
       // …while EVERY OTHER family is untouched by that one switch.
       for (const other of FAMILY_CASES) {
         if (other.family === family) continue;
         const still = render(
-          <Step4Estimate api={makeApi([other.category]).api} shopRank={rank} screenConfig={offConfig} />,
+          <Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi([other.category]).api} shopRank={rank} screenConfig={offConfig} />,
         );
         assert.ok(still.includes(other.marker),
           `${family} OFF must not affect ${other.family} (${rank})`);
@@ -551,7 +585,7 @@ test("no-selection fallback: the only selected family being OFF opens nothing", 
     ...SC,
     serviceOfferings: { ...SC.serviceOfferings, window_film: false },
   };
-  const html = render(<Step4Estimate api={makeApi(["window"]).api} shopRank="detailer" screenConfig={optedOut} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["window"]).api} shopRank="detailer" screenConfig={optedOut} />);
   for (const { marker } of FAMILY_CASES) {
     assert.equal(html.includes(marker), false, `no family content may render (${marker})`);
   }
@@ -563,10 +597,65 @@ test("PPF incomplete directs the operator to an ADMINISTRATOR, never to dealer s
   // them somewhere that cannot help — the message must not be broader than the condition it names.
   const noPpf: WizardScreenConfiguration = { ...SC, ppfMethods: [], ppfParts: [], ppfTypeGroups: [] };
   for (const rank of ALL_RANKS) {
-    const html = render(<Step4Estimate api={makeApi(["ppf"]).api} shopRank={rank} screenConfig={noPpf} />);
+    const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["ppf"]).api} shopRank={rank} screenConfig={noPpf} />);
     assert.ok(html.includes("管理者にお問い合わせください"), `${rank}: administrator-directed message`);
     assert.equal(html.includes("見積ウィザード設定"), false, `${rank}: must not point at dealer settings`);
   }
+});
+
+// ── 8c2. GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 — PPF pricing readiness locks the section ──────
+//
+// Global PPF rows (methods/parts/groups) alone once made the section "ready". A dealer with PPF
+// offered but no authoritative R1 price table, or a selectable PPF product without an install
+// coefficient, could then select PPF and reach Step 7, where save failed closed. The section must
+// stay VISIBLE (offered) but LOCKED, with a reason naming the dealer-fixable settings destination.
+//
+// The production messages contain a literal ">" (settings breadcrumb). `renderToStaticMarkup`
+// escapes text-node ">" as "&gt;", so the assertions compare against the ESCAPED form of the exact
+// message — the message itself is not weakened, and production is not altered to suit the markup.
+const escapeMarkupText = (text: string): string =>
+  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const PPF_PRICE_TABLE_REASON = escapeMarkupText("PPFを利用するには、設定 > PPF種類・施工係数 でPPFの基準価格表を保存してください。");
+const PPF_COEFFICIENT_REASON = escapeMarkupText("PPFを利用するには、設定 > PPF種類・施工係数 ですべてのPPF種類の施工係数を登録してください。");
+
+test("PPF offered + catalog rows present + price table missing → locked with the settings reason", () => {
+  const notReady: PpfPricingReadiness = { ready: false, reason: "price-table-missing" };
+  for (const rank of ALL_RANKS) {
+    const html = render(<Step4Estimate ppfPricingReadiness={notReady} api={makeApi(["ppf"]).api} shopRank={rank} screenConfig={SC} />);
+    assert.ok(html.includes("PPF（ペイント プロテクション フィルム）"), `${rank}: section still visible (offered)`);
+    assert.ok(html.includes(PPF_PRICE_TABLE_REASON), `${rank}: actionable settings reason shown`);
+    assert.equal(html.includes("ZZPPFMETHOD"), false, `${rank}: no selectable PPF method while locked`);
+    assert.equal(html.includes("管理者にお問い合わせください"), false, `${rank}: not misdirected to an administrator`);
+    // A locked family never blocks a service the dealer HAS configured.
+    const maint = render(<Step4Estimate ppfPricingReadiness={notReady} api={makeApi(["maintenance"]).api} shopRank={rank} screenConfig={SC} />);
+    assert.ok(maint.includes("ZZMAINTMENU"), `${rank}: maintenance unaffected`);
+  }
+});
+
+test("PPF price table present but a selectable product coefficient missing → locked", () => {
+  const notReady: PpfPricingReadiness = { ready: false, reason: "coefficient-missing" };
+  const html = render(<Step4Estimate ppfPricingReadiness={notReady} api={makeApi(["ppf"]).api} shopRank="detailer" screenConfig={SC} />);
+  assert.ok(html.includes(PPF_COEFFICIENT_REASON), "coefficient reason shown");
+  assert.equal(html.includes("ZZPPFMETHOD"), false, "no selectable PPF method while locked");
+  // The attached partial-PPF action is disabled with the same reason, never hidden as opt-out.
+  const coating = render(<Step4Estimate ppfPricingReadiness={notReady} api={makeApi(["coating"]).api} shopRank="detailer" screenConfig={SC} />);
+  assert.ok(coating.includes("部分PPFを追加"), "attached action still rendered");
+  assert.ok(coating.includes(PPF_COEFFICIENT_REASON), "attached action carries the pricing reason");
+});
+
+test("PPF price table + all coefficients present → the existing selection flow stays enabled", () => {
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["ppf"]).api} shopRank="detailer" screenConfig={SC} />);
+  assert.ok(html.includes("ZZPPFMETHOD"), "PPF methods selectable");
+  assert.equal(html.includes(PPF_PRICE_TABLE_REASON), false);
+  assert.equal(html.includes(PPF_COEFFICIENT_REASON), false);
+});
+
+test("missing GLOBAL rows still take precedence over the dealer pricing reason", () => {
+  const noPpf: WizardScreenConfiguration = { ...SC, ppfMethods: [], ppfParts: [], ppfTypeGroups: [] };
+  const notReady: PpfPricingReadiness = { ready: false, reason: "price-table-missing" };
+  const html = render(<Step4Estimate ppfPricingReadiness={notReady} api={makeApi(["ppf"]).api} shopRank="detailer" screenConfig={noPpf} />);
+  assert.ok(html.includes("管理者にお問い合わせください"), "administrator reason when the dealer cannot fix it");
+  assert.equal(html.includes(PPF_PRICE_TABLE_REASON), false, "settings reason must not be broader than its condition");
 });
 
 // ── 8d. GDA-ESTIMATE-PPF-OFFERING-R1-A — attached partial PPF from coating-only selection ──
@@ -591,30 +680,30 @@ test("attachedPartialPpfPatch: does not duplicate an already-present ppf categor
 });
 
 test("coating-only + PPF offered and configured renders the attached partial-PPF action", () => {
-  const html = render(<Step4Estimate api={makeApi(["coating"]).api} shopRank="detailer" screenConfig={SC} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["coating"]).api} shopRank="detailer" screenConfig={SC} />);
   assert.ok(html.includes(ATTACHED_PARTIAL_PPF_LABEL), "attached action rendered");
   assert.ok(html.includes("Q² ONE EVO"), "existing coating section content still renders alongside it");
 });
 
 test("PPF not offered: coating-only selection shows no attached action", () => {
   const offConfig: WizardScreenConfiguration = { ...SC, serviceOfferings: { ...SC.serviceOfferings, ppf: false } };
-  const html = render(<Step4Estimate api={makeApi(["coating"]).api} shopRank="detailer" screenConfig={offConfig} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["coating"]).api} shopRank="detailer" screenConfig={offConfig} />);
   assert.equal(html.includes(ATTACHED_PARTIAL_PPF_LABEL), false, "no attached action when PPF is not offered");
 });
 
 test("PPF already selected: no attached action; the existing PPF tab remains authoritative", () => {
-  const html = render(<Step4Estimate api={makeApi(["coating", "ppf"]).api} shopRank="detailer" screenConfig={SC} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["coating", "ppf"]).api} shopRank="detailer" screenConfig={SC} />);
   assert.equal(html.includes(ATTACHED_PARTIAL_PPF_LABEL), false, "no attached action once main PPF is already selected");
 });
 
 test("attached action absent for a non-coating selection even when PPF is offered", () => {
-  const html = render(<Step4Estimate api={makeApi(["maintenance"]).api} shopRank="detailer" screenConfig={SC} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["maintenance"]).api} shopRank="detailer" screenConfig={SC} />);
   assert.equal(html.includes(ATTACHED_PARTIAL_PPF_LABEL), false, "no attached action without coating selected");
 });
 
 test("PPF offered but prerequisites incomplete: attached action renders disabled with the existing administrator reason", () => {
   const noPpf: WizardScreenConfiguration = { ...SC, ppfMethods: [], ppfParts: [], ppfTypeGroups: [] };
-  const html = render(<Step4Estimate api={makeApi(["coating"]).api} shopRank="detailer" screenConfig={noPpf} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["coating"]).api} shopRank="detailer" screenConfig={noPpf} />);
   assert.ok(html.includes(ATTACHED_PARTIAL_PPF_LABEL), "attached action still rendered, not hidden as opt-out");
   assert.ok(html.includes("管理者にお問い合わせください"), "existing administrator-directed setup reason shown");
   assert.equal(html.includes("見積ウィザード設定"), false, "must not mislabel this as dealer opt-out");
@@ -648,7 +737,7 @@ test("selecting main PPF still exposes both full and partial installation method
       { id: "partial", label: "ZZPARTIALMETHOD" },
     ],
   };
-  const html = render(<Step4Estimate api={makeApi(["ppf"]).api} shopRank="detailer" screenConfig={scWithBothMethods} />);
+  const html = render(<Step4Estimate ppfPricingReadiness={PPF_READY} api={makeApi(["ppf"]).api} shopRank="detailer" screenConfig={scWithBothMethods} />);
   assert.ok(html.includes("ZZFULLMETHOD"), "full method selectable");
   assert.ok(html.includes("ZZPARTIALMETHOD"), "partial method selectable");
 });
@@ -672,9 +761,10 @@ test("EstimateWizard threads shopRank + screenConfig ONLY to Step4Estimate (sour
   const raw = readFileSync(WIZARD_SRC, "utf8");
   assert.match(
     raw,
-    /<Step4Estimate\s+api=\{api\}\s+shopRank=\{shopRank\}\s+screenConfig=\{screenConfig\}\s*\/>/,
-    "Step4Estimate receives both runtime inputs",
+    /<Step4Estimate\s+api=\{api\}\s+shopRank=\{shopRank\}\s+screenConfig=\{screenConfig\}\s+ppfPricingReadiness=\{ppfPricingReadiness\}\s*\/>/,
+    "Step4Estimate receives both runtime inputs plus ONLY the derived PPF pricing readiness",
   );
+  assert.equal(/<Step4Estimate[^>]*\b(catalog|pricingConfig)=/.test(raw), false, "Step4 never receives catalog/pricingConfig");
   assert.equal((raw.match(/shopRank=\{shopRank\}/g) ?? []).length, 1, "shopRank passed exactly once");
   assert.equal((raw.match(/screenConfig=\{screenConfig\}/g) ?? []).length, 1, "screenConfig passed exactly once");
   const code = codeOf(WIZARD_SRC);

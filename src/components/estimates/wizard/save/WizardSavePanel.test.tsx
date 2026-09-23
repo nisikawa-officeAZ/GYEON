@@ -15,9 +15,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import {
   presentWizardSaveFailure, runWizardSaveAttempt, WizardSavePanel,
+  isWizardPricingSaveReady, wizardPricingBlockMessages,
   type WizardSaveBinding, type WizardSaveOutcome, type WizardSaveBlockedReason,
   type WizardSaveDestination,
 } from "./WizardSavePanel";
+import { EMPTY_WIZARD_PRICING_RESULT, type WizardPricingResult } from "../pricing/wizard-pricing-types";
 import {
   initializeWizardSession, recoverWizardSession,
   markWizardSessionPending, markWizardSessionCompleted,
@@ -50,6 +52,20 @@ function fakeCrypto() {
 }
 
 const DRAFT: Readonly<EstimateWizardDraftV22> = resetWizardDraft();
+
+// GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 — an unambiguously complete pricing result (the ONLY state in
+// which the panel may offer a fresh save). Every pre-existing render uses it unchanged.
+const COMPLETE_PRICING: WizardPricingResult = {
+  ...EMPTY_WIZARD_PRICING_RESULT,
+  status: "success", completeness: "complete",
+  lines: [{
+    kind: "catalog", category: "coating", sourceId: "coating:PURE EVO", label: "PURE EVO",
+    quantity: 1, unitPrice: 80_000, lineSubtotal: 80_000, discountAmount: null, taxAmount: null,
+    lineTotal: 80_000, pricingReferenceId: "pure-evo", catalogLineRole: "base",
+  }],
+  subtotal: 80_000, discountTotal: 0, taxableSubtotal: 80_000, taxTotal: 8_000, grandTotal: 88_000,
+};
+const PPF_ISSUE = { code: "PPF_R1_SETTINGS_REQUIRED", category: "ppf", sourceId: null, message: "PPFの正式価格表が未設定です。設定画面で価格を保存してください。" };
 
 type World = {
   deps: WizardSessionDeps;
@@ -223,6 +239,7 @@ test("5. a remounted PENDING session invokes nothing and offers a separate retry
   const html = renderToStaticMarkup(
     React.createElement(WizardSavePanel, {
       draft: DRAFT,
+      pricing: COMPLETE_PRICING,
       binding: bindingFor(w, async () => OK, rec, recovered.session),
     }),
   );
@@ -396,7 +413,7 @@ test("14. ready / submitting / recovered-pending / failed / completed / blocked 
 
   const readyW = world();
   const readyHtml = renderToStaticMarkup(React.createElement(WizardSavePanel, {
-    draft: DRAFT, binding: bindingFor(readyW, async () => OK, rec),
+    draft: DRAFT, pricing: COMPLETE_PRICING, binding: bindingFor(readyW, async () => OK, rec),
   }));
   assert.ok(readyHtml.includes("save-state-ready"));
   assert.ok(readyHtml.includes("save-submit"));
@@ -406,7 +423,7 @@ test("14. ready / submitting / recovered-pending / failed / completed / blocked 
   const pend = recoverWizardSession(pendW.deps, pendW.ws);
   assert.equal(pend.ok, true);
   const pendHtml = pend.ok ? renderToStaticMarkup(React.createElement(WizardSavePanel, {
-    draft: DRAFT, binding: bindingFor(pendW, async () => OK, rec, pend.session),
+    draft: DRAFT, pricing: COMPLETE_PRICING, binding: bindingFor(pendW, async () => OK, rec, pend.session),
   })) : "";
   assert.ok(pendHtml.includes("save-state-unknown"));
 
@@ -414,7 +431,7 @@ test("14. ready / submitting / recovered-pending / failed / completed / blocked 
   markWizardSessionPending(compW.deps, compW.ws);
   const comp = markWizardSessionCompleted(compW.deps, compW.ws, UUID);
   const compHtml = comp.ok ? renderToStaticMarkup(React.createElement(WizardSavePanel, {
-    draft: DRAFT, binding: bindingFor(compW, async () => OK, rec, comp.session),
+    draft: DRAFT, pricing: COMPLETE_PRICING, binding: bindingFor(compW, async () => OK, rec, comp.session),
   })) : "";
   assert.ok(compHtml.includes("save-state-completed"));
 
@@ -440,7 +457,7 @@ test("14b. no raw diagnostic, draft or PII is rendered on failure", async () => 
   assert.equal(after.ok, true);
   if (!after.ok) return;
   const html = renderToStaticMarkup(React.createElement(WizardSavePanel, {
-    draft: DRAFT, binding: bindingFor(w, async () => leaky, rec, after.session),
+    draft: DRAFT, pricing: COMPLETE_PRICING, binding: bindingFor(w, async () => leaky, rec, after.session),
   }));
 
   assert.ok(html.includes("save-state-failed"), "PRECONDITION: the failure state rendered");
@@ -450,6 +467,91 @@ test("14b. no raw diagnostic, draft or PII is rendered on failure", async () => 
                       "save-validation-failed", "saveIssues", w.key]) {
     assert.equal(html.includes(leak), false, `panel renders ${leak}`);
   }
+});
+
+// ── 14c-14f. GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 — the pricing gate ─────────
+
+test("14c. the save-ready predicate is exactly the server's: success + complete + no errors + no unresolved", () => {
+  assert.equal(isWizardPricingSaveReady(COMPLETE_PRICING), true);
+  const notReady: Array<[string, WizardPricingResult]> = [
+    ["partial", { ...COMPLETE_PRICING, completeness: "partial" }],
+    ["unavailable", { ...COMPLETE_PRICING, completeness: "unavailable" }],
+    ["error", { ...COMPLETE_PRICING, status: "error", completeness: "error" }],
+    ["incomplete status", { ...COMPLETE_PRICING, status: "incomplete" }],
+    ["errors", { ...COMPLETE_PRICING, errors: [PPF_ISSUE] }],
+    ["unresolved", { ...COMPLETE_PRICING, unresolvedItems: [{ ...PPF_ISSUE, category: "ppf" }] }],
+    ["idle empty", EMPTY_WIZARD_PRICING_RESULT],
+  ];
+  for (const [label, pricing] of notReady) assert.equal(isWizardPricingSaveReady(pricing), false, label);
+});
+
+test("14d. not-ready pricing on a fresh session: NO fresh controls, the concrete reason is shown, no invocation", () => {
+  const cases: Array<[string, WizardPricingResult]> = [
+    ["partial+errors", { ...COMPLETE_PRICING, completeness: "partial", errors: [PPF_ISSUE] }],
+    ["unavailable", { ...EMPTY_WIZARD_PRICING_RESULT, status: "incomplete", completeness: "unavailable" }],
+    ["error", { ...COMPLETE_PRICING, status: "error", completeness: "error", errors: [PPF_ISSUE] }],
+    ["complete-but-errors", { ...COMPLETE_PRICING, errors: [PPF_ISSUE] }],
+    ["complete-but-unresolved", { ...COMPLETE_PRICING, unresolvedItems: [PPF_ISSUE] }],
+  ];
+  for (const [label, pricing] of cases) {
+    const w = world();
+    const rec = recorder();
+    const html = renderToStaticMarkup(React.createElement(WizardSavePanel, {
+      draft: DRAFT, pricing, binding: bindingFor(w, async () => OK, rec),
+    }));
+    assert.equal(html.includes('data-testid="save-submit"'), false, `${label}: no 保存 control`);
+    assert.equal(html.includes('data-testid="save-submit-pdf"'), false, `${label}: no 保存してPDFを開く control`);
+    assert.equal(html.includes("save-state-ready"), false, `${label}: not presented as ready`);
+    assert.ok(html.includes("save-state-pricing-incomplete"), `${label}: pricing-incomplete state shown`);
+    assert.ok(html.includes("価格が確定していないため保存できません"), `${label}: operator-facing explanation`);
+    if (pricing.errors.length > 0 || pricing.unresolvedItems.length > 0) {
+      assert.ok(html.includes(PPF_ISSUE.message), `${label}: the concrete pricing/configuration reason is visible`);
+    }
+    assert.equal(html.includes("PPF_R1_SETTINGS_REQUIRED"), false, `${label}: internal code never rendered`);
+    assert.equal(rec.invokerCalls.length, 0, `${label}: nothing invoked`);
+    assert.equal(storedOf(w).status, "ready", `${label}: the session is untouched`);
+  }
+  assert.deepEqual(wizardPricingBlockMessages({ ...COMPLETE_PRICING, errors: [PPF_ISSUE, PPF_ISSUE], unresolvedItems: [PPF_ISSUE] }),
+    [PPF_ISSUE.message], "messages are de-duplicated");
+});
+
+test("14e. complete clean pricing keeps the exact fresh Save / Save-and-PDF surface", () => {
+  const w = world();
+  const rec = recorder();
+  const html = renderToStaticMarkup(React.createElement(WizardSavePanel, {
+    draft: DRAFT, pricing: COMPLETE_PRICING, binding: bindingFor(w, async () => OK, rec),
+  }));
+  assert.ok(html.includes("save-state-ready"));
+  assert.ok(html.includes('data-testid="save-submit"'));
+  assert.ok(html.includes('data-testid="save-submit-pdf"'));
+  assert.equal(html.includes("save-state-pricing-incomplete"), false, "no pricing notice when complete");
+});
+
+test("14f. recovered pending / failed sessions keep their same-key retry control regardless of pricing", async () => {
+  const notReady: WizardPricingResult = { ...COMPLETE_PRICING, completeness: "partial", errors: [PPF_ISSUE] };
+  const rec = recorder();
+
+  const pendW = world();
+  markWizardSessionPending(pendW.deps, pendW.ws);
+  const pend = recoverWizardSession(pendW.deps, pendW.ws);
+  assert.equal(pend.ok, true);
+  const pendHtml = pend.ok ? renderToStaticMarkup(React.createElement(WizardSavePanel, {
+    draft: DRAFT, pricing: notReady, binding: bindingFor(pendW, async () => OK, rec, pend.session),
+  })) : "";
+  assert.ok(pendHtml.includes("save-state-unknown"), "recovered pending state unchanged");
+  assert.ok(pendHtml.includes("save-retry-same-key"), "same-key retry still offered");
+  assert.equal(pendHtml.includes('data-testid="save-submit"'), false);
+
+  // The execution core itself is untouched: a same-key retry from FAILED still invokes exactly once.
+  const w = world();
+  await runWizardSaveAttempt(attemptDeps(w, bindingFor(w, async () => TYPED_FAILURE, rec), rec));
+  const after = recoverWizardSession(w.deps, w.ws);
+  assert.equal(after.ok, true);
+  if (!after.ok) return;
+  const rec2 = recorder();
+  await runWizardSaveAttempt(attemptDeps(w, bindingFor(w, async () => OK, rec2, after.session), rec2));
+  assert.equal(rec2.invokerCalls.length, 1);
+  assert.equal((rec2.invokerCalls[0] as { idempotencyKey: string }).idempotencyKey, w.key);
 });
 
 // ── 15. Source boundary ────────────────────────────────────────────────────
@@ -593,7 +695,7 @@ test("21. both ready controls exist, share one attempt, and appear ONLY when rea
 
   const readyW = world();
   const readyHtml = renderToStaticMarkup(React.createElement(WizardSavePanel, {
-    draft: DRAFT, binding: bindingFor(readyW, async () => OK, rec),
+    draft: DRAFT, pricing: COMPLETE_PRICING, binding: bindingFor(readyW, async () => OK, rec),
   }));
   assert.ok(readyHtml.includes('data-testid="save-submit"'), "保存");
   assert.ok(readyHtml.includes('data-testid="save-submit-pdf"'), "保存してPDFを開く");
@@ -606,7 +708,7 @@ test("21. both ready controls exist, share one attempt, and appear ONLY when rea
   const pend = recoverWizardSession(pendW.deps, pendW.ws);
   assert.equal(pend.ok, true);
   const pendHtml = pend.ok ? renderToStaticMarkup(React.createElement(WizardSavePanel, {
-    draft: DRAFT, binding: bindingFor(pendW, async () => OK, rec, pend.session),
+    draft: DRAFT, pricing: COMPLETE_PRICING, binding: bindingFor(pendW, async () => OK, rec, pend.session),
   })) : "";
   assert.equal(pendHtml.includes('data-testid="save-submit-pdf"'), false);
   assert.equal(pendHtml.includes('data-testid="save-submit"'), false);
@@ -615,7 +717,7 @@ test("21. both ready controls exist, share one attempt, and appear ONLY when rea
   markWizardSessionPending(compW.deps, compW.ws);
   const comp = markWizardSessionCompleted(compW.deps, compW.ws, UUID);
   const compHtml = comp.ok ? renderToStaticMarkup(React.createElement(WizardSavePanel, {
-    draft: DRAFT, binding: bindingFor(compW, async () => OK, rec, comp.session),
+    draft: DRAFT, pricing: COMPLETE_PRICING, binding: bindingFor(compW, async () => OK, rec, comp.session),
   })) : "";
   assert.equal(compHtml.includes('data-testid="save-submit-pdf"'), false);
 

@@ -113,11 +113,30 @@ export function attachedPartialPpfPatch(categories: readonly string[]): WizardSt
   };
 }
 
+/**
+ * GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 — the host-derived PPF pricing readiness. A minimal
+ * boolean/reason ONLY: the catalog and pricing configuration it is derived from never reach this
+ * step. Both unready reasons are dealer-fixable in Settings > PPF種類・施工係数, so the lock copy
+ * names that destination instead of the administrator.
+ */
+export type PpfPricingReadiness =
+  | { readonly ready: true }
+  | { readonly ready: false; readonly reason: "price-table-missing" | "coefficient-missing" };
+
+const PPF_PRICING_REASON: Readonly<Record<"price-table-missing" | "coefficient-missing", string>> = {
+  "price-table-missing":
+    "PPFを利用するには、設定 > PPF種類・施工係数 でPPFの基準価格表を保存してください。",
+  "coefficient-missing":
+    "PPFを利用するには、設定 > PPF種類・施工係数 ですべてのPPF種類の施工係数を登録してください。",
+};
+
 export interface Step4EstimateProps extends WizardRuntimeInputs {
   api: EstimateWizardApi;
+  /** REQUIRED — no default. Absence would be a wiring failure, not "ready". */
+  ppfPricingReadiness: PpfPricingReadiness;
 }
 
-export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProps) {
+export function Step4Estimate({ api, shopRank, screenConfig, ppfPricingReadiness }: Step4EstimateProps) {
   // Local UI-only state — NOTHING else lives here (no second copy of services or categories).
   const [activeSection, setActiveSection] = useState<string>("coating");
   const [rowIdError, setRowIdError] = useState<string | null>(null);
@@ -143,11 +162,15 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
   const offerings = screenConfig.serviceOfferings;
 
   /** Prerequisites per managed family. Rank appears nowhere. */
+  // PPF needs BOTH the global catalog rows (administrator-owned) AND the dealer's authoritative
+  // pricing inputs (R1 price table + every product's install coefficient). Catalog rows alone once
+  // reported "ready" and let an unpriceable PPF selection reach Step 7, where save failed closed.
+  const ppfCatalogComplete = screenConfig.ppfMethods.length > 0
+    && screenConfig.ppfParts.length > 0
+    && screenConfig.ppfTypeGroups.length > 0;
   const familyComplete: Readonly<Record<ServiceFamily, boolean>> = {
     window_film: isWindowFilmV1RuntimeReady(screenConfig),
-    ppf: screenConfig.ppfMethods.length > 0
-      && screenConfig.ppfParts.length > 0
-      && screenConfig.ppfTypeGroups.length > 0,
+    ppf: ppfCatalogComplete && ppfPricingReadiness.ready,
     maintenance: screenConfig.maintenanceMenus.length > 0,
     car_wash: screenConfig.washMenus.length > 0,
     room_cleaning: screenConfig.roomMenus.length > 0,
@@ -175,7 +198,10 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
   const lockReasonFor = (family: ServiceFamily): string =>
     family === "window_film" && screenConfig.filmTypes.length > 0
       ? WINDOW_AREAS_UNAVAILABLE_REASON   // films exist; the missing half is the global areas
-      : SETUP_REQUIRED_REASON[family];
+      // Global PPF rows present but dealer pricing incomplete → the dealer-fixable settings reason.
+      : family === "ppf" && ppfCatalogComplete && !ppfPricingReadiness.ready
+        ? PPF_PRICING_REASON[ppfPricingReadiness.reason]
+        : SETUP_REQUIRED_REASON[family];
 
   const disabledSections = new Set<string>();
   if (coatingLocked) disabledSections.add("coating");

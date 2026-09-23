@@ -36,8 +36,11 @@ import { useWizardPricingFromConfig } from "./pricing/useWizardPricingFromConfig
 import { Step1Customer } from "./steps/Step1Customer";
 import { Step2Vehicle } from "./steps/Step2Vehicle";
 import { Step3Category } from "./steps/Step3Category";
-import { Step4Estimate } from "./steps/Step4Estimate";
+import { Step4Estimate, type PpfPricingReadiness } from "./steps/Step4Estimate";
 import { Step5Discount } from "./steps/Step5Discount";
+import type { PricingCatalog } from "@/lib/pricing/pricing-catalog";
+import type { ConfiguredPricingConfiguration } from "./pricing/wizard-pricing-input-adapter-config";
+import type { WizardScreenConfiguration } from "./contract/wizard-runtime-inputs";
 import { Step6Notes } from "./steps/Step6Notes";
 import { Step7Review } from "./steps/Step7Review";
 import type { EstimateWizardDraftV22 } from "./draft/wizard-draft-types";
@@ -65,6 +68,34 @@ export interface EstimateWizardProps
   saveBinding?: WizardSaveBinding;
   /** Exact immutable predecessor snapshot. Present only for formal revision issuance. */
   initialDraft?: Readonly<EstimateWizardDraftV22>;
+}
+
+/**
+ * GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 — PPF pricing readiness, derived from the SAME authoritative
+ * runtime inputs the pricing route consumes. PURE: reads `catalog.ppfR1` and the configured install
+ * coefficients, never a draft, never a default. The R1 price route fails closed on either missing
+ * input, so a Step-4 PPF section must not be presented as ready unless BOTH are present:
+ *   • the dealer's authoritative R1 price table exists, and
+ *   • EVERY selectable PPF product carries a positive-integer install coefficient (basis points).
+ * Only this minimal boolean/reason reaches Step 4 — catalog and pricing configuration never do.
+ */
+export function derivePpfPricingReadiness(
+  catalog: PricingCatalog,
+  pricingConfig: ConfiguredPricingConfiguration,
+  screenConfig: WizardScreenConfiguration,
+): PpfPricingReadiness {
+  if (catalog.ppfR1 === null) return { ready: false, reason: "price-table-missing" };
+  const coefficients = pricingConfig.installCoefficientBpByCode;
+  for (const group of screenConfig.ppfTypeGroups) {
+    for (const product of group.products) {
+      if (product.disabled === true) continue; // not selectable → not a pricing prerequisite
+      const bp = coefficients?.[product.id];
+      if (typeof bp !== "number" || !Number.isInteger(bp) || bp <= 0) {
+        return { ready: false, reason: "coefficient-missing" };
+      }
+    }
+  }
+  return { ready: true };
 }
 
 export default function EstimateWizard({
@@ -109,6 +140,8 @@ export default function EstimateWizard({
     total: pricing.grandTotal,
     state: pricing.completeness,
   };
+  // Minimal derived readiness for Step 4 — a boolean/reason only, never the inputs themselves.
+  const ppfPricingReadiness = derivePpfPricingReadiness(catalog, pricingConfig, screenConfig);
 
   return (
     <WizardShell api={api} title={title} totals={totals}>
@@ -132,7 +165,9 @@ export default function EstimateWizard({
         />
       )}
       {api.step === 3 && <Step3Category api={api} serviceOfferings={screenConfig.serviceOfferings} />}
-      {api.step === 4 && <Step4Estimate api={api} shopRank={shopRank} screenConfig={screenConfig} />}
+      {api.step === 4 && (
+        <Step4Estimate api={api} shopRank={shopRank} screenConfig={screenConfig} ppfPricingReadiness={ppfPricingReadiness} />
+      )}
       {api.step === 5 && (
         <Step5Discount api={api} coupons={screenConfig.coupons} subtotal={pricing.subtotal} />
       )}

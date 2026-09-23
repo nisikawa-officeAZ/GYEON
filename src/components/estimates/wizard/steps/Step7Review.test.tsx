@@ -25,7 +25,9 @@ import type {
   WizardExistingCustomerReference,
   WizardExistingVehicleReference,
 } from "../contract/wizard-runtime-inputs";
-import { EMPTY_WIZARD_PRICING_RESULT } from "../pricing/wizard-pricing-types";
+import { EMPTY_WIZARD_PRICING_RESULT, type WizardPricingResult } from "../pricing/wizard-pricing-types";
+import type { WizardSaveBinding } from "../save/WizardSavePanel";
+import { initializeWizardSession, type WizardSessionDeps } from "../save/wizard-idempotency-session";
 
 const CUSTOMERS: readonly WizardExistingCustomerReference[] = [
   { id: "c1", displayName: "山田 太郎 様", phone: "09011112222" },
@@ -232,6 +234,61 @@ describe("Step7Review — canonical line-order controls stay inside the responsi
     assert.match(html, /aria-label="メンテナンスを上へ"/);
     assert.match(html, /aria-label="PURE EVOを下へ"/);
     assert.doesNotMatch(html, /<table/);
+  });
+});
+
+// ── GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 — Step 7 hands the SAME pricing result to the save panel ──
+describe("Step7Review — the save panel is gated by the pricing result Step 7 displays", () => {
+  function binding(): WizardSaveBinding {
+    const map = new Map<string, string>();
+    const deps: WizardSessionDeps = {
+      storage: { getItem: (k) => map.get(k) ?? null, setItem: (k, v) => { map.set(k, v); } },
+      crypto: { getRandomValues(a: Uint8Array): Uint8Array { a.fill(0x1a); return a; } },
+    };
+    const init = initializeWizardSession(deps, () => {});
+    if (!init.ok) throw new Error("fixture: initialization must succeed");
+    return {
+      expectedConfigRevision: 1,
+      saveInvoker: async () => { throw new Error("must not be invoked by a render"); },
+      session: init.session,
+      sessionDeps: deps,
+      onCompleted: () => undefined,
+    };
+  }
+  const line = {
+    kind: "catalog" as const, category: "coating", sourceId: "coating:PURE EVO", label: "PURE EVO",
+    quantity: 1, unitPrice: 80_000, lineSubtotal: 80_000, discountAmount: null, taxAmount: null,
+    lineTotal: 80_000, pricingReferenceId: "pure-evo", catalogLineRole: "base" as const,
+  };
+  const ppfIssue = { code: "PPF_R1_SETTINGS_REQUIRED", category: "ppf", sourceId: null, message: "PPFの正式価格表が未設定です。設定画面で価格を保存してください。" };
+
+  it("priced coating + PPF configuration error: no Save/PDF controls, the reason is visible, no internal code", () => {
+    const pricing: WizardPricingResult = {
+      ...EMPTY_WIZARD_PRICING_RESULT, status: "success", completeness: "partial", lines: [line],
+      subtotal: 80_000, grandTotal: 88_000, errors: [ppfIssue],
+    };
+    const html = renderToStaticMarkup(
+      <Step7Review api={apiFor(storeWith({ categories: ["coating", "ppf"] }))} customers={CUSTOMERS} vehicles={VEHICLES} pricing={pricing} saveBinding={binding()} />,
+    );
+    assert.ok(html.includes("wizard-save-panel"), "PRECONDITION: the panel rendered");
+    assert.equal(html.includes('data-testid="save-submit"'), false);
+    assert.equal(html.includes('data-testid="save-submit-pdf"'), false);
+    assert.ok(html.includes("save-state-pricing-incomplete"));
+    assert.ok(html.includes(ppfIssue.message), "concrete pricing/configuration reason visible");
+    assert.equal(html.includes("PPF_R1_SETTINGS_REQUIRED"), false, "internal code never rendered");
+  });
+
+  it("complete clean pricing keeps the fresh Save / Save-and-PDF controls", () => {
+    const pricing: WizardPricingResult = {
+      ...EMPTY_WIZARD_PRICING_RESULT, status: "success", completeness: "complete", lines: [line],
+      subtotal: 80_000, discountTotal: 0, taxableSubtotal: 80_000, taxTotal: 8_000, grandTotal: 88_000,
+    };
+    const html = renderToStaticMarkup(
+      <Step7Review api={apiFor(storeWith({ categories: ["coating"] }))} customers={CUSTOMERS} vehicles={VEHICLES} pricing={pricing} saveBinding={binding()} />,
+    );
+    assert.ok(html.includes('data-testid="save-submit"'));
+    assert.ok(html.includes('data-testid="save-submit-pdf"'));
+    assert.equal(html.includes("save-state-pricing-incomplete"), false);
   });
 });
 
