@@ -2,13 +2,13 @@ import "server-only";
 
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { createClient } from "@/lib/supabase/server";
-import { evaluateOfficeAzInventoryAuthority } from "./office-az-inventory-authority-core.js";
+import { evaluateOfficeAzInventoryAuthority } from "./office-az-inventory-authority-core";
 import {
   OFFICE_AZ_INVENTORY_CAPABILITIES,
   OFFICE_AZ_INVENTORY_OWNER,
   type OfficeAzInventoryAuthorityEvaluation,
   type OfficeAzInventoryCapability,
-} from "./office-az-inventory-authority-types.js";
+} from "./office-az-inventory-authority-types";
 
 const AUTHORITY_RPC = "resolve_office_az_inventory_authority" as const;
 const REQUEST_KEYS = new Set([

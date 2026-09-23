@@ -8,7 +8,7 @@ mock.module("server-only", {
   namedExports: {},
 });
 
-mock.module("../../../../lib/inventory/foundation/foundation-server-actions.js", {
+mock.module("../../../../lib/inventory/foundation/foundation-server-actions", {
   namedExports: {
     FOUNDATION_BOUNDARY_MAX_BODY_BYTES: 32768,
     publicStatusFor: (code: string) => {
@@ -35,7 +35,7 @@ let mutationOriginAllowed: Route["mutationOriginAllowed"];
 
 before(async () => {
   ({ GET, POST, PUT, HEAD, OPTIONS, isExactJsonMediaType, mutationOriginAllowed } =
-    await import("./route.js"));
+    await import("./route"));
 });
 
 function originUrl() {

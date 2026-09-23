@@ -10,7 +10,7 @@ import {
   exportFoundationSnapshot,
   importFoundationSnapshot,
   readFoundationAuditLog,
-} from "./foundation-adaptor-core.js";
+} from "./foundation-adaptor-core";
 import {
   FOUNDATION_INTEGRATION_CONTRACT_VERSION,
   FOUNDATION_RUNTIME_COMMANDS,
@@ -24,7 +24,7 @@ import {
   type FoundationRuntimeCommand,
   type FoundationSnapshotExportRequest,
   type FoundationSnapshotImportRequest,
-} from "./foundation-adaptor-types.js";
+} from "./foundation-adaptor-types";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -839,7 +839,7 @@ describe("csv and legacy-core absence (source contract)", () => {
       .filter((line) => line.trim().startsWith("import ") || line.trim().startsWith("} from"));
     for (const line of importLines) {
       if (line.includes(" from ")) {
-        assert.match(line, /from "\.\/foundation-adaptor-types\.js"/);
+        assert.match(line, /from "\.\/foundation-adaptor-types"/);
       }
     }
   });

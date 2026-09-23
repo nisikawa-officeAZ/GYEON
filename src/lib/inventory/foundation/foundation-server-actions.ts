@@ -1,20 +1,20 @@
 import "server-only";
 
-import { resolveOfficeAzInventoryAuthority } from "../authority/resolve-office-az-inventory-authority.js";
+import { resolveOfficeAzInventoryAuthority } from "../authority/resolve-office-az-inventory-authority";
 import type {
   OfficeAzInventoryAuthorityEvaluation,
   OfficeAzInventoryCapability,
-} from "../authority/office-az-inventory-authority-types.js";
-import { executeWithFoundationPersistence } from "./foundation-persistence-adaptor.js";
-import { resolveFoundationProduct } from "./foundation-product-mapping.js";
+} from "../authority/office-az-inventory-authority-types";
+import { executeWithFoundationPersistence } from "./foundation-persistence-adaptor";
+import { resolveFoundationProduct } from "./foundation-product-mapping";
 import {
   dispatchFoundationCommand,
   evaluateFoundationRecoveryEvidence,
   exportFoundationSnapshot,
   importFoundationSnapshot,
   readFoundationAuditLog,
-} from "./foundation-adaptor-core.js";
-import { createFoundationRuntimePackagePort } from "./foundation-runtime-package.js";
+} from "./foundation-adaptor-core";
+import { createFoundationRuntimePackagePort } from "./foundation-runtime-package";
 import {
   FOUNDATION_INTEGRATION_CONTRACT_VERSION,
   isFoundationRuntimeCommand,
@@ -24,9 +24,9 @@ import {
   type FoundationPort,
   type FoundationRuntimeCommand,
   type FoundationSnapshotImportContract,
-} from "./foundation-adaptor-types.js";
-import type { FoundationProductMappingStore } from "./foundation-product-mapping.js";
-import type { FoundationRuntimePackageDependencies } from "./foundation-runtime-package.js";
+} from "./foundation-adaptor-types";
+import type { FoundationProductMappingStore } from "./foundation-product-mapping";
+import type { FoundationRuntimePackageDependencies } from "./foundation-runtime-package";
 
 export const FOUNDATION_BOUNDARY_MAX_BODY_BYTES = 32768;
 

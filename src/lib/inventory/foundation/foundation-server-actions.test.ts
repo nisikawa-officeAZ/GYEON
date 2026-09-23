@@ -36,7 +36,7 @@ const authorityCalls: unknown[] = [];
 let authorityResult: unknown = { tag: "denied", code: "ZERO_ASSIGNMENT" };
 let authorityThrows = false;
 
-mock.module("../authority/resolve-office-az-inventory-authority.js", {
+mock.module("../authority/resolve-office-az-inventory-authority", {
   namedExports: {
     resolveOfficeAzInventoryAuthority: async (input: unknown) => {
       authorityCalls.push(input);
@@ -52,7 +52,7 @@ let parseFoundationBoundaryRequest: Actions["parseFoundationBoundaryRequest"];
 
 before(async () => {
   ({ executeFoundationServerBoundary, parseFoundationBoundaryRequest } = await import(
-    "./foundation-server-actions.js"
+    "./foundation-server-actions"
   ));
 });
 

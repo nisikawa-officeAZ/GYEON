@@ -17,7 +17,7 @@ import type {
   FoundationPort,
   FoundationPortOutcome,
   FoundationRuntimeCommand,
-} from "./foundation-adaptor-types.js";
+} from "./foundation-adaptor-types";
 
 /** Dependencies whose durable implementation is supplied by the later D3A gate. */
 export interface FoundationRuntimePackageDependencies {

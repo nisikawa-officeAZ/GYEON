@@ -33,7 +33,7 @@ import {
   type FoundationSnapshotExportResult,
   type FoundationSnapshotImportRequest,
   type FoundationSnapshotImportResult,
-} from "./foundation-adaptor-types.js";
+} from "./foundation-adaptor-types";
 
 // ---------------------------------------------------------------------------
 // Shared validation and classification helpers

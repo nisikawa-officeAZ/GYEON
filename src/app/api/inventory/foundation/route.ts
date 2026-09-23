@@ -6,7 +6,7 @@ import {
   publicStatusFor,
   type FoundationBoundaryPublicCode,
   type FoundationBoundaryResult,
-} from "../../../../lib/inventory/foundation/foundation-server-actions.js";
+} from "../../../../lib/inventory/foundation/foundation-server-actions";
 
 export const dynamic = "force-dynamic";
 

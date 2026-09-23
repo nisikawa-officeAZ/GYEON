@@ -326,7 +326,7 @@ test("the core is pure and imports only its sibling type contract", () => {
   );
   const imports = source.match(/^import[\s\S]*?from\s+["'][^"']+["'];/gm) ?? [];
   assert.equal(imports.length, 1);
-  assert.match(imports[0], /office-az-inventory-authority-types\.js/);
+  assert.match(imports[0], /office-az-inventory-authority-types"/);
   for (const forbidden of [
     "@supabase",
     "process.env",
