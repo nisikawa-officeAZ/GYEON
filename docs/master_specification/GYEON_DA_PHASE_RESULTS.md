@@ -5758,7 +5758,7 @@ not_authorized:
   android: NOT_AUTHORIZED
   deploy: NOT_AUTHORIZED
 git_actions:
-  committed: false
+  committed: true
   pushed: false
   pr_changed: false
   ready_or_merged: false
