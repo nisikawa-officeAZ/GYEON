@@ -92,7 +92,7 @@ const SETUP_REQUIRED_REASON: Readonly<Record<ServiceFamily, string>> = {
  * installation areas resolve. Areas are global rows, so this one is administrator-only.
  */
 const WINDOW_AREAS_UNAVAILABLE_REASON =
-  "ウィンドウフィルム設定で、提供する部位またはセットの金額と所要時間を登録してください。";
+  "ウィンドウフィルムの施工部位が利用できません。管理者にお問い合わせください。";
 
 /**
  * GDA-ESTIMATE-PPF-OFFERING-R1-A — the compact attached action offered from the coating section
@@ -147,7 +147,8 @@ export function Step4Estimate({ api, shopRank, screenConfig }: Step4EstimateProp
     window_film: isWindowFilmV1RuntimeReady(screenConfig),
     ppf: screenConfig.ppfMethods.length > 0
       && screenConfig.ppfParts.length > 0
-      && screenConfig.ppfTypeGroups.length > 0,
+      && screenConfig.ppfTypeGroups.length > 0
+      && screenConfig.ppfPricingReady,
     maintenance: screenConfig.maintenanceMenus.length > 0,
     car_wash: screenConfig.washMenus.length > 0,
     room_cleaning: screenConfig.roomMenus.length > 0,

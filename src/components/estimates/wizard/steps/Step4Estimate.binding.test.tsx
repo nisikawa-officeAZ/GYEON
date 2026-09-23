@@ -47,8 +47,23 @@ const SC: WizardScreenConfiguration = {
   // B2-E2G — a fully opted-in, fully configured dealer, so every pre-existing assertion keeps
   // exercising the same surface it always did.
   serviceOfferings:   { window_film: true, ppf: true, maintenance: true, room_cleaning: true, car_wash: true },
-  filmTypes:          [{ id: "ft1", label: "ZZFILMTYPE" }],
-  windowAreas:        [{ id: "wa1", label: "ZZWINDOWAREA" }],
+  filmTypes:          [{ id: "ft1", label: "ZZFILMTYPE", installationCoefficientBp: 10_000 }],
+  windowAreas:        [{ id: "front-windshield", label: "ZZWINDOWAREA" }],
+  windowFilmSettings: {
+    contractVersion: "1.0",
+    revision: 1,
+    areas: {
+      "front-windshield": { priceYen: 30_000, durationMinutes: 60, isActive: true },
+      "front-door-glass": { priceYen: null, durationMinutes: null, isActive: false },
+      "rear-door-glass": { priceYen: null, durationMinutes: null, isActive: false },
+      "triangular-window": { priceYen: null, durationMinutes: null, isActive: false },
+      "quarter-glass": { priceYen: null, durationMinutes: null, isActive: false },
+      "rear-glass": { priceYen: null, durationMinutes: null, isActive: false },
+      sunroof: { priceYen: null, durationMinutes: null, isActive: false },
+    },
+    packages: [],
+    options: [],
+  },
   maintenanceMenus:   [{ id: "mm1", name: "ZZMAINTMENU", defaultPrice: 5000 }],
   washMenus:          [{ id: "cw1", name: "ZZWASHMENU", defaultPrice: 3000 }],
   roomMenus:          [{ id: "rc1", name: "ZZROOMMENU", defaultPrice: 4000 }],
@@ -58,6 +73,7 @@ const SC: WizardScreenConfiguration = {
   ppfMethods:         [{ id: "full", label: "ZZPPFMETHOD" }],
   ppfParts:           [{ id: "pp1", label: "ZZPPFPART" }],
   ppfTypeGroups:      [{ id: "gg1", label: "ZZPPFGROUP", products: [{ id: "pt1", label: "ZZPPFTYPE" }] }],
+  ppfPricingReady:    true,
 };
 
 function makeApi(categories: string[], servicesOverride?: WizardServiceConfigurationDraft): {
@@ -567,6 +583,13 @@ test("PPF incomplete directs the operator to an ADMINISTRATOR, never to dealer s
     assert.ok(html.includes("管理者にお問い合わせください"), `${rank}: administrator-directed message`);
     assert.equal(html.includes("見積ウィザード設定"), false, `${rank}: must not point at dealer settings`);
   }
+});
+
+test("PPF pricing incomplete locks the family even when all catalog selectors exist", () => {
+  const missingPricing: WizardScreenConfiguration = { ...SC, ppfPricingReady: false };
+  const html = render(<Step4Estimate api={makeApi(["ppf"]).api} shopRank="detailer" screenConfig={missingPricing} />);
+  assert.ok(html.includes("管理者にお問い合わせください"));
+  assert.equal(html.includes("ZZPPFTYPE"), false, "unpriceable PPF selector must not be exposed");
 });
 
 // ── 8d. GDA-ESTIMATE-PPF-OFFERING-R1-A — attached partial PPF from coating-only selection ──
