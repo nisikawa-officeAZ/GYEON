@@ -4,7 +4,7 @@
 // Flow:
 //   1. Mount → pre-flight GET /api/auth/status
 //   2. If not authenticated → show login banner, block file picker
-//   3. User picks source (camera / file)
+//   3. User picks source (photo/file by default, or camera explicitly)
 //   4. Image compressed client-side via Canvas API (JPEG, >1.5 MB only)
 //   5. User confirms → Server Action upload + OCR (55 s timeout, 1 server-side retry)
 //   6. On error → show specific message + retry button
@@ -161,7 +161,6 @@ export default function VehicleRegistrationUpload({
   const [ocrMeta,        setOcrMeta]        = useState<OcrRunMeta | null>(null);
   const [ocrResult,      setOcrResult]      = useState<VehicleRegistrationOcrResult | null>(null);
   const [elapsedSec,     setElapsedSec]     = useState(0);
-  const [cameraTried,    setCameraTried]    = useState(false);
   const [cameraFallback, setCameraFallback] = useState(false);
   const [isPending,      startTransition]   = useTransition();
 
@@ -208,15 +207,6 @@ export default function VehicleRegistrationUpload({
       videoRef.current.play().catch(() => {});
     }
   }, [stage]);
-
-  // ── Desktop: attempt the webcam immediately; fall back to file on failure ──
-  useEffect(() => {
-    if (authStatus === "ok" && !isMobile && stage === "choice" && !cameraTried) {
-      setCameraTried(true);
-      void startWebcam();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authStatus, isMobile, stage, cameraTried]);
 
   // ── Stop the camera on unmount ─────────────────────────────────────────────
   useEffect(() => () => stopWebcam(), []);
@@ -494,70 +484,47 @@ export default function VehicleRegistrationUpload({
         <div className="flex flex-col gap-3">
           <p className="text-xs text-slate-400 text-center">画像の取得方法を選択してください</p>
 
-          {isMobile ? (
-            // Mobile: camera capture is the PRIMARY action; file select is secondary.
-            <div className="flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => void startWebcam()}
-                className="flex flex-col items-center justify-center gap-3 py-10 rounded-xl border-2 border-blue-500/50 bg-blue-950/20 hover:bg-blue-900/30 transition-colors w-full"
-              >
-                <span className="text-4xl">📷</span>
-                <div className="text-center">
-                  <p className="text-base font-semibold text-blue-200">カメラで撮影</p>
-                  <p className="text-xs text-blue-300/70 mt-0.5">背面カメラ・A4ガイドで車検証をスキャン</p>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex h-20 w-full items-center justify-center gap-3 rounded-xl border-2 border-blue-500/50 bg-blue-950/20 px-4 hover:bg-blue-900/30 transition-colors"
+            >
+              <div className="flex flex-col items-center justify-center gap-1 text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-base leading-none">📂</span>
+                  <p className="text-base font-semibold text-blue-200">写真から選択</p>
                 </div>
-              </button>
+                <p className="text-xs text-blue-300/70 mt-0.5">保存済みの画像・PDFから車検証を読み取り</p>
+              </div>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors w-full"
-              >
-                <span className="text-lg">📂</span>
-                <p className="text-sm text-slate-300">写真から選択（画像・PDF）</p>
-              </button>
+            <button
+              type="button"
+              onClick={() => void startWebcam()}
+              className="flex h-20 w-full items-center justify-center gap-2 px-4 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors"
+            >
+              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">📷</span>
+              <span className="text-sm text-slate-300">カメラで撮影</span>
+            </button>
 
-              {cameraFallback && (
+            {cameraFallback && (
+              isMobile ? (
                 <button
                   type="button"
                   onClick={() => cameraInputRef.current?.click()}
-                  className="flex items-center justify-center gap-2 py-2 rounded-lg border border-slate-700 hover:border-slate-500 text-slate-400 text-xs transition-colors w-full"
+                  className="flex items-center justify-center gap-2 min-h-12 px-4 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-400 text-xs transition-colors w-full"
                 >
-                  端末の標準カメラで撮影
+                  <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">📷</span>
+                  <span>端末の標準カメラで撮影</span>
                 </button>
-              )}
-            </div>
-          ) : (
-            // Desktop: the webcam is attempted automatically on open. This view is
-            // the fallback / manual re-try, with file upload always available.
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => void startWebcam()}
-                className="flex flex-col items-center justify-center gap-3 py-8 rounded-xl border-2 border-blue-500/50 bg-blue-950/20 hover:bg-blue-900/30 transition-colors w-full"
-              >
-                <span className="text-3xl">📷</span>
-                <div className="text-center">
-                  <p className="text-sm font-semibold text-blue-200">カメラで撮影</p>
-                  <p className="text-xs text-blue-300/70 mt-0.5">Webカメラで車検証を撮影</p>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors w-full"
-              >
-                <span className="text-lg">📂</span>
-                <p className="text-sm text-slate-300">画像・PDFをアップロード</p>
-              </button>
-              {cameraFallback && (
+              ) : (
                 <p className="text-xs text-amber-400/80 text-center">
-                  カメラを利用できませんでした。ファイルを選択してください。
+                  カメラを利用できませんでした。写真またはファイルを選択してください。
                 </p>
-              )}
-            </div>
-          )}
+              )
+            )}
+          </div>
 
           <p className="text-xs text-slate-600 text-center">JPEG・PNG・WebP・HEIC・PDF / 最大{RAW_MAX_SIZE_MB}MB</p>
         </div>
@@ -591,27 +558,30 @@ export default function VehicleRegistrationUpload({
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <button
               type="button"
               onClick={capturePhoto}
-              className="flex-1 h-12 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-base font-semibold transition-colors flex items-center justify-center gap-2"
+              className="h-12 min-w-0 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2"
             >
-              <span className="text-lg">📸</span> 撮影する
+              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">📸</span>
+              <span>撮影する</span>
             </button>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="h-12 px-4 rounded-xl border border-slate-700 hover:border-blue-500/50 text-slate-300 text-sm transition-colors shrink-0"
+              className="h-12 min-w-0 px-3 rounded-xl border border-slate-700 hover:border-blue-500/50 text-slate-300 text-sm transition-colors flex items-center justify-center gap-2"
             >
-              写真から選択
+              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-base leading-none">📂</span>
+              <span>写真から選択</span>
             </button>
             <button
               type="button"
               onClick={resetToChoice}
-              className="h-12 px-4 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-400 text-sm transition-colors shrink-0"
+              className="h-12 min-w-0 px-3 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-400 text-sm transition-colors flex items-center justify-center gap-2"
             >
-              キャンセル
+              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">✕</span>
+              <span>キャンセル</span>
             </button>
           </div>
           <p className="text-xs text-slate-500 text-center">車検証全体が枠に収まるように撮影してください</p>
@@ -850,7 +820,9 @@ export default function VehicleRegistrationUpload({
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm rounded-lg transition-colors min-h-[44px]"
+            className={stage === "choice"
+              ? "h-20 w-full px-4 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm rounded-lg transition-colors"
+              : "flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm rounded-lg transition-colors min-h-[44px]"}
           >
             キャンセル
           </button>
