@@ -5689,3 +5689,87 @@ mutation_flags:
 forbidden_actions_taken: NONE
 next: "BOOK_CODEX_INDEPENDENT_READ_ONLY_GOVERNANCE_REVIEW; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_AND_LOCAL_COMMIT_ONLY."
 ```
+
+## INV001-P19-BOOK-D5A-R2 — merged-main mobile authority boundary acceptance
+
+```yaml
+phase: INV001_P19_BOOK_D5A_R2_MOBILE_AUTHORITY_MAIN_ACCEPTANCE
+marker: INV001_P19_BOOK_D5A_R2_MOBILE_AUTHORITY_MAIN_ACCEPTANCE_V1
+status: MERGED_TO_MAIN_POST_MERGE_VERIFIED_NO_DEPLOY
+date: 2026-09-23
+append_only: true
+authorization: "The Owner separately authorized the completed 16-path local commit, normal non-force push, Draft PR, Claude Fable read-only review, Ready conversion, normal merge, and post-merge main verification. This task authorizes only the local one-path ledger candidate and does not authorize Git publication or deployment."
+model_evidence: claude-fable-5-1 (Claude Fable high), bounded implementation agent
+repository:
+  name: nisikawa-officeAZ/GYEON
+  base_branch: main (detached, merged-main)
+  base_commit: c8f1c718c9a20729eafa93c705f423f606f53133
+  base_tree: 093055d32f52715f846e3c9f539c3c51a8ab110b
+  git_status_before: CLEAN
+pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/128
+feature_commit: 3f2771bf36143596b59349f41e793994ee976a9a
+feature_tree: 3a20c696c7d69940bf47a4cccb9f53e174b1cb84
+merge_commit: c8f1c718c9a20729eafa93c705f423f606f53133
+merge_tree: 093055d32f52715f846e3c9f539c3c51a8ab110b
+first_parent: 873ffdf3a1eb2dce61e8b1bdb927b132bb21339b
+second_parent: 3f2771bf36143596b59349f41e793994ee976a9a
+merge_method: NORMAL_MERGE_COMMIT
+exact_changed_paths: 16
+feature_blob_match: PASS_16_OF_16
+review_evidence:
+  book_independent_review:
+    evidence: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5795765132
+    marker: INV001_P19_BOOK_D5A_R2_RPC_THENABLE_CONTRACT_REVIEW_RESULT_V1
+    verdict: PASS
+  claude_read_only_pr_review:
+    evidence: https://github.com/nisikawa-officeAZ/GYEON/pull/128#issuecomment-5795929886
+    marker: INV001_P19_D5A_R2_PR128_CLAUDE_READ_ONLY_REVIEW_RESULT_V1
+    verdict: PASS
+    p0_p2_findings: NONE
+    non_blocking_p3_observations:
+      - DOWNSTREAM_RPC_FAILURE_HTTP_CLASSIFICATION
+      - TWO_AUTH_ROUND_TRIPS_PER_REQUEST
+      - DIRECT_ROUTE_HELPER_EXECUTABLE_COVERAGE
+      - GOVERNANCE_LEDGER_LAG
+    p3_resolution_by_this_append: GOVERNANCE_LEDGER_LAG_ONLY
+  post_merge_main_verification:
+    evidence: https://github.com/nisikawa-officeAZ/GYEON/pull/128#issuecomment-5796084803
+    marker: INV001_P19_D5A_R2_MAIN_POST_MERGE_VERIFICATION_RESULT_V1
+    verdict: PASS
+verification:
+  fresh_npm_ci: EXIT_0
+  focused_tests: PASS_79_OF_79
+  typecheck: PASS
+  production_build: PASS
+  canonical_prebuild: PASS_28_OF_28
+  static_pages: PASS_53_OF_53
+  diff_check: PASS
+  final_merged_main_worktree_before_ledger_append: CLEAN
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+explicitly_not_authorized:
+  - DB_OR_MIGRATION_APPLY
+  - SUPABASE_AUTH_PROVIDER_ENVIRONMENT_ANDROID_ACTION
+  - DEPLOYMENT_OR_PRODUCTION_ACTION
+  - UNRELATED_SOURCE_OR_TEST_CHANGE
+  - STAGE
+  - COMMIT
+  - PUSH
+  - PR_MUTATION
+  - READY
+  - MERGE
+mutation_flags:
+  source_test_migration_package_lockfile_config_environment: false
+  db_supabase_auth_endpoint_provider_android: false
+  build_typecheck_runtime_test: false
+  staged: false
+  committed: false
+  pushed: false
+  pr_or_comment_mutated: false
+  ready_merged_deployed: false
+forbidden_actions_taken: NONE
+next: "INDEPENDENTLY_VERIFY_THIS_EXACT_ONE_PATH_APPEND_AND_GIT_DIFF_CHECK; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_ONE_PATH_LOCAL_COMMIT_ONLY."
+```
