@@ -5537,3 +5537,155 @@ protected_metadata:
   src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
 next: "VERIFY_THE_EXACT_LEDGER_ONLY_DELTA_AND_PR_COMMENT; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_LEDGER_PATH_COMMIT_ONLY."
 ```
+
+## INV001-P27-G0 — Android connection prerequisites governance candidate
+
+```yaml
+phase: INV001_P27_G0_ANDROID_CONNECTION_PREREQUISITES_GOVERNANCE
+marker: INV001_P27_G0_ANDROID_CONNECTION_PREREQUISITES_GOVERNANCE_RESULT_V1
+status: LOCAL_GOVERNANCE_CANDIDATE_UNSTAGED_UNCOMMITTED_IMPLEMENTATION_NOT_AUTHORIZED
+date: 2026-09-23
+append_only: true
+authorization: "The Owner ratified the eight P27 decisions and authorized exactly this three-document governance candidate (new directive, completion-plan section, this ledger entry). No source, migration, test, DB/Auth, endpoint configuration, Android, commit, push, PR, Ready, merge, deploy, or production action is authorized."
+model_evidence: claude-fable-5-1 (Claude Fable high), bounded governance implementation agent
+repository:
+  name: nisikawa-officeAZ/GYEON
+  base_branch: main (detached)
+  base_commit: 54c32343b4ef57e4e4b703b23540153e529473dd
+  base_tree: 633a2fc4ab68c06ebb3002a8e2e481b8df4ce76b
+  git_status_before: CLEAN
+diagnosis:
+  instruction: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5790917545
+  result: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5791009334
+  marker: INV001_P27_BOOK_ANDROID_CONNECTION_PREREQUISITES_READ_ONLY_DIAGNOSIS_RESULT_V1
+  verdict: READY_FOR_OWNER_DECISIONS
+  codex_acceptance: ACCEPTED_MARKER_MODEL_EVIDENCE_BASE_CLEAN_GIT_LITERAL_READ_SCOPE_PROTECTED_METADATA_ZERO_MUTATION
+directive:
+  path: docs/master_specification/CLAUDE_DIRECTIVE_INV001_P27_G0_ANDROID_CONNECTION_PREREQUISITES_GOVERNANCE.md
+  marker: INV001_P27_G0_ANDROID_CONNECTION_PREREQUISITES_GOVERNANCE_V1
+exact_change_scope:
+  - docs/master_specification/CLAUDE_DIRECTIVE_INV001_P27_G0_ANDROID_CONNECTION_PREREQUISITES_GOVERNANCE.md
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+owner_ratified_decisions:
+  1_track: "P27 Book auth/session work is the next prerequisite track; Book integration/auth work; no transfer of Foundation inventory-rule ownership from Studio to MacBook."
+  2_device_policy: "Company-owned/managed devices only; one active device per operator."
+  3_session_policy: "Access token TTL 15 minutes; refresh idle expiry 7 days; absolute session lifetime 30 days; high-risk actions require re-authentication within 5 minutes."
+  4_registration_revocation_authority: "Inventory Super Admin only."
+  5_identity_activation: "Verified Supabase Auth user login plus one-time admin-issued managed-device activation."
+  6_endpoint_key: "DEALEROS_INVENTORY_API_BASE_URL; non-secret; injected per Android build/runtime environment; production value must not be hard-coded or committed."
+  7_prerequisite_reconciliation: "Record completed D4 Gate B PR #117 and existing D4A authority migration acceptance before P27 implementation governance depends on them."
+  8_refresh_reuse: "A consumed refresh token replay revokes the entire token family."
+d4_gate_b_reconciliation:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/117
+  state: MERGED_NORMALLY_TO_MAIN
+  merged_at: 2026-09-23T07:27:16Z
+  repair_head: 5465938e519c5849f0530c32030fd2b1bb48dc5b
+  merge_commit: 54c32343b4ef57e4e4b703b23540153e529473dd
+  merge_tree: 633a2fc4ab68c06ebb3002a8e2e481b8df4ce76b
+  merge_parents:
+    - 0d4ae782e02678c0768b669c53b1c9c7d23e5d4f
+    - 5465938e519c5849f0530c32030fd2b1bb48dc5b
+  whole_pr_paths: 13
+  build_turbopack: PASS
+  focused_tests: PASS_132_OF_132
+  path_limited_typescript: PASS
+  diff_check: PASS
+  replacement_vercel: SUCCESS
+  fresh_independent_review: PASS_NO_ACTIONABLE_FINDING
+  review_evidence: https://github.com/nisikawa-officeAZ/GYEON/pull/117#issuecomment-5790801935
+  owner_authorized_gate_sequence: LOCAL_COMMIT_THEN_NORMAL_NON_FORCE_PUSH_THEN_ONE_TIME_CI_CONFIRMATION_THEN_FRESH_INDEPENDENT_REVIEW_THEN_READY_CONVERSION_THEN_NORMAL_MERGE_EACH_SEPARATELY_OWNER_AUTHORIZED
+  historical_interpretation_comments: ISSUE_39_5790862241_AND_5790921677_SUPERSEDED_BY_SUBSEQUENT_SEPARATE_OWNER_AUTHORIZATION
+  additional_git_work: NONE_NO_ROLLBACK_REWRITE_OR_REWORK_AUTHORIZED_OR_REQUIRED
+  technical_status: COMPLETE_ON_GYEON_MAIN_BROWSER_SSR_COOKIE_BOUNDARY_ONLY
+d4a_migration_reconciliation:
+  path: supabase/migrations/20260920093931_office_az_operator_authority.sql
+  blob: 100644_4297e9f3af0a4add51fe7bc63fe5ed020a9fa27d
+  first_commit: f4078fa03e178e302bf7ad57a32995007551128a
+  landed_via_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/104
+  landed_merge_commit: 4a9d68567430fc7d01b262269577f98f9a8e3786
+  disposable_ci_workflow: .github/workflows/inv001-d4a-b2-disposable-db.yml
+  disposable_ci_workflow_blob: 100644_6a407267df0d9736c7fe7e094f4ce1030dbc50be
+  disposable_ci_landed_via_pr: https://github.com/nisikawa-officeAZ/GYEON/pull/112
+  disposable_ci_landed_merge_commit: 882faa7d2d92471be09b268965e467b406421b04
+  repository_evidence_proves:
+    - MIGRATION_SOURCE_PRESENT_ON_MAIN
+    - MIGRATION_HEADER_DECLARES_NO_ASSIGNMENTS_LOCATIONS_GRANTS_OR_MUTATION_RPCS_FAIL_CLOSED_FRESH_DATABASE
+    - PULL_REQUEST_ONLY_DISPOSABLE_CI_VALIDATION_PATH_EXISTS
+  repository_evidence_does_not_prove:
+    - HOSTED_STAGING_OR_PRODUCTION_MIGRATION_APPLY
+    - SEEDED_OR_LIVE_ASSIGNMENT_LOCATION_OR_CAPABILITY_GRANT
+    - RLS_EFFECTIVE_LIVE_AUTHORITY
+    - AUTH_USER_PROVISIONING_OR_CLAIM
+    - PRODUCTION_AUTHORITY
+  live_authority: NOT_CONFIGURED_FAIL_CLOSED
+current_capabilities:
+  browser_ssr_cookie_d4_path: PRESENT
+  per_request_operator_status_and_authority_version: PARTIAL_NO_DEVICE_SESSION_INVALIDATION
+  managed_device_session_issue_refresh: NOT_EVIDENCED
+  refresh_rotation_and_reuse_denial: NOT_EVIDENCED
+  non_cookie_request_authentication: NOT_EVIDENCED
+  dealeros_inventory_api_base_url_contract: NOT_EVIDENCED
+  managed_device_registration_and_binding: NOT_EVIDENCED
+  per_device_and_operator_wide_revoke: NOT_EVIDENCED
+  immediate_device_session_invalidation_and_device_audit: NOT_EVIDENCED
+accepted_architecture:
+  exchange_boundary: BOOK_OWNED_NO_GENERIC_BROWSER_SESSION_REUSE_NO_SECOND_IDENTITY_PROVIDER
+  tokens: OPAQUE_ACCESS_AND_REFRESH_STORED_HASH_ONLY
+  refresh: SINGLE_USE_ROTATION_WHOLE_FAMILY_REUSE_REVOCATION
+  per_request_check: DEVICE_OPERATOR_AUTHORITY_VERSION_CAPABILITY_LOCATION_BEFORE_D4_FOUNDATION_BOUNDARY
+  registration_and_revocation: SEPARATE_SUPER_ADMIN_ONLY_WEB_SURFACES_DEVICE_SESSIONS_CANNOT_CALL
+  endpoint: ANDROID_RUNTIME_INJECTED_ORIGIN_PRODUCTION_NEVER_HARD_CODED
+  cookie_vs_bearer: WEB_SAME_ORIGIN_CSRF_PRESERVED_DEVICE_BEARER_CORS_DENY_BY_DEFAULT
+future_gates:
+  - C1_PURE_CONTRACTS
+  - C2_DATABASE_SOURCE
+  - C3_REQUEST_HANDLERS
+  - C4_LOCAL_VERIFICATION
+  - C5_DISPOSABLE_PG17_AUTH_POSTGREST_RACE_VERIFICATION
+  - LOCAL_COMMIT
+  - PUSH_DRAFT_PR
+  - INDEPENDENT_REVIEW
+  - READY
+  - MERGE
+  - ENVIRONMENT_CONFIGURATION_MIGRATION_APPLY
+  - ANDROID_SOURCE
+  - PRODUCTION_ROLLOUT
+proposed_allowlists: PROPOSED_ONLY_NOT_AUTHORIZED_REQUIRES_A_FRESH_LITERAL_GATE
+proposed_allowlists_source: STUDIO_ISSUE_39_COMMENT_5790921677_NON_AUTHORITATIVE_PLANNING_INPUT_ONLY_NOT_AN_ACCEPTED_DIAGNOSIS_ALLOWLIST_STALE_KEY_SUPERSEDED_BY_DEALEROS_INVENTORY_API_BASE_URL
+proposed_allowlists_rule: EACH_FUTURE_GATE_INDEPENDENTLY_REDIAGNOSES_AND_FIXES_ITS_EXACT_LITERAL_ALLOWLIST
+security_acceptance_cases:
+  - TOKEN_THEFT_REPLAY
+  - REFRESH_REUSE_FAMILY_REVOCATION
+  - REVOKED_OR_SUSPENDED_OPERATOR
+  - STALE_AUTHORITY_VERSION
+  - WRONG_DEVICE
+  - WRONG_LOCATION
+  - WRONG_ENDPOINT_ENVIRONMENT
+  - CONCURRENT_REFRESH_SINGLE_ROTATION
+  - REVOKE_VS_REQUEST_RACE
+  - SESSION_LIFETIMES_15M_7D_30D_5M_SERVER_ENFORCED
+  - ONE_ACTIVE_DEVICE_PER_OPERATOR
+  - REGISTRATION_REVOCATION_SURFACE_SEPARATION
+responsibility:
+  owner: Office AZ
+  specification_and_acceptance: Book Codex
+  bounded_governance_and_later_authorized_implementation: Book Claude (Claude Fable high)
+  foundation_inventory_owner: Mac Studio (no Book auth/session implementation)
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+mutation_flags:
+  source_test_migration_package_lockfile_config_environment: false
+  db_supabase_auth_endpoint_provider_android: false
+  build_typecheck_runtime_test: false
+  staged: false
+  committed: false
+  pushed: false
+  pr_or_comment_mutated: false
+  ready_merged_deployed: false
+forbidden_actions_taken: NONE
+next: "BOOK_CODEX_INDEPENDENT_READ_ONLY_GOVERNANCE_REVIEW; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_AND_LOCAL_COMMIT_ONLY."
+```
