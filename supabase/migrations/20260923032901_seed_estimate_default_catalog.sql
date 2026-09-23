@@ -180,22 +180,32 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, pg_catalog
 AS $$
+DECLARE
+  v_runtime_enabled boolean;
 BEGIN
   INSERT INTO public.dealer_wizard_catalog_lifecycle (dealer_id)
   VALUES (NEW.id)
   ON CONFLICT (dealer_id) DO NOTHING;
 
-  -- Default-catalog availability must never become a hard dependency of dealer signup.
-  -- Keep the lifecycle row, roll back only the seed subtransaction on failure, and surface
-  -- a warning for operators. The migration backfill calls the seed helper directly, so
-  -- policy or validator failures during deployment still fail the migration closed.
-  BEGIN
-    PERFORM public.wiz_seed_default_estimate_catalog(NEW.id);
-  EXCEPTION WHEN OTHERS THEN
+  SELECT runtime_enabled
+    INTO v_runtime_enabled
+    FROM public.wizard_product_modes
+   WHERE mode = NEW.product_mode;
+
+  -- Runtime disablement is the one supported soft-failure path: preserve dealer signup and
+  -- its lifecycle row, but do not create catalog rows while the mode is disabled or unknown.
+  IF v_runtime_enabled IS NOT TRUE THEN
     RAISE WARNING
-      'wiz_init_dealer_lifecycle: default catalog seed skipped for dealer % (SQLSTATE %)',
-      NEW.id, SQLSTATE;
-  END;
+      'wiz_init_dealer_lifecycle: default catalog seed skipped for dealer % because product mode % is not runtime-enabled',
+      NEW.id, NEW.product_mode;
+    RETURN NULL;
+  END IF;
+
+  -- Every other immediate seed error remains fail-closed. Deferred catalog validators fire at
+  -- the outer transaction COMMIT, outside this trigger call; they can still abort dealer signup.
+  -- Existing seeded rows make incompatible policy narrowing fail earlier through the catalog
+  -- revalidation triggers. Do not force unrelated deferred constraints from inside this trigger.
+  PERFORM public.wiz_seed_default_estimate_catalog(NEW.id);
   RETURN NULL;
 END;
 $$;

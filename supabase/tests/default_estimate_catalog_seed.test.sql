@@ -101,16 +101,16 @@ BEGIN
   INSERT INTO public.dealers
     (id, name, status, approval_status, product_mode, detailer_rank)
   VALUES
-    (v_dealer, 'Seed Failure Isolation Test', 'active', 'approved', 'gyeon', 'detailer');
+    (v_dealer, 'Runtime Disabled Seed Skip Test', 'active', 'approved', 'gyeon', 'detailer');
 
   IF NOT EXISTS (
     SELECT 1 FROM public.dealer_wizard_catalog_lifecycle WHERE dealer_id = v_dealer
   ) THEN
-    RAISE EXCEPTION 'dealer lifecycle was lost when default seeding failed';
+    RAISE EXCEPTION 'dealer lifecycle was lost when runtime-disabled seeding was skipped';
   END IF;
 
   IF EXISTS (SELECT 1 FROM public.wizard_catalog_items WHERE dealer_id = v_dealer) THEN
-    RAISE EXCEPTION 'failed seed left partial catalog rows';
+    RAISE EXCEPTION 'runtime-disabled seed skip left catalog rows';
   END IF;
 
   BEGIN
@@ -128,6 +128,48 @@ BEGIN
    WHERE mode = 'gyeon';
 END
 $$;
+
+CREATE OR REPLACE FUNCTION public.test_reject_default_catalog_insert()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RAISE EXCEPTION 'intentional unexpected seed failure';
+END;
+$$;
+
+CREATE TRIGGER trg_test_reject_default_catalog_insert
+  BEFORE INSERT ON public.wizard_catalog_items
+  FOR EACH ROW EXECUTE FUNCTION public.test_reject_default_catalog_insert();
+
+DO $$
+DECLARE
+  v_dealer constant uuid := '91000000-0000-0000-0000-000000000006';
+  v_signup_failed boolean := false;
+BEGIN
+  BEGIN
+    INSERT INTO public.dealers
+      (id, name, status, approval_status, product_mode, detailer_rank)
+    VALUES
+      (v_dealer, 'Unexpected Seed Failure Test', 'active', 'approved', 'gyeon', 'detailer');
+  EXCEPTION WHEN OTHERS THEN
+    v_signup_failed := true;
+  END;
+
+  IF NOT v_signup_failed THEN
+    RAISE EXCEPTION 'unexpected seed failure did not abort dealer creation';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM public.dealers WHERE id = v_dealer)
+     OR EXISTS (SELECT 1 FROM public.dealer_wizard_catalog_lifecycle WHERE dealer_id = v_dealer)
+     OR EXISTS (SELECT 1 FROM public.wizard_catalog_items WHERE dealer_id = v_dealer) THEN
+    RAISE EXCEPTION 'failed dealer creation left partial dealer, lifecycle, or catalog rows';
+  END IF;
+END
+$$;
+
+DROP TRIGGER trg_test_reject_default_catalog_insert ON public.wizard_catalog_items;
+DROP FUNCTION public.test_reject_default_catalog_insert();
 
 DO $$
 DECLARE
