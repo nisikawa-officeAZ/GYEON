@@ -13,6 +13,8 @@ import {
   buildWizardPricingInputFromConfig,
   type ConfiguredPricingConfiguration,
 } from "./wizard-pricing-input-adapter-config";
+import { computeWizardPricingFromConfig } from "./compute-wizard-pricing-from-config";
+import { mapWizardDraftToSaveRequestFromConfig } from "../save/estimate-save-mapper-from-config";
 
 const PPF_R1: PpfR1PriceSettings = {
   contractVersion: "1.0",
@@ -120,7 +122,7 @@ test("partial PPF sums exact configured part prices before applying coefficients
   assert.equal(result.manualLines[0]?.metadata.ppfPartQuantities, "bonnet:1,front-bumper:2");
 });
 
-test("missing R1 settings blocks instead of falling back to legacy tables or manual input", () => {
+test("missing R1 settings surfaces an editable review line and remains blocked until priced", () => {
   const result = buildWizardPricingInputFromConfig(
     draft(),
     CONFIG,
@@ -128,7 +130,55 @@ test("missing R1 settings blocks instead of falling back to legacy tables or man
     "detailer",
   );
   assert.ok(result.errors.some((entry) => entry.code === "PPF_R1_SETTINGS_REQUIRED"));
-  assert.equal(result.manualLines.length, 0);
+  assert.equal(result.manualLines.length, 1);
+  assert.equal(result.manualLines[0]?.manualPricingIdentity, "ppf_review_full_front_full_film-x");
+  assert.equal(result.manualLines[0]?.unitPrice, 0);
+  assert.equal(result.manualLines[0]?.metadata.reviewPriceRequired, true);
+});
+
+test("a final-review PPF amount resolves the placeholder without reviving the legacy amount", () => {
+  const value = draft((next) => {
+    next.review.unitPriceInputsByLine["manual:ppf:ppf_review_full_front_full_film-x"] = "125000";
+  });
+  const result = buildWizardPricingInputFromConfig(value, CONFIG, makePricingCatalog(), "detailer");
+
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.manualLines.length, 1);
+  assert.equal(result.manualLines[0]?.unitPrice, 125_000);
+  assert.equal(result.manualLines[0]?.metadata.reviewPriceRequired, false);
+  assert.equal(result.manualLines[0]?.metadata.reviewPriceOverride, true);
+  assert.notEqual(result.manualLines[0]?.unitPrice, 999_999);
+});
+
+test("missing PPF catalog price is visible blank, then review price becomes saveable", () => {
+  const value = draft();
+  const catalog = makePricingCatalog();
+  const pending = computeWizardPricingFromConfig(value, CONFIG, catalog, "detailer");
+
+  assert.equal(pending.lines.length, 1);
+  assert.equal(pending.lines[0]?.label, "PPF フロントフル（PPF X）");
+  assert.equal(pending.lines[0]?.unitPrice, null);
+  assert.ok(pending.unresolvedItems.some((item) => item.code === "PPF_R1_SETTINGS_REQUIRED"));
+
+  value.review.unitPriceInputsByLine["manual:ppf:ppf_review_full_front_full_film-x"] = "125000";
+  const priced = computeWizardPricingFromConfig(value, CONFIG, catalog, "detailer");
+  assert.equal(priced.completeness, "complete");
+  assert.equal(priced.lines[0]?.unitPrice, 125_000);
+  assert.equal(priced.subtotal, 125_000);
+  assert.equal(priced.grandTotal, 137_500);
+
+  const mapped = mapWizardDraftToSaveRequestFromConfig({
+    draft: value,
+    pricingResult: priced,
+    pricingConfig: CONFIG,
+    catalog,
+    shopRank: "detailer",
+  });
+  assert.equal(mapped.ok, true);
+  if (mapped.ok) {
+    assert.equal(mapped.request.services[0]?.label, "PPF フロントフル（PPF X）");
+    assert.equal(mapped.request.services[0]?.unitPrice, 125_000);
+  }
 });
 
 test("missing coverage, type coefficient, body-size price, and vehicle coefficient fail closed", () => {
@@ -143,7 +193,8 @@ test("missing coverage, type coefficient, body-size price, and vehicle coefficie
   for (const [label, value, config, code] of cases) {
     const result = buildWizardPricingInputFromConfig(value, config, catalog, "detailer");
     assert.ok(result.errors.some((entry) => entry.code === code), label);
-    assert.equal(result.manualLines.length, 0, label);
+    const reviewPriceSupported = label === "coefficient" || label === "size-price";
+    assert.equal(result.manualLines.length, reviewPriceSupported ? 1 : 0, label);
   }
 });
 

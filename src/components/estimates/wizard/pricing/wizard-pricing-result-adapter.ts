@@ -24,6 +24,9 @@ const UNRESOLVED_CODES: string[] = [
   WIZARD_PRICING_ERRORS.INVALID_MANUAL_PRICE,
   WIZARD_PRICING_ERRORS.INVALID_QUANTITY,
   WIZARD_PRICING_ERRORS.UNKNOWN_PRICING_REFERENCE,
+  "PPF_R1_SETTINGS_REQUIRED",
+  "PPF_R1_COEFFICIENT_REQUIRED",
+  "PPF_R1_PRICE_UNAVAILABLE",
 ];
 const INVALID_CODES: string[] = [
   WIZARD_PRICING_ERRORS.INVALID_MANUAL_PRICE,
@@ -95,6 +98,7 @@ export function mapProductionResultToWizard(
   // passed into canonical aggregation, so the displayed lines and the engine subtotal always agree).
   const manualLines: WizardPricingLineResult[] = bundle.manualLines.map((l) => {
     const extended = Math.round(l.unitPrice * l.quantity);
+    const reviewPriceRequired = l.metadata.reviewPriceRequired === true;
     return {
       kind:           "manual" as const,
       category:       l.sourceCategory,
@@ -103,11 +107,11 @@ export function mapProductionResultToWizard(
       catalogLineRole: null,    // …nor a catalog role
       label:          l.label,
       quantity:       l.quantity,
-      unitPrice:      l.unitPrice,
-      lineSubtotal:   extended,
+      unitPrice:      reviewPriceRequired ? null : l.unitPrice,
+      lineSubtotal:   reviewPriceRequired ? null : extended,
       discountAmount: null,
       taxAmount:      null,
-      lineTotal:      extended,
+      lineTotal:      reviewPriceRequired ? null : extended,
     };
   });
 

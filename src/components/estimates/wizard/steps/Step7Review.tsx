@@ -125,6 +125,8 @@ export function Step7Review({
                       step="1"
                       inputMode="numeric"
                       aria-label={`${line.label}の金額（単価）`}
+                      aria-invalid={line.unitPrice === null}
+                      placeholder={line.unitPrice === null ? "金額を入力" : undefined}
                       value={api.draft.review.unitPriceInputsByLine[wizardPricingLineId(line)] ?? String(line.unitPrice ?? "")}
                       onChange={(event) => api.setServiceLineAdjustment(
                         wizardPricingLineId(line),
@@ -134,6 +136,7 @@ export function Step7Review({
                       className="h-10 w-full rounded-lg border border-slate-600 bg-slate-950 pl-7 pr-3 text-right text-sm text-slate-100"
                     />
                   </div>
+                  {line.unitPrice === null && <span className="text-amber-400">金額を入力すると保存できます</span>}
                 </label>
                 <div className="grid shrink-0 grid-cols-2 gap-1" aria-label={`${line.label}の表示順`}>
                   <button

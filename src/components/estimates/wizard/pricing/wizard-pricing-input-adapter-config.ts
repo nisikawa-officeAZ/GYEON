@@ -179,6 +179,12 @@ function parseVehicleCoefficientBp(raw: string): number | null {
   return Number.isSafeInteger(bp) && bp > 0 ? bp : null;
 }
 
+function parseReviewYen(raw: string | undefined): number | null {
+  if (raw === undefined || !/^\d+$/.test(raw)) return null;
+  const value = Number(raw);
+  return Number.isSafeInteger(value) ? value : null;
+}
+
 const PPF_R1_PRICING_ERRORS = {
   SETTINGS_REQUIRED: "PPF_R1_SETTINGS_REQUIRED",
   COVERAGE_REQUIRED: "PPF_R1_COVERAGE_REQUIRED",
@@ -331,6 +337,55 @@ export function buildWizardPricingInputFromConfig(
       };
     }
 
+    const scopeCode = ppf.installationMethod === "full"
+      ? ppf.fullCoverage
+      : ppf.installationMethod === "partial" ? "partial" : null;
+    const reviewIdentity = scopeCode && typeId
+      ? `ppf_review_${ppf.installationMethod}_${scopeCode}_${typeId}`
+      : null;
+    const reviewLineId = reviewIdentity ? `manual:ppf:${reviewIdentity}` : null;
+    const reviewUnitPrice = reviewLineId
+      ? parseReviewYen(draft.review.unitPriceInputsByLine[reviewLineId])
+      : null;
+    const scopeLabel = scopeCode === "front_full"
+      ? "フロントフル"
+      : scopeCode === "full_body" ? "フルボディ" : scopeCode === "partial" ? "部分施工" : null;
+    const reviewLine = reviewIdentity && scopeLabel && typeId && typeOption
+      ? {
+          sourceCategory: "ppf" as const,
+          manualPricingIdentity: reviewIdentity,
+          label: `PPF ${scopeLabel}（${typeOption.label}）`,
+          quantity: 1,
+          unitPrice: reviewUnitPrice ?? 0,
+          optionIdentity: typeId,
+          metadata: {
+            ppfR1ContractVersion: "1.0",
+            ppfMethodCode: ppf.installationMethod,
+            ppfScope: scopeCode,
+            ppfBodySize: sizeKey,
+            ppfInstallCoefficientBp: 10_000,
+            ppfVehicleCoefficientBp: vehicleCoefficientBp,
+            ppfTypeCode: typeId,
+            reviewPriceRequired: reviewUnitPrice === null,
+            reviewPriceOverride: reviewUnitPrice !== null,
+            ...(scopeCode === "partial"
+              ? {
+                  ppfPartQuantities: ppf.selectedPartIds
+                    .map((partCode) => `${partCode}:${ppf.quantitiesByPart[partCode] ?? 1}`)
+                    .join(","),
+                }
+              : {}),
+          },
+        }
+      : null;
+
+    // A valid final-review price is an explicit operator override. It may replace a
+    // missing dealer price table/coefficient, but never an incomplete PPF selection.
+    if (reviewLine && reviewUnitPrice !== null && vehicleCoefficientBp !== null) {
+      resolvedPpfR1Lines.push(reviewLine);
+      catalogResolved = true;
+    } else
+
     if (!methodOption) {
       errors.push(issue(
         WIZARD_PRICING_CONFIG_ERRORS.UNKNOWN_CONFIGURED_ITEM,
@@ -340,12 +395,14 @@ export function buildWizardPricingInputFromConfig(
       ));
     } else if (settings === null) {
       errors.push(issue(PPF_R1_PRICING_ERRORS.SETTINGS_REQUIRED, "PPFの正式価格表が未設定です。設定画面で価格を保存してください。", "ppf"));
+      if (reviewLine) resolvedPpfR1Lines.push(reviewLine);
     } else if (ppf.installationMethod === "full" && scope === null) {
       errors.push(issue(PPF_R1_PRICING_ERRORS.COVERAGE_REQUIRED, "フロントフルまたはフルボディを選択してください。", "ppf", "full"));
     } else if (!typeId || !typeOption) {
       errors.push(issue(PPF_R1_PRICING_ERRORS.TYPE_REQUIRED, "施工するPPF種類を選択してください。", "ppf", typeId));
     } else if (installCoefficientBp === undefined) {
       errors.push(issue(PPF_R1_PRICING_ERRORS.COEFFICIENT_REQUIRED, "選択したPPF種類の施工係数が未設定です。", "ppf", typeId));
+      if (reviewLine) resolvedPpfR1Lines.push(reviewLine);
     } else if (vehicleCoefficientBp === null) {
       errors.push(issue(PPF_R1_PRICING_ERRORS.VEHICLE_COEFFICIENT_INVALID, "車格係数は0より大きい数値で入力してください。", "ppf", typeId));
     } else if (scope !== null) {
@@ -357,15 +414,16 @@ export function buildWizardPricingInputFromConfig(
           "ppf",
           resolved.partCode ?? ppf.installationMethod,
         ));
+        if (reviewLine) resolvedPpfR1Lines.push(reviewLine);
       } else {
-        const scopeLabel = resolved.scope === "front_full"
+        const resolvedScopeLabel = resolved.scope === "front_full"
           ? "フロントフル"
           : resolved.scope === "full_body" ? "フルボディ" : "部分施工";
         const identity = `ppf_r1_${resolved.scope}_${typeId}`;
         resolvedPpfR1Lines.push({
           sourceCategory: "ppf",
           manualPricingIdentity: identity,
-          label: `PPF ${scopeLabel}（${typeOption.label}）`,
+          label: `PPF ${resolvedScopeLabel}（${typeOption.label}）`,
           quantity: 1,
           unitPrice: resolved.resolvedPriceYen,
           optionIdentity: typeId,

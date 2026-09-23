@@ -243,6 +243,35 @@ describe("Step7Review — canonical line-order controls stay inside the responsi
     assert.match(html, /aria-label="PURE EVOを下へ"/);
     assert.doesNotMatch(html, /<table/);
   });
+
+  it("renders an unresolved editable PPF line with a required-price prompt", () => {
+    const pricing = {
+      ...EMPTY_WIZARD_PRICING_RESULT,
+      status: "success" as const,
+      completeness: "partial" as const,
+      lines: [{
+        kind: "manual" as const,
+        category: "ppf",
+        sourceId: "ppf:ppf_review_full_front_full_film-x",
+        label: "PPF フロントフル（PPF X）",
+        quantity: 1,
+        unitPrice: null,
+        lineSubtotal: null,
+        discountAmount: null,
+        taxAmount: null,
+        lineTotal: null,
+        pricingReferenceId: null,
+        catalogLineRole: null,
+      }],
+    };
+    const html = renderToStaticMarkup(
+      <Step7Review api={apiFor(storeWith())} customers={CUSTOMERS} vehicles={VEHICLES} pricing={pricing} />,
+    );
+
+    assert.match(html, /PPF フロントフル（PPF X）/);
+    assert.match(html, /金額を入力すると保存できます/);
+    assert.match(html, /aria-invalid="true"/);
+  });
 });
 
 describe("Step7Review — display resolution never mutates its inputs", () => {
