@@ -139,6 +139,29 @@ test("changed label keeps the same identity", async () => {
   const r = await resolveWizardRuntimeConfig(readers({ rank: "shop", rows }));
   assert.ok(r.ok && r.screenConfig.maintenanceMenus.some((x) => x.id === "maint-a"));
 });
+test("dealer work presets and store options reach the estimate runtime; store options default to every category", async () => {
+  const rows = [
+    ...globals(),
+    ...menus(),
+    row({ kind: "other_work_preset", code: "other-polish", owner_scope: "dealer", label_ja: "ハードポリッシュ", categories: ["other"] }),
+    row({ kind: "store_global_option", code: "store-trip", owner_scope: "dealer", label_ja: "出張費", default_unit_price: 15000, categories: [] }),
+  ];
+  const r = await resolveWizardRuntimeConfig(readers({ rank: "shop", rows }));
+  assert.ok(r.ok);
+  if (!r.ok) return;
+  assert.deepEqual(r.screenConfig.otherWorkPresets.map((x) => x.name), ["ハードポリッシュ"]);
+  assert.deepEqual(r.screenConfig.storeGlobalOptions, [{
+    id: "store-trip",
+    name: "出張費",
+    defaultPrice: 15000,
+    editableUnitPrice: false,
+    quantityRequired: false,
+    minQty: 1,
+    maxQty: undefined,
+    appliesToAllCategories: true,
+    displayOrder: 0,
+  }]);
+});
 // B2-E2B — this test previously asserted the OPPOSITE: that an eligible rank with window areas but
 // no registered film types failed the ENTIRE wizard. That behaviour is removed. An absent optional
 // product line is a configuration state, not a defect, so the runtime now succeeds and window film
