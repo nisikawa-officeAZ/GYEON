@@ -31,6 +31,15 @@ test("photo and camera source icons use the same visual size", () => {
   assert.doesNotMatch(choiceStage, /<svg/);
 });
 
+test("folder icon is placed immediately to the left of the photo label", () => {
+  const choiceStage = source.match(/\{\/\* ── Stage: choice[\s\S]*?\{\/\* ── Stage: camera/)?.[0] ?? "";
+
+  assert.match(
+    choiceStage,
+    /className="flex items-center justify-center gap-2">\s*<span[^>]*>📂<\/span>\s*<p[^>]*>写真から選択<\/p>/,
+  );
+});
+
 test("choice source and cancel buttons use the same full-width height", () => {
   const choiceStage = source.match(/\{\/\* ── Stage: choice[\s\S]*?\{\/\* ── Stage: camera/)?.[0] ?? "";
   const actions = source.match(/\{\/\* ── Action buttons[\s\S]*?return \(/)?.[0] ?? source.slice(source.indexOf("{/* ── Action buttons"));

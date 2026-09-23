@@ -490,9 +490,11 @@ export default function VehicleRegistrationUpload({
               onClick={() => fileInputRef.current?.click()}
               className="flex h-20 w-full items-center justify-center gap-3 rounded-xl border-2 border-blue-500/50 bg-blue-950/20 px-4 hover:bg-blue-900/30 transition-colors"
             >
-              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-base leading-none">📂</span>
-              <div className="text-center">
-                <p className="text-base font-semibold text-blue-200">写真から選択</p>
+              <div className="flex flex-col items-center justify-center gap-1 text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-base leading-none">📂</span>
+                  <p className="text-base font-semibold text-blue-200">写真から選択</p>
+                </div>
                 <p className="text-xs text-blue-300/70 mt-0.5">保存済みの画像・PDFから車検証を読み取り</p>
               </div>
             </button>
