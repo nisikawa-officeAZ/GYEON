@@ -30,3 +30,11 @@ test("photo and camera source icons use the same visual size", () => {
   assert.match(choiceStage, /size-6 items-center justify-center text-xl leading-none">📷/);
   assert.doesNotMatch(choiceStage, /<svg/);
 });
+
+test("choice source and cancel buttons use the same full-width height", () => {
+  const choiceStage = source.match(/\{\/\* ── Stage: choice[\s\S]*?\{\/\* ── Stage: camera/)?.[0] ?? "";
+  const actions = source.match(/\{\/\* ── Action buttons[\s\S]*?return \(/)?.[0] ?? source.slice(source.indexOf("{/* ── Action buttons"));
+
+  assert.equal((choiceStage.match(/h-20 w-full/g) ?? []).length, 2);
+  assert.match(actions, /onClick=\{onCancel\}[\s\S]*?stage === "choice"[\s\S]*?"h-20 w-full/);
+});

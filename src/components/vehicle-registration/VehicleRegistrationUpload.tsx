@@ -488,7 +488,7 @@ export default function VehicleRegistrationUpload({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col items-center justify-center gap-3 py-8 rounded-xl border-2 border-blue-500/50 bg-blue-950/20 hover:bg-blue-900/30 transition-colors w-full"
+              className="flex h-20 w-full items-center justify-center gap-3 rounded-xl border-2 border-blue-500/50 bg-blue-950/20 px-4 hover:bg-blue-900/30 transition-colors"
             >
               <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-base leading-none">📂</span>
               <div className="text-center">
@@ -500,7 +500,7 @@ export default function VehicleRegistrationUpload({
             <button
               type="button"
               onClick={() => void startWebcam()}
-              className="flex items-center justify-center gap-2 min-h-12 px-4 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors w-full"
+              className="flex h-20 w-full items-center justify-center gap-2 px-4 rounded-xl border border-slate-700 hover:border-blue-500/50 bg-[#0f172a] hover:bg-blue-950/20 transition-colors"
             >
               <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">📷</span>
               <span className="text-sm text-slate-300">カメラで撮影</span>
@@ -818,7 +818,9 @@ export default function VehicleRegistrationUpload({
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm rounded-lg transition-colors min-h-[44px]"
+            className={stage === "choice"
+              ? "h-20 w-full px-4 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm rounded-lg transition-colors"
+              : "flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm rounded-lg transition-colors min-h-[44px]"}
           >
             キャンセル
           </button>
