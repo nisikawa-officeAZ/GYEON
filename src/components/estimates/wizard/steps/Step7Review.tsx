@@ -48,6 +48,15 @@ export function Step7Review({
 }) {
   const s = api.store;
   const orderedLines = orderedWizardPricingLines(pricing.lines, api.draft.review.serviceLineOrder);
+  const pricingReadyToSave =
+    pricing.status === "success"
+    && pricing.completeness === "complete"
+    && pricing.errors.length === 0
+    && pricing.unresolvedItems.length === 0;
+  const pricingBlockingMessages = Array.from(new Set([
+    ...pricing.errors.map((issue) => issue.message),
+    ...pricing.unresolvedItems.map((item) => item.message),
+  ].filter((message) => message.trim() !== "")));
 
   const moveLine = (index: number, delta: -1 | 1) => {
     const target = index + delta;
@@ -127,7 +136,25 @@ export function Step7Review({
         )}
       </Card>
       {saveBinding
-        ? <WizardSavePanel draft={api.draft} binding={saveBinding} />
+        ? pricingReadyToSave
+          ? <WizardSavePanel draft={api.draft} binding={saveBinding} />
+          : (
+            <div
+              role="alert"
+              data-testid="pricing-save-blocked"
+              className="rounded-md border border-amber-600/70 bg-amber-950/30 p-4"
+            >
+              <p className="text-sm font-semibold text-amber-200">保存前に修正が必要です</p>
+              <p className="mt-1 text-xs text-slate-300">
+                未確定の作業内容があるため保存できません。戻るボタンから入力内容を確認してください。
+              </p>
+              {pricingBlockingMessages.length > 0 && (
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-amber-100">
+                  {pricingBlockingMessages.map((message) => <li key={message}>{message}</li>)}
+                </ul>
+              )}
+            </div>
+          )
         : <PhaseTwoNotice screen="保存 / PDF / LINE(送信・文章コピー) / 予約カレンダー / 請求書・納品書・納品請求書" />}
     </>
   );

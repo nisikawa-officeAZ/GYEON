@@ -21,6 +21,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { Step7Review } from "./Step7Review";
 import type { EstimateWizardApi } from "../useEstimateWizard";
+import type { WizardSaveBinding } from "../save/WizardSavePanel";
 import type {
   WizardExistingCustomerReference,
   WizardExistingVehicleReference,
@@ -73,6 +74,18 @@ function renderStep(
     <Step7Review api={apiFor(store)} customers={customers} vehicles={vehicles} pricing={EMPTY_WIZARD_PRICING_RESULT} />,
   );
 }
+
+const SAVE_BINDING = {
+  expectedConfigRevision: 1,
+  saveInvoker: async () => ({ ok: false, failure: "save-failed" }),
+  session: {
+    wizardSessionId: "ws.11111111111111111111111111111111",
+    idempotencyKey: "11111111-1111-4111-8111-111111111111",
+    status: "ready",
+  },
+  sessionDeps: { storage: null, crypto: null },
+  onCompleted: () => undefined,
+} as unknown as WizardSaveBinding;
 
 /** The <dd> text rendered next to a summary label (顧客 / 車両 / 作業). */
 function rowValue(html: string, label: string): string {
@@ -232,6 +245,77 @@ describe("Step7Review — canonical line-order controls stay inside the responsi
     assert.match(html, /aria-label="メンテナンスを上へ"/);
     assert.match(html, /aria-label="PURE EVOを下へ"/);
     assert.doesNotMatch(html, /<table/);
+  });
+});
+
+describe("Step7Review — incomplete pricing cannot reach save", () => {
+  it("replaces save controls with the exact unresolved PPF guidance", () => {
+    const ppfMessage = "PPFの施工方法と金額を入力してください。";
+    const pricing = {
+      ...EMPTY_WIZARD_PRICING_RESULT,
+      status: "success" as const,
+      completeness: "partial" as const,
+      lines: [
+        {
+          kind: "catalog" as const, category: "coating", sourceId: "coating:MOHS EVO", label: "MOHS EVO",
+          quantity: 1, unitPrice: 60_000, lineSubtotal: 60_000, discountAmount: null, taxAmount: null,
+          lineTotal: 60_000, pricingReferenceId: "mohs-evo", catalogLineRole: "base" as const,
+        },
+      ],
+      errors: [{ code: "MANUAL_PRICE_REQUIRED", category: "ppf", sourceId: null, message: ppfMessage }],
+      unresolvedItems: [{ code: "MANUAL_PRICE_REQUIRED", category: "ppf", sourceId: null, message: ppfMessage }],
+    };
+
+    const html = renderToStaticMarkup(
+      <Step7Review
+        api={apiFor(storeWith({ categories: ["coating", "ppf"] }))}
+        customers={CUSTOMERS}
+        vehicles={VEHICLES}
+        pricing={pricing}
+        saveBinding={SAVE_BINDING}
+      />,
+    );
+
+    assert.match(html, /data-testid="pricing-save-blocked"/);
+    assert.match(html, /保存前に修正が必要です/);
+    assert.match(html, new RegExp(ppfMessage));
+    assert.equal(html.match(new RegExp(ppfMessage, "g"))?.length, 1, "duplicate pricing issues are shown once");
+    assert.doesNotMatch(html, /data-testid="wizard-save-panel"/);
+    assert.doesNotMatch(html, /data-testid="save-submit"/);
+  });
+
+  it("keeps the existing save panel only for complete, error-free pricing", () => {
+    const pricing = {
+      ...EMPTY_WIZARD_PRICING_RESULT,
+      status: "success" as const,
+      completeness: "complete" as const,
+      lines: [
+        {
+          kind: "catalog" as const, category: "coating", sourceId: "coating:MOHS EVO", label: "MOHS EVO",
+          quantity: 1, unitPrice: 60_000, lineSubtotal: 60_000, discountAmount: null, taxAmount: null,
+          lineTotal: 60_000, pricingReferenceId: "mohs-evo", catalogLineRole: "base" as const,
+        },
+      ],
+      subtotal: 60_000,
+      discountTotal: 0,
+      taxableSubtotal: 60_000,
+      taxTotal: 6_000,
+      grandTotal: 66_000,
+    };
+
+    const html = renderToStaticMarkup(
+      <Step7Review
+        api={apiFor(storeWith({ categories: ["coating"] }))}
+        customers={CUSTOMERS}
+        vehicles={VEHICLES}
+        pricing={pricing}
+        saveBinding={SAVE_BINDING}
+      />,
+    );
+
+    assert.match(html, /data-testid="wizard-save-panel"/);
+    assert.match(html, /data-testid="save-submit"/);
+    assert.doesNotMatch(html, /data-testid="pricing-save-blocked"/);
   });
 });
 
