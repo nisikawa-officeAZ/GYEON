@@ -185,7 +185,17 @@ BEGIN
   VALUES (NEW.id)
   ON CONFLICT (dealer_id) DO NOTHING;
 
-  PERFORM public.wiz_seed_default_estimate_catalog(NEW.id);
+  -- Default-catalog availability must never become a hard dependency of dealer signup.
+  -- Keep the lifecycle row, roll back only the seed subtransaction on failure, and surface
+  -- a warning for operators. The migration backfill calls the seed helper directly, so
+  -- policy or validator failures during deployment still fail the migration closed.
+  BEGIN
+    PERFORM public.wiz_seed_default_estimate_catalog(NEW.id);
+  EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING
+      'wiz_init_dealer_lifecycle: default catalog seed skipped for dealer % (SQLSTATE %)',
+      NEW.id, SQLSTATE;
+  END;
   RETURN NULL;
 END;
 $$;
