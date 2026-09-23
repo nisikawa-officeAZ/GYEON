@@ -23,3 +23,12 @@ test("camera action buttons use one icon box and one button height", () => {
     assert.match(cameraStage, new RegExp(label));
   }
 });
+
+test("photo and camera source icons use the same visual size", () => {
+  const choiceStage = source.match(/\{\/\* ── Stage: choice[\s\S]*?\{\/\* ── Stage: camera/)?.[0] ?? "";
+  const sharedIconClass = "inline-flex size-6 items-center justify-center text-xl leading-none";
+
+  assert.match(choiceStage, new RegExp(`className="${sharedIconClass}">📂`));
+  assert.match(choiceStage, new RegExp(`className="${sharedIconClass}">📷`));
+  assert.doesNotMatch(choiceStage, /size-8 items-center justify-center text-2xl/);
+});

@@ -490,7 +490,7 @@ export default function VehicleRegistrationUpload({
               onClick={() => fileInputRef.current?.click()}
               className="flex flex-col items-center justify-center gap-3 py-8 rounded-xl border-2 border-blue-500/50 bg-blue-950/20 hover:bg-blue-900/30 transition-colors w-full"
             >
-              <span aria-hidden="true" className="inline-flex size-8 items-center justify-center text-2xl leading-none">📂</span>
+              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center text-xl leading-none">📂</span>
               <div className="text-center">
                 <p className="text-base font-semibold text-blue-200">写真から選択</p>
                 <p className="text-xs text-blue-300/70 mt-0.5">保存済みの画像・PDFから車検証を読み取り</p>
