@@ -42,11 +42,16 @@ test("makes maintenance available without overriding an explicit offering", () =
 test("backfills active GYEON dealers and seeds future dealers", () => {
   assert.match(sql, /WHERE product_mode = 'gyeon'[\s\S]*deleted_at IS NULL/);
   assert.match(sql, /CREATE OR REPLACE FUNCTION public\.wiz_init_dealer_lifecycle\(\)/);
-  assert.match(sql, /PERFORM public\.wiz_seed_default_estimate_catalog\(NEW\.id\)/);
   assert.match(
     sql,
-    /BEGIN\s+PERFORM public\.wiz_seed_default_estimate_catalog\(NEW\.id\);\s+EXCEPTION WHEN OTHERS THEN\s+RAISE WARNING/,
+    /SELECT runtime_enabled\s+INTO v_runtime_enabled\s+FROM public\.wizard_product_modes\s+WHERE mode = NEW\.product_mode/,
   );
+  assert.match(
+    sql,
+    /IF v_runtime_enabled IS NOT TRUE THEN[\s\S]*RAISE WARNING[\s\S]*RETURN NULL/,
+  );
+  assert.match(sql, /PERFORM public\.wiz_seed_default_estimate_catalog\(NEW\.id\)/);
+  assert.doesNotMatch(sql, /EXCEPTION WHEN OTHERS/);
 });
 
 test("keeps the internal SECURITY DEFINER helper non-callable", () => {
