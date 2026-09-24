@@ -1,0 +1,101 @@
+name: INV001 D5B persist source verification
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - supabase/migrations/20260924132149_office_az_inventory_mobile_persistence.sql
+      - src/lib/inventory/mobile/office-az-inventory-mobile-persistence.ts
+      - src/lib/inventory/mobile/office-az-inventory-mobile-persistence.test.ts
+      - .github/workflows/inv001-d5b-persist-source-verification.yml
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  persist-source-verification:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout exact pull request revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up repository Node.js version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Configure run-scoped package read
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          umask 077
+          npm_config_path="${RUNNER_TEMP}/inv001-d5b-persist-npmrc"
+          printf '%s\n' \
+            '@nisikawa-officeaz:registry=https://npm.pkg.github.com' \
+            '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' \
+            'always-auth=true' > "$npm_config_path"
+          test -f "$npm_config_path"
+          grep -F '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' "$npm_config_path"
+          ! grep -E 'gho_|github_pat_|ghp_' "$npm_config_path"
+
+      - name: Install locked dependencies without cache
+        env:
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/inv001-d5b-persist-npmrc
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify exact four-path change set
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git diff --name-only --diff-filter=ACDMRTUXB "${{ github.event.pull_request.base.sha }}"...HEAD | LC_ALL=C sort)"
+          expected="$(printf '%s\n' \
+            '.github/workflows/inv001-d5b-persist-source-verification.yml' \
+            'src/lib/inventory/mobile/office-az-inventory-mobile-persistence.test.ts' \
+            'src/lib/inventory/mobile/office-az-inventory-mobile-persistence.ts' \
+            'supabase/migrations/20260924132149_office_az_inventory_mobile_persistence.sql' \
+            | LC_ALL=C sort)"
+          test "$actual" = "$expected"
+          git diff --check "${{ github.event.pull_request.base.sha }}"...HEAD
+
+      - name: Run focused D5B persistence tests
+        run: >-
+          node --experimental-test-module-mocks --import tsx --test
+          src/lib/inventory/mobile/office-az-inventory-mobile-persistence.test.ts
+
+      - name: Run related D5A mobile and authority regressions
+        run: >-
+          node --experimental-test-module-mocks --import tsx --test
+          src/lib/inventory/mobile/office-az-inventory-mobile-session-core.test.ts
+          src/lib/inventory/mobile/office-az-inventory-mobile-server.test.ts
+          src/lib/inventory/mobile/resolve-office-az-inventory-mobile-bearer.test.ts
+          src/lib/inventory/authority/office-az-inventory-authority-core.test.ts
+          src/lib/inventory/authority/office-az-inventory-authority-actions.test.ts
+          src/lib/inventory/authority/office-az-inventory-authority-migration.test.ts
+          src/lib/inventory/authority/resolve-office-az-inventory-authority.test.ts
+
+      - name: Run typecheck
+        run: npm run typecheck
+
+      - name: Run build
+        run: npm run build
+
+      - name: Always delete temporary npm config and prove absence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm_config_path="${RUNNER_TEMP}/inv001-d5b-persist-npmrc"
+          rm -f "$npm_config_path"
+          test ! -e "$npm_config_path"
