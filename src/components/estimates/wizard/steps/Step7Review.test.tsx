@@ -61,8 +61,9 @@ function storeWith(overrides: Partial<Step7Store> = {}): Step7Store {
 function apiFor(store: Step7Store): EstimateWizardApi {
   return {
     store,
-    draft: { review: { serviceLineOrder: [] } },
+    draft: { review: { serviceLineOrder: [], quantityInputsByLine: {}, unitPriceInputsByLine: {} } },
     setServiceLineOrder: () => undefined,
+    setServiceLineAdjustment: () => undefined,
   } as unknown as EstimateWizardApi;
 }
 
@@ -224,13 +225,26 @@ describe("Step7Review — canonical line-order controls stay inside the responsi
     };
     const api = {
       ...apiFor(storeWith()),
-      draft: { review: { serviceLineOrder: ["manual:maintenance:mm1", "catalog:coating:base:pure-evo"] } },
+      draft: {
+        review: {
+          serviceLineOrder: ["manual:maintenance:mm1", "catalog:coating:base:pure-evo"],
+          quantityInputsByLine: { "catalog:coating:base:pure-evo": "2" },
+          unitPriceInputsByLine: {},
+        },
+      },
     } as unknown as EstimateWizardApi;
     const html = renderToStaticMarkup(
       <Step7Review api={api} customers={CUSTOMERS} vehicles={VEHICLES} pricing={pricing} />,
     );
     assert.ok(html.indexOf("メンテナンス") < html.indexOf("PURE EVO"), "saved order is rendered");
-    assert.match(html, /grid-cols-\[minmax\(0,1fr\)_auto\]/);
+    assert.match(html, /明細の詳細/);
+    assert.match(html, /md:grid-cols-\[minmax\(0,1fr\)_6rem_8rem_auto\]/);
+    // one editable quantity + unit-price pair per line, keyed by the stable line identity
+    assert.match(html, /aria-label="メンテナンスの数量"[^>]*value="1"/);
+    assert.match(html, /aria-label="メンテナンスの金額（単価）"[^>]*value="5000"/);
+    assert.match(html, /aria-label="PURE EVOの数量"[^>]*value="2"/, "draft text wins over the priced quantity");
+    assert.match(html, /aria-label="PURE EVOの金額（単価）"[^>]*value="80000"/);
+    assert.equal((html.match(/の数量"/g) ?? []).length, 2, "exactly one quantity input per line");
     assert.match(html, /aria-label="メンテナンスを上へ"/);
     assert.match(html, /aria-label="PURE EVOを下へ"/);
     assert.doesNotMatch(html, /<table/);
@@ -289,6 +303,8 @@ describe("Step7Review — the save panel is gated by the pricing result Step 7 d
     assert.ok(html.includes('data-testid="save-submit"'));
     assert.ok(html.includes('data-testid="save-submit-pdf"'));
     assert.equal(html.includes("save-state-pricing-incomplete"), false);
+    // GDA-ESTIMATE-PR123-R2: the future customer-product action sits beside save/PDF, disabled, no mutation.
+    assert.match(html, /data-testid="add-customer-product"[^>]*disabled/);
   });
 });
 

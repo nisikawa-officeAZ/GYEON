@@ -133,6 +133,66 @@ test("operator-selected line order becomes the persisted service array order", (
   assert.deepEqual(req.services.map((line) => line.lineId), draft.review.serviceLineOrder);
 });
 
+test("final-review quantity and unit-price edits persist with recomputed totals", () => {
+  const base = draftWith(["coating"], coatingCfg("one-evo"));
+  const lineId = "catalog:coating:base:one-evo";
+  const draft: EstimateWizardDraftV22 = {
+    ...base,
+    review: {
+      ...base.review,
+      quantityInputsByLine: { [lineId]: "2" },
+      unitPriceInputsByLine: { [lineId]: "60000" },
+    },
+  };
+
+  const req = okReq(run(draft));
+  assert.equal(req.services[0]?.quantity, 2);
+  assert.equal(req.services[0]?.unitPrice, 60_000);
+  assert.equal(req.services[0]?.subtotal, 120_000);
+  assert.equal(req.pricing.subtotal, 120_000);
+  assert.equal(req.pricing.taxTotal, 12_000);
+  assert.equal(req.pricing.grandTotal, 132_000);
+});
+
+test("GDA-ESTIMATE-PR123-R2: coupon + fixed discount persist with the coupon counted exactly once; identity edits persist identically; edits recompute", () => {
+  const canonicalDraft = draftWith(["maintenance"], maintCfg, { mode: "amount", amountInput: "1000", selectedCouponIds: [COUPON_ID] });
+  const canonical = okReq(run(canonicalDraft, { pricingConfig: COUPON_PC }));
+  assert.equal(canonical.pricing.subtotal, 5000);
+  assert.equal(canonical.pricing.couponTotal, 100, "couponTotal is ONLY the coupon");
+  assert.equal(canonical.coupon.appliedAmount, 100);
+  assert.equal(canonical.pricing.discountTotal, 1100, "applied document discount = authored 1,000 + coupon 100, counted once");
+  assert.equal(canonical.discount.appliedAmount, 1100, "engine-applied figure, copied");
+  assert.equal(canonical.discount.intent.fixedAmount, 1000, "the authored figure is persisted as intent, never conflated with the applied amount");
+  assert.equal(canonical.pricing.taxTotal, 500);
+  assert.equal(canonical.pricing.grandTotal, 5000 + 500 - 1100, "total subtracts the applied discount once; couponTotal is never subtracted again");
+  assert.equal((canonical.coupon.applications ?? []).reduce((s, a) => s + a.appliedAmount, 0), 100, "per-coupon snapshot sums to couponTotal");
+
+  const lineId = "manual:maintenance:mm1";
+  const identityDraft: EstimateWizardDraftV22 = {
+    ...canonicalDraft,
+    review: { ...canonicalDraft.review, quantityInputsByLine: { [lineId]: "1" }, unitPriceInputsByLine: { [lineId]: "5000" } },
+  };
+  const identity = okReq(run(identityDraft, { pricingConfig: COUPON_PC }));
+  assert.deepEqual(identity.pricing, canonical.pricing, "identity edit: persisted pricing snapshot is byte-identical");
+  assert.deepEqual(identity.discount, canonical.discount);
+  assert.deepEqual(identity.coupon, canonical.coupon);
+  assert.deepEqual(identity.services, canonical.services);
+
+  const editedDraft: EstimateWizardDraftV22 = {
+    ...canonicalDraft,
+    review: { ...canonicalDraft.review, unitPriceInputsByLine: { [lineId]: "8000" } },
+  };
+  const edited = okReq(run(editedDraft, { pricingConfig: COUPON_PC }));
+  assert.equal(edited.services[0]?.unitPrice, 8000);
+  assert.equal(edited.pricing.subtotal, 8000);
+  assert.equal(edited.pricing.couponTotal, 100, "amount coupon unchanged by the edit");
+  assert.equal(edited.pricing.discountTotal, 1100, "fixed discount unchanged; coupon still counted once");
+  assert.equal(edited.pricing.taxTotal, 800);
+  assert.equal(edited.pricing.grandTotal, 8000 + 800 - 1100);
+  assert.equal(edited.discount.appliedAmount, 1100);
+  assert.equal(edited.coupon.appliedAmount, 100);
+});
+
 test("catalog ids and roles come directly from the pricing result", () => {
   const draft = draftWith(["coating"], coatingCfg("one-evo", "cancoat-evo", "cancoat-evo"));
   const pr = computeWizardPricingFromConfig(draft, PC, CATALOG, RANK);

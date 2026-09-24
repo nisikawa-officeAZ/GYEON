@@ -55,7 +55,7 @@ const SC: WizardScreenConfiguration = {
   // a valid (non-disabled, coefficient-bearing) film AND an active priced/duration area or package
   // in the V1 settings. A genuinely configured dealer carries both.
   filmTypes:          [{ id: "ft1", label: "ZZFILMTYPE", installationCoefficientBp: 12_500 }],
-  windowAreas:        [{ id: "wa1", label: "ZZWINDOWAREA" }],
+  windowAreas:        [{ id: "front-windshield", label: "ZZWINDOWAREA" }],
   windowFilmSettings: {
     contractVersion: "1.0", revision: 1,
     areas: {

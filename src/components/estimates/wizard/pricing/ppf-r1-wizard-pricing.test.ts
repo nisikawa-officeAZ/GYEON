@@ -13,6 +13,8 @@ import {
   buildWizardPricingInputFromConfig,
   type ConfiguredPricingConfiguration,
 } from "./wizard-pricing-input-adapter-config";
+import { computeWizardPricingFromConfig } from "./compute-wizard-pricing-from-config";
+import { mapWizardDraftToSaveRequestFromConfig } from "../save/estimate-save-mapper-from-config";
 
 const PPF_R1: PpfR1PriceSettings = {
   contractVersion: "1.0",
@@ -244,4 +246,105 @@ test("interior PPF is excluded from the body-coating combination reduction", () 
   assert.deepEqual(result.errors, []);
   assert.equal(result.discounts.extraAmount, 0);
   assert.deepEqual(result.ppfAdjustmentsByIdentity, {});
+});
+
+// ── GDA-ESTIMATE-PR123-R2 — hard fail-closed: final-review inputs NEVER replace PPF authority ──
+
+const REVIEW_LINE_IDS = [
+  "manual:ppf:ppf_review_full_front_full_film-x", // the rejected PR #123 override identity
+  "manual:ppf:ppf_r1_front_full_film-x",          // the real R1 identity
+];
+const withReviewInputs = (over?: (d: EstimateWizardDraftV22) => void) => draft((d) => {
+  for (const id of REVIEW_LINE_IDS) {
+    d.review.quantityInputsByLine[id] = "1";
+    d.review.unitPriceInputsByLine[id] = "125000";
+  }
+  over?.(d);
+});
+
+test("operator review price never converts missing settings / coefficient / size price into a saveable PPF line", () => {
+  const cases: Array<[string, EstimateWizardDraftV22, ConfiguredPricingConfiguration, ReturnType<typeof makePricingCatalog>, string]> = [
+    ["settings", withReviewInputs(), CONFIG, makePricingCatalog(), "PPF_R1_SETTINGS_REQUIRED"],
+    ["coefficient", withReviewInputs(), { ...CONFIG, installCoefficientBpByCode: {} }, makePricingCatalog({ ppfR1: PPF_R1 }), "PPF_R1_COEFFICIENT_REQUIRED"],
+    ["size-price", withReviewInputs((v) => { v.vehicle.bodySizeKey = "XL"; }), CONFIG, makePricingCatalog({ ppfR1: PPF_R1 }), "PPF_R1_PRICE_UNAVAILABLE"],
+  ];
+  for (const [label, value, config, catalog, code] of cases) {
+    const bundle = buildWizardPricingInputFromConfig(value, config, catalog, "detailer");
+    assert.ok(bundle.errors.some((entry) => entry.code === code), label);
+    assert.equal(bundle.manualLines.length, 0, `${label}: zero saveable PPF lines`);
+    assert.equal(bundle.catalogResolved, false, `${label}: nothing resolved`);
+    for (const line of bundle.manualLines) {
+      assert.equal(line.metadata.reviewPriceOverride, undefined, label);
+      assert.equal(line.metadata.reviewPriceRequired, undefined, label);
+    }
+
+    const pricing = computeWizardPricingFromConfig(value, config, catalog, "detailer");
+    assert.equal(pricing.lines.filter((line) => line.category === "ppf").length, 0, `${label}: no PPF line`);
+    assert.notEqual(pricing.completeness, "complete", label);
+    assert.equal(pricing.grandTotal, null, `${label}: no manufactured total`);
+    assert.ok(pricing.errors.some((entry) => entry.code === code), `${label}: authority error stays visible`);
+
+    const mapped = mapWizardDraftToSaveRequestFromConfig({
+      draft: value, pricingResult: pricing, pricingConfig: config, catalog, shopRank: "detailer",
+    });
+    assert.equal(mapped.ok, false, `${label}: unsaveable`);
+  }
+});
+
+test("fully configured PPF stays priced from R1 authority, and identity review inputs reproduce it", () => {
+  const catalog = makePricingCatalog({ ppfR1: PPF_R1 });
+  const canonical = computeWizardPricingFromConfig(draft(), CONFIG, catalog, "detailer");
+  assert.equal(canonical.completeness, "complete");
+  assert.equal(canonical.lines[0]?.unitPrice, 165_000);
+  assert.equal(canonical.grandTotal, 181_500);
+
+  const identity = computeWizardPricingFromConfig(draft((d) => {
+    d.review.quantityInputsByLine["manual:ppf:ppf_r1_front_full_film-x"] = "1";
+    d.review.unitPriceInputsByLine["manual:ppf:ppf_r1_front_full_film-x"] = "165000";
+  }), CONFIG, catalog, "detailer");
+  assert.equal(identity.completeness, "complete");
+  assert.equal(identity.subtotal, canonical.subtotal);
+  assert.equal(identity.taxTotal, canonical.taxTotal);
+  assert.equal(identity.discountTotal, canonical.discountTotal);
+  assert.equal(identity.couponTotal, canonical.couponTotal);
+  assert.equal(identity.grandTotal, canonical.grandTotal);
+  const bundle = buildWizardPricingInputFromConfig(draft(), CONFIG, catalog, "detailer");
+  assert.equal(bundle.manualLines[0]?.metadata.ppfInstallCoefficientBp, 12_500, "authority metadata, never a fabricated 10000");
+  assert.equal(bundle.manualLines[0]?.metadata.reviewPriceOverride, undefined);
+});
+
+test("PPF+coating reduction keeps parity under identity edits and follows an edited coating amount", () => {
+  const config = { ...CONFIG, ppfCoatingAdjustments: [globalRule({ adjustmentType: "percent", adjustmentValue: 1_000 })] };
+  const catalog = makePricingCatalog({ ppfR1: PPF_R1 });
+  const both = (over?: (d: EstimateWizardDraftV22) => void) => draft((d) => {
+    d.serviceSelection.selectedCategories = ["ppf", "coating"];
+    d.serviceConfiguration.coating.layer1Id = "pure-evo";
+    over?.(d);
+  });
+  const canonical = computeWizardPricingFromConfig(both(), config, catalog, "detailer");
+  assert.equal(canonical.completeness, "complete");
+  assert.equal(canonical.discountTotal, 6_000, "10% of PURE M 60,000 enters the document discount only");
+  assert.equal(canonical.couponTotal, 0);
+
+  const identity = computeWizardPricingFromConfig(both((d) => {
+    d.review.quantityInputsByLine["catalog:coating:base:pure-evo"] = "1";
+    d.review.unitPriceInputsByLine["catalog:coating:base:pure-evo"] = "60000";
+  }), config, catalog, "detailer");
+  assert.equal(identity.discountTotal, canonical.discountTotal);
+  assert.equal(identity.grandTotal, canonical.grandTotal);
+
+  const edited = computeWizardPricingFromConfig(both((d) => {
+    d.review.unitPriceInputsByLine["catalog:coating:base:pure-evo"] = "80000";
+  }), config, catalog, "detailer");
+  assert.equal(edited.discountTotal, 8_000, "reduction re-derived from the adjusted coating amount");
+  assert.equal(edited.couponTotal, 0, "never folded into couponTotal");
+  const mapped = mapWizardDraftToSaveRequestFromConfig({ draft: both((d) => {
+    d.review.unitPriceInputsByLine["catalog:coating:base:pure-evo"] = "80000";
+  }), pricingResult: edited, pricingConfig: config, catalog, shopRank: "detailer" });
+  assert.equal(mapped.ok, true);
+  if (mapped.ok) {
+    assert.equal(mapped.request.discount.appliedAmount, 8_000);
+    assert.equal(mapped.request.coupon.appliedAmount, 0);
+    assert.equal(mapped.request.services.find((s) => s.category === "ppf")?.metadata.ppfCoatingAdjustmentReductionYen, 8_000);
+  }
 });

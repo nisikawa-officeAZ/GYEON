@@ -253,7 +253,9 @@ test("17. Step 4 receives only api, shopRank and screenConfig — never entity a
   const host = readFileSync("src/components/estimates/wizard/EstimateWizard.tsx", "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
   const mount = host.slice(host.indexOf("<Step4Estimate"), host.indexOf("<Step5Discount"));
-  assert.match(mount, /<Step4Estimate api=\{api\} shopRank=\{shopRank\} screenConfig=\{screenConfig\} \/>/);
+  // GDA-ESTIMATE-SAVE-PRICING-GUARD-R1 (merged PR #125): the host also passes the ONE host-derived
+  // `ppfPricingReadiness` boolean/reason — still no entity arrays, catalog, or pricing config.
+  assert.match(mount, /<Step4Estimate api=\{api\} shopRank=\{shopRank\} screenConfig=\{screenConfig\} ppfPricingReadiness=\{ppfPricingReadiness\} \/>/);
   for (const forbidden of ["customers", "vehicles"]) {
     assert.equal(mount.includes(forbidden), false, `Step 4 must not receive ${forbidden}`);
   }
