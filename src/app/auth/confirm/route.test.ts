@@ -3,6 +3,7 @@
 //
 // Run:
 //   node --experimental-test-module-mocks --import tsx --test src/app/auth/confirm/route.test.ts
+//   (or, together with the helper suite: npm run test:auth-confirm)
 //
 // The handlers are invoked directly with real `Request` objects. Their three
 // server dependencies — the request-scoped Supabase client, the GYEON claim
@@ -142,6 +143,21 @@ beforeEach(() => {
 });
 
 const binding = () => signupConfirmBinding("signup", TOKEN, SECRET)!;
+
+// Next declares `process.env.NODE_ENV` as readonly, so the swap goes through a
+// narrow cast. The original value is restored in `finally` — even when an
+// assertion inside `run` throws — so sibling tests never observe the change.
+const realNodeEnv = process.env.NODE_ENV;
+async function withNodeEnv<T>(value: string, run: () => Promise<T>): Promise<T> {
+  const env = process.env as { NODE_ENV?: string };
+  env.NODE_ENV = value;
+  try {
+    return await run();
+  } finally {
+    if (realNodeEnv === undefined) delete env.NODE_ENV;
+    else env.NODE_ENV = realNodeEnv;
+  }
+}
 
 function get(query: string, headers: Record<string, string> = {}): Promise<Response> {
   return GET(new Request(`${ORIGIN}/auth/confirm${query}`, { headers }));
@@ -340,6 +356,19 @@ describe("POST signup: first valid confirmation", () => {
     const plain = createHash("sha256").update(`signup:${TOKEN}`).digest("hex");
     assert.equal(setCookie.includes(plain), false, "cookie is not a plain SHA-256");
     assert.equal(/Secure/i.test(setCookie), process.env.NODE_ENV === "production");
+  });
+
+  it("in production mode the binding cookie is issued WITH the Secure attribute (observed on Set-Cookie)", async () => {
+    scenario.dealer = { kind: "created", dealerId: DEALER_ID };
+    const res = await withNodeEnv("production", () => post());
+    expectRedirect(res, PENDING);
+    assert.deepEqual(log.consoleError, []);
+
+    const setCookie = res.headers.get("set-cookie") ?? "";
+    assert.match(setCookie, new RegExp(`^${COOKIE}=${binding()};`), "same keyed binding cookie is issued in production");
+    assert.match(setCookie, /HttpOnly/i);
+    assert.match(setCookie, /;\s*Secure\b/i, "production binding cookie carries Secure");
+    assert.equal(process.env.NODE_ENV, realNodeEnv, "NODE_ENV is restored after the production-mode request");
   });
 
   it("an already-existing pending dealer converges to the same state", async () => {
