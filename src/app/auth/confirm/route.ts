@@ -9,11 +9,13 @@
 // post-verification state: /signup/pending?confirm=0 (approval pending).
 //
 // Production UAT 2026-09-24: a signup token_hash is single-use, and mail
-// scanners / link previews GET the link before the applicant does. For
-// type=signup a GET therefore never consumes the token: it renders a
-// human-confirmation page whose only action is a same-origin POST. The POST
-// runs the unchanged consuming sequence below. Recovery and invite links keep
-// their GET-consuming behaviour (out of scope here).
+// scanners / link previews GET the link before the applicant does. For a
+// signup confirmation type (`type=signup`, or the `type=email` alias the live
+// Supabase template actually emits — Preview UAT 2026-09-24) a GET therefore
+// never consumes the token: it renders a human-confirmation page whose only
+// action is a same-origin POST. The POST runs the unchanged consuming sequence
+// below with the ORIGINAL type value. Recovery and invite links keep their
+// GET-consuming behaviour (out of scope here).
 
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse }      from "next/server";
@@ -27,6 +29,7 @@ import {
   SIGNUP_CONFIRM_BIND_PATH,
   bindingsMatch,
   decideSignupConfirmReplay,
+  isSignupConfirmType,
   readCookie,
   renderSignupConfirmInterstitial,
   signupConfirmBinding,
@@ -89,7 +92,7 @@ async function consumeConfirmation(
     return withSignupBinding(NextResponse.redirect(`${origin}/shop-profile`), type, token_hash);
   }
 
-  if (type === "signup") {
+  if (isSignupConfirmType(type)) {
     // Confirmation-required production signup converges here.
     // The service action derives id/email from this verified session and
     // creates at most one pending dealer; no browser-supplied identity,
@@ -122,7 +125,7 @@ async function consumeConfirmation(
 // to this path. Without the server-only key no cookie is set: replay recovery
 // is then unavailable, but the first valid confirmation still succeeds.
 function withSignupBinding(response: NextResponse, type: EmailOtpType, token_hash: string): NextResponse {
-  if (type !== "signup") return response;
+  if (!isSignupConfirmType(type)) return response;
   const binding = signupConfirmBinding(type, token_hash, process.env.SUPABASE_SERVICE_ROLE_KEY);
   if (!binding) return response;
   response.cookies.set({
@@ -154,7 +157,7 @@ async function recoverBoundReplay(
   { origin, token_hash, type }: ConfirmInput,
   cookieHeader: string | null,
 ): Promise<NextResponse | null> {
-  if (type !== "signup") return null;
+  if (!isSignupConfirmType(type)) return null;
   const expected  = signupConfirmBinding(type, token_hash, process.env.SUPABASE_SERVICE_ROLE_KEY);
   const presented = readCookie(cookieHeader, SIGNUP_CONFIRM_BIND_COOKIE);
   if (!bindingsMatch(presented, expected)) return null;
@@ -207,7 +210,7 @@ export async function GET(request: Request) {
   if (token_hash && type) {
     const input: ConfirmInput = { origin, token_hash, type, next };
     try {
-      if (type === "signup") {
+      if (isSignupConfirmType(type)) {
         // Never consume on GET. A browser that already consumed this exact link
         // (bound cookie + confirmed session) is shown the truthful state; every
         // other GET — scanner, preview, prefetch, first human visit — gets the
@@ -232,7 +235,7 @@ export async function GET(request: Request) {
   return failedRedirect(origin);
 }
 
-// ── POST (type=signup only) ─────────────────────────────────────────────────
+// ── POST (signup confirmation types only: signup | email) ───────────────────
 export async function POST(request: Request) {
   const { origin } = new URL(request.url);
 
@@ -248,7 +251,7 @@ export async function POST(request: Request) {
   const token_hash = form.get("token_hash");
   const type       = form.get("type");
   const rawNext    = form.get("next");
-  if (typeof token_hash !== "string" || token_hash.length === 0 || type !== "signup") {
+  if (typeof token_hash !== "string" || token_hash.length === 0 || !isSignupConfirmType(type)) {
     return failedRedirect(origin);
   }
 

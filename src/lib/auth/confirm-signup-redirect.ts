@@ -54,6 +54,27 @@ export const SIGNUP_CONFIRM_BIND_PATH = "/auth/confirm";
 // prefixed so a binding can never collide with any other keyed value.
 const BINDING_PURPOSE = "gda:auth-confirm:signup-binding:v1";
 
+/**
+ * The `type` values Supabase Auth emits for a signup confirmation link. The
+ * documented SSR template uses `type=signup`; Preview UAT 2026-09-24 showed
+ * the live "Confirm signup" email linking with `type=email` for the SAME
+ * single-use token_hash. Both aliases get the scanner-safe treatment (GET
+ * never consumes; only the human's same-origin POST does). The original
+ * string is passed through unchanged to the binding and to verifyOtp — it is
+ * never normalised to `signup`.
+ */
+export const SIGNUP_CONFIRM_TYPES = ["signup", "email"] as const;
+export type SignupConfirmType = (typeof SIGNUP_CONFIRM_TYPES)[number];
+
+/**
+ * The single predicate every signup-only decision goes through. True only for
+ * the exact strings `signup` or `email`: no trimming, no case folding, and no
+ * other confirmation type (recovery, invite, magiclink, email_change, …).
+ */
+export function isSignupConfirmType(type: unknown): type is SignupConfirmType {
+  return type === "signup" || type === "email";
+}
+
 /** The minimal view of a session user needed for the replay decision. */
 export interface ConfirmSessionUser {
   email?: string | null;
@@ -145,7 +166,7 @@ export function decideSignupConfirmReplay(
   presentedBinding: string | null | undefined,
   expectedBinding: string | null | undefined,
 ): SignupReplayDecision {
-  if (type !== "signup") return { kind: "fail-closed", reason: "not-signup" };
+  if (!isSignupConfirmType(type)) return { kind: "fail-closed", reason: "not-signup" };
   if (!bindingsMatch(presentedBinding, expectedBinding)) {
     return { kind: "fail-closed", reason: "not-bound" };
   }

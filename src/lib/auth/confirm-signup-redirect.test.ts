@@ -19,9 +19,11 @@ import {
   SIGNUP_CONFIRM_BIND_COOKIE,
   SIGNUP_CONFIRM_BIND_MAX_AGE,
   SIGNUP_CONFIRM_BIND_PATH,
+  SIGNUP_CONFIRM_TYPES,
   bindingsMatch,
   decideSignupConfirmReplay,
   escapeHtml,
+  isSignupConfirmType,
   readCookie,
   renderSignupConfirmInterstitial,
   signupConfirmBinding,
@@ -33,6 +35,9 @@ import {
 const SECRET = "test-service-secret-not-a-real-key";
 const TOKEN  = "pkce_0123456789abcdef0123456789abcdef0123456789abcdef";
 const BIND   = signupConfirmBinding("signup", TOKEN, SECRET)!;
+// Preview UAT 2026-09-24: the live Supabase signup template links with
+// `type=email`. It is a signup-confirmation alias, bound under its OWN type.
+const BIND_EMAIL = signupConfirmBinding("email", TOKEN, SECRET)!;
 
 const confirmedDealerSignup = (): ConfirmSessionUser => ({
   email: "applicant@example.com",
@@ -47,6 +52,17 @@ test("1. flow constant and cookie contract match the route/page conventions", ()
   assert.equal(SIGNUP_CONFIRM_BIND_PATH, "/auth/confirm");
 });
 
+test("1b. isSignupConfirmType accepts exactly `signup` and `email` — nothing else, no normalisation", () => {
+  assert.deepEqual([...SIGNUP_CONFIRM_TYPES], ["signup", "email"]);
+  for (const type of SIGNUP_CONFIRM_TYPES) assert.equal(isSignupConfirmType(type), true, type);
+  const rejected: unknown[] = [
+    "recovery", "invite", "magiclink", "email_change",
+    "Email", "SIGNUP", " email", "email ", "signup\n", "",
+    null, undefined, 0, true, {}, ["email"], { type: "email" },
+  ];
+  for (const type of rejected) assert.equal(isSignupConfirmType(type), false, JSON.stringify(type));
+});
+
 // ── binding ──────────────────────────────────────────────────────────────────
 
 test("2. binding is a deterministic 64-hex HMAC that never contains the token or the secret", () => {
@@ -59,6 +75,11 @@ test("2. binding is a deterministic 64-hex HMAC that never contains the token or
 test("3. binding differs per token, per type, and per secret", () => {
   assert.notEqual(signupConfirmBinding("signup", TOKEN + "x", SECRET), BIND);
   assert.notEqual(signupConfirmBinding("recovery", TOKEN, SECRET), BIND);
+  // The two signup aliases are bound separately: the original type is signed, never normalised.
+  assert.match(BIND_EMAIL, /^[0-9a-f]{64}$/);
+  assert.equal(signupConfirmBinding("email", TOKEN, SECRET), BIND_EMAIL);
+  assert.notEqual(BIND_EMAIL, BIND);
+  assert.equal(bindingsMatch(BIND_EMAIL, BIND), false);
   assert.notEqual(signupConfirmBinding("signup", TOKEN, SECRET + "x"), BIND);
   // Length-prefixed input: shifting characters between type and token never collides.
   assert.notEqual(signupConfirmBinding("signu", "p" + TOKEN, SECRET), BIND);
@@ -126,8 +147,34 @@ test("9. recover: signup type + matching binding + confirmed session + dealer-v1
   assert.deepEqual(decideSignupConfirmReplay("signup", confirmedDealerSignup(), BIND, BIND), { kind: "recover" });
 });
 
-test("10. fail closed: non-signup types never recover, even with binding and a confirmed dealer session", () => {
-  for (const type of ["recovery", "invite", "magiclink", "email_change", "email", "", null]) {
+test("9b. recover: the `email` alias with ITS OWN binding + confirmed session + dealer-v1 metadata", () => {
+  assert.deepEqual(decideSignupConfirmReplay("email", confirmedDealerSignup(), BIND_EMAIL, BIND_EMAIL), { kind: "recover" });
+});
+
+test("9c. the aliases are not interchangeable: a binding for one never recovers a link of the other", () => {
+  const user = confirmedDealerSignup();
+  assert.deepEqual(decideSignupConfirmReplay("email",  user, BIND,       BIND_EMAIL), { kind: "fail-closed", reason: "not-bound" });
+  assert.deepEqual(decideSignupConfirmReplay("signup", user, BIND_EMAIL, BIND),       { kind: "fail-closed", reason: "not-bound" });
+});
+
+test("9d. every fail-closed session reason applies identically to both aliases", () => {
+  for (const type of SIGNUP_CONFIRM_TYPES) {
+    const bind = signupConfirmBinding(type, TOKEN, SECRET)!;
+    assert.deepEqual(decideSignupConfirmReplay(type, null, bind, bind), { kind: "fail-closed", reason: "no-session" }, type);
+    assert.deepEqual(
+      decideSignupConfirmReplay(type, { ...confirmedDealerSignup(), email_confirmed_at: null }, bind, bind),
+      { kind: "fail-closed", reason: "not-verified" }, type,
+    );
+    assert.deepEqual(
+      decideSignupConfirmReplay(type, { ...confirmedDealerSignup(), user_metadata: { role: "super_admin" } }, bind, bind),
+      { kind: "fail-closed", reason: "not-dealer-signup" }, type,
+    );
+    assert.deepEqual(decideSignupConfirmReplay(type, confirmedDealerSignup(), null, bind), { kind: "fail-closed", reason: "not-bound" }, type);
+  }
+});
+
+test("10. fail closed: non-signup types (and inexact alias spellings) never recover, even with binding and a confirmed dealer session", () => {
+  for (const type of ["recovery", "invite", "magiclink", "email_change", "Email", "SIGNUP", " email", "", null]) {
     assert.deepEqual(
       decideSignupConfirmReplay(type, confirmedDealerSignup(), BIND, BIND),
       { kind: "fail-closed", reason: "not-signup" },
@@ -258,6 +305,15 @@ test("21. interstitial: Japanese copy, same-origin POST form, one explicit confi
   assert.equal(/<script\b/.test(html), false);
   assert.equal(/\bsrc=|<link\b|@import|url\(/.test(html), false);
   assert.equal(/\.submit\(\)|method="get"/.test(html), false);
+});
+
+test("21b. interstitial: the `email` alias is rendered with its ORIGINAL type in the hidden field", () => {
+  const html = renderSignupConfirmInterstitial({ tokenHash: TOKEN, type: "email" });
+  assert.match(html, /<input type="hidden" name="type" value="email">/);
+  assert.equal(html.includes('value="signup"'), false, "never normalised to signup");
+  assert.equal(html.match(/<form /g)!.length, 1);
+  assert.equal(html.match(/<button type="submit">/g)!.length, 1);
+  assert.equal(html.replace(/<input type="hidden"[^>]*>/g, "").includes(TOKEN), false);
 });
 
 test("22. interstitial: the token appears only inside the hidden field, never in visible text", () => {

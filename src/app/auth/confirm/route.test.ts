@@ -25,6 +25,10 @@
 //   * Cross-origin POST, recovery/invite POST, missing params, thrown errors →
 //     /login?error=auth_confirm_failed. Recovery/invite GET → /reset-password
 //     (unchanged consuming behaviour). GYEON claim → /shop-profile.
+//   * type=email (Preview UAT 2026-09-24: what the live Supabase signup
+//     template actually emits) is a signup-confirmation alias: identical
+//     scanner-safe GET / explicit POST contract, and the ORIGINAL `email`
+//     string is what reaches the hidden field, the binding, and verifyOtp.
 
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
@@ -556,9 +560,9 @@ describe("POST fail-closed", () => {
     assert.equal(log.getUser, 0);
   });
 
-  it("recovery / invite / other types are never consumed by POST", async () => {
+  it("recovery / invite / other types (and inexact alias spellings) are never consumed by POST", async () => {
     scenario.user = confirmedDealerSignupUser();
-    for (const type of ["recovery", "invite", "magiclink", "email_change", "email", ""]) {
+    for (const type of ["recovery", "invite", "magiclink", "email_change", "Email", "SIGNUP", " email", "email ", ""]) {
       expectRedirect(await post({ fields: { token_hash: TOKEN, type } }), LOGIN_FAILED);
     }
     assert.equal(log.createClient, 0);
@@ -650,10 +654,211 @@ describe("GET recovery / invite (unchanged)", () => {
   it("missing token_hash or type never touches Supabase (GET)", async () => {
     scenario.user = confirmedDealerSignupUser();
     expectRedirect(await get(`?type=signup`), LOGIN_FAILED);
+    expectRedirect(await get(`?type=email`), LOGIN_FAILED);
     expectRedirect(await get(`?token_hash=${TOKEN}`), LOGIN_FAILED);
     expectRedirect(await get(``), LOGIN_FAILED);
     assert.equal(log.createClient, 0);
     expectNothingConsumed();
     assert.equal(log.getUser, 0);
+  });
+});
+
+// ── 7. type=email: the alias the live Supabase signup template emits ────────
+//
+// Preview UAT 2026-09-24: the real confirmation email links with `type=email`,
+// not `type=signup`. The alias gets exactly the same scanner-safe treatment.
+// The ORIGINAL string travels through the hidden field, the HMAC binding, and
+// verifyOtp — it is never rewritten to `signup`, so a binding issued for one
+// alias can never recover a link of the other.
+
+const emailBinding = () => signupConfirmBinding("email", TOKEN, SECRET)!;
+
+function postEmail({ next, ...rest }: Omit<PostOptions, "fields"> & { next?: string } = {}): Promise<Response> {
+  const fields: Record<string, string> = { token_hash: TOKEN, type: "email" };
+  if (next !== undefined) fields.next = next;
+  return post({ ...rest, fields });
+}
+
+describe("GET type=email: scanner-safe, never consumes", () => {
+  it("renders the no-store confirmation page with the ORIGINAL type and performs zero verify/dealer calls", async () => {
+    scenario.dealer = { kind: "created", dealerId: DEALER_ID };
+    const res = await get(`?token_hash=${TOKEN}&type=email`);
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type") ?? "", /^text\/html; charset=utf-8/);
+    assert.match(res.headers.get("cache-control") ?? "", /no-store/);
+    assert.equal(res.headers.get("referrer-policy"), "no-referrer");
+    assert.match(res.headers.get("x-robots-tag") ?? "", /noindex/);
+    assert.equal(res.headers.get("location"), null);
+    expectNoBindingCookie(res);
+    expectNothingConsumed();
+    assert.equal(log.getUser, 0);
+    assert.equal(log.createClient, 0, "no Supabase client is even created for a plain GET");
+    assert.deepEqual(log.consoleError, []);
+
+    const html = await res.text();
+    assert.match(html, /<form method="post" action="\/auth\/confirm"/);
+    assert.match(html, /name="type" value="email"/, "hidden type keeps the original value");
+    assert.equal(/name="type" value="signup"/.test(html), false, "never normalised to signup");
+    assert.equal(html.replace(/<input type="hidden"[^>]*>/g, "").includes(TOKEN), false, "token only in the hidden field");
+  });
+
+  it("carries a sanitised next through the form and drops unsafe values", async () => {
+    let html = await (await get(`?token_hash=${TOKEN}&type=email&next=/hub`)).text();
+    assert.match(html, /name="next" value="\/hub"/);
+    html = await (await get(`?token_hash=${TOKEN}&type=email&next=//evil.example`)).text();
+    assert.match(html, /name="next" value="\/"/);
+    expectNothingConsumed();
+  });
+
+  it("a confirmed dealer session with no / wrong / signup-typed / other-token binding still gets the page, never a recovery", async () => {
+    scenario.user   = confirmedDealerSignupUser();
+    scenario.dealer = { kind: "already-exists", dealerId: DEALER_ID };
+    assert.equal((await get(`?token_hash=${TOKEN}&type=email`)).status, 200, "no cookie");
+    const other = signupConfirmBinding("email", TOKEN + "x", SECRET)!;
+    for (const value of ["forged", binding(), other, ""]) {
+      const res = await get(`?token_hash=${TOKEN}&type=email`, { cookie: `${COOKIE}=${value}` });
+      assert.equal(res.status, 200, `binding=${value.slice(0, 8)}`);
+    }
+    assert.equal(log.getUser, 0, "binding mismatch is decided before any session lookup");
+    expectNothingConsumed();
+  });
+
+  it("bound replay (email-typed binding + confirmed dealer-v1 session) redirects to the pending state without verifyOtp", async () => {
+    scenario.user   = confirmedDealerSignupUser();
+    scenario.dealer = { kind: "already-exists", dealerId: DEALER_ID };
+    const res = await get(`?token_hash=${TOKEN}&type=email`, { cookie: `${COOKIE}=${emailBinding()}` });
+    expectRedirect(res, PENDING);
+    assert.deepEqual(log.verifyOtp, []);
+    assert.equal(log.getUser, 1);
+    assert.equal(log.createPendingDealer, 1);
+    assert.equal(log.claim, 0);
+  });
+
+  it("bound replay with NO session or a non-dealer session → page (token untouched)", async () => {
+    scenario.user = null;
+    assert.equal((await get(`?token_hash=${TOKEN}&type=email`, { cookie: `${COOKIE}=${emailBinding()}` })).status, 200);
+    scenario.user = { ...confirmedDealerSignupUser(), user_metadata: { role: "super_admin" } };
+    assert.equal((await get(`?token_hash=${TOKEN}&type=email`, { cookie: `${COOKIE}=${emailBinding()}` })).status, 200);
+    expectNothingConsumed();
+  });
+});
+
+describe("POST type=email: consumes exactly once with the original type", () => {
+  it("verifies once with type \"email\", claims once, converges the pending dealer, sets the email-typed HMAC binding cookie", async () => {
+    scenario.dealer = { kind: "created", dealerId: DEALER_ID };
+    const res = await postEmail();
+    expectRedirect(res, PENDING);
+    assert.deepEqual(log.verifyOtp, [{ type: "email", token_hash: TOKEN }], "the ORIGINAL type reaches verifyOtp, exactly once");
+    assert.equal(log.claim, 1);
+    assert.equal(log.createPendingDealer, 1);
+    assert.equal(log.getUser, 0, "success path needs no extra session lookup");
+    assert.deepEqual(log.consoleError, []);
+
+    const setCookie = res.headers.get("set-cookie") ?? "";
+    assert.match(setCookie, new RegExp(`^${COOKIE}=${emailBinding()};`), "cookie is the keyed binding over the ORIGINAL type");
+    assert.equal(setCookie.includes(binding()), false, "cookie is not the signup-typed binding");
+    assert.match(setCookie, /HttpOnly/i);
+    assert.match(setCookie, /SameSite=lax/i);
+    assert.match(setCookie, /Path=\/auth\/confirm/);
+    assert.match(setCookie, /Max-Age=3600/);
+    assert.equal(setCookie.includes(TOKEN), false, "cookie never contains the token");
+    assert.equal(setCookie.includes(SECRET), false, "cookie never contains the secret");
+  });
+
+  it("already-exists / setup failure / non-dealer next / GYEON claim outcomes match the signup alias", async () => {
+    scenario.dealer = { kind: "already-exists", dealerId: DEALER_ID };
+    expectRedirect(await postEmail(), PENDING);
+    scenario.dealer = { kind: "error" };
+    expectRedirect(await postEmail(), `${PENDING}&setup_error=1`);
+    scenario.dealer = { kind: "not-dealer-signup" };
+    expectRedirect(await postEmail(), "/");
+    expectRedirect(await postEmail({ next: "/hub" }), "/hub");
+    expectRedirect(await postEmail({ next: "//evil.example" }), "/");
+    scenario.claim  = { kind: "claimed", dealerId: DEALER_ID };
+    scenario.dealer = { kind: "created", dealerId: DEALER_ID };
+    expectRedirect(await postEmail(), "/shop-profile");
+    assert.equal(log.verifyOtp.length, 6);
+    assert.ok(log.verifyOtp.every((call) => call.type === "email"), "every verifyOtp call keeps the original type");
+  });
+
+  it("without the server secret the confirmation still succeeds — just without a binding cookie", async () => {
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    scenario.dealer = { kind: "created", dealerId: DEALER_ID };
+    const res = await postEmail();
+    expectRedirect(res, PENDING);
+    expectNoBindingCookie(res);
+    assert.deepEqual(log.verifyOtp, [{ type: "email", token_hash: TOKEN }]);
+  });
+
+  it("replay recovers ONLY with the email-typed binding + confirmed dealer-v1 session (token verified first, once)", async () => {
+    scenario.verify = USED_TOKEN_ERROR;
+    scenario.user   = confirmedDealerSignupUser();
+    scenario.dealer = { kind: "already-exists", dealerId: DEALER_ID };
+    const res = await postEmail({ cookie: `${COOKIE}=${emailBinding()}` });
+    expectRedirect(res, PENDING);
+    assert.deepEqual(log.verifyOtp, [{ type: "email", token_hash: TOKEN }]);
+    assert.equal(log.getUser, 1);
+    assert.equal(log.createPendingDealer, 1);
+    assert.equal(log.claim, 0);
+    expectNoBindingCookie(res);
+    assert.equal(log.consoleError.some((line) => line.includes(TOKEN)), false);
+  });
+
+  it("binding / signature rejection: signup-typed, other-token, wrong-key, plain-SHA, forged, truncated, extended, empty, missing → fail closed", async () => {
+    scenario.verify = USED_TOKEN_ERROR;
+    scenario.user   = confirmedDealerSignupUser();
+    scenario.dealer = { kind: "already-exists", dealerId: DEALER_ID };
+    const plain    = createHash("sha256").update(`email:${TOKEN}`).digest("hex");
+    const other    = signupConfirmBinding("email", TOKEN + "x", SECRET)!;
+    const wrongKey = signupConfirmBinding("email", TOKEN, SECRET + "x")!;
+    for (const value of [binding(), other, wrongKey, plain, "forged", emailBinding().slice(0, 63), emailBinding() + "0", ""]) {
+      expectRedirect(await postEmail({ cookie: `${COOKIE}=${value}` }), LOGIN_FAILED);
+    }
+    expectRedirect(await postEmail(), LOGIN_FAILED);
+    assert.equal(log.getUser, 0, "no session lookup without a matching binding");
+    assert.equal(log.createPendingDealer, 0);
+    assert.equal(log.claim, 0);
+  });
+
+  it("replay rejection: matching binding but no session / unverified / non-dealer / no secret → fail closed", async () => {
+    scenario.verify = USED_TOKEN_ERROR;
+    scenario.user   = null;
+    expectRedirect(await postEmail({ cookie: `${COOKIE}=${emailBinding()}` }), LOGIN_FAILED);
+    assert.equal(log.getUser, 1);
+    for (const user of [
+      { ...confirmedDealerSignupUser(), email_confirmed_at: null },
+      { ...confirmedDealerSignupUser(), user_metadata: { role: "super_admin" } },
+    ]) {
+      scenario.user = user;
+      expectRedirect(await postEmail({ cookie: `${COOKIE}=${emailBinding()}` }), LOGIN_FAILED);
+    }
+    scenario.user = confirmedDealerSignupUser();
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    expectRedirect(await postEmail({ cookie: `${COOKIE}=${emailBinding()}` }), LOGIN_FAILED);
+    assert.equal(log.createPendingDealer, 0);
+  });
+
+  it("the two aliases are not interchangeable: neither binding recovers the other alias's link", async () => {
+    scenario.verify = USED_TOKEN_ERROR;
+    scenario.user   = confirmedDealerSignupUser();
+    scenario.dealer = { kind: "already-exists", dealerId: DEALER_ID };
+    expectRedirect(await postEmail({ cookie: `${COOKIE}=${binding()}` }), LOGIN_FAILED);
+    expectRedirect(await post({ cookie: `${COOKIE}=${emailBinding()}` }), LOGIN_FAILED);
+    assert.equal(log.getUser, 0);
+    assert.equal(log.createPendingDealer, 0);
+  });
+
+  it("cross-origin / thrown-verify / no-token POSTs with type=email fail closed like the signup alias", async () => {
+    scenario.dealer = { kind: "created", dealerId: DEALER_ID };
+    expectRedirect(await postEmail({ origin: "https://evil.example" }), LOGIN_FAILED);
+    expectRedirect(await postEmail({ origin: null }), LOGIN_FAILED);
+    expectRedirect(await post({ fields: { token_hash: "", type: "email" } }), LOGIN_FAILED);
+    assert.equal(log.createClient, 0);
+    expectNothingConsumed();
+    scenario.verify = "throw";
+    scenario.user   = confirmedDealerSignupUser();
+    expectRedirect(await postEmail({ cookie: `${COOKIE}=${emailBinding()}` }), LOGIN_FAILED);
+    assert.equal(log.getUser, 0);
+    assert.equal(log.createPendingDealer, 0);
   });
 });

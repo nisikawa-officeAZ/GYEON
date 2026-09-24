@@ -54,13 +54,14 @@ test("3. confirmation-required signup defers the dealer write until verification
   assert.equal(source.slice(0, autoConfirmedAt).includes("await createPendingDealer()"), false);
 });
 
-test("4. token confirmation creates a pending dealer only for signup", () => {
+test("4. token confirmation creates a pending dealer only for a signup confirmation type (signup | email)", () => {
   const source = stripComments(read("src/app/auth/confirm/route.ts"));
 
   const resetAt = source.indexOf('type === "recovery" || type === "invite"');
-  const signupAt = source.indexOf('if (type === "signup")');
+  const signupAt = source.indexOf("if (isSignupConfirmType(type))");
   const createAt = source.indexOf("await createPendingDealer()", signupAt);
   assert.ok(resetAt >= 0 && signupAt > resetAt && createAt > signupAt);
+  assert.doesNotMatch(source, /type [!=]== "signup"/, "signup-only gating goes through the shared signup|email predicate");
   assert.match(source, /signup\/pending\?confirm=0/);
   assert.match(source, /setup_error=1/);
 });
