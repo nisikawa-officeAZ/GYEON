@@ -5689,3 +5689,79 @@ mutation_flags:
 forbidden_actions_taken: NONE
 next: "BOOK_CODEX_INDEPENDENT_READ_ONLY_GOVERNANCE_REVIEW; THEN_REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_LITERAL_THREE_PATH_STAGE_AND_LOCAL_COMMIT_ONLY."
 ```
+
+## INV001-P19-D5A-R2 — PR #128 publication acceptance
+
+```yaml
+phase: INV001_P19_D5A_R2_MOBILE_SESSION_CONTRACT
+marker: INV001_P19_D5A_R2_PR128_PUBLICATION_ACCEPTANCE_V1
+status: CLOSED_PUBLISHED_ON_GYEON_MAIN_NO_PERSIST_NO_ANDROID
+date: 2026-09-23
+append_only: true
+authorization: "Owner acceptance 5796114966 accepted PR #128 on live main as the D5A-R2 publication and forbade a duplicate implementation commit. This ledger append records that acceptance only."
+owner_acceptance: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5796114966
+book_pass: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5795765132
+book_executable:
+  npm_ci_exit: 0
+  focused_tests: PASS_79_OF_79
+  typecheck_exit: 0
+  npm_run_build_exit: 0
+  git_diff_check_exit: 0
+  security_findings: NONE
+repository: nisikawa-officeAZ/GYEON
+publication:
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/128
+  state: MERGED
+  merged_at: 2026-09-23T13:43:29Z
+  head: 3f2771bf36143596b59349f41e793994ee976a9a
+  head_tree: 3a20c696c7d69940bf47a4cccb9f53e174b1cb84
+  merge_commit: c8f1c718c9a20729eafa93c705f423f606f53133
+  merge_tree: 093055d32f52715f846e3c9f539c3c51a8ab110b
+  published_branch: agent/inv001-p19-d5a-r2-mobile-authority
+  published_subject: "feat(inventory): add authenticated mobile authority boundary"
+sequencing_deviation:
+  pr_create_push_ready_merge_preceded_named_owner_commit_only_gate: true
+  named_owner_commit_only_gate: https://github.com/nisikawa-officeAZ/detaileros-inventory-foundation/issues/39#issuecomment-5795938501
+  authorized_branch: agent/inv001-p19-d5a-r2-mobile-session-contract
+  authorized_subject: "feat(inventory): add mobile session contract with bearer-scoped authority"
+  published_branch_mismatch: true
+  published_subject_mismatch: true
+  cursor_duplicate_commit: NOT_REQUIRED_AND_NOT_PERFORMED
+  cursor_blocked_reason: BLOCKED_IDENTITY_LIVE_MAIN_NO_LONGER_873ffdf3
+claude_result_used_as_studio_acceptance: false
+acceptance_evidence:
+  - BOOK_INDEPENDENT_PASS_5795765132
+  - LIVE_MAIN_EXACT_16_SHA256_MATCH
+exact_16_path_sha256:
+  src/lib/inventory/authority/office-az-inventory-authority-types.ts: 05bae926d152cfc1aecaffb46d1fd95f2046ea592f48ccd40c84047d190e9f2d
+  src/lib/inventory/authority/office-az-inventory-authority-core.ts: 8d5c23e895d4a19093964a52f3febd2c64b5809becbc8c1800b5e487ddfb3b8e
+  src/lib/inventory/authority/office-az-inventory-authority-core.test.ts: 0adbc1895b77ffce51353b22d3d8f12a64bf358f68b5b271157831b044a0ef0c
+  src/lib/inventory/authority/resolve-office-az-inventory-authority.ts: 652c8819501f8214ee78760a7186b126c27e652e957f47de06d92116b45147eb
+  src/lib/inventory/authority/resolve-office-az-inventory-authority.test.ts: 5c22d3324d02ac16db24f407a36fe3385926892b365ffd5f4dac11988113fdff
+  src/lib/inventory/mobile/office-az-inventory-mobile-server.ts: 30cae5d00889754587398a4aa1176a274c5fdb784975b5b6d4f1bbb733e29c4f
+  src/lib/inventory/mobile/office-az-inventory-mobile-server.test.ts: a24731c1e684a924f88988cd93b148552209894098eb1de44385ef8bda508347
+  src/lib/inventory/mobile/resolve-office-az-inventory-mobile-bearer.ts: cf5bfd9a7d98785facd2f441f3b4ddecec070aa0d7ac66cb923a34eff09470ca
+  src/lib/inventory/mobile/resolve-office-az-inventory-mobile-bearer.test.ts: 802228bbf4caa8b7e91a2911c85cc1c98f1194edc56a665f36b0e3df28e7eeab
+  src/lib/inventory/mobile/office-az-inventory-mobile-session-types.ts: cad287c22b5a97768b430e9b257ff14d0d7d4992b2f0f45abecdbcc99e9f4a28
+  src/lib/inventory/mobile/office-az-inventory-mobile-session-core.ts: 05450107241248f5722053547cac337af83164a0a995e167fe02ead8daeec031
+  src/lib/inventory/mobile/office-az-inventory-mobile-session-core.test.ts: ec851775572d964acec962150738e8cfc65838817999fc49b220b580e7cabb82
+  src/app/api/inventory/mobile/session/route.ts: 5587292cfc97ccfc52889a27d03d9e7391146e606dd2f3d50370a60d5cf54948
+  src/app/api/inventory/mobile/session/route.test.ts: 0fb79bc5232afb9738388903ac9f5c0aa5f05b97b9ebebe36e023942908b8b5d
+  src/app/api/inventory/mobile/devices/route.ts: 628d34fb7ec44f7eacd3922e5eda6c7b24b780217d7596a99ea6597827419f51
+  src/app/api/inventory/mobile/devices/route.test.ts: 3c240a0525d4584acb25f73f066159e6a7029b40d2ef22e1694a5104e47af039
+not_authorized:
+  d5b_persist: NOT_AUTHORIZED
+  d5c_d4_bearer: NOT_AUTHORIZED
+  db_apply: NOT_AUTHORIZED
+  auth_live_grant: NOT_AUTHORIZED
+  migration_apply: NOT_AUTHORIZED
+  android: NOT_AUTHORIZED
+  deploy: NOT_AUTHORIZED
+git_actions:
+  committed: true
+  pushed: false
+  pr_changed: false
+  ready_or_merged: false
+decision: ACCEPT_PR128_AS_D5A_R2_PUBLICATION_AND_RECORD_SEQUENCING_DEVIATION_WITHOUT_DUPLICATE_COMMIT
+next: "INDEPENDENT_BOOK_REVIEW_OF_THIS_TWO_PATH_LEDGER_APPEND; PUSH_PR_READY_MERGE_AND_D5B_REMAIN_SEPARATE_OWNER_GATES."
+```

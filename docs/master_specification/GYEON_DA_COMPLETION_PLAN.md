@@ -2420,3 +2420,40 @@ not_authorized:
   - ready_merge_deploy_or_production_action
 next: "BOOK_CODEX_INDEPENDENT_READ_ONLY_GOVERNANCE_REVIEW_THEN_SEPARATE_OWNER_GATE_FOR_LITERAL_THREE_PATH_STAGE_AND_LOCAL_COMMIT."
 ```
+
+## 23. INV001-P19-D5A-R2 — Mobile session/device HTTP contract publication
+
+**Status:** COMPLETE_ON_GYEON_MAIN for the D5A-R2 fail-closed HTTP contract only. Persist (D5B), D4 bearer (D5C), Android source, DB apply, live grant, and deploy remain unauthorized.
+
+**Publication:** PR https://github.com/nisikawa-officeAZ/GYEON/pull/128 merged to `main` as `c8f1c718c9a20729eafa93c705f423f606f53133` / tree `093055d32f52715f846e3c9f539c3c51a8ab110b`. Head `3f2771bf36143596b59349f41e793994ee976a9a` / tree `3a20c696c7d69940bf47a4cccb9f53e174b1cb84`.
+
+**Book executable PASS:** Foundation Issue #39 comment `5795765132` (`npm ci` 0, focused 79/79, typecheck 0, production build 0, `git diff --check` 0, `SECURITY_FINDINGS=NONE`). Owner accepted this publication in comment `5796114966`. Claude review is not Studio acceptance evidence.
+
+**Sequencing deviation:** PR create/push/Ready/merge preceded the named Owner commit-only gate `5795938501`. Published branch `agent/inv001-p19-d5a-r2-mobile-authority` and subject `feat(inventory): add authenticated mobile authority boundary` differ from the later authorized branch `agent/inv001-p19-d5a-r2-mobile-session-contract` and subject `feat(inventory): add mobile session contract with bearer-scoped authority`. Cursor detected live-main identity drift and did not create a duplicate commit.
+
+**Exact 16 implementation SHA-256:** unchanged from Book PASS `5795765132`. This section does not rewrite the historical P27-G0 candidate record above.
+
+```yaml
+phase: INV001_P19_D5A_R2_MOBILE_SESSION_CONTRACT
+marker: INV001_P19_D5A_R2_PR128_PUBLICATION_ACCEPTANCE_V1
+date: 2026-09-23
+status: COMPLETE_ON_GYEON_MAIN_HTTP_CONTRACT_ONLY
+technical_status: D5A_R2_HTTP_CONTRACT_PUBLISHED_ON_GYEON_MAIN_NO_PERSIST_NO_ANDROID
+owner_acceptance: 5796114966
+book_pass: 5795765132
+pull_request: 128
+head: 3f2771bf36143596b59349f41e793994ee976a9a
+head_tree: 3a20c696c7d69940bf47a4cccb9f53e174b1cb84
+merge_commit: c8f1c718c9a20729eafa93c705f423f606f53133
+merge_tree: 093055d32f52715f846e3c9f539c3c51a8ab110b
+duplicate_commit: NOT_REQUIRED_AND_NOT_PERFORMED
+claude_result_used_as_studio_acceptance: false
+not_authorized:
+  - D5B_PERSIST
+  - D5C_D4_BEARER
+  - DB_APPLY
+  - AUTH_LIVE_GRANT
+  - MIGRATION_APPLY
+  - ANDROID_SOURCE
+  - DEPLOY
+```
