@@ -133,6 +133,27 @@ test("operator-selected line order becomes the persisted service array order", (
   assert.deepEqual(req.services.map((line) => line.lineId), draft.review.serviceLineOrder);
 });
 
+test("final-review quantity and unit-price edits persist with recomputed totals", () => {
+  const base = draftWith(["coating"], coatingCfg("one-evo"));
+  const lineId = "catalog:coating:base:one-evo";
+  const draft: EstimateWizardDraftV22 = {
+    ...base,
+    review: {
+      ...base.review,
+      quantityInputsByLine: { [lineId]: "2" },
+      unitPriceInputsByLine: { [lineId]: "60000" },
+    },
+  };
+
+  const req = okReq(run(draft));
+  assert.equal(req.services[0]?.quantity, 2);
+  assert.equal(req.services[0]?.unitPrice, 60_000);
+  assert.equal(req.services[0]?.subtotal, 120_000);
+  assert.equal(req.pricing.subtotal, 120_000);
+  assert.equal(req.pricing.taxTotal, 12_000);
+  assert.equal(req.pricing.grandTotal, 132_000);
+});
+
 test("catalog ids and roles come directly from the pricing result", () => {
   const draft = draftWith(["coating"], coatingCfg("one-evo", "cancoat-evo", "cancoat-evo"));
   const pr = computeWizardPricingFromConfig(draft, PC, CATALOG, RANK);

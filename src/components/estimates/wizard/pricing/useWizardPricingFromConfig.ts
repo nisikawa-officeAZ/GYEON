@@ -33,13 +33,13 @@ export function useWizardPricingFromConfig(
   catalog: PricingCatalog,
   shopRank: ShopRank,
 ): WizardPricingResult {
-  const { serviceSelection, serviceConfiguration, discountAndCoupon } = draft;
+  const { serviceSelection, serviceConfiguration, discountAndCoupon, review } = draft;
   const bodySizeKey = draft.vehicle.bodySizeKey;
   const isBusiness = draft.customer.newCustomer.isBusiness;
   const tradeRate = draft.customer.newCustomer.tradeRate;
   return useMemo(
     () => computeWizardPricingFromConfig(draft, pricingConfig, catalog, shopRank),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [serviceSelection, serviceConfiguration, bodySizeKey, discountAndCoupon, isBusiness, tradeRate, shopRank, catalog, pricingConfig],
+    [serviceSelection, serviceConfiguration, bodySizeKey, discountAndCoupon, review, isBusiness, tradeRate, shopRank, catalog, pricingConfig],
   );
 }
