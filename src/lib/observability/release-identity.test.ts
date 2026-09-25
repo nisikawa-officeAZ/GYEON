@@ -400,9 +400,21 @@ test("no clock, randomness, package version or worktree state becomes the releas
 test("the existing PWA, PDF, HEIC and Server Action configuration is unchanged", () => {
   assert.equal(nextConfig.reactStrictMode, true);
   assert.deepEqual(nextConfig.serverExternalPackages,
-    ["@react-pdf/renderer", "sharp", "heic-convert", "libheif-js"]);
+    ["@react-pdf/renderer", "sharp", "heic-convert", "libheif-js", "puppeteer-core", "@sparticuz/chromium"]);
   assert.deepEqual(nextConfig.outputFileTracingIncludes, {
-    "/**": ["./src/lib/pdf/fonts/*.ttf", "./src/lib/pdf/brand-assets/*.png"],
+    "/**": [
+      "./src/lib/pdf/fonts/*.ttf",
+      "./src/lib/pdf/brand-assets/*.png",
+      "./src/lib/pdf/design/premium/**",
+      "./src/lib/pdf/chromium-document/design/**",
+      "./node_modules/@sparticuz/chromium/bin/**",
+      "./public/brand/gyeon-classic/logos/combination.svg",
+      "./src/data/postal/japan-post-address-map.json",
+      // sharp >= 0.35 native runtime for Vercel (linux-x64): removing these
+      // reintroduces "Could not load the sharp module using the linux-x64 runtime".
+      "./node_modules/@img/sharp-linux-x64/**",
+      "./node_modules/@img/sharp-libvips-linux-x64/**",
+    ],
   });
   assert.equal(nextConfig.experimental?.serverActions?.bodySizeLimit, "20mb");
 
