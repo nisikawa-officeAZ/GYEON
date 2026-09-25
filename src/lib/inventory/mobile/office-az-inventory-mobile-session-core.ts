@@ -9,15 +9,21 @@ import {
 } from "./office-az-inventory-mobile-session-types";
 
 const MAX_ID_LENGTH = 512;
-const SESSION_COMMON_KEYS = new Set([
+const SHARED_AUTHORITY_KEYS = [
   "operation",
   "actorId",
   "operatorId",
   "expectedAuthorityVersion",
   "requiredLocationIds",
-  "deviceId",
+] as const;
+const SESSION_ISSUE_KEYS = new Set([...SHARED_AUTHORITY_KEYS, "deviceId"]);
+const SESSION_REFRESH_KEYS = new Set([
+  ...SHARED_AUTHORITY_KEYS,
   "sessionId",
+  "refreshToken",
+  "refreshVersion",
 ]);
+const SESSION_REVOKE_KEYS = new Set([...SHARED_AUTHORITY_KEYS, "sessionId"]);
 const DEVICE_REGISTER_KEYS = new Set([
   "operation",
   "actorId",
@@ -72,6 +78,10 @@ function isPositiveSafeInteger(value: unknown): value is number {
 
 function looksLikeJwt(value: string): boolean {
   return value.startsWith("eyJ") && value.includes(".");
+}
+
+function isOpaqueValue(value: unknown): value is string {
+  return isTrimmedNonEmptyId(value) && !looksLikeJwt(value);
 }
 
 function parseLocationIds(value: unknown): readonly string[] | null {
@@ -135,31 +145,41 @@ export function parseMobileSessionRequest(input: unknown): MobileSessionParse {
   ) {
     return { ok: false, code: "unknown_operation" };
   }
-  if (hasUnknownKeys(input, SESSION_COMMON_KEYS)) {
-    return { ok: false, code: "invalid_request" };
-  }
   const shared = parseSharedAuthority(input);
-  if (!shared || !isTrimmedNonEmptyId(input.deviceId) || looksLikeJwt(input.deviceId)) {
-    return { ok: false, code: "invalid_request" };
-  }
+  if (!shared) return { ok: false, code: "invalid_request" };
   if (input.operation === "issue") {
-    if ("sessionId" in input) return { ok: false, code: "invalid_request" };
+    if (hasUnknownKeys(input, SESSION_ISSUE_KEYS) || !isOpaqueValue(input.deviceId)) {
+      return { ok: false, code: "invalid_request" };
+    }
     return { ok: true, operation: "issue", deviceId: input.deviceId, ...shared };
   }
+  if (input.operation === "refresh") {
+    if (
+      hasUnknownKeys(input, SESSION_REFRESH_KEYS) ||
+      !isOpaqueValue(input.sessionId) ||
+      !isOpaqueValue(input.refreshToken) ||
+      !isPositiveSafeInteger(input.refreshVersion) ||
+      !Number.isSafeInteger(input.refreshVersion + 1)
+    ) {
+      return { ok: false, code: "invalid_request" };
+    }
+    return {
+      ok: true,
+      operation: "refresh",
+      sessionId: input.sessionId,
+      refreshToken: input.refreshToken,
+      refreshVersion: input.refreshVersion,
+      ...shared,
+    };
+  }
   if (
-    (input.operation !== "refresh" && input.operation !== "revoke") ||
-    !isTrimmedNonEmptyId(input.sessionId) ||
-    looksLikeJwt(input.sessionId)
+    input.operation !== "revoke" ||
+    hasUnknownKeys(input, SESSION_REVOKE_KEYS) ||
+    !isOpaqueValue(input.sessionId)
   ) {
     return { ok: false, code: "invalid_request" };
   }
-  return {
-    ok: true,
-    operation: input.operation,
-    deviceId: input.deviceId,
-    sessionId: input.sessionId,
-    ...shared,
-  };
+  return { ok: true, operation: "revoke", sessionId: input.sessionId, ...shared };
 }
 
 export function parseMobileDeviceRequest(input: unknown): MobileDeviceParse {
@@ -178,7 +198,7 @@ export function parseMobileDeviceRequest(input: unknown): MobileDeviceParse {
     if (hasUnknownKeys(input, DEVICE_REGISTER_KEYS)) {
       return { ok: false, code: "invalid_request" };
     }
-    if (!isTrimmedNonEmptyId(input.enrollmentCode) || looksLikeJwt(input.enrollmentCode)) {
+    if (!isOpaqueValue(input.enrollmentCode)) {
       return { ok: false, code: "invalid_request" };
     }
     return { ok: true, operation: "register", enrollmentCode: input.enrollmentCode, ...shared };
@@ -186,7 +206,7 @@ export function parseMobileDeviceRequest(input: unknown): MobileDeviceParse {
   if (hasUnknownKeys(input, DEVICE_REVOKE_KEYS)) {
     return { ok: false, code: "invalid_request" };
   }
-  if (!isTrimmedNonEmptyId(input.deviceId) || looksLikeJwt(input.deviceId)) {
+  if (!isOpaqueValue(input.deviceId)) {
     return { ok: false, code: "invalid_request" };
   }
   return { ok: true, operation: "revoke_device", deviceId: input.deviceId, ...shared };

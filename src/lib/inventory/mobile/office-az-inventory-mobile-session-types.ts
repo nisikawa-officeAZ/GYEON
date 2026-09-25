@@ -1,6 +1,6 @@
 /**
- * D5A Book-hosted mobile session/device contract.
- * Persist, token issuance, hostname, and Android source are out of scope.
+ * D5A/D5C Book-hosted mobile session/device contract.
+ * Live persistence injection, hostname, and Android source are out of scope.
  */
 
 export const DEALEROS_INVENTORY_API_BASE_URL_KEY =
@@ -41,40 +41,77 @@ export type MobileBoundaryPublicCode =
 
 export const MOBILE_BOUNDARY_MAX_BODY_BYTES = 32768;
 
-export type MobileBoundaryResult =
-  | { readonly ok: true; readonly operation: MobileBoundaryOperation; readonly accepted: true }
-  | { readonly ok: false; readonly code: MobileBoundaryPublicCode };
-
-export type MobileSessionParse =
-  | {
-      readonly ok: true;
-      readonly operation: MobileSessionOperation;
-      readonly actorId: string;
-      readonly operatorId: string;
-      readonly expectedAuthorityVersion: number;
-      readonly requiredLocationIds: readonly string[];
-      readonly deviceId: string;
-      readonly sessionId?: string;
-    }
-  | { readonly ok: false; readonly code: "invalid_request" | "unknown_operation" };
-
-export type MobileDeviceParse =
+/** Success payloads carry raw opaque values only; hashes and expiry timestamps never appear. */
+export type MobileBoundarySuccess =
   | {
       readonly ok: true;
       readonly operation: "register";
-      readonly actorId: string;
-      readonly operatorId: string;
-      readonly expectedAuthorityVersion: number;
-      readonly requiredLocationIds: readonly string[];
-      readonly enrollmentCode: string;
+      readonly accepted: true;
+      readonly deviceId: string;
     }
   | {
       readonly ok: true;
-      readonly operation: "revoke_device";
-      readonly actorId: string;
-      readonly operatorId: string;
-      readonly expectedAuthorityVersion: number;
-      readonly requiredLocationIds: readonly string[];
-      readonly deviceId: string;
+      readonly operation: "issue";
+      readonly accepted: true;
+      readonly sessionId: string;
+      readonly refreshToken: string;
+      readonly refreshVersion: 1;
+      readonly accessLifetimeMs: number;
+      readonly refreshAbsoluteCeilingMs: number;
     }
+  | {
+      readonly ok: true;
+      readonly operation: "refresh";
+      readonly accepted: true;
+      readonly refreshToken: string;
+      readonly refreshVersion: number;
+    }
+  | {
+      readonly ok: true;
+      readonly operation: "revoke" | "revoke_device";
+      readonly accepted: true;
+    };
+
+export type MobileBoundaryResult =
+  | MobileBoundarySuccess
+  | { readonly ok: false; readonly code: MobileBoundaryPublicCode };
+
+type MobileSharedAuthorityParse = {
+  readonly actorId: string;
+  readonly operatorId: string;
+  readonly expectedAuthorityVersion: number;
+  readonly requiredLocationIds: readonly string[];
+};
+
+export type MobileSessionParse =
+  | (MobileSharedAuthorityParse & {
+      readonly ok: true;
+      readonly operation: "issue";
+      readonly deviceId: string;
+    })
+  | (MobileSharedAuthorityParse & {
+      readonly ok: true;
+      readonly operation: "refresh";
+      readonly sessionId: string;
+      readonly refreshToken: string;
+      readonly refreshVersion: number;
+    })
+  | (MobileSharedAuthorityParse & {
+      readonly ok: true;
+      readonly operation: "revoke";
+      readonly sessionId: string;
+    })
+  | { readonly ok: false; readonly code: "invalid_request" | "unknown_operation" };
+
+export type MobileDeviceParse =
+  | (MobileSharedAuthorityParse & {
+      readonly ok: true;
+      readonly operation: "register";
+      readonly enrollmentCode: string;
+    })
+  | (MobileSharedAuthorityParse & {
+      readonly ok: true;
+      readonly operation: "revoke_device";
+      readonly deviceId: string;
+    })
   | { readonly ok: false; readonly code: "invalid_request" | "unknown_operation" };

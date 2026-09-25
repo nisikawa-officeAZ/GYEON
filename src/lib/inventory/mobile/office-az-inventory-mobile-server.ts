@@ -4,6 +4,13 @@ import { resolveOfficeAzInventoryAuthorityForBearerUser } from "../authority/res
 import type { OfficeAzInventoryAuthorityEvaluation } from "../authority/office-az-inventory-authority-types";
 import type { OfficeAzInventoryCapability } from "../authority/office-az-inventory-authority-types";
 import {
+  bindAuthorizedMobileOperation,
+  generateOfficeAzInventoryMobileOpaqueId,
+  type AuthorizedMobileParse,
+  type MobileBindingDependencies,
+} from "./office-az-inventory-mobile-binding";
+import { createOfficeAzInventoryMobilePersistence } from "./office-az-inventory-mobile-persistence";
+import {
   parseMobileDeviceRequest,
   parseMobileSessionRequest,
 } from "./office-az-inventory-mobile-session-core";
@@ -11,8 +18,6 @@ import {
   MOBILE_BOUNDARY_MAX_BODY_BYTES,
   type MobileBoundaryPublicCode,
   type MobileBoundaryResult,
-  type MobileDeviceParse,
-  type MobileSessionParse,
 } from "./office-az-inventory-mobile-session-types";
 import { resolveOfficeAzInventoryMobileBearer } from "./resolve-office-az-inventory-mobile-bearer";
 
@@ -85,9 +90,7 @@ export function mapAuthorityEvaluation(
   }
 }
 
-function capabilityFor(
-  parsed: Extract<MobileSessionParse, { ok: true }> | Extract<MobileDeviceParse, { ok: true }>,
-): OfficeAzInventoryCapability {
+function capabilityFor(parsed: AuthorizedMobileParse): OfficeAzInventoryCapability {
   if (parsed.operation === "register") return "inventory.device.register";
   if (parsed.operation === "revoke" || parsed.operation === "revoke_device") {
     return "inventory.session.revoke";
@@ -145,8 +148,9 @@ export async function readBoundedJsonBody(
 }
 
 async function executeParsed(
-  parsed: Extract<MobileSessionParse, { ok: true }> | Extract<MobileDeviceParse, { ok: true }>,
+  parsed: AuthorizedMobileParse,
   authorizationHeader: string | null,
+  deps: MobileBindingDependencies,
 ): Promise<MobileBoundaryResult> {
   const bearer = await resolveOfficeAzInventoryMobileBearer(authorizationHeader);
   if (bearer.tag === "denied") return fail("unauthenticated");
@@ -165,31 +169,61 @@ async function executeParsed(
   if (evaluation.tag !== "authorized") {
     return fail(mapAuthorityEvaluation(evaluation));
   }
-  return fail("dependency_not_configured");
+  return bindAuthorizedMobileOperation(parsed, deps);
 }
+
+export type MobileBoundaryExecutor = {
+  executeMobileSessionBoundary(
+    input: unknown,
+    authorizationHeader: string | null,
+  ): Promise<MobileBoundaryResult>;
+  executeMobileDeviceBoundary(
+    input: unknown,
+    authorizationHeader: string | null,
+  ): Promise<MobileBoundaryResult>;
+};
+
+export function createMobileBoundaryExecutor(
+  deps: MobileBindingDependencies,
+): MobileBoundaryExecutor {
+  return {
+    async executeMobileSessionBoundary(input, authorizationHeader) {
+      try {
+        const parsed = parseMobileSessionRequest(input);
+        if (!parsed.ok) return fail(parsed.code);
+        return await executeParsed(parsed, authorizationHeader, deps);
+      } catch {
+        return fail("downstream_failure");
+      }
+    },
+    async executeMobileDeviceBoundary(input, authorizationHeader) {
+      try {
+        const parsed = parseMobileDeviceRequest(input);
+        if (!parsed.ok) return fail(parsed.code);
+        return await executeParsed(parsed, authorizationHeader, deps);
+      } catch {
+        return fail("downstream_failure");
+      }
+    },
+  };
+}
+
+/** Live persistence injection is a later gate; the deployed client stays null (503). */
+const deployedExecutor = createMobileBoundaryExecutor({
+  persistence: createOfficeAzInventoryMobilePersistence(null),
+  generateOpaqueId: generateOfficeAzInventoryMobileOpaqueId,
+});
 
 export async function executeMobileSessionBoundary(
   input: unknown,
   authorizationHeader: string | null,
 ): Promise<MobileBoundaryResult> {
-  try {
-    const parsed = parseMobileSessionRequest(input);
-    if (!parsed.ok) return fail(parsed.code);
-    return await executeParsed(parsed, authorizationHeader);
-  } catch {
-    return fail("downstream_failure");
-  }
+  return deployedExecutor.executeMobileSessionBoundary(input, authorizationHeader);
 }
 
 export async function executeMobileDeviceBoundary(
   input: unknown,
   authorizationHeader: string | null,
 ): Promise<MobileBoundaryResult> {
-  try {
-    const parsed = parseMobileDeviceRequest(input);
-    if (!parsed.ok) return fail(parsed.code);
-    return await executeParsed(parsed, authorizationHeader);
-  } catch {
-    return fail("downstream_failure");
-  }
+  return deployedExecutor.executeMobileDeviceBoundary(input, authorizationHeader);
 }
