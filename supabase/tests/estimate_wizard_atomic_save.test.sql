@@ -85,7 +85,8 @@ INSERT INTO public.dealer_service_offerings (dealer_id, family, enabled) VALUES
   (pg_temp.uid('dealer_b'), 'maintenance', true),
   (pg_temp.uid('dealer_c'), 'maintenance', true),
   (pg_temp.uid('dealer_d'), 'maintenance', true),
-  (pg_temp.uid('dealer_e'), 'maintenance', true);
+  (pg_temp.uid('dealer_e'), 'maintenance', true)
+ON CONFLICT (dealer_id, family) DO NOTHING;
 
 -- Dedicated dealers F/G/H isolate section 13's offering-guard assertions from
 -- every sequence/number/fixture assumption made in sections 1-12.
@@ -1090,6 +1091,10 @@ SELECT is(
 RESET ROLE;
 
 -- maintenance -> maintenance (dealer_f, independent of dealers A-E's rows)
+-- Lifecycle/default-catalog seeding auto-creates (dealer_f, 'maintenance',
+-- enabled=true) on dealer insert. Remove exactly that one auto-seeded row so
+-- the missing-row contract asserted next is genuinely exercised.
+DELETE FROM public.dealer_service_offerings WHERE dealer_id = pg_temp.uid('dealer_f') AND family = 'maintenance';
 SET LOCAL ROLE service_role;
 SELECT throws_matching(
   $$ SELECT pg_temp.call(pg_temp.uid('dealer_f'), pg_temp.uid('u_owner_f'), pg_temp.category_payload('offmaintkey000001', 'maintenance')) $$,
@@ -1156,7 +1161,12 @@ RESET ROLE;
 INSERT INTO public.dealer_service_offerings (dealer_id, family, enabled) VALUES
   (pg_temp.uid('dealer_g'), 'ppf', true),
   (pg_temp.uid('dealer_g'), 'window_film', true);
--- maintenance carries NO row for dealer_g: absence means OFF.
+-- Lifecycle/default-catalog seeding auto-creates (dealer_g, 'maintenance',
+-- enabled=true) on dealer insert. Remove exactly that one auto-seeded row so
+-- maintenance is genuinely missing for dealer_g (absence means OFF) and the
+-- mixed-payload rejection below exercises the missing/off contract.
+DELETE FROM public.dealer_service_offerings
+WHERE dealer_id = pg_temp.uid('dealer_g') AND family = 'maintenance';
 CREATE TEMP TABLE t_mixed_counts (k text PRIMARY KEY, c bigint, e bigint, v bigint, i bigint);
 INSERT INTO t_mixed_counts SELECT 'before',
   (SELECT count(*) FROM public.customers), (SELECT count(*) FROM public.estimates),

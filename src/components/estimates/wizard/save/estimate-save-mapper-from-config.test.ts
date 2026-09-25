@@ -42,6 +42,8 @@ const PC: ConfiguredPricingConfiguration = {
   storeGlobalOptions: [
     { code: "go-np", label: "非課金オプション", priceable: false, quantityRequired: false, minQuantity: 1, maxQuantity: null },
     { code: "go-q",  label: "数量オプション",   priceable: true,  quantityRequired: true,  minQuantity: 1, maxQuantity: 5 },
+    { code: "go-min", label: "最小数量オプション", priceable: true, quantityRequired: true, minQuantity: 2, maxQuantity: 4 },
+    { code: "go-1",  label: "単品オプション",   priceable: true,  quantityRequired: false, minQuantity: 1, maxQuantity: null },
   ],
 };
 const COUPON_ID = "00000000-0000-4000-8000-000000000100";
@@ -131,6 +133,108 @@ test("operator-selected line order becomes the persisted service array order", (
   };
   const req = okReq(run(draft));
   assert.deepEqual(req.services.map((line) => line.lineId), draft.review.serviceLineOrder);
+});
+
+// GDA-ESTIMATE-PR133 P2-1: a quantity override is only valid on a quantityRequired store-global option
+// and only within its configured bounds; the catalog coating line's quantity is fixed, so the persisted
+// quantity edit below targets the option while the unit-price edit targets the coating line.
+const quantityOptionCfg: Partial<WizardServiceConfigurationDraft> = {
+  storeGlobalOptions: { selectedOptionIds: ["go-q"], unitPricesByOption: { "go-q": "2000" }, quantitiesByOption: { "go-q": 2 } },
+};
+
+test("final-review quantity and unit-price edits persist with recomputed totals", () => {
+  const base = draftWith(["coating"], { ...coatingCfg("one-evo"), ...quantityOptionCfg });
+  const coatingId = "catalog:coating:base:one-evo";
+  const optionId = "manual:store_global_options:go-q";
+  const draft: EstimateWizardDraftV22 = {
+    ...base,
+    review: {
+      ...base.review,
+      quantityInputsByLine: { [optionId]: "3" },
+      unitPriceInputsByLine: { [coatingId]: "60000" },
+    },
+  };
+
+  const req = okReq(run(draft));
+  const coating = req.services.find((s) => s.lineId === coatingId);
+  const option = req.services.find((s) => s.lineId === optionId);
+  assert.equal(coating?.quantity, 1, "catalog quantity untouched");
+  assert.equal(coating?.unitPrice, 60_000);
+  assert.equal(coating?.subtotal, 60_000);
+  assert.equal(option?.quantity, 3, "configured in-bounds quantity persisted");
+  assert.equal(option?.unitPrice, 2_000);
+  assert.equal(option?.subtotal, 6_000);
+  assert.equal(req.pricing.subtotal, 66_000);
+  assert.equal(req.pricing.taxTotal, 6_600);
+  assert.equal(req.pricing.grandTotal, 72_600);
+});
+
+test("GDA-ESTIMATE-PR133 P2-1: a disallowed quantity override fails the save closed as pricing-error", () => {
+  const base = draftWith(["coating", "maintenance"], {
+    ...coatingCfg("one-evo"), ...maintCfg,
+    storeGlobalOptions: {
+      selectedOptionIds: ["go-q", "go-min", "go-1"],
+      unitPricesByOption: { "go-q": "2000", "go-min": "1000", "go-1": "500" },
+      quantitiesByOption: { "go-q": 2, "go-min": 3 },
+    },
+  });
+  assert.equal(run(base).ok, true, "PRECONDITION: the canonical draft saves");
+  const withQuantity = (lineId: string, q: string): EstimateWizardDraftV22 =>
+    ({ ...base, review: { ...base.review, quantityInputsByLine: { [lineId]: q } } });
+
+  // not quantityRequired: catalog line, plain manual line, non-quantity option
+  expectFail(run(withQuantity("catalog:coating:base:one-evo", "2")), "pricing-error");
+  expectFail(run(withQuantity("manual:maintenance:mm1", "2")), "pricing-error");
+  expectFail(run(withQuantity("manual:store_global_options:go-1", "2")), "pricing-error");
+  // outside the configured bounds
+  expectFail(run(withQuantity("manual:store_global_options:go-q", "6")), "pricing-error");   // max 5
+  expectFail(run(withQuantity("manual:store_global_options:go-min", "1")), "pricing-error"); // min 2
+  expectFail(run(withQuantity("manual:store_global_options:go-min", "5")), "pricing-error"); // max 4
+  // configured and in bounds: persisted
+  const ok = okReq(run(withQuantity("manual:store_global_options:go-min", "4")));
+  assert.equal(ok.services.find((s) => s.lineId === "manual:store_global_options:go-min")?.quantity, 4);
+  // identity quantities on fixed lines remain a no-op
+  const identity = okReq(run(withQuantity("manual:maintenance:mm1", "1")));
+  assert.deepEqual(identity.pricing, okReq(run(base)).pricing);
+});
+
+test("GDA-ESTIMATE-PR123-R2: coupon + fixed discount persist with the coupon counted exactly once; identity edits persist identically; edits recompute", () => {
+  const canonicalDraft = draftWith(["maintenance"], maintCfg, { mode: "amount", amountInput: "1000", selectedCouponIds: [COUPON_ID] });
+  const canonical = okReq(run(canonicalDraft, { pricingConfig: COUPON_PC }));
+  assert.equal(canonical.pricing.subtotal, 5000);
+  assert.equal(canonical.pricing.couponTotal, 100, "couponTotal is ONLY the coupon");
+  assert.equal(canonical.coupon.appliedAmount, 100);
+  assert.equal(canonical.pricing.discountTotal, 1100, "applied document discount = authored 1,000 + coupon 100, counted once");
+  assert.equal(canonical.discount.appliedAmount, 1100, "engine-applied figure, copied");
+  assert.equal(canonical.discount.intent.fixedAmount, 1000, "the authored figure is persisted as intent, never conflated with the applied amount");
+  assert.equal(canonical.pricing.taxTotal, 500);
+  assert.equal(canonical.pricing.grandTotal, 5000 + 500 - 1100, "total subtracts the applied discount once; couponTotal is never subtracted again");
+  assert.equal((canonical.coupon.applications ?? []).reduce((s, a) => s + a.appliedAmount, 0), 100, "per-coupon snapshot sums to couponTotal");
+
+  const lineId = "manual:maintenance:mm1";
+  const identityDraft: EstimateWizardDraftV22 = {
+    ...canonicalDraft,
+    review: { ...canonicalDraft.review, quantityInputsByLine: { [lineId]: "1" }, unitPriceInputsByLine: { [lineId]: "5000" } },
+  };
+  const identity = okReq(run(identityDraft, { pricingConfig: COUPON_PC }));
+  assert.deepEqual(identity.pricing, canonical.pricing, "identity edit: persisted pricing snapshot is byte-identical");
+  assert.deepEqual(identity.discount, canonical.discount);
+  assert.deepEqual(identity.coupon, canonical.coupon);
+  assert.deepEqual(identity.services, canonical.services);
+
+  const editedDraft: EstimateWizardDraftV22 = {
+    ...canonicalDraft,
+    review: { ...canonicalDraft.review, unitPriceInputsByLine: { [lineId]: "8000" } },
+  };
+  const edited = okReq(run(editedDraft, { pricingConfig: COUPON_PC }));
+  assert.equal(edited.services[0]?.unitPrice, 8000);
+  assert.equal(edited.pricing.subtotal, 8000);
+  assert.equal(edited.pricing.couponTotal, 100, "amount coupon unchanged by the edit");
+  assert.equal(edited.pricing.discountTotal, 1100, "fixed discount unchanged; coupon still counted once");
+  assert.equal(edited.pricing.taxTotal, 800);
+  assert.equal(edited.pricing.grandTotal, 8000 + 800 - 1100);
+  assert.equal(edited.discount.appliedAmount, 1100);
+  assert.equal(edited.coupon.appliedAmount, 100);
 });
 
 test("catalog ids and roles come directly from the pricing result", () => {

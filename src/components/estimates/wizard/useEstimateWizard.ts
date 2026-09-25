@@ -19,7 +19,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { WIZARD_STEPS, type StepId, type WizardStore } from "./wizard-types";
-import type { EstimateWizardDraftV22 } from "./draft/wizard-draft-types";
+import type { EstimateWizardDraftV22, WizardReviewDraft } from "./draft/wizard-draft-types";
 import { setCurrentStep, updateReview } from "./draft/wizard-draft-state";
 import { projectStore, applyStorePatch, initialCanonicalDraft, type WizardStorePatch } from "./bridge/ew-ui1-controller";
 import {
@@ -38,6 +38,8 @@ export interface EstimateWizardApi {
   draft:       EstimateWizardDraftV22;       // the single authoritative business state (readonly to callers)
   updateStore: (patch: WizardStorePatch) => void;
   setServiceLineOrder: (lineIds: readonly string[]) => void;
+  /** GDA-ESTIMATE-PR133 P2-2: updates ONLY the review field(s) the caller explicitly supplies. */
+  setServiceLineAdjustment: (lineId: string, patch: ServiceLineAdjustmentPatch) => void;
   jumpTo:      (n: number) => void;
   next:        () => void;
   back:        () => void;
@@ -52,6 +54,44 @@ export interface EstimateWizardApi {
   /** Highest step the operator may ENTER — forward stepper targets beyond it are blocked. */
   maxEnterableStep: StepId;
   completed:   Set<StepId>; // display-only checkmarks, derived from the SAME validity contract
+}
+
+/**
+ * A final-review line edit. Each key is OPTIONAL and independent: a quantity edit carries only
+ * `quantityInput`, a unit-price edit only `unitPriceInput`. An explicitly supplied empty string is a
+ * legitimate in-progress value and is stored as-is.
+ */
+export type ServiceLineAdjustmentPatch = {
+  readonly quantityInput?: string;
+  readonly unitPriceInput?: string;
+};
+
+/**
+ * PURE. Apply a `ServiceLineAdjustmentPatch` to the review draft, touching ONLY the record(s) whose
+ * key the caller explicitly provided (GDA-ESTIMATE-PR133 P2-2). Editing the quantity therefore never
+ * writes `unitPriceInputsByLine`, and editing the unit price never writes `quantityInputsByLine` — so
+ * an untouched field keeps following the authoritative pricing result instead of being frozen at
+ * the value displayed when the other field was edited. An empty patch returns the input unchanged.
+ */
+export function applyServiceLineAdjustmentPatch(
+  review: WizardReviewDraft,
+  lineId: string,
+  patch: ServiceLineAdjustmentPatch,
+): WizardReviewDraft {
+  if (lineId.trim() === "") return review;
+  const hasQuantity = patch.quantityInput !== undefined;
+  const hasUnitPrice = patch.unitPriceInput !== undefined;
+  if (!hasQuantity && !hasUnitPrice) return review;
+  return {
+    ...review,
+    ...(hasQuantity
+      ? { quantityInputsByLine: { ...review.quantityInputsByLine, [lineId]: patch.quantityInput as string } }
+      : {}),
+    ...(hasUnitPrice
+      ? { unitPriceInputsByLine: { ...review.unitPriceInputsByLine, [lineId]: patch.unitPriceInput as string } }
+      : {}),
+    previewConfirmed: false,
+  };
 }
 
 function clampStep(n: number): StepId {
@@ -96,6 +136,13 @@ export function useEstimateWizard(
     setDraft((d) => updateReview(d, { serviceLineOrder: unique, previewConfirmed: false }));
   }, []);
 
+  const setServiceLineAdjustment = useCallback((lineId: string, patch: ServiceLineAdjustmentPatch) => {
+    setDraft((d) => {
+      const review = applyServiceLineAdjustmentPatch(d.review, lineId, patch);
+      return review === d.review ? d : updateReview(d, review);
+    });
+  }, []);
+
   // Navigation is backed by canonical metadata.currentStep and resolved through the pure
   // fail-closed transition resolvers. A blocked forward move returns the CURRENT step, so
   // setCurrentStep rewrites the same value and the canonical step never advances.
@@ -130,6 +177,7 @@ export function useEstimateWizard(
     draft,
     updateStore,
     setServiceLineOrder,
+    setServiceLineAdjustment,
     jumpTo,
     next,
     back,

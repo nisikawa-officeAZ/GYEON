@@ -83,8 +83,8 @@ export function Step7Review({
         </dl>
       </Card>
       <Card>
-        <SectionTitle>明細の表示順</SectionTitle>
-        <p className="mb-3 text-xs text-slate-500">保存後の見積詳細とPDFに反映されます。</p>
+        <SectionTitle>明細の詳細</SectionTitle>
+        <p className="mb-3 text-xs text-slate-500">数量・単価・表示順は、保存後の見積詳細とPDFに反映されます。</p>
         {orderedLines.length === 0 ? (
           <p className="text-xs text-slate-500">明細がありません。</p>
         ) : (
@@ -92,15 +92,55 @@ export function Step7Review({
             {orderedLines.map((line, index) => (
               <li
                 key={wizardPricingLineId(line)}
-                className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-slate-700/60 bg-[#0b1220] p-3"
+                className="grid min-w-0 grid-cols-1 items-end gap-3 rounded-lg border border-slate-700/60 bg-[#0b1220] p-3 md:grid-cols-[minmax(0,1fr)_6rem_8rem_auto]"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-100">{line.label}</p>
                   <p className="truncate text-[11px] text-slate-500">
-                    {pricingCategoryLabel(line.category)}・数量 {line.quantity}
+                    {pricingCategoryLabel(line.category)}
                     {line.lineTotal !== null ? `・¥${line.lineTotal.toLocaleString("ja-JP")}` : ""}
                   </p>
                 </div>
+                {/* GDA-ESTIMATE-PR123-R2 — quantity / tax-exclusive unit price, keyed by the SAME stable
+                    line identity as the saved order. The edit is draft text only; the authoritative
+                    pricing route re-validates and recomputes it, and any edit resets preview confirmation.
+                    GDA-ESTIMATE-PR133 P2-2 — each input submits ONLY its own field, so editing one never
+                    freezes the other at its currently displayed value. */}
+                <label className="grid gap-1 text-[11px] text-slate-400">
+                  <span>数量</span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputMode="numeric"
+                    aria-label={`${line.label}の数量`}
+                    value={api.draft.review.quantityInputsByLine[wizardPricingLineId(line)] ?? String(line.quantity)}
+                    onChange={(event) => api.setServiceLineAdjustment(
+                      wizardPricingLineId(line),
+                      { quantityInput: event.target.value },
+                    )}
+                    className="h-10 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 text-right text-sm text-slate-100"
+                  />
+                </label>
+                <label className="grid gap-1 text-[11px] text-slate-400">
+                  <span>金額（単価・税抜）</span>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-500">¥</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      aria-label={`${line.label}の金額（単価）`}
+                      value={api.draft.review.unitPriceInputsByLine[wizardPricingLineId(line)] ?? String(line.unitPrice ?? "")}
+                      onChange={(event) => api.setServiceLineAdjustment(
+                        wizardPricingLineId(line),
+                        { unitPriceInput: event.target.value },
+                      )}
+                      className="h-10 w-full rounded-lg border border-slate-600 bg-slate-950 pl-7 pr-3 text-right text-sm text-slate-100"
+                    />
+                  </div>
+                </label>
                 <div className="grid shrink-0 grid-cols-2 gap-1" aria-label={`${line.label}の表示順`}>
                   <button
                     type="button"

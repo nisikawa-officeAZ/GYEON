@@ -204,6 +204,12 @@ export const nextConfig: NextConfig = {
       "./node_modules/@sparticuz/chromium/bin/**",
       "./public/brand/gyeon-classic/logos/combination.svg",
       "./src/data/postal/japan-post-address-map.json",
+      // sharp >= 0.35 resolves its native runtime through an ESM createRequire path that
+      // @vercel/nft's sharp special case does not trace, so the Linux x64 binary and libvips
+      // are omitted from the Vercel function bundle ("Could not load the sharp module using
+      // the linux-x64 runtime"). Include them explicitly so the OCR image pipeline loads.
+      "./node_modules/@img/sharp-linux-x64/**",
+      "./node_modules/@img/sharp-libvips-linux-x64/**",
     ],
   },
   experimental: {

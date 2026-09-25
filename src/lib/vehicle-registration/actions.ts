@@ -30,7 +30,6 @@ import {
 import { analyzeVehicleRegistrationImage } from "./ocr";
 import { isGyeonManagedKeyConfigured } from "@/lib/ai/gyeon-managed-key";
 import { logAiUsage } from "@/lib/ai/log-ai-usage";
-import sharp from "sharp";
 import heicConvert from "heic-convert";
 import { createAuditLog }    from "@/lib/audit/audit";
 import {
@@ -146,6 +145,10 @@ export async function uploadAndAnalyzeVehicleRegistration(
     }
 
     try {
+      // Loaded lazily so a missing/unloadable sharp native runtime (e.g. an omitted
+      // linux-x64 binary on Vercel) fails INSIDE this try — falling back below —
+      // instead of breaking every Server Action co-registered with this module.
+      const { default: sharp } = await import("sharp");
       const out = await sharp(sharpInput)
         .rotate()                        // auto-orient from EXIF
         .normalize()                     // stretch contrast (document legibility)

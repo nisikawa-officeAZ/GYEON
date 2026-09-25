@@ -136,6 +136,9 @@ export type WizardReviewDraft = {
   previewConfirmed: boolean;
   /** Operator-selected PDF/detail line order. Stable persistence ids; [] = engine order. */
   serviceLineOrder: string[];
+  /** Final-review operator overrides, keyed by the same stable line identity as the saved order. */
+  quantityInputsByLine: Record<string, string>;
+  unitPriceInputsByLine: Record<string, string>;
 };
 
 // ── Metadata (in-memory only) ────────────────────────────────────────────────────

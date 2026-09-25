@@ -774,14 +774,26 @@ test("a throwing pricing dependency is contained", async () => {
 
 test("the mapper receives the same draft and the exact runtime inputs", async () => {
   const rt = runtimeConfig();
-  const { deps, seen } = makeDeps({ loadRuntimeConfig: async () => rt });
+  const validation = okValidation();
+  const { deps, seen } = makeDeps({
+    validateIntent: () => validation,
+    loadRuntimeConfig: async () => rt,
+  });
   await runWizardSaveIntent({}, deps);
-  const input = seen.mapperInput as { draft: unknown; pricingConfig: unknown; catalog: unknown; shopRank: unknown };
-  if (!rt.ok) return;
+  const input = seen.mapperInput as {
+    draft: unknown;
+    pricingConfig: unknown;
+    catalog: unknown;
+    shopRank: unknown;
+    configurationRevision: unknown;
+  };
+  if (!rt.ok || !validation.ok) return;
   assert.equal(input.draft, DRAFT);
   assert.equal(input.pricingConfig, rt.pricingConfig);
   assert.equal(input.catalog, rt.catalog);
   assert.equal(input.shopRank, rt.shopRank);
+  assert.equal(input.configurationRevision, rt.lifecycle.currentRevision);
+  assert.equal(input.configurationRevision, validation.intent.expectedConfigRevision);
 });
 
 test("a mapper failure carries stable CODES only — never messages", async () => {
