@@ -103,7 +103,9 @@ export function Step7Review({
                 </div>
                 {/* GDA-ESTIMATE-PR123-R2 — quantity / tax-exclusive unit price, keyed by the SAME stable
                     line identity as the saved order. The edit is draft text only; the authoritative
-                    pricing route re-validates and recomputes it, and any edit resets preview confirmation. */}
+                    pricing route re-validates and recomputes it, and any edit resets preview confirmation.
+                    GDA-ESTIMATE-PR133 P2-2 — each input submits ONLY its own field, so editing one never
+                    freezes the other at its currently displayed value. */}
                 <label className="grid gap-1 text-[11px] text-slate-400">
                   <span>数量</span>
                   <input
@@ -115,8 +117,7 @@ export function Step7Review({
                     value={api.draft.review.quantityInputsByLine[wizardPricingLineId(line)] ?? String(line.quantity)}
                     onChange={(event) => api.setServiceLineAdjustment(
                       wizardPricingLineId(line),
-                      event.target.value,
-                      api.draft.review.unitPriceInputsByLine[wizardPricingLineId(line)] ?? String(line.unitPrice ?? ""),
+                      { quantityInput: event.target.value },
                     )}
                     className="h-10 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 text-right text-sm text-slate-100"
                   />
@@ -134,8 +135,7 @@ export function Step7Review({
                       value={api.draft.review.unitPriceInputsByLine[wizardPricingLineId(line)] ?? String(line.unitPrice ?? "")}
                       onChange={(event) => api.setServiceLineAdjustment(
                         wizardPricingLineId(line),
-                        api.draft.review.quantityInputsByLine[wizardPricingLineId(line)] ?? String(line.quantity),
-                        event.target.value,
+                        { unitPriceInput: event.target.value },
                       )}
                       className="h-10 w-full rounded-lg border border-slate-600 bg-slate-950 pl-7 pr-3 text-right text-sm text-slate-100"
                     />

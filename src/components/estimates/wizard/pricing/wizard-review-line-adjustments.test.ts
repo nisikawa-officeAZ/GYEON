@@ -15,17 +15,30 @@ import { mapWizardDraftToSaveRequestFromConfig } from "../save/estimate-save-map
 import type { EstimateSaveRequest } from "../save/estimate-save-dto";
 import { computeWizardPricingFromConfig } from "./compute-wizard-pricing-from-config";
 import { wizardPricingLineId } from "./wizard-line-order";
-import type { ConfigPricingInputBundle, ConfiguredPricingConfiguration } from "./wizard-pricing-input-adapter-config";
+import {
+  buildWizardPricingInputFromConfig,
+  type ConfigPricingInputBundle,
+  type ConfiguredPricingConfiguration,
+} from "./wizard-pricing-input-adapter-config";
 import {
   applyWizardReviewLineAdjustments,
   resolvedCouponApplicationsForSubtotal,
   resolvedPpfCoatingReductionForLines,
+  reviewQuantityPolicyForLine,
 } from "./wizard-review-line-adjustments";
 import type { WizardPricingResult } from "./wizard-pricing-types";
 
 const CATALOG = makePricingCatalog();
 const PC: ConfiguredPricingConfiguration = {
-  ppfMethods: [], filmTypes: [], washMenus: [], roomCleaningMenus: [], storeGlobalOptions: [],
+  ppfMethods: [], filmTypes: [], washMenus: [], roomCleaningMenus: [],
+  storeGlobalOptions: [
+    // quantityRequired + configured bounds 1..5 — the ONLY kind of line whose quantity may change.
+    { code: "go-q",   label: "数量オプション", priceable: true, quantityRequired: true,  minQuantity: 1, maxQuantity: 5 },
+    // quantityRequired with a minimum ABOVE 1 and a bounded maximum.
+    { code: "go-min", label: "最小数量オプション", priceable: true, quantityRequired: true, minQuantity: 2, maxQuantity: 4 },
+    // priceable but NOT quantityRequired — a single-unit line whose quantity is fixed.
+    { code: "go-1",   label: "単品オプション", priceable: true, quantityRequired: false, minQuantity: 1, maxQuantity: null },
+  ],
   maintenanceMenus: [{ code: "mm1", label: "6ヶ月ボディメンテナンス" }],
   coupons: [{
     couponId: "00000000-0000-4000-8000-000000000100", code: "pct-10", label: "10%クーポン",
@@ -44,6 +57,13 @@ function draft(over?: (d: EstimateWizardDraftV22) => void): EstimateWizardDraftV
   d.discountAndCoupon = { mode: "amount", percentInput: "", amountInput: "1000", selectedCouponIds: [PC.coupons![0]!.couponId], adjustmentReason: "" };
   over?.(d);
   return d;
+}
+
+/** Select a store-global option with a draft unit price and (for quantityRequired options) a draft quantity. */
+function selectOption(d: EstimateWizardDraftV22, code: string, unitPrice: string, quantity?: number): void {
+  d.serviceConfiguration.storeGlobalOptions.selectedOptionIds.push(code);
+  d.serviceConfiguration.storeGlobalOptions.unitPricesByOption[code] = unitPrice;
+  if (quantity !== undefined) d.serviceConfiguration.storeGlobalOptions.quantitiesByOption[code] = quantity;
 }
 
 const totalsOf = (r: WizardPricingResult) => ({
@@ -121,17 +141,23 @@ test("parity: identity edits reproduce the canonical unadjusted subtotal, tax, d
 });
 
 test("edits keep coupon ONLY in couponTotal, count it once in the applied discount, and recompute through the canonical engine", () => {
-  const canonical = computeWizardPricingFromConfig(draft(), PC, CATALOG, "detailer");
+  const withOption = (d: EstimateWizardDraftV22) => selectOption(d, "go-q", "3000", 2);
+  const canonical = computeWizardPricingFromConfig(draft(withOption), PC, CATALOG, "detailer");
+  assert.equal(canonical.completeness, "complete");
   const coating = canonical.lines.find((l) => l.kind === "catalog")!;
   const editedDraft = draft((d) => {
-    d.review.quantityInputsByLine["catalog:coating:base:pure-evo"] = "2";
+    withOption(d);
+    // quantity change ONLY on the quantityRequired option (2 → 3, within 1..5); unit-price change on mm1.
+    d.review.quantityInputsByLine["manual:store_global_options:go-q"] = "3";
     d.review.unitPriceInputsByLine["manual:maintenance:mm1"] = "7000";
   });
   const edited = computeWizardPricingFromConfig(editedDraft, PC, CATALOG, "detailer");
   assert.equal(edited.completeness, "complete");
-  const coatingTotal = (coating.unitPrice as number) * 2;
-  assert.equal(edited.lines.find((l) => l.kind === "catalog")?.lineTotal, coatingTotal);
-  const subtotal = coatingTotal + 7_000;
+  const coatingTotal = coating.lineTotal as number;
+  const option = edited.lines.find((l) => l.sourceId === "store_global_options:go-q")!;
+  assert.equal(option.quantity, 3);
+  assert.equal(option.lineTotal, 9_000);
+  const subtotal = coatingTotal + 7_000 + 9_000;
   assert.equal(edited.subtotal, subtotal);
   assert.notEqual(subtotal, canonical.subtotal, "the edit really changed the subtotal");
   const coupon = percentOfYen(subtotal, 1_000);
@@ -206,8 +232,106 @@ test("a line the authoritative route left unpriced is never priced by a review e
   } as unknown as ConfigPricingInputBundle;
   const r = applyWizardReviewLineAdjustments(base, bundle, {
     quantityInputsByLine: {}, unitPriceInputsByLine: { "manual:ppf:x": "125000" },
-  }, CATALOG);
+  }, CATALOG, PC);
   assert.equal(r.status, "error");
   assert.equal(r.grandTotal, null);
   assert.equal(r.lines[0]?.unitPrice, null, "no price manufactured");
+});
+
+// ── GDA-ESTIMATE-PR133 P2-1 — quantity edits obey the canonical manual option policy ─────────────
+
+const expectRejected = (r: WizardPricingResult, label: string) => {
+  assert.equal(r.status, "error", label);
+  assert.equal(r.completeness, "error", label);
+  assert.equal(r.subtotal, null, label);
+  assert.equal(r.grandTotal, null, label);
+  assert.ok(r.errors.some((e) => e.code === "INVALID_REVIEW_ADJUSTMENT"), label);
+};
+
+test("P2-1: a quantity change on a line WITHOUT quantityRequired is rejected (manual, catalog, non-quantity option)", () => {
+  const withOption = (d: EstimateWizardDraftV22) => selectOption(d, "go-1", "2500");
+  const canonical = computeWizardPricingFromConfig(draft(withOption), PC, CATALOG, "detailer");
+  assert.equal(canonical.completeness, "complete", "PRECONDITION: the canonical draft prices cleanly");
+  assert.equal(canonical.lines.find((l) => l.sourceId === "store_global_options:go-1")?.quantity, 1);
+
+  for (const id of ["manual:maintenance:mm1", "catalog:coating:base:pure-evo", "manual:store_global_options:go-1"]) {
+    const r = computeWizardPricingFromConfig(draft((d) => {
+      withOption(d);
+      d.review.quantityInputsByLine[id] = "2";
+    }), PC, CATALOG, "detailer");
+    expectRejected(r, id);
+    assert.ok(r.errors.some((e) => e.message.includes("数量は変更できません")), `${id}: operator-safe policy message`);
+    assert.deepEqual(r.lines, canonical.lines, `${id}: no line is re-priced by a rejected edit`);
+  }
+});
+
+test("P2-1: a quantityRequired line rejects a quantity below minQuantity or above maxQuantity", () => {
+  const withOptions = (d: EstimateWizardDraftV22) => { selectOption(d, "go-q", "3000", 2); selectOption(d, "go-min", "1000", 3); };
+  const canonical = computeWizardPricingFromConfig(draft(withOptions), PC, CATALOG, "detailer");
+  assert.equal(canonical.completeness, "complete", "PRECONDITION");
+
+  const cases: ReadonlyArray<readonly [string, string]> = [
+    ["manual:store_global_options:go-q",   "6"], // max 5
+    ["manual:store_global_options:go-min", "1"], // min 2
+    ["manual:store_global_options:go-min", "5"], // max 4
+  ];
+  for (const [id, q] of cases) {
+    const r = computeWizardPricingFromConfig(draft((d) => {
+      withOptions(d);
+      d.review.quantityInputsByLine[id] = q;
+    }), PC, CATALOG, "detailer");
+    expectRejected(r, `${id}=${q}`);
+    assert.ok(r.errors.some((e) => e.message.includes("範囲で入力")), `${id}=${q}: bounds message`);
+  }
+});
+
+test("P2-1: a configured, in-bounds quantity on a quantityRequired line succeeds and recomputes; identity quantities stay accepted everywhere", () => {
+  const withOptions = (d: EstimateWizardDraftV22) => { selectOption(d, "go-q", "3000", 2); selectOption(d, "go-min", "1000", 3); };
+  const canonical = computeWizardPricingFromConfig(draft(withOptions), PC, CATALOG, "detailer");
+  const coatingTotal = canonical.lines.find((l) => l.kind === "catalog")!.lineTotal as number;
+
+  const editedDraft = draft((d) => {
+    withOptions(d);
+    d.review.quantityInputsByLine["manual:store_global_options:go-q"] = "5";   // max bound, inclusive
+    d.review.quantityInputsByLine["manual:store_global_options:go-min"] = "2"; // min bound, inclusive
+    d.review.quantityInputsByLine["manual:maintenance:mm1"] = "1";             // identity on a fixed line
+    d.review.quantityInputsByLine["catalog:coating:base:pure-evo"] = "1";      // identity on a catalog line
+  });
+  const edited = computeWizardPricingFromConfig(editedDraft, PC, CATALOG, "detailer");
+  assert.equal(edited.completeness, "complete");
+  assert.equal(edited.lines.find((l) => l.sourceId === "store_global_options:go-q")?.quantity, 5);
+  assert.equal(edited.lines.find((l) => l.sourceId === "store_global_options:go-q")?.lineTotal, 15_000);
+  assert.equal(edited.lines.find((l) => l.sourceId === "store_global_options:go-min")?.quantity, 2);
+  assert.equal(edited.lines.find((l) => l.sourceId === "store_global_options:go-min")?.lineTotal, 2_000);
+  const subtotal = coatingTotal + 5_000 + 15_000 + 2_000;
+  assert.equal(edited.subtotal, subtotal);
+  assertCouponCountedOnce(edited, 1_000, percentOfYen(subtotal, 1_000));
+  assertPersistedCouponCountedOnce(persisted(editedDraft, edited), 1_000);
+});
+
+test("P2-1: reviewQuantityPolicyForLine resolves ONLY through the bundle manual source line + configured option", () => {
+  const withOptions = (d: EstimateWizardDraftV22) => { selectOption(d, "go-q", "3000", 2); selectOption(d, "go-1", "2500"); };
+  const d = draft(withOptions);
+  const bundle = buildWizardPricingInputFromConfig(d, PC, CATALOG, "detailer");
+  const result = computeWizardPricingFromConfig(d, PC, CATALOG, "detailer");
+  const line = (sourceId: string) => result.lines.find((l) => l.sourceId === sourceId)!;
+
+  assert.deepEqual(reviewQuantityPolicyForLine(line("store_global_options:go-q"), bundle, PC), { minQuantity: 1, maxQuantity: 5 });
+  assert.equal(reviewQuantityPolicyForLine(line("store_global_options:go-1"), bundle, PC), null, "not quantityRequired");
+  assert.equal(reviewQuantityPolicyForLine(line("maintenance:mm1"), bundle, PC), null, "no quantity rule for maintenance");
+  assert.equal(reviewQuantityPolicyForLine(result.lines.find((l) => l.kind === "catalog")!, bundle, PC), null, "catalog lines are fixed");
+  // A result line that no bundle source line backs can never earn a policy (no inference from label/category).
+  assert.equal(reviewQuantityPolicyForLine(line("store_global_options:go-q"), { manualLines: [] }, PC), null);
+  // The configured option is the bounds authority: without it, even a quantityRequired source is fixed.
+  assert.equal(reviewQuantityPolicyForLine(line("store_global_options:go-q"), bundle, { ...PC, storeGlobalOptions: [] }), null);
+});
+
+test("P2-1: no adjustment ⇒ the authoritative result is returned as-is (same reference), byte-identical to canonical", () => {
+  const d = draft((sd) => selectOption(sd, "go-q", "3000", 2));
+  const bundle = buildWizardPricingInputFromConfig(d, PC, CATALOG, "detailer");
+  const canonical = computeWizardPricingFromConfig(d, PC, CATALOG, "detailer");
+  const same = applyWizardReviewLineAdjustments(canonical, bundle, { quantityInputsByLine: {}, unitPriceInputsByLine: {} }, CATALOG, PC);
+  assert.equal(same, canonical, "no adjustment returns the input object itself");
+  const recomputed = computeWizardPricingFromConfig({ ...d, review: { ...d.review, quantityInputsByLine: {}, unitPriceInputsByLine: {} } }, PC, CATALOG, "detailer");
+  assert.deepEqual(recomputed, canonical);
 });

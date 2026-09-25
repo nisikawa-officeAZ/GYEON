@@ -131,7 +131,9 @@ export function computeWizardPricingFromConfig(
 
     // GDA-ESTIMATE-PR123-R2: final-review quantity/unit-price edits are applied on top of the
     // authoritative result through the SAME engine and helpers (identity edits reproduce it exactly).
-    const adjusted = applyWizardReviewLineAdjustments(refined, bundle, draft.review, catalog);
+    // GDA-ESTIMATE-PR133 P2-1: the SAME `pricingConfig` is handed through so a quantity change is
+    // bound by the configured manual option policy (quantityRequired + min/max) on client AND server.
+    const adjusted = applyWizardReviewLineAdjustments(refined, bundle, draft.review, catalog, pricingConfig);
 
     // Fail-closed: null the aggregate totals for unavailable/error completeness so unresolved or
     // failed pricing never appears as a genuine ¥0 estimate. Partial/complete totals are untouched.

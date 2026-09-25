@@ -20,7 +20,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 (globalThis as unknown as { React: typeof React }).React = React;
 
 import { Step7Review } from "./Step7Review";
-import type { EstimateWizardApi } from "../useEstimateWizard";
+import { applyServiceLineAdjustmentPatch, type EstimateWizardApi, type ServiceLineAdjustmentPatch } from "../useEstimateWizard";
+import type { WizardReviewDraft } from "../draft/wizard-draft-types";
 import type {
   WizardExistingCustomerReference,
   WizardExistingVehicleReference,
@@ -327,5 +328,103 @@ describe("Step7Review — display resolution never mutates its inputs", () => {
 
     assert.equal(rowValue(html, "顧客"), "山田 太郎 様");
     assert.equal(JSON.stringify({ store, customers, vehicles }), before);
+  });
+});
+
+// ── GDA-ESTIMATE-PR133 P2-2 — editing one review field never freezes the other ─────────────────
+
+/** Walk a React element tree (no rendering) and return the first element whose aria-label matches. */
+function findByAriaLabel(node: unknown, label: string): { props: Record<string, unknown> } | null {
+  if (node === null || node === undefined || typeof node !== "object") return null;
+  if (Array.isArray(node)) {
+    for (const child of node) { const hit = findByAriaLabel(child, label); if (hit) return hit; }
+    return null;
+  }
+  const el = node as { props?: Record<string, unknown> };
+  if (el.props === undefined) return null;
+  if (el.props["aria-label"] === label) return el as { props: Record<string, unknown> };
+  return findByAriaLabel(el.props.children, label);
+}
+
+describe("Step7Review — each review input submits ONLY its own field (P2-2)", () => {
+  const line = {
+    kind: "manual" as const, category: "store_global_options", sourceId: "store_global_options:go-q", label: "数量オプション",
+    quantity: 2, unitPrice: 3_000, lineSubtotal: 6_000, discountAmount: null, taxAmount: null,
+    lineTotal: 6_000, pricingReferenceId: null, catalogLineRole: null,
+  };
+  const lineId = "manual:store_global_options:go-q";
+
+  function captureApi(): { api: EstimateWizardApi; calls: Array<[string, ServiceLineAdjustmentPatch]> } {
+    const calls: Array<[string, ServiceLineAdjustmentPatch]> = [];
+    const api = {
+      ...apiFor(storeWith({ categories: ["coating"] })),
+      setServiceLineAdjustment: (id: string, patch: ServiceLineAdjustmentPatch) => { calls.push([id, patch]); },
+    } as unknown as EstimateWizardApi;
+    return { api, calls };
+  }
+
+  it("a quantity edit passes { quantityInput } only — no unitPriceInput key", () => {
+    const { api, calls } = captureApi();
+    // Step7Review is hook-free, so its element tree can be produced directly and its handlers invoked.
+    const tree = Step7Review({ api, customers: CUSTOMERS, vehicles: VEHICLES, pricing: { ...EMPTY_WIZARD_PRICING_RESULT, lines: [line] } });
+    const input = findByAriaLabel(tree, "数量オプションの数量");
+    assert.ok(input, "quantity input present");
+    (input.props.onChange as (e: { target: { value: string } }) => void)({ target: { value: "3" } });
+    assert.deepEqual(calls, [[lineId, { quantityInput: "3" }]]);
+    assert.equal("unitPriceInput" in calls[0][1], false, "the displayed unit price is never re-submitted");
+  });
+
+  it("a unit-price edit passes { unitPriceInput } only — no quantityInput key", () => {
+    const { api, calls } = captureApi();
+    const tree = Step7Review({ api, customers: CUSTOMERS, vehicles: VEHICLES, pricing: { ...EMPTY_WIZARD_PRICING_RESULT, lines: [line] } });
+    const input = findByAriaLabel(tree, "数量オプションの金額（単価）");
+    assert.ok(input, "unit-price input present");
+    (input.props.onChange as (e: { target: { value: string } }) => void)({ target: { value: "" } });
+    assert.deepEqual(calls, [[lineId, { unitPriceInput: "" }]], "an in-progress empty string is passed through as-is");
+    assert.equal("quantityInput" in calls[0][1], false, "the displayed quantity is never re-submitted");
+  });
+});
+
+describe("applyServiceLineAdjustmentPatch — updates only explicitly provided keys (P2-2)", () => {
+  const lineId = "manual:store_global_options:go-q";
+  const review = (): WizardReviewDraft => ({
+    previewConfirmed: true, serviceLineOrder: [], quantityInputsByLine: {}, unitPriceInputsByLine: {},
+  });
+
+  it("quantity-only edit stores the quantity and leaves unitPriceInputsByLine untouched (no frozen unit price)", () => {
+    const next = applyServiceLineAdjustmentPatch(review(), lineId, { quantityInput: "3" });
+    assert.deepEqual(next.quantityInputsByLine, { [lineId]: "3" });
+    assert.deepEqual(next.unitPriceInputsByLine, {}, "no unit-price override is created");
+    assert.equal(next.previewConfirmed, false, "any edit resets preview confirmation");
+  });
+
+  it("unit-price-only edit stores the unit price and leaves quantityInputsByLine untouched (no frozen quantity)", () => {
+    const next = applyServiceLineAdjustmentPatch(review(), lineId, { unitPriceInput: "8000" });
+    assert.deepEqual(next.unitPriceInputsByLine, { [lineId]: "8000" });
+    assert.deepEqual(next.quantityInputsByLine, {}, "no quantity override is created");
+    assert.equal(next.previewConfirmed, false);
+  });
+
+  it("an explicitly provided empty string is stored while the operator is editing", () => {
+    const next = applyServiceLineAdjustmentPatch(review(), lineId, { quantityInput: "" });
+    assert.deepEqual(next.quantityInputsByLine, { [lineId]: "" });
+    assert.deepEqual(next.unitPriceInputsByLine, {});
+  });
+
+  it("a later edit of the other field keeps the earlier field's value; other lines are untouched", () => {
+    const first = applyServiceLineAdjustmentPatch(review(), lineId, { quantityInput: "3" });
+    const second = applyServiceLineAdjustmentPatch(first, lineId, { unitPriceInput: "2500" });
+    assert.deepEqual(second.quantityInputsByLine, { [lineId]: "3" });
+    assert.deepEqual(second.unitPriceInputsByLine, { [lineId]: "2500" });
+    const third = applyServiceLineAdjustmentPatch(second, "manual:maintenance:mm1", { unitPriceInput: "7000" });
+    assert.deepEqual(third.quantityInputsByLine, { [lineId]: "3" });
+    assert.deepEqual(third.unitPriceInputsByLine, { [lineId]: "2500", "manual:maintenance:mm1": "7000" });
+  });
+
+  it("an empty patch or a blank line id is a no-op returning the same review object", () => {
+    const r = review();
+    assert.equal(applyServiceLineAdjustmentPatch(r, lineId, {}), r);
+    assert.equal(applyServiceLineAdjustmentPatch(r, "  ", { quantityInput: "3" }), r);
+    assert.equal(r.previewConfirmed, true, "input never mutated");
   });
 });
