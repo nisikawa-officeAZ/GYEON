@@ -22,10 +22,30 @@ mock.module("../../../../../lib/inventory/mobile/office-az-inventory-mobile-serv
         return { ok: false, status: 400 as const };
       }
     },
-    executeMobileSessionBoundary: async () => ({
-      ok: false,
-      code: "dependency_not_configured",
-    }),
+    executeMobileSessionBoundary: async (body: { operation?: string }) => {
+      if (body?.operation === "issue-success-shape") {
+        return {
+          ok: true,
+          operation: "issue",
+          accepted: true,
+          sessionId: "S".repeat(43),
+          refreshToken: "R".repeat(43),
+          refreshVersion: 1,
+          accessLifetimeMs: 3_600_000,
+          refreshAbsoluteCeilingMs: 43_200_000,
+        };
+      }
+      if (body?.operation === "refresh-success-shape") {
+        return {
+          ok: true,
+          operation: "refresh",
+          accepted: true,
+          refreshToken: "N".repeat(43),
+          refreshVersion: 2,
+        };
+      }
+      return { ok: false, code: "dependency_not_configured" };
+    },
   },
 });
 
@@ -77,6 +97,32 @@ test("non-POST methods are 405 and wrong media type is invalid_request", async (
   );
   assert.equal(bad.status, 400);
   assert.deepEqual(await bad.json(), { ok: false, code: "invalid_request" });
+});
+
+test("session success payloads pass through unchanged with 200 and no-store", async () => {
+  const issued = await post({ operation: "issue-success-shape" });
+  assert.equal(issued.status, 200);
+  assert.equal(issued.headers.get("cache-control"), "no-store, private");
+  assert.deepEqual(await issued.json(), {
+    ok: true,
+    operation: "issue",
+    accepted: true,
+    sessionId: "S".repeat(43),
+    refreshToken: "R".repeat(43),
+    refreshVersion: 1,
+    accessLifetimeMs: 3_600_000,
+    refreshAbsoluteCeilingMs: 43_200_000,
+  });
+  const refreshed = await post({ operation: "refresh-success-shape" });
+  assert.equal(refreshed.status, 200);
+  const body = await refreshed.json();
+  assert.deepEqual(Object.keys(body).sort(), [
+    "accepted",
+    "ok",
+    "operation",
+    "refreshToken",
+    "refreshVersion",
+  ]);
 });
 
 test("D4 foundation route still enforces Origin and was not imported here", () => {
