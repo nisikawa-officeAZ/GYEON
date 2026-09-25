@@ -324,6 +324,7 @@ export async function runWizardSaveIntent(
       pricingConfig: runtime.pricingConfig,
       catalog: runtime.catalog,
       shopRank: runtime.shopRank,
+      configurationRevision: runtime.lifecycle.currentRevision,
     });
   } catch {
     report(deps, "save-mapping-failed", context.dealerId);
