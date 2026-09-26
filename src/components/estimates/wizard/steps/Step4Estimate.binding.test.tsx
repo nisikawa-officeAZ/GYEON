@@ -35,6 +35,9 @@ import type { WizardScreenConfiguration } from "../contract/wizard-runtime-input
 import type { EstimateWizardApi } from "../useEstimateWizard";
 import { makePricingCatalog } from "@/lib/pricing/pricing-catalog";
 import type { ProductionPricingConfiguration } from "../pricing/wizard-manual-pricing-config";
+import { configuredStoreGlobalOptionUnitPrice } from "./step4-bindings";
+import { StoreGlobalOptionsSelector } from "../screens/StoreGlobalOptionsSelector";
+import type { StoreGlobalOption } from "../screens/step-types";
 
 // ── helpers ───────────────────────────────────────────────────────────────────────
 
@@ -808,3 +811,239 @@ test("PPF price + coefficient placeholders stay null/omitted; no example price l
   assert.match(raw, /combinedServiceAdjustment=\{null\}/, "PPF combinedServiceAdjustment null");
   assert.equal(/180000/.test(raw), false, "no 180000 example price literal");
 });
+
+// ── 11. GDA-ESTIMATE-OPTION-PRICING-R1 — selecting a store-global option seeds its configured price ──
+//
+// The engine bills a store-global option ONLY from the canonical draft's `unitPricesByOption`. These
+// tests prove the toggle now carries the trusted runtime option's configured price into that field on
+// selection (one section-scoped patch), clears it on deselection (no stale amount), never seeds an
+// invalid/missing price (fail-closed), and never overwrites an explicit operator edit. Synthetic ids
+// and amounts only.
+
+const OPTION_SOURCE: readonly StoreGlobalOption[] = [
+  { id: "go-priced",   name: "ZZPRICED",   defaultPrice: 15000, appliesToAllCategories: true },
+  { id: "go-editable", name: "ZZEDITABLE", defaultPrice: 8000, editableUnitPrice: true, appliesToAllCategories: true },
+  { id: "go-zero",     name: "ZZZERO",     defaultPrice: 0, appliesToAllCategories: true },
+  { id: "go-nan",      name: "ZZNAN",      defaultPrice: Number.NaN, appliesToAllCategories: true },
+  { id: "go-neg",      name: "ZZNEG",      defaultPrice: -100, appliesToAllCategories: true },
+  { id: "go-frac",     name: "ZZFRAC",     defaultPrice: 1500.5, appliesToAllCategories: true },
+  { id: "go-inf",      name: "ZZINF",      defaultPrice: Number.POSITIVE_INFINITY, appliesToAllCategories: true },
+];
+const optionSource = (id: string) => OPTION_SOURCE.find((o) => o.id === id);
+
+test("option price seed: only a finite, positive, whole-yen configured price is seeded", () => {
+  assert.equal(configuredStoreGlobalOptionUnitPrice(optionSource("go-priced")), "15000");
+  assert.equal(configuredStoreGlobalOptionUnitPrice(optionSource("go-editable")), "8000");
+  for (const id of ["go-zero", "go-nan", "go-neg", "go-frac", "go-inf"]) {
+    assert.equal(configuredStoreGlobalOptionUnitPrice(optionSource(id)), null, `${id}: not seeded`);
+  }
+  assert.equal(configuredStoreGlobalOptionUnitPrice(undefined), null, "unknown option: not seeded");
+});
+
+test("selecting a priced option emits ONE storeGlobalOptions patch carrying the configured unit price", () => {
+  const { updateStore, patches } = cap();
+  const b = createStep4Bindings(fresh(), updateStore, undefined, OPTION_SOURCE);
+  b.storeGlobalOptions.onOptionToggle("go-priced");
+  assert.equal(patches.length, 1);
+  assert.deepEqual(Object.keys(patches[0].services!), ["storeGlobalOptions"]);
+  assert.deepEqual(patches[0], {
+    services: { storeGlobalOptions: { selectedOptionIds: ["go-priced"], unitPricesByOption: { "go-priced": "15000" } } },
+  });
+  // An editable option is seeded the same way; the operator may still override it afterwards.
+  b.storeGlobalOptions.onOptionToggle("go-editable");
+  assert.deepEqual(patches.at(-1)!.services!.storeGlobalOptions!.unitPricesByOption, { "go-editable": "8000" });
+});
+
+test("selecting an option with a missing/invalid configured price seeds nothing and clears a stale entry", () => {
+  const s = fresh();
+  for (const id of ["go-zero", "go-nan", "go-neg", "go-frac", "go-inf", "go-unknown"]) {
+    const seeded: WizardServiceConfigurationDraft = {
+      ...s,
+      storeGlobalOptions: { selectedOptionIds: [], unitPricesByOption: { [id]: "999", other: "1" }, quantitiesByOption: {} },
+    };
+    const { updateStore, patches } = cap();
+    createStep4Bindings(seeded, updateStore, undefined, OPTION_SOURCE).storeGlobalOptions.onOptionToggle(id);
+    const patch = patches[0].services!.storeGlobalOptions!;
+    assert.deepEqual(patch.selectedOptionIds, [id], `${id}: still selected (the engine reports it as unpriced)`);
+    assert.deepEqual(patch.unitPricesByOption, { other: "1" }, `${id}: no seeded price, stale entry removed`);
+  }
+});
+
+test("without a runtime option source the toggle selects but seeds no price (fail-closed)", () => {
+  const { updateStore, patches } = cap();
+  createStep4Bindings(fresh(), updateStore).storeGlobalOptions.onOptionToggle("go-priced");
+  assert.deepEqual(patches[0], { services: { storeGlobalOptions: { selectedOptionIds: ["go-priced"], unitPricesByOption: {} } } });
+});
+
+test("deselecting an option drops ONLY its price and quantity; sibling option entries are preserved", () => {
+  const s = fresh();
+  const seeded: WizardServiceConfigurationDraft = {
+    ...s,
+    storeGlobalOptions: {
+      selectedOptionIds: ["go-priced", "go-editable"],
+      unitPricesByOption: { "go-priced": "15000", "go-editable": "7000" },
+      quantitiesByOption: { "go-priced": 2, "go-editable": 3 },
+    },
+  };
+  const { updateStore, patches } = cap();
+  createStep4Bindings(seeded, updateStore, undefined, OPTION_SOURCE).storeGlobalOptions.onOptionToggle("go-priced");
+  assert.equal(patches.length, 1);
+  assert.deepEqual(patches[0], {
+    services: { storeGlobalOptions: {
+      selectedOptionIds: ["go-editable"],
+      unitPricesByOption: { "go-editable": "7000" },
+      quantitiesByOption: { "go-editable": 3 },
+    } },
+  });
+});
+
+test("an explicit operator price edit is preserved when another option is toggled", () => {
+  const s = fresh();
+  const seeded: WizardServiceConfigurationDraft = {
+    ...s,
+    storeGlobalOptions: { selectedOptionIds: ["go-priced"], unitPricesByOption: { "go-priced": "12000" }, quantitiesByOption: {} },
+  };
+  const { updateStore, patches } = cap();
+  const b = createStep4Bindings(seeded, updateStore, undefined, OPTION_SOURCE);
+  b.storeGlobalOptions.onUnitPriceChange("go-priced", "11000");
+  assert.deepEqual(patches.at(-1), { services: { storeGlobalOptions: { unitPricesByOption: { "go-priced": "11000" } } } });
+  b.storeGlobalOptions.onOptionToggle("go-editable");
+  assert.deepEqual(patches.at(-1)!.services!.storeGlobalOptions!.unitPricesByOption, { "go-priced": "12000", "go-editable": "8000" });
+});
+
+test("canonical round trip: select seeds, deselect clears, re-select re-seeds (no stale amount); projection unmutated", () => {
+  let draft = initialCanonicalDraft();
+  const step = (id: string, edit?: string) => {
+    const services = draft.serviceConfiguration;
+    const snapshot = JSON.stringify(services);
+    const patches: WizardStorePatch[] = [];
+    const b = createStep4Bindings(services, (p) => patches.push(p), undefined, OPTION_SOURCE);
+    if (edit !== undefined) b.storeGlobalOptions.onUnitPriceChange(id, edit); else b.storeGlobalOptions.onOptionToggle(id);
+    assert.equal(patches.length, 1);
+    const r = applyStorePatch(draft, patches[0]);
+    assert.equal(r.ok, true);
+    if (!r.ok) throw new Error("unreachable");
+    assert.equal(JSON.stringify(services), snapshot, "supplied projection unchanged");
+    draft = r.draft;
+    return draft.serviceConfiguration.storeGlobalOptions;
+  };
+  let g = step("go-priced");
+  assert.deepEqual(g.selectedOptionIds, ["go-priced"]);
+  assert.equal(g.unitPricesByOption["go-priced"], "15000");
+  g = step("go-priced", "12000");
+  assert.equal(g.unitPricesByOption["go-priced"], "12000", "explicit edit stored");
+  g = step("go-priced");
+  assert.deepEqual(g.selectedOptionIds, []);
+  assert.equal("go-priced" in g.unitPricesByOption, false, "deselect clears the amount");
+  g = step("go-priced");
+  assert.equal(g.unitPricesByOption["go-priced"], "15000", "re-select seeds the configured price, not the stale edit");
+});
+
+test("host threads screenConfig.storeGlobalOptions into the binding layer (source guard)", () => {
+  const code = codeOf(STEP_SRC);
+  assert.match(code, /createStep4Bindings\([^)]*screenConfig\.storeGlobalOptions/);
+});
+
+// ── 12. Acceptance correction — the selected-option detail displays the BILLED draft amount ──────
+//
+// The main option card keeps its configured-price semantics (`defaultPrice`, ¥15,000 for go-priced).
+// The selected-option detail row must instead show the parsed canonical-draft unit price — the only
+// value the engine bills and the save payload carries — or an honest unset/invalid notice. It must
+// never fall back to `defaultPrice`, so every assertion below pins the count of the configured price
+// string to exactly ONE occurrence (the card), proving the detail never re-emits it.
+
+const SELECTOR_BASE = {
+  globalOptions: [optionSource("go-priced")!],
+  selectedCategoryIds: ["coating"],
+  selectedGlobalOptionIds: ["go-priced"],
+  quantitiesByOption: {},
+  onGlobalOptionToggle: () => {}, onUnitPriceChange: () => {}, onQuantityChange: () => {}, onAddOrUpdate: () => {},
+};
+const count = (haystack: string, needle: string): number => haystack.split(needle).length - 1;
+const UNSET_NOTICE = "金額未設定";
+const INVALID_NOTICE = "金額不正";
+
+test("selector: a selected non-editable option shows its billed price only when the draft carries one", () => {
+  const priced = render(<StoreGlobalOptionsSelector {...SELECTOR_BASE} unitPricesByOption={{ "go-priced": "15000" }} />);
+  assert.equal(count(priced, "¥15,000"), 2, "card (configured) + detail (billed) both show the matching amount");
+  assert.equal(priced.includes(UNSET_NOTICE), false, "no unpriced notice when the draft carries the price");
+  assert.equal(priced.includes(INVALID_NOTICE), false, "no invalid notice for a parseable draft price");
+  const unpriced = render(<StoreGlobalOptionsSelector {...SELECTOR_BASE} unitPricesByOption={{}} />);
+  assert.ok(unpriced.includes(UNSET_NOTICE), "honest unpriced notice when the draft carries no price");
+  assert.equal(count(unpriced, "¥15,000"), 1, "the configured price appears ONLY on the card, never as the billed detail");
+});
+
+test("selector: a valid draft unit price that DIFFERS from the current default is what the detail displays", () => {
+  // Reopened estimate / legacy draft: the stored unit price (¥12,000) no longer matches defaultPrice (¥15,000).
+  const html = render(<StoreGlobalOptionsSelector {...SELECTOR_BASE} unitPricesByOption={{ "go-priced": "12000" }} />);
+  assert.equal(count(html, "¥12,000"), 1, "detail shows the billed draft amount");
+  assert.equal(count(html, "¥15,000"), 1, "configured price remains on the card only — not substituted into the detail");
+  assert.equal(html.includes(UNSET_NOTICE), false);
+  assert.equal(html.includes(INVALID_NOTICE), false);
+  // Whitespace-padded draft text parses exactly as the engine parses it (trim → Number).
+  const padded = render(<StoreGlobalOptionsSelector {...SELECTOR_BASE} unitPricesByOption={{ "go-priced": "  9800 " }} />);
+  assert.equal(count(padded, "¥9,800"), 1, "trimmed draft amount displayed");
+  assert.equal(count(padded, "¥15,000"), 1);
+});
+
+test("selector: a draft amount the engine accepts (zero / fractional) is displayed as billed, not replaced by the default", () => {
+  // The engine's parseAmount accepts any finite, non-negative Number; the detail mirrors it exactly.
+  const zero = render(<StoreGlobalOptionsSelector {...SELECTOR_BASE} unitPricesByOption={{ "go-priced": "0" }} />);
+  assert.equal(count(zero, "¥0"), 1, "a stored ¥0 is shown as ¥0 (what the engine bills)");
+  assert.equal(count(zero, "¥15,000"), 1, "no silent default fallback for a zero draft");
+  assert.equal(zero.includes(UNSET_NOTICE), false);
+  assert.equal(zero.includes(INVALID_NOTICE), false);
+  const frac = render(<StoreGlobalOptionsSelector {...SELECTOR_BASE} unitPricesByOption={{ "go-priced": "1500.5" }} />);
+  assert.equal(count(frac, "¥15,000"), 1, "fractional draft is not replaced by the default");
+  assert.ok(frac.includes(formatYenForTest(1500.5)), "fractional draft is displayed as parsed");
+});
+
+test("selector: an INVALID nonblank draft unit price shows an honest invalid notice — never the default price", () => {
+  for (const bad of ["abc", "-100", "Infinity", "-Infinity", "NaN", "1e400", "12,000", "¥15000"]) {
+    const html = render(<StoreGlobalOptionsSelector {...SELECTOR_BASE} unitPricesByOption={{ "go-priced": bad }} />);
+    assert.ok(html.includes(INVALID_NOTICE), `${JSON.stringify(bad)}: invalid notice shown`);
+    assert.equal(html.includes(UNSET_NOTICE), false, `${JSON.stringify(bad)}: not misreported as unset`);
+    assert.equal(count(html, "¥15,000"), 1, `${JSON.stringify(bad)}: configured price stays on the card only — no misleading default in the detail`);
+  }
+});
+
+test("selector: an UNSET draft (missing, empty, whitespace) shows the unset notice — never the default price", () => {
+  const unsetDrafts: Record<string, string>[] = [{}, { "go-priced": "" }, { "go-priced": "   " }, { other: "5000" }];
+  for (const prices of unsetDrafts) {
+    const html = render(<StoreGlobalOptionsSelector {...SELECTOR_BASE} unitPricesByOption={prices} />);
+    assert.ok(html.includes(UNSET_NOTICE), `${JSON.stringify(prices)}: unset notice shown`);
+    assert.equal(html.includes(INVALID_NOTICE), false, `${JSON.stringify(prices)}: not misreported as invalid`);
+    assert.equal(count(html, "¥15,000"), 1, `${JSON.stringify(prices)}: configured price stays on the card only`);
+    assert.equal(html.includes("¥5,000"), false, `${JSON.stringify(prices)}: a sibling option's price is never borrowed`);
+  }
+});
+
+test("selector: an EDITABLE option keeps its input bound to the draft value (no notice, no default substitution)", () => {
+  const html = render(
+    <StoreGlobalOptionsSelector
+      {...SELECTOR_BASE}
+      globalOptions={[optionSource("go-editable")!]}
+      selectedGlobalOptionIds={["go-editable"]}
+      unitPricesByOption={{ "go-editable": "7000" }}
+    />,
+  );
+  assert.match(html, /<input[^>]*value="7000"/, "input carries the draft value");
+  assert.match(html, /<input[^>]*placeholder="8000"/, "placeholder is the configured default, not the value");
+  assert.equal(html.includes(UNSET_NOTICE), false);
+  assert.equal(html.includes(INVALID_NOTICE), false);
+});
+
+test("selector source: the selected detail never renders defaultPrice and mirrors engine parse semantics", () => {
+  const code = codeOf("src/components/estimates/wizard/screens/StoreGlobalOptionsSelector.tsx");
+  // The detail's formatYen call must take the parsed draft value; `formatYen(o.defaultPrice)` may appear
+  // ONLY inside OptionCard (the configured-price card), i.e. as `formatYen(option.defaultPrice)`.
+  assert.equal(/formatYen\(o\.defaultPrice\)/.test(code), false, "detail row no longer formats defaultPrice");
+  assert.match(code, /formatYen\(billed\.value\)/, "detail row formats the parsed draft value");
+  assert.match(code, /Number\.isFinite\(n\) \|\| n < 0/, "parse mirrors engine parseAmount (finite, non-negative)");
+  assert.equal(/from ["'][^"']*\/(pricing|save|integration)\//.test(code), false, "presentation layer imports no engine module");
+});
+
+// Mirrors the production `formatYen` only for the fractional expectation (ja-JP locale formatting).
+function formatYenForTest(n: number): string {
+  return "¥" + n.toLocaleString("ja-JP");
+}

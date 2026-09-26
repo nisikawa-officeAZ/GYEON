@@ -24,7 +24,7 @@ import type {
   WizardCarWashDraft, WizardRoomCleaningDraft, WizardOtherWorkDraft, WizardStoreGlobalOptionsDraft,
 } from "../draft/wizard-draft-types";
 import type { WizardStorePatch } from "../bridge/ew-ui1-controller";
-import type { LayerCount, PpfInstallationMethodId, InteriorPpfRow, OtherWorkCustomRow } from "../screens/step-types";
+import type { LayerCount, PpfInstallationMethodId, InteriorPpfRow, OtherWorkCustomRow, StoreGlobalOption } from "../screens/step-types";
 import { createWizardRowId, type WizardRowIdCryptoSource } from "../contract/wizard-row-id";
 
 /** The host's validated patch sink — structurally exactly `useEstimateWizard().updateStore`. */
@@ -47,6 +47,30 @@ function setNum(record: Readonly<Record<string, number>>, id: string, value: num
 }
 function setStr(record: Readonly<Record<string, string>>, id: string, value: string): Record<string, string> {
   return { ...record, [id]: value };
+}
+function without<T>(record: Readonly<Record<string, T>>, id: string): Record<string, T> {
+  return Object.fromEntries(Object.entries(record).filter(([key]) => key !== id));
+}
+
+/**
+ * GDA-ESTIMATE-OPTION-PRICING-R1 — the authoritative unit-price seed for a NEWLY SELECTED store-global
+ * option, as draft text (the same `unitPricesByOption` channel an operator edit uses).
+ *
+ * The pricing engine prices a store-global option ONLY from `unitPricesByOption[id]`; the pricing
+ * configuration carries no price. Until now the toggle never wrote that field, so a selected option
+ * whose card displayed its configured price was still reported as 金額未入力 (partial → save blocked),
+ * and the runtime marks these options non-editable so no manual entry was even possible.
+ *
+ * Fail-closed: only a finite, positive, whole-yen configured price is seeded. Anything else returns
+ * `null`, and the option stays honestly unpriced (the engine keeps its MANUAL_PRICE_REQUIRED signal).
+ * Zero is deliberately NOT seeded: the runtime projection collapses an unconfigured price to 0, so a
+ * seeded 0 would manufacture a ¥0 line for an option whose price was never set.
+ */
+export function configuredStoreGlobalOptionUnitPrice(option: Pick<StoreGlobalOption, "defaultPrice"> | undefined): string | null {
+  if (option === undefined) return null;
+  const price = option.defaultPrice;
+  if (typeof price !== "number" || !Number.isInteger(price) || price <= 0) return null;
+  return String(price);
 }
 
 export interface CoatingBindings {
@@ -128,11 +152,15 @@ function existingRowIds(services: WizardServiceConfigurationDraft): Set<string> 
  * @param updateStore  The host's validated patch sink (`useEstimateWizard().updateStore`).
  * @param cryptoSource Optional Web-Crypto source for row-ID generation (defaults to
  *                     `globalThis.crypto` inside createWizardRowId). Injected only in tests.
+ * @param storeGlobalOptions Trusted runtime store-global options (from `screenConfig`). Read ONLY to
+ *                     seed a newly selected option's configured unit price into the canonical draft.
+ *                     Absent/unknown ⇒ nothing is seeded and the option stays unpriced (fail-closed).
  */
 export function createStep4Bindings(
   services: WizardServiceConfigurationDraft,
   updateStore: Step4UpdateStore,
   cryptoSource?: WizardRowIdCryptoSource,
+  storeGlobalOptions?: readonly StoreGlobalOption[],
 ): Step4Bindings {
   // Section-scoped emit — exactly ONE section key per patch, so siblings are never included.
   const emitCoating = (patch: Partial<WizardCoatingDraft>) => updateStore({ services: { coating: patch } });
@@ -213,7 +241,28 @@ export function createStep4Bindings(
         emitOtherWork({ customRows: services.otherWork.customRows.filter((r) => r.id !== id) }),
     },
     storeGlobalOptions: {
-      onOptionToggle: (id) => emitStoreGlobalOptions({ selectedOptionIds: toggle(services.storeGlobalOptions.selectedOptionIds, id) }),
+      // ONE patch per toggle. SELECT seeds the configured unit price (or clears a stale entry when no
+      // valid configured price exists) so the engine can bill the option immediately. DESELECT drops
+      // the option's price and quantity so a later re-selection never resurfaces a stale amount.
+      // Explicit operator edits made WHILE selected flow through onUnitPriceChange and are untouched.
+      onOptionToggle: (id) => {
+        const current = services.storeGlobalOptions;
+        if (current.selectedOptionIds.includes(id)) {
+          emitStoreGlobalOptions({
+            selectedOptionIds: current.selectedOptionIds.filter((x) => x !== id),
+            unitPricesByOption: without(current.unitPricesByOption, id),
+            quantitiesByOption: without(current.quantitiesByOption, id),
+          });
+          return;
+        }
+        const seed = configuredStoreGlobalOptionUnitPrice(storeGlobalOptions?.find((o) => o.id === id));
+        emitStoreGlobalOptions({
+          selectedOptionIds: [...current.selectedOptionIds, id],
+          unitPricesByOption: seed === null
+            ? without(current.unitPricesByOption, id)
+            : setStr(current.unitPricesByOption, id, seed),
+        });
+      },
       onUnitPriceChange: (id, v) => emitStoreGlobalOptions({ unitPricesByOption: setStr(services.storeGlobalOptions.unitPricesByOption, id, v) }),
       onQuantityChange: (id, qty) => emitStoreGlobalOptions({ quantitiesByOption: setNum(services.storeGlobalOptions.quantitiesByOption, id, qty) }),
     },
