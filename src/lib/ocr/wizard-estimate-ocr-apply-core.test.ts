@@ -61,14 +61,55 @@ test("operator-edited vehicle_name is the vehicle name and model is the vehicle 
     vehicle_name: "手入力した車名",
     model: "DBA-ABC123",
     model_code: "12345",
-  });
+  }, { source: "reviewed" });
   assert.equal(applied.vehicle.model, "手入力した車名");
   assert.equal(applied.vehicle.vehicleCode, "DBA-ABC123");
 });
 
-test("model_code is a safe fallback when the vehicle type field is absent", () => {
-  const applied = buildWizardEstimateOcrApplication({ model_code: "12345" });
-  assert.equal(applied.vehicle.vehicleCode, "12345");
+test("型式指定番号 / 類別区分番号 / 原動機の型式 never substitute for the certificate 型式", () => {
+  const applied = buildWizardEstimateOcrApplication({
+    model_code: "99999",
+    classification_number: "9999",
+    engine_model: "9ZZ-FE",
+  });
+  assert.equal(applied.vehicle.vehicleCode, undefined);
+  assert.deepEqual(applied.vehicle, {});
+});
+
+test("blank OCR 車名/グレード leave operator-entered values intact when merged", () => {
+  const operator = { model: "手入力の車名", grade: "手入力グレード", vehicleCode: "手入力型式" };
+  const patch = buildWizardEstimateOcrApplication({ vehicle_name: "", grade: "", model: " " }).vehicle;
+  assert.deepEqual({ ...operator, ...patch }, operator);
+});
+
+test("legacy replay: a grade equal to the engine code is dropped, a distinct operator grade is kept", () => {
+  const replayed = buildWizardEstimateOcrApplication({ grade: "9ZZ-FE", engine_model: "9ZZ-FE", model: "DBA-ZZZ999" });
+  assert.equal(replayed.vehicle.grade, undefined);
+  assert.equal(replayed.vehicle.vehicleCode, "DBA-ZZZ999");
+
+  const fullWidth = buildWizardEstimateOcrApplication({ grade: "９ＺＺ－ＦＥ", engine_model: "9ZZ-FE" });
+  assert.equal(fullWidth.vehicle.grade, undefined);
+
+  const operator = buildWizardEstimateOcrApplication({ grade: "手入力グレード", engine_model: "9ZZ-FE" }, { source: "reviewed" });
+  assert.equal(operator.vehicle.grade, "手入力グレード");
+});
+
+test("a 型式-like value in 型式指定番号 is never recovered as 型式", () => {
+  const pending = buildWizardEstimateOcrApplication({ model_code: "LZZ-ZZ9Z99" });
+  assert.equal(pending.vehicle.vehicleCode, undefined);
+  const confirmed = buildWizardEstimateOcrApplication({ model: "LZZ-ZZ9Z99" }, { source: "reviewed" });
+  assert.equal(confirmed.vehicle.vehicleCode, "LZZ-ZZ9Z99");
+});
+
+test("reviewed manual hyphen-less 型式 survives; the same raw OCR token fails closed", () => {
+  const input = { model: "Z999Z" };
+  assert.equal(buildWizardEstimateOcrApplication(input).vehicle.vehicleCode, undefined);
+  assert.equal(buildWizardEstimateOcrApplication(input, { source: "reviewed" }).vehicle.vehicleCode, "Z999Z");
+});
+
+test("engine-like value in 型式指定番号 never substitutes for missing 型式", () => {
+  const applied = buildWizardEstimateOcrApplication({ model_code: "Z09Z", engine_model: "Z09Z" });
+  assert.equal(applied.vehicle.vehicleCode, undefined);
 });
 
 test("blank OCR values do not clear operator-entered vehicle fields", () => {
@@ -93,10 +134,10 @@ test("Screen 1 and Screen 2 are wired to the same canonical OCR application", ()
   const step2 = readFileSync("src/components/estimates/wizard/steps/Step2Vehicle.tsx", "utf8");
 
   assert.ok(host.includes("onSizeEstimate={setBodySizeEstimate}"));
-  assert.ok(step1.includes("buildWizardEstimateOcrApplication(f)"));
+  assert.ok(step1.includes('buildWizardEstimateOcrApplication(f, { source: "reviewed" })'));
   assert.ok(step1.includes("customer: applied.customer, vehicle: applied.vehicle"));
   assert.ok(step1.includes("onSizeEstimate?.(applied.bodySizeEstimate)"));
-  assert.ok(step2.includes("buildWizardEstimateOcrApplication(f)"));
+  assert.ok(step2.includes('buildWizardEstimateOcrApplication(f, { source: "reviewed" })'));
   assert.ok(step2.includes("onSizeEstimate?.(applied.bodySizeEstimate)"));
 });
 

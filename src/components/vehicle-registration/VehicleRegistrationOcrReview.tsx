@@ -6,12 +6,13 @@
 // Fields are grouped into two sections: customer data and vehicle data.
 // User can edit any field and choose which fields to apply before confirming.
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import {
   VehicleRegistrationOcrResult,
   OCR_FIELD_LABELS,
 } from "@/lib/vehicle-registration/vehicle-registration-types";
 import { analyzeOcrQuality } from "@/lib/ocr/ocr-field-analysis";
+import { resolveVehicleIdentity } from "@/lib/vehicle-registration/ocr-quality";
 import {
   analyzeOcrCustomer,
   resolveCustomer,
@@ -40,17 +41,23 @@ const CUSTOMER_FIELDS: ReviewField[] = [
   "user_address",
 ];
 
-// Field order per spec: メーカー → 車名 → グレード → 型式指定番号 → … → ボディカラー.
-// ボディサイズ is estimated in the wizard (3M), not an OCR field, so it is not part
-// of this OCR review table.
+// Field order per owner spec: メーカー → 車名 → グレード → ボディカラー → 型式 → 車台番号 →
+// 型式指定番号 → 類別区分番号, then the remaining fields in their previous relative order.
+// 車名（通称名）/ グレード / ボディカラー are never auto-filled from the certificate — they are
+// shown so the operator can type them. 型式 is the certificate 型式 column (not 原動機の型式 and
+// not 型式指定番号). 類別区分番号 is OCR-review only (no estimate persistence field).
+// ボディサイズ is estimated in the wizard (3M), not an OCR field, so it is not part of this table.
 const VEHICLE_FIELDS: ReviewField[] = [
   "maker",                   // メーカー
-  "vehicle_name",            // 車名
-  "grade",                   // グレード
-  "model_code",              // 型式指定番号
+  "vehicle_name",            // 車名（通称名・手入力のみ）
+  "grade",                   // グレード（手入力のみ）
+  "color",                   // ボディカラー（手入力必須・AI自動入力なし）
+  "model",                   // 型式（車検証「型式」欄）
   "chassis_number",          // 車台番号
+  "model_code",              // 型式指定番号
+  "classification_number",   // 類別区分番号（レビューのみ・見積には反映しない）
   "license_plate_region",    // ナンバー地域
-  "license_plate_class",     // 分類番号
+  "license_plate_class",     // 分類番号（ナンバープレート）
   "license_plate_kana",      // かな
   "license_plate_number",    // 指定番号
   "first_registration_date", // 初度登録年月
@@ -61,7 +68,6 @@ const VEHICLE_FIELDS: ReviewField[] = [
   "length_mm",               // 長さ（3M計算用）
   "width_mm",                // 幅（3M計算用）
   "height_mm",               // 高さ（3M計算用）
-  "color",                   // ボディカラー（手入力必須・AI自動入力なし）
 ];
 
 const DIMENSION_FIELDS = new Set<ReviewField>(["length_mm", "width_mm", "height_mm"]);
@@ -146,11 +152,21 @@ function FieldTable({ fields, ocr, edited, selected, onToggle, onEdit, showAll }
 // ─── Main component ────────────────────────────────────────────────────────────
 
 export default function VehicleRegistrationOcrReview({
-  ocrResult,
+  ocrResult: rawOcrResult,
   onApply,
   onCancel,
 }: Props) {
   const [, startTransition] = useTransition();
+
+  // Vehicle-identity resolution on the way IN (also covers legacy stored results whose old グレード
+  // held an engine type, or whose 型式指定番号 held a non-numeric value). Ambiguous values are blanked
+  // and listed as notices so the operator can correct them visibly; nothing is guessed. The operator's
+  // own edits are made afterwards and are never re-filtered here.
+  const identity = useMemo(
+    () => resolveVehicleIdentity(rawOcrResult, { ambiguousGrade: "blank" }),
+    [rawOcrResult],
+  );
+  const ocrResult = identity.result;
 
   const [edited, setEdited] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
@@ -489,6 +505,19 @@ export default function VehicleRegistrationOcrReview({
                   ボディカラーを入力してください。
                 </p>
               )}
+              {/* 自動判定で除外した値（推測はしない — 操作者が車検証と照合して手入力する） */}
+              {identity.notices.length > 0 && (
+                <div className="flex flex-col gap-1 px-3 py-2 text-[11px] text-amber-300 bg-amber-950/20">
+                  <p className="font-medium">自動判定で除外した項目があります。車検証と照合して必要なら手入力してください。</p>
+                  {identity.notices.map((notice) => (
+                    <p key={notice} className="text-amber-200/80">・{notice}</p>
+                  ))}
+                </div>
+              )}
+              {/* 車名（通称名）・グレードは車検証に記載がない — AI は自動入力しない */}
+              <p className="px-3 py-2 text-[11px] text-slate-500">
+                車名（通称名）・グレードは車検証に記載がないため自動入力されません。必要な場合は手入力してください。
+              </p>
             </>
           </div>
 
