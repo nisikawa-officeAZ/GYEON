@@ -1660,6 +1660,16 @@ No phase is complete until its result is appended to `GYEON_DA_PHASE_RESULTS.md`
 
 The GYEON DA is complete when the critical journey is E5 and field use demonstrates:
 
+**Owner-ratified mandatory field release gate (2026-09-27):** A GYEON detailer must
+complete one representative, dealer-scoped case on a real device in an actual
+shop, without developer assistance, through saved estimate -> executable work
+order -> invoice -> delivery-note PDF -> installation certificate. Record the
+case's step-by-step outcome and evidence in the result ledger. A displayed
+screen, source test, successful Preview build, or merged PR alone does not pass
+this gate. This is a necessary condition for publication, not a replacement
+for E5, pricing and document accuracy, tenant/role authorization, duplicate
+submission and failure recovery, production smoke, or rollback requirements.
+
 - Fewer duplicate customer/vehicle entries.
 - Fewer manual transfers between reservation, estimate, work order, report, invoice, and maintenance.
 - Fewer screens and clicks after service completion.

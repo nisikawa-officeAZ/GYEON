@@ -5765,3 +5765,27 @@ git_actions:
 decision: ACCEPT_PR128_AS_D5A_R2_PUBLICATION_AND_RECORD_SEQUENCING_DEVIATION_WITHOUT_DUPLICATE_COMMIT
 next: "INDEPENDENT_BOOK_REVIEW_OF_THIS_TWO_PATH_LEDGER_APPEND; PUSH_PR_READY_MERGE_AND_D5B_REMAIN_SEPARATE_OWNER_GATES."
 ```
+
+## GDA-FIELD-RELEASE-GATE-R1 — Owner-ratified mandatory journey
+
+```yaml
+phase: GDA_FIELD_RELEASE_GATE_R1
+marker: GDA_FIELD_RELEASE_GATE_R1_OWNER_RATIFICATION_V1
+date: 2026-09-27
+status: OWNER_RATIFIED_LOCAL_GIT_RECORD
+authorization: "The Owner explicitly approved recording the field release criterion in Git after approving the criterion itself."
+repository: nisikawa-officeAZ/GYEON
+base_commit: b440efea8e023c917d78171804c2a1edfd163647
+base_tree: a5591ea3961432a58380261986ae48ca0b7714ee
+literal_change_paths:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+required_field_journey: "One representative dealer-scoped case, on a real device in an actual shop and without developer assistance: saved estimate -> executable work order -> invoice -> delivery-note PDF -> installation certificate."
+evidence_rule: "Record each step and its outcome in this ledger; UI visibility, source tests, Preview success, or merge alone cannot pass the field gate."
+other_release_gates: "E5, pricing/document accuracy, tenant and role boundaries, duplicate submission, failure recovery, production smoke, and rollback remain mandatory."
+field_journey_verified: false
+production_release_accepted: false
+source_test_db_environment_or_deployment_mutation: false
+git_publication: LOCAL_COMMIT_ONLY_NOT_PUSHED
+next: "Obtain a separate owner gate for push and PR publication; merge and deployment remain separate gates."
+```
