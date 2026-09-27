@@ -25,17 +25,20 @@ mock.module("../../../../lib/inventory/foundation/foundation-server-actions", {
 });
 
 type Route = typeof import("./route");
+type Guards = typeof import("../../../../lib/inventory/foundation/foundation-route-guards");
 let GET: Route["GET"];
 let POST: Route["POST"];
 let PUT: Route["PUT"];
 let HEAD: Route["HEAD"];
 let OPTIONS: Route["OPTIONS"];
-let isExactJsonMediaType: Route["isExactJsonMediaType"];
-let mutationOriginAllowed: Route["mutationOriginAllowed"];
+let isExactJsonMediaType: Guards["isExactJsonMediaType"];
+let mutationOriginAllowed: Guards["mutationOriginAllowed"];
 
 before(async () => {
-  ({ GET, POST, PUT, HEAD, OPTIONS, isExactJsonMediaType, mutationOriginAllowed } =
-    await import("./route"));
+  ({ GET, POST, PUT, HEAD, OPTIONS } = await import("./route"));
+  ({ isExactJsonMediaType, mutationOriginAllowed } = await import(
+    "../../../../lib/inventory/foundation/foundation-route-guards"
+  ));
 });
 
 function originUrl() {
