@@ -1,0 +1,72 @@
+# INV001_D6_DISPOSABLE_LOOPBACK_STACK_TEMPLATE
+# Rendered by scripts/e2e/inv001-d6/run.mjs into a run-scoped temporary
+# workdir outside the repository tree, next to copies of exactly the two pinned
+# inventory migrations. It is never the repository's root Supabase
+# configuration, never linked to a hosted project, and never used against a
+# shared or production database. Only db, auth, rest, and kong run; every
+# published port binds to 127.0.0.1 through the run-scoped Docker network.
+
+project_id = "__INV001_D6_PROJECT_ID__"
+
+[api]
+enabled = true
+port = __INV001_D6_API_PORT__
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = __INV001_D6_DB_PORT__
+shadow_port = __INV001_D6_SHADOW_PORT__
+major_version = 17
+
+[db.pooler]
+enabled = false
+port = __INV001_D6_POOLER_PORT__
+
+[db.migrations]
+enabled = true
+
+[db.seed]
+enabled = false
+
+[realtime]
+enabled = false
+
+[studio]
+enabled = false
+port = __INV001_D6_STUDIO_PORT__
+
+[local_smtp]
+enabled = false
+port = __INV001_D6_SMTP_WEB_PORT__
+
+[storage]
+enabled = false
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:__INV001_D6_API_PORT__"
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_signup = false
+enable_anonymous_sign_ins = false
+
+[auth.rate_limit]
+email_sent = 2
+anonymous_users = 30
+token_refresh = 600
+sign_in_sign_ups = 600
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[edge_runtime]
+enabled = false
+inspector_port = __INV001_D6_INSPECTOR_PORT__
+
+[analytics]
+enabled = false
+port = __INV001_D6_ANALYTICS_PORT__
