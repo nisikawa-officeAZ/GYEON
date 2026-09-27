@@ -962,6 +962,11 @@ const SELECTOR_BASE = {
 const count = (haystack: string, needle: string): number => haystack.split(needle).length - 1;
 const UNSET_NOTICE = "金額未設定";
 const INVALID_NOTICE = "金額不正";
+// Legacy-draft guidance correction: the unset notice carries ONE of two guidances. When the configured
+// default would be seeded on (re)selection, the cure is an explicit deselect/reselect; when the configured
+// default itself is missing/invalid, the only honest cure is registering a price in settings.
+const SETTINGS_GUIDANCE = "店舗設定で単価を登録してください";
+const RESELECT_GUIDANCE = "一度選択解除して再選択してください";
 
 test("selector: a selected non-editable option shows its billed price only when the draft carries one", () => {
   const priced = render(<StoreGlobalOptionsSelector {...SELECTOR_BASE} unitPricesByOption={{ "go-priced": "15000" }} />);
@@ -1015,6 +1020,90 @@ test("selector: an UNSET draft (missing, empty, whitespace) shows the unset noti
     assert.equal(html.includes(INVALID_NOTICE), false, `${JSON.stringify(prices)}: not misreported as invalid`);
     assert.equal(count(html, "¥15,000"), 1, `${JSON.stringify(prices)}: configured price stays on the card only`);
     assert.equal(html.includes("¥5,000"), false, `${JSON.stringify(prices)}: a sibling option's price is never borrowed`);
+    // go-priced HAS a valid configured default (¥15,000), so the settings guidance would be misleading.
+    assert.ok(html.includes(RESELECT_GUIDANCE), `${JSON.stringify(prices)}: reselect guidance for a seedable default`);
+    assert.equal(html.includes(SETTINGS_GUIDANCE), false, `${JSON.stringify(prices)}: no misleading settings guidance`);
+  }
+});
+
+// ── 12b. Legacy-draft guidance — unset draft + configured default: reselect vs. settings ─────────
+//
+// An old/in-flight draft may select a non-editable option with no `unitPricesByOption` entry. If the shop
+// option now carries a seedable default (finite positive whole yen — the exact binding seed predicate), the
+// operator must deselect and reselect to apply it; the UI must say so instead of sending them to settings.
+// If the configured default is itself missing/zero/negative/fractional/non-finite/non-number, reselect
+// would seed nothing, so the settings guidance must remain. Either way the draft is NEVER mutated.
+
+// Renders a selected, non-editable option against an untouched (frozen) draft and proves the component
+// neither writes the draft nor fires any write callback during render.
+function renderUnsetDraft(option: StoreGlobalOption): string {
+  const draft: Record<string, string> = Object.freeze({ other: "5000" }) as Record<string, string>;
+  const snapshot = JSON.stringify(draft);
+  const calls: string[] = [];
+  const html = render(
+    <StoreGlobalOptionsSelector
+      {...SELECTOR_BASE}
+      globalOptions={[option]}
+      selectedGlobalOptionIds={[option.id]}
+      unitPricesByOption={draft}
+      onGlobalOptionToggle={() => calls.push("toggle")}
+      onUnitPriceChange={() => calls.push("price")}
+      onQuantityChange={() => calls.push("qty")}
+      onAddOrUpdate={() => calls.push("add")}
+    />,
+  );
+  assert.equal(JSON.stringify(draft), snapshot, `${option.id}: the old draft's prices were not mutated`);
+  assert.equal(option.id in draft, false, `${option.id}: no amount was hydrated into the draft`);
+  assert.deepEqual(calls, [], `${option.id}: no write callback fired during render`);
+  return html;
+}
+
+test("selector: unset draft + VALID configured default → deselect/reselect guidance, no settings guidance, no hydration", () => {
+  for (const defaultPrice of [15000, 1, 999999]) {
+    const option: StoreGlobalOption = { id: "go-legacy", name: "ZZLEGACY", defaultPrice, appliesToAllCategories: true };
+    const html = renderUnsetDraft(option);
+    assert.ok(html.includes(UNSET_NOTICE), `${defaultPrice}: still reported as unset (nothing is billed)`);
+    assert.ok(html.includes(RESELECT_GUIDANCE), `${defaultPrice}: reselect guidance shown`);
+    assert.equal(html.includes(SETTINGS_GUIDANCE), false, `${defaultPrice}: settings guidance is misleading here`);
+    assert.equal(html.includes(INVALID_NOTICE), false, `${defaultPrice}: not misreported as invalid`);
+    assert.equal(count(html, formatYenForTest(defaultPrice)), 1, `${defaultPrice}: configured price on the card only — never shown as billed`);
+    assert.equal(html.includes("¥5,000"), false, `${defaultPrice}: a sibling option's price is never borrowed`);
+  }
+});
+
+test("selector: unset draft + MISSING/INVALID configured default → settings guidance stays; reselect is never promised", () => {
+  // Mirrors the binding predicate's rejections exactly: zero, negative, fractional, NaN, ±Infinity,
+  // plus a missing and a non-number default (legacy/malformed shop configuration reaching the screen).
+  const invalidDefaults: Array<[string, unknown]> = [
+    ["zero", 0], ["negative", -100], ["fractional", 1500.5], ["nan", Number.NaN],
+    ["infinity", Number.POSITIVE_INFINITY], ["neg-infinity", Number.NEGATIVE_INFINITY],
+    ["missing", undefined], ["null", null], ["string", "15000"], ["boolean", true],
+  ];
+  for (const [label, defaultPrice] of invalidDefaults) {
+    const option = { id: `go-bad-${label}`, name: `ZZBAD${label}`, defaultPrice, appliesToAllCategories: true } as unknown as StoreGlobalOption;
+    const html = renderUnsetDraft(option);
+    assert.ok(html.includes(UNSET_NOTICE), `${label}: still reported as unset`);
+    assert.ok(html.includes(SETTINGS_GUIDANCE), `${label}: settings guidance retained`);
+    assert.equal(html.includes(RESELECT_GUIDANCE), false, `${label}: reselect is not presented as a cure for an invalid configured price`);
+    assert.equal(html.includes(INVALID_NOTICE), false, `${label}: an unset draft is not misreported as an invalid draft`);
+    assert.equal(html.includes("¥5,000"), false, `${label}: a sibling option's price is never borrowed`);
+  }
+  // The binding seed predicate and the guidance predicate agree on every case above and on the valid ones.
+  for (const [label, defaultPrice] of invalidDefaults) {
+    assert.equal(configuredStoreGlobalOptionUnitPrice({ defaultPrice } as StoreGlobalOption), null, `${label}: binding seeds nothing`);
+  }
+  assert.equal(configuredStoreGlobalOptionUnitPrice({ defaultPrice: 15000 } as StoreGlobalOption), "15000");
+});
+
+test("selector: an INVALID draft amount keeps the invalid-amount error regardless of the configured default", () => {
+  for (const option of [optionSource("go-priced")!, optionSource("go-zero")!]) {
+    const html = render(
+      <StoreGlobalOptionsSelector {...SELECTOR_BASE} globalOptions={[option]} selectedGlobalOptionIds={[option.id]} unitPricesByOption={{ [option.id]: "abc" }} />,
+    );
+    assert.ok(html.includes(INVALID_NOTICE), `${option.id}: invalid notice shown`);
+    assert.equal(html.includes(UNSET_NOTICE), false, `${option.id}: not misreported as unset`);
+    assert.equal(html.includes(RESELECT_GUIDANCE), false, `${option.id}: reselect guidance is not offered for an invalid draft`);
+    assert.equal(html.includes(SETTINGS_GUIDANCE), false, `${option.id}: settings guidance is not offered for an invalid draft`);
   }
 });
 
@@ -1041,6 +1130,14 @@ test("selector source: the selected detail never renders defaultPrice and mirror
   assert.match(code, /formatYen\(billed\.value\)/, "detail row formats the parsed draft value");
   assert.match(code, /Number\.isFinite\(n\) \|\| n < 0/, "parse mirrors engine parseAmount (finite, non-negative)");
   assert.equal(/from ["'][^"']*\/(pricing|save|integration)\//.test(code), false, "presentation layer imports no engine module");
+  // Legacy-draft guidance: the reselect promise is gated by the SAME predicate the binding layer seeds
+  // with (finite positive whole-yen number), and the screen has no hydration path (no effects, no
+  // binding import) — the operator's explicit deselect/reselect remains the only way a price is seeded.
+  const guard = /typeof defaultPrice === "number" && Number\.isInteger\(defaultPrice\) && defaultPrice > 0/;
+  assert.match(code, guard, "reselect guidance predicate mirrors configuredStoreGlobalOptionUnitPrice");
+  assert.match(codeOf(BIND_SRC), /typeof price !== "number" \|\| !Number\.isInteger\(price\) \|\| price <= 0/, "binding seed predicate unchanged");
+  assert.equal(/useEffect|useLayoutEffect|useState/.test(code), false, "screen has no hydration effect or local state");
+  assert.equal(/step4-bindings/.test(code), false, "screen does not import the binding layer");
 });
 
 // Mirrors the production `formatYen` only for the fractional expectation (ja-JP locale formatting).

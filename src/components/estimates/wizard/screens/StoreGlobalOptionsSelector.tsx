@@ -38,6 +38,19 @@ function billedDraftUnitPrice(raw: string | undefined): BilledDraftUnitPrice {
   return { kind: "priced", value: n };
 }
 
+// GDA-ESTIMATE-OPTION-PRICING-R1 (legacy-draft guidance) — an old or in-flight draft can hold a selected
+// non-editable option WITHOUT a `unitPricesByOption` entry even though the shop has a valid configured
+// `defaultPrice`. Telling the operator to "register a price in settings" is then misleading: the price
+// exists, and the binding layer seeds it on selection. The honest cure is an explicit operator action —
+// deselect and reselect — so the unset notice says exactly that. This predicate mirrors the binding seed
+// rule (`configuredStoreGlobalOptionUnitPrice`: a finite, positive, whole-yen number; `Number.isInteger`
+// already rejects NaN/±Infinity) so reselect is promised ONLY when it would actually seed a price. For a
+// missing/zero/negative/fractional/non-number default the settings guidance stays. Nothing is hydrated,
+// substituted, or mutated here — the draft amount is still never written by this component.
+function isSeedableConfiguredPrice(defaultPrice: unknown): boolean {
+  return typeof defaultPrice === "number" && Number.isInteger(defaultPrice) && defaultPrice > 0;
+}
+
 function OptionCard({
   option,
   selected,
@@ -146,7 +159,9 @@ export function StoreGlobalOptionsSelector(props: StoreGlobalOptionsSelectorProp
             // draft price cannot be fixed here, so say so honestly instead of showing a price that is
             // not being counted (GDA-ESTIMATE-OPTION-PRICING-R1). The displayed amount is the parsed
             // draft value itself — never `defaultPrice` — and an unparseable draft string is reported
-            // as invalid rather than masked by a default. No amount is computed or invented.
+            // as invalid rather than masked by a default. No amount is computed or invented. When the
+            // draft is unset, the guidance depends on whether reselecting would seed a configured price
+            // (deselect/reselect) or not (register a price in settings) — see isSeedableConfiguredPrice.
             const billed = billedDraftUnitPrice(unitPricesByOption[o.id]);
             return (
               <div key={o.id} className="flex flex-wrap items-center justify-between gap-2">
@@ -165,6 +180,8 @@ export function StoreGlobalOptionsSelector(props: StoreGlobalOptionsSelectorProp
                     <span className="text-sm text-slate-200 tabular-nums">{formatYen(billed.value)}</span>
                   ) : billed.kind === "invalid" ? (
                     <span className="text-[11px] text-amber-400/90">金額不正（保存された単価を読み取れないため計上できません）</span>
+                  ) : isSeedableConfiguredPrice(o.defaultPrice) ? (
+                    <span className="text-[11px] text-amber-400/90">金額未設定（設定済みの単価を反映するには、一度選択解除して再選択してください）</span>
                   ) : (
                     <span className="text-[11px] text-amber-400/90">金額未設定（店舗設定で単価を登録してください）</span>
                   )}
