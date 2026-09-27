@@ -990,14 +990,19 @@ async function main() {
 
   async function ownerSnapshot(step) {
     const out = await sql(`${objectsCte}
-      select count(*) || '#' || string_agg(kind || '|' || name || '|' || pg_get_userbyid(owner_oid), ',' order by kind, name) from objs;`, step);
-    const [count, rest] = out.split("#");
-    if (Number(count) !== 17) throw stop("INVENTORY_OBJECT_SET_MISMATCH");
+      select count(*) || '#' || string_agg(kind || '|' || name || '|' || pg_get_userbyid(owner_oid), E'\\n' order by kind, name) from objs;`, step);
+    const separator = out.indexOf("#");
+    const count = out.slice(0, separator);
+    const rest = out.slice(separator + 1);
+    if (separator < 0 || Number(count) !== 17) throw stop("INVENTORY_OBJECT_SET_MISMATCH");
+    // Function signatures contain commas, so rows are newline-delimited.
     const owners = {};
-    for (const entry of rest.split(",")) {
-      const [, name, owner] = entry.split("|");
-      owners[name] = owner;
+    for (const entry of rest.split("\n")) {
+      const fields = entry.split("|");
+      if (fields.length !== 3 || fields[1] === "" || fields[2] === "") throw stop("INVENTORY_OBJECT_SET_MISMATCH");
+      owners[fields[1]] = fields[2];
     }
+    if (Object.keys(owners).length !== 17) throw stop("INVENTORY_OBJECT_SET_MISMATCH");
     return owners;
   }
 
