@@ -10,6 +10,8 @@ on:
       - scripts/e2e/inv001-d6/identity.test.ts
       - scripts/e2e/inv001-d6/concurrency.mjs
       - .github/workflows/inv001-d6-disposable-security-proof.yml
+      - supabase/migrations/20260927143257_office_az_inventory_authority_resolver_human_only.sql
+      - src/lib/inventory/authority/office-az-inventory-authority-resolver-human-only-migration.test.ts
 
 permissions:
   contents: read
@@ -65,17 +67,16 @@ jobs:
           rm -f "$npm_config_path"
           test ! -e "$npm_config_path"
 
-      - name: Verify exact five-path change set
+      - name: Verify exact four-path D6-B change set
         shell: bash
         run: |
           set -euo pipefail
           actual="$(git diff --name-only --diff-filter=ACDMRTUXB "${{ github.event.pull_request.base.sha }}"...HEAD | LC_ALL=C sort)"
           expected="$(printf '%s\n' \
             '.github/workflows/inv001-d6-disposable-security-proof.yml' \
-            'scripts/e2e/inv001-d6/concurrency.mjs' \
-            'scripts/e2e/inv001-d6/config.toml' \
-            'scripts/e2e/inv001-d6/identity.test.ts' \
             'scripts/e2e/inv001-d6/run.mjs' \
+            'src/lib/inventory/authority/office-az-inventory-authority-resolver-human-only-migration.test.ts' \
+            'supabase/migrations/20260927143257_office_az_inventory_authority_resolver_human_only.sql' \
             | LC_ALL=C sort)"
           test "$actual" = "$expected"
           git diff --check "${{ github.event.pull_request.base.sha }}"...HEAD
@@ -95,8 +96,12 @@ jobs:
           tar -xzf "$cli_dir/$tarball" -C "$cli_dir/bin"
           test "$(find "$cli_dir/bin" -maxdepth 2 -type f -name supabase | wc -l)" -eq 1
 
-      - name: Run static harness self-tests
-        run: node --import tsx --test scripts/e2e/inv001-d6/identity.test.ts
+      - name: Run static harness self-tests and migration invariants
+        run: >-
+          node --import tsx --test
+          scripts/e2e/inv001-d6/identity.test.ts
+          src/lib/inventory/authority/office-az-inventory-authority-migration.test.ts
+          src/lib/inventory/authority/office-az-inventory-authority-resolver-human-only-migration.test.ts
 
       - name: Run disposable loopback security proof once
         run: >-

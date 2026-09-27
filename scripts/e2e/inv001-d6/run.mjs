@@ -22,8 +22,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 export const EVIDENCE_MARKER = "INV001_P19_D6_DISPOSABLE_SECURITY_PROOF_EVIDENCE_V1";
 const CLEANUP_MARKER = "INV001_P19_D6_CLEANUP_RESIDUE_V1";
 const ACK = "I_ACKNOWLEDGE_DISPOSABLE_LOOPBACK_SUPABASE_STACK_ONLY";
-const EXPECTED_BASE = "df3be017c0f049aec48f40646d5b6708c91998b5";
-const EXPECTED_TREE = "af9296dbb26efb23ad3b18c4b5e811a46dbfa238";
+const EXPECTED_BASE = "b440efea8e023c917d78171804c2a1edfd163647";
+const EXPECTED_TREE = "a5591ea3961432a58380261986ae48ca0b7714ee";
 const CLI_VERSION = "2.118.0";
 const CLI_TARBALL = "supabase_2.118.0_linux_amd64.tar.gz";
 const CLI_TARBALL_SHA256 = "f6089a86fb9d9221c958193a277338daddd6822f706929943812fa32e106c86d";
@@ -47,6 +47,12 @@ const MIGRATIONS = [
     path: "supabase/migrations/20260924132149_office_az_inventory_mobile_persistence.sql",
     version: "20260924132149",
     sha256: "1377e6847bbc261b1289fc0856c11c5feb9d270520c1fb4f26c294a4e33bc6ca",
+  },
+  {
+    // D6-B F1/F1b forward fix: human-only resolver, knownLocationIds gated.
+    path: "supabase/migrations/20260927143257_office_az_inventory_authority_resolver_human_only.sql",
+    version: "20260927143257",
+    sha256: "a899159f96e95a0708721633a3a419260f8d78ebc3314725acff7b56061eb687",
   },
 ];
 // Presence-only check; values are never read.
@@ -146,7 +152,7 @@ export const IDENTITY_EXPECTATIONS = {
   A13_self_action: "SELF_ACTION_PROHIBITED",
   A14_location_not_granted: "LOCATION_NOT_GRANTED",
   A14_unknown_location: "UNKNOWN_LOCATION",
-  A15_service_candidate: "SERVICE_AUTHORITY_NOT_CONFIGURED",
+  A15_service_candidate: "ZERO_ASSIGNMENT",
 };
 
 let secretStop = null;
@@ -390,13 +396,22 @@ export function buildSampleEvidence() {
       },
       C7: { original_owner_functional: true, resolver_candidate_count: 1, register_status: "accepted" },
     },
-    findings: [{
-      id: "F1",
-      classification: "INFORMATION_DISCLOSURE_WITHOUT_AUTHORITY_GRANT",
-      service_candidate_returned_to_other_user: true,
-      core_result: "SERVICE_AUTHORITY_NOT_CONFIGURED",
-      disposition: "SEPARATE_FORWARD_MIGRATION_GATE",
-    }],
+    findings: [
+      {
+        id: "F1",
+        classification: "INFORMATION_DISCLOSURE_WITHOUT_AUTHORITY_GRANT",
+        service_candidate_returned_to_other_user: false,
+        core_result: "ZERO_ASSIGNMENT",
+        disposition: "FIXED_BY_FORWARD_MIGRATION_20260927143257",
+      },
+      {
+        id: "F1b",
+        classification: "LOCATION_LIST_DISCLOSURE_WITHOUT_MATCHING_HUMAN_ASSIGNMENT",
+        known_location_ids_returned_without_human_candidate: false,
+        human_positive_control: "object:2:1:human:wh-a,wh-b",
+        disposition: "FIXED_BY_FORWARD_MIGRATION_20260927143257",
+      },
+    ],
     cleanup: {
       containers: 0, volumes: 0, networks: 0, processes: 0, listeners: 0,
       temp_present: false, out_dir_present: false, npmrc_present: false, error: null,
@@ -1150,7 +1165,7 @@ async function main() {
     if (!helpOk) throw stop("CLI_HELP_FLAGS_MISMATCH");
     state.cliHelpConfirmed = true;
 
-    // Run-scoped workdir with exactly the two pinned migrations.
+    // Run-scoped workdir with exactly the pinned migrations.
     mkdirSync(join(workdir, "supabase", "migrations"), { recursive: true });
     mkdirSync(supabaseHome, { recursive: true });
     mkdirSync(tempDir, { recursive: true });
@@ -1173,7 +1188,7 @@ async function main() {
     for (const { path } of migrationFiles) {
       copyFileSync(resolve(repositoryRoot, path), join(workdir, "supabase", "migrations", path.split("/").at(-1)));
     }
-    if (readdirSync(join(workdir, "supabase", "migrations")).length !== 2) throw stop("TEMP_MIGRATION_SET_MISMATCH");
+    if (readdirSync(join(workdir, "supabase", "migrations")).length !== MIGRATIONS.length) throw stop("TEMP_MIGRATION_SET_MISMATCH");
 
     // B1: loopback network before any container.
     await docker([
@@ -1257,7 +1272,7 @@ async function main() {
       expect(state.images.length === 4 && state.images.every((image) => image.digest !== null), "IMAGE_DIGEST_NOT_RECORDED");
     });
 
-    // A02 migrations: the ledger holds exactly the two pinned versions.
+    // A02 migrations: the ledger holds exactly the pinned versions.
     await assertion("A02", async () => {
       const ledger = await sql("select coalesce(string_agg(version, ',' order by version), '') from supabase_migrations.schema_migrations;", "a02_ledger");
       if (ledger !== MIGRATIONS.map((m) => m.version).join(",")) throw stop("EXTRA_OR_MISSING_MIGRATION");
@@ -1270,7 +1285,7 @@ async function main() {
       const counts = new Map();
       for (const version of versions) counts.set(version, (counts.get(version) ?? 0) + 1);
       expect(
-        counts.size === 2 && MIGRATIONS.every((m) => counts.get(m.version) === 2),
+        counts.size === MIGRATIONS.length && MIGRATIONS.every((m) => counts.get(m.version) === 2),
         "MIGRATION_LIST_NOT_EXACTLY_PINNED",
       );
     });
@@ -1572,21 +1587,53 @@ async function main() {
       expect(a14MobileChecked, "MOBILE_UNGRANTED_LOCATION_NOT_RUN");
     });
 
+    // A15 (D6-B F1/F1b): under the third pinned migration the human-facing
+    // resolver returns no service candidate to anyone, returns
+    // knownLocationIds = [] when zero human assignments match the caller, and
+    // still returns the full active Office AZ location list (not narrowed to
+    // location grants) to a matching human. Probe output is a closed shape:
+    // jsonb type : key count : candidate count : principalKind : known ids.
     await assertion("A15", async () => {
-      const f1 = await clientSql(users.B.uid, `
-        select 'F:' || concat_ws(':',
-          jsonb_array_length(public.resolve_office_az_inventory_authority(${lit(ids.svc.actorId)}, ${lit(ids.svc.operatorId)})->'candidates'),
-          public.resolve_office_az_inventory_authority(${lit(ids.svc.actorId)}, ${lit(ids.svc.operatorId)})->'candidates'->0->>'principalKind');
-      `, "a15_service_candidate");
-      const exposed = tagged(f1, "F:") === "1:service";
+      const probe = (tag, key) => `
+        select ${lit(tag)} || concat_ws(':',
+          jsonb_typeof(resolved),
+          (select count(*) from jsonb_object_keys(resolved)),
+          jsonb_array_length(resolved->'candidates'),
+          coalesce(resolved->'candidates'->0->>'principalKind', 'none'),
+          (select coalesce(string_agg(value, ',' order by ordinality), 'none')
+             from jsonb_array_elements_text(resolved->'knownLocationIds') with ordinality))
+        from (select public.resolve_office_az_inventory_authority(${lit(ids[key].actorId)}, ${lit(ids[key].operatorId)}) as resolved) as probe;`;
+      const ZERO = "object:2:0:none:none";
+      const HUMAN_FULL_ACTIVE = "object:2:1:human:wh-a,wh-b";
+      const asB = await clientSql(users.B.uid, `${probe("BSVC:", "svc")}\n${probe("BOK:", "ok")}`, "a15_user_b_probe");
+      const asA = await clientSql(users.A.uid, `${probe("ASVC:", "svc")}\n${probe("AOK:", "ok")}`, "a15_user_a_probe");
+      const bSvc = tagged(asB, "BSVC:");
+      const bOk = tagged(asB, "BOK:");
+      const aSvc = tagged(asA, "ASVC:");
+      const aOk = tagged(asA, "AOK:");
+      const definer = await sql(`select prosecdef::text || ':' || exists (
+          select 1 from unnest(proconfig) as setting where setting like 'search_path=%'
+        )::text from pg_proc where oid = '${RESOLVER_SIGNATURE}'::regprocedure;`, "a15_resolver_definer");
+      const serviceExposed = bSvc !== ZERO || aSvc !== ZERO;
+      const locationsExposed = bSvc !== ZERO || bOk !== ZERO || aSvc !== ZERO;
       findings.push({
         id: "F1",
         classification: "INFORMATION_DISCLOSURE_WITHOUT_AUTHORITY_GRANT",
-        service_candidate_returned_to_other_user: exposed,
+        service_candidate_returned_to_other_user: serviceExposed,
         core_result: "PENDING_IDENTITY_CHILD",
-        disposition: "SEPARATE_FORWARD_MIGRATION_GATE",
+        disposition: "FIXED_BY_FORWARD_MIGRATION_20260927143257",
       });
-      expect(exposed, "F1_SERVICE_CANDIDATE_NOT_OBSERVED");
+      findings.push({
+        id: "F1b",
+        classification: "LOCATION_LIST_DISCLOSURE_WITHOUT_MATCHING_HUMAN_ASSIGNMENT",
+        known_location_ids_returned_without_human_candidate: locationsExposed,
+        human_positive_control: aOk,
+        disposition: "FIXED_BY_FORWARD_MIGRATION_20260927143257",
+      });
+      expect(!serviceExposed, "F1_SERVICE_CANDIDATE_EXPOSED");
+      expect(!locationsExposed, "F1B_KNOWN_LOCATIONS_EXPOSED_WITHOUT_HUMAN_CANDIDATE");
+      expect(aOk === HUMAN_FULL_ACTIVE, "HUMAN_RESOLVER_COMPATIBILITY_BOUNDARY_CHANGED");
+      expect(definer === "true:true", "RESOLVER_DEFINER_OR_SEARCH_PATH_LOST");
     });
 
     // A04-A08, A13, A14, A15: genuine SSR-cookie and Bearer identity in an IPC child.
