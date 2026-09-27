@@ -1,0 +1,124 @@
+name: INV001 D6 disposable security proof
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - scripts/e2e/inv001-d6/config.toml
+      - scripts/e2e/inv001-d6/run.mjs
+      - scripts/e2e/inv001-d6/identity.test.ts
+      - scripts/e2e/inv001-d6/concurrency.mjs
+      - .github/workflows/inv001-d6-disposable-security-proof.yml
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  d6-disposable-security-proof:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout exact pull request revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up repository Node.js version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Configure run-scoped package read
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          umask 077
+          npm_config_path="${RUNNER_TEMP}/inv001-d6-npmrc"
+          printf '%s\n' \
+            '@nisikawa-officeaz:registry=https://npm.pkg.github.com' \
+            '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' \
+            'always-auth=true' > "$npm_config_path"
+          test -f "$npm_config_path"
+          grep -F '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' "$npm_config_path"
+          ! grep -E 'gho_|github_pat_|ghp_|ghs_' "$npm_config_path"
+
+      - name: Install locked dependencies without cache
+        env:
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/inv001-d6-npmrc
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: npm ci --no-audit --no-fund
+
+      - name: Remove run-scoped package configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm_config_path="${RUNNER_TEMP}/inv001-d6-npmrc"
+          rm -f "$npm_config_path"
+          test ! -e "$npm_config_path"
+
+      - name: Verify exact five-path change set
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git diff --name-only --diff-filter=ACDMRTUXB "${{ github.event.pull_request.base.sha }}"...HEAD | LC_ALL=C sort)"
+          expected="$(printf '%s\n' \
+            '.github/workflows/inv001-d6-disposable-security-proof.yml' \
+            'scripts/e2e/inv001-d6/concurrency.mjs' \
+            'scripts/e2e/inv001-d6/config.toml' \
+            'scripts/e2e/inv001-d6/identity.test.ts' \
+            'scripts/e2e/inv001-d6/run.mjs' \
+            | LC_ALL=C sort)"
+          test "$actual" = "$expected"
+          git diff --check "${{ github.event.pull_request.base.sha }}"...HEAD
+
+      - name: Download and verify pinned Supabase CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          cli_dir="${RUNNER_TEMP}/inv001-d6-cli"
+          tarball="supabase_2.118.0_linux_amd64.tar.gz"
+          test ! -e "$cli_dir"
+          mkdir -p "$cli_dir/bin"
+          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+            --output "$cli_dir/$tarball" \
+            "https://github.com/supabase/cli/releases/download/v2.118.0/$tarball"
+          (cd "$cli_dir" && printf '%s  %s\n' 'f6089a86fb9d9221c958193a277338daddd6822f706929943812fa32e106c86d' "$tarball" | sha256sum -c -)
+          tar -xzf "$cli_dir/$tarball" -C "$cli_dir/bin"
+          test "$(find "$cli_dir/bin" -maxdepth 2 -type f -name supabase | wc -l)" -eq 1
+
+      - name: Run static harness self-tests
+        run: node --import tsx --test scripts/e2e/inv001-d6/identity.test.ts
+
+      - name: Run disposable loopback security proof once
+        run: >-
+          INV001_D6_ACK=I_ACKNOWLEDGE_DISPOSABLE_LOOPBACK_SUPABASE_STACK_ONLY
+          INV001_D6_RESOURCE_LABEL="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          node scripts/e2e/inv001-d6/run.mjs
+
+      - name: Run typecheck
+        run: npm run typecheck
+
+      - name: Run build
+        run: npm run build
+
+      - name: Always destroy disposable resources and prove no residue
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          INV001_D6_RESOURCE_LABEL="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            node scripts/e2e/inv001-d6/run.mjs --cleanup-residue
+          rm -rf "${RUNNER_TEMP}"/inv001-d6-*
+          npm_config_path="${RUNNER_TEMP}/inv001-d6-npmrc"
+          rm -f "$npm_config_path"
+          test ! -e "$npm_config_path"
+          test -z "$(find "${RUNNER_TEMP}" -maxdepth 1 -name 'inv001-d6-*' -print -quit)"
