@@ -9,8 +9,8 @@ import { readFileSync } from "node:fs";
 
 import { applyVehicleIdentityPolicy, sanitizeVehicleRegistrationOcrResult } from "./ocr";
 import { buildOcrQualityReport, resolveVehicleIdentity } from "./ocr-quality";
-import { applyPdfTextLayerCertificateFields, extractCertificateCodesFromLines } from "./pdf-text-layer";
-import { OCR_FIELD_LABELS, OCR_TO_VEHICLE_MAP } from "./vehicle-registration-types";
+import { applyPdfTextLayerCertificateFields, extractCertificateCodesFromItems, extractCertificateCodesFromLines, type PdfTextItemLike } from "./pdf-text-layer";
+import { OCR_FIELD_LABELS, OCR_TO_VEHICLE_MAP, type VehicleRegistrationOcrResult } from "./vehicle-registration-types";
 import { buildWizardEstimateOcrApplication } from "@/lib/ocr/wizard-estimate-ocr-apply-core";
 import { mapOcrToVehicle } from "@/lib/ocr/vehicle-mapper";
 
@@ -543,4 +543,487 @@ test("ocr.ts runs the PDF text layer only for PDFs, after sanitizing and before 
   assert.ok(sanitizeAt > 0 && overrideAt > sanitizeAt && policyAt > overrideAt);
   assert.ok(source.includes("Object.keys(pdfTextLayer.fields).join"));
   assert.ok(!source.includes("JSON.stringify(pdfTextLayer"));
+});
+
+// ─── R2 two-finding repair: 「旧型式」 is not a label; a text-layer 型式 keeps its provenance through the review ───
+
+const REMARK_OLD_TYPE = "6BA-OLD999"; // synthetic value quoted in a remark (「旧型式 …」) — never a certificate 型式 here
+const TL_TYPE   = "XYZ9";             // synthetic hyphen-less (kei-like) certificate 型式 verified from the text layer
+const TL_ENGINE = "ABC1";             // synthetic 原動機の型式
+const CTX = { model: "m", promptVersion: "p", processingMs: 1 };
+
+test("R2-3 (pipeline, T1 re-baseline): 「備考: 旧型式 6BA-OLD999」 never becomes the accepted 型式 — it is old-model evidence, so 型式 is withheld for manual entry (server, review, report, estimate)", () => {
+  const extraction = extractCertificateCodesFromLines([`原動機の型式 ${TL_ENGINE}`, `備考: 旧型式 ${REMARK_OLD_TYPE}`]);
+  assert.deepEqual(extraction.fields, { engine_model: TL_ENGINE });
+  assert.deepEqual(Object.keys(extraction.rejected), ["model"]);
+  assert.ok(extraction.rejected.model !== undefined && extraction.rejected.model.startsWith("【要手入力：型式】") && extraction.rejected.model.includes("旧型式"), extraction.rejected.model);
+  const sanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", engine_model: TL_ENGINE, grade: TL_ENGINE, owner_name: "合成 名義" });
+  const layer = applyPdfTextLayerCertificateFields(sanitized, extraction);
+  assert.deepEqual(layer, { applied: ["engine_model"], trustedModel: false, manualEntry: ["model"] });
+  const result = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: layer.trustedModel });
+  assert.equal(result.model, undefined);
+  assert.equal(result.model_text_layer, undefined);
+  assert.equal(result.engine_model, TL_ENGINE);
+  assert.equal(result.grade, undefined);
+  assert.equal(result.owner_name, "合成 名義");
+  // No FIELD carries the old value; it appears only inside the operator-visible manual-entry notice (the PDF evidence).
+  const { vehicle_identity_notices: notices = [], ...fields } = result;
+  assert.ok(!JSON.stringify(fields).includes(REMARK_OLD_TYPE));
+  assert.ok(notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes(REMARK_OLD_TYPE)), notices.join(" | "));
+  assert.equal(buildWizardEstimateOcrApplication(result).vehicle.vehicleCode, undefined);
+  const review = resolveVehicleIdentity(structuredClone(result), { ambiguousGrade: "blank" }).result;
+  assert.equal(review.model, undefined);
+  const report = buildOcrQualityReport(review, CTX);
+  assert.ok(report.missingRequired.includes("型式"));
+  assert.deepEqual(report.manualEntryRequired, ["型式"]);
+  assert.equal(report.needsManualCorrection, true);
+});
+
+test("R2-4 (server → review): a text-layer 型式 XYZ9 accepted by the server survives the review's re-resolution via provenance, not via any option", () => {
+  // Server: selectable PDF whose text layer states 型式 XYZ9 and 原動機の型式 ABC1; the AI leaked the engine code everywhere.
+  const extraction = extractCertificateCodesFromLines([`型式 ${TL_TYPE} 原動機の型式 ${TL_ENGINE}`, `型式指定番号 ${PDF_APPROVAL} 類別区分番号 ${PDF_CLASS}`]);
+  const sanitized = sanitizeVehicleRegistrationOcrResult({
+    vehicle_name: "ホンダ", maker: "ホンダ", model: TL_ENGINE, engine_model: TL_ENGINE, grade: TL_ENGINE,
+    owner_name: "合成 名義", license_plate_class: PLATE_CLASS,
+  });
+  const layer = applyPdfTextLayerCertificateFields(sanitized, extraction);
+  assert.equal(layer.trustedModel, true);
+  const server = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: layer.trustedModel });
+  assert.equal(server.model, TL_TYPE);
+  assert.equal(server.model_text_layer, TL_TYPE);
+  assert.equal(server.engine_model, TL_ENGINE);
+
+  // Persisted as JSON (ocr_result) and handed to the review, which resolves WITHOUT any trust option.
+  const stored = JSON.parse(JSON.stringify(server)) as VehicleRegistrationOcrResult;
+  const review = resolveVehicleIdentity(stored, { ambiguousGrade: "blank" });
+  assert.equal(review.result.model, TL_TYPE);                 // before the fix: undefined (bare alphanumeric)
+  assert.equal(review.result.model_text_layer, TL_TYPE);
+  assert.equal(review.result.engine_model, TL_ENGINE);
+  assert.equal(review.result.model_code, PDF_APPROVAL);
+  assert.equal(review.result.classification_number, PDF_CLASS);
+  assert.equal(review.result.grade, undefined);
+  assert.equal(review.result.owner_name, "合成 名義");
+  assert.equal(review.result.license_plate_class, PLATE_CLASS);
+  assert.ok(!review.notices.some((n) => n.includes("ハイフンのない英数字")), review.notices.join(" | "));
+  assert.ok(review.notices.some((n) => n.includes("PDFの文字情報から") && n.includes("型式")), review.notices.join(" | ")); // operator-visible provenance notice stays
+  assert.deepEqual(resolveVehicleIdentity(review.result, { ambiguousGrade: "blank" }).result, review.result);          // idempotent
+  assert.equal(buildWizardEstimateOcrApplication(review.result).vehicle.vehicleCode, TL_TYPE);
+  assert.equal(buildWizardEstimateOcrApplication(stored).vehicle.vehicleCode, TL_TYPE);                                // raw path: same provenance
+  const report = buildOcrQualityReport(review.result, CTX);
+  assert.ok(!report.missingRequired.includes("型式"));
+  assert.deepEqual(report.manualEntryRequired, []);
+
+  // Manual correction is preserved: the reviewed payload is applied as typed and never carries the provenance key.
+  assert.equal(buildWizardEstimateOcrApplication({ model: "6BA-ABC2" }, { source: "reviewed" }).vehicle.vehicleCode, "6BA-ABC2");
+});
+
+test("R2-4 (negative): AI-only, scanned, legacy, forged, mismatching, stale and notice-only claims never validate a bare alphanumeric 型式", () => {
+  const bare = (r: VehicleRegistrationOcrResult) => resolveVehicleIdentity(r, { ambiguousGrade: "blank" }).result;
+
+  // AI output claiming provenance: the sanitizer discards every result-internal key, the policy drops the bare code.
+  const ai = sanitizeVehicleRegistrationOcrResult({
+    maker: "ホンダ", model: TL_TYPE, engine_model: TL_ENGINE,
+    model_text_layer: TL_TYPE, model_needs_confirmation: "false", vehicle_identity_notices: ["PDFの文字情報から型式を取得しました。"],
+  });
+  assert.equal(ai.model_text_layer, undefined);
+  assert.equal(ai.model_needs_confirmation, undefined);
+  assert.equal(ai.vehicle_identity_notices, undefined);
+  const aiResult = applyVehicleIdentityPolicy(ai);
+  assert.equal(aiResult.model, undefined);
+  assert.equal(aiResult.model_text_layer, undefined);
+  assert.ok((aiResult.vehicle_identity_notices ?? []).some((n) => n.includes(TL_TYPE) && n.includes("ハイフンのない英数字")));
+
+  // Scanned PDF / image: no text layer → no provenance → the same AI reading is dropped, on the server and in the review.
+  const scanned = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: TL_TYPE, engine_model: TL_ENGINE });
+  const scannedLayer = applyPdfTextLayerCertificateFields(scanned, { status: "no_text", fields: {}, rejected: {}, notices: [], lineCount: 0 });
+  assert.equal(scannedLayer.trustedModel, false);
+  const scannedResult = applyVehicleIdentityPolicy(scanned, { trustedModelShape: scannedLayer.trustedModel });
+  assert.equal(scannedResult.model, undefined);
+  assert.equal(bare(JSON.parse(JSON.stringify(scannedResult))).model, undefined);
+
+  // Legacy stored result (before provenance existed): unchanged fail-closed behaviour.
+  assert.equal(bare({ model: TL_TYPE, engine_model: TL_ENGINE }).model, undefined);
+
+  // Image upload (no PDF → null extraction) carrying a stale/forged claim: the pure override function itself
+  // removes the claim before returning, so the server policy blanks the bare code even without the sanitizer.
+  for (const absent of [null, undefined]) {
+    const image: VehicleRegistrationOcrResult = { maker: "ホンダ", model: TL_TYPE, engine_model: TL_ENGINE, model_text_layer: TL_TYPE };
+    const imageLayer = applyPdfTextLayerCertificateFields(image, absent);
+    assert.deepEqual(imageLayer, { applied: [], trustedModel: false, manualEntry: [] });
+    assert.equal(image.model_text_layer, undefined);
+    assert.equal(image.model, TL_TYPE); // AI reading itself is left for the identity policy, not rewritten here
+    const imageResult = applyVehicleIdentityPolicy(image, { trustedModelShape: imageLayer.trustedModel });
+    assert.equal(imageResult.model, undefined);
+    assert.equal(imageResult.model_text_layer, undefined);
+    assert.equal(imageResult.engine_model, TL_ENGINE);
+  }
+
+  // Forged / mismatching / orphaned claims: another value is never validated, and the stale claim is removed.
+  const mismatch = bare({ model: "ABC9", engine_model: TL_ENGINE, model_text_layer: TL_TYPE });
+  assert.equal(mismatch.model, undefined);
+  assert.equal(mismatch.model_text_layer, undefined);
+  const hyphenated = bare({ model: CERT_TYPE, model_text_layer: TL_TYPE });
+  assert.equal(hyphenated.model, CERT_TYPE);            // stands on its own shape …
+  assert.equal(hyphenated.model_text_layer, undefined);  // … but the unrelated claim does not travel on
+  const orphan = bare({ engine_model: TL_ENGINE, model_text_layer: TL_TYPE });
+  assert.equal(orphan.model, undefined);
+  assert.equal(orphan.model_text_layer, undefined);
+  assert.equal(bare({ model: TL_TYPE, engine_model: TL_ENGINE, model_text_layer: "" }).model, undefined);
+  assert.equal(bare({ model: TL_TYPE, engine_model: TL_ENGINE, model_text_layer: "不明" }).model, undefined);
+  assert.equal(bare({ model: "xyz9", engine_model: TL_ENGINE, model_text_layer: TL_TYPE }).model, TL_TYPE); // canonical form of the SAME value
+
+  // Provenance never overrides the other safeguards.
+  assert.equal(bare({ model: TL_ENGINE, engine_model: TL_ENGINE, model_text_layer: TL_ENGINE }).model, undefined); // equal to engine
+  assert.equal(bare({ model: PDF_APPROVAL, model_text_layer: PDF_APPROVAL }).model, undefined);                     // digits only
+  const flagged = bare({ model: TL_TYPE, engine_model: TL_ENGINE, model_text_layer: TL_TYPE, model_needs_confirmation: "true" });
+  assert.equal(flagged.model, undefined);
+  assert.equal(flagged.model_text_layer, undefined);
+
+  // A notice is text, not provenance; a generic non-empty 型式 is not provenance.
+  const noticeOnly = bare({ model: TL_TYPE, engine_model: TL_ENGINE, vehicle_identity_notices: ["PDFの文字情報から型式を取得しました。車検証と照合して確認してください。"] });
+  assert.equal(noticeOnly.model, undefined);
+
+  // Review source contract: no trust option is passed, and the provenance key is never an editable review field.
+  const source = readFileSync("src/components/vehicle-registration/VehicleRegistrationOcrReview.tsx", "utf8");
+  assert.ok(!source.includes("trustedModelShape"));
+  assert.ok(!/"model_text_layer"/.test(source));
+  assert.equal(OCR_FIELD_LABELS.model_text_layer, "型式の出所（PDF文字情報）");
+});
+
+// ─── R2-6: the 「旧型式」 qualifier may be whitespace-separated / letter-spaced like the label (「旧 型 式」) ───
+
+test("R2-6 (pipeline): listed-qualifier compounds (「車両の 型 式」, 「この 型 式」, 「従来 型 式」, 「先代 型 式」) never become the accepted 型式; a genuine 型式 on the same page still is", () => {
+  // T1 re-baseline: the 「旧 型 式」 variants are OLD-MODEL evidence and moved to the T1 pipeline test below (fail closed).
+  const variants = [
+    `車両の 型 式 ${REMARK_OLD_TYPE}`, `この 型 式 ${REMARK_OLD_TYPE}`,
+    // R2-7: the residual qualifiers 従来 / 先代 (spaced and full-width) follow the same pipeline contract.
+    `備考: 従来 型 式 ${REMARK_OLD_TYPE}`, `先代 型 式 ${REMARK_OLD_TYPE}`, "備考：　従来　型　式　６ＢＡ－ＯＬＤ９９９", `先代 型式 ${REMARK_OLD_TYPE}`,
+  ];
+  for (const remark of variants) {
+    // Remark only: nothing anchored, so the server keeps the AI 型式 (here: none), records no provenance, and the
+    // review / estimate never see the old type.
+    const extraction = extractCertificateCodesFromLines([`原動機の型式 ${TL_ENGINE}`, remark]);
+    assert.deepEqual(extraction.fields, { engine_model: TL_ENGINE }, remark);
+    assert.deepEqual(extraction.notices, [], remark);
+    const sanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", engine_model: TL_ENGINE, grade: TL_ENGINE, owner_name: "合成 名義" });
+    const layer = applyPdfTextLayerCertificateFields(sanitized, extraction);
+    assert.deepEqual(layer, { applied: ["engine_model"], trustedModel: false, manualEntry: [] }, remark);
+    const result = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: layer.trustedModel });
+    assert.equal(result.model, undefined, remark);
+    assert.equal(result.model_text_layer, undefined, remark);
+    assert.equal(result.engine_model, TL_ENGINE, remark);
+    assert.ok(!JSON.stringify(result).includes(REMARK_OLD_TYPE), remark);
+    assert.equal(buildWizardEstimateOcrApplication(result).vehicle.vehicleCode, undefined, remark);
+    const review = resolveVehicleIdentity(structuredClone(result), { ambiguousGrade: "blank" }).result;
+    assert.equal(review.model, undefined, remark);
+    assert.ok(buildOcrQualityReport(review, CTX).missingRequired.includes("型式"), remark);
+
+    // Genuine letter-spaced 型式 at a clean boundary on the same page: applied with provenance, the old type is ignored, no ambiguity.
+    const page = extractCertificateCodesFromLines([`型 式 ${CERT_TYPE} 原 動 機 の 型 式 ${TL_ENGINE}`, remark, `型式指定番号 ${PDF_APPROVAL} 類別区分番号 ${PDF_CLASS}`]);
+    assert.deepEqual(page.fields, { model: CERT_TYPE, engine_model: TL_ENGINE, model_code: PDF_APPROVAL, classification_number: PDF_CLASS }, remark);
+    assert.deepEqual(page.notices, [], remark);
+    const pageSanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: REMARK_OLD_TYPE, engine_model: TL_ENGINE, owner_name: "合成 名義" });
+    const pageLayer = applyPdfTextLayerCertificateFields(pageSanitized, page);
+    assert.equal(pageLayer.trustedModel, true, remark);
+    const pageResult = applyVehicleIdentityPolicy(pageSanitized, { trustedModelShape: pageLayer.trustedModel });
+    assert.equal(pageResult.model, CERT_TYPE, remark);
+    assert.equal(pageResult.model_text_layer, CERT_TYPE, remark);
+    // The old type survives ONLY inside the operator-visible override notice that quotes the replaced AI reading;
+    // no field carries it.
+    const { vehicle_identity_notices: pageNotices, ...pageFields } = pageResult;
+    assert.ok(!JSON.stringify(pageFields).includes(REMARK_OLD_TYPE), remark);
+    assert.ok((pageNotices ?? []).some((n) => n.includes(`AI読み取り（${REMARK_OLD_TYPE}）`) && n.includes(`PDFの文字情報（${CERT_TYPE}）`)), remark);
+    const pageReview = resolveVehicleIdentity(JSON.parse(JSON.stringify(pageResult)) as VehicleRegistrationOcrResult, { ambiguousGrade: "blank" }).result;
+    assert.equal(pageReview.model, CERT_TYPE, remark);
+    assert.equal(buildWizardEstimateOcrApplication(pageReview).vehicle.vehicleCode, CERT_TYPE, remark);
+
+    // Stage 1 re-baseline (fail-closed direction): the same page with a 車名 cell directly before the 型式 label on its
+    // own row. The 車名 value is an UNLISTED Japanese run — indistinguishable from 「旧来 型 式」 — so the 型式 candidate
+    // is suspect-only: rejected, the AI 型式 (here the remark value) withheld, no provenance, manual entry flagged.
+    const named = extractCertificateCodesFromLines([`車 名 ホンダ 型 式 ${CERT_TYPE} 原 動 機 の 型 式 ${TL_ENGINE}`, remark, `型式指定番号 ${PDF_APPROVAL} 類別区分番号 ${PDF_CLASS}`]);
+    assert.deepEqual(named.fields, { engine_model: TL_ENGINE, model_code: PDF_APPROVAL, classification_number: PDF_CLASS }, remark);
+    assert.deepEqual(Object.keys(named.rejected), ["model"], remark);
+    const namedSanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: REMARK_OLD_TYPE, engine_model: TL_ENGINE, owner_name: "合成 名義" });
+    const namedLayer = applyPdfTextLayerCertificateFields(namedSanitized, named);
+    assert.deepEqual(namedLayer, { applied: ["engine_model", "model_code", "classification_number"], trustedModel: false, manualEntry: ["model"] }, remark);
+    const namedResult = applyVehicleIdentityPolicy(namedSanitized, { trustedModelShape: namedLayer.trustedModel });
+    assert.equal(namedResult.model, undefined, remark);
+    assert.equal(namedResult.model_text_layer, undefined, remark);
+    assert.equal(namedResult.engine_model, TL_ENGINE, remark);
+    const { vehicle_identity_notices: namedNotices, ...namedFields } = namedResult;
+    assert.ok(!JSON.stringify(namedFields).includes(REMARK_OLD_TYPE), remark);
+    assert.ok(!JSON.stringify(namedFields).includes(CERT_TYPE), remark);
+    assert.ok((namedNotices ?? []).some((n) => n.startsWith("【要手入力：型式】") && n.includes(CERT_TYPE)), remark);
+    assert.equal(buildWizardEstimateOcrApplication(namedResult).vehicle.vehicleCode, undefined, remark);
+    const namedReport = buildOcrQualityReport(namedResult, CTX);
+    assert.equal(namedReport.needsManualCorrection, true, remark);
+    assert.deepEqual(namedReport.manualEntryRequired, ["型式"], remark);
+  }
+});
+
+// ─── Stage 1 (T2): an UNLISTED whitespace-separated qualifier before the same-row 型式 label fails closed end to end ───
+
+test("T2 (pipeline): 「備考: 旧来 型 式 6BA-OLD999」 alone withholds 型式 — same wrong AI value or a different correct-looking one — through server, review, report and estimate", () => {
+  const extraction = extractCertificateCodesFromLines([`原動機の型式 ${TL_ENGINE}`, `備考: 旧来 型 式 ${REMARK_OLD_TYPE}`, `型式指定番号 ${PDF_APPROVAL} 類別区分番号 ${PDF_CLASS}`]);
+  assert.deepEqual(extraction.fields, { engine_model: TL_ENGINE, model_code: PDF_APPROVAL, classification_number: PDF_CLASS });
+  assert.deepEqual(Object.keys(extraction.rejected), ["model"]);
+  assert.ok(extraction.rejected.model !== undefined && extraction.rejected.model.startsWith("【要手入力：型式】") && extraction.rejected.model.includes(REMARK_OLD_TYPE), extraction.rejected.model);
+
+  // (A) the AI read the same remark value (the silent case before Stage 1); (B) the AI read a different, correct-looking 型式.
+  for (const aiModel of [REMARK_OLD_TYPE, CERT_TYPE]) {
+    const sanitized = sanitizeVehicleRegistrationOcrResult({
+      vehicle_name: "ホンダ", maker: "ホンダ", model: aiModel, engine_model: TL_ENGINE, grade: TL_ENGINE,
+      owner_name: "合成 名義", license_plate_class: PLATE_CLASS,
+    });
+    const layer = applyPdfTextLayerCertificateFields(sanitized, extraction);
+    assert.deepEqual(layer, { applied: ["engine_model", "model_code", "classification_number"], trustedModel: false, manualEntry: ["model"] }, aiModel);
+    const result = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: layer.trustedModel });
+    assert.equal(result.model, undefined, aiModel);
+    assert.equal(result.model_text_layer, undefined, aiModel);
+    assert.equal(result.engine_model, TL_ENGINE, aiModel);
+    assert.equal(result.model_code, PDF_APPROVAL, aiModel);
+    assert.equal(result.classification_number, PDF_CLASS, aiModel);
+    assert.equal(result.grade, undefined, aiModel);
+    assert.equal(result.vehicle_name, undefined, aiModel);
+    assert.equal(result.maker, "ホンダ", aiModel);
+    assert.equal(result.owner_name, "合成 名義", aiModel);
+    assert.equal(result.license_plate_class, PLATE_CLASS, aiModel);
+    // No field carries either value; the withheld AI candidate is echoed in no notice (the manual-entry notice quotes
+    // only the PDF evidence, i.e. the remark value and the text that preceded the label).
+    const { vehicle_identity_notices: notices = [], ...fields } = result;
+    assert.ok(!JSON.stringify(fields).includes(REMARK_OLD_TYPE) && !JSON.stringify(fields).includes(CERT_TYPE), aiModel);
+    assert.ok(notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes("（旧来）") && n.includes(REMARK_OLD_TYPE)), notices.join(" | "));
+    assert.ok(notices.some((n) => n.includes("AI読み取りの型式") && n.includes("表示しません")), notices.join(" | "));
+    assert.ok(notices.every((n) => !n.includes("PDFの文字情報を優先")), notices.join(" | "));
+    assert.ok(notices.every((n) => !n.includes(CERT_TYPE)), notices.join(" | "));
+    assert.equal(buildWizardEstimateOcrApplication(result).vehicle.vehicleCode, undefined, aiModel);
+
+    const report = buildOcrQualityReport(result, CTX);
+    assert.equal(report.needsManualCorrection, true, aiModel);
+    assert.deepEqual(report.manualEntryRequired, ["型式"], aiModel);
+    assert.ok(report.missingRequired.includes("型式"), aiModel);
+
+    // Review re-resolution (no trust option) keeps the manual-entry state; nothing resurrects a 型式.
+    const review = resolveVehicleIdentity(JSON.parse(JSON.stringify(result)) as VehicleRegistrationOcrResult, { ambiguousGrade: "blank" });
+    assert.equal(review.result.model, undefined, aiModel);
+    assert.equal(review.result.model_text_layer, undefined, aiModel);
+    assert.deepEqual(buildOcrQualityReport(review.result, CTX).manualEntryRequired, ["型式"], aiModel);
+    assert.equal(buildWizardEstimateOcrApplication(review.result).vehicle.vehicleCode, undefined, aiModel);
+  }
+
+  // (C) T2 + a clean 型式 label with a DIFFERENT value: the existing ambiguity rejection (unchanged) — still blank.
+  const ambiguous = extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`, `備考: 旧来 型 式 ${REMARK_OLD_TYPE}`]);
+  assert.deepEqual(Object.keys(ambiguous.rejected), ["model"]);
+  assert.ok(ambiguous.rejected.model !== undefined && ambiguous.rejected.model.includes("候補が複数"), ambiguous.rejected.model);
+  const ambiguousSanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: REMARK_OLD_TYPE });
+  assert.deepEqual(applyPdfTextLayerCertificateFields(ambiguousSanitized, ambiguous).manualEntry, ["model"]);
+  assert.equal(applyVehicleIdentityPolicy(ambiguousSanitized, { trustedModelShape: false }).model, undefined);
+
+  // Suspect + clean label with the SAME value: the clean occurrence justifies acceptance, with provenance.
+  const agreed = extractCertificateCodesFromLines([`車 名 ホンダ 型 式 ${CERT_TYPE}`, `型式 ${CERT_TYPE} 原動機の型式 ${TL_ENGINE}`]);
+  assert.deepEqual(agreed.fields, { model: CERT_TYPE, engine_model: TL_ENGINE });
+  assert.deepEqual(agreed.rejected, {});
+  const agreedSanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: REMARK_OLD_TYPE, engine_model: TL_ENGINE });
+  const agreedLayer = applyPdfTextLayerCertificateFields(agreedSanitized, agreed);
+  assert.equal(agreedLayer.trustedModel, true);
+  const agreedResult = applyVehicleIdentityPolicy(agreedSanitized, { trustedModelShape: agreedLayer.trustedModel });
+  assert.equal(agreedResult.model, CERT_TYPE);
+  assert.equal(agreedResult.model_text_layer, CERT_TYPE);
+  assert.equal(buildWizardEstimateOcrApplication(agreedResult).vehicle.vehicleCode, CERT_TYPE);
+
+  // Scanned / image PDF (no text layer): unchanged — the text layer cannot see a remark it never read (documented residual).
+  const scanned = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE, engine_model: TL_ENGINE });
+  const scannedLayer = applyPdfTextLayerCertificateFields(scanned, { status: "no_text", fields: {}, rejected: {}, notices: [], lineCount: 0 });
+  assert.deepEqual(scannedLayer.manualEntry, []);
+  assert.equal(applyVehicleIdentityPolicy(scanned, { trustedModelShape: scannedLayer.trustedModel }).model, CERT_TYPE);
+});
+
+// ─── T1: the 「旧型式」 annotation is OLD-MODEL evidence — an old-model-only 型式 fails closed end to end (Owner-approved) ───
+
+test("T1 (pipeline): 「旧型式 6BA-OLD999」 (glued / spaced / full-width) alone withholds 型式 — same wrong AI value or a different correct-looking one — through server, review, report and estimate; clean+old same is accepted, different is ambiguous", () => {
+  for (const remark of [`備考: 旧型式 ${REMARK_OLD_TYPE}`, `備考: 旧 型 式 ${REMARK_OLD_TYPE}`, `旧 型式 ${REMARK_OLD_TYPE}`, "備考：　旧　型　式　６ＢＡ－ＯＬＤ９９９", `旧型式:${REMARK_OLD_TYPE}`]) {
+    const extraction = extractCertificateCodesFromLines([`原動機の型式 ${TL_ENGINE}`, remark, `型式指定番号 ${PDF_APPROVAL} 類別区分番号 ${PDF_CLASS}`]);
+    assert.deepEqual(extraction.fields, { engine_model: TL_ENGINE, model_code: PDF_APPROVAL, classification_number: PDF_CLASS }, remark);
+    assert.deepEqual(Object.keys(extraction.rejected), ["model"], remark);
+    assert.ok(extraction.rejected.model !== undefined && extraction.rejected.model.startsWith("【要手入力：型式】") && extraction.rejected.model.includes("旧型式") && extraction.rejected.model.includes(REMARK_OLD_TYPE), extraction.rejected.model);
+
+    // (A) the AI read the same old value (the T1 gap: before this fix it survived as the fallback); (B) a different, correct-looking 型式.
+    for (const aiModel of [REMARK_OLD_TYPE, CERT_TYPE]) {
+      const sanitized = sanitizeVehicleRegistrationOcrResult({
+        vehicle_name: "ホンダ", maker: "ホンダ", model: aiModel, engine_model: TL_ENGINE, grade: TL_ENGINE,
+        owner_name: "合成 名義", license_plate_class: PLATE_CLASS,
+      });
+      const layer = applyPdfTextLayerCertificateFields(sanitized, extraction);
+      assert.deepEqual(layer, { applied: ["engine_model", "model_code", "classification_number"], trustedModel: false, manualEntry: ["model"] }, `${remark} / ${aiModel}`);
+      const result = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: layer.trustedModel });
+      assert.equal(result.model, undefined, aiModel);
+      assert.equal(result.model_text_layer, undefined, aiModel);
+      assert.equal(result.engine_model, TL_ENGINE, aiModel);
+      assert.equal(result.model_code, PDF_APPROVAL, aiModel);
+      assert.equal(result.classification_number, PDF_CLASS, aiModel);
+      assert.equal(result.grade, undefined, aiModel);
+      assert.equal(result.vehicle_name, undefined, aiModel);
+      assert.equal(result.maker, "ホンダ", aiModel);
+      assert.equal(result.owner_name, "合成 名義", aiModel);
+      assert.equal(result.license_plate_class, PLATE_CLASS, aiModel);
+      const { vehicle_identity_notices: notices = [], ...fields } = result;
+      assert.ok(!JSON.stringify(fields).includes(REMARK_OLD_TYPE) && !JSON.stringify(fields).includes(CERT_TYPE), aiModel);
+      assert.ok(notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes("旧型式") && n.includes(REMARK_OLD_TYPE)), notices.join(" | "));
+      assert.ok(notices.some((n) => n.includes("AI読み取りの型式") && n.includes("表示しません")), notices.join(" | "));
+      assert.ok(notices.every((n) => !n.includes("PDFの文字情報を優先")), notices.join(" | "));
+      assert.ok(notices.every((n) => !n.includes(CERT_TYPE)), notices.join(" | ")); // the withheld AI candidate is never echoed
+      assert.equal(buildWizardEstimateOcrApplication(result).vehicle.vehicleCode, undefined, aiModel);
+      const report = buildOcrQualityReport(result, CTX);
+      assert.equal(report.needsManualCorrection, true, aiModel);
+      assert.deepEqual(report.manualEntryRequired, ["型式"], aiModel);
+      assert.ok(report.missingRequired.includes("型式"), aiModel);
+      const review = resolveVehicleIdentity(JSON.parse(JSON.stringify(result)) as VehicleRegistrationOcrResult, { ambiguousGrade: "blank" });
+      assert.equal(review.result.model, undefined, aiModel);
+      assert.equal(review.result.model_text_layer, undefined, aiModel);
+      assert.deepEqual(buildOcrQualityReport(review.result, CTX).manualEntryRequired, ["型式"], aiModel);
+      assert.equal(buildWizardEstimateOcrApplication(review.result).vehicle.vehicleCode, undefined, aiModel);
+    }
+
+    // (C) a clean 型式 with a DIFFERENT value on the same page → the existing ambiguity rejection — still blank, other codes kept.
+    const ambiguous = extractCertificateCodesFromLines([`型 式 ${CERT_TYPE} 原 動 機 の 型 式 ${TL_ENGINE}`, remark, `型式指定番号 ${PDF_APPROVAL} 類別区分番号 ${PDF_CLASS}`]);
+    assert.deepEqual(ambiguous.fields, { engine_model: TL_ENGINE, model_code: PDF_APPROVAL, classification_number: PDF_CLASS }, remark);
+    assert.ok(ambiguous.rejected.model !== undefined && ambiguous.rejected.model.includes("候補が複数"), remark);
+    const ambiguousSanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE, engine_model: TL_ENGINE });
+    const ambiguousLayer = applyPdfTextLayerCertificateFields(ambiguousSanitized, ambiguous);
+    assert.deepEqual(ambiguousLayer, { applied: ["engine_model", "model_code", "classification_number"], trustedModel: false, manualEntry: ["model"] }, remark);
+    const ambiguousResult = applyVehicleIdentityPolicy(ambiguousSanitized, { trustedModelShape: ambiguousLayer.trustedModel });
+    assert.equal(ambiguousResult.model, undefined, remark);
+    assert.equal(ambiguousResult.model_text_layer, undefined, remark);
+    assert.equal(buildWizardEstimateOcrApplication(ambiguousResult).vehicle.vehicleCode, undefined, remark);
+    assert.deepEqual(buildOcrQualityReport(ambiguousResult, CTX).manualEntryRequired, ["型式"], remark);
+  }
+
+  // (D) a clean 型式 with the SAME value as the old-model annotation → accepted with provenance, like a plain clean label.
+  const agreed = extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 原動機の型式 ${TL_ENGINE}`, `備考: 旧型式 ${CERT_TYPE}`]);
+  assert.deepEqual(agreed.fields, { model: CERT_TYPE, engine_model: TL_ENGINE });
+  assert.deepEqual(agreed.rejected, {});
+  const agreedSanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: REMARK_OLD_TYPE, engine_model: TL_ENGINE });
+  const agreedLayer = applyPdfTextLayerCertificateFields(agreedSanitized, agreed);
+  assert.equal(agreedLayer.trustedModel, true);
+  const agreedResult = applyVehicleIdentityPolicy(agreedSanitized, { trustedModelShape: agreedLayer.trustedModel });
+  assert.equal(agreedResult.model, CERT_TYPE);
+  assert.equal(agreedResult.model_text_layer, CERT_TYPE);
+  assert.equal(buildWizardEstimateOcrApplication(agreedResult).vehicle.vehicleCode, CERT_TYPE);
+
+  // Negative controls: 「旧」 before 型式指定番号 / 原動機の型式 is NOT old-model 型式 evidence (nothing anchored, AI 型式 kept as
+  // fallback); a scanned / image PDF (no text layer) is unchanged — the text layer cannot see a remark it never read.
+  for (const line of [`旧型式指定番号 ${PDF_APPROVAL}`, `旧 原動機の型式 ${TL_ENGINE}`]) {
+    const extraction = extractCertificateCodesFromLines([line]);
+    assert.deepEqual(extraction.rejected, {}, line);
+    const kept = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE, engine_model: TL_ENGINE });
+    assert.deepEqual(applyPdfTextLayerCertificateFields(kept, extraction).manualEntry, [], line);
+    assert.equal(applyVehicleIdentityPolicy(kept, { trustedModelShape: false }).model, CERT_TYPE, line);
+  }
+  const scanned = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE, engine_model: TL_ENGINE });
+  const scannedLayer = applyPdfTextLayerCertificateFields(scanned, { status: "no_text", fields: {}, rejected: {}, notices: [], lineCount: 0 });
+  assert.deepEqual(scannedLayer.manualEntry, []);
+  assert.equal(applyVehicleIdentityPolicy(scanned, { trustedModelShape: scannedLayer.trustedModel }).model, CERT_TYPE);
+});
+
+// ─── T1-2: the 「旧型式」 annotation on a two-row label row with a remark head (「備考」+「旧型式」 / 「備考旧型式」) fails closed end to end ───
+
+test("T1-2 (pipeline): 「備考」+「旧型式」 or 「備考旧型式」 above the old value withholds 型式 — same wrong AI value or a different correct-looking one — through server, review, report and estimate; clean+old same is accepted, different is ambiguous; 旧 before other labels is untouched", () => {
+  const CLS_COLUMN: PdfTextItemLike[] = [{ str: "類別区分番号", x: 480, y: 500, width: 60, height: 10 }, { str: PDF_CLASS, x: 480, y: 492, width: 40, height: 10 }];
+  const ENGINE_ROW: PdfTextItemLike[] = [{ str: "原動機の型式", x: 40, y: 740, width: 60, height: 10 }, { str: TL_ENGINE, x: 120, y: 740, width: 40, height: 10 }];
+  const valueBelow = (x: number, value: string): PdfTextItemLike => ({ str: value, x, y: 492, width: 80, height: 10 });
+  const cleanRow = (value: string): PdfTextItemLike[] => [{ str: "型式", x: 40, y: 300, width: 20, height: 10 }, { str: value, x: 70, y: 300, width: 80, height: 10 }];
+
+  for (const { name, labels, valueX } of [
+    { name: "備考 + 旧型式 (adjacent)", valueX: 64, labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧型式", x: 64, y: 500, width: 30, height: 10 }] },
+    { name: "備考旧型式 (glued)",       valueX: 40, labels: [{ str: "備考旧型式", x: 40, y: 500, width: 50, height: 10 }] },
+    { name: "備考 + 旧 + 型 + 式",      valueX: 64, labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧", x: 64, y: 500, width: 10, height: 10 }, { str: "型", x: 76, y: 500, width: 10, height: 10 }, { str: "式", x: 88, y: 500, width: 10, height: 10 }] },
+  ] as Array<{ name: string; labels: PdfTextItemLike[]; valueX: number }>) {
+    const extraction = extractCertificateCodesFromItems([...ENGINE_ROW, ...labels, valueBelow(valueX, REMARK_OLD_TYPE), ...CLS_COLUMN]);
+    assert.deepEqual(extraction.fields, { engine_model: TL_ENGINE, classification_number: PDF_CLASS }, name);
+    assert.deepEqual(Object.keys(extraction.rejected), ["model"], name);
+    assert.ok(extraction.rejected.model !== undefined && extraction.rejected.model.startsWith("【要手入力：型式】") && extraction.rejected.model.includes("旧型式") && extraction.rejected.model.includes(REMARK_OLD_TYPE), `${name}: ${extraction.rejected.model}`);
+
+    // (A) the AI read the same old value (the silent residual before this fix); (B) a different, correct-looking 型式.
+    for (const aiModel of [REMARK_OLD_TYPE, CERT_TYPE]) {
+      const tag = `${name} / ${aiModel}`;
+      const sanitized = sanitizeVehicleRegistrationOcrResult({
+        vehicle_name: "ホンダ", maker: "ホンダ", model: aiModel, engine_model: TL_ENGINE, grade: TL_ENGINE,
+        owner_name: "合成 名義", license_plate_class: PLATE_CLASS,
+      });
+      const layer = applyPdfTextLayerCertificateFields(sanitized, extraction);
+      assert.deepEqual(layer, { applied: ["engine_model", "classification_number"], trustedModel: false, manualEntry: ["model"] }, tag);
+      const result = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: layer.trustedModel });
+      assert.equal(result.model, undefined, tag);
+      assert.equal(result.model_text_layer, undefined, tag);
+      assert.equal(result.engine_model, TL_ENGINE, tag);
+      assert.equal(result.classification_number, "0007", tag); // leading zero preserved beside the rejection
+      assert.notEqual(result.classification_number, result.license_plate_class, tag);
+      assert.equal(result.grade, undefined, tag);
+      assert.equal(result.vehicle_name, undefined, tag);
+      assert.equal(result.maker, "ホンダ", tag);
+      assert.equal(result.owner_name, "合成 名義", tag);
+      assert.equal(result.license_plate_class, PLATE_CLASS, tag);
+      const { vehicle_identity_notices: notices = [], ...fields } = result;
+      assert.ok(!JSON.stringify(fields).includes(REMARK_OLD_TYPE) && !JSON.stringify(fields).includes(CERT_TYPE), tag);
+      assert.ok(notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes("旧型式") && n.includes(REMARK_OLD_TYPE)), notices.join(" | "));
+      assert.ok(notices.some((n) => n.includes("AI読み取りの型式") && n.includes("表示しません")), notices.join(" | "));
+      assert.ok(notices.every((n) => !n.includes("PDFの文字情報を優先") && !n.includes(CERT_TYPE)), notices.join(" | ")); // the withheld AI candidate is never echoed
+      assert.equal(buildWizardEstimateOcrApplication(result).vehicle.vehicleCode, undefined, tag);
+      const report = buildOcrQualityReport(result, CTX);
+      assert.equal(report.needsManualCorrection, true, tag);
+      assert.deepEqual(report.manualEntryRequired, ["型式"], tag);
+      assert.ok(report.missingRequired.includes("型式"), tag);
+      const review = resolveVehicleIdentity(JSON.parse(JSON.stringify(result)) as VehicleRegistrationOcrResult, { ambiguousGrade: "blank" });
+      assert.equal(review.result.model, undefined, tag);
+      assert.equal(review.result.model_text_layer, undefined, tag);
+      assert.deepEqual(buildOcrQualityReport(review.result, CTX).manualEntryRequired, ["型式"], tag);
+      assert.equal(buildWizardEstimateOcrApplication(review.result).vehicle.vehicleCode, undefined, tag);
+    }
+
+    // (C) a clean current 型式 on its own row with the SAME value → accepted with provenance, estimate 型式 filled; (D) DIFFERENT → ambiguity, blank.
+    const agreed = extractCertificateCodesFromItems([...ENGINE_ROW, ...labels, valueBelow(valueX, CERT_TYPE), ...CLS_COLUMN, ...cleanRow(CERT_TYPE)]);
+    assert.deepEqual(agreed.fields, { model: CERT_TYPE, engine_model: TL_ENGINE, classification_number: PDF_CLASS }, name);
+    assert.deepEqual(agreed.rejected, {}, name);
+    const agreedSanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: REMARK_OLD_TYPE, engine_model: TL_ENGINE });
+    const agreedLayer = applyPdfTextLayerCertificateFields(agreedSanitized, agreed);
+    assert.equal(agreedLayer.trustedModel, true, name);
+    const agreedResult = applyVehicleIdentityPolicy(agreedSanitized, { trustedModelShape: agreedLayer.trustedModel });
+    assert.equal(agreedResult.model, CERT_TYPE, name);
+    assert.equal(agreedResult.model_text_layer, CERT_TYPE, name);
+    assert.equal(buildWizardEstimateOcrApplication(agreedResult).vehicle.vehicleCode, CERT_TYPE, name);
+
+    const ambiguous = extractCertificateCodesFromItems([...ENGINE_ROW, ...labels, valueBelow(valueX, REMARK_OLD_TYPE), ...CLS_COLUMN, ...cleanRow(CERT_TYPE)]);
+    assert.ok(ambiguous.rejected.model !== undefined && ambiguous.rejected.model.includes("候補が複数"), name);
+    const ambiguousSanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE, engine_model: TL_ENGINE });
+    const ambiguousLayer = applyPdfTextLayerCertificateFields(ambiguousSanitized, ambiguous);
+    assert.deepEqual(ambiguousLayer, { applied: ["engine_model", "classification_number"], trustedModel: false, manualEntry: ["model"] }, name);
+    const ambiguousResult = applyVehicleIdentityPolicy(ambiguousSanitized, { trustedModelShape: ambiguousLayer.trustedModel });
+    assert.equal(ambiguousResult.model, undefined, name);
+    assert.equal(buildWizardEstimateOcrApplication(ambiguousResult).vehicle.vehicleCode, undefined, name);
+    assert.deepEqual(buildOcrQualityReport(ambiguousResult, CTX).manualEntryRequired, ["型式"], name);
+  }
+
+  // Negative controls: the same remark head before 型式指定番号 / 原動機の型式 is NOT old-model 型式 evidence (nothing anchored,
+  // nothing rejected, the AI 型式 stays the fallback and reaches the estimate); a scanned / image PDF is unchanged.
+  for (const { name, labels, value } of [
+    { name: "備考 + 旧型式指定番号", labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧型式指定番号", x: 64, y: 500, width: 70, height: 10 }], value: PDF_APPROVAL },
+    { name: "備考旧型式指定番号",    labels: [{ str: "備考旧型式指定番号", x: 40, y: 500, width: 90, height: 10 }], value: PDF_APPROVAL },
+    { name: "備考 + 旧原動機の型式", labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧原動機の型式", x: 64, y: 500, width: 70, height: 10 }], value: TL_ENGINE },
+    { name: "備考旧原動機の型式",    labels: [{ str: "備考旧原動機の型式", x: 40, y: 500, width: 90, height: 10 }], value: TL_ENGINE },
+  ] as Array<{ name: string; labels: PdfTextItemLike[]; value: string }>) {
+    const extraction = extractCertificateCodesFromItems([...labels, { str: value, x: 40, y: 492, width: 60, height: 10 }, ...CLS_COLUMN]);
+    assert.deepEqual(extraction.fields, { classification_number: PDF_CLASS }, name);
+    assert.deepEqual(extraction.rejected, {}, name);
+    const kept = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE, engine_model: TL_ENGINE });
+    const keptLayer = applyPdfTextLayerCertificateFields(kept, extraction);
+    assert.deepEqual(keptLayer, { applied: ["classification_number"], trustedModel: false, manualEntry: [] }, name);
+    const keptResult = applyVehicleIdentityPolicy(kept, { trustedModelShape: keptLayer.trustedModel });
+    assert.equal(keptResult.model, CERT_TYPE, name);
+    assert.equal(keptResult.engine_model, TL_ENGINE, name);
+    assert.equal(keptResult.classification_number, "0007", name);
+    assert.equal(buildWizardEstimateOcrApplication(keptResult).vehicle.vehicleCode, CERT_TYPE, name);
+  }
+  const scanned = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE, engine_model: TL_ENGINE });
+  assert.deepEqual(applyPdfTextLayerCertificateFields(scanned, { status: "no_text", fields: {}, rejected: {}, notices: [], lineCount: 0 }).manualEntry, []);
+  assert.equal(applyVehicleIdentityPolicy(scanned, { trustedModelShape: false }).model, CERT_TYPE);
 });

@@ -56,6 +56,8 @@ export type VehicleRegistrationOcrResult = {
   // show the operator exactly which value was excluded or moved, instead of guessing silently.
   vehicle_identity_notices?:   string[]; // 自動判定で除外・退避した値の操作者向け通知
   model_needs_confirmation?:   string;   // "true": 型式 は型式指定番号欄などから退避した低信頼値。操作者の確認が必要
+  model_text_layer?:           string;   // 型式 の出所: サーバー側PDF文字情報（pdf-text-layer.ts）で確定した 型式 の値そのもの。
+                                         // model と一致する間だけ形式緩和を許す。AI出力からは決して受け取らない（sanitizer が破棄）
   confidence?:             number;  // 0-1 overall confidence
 };
 
@@ -184,5 +186,6 @@ export const OCR_FIELD_LABELS: Record<keyof VehicleRegistrationOcrResult, string
   owner_user_separated:       "所有者・使用者の相違",
   vehicle_identity_notices:   "車両識別の確認事項",
   model_needs_confirmation:   "型式の要確認",
+  model_text_layer:           "型式の出所（PDF文字情報）",
   confidence:             "信頼度",
 };

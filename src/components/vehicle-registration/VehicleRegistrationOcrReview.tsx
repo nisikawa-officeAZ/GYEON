@@ -162,6 +162,11 @@ export default function VehicleRegistrationOcrReview({
   // held an engine type, or whose 型式指定番号 held a non-numeric value). Ambiguous values are blanked
   // and listed as notices so the operator can correct them visibly; nothing is guessed. The operator's
   // own edits are made afterwards and are never re-filtered here.
+  // A 型式 the server verified from a selectable PDF's text layer travels INSIDE the result as its own
+  // provenance (model_text_layer — the exact value, written only by pdf-text-layer.ts, never by AI output)
+  // and is honoured by resolveVehicleIdentity() only while 型式 still equals it. No trust option is passed
+  // from here: a hyphen-less certificate 型式 (kei) survives the review exactly as the server accepted it,
+  // while a legacy / scanned / forged / mismatching value is still blanked with a visible notice.
   const identity = useMemo(
     () => resolveVehicleIdentity(rawOcrResult, { ambiguousGrade: "blank" }),
     [rawOcrResult],

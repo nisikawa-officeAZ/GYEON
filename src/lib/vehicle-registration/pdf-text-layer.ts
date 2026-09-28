@@ -22,6 +22,25 @@
 // Fail-closed by design:
 //   - page 1 only, bounded bytes / time / item count; no other page is ever parsed;
 //   - full-width characters are folded, leading zeros are preserved (values stay strings);
+//   - a label counts only as a FIELD label: 「型式」 that merely ends compound text (「車両の型式」, 「この型式」,
+//     …) is ordinary text in both rules — nothing is anchored on it, nothing rejected. The same holds when
+//     the compound is letter-spaced like the labels themselves (「車両の 型 式」, 「新　型式」): a whitespace-
+//     separated QUALIFIER from a small explicit list (新 / 元 / 前 / 現 / 後 / 従来 / 先代 / 当該 / この / その /
+//     …の) directly before the label is the head of that compound. A modification mark (「改 型式」) never
+//     affects a label;
+//   - EXCEPT the 「旧型式」 annotation (glued or letter-spaced: 「旧 型 式」, 「旧　型式」, 「備考: 旧型式 X」): its
+//     value is HISTORICAL 型式 evidence, never the current 型式 (T1 old-model rule). It is accepted only when
+//     the same value also follows a clean 型式 label on page 1; an old-model-only 型式 is REJECTED with a
+//     manual-entry notice (AI reading withheld, no provenance claimed) so the operator enters the current 型式
+//     by hand, and distinct old-model / clean values remain an ambiguity rejection. 「旧」 before any OTHER
+//     label (「旧型式指定番号」, 「旧原動機の型式」) stays ordinary compound text — only 型式 reaches the estimate;
+//   - any OTHER Japanese text separated from a same-row 型式 label only by whitespace (「備考: 旧来 型 式 X」 —
+//     but equally a 車名 cell 「車 名 ホンダ 型 式 X」: the two are indistinguishable without a vocabulary) makes
+//     that 型式 candidate SUSPECT. It is accepted only when the same value also follows a clean 型式 label on
+//     page 1; a suspect-only 型式 is rejected with a manual-entry notice (AI reading withheld, no provenance
+//     claimed) instead of being trusted, and distinct suspect / clean values remain an ambiguity rejection;
+//   - the 型式 the text layer applied is recorded as provenance (`model_text_layer`, its exact value) so the
+//     identity policy can honour it downstream — and ONLY it (see resolveVehicleIdentity);
 //   - ambiguous (several different values, including (a) and (b) disagreeing) or conflicting (same
 //     value under two labels) matches are rejected with an operator-visible notice — nothing is
 //     inferred or completed;
@@ -216,6 +235,87 @@ export function groupPdfTextItemsIntoLines(
 // Labels may be letter-spaced on the certificate ("型　式"); values are ASCII after folding, so a label
 // and its value never merge. Alternation order matters: the longer labels containing 「型式」 win.
 const LABEL_PATTERN = /(原\s*動\s*機\s*の?\s*型\s*式)|(型\s*式\s*指\s*定\s*番\s*号)|(類\s*別\s*区\s*分\s*番\s*号)|(型\s*式)/g;
+// A label is a FIELD label only when it is not the tail of compound Japanese text: 「旧型式 6BA-…」 in a remark,
+// 「車両の型式」, 「この型式」 … Two narrow boundary rules decide, nothing broader (ES2017 target: no lookbehind):
+//   1. glued — the character DIRECTLY before the match is kanji / kana / half-width kana: compound text.
+//      Whitespace, ASCII, a colon or a preceding code keep the label valid, so 「改 型式 …」,
+//      「型式:X原動機の型式:Y」 and letter-spaced labels are unaffected;
+//   2. letter-spaced qualifier — labels may be letter-spaced on a PDF, and so may the compound: 「旧 型 式」,
+//      「旧　型式」. The preceding text is therefore read back across whitespace as ONE Japanese run, and the
+//      label is compound text when that run (whitespace removed) ENDS with an explicit qualifier from
+//      QUALIFIER_BEFORE_LABEL. Only the listed qualifiers count as compound text; a modification mark (「改 型式」)
+//      stays a valid boundary. No certificate field carries such a qualifier as its own value directly before
+//      型式, so the rule never loses a genuine label.
+//   3. suspect (型式 only) — a Japanese run before the label across whitespace that is NOT a listed qualifier
+//      (「備考: 旧来 型 式 X」) cannot be told apart from a 車名 cell (「車 名 ホンダ 型 式 X」) without a vocabulary.
+//      The label is anchored, but its candidate is recorded as SUSPECT and only accepted when the same value also
+//      follows a clean 型式 label; otherwise the field is rejected (manual entry), never trusted. Applied to 型式
+//      alone (the code that reaches the estimate with provenance); the other three labels keep rules 1–2 only.
+//   4. old-model (型式 only) — the Japanese run before the label (rule 1 glued or rule 2 across whitespace) ENDS with
+//      「旧」 (「旧型式 X」, 「備考: 旧 型 式 X」, 「旧　型式　X」). The label IS anchored, but its candidate is recorded as
+//      OLD-MODEL evidence: accepted only when the same value also follows a clean 型式 label; otherwise the field is
+//      rejected (manual entry, AI reading withheld) — never trusted, whatever the AI read. Takes precedence over rules
+//      1–2 for 型式 alone; before the other three labels 「旧」 stays rule 1–2 compound text (skipped silently, as before).
+const CJK_TEXT = /[々-〇぀-ヿ㐀-䶿一-鿿豈-﫿ｦ-ﾟ]/;
+// The trailing Japanese run before a label (whitespace between its characters allowed, whitespace removed
+// before testing). ASCII, digits, punctuation and colons end the run: 「型式:X 旧 型式」 tests only 「旧」.
+const CJK_RUN_BEFORE_LABEL = /[々-〇぀-ヿ㐀-䶿一-鿿豈-﫿ｦ-ﾟ\s]+$/;
+// Explicit, narrow qualifier list: 旧 / 新 / 元 / 前 / 現 / 後 (変更前・変更後・従前), 従来 / 先代 (「従来 型 式」,
+// 「先代 型 式」 in a remark — neither is ever a certificate VALUE), 当該, この / その, and any possessive 「…の」
+// (「車両の型式」, 「エンジンの型式」). Matched at the END of the whitespace-stripped run only.
+const QUALIFIER_BEFORE_LABEL = /(?:旧|新|元|前|現|後|従来|先代|当該|この|その|の)$/;
+// Rule 4: the 「旧型式」 annotation. Tested on the same whitespace-stripped run; 「旧」 must be the LAST character before the
+// label (「ホンダ 旧 型 式」 qualifies, 「旧 車名 ホンダ 型 式」 does not — that run is rule 3 suspect). Deliberately narrow:
+// 「旧の型式」, 「変更前 型式」, 「従来 型式」 are NOT old-model evidence here — they stay rules 1–2 compound text.
+const OLD_MODEL_QUALIFIER = /旧$/;
+// …except a bare modification mark glued to the label ("6BA-ABC1 改原動機の型式"): that 改 is the PREVIOUS value's
+// own mark (it rejects that value, see isModifierToken), not text the label belongs to.
+const MODIFIER_MARK_BEFORE_LABEL = /(?:^|\s)[(（]?改[)）]?$/;
+/** True when the whitespace-stripped Japanese text `text` ends with one of the explicit compound qualifiers. */
+function endsWithQualifier(text: string): boolean {
+  return QUALIFIER_BEFORE_LABEL.test(text);
+}
+/** True when the whitespace-stripped Japanese text `text` ends with the 「旧」 (old-model) qualifier. */
+function endsWithOldModelQualifier(text: string): boolean {
+  return OLD_MODEL_QUALIFIER.test(text);
+}
+type LabelBoundary =
+  | { kind: "field" }                        // field boundary: line start, ASCII / colon / code, or a bare 改 mark
+  | { kind: "compound" }                     // rules 1–2: the tail of compound text, not a label at all
+  | { kind: "old_model" }                    // rule 4: 「旧型式」 / 「旧 型 式」 — the historical-型式 annotation
+  | { kind: "suspect"; preceding: string };  // rule 3: unlisted Japanese run across whitespace (whitespace removed)
+
+/**
+ * Classifies what precedes the label matched at `index` of `line` (rules 1–4 above). `old_model` is returned for
+ * EVERY label preceded by 「旧」; the caller applies it to 型式 only and treats it as `compound` for the other three.
+ */
+function classifyLabelBoundary(line: string, index: number): LabelBoundary {
+  if (index === 0) return { kind: "field" };
+  const before = line.slice(0, index);
+  const run = CJK_RUN_BEFORE_LABEL.exec(before)?.[0].replace(/\s+/g, "") ?? "";
+  if (CJK_TEXT.test(line.charAt(index - 1))) {                                               // rule 1: glued
+    if (MODIFIER_MARK_BEFORE_LABEL.test(before)) return { kind: "field" };                   // 「6BA-ABC1 改原動機の型式」
+    return endsWithOldModelQualifier(run) ? { kind: "old_model" } : { kind: "compound" };    // 「旧型式」 vs 「車両の型式」
+  }
+  if (run === "") return { kind: "field" };
+  if (endsWithOldModelQualifier(run)) return { kind: "old_model" };                          // rule 4: 「旧 型 式」
+  if (endsWithQualifier(run)) return { kind: "compound" };                                   // rule 2: 「この 型 式」
+  if (MODIFIER_MARK_BEFORE_LABEL.test(before.replace(/\s+$/, ""))) return { kind: "field" }; // 「改 型式」 / 「(改) 型 式」
+  return { kind: "suspect", preceding: run };                                                // rule 3: 「旧来 型 式」
+}
+function endsWithCjkText(str: string): boolean {
+  const text = exactLabelText(str);
+  return text !== "" && CJK_TEXT.test(text.charAt(text.length - 1));
+}
+/** Two-row rule 2: the preceding token of the label row is (or ends with) an explicit compound qualifier, e.g. 「旧」. */
+function isQualifierToken(str: string): boolean {
+  const text = exactLabelText(str);
+  return text !== "" && CJK_TEXT.test(text.charAt(text.length - 1)) && endsWithQualifier(text);
+}
+/** Two-row rule 4: the preceding token of the label row is (or ends with) the 「旧」 qualifier (「旧」, 「備考:旧」). */
+function isOldModelToken(str: string): boolean {
+  return endsWithOldModelQualifier(exactLabelText(str));
+}
 // The value must directly follow the label (optional colon); hyphen variants are folded afterwards.
 const VALUE_AFTER_LABEL = /^\s*[:：]?\s*([A-Za-z0-9‐-―−ーｰ-]+)/;
 // What may directly follow a same-row value without a separating space: only ANOTHER exact label
@@ -284,10 +384,19 @@ function foldFullWidthLine(line: string): string {
     .replace(/[\s　]+/g, " ");
 }
 
+/** Values that followed a CLEAN field label (same-row rule at a field boundary, or the two-row rule). */
 type CandidateSets = Record<CertificateCodeField, Set<string>>;
+/** Values that followed a SUSPECT same-row label (rule 3) → the Japanese text that preceded the label. */
+type SuspectCandidates = Record<CertificateCodeField, Map<string, string>>;
+/** Values that followed an OLD-MODEL label (rule 4, 「旧型式」): historical evidence, never current 型式 on their own. Only `model` is ever filled. */
+type OldModelCandidates = CandidateSets;
 
 function newCandidateSets(): CandidateSets {
   return { model: new Set(), engine_model: new Set(), model_code: new Set(), classification_number: new Set() };
+}
+
+function newSuspectCandidates(): SuspectCandidates {
+  return { model: new Map(), engine_model: new Map(), model_code: new Map(), classification_number: new Map() };
 }
 
 /** A folded code candidate, or null when the text is not a code (Japanese text, blank, dash placeholder). */
@@ -304,10 +413,17 @@ function asCodeCandidate(raw: string): string | null {
  * followed by more text of its own value — glued ("6BA-ABC1改", brackets, …) or as a separate
  * modification-mark token ("6BA-ABC1 改") — is NOT a match for its leading code: that field is
  * blocked for the whole page with an operator-visible notice.
+ * A 型式 value after a label at a SUSPECT boundary (rule 3: 「旧来 型 式 X」, 「車 名 ホンダ 型 式 X」) goes to
+ * `suspect`, not `candidates`; resolveCandidates() accepts it only with a clean occurrence of the same value.
+ * A 型式 value after an OLD-MODEL boundary (rule 4: 「旧型式 X」, 「備考: 旧 型 式 X」) goes to `oldModel` under the same
+ * acceptance rule — historical evidence never becomes the current 型式 by itself. Trailing-text blocks (「旧型式 X 改」)
+ * are applied before either routing, exactly as for a clean label.
  */
 function collectSameRowCandidates(
   lines: readonly string[],
   candidates: CandidateSets,
+  suspect: SuspectCandidates,
+  oldModel: OldModelCandidates,
   blocked: Partial<Record<CertificateCodeField, string>>,
 ): void {
   for (const raw of lines) {
@@ -315,10 +431,13 @@ function collectSameRowCandidates(
     LABEL_PATTERN.lastIndex = 0;
     let match: RegExpExecArray | null;
     while ((match = LABEL_PATTERN.exec(line)) !== null) {
+      const boundary = classifyLabelBoundary(line, match.index);
+      if (boundary.kind === "compound") continue; // 「車両の型式 …」 / 「この 型 式 …」: compound text, not a field label
       const field: CertificateCodeField = match[1] ? "engine_model"
         : match[2] ? "model_code"
         : match[3] ? "classification_number"
         : "model";
+      if (boundary.kind === "old_model" && field !== "model") continue; // 「旧型式指定番号」 / 「旧 原動機の型式」: compound text, as before
       const afterLabel = line.slice(match.index + match[0].length);
       const value = VALUE_AFTER_LABEL.exec(afterLabel);
       if (value === null) continue;
@@ -329,6 +448,14 @@ function collectSameRowCandidates(
         blocked[field] ??= trailingTextNotice(field, folded, trailing);
         continue;
       }
+      if (boundary.kind === "old_model") { // field === "model" here (see above)
+        oldModel[field].add(folded);
+        continue;
+      }
+      if (boundary.kind === "suspect" && field === "model") {
+        if (!suspect[field].has(folded)) suspect[field].set(folded, boundary.preceding);
+        continue;
+      }
       candidates[field].add(folded);
     }
   }
@@ -336,46 +463,85 @@ function collectSameRowCandidates(
 
 // ─── (b) Two-row rule: label row → immediately following value row (pure, geometry-bound) ──────
 
-interface LabelRowToken extends PdfTextToken { field?: CertificateCodeField }
+/** `oldModel`: the 型式 label is the 「旧型式」 annotation (rule 4) — its paired value is historical evidence only. */
+interface LabelRowToken extends PdfTextToken { field?: CertificateCodeField; oldModel?: boolean }
 
 /** Exact-label text of a token: full-width folded, whitespace removed, optional trailing colon dropped. */
 function exactLabelText(str: string): string {
   return foldFullWidthLine(str).replace(/\s+/g, "");
 }
 
+/** True when `piece` sits close enough behind `before` to be the next letter of one letter-spaced word. */
+function isLabelPieceGap(before: PdfTextToken, piece: PdfTextToken): boolean {
+  const h = Math.max(before.height, piece.height);
+  const maxGap = Math.max(2, h * PDF_TWO_ROW_GEOMETRY.labelPieceGapRatio);
+  return piece.x0 - before.x1 <= maxGap;
+}
+
 /**
  * Marks the tokens of a row that are EXACTLY one of the four labels. Letter-spaced labels split into
  * several adjacent pieces ("型", "式") are merged into one token first; nothing else is merged.
+ * A label whose first piece directly continues preceding Japanese text ("旧" + "型" + "式") is the tail of
+ * compound text, not a field label — unless that preceding token is itself an exact label (two labels
+ * printed back to back in one letter-spaced label row). A preceding token that IS an explicit compound
+ * qualifier ("車両の", "この", …) makes the label compound text at ANY gap on the row: a letter-spaced 「この 型 式」
+ * is not more of a field label because pdf.js left a wider gap after the qualifier. Other preceding Japanese text
+ * (a 車名 value, a 改 mark, unrelated label pieces such as 「名」 of 車名) keeps the label valid beyond the gap.
+ * Rule 4 (型式 only): a preceding 「旧」 token — adjacent or at any gap — or 「旧型式」 printed as one token (or 「旧型」+「式」)
+ * marks the 型式 label `oldModel`: it IS anchored, but its value is historical evidence (see collectTwoRowCandidates).
+ * Exactly like the same-row rule 4, the text before 「旧」 does not matter: a remark head glued to the annotation
+ * (「備考旧型式」, 「備考:旧型式」) or printed as an adjacent token (「備考」+「旧型式」, 「備考」+「旧」+「型」+「式」) is still the
+ * 旧型式 annotation — the label part is what follows the LAST 「旧」 — and a preceding token never demotes an old-model
+ * label to compound text (rule 4 takes precedence over rules 1–2 for 型式, as on a same row).
+ * 「旧」 before another label (「旧」+「型式指定番号」, 「旧型式指定番号」 / 「備考旧原動機の型式」 in one token) stays compound text, as before.
  */
 function markExactLabels(tokens: readonly PdfTextToken[]): LabelRowToken[] {
   const out: LabelRowToken[] = [];
   let k = 0;
   while (k < tokens.length) {
-    let best: { count: number; field: CertificateCodeField } | null = null;
+    let best: { count: number; field: CertificateCodeField; oldModel: boolean } | null = null;
     let text = "";
+    // A token that is (or ends with) 「旧」 — 「旧」, 「備考:旧」 — is never the head of a glued 「旧型式」 label: it is judged as
+    // the PRECEDING token below, so the longest exact label after it (「型式指定番号」 across pieces) still wins as it always did.
+    const oldQualifierToken = isOldModelToken(tokens[k].str);
     const maxPieces = Math.min(PDF_TWO_ROW_GEOMETRY.maxLabelPieces, tokens.length - k);
     for (let n = 1; n <= maxPieces; n++) {
       const piece = tokens[k + n - 1];
-      if (n > 1) {
-        const before = tokens[k + n - 2];
-        const h = Math.max(before.height, piece.height);
-        const maxGap = Math.max(2, h * PDF_TWO_ROW_GEOMETRY.labelPieceGapRatio);
-        if (piece.x0 - before.x1 > maxGap) break;
-      }
+      if (n > 1 && !isLabelPieceGap(tokens[k + n - 2], piece)) break;
       text += exactLabelText(piece.str);
-      if (text.length > 8) break; // longer than any label (+ colon)
+      // The label part of the text: all of it — or, when 「旧」 is glued in front (「旧型式」, 「備考旧型式」, 「備考:旧型式」,
+      // 「備考」+「旧型式」, 「旧型」+「式」 across pieces), what follows the LAST 「旧」: the same run the same-row rule 4 tests.
+      const oldAt = oldQualifierToken ? -1 : text.lastIndexOf("旧");
+      const labelText = oldAt >= 0 ? text.slice(oldAt + 1) : text;
+      if (labelText.length > 8) break; // longer than any label (+ colon)
       const field = FIELD_BY_EXACT_LABEL.get(text.replace(/:$/, ""));
-      if (field !== undefined) best = { count: n, field };
+      if (field !== undefined) best = { count: n, field, oldModel: false };
+      else if (oldAt >= 0) {
+        // 「旧型式」 / 「備考旧型式」 in one token, 「旧型」+「式」: an OLD-MODEL 型式 label. 「旧型式指定番号」 / 「備考旧原動機の型式」: compound text.
+        const qualified = FIELD_BY_EXACT_LABEL.get(labelText.replace(/:$/, ""));
+        if (qualified === "model") best = { count: n, field: "model", oldModel: true };
+        else if (qualified !== undefined) best = null;
+      }
     }
     if (best === null) { out.push({ ...tokens[k] }); k++; continue; }
+    const preceding = out[out.length - 1];
+    if (preceding !== undefined && preceding.field === undefined
+        && ((isLabelPieceGap(preceding, tokens[k]) && endsWithCjkText(preceding.str)) || isQualifierToken(preceding.str))) {
+      if (best.field === "model" && (best.oldModel || isOldModelToken(preceding.str))) {
+        best = { ...best, oldModel: true }; // 「旧」+「型式」 / 「旧」 … 「型」「式」 / 「この」 … 「旧型式」: the 旧型式 annotation — an OLD-MODEL 型式 label
+      } else {
+        out.push({ ...tokens[k] }); k++; continue; // 「車両の」+「型式」 / 「旧」+「型式指定番号」: compound text, not a field label
+      }
+    }
     const pieces = tokens.slice(k, k + best.count);
     out.push({
-      str:    pieces.map((p) => p.str).join(""),
-      x0:     pieces[0].x0,
-      x1:     Math.max(...pieces.map((p) => p.x1)),
-      y:      pieces[0].y,
-      height: Math.max(...pieces.map((p) => p.height)),
-      field:  best.field,
+      str:      pieces.map((p) => p.str).join(""),
+      x0:       pieces[0].x0,
+      x1:       Math.max(...pieces.map((p) => p.x1)),
+      y:        pieces[0].y,
+      height:   Math.max(...pieces.map((p) => p.height)),
+      field:    best.field,
+      oldModel: best.oldModel,
     });
     k += best.count;
   }
@@ -405,11 +571,13 @@ function maxBaselineGap(labelHeight: number, valueHeight: number): number {
  * label row); the last column extends a bounded distance past the label. A token straddling a column
  * edge blocks that field, and so does a code carrying further text of its own value inside the column
  * (glued "6BA-ABC1改" or a separate modification-mark token "改" directly after the code, whatever the
- * gap). Labels already followed by a value on their own row are skipped per label.
+ * gap). Labels already followed by a value on their own row are skipped per label. A value under an
+ * `oldModel` 型式 label (「旧」+「型式」, rule 4) is recorded as old-model evidence, never as a clean candidate.
  */
 function collectTwoRowCandidates(
   rows: readonly (readonly PdfTextToken[])[],
   candidates: CandidateSets,
+  oldModel: OldModelCandidates,
   blocked: Partial<Record<CertificateCodeField, string>>,
 ): void {
   for (let r = 0; r + 1 < rows.length; r++) {
@@ -466,7 +634,7 @@ function collectTwoRowCandidates(
             continue;
           }
         }
-        candidates[field].add(folded);
+        (label.oldModel === true ? oldModel : candidates)[field].add(folded);
       }
     }
   }
@@ -476,6 +644,8 @@ function collectTwoRowCandidates(
 
 function resolveCandidates(
   candidates: CandidateSets,
+  suspect: SuspectCandidates,
+  oldModel: OldModelCandidates,
   blocked: Partial<Record<CertificateCodeField, string>>,
   lineCount: number,
 ): PdfTextLayerExtraction {
@@ -493,13 +663,31 @@ function resolveCandidates(
     const label = FIELD_LABELS[field];
     const blockedNotice = blocked[field];
     if (blockedNotice !== undefined) { reject([field], blockedNotice); continue; }
-    const values = [...candidates[field]];
+    // Clean, suspect and old-model occurrences are ONE candidate set: different values are an ambiguity whichever
+    // label they followed (a bare-label remark 「備考: 型式 X」 is itself clean, so "clean wins" would be unsafe, and a
+    // clean 型式 next to a differing 「旧型式」 is likewise left to the operator).
+    const clean = [...candidates[field]];
+    const values = [...clean];
+    for (const v of [...suspect[field].keys(), ...oldModel[field]]) if (!values.includes(v)) values.push(v);
     if (values.length === 0) continue;
     if (values.length > 1) {
       reject([field], `PDFの文字情報で${label}の候補が複数あったため（${values.join(" / ")}）、${label}は自動取得しませんでした。車検証の${label}欄を確認して手入力してください。`);
       continue;
     }
     const value = values[0];
+    if (clean.length === 0) {
+      if (oldModel[field].has(value)) {
+        // Old-model only (rule 4): the sole evidence is the 「旧型式」 annotation — a HISTORICAL 型式. Fail closed — manual
+        // entry, AI reading withheld via `rejected` (even when the AI read this very value) — never the current 型式.
+        reject([field], `PDFの文字情報で${label}の値（${value}）は「旧${label}」（変更前の${label}）として記載されたものだけで、現在の${label}欄の値が確認できなかったため、${label}は自動取得しませんでした。車検証の${label}欄を確認して手入力してください。`);
+        continue;
+      }
+      // Suspect only (rule 3): the sole evidence is a label preceded by unlisted Japanese text. Fail closed —
+      // manual entry, AI reading withheld via `rejected` — rather than trust a possibly remark-derived value.
+      const preceding = suspect[field].get(value) ?? "";
+      reject([field], `PDFの文字情報で${label}の欄名の直前に別の文字（${preceding}）が続いていたため、その後の値（${value}）が車検証の${label}欄かどうか判断できず、${label}は自動取得しませんでした。車検証の${label}欄を確認して手入力してください。`);
+      continue;
+    }
     if (!SHAPE[field](value)) {
       reject([field], `PDFの文字情報の${label}欄の値（${value}）は${label}の形式ではないため自動取得しませんでした。車検証の${label}欄を確認して手入力してください。`);
       continue;
@@ -533,9 +721,11 @@ export function extractCertificateCodesFromLines(lines: readonly string[]): PdfT
   const meaningful = lines.filter((line) => typeof line === "string" && line.trim() !== "");
   if (meaningful.length === 0) return empty("no_text", 0);
   const candidates = newCandidateSets();
+  const suspect = newSuspectCandidates();
+  const oldModel: OldModelCandidates = newCandidateSets();
   const blocked: Partial<Record<CertificateCodeField, string>> = {};
-  collectSameRowCandidates(meaningful, candidates, blocked);
-  return resolveCandidates(candidates, blocked, meaningful.length);
+  collectSameRowCandidates(meaningful, candidates, suspect, oldModel, blocked);
+  return resolveCandidates(candidates, suspect, oldModel, blocked, meaningful.length);
 }
 
 /**
@@ -553,10 +743,12 @@ export function extractCertificateCodesFromItems(
   if (meaningful.length === 0) return empty("no_text", 0);
 
   const candidates = newCandidateSets();
+  const suspect = newSuspectCandidates();
+  const oldModel: OldModelCandidates = newCandidateSets();
   const blocked: Partial<Record<CertificateCodeField, string>> = {};
-  collectSameRowCandidates(meaningful, candidates, blocked);
-  collectTwoRowCandidates(rows.filter((row) => row.length > 0), candidates, blocked);
-  return resolveCandidates(candidates, blocked, meaningful.length);
+  collectSameRowCandidates(meaningful, candidates, suspect, oldModel, blocked);
+  collectTwoRowCandidates(rows.filter((row) => row.length > 0), candidates, oldModel, blocked); // two-row values: clean, or old-model under 「旧」+「型式」
+  return resolveCandidates(candidates, suspect, oldModel, blocked, meaningful.length);
 }
 
 // ─── Override of the AI result (pure) ────────────────────────────────────────
@@ -570,6 +762,12 @@ export function extractCertificateCodesFromItems(
  * well and reported in `manualEntry`, because a displayed value would contradict the notice asking the
  * operator to enter exactly that field by hand. Fields the PDF simply does not carry, and every
  * non-text-layer status (scanned PDF, image, parse failure), keep the AI reading — fallback unchanged.
+ *
+ * Provenance: when 型式 itself is applied, its exact value is also recorded as `model_text_layer`. That
+ * is the ONLY place this key is ever written (the AI sanitizer never passes it through); any value the
+ * input carried is discarded first — including when `extraction` is null/undefined (no PDF at all) — so
+ * a rejected, absent or non-text-layer 型式 never keeps a stale claim. resolveVehicleIdentity() honours
+ * the claim only while 型式 still equals it.
  */
 export function applyPdfTextLayerCertificateFields(
   sanitized: VehicleRegistrationOcrResult,
@@ -577,6 +775,10 @@ export function applyPdfTextLayerCertificateFields(
 ): { applied: CertificateCodeField[]; trustedModel: boolean; manualEntry: CertificateCodeField[] } {
   const applied: CertificateCodeField[] = [];
   const manualEntry: CertificateCodeField[] = [];
+  // Provenance is established below, by THIS extraction only. Discarded BEFORE the no-extraction exit so
+  // that an absent text layer (image upload, null/undefined) can never leave a stale or forged claim on
+  // the result — the pure function fails closed on its own, independent of the AI sanitizer.
+  delete sanitized.model_text_layer;
   if (!extraction) return { applied, trustedModel: false, manualEntry };
 
   const notices = [...(sanitized.vehicle_identity_notices ?? [])];
@@ -593,6 +795,7 @@ export function applyPdfTextLayerCertificateFields(
       sanitized[field] = value;
       applied.push(field);
     }
+    if (applied.includes("model")) sanitized.model_text_layer = sanitized.model; // exact applied value
     if (applied.includes("model") && sanitized.model_needs_confirmation !== undefined) {
       // The legacy "型式 was moved here from another column" flag describes the AI/legacy value that
       // has just been replaced by the label-anchored text-layer 型式. Left in place it would make

@@ -126,6 +126,9 @@ export type VehicleIdentityOptions = {
    * true ONLY when 型式 was written by the deterministic PDF text layer (pdf-text-layer.ts) with exact
    * label anchoring and conflict checks. Bypasses the hyphen-less code-shape rejection alone; the
    * digits-only, equal-to-engine and every other safeguard still apply. Never set for AI output.
+   * The same trust is derived WITHOUT this option from the result's own provenance (`model_text_layer`,
+   * written by pdf-text-layer.ts) — but only while 型式 still equals that exact value — so the review,
+   * which has no server context, re-resolves a stored text-layer 型式 exactly as the server accepted it.
    */
   trustedModelShape?: boolean;
 };
@@ -174,6 +177,17 @@ export function resolveVehicleIdentity(
   }
   const inputCodes = CODE_FIELDS.map((key) => foldVehicleCode(input[key])).filter((v) => v !== "");
 
+  // 型式 provenance. pdf-text-layer.ts records the exact 型式 it verified in `model_text_layer` (server
+  // side; the AI sanitizer never passes this key through, and the review never edits it). It is a claim
+  // about ONE exact value: honoured only while 型式 still equals it, dropped here and re-attached at the
+  // end only if 型式 survives every rule below unchanged. A legacy result, a scan, a forged or stale claim,
+  // or a claim for a different value therefore never softens the shape rule for anything else.
+  const textLayerModel = foldVehicleCode(input.model_text_layer);
+  delete result.model_text_layer;
+  const modelHasTextLayerProvenance =
+    /^[A-Z0-9-]+$/.test(textLayerModel) && result.model !== undefined && result.model === textLayerModel;
+  const trustedModelShape = opts.trustedModelShape === true || modelHasTextLayerProvenance;
+
   // Old OCR results may contain a value moved from a different column. Never treat it as
   // certificate 型式; ask the operator to read that column and enter it explicitly.
   if (input.model_needs_confirmation === "true") {
@@ -204,7 +218,7 @@ export function resolveVehicleIdentity(
   if (model !== "" && isDigitsOnly(model)) {
     delete result.model;
     note(`型式欄に数字のみの値（${model}）が入っていたため空にしました。型式指定番号と混同している可能性があります。`);
-  } else if (model !== "" && isBareAlnumCode(model) && opts.trustedModelShape !== true) {
+  } else if (model !== "" && isBareAlnumCode(model) && !trustedModelShape) {
     delete result.model;
     note(`型式欄の値（${model}）はハイフンのない英数字のみで原動機の型式の可能性があるため空にしました。車検証の型式欄を確認してください。`);
   }
@@ -230,6 +244,9 @@ export function resolveVehicleIdentity(
       note(`グレード欄の値（${gradeRaw}）は原動機の型式などのコードの可能性があるため空にしました。正しいグレードなら手入力してください。`);
     }
   }
+
+  // Provenance travels on only with the very 型式 it vouches for (idempotent re-resolution in the review).
+  if (modelHasTextLayerProvenance && result.model === textLayerModel) result.model_text_layer = textLayerModel;
 
   if (notices.length > 0) result.vehicle_identity_notices = notices;
   else delete result.vehicle_identity_notices;

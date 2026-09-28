@@ -116,6 +116,9 @@ export interface OcrUsage {
 // These codes warrant a single transparent retry on the server side.
 const RETRYABLE_CODES: OcrErrorCode[] = ["TIMEOUT", "CONNECT_ERROR", "OPENAI_SERVER_ERROR"];
 
+// The ONLY keys accepted from the AI. Everything else the model emits is discarded — in particular the
+// result-internal keys the server itself writes later (vehicle_identity_notices, model_needs_confirmation,
+// model_text_layer): 型式 provenance can never be claimed by AI output, only established by pdf-text-layer.ts.
 const STRING_FIELDS: Array<keyof VehicleRegistrationOcrResult> = [
   "owner_name", "user_name", "owner_name_kana", "user_name_kana",
   "owner_postal_code", "user_postal_code", "owner_address", "user_address",
@@ -325,7 +328,8 @@ async function callOpenAI(
     }
 
     // Selectable PDF: the label-anchored text layer (page 1) overrides ONLY the four certificate
-    // codes (型式 / 原動機の型式 / 型式指定番号 / 類別区分番号). No text layer → nothing changes here.
+    // codes (型式 / 原動機の型式 / 型式指定番号 / 類別区分番号). No text layer → no field changes here;
+    // only a (never expected) pre-existing model_text_layer claim is discarded, so trust fails closed.
     const textLayer = applyPdfTextLayerCertificateFields(sanitized, pdfTextLayer);
 
     // Deterministic vehicle-identity policy: maker from the 車名欄, 通称名/グレード always blank,

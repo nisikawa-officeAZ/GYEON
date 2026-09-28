@@ -19,6 +19,8 @@ import {
   type PdfTextItemLike,
 } from "./pdf-text-layer";
 import { applyVehicleIdentityPolicy, sanitizeVehicleRegistrationOcrResult } from "./ocr";
+import { resolveVehicleIdentity } from "./ocr-quality";
+import type { VehicleRegistrationOcrResult } from "./vehicle-registration-types";
 
 // Synthetic certificate codes (Owner-approved examples; deliberately not real vehicles).
 const CERT_TYPE      = "6BA-ABC1"; // 型式
@@ -321,6 +323,7 @@ test("text-layer codes override ONLY the four certificate fields; owner, 車名 
   assert.deepEqual(outcome.applied, ["model", "engine_model", "model_code", "classification_number"]);
   assert.equal(outcome.trustedModel, true);
   assert.equal(sanitized.model, CERT_TYPE);
+  assert.equal(sanitized.model_text_layer, CERT_TYPE); // provenance: the exact applied 型式
   assert.equal(sanitized.model_code, TYPE_APPROVAL);
   assert.equal(sanitized.classification_number, CLASSIFICATION);
   assert.equal(sanitized.owner_name, before.owner_name);
@@ -342,10 +345,10 @@ test("text-layer codes override ONLY the four certificate fields; owner, 車名 
   assert.equal(final.owner_name, "合成 名義");
   assert.notEqual(final.classification_number, final.license_plate_class);
 
-  // Only the four code keys (+ notices) can ever be written.
+  // Only the four code keys (+ notices + the 型式 provenance) can ever be written.
   const blank = {};
   applyPdfTextLayerCertificateFields(blank, extraction);
-  assert.deepEqual(Object.keys(blank).sort(), ["classification_number", "engine_model", "model", "model_code", "vehicle_identity_notices"]);
+  assert.deepEqual(Object.keys(blank).sort(), ["classification_number", "engine_model", "model", "model_code", "model_text_layer", "vehicle_identity_notices"]);
 });
 
 test("no text layer (scanned / image PDF / failure) leaves the AI result exactly as it was", () => {
@@ -932,4 +935,872 @@ test("R2-1 (pdf.js): a selectable PDF whose 型式 is followed by a separate 改
   const u = await extractCertificateCodesFromPdf(toBytes(unrelated));
   assert.deepEqual(u.fields, ALL_FOUR, JSON.stringify(u));
   assert.deepEqual(u.notices, []);
+});
+
+// ─── R2-3: 型式 is a FIELD label only — never the tail of compound text (「旧型式」 …) ──────────────
+
+test("R2-3: 型式 inside compound text (旧型式, 車両の型式, 旧型式指定番号 …) is never a label, and the quoted value never reaches accepted 型式", () => {
+  // The reported line: a remark quoting the OLD type. Before the fix this yielded model = 6BA-OLD999 and the
+  // server trusted it. Now nothing is anchored, nothing rejected, no notice (there was no labelled 型式 at all).
+  // T1 re-baseline (fail-closed direction, Owner-approved): the 「旧型式」 annotation is HISTORICAL 型式 evidence. Alone on
+  // the page it is anchored and REJECTED (manual entry), never silently ignored — the T1 tests below hold the full contract.
+  const remark = extractCertificateCodesFromLines(["備考: 旧型式 6BA-OLD999"]);
+  assert.equal(remark.status, "no_codes");
+  assert.deepEqual(remark.fields, {});
+  assert.deepEqual(Object.keys(remark.rejected), ["model"]);
+  assert.equal(remark.notices.length, 1);
+  assert.ok(remark.notices[0].startsWith("【要手入力：型式】") && remark.notices[0].includes("旧型式") && remark.notices[0].includes("6BA-OLD999"), remark.notices[0]);
+
+  // T1 re-baseline: next to a genuine 型式 with a DIFFERENT value the old-model annotation is the existing ambiguity
+  // rejection (never "clean wins"); the other three codes stay.
+  const page = extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 原動機の型式 ${ENGINE_TYPE}`, "備考: 旧型式 6BA-OLD999", `型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`]);
+  assert.deepEqual(page.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION });
+  assert.deepEqual(Object.keys(page.rejected), ["model"]);
+  assert.ok(page.notices.some((n) => n.includes("候補が複数") && n.includes(CERT_TYPE) && n.includes("6BA-OLD999")), page.notices.join(" | "));
+
+  // Every OTHER compound (unchanged): a kanji / kana directly before the label makes it ordinary text — nothing anchored,
+  // nothing rejected. 「旧」 before a NON-型式 label is compound text too (the old-model rule is 型式-only).
+  for (const line of ["車両の型式 6BA-OLD999", "この型式 6BA-OLD999", "旧原動機の型式 OLD1", "旧型式指定番号 99999", "旧類別区分番号 0099"]) {
+    const r = extractCertificateCodesFromLines([line]);
+    assert.deepEqual(r.fields, {}, line);
+    assert.deepEqual(r.rejected, {}, line);
+    assert.deepEqual(r.notices, [], line);
+  }
+  // T1 re-baseline: the glued 「旧型式」 forms are old-model evidence → rejected, manual entry (never the AI fallback).
+  for (const line of ["旧型式 6BA-OLD999", "旧型式:6BA-OLD999", "旧型式　６ＢＡ－ＯＬＤ９９９", "型式旧型式 6BA-OLD999"]) {
+    const r = extractCertificateCodesFromLines([line]);
+    assert.deepEqual(r.fields, {}, line);
+    assert.deepEqual(Object.keys(r.rejected), ["model"], line);
+    assert.ok(r.rejected.model !== undefined && r.rejected.model.includes("旧型式") && r.rejected.model.includes("6BA-OLD999"), line);
+  }
+
+  // Positive controls are unchanged: a label at line start, after a modification mark, letter-spaced, or glued to
+  // the preceding label's ASCII value / colon.
+  assert.deepEqual(extractCertificateCodesFromLines([`改 型式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`型　式 ${CERT_TYPE}　原 動 機 の 型 式 ${ENGINE_TYPE}`]).fields, { model: CERT_TYPE, engine_model: ENGINE_TYPE });
+  // Stage 1 re-baseline (fail-closed direction): a Japanese VALUE such as a 車名 cell before the same-row 型式 label is
+  // indistinguishable from an unlisted remark qualifier (「旧来 型 式」) → suspect-only → rejected, manual entry (see T2 test).
+  const afterName = extractCertificateCodesFromLines([`車 名 ホンダ 型 式 ${CERT_TYPE}`]);
+  assert.deepEqual(afterName.fields, {});
+  assert.ok(afterName.rejected.model !== undefined && afterName.rejected.model.startsWith("【要手入力：型式】"), afterName.rejected.model);
+  assert.deepEqual(extractCertificateCodesFromLines([`型式:${CERT_TYPE}原動機の型式:${ENGINE_TYPE}`]).fields, { model: CERT_TYPE, engine_model: ENGINE_TYPE });
+
+  // End-to-end (T1 re-baseline): the remark value never becomes the accepted 型式 — and the AI 型式 is WITHHELD, whether
+  // absent, the same old value, or a different correct-looking one — server (override + policy) and review alike.
+  for (const aiModel of [undefined, "6BA-OLD999", CERT_TYPE]) {
+    const sanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: aiModel, engine_model: ENGINE_TYPE });
+    const outcome = applyPdfTextLayerCertificateFields(sanitized, remark);
+    assert.deepEqual(outcome, { applied: [], trustedModel: false, manualEntry: ["model"] }, String(aiModel));
+    assert.equal(sanitized.model, undefined, String(aiModel));
+    assert.equal(sanitized.model_text_layer, undefined);
+    const final = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: outcome.trustedModel });
+    assert.equal(final.model, undefined, String(aiModel));
+    assert.equal(final.model_text_layer, undefined);
+    assert.equal(resolveVehicleIdentity(structuredClone(final), { ambiguousGrade: "blank" }).result.model, undefined, String(aiModel));
+  }
+
+  // Two-row path (T1 re-baseline): 「旧型式」 split into adjacent letter pieces above a value is an OLD-MODEL 型式 label —
+  // its value is rejected (manual entry) and the other column still pairs. A genuine letter-spaced label row keeps
+  // pairing — including two labels printed back to back without a gap.
+  const compoundPieces: PdfTextItemLike[] = [
+    { str: "旧", x: 40, y: 500, width: 10, height: 10 }, { str: "型", x: 52, y: 500, width: 10, height: 10 }, { str: "式", x: 64, y: 500, width: 10, height: 10 },
+    { str: "6BA-OLD999", x: 40, y: 492, width: 80, height: 10 },
+    { str: "類別区分番号", x: 480, y: 500, width: 60, height: 10 }, { str: CLASSIFICATION, x: 480, y: 492, width: 40, height: 10 },
+  ];
+  const compound = extractCertificateCodesFromItems(compoundPieces);
+  assert.deepEqual(compound.fields, { classification_number: CLASSIFICATION });
+  assert.deepEqual(Object.keys(compound.rejected), ["model"]);
+  assert.ok(compound.notices.some((n) => n.includes("旧型式") && n.includes("6BA-OLD999")), compound.notices.join(" | "));
+  const spacedLabels: PdfTextItemLike[] = [
+    ...["型", "式", "原", "動", "機", "の", "型", "式"].map((str, i) => ({ str, x: 40 + 12 * i, y: 500, width: 10, height: 10 })),
+    { str: "AB1", x: 40, y: 492, width: 30, height: 10 }, { str: ENGINE_TYPE, x: 76, y: 492, width: 40, height: 10 },
+  ];
+  assert.deepEqual(extractCertificateCodesFromItems(spacedLabels).fields, { model: "AB1", engine_model: ENGINE_TYPE });
+});
+
+// ─── R2-6: the compound qualifier may be letter-spaced / whitespace-separated like the label itself (「旧 型 式」) ──
+
+test("R2-6: 「旧 型 式」 and its full-width / whitespace variants are compound text, never a 型式 label; a genuine 型式 on the same page is kept", () => {
+  const OLD = "6BA-OLD999";
+  // The reported residual: whitespace between the qualifier and a (letter-spaced) label. Before R2-6 every line below
+  // yielded model = 6BA-OLD999. For the listed NON-旧 qualifiers nothing is anchored, nothing rejected, no notice — and
+  // 「旧」 before a NON-型式 label is compound text just the same (the old-model rule is 型式-only).
+  for (const line of [
+    `車両の 型 式 ${OLD}`, `車 両 の 型 式 ${OLD}`, `この 型 式 ${OLD}`, `その 型式 ${OLD}`, `新 型 式 ${OLD}`, `元 型 式 ${OLD}`,
+    `変更前 型 式 ${OLD}`, `変 更 前 の 型 式 ${OLD}`, `変更後 型 式 ${OLD}`, `当該 型 式 ${OLD}`,
+    "旧 原 動 機 の 型 式 OLD1", "旧 原動機の型式 OLD1", "旧 型 式 指 定 番 号 99999", "旧 型式指定番号 99999", "旧 類 別 区 分 番 号 0099",
+  ]) {
+    const r = extractCertificateCodesFromLines([line]);
+    assert.equal(r.status, "no_codes", line);
+    assert.deepEqual(r.fields, {}, line);
+    assert.deepEqual(r.rejected, {}, line);
+    assert.deepEqual(r.notices, [], line);
+  }
+  // T1 re-baseline (fail-closed direction): the spaced 「旧 型 式」 variants are OLD-MODEL evidence → anchored, rejected,
+  // manual entry — never silently ignored, never the AI fallback (full contract in the T1 tests below).
+  for (const line of [
+    `備考: 旧 型 式 ${OLD}`, `備考: 旧 型式 ${OLD}`, `備考:旧 型 式:${OLD}`, `旧 型 式 ${OLD}`, `旧　型　式　${OLD}`, `旧　型式　${OLD}`,
+    "備考：　旧　型　式　６ＢＡ－ＯＬＤ９９９", "備考： 旧 型式 ６ＢＡ－ＯＬＤ９９９", "旧\t型\t式\t6BA-OLD999", `ホンダ 旧 型 式 ${OLD}`,
+  ]) {
+    const r = extractCertificateCodesFromLines([line]);
+    assert.equal(r.status, "no_codes", line);
+    assert.deepEqual(r.fields, {}, line);
+    assert.deepEqual(Object.keys(r.rejected), ["model"], line);
+    assert.ok(r.rejected.model !== undefined && r.rejected.model.startsWith("【要手入力：型式】") && r.rejected.model.includes("旧型式") && r.rejected.model.includes(OLD), line);
+  }
+
+  // A genuine (letter-spaced) 型式 on the same page: the spaced remark is ignored, no "several candidates" ambiguity,
+  // all four codes are kept — whichever variant the remark uses and wherever it sits.
+  for (const remark of [`車両の 型 式 ${OLD}`, `この 型 式 ${OLD}`]) {
+    for (const lines of [
+      [`型 式 ${CERT_TYPE} 原 動 機 の 型 式 ${ENGINE_TYPE}`, remark, `型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`],
+      [remark, `型 式 ${CERT_TYPE}`, `原動機の型式 ${ENGINE_TYPE} 型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`],
+      [`型式 ${CERT_TYPE} ${remark}`, `原動機の型式 ${ENGINE_TYPE} 型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`],
+    ]) {
+      const page = extractCertificateCodesFromLines(lines);
+      assert.deepEqual(page.fields, ALL_FOUR, JSON.stringify(lines));
+      assert.deepEqual(page.notices, [], JSON.stringify(lines));
+    }
+    // Stage 1 re-baseline: the same page with a 車名 cell before the 型式 label on the label's own row — the remark is
+    // still ignored (listed qualifier), but the 型式 candidate is suspect-only → rejected, the other three codes stay.
+    const named = extractCertificateCodesFromLines([`車 名 ホンダ 型 式 ${CERT_TYPE} 原 動 機 の 型 式 ${ENGINE_TYPE}`, remark, `型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`]);
+    assert.deepEqual(named.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION }, remark);
+    assert.deepEqual(Object.keys(named.rejected), ["model"], remark);
+    assert.equal(named.notices.length, 1, remark);
+    assert.ok(named.notices[0].includes("車名ホンダ") && named.notices[0].includes(CERT_TYPE) && !named.notices[0].includes(OLD), named.notices[0]);
+  }
+  // T1 re-baseline: a genuine 型式 next to a spaced 「旧 型 式」 remark with a DIFFERENT value is the existing ambiguity
+  // rejection (the other three codes stay); with the SAME value the clean label is the evidence and 型式 is accepted.
+  for (const remark of [`備考: 旧 型 式 ${OLD}`, "備考：　旧　型　式　６ＢＡ－ＯＬＤ９９９", `旧 型式 ${OLD}`]) {
+    for (const lines of [
+      [`型 式 ${CERT_TYPE} 原 動 機 の 型 式 ${ENGINE_TYPE}`, remark, `型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`],
+      [remark, `型 式 ${CERT_TYPE}`, `原動機の型式 ${ENGINE_TYPE} 型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`],
+      [`型式 ${CERT_TYPE} ${remark}`, `原動機の型式 ${ENGINE_TYPE} 型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`],
+    ]) {
+      const page = extractCertificateCodesFromLines(lines);
+      assert.deepEqual(page.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION }, JSON.stringify(lines));
+      assert.deepEqual(Object.keys(page.rejected), ["model"], JSON.stringify(lines));
+      assert.ok(page.notices.some((n) => n.includes("候補が複数") && n.includes(CERT_TYPE) && n.includes(OLD)), JSON.stringify(lines));
+    }
+  }
+  assert.deepEqual(extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`, `旧 型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`, `旧 型 式 ${CERT_TYPE}`]).rejected, {});
+
+  // Positive controls (unchanged): a label at a FIELD boundary — line start, after an ASCII value or colon, after the
+  // modification mark of the previous value, letter-spaced or not.
+  assert.deepEqual(extractCertificateCodesFromLines([`型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`型　式　${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`改 型式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`改 型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`(改) 型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`${ENGINE_TYPE} 型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  // T1 re-baseline: an old-model value on the SAME line as a differing genuine 型式 → ambiguity rejection (not "clean wins").
+  assert.ok(extractCertificateCodesFromLines([`旧型式 ${OLD} 型 式 ${CERT_TYPE}`]).rejected.model?.includes("候補が複数"));
+  assert.ok(extractCertificateCodesFromLines([`備考: 旧 型 式 ${OLD} 型式 ${CERT_TYPE}`]).rejected.model?.includes("候補が複数"));
+  assert.deepEqual(extractCertificateCodesFromLines([`型式:${CERT_TYPE} 旧 原 動 機 の 型 式 OLD1 原動機の型式:${ENGINE_TYPE}`]).fields, { model: CERT_TYPE, engine_model: ENGINE_TYPE });
+  // Stage 1 re-baseline (fail-closed direction): a Japanese VALUE (車名 cell) directly before the same-row 型式 label,
+  // and a listed qualifier that is NOT the last Japanese text (「旧 車名 ホンダ 型 式」), are unlisted runs → suspect-only
+  // → rejected with a manual-entry notice, never anchored as a trusted 型式 (T2 test below holds the full contract).
+  for (const line of [
+    `車 名 ホンダ 型 式 ${CERT_TYPE}`, `車名 トヨタ 型式 ${CERT_TYPE}`, `車 名 ダイハツ 型 式 ${CERT_TYPE}`, `車 名 三菱 型 式 ${CERT_TYPE}`,
+    `旧 車名 ホンダ 型 式 ${CERT_TYPE}`,
+  ]) {
+    const r = extractCertificateCodesFromLines([line]);
+    assert.deepEqual(r.fields, {}, line);
+    assert.equal(r.status, "no_codes", line);
+    assert.deepEqual(Object.keys(r.rejected), ["model"], line);
+    assert.ok(r.rejected.model !== undefined && r.rejected.model.startsWith("【要手入力：型式】") && r.rejected.model.includes(CERT_TYPE), line);
+  }
+  // Value-side rejections after a valid label are untouched by the boundary rule (「型 式 6BA-ABC1 改」 still rejected whole).
+  const modified = extractCertificateCodesFromLines([`車 名 ホンダ 型 式 ${CERT_TYPE} 改`]);
+  assert.deepEqual(modified.fields, {});
+  assert.ok(modified.rejected.model !== undefined);
+
+  // Documented limitation (fail-closed direction only): a Japanese VALUE that itself ends with a listed qualifier
+  // character directly before the label is treated as compound text — the label is ignored, never mis-anchored,
+  // and the AI reading remains the unchanged fallback (no such 車名 exists on a certificate; kept explicit here).
+  assert.deepEqual(extractCertificateCodesFromLines([`車 名 テスト新 型 式 ${CERT_TYPE}`]).fields, {});
+
+  // Two-row path: a qualifier token before a letter-spaced label — at piece distance OR at a wider gap (the case
+  // the piece-gap rule of R2-3 did not cover) — is compound text; other labels on the row keep pairing.
+  for (const qualifierX of [40, 52]) {
+    for (const qualifier of ["車両の", "この", "新"]) { // 「旧」 moved to the T1 test: old-model label, rejected
+      const items: PdfTextItemLike[] = [
+        { str: qualifier, x: qualifierX, y: 500, width: 10, height: 10 },
+        { str: "型", x: 100, y: 500, width: 10, height: 10 }, { str: "式", x: 112, y: 500, width: 10, height: 10 },
+        { str: OLD, x: 100, y: 492, width: 80, height: 10 },
+        { str: "類別区分番号", x: 480, y: 500, width: 60, height: 10 }, { str: CLASSIFICATION, x: 480, y: 492, width: 40, height: 10 },
+      ];
+      const r = extractCertificateCodesFromItems(items);
+      assert.deepEqual(r.fields, { classification_number: CLASSIFICATION }, `${qualifier}@${qualifierX}`);
+      assert.deepEqual(r.notices, [], `${qualifier}@${qualifierX}`);
+    }
+  }
+  // Two-row positive controls: a letter-spaced 型 式 label in its own column after a 車 名 label column, and after a
+  // Japanese 車名 VALUE token on the label row, still pair with the value directly below (geometry unchanged).
+  const columns: PdfTextItemLike[] = [
+    { str: "車", x: 40, y: 500, width: 10, height: 10 }, { str: "名", x: 52, y: 500, width: 10, height: 10 },
+    { str: "型", x: 140, y: 500, width: 10, height: 10 }, { str: "式", x: 152, y: 500, width: 10, height: 10 },
+    { str: "ホンダ", x: 40, y: 492, width: 30, height: 10 }, { str: CERT_TYPE, x: 140, y: 492, width: 60, height: 10 },
+  ];
+  assert.deepEqual(extractCertificateCodesFromItems(columns).fields, { model: CERT_TYPE });
+  const afterValue: PdfTextItemLike[] = [
+    { str: "ホンダ", x: 40, y: 500, width: 30, height: 10 },
+    { str: "型", x: 100, y: 500, width: 10, height: 10 }, { str: "式", x: 112, y: 500, width: 10, height: 10 },
+    { str: CERT_TYPE, x: 100, y: 492, width: 60, height: 10 },
+  ];
+  assert.deepEqual(extractCertificateCodesFromItems(afterValue).fields, { model: CERT_TYPE });
+  const afterMark: PdfTextItemLike[] = [
+    { str: "改", x: 40, y: 500, width: 10, height: 10 },
+    { str: "型", x: 100, y: 500, width: 10, height: 10 }, { str: "式", x: 112, y: 500, width: 10, height: 10 },
+    { str: CERT_TYPE, x: 100, y: 492, width: 60, height: 10 },
+  ];
+  assert.deepEqual(extractCertificateCodesFromItems(afterMark).fields, { model: CERT_TYPE });
+});
+
+// ─── R2-7: the 「従来 型 式」 / 「先代 型 式」 qualifiers (residual of R2-6) are compound text like 「旧 型 式」 ────
+
+test("R2-7: 「従来 型 式」 and 「先代 型 式」 (spaced, full-width, glued) are compound text, never a 型式 label; a genuine 型式 on the same page is kept", () => {
+  const OLD = "6BA-OLD999";
+  // The documented residual of R2-6: these two qualifiers were outside the explicit list, so the spaced remark alone
+  // yielded model = 6BA-OLD999, and next to a genuine 型式 it raised a "候補が複数" ambiguity that dropped the genuine
+  // value. Now nothing is anchored, nothing rejected, no notice — exactly like 「旧 型 式」.
+  for (const line of [
+    `備考: 従来 型 式 ${OLD}`, `先代 型 式 ${OLD}`, `従来 型 式 ${OLD}`, `備考: 先代 型 式 ${OLD}`, `従来 型式 ${OLD}`, `先代 型式 ${OLD}`,
+    `従来　型　式　${OLD}`, `先代　型　式　${OLD}`, "備考：　従来　型　式　６ＢＡ－ＯＬＤ９９９", "備考：　先代　型　式　６ＢＡ－ＯＬＤ９９９",
+    `備考:従来 型 式:${OLD}`, `従来の 型 式 ${OLD}`, `先代の 型 式 ${OLD}`, `ホンダ 従来 型 式 ${OLD}`,
+    `従来型式 ${OLD}`, `先代型式 ${OLD}`, // glued forms were already rule 1 — must stay ignored
+    "従来 原 動 機 の 型 式 OLD1", "先代 原動機の型式 OLD1", "従来 型 式 指 定 番 号 99999", "先代 型式指定番号 99999", "従来 類 別 区 分 番 号 0099",
+  ]) {
+    const r = extractCertificateCodesFromLines([line]);
+    assert.equal(r.status, "no_codes", line);
+    assert.deepEqual(r.fields, {}, line);
+    assert.deepEqual(r.rejected, {}, line);
+    assert.deepEqual(r.notices, [], line);
+  }
+
+  // A genuine 型式 on the same page: the remark is ignored, no "候補が複数" ambiguity, all four codes kept —
+  // whichever variant, wherever it sits (own line before / after, or on the 型式 line itself).
+  for (const remark of [`備考: 従来 型 式 ${OLD}`, `先代 型 式 ${OLD}`, "備考：　従来　型　式　６ＢＡ－ＯＬＤ９９９", `先代 型式 ${OLD}`]) {
+    for (const lines of [
+      [`型式 ${CERT_TYPE} 原動機の型式 ${ENGINE_TYPE}`, remark, `型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`],
+      [`型 式 ${CERT_TYPE} 原 動 機 の 型 式 ${ENGINE_TYPE}`, remark, `型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`],
+      [remark, `型 式 ${CERT_TYPE}`, `原動機の型式 ${ENGINE_TYPE} 型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`],
+      [`型式 ${CERT_TYPE} ${remark}`, `原動機の型式 ${ENGINE_TYPE} 型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`],
+    ]) {
+      const page = extractCertificateCodesFromLines(lines);
+      assert.deepEqual(page.fields, ALL_FOUR, JSON.stringify(lines));
+      assert.deepEqual(page.notices, [], JSON.stringify(lines));
+      assert.deepEqual(page.rejected, {}, JSON.stringify(lines));
+    }
+    // Stage 1 re-baseline: a 車名 cell before the 型式 label on its own row → 型式 suspect-only → rejected; the remark
+    // (listed qualifier) stays ignored and the other three codes are kept.
+    const named = extractCertificateCodesFromLines([`車 名 ホンダ 型 式 ${CERT_TYPE} 原 動 機 の 型 式 ${ENGINE_TYPE}`, remark, `型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`]);
+    assert.deepEqual(named.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION }, remark);
+    assert.deepEqual(Object.keys(named.rejected), ["model"], remark);
+  }
+  // …and the remark quoting the SAME value as the genuine 型式 is still just ignored (one candidate, no conflict).
+  assert.deepEqual(extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`, `従来 型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+
+  // Positive controls (unchanged): a modification mark, an ASCII value or a colon before the label keep it a field
+  // label. 「従来」/「先代」 elsewhere on the line never disturb a valid label.
+  assert.deepEqual(extractCertificateCodesFromLines([`改 型式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`従来 型 式 ${OLD} 型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  // Stage 1 re-baseline (fail-closed direction): a 車名 VALUE before the label — with or without 「従来」/「先代」 earlier on
+  // the line — is an unlisted Japanese run → suspect-only → rejected with a manual-entry notice.
+  for (const line of [`車 名 ホンダ 型 式 ${CERT_TYPE}`, `従来 車名 ホンダ 型 式 ${CERT_TYPE}`, `先代 車 名 ホンダ 型 式 ${CERT_TYPE}`]) {
+    const r = extractCertificateCodesFromLines([line]);
+    assert.deepEqual(r.fields, {}, line);
+    assert.deepEqual(Object.keys(r.rejected), ["model"], line);
+  }
+  assert.deepEqual(extractCertificateCodesFromLines([`備考: 先代 型 式 ${OLD} 型式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`型式:${CERT_TYPE} 従来 原 動 機 の 型 式 OLD1 原動機の型式:${ENGINE_TYPE}`]).fields, { model: CERT_TYPE, engine_model: ENGINE_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`型 式 ${CERT_TYPE} 原 動 機 の 型 式 ${ENGINE_TYPE}`]).fields, { model: CERT_TYPE, engine_model: ENGINE_TYPE });
+  // Value-side rejections after a valid label are untouched (「型 式 6BA-ABC1 改」 still rejected whole).
+  const modified = extractCertificateCodesFromLines([`車 名 ホンダ 型 式 ${CERT_TYPE} 改`]);
+  assert.deepEqual(modified.fields, {});
+  assert.ok(modified.rejected.model !== undefined);
+
+  // Two-row path: a 「従来」 / 「先代」 token before a letter-spaced label — at piece distance or at a wider gap — is
+  // compound text; other labels on the row keep pairing (same isQualifierToken rule as 「旧」).
+  for (const qualifierX of [40, 52, 76]) {
+    for (const qualifier of ["従来", "先代", "従来の"]) {
+      const items: PdfTextItemLike[] = [
+        { str: qualifier, x: qualifierX, y: 500, width: 20, height: 10 },
+        { str: "型", x: 100, y: 500, width: 10, height: 10 }, { str: "式", x: 112, y: 500, width: 10, height: 10 },
+        { str: OLD, x: 100, y: 492, width: 80, height: 10 },
+        { str: "類別区分番号", x: 480, y: 500, width: 60, height: 10 }, { str: CLASSIFICATION, x: 480, y: 492, width: 40, height: 10 },
+      ];
+      const r = extractCertificateCodesFromItems(items);
+      assert.deepEqual(r.fields, { classification_number: CLASSIFICATION }, `${qualifier}@${qualifierX}`);
+      assert.deepEqual(r.notices, [], `${qualifier}@${qualifierX}`);
+    }
+  }
+  // Two-row positive control: a 車名 VALUE token before the letter-spaced label still pairs (geometry unchanged).
+  const afterValue: PdfTextItemLike[] = [
+    { str: "ホンダ", x: 40, y: 500, width: 30, height: 10 },
+    { str: "型", x: 100, y: 500, width: 10, height: 10 }, { str: "式", x: 112, y: 500, width: 10, height: 10 },
+    { str: CERT_TYPE, x: 100, y: 492, width: 60, height: 10 },
+  ];
+  assert.deepEqual(extractCertificateCodesFromItems(afterValue).fields, { model: CERT_TYPE });
+});
+
+// ─── Stage 1 (T2): an UNLISTED Japanese run across whitespace before a same-row 型式 label is a SUSPECT boundary ─────
+
+test("T2: 「備考: 旧来 型 式 6BA-OLD999」 (unlisted qualifier) is suspect-only → 型式 rejected with a manual-entry notice, never anchored", () => {
+  const OLD = "6BA-OLD999";
+  // Before Stage 1 every line below anchored the label and yielded model = 6BA-OLD999 WITH provenance (rule 2 only
+  // knows the listed qualifiers). Now the candidate is suspect and, with no clean occurrence, the field fails closed.
+  for (const line of [
+    `備考: 旧来 型 式 ${OLD}`, `旧来 型 式 ${OLD}`, `旧来 型式 ${OLD}`, `旧来　型　式　${OLD}`, "備考：　旧来　型　式　６ＢＡ－ＯＬＤ９９９",
+    `備考:旧来 型 式:${OLD}`, `参考 型 式 ${OLD}`, `ホンダ 型 式 ${OLD}`, `車 名 ホンダ 型 式 ${OLD}`, `旧来\t型\t式\t${OLD}`,
+  ]) {
+    const r = extractCertificateCodesFromLines([line]);
+    assert.equal(r.status, "no_codes", line);
+    assert.deepEqual(r.fields, {}, line);
+    assert.deepEqual(Object.keys(r.rejected), ["model"], line);
+    assert.equal(r.notices.length, 1, line);
+    assert.equal(r.rejected.model, r.notices[0], line);
+    assert.ok(r.notices[0].startsWith("【要手入力：型式】") && r.notices[0].includes(OLD) && r.notices[0].includes("型式は自動取得しませんでした") && r.notices[0].includes("手入力"), r.notices[0]);
+  }
+  // The notice quotes the preceding text (whitespace removed) so the operator can find the line on the certificate.
+  const quoted = extractCertificateCodesFromLines([`備考: 旧来 型 式 ${OLD}`]);
+  assert.ok(quoted.notices[0].includes("（旧来）"), quoted.notices[0]);
+  // Other codes on the page are unaffected; the suspect rule is about the 型式 label only.
+  const page = extractCertificateCodesFromLines([`原動機の型式 ${ENGINE_TYPE}`, `備考: 旧来 型 式 ${OLD}`, `型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`]);
+  assert.equal(page.status, "extracted");
+  assert.deepEqual(page.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION });
+  assert.deepEqual(Object.keys(page.rejected), ["model"]);
+
+  // Suspect + clean occurrence of the SAME value → accepted (the clean label is the evidence), no notice.
+  for (const lines of [
+    [`型式 ${CERT_TYPE}`, `車 名 ホンダ 型 式 ${CERT_TYPE}`],
+    [`備考: 旧来 型 式 ${CERT_TYPE}`, `型 式 ${CERT_TYPE}`],
+    [`車 名 ホンダ 型 式 ${CERT_TYPE} 原動機の型式 ${ENGINE_TYPE}`, `型式:${CERT_TYPE}`],
+  ]) {
+    const r = extractCertificateCodesFromLines(lines);
+    assert.equal(r.fields.model, CERT_TYPE, JSON.stringify(lines));
+    assert.deepEqual(r.rejected, {}, JSON.stringify(lines));
+    assert.deepEqual(r.notices, [], JSON.stringify(lines));
+  }
+
+  // Suspect + clean occurrence of DIFFERENT values → the existing ambiguity rejection (never "clean wins": a bare-label
+  // remark 「備考: 型式 X」 is itself clean, so preferring clean would let it beat a genuine label).
+  for (const lines of [
+    [`型式 ${CERT_TYPE}`, `備考: 旧来 型 式 ${OLD}`],
+    [`備考: 旧来 型 式 ${OLD}`, `型 式 ${CERT_TYPE}`],
+    [`車 名 ホンダ 型 式 ${OLD}`, `型式 ${CERT_TYPE}`],
+  ]) {
+    const r = extractCertificateCodesFromLines(lines);
+    assert.equal(r.fields.model, undefined, JSON.stringify(lines));
+    assert.deepEqual(Object.keys(r.rejected), ["model"], JSON.stringify(lines));
+    assert.ok(r.notices.some((n) => n.includes("候補が複数") && n.includes(CERT_TYPE) && n.includes(OLD)), r.notices.join(" | "));
+  }
+  // Two suspect labels with different values are an ambiguity as well; the same suspect value twice is still suspect-only.
+  assert.ok(extractCertificateCodesFromLines([`車 名 ホンダ 型 式 ${CERT_TYPE}`, `備考: 旧来 型 式 ${OLD}`]).notices.some((n) => n.includes("候補が複数")));
+  assert.ok(extractCertificateCodesFromLines([`車 名 ホンダ 型 式 ${OLD}`, `備考: 旧来 型 式 ${OLD}`]).notices.some((n) => n.includes("（旧来）") || n.includes("（車名ホンダ）")));
+
+  // Value-side / listed-qualifier rules keep precedence: a 改 after the value is the trailing-text rejection; a listed
+  // non-旧 qualifier is still compound text (ignored, no notice); 「旧」 is the T1 old-model rejection (not suspect); a bare
+  // modification mark before the label is a clean boundary.
+  assert.ok(extractCertificateCodesFromLines([`旧来 型 式 ${OLD} 改`]).notices[0].includes(`${OLD} 改`));
+  assert.ok(extractCertificateCodesFromLines([`備考: 旧 型 式 ${OLD}`]).rejected.model?.includes("旧型式"));
+  assert.deepEqual(extractCertificateCodesFromLines([`備考: 従来 型 式 ${OLD}`]).notices, []);
+  assert.deepEqual(extractCertificateCodesFromLines([`改 型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`(改) 型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`${OLD} 改 型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  // Clean boundaries stay clean: ASCII, colon, a preceding code, a line start.
+  assert.deepEqual(extractCertificateCodesFromLines([`備考: 型式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`${ENGINE_TYPE} 型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  // A suspect label WITHOUT a value records nothing (no candidate, no notice): 「ホンダ 型 式」 on a label row is left to
+  // the two-row rule, whose column pairing is unchanged (positive control from R2-6/R2-7).
+  assert.deepEqual(extractCertificateCodesFromLines([`車 名 ホンダ 型 式`]).rejected, {});
+  const afterValue: PdfTextItemLike[] = [
+    { str: "ホンダ", x: 40, y: 500, width: 30, height: 10 },
+    { str: "型", x: 100, y: 500, width: 10, height: 10 }, { str: "式", x: 112, y: 500, width: 10, height: 10 },
+    { str: CERT_TYPE, x: 100, y: 492, width: 60, height: 10 },
+  ];
+  assert.deepEqual(extractCertificateCodesFromItems(afterValue).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromItems(afterValue).rejected, {});
+  // Items path: a suspect same-row line plus a clean two-row value of the same code is accepted; a different one is ambiguous.
+  const sameRowSuspect: PdfTextItemLike[] = [
+    { str: "備考: 旧来", x: 40, y: 300, width: 50, height: 10 }, { str: "型 式", x: 110, y: 300, width: 20, height: 10 }, { str: CERT_TYPE, x: 150, y: 300, width: 80, height: 10 },
+  ];
+  assert.deepEqual(extractCertificateCodesFromItems([...twoRowItems(500, 492), ...sameRowSuspect]).fields, ALL_FOUR);
+  const differing = extractCertificateCodesFromItems([...twoRowItems(500, 492), { ...sameRowSuspect[0] }, { ...sameRowSuspect[1] }, { str: OLD, x: 150, y: 300, width: 80, height: 10 }]);
+  assert.equal(differing.fields.model, undefined);
+  assert.ok(differing.notices.some((n) => n.includes("候補が複数")));
+});
+
+test("T2 (pipeline): a suspect-only 型式 withholds the AI 型式 — same wrong value or a different correct-looking one — and claims no provenance", () => {
+  const OLD = "6BA-OLD999";
+  const remark = extractCertificateCodesFromLines([`原動機の型式 ${ENGINE_TYPE}`, `備考: 旧来 型 式 ${OLD}`]);
+  assert.deepEqual(remark.fields, { engine_model: ENGINE_TYPE });
+  assert.deepEqual(Object.keys(remark.rejected), ["model"]);
+
+  // (A) AI read the same remark value; (B) AI read a different, correct-looking 型式. Both are withheld: blank beats
+  // a value the page cannot vouch for, and the withheld candidate is never echoed in any notice.
+  for (const aiModel of [OLD, CERT_TYPE]) {
+    const sanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: aiModel, engine_model: ENGINE_TYPE, owner_name: "合成 名義" });
+    const outcome = applyPdfTextLayerCertificateFields(sanitized, remark);
+    assert.deepEqual(outcome, { applied: ["engine_model"], trustedModel: false, manualEntry: ["model"] }, aiModel);
+    assert.equal(sanitized.model, undefined, aiModel);
+    assert.equal(sanitized.model_text_layer, undefined, aiModel);
+    const notices = sanitized.vehicle_identity_notices ?? [];
+    assert.ok(notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes("（旧来）") && n.includes(OLD)), notices.join(" | "));
+    assert.ok(notices.some((n) => n.includes("AI読み取りの型式") && n.includes("表示しません")), notices.join(" | "));
+    assert.ok(!notices.some((n) => n.includes("PDFの文字情報を優先")), notices.join(" | "));
+    if (aiModel !== OLD) assert.ok(notices.every((n) => !n.includes(aiModel)), notices.join(" | "));
+    const final = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: outcome.trustedModel });
+    assert.equal(final.model, undefined, aiModel);
+    assert.equal(final.model_text_layer, undefined, aiModel);
+    assert.equal(final.engine_model, ENGINE_TYPE, aiModel);
+    assert.equal(final.owner_name, "合成 名義", aiModel);
+    const review = resolveVehicleIdentity(structuredClone(final), { ambiguousGrade: "blank" }).result;
+    assert.equal(review.model, undefined, aiModel);
+    assert.equal(review.model_text_layer, undefined, aiModel);
+  }
+  // No AI 型式 at all: manual-entry state only, no "withheld" notice.
+  const blank = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", engine_model: ENGINE_TYPE });
+  assert.deepEqual(applyPdfTextLayerCertificateFields(blank, remark).manualEntry, ["model"]);
+  assert.ok(!(blank.vehicle_identity_notices ?? []).some((n) => n.includes("AI読み取りの")));
+
+  // (C) suspect + clean DIFFERENT values: ambiguity → the AI value (even the wrong remark one) is withheld as before.
+  const ambiguous = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: OLD });
+  const ambiguousOutcome = applyPdfTextLayerCertificateFields(ambiguous, extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`, `備考: 旧来 型 式 ${OLD}`]));
+  assert.deepEqual(ambiguousOutcome, { applied: [], trustedModel: false, manualEntry: ["model"] });
+  assert.equal(applyVehicleIdentityPolicy(ambiguous, { trustedModelShape: false }).model, undefined);
+
+  // Suspect + clean SAME value: applied with provenance exactly like a plain clean label.
+  const agreed = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: OLD });
+  const agreedOutcome = applyPdfTextLayerCertificateFields(agreed, extractCertificateCodesFromLines([`車 名 ホンダ 型 式 ${CERT_TYPE}`, `型式 ${CERT_TYPE}`]));
+  assert.deepEqual(agreedOutcome, { applied: ["model"], trustedModel: true, manualEntry: [] });
+  assert.equal(agreed.model, CERT_TYPE);
+  assert.equal(agreed.model_text_layer, CERT_TYPE);
+  assert.equal(applyVehicleIdentityPolicy(agreed, { trustedModelShape: true }).model, CERT_TYPE);
+});
+
+test("T2 (pdf.js): a selectable PDF whose only 型式 label follows 「旧来」 on the same row yields no 型式, a manual-entry rejection, and the other codes", async () => {
+  const OLD = "6BA-OLD999";
+  const pdf = buildSyntheticPdf([{ text: [
+    { x: 40,  y: 780, text: "自動車検査証（合成テスト）" },
+    { x: 40,  y: 740, text: "原動機の型式" }, { x: 120, y: 740, text: ENGINE_TYPE },
+    { x: 40,  y: 700, text: "型式指定番号" }, { x: 120, y: 700, text: TYPE_APPROVAL },
+    { x: 260, y: 700, text: "類別区分番号" }, { x: 340, y: 700, text: CLASSIFICATION },
+    { x: 40,  y: 600, text: "備考:" }, { x: 80, y: 600, text: "旧来" }, { x: 120, y: 600, text: "型 式" }, { x: 170, y: 600, text: OLD },
+  ] }]);
+  const r = await extractCertificateCodesFromPdf(toBytes(pdf));
+  assert.equal(r.status, "extracted", JSON.stringify(r));
+  assert.deepEqual(r.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION });
+  assert.deepEqual(Object.keys(r.rejected), ["model"]);
+  assert.ok(r.notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes(OLD)), r.notices.join(" | "));
+});
+
+// ─── R2-4: 型式 provenance (model_text_layer) is written only for a 型式 the text layer itself applied ─────
+
+test("R2-4: applyPdfTextLayerCertificateFields records 型式 provenance only when it applied 型式, and discards any pre-existing claim", () => {
+  // 型式 applied → provenance = the exact applied value (a forged input claim is replaced, never kept).
+  const full = { model: "6BA-ABC2" as string | undefined, model_text_layer: "FORGED" as string | undefined };
+  const fullOutcome = applyPdfTextLayerCertificateFields(full, extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`]));
+  assert.equal(fullOutcome.trustedModel, true);
+  assert.equal(full.model, CERT_TYPE);
+  assert.equal(full.model_text_layer, CERT_TYPE);
+
+  // Other codes only → no 型式 provenance; a stale claim on the input is removed.
+  const partial = { model: "XYZ9" as string | undefined, model_text_layer: "XYZ9" as string | undefined };
+  assert.equal(applyPdfTextLayerCertificateFields(partial, extractCertificateCodesFromLines([`類別区分番号 ${CLASSIFICATION}`])).trustedModel, false);
+  assert.equal(partial.model, "XYZ9");
+  assert.equal(partial.model_text_layer, undefined);
+
+  // 型式 rejected → neither the value nor a provenance survives.
+  const rejected = { model: CERT_TYPE as string | undefined, model_text_layer: CERT_TYPE as string | undefined };
+  applyPdfTextLayerCertificateFields(rejected, extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 改`]));
+  assert.equal(rejected.model, undefined);
+  assert.equal(rejected.model_text_layer, undefined);
+
+  // Non-text-layer statuses: a claim carried by the input is dropped too — only THIS extraction can establish it.
+  for (const status of ["no_text", "no_codes", "not_pdf", "too_large", "timeout", "parse_error"] as const) {
+    const scanned = { model: "XYZ9" as string | undefined, model_text_layer: "XYZ9" as string | undefined };
+    applyPdfTextLayerCertificateFields(scanned, { status, fields: {}, rejected: {}, notices: [], lineCount: 0 });
+    assert.equal(scanned.model, "XYZ9");
+    assert.equal(scanned.model_text_layer, undefined);
+  }
+  // No PDF at all (null extraction) leaves ordinary AI data untouched (a stale claim is covered by R2-5).
+  const image = { model: "XYZ9" };
+  applyPdfTextLayerCertificateFields(image, null);
+  assert.deepEqual(image, { model: "XYZ9" });
+});
+
+test("R2-5: an absent extraction (null / undefined — image upload, no PDF) still discards a stale or forged 型式 provenance and leaves ordinary AI data unchanged", () => {
+  for (const absent of [null, undefined]) {
+    // Stale / forged claim matching the bare AI 型式: removed by the pure function itself, so the downstream
+    // identity policy (server) and the review's re-resolution both blank the hyphen-less code as usual.
+    const forged: VehicleRegistrationOcrResult = {
+      maker: "ホンダ", model: "XYZ9", engine_model: ENGINE_TYPE, owner_name: "合成 名義",
+      model_text_layer: "XYZ9", vehicle_identity_notices: ["既存の通知"],
+    };
+    const outcome = applyPdfTextLayerCertificateFields(forged, absent);
+    assert.deepEqual(outcome, { applied: [], trustedModel: false, manualEntry: [] });
+    assert.deepEqual(forged, {
+      maker: "ホンダ", model: "XYZ9", engine_model: ENGINE_TYPE, owner_name: "合成 名義",
+      vehicle_identity_notices: ["既存の通知"],
+    });
+    assert.equal(resolveVehicleIdentity(structuredClone(forged), { ambiguousGrade: "blank" }).result.model, undefined);
+    const server = applyVehicleIdentityPolicy(structuredClone(forged), { trustedModelShape: outcome.trustedModel });
+    assert.equal(server.model, undefined);
+    assert.equal(server.model_text_layer, undefined);
+    assert.equal(server.engine_model, ENGINE_TYPE);
+    assert.equal(server.owner_name, "合成 名義");
+
+    // A claim for a DIFFERENT value than 型式 is removed just the same; the hyphenated 型式 stands on its own shape.
+    const mismatch: VehicleRegistrationOcrResult = { model: CERT_TYPE, model_text_layer: "XYZ9" };
+    applyPdfTextLayerCertificateFields(mismatch, absent);
+    assert.deepEqual(mismatch, { model: CERT_TYPE });
+
+    // Ordinary AI data with no claim: byte-for-byte unchanged (no notices, no keys added or removed).
+    const plain: VehicleRegistrationOcrResult = { maker: "ホンダ", model: CERT_TYPE, engine_model: ENGINE_TYPE, owner_name: "合成 名義" };
+    const before = structuredClone(plain);
+    assert.deepEqual(applyPdfTextLayerCertificateFields(plain, absent), { applied: [], trustedModel: false, manualEntry: [] });
+    assert.deepEqual(plain, before);
+  }
+});
+
+// ─── T1: the 「旧型式」 annotation is OLD-MODEL evidence — an old-model-only 型式 fails closed (Owner-approved policy) ─────
+
+test("T1: 「旧型式 X」 / 「旧 型 式 X」 alone is rejected with a manual-entry notice; clean+old same is accepted, different is ambiguous; 旧 before other labels and plain labels are untouched", () => {
+  const OLD = "6BA-OLD999";
+  // Old-model only — glued, spaced, full-width, tab, colon, remark prefix, preceding text ending in 旧: rejected, never accepted.
+  for (const line of [
+    `旧型式 ${OLD}`, `備考: 旧型式 ${OLD}`, `旧型式:${OLD}`, `旧 型 式 ${OLD}`, `旧 型式 ${OLD}`, `旧　型　式　${OLD}`, `旧　型式　${OLD}`,
+    `備考: 旧 型 式 ${OLD}`, `備考:旧 型 式:${OLD}`, "備考：　旧　型　式　６ＢＡ－ＯＬＤ９９９", "旧型式　６ＢＡ－ＯＬＤ９９９", `旧\t型\t式\t${OLD}`,
+    `ホンダ 旧 型 式 ${OLD}`, `備考旧型式 ${OLD}`,
+  ]) {
+    const r = extractCertificateCodesFromLines([line]);
+    assert.equal(r.status, "no_codes", line);
+    assert.deepEqual(r.fields, {}, line);
+    assert.deepEqual(Object.keys(r.rejected), ["model"], line);
+    assert.equal(r.notices.length, 1, line);
+    assert.equal(r.rejected.model, r.notices[0], line);
+    const n = r.notices[0];
+    assert.ok(n.startsWith("【要手入力：型式】") && n.includes("旧型式") && n.includes(OLD) && n.includes("型式は自動取得しませんでした") && n.includes("手入力"), n);
+  }
+  // Other codes on the page are unaffected; the AI-visible outcome is: three codes applied, 型式 manual.
+  const page = extractCertificateCodesFromLines([`原動機の型式 ${ENGINE_TYPE}`, `備考: 旧型式 ${OLD}`, `型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`]);
+  assert.equal(page.status, "extracted");
+  assert.deepEqual(page.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION });
+  assert.deepEqual(Object.keys(page.rejected), ["model"]);
+  // The same old value twice (glued + spaced) is still old-model-only, not an ambiguity.
+  assert.ok(extractCertificateCodesFromLines([`旧型式 ${OLD}`, `備考: 旧 型 式 ${OLD}`]).rejected.model?.includes("旧型式"));
+
+  // Clean 型式 + old-model with the SAME value → accepted (the clean label is the evidence), no notice, no rejection.
+  for (const lines of [
+    [`型式 ${CERT_TYPE}`, `備考: 旧型式 ${CERT_TYPE}`],
+    [`備考: 旧 型 式 ${CERT_TYPE}`, `型 式 ${CERT_TYPE}`],
+    [`型式 ${CERT_TYPE} 原動機の型式 ${ENGINE_TYPE}`, `旧　型式　${CERT_TYPE}`],
+  ]) {
+    const r = extractCertificateCodesFromLines(lines);
+    assert.equal(r.fields.model, CERT_TYPE, JSON.stringify(lines));
+    assert.deepEqual(r.rejected, {}, JSON.stringify(lines));
+    assert.deepEqual(r.notices, [], JSON.stringify(lines));
+  }
+  // Clean 型式 + old-model with DIFFERENT values → the existing ambiguity rejection (never "clean wins").
+  for (const lines of [
+    [`型式 ${CERT_TYPE}`, `備考: 旧型式 ${OLD}`],
+    [`備考: 旧 型 式 ${OLD}`, `型 式 ${CERT_TYPE}`],
+    [`型式 ${CERT_TYPE} 備考: 旧型式 ${OLD}`],
+    [`旧型式 ${OLD}`, `型式:${CERT_TYPE}`],
+  ]) {
+    const r = extractCertificateCodesFromLines(lines);
+    assert.equal(r.fields.model, undefined, JSON.stringify(lines));
+    assert.deepEqual(Object.keys(r.rejected), ["model"], JSON.stringify(lines));
+    assert.ok(r.notices.some((n) => n.includes("候補が複数") && n.includes(CERT_TYPE) && n.includes(OLD)), JSON.stringify(lines));
+  }
+  // Old-model + suspect (unlisted) with different values → ambiguity as well; a 改 after the old value is the trailing-text block.
+  assert.ok(extractCertificateCodesFromLines([`旧型式 ${OLD}`, `車 名 ホンダ 型 式 ${CERT_TYPE}`]).rejected.model?.includes("候補が複数"));
+  assert.ok(extractCertificateCodesFromLines([`旧型式 ${OLD} 改`]).rejected.model?.includes(`${OLD} 改`));
+
+  // Negative controls: 「旧」 before the OTHER three labels is compound text (nothing anchored, nothing rejected); the plain
+  // labels 型式指定番号 / 原動機の型式 / 型式 are never old-model; 型式指定番号 alone never becomes a 型式 candidate.
+  for (const line of ["旧型式指定番号 99999", "旧 型式指定番号 99999", "旧 型 式 指 定 番 号 99999", "旧原動機の型式 OLD1", "旧 原 動 機 の 型 式 OLD1", "旧類別区分番号 0099", "旧 類 別 区 分 番 号 0099"]) {
+    const r = extractCertificateCodesFromLines([line]);
+    assert.deepEqual(r.fields, {}, line);
+    assert.deepEqual(r.rejected, {}, line);
+    assert.deepEqual(r.notices, [], line);
+  }
+  const plain = extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 原動機の型式 ${ENGINE_TYPE}`, `型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`]);
+  assert.deepEqual(plain.fields, ALL_FOUR);
+  assert.deepEqual(plain.rejected, {});
+  assert.deepEqual(extractCertificateCodesFromLines([`型式指定番号 ${TYPE_APPROVAL}`]).fields, { model_code: TYPE_APPROVAL });
+  assert.deepEqual(extractCertificateCodesFromLines([`型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`備考: 型式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`改 型 式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+  // 「旧」 must be the LAST Japanese text before the label: 「旧 車名 ホンダ 型 式」 stays the T2 suspect rejection, not old-model.
+  const suspectRun = extractCertificateCodesFromLines([`旧 車名 ホンダ 型 式 ${OLD}`]);
+  assert.ok(suspectRun.rejected.model !== undefined && suspectRun.rejected.model.includes("（旧車名ホンダ）") && !suspectRun.rejected.model.includes("「旧型式」"), suspectRun.rejected.model);
+  // Documented residual (unchanged, NOT expanded here): the other listed qualifiers stay silently compound.
+  for (const line of [`新 型 式 ${OLD}`, `元 型 式 ${OLD}`, `変更前 型 式 ${OLD}`, `変更後 型 式 ${OLD}`, `従来 型 式 ${OLD}`, `先代 型 式 ${OLD}`, `当該 型 式 ${OLD}`, `この 型 式 ${OLD}`, `その 型式 ${OLD}`, `車両の 型 式 ${OLD}`, `旧の型式 ${OLD}`]) {
+    const r = extractCertificateCodesFromLines([line]);
+    assert.deepEqual(r.fields, {}, line);
+    assert.deepEqual(r.rejected, {}, line);
+  }
+
+  // Two-row path: 「旧」 before a letter-spaced 型式 label (adjacent or at a wide gap), 「旧型式」 as one token, and 「旧型」+「式」
+  // are OLD-MODEL labels → the value below is rejected; the other column still pairs.
+  const twoRow = (labelTokens: PdfTextItemLike[]) => extractCertificateCodesFromItems([
+    ...labelTokens,
+    { str: OLD, x: 100, y: 492, width: 80, height: 10 },
+    { str: "類別区分番号", x: 480, y: 500, width: 60, height: 10 }, { str: CLASSIFICATION, x: 480, y: 492, width: 40, height: 10 },
+  ]);
+  for (const labels of [
+    [{ str: "旧", x: 88, y: 500, width: 10, height: 10 }, { str: "型", x: 100, y: 500, width: 10, height: 10 }, { str: "式", x: 112, y: 500, width: 10, height: 10 }],
+    [{ str: "旧", x: 40, y: 500, width: 10, height: 10 }, { str: "型", x: 100, y: 500, width: 10, height: 10 }, { str: "式", x: 112, y: 500, width: 10, height: 10 }],
+    [{ str: "備考:旧", x: 40, y: 500, width: 40, height: 10 }, { str: "型式", x: 100, y: 500, width: 20, height: 10 }],
+    [{ str: "旧型式", x: 100, y: 500, width: 30, height: 10 }],
+    [{ str: "旧型", x: 100, y: 500, width: 20, height: 10 }, { str: "式", x: 122, y: 500, width: 10, height: 10 }],
+  ] as PdfTextItemLike[][]) {
+    const r = twoRow(labels);
+    assert.deepEqual(r.fields, { classification_number: CLASSIFICATION }, JSON.stringify(labels));
+    assert.deepEqual(Object.keys(r.rejected), ["model"], JSON.stringify(labels));
+    assert.ok(r.rejected.model !== undefined && r.rejected.model.includes("旧型式") && r.rejected.model.includes(OLD), JSON.stringify(labels));
+  }
+  // Two-row negative controls: 「旧」 + 「型式指定番号」 (pieces or one token, digits below) stays compound — nothing anchored.
+  for (const labels of [
+    [{ str: "旧", x: 88, y: 500, width: 10, height: 10 }, ...["型", "式", "指", "定", "番", "号"].map((str, i) => ({ str, x: 100 + 12 * i, y: 500, width: 10, height: 10 }))],
+    [{ str: "旧型式指定番号", x: 100, y: 500, width: 70, height: 10 }],
+    [{ str: "旧型式", x: 100, y: 500, width: 30, height: 10 }, { str: "指定番号", x: 131, y: 500, width: 40, height: 10 }],
+  ] as PdfTextItemLike[][]) {
+    const r = extractCertificateCodesFromItems([...labels, { str: TYPE_APPROVAL, x: 100, y: 492, width: 50, height: 10 }]);
+    assert.deepEqual(r.fields, {}, JSON.stringify(labels));
+    assert.deepEqual(r.rejected, {}, JSON.stringify(labels));
+  }
+  // Two-row: an old-model label plus a clean same-row 型式 with the same value → accepted; with a different value → ambiguity.
+  const oldAbove: PdfTextItemLike[] = [
+    { str: "旧", x: 40, y: 500, width: 10, height: 10 }, { str: "型", x: 52, y: 500, width: 10, height: 10 }, { str: "式", x: 64, y: 500, width: 10, height: 10 },
+  ];
+  const agree = extractCertificateCodesFromItems([...oldAbove, { str: CERT_TYPE, x: 40, y: 492, width: 80, height: 10 }, { str: "型式", x: 40, y: 300, width: 20, height: 10 }, { str: CERT_TYPE, x: 70, y: 300, width: 80, height: 10 }]);
+  assert.deepEqual(agree.fields, { model: CERT_TYPE });
+  assert.deepEqual(agree.rejected, {});
+  const differ = extractCertificateCodesFromItems([...oldAbove, { str: OLD, x: 40, y: 492, width: 80, height: 10 }, { str: "型式", x: 40, y: 300, width: 20, height: 10 }, { str: CERT_TYPE, x: 70, y: 300, width: 80, height: 10 }]);
+  assert.equal(differ.fields.model, undefined);
+  assert.ok(differ.rejected.model?.includes("候補が複数"));
+  // Plain two-row 型式 label (no 旧) is unchanged.
+  assert.deepEqual(extractCertificateCodesFromItems(twoRowItems(500, 492)).fields, ALL_FOUR);
+});
+
+test("T1 (pipeline): an old-model-only 型式 withholds the AI 型式 — the same old value or a different correct-looking one — with no provenance and a blank estimate 型式", () => {
+  const OLD = "6BA-OLD999";
+  for (const remarkLine of [`備考: 旧型式 ${OLD}`, `備考: 旧 型 式 ${OLD}`, `旧　型式　${OLD}`]) {
+    const extraction = extractCertificateCodesFromLines([`原動機の型式 ${ENGINE_TYPE}`, remarkLine, `型式指定番号 ${TYPE_APPROVAL}`]);
+    assert.deepEqual(extraction.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL }, remarkLine);
+    assert.deepEqual(Object.keys(extraction.rejected), ["model"], remarkLine);
+    // (A) AI read the same old value (the T1 gap: it used to survive as the fallback); (B) AI read a different, correct-looking 型式.
+    for (const aiModel of [OLD, CERT_TYPE]) {
+      const sanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: aiModel, engine_model: ENGINE_TYPE, owner_name: "合成 名義" });
+      const outcome = applyPdfTextLayerCertificateFields(sanitized, extraction);
+      assert.deepEqual(outcome, { applied: ["engine_model", "model_code"], trustedModel: false, manualEntry: ["model"] }, `${remarkLine} / ${aiModel}`);
+      assert.equal(sanitized.model, undefined, aiModel);
+      assert.equal(sanitized.model_text_layer, undefined, aiModel);
+      assert.equal(sanitized.owner_name, "合成 名義");
+      const notices = sanitized.vehicle_identity_notices ?? [];
+      assert.ok(notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes("旧型式") && n.includes(OLD)), notices.join(" | "));
+      assert.ok(notices.some((n) => n.includes("AI読み取りの型式") && n.includes("表示しません")), notices.join(" | "));
+      assert.ok(!notices.some((n) => n.includes("PDFの文字情報を優先")), notices.join(" | "));
+      if (aiModel !== OLD) assert.ok(notices.every((n) => !n.includes(aiModel)), notices.join(" | ")); // the withheld AI candidate is never echoed
+      const final = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: outcome.trustedModel });
+      assert.equal(final.model, undefined, aiModel);
+      assert.equal(final.model_text_layer, undefined, aiModel);
+      assert.equal(final.engine_model, ENGINE_TYPE, aiModel);
+      assert.equal(final.model_code, TYPE_APPROVAL, aiModel);
+      const review = resolveVehicleIdentity(structuredClone(final), { ambiguousGrade: "blank" }).result;
+      assert.equal(review.model, undefined, aiModel);
+      assert.equal(review.model_text_layer, undefined, aiModel);
+    }
+  }
+  // No AI 型式 at all: manual-entry state only, no "withheld" notice.
+  const blank = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", engine_model: ENGINE_TYPE });
+  assert.deepEqual(applyPdfTextLayerCertificateFields(blank, extractCertificateCodesFromLines([`旧型式 ${OLD}`])).manualEntry, ["model"]);
+  assert.ok(!(blank.vehicle_identity_notices ?? []).some((n) => n.includes("AI読み取りの")));
+  // Clean + old DIFFERENT → ambiguity → the AI value (even the correct-looking one) is withheld.
+  const ambiguous = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE });
+  assert.deepEqual(applyPdfTextLayerCertificateFields(ambiguous, extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`, `備考: 旧型式 ${OLD}`])), { applied: [], trustedModel: false, manualEntry: ["model"] });
+  assert.equal(applyVehicleIdentityPolicy(ambiguous, { trustedModelShape: false }).model, undefined);
+  // Clean + old SAME → applied with provenance exactly like a plain clean label.
+  const agreed = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: OLD });
+  const agreedOutcome = applyPdfTextLayerCertificateFields(agreed, extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`, `備考: 旧 型 式 ${CERT_TYPE}`]));
+  assert.deepEqual(agreedOutcome, { applied: ["model"], trustedModel: true, manualEntry: [] });
+  assert.equal(agreed.model, CERT_TYPE);
+  assert.equal(agreed.model_text_layer, CERT_TYPE);
+  assert.equal(applyVehicleIdentityPolicy(agreed, { trustedModelShape: true }).model, CERT_TYPE);
+});
+
+test("T1 (pdf.js): a selectable PDF whose only 型式 evidence is a 「旧型式」 remark — same row or a 「旧」+「型 式」 label row — yields no 型式, a manual-entry rejection, and the other codes", async () => {
+  const OLD = "6BA-OLD999";
+  const sameRow = buildSyntheticPdf([{ text: [
+    { x: 40,  y: 780, text: "自動車検査証（合成テスト）" },
+    { x: 40,  y: 740, text: "原動機の型式" }, { x: 120, y: 740, text: ENGINE_TYPE },
+    { x: 40,  y: 700, text: "型式指定番号" }, { x: 120, y: 700, text: TYPE_APPROVAL },
+    { x: 260, y: 700, text: "類別区分番号" }, { x: 340, y: 700, text: CLASSIFICATION },
+    { x: 40,  y: 600, text: "備考:" }, { x: 80, y: 600, text: "旧型式" }, { x: 120, y: 600, text: OLD },
+  ] }]);
+  const r = await extractCertificateCodesFromPdf(toBytes(sameRow));
+  assert.equal(r.status, "extracted", JSON.stringify(r));
+  assert.deepEqual(r.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION });
+  assert.deepEqual(Object.keys(r.rejected), ["model"]);
+  assert.ok(r.notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes("旧型式") && n.includes(OLD)), r.notices.join(" | "));
+
+  // Spaced variant on the same row, and the two-row 「旧」「型」「式」 label above the old value.
+  const spaced = buildSyntheticPdf([{ text: [{ x: 40, y: 600, text: "備考:" }, { x: 80, y: 600, text: "旧" }, { x: 100, y: 600, text: "型 式" }, { x: 150, y: 600, text: OLD }] }]);
+  const s = await extractCertificateCodesFromPdf(toBytes(spaced));
+  assert.equal(s.status, "no_codes", JSON.stringify(s));
+  assert.ok(s.rejected.model?.includes("旧型式"), JSON.stringify(s));
+  const twoRow = buildSyntheticPdf([{ text: [
+    { x: 40, y: 500, text: "旧" }, { x: 52, y: 500, text: "型" }, { x: 64, y: 500, text: "式" }, { x: 40, y: 492, text: OLD },
+    { x: 480, y: 500, text: "類別区分番号" }, { x: 480, y: 492, text: CLASSIFICATION },
+  ] }]);
+  const t = await extractCertificateCodesFromPdf(toBytes(twoRow));
+  assert.deepEqual(t.fields, { classification_number: CLASSIFICATION }, JSON.stringify(t));
+  assert.ok(t.rejected.model?.includes("旧型式"), JSON.stringify(t));
+
+  // Negative control: the same PDF with a genuine 型式 of the SAME value keeps all four codes; a DIFFERENT one is ambiguous.
+  const agree = buildSyntheticPdf([{ text: [...KEI_ROWS, { x: 40, y: 600, text: "備考:" }, { x: 80, y: 600, text: "旧型式" }, { x: 120, y: 600, text: CERT_TYPE }] }]);
+  const a = await extractCertificateCodesFromPdf(toBytes(agree));
+  assert.deepEqual(a.fields, ALL_FOUR, JSON.stringify(a));
+  assert.deepEqual(a.rejected, {});
+  const differ = buildSyntheticPdf([{ text: [...KEI_ROWS, { x: 40, y: 600, text: "備考:" }, { x: 80, y: 600, text: "旧型式" }, { x: 120, y: 600, text: OLD }] }]);
+  const d = await extractCertificateCodesFromPdf(toBytes(differ));
+  assert.deepEqual(d.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION }, JSON.stringify(d));
+  assert.ok(d.rejected.model?.includes("候補が複数"), JSON.stringify(d));
+});
+
+// ─── T1-2: a remark head glued to / adjacent to the 「旧型式」 annotation on a two-row label row (「備考」+「旧型式」, 「備考旧型式」) ─────
+
+test("T1-2 (two-row): 「備考」 adjacent to 「旧型式」 or a glued 「備考旧型式」 token above the old value is an OLD-MODEL 型式 label → rejected for manual entry, never silently skipped", () => {
+  const OLD = "6BA-OLD999";
+  const CLS_COLUMN: PdfTextItemLike[] = [
+    { str: "類別区分番号", x: 480, y: 500, width: 60, height: 10 }, { str: CLASSIFICATION, x: 480, y: 492, width: 40, height: 10 },
+  ];
+  // Before this fix the adjacent / glued 「備考」 forms were demoted to compound text (rule 1) and skipped SILENTLY, so the AI
+  // 型式 — the same old value, typically — survived as the fallback. The wide-gap form already failed closed (control).
+  const OLD_MODEL_LABEL_ROWS: Array<{ name: string; labels: PdfTextItemLike[]; valueX: number }> = [
+    { name: "備考 + 旧型式 (adjacent, gap 4pt)",           valueX: 64,  labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧型式", x: 64, y: 500, width: 30, height: 10 }] },
+    { name: "備考 + 旧型式 (wide gap — already rejected)", valueX: 100, labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧型式", x: 100, y: 500, width: 30, height: 10 }] },
+    { name: "備考旧型式 (one glued token)",               valueX: 40,  labels: [{ str: "備考旧型式", x: 40, y: 500, width: 50, height: 10 }] },
+    { name: "備考:旧型式 (one glued token, colon)",       valueX: 40,  labels: [{ str: "備考:旧型式", x: 40, y: 500, width: 55, height: 10 }] },
+    { name: "備考 + 旧 + 型 + 式 (adjacent pieces)",     valueX: 64,  labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧", x: 64, y: 500, width: 10, height: 10 }, { str: "型", x: 76, y: 500, width: 10, height: 10 }, { str: "式", x: 88, y: 500, width: 10, height: 10 }] },
+    { name: "備考旧型 + 式 (glued head, split tail)",    valueX: 40,  labels: [{ str: "備考旧型", x: 40, y: 500, width: 40, height: 10 }, { str: "式", x: 82, y: 500, width: 10, height: 10 }] },
+    { name: "備　考 + 旧型式 (full-width remark head)",  valueX: 64,  labels: [{ str: "備　考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧型式", x: 64, y: 500, width: 30, height: 10 }] },
+  ];
+  const cleanRow = (value: string): PdfTextItemLike[] => [{ str: "型式", x: 40, y: 300, width: 20, height: 10 }, { str: value, x: 70, y: 300, width: 80, height: 10 }];
+
+  for (const { name, labels, valueX } of OLD_MODEL_LABEL_ROWS) {
+    const items = [...labels, { str: OLD, x: valueX, y: 492, width: 80, height: 10 }, ...CLS_COLUMN];
+    const r = extractCertificateCodesFromItems(items);
+    assert.deepEqual(r.fields, { classification_number: CLASSIFICATION }, name);
+    assert.equal(r.fields.classification_number, "0007", name); // leading zero preserved next to the rejection
+    assert.deepEqual(Object.keys(r.rejected), ["model"], name);
+    assert.equal(r.notices.length, 1, name);
+    assert.equal(r.rejected.model, r.notices[0], name);
+    assert.ok(r.notices[0].startsWith("【要手入力：型式】") && r.notices[0].includes("旧型式") && r.notices[0].includes(OLD) && r.notices[0].includes("手入力"), `${name}: ${r.notices[0]}`);
+
+    // AI 型式 = the same old value (the silent residual) or a different correct-looking one: withheld, no provenance, never echoed.
+    for (const aiModel of [OLD, CERT_TYPE]) {
+      const tag = `${name} / ${aiModel}`;
+      const sanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: aiModel, engine_model: ENGINE_TYPE, owner_name: "合成 名義" });
+      const outcome = applyPdfTextLayerCertificateFields(sanitized, r);
+      assert.deepEqual(outcome, { applied: ["classification_number"], trustedModel: false, manualEntry: ["model"] }, tag);
+      assert.equal(sanitized.model, undefined, tag);
+      assert.equal(sanitized.model_text_layer, undefined, tag);
+      assert.equal(sanitized.classification_number, "0007", tag);
+      const notices = sanitized.vehicle_identity_notices ?? [];
+      assert.ok(notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes("旧型式") && n.includes(OLD)), notices.join(" | "));
+      assert.ok(notices.some((n) => n.includes("AI読み取りの型式") && n.includes("表示しません")), notices.join(" | "));
+      assert.ok(!notices.some((n) => n.includes("PDFの文字情報を優先")), notices.join(" | "));
+      if (aiModel !== OLD) assert.ok(notices.every((n) => !n.includes(aiModel)), notices.join(" | ")); // the withheld AI candidate is never echoed
+      const final = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: outcome.trustedModel });
+      assert.equal(final.model, undefined, tag);
+      assert.equal(final.model_text_layer, undefined, tag);
+      assert.equal(final.engine_model, ENGINE_TYPE, tag);
+      assert.equal(final.classification_number, "0007", tag);
+      assert.equal(final.owner_name, "合成 名義", tag);
+      assert.equal(resolveVehicleIdentity(structuredClone(final), { ambiguousGrade: "blank" }).result.model, undefined, tag);
+    }
+
+    // A genuinely clean current 型式 elsewhere on the page (same-row, own line): SAME value → accepted, nothing rejected; DIFFERENT → ambiguity.
+    const agree = extractCertificateCodesFromItems([...labels, { str: CERT_TYPE, x: valueX, y: 492, width: 80, height: 10 }, ...CLS_COLUMN, ...cleanRow(CERT_TYPE)]);
+    assert.deepEqual(agree.fields, { model: CERT_TYPE, classification_number: CLASSIFICATION }, name);
+    assert.deepEqual(agree.rejected, {}, name);
+    assert.deepEqual(agree.notices, [], name);
+    const differ = extractCertificateCodesFromItems([...items, ...cleanRow(CERT_TYPE)]);
+    assert.equal(differ.fields.model, undefined, name);
+    assert.equal(differ.fields.classification_number, "0007", name);
+    assert.deepEqual(Object.keys(differ.rejected), ["model"], name);
+    assert.ok(differ.rejected.model?.includes("候補が複数") && differ.rejected.model.includes(CERT_TYPE) && differ.rejected.model.includes(OLD), `${name}: ${differ.rejected.model}`);
+  }
+
+  // Negative controls (unchanged): the same remark head before 型式指定番号 / 原動機の型式 — with 「旧」, glued or adjacent — is compound
+  // text: nothing anchored, nothing rejected, the AI 型式 stays the fallback. A 「備考」 glued to / adjacent to a plain 「型式」 (no 「旧」)
+  // is the pre-existing rule-1 compound and is likewise untouched here (silent, AI fallback kept).
+  for (const { name, labels, value } of [
+    { name: "備考 + 旧型式指定番号",   labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧型式指定番号", x: 64, y: 500, width: 70, height: 10 }], value: TYPE_APPROVAL },
+    { name: "備考旧型式指定番号",      labels: [{ str: "備考旧型式指定番号", x: 40, y: 500, width: 90, height: 10 }], value: TYPE_APPROVAL },
+    { name: "備考旧型式 + 指定番号",   labels: [{ str: "備考旧型式", x: 40, y: 500, width: 50, height: 10 }, { str: "指定番号", x: 91, y: 500, width: 40, height: 10 }], value: TYPE_APPROVAL },
+    { name: "備考 + 旧 + 型式指定番号", labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧", x: 64, y: 500, width: 10, height: 10 }, { str: "型式指定番号", x: 76, y: 500, width: 60, height: 10 }], value: TYPE_APPROVAL },
+    { name: "備考 + 旧原動機の型式",   labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧原動機の型式", x: 64, y: 500, width: 70, height: 10 }], value: ENGINE_TYPE },
+    { name: "備考旧原動機の型式",      labels: [{ str: "備考旧原動機の型式", x: 40, y: 500, width: 90, height: 10 }], value: ENGINE_TYPE },
+    { name: "備考 + 旧 + 原動機の型式", labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "旧", x: 64, y: 500, width: 10, height: 10 }, { str: "原動機の型式", x: 76, y: 500, width: 60, height: 10 }], value: ENGINE_TYPE },
+    { name: "備考 + 型式 (no 旧: rule-1 compound, unchanged)", labels: [{ str: "備考", x: 40, y: 500, width: 20, height: 10 }, { str: "型式", x: 64, y: 500, width: 20, height: 10 }], value: OLD },
+    { name: "備考型式 (no 旧: glued compound, unchanged)",     labels: [{ str: "備考型式", x: 40, y: 500, width: 40, height: 10 }], value: OLD },
+  ] as Array<{ name: string; labels: PdfTextItemLike[]; value: string }>) {
+    const r = extractCertificateCodesFromItems([...labels, { str: value, x: 40, y: 492, width: 80, height: 10 }, ...CLS_COLUMN]);
+    assert.deepEqual(r.fields, { classification_number: CLASSIFICATION }, name);
+    assert.deepEqual(r.rejected, {}, name);
+    assert.deepEqual(r.notices, [], name);
+    const kept = { model: CERT_TYPE, engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL };
+    assert.deepEqual(applyPdfTextLayerCertificateFields(kept, r).manualEntry, [], name);
+    assert.equal(kept.model, CERT_TYPE, name);
+    assert.equal(kept.engine_model, ENGINE_TYPE, name);
+    assert.equal(kept.model_code, TYPE_APPROVAL, name);
+  }
+
+  // Existing two-row 「旧」 forms and the plain label row are unchanged.
+  const plainOld = extractCertificateCodesFromItems([{ str: "旧", x: 40, y: 500, width: 10, height: 10 }, { str: "型", x: 52, y: 500, width: 10, height: 10 }, { str: "式", x: 64, y: 500, width: 10, height: 10 }, { str: OLD, x: 40, y: 492, width: 80, height: 10 }, ...CLS_COLUMN]);
+  assert.deepEqual(Object.keys(plainOld.rejected), ["model"]);
+  assert.deepEqual(extractCertificateCodesFromItems(twoRowItems(500, 492)).fields, ALL_FOUR);
+});
+
+test("T1-2 (pdf.js): a selectable PDF whose 型式 evidence is 「備考」+「旧型式」 or 「備考旧型式」 printed above the old value yields no 型式, a manual-entry rejection and the other codes; a clean 型式 of the same value is kept", async () => {
+  const OLD = "6BA-OLD999";
+  const OTHER_CODES: SyntheticTextOp[] = [
+    { x: 40,  y: 780, text: "自動車検査証（合成テスト）" },
+    { x: 40,  y: 740, text: "原動機の型式" }, { x: 120, y: 740, text: ENGINE_TYPE },
+    { x: 40,  y: 700, text: "型式指定番号" }, { x: 120, y: 700, text: TYPE_APPROVAL },
+    { x: 260, y: 700, text: "類別区分番号" }, { x: 340, y: 700, text: CLASSIFICATION },
+  ];
+  // Glyph width = 10pt: 「備考」 spans 40..60. At x=64 the annotation is a separate adjacent token (piece gap 4pt); at x=60 the
+  // gap-0 pdf.js items are glued into one 「備考旧型式」 token by the tokenizer; the third form is one printed item.
+  for (const [name, remarkRow] of [
+    ["備考 + 旧型式 (adjacent items)", [{ x: 40, y: 500, text: "備考" }, { x: 64, y: 500, text: "旧型式" }, { x: 64, y: 492, text: OLD }]],
+    ["備考旧型式 (glued items)",       [{ x: 40, y: 500, text: "備考" }, { x: 60, y: 500, text: "旧型式" }, { x: 40, y: 492, text: OLD }]],
+    ["備考旧型式 (one item)",          [{ x: 40, y: 500, text: "備考旧型式" }, { x: 40, y: 492, text: OLD }]],
+  ] as Array<[string, SyntheticTextOp[]]>) {
+    const r = await extractCertificateCodesFromPdf(toBytes(buildSyntheticPdf([{ text: [...OTHER_CODES, ...remarkRow] }])));
+    assert.equal(r.status, "extracted", `${name}: ${JSON.stringify(r)}`);
+    assert.deepEqual(r.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION }, name);
+    assert.equal(r.fields.classification_number, "0007", name);
+    assert.deepEqual(Object.keys(r.rejected), ["model"], name);
+    assert.ok(r.notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes("旧型式") && n.includes(OLD)), `${name}: ${r.notices.join(" | ")}`);
+    // Full flow through the application entrypoint: the AI old 型式 is withheld and the estimate 型式 stays blank.
+    const sanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: OLD, engine_model: ENGINE_TYPE });
+    const outcome = applyPdfTextLayerCertificateFields(sanitized, r);
+    assert.deepEqual(outcome, { applied: ["engine_model", "model_code", "classification_number"], trustedModel: false, manualEntry: ["model"] }, name);
+    assert.equal(applyVehicleIdentityPolicy(sanitized, { trustedModelShape: outcome.trustedModel }).model, undefined, name);
+  }
+  // Clean 型式 (KEI_ROWS) + the adjacent annotation with the SAME value below → all four codes, nothing rejected; DIFFERENT → ambiguity.
+  const agree = await extractCertificateCodesFromPdf(toBytes(buildSyntheticPdf([{ text: [...KEI_ROWS, { x: 40, y: 500, text: "備考" }, { x: 64, y: 500, text: "旧型式" }, { x: 64, y: 492, text: CERT_TYPE }] }])));
+  assert.deepEqual(agree.fields, ALL_FOUR, JSON.stringify(agree));
+  assert.deepEqual(agree.rejected, {});
+  const differ = await extractCertificateCodesFromPdf(toBytes(buildSyntheticPdf([{ text: [...KEI_ROWS, { x: 40, y: 500, text: "備考" }, { x: 64, y: 500, text: "旧型式" }, { x: 64, y: 492, text: OLD }] }])));
+  assert.deepEqual(differ.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION }, JSON.stringify(differ));
+  assert.ok(differ.rejected.model?.includes("候補が複数"), JSON.stringify(differ));
 });
