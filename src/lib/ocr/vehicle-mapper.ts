@@ -6,6 +6,7 @@
 // User must review all fields before registration.
 
 import type { VehicleRegistrationOcrResult } from "@/lib/vehicle-registration/vehicle-registration-types";
+import { resolveVehicleIdentity } from "@/lib/vehicle-registration/ocr-quality";
 
 // ─── Vehicle form state ───────────────────────────────────────────────────────
 
@@ -58,15 +59,18 @@ function buildPlateNumber(ocr: Partial<VehicleRegistrationOcrResult>): string {
 // ─── Main mapper ──────────────────────────────────────────────────────────────
 
 export function mapOcrToVehicle(
-  ocr: Partial<VehicleRegistrationOcrResult>,
+  input: Partial<VehicleRegistrationOcrResult>,
 ): Partial<VehicleFormState> {
+  // Keep a leaked certificate 型式 / engine type out of 型式指定番号 and グレード (legacy replay guard).
+  // NOTE: this form state has no 型式 (vehicle_code) field, so the certificate 型式 is not mapped here.
+  const ocr = resolveVehicleIdentity(input, { ambiguousGrade: "keep" }).result;
   const result: Partial<VehicleFormState> = {};
 
   if (ocr.maker)                  result.maker       = ocr.maker;
-  // Prefer 車名 (vehicle_name); fall back to 型式 (model) so the model field is
-  // not left empty when only the type code was read.
+  // 車名 comes ONLY from vehicle_name (operator-entered; the certificate does not carry the
+  // commercial name). The certificate 型式 (model) is a type code and must never be used as a
+  // substitute for 車名. This form state has no 型式 field, so 型式 is not mapped here.
   if (ocr.vehicle_name)           result.model       = ocr.vehicle_name;
-  else if (ocr.model)             result.model       = ocr.model;
   if (ocr.grade)                  result.grade       = ocr.grade;
   if (ocr.model_code)             result.model_code  = ocr.model_code;
   if (ocr.color)                  result.color       = ocr.color;

@@ -71,9 +71,8 @@ export function Step2Vehicle(props: Step2VehicleProps) {
         {/* 新規車両フォーム（既存 nv 状態）*/}
         {vehicleMode === "new" && (
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="ナンバープレート" value={nv.plate_number}>
-              <TextInput value={nv.plate_number} onChange={(v) => onChangeNv({ plate_number: v })} placeholder="滋賀 330 に 1234" />
-            </Field>
+            {/* Leading order per owner spec: メーカー → 車名 → グレード → ボディカラー → 型式 → 車体番号,
+                then the remaining fields in their previous relative order. */}
             <Field label="メーカー" value={nv.maker}>
               <TextInput value={nv.maker} onChange={(v) => onChangeNv({ maker: v })} placeholder="トヨタ" />
             </Field>
@@ -83,11 +82,17 @@ export function Step2Vehicle(props: Step2VehicleProps) {
             <Field label="グレード" value={nv.grade}>
               <TextInput value={nv.grade} onChange={(v) => onChangeNv({ grade: v })} placeholder="アスリート" />
             </Field>
+            <Field label="ボディカラー" value={nv.color}>
+              <TextInput value={nv.color} onChange={(v) => onChangeNv({ color: v })} placeholder="ホワイトパール" />
+            </Field>
             <Field label="型式" value={nv.vehicle_code}>
               <TextInput value={nv.vehicle_code} onChange={(v) => onChangeNv({ vehicle_code: v })} placeholder="ABA-XXX" />
             </Field>
             <Field label="車体番号" value={nv.vin}>
               <TextInput value={nv.vin} onChange={(v) => onChangeNv({ vin: v })} />
+            </Field>
+            <Field label="ナンバープレート" value={nv.plate_number}>
+              <TextInput value={nv.plate_number} onChange={(v) => onChangeNv({ plate_number: v })} placeholder="滋賀 330 に 1234" />
             </Field>
             <Field label="初年度登録年月" value={nv.first_registration_year_month}>
               <TextInput value={nv.first_registration_year_month} onChange={(v) => onChangeNv({ first_registration_year_month: v })} placeholder="2020-04" />
@@ -97,9 +102,6 @@ export function Step2Vehicle(props: Step2VehicleProps) {
             </Field>
             <Field label="車検満了年月日" value={nv.inspection_expiry_date}>
               <TextInput value={nv.inspection_expiry_date} onChange={(v) => onChangeNv({ inspection_expiry_date: v })} type="date" />
-            </Field>
-            <Field label="ボディカラー" value={nv.color}>
-              <TextInput value={nv.color} onChange={(v) => onChangeNv({ color: v })} placeholder="ホワイトパール" />
             </Field>
           </div>
         )}

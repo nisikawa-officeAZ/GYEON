@@ -243,7 +243,7 @@ export function Step1Customer({
             onApply={(f) => {
               // The reviewed result is applied once to BOTH customer and vehicle drafts through the
               // same pure core Screen 2 uses. A Screen-1 scan must never discard the vehicle half.
-              const applied = buildWizardEstimateOcrApplication(f);
+              const applied = buildWizardEstimateOcrApplication(f, { source: "reviewed" });
               if (Object.keys(applied.customer).length > 0 || Object.keys(applied.vehicle).length > 0) {
                 api.updateStore({ customer: applied.customer, vehicle: applied.vehicle });
               }

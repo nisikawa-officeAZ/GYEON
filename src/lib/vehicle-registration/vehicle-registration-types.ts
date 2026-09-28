@@ -18,11 +18,13 @@ export type VehicleRegistrationOcrResult = {
   user_postal_code?:       string;  // 使用者郵便番号（7桁が明確な場合のみ）
   owner_address?:          string;  // 所有者住所
   user_address?:           string;  // 使用者住所
-  vehicle_name?:           string;  // 車名
-  maker?:                  string;  // メーカー
-  model?:                  string;  // 型式
-  grade?:                  string;  // グレード
+  vehicle_name?:           string;  // 車名（通称名）— 車検証には記載がないため OCR では常に空。手入力のみ
+  maker?:                  string;  // メーカー（車検証「車名」欄＝法定車名から判定）
+  model?:                  string;  // 型式（車検証「型式」欄のみ。原動機の型式・型式指定番号とは別）
+  grade?:                  string;  // グレード — 車検証には記載がないため OCR では常に空。手入力のみ
   model_code?:             string;  // 型式指定番号
+  classification_number?:  string;  // 類別区分番号（型式指定番号と対。ナンバープレートの分類番号とは別）
+  engine_model?:           string;  // 原動機の型式（グレード・型式に混入させないための受け皿）
   chassis_number?:         string;  // 車台番号
   license_plate_region?:   string;  // ナンバープレート地域（例: 品川）
   license_plate_class?:    string;  // 分類番号（3桁）
@@ -49,6 +51,13 @@ export type VehicleRegistrationOcrResult = {
   customer_candidate_address?: string; // 顧客として反映する住所
   customer_type?:              string; // individual / corporation / unknown
   owner_user_separated?:       string; // "true" / "false" / "unknown"
+  // ─ Vehicle-identity resolution (型式 / 原動機の型式 / 型式指定番号 / 類別区分番号 / グレード) ─
+  // Not certificate columns. Set deterministically by resolveVehicleIdentity() so the review UI can
+  // show the operator exactly which value was excluded or moved, instead of guessing silently.
+  vehicle_identity_notices?:   string[]; // 自動判定で除外・退避した値の操作者向け通知
+  model_needs_confirmation?:   string;   // "true": 型式 は型式指定番号欄などから退避した低信頼値。操作者の確認が必要
+  model_text_layer?:           string;   // 型式 の出所: サーバー側PDF文字情報（pdf-text-layer.ts）で確定した 型式 の値そのもの。
+                                         // model と一致する間だけ形式緩和を許す。AI出力からは決して受け取らない（sanitizer が破棄）
   confidence?:             number;  // 0-1 overall confidence
 };
 
@@ -124,6 +133,7 @@ export const OCR_TO_CUSTOMER_MAP: Partial<Record<keyof VehicleRegistrationOcrRes
 export const OCR_TO_VEHICLE_MAP: Partial<Record<keyof VehicleRegistrationOcrResult, string>> = {
   vehicle_name:            "model",
   maker:                   "maker",
+  model:                   "vehicle_code",        // 型式 → vehicles.vehicle_code (existing column)
   model_code:              "model_code",
   chassis_number:          "chassis_number",
   first_registration_date: "registration_date",   // maps to vehicles.registration_date (migration 073)
@@ -147,6 +157,8 @@ export const OCR_FIELD_LABELS: Record<keyof VehicleRegistrationOcrResult, string
   model:                  "型式",
   grade:                  "グレード",
   model_code:             "型式指定番号",
+  classification_number:  "類別区分番号",
+  engine_model:           "原動機の型式",
   chassis_number:         "車台番号",
   license_plate_region:   "ナンバー地域",
   license_plate_class:    "分類番号",
@@ -172,5 +184,8 @@ export const OCR_FIELD_LABELS: Record<keyof VehicleRegistrationOcrResult, string
   customer_candidate_address: "顧客反映住所",
   customer_type:              "顧客種別",
   owner_user_separated:       "所有者・使用者の相違",
+  vehicle_identity_notices:   "車両識別の確認事項",
+  model_needs_confirmation:   "型式の要確認",
+  model_text_layer:           "型式の出所（PDF文字情報）",
   confidence:             "信頼度",
 };

@@ -171,7 +171,7 @@ export function Step2Vehicle({
           <SectionTitle>車両登録</SectionTitle>
           <OcrEntry
             onApply={(f) => {
-              const applied = buildWizardEstimateOcrApplication(f);
+              const applied = buildWizardEstimateOcrApplication(f, { source: "reviewed" });
               onSizeEstimate?.(applied.bodySizeEstimate);
               if (Object.keys(applied.vehicle).length > 0) setV(applied.vehicle);
             }}

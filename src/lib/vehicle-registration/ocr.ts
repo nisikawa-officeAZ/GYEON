@@ -9,7 +9,12 @@
 import { VehicleRegistrationOcrResult } from "./vehicle-registration-types";
 import { analyzeOcrCustomer, resolveCustomer } from "./ocr-customer-mapping";
 import { normalizeVehicleFields } from "./vehicle-normalize";
-import { buildOcrQualityReport, type OcrQualityReport } from "./ocr-quality";
+import { buildOcrQualityReport, resolveVehicleIdentity, type OcrQualityReport } from "./ocr-quality";
+import {
+  applyPdfTextLayerCertificateFields,
+  extractCertificateCodesFromPdfBase64,
+  type PdfTextLayerExtraction,
+} from "./pdf-text-layer";
 import { getGyeonManagedApiKey } from "@/lib/ai/gyeon-managed-key";
 import { OCR_MODEL, OCR_TEMPERATURE, OCR_MAX_TOKENS, OCR_PROMPT_VERSION } from "@/lib/ai/ocr-config";
 import { addressWithoutLeadingPostal, normalizeJapanesePostalCode, postalCodeFromAddress } from "./postal-normalization";
@@ -39,6 +44,12 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
 - length_mm / width_mm / height_mm: 車検証に記載された長さ・幅・高さをmm単位の数値で返す。不鮮明・欠損時は null。単位換算以外の推測は禁止
 - dimension_confidence: 長さ・幅・高さ3項目の読み取り品質を0〜1で評価。1項目でも不鮮明なら0.79以下
 - 法人名（株式会社・有限会社など）は姓名に分割しないこと
+- vehicle_name: 車検証「車名」欄の記載そのまま（法定車名＝メーカー名。例: トヨタ）。通称名やグレードは車検証に記載がないため絶対に創作しない
+- maker: 「車名」欄から判定したメーカー名
+- model: 車検証「型式」欄の値のみ（例: DBA-XXX999 のようにハイフンを含む形式。軽自動車も同じ）。「原動機の型式」や「型式指定番号」を入れないこと
+- engine_model: 「原動機の型式」欄の値（例: X99X のような短い英数字）。model や grade など他の項目に入れないこと
+- model_code: 「型式指定番号」欄の数字のみ。型式（英字とハイフンを含む値）を入れないこと
+- classification_number: 「類別区分番号」欄の数字のみ。model_code と classification_number はナンバープレートの分類番号(license_plate_class)とは別項目。記載がなければ空文字
 - confidence は全体的な読み取り品質を0〜1で評価
 
 出力JSONスキーマ（このキーのみ、説明文なし）:
@@ -54,8 +65,9 @@ const EXTRACTION_PROMPT = `あなたは日本の車検証（自動車検査証�
   "vehicle_name": "",
   "maker": "",
   "model": "",
-  "grade": "",
+  "engine_model": "",
   "model_code": "",
+  "classification_number": "",
   "chassis_number": "",
   "license_plate_region": "",
   "license_plate_class": "",
@@ -104,10 +116,13 @@ export interface OcrUsage {
 // These codes warrant a single transparent retry on the server side.
 const RETRYABLE_CODES: OcrErrorCode[] = ["TIMEOUT", "CONNECT_ERROR", "OPENAI_SERVER_ERROR"];
 
+// The ONLY keys accepted from the AI. Everything else the model emits is discarded — in particular the
+// result-internal keys the server itself writes later (vehicle_identity_notices, model_needs_confirmation,
+// model_text_layer): 型式 provenance can never be claimed by AI output, only established by pdf-text-layer.ts.
 const STRING_FIELDS: Array<keyof VehicleRegistrationOcrResult> = [
   "owner_name", "user_name", "owner_name_kana", "user_name_kana",
   "owner_postal_code", "user_postal_code", "owner_address", "user_address",
-  "vehicle_name", "maker", "model", "grade", "model_code", "chassis_number",
+  "vehicle_name", "maker", "model", "grade", "model_code", "classification_number", "engine_model", "chassis_number",
   "license_plate_region", "license_plate_class", "license_plate_kana", "license_plate_number",
   "first_registration_date", "registration_date", "inspection_expiry_date",
   "vehicle_type", "use_type", "private_or_business", "body_shape",
@@ -167,6 +182,41 @@ export function sanitizeVehicleRegistrationOcrResult(
 }
 
 /**
+ * Pure vehicle-identity policy applied after sanitizing (exported for source-contract tests).
+ * - The 車検証「車名」欄 is the LEGAL name (the manufacturer). The commercial model name and グレード
+ *   are not printed on the certificate, so both are ALWAYS blank here. The operator may type them in
+ *   review; downstream a blank never overwrites an operator-entered value.
+ * - `model` is the certificate「型式」欄 only; 原動機の型式 / 型式指定番号 / 類別区分番号 are kept apart by
+ *   resolveVehicleIdentity(), which blanks ambiguous values with an operator-visible notice instead
+ *   of guessing (see ocr-quality.ts).
+ * - ボディカラー is manual-required — the AI must never auto-fill it.
+ */
+export function applyVehicleIdentityPolicy(
+  sanitized: VehicleRegistrationOcrResult,
+  opts: { trustedModelShape?: boolean } = {},
+): VehicleRegistrationOcrResult {
+  // Deterministic maker detection (the 車名欄 usually carries the maker); model/grade output of the
+  // normalizer is deliberately discarded — never derived from 車名 tokens.
+  const norm = normalizeVehicleFields({ maker: sanitized.maker, vehicleName: sanitized.vehicle_name });
+  if (norm.maker) sanitized.maker = norm.maker;
+  else delete sanitized.maker;
+  delete sanitized.vehicle_name; // 通称名: never from OCR
+  delete sanitized.grade;        // グレード: never from OCR (an engine type must never land here)
+
+  const resolved = resolveVehicleIdentity(sanitized, {
+    ambiguousGrade: "blank",
+    trustedModelShape: opts.trustedModelShape === true,
+  }).result;
+  for (const key of Object.keys(sanitized) as Array<keyof VehicleRegistrationOcrResult>) {
+    if (!(key in resolved)) delete sanitized[key];
+  }
+  Object.assign(sanitized, resolved);
+
+  delete (sanitized as Record<string, unknown>).color;
+  return sanitized;
+}
+
+/**
  * A 車検証 usually prints an address but not a postal code. Complete OCR evidence wins; otherwise
  * resolve the SAME party address against the bundled official Japan Post map. Unknown or ambiguous
  * prefixes remain blank, so a stray fragment such as `〒523-` can never be completed by guesswork.
@@ -194,6 +244,7 @@ async function callOpenAI(
   fileBase64: string,
   mimeType: string,
   apiKey: string,
+  pdfTextLayer: PdfTextLayerExtraction | null,
 ): Promise<
   | { result: VehicleRegistrationOcrResult; provider: string; model: string; usage: OcrUsage; promptVersion: string; quality: OcrQualityReport }
   | { error: OcrErrorCode }
@@ -276,20 +327,14 @@ async function callOpenAI(
       return { error: "EMPTY_RESPONSE" };
     }
 
-    // Deterministic maker/model/grade normalization (do not rely on the AI alone).
-    // メーカー / 車名 / グレード are separated; 車名 is the MODEL only (never the maker),
-    // and stays blank when only the maker was detected (e.g. "フェラーリ").
-    const norm = normalizeVehicleFields({
-      maker:       sanitized.maker,
-      vehicleName: sanitized.vehicle_name,
-      grade:       sanitized.grade,
-    });
-    sanitized.maker        = norm.maker;   // メーカー
-    sanitized.vehicle_name = norm.model;   // 車名 (model only; blank when only maker)
-    sanitized.grade        = norm.grade;   // グレード (blank unless detected)
+    // Selectable PDF: the label-anchored text layer (page 1) overrides ONLY the four certificate
+    // codes (型式 / 原動機の型式 / 型式指定番号 / 類別区分番号). No text layer → no field changes here;
+    // only a (never expected) pre-existing model_text_layer claim is discarded, so trust fails closed.
+    const textLayer = applyPdfTextLayerCertificateFields(sanitized, pdfTextLayer);
 
-    // ボディカラー is MANUAL required — the AI must never auto-fill it.
-    delete (sanitized as Record<string, unknown>).color;
+    // Deterministic vehicle-identity policy: maker from the 車名欄, 通称名/グレード always blank,
+    // 型式 = certificate 型式 column only, ボディカラー manual-only.
+    applyVehicleIdentityPolicy(sanitized, { trustedModelShape: textLayer.trustedModel });
 
     // Derive the customer mapping (owner/user rule). Owner AND user raw fields are
     // preserved above; this only records the recommended candidate + flags.
@@ -336,12 +381,21 @@ export async function analyzeVehicleRegistrationImage(
   }
   const apiKey = keyResult.apiKey;
 
-  const first = await callOpenAI(imageBase64, mimeType, apiKey);
+  // Deterministic PDF text-layer pass (page 1, bounded). Runs once per request, before the AI call,
+  // and only for PDFs. Any failure is fail-closed: status without fields → AI path unchanged.
+  let pdfTextLayer: PdfTextLayerExtraction | null = null;
+  if (mimeType === "application/pdf") {
+    pdfTextLayer = await extractCertificateCodesFromPdfBase64(imageBase64);
+    // Field NAMES only — values are never logged.
+    console.log(`[OCR] pdf-text-layer status=${pdfTextLayer.status} fields=[${Object.keys(pdfTextLayer.fields).join(",")}] lines=${pdfTextLayer.lineCount}`);
+  }
+
+  const first = await callOpenAI(imageBase64, mimeType, apiKey, pdfTextLayer);
 
   if ("error" in first && RETRYABLE_CODES.includes(first.error)) {
     console.log("[OCR] Transient error:", first.error, "— retrying once in 2 s …");
     await sleep(2_000);
-    const second = await callOpenAI(imageBase64, mimeType, apiKey);
+    const second = await callOpenAI(imageBase64, mimeType, apiKey, pdfTextLayer);
     console.log("[OCR] Retry result:", "error" in second ? second.error : "success");
     return second;
   }
