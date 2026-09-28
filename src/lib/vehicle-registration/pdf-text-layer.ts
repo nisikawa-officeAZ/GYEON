@@ -7,12 +7,15 @@
 //
 // Two label layouts are recognised, both anchored on an EXACT label:
 //   (a) same row  — the value directly follows the label on the same visual line ("型式 6BA-ABC1");
-//       a code glued to further text ("6BA-ABC1改") is never truncated to its leading code — the
-//       whole candidate is rejected with a notice;
+//       a code glued to further text ("6BA-ABC1改") or directly followed by a separate modification
+//       mark ("6BA-ABC1 改", whatever the gap pdf.js left between the two items) is never truncated
+//       to its leading code — the whole candidate is rejected with a notice;
 //   (b) two rows  — a row of labels followed by the IMMEDIATELY next visual row of values, where each
 //       value sits inside its own label's horizontal column (from the label's left edge up to the next
 //       token of the label row) with a small baseline distance. Values are never taken from a later
-//       row, never from a neighbouring column, and a value that straddles two columns is rejected.
+//       row, never from a neighbouring column, and a value that straddles two columns is rejected;
+//       a value glued to further text or followed by a modification mark inside its own column is
+//       rejected exactly like (a).
 //       Only a label WITHOUT a same-row value takes part (per label): a label already resolved by (a)
 //       is never re-interpreted against the next row, however close the rows are.
 //
@@ -22,12 +25,15 @@
 //   - ambiguous (several different values, including (a) and (b) disagreeing) or conflicting (same
 //     value under two labels) matches are rejected with an operator-visible notice — nothing is
 //     inferred or completed;
+//   - every field whose labelled evidence was rejected is reported in `rejected`, and the AI reading
+//     of THAT field is withheld by applyPdfTextLayerCertificateFields(): a value must never be shown
+//     next to a notice asking the operator to enter that very field by hand;
 //   - a missing text layer (scanned PDF), a non-PDF, a parse failure or a timeout yields NO fields,
 //     so the existing OpenAI OCR path continues unchanged.
 //
 // Server-side only for the pdf.js loader (Node); the row/label functions are pure and test-covered.
 
-import { foldVehicleCode } from "./ocr-quality";
+import { foldVehicleCode, manualEntryNotice } from "./ocr-quality";
 import type { VehicleRegistrationOcrResult } from "./vehicle-registration-types";
 
 export type CertificateCodeField = "model" | "engine_model" | "model_code" | "classification_number";
@@ -69,6 +75,13 @@ export type PdfTextLayerStatus =
 export interface PdfTextLayerExtraction {
   status:    PdfTextLayerStatus;
   fields:    Partial<Record<CertificateCodeField, string>>;
+  /**
+   * Fields for which page 1 DID carry a labelled value that was rejected (glued / modified text,
+   * several different values, wrong shape, same value under two labels) → the notice explaining why.
+   * Distinct from a field simply absent from the PDF: a rejected field must be entered by hand and the
+   * AI reading of it is never shown. Always empty for non-text-layer statuses.
+   */
+  rejected:  Partial<Record<CertificateCodeField, string>>;
   notices:   string[];
   lineCount: number;
 }
@@ -101,7 +114,7 @@ export interface PdfTextLayerOptions {
 }
 
 function empty(status: PdfTextLayerStatus, lineCount = 0): PdfTextLayerExtraction {
-  return { status, fields: {}, notices: [], lineCount };
+  return { status, fields: {}, rejected: {}, notices: [], lineCount };
 }
 
 // ─── Row / token reconstruction (pure) ───────────────────────────────────────
@@ -209,6 +222,52 @@ const VALUE_AFTER_LABEL = /^\s*[:：]?\s*([A-Za-z0-9‐-―−ーｰ-]+)/;
 // ("型式指定番号12345類別区分番号0007"). Anything else glued to the code (e.g. "6BA-ABC1改") is not a
 // code the SHAPE rules describe, and the candidate is rejected whole — never truncated.
 const LABEL_AT_START = /^(?:原\s*動\s*機\s*の?\s*型\s*式|型\s*式\s*指\s*定\s*番\s*号|類\s*別\s*区\s*分\s*番\s*号|型\s*式)/;
+// A modification mark printed as its OWN token directly after a code ("6BA-ABC1 改", "6BA-ABC1 (改)")
+// is part of that certificate value exactly like a glued suffix — however wide the gap pdf.js left
+// between the two items (the glue threshold above only decides token joining). Only the token DIRECTLY
+// following the code is inspected, so a 改 elsewhere on the page (another row, after another label's
+// value, after remark text) never blocks a field.
+const MODIFIER_MARK = /^[(（]?改[)）]?/;
+
+/** True for a bare modification-mark token, optionally glued to the NEXT exact label ("改原動機の型式"). */
+function isModifierToken(token: string): boolean {
+  const mark = MODIFIER_MARK.exec(token);
+  if (mark === null) return false;
+  const rest = token.slice(mark[0].length);
+  return rest === "" || LABEL_AT_START.test(rest);
+}
+
+type TrailingText =
+  | { kind: "clean" }                             // nothing, another exact label, or ordinary further text
+  | { kind: "glued" | "modifier"; text: string }; // the code is only the PREFIX of the printed value
+
+/**
+ * Classifies the text directly following a matched code on its line. Text glued to the code without a
+ * space ("改", "(改)", …) or a separate modification-mark token after whitespace make the code a mere
+ * prefix of the printed value → rejected whole, never truncated. Another exact label directly after
+ * the code is the packed layout ("型式指定番号12345類別区分番号0007") and stays clean.
+ */
+function classifyTrailingText(trailing: string): TrailingText {
+  if (trailing === "" || LABEL_AT_START.test(trailing)) return { kind: "clean" };
+  if (!/^\s/.test(trailing)) return { kind: "glued", text: /^\S+/.exec(trailing)?.[0] ?? "" };
+  const next = /^\s+(\S+)/.exec(trailing)?.[1];
+  if (next !== undefined && isModifierToken(next)) return { kind: "modifier", text: next };
+  return { kind: "clean" };
+}
+
+function trailingTextNotice(field: CertificateCodeField, code: string, trailing: Exclude<TrailingText, { kind: "clean" }>): string {
+  const printed = trailing.kind === "glued" ? `${code}${trailing.text}` : `${code} ${trailing.text}`;
+  return `PDFの文字情報で${FIELD_LABELS[field]}欄の値（${printed}）はコードの後に文字が続いていたため、${FIELD_LABELS[field]}は自動取得しませんでした。車検証の${FIELD_LABELS[field]}欄を確認して手入力してください。`;
+}
+
+/** Leading code of a value-row token plus whatever follows it inside the same token ("6BA-ABC1改" → "改"). */
+function splitValueToken(str: string): { code: string; trailing: string } | null {
+  const text = foldFullWidthLine(str).trim();
+  const match = /^[:：]?\s*([A-Za-z0-9‐-―−ーｰ-]+)(.*)$/.exec(text);
+  if (match === null) return null;
+  const code = asCodeCandidate(match[1]);
+  return code === null ? null : { code, trailing: match[2] };
+}
 
 const SHAPE: Record<CertificateCodeField, (v: string) => boolean> = {
   // 型式: letters (+digits), optional single hyphen part; never digits-only (that is a 型式指定番号).
@@ -242,8 +301,9 @@ function asCodeCandidate(raw: string): string | null {
 
 /**
  * (a) Same-row rule: the value directly follows an exact label on the same text line. A code that is
- * immediately followed by more text (a 改 modification suffix, brackets, …) is NOT a match for its
- * leading code: that field is blocked for the whole page with an operator-visible notice.
+ * followed by more text of its own value — glued ("6BA-ABC1改", brackets, …) or as a separate
+ * modification-mark token ("6BA-ABC1 改") — is NOT a match for its leading code: that field is
+ * blocked for the whole page with an operator-visible notice.
  */
 function collectSameRowCandidates(
   lines: readonly string[],
@@ -264,10 +324,9 @@ function collectSameRowCandidates(
       if (value === null) continue;
       const folded = asCodeCandidate(value[1]);
       if (folded === null) continue;
-      const trailing = afterLabel.slice(value[0].length);
-      if (trailing !== "" && !/^\s/.test(trailing) && !LABEL_AT_START.test(trailing)) {
-        const glued = `${folded}${/^\S+/.exec(trailing)?.[0] ?? ""}`;
-        blocked[field] ??= `PDFの文字情報で${FIELD_LABELS[field]}欄の値（${glued}）はコードの後に文字が続いていたため、${FIELD_LABELS[field]}は自動取得しませんでした。車検証の${FIELD_LABELS[field]}欄を確認して手入力してください。`;
+      const trailing = classifyTrailingText(afterLabel.slice(value[0].length));
+      if (trailing.kind !== "clean") {
+        blocked[field] ??= trailingTextNotice(field, folded, trailing);
         continue;
       }
       candidates[field].add(folded);
@@ -344,7 +403,9 @@ function maxBaselineGap(labelHeight: number, valueHeight: number): number {
  * Pairs each exact label of a row that has NO same-row value with the single code token that sits
  * inside the label's column on the IMMEDIATELY following row. Column = [label.x0, next token of the
  * label row); the last column extends a bounded distance past the label. A token straddling a column
- * edge blocks that field. Labels already followed by a value on their own row are skipped per label.
+ * edge blocks that field, and so does a code carrying further text of its own value inside the column
+ * (glued "6BA-ABC1改" or a separate modification-mark token "改" directly after the code, whatever the
+ * gap). Labels already followed by a value on their own row are skipped per label.
  */
 function collectTwoRowCandidates(
   rows: readonly (readonly PdfTextToken[])[],
@@ -368,20 +429,42 @@ function collectTwoRowCandidates(
       const colEnd   = next !== undefined ? next.x0 : label.x1 + outer;
       const slack    = Math.max(4, 1.5 * label.height);
 
-      for (const value of valueRow) {
+      for (let v = 0; v < valueRow.length; v++) {
+        const value = valueRow[v];
         const gap = label.y - value.y;
         if (!(gap > 0) || gap > maxBaselineGap(label.height, value.height)) continue;
         const inside    = value.x1 > colStart + slack && value.x0 < colEnd - slack;
         const touches   = value.x1 > colStart - slack && value.x0 < colEnd + slack;
         if (!inside && !touches) continue;
         const folded = asCodeCandidate(value.str);
-        if (folded === null) continue; // Japanese text / dash placeholder under a label: not a value
+        if (folded === null) {
+          // Not a code by itself. Japanese text or a dash placeholder under a label is silently no
+          // value; a code with further text glued to it ("6BA-ABC1改") inside this column is a REJECTED
+          // value of this field, exactly as on a same row — never truncated, never left to the AI.
+          const split = splitValueToken(value.str);
+          const trailing = split === null ? null : classifyTrailingText(split.trailing);
+          if (split !== null && trailing !== null && trailing.kind !== "clean" && inside) {
+            blocked[field] ??= trailingTextNotice(field, split.code, trailing);
+          }
+          continue;
+        }
         const contained = value.x0 >= colStart - slack && value.x1 <= colEnd + slack;
         if (!contained) {
           if (inside) {
             blocked[field] ??= `PDFの文字情報で${FIELD_LABELS[field]}の下の行の値（${folded}）が隣の欄にまたがっていたため、${FIELD_LABELS[field]}は自動取得しませんでした。車検証の${FIELD_LABELS[field]}欄を確認して手入力してください。`;
           }
           continue; // merely touching the edge from outside: belongs to a neighbouring column
+        }
+        // The very next token of the value row, when it is a bare modification mark that starts inside
+        // this column, is part of THIS value ("6BA-ABC1" + "改" split by pdf.js with any gap). A mark
+        // starting beyond the column belongs to a neighbour / elsewhere and is never attributed here.
+        const follower = valueRow[v + 1];
+        if (follower !== undefined && follower.x0 < colEnd + slack) {
+          const mark = foldFullWidthLine(follower.str).trim();
+          if (isModifierToken(mark)) {
+            blocked[field] ??= trailingTextNotice(field, folded, { kind: "modifier", text: mark });
+            continue;
+          }
         }
         candidates[field].add(folded);
       }
@@ -397,20 +480,28 @@ function resolveCandidates(
   lineCount: number,
 ): PdfTextLayerExtraction {
   const fields: Partial<Record<CertificateCodeField, string>> = {};
+  const rejected: Partial<Record<CertificateCodeField, string>> = {};
   const notices: string[] = [];
+  // Every rejection names the field(s) that now REQUIRE manual entry (machine-readable prefix, see
+  // ocr-quality.ts) and records them in `rejected`, so the AI reading of those fields is withheld too.
+  const reject = (rejectedFields: readonly CertificateCodeField[], message: string): void => {
+    const notice = manualEntryNotice(rejectedFields.map((f) => FIELD_LABELS[f]), message);
+    notices.push(notice);
+    for (const f of rejectedFields) rejected[f] ??= notice;
+  };
   for (const field of CERTIFICATE_CODE_FIELDS) {
     const label = FIELD_LABELS[field];
     const blockedNotice = blocked[field];
-    if (blockedNotice !== undefined) { notices.push(blockedNotice); continue; }
+    if (blockedNotice !== undefined) { reject([field], blockedNotice); continue; }
     const values = [...candidates[field]];
     if (values.length === 0) continue;
     if (values.length > 1) {
-      notices.push(`PDFの文字情報で${label}の候補が複数あったため（${values.join(" / ")}）、${label}は自動取得しませんでした。車検証の${label}欄を確認して手入力してください。`);
+      reject([field], `PDFの文字情報で${label}の候補が複数あったため（${values.join(" / ")}）、${label}は自動取得しませんでした。車検証の${label}欄を確認して手入力してください。`);
       continue;
     }
     const value = values[0];
     if (!SHAPE[field](value)) {
-      notices.push(`PDFの文字情報の${label}欄の値（${value}）は${label}の形式ではないため自動取得しませんでした。車検証の${label}欄を確認してください。`);
+      reject([field], `PDFの文字情報の${label}欄の値（${value}）は${label}の形式ではないため自動取得しませんでした。車検証の${label}欄を確認して手入力してください。`);
       continue;
     }
     fields[field] = value;
@@ -422,7 +513,7 @@ function resolveCandidates(
       const a = CERTIFICATE_CODE_FIELDS[i];
       const b = CERTIFICATE_CODE_FIELDS[j];
       if (fields[a] !== undefined && fields[a] === fields[b]) {
-        notices.push(`PDFの文字情報で${FIELD_LABELS[a]}と${FIELD_LABELS[b]}に同じ値（${fields[a]}）が見つかったため、どちらも自動取得しませんでした。車検証を確認して手入力してください。`);
+        reject([a, b], `PDFの文字情報で${FIELD_LABELS[a]}と${FIELD_LABELS[b]}に同じ値（${fields[a]}）が見つかったため、どちらも自動取得しませんでした。車検証を確認して手入力してください。`);
         delete fields[a];
         delete fields[b];
       }
@@ -430,7 +521,7 @@ function resolveCandidates(
   }
 
   const status: PdfTextLayerStatus = Object.keys(fields).length > 0 ? "extracted" : "no_codes";
-  return { status, fields, notices, lineCount };
+  return { status, fields, rejected, notices, lineCount };
 }
 
 /**
@@ -474,13 +565,19 @@ export function extractCertificateCodesFromItems(
  * Writes the deterministically extracted codes over the AI output — ONLY the four certificate code
  * fields, nothing else. Owner/customer fields, 車名 and グレード are never written here. Every applied
  * value and every rejection is recorded as an operator-visible notice (human confirmation stays).
+ *
+ * A field the text layer REJECTED (`extraction.rejected`) fails closed: its AI reading is removed as
+ * well and reported in `manualEntry`, because a displayed value would contradict the notice asking the
+ * operator to enter exactly that field by hand. Fields the PDF simply does not carry, and every
+ * non-text-layer status (scanned PDF, image, parse failure), keep the AI reading — fallback unchanged.
  */
 export function applyPdfTextLayerCertificateFields(
   sanitized: VehicleRegistrationOcrResult,
   extraction: PdfTextLayerExtraction | null | undefined,
-): { applied: CertificateCodeField[]; trustedModel: boolean } {
+): { applied: CertificateCodeField[]; trustedModel: boolean; manualEntry: CertificateCodeField[] } {
   const applied: CertificateCodeField[] = [];
-  if (!extraction) return { applied, trustedModel: false };
+  const manualEntry: CertificateCodeField[] = [];
+  if (!extraction) return { applied, trustedModel: false, manualEntry };
 
   const notices = [...(sanitized.vehicle_identity_notices ?? [])];
   const note = (message: string) => { if (!notices.includes(message)) notices.push(message); };
@@ -511,8 +608,19 @@ export function applyPdfTextLayerCertificateFields(
   }
   for (const message of extraction.notices) note(message);
 
+  const rejected = extraction.rejected ?? {};
+  for (const field of CERTIFICATE_CODE_FIELDS) {
+    if (rejected[field] === undefined) continue;
+    manualEntry.push(field);
+    const previous = foldVehicleCode(sanitized[field]);
+    delete sanitized[field]; // never shown next to the manual-entry notice for this very field
+    if (previous !== "") {
+      note(`AI読み取りの${FIELD_LABELS[field]}（${previous}）は、PDFの文字情報で${FIELD_LABELS[field]}を確定できなかったため表示しません。車検証の${FIELD_LABELS[field]}欄を確認して手入力してください。`);
+    }
+  }
+
   if (notices.length > 0) sanitized.vehicle_identity_notices = notices;
-  return { applied, trustedModel: applied.includes("model") };
+  return { applied, trustedModel: applied.includes("model"), manualEntry };
 }
 
 // ─── pdf.js loader (Node / server only) ──────────────────────────────────────

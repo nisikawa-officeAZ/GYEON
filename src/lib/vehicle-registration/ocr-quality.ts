@@ -12,6 +12,7 @@ export interface OcrQualityReport {
   processingMs:          number | null;
   needsManualCorrection: boolean;
   manualRequired:        string[];        // fields the operator must always fill (color)
+  manualEntryRequired:   string[];        // certificate fields withheld by a 【要手入力】 notice (see below)
 }
 
 // OCR-extractable REQUIRED fields (key → Japanese label). 車名（通称名）/ body color /
@@ -55,14 +56,22 @@ export function buildOcrQualityReport(
     warnings.push(`未取得の必須項目: ${missingRequired.join("、")}`);
   }
 
-  // Vehicle-identity resolution notices (excluded 型式・グレード values) are operator-facing.
-  for (const notice of result.vehicle_identity_notices ?? []) warnings.push(notice);
+  // Vehicle-identity resolution notices (excluded 型式・グレード values) are operator-facing. Those that
+  // WITHHOLD a certificate field (【要手入力：<欄>】…, from the PDF text layer) also name the fields the
+  // operator must now enter by hand — read from the marker, never from the prose.
+  const manualEntryRequired: string[] = [];
+  for (const notice of result.vehicle_identity_notices ?? []) {
+    warnings.push(notice);
+    for (const label of manualEntryLabels(notice)) {
+      if (!manualEntryRequired.includes(label)) manualEntryRequired.push(label);
+    }
+  }
 
   // Always manual (not printed on the certificate): 車名（通称名）, ボディカラー
   const manualRequired = ["車名", "ボディカラー"];
 
   const needsManualCorrection =
-    missingRequired.length > 0 || (conf !== null && conf < LOW_CONFIDENCE);
+    missingRequired.length > 0 || (conf !== null && conf < LOW_CONFIDENCE) || manualEntryRequired.length > 0;
 
   return {
     model:          ctx.model,
@@ -73,7 +82,28 @@ export function buildOcrQualityReport(
     processingMs:   ctx.processingMs,
     needsManualCorrection,
     manualRequired,
+    manualEntryRequired,
   };
+}
+
+// ─── Manual-entry notices ────────────────────────────────────────────────────
+//
+// A notice that WITHHOLDS a certificate code field — the PDF text layer saw a labelled value for it but
+// rejected it (glued / modified text, several values, wrong shape, same value under two labels) — starts
+// with the marker 【要手入力：<欄>】 (several fields joined by 「・」). The field's AI reading is removed with
+// it (pdf-text-layer.ts), and the quality report reads the marker to flag manual correction.
+
+const MANUAL_ENTRY_MARKER = /^【要手入力：([^】]+)】/;
+
+/** Builds an operator-facing notice that requires manual entry of the named certificate field(s). */
+export function manualEntryNotice(labels: readonly string[], message: string): string {
+  return `【要手入力：${labels.join("・")}】${message}`;
+}
+
+/** Field labels named by a manual-entry notice; empty for every other notice. */
+export function manualEntryLabels(notice: string): string[] {
+  const match = MANUAL_ENTRY_MARKER.exec(notice);
+  return match === null ? [] : match[1].split("・").filter((label) => label !== "");
 }
 
 // ─── Vehicle-identity resolution ─────────────────────────────────────────────

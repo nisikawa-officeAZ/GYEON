@@ -448,7 +448,7 @@ test("F1: a legacy model_needs_confirmation flag never deletes a 型式 applied 
   // No text layer at all (scanned PDF / image) → unchanged legacy behaviour.
   const scanned = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE });
   scanned.model_needs_confirmation = "true";
-  applyPdfTextLayerCertificateFields(scanned, { status: "no_text", fields: {}, notices: [], lineCount: 0 });
+  applyPdfTextLayerCertificateFields(scanned, { status: "no_text", fields: {}, rejected: {}, notices: [], lineCount: 0 });
   assert.equal(applyVehicleIdentityPolicy(scanned).model, undefined);
 
   // The other trusted-model safeguards are untouched: equal-to-engine and digits-only PDF values still fall.
@@ -457,6 +457,62 @@ test("F1: a legacy model_needs_confirmation flag never deletes a 型式 applied 
   const equalLayer = applyPdfTextLayerCertificateFields(equal, extractCertificateCodesFromLines(["型式 XYZ9"]));
   assert.equal(equalLayer.trustedModel, true);
   assert.equal(applyVehicleIdentityPolicy(equal, { trustedModelShape: true }).model, undefined);
+});
+
+test("R2: a 型式 whose PDF evidence carries a 改 mark is neither taken from the PDF nor kept from the AI; the report flags manual entry and the other codes stay", () => {
+  const ctx = { model: "m", promptVersion: "p", processingMs: 1 };
+  const sanitized = sanitizeVehicleRegistrationOcrResult({
+    vehicle_name: "ホンダ", maker: "ホンダ", model: PDF_TYPE, grade: PDF_ENGINE, engine_model: PDF_ENGINE, model_code: PDF_ENGINE,
+    owner_name: "合成 名義", license_plate_class: PLATE_CLASS,
+  });
+  const layer = applyPdfTextLayerCertificateFields(sanitized, extractCertificateCodesFromLines([
+    `型式 ${PDF_TYPE} 改 原動機の型式 ${PDF_ENGINE}`, `型式指定番号 ${PDF_APPROVAL} 類別区分番号 ${PDF_CLASS}`,
+  ]));
+  assert.deepEqual(layer, { applied: ["engine_model", "model_code", "classification_number"], trustedModel: false, manualEntry: ["model"] });
+  const result = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: layer.trustedModel });
+  assert.equal(result.model, undefined);                 // never the bare prefix — the certificate prints "6BA-ABC1 改"
+  assert.equal(result.engine_model, PDF_ENGINE);
+  assert.equal(result.model_code, PDF_APPROVAL);
+  assert.equal(result.classification_number, PDF_CLASS);
+  assert.equal(result.grade, undefined);
+  assert.equal(result.vehicle_name, undefined);
+  assert.equal(result.maker, "ホンダ");
+  assert.equal(result.owner_name, "合成 名義");
+  assert.equal(result.license_plate_class, PLATE_CLASS);
+  assert.equal(buildWizardEstimateOcrApplication(result).vehicle.vehicleCode, undefined);
+
+  const report = buildOcrQualityReport(result, ctx);
+  assert.equal(report.needsManualCorrection, true);
+  assert.deepEqual(report.manualEntryRequired, ["型式"]);
+  assert.ok(report.missingRequired.includes("型式"));
+  assert.ok(report.warnings.some((w) => w.startsWith("【要手入力：型式】") && w.includes(`${PDF_TYPE} 改`)), report.warnings.join(" | "));
+  assert.ok(report.warnings.some((w) => w.includes(`AI読み取りの型式（${PDF_TYPE}）`) && w.includes("表示しません")), report.warnings.join(" | "));
+
+  // The manual-entry state survives the review's re-resolution (idempotent notices).
+  const again = resolveVehicleIdentity(result, { ambiguousGrade: "blank" });
+  assert.deepEqual(again.result, result);
+  assert.deepEqual(buildOcrQualityReport(again.result, ctx).manualEntryRequired, ["型式"]);
+
+  // A rejected NON-required code (類別区分番号) also flags manual entry; the AI 型式 (absent from the PDF) is kept.
+  const optional = sanitizeVehicleRegistrationOcrResult({ maker: "日産", model: PDF_TYPE, classification_number: PDF_CLASS, license_plate_class: PLATE_CLASS });
+  const optionalLayer = applyPdfTextLayerCertificateFields(optional, extractCertificateCodesFromLines([`型式指定番号 ${PDF_APPROVAL} 類別区分番号 ${PDF_CLASS} 改`]));
+  assert.deepEqual(optionalLayer.manualEntry, ["classification_number"]);
+  const optionalResult = applyVehicleIdentityPolicy(optional, { trustedModelShape: optionalLayer.trustedModel });
+  assert.equal(optionalResult.model, PDF_TYPE);
+  assert.equal(optionalResult.model_code, PDF_APPROVAL);
+  assert.equal(optionalResult.classification_number, undefined);
+  assert.equal(optionalResult.license_plate_class, PLATE_CLASS);
+  const optionalReport = buildOcrQualityReport(optionalResult, ctx);
+  assert.equal(optionalReport.needsManualCorrection, true);
+  assert.deepEqual(optionalReport.manualEntryRequired, ["類別区分番号"]);
+
+  // Scanned PDF / image (no text layer): the AI 型式 remains the fallback and the text layer flags nothing.
+  const scanned = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: PDF_TYPE, engine_model: PDF_ENGINE });
+  const scannedLayer = applyPdfTextLayerCertificateFields(scanned, { status: "no_text", fields: {}, rejected: {}, notices: [], lineCount: 0 });
+  assert.deepEqual(scannedLayer.manualEntry, []);
+  const scannedResult = applyVehicleIdentityPolicy(scanned, { trustedModelShape: scannedLayer.trustedModel });
+  assert.equal(scannedResult.model, PDF_TYPE);
+  assert.deepEqual(buildOcrQualityReport(scannedResult, ctx).manualEntryRequired, []);
 });
 
 test("ocr.ts runs the PDF text layer only for PDFs, after sanitizing and before the identity policy, and logs field names only", () => {

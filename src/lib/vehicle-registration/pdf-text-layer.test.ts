@@ -234,6 +234,76 @@ test("F2: a same-row code glued to trailing text (synthetic 改 suffix) is never
   assert.deepEqual(extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
 });
 
+test("R2-1: a separate 改 modification mark directly after a same-row code rejects that field whole — never its leading code", () => {
+  // "型式 6BA-ABC1 改": the mark is its own token (pdf.js split it off with a gap wider than the glue threshold).
+  const spaced = extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 改 原動機の型式 ${ENGINE_TYPE}`, `型式指定番号 ${TYPE_APPROVAL}`]);
+  assert.equal(spaced.fields.model, undefined);
+  assert.deepEqual(spaced.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL });
+  assert.equal(spaced.notices.length, 1);
+  assert.ok(spaced.notices[0].includes(`${CERT_TYPE} 改`) && spaced.notices[0].includes("型式は自動取得しませんでした"), spaced.notices[0]);
+  assert.ok(spaced.notices[0].startsWith("【要手入力：型式】"), spaced.notices[0]);
+  assert.ok(!spaced.notices[0].includes("原動機の型式は"));
+  assert.deepEqual(Object.keys(spaced.rejected), ["model"]);
+  assert.equal(spaced.rejected.model, spaced.notices[0]);
+
+  // Bracketed / full-width marks, a mark at the end of the line, a mark glued to the NEXT label, and a mark on the other code fields.
+  assert.equal(extractCertificateCodesFromLines([`型式 ${CERT_TYPE} (改)`]).fields.model, undefined);
+  assert.equal(extractCertificateCodesFromLines(["型式　６ＢＡ－ＡＢＣ１　改"]).fields.model, undefined);
+  assert.equal(extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 改`]).status, "no_codes");
+  const gluedToLabel = extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 改原動機の型式 ${ENGINE_TYPE}`]);
+  assert.deepEqual(gluedToLabel.fields, { engine_model: ENGINE_TYPE });
+  const engine = extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 原動機の型式 ${ENGINE_TYPE} 改`]);
+  assert.deepEqual(engine.fields, { model: CERT_TYPE });          // the mark follows the ENGINE code, not 型式
+  assert.deepEqual(Object.keys(engine.rejected), ["engine_model"]);
+  const classification = extractCertificateCodesFromLines([`型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION} 改`]);
+  assert.deepEqual(classification.fields, { model_code: TYPE_APPROVAL });
+  assert.deepEqual(Object.keys(classification.rejected), ["classification_number"]);
+
+  // The whole page stays blocked for that field: a clean repetition elsewhere does not rescue it.
+  const mixed = extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 改`, `型式 ${CERT_TYPE}`]);
+  assert.equal(mixed.fields.model, undefined);
+  assert.equal(mixed.status, "no_codes");
+
+  // Negative controls — an unrelated 改 never blocks: on another line, after remark text on the same
+  // line, or before the label instead of after the code.
+  const otherLine = extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 原動機の型式 ${ENGINE_TYPE}`, "改", `型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`]);
+  assert.deepEqual(otherLine.fields, { model: CERT_TYPE, engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION });
+  assert.deepEqual(otherLine.notices, []);
+  assert.deepEqual(otherLine.rejected, {});
+  const remark = extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 備考 改`]);
+  assert.deepEqual(remark.fields, { model: CERT_TYPE });
+  assert.deepEqual(remark.notices, []);
+  const before = extractCertificateCodesFromLines([`改 型式 ${CERT_TYPE}`]);
+  assert.deepEqual(before.fields, { model: CERT_TYPE });
+  assert.deepEqual(before.notices, []);
+});
+
+test("R2-1 (items): a 改 item split from the same-row code by more than the glue threshold still rejects 型式; a 改 on another row does not", () => {
+  const row = (extra: PdfTextItemLike[]): PdfTextItemLike[] => [
+    { str: "型式",         x: 40,  y: 740, width: 20, height: 10 }, { str: CERT_TYPE,   x: 90,  y: 740, width: 80, height: 10 },
+    { str: "原動機の型式", x: 300, y: 740, width: 60, height: 10 }, { str: ENGINE_TYPE, x: 380, y: 740, width: 40, height: 10 },
+    ...extra,
+  ];
+  // Gap 15pt (code ends at 170, mark at 185) ≫ glue threshold 1.5pt → separate token, still the value's own mark.
+  const spacedItems = row([{ str: "改", x: 185, y: 740, width: 10, height: 10 }]);
+  assert.deepEqual(groupPdfTextItemsIntoLines(spacedItems), [`型式 ${CERT_TYPE} 改 原動機の型式 ${ENGINE_TYPE}`]);
+  const spaced = extractCertificateCodesFromItems(spacedItems);
+  assert.deepEqual(spaced.fields, { engine_model: ENGINE_TYPE });
+  assert.deepEqual(Object.keys(spaced.rejected), ["model"]);
+  assert.ok(spaced.notices.some((n) => n.includes(`${CERT_TYPE} 改`) && n.includes("型式は自動取得しませんでした")), spaced.notices.join(" | "));
+
+  // Glued (gap 0) keeps the original F2 outcome.
+  const glued = extractCertificateCodesFromItems(row([{ str: "改", x: 170, y: 740, width: 10, height: 10 }]));
+  assert.deepEqual(glued.fields, { engine_model: ENGINE_TYPE });
+  assert.ok(glued.notices.some((n) => n.includes(`${CERT_TYPE}改`)));
+
+  // A 改 on the row below (an unrelated remark) blocks nothing — same-row labels are never re-paired downward.
+  const below = extractCertificateCodesFromItems(row([{ str: "改", x: 90, y: 720, width: 10, height: 10 }]));
+  assert.deepEqual(below.fields, { model: CERT_TYPE, engine_model: ENGINE_TYPE });
+  assert.deepEqual(below.notices, []);
+  assert.deepEqual(below.rejected, {});
+});
+
 // ─── Pure: override of the AI result ──────────────────────────────────────────
 
 test("text-layer codes override ONLY the four certificate fields; owner, 車名 and グレード are untouched", () => {
@@ -282,12 +352,12 @@ test("no text layer (scanned / image PDF / failure) leaves the AI result exactly
   for (const status of ["no_text", "no_codes", "not_pdf", "too_large", "timeout", "parse_error"] as const) {
     const sanitized = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE, engine_model: ENGINE_TYPE, grade: ENGINE_TYPE });
     const before = structuredClone(sanitized);
-    const outcome = applyPdfTextLayerCertificateFields(sanitized, { status, fields: {}, notices: [], lineCount: 0 });
-    assert.deepEqual(outcome, { applied: [], trustedModel: false });
+    const outcome = applyPdfTextLayerCertificateFields(sanitized, { status, fields: {}, rejected: {}, notices: [], lineCount: 0 });
+    assert.deepEqual(outcome, { applied: [], trustedModel: false, manualEntry: [] });
     assert.deepEqual(sanitized, before);
   }
   const untouched = { model: CERT_TYPE };
-  assert.deepEqual(applyPdfTextLayerCertificateFields(untouched, null), { applied: [], trustedModel: false });
+  assert.deepEqual(applyPdfTextLayerCertificateFields(untouched, null), { applied: [], trustedModel: false, manualEntry: [] });
   assert.deepEqual(untouched, { model: CERT_TYPE });
 });
 
@@ -295,7 +365,7 @@ test("partial extraction overrides only what was anchored; a conflicting AI 型�
   const partial = extractCertificateCodesFromLines([`型式指定番号 ${TYPE_APPROVAL} 類別区分番号 ${CLASSIFICATION}`]);
   const sanitized = { model: CERT_TYPE, engine_model: ENGINE_TYPE, model_code: ENGINE_TYPE };
   const outcome = applyPdfTextLayerCertificateFields(sanitized, partial);
-  assert.deepEqual(outcome, { applied: ["model_code", "classification_number"], trustedModel: false });
+  assert.deepEqual(outcome, { applied: ["model_code", "classification_number"], trustedModel: false, manualEntry: [] });
   assert.equal(sanitized.model, CERT_TYPE);
   assert.equal(sanitized.model_code, TYPE_APPROVAL);
   assert.equal((sanitized as { classification_number?: string }).classification_number, CLASSIFICATION);
@@ -325,8 +395,74 @@ test("F1: the legacy model_needs_confirmation flag is cleared ONLY when the text
 
   // No text layer at all → untouched.
   const none = { model_needs_confirmation: "true" as string | undefined };
-  applyPdfTextLayerCertificateFields(none, { status: "no_text", fields: {}, notices: [], lineCount: 0 });
+  applyPdfTextLayerCertificateFields(none, { status: "no_text", fields: {}, rejected: {}, notices: [], lineCount: 0 });
   assert.equal(none.model_needs_confirmation, "true");
+});
+
+test("R2-2: a field the text layer REJECTED withholds the AI reading of that field with a manual-entry notice; absent fields and other statuses keep the AI fallback", () => {
+  // 型式 rejected (spaced 改), 型式指定番号 extracted, 原動機の型式 / 類別区分番号 absent from the PDF.
+  const extraction = extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 改`, `型式指定番号 ${TYPE_APPROVAL}`]);
+  const sanitized = sanitizeVehicleRegistrationOcrResult({
+    maker: "ホンダ", model: CERT_TYPE, engine_model: ENGINE_TYPE, model_code: ENGINE_TYPE, classification_number: CLASSIFICATION,
+    owner_name: "合成 名義", license_plate_class: "580",
+  });
+  const outcome = applyPdfTextLayerCertificateFields(sanitized, extraction);
+  assert.deepEqual(outcome, { applied: ["model_code"], trustedModel: false, manualEntry: ["model"] });
+  assert.equal(sanitized.model, undefined);                    // AI 型式 withheld: it would contradict the notice
+  assert.equal(sanitized.model_code, TYPE_APPROVAL);           // PDF value applied
+  assert.equal(sanitized.engine_model, ENGINE_TYPE);           // absent from the PDF → AI fallback kept
+  assert.equal(sanitized.classification_number, CLASSIFICATION);
+  assert.equal(sanitized.owner_name, "合成 名義");
+  assert.equal(sanitized.license_plate_class, "580");
+  const notices = sanitized.vehicle_identity_notices ?? [];
+  assert.ok(notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes(`${CERT_TYPE} 改`)), notices.join(" | "));
+  assert.ok(notices.some((n) => n.includes(`AI読み取りの型式（${CERT_TYPE}）`) && n.includes("表示しません") && n.includes("手入力")), notices.join(" | "));
+  const final = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: outcome.trustedModel });
+  assert.equal(final.model, undefined);
+  assert.equal(final.model_code, TYPE_APPROVAL);
+  assert.equal(final.engine_model, ENGINE_TYPE);
+  assert.equal(final.classification_number, CLASSIFICATION);
+
+  // A rejection with no extracted field at all (status no_codes) still withholds the AI reading of that field.
+  const onlyRejected = { model: CERT_TYPE, engine_model: ENGINE_TYPE };
+  const only = applyPdfTextLayerCertificateFields(onlyRejected, extractCertificateCodesFromLines([`型式 ${CERT_TYPE}改`]));
+  assert.deepEqual(only, { applied: [], trustedModel: false, manualEntry: ["model"] });
+  assert.equal(onlyRejected.model, undefined);
+  assert.equal(onlyRejected.engine_model, ENGINE_TYPE);
+
+  // Ambiguous, malformed and conflicting evidence withhold exactly the fields they name.
+  const ambiguous = { model: CERT_TYPE, model_code: TYPE_APPROVAL };
+  applyPdfTextLayerCertificateFields(ambiguous, extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`, "型式 6BA-ABC2", `型式指定番号 ${TYPE_APPROVAL}`]));
+  assert.equal(ambiguous.model, undefined);
+  assert.equal(ambiguous.model_code, TYPE_APPROVAL);
+  const malformed = { classification_number: CLASSIFICATION, model: CERT_TYPE };
+  applyPdfTextLayerCertificateFields(malformed, extractCertificateCodesFromLines(["類別区分番号 12-3"]));
+  assert.equal(malformed.classification_number, undefined);
+  assert.equal(malformed.model, CERT_TYPE);
+  const conflict = { model: CERT_TYPE, engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL };
+  const conflictOutcome = applyPdfTextLayerCertificateFields(conflict, extractCertificateCodesFromLines([`型式 ${ENGINE_TYPE} 原動機の型式 ${ENGINE_TYPE}`]));
+  assert.deepEqual(conflictOutcome.manualEntry, ["model", "engine_model"]);
+  assert.equal(conflict.model, undefined);
+  assert.equal(conflict.engine_model, undefined);
+  assert.equal(conflict.model_code, TYPE_APPROVAL);
+
+  // A rejected field with NO AI reading only records the manual-entry state (no "withheld" notice to show).
+  const blank: { model?: string; vehicle_identity_notices?: string[] } = {};
+  const blankOutcome = applyPdfTextLayerCertificateFields(blank, extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 改`]));
+  assert.deepEqual(blankOutcome.manualEntry, ["model"]);
+  assert.equal(blank.model, undefined);
+  assert.ok(!(blank.vehicle_identity_notices ?? []).some((n) => n.includes("AI読み取りの")));
+  assert.ok((blank.vehicle_identity_notices ?? []).some((n) => n.startsWith("【要手入力：型式】")));
+
+  // Unchanged fallbacks: a field merely absent from the PDF keeps the AI reading; non-text-layer statuses touch nothing.
+  const absent = { model: CERT_TYPE };
+  assert.deepEqual(applyPdfTextLayerCertificateFields(absent, extractCertificateCodesFromLines([`類別区分番号 ${CLASSIFICATION}`])).manualEntry, []);
+  assert.equal(absent.model, CERT_TYPE);
+  for (const status of ["no_text", "no_codes", "not_pdf", "too_large", "timeout", "parse_error"] as const) {
+    const scanned = { model: CERT_TYPE, engine_model: ENGINE_TYPE };
+    assert.deepEqual(applyPdfTextLayerCertificateFields(scanned, { status, fields: {}, rejected: {}, notices: [], lineCount: 0 }).manualEntry, []);
+    assert.deepEqual(scanned, { model: CERT_TYPE, engine_model: ENGINE_TYPE });
+  }
 });
 
 // ─── pdf.js: synthetic selectable / scanned PDFs ─────────────────────────────
@@ -633,6 +769,53 @@ test("F3: a label with a same-row value is never re-paired with the next row; la
   assert.ok(straddle.notices.some((n) => n.includes("またが")));
 });
 
+test("R2-1 (two-row): a 改 token under the label directly after the code — split by any gap or glued — rejects that field; marks outside the column never do", () => {
+  const withMark = (mark: PdfTextItemLike) => extractCertificateCodesFromItems(twoRowItems(500, 492, { values: [
+    { str: CERT_TYPE,      x: 40,  y: 492, width: 80, height: 10 }, mark,
+    { str: ENGINE_TYPE,    x: 200, y: 492, width: 40, height: 10 },
+    { str: TYPE_APPROVAL,  x: 340, y: 492, width: 50, height: 10 },
+    { str: CLASSIFICATION, x: 480, y: 492, width: 40, height: 10 },
+  ] }));
+  const three = { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION };
+  for (const mark of [
+    { str: "改",     x: 130, y: 492, width: 10, height: 10 }, // 10pt gap: separate token inside the 型式 column
+    { str: "（改）", x: 150, y: 492, width: 30, height: 10 }, // full-width brackets, 30pt gap
+    { str: "改",     x: 120, y: 492, width: 10, height: 10 }, // gap 0: glued into one token "6BA-ABC1改"
+  ]) {
+    const r = withMark(mark);
+    assert.deepEqual(r.fields, three, JSON.stringify(r));
+    assert.deepEqual(Object.keys(r.rejected), ["model"]);
+    assert.ok(r.notices.some((n) => n.includes(CERT_TYPE) && n.includes("改") && n.includes("型式は自動取得しませんでした")), r.notices.join(" | "));
+  }
+
+  // One pdf.js item "6BA-ABC1改" under 型式 is rejected as well (it used to be skipped silently, leaving the AI value).
+  const glued = extractCertificateCodesFromItems(twoRowItems(500, 492, { values: [
+    { str: `${CERT_TYPE}改`, x: 40, y: 492, width: 90, height: 10 }, { str: ENGINE_TYPE, x: 200, y: 492, width: 40, height: 10 },
+  ] }));
+  assert.deepEqual(glued.fields, { engine_model: ENGINE_TYPE });
+  assert.deepEqual(Object.keys(glued.rejected), ["model"]);
+  assert.ok(glued.notices.some((n) => n.includes(`${CERT_TYPE}改`)));
+
+  // A mark after the ENGINE code blocks 原動機の型式 only — never 型式 across the column edge.
+  const engineMark = extractCertificateCodesFromItems(twoRowItems(500, 492, { values: [
+    { str: CERT_TYPE,      x: 40,  y: 492, width: 80, height: 10 },
+    { str: ENGINE_TYPE,    x: 200, y: 492, width: 40, height: 10 }, { str: "改", x: 250, y: 492, width: 10, height: 10 },
+    { str: TYPE_APPROVAL,  x: 340, y: 492, width: 50, height: 10 },
+    { str: CLASSIFICATION, x: 480, y: 492, width: 40, height: 10 },
+  ] }));
+  assert.deepEqual(engineMark.fields, { model: CERT_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION });
+  assert.deepEqual(Object.keys(engineMark.rejected), ["engine_model"]);
+
+  // Negative controls: a 改 beyond the last column, or on a row that is not the value row, blocks nothing.
+  const outside = extractCertificateCodesFromItems(twoRowItems(500, 492, { extra: [{ str: "改", x: 700, y: 492, width: 10, height: 10 }] }));
+  assert.deepEqual(outside.fields, ALL_FOUR);
+  assert.deepEqual(outside.notices, []);
+  const otherRow = extractCertificateCodesFromItems(twoRowItems(500, 492, { extra: [{ str: "改", x: 130, y: 470, width: 10, height: 10 }] }));
+  assert.deepEqual(otherRow.fields, ALL_FOUR);
+  assert.deepEqual(otherRow.notices, []);
+  assert.deepEqual(otherRow.rejected, {});
+});
+
 // ─── pdf.js: two-row synthetic PDFs ────────────────────────────────────────────
 
 // Label row at y=500, value row at y=492, four columns (glyph width = 10pt at size 10).
@@ -698,4 +881,33 @@ test("F3 (pdf.js): a mixed same-row / next-row certificate PDF at a 20pt row pit
   assert.deepEqual(r.fields, ALL_FOUR);
   assert.deepEqual(r.notices, []);
   assert.equal(r.lineCount, 4);
+});
+
+test("R2-1 (pdf.js): a selectable PDF whose 型式 is followed by a separate 改 item — same row or value row — yields no 型式, a notice, and the other codes", async () => {
+  // Same row: CERT_TYPE spans 90..170 (8 glyphs × 10pt); the mark at 185 leaves a 15pt gap (≫ glue threshold).
+  const sameRow = buildSyntheticPdf([{ text: [
+    { x: 40,  y: 780, text: "自動車検査証（合成テスト）" },
+    { x: 40,  y: 740, text: "型式" },         { x: 90,  y: 740, text: CERT_TYPE }, { x: 185, y: 740, text: "改" },
+    { x: 300, y: 740, text: "原動機の型式" }, { x: 380, y: 740, text: ENGINE_TYPE },
+    { x: 40,  y: 700, text: "型式指定番号" }, { x: 120, y: 700, text: TYPE_APPROVAL },
+    { x: 300, y: 700, text: "類別区分番号" }, { x: 380, y: 700, text: CLASSIFICATION },
+  ] }]);
+  const r = await extractCertificateCodesFromPdf(toBytes(sameRow));
+  assert.equal(r.status, "extracted", JSON.stringify(r));
+  assert.deepEqual(r.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION });
+  assert.deepEqual(Object.keys(r.rejected), ["model"]);
+  assert.ok(r.notices.some((n) => n.includes(`${CERT_TYPE} 改`) && n.includes("型式は自動取得しませんでした")), r.notices.join(" | "));
+
+  // Value row under a label row: the mark sits 10pt after the code inside the 型式 column.
+  const twoRow = buildSyntheticPdf([{ text: [...TWO_ROW_LABELS, ...twoRowValues(492), { x: 130, y: 492, text: "改" }] }]);
+  const t = await extractCertificateCodesFromPdf(toBytes(twoRow));
+  assert.equal(t.status, "extracted", JSON.stringify(t));
+  assert.deepEqual(t.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION });
+  assert.deepEqual(Object.keys(t.rejected), ["model"]);
+
+  // Negative control: the same PDFs with the mark on an unrelated row keep all four codes.
+  const unrelated = buildSyntheticPdf([{ text: [{ x: 40, y: 780, text: "自動車検査証（合成テスト）" }, ...TWO_ROW_LABELS, ...twoRowValues(492), { x: 40, y: 300, text: "改" }] }]);
+  const u = await extractCertificateCodesFromPdf(toBytes(unrelated));
+  assert.deepEqual(u.fields, ALL_FOUR, JSON.stringify(u));
+  assert.deepEqual(u.notices, []);
 });
