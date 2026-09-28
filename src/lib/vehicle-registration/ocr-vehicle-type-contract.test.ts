@@ -407,6 +407,58 @@ test("a trusted text-layer 型式 bypasses only the hyphen-less shape rule; ever
   assert.equal(partial.trustedModel, false);
 });
 
+test("F1: a legacy model_needs_confirmation flag never deletes a 型式 applied from the PDF text layer (full override → policy)", () => {
+  // Legacy/replayed result: 型式 held a value moved from another column (flag set), 車名・グレード blank.
+  const sanitized = sanitizeVehicleRegistrationOcrResult({
+    maker: "ホンダ", vehicle_name: "", grade: "", model: PDF_ENGINE, engine_model: PDF_ENGINE, model_code: PDF_ENGINE,
+    owner_name: "合成 名義", license_plate_class: PLATE_CLASS,
+  });
+  sanitized.model_needs_confirmation = "true";
+  const layer = applyPdfTextLayerCertificateFields(sanitized, extractCertificateCodesFromLines(PDF_LINES));
+  assert.equal(layer.trustedModel, true);
+  assert.equal(sanitized.model_needs_confirmation, undefined);
+
+  const result = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: layer.trustedModel });
+  assert.equal(result.model, PDF_TYPE);                       // the trusted PDF 型式 survives
+  assert.equal(result.model_needs_confirmation, undefined);
+  assert.equal(result.engine_model, PDF_ENGINE);
+  assert.equal(result.model_code, PDF_APPROVAL);
+  assert.equal(result.classification_number, PDF_CLASS);
+  assert.equal(result.grade, undefined);
+  assert.equal(result.vehicle_name, undefined);
+  assert.equal(result.maker, "ホンダ");
+  assert.equal(result.owner_name, "合成 名義");
+  assert.equal(result.license_plate_class, PLATE_CLASS);
+  const notices = result.vehicle_identity_notices ?? [];
+  assert.ok(!notices.some((n) => n.includes("退避した型式は除外")), notices.join(" | "));
+  assert.ok(notices.some((n) => n.includes("確認フラグ") && n.includes("解除")));
+  assert.equal(buildWizardEstimateOcrApplication(result).vehicle.vehicleCode, PDF_TYPE);
+
+  // Fail-closed is preserved: no PDF 型式 applied (other codes only) → the flagged legacy 型式 is still dropped.
+  const partial = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE, engine_model: PDF_ENGINE });
+  partial.model_needs_confirmation = "true";
+  const partialLayer = applyPdfTextLayerCertificateFields(partial, extractCertificateCodesFromLines([`類別区分番号 ${PDF_CLASS}`]));
+  assert.equal(partialLayer.trustedModel, false);
+  assert.equal(partial.model_needs_confirmation, "true");
+  const partialResult = applyVehicleIdentityPolicy(partial, { trustedModelShape: partialLayer.trustedModel });
+  assert.equal(partialResult.model, undefined);
+  assert.equal(partialResult.classification_number, PDF_CLASS);
+  assert.ok((partialResult.vehicle_identity_notices ?? []).some((n) => n.includes("退避した型式は除外")));
+
+  // No text layer at all (scanned PDF / image) → unchanged legacy behaviour.
+  const scanned = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE });
+  scanned.model_needs_confirmation = "true";
+  applyPdfTextLayerCertificateFields(scanned, { status: "no_text", fields: {}, notices: [], lineCount: 0 });
+  assert.equal(applyVehicleIdentityPolicy(scanned).model, undefined);
+
+  // The other trusted-model safeguards are untouched: equal-to-engine and digits-only PDF values still fall.
+  const equal = sanitizeVehicleRegistrationOcrResult({ engine_model: "XYZ9" });
+  equal.model_needs_confirmation = "true";
+  const equalLayer = applyPdfTextLayerCertificateFields(equal, extractCertificateCodesFromLines(["型式 XYZ9"]));
+  assert.equal(equalLayer.trustedModel, true);
+  assert.equal(applyVehicleIdentityPolicy(equal, { trustedModelShape: true }).model, undefined);
+});
+
 test("ocr.ts runs the PDF text layer only for PDFs, after sanitizing and before the identity policy, and logs field names only", () => {
   const source = readFileSync("src/lib/vehicle-registration/ocr.ts", "utf8");
   assert.ok(source.includes('if (mimeType === "application/pdf") {'));

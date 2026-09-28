@@ -206,6 +206,34 @@ test("ambiguous or conflicting matches are rejected with a notice instead of gue
   assert.equal(extractCertificateCodesFromLines(["", "  "]).status, "no_text");
 });
 
+test("F2: a same-row code glued to trailing text (synthetic 改 suffix) is never truncated — the whole field fails closed with a notice", () => {
+  // "6BA-ABC1改" must NOT become 6BA-ABC1. The unaffected labels on the same page are still extracted.
+  const suffixed = extractCertificateCodesFromLines([`型式 6BA-ABC1改 原動機の型式 ${ENGINE_TYPE}`, `型式指定番号 ${TYPE_APPROVAL}`]);
+  assert.equal(suffixed.fields.model, undefined);
+  assert.deepEqual(suffixed.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL });
+  assert.equal(suffixed.notices.length, 1);
+  assert.ok(suffixed.notices[0].includes("6BA-ABC1改") && suffixed.notices[0].includes("型式は自動取得しませんでした"), suffixed.notices[0]);
+  assert.ok(!suffixed.notices[0].includes("原動機の型式は"));
+
+  // The block covers the whole page: a clean repetition elsewhere does not rescue the truncated value.
+  const mixed = extractCertificateCodesFromLines(["型式 6BA-ABC1改", `型式 ${CERT_TYPE}`]);
+  assert.equal(mixed.fields.model, undefined);
+  assert.equal(mixed.status, "no_codes");
+  assert.ok(mixed.notices.some((n) => n.includes("6BA-ABC1改")));
+
+  // Full-width suffix / bracketed suffix / suffix on the other code fields fail closed the same way.
+  assert.equal(extractCertificateCodesFromLines(["型式　６ＢＡ－ＡＢＣ１改"]).fields.model, undefined);
+  assert.equal(extractCertificateCodesFromLines([`型式 ${CERT_TYPE}(改)`]).fields.model, undefined);
+  const engine = extractCertificateCodesFromLines([`原動機の型式 ${ENGINE_TYPE}改`]);
+  assert.deepEqual(engine.fields, {});
+  assert.ok(engine.notices.some((n) => n.includes(`${ENGINE_TYPE}改`) && n.includes("原動機の型式は自動取得しませんでした")));
+
+  // Unchanged: whitespace, end of line, a colon-separated value and a directly following LABEL still pass.
+  assert.deepEqual(extractCertificateCodesFromLines([`型式:${CERT_TYPE}原動機の型式:${ENGINE_TYPE}`]).fields, { model: CERT_TYPE, engine_model: ENGINE_TYPE });
+  assert.deepEqual(extractCertificateCodesFromLines([`型式指定番号${TYPE_APPROVAL}類別区分番号${CLASSIFICATION}`]).fields, { model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION });
+  assert.deepEqual(extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`]).fields, { model: CERT_TYPE });
+});
+
 // ─── Pure: override of the AI result ──────────────────────────────────────────
 
 test("text-layer codes override ONLY the four certificate fields; owner, 車名 and グレード are untouched", () => {
@@ -279,6 +307,28 @@ test("partial extraction overrides only what was anchored; a conflicting AI 型�
   assert.ok(differing.vehicle_identity_notices.some((n) => n.includes("6BA-ABC2") && n.includes(CERT_TYPE) && n.includes("PDFの文字情報を優先")));
 });
 
+test("F1: the legacy model_needs_confirmation flag is cleared ONLY when the text layer applies 型式 itself", () => {
+  // 型式 applied → the flag (which described the replaced legacy value) is removed, with a notice.
+  const flagged = { model: "6BA-ABC2", model_needs_confirmation: "true" as string | undefined, vehicle_identity_notices: [] as string[] };
+  const outcome = applyPdfTextLayerCertificateFields(flagged, extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`]));
+  assert.equal(outcome.trustedModel, true);
+  assert.equal(flagged.model, CERT_TYPE);
+  assert.equal(flagged.model_needs_confirmation, undefined);
+  assert.ok(flagged.vehicle_identity_notices.some((n) => n.includes("確認フラグ") && n.includes("解除")));
+
+  // Only other codes applied → the flag is untouched (the identity policy keeps failing closed on it).
+  const partial = { model: "6BA-ABC2", model_needs_confirmation: "true" as string | undefined };
+  const partialOutcome = applyPdfTextLayerCertificateFields(partial, extractCertificateCodesFromLines([`類別区分番号 ${CLASSIFICATION}`]));
+  assert.equal(partialOutcome.trustedModel, false);
+  assert.equal(partial.model_needs_confirmation, "true");
+  assert.equal(partial.model, "6BA-ABC2");
+
+  // No text layer at all → untouched.
+  const none = { model_needs_confirmation: "true" as string | undefined };
+  applyPdfTextLayerCertificateFields(none, { status: "no_text", fields: {}, notices: [], lineCount: 0 });
+  assert.equal(none.model_needs_confirmation, "true");
+});
+
 // ─── pdf.js: synthetic selectable / scanned PDFs ─────────────────────────────
 
 test("a selectable kei certificate PDF yields the four codes from page 1 via pdf.js", async () => {
@@ -310,6 +360,30 @@ test("split text items and full-width text inside the PDF are re-joined and fold
   const f = await extractCertificateCodesFromPdf(toBytes(fullWidth));
   assert.equal(f.status, "extracted", JSON.stringify(f));
   assert.deepEqual(f.fields, { model: CERT_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION });
+});
+
+test("F2 (pdf.js): a selectable PDF whose 型式 carries a synthetic 改 suffix yields no 型式, a notice, and the other codes", async () => {
+  const suffixed = buildSyntheticPdf([{ text: [
+    { x: 40,  y: 780, text: "自動車検査証（合成テスト）" },
+    { x: 40,  y: 740, text: "型式" },        { x: 90,  y: 740, text: "6BA-ABC1改" },
+    { x: 260, y: 740, text: "原動機の型式" }, { x: 340, y: 740, text: ENGINE_TYPE },
+    { x: 40,  y: 700, text: "型式指定番号" }, { x: 120, y: 700, text: TYPE_APPROVAL },
+    { x: 260, y: 700, text: "類別区分番号" }, { x: 340, y: 700, text: CLASSIFICATION },
+  ] }]);
+  const r = await extractCertificateCodesFromPdf(toBytes(suffixed));
+  assert.equal(r.status, "extracted", JSON.stringify(r));
+  assert.deepEqual(r.fields, { engine_model: ENGINE_TYPE, model_code: TYPE_APPROVAL, classification_number: CLASSIFICATION }); // no 型式
+  assert.equal(r.notices.length, 1);
+  assert.ok(r.notices[0].includes("6BA-ABC1改") && r.notices[0].includes("型式は自動取得しませんでした"), r.notices[0]);
+
+  // Split into two pdf.js items ("6BA-ABC1" + "改", glued: gap 0) the outcome is identical — never 6BA-ABC1.
+  const split = buildSyntheticPdf([{ text: [
+    { x: 40, y: 740, text: "型式" }, { x: 90, y: 740, text: CERT_TYPE }, { x: 170, y: 740, text: "改" },
+  ] }]);
+  const s = await extractCertificateCodesFromPdf(toBytes(split));
+  assert.equal(s.status, "no_codes", JSON.stringify(s));
+  assert.equal(s.fields.model, undefined);
+  assert.ok(s.notices.some((n) => n.includes("6BA-ABC1改")));
 });
 
 test("an image-only (scanned) PDF has no text layer → no fields, AI path continues", async () => {
@@ -510,6 +584,55 @@ test("two-row pairing glues split value items, folds full-width text, merges let
   assert.deepEqual(noGeometry.fields, {});
 });
 
+// ─── F3: mixed same-row / next-row layouts at a close row pitch ─────────────────
+
+// Three rows 20pt apart. 型式 and 型式指定番号 have their value on THEIR OWN row (same-row layout, value
+// right-shifted inside the cell); 原動機の型式 and 類別区分番号 are label-only with the value on the
+// immediately following row (two-row layout). Every column is synthetic.
+const MIXED_ROWS: PdfTextItemLike[] = [
+  { str: "自動車検査証（合成テスト）", x: 40, y: 780, width: 130, height: 10 },
+  { str: "型式",         x: 40,  y: 740, width: 20, height: 10 }, { str: CERT_TYPE,     x: 140, y: 740, width: 80, height: 10 },
+  { str: "原動機の型式", x: 300, y: 740, width: 60, height: 10 },
+  { str: "型式指定番号", x: 40,  y: 720, width: 60, height: 10 }, { str: TYPE_APPROVAL, x: 110, y: 720, width: 50, height: 10 },
+  { str: ENGINE_TYPE,    x: 300, y: 720, width: 40, height: 10 },
+  { str: "類別区分番号", x: 440, y: 720, width: 60, height: 10 },
+  { str: CLASSIFICATION, x: 440, y: 700, width: 40, height: 10 },
+];
+
+test("F3: a label with a same-row value is never re-paired with the next row; label-only columns still pair per label", () => {
+  const r = extractCertificateCodesFromItems(MIXED_ROWS);
+  assert.equal(r.status, "extracted", JSON.stringify(r));
+  assert.deepEqual(r.fields, ALL_FOUR);
+  assert.deepEqual(r.notices, []);
+  assert.equal(r.lineCount, 4);
+
+  // The plain kei same-row layout at a 20pt pitch (rows 740 / 720) is not disturbed by the two-row rule.
+  const close = extractCertificateCodesFromItems([
+    { str: "型式",         x: 40,  y: 740, width: 20, height: 10 }, { str: CERT_TYPE,      x: 90,  y: 740, width: 80, height: 10 },
+    { str: "原動機の型式", x: 260, y: 740, width: 60, height: 10 }, { str: ENGINE_TYPE,    x: 340, y: 740, width: 40, height: 10 },
+    { str: "型式指定番号", x: 40,  y: 720, width: 60, height: 10 }, { str: TYPE_APPROVAL,  x: 120, y: 720, width: 50, height: 10 },
+    { str: "類別区分番号", x: 260, y: 720, width: 60, height: 10 }, { str: CLASSIFICATION, x: 340, y: 720, width: 40, height: 10 },
+  ]);
+  assert.deepEqual(close.fields, ALL_FOUR);
+  assert.deepEqual(close.notices, []);
+
+  // A colon token between label and same-row value still counts as "resolved on its own row".
+  const colon = extractCertificateCodesFromItems([
+    { str: "型式", x: 40, y: 740, width: 20, height: 10 }, { str: ":", x: 65, y: 740, width: 5, height: 10 }, { str: CERT_TYPE, x: 140, y: 740, width: 80, height: 10 },
+    { str: "型式指定番号", x: 40, y: 720, width: 60, height: 10 }, { str: TYPE_APPROVAL, x: 110, y: 720, width: 50, height: 10 },
+  ]);
+  assert.deepEqual(colon.fields, { model: CERT_TYPE, model_code: TYPE_APPROVAL });
+  assert.deepEqual(colon.notices, []);
+
+  // Still fail-closed: a label-only 型式 whose next-row token straddles the column edge stays blocked.
+  const straddle = extractCertificateCodesFromItems([
+    { str: "型式", x: 40, y: 740, width: 20, height: 10 }, { str: "原動機の型式", x: 140, y: 740, width: 60, height: 10 },
+    { str: "6BA-ABC1XYZ1", x: 80, y: 720, width: 120, height: 10 },
+  ]);
+  assert.deepEqual(straddle.fields, {});
+  assert.ok(straddle.notices.some((n) => n.includes("またが")));
+});
+
 // ─── pdf.js: two-row synthetic PDFs ────────────────────────────────────────────
 
 // Label row at y=500, value row at y=492, four columns (glyph width = 10pt at size 10).
@@ -558,4 +681,21 @@ test("a selectable PDF whose value row is far below the label row, or on page 2,
   const p = await extractCertificateCodesFromPdf(toBytes(page2));
   assert.equal(p.status, "no_codes");
   assert.deepEqual(p.fields, {});
+});
+
+test("F3 (pdf.js): a mixed same-row / next-row certificate PDF at a 20pt row pitch yields all four codes without notices", async () => {
+  const pdf = buildSyntheticPdf([{ text: [
+    { x: 40,  y: 780, text: "自動車検査証（合成テスト）" },
+    { x: 40,  y: 740, text: "型式" },         { x: 140, y: 740, text: CERT_TYPE },
+    { x: 300, y: 740, text: "原動機の型式" },
+    { x: 40,  y: 720, text: "型式指定番号" }, { x: 110, y: 720, text: TYPE_APPROVAL },
+    { x: 300, y: 720, text: ENGINE_TYPE },
+    { x: 440, y: 720, text: "類別区分番号" },
+    { x: 440, y: 700, text: CLASSIFICATION },
+  ] }]);
+  const r = await extractCertificateCodesFromPdf(toBytes(pdf));
+  assert.equal(r.status, "extracted", JSON.stringify(r));
+  assert.deepEqual(r.fields, ALL_FOUR);
+  assert.deepEqual(r.notices, []);
+  assert.equal(r.lineCount, 4);
 });

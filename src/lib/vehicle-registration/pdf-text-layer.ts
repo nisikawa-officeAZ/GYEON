@@ -7,10 +7,14 @@
 //
 // Two label layouts are recognised, both anchored on an EXACT label:
 //   (a) same row  — the value directly follows the label on the same visual line ("型式 6BA-ABC1");
+//       a code glued to further text ("6BA-ABC1改") is never truncated to its leading code — the
+//       whole candidate is rejected with a notice;
 //   (b) two rows  — a row of labels followed by the IMMEDIATELY next visual row of values, where each
 //       value sits inside its own label's horizontal column (from the label's left edge up to the next
 //       token of the label row) with a small baseline distance. Values are never taken from a later
 //       row, never from a neighbouring column, and a value that straddles two columns is rejected.
+//       Only a label WITHOUT a same-row value takes part (per label): a label already resolved by (a)
+//       is never re-interpreted against the next row, however close the rows are.
 //
 // Fail-closed by design:
 //   - page 1 only, bounded bytes / time / item count; no other page is ever parsed;
@@ -201,6 +205,10 @@ export function groupPdfTextItemsIntoLines(
 const LABEL_PATTERN = /(原\s*動\s*機\s*の?\s*型\s*式)|(型\s*式\s*指\s*定\s*番\s*号)|(類\s*別\s*区\s*分\s*番\s*号)|(型\s*式)/g;
 // The value must directly follow the label (optional colon); hyphen variants are folded afterwards.
 const VALUE_AFTER_LABEL = /^\s*[:：]?\s*([A-Za-z0-9‐-―−ーｰ-]+)/;
+// What may directly follow a same-row value without a separating space: only ANOTHER exact label
+// ("型式指定番号12345類別区分番号0007"). Anything else glued to the code (e.g. "6BA-ABC1改") is not a
+// code the SHAPE rules describe, and the candidate is rejected whole — never truncated.
+const LABEL_AT_START = /^(?:原\s*動\s*機\s*の?\s*型\s*式|型\s*式\s*指\s*定\s*番\s*号|類\s*別\s*区\s*分\s*番\s*号|型\s*式)/;
 
 const SHAPE: Record<CertificateCodeField, (v: string) => boolean> = {
   // 型式: letters (+digits), optional single hyphen part; never digits-only (that is a 型式指定番号).
@@ -232,8 +240,16 @@ function asCodeCandidate(raw: string): string | null {
   return folded;
 }
 
-/** (a) Same-row rule: the value directly follows an exact label on the same text line. */
-function collectSameRowCandidates(lines: readonly string[], candidates: CandidateSets): void {
+/**
+ * (a) Same-row rule: the value directly follows an exact label on the same text line. A code that is
+ * immediately followed by more text (a 改 modification suffix, brackets, …) is NOT a match for its
+ * leading code: that field is blocked for the whole page with an operator-visible notice.
+ */
+function collectSameRowCandidates(
+  lines: readonly string[],
+  candidates: CandidateSets,
+  blocked: Partial<Record<CertificateCodeField, string>>,
+): void {
   for (const raw of lines) {
     const line = foldFullWidthLine(raw);
     LABEL_PATTERN.lastIndex = 0;
@@ -243,10 +259,17 @@ function collectSameRowCandidates(lines: readonly string[], candidates: Candidat
         : match[2] ? "model_code"
         : match[3] ? "classification_number"
         : "model";
-      const value = VALUE_AFTER_LABEL.exec(line.slice(match.index + match[0].length));
+      const afterLabel = line.slice(match.index + match[0].length);
+      const value = VALUE_AFTER_LABEL.exec(afterLabel);
       if (value === null) continue;
       const folded = asCodeCandidate(value[1]);
       if (folded === null) continue;
+      const trailing = afterLabel.slice(value[0].length);
+      if (trailing !== "" && !/^\s/.test(trailing) && !LABEL_AT_START.test(trailing)) {
+        const glued = `${folded}${/^\S+/.exec(trailing)?.[0] ?? ""}`;
+        blocked[field] ??= `PDFの文字情報で${FIELD_LABELS[field]}欄の値（${glued}）はコードの後に文字が続いていたため、${FIELD_LABELS[field]}は自動取得しませんでした。車検証の${FIELD_LABELS[field]}欄を確認して手入力してください。`;
+        continue;
+      }
       candidates[field].add(folded);
     }
   }
@@ -300,6 +323,17 @@ function markExactLabels(tokens: readonly PdfTextToken[]): LabelRowToken[] {
   return out;
 }
 
+/**
+ * True when the label at `index` already has a value on ITS OWN row (exactly what the same-row rule (a)
+ * matches: an optional colon, then a code). Such a label is resolved by (a) and must never be paired
+ * with the next row as well — that would re-interpret a same-row layout whenever rows are close.
+ */
+function hasSameRowValue(labelRow: readonly LabelRowToken[], index: number): boolean {
+  const rest = foldFullWidthLine(joinRowTokens(labelRow.slice(index + 1)));
+  const value = VALUE_AFTER_LABEL.exec(rest);
+  return value !== null && asCodeCandidate(value[1]) !== null;
+}
+
 function maxBaselineGap(labelHeight: number, valueHeight: number): number {
   const h = Math.max(labelHeight, valueHeight);
   const { maxBaselineGapPt, minBaselineGapPt, baselineGapRatio } = PDF_TWO_ROW_GEOMETRY;
@@ -307,9 +341,10 @@ function maxBaselineGap(labelHeight: number, valueHeight: number): number {
 }
 
 /**
- * Pairs each exact label of a row with the single code token that sits inside the label's column on
- * the IMMEDIATELY following row. Column = [label.x0, next token of the label row); the last column
- * extends a bounded distance past the label. A token straddling a column edge blocks that field.
+ * Pairs each exact label of a row that has NO same-row value with the single code token that sits
+ * inside the label's column on the IMMEDIATELY following row. Column = [label.x0, next token of the
+ * label row); the last column extends a bounded distance past the label. A token straddling a column
+ * edge blocks that field. Labels already followed by a value on their own row are skipped per label.
  */
 function collectTwoRowCandidates(
   rows: readonly (readonly PdfTextToken[])[],
@@ -325,6 +360,7 @@ function collectTwoRowCandidates(
       const label = labelRow[i];
       const field = label.field;
       if (field === undefined) continue;
+      if (hasSameRowValue(labelRow, i)) continue; // resolved by the same-row rule: never re-paired below
       const labelWidth = label.x1 - label.x0;
       const next = labelRow[i + 1];
       const outer = Math.max(2 * labelWidth, 3 * label.height, 12);
@@ -406,8 +442,9 @@ export function extractCertificateCodesFromLines(lines: readonly string[]): PdfT
   const meaningful = lines.filter((line) => typeof line === "string" && line.trim() !== "");
   if (meaningful.length === 0) return empty("no_text", 0);
   const candidates = newCandidateSets();
-  collectSameRowCandidates(meaningful, candidates);
-  return resolveCandidates(candidates, {}, meaningful.length);
+  const blocked: Partial<Record<CertificateCodeField, string>> = {};
+  collectSameRowCandidates(meaningful, candidates, blocked);
+  return resolveCandidates(candidates, blocked, meaningful.length);
 }
 
 /**
@@ -426,7 +463,7 @@ export function extractCertificateCodesFromItems(
 
   const candidates = newCandidateSets();
   const blocked: Partial<Record<CertificateCodeField, string>> = {};
-  collectSameRowCandidates(meaningful, candidates);
+  collectSameRowCandidates(meaningful, candidates, blocked);
   collectTwoRowCandidates(rows.filter((row) => row.length > 0), candidates, blocked);
   return resolveCandidates(candidates, blocked, meaningful.length);
 }
@@ -458,6 +495,15 @@ export function applyPdfTextLayerCertificateFields(
       }
       sanitized[field] = value;
       applied.push(field);
+    }
+    if (applied.includes("model") && sanitized.model_needs_confirmation !== undefined) {
+      // The legacy "型式 was moved here from another column" flag describes the AI/legacy value that
+      // has just been replaced by the label-anchored text-layer 型式. Left in place it would make
+      // resolveVehicleIdentity() delete the trusted PDF value. Cleared ONLY when 型式 itself was applied;
+      // without a PDF 型式 the flag is untouched and the identity policy still fails closed.
+      const wasFlagged = sanitized.model_needs_confirmation === "true";
+      delete sanitized.model_needs_confirmation;
+      if (wasFlagged) note("以前の読み取りで付いていた型式の確認フラグは、PDFの文字情報から型式を取得したため解除しました。車検証の型式欄と照合してください。");
     }
     if (applied.length > 0) {
       note(`PDFの文字情報から${applied.map((f) => FIELD_LABELS[f]).join("・")}を取得しました。車検証と照合して確認してください。`);
