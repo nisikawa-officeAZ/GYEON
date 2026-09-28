@@ -12,6 +12,13 @@
 --     matches, knownLocationIds remains the full active Office AZ location list
 --     in location_id order (D4 compatibility boundary); it is deliberately NOT
 --     narrowed to the caller's location grants.
+-- F1c knownLocationIds was also returned when the only matching human
+--     assignment was suspended, revoked, not yet valid, or expired. The list
+--     is now returned only when a matching human assignment is active and
+--     valid_from <= now() < valid_until (valid_until null = open-ended), the
+--     same boundaries the core uses for NOT_YET_VALID / EXPIRED. Candidates are
+--     unchanged, so the core still reports INACTIVE_OPERATOR / NOT_YET_VALID /
+--     EXPIRED for those callers before any location check.
 --
 -- Preserved: signature (text, text) -> jsonb, invalid-input null result, the
 -- two-key JSON shape {candidates, knownLocationIds}, per-candidate fields and
@@ -95,7 +102,13 @@ as $function$
           from human_candidate as assignment
         ), '[]'::jsonb),
         'knownLocationIds', case
-          when exists (select 1 from human_candidate)
+          when exists (
+            select 1
+            from human_candidate as eligible
+            where eligible.status = 'active'
+              and eligible.valid_from <= pg_catalog.now()
+              and (eligible.valid_until is null or eligible.valid_until > pg_catalog.now())
+          )
           then coalesce((
             select pg_catalog.jsonb_agg(location_row.location_id order by location_row.location_id)
             from office_az_inventory_authority_private.locations as location_row

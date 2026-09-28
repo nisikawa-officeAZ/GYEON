@@ -1,4 +1,4 @@
-// INV001 P19 D6-B F1/F1b static invariants for the human-only resolver
+// INV001 P19 D6-B F1/F1b/F1c static invariants for the human-only resolver
 // migration. These tests read files only; they prove nothing about a running
 // database. Runtime proof is the D6 disposable harness (A15) when it is run.
 
@@ -128,15 +128,38 @@ test("F1: candidates are filtered to human assignments bound to auth.uid(); no s
   assert.match(code, /from human_candidate as assignment/);
 });
 
-test("F1b: knownLocationIds is [] without a matching human candidate and otherwise the full active Office AZ list", () => {
+const knownLocationSegment = (): string => {
   const start = code.indexOf("'knownLocationIds'");
-  const segment = code.slice(start, code.indexOf("$function$;", start));
-  assert.match(segment, /^'knownLocationIds', case\s+when exists \(select 1 from human_candidate\)\s+then coalesce\(\(/);
+  return code.slice(start, code.indexOf("$function$;", start));
+};
+
+test("F1b: knownLocationIds is [] without a matching human candidate and otherwise the full active Office AZ list", () => {
+  const segment = knownLocationSegment();
+  assert.match(segment, /^'knownLocationIds', case\s+when exists \(\s*select 1\s+from human_candidate as eligible\s+where /);
+  assert.match(segment, /\)\s+then coalesce\(\(/);
   assert.match(segment, /from office_az_inventory_authority_private\.locations as location_row\s+where location_row\.owner = 'OFFICE_AZ' and location_row\.is_active/);
   assert.match(segment, /\), '\[\]'::jsonb\)\s+else '\[\]'::jsonb\s+end/);
   // Compatibility boundary: never narrowed to the caller's location grants.
   assert.doesNotMatch(segment, /location_grant|capability_grant|assignment\./);
   assert.equal(count(code, /from office_az_inventory_authority_private\.locations/g), 1);
+});
+
+test("F1c: knownLocationIds requires an active, currently valid matching human; candidates stay unfiltered", () => {
+  const segment = knownLocationSegment();
+  const gate = segment.match(/^'knownLocationIds', case\s+when exists \(([\s\S]*?)\)\s+then coalesce\(\(/)?.[1] ?? "";
+  assert.match(
+    gate,
+    /^\s*select 1\s+from human_candidate as eligible\s+where eligible\.status = 'active'\s+and eligible\.valid_from <= pg_catalog\.now\(\)\s+and \(eligible\.valid_until is null or eligible\.valid_until > pg_catalog\.now\(\)\)\s*$/,
+  );
+  assert.equal(count(code, /pg_catalog\.now\(\)/g), 2);
+  assert.doesNotMatch(code, /statement_timestamp|clock_timestamp|current_timestamp|transaction_timestamp/i);
+
+  // The candidate set itself is not narrowed, so the core keeps its deny codes.
+  const cte = code.match(/with human_candidate as \(([\s\S]*?)\n\s*\)\n\s*select pg_catalog\.jsonb_build_object/)?.[1] ?? "";
+  assert.match(cte, /from office_az_inventory_authority_private\.assignments as assignment/);
+  assert.doesNotMatch(cte, /assignment\.status\s*=|valid_from\s*<|valid_until\s*>|now\(\)/);
+  assert.match(code, /from human_candidate as assignment\s+\), '\[\]'::jsonb\)/);
+  assert.equal(count(code, /'status', assignment\.status/g), 1);
 });
 
 test("least privilege: EXECUTE stays authenticated-only, no table grants, every reference schema-qualified", () => {
@@ -155,7 +178,7 @@ test("least privilege: EXECUTE stays authenticated-only, no table grants, every 
     );
   }
   assert.doesNotMatch(code, /office_az_inventory_mobile_private|auth\.users|\bpublic\.(?!resolve_office_az_inventory_authority)/);
-  for (const fn of ["jsonb_build_object", "jsonb_agg", "to_char", "btrim", "length"]) {
+  for (const fn of ["jsonb_build_object", "jsonb_agg", "to_char", "btrim", "length", "now"]) {
     assert.doesNotMatch(code, new RegExp(`(?<![.\\w])${fn}\\(`, "g"), `unqualified function call: ${fn}`);
   }
   assert.equal(count(code, /auth\.uid\(\)/g), 3);
@@ -197,12 +220,20 @@ test("core contract: the resolver shapes produced after the fix evaluate fail-cl
   assert.equal(codeOf([human], ["wh-a", "wh-b"]), "authorized");
   // Narrowing knownLocationIds for a legitimate human would break the D4 boundary.
   assert.equal(codeOf([human], []), "UNKNOWN_LOCATION");
+  // F1c: ineligible humans now receive knownLocationIds = [] and keep their deny codes.
+  assert.equal(codeOf([{ ...human, status: "suspended" }], []), "INACTIVE_OPERATOR");
+  assert.equal(codeOf([{ ...human, status: "revoked" }], []), "INACTIVE_OPERATOR");
+  assert.equal(codeOf([{ ...human, validFromIso: "2026-09-28T00:00:00.000Z" }], []), "NOT_YET_VALID");
+  assert.equal(
+    codeOf([{ ...human, validFromIso: "2026-09-01T00:00:00.000Z", validUntilIso: "2026-09-27T00:00:00.000Z" }], []),
+    "EXPIRED",
+  );
   // The pre-fix leak: a service candidate produced a distinguishable oracle.
   const service = { ...human, principalKind: "service", role: "office_az_inventory_service" };
   assert.equal(codeOf([service], ["wh-a", "wh-b"]), "SERVICE_AUTHORITY_NOT_CONFIGURED");
 });
 
-test("D6 harness and workflow pin this migration as the third applied migration with F1/F1b expectations", async () => {
+test("D6 harness and workflow pin this migration as the third applied migration with F1/F1b/F1c expectations", async () => {
   const specifier: string = pathToFileURL(resolve(process.cwd(), HARNESS_PATH)).href;
   const harness = (await import(specifier)) as HarnessModule;
   const sample = harness.buildSampleEvidence();
@@ -213,13 +244,17 @@ test("D6 harness and workflow pin this migration as the third applied migration 
     [...PRIOR_PINNED_MIGRATIONS.map(([path, hash]) => ({ path, sha256: hash })), { path: MIGRATION_PATH, sha256: sha256(sql) }],
   );
   assert.equal(harness.IDENTITY_EXPECTATIONS.A15_service_candidate, "ZERO_ASSIGNMENT");
-  assert.deepEqual(sample.findings.map((finding) => finding.id), ["F1", "F1b"]);
+  assert.deepEqual(sample.findings.map((finding) => finding.id), ["F1", "F1b", "F1c"]);
   for (const finding of sample.findings) assert.equal(finding.disposition, "FIXED_BY_FORWARD_MIGRATION_20260927143257");
 
   const harnessSource = read(HARNESS_PATH);
   assert.match(harnessSource, /F1_SERVICE_CANDIDATE_EXPOSED/);
   assert.match(harnessSource, /F1B_KNOWN_LOCATIONS_EXPOSED_WITHOUT_HUMAN_CANDIDATE/);
   assert.match(harnessSource, /HUMAN_RESOLVER_COMPATIBILITY_BOUNDARY_CHANGED/);
+  assert.match(harnessSource, /F1C_KNOWN_LOCATIONS_EXPOSED_TO_INELIGIBLE_HUMAN/);
+  for (const key of ["susp", "rev", "future", "expired"]) {
+    assert.ok(harnessSource.includes(`probe("A${key.toUpperCase()}:", "${key}")`), `F1c raw-RPC negative missing: ${key}`);
+  }
   assert.doesNotMatch(harnessSource, /F1_SERVICE_CANDIDATE_NOT_OBSERVED/);
   assert.match(harnessSource, /length !== MIGRATIONS\.length\) throw stop\("TEMP_MIGRATION_SET_MISMATCH"\)/);
   assert.match(harnessSource, /counts\.size === MIGRATIONS\.length/);

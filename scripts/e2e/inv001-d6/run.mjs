@@ -49,10 +49,11 @@ const MIGRATIONS = [
     sha256: "1377e6847bbc261b1289fc0856c11c5feb9d270520c1fb4f26c294a4e33bc6ca",
   },
   {
-    // D6-B F1/F1b forward fix: human-only resolver, knownLocationIds gated.
+    // D6-B F1/F1b/F1c forward fix: human-only resolver, knownLocationIds gated
+    // on an active, currently valid matching human.
     path: "supabase/migrations/20260927143257_office_az_inventory_authority_resolver_human_only.sql",
     version: "20260927143257",
-    sha256: "a899159f96e95a0708721633a3a419260f8d78ebc3314725acff7b56061eb687",
+    sha256: "aef587f9fbb41cd2d074018ac457e0779fca085cb420b222b4527dcac1aaeb4d",
   },
 ];
 // Presence-only check; values are never read.
@@ -408,6 +409,17 @@ export function buildSampleEvidence() {
         id: "F1b",
         classification: "LOCATION_LIST_DISCLOSURE_WITHOUT_MATCHING_HUMAN_ASSIGNMENT",
         known_location_ids_returned_without_human_candidate: false,
+        human_positive_control: "object:2:1:human:wh-a,wh-b",
+        disposition: "FIXED_BY_FORWARD_MIGRATION_20260927143257",
+      },
+      {
+        id: "F1c",
+        classification: "LOCATION_LIST_DISCLOSURE_TO_INELIGIBLE_HUMAN",
+        known_location_ids_returned_to_ineligible_human: false,
+        suspended: "object:2:1:human:none",
+        revoked: "object:2:1:human:none",
+        not_yet_valid: "object:2:1:human:none",
+        expired: "object:2:1:human:none",
         human_positive_control: "object:2:1:human:wh-a,wh-b",
         disposition: "FIXED_BY_FORWARD_MIGRATION_20260927143257",
       },
@@ -1307,7 +1319,7 @@ async function main() {
     state.syntheticUserCount = 3;
 
     // Fixtures (superuser, disposable cluster only).
-    for (const key of ["ok", "life", "expired", "future", "grant", "unknown", "b", "svc", "mobile", "c7"]) {
+    for (const key of ["ok", "life", "expired", "future", "susp", "rev", "grant", "unknown", "b", "svc", "mobile", "c7"]) {
       assignment[key] = randomUUID();
       ids[key] = { actorId: `actor-d6-${key}`, operatorId: `operator-d6-${key}` };
     }
@@ -1331,6 +1343,8 @@ async function main() {
         ${row("life", users.A.uid, "office_az_warehouse_operator", "active", hourAgo, "null")},
         ${row("expired", users.A.uid, "office_az_warehouse_operator", "active", "now() - interval '2 hours'", hourAgo)},
         ${row("future", users.A.uid, "office_az_warehouse_operator", "active", "now() + interval '1 hour'", "null")},
+        ${row("susp", users.A.uid, "office_az_warehouse_operator", "suspended", hourAgo, "null")},
+        ${row("rev", users.A.uid, "office_az_warehouse_operator", "revoked", hourAgo, "null")},
         ${row("grant", users.A.uid, "office_az_warehouse_operator", "active", hourAgo, "null")},
         ${row("unknown", users.A.uid, "office_az_warehouse_operator", "active", hourAgo, "null")},
         ${row("b", users.B.uid, "office_az_warehouse_operator", "active", hourAgo, "null")},
@@ -1339,12 +1353,12 @@ async function main() {
         ${row("c7", users.C.uid, "office_az_inventory_super_admin", "active", hourAgo, "null")};
       insert into office_az_inventory_authority_private.capability_grants(assignment_id, capability) values
         ${[
-          ...["ok", "life", "expired", "future", "grant", "unknown", "b", "svc"].flatMap((key) => grants(key, ["inventory.quantity.read"])),
+          ...["ok", "life", "expired", "future", "susp", "rev", "grant", "unknown", "b", "svc"].flatMap((key) => grants(key, ["inventory.quantity.read"])),
           ...grants("mobile", mobileCaps),
           ...grants("c7", mobileCaps),
         ].join(",\n")};
       insert into office_az_inventory_authority_private.location_grants(assignment_id, location_id) values
-        ${["ok", "life", "expired", "future", "grant", "unknown", "b", "svc", "mobile", "c7"].map((key) => `(${lit(assignment[key])}, 'wh-a')`).join(",\n")};
+        ${["ok", "life", "expired", "future", "susp", "rev", "grant", "unknown", "b", "svc", "mobile", "c7"].map((key) => `(${lit(assignment[key])}, 'wh-a')`).join(",\n")};
       insert into office_az_inventory_mobile_private.enrollment_codes(
         enrollment_code_hash, actor_id, operator_id, authenticated_user_id, location_id, authority_version, expires_at
       ) values ${["enr1", "enr2", "enr3", "enr7"].map(enrollment).join(",\n")};
@@ -1587,11 +1601,12 @@ async function main() {
       expect(a14MobileChecked, "MOBILE_UNGRANTED_LOCATION_NOT_RUN");
     });
 
-    // A15 (D6-B F1/F1b): under the third pinned migration the human-facing
+    // A15 (D6-B F1/F1b/F1c): under the third pinned migration the human-facing
     // resolver returns no service candidate to anyone, returns
-    // knownLocationIds = [] when zero human assignments match the caller, and
+    // knownLocationIds = [] when zero human assignments match the caller or the
+    // matching human is suspended / revoked / not yet valid / expired, and
     // still returns the full active Office AZ location list (not narrowed to
-    // location grants) to a matching human. Probe output is a closed shape:
+    // location grants) to an eligible matching human. Probe output is a closed shape:
     // jsonb type : key count : candidate count : principalKind : known ids.
     await assertion("A15", async () => {
       const probe = (tag, key) => `
@@ -1607,6 +1622,16 @@ async function main() {
       const HUMAN_FULL_ACTIVE = "object:2:1:human:wh-a,wh-b";
       const asB = await clientSql(users.B.uid, `${probe("BSVC:", "svc")}\n${probe("BOK:", "ok")}`, "a15_user_b_probe");
       const asA = await clientSql(users.A.uid, `${probe("ASVC:", "svc")}\n${probe("AOK:", "ok")}`, "a15_user_a_probe");
+      // F1c: the same caller's own suspended / revoked / not-yet-valid / expired
+      // human assignment keeps its candidate (core deny codes) but no location list.
+      const INELIGIBLE_HUMAN = "object:2:1:human:none";
+      const asAIneligible = await clientSql(users.A.uid, [
+        probe("ASUSP:", "susp"),
+        probe("AREV:", "rev"),
+        probe("AFUTURE:", "future"),
+        probe("AEXPIRED:", "expired"),
+      ].join("\n"), "a15_user_a_ineligible_probe");
+      const ineligible = Object.fromEntries(["ASUSP:", "AREV:", "AFUTURE:", "AEXPIRED:"].map((tag) => [tag, tagged(asAIneligible, tag)]));
       const bSvc = tagged(asB, "BSVC:");
       const bOk = tagged(asB, "BOK:");
       const aSvc = tagged(asA, "ASVC:");
@@ -1630,8 +1655,21 @@ async function main() {
         human_positive_control: aOk,
         disposition: "FIXED_BY_FORWARD_MIGRATION_20260927143257",
       });
+      const ineligibleExposed = Object.values(ineligible).some((observed) => observed !== INELIGIBLE_HUMAN);
+      findings.push({
+        id: "F1c",
+        classification: "LOCATION_LIST_DISCLOSURE_TO_INELIGIBLE_HUMAN",
+        known_location_ids_returned_to_ineligible_human: ineligibleExposed,
+        suspended: ineligible["ASUSP:"],
+        revoked: ineligible["AREV:"],
+        not_yet_valid: ineligible["AFUTURE:"],
+        expired: ineligible["AEXPIRED:"],
+        human_positive_control: aOk,
+        disposition: "FIXED_BY_FORWARD_MIGRATION_20260927143257",
+      });
       expect(!serviceExposed, "F1_SERVICE_CANDIDATE_EXPOSED");
       expect(!locationsExposed, "F1B_KNOWN_LOCATIONS_EXPOSED_WITHOUT_HUMAN_CANDIDATE");
+      expect(!ineligibleExposed, "F1C_KNOWN_LOCATIONS_EXPOSED_TO_INELIGIBLE_HUMAN");
       expect(aOk === HUMAN_FULL_ACTIVE, "HUMAN_RESOLVER_COMPATIBILITY_BOUNDARY_CHANGED");
       expect(definer === "true:true", "RESOLVER_DEFINER_OR_SEARCH_PATH_LOST");
     });
