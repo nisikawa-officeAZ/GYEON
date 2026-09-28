@@ -416,12 +416,34 @@ test("R2-2: a field the text layer REJECTED withholds the AI reading of that fie
   assert.equal(sanitized.license_plate_class, "580");
   const notices = sanitized.vehicle_identity_notices ?? [];
   assert.ok(notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes(`${CERT_TYPE} 改`)), notices.join(" | "));
-  assert.ok(notices.some((n) => n.includes(`AI読み取りの型式（${CERT_TYPE}）`) && n.includes("表示しません") && n.includes("手入力")), notices.join(" | "));
+  const aiNotice = notices.find((n) => n.includes("AI読み取りの型式"));
+  assert.ok(aiNotice !== undefined && aiNotice.includes("表示しません") && aiNotice.includes("手入力"), notices.join(" | "));
+  assert.ok(!aiNotice.includes(CERT_TYPE), aiNotice); // the withheld AI candidate is never echoed
   const final = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: outcome.trustedModel });
   assert.equal(final.model, undefined);
   assert.equal(final.model_code, TYPE_APPROVAL);
   assert.equal(final.engine_model, ENGINE_TYPE);
   assert.equal(final.classification_number, CLASSIFICATION);
+
+  // Regression: an AI candidate that DIFFERS from the rejected PDF text is withheld and never echoed in any
+  // notice — the AI-specific notice names the field only; the manual-entry notice quotes the PDF evidence only.
+  const AI_ONLY_TYPE = "6BA-ZZZ9"; // synthetic; distinguishable from every PDF value on the page
+  const distinct = { model: AI_ONLY_TYPE, model_code: TYPE_APPROVAL, vehicle_identity_notices: [] as string[] };
+  const distinctOutcome = applyPdfTextLayerCertificateFields(distinct, extractCertificateCodesFromLines([`型式 ${CERT_TYPE} 改`, `型式指定番号 ${TYPE_APPROVAL}`]));
+  assert.deepEqual(distinctOutcome, { applied: ["model_code"], trustedModel: false, manualEntry: ["model"] });
+  assert.equal(distinct.model, undefined);
+  const distinctAi = distinct.vehicle_identity_notices.find((n) => n.includes("AI読み取りの型式"));
+  assert.ok(distinctAi !== undefined && distinctAi.includes("表示しません") && distinctAi.includes("車検証の型式欄"), distinct.vehicle_identity_notices.join(" | "));
+  assert.ok(!distinctAi.includes(AI_ONLY_TYPE), distinctAi);
+  assert.ok(distinct.vehicle_identity_notices.every((n) => !n.includes(AI_ONLY_TYPE)), distinct.vehicle_identity_notices.join(" | "));
+  assert.ok(distinct.vehicle_identity_notices.some((n) => n.startsWith("【要手入力：型式】") && n.includes(`${CERT_TYPE} 改`)), distinct.vehicle_identity_notices.join(" | "));
+  // Same for an AMBIGUOUS PDF field (several different values): the PDF candidates are quoted, the AI one is not.
+  const ambiguousDistinct = { model: AI_ONLY_TYPE, vehicle_identity_notices: [] as string[] };
+  applyPdfTextLayerCertificateFields(ambiguousDistinct, extractCertificateCodesFromLines([`型式 ${CERT_TYPE}`, "型式 6BA-ABC2"]));
+  assert.equal(ambiguousDistinct.model, undefined);
+  assert.ok(ambiguousDistinct.vehicle_identity_notices.some((n) => n.includes("候補が複数") && n.includes(CERT_TYPE) && n.includes("6BA-ABC2")));
+  assert.ok(ambiguousDistinct.vehicle_identity_notices.some((n) => n.includes("AI読み取りの型式") && n.includes("表示しません")));
+  assert.ok(ambiguousDistinct.vehicle_identity_notices.every((n) => !n.includes(AI_ONLY_TYPE)), ambiguousDistinct.vehicle_identity_notices.join(" | "));
 
   // A rejection with no extracted field at all (status no_codes) still withholds the AI reading of that field.
   const onlyRejected = { model: CERT_TYPE, engine_model: ENGINE_TYPE };

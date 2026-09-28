@@ -615,7 +615,9 @@ export function applyPdfTextLayerCertificateFields(
     const previous = foldVehicleCode(sanitized[field]);
     delete sanitized[field]; // never shown next to the manual-entry notice for this very field
     if (previous !== "") {
-      note(`AI読み取りの${FIELD_LABELS[field]}（${previous}）は、PDFの文字情報で${FIELD_LABELS[field]}を確定できなかったため表示しません。車検証の${FIELD_LABELS[field]}欄を確認して手入力してください。`);
+      // The withheld AI candidate is untrusted for this field: it is neither displayed nor echoed in
+      // this notice (the PDF evidence itself is already quoted by the manual-entry notice above).
+      note(`AI読み取りの${FIELD_LABELS[field]}は、PDFの文字情報で${FIELD_LABELS[field]}を確定できなかったため表示しません。車検証の${FIELD_LABELS[field]}欄を確認して手入力してください。`);
     }
   }
 

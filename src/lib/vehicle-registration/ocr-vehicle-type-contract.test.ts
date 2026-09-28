@@ -486,12 +486,30 @@ test("R2: a 型式 whose PDF evidence carries a 改 mark is neither taken from t
   assert.deepEqual(report.manualEntryRequired, ["型式"]);
   assert.ok(report.missingRequired.includes("型式"));
   assert.ok(report.warnings.some((w) => w.startsWith("【要手入力：型式】") && w.includes(`${PDF_TYPE} 改`)), report.warnings.join(" | "));
-  assert.ok(report.warnings.some((w) => w.includes(`AI読み取りの型式（${PDF_TYPE}）`) && w.includes("表示しません")), report.warnings.join(" | "));
+  const aiWarning = report.warnings.find((w) => w.includes("AI読み取りの型式"));
+  assert.ok(aiWarning !== undefined && aiWarning.includes("表示しません") && aiWarning.includes("手入力"), report.warnings.join(" | "));
+  assert.ok(!aiWarning.includes(PDF_TYPE), aiWarning); // the withheld AI candidate is never echoed
 
   // The manual-entry state survives the review's re-resolution (idempotent notices).
   const again = resolveVehicleIdentity(result, { ambiguousGrade: "blank" });
   assert.deepEqual(again.result, result);
   assert.deepEqual(buildOcrQualityReport(again.result, ctx).manualEntryRequired, ["型式"]);
+
+  // Regression: an AI 型式 distinguishable from the rejected PDF text is withheld and appears in NO notice or
+  // report warning; the manual-entry warning still quotes the PDF evidence itself.
+  const distinct = sanitizeVehicleRegistrationOcrResult({ maker: "ホンダ", model: CERT_TYPE, engine_model: PDF_ENGINE, license_plate_class: PLATE_CLASS });
+  const distinctLayer = applyPdfTextLayerCertificateFields(distinct, extractCertificateCodesFromLines([`型式 ${PDF_TYPE} 改 原動機の型式 ${PDF_ENGINE}`]));
+  assert.deepEqual(distinctLayer.manualEntry, ["model"]);
+  const distinctResult = applyVehicleIdentityPolicy(distinct, { trustedModelShape: distinctLayer.trustedModel });
+  assert.equal(distinctResult.model, undefined);
+  assert.equal(distinctResult.engine_model, PDF_ENGINE);
+  const distinctNotices = distinctResult.vehicle_identity_notices ?? [];
+  assert.ok(distinctNotices.some((n) => n.includes("AI読み取りの型式") && n.includes("表示しません")), distinctNotices.join(" | "));
+  assert.ok(distinctNotices.every((n) => !n.includes(CERT_TYPE)), distinctNotices.join(" | "));
+  const distinctReport = buildOcrQualityReport(distinctResult, ctx);
+  assert.deepEqual(distinctReport.manualEntryRequired, ["型式"]);
+  assert.ok(distinctReport.warnings.some((w) => w.startsWith("【要手入力：型式】") && w.includes(`${PDF_TYPE} 改`)), distinctReport.warnings.join(" | "));
+  assert.ok(distinctReport.warnings.every((w) => !w.includes(CERT_TYPE)), distinctReport.warnings.join(" | "));
 
   // A rejected NON-required code (類別区分番号) also flags manual entry; the AI 型式 (absent from the PDF) is kept.
   const optional = sanitizeVehicleRegistrationOcrResult({ maker: "日産", model: PDF_TYPE, classification_number: PDF_CLASS, license_plate_class: PLATE_CLASS });
