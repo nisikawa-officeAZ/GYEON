@@ -50,6 +50,11 @@ import {
 import { buildLineItems } from "@/lib/pricing/pricing-engine";
 import { DEFAULT_PRICING_CATALOG, makePricingCatalog } from "@/lib/pricing/pricing-catalog";
 import type { EstimateItemDB, EstimateCategory } from "@/lib/estimates/estimate-types";
+import { createStep4Bindings } from "../steps/step4-bindings";
+import { applyStorePatch, type WizardStorePatch } from "../bridge/ew-ui1-controller";
+import { computeWizardPricingFromConfig } from "../pricing/compute-wizard-pricing-from-config";
+import type { EstimateWizardDraftV22 } from "../draft/wizard-draft-types";
+import type { StoreGlobalOption } from "../screens/step-types";
 
 // ── Fixtures (synthetic only) ────────────────────────────────────────────────────
 function item(id: string, category: EstimateCategory = "coating"): EstimateItemDB {
@@ -1751,4 +1756,99 @@ test("EW-FC-1C: method changes never clear customer input fields", () => {
   const afterSearch = updateCustomerRegistrationMethod(afterOcr, "search");
   assert.equal(afterSearch.customer.newCustomer.name, "山田太郎");
   assert.equal(afterSearch.customer.newCustomer.email, "a@b.jp");
+});
+
+// ── 15. GDA-ESTIMATE-OPTION-PRICING-R1 — Step-4 selection → canonical draft → authoritative pricing ──
+//
+// The full client chain: trusted runtime option (configured price) → Step-4 toggle binding → ONE
+// canonical store patch → EstimateWizardDraftV22 → computeWizardPricingFromConfig. Proves the newly
+// selected option is billed immediately with no manual entry, an edit overrides it, deselect/re-select
+// leaves no stale amount, an unpriced configuration stays blocked, and an unrelated unresolved PPF
+// selection keeps the honest partial state with the option's contribution separated. Synthetic only.
+
+const RUNTIME_OPTIONS: readonly StoreGlobalOption[] = [
+  { id: "gopt-a",     name: "RUNTIME-GOPT-A",   defaultPrice: 15_000, appliesToAllCategories: true },
+  { id: "gopt-qty",   name: "RUNTIME-GOPT-QTY", defaultPrice: 2_000, quantityRequired: true, minQty: 1, maxQty: 5, appliesToAllCategories: true },
+];
+
+function maintenanceDraftFor(categories: Array<"maintenance" | "ppf">): EstimateWizardDraftV22 {
+  let d = resetWizardDraft();
+  d = updateServiceSelection(d, { selectedCategories: categories });
+  return updateServiceConfiguration(d, "bodyMaintenance", { menuId: "maint-a", unitPriceInput: "5000" });
+}
+
+/** Drive ONE Step-4 event through the binding layer and the canonical patch route. */
+function step4(
+  draft: EstimateWizardDraftV22,
+  run: (b: ReturnType<typeof createStep4Bindings>["storeGlobalOptions"]) => void,
+  options: readonly StoreGlobalOption[] = RUNTIME_OPTIONS,
+): EstimateWizardDraftV22 {
+  const patches: WizardStorePatch[] = [];
+  run(createStep4Bindings(draft.serviceConfiguration, (p) => patches.push(p), undefined, options).storeGlobalOptions);
+  assert.equal(patches.length, 1, "exactly one canonical patch per event");
+  const r = applyStorePatch(draft, patches[0]);
+  assert.equal(r.ok, true, "patch accepted by the canonical route");
+  if (!r.ok) throw new Error("unreachable");
+  return r.draft;
+}
+
+const price = (d: EstimateWizardDraftV22) => computeWizardPricingFromConfig(d, TEST_CONFIG, DEFAULT_PRICING_CATALOG, "detailer");
+const goptLine = (d: EstimateWizardDraftV22, id: string) =>
+  price(d).lines.find((l) => l.category === "store_global_options" && l.sourceId === `store_global_options:${id}`);
+
+test("selecting a configured option on Step 4 bills it immediately — no manual entry, no Add/Update", () => {
+  const before = price(maintenanceDraftFor(["maintenance"]));
+  const d = step4(maintenanceDraftFor(["maintenance"]), (b) => b.onOptionToggle("gopt-a"));
+  assert.equal(d.serviceConfiguration.storeGlobalOptions.unitPricesByOption["gopt-a"], "15000", "authoritative price lives in the canonical draft");
+  const r = price(d);
+  const line = goptLine(d, "gopt-a");
+  assert.equal(line?.label, "CFG-GOPT-A", "label still comes from the pricing configuration");
+  assert.equal(line?.unitPrice, 15_000);
+  assert.equal(line?.lineTotal, 15_000);
+  assert.equal(r.completeness, "complete");
+  assert.equal(r.subtotal, before.subtotal! + 15_000);
+});
+
+test("an operator edit overrides the configured price; deselect then re-select never resurfaces the edit", () => {
+  let d = step4(maintenanceDraftFor(["maintenance"]), (b) => b.onOptionToggle("gopt-a"));
+  d = step4(d, (b) => b.onUnitPriceChange("gopt-a", "12000"));
+  assert.equal(goptLine(d, "gopt-a")?.unitPrice, 12_000, "edit overrides");
+  d = step4(d, (b) => b.onOptionToggle("gopt-a"));
+  assert.equal(goptLine(d, "gopt-a"), undefined, "deselected option is not billed");
+  assert.equal("gopt-a" in d.serviceConfiguration.storeGlobalOptions.unitPricesByOption, false, "no stale amount kept");
+  assert.equal(price(d).completeness, "complete");
+  d = step4(d, (b) => b.onOptionToggle("gopt-a"));
+  assert.equal(goptLine(d, "gopt-a")?.unitPrice, 15_000, "re-select returns to the configured price");
+});
+
+test("quantity extends the seeded unit price within the configured bounds", () => {
+  let d = step4(maintenanceDraftFor(["maintenance"]), (b) => b.onOptionToggle("gopt-qty"));
+  assert.equal(goptLine(d, "gopt-qty")?.lineTotal, 2_000, "quantity defaults to the configured minimum");
+  d = step4(d, (b) => b.onQuantityChange("gopt-qty", 3));
+  const line = goptLine(d, "gopt-qty");
+  assert.equal(line?.quantity, 3);
+  assert.equal(line?.unitPrice, 2_000);
+  assert.equal(line?.lineTotal, 6_000);
+  assert.equal(price(d).completeness, "complete");
+});
+
+test("an option whose configured price is missing (projected as 0) stays honestly blocked", () => {
+  // Same configured option, but the trusted runtime carries no usable price (the projection maps an
+  // unconfigured price to 0). Selection must NOT manufacture a ¥0 line.
+  const unpricedRuntime: readonly StoreGlobalOption[] = [{ id: "gopt-a", name: "RUNTIME-GOPT-A", defaultPrice: 0, appliesToAllCategories: true }];
+  const d = step4(maintenanceDraftFor(["maintenance"]), (b) => b.onOptionToggle("gopt-a"), unpricedRuntime);
+  assert.equal("gopt-a" in d.serviceConfiguration.storeGlobalOptions.unitPricesByOption, false, "nothing seeded");
+  const r = price(d);
+  assert.ok(r.errors.some((e) => e.code === "MANUAL_PRICE_REQUIRED" && e.sourceId === "gopt-a"));
+  assert.equal(r.completeness, "partial");
+  assert.equal(r.lines.some((l) => l.category === "store_global_options"), false, "no manufactured ¥0 line");
+});
+
+test("an unresolved PPF selection keeps the partial state while the option's own amount is counted", () => {
+  const d = step4(maintenanceDraftFor(["maintenance", "ppf"]), (b) => b.onOptionToggle("gopt-a"));
+  const r = price(d);
+  assert.equal(goptLine(d, "gopt-a")?.unitPrice, 15_000);
+  assert.equal(r.completeness, "partial", "legitimate partial notice is NOT suppressed");
+  assert.ok(r.errors.some((e) => e.category === "ppf"), "PPF issue remains visible");
+  assert.equal(r.errors.some((e) => e.category === "store_global_options"), false, "the option raises no issue of its own");
 });

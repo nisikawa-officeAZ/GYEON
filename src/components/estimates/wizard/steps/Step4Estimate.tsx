@@ -143,7 +143,9 @@ export function Step4Estimate({ api, shopRank, screenConfig, ppfPricingReadiness
 
   const categories = api.store.categories;
   const cfg = api.store.services; // canonical projection (read-only)
-  const bindings = createStep4Bindings(cfg, api.updateStore);
+  // Trusted runtime store-global options are threaded ONLY so a newly selected option's configured
+  // unit price is seeded into the canonical draft (GDA-ESTIMATE-OPTION-PRICING-R1). No pricing here.
+  const bindings = createStep4Bindings(cfg, api.updateStore, undefined, screenConfig.storeGlobalOptions);
 
   // Resolve the open section against the CURRENT selection. A deselected active section falls back
   // to the first selected canonical category — WITHOUT deleting that section's saved configuration

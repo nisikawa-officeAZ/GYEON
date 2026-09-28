@@ -428,3 +428,114 @@ test("15. both hook and core have no arithmetic/apply/save/DB/route; hook uses u
   assert.match(hook, /from ["']\.\/compute-wizard-pricing-from-config["']/, "hook imports the core");
   assert.match(hook, /export \{ computeWizardPricingFromConfig \}/, "hook re-exports the core for compatibility");
 });
+
+// ── 16–20. GDA-ESTIMATE-OPTION-PRICING-R1 — store-global option pricing through the authoritative route ──
+//
+// The engine prices a store-global option ONLY from the canonical draft's `unitPricesByOption`. These
+// tests pin: (a) an option carrying its authoritative unit price is billed immediately; (b) an operator
+// edit overrides it; (c) quantity extends it; (d) a missing/invalid price stays blocked, never a
+// manufactured amount; (e) another unresolved selected service keeps the honest partial state while the
+// option's own contribution is counted. Synthetic amounts only.
+
+const optionDraft = (
+  categories: ServiceCategoryId[],
+  storeGlobalOptions: WizardServiceConfigurationDraft["storeGlobalOptions"],
+) => draftWith(categories, { bodyMaintenance: { menuId: "mm1", unitPriceInput: "5000" }, storeGlobalOptions });
+
+const optionLine = (r: ReturnType<typeof computeWizardPricingFromConfig>, sourceId: string) =>
+  r.lines.find((l) => l.category === "store_global_options" && l.sourceId === `store_global_options:${sourceId}`);
+
+test("16. a selected option carrying its authoritative unit price is billed immediately and the result is complete", () => {
+  const base = computeWizardPricingFromConfig(maintenanceDraft(), CONFIG, DEFAULT_PRICING_CATALOG, RANK);
+  const r = computeWizardPricingFromConfig(
+    optionDraft(["maintenance"], { selectedOptionIds: ["go1"], unitPricesByOption: { go1: "15000" }, quantitiesByOption: {} }),
+    CONFIG, DEFAULT_PRICING_CATALOG, RANK,
+  );
+  const line = optionLine(r, "go1");
+  assert.ok(line, "option line produced");
+  assert.equal(line!.label, "鉄粉除去");
+  assert.equal(line!.quantity, 1);
+  assert.equal(line!.unitPrice, 15_000);
+  assert.equal(line!.lineTotal, 15_000);
+  assert.equal(r.completeness, "complete");
+  assert.equal(r.status, "success");
+  assert.deepEqual(r.unresolvedItems, []);
+  assert.equal(r.errors.length, 0);
+  assert.equal(r.subtotal, base.subtotal! + 15_000, "subtotal includes the option");
+});
+
+test("17. an explicit operator edit overrides the option's unit price", () => {
+  const r = computeWizardPricingFromConfig(
+    optionDraft(["maintenance"], { selectedOptionIds: ["go1"], unitPricesByOption: { go1: "12000" }, quantitiesByOption: {} }),
+    CONFIG, DEFAULT_PRICING_CATALOG, RANK,
+  );
+  assert.equal(optionLine(r, "go1")!.unitPrice, 12_000);
+  assert.equal(r.completeness, "complete");
+});
+
+test("18. a quantity-required option extends the authoritative unit price; out-of-range quantity still fails closed", () => {
+  const base = computeWizardPricingFromConfig(maintenanceDraft(), CONFIG, DEFAULT_PRICING_CATALOG, RANK);
+  const r = computeWizardPricingFromConfig(
+    optionDraft(["maintenance"], { selectedOptionIds: ["go-q"], unitPricesByOption: { "go-q": "15000" }, quantitiesByOption: { "go-q": 3 } }),
+    CONFIG, DEFAULT_PRICING_CATALOG, RANK,
+  );
+  const line = optionLine(r, "go-q");
+  assert.equal(line!.quantity, 3);
+  assert.equal(line!.unitPrice, 15_000);
+  assert.equal(line!.lineTotal, 45_000);
+  assert.equal(r.subtotal, base.subtotal! + 45_000);
+  assert.equal(r.completeness, "complete");
+
+  const over = computeWizardPricingFromConfig(
+    optionDraft(["maintenance"], { selectedOptionIds: ["go-q"], unitPricesByOption: { "go-q": "15000" }, quantitiesByOption: { "go-q": 6 } }),
+    CONFIG, DEFAULT_PRICING_CATALOG, RANK,
+  );
+  assert.ok(over.errors.some((e) => e.code === "INVALID_QUANTITY" && e.sourceId === "go-q"));
+  assert.equal(over.completeness, "error");
+  assertAllAggregatesNull(over);
+});
+
+test("19. a selected option with NO authoritative price stays honestly unresolved — no manufactured amount", () => {
+  const base = computeWizardPricingFromConfig(maintenanceDraft(), CONFIG, DEFAULT_PRICING_CATALOG, RANK);
+  const missing = computeWizardPricingFromConfig(
+    optionDraft(["maintenance"], { selectedOptionIds: ["go1"], unitPricesByOption: {}, quantitiesByOption: {} }),
+    CONFIG, DEFAULT_PRICING_CATALOG, RANK,
+  );
+  assert.equal(optionLine(missing, "go1"), undefined, "no line without a price");
+  assert.ok(missing.errors.some((e) => e.code === "MANUAL_PRICE_REQUIRED" && e.category === "store_global_options" && e.sourceId === "go1"));
+  assert.ok(missing.unresolvedItems.some((u) => u.sourceId === "go1"));
+  assert.equal(missing.completeness, "partial");
+  assert.equal(missing.subtotal, base.subtotal, "the priced subset excludes the unpriced option");
+
+  const invalid = computeWizardPricingFromConfig(
+    optionDraft(["maintenance"], { selectedOptionIds: ["go1"], unitPricesByOption: { go1: "abc" }, quantitiesByOption: {} }),
+    CONFIG, DEFAULT_PRICING_CATALOG, RANK,
+  );
+  assert.ok(invalid.errors.some((e) => e.code === "INVALID_MANUAL_PRICE" && e.sourceId === "go1"));
+  assert.equal(invalid.completeness, "error");
+  assertAllAggregatesNull(invalid);
+
+  // A priced but NON-PRICEABLE option remains blocked regardless of any carried amount.
+  const nonPriceable = computeWizardPricingFromConfig(
+    optionDraft(["maintenance"], { selectedOptionIds: ["go-np"], unitPricesByOption: { "go-np": "15000" }, quantitiesByOption: {} }),
+    CONFIG, DEFAULT_PRICING_CATALOG, RANK,
+  );
+  assert.ok(nonPriceable.errors.some((e) => e.code === "NON_PRICEABLE_SELECTED_ITEM" && e.sourceId === "go-np"));
+  assert.equal(optionLine(nonPriceable, "go-np"), undefined);
+  assert.notEqual(nonPriceable.completeness, "complete");
+});
+
+test("20. another unresolved selected service (PPF) keeps the honest partial state while the option IS counted", () => {
+  const r = computeWizardPricingFromConfig(
+    optionDraft(["maintenance", "ppf"], { selectedOptionIds: ["go1"], unitPricesByOption: { go1: "15000" }, quantitiesByOption: {} }),
+    CONFIG, DEFAULT_PRICING_CATALOG, RANK,
+  );
+  const line = optionLine(r, "go1");
+  assert.ok(line, "the option's contribution is separated from the unresolved PPF and counted");
+  assert.equal(line!.unitPrice, 15_000);
+  assert.equal(r.completeness, "partial", "partial state is legitimate and NOT suppressed");
+  assert.ok(r.errors.some((e) => e.category === "ppf"), "the PPF issue stays visible");
+  assert.equal(r.errors.some((e) => e.sourceId === "go1"), false, "the option itself raises no issue");
+  assert.equal(r.unresolvedItems.some((u) => u.category === "store_global_options"), false);
+  assert.ok(typeof r.subtotal === "number" && r.subtotal >= 15_000, "priced subset retains the option's amount");
+});

@@ -24,6 +24,9 @@ import type { ShopRank } from "../screens/step-types";
 import type { ServiceCategoryId } from "@/lib/estimates/service-categories";
 import type { ConfiguredPricingConfiguration } from "../pricing/wizard-pricing-input-adapter-config";
 import type { WizardPricingResult } from "../pricing/wizard-pricing-types";
+import { createStep4Bindings } from "../steps/step4-bindings";
+import { applyStorePatch, type WizardStorePatch } from "../bridge/ew-ui1-controller";
+import type { StoreGlobalOption } from "../screens/step-types";
 
 const RANK: ShopRank = "detailer";
 const CATALOG: PricingCatalog = makePricingCatalog({
@@ -577,4 +580,71 @@ test("F2-R1: sourceMode existing with an EMPTY-STRING vehicleId maps to NEW — 
   const emptyId = { ...d, vehicle: { ...d.vehicle, sourceMode: "existing" as const, vehicleId: "" } };
   const req = okReq(run(emptyId));
   assert.equal(req.vehicle.mode, "new", "an empty-string id must never save as existing");
+});
+
+// ── GDA-ESTIMATE-OPTION-PRICING-R1 — the save contract uses the SAME authoritative option price ──
+//
+// The Step-4 toggle seeds the configured price into the canonical draft; the server-side recompute
+// (computeWizardPricingFromConfig on that draft) and the save mapper therefore see the identical unit
+// price. No presentation-only number is trusted: the persisted amount is exactly the draft's value.
+
+const SAVE_RUNTIME_OPTIONS: readonly StoreGlobalOption[] = [
+  { id: "go-1",    name: "単品オプション",   defaultPrice: 15_000, appliesToAllCategories: true },
+  { id: "go-q",    name: "数量オプション",   defaultPrice: 3_000, quantityRequired: true, minQty: 1, maxQty: 5, appliesToAllCategories: true },
+  // Configured in PC (go-min) but the runtime carries no usable price (projected as 0).
+  { id: "go-min",  name: "最小数量オプション", defaultPrice: 0, quantityRequired: true, minQty: 2, maxQty: 4, appliesToAllCategories: true },
+];
+
+function viaStep4(
+  draft: EstimateWizardDraftV22,
+  run: (b: ReturnType<typeof createStep4Bindings>["storeGlobalOptions"]) => void,
+): EstimateWizardDraftV22 {
+  const patches: WizardStorePatch[] = [];
+  run(createStep4Bindings(draft.serviceConfiguration, (p) => patches.push(p), undefined, SAVE_RUNTIME_OPTIONS).storeGlobalOptions);
+  const r = applyStorePatch(draft, patches[0]);
+  assert.equal(r.ok, true);
+  if (!r.ok) throw new Error("unreachable");
+  return r.draft;
+}
+const lineId = (id: string) => `manual:store_global_options:${id}`;
+
+test("save uses the option price seeded on selection; the persisted line equals the recomputed authoritative line", () => {
+  const baseline = okReq(run(draftWith(["coating"], coatingCfg("one-evo"))));
+  assert.notEqual(baseline.pricing.subtotal, null);
+  if (baseline.pricing.subtotal === null) throw new Error("unreachable");
+  const draft = viaStep4(draftWith(["coating"], coatingCfg("one-evo")), (b) => b.onOptionToggle("go-1"));
+  const recomputed = computeWizardPricingFromConfig(draft, PC, CATALOG, RANK);
+  const req = okReq(run(draft));
+  const line = req.services.find((s) => s.lineId === lineId("go-1"));
+  assert.ok(line, "option line persisted");
+  assert.equal(line!.quantity, 1);
+  assert.equal(line!.unitPrice, 15_000);
+  assert.equal(line!.subtotal, 15_000);
+  assert.equal(req.pricing.subtotal, baseline.pricing.subtotal + 15_000);
+  const authoritative = recomputed.lines.find((l) => l.sourceId === "store_global_options:go-1");
+  assert.equal(line!.unitPrice, authoritative?.unitPrice, "save and authoritative recompute agree");
+  assert.equal(req.pricing.grandTotal, recomputed.grandTotal);
+});
+
+test("an explicit operator edit and an in-bounds quantity persist through the same path", () => {
+  let draft = viaStep4(draftWith(["coating"], coatingCfg("one-evo")), (b) => b.onOptionToggle("go-1"));
+  draft = viaStep4(draft, (b) => b.onUnitPriceChange("go-1", "12000"));
+  assert.equal(okReq(run(draft)).services.find((s) => s.lineId === lineId("go-1"))?.unitPrice, 12_000);
+
+  let qty = viaStep4(draftWith(["coating"], coatingCfg("one-evo")), (b) => b.onOptionToggle("go-q"));
+  qty = viaStep4(qty, (b) => b.onQuantityChange("go-q", 3));
+  const line = okReq(run(qty)).services.find((s) => s.lineId === lineId("go-q"));
+  assert.equal(line?.quantity, 3);
+  assert.equal(line?.unitPrice, 3_000);
+  assert.equal(line?.subtotal, 9_000);
+});
+
+test("an option without a valid configured price is never saved with a manufactured amount", () => {
+  const draft = viaStep4(draftWith(["coating"], coatingCfg("one-evo")), (b) => b.onOptionToggle("go-min"));
+  assert.equal("go-min" in draft.serviceConfiguration.storeGlobalOptions.unitPricesByOption, false, "nothing seeded");
+  expectFail(run(draft), "pricing-error");
+  // Deselecting it restores a saveable estimate with no residual option amount.
+  const cleared = viaStep4(draft, (b) => b.onOptionToggle("go-min"));
+  const req = okReq(run(cleared));
+  assert.equal(req.services.some((s) => s.lineId.startsWith("manual:store_global_options:")), false);
 });

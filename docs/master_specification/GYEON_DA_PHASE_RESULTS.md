@@ -5765,3 +5765,209 @@ git_actions:
 decision: ACCEPT_PR128_AS_D5A_R2_PUBLICATION_AND_RECORD_SEQUENCING_DEVIATION_WITHOUT_DUPLICATE_COMMIT
 next: "INDEPENDENT_BOOK_REVIEW_OF_THIS_TWO_PATH_LEDGER_APPEND; PUSH_PR_READY_MERGE_AND_D5B_REMAIN_SEPARATE_OWNER_GATES."
 ```
+
+## GDA-ESTIMATE-OPTION-PRICING-R1 — PR #137 legacy-draft guidance review
+
+```yaml
+phase: GDA_ESTIMATE_OPTION_PRICING_R1_PR137_LEGACY_DRAFT_GUIDANCE_REVIEW
+marker: GDA_ESTIMATE_OPTION_PRICING_R1_PR137_LEDGER_RESULT_V1
+status: DELTA_REVIEW_ACCEPTED_E1_PLUS_LOCAL_CHECKS_E2_PENDING_PR_DRAFT_LEDGER_CANDIDATE_UNCOMMITTED
+date: 2026-09-27
+append_only: true
+objective: "Correct the misleading price-registration notice for a selected non-editable store option in an old estimate draft when a valid configured price exists, without silently changing its billed amount. Record the independent post-push review of this correction only; this is not whole-PR Ready or production acceptance."
+authorization: "The Owner approved Claude Fable's two-file guidance repair and tests, then separately approved the two-file commit, normal non-force push to PR #137, independent read-only review, and drafting this result-ledger record. No approval for this ledger candidate's commit or push, PR Ready, merge, or deployment is inferred."
+responsibility:
+  product_authority: Office AZ
+  specification_and_result_acceptance: Book Codex
+  bounded_repair_and_executable_tests: Book Claude Fable high
+  independent_read_only_delta_review: Book Claude Fable high (separate run)
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-option-pricing-20260927A
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-option-pricing-20260927A
+  base_branch: main
+  branch_creation_base_commit: df3be017c0f049aec48f40646d5b6708c91998b5
+  branch_creation_base_tree: af9296dbb26efb23ad3b18c4b5e811a46dbfa238
+  candidate_branch: work/estimate-option-pricing-20260927
+  reviewed_delta_parent: 490243fb0eb1876ca991b448823809f7b7df899a
+  reviewed_commit: af69c4873271d0765c136f3084666656fed81960
+  reviewed_tree: e9cfad155f1b4f82bbf8ffc376b81e9ad7fa428c
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/137
+  pull_request_state_at_recording: OPEN_DRAFT_HEAD_AF69C487
+reviewed_commit_changed_paths:
+  - src/components/estimates/wizard/screens/StoreGlobalOptionsSelector.tsx
+  - src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx
+current_ledger_write_allowlist:
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+current_ledger_actual_changed_paths:
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+code_file_sha256:
+  src/components/estimates/wizard/screens/StoreGlobalOptionsSelector.tsx: e83bd4bef499f169cdffba60821d7a71ec27b13789c7eeae207a746229294d91
+  src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx: 141501f9a335cf0a1ad961abdafe3f12dd38189268a58c22fbd58ced188145b9
+code_file_sha256_verified_against: "HEAD af69c4873271d0765c136f3084666656fed81960 checkout on 2026-09-27; both values match the repair result before commit"
+combined_code_sha256:
+  procedure: "From repository root, run shasum -a 256 with the two repository-relative paths exactly as listed in reviewed_commit_changed_paths, then pipe its complete text output to shasum -a 256."
+  value: 3e99022401494704a098845da259228dff1274ea120cc480f9da2420cd7f7d7d
+repair_execution:
+  model: claude-fable-5-1
+  pid: 7945
+  exit_code: 0
+  result_marker: BOOK_PR137_LEGACY_OPTION_GUIDANCE_REPAIR_V1
+  verdict: PASS
+  evidence: /Users/atsushinishikawa/.codex/claude-handoff-runs/2026-09-27T00-15-42-811Z-f42ea1d4/result.txt
+  focused_test_command: node --import tsx --test src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx
+  focused_tests: PASS_67_OF_67_EXIT_0
+  typecheck_command: npm run typecheck
+  typecheck: PASS_EXIT_0_TSC_NO_EMIT
+  diff_check_command: git diff --check
+  diff_check: PASS_EXIT_0
+independent_review:
+  instruction: https://github.com/nisikawa-officeAZ/GYEON/pull/137#issuecomment-5851240611
+  result: https://github.com/nisikawa-officeAZ/GYEON/pull/137#issuecomment-5851261853
+  model: claude-fable-5-1
+  pid: 8685
+  exit_code: 0
+  marker: BOOK_PR137_POST_PUSH_INDEPENDENT_REVIEW_RESULT_V1
+  verdict: PASS_NO_CONFIRMED_BUG
+  evidence: /Users/atsushinishikawa/.codex/claude-handoff-runs/2026-09-27T00-24-32-346Z-3032f971/result.txt
+  access: CODE_ONLY_PACKET_TOOLS_DISABLED_NO_TESTS_RUN_BY_REVIEWER
+  scope: CORRECTION_COMMIT_DELTA_ONLY_NOT_WHOLE_PR_READY_ACCEPTANCE
+behavior_accepted:
+  unset_draft_with_valid_positive_integer_default: EXPLICIT_DESELECT_RESELECT_GUIDANCE_NO_AUTO_PRICE_WRITE
+  unset_draft_with_missing_or_invalid_default: SETTINGS_PRICE_GUIDANCE_RETAINED
+  existing_billed_or_invalid_draft: DISPLAY_BEHAVIOR_UNCHANGED
+  editable_option: INPUT_BEHAVIOR_UNCHANGED
+evidence_level: E1_SOURCE_PRESENT_WITH_FOCUSED_TESTS_AND_TYPECHECK_E2_PENDING_BUILD_GATE
+applicability:
+  build: NOT_RUN_NO_WAIVER_RECORDED_E2_NOT_CLAIMED
+  lint: NOT_RUN_APPLICABILITY_NOT_DETERMINED
+  db_supabase_storage_line: NOT_ACCESSED
+  authenticated_staging_or_production: NOT_VERIFIED
+  deployment: NOT_PERFORMED
+  destructive_action: NONE
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+  protected_paths_git_status: NO_STATUS_ENTRY
+git_and_release_boundary:
+  reviewed_code_commit: COMMITTED_AND_NORMALLY_PUSHED_AS_AF69C487
+  ledger_candidate_staged: false
+  ledger_candidate_committed: false
+  ledger_candidate_pushed: false
+  pr_ready: false
+  merged: false
+  deployed: false
+limitations:
+  - "The independent reviewer used a code-only diff packet and did not re-run tests; the separate repair run supplied executable test evidence."
+  - "Pre-existing helper/fixture definitions outside the correction diff were not independently inspected by the reviewer."
+  - "The guidance predicate in StoreGlobalOptionsSelector.tsx and the selection seed predicate in step4-bindings.ts are duplicated; future drift is guarded by current source and behavior tests but requires paired maintenance."
+  - "Full E2 is not claimed until the required build gate or an explicit, recorded waiver is accepted; lint applicability is also undecided."
+rollback_recovery: "PR #137 remains Draft and unmerged; the correction can be revised on its branch. No production rollback is needed because this phase performed no deployment."
+next: "RECHECK_THIS_ONE_PATH_LEDGER_CANDIDATE; REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_ITS_COMMIT_AND_PUSH. RESOLVE_BUILD_GATE_BEFORE_FULL_E2_OR_READY; PR_READY_MERGE_DEPLOY_REMAIN_SEPARATE_GATES."
+```
+
+## GDA-ESTIMATE-OPTION-PRICING-R1 — PR #137 local E2 build verification
+
+```yaml
+phase: GDA_ESTIMATE_OPTION_PRICING_R1_PR137_E2_BUILD_VERIFICATION
+marker: GDA_ESTIMATE_OPTION_PRICING_R1_PR137_E2_LEDGER_RESULT_V1
+status: E2_LOCAL_EVIDENCE_ACCEPTED_LEDGER_CANDIDATE_UNCOMMITTED_PR_DRAFT
+date: 2026-09-27
+append_only: true
+supersedes_evidence_status: "The preceding PR #137 ledger entry accurately recorded E1 plus local checks and E2 pending at its creation; this new entry records the later build result without rewriting that historical state."
+objective: "Determine whether the accepted estimate-option guidance correction at PR #137 meets the bounded local E2 focused-test, typecheck, and production-build gates. This does not assert full Estimate Wizard, hosted environment, field, or production completion."
+authorization: "The Owner separately approved Claude Fable's build verification, then approved appending this E2 result to the canonical phase-results document. No commit, push, Ready conversion, merge, deployment, production access, or other source change is authorized by that approval."
+responsibility:
+  owner: Office AZ
+  bounded_build_worker: Book Claude Fable high
+  evidence_and_scope_acceptance: Book Codex
+  studio_inventory_implementation: OUT_OF_SCOPE
+repository:
+  name: nisikawa-officeAZ/GYEON
+  root: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-option-pricing-20260927A
+  worktree: /Users/atsushinishikawa/Documents/Codex/2026-08-09/files-mentioned-by-the-user-dealeros/work/dealeros-estimate-option-pricing-20260927A
+  base_branch: main
+  branch_creation_base_commit: df3be017c0f049aec48f40646d5b6708c91998b5
+  branch_creation_base_tree: af9296dbb26efb23ad3b18c4b5e811a46dbfa238
+  candidate_branch: work/estimate-option-pricing-20260927
+  build_verified_head: 995850e6286f9d7a6e64774cde8fa872f885fac8
+  build_verified_tree: 757b30d5f496f3a5abde5c9e977f0ffaecefdf0c
+  code_correction_commit: af69c4873271d0765c136f3084666656fed81960
+  pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/137
+  pull_request_state_at_recording: OPEN_DRAFT_HEAD_995850E
+literal_ledger_write_allowlist:
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+actual_changed_paths_for_this_ledger_candidate:
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+build_phase_tracked_source_changes: NONE
+code_hashes_at_build_verified_head:
+  src/components/estimates/wizard/screens/StoreGlobalOptionsSelector.tsx: e83bd4bef499f169cdffba60821d7a71ec27b13789c7eeae207a746229294d91
+  src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx: 141501f9a335cf0a1ad961abdafe3f12dd38189268a58c22fbd58ced188145b9
+combined_code_sha256:
+  procedure: "From repository root, hash the two repository-relative code paths above in listed order with shasum -a 256, then pipe the complete text output to shasum -a 256."
+  value: 3e99022401494704a098845da259228dff1274ea120cc480f9da2420cd7f7d7d
+code_identity: "Both code hashes equal the pre-commit repair evidence; intervening 995850e changed only this result ledger, so earlier focused tests/typecheck apply to the exact code built."
+build_execution:
+  instruction: https://github.com/nisikawa-officeAZ/GYEON/pull/137#issuecomment-5855556509
+  result: https://github.com/nisikawa-officeAZ/GYEON/pull/137#issuecomment-5855585640
+  model: claude-fable-5-1
+  pid: 11102
+  exit_code: 0
+  result_marker: BOOK_PR137_BUILD_E2_VERIFICATION_RESULT_V1
+  verdict: PASS
+  evidence: /Users/atsushinishikawa/.codex/claude-handoff-runs/2026-09-27T11-49-20-814Z-592095a3/result.txt
+  stream_evidence: /Users/atsushinishikawa/.codex/claude-handoff-runs/2026-09-27T11-49-20-814Z-592095a3/stream.jsonl
+  command: npm run build
+  build_script: next build --turbopack
+  build_exit_code: 0
+  build_result: NEXT_15_5_26_PRODUCTION_BUILD_COMPILED_STATIC_PAGES_53_OF_53_FINALIZED_ROUTE_MANIFEST
+  build_log: /tmp/pr137-build-1790509807.log
+  build_log_lines: 238
+  build_log_sha256: 06ce269ede6f90df29347726003a96808ab5623cc9f9e3a6c1e34691978e3c7d
+  automatic_prebuild_command: npm run test:canonical-estimate
+  automatic_prebuild_tests: PASS_28_OF_28_EXIT_0
+  nonfatal_warnings:
+    - WEBPACK_CONFIGURATION_WITH_TURBOPACK_ADVISORY
+    - DYNAMIC_SERVER_USAGE_ON_OUT_OF_SCOPE_INVENTORY_AND_PRODUCTS_ROUTES_RENDERED_DYNAMICALLY
+prior_same_code_validation:
+  evidence: /Users/atsushinishikawa/.codex/claude-handoff-runs/2026-09-27T00-15-42-811Z-f42ea1d4/result.txt
+  focused_command: node --import tsx --test src/components/estimates/wizard/steps/Step4Estimate.binding.test.tsx
+  focused_tests: PASS_67_OF_67_EXIT_0
+  typecheck_command: npm run typecheck
+  typecheck: PASS_EXIT_0_TSC_NO_EMIT
+  diff_check_command: git diff --check
+  diff_check: PASS_EXIT_0
+  rerun_in_build_phase: false
+lint_applicability: "No package lint script or ESLint configuration/dependency exists. Next's internal lint/type validity phase completed in the successful build; no standalone lint command was invented."
+evidence_level: E2_LOCALLY_VERIFIED_BOUNDED_ESTIMATE_OPTION_CORRECTION_ONLY
+environment_and_release_boundaries:
+  hosted_authenticated_staging_e3: NOT_VERIFIED
+  detailer_field_e4: NOT_VERIFIED
+  deployed_production_e5: NOT_VERIFIED
+  db_supabase_auth_storage_line_mutation: NONE
+  dependency_or_lockfile_change: NONE
+  migration_apply: NONE
+  destructive_cleanup: NONE
+  ignored_build_artifacts_left_in_place: .next_and_next-env.d.ts
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  supabase/migrations/20260801110110_line_link_tokens.sql: 100644_accd22345054cc44f89156fd78eaba6dfe4242a4
+  supabase/migrations/20260807135006_monthly_invoice_pdf_artifact.sql: 100644_32fda49583ae1217bc13711784ad8fa31744726c
+  src/lib/monthly-statements/monthly-invoice-artifact-boundary.test.ts: 100644_fe3c80f22fd80dcbfab076082473216dda582c14
+  protected_paths_git_status: NO_STATUS_ENTRY_BEFORE_OR_AFTER_BUILD
+git_state_at_recording:
+  ledger_candidate_staged: false
+  ledger_candidate_committed: false
+  ledger_candidate_pushed: false
+  pr_ready: false
+  merged: false
+  deployed: false
+limitations:
+  - "The separate independent code reviewer used a code-only packet and did not run tests; the repair and build runs supplied executable evidence on identical code hashes."
+  - "Build output contains nonfatal warnings and dynamic-server logs for out-of-scope inventory/products routes; these were not repaired or classified as production smoke evidence."
+  - "The PR base should be refreshed against current main before any Ready decision; no fetch or merge was performed in this verification phase."
+rollback_recovery: "PR #137 is still Draft and unmerged. No production change or rollback is needed; the local ledger candidate can be reviewed before its separately authorized commit and push."
+next: "INDEPENDENTLY_REVIEW_THIS_ONE_PATH_APPEND; REQUEST_SEPARATE_OWNER_AUTHORIZATION_FOR_ITS_COMMIT_AND_PUSH. PR_READY_MERGE_E3_E4_E5_REMAIN_SEPARATE_GATES."
+```
