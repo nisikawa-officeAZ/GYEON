@@ -10,6 +10,11 @@ import { VehicleRegistrationOcrResult } from "./vehicle-registration-types";
 import { analyzeOcrCustomer, resolveCustomer } from "./ocr-customer-mapping";
 import { normalizeVehicleFields } from "./vehicle-normalize";
 import { buildOcrQualityReport, resolveVehicleIdentity, type OcrQualityReport } from "./ocr-quality";
+import {
+  applyPdfTextLayerCertificateFields,
+  extractCertificateCodesFromPdfBase64,
+  type PdfTextLayerExtraction,
+} from "./pdf-text-layer";
 import { getGyeonManagedApiKey } from "@/lib/ai/gyeon-managed-key";
 import { OCR_MODEL, OCR_TEMPERATURE, OCR_MAX_TOKENS, OCR_PROMPT_VERSION } from "@/lib/ai/ocr-config";
 import { addressWithoutLeadingPostal, normalizeJapanesePostalCode, postalCodeFromAddress } from "./postal-normalization";
@@ -185,6 +190,7 @@ export function sanitizeVehicleRegistrationOcrResult(
  */
 export function applyVehicleIdentityPolicy(
   sanitized: VehicleRegistrationOcrResult,
+  opts: { trustedModelShape?: boolean } = {},
 ): VehicleRegistrationOcrResult {
   // Deterministic maker detection (the 車名欄 usually carries the maker); model/grade output of the
   // normalizer is deliberately discarded — never derived from 車名 tokens.
@@ -194,7 +200,10 @@ export function applyVehicleIdentityPolicy(
   delete sanitized.vehicle_name; // 通称名: never from OCR
   delete sanitized.grade;        // グレード: never from OCR (an engine type must never land here)
 
-  const resolved = resolveVehicleIdentity(sanitized, { ambiguousGrade: "blank" }).result;
+  const resolved = resolveVehicleIdentity(sanitized, {
+    ambiguousGrade: "blank",
+    trustedModelShape: opts.trustedModelShape === true,
+  }).result;
   for (const key of Object.keys(sanitized) as Array<keyof VehicleRegistrationOcrResult>) {
     if (!(key in resolved)) delete sanitized[key];
   }
@@ -232,6 +241,7 @@ async function callOpenAI(
   fileBase64: string,
   mimeType: string,
   apiKey: string,
+  pdfTextLayer: PdfTextLayerExtraction | null,
 ): Promise<
   | { result: VehicleRegistrationOcrResult; provider: string; model: string; usage: OcrUsage; promptVersion: string; quality: OcrQualityReport }
   | { error: OcrErrorCode }
@@ -314,9 +324,13 @@ async function callOpenAI(
       return { error: "EMPTY_RESPONSE" };
     }
 
+    // Selectable PDF: the label-anchored text layer (page 1) overrides ONLY the four certificate
+    // codes (型式 / 原動機の型式 / 型式指定番号 / 類別区分番号). No text layer → nothing changes here.
+    const textLayer = applyPdfTextLayerCertificateFields(sanitized, pdfTextLayer);
+
     // Deterministic vehicle-identity policy: maker from the 車名欄, 通称名/グレード always blank,
     // 型式 = certificate 型式 column only, ボディカラー manual-only.
-    applyVehicleIdentityPolicy(sanitized);
+    applyVehicleIdentityPolicy(sanitized, { trustedModelShape: textLayer.trustedModel });
 
     // Derive the customer mapping (owner/user rule). Owner AND user raw fields are
     // preserved above; this only records the recommended candidate + flags.
@@ -363,12 +377,21 @@ export async function analyzeVehicleRegistrationImage(
   }
   const apiKey = keyResult.apiKey;
 
-  const first = await callOpenAI(imageBase64, mimeType, apiKey);
+  // Deterministic PDF text-layer pass (page 1, bounded). Runs once per request, before the AI call,
+  // and only for PDFs. Any failure is fail-closed: status without fields → AI path unchanged.
+  let pdfTextLayer: PdfTextLayerExtraction | null = null;
+  if (mimeType === "application/pdf") {
+    pdfTextLayer = await extractCertificateCodesFromPdfBase64(imageBase64);
+    // Field NAMES only — values are never logged.
+    console.log(`[OCR] pdf-text-layer status=${pdfTextLayer.status} fields=[${Object.keys(pdfTextLayer.fields).join(",")}] lines=${pdfTextLayer.lineCount}`);
+  }
+
+  const first = await callOpenAI(imageBase64, mimeType, apiKey, pdfTextLayer);
 
   if ("error" in first && RETRYABLE_CODES.includes(first.error)) {
     console.log("[OCR] Transient error:", first.error, "— retrying once in 2 s …");
     await sleep(2_000);
-    const second = await callOpenAI(imageBase64, mimeType, apiKey);
+    const second = await callOpenAI(imageBase64, mimeType, apiKey, pdfTextLayer);
     console.log("[OCR] Retry result:", "error" in second ? second.error : "success");
     return second;
   }

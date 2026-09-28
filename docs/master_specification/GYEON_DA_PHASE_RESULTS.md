@@ -5765,3 +5765,130 @@ git_actions:
 decision: ACCEPT_PR128_AS_D5A_R2_PUBLICATION_AND_RECORD_SEQUENCING_DEVIATION_WITHOUT_DUPLICATE_COMMIT
 next: "INDEPENDENT_BOOK_REVIEW_OF_THIS_TWO_PATH_LEDGER_APPEND; PUSH_PR_READY_MERGE_AND_D5B_REMAIN_SEPARATE_OWNER_GATES."
 ```
+
+## GDA-OCR-PDF-TEXT-LAYER-R2 — local correction authorization
+
+```yaml
+phase: GDA_OCR_PDF_TEXT_LAYER_R2
+marker: GDA_OCR_PDF_TEXT_LAYER_R2_LOCAL_AUTHORIZATION_V1
+date: 2026-09-28
+status: OWNER_AUTHORIZED_LOCAL_CANDIDATE_IN_PROGRESS
+owner_authorization: "Record the OCR phase and result boundary, add pdfjs-dist, and implement/test the bounded uncommitted correction. Commit, push, PR state change, merge, deployment, and production action remain separate."
+repository: nisikawa-officeAZ/GYEON
+pull_request: https://github.com/nisikawa-officeAZ/GYEON/pull/141
+branch: work/ocr-vehicle-type-20260927
+fixed_base:
+  commit: aa9b9cd2498da4de50a2b4015a35ddbfd45abb69
+  tree: 2afded7426e918d2e9188329201b50f1193605ca
+  index_and_worktree_before: CLEAN
+claude_read_only_diagnosis:
+  marker: OCR_PDF_TEXT_LAYER_READ_ONLY_DIAGNOSIS_RESULT_V1
+  verdict: NEEDS_DEPENDENCY
+  coordination_comment: https://github.com/nisikawa-officeAZ/GYEON/pull/141#issuecomment-5861065383
+literal_change_allowlist:
+  - docs/master_specification/GYEON_DA_COMPLETION_PLAN.md
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+  - package.json
+  - package-lock.json
+  - src/lib/vehicle-registration/pdf-text-layer.ts
+  - src/lib/vehicle-registration/pdf-text-layer.test.ts
+  - src/lib/vehicle-registration/ocr.ts
+  - src/lib/vehicle-registration/ocr-quality.ts
+  - src/lib/vehicle-registration/ocr-vehicle-type-contract.test.ts
+data_boundary: OWNER_CERTIFICATE_AND_PERSONAL_DATA_LOCAL_ONLY_NOT_SENT_TO_ANTHROPIC
+protected_paths: PRESERVED_METADATA_ONLY
+validation_pending:
+  - FOCUSED_OCR_TESTS
+  - TYPESCRIPT
+  - PRODUCTION_BUILD
+  - LOCKFILE_INTEGRITY
+  - GIT_DIFF_CHECK
+not_authorized:
+  - OUTSIDE_ALLOWLIST
+  - COMMIT_OR_PUSH
+  - READY_OR_MERGE
+  - DEPLOYMENT_OR_PRODUCTION
+next: "CLAUDE_FABLE_HIGH_BOUNDED_OCR_SOURCE_IMPLEMENTATION_AND_LOCAL_TESTS_THEN_BOOK_SCOPE_AND_EVIDENCE_REVIEW."
+```
+
+## GDA-OCR-PDF-TEXT-LAYER-R2 — first candidate rejected by local field check
+
+```yaml
+phase: GDA_OCR_PDF_TEXT_LAYER_R2
+marker: GDA_OCR_PDF_TEXT_LAYER_R2_FIRST_CANDIDATE_FIELD_CHECK_V1
+date: 2026-09-28
+status: CHANGES_REQUIRED_LOCAL_UNCOMMITTED
+claude_first_candidate:
+  marker: GDA_OCR_PDF_TEXT_LAYER_R2_LOCAL_CANDIDATE_RESULT_V1
+  model: claude-fable-5-1
+  exit_code: 0
+  synthetic_pdf_tests: PASS_13_OF_13
+  contract_tests: PASS_23_OF_23
+  typecheck: PASS
+  build: PASS
+book_local_field_check:
+  owner_pdf_transfer_to_anthropic: false
+  result: FAIL_ALL_FOUR_CERTIFICATE_CODE_FIELDS
+  text_layer: PRESENT
+  layout: LABEL_ROW_FOLLOWED_BY_COLUMN_ALIGNED_VALUE_ROW
+  cause: FIRST_CANDIDATE_ONLY_ACCEPTED_LABEL_AND_VALUE_ON_SAME_LINE
+decision: REJECT_FIRST_CANDIDATE_AS_INCOMPLETE_DO_NOT_COMMIT_OR_PUSH
+repair_boundary: SAME_NINE_PATH_ALLOWLIST_NO_ADDITIONAL_DEPENDENCY_OR_FILE
+next: "ADD_SAFE_GEOMETRY_BOUND_LABEL_ROW_VALUE_ROW_PAIRING_USING_SYNTHETIC_TESTS_THEN_REPEAT_LOCAL_FIELD_CHECK_AND_ALL_REQUIRED_GATES."
+```
+
+## GDA-OCR-PDF-TEXT-LAYER-R2 — repaired local candidate reviewed
+
+```yaml
+phase: GDA_OCR_PDF_TEXT_LAYER_R2
+marker: GDA_OCR_PDF_TEXT_LAYER_R2_BOOK_LOCAL_ACCEPTANCE_V1
+date: 2026-09-28
+status: LOCAL_E2_CANDIDATE_REVIEWED_UNCOMMITTED_NOT_DEPLOYED
+claude_repair:
+  identity: TWO_ROW_REPAIR_1
+  model: claude-fable-5-1
+  exit_code: 0
+  marker: GDA_OCR_PDF_TEXT_LAYER_R2_LOCAL_CANDIDATE_RESULT_V1
+  changed_in_repair: PDF_TEXT_LAYER_MODULE_AND_TEST_ONLY
+  synthetic_pdf_tests: PASS_19_OF_19
+  ocr_contract_tests: PASS_23_OF_23
+  all_vehicle_registration_tests: PASS_75_OF_75
+  typecheck: PASS
+  build_including_prebuild: PASS
+  npm_ci: PASS_ON_FIRST_CANDIDATE_DEPENDENCY_AND_LOCKFILE_UNCHANGED_IN_REPAIR
+book_independent_local_check:
+  owner_pdf_transfer_to_anthropic: false
+  certificate_codes: PASS_4_OF_4
+  pipeline_override_and_vehicle_identity_policy: PASS_4_OF_4
+  vehicle_name_and_grade: BLANK_AS_REQUIRED
+  check_output: FIELD_LEVEL_BOOLEANS_ONLY_NO_PERSONAL_DATA
+  scope: EXACT_NINE_PATH_ALLOWLIST
+  protected_paths: UNTOUCHED_METADATA_ONLY
+  git_diff_check: PASS
+remaining_limits:
+  - LOCAL_E2_ONLY_NO_PRODUCTION_FIELD_ACCEPTANCE
+  - ORDINARY_CAR_AND_IMAGE_ONLY_REAL_DOCUMENTS_NOT_FIELD_VERIFIED_IN_THIS_REPAIR
+  - NPM_AUDIT_REPORTS_TWELVE_PRE_EXISTING_UNRELATED_VULNERABILITY_CHAINS
+not_authorized:
+  - COMMIT_OR_PUSH
+  - READY_OR_MERGE
+  - DEPLOYMENT_OR_PRODUCTION
+decision: ACCEPT_REPAIRED_CANDIDATE_FOR_LOCAL_REVIEW_ONLY
+next: "SEPARATE_OWNER_COMMIT_GATE_THEN_SEPARATE_PUSH_AND_DRAFT_PR_REVIEW_GATES; PRODUCTION_AND_FIELD_TEST_STILL_PENDING."
+```
+
+## GDA-OCR-PDF-TEXT-LAYER-R2 — exact local commit authorization
+
+```yaml
+phase: GDA_OCR_PDF_TEXT_LAYER_R2
+marker: GDA_OCR_PDF_TEXT_LAYER_R2_LOCAL_COMMIT_AUTHORIZATION_V1
+date: 2026-09-28
+owner_authorization: "はい — exact nine-path local commit only, in response to the reviewed-candidate commit question."
+candidate: GDA_OCR_PDF_TEXT_LAYER_R2_BOOK_LOCAL_ACCEPTANCE_V1
+status: LOCAL_COMMIT_OWNER_AUTHORIZED
+literal_stage_and_commit_scope: EXACT_NINE_PATHS_IN_COMPLETION_PLAN_SECTION_24
+push: NOT_AUTHORIZED
+pr_ready_merge: NOT_AUTHORIZED
+deployment_or_production: NOT_AUTHORIZED
+next: "VERIFY_UNCHANGED_HEAD_AND_EXACT_PATH_SET; STAGE_LITERAL_NINE_PATHS; COMMIT_LOCALLY; VERIFY_COMMIT_AND_CLEAN_WORKTREE; STOP_BEFORE_PUSH."
+```

@@ -92,6 +92,12 @@ export type VehicleIdentityOptions = {
    *          is distinct from the engine code always survives apply.
    */
   ambiguousGrade: "blank" | "keep";
+  /**
+   * true ONLY when 型式 was written by the deterministic PDF text layer (pdf-text-layer.ts) with exact
+   * label anchoring and conflict checks. Bypasses the hyphen-less code-shape rejection alone; the
+   * digits-only, equal-to-engine and every other safeguard still apply. Never set for AI output.
+   */
+  trustedModelShape?: boolean;
 };
 
 export interface VehicleIdentityResolution {
@@ -168,7 +174,7 @@ export function resolveVehicleIdentity(
   if (model !== "" && isDigitsOnly(model)) {
     delete result.model;
     note(`型式欄に数字のみの値（${model}）が入っていたため空にしました。型式指定番号と混同している可能性があります。`);
-  } else if (model !== "" && isBareAlnumCode(model)) {
+  } else if (model !== "" && isBareAlnumCode(model) && opts.trustedModelShape !== true) {
     delete result.model;
     note(`型式欄の値（${model}）はハイフンのない英数字のみで原動機の型式の可能性があるため空にしました。車検証の型式欄を確認してください。`);
   }

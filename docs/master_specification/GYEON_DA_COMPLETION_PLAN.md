@@ -2457,3 +2457,27 @@ not_authorized:
   - ANDROID_SOURCE
   - DEPLOY
 ```
+
+## 24. GDA-OCR-PDF-TEXT-LAYER-R2 — vehicle type recovery candidate
+
+**Status:** LOCAL CANDIDATE REVIEWED; EXACT NINE-PATH LOCAL COMMIT OWNER-AUTHORIZED; NOT PUSHED OR DEPLOYED. This is a narrow GYEON DA daily-workflow exception for a field-reported OCR regression; it does not resume or transfer any Studio inventory phase. Local E2 evidence is recorded in `GYEON_DA_PHASE_RESULTS.md`; production behavior remains unverified.
+
+**Objective:** For a selectable vehicle-registration PDF, use its text layer to identify the certificate's vehicle type (型式) separately from engine model (原動機の型式), type-designation number (型式指定番号), and classification number (類別区分番号). Never use an engine code as grade. Vehicle name and grade remain blank when the certificate does not establish them. Preserve leading zeros and human review. Image-only/scanned PDFs continue through the existing AI path without fabricated values.
+
+**Fixed base:** Draft PR #141, branch `work/ocr-vehicle-type-20260927`, HEAD `aa9b9cd2498da4de50a2b4015a35ddbfd45abb69`, tree `2afded7426e918d2e9188329201b50f1193605ca`; clean index/worktree before this candidate. Claude's read-only diagnosis marker is `OCR_PDF_TEXT_LAYER_READ_ONLY_DIAGNOSIS_RESULT_V1` with verdict `NEEDS_DEPENDENCY`. The Owner explicitly approved this governance record, a `pdfjs-dist` dependency, and an uncommitted OCR-only correction candidate on 2026-09-28.
+
+**Literal local change allowlist — exactly nine paths:**
+
+1. `docs/master_specification/GYEON_DA_COMPLETION_PLAN.md`
+2. `docs/master_specification/GYEON_DA_PHASE_RESULTS.md`
+3. `package.json`
+4. `package-lock.json`
+5. `src/lib/vehicle-registration/pdf-text-layer.ts` (new)
+6. `src/lib/vehicle-registration/pdf-text-layer.test.ts` (new)
+7. `src/lib/vehicle-registration/ocr.ts`
+8. `src/lib/vehicle-registration/ocr-quality.ts`
+9. `src/lib/vehicle-registration/ocr-vehicle-type-contract.test.ts`
+
+**Acceptance:** Selectable synthetic kei and ordinary certificate PDFs recover only unambiguous, label-bound vehicle/type codes, including the real certificate layout where a row of labels is followed by a row of values aligned to those labels' columns; engine/model/grade are not conflated; scanned or ambiguous PDFs fall back to the existing path; unrelated fields, customer data, and manual review are unchanged. Run focused OCR tests, TypeScript check, production build, lockfile integrity check, and `git diff --check`. This yields only local E2 evidence, not field or production acceptance. The actual owner-provided registration PDF stays local and must not be transmitted to Anthropic; if locally inspected, report only non-personal field-level pass/fail evidence.
+
+**Stop rules:** No edit to `next.config.ts`, actions, UI, database, migrations, or any path outside the nine-path allowlist. All section 3.1 protected paths remain protected; `ScreensPreview.tsx` is metadata-only. If another path, a PDF engine configuration change, or customer data transmission becomes necessary, stop for a new Owner gate. The Owner separately authorized one exact nine-path local commit after the reviewed candidate; push, Ready conversion, merge, deployment, production database/provider action, and automatic release remain unauthorized.

@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
 
 import { applyVehicleIdentityPolicy, sanitizeVehicleRegistrationOcrResult } from "./ocr";
 import { buildOcrQualityReport, resolveVehicleIdentity } from "./ocr-quality";
+import { applyPdfTextLayerCertificateFields, extractCertificateCodesFromLines } from "./pdf-text-layer";
 import { OCR_FIELD_LABELS, OCR_TO_VEHICLE_MAP } from "./vehicle-registration-types";
 import { buildWizardEstimateOcrApplication } from "@/lib/ocr/wizard-estimate-ocr-apply-core";
 import { mapOcrToVehicle } from "@/lib/ocr/vehicle-mapper";
@@ -347,4 +348,73 @@ test("estimate Step 2 vehicle forms follow the leading order where those fields 
   assert.deepEqual(fieldLabels(steps, "<ChoiceGrid cols={2}>", "</ChoiceGrid>"), [
     "メーカー", "車名", "型式", "排気量", "ナンバープレート",
   ]);
+});
+
+// ─── Selectable PDF text layer (synthetic codes: 型式 6BA-ABC1 / 原動機の型式 XYZ1 / 型式指定番号 12345 / 類別区分番号 0007) ───
+
+const PDF_TYPE = "6BA-ABC1";
+const PDF_ENGINE = "XYZ1";
+const PDF_APPROVAL = "12345";
+const PDF_CLASS = "0007";
+const PDF_LINES = [`型式 ${PDF_TYPE} 原動機の型式 ${PDF_ENGINE}`, `型式指定番号 ${PDF_APPROVAL} 類別区分番号 ${PDF_CLASS}`];
+
+test("kei selectable PDF: the text-layer 型式 is restored and the engine code leaves グレード/型式指定番号; 車名・グレード stay blank", () => {
+  const sanitized = sanitizeVehicleRegistrationOcrResult({
+    vehicle_name: "ホンダ", maker: "ホンダ", grade: PDF_ENGINE, model_code: PDF_ENGINE, engine_model: PDF_ENGINE,
+    owner_name: "合成 名義", license_plate_class: PLATE_CLASS,
+  });
+  const layer = applyPdfTextLayerCertificateFields(sanitized, extractCertificateCodesFromLines(PDF_LINES));
+  const result = applyVehicleIdentityPolicy(sanitized, { trustedModelShape: layer.trustedModel });
+  assert.equal(result.model, PDF_TYPE);
+  assert.equal(result.engine_model, PDF_ENGINE);
+  assert.equal(result.model_code, PDF_APPROVAL);
+  assert.equal(result.classification_number, PDF_CLASS);
+  assert.equal(result.grade, undefined);
+  assert.equal(result.vehicle_name, undefined);
+  assert.equal(result.owner_name, "合成 名義");
+  assert.equal(result.license_plate_class, PLATE_CLASS);
+  assert.ok((result.vehicle_identity_notices ?? []).some((n) => n.includes("PDFの文字情報から")));
+
+  const applied = buildWizardEstimateOcrApplication(result);
+  assert.equal(applied.vehicle.vehicleCode, PDF_TYPE);
+  assert.equal(applied.vehicle.grade, undefined);
+  assert.equal(applied.vehicle.model, undefined);
+  const report = buildOcrQualityReport(result, { model: "m", promptVersion: "p", processingMs: 1 });
+  assert.ok(!report.missingRequired.includes("型式"));
+});
+
+test("ordinary selectable PDF: 類別区分番号 keeps its leading zero and is never confused with the plate 分類番号", () => {
+  const sanitized = sanitizeVehicleRegistrationOcrResult({ maker: "日産", model: PDF_TYPE, license_plate_class: PLATE_CLASS });
+  applyPdfTextLayerCertificateFields(sanitized, extractCertificateCodesFromLines([`型式指定番号 ${PDF_APPROVAL} 類別区分番号 ${PDF_CLASS}`]));
+  const result = applyVehicleIdentityPolicy(sanitized);
+  assert.equal(result.classification_number, "0007");
+  assert.equal(result.model_code, PDF_APPROVAL);
+  assert.equal(result.license_plate_class, PLATE_CLASS);
+  assert.equal(result.model, PDF_TYPE);
+});
+
+test("a trusted text-layer 型式 bypasses only the hyphen-less shape rule; every other safeguard still applies", () => {
+  const trusted = { ambiguousGrade: "blank" as const, trustedModelShape: true };
+  const untrusted = { ambiguousGrade: "blank" as const };
+  assert.equal(resolveVehicleIdentity({ model: "XYZ9", engine_model: PDF_ENGINE }, trusted).result.model, "XYZ9");
+  assert.equal(resolveVehicleIdentity({ model: "XYZ9", engine_model: PDF_ENGINE }, untrusted).result.model, undefined);
+  assert.equal(applyVehicleIdentityPolicy({ model: "XYZ9", engine_model: PDF_ENGINE }).model, undefined); // AI output: never trusted
+  assert.equal(resolveVehicleIdentity({ model: PDF_ENGINE, engine_model: PDF_ENGINE }, trusted).result.model, undefined); // equal to engine
+  assert.equal(resolveVehicleIdentity({ model: PDF_APPROVAL }, trusted).result.model, undefined);                          // digits only
+  assert.equal(resolveVehicleIdentity({ model: PDF_TYPE, model_needs_confirmation: "true" }, trusted).result.model, undefined);
+  // No text-layer 型式 → nothing is trusted, even when other codes were applied.
+  const partial = applyPdfTextLayerCertificateFields({ model: "XYZ9" }, extractCertificateCodesFromLines([`類別区分番号 ${PDF_CLASS}`]));
+  assert.equal(partial.trustedModel, false);
+});
+
+test("ocr.ts runs the PDF text layer only for PDFs, after sanitizing and before the identity policy, and logs field names only", () => {
+  const source = readFileSync("src/lib/vehicle-registration/ocr.ts", "utf8");
+  assert.ok(source.includes('if (mimeType === "application/pdf") {'));
+  assert.ok(source.includes("extractCertificateCodesFromPdfBase64(imageBase64)"));
+  const sanitizeAt = source.indexOf("sanitizeVehicleRegistrationOcrResult(parsed)");
+  const overrideAt = source.indexOf("applyPdfTextLayerCertificateFields(sanitized, pdfTextLayer)");
+  const policyAt = source.indexOf("applyVehicleIdentityPolicy(sanitized, { trustedModelShape: textLayer.trustedModel })");
+  assert.ok(sanitizeAt > 0 && overrideAt > sanitizeAt && policyAt > overrideAt);
+  assert.ok(source.includes("Object.keys(pdfTextLayer.fields).join"));
+  assert.ok(!source.includes("JSON.stringify(pdfTextLayer"));
 });
