@@ -5765,3 +5765,118 @@ git_actions:
 decision: ACCEPT_PR128_AS_D5A_R2_PUBLICATION_AND_RECORD_SEQUENCING_DEVIATION_WITHOUT_DUPLICATE_COMMIT
 next: "INDEPENDENT_BOOK_REVIEW_OF_THIS_TWO_PATH_LEDGER_APPEND; PUSH_PR_READY_MERGE_AND_D5B_REMAIN_SEPARATE_OWNER_GATES."
 ```
+
+## INV001-P19-BOOK-PR139 — Foundation route build repair verification record
+
+```yaml
+phase: INV001_P19_BOOK_PR139_ROUTE_BUILD_REPAIR
+marker: INV001_P19_BOOK_PR139_ROUTE_BUILD_LEDGER_RECORD_RESULT_V1
+status: LOCAL_LEDGER_RECORD_CANDIDATE_UNSTAGED_UNCOMMITTED_PR139_DRAFT_E2_LOCAL_VERIFIED
+date: 2026-09-27
+append_only: true
+authorization: "The Owner authorized exactly one append-only PR #139 verification/result entry in this ledger. No pre-existing PR #139 phase entry existed; in this narrow case current explicit Owner authority (precedence item 1) governs the record. This is not general permission for Office AZ inventory implementation on MacBook and does not authorize stage, commit, push, PR comment, Ready conversion, merge, deploy, DB, migration, or environment action."
+model_evidence: claude-fable-5-1 (Claude Fable high), bounded ledger-record agent; no nested agents; no GitHub/network/browser/Supabase/DB access in this run
+classification: BOOK_INTEGRATION_ROUTE_BUILD_REPAIR_NOT_MACBOOK_OFFICE_AZ_INVENTORY_FOUNDATION_IMPLEMENTATION
+lineage: D4_AUTHENTICATED_SERVER_BOUNDARY_GATE_B_PR117_MERGED_TO_MAIN_ROUTE_HANDLER_KEPT_NEXT_COMPATIBLE
+repository:
+  name: nisikawa-officeAZ/GYEON
+  branch: work/inventory-route-build-fix-20260927
+  worktree: work/dealeros-inventory-route-build-fix-20260927A
+  head: ccbbd1cd26d4df272890458f67b1d6d63de02e19
+  tree: 76eaccade610d46f3357aa74ab5ffdf41b7ceb02
+  head_subject: "fix(inventory): move route guards out of handler exports"
+  git_status_before_ledger_edit: CLEAN
+pull_request:
+  number: 139
+  title: "fix(inventory): keep foundation route exports Next-compatible"
+  base: main
+  base_commit: b440efea8e023c917d78171804c2a1edfd163647
+  state_at_book_check: OPEN_DRAFT
+  mergeable_at_book_check: MERGEABLE
+  vercel_preview_at_book_check: SUCCESS
+  github_reviews_at_book_check: NONE
+  metadata_source: BOOK_CODEX_LIVE_CHECK_BEFORE_THIS_RUN_NOT_REVERIFIED_BY_THIS_RUN
+  metadata_meaning: CURRENT_PR_METADATA_ONLY_NOT_E3_ENVIRONMENT_NOT_E5_PRODUCTION_PROOF
+  remote_contains_this_ledger_entry: false
+exact_change_scope_merge_base_diff:
+  - path: src/app/api/inventory/foundation/route.ts
+    status: M
+    sha256: c2adced6cf7a849ea733afd9bc416479e9d39d1834f16180835e6bc759d0a0d4
+  - path: src/app/api/inventory/foundation/route.test.ts
+    status: M
+    sha256: 95ca0bb0de184aaccab48537e7aa5d1d53ebc05920b40a060a1988890c02222d
+  - path: src/lib/inventory/foundation/foundation-route-guards.ts
+    status: A
+    sha256: d57a3e8d52c3ce758238fb19a8b4664ac8c2016c8b8aa8ac676fb36915ccf489
+change_summary: "Moves three guard helpers out of the Route Handler module into a server-only module so the route file exports only Next-compatible handler methods; route handler methods and behavior are unchanged. Three paths only; two-dot diff against current main additionally shows five unrelated deletions that exist only because main advanced past the merge-base and are not PR #139 changes."
+independent_static_review:
+  marker: INV001_P19_BOOK_PR139_ROUTE_BUILD_INDEPENDENT_REVIEW_R1_RESULT_V1
+  run: 2026-09-27T13-09-44-143Z-763c5636
+  verdict: PASS
+  diff_scope: EXACT_3_PATHS
+  blocking_findings: NONE
+  protected_blob: UNCHANGED
+  evidence_class: STATIC_REVIEW_NOT_EXECUTION
+executable_verification:
+  marker: INV001_P19_BOOK_PR139_ROUTE_BUILD_EXECUTABLE_VERIFICATION_RESULT_V1
+  run: 2026-09-27T13-18-29-100Z-a84bdb32
+  head_tree_identity: SAME_AS_ABOVE
+  child_exit: 0
+  model_accepted: true
+  marker_found: true
+  focused_tests:
+    command: "node --import tsx --experimental-test-module-mocks --test src/app/api/inventory/foundation/route.test.ts src/lib/inventory/foundation/foundation-server-actions.test.ts"
+    result: PASS_29_OF_29_ROUTE_11_ACTIONS_18
+    exit: 0
+  typecheck:
+    command: "npm run typecheck"
+    exit: 0
+    diagnostics: 0
+  build:
+    command: "NEXT_TELEMETRY_DISABLED=1 npm run build"
+    exit: 0
+    prebuild_canonical_estimate: PASS_28_OF_28
+    next_version: 15.5.26
+    bundler: TURBOPACK_COMPILE_SUCCESS
+    route_emitted: "/api/inventory/foundation DYNAMIC"
+  diff_check:
+    command: "git diff --check"
+    exit: 0
+  post_build_status: EMPTY
+  npm_ci_rerun_in_this_gate: false
+  npm_ci_pr_body_claim: EARLIER_PR_EVIDENCE_ONLY_NOT_REVERIFIED
+  evidence_class: E2_LOCAL_VERIFIED
+this_ledger_run:
+  new_checks_claimed: NONE
+  commands_run: GIT_IDENTITY_STATUS_DIFF_CHECK_SHA256_ONLY
+  npm_ci_tests_typecheck_build: NOT_RERUN_DOCS_ONLY_GATE
+protected_metadata:
+  src/components/estimates/wizard/screens/ScreensPreview.tsx: 100644_c1eb0dc88954f3a17cc85e313b62d5bb6a4fda3f
+  access: PATHNAME_MODE_BLOB_GIT_STATUS_ONLY_NEVER_OPENED_READ_DIFFED_COPIED_STAGED_OR_MODIFIED
+  changed_by_pr139: false
+  closed_finance_and_line_paths: EXCLUDED_UNTOUCHED
+literal_write_allowlist:
+  - docs/master_specification/GYEON_DA_PHASE_RESULTS.md
+responsibility:
+  owner: Office AZ
+  specification_and_acceptance: Book Codex
+  bounded_ledger_record: Book Claude (Claude Fable high)
+  foundation_inventory_owner: Mac Studio (unchanged; PR #139 transfers no inventory-rule ownership)
+not_authorized:
+  - db_supabase_auth_migration_create_or_apply
+  - source_test_dependency_lockfile_config_or_environment_change
+  - stage_commit_push_or_pr_comment
+  - ready_conversion
+  - merge
+  - manual_or_production_deploy
+mutation_flags:
+  ledger_appended_locally: true
+  other_paths_changed: false
+  staged: false
+  committed: false
+  pushed: false
+  pr_or_comment_mutated: false
+  ready_merged_deployed: false
+forbidden_actions_taken: NONE
+next: "BOOK_CODEX_INDEPENDENT_VERIFICATION_OF_THIS_EXACT_ONE_PATH_LEDGER_DELTA; THEN_SEPARATE_OWNER_GATE_FOR_LITERAL_ONE_PATH_STAGE_AND_LOCAL_COMMIT; PR139_READY_CONVERSION_AND_MERGE_REMAIN_FURTHER_SEPARATE_EXPLICIT_OWNER_GATES."
+```
